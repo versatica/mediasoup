@@ -31,4 +31,3 @@ table GetStatsResponse {
     base: FBS.Transport.Stats (required);
     tuple: FBS.Transport.Tuple (required);
 }
-

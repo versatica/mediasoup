@@ -15,7 +15,7 @@ namespace RTC
 		class Value
 		{
 		public:
-			enum class Type
+			enum class Type : uint8_t
 			{
 				BOOLEAN = 1,
 				INTEGER,
@@ -41,7 +41,8 @@ namespace RTC
 			{
 			}
 
-			explicit Value(std::string&& stringValue) : type(Type::STRING), stringValue(stringValue)
+			explicit Value(std::string&& stringValue)
+			  : type(Type::STRING), stringValue(std::move(stringValue))
 			{
 			}
 
@@ -55,8 +56,8 @@ namespace RTC
 			bool booleanValue{ false };
 			int32_t integerValue{ 0 };
 			double doubleValue{ 0.0 };
-			const std::string stringValue;
-			const std::vector<int32_t> arrayOfIntegers;
+			std::string stringValue;
+			std::vector<int32_t> arrayOfIntegers;
 		};
 
 	public:

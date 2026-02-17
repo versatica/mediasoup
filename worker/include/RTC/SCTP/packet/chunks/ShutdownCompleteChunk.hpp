@@ -69,11 +69,11 @@ namespace RTC
 			ShutdownCompleteChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ShutdownCompleteChunk() override;
+			~ShutdownCompleteChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual ShutdownCompleteChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			ShutdownCompleteChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			bool GetT() const
 			{
@@ -83,7 +83,7 @@ namespace RTC
 			void SetT(bool flag);
 
 		protected:
-			virtual ShutdownCompleteChunk* SoftClone(const uint8_t* buffer) const final override;
+			ShutdownCompleteChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

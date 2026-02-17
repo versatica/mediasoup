@@ -27,7 +27,7 @@ namespace RTC
 
 		public:
 			static const size_t HeaderSize{ 4 };
-			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::PSLEI };
+			static const FeedbackPs::MessageType MessageType{ FeedbackPs::MessageType::PSLEI };
 
 		public:
 			explicit FeedbackPsLeiItem(Header* header) : header(header)
@@ -41,7 +41,7 @@ namespace RTC
 
 			uint32_t GetSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->ssrc) };
+				return ntohl(this->header->ssrc);
 			}
 
 			/* Virtual methods inherited from FeedbackItem. */

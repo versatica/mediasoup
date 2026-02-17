@@ -2,14 +2,12 @@
 #include "RTC/TrendCalculator.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-using namespace RTC;
-
-SCENARIO("TrendCalculator", "[rtc]")
+SCENARIO("TrendCalculator")
 {
 	SECTION("trend values after same elapsed time match")
 	{
-		TrendCalculator trendA;
-		TrendCalculator trendB;
+		RTC::TrendCalculator trendA;
+		RTC::TrendCalculator trendB;
 
 		trendA.Update(1000u, 0u);
 		trendB.Update(1000u, 0u);

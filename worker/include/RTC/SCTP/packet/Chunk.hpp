@@ -158,10 +158,10 @@ namespace RTC
 			  uint16_t& chunkLength,
 			  uint8_t& padding);
 
-			static const std::string& ChunkType2String(ChunkType chunkType);
+			static const std::string& ChunkTypeToString(ChunkType chunkType);
 
 		private:
-			static std::unordered_map<ChunkType, std::string> chunkType2String;
+			static const std::unordered_map<ChunkType, std::string> ChunkType2String;
 
 		protected:
 			/**
@@ -171,16 +171,16 @@ namespace RTC
 			Chunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~Chunk() override;
+			~Chunk() override;
 
-			virtual void Dump(int indentation = 0) const override = 0;
+			void Dump(int indentation = 0) const override = 0;
 
-			virtual void Serialize(uint8_t* buffer, size_t bufferLength) override final;
+			void Serialize(uint8_t* buffer, size_t bufferLength) final;
 
 			/**
 			 * Can be overridden by each subclass.
 			 */
-			virtual Chunk* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
+			Chunk* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ChunkType GetType() const final
 			{
@@ -299,7 +299,6 @@ namespace RTC
 			template<typename T>
 			T* BuildParameterInPlace()
 			{
-				AssertNotFrozen();
 				AssertCanHaveParameters();
 
 				// The new Parameter will be added after other Parameters in the Chunk,
@@ -414,7 +413,6 @@ namespace RTC
 			template<typename T>
 			T* BuildErrorCauseInPlace()
 			{
-				AssertNotFrozen();
 				AssertCanHaveErrorCauses();
 
 				// The new Error Cause will be added after other Error Causes in the
@@ -440,7 +438,7 @@ namespace RTC
 			/**
 			 * Subclasses must invoke this method within their Dump() method.
 			 */
-			virtual void DumpCommon(int indentation) const override final;
+			void DumpCommon(int indentation) const final;
 
 			/**
 			 * Subclasses must invoke this method within their Dump() method.
@@ -549,7 +547,7 @@ namespace RTC
 			 * variable-length field considered "value", Optional/Variable-Length
 			 * Parameters and Error Causes).
 			 */
-			virtual size_t GetHeaderLength() const override
+			size_t GetHeaderLength() const override
 			{
 				return Chunk::ChunkHeaderLength;
 			}

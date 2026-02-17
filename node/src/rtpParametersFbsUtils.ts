@@ -1,4 +1,4 @@
-import * as flatbuffers from 'flatbuffers';
+import type * as flatbuffers from 'flatbuffers';
 import type {
 	RtpParameters,
 	RtpCodecParameters,
@@ -119,14 +119,15 @@ export function serializeRtpParameters(
 	);
 
 	const midOffset = builder.createString(rtpParameters.mid);
+	const msidOffset = builder.createString(rtpParameters.msid);
 
 	FbsRtpParameters.startRtpParameters(builder);
 	FbsRtpParameters.addMid(builder, midOffset);
 	FbsRtpParameters.addCodecs(builder, codecsOffset);
-
 	FbsRtpParameters.addHeaderExtensions(builder, headerExtensionsOffset);
 	FbsRtpParameters.addEncodings(builder, encodingsOffset);
 	FbsRtpParameters.addRtcp(builder, rtcpOffset);
+	FbsRtpParameters.addMsid(builder, msidOffset);
 
 	return FbsRtpParameters.endRtpParameters(builder);
 }
@@ -382,8 +383,20 @@ export function rtpHeaderExtensionUriFromFbs(
 			return 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id';
 		}
 
-		case FbsRtpHeaderExtensionUri.AudioLevel: {
+		case FbsRtpHeaderExtensionUri.AbsSendTime: {
+			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time';
+		}
+
+		case FbsRtpHeaderExtensionUri.TransportWideCcDraft01: {
+			return 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01';
+		}
+
+		case FbsRtpHeaderExtensionUri.SsrcAudioLevel: {
 			return 'urn:ietf:params:rtp-hdrext:ssrc-audio-level';
+		}
+
+		case FbsRtpHeaderExtensionUri.DependencyDescriptor: {
+			return 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension';
 		}
 
 		case FbsRtpHeaderExtensionUri.VideoOrientation: {
@@ -394,14 +407,6 @@ export function rtpHeaderExtensionUriFromFbs(
 			return 'urn:ietf:params:rtp-hdrext:toffset';
 		}
 
-		case FbsRtpHeaderExtensionUri.TransportWideCcDraft01: {
-			return 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01';
-		}
-
-		case FbsRtpHeaderExtensionUri.AbsSendTime: {
-			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time';
-		}
-
 		case FbsRtpHeaderExtensionUri.AbsCaptureTime: {
 			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time';
 		}
@@ -410,8 +415,8 @@ export function rtpHeaderExtensionUriFromFbs(
 			return 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay';
 		}
 
-		case FbsRtpHeaderExtensionUri.DependencyDescriptor: {
-			return 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension';
+		case FbsRtpHeaderExtensionUri.MediasoupPacketId: {
+			return 'urn:mediasoup:params:rtp-hdrext:packet-id';
 		}
 	}
 }
@@ -432,8 +437,20 @@ export function rtpHeaderExtensionUriToFbs(
 			return FbsRtpHeaderExtensionUri.RepairRtpStreamId;
 		}
 
+		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time': {
+			return FbsRtpHeaderExtensionUri.AbsSendTime;
+		}
+
+		case 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01': {
+			return FbsRtpHeaderExtensionUri.TransportWideCcDraft01;
+		}
+
 		case 'urn:ietf:params:rtp-hdrext:ssrc-audio-level': {
-			return FbsRtpHeaderExtensionUri.AudioLevel;
+			return FbsRtpHeaderExtensionUri.SsrcAudioLevel;
+		}
+
+		case 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension': {
+			return FbsRtpHeaderExtensionUri.DependencyDescriptor;
 		}
 
 		case 'urn:3gpp:video-orientation': {
@@ -444,14 +461,6 @@ export function rtpHeaderExtensionUriToFbs(
 			return FbsRtpHeaderExtensionUri.TimeOffset;
 		}
 
-		case 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01': {
-			return FbsRtpHeaderExtensionUri.TransportWideCcDraft01;
-		}
-
-		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time': {
-			return FbsRtpHeaderExtensionUri.AbsSendTime;
-		}
-
 		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time': {
 			return FbsRtpHeaderExtensionUri.AbsCaptureTime;
 		}
@@ -460,8 +469,8 @@ export function rtpHeaderExtensionUriToFbs(
 			return FbsRtpHeaderExtensionUri.PlayoutDelay;
 		}
 
-		case 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension': {
-			return FbsRtpHeaderExtensionUri.DependencyDescriptor;
+		case 'urn:mediasoup:params:rtp-hdrext:packet-id': {
+			return FbsRtpHeaderExtensionUri.MediasoupPacketId;
 		}
 
 		default: {
@@ -486,12 +495,12 @@ export function parseRtpEncodingParameters(
 ): RtpEncodingParameters {
 	return {
 		ssrc: data.ssrc() ?? undefined,
-		rid: data.rid() ?? undefined,
+		rid: data.rid() || undefined,
 		codecPayloadType:
 			data.codecPayloadType() !== null ? data.codecPayloadType()! : undefined,
 		rtx: data.rtx() ? { ssrc: data.rtx()!.ssrc() } : undefined,
 		dtx: data.dtx(),
-		scalabilityMode: data.scalabilityMode() ?? undefined,
+		scalabilityMode: data.scalabilityMode() || undefined,
 		maxBitrate: data.maxBitrate() !== null ? data.maxBitrate()! : undefined,
 	};
 }
@@ -525,16 +534,17 @@ export function parseRtpParameters(data: FbsRtpParameters): RtpParameters {
 		const fbsRtcp = data.rtcp()!;
 
 		rtcp = {
-			cname: fbsRtcp.cname() ?? undefined,
+			cname: fbsRtcp.cname() || undefined,
 			reducedSize: fbsRtcp.reducedSize(),
 		};
 	}
 
 	return {
-		mid: data.mid() ?? undefined,
+		mid: data.mid() || undefined,
 		codecs,
 		headerExtensions,
 		encodings,
 		rtcp,
+		msid: data.msid() || undefined,
 	};
 }

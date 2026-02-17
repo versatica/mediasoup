@@ -9,17 +9,17 @@
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpHeaderExtensionIds.hpp"
-#include "RTC/RtpPacket.hpp"
-#include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
 #include <string>
 #include <vector>
 
 namespace RTC
 {
-	class Producer : public RTC::RtpStreamRecv::Listener,
+	class Producer : public RTC::RTP::RtpStreamRecv::Listener,
 	                 public RTC::KeyFrameRequestManager::Listener,
 	                 public Channel::ChannelSocket::RequestHandler,
 	                 public Channel::ChannelSocket::NotificationHandler
@@ -31,20 +31,20 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnProducerReceiveData(RTC::Producer* producer, size_t len)                  = 0;
-			virtual void OnProducerReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-			virtual void OnProducerPaused(RTC::Producer* producer)                                   = 0;
-			virtual void OnProducerResumed(RTC::Producer* producer)                                  = 0;
+			virtual void OnProducerReceiveData(RTC::Producer* producer, size_t len) = 0;
+			virtual void OnProducerReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
+			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
+			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
 			virtual void OnProducerNewRtpStream(
-			  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
+			  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 			virtual void OnProducerRtpStreamScore(
 			  RTC::Producer* producer,
-			  RTC::RtpStreamRecv* rtpStream,
+			  RTC::RTP::RtpStreamRecv* rtpStream,
 			  uint8_t score,
 			  uint8_t previousScore) = 0;
 			virtual void OnProducerRtcpSenderReport(
-			  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, bool first)                     = 0;
-			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+			  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
+			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 			virtual void OnProducerNeedWorstRemoteFractionLost(
 			  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
@@ -74,10 +74,10 @@ namespace RTC
 		};
 
 	public:
-		enum class ReceiveRtpPacketResult
+		enum class ReceiveRtpPacketResult : uint8_t
 		{
-			DISCARDED = 0,
-			MEDIA     = 1,
+			DISCARDED,
+			MEDIA,
 			RETRANSMISSION
 		};
 
@@ -113,7 +113,7 @@ namespace RTC
 		{
 			return this->rtpParameters;
 		}
-		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const
+		const struct RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
 		{
 			return this->rtpHeaderExtensionIds;
 		}
@@ -125,7 +125,7 @@ namespace RTC
 		{
 			return this->paused;
 		}
-		const absl::flat_hash_map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams()
+		const absl::flat_hash_map<RTC::RTP::RtpStreamRecv*, uint32_t>& GetRtpStreams()
 		{
 			return this->mapRtpStreamMappedSsrc;
 		}
@@ -133,7 +133,7 @@ namespace RTC
 		{
 			return std::addressof(this->rtpStreamScores);
 		}
-		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
+		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RTP::Packet* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
@@ -148,16 +148,14 @@ namespace RTC
 		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	private:
-		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
-		RTC::RtpStreamRecv* CreateRtpStream(
-		  RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
-		void NotifyNewRtpStream(RTC::RtpStreamRecv* rtpStream);
-		void PreProcessRtpPacket(RTC::RtpPacket* packet);
-		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
-		void PostProcessRtpPacket(RTC::RtpPacket* packet);
+		RTC::RTP::RtpStreamRecv* GetRtpStream(const RTC::RTP::Packet* packet);
+		RTC::RTP::RtpStreamRecv* CreateRtpStream(
+		  const RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
+		void NotifyNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream);
+		bool MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const;
+		void PostProcessRtpPacket(RTC::RTP::Packet* packet);
 		void EmitScore() const;
-		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
-		void EmitTraceEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;
@@ -166,10 +164,10 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
-		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamSendRtcpPacket(RTC::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override;
+		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void OnRtpStreamSendRtcpPacket(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override;
 		void OnRtpStreamNeedWorstRemoteFractionLost(
-		  RTC::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost) override;
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost) override;
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */
 	public:
@@ -177,28 +175,29 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		const std::string id;
+		std::string id;
 
 	private:
 		// Passed by argument.
 		RTC::Shared* shared{ nullptr };
 		RTC::Producer::Listener* listener{ nullptr };
 		// Allocated by this.
-		absl::flat_hash_map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
+		absl::flat_hash_map<uint32_t, RTC::RTP::RtpStreamRecv*> mapSsrcRtpStream;
 		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
 		// Others.
 		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
 		struct RtpMapping rtpMapping;
-		std::vector<RTC::RtpStreamRecv*> rtpStreamByEncodingIdx;
+		std::vector<RTC::RTP::RtpStreamRecv*> rtpStreamByEncodingIdx;
 		std::vector<uint8_t> rtpStreamScores;
-		absl::flat_hash_map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
-		absl::flat_hash_map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
+		absl::flat_hash_map<uint32_t, RTC::RTP::RtpStreamRecv*> mapRtxSsrcRtpStream;
+		absl::flat_hash_map<RTC::RTP::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		absl::flat_hash_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
+		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
-		RTC::RtpPacket* currentRtpPacket{ nullptr };
+		bool enableMediasoupPacketIdHeaderExtension{ false };
+		RTC::RTP::Packet* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0u };
 		uint16_t maxRtcpInterval{ 0u };
@@ -206,8 +205,6 @@ namespace RTC
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
-		// Static buffer.
-		thread_local static uint8_t* buffer;
 	};
 } // namespace RTC
 

@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
 #include "DepLibWebRTC.hpp"
@@ -52,7 +53,7 @@ int main(int argc, char* argv[])
 
 	Catch::Session session;
 
-	int status = session.run(argc, argv);
+	const int status = session.run(argc, argv);
 
 	// Free static stuff.
 	DepLibSRTP::ClassDestroy();

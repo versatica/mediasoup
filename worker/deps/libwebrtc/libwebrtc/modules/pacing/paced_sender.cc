@@ -19,7 +19,7 @@
 
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 
 #include <absl/memory/memory.h>
 #include <algorithm>
@@ -199,7 +199,7 @@ void PacedSender::Process() {
 
   size_t bytes_sent = 0;
   // MS_NOTE: Let's not use a useless vector.
-  RTC::RtpPacket* padding_packet{ nullptr };
+  RTC::RTP::Packet* padding_packet{ nullptr };
 
   // Check if we should send padding.
   while (true)
@@ -222,7 +222,7 @@ void PacedSender::Process() {
     // MS_DEBUG_DEV("sending padding packet [size:%zu]", padding_packet->GetSize());
 
     packet_router_->SendPacket(padding_packet, pacing_info);
-    bytes_sent += padding_packet->GetSize();
+    bytes_sent += padding_packet->GetLength();
 
     if (recommended_probe_size && bytes_sent > *recommended_probe_size)
       break;

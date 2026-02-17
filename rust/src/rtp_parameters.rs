@@ -125,6 +125,7 @@ impl<'a> TryFromFbs<'a> for RtpParameters {
                     .map(|cname| cname.to_string()),
                 reduced_size: rtp_parameters.rtcp()?.reduced_size()?,
             },
+            msid: rtp_parameters.msid()?.map(|msid| msid.to_string()),
         })
     }
 }
@@ -193,25 +194,30 @@ impl FromFbs for RtpHeaderExtensionUri {
             rtp_parameters::RtpHeaderExtensionUri::RepairRtpStreamId => {
                 RtpHeaderExtensionUri::RepairRtpStreamId
             }
+            rtp_parameters::RtpHeaderExtensionUri::AbsSendTime => {
+                RtpHeaderExtensionUri::AbsSendTime
+            }
+            rtp_parameters::RtpHeaderExtensionUri::TransportWideCcDraft01 => {
+                RtpHeaderExtensionUri::TransportWideCcDraft01
+            }
+            rtp_parameters::RtpHeaderExtensionUri::SsrcAudioLevel => {
+                RtpHeaderExtensionUri::SsrcAudioLevel
+            }
             rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor => {
                 RtpHeaderExtensionUri::DependencyDescriptor
             }
-            rtp_parameters::RtpHeaderExtensionUri::AudioLevel => RtpHeaderExtensionUri::AudioLevel,
             rtp_parameters::RtpHeaderExtensionUri::VideoOrientation => {
                 RtpHeaderExtensionUri::VideoOrientation
             }
             rtp_parameters::RtpHeaderExtensionUri::TimeOffset => RtpHeaderExtensionUri::TimeOffset,
-            rtp_parameters::RtpHeaderExtensionUri::TransportWideCcDraft01 => {
-                RtpHeaderExtensionUri::TransportWideCcDraft01
-            }
-            rtp_parameters::RtpHeaderExtensionUri::AbsSendTime => {
-                RtpHeaderExtensionUri::AbsSendTime
-            }
             rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime => {
                 RtpHeaderExtensionUri::AbsCaptureTime
             }
             rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay => {
                 RtpHeaderExtensionUri::PlayoutDelay
+            }
+            rtp_parameters::RtpHeaderExtensionUri::MediasoupPacketId => {
+                RtpHeaderExtensionUri::MediasoupPacketId
             }
         }
     }
@@ -229,25 +235,30 @@ impl ToFbs for RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::RepairRtpStreamId => {
                 rtp_parameters::RtpHeaderExtensionUri::RepairRtpStreamId
             }
+            RtpHeaderExtensionUri::AbsSendTime => {
+                rtp_parameters::RtpHeaderExtensionUri::AbsSendTime
+            }
+            RtpHeaderExtensionUri::TransportWideCcDraft01 => {
+                rtp_parameters::RtpHeaderExtensionUri::TransportWideCcDraft01
+            }
+            RtpHeaderExtensionUri::SsrcAudioLevel => {
+                rtp_parameters::RtpHeaderExtensionUri::SsrcAudioLevel
+            }
             RtpHeaderExtensionUri::DependencyDescriptor => {
                 rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor
             }
-            RtpHeaderExtensionUri::AudioLevel => rtp_parameters::RtpHeaderExtensionUri::AudioLevel,
             RtpHeaderExtensionUri::VideoOrientation => {
                 rtp_parameters::RtpHeaderExtensionUri::VideoOrientation
             }
             RtpHeaderExtensionUri::TimeOffset => rtp_parameters::RtpHeaderExtensionUri::TimeOffset,
-            RtpHeaderExtensionUri::TransportWideCcDraft01 => {
-                rtp_parameters::RtpHeaderExtensionUri::TransportWideCcDraft01
-            }
-            RtpHeaderExtensionUri::AbsSendTime => {
-                rtp_parameters::RtpHeaderExtensionUri::AbsSendTime
-            }
             RtpHeaderExtensionUri::AbsCaptureTime => {
                 rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime
             }
             RtpHeaderExtensionUri::PlayoutDelay => {
                 rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay
+            }
+            RtpHeaderExtensionUri::MediasoupPacketId => {
+                rtp_parameters::RtpHeaderExtensionUri::MediasoupPacketId
             }
             RtpHeaderExtensionUri::Unsupported => panic!("Invalid RTP extension header URI"),
         }
@@ -344,6 +355,7 @@ impl ToFbs for RtpParameters {
                 cname: self.rtcp.cname.clone(),
                 reduced_size: self.rtcp.reduced_size,
             }),
+            msid: self.msid.clone(),
         }
     }
 }

@@ -67,12 +67,11 @@ namespace RTC
 			SupportedAddressTypesParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~SupportedAddressTypesParameter() override;
+			~SupportedAddressTypesParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual SupportedAddressTypesParameter* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			SupportedAddressTypesParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint16_t GetNumberOfAddressTypes() const
 			{
@@ -87,7 +86,7 @@ namespace RTC
 			void AddAddressType(uint16_t addressType);
 
 		protected:
-			virtual SupportedAddressTypesParameter* SoftClone(const uint8_t* buffer) const final override;
+			SupportedAddressTypesParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

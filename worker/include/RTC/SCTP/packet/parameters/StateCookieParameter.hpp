@@ -66,11 +66,11 @@ namespace RTC
 			StateCookieParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~StateCookieParameter() override;
+			~StateCookieParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual StateCookieParameter* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			StateCookieParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			virtual bool HasCookie() const final
 			{
@@ -107,7 +107,7 @@ namespace RTC
 			  const NegotiatedCapabilities& negotiatedCapabilities);
 
 		protected:
-			virtual StateCookieParameter* SoftClone(const uint8_t* buffer) const final override;
+			StateCookieParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

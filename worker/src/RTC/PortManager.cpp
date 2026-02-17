@@ -5,7 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Settings.hpp"
 #include "Utils.hpp"
 #include <tuple>   // std:make_tuple()
 #include <utility> // std::piecewise_construct
@@ -47,9 +46,7 @@ namespace RTC
 
 		int err;
 		const int family = Utils::IP::GetFamily(ip);
-		struct sockaddr_storage bindAddr
-		{
-		};
+		struct sockaddr_storage bindAddr{};
 		uv_handle_t* uvHandle{ nullptr };
 		std::string protocolStr;
 		const uint8_t bitFlags = ConvertSocketFlags(flags, protocol, family);
@@ -120,6 +117,12 @@ namespace RTC
 
 				break;
 			}
+
+			// This cannot happen.
+			default:
+			{
+				MS_THROW_ERROR("unknown IP family");
+			}
 		}
 
 		// Try to bind on it.
@@ -179,7 +182,7 @@ namespace RTC
 				if (err != 0)
 				{
 					// If it failed, close the handle and check the reason.
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseUdp));
+					uv_close(uvHandle, static_cast<uv_close_cb>(onCloseUdp));
 
 					MS_THROW_ERROR(
 					  "uv_udp_bind() failed [protocol:%s, ip:'%s', port:%" PRIu16 "]: %s",
@@ -202,7 +205,7 @@ namespace RTC
 				if (err != 0)
 				{
 					// If it failed, close the handle and check the reason.
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
+					uv_close(uvHandle, static_cast<uv_close_cb>(onCloseTcp));
 
 					MS_THROW_ERROR(
 					  "uv_tcp_bind() failed [protocol:%s, ip:'%s', port:%" PRIu16 "]: %s",
@@ -222,7 +225,7 @@ namespace RTC
 				if (err != 0)
 				{
 					// If it failed, close the handle and check the reason.
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
+					uv_close(uvHandle, static_cast<uv_close_cb>(onCloseTcp));
 
 					MS_THROW_ERROR(
 					  "uv_listen() failed [protocol:%s, ip:'%s', port:%" PRIu16 "]: %s",
@@ -239,7 +242,7 @@ namespace RTC
 		MS_DEBUG_DEV(
 		  "bind succeeded [protocol:%s, ip:'%s', port:%" PRIu16 "]", protocolStr.c_str(), ip.c_str(), port);
 
-		return static_cast<uv_handle_t*>(uvHandle);
+		return uvHandle;
 	}
 
 	uv_handle_t* PortManager::Bind(
@@ -262,9 +265,7 @@ namespace RTC
 
 		int err;
 		const int family = Utils::IP::GetFamily(ip);
-		struct sockaddr_storage bindAddr
-		{
-		};
+		struct sockaddr_storage bindAddr{};
 		std::string protocolStr;
 
 		switch (protocol)
@@ -329,8 +330,8 @@ namespace RTC
 		const uint8_t bitFlags = ConvertSocketFlags(flags, protocol, family);
 
 		// Choose a random port index to start from.
-		portIdx = static_cast<size_t>(Utils::Crypto::GetRandomUInt32(
-		  static_cast<uint32_t>(0), static_cast<uint32_t>(numPorts - 1)));
+		portIdx = Utils::Crypto::GetRandomUInt<size_t>(
+		  static_cast<uint32_t>(0), static_cast<uint32_t>(numPorts - 1));
 
 		// Iterate all ports until getting one available. Fail if none found and also
 		// if bind() fails N times in theoretically available ports.
@@ -395,6 +396,12 @@ namespace RTC
 					(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(port);
 
 					break;
+				}
+
+				// This cannot happen.
+				default:
+				{
+					MS_THROW_ERROR("unknown IP family");
 				}
 			}
 
@@ -520,14 +527,14 @@ namespace RTC
 			{
 				case Protocol::UDP:
 				{
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseUdp));
+					uv_close(uvHandle, static_cast<uv_close_cb>(onCloseUdp));
 
 					break;
 				};
 
 				case Protocol::TCP:
 				{
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
+					uv_close(uvHandle, static_cast<uv_close_cb>(onCloseTcp));
 
 					break;
 				}
@@ -586,7 +593,7 @@ namespace RTC
 		  attempt,
 		  numAttempts);
 
-		return static_cast<uv_handle_t*>(uvHandle);
+		return uvHandle;
 	}
 
 	void PortManager::Unbind(uint64_t hash, uint16_t port)
@@ -700,6 +707,12 @@ namespace RTC
 				hash |= 0x0002; // AF_INET6.
 
 				break;
+			}
+
+			// This cannot happen.
+			default:
+			{
+				MS_THROW_ERROR("unknown IP family");
 			}
 		}
 

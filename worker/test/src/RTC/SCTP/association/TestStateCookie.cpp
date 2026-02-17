@@ -1,15 +1,13 @@
 #include "common.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
-#include "RTC/SCTP/common.hpp" // in worker/test/include/
+#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-
-SCENARIO("SCTP State Cookie", "[sctp]")
+SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 {
-	resetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("StateCookie::Parse() succeeds")
 	{
@@ -44,18 +42,17 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
-		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer, sizeof(buffer)) == true);
+		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer, sizeof(buffer)) == true);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(buffer, sizeof(buffer)) ==
-		  StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer, sizeof(buffer)) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
 
-		auto* stateCookie = StateCookie::Parse(buffer, sizeof(buffer));
+		auto* stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == buffer);
-		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->GetBufferLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->IsFrozen() == true);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBufferLength() == RTC::SCTP::StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetLocalVerificationTag() == 11223344);
 		REQUIRE(stateCookie->GetRemoteVerificationTag() == 55667788);
 		REQUIRE(stateCookie->GetLocalInitialTsn() == 12345678);
@@ -63,10 +60,12 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(stateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 66666666);
 		REQUIRE(stateCookie->GetTieTag() == 0xABCDEF0011223344);
 		REQUIRE(
-		  StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
+		  RTC::SCTP::StateCookie::IsMediasoupStateCookie(
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(stateCookie->GetBuffer(), stateCookie->GetLength()) ==
-		  StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
 
 		auto negotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
@@ -79,15 +78,14 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 
 		/* Serialize it. */
 
-		stateCookie->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		stateCookie->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		REQUIRE(stateCookie);
-		REQUIRE(stateCookie->GetBuffer() == SerializeBuffer);
-		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->GetBufferLength() == sizeof(SerializeBuffer));
-		REQUIRE(stateCookie->IsFrozen() == false);
+		REQUIRE(stateCookie->GetBuffer() == sctpCommon::SerializeBuffer);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBufferLength() == sizeof(sctpCommon::SerializeBuffer));
 		REQUIRE(stateCookie->GetLocalVerificationTag() == 11223344);
 		REQUIRE(stateCookie->GetRemoteVerificationTag() == 55667788);
 		REQUIRE(stateCookie->GetLocalInitialTsn() == 12345678);
@@ -95,10 +93,12 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(stateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 66666666);
 		REQUIRE(stateCookie->GetTieTag() == 0xABCDEF0011223344);
 		REQUIRE(
-		  StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
+		  RTC::SCTP::StateCookie::IsMediasoupStateCookie(
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(stateCookie->GetBuffer(), stateCookie->GetLength()) ==
-		  StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
 
 		negotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
@@ -111,17 +111,17 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 
 		/* Clone it. */
 
-		auto* clonedStateCookie = stateCookie->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedStateCookie =
+		  stateCookie->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete stateCookie;
 
 		REQUIRE(clonedStateCookie);
-		REQUIRE(clonedStateCookie->GetBuffer() == CloneBuffer);
-		REQUIRE(clonedStateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(clonedStateCookie->GetBufferLength() == sizeof(CloneBuffer));
-		REQUIRE(clonedStateCookie->IsFrozen() == false);
+		REQUIRE(clonedStateCookie->GetBuffer() == sctpCommon::CloneBuffer);
+		REQUIRE(clonedStateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(clonedStateCookie->GetBufferLength() == sizeof(sctpCommon::CloneBuffer));
 		REQUIRE(clonedStateCookie->GetLocalVerificationTag() == 11223344);
 		REQUIRE(clonedStateCookie->GetRemoteVerificationTag() == 55667788);
 		REQUIRE(clonedStateCookie->GetLocalInitialTsn() == 12345678);
@@ -129,12 +129,12 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(clonedStateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 66666666);
 		REQUIRE(clonedStateCookie->GetTieTag() == 0xABCDEF0011223344);
 		REQUIRE(
-		  StateCookie::IsMediasoupStateCookie(
+		  RTC::SCTP::StateCookie::IsMediasoupStateCookie(
 		    clonedStateCookie->GetBuffer(), clonedStateCookie->GetLength()) == true);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
 		    clonedStateCookie->GetBuffer(), clonedStateCookie->GetLength()) ==
-		  StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
 
 		negotiatedCapabilities = clonedStateCookie->GetNegotiatedCapabilities();
 
@@ -182,11 +182,11 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
-		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer1, sizeof(buffer1)) == false);
+		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer1, sizeof(buffer1)) == false);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(buffer1, sizeof(buffer1)) ==
-		  StateCookie::SctpImplementation::UNKNOWN);
-		REQUIRE(!StateCookie::Parse(buffer1, sizeof(buffer1)));
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer1, sizeof(buffer1)) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::UNKNOWN);
+		REQUIRE(!RTC::SCTP::StateCookie::Parse(buffer1, sizeof(buffer1)));
 
 		// Wrong Magic 2.
 		// clang-format off
@@ -220,11 +220,11 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
-		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer2, sizeof(buffer2)) == false);
+		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer2, sizeof(buffer2)) == false);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(buffer2, sizeof(buffer2)) ==
-		  StateCookie::SctpImplementation::MEDIASOUP);
-		REQUIRE(!StateCookie::Parse(buffer2, sizeof(buffer2)));
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer2, sizeof(buffer2)) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		REQUIRE(!RTC::SCTP::StateCookie::Parse(buffer2, sizeof(buffer2)));
 
 		// Buffer too big.
 		// clang-format off
@@ -260,25 +260,25 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
-		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer3, sizeof(buffer3)) == false);
+		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer3, sizeof(buffer3)) == false);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(buffer3, sizeof(buffer3)) ==
-		  StateCookie::SctpImplementation::MEDIASOUP);
-		REQUIRE(!StateCookie::Parse(buffer3, sizeof(buffer3)));
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer3, sizeof(buffer3)) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		REQUIRE(!RTC::SCTP::StateCookie::Parse(buffer3, sizeof(buffer3)));
 	}
 
 	SECTION("StateCookie::Factory() succeeds")
 	{
-		NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
-			                                                .maxInboundStreams   = 55555,
-			                                                .partialReliability  = true,
-			                                                .messageInterleaving = true,
-			                                                .reconfig            = true,
-			                                                .zeroChecksum        = false };
+		RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
+			                                                           .maxInboundStreams   = 55555,
+			                                                           .partialReliability  = true,
+			                                                           .messageInterleaving = true,
+			                                                           .reconfig            = true,
+			                                                           .zeroChecksum        = false };
 
-		auto* stateCookie = StateCookie::Factory(
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		auto* stateCookie = RTC::SCTP::StateCookie::Factory(
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*localVerificationTag*/ 6660666,
 		  /*remoteVerificationTag*/ 9990999,
 		  /*localInitialTsn*/ 1110111,
@@ -293,10 +293,9 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		negotiatedCapabilities.maxOutboundStreams = 1024;
 
 		REQUIRE(stateCookie);
-		REQUIRE(stateCookie->GetBuffer() == FactoryBuffer);
-		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->GetBufferLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->IsFrozen() == false);
+		REQUIRE(stateCookie->GetBuffer() == sctpCommon::FactoryBuffer);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBufferLength() == RTC::SCTP::StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetLocalVerificationTag() == 6660666);
 		REQUIRE(stateCookie->GetRemoteVerificationTag() == 9990999);
 		REQUIRE(stateCookie->GetLocalInitialTsn() == 1110111);
@@ -304,10 +303,12 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(stateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 999909999);
 		REQUIRE(stateCookie->GetTieTag() == 1111222233334444);
 		REQUIRE(
-		  StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
+		  RTC::SCTP::StateCookie::IsMediasoupStateCookie(
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(stateCookie->GetBuffer(), stateCookie->GetLength()) ==
-		  StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
 
 		const auto retrievedNegotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
@@ -320,15 +321,15 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedStateCookie = StateCookie::Parse(stateCookie->GetBuffer(), stateCookie->GetLength());
+		auto* parsedStateCookie =
+		  RTC::SCTP::StateCookie::Parse(stateCookie->GetBuffer(), stateCookie->GetLength());
 
 		delete stateCookie;
 
 		REQUIRE(parsedStateCookie);
-		REQUIRE(parsedStateCookie->GetBuffer() == FactoryBuffer);
-		REQUIRE(parsedStateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(parsedStateCookie->GetBufferLength() == StateCookie::StateCookieLength);
-		REQUIRE(parsedStateCookie->IsFrozen() == true);
+		REQUIRE(parsedStateCookie->GetBuffer() == sctpCommon::FactoryBuffer);
+		REQUIRE(parsedStateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(parsedStateCookie->GetBufferLength() == RTC::SCTP::StateCookie::StateCookieLength);
 		REQUIRE(parsedStateCookie->GetLocalVerificationTag() == 6660666);
 		REQUIRE(parsedStateCookie->GetRemoteVerificationTag() == 9990999);
 		REQUIRE(parsedStateCookie->GetLocalInitialTsn() == 1110111);
@@ -336,12 +337,12 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(parsedStateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 999909999);
 		REQUIRE(parsedStateCookie->GetTieTag() == 1111222233334444);
 		REQUIRE(
-		  StateCookie::IsMediasoupStateCookie(
+		  RTC::SCTP::StateCookie::IsMediasoupStateCookie(
 		    parsedStateCookie->GetBuffer(), parsedStateCookie->GetLength()) == true);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
 		    parsedStateCookie->GetBuffer(), parsedStateCookie->GetLength()) ==
-		  StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
 
 		const auto retrievedParsedNegotiatedCapabilities = parsedStateCookie->GetNegotiatedCapabilities();
 
@@ -357,18 +358,18 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 
 	SECTION("StateCookie::Write() succeeds")
 	{
-		NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
-			                                                .maxInboundStreams   = 55555,
-			                                                .partialReliability  = true,
-			                                                .messageInterleaving = true,
-			                                                .reconfig            = true,
-			                                                .zeroChecksum        = false };
+		RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
+			                                                           .maxInboundStreams   = 55555,
+			                                                           .partialReliability  = true,
+			                                                           .messageInterleaving = true,
+			                                                           .reconfig            = true,
+			                                                           .zeroChecksum        = false };
 
-		auto* buffer = FactoryBuffer;
+		auto* buffer = sctpCommon::FactoryBuffer;
 
-		StateCookie::Write(
+		RTC::SCTP::StateCookie::Write(
 		  /*buffer*/ buffer,
-		  /*bufferLength*/ StateCookie::StateCookieLength,
+		  /*bufferLength*/ RTC::SCTP::StateCookie::StateCookieLength,
 		  /*localVerificationTag*/ 6660666,
 		  /*remoteVerificationTag*/ 9990999,
 		  /*localInitialTsn*/ 1110111,
@@ -384,13 +385,13 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 
 		/* Parse the buffer. */
 
-		auto* stateCookie = StateCookie::Parse(buffer, StateCookie::StateCookieLength);
+		auto* stateCookie =
+		  RTC::SCTP::StateCookie::Parse(buffer, RTC::SCTP::StateCookie::StateCookieLength);
 
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == buffer);
-		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->GetBufferLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->IsFrozen() == true);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBufferLength() == RTC::SCTP::StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetLocalVerificationTag() == 6660666);
 		REQUIRE(stateCookie->GetRemoteVerificationTag() == 9990999);
 		REQUIRE(stateCookie->GetLocalInitialTsn() == 1110111);
@@ -398,10 +399,12 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(stateCookie->GetRemoteAdvertisedReceiverWindowCredit() == 999909999);
 		REQUIRE(stateCookie->GetTieTag() == 1111222233334444);
 		REQUIRE(
-		  StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
+		  RTC::SCTP::StateCookie::IsMediasoupStateCookie(
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(stateCookie->GetBuffer(), stateCookie->GetLength()) ==
-		  StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
+		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
 
 		const auto retrievedNegotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
@@ -440,10 +443,10 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
-		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer1, sizeof(buffer1)) == false);
+		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer1, sizeof(buffer1)) == false);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(buffer1, sizeof(buffer1)) ==
-		  StateCookie::SctpImplementation::USRSCTP);
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer1, sizeof(buffer1)) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::USRSCTP);
 
 		// dcSCTP generated State Cookie.
 		// clang-format off
@@ -463,10 +466,10 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
-		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer2, sizeof(buffer2)) == false);
+		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer2, sizeof(buffer2)) == false);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(buffer2, sizeof(buffer2)) ==
-		  StateCookie::SctpImplementation::DCSCTP);
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer2, sizeof(buffer2)) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::DCSCTP);
 
 		// State Cookie generated by unknown implementation.
 		// clang-format off
@@ -484,10 +487,10 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
-		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer3, sizeof(buffer3)) == false);
+		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer3, sizeof(buffer3)) == false);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(buffer3, sizeof(buffer3)) ==
-		  StateCookie::SctpImplementation::UNKNOWN);
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer3, sizeof(buffer3)) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::UNKNOWN);
 
 		// Too short State Cookie so we don't know.
 		// clang-format off
@@ -498,9 +501,9 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
-		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer4, sizeof(buffer4)) == false);
+		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer4, sizeof(buffer4)) == false);
 		REQUIRE(
-		  StateCookie::DetermineSctpImplementation(buffer4, sizeof(buffer4)) ==
-		  StateCookie::SctpImplementation::UNKNOWN);
+		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer4, sizeof(buffer4)) ==
+		  RTC::SCTP::StateCookie::SctpImplementation::UNKNOWN);
 	}
 }

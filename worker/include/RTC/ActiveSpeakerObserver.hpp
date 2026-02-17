@@ -65,7 +65,7 @@ namespace RTC
 		};
 
 	private:
-		static const size_t RelativeSpeachActivitiesLen{ 3u };
+		static const uint8_t RelativeSpeachActivitiesLen{ 3u };
 
 	public:
 		ActiveSpeakerObserver(
@@ -78,7 +78,7 @@ namespace RTC
 	public:
 		void AddProducer(RTC::Producer* producer) override;
 		void RemoveProducer(RTC::Producer* producer) override;
-		void ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		void ReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet) override;
 		void ProducerPaused(RTC::Producer* producer) override;
 		void ProducerResumed(RTC::Producer* producer) override;
 

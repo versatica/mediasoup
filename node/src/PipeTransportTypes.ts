@@ -119,12 +119,13 @@ export type PipeTransportObserverEvents = TransportObserverEvents & {
 	sctpstatechange: [SctpState];
 };
 
-export interface PipeTransport<PipeTransportAppData extends AppData = AppData>
-	extends Transport<
-		PipeTransportAppData,
-		PipeTransportEvents,
-		PipeTransportObserver
-	> {
+export interface PipeTransport<
+	PipeTransportAppData extends AppData = AppData,
+> extends Transport<
+	PipeTransportAppData,
+	PipeTransportEvents,
+	PipeTransportObserver
+> {
 	/**
 	 * Transport type.
 	 *

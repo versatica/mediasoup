@@ -74,8 +74,9 @@ export type DataProducerObserverEvents = {
 	resume: [];
 };
 
-export interface DataProducer<DataProducerAppData extends AppData = AppData>
-	extends EnhancedEventEmitter<DataProducerEvents> {
+export interface DataProducer<
+	DataProducerAppData extends AppData = AppData,
+> extends EnhancedEventEmitter<DataProducerEvents> {
 	/**
 	 * DataProducer id.
 	 */

@@ -120,10 +120,10 @@ namespace RTC
 			  uint16_t& parameterLength,
 			  uint8_t& padding);
 
-			static const std::string& ParameterType2String(ParameterType parameterType);
+			static const std::string& ParameterTypeToString(ParameterType parameterType);
 
 		private:
-			static std::unordered_map<ParameterType, std::string> parameterType2String;
+			static const std::unordered_map<ParameterType, std::string> ParameterType2String;
 
 		protected:
 			/**
@@ -133,16 +133,15 @@ namespace RTC
 			Parameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~Parameter() override;
+			~Parameter() override;
 
-			virtual void Dump(int indentation = 0) const override = 0;
+			void Dump(int indentation = 0) const override = 0;
 
-			virtual Parameter* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
+			Parameter* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ParameterType GetType() const final
 			{
-				return static_cast<ParameterType>(
-				  uint16_t{ ntohs(static_cast<uint16_t>(GetHeaderPointer()->type)) });
+				return static_cast<ParameterType>(ntohs(static_cast<uint16_t>(GetHeaderPointer()->type)));
 			}
 
 			/**
@@ -163,7 +162,7 @@ namespace RTC
 			/**
 			 * Subclasses must invoke this method within their Dump() method.
 			 */
-			virtual void DumpCommon(int indentation) const override final;
+			void DumpCommon(int indentation) const final;
 
 			virtual void SoftSerialize(const uint8_t* buffer) final;
 
@@ -178,7 +177,7 @@ namespace RTC
 			 * must override this method and return their header length (excluding
 			 * variable-length field considered "value").
 			 */
-			virtual size_t GetHeaderLength() const override
+			size_t GetHeaderLength() const override
 			{
 				return Parameter::ParameterHeaderLength;
 			}
@@ -196,7 +195,7 @@ namespace RTC
 			virtual void SetType(ParameterType parameterType) final
 			{
 				GetHeaderPointer()->type =
-				  static_cast<ParameterType>(uint16_t{ htons(static_cast<uint16_t>(parameterType)) });
+				  static_cast<ParameterType>(htons(static_cast<uint16_t>(parameterType)));
 			}
 		};
 	} // namespace SCTP

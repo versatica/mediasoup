@@ -19,8 +19,8 @@ type RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData> =
 const logger = new Logger('ActiveSpeakerObserver');
 
 export class ActiveSpeakerObserverImpl<
-		ActiveSpeakerObserverAppData extends AppData = AppData,
-	>
+	ActiveSpeakerObserverAppData extends AppData = AppData,
+>
 	extends RtpObserverImpl<
 		ActiveSpeakerObserverAppData,
 		ActiveSpeakerObserverEvents,

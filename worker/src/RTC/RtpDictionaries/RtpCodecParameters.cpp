@@ -24,9 +24,9 @@ namespace RTC
 		this->clockRate = data->clockRate();
 
 		// channels is optional.
-		if (data->channels().has_value())
+		if (auto channels = data->channels(); channels.has_value())
 		{
-			this->channels = data->channels().value();
+			this->channels = channels.value();
 		}
 
 		// parameters is optional.
@@ -79,7 +79,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string aptString{ "apt" };
+		static const std::string AptString{ "apt" };
 
 		// Check per MIME parameters and set default values.
 		switch (this->mimeType.subtype)
@@ -87,7 +87,7 @@ namespace RTC
 			case RTC::RtpCodecMimeType::Subtype::RTX:
 			{
 				// A RTX codec must have 'apt' parameter.
-				if (!this->parameters.HasPositiveInteger(aptString))
+				if (!this->parameters.HasPositiveInteger(AptString))
 				{
 					MS_THROW_TYPE_ERROR("missing apt parameter in RTX codec");
 				}

@@ -65,14 +65,15 @@ enum RtpHeaderExtensionUri: uint8 {
     Mid,
     RtpStreamId,
     RepairRtpStreamId,
-    AudioLevel,
+    AbsSendTime,
+    TransportWideCcDraft01,
+    SsrcAudioLevel,
+    DependencyDescriptor,
     VideoOrientation,
     TimeOffset,
-    TransportWideCcDraft01,
-    AbsSendTime,
     AbsCaptureTime,
     PlayoutDelay,
-    DependencyDescriptor,
+    MediasoupPacketId,
 }
 
 table RtpHeaderExtensionParameters {
@@ -107,6 +108,7 @@ table RtpParameters {
     header_extensions: [RtpHeaderExtensionParameters] (required);
     encodings: [RtpEncodingParameters] (required);
     rtcp: RtcpParameters (required);
+    msid: string;
 }
 
 table CodecMapping {

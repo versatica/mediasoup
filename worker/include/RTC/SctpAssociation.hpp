@@ -12,7 +12,7 @@ namespace RTC
 	class SctpAssociation
 	{
 	public:
-		enum class SctpState
+		enum class SctpState : uint8_t
 		{
 			NEW = 1,
 			CONNECTING,
@@ -22,7 +22,7 @@ namespace RTC
 		};
 
 	private:
-		enum class StreamDirection
+		enum class StreamDirection : uint8_t
 		{
 			INCOMING = 1,
 			OUTGOING
@@ -101,7 +101,7 @@ namespace RTC
 		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
 
 	private:
-		void ResetSctpStream(uint16_t streamId, StreamDirection direction);
+		void ResetSctpStream(uint16_t streamId, StreamDirection direction) const;
 		void AddOutgoingStreams(bool force = false);
 
 		/* Callbacks fired by usrsctp events. */

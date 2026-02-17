@@ -9,14 +9,13 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memset()
-#include <stdexcept>
 
 namespace RTC
 {
 	/* Static. */
 
 	static constexpr size_t EncryptBufferSize{ 65536 };
-	thread_local static uint8_t EncryptBuffer[EncryptBufferSize];
+	thread_local uint8_t EncryptBuffer[EncryptBufferSize];
 
 	/* Class methods. */
 
@@ -200,7 +199,7 @@ namespace RTC
 		policy.ssrc.value = 0;
 		policy.key        = key;
 		// Required for sending RTP retransmission without RTX.
-		policy.allow_repeat_tx = 1;
+		policy.allow_repeat_tx = true;
 		policy.window_size     = 1024;
 		policy.next            = nullptr;
 
@@ -227,7 +226,7 @@ namespace RTC
 				{
 					MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 				}
-				catch (const std::exception& error)
+				catch (const std::exception& error) // NOLINT(bugprone-empty-catch)
 				{
 					// NOTE: This is to avoid a warning:
 					// '~SrtpSession' has a non-throwing exception specification but can

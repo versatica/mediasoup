@@ -43,10 +43,10 @@ export type DirectTransportObserverEvents = TransportObserverEvents & {
 export interface DirectTransport<
 	DirectTransportAppData extends AppData = AppData,
 > extends Transport<
-		DirectTransportAppData,
-		DirectTransportEvents,
-		DirectTransportObserver
-	> {
+	DirectTransportAppData,
+	DirectTransportEvents,
+	DirectTransportObserver
+> {
 	/**
 	 * Transport type.
 	 *

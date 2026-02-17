@@ -56,7 +56,7 @@ namespace RTC
 		}
 
 		ForwardTsnSupportedParameter* ForwardTsnSupportedParameter::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
+		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t /*padding*/)
 		{
 			MS_TRACE();
 
@@ -71,9 +71,6 @@ namespace RTC
 			}
 
 			auto* parameter = new ForwardTsnSupportedParameter(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
 
 			return parameter;
 		}

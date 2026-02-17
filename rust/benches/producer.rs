@@ -112,7 +112,7 @@ fn audio_producer_options() -> ProducerOptions {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AudioLevel,
+                    uri: RtpHeaderExtensionUri::SsrcAudioLevel,
                     id: 12,
                     encrypt: false,
                 },
@@ -123,6 +123,7 @@ fn audio_producer_options() -> ProducerOptions {
                 cname: Some("audio-1".to_string()),
                 ..RtcpParameters::default()
             },
+            msid: None,
         },
     )
 }
@@ -202,6 +203,7 @@ fn video_producer_options() -> ProducerOptions {
                 cname: Some("video-1".to_string()),
                 ..RtcpParameters::default()
             },
+            msid: None,
         },
     )
 }

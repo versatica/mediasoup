@@ -14,10 +14,10 @@
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTP/HeaderExtensionIds.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RateCalculator.hpp"
-#include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpListener.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include "RTC/SctpListener.hpp"
 #include "RTC/Shared.hpp"
@@ -65,21 +65,21 @@ namespace RTC
 			virtual void OnTransportProducerNewRtpStream(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
-			  RTC::RtpStreamRecv* rtpStream,
+			  RTC::RTP::RtpStreamRecv* rtpStream,
 			  uint32_t mappedSsrc) = 0;
 			virtual void OnTransportProducerRtpStreamScore(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
-			  RTC::RtpStreamRecv* rtpStream,
+			  RTC::RTP::RtpStreamRecv* rtpStream,
 			  uint8_t score,
 			  uint8_t previousScore) = 0;
 			virtual void OnTransportProducerRtcpSenderReport(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
-			  RTC::RtpStreamRecv* rtpStream,
+			  RTC::RTP::RtpStreamRecv* rtpStream,
 			  bool first) = 0;
 			virtual void OnTransportProducerRtpPacketReceived(
-			  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+			  RTC::Transport* transport, RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
 			virtual void OnTransportNeedWorstRemoteFractionLost(
 			  RTC::Transport* transport,
 			  RTC::Producer* producer,
@@ -184,7 +184,7 @@ namespace RTC
 		{
 			this->sendTransmission.Update(len, DepLibUV::GetTimeMs());
 		}
-		void ReceiveRtpPacket(RTC::RtpPacket* packet);
+		void ReceiveRtpPacket(RTC::RTP::Packet* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
 		RTC::Producer* GetProducerById(const std::string& producerId) const;
@@ -197,7 +197,7 @@ namespace RTC
 	private:
 		virtual bool IsConnected() const = 0;
 		virtual void SendRtpPacket(
-		  RTC::Consumer* consumer, RTC::RtpPacket* packet, onSendCallback* cb = nullptr) = 0;
+		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, const onSendCallback* cb = nullptr) = 0;
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcp(uint64_t nowMs);
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
@@ -213,7 +213,7 @@ namespace RTC
 		virtual void SendStreamClosed(uint32_t ssrc)               = 0;
 		void DistributeAvailableOutgoingBitrate();
 		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
-		void EmitTraceEventProbationType(RTC::RtpPacket* packet) const;
+		void EmitTraceEventProbationType(RTC::RTP::Packet* packet) const;
 		void EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
 		void CheckNoProducer(const std::string& producerId) const;
 		void CheckNoDataProducer(const std::string& dataProducerId) const;
@@ -225,30 +225,30 @@ namespace RTC
 		{
 			this->DataReceived(len);
 		}
-		void OnProducerReceiveRtpPacket(RTC::Producer* /*producer*/, RTC::RtpPacket* packet) override
+		void OnProducerReceiveRtpPacket(RTC::Producer* /*producer*/, RTC::RTP::Packet* packet) override
 		{
 			this->ReceiveRtpPacket(packet);
 		}
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
 		void OnProducerNewRtpStream(
-		  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
+		  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
 		void OnProducerRtpStreamScore(
 		  RTC::Producer* producer,
-		  RTC::RtpStreamRecv* rtpStream,
+		  RTC::RTP::RtpStreamRecv* rtpStream,
 		  uint8_t score,
 		  uint8_t previousScore) override;
 		void OnProducerRtcpSenderReport(
-		  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, bool first) override;
-		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
+		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) override;
 		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
 		void OnProducerNeedWorstRemoteFractionLost(
 		  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
-		void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) override;
-		void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) override;
+		void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) override;
+		void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) override;
 		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override;
 		void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) override;
@@ -304,7 +304,7 @@ namespace RTC
 		  RTC::TransportCongestionControlClient::Bitrates& bitrates) override;
 		void OnTransportCongestionControlClientSendRtpPacket(
 		  RTC::TransportCongestionControlClient* tccClient,
-		  RTC::RtpPacket* packet,
+		  RTC::RTP::Packet* packet,
 		  const webrtc::PacedPacketInfo& pacingInfo) override;
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlServer::Listener. */
@@ -327,7 +327,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		const std::string id;
+		std::string id;
 
 	protected:
 		RTC::Shared* shared{ nullptr };
@@ -354,7 +354,7 @@ namespace RTC
 		// Others.
 		bool direct{ false }; // Whether this Transport allows direct communication.
 		bool destroying{ false };
-		struct RTC::RtpHeaderExtensionIds recvRtpHeaderExtensionIds;
+		struct RTC::RTP::HeaderExtensionIds recvRtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;
 		RTC::SctpListener sctpListener;
 		RTC::RateCalculator recvTransmission;

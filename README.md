@@ -13,6 +13,7 @@
 [![][github-actions-shield-mediasoup-rust]][github-actions-mediasoup-rust]
 [![][github-actions-shield-mediasoup-worker-fuzzer]][github-actions-mediasoup-worker-fuzzer]
 [![][github-actions-shield-mediasoup-worker-prebuild]][github-actions-mediasoup-worker-prebuild]
+[![][github-actions-shield-mediasoup-worker-clang-tidy]][github-actions-mediasoup-worker-clang-tidy]
 [![][codeql-shield-mediasoup]][codeql-mediasoup]
 
 ## Website and Documentation
@@ -27,7 +28,7 @@
 
 mediasoup and its client side libraries are designed to accomplish with the following goals:
 
-- Be a [SFU](https://webrtcglossary.com/sfu) (Selective Forwarding Unit).
+- Be a SFU (Selective Forwarding Unit).
 - Support both WebRTC and plain RTP input and output.
 - Be a Node.js module or Rust crate in server side.
 - Be a tiny TypeScript and C++ libraries in client side.
@@ -75,7 +76,7 @@ Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](ht
 
 ## Social
 
-- Twitter: [@mediasoup_sfu](https://twitter.com/mediasoup_sfu)
+- Bluesky: [@mediasoup-sfu.bsky.social](https://bsky.app/profile/mediasoup-sfu.bsky.social)
 
 ## Sponsor
 
@@ -104,8 +105,10 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [github-actions-mediasoup-worker-fuzzer]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-fuzzer.yaml
 [github-actions-shield-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml/badge.svg
 [github-actions-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml
-[codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml/badge.svg
-[codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml
+[github-actions-shield-mediasoup-worker-clang-tidy]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-clang-tidy.yaml/badge.svg
+[github-actions-mediasoup-worker-clang-tidy]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-clang-tidy.yaml
+[codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yaml/badge.svg
+[codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yaml
 [sponsor]: https://mediasoup.org/sponsor
 [mediasoup-architecture]: /art/mediasoup-v3-architecture-01.svg
 [mediasoup-demo-screenshot]: /art/mediasoup-v3.png

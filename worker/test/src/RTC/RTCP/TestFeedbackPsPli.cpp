@@ -3,9 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
-namespace TestFeedbackPsPli
+SCENARIO("RTCP Feedback RTP PLI", "[rtcp][feedback-ps][pli]")
 {
 	// RTCP PLI packet.
 
@@ -19,23 +17,20 @@ namespace TestFeedbackPsPli
 	// clang-format on
 
 	// PLI values.
-	uint32_t senderSsrc{ 0x00000001 };
-	uint32_t mediaSsrc{ 0x0330bdee };
+	const uint32_t senderSsrc{ 0x00000001 };
+	const uint32_t mediaSsrc{ 0x0330bdee };
 
-	void verify(FeedbackPsPliPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](RTC::RTCP::FeedbackPsPliPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
-	}
-} // namespace TestFeedbackPsPli
-
-SCENARIO("RTCP Feeback RTP PLI parsing", "[parser][rtcp][feedback-ps][pli]")
-{
-	using namespace TestFeedbackPsPli;
+	};
 
 	SECTION("parse FeedbackPsPliPacket")
 	{
-		std::unique_ptr<FeedbackPsPliPacket> packet{ FeedbackPsPliPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackPsPliPacket> packet{ RTC::RTCP::FeedbackPsPliPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
@@ -56,7 +51,7 @@ SCENARIO("RTCP Feeback RTP PLI parsing", "[parser][rtcp][feedback-ps][pli]")
 
 	SECTION("create FeedbackPsPliPacket")
 	{
-		FeedbackPsPliPacket packet(senderSsrc, mediaSsrc);
+		RTC::RTCP::FeedbackPsPliPacket packet(senderSsrc, mediaSsrc);
 
 		verify(&packet);
 	}

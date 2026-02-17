@@ -219,10 +219,10 @@ export type WebRtcTransportObserverEvents = TransportObserverEvents & {
 export interface WebRtcTransport<
 	WebRtcTransportAppData extends AppData = AppData,
 > extends Transport<
-		WebRtcTransportAppData,
-		WebRtcTransportEvents,
-		WebRtcTransportObserver
-	> {
+	WebRtcTransportAppData,
+	WebRtcTransportEvents,
+	WebRtcTransportObserver
+> {
 	/**
 	 * Transport type.
 	 *

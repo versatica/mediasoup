@@ -28,19 +28,21 @@ Creates a prebuilt of `mediasoup-worker` binary in the `worker/prebuild` folder.
 
 ### `npm run lint`
 
-Runs both `npm run lint:node` and `npm run lint:worker`.
+Runs both `lint:node` and `lint:worker` tasks.
 
 ### `npm run lint:node`
 
-Validates mediasoup JavaScript files using [ESLint](https://eslint.org).
+Validates mediasoup TypeScript files using [ESLint](https://eslint.org), [Prettier](https://prettier.io) and [Knip](https://knip.dev/).
 
 ### `npm run lint:worker`
 
 Validates mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html). It invokes `invoke lint` below.
 
+See [Install clang-format](#install-clang-format) for requirements.
+
 ### `npm run format`
 
-Runs both `npm run format:node` and `npm run format:worker`.
+Runs both `format:node` and `format:worker` tasks.
 
 ### `npm run format:node`
 
@@ -50,9 +52,21 @@ Format TypeScript and JavaScript code using [Prettier](https://prettier.io).
 
 Rewrites mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html). It invokes `invoke format` below.
 
+See [Install clang-format](#install-clang-format) for requirements.
+
+### `npm run tidy:worker`
+
+Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code checks following `worker/.clang-tidy` rules. It invokes `invoke tidy` below.
+
+See [Install clang-tidy](#install-clang-tidy) for requirements.
+
+### `npm run tidy:worker:fix`
+
+Same as `npm run tidy:worker` but it also applies fixes.
+
 ### `npm run flatc`
 
-Runs both `npm run flatc:node` and `npm run flatc:worker`.
+Runs both `flatc:node` and `flatc:worker` tasks.
 
 ### `npm run flatc:node`
 
@@ -64,7 +78,7 @@ Compiles [FlatBuffers](https://github.com/google/flatbuffers) `.fbs` files in `w
 
 ### `npm run test`
 
-Runs both `npm run test:node` and `npm run test:worker`.
+Runs both `test:node` and `test:worker` tasks.
 
 ### `npm run test:node`
 
@@ -73,16 +87,20 @@ Runs [Jest](https://jestjs.io) test units located at `node/test` folder.
 Jest command arguments can be given using `--` as follows:
 
 ```bash
-npm run test:node -- --testPathPattern "test-Worker.ts" --testNamePattern "createWorker"
+npm run test:node -- --testPathPatterns "node/src/test/test-Worker.ts" --testNamePattern "createWorker"
 ```
 
 ### `npm run test:worker`
 
 Runs [Catch2](https://github.com/catchorg/Catch2) test units located at `worker/test` folder. It invokes `invoke test` below.
 
+### `npm run coverage`
+
+Runs `coverage:node` task.
+
 ### `npm run coverage:node`
 
-Same as `npm run test:node` but it also opens a browser window with JavaScript coverage results.
+Same as `test:node` task but it also opens a browser window with TypeScript coverage results.
 
 ### `npm run release:check`
 
@@ -192,9 +210,52 @@ Builds a Xcode project for the mediasoup worker subproject.
 
 Validates mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and rules in `worker/.clang-format`.
 
+**Requirements:**
+
+- A specific version of `clang-format`is required. See [Install clang-format](#install-clang-format).
+- `clang-format-VERSION` or `clang-format` (corresponding to the required version) must be in the `PATH`. If not, add it before running the command.
+
 ### `invoke format`
 
 Rewrites mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html).
+
+**Requirements:**
+
+- A specific version of `clang-format`is required. See [Install clang-format](#install-clang-format).
+- `clang-format-VERSION` or `clang-format` (corresponding to the required version) must be in the `PATH`. If not, add it before running the command.
+
+### `invoke tidy`
+
+Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code checks following `worker/.clang-tidy` rules.
+
+**Requirements:**
+
+- `invoke clean` and `invoke mediasoup-worker` must have been called first.
+- A specific version of `clang-tidy`is required. See [Install clang-tidy](#install-clang-tidy).
+- `clang-tydi-VERSION` or `clang-tidy` (corresponding to the required version) must be in the `PATH`. If not, add it before running the command. Same for other `clang-tidy` related executables such as `run-clang-tidy` and `clang-apply-replacements`,
+
+**Environment variables:**
+
+- "MEDIASOUP_TIDY_CHECKS": Optional. Comma separated list of checks. Overrides the checks defined in `worker/.clang-tidy` file.
+- "MEDIASOUP_TIDY_FILES": Optional. Space separated source file paths to process. All `.cpp` files will be processes by default.
+  - File paths must be relative to `worker/` folder.
+  - File paths can use [glob](https://github.com/isaacs/node-glob) syntax. Example: `"test/src/**/*.cpp"`.
+
+**Usage example in macOS:**
+
+```bash
+PATH="/opt/homebrew/opt/llvm/bin/:$PATH" invoke tidy
+```
+
+It may happens that `clang-tidy` doesn't know where C++ standard libraries are so it shows lot of warnings about them. Depending on your local setup this may work:
+
+```bash
+PATH="/opt/homebrew/opt/llvm/bin/:$PATH" CPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 invoke tidy
+```
+
+### `invoke tidy-fix`
+
+Same as `invoke tidy` but it also applies fixes.
 
 ### `invoke test`
 
@@ -211,29 +272,6 @@ Run test with Address Sanitizer with `-fsanitize=undefined`.
 ### `invoke test-asan-thread`
 
 Run test with Address Sanitizer with `-fsanitize=thread`.
-
-### `invoke tidy`
-
-Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code checks following `worker/.clang-tidy` rules.
-
-**Requirements:**
-
-- `invoke clean` and `invoke mediasoup-worker` must have been called first.
-- [clang-tools-extra](https://clang.llvm.org/extra) is required.
-  - In OSX install it with `brew install llvm`.
-  - In linux the package name is `clang-tools-extra`.
-
-**Environment variables:**
-
-- "MEDIASOUP_TIDY_CHECKS": Comma separated list of checks. Overrides the checks defined in `worker/.clang-tidy` file.
-- "MEDIASOUP_TIDY_FILES": Space separated source files to process, including their path. All `.cpp` files will be processes by default.
-- "MEDIASOUP_CLANG_TIDY_DIR": Path to directory containing clang tools (`run-clang-tidy`, `clang-tidy`, `clang-apply-replacements`).
-
-**Usage example in macOS:**
-
-```bash
-MEDIASOUP_CLANG_TIDY_DIR=/usr/local/opt/llvm/bin invoke tidy
-```
 
 ### `invoke fuzzer`
 
@@ -289,3 +327,35 @@ All tasks defined in `tasks.py` (see above) are available in `Makefile`. There i
   cd worker
   make update-wrap-file SUBPROJECT=openssl
   ```
+
+## Install clang-format
+
+A specific `clang-format` version is required to be installed in the system, which is defined in [clang-scripts.mjs](../worker/scripts/clang-scripts.mjs).
+
+macOS:
+
+```bash
+brew install clang-format@VERSION
+```
+
+Linux:
+
+```bash
+apt-get install clang-format-VERSION
+```
+
+## Install clang-tidy
+
+A specific `clang-tidy` version is required to be installed in the system, which is defined in [clang-scripts.mjs](../worker/scripts/clang-scripts.mjs).
+
+macOS:
+
+```bash
+brew install clang-tidy@VERSION
+```
+
+Linux:
+
+```bash
+apt-get install clang-tidy-VERSION
+```

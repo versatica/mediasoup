@@ -226,7 +226,7 @@ namespace RTC
 
 				if (body->requiredSubchannel().has_value())
 				{
-					requiredSubchannel = body->requiredSubchannel().value();
+					requiredSubchannel = body->requiredSubchannel();
 				}
 
 				ReceiveMessage(data, len, body->ppid(), subchannels, requiredSubchannel);

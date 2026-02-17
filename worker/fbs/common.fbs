@@ -30,4 +30,3 @@ enum TraceDirection: uint8 {
     DIRECTION_IN = 0,
     DIRECTION_OUT
 }
-

@@ -253,8 +253,9 @@ export type ConsumerObserverEvents = {
 	trace: [ConsumerTraceEventData];
 };
 
-export interface Consumer<ConsumerAppData extends AppData = AppData>
-	extends EnhancedEventEmitter<ConsumerEvents> {
+export interface Consumer<
+	ConsumerAppData extends AppData = AppData,
+> extends EnhancedEventEmitter<ConsumerEvents> {
 	/**
 	 * Consumer id.
 	 */

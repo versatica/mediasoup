@@ -19,7 +19,7 @@
 /* Static. */
 
 static constexpr size_t BufferOutSize{ 65536 };
-thread_local static uint8_t BufferOut[BufferOutSize];
+thread_local uint8_t BufferOut[BufferOutSize];
 static const uint8_t Base64Table[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -35,7 +35,7 @@ namespace Utils
 		const uint8_t* in;
 		size_t olen;
 
-		olen = len * 4 / 3 + 4; // 3-byte blocks to 4-byte.
+		olen = (len * 4 / 3) + 4; // 3-byte blocks to 4-byte.
 
 		if (olen < len)
 		{

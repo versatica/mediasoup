@@ -28,7 +28,7 @@ namespace RTC
 
 		public:
 			static const size_t HeaderSize{ 4 };
-			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::TLLEI };
+			static const FeedbackRtp::MessageType MessageType{ FeedbackRtp::MessageType::TLLEI };
 
 		public:
 			explicit FeedbackRtpTlleiItem(Header* header) : header(header)
@@ -42,11 +42,11 @@ namespace RTC
 
 			uint16_t GetPacketId() const
 			{
-				return uint16_t{ ntohs(this->header->packetId) };
+				return ntohs(this->header->packetId);
 			}
 			uint16_t GetLostPacketBitmask() const
 			{
-				return uint16_t{ ntohs(this->header->lostPacketBitmask) };
+				return ntohs(this->header->lostPacketBitmask);
 			}
 
 			/* Virtual methods inherited from FeedbackItem. */

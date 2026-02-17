@@ -20,8 +20,6 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 
-#include "RTC/RtpPacket.hpp"
-
 #include <absl/types/optional.h>
 #include <stddef.h>
 #include <stdint.h>

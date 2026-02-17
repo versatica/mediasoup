@@ -64,9 +64,6 @@ namespace RTC
 			// not fixed length.
 			chunk->SetLength(chunkLength + padding);
 
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
 			return chunk;
 		}
 
@@ -114,8 +111,6 @@ namespace RTC
 		void CookieEchoChunk::SetCookie(const uint8_t* cookie, uint16_t cookieLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetVariableLengthValue(cookie, cookieLength);
 		}

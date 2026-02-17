@@ -1,9 +1,9 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
+#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -11,7 +11,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 {
-	resetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("SupportedExtensionsParameter::Parse() succeeds")
 	{
@@ -28,17 +28,16 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* parameter = SupportedExtensionsParameter::Parse(buffer, sizeof(buffer));
+		auto* parameter = RTC::SCTP::SupportedExtensionsParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 3);
 		REQUIRE(parameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);
@@ -49,25 +48,20 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		REQUIRE(parameter->IncludesChunkType(static_cast<Chunk::ChunkType>(0x42)) == true);
 		REQUIRE(parameter->IncludesChunkType(Chunk::ChunkType::I_DATA) == false);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->AddChunkType(Chunk::ChunkType::COOKIE_ACK), MediaSoupError);
-
 		/* Serialize it. */
 
-		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		parameter->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 3);
 		REQUIRE(parameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);
@@ -80,21 +74,21 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedParameter = parameter->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedParameter =
+		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(clonedParameter->GetNumberOfChunkTypes() == 3);
 		REQUIRE(clonedParameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);
@@ -110,17 +104,17 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 
 	SECTION("SupportedExtensionsParameter::Factory() succeeds")
 	{
-		auto* parameter = SupportedExtensionsParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* parameter = RTC::SCTP::SupportedExtensionsParameter::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 0);
 		REQUIRE(parameter->IncludesChunkType(Chunk::ChunkType::RE_CONFIG) == false);
@@ -132,15 +126,14 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		parameter->AddChunkType(Chunk::ChunkType::RE_CONFIG);
 		parameter->AddChunkType(Chunk::ChunkType::CWR);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 2);
 		REQUIRE(parameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);
@@ -152,15 +145,14 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		parameter->AddChunkType(Chunk::ChunkType::COOKIE_ACK);
 		parameter->AddChunkType(static_cast<Chunk::ChunkType>(99));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 5);
 		REQUIRE(parameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);
@@ -177,19 +169,18 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		/* Parse itself and compare. */
 
 		auto* parsedParameter =
-		  SupportedExtensionsParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
+		  RTC::SCTP::SupportedExtensionsParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(parsedParameter->GetNumberOfChunkTypes() == 5);
 		REQUIRE(parsedParameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);

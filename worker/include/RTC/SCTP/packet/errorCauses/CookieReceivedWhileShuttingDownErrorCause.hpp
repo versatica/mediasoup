@@ -63,16 +63,14 @@ namespace RTC
 			CookieReceivedWhileShuttingDownErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~CookieReceivedWhileShuttingDownErrorCause() override;
+			~CookieReceivedWhileShuttingDownErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual CookieReceivedWhileShuttingDownErrorCause* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			CookieReceivedWhileShuttingDownErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 		protected:
-			virtual CookieReceivedWhileShuttingDownErrorCause* SoftClone(
-			  const uint8_t* buffer) const final override;
+			CookieReceivedWhileShuttingDownErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

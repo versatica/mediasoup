@@ -13,7 +13,7 @@ namespace RTC
 		/* Item Class variables. */
 
 		// clang-format off
-		absl::flat_hash_map<SdesItem::Type, std::string> SdesItem::type2String =
+		const absl::flat_hash_map<SdesItem::Type, std::string> SdesItem::Type2String =
 		{
 			{ SdesItem::Type::END,   "END"   },
 			{ SdesItem::Type::CNAME, "CNAME" },
@@ -54,13 +54,13 @@ namespace RTC
 			return new SdesItem(header);
 		}
 
-		const std::string& SdesItem::Type2String(SdesItem::Type type)
+		const std::string& SdesItem::TypeToString(SdesItem::Type type)
 		{
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = SdesItem::type2String.find(type);
+			auto it = SdesItem::Type2String.find(type);
 
-			if (it == SdesItem::type2String.end())
+			if (it == SdesItem::Type2String.end())
 			{
 				return Unknown;
 			}
@@ -92,7 +92,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<SdesItem>");
-			MS_DUMP_CLEAN(indentation, "  type: %s", SdesItem::Type2String(this->GetType()).c_str());
+			MS_DUMP_CLEAN(indentation, "  type: %s", SdesItem::TypeToString(this->GetType()).c_str());
 			MS_DUMP_CLEAN(indentation, "  length: %" PRIu8, this->header->length);
 			MS_DUMP_CLEAN(indentation, "  value: %.*s", this->header->length, this->header->value);
 			MS_DUMP_CLEAN(indentation, "</SdesItem>");
@@ -249,7 +249,7 @@ namespace RTC
 
 		/* Static Class members */
 
-		size_t SdesPacket::MaxChunksPerPacket = 31;
+		size_t SdesPacket::maxChunksPerPacket = 31;
 
 		/* Class methods. */
 
@@ -301,7 +301,7 @@ namespace RTC
 			for (size_t i{ 0u }; i < this->GetCount(); ++i)
 			{
 				// Create a new SDES packet header for each 31 chunks.
-				if (i % MaxChunksPerPacket == 0)
+				if (i % SdesPacket::maxChunksPerPacket == 0)
 				{
 					// Reference current common header.
 					header = buffer + offset;
@@ -318,10 +318,10 @@ namespace RTC
 
 				// Adjust the header count field.
 				reinterpret_cast<Packet::CommonHeader*>(header)->count =
-				  static_cast<uint8_t>((i % MaxChunksPerPacket) + 1);
+				  static_cast<uint8_t>((i % SdesPacket::maxChunksPerPacket) + 1);
 
 				// Adjust the header length field.
-				reinterpret_cast<Packet::CommonHeader*>(header)->length = uint16_t{ htons((length / 4) - 1) };
+				reinterpret_cast<Packet::CommonHeader*>(header)->length = htons((length / 4) - 1);
 			}
 
 			return offset;

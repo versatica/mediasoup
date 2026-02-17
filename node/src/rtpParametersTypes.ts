@@ -204,6 +204,12 @@ export type RtpParameters = {
 	 * Parameters used for RTCP.
 	 */
 	rtcp?: RtcpParameters;
+	/**
+	 * MSID (WebRTC MediaStream Identification).
+	 *
+	 * @see https://datatracker.ietf.org/doc/html/rfc8830
+	 */
+	msid?: string;
 };
 
 /**
@@ -315,14 +321,15 @@ export type RtpHeaderExtensionUri =
 	| 'urn:ietf:params:rtp-hdrext:sdes:mid'
 	| 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id'
 	| 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id'
-	| 'urn:ietf:params:rtp-hdrext:ssrc-audio-level'
-	| 'urn:3gpp:video-orientation'
-	| 'urn:ietf:params:rtp-hdrext:toffset'
-	| 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 	| 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time'
+	| 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
+	| 'urn:ietf:params:rtp-hdrext:ssrc-audio-level'
+	| 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension'
+	| 'urn:3gpp:video-orientation'
 	| 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time'
+	| 'urn:ietf:params:rtp-hdrext:toffset'
 	| 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay'
-	| 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension';
+	| 'urn:mediasoup:params:rtp-hdrext:packet-id';
 
 /**
  * Defines a RTP header extension within the RTP parameters. The list of RTP

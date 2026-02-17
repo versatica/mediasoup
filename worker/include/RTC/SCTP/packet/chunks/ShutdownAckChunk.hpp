@@ -66,14 +66,14 @@ namespace RTC
 			ShutdownAckChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ShutdownAckChunk() override;
+			~ShutdownAckChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual ShutdownAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			ShutdownAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 		protected:
-			virtual ShutdownAckChunk* SoftClone(const uint8_t* buffer) const final override;
+			ShutdownAckChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

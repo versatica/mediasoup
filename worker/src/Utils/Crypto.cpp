@@ -3,14 +3,14 @@
 
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include <openssl/rand.h>
 #include <openssl/sha.h>
 
 namespace Utils
 {
 	/* Static variables. */
 
-	thread_local uint32_t Crypto::seed32;
-	thread_local uint64_t Crypto::seed64;
+	thread_local std::mt19937_64 Crypto::rng;
 	thread_local EVP_MAC* Crypto::mac{ nullptr };
 	thread_local EVP_MAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
 	thread_local uint8_t Crypto::hmacSha1Buffer[SHA_DIGEST_LENGTH];
@@ -95,14 +95,10 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		// Init the crypto seed32 with a random number taken from the address
-		// of the seed32 variable itself (which is random).
-		Crypto::seed32 =
-		  static_cast<uint32_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed32)));
+		std::random_device rd;
+		const uint64_t seed = (uint64_t(rd()) << 32) | uint64_t(rd());
 
-		// Same for crypto seed64.
-		Crypto::seed64 =
-		  static_cast<uint64_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed64)));
+		Crypto::rng.seed(seed);
 
 		// Create an OpenSSL HMAC_CTX context for HMAC SHA1 calculation.
 		Crypto::mac         = EVP_MAC_fetch(nullptr, "HMAC", nullptr);
@@ -122,6 +118,25 @@ namespace Utils
 		{
 			EVP_MAC_free(Crypto::mac);
 		}
+	}
+
+	std::string Crypto::GetRandomString(size_t len)
+	{
+		MS_TRACE();
+
+		char buffer[64];
+		static const char Chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
+			                            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+			                            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+
+		len = std::min<size_t>(len, 64);
+
+		for (size_t i{ 0 }; i < len; ++i)
+		{
+			buffer[i] = Chars[GetRandomUInt<size_t>(0, sizeof(Chars) - 1)];
+		}
+
+		return { buffer, len };
 	}
 
 	uint32_t Crypto::GetCRC32(const uint8_t* data, size_t size)
@@ -153,18 +168,18 @@ namespace Utils
 			crc32 = (crc32 >> 8) ^ Crypto::Crc32cTable[(crc32 ^ data[i]) & 0xFF];
 		}
 
-		uint32_t result = ~crc32;
-		uint32_t byte0  = result & 0xff;
-		uint32_t byte1  = (result >> 8) & 0xff;
-		uint32_t byte2  = (result >> 16) & 0xff;
-		uint32_t byte3  = (result >> 24) & 0xff;
+		const uint32_t result = ~crc32;
+		const uint32_t byte0  = result & 0xff;
+		const uint32_t byte1  = (result >> 8) & 0xff;
+		const uint32_t byte2  = (result >> 16) & 0xff;
+		const uint32_t byte3  = (result >> 24) & 0xff;
 
 		crc32 = ((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3);
 
 		return crc32;
 	}
 
-	const uint8_t* Crypto::GetHmacSha1(const std::string& key, const uint8_t* data, size_t len)
+	const uint8_t* Crypto::GetHmacSha1(const char* key, size_t keyLen, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -172,28 +187,35 @@ namespace Utils
 
 		OSSL_PARAM sha1[] = { { "digest", OSSL_PARAM_UTF8_STRING, (void*)"sha1", 4, 0 }, OSSL_PARAM_END };
 
-		ret = EVP_MAC_init(
-		  Crypto::hmacSha1Ctx, reinterpret_cast<const unsigned char*>(key.c_str()), key.length(), sha1);
+		ret =
+		  EVP_MAC_init(Crypto::hmacSha1Ctx, reinterpret_cast<const unsigned char*>(key), keyLen, sha1);
 
-		MS_ASSERT(ret == 1, "OpenSSL EVP_MAC_init() failed with key '%s'", key.c_str());
+		MS_ASSERT(ret == 1, "OpenSSL EVP_MAC_init() failed with key '%s'", key);
 
 		ret = EVP_MAC_update(Crypto::hmacSha1Ctx, data, len);
 
 		MS_ASSERT(
-		  ret == 1,
-		  "OpenSSL EVP_MAC_update() failed with key '%s' and data length %zu bytes",
-		  key.c_str(),
-		  len);
+		  ret == 1, "OpenSSL EVP_MAC_update() failed with key '%s' and data length %zu bytes", key, len);
 
 		size_t resultLen;
 
 		ret = EVP_MAC_final(Crypto::hmacSha1Ctx, Crypto::hmacSha1Buffer, &resultLen, SHA_DIGEST_LENGTH);
 
 		MS_ASSERT(
-		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key.c_str(), len);
+		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key, len);
 		MS_ASSERT(
 		  resultLen == SHA_DIGEST_LENGTH, "OpenSSL HMAC_Final() resultLen is %zu instead of 20", resultLen);
 
 		return Crypto::hmacSha1Buffer;
+	}
+
+	void Crypto::WriteRandomBytes(uint8_t* buffer, size_t len)
+	{
+		MS_TRACE();
+
+		if (RAND_bytes(buffer, len) != 1)
+		{
+			MS_ABORT("OpenSSL RAND_bytes() failed");
+		}
 	}
 } // namespace Utils

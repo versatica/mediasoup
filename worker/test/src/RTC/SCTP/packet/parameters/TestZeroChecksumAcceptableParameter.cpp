@@ -1,16 +1,14 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-
 SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 {
-	resetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("ZeroChecksumAcceptableParameter::Parse() succeeds")
 	{
@@ -27,131 +25,123 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* parameter = ZeroChecksumAcceptableParameter::Parse(buffer, sizeof(buffer));
+		auto* parameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
-		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(
 		  parameter->GetAlternateErrorDetectionMethod() ==
-		  static_cast<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666777888));
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(
-		  parameter->SetAlternateErrorDetectionMethod(
-		    ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS),
-		  MediaSoupError);
+		  static_cast<RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(
+		    666777888));
 
 		/* Serialize it. */
 
-		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		parameter->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
-		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(
 		  parameter->GetAlternateErrorDetectionMethod() ==
-		  static_cast<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666777888));
+		  static_cast<RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(
+		    666777888));
 
 		/* Clone it. */
 
-		auto* clonedParameter = parameter->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedParameter =
+		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
-		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(
 		  clonedParameter->GetAlternateErrorDetectionMethod() ==
-		  static_cast<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666777888));
+		  static_cast<RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(
+		    666777888));
 
 		delete clonedParameter;
 	}
 
 	SECTION("ZeroChecksumAcceptableParameter::Factory() succeeds")
 	{
-		auto* parameter = ZeroChecksumAcceptableParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* parameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
-		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(
 		  parameter->GetAlternateErrorDetectionMethod() ==
-		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
 
 		/* Modify it. */
 
 		parameter->SetAlternateErrorDetectionMethod(
-		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
-		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(
 		  parameter->GetAlternateErrorDetectionMethod() ==
-		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter =
-		  ZeroChecksumAcceptableParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
+		auto* parsedParameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Parse(
+		  parameter->GetBuffer(), parameter->GetLength());
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
-		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP);
 
 		REQUIRE(
 		  parsedParameter->GetAlternateErrorDetectionMethod() ==
-		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
 		delete parsedParameter;
 	}

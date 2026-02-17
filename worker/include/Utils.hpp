@@ -2,13 +2,15 @@
 #define MS_UTILS_HPP
 
 #include "common.hpp"
+#include "RTC/Consts.hpp"
 #include <openssl/evp.h>
 #include <cmath>
+#include <cstdint>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <limits>  // std::numeric_limits
+#include <random>  // std::mt19937_64, std::uniform_int_distribution, std::random_device
 #include <string>
-#include <type_traits> // std::enable_if, std::is_same_v
-#include <vector>
+#include <type_traits> // std::enable_if, std::is_same_v, std::is_unsigned
 #ifdef _WIN32
 #include <ws2ipdef.h>
 // https://stackoverflow.com/a/24550632/2085408
@@ -74,9 +76,7 @@ namespace Utils
 
 		static struct sockaddr_storage CopyAddress(const struct sockaddr* addr)
 		{
-			struct sockaddr_storage copiedAddr
-			{
-			};
+			struct sockaddr_storage copiedAddr{};
 
 			switch (addr->sa_family)
 			{
@@ -87,12 +87,14 @@ namespace Utils
 				case AF_INET6:
 					std::memcpy(std::addressof(copiedAddr), addr, sizeof(struct sockaddr_in6));
 					break;
+
+				default:;
 			}
 
 			return copiedAddr;
 		}
 
-		static void NormalizeIp(std::string& ip);
+		static std::string NormalizeIp(std::string& ip);
 	};
 
 	class File
@@ -199,9 +201,21 @@ namespace Utils
 		}
 
 		template<typename T>
+		typename std::enable_if<std::is_unsigned<T>::value, bool>::type static IsPaddedTo8Bytes(T size)
+		{
+			return (size & 0x07) == 0u;
+		}
+
+		template<typename T>
 		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadTo4Bytes(T size)
 		{
 			return (size + 3) & ~static_cast<T>(0x03);
+		}
+
+		template<typename T>
+		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadTo8Bytes(T size)
+		{
+			return (size + 7) & ~static_cast<T>(0x07);
 		}
 	};
 
@@ -221,76 +235,31 @@ namespace Utils
 
 		static void ClassDestroy();
 
-		static uint32_t GetRandomUInt32(
-		  uint32_t min = 0, uint32_t max = std::numeric_limits<uint32_t>::max())
+		template<typename T>
+		static T GetRandomUInt(T min, T max)
 		{
-			Crypto::seed32 = 214013 * Crypto::seed32 + 2531011;
+			static_assert(
+			  std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> || std::is_same_v<T, uint64_t> ||
+			    std::is_same_v<T, size_t>,
+			  "T must be uint16_t, uint32_t, uint64_t, size_t");
 
-			if (min > max)
-			{
-				min = max;
-			}
+			std::uniform_int_distribution<T> dist(min, max);
 
-			uint64_t range = static_cast<uint64_t>(max) - static_cast<uint64_t>(min) + 1;
-
-			return static_cast<uint32_t>((((Crypto::seed32 >> 4) & 0x7FFF7FFF) % range) + min);
+			return dist(Crypto::rng);
 		}
 
-		static uint64_t GetRandomUInt64(
-		  uint64_t min = 0, uint64_t max = std::numeric_limits<uint64_t>::max())
-		{
-			Crypto::seed64 = 6364136223846793005ULL * Crypto::seed64 + 1442695040888963407ULL;
-
-			if (max == std::numeric_limits<uint64_t>::max())
-			{
-				if (min == 0)
-				{
-					return Crypto::seed64;
-				}
-
-				--max;
-			}
-
-			if (min > max)
-			{
-				min = max;
-			}
-
-			uint64_t range = max - min + 1;
-			uint64_t value = Crypto::seed64 % range;
-
-			return min + value;
-		}
-
-		static std::string GetRandomString(size_t len)
-		{
-			char buffer[64];
-			static const char Chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
-				                            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-				                            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
-
-			if (len > 64)
-			{
-				len = 64;
-			}
-
-			for (size_t i{ 0 }; i < len; ++i)
-			{
-				buffer[i] = Chars[GetRandomUInt32(0, sizeof(Chars) - 1)];
-			}
-
-			return { buffer, len };
-		}
+		static std::string GetRandomString(size_t len);
 
 		static uint32_t GetCRC32(const uint8_t* data, size_t size);
 
 		static uint32_t GetCRC32c(const uint8_t* data, size_t size);
 
-		static const uint8_t* GetHmacSha1(const std::string& key, const uint8_t* data, size_t len);
+		static const uint8_t* GetHmacSha1(const char* key, size_t keyLen, const uint8_t* data, size_t len);
+
+		static void WriteRandomBytes(uint8_t* buffer, size_t len);
 
 	private:
-		thread_local static uint32_t seed32;
-		thread_local static uint64_t seed64;
+		thread_local static std::mt19937_64 rng;
 		thread_local static EVP_MAC* mac;
 		thread_local static EVP_MAC_CTX* hmacSha1Ctx;
 		thread_local static uint8_t hmacSha1Buffer[];
@@ -322,8 +291,6 @@ namespace Utils
 	{
 	private:
 		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
-		static constexpr T Mask =
-		  (N == 0) ? std::numeric_limits<T>::max() : (static_cast<T>((T(1) << N) - 1));
 
 	public:
 		static bool IsEqualThan(T lhs, T rhs)
@@ -333,8 +300,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return (lhs == rhs);
 		}
@@ -346,8 +313,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
 			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
@@ -360,8 +327,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
@@ -374,8 +341,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return (lhs == rhs) || ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
 			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
@@ -388,8 +355,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return (lhs == rhs) || ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
@@ -425,7 +392,7 @@ namespace Utils
 		static uint64_t Ntp2TimeMs(Time::Ntp ntp)
 		{
 			return (
-			  static_cast<uint64_t>(ntp.seconds) * 1000 +
+			  (static_cast<uint64_t>(ntp.seconds) * 1000) +
 			  static_cast<uint64_t>(
 			    std::round((static_cast<double>(ntp.fractions) * 1000) / NtpFractionalUnit)));
 		}
@@ -442,18 +409,26 @@ namespace Utils
 		BitStream(uint8_t* data, size_t len);
 		~BitStream() = default;
 
+		const uint8_t* GetData() const;
+		size_t GetLength() const;
+		uint32_t GetOffset() const;
+		void Reset();
 		uint8_t GetBit();
 		uint32_t GetBits(size_t count);
 		uint32_t GetLeftBits() const;
+		uint32_t GetNumBits(uint32_t n) const;
+		std::optional<uint32_t> ReadNs(uint32_t n);
 		void SkipBits(size_t count);
 		void Write(uint32_t offset, uint32_t n, uint32_t v);
+		void PutBit(uint8_t bit);
+		void PutBits(uint32_t count, uint32_t bits);
 
 	private:
 		void PutBit(uint32_t offset, uint8_t bit);
 		void PutBits(uint32_t offset, uint32_t count, uint32_t bits);
 
 	private:
-		uint8_t* data{ nullptr };
+		uint8_t data[RTC::Consts::TwoBytesRtpExtensionMaxLength];
 		uint32_t len{ 0 };
 		uint32_t offset{ 0 };
 	};

@@ -111,7 +111,13 @@ test('mediasoup.createWorker() with wrong settings rejects with TypeError', asyn
 	await expect(
 		// @ts-expect-error --- Testing purposes.
 		mediasoup.createWorker({ appData: 'NOT-AN-OBJECT' })
-	).rejects.toThrow(TypeError);
+	).rejects.toBeInstanceOf(TypeError);
+}, 2000);
+
+test('mediasoup.createWorker() with wrong `workerBin` rejects with Error', async () => {
+	await expect(
+		mediasoup.createWorker({ workerBin: '/tmp/foo/mediasoup-worker' })
+	).rejects.toBeInstanceOf(Error);
 }, 2000);
 
 test('worker.updateSettings() succeeds', async () => {
@@ -152,7 +158,11 @@ test('worker.updateSettings() rejects with InvalidStateError if closed', async (
 }, 2000);
 
 test('worker.dump() succeeds', async () => {
-	const worker = await mediasoup.createWorker();
+	const worker = await mediasoup.createWorker({
+		// Just for testing purposes. This does nothing since by default
+		// `mediasoup.workerBin` is used.
+		workerBin: mediasoup.workerBin,
+	});
 
 	await expect(worker.dump()).resolves.toMatchObject({
 		pid: worker.pid,

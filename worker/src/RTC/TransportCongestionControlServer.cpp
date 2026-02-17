@@ -5,8 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
 
 namespace RTC
 {
@@ -107,7 +105,7 @@ namespace RTC
 		return this->packetLoss;
 	}
 
-	void TransportCongestionControlServer::IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet)
+	void TransportCongestionControlServer::IncomingPacket(uint64_t nowMs, const RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -344,8 +342,8 @@ namespace RTC
 		// the condition is met.
 		if (nowMs >= PacketArrivalTimestampWindow)
 		{
-			uint64_t expiryTimestamp = nowMs - PacketArrivalTimestampWindow;
-			auto it                  = this->mapPacketArrivalTimes.begin();
+			const uint64_t expiryTimestamp = nowMs - PacketArrivalTimestampWindow;
+			auto it                        = this->mapPacketArrivalTimes.begin();
 
 			while (it != this->mapPacketArrivalTimes.end() &&
 			       it->first != this->transportCcFeedbackWideSeqNumStart &&
@@ -368,18 +366,11 @@ namespace RTC
 		}
 
 		// In case this is the first unlimited REMB packet, send it fast.
-		// clang-format off
 		if (
-			(
-				(this->bweType != RTC::BweType::REMB && this->maxIncomingBitrate != 0u) ||
-				this->unlimitedRembCounter > 0u
-			) &&
-			(
-				nowMs - this->limitationRembSentAtMs > LimitationRembInterval ||
-				this->unlimitedRembCounter == UnlimitedRembNumPackets
-			)
-		)
-		// clang-format on
+		  ((this->bweType != RTC::BweType::REMB && this->maxIncomingBitrate != 0u) ||
+		   this->unlimitedRembCounter > 0u) &&
+		  (nowMs - this->limitationRembSentAtMs > LimitationRembInterval ||
+		   this->unlimitedRembCounter == UnlimitedRembNumPackets))
 		{
 			MS_DEBUG_DEV(
 			  "sending limitation RTCP REMB packet [bitrate:%" PRIu32 "]", this->maxIncomingBitrate);
@@ -387,7 +378,7 @@ namespace RTC
 			RTC::RTCP::FeedbackPsRembPacket packet(0u, 0u);
 
 			packet.SetBitrate(this->maxIncomingBitrate);
-			packet.Serialize(RTC::RTCP::Buffer);
+			packet.Serialize(RTC::RTCP::SerializationBuffer);
 
 			// Notify the listener.
 			this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, &packet);
@@ -471,7 +462,7 @@ namespace RTC
 
 		packet.SetBitrate(availableBitrate);
 		packet.SetSsrcs(ssrcs);
-		packet.Serialize(RTC::RTCP::Buffer);
+		packet.Serialize(RTC::RTCP::SerializationBuffer);
 
 		// Notify the listener.
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, &packet);

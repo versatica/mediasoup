@@ -3,11 +3,13 @@
 	"version": "0.0.1",
 	"description": "mediasoup worker dev tools",
 	"scripts": {
-		"lint": "node clang-format.mjs lint",
-		"format": "node clang-format.mjs format"
+		"lint": "node clang-scripts.mjs lint",
+		"format": "node clang-scripts.mjs format",
+		"tidy": "node clang-scripts.mjs tidy",
+		"tidy:fix": "node clang-scripts.mjs tidy:fix",
+		"normalize-compile-commands": "node clang-scripts.mjs normalize-compile-commands"
 	},
 	"dependencies": {
-		"clang-format": "^1.8.0",
-		"glob": "^11.0.3"
+		"glob": "^13.0.0"
 	}
 }

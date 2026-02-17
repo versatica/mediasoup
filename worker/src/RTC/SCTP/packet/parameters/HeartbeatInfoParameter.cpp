@@ -64,9 +64,6 @@ namespace RTC
 			// not fixed length.
 			parameter->SetLength(parameterLength + padding);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -113,8 +110,6 @@ namespace RTC
 		void HeartbeatInfoParameter::SetInfo(const uint8_t* info, uint16_t infoLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetVariableLengthValue(info, infoLength);
 		}

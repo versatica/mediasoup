@@ -57,7 +57,7 @@ namespace RTC
 		}
 
 		InvalidMandatoryParameterErrorCause* InvalidMandatoryParameterErrorCause::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
+		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t /*padding*/)
 		{
 			MS_TRACE();
 
@@ -73,9 +73,6 @@ namespace RTC
 
 			auto* errorCause =
 			  new InvalidMandatoryParameterErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
 
 			return errorCause;
 		}

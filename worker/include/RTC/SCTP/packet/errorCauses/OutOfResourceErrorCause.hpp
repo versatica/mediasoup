@@ -62,14 +62,14 @@ namespace RTC
 			OutOfResourceErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~OutOfResourceErrorCause() override;
+			~OutOfResourceErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual OutOfResourceErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			OutOfResourceErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 		protected:
-			virtual OutOfResourceErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			OutOfResourceErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

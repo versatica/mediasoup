@@ -6,10 +6,10 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Codecs/Tools.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
@@ -18,12 +18,10 @@
 
 namespace RTC
 {
-	/* Static variables. */
+	/* Static */
 
-	thread_local uint8_t* Producer::buffer{ nullptr };
-
-	/* Static. */
-
+	static constexpr size_t ProducerSendBufferSize{ 65536 };
+	thread_local uint8_t ProducerSendBuffer[ProducerSendBufferSize];
 	static constexpr unsigned int SendNackDelay{ 10u }; // In ms.
 
 	/* Instance methods. */
@@ -58,7 +56,7 @@ namespace RTC
 		auto& encoding         = this->rtpParameters.encodings[0];
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		if (!RTC::Codecs::Tools::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
+		if (!RTC::RTP::Codecs::Tools::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
 		{
 			MS_THROW_TYPE_ERROR(
 			  "%s codec not supported for %s",
@@ -81,34 +79,24 @@ namespace RTC
 
 			auto& encodingMapping = this->rtpMapping.encodings.back();
 
-			// ssrc is optional.
-			if (encoding->ssrc().has_value())
+			if (auto ssrc = encoding->ssrc(); ssrc.has_value())
 			{
-				encodingMapping.ssrc = encoding->ssrc().value();
+				encodingMapping.ssrc = ssrc.value();
 			}
 
 			// rid is optional.
 			// However ssrc or rid must be present (if more than 1 encoding).
-			// clang-format off
 			if (
-				encodings->size() > 1 &&
-				!encoding->ssrc().has_value() &&
-				!flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID)
-			)
-			// clang-format on
+			  encodings->size() > 1 && !encoding->ssrc().has_value() &&
+			  !flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID))
 			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings (missing ssrc or rid)");
 			}
 
 			// If there is no mid and a single encoding, ssrc or rid must be present.
-			// clang-format off
 			if (
-				this->rtpParameters.mid.empty() &&
-				encodings->size() == 1 &&
-				!encoding->ssrc().has_value() &&
-				!flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID)
-			)
-			// clang-format on
+			  this->rtpParameters.mid.empty() && encodings->size() == 1 && !encoding->ssrc().has_value() &&
+			  !flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID))
 			{
 				MS_THROW_TYPE_ERROR(
 				  "wrong entry in rtpMapping.encodings (missing ssrc or rid, or rtpParameters.mid)");
@@ -124,6 +112,8 @@ namespace RTC
 		}
 
 		this->paused = data->paused();
+
+		this->enableMediasoupPacketIdHeaderExtension = data->enableMediasoupPacketIdHeaderExtension();
 
 		// The number of encodings in rtpParameters must match the number of encodings
 		// in rtpMapping.
@@ -171,14 +161,21 @@ namespace RTC
 				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
 			}
 
+			if (
+			  this->rtpHeaderExtensionIds.dependencyDescriptor == 0u &&
+			  exten.type == RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR)
+			{
+				this->rtpHeaderExtensionIds.dependencyDescriptor = exten.id;
+			}
+
 			if (this->rtpHeaderExtensionIds.videoOrientation == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION)
 			{
 				this->rtpHeaderExtensionIds.videoOrientation = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.toffset == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TOFFSET)
+			if (this->rtpHeaderExtensionIds.timeOffset == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET)
 			{
-				this->rtpHeaderExtensionIds.toffset = exten.id;
+				this->rtpHeaderExtensionIds.timeOffset = exten.id;
 			}
 
 			if (this->rtpHeaderExtensionIds.absCaptureTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
@@ -191,11 +188,9 @@ namespace RTC
 				this->rtpHeaderExtensionIds.playoutDelay = exten.id;
 			}
 
-			if (
-			  this->rtpHeaderExtensionIds.dependencyDescriptor == 0u &&
-			  exten.type == RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR)
+			if (this->rtpHeaderExtensionIds.mediasoupPacketId == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID)
 			{
-				this->rtpHeaderExtensionIds.dependencyDescriptor = exten.id;
+				this->rtpHeaderExtensionIds.mediasoupPacketId = exten.id;
 			}
 		}
 
@@ -271,13 +266,14 @@ namespace RTC
 
 		for (const auto& encodingMapping : this->rtpMapping.encodings)
 		{
-			encodings.emplace_back(FBS::RtpParameters::CreateEncodingMappingDirect(
-			  builder,
-			  encodingMapping.rid.c_str(),
-			  encodingMapping.ssrc != 0u ? flatbuffers::Optional<uint32_t>(encodingMapping.ssrc)
-			                             : flatbuffers::nullopt,
-			  nullptr, /* capability mode. NOTE: Present in NODE*/
-			  encodingMapping.mappedSsrc));
+			encodings.emplace_back(
+			  FBS::RtpParameters::CreateEncodingMappingDirect(
+			    builder,
+			    encodingMapping.rid.c_str(),
+			    encodingMapping.ssrc != 0u ? flatbuffers::Optional<uint32_t>(encodingMapping.ssrc)
+			                               : flatbuffers::nullopt,
+			    nullptr, /* capability mode. NOTE: Present in NODE*/
+			    encodingMapping.mappedSsrc));
 		}
 
 		// Build rtpMapping.
@@ -524,24 +520,17 @@ namespace RTC
 				// Increase receive transmission.
 				this->listener->OnProducerReceiveData(this, len);
 
-				if (len > RTC::Consts::MtuSize + 100)
+				if (len > ProducerSendBufferSize)
 				{
 					MS_WARN_TAG(rtp, "given RTP packet exceeds maximum size [len:%i]", len);
 
 					break;
 				}
 
-				// If this is the first time to receive a RTP packet then allocate the
-				// receiving buffer now.
-				if (!Producer::buffer)
-				{
-					Producer::buffer = new uint8_t[RTC::Consts::MtuSize + 100];
-				}
-
 				// Copy the received packet into this buffer so it can be expanded later.
-				std::memcpy(Producer::buffer, body->data()->data(), static_cast<size_t>(len));
+				std::memcpy(ProducerSendBuffer, body->data()->data(), static_cast<size_t>(len));
 
-				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(Producer::buffer, len);
+				auto* packet = RTC::RTP::Packet::Parse(ProducerSendBuffer, len, ProducerSendBufferSize);
 
 				if (!packet)
 				{
@@ -563,7 +552,7 @@ namespace RTC
 		}
 	}
 
-	Producer::ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
+	Producer::ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -584,14 +573,11 @@ namespace RTC
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_NOT_FOUND);
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_NOT_FOUND);
 #endif
 
 			return ReceiveRtpPacketResult::DISCARDED;
 		}
-
-		// Pre-process the packet.
-		PreProcessRtpPacket(packet);
 
 		ReceiveRtpPacketResult result;
 		bool isRtx{ false };
@@ -611,7 +597,7 @@ namespace RTC
 				}
 
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_DISCARDED);
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_DISCARDED);
 #endif
 
 				return result;
@@ -627,7 +613,8 @@ namespace RTC
 			if (!rtpStream->ReceiveRtxPacket(packet))
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::RECV_RTP_RTX_STREAM_DISCARDED);
+				packet->logger.Discarded(
+				  RTC::RtcLogger::RtpPacket::DiscardReason::RECV_RTP_RTX_STREAM_DISCARDED);
 #endif
 
 				return result;
@@ -823,14 +810,9 @@ namespace RTC
 		//
 		// NOTE: We know that this may only happen before calling MangleRtpPacket()
 		// so the SSRC of the packet is still the original one and not the mapped one.
-		//
-		// clang-format off
 		if (
-			this->currentRtpPacket &&
-			this->currentRtpPacket->GetSsrc() == ssrc &&
-			this->currentRtpPacket->IsKeyFrame()
-		)
-		// clang-format on
+		  this->currentRtpPacket && this->currentRtpPacket->GetSsrc() == ssrc &&
+		  this->currentRtpPacket->IsKeyFrame())
 		{
 			return;
 		}
@@ -838,7 +820,7 @@ namespace RTC
 		this->keyFrameRequestManager->KeyFrameNeeded(ssrc);
 	}
 
-	RTC::RtpStreamRecv* Producer::GetRtpStream(RTC::RtpPacket* packet)
+	RTC::RTP::RtpStreamRecv* Producer::GetRtpStream(const RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -997,14 +979,9 @@ namespace RTC
 
 		// If not found, and there is a single encoding without ssrc and RID, this
 		// may be the media or RTX stream.
-		//
-		// clang-format off
 		if (
-			this->rtpParameters.encodings.size() == 1 &&
-			!this->rtpParameters.encodings[0].ssrc &&
-			this->rtpParameters.encodings[0].rid.empty()
-		)
-		// clang-format on
+		  this->rtpParameters.encodings.size() == 1 && !this->rtpParameters.encodings[0].ssrc &&
+		  this->rtpParameters.encodings[0].rid.empty())
 		{
 			auto& encoding           = this->rtpParameters.encodings[0];
 			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -1064,8 +1041,8 @@ namespace RTC
 		return nullptr;
 	}
 
-	RTC::RtpStreamRecv* Producer::CreateRtpStream(
-	  RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx)
+	RTC::RTP::RtpStreamRecv* Producer::CreateRtpStream(
+	  const RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx)
 	{
 		MS_TRACE();
 
@@ -1090,7 +1067,7 @@ namespace RTC
 		  mediaCodec.payloadType);
 
 		// Set stream params.
-		RTC::RtpStream::Params params;
+		RTC::RTP::RtpStream::Params params;
 
 		params.encodingIdx    = encodingIdx;
 		params.ssrc           = ssrc;
@@ -1154,7 +1131,7 @@ namespace RTC
 		  this->type == RtpParameters::Type::SIMULCAST && this->rtpMapping.encodings.size() > 1;
 
 		// Create a RtpStreamRecv for receiving a media stream.
-		auto* rtpStream = new RTC::RtpStreamRecv(this, params, SendNackDelay, useRtpInactivityCheck);
+		auto* rtpStream = new RTC::RTP::RtpStreamRecv(this, params, SendNackDelay, useRtpInactivityCheck);
 
 		// Insert into the maps.
 		this->mapSsrcRtpStream[ssrc]              = rtpStream;
@@ -1177,7 +1154,7 @@ namespace RTC
 		return rtpStream;
 	}
 
-	void Producer::NotifyNewRtpStream(RTC::RtpStreamRecv* rtpStream)
+	void Producer::NotifyNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
@@ -1187,17 +1164,7 @@ namespace RTC
 		this->listener->OnProducerNewRtpStream(this, rtpStream, mappedSsrc);
 	}
 
-	inline void Producer::PreProcessRtpPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		if (this->kind == RTC::Media::Kind::VIDEO)
-		{
-			packet->SetDependencyDescriptorExtensionId(this->rtpHeaderExtensionIds.dependencyDescriptor);
-		}
-	}
-
-	inline bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
+	inline bool Producer::MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
 
@@ -1227,8 +1194,8 @@ namespace RTC
 
 		// Mangle RTP header extensions.
 		{
-			thread_local static uint8_t buffer[4096];
-			thread_local static std::vector<RTC::RtpPacket::GenericExtension> extensions;
+			thread_local uint8_t buffer[4096];
+			thread_local std::vector<RTC::RTP::Packet::Extension> extensions;
 
 			// This happens just once.
 			if (extensions.capacity() != 24)
@@ -1247,35 +1214,42 @@ namespace RTC
 				extenLen = RTC::Consts::MidRtpExtensionMaxLength;
 
 				extensions.emplace_back(
-				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID), extenLen, bufferPtr);
+				  /*type*/ RTC::RtpHeaderExtensionUri::Type::MID,
+				  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID),
+				  /*len*/ extenLen,
+				  /*value*/ bufferPtr);
 
 				bufferPtr += extenLen;
 			}
 
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time.
-			extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
+			extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
 
 			if (extenValue)
 			{
 				std::memcpy(bufferPtr, extenValue, extenLen);
 
 				extensions.emplace_back(
-				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
-				  extenLen,
-				  bufferPtr);
+				  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
+				  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
+				  /*len*/ extenLen,
+				  /*value*/ bufferPtr);
 
 				bufferPtr += extenLen;
 			}
 
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
-			extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.playoutDelay, extenLen);
+			extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.playoutDelay, extenLen);
 
 			if (extenValue)
 			{
 				std::memcpy(bufferPtr, extenValue, extenLen);
 
 				extensions.emplace_back(
-				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY), extenLen, bufferPtr);
+				  /*type*/ RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY,
+				  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY),
+				  /*len*/ extenLen,
+				  /*value*/ bufferPtr);
 
 				bufferPtr += extenLen;
 			}
@@ -1283,19 +1257,19 @@ namespace RTC
 			if (this->kind == RTC::Media::Kind::AUDIO)
 			{
 				// Proxy urn:ietf:params:rtp-hdrext:ssrc-audio-level.
-				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.ssrcAudioLevel, extenLen);
+				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.ssrcAudioLevel, extenLen);
 
 				if (extenValue)
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
 					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL),
-					  extenLen,
-					  bufferPtr);
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
 
-					// Not needed since this is the latest added extension.
-					// bufferPtr += extenLen;
+					bufferPtr += extenLen;
 				}
 			}
 			else if (this->kind == RTC::Media::Kind::VIDEO)
@@ -1311,7 +1285,10 @@ namespace RTC
 					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
 
 					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
 
 					bufferPtr += extenLen;
 				}
@@ -1327,82 +1304,112 @@ namespace RTC
 					Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
 
 					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
-					  extenLen,
-					  bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
-				// Proxy urn:3gpp:video-orientation.
-				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
-
-				if (extenValue)
-				{
-					std::memcpy(bufferPtr, extenValue, extenLen);
-
-					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION),
-					  extenLen,
-					  bufferPtr);
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
 
 					bufferPtr += extenLen;
 				}
 
 				// Proxy https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension.
-				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.dependencyDescriptor, extenLen);
+				extenValue =
+				  packet->GetExtensionValue(this->rtpHeaderExtensionIds.dependencyDescriptor, extenLen);
 
 				if (extenValue)
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
 					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
-					  extenLen,
-					  bufferPtr);
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
+				// Proxy urn:3gpp:video-orientation.
+				extenValue =
+				  packet->GetExtensionValue(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
+
+				if (extenValue)
+				{
+					std::memcpy(bufferPtr, extenValue, extenLen);
+
+					extensions.emplace_back(
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
 
 					bufferPtr += extenLen;
 				}
 
 				// Proxy urn:ietf:params:rtp-hdrext:toffset.
-				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.toffset, extenLen);
+				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.timeOffset, extenLen);
 
 				if (extenValue)
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
 					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TOFFSET), extenLen, bufferPtr);
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+			}
+
+			// Add urn:mediasoup:params:rtp-hdrext:packet-id.
+			//
+			// Here if may happen that the packet ALREADY contains the header (if it comes
+			// from another mediasoup Router in which it was added). If so, honor it.
+			// Otherwise, if the flag `enableMediasoupPacketIdHeaderExtension` is set,
+			// add it.
+			{
+				extenValue =
+				  packet->GetExtensionValue(this->rtpHeaderExtensionIds.mediasoupPacketId, extenLen);
+
+				if (extenValue)
+				{
+					std::memcpy(bufferPtr, extenValue, extenLen);
+
+					extensions.emplace_back(
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
+
+					// Not needed since this is the latest added extension.
+					// bufferPtr += extenLen;
+				}
+				else if (this->enableMediasoupPacketIdHeaderExtension)
+				{
+					extenLen = 4;
+
+					Utils::Byte::Set4Bytes(bufferPtr, 0, RTC::RTP::Packet::GetNextMediasoupPacketId());
+
+					extensions.emplace_back(
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
 
 					// Not needed since this is the latest added extension.
 					// bufferPtr += extenLen;
 				}
 			}
 
-			// Set the new extensions into the packet.
-			packet->SetExtensions(packet->HasTwoBytesExtensions() ? 2 : 1, extensions);
-
-			// Assign mediasoup RTP header extension ids (just those that mediasoup may
-			// be interested in after passing it to the Router).
-			packet->SetMidExtensionId(static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID));
-			packet->SetAbsSendTimeExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
-			packet->SetTransportWideCc01ExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01));
-			packet->SetSsrcAudioLevelExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL));
-			packet->SetVideoOrientationExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION));
-			packet->SetPlayoutDelayExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY));
-			packet->SetDependencyDescriptorExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR));
+			packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 		}
 
 		return true;
 	}
 
-	inline void Producer::PostProcessRtpPacket(RTC::RtpPacket* packet)
+	inline void Producer::PostProcessRtpPacket(RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -1416,14 +1423,9 @@ namespace RTC
 			{
 				// If video orientation was not yet detected or any value has changed,
 				// emit event.
-				// clang-format off
 				if (
-					!this->videoOrientationDetected ||
-					camera != this->videoOrientation.camera ||
-					flip != this->videoOrientation.flip ||
-					rotation != this->videoOrientation.rotation
-				)
-				// clang-format on
+				  !this->videoOrientationDetected || camera != this->videoOrientation.camera ||
+				  flip != this->videoOrientation.flip || rotation != this->videoOrientation.rotation)
 				{
 					this->videoOrientationDetected  = true;
 					this->videoOrientation.camera   = camera;
@@ -1459,12 +1461,13 @@ namespace RTC
 				continue;
 			}
 
-			scores.emplace_back(FBS::Producer::CreateScoreDirect(
-			  this->shared->channelNotifier->GetBufferBuilder(),
-			  rtpStream->GetEncodingIdx(),
-			  rtpStream->GetSsrc(),
-			  !rtpStream->GetRid().empty() ? rtpStream->GetRid().c_str() : nullptr,
-			  rtpStream->GetScore()));
+			scores.emplace_back(
+			  FBS::Producer::CreateScoreDirect(
+			    this->shared->channelNotifier->GetBufferBuilder(),
+			    rtpStream->GetEncodingIdx(),
+			    rtpStream->GetSsrc(),
+			    !rtpStream->GetRid().empty() ? rtpStream->GetRid().c_str() : nullptr,
+			    rtpStream->GetScore()));
 		}
 
 		auto notification = FBS::Producer::CreateScoreNotificationDirect(
@@ -1477,7 +1480,7 @@ namespace RTC
 		  notification);
 	}
 
-	inline void Producer::EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx) const
+	inline void Producer::EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx) const
 	{
 		MS_TRACE();
 
@@ -1620,7 +1623,8 @@ namespace RTC
 		  notification);
 	}
 
-	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
+	inline void Producer::OnRtpStreamScore(
+	  RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -1629,14 +1633,14 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnProducerRtpStreamScore(
-		  this, static_cast<RTC::RtpStreamRecv*>(rtpStream), score, previousScore);
+		  this, static_cast<RTC::RTP::RtpStreamRecv*>(rtpStream), score, previousScore);
 
 		// Emit the score event.
 		EmitScore();
 	}
 
 	inline void Producer::OnRtpStreamSendRtcpPacket(
-	  RTC::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet)
+	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet)
 	{
 		switch (packet->GetType())
 		{
@@ -1692,7 +1696,7 @@ namespace RTC
 	}
 
 	inline void Producer::OnRtpStreamNeedWorstRemoteFractionLost(
-	  RTC::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost)
+	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost)
 	{
 		auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 

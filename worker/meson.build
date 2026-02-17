@@ -2,8 +2,8 @@ project(
   'mediasoup-worker',
   ['c', 'cpp'],
   default_options : [
-    'warning_level=1',
     'cpp_std=c++17',
+    'warning_level=1',
     'default_library=static',
   ],
   meson_version: '>= 1.1.0',
@@ -41,6 +41,18 @@ endif
 if get_option('ms_rtc_logger_rtp')
   cpp_args += [
     '-DMS_RTC_LOGGER_RTP',
+  ]
+endif
+
+if get_option('ms_dump_rtp_payload_descriptor')
+  cpp_args += [
+    '-DMS_DUMP_RTP_PAYLOAD_DESCRIPTOR',
+  ]
+endif
+
+if get_option('ms_dump_rtp_shared_packet_memory_usage')
+  cpp_args += [
+    '-DMS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE',
   ]
 endif
 
@@ -97,8 +109,6 @@ common_sources = [
   'src/RTC/DataProducer.cpp',
   'src/RTC/DirectTransport.cpp',
   'src/RTC/DtlsTransport.cpp',
-  'src/RTC/IceCandidate.cpp',
-  'src/RTC/IceServer.cpp',
   'src/RTC/KeyFrameRequestManager.cpp',
   'src/RTC/NackGenerator.cpp',
   'src/RTC/PipeConsumer.cpp',
@@ -111,24 +121,15 @@ common_sources = [
   'src/RTC/RtcLogger.cpp',
   'src/RTC/RtpListener.cpp',
   'src/RTC/RtpObserver.cpp',
-  'src/RTC/RtpPacket.cpp',
-  'src/RTC/RtpProbationGenerator.cpp',
-  'src/RTC/RtpRetransmissionBuffer.cpp',
-  'src/RTC/RtpStream.cpp',
-  'src/RTC/RtpStreamRecv.cpp',
-  'src/RTC/RtpStreamSend.cpp',
-  'src/RTC/RtxStream.cpp',
   'src/RTC/SctpAssociation.cpp',
   'src/RTC/SctpListener.cpp',
   'src/RTC/SenderBandwidthEstimator.cpp',
   'src/RTC/SeqManager.cpp',
   'src/RTC/Serializable.cpp',
   'src/RTC/Shared.cpp',
-  'src/RTC/SharedRtpPacket.cpp',
   'src/RTC/SimpleConsumer.cpp',
   'src/RTC/SimulcastConsumer.cpp',
   'src/RTC/SrtpSession.cpp',
-  'src/RTC/StunPacket.cpp',
   'src/RTC/SvcConsumer.cpp',
   'src/RTC/TcpConnection.cpp',
   'src/RTC/TcpServer.cpp',
@@ -140,12 +141,6 @@ common_sources = [
   'src/RTC/UdpSocket.cpp',
   'src/RTC/WebRtcServer.cpp',
   'src/RTC/WebRtcTransport.cpp',
-  'src/RTC/Codecs/H264.cpp',
-  'src/RTC/Codecs/VP8.cpp',
-  'src/RTC/Codecs/VP9.cpp',
-  'src/RTC/Codecs/AV1.cpp',
-  'src/RTC/Codecs/Opus.cpp',
-  'src/RTC/Codecs/DependencyDescriptor.cpp',
   'src/RTC/RtpDictionaries/Parameters.cpp',
   'src/RTC/RtpDictionaries/RtcpFeedback.cpp',
   'src/RTC/RtpDictionaries/RtcpParameters.cpp',
@@ -157,6 +152,23 @@ common_sources = [
   'src/RTC/RtpDictionaries/RtpParameters.cpp',
   'src/RTC/RtpDictionaries/RtpRtxParameters.cpp',
   'src/RTC/SctpDictionaries/SctpStreamParameters.cpp',
+  'src/RTC/ICE/IceCandidate.cpp',
+  'src/RTC/ICE/IceServer.cpp',
+  'src/RTC/ICE/StunPacket.cpp',
+  'src/RTC/RTP/Packet.cpp',
+  'src/RTC/RTP/ProbationGenerator.cpp',
+  'src/RTC/RTP/RetransmissionBuffer.cpp',
+  'src/RTC/RTP/RtpStream.cpp',
+  'src/RTC/RTP/RtpStreamRecv.cpp',
+  'src/RTC/RTP/RtpStreamSend.cpp',
+  'src/RTC/RTP/RtxStream.cpp',
+  'src/RTC/RTP/SharedPacket.cpp',
+  'src/RTC/RTP/Codecs/AV1.cpp',
+  'src/RTC/RTP/Codecs/H264.cpp',
+  'src/RTC/RTP/Codecs/Opus.cpp',
+  'src/RTC/RTP/Codecs/VP8.cpp',
+  'src/RTC/RTP/Codecs/VP9.cpp',
+  'src/RTC/RTP/Codecs/DependencyDescriptor.cpp',
   'src/RTC/RTCP/Packet.cpp',
   'src/RTC/RTCP/CompoundPacket.cpp',
   'src/RTC/RTCP/SenderReport.cpp',
@@ -245,19 +257,19 @@ common_sources = [
   'src/RTC/SCTP/packet/errorCauses/UnknownErrorCause.cpp',
 ]
 
-openssl_proj = subproject(
-  'openssl',
-  default_options: [
-    'warning_level=0',
-  ],
-)
-
 libuv_proj = subproject(
   'libuv',
   default_options: [
     'warning_level=0',
     'build_tests=false',
     'build_benchmarks=false',
+  ],
+)
+
+openssl_proj = subproject(
+  'openssl',
+  default_options: [
+    'warning_level=0',
   ],
 )
 
@@ -287,15 +299,15 @@ abseil_cpp_proj = subproject(
   ],
 )
 
-catch2_proj = subproject(
-  'catch2',
+flatbuffers_proj = subproject(
+  'flatbuffers',
   default_options: [
     'warning_level=0',
   ],
 )
 
-flatbuffers_proj = subproject(
-  'flatbuffers',
+catch2_proj = subproject(
+  'catch2',
   default_options: [
     'warning_level=0',
   ],
@@ -394,25 +406,29 @@ executable(
 
 test_sources = [
   'test/src/tests.cpp',
-  'test/src/helpers.cpp',
+  'test/src/testHelpers.cpp',
   'test/src/RTC/TestKeyFrameRequestManager.cpp',
   'test/src/RTC/TestNackGenerator.cpp',
   'test/src/RTC/TestRateCalculator.cpp',
   'test/src/RTC/TestRtpEncodingParameters.cpp',
-  'test/src/RTC/TestRtpPacket.cpp',
-  'test/src/RTC/TestRtpRetransmissionBuffer.cpp',
-  'test/src/RTC/TestRtpStreamSend.cpp',
-  'test/src/RTC/TestRtpStreamRecv.cpp',
   'test/src/RTC/TestSeqManager.cpp',
-  'test/src/RTC/TestSharedRtpPacket.cpp',
   'test/src/RTC/TestSimpleConsumer.cpp',
   'test/src/RTC/TestTransportCongestionControlServer.cpp',
   'test/src/RTC/TestTransportTuple.cpp',
   'test/src/RTC/TestTrendCalculator.cpp',
-  'test/src/RTC/Codecs/TestDependencyDescriptor.cpp',
-  'test/src/RTC/Codecs/TestVP8.cpp',
-  'test/src/RTC/Codecs/TestVP9.cpp',
-  'test/src/RTC/Codecs/TestH264.cpp',
+  'test/src/RTC/ICE/iceCommon.cpp',
+  'test/src/RTC/ICE/TestStunPacket.cpp',
+  'test/src/RTC/RTP/rtpCommon.cpp',
+  'test/src/RTC/RTP/TestPacket.cpp',
+  'test/src/RTC/RTP/TestProbationGenerator.cpp',
+  'test/src/RTC/RTP/TestRetransmissionBuffer.cpp',
+  'test/src/RTC/RTP/TestRtpStreamSend.cpp',
+  'test/src/RTC/RTP/TestRtpStreamRecv.cpp',
+  'test/src/RTC/RTP/TestSharedPacket.cpp',
+  'test/src/RTC/RTP/Codecs/TestH264.cpp',
+  'test/src/RTC/RTP/Codecs/TestVP8.cpp',
+  'test/src/RTC/RTP/Codecs/TestVP9.cpp',
+  'test/src/RTC/RTP/Codecs/TestDependencyDescriptor.cpp',
   'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
   'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
   'test/src/RTC/RTCP/TestFeedbackPsLei.cpp',
@@ -434,7 +450,7 @@ test_sources = [
   'test/src/RTC/RTCP/TestSenderReport.cpp',
   'test/src/RTC/RTCP/TestPacket.cpp',
   'test/src/RTC/RTCP/TestXr.cpp',
-  'test/src/RTC/SCTP/common.cpp',
+  'test/src/RTC/SCTP/sctpCommon.cpp',
   'test/src/RTC/SCTP/association/TestNegotiatedCapabilities.cpp',
   'test/src/RTC/SCTP/association/TestStateCookie.cpp',
   'test/src/RTC/SCTP/packet/TestPacket.cpp',
@@ -619,18 +635,19 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/FuzzerUtils.cpp',
   'fuzzer/src/RTC/FuzzerDtlsTransport.cpp',
   'fuzzer/src/RTC/FuzzerRateCalculator.cpp',
-  'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
-  'fuzzer/src/RTC/FuzzerRtpRetransmissionBuffer.cpp',
-  'fuzzer/src/RTC/FuzzerRtpStreamSend.cpp',
   'fuzzer/src/RTC/FuzzerSeqManager.cpp',
-  'fuzzer/src/RTC/FuzzerStunPacket.cpp',
   'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
-  'fuzzer/src/RTC/Codecs/FuzzerOpus.cpp',
-  'fuzzer/src/RTC/Codecs/FuzzerVP8.cpp',
-  'fuzzer/src/RTC/Codecs/FuzzerVP9.cpp',
-  'fuzzer/src/RTC/Codecs/FuzzerH264.cpp',
-  'fuzzer/src/RTC/Codecs/FuzzerDependencyDescriptor.cpp',
-  'fuzzer/src/RTC/Codecs/FuzzerAV1.cpp',
+  'fuzzer/src/RTC/ICE/FuzzerStunPacket.cpp',
+  'fuzzer/src/RTC/RTP/FuzzerPacket.cpp',
+  'fuzzer/src/RTC/RTP/FuzzerProbationGenerator.cpp',
+  'fuzzer/src/RTC/RTP/FuzzerRetransmissionBuffer.cpp',
+  'fuzzer/src/RTC/RTP/FuzzerRtpStreamSend.cpp',
+  'fuzzer/src/RTC/RTP/Codecs/FuzzerOpus.cpp',
+  'fuzzer/src/RTC/RTP/Codecs/FuzzerAV1.cpp',
+  'fuzzer/src/RTC/RTP/Codecs/FuzzerH264.cpp',
+  'fuzzer/src/RTC/RTP/Codecs/FuzzerVP8.cpp',
+  'fuzzer/src/RTC/RTP/Codecs/FuzzerVP9.cpp',
+  'fuzzer/src/RTC/RTP/Codecs/FuzzerDependencyDescriptor.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',

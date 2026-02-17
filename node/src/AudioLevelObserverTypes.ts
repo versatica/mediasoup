@@ -61,10 +61,10 @@ export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents & {
 export interface AudioLevelObserver<
 	AudioLevelObserverAppData extends AppData = AppData,
 > extends RtpObserver<
-		AudioLevelObserverAppData,
-		AudioLevelObserverEvents,
-		AudioLevelObserverObserver
-	> {
+	AudioLevelObserverAppData,
+	AudioLevelObserverEvents,
+	AudioLevelObserverObserver
+> {
 	/**
 	 * RtpObserver type.
 	 *

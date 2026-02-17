@@ -3,7 +3,7 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/Codecs/Tools.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <absl/container/flat_hash_set.h>
 
@@ -11,7 +11,8 @@ namespace RTC
 {
 	/* Class variables. */
 
-	absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::type2String = {
+	// clang-format off
+	const absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::Type2String = {
 		{ RtpParameters::Type::SIMPLE, "simple" },
 		{ RtpParameters::Type::SIMULCAST, "simulcast" },
 		{ RtpParameters::Type::SVC, "svc" },
@@ -35,11 +36,12 @@ namespace RTC
 
 			if (encoding.spatialLayers > 1 || encoding.temporalLayers > 1)
 			{
-				if (RTC::Codecs::Tools::IsValidTypeForCodec(RtpParameters::Type::SVC, mediaCodec->mimeType))
+				if (RTC::RTP::Codecs::Tools::IsValidTypeForCodec(
+				      RtpParameters::Type::SVC, mediaCodec->mimeType))
 				{
 					type.emplace(RtpParameters::Type::SVC);
 				}
-				else if (RTC::Codecs::Tools::IsValidTypeForCodec(
+				else if (RTC::RTP::Codecs::Tools::IsValidTypeForCodec(
 				           RtpParameters::Type::SIMULCAST, mediaCodec->mimeType))
 				{
 					type.emplace(RtpParameters::Type::SIMULCAST);
@@ -58,11 +60,11 @@ namespace RTC
 		return type;
 	}
 
-	std::string& RtpParameters::GetTypeString(RtpParameters::Type type)
+	const std::string& RtpParameters::GetTypeString(RtpParameters::Type type)
 	{
 		MS_TRACE();
 
-		return RtpParameters::type2String.at(type);
+		return RtpParameters::Type2String.at(type);
 	}
 
 	FBS::RtpParameters::Type RtpParameters::TypeToFbs(RtpParameters::Type type)
@@ -105,11 +107,6 @@ namespace RTC
 		if (data->mid())
 		{
 			this->mid = data->mid()->str();
-
-			if (this->mid.empty())
-			{
-				MS_THROW_TYPE_ERROR("empty mid");
-			}
 		}
 
 		this->codecs.reserve(data->codecs()->size());
@@ -148,6 +145,12 @@ namespace RTC
 
 		// This may throw.
 		this->rtcp = RTC::RtcpParameters(data->rtcp());
+
+		// msid is optional.
+		if (data->msid())
+		{
+			this->msid = data->msid()->str();
+		}
 
 		// Validate RTP parameters.
 		ValidateCodecs();
@@ -192,15 +195,15 @@ namespace RTC
 		rtcp = this->rtcp.FillBuffer(builder);
 
 		return FBS::RtpParameters::CreateRtpParametersDirect(
-		  builder, mid.c_str(), &codecs, &headerExtensions, &encodings, rtcp);
+		  builder, this->mid.c_str(), &codecs, &headerExtensions, &encodings, rtcp, this->msid.c_str());
 	}
 
 	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding) const
 	{
 		MS_TRACE();
 
-		uint8_t payloadType = encoding.codecPayloadType;
-		auto it             = this->codecs.begin();
+		const uint8_t payloadType = encoding.codecPayloadType;
+		auto it                   = this->codecs.begin();
 
 		for (; it != this->codecs.end(); ++it)
 		{
@@ -227,7 +230,7 @@ namespace RTC
 
 		static const std::string AptString{ "apt" };
 
-		uint8_t payloadType = encoding.codecPayloadType;
+		const uint8_t payloadType = encoding.codecPayloadType;
 
 		for (const auto& codec : this->codecs)
 		{
@@ -263,12 +266,12 @@ namespace RTC
 				case RTC::RtpCodecMimeType::Subtype::RTX:
 				{
 					// NOTE: RtpCodecParameters already asserted that there is apt parameter.
-					int32_t apt = codec.parameters.GetInteger(AptString);
-					auto it     = this->codecs.begin();
+					const int32_t apt = codec.parameters.GetInteger(AptString);
+					auto it           = this->codecs.begin();
 
 					for (; it != this->codecs.end(); ++it)
 					{
-						auto codec = *it;
+						const auto& codec = *it;
 
 						if (static_cast<int32_t>(codec.payloadType) == apt)
 						{
@@ -354,7 +357,7 @@ namespace RTC
 
 				for (; it != this->codecs.end(); ++it)
 				{
-					auto codec = *it;
+					const auto& codec = *it;
 
 					if (codec.payloadType == encoding.codecPayloadType)
 					{

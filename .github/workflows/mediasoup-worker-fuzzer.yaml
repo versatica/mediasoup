@@ -3,7 +3,13 @@ name: mediasoup-worker-fuzzer
 on:
   push:
     branches: [v3]
+    paths:
+      - 'worker/**'
+      - '.github/workflows/mediasoup-worker-fuzzer.yaml'
   pull_request:
+    paths:
+      - 'worker/**'
+      - '.github/workflows/mediasoup-worker-fuzzer.yaml'
   workflow_dispatch:
 
 concurrency:

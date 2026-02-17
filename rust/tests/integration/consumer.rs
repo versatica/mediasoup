@@ -95,7 +95,7 @@ fn audio_producer_options() -> ProducerOptions {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AudioLevel,
+                    uri: RtpHeaderExtensionUri::SsrcAudioLevel,
                     id: 12,
                     encrypt: false,
                 },
@@ -108,6 +108,7 @@ fn audio_producer_options() -> ProducerOptions {
                 cname: Some("FOOBAR".to_string()),
                 ..RtcpParameters::default()
             },
+            msid: Some("1111-1111-1111-1111 2222-2222-2222-2222".to_string()),
         },
     );
 
@@ -186,6 +187,7 @@ fn video_producer_options() -> ProducerOptions {
                 cname: Some("FOOBAR".to_string()),
                 ..RtcpParameters::default()
             },
+            msid: None,
         },
     );
 
@@ -267,22 +269,22 @@ fn consumer_device_capabilities() -> RtpCapabilities {
             },
             RtpHeaderExtension {
                 kind: MediaKind::Audio,
-                uri: RtpHeaderExtensionUri::AudioLevel,
-                preferred_id: 10,
+                uri: RtpHeaderExtensionUri::SsrcAudioLevel,
+                preferred_id: 6,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
                 kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::VideoOrientation,
-                preferred_id: 11,
+                preferred_id: 8,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
             RtpHeaderExtension {
                 kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TimeOffset,
-                preferred_id: 12,
+                preferred_id: 9,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
@@ -456,6 +458,10 @@ fn consume_succeeds() {
                     rtcp_feedback: vec![],
                 }]
             );
+            assert_eq!(
+                audio_consumer.rtp_parameters().msid,
+                Some("1111-1111-1111-1111 2222-2222-2222-2222".to_string())
+            );
             assert_eq!(audio_consumer.r#type(), ConsumerType::Simple);
             assert!(!audio_consumer.paused());
             assert!(!audio_consumer.producer_paused());
@@ -554,6 +560,7 @@ fn consume_succeeds() {
                     },
                 ]
             );
+            assert_eq!(video_consumer.rtp_parameters().msid, None);
             assert_eq!(video_consumer.r#type(), ConsumerType::Simulcast);
             assert!(video_consumer.paused());
             assert!(video_consumer.producer_paused());
@@ -980,8 +987,8 @@ fn dump_succeeds() {
                         encrypt: false,
                     },
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::AudioLevel,
-                        id: 10,
+                        uri: RtpHeaderExtensionUri::SsrcAudioLevel,
+                        id: 6,
                         encrypt: false,
                     },
                 ],
@@ -1088,12 +1095,12 @@ fn dump_succeeds() {
                     },
                     RtpHeaderExtensionParameters {
                         uri: RtpHeaderExtensionUri::VideoOrientation,
-                        id: 11,
+                        id: 8,
                         encrypt: false,
                     },
                     RtpHeaderExtensionParameters {
                         uri: RtpHeaderExtensionUri::TimeOffset,
-                        id: 12,
+                        id: 9,
                         encrypt: false,
                     },
                 ],

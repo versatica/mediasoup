@@ -30,14 +30,11 @@ namespace RTC
 	static constexpr uint32_t LevelsBuffLen{ LongCount * N3 * N2 };
 	static constexpr double MinActivityScore{ 0.0000000001 };
 
-	inline int64_t BinomialCoefficient(int32_t n, int32_t r)
+	static inline int64_t binomialCoefficient(int32_t n, int32_t r)
 	{
 		const int32_t m = n - r;
 
-		if (r < m)
-		{
-			r = m;
-		}
+		r = std::max(r, m);
 
 		int64_t t{ 1 };
 
@@ -49,21 +46,18 @@ namespace RTC
 		return t;
 	}
 
-	inline double ComputeActivityScore(
+	static inline double computeActivityScore(
 	  const uint8_t vL, const uint32_t nR, const double p, const double lambda)
 	{
-		double activityScore = std::log(BinomialCoefficient(nR, vL)) + vL * std::log(p) +
-		                       (nR - vL) * std::log(1 - p) - std::log(lambda) + lambda * vL;
+		double activityScore = std::log(binomialCoefficient(nR, vL)) + (vL * std::log(p)) +
+		                       ((nR - vL) * std::log(1 - p)) - std::log(lambda) + (lambda * vL);
 
-		if (activityScore < MinActivityScore)
-		{
-			activityScore = MinActivityScore;
-		}
+		activityScore = std::max(activityScore, MinActivityScore);
 
 		return activityScore;
 	}
 
-	inline bool ComputeBigs(
+	static inline bool computeBigs(
 	  const std::vector<uint8_t>& littles, std::vector<uint8_t>& bigs, uint8_t threashold)
 	{
 		const uint32_t littleLen       = littles.size();
@@ -211,7 +205,7 @@ namespace RTC
 		}
 	}
 
-	void ActiveSpeakerObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	void ActiveSpeakerObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -540,35 +534,35 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return ComputeBigs(this->immediates, this->mediums, MediumThreshold);
+		return computeBigs(this->immediates, this->mediums, MediumThreshold);
 	}
 
 	bool ActiveSpeakerObserver::Speaker::ComputeLongs()
 	{
 		MS_TRACE();
 
-		return ComputeBigs(this->mediums, this->longs, LongThreashold);
+		return computeBigs(this->mediums, this->longs, LongThreashold);
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalImmediateActivityScore()
 	{
 		MS_TRACE();
 
-		this->immediateActivityScore = ComputeActivityScore(this->immediates[0], N1, 0.5, 0.78);
+		this->immediateActivityScore = computeActivityScore(this->immediates[0], N1, 0.5, 0.78);
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalMediumActivityScore()
 	{
 		MS_TRACE();
 
-		this->mediumActivityScore = ComputeActivityScore(this->mediums[0], N2, 0.5, 24);
+		this->mediumActivityScore = computeActivityScore(this->mediums[0], N2, 0.5, 24);
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalLongActivityScore()
 	{
 		MS_TRACE();
 
-		this->longActivityScore = ComputeActivityScore(this->longs[0], N3, 0.5, 47);
+		this->longActivityScore = computeActivityScore(this->longs[0], N3, 0.5, 47);
 	}
 
 	void ActiveSpeakerObserver::Speaker::UpdateMinLevel(int8_t level)
@@ -595,10 +589,7 @@ namespace RTC
 			}
 			else
 			{
-				if (this->nextMinLevel > level)
-				{
-					this->nextMinLevel = level;
-				}
+				this->nextMinLevel = std::min<int>(this->nextMinLevel, level);
 
 				this->nextMinLevelWindowLen++;
 

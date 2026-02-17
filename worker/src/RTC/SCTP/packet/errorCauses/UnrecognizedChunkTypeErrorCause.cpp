@@ -67,9 +67,6 @@ namespace RTC
 			// not fixed length.
 			errorCause->SetLength(causeLength + padding);
 
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
 			return errorCause;
 		}
 
@@ -117,8 +114,6 @@ namespace RTC
 		void UnrecognizedChunkTypeErrorCause::SetUnrecognizedChunk(const uint8_t* chunk, uint16_t chunkLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetVariableLengthValue(chunk, chunkLength);
 		}

@@ -1,4 +1,4 @@
-import * as flatbuffers from 'flatbuffers';
+import type * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import type {
@@ -67,8 +67,8 @@ export type WebRtcTransportData = {
 const logger = new Logger('WebRtcTransport');
 
 export class WebRtcTransportImpl<
-		WebRtcTransportAppData extends AppData = AppData,
-	>
+	WebRtcTransportAppData extends AppData = AppData,
+>
 	extends TransportImpl<
 		WebRtcTransportAppData,
 		WebRtcTransportEvents,

@@ -66,9 +66,6 @@ namespace RTC
 			// not fixed length.
 			parameter->SetLength(parameterLength + padding);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -101,7 +98,7 @@ namespace RTC
 				  "  - idx: %" PRIu16 ", chunk type: %" PRIu8 " (%s)",
 				  idx,
 				  static_cast<uint8_t>(GetChunkTypeAt(idx)),
-				  Chunk::ChunkType2String(GetChunkTypeAt(idx)).c_str());
+				  Chunk::ChunkTypeToString(GetChunkTypeAt(idx)).c_str());
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::SupportedExtensionsParameter>");
 		}
@@ -121,8 +118,6 @@ namespace RTC
 		void SupportedExtensionsParameter::AddChunkType(Chunk::ChunkType chunkType)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			// We must save previous count since SetVariableLengthValueLength() will
 			// make GetNumberOfChunkTypes() return a different value.

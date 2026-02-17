@@ -610,7 +610,7 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 	}
 }
 
-export function parseTraceEventData(
+function parseTraceEventData(
 	trace: FbsConsumer.TraceNotification
 ): ConsumerTraceEventData {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

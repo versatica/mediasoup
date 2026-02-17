@@ -82,19 +82,19 @@ namespace RTC
 			ReConfigChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ReConfigChunk() override;
+			~ReConfigChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual ReConfigChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			ReConfigChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			virtual bool CanHaveParameters() const final
+			bool CanHaveParameters() const final
 			{
 				return true;
 			}
 
 		protected:
-			virtual ReConfigChunk* SoftClone(const uint8_t* buffer) const final override;
+			ReConfigChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

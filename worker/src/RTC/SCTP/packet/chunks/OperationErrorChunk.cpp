@@ -73,9 +73,6 @@ namespace RTC
 			// not fixed length.
 			chunk->SetLength(chunkLength + padding);
 
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
 			return chunk;
 		}
 

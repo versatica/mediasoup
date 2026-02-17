@@ -3,9 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
-namespace TestSenderReport
+SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 {
 	// RTCP Packet. Sender Report and Receiver Report.
 
@@ -23,17 +21,18 @@ namespace TestSenderReport
 	// clang-format on
 
 	// Sender Report buffer start point.
-	uint8_t* srBuffer = buffer + Packet::CommonHeaderSize;
+	const uint8_t* srBuffer = buffer + RTC::RTCP::Packet::CommonHeaderSize;
 
 	// SR values.
-	uint32_t ssrc{ 0x5d931534 };
-	uint32_t ntpSec{ 3711615412 };
-	uint32_t ntpFrac{ 1985245553 };
-	uint32_t rtpTs{ 577280 };
-	uint32_t packetCount{ 3608 };
-	uint32_t octetCount{ 577280 };
+	const uint32_t ssrc{ 0x5d931534 };
+	const uint32_t ntpSec{ 3711615412 };
+	const uint32_t ntpFrac{ 1985245553 };
+	const uint32_t rtpTs{ 577280 };
+	const uint32_t packetCount{ 3608 };
+	const uint32_t octetCount{ 577280 };
 
-	void verify(SenderReport* report)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](RTC::RTCP::SenderReport* report)
 	{
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetNtpSec() == ntpSec);
@@ -41,16 +40,12 @@ namespace TestSenderReport
 		REQUIRE(report->GetRtpTs() == rtpTs);
 		REQUIRE(report->GetPacketCount() == packetCount);
 		REQUIRE(report->GetOctetCount() == octetCount);
-	}
-} // namespace TestSenderReport
+	};
 
-using namespace TestSenderReport;
-
-SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
-{
 	SECTION("parse SR packet")
 	{
-		std::unique_ptr<SenderReportPacket> packet{ SenderReportPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		auto* report = *(packet->Begin());
 
@@ -71,7 +66,8 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 	SECTION("parse SR")
 	{
-		std::unique_ptr<SenderReport> report{ SenderReport::Parse(srBuffer, SenderReport::HeaderSize) };
+		std::unique_ptr<RTC::RTCP::SenderReport> report{ RTC::RTCP::SenderReport::Parse(
+			srBuffer, RTC::RTCP::SenderReport::HeaderSize) };
 
 		REQUIRE(report);
 
@@ -79,13 +75,13 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		SECTION("serialize SenderReport instance")
 		{
-			uint8_t serialized[SenderReport::HeaderSize] = { 0 };
+			uint8_t serialized[RTC::RTCP::SenderReport::HeaderSize] = { 0 };
 
 			report->Serialize(serialized);
 
 			SECTION("compare serialized SenderReport with original buffer")
 			{
-				REQUIRE(std::memcmp(srBuffer, serialized, SenderReport::HeaderSize) == 0);
+				REQUIRE(std::memcmp(srBuffer, serialized, RTC::RTCP::SenderReport::HeaderSize) == 0);
 			}
 		}
 	}
@@ -94,12 +90,12 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 	{
 		const size_t count = 3;
 
-		SenderReportPacket packet;
+		RTC::RTCP::SenderReportPacket packet;
 
 		for (size_t i = 1; i <= count; ++i)
 		{
 			// Create report and add to packet.
-			SenderReport* report = new SenderReport();
+			auto* report = new RTC::RTCP::SenderReport();
 
 			report->SetSsrc(i);
 			report->SetNtpSec(i);
@@ -116,22 +112,26 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 		// Serialization must contain 3 SR packets.
 		packet.Serialize(buffer);
 
-		SenderReport* reports[count]{ nullptr };
+		// NOTE: clang-tidy says that this could be `const SenderReport* const reports`
+		// but that's absolutely wrong!
+		// NOLINTNEXTLINE(misc-const-correctness)
+		const RTC::RTCP::SenderReport* reports[count]{ nullptr };
 
-		std::unique_ptr<SenderReportPacket> packet2{ static_cast<SenderReportPacket*>(
-			Packet::Parse(buffer, sizeof(buffer))) };
+		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet2{
+			static_cast<RTC::RTCP::SenderReportPacket*>(RTC::RTCP::Packet::Parse(buffer, sizeof(buffer)))
+		};
 
 		REQUIRE(packet2 != nullptr);
 
 		reports[0] = *(packet2->Begin());
 
-		auto* packet3 = static_cast<SenderReportPacket*>(packet2->GetNext());
+		auto* packet3 = static_cast<RTC::RTCP::SenderReportPacket*>(packet2->GetNext());
 
 		REQUIRE(packet3 != nullptr);
 
 		reports[1] = *(packet3->Begin());
 
-		auto* packet4 = static_cast<SenderReportPacket*>(packet3->GetNext());
+		auto* packet4 = static_cast<RTC::RTCP::SenderReportPacket*>(packet3->GetNext());
 
 		REQUIRE(packet4 != nullptr);
 
@@ -139,10 +139,9 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		for (size_t i = 1; i <= count; ++i)
 		{
-			auto* report = reports[i - 1];
+			const auto* report = reports[i - 1];
 
 			REQUIRE(report != nullptr);
-
 			REQUIRE(report->GetSsrc() == i);
 			REQUIRE(report->GetNtpSec() == i);
 			REQUIRE(report->GetNtpFrac() == i);
@@ -158,7 +157,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 	SECTION("create SR")
 	{
 		// Create local report and check content.
-		SenderReport report1;
+		RTC::RTCP::SenderReport report1;
 
 		report1.SetSsrc(ssrc);
 		report1.SetNtpSec(ntpSec);
@@ -171,7 +170,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		SECTION("create a report out of the existing one")
 		{
-			SenderReport report2(&report1);
+			RTC::RTCP::SenderReport report2(&report1);
 
 			verify(&report2);
 		}

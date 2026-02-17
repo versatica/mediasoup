@@ -95,9 +95,6 @@ namespace RTC
 			// not fixed length.
 			errorCause->SetLength(causeLength + padding);
 
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
 			return errorCause;
 		}
 
@@ -133,7 +130,7 @@ namespace RTC
 				  indentation,
 				  "  - idx: %" PRIu32 ", parameter type: %s (%" PRIu16 ")",
 				  idx,
-				  Parameter::ParameterType2String(parameterType).c_str(),
+				  Parameter::ParameterTypeToString(parameterType).c_str(),
 				  static_cast<uint16_t>(parameterType));
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::MissingMandatoryParameterErrorCause>");
@@ -155,8 +152,6 @@ namespace RTC
 		  Parameter::ParameterType parameterType)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(GetVariableLengthValueLength() + 2);
@@ -196,8 +191,9 @@ namespace RTC
 				const auto parameterType = GetMissingParameterTypeAt(idx);
 
 				missingParameterTypesOss << (firstParameterType ? "" : ", ")
-				                         << Parameter::ParameterType2String(parameterType).c_str() << " ("
-				                         << std::to_string(static_cast<uint16_t>(parameterType)) << ")";
+				                         << RTC::SCTP::Parameter::ParameterTypeToString(parameterType).c_str()
+				                         << " (" << std::to_string(static_cast<uint16_t>(parameterType))
+				                         << ")";
 
 				firstParameterType = false;
 			}
@@ -208,8 +204,6 @@ namespace RTC
 		void MissingMandatoryParameterErrorCause::SetNumberOfMissingParameters(uint32_t value)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}

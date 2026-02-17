@@ -2,6 +2,81 @@
 
 ### NEXT
 
+- Worker: Improve `Utils::Crypto::GetRandomUInt()` ([PR #1725](https://github.com/versatica/mediasoup/pull/1725).
+- Convert `WORKER_CLOSE` into a notification ([PR #1729](https://github.com/versatica/mediasoup/pull/1729).
+- Node tests: Replace `sctp` unmaintained library with `werift-sctp` ([PR #1732](https://github.com/versatica/mediasoup/pull/1732), thanks to @shinyoshiaki for his help with `werift-sctp`.
+
+### 3.19.17
+
+- `ICE::StunPacket`: Fix wrong memory access in `GetXorMappedAddress()` method ([08c1ec9](https://github.com/versatica/mediasoup/commit/ea464d40ef77247c3ff7acd10e4a0118665fdd14)).
+
+### 3.19.16
+
+- `RTP::ProbationGenerator`: Remove wrong warning log ([PR #1703](https://github.com/versatica/mediasoup/pull/1703).
+
+### 3.19.15
+
+- `RtpStreamSend`: duplicated packets are discarded ([PR #1683](https://github.com/versatica/mediasoup/pull/1683).
+- Worker: Update liburing from 2.5-2 to 2.12-1 ([PR #1686](https://github.com/versatica/mediasoup/pull/1686).
+- Worker: Use the new `RTP::Packet` class ([PR #1689](https://github.com/versatica/mediasoup/pull/1689).
+- Worker: Use the new `ICE::StunPacket` class ([PR #1697](https://github.com/versatica/mediasoup/pull/1697).
+- Node: Expose `ortc` functions in `exports` in `package.json` and main module ([PR #1698](https://github.com/versatica/mediasoup/pull/1698).
+
+### 3.19.14
+
+- Worker: Fix missing system header include, which fails in GCC 15 ([PR #1679](https://github.com/versatica/mediasoup/pull/1679), credits to @upisfree).
+
+### 3.19.13
+
+- `RtxStream`: Don't check if RTP timestamp moved backwards ([PR #1668](https://github.com/versatica/mediasoup/pull/1668), credits to @Lynnworld).
+- Fix RTX packets containing non yet seen RTP packets being discarded ([PR #1653](https://github.com/versatica/mediasoup/pull/1653), credits to @penguinol, @mengbieting and @Lynnworld).
+
+### 3.19.12
+
+- Only look up the RTP packet’s RID extension if the packet doesn’t have MID extension ([PR #1666](https://github.com/versatica/mediasoup/pull/1666)).
+
+### 3.19.11
+
+- Node: Add `workerBin` optional field in `createWorker()` ([PR #1660](https://github.com/versatica/mediasoup/pull/1660)).
+
+### 3.19.10
+
+- Add `jitter` in `Consumer` 'outbound-rtp' stats ([PR #1654](https://github.com/versatica/mediasoup/pull/1654)).
+
+### 3.19.9
+
+- Fix RTCP packets lost in stats ([PR #1651](https://github.com/versatica/mediasoup/pull/1651)).
+
+### 3.19.8
+
+- Fix RTCP cumulative total lost computation ([PR #1650](https://github.com/versatica/mediasoup/pull/1650)).
+
+### 3.19.7
+
+- Bump up Meson from 1.5.0 to 1.9.1 ([PR #1634](https://github.com/versatica/mediasoup/pull/1634)).
+- `SeqManager`: Fix, properly account out of order drops until an input is forwarded ([#1635](https://github.com/versatica/mediasoup/pull/1635)), thanks to @pnts-se-whereby for reporting.
+- `RtpParameters`: Add `msid` optional field ([PR #1634](https://github.com/versatica/mediasoup/pull/1634)).
+
+### 3.19.6
+
+- AV1: Set DependencyDescriptor Header Extension to 'recvonly' but forward it between pipe transports ([#1632](https://github.com/versatica/mediasoup/pull/1632)).
+
+### 3.19.5
+
+- Add custom 'urn:mediasoup:params:rtp-hdrext:packet-id' (mediasoup-packet-id) header extension ([#1631](https://github.com/versatica/mediasoup/pull/1631)).
+
+### 3.19.4
+
+- AV1: Add support for DD extension header forwarding ([#1610](https://github.com/versatica/mediasoup/pull/1610)).
+- DependencyDescriptor: Update listener on RtpPacket clone ([#1618](https://github.com/versatica/mediasoup/pull/1618)).
+
+### 3.19.3
+
+- CI: Remove `macos-13` hosts.
+- VP8: Fix keyframe detection if "extended" bit is not set ([PR #1612](https://github.com/versatica/mediasoup/pull/1612), credits to @nifigase).
+- CI: Remove `node-20` GitHub actions.
+- Require Node.js >= 22 ([PR #1614](https://github.com/versatica/mediasoup/pull/1614)).
+
 ### 3.19.2
 
 - `IceServer`: Fix active tuple selection when in "completed" state ([PR #1608](https://github.com/versatica/mediasoup/pull/1608), credits to @pangsimon).

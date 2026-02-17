@@ -1,8 +1,9 @@
+#include <cstdint>
 #define MS_CLASS "RTC::RTCP::FeedbackPsRpsi"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/RTCP/FeedbackPsRpsi.hpp"
 #include "Logger.hpp"
+#include "RTC/RTCP/FeedbackPsRpsi.hpp"
 #include <cstring>
 
 namespace RTC
@@ -27,14 +28,14 @@ namespace RTC
 
 			const size_t paddingBytes = this->header->paddingBits / 8;
 
-			if (paddingBytes > FeedbackPsRpsiItem::maxBitStringSize)
+			if (paddingBytes > FeedbackPsRpsiItem::MaxBitStringSize)
 			{
 				MS_WARN_TAG(rtcp, "invalid Rpsi packet with too many padding bytes");
 
 				isCorrect = false;
 			}
 
-			this->length = FeedbackPsRpsiItem::maxBitStringSize - paddingBytes;
+			this->length = FeedbackPsRpsiItem::MaxBitStringSize - paddingBytes;
 		}
 
 		FeedbackPsRpsiItem::FeedbackPsRpsiItem(uint8_t payloadType, uint8_t* bitString, size_t length)
@@ -43,23 +44,25 @@ namespace RTC
 
 			MS_ASSERT(payloadType <= 0x7f, "rpsi payload type exceeds the maximum value");
 			MS_ASSERT(
-			  length <= FeedbackPsRpsiItem::maxBitStringSize,
+			  length <= FeedbackPsRpsiItem::MaxBitStringSize,
 			  "rpsi bit string length exceeds the maximum value");
 
-			this->raw    = new uint8_t[HeaderSize];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
+			// TODO: We should use Utils::Byte::PadTo4Bytes().
 			// 32 bits padding.
-			const size_t padding = (-length) & 3;
+			const uint8_t padding = (-length) & 3;
 
 			this->header->paddingBits = padding * 8;
 			this->header->zero        = 0;
 			std::memcpy(this->header->bitString, bitString, length);
 
+			this->raw = new uint8_t[FeedbackPsRpsiItem::HeaderSize + padding];
+
 			// Fill padding.
-			for (size_t i{ 0 }; i < padding; ++i)
+			for (uint8_t i{ 0 }; i < padding; ++i)
 			{
-				this->raw[HeaderSize + i - 1] = 0;
+				this->raw[FeedbackPsRpsiItem::HeaderSize + i - 1] = 0;
 			}
 		}
 
@@ -67,9 +70,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::memcpy(buffer, this->header, HeaderSize);
+			std::memcpy(buffer, this->header, FeedbackPsRpsiItem::HeaderSize);
 
-			return HeaderSize;
+			return FeedbackPsRpsiItem::HeaderSize;
 		}
 
 		void FeedbackPsRpsiItem::Dump(int indentation) const

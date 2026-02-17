@@ -18,14 +18,23 @@
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
-#include <uv.h>
 #include <absl/container/flat_hash_map.h>
 #include <csignal> // sigaction()
 #include <string>
 
-void IgnoreSignals();
+static void ignoreSignals();
 
-// NOLINTNEXTLINE
+/**
+ * Initializes everything and creates an instance of Worker class.
+ *
+ * @return
+ * - 0 if the Worker terminated properly.
+ * - 42 if given settings are wrong/invalid.
+ * - 40 if an uncaught MediasoupError happens (only in non executable mode).
+ * - 134 when any other uncaught C++ exception happens (only in non executable
+ *   mode).
+ */
+// NOLINTNEXTLINE(readability-identifier-naming)
 extern "C" int mediasoup_worker_run(
   int argc,
   char* argv[],
@@ -45,8 +54,10 @@ extern "C" int mediasoup_worker_run(
 	// deallocate its UV handles.
 	std::unique_ptr<Channel::ChannelSocket> channel{ nullptr };
 
+#ifndef MS_EXECUTABLE
 	try
 	{
+#endif
 		if (channelReadFn)
 		{
 			channel.reset(
@@ -56,6 +67,7 @@ extern "C" int mediasoup_worker_run(
 		{
 			channel.reset(new Channel::ChannelSocket(consumerChannelFd, producerChannelFd));
 		}
+#ifndef MS_EXECUTABLE
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -64,9 +76,10 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 40 is a custom exit code to notify "unknown error" to the Node library.
+		// 40 is a custom exit code to notify "unknown error" caller.
 		return 40;
 	}
+#endif
 
 	// Initialize the Logger.
 	Logger::ClassInit(channel.get());
@@ -83,9 +96,10 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 42 is a custom exit code to notify "settings error" to the Node library.
+		// 42 is a custom exit code to notify "settings error" caller.
 		return 42;
 	}
+#ifndef MS_EXECUTABLE
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("unexpected settings error: %s", error.what());
@@ -94,13 +108,19 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 40 is a custom exit code to notify "unknown error" to the Node library.
+		// 40 is a custom exit code to notify "unknown error" caller.
 		return 40;
 	}
+	catch (const std::runtime_error& error)
+	{
+		// 134 is the exit code for SIGABRT.
+		return 134;
+	}
+#endif
 
 	MS_DEBUG_TAG(info, "starting mediasoup-worker process [version:%s]", version);
 
-#if defined(MS_LITTLE_ENDIAN)
+#ifdef MS_LITTLE_ENDIAN
 	MS_DEBUG_TAG(info, "little-endian CPU detected");
 #elif defined(MS_BIG_ENDIAN)
 	MS_DEBUG_TAG(info, "big-endian CPU detected");
@@ -119,8 +139,10 @@ extern "C" int mediasoup_worker_run(
 	Settings::PrintConfiguration();
 	DepLibUV::PrintVersion();
 
+#ifndef MS_EXECUTABLE
 	try
 	{
+#endif
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
@@ -133,10 +155,8 @@ extern "C" int mediasoup_worker_run(
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
 
-#ifdef MS_EXECUTABLE
 		// Ignore some signals.
-		IgnoreSignals();
-#endif
+		ignoreSignals();
 
 		// Run the Worker.
 		const Worker worker(channel.get());
@@ -152,38 +172,32 @@ extern "C" int mediasoup_worker_run(
 		DepUsrSCTP::ClassDestroy();
 		DepLibUV::ClassDestroy();
 
-#ifdef MS_EXECUTABLE
-		// Wait a bit so pending messages to stdout/Channel arrive to the Node
-		// process.
-		uv_sleep(200);
-#endif
-
 		return 0;
+#ifndef MS_EXECUTABLE
 	}
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("failure exit: %s", error.what());
 
-		// 40 is a custom exit code to notify "unknown error" to the Node library.
+		// 40 is a custom exit code to notify "unknown error" caller.
 		return 40;
 	}
-#ifndef MS_EXECUTABLE
 	catch (const std::runtime_error& error)
 	{
-		return 134; // 134 is the exit code for SIGABRT.
+		// 134 is the exit code for SIGABRT.
+		return 134;
 	}
 #endif
 }
 
-void IgnoreSignals()
+static void ignoreSignals()
 {
+#ifdef MS_EXECUTABLE
 #ifndef _WIN32
 	MS_TRACE();
 
 	int err;
-	struct sigaction act
-	{
-	}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+	struct sigaction act{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	// clang-format off
 	absl::flat_hash_map<std::string, int> const ignoredSignals =
@@ -217,5 +231,6 @@ void IgnoreSignals()
 			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
 		}
 	}
+#endif
 #endif
 }

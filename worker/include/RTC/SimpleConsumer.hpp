@@ -1,7 +1,6 @@
 #ifndef MS_RTC_SIMPLE_CONSUMER_HPP
 #define MS_RTC_SIMPLE_CONSUMER_HPP
 
-#include "FBS/transport.h"
 #include "RTC/Consumer.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
@@ -9,7 +8,7 @@
 
 namespace RTC
 {
-	class SimpleConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
+	class SimpleConsumer : public RTC::Consumer, public RTC::RTP::RtpStreamSend::Listener
 	{
 	public:
 		SimpleConsumer(
@@ -39,17 +38,17 @@ namespace RTC
 			);
 			// clang-format on
 		}
-		void ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
-		void ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
+		void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
+		void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(
-		  RTC::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void ProducerRtcpSenderReport(RTC::RtpStreamRecv* rtpStream, bool first) override;
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
 		uint8_t GetBitratePriority() const override;
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket) override;
-		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
+		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket) override;
+		const std::vector<RTC::RTP::RtpStreamSend*>& GetRtpStreams() const override
 		{
 			return this->rtpStreams;
 		}
@@ -74,28 +73,29 @@ namespace RTC
 		void CreateRtpStream();
 		void RequestKeyFrame();
 		void StorePacketInTargetLayerRetransmissionBuffer(
-		  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket);
+		  RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
 		void EmitScore() const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
-		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
+		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void OnRtpStreamRetransmitRtpPacket(
+		  RTC::RTP::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet) override;
 
 	private:
 		// Allocated by this.
-		RTC::RtpStreamSend* rtpStream{ nullptr };
+		RTC::RTP::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
-		std::vector<RTC::RtpStreamSend*> rtpStreams;
-		RTC::RtpStreamRecv* producerRtpStream{ nullptr };
+		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
+		RTC::RTP::RtpStreamRecv* producerRtpStream{ nullptr };
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
-		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
+		RTC::SeqManager<uint16_t> rtpSeqManager;
 		bool managingBitrate{ false };
-		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
+		std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext;
 		// Buffer to store packets that arrive earlier than the first packet of the
 		// video key frame.
-		std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
+		std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
 		  targetLayerRetransmissionBuffer;
 	};
 } // namespace RTC

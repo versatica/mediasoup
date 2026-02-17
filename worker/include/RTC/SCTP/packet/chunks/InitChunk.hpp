@@ -107,13 +107,13 @@ namespace RTC
 			InitChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~InitChunk() override;
+			~InitChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual InitChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			InitChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			virtual bool CanHaveParameters() const final
+			bool CanHaveParameters() const final
 			{
 				return true;
 			}
@@ -154,7 +154,7 @@ namespace RTC
 			void SetInitialTsn(uint32_t value);
 
 		protected:
-			virtual InitChunk* SoftClone(const uint8_t* buffer) const final override;
+			InitChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We don't really need to override this method since this Chunk doesn't
@@ -162,7 +162,7 @@ namespace RTC
 			 * default length). Optional/Variable-Length Parameters and/or Error
 			 * Causes don't account here.
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return InitChunk::InitChunkHeaderLength;
 			}

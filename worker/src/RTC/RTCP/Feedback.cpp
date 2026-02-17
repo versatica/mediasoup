@@ -26,13 +26,13 @@ namespace RTC
 		/* Class methods. */
 
 		template<typename T>
-		const std::string& FeedbackPacket<T>::MessageType2String(typename T::MessageType type)
+		const std::string& FeedbackPacket<T>::MessageTypeToString(typename T::MessageType type)
 		{
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = FeedbackPacket<T>::type2String.find(type);
+			auto it = FeedbackPacket<T>::MessageType2String.find(type);
 
-			if (it == FeedbackPacket<T>::type2String.end())
+			if (it == FeedbackPacket<T>::MessageType2String.end())
 			{
 				return Unknown;
 			}
@@ -57,8 +57,8 @@ namespace RTC
 		{
 			this->raw                = new uint8_t[HeaderSize];
 			this->header             = reinterpret_cast<Header*>(this->raw);
-			this->header->senderSsrc = uint32_t{ htonl(senderSsrc) };
-			this->header->mediaSsrc  = uint32_t{ htonl(mediaSsrc) };
+			this->header->senderSsrc = htonl(senderSsrc);
+			this->header->mediaSsrc  = htonl(mediaSsrc);
 		}
 
 		template<typename T>
@@ -74,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t offset = Packet::Serialize(buffer);
+			const size_t offset = Packet::Serialize(buffer);
 
 			// Copy the header.
 			std::memcpy(buffer + offset, this->header, HeaderSize);
@@ -99,7 +99,7 @@ namespace RTC
 
 		// clang-format off
 		template<>
-		absl::flat_hash_map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String =
+		const absl::flat_hash_map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::MessageType2String =
 		{
 			{ FeedbackPs::MessageType::PLI,   "PLI"   },
 			{ FeedbackPs::MessageType::SLI,   "SLI"   },
@@ -128,7 +128,7 @@ namespace RTC
 			}
 
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-			FeedbackPsPacket* packet{ nullptr };
+			FeedbackPsPacket* packet{ nullptr }; // NOLINT(misc-const-correctness)
 
 			switch (FeedbackPs::MessageType(commonHeader->count))
 			{
@@ -189,7 +189,7 @@ namespace RTC
 
 		// clang-format off
 		template<>
-		absl::flat_hash_map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String =
+		const absl::flat_hash_map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::MessageType2String =
 		{
 			{ FeedbackRtp::MessageType::NACK,   "NACK"   },
 			{ FeedbackRtp::MessageType::TMMBR,  "TMMBR"  },
@@ -252,7 +252,6 @@ namespace RTC
 
 				case FeedbackRtp::MessageType::PS:
 					break;
-
 				case FeedbackRtp::MessageType::EXT:
 					break;
 

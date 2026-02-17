@@ -82,9 +82,6 @@ namespace RTC
 			// not fixed length.
 			parameter->SetLength(parameterLength + padding);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -137,16 +134,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
 		void IncomingSsnResetRequestParameter::AddStream(uint16_t stream)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			auto previousVariableLengthValueLength = GetVariableLengthValueLength();
 

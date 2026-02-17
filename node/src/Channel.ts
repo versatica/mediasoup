@@ -173,21 +173,21 @@ export class Channel extends EnhancedEventEmitter {
 			}
 		});
 
-		this.#consumerSocket.on('end', () =>
-			logger.debug('Consumer Channel ended by the worker process')
-		);
+		this.#consumerSocket.on('end', () => {
+			logger.debug('Consumer Channel ended by the worker process');
+		});
 
-		this.#consumerSocket.on('error', error =>
-			logger.error(`Consumer Channel error: ${error}`)
-		);
+		this.#consumerSocket.on('error', error => {
+			logger.error(`Consumer Channel error: ${error}`);
+		});
 
-		this.#producerSocket.on('end', () =>
-			logger.debug('Producer Channel ended by the worker process')
-		);
+		this.#producerSocket.on('end', () => {
+			logger.debug('Producer Channel ended by the worker process');
+		});
 
-		this.#producerSocket.on('error', error =>
-			logger.error(`Producer Channel error: ${error}`)
-		);
+		this.#producerSocket.on('error', error => {
+			logger.error(`Producer Channel error: ${error}`);
+		});
 	}
 
 	/**
@@ -244,7 +244,7 @@ export class Channel extends EnhancedEventEmitter {
 			);
 		}
 
-		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
+		const handlerIdOffset = this.#bufferBuilder.createString(handlerId ?? '');
 
 		let notificationOffset: number;
 
@@ -283,14 +283,16 @@ export class Channel extends EnhancedEventEmitter {
 		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN) {
-			throw new Error(`notification too big [event:${Event[event]}]`);
+			logger.error(`notify() | notification too big [event:${Event[event]}]`);
+
+			return;
 		}
 
 		try {
 			// This may throw if closed or remote side ended.
 			this.#producerSocket.write(buffer, 'binary');
 		} catch (error) {
-			logger.warn(`notify() | sending notification failed: ${error}`);
+			logger.error(`notify() | sending notification failed: ${error}`);
 
 			return;
 		}
@@ -317,7 +319,6 @@ export class Channel extends EnhancedEventEmitter {
 		}
 
 		const id = this.#nextId;
-
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId ?? '');
 
 		let requestOffset: number;

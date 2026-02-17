@@ -47,16 +47,23 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 	rtcMaxPort?: number;
 
 	/**
-	 * Path to the DTLS public certificate file in PEM format. If unset, a
-	 * certificate is dynamically created.
+	 * Absolute path to the DTLS public certificate file in PEM format. If unset,
+	 * a certificate is dynamically created.
 	 */
 	dtlsCertificateFile?: string;
 
 	/**
-	 * Path to the DTLS certificate private key file in PEM format. If unset, a
-	 * certificate is dynamically created.
+	 * Absolute path to the DTLS certificate private key file in PEM format. If
+	 * unset, a certificate is dynamically created.
 	 */
 	dtlsPrivateKeyFile?: string;
+
+	/**
+	 * Absolute path to the mediasoup-worker binary. If given it overrides the
+	 * default location of the binary and the MEDIASOUP_WORKER_BIN environment
+	 * variable.
+	 */
+	workerBin?: string;
 
 	/**
 	 * Field trials for libwebrtc.
@@ -203,8 +210,9 @@ export type WorkerObserverEvents = {
 	newrouter: [Router];
 };
 
-export interface Worker<WorkerAppData extends AppData = AppData>
-	extends EnhancedEventEmitter<WorkerEvents> {
+export interface Worker<
+	WorkerAppData extends AppData = AppData,
+> extends EnhancedEventEmitter<WorkerEvents> {
 	/**
 	 * Worker process identifier (PID).
 	 */

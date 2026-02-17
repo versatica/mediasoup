@@ -27,7 +27,7 @@ namespace RTC
 
 		public:
 			static const size_t HeaderSize{ 4 };
-			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::SLI };
+			static const FeedbackPs::MessageType MessageType{ FeedbackPs::MessageType::SLI };
 
 		public:
 			explicit FeedbackPsSliItem(Header* header);

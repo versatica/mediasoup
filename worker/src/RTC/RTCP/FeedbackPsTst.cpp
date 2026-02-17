@@ -20,7 +20,7 @@ namespace RTC
 			// Set reserved bits to zero.
 			std::memset(this->header, 0, HeaderSize);
 
-			this->header->ssrc           = uint32_t{ htonl(ssrc) };
+			this->header->ssrc           = htonl(ssrc);
 			this->header->sequenceNumber = sequenceNumber;
 			this->header->index          = index;
 		}
@@ -50,13 +50,13 @@ namespace RTC
 		/* Specialization for Tstr class. */
 
 		template<>
-		const FeedbackPs::MessageType FeedbackPsTstItem<Tstr>::messageType =
+		const FeedbackPs::MessageType FeedbackPsTstItem<Tstr>::MessageType =
 		  FeedbackPs::MessageType::TSTR;
 
 		/* Specialization for Tstn class. */
 
 		template<>
-		const FeedbackPs::MessageType FeedbackPsTstItem<Tstn>::messageType =
+		const FeedbackPs::MessageType FeedbackPsTstItem<Tstn>::MessageType =
 		  FeedbackPs::MessageType::TSTN;
 
 		// Explicit instantiation to have all definitions in this file.

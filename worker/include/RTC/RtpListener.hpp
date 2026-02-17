@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/Producer.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include <string>
 #include <unordered_map>
 
@@ -16,7 +16,7 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		void AddProducer(RTC::Producer* producer);
 		void RemoveProducer(RTC::Producer* producer);
-		RTC::Producer* GetProducer(const RTC::RtpPacket* packet);
+		RTC::Producer* GetProducer(const RTC::RTP::Packet* packet);
 		RTC::Producer* GetProducer(uint32_t ssrc) const;
 
 	public:

@@ -363,9 +363,7 @@ export function dataProducerTypeToFbs(
 	}
 }
 
-export function dataProducerTypeFromFbs(
-	type: FbsDataProducer.Type
-): DataProducerType {
+function dataProducerTypeFromFbs(type: FbsDataProducer.Type): DataProducerType {
 	switch (type) {
 		case FbsDataProducer.Type.SCTP: {
 			return 'sctp';

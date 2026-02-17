@@ -17,7 +17,7 @@ namespace RTC
 	class DtlsTransport : public TimerHandle::Listener
 	{
 	public:
-		enum class DtlsState
+		enum class DtlsState : uint8_t
 		{
 			NEW = 1,
 			CONNECTING,
@@ -27,7 +27,7 @@ namespace RTC
 		};
 
 	public:
-		enum class Role
+		enum class Role : uint8_t
 		{
 			AUTO = 1,
 			CLIENT,
@@ -35,7 +35,7 @@ namespace RTC
 		};
 
 	public:
-		enum class FingerprintAlgorithm
+		enum class FingerprintAlgorithm : uint8_t
 		{
 			SHA1 = 1,
 			SHA224,
@@ -107,12 +107,12 @@ namespace RTC
 			return (
 				// Minimum DTLS record length is 13 bytes.
 				(len >= 13) &&
-				// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
+				// @see RFC 7983.
 				(data[0] > 19 && data[0] < 64)
 			);
 			// clang-format on
 		}
-		static std::vector<Fingerprint>& GetLocalFingerprints()
+		static const std::vector<Fingerprint>& GetLocalFingerprints()
 		{
 			return DtlsTransport::localFingerprints;
 		}
@@ -128,11 +128,11 @@ namespace RTC
 		thread_local static EVP_PKEY* privateKey;
 		thread_local static SSL_CTX* sslCtx;
 		thread_local static uint8_t sslReadBuffer[];
-		static absl::flat_hash_map<std::string, Role> string2Role;
-		static absl::flat_hash_map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
-		static absl::flat_hash_map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
+		static const absl::flat_hash_map<std::string, Role> String2Role;
+		static const absl::flat_hash_map<std::string, FingerprintAlgorithm> String2FingerprintAlgorithm;
+		static const absl::flat_hash_map<FingerprintAlgorithm, std::string> FingerprintAlgorithm2String;
 		thread_local static std::vector<Fingerprint> localFingerprints;
-		static std::vector<SrtpCryptoSuiteMapEntry> srtpCryptoSuites;
+		static const std::vector<SrtpCryptoSuiteMapEntry> SrtpCryptoSuites;
 
 	public:
 		explicit DtlsTransport(Listener* listener);
@@ -161,18 +161,27 @@ namespace RTC
 			switch (this->state)
 			{
 				case DtlsState::NEW:
+				{
 					return false;
+				}
+
 				case DtlsState::CONNECTING:
 				case DtlsState::CONNECTED:
+				{
 					return true;
+				}
+
 				case DtlsState::FAILED:
 				case DtlsState::CLOSED:
+				{
 					return false;
+				}
 			}
 
 			// Make GCC 4.9 happy.
 			return false;
 		}
+
 		void Reset();
 		bool CheckStatus(int returnCode);
 		bool SetTimeout();

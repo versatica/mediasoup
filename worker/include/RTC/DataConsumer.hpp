@@ -104,7 +104,7 @@ namespace RTC
 		  uint32_t ppid,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel,
-		  onQueuedCallback* cb = nullptr);
+		  const onQueuedCallback* cb = nullptr);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
@@ -112,8 +112,8 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		const std::string id;
-		const std::string dataProducerId;
+		std::string id;
+		std::string dataProducerId;
 
 	private:
 		// Passed by argument.

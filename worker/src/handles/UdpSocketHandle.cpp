@@ -13,7 +13,7 @@
 /* Static. */
 
 static constexpr size_t ReadBufferSize{ 65536 };
-thread_local static uint8_t ReadBuffer[ReadBufferSize];
+thread_local uint8_t ReadBuffer[ReadBufferSize];
 
 /* Static methods for UV callbacks. */
 
@@ -106,7 +106,14 @@ UdpSocketHandle::~UdpSocketHandle()
 
 	if (!this->closed)
 	{
-		InternalClose();
+		try
+		{
+			InternalClose();
+		}
+		catch (const std::exception& e)
+		{
+			MS_ERROR("error closing UDP socket: %s", e.what());
+		}
 	}
 }
 
@@ -367,7 +374,6 @@ bool UdpSocketHandle::SetLocalAddress()
 	return true;
 }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 inline void UdpSocketHandle::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
@@ -404,7 +410,7 @@ inline void UdpSocketHandle::OnUvRecv(
 		this->recvBytes += nread;
 
 		// Notify the subclass.
-		UserOnUdpDatagramReceived(reinterpret_cast<uint8_t*>(buf->base), nread, addr);
+		UserOnUdpDatagramReceived(reinterpret_cast<uint8_t*>(buf->base), nread, ReadBufferSize, addr);
 	}
 	// Some error.
 	else
@@ -413,7 +419,6 @@ inline void UdpSocketHandle::OnUvRecv(
 	}
 }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 inline void UdpSocketHandle::OnUvSend(int status, UdpSocketHandle::onSendCallback* cb)
 {
 	MS_TRACE();

@@ -359,7 +359,14 @@ void TcpConnectionHandle::InternalClose()
 
 	if (err != 0)
 	{
-		MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+		try
+		{
+			MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+		}
+		catch (const std::exception& e)
+		{
+			MS_ERROR("%s", e.what());
+		}
 	}
 
 	// If there is no error and the peer didn't close its connection side then close gracefully.
@@ -374,7 +381,14 @@ void TcpConnectionHandle::InternalClose()
 
 		if (err != 0)
 		{
-			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
+			try
+			{
+				MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
+			}
+			catch (const std::exception& e)
+			{
+				MS_ERROR("%s", e.what());
+			}
 		}
 	}
 	// Otherwise directly close the socket.
@@ -412,7 +426,8 @@ inline void TcpConnectionHandle::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_
 {
 	MS_TRACE();
 
-	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
+	// If this is the first call to onUvReadAlloc() then allocate the receiving
+	// buffer now.
 	if (!this->buffer)
 	{
 		this->buffer = new uint8_t[this->bufferSize];

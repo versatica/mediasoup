@@ -69,12 +69,11 @@ namespace RTC
 			InvalidStreamIdentifierErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~InvalidStreamIdentifierErrorCause() override;
+			~InvalidStreamIdentifierErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual InvalidStreamIdentifierErrorCause* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			InvalidStreamIdentifierErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint16_t GetStreamIdentifier() const
 			{
@@ -84,14 +83,14 @@ namespace RTC
 			void SetStreamIdentifier(uint16_t value);
 
 		protected:
-			virtual InvalidStreamIdentifierErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			InvalidStreamIdentifierErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We don't really need to override this method since this Error Cause
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength;
 			}

@@ -5,7 +5,6 @@ import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 import fetch from 'node-fetch';
 import * as tar from 'tar';
-import * as ini from 'ini';
 import pkg from './package.json' with { type: 'json' };
 
 const IS_WINDOWS = os.platform() === 'win32';
@@ -21,21 +20,20 @@ const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
-// Paths for ESLint to check. Converted to string for convenience.
+// Paths for ESLint to check.
 const ESLINT_PATHS = [
 	'eslint.config.mjs',
 	'jest.config.mjs',
+	'knip.config.mjs',
 	'node/src',
 	'npm-scripts.mjs',
 	'worker/scripts',
-].join(' ');
+];
 
-// Paths for ESLint to ignore. Converted to string argument for convenience.
-const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs']
-	.map(entry => `--ignore-pattern ${entry}`)
-	.join(' ');
+// Paths for ESLint to ignore.
+const ESLINT_IGNORE_PATHS = ['node/src/fbs'];
 
-// Paths for Prettier to check/write. Converted to string for convenience.
+// Paths for Prettier to check/write.
 // NOTE: Prettier ignores paths in .gitignore so we don't need to care about
 // node/src/fbs.
 const PRETTIER_PATHS = [
@@ -45,12 +43,13 @@ const PRETTIER_PATHS = [
 	'doc',
 	'eslint.config.mjs',
 	'jest.config.mjs',
+	'knip.config.mjs',
 	'node/src',
 	'npm-scripts.mjs',
 	'package.json',
 	'tsconfig.json',
 	'worker/scripts',
-].join(' ');
+];
 
 const task = process.argv[2];
 const taskArgs = process.argv.slice(3).join(' ');
@@ -87,7 +86,7 @@ async function run() {
 		// So here we generate flatbuffers definitions for TypeScript and compile
 		// TypeScript to JavaScript.
 		case 'prepare': {
-			flatcNode();
+			await flatcNode();
 			buildTypescript({ force: false });
 
 			break;
@@ -186,15 +185,25 @@ async function run() {
 		}
 
 		case 'format:worker': {
-			installInvoke();
+			formatWorker();
 
-			executeCmd(`"${PYTHON}" -m invoke -r worker format`);
+			break;
+		}
+
+		case 'tidy:worker': {
+			tidyWorker({ fix: false });
+
+			break;
+		}
+
+		case 'tidy:worker:fix': {
+			tidyWorker({ fix: true });
 
 			break;
 		}
 
 		case 'flatc:node': {
-			flatcNode();
+			await flatcNode();
 
 			break;
 		}
@@ -218,20 +227,19 @@ async function run() {
 		}
 
 		case 'coverage:node': {
-			executeCmd(`jest --coverage ${taskArgs}`);
-			executeCmd('open-cli coverage/lcov-report/index.html');
+			coverageNode();
 
 			break;
 		}
 
 		case 'release:check': {
-			checkRelease();
+			await checkRelease();
 
 			break;
 		}
 
 		case 'release': {
-			release();
+			await release();
 
 			break;
 		}
@@ -250,6 +258,7 @@ function getPython() {
 	if (!python) {
 		try {
 			execSync('python3 --version', { stdio: ['ignore', 'ignore', 'ignore'] });
+
 			python = 'python3';
 		} catch (error) {
 			python = 'python';
@@ -308,7 +317,7 @@ function buildTypescript({ force }) {
 		return;
 	}
 
-	logInfo('buildTypescript()');
+	logInfo(`buildTypescript() [force:${force}]`);
 
 	deleteNodeLib();
 
@@ -353,11 +362,20 @@ function lintNode() {
 	// rules.
 	executeCmd('eslint-config-prettier eslint.config.mjs');
 
+	const eslintIgnorePatternArgs = ESLINT_IGNORE_PATHS.map(
+		entry => `--ignore-pattern ${entry}`
+	).join(' ');
+	const eslintFiles = ESLINT_PATHS.join(' ');
+
 	executeCmd(
-		`eslint -c eslint.config.mjs --max-warnings 0 ${ESLINT_IGNORE_PATTERN_ARGS} ${ESLINT_PATHS}`
+		`eslint -c eslint.config.mjs --max-warnings 0 ${eslintIgnorePatternArgs} ${eslintFiles}`
 	);
 
-	executeCmd(`prettier --check ${PRETTIER_PATHS}`);
+	const prettierFiles = PRETTIER_PATHS.join(' ');
+
+	executeCmd(`prettier --check ${prettierFiles}`);
+
+	executeCmd('knip --config knip.config.mjs --treat-config-hints-as-errors');
 }
 
 function lintWorker() {
@@ -371,11 +389,36 @@ function lintWorker() {
 function formatNode() {
 	logInfo('formatNode()');
 
-	executeCmd(`prettier --write ${PRETTIER_PATHS}`);
+	const prettierFiles = PRETTIER_PATHS.join(' ');
+
+	executeCmd(`prettier --write ${prettierFiles}`);
 }
 
-function flatcNode() {
+function formatWorker() {
+	logInfo('formatWorker()');
+
+	installInvoke();
+
+	executeCmd(`"${PYTHON}" -m invoke -r worker format`);
+}
+
+function tidyWorker({ fix }) {
+	logInfo(`tidyWorker() [fix:${fix}]`);
+
+	installInvoke();
+
+	if (fix) {
+		executeCmd(`"${PYTHON}" -m invoke -r worker tidy-fix`);
+	} else {
+		executeCmd(`"${PYTHON}" -m invoke -r worker tidy`);
+	}
+}
+
+async function flatcNode() {
 	logInfo('flatcNode()');
+
+	// NOTE: Load dep on demand since it's a devDependency.
+	const ini = await import('ini');
 
 	installInvoke();
 
@@ -447,6 +490,13 @@ function testWorker() {
 	executeCmd(`"${PYTHON}" -m invoke -r worker test`);
 }
 
+function coverageNode() {
+	logInfo('coverageNode()');
+
+	executeCmd(`jest --coverage ${taskArgs}`);
+	executeCmd('open-cli coverage/lcov-report/index.html');
+}
+
 function installNodeDeps() {
 	logInfo('installNodeDeps()');
 
@@ -456,15 +506,16 @@ function installNodeDeps() {
 	// Update package-lock.json.
 	executeCmd('npm install --package-lock-only --ignore-scripts');
 
-	// Check vulnerabilities in deps (exclude dev deps).
-	executeCmd('npm audit --omit=dev');
+	// Check vulnerabilities in deps.
+	executeCmd('npm audit');
+	executeCmd('npm audit --prefix worker/scripts');
 }
 
-function checkRelease() {
+async function checkRelease() {
 	logInfo('checkRelease()');
 
 	installNodeDeps();
-	flatcNode();
+	await flatcNode();
 	buildTypescript({ force: true });
 	buildWorker();
 	lintNode();
@@ -488,7 +539,7 @@ async function release() {
 		exitWithError();
 	}
 
-	checkRelease();
+	await checkRelease();
 	executeCmd(`git commit -am '${pkg.version}'`);
 	executeCmd(`git tag -a ${pkg.version} -m '${pkg.version}'`);
 	executeCmd(`git push origin v${MAYOR_VERSION}`);

@@ -20,6 +20,7 @@ namespace RTC
 		};
 	};
 
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	class RtpCodecMimeType
 	{
 	public:
@@ -30,7 +31,7 @@ namespace RTC
 		};
 
 	public:
-		enum class Subtype : uint16_t
+		enum class Subtype
 		{
 			// Audio codecs:
 			OPUS = 100,
@@ -59,10 +60,10 @@ namespace RTC
 		};
 
 	public:
-		static absl::flat_hash_map<std::string, Type> string2Type;
-		static absl::flat_hash_map<Type, std::string> type2String;
-		static absl::flat_hash_map<std::string, Subtype> string2Subtype;
-		static absl::flat_hash_map<Subtype, std::string> subtype2String;
+		static const absl::flat_hash_map<std::string, Type> String2Type;
+		static const absl::flat_hash_map<Type, std::string> Type2String;
+		static const absl::flat_hash_map<std::string, Subtype> String2Subtype;
+		static const absl::flat_hash_map<Subtype, std::string> Subtype2String;
 
 	public:
 		RtpCodecMimeType() = default;
@@ -119,12 +120,13 @@ namespace RTC
 			REPAIRED_RTP_STREAM_ID = 3,
 			ABS_SEND_TIME          = 4,
 			TRANSPORT_WIDE_CC_01   = 5,
-			DEPENDENCY_DESCRIPTOR  = 8,
-			SSRC_AUDIO_LEVEL       = 10,
-			VIDEO_ORIENTATION      = 11,
-			TOFFSET                = 12,
-			ABS_CAPTURE_TIME       = 13,
-			PLAYOUT_DELAY          = 14,
+			SSRC_AUDIO_LEVEL       = 6,
+			DEPENDENCY_DESCRIPTOR  = 7,
+			VIDEO_ORIENTATION      = 8,
+			TIME_OFFSET            = 9,
+			ABS_CAPTURE_TIME       = 10,
+			PLAYOUT_DELAY          = 11,
+			MEDIASOUP_PACKET_ID    = 12
 		};
 
 	public:
@@ -204,6 +206,7 @@ namespace RTC
 		bool ksvc{ false };
 	};
 
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	class RtpHeaderExtensionParameters
 	{
 	public:
@@ -247,11 +250,11 @@ namespace RTC
 
 	public:
 		static std::optional<Type> GetType(const RtpParameters& rtpParameters);
-		static std::string& GetTypeString(Type type);
+		static const std::string& GetTypeString(Type type);
 		static FBS::RtpParameters::Type TypeToFbs(Type type);
 
 	private:
-		static absl::flat_hash_map<Type, std::string> type2String;
+		static const absl::flat_hash_map<Type, std::string> Type2String;
 
 	public:
 		RtpParameters() = default;
@@ -273,6 +276,7 @@ namespace RTC
 		std::vector<RtpEncodingParameters> encodings;
 		std::vector<RtpHeaderExtensionParameters> headerExtensions;
 		RtcpParameters rtcp;
+		std::string msid;
 	};
 } // namespace RTC
 

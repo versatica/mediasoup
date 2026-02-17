@@ -56,13 +56,13 @@ namespace RTC
 			UnknownParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~UnknownParameter() override;
+			~UnknownParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual UnknownParameter* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			UnknownParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			virtual bool HasUnknownType() const override
+			bool HasUnknownType() const override
 			{
 				return true;
 			}
@@ -83,7 +83,7 @@ namespace RTC
 			}
 
 		protected:
-			virtual UnknownParameter* SoftClone(const uint8_t* buffer) const final override;
+			UnknownParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

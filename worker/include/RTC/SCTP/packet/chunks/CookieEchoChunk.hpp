@@ -70,11 +70,11 @@ namespace RTC
 			CookieEchoChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~CookieEchoChunk() override;
+			~CookieEchoChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual CookieEchoChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			CookieEchoChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			bool HasCookie() const
 			{
@@ -94,7 +94,7 @@ namespace RTC
 			void SetCookie(const uint8_t* cookie, uint16_t cookieLength);
 
 		protected:
-			virtual CookieEchoChunk* SoftClone(const uint8_t* buffer) const final override;
+			CookieEchoChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -43,15 +43,6 @@ function get_dep()
 	cd ${WORKER_PWD}
 }
 
-function get_lcov()
-{
-	GIT_REPO="https://github.com/linux-test-project/lcov.git"
-	GIT_TAG="master"
-	DEST="deps/lcov"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-}
-
 function get_clang_fuzzer()
 {
 	NAME="clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04"
@@ -85,11 +76,8 @@ function get_fuzzer_corpora()
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [lcov|clang-fuzzer|fuzzer-corpora]"
+		echo "  ./scripts/$(basename $0) [clang-fuzzer|fuzzer-corpora]"
 		echo
-		;;
-	lcov)
-		get_lcov
 		;;
 	clang-fuzzer)
 		get_clang_fuzzer

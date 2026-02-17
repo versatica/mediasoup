@@ -86,9 +86,6 @@ namespace RTC
 			// not fixed length.
 			chunk->SetLength(chunkLength + padding);
 
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
 			return chunk;
 		}
 
@@ -144,16 +141,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
 		void IForwardTsnChunk::AddStream(uint16_t stream, bool uFlag, uint32_t messageIdentifier)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			auto previousVariableLengthValueLength = GetVariableLengthValueLength();
 

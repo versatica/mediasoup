@@ -100,7 +100,7 @@ namespace RTC
 			uint32_t remoteInitialTsn{ 0 };
 			uint32_t remoteAdvertisedReceiverWindowCredit{ 0 };
 			uint64_t tieTag{ 0 };
-			const NegotiatedCapabilities negotiatedCapabilities;
+			NegotiatedCapabilities negotiatedCapabilities;
 		};
 	} // namespace SCTP
 } // namespace RTC

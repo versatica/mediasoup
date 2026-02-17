@@ -1,7 +1,8 @@
 #define MS_CLASS "mediasoup-worker"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "MediaSoupErrors.hpp"
+#include "common.hpp"
+#include "Logger.hpp"
 #include "lib.hpp"
 #include <cstdlib> // std::_Exit()
 #include <string>
@@ -11,8 +12,10 @@ static constexpr int ProducerChannelFd{ 4 };
 
 int main(int argc, char* argv[])
 {
+	const char* envVersion = std::getenv("MEDIASOUP_VERSION");
+
 	// Ensure we are called by our Node library.
-	if (!std::getenv("MEDIASOUP_VERSION"))
+	if (!envVersion)
 	{
 		MS_ERROR_STD("you don't seem to be my real father!");
 
@@ -20,10 +23,18 @@ int main(int argc, char* argv[])
 		std::_Exit(41);
 	}
 
-	const std::string version = std::getenv("MEDIASOUP_VERSION");
+	const std::string version{ envVersion };
 
-	auto statusCode = mediasoup_worker_run(
-	  argc, argv, version.c_str(), ConsumerChannelFd, ProducerChannelFd, nullptr, nullptr, nullptr, nullptr);
+	const auto statusCode = mediasoup_worker_run(
+	  /*argc*/ argc,
+	  /*argv*/ argv,
+	  /*version*/ version.c_str(),
+	  /*consumerChannelFd*/ ConsumerChannelFd,
+	  /*producerChannelFd*/ ProducerChannelFd,
+	  /*channelReadFn*/ nullptr,
+	  /*channelReadCtx*/ nullptr,
+	  /*channelWriteFn*/ nullptr,
+	  /*channelWriteCtx*/ nullptr);
 
 	std::_Exit(statusCode);
 }

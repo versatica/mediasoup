@@ -91,12 +91,10 @@ public:
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
 	virtual void UserOnUdpDatagramReceived(
-	  const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
+	  const uint8_t* data, size_t len, size_t bufferLen, const struct sockaddr* addr) = 0;
 
 protected:
-	struct sockaddr_storage localAddr
-	{
-	};
+	struct sockaddr_storage localAddr{};
 	std::string localIp;
 	uint16_t localPort{ 0u };
 

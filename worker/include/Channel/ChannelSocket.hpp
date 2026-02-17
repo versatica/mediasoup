@@ -8,7 +8,7 @@
 
 namespace Channel
 {
-	class ConsumerSocket : public ::UnixStreamSocketHandle
+	class ConsumerSocket : public UnixStreamSocketHandle
 	{
 	public:
 		class Listener
@@ -17,15 +17,16 @@ namespace Channel
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) = 0;
-			virtual void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) = 0;
+			virtual void OnConsumerSocketMessage(
+			  const ConsumerSocket* consumerSocket, char* msg, size_t msgLen)         = 0;
+			virtual void OnConsumerSocketClosed(const ConsumerSocket* consumerSocket) = 0;
 		};
 
 	public:
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
 		~ConsumerSocket() override;
 
-		/* Pure virtual methods inherited from ::UnixStreamSocketHandle. */
+		/* Pure virtual methods inherited from UnixStreamSocketHandle. */
 	public:
 		void UserOnUnixStreamRead() override;
 		void UserOnUnixStreamSocketClosed() override;
@@ -35,12 +36,12 @@ namespace Channel
 		Listener* listener{ nullptr };
 	};
 
-	class ProducerSocket : public ::UnixStreamSocketHandle
+	class ProducerSocket : public UnixStreamSocketHandle
 	{
 	public:
 		ProducerSocket(int fd, size_t bufferSize);
 
-		/* Pure virtual methods inherited from ::UnixStreamSocketHandle. */
+		/* Pure virtual methods inherited from UnixStreamSocketHandle. */
 	public:
 		void UserOnUnixStreamRead() override
 		{
@@ -104,8 +105,8 @@ namespace Channel
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
-		void OnConsumerSocketMessage(ConsumerSocket* consumerSocket, char* msg, size_t msgLen) override;
-		void OnConsumerSocketClosed(ConsumerSocket* consumerSocket) override;
+		void OnConsumerSocketMessage(const ConsumerSocket* consumerSocket, char* msg, size_t msgLen) override;
+		void OnConsumerSocketClosed(const ConsumerSocket* consumerSocket) override;
 
 	private:
 		// Passed by argument.
@@ -119,7 +120,7 @@ namespace Channel
 		ChannelWriteFn channelWriteFn{ nullptr };
 		ChannelWriteCtx channelWriteCtx{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
-		flatbuffers::FlatBufferBuilder bufferBuilder{};
+		flatbuffers::FlatBufferBuilder bufferBuilder;
 	};
 } // namespace Channel
 

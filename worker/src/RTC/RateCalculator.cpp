@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RateCalculator.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include <cmath>   // std::trunc()
@@ -70,8 +71,8 @@ namespace RTC
 
 			MS_ASSERT(
 			  this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
-			  "newest index overlaps with the oldest one [newestItemIndex:%" PRId32
-			  ", oldestItemIndex:%" PRId32 "]",
+			  "newest index overlaps with the oldest one [newestItemIndex:%" PRIi32
+			  ", oldestItemIndex:%" PRIi32 "]",
 			  this->newestItemIndex,
 			  this->oldestItemIndex);
 
@@ -121,7 +122,7 @@ namespace RTC
 		const float scale = this->scale / this->windowSizeMs;
 
 		this->lastTime = nowMs;
-		this->lastRate = static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
+		this->lastRate = static_cast<uint32_t>(std::trunc((this->totalCount * scale) + 0.5f));
 
 		return this->lastRate;
 	}
@@ -196,15 +197,15 @@ namespace RTC
 		}
 	}
 
-	void RtpDataCounter::Update(RTC::RtpPacket* packet)
+	void RtpDataCounter::Update(const RTC::RTP::Packet* packet)
 	{
-		const uint64_t nowMs = DepLibUV::GetTimeMs();
-
 		this->packets++;
 
 		if (!this->ignorePaddingOnlyPackets || packet->GetPayloadLength() > 0)
 		{
-			this->rate.Update(packet->GetSize(), nowMs);
+			const uint64_t nowMs = DepLibUV::GetTimeMs();
+
+			this->rate.Update(packet->GetLength(), nowMs);
 		}
 	}
 } // namespace RTC

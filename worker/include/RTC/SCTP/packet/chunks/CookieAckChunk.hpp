@@ -66,14 +66,14 @@ namespace RTC
 			CookieAckChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~CookieAckChunk() override;
+			~CookieAckChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual CookieAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			CookieAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 		protected:
-			virtual CookieAckChunk* SoftClone(const uint8_t* buffer) const final override;
+			CookieAckChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

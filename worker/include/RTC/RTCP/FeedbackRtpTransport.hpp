@@ -2,7 +2,7 @@
 #define MS_RTC_RTCP_FEEDBACK_RTP_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/Feedback.hpp"
 #include <vector>
 
 /* RTP Extensions for Transport-wide Congestion Control
@@ -60,10 +60,10 @@ namespace RTC
 			};
 
 		public:
-			enum class AddPacketResult
+			enum class AddPacketResult : uint8_t
 			{
-				SUCCESS           = 0,
-				MAX_SIZE_EXCEEDED = 1,
+				SUCCESS,
+				MAX_SIZE_EXCEEDED,
 				FATAL
 			};
 
@@ -201,7 +201,7 @@ namespace RTC
 			static FeedbackRtpTransportPacket* Parse(const uint8_t* data, size_t len);
 
 		private:
-			static absl::flat_hash_map<Status, std::string> status2String;
+			static const absl::flat_hash_map<Status, std::string> Status2String;
 
 		public:
 			FeedbackRtpTransportPacket(uint32_t senderSsrc, uint32_t mediaSsrc)
@@ -254,7 +254,7 @@ namespace RTC
 			}
 			int64_t GetReferenceTimestamp() const // Reference time in ms.
 			{
-				return TimeWrapPeriod + static_cast<int64_t>(this->referenceTime) * BaseTimeTick;
+				return TimeWrapPeriod + (static_cast<int64_t>(this->referenceTime) * BaseTimeTick);
 			}
 			int64_t GetBaseDelta(const int64_t previousTimestampMs) const
 			{

@@ -74,12 +74,11 @@ namespace RTC
 			MissingMandatoryParameterErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~MissingMandatoryParameterErrorCause() override;
+			~MissingMandatoryParameterErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual MissingMandatoryParameterErrorCause* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			MissingMandatoryParameterErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint32_t GetNumberOfMissingParameters() const
 			{
@@ -95,14 +94,14 @@ namespace RTC
 			void AddMissingParameterType(Parameter::ParameterType parameterType);
 
 		protected:
-			virtual MissingMandatoryParameterErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			MissingMandatoryParameterErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We don't really need to override this method since this Error Cause
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength;
 			}

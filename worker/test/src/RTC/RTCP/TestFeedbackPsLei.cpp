@@ -3,9 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
-namespace TestFeedbackPsLei
+SCENARIO("RTCP Feedback PS LEI", "[rtcp][feedback-ps][lei]")
 {
 	// RTCP LEI packet.
 
@@ -20,28 +18,25 @@ namespace TestFeedbackPsLei
 	// clang-format on
 
 	// LEI values.
-	uint32_t senderSsrc{ 0xfa17fa17 };
-	uint32_t mediaSsrc{ 0 };
-	uint32_t ssrc{ 0x02d03702 };
+	const uint32_t senderSsrc{ 0xfa17fa17 };
+	const uint32_t mediaSsrc{ 0 };
+	const uint32_t ssrc{ 0x02d03702 };
 
-	void verify(FeedbackPsLeiPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](RTC::RTCP::FeedbackPsLeiPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		FeedbackPsLeiItem* item = *(packet->Begin());
+		const RTC::RTCP::FeedbackPsLeiItem* item = *(packet->Begin());
 
 		REQUIRE(item->GetSsrc() == ssrc);
-	}
-} // namespace TestFeedbackPsLei
-
-SCENARIO("RTCP Feedback PS LEI parsing", "[parser][rtcp][feedback-ps][lei]")
-{
-	using namespace TestFeedbackPsLei;
+	};
 
 	SECTION("parse FeedbackPsLeiPacket")
 	{
-		std::unique_ptr<FeedbackPsLeiPacket> packet{ FeedbackPsLeiPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackPsLeiPacket> packet{ RTC::RTCP::FeedbackPsLeiPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
@@ -62,9 +57,9 @@ SCENARIO("RTCP Feedback PS LEI parsing", "[parser][rtcp][feedback-ps][lei]")
 
 	SECTION("create FeedbackPsLeiPacket")
 	{
-		FeedbackPsLeiPacket packet(senderSsrc, mediaSsrc);
+		RTC::RTCP::FeedbackPsLeiPacket packet(senderSsrc, mediaSsrc);
 
-		auto* item = new FeedbackPsLeiItem(ssrc);
+		auto* item = new RTC::RTCP::FeedbackPsLeiItem(ssrc);
 
 		packet.AddItem(item);
 

@@ -240,25 +240,10 @@ namespace RTC
 		}
 		else
 		{
-			if (sentAtMs < this->firstPacketSentAtMs)
-			{
-				this->firstPacketSentAtMs = sentAtMs;
-			}
-
-			if (receivedAtMs < this->firstPacketReceivedAtMs)
-			{
-				this->firstPacketReceivedAtMs = receivedAtMs;
-			}
-
-			if (sentAtMs > this->lastPacketSentAtMs)
-			{
-				this->lastPacketSentAtMs = sentAtMs;
-			}
-
-			if (receivedAtMs > this->lastPacketReceivedAtMs)
-			{
-				this->lastPacketReceivedAtMs = receivedAtMs;
-			}
+			this->firstPacketSentAtMs     = std::min(sentAtMs, this->firstPacketSentAtMs);
+			this->firstPacketReceivedAtMs = std::min(receivedAtMs, this->firstPacketReceivedAtMs);
+			this->lastPacketSentAtMs      = std::max(sentAtMs, this->lastPacketSentAtMs);
+			this->lastPacketReceivedAtMs  = std::max(receivedAtMs, this->lastPacketReceivedAtMs);
 		}
 
 		this->numPackets++;

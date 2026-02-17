@@ -3,10 +3,13 @@ Checks: "*,\
   -altera*,\
   -android*,\
   -boost-use-to-string,\
+  -boost-use-ranges,\
+  -bugprone-branch-clone,\
   -bugprone-easily-swappable-parameters,\
   -bugprone-implicit-widening-of-multiplication-result,\
   -bugprone-lambda-function-name,\
   -bugprone-macro-parentheses,\
+  -bugprone-narrowing-conversions,\
   -bugprone-reserved-identifier,\
   -cert-*,\
   -clang-analyzer-optin.osx.*,\
@@ -18,6 +21,7 @@ Checks: "*,\
   -cppcoreguidelines-avoid-non-const-global-variables,\
   -cppcoreguidelines-avoid-magic-numbers,\
   -cppcoreguidelines-init-variables,\
+  -cppcoreguidelines-narrowing-conversions,\
   -cppcoreguidelines-no-malloc,\
   -cppcoreguidelines-non-private-member-variables-in-classes,\
   -cppcoreguidelines-owning-memory,\
@@ -31,12 +35,17 @@ Checks: "*,\
   -cppcoreguidelines-pro-type-union-access,\
   -cppcoreguidelines-pro-type-vararg,\
   -cppcoreguidelines-special-member-functions,\
+  -hicpp-exception-baseclass,\
+  -hicpp-no-malloc,\
+  -hicpp-function-size,\
   -fuchsia-default-arguments-calls,\
   -fuchsia-default-arguments-declarations,\
   -fuchsia-overloaded-operator,\
+  -fuchsia-statically-constructed-objects,\
+  -google-build-using-namespace,\
   -google-default-arguments,\
   -google-readability-*,\
-  -google-runtime-references,\
+  -google-runtime-int,\
   -google-upgrade-googletest-case,\
   -hicpp-avoid-c-arrays,\
   -hicpp-avoid-goto,\
@@ -49,6 +58,7 @@ Checks: "*,\
   -llvm-include-order,\
   -llvm-header-guard,\
   -llvm-else-after-return,\
+  -llvm-prefer-static-over-anonymous-namespace,\
   -llvmlibc-*,\
   -misc-confusable-identifiers,\
   -misc-include-cleaner,\
@@ -60,20 +70,23 @@ Checks: "*,\
   -modernize-pass-by-value,\
   -modernize-use-nodiscard, \
   -modernize-use-trailing-return-type,\
+  -performance-avoid-endl,\
+  -performance-no-int-to-ptr,\
+  -portability-template-virtual-member-function,\
+  -readability-convert-member-functions-to-static,\
   -readability-else-after-return,\
   -readability-function-cognitive-complexity,\
+  -readability-function-size,\
   -readability-identifier-length,\
-  -readability-implicit-bool-cast,\
   -readability-implicit-bool-conversion,\
   -readability-magic-numbers,\
   -readability-redundant-access-specifiers, \
+  -readability-simplify-boolean-expr,\
   -readability-uppercase-literal-suffix,\
   "
-
-AnalyzeTemporaryDtors: false
+HeaderFilterRegex: '.*/worker/(include|test/include|fuzzer/include)/.*'
+FormatStyle: 'file'
 User: mediasoup
-FormatStyle: file
-
 CheckOptions:
   - key: cppcoreguidelines-pro-bounds-constant-array-index.GslHeader
     value: ''
@@ -81,10 +94,6 @@ CheckOptions:
     value: '0'
   - key: cppcoreguidelines-macro-usage.AllowedRegexp
     value: ^MS_*
-  - key: misc-assert-side-effect.AssertMacros
-    value: assert
-  - key: misc-assert-side-effect.CheckFunctionCalls
-    value: '0'
   - key: misc-throw-by-value-catch-by-reference.CheckThrowTemporaries
     value: '1'
   - key: modernize-loop-convert.MaxCopySize
@@ -99,12 +108,6 @@ CheckOptions:
     value: 'NULL'
   - key: readability-braces-around-statements.ShortStatementLines
     value: '3'
-  - key: readability-function-size.BranchThreshold
-    value: '4294967295'
-  - key: readability-function-size.LineThreshold
-    value: '4294967295'
-  - key: readability-function-size.StatementThreshold
-    value: '800'
   - key: readability-identifier-naming.AbstractClassCase
     value: CamelCase
   - key: readability-identifier-naming.AbstractClassPrefix

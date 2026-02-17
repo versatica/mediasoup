@@ -53,4 +53,3 @@ table TupleNotification {
 table RtcpTupleNotification {
     tuple: FBS.Transport.Tuple (required);
 }
-

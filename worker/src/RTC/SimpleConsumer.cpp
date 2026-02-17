@@ -6,7 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Codecs/Tools.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
@@ -40,7 +40,7 @@ namespace RTC
 		auto& encoding         = this->rtpParameters.encodings[0];
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
+		this->keyFrameSupported = RTC::RTP::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
@@ -49,9 +49,9 @@ namespace RTC
 		// libsrtp bug:
 		// https://github.com/versatica/mediasoup/issues/1437
 		const uint16_t initialOutputSeq =
-		  Utils::Crypto::GetRandomUInt32(1000u, std::numeric_limits<uint16_t>::max() / 2);
+		  Utils::Crypto::GetRandomUInt<uint16_t>(1000u, std::numeric_limits<uint16_t>::max() / 2);
 
-		this->rtpSeqManager.reset(new RTC::SeqManager<uint16_t>(initialOutputSeq));
+		this->rtpSeqManager = RTC::SeqManager<uint16_t>(initialOutputSeq);
 
 		// Create the encoding context for Opus.
 		if (
@@ -59,10 +59,10 @@ namespace RTC
 		  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
 		   mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
 		{
-			RTC::Codecs::EncodingContext::Params params;
+			RTC::RTP::Codecs::EncodingContext::Params params;
 
 			this->encodingContext.reset(
-			  RTC::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
+			  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
 
 			// ignoreDtx is set to false by default.
 			this->encodingContext->SetIgnoreDtx(data->ignoreDtx());
@@ -185,14 +185,14 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t /*mappedSsrc*/)
+	void SimpleConsumer::ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
 	}
 
-	void SimpleConsumer::ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t /*mappedSsrc*/)
+	void SimpleConsumer::ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
@@ -203,7 +203,7 @@ namespace RTC
 	}
 
 	void SimpleConsumer::ProducerRtpStreamScore(
-	  RTC::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
+	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 
@@ -211,7 +211,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	void SimpleConsumer::ProducerRtcpSenderReport(RTC::RtpStreamRecv* /*rtpStream*/, bool /*first*/)
+	void SimpleConsumer::ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* /*rtpStream*/, bool /*first*/)
 	{
 		MS_TRACE();
 
@@ -307,15 +307,13 @@ namespace RTC
 		// greater than computed one, then use it.
 		auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
 
-		if (maxBitrate > desiredBitrate)
-		{
-			desiredBitrate = maxBitrate;
-		}
+		desiredBitrate = std::max(maxBitrate, desiredBitrate);
 
 		return desiredBitrate;
 	}
 
-	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
+	// NOLINTNEXTLINE(misc-no-recursion)
+	void SimpleConsumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -326,10 +324,10 @@ namespace RTC
 		if (!IsActive())
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
 #endif
 
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -339,7 +337,7 @@ namespace RTC
 		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
 #endif
 
 			// NOTE: No need to drop the packet in the RTP sequence manager since here
@@ -362,10 +360,10 @@ namespace RTC
 			MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
 
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -374,10 +372,10 @@ namespace RTC
 		if (packet->GetPayloadLength() == 0)
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
 #endif
 
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -394,10 +392,10 @@ namespace RTC
 			  packet->GetTimestamp());
 
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
 #endif
 
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -424,7 +422,7 @@ namespace RTC
 				sendPacketsInTargetLayerRetransmissionBuffer = true;
 			}
 
-			this->rtpSeqManager->Sync(packet->GetSequenceNumber() - 1);
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
 			this->syncRequired = false;
 		}
@@ -432,7 +430,7 @@ namespace RTC
 		// Update RTP seq number and timestamp.
 		uint16_t seq;
 
-		this->rtpSeqManager->Input(packet->GetSequenceNumber(), seq);
+		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 
 		// Save original packet fields.
 		auto origSsrc = packet->GetSsrc();
@@ -459,10 +457,10 @@ namespace RTC
 			  origSeq);
 		}
 
-		const RTC::RtpStreamSend::ReceivePacketResult result =
+		const RTC::RTP::RtpStreamSend::ReceivePacketResult result =
 		  this->rtpStream->ReceivePacket(packet, sharedPacket);
 
-		if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
+		if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -482,7 +480,7 @@ namespace RTC
 			  origSeq);
 
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED);
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED);
 #endif
 		}
 
@@ -492,7 +490,7 @@ namespace RTC
 
 		// If sharedPacket doesn't have a packet inside and it has been stored we
 		// need to clone the packet into it.
-		if (!sharedPacket.HasPacket() && result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		if (!sharedPacket.HasPacket() && result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
 		{
 			sharedPacket.Assign(packet);
 		}
@@ -504,7 +502,7 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the key
 			// frame was sent.
-			if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
+			if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
 			{
 				for (auto& kv : this->targetLayerRetransmissionBuffer)
 				{
@@ -529,7 +527,7 @@ namespace RTC
 
 						// Be sure that the target layer retransmission buffer has not been
 						// emptied as a result of sending this packet. If so, exit the loop.
-						if (this->targetLayerRetransmissionBuffer.size() == 0)
+						if (this->targetLayerRetransmissionBuffer.empty())
 						{
 							MS_DEBUG_DEV(
 							  "target layer retransmission buffer emptied while iterating it, exiting the loop");
@@ -589,10 +587,7 @@ namespace RTC
 		auto fractionLost = this->rtpStream->GetFractionLost();
 
 		// If our fraction lost is worse than the given one, update it.
-		if (fractionLost > worstRemoteFractionLost)
-		{
-			worstRemoteFractionLost = fractionLost;
-		}
+		worstRemoteFractionLost = std::max(fractionLost, worstRemoteFractionLost);
 	}
 
 	void SimpleConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
@@ -731,7 +726,7 @@ namespace RTC
 		  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
 
 		// Set stream params.
-		RTC::RtpStream::Params params;
+		RTC::RTP::RtpStream::Params params;
 
 		params.ssrc        = encoding.ssrc;
 		params.payloadType = mediaCodec->payloadType;
@@ -785,7 +780,7 @@ namespace RTC
 			}
 		}
 
-		this->rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
+		this->rtpStream = new RTC::RTP::RtpStreamSend(this, params, this->rtpParameters.mid);
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.
@@ -817,7 +812,7 @@ namespace RTC
 	}
 
 	void SimpleConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
+	  RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -866,7 +861,7 @@ namespace RTC
 	}
 
 	void SimpleConsumer::OnRtpStreamScore(
-	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
+	  RTC::RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 
@@ -875,7 +870,7 @@ namespace RTC
 	}
 
 	void SimpleConsumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
+	  RTC::RTP::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

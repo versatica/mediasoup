@@ -9,8 +9,7 @@ include "rtpObserver.fbs";
 namespace FBS.Request;
 
 enum Method: uint8 {
-    WORKER_CLOSE = 0,
-    WORKER_DUMP,
+    WORKER_DUMP = 0,
     WORKER_GET_RESOURCE_USAGE,
     WORKER_UPDATE_SETTINGS,
     WORKER_CREATE_WEBRTCSERVER,
@@ -130,4 +129,3 @@ table Request {
 }
 
 root_type Request;
-

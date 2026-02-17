@@ -12,7 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		std::unordered_map<Parameter::ParameterType, std::string> Parameter::parameterType2String =
+		const std::unordered_map<Parameter::ParameterType, std::string> Parameter::ParameterType2String =
 		{
 			{ Parameter::ParameterType::HEARTBEAT_INFO,               "HEARTBEAT_INFO"               },
 			{ Parameter::ParameterType::IPV4_ADDRESS,                 "IPV4_ADDRESS"                 },
@@ -54,15 +54,15 @@ namespace RTC
 			return true;
 		}
 
-		const std::string& Parameter::ParameterType2String(ParameterType parameterType)
+		const std::string& Parameter::ParameterTypeToString(ParameterType parameterType)
 		{
 			MS_TRACE();
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = Parameter::parameterType2String.find(parameterType);
+			auto it = Parameter::ParameterType2String.find(parameterType);
 
-			if (it == Parameter::parameterType2String.end())
+			if (it == Parameter::ParameterType2String.end())
 			{
 				return Unknown;
 			}
@@ -98,7 +98,7 @@ namespace RTC
 			  indentation,
 			  "  type: %" PRIu16 " (%s) (unknown: %s)",
 			  static_cast<uint16_t>(GetType()),
-			  Parameter::ParameterType2String(GetType()).c_str(),
+			  Parameter::ParameterTypeToString(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
 			TLV::DumpCommon(indentation);
 		}

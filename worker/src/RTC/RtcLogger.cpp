@@ -10,7 +10,7 @@ namespace RTC
 	namespace RtcLogger
 	{
 		// clang-format off
-		absl::flat_hash_map<RtpPacket::DiscardReason, std::string> RtpPacket::discardReason2String = {
+		const absl::flat_hash_map<RtpPacket::DiscardReason, std::string> RtpPacket::DiscardReason2String = {
 			{ RtpPacket::DiscardReason::NONE,                                    "None"                               },
 			{ RtpPacket::DiscardReason::PRODUCER_NOT_FOUND,                      "ProducerNotFound"                   },
 			{ RtpPacket::DiscardReason::RECV_RTP_STREAM_NOT_FOUND,               "RecvRtpStreamNotFound"              },
@@ -85,7 +85,8 @@ namespace RTC
 			ss << ", \"recvSeqNumber\": " << this->recvSeqNumber;
 			ss << ", \"sendSeqNumber\": " << this->sendSeqNumber;
 			ss << ", \"discarded\": " << (this->discarded ? "true" : "false");
-			ss << ", \"discardReason\": '" << discardReason2String[this->discardReason] << "'";
+			ss << ", \"discardReason\": '" << RtpPacket::DiscardReason2String.at(this->discardReason)
+			   << "'";
 			ss << "}";
 
 			MS_DUMP_CLEAN(0, "%s", ss.str().c_str());

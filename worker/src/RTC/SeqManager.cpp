@@ -61,11 +61,20 @@ namespace RTC
 		// Mark as dropped if 'input' is higher than anyone already processed.
 		if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 		{
-			this->maxInput = input;
+			this->maxInput   = input;
+			this->maxDropped = input;
 			// Insert input in the last position.
-			// Explicitly indicate insert() to add the input at the end, which is
-			// more performant.
+			// Explicitly insert at the end, which is more performant.
 			this->dropped.insert(this->dropped.end(), input);
+
+			ClearDropped();
+		}
+		// Mark as dropped if no input was forwarded after the last dropped one and
+		// 'input' is higher than the last forwarded input 'this->maxForwarded'.
+		// Allows for properly accounting for out of order drops until an input is forwarded.
+		else if (this->maxInput == this->maxDropped && SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
+		{
+			this->dropped.insert(input);
 
 			ClearDropped();
 		}
@@ -89,7 +98,8 @@ namespace RTC
 			// Set 'maxInput' here if needed before calling ClearDropped().
 			if (this->started && SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 			{
-				this->maxInput = input;
+				this->maxInput     = input;
+				this->maxForwarded = input;
 			}
 
 			ClearDropped();
@@ -126,16 +136,18 @@ namespace RTC
 
 		if (!this->started)
 		{
-			this->started   = true;
-			this->maxInput  = input;
-			this->maxOutput = output;
+			this->started      = true;
+			this->maxInput     = input;
+			this->maxForwarded = input;
+			this->maxOutput    = output;
 		}
 		else
 		{
 			// New input is higher than the maximum seen.
 			if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 			{
-				this->maxInput = input;
+				this->maxInput     = input;
+				this->maxForwarded = input;
 			}
 
 			// New output is higher than the maximum seen.

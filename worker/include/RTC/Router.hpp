@@ -7,9 +7,9 @@
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
 #include "RTC/Producer.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpObserver.hpp"
-#include "RTC/RtpPacket.hpp"
-#include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
@@ -62,21 +62,21 @@ namespace RTC
 		void OnTransportProducerNewRtpStream(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RtpStreamRecv* rtpStream,
+		  RTC::RTP::RtpStreamRecv* rtpStream,
 		  uint32_t mappedSsrc) override;
 		void OnTransportProducerRtpStreamScore(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RtpStreamRecv* rtpStream,
+		  RTC::RTP::RtpStreamRecv* rtpStream,
 		  uint8_t score,
 		  uint8_t previousScore) override;
 		void OnTransportProducerRtcpSenderReport(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RtpStreamRecv* rtpStream,
+		  RTC::RTP::RtpStreamRecv* rtpStream,
 		  bool first) override;
 		void OnTransportProducerRtpPacketReceived(
-		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		  RTC::Transport* transport, RTC::Producer* producer, RTC::RTP::Packet* packet) override;
 		void OnTransportNeedWorstRemoteFractionLost(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
@@ -116,7 +116,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		const std::string id;
+		std::string id;
 
 	private:
 		// Passed by argument.

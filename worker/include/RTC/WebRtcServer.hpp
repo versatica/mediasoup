@@ -2,9 +2,9 @@
 #define MS_RTC_WEBRTC_SERVER_HPP
 
 #include "Channel/ChannelRequest.hpp"
-#include "RTC/IceCandidate.hpp"
+#include "RTC/ICE/IceCandidate.hpp"
+#include "RTC/ICE/StunPacket.hpp"
 #include "RTC/Shared.hpp"
-#include "RTC/StunPacket.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -45,7 +45,8 @@ namespace RTC
 		};
 
 	private:
-		static std::string GetLocalIceUsernameFragmentFromReceivedStunPacket(RTC::StunPacket* packet);
+		static std::string GetLocalIceUsernameFragmentFromReceivedStunPacket(
+		  const RTC::ICE::StunPacket* packet);
 
 	public:
 		WebRtcServer(
@@ -57,7 +58,7 @@ namespace RTC
 	public:
 		flatbuffers::Offset<FBS::WebRtcServer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
-		std::vector<RTC::IceCandidate> GetIceCandidates(
+		std::vector<RTC::ICE::IceCandidate> GetIceCandidates(
 		  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp) const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -65,9 +66,10 @@ namespace RTC
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
-		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 		void OnStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnNonStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnNonStunDataReceived(
+		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 
 		/* Pure virtual methods inherited from RTC::WebRtcTransport::WebRtcTransportListener. */
 	public:
@@ -85,7 +87,11 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
 		void OnUdpSocketPacketReceived(
-		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
+		  RTC::UdpSocket* socket,
+		  const uint8_t* data,
+		  size_t len,
+		  size_t bufferLen,
+		  const struct sockaddr* remoteAddr) override;
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
@@ -94,13 +100,15 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
 		void OnTcpConnectionPacketReceived(
-		  RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;
-
-	public:
-		// Passed by argument.
-		const std::string id;
+		  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen) override;
+		const std::string& GetId() const
+		{
+			return this->id;
+		}
 
 	private:
+		// Passed by argument.
+		std::string id;
 		// Passed by argument.
 		RTC::Shared* shared{ nullptr };
 		// Vector of UdpSockets and TcpServers in the user given order.

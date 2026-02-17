@@ -111,11 +111,11 @@ namespace RTC
 			DataChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~DataChunk() override;
+			~DataChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual DataChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			DataChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			bool GetI() const
 			{
@@ -191,13 +191,13 @@ namespace RTC
 			void SetUserData(const uint8_t* userData, uint16_t userDataLength);
 
 		protected:
-			virtual DataChunk* SoftClone(const uint8_t* buffer) const final override;
+			DataChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We need to override this method since this Chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return DataChunk::DataChunkHeaderLength;
 			}

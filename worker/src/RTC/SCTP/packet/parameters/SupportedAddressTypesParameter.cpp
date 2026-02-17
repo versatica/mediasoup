@@ -77,9 +77,6 @@ namespace RTC
 			// not fixed length.
 			parameter->SetLength(parameterLength + padding);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -128,8 +125,6 @@ namespace RTC
 		void SupportedAddressTypesParameter::AddAddressType(uint16_t addressType)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			// We must save previous count since SetVariableLengthValueLength() will
 			// make GetNumberOfAddressTypes() return a different value.

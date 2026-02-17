@@ -36,7 +36,7 @@ namespace RTC
 		}
 		void Restart()
 		{
-			return this->timer->Restart();
+			this->timer->Restart();
 		}
 
 		/* Pure virtual methods inherited from TimerHandle::Listener. */

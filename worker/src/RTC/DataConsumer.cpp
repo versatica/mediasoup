@@ -470,12 +470,10 @@ namespace RTC
 
 		this->bufferedAmount = bufferedAmount;
 
-		// clang-format off
 		if (
-				(this->forceTriggerBufferedAmountLow || previousBufferedAmount > this->bufferedAmountLowThreshold) &&
-				this->bufferedAmount <= this->bufferedAmountLowThreshold
-		)
-		// clang-format on
+		  (this->forceTriggerBufferedAmountLow ||
+		   previousBufferedAmount > this->bufferedAmountLowThreshold) &&
+		  this->bufferedAmount <= this->bufferedAmountLowThreshold)
 		{
 			this->forceTriggerBufferedAmountLow = false;
 
@@ -521,7 +519,7 @@ namespace RTC
 	  uint32_t ppid,
 	  std::vector<uint16_t>& subchannels,
 	  std::optional<uint16_t> requiredSubchannel,
-	  onQueuedCallback* cb)
+	  const onQueuedCallback* cb)
 	{
 		MS_TRACE();
 

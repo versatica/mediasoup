@@ -38,7 +38,7 @@ namespace RTC
 			// bytes despite item Length field doesn't not include padding.
 			// NOTE: We must cast to size_t, otherwise a maximum item Length value of
 			// 65535 would generate a padded length of 0 bytes!
-			size_t paddedItemLength = Utils::Byte::PadTo4Bytes(size_t{ itemLength });
+			const size_t paddedItemLength = Utils::Byte::PadTo4Bytes(size_t{ itemLength });
 
 			if (bufferLength < paddedItemLength)
 			{
@@ -78,14 +78,11 @@ namespace RTC
 			  GetLengthField(),
 			  GetLength() - GetLengthField(),
 			  GetBufferLength());
-			MS_DUMP_CLEAN(indentation, "  frozen: %s", IsFrozen() ? "yes" : "no");
 		}
 
 		void TLV::InitializeTLVHeader(uint16_t lengthFieldValue)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetLengthField(lengthFieldValue);
 		}
@@ -106,13 +103,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
 			MS_ASSERT(value != nullptr || valueLength == 0, "value cannot be nullptr if valueLength is > 0");
 
 			// NOTE: This can throw.
 			SetVariableLengthValueLength(valueLength);
 
-			// Copy the given value into the buffer (only if value is not null).
 			if (value)
 			{
 				std::memmove(GetVariableLengthValuePointer(), value, valueLength);
@@ -122,8 +117,6 @@ namespace RTC
 		void TLV::SetVariableLengthValueLength(size_t valueLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			auto previousLength      = GetLength();
 			auto previousLengthField = GetLengthField();
@@ -158,8 +151,6 @@ namespace RTC
 		void TLV::AddItem(const TLV* item)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			auto previousLength      = GetLength();
 			auto previousLengthField = GetLengthField();

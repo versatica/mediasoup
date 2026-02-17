@@ -51,7 +51,7 @@ PIP_PYLINT_DIR = f'{MEDIASOUP_OUT_DIR}/pip_pylint';
 NUM_CORES = len(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else os.cpu_count();
 PYTHON = os.getenv('PYTHON') or sys.executable;
 MESON = os.getenv('MESON') or f'{PIP_MESON_NINJA_DIR}/bin/meson';
-MESON_VERSION = os.getenv('MESON_VERSION') or '1.5.0';
+MESON_VERSION = os.getenv('MESON_VERSION') or '1.9.1';
 # MESON_ARGS can be used to provide extra configuration parameters to meson,
 # such as adding defines or changing optimization options. For instance, use
 # `MESON_ARGS="-Dms_log_trace=true -Dms_log_file_line=true" npm i` to compile
@@ -369,6 +369,35 @@ def format(ctx):
         );
 
 
+@task
+def tidy(ctx):
+    """
+    Performs C++ code checks according to `worker/.clang-tidy` rules
+    """
+    with cd_worker():
+        ctx.run(
+            f'"{NPM}" run tidy --prefix scripts/',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
+
+
+@task
+def tidy_fix(ctx):
+    """
+    Performs C++ code checks according to `worker/.clang-tidy` rules and applies
+    fixes
+    """
+    with cd_worker():
+        ctx.run(
+            f'"{NPM}" run tidy:fix --prefix scripts/',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
+
+
 @task(pre=[setup, flatc])
 def test(ctx):
     """
@@ -488,35 +517,6 @@ def test_asan_thread(ctx):
     with cd_worker():
         ctx.run(
             f'ASAN_OPTIONS=detect_leaks=1 "{BUILD_DIR}/mediasoup-worker-test-asan-thread" --invisibles {mediasoup_test_tags}',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
-
-
-@task
-def tidy(ctx):
-    """
-    Perform C++ checks with clang-tidy
-    """
-    mediasoup_tidy_checks = os.getenv('MEDIASOUP_TIDY_CHECKS') or '';
-    mediasoup_tidy_files = os.getenv('MEDIASOUP_TIDY_FILES') or '';
-    mediasoup_clang_tidy_dir = os.getenv('MEDIASOUP_CLANG_TIDY_DIR');
-
-    # MEDIASOUP_CLANG_TIDY_DIR env variable is mandatory.
-    # NOTE: sys.exit(text) exists the program with status code 1.
-    if not mediasoup_clang_tidy_dir:
-        sys.exit('missing MEDIASOUP_CLANG_TIDY_DIR env variable');
-
-    if mediasoup_tidy_checks:
-        mediasoup_tidy_checks = '-*,' + mediasoup_tidy_checks;
-
-    if not mediasoup_tidy_files:
-        mediasoup_tidy_files = 'src/*.cpp src/**/*.cpp src/**/**.cpp';
-
-    with cd_worker():
-        ctx.run(
-            f'"{PYTHON}" "{mediasoup_clang_tidy_dir}/run-clang-tidy" -clang-tidy-binary="{mediasoup_clang_tidy_dir}/clang-tidy" -clang-apply-replacements-binary="{mediasoup_clang_tidy_dir}/clang-apply-replacements" -p="{BUILD_DIR}" -j={NUM_CORES} -fix -checks={mediasoup_tidy_checks} {mediasoup_tidy_files}',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL

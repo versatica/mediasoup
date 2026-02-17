@@ -1,9 +1,8 @@
 #ifndef MS_RTC_RTP_OBSERVER_HPP
 #define MS_RTC_RTP_OBSERVER_HPP
 
-#include "common.hpp"
 #include "RTC/Producer.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/Shared.hpp"
 #include <string>
 
@@ -36,11 +35,11 @@ namespace RTC
 		{
 			return this->paused;
 		}
-		virtual void AddProducer(RTC::Producer* producer)                              = 0;
-		virtual void RemoveProducer(RTC::Producer* producer)                           = 0;
-		virtual void ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-		virtual void ProducerPaused(RTC::Producer* producer)                           = 0;
-		virtual void ProducerResumed(RTC::Producer* producer)                          = 0;
+		virtual void AddProducer(RTC::Producer* producer)                                = 0;
+		virtual void RemoveProducer(RTC::Producer* producer)                             = 0;
+		virtual void ReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
+		virtual void ProducerPaused(RTC::Producer* producer)                             = 0;
+		virtual void ProducerResumed(RTC::Producer* producer)                            = 0;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
@@ -52,7 +51,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		const std::string id;
+		std::string id;
 
 	protected:
 		// Passed by argument.

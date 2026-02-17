@@ -38,6 +38,7 @@ namespace RTC
 			/**
 			 * Zero Checksum Alternate Error Detection Method.
 			 */
+			// NOLINTNEXTLINE(performance-enum-size)
 			enum class AlternateErrorDetectionMethod : uint32_t
 			{
 				NONE           = 0x0000,
@@ -64,7 +65,7 @@ namespace RTC
 			 */
 			static ZeroChecksumAcceptableParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
-			static const std::string& AlternateErrorDetectionMethod2String(
+			static const std::string& AlternateErrorDetectionMethodToString(
 			  AlternateErrorDetectionMethod alternateErrorDetectionMethod);
 
 		private:
@@ -77,8 +78,8 @@ namespace RTC
 			static ZeroChecksumAcceptableParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
 
-			static std::unordered_map<AlternateErrorDetectionMethod, std::string>
-			  alternateErrorDetectionMethod2String;
+			static const std::unordered_map<AlternateErrorDetectionMethod, std::string>
+			  AlternateErrorDetectionMethod2String;
 
 		private:
 			/**
@@ -87,12 +88,11 @@ namespace RTC
 			ZeroChecksumAcceptableParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ZeroChecksumAcceptableParameter() override;
+			~ZeroChecksumAcceptableParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual ZeroChecksumAcceptableParameter* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			ZeroChecksumAcceptableParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			AlternateErrorDetectionMethod GetAlternateErrorDetectionMethod() const
 			{
@@ -102,14 +102,14 @@ namespace RTC
 			void SetAlternateErrorDetectionMethod(AlternateErrorDetectionMethod alternateErrorDetectionMethod);
 
 		protected:
-			virtual ZeroChecksumAcceptableParameter* SoftClone(const uint8_t* buffer) const final override;
+			ZeroChecksumAcceptableParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We don't really need to override this method since this Parameter
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return ZeroChecksumAcceptableParameter::ZeroChecksumAcceptableParameterHeaderLength;
 			}

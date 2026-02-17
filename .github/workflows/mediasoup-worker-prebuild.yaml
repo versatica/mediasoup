@@ -21,9 +21,6 @@ jobs:
           - os: ubuntu-22.04-arm
             cc: gcc
             cxx: g++
-          - os: macos-13
-            cc: clang
-            cxx: clang++
           - os: macos-15
             cc: clang
             cxx: clang++
@@ -53,7 +50,7 @@ jobs:
 
       # We need to install some NPM production deps for npm-scripts.mjs to
       # work.
-      - name: npm ci --ignore-scripts
+      - name: npm ci --ignore-scripts --omit=dev --foreground-scripts
         run: npm ci --ignore-scripts --omit=dev --foreground-scripts
 
       - name: npm run worker:prebuild-name

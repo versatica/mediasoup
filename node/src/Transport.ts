@@ -1,4 +1,4 @@
-import * as flatbuffers from 'flatbuffers';
+import type * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
@@ -113,10 +113,10 @@ type TransportData =
 const logger = new Logger('Transport');
 
 export abstract class TransportImpl<
-		TransportAppData extends AppData = AppData,
-		Events extends TransportEvents = TransportEvents,
-		Observer extends TransportObserver = TransportObserver,
-	>
+	TransportAppData extends AppData = AppData,
+	Events extends TransportEvents = TransportEvents,
+	Observer extends TransportObserver = TransportObserver,
+>
 	extends EnhancedEventEmitter<Events>
 	implements Transport
 {
@@ -455,6 +455,7 @@ export abstract class TransportImpl<
 		rtpParameters,
 		paused = false,
 		keyFrameRequestDelay,
+		enableMediasoupPacketIdHeaderExtension,
 		appData,
 	}: ProducerOptions<ProducerAppData>): Promise<Producer<ProducerAppData>> {
 		logger.debug('produce()');
@@ -471,7 +472,7 @@ export abstract class TransportImpl<
 		const clonedRtpParameters = utils.clone<RtpParameters>(rtpParameters);
 
 		// This may throw.
-		ortc.validateRtpParameters(clonedRtpParameters);
+		ortc.validateAndNormalizeRtpParameters(clonedRtpParameters);
 
 		// If missing or empty encodings, add one.
 		if (
@@ -524,8 +525,9 @@ export abstract class TransportImpl<
 			kind,
 			rtpParameters: clonedRtpParameters,
 			rtpMapping,
-			keyFrameRequestDelay,
 			paused,
+			keyFrameRequestDelay,
+			enableMediasoupPacketIdHeaderExtension,
 		});
 
 		const response = await this.channel.request(
@@ -599,7 +601,7 @@ export abstract class TransportImpl<
 		const clonedRtpCapabilities = utils.clone<RtpCapabilities>(rtpCapabilities);
 
 		// This may throw.
-		ortc.validateRtpCapabilities(clonedRtpCapabilities);
+		ortc.validateAndNormalizeRtpCapabilities(clonedRtpCapabilities);
 
 		const producer = this.getProducerById(producerId);
 
@@ -730,7 +732,9 @@ export abstract class TransportImpl<
 			type = 'sctp';
 
 			// This may throw.
-			ortc.validateSctpStreamParameters(clonedSctpStreamParameters!);
+			ortc.validateAndNormalizeSctpStreamParameters(
+				clonedSctpStreamParameters!
+			);
 		}
 		// If this is a DirectTransport, sctpStreamParameters must not be given.
 		else {
@@ -1425,16 +1429,18 @@ function createProduceRequest({
 	kind,
 	rtpParameters,
 	rtpMapping,
-	keyFrameRequestDelay,
 	paused,
+	keyFrameRequestDelay,
+	enableMediasoupPacketIdHeaderExtension,
 }: {
 	builder: flatbuffers.Builder;
 	producerId: string;
 	kind: MediaKind;
 	rtpParameters: RtpParameters;
 	rtpMapping: ortc.RtpCodecsEncodingsMapping;
-	keyFrameRequestDelay?: number;
 	paused: boolean;
+	keyFrameRequestDelay?: number;
+	enableMediasoupPacketIdHeaderExtension?: boolean;
 }): number {
 	const producerIdOffset = builder.createString(producerId);
 	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
@@ -1448,11 +1454,15 @@ function createProduceRequest({
 	);
 	FbsTransport.ProduceRequest.addRtpParameters(builder, rtpParametersOffset);
 	FbsTransport.ProduceRequest.addRtpMapping(builder, rtpMappingOffset);
+	FbsTransport.ProduceRequest.addPaused(builder, paused);
 	FbsTransport.ProduceRequest.addKeyFrameRequestDelay(
 		builder,
 		keyFrameRequestDelay ?? 0
 	);
-	FbsTransport.ProduceRequest.addPaused(builder, paused);
+	FbsTransport.ProduceRequest.addEnableMediasoupPacketIdHeaderExtension(
+		builder,
+		enableMediasoupPacketIdHeaderExtension ?? false
+	);
 
 	return FbsTransport.ProduceRequest.endProduceRequest(builder);
 }

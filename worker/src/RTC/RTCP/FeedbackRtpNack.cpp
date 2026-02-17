@@ -16,8 +16,8 @@ namespace RTC
 			this->raw    = new uint8_t[HeaderSize];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
-			this->header->packetId          = uint16_t{ htons(packetId) };
-			this->header->lostPacketBitmask = uint16_t{ htons(lostPacketBitmask) };
+			this->header->packetId          = htons(packetId);
+			this->header->lostPacketBitmask = htons(lostPacketBitmask);
 		}
 
 		size_t FeedbackRtpNackItem::Serialize(uint8_t* buffer)
@@ -34,7 +34,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::bitset<16> nackBitset(GetLostPacketBitmask());
+			const std::bitset<16> nackBitset(GetLostPacketBitmask());
 
 			MS_DUMP_CLEAN(indentation, "<FeedbackRtpNackItem>");
 			MS_DUMP_CLEAN(indentation, "  pid: %" PRIu16, this->GetPacketId());

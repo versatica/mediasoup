@@ -12,7 +12,7 @@
 #include "RTC/DirectTransport.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
-#include "RTC/SharedRtpPacket.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -164,8 +164,9 @@ namespace RTC
 				dataConsumerIds.emplace_back(builder.CreateString(dataConsumer->id));
 			}
 
-			mapDataProducerIdDataConsumerIds.emplace_back(FBS::Common::CreateStringStringArrayDirect(
-			  builder, dataProducer->id.c_str(), &dataConsumerIds));
+			mapDataProducerIdDataConsumerIds.emplace_back(
+			  FBS::Common::CreateStringStringArrayDirect(
+			    builder, dataProducer->id.c_str(), &dataConsumerIds));
 		}
 
 		// Add mapDataConsumerIdDataProducerId.
@@ -177,8 +178,9 @@ namespace RTC
 			auto* dataConsumer = kv.first;
 			auto* dataProducer = kv.second;
 
-			mapDataConsumerIdDataProducerId.emplace_back(FBS::Common::CreateStringStringDirect(
-			  builder, dataConsumer->id.c_str(), dataProducer->id.c_str()));
+			mapDataConsumerIdDataProducerId.emplace_back(
+			  FBS::Common::CreateStringStringDirect(
+			    builder, dataConsumer->id.c_str(), dataProducer->id.c_str()));
 		}
 
 		return FBS::Router::CreateDumpResponseDirect(
@@ -440,7 +442,7 @@ namespace RTC
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", Channel::ChannelRequest::method2String[request->method]);
+				MS_THROW_ERROR("unknown method");
 			}
 		}
 	}
@@ -604,7 +606,7 @@ namespace RTC
 	inline void Router::OnTransportProducerNewRtpStream(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
-	  RTC::RtpStreamRecv* rtpStream,
+	  RTC::RTP::RtpStreamRecv* rtpStream,
 	  uint32_t mappedSsrc)
 	{
 		MS_TRACE();
@@ -620,7 +622,7 @@ namespace RTC
 	inline void Router::OnTransportProducerRtpStreamScore(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
-	  RTC::RtpStreamRecv* rtpStream,
+	  RTC::RTP::RtpStreamRecv* rtpStream,
 	  uint8_t score,
 	  uint8_t previousScore)
 	{
@@ -635,7 +637,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerRtcpSenderReport(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, bool first)
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first)
 	{
 		MS_TRACE();
 
@@ -648,7 +650,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerRtpPacketReceived(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpPacket* packet)
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -663,7 +665,7 @@ namespace RTC
 			// Cloned ref-counted packet that will be filled for as long as needed
 			// avoiding multiple allocations unless absolutely necessary.
 			// Clone only happens if needed and only once.
-			RTC::SharedRtpPacket sharedPacket;
+			RTC::RTP::SharedPacket sharedPacket;
 
 #ifdef MS_LIBURING_SUPPORTED
 			if (DepLibUring::IsEnabled())

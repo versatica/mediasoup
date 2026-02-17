@@ -1,6 +1,8 @@
 #ifndef MS_RTC_CONSTS_HPP
 #define MS_RTC_CONSTS_HPP
 
+#include "common.hpp"
+
 namespace RTC
 {
 	namespace Consts
@@ -20,6 +22,16 @@ namespace RTC
 		 *   - srtp.h: SRTP_MAX_TRAILER_LEN (SRTP_MAX_TAG_LEN + SRTP_MAX_MKI_LEN).
 		 */
 		constexpr size_t RtcpPacketMaxSize{ RTC::Consts::MtuSize - 40 - 20 - 148u };
+
+		/**
+		 * Max length for a 1 byte RTP header extension.
+		 */
+		constexpr uint8_t OneByteRtpExtensionMaxLength{ 16u };
+
+		/**
+		 * Max length for a 2 bytes RTP header extension.
+		 */
+		constexpr uint8_t TwoBytesRtpExtensionMaxLength{ 255u };
 
 		/**
 		 * MID RTP header extension max length (just used when setting/updating MID

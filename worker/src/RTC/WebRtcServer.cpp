@@ -22,14 +22,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return std::pow(2, 24) * IceTypePreference + std::pow(2, 8) * localPreference +
-		       std::pow(2, 0) * (256 - IceComponent);
+		return (std::pow(2, 24) * IceTypePreference) + (std::pow(2, 8) * localPreference) +
+		       (std::pow(2, 0) * (256 - IceComponent));
 	}
 
 	/* Class methods. */
 
 	inline std::string WebRtcServer::GetLocalIceUsernameFragmentFromReceivedStunPacket(
-	  RTC::StunPacket* packet)
+	  const RTC::ICE::StunPacket* packet)
 	{
 		MS_TRACE();
 
@@ -38,7 +38,7 @@ namespace RTC
 		// local usernameFragment) which is the first value in the attribute value
 		// before the ":" symbol.
 
-		const auto& username  = packet->GetUsername();
+		std::string username{ packet->GetUsername() };
 		const size_t colonPos = username.find(':');
 
 		// If no colon is found just return the whole USERNAME attribute anyway.
@@ -81,7 +81,7 @@ namespace RTC
 					announcedAddress = listenInfo->announcedAddress()->str();
 				}
 
-				bool exposeInternalIp = listenInfo->exposeInternalIp();
+				const bool exposeInternalIp = listenInfo->exposeInternalIp();
 
 				RTC::Transport::SocketFlags flags;
 
@@ -269,13 +269,15 @@ namespace RTC
 		{
 			if (item.udpSocket)
 			{
-				udpSockets.emplace_back(FBS::WebRtcServer::CreateIpPortDirect(
-				  builder, item.udpSocket->GetLocalIp().c_str(), item.udpSocket->GetLocalPort()));
+				udpSockets.emplace_back(
+				  FBS::WebRtcServer::CreateIpPortDirect(
+				    builder, item.udpSocket->GetLocalIp().c_str(), item.udpSocket->GetLocalPort()));
 			}
 			else if (item.tcpServer)
 			{
-				tcpServers.emplace_back(FBS::WebRtcServer::CreateIpPortDirect(
-				  builder, item.tcpServer->GetLocalIp().c_str(), item.tcpServer->GetLocalPort()));
+				tcpServers.emplace_back(
+				  FBS::WebRtcServer::CreateIpPortDirect(
+				    builder, item.tcpServer->GetLocalIp().c_str(), item.tcpServer->GetLocalPort()));
 			}
 		}
 
@@ -295,8 +297,9 @@ namespace RTC
 			const auto& localIceUsernameFragment = kv.first;
 			const auto* webRtcTransport          = kv.second;
 
-			localIceUsernameFragments.emplace_back(FBS::WebRtcServer::CreateIceUserNameFragmentDirect(
-			  builder, localIceUsernameFragment.c_str(), webRtcTransport->id.c_str()));
+			localIceUsernameFragments.emplace_back(
+			  FBS::WebRtcServer::CreateIceUserNameFragmentDirect(
+			    builder, localIceUsernameFragment.c_str(), webRtcTransport->id.c_str()));
 		}
 
 		// Add tupleHashes.
@@ -343,12 +346,12 @@ namespace RTC
 		}
 	}
 
-	std::vector<RTC::IceCandidate> WebRtcServer::GetIceCandidates(
+	std::vector<RTC::ICE::IceCandidate> WebRtcServer::GetIceCandidates(
 	  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp) const
 	{
 		MS_TRACE();
 
-		std::vector<RTC::IceCandidate> iceCandidates;
+		std::vector<RTC::ICE::IceCandidate> iceCandidates;
 		uint16_t iceLocalPreferenceDecrement{ 0 };
 
 		// Optimistic preallocation which takes into account worst case (each
@@ -417,17 +420,18 @@ namespace RTC
 		return iceCandidates;
 	}
 
-	inline void WebRtcServer::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void WebRtcServer::OnPacketReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
-		if (RTC::StunPacket::IsStun(data, len))
+		if (RTC::ICE::StunPacket::IsStun(data, len))
 		{
 			OnStunDataReceived(tuple, data, len);
 		}
 		else
 		{
-			OnNonStunDataReceived(tuple, data, len);
+			OnNonStunDataReceived(tuple, data, len, bufferLen);
 		}
 	}
 
@@ -435,7 +439,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::StunPacket* packet = RTC::StunPacket::Parse(data, len);
+		const auto* packet = RTC::ICE::StunPacket::Parse(data, len);
 
 		if (!packet)
 		{
@@ -479,7 +483,7 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnNonStunDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
@@ -494,7 +498,7 @@ namespace RTC
 
 		auto* webRtcTransport = it->second;
 
-		webRtcTransport->ProcessNonStunPacketFromWebRtcServer(tuple, data, len);
+		webRtcTransport->ProcessNonStunPacketFromWebRtcServer(tuple, data, len, bufferLen);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportCreated(RTC::WebRtcTransport* webRtcTransport)
@@ -583,13 +587,17 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnUdpSocketPacketReceived(
-	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
+	  RTC::UdpSocket* socket,
+	  const uint8_t* data,
+	  size_t len,
+	  size_t bufferLen,
+	  const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len);
+		OnPacketReceived(&tuple, data, len, bufferLen);
 	}
 
 	inline void WebRtcServer::OnRtcTcpConnectionClosed(
@@ -616,12 +624,12 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnTcpConnectionPacketReceived(
-	  RTC::TcpConnection* connection, const uint8_t* data, size_t len)
+	  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(connection);
 
-		OnPacketReceived(&tuple, data, len);
+		OnPacketReceived(&tuple, data, len, bufferLen);
 	}
 } // namespace RTC

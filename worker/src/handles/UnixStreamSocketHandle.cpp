@@ -154,7 +154,14 @@ void UnixStreamSocketHandle::Close()
 
 		if (err != 0)
 		{
-			MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+			try
+			{
+				MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+			}
+			catch (const std::exception& e)
+			{
+				MS_ERROR("%s", e.what());
+			}
 		}
 	}
 
@@ -169,7 +176,14 @@ void UnixStreamSocketHandle::Close()
 
 		if (err != 0)
 		{
-			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
+			try
+			{
+				MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
+			}
+			catch (const std::exception& e)
+			{
+				MS_ERROR("%s", e.what());
+			}
 		}
 	}
 	// Otherwise directly close the socket.

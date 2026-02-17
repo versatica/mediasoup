@@ -19,7 +19,7 @@ namespace RTC
 		int16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFF };
 
 		// clang-format off
-		absl::flat_hash_map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::status2String =
+		const absl::flat_hash_map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String =
 		{
 			{ FeedbackRtpTransportPacket::Status::NotReceived, "NR" },
 			{ FeedbackRtpTransportPacket::Status::SmallDelta,  "SD" },
@@ -327,12 +327,9 @@ namespace RTC
 			// NOTE: Read it as int 64 to detect long elapsed times.
 			const int64_t delta64 = (timestamp - this->latestTimestamp) * 4;
 
-			// clang-format off
 			if (
-				delta64 > FeedbackRtpTransportPacket::maxPacketDelta ||
-				delta64 < -1 * static_cast<int64_t>(FeedbackRtpTransportPacket::maxPacketDelta)
-			)
-			// clang-format on
+			  delta64 > FeedbackRtpTransportPacket::maxPacketDelta ||
+			  delta64 < -1 * static_cast<int64_t>(FeedbackRtpTransportPacket::maxPacketDelta))
 			{
 				MS_WARN_DEV(
 				  "RTP packet delta exceeded [latestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
@@ -400,6 +397,7 @@ namespace RTC
 			}
 
 			size_t deltaIdx{ 0u };
+			// NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
 			auto currentReceivedAtMs = static_cast<int64_t>(this->referenceTime * 64);
 
 			for (size_t idx{ 0u }; idx < packetResults.size(); ++idx)
@@ -510,13 +508,9 @@ namespace RTC
 			}
 
 			// Create a long run chunk before processing this packet, if needed.
-			// clang-format off
 			if (
-				this->context.statuses.size() >= 7 &&
-				this->context.allSameStatus &&
-				status != this->context.currentStatus
-			)
-			// clang-format on
+			  this->context.statuses.size() >= 7 && this->context.allSameStatus &&
+			  status != this->context.currentStatus)
 			{
 				CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
@@ -529,12 +523,9 @@ namespace RTC
 
 			// Update context info.
 
-			// clang-format off
 			if (
-				this->context.currentStatus == Status::None ||
-				(this->context.allSameStatus && this->context.currentStatus == status)
-			)
-			// clang-format on
+			  this->context.currentStatus == Status::None ||
+			  (this->context.allSameStatus && this->context.currentStatus == status))
 			{
 				this->context.allSameStatus = true;
 			}
@@ -732,7 +723,9 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<RunLengthChunk>");
 			MS_DUMP_CLEAN(
-			  indentation, "  status: %s", FeedbackRtpTransportPacket::status2String[this->status].c_str());
+			  indentation,
+			  "  status: %s",
+			  FeedbackRtpTransportPacket::Status2String.at(this->status).c_str());
 			MS_DUMP_CLEAN(indentation, "  count: %" PRIu16, this->count);
 			MS_DUMP_CLEAN(indentation, "</RunLengthChunk>");
 		}
@@ -842,7 +835,7 @@ namespace RTC
 			// Dump status slots.
 			for (auto status : this->statuses)
 			{
-				out << "|" << FeedbackRtpTransportPacket::status2String[status];
+				out << "|" << FeedbackRtpTransportPacket::Status2String.at(status);
 			}
 
 			// Dump empty slots.
@@ -982,7 +975,7 @@ namespace RTC
 			// Dump status slots.
 			for (auto status : this->statuses)
 			{
-				out << "|" << FeedbackRtpTransportPacket::status2String[status];
+				out << "|" << FeedbackRtpTransportPacket::Status2String.at(status);
 			}
 
 			// Dump empty slots.

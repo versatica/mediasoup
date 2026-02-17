@@ -43,7 +43,7 @@ namespace RTC
 
 		public:
 			static const size_t HeaderSize{ 20 };
-			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::ECN };
+			static const FeedbackRtp::MessageType MessageType{ FeedbackRtp::MessageType::ECN };
 
 		public:
 			explicit FeedbackRtpEcnItem(Header* header) : header(header)
@@ -56,31 +56,31 @@ namespace RTC
 
 			uint32_t GetSequenceNumber() const
 			{
-				return uint32_t{ ntohl(this->header->sequenceNumber) };
+				return ntohl(this->header->sequenceNumber);
 			}
 			uint32_t GetEct0Counter() const
 			{
-				return uint32_t{ ntohl(this->header->ect0Counter) };
+				return ntohl(this->header->ect0Counter);
 			}
 			uint32_t GetEct1Counter() const
 			{
-				return uint32_t{ ntohl(this->header->ect1Counter) };
+				return ntohl(this->header->ect1Counter);
 			}
 			uint16_t GetEcnCeCounter() const
 			{
-				return uint16_t{ ntohs(this->header->ecnCeCounter) };
+				return ntohs(this->header->ecnCeCounter);
 			}
 			uint16_t GetNotEctCounter() const
 			{
-				return uint16_t{ ntohs(this->header->notEctCounter) };
+				return ntohs(this->header->notEctCounter);
 			}
 			uint16_t GetLostPackets() const
 			{
-				return uint16_t{ ntohs(this->header->lostPackets) };
+				return ntohs(this->header->lostPackets);
 			}
 			uint16_t GetDuplicatedPackets() const
 			{
-				return uint16_t{ ntohs(this->header->duplicatedPackets) };
+				return ntohs(this->header->duplicatedPackets);
 			}
 
 			/* Virtual methods inherited from FeedbackItem. */

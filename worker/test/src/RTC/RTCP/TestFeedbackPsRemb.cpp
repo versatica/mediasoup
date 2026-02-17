@@ -3,9 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
-namespace TestFeedbackPsRemb
+SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 {
 	// RTCP REMB packet.
 
@@ -23,27 +21,24 @@ namespace TestFeedbackPsRemb
 	// clang-format on
 
 	// REMB values.
-	uint32_t senderSsrc{ 0xfa17fa17 };
-	uint32_t mediaSsrc{ 0u };
-	uint64_t bitrate{ 122754u };
-	std::vector<uint32_t> ssrcs{ 0x02d03702, 0x04a76747 };
+	const uint32_t senderSsrc{ 0xfa17fa17 };
+	const uint32_t mediaSsrc{ 0u };
+	const uint64_t bitrate{ 122754u };
+	const std::vector<uint32_t> ssrcs{ 0x02d03702, 0x04a76747 };
 
-	void verify(FeedbackPsRembPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [&ssrcs](RTC::RTCP::FeedbackPsRembPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 		REQUIRE(packet->GetBitrate() == bitrate);
 		REQUIRE(packet->GetSsrcs() == ssrcs);
-	}
-} // namespace TestFeedbackPsRemb
-
-SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps][remb]")
-{
-	using namespace TestFeedbackPsRemb;
+	};
 
 	SECTION("parse FeedbackPsRembPacket")
 	{
-		std::unique_ptr<FeedbackPsRembPacket> packet{ FeedbackPsRembPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackPsRembPacket> packet{ RTC::RTCP::FeedbackPsRembPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
@@ -64,7 +59,7 @@ SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps][remb]")
 
 	SECTION("create FeedbackPsRembPacket")
 	{
-		FeedbackPsRembPacket packet(senderSsrc, mediaSsrc);
+		RTC::RTCP::FeedbackPsRembPacket packet(senderSsrc, mediaSsrc);
 
 		packet.SetSsrcs(ssrcs);
 		packet.SetBitrate(bitrate);

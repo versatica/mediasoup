@@ -27,6 +27,7 @@ import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import type { AppData } from './types';
 import { Event } from './fbs/notification';
+import * as FbsNotification from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsWorker from './fbs/worker';
 import * as FbsTransport from './fbs/transport';
@@ -35,7 +36,7 @@ import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
 const logger = new Logger('Worker');
 const workerLogger = new Logger('Worker');
 
-export const workerBin: string = getWorkerBin();
+export const defaultWorkerBin: string = getDefaultWorkerBin();
 
 export class WorkerImpl<WorkerAppData extends AppData = AppData>
 	extends EnhancedEventEmitter<WorkerEvents>
@@ -79,6 +80,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		rtcMaxPort,
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
+		workerBin,
 		libwebrtcFieldTrials,
 		disableLiburing,
 		appData,
@@ -86,6 +88,8 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		super();
 
 		logger.debug('constructor()');
+
+		workerBin = workerBin ?? defaultWorkerBin;
 
 		let spawnBin = workerBin;
 		let spawnArgs: string[] = [];
@@ -240,7 +244,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 				);
 
 				this.close();
-				this.emit('@failure', error);
+				this.emit('@failure', new Error(error.message));
 			} else {
 				logger.error(
 					`worker process error [pid:${this.#pid}]: ${error.message}`
@@ -348,22 +352,11 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		}
 		this.#webRtcServers.clear();
 
-		/* Send Request. */
-		this.#channel
-			.request(FbsRequest.Method.WORKER_CLOSE)
-			.then(() => {
-				// Close the Channel instance now.
-				this.#channel.close();
-			})
-			.catch(error => {
-				logger.error(
-					'close() | worker process failed to process the close request:',
-					error
-				);
+		// Send notification to worker process.
+		this.#channel.notify(FbsNotification.Event.WORKER_CLOSE);
 
-				// Close the Channel instance anyway.
-				this.#channel.close();
-			});
+		// Close the Channel instance now.
+		this.#channel.close();
 
 		// Emit observer event.
 		this.#observer.safeEmit('close');
@@ -623,11 +616,11 @@ function parseWorkerDumpResponse(binary: FbsWorker.DumpResponse): WorkerDump {
 	return dump;
 }
 
-function getWorkerBin(): string {
+function getDefaultWorkerBin(): string {
 	// If MEDIASOUP_WORKER_BIN env is given, use it as worker binary.
 	if (process.env['MEDIASOUP_WORKER_BIN']) {
 		logger.debug(
-			`getWorkerBin() | using MEDIASOUP_WORKER_BIN environment variable: ${process.env['MEDIASOUP_WORKER_BIN']}`
+			`getDefaultWorkerBin() | using MEDIASOUP_WORKER_BIN environment variable: ${process.env['MEDIASOUP_WORKER_BIN']}`
 		);
 
 		return process.env['MEDIASOUP_WORKER_BIN'];
@@ -650,7 +643,7 @@ function getWorkerBin(): string {
 		);
 	} catch (error) {
 		logger.warn(
-			`getWorkerBin() | require.resolve('mediasoup') failed, using __dirname: ${error}`
+			`getDefaultWorkerBin() | require.resolve('mediasoup') failed, using __dirname: ${error}`
 		);
 
 		// mediasoup module path is two folders above this file.
@@ -662,7 +655,7 @@ function getWorkerBin(): string {
 	const buildType: 'Release' | 'Debug' =
 		process.env['MEDIASOUP_BUILDTYPE'] === 'Debug' ? 'Debug' : 'Release';
 
-	const workerBinPath = path.join(
+	const defaultWorkerBinPath = path.join(
 		mediasoupModulePath,
 		'worker',
 		'out',
@@ -671,8 +664,8 @@ function getWorkerBin(): string {
 	);
 
 	logger.debug(
-		`getWorkerBin() | detected worker binary path: ${workerBinPath}`
+		`getDefaultWorkerBin() | detected worker binary path: ${defaultWorkerBinPath}`
 	);
 
-	return workerBinPath;
+	return defaultWorkerBinPath;
 }

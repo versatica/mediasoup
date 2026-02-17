@@ -1,16 +1,14 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownAckChunk.hpp"
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-
 SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 {
-	resetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("ShutdownAckChunk::Parse() succeeds")
 	{
@@ -26,17 +24,16 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* chunk = ShutdownAckChunk::Parse(buffer, sizeof(buffer));
+		auto* chunk = RTC::SCTP::ShutdownAckChunk::Parse(buffer, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 4,
-		  /*frozen*/ true,
-		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b01000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -45,19 +42,18 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 
 		/* Serialize it. */
 
-		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		chunk->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
-		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b01000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -66,21 +62,20 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
-		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b01000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -92,17 +87,17 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 
 	SECTION("ShutdownAckChunk::Factory() succeeds")
 	{
-		auto* chunk = ShutdownAckChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* chunk = RTC::SCTP::ShutdownAckChunk::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
-		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -111,19 +106,18 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = ShutdownAckChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+		auto* parsedChunk = RTC::SCTP::ShutdownAckChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*frozen*/ true,
-		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,

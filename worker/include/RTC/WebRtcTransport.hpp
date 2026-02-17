@@ -2,11 +2,11 @@
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
 #include "RTC/DtlsTransport.hpp"
-#include "RTC/IceCandidate.hpp"
-#include "RTC/IceServer.hpp"
+#include "RTC/ICE/IceCandidate.hpp"
+#include "RTC/ICE/IceServer.hpp"
+#include "RTC/ICE/StunPacket.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
-#include "RTC/StunPacket.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/Transport.hpp"
@@ -20,7 +20,7 @@ namespace RTC
 	                        public RTC::UdpSocket::Listener,
 	                        public RTC::TcpServer::Listener,
 	                        public RTC::TcpConnection::Listener,
-	                        public RTC::IceServer::Listener,
+	                        public RTC::ICE::IceServer::Listener,
 	                        public RTC::DtlsTransport::Listener
 	{
 	public:
@@ -53,7 +53,7 @@ namespace RTC
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  WebRtcTransportListener* webRtcTransportListener,
-		  const std::vector<RTC::IceCandidate>& iceCandidates,
+		  const std::vector<RTC::ICE::IceCandidate>& iceCandidates,
 		  const FBS::WebRtcTransport::WebRtcTransportOptions* options);
 		~WebRtcTransport() override;
 
@@ -62,9 +62,10 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder);
 		flatbuffers::Offset<FBS::WebRtcTransport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
-		void ProcessStunPacketFromWebRtcServer(RTC::TransportTuple* tuple, RTC::StunPacket* packet);
+		void ProcessStunPacketFromWebRtcServer(
+		  RTC::TransportTuple* tuple, const RTC::ICE::StunPacket* packet);
 		void ProcessNonStunPacketFromWebRtcServer(
-		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 		void RemoveTuple(RTC::TransportTuple* tuple);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -80,7 +81,7 @@ namespace RTC
 		void MayRunDtlsTransport();
 		void SendRtpPacket(
 		  RTC::Consumer* consumer,
-		  RTC::RtpPacket* packet,
+		  RTC::RTP::Packet* packet,
 		  RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
@@ -93,16 +94,20 @@ namespace RTC
 		void SendSctpData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
-		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 		void OnStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnDtlsDataReceived(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
 		void OnUdpSocketPacketReceived(
-		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
+		  RTC::UdpSocket* socket,
+		  const uint8_t* data,
+		  size_t len,
+		  size_t bufferLen,
+		  const struct sockaddr* remoteAddr) override;
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
@@ -111,24 +116,25 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
 		void OnTcpConnectionPacketReceived(
-		  RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;
+		  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen) override;
 
-		/* Pure virtual methods inherited from RTC::IceServer::Listener. */
+		/* Pure virtual methods inherited from RTC::ICE::IceServer::Listener. */
 	public:
 		void OnIceServerSendStunPacket(
-		  const RTC::IceServer* iceServer,
-		  const RTC::StunPacket* packet,
+		  const RTC::ICE::IceServer* iceServer,
+		  const RTC::ICE::StunPacket* packet,
 		  RTC::TransportTuple* tuple) override;
 		void OnIceServerLocalUsernameFragmentAdded(
-		  const RTC::IceServer* iceServer, const std::string& usernameFragment) override;
+		  const RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) override;
 		void OnIceServerLocalUsernameFragmentRemoved(
-		  const RTC::IceServer* iceServer, const std::string& usernameFragment) override;
-		void OnIceServerTupleAdded(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
-		void OnIceServerTupleRemoved(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
-		void OnIceServerSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
-		void OnIceServerConnected(const RTC::IceServer* iceServer) override;
-		void OnIceServerCompleted(const RTC::IceServer* iceServer) override;
-		void OnIceServerDisconnected(const RTC::IceServer* iceServer) override;
+		  const RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) override;
+		void OnIceServerTupleAdded(const RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) override;
+		void OnIceServerTupleRemoved(const RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) override;
+		void OnIceServerSelectedTuple(
+		  const RTC::ICE::IceServer* iceServer, RTC::TransportTuple* tuple) override;
+		void OnIceServerConnected(const RTC::ICE::IceServer* iceServer) override;
+		void OnIceServerCompleted(const RTC::ICE::IceServer* iceServer) override;
+		void OnIceServerDisconnected(const RTC::ICE::IceServer* iceServer) override;
 
 		/* Pure virtual methods inherited from RTC::DtlsTransport::Listener. */
 	public:
@@ -152,7 +158,7 @@ namespace RTC
 		// Passed by argument.
 		WebRtcTransportListener* webRtcTransportListener{ nullptr };
 		// Allocated by this.
-		RTC::IceServer* iceServer{ nullptr };
+		RTC::ICE::IceServer* iceServer{ nullptr };
 		// Map of UdpSocket/TcpServer and local announced address (if any).
 		absl::flat_hash_map<RTC::UdpSocket*, std::string> udpSockets;
 		absl::flat_hash_map<RTC::TcpServer*, std::string> tcpServers;
@@ -162,7 +168,7 @@ namespace RTC
 		// Others.
 		// Whether connect() was succesfully called.
 		bool connectCalled{ false };
-		std::vector<RTC::IceCandidate> iceCandidates;
+		std::vector<RTC::ICE::IceCandidate> iceCandidates;
 		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
 	};
 } // namespace RTC

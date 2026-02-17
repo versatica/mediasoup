@@ -1,7 +1,6 @@
 #ifndef MS_CHANNEL_NOTIFIER_HPP
 #define MS_CHANNEL_NOTIFIER_HPP
 
-#include "common.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include <string>
 
@@ -28,7 +27,6 @@ namespace Channel
 			auto& builder     = this->bufferBuilder;
 			auto notification = FBS::Notification::CreateNotificationDirect(
 			  builder, targetId.c_str(), event, type, body.Union());
-
 			auto message =
 			  FBS::Message::CreateMessage(builder, FBS::Message::Body::Notification, notification.Union());
 
@@ -37,25 +35,13 @@ namespace Channel
 			builder.Clear();
 		}
 
-		void Emit(const std::string& targetId, FBS::Notification::Event event)
-		{
-			auto& builder = ChannelNotifier::bufferBuilder;
-			auto notification =
-			  FBS::Notification::CreateNotificationDirect(builder, targetId.c_str(), event);
-
-			auto message =
-			  FBS::Message::CreateMessage(builder, FBS::Message::Body::Notification, notification.Union());
-
-			builder.FinishSizePrefixed(message);
-			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
-			builder.Clear();
-		}
+		void Emit(const std::string& targetId, FBS::Notification::Event event);
 
 	private:
 		// Passed by argument.
 		Channel::ChannelSocket* channel{ nullptr };
 		// Others.
-		flatbuffers::FlatBufferBuilder bufferBuilder{};
+		flatbuffers::FlatBufferBuilder bufferBuilder;
 	};
 } // namespace Channel
 

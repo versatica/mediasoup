@@ -65,9 +65,6 @@ namespace RTC
 			// not fixed length.
 			parameter->SetLength(parameterLength + padding);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -115,8 +112,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			SetVariableLengthValue(cookie, cookieLength);
 		}
 
@@ -130,8 +125,6 @@ namespace RTC
 		  const NegotiatedCapabilities& negotiatedCapabilities)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			// The buffer in which the StateCookie will be written starts at the
 			// position of the Cookie field in the StateCookieParameter.

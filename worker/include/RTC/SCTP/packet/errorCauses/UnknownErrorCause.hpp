@@ -55,13 +55,13 @@ namespace RTC
 			UnknownErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~UnknownErrorCause() override;
+			~UnknownErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual UnknownErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			UnknownErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			virtual bool HasUnknownCode() const override
+			bool HasUnknownCode() const override
 			{
 				return true;
 			}
@@ -82,7 +82,7 @@ namespace RTC
 			}
 
 		protected:
-			virtual UnknownErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			UnknownErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

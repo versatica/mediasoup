@@ -12,7 +12,8 @@ namespace FBS.Notification;
 
 enum Event: uint8 {
     // Notifications to worker.
-    TRANSPORT_SEND_RTCP = 0,
+    WORKER_CLOSE = 0,
+    TRANSPORT_SEND_RTCP,
     PRODUCER_SEND,
     DATAPRODUCER_SEND,
 
@@ -80,4 +81,3 @@ table Notification {
     event: Event;
     body: Body;
 }
-

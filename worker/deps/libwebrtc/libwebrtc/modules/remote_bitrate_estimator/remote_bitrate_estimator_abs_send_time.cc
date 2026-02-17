@@ -18,6 +18,7 @@
 
 #include "Logger.hpp"
 #include "DepLibUV.hpp"
+#include "RTC/RTP/Packet.hpp"
 
 #include <math.h>
 #include <algorithm>
@@ -224,7 +225,7 @@ bool RemoteBitrateEstimatorAbsSendTime::IsBitrateImproving(
 }
 
 void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(
-    int64_t arrival_time_ms, size_t payload_size, const RTC::RtpPacket& packet, const uint32_t send_time_24bits)
+    int64_t arrival_time_ms, size_t payload_size, const RTC::RTP::Packet& packet, const uint32_t send_time_24bits)
 {
   MS_TRACE();
 

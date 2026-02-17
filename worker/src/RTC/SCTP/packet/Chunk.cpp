@@ -44,7 +44,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		std::unordered_map<Chunk::ChunkType, std::string> Chunk::chunkType2String =
+		const std::unordered_map<Chunk::ChunkType, std::string> Chunk::ChunkType2String =
 		{
 			{ Chunk::ChunkType::DATA,              "DATA"              },
 			{ Chunk::ChunkType::INIT,              "INIT"              },
@@ -89,15 +89,15 @@ namespace RTC
 			return true;
 		}
 
-		const std::string& Chunk::ChunkType2String(ChunkType chunkType)
+		const std::string& Chunk::ChunkTypeToString(ChunkType chunkType)
 		{
 			MS_TRACE();
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = Chunk::chunkType2String.find(chunkType);
+			auto it = Chunk::ChunkType2String.find(chunkType);
 
-			if (it == Chunk::chunkType2String.end())
+			if (it == Chunk::ChunkType2String.end())
 			{
 				return Unknown;
 			}
@@ -144,7 +144,7 @@ namespace RTC
 			{
 				for (auto* parameter : this->parameters)
 				{
-					size_t offset = parameter->GetBuffer() - previousBuffer;
+					const size_t offset = parameter->GetBuffer() - previousBuffer;
 
 					parameter->SoftSerialize(buffer + offset);
 				}
@@ -154,7 +154,7 @@ namespace RTC
 			{
 				for (auto* errorCause : this->errorCauses)
 				{
-					size_t offset = errorCause->GetBuffer() - previousBuffer;
+					const size_t offset = errorCause->GetBuffer() - previousBuffer;
 
 					errorCause->SoftSerialize(buffer + offset);
 				}
@@ -165,10 +165,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
 			AssertCanHaveParameters();
 
-			size_t previousLength = GetLength();
+			const size_t previousLength = GetLength();
 
 			// This will update the total length and Length field of the Chunk.
 			// NOTE: It may throw.
@@ -178,9 +177,6 @@ namespace RTC
 			auto* clonedParameter =
 			  parameter->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, parameter->GetLength());
 
-			// Freeze the cloned Parameter.
-			clonedParameter->Freeze();
-
 			// Add the Parameter to the list.
 			this->parameters.push_back(clonedParameter);
 		}
@@ -189,10 +185,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
 			AssertCanHaveErrorCauses();
 
-			size_t previousLength = GetLength();
+			const size_t previousLength = GetLength();
 
 			// This will update the total length and Length field of the Chunk.
 			// NOTE: It may throw.
@@ -201,9 +196,6 @@ namespace RTC
 			// Let's append the Error Cause at the end of existing Error Causes.
 			auto* clonedErrorCause = errorCause->Clone(
 			  const_cast<uint8_t*>(GetBuffer()) + previousLength, errorCause->GetLength());
-
-			// Freeze the cloned Error Cause.
-			clonedErrorCause->Freeze();
 
 			this->errorCauses.push_back(clonedErrorCause);
 		}
@@ -216,7 +208,7 @@ namespace RTC
 			  indentation,
 			  "  type: %" PRIu8 " (%s) (unknown: %s)",
 			  static_cast<uint8_t>(GetType()),
-			  Chunk::ChunkType2String(GetType()).c_str(),
+			  Chunk::ChunkTypeToString(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP_CLEAN(
 			  indentation, "  flags: " MS_UINT8_TO_BINARY_PATTERN, MS_UINT8_TO_BINARY(GetFlags()));
@@ -263,7 +255,7 @@ namespace RTC
 			{
 				for (auto* parameter : this->parameters)
 				{
-					size_t offset = parameter->GetBuffer() - previousBuffer;
+					const size_t offset = parameter->GetBuffer() - previousBuffer;
 
 					parameter->SoftSerialize(buffer + offset);
 				}
@@ -273,7 +265,7 @@ namespace RTC
 			{
 				for (auto* errorCause : this->errorCauses)
 				{
-					size_t offset = errorCause->GetBuffer() - previousBuffer;
+					const size_t offset = errorCause->GetBuffer() - previousBuffer;
 
 					errorCause->SoftSerialize(buffer + offset);
 				}
@@ -289,13 +281,9 @@ namespace RTC
 			{
 				for (auto* parameter : this->parameters)
 				{
-					size_t offset = parameter->GetBuffer() - GetBuffer();
+					const size_t offset = parameter->GetBuffer() - GetBuffer();
 
 					auto* softClonedParameter = parameter->SoftClone(chunk->GetBuffer() + offset);
-
-					// Parameter constructors don't freeze the Parameter so we
-					// must do it manually.
-					softClonedParameter->Freeze();
 
 					chunk->parameters.push_back(softClonedParameter);
 				}
@@ -306,13 +294,9 @@ namespace RTC
 			{
 				for (auto* errorCause : this->errorCauses)
 				{
-					size_t offset = errorCause->GetBuffer() - GetBuffer();
+					const size_t offset = errorCause->GetBuffer() - GetBuffer();
 
 					auto* softClonedErrorCause = errorCause->SoftClone(chunk->GetBuffer() + offset);
-
-					// ErrorCause constructors don't freeze the ErrorCause so we must do
-					// it manually.
-					softClonedErrorCause->Freeze();
 
 					chunk->errorCauses.push_back(softClonedErrorCause);
 				}
@@ -356,7 +340,7 @@ namespace RTC
 			{
 				// The remaining length in the given length is the potential buffer
 				// length of the Parameter.
-				size_t parameterMaxBufferLength = end - ptr;
+				const size_t parameterMaxBufferLength = end - ptr;
 
 				// Here we must anticipate the type of each Parameter to use its
 				// appropriate parser.
@@ -563,7 +547,7 @@ namespace RTC
 			{
 				// The remaining length in the given length is the potential buffer
 				// length of the Error Cause.
-				size_t errorCauseMaxBufferLength = end - ptr;
+				const size_t errorCauseMaxBufferLength = end - ptr;
 
 				// Here we must anticipate the type of each Error Cause to use its
 				// appropriate parser.
@@ -736,9 +720,6 @@ namespace RTC
 				  // NOTE: It may throw.
 				  AddItem(parameter);
 
-				  // Freeze the Parameter.
-				  parameter->Freeze();
-
 				  // Add the Parameter to the list.
 				  this->parameters.push_back(parameter);
 			  });
@@ -759,9 +740,6 @@ namespace RTC
 				  // This will update the total length and Length field of the Chunk.
 				  // NOTE: It may throw.
 				  AddItem(errorCause);
-
-				  // Freeze the Error Cause.
-				  errorCause->Freeze();
 
 				  // Add the Error Cause to the list.
 				  this->errorCauses.push_back(errorCause);

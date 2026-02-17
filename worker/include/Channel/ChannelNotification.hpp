@@ -1,7 +1,6 @@
 #ifndef MS_CHANNEL_NOTIFICATION_HPP
 #define MS_CHANNEL_NOTIFICATION_HPP
 
-#include "common.hpp"
 #include "FBS/notification.h"
 #include <absl/container/flat_hash_map.h>
 #include <string>
@@ -14,7 +13,7 @@ namespace Channel
 		using Event = FBS::Notification::Event;
 
 	private:
-		static absl::flat_hash_map<FBS::Notification::Event, const char*> event2String;
+		static const absl::flat_hash_map<FBS::Notification::Event, const char*> Event2String;
 
 	public:
 		explicit ChannelNotification(const FBS::Notification::Notification* notification);

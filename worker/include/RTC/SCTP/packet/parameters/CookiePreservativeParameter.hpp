@@ -68,12 +68,11 @@ namespace RTC
 			CookiePreservativeParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~CookiePreservativeParameter() override;
+			~CookiePreservativeParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual CookiePreservativeParameter* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			CookiePreservativeParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint32_t GetLifeSpanIncrement() const
 			{
@@ -83,14 +82,14 @@ namespace RTC
 			void SetLifeSpanIncrement(uint32_t increment);
 
 		protected:
-			virtual CookiePreservativeParameter* SoftClone(const uint8_t* buffer) const final override;
+			CookiePreservativeParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We don't really need to override this method since this Parameter
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return CookiePreservativeParameter::CookiePreservativeParameterHeaderLength;
 			}

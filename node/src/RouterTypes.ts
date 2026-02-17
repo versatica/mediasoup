@@ -184,8 +184,9 @@ export type RouterObserverEvents = {
 	newrtpobserver: [RtpObserver];
 };
 
-export interface Router<RouterAppData extends AppData = AppData>
-	extends EnhancedEventEmitter<RouterEvents> {
+export interface Router<
+	RouterAppData extends AppData = AppData,
+> extends EnhancedEventEmitter<RouterEvents> {
 	/**
 	 * Router id.
 	 */

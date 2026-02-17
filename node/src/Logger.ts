@@ -3,7 +3,7 @@ import type { EnhancedEventEmitter } from './enhancedEvents';
 
 const APP_NAME = 'mediasoup';
 
-export type LoggerEmitterEvents = {
+type LoggerEmitterEvents = {
 	debuglog: [string, string];
 	warnlog: [string, string];
 	errorlog: [string, string, Error?];

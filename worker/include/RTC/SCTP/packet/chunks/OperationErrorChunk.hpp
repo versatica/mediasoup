@@ -72,19 +72,19 @@ namespace RTC
 			OperationErrorChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~OperationErrorChunk() override;
+			~OperationErrorChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual OperationErrorChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			OperationErrorChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			virtual bool CanHaveErrorCauses() const final
+			bool CanHaveErrorCauses() const final
 			{
 				return true;
 			}
 
 		protected:
-			virtual OperationErrorChunk* SoftClone(const uint8_t* buffer) const final override;
+			OperationErrorChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

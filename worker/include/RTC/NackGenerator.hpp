@@ -2,7 +2,7 @@
 #define MS_RTC_NACK_GENERATOR_HPP
 
 #include "common.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/SeqManager.hpp"
 #include "handles/TimerHandle.hpp"
 #include <map>
@@ -40,7 +40,7 @@ namespace RTC
 			uint8_t retries{ 0u };
 		};
 
-		enum class NackFilter
+		enum class NackFilter : uint8_t
 		{
 			SEQ,
 			TIME
@@ -50,7 +50,7 @@ namespace RTC
 		explicit NackGenerator(Listener* listener, unsigned int sendNackDelayMs);
 		~NackGenerator() override;
 
-		bool ReceivePacket(RTC::RtpPacket* packet, bool isRecovered);
+		bool ReceivePacket(const RTC::RTP::Packet* packet, bool isRecovered);
 		size_t GetNackListLength() const
 		{
 			return this->nackList.size();

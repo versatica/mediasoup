@@ -3,9 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
-namespace TestFeedbackRtpNack
+SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 {
 	// RTCP NACK packet.
 
@@ -20,32 +18,28 @@ namespace TestFeedbackRtpNack
 	// clang-format on
 
 	// NACK values.
-	uint32_t senderSsrc{ 0x00000001 };
-	uint32_t mediaSsrc{ 0x0330bdee };
-	uint16_t pid{ 2959 };
-	uint16_t lostPacketBitmask{ 0x0003 };
+	const uint32_t senderSsrc{ 0x00000001 };
+	const uint32_t mediaSsrc{ 0x0330bdee };
+	const uint16_t pid{ 2959 };
+	const uint16_t lostPacketBitmask{ 0x0003 };
 
-	void verify(FeedbackRtpNackPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](RTC::RTCP::FeedbackRtpNackPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		auto it   = packet->Begin();
-		auto item = *it;
+		auto it          = packet->Begin();
+		const auto* item = *it;
 
 		REQUIRE(item->GetPacketId() == pid);
 		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
 		REQUIRE(item->CountRequestedPackets() == 3);
-	}
-} // namespace TestFeedbackRtpNack
-
-SCENARIO("RTCP Feeback RTP NACK parsing", "[parser][rtcp][feedback-rtp][nack]")
-{
-	using namespace TestFeedbackRtpNack;
+	};
 
 	SECTION("parse FeedbackRtpNackItem")
 	{
-		std::unique_ptr<FeedbackRtpNackPacket> packet{ FeedbackRtpNackPacket::Parse(
+		std::unique_ptr<RTC::RTCP::FeedbackRtpNackPacket> packet{ RTC::RTCP::FeedbackRtpNackPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
@@ -67,8 +61,8 @@ SCENARIO("RTCP Feeback RTP NACK parsing", "[parser][rtcp][feedback-rtp][nack]")
 
 	SECTION("create FeedbackRtpNackPacket")
 	{
-		FeedbackRtpNackPacket packet(senderSsrc, mediaSsrc);
-		auto* item = new FeedbackRtpNackItem(pid, lostPacketBitmask);
+		RTC::RTCP::FeedbackRtpNackPacket packet(senderSsrc, mediaSsrc);
+		auto* item = new RTC::RTCP::FeedbackRtpNackItem(pid, lostPacketBitmask);
 
 		packet.AddItem(item);
 

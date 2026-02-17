@@ -75,11 +75,11 @@ namespace RTC
 			AbortAssociationChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~AbortAssociationChunk() override;
+			~AbortAssociationChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual AbortAssociationChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			AbortAssociationChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			bool GetT() const
 			{
@@ -88,13 +88,13 @@ namespace RTC
 
 			void SetT(bool flag);
 
-			virtual bool CanHaveErrorCauses() const final
+			bool CanHaveErrorCauses() const final
 			{
 				return true;
 			}
 
 		protected:
-			virtual AbortAssociationChunk* SoftClone(const uint8_t* buffer) const final override;
+			AbortAssociationChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

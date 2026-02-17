@@ -19,10 +19,9 @@ https://mediasoup.org/support/#crashes-in-mediasoup-get-a-core-dump
 ## Your environment
 
 - Operating system:
-- Node version:
-- npm version:
 - gcc/clang version:
-- mediasoup version:
+- mediasoup (Node) version:
+- mediasoup (Rust) version:
 - mediasoup-client version:
 
 ## Issue description

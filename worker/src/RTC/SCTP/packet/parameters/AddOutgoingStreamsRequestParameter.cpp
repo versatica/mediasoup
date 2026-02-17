@@ -63,7 +63,7 @@ namespace RTC
 		}
 
 		AddOutgoingStreamsRequestParameter* AddOutgoingStreamsRequestParameter::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
+		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t /*padding*/)
 		{
 			MS_TRACE();
 
@@ -79,9 +79,6 @@ namespace RTC
 
 			auto* parameter =
 			  new AddOutgoingStreamsRequestParameter(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
 
 			return parameter;
 		}
@@ -132,16 +129,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
 		void AddOutgoingStreamsRequestParameter::SetNumberOfNewStreams(uint16_t value)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
 		}

@@ -54,7 +54,7 @@ namespace RTC
 		}
 
 		CookieAckChunk* CookieAckChunk::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
+		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t /*padding*/)
 		{
 			MS_TRACE();
 
@@ -67,9 +67,6 @@ namespace RTC
 
 			auto* chunk = new CookieAckChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
 			return chunk;
 		}
 
@@ -79,8 +76,6 @@ namespace RTC
 		  : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetLength(Chunk::ChunkHeaderLength);
 		}

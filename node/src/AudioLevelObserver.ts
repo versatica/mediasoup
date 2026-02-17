@@ -21,8 +21,8 @@ type AudioLevelObserverConstructorOptions<AudioLevelObserverAppData> =
 const logger = new Logger('AudioLevelObserver');
 
 export class AudioLevelObserverImpl<
-		AudioLevelObserverAppData extends AppData = AppData,
-	>
+	AudioLevelObserverAppData extends AppData = AppData,
+>
 	extends RtpObserverImpl<
 		AudioLevelObserverAppData,
 		AudioLevelObserverEvents,

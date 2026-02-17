@@ -39,7 +39,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "<ReceiverReport>");
 			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
 			MS_DUMP_CLEAN(indentation, "  fraction lost: %" PRIu8, GetFractionLost());
-			MS_DUMP_CLEAN(indentation, "  total lost: %" PRIu32, GetTotalLost());
+			MS_DUMP_CLEAN(indentation, "  total lost: %" PRIi32, GetTotalLost());
 			MS_DUMP_CLEAN(indentation, "  last seq: %" PRIu32, GetLastSeq());
 			MS_DUMP_CLEAN(indentation, "  jitter: %" PRIu32, GetJitter());
 			MS_DUMP_CLEAN(indentation, "  lsr: %" PRIu32, GetLastSenderReport());
@@ -59,7 +59,7 @@ namespace RTC
 
 		/* Static Class members */
 
-		size_t ReceiverReportPacket::MaxReportsPerPacket = 31;
+		size_t ReceiverReportPacket::maxReportsPerPacket = 31;
 
 		/* Class methods. */
 
@@ -128,7 +128,7 @@ namespace RTC
 			for (size_t i = 0; i < this->GetCount(); i++)
 			{
 				// Create a new RR packet header for each 31 reports.
-				if (i % MaxReportsPerPacket == 0)
+				if (i % maxReportsPerPacket == 0)
 				{
 					// Reference current common header.
 					header = buffer + offset;
@@ -144,13 +144,13 @@ namespace RTC
 
 				// Adjust the header count field.
 				reinterpret_cast<Packet::CommonHeader*>(header)->count =
-				  static_cast<uint8_t>((i % MaxReportsPerPacket) + 1);
+				  static_cast<uint8_t>((i % maxReportsPerPacket) + 1);
 
 				// Adjust the header length field.
 				size_t length = (Packet::CommonHeaderSize + 4u /* this->ssrc */);
-				length += ReceiverReport::HeaderSize * ((i % MaxReportsPerPacket) + 1);
+				length += ReceiverReport::HeaderSize * ((i % maxReportsPerPacket) + 1);
 
-				reinterpret_cast<Packet::CommonHeader*>(header)->length = uint16_t{ htons((length / 4) - 1) };
+				reinterpret_cast<Packet::CommonHeader*>(header)->length = htons((length / 4) - 1);
 			}
 
 			return offset;

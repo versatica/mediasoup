@@ -5,66 +5,75 @@
 #include <string>
 #include <vector>
 
-using namespace RTC;
-
-constexpr uint16_t MaxNumberFor15Bits = (1 << 15) - 1;
-
-template<typename T>
-struct TestSeqManagerInput
+namespace
 {
-	TestSeqManagerInput(T input, T output, bool sync = false, bool drop = false, int64_t maxInput = -1)
-	  : input(input), output(output), sync(sync), drop(drop), maxInput(maxInput)
+	template<typename T>
+	struct TestSeqManagerInput
 	{
-	}
-
-	T input{ 0 };
-	T output{ 0 };
-	bool sync{ false };
-	bool drop{ false };
-	int64_t maxInput{ -1 };
-};
-
-template<typename T, uint8_t N>
-void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>& inputs)
-{
-	for (auto& element : inputs)
-	{
-		if (element.sync)
+		TestSeqManagerInput(T input, T output, bool sync = false, bool drop = false, int64_t maxInput = -1)
+		  : input(input), output(output), sync(sync), drop(drop), maxInput(maxInput)
 		{
-			seqManager.Sync(element.input - 1);
 		}
 
-		if (element.drop)
+		T input{ 0 };
+		T output{ 0 };
+		bool sync{ false };
+		bool drop{ false };
+		int64_t maxInput{ -1 };
+	};
+
+	template<typename T, uint8_t N>
+	std::pair<T, T> validate(RTC::SeqManager<T, N> seqManager, std::vector<TestSeqManagerInput<T>>& inputs)
+	{
+		for (auto& element : inputs)
 		{
-			seqManager.Drop(element.input);
-		}
-		else
-		{
-			T output;
-
-			seqManager.Input(element.input, output);
-
-			// Covert to string because otherwise Catch will print uint8_t as char.
-			REQUIRE(std::to_string(output) == std::to_string(element.output));
-
-			if (element.maxInput != -1)
+			if (element.sync)
 			{
-				REQUIRE(std::to_string(element.maxInput) == std::to_string(seqManager.GetMaxInput()));
+				seqManager.Sync(element.input - 1);
+			}
+
+			if (element.drop)
+			{
+				seqManager.Drop(element.input);
+			}
+			else
+			{
+				T output;
+
+				seqManager.Input(element.input, output);
+
+				if (output != element.output)
+				{
+					return std::make_pair(output, element.output);
+				}
+
+				if (element.maxInput != -1)
+				{
+					if (element.maxInput != seqManager.GetMaxInput())
+					{
+						return std::make_pair(element.maxInput, seqManager.GetMaxInput());
+					}
+				}
 			}
 		}
-	}
-}
 
-SCENARIO("SeqManager", "[rtc][SeqManager]")
+		// Success, return a pair of zeros for successful comparison.
+		return std::make_pair(0, 0);
+	}
+} // namespace
+
+SCENARIO("SeqManager", "[seqmanager]")
 {
+	constexpr uint16_t MaxNumberFor15Bits = (1 << 15) - 1;
+
 	SECTION("0 is greater than 65000")
 	{
-		REQUIRE(SeqManager<uint16_t>::IsSeqHigherThan(0, 65000) == true);
+		REQUIRE(RTC::SeqManager<uint16_t>::IsSeqHigherThan(0, 65000) == true);
 	}
 
 	SECTION("0 is greater than 32500 in range 15")
 	{
-		REQUIRE(SeqManager<uint16_t, 15>::IsSeqHigherThan(0, 32500) == true);
+		REQUIRE(RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(0, 32500) == true);
 	}
 
 	SECTION("receive ordered numbers, no sync, no drop")
@@ -87,10 +96,10 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		SeqManager<uint16_t, 15> seqManager2;
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive ordered numbers, sync, no drop")
@@ -109,10 +118,10 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		SeqManager<uint16_t, 15> seqManager2;
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive ordered numbers, sync, drop")
@@ -136,10 +145,10 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		SeqManager<uint16_t, 15> seqManager2;
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive ordered wrapped numbers")
@@ -155,8 +164,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive sequence numbers with a big jump")
@@ -171,10 +180,10 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		SeqManager<uint16_t, 15> seqManager2;
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive out of order numbers with a big jump")
@@ -188,8 +197,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive mixed numbers with a big jump, drop before jump")
@@ -206,10 +215,10 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		SeqManager<uint16_t, 15> seqManager2;
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive mixed numbers with a big jump, drop after jump")
@@ -225,10 +234,10 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		SeqManager<uint16_t, 15> seqManager2;
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("drop, receive numbers newer and older than the one dropped")
@@ -244,10 +253,10 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		SeqManager<uint16_t, 15> seqManager2;
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive mixed numbers, sync, drop")
@@ -304,8 +313,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive ordered numbers, sync, no drop, increase input")
@@ -324,10 +333,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		SeqManager<uint16_t, 15> seqManager2;
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("drop many inputs at the beginning (using uint16_t)")
@@ -367,10 +377,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		SeqManager<uint16_t, 15> seqManager2;
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("drop many inputs at the beginning (using uint8_t)")
@@ -410,8 +421,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint8_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint8_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive mixed numbers, sync, drop in range 15")
@@ -468,8 +479,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("drop many inputs at the beginning (using uint16_t with high values)")
@@ -502,8 +513,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("sync and drop some input near max-value")
@@ -524,8 +535,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("drop many inputs at the beginning (using uint16_t range 15 with high values)")
@@ -558,8 +569,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("sync and drop some input near max-value in a 15bit range")
@@ -580,8 +591,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("should update all values during multiple roll overs")
@@ -599,8 +610,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		}
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("should update all values during multiple roll overs (15 bits range)")
@@ -618,8 +629,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		}
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("should produce same output for same old input before drop (15 bits range)")
@@ -637,8 +648,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("should properly clean previous cycle drops")
@@ -660,8 +671,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint8_t, 3> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint8_t, 3>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("dropped inputs to be removed going out of range, 1.")
@@ -699,8 +710,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("dropped inputs to be removed go out of range, 2.")
@@ -718,8 +729,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("dropped inputs to be removed go out of range, 3.")
@@ -730,17 +741,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 			{ 36964, 36964, false, false },
 			{ 65396 ,    0, false, true  }, // Drop.
 			{ 25855, 25854, false, false },
-			{ 29793 ,    0, false, true  }, // Drop.
-			{ 65396, 25854, false, false }, // Previously dropped.
-			{ 25087,    0,  false, true  }, // Drop.
-			{ 29793, 25854, false, false }, // Previously dropped.
-			{ 65535 ,    0, false, true  }, // Drop.
-			{ 25087, 25086, false, false },
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager;
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive ordered numbers, no sync, no drop (with initial output)")
@@ -763,10 +768,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000u);
-		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 1000u);
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive ordered numbers, sync, no drop (with initial output)")
@@ -785,10 +791,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 2000u);
-		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 2000u);
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 2000u }, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 2000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive ordered numbers, sync, drop (with initial output)")
@@ -812,10 +819,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 3000u);
-		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 3000u);
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 3000u }, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 3000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive ordered wrapped numbers (with initial output)")
@@ -831,8 +839,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000u);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive sequence numbers with a big jump (with initial output)")
@@ -847,8 +855,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 32000u);
-		validate(seqManager, inputs1);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 32000u }, inputs1);
+		REQUIRE(result.first == result.second);
 
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs2 =
@@ -860,8 +868,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 32000u);
-		validate(seqManager2, inputs2);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 32000u }, inputs2);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive out of order numbers with a big jump (with initial output)")
@@ -875,8 +883,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000u);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive mixed numbers with a big jump, drop before jump (with initial output)")
@@ -893,10 +901,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000);
-		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 1000);
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive mixed numbers with a big jump, drop after jump (with initial output)")
@@ -912,10 +921,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 2000);
-		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 2000);
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 2000u }, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 2000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("drop, receive numbers newer and older than the one dropped (with initial output)")
@@ -931,10 +941,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 2000);
-		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 2000);
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 2000u }, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 2000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive mixed numbers, sync, drop (with initial output)")
@@ -991,8 +1002,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 10000);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 10000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive ordered numbers, sync, no drop, increase input (with initial output)")
@@ -1011,10 +1022,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 1);
-		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 1);
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1u }, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("drop many inputs at the beginning (using uint16_t) (with initial output)")
@@ -1054,10 +1066,11 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000);
-		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 1000);
-		validate(seqManager, inputs);
-		validate(seqManager2, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		REQUIRE(result.first == result.second);
+
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("drop many inputs at the beginning (using uint8_t) (with initial output)")
@@ -1097,8 +1110,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint8_t> seqManager(/*initialOutput*/ 200);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint8_t>{ /*initialOutput*/ 200u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("receive mixed numbers, sync, drop in range 15 (with initial output)")
@@ -1155,8 +1168,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager(/*initialOutput*/ 100);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("drop many inputs at the beginning (using uint16_t with high values) (with initial output)")
@@ -1189,8 +1202,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 200);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 200u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("sync and drop some input near max-value (with initial output)")
@@ -1211,8 +1224,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 200);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 200u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION(
@@ -1246,8 +1259,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager(/*initialOutput*/ 100);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("sync and drop some input near max-value in a 15bit range (with initial output)")
@@ -1268,8 +1281,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager(/*initialOutput*/ 100);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("should update all values during multiple roll overs (with initial output)")
@@ -1287,8 +1300,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		}
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 100);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 100u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("should update all values during multiple roll overs (15 bits range) (with initial output)")
@@ -1306,8 +1319,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		}
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager(/*initialOutput*/ 100);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION(
@@ -1326,8 +1339,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t, 15> seqManager(/*initialOutput*/ 10000);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 10000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("should properly clean previous cycle drops (with initial output)")
@@ -1349,8 +1362,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint8_t, 3> seqManager(/*initialOutput*/ 2);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint8_t, 3>{ /*initialOutput*/ 2u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("dropped inputs to be removed going out of range, 1. (with initial output)")
@@ -1388,8 +1401,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 10000);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 10000u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("dropped inputs to be removed go out of range, 2. (with initial output)")
@@ -1407,8 +1420,8 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 100);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 100u }, inputs);
+		REQUIRE(result.first == result.second);
 	}
 
 	SECTION("dropped inputs to be removed go out of range, 3. (with initial output)")
@@ -1419,16 +1432,148 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 			{ 36964, 37964, false, false },
 			{ 65396 , 1000, false, true  }, // Drop.
 			{ 25855, 26854, false, false },
-			{ 29793 , 1000, false, true  }, // Drop.
-			{ 65396, 26854, false, false }, // Previously dropped.
-			{ 25087,  1000,  false, true  }, // Drop.
-			{ 29793, 26854, false, false }, // Previously dropped.
-			{ 65535 , 1000, false, true  }, // Drop.
-			{ 25087, 26086, false, false },
 		};
 		// clang-format on
 
-		SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000);
-		validate(seqManager, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		REQUIRE(result.first == result.second);
+	}
+
+	// https://github.com/versatica/mediasoup/issues/1615
+	SECTION("receive dropped inputs out of order")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0, 0, false, false },
+			{ 2, 0, false, true  },
+			{ 1, 0, false, true  },
+			{ 3, 1, false, false  },
+		};
+		// clang-format on
+
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+	}
+
+	SECTION("receive dropped inputs out of order, 2")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0,   0, false, false },
+			{ 1,   1, false, false },
+			{ 2,   2, false, false },
+			{ 4,   4, false, false },
+			{ 5,   5, false, false },
+			{ 6,   0, false, true  },
+			{ 7,   0, false, true  },
+			{ 8,   0, false, true  },
+			{ 3,   0, false, true  },
+			{ 9,   0, false, true  },
+			{ 10,  6, false, false }
+		};
+		// clang-format on
+
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+	}
+
+	SECTION("receive dropped inputs out of order, 3")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 1, 1, false, false },
+			{ 2, 2, false, false },
+			{ 3, 3, false, false },
+			{ 4, 4, false, false },
+			{ 5, 0, false, true },
+			{ 6, 0, false, true },
+			{ 7, 0, false, true },
+			{ 8, 0, false, true },
+			{ 0, 0, false, true },
+			{ 9, 5, false, false },
+		};
+		// clang-format on
+
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
+	}
+
+	SECTION("receive dropped inputs out of order, 4")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 1, 1, false, false },
+			{ 2, 2, false, false },
+			{ 3, 3, false, false },
+			{ 4, 4, false, false },
+			{ 5, 5, false, false },
+			{ 6, 6, false, false },
+			{ 7, 7, false, false },
+			{ 8, 8, false, false },
+			{ 9, 9, false, false },
+			{ 10, 10, false, false },
+			{ 11, 11, false, false },
+			{ 12, 12, false, false },
+			{ 13, 13, false, false },
+			{ 14, 14, false, false },
+			{ 15, 15, false, false },
+			{ 16, 16, false, false },
+			{ 17, 17, false, false },
+			{ 18, 18, false, false },
+			{ 19, 19, false, false },
+			{ 21, 21, false, false },
+			{ 22, 22, false, false },
+			{ 23, 23, false, false },
+			{ 24, 24, false, false },
+			{ 25, 25, false, false },
+			{ 26, 26, false, false },
+			{ 27, 0, false, true },
+			{ 28, 0, false, true },
+			{ 29, 0, false, true },
+			{ 20, 20, false, false },
+			{ 30, 0, false, true },
+			{ 31, 0, false, true },
+			{ 32, 0, false, true },
+			{ 33, 0, false, true },
+			{ 34, 0, false, true },
+			{ 35, 0, false, true },
+			{ 36, 0, false, true },
+			{ 38, 0, false, true },
+			{ 39, 0, false, true },
+			{ 40, 0, false, true },
+			{ 41, 0, false, true },
+			{ 42, 0, false, true },
+			{ 44, 0, false, true },
+			{ 45, 0, false, true },
+			{ 46, 0, false, true },
+			{ 47, 29, false, false },
+			{ 48, 30, false, false },
+			{ 49, 31, false, false },
+			{ 51, 33, false, false },
+			{ 52, 34, false, false },
+			{ 53, 35, false, false },
+			{ 54, 36, false, false },
+			{ 55, 0, false, true },
+			{ 56, 0, false, true },
+			{ 57, 0, false, true },
+			{ 58, 0, false, true },
+			{ 59, 0, false, true },
+			{ 37, 0, false, true },
+			{ 60, 0, false, true },
+			{ 61, 0, false, true },
+			{ 62, 0, false, true },
+			{ 63, 0, false, true },
+			{ 64, 0, false, true },
+			{ 43, 0, false, true },
+			{ 50, 32, false, false },
+		};
+		// clang-format on
+
+		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		REQUIRE(result.first == result.second);
 	}
 }

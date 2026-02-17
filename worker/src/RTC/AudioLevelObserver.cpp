@@ -80,7 +80,7 @@ namespace RTC
 		this->mapProducerDBovs.erase(producer);
 	}
 
-	void AudioLevelObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	void AudioLevelObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -177,8 +177,9 @@ namespace RTC
 
 			for (; idx < this->maxEntries && rit != mapDBovsProducer.crend(); ++idx, ++rit)
 			{
-				volumes.emplace_back(FBS::AudioLevelObserver::CreateVolumeDirect(
-				  this->shared->channelNotifier->GetBufferBuilder(), rit->second->id.c_str(), rit->first));
+				volumes.emplace_back(
+				  FBS::AudioLevelObserver::CreateVolumeDirect(
+				    this->shared->channelNotifier->GetBufferBuilder(), rit->second->id.c_str(), rit->first));
 			}
 
 			auto notification = FBS::AudioLevelObserver::CreateVolumesNotificationDirect(

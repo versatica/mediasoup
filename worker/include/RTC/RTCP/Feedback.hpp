@@ -24,10 +24,10 @@ namespace RTC
 			static const size_t HeaderSize{ 8 };
 			static RTCP::Type rtcpType;
 			static FeedbackPacket<T>* Parse(const uint8_t* data, size_t len);
-			static const std::string& MessageType2String(typename T::MessageType type);
+			static const std::string& MessageTypeToString(typename T::MessageType type);
 
 		private:
-			static absl::flat_hash_map<typename T::MessageType, std::string> type2String;
+			static const absl::flat_hash_map<typename T::MessageType, std::string> MessageType2String;
 
 		public:
 			typename T::MessageType GetMessageType() const
@@ -36,19 +36,19 @@ namespace RTC
 			}
 			uint32_t GetSenderSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->senderSsrc) };
+				return ntohl(this->header->senderSsrc);
 			}
 			void SetSenderSsrc(uint32_t ssrc)
 			{
-				this->header->senderSsrc = uint32_t{ htonl(ssrc) };
+				this->header->senderSsrc = htonl(ssrc);
 			}
 			uint32_t GetMediaSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->mediaSsrc) };
+				return ntohl(this->header->mediaSsrc);
 			}
 			void SetMediaSsrc(uint32_t ssrc)
 			{
-				this->header->mediaSsrc = uint32_t{ htonl(ssrc) };
+				this->header->mediaSsrc = htonl(ssrc);
 			}
 
 			/* Pure virtual methods inherited from Packet. */
@@ -64,7 +64,7 @@ namespace RTC
 				return Packet::CommonHeaderSize + HeaderSize;
 			}
 
-		protected:
+		public:
 			explicit FeedbackPacket(CommonHeader* commonHeader);
 			FeedbackPacket(typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc);
 			~FeedbackPacket() override;

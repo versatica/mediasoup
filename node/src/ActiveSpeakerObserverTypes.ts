@@ -39,10 +39,10 @@ export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents & {
 export interface ActiveSpeakerObserver<
 	ActiveSpeakerObserverAppData extends AppData = AppData,
 > extends RtpObserver<
-		ActiveSpeakerObserverAppData,
-		ActiveSpeakerObserverEvents,
-		ActiveSpeakerObserverObserver
-	> {
+	ActiveSpeakerObserverAppData,
+	ActiveSpeakerObserverEvents,
+	ActiveSpeakerObserverObserver
+> {
 	/**
 	 * RtpObserver type.
 	 *

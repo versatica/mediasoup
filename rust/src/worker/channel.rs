@@ -7,7 +7,7 @@ use atomic_take::AtomicTake;
 use hash_hasher::HashedMap;
 use log::{debug, error, trace, warn};
 use lru::LruCache;
-use mediasoup_sys::fbs::{message, notification, request, response};
+use mediasoup_sys::fbs::{message, notification, response};
 use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
 use planus::ReadAsRoot;
@@ -387,11 +387,8 @@ impl Channel {
                 .push_back(Arc::clone(&buffer));
             if let Some(handle) = outgoing_message_buffer.handle {
                 if self.inner.worker_closed.load(Ordering::Acquire) {
-                    // Forbid all requests after worker closing except one worker closing request
-                    // TODO: We were checking before that inner.closed.
-                    if R::METHOD != request::Method::WorkerClose {
-                        return Err(RequestError::ChannelClosed);
-                    }
+                    // Forbid all requests after worker closing
+                    return Err(RequestError::ChannelClosed);
                 }
                 unsafe {
                     // Notify worker that there is something to read
@@ -487,7 +484,11 @@ impl Channel {
                 .push_back(Arc::clone(&message));
             if let Some(handle) = outgoing_message_buffer.handle {
                 if self.inner.worker_closed.load(Ordering::Acquire) {
-                    return Err(NotificationError::ChannelClosed);
+                    // Forbid all notifications after worker closing except one
+                    // worker closing request
+                    if N::EVENT != notification::Event::WorkerClose {
+                        return Err(NotificationError::ChannelClosed);
+                    }
                 }
                 unsafe {
                     // Notify worker that there is something to read
@@ -502,6 +503,7 @@ impl Channel {
 
         Ok(())
     }
+
     pub(crate) fn subscribe_to_notifications<F>(
         &self,
         target_id: SubscriptionTarget,

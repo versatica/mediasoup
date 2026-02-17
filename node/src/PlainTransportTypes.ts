@@ -131,12 +131,13 @@ export type PlainTransportObserverEvents = TransportObserverEvents & {
 	sctpstatechange: [SctpState];
 };
 
-export interface PlainTransport<PlainTransportAppData extends AppData = AppData>
-	extends Transport<
-		PlainTransportAppData,
-		PlainTransportEvents,
-		PlainTransportObserver
-	> {
+export interface PlainTransport<
+	PlainTransportAppData extends AppData = AppData,
+> extends Transport<
+	PlainTransportAppData,
+	PlainTransportEvents,
+	PlainTransportObserver
+> {
 	/**
 	 * Transport type.
 	 *

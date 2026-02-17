@@ -4,9 +4,7 @@
 #include <cstring> // std::memcmp()
 #include <string>
 
-using namespace RTC::RTCP;
-
-namespace TestBye
+SCENARIO("RTCP BYE", "[rtcp][bye]")
 {
 	// RCTP BYE packet.
 
@@ -23,11 +21,14 @@ namespace TestBye
 	};
 	// clang-format on
 
-	uint32_t ssrc1{ 0x624276e0 };
-	uint32_t ssrc2{ 0x2624670e };
-	std::string reason("Hasta la vista");
+	const uint32_t ssrc1{ 0x624276e0 };
+	const uint32_t ssrc2{ 0x2624670e };
+	const std::string reason("Hasta la vista");
 
-	void verify(ByePacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	// NOTE: If we pass const integers then clang-tidy complains with
+	// 'clang-diagnostic-unused-lambda-capture'.
+	auto verify = [&reason](RTC::RTCP::ByePacket* packet)
 	{
 		REQUIRE(packet->GetReason() == reason);
 
@@ -35,19 +36,14 @@ namespace TestBye
 
 		REQUIRE(*it == ssrc1);
 
-		it++;
+		++it;
 
 		REQUIRE(*it == ssrc2);
-	}
-} // namespace TestBye
+	};
 
-using namespace TestBye;
-
-SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
-{
-	SECTION("parse BYE packet")
+	SECTION("parse ByePacket")
 	{
-		std::unique_ptr<ByePacket> packet{ ByePacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
@@ -69,7 +65,7 @@ SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
 	SECTION("create ByePacket")
 	{
 		// Create local Bye packet and check content.
-		ByePacket packet;
+		RTC::RTCP::ByePacket packet;
 
 		packet.AddSsrc(ssrc1);
 		packet.AddSsrc(ssrc2);

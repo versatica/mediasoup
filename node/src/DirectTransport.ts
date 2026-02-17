@@ -37,8 +37,8 @@ export type DirectTransportData = {
 const logger = new Logger('DirectTransport');
 
 export class DirectTransportImpl<
-		DirectTransportAppData extends AppData = AppData,
-	>
+	DirectTransportAppData extends AppData = AppData,
+>
 	extends TransportImpl<
 		DirectTransportAppData,
 		DirectTransportEvents,

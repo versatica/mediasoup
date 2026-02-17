@@ -45,7 +45,9 @@ namespace RTC
 		public:
 			/**
 			 * Error Cause Code.
+			 * NOTE: This field MUST be 2 bytes long.
 			 */
+			// NOLINTNEXTLINE(performance-enum-size)
 			enum class ErrorCauseCode : uint16_t
 			{
 				INVALID_STREAM_IDENTIFIER                    = 0x0001,
@@ -103,10 +105,10 @@ namespace RTC
 			  uint16_t& causeLength,
 			  uint8_t& padding);
 
-			static const std::string& ErrorCauseCode2String(ErrorCauseCode causeCode);
+			static const std::string& ErrorCauseCodeToString(ErrorCauseCode causeCode);
 
 		private:
-			static std::unordered_map<ErrorCauseCode, std::string> errorCauseCode2String;
+			static const std::unordered_map<ErrorCauseCode, std::string> ErrorCauseCode2String;
 
 		protected:
 			/**
@@ -116,16 +118,15 @@ namespace RTC
 			ErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ErrorCause() override;
+			~ErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override = 0;
+			void Dump(int indentation = 0) const override = 0;
 
-			virtual ErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
+			ErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ErrorCauseCode GetCode() const final
 			{
-				return static_cast<ErrorCauseCode>(
-				  uint16_t{ ntohs(static_cast<uint16_t>(GetHeaderPointer()->code)) });
+				return static_cast<ErrorCauseCode>(ntohs(static_cast<uint16_t>(GetHeaderPointer()->code)));
 			}
 
 			/**
@@ -144,12 +145,12 @@ namespace RTC
 
 				if (contentToString.size() > 0)
 				{
-					return ErrorCause::ErrorCauseCode2String(GetCode()) + " (" +
+					return ErrorCause::ErrorCauseCodeToString(GetCode()) + " (" +
 					       std::to_string(static_cast<uint16_t>(GetCode())) + ") " + contentToString;
 				}
 				else
 				{
-					return ErrorCause::ErrorCauseCode2String(GetCode()) + " (" +
+					return ErrorCause::ErrorCauseCodeToString(GetCode()) + " (" +
 					       std::to_string(static_cast<uint16_t>(GetCode())) + ")";
 				}
 			}
@@ -158,7 +159,7 @@ namespace RTC
 			/**
 			 * Subclasses must invoke this method within their Dump() method.
 			 */
-			virtual void DumpCommon(int indentation) const override final;
+			void DumpCommon(int indentation) const final;
 
 			virtual void SoftSerialize(const uint8_t* buffer) final;
 
@@ -173,7 +174,7 @@ namespace RTC
 			 * must override this method and return their header length (excluding
 			 * variable-length field considered "value").
 			 */
-			virtual size_t GetHeaderLength() const override
+			size_t GetHeaderLength() const override
 			{
 				return ErrorCause::ErrorCauseHeaderLength;
 			}
@@ -191,7 +192,7 @@ namespace RTC
 			virtual void SetCode(ErrorCauseCode causeCode) final
 			{
 				GetHeaderPointer()->code =
-				  static_cast<ErrorCauseCode>(uint16_t{ htons(static_cast<uint16_t>(causeCode)) });
+				  static_cast<ErrorCauseCode>(htons(static_cast<uint16_t>(causeCode)));
 			}
 
 			/**

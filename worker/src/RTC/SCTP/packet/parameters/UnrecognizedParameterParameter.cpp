@@ -68,9 +68,6 @@ namespace RTC
 			// not fixed length.
 			parameter->SetLength(parameterLength + padding);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -119,8 +116,6 @@ namespace RTC
 		  const uint8_t* parameter, uint16_t parameterLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetVariableLengthValue(parameter, parameterLength);
 		}

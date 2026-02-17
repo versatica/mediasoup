@@ -30,7 +30,7 @@ namespace RTC
 				SEND_RTP_STREAM_DISCARDED
 			};
 
-			static absl::flat_hash_map<DiscardReason, std::string> discardReason2String;
+			static const absl::flat_hash_map<DiscardReason, std::string> DiscardReason2String;
 
 			RtpPacket()  = default;
 			~RtpPacket() = default;
@@ -43,11 +43,11 @@ namespace RTC
 
 		public:
 			uint64_t timestamp{};
-			std::string recvTransportId{};
-			std::string sendTransportId{};
-			std::string routerId{};
-			std::string producerId{};
-			std::string consumerId{};
+			std::string recvTransportId;
+			std::string sendTransportId;
+			std::string routerId;
+			std::string producerId;
+			std::string consumerId;
 			uint32_t recvRtpTimestamp{};
 			uint32_t sendRtpTimestamp{};
 			uint16_t recvSeqNumber{};

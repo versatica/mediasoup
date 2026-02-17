@@ -73,9 +73,6 @@ namespace RTC
 			// not fixed length.
 			chunk->SetLength(chunkLength + padding);
 
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
 			return chunk;
 		}
 
@@ -120,8 +117,6 @@ namespace RTC
 		void AbortAssociationChunk::SetT(bool flag)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetBit0(flag);
 		}

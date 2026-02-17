@@ -3,7 +3,15 @@ name: mediasoup-rust
 on:
   push:
     branches: [v3]
+    paths:
+      - 'rust/**'
+      - 'worker/**'
+      - '.github/workflows/mediasoup-rust.yaml'
   pull_request:
+    paths:
+      - 'rust/**'
+      - 'worker/**'
+      - '.github/workflows/mediasoup-rust.yaml'
   workflow_dispatch:
 
 concurrency:
@@ -22,7 +30,6 @@ jobs:
         build:
           - os: ubuntu-24.04
           - os: ubuntu-24.04-arm
-          - os: macos-13
           - os: macos-14
           - os: macos-15
           - os: windows-2022
@@ -45,10 +52,10 @@ jobs:
             ~/.cargo/git
           key: ${{ matrix.build.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
-      - name: cargo fmt
+      - name: cargo fmt --all -- --check
         run: cargo fmt --all -- --check
 
-      - name: cargo clippy
+      - name: cargo clippy --all-targets -- -D warnings
         run: cargo clippy --all-targets -- -D warnings
 
       # NOTE: In Windows this will build and test libmediasoupworker in release
@@ -58,7 +65,7 @@ jobs:
           cargo test --verbose
           cargo test --release --verbose
 
-      - name: cargo doc
+      - name: cargo doc --locked --all --no-deps --lib
         run: cargo doc --locked --all --no-deps --lib
         env:
           DOCS_RS: '1'

@@ -57,24 +57,27 @@ namespace RTC
 
 		Socket::Socket(SocketOptions options, Listener* listener)
 		  : options(options), listener(listener),
-		    t1InitTimer(std::make_unique<BackoffTimerHandle>(
-		      /*listener*/ this,
-		      /*baseTimeout*/ options.t1InitTimeout,
-		      /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		      /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
-		      /*maxRestarts*/ options.maxInitRetransmits)),
-		    t1CookieTimer(std::make_unique<BackoffTimerHandle>(
-		      /*listener*/ this,
-		      /*baseTimeout*/ options.t1CookieTimeout,
-		      /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		      /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
-		      /*maxRestarts*/ options.maxInitRetransmits)),
-		    t2ShutdownTimer(std::make_unique<BackoffTimerHandle>(
-		      /*listener*/ this,
-		      /*baseTimeout*/ options.t2ShutdownTimeout,
-		      /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		      /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
-		      /*maxRestarts*/ options.maxRetransmits))
+		    t1InitTimer(
+		      std::make_unique<BackoffTimerHandle>(
+		        /*listener*/ this,
+		        /*baseTimeout*/ options.t1InitTimeout,
+		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
+		        /*maxRestarts*/ options.maxInitRetransmits)),
+		    t1CookieTimer(
+		      std::make_unique<BackoffTimerHandle>(
+		        /*listener*/ this,
+		        /*baseTimeout*/ options.t1CookieTimeout,
+		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
+		        /*maxRestarts*/ options.maxInitRetransmits)),
+		    t2ShutdownTimer(
+		      std::make_unique<BackoffTimerHandle>(
+		        /*listener*/ this,
+		        /*baseTimeout*/ options.t2ShutdownTimeout,
+		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
+		        /*maxRestarts*/ options.maxRetransmits))
 		{
 			MS_TRACE();
 		}
@@ -115,9 +118,9 @@ namespace RTC
 			}
 
 			this->preTcb.localVerificationTag =
-			  Utils::Crypto::GetRandomUInt32(1, std::numeric_limits<uint32_t>::max());
+			  Utils::Crypto::GetRandomUInt<uint32_t>(1, std::numeric_limits<uint32_t>::max());
 			this->preTcb.localInitialTsn =
-			  Utils::Crypto::GetRandomUInt32(0, std::numeric_limits<uint32_t>::max());
+			  Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max());
 
 			SendInitChunk();
 
@@ -640,8 +643,9 @@ namespace RTC
 					MS_DEBUG_TAG(sctp, "INIT Chunk received in CLOSED state (normal scenario)");
 
 					localVerificationTag =
-					  Utils::Crypto::GetRandomUInt32(1, std::numeric_limits<uint32_t>::max());
-					localInitialTsn = Utils::Crypto::GetRandomUInt32(0, std::numeric_limits<uint32_t>::max());
+					  Utils::Crypto::GetRandomUInt<uint32_t>(1, std::numeric_limits<uint32_t>::max());
+					localInitialTsn =
+					  Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max());
 
 					break;
 				}
@@ -685,7 +689,7 @@ namespace RTC
 					MS_DEBUG_TAG(sctp, "INIT Chunk received (probably peer restarted)");
 
 					localVerificationTag =
-					  Utils::Crypto::GetRandomUInt32(1, std::numeric_limits<uint32_t>::max());
+					  Utils::Crypto::GetRandomUInt<uint32_t>(1, std::numeric_limits<uint32_t>::max());
 
 					// TODO: Implement this.
 					// Make the initial TSN make a large jump, so that there is no overlap
@@ -693,7 +697,8 @@ namespace RTC
 					// my_initial_tsn = TSN(*tcb_->retransmission_queue().next_tsn() + 1000000);
 
 					// TODO: Remove this when the above TODO is done.
-					localInitialTsn = Utils::Crypto::GetRandomUInt32(0, std::numeric_limits<uint32_t>::max());
+					localInitialTsn =
+					  Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max());
 
 					tieTag = this->tcb->GetTieTag();
 				}
@@ -824,7 +829,7 @@ namespace RTC
 			  this->preTcb.localInitialTsn,
 			  receivedInitAckChunk->GetInitialTsn(),
 			  receivedInitAckChunk->GetAdvertisedReceiverWindowCredit(),
-			  /*tieTag*/ Utils::Crypto::GetRandomUInt64(0, std::numeric_limits<uint64_t>::max()),
+			  /*tieTag*/ Utils::Crypto::GetRandomUInt<uint64_t>(0, std::numeric_limits<uint64_t>::max()),
 			  negotiatedCapabilities);
 
 			SetState(State::COOKIE_ECHOED, "INIT_ACK received");

@@ -1,14 +1,14 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedParametersErrorCause.hpp"
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
 SCENARIO("Unrecognized Parameters Error Cause (8)", "[sctp][serializable]")
 {
-	resetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("UnrecognizedParametersErrorCause::Parse() succeeds")
 	{
@@ -27,15 +27,14 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* errorCause = UnrecognizedParametersErrorCause::Parse(buffer, sizeof(buffer));
+		auto* errorCause = RTC::SCTP::UnrecognizedParametersErrorCause::Parse(buffer, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->HasUnrecognizedParameters() == true);
@@ -50,23 +49,18 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(errorCause->GetUnrecognizedParameters()[7] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(errorCause->SetUnrecognizedParameters(DataBuffer, 3), MediaSoupError);
-
 		/* Serialize it. */
 
-		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		errorCause->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->HasUnrecognizedParameters() == true);
@@ -83,19 +77,19 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedErrorCause = errorCause->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedErrorCause =
+		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
 		  /*unknownCode*/ false);
 
 		REQUIRE(clonedErrorCause->HasUnrecognizedParameters() == true);
@@ -115,16 +109,15 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[sctp][serializable]")
 
 	SECTION("UnrecognizedParametersErrorCause::Factory() succeeds")
 	{
-		auto* errorCause =
-		  UnrecognizedParametersErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* errorCause = RTC::SCTP::UnrecognizedParametersErrorCause::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->HasUnrecognizedParameters() == false);
@@ -133,7 +126,7 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[sctp][serializable]")
 		/* Modify it. */
 
 		// Verify that replacing the value works.
-		errorCause->SetUnrecognizedParameters(DataBuffer + 1000, 3000);
+		errorCause->SetUnrecognizedParameters(sctpCommon::DataBuffer + 1000, 3000);
 
 		REQUIRE(errorCause->GetLength() == 3004);
 		REQUIRE(errorCause->HasUnrecognizedParameters() == true);
@@ -146,15 +139,14 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[sctp][serializable]")
 		REQUIRE(errorCause->GetUnrecognizedParametersLength() == 0);
 
 		// 6 bytes + 2 bytes of padding.
-		errorCause->SetUnrecognizedParameters(DataBuffer, 6);
+		errorCause->SetUnrecognizedParameters(sctpCommon::DataBuffer, 6);
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->HasUnrecognizedParameters() == true);
@@ -171,18 +163,17 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[sctp][serializable]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause =
-		  UnrecognizedParametersErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength());
+		auto* parsedErrorCause = RTC::SCTP::UnrecognizedParametersErrorCause::Parse(
+		  errorCause->GetBuffer(), errorCause->GetLength());
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,
 		  /*unknownCode*/ false);
 
 		REQUIRE(parsedErrorCause->HasUnrecognizedParameters() == true);

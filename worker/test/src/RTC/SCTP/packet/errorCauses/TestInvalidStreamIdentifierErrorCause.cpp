@@ -1,14 +1,14 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
 SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 {
-	resetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("InvalidStreamIdentifierErrorCause::Parse() succeeds")
 	{
@@ -26,15 +26,14 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* errorCause = InvalidStreamIdentifierErrorCause::Parse(buffer, sizeof(buffer));
+		auto* errorCause = RTC::SCTP::InvalidStreamIdentifierErrorCause::Parse(buffer, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetStreamIdentifier() == 12345);
@@ -42,23 +41,18 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		REQUIRE(errorCause->GetBuffer()[6] == 0);
 		REQUIRE(errorCause->GetBuffer()[7] == 0);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(errorCause->SetStreamIdentifier(44444), MediaSoupError);
-
 		/* Serialize it. */
 
-		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		errorCause->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetStreamIdentifier() == 12345);
@@ -68,19 +62,19 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedErrorCause = errorCause->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedErrorCause =
+		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(clonedErrorCause->GetStreamIdentifier() == 12345);
@@ -104,7 +98,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!InvalidStreamIdentifierErrorCause::Parse(buffer1, sizeof(buffer1)));
+		REQUIRE(!RTC::SCTP::InvalidStreamIdentifierErrorCause::Parse(buffer1, sizeof(buffer1)));
 
 		// Wrong Length field.
 		// clang-format off
@@ -117,7 +111,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!InvalidStreamIdentifierErrorCause::Parse(buffer2, sizeof(buffer2)));
+		REQUIRE(!RTC::SCTP::InvalidStreamIdentifierErrorCause::Parse(buffer2, sizeof(buffer2)));
 
 		// Wrong Length field.
 		// clang-format off
@@ -131,7 +125,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!InvalidStreamIdentifierErrorCause::Parse(buffer3, sizeof(buffer3)));
+		REQUIRE(!RTC::SCTP::InvalidStreamIdentifierErrorCause::Parse(buffer3, sizeof(buffer3)));
 
 		// Wrong buffer length.
 		// clang-format off
@@ -144,21 +138,20 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!InvalidStreamIdentifierErrorCause::Parse(buffer4, sizeof(buffer4)));
+		REQUIRE(!RTC::SCTP::InvalidStreamIdentifierErrorCause::Parse(buffer4, sizeof(buffer4)));
 	}
 
 	SECTION("InvalidStreamIdentifierErrorCause::Factory() succeeds")
 	{
-		auto* errorCause =
-		  InvalidStreamIdentifierErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* errorCause = RTC::SCTP::InvalidStreamIdentifierErrorCause::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetStreamIdentifier() == 0);
@@ -170,13 +163,12 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 
 		errorCause->SetStreamIdentifier(6666);
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetStreamIdentifier() == 6666);
@@ -186,18 +178,17 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause =
-		  InvalidStreamIdentifierErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength());
+		auto* parsedErrorCause = RTC::SCTP::InvalidStreamIdentifierErrorCause::Parse(
+		  errorCause->GetBuffer(), errorCause->GetLength());
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(parsedErrorCause->GetStreamIdentifier() == 6666);

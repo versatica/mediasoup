@@ -56,8 +56,7 @@ namespace Utils
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 				}
 
-				port =
-				  static_cast<uint16_t>(ntohs(reinterpret_cast<const struct sockaddr_in*>(addr)->sin_port));
+				port = ntohs(reinterpret_cast<const struct sockaddr_in*>(addr)->sin_port);
 
 				break;
 			}
@@ -75,8 +74,7 @@ namespace Utils
 					MS_ABORT("uv_inet_ntop() failed: %s", uv_strerror(err));
 				}
 
-				port =
-				  static_cast<uint16_t>(ntohs(reinterpret_cast<const struct sockaddr_in6*>(addr)->sin6_port));
+				port = ntohs(reinterpret_cast<const struct sockaddr_in6*>(addr)->sin6_port);
 
 				break;
 			}
@@ -114,7 +112,7 @@ namespace Utils
 		}
 	}
 
-	void IP::NormalizeIp(std::string& ip)
+	std::string IP::NormalizeIp(std::string& ip)
 	{
 		MS_TRACE();
 
@@ -145,7 +143,7 @@ namespace Utils
 
 				ip.assign(ipBuffer);
 
-				break;
+				return ip;
 			}
 
 			case AF_INET6:
@@ -169,7 +167,7 @@ namespace Utils
 
 				ip.assign(ipBuffer);
 
-				break;
+				return ip;
 			}
 
 			default:

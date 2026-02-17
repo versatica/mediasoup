@@ -16,6 +16,7 @@ const config = tsEslint.config(
 		},
 	},
 	eslint.configs.recommended,
+	prettierRecommendedEslint,
 	{
 		rules: {
 			'constructor-super': 2,
@@ -125,7 +126,6 @@ const config = tsEslint.config(
 		files: ['node/src/**/*.ts'],
 		languageOptions: {
 			parserOptions: {
-				projectService: true,
 				project: 'tsconfig.json',
 			},
 		},
@@ -169,6 +169,7 @@ const config = tsEslint.config(
 				2,
 				{ ignoreUnions: true },
 			],
+			'@typescript-eslint/no-redundant-type-constituents': 0,
 		},
 	},
 	{
@@ -181,8 +182,7 @@ const config = tsEslint.config(
 			'jest/prefer-expect-assertions': 0,
 			'@typescript-eslint/no-unnecessary-type-assertion': 0,
 		},
-	},
-	prettierRecommendedEslint
+	}
 );
 
 export default config;

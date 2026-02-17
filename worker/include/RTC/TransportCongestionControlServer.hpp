@@ -5,7 +5,7 @@
 #include "RTC/BweType.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/Packet.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/SeqManager.hpp"
 #include "handles/TimerHandle.hpp"
 #include <libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h>
@@ -53,7 +53,7 @@ namespace RTC
 			}
 		}
 		double GetPacketLoss() const;
-		void IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet);
+		void IncomingPacket(uint64_t nowMs, const RTC::RTP::Packet* packet);
 		void SetMaxIncomingBitrate(uint32_t bitrate);
 		void FillAndSendTransportCcFeedback();
 

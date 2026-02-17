@@ -70,7 +70,7 @@ namespace RTC
 			static const size_t CommonHeaderLength{ 12 };
 
 			/**
-			 * Parse a SCTP packet.
+			 * Parse a SCTP Packet.
 			 *
 			 * @remarks
 			 * `bufferLength` must be the exact length of the Packet.
@@ -89,36 +89,36 @@ namespace RTC
 		public:
 			~Packet() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual void Serialize(uint8_t* buffer, size_t bufferLength) override final;
+			void Serialize(uint8_t* buffer, size_t bufferLength) final;
 
-			virtual Packet* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			Packet* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint16_t GetSourcePort() const
 			{
-				return uint16_t{ ntohs(GetHeaderPointer()->sourcePort) };
+				return ntohs(GetHeaderPointer()->sourcePort);
 			}
 
 			void SetSourcePort(uint16_t sourcePort);
 
 			uint16_t GetDestinationPort() const
 			{
-				return uint16_t{ ntohs(GetHeaderPointer()->destinationPort) };
+				return ntohs(GetHeaderPointer()->destinationPort);
 			}
 
 			void SetDestinationPort(uint16_t destinationPort);
 
 			uint32_t GetVerificationTag() const
 			{
-				return uint32_t{ ntohl(GetHeaderPointer()->verificationTag) };
+				return ntohl(GetHeaderPointer()->verificationTag);
 			}
 
 			void SetVerificationTag(uint32_t verificationTag);
 
 			uint32_t GetChecksum() const
 			{
-				return uint32_t{ ntohl(GetHeaderPointer()->checksum) };
+				return ntohl(GetHeaderPointer()->checksum);
 			}
 
 			void SetChecksum(uint32_t checksum);
@@ -201,8 +201,6 @@ namespace RTC
 			template<typename T>
 			T* BuildChunkInPlace()
 			{
-				AssertNotFrozen();
-
 				// The new Chunk will be added after other Chunks in the Packet, this is,
 				// at the end of the Packet,  whose length we know it's padded to 4
 				// bytes, and each Parameter total length is also multiple of 4 bytes.

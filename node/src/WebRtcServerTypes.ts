@@ -60,8 +60,9 @@ export type WebRtcServerObserverEvents = {
 	webrtctransportunhandled: [WebRtcTransport];
 };
 
-export interface WebRtcServer<WebRtcServerAppData extends AppData = AppData>
-	extends EnhancedEventEmitter<WebRtcServerEvents> {
+export interface WebRtcServer<
+	WebRtcServerAppData extends AppData = AppData,
+> extends EnhancedEventEmitter<WebRtcServerEvents> {
 	/**
 	 * WebRtcServer id.
 	 */

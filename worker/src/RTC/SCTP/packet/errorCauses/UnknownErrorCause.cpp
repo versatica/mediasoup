@@ -3,7 +3,6 @@
 
 #include "RTC/SCTP/packet/errorCauses/UnknownErrorCause.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 
 namespace RTC
 {
@@ -37,9 +36,6 @@ namespace RTC
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
 			errorCause->SetLength(causeLength + padding);
-
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
 
 			return errorCause;
 		}

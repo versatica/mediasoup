@@ -23,7 +23,7 @@ namespace RTC
 			// Set reserved bits to zero.
 			std::memset(this->header, 0, HeaderSize);
 
-			this->header->ssrc           = uint32_t{ htonl(ssrc) };
+			this->header->ssrc           = htonl(ssrc);
 			this->header->sequenceNumber = sequenceNumber;
 		}
 

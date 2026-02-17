@@ -1,5 +1,5 @@
 import * as h264 from 'h264-profile-level-id';
-import * as flatbuffers from 'flatbuffers';
+import type * as flatbuffers from 'flatbuffers';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { parseScalabilityMode } from './scalabilityModesUtils';
 import type {
@@ -40,12 +40,24 @@ const DynamicPayloadTypes = [
 	99,
 ];
 
+// TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
+// extension.
+//
+// This is an object where we store some objects we may later need.
+type Cache = {
+	dependencyDescriptorHeaderExtensionParametersForPipeConsumer?: RtpHeaderExtensionParameters;
+};
+
+const cache: Cache = {
+	dependencyDescriptorHeaderExtensionParametersForPipeConsumer: undefined,
+};
+
 /**
  * Validates RtpCapabilities. It may modify given data by adding missing
  * fields with default values.
  * It throws if invalid.
  */
-export function validateRtpCapabilities(
+export function validateAndNormalizeRtpCapabilities(
 	caps: RtpCapabilities | RouterRtpCapabilities
 ): void {
 	if (typeof caps !== 'object') {
@@ -60,7 +72,7 @@ export function validateRtpCapabilities(
 	}
 
 	for (const codec of caps.codecs) {
-		validateRtpCodecCapability(codec);
+		validateAndNormalizeRtpCodecCapability(codec);
 	}
 
 	// headerExtensions is optional. If unset, fill with an empty array.
@@ -71,7 +83,7 @@ export function validateRtpCapabilities(
 	}
 
 	for (const ext of caps.headerExtensions) {
-		validateRtpHeaderExtension(ext);
+		validateAndNormalizeRtpHeaderExtension(ext);
 	}
 }
 
@@ -80,7 +92,7 @@ export function validateRtpCapabilities(
  * fields with default values.
  * It throws if invalid.
  */
-export function validateRtpParameters(params: RtpParameters): void {
+export function validateAndNormalizeRtpParameters(params: RtpParameters): void {
 	if (typeof params !== 'object') {
 		throw new TypeError('params is not an object');
 	}
@@ -96,7 +108,7 @@ export function validateRtpParameters(params: RtpParameters): void {
 	}
 
 	for (const codec of params.codecs) {
-		validateRtpCodecParameters(codec);
+		validateAndNormalizeRtpCodecParameters(codec);
 	}
 
 	// headerExtensions is optional. If unset, fill with an empty array.
@@ -107,7 +119,7 @@ export function validateRtpParameters(params: RtpParameters): void {
 	}
 
 	for (const ext of params.headerExtensions) {
-		validateRtpHeaderExtensionParameters(ext);
+		validateAndNormalizeRtpHeaderExtensionParameters(ext);
 	}
 
 	// encodings is optional. If unset, fill with an empty array.
@@ -118,7 +130,7 @@ export function validateRtpParameters(params: RtpParameters): void {
 	}
 
 	for (const encoding of params.encodings) {
-		validateRtpEncodingParameters(encoding);
+		validateAndNormalizeRtpEncodingParameters(encoding);
 	}
 
 	// rtcp is optional. If unset, fill with an empty object.
@@ -128,7 +140,12 @@ export function validateRtpParameters(params: RtpParameters): void {
 		params.rtcp = {};
 	}
 
-	validateRtcpParameters(params.rtcp);
+	// msid is optional.
+	if (params.msid && typeof params.msid !== 'string') {
+		throw new TypeError('params.msid is not a string');
+	}
+
+	validateAndNormalizeRtcpParameters(params.rtcp);
 }
 
 /**
@@ -136,7 +153,7 @@ export function validateRtpParameters(params: RtpParameters): void {
  * fields with default values.
  * It throws if invalid.
  */
-export function validateSctpStreamParameters(
+export function validateAndNormalizeSctpStreamParameters(
 	params: SctpStreamParameters
 ): void {
 	if (typeof params !== 'object') {
@@ -200,7 +217,7 @@ export function generateRouterRtpCapabilities(
 	mediaCodecs: RouterRtpCodecCapability[] = []
 ): RtpCapabilities {
 	// Normalize supported RTP capabilities.
-	validateRtpCapabilities(supportedRtpCapabilities);
+	validateAndNormalizeRtpCapabilities(supportedRtpCapabilities);
 
 	if (!Array.isArray(mediaCodecs)) {
 		throw new TypeError('mediaCodecs must be an Array');
@@ -217,7 +234,7 @@ export function generateRouterRtpCapabilities(
 
 	for (const mediaCodec of mediaCodecs) {
 		// This may throw.
-		validateRtpCodecCapability(mediaCodec);
+		validateAndNormalizeRtpCodecCapability(mediaCodec);
 
 		const matchedSupportedCodec = clonedSupportedRtpCapabilities.codecs!.find(
 			supportedCodec =>
@@ -298,6 +315,30 @@ export function generateRouterRtpCapabilities(
 			// Append to the codec list.
 			caps.codecs!.push(rtxCodec);
 		}
+	}
+
+	// TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
+	// extension.
+	//
+	// We need to create and store this Dependency-Descriptor header extension to
+	// leter be used by `getPipeConsumerRtpParameters()` function.
+	const dependencyDescriptorHeaderExtensionForPipeConsumer:
+		| RtpHeaderExtension
+		| undefined = supportedRtpCapabilities.headerExtensions!.find(
+		headerExtension =>
+			headerExtension.uri ===
+				'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension' &&
+			headerExtension.direction !== 'sendrecv'
+	);
+
+	if (dependencyDescriptorHeaderExtensionForPipeConsumer) {
+		cache.dependencyDescriptorHeaderExtensionParametersForPipeConsumer = {
+			uri: dependencyDescriptorHeaderExtensionForPipeConsumer.uri,
+			id: dependencyDescriptorHeaderExtensionForPipeConsumer.preferredId,
+			encrypt:
+				dependencyDescriptorHeaderExtensionForPipeConsumer.preferredEncrypt,
+			parameters: {},
+		};
 	}
 
 	return caps;
@@ -418,6 +459,7 @@ export function getConsumableRtpParameters(
 		headerExtensions: [],
 		encodings: [],
 		rtcp: {},
+		msid: undefined,
 	};
 
 	for (const codec of params.codecs) {
@@ -506,6 +548,8 @@ export function getConsumableRtpParameters(
 		reducedSize: true,
 	};
 
+	consumableParams.msid = params.msid;
+
 	return consumableParams;
 }
 
@@ -517,7 +561,7 @@ export function canConsume(
 	caps: RtpCapabilities
 ): boolean {
 	// This may throw.
-	validateRtpCapabilities(caps);
+	validateAndNormalizeRtpCapabilities(caps);
 
 	const matchingCodecs: RtpCodecParameters[] = [];
 
@@ -564,10 +608,11 @@ export function getConsumerRtpParameters({
 		headerExtensions: [],
 		encodings: [],
 		rtcp: consumableRtpParameters.rtcp,
+		msid: consumableRtpParameters.msid,
 	};
 
 	for (const capCodec of remoteRtpCapabilities.codecs!) {
-		validateRtpCodecCapability(capCodec);
+		validateAndNormalizeRtpCodecCapability(capCodec);
 	}
 
 	const consumableCodecs =
@@ -754,6 +799,7 @@ export function getPipeConsumerRtpParameters({
 		headerExtensions: [],
 		encodings: [],
 		rtcp: consumableRtpParameters.rtcp,
+		msid: consumableRtpParameters.msid,
 	};
 
 	const consumableCodecs =
@@ -787,6 +833,20 @@ export function getPipeConsumerRtpParameters({
 					'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 		);
 
+	// TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
+	// extension.
+	//
+	// We need to add Dependency-Descriptor header extension manually since it's
+	// 'recvonly' so it's not present in received `consumableRtpParameters`.
+	if (cache.dependencyDescriptorHeaderExtensionParametersForPipeConsumer) {
+		consumerParams.headerExtensions.push(
+			cache.dependencyDescriptorHeaderExtensionParametersForPipeConsumer
+		);
+
+		// Sort header extensions by ID.
+		consumerParams.headerExtensions.sort((a, b) => a.id - b.id);
+	}
+
 	const consumableEncodings =
 		utils.clone<RtpEncodingParameters[] | undefined>(
 			consumableRtpParameters.encodings
@@ -809,6 +869,52 @@ export function getPipeConsumerRtpParameters({
 	}
 
 	return consumerParams;
+}
+
+export function serializeRtpMapping(
+	builder: flatbuffers.Builder,
+	rtpMapping: RtpCodecsEncodingsMapping
+): number {
+	const codecs: number[] = [];
+
+	for (const codec of rtpMapping.codecs) {
+		codecs.push(
+			FbsRtpParameters.CodecMapping.createCodecMapping(
+				builder,
+				codec.payloadType,
+				codec.mappedPayloadType
+			)
+		);
+	}
+	const codecsOffset = FbsRtpParameters.RtpMapping.createCodecsVector(
+		builder,
+		codecs
+	);
+
+	const encodings: number[] = [];
+
+	for (const encoding of rtpMapping.encodings) {
+		encodings.push(
+			FbsRtpParameters.EncodingMapping.createEncodingMapping(
+				builder,
+				builder.createString(encoding.rid),
+				encoding.ssrc ?? null,
+				builder.createString(encoding.scalabilityMode),
+				encoding.mappedSsrc
+			)
+		);
+	}
+
+	const encodingsOffset = FbsRtpParameters.RtpMapping.createEncodingsVector(
+		builder,
+		encodings
+	);
+
+	return FbsRtpParameters.RtpMapping.createRtpMapping(
+		builder,
+		codecsOffset,
+		encodingsOffset
+	);
 }
 
 function isRtxCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {
@@ -910,58 +1016,12 @@ function matchCodecs(
 	return true;
 }
 
-export function serializeRtpMapping(
-	builder: flatbuffers.Builder,
-	rtpMapping: RtpCodecsEncodingsMapping
-): number {
-	const codecs: number[] = [];
-
-	for (const codec of rtpMapping.codecs) {
-		codecs.push(
-			FbsRtpParameters.CodecMapping.createCodecMapping(
-				builder,
-				codec.payloadType,
-				codec.mappedPayloadType
-			)
-		);
-	}
-	const codecsOffset = FbsRtpParameters.RtpMapping.createCodecsVector(
-		builder,
-		codecs
-	);
-
-	const encodings: number[] = [];
-
-	for (const encoding of rtpMapping.encodings) {
-		encodings.push(
-			FbsRtpParameters.EncodingMapping.createEncodingMapping(
-				builder,
-				builder.createString(encoding.rid),
-				encoding.ssrc ?? null,
-				builder.createString(encoding.scalabilityMode),
-				encoding.mappedSsrc
-			)
-		);
-	}
-
-	const encodingsOffset = FbsRtpParameters.RtpMapping.createEncodingsVector(
-		builder,
-		encodings
-	);
-
-	return FbsRtpParameters.RtpMapping.createRtpMapping(
-		builder,
-		codecsOffset,
-		encodingsOffset
-	);
-}
-
 /**
  * Validates RtpCodecCapability. It may modify given data by adding missing
  * fields with default values.
  * It throws if invalid.
  */
-function validateRtpCodecCapability(
+function validateAndNormalizeRtpCodecCapability(
 	codec: RtpCodecCapability | RouterRtpCodecCapability
 ): void {
 	const MimeTypeRegex = new RegExp('^(audio|video)/(.+)', 'i');
@@ -1039,7 +1099,7 @@ function validateRtpCodecCapability(
 	}
 
 	for (const fb of codec.rtcpFeedback) {
-		validateRtcpFeedback(fb);
+		validateAndNormalizeRtcpFeedback(fb);
 	}
 }
 
@@ -1048,7 +1108,7 @@ function validateRtpCodecCapability(
  * fields with default values.
  * It throws if invalid.
  */
-function validateRtcpFeedback(fb: RtcpFeedback): void {
+function validateAndNormalizeRtcpFeedback(fb: RtcpFeedback): void {
 	if (typeof fb !== 'object') {
 		throw new TypeError('fb is not an object');
 	}
@@ -1069,7 +1129,7 @@ function validateRtcpFeedback(fb: RtcpFeedback): void {
  * fields with default values.
  * It throws if invalid.
  */
-function validateRtpHeaderExtension(ext: RtpHeaderExtension): void {
+function validateAndNormalizeRtpHeaderExtension(ext: RtpHeaderExtension): void {
 	if (typeof ext !== 'object') {
 		throw new TypeError('ext is not an object');
 	}
@@ -1108,7 +1168,9 @@ function validateRtpHeaderExtension(ext: RtpHeaderExtension): void {
  * fields with default values.
  * It throws if invalid.
  */
-function validateRtpCodecParameters(codec: RtpCodecParameters): void {
+function validateAndNormalizeRtpCodecParameters(
+	codec: RtpCodecParameters
+): void {
 	const MimeTypeRegex = new RegExp('^(audio|video)/(.+)', 'i');
 
 	if (typeof codec !== 'object') {
@@ -1180,7 +1242,7 @@ function validateRtpCodecParameters(codec: RtpCodecParameters): void {
 	}
 
 	for (const fb of codec.rtcpFeedback) {
-		validateRtcpFeedback(fb);
+		validateAndNormalizeRtcpFeedback(fb);
 	}
 }
 
@@ -1188,7 +1250,7 @@ function validateRtpCodecParameters(codec: RtpCodecParameters): void {
  * Validates RtpHeaderExtensionParameteters. It may modify given data by adding
  * missing fields with default values. It throws if invalid.
  */
-function validateRtpHeaderExtensionParameters(
+function validateAndNormalizeRtpHeaderExtensionParameters(
 	ext: RtpHeaderExtensionParameters
 ): void {
 	if (typeof ext !== 'object') {
@@ -1236,7 +1298,9 @@ function validateRtpHeaderExtensionParameters(
  * fields with default values.
  * It throws if invalid.
  */
-function validateRtpEncodingParameters(encoding: RtpEncodingParameters): void {
+function validateAndNormalizeRtpEncodingParameters(
+	encoding: RtpEncodingParameters
+): void {
 	if (typeof encoding !== 'object') {
 		throw new TypeError('encoding is not an object');
 	}
@@ -1280,7 +1344,7 @@ function validateRtpEncodingParameters(encoding: RtpEncodingParameters): void {
  * fields with default values.
  * It throws if invalid.
  */
-function validateRtcpParameters(rtcp: RtcpParameters): void {
+function validateAndNormalizeRtcpParameters(rtcp: RtcpParameters): void {
 	if (typeof rtcp !== 'object') {
 		throw new TypeError('rtcp is not an object');
 	}

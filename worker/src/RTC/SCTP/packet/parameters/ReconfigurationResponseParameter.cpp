@@ -12,7 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		std::unordered_map<ReconfigurationResponseParameter::Result, std::string> ReconfigurationResponseParameter::result2String =
+		const std::unordered_map<ReconfigurationResponseParameter::Result, std::string> ReconfigurationResponseParameter::Result2String =
 		{
 			{ ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO,             "SUCCESS_NOTHING_TO_DO"             },
 			{ ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED,                 "SUCCESS_PERFORMED"                 },
@@ -76,16 +76,16 @@ namespace RTC
 			return parameter;
 		}
 
-		const std::string& ReconfigurationResponseParameter::Result2String(
+		const std::string& ReconfigurationResponseParameter::ResultToString(
 		  ReconfigurationResponseParameter::Result result)
 		{
 			MS_TRACE();
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = ReconfigurationResponseParameter::result2String.find(result);
+			auto it = ReconfigurationResponseParameter::Result2String.find(result);
 
-			if (it == ReconfigurationResponseParameter::result2String.end())
+			if (it == ReconfigurationResponseParameter::Result2String.end())
 			{
 				return Unknown;
 			}
@@ -120,9 +120,6 @@ namespace RTC
 			// not fixed length.
 			parameter->SetLength(parameterLength + padding);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -155,7 +152,7 @@ namespace RTC
 			  indentation,
 			  "  result: %" PRIu32 " (%s)",
 			  static_cast<uint32_t>(GetResult()),
-			  ReconfigurationResponseParameter::Result2String(GetResult()).c_str());
+			  ReconfigurationResponseParameter::ResultToString(GetResult()).c_str());
 			MS_DUMP_CLEAN(indentation, "  has next tsns: %s", HasNextTsns() ? "yes" : "no");
 			if (HasNextTsns())
 			{
@@ -181,8 +178,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
@@ -190,16 +185,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, static_cast<uint32_t>(result));
 		}
 
 		void ReconfigurationResponseParameter::SetNextTsns(uint32_t senderNextTsn, uint32_t receiverNextTsn)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			if (!HasNextTsns())
 			{

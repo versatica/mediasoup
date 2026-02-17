@@ -12,7 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		std::unordered_map<ErrorCause::ErrorCauseCode, std::string> ErrorCause::errorCauseCode2String =
+		const std::unordered_map<ErrorCause::ErrorCauseCode, std::string> ErrorCause::ErrorCauseCode2String =
 		{
 			{ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,                    "INVALID_STREAM_IDENTIFIER"                    },
 			{ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,                  "MISSING_MANDATORY_PARAMETER"                  },
@@ -51,15 +51,15 @@ namespace RTC
 			return true;
 		}
 
-		const std::string& ErrorCause::ErrorCauseCode2String(ErrorCauseCode causeCode)
+		const std::string& ErrorCause::ErrorCauseCodeToString(ErrorCauseCode causeCode)
 		{
 			MS_TRACE();
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = ErrorCause::errorCauseCode2String.find(causeCode);
+			auto it = ErrorCause::ErrorCauseCode2String.find(causeCode);
 
-			if (it == ErrorCause::errorCauseCode2String.end())
+			if (it == ErrorCause::ErrorCauseCode2String.end())
 			{
 				return Unknown;
 			}
@@ -95,7 +95,7 @@ namespace RTC
 			  indentation,
 			  "  code: %" PRIu16 " (%s) (unknown: %s)",
 			  static_cast<uint16_t>(GetCode()),
-			  ErrorCause::ErrorCauseCode2String(GetCode()).c_str(),
+			  ErrorCause::ErrorCauseCodeToString(GetCode()).c_str(),
 			  HasUnknownCode() ? "yes" : "no");
 			TLV::DumpCommon(indentation);
 		}

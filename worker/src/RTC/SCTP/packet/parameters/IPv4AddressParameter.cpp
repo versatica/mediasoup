@@ -60,7 +60,7 @@ namespace RTC
 		}
 
 		IPv4AddressParameter* IPv4AddressParameter::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
+		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t /*padding*/)
 		{
 			MS_TRACE();
 
@@ -75,9 +75,6 @@ namespace RTC
 			}
 
 			auto* parameter = new IPv4AddressParameter(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
 
 			return parameter;
 		}
@@ -126,8 +123,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			std::memmove(const_cast<uint8_t*>(GetBuffer()) + 4, ip, 4);
 		}
 
@@ -145,8 +140,6 @@ namespace RTC
 		void IPv4AddressParameter::ResetIPv4Address()
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			std::memset(const_cast<uint8_t*>(GetBuffer()) + 4, 0x00, 4);
 		}

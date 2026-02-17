@@ -38,7 +38,7 @@ namespace RTC
 		public:
 			static const size_t HeaderSize = 2;
 			static SdesItem* Parse(const uint8_t* data, size_t len);
-			static const std::string& Type2String(SdesItem::Type type);
+			static const std::string& TypeToString(SdesItem::Type type);
 
 		public:
 			explicit SdesItem(Header* header) : header(header)
@@ -76,7 +76,7 @@ namespace RTC
 			std::unique_ptr<uint8_t[]> raw;
 
 		private:
-			static absl::flat_hash_map<SdesItem::Type, std::string> type2String;
+			static const absl::flat_hash_map<SdesItem::Type, std::string> Type2String;
 		};
 
 		class SdesChunk
@@ -157,7 +157,7 @@ namespace RTC
 		class SdesPacket : public Packet
 		{
 		public:
-			static size_t MaxChunksPerPacket;
+			static size_t maxChunksPerPacket;
 
 			using Iterator = std::vector<SdesChunk*>::iterator;
 
@@ -214,7 +214,8 @@ namespace RTC
 				// A serialized packet can contain a maximum of 31 chunks.
 				// If number of chunks exceeds 31 then the required number of packets
 				// will be serialized which will take the size calculated below.
-				size_t size = Packet::CommonHeaderSize * ((this->GetCount() / (MaxChunksPerPacket + 1)) + 1);
+				size_t size =
+				  Packet::CommonHeaderSize * ((this->GetCount() / (SdesPacket::maxChunksPerPacket + 1)) + 1);
 
 				for (auto* chunk : this->chunks)
 				{

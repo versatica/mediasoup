@@ -4,9 +4,6 @@
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
-#include <utility>  // std::make_pair()
 
 namespace RTC
 {
@@ -35,8 +32,13 @@ namespace RTC
 		delete this->timer;
 	}
 
-	// Returns true if this is a found nacked packet. False otherwise.
-	bool NackGenerator::ReceivePacket(RTC::RtpPacket* packet, bool isRecovered)
+	/**
+	 * Returns true if this is a found nacked packet. False otherwise.
+	 *
+	 * NOTE: It also returns true if packet comes via RTX and contains a sequence
+	 * number higher than the highest seen.
+	 */
+	bool NackGenerator::ReceivePacket(const RTC::RTP::Packet* packet, bool isRecovered)
 	{
 		MS_TRACE();
 
@@ -66,10 +68,8 @@ namespace RTC
 		// or a retransmitted packet.
 		if (SeqManager<uint16_t>::IsSeqLowerThan(seq, this->lastSeq))
 		{
-			auto it = this->nackList.find(seq);
-
 			// It was a nacked packet.
-			if (it != this->nackList.end())
+			if (this->nackList.erase(seq) != 0u)
 			{
 				MS_DEBUG_DEV(
 				  "NACKed packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", recovered:%s]",
@@ -77,11 +77,11 @@ namespace RTC
 				  packet->GetSequenceNumber(),
 				  isRecovered ? "true" : "false");
 
-				auto retries = it->second.retries;
+				// NOTE: Accept the packet since it was in the `nackList`, regardless
+				// the NACK requesting this packet was not sent yet (this is, if
+				// nackInfo.retries == 0) because we would request it later anyway.
 
-				this->nackList.erase(it);
-
-				return retries != 0;
+				return true;
 			}
 
 			// Out of order packet or already handled NACKed packet.
@@ -116,7 +116,13 @@ namespace RTC
 
 		if (isRecovered)
 		{
-			this->recoveredList.insert(seq);
+			const auto inserted = this->recoveredList.insert(seq).second;
+
+			// Packet already recovered, ignore it.
+			if (!inserted)
+			{
+				return false;
+			}
 
 			// Remove old ones so we don't accumulate recovered packets.
 			auto it = this->recoveredList.lower_bound(seq - MaxPacketAge);
@@ -126,9 +132,10 @@ namespace RTC
 				this->recoveredList.erase(this->recoveredList.begin(), it);
 			}
 
-			// Do not let a packet pass if it's newer than last seen seq and came via
-			// RTX.
-			return false;
+			// NOTE: It may happen that this packet received via RTX contains a real
+			// RTP packet that (with highest seq not seen yet) whose transmission
+			// failed so we didn't receive it. So do not return false here but let
+			// the packet go through.
 		}
 
 		AddPacketsToNackList(this->lastSeq + 1, seq);
@@ -150,7 +157,10 @@ namespace RTC
 			MayRunTimer();
 		}
 
-		return false;
+		// libwebrtc may use RTX for probation and such packets may contain
+		// RTX-encoded real RTP packets that were sent before but didn't arrive yet
+		// to us or they were lost. Let's deal with them as normal packets.
+		return isRecovered ? true : false;
 	}
 
 	void NackGenerator::AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd)
@@ -169,12 +179,8 @@ namespace RTC
 
 		if (static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets)
 		{
-			// clang-format off
-			while (
-				RemoveNackItemsUntilKeyFrame() &&
-				static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets
-			)
-			// clang-format on
+			while (RemoveNackItemsUntilKeyFrame() &&
+			       static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets)
 			{
 			}
 
@@ -200,13 +206,13 @@ namespace RTC
 				continue;
 			}
 
-			this->nackList.emplace(std::make_pair(
+			this->nackList.emplace(
 			  seq,
 			  NackInfo{
 			    DepLibUV::GetTimeMs(),
 			    seq,
 			    seq,
-			  }));
+			  });
 		}
 	}
 
@@ -255,16 +261,10 @@ namespace RTC
 				continue;
 			}
 
-			// clang-format off
 			if (
-				filter == NackFilter::SEQ &&
-				nackInfo.sentAtMs == 0 &&
-				(
-					nackInfo.sendAtSeq == this->lastSeq ||
-					SeqManager<uint16_t>::IsSeqHigherThan(this->lastSeq, nackInfo.sendAtSeq)
-				)
-			)
-			// clang-format on
+			  filter == NackFilter::SEQ && nackInfo.sentAtMs == 0 &&
+			  (nackInfo.sendAtSeq == this->lastSeq ||
+			   SeqManager<uint16_t>::IsSeqHigherThan(this->lastSeq, nackInfo.sendAtSeq)))
 			{
 				nackBatch.emplace_back(seq);
 				nackInfo.retries++;

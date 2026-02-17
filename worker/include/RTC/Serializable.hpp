@@ -19,6 +19,10 @@ namespace RTC
 	 */
 	class Serializable
 	{
+	public:
+		using BufferReleasedListener = std::function<void(const Serializable*, uint8_t* buffer)>;
+
+	protected:
 		using ConsolidatedListener = std::function<void()>;
 
 	public:
@@ -33,12 +37,9 @@ namespace RTC
 		 * - Always use `GetLength()` to obtain the exact length of the
 		 *   Serializable.
 		 */
-		Serializable(const uint8_t* buffer, size_t bufferLength)
-		  : buffer(const_cast<uint8_t*>(buffer)), bufferLength(bufferLength)
-		{
-		}
+		Serializable(const uint8_t* buffer, size_t bufferLength);
 
-		virtual ~Serializable() = default;
+		virtual ~Serializable();
 
 	public:
 		/**
@@ -69,42 +70,9 @@ namespace RTC
 		 * Current exact length of the Serializable, including padding bytes (if
 		 * any).
 		 */
-		virtual const size_t GetLength() const final
+		virtual size_t GetLength() const final
 		{
 			return this->length;
-		}
-
-		/**
-		 * Whether the Serializable is frozen, meaning that modifications are not
-		 * allowed.
-		 *
-		 * @remarks
-		 * - By design, all Parse() class methods return a frozen Serializable.
-		 *   This is because the buffer in which the packet exists is supposed to
-		 *   be read-only.
-		 * - By design, all Factory() class methods return a non frozen
-		 *   Serializable.
-		 * - When calling `Serialize()` on a Serializable, it becomes non frozen.
-		 * - When calling `Clone()` on a Serializable, the new created Serializable
-		 *   is not frozen.
-		 * - The internal Serializable items that the instance contains (for
-		 *   example, an SCTP Packet may contain SCTP Chunks and a SCTP Chunk may
-		 *   contain SCTP Parameters), will always be frozen. This is because the
-		 *   user is not able to modify those items because their length may change
-		 *   and corrupt other bytes of the main Serializable.
-		 */
-		virtual bool IsFrozen() const final
-		{
-			return this->frozen;
-		}
-
-		/**
-		 * Freeze the Serializable, meaning that modifications are not allowed on
-		 * it. If a modification is attempted it will throw MediasoupError.
-		 */
-		virtual void Freeze() final
-		{
-			this->frozen = true;
 		}
 
 		/**
@@ -117,10 +85,10 @@ namespace RTC
 		 * @param bufferLength - New buffer length.
 		 *
 		 * @remarks
-		 * In addition to call this method in Serializable parent class, the
-		 * `Serialize()` implementation in the subclass must also reassign any
-		 * pointers it holds and make them point to the proper position in the new
-		 * buffer.
+		 * - In addition to call this method in Serializable parent class, the
+		 *   `Serialize()` implementation in the subclass must also reassign any
+		 *   pointers it holds and make them point to the proper position in the
+		 *   new buffer.
 		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 *   current exact length of the Serializable.
@@ -141,13 +109,22 @@ namespace RTC
 		virtual Serializable* Clone(uint8_t* buffer, size_t bufferLength) const = 0;
 
 		/**
+		 * Set a listener that will be invoked when the current buffer is released,
+		 * meaning that this Serializable no longer uses it.
+		 *
+		 * @remarks
+		 * - The caller should call this method with `nullptr` as argument in case
+		 *   the lifetime of the previously passed `listener` ends before the
+		 *   Serializable is destroyed or serialized. Otherwise the Serializable
+		 *   will invoke a listener that was already destroyed.
+		 */
+		virtual void SetBufferReleasedListener(BufferReleasedListener* listener) final;
+
+		/**
 		 * The application must call this method on a Serializable when it's been
 		 * constructed within a parent Serializable object that needs to know when
 		 * this Serializable is done to recompute its total length and internal
 		 * pointers.
-		 *
-		 * @remarks
-		 * Once the serialization completes, the Serializable is frozen.
 		 *
 		 * @throw MediaSoupError - If `SetConsolidatedListener()` was not called
 		 *   first.
@@ -163,26 +140,20 @@ namespace RTC
 		/**
 		 * Change the buffer of the Serializable.
 		 */
-		virtual void SetBuffer(uint8_t* buffer) final
-		{
-			// NOTE: We don't assert not frozen here on purpose.
-
-			this->buffer = buffer;
-		}
+		virtual void SetBuffer(uint8_t* buffer) final;
 
 		/**
 		 * Update the buffer length of the Serializable.
 		 **
 		 * @remarks
-		 * The child class must invoke this method after parsing completes in case
-		 * it couldn't anticipate its expected exact length. Specially useful when
-		 * parsing variable-length items within a packet.
+		 * - The child class must invoke this method after parsing completes in
+		 *   case it couldn't anticipate its expected exact length. Specially
+		 *   useful when parsing variable-length items within a packet.
 		 *
 		 * @throw
 		 * - MediaSoupError - If given `bufferLength` is lower than the current
 		 *   exact length of the Serializable.
 		 * - MediaSoupError - If 0 is given.
-		 * - MediaSoupError - If the Serializable is frozen.
 		 */
 		virtual void SetBufferLength(size_t bufferLength) final;
 
@@ -191,15 +162,14 @@ namespace RTC
 		 * length of the Serializable.
 		 *
 		 * @remarks
-		 * The child class must invoke this method after parsing completes and
-		 * after every change in the Serializable content that affects its current
-		 * length.
+		 * - The child class must invoke this method after parsing completes and
+		 *   after every change in the Serializable content that affects its
+		 *   current length.
 		 *
 		 * @throw
 		 * - MediaSoupError - If given `length` is larger than the buffer length of
 		 *   the Serializable.
 		 * - MediaSoupError - If 0 is given.
-		 * - MediaSoupError - If the Serializable is frozen.
 		 */
 		virtual void SetLength(size_t length) final;
 
@@ -207,10 +177,10 @@ namespace RTC
 		 * Clone the Serializable into the given Serializable.
 		 *
 		 * @remarks
-		 * If this method throws (due to the buffer length of the given Serializable
-		 * being too small), then this method deletes the given `serializable`
-		 * pointer and throws, meaning that the subclass must not delete it in case
-		 * it captured the error.
+		 * - If this method throws (due to the buffer length of the given
+		 *   Serializable being too small), then this method deletes the given
+		 *   `serializable` pointer and throws, meaning that the subclass must not
+		 *   delete it in case it captured the error.
 		 *
 		 * @throw MediaSoupError - If the buffer length of the given `serializable`
 		 *   is too small.
@@ -220,7 +190,8 @@ namespace RTC
 		/**
 		 * Fill the last given `padding` number of bytes of the buffer with zeros.
 		 *
-		 * @remarks This method does NOT add bytes to the buffer.
+		 * @remarks
+		 * - This method does NOT add bytes to the buffer.
 		 */
 		virtual void FillPadding(uint8_t padding) final;
 
@@ -230,13 +201,7 @@ namespace RTC
 		 *
 		 * @see Consolidate()
 		 */
-		virtual void SetConsolidatedListener(const ConsolidatedListener&& listener) final;
-
-		/**
-		 * Assert that the Serializable is not frozen, otherwise it throws a
-		 * MediasoupError exception.
-		 */
-		virtual void AssertNotFrozen() const final;
+		virtual void SetConsolidatedListener(ConsolidatedListener&& listener) final;
 
 	private:
 		// Buffer holding the Serializable content.
@@ -246,9 +211,9 @@ namespace RTC
 		size_t bufferLength{ 0u };
 		// Serializable exact length (includes padding bytes).
 		size_t length{ 0u };
-		// Whether the Serializable is frozen, meaning that modifications are not
-		// allowed.
-		bool frozen{ false };
+		// Event listener invoked when the current buffer is released (no longer
+		// used by this Serializable)-
+		BufferReleasedListener* bufferReleasedListener{ nullptr };
 		// Event listener invoked when the Serializable is consolidated.
 		ConsolidatedListener consolidatedListener{ nullptr };
 	};

@@ -110,7 +110,7 @@ namespace RTC
 					return;
 				}
 
-				RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(body->data()->data(), len);
+				auto* packet = RTC::RTCP::Packet::Parse(body->data()->data(), len);
 
 				if (!packet)
 				{
@@ -139,7 +139,7 @@ namespace RTC
 	}
 
 	void DirectTransport::SendRtpPacket(
-	  RTC::Consumer* consumer, RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	  RTC::Consumer* consumer, RTC::RTP::Packet* packet, const RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 
@@ -157,7 +157,7 @@ namespace RTC
 		}
 
 		const auto data = this->shared->channelNotifier->GetBufferBuilder().CreateVector(
-		  packet->GetData(), packet->GetSize());
+		  packet->GetBuffer(), packet->GetLength());
 
 		auto notification =
 		  FBS::Consumer::CreateRtpNotification(this->shared->channelNotifier->GetBufferBuilder(), data);
@@ -175,7 +175,7 @@ namespace RTC
 		}
 
 		// Increase send transmission.
-		RTC::Transport::DataSent(packet->GetSize());
+		RTC::Transport::DataSent(packet->GetLength());
 	}
 
 	void DirectTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
@@ -203,7 +203,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		packet->Serialize(RTC::RTCP::Buffer);
+		packet->Serialize(RTC::RTCP::SerializationBuffer);
 
 		const auto data = this->shared->channelNotifier->GetBufferBuilder().CreateVector(
 		  packet->GetData(), packet->GetSize());

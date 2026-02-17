@@ -11,7 +11,6 @@ namespace RTC
 {
 	/* Static. */
 
-	// clang-format off
 	// AES-HMAC: http://tools.ietf.org/html/rfc3711
 	static constexpr size_t SrtpMasterKeyLength{ 16 };
 	static constexpr size_t SrtpMasterSaltLength{ 14 };
@@ -19,11 +18,12 @@ namespace RTC
 	// AES-GCM: http://tools.ietf.org/html/rfc7714
 	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32 };
 	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12 };
-	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength + SrtpAesGcm256MasterSaltLength };
+	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength +
+		                                                 SrtpAesGcm256MasterSaltLength };
 	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16 };
 	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12 };
-	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength + SrtpAesGcm128MasterSaltLength };
-	// clang-format on
+	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength +
+		                                                 SrtpAesGcm128MasterSaltLength };
 
 	/* Class variables. */
 
@@ -104,13 +104,15 @@ namespace RTC
 
 		if (options->enableSrtp())
 		{
-			if (!options->srtpCryptoSuite().has_value())
+			auto srtpCryptoSuite = options->srtpCryptoSuite();
+
+			if (!srtpCryptoSuite.has_value())
 			{
 				MS_THROW_TYPE_ERROR("missing srtpCryptoSuite");
 			}
 
 			// NOTE: The SRTP crypto suite may change later on connect().
-			this->srtpCryptoSuite = SrtpSession::CryptoSuiteFromFbs(options->srtpCryptoSuite().value());
+			this->srtpCryptoSuite = SrtpSession::CryptoSuiteFromFbs(srtpCryptoSuite.value());
 
 			switch (this->srtpCryptoSuite)
 			{
@@ -592,6 +594,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing port");
 						}
 
+						// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 						port = body->port().value();
 
 						if (body->rtcpPort().has_value())
@@ -601,6 +604,7 @@ namespace RTC
 								MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
 							}
 
+							// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 							rtcpPort = body->rtcpPort().value();
 						}
 						else
@@ -798,7 +802,7 @@ namespace RTC
 	}
 
 	void PlainTransport::SendRtpPacket(
-	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	  RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet, const RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 
@@ -813,8 +817,8 @@ namespace RTC
 			return;
 		}
 
-		const uint8_t* data = packet->GetData();
-		auto len            = packet->GetSize();
+		const uint8_t* data = packet->GetBuffer();
+		auto len            = packet->GetLength();
 
 		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(&data, &len))
 		{
@@ -872,7 +876,7 @@ namespace RTC
 			return;
 		}
 
-		packet->Serialize(RTC::RTCP::Buffer);
+		packet->Serialize(RTC::RTCP::SerializationBuffer);
 
 		const uint8_t* data = packet->GetData();
 		auto len            = packet->GetSize();
@@ -938,7 +942,8 @@ namespace RTC
 		}
 	}
 
-	inline void PlainTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void PlainTransport::OnPacketReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
@@ -951,9 +956,9 @@ namespace RTC
 			OnRtcpDataReceived(tuple, data, len);
 		}
 		// Check if it's RTP.
-		else if (RTC::RtpPacket::IsRtp(data, len))
+		else if (RTC::RTP::Packet::IsRtp(data, len))
 		{
-			OnRtpDataReceived(tuple, data, len);
+			OnRtpDataReceived(tuple, data, len, bufferLen);
 		}
 		// Check if it's SCTP.
 		else if (RTC::SctpAssociation::IsSctp(data, len))
@@ -967,7 +972,7 @@ namespace RTC
 	}
 
 	inline void PlainTransport::OnRtpDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
@@ -979,7 +984,7 @@ namespace RTC
 		// Decrypt the SRTP packet.
 		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
 		{
-			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+			const auto* packet = RTC::RTP::Packet::Parse(data, len, bufferLen);
 
 			if (!packet)
 			{
@@ -1000,7 +1005,7 @@ namespace RTC
 			return;
 		}
 
-		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+		auto* packet = RTC::RTP::Packet::Parse(data, len, bufferLen);
 
 		if (!packet)
 		{
@@ -1147,7 +1152,7 @@ namespace RTC
 			return;
 		}
 
-		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
+		auto* packet = RTC::RTCP::Packet::Parse(data, len);
 
 		if (!packet)
 		{
@@ -1235,12 +1240,16 @@ namespace RTC
 	}
 
 	inline void PlainTransport::OnUdpSocketPacketReceived(
-	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
+	  RTC::UdpSocket* socket,
+	  const uint8_t* data,
+	  size_t len,
+	  size_t bufferLen,
+	  const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len);
+		OnPacketReceived(&tuple, data, len, bufferLen);
 	}
 } // namespace RTC

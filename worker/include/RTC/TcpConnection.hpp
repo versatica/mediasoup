@@ -16,7 +16,7 @@ namespace RTC
 
 		public:
 			virtual void OnTcpConnectionPacketReceived(
-			  RTC::TcpConnection* connection, const uint8_t* data, size_t len) = 0;
+			  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen) = 0;
 		};
 
 	public:
