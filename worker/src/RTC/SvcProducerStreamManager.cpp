@@ -52,12 +52,13 @@ namespace RTC
 		return this->producerRtpStream;
 	}
 
-	bool SvcProducerStreamManager::IsProducerStreamActive() const
+	bool SvcProducerStreamManager::IsActive() const
 	{
 		MS_TRACE();
 
 		// clang-format off
 		return (
+			this->listener->IsActive() &&
 			this->producerRtpStream &&
 			// If there is no RTP inactivity check do not consider the stream
 			// inactive despite it has score 0.
@@ -613,7 +614,7 @@ namespace RTC
 
 		this->syncRequired = true;
 
-		if (this->listener->IsActive())
+		if (IsActive())
 		{
 			MayChangeLayers(/*force*/ false);
 		}
@@ -643,7 +644,7 @@ namespace RTC
 
 		this->syncRequired = true;
 
-		if (this->listener->IsActive())
+		if (IsActive())
 		{
 			MayChangeLayers(/*force*/ false);
 		}

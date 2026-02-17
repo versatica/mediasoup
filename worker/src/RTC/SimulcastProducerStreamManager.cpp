@@ -64,21 +64,24 @@ namespace RTC
 		return this->producerRtpStreams.at(this->targetLayers.spatial);
 	}
 
-	bool SimulcastProducerStreamManager::IsProducerStreamActive() const
+	bool SimulcastProducerStreamManager::IsActive() const
 	{
 		MS_TRACE();
 
 		// clang-format off
-		return std::any_of(
-			this->producerRtpStreams.begin(),
-			this->producerRtpStreams.end(),
-			[](const RTC::RTP::RtpStreamRecv* rtpStream)
-			{
-				return (
-					rtpStream != nullptr &&
-					(rtpStream->GetScore() > 0u || !rtpStream->HasRtpInactivityCheckEnabled())
-				);
-			}
+		return (
+			this->listener->IsActive() &&
+			std::any_of(
+				this->producerRtpStreams.begin(),
+				this->producerRtpStreams.end(),
+				[](const RTC::RTP::RtpStreamRecv* rtpStream)
+				{
+					return (
+						rtpStream != nullptr &&
+						(rtpStream->GetScore() > 0u || !rtpStream->HasRtpInactivityCheckEnabled())
+					);
+				}
+			)
 		);
 		// clang-format on
 	}
@@ -127,7 +130,7 @@ namespace RTC
 		if (this->listener->IsActive())
 		{
 			// All Producer streams are dead.
-			if (!IsProducerStreamActive())
+			if (!IsActive())
 			{
 				UpdateTargetLayers(-1, -1);
 			}
@@ -967,7 +970,7 @@ namespace RTC
 		this->spatialLayerToSync           = -1;
 		this->keyFrameForTsOffsetRequested = false;
 
-		if (this->listener->IsActive())
+		if (IsActive())
 		{
 			MayChangeLayers(/*force*/ false);
 		}
@@ -1000,7 +1003,7 @@ namespace RTC
 		this->keyFrameForTsOffsetRequested        = false;
 		this->checkingForOldPacketsInSpatialLayer = false;
 
-		if (this->listener->IsActive())
+		if (IsActive())
 		{
 			MayChangeLayers(/*force*/ false);
 		}

@@ -35,18 +35,18 @@ namespace RTC
 		return this->producerRtpStream;
 	}
 
-	bool SimpleProducerStreamManager::IsProducerStreamActive() const
+	bool SimpleProducerStreamManager::IsActive() const
 	{
 		MS_TRACE();
 
 		// clang-format off
 		return (
+		  this->listener->IsActive() &&
 		  this->producerRtpStream &&
 		  // If there is no RTP inactivity check do not consider the stream
 		  // inactive despite it has score 0.
 		  (this->producerRtpStream->GetScore() > 0u || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
 		);
-
 		// clang-format on
 	}
 
@@ -301,7 +301,7 @@ namespace RTC
 
 		this->syncRequired = true;
 
-		if (this->listener->IsActive())
+		if (IsActive())
 		{
 			RequestKeyFrame();
 		}
@@ -327,7 +327,7 @@ namespace RTC
 
 		this->syncRequired = true;
 
-		if (this->listener->IsActive())
+		if (IsActive())
 		{
 			RequestKeyFrame();
 		}

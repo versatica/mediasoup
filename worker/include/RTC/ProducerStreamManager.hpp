@@ -88,8 +88,6 @@ namespace RTC
 			this->preferredLayers = layers;
 		}
 
-		virtual bool IsProducerStreamActive() const = 0;
-
 		virtual void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)    = 0;
 		virtual void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 		virtual void ProducerRtpStreamScore(
@@ -151,12 +149,8 @@ namespace RTC
 		virtual void OnResumed()               = 0;
 
 	protected:
-		bool IsActive() const
-		{
-			return this->listener->IsActive();
-		}
+		virtual bool IsActive() const = 0;
 
-	protected:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		bool keyFrameSupported{ false };

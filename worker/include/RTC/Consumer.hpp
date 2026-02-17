@@ -109,8 +109,7 @@ namespace RTC
 				this->transportConnected &&
 				!this->paused &&
 				!this->producerPaused &&
-				!this->producerClosed &&
-				this->producerStreamManager->IsProducerStreamActive()
+				!this->producerClosed
 			);
 			// clang-format on
 		}
