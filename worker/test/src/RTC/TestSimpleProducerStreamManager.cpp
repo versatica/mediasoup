@@ -1,8 +1,7 @@
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
+#include "RTC/RTP/rtpCommon.hpp"
 #include "RTC/SimpleProducerStreamManager.hpp"
-#include <catch2/catch_test_macros.hpp>
 
 namespace
 {
@@ -162,14 +161,12 @@ namespace
 	}
 
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero.
-	void feedRtpStreamRecv(RTC::RTP::RtpStreamRecv* rtpStream, uint8_t* buffer, size_t len, uint16_t count)
+	void feedRtpStreamRecv(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTP::Packet* packet, uint16_t count)
 	{
-		std::unique_ptr<RTC::RTP::Packet> packet(RTC::RTP::Packet::Parse(buffer, len));
-
-		for (uint16_t seq = 1; seq <= count; ++seq)
+		for (uint16_t seq = packet->GetSequenceNumber() + 1; seq <= count; ++seq)
 		{
 			packet->SetSequenceNumber(seq);
-			rtpStream->ReceivePacket(packet.get());
+			rtpStream->ReceivePacket(packet);
 		}
 
 		auto nowMs = DepLibUV::GetTimeMs();
@@ -185,23 +182,12 @@ namespace
 
 SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 {
-	// clang-format off
-	uint8_t buffer[] =
-	{
-		0x80, 0x01, 0x00, 0x08,
-		0x00, 0x00, 0x00, 0x04,
-		0x49, 0x96, 0x02, 0xD2, // SSRC: 1234567890.
-		// Payload (4 bytes).
-		0xFF, 0xFF, 0xFF, 0xFF,
-		// Extra buffer for cloning.
-		0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF,
-	};
-	// clang-format on
+	std::unique_ptr<RTC::RTP::Packet> packet(
+	  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
-	const size_t packetLength{ 16 };
-	const size_t bufferLength{ packetLength + 12 };
+	packet->SetPayloadType(1);
+	packet->SetSsrc(mappedSsrc);
+	packet->SetPayloadLength(sizeof(rtpCommon::FactoryBuffer) - RTC::RTP::Packet::FixedHeaderMinLength);
 
 	SECTION("returns BUFFER when sync required and packet is not a keyframe")
 	{
@@ -211,8 +197,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
 		manager->OnTransportConnected();
-
-		std::unique_ptr<RTC::RTP::Packet> packet(RTC::RTP::Packet::Parse(buffer, bufferLength));
 
 		auto result = manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 0, /*maxPacketTs*/ 0);
@@ -228,8 +212,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
 		manager->OnTransportConnected();
-
-		std::unique_ptr<RTC::RTP::Packet> packet(RTC::RTP::Packet::Parse(buffer, bufferLength));
 		const uint16_t seq{ 100 };
 
 		packet->SetSequenceNumber(seq);
@@ -257,8 +239,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
 		manager->OnTransportConnected();
 
-		std::unique_ptr<RTC::RTP::Packet> packet(RTC::RTP::Packet::Parse(buffer, bufferLength));
-
 		packet->SetSequenceNumber(1);
 		packet->RemovePayload();
 		auto result = manager->ProcessRtpPacket(
@@ -280,8 +260,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
 		manager->OnTransportConnected();
-
-		std::unique_ptr<RTC::RTP::Packet> packet(RTC::RTP::Packet::Parse(buffer, bufferLength));
 
 		packet->SetSequenceNumber(1);
 
@@ -305,7 +283,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
 		manager->OnTransportConnected();
 
-		std::unique_ptr<RTC::RTP::Packet> packet(RTC::RTP::Packet::Parse(buffer, bufferLength));
 		const uint16_t seq{ 100 };
 
 		packet->SetSequenceNumber(seq);
@@ -330,7 +307,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		manager->OnTransportConnected();
 
 		// Complete sync with first packet.
-		std::unique_ptr<RTC::RTP::Packet> packet(RTC::RTP::Packet::Parse(buffer, bufferLength));
 
 		packet->SetSequenceNumber(1);
 		manager->ProcessRtpPacket(
@@ -392,7 +368,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		REQUIRE(listener.keyFrameRequestCount == keyFrameCount + 1);
 
 		// Prove syncRequired was set: sending a non-keyframe returns BUFFER.
-		std::unique_ptr<RTC::RTP::Packet> packet(RTC::RTP::Packet::Parse(buffer, bufferLength));
 
 		packet->SetSequenceNumber(1);
 		auto result = manager->ProcessRtpPacket(
@@ -412,7 +387,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		manager->OnTransportConnected();
 
 		// Feed packets so the stream has non-zero bitrate.
-		feedRtpStreamRecv(rtpStream.get(), buffer, bufferLength, 100);
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
 		auto nowMs        = DepLibUV::GetTimeMs();
 		auto steamBitrate = rtpStream->GetBitrate(nowMs);
@@ -433,7 +408,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		manager->OnTransportConnected();
 
 		// Feed packets so the stream has non-zero bitrate.
-		feedRtpStreamRecv(rtpStream.get(), buffer, bufferLength, 100);
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
 		auto nowMs                = DepLibUV::GetTimeMs();
 		auto streamBitrate        = rtpStream->GetBitrate(nowMs);
@@ -455,7 +430,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		manager->OnTransportConnected();
 
 		// Feed packets so the stream has non-zero bitrate.
-		feedRtpStreamRecv(rtpStream.get(), buffer, bufferLength, 100);
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
 		auto nowMs = DepLibUV::GetTimeMs();
 
@@ -483,7 +458,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		manager->OnTransportConnected();
 
 		// Feed packets so the stream has non-zero bitrate.
-		feedRtpStreamRecv(rtpStream.get(), buffer, bufferLength, 100);
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
 		auto nowMs = DepLibUV::GetTimeMs();
 
@@ -510,7 +485,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		manager->OnTransportConnected();
 
 		// Feed packets so the stream has non-zero bitrate.
-		feedRtpStreamRecv(rtpStream.get(), buffer, bufferLength, 100);
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
 		auto nowMs          = DepLibUV::GetTimeMs();
 		auto steamBitrate   = rtpStream->GetBitrate(nowMs);
@@ -530,7 +505,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 		manager->OnTransportConnected();
 
 		// Feed packets so the stream has non-zero bitrate.
-		feedRtpStreamRecv(rtpStream.get(), buffer, bufferLength, 100);
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
 		auto nowMs          = DepLibUV::GetTimeMs();
 		auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
