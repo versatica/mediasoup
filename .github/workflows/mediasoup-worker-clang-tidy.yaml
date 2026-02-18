@@ -1,6 +1,19 @@
 name: mediasoup-worker-clang-tidy
 
 on:
+  push:
+    branches: [v3]
+    paths:
+      - 'worker/src/**/*.cpp'
+      - 'worker/include/**/*.hpp'
+      - 'worker/test/src/**/*.cpp'
+      - 'worker/test/include/**/*.hpp'
+      - 'worker/fuzzer/src/**/*.cpp'
+      - 'worker/fuzzer/include/**/*.hpp'
+      - 'worker/meson.build'
+      - 'worker/.clang-format'
+      - 'worker/.clang-tidy'
+      - '.github/workflows/mediasoup-worker-clang-tidy.yaml'
   pull_request:
     paths:
       - 'worker/src/**/*.cpp'
@@ -9,8 +22,11 @@ on:
       - 'worker/test/include/**/*.hpp'
       - 'worker/fuzzer/src/**/*.cpp'
       - 'worker/fuzzer/include/**/*.hpp'
+      - 'worker/meson.build'
+      - 'worker/.clang-format'
       - 'worker/.clang-tidy'
       - '.github/workflows/mediasoup-worker-clang-tidy.yaml'
+  workflow_dispatch:
 
 jobs:
   clang-tidy:
