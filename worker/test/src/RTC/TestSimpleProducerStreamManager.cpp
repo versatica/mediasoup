@@ -2,6 +2,7 @@
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RTP/rtpCommon.hpp"
 #include "RTC/SimpleProducerStreamManager.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 namespace
 {
@@ -187,7 +188,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
 
 	packet->SetPayloadType(1);
 	packet->SetSsrc(mappedSsrc);
-	packet->SetPayloadLength(sizeof(rtpCommon::FactoryBuffer) - RTC::RTP::Packet::FixedHeaderMinLength);
+	packet->SetPayloadLength(40);
 
 	SECTION("returns BUFFER when sync required and packet is not a keyframe")
 	{
