@@ -185,8 +185,8 @@ namespace RTC
 		auto& encoding = this->rtpParameters.encodings[0];
 
 		// Determine keyFrameSupported.
-		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
-		bool keyFrameSupported = RTC::RTP::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
+		const auto* mediaCodec       = this->rtpParameters.GetCodecForEncoding(encoding);
+		const bool keyFrameSupported = RTC::RTP::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		// Build preferred layers from FBS data.
 		RTC::ConsumerTypes::VideoLayers preferredLayers;
@@ -337,10 +337,12 @@ namespace RTC
 						preferredLayers.spatial = static_cast<int16_t>(encoding.spatialLayers - 1);
 					}
 
-					if (flatbuffers::IsFieldPresent(
-					      data->preferredLayers(), FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
+					// preferredTemporalLayer is optional.
+					auto preferredTemporalLayer = data->preferredLayers()->temporalLayer();
+
+					if (preferredTemporalLayer)
 					{
-						preferredLayers.temporal = data->preferredLayers()->temporalLayer().value();
+						preferredLayers.temporal = preferredTemporalLayer.value();
 
 						if (preferredLayers.temporal > encoding.temporalLayers - 1)
 						{
