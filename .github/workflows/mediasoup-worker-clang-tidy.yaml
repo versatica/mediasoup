@@ -36,7 +36,7 @@ jobs:
       - name: Normalize compile_commands.json paths
         run: npm run normalize-compile-commands --prefix worker/scripts --foreground-scripts
 
-      - uses: ZedThree/clang-tidy-review@v0.22.1
+      - uses: ZedThree/clang-tidy-review@v0.23.0
         id: review
         with:
           apt_packages: 'libclang-rt-21-dev'
@@ -49,7 +49,7 @@ jobs:
           include: 'worker/src/**/*.cpp,worker/test/src/**/*.cpp,worker/fuzzer/src/**/*.cpp'
 
       # Uploads an artifact containing clang_fixes.json.
-      - uses: ZedThree/clang-tidy-review/upload@v0.22.1
+      - uses: ZedThree/clang-tidy-review/upload@v0.23.0
         id: upload-review
 
       # If there are any comments, fail the check.
