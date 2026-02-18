@@ -355,13 +355,14 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 
 		const builder = this.#channel.bufferBuilder;
 
-		let dataOffset = 0;
-
 		if (typeof message === 'string') {
 			message = Buffer.from(message);
 		}
 
-		dataOffset = FbsDataConsumer.SendRequest.createDataVector(builder, message);
+		const dataOffset = FbsDataConsumer.SendRequest.createDataVector(
+			builder,
+			message
+		);
 
 		const requestOffset = FbsDataConsumer.SendRequest.createSendRequest(
 			builder,

@@ -7,7 +7,6 @@ const config = {
 		'node/src/rtpParametersFbsUtils.ts',
 		'node/src/rtpStreamStatsFbsUtils.ts',
 		'node/src/srtpParametersFbsUtils.ts',
-		'node/src/utils.ts',
 	],
 	ignoreDependencies: ['open-cli', 'supports-color'],
 	typescript: {
