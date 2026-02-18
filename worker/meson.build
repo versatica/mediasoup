@@ -410,6 +410,7 @@ test_sources = [
   'test/src/tests.cpp',
   'test/src/testHelpers.cpp',
   'test/src/RTC/TestConsumer.cpp',
+  'test/src/RTC/TestSimpleProducerStreamManager.cpp',
   'test/src/RTC/TestKeyFrameRequestManager.cpp',
   'test/src/RTC/TestNackGenerator.cpp',
   'test/src/RTC/TestRateCalculator.cpp',
