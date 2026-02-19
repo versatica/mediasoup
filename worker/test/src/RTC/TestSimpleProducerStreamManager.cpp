@@ -1,3 +1,4 @@
+#include "Utils.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RTP/rtpCommon.hpp"
@@ -69,7 +70,7 @@ namespace
 	class MockEncodingContext : public RTC::RTP::Codecs::EncodingContext
 	{
 	public:
-		MockEncodingContext() : RTC::RTP::Codecs::EncodingContext(this->params)
+		MockEncodingContext() : RTC::RTP::Codecs::EncodingContext(MockEncodingContext::params)
 		{
 		}
 		void SyncRequired() override
@@ -77,8 +78,11 @@ namespace
 		}
 
 	private:
-		RTC::RTP::Codecs::EncodingContext::Params params;
+		static RTC::RTP::Codecs::EncodingContext::Params params;
 	};
+
+	// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+	RTC::RTP::Codecs::EncodingContext::Params MockEncodingContext::params;
 
 	class MockPayloadDescriptorHandler : public RTC::RTP::Codecs::PayloadDescriptorHandler
 	{
@@ -164,7 +168,10 @@ namespace
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero.
 	void feedRtpStreamRecv(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTP::Packet* packet, uint16_t count)
 	{
-		for (uint16_t seq = packet->GetSequenceNumber() + 1; seq <= count; ++seq)
+		auto firstSeq = static_cast<uint16_t>(packet->GetSequenceNumber() + 1);
+		auto lastSeq  = static_cast<uint16_t>(firstSeq + count);
+
+		for (uint16_t seq = firstSeq; Utils::Number<uint16_t>::IsLowerThan(seq, lastSeq); ++seq)
 		{
 			packet->SetSequenceNumber(seq);
 			rtpStream->ReceivePacket(packet);
@@ -181,7 +188,7 @@ namespace
 	}
 } // namespace
 
-SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager]")
+SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]")
 {
 	std::unique_ptr<RTC::RTP::Packet> packet(
 	  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
