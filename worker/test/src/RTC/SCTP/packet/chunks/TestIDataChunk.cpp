@@ -32,10 +32,11 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		};
 		// clang-format on
 
-		auto* chunk = RTC::SCTP::IDataChunk::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<RTC::SCTP::IDataChunk> chunk{ RTC::SCTP::IDataChunk::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
@@ -55,7 +56,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetTsn() == 0x11223344);
 		REQUIRE(chunk->GetStreamIdentifier() == 5001);
 		REQUIRE(chunk->GetMessageIdentifier() == 1234567890);
-		// Bit B is set so we have PPID and we don't have FSN.
+		// Bit B is set so we have PPID instead of FSN.
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 99887766);
 		REQUIRE(chunk->GetFragmentSequenceNumber() == 0);
 		REQUIRE(chunk->HasUserData() == true);
@@ -76,7 +77,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 24,
@@ -96,7 +97,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetTsn() == 0x11223344);
 		REQUIRE(chunk->GetStreamIdentifier() == 5001);
 		REQUIRE(chunk->GetMessageIdentifier() == 1234567890);
-		// Bit B is set so we have PPID and we don't have FSN.
+		// Bit B is set so we have PPID instead of FSN.
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 99887766);
 		REQUIRE(chunk->GetFragmentSequenceNumber() == 0);
 		REQUIRE(chunk->HasUserData() == true);
@@ -109,14 +110,12 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		chunk.reset(chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer)));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
-		delete chunk;
-
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ clonedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 24,
@@ -129,34 +128,32 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(clonedChunk->GetI() == true);
-		REQUIRE(clonedChunk->GetU() == false);
-		REQUIRE(clonedChunk->GetB() == true);
-		REQUIRE(clonedChunk->GetE() == false);
-		REQUIRE(clonedChunk->GetTsn() == 0x11223344);
-		REQUIRE(clonedChunk->GetStreamIdentifier() == 5001);
-		REQUIRE(clonedChunk->GetMessageIdentifier() == 1234567890);
-		// Bit B is set so we have PPID and we don't have FSN.
+		REQUIRE(chunk->GetI() == true);
+		REQUIRE(chunk->GetU() == false);
+		REQUIRE(chunk->GetB() == true);
+		REQUIRE(chunk->GetE() == false);
+		REQUIRE(chunk->GetTsn() == 0x11223344);
+		REQUIRE(chunk->GetStreamIdentifier() == 5001);
+		REQUIRE(chunk->GetMessageIdentifier() == 1234567890);
+		// Bit B is set so we have PPID instead of FSN.
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 99887766);
 		REQUIRE(chunk->GetFragmentSequenceNumber() == 0);
-		REQUIRE(clonedChunk->HasUserData() == true);
-		REQUIRE(clonedChunk->GetUserDataLength() == 3);
-		REQUIRE(clonedChunk->GetUserData()[0] == 0xAB);
-		REQUIRE(clonedChunk->GetUserData()[1] == 0xCD);
-		REQUIRE(clonedChunk->GetUserData()[2] == 0xEF);
+		REQUIRE(chunk->HasUserData() == true);
+		REQUIRE(chunk->GetUserDataLength() == 3);
+		REQUIRE(chunk->GetUserData()[0] == 0xAB);
+		REQUIRE(chunk->GetUserData()[1] == 0xCD);
+		REQUIRE(chunk->GetUserData()[2] == 0xEF);
 		// This should be padding.
-		REQUIRE(clonedChunk->GetUserData()[3] == 0x00);
-
-		delete clonedChunk;
+		REQUIRE(chunk->GetUserData()[3] == 0x00);
 	}
 
 	SECTION("IDataChunk::Factory() succeeds")
 	{
-		auto* chunk =
-		  RTC::SCTP::IDataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		std::unique_ptr<RTC::SCTP::IDataChunk> chunk{ RTC::SCTP::IDataChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20,
@@ -176,7 +173,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetTsn() == 0);
 		REQUIRE(chunk->GetStreamIdentifier() == 0);
 		REQUIRE(chunk->GetMessageIdentifier() == 0);
-		// Bit B is not set so we don't have PPID and we have FSN.
+		// Bit B is not set so we don't have PPID but FSN.
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0);
 		REQUIRE(chunk->GetFragmentSequenceNumber() == 0);
 		REQUIRE(chunk->HasUserData() == false);
@@ -211,7 +208,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		chunk->SetUserData(sctpCommon::DataBuffer, 3);
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20 + 3 + 1,
@@ -231,7 +228,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetTsn() == 12345678);
 		REQUIRE(chunk->GetStreamIdentifier() == 9988);
 		REQUIRE(chunk->GetMessageIdentifier() == 1234);
-		// Bit B is not set so we don't have PPID and we have FSN.
+		// Bit B is not set so we don't have PPID but FSN.
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0);
 		REQUIRE(chunk->GetFragmentSequenceNumber() == 987654321);
 		REQUIRE(chunk->HasUserData() == true);
@@ -244,12 +241,10 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::IDataChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
-
-		delete chunk;
+		chunk.reset(RTC::SCTP::IDataChunk::Parse(chunk->GetBuffer(), chunk->GetLength()));
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ parsedChunk,
+		  /*chunk*/ chunk.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 20 + 3 + 1,
 		  /*length*/ 20 + 3 + 1,
@@ -262,36 +257,34 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(parsedChunk->GetI() == true);
-		REQUIRE(parsedChunk->GetU() == false);
-		REQUIRE(parsedChunk->GetB() == false);
-		REQUIRE(parsedChunk->GetE() == true);
-		REQUIRE(parsedChunk->GetTsn() == 12345678);
-		REQUIRE(parsedChunk->GetStreamIdentifier() == 9988);
-		REQUIRE(parsedChunk->GetMessageIdentifier() == 1234);
-		// Bit B is not set so we don't have PPID and we have FSN.
+		REQUIRE(chunk->GetI() == true);
+		REQUIRE(chunk->GetU() == false);
+		REQUIRE(chunk->GetB() == false);
+		REQUIRE(chunk->GetE() == true);
+		REQUIRE(chunk->GetTsn() == 12345678);
+		REQUIRE(chunk->GetStreamIdentifier() == 9988);
+		REQUIRE(chunk->GetMessageIdentifier() == 1234);
+		// Bit B is not set so we don't have PPID but FSN.
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0);
 		REQUIRE(chunk->GetFragmentSequenceNumber() == 987654321);
-		REQUIRE(parsedChunk->HasUserData() == true);
-		REQUIRE(parsedChunk->GetUserDataLength() == 3);
-		REQUIRE(parsedChunk->GetUserData()[0] == 0x00);
-		REQUIRE(parsedChunk->GetUserData()[1] == 0x01);
-		REQUIRE(parsedChunk->GetUserData()[2] == 0x02);
+		REQUIRE(chunk->HasUserData() == true);
+		REQUIRE(chunk->GetUserDataLength() == 3);
+		REQUIRE(chunk->GetUserData()[0] == 0x00);
+		REQUIRE(chunk->GetUserData()[1] == 0x01);
+		REQUIRE(chunk->GetUserData()[2] == 0x02);
 		// Last byte must be a zero byte padding.
-		REQUIRE(parsedChunk->GetUserData()[3] == 0x00);
-
-		delete parsedChunk;
+		REQUIRE(chunk->GetUserData()[3] == 0x00);
 	}
 
 	SECTION("IDataChunk::SetUserData() throws if userDataLength is too big")
 	{
-		auto* chunk =
-		  RTC::SCTP::IDataChunk::Factory(sctpCommon::ThrowBuffer, sizeof(sctpCommon::ThrowBuffer));
+		std::unique_ptr<RTC::SCTP::IDataChunk> chunk{ RTC::SCTP::IDataChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
-		  /*buffer*/ sctpCommon::ThrowBuffer,
-		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
+		  /*chunk*/ chunk.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20,
 		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::I_DATA,
 		  /*unknownType*/ false,
@@ -305,9 +298,9 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE_THROWS_AS(chunk->SetUserData(sctpCommon::DataBuffer, 65535), MediaSoupError);
 
 		CHECK_SCTP_CHUNK(
-		  /*chunk*/ chunk,
-		  /*buffer*/ sctpCommon::ThrowBuffer,
-		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
+		  /*chunk*/ chunk.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20,
 		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::I_DATA,
 		  /*unknownType*/ false,
@@ -317,7 +310,5 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		  /*parametersCount*/ 0,
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
-
-		delete chunk;
 	}
 }
