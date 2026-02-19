@@ -23,7 +23,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 			0x13, 0x89, 0x00, 0x00,
 			// Message Identifier: 1234567890
 			0x49, 0x96, 0x02, 0xD2,
-			// Payload Protocol Identifier / Fragment Sequence Number: 99887766
+			// Payload Protocol Identifier / Fragment Sequence Number: 99887766 (PPID)
 			0x05, 0xF4, 0x2A, 0x96,
 			// User Data (3 bytes): 0xABCDED, 1 byte of padding
 			0xAB, 0xCD, 0xEF, 0x00,
@@ -55,7 +55,9 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetTsn() == 0x11223344);
 		REQUIRE(chunk->GetStreamIdentifier() == 5001);
 		REQUIRE(chunk->GetMessageIdentifier() == 1234567890);
-		REQUIRE(chunk->GetPayloadProtocolIdentifierOrFragmentSequenceNumber() == 99887766);
+		// Bit B is set so we have PPID and we don't have FSN.
+		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 99887766);
+		REQUIRE(chunk->GetFragmentSequenceNumber() == 0);
 		REQUIRE(chunk->HasUserData() == true);
 		REQUIRE(chunk->GetUserDataLength() == 3);
 		REQUIRE(chunk->GetUserData()[0] == 0xAB);
@@ -63,6 +65,9 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetUserData()[2] == 0xEF);
 		// This should be padding.
 		REQUIRE(chunk->GetUserData()[3] == 0x00);
+
+		// Bit B is not set so cannot set FSN.
+		REQUIRE_THROWS_AS(chunk->SetFragmentSequenceNumber(1234), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -91,7 +96,9 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetTsn() == 0x11223344);
 		REQUIRE(chunk->GetStreamIdentifier() == 5001);
 		REQUIRE(chunk->GetMessageIdentifier() == 1234567890);
-		REQUIRE(chunk->GetPayloadProtocolIdentifierOrFragmentSequenceNumber() == 99887766);
+		// Bit B is set so we have PPID and we don't have FSN.
+		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 99887766);
+		REQUIRE(chunk->GetFragmentSequenceNumber() == 0);
 		REQUIRE(chunk->HasUserData() == true);
 		REQUIRE(chunk->GetUserDataLength() == 3);
 		REQUIRE(chunk->GetUserData()[0] == 0xAB);
@@ -129,7 +136,9 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(clonedChunk->GetTsn() == 0x11223344);
 		REQUIRE(clonedChunk->GetStreamIdentifier() == 5001);
 		REQUIRE(clonedChunk->GetMessageIdentifier() == 1234567890);
-		REQUIRE(clonedChunk->GetPayloadProtocolIdentifierOrFragmentSequenceNumber() == 99887766);
+		// Bit B is set so we have PPID and we don't have FSN.
+		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 99887766);
+		REQUIRE(chunk->GetFragmentSequenceNumber() == 0);
 		REQUIRE(clonedChunk->HasUserData() == true);
 		REQUIRE(clonedChunk->GetUserDataLength() == 3);
 		REQUIRE(clonedChunk->GetUserData()[0] == 0xAB);
@@ -162,12 +171,14 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetI() == false);
 		REQUIRE(chunk->GetU() == false);
-		REQUIRE(chunk->GetI() == false);
-		REQUIRE(chunk->GetI() == false);
+		REQUIRE(chunk->GetB() == false);
+		REQUIRE(chunk->GetE() == false);
 		REQUIRE(chunk->GetTsn() == 0);
 		REQUIRE(chunk->GetStreamIdentifier() == 0);
 		REQUIRE(chunk->GetMessageIdentifier() == 0);
-		REQUIRE(chunk->GetPayloadProtocolIdentifierOrFragmentSequenceNumber() == 0);
+		// Bit B is not set so we don't have PPID and we have FSN.
+		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0);
+		REQUIRE(chunk->GetFragmentSequenceNumber() == 0);
 		REQUIRE(chunk->HasUserData() == false);
 		REQUIRE(chunk->GetUserDataLength() == 0);
 
@@ -178,7 +189,10 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		chunk->SetTsn(12345678);
 		chunk->SetStreamIdentifier(9988);
 		chunk->SetMessageIdentifier(1234);
-		chunk->SetPayloadProtocolIdentifierOrFragmentSequenceNumber(987654321);
+		chunk->SetFragmentSequenceNumber(987654321);
+
+		// Bit B is not set so cannot set PPID.
+		REQUIRE_THROWS_AS(chunk->SetPayloadProtocolIdentifier(1234), MediaSoupError);
 
 		// Verify that replacing the value works.
 		chunk->SetUserData(sctpCommon::DataBuffer + 1000, 3000);
@@ -217,7 +231,9 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetTsn() == 12345678);
 		REQUIRE(chunk->GetStreamIdentifier() == 9988);
 		REQUIRE(chunk->GetMessageIdentifier() == 1234);
-		REQUIRE(chunk->GetPayloadProtocolIdentifierOrFragmentSequenceNumber() == 987654321);
+		// Bit B is not set so we don't have PPID and we have FSN.
+		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0);
+		REQUIRE(chunk->GetFragmentSequenceNumber() == 987654321);
 		REQUIRE(chunk->HasUserData() == true);
 		REQUIRE(chunk->GetUserDataLength() == 3);
 		REQUIRE(chunk->GetUserData()[0] == 0x00);
@@ -253,7 +269,9 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedChunk->GetTsn() == 12345678);
 		REQUIRE(parsedChunk->GetStreamIdentifier() == 9988);
 		REQUIRE(parsedChunk->GetMessageIdentifier() == 1234);
-		REQUIRE(parsedChunk->GetPayloadProtocolIdentifierOrFragmentSequenceNumber() == 987654321);
+		// Bit B is not set so we don't have PPID and we have FSN.
+		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0);
+		REQUIRE(chunk->GetFragmentSequenceNumber() == 987654321);
 		REQUIRE(parsedChunk->HasUserData() == true);
 		REQUIRE(parsedChunk->GetUserDataLength() == 3);
 		REQUIRE(parsedChunk->GetUserData()[0] == 0x00);

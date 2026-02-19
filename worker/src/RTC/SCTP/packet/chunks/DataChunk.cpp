@@ -111,7 +111,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  stream identifier S: %" PRIu16, GetStreamIdentifierS());
 			MS_DUMP_CLEAN(indentation, "  stream sequence number n: %" PRIu16, GetStreamSequenceNumberN());
 			MS_DUMP_CLEAN(
-			  indentation, "  payload protocol identifier: %" PRIu32, GetPayloadProtocolIdentifier());
+			  indentation, "  payload protocol identifier (PPID): %" PRIu32, GetPayloadProtocolIdentifier());
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  user data length: %" PRIu16 " (has user data: %s)",
