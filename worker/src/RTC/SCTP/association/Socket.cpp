@@ -55,7 +55,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Socket::Socket(SocketOptions options, Listener* listener)
+		Socket::Socket(SocketOptions options, SocketListener* listener)
 		  : options(options), listener(listener),
 		    t1InitTimer(
 		      std::make_unique<BackoffTimerHandle>(
@@ -100,7 +100,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</SCTP::Socket>");
 		}
 
-		void Socket::Associate()
+		void Socket::Connect()
 		{
 			MS_TRACE();
 
@@ -126,7 +126,7 @@ namespace RTC
 
 			this->t1InitTimer->Start();
 
-			SetState(State::COOKIE_WAIT, "Associate() called");
+			SetState(State::COOKIE_WAIT, "Connect() called");
 		}
 
 		// TODO: Should the caller call free packet after calling this method? or us?
@@ -314,7 +314,7 @@ namespace RTC
 			}
 
 			// Send the Packet.
-			this->listener->OnSocketSendSctpPacket(this, packet);
+			this->listener.OnSocketSendSctpPacket(this, packet);
 		}
 
 		void Socket::SendInitChunk()

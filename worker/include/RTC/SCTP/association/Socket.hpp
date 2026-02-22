@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/SocketDeferredListener.hpp"
+#include "RTC/SCTP/association/SocketListener.hpp"
 #include "RTC/SCTP/association/SocketMetrics.hpp"
 #include "RTC/SCTP/association/SocketOptions.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
@@ -34,16 +36,6 @@ namespace RTC
 		 */
 		class Socket : public BackoffTimerHandle::Listener
 		{
-		public:
-			class Listener
-			{
-			public:
-				virtual ~Listener() = default;
-
-			public:
-				virtual void OnSocketSendSctpPacket(const Socket* socket, Packet* packet) const = 0;
-			};
-
 		public:
 			/**
 			 * SCTP association state.
@@ -80,7 +72,7 @@ namespace RTC
 			static constexpr std::string_view State2String(State state);
 
 		public:
-			explicit Socket(SocketOptions options, Listener* listener);
+			explicit Socket(SocketOptions options, SocketListener* listener);
 
 			~Socket();
 
@@ -93,7 +85,7 @@ namespace RTC
 			 * @remarks
 			 * The Socket must be in Closed state.
 			 */
-			void Associate();
+			void Connect();
 
 			/**
 			 * Receive a Packet received from the peer.
@@ -176,8 +168,9 @@ namespace RTC
 		private:
 			// Socket options given in th econstructor.
 			const SocketOptions options;
-			// Listener.
-			const Listener* listener{ nullptr };
+			// Listener. It's not a SocketListener but a SocketDeferredListener which
+			// inherits from SocketListener.
+			SocketDeferredListener listener;
 			// SCTP association state.
 			State state{ State::CLOSED };
 			// Metrics.
