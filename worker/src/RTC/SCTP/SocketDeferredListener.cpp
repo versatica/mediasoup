@@ -150,10 +150,36 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			MS_ASSERT(this->ready, "not ready");
+
 			this->deferredCallbacks.emplace_back(
 			  [socket](CallbackData data, SocketListener* listener)
 			  { listener->OnSocketMessageReceived(socket, std::get<Message>(std::move(data))); },
 			  std::move(message));
+		}
+
+		void SocketDeferredListener::OnBufferedAmountLow(const Socket* socket, uint16_t streamId)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData data, SocketListener* listener)
+			  { listener->OnBufferedAmountLow(socket, std::get<uint16_t>(std::move(data))); },
+			  streamId);
+		}
+
+		void SocketDeferredListener::OnTotalBufferedAmountLow(const Socket* socket)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData data, SocketListener* listener)
+			  { listener->OnTotalBufferedAmountLow(socket); },
+			  std::monostate{});
 		}
 	} // namespace SCTP
 } // namespace RTC

@@ -96,6 +96,11 @@ namespace RTC
 			 * Set to std::nullopt for no limit.
 			 */
 			std::optional<size_t> maxRetransmits = 8;
+			/**
+			 * A threshold that, when the amount of data in the send buffer goes below
+			 * this value, will trigger Socket::OnTotalBufferedAmountLow().
+			 */
+			size_t totalBufferedAmountLowThreshold = 1800000;
 		};
 	} // namespace SCTP
 } // namespace RTC

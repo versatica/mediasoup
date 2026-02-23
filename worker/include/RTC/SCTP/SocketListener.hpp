@@ -90,6 +90,25 @@ namespace RTC
 			 * Called when an SCTP message in full has been received.
 			 */
 			virtual void OnSocketMessageReceived(const Socket* socket, Message message) = 0;
+
+			/**
+			 * Called when the amount of data buffered to be sent falls to or below
+			 * the threshold set when calling SetBufferedAmountLowThreshold().
+			 *
+			 * @remarks
+			 * - It is allowed to call methods in Socket within this callback.
+			 */
+			virtual void OnBufferedAmountLow(const Socket* socket, uint16_t streamId) = 0;
+
+			/**
+			 * Called when the total amount of data buffered (in the entire send
+			 * buffer, for all streams) falls to or below the threshold specified in
+			 * SocketOptions::totalBufferedAmountLowThreshold`.
+			 *
+			 * @remarks
+			 * - It is allowed to call methods in Socket within this callback.
+			 */
+			virtual void OnTotalBufferedAmountLow(const Socket* socket) = 0;
 		};
 	} // namespace SCTP
 } // namespace RTC

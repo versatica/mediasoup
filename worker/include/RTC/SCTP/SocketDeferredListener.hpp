@@ -74,6 +74,10 @@ namespace RTC
 
 			void OnSocketMessageReceived(const Socket* socket, Message message) override;
 
+			void OnBufferedAmountLow(const Socket* socket, uint16_t streamId) override;
+
+			void OnTotalBufferedAmountLow(const Socket* socket) override;
+
 		private:
 			SocketListener* innerListener{ nullptr };
 			bool ready{ false };
