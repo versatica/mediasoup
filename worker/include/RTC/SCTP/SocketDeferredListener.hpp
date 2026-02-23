@@ -6,6 +6,7 @@
 #include "RTC/SCTP/SocketListener.hpp"
 #include "RTC/SCTP/Types.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
+#include <span>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -67,16 +68,24 @@ namespace RTC
 			void OnSocketConnectionRestarted(const Socket* socket) override;
 
 			void OnSocketError(
-			  const Socket* socket, Types::ErrorKind errorKind, std::string_view message) override;
+			  const Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage) override;
 
 			void OnSocketAborted(
-			  const Socket* socket, Types::ErrorKind errorKind, std::string_view message) override;
+			  const Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage) override;
 
 			void OnSocketMessageReceived(const Socket* socket, Message message) override;
 
-			void OnBufferedAmountLow(const Socket* socket, uint16_t streamId) override;
+			void OnSocketStreamsResetPerformed(
+			  const Socket* socket, std::span<const uint16_t> outboundStreamIds) override;
 
-			void OnTotalBufferedAmountLow(const Socket* socket) override;
+			void OnSocketStreamsResetFailed(
+			  const Socket* socket,
+			  std::span<const uint16_t> outboundStreamIds,
+			  std::string_view errorMessage) override;
+
+			void OnSocketBufferedAmountLow(const Socket* socket, uint16_t streamId) override;
+
+			void OnSocketTotalBufferedAmountLow(const Socket* socket) override;
 
 		private:
 			SocketListener* innerListener{ nullptr };

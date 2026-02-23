@@ -1,6 +1,7 @@
 Language: Cpp
 AccessModifierOffset: -2
 AlignAfterOpenBracket: AlwaysBreak
+AlignArrayOfStructures: Left
 AlignConsecutiveAssignments: Consecutive
 AlignConsecutiveDeclarations: None
 AlignOperands: true
@@ -10,8 +11,8 @@ AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
+AllowShortLambdasOnASingleLine: None
 AllowShortLoopsOnASingleLine: false
-BreakAfterReturnType: Automatic
 AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
@@ -29,6 +30,7 @@ BraceWrapping:
   BeforeCatch: true
   BeforeElse: true
   IndentBraces: false
+BreakAfterReturnType: Automatic
 BreakBeforeBraces: Allman
 BreakBeforeBinaryOperators: None
 BreakBeforeInheritanceComma: false

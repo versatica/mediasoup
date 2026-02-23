@@ -86,7 +86,9 @@ namespace RTC
 
 			this->deferredCallbacks.emplace_back(
 			  [socket](CallbackData /*data*/, SocketListener* listener)
-			  { listener->OnSocketConnected(socket); },
+			  {
+				  listener->OnSocketConnected(socket);
+			  },
 			  std::monostate{});
 		}
 
@@ -98,7 +100,9 @@ namespace RTC
 
 			this->deferredCallbacks.emplace_back(
 			  [socket](CallbackData /*data*/, SocketListener* listener)
-			  { listener->OnSocketClosed(socket); },
+			  {
+				  listener->OnSocketClosed(socket);
+			  },
 			  std::monostate{});
 		}
 
@@ -110,12 +114,14 @@ namespace RTC
 
 			this->deferredCallbacks.emplace_back(
 			  [socket](CallbackData /*data*/, SocketListener* listener)
-			  { listener->OnSocketConnectionRestarted(socket); },
+			  {
+				  listener->OnSocketConnectionRestarted(socket);
+			  },
 			  std::monostate{});
 		}
 
 		void SocketDeferredListener::OnSocketError(
-		  const Socket* socket, Types::ErrorKind errorKind, std::string_view message)
+		  const Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
 
@@ -127,11 +133,11 @@ namespace RTC
 				  Error error = std::get<Error>(std::move(data));
 				  listener->OnSocketError(socket, error.errorKind, error.message);
 			  },
-			  Error{ .errorKind = errorKind, .message = std::string(message) });
+			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
 		void SocketDeferredListener::OnSocketAborted(
-		  const Socket* socket, Types::ErrorKind errorKind, std::string_view message)
+		  const Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
 
@@ -143,7 +149,7 @@ namespace RTC
 				  Error error = std::get<Error>(std::move(data));
 				  listener->OnSocketAborted(socket, error.errorKind, error.message);
 			  },
-			  Error{ .errorKind = errorKind, .message = std::string(message) });
+			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
 		void SocketDeferredListener::OnSocketMessageReceived(const Socket* socket, Message message)
@@ -154,11 +160,14 @@ namespace RTC
 
 			this->deferredCallbacks.emplace_back(
 			  [socket](CallbackData data, SocketListener* listener)
-			  { listener->OnSocketMessageReceived(socket, std::get<Message>(std::move(data))); },
+			  {
+				  listener->OnSocketMessageReceived(socket, std::get<Message>(std::move(data)));
+			  },
 			  std::move(message));
 		}
 
-		void SocketDeferredListener::OnBufferedAmountLow(const Socket* socket, uint16_t streamId)
+		void SocketDeferredListener::OnSocketStreamsResetPerformed(
+		  const Socket* socket, std::span<const uint16_t> outboundStreamIds)
 		{
 			MS_TRACE();
 
@@ -166,11 +175,46 @@ namespace RTC
 
 			this->deferredCallbacks.emplace_back(
 			  [socket](CallbackData data, SocketListener* listener)
-			  { listener->OnBufferedAmountLow(socket, std::get<uint16_t>(std::move(data))); },
+			  {
+				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
+				  listener->OnSocketStreamsResetPerformed(socket, streamReset.streamIds);
+      },
+			  StreamReset{ .streamIds = { outboundStreamIds.begin(), outboundStreamIds.end() } });
+		}
+
+		void SocketDeferredListener::OnSocketStreamsResetFailed(
+		  const Socket* socket, std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData data, SocketListener* listener)
+			  {
+				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
+				  listener->OnSocketStreamsResetFailed(
+				    socket, streamReset.streamIds, streamReset.errorMessage);
+      },
+			  StreamReset{ .streamIds    = { outboundStreamIds.begin(), outboundStreamIds.end() },
+			               .errorMessage = std::string(errorMessage) });
+		}
+
+		void SocketDeferredListener::OnSocketBufferedAmountLow(const Socket* socket, uint16_t streamId)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData data, SocketListener* listener)
+			  {
+				  listener->OnSocketBufferedAmountLow(socket, std::get<uint16_t>(std::move(data)));
+			  },
 			  streamId);
 		}
 
-		void SocketDeferredListener::OnTotalBufferedAmountLow(const Socket* socket)
+		void SocketDeferredListener::OnSocketTotalBufferedAmountLow(const Socket* socket)
 		{
 			MS_TRACE();
 
@@ -178,7 +222,9 @@ namespace RTC
 
 			this->deferredCallbacks.emplace_back(
 			  [socket](CallbackData data, SocketListener* listener)
-			  { listener->OnTotalBufferedAmountLow(socket); },
+			  {
+				  listener->OnSocketTotalBufferedAmountLow(socket);
+			  },
 			  std::monostate{});
 		}
 	} // namespace SCTP

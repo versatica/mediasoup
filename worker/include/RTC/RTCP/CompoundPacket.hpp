@@ -64,7 +64,9 @@ namespace RTC
 				  this->xrPacket.Begin(),
 				  this->xrPacket.End(),
 				  [](const ExtendedReportBlock* report)
-				  { return report->GetType() == ExtendedReportBlock::Type::RRT; });
+				  {
+					  return report->GetType() == ExtendedReportBlock::Type::RRT;
+				  });
 			}
 			bool HasDelaySinceLastRr()
 			{
@@ -72,7 +74,9 @@ namespace RTC
 				  this->xrPacket.Begin(),
 				  this->xrPacket.End(),
 				  [](const ExtendedReportBlock* report)
-				  { return report->GetType() == ExtendedReportBlock::Type::DLRR; });
+				  {
+					  return report->GetType() == ExtendedReportBlock::Type::DLRR;
+				  });
 			}
 			void Serialize(uint8_t* data);
 

@@ -152,13 +152,41 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet1.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet3.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet2.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet3.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet4.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet5.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet5.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet1.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet2.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet4.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet5.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet5.get());
 
 		// Create a NACK item that request for all the packets.
 		RTC::RTCP::FeedbackRtpNackPacket nackPacket(0, params.ssrc);
@@ -215,13 +243,41 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet1.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet3.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet2.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet3.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet4.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet5.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet5.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet1.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet2.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet4.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet5.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet5.get());
 
 		// Create a NACK item that request for all the packets.
 		RTC::RTCP::FeedbackRtpNackPacket nackPacket(0, params.ssrc);
@@ -266,13 +322,41 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet1.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet3.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet2.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet3.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet4.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet5.get());
-		sendRtpPacket({ { stream.get(), params.ssrc } }, packet5.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet1.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet2.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet4.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet5.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params.ssrc }
+    },
+		  packet5.get());
 
 		// Create a NACK item that request for all the packets.
 		RTC::RTCP::FeedbackRtpNackPacket nackPacket(0, params.ssrc);
@@ -323,8 +407,18 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  new RTC::RTP::RtpStreamSend(&testRtpStreamListener2, params2, mid));
 
 		// Receive all the packets in both streams.
-		sendRtpPacket({ { stream1.get(), params1.ssrc }, { stream2.get(), params2.ssrc } }, packet1.get());
-		sendRtpPacket({ { stream1.get(), params1.ssrc }, { stream2.get(), params2.ssrc } }, packet2.get());
+		sendRtpPacket(
+		  {
+		    { stream1.get(), params1.ssrc },
+        { stream2.get(), params2.ssrc }
+    },
+		  packet1.get());
+		sendRtpPacket(
+		  {
+		    { stream1.get(), params1.ssrc },
+        { stream2.get(), params2.ssrc }
+    },
+		  packet2.get());
 
 		// Create a NACK item that request for all the packets.
 		RTC::RTCP::FeedbackRtpNackPacket nackPacket(0, params1.ssrc);
@@ -484,7 +578,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(forwarded);
 
 		// Receive the third packet in the first stream.
-		sendRtpPacket({ { stream1.get(), params1.ssrc } }, packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream1.get(), params1.ssrc }
+    },
+		  packet3.get());
 
 		// Update current/target temporal layers for context2.
 		context2.SetCurrentTemporalLayer(3);
@@ -494,7 +592,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(forwarded);
 
 		// Receive the third packet in the second stream.
-		sendRtpPacket({ { stream2.get(), params2.ssrc } }, packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream2.get(), params2.ssrc }
+    },
+		  packet3.get());
 
 		// Create a NACK item that requests the third packet.
 		RTC::RTCP::FeedbackRtpNackPacket nackPacket(0, params1.ssrc);
@@ -821,8 +923,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params1, mid);
 
 		// Receive all the packets.
-		sendRtpPacket({ { stream.get(), params1.ssrc } }, packet1.get());
-		sendRtpPacket({ { stream.get(), params1.ssrc } }, packet2.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params1.ssrc }
+    },
+		  packet1.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params1.ssrc }
+    },
+		  packet2.get());
 
 		// Create a NACK item that request for all the packets.
 		RTC::RTCP::FeedbackRtpNackPacket nackPacket(0, params1.ssrc);
@@ -876,9 +986,21 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params1, mid);
 
 		// Receive all the packets.
-		sendRtpPacket({ { stream.get(), params1.ssrc } }, packet1.get());
-		sendRtpPacket({ { stream.get(), params1.ssrc } }, packet2.get());
-		sendRtpPacket({ { stream.get(), params1.ssrc } }, packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params1.ssrc }
+    },
+		  packet1.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params1.ssrc }
+    },
+		  packet2.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params1.ssrc }
+    },
+		  packet3.get());
 
 		// Create a NACK item that requests for all packets.
 		RTC::RTCP::FeedbackRtpNackPacket nackPacket(0, params1.ssrc);
@@ -927,10 +1049,26 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		std::string mid;
 		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params1, mid);
 
-		sendRtpPacket({ { stream.get(), params1.ssrc } }, packet1.get());
-		sendRtpPacket({ { stream.get(), params1.ssrc } }, packet2.get());
-		sendRtpPacket({ { stream.get(), params1.ssrc } }, packet3.get());
-		sendRtpPacket({ { stream.get(), params1.ssrc } }, packet4.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params1.ssrc }
+    },
+		  packet1.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params1.ssrc }
+    },
+		  packet2.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params1.ssrc }
+    },
+		  packet3.get());
+		sendRtpPacket(
+		  {
+		    { stream.get(), params1.ssrc }
+    },
+		  packet4.get());
 
 		// Create a NACK item that requests for packets 1 and 2.
 		RTC::RTCP::FeedbackRtpNackPacket nackPacket2(0, params1.ssrc);
