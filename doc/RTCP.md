@@ -53,6 +53,68 @@ or below, the provided value.
 ```
 
 This information is ignored.
+<br>
+<h2>Why TMMBR Is Ignored</h2>
+
+<h3>What TMMBR Is Designed For</h3>
+
+<p>
+According to <strong>RFC 5104</strong>, the <strong>Temporary Maximum Media Stream Bit Rate Request (TMMBR)</strong>
+allows a receiver to request that a sender cap its bitrate to a specific value.
+</p>
+
+<p>
+This mechanism works reasonably well in <em>point-to-point RTP sessions</em>, where:
+</p>
+
+<ul>
+  <li>One sender</li>
+  <li>One receiver</li>
+  <li>One network path</li>
+</ul>
+
+<h3>Why This Breaks in an SFU</h3>
+
+<p>
+In a Selective Forwarding Unit (SFU) topology:
+</p>
+
+<ul>
+  <li>A single producer sends media to many consumers</li>
+  <li>Each consumer has different bandwidth, RTT, and packet loss characteristics</li>
+  <li>A single TMMBR request reflects only one receiver’s network state</li>
+</ul>
+
+<p>If mediasoup forwarded TMMBR upstream:</p>
+
+<ul>
+  <li>A single slow consumer could throttle the producer</li>
+  <li>All other consumers would suffer reduced quality</li>
+  <li>Bitrate would oscillate as different consumers issue competing TMMBR requests</li>
+</ul>
+
+<h3>mediasoup’s Decision</h3>
+
+<p>
+mediasoup ignores <strong>TMMBR/TMMBN</strong> and instead relies on:
+</p>
+
+<ul>
+  <li>Locally generated Receiver Reports (RR)</li>
+  <li>SFU-side congestion estimation</li>
+  <li>Controlled and centralized feedback toward producers</li>
+</ul>
+
+<h3>Key Principle</h3>
+
+<blockquote>
+Congestion control must be centralized in an SFU, not dictated by individual receivers.
+</blockquote>
+
+<p>
+By ignoring TMMBR in multi-party scenarios, mediasoup prevents unfair bitrate reduction,
+avoids oscillation, and maintains stable quality across all participants in a conference.
+</p>
 
 As for now, we do not limit the bit rate for the media streams as we are relying on locally generated reception reports (RR) to make the remote RTP senders adjust their transmition rates given such values.
 
