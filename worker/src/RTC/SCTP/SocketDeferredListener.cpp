@@ -200,6 +200,22 @@ namespace RTC
 			               .errorMessage = std::string(errorMessage) });
 		}
 
+		void SocketDeferredListener::OnSocketInboundStreamsReset(
+		  const Socket* socket, std::span<const uint16_t> inboundStreamIds)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData data, SocketListener* listener)
+			  {
+				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
+				  listener->OnSocketInboundStreamsReset(socket, streamReset.streamIds);
+      },
+			  StreamReset{ .streamIds = { inboundStreamIds.begin(), inboundStreamIds.end() } });
+		}
+
 		void SocketDeferredListener::OnSocketBufferedAmountLow(const Socket* socket, uint16_t streamId)
 		{
 			MS_TRACE();

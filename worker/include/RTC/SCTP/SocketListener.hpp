@@ -116,6 +116,16 @@ namespace RTC
 			  std::string_view errorMessage) = 0;
 
 			/**
+			 * When a peer has reset some of its outbound streams, this will be
+			 * called. An empty list indicates that all streams have been reset.
+			 *
+			 * @remarks
+			 * - It is allowed to call methods in Socket within this callback.
+			 */
+			virtual void OnSocketInboundStreamsReset(
+			  const Socket* socket, std::span<const uint16_t> inboundStreamIds) = 0;
+
+			/**
 			 * Called when the amount of data buffered to be sent falls to or below
 			 * the threshold set when calling SetBufferedAmountLowThreshold().
 			 *

@@ -83,6 +83,9 @@ namespace RTC
 			  std::span<const uint16_t> outboundStreamIds,
 			  std::string_view errorMessage) override;
 
+			void OnSocketInboundStreamsReset(
+			  const Socket* socket, std::span<const uint16_t> inboundStreamIds) override;
+
 			void OnSocketBufferedAmountLow(const Socket* socket, uint16_t streamId) override;
 
 			void OnSocketTotalBufferedAmountLow(const Socket* socket) override;
