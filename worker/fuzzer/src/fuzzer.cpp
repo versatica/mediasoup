@@ -26,7 +26,7 @@
 #include "RTC/RTP/FuzzerProbationGenerator.hpp"
 #include "RTC/RTP/FuzzerRetransmissionBuffer.hpp"
 #include "RTC/RTP/FuzzerRtpStreamSend.hpp"
-#include "RTC/SCTP/association/FuzzerStateCookie.hpp"
+#include "RTC/SCTP/FuzzerStateCookie.hpp"
 #include "RTC/SCTP/packet/FuzzerPacket.hpp"
 #include <cstdlib> // std::getenv()
 #include <iostream>

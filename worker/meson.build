@@ -453,8 +453,8 @@ test_sources = [
   'test/src/RTC/RTCP/TestPacket.cpp',
   'test/src/RTC/RTCP/TestXr.cpp',
   'test/src/RTC/SCTP/sctpCommon.cpp',
-  'test/src/RTC/SCTP/association/TestNegotiatedCapabilities.cpp',
-  'test/src/RTC/SCTP/association/TestStateCookie.cpp',
+  'test/src/RTC/SCTP/TestNegotiatedCapabilities.cpp',
+  'test/src/RTC/SCTP/TestStateCookie.cpp',
   'test/src/RTC/SCTP/packet/TestPacket.cpp',
   'test/src/RTC/SCTP/packet/chunks/TestDataChunk.cpp',
   'test/src/RTC/SCTP/packet/chunks/TestInitChunk.cpp',
@@ -673,7 +673,7 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
-  'fuzzer/src/RTC/SCTP/association/FuzzerStateCookie.cpp',
+  'fuzzer/src/RTC/SCTP/FuzzerStateCookie.cpp',
   'fuzzer/src/RTC/SCTP/packet/FuzzerPacket.cpp'
 ]
 
