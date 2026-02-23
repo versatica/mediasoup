@@ -210,7 +210,7 @@ namespace RTC
 
 			supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::RE_CONFIG);
 
-			if (this->options.partialReliability)
+			if (this->options.enablePartialReliability)
 			{
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::FORWARD_TSN);
 
@@ -220,7 +220,7 @@ namespace RTC
 				forwardTsnSupportedParameter->Consolidate();
 			}
 
-			if (this->options.messageInterleaving)
+			if (this->options.enableMessageInterleaving)
 			{
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_DATA);
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_FORWARD_TSN);
@@ -327,7 +327,7 @@ namespace RTC
 			auto* initChunk = packet->BuildChunkInPlace<InitChunk>();
 
 			initChunk->SetInitiateTag(this->preTcb.localVerificationTag);
-			initChunk->SetAdvertisedReceiverWindowCredit(this->options.localAdvertisedReceiverWindowCredit);
+			initChunk->SetAdvertisedReceiverWindowCredit(this->options.maxReceiverWindowBufferSize);
 			initChunk->SetNumberOfOutboundStreams(this->options.maxOutboundStreams);
 			initChunk->SetNumberOfInboundStreams(this->options.maxInboundStreams);
 			initChunk->SetInitialTsn(this->preTcb.localInitialTsn);
@@ -715,8 +715,7 @@ namespace RTC
 			auto* initAckChunk = packet->BuildChunkInPlace<InitAckChunk>();
 
 			initAckChunk->SetInitiateTag(localVerificationTag);
-			initAckChunk->SetAdvertisedReceiverWindowCredit(
-			  this->options.localAdvertisedReceiverWindowCredit);
+			initAckChunk->SetAdvertisedReceiverWindowCredit(this->options.maxReceiverWindowBufferSize);
 			initAckChunk->SetNumberOfOutboundStreams(this->options.maxOutboundStreams);
 			initAckChunk->SetNumberOfInboundStreams(this->options.maxInboundStreams);
 			initAckChunk->SetInitialTsn(localInitialTsn);

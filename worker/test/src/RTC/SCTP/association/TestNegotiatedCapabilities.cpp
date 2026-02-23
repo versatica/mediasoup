@@ -17,10 +17,10 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 	{
 		RTC::SCTP::SocketOptions socketOptions{};
 
-		socketOptions.maxOutboundStreams  = 8192;
-		socketOptions.maxInboundStreams   = 2048;
-		socketOptions.partialReliability  = true;
-		socketOptions.messageInterleaving = true;
+		socketOptions.maxOutboundStreams        = 8192;
+		socketOptions.maxInboundStreams         = 2048;
+		socketOptions.enablePartialReliability  = true;
+		socketOptions.enableMessageInterleaving = true;
 		socketOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
@@ -63,10 +63,10 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 	{
 		RTC::SCTP::SocketOptions socketOptions{};
 
-		socketOptions.maxOutboundStreams  = 1000;
-		socketOptions.maxInboundStreams   = 2000;
-		socketOptions.partialReliability  = true;
-		socketOptions.messageInterleaving = true;
+		socketOptions.maxOutboundStreams        = 1000;
+		socketOptions.maxInboundStreams         = 2000;
+		socketOptions.enablePartialReliability  = true;
+		socketOptions.enableMessageInterleaving = true;
 		socketOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
