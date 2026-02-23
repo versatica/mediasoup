@@ -54,7 +54,7 @@ namespace RTC
 				UnsupportedOperation,
 			};
 
-			inline constexpr std::string_view ErrorKindToString(ErrorKind error)
+			constexpr std::string_view ErrorKindToString(ErrorKind error)
 			{
 				switch (error)
 				{
@@ -117,7 +117,7 @@ namespace RTC
 				USRSCTP,
 			};
 
-			inline constexpr std::string_view SctpImplementationToString(SctpImplementation sctpImplementation)
+			constexpr std::string_view SctpImplementationToString(SctpImplementation sctpImplementation)
 			{
 				switch (sctpImplementation)
 				{

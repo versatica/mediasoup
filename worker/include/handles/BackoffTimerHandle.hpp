@@ -19,10 +19,10 @@ public:
 		 * timeout given as reference and affect the next timeout duration.
 		 *
 		 * @remarks
-		 * If the caller deletes this instance of SmartTimer within the callback
-		 * it must signal it be setting `stop` to true.
+		 * - If the caller deletes this instance of SmartTimer within the callback
+		 *   it must signal it be setting `stop` to true.
 		 */
-		virtual void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeout, bool& stop) = 0;
+		virtual void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) = 0;
 	};
 
 public:
@@ -37,7 +37,7 @@ public:
 	};
 
 public:
-	static constexpr uint64_t MaxTimeout{ std::numeric_limits<uint64_t>::max() / 2 };
+	static constexpr uint64_t MaxTimeoutMs{ std::numeric_limits<uint64_t>::max() / 2 };
 
 public:
 	explicit BackoffTimerHandle(
@@ -46,18 +46,18 @@ public:
 	   */
 	  Listener* listener,
 	  /**
-	   * Base timeout duration.
+	   * Base timeout duration (ms).
 	   */
-	  uint64_t baseTimeout,
+	  uint64_t baseTimeoutMs,
 	  /**
 	   * Backoff algorithm.
 	   */
 	  BackoffAlgorithm backoffAlgorithm,
 	  /**
-	   * Maximum duration of the backoff timeout. If no value is given, no
+	   * Maximum duration of the backoff timeout (ms). If no value is given, no
 	   * limit is set.
 	   */
-	  std::optional<uint64_t> maxBackoffTimeout,
+	  std::optional<uint64_t> maxBackoffTimeoutMs,
 	  /**
 	   * Maximum number of restarts. If no value is given, it will restart
 	   * forever until stopped.
@@ -91,16 +91,16 @@ public:
 	/**
 	 * Get the base timeout duration.
 	 */
-	uint64_t GetBaseTimeout() const
+	uint64_t GetBaseTimeoutMs() const
 	{
-		return this->baseTimeout;
+		return this->baseTimeoutMs;
 	}
 
 	/**
 	 * Set the base timeout duration. It will be applied after the next timeout
 	 * and effective duration can be larger if backoff algorithm is exponential.
 	 */
-	void SetBaseTimeout(uint64_t baseTimeout);
+	void SetBaseTimeoutMs(uint64_t baseTimeoutMs);
 
 	/**
 	 * Whether the smart timer is running. Useful to check if this smart timer
@@ -120,7 +120,7 @@ public:
 	}
 
 private:
-	uint64_t ComputeNextTimeout() const;
+	uint64_t ComputeNextTimeoutMs() const;
 
 	/* Pure virtual methods inherited from TimerHandle::Listener. */
 public:
@@ -129,9 +129,9 @@ public:
 private:
 	// Passed by argument.
 	Listener* listener{ nullptr };
-	uint64_t baseTimeout{ 0 };
+	uint64_t baseTimeoutMs{ 0 };
 	BackoffAlgorithm backoffAlgorithm;
-	std::optional<uint64_t> maxBackoffTimeout;
+	std::optional<uint64_t> maxBackoffTimeoutMs;
 	std::optional<size_t> maxRestarts;
 	// Allocated by this.
 	TimerHandle* timer{ nullptr };

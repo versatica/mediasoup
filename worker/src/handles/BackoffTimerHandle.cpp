@@ -10,17 +10,17 @@
 
 BackoffTimerHandle::BackoffTimerHandle(
   Listener* listener,
-  uint64_t baseTimeout,
+  uint64_t baseTimeoutMs,
   BackoffAlgorithm backoffAlgorithm,
-  std::optional<uint64_t> maxBackoffTimeout,
+  std::optional<uint64_t> maxBackoffTimeoutMs,
   std::optional<size_t> maxRestarts)
-  : listener(listener), baseTimeout(baseTimeout), backoffAlgorithm(backoffAlgorithm),
-    maxBackoffTimeout(maxBackoffTimeout), maxRestarts(maxRestarts)
+  : listener(listener), baseTimeoutMs(baseTimeoutMs), backoffAlgorithm(backoffAlgorithm),
+    maxBackoffTimeoutMs(maxBackoffTimeoutMs), maxRestarts(maxRestarts)
 {
 	MS_TRACE();
 
 	// NOTE: This may throw.
-	SetBaseTimeout(baseTimeout);
+	SetBaseTimeoutMs(baseTimeoutMs);
 
 	this->timer = new TimerHandle(this);
 }
@@ -37,7 +37,7 @@ void BackoffTimerHandle::Start()
 {
 	MS_TRACE();
 
-	this->timer->Start(this->baseTimeout);
+	this->timer->Start(this->baseTimeoutMs);
 
 	this->active       = true;
 	this->timeoutCount = 0;
@@ -63,22 +63,22 @@ void BackoffTimerHandle::Restart()
 	this->timeoutCount = 0;
 }
 
-void BackoffTimerHandle::SetBaseTimeout(uint64_t baseTimeout)
+void BackoffTimerHandle::SetBaseTimeoutMs(uint64_t baseTimeoutMs)
 {
 	MS_TRACE();
 
-	if (baseTimeout > BackoffTimerHandle::MaxTimeout)
+	if (baseTimeoutMs > BackoffTimerHandle::MaxTimeoutMs)
 	{
 		MS_THROW_ERROR(
-		  "base timeout (%" PRIu64 ") cannot be greater than %" PRIu64,
-		  baseTimeout,
-		  BackoffTimerHandle::MaxTimeout);
+		  "base timeout (%" PRIu64 " ms) cannot be greater than %" PRIu64 " ms",
+		  baseTimeoutMs,
+		  BackoffTimerHandle::MaxTimeoutMs);
 	}
 
-	this->baseTimeout = baseTimeout;
+	this->baseTimeoutMs = baseTimeoutMs;
 }
 
-uint64_t BackoffTimerHandle::ComputeNextTimeout() const
+uint64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 {
 	MS_TRACE();
 
@@ -88,25 +88,25 @@ uint64_t BackoffTimerHandle::ComputeNextTimeout() const
 	{
 		case BackoffAlgorithm::FIXED:
 		{
-			return this->baseTimeout;
+			return this->baseTimeoutMs;
 		}
 
 		case BackoffAlgorithm::EXPONENTIAL:
 		{
-			auto timeout = this->baseTimeout;
+			auto timeoutMs = this->baseTimeoutMs;
 
-			while (timeoutCount > 0 && timeout < BackoffTimerHandle::MaxTimeout)
+			while (timeoutCount > 0 && timeoutMs < BackoffTimerHandle::MaxTimeoutMs)
 			{
-				timeout *= 2;
+				timeoutMs *= 2;
 				--timeoutCount;
 
-				if (this->maxBackoffTimeout.has_value() && timeout > *this->maxBackoffTimeout)
+				if (this->maxBackoffTimeoutMs.has_value() && timeoutMs > *this->maxBackoffTimeoutMs)
 				{
-					return *this->maxBackoffTimeout;
+					return *this->maxBackoffTimeoutMs;
 				}
 			}
 
-			return std::min<uint64_t>(timeout, BackoffTimerHandle::MaxTimeout);
+			return std::min<uint64_t>(timeoutMs, BackoffTimerHandle::MaxTimeoutMs);
 		}
 	}
 }
@@ -122,12 +122,12 @@ void BackoffTimerHandle::OnTimer(TimerHandle* timer)
 	// callback.
 	this->active = !this->maxRestarts.has_value() || this->timeoutCount <= *this->maxRestarts;
 
-	uint64_t baseTimeout{ this->baseTimeout };
+	uint64_t baseTimeoutMs{ this->baseTimeoutMs };
 	bool stop{ false };
 
 	// Call the listener by passing base timeout as reference so the parent has
 	// a chance to change it and affect the next timeout.
-	this->listener->OnTimer(this, baseTimeout, stop);
+	this->listener->OnTimer(this, baseTimeoutMs, stop);
 
 	// If the parent has set `stop` to true it means that it has deleted the
 	// instance, so stop here.
@@ -137,14 +137,14 @@ void BackoffTimerHandle::OnTimer(TimerHandle* timer)
 	}
 
 	// NOTE: This may throw.
-	SetBaseTimeout(baseTimeout);
+	SetBaseTimeoutMs(baseTimeoutMs);
 
 	// The caller may have called Stop() within the callback so we must check
 	// the `active` flag.
 	if (this->active)
 	{
-		auto nextTimeout = ComputeNextTimeout();
+		auto nextTimeoutMs = ComputeNextTimeoutMs();
 
-		this->timer->Start(nextTimeout);
+		this->timer->Start(nextTimeoutMs);
 	}
 }

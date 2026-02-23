@@ -147,11 +147,11 @@ namespace RTC
 			bool ProcessReceivedUnknownChunk(
 			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
 
-			void OnT1InitTimer(uint64_t& baseTimeout, bool& stop);
+			void OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop);
 
-			void OnT1CookieTimer(uint64_t& baseTimeout, bool& stop);
+			void OnT1CookieTimer(uint64_t& baseTimeoutMs, bool& stop);
 
-			void OnT2ShutdownTimer(uint64_t& baseTimeout, bool& stop);
+			void OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& stop);
 
 			template<typename... States>
 			void AssertState(States... expectedStates) const;
@@ -163,7 +163,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
 		public:
-			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeout, bool& stop) override;
+			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			// Socket options given in th econstructor.

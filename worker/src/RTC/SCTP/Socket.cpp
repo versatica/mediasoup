@@ -60,23 +60,23 @@ namespace RTC
 		    t1InitTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
-		        /*baseTimeout*/ options.t1InitTimeout,
+		        /*baseTimeoutMs*/ options.t1InitTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
+		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ options.maxInitRetransmits)),
 		    t1CookieTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
-		        /*baseTimeout*/ options.t1CookieTimeout,
+		        /*baseTimeoutMs*/ options.t1CookieTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
+		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ options.maxInitRetransmits)),
 		    t2ShutdownTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
-		        /*baseTimeout*/ options.t2ShutdownTimeout,
+		        /*baseTimeoutMs*/ options.t2ShutdownTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
+		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ options.maxRetransmits))
 		{
 			MS_TRACE();
@@ -901,7 +901,7 @@ namespace RTC
 			return !skipProcessing;
 		}
 
-		void Socket::OnT1InitTimer(uint64_t& baseTimeout, bool& stop)
+		void Socket::OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 
@@ -921,7 +921,7 @@ namespace RTC
 			}
 		}
 
-		void Socket::OnT1CookieTimer(uint64_t& baseTimeout, bool& stop)
+		void Socket::OnT1CookieTimer(uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 
@@ -942,7 +942,7 @@ namespace RTC
 			}
 		}
 
-		void Socket::OnT2ShutdownTimer(uint64_t& baseTimeout, bool& stop)
+		void Socket::OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 
@@ -1025,21 +1025,21 @@ namespace RTC
 			}
 		}
 
-		void Socket::OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeout, bool& stop)
+		void Socket::OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 
 			if (backoffTimer == this->t1InitTimer.get())
 			{
-				OnT1InitTimer(baseTimeout, stop);
+				OnT1InitTimer(baseTimeoutMs, stop);
 			}
 			else if (backoffTimer == this->t1CookieTimer.get())
 			{
-				OnT1CookieTimer(baseTimeout, stop);
+				OnT1CookieTimer(baseTimeoutMs, stop);
 			}
 			else if (backoffTimer == this->t2ShutdownTimer.get())
 			{
-				OnT2ShutdownTimer(baseTimeout, stop);
+				OnT2ShutdownTimer(baseTimeoutMs, stop);
 			}
 		}
 	} // namespace SCTP
