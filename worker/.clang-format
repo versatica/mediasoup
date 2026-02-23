@@ -17,6 +17,8 @@ AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
+# TODO: It requires clang-format 22.
+# BreakAfterOpenBracketBracedList: true
 BraceWrapping:
   AfterClass: true
   AfterControlStatement: Always
