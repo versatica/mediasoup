@@ -69,7 +69,7 @@ namespace RTC
 			};
 
 		public:
-			static constexpr std::string_view State2String(State state);
+			static constexpr std::string_view StateToString(State state);
 
 		public:
 			explicit Socket(SocketOptions options, SocketListener* listener);

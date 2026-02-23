@@ -26,7 +26,7 @@ namespace RTC
 
 		/* Class methods. */
 
-		constexpr std::string_view Socket::State2String(Socket::State state)
+		constexpr std::string_view Socket::StateToString(Socket::State state)
 		{
 			// NOTE: We cannot use MS_TRACE() here because clang in Linux will
 			// comlain about "read of non-constexpr variable 'configuration' is not
@@ -91,7 +91,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto stateStringView = Socket::State2String(this->state);
+			auto stateStringView = Socket::StateToString(this->state);
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Socket>");
 			MS_DUMP_CLEAN(
@@ -106,7 +106,7 @@ namespace RTC
 
 			if (this->state != State::CLOSED)
 			{
-				const auto stateStringView = Socket::State2String(this->state);
+				const auto stateStringView = Socket::StateToString(this->state);
 
 				MS_DEBUG_TAG(
 				  sctp,
@@ -169,7 +169,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto stateStringView = Socket::State2String(state);
+			const auto stateStringView = Socket::StateToString(state);
 
 			if (state == this->state)
 			{
@@ -183,7 +183,7 @@ namespace RTC
 				return;
 			}
 
-			const auto previousStateStringView = Socket::State2String(this->state);
+			const auto previousStateStringView = Socket::StateToString(this->state);
 
 			MS_WARN_TAG(
 			  sctp,
@@ -967,12 +967,12 @@ namespace RTC
 				return;
 			}
 
-			auto currentStateStringView = Socket::State2String(this->state);
+			auto currentStateStringView = Socket::StateToString(this->state);
 			std::ostringstream expectedStatesOss;
 			bool firstExpectedState = true;
 
 			// NOTE: Using fold expression operator.
-			((expectedStatesOss << (firstExpectedState ? "" : ", ") << Socket::State2String(expectedStates),
+			((expectedStatesOss << (firstExpectedState ? "" : ", ") << Socket::StateToString(expectedStates),
 			  firstExpectedState = false),
 			 ...);
 
@@ -995,13 +995,13 @@ namespace RTC
 			// NOTE: Using fold expression operator.
 			if ((... || (this->state == unexpectedStates)))
 			{
-				auto currentStateStringView = Socket::State2String(this->state);
+				auto currentStateStringView = Socket::StateToString(this->state);
 				std::ostringstream unexpectedStatesOss;
 				bool firstUnexpectedState = true;
 
 				// NOTE: Using fold expression operator.
 				((unexpectedStatesOss << (firstUnexpectedState ? "" : ", ")
-				                      << Socket::State2String(unexpectedStates),
+				                      << Socket::StateToString(unexpectedStates),
 				  firstUnexpectedState = false),
 				 ...);
 
