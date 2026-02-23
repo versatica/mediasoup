@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/Types.hpp"
 #include "RTC/Serializable.hpp"
 #include <string_view>
 
@@ -60,19 +61,6 @@ namespace RTC
 		 */
 		class StateCookie : public Serializable
 		{
-		public:
-			/**
-			 * SCTP implementation determined by first 8 bytes of the State Cookie
-			 * sent by the remote peer.
-			 */
-			enum class SctpImplementation
-			{
-				UNKNOWN,
-				MEDIASOUP,
-				DCSCTP,
-				USRSCTP,
-			};
-
 		private:
 			struct NegotiatedCapabilitiesField
 			{
@@ -158,10 +146,8 @@ namespace RTC
 			 * Determine the SCTP implementation of the generator of State Cookie
 			 * given in the buffer.
 			 */
-			static SctpImplementation DetermineSctpImplementation(const uint8_t* buffer, size_t bufferLength);
-
-			static const std::string_view SctpImplementation2String(
-			  StateCookie::SctpImplementation sctpImplementation);
+			static Types::SctpImplementation DetermineSctpImplementation(
+			  const uint8_t* buffer, size_t bufferLength);
 
 		public:
 			StateCookie(uint8_t* buffer, size_t bufferLength);

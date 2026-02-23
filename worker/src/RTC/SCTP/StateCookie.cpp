@@ -121,51 +121,33 @@ namespace RTC
 			  uint16_t{ htons(negotiatedCapabilities.maxInboundStreams) };
 		}
 
-		StateCookie::SctpImplementation StateCookie::DetermineSctpImplementation(
+		Types::SctpImplementation StateCookie::DetermineSctpImplementation(
 		  const uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
 
 			if (bufferLength < StateCookie::Magic1Length)
 			{
-				return StateCookie::SctpImplementation::UNKNOWN;
+				return Types::SctpImplementation::UNKNOWN;
 			}
 
 			std::string_view magic1(reinterpret_cast<const char*>(buffer), StateCookie::Magic1Length);
 
 			if (magic1 == "msworker")
 			{
-				return StateCookie::SctpImplementation::MEDIASOUP;
+				return Types::SctpImplementation::MEDIASOUP;
 			}
 			else if (magic1 == "dcSCTP00")
 			{
-				return StateCookie::SctpImplementation::DCSCTP;
+				return Types::SctpImplementation::DCSCTP;
 			}
 			else if (magic1 == "KAME-BSD")
 			{
-				return StateCookie::SctpImplementation::USRSCTP;
+				return Types::SctpImplementation::USRSCTP;
 			}
 			else
 			{
-				return StateCookie::SctpImplementation::UNKNOWN;
-			}
-		}
-
-		const std::string_view StateCookie::SctpImplementation2String(
-		  StateCookie::SctpImplementation sctpImplementation)
-		{
-			MS_TRACE();
-
-			switch (sctpImplementation)
-			{
-				case StateCookie::SctpImplementation::UNKNOWN:
-					return "unknown";
-				case StateCookie::SctpImplementation::MEDIASOUP:
-					return "mediasoup";
-				case StateCookie::SctpImplementation::DCSCTP:
-					return "dcsctp";
-				case StateCookie::SctpImplementation::USRSCTP:
-					return "usrsctp";
+				return Types::SctpImplementation::UNKNOWN;
 			}
 		}
 

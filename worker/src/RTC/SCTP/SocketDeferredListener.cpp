@@ -78,24 +78,81 @@ namespace RTC
 			return this->innerListener->OnSocketSendSctpPacket(socket, packet);
 		}
 
-		void SocketDeferredListener::OnConnected(const Socket* socket)
+		void SocketDeferredListener::OnSocketConnected(const Socket* socket)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData /*data*/, SocketListener* listener) { listener->OnConnected(socket); },
+			  [socket](CallbackData /*data*/, SocketListener* listener)
+			  { listener->OnSocketConnected(socket); },
 			  std::monostate{});
 		}
 
-		void SocketDeferredListener::OnMessageReceived(const Socket* socket, Message message)
+		void SocketDeferredListener::OnSocketClosed(const Socket* socket)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData /*data*/, SocketListener* listener)
+			  { listener->OnSocketClosed(socket); },
+			  std::monostate{});
+		}
+
+		void SocketDeferredListener::OnSocketConnectionRestarted(const Socket* socket)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData /*data*/, SocketListener* listener)
+			  { listener->OnSocketConnectionRestarted(socket); },
+			  std::monostate{});
+		}
+
+		void SocketDeferredListener::OnSocketError(
+		  const Socket* socket, Types::ErrorKind errorKind, std::string_view message)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData data, SocketListener* listener)
+			  {
+				  Error error = std::get<Error>(std::move(data));
+				  listener->OnSocketError(socket, error.errorKind, error.message);
+			  },
+			  Error{ .errorKind = errorKind, .message = std::string(message) });
+		}
+
+		void SocketDeferredListener::OnSocketAborted(
+		  const Socket* socket, Types::ErrorKind errorKind, std::string_view message)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData data, SocketListener* listener)
+			  {
+				  Error error = std::get<Error>(std::move(data));
+				  listener->OnSocketAborted(socket, error.errorKind, error.message);
+			  },
+			  Error{ .errorKind = errorKind, .message = std::string(message) });
+		}
+
+		void SocketDeferredListener::OnSocketMessageReceived(const Socket* socket, Message message)
 		{
 			MS_TRACE();
 
 			this->deferredCallbacks.emplace_back(
 			  [socket](CallbackData data, SocketListener* listener)
-			  { listener->OnMessageReceived(socket, std::get<Message>(std::move(data))); },
+			  { listener->OnSocketMessageReceived(socket, std::get<Message>(std::move(data))); },
 			  std::move(message));
 		}
 	} // namespace SCTP

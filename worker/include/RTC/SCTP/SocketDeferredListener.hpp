@@ -4,8 +4,10 @@
 #include "common.hpp"
 #include "RTC/SCTP/Message.hpp"
 #include "RTC/SCTP/SocketListener.hpp"
+#include "RTC/SCTP/Types.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -28,12 +30,11 @@ namespace RTC
 			};
 
 		private:
-			// TODO
-			// struct Error
-			// {
-			// 	ErrorKind error;
-			// 	std::string message;
-			// };
+			struct Error
+			{
+				Types::ErrorKind errorKind;
+				std::string message;
+			};
 
 			struct StreamReset
 			{
@@ -43,9 +44,7 @@ namespace RTC
 
 			// Use a pre-sized variant for storage to avoid double heap allocation. This
 			// variant can hold all cases of stored data.
-			// TODO
-			// using CallbackData = std::variant<std::monostate, DcSctpMessage, Error, StreamReset, StreamID>;
-			using CallbackData = std::variant<std::monostate, Message, StreamReset, uint16_t>;
+			using CallbackData = std::variant<std::monostate, Message, Error, StreamReset, uint16_t>;
 
 			using Callback = std::function<void(CallbackData, SocketListener*)>;
 
@@ -61,9 +60,19 @@ namespace RTC
 			/* Pure virtual methods inherited from Socket::Listener. */
 			bool OnSocketSendSctpPacket(const Socket* socket, Packet* packet) override;
 
-			void OnConnected(const Socket* socket) override;
+			void OnSocketConnected(const Socket* socket) override;
 
-			void OnMessageReceived(const Socket* socket, Message message) override;
+			void OnSocketClosed(const Socket* socket) override;
+
+			void OnSocketConnectionRestarted(const Socket* socket) override;
+
+			void OnSocketError(
+			  const Socket* socket, Types::ErrorKind errorKind, std::string_view message) override;
+
+			void OnSocketAborted(
+			  const Socket* socket, Types::ErrorKind errorKind, std::string_view message) override;
+
+			void OnSocketMessageReceived(const Socket* socket, Message message) override;
 
 		private:
 			SocketListener* innerListener{ nullptr };

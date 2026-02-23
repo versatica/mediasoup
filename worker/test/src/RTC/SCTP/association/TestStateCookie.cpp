@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/StateCookie.hpp"
+#include "RTC/SCTP/Types.hpp"
 #include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
@@ -45,7 +46,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer, sizeof(buffer)) == true);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer, sizeof(buffer)) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
 		auto* stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
 
@@ -65,7 +66,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
 		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
 		auto negotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
@@ -98,7 +99,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
 		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
 		negotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
@@ -134,7 +135,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
 		    clonedStateCookie->GetBuffer(), clonedStateCookie->GetLength()) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
 		negotiatedCapabilities = clonedStateCookie->GetNegotiatedCapabilities();
 
@@ -185,7 +186,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer1, sizeof(buffer1)) == false);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer1, sizeof(buffer1)) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::UNKNOWN);
+		  RTC::SCTP::Types::SctpImplementation::UNKNOWN);
 		REQUIRE(!RTC::SCTP::StateCookie::Parse(buffer1, sizeof(buffer1)));
 
 		// Wrong Magic 2.
@@ -223,7 +224,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer2, sizeof(buffer2)) == false);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer2, sizeof(buffer2)) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 		REQUIRE(!RTC::SCTP::StateCookie::Parse(buffer2, sizeof(buffer2)));
 
 		// Buffer too big.
@@ -263,7 +264,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer3, sizeof(buffer3)) == false);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer3, sizeof(buffer3)) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 		REQUIRE(!RTC::SCTP::StateCookie::Parse(buffer3, sizeof(buffer3)));
 	}
 
@@ -308,7 +309,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
 		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
 		const auto retrievedNegotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
@@ -342,7 +343,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
 		    parsedStateCookie->GetBuffer(), parsedStateCookie->GetLength()) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
 		const auto retrievedParsedNegotiatedCapabilities = parsedStateCookie->GetNegotiatedCapabilities();
 
@@ -404,7 +405,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(
 		    stateCookie->GetBuffer(), stateCookie->GetLength()) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::MEDIASOUP);
+		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
 		const auto retrievedNegotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
@@ -446,7 +447,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer1, sizeof(buffer1)) == false);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer1, sizeof(buffer1)) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::USRSCTP);
+		  RTC::SCTP::Types::SctpImplementation::USRSCTP);
 
 		// dcSCTP generated State Cookie.
 		// clang-format off
@@ -469,7 +470,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer2, sizeof(buffer2)) == false);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer2, sizeof(buffer2)) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::DCSCTP);
+		  RTC::SCTP::Types::SctpImplementation::DCSCTP);
 
 		// State Cookie generated by unknown implementation.
 		// clang-format off
@@ -490,7 +491,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer3, sizeof(buffer3)) == false);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer3, sizeof(buffer3)) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::UNKNOWN);
+		  RTC::SCTP::Types::SctpImplementation::UNKNOWN);
 
 		// Too short State Cookie so we don't know.
 		// clang-format off
@@ -504,6 +505,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(RTC::SCTP::StateCookie::IsMediasoupStateCookie(buffer4, sizeof(buffer4)) == false);
 		REQUIRE(
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer4, sizeof(buffer4)) ==
-		  RTC::SCTP::StateCookie::SctpImplementation::UNKNOWN);
+		  RTC::SCTP::Types::SctpImplementation::UNKNOWN);
 	}
 }
