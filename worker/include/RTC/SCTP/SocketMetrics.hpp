@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_SOCKET_METRICS_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/association/StateCookie.hpp"
+#include "RTC/SCTP/StateCookie.hpp"
 
 namespace RTC
 {

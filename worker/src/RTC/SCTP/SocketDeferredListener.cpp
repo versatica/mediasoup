@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::SocketDeferredListener"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/association/SocketDeferredListener.hpp"
+#include "RTC/SCTP/SocketDeferredListener.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -27,6 +27,8 @@ namespace RTC
 		  : innerListener(innerListener)
 		{
 			MS_TRACE();
+
+			this->deferredCallbacks.reserve(8);
 		}
 
 		void SocketDeferredListener::SetReady()
@@ -66,25 +68,35 @@ namespace RTC
 			}
 		}
 
-		void SocketDeferredListener::OnSocketSendSctpPacket(const Socket* socket, Packet* packet) const
+		bool SocketDeferredListener::OnSocketSendSctpPacket(const Socket* socket, Packet* packet)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			// Will not be deferred but called directly.
-			this->innerListener->OnSocketSendSctpPacket(socket, packet);
+			return this->innerListener->OnSocketSendSctpPacket(socket, packet);
 		}
 
-		void SocketDeferredListener::OnConnected()
+		void SocketDeferredListener::OnConnected(const Socket* socket)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  +[](CallbackData /*data*/, SocketListener* callback) { return callback->OnConnected(); },
+			  [socket](CallbackData /*data*/, SocketListener* listener) { listener->OnConnected(socket); },
 			  std::monostate{});
+		}
+
+		void SocketDeferredListener::OnMessageReceived(const Socket* socket, Message message)
+		{
+			MS_TRACE();
+
+			this->deferredCallbacks.emplace_back(
+			  [socket](CallbackData data, SocketListener* listener)
+			  { listener->OnMessageReceived(socket, std::get<Message>(std::move(data))); },
+			  std::move(message));
 		}
 	} // namespace SCTP
 } // namespace RTC

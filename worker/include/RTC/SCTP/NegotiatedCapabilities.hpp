@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_NEGOTIATED_CAPABILITIES_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/association/SocketOptions.hpp"
+#include "RTC/SCTP/SocketOptions.hpp"
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include <variant> // std::variant, std::visit()

@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_TRANSMISSION_CONTROL_BLOCK_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/NegotiatedCapabilities.hpp"
 
 namespace RTC
 {

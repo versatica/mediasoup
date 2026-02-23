@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/NegotiatedCapabilities.hpp"
 #include "RTC/Serializable.hpp"
 #include <string_view>
 

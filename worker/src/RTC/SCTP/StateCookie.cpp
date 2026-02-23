@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::Packet"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/association/StateCookie.hpp"
+#include "RTC/SCTP/StateCookie.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 

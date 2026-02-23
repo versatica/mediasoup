@@ -1,11 +1,11 @@
 #define MS_CLASS "RTC::SCTP::Socket"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/association/Socket.hpp"
+#include "RTC/SCTP/Socket.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
-#include "RTC/SCTP/association/StateCookie.hpp"
+#include "RTC/SCTP/StateCookie.hpp"
 #include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"

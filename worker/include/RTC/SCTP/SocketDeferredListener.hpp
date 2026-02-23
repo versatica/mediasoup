@@ -2,10 +2,10 @@
 #define MS_RTC_SCTP_SOCKET_DEFERRED_LISTENER_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/association/SocketListener.hpp"
+#include "RTC/SCTP/Message.hpp"
+#include "RTC/SCTP/SocketListener.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include <string>
-#include <utility> // std::pair
 #include <variant>
 #include <vector>
 
@@ -45,9 +45,9 @@ namespace RTC
 			// variant can hold all cases of stored data.
 			// TODO
 			// using CallbackData = std::variant<std::monostate, DcSctpMessage, Error, StreamReset, StreamID>;
-			using CallbackData = std::variant<std::monostate, StreamReset, uint16_t>;
+			using CallbackData = std::variant<std::monostate, Message, StreamReset, uint16_t>;
 
-			using Callback = void (*)(CallbackData, SocketListener*);
+			using Callback = std::function<void(CallbackData, SocketListener*)>;
 
 		public:
 			explicit SocketDeferredListener(SocketListener* innerListener);
@@ -59,9 +59,11 @@ namespace RTC
 
 		public:
 			/* Pure virtual methods inherited from Socket::Listener. */
-			void OnSocketSendSctpPacket(const Socket* socket, Packet* packet) const override;
+			bool OnSocketSendSctpPacket(const Socket* socket, Packet* packet) override;
 
-			void OnConnected() override;
+			void OnConnected(const Socket* socket) override;
+
+			void OnMessageReceived(const Socket* socket, Message message) override;
 
 		private:
 			SocketListener* innerListener{ nullptr };

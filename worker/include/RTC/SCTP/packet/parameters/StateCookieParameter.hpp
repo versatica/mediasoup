@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_STATE_COOKIE_PARAMETER_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 
 namespace RTC

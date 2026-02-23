@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
-#include "RTC/SCTP/association/SocketOptions.hpp"
+#include "RTC/SCTP/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/SocketOptions.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"

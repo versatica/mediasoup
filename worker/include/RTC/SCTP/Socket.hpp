@@ -2,12 +2,12 @@
 #define MS_RTC_SCTP_SOCKET_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
-#include "RTC/SCTP/association/SocketDeferredListener.hpp"
-#include "RTC/SCTP/association/SocketListener.hpp"
-#include "RTC/SCTP/association/SocketMetrics.hpp"
-#include "RTC/SCTP/association/SocketOptions.hpp"
-#include "RTC/SCTP/association/TransmissionControlBlock.hpp"
+#include "RTC/SCTP/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/SocketDeferredListener.hpp"
+#include "RTC/SCTP/SocketListener.hpp"
+#include "RTC/SCTP/SocketMetrics.hpp"
+#include "RTC/SCTP/SocketOptions.hpp"
+#include "RTC/SCTP/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"

@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::TransmissionControlBlock"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/association/TransmissionControlBlock.hpp"
+#include "RTC/SCTP/TransmissionControlBlock.hpp"
 #include "Logger.hpp"
 
 namespace RTC

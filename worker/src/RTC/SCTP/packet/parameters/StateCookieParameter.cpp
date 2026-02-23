@@ -4,7 +4,7 @@
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/association/StateCookie.hpp"
+#include "RTC/SCTP/StateCookie.hpp"
 
 namespace RTC
 {

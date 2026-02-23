@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::NegotiatedCapabilities"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/NegotiatedCapabilities.hpp"
 #include "Logger.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
