@@ -147,7 +147,58 @@ This information is ignored except for the REMB messages, which is locally consu
 
 This information is locally consumed to perform sender side bandwidth estimation.
 
-REMB RTCP is generated locally based on the remote bitrate estimation.
+<h2>Why REMB Is Locally Consumed</h2>
+
+<h3>What REMB Does</h3>
+
+<p>
+<strong>Receiver Estimated Maximum Bitrate (REMB)</strong> is an RTCP feedback
+message used in <a href="https://webrtc.org/" target="_blank">WebRTC</a>
+sessions to communicate a receiver’s estimate of available bandwidth to the sender.
+</p>
+
+<p>REMB is:</p>
+<ul>
+  <li>Widely implemented across WebRTC stacks</li>
+  <li>Simple to compute and transmit</li>
+  <li>Coarse-grained (provides aggregate bitrate estimation, not per-packet feedback)</li>
+</ul>
+
+<h3>Why mediasoup Uses REMB Carefully</h3>
+
+<p>
+As a Selective Forwarding Unit (SFU), mediasoup operates with a global
+view of all producers and consumers in a router. Because of this,
+REMB cannot be treated as a direct command from a single receiver.
+</p>
+
+<p>mediasoup does consume REMB, but:</p>
+<ul>
+  <li>It does <strong>not</strong> blindly forward REMB upstream</li>
+  <li>It integrates REMB into its own bandwidth estimation logic</li>
+  <li>It may generate REMB messages toward producers based on aggregated state</li>
+</ul>
+
+<h3>Why This Matters</h3>
+
+<p>This design allows mediasoup to:</p>
+<ul>
+  <li>Prevent low-bandwidth consumers from dominating bitrate decisions</li>
+  <li>Smooth out transient or short-lived network fluctuations</li>
+  <li>Maintain fairness across all participants in a multi-party session</li>
+</ul>
+
+<h3>Important Distinction</h3>
+
+<blockquote>
+REMB is used as <strong>input</strong> to SFU congestion control logic, not as a command.
+</blockquote>
+
+<p>
+By locally consuming REMB and integrating it into centralized congestion control,
+mediasoup ensures stable bitrate adaptation and avoids oscillation in large-scale
+real-time communication environments.
+</p>
 
 ## Mediasoup internal behaviour for each type of RTCP
 
