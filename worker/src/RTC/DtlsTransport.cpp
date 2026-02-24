@@ -124,38 +124,34 @@ namespace RTC
 	thread_local EVP_PKEY* DtlsTransport::privateKey{ nullptr };
 	thread_local SSL_CTX* DtlsTransport::sslCtx{ nullptr };
 	thread_local uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
-	// clang-format off
-	const absl::flat_hash_map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::String2FingerprintAlgorithm =
-	{
-		{ "sha-1",   DtlsTransport::FingerprintAlgorithm::SHA1   },
-		{ "sha-224", DtlsTransport::FingerprintAlgorithm::SHA224 },
-		{ "sha-256", DtlsTransport::FingerprintAlgorithm::SHA256 },
-		{ "sha-384", DtlsTransport::FingerprintAlgorithm::SHA384 },
-		{ "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 }
-	};
-	const absl::flat_hash_map<DtlsTransport::FingerprintAlgorithm, std::string> DtlsTransport::FingerprintAlgorithm2String =
-	{
-		{ DtlsTransport::FingerprintAlgorithm::SHA1,   "sha-1"   },
-		{ DtlsTransport::FingerprintAlgorithm::SHA224, "sha-224" },
-		{ DtlsTransport::FingerprintAlgorithm::SHA256, "sha-256" },
-		{ DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
-		{ DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
-	};
-	const absl::flat_hash_map<std::string, DtlsTransport::Role> DtlsTransport::String2Role =
-	{
+	const absl::flat_hash_map<std::string, DtlsTransport::FingerprintAlgorithm>
+	  DtlsTransport::String2FingerprintAlgorithm = {
+		  { "sha-1",   DtlsTransport::FingerprintAlgorithm::SHA1   },
+		  { "sha-224", DtlsTransport::FingerprintAlgorithm::SHA224 },
+		  { "sha-256", DtlsTransport::FingerprintAlgorithm::SHA256 },
+		  { "sha-384", DtlsTransport::FingerprintAlgorithm::SHA384 },
+		  { "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 }
+  };
+	const absl::flat_hash_map<DtlsTransport::FingerprintAlgorithm, std::string>
+	  DtlsTransport::FingerprintAlgorithm2String = {
+		  { DtlsTransport::FingerprintAlgorithm::SHA1,   "sha-1"   },
+		  { DtlsTransport::FingerprintAlgorithm::SHA224, "sha-224" },
+		  { DtlsTransport::FingerprintAlgorithm::SHA256, "sha-256" },
+		  { DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
+		  { DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
+  };
+	const absl::flat_hash_map<std::string, DtlsTransport::Role> DtlsTransport::String2Role = {
 		{ "auto",   DtlsTransport::Role::AUTO   },
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER }
 	};
 	thread_local std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
-	const std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::SrtpCryptoSuites =
-	{
+	const std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::SrtpCryptoSuites = {
 		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM,        "SRTP_AEAD_AES_256_GCM"  },
 		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM,        "SRTP_AEAD_AES_128_GCM"  },
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
-	// clang-format on
 
 	/* Class methods. */
 

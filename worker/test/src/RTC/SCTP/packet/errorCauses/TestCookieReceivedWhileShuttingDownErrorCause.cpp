@@ -5,7 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][serializable]")
+SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

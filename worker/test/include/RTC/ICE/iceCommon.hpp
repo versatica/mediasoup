@@ -105,7 +105,10 @@ namespace iceCommon
 		  std::any_of(                                                                                    \
 		    packet->GetTransactionId(),                                                                   \
 		    packet->GetTransactionId() + RTC::ICE::StunPacket::TransactionIdLength,                       \
-		    [](uint8_t b) { return b != 0; }));                                                           \
+		    [](uint8_t b)                                                                                 \
+		    {                                                                                             \
+			    return b != 0;                                                                              \
+		    }));                                                                                          \
 		REQUIRE(packet->Validate(/*storeAttributes*/ false));                                             \
 		REQUIRE(                                                                                          \
 		  packet->CheckAuthentication("lalala-fooo-œæ€œæ€", "∫∂ƒ3487345345Ω∑©™ƒ™œ") !=                    \

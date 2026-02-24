@@ -1433,26 +1433,34 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		// Can fit into One-Byte type Extensions.
 		extensions.assign(
-		  { { RTC::RtpHeaderExtensionUri::Type::MID, 1, 1, rtpCommon::DataBuffer },
-		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 14, 16, rtpCommon::DataBuffer } });
+		  {
+		    { RTC::RtpHeaderExtensionUri::Type::MID,           1,  1,  rtpCommon::DataBuffer },
+		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 14, 16, rtpCommon::DataBuffer }
+    });
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasOneByteExtensions());
 
 		// Requires Two-Bytes type Extensions due to id > 14.
 		extensions.assign(
-		  { { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 15, 2, rtpCommon::DataBuffer } });
+		  {
+		    { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 15, 2, rtpCommon::DataBuffer }
+    });
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
 		// Requires Two-Bytes type Extensions due to length 0.
 		extensions.assign(
-		  { { RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, 1, 0, rtpCommon::DataBuffer } });
+		  {
+		    { RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, 1, 0, rtpCommon::DataBuffer }
+    });
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
 		// Requires Two-Bytes type Extensions due to length > 16.
 		extensions.assign(
-		  { { RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET, 1, 17, rtpCommon::DataBuffer } });
+		  {
+		    { RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET, 1, 17, rtpCommon::DataBuffer }
+    });
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());
 	}
@@ -1581,8 +1589,10 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		// Invalid Extension id 0.
 		extensions.assign(
-		  { { RTC::RtpHeaderExtensionUri::Type::MID, 0, 4, d },
-		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 1, 1, d } });
+		  {
+		    { RTC::RtpHeaderExtensionUri::Type::MID,           0, 4, d },
+		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 1, 1, d }
+    });
 
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
@@ -1593,9 +1603,11 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		// Invalid Extension id > 14 in One-Byte.
 		extensions.assign(
-		  { { RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION, 15, 2, d },
-		    { RTC::RtpHeaderExtensionUri::Type::MID, 6, 6, d },
-		    { RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 7, 7, d } });
+		  {
+		    { RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION, 15, 2, d },
+		    { RTC::RtpHeaderExtensionUri::Type::MID,               6,  6, d },
+		    { RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,  7,  7, d }
+    });
 
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
@@ -1604,10 +1616,12 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		// Invalid Extension length 0 in One-Byte.
 		extensions.assign(
-		  { { RTC::RtpHeaderExtensionUri::Type::MID, 3, 0, d },
+		  {
+		    { RTC::RtpHeaderExtensionUri::Type::MID,                    3, 0, d },
 		    { RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, 6, 6, d },
-		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 7, 7, d },
-		    { RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 8, 8, d } });
+		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID,          7, 7, d },
+		    { RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,       8, 8, d }
+    });
 
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
@@ -1616,12 +1630,14 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		// Invalid Extension length > 16 in One-Byte.
 		extensions.assign(
-		  { { RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID, 3, 17, d },
-		    { RTC::RtpHeaderExtensionUri::Type::MID, 6, 6, d },
-		    { RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION, 7, 7, d },
-		    { RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, 8, 8, d },
-		    { RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY, 9, 9, d },
-		    { RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME, 100, 10, d } });
+		  {
+		    { RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID,   3,   17, d },
+		    { RTC::RtpHeaderExtensionUri::Type::MID,                   6,   6,  d },
+		    { RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION,     7,   7,  d },
+		    { RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, 8,   8,  d },
+		    { RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY,         9,   9,  d },
+		    { RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,      100, 10, d }
+    });
 
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions),
@@ -1824,9 +1840,11 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// clang-format on
 
 		extensions.assign(
-		  { { RTC::RtpHeaderExtensionUri::Type::MID, 1, 1, extension1 },
-		    { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 2, 2, extension2 },
-		    { RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01, 3, 3, extension3 } });
+		  {
+		    { RTC::RtpHeaderExtensionUri::Type::MID,                  1, 1, extension1 },
+		    { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,        2, 2, extension2 },
+		    { RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01, 3, 3, extension3 }
+    });
 
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
 

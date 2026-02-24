@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp][serializable]")
+SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

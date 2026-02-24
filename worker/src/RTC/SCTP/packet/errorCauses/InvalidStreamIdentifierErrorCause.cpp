@@ -140,6 +140,13 @@ namespace RTC
 			return softClonedErrorCause;
 		}
 
+		const std::string InvalidStreamIdentifierErrorCause::ContentToString() const
+		{
+			MS_TRACE();
+
+			return "stream:" + std::to_string(GetStreamIdentifier());
+		}
+
 		void InvalidStreamIdentifierErrorCause::SetReserved()
 		{
 			MS_TRACE();

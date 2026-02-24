@@ -8,7 +8,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
+SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 
@@ -272,12 +272,12 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 	SECTION("DataChunk::SetUserData() throws if userDataLength is too big")
 	{
 		auto* chunk =
-		  RTC::SCTP::DataChunk::Factory(sctpCommon::ThrowBuffer, sizeof(sctpCommon::ThrowBuffer));
+		  RTC::SCTP::DataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ sctpCommon::ThrowBuffer,
-		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
 		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
@@ -292,8 +292,8 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ sctpCommon::ThrowBuffer,
-		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
 		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,

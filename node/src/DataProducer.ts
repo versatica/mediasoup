@@ -297,8 +297,6 @@ export class DataProducerImpl<DataProducerAppData extends AppData = AppData>
 
 		const builder = this.#channel.bufferBuilder;
 
-		let dataOffset = 0;
-
 		const subchannelsOffset =
 			FbsDataProducer.SendNotification.createSubchannelsVector(
 				builder,
@@ -309,7 +307,7 @@ export class DataProducerImpl<DataProducerAppData extends AppData = AppData>
 			message = Buffer.from(message);
 		}
 
-		dataOffset = FbsDataProducer.SendNotification.createDataVector(
+		const dataOffset = FbsDataProducer.SendNotification.createDataVector(
 			builder,
 			message
 		);

@@ -95,6 +95,8 @@ namespace RTC
 				return InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength;
 			}
 
+			virtual const std::string ContentToString() const override final;
+
 		private:
 			void SetReserved();
 		};

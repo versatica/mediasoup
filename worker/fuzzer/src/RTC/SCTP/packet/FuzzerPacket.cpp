@@ -36,7 +36,7 @@ void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetChecksum();
 	packet->ValidateCRC32cChecksum();
 	packet->SetChecksum(999999);
-	packet->SetCRC32cChecksum();
+	packet->WriteCRC32cChecksum();
 	packet->ValidateCRC32cChecksum();
 	packet->HasChunks();
 	packet->GetChunksCount();
@@ -58,7 +58,7 @@ void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 	clonedPacket->GetChecksum();
 	clonedPacket->ValidateCRC32cChecksum();
 	clonedPacket->SetChecksum(999999);
-	clonedPacket->SetCRC32cChecksum();
+	clonedPacket->WriteCRC32cChecksum();
 	clonedPacket->ValidateCRC32cChecksum();
 	clonedPacket->HasChunks();
 	clonedPacket->GetChunksCount();

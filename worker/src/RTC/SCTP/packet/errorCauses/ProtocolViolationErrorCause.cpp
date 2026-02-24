@@ -116,6 +116,13 @@ namespace RTC
 			SetVariableLengthValue(info, infoLength);
 		}
 
+		void ProtocolViolationErrorCause::SetAdditionalInformation(const std::string& info)
+		{
+			MS_TRACE();
+
+			SetVariableLengthValue(reinterpret_cast<const uint8_t*>(info.c_str()), info.size());
+		}
+
 		ProtocolViolationErrorCause* ProtocolViolationErrorCause::SoftClone(const uint8_t* buffer) const
 		{
 			MS_TRACE();
@@ -126,6 +133,24 @@ namespace RTC
 			SoftCloneInto(softClonedErrorCause);
 
 			return softClonedErrorCause;
+		}
+
+		const std::string ProtocolViolationErrorCause::ContentToString() const
+		{
+			MS_TRACE();
+
+			if (HasAdditionalInformation())
+			{
+				return "info:[" +
+				       std::string(
+				         reinterpret_cast<const char*>(GetAdditionalInformation()),
+				         GetAdditionalInformationLength()) +
+				       "]";
+			}
+			else
+			{
+				return "";
+			}
 		}
 	} // namespace SCTP
 } // namespace RTC

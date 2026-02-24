@@ -881,7 +881,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_WARN_TAG(sctp, "data to be sent is not a valid SCTP packet");
+			MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse sent SCTP data");
 		}
 #endif
 
@@ -1458,7 +1458,7 @@ namespace RTC
 
 		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
 
-		if (!packet)
+		if (packet)
 		{
 			packet->Dump();
 
@@ -1466,7 +1466,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_WARN_TAG(sctp, "received data is not a valid SCTP packet");
+			MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse received SCTP data");
 		}
 #endif
 

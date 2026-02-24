@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
+SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 

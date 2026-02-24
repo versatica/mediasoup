@@ -9,7 +9,7 @@
 #include <cstring> // std::memset()
 
 // NOTE: Simplified since it's similar to InitChunk.
-SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
+SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 

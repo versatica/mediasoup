@@ -163,12 +163,39 @@ namespace RTC
 
 			void SetMessageIdentifier(uint32_t value);
 
-			uint32_t GetPayloadProtocolIdentifierOrFragmentSequenceNumber() const
+			uint32_t GetPayloadProtocolIdentifier() const
 			{
-				return Utils::Byte::Get4Bytes(GetBuffer(), 16);
+				if (GetB())
+				{
+					return Utils::Byte::Get4Bytes(GetBuffer(), 16);
+				}
+				else
+				{
+					return 0;
+				}
 			}
 
-			void SetPayloadProtocolIdentifierOrFragmentSequenceNumber(uint32_t value);
+			/**
+			 * @throw MediaSoupError - If the B bit is not set.
+			 */
+			void SetPayloadProtocolIdentifier(uint32_t value);
+
+			uint32_t GetFragmentSequenceNumber() const
+			{
+				if (!GetB())
+				{
+					return Utils::Byte::Get4Bytes(GetBuffer(), 16);
+				}
+				else
+				{
+					return 0;
+				}
+			}
+
+			/**
+			 * @throw MediaSoupError - If the B bit is set.
+			 */
+			void SetFragmentSequenceNumber(uint32_t value);
 
 			bool HasUserData() const
 			{

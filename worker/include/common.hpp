@@ -1,13 +1,14 @@
 #ifndef MS_COMMON_HPP
 #define MS_COMMON_HPP
 
-#include <algorithm>  // IWYU pragma: export  std::transform(), std::find(), std::min(), std::max()
+#include <algorithm> // IWYU pragma: export  std::transform(), std::find(), std::min(), std::max(), std::copy()
 #include <cinttypes>  // IWYU pragma: export  PRIu64, etc
 #include <cstddef>    // IWYU pragma: export  size_t
 #include <cstdint>    // IWYU pragma: export  uint8_t, etc
 #include <functional> // IWYU pragma: export  std::function
 #include <memory>     // IWYU pragma: export  std::addressof(), std::unique_ptr(), etc
 #include <optional>   // IWYU pragma: export
+#include <utility>    // std::pair, std::move(), std::piecewise_construct
 #ifdef _WIN32
 #include <winsock2.h>
 // Avoid uv/win.h: error C2628 'intptr_t' followed by 'int' is illegal.

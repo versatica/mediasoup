@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
+SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][parameter]")
 {
 	sctpCommon::ResetBuffers();
 

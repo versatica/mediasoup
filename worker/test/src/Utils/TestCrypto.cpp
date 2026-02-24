@@ -1,6 +1,8 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <limits> // std::numeric_limits()
+#include <set>
 
 SCENARIO("Utils::Crypto", "[utils][crypto]")
 {
@@ -72,5 +74,31 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		REQUIRE(Utils::Crypto::GetCRC32c(data32Incrementing, sizeof(data32Incrementing)) == 0x4E79DD46);
 		REQUIRE(Utils::Crypto::GetCRC32c(data32Decrementing, sizeof(data32Decrementing)) == 0x5CDB3F11);
 		REQUIRE(Utils::Crypto::GetCRC32c(dataSCSICommandPDU, sizeof(dataSCSICommandPDU)) == 0x563A96D9);
+	}
+}
+
+SCENARIO("Utils::Crypto::GetRandomUInt()", "[utils][crypto]")
+{
+	std::set<uint32_t> randomUint32Numbers;
+	std::set<uint32_t> randomUint64Numbers;
+
+	for (size_t i = 0; i < 200; ++i)
+	{
+		auto randomNumber =
+		  Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max());
+
+		REQUIRE(randomUint32Numbers.find(randomNumber) == randomUint32Numbers.end());
+
+		randomUint32Numbers.insert(randomNumber);
+	}
+
+	for (size_t i = 0; i < 200; ++i)
+	{
+		auto randomNumber =
+		  Utils::Crypto::GetRandomUInt<uint64_t>(0, std::numeric_limits<uint64_t>::max());
+
+		REQUIRE(randomUint64Numbers.find(randomNumber) == randomUint64Numbers.end());
+
+		randomUint64Numbers.insert(randomNumber);
 	}
 }

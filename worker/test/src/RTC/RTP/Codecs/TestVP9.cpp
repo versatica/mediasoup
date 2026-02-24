@@ -134,36 +134,36 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		const uint16_t start                                                     = MaxPictureId - 20;
 		const std::vector<std::tuple<uint16_t, uint16_t, int16_t, bool>> packets = {
 			// targetTemporalLayer=0
-			{ start, 0, 0, true },
-			{ start, 1, -1, false },
-			{ start + 1, 0, -1, true },
-			{ start + 1, 1, -1, false },
-			{ start + 2, 0, -1, true },
-			{ start + 2, 1, -1, false },
+			{ start,      0, 0,  true  },
+			{ start,      1, -1, false },
+			{ start + 1,  0, -1, true  },
+			{ start + 1,  1, -1, false },
+			{ start + 2,  0, -1, true  },
+			{ start + 2,  1, -1, false },
 			// targetTemporalLayer=1
-			{ start + 10, 0, 1, true },
-			{ start + 10, 1, -1, true },
-			{ start + 11, 0, -1, true },
-			{ start + 11, 1, -1, true },
-			{ start + 3, 0, -1, true }, // old packet
-			{ start + 3, 1, -1, false },
-			{ start + 12, 0, -1, true },
-			{ start + 12, 1, -1, true },
+			{ start + 10, 0, 1,  true  },
+			{ start + 10, 1, -1, true  },
+			{ start + 11, 0, -1, true  },
+			{ start + 11, 1, -1, true  },
+			{ start + 3,  0, -1, true  }, // old packet
+			{ start + 3,  1, -1, false },
+			{ start + 12, 0, -1, true  },
+			{ start + 12, 1, -1, true  },
 			// targetTemporalLayer=0
-			{ start + 14, 0, 0, true },
+			{ start + 14, 0, 0,  true  },
 			{ start + 14, 1, -1, false },
-			{ start + 13, 0, -1, true }, // old packet
-			{ start + 13, 1, -1, true },
+			{ start + 13, 0, -1, true  }, // old packet
+			{ start + 13, 1, -1, true  },
 			// targetTemporalLayer=1
-			{ start + 15, 0, 1, true },
-			{ start + 15, 1, -1, true },
+			{ start + 15, 0, 1,  true  },
+			{ start + 15, 1, -1, true  },
 			// targetTemporalLayer=0
-			{ 0, 0, 0, true },
-			{ 0, 1, -1, false },
-			{ 1, 0, -1, true },
-			{ 1, 1, -1, false },
-			{ start + 16, 0, -1, true }, // old packet
-			{ start + 16, 1, -1, true },
+			{ 0,          0, 0,  true  },
+			{ 0,          1, -1, false },
+			{ 1,          0, -1, true  },
+			{ 1,          1, -1, false },
+			{ start + 16, 0, -1, true  }, // old packet
+			{ start + 16, 1, -1, true  },
 		};
 
 		for (const auto& packet : packets)

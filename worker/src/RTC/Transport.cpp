@@ -733,7 +733,10 @@ namespace RTC
 						    return std::any_of(
 						      codec.rtcpFeedback.begin(),
 						      codec.rtcpFeedback.end(),
-						      [](const RTC::RtcpFeedback& fb) { return fb.type == "transport-cc"; });
+						      [](const RTC::RtcpFeedback& fb)
+						      {
+							      return fb.type == "transport-cc";
+						      });
 					    }))
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
@@ -755,7 +758,9 @@ namespace RTC
 						                                                 codec.rtcpFeedback.begin(),
 						                                                 codec.rtcpFeedback.end(),
 						                                                 [](const RTC::RtcpFeedback& fb)
-						                                                 { return fb.type == "goog-remb"; });
+						                                                 {
+							                                                 return fb.type == "goog-remb";
+						                                                 });
 					                                               }))
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
@@ -885,7 +890,10 @@ namespace RTC
 						    return std::any_of(
 						      codec.rtcpFeedback.begin(),
 						      codec.rtcpFeedback.end(),
-						      [](const RTC::RtcpFeedback& fb) { return fb.type == "transport-cc"; });
+						      [](const RTC::RtcpFeedback& fb)
+						      {
+							      return fb.type == "transport-cc";
+						      });
 					    }))
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
@@ -909,7 +917,10 @@ namespace RTC
 						    return std::any_of(
 						      codec.rtcpFeedback.begin(),
 						      codec.rtcpFeedback.end(),
-						      [](const RTC::RtcpFeedback& fb) { return fb.type == "goog-remb"; });
+						      [](const RTC::RtcpFeedback& fb)
+						      {
+							      return fb.type == "goog-remb";
+						      });
 					    }))
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
@@ -967,7 +978,10 @@ namespace RTC
 					    return std::any_of(
 					      codec.rtcpFeedback.begin(),
 					      codec.rtcpFeedback.end(),
-					      [](const RTC::RtcpFeedback& fb) { return fb.type == "transport-cc"; });
+					      [](const RTC::RtcpFeedback& fb)
+					      {
+						      return fb.type == "transport-cc";
+					      });
 				    }))
 				{
 					MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");

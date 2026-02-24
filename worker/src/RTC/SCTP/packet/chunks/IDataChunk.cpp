@@ -52,7 +52,8 @@ namespace RTC
 			chunk->SetStreamIdentifier(0);
 			chunk->SetReserved();
 			chunk->SetMessageIdentifier(0);
-			chunk->SetPayloadProtocolIdentifierOrFragmentSequenceNumber(0);
+			// NOTE: BitB is not set so we must set FSN to 0 rather than setting PPID.
+			chunk->SetFragmentSequenceNumber(0);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum IDataChunk length.
@@ -111,10 +112,18 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  tsn: %" PRIu32, GetTsn());
 			MS_DUMP_CLEAN(indentation, "  stream identifier: %" PRIu16, GetStreamIdentifier());
 			MS_DUMP_CLEAN(indentation, "  message identifier: %" PRIu32, GetMessageIdentifier());
-			MS_DUMP_CLEAN(
-			  indentation,
-			  "  payload protocol identifier / fragment sequence number: %" PRIu32,
-			  GetPayloadProtocolIdentifierOrFragmentSequenceNumber());
+			if (GetB())
+			{
+				MS_DUMP_CLEAN(
+				  indentation,
+				  "  payload protocol identifier (PPID): %" PRIu32,
+				  GetPayloadProtocolIdentifier());
+			}
+			else
+			{
+				MS_DUMP_CLEAN(
+				  indentation, "  fragment sequence number (FSN): %" PRIu32, GetFragmentSequenceNumber());
+			}
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  user data length: %" PRIu16 " (has user data: %s)",
@@ -184,9 +193,26 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 12, value);
 		}
 
-		void IDataChunk::SetPayloadProtocolIdentifierOrFragmentSequenceNumber(uint32_t value)
+		void IDataChunk::SetPayloadProtocolIdentifier(uint32_t value)
 		{
 			MS_TRACE();
+
+			if (!GetB())
+			{
+				MS_THROW_ERROR("cannot set payload protocol identifier (PPID) if bit B is not set");
+			}
+
+			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);
+		}
+
+		void IDataChunk::SetFragmentSequenceNumber(uint32_t value)
+		{
+			MS_TRACE();
+
+			if (GetB())
+			{
+				MS_THROW_ERROR("cannot set payload protocol identifier (PPID) if bit B is set");
+			}
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);
 		}

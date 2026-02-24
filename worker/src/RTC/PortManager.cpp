@@ -6,8 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <tuple>   // std:make_tuple()
-#include <utility> // std::piecewise_construct
+#include <tuple> // std:make_tuple()
 
 /* Static methods for UV callbacks. */
 

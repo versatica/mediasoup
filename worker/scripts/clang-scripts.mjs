@@ -260,7 +260,8 @@ function checkClangToolVersion(clangToolBinary, requiredVersion) {
 		}
 	} catch (error) {
 		throw new Error(
-			`checkClangToolVersion() | failed to check ${clangToolBinary} version: ${error.message}`
+			`checkClangToolVersion() | failed to check ${clangToolBinary} version: ${error.message}`,
+			{ cause: error }
 		);
 	}
 }

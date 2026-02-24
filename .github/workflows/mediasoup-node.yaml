@@ -117,8 +117,8 @@ jobs:
           # to build.
           ASAN_OPTIONS: 'detect_leaks=0 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1'
 
-      - name: npm run worker:prebuild-name
-        run: npm run worker:prebuild-name
+      - name: npm audit --omit dev
+        run: npm audit --omit dev
 
       - if: ${{ matrix.build-type == 'Release' }}
         name: npm run worker:prebuild
@@ -130,3 +130,6 @@ jobs:
       - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build-type != 'Debug' }}
         name: npm run test:node
         run: npm run test:node
+
+      - name: npm run worker:prebuild-name
+        run: npm run worker:prebuild-name

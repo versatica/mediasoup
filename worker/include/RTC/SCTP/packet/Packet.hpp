@@ -223,7 +223,7 @@ namespace RTC
 			 * Calculate CRC32C value of the whole Packet and insert it into the
 			 * Checksum field.
 			 */
-			void SetCRC32cChecksum();
+			void WriteCRC32cChecksum();
 
 			/**
 			 * Validate CRC32C value in the Checksum field.

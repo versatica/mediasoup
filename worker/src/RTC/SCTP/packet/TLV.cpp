@@ -103,10 +103,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			MS_ASSERT(value != nullptr || valueLength == 0, "value cannot be nullptr if valueLength is > 0");
+
 			// NOTE: This can throw.
 			SetVariableLengthValueLength(valueLength);
 
-			// Copy the given value into the buffer.
 			if (value)
 			{
 				std::memmove(GetVariableLengthValuePointer(), value, valueLength);

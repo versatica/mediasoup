@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
+SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 
@@ -17,10 +17,10 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		{
 			// Code:13 (PROTOCOL_VIOLATION), Length: 10
 			0x00, 0x0D, 0x00, 0x0A,
-			// Additional Information: 0x1234567890AB
-			0x12, 0x34, 0x56, 0x78,
+			// Additional Information: "error1"
+			0x65, 0x72, 0x72, 0x6F,
 			// 2 bytes of padding.
-			0x90, 0xAB, 0x00, 0x00,
+			0x72, 0x31, 0x00, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC,
@@ -39,12 +39,18 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 
 		REQUIRE(errorCause->HasAdditionalInformation() == true);
 		REQUIRE(errorCause->GetAdditionalInformationLength() == 6);
-		REQUIRE(errorCause->GetAdditionalInformation()[0] == 0x12);
-		REQUIRE(errorCause->GetAdditionalInformation()[1] == 0x34);
-		REQUIRE(errorCause->GetAdditionalInformation()[2] == 0x56);
-		REQUIRE(errorCause->GetAdditionalInformation()[3] == 0x78);
-		REQUIRE(errorCause->GetAdditionalInformation()[4] == 0x90);
-		REQUIRE(errorCause->GetAdditionalInformation()[5] == 0xAB);
+		REQUIRE(errorCause->GetAdditionalInformation()[0] == 0x65);
+		REQUIRE(errorCause->GetAdditionalInformation()[1] == 0x72);
+		REQUIRE(errorCause->GetAdditionalInformation()[2] == 0x72);
+		REQUIRE(errorCause->GetAdditionalInformation()[3] == 0x6F);
+		REQUIRE(errorCause->GetAdditionalInformation()[4] == 0x72);
+		REQUIRE(errorCause->GetAdditionalInformation()[5] == 0x31);
+
+		std::string additionalInfo(
+		  reinterpret_cast<const char*>(errorCause->GetAdditionalInformation()),
+		  errorCause->GetAdditionalInformationLength());
+
+		REQUIRE(additionalInfo == "error1");
 		// These should be padding.
 		REQUIRE(errorCause->GetAdditionalInformation()[6] == 0x00);
 		REQUIRE(errorCause->GetAdditionalInformation()[7] == 0x00);
@@ -65,12 +71,18 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 
 		REQUIRE(errorCause->HasAdditionalInformation() == true);
 		REQUIRE(errorCause->GetAdditionalInformationLength() == 6);
-		REQUIRE(errorCause->GetAdditionalInformation()[0] == 0x12);
-		REQUIRE(errorCause->GetAdditionalInformation()[1] == 0x34);
-		REQUIRE(errorCause->GetAdditionalInformation()[2] == 0x56);
-		REQUIRE(errorCause->GetAdditionalInformation()[3] == 0x78);
-		REQUIRE(errorCause->GetAdditionalInformation()[4] == 0x90);
-		REQUIRE(errorCause->GetAdditionalInformation()[5] == 0xAB);
+		REQUIRE(errorCause->GetAdditionalInformation()[0] == 0x65);
+		REQUIRE(errorCause->GetAdditionalInformation()[1] == 0x72);
+		REQUIRE(errorCause->GetAdditionalInformation()[2] == 0x72);
+		REQUIRE(errorCause->GetAdditionalInformation()[3] == 0x6F);
+		REQUIRE(errorCause->GetAdditionalInformation()[4] == 0x72);
+		REQUIRE(errorCause->GetAdditionalInformation()[5] == 0x31);
+
+		additionalInfo = std::string(
+		  reinterpret_cast<const char*>(errorCause->GetAdditionalInformation()),
+		  errorCause->GetAdditionalInformationLength());
+
+		REQUIRE(additionalInfo == "error1");
 		// These should be padding.
 		REQUIRE(errorCause->GetAdditionalInformation()[6] == 0x00);
 		REQUIRE(errorCause->GetAdditionalInformation()[7] == 0x00);
@@ -94,12 +106,18 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 
 		REQUIRE(clonedErrorCause->HasAdditionalInformation() == true);
 		REQUIRE(clonedErrorCause->GetAdditionalInformationLength() == 6);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[0] == 0x12);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[1] == 0x34);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[2] == 0x56);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[3] == 0x78);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[4] == 0x90);
-		REQUIRE(clonedErrorCause->GetAdditionalInformation()[5] == 0xAB);
+		REQUIRE(clonedErrorCause->GetAdditionalInformation()[0] == 0x65);
+		REQUIRE(clonedErrorCause->GetAdditionalInformation()[1] == 0x72);
+		REQUIRE(clonedErrorCause->GetAdditionalInformation()[2] == 0x72);
+		REQUIRE(clonedErrorCause->GetAdditionalInformation()[3] == 0x6F);
+		REQUIRE(clonedErrorCause->GetAdditionalInformation()[4] == 0x72);
+		REQUIRE(clonedErrorCause->GetAdditionalInformation()[5] == 0x31);
+
+		additionalInfo = std::string(
+		  reinterpret_cast<const char*>(clonedErrorCause->GetAdditionalInformation()),
+		  clonedErrorCause->GetAdditionalInformationLength());
+
+		REQUIRE(additionalInfo == "error1");
 		// These should be padding.
 		REQUIRE(clonedErrorCause->GetAdditionalInformation()[6] == 0x00);
 		REQUIRE(clonedErrorCause->GetAdditionalInformation()[7] == 0x00);
@@ -168,7 +186,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		REQUIRE(errorCause->GetAdditionalInformationLength() == 0);
 
 		// 6 bytes + 2 bytes of padding.
-		errorCause->SetAdditionalInformation(sctpCommon::DataBuffer, 6);
+		errorCause->SetAdditionalInformation("iñaki");
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
@@ -180,12 +198,12 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 
 		REQUIRE(errorCause->HasAdditionalInformation() == true);
 		REQUIRE(errorCause->GetAdditionalInformationLength() == 6);
-		REQUIRE(errorCause->GetAdditionalInformation()[0] == 0x00);
-		REQUIRE(errorCause->GetAdditionalInformation()[1] == 0x01);
-		REQUIRE(errorCause->GetAdditionalInformation()[2] == 0x02);
-		REQUIRE(errorCause->GetAdditionalInformation()[3] == 0x03);
-		REQUIRE(errorCause->GetAdditionalInformation()[4] == 0x04);
-		REQUIRE(errorCause->GetAdditionalInformation()[5] == 0x05);
+
+		std::string additionalInfo(
+		  reinterpret_cast<const char*>(errorCause->GetAdditionalInformation()),
+		  errorCause->GetAdditionalInformationLength());
+
+		REQUIRE(additionalInfo == "iñaki");
 		// These should be padding.
 		REQUIRE(errorCause->GetAdditionalInformation()[6] == 0x00);
 		REQUIRE(errorCause->GetAdditionalInformation()[7] == 0x00);
@@ -207,12 +225,13 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 
 		REQUIRE(parsedErrorCause->HasAdditionalInformation() == true);
 		REQUIRE(parsedErrorCause->GetAdditionalInformationLength() == 6);
-		REQUIRE(parsedErrorCause->GetAdditionalInformation()[0] == 0x00);
-		REQUIRE(parsedErrorCause->GetAdditionalInformation()[1] == 0x01);
-		REQUIRE(parsedErrorCause->GetAdditionalInformation()[2] == 0x02);
-		REQUIRE(parsedErrorCause->GetAdditionalInformation()[3] == 0x03);
-		REQUIRE(parsedErrorCause->GetAdditionalInformation()[4] == 0x04);
-		REQUIRE(parsedErrorCause->GetAdditionalInformation()[5] == 0x05);
+
+		additionalInfo = std::string(
+		  reinterpret_cast<const char*>(parsedErrorCause->GetAdditionalInformation()),
+		  parsedErrorCause->GetAdditionalInformationLength());
+
+		REQUIRE(additionalInfo == "iñaki");
+
 		// These should be padding.
 		REQUIRE(parsedErrorCause->GetAdditionalInformation()[6] == 0x00);
 		REQUIRE(parsedErrorCause->GetAdditionalInformation()[7] == 0x00);

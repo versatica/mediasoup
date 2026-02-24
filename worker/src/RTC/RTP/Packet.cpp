@@ -154,6 +154,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<RTP::Packet>");
+
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(indentation, "  sequence number: %" PRIu16, GetSequenceNumber());
 			MS_DUMP_CLEAN(indentation, "  timestamp: %" PRIu32, GetTimestamp());

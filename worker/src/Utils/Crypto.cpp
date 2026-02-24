@@ -185,7 +185,10 @@ namespace Utils
 
 		int ret;
 
-		OSSL_PARAM sha1[] = { { "digest", OSSL_PARAM_UTF8_STRING, (void*)"sha1", 4, 0 }, OSSL_PARAM_END };
+		OSSL_PARAM sha1[] = {
+			{ "digest", OSSL_PARAM_UTF8_STRING, (void*)"sha1", 4, 0 },
+      OSSL_PARAM_END
+		};
 
 		ret =
 		  EVP_MAC_init(Crypto::hmacSha1Ctx, reinterpret_cast<const unsigned char*>(key), keyLen, sha1);

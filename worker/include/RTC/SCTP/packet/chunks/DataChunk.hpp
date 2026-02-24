@@ -59,7 +59,7 @@ namespace RTC
 		 *   range is 0 to 65535. When a user message is fragmented by SCTP for
 		 *   transport, the same Stream Sequence Number MUST be carried in each of
 		 *   the fragments of the message.
-		 * - Payload Protocol Identifier (32 bits): This value represents an
+		 * - Payload Protocol Identifier (PPID) (32 bits): This value represents an
 		 *   application (or upper layer) specified protocol identifier.
 		 * - User Data (variable length): This is the payload user data. The
 		 *   implementation MUST pad the end of the data to a 4-byte boundary with

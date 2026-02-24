@@ -87,6 +87,19 @@ namespace RTC
 				  Utils::Byte::Get1Byte(GetVariableLengthValuePointer(), idx));
 			}
 
+			bool IncludesChunkType(Chunk::ChunkType chunkType) const
+			{
+				for (size_t idx{ 0 }; idx < GetNumberOfChunkTypes(); ++idx)
+				{
+					if (chunkType == GetChunkTypeAt(idx))
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
 			void AddChunkType(Chunk::ChunkType chunkType);
 
 		protected:

@@ -129,5 +129,23 @@ namespace RTC
 
 			return softClonedErrorCause;
 		}
+
+		const std::string UserInitiatedAbortErrorCause::ContentToString() const
+		{
+			MS_TRACE();
+
+			if (HasUpperLayerAbortReason())
+			{
+				return "reason:[" +
+				       std::string(
+				         reinterpret_cast<const char*>(GetUpperLayerAbortReason()),
+				         GetUpperLayerAbortReasonLength()) +
+				       "]";
+			}
+			else
+			{
+				return "";
+			}
+		}
 	} // namespace SCTP
 } // namespace RTC

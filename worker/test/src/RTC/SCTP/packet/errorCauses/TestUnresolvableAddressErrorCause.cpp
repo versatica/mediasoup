@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Unresolvable Address Error Cause (5)", "[sctp][serializable]")
+SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

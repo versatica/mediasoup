@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
+SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 {
 	sctpCommon::ResetBuffers();
 
