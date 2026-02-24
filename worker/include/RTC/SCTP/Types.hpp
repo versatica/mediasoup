@@ -11,6 +11,59 @@ namespace RTC
 		namespace Types
 		{
 			/**
+			 * Publicly exposed SCTP socket state.
+			 */
+			enum class SocketState
+			{
+				/**
+				 * The socket is closed.
+				 */
+				CLOSED,
+				/**
+				 * The Socket has initiated a connection, which is not yet established.
+				 *
+				 * @remarks
+				 * - For incoming connections and for reconnections when the Socket is
+				 *   already connected, the Socket will not transition to this state.
+				 */
+				CONNECTING,
+				/**
+				 * The Socket is connected and the connection is established.
+				 */
+				CONNECTED,
+				/**
+				 * The Socket is shutting down, and the connection is not yet closed.
+				 */
+				SHUTTING_DOWN,
+			};
+
+			constexpr std::string_view SocketStateToString(SocketState socketState)
+			{
+				switch (socketState)
+				{
+					case SocketState::CLOSED:
+					{
+						return "Closed";
+					}
+
+					case SocketState::CONNECTING:
+					{
+						return "Connecting";
+					}
+
+					case SocketState::CONNECTED:
+					{
+						return "Connected";
+					}
+
+					case SocketState::SHUTTING_DOWN:
+					{
+						return "ShuttingDown";
+					}
+				}
+			}
+
+			/**
 			 * Kinds of errors that are exposed in the Socket API.
 			 */
 			enum class ErrorKind
@@ -57,9 +110,9 @@ namespace RTC
 				UnsupportedOperation,
 			};
 
-			constexpr std::string_view ErrorKindToString(ErrorKind error)
+			constexpr std::string_view ErrorKindToString(ErrorKind errorKind)
 			{
-				switch (error)
+				switch (errorKind)
 				{
 					case ErrorKind::NoError:
 					{

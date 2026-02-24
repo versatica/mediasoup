@@ -38,9 +38,10 @@ namespace RTC
 		{
 		public:
 			/**
-			 * SCTP association state.
+			 * Internal SCTP association state. This is different from the public SCTP
+			 * Socket state (`SCTP::Types::SocketState`).
 			 */
-			enum class State
+			enum class AssociationState
 			{
 				CLOSED,
 				COOKIE_WAIT,
@@ -53,14 +54,64 @@ namespace RTC
 				SHUTDOWN_ACK_SENT,
 			};
 
+			static constexpr std::string_view AssociationStateToString(AssociationState associationState)
+			{
+				// NOTE: We cannot use MS_TRACE() here because clang in Linux will
+				// complain about "read of non-constexpr variable 'configuration' is not
+				// allowed in a constant expression".
+
+				switch (associationState)
+				{
+					case Socket::AssociationState::CLOSED:
+					{
+						return "CLOSED";
+					}
+
+					case Socket::AssociationState::COOKIE_WAIT:
+					{
+						return "COOKIE_WAIT";
+					}
+
+					case Socket::AssociationState::COOKIE_ECHOED:
+					{
+						return "COOKIE_ECHOED";
+					}
+
+					case Socket::AssociationState::ESTABLISHED:
+					{
+						return "ESTABLISHED";
+					}
+
+					case Socket::AssociationState::SHUTDOWN_PENDING:
+					{
+						return "SHUTDOWN_PENDING";
+					}
+
+					case Socket::AssociationState::SHUTDOWN_SENT:
+					{
+						return "SHUTDOWN_SENT";
+					}
+
+					case Socket::AssociationState::SHUTDOWN_RECEIVED:
+					{
+						return "SHUTDOWN_RECEIVED";
+					}
+
+					case Socket::AssociationState::SHUTDOWN_ACK_SENT:
+					{
+						return "SHUTDOWN_ACK_SENT";
+					}
+				}
+			}
+
 			/**
 			 * Struct holding local verification tag and initial TSN between having
 			 * sent the INIT Chunk until the connection is established (there is no
 			 * TCB in between).
 			 *
 			 * @remarks
-			 * This is how dcSCTP does, despite RFC 9260 states that the TCB should
-			 * also be created when an INIT Chunk is sent.
+			 * - This is how dcSCTP does, despite RFC 9260 states that the TCB should
+			 *   also be created when an INIT Chunk is sent.
 			 */
 			struct PreTransmissionControlBlock
 			{
@@ -69,21 +120,20 @@ namespace RTC
 			};
 
 		public:
-			static constexpr std::string_view StateToString(State state);
-
-		public:
 			explicit Socket(SocketOptions options, SocketListener* listener);
 
-			~Socket();
+			~Socket() override;
 
 			void Dump(int indentation = 0) const;
+
+			Types::SocketState GetState() const;
 
 			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
 			 * Chunk.
 			 *
 			 * @remarks
-			 * The Socket must be in Closed state.
+			 * - The SCTP association must be in Closed state.
 			 */
 			void Connect();
 
@@ -93,7 +143,7 @@ namespace RTC
 			void ReceivePacket(const Packet* receivedPacket);
 
 		private:
-			void SetState(State state, const std::string& reason);
+			void SetAssociationState(AssociationState associationState, const std::string& reason);
 
 			void AddCapabilitiesParametersToInitOrInitAckChunk(Chunk* chunk) const;
 
@@ -119,8 +169,8 @@ namespace RTC
 			 * negotiated or not.
 			 *
 			 * @remarks
-			 * This method does not delete the given `packet`. The caller must do it
-			 * after invoking this method.
+			 * - This method does not delete the given `packet`. The caller must do it
+			 *   after invoking this method.
 			 */
 			void SendPacket(Packet* packet, std::optional<bool> writeChecksum = std::nullopt);
 
@@ -153,11 +203,11 @@ namespace RTC
 
 			void OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& stop);
 
-			template<typename... States>
-			void AssertState(States... expectedStates) const;
+			template<typename... AssociationStates>
+			void AssertAssociationState(AssociationStates... expectedAssociationStates) const;
 
-			template<typename... States>
-			void AssertNotState(States... unexpectedStates) const;
+			template<typename... AssociationStates>
+			void AssertNotAssociatonState(AssociationStates... unexpectedAssociationStates) const;
 
 			void AssertHasTcb() const;
 
@@ -172,7 +222,7 @@ namespace RTC
 			// inherits from SocketListener.
 			SocketDeferredListener listener;
 			// SCTP association state.
-			State state{ State::CLOSED };
+			AssociationState associationState{ AssociationState::CLOSED };
 			// Metrics.
 			SocketMetrics metrics{};
 			// To keep settings between sending of INIT Chunk and establishment of

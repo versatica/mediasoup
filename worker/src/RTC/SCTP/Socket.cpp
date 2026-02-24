@@ -24,58 +24,6 @@ namespace RTC
 
 		thread_local static uint8_t FactoryBuffer[RTC::Consts::MaxSafeMtuSizeForSctp];
 
-		/* Class methods. */
-
-		constexpr std::string_view Socket::StateToString(Socket::State state)
-		{
-			// NOTE: We cannot use MS_TRACE() here because clang in Linux will
-			// complain about "read of non-constexpr variable 'configuration' is not
-			// allowed in a constant expression".
-
-			switch (state)
-			{
-				case Socket::State::CLOSED:
-				{
-					return "CLOSED";
-				}
-
-				case Socket::State::COOKIE_WAIT:
-				{
-					return "COOKIE_WAIT";
-				}
-
-				case Socket::State::COOKIE_ECHOED:
-				{
-					return "COOKIE_ECHOED";
-				}
-
-				case Socket::State::ESTABLISHED:
-				{
-					return "ESTABLISHED";
-				}
-
-				case Socket::State::SHUTDOWN_PENDING:
-				{
-					return "SHUTDOWN_PENDING";
-				}
-
-				case Socket::State::SHUTDOWN_SENT:
-				{
-					return "SHUTDOWN_SENT";
-				}
-
-				case Socket::State::SHUTDOWN_RECEIVED:
-				{
-					return "SHUTDOWN_RECEIVED";
-				}
-
-				case Socket::State::SHUTDOWN_ACK_SENT:
-				{
-					return "SHUTDOWN_ACK_SENT";
-				}
-			}
-		}
-
 		/* Instance methods. */
 
 		Socket::Socket(SocketOptions options, SocketListener* listener)
@@ -114,28 +62,64 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto stateStringView = Socket::StateToString(this->state);
+			auto associationStateStringView = Socket::AssociationStateToString(this->associationState);
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Socket>");
 			MS_DUMP_CLEAN(
-			  indentation, "  state: %.*s", static_cast<int>(stateStringView.size()), stateStringView.data());
+			  indentation,
+			  "  association state: %.*s",
+			  static_cast<int>(associationStateStringView.size()),
+			  associationStateStringView.data());
 			this->metrics.Dump(indentation);
 			MS_DUMP_CLEAN(indentation, "</SCTP::Socket>");
+		}
+
+		Types::SocketState Socket::GetState() const
+		{
+			MS_TRACE();
+
+			switch (this->associationState)
+			{
+				case AssociationState::CLOSED:
+				{
+					return Types::SocketState::CLOSED;
+				}
+
+				case AssociationState::COOKIE_WAIT:
+				case AssociationState::COOKIE_ECHOED:
+				{
+					return Types::SocketState::CONNECTING;
+				}
+
+				case AssociationState::ESTABLISHED:
+				{
+					return Types::SocketState::CONNECTED;
+				}
+
+				case AssociationState::SHUTDOWN_PENDING:
+				case AssociationState::SHUTDOWN_SENT:
+				case AssociationState::SHUTDOWN_RECEIVED:
+				case AssociationState::SHUTDOWN_ACK_SENT:
+				{
+					return Types::SocketState::SHUTTING_DOWN;
+				}
+			}
 		}
 
 		void Socket::Connect()
 		{
 			MS_TRACE();
 
-			if (this->state != State::CLOSED)
+			if (this->associationState != AssociationState::CLOSED)
 			{
-				const auto stateStringView = Socket::StateToString(this->state);
+				const auto associationStateStringView =
+				  Socket::AssociationStateToString(this->associationState);
 
 				MS_DEBUG_TAG(
 				  sctp,
-				  "cannot initiate the association since state is not CLOSED but %.*s",
-				  static_cast<int>(stateStringView.size()),
-				  stateStringView.data());
+				  "cannot initiate the association since association state is not CLOSED but %.*s",
+				  static_cast<int>(associationStateStringView.size()),
+				  associationStateStringView.data());
 
 				return;
 			}
@@ -149,7 +133,7 @@ namespace RTC
 
 			this->t1InitTimer->Start();
 
-			SetState(State::COOKIE_WAIT, "Connect() called");
+			SetAssociationState(AssociationState::COOKIE_WAIT, "Connect() called");
 		}
 
 		// TODO: Should the caller call free packet after calling this method? or us?
@@ -188,36 +172,37 @@ namespace RTC
 			// }
 		}
 
-		void Socket::SetState(State state, const std::string& reason)
+		void Socket::SetAssociationState(AssociationState associationState, const std::string& reason)
 		{
 			MS_TRACE();
 
-			const auto stateStringView = Socket::StateToString(state);
+			const auto associationStateStringView = Socket::AssociationStateToString(associationState);
 
-			if (state == this->state)
+			if (associationState == this->associationState)
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "Socket state is already %.*s (reason:'%s')",
-				  static_cast<int>(stateStringView.size()),
-				  stateStringView.data(),
+				  "association state is already %.*s (reason:'%s')",
+				  static_cast<int>(associationStateStringView.size()),
+				  associationStateStringView.data(),
 				  reason.c_str());
 
 				return;
 			}
 
-			const auto previousStateStringView = Socket::StateToString(this->state);
+			const auto previousAssociationStateStringView =
+			  Socket::AssociationStateToString(this->associationState);
 
 			MS_WARN_TAG(
 			  sctp,
-			  "Socket state changed from %.*s to %.*s (reason:'%s')",
-			  static_cast<int>(previousStateStringView.size()),
-			  previousStateStringView.data(),
-			  static_cast<int>(stateStringView.size()),
-			  stateStringView.data(),
+			  "association state changed from %.*s to %.*s (reason:'%s')",
+			  static_cast<int>(previousAssociationStateStringView.size()),
+			  previousAssociationStateStringView.data(),
+			  static_cast<int>(associationStateStringView.size()),
+			  associationStateStringView.data(),
 			  reason.c_str());
 
-			this->state = state;
+			this->associationState = associationState;
 		}
 
 		void Socket::AddCapabilitiesParametersToInitOrInitAckChunk(Chunk* chunk) const
@@ -639,7 +624,7 @@ namespace RTC
 			// INIT chunk and retransmit the SHUTDOWN ACK chunk."
 			//
 			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
-			if (this->state == State::SHUTDOWN_ACK_SENT)
+			if (this->associationState == AssociationState::SHUTDOWN_ACK_SENT)
 			{
 				MS_DEBUG_TAG(
 				  sctp, "INIT Chunk received in SHUTDOWN_ACK_SENT state, retransmitting SHUTDOWN_ACK Chunk");
@@ -653,9 +638,9 @@ namespace RTC
 			uint32_t localVerificationTag;
 			uint32_t localInitialTsn;
 
-			switch (this->state)
+			switch (this->associationState)
 			{
-				case State::CLOSED:
+				case AssociationState::CLOSED:
 				{
 					MS_DEBUG_TAG(sctp, "INIT Chunk received in CLOSED state (normal scenario)");
 
@@ -677,8 +662,8 @@ namespace RTC
 				 *
 				 * @see https://datatracker.ietf.org/doc/html/rfc9260#section-5.2.1
 				 */
-				case State::COOKIE_WAIT:
-				case State::COOKIE_ECHOED:
+				case AssociationState::COOKIE_WAIT:
+				case AssociationState::COOKIE_ECHOED:
 				{
 					MS_DEBUG_TAG(sctp, "INIT Chunk received after sending INIT Chunk (collision, no problem)");
 
@@ -779,7 +764,7 @@ namespace RTC
 			// INIT ACK chunk."
 			//
 			// @see https://datatracker.ietf.org/doc/html/rfc9260#name-unexpected-init-ack-chunk
-			if (this->state != State::COOKIE_WAIT)
+			if (this->associationState != AssociationState::COOKIE_WAIT)
 			{
 				MS_DEBUG_TAG(sctp, "ignoring received INIT_ACK Chunk when not in COOKIE_WAIT state");
 
@@ -844,7 +829,7 @@ namespace RTC
 			  /*tieTag*/ Utils::Crypto::GetRandomUInt<uint64_t>(0, std::numeric_limits<uint64_t>::max()),
 			  negotiatedCapabilities);
 
-			SetState(State::COOKIE_ECHOED, "INIT_ACK received");
+			SetAssociationState(AssociationState::COOKIE_ECHOED, "INIT_ACK received");
 
 			// TODO
 			// The connection isn't fully established just yet.
@@ -930,7 +915,7 @@ namespace RTC
 			MS_DEBUG_TAG(
 			  sctp, "T1-init timer expired [timeout count:%zu]", this->t1InitTimer->GetTimeoutCount());
 
-			AssertState(State::COOKIE_WAIT);
+			AssertAssociationState(AssociationState::COOKIE_WAIT);
 
 			if (this->t1InitTimer->IsActive())
 			{
@@ -950,7 +935,7 @@ namespace RTC
 			MS_DEBUG_TAG(
 			  sctp, "T1-cookie timer expired [timeout count:%zu]", this->t1CookieTimer->GetTimeoutCount());
 
-			AssertState(State::COOKIE_ECHOED);
+			AssertAssociationState(AssociationState::COOKIE_ECHOED);
 
 			if (this->t1CookieTimer->IsActive())
 			{
@@ -976,64 +961,72 @@ namespace RTC
 			// TODO
 		}
 
-		template<typename... States>
-		void Socket::AssertState(States... expectedStates) const
+		template<typename... AssociationStates>
+		void Socket::AssertAssociationState(AssociationStates... expectedAssociationStates) const
 		{
 			MS_TRACE();
 
-			static_assert((std::is_same_v<States, State> && ...), "all arguments must be of type State");
+			static_assert(
+			  (std::is_same_v<AssociationStates, AssociationState> && ...),
+			  "all arguments must be of type AssociationState");
 
 			// NOTE: Using fold expression operator.
-			if ((... || (this->state == expectedStates)))
+			if ((... || (this->associationState == expectedAssociationStates)))
 			{
 				return;
 			}
 
-			auto currentStateStringView = Socket::StateToString(this->state);
-			std::ostringstream expectedStatesOss;
-			bool firstExpectedState = true;
+			auto currentAssociationStateStringView =
+			  Socket::AssociationStateToString(this->associationState);
+			std::ostringstream expectedAssociationStatesOss;
+			bool firstExpectedAssociationState = true;
 
 			// NOTE: Using fold expression operator.
-			((expectedStatesOss << (firstExpectedState ? "" : ", ") << Socket::StateToString(expectedStates),
-			  firstExpectedState = false),
+			((expectedAssociationStatesOss << (firstExpectedAssociationState ? "" : ", ")
+			                               << Socket::AssociationStateToString(expectedAssociationStates),
+			  firstExpectedAssociationState = false),
 			 ...);
 
-			auto expectedStatesString = expectedStatesOss.str();
+			auto expectedAssociationStatesString = expectedAssociationStatesOss.str();
 
 			MS_ABORT(
-			  "current Socket state %.*s does not match any of the given expected states (%s)",
-			  static_cast<int>(currentStateStringView.size()),
-			  currentStateStringView.data(),
-			  expectedStatesString.c_str());
+			  "current association state %.*s does not match any of the given expected states (%s)",
+			  static_cast<int>(currentAssociationStateStringView.size()),
+			  currentAssociationStateStringView.data(),
+			  expectedAssociationStatesString.c_str());
 		}
 
-		template<typename... States>
-		void Socket::AssertNotState(States... unexpectedStates) const
+		template<typename... AssociationStates>
+		void Socket::AssertNotAssociatonState(AssociationStates... unexpectedAssociationStates) const
 		{
 			MS_TRACE();
 
-			static_assert((std::is_same_v<States, State> && ...), "all arguments must be of type State");
+			static_assert(
+			  (std::is_same_v<AssociationStates, AssociationState> && ...),
+			  "all arguments must be of type AssociationState");
 
 			// NOTE: Using fold expression operator.
-			if ((... || (this->state == unexpectedStates)))
+			if ((... || (this->associationState == unexpectedAssociationStates)))
 			{
-				auto currentStateStringView = Socket::StateToString(this->state);
-				std::ostringstream unexpectedStatesOss;
-				bool firstUnexpectedState = true;
+				auto currentAssociationStateStringView =
+				  Socket::AssociationStateToString(this->associationState);
+				std::ostringstream unexpectedAssociationStatesOss;
+				bool firstUnexpectedAssociationState = true;
 
 				// NOTE: Using fold expression operator.
-				((unexpectedStatesOss << (firstUnexpectedState ? "" : ", ")
-				                      << Socket::StateToString(unexpectedStates),
-				  firstUnexpectedState = false),
+				((unexpectedAssociationStatesOss
+				    << (firstUnexpectedAssociationState ? "" : ", ")
+				    << Socket::AssociationStateToString(unexpectedAssociationStates),
+				  firstUnexpectedAssociationState = false),
 				 ...);
 
-				auto unexpectedStatesString = unexpectedStatesOss.str();
+				auto unexpectedAssociationStatesString = unexpectedAssociationStatesOss.str();
 
 				MS_ABORT(
-				  "current Socket state %.*s matches one of the given unexpected states (%s)",
-				  static_cast<int>(currentStateStringView.size()),
-				  currentStateStringView.data(),
-				  unexpectedStatesString.c_str());
+				  "current association state %.*s matches one of the given unexpected states (%s)",
+				  static_cast<int>(currentAssociationStateStringView.size()),
+				  currentAssociationStateStringView.data(),
+				  unexpectedAssociationStatesString.c_str());
 			}
 		}
 
