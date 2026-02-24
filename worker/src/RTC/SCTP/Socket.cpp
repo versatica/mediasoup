@@ -261,8 +261,8 @@ namespace RTC
 			  tieTag,
 			  negotiatedCapabilities);
 
-			this->metrics.messageInterleaving = negotiatedCapabilities.messageInterleaving;
-			this->metrics.zeroChecksum        = negotiatedCapabilities.zeroChecksum;
+			this->metrics.usesMessageInterleaving = negotiatedCapabilities.messageInterleaving;
+			this->metrics.usesZeroChecksum        = negotiatedCapabilities.zeroChecksum;
 		}
 
 		std::unique_ptr<Packet> Socket::CreatePacket() const
