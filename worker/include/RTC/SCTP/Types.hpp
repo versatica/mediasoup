@@ -10,6 +10,9 @@ namespace RTC
 	{
 		namespace Types
 		{
+			/**
+			 * Kinds of errors that are exposed in the Socket API.
+			 */
 			enum class ErrorKind
 			{
 				/**

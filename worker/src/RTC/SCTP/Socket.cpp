@@ -29,27 +29,50 @@ namespace RTC
 		constexpr std::string_view Socket::StateToString(Socket::State state)
 		{
 			// NOTE: We cannot use MS_TRACE() here because clang in Linux will
-			// comlain about "read of non-constexpr variable 'configuration' is not
+			// complain about "read of non-constexpr variable 'configuration' is not
 			// allowed in a constant expression".
 
 			switch (state)
 			{
 				case Socket::State::CLOSED:
+				{
 					return "CLOSED";
+				}
+
 				case Socket::State::COOKIE_WAIT:
+				{
 					return "COOKIE_WAIT";
+				}
+
 				case Socket::State::COOKIE_ECHOED:
+				{
 					return "COOKIE_ECHOED";
+				}
+
 				case Socket::State::ESTABLISHED:
+				{
 					return "ESTABLISHED";
+				}
+
 				case Socket::State::SHUTDOWN_PENDING:
+				{
 					return "SHUTDOWN_PENDING";
+				}
+
 				case Socket::State::SHUTDOWN_SENT:
+				{
 					return "SHUTDOWN_SENT";
+				}
+
 				case Socket::State::SHUTDOWN_RECEIVED:
+				{
 					return "SHUTDOWN_RECEIVED";
+				}
+
 				case Socket::State::SHUTDOWN_ACK_SENT:
+				{
 					return "SHUTDOWN_ACK_SENT";
+				}
 			}
 		}
 
