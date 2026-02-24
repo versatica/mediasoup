@@ -148,6 +148,7 @@ This information is ignored except for the REMB messages, which is locally consu
 This information is locally consumed to perform sender side bandwidth estimation.
 
 REMB RTCP is generated locally based on the remote bitrate estimation.
+REMB feedback is parsed at the transport level and incorporated into the sender side bandwidth estimation logic of the transport.
 
 ## Mediasoup internal behaviour for each type of RTCP
 
