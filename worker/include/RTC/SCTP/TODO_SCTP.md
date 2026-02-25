@@ -1,6 +1,10 @@
 # TODO STCP
 
-Here some notes about our future SCTP implementation.
+Here some notes about our ongoing SCTP implementation.
+
+## Related to dcsctp
+
+- Check all calls to `CreatePacket()` in `Socket.cpp` since many of them must be replaced to `this->tbc->CreatePacket()`.
 
 ## Flow
 

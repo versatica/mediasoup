@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
-#include <string>
 
 namespace RTC
 {

@@ -14,7 +14,7 @@ namespace RTC
 		/* Class methods. */
 
 		NegotiatedCapabilities NegotiatedCapabilities::Factory(
-		  const SocketOptions& socketOptions, const AnyInitChunk* remoteChunk)
+		  const SctpOptions& sctpOptions, const AnyInitChunk* remoteChunk)
 		{
 			MS_TRACE();
 
@@ -28,16 +28,16 @@ namespace RTC
 			  remoteChunk->template GetFirstParameterOfType<ZeroChecksumAcceptableParameter>();
 
 			negotiatedCapabilities.maxOutboundStreams =
-			  std::min(socketOptions.maxOutboundStreams, remoteChunk->GetNumberOfInboundStreams());
+			  std::min(sctpOptions.maxOutboundStreams, remoteChunk->GetNumberOfInboundStreams());
 
 			negotiatedCapabilities.maxInboundStreams =
-			  std::min(socketOptions.maxInboundStreams, remoteChunk->GetNumberOfOutboundStreams());
+			  std::min(sctpOptions.maxInboundStreams, remoteChunk->GetNumberOfOutboundStreams());
 
 			// Partial Reliability Extension is negotiated if we desire it and
 			// peer announces support via Forward-TSN-Supported Parameter or via
 			// Supported Extensions Parameter.
 			negotiatedCapabilities.partialReliability =
-			  socketOptions.enablePartialReliability &&
+			  sctpOptions.enablePartialReliability &&
 			  (remoteForwardTsnSupportedParameter ||
 			   (remoteSupportedExtensionsParameter &&
 			    remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::FORWARD_TSN)));
@@ -45,7 +45,7 @@ namespace RTC
 			// Message Interleaving is negotiated if we desire it and peer
 			// announces support via Supported Extensions Parameter.
 			negotiatedCapabilities.messageInterleaving =
-			  socketOptions.enableMessageInterleaving && remoteSupportedExtensionsParameter &&
+			  sctpOptions.enableMessageInterleaving && remoteSupportedExtensionsParameter &&
 			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_DATA) &&
 			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_FORWARD_TSN);
 
@@ -59,11 +59,11 @@ namespace RTC
 			// if we desire it and peer announces the same non-none alternate
 			// error detection method.
 			negotiatedCapabilities.zeroChecksum =
-			  socketOptions.zeroChecksumAlternateErrorDetectionMethod !=
+			  sctpOptions.zeroChecksumAlternateErrorDetectionMethod !=
 			    ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE &&
 			  remoteZeroChecksumAcceptableParameter &&
 			  remoteZeroChecksumAcceptableParameter->GetAlternateErrorDetectionMethod() ==
-			    socketOptions.zeroChecksumAlternateErrorDetectionMethod;
+			    sctpOptions.zeroChecksumAlternateErrorDetectionMethod;
 
 			return negotiatedCapabilities;
 		}

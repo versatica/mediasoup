@@ -3,10 +3,10 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/SocketDeferredListener.hpp"
 #include "RTC/SCTP/SocketListener.hpp"
 #include "RTC/SCTP/SocketMetrics.hpp"
-#include "RTC/SCTP/SocketOptions.hpp"
 #include "RTC/SCTP/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
@@ -21,7 +21,6 @@
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
 #include "handles/BackoffTimerHandle.hpp"
-#include <string>
 #include <string_view>
 
 namespace RTC
@@ -120,13 +119,20 @@ namespace RTC
 			};
 
 		public:
-			explicit Socket(const SocketOptions& options, SocketListener& listener);
+			explicit Socket(const SctpOptions& sctpOptions, SocketListener& listener);
 
 			~Socket() override;
 
 			void Dump(int indentation = 0) const;
 
 			Types::SocketState GetState() const;
+
+			/**
+			 * Closes the connection non-gracefully. Will send ABORT if the connection
+			 * is not already closed. No callbacks will be made after Close() has
+			 * returned.
+			 */
+			void Close();
 
 			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
@@ -143,7 +149,9 @@ namespace RTC
 			void ReceivePacket(const Packet* receivedPacket);
 
 		private:
-			void SetAssociationState(AssociationState associationState, const std::string& reason);
+			void InternalClose(Types::ErrorKind errorKind, std::string_view& message);
+
+			void SetAssociationState(AssociationState associationState, const std::string_view& message);
 
 			void AddCapabilitiesParametersToInitOrInitAckChunk(Chunk* chunk) const;
 
@@ -219,8 +227,8 @@ namespace RTC
 			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			// Socket options given in th econstructor.
-			const SocketOptions options;
+			// SCTP options given in the constructor.
+			const SctpOptions sctpOptions;
 			// Listener. It's not a SocketListener but a SocketDeferredListener which
 			// inherits from SocketListener.
 			SocketDeferredListener listener;

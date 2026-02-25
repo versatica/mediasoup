@@ -81,6 +81,20 @@ namespace RTC
 			Types::SctpImplementation peerImplementation{ Types::SctpImplementation::UNKNOWN };
 
 			/**
+			 * The number of negotiated outbound streams, which is configured locally
+			 * as `SctpOptions::maxOutboundStreams`, and which will be signaled by the
+			 * remote during connection.
+			 */
+			uint16_t negotiatedMaxOutboundStreams{ 0 };
+
+			/**
+			 * The number of negotiated inbound streams, which is configured locally
+			 * as `SctpOptions::maxInboundStreams`, and which will be signaled by the
+			 * remote during connection.
+			 */
+			uint16_t negotiatedMaxInboundStreams{ 0 };
+
+			/**
 			 * Whether Partial Reliability has been negotiated.
 			 *
 			 * @see RFC 3758.

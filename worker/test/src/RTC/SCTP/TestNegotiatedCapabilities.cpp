@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
-#include "RTC/SCTP/SocketOptions.hpp"
+#include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
@@ -15,13 +15,13 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 
 	SECTION("NegotiatedCapabilities::Factory() succeeds (1)")
 	{
-		RTC::SCTP::SocketOptions socketOptions{};
+		RTC::SCTP::SctpOptions sctpOptions{};
 
-		socketOptions.maxOutboundStreams        = 8192;
-		socketOptions.maxInboundStreams         = 2048;
-		socketOptions.enablePartialReliability  = true;
-		socketOptions.enableMessageInterleaving = true;
-		socketOptions.zeroChecksumAlternateErrorDetectionMethod =
+		sctpOptions.maxOutboundStreams        = 8192;
+		sctpOptions.maxInboundStreams         = 2048;
+		sctpOptions.enablePartialReliability  = true;
+		sctpOptions.enableMessageInterleaving = true;
+		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
 		auto* remoteChunk =
@@ -47,7 +47,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		remoteZeroChecksumAcceptableParameter->Consolidate();
 
 		auto negotiatedCapabilities =
-		  RTC::SCTP::NegotiatedCapabilities::Factory(socketOptions, remoteChunk);
+		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteChunk);
 
 		delete remoteChunk;
 
@@ -61,13 +61,13 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 
 	SECTION("NegotiatedCapabilities::Factory() succeeds (2)")
 	{
-		RTC::SCTP::SocketOptions socketOptions{};
+		RTC::SCTP::SctpOptions sctpOptions{};
 
-		socketOptions.maxOutboundStreams        = 1000;
-		socketOptions.maxInboundStreams         = 2000;
-		socketOptions.enablePartialReliability  = true;
-		socketOptions.enableMessageInterleaving = true;
-		socketOptions.zeroChecksumAlternateErrorDetectionMethod =
+		sctpOptions.maxOutboundStreams        = 1000;
+		sctpOptions.maxInboundStreams         = 2000;
+		sctpOptions.enablePartialReliability  = true;
+		sctpOptions.enableMessageInterleaving = true;
+		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
 		auto* remoteChunk =
@@ -100,7 +100,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		remoteZeroChecksumAcceptableParameter->Consolidate();
 
 		auto negotiatedCapabilities =
-		  RTC::SCTP::NegotiatedCapabilities::Factory(socketOptions, remoteChunk);
+		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteChunk);
 
 		delete remoteChunk;
 

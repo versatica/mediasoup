@@ -135,7 +135,7 @@ namespace RTC
 			/**
 			 * Called when the total amount of data buffered (in the entire send
 			 * buffer, for all streams) falls to or below the threshold specified in
-			 * SocketOptions::totalBufferedAmountLowThreshold`.
+			 * SctpOptions::totalBufferedAmountLowThreshold`.
 			 *
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.

@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_NEGOTIATED_CAPABILITIES_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/SocketOptions.hpp"
+#include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/packet/chunks/AnyInitChunk.hpp"
 
 namespace RTC
@@ -24,7 +24,7 @@ namespace RTC
 			 * - Given `remoteChunk` must be an INIT or an INIT_ACK Chunk.
 			 */
 			static NegotiatedCapabilities Factory(
-			  const SocketOptions& socketOptions, const AnyInitChunk* remoteChunk);
+			  const SctpOptions& sctpOptions, const AnyInitChunk* remoteChunk);
 
 			/**
 			 * Negotiated maximum number of outbound streams (OS).

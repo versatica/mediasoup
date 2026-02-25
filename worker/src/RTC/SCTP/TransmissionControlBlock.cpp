@@ -8,9 +8,14 @@ namespace RTC
 {
 	namespace SCTP
 	{
+		/* Static. */
+
+		thread_local static uint8_t FactoryBuffer[RTC::Consts::MaxSafeMtuSizeForSctp];
+
 		/* Instance methods. */
 
 		TransmissionControlBlock::TransmissionControlBlock(
+		  const SctpOptions& sctpOptions,
 		  uint32_t localVerificationTag,
 		  uint32_t remoteVerificationTag,
 		  uint32_t localInitialTsn,
@@ -18,8 +23,9 @@ namespace RTC
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const NegotiatedCapabilities& negotiatedCapabilities)
-		  : localVerificationTag(localVerificationTag), remoteVerificationTag(remoteVerificationTag),
-		    localInitialTsn(localInitialTsn), remoteInitialTsn(remoteInitialTsn),
+		  : sctpOptions(sctpOptions), localVerificationTag(localVerificationTag),
+		    remoteVerificationTag(remoteVerificationTag), localInitialTsn(localInitialTsn),
+		    remoteInitialTsn(remoteInitialTsn),
 		    remoteAdvertisedReceiverWindowCredit(remoteAdvertisedReceiverWindowCredit), tieTag(tieTag),
 		    negotiatedCapabilities(negotiatedCapabilities)
 		{
@@ -47,6 +53,27 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  tie-tag: %" PRIu64, this->tieTag);
 			this->negotiatedCapabilities.Dump(indentation + 1);
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");
+		}
+
+		std::unique_ptr<Packet> TransmissionControlBlock::CreatePacket() const
+		{
+			MS_TRACE();
+
+			return CreatePacketWithVerificationTag(this->remoteVerificationTag);
+		}
+
+		std::unique_ptr<Packet> TransmissionControlBlock::CreatePacketWithVerificationTag(
+		  uint32_t verificationTag) const
+		{
+			MS_TRACE();
+
+			auto packet = std::unique_ptr<Packet>(Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)));
+
+			packet->SetSourcePort(this->sctpOptions.sourcePort);
+			packet->SetDestinationPort(this->sctpOptions.destinationPort);
+			packet->SetVerificationTag(verificationTag);
+
+			return packet;
 		}
 	} // namespace SCTP
 } // namespace RTC

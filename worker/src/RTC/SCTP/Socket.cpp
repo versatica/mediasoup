@@ -1,13 +1,15 @@
+#include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
 #define MS_CLASS "RTC::SCTP::Socket"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/Socket.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/SCTP/Socket.hpp"
 #include "RTC/SCTP/StateCookie.hpp"
 #include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
+#include "RTC/SCTP/packet/errorCauses/UserInitiatedAbortErrorCause.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
@@ -32,29 +34,29 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Socket::Socket(const SocketOptions& options, SocketListener& listener)
-		  : options(options), listener(listener),
+		Socket::Socket(const SctpOptions& sctpOptions, SocketListener& listener)
+		  : sctpOptions(sctpOptions), listener(listener),
 		    t1InitTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
-		        /*baseTimeoutMs*/ options.t1InitTimeoutMs,
+		        /*baseTimeoutMs*/ sctpOptions.t1InitTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeoutMs,
-		        /*maxRestarts*/ options.maxInitRetransmissions)),
+		        /*maxBackoffTimeout*/ sctpOptions.timerMaxBackoffTimeoutMs,
+		        /*maxRestarts*/ sctpOptions.maxInitRetransmissions)),
 		    t1CookieTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
-		        /*baseTimeoutMs*/ options.t1CookieTimeoutMs,
+		        /*baseTimeoutMs*/ sctpOptions.t1CookieTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeoutMs,
-		        /*maxRestarts*/ options.maxInitRetransmissions)),
+		        /*maxBackoffTimeout*/ sctpOptions.timerMaxBackoffTimeoutMs,
+		        /*maxRestarts*/ sctpOptions.maxInitRetransmissions)),
 		    t2ShutdownTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
-		        /*baseTimeoutMs*/ options.t2ShutdownTimeoutMs,
+		        /*baseTimeoutMs*/ sctpOptions.t2ShutdownTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeoutMs,
-		        /*maxRestarts*/ options.maxRetransmissions))
+		        /*maxBackoffTimeout*/ sctpOptions.timerMaxBackoffTimeoutMs,
+		        /*maxRestarts*/ sctpOptions.maxRetransmissions))
 
 		// TODO: Set RRSendQueue this->sendQueue.
 		{
@@ -114,6 +116,39 @@ namespace RTC
 				{
 					return Types::SocketState::SHUTTING_DOWN;
 				}
+			}
+		}
+
+		void Socket::Close()
+		{
+			MS_TRACE();
+
+			SocketDeferredListener::ScopedDeferred deferrer(this->listener);
+
+			if (this->associationState == AssociationState::CLOSED)
+			{
+				MS_DEBUG_TAG(sctp, "called on a closed Socket");
+
+				return;
+			}
+
+			if (this->tcb)
+			{
+				auto packet                 = this->tcb->CreatePacket();
+				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+
+				// NOTE: Don't set bit T in the ABORT chunk since TCB knows the
+				// Verification Tag expected by the remote.
+
+				auto* userInitiatedAbortErrorCause =
+				  abortAssociationChunk->BuildErrorCauseInPlace<UserInitiatedAbortErrorCause>();
+
+				userInitiatedAbortErrorCause->SetUpperLayerAbortReason("Socket::Close() called");
+
+				userInitiatedAbortErrorCause->Consolidate();
+				abortAssociationChunk->Consolidate();
+
+				SendPacket(packet.get());
 			}
 		}
 
@@ -185,7 +220,32 @@ namespace RTC
 			// }
 		}
 
-		void Socket::SetAssociationState(AssociationState associationState, const std::string& reason)
+		void Socket::InternalClose(Types::ErrorKind errorKind, std::string_view& message)
+		{
+			MS_TRACE();
+
+			if (this->associationState != AssociationState::CLOSED)
+			{
+				this->t1InitTimer->Stop();
+				this->t1CookieTimer->Stop();
+				this->t2ShutdownTimer->Stop();
+
+				this->tcb = nullptr;
+			}
+
+			if (errorKind == Types::ErrorKind::NoError)
+			{
+				this->listener.OnSocketClosed(this);
+			}
+			else
+			{
+				this->listener.OnSocketAborted(this, errorKind, message);
+			}
+
+			SetAssociationState(AssociationState::CLOSED, message);
+		}
+
+		void Socket::SetAssociationState(AssociationState associationState, const std::string_view& message)
 		{
 			MS_TRACE();
 
@@ -195,10 +255,11 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "association state is already %.*s (reason:'%s')",
+				  "association state is already %.*s (message: %.*s)",
 				  static_cast<int>(associationStateStringView.size()),
 				  associationStateStringView.data(),
-				  reason.c_str());
+				  static_cast<int>(message.size()),
+				  message.data());
 
 				return;
 			}
@@ -208,12 +269,13 @@ namespace RTC
 
 			MS_WARN_TAG(
 			  sctp,
-			  "association state changed from %.*s to %.*s (reason:'%s')",
+			  "association state changed from %.*s to %.*s (message: %.*s)",
 			  static_cast<int>(previousAssociationStateStringView.size()),
 			  previousAssociationStateStringView.data(),
 			  static_cast<int>(associationStateStringView.size()),
 			  associationStateStringView.data(),
-			  reason.c_str());
+			  static_cast<int>(message.size()),
+			  message.data());
 
 			this->associationState = associationState;
 		}
@@ -231,7 +293,7 @@ namespace RTC
 
 			supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::RE_CONFIG);
 
-			if (this->options.enablePartialReliability)
+			if (this->sctpOptions.enablePartialReliability)
 			{
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::FORWARD_TSN);
 
@@ -241,21 +303,21 @@ namespace RTC
 				forwardTsnSupportedParameter->Consolidate();
 			}
 
-			if (this->options.enableMessageInterleaving)
+			if (this->sctpOptions.enableMessageInterleaving)
 			{
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_DATA);
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_FORWARD_TSN);
 			}
 
 			if (
-			  this->options.zeroChecksumAlternateErrorDetectionMethod !=
+			  this->sctpOptions.zeroChecksumAlternateErrorDetectionMethod !=
 			  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE)
 			{
 				auto* zeroChecksumAcceptableParameter =
 				  chunk->BuildParameterInPlace<ZeroChecksumAcceptableParameter>();
 
 				zeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
-				  this->options.zeroChecksumAlternateErrorDetectionMethod);
+				  this->sctpOptions.zeroChecksumAlternateErrorDetectionMethod);
 				zeroChecksumAcceptableParameter->Consolidate();
 			}
 
@@ -274,6 +336,7 @@ namespace RTC
 			MS_TRACE();
 
 			this->tcb = std::make_unique<TransmissionControlBlock>(
+			  this->sctpOptions,
 			  localVerificationTag,
 			  remoteVerificationTag,
 			  localInitialTsn,
@@ -282,19 +345,19 @@ namespace RTC
 			  tieTag,
 			  negotiatedCapabilities);
 
-			this->metrics.usesPartialReliability  = negotiatedCapabilities.partialReliability;
-			this->metrics.usesMessageInterleaving = negotiatedCapabilities.messageInterleaving;
-			this->metrics.usesReconfig            = negotiatedCapabilities.reconfig;
-			this->metrics.usesZeroChecksum        = negotiatedCapabilities.zeroChecksum;
+			this->metrics.negotiatedMaxOutboundStreams = negotiatedCapabilities.maxOutboundStreams;
+			this->metrics.negotiatedMaxInboundStreams  = negotiatedCapabilities.maxInboundStreams;
+			this->metrics.usesPartialReliability       = negotiatedCapabilities.partialReliability;
+			this->metrics.usesMessageInterleaving      = negotiatedCapabilities.messageInterleaving;
+			this->metrics.usesReconfig                 = negotiatedCapabilities.reconfig;
+			this->metrics.usesZeroChecksum             = negotiatedCapabilities.zeroChecksum;
 		}
 
 		std::unique_ptr<Packet> Socket::CreatePacket() const
 		{
 			MS_TRACE();
 
-			uint32_t verificationTag = this->tcb ? this->tcb->GetRemoteVerificationTag() : 0;
-
-			return CreatePacketWithVerificationTag(verificationTag);
+			return CreatePacketWithVerificationTag(0);
 		}
 
 		std::unique_ptr<Packet> Socket::CreatePacketWithVerificationTag(uint32_t verificationTag) const
@@ -303,8 +366,8 @@ namespace RTC
 
 			auto packet = std::unique_ptr<Packet>(Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)));
 
-			packet->SetSourcePort(this->options.sourcePort);
-			packet->SetDestinationPort(this->options.destinationPort);
+			packet->SetSourcePort(this->sctpOptions.sourcePort);
+			packet->SetDestinationPort(this->sctpOptions.destinationPort);
 			packet->SetVerificationTag(verificationTag);
 
 			return packet;
@@ -350,9 +413,9 @@ namespace RTC
 			auto* initChunk = packet->BuildChunkInPlace<InitChunk>();
 
 			initChunk->SetInitiateTag(this->preTcb.localVerificationTag);
-			initChunk->SetAdvertisedReceiverWindowCredit(this->options.maxReceiverWindowBufferSize);
-			initChunk->SetNumberOfOutboundStreams(this->options.maxOutboundStreams);
-			initChunk->SetNumberOfInboundStreams(this->options.maxInboundStreams);
+			initChunk->SetAdvertisedReceiverWindowCredit(this->sctpOptions.maxReceiverWindowBufferSize);
+			initChunk->SetNumberOfOutboundStreams(this->sctpOptions.maxOutboundStreams);
+			initChunk->SetNumberOfInboundStreams(this->sctpOptions.maxInboundStreams);
 			initChunk->SetInitialTsn(this->preTcb.localInitialTsn);
 
 			// Insert capabilities related Parameters in the INIT Chunk.
@@ -369,6 +432,8 @@ namespace RTC
 		void Socket::SendShutdownAckChunk()
 		{
 			MS_TRACE();
+
+			AssertHasTcb();
 
 			auto packet            = CreatePacket();
 			auto* shutdownAckChunk = packet->BuildChunkInPlace<ShutdownAckChunk>();
@@ -736,16 +801,16 @@ namespace RTC
 			auto* initAckChunk = packet->BuildChunkInPlace<InitAckChunk>();
 
 			initAckChunk->SetInitiateTag(localVerificationTag);
-			initAckChunk->SetAdvertisedReceiverWindowCredit(this->options.maxReceiverWindowBufferSize);
-			initAckChunk->SetNumberOfOutboundStreams(this->options.maxOutboundStreams);
-			initAckChunk->SetNumberOfInboundStreams(this->options.maxInboundStreams);
+			initAckChunk->SetAdvertisedReceiverWindowCredit(this->sctpOptions.maxReceiverWindowBufferSize);
+			initAckChunk->SetNumberOfOutboundStreams(this->sctpOptions.maxOutboundStreams);
+			initAckChunk->SetNumberOfInboundStreams(this->sctpOptions.maxInboundStreams);
 			initAckChunk->SetInitialTsn(localInitialTsn);
 
 			// Insert a StateCookie Parameter in the INIT_ACK Chunk.
 			auto* stateCookieParameter = initAckChunk->BuildParameterInPlace<StateCookieParameter>();
 
 			const auto negotiatedCapabilities =
-			  NegotiatedCapabilities::Factory(this->options, receivedInitChunk);
+			  NegotiatedCapabilities::Factory(this->sctpOptions, receivedInitChunk);
 
 			// Write the StateCookie in place in the Parameter.
 			stateCookieParameter->WriteStateCookieInPlace(
@@ -822,7 +887,7 @@ namespace RTC
 			this->t1InitTimer->Stop();
 
 			const auto negotiatedCapabilities =
-			  NegotiatedCapabilities::Factory(this->options, receivedInitAckChunk);
+			  NegotiatedCapabilities::Factory(this->sctpOptions, receivedInitAckChunk);
 
 			// TODO
 			// If the connection is re-established (peer restarted, but re-used old

@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/SctpOptions.hpp"
+#include "RTC/SCTP/packet/Packet.hpp"
 
 namespace RTC
 {
@@ -18,6 +20,7 @@ namespace RTC
 		{
 		public:
 			TransmissionControlBlock(
+			  const SctpOptions& sctpOptions,
 			  uint32_t localVerificationTag,
 			  uint32_t remoteVerificationTag,
 			  uint32_t localInitialTsn,
@@ -93,7 +96,12 @@ namespace RTC
 				return this->negotiatedCapabilities;
 			}
 
+			std::unique_ptr<Packet> CreatePacket() const;
+
+			std::unique_ptr<Packet> CreatePacketWithVerificationTag(uint32_t verificationTag) const;
+
 		private:
+			const SctpOptions sctpOptions;
 			uint32_t localVerificationTag{ 0 };
 			uint32_t remoteVerificationTag{ 0 };
 			uint32_t localInitialTsn{ 0 };
