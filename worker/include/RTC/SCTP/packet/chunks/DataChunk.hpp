@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/packet/Chunk.hpp"
+#include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
 
 namespace RTC
 {
@@ -17,7 +17,7 @@ namespace RTC
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |   Type = 0    |  Res  |I|U|B|E|            Length             |
+		 * |   Type = 0    |  Res  |I|U|B|E|       Length = Variable       |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |                              TSN                              |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -69,7 +69,7 @@ namespace RTC
 		// Forward declaration.
 		class Packet;
 
-		class DataChunk : public Chunk
+		class DataChunk : public AnyDataChunk
 		{
 			// We need that Packet calls protected and private methods in this class.
 			friend class Packet;
@@ -117,73 +117,89 @@ namespace RTC
 
 			DataChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			bool GetI() const
+			bool GetI() const final
 			{
 				return GetBit3();
 			}
 
 			void SetI(bool flag);
 
-			bool GetU() const
+			bool GetU() const final
 			{
 				return GetBit2();
 			}
 
 			void SetU(bool flag);
 
-			bool GetB() const
+			bool GetB() const final
 			{
 				return GetBit1();
 			}
 
 			void SetB(bool flag);
 
-			bool GetE() const
+			bool GetE() const final
 			{
 				return GetBit0();
 			}
 
 			void SetE(bool flag);
 
-			uint32_t GetTsn() const
+			uint32_t GetTsn() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
 			void SetTsn(uint32_t value);
 
-			uint16_t GetStreamIdentifierS() const
+			uint16_t GetStreamIdentifier() const final
 			{
 				return Utils::Byte::Get2Bytes(const_cast<uint8_t*>(GetBuffer()), 8);
 			}
 
-			void SetStreamIdentifierS(uint16_t value);
+			void SetStreamIdentifier(uint16_t value);
 
-			uint16_t GetStreamSequenceNumberN() const
+			uint16_t GetStreamSequenceNumber() const final
 			{
 				return Utils::Byte::Get2Bytes(const_cast<uint8_t*>(GetBuffer()), 10);
 			}
 
-			void SetStreamSequenceNumberN(uint16_t value);
+			void SetStreamSequenceNumber(uint16_t value);
 
-			uint32_t GetPayloadProtocolIdentifier() const
+			/**
+			 * @remarks Only in I_DATA chunks.
+			 */
+			uint32_t GetMessageIdentifier() const final
+			{
+				return 0;
+			}
+
+			uint32_t GetPayloadProtocolIdentifier() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 12);
 			}
 
+			/**
+			 * @remarks Only in I_DATA chunks.
+			 */
+			uint32_t GetFragmentSequenceNumber() const final
+			{
+				return 0;
+			}
+
 			void SetPayloadProtocolIdentifier(uint32_t value);
 
-			bool HasUserData() const
+			bool HasUserData() const final
 			{
 				return HasVariableLengthValue();
 			}
 
-			const uint8_t* GetUserData() const
+			const uint8_t* GetUserData() const final
 			{
 				return GetVariableLengthValue();
 			}
 
-			uint16_t GetUserDataLength() const
+			uint16_t GetUserDataLength() const final
 			{
 				return GetVariableLengthValueLength();
 			}

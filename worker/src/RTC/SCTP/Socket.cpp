@@ -23,10 +23,16 @@ namespace RTC
 		/* Static. */
 
 		thread_local static uint8_t FactoryBuffer[RTC::Consts::MaxSafeMtuSizeForSctp];
+		// @see https://tools.ietf.org/html/rfc9260#section-5.1
+		constexpr uint32_t MinVerificationTag{ 1 };
+		constexpr uint32_t MaxVerificationTag{ std::numeric_limits<uint32_t>::max() };
+		// @see https://tools.ietf.org/html/rfc9260#section-3.3.2
+		constexpr uint32_t MinInitialTsn{ 0 };
+		constexpr uint32_t MaxInitialTsn{ std::numeric_limits<uint32_t>::max() };
 
 		/* Instance methods. */
 
-		Socket::Socket(SocketOptions options, SocketListener* listener)
+		Socket::Socket(const SocketOptions& options, SocketListener* listener)
 		  : options(options), listener(listener),
 		    t1InitTimer(
 		      std::make_unique<BackoffTimerHandle>(
@@ -65,12 +71,15 @@ namespace RTC
 			auto associationStateStringView = Socket::AssociationStateToString(this->associationState);
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Socket>");
+
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  association state: %.*s",
 			  static_cast<int>(associationStateStringView.size()),
 			  associationStateStringView.data());
-			this->metrics.Dump(indentation);
+
+			this->metrics.Dump(indentation + 1);
+
 			MS_DUMP_CLEAN(indentation, "</SCTP::Socket>");
 		}
 
@@ -125,9 +134,9 @@ namespace RTC
 			}
 
 			this->preTcb.localVerificationTag =
-			  Utils::Crypto::GetRandomUInt<uint32_t>(1, std::numeric_limits<uint32_t>::max());
+			  Utils::Crypto::GetRandomUInt<uint32_t>(MinVerificationTag, MaxVerificationTag);
 			this->preTcb.localInitialTsn =
-			  Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max());
+			  Utils::Crypto::GetRandomUInt<uint32_t>(MinInitialTsn, MaxInitialTsn);
 
 			SendInitChunk();
 
@@ -645,9 +654,8 @@ namespace RTC
 					MS_DEBUG_TAG(sctp, "INIT Chunk received in CLOSED state (normal scenario)");
 
 					localVerificationTag =
-					  Utils::Crypto::GetRandomUInt<uint32_t>(1, std::numeric_limits<uint32_t>::max());
-					localInitialTsn =
-					  Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max());
+					  Utils::Crypto::GetRandomUInt<uint32_t>(MinVerificationTag, MaxVerificationTag);
+					localInitialTsn = Utils::Crypto::GetRandomUInt<uint32_t>(MinInitialTsn, MaxInitialTsn);
 
 					break;
 				}
@@ -691,7 +699,7 @@ namespace RTC
 					MS_DEBUG_TAG(sctp, "INIT Chunk received (probably peer restarted)");
 
 					localVerificationTag =
-					  Utils::Crypto::GetRandomUInt<uint32_t>(1, std::numeric_limits<uint32_t>::max());
+					  Utils::Crypto::GetRandomUInt<uint32_t>(MinVerificationTag, MaxVerificationTag);
 
 					// TODO: Implement this.
 					// Make the initial TSN make a large jump, so that there is no overlap
@@ -699,8 +707,7 @@ namespace RTC
 					// my_initial_tsn = TSN(*tcb_->retransmission_queue().next_tsn() + 1000000);
 
 					// TODO: Remove this when the above TODO is done.
-					localInitialTsn =
-					  Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max());
+					localInitialTsn = Utils::Crypto::GetRandomUInt<uint32_t>(MinInitialTsn, MaxInitialTsn);
 
 					tieTag = this->tcb->GetTieTag();
 				}

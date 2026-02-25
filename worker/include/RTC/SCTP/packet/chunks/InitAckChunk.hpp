@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/packet/Chunk.hpp"
+#include "RTC/SCTP/packet/chunks/AnyInitChunk.hpp"
 
 namespace RTC
 {
@@ -21,7 +21,7 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |                         Initiate Tag                          |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |               Advertised Receiver Window Credit               |
+		 * |          Advertised Receiver Window Credit (a_rwnd)           |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |  Number of Outbound Streams   |   Number of Inbound Streams   |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -65,7 +65,7 @@ namespace RTC
 		// Forward declaration.
 		class Packet;
 
-		class InitAckChunk : public Chunk
+		class InitAckChunk : public AnyInitChunk
 		{
 			// We need that Packet calls protected and private methods in this class.
 			friend class Packet;
@@ -118,35 +118,35 @@ namespace RTC
 				return true;
 			}
 
-			uint32_t GetInitiateTag() const
+			uint32_t GetInitiateTag() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
 			void SetInitiateTag(uint32_t value);
 
-			uint32_t GetAdvertisedReceiverWindowCredit() const
+			uint32_t GetAdvertisedReceiverWindowCredit() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 8);
 			}
 
 			void SetAdvertisedReceiverWindowCredit(uint32_t value);
 
-			uint16_t GetNumberOfOutboundStreams() const
+			uint16_t GetNumberOfOutboundStreams() const final
 			{
 				return Utils::Byte::Get2Bytes(GetBuffer(), 12);
 			}
 
 			void SetNumberOfOutboundStreams(uint16_t value);
 
-			uint16_t GetNumberOfInboundStreams() const
+			uint16_t GetNumberOfInboundStreams() const final
 			{
 				return Utils::Byte::Get2Bytes(GetBuffer(), 14);
 			}
 
 			void SetNumberOfInboundStreams(uint16_t value);
 
-			uint32_t GetInitialTsn() const
+			uint32_t GetInitialTsn() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 16);
 			}

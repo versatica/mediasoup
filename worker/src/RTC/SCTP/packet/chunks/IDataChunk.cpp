@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/packet/Chunk.hpp"
 
 namespace RTC
 {
@@ -87,7 +88,8 @@ namespace RTC
 
 		/* Instance methods. */
 
-		IDataChunk::IDataChunk(uint8_t* buffer, size_t bufferLength) : Chunk(buffer, bufferLength)
+		IDataChunk::IDataChunk(uint8_t* buffer, size_t bufferLength)
+		  : AnyDataChunk(buffer, bufferLength)
 		{
 			MS_TRACE();
 

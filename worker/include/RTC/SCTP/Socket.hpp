@@ -120,7 +120,7 @@ namespace RTC
 			};
 
 		public:
-			explicit Socket(SocketOptions options, SocketListener* listener);
+			explicit Socket(const SocketOptions& options, SocketListener* listener);
 
 			~Socket() override;
 

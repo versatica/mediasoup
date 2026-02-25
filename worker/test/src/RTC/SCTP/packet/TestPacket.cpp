@@ -186,8 +186,8 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetB() == true);
 		REQUIRE(chunk1->GetE() == true);
 		REQUIRE(chunk1->GetTsn() == 0x11223344);
-		REQUIRE(chunk1->GetStreamIdentifierS() == 0xFF00);
-		REQUIRE(chunk1->GetStreamSequenceNumberN() == 0x6677);
+		REQUIRE(chunk1->GetStreamIdentifier() == 0xFF00);
+		REQUIRE(chunk1->GetStreamSequenceNumber() == 0x6677);
 		REQUIRE(chunk1->GetPayloadProtocolIdentifier() == 0x12341234);
 		REQUIRE(chunk1->HasUserData() == true);
 		REQUIRE(chunk1->GetUserDataLength() == 2);
@@ -305,8 +305,8 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetB() == true);
 		REQUIRE(chunk1->GetE() == true);
 		REQUIRE(chunk1->GetTsn() == 0x11223344);
-		REQUIRE(chunk1->GetStreamIdentifierS() == 0xFF00);
-		REQUIRE(chunk1->GetStreamSequenceNumberN() == 0x6677);
+		REQUIRE(chunk1->GetStreamIdentifier() == 0xFF00);
+		REQUIRE(chunk1->GetStreamSequenceNumber() == 0x6677);
 		REQUIRE(chunk1->GetPayloadProtocolIdentifier() == 0x12341234);
 		REQUIRE(chunk1->HasUserData() == true);
 		REQUIRE(chunk1->GetUserDataLength() == 2);
@@ -421,8 +421,8 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetB() == true);
 		REQUIRE(chunk1->GetE() == true);
 		REQUIRE(chunk1->GetTsn() == 0x11223344);
-		REQUIRE(chunk1->GetStreamIdentifierS() == 0xFF00);
-		REQUIRE(chunk1->GetStreamSequenceNumberN() == 0x6677);
+		REQUIRE(chunk1->GetStreamIdentifier() == 0xFF00);
+		REQUIRE(chunk1->GetStreamSequenceNumber() == 0x6677);
 		REQUIRE(chunk1->GetPayloadProtocolIdentifier() == 0x12341234);
 		REQUIRE(chunk1->HasUserData() == true);
 		REQUIRE(chunk1->GetUserDataLength() == 2);
