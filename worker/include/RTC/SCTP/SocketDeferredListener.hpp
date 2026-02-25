@@ -22,12 +22,12 @@ namespace RTC
 			class ScopedDeferred
 			{
 			public:
-				explicit ScopedDeferred(SocketDeferredListener* deferredListener);
+				explicit ScopedDeferred(SocketDeferredListener& deferredListener);
 
 				~ScopedDeferred();
 
 			private:
-				SocketDeferredListener* deferredListener;
+				SocketDeferredListener& deferredListener;
 			};
 
 		private:
@@ -47,10 +47,10 @@ namespace RTC
 			// variant can hold all cases of stored data.
 			using CallbackData = std::variant<std::monostate, Message, Error, StreamReset, uint16_t>;
 
-			using Callback = std::function<void(CallbackData, SocketListener*)>;
+			using Callback = std::function<void(CallbackData, SocketListener&)>;
 
 		public:
-			explicit SocketDeferredListener(SocketListener* innerListener);
+			explicit SocketDeferredListener(SocketListener& innerListener);
 
 		private:
 			void SetReady();
@@ -90,7 +90,7 @@ namespace RTC
 			void OnSocketTotalBufferedAmountLow(Socket* socket) override;
 
 		private:
-			SocketListener* innerListener{ nullptr };
+			SocketListener& innerListener;
 			bool ready{ false };
 			std::vector<std::pair<Callback, CallbackData>> deferredCallbacks;
 		};

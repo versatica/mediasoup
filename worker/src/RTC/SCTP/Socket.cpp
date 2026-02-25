@@ -32,7 +32,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Socket::Socket(const SocketOptions& options, SocketListener* listener)
+		Socket::Socket(const SocketOptions& options, SocketListener& listener)
 		  : options(options), listener(listener),
 		    t1InitTimer(
 		      std::make_unique<BackoffTimerHandle>(
@@ -55,6 +55,8 @@ namespace RTC
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeout*/ options.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ options.maxRetransmissions))
+
+		// TODO: Set RRSendQueue this->sendQueue.
 		{
 			MS_TRACE();
 		}
@@ -118,6 +120,8 @@ namespace RTC
 		void Socket::Connect()
 		{
 			MS_TRACE();
+
+			SocketDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			if (this->associationState != AssociationState::CLOSED)
 			{
@@ -278,7 +282,9 @@ namespace RTC
 			  tieTag,
 			  negotiatedCapabilities);
 
+			this->metrics.usesPartialReliability  = negotiatedCapabilities.partialReliability;
 			this->metrics.usesMessageInterleaving = negotiatedCapabilities.messageInterleaving;
+			this->metrics.usesReconfig            = negotiatedCapabilities.reconfig;
 			this->metrics.usesZeroChecksum        = negotiatedCapabilities.zeroChecksum;
 		}
 
@@ -304,7 +310,7 @@ namespace RTC
 			return packet;
 		}
 
-		void Socket::SendPacket(Packet* packet, std::optional<bool> writeChecksum)
+		bool Socket::SendPacket(Packet* packet, std::optional<bool> writeChecksum)
 		{
 			MS_TRACE();
 
@@ -331,7 +337,7 @@ namespace RTC
 			}
 
 			// Send the Packet.
-			this->listener.OnSocketSendSctpPacket(this, packet);
+			return this->listener.OnSocketSendSctpPacket(this, packet);
 		}
 
 		void Socket::SendInitChunk()
@@ -924,7 +930,7 @@ namespace RTC
 
 			AssertAssociationState(AssociationState::COOKIE_WAIT);
 
-			if (this->t1InitTimer->IsActive())
+			if (this->t1InitTimer->IsRunning())
 			{
 				SendInitChunk();
 			}
@@ -944,7 +950,7 @@ namespace RTC
 
 			AssertAssociationState(AssociationState::COOKIE_ECHOED);
 
-			if (this->t1CookieTimer->IsActive())
+			if (this->t1CookieTimer->IsRunning())
 			{
 				// TODO
 				// tcb_->SendBufferedPackets(callbacks_.Now());
@@ -1044,6 +1050,144 @@ namespace RTC
 			if (!this->tcb)
 			{
 				MS_ABORT("TCB doesn't exist");
+			}
+		}
+		void Socket::AssertAssociationStateIsConsistent() const
+		{
+			MS_TRACE();
+
+			switch (this->associationState)
+			{
+				case AssociationState::CLOSED:
+				{
+					MS_ASSERT(!this->tcb, "association state is CLOSED but there is TCB");
+					MS_ASSERT(
+					  !this->t1InitTimer->IsRunning(),
+					  "association state is CLOSED but T1 Init timer is running");
+					MS_ASSERT(
+					  !this->t1CookieTimer->IsRunning(),
+					  "association state is CLOSED but T1 Cookie timer is running");
+					MS_ASSERT(
+					  !this->t2ShutdownTimer->IsRunning(),
+					  "association state is CLOSED but T2 Shutdown timer is running");
+
+					break;
+				}
+
+				case AssociationState::COOKIE_WAIT:
+				{
+					MS_ASSERT(!this->tcb, "association state is COOKIE_WAIT but there is TCB");
+					MS_ASSERT(
+					  this->t1InitTimer->IsRunning(),
+					  "association state is COOKIE_WAIT but T1 Init timer is not running");
+					MS_ASSERT(
+					  !this->t1CookieTimer->IsRunning(),
+					  "association state is COOKIE_WAIT but T1 Cookie timer is running");
+					MS_ASSERT(
+					  !this->t2ShutdownTimer->IsRunning(),
+					  "association state is COOKIE_WAIT but T2 Shutdown timer is running");
+
+					break;
+				}
+
+				case AssociationState::COOKIE_ECHOED:
+				{
+					MS_ASSERT(this->tcb, "association state is COOKIE_ECHOED but there is no TCB");
+					MS_ASSERT(
+					  !this->t1InitTimer->IsRunning(),
+					  "association state is COOKIE_ECHOED but T1 Init timer is not running");
+					MS_ASSERT(
+					  this->t1CookieTimer->IsRunning(),
+					  "association state is COOKIE_ECHOED but T1 Cookie timer is not running");
+					MS_ASSERT(
+					  !this->t2ShutdownTimer->IsRunning(),
+					  "association state is COOKIE_ECHOED but T2 Shutdown timer is running");
+					// TODO: Implement this.
+					// MS_ASSERT(this->tcb->HasCookieEchoChunk(), "association state is COOKIE_ECHOED but TCB
+					// does't have ECHO chunk");
+
+					break;
+				}
+
+				case AssociationState::ESTABLISHED:
+				{
+					MS_ASSERT(this->tcb, "association state is ESTABLISHED but there is not TCB");
+					MS_ASSERT(
+					  !this->t1InitTimer->IsRunning(),
+					  "association state is ESTABLISHED but T1 Init timer is running");
+					MS_ASSERT(
+					  !this->t1CookieTimer->IsRunning(),
+					  "association state is ESTABLISHED but T1 Cookie timer is running");
+					MS_ASSERT(
+					  !this->t2ShutdownTimer->IsRunning(),
+					  "association state is ESTABLISHED but T2 Shutdown timer is running");
+
+					break;
+				}
+
+				case AssociationState::SHUTDOWN_PENDING:
+				{
+					MS_ASSERT(this->tcb, "association state is SHUTDOWN_PENDING but there is not TCB");
+					MS_ASSERT(
+					  !this->t1InitTimer->IsRunning(),
+					  "association state is SHUTDOWN_PENDING but T1 Init timer is running");
+					MS_ASSERT(
+					  !this->t1CookieTimer->IsRunning(),
+					  "association state is SHUTDOWN_PENDING but T1 Cookie timer is running");
+					MS_ASSERT(
+					  !this->t2ShutdownTimer->IsRunning(),
+					  "association state is SHUTDOWN_PENDING but T2 Shutdown timer is running");
+
+					break;
+				}
+
+				case AssociationState::SHUTDOWN_SENT:
+				{
+					MS_ASSERT(this->tcb, "association state is SHUTDOWN_SENT but there is not TCB");
+					MS_ASSERT(
+					  !this->t1InitTimer->IsRunning(),
+					  "association state is SHUTDOWN_SENT but T1 Init timer is running");
+					MS_ASSERT(
+					  !this->t1CookieTimer->IsRunning(),
+					  "association state is SHUTDOWN_SENT but T1 Cookie timer is running");
+					MS_ASSERT(
+					  this->t2ShutdownTimer->IsRunning(),
+					  "association state is SHUTDOWN_SENT but T2 Shutdown timer is not running");
+
+					break;
+				}
+
+				case AssociationState::SHUTDOWN_RECEIVED:
+				{
+					MS_ASSERT(this->tcb, "association state is SHUTDOWN_RECEIVED but there is not TCB");
+					MS_ASSERT(
+					  !this->t1InitTimer->IsRunning(),
+					  "association state is SHUTDOWN_RECEIVED but T1 Init timer is running");
+					MS_ASSERT(
+					  !this->t1CookieTimer->IsRunning(),
+					  "association state is SHUTDOWN_RECEIVED but T1 Cookie timer is running");
+					MS_ASSERT(
+					  !this->t2ShutdownTimer->IsRunning(),
+					  "association state is SHUTDOWN_RECEIVED but T2 Shutdown timer is running");
+
+					break;
+				}
+
+				case AssociationState::SHUTDOWN_ACK_SENT:
+				{
+					MS_ASSERT(this->tcb, "association state is SHUTDOWN_ACK_SENT but there is not TCB");
+					MS_ASSERT(
+					  !this->t1InitTimer->IsRunning(),
+					  "association state is SHUTDOWN_ACK_SENT but T1 Init timer is running");
+					MS_ASSERT(
+					  !this->t1CookieTimer->IsRunning(),
+					  "association state is SHUTDOWN_ACK_SENT but T1 Cookie timer is running");
+					MS_ASSERT(
+					  this->t2ShutdownTimer->IsRunning(),
+					  "association state is SHUTDOWN_ACK_SENT but T2 Shutdown timer is not running");
+
+					break;
+				}
 			}
 		}
 

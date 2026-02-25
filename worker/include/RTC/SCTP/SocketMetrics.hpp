@@ -81,12 +81,26 @@ namespace RTC
 			Types::SctpImplementation peerImplementation{ Types::SctpImplementation::UNKNOWN };
 
 			/**
+			 * Whether Partial Reliability has been negotiated.
+			 *
+			 * @see RFC 3758.
+			 */
+			bool usesPartialReliability{ false };
+
+			/**
 			 * Whether Stream Schedulers and User Message Interleaving (I-DATA Chunks)
 			 * have been negotiated.
 			 *
 			 * @see RFC 8260.
 			 */
 			bool usesMessageInterleaving{ false };
+
+			/**
+			 * Whether Stream Reconfiguration has been negotiated.
+			 *
+			 * @see RFC 6525.
+			 */
+			bool usesReconfig{ false };
 
 			/**
 			 * Whether Alternate Error Detection Method for Zero Checksum has been

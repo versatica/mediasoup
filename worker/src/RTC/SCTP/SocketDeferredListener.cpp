@@ -8,22 +8,22 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		SocketDeferredListener::ScopedDeferred::ScopedDeferred(SocketDeferredListener* deferredListener)
+		SocketDeferredListener::ScopedDeferred::ScopedDeferred(SocketDeferredListener& deferredListener)
 		  : deferredListener(deferredListener)
 		{
 			MS_TRACE();
 
-			this->deferredListener->SetReady();
+			this->deferredListener.SetReady();
 		}
 
 		SocketDeferredListener::ScopedDeferred::~ScopedDeferred()
 		{
 			MS_TRACE();
 
-			this->deferredListener->TriggerDeferredCallbacks();
+			this->deferredListener.TriggerDeferredCallbacks();
 		}
 
-		SocketDeferredListener::SocketDeferredListener(SocketListener* innerListener)
+		SocketDeferredListener::SocketDeferredListener(SocketListener& innerListener)
 		  : innerListener(innerListener)
 		{
 			MS_TRACE();
@@ -75,7 +75,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			// Will not be deferred but called directly.
-			return this->innerListener->OnSocketSendSctpPacket(socket, packet);
+			return this->innerListener.OnSocketSendSctpPacket(socket, packet);
 		}
 
 		void SocketDeferredListener::OnSocketConnected(Socket* socket)
@@ -85,9 +85,9 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData /*data*/, SocketListener* listener)
+			  [socket](CallbackData /*data*/, SocketListener& listener)
 			  {
-				  listener->OnSocketConnected(socket);
+				  listener.OnSocketConnected(socket);
 			  },
 			  std::monostate{});
 		}
@@ -99,9 +99,9 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData /*data*/, SocketListener* listener)
+			  [socket](CallbackData /*data*/, SocketListener& listener)
 			  {
-				  listener->OnSocketClosed(socket);
+				  listener.OnSocketClosed(socket);
 			  },
 			  std::monostate{});
 		}
@@ -113,9 +113,9 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData /*data*/, SocketListener* listener)
+			  [socket](CallbackData /*data*/, SocketListener& listener)
 			  {
-				  listener->OnSocketConnectionRestarted(socket);
+				  listener.OnSocketConnectionRestarted(socket);
 			  },
 			  std::monostate{});
 		}
@@ -128,10 +128,10 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener* listener)
+			  [socket](CallbackData data, SocketListener& listener)
 			  {
 				  Error error = std::get<Error>(std::move(data));
-				  listener->OnSocketError(socket, error.errorKind, error.message);
+				  listener.OnSocketError(socket, error.errorKind, error.message);
 			  },
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
@@ -144,10 +144,10 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener* listener)
+			  [socket](CallbackData data, SocketListener& listener)
 			  {
 				  Error error = std::get<Error>(std::move(data));
-				  listener->OnSocketAborted(socket, error.errorKind, error.message);
+				  listener.OnSocketAborted(socket, error.errorKind, error.message);
 			  },
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
@@ -159,9 +159,9 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener* listener)
+			  [socket](CallbackData data, SocketListener& listener)
 			  {
-				  listener->OnSocketMessageReceived(socket, std::get<Message>(std::move(data)));
+				  listener.OnSocketMessageReceived(socket, std::get<Message>(std::move(data)));
 			  },
 			  std::move(message));
 		}
@@ -174,10 +174,10 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener* listener)
+			  [socket](CallbackData data, SocketListener& listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
-				  listener->OnSocketStreamsResetPerformed(socket, streamReset.streamIds);
+				  listener.OnSocketStreamsResetPerformed(socket, streamReset.streamIds);
       },
 			  StreamReset{ .streamIds = { outboundStreamIds.begin(), outboundStreamIds.end() } });
 		}
@@ -190,11 +190,10 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener* listener)
+			  [socket](CallbackData data, SocketListener& listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
-				  listener->OnSocketStreamsResetFailed(
-				    socket, streamReset.streamIds, streamReset.errorMessage);
+				  listener.OnSocketStreamsResetFailed(socket, streamReset.streamIds, streamReset.errorMessage);
       },
 			  StreamReset{ .streamIds    = { outboundStreamIds.begin(), outboundStreamIds.end() },
 			               .errorMessage = std::string(errorMessage) });
@@ -208,10 +207,10 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener* listener)
+			  [socket](CallbackData data, SocketListener& listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
-				  listener->OnSocketInboundStreamsReset(socket, streamReset.streamIds);
+				  listener.OnSocketInboundStreamsReset(socket, streamReset.streamIds);
       },
 			  StreamReset{ .streamIds = { inboundStreamIds.begin(), inboundStreamIds.end() } });
 		}
@@ -223,9 +222,9 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener* listener)
+			  [socket](CallbackData data, SocketListener& listener)
 			  {
-				  listener->OnSocketBufferedAmountLow(socket, std::get<uint16_t>(std::move(data)));
+				  listener.OnSocketBufferedAmountLow(socket, std::get<uint16_t>(std::move(data)));
 			  },
 			  streamId);
 		}
@@ -237,9 +236,9 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener* listener)
+			  [socket](CallbackData data, SocketListener& listener)
 			  {
-				  listener->OnSocketTotalBufferedAmountLow(socket);
+				  listener.OnSocketTotalBufferedAmountLow(socket);
 			  },
 			  std::monostate{});
 		}

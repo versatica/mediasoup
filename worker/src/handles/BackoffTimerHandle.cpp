@@ -39,7 +39,7 @@ void BackoffTimerHandle::Start()
 
 	this->timer->Start(this->baseTimeoutMs);
 
-	this->active       = true;
+	this->running      = true;
 	this->timeoutCount = 0;
 }
 
@@ -49,7 +49,7 @@ void BackoffTimerHandle::Stop()
 
 	this->timer->Stop();
 
-	this->active       = false;
+	this->running      = false;
 	this->timeoutCount = 0;
 }
 
@@ -59,7 +59,7 @@ void BackoffTimerHandle::Restart()
 
 	this->timer->Restart();
 
-	this->active       = true;
+	this->running      = true;
 	this->timeoutCount = 0;
 }
 
@@ -118,9 +118,9 @@ void BackoffTimerHandle::OnTimer(TimerHandle* timer)
 	this->timeoutCount++;
 
 	// Compute whether the smart timer should still be running after this timeout
-	// expiration so the parent can check IsActive() within the OnTimer()
+	// expiration so the parent can check IsRunning() within the OnTimer()
 	// callback.
-	this->active = !this->maxRestarts.has_value() || this->timeoutCount <= *this->maxRestarts;
+	this->running = !this->maxRestarts.has_value() || this->timeoutCount <= *this->maxRestarts;
 
 	uint64_t baseTimeoutMs{ this->baseTimeoutMs };
 	bool stop{ false };
@@ -140,8 +140,8 @@ void BackoffTimerHandle::OnTimer(TimerHandle* timer)
 	SetBaseTimeoutMs(baseTimeoutMs);
 
 	// The caller may have called Stop() within the callback so we must check
-	// the `active` flag.
-	if (this->active)
+	// the `running` flag.
+	if (this->running)
 	{
 		auto nextTimeoutMs = ComputeNextTimeoutMs();
 

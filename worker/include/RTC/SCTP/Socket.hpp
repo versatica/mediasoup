@@ -120,7 +120,7 @@ namespace RTC
 			};
 
 		public:
-			explicit Socket(const SocketOptions& options, SocketListener* listener);
+			explicit Socket(const SocketOptions& options, SocketListener& listener);
 
 			~Socket() override;
 
@@ -161,7 +161,8 @@ namespace RTC
 			std::unique_ptr<Packet> CreatePacketWithVerificationTag(uint32_t verificationTag) const;
 
 			/**
-			 * Notify the parent about a Packet to be sent to the peer.
+			 * Notify the parent about a Packet to be sent to the peer and return a
+			 * boolean indicating whether the Packet was sent or not.
 			 *
 			 * This method also writes the Packet checksum field depending on the value
 			 * of `writeChecksum`. If it's explicitly set then it's honored. Otherwise
@@ -172,7 +173,7 @@ namespace RTC
 			 * - This method does not delete the given `packet`. The caller must do it
 			 *   after invoking this method.
 			 */
-			void SendPacket(Packet* packet, std::optional<bool> writeChecksum = std::nullopt);
+			bool SendPacket(Packet* packet, std::optional<bool> writeChecksum = std::nullopt);
 
 			void SendInitChunk();
 
@@ -209,6 +210,8 @@ namespace RTC
 			template<typename... AssociationStates>
 			void AssertNotAssociatonState(AssociationStates... unexpectedAssociationStates) const;
 
+			void AssertAssociationStateIsConsistent() const;
+
 			void AssertHasTcb() const;
 
 			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
@@ -225,6 +228,10 @@ namespace RTC
 			AssociationState associationState{ AssociationState::CLOSED };
 			// Metrics.
 			SocketMetrics metrics{};
+			// The actual send queue implementation. As data can be sent on a Socket
+			// before the connection is established, this component is not in the TCB.
+			// TODO: Implement this class.
+			// RRSendQueue sendQueue;
 			// To keep settings between sending of INIT Chunk and establishment of
 			// the connection.
 			PreTransmissionControlBlock preTcb;

@@ -68,7 +68,7 @@ public:
 
 	BackoffTimerHandle(const BackoffTimerHandle&) = delete;
 
-	~BackoffTimerHandle();
+	~BackoffTimerHandle() override;
 
 public:
 	/**
@@ -83,7 +83,7 @@ public:
 	void Stop();
 
 	/**
-	 * Restart the smart timer (if it's active) or start it. It will reset the
+	 * Restart the smart timer (if it's running) or start it. It will reset the
 	 * timeout count.
 	 */
 	void Restart();
@@ -106,9 +106,9 @@ public:
 	 * Whether the smart timer is running. Useful to check if this smart timer
 	 * will timeout again within the OnTimer() callback.
 	 */
-	bool IsActive() const
+	bool IsRunning() const
 	{
-		return this->active;
+		return this->running;
 	}
 
 	/**
@@ -136,7 +136,7 @@ private:
 	// Allocated by this.
 	TimerHandle* timer{ nullptr };
 	// Others.
-	bool active{ false };
+	bool running{ false };
 	size_t timeoutCount{ 0 };
 };
 
