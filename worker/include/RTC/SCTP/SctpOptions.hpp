@@ -261,7 +261,7 @@ namespace RTC
 		/**
 		 * Send options given when sending SCTP messages.
 		 */
-		struct MessageSendOptions
+		struct SendMessageOptions
 		{
 			/**
 			 * Whether the message should be sent with unordered message delivery.

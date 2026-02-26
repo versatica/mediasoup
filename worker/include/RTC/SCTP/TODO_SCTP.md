@@ -1,6 +1,8 @@
 # TODO STCP
 
-Here some notes about our ongoing SCTP implementation.
+## Related to mediasoup SCTP implementation
+
+- `SocketListener` callbacks cannpt include `Socket* socket` as first argument because the `listener` is given to other subclasses and those cannot invoke listener callbacks with `this` (because they are not `Socket` instances). So we may have to remove `Socket* socket` from the signatures of `SocketListener` callbacks. However if we do that, how can the parent class correlate them? Should we assume that we will have a `SCTP::Association` parent class that handles a **single** `SCTP::Socket` instance and also `DataProducers/DataConsumers`?
 
 ## Related to dcsctp
 

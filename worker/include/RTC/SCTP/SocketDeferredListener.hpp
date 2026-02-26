@@ -58,36 +58,32 @@ namespace RTC
 			void TriggerDeferredCallbacks();
 
 		public:
-			/* Pure virtual methods inherited from Socket::Listener. */
-			bool OnSocketSendSctpPacket(Socket* socket, Packet* packet) override;
+			/* Pure virtual methods inherited from RTC::STCP::SocketListener. */
+			bool OnSocketSendSctpPacket(Packet* packet) override;
 
-			void OnSocketConnected(Socket* socket) override;
+			void OnSocketConnected() override;
 
-			void OnSocketClosed(Socket* socket) override;
+			void OnSocketClosed() override;
 
-			void OnSocketConnectionRestarted(Socket* socket) override;
+			void OnSocketConnectionRestarted() override;
 
-			void OnSocketError(
-			  Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage) override;
+			void OnSocketError(Types::ErrorKind errorKind, std::string_view errorMessage) override;
 
-			void OnSocketAborted(
-			  Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage) override;
+			void OnSocketAborted(Types::ErrorKind errorKind, std::string_view errorMessage) override;
 
-			void OnSocketMessageReceived(Socket* socket, Message message) override;
+			void OnSocketMessageReceived(Message message) override;
 
-			void OnSocketStreamsResetPerformed(
-			  Socket* socket, std::span<const uint16_t> outboundStreamIds) override;
+			void OnSocketStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds) override;
 
 			void OnSocketStreamsResetFailed(
-			  Socket* socket,
-			  std::span<const uint16_t> outboundStreamIds,
-			  std::string_view errorMessage) override;
 
-			void OnSocketInboundStreamsReset(Socket* socket, std::span<const uint16_t> inboundStreamIds) override;
+			  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage) override;
 
-			void OnSocketBufferedAmountLow(Socket* socket, uint16_t streamId) override;
+			void OnSocketInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) override;
 
-			void OnSocketTotalBufferedAmountLow(Socket* socket) override;
+			void OnSocketStreamBufferedAmountLow(uint16_t streamId) override;
+
+			void OnSocketTotalBufferedAmountLow() override;
 
 		private:
 			SocketListener& innerListener;

@@ -12,9 +12,6 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		// Forward declaration.
-		class Socket;
-
 		class SocketListener
 		{
 		public:
@@ -33,7 +30,7 @@ namespace RTC
 			 * @remarks
 			 * - It is NOT allowed to call methods in Socket within this callback.
 			 */
-			virtual bool OnSocketSendSctpPacket(Socket* socket, Packet* packet) = 0;
+			virtual bool OnSocketSendSctpPacket(Packet* packet) = 0;
 
 			/**
 			 * Called when calling Connect() succeeds and also for incoming successful
@@ -42,7 +39,7 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketConnected(Socket* socket) = 0;
+			virtual void OnSocketConnected() = 0;
 
 			/**
 			 * Called when the Socket is closed in a controlled way. No other callbacks
@@ -51,7 +48,7 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketClosed(Socket* socket) = 0;
+			virtual void OnSocketClosed() = 0;
 
 			/**
 			 * Called on connection restarted (by peer). This is just a notification,
@@ -61,7 +58,7 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketConnectionRestarted(Socket* socket) = 0;
+			virtual void OnSocketConnectionRestarted() = 0;
 
 			/**
 			 * Triggered when an non-fatal error is reported by either this library or
@@ -72,8 +69,7 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketError(
-			  Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
+			virtual void OnSocketError(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
 
 			/**
 			 * Triggered when the socket has aborted - either as decided by this Socket
@@ -84,8 +80,7 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketAborted(
-			  Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
+			virtual void OnSocketAborted(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
 
 			/**
 			 * Called when an SCTP message in full has been received.
@@ -93,7 +88,7 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketMessageReceived(Socket* socket, Message message) = 0;
+			virtual void OnSocketMessageReceived(Message message) = 0;
 
 			/**
 			 * Indicates that a stream reset request has been performed.
@@ -101,8 +96,7 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketStreamsResetPerformed(
-			  Socket* socket, std::span<const uint16_t> outboundStreamIds) = 0;
+			virtual void OnSocketStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds) = 0;
 
 			/**
 			 * Indicates that a stream reset request has failed.
@@ -111,7 +105,7 @@ namespace RTC
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
 			virtual void OnSocketStreamsResetFailed(
-			  Socket* socket, std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage) = 0;
+			  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage) = 0;
 
 			/**
 			 * When a peer has reset some of its outbound streams, this will be
@@ -120,17 +114,16 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketInboundStreamsReset(
-			  Socket* socket, std::span<const uint16_t> inboundStreamIds) = 0;
+			virtual void OnSocketInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) = 0;
 
 			/**
 			 * Called when the amount of data buffered to be sent falls to or below
-			 * the threshold set when calling SetBufferedAmountLowThreshold().
+			 * the threshold set when calling SetStreamBufferedAmountLowThreshold().
 			 *
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketBufferedAmountLow(Socket* socket, uint16_t streamId) = 0;
+			virtual void OnSocketStreamBufferedAmountLow(uint16_t streamId) = 0;
 
 			/**
 			 * Called when the total amount of data buffered (in the entire send
@@ -140,7 +133,7 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnSocketTotalBufferedAmountLow(Socket* socket) = 0;
+			virtual void OnSocketTotalBufferedAmountLow() = 0;
 
 			/**
 			 * SCTP message lifecycle events.

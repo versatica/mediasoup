@@ -1,7 +1,10 @@
+#include "RTC/SCTP/Types.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
+#include <cstdint>
 #define MS_CLASS "RTC::SCTP::Socket"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
@@ -187,7 +190,7 @@ namespace RTC
 			// is the application's intention when calling Shutdown().
 			else
 			{
-				InternalClose(Types::ErrorKind::NoError, "");
+				InternalClose(Types::ErrorKind::NO_ERROR, "");
 			}
 
 			AssertAssociationStateIsConsistent();
@@ -220,7 +223,7 @@ namespace RTC
 					SendPacket(packet.get());
 				}
 
-				InternalClose(Types::ErrorKind::NoError, "");
+				InternalClose(Types::ErrorKind::NO_ERROR, "");
 			}
 			else
 			{
@@ -228,6 +231,16 @@ namespace RTC
 			}
 
 			AssertAssociationStateIsConsistent();
+		}
+
+		std::optional<SocketMetrics> Socket::GetMetrics() const
+		{
+			if (!this->tcb)
+			{
+				return std::nullopt;
+			}
+
+			return ComputeMetrics();
 		}
 
 		uint16_t Socket::GetStreamPriority(uint16_t streamId) const
@@ -251,6 +264,140 @@ namespace RTC
 			MS_TRACE();
 
 			this->sctpOptions.maxSendMessageSize = maxMessageSize;
+		}
+
+		size_t Socket::GetStreamBufferedAmount(uint16_t streamId) const
+		{
+			MS_TRACE();
+
+			// TODO: Implement it.
+			// return this->sendQueue.GetStreamBufferedAmount(streamId);
+		}
+
+		size_t Socket::GetStreamBufferedAmountLowThreshold(uint16_t streamId) const
+		{
+			MS_TRACE();
+
+			// TODO: Implement it.
+			// return this->sendQueue.GetStreamBufferedAmountLowThreshold(streamId);
+		}
+
+		void Socket::SetBufferedAmountLowThreshold(uint16_t stream_id, size_t bytes)
+		{
+			MS_TRACE();
+
+			// TODO: Implement it.
+			// this->sendQueue.SetBufferedAmountLowThreshold(streamId, bytes);
+		}
+
+		Types::ResetStreamsStatus Socket::ResetStreams(std::span<const uint16_t> outboundStreamIds)
+		{
+			MS_TRACE();
+
+			SocketDeferredListener::ScopedDeferred deferrer(this->listener);
+
+			if (!this->tcb)
+			{
+				this->listener.OnSocketError(
+				  Types::ErrorKind::WRONG_SEQUENCE, "can't reset streams as the socket is not connected");
+
+				return Types::ResetStreamsStatus::NOT_CONNECTED;
+			}
+
+			// TODO: Implement it.
+			// if (!this->tcb->GetCapabilities().reconfig)
+			// {
+			//   this->listener.OnSocketError(Types::ErrorKind::UNSUPPORTED_OPERATION,
+			//                      "can't reset streams as the remote doesn't support it");
+
+			//   return Types::ResetStreamsStatus::NOT_SUPPORTED;
+			// }
+
+			// TODO: Implement it.
+			// this->tcb->GetStreamResetHandler().ResetStreams(outboundStreamIds);
+
+			// TODO: Implement it.
+			// MaySendResetStreamsRequest();
+
+			AssertAssociationStateIsConsistent();
+
+			return Types::ResetStreamsStatus::PERFORMED;
+		}
+
+		// TODO: Why not Message&?
+		Types::SendMessageStatus Socket::SendMessage(
+		  Message message, const SendMessageOptions& sendMessageOptions)
+		{
+			MS_TRACE();
+
+			SocketDeferredListener::ScopedDeferred deferrer(this->listener);
+
+			// TODO: Implement it.
+			Types::SendMessageStatus status = InternalSendMessage(message, sendMessageOptions);
+
+			if (status != Types::SendMessageStatus::SUCCESS)
+			{
+				return status;
+			}
+
+			const uint64_t now = DepLibUV::GetTimeMs();
+
+			this->metrics.txMessagesCount++;
+
+			// TODO: Implement it.
+			// this->sendQueue.AddMessage(now, std::move(message), sendMessageOptions);
+
+			if (this->tcb)
+			{
+				// TODO: Implement it.
+				// this->tcb->SendBufferedPackets(now);
+			}
+
+			AssertAssociationStateIsConsistent();
+
+			return Types::SendMessageStatus::SUCCESS;
+		}
+
+		// TODO: Why not Message&?
+		std::vector<Types::SendMessageStatus> Socket::SendManyMessages(
+		  std::span<Message> messages, const SendMessageOptions& sendMessageOptions)
+		{
+			MS_TRACE();
+
+			SocketDeferredListener::ScopedDeferred deferrer(this->listener);
+
+			const uint64_t now = DepLibUV::GetTimeMs();
+			std::vector<Types::SendMessageStatus> statuses;
+
+			statuses.reserve(messages.size());
+
+			for (auto& message : messages)
+			{
+				// TODO: Implement it.
+				Types::SendMessageStatus status = InternalSendMessage(message, sendMessageOptions);
+
+				statuses.push_back(status);
+
+				if (status != Types::SendMessageStatus::SUCCESS)
+				{
+					continue;
+				}
+
+				this->metrics.txMessagesCount++;
+
+				// TODO: Implement it.
+				// this->sendQueue.AddMessage(now, std::move(message), sendMessageOptions);
+			}
+
+			if (this->tcb)
+			{
+				// TODO: Implement it.
+				// this->tcb->SendBufferedPackets(now);
+			}
+
+			AssertAssociationStateIsConsistent();
+
+			return statuses;
 		}
 
 		// TODO: Should the caller call free packet after calling this method? or us?
@@ -302,13 +449,13 @@ namespace RTC
 				this->tcb = nullptr;
 			}
 
-			if (errorKind == Types::ErrorKind::NoError)
+			if (errorKind == Types::ErrorKind::NO_ERROR)
 			{
-				this->listener.OnSocketClosed(this);
+				this->listener.OnSocketClosed();
 			}
 			else
 			{
-				this->listener.OnSocketAborted(this, errorKind, message);
+				this->listener.OnSocketAborted(errorKind, message);
 			}
 
 			SetAssociationState(AssociationState::CLOSED, message);
@@ -466,7 +613,15 @@ namespace RTC
 			}
 
 			// Send the Packet.
-			return this->listener.OnSocketSendSctpPacket(this, packet);
+			return this->listener.OnSocketSendSctpPacket(packet);
+		}
+
+		Types::SendMessageStatus Socket::InternalSendMessage(
+		  const Message& message, const SendMessageOptions& sendMessageOptions)
+		{
+			MS_TRACE();
+
+			// TODO
 		}
 
 		void Socket::SendInitChunk()
@@ -806,7 +961,7 @@ namespace RTC
 
 				SendPacket(packet.get());
 
-				InternalClose(Types::ErrorKind::ProtocolViolation, "received invalid INIT chunk");
+				InternalClose(Types::ErrorKind::PROTOCOL_VIOLATION, "received invalid INIT chunk");
 
 				return;
 			}
@@ -990,7 +1145,7 @@ namespace RTC
 				SendPacket(packet.get());
 
 				InternalClose(
-				  Types::ErrorKind::ProtocolViolation, "received INIT_ACK chunk doesn't contain a Cookie");
+				  Types::ErrorKind::PROTOCOL_VIOLATION, "received INIT_ACK chunk doesn't contain a Cookie");
 
 				return;
 			}
@@ -1111,8 +1266,8 @@ namespace RTC
 				return metrics;
 			}
 
-			const size_t packetPayloadLength =
-			  this->sctpOptions.mtu - Packet::CommonHeaderLength - DataChunk::DataChunkHeaderLength;
+			// const size_t packetPayloadLength =
+			//   this->sctpOptions.mtu - Packet::CommonHeaderLength - DataChunk::DataChunkHeaderLength;
 
 			// TODO: Implement it.
 			// metrics.cwndBytes = this->tcb->getCwnd();
@@ -1148,7 +1303,7 @@ namespace RTC
 			}
 			else
 			{
-				InternalClose(Types::ErrorKind::TooManyRetries, "no INIT_ACK chunk received");
+				InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "no INIT_ACK chunk received");
 			}
 
 			AssertAssociationStateIsConsistent();
@@ -1173,7 +1328,7 @@ namespace RTC
 			}
 			else
 			{
-				InternalClose(Types::ErrorKind::TooManyRetries, "no COOKIE_ACK chunk received");
+				InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "no COOKIE_ACK chunk received");
 			}
 
 			AssertAssociationStateIsConsistent();
@@ -1225,7 +1380,7 @@ namespace RTC
 
 				SendPacket(packet.get());
 
-				InternalClose(Types::ErrorKind::TooManyRetries, "no SHUTDOWN_ACK chunk received");
+				InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "no SHUTDOWN_ACK chunk received");
 			}
 
 			AssertAssociationStateIsConsistent();

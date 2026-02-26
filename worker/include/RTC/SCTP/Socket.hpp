@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_SOCKET_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/Message.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/SocketDeferredListener.hpp"
@@ -23,7 +24,9 @@
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include <cstdint>
+#include <span>
 #include <string_view>
+#include <vector>
 
 namespace RTC
 {
@@ -160,6 +163,12 @@ namespace RTC
 			void Close();
 
 			/**
+			 * Retrieves the latest metrics. If the Socket is not fully connected,
+			 * `std::nullopt` will be returned.
+			 */
+			std::optional<SocketMetrics> GetMetrics() const;
+
+			/**
 			 * Returns the currently set priority for an outgoing stream. The initial
 			 * value, when not set, is `SctpOptions::defaultStreamPriority`.
 			 */
@@ -176,6 +185,74 @@ namespace RTC
 			 * set, is `SctpOptions::maxSendMessageSize`.
 			 */
 			void SetMaxSendMessageSize(size_t maxMessageSize);
+
+			/**
+			 * Returns the number of bytes of data currently queued to be sent on a
+			 * given stream.
+			 */
+			size_t GetStreamBufferedAmount(uint16_t streamId) const;
+
+			/**
+			 * Returns the number of buffered outgoing bytes that is considered "low"
+			 * for a given stream. See `SetStreamBufferedAmountLowThreshold()`.
+			 */
+			size_t GetStreamBufferedAmountLowThreshold(uint16_t streamId) const;
+
+			/**
+			 * Specifies the number of bytes of buffered outgoing data that is considered
+			 * "low" for a given stream, which will trigger
+			 * OnSocketStreamBufferedAmountLow()` event. The default value is 0.
+			 */
+			void SetBufferedAmountLowThreshold(uint16_t stream_id, size_t bytes);
+
+			/**
+			 * Resetting streams is an asynchronous operation and the results will be
+			 * notified using `OnSocketStreamsResetPerformed()` on success and
+			 * `OnSocketStreamsResetFailed()` on failure.
+			 *
+			 * When it's known that the peer has reset its own outgoing streams,
+			 * `OnSocketInboundStreamsReset()` is called.
+			 *
+			 * Resetting streams can only be done on an established association that
+			 * supports stream resetting. Calling this method on e.g. a closed SCTP
+			 * association or streams that don't support resetting will not perform
+			 * any operation.
+			 *
+			 * @remarks
+			 * - Only outbound streams can be reset.
+			 * - Resetting a stream will also remove all queued messages on those
+			 *   streams, but will ensure that the currently sent message (if any) is
+			 *   fully sent before closing the stream.
+			 */
+			Types::ResetStreamsStatus ResetStreams(std::span<const uint16_t> outboundStreamIds);
+
+			/**
+			 * Sends a SCTP message using the provided send options. Sending a message
+			 * is an asynchronous operation, and the `OnSocketError()` callback may be
+			 * invoked to indicate any errors in sending the message.
+			 *
+			 * The association does not have to be established before calling this
+			 * method. If it's called before there is an established association, the
+			 * message will be queued.
+			 */
+			// TODO: Why not Message&?
+			Types::SendMessageStatus SendMessage(Message message, const SendMessageOptions& sendMessageOptions);
+
+			/**
+			 * Sends SCTP messages using the provided send options. Sending a message
+			 * is an asynchronous operation, and the `OnSocketError()` callback may be
+			 * invoked to indicate any errors in sending a message.
+			 *
+			 * The association does not have to be established before calling this
+			 * method. If it's called before there is an established association, the
+			 * message will be queued.
+			 *
+			 * This has identical semantics to `SendMessage()', except that it may
+			 * coalesce many messages into a single SCTP packet if they would fit.
+			 */
+			// TODO: Why not Message&?
+			std::vector<Types::SendMessageStatus> SendManyMessages(
+			  std::span<Message> messages, const SendMessageOptions& sendMessageOptions);
 
 			/**
 			 * Receive a Packet received from the peer.
@@ -216,6 +293,9 @@ namespace RTC
 			 *   after invoking this method.
 			 */
 			bool SendPacket(Packet* packet, std::optional<bool> writeChecksum = std::nullopt);
+
+			Types::SendMessageStatus InternalSendMessage(
+			  const Message& message, const SendMessageOptions& sendMessageOptions);
 
 			void SendInitChunk();
 

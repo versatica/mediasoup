@@ -68,177 +68,173 @@ namespace RTC
 			}
 		}
 
-		bool SocketDeferredListener::OnSocketSendSctpPacket(Socket* socket, Packet* packet)
+		bool SocketDeferredListener::OnSocketSendSctpPacket(Packet* packet)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			// Will not be deferred but called directly.
-			return this->innerListener.OnSocketSendSctpPacket(socket, packet);
+			return this->innerListener.OnSocketSendSctpPacket(packet);
 		}
 
-		void SocketDeferredListener::OnSocketConnected(Socket* socket)
+		void SocketDeferredListener::OnSocketConnected()
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData /*data*/, SocketListener& listener)
+			  [](CallbackData /*data*/, SocketListener& listener)
 			  {
-				  listener.OnSocketConnected(socket);
+				  listener.OnSocketConnected();
 			  },
 			  std::monostate{});
 		}
 
-		void SocketDeferredListener::OnSocketClosed(Socket* socket)
+		void SocketDeferredListener::OnSocketClosed()
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData /*data*/, SocketListener& listener)
+			  [](CallbackData /*data*/, SocketListener& listener)
 			  {
-				  listener.OnSocketClosed(socket);
+				  listener.OnSocketClosed();
 			  },
 			  std::monostate{});
 		}
 
-		void SocketDeferredListener::OnSocketConnectionRestarted(Socket* socket)
+		void SocketDeferredListener::OnSocketConnectionRestarted()
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData /*data*/, SocketListener& listener)
+			  [](CallbackData /*data*/, SocketListener& listener)
 			  {
-				  listener.OnSocketConnectionRestarted(socket);
+				  listener.OnSocketConnectionRestarted();
 			  },
 			  std::monostate{});
 		}
 
-		void SocketDeferredListener::OnSocketError(
-		  Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage)
+		void SocketDeferredListener::OnSocketError(Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, SocketListener& listener)
 			  {
 				  Error error = std::get<Error>(std::move(data));
-				  listener.OnSocketError(socket, error.errorKind, error.message);
+				  listener.OnSocketError(error.errorKind, error.message);
 			  },
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
-		void SocketDeferredListener::OnSocketAborted(
-		  Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage)
+		void SocketDeferredListener::OnSocketAborted(Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, SocketListener& listener)
 			  {
 				  Error error = std::get<Error>(std::move(data));
-				  listener.OnSocketAborted(socket, error.errorKind, error.message);
+				  listener.OnSocketAborted(error.errorKind, error.message);
 			  },
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
-		void SocketDeferredListener::OnSocketMessageReceived(Socket* socket, Message message)
+		void SocketDeferredListener::OnSocketMessageReceived(Message message)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, SocketListener& listener)
 			  {
-				  listener.OnSocketMessageReceived(socket, std::get<Message>(std::move(data)));
+				  listener.OnSocketMessageReceived(std::get<Message>(std::move(data)));
 			  },
 			  std::move(message));
 		}
 
-		void SocketDeferredListener::OnSocketStreamsResetPerformed(
-		  Socket* socket, std::span<const uint16_t> outboundStreamIds)
+		void SocketDeferredListener::OnSocketStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, SocketListener& listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
-				  listener.OnSocketStreamsResetPerformed(socket, streamReset.streamIds);
+				  listener.OnSocketStreamsResetPerformed(streamReset.streamIds);
       },
 			  StreamReset{ .streamIds = { outboundStreamIds.begin(), outboundStreamIds.end() } });
 		}
 
 		void SocketDeferredListener::OnSocketStreamsResetFailed(
-		  Socket* socket, std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage)
+		  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, SocketListener& listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
-				  listener.OnSocketStreamsResetFailed(socket, streamReset.streamIds, streamReset.errorMessage);
+				  listener.OnSocketStreamsResetFailed(streamReset.streamIds, streamReset.errorMessage);
       },
 			  StreamReset{ .streamIds    = { outboundStreamIds.begin(), outboundStreamIds.end() },
 			               .errorMessage = std::string(errorMessage) });
 		}
 
-		void SocketDeferredListener::OnSocketInboundStreamsReset(
-		  Socket* socket, std::span<const uint16_t> inboundStreamIds)
+		void SocketDeferredListener::OnSocketInboundStreamsReset(std::span<const uint16_t> inboundStreamIds)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, SocketListener& listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
-				  listener.OnSocketInboundStreamsReset(socket, streamReset.streamIds);
+				  listener.OnSocketInboundStreamsReset(streamReset.streamIds);
       },
 			  StreamReset{ .streamIds = { inboundStreamIds.begin(), inboundStreamIds.end() } });
 		}
 
-		void SocketDeferredListener::OnSocketBufferedAmountLow(Socket* socket, uint16_t streamId)
+		void SocketDeferredListener::OnSocketStreamBufferedAmountLow(uint16_t streamId)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, SocketListener& listener)
 			  {
-				  listener.OnSocketBufferedAmountLow(socket, std::get<uint16_t>(std::move(data)));
+				  listener.OnSocketStreamBufferedAmountLow(std::get<uint16_t>(std::move(data)));
 			  },
 			  streamId);
 		}
 
-		void SocketDeferredListener::OnSocketTotalBufferedAmountLow(Socket* socket)
+		void SocketDeferredListener::OnSocketTotalBufferedAmountLow()
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [socket](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, SocketListener& listener)
 			  {
-				  listener.OnSocketTotalBufferedAmountLow(socket);
+				  listener.OnSocketTotalBufferedAmountLow();
 			  },
 			  std::monostate{});
 		}

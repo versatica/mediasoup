@@ -72,89 +72,89 @@ namespace RTC
 				 * Indicates that no error has occurred. This will never be the case when
 				 * OnError() or OnAborted() is called.
 				 */
-				NoError,
+				NO_ERROR,
 				/**
 				 * There have been too many retries or timeouts, and the library has given
 				 * up.
 				 */
-				TooManyRetries,
+				TOO_MANY_RETRIES,
 				/**
 				 * A command was received that is only possible to execute when the Socket
 				 * is connected, which it is not.
 				 */
-				NotConnected,
+				NOT_CONNECTED,
 				/**
 				 * Parsing of the command or its parameters failed.
 				 */
-				ParseFailed,
+				PARSE_FAILED,
 				/**
 				 * Commands are received in the wrong sequence, which indicates a
 				 * synchronisation mismatch between the peers.
 				 */
-				WrongSequence,
+				WRONG_SEQUENCE,
 				/**
 				 * The peer has reported an issue using ERROR or ABORT command.
 				 */
-				PeerReported,
+				PEER_REPORTED,
 				/**
 				 * The peer has performed a protocol violation.
 				 */
-				ProtocolViolation,
+				PROTOCOL_VIOLATION,
 				/**
 				 * The receive or send buffers have been exhausted.
 				 */
-				ResourceExhaustion,
+				RESOURCE_EXHAUSTION,
 				/**
 				 * The application has performed an invalid operation.
 				 */
-				UnsupportedOperation,
+				UNSUPPORTED_OPERATION,
 			};
 
 			constexpr std::string_view ErrorKindToString(ErrorKind errorKind)
 			{
 				switch (errorKind)
 				{
-					case ErrorKind::NoError:
+					case ErrorKind::NO_ERROR:
 					{
 						return "NO_ERROR";
 					}
 
-					case ErrorKind::TooManyRetries:
+					case ErrorKind::TOO_MANY_RETRIES:
 					{
 						return "TOO_MANY_RETRIES";
 					}
 
-					case ErrorKind::NotConnected:
+					case ErrorKind::NOT_CONNECTED:
 					{
 						return "NOT_CONNECTED";
 					}
 
-					case ErrorKind::ParseFailed:
+					case ErrorKind::PARSE_FAILED:
 					{
 						return "PARSE_FAILED";
 					}
 
-					case ErrorKind::WrongSequence:
+					case ErrorKind::WRONG_SEQUENCE:
 					{
 						return "WRONG_SEQUENCE";
 					}
 
-					case ErrorKind::PeerReported:
+					case ErrorKind::PEER_REPORTED:
 					{
 						return "PEER_REPORTED";
 					}
 
-					case ErrorKind::ProtocolViolation:
+					case ErrorKind::PROTOCOL_VIOLATION:
 					{
 						return "PROTOCOL_VIOLATION";
 					}
 
-					case ErrorKind::ResourceExhaustion:
+					case ErrorKind::RESOURCE_EXHAUSTION:
 					{
 						return "RESOURCE_EXHAUSTION";
 					}
 
-					case ErrorKind::UnsupportedOperation:
+					case ErrorKind::UNSUPPORTED_OPERATION:
 					{
 						return "UNSUPPORTED_OPERATION";
 					}
@@ -195,6 +195,116 @@ namespace RTC
 					case SctpImplementation::USRSCTP:
 					{
 						return "usrsctp";
+					}
+				}
+			}
+
+			/**
+			 * Return value of Socket::ResetStreams().
+			 */
+			enum class ResetStreamsStatus
+			{
+				/**
+				 * If the connection is not yet established, this will be returned.
+				 */
+				NOT_CONNECTED,
+
+				/**
+				 * Indicates that ResetStreams operation has been successfully
+				 * initiated.
+				 */
+				PERFORMED,
+
+				/**
+				 * Indicates that resetting streams has failed as it's not supported by
+				 * the peer.
+				 */
+				NOT_SUPPORTED,
+			};
+
+			constexpr std::string_view ResetStreamsStatusToString(ResetStreamsStatus status)
+			{
+				switch (status)
+				{
+					case ResetStreamsStatus::NOT_CONNECTED:
+					{
+						return "NOT_CONNECTED";
+					}
+
+					case ResetStreamsStatus::PERFORMED:
+					{
+						return "PERFORMED";
+					}
+
+					case ResetStreamsStatus::NOT_SUPPORTED:
+					{
+						return "NOT_SUPPORTED";
+					}
+				}
+			}
+
+			/**
+			 * Return value of Socket::SendMessage() and Socket::SendManyMessages().
+			 */
+			enum class SendMessageStatus
+			{
+				/**
+				 * The message was enqueued successfully. As sending the message is done
+				 * asynchronously, this is no guarantee that the message has been
+				 * actually sent.
+				 */
+				SUCCESS,
+				/**
+				 * The message was rejected as the payload was empty (which is not
+				 * allowed in SCTP).
+				 */
+				ERROR_MESSAGE_EMPTY,
+
+				/**
+				 * The message was rejected as the payload was larger than what has been
+				 * set as `SctpOptions.maxMessageSize`.
+				 */
+				ERROR_MESSAGE_TOO_LARGE,
+
+				/**
+				 * The message could not be enqueued as the Socket is out of resources.
+				 * This mainly indicates that the send queue is full.
+				 */
+				ERROR_RESOURCE_EXHAUSTION,
+
+				/**
+				 * The message could not be sent as the Socket is shutting down.
+				 */
+				ERROR_SHUTTING_DOWN,
+			};
+
+			constexpr std::string_view SendMessageStatusToString(SendMessageStatus status)
+			{
+				switch (status)
+				{
+					case SendMessageStatus::SUCCESS:
+					{
+						return "SUCCESS";
+					}
+
+					case SendMessageStatus::ERROR_MESSAGE_EMPTY:
+					{
+						return "ERROR_MESSAGE_EMPTY";
+					}
+
+					case SendMessageStatus::ERROR_MESSAGE_TOO_LARGE:
+					{
+						return "ERROR_MESSAGE_TOO_LARGE";
+					}
+
+					case SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
+					{
+						return "ERROR_RESOURCE_EXHAUSTION";
+					}
+
+					case SendMessageStatus::ERROR_SHUTTING_DOWN:
+					{
+						return "ERROR_SHUTTING_DOWN";
 					}
 				}
 			}
