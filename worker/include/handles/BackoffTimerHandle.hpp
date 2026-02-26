@@ -19,7 +19,7 @@ public:
 		 * timeout given as reference and affect the next timeout duration.
 		 *
 		 * @remarks
-		 * - If the caller deletes this instance of SmartTimer within the callback
+		 * - If the caller deletes this BackoffTimer instance within the callback
 		 *   it must signal it be setting `stop` to true.
 		 */
 		virtual void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) = 0;
@@ -72,29 +72,21 @@ public:
 
 public:
 	/**
-	 * Start the smart timer (if it's stopped) or restart it (if already
+	 * Start the BackoffTimer (if it's stopped) or restart it (if already
 	 * running). It will reset the timeout count.
 	 */
 	void Start();
 
 	/**
-	 * Stop the smart timer. It will reset the timeout count.
+	 * Stop the BackoffTimer. It will reset the timeout count.
 	 */
 	void Stop();
 
 	/**
-	 * Restart the smart timer (if it's running) or start it. It will reset the
+	 * Restart the BackoffTimer (if it's running) or start it. It will reset the
 	 * timeout count.
 	 */
 	void Restart();
-
-	/**
-	 * Get the base timeout duration.
-	 */
-	uint64_t GetBaseTimeoutMs() const
-	{
-		return this->baseTimeoutMs;
-	}
 
 	/**
 	 * Set the base timeout duration. It will be applied after the next timeout
@@ -103,7 +95,7 @@ public:
 	void SetBaseTimeoutMs(uint64_t baseTimeoutMs);
 
 	/**
-	 * Whether the smart timer is running. Useful to check if this smart timer
+	 * Whether the BackoffTimer is running. Useful to check if this BackoffTimer
 	 * will timeout again within the OnTimer() callback.
 	 */
 	bool IsRunning() const
@@ -112,11 +104,22 @@ public:
 	}
 
 	/**
+	 * Maximum number of restarts.
+	 *
+	 * @remarks
+	 * - If `maxRestarts` was not given in the constructor, this method returns 0.
+	 */
+	size_t GetMaxRestarts() const
+	{
+		return this->maxRestarts.value_or(0);
+	}
+
+	/**
 	 * Number of times the timer has expired.
 	 */
-	size_t GetTimeoutCount() const
+	size_t GetExpirationCount() const
 	{
-		return this->timeoutCount;
+		return this->expirationCount;
 	}
 
 private:
@@ -137,7 +140,7 @@ private:
 	TimerHandle* timer{ nullptr };
 	// Others.
 	bool running{ false };
-	size_t timeoutCount{ 0 };
+	size_t expirationCount{ 0 };
 };
 
 #endif

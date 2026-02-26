@@ -11,6 +11,7 @@
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
+#include "RTC/SCTP/packet/chunks/AnyInitChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
@@ -21,6 +22,7 @@
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
 #include "handles/BackoffTimerHandle.hpp"
+#include <cstdint>
 #include <string_view>
 
 namespace RTC
@@ -128,13 +130,6 @@ namespace RTC
 			Types::SocketState GetState() const;
 
 			/**
-			 * Closes the connection non-gracefully. Will send ABORT if the connection
-			 * is not already closed. No callbacks will be made after Close() has
-			 * returned.
-			 */
-			void Close();
-
-			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
 			 * Chunk.
 			 *
@@ -144,16 +139,55 @@ namespace RTC
 			void Connect();
 
 			/**
+			 * Gracefully shutdowns the Socket and sends all outstanding data. This
+			 * is an asynchronous operation and OnSocketClosed() will be called on
+			 * success.
+			 *
+			 * @remarks
+			 * - libwebrtc never calls the corresponding DcSctpSocket::Shutdown()
+			 *   method due to a bug and hence we shouldn't either.
+			 *
+			 * @see https://issues.webrtc.org/issues/42222897
+			 */
+			void Shutdown();
+
+			/**
+			 * Closes the Socket non-gracefully. Will send ABORT if the connection
+			 * is not already closed. No callbacks will be made after Close() has
+			 * returned. However, before Close() returns, it may have called
+			 * OnSocketClosed() or OnSocketAborted() callbacks.
+			 */
+			void Close();
+
+			/**
+			 * Returns the currently set priority for an outgoing stream. The initial
+			 * value, when not set, is `SctpOptions::defaultStreamPriority`.
+			 */
+			uint16_t GetStreamPriority(uint16_t streamId) const;
+
+			/**
+			 * Sets the priority of an outgoing stream. The initial value, when not
+			 * set, is `SctpOptions::defaultStreamPriority`.
+			 */
+			void SetStreamPriority(uint16_t streamId, uint16_t priority);
+
+			/**
+			 * Sets the maximum size of sent messages. The initial value, when not
+			 * set, is `SctpOptions::maxSendMessageSize`.
+			 */
+			void SetMaxSendMessageSize(size_t maxMessageSize);
+
+			/**
 			 * Receive a Packet received from the peer.
 			 */
 			void ReceivePacket(const Packet* receivedPacket);
 
 		private:
-			void InternalClose(Types::ErrorKind errorKind, std::string_view& message);
+			void InternalClose(Types::ErrorKind errorKind, const std::string_view& message);
 
 			void SetAssociationState(AssociationState associationState, const std::string_view& message);
 
-			void AddCapabilitiesParametersToInitOrInitAckChunk(Chunk* chunk) const;
+			void AddCapabilitiesParametersToInitOrInitAckChunk(AnyInitChunk* chunk) const;
 
 			void CreateTransmissionControlBlock(
 			  uint32_t localVerificationTag,
@@ -185,7 +219,11 @@ namespace RTC
 
 			void SendInitChunk();
 
+			void SendShutdownChunk();
+
 			void SendShutdownAckChunk();
+
+			void MaySendShutdownOrShutdownAckChunk();
 
 			bool ValidateReceivedPacket(const Packet* receivedPacket);
 
@@ -205,6 +243,8 @@ namespace RTC
 
 			bool ProcessReceivedUnknownChunk(
 			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
+
+			SocketMetrics ComputeMetrics() const;
 
 			void OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop);
 
@@ -228,7 +268,7 @@ namespace RTC
 
 		private:
 			// SCTP options given in the constructor.
-			const SctpOptions sctpOptions;
+			SctpOptions sctpOptions;
 			// Listener. It's not a SocketListener but a SocketDeferredListener which
 			// inherits from SocketListener.
 			SocketDeferredListener listener;

@@ -6,6 +6,8 @@ Here some notes about our ongoing SCTP implementation.
 
 - Check all calls to `CreatePacket()` in `Socket.cpp` since many of them must be replaced to `this->tbc->CreatePacket()`.
 
+- Investigate `DcSctpSocket::HandleTimeout()` which is only called from `media/sctp/dcsctp_transport.cc`.
+
 ## Flow
 
 1. A DTLS packet arrives to `WebRtcTransport` where we check `DtlsTransport::IsDtls()`).

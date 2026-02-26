@@ -127,6 +127,39 @@ void TimerHandle::Restart()
 	}
 }
 
+void TimerHandle::Restart(uint64_t timeout, uint64_t repeat)
+{
+	MS_TRACE();
+
+	if (this->closed)
+	{
+		MS_THROW_ERROR("closed");
+	}
+
+	this->timeout = timeout;
+	this->repeat  = repeat;
+
+	int err;
+
+	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
+	{
+		err = uv_timer_stop(this->uvHandle);
+
+		if (err != 0)
+		{
+			MS_THROW_ERROR("uv_timer_stop() failed: %s", uv_strerror(err));
+		}
+	}
+
+	err =
+	  uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->timeout, this->repeat);
+
+	if (err != 0)
+	{
+		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
+	}
+}
+
 void TimerHandle::InternalClose()
 {
 	MS_TRACE();

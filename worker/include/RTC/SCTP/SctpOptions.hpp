@@ -52,7 +52,7 @@ namespace RTC
 			 * incoming messages, which may larger than this value (but smaller than
 			 * `maxReceiverWindowBufferSize`).
 			 */
-			size_t maxMessageSize{ 256 * 1024 };
+			size_t maxSendMessageSize{ 256 * 1024 };
 
 			/**
 			 * The default stream priority, if not overridden by
