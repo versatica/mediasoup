@@ -131,7 +131,7 @@ namespace RTC
 				return Types::SctpImplementation::UNKNOWN;
 			}
 
-			std::string_view magic1(reinterpret_cast<const char*>(buffer), StateCookie::Magic1Length);
+			const std::string_view magic1(reinterpret_cast<const char*>(buffer), StateCookie::Magic1Length);
 
 			if (magic1 == "msworker")
 			{
