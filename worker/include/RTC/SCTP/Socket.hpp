@@ -123,6 +123,27 @@ namespace RTC
 				uint32_t localInitialTsn{ 0 };
 			};
 
+			/**
+			 * Metrics that are directly filled by the Socket class.
+			 *
+			 * @remarks
+			 * - This struct is a subset of the public SocketMetrics struct.
+			 */
+			struct SocketPrivateMetrics
+			{
+				uint64_t txPacketsCount{ 0 };
+				uint64_t txMessagesCount{ 0 };
+				uint64_t rxPacketsCount{ 0 };
+				uint64_t rxMessagesCount{ 0 };
+				Types::SctpImplementation peerImplementation{ Types::SctpImplementation::UNKNOWN };
+				uint16_t negotiatedMaxOutboundStreams{ 0 };
+				uint16_t negotiatedMaxInboundStreams{ 0 };
+				bool usesPartialReliability{ false };
+				bool usesMessageInterleaving{ false };
+				bool usesReconfig{ false };
+				bool usesZeroChecksum{ false };
+			};
+
 		public:
 			explicit Socket(const SctpOptions& sctpOptions, SocketListener& listener);
 
@@ -324,8 +345,6 @@ namespace RTC
 			bool ProcessReceivedUnknownChunk(
 			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
 
-			SocketMetrics ComputeMetrics() const;
-
 			void OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop);
 
 			void OnT1CookieTimer(uint64_t& baseTimeoutMs, bool& stop);
@@ -354,8 +373,8 @@ namespace RTC
 			SocketDeferredListener listener;
 			// SCTP association state.
 			AssociationState associationState{ AssociationState::CLOSED };
-			// Metrics.
-			SocketMetrics metrics{};
+			// Private metrics.
+			SocketPrivateMetrics privateMetrics{};
 			// The actual send queue implementation. As data can be sent on a Socket
 			// before the connection is established, this component is not in the TCB.
 			// TODO: Implement this class.

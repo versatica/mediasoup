@@ -25,6 +25,16 @@ namespace RTC
 			uint64_t txMessagesCount{ 0 };
 
 			/**
+			 * Number of SCTP Packets received.
+			 */
+			uint64_t rxPacketsCount{ 0 };
+
+			/**
+			 * Number of messages received.
+			 */
+			uint64_t rxMessagesCount{ 0 };
+
+			/**
 			 * Number of Packets retransmitted. Since SCTP Packets can contain both
 			 * retransmitted DATA or I-DATA Chunks and Chunks that are transmitted for
 			 * the first time, this represents an upper bound as it's incremented
@@ -57,16 +67,6 @@ namespace RTC
 			 * messages in the send queue that haven't been fragmented/packetized yet.
 			 */
 			size_t unackDataCount{ 0 };
-
-			/**
-			 * Number of SCTP Packets received.
-			 */
-			uint64_t rxPacketsCount{ 0 };
-
-			/**
-			 * Number of messages received.
-			 */
-			uint64_t rxMessagesCount{ 0 };
 
 			/**
 			 * The peer’s last announced receiver window size, corresponding to

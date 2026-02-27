@@ -85,7 +85,12 @@ namespace RTC
 			  static_cast<int>(associationStateStringView.size()),
 			  associationStateStringView.data());
 
-			this->metrics.Dump(indentation + 1);
+			const auto metrics = GetMetrics();
+
+			if (metrics.has_value())
+			{
+				metrics->Dump(indentation + 1);
+			}
 
 			MS_DUMP_CLEAN(indentation, "</SCTP::Socket>");
 		}
@@ -240,7 +245,34 @@ namespace RTC
 				return std::nullopt;
 			}
 
-			return ComputeMetrics();
+			// const size_t packetPayloadLength =
+			//   this->sctpOptions.mtu - Packet::CommonHeaderLength - DataChunk::DataChunkHeaderLength;
+
+			// TODO: Implement missing fields.
+			SocketMetrics metrics{
+				.txPacketsCount  = this->privateMetrics.txPacketsCount,
+				.txMessagesCount = this->privateMetrics.txMessagesCount,
+				.rxPacketsCount  = this->privateMetrics.rxPacketsCount,
+				.rxMessagesCount = this->privateMetrics.rxMessagesCount,
+				// .rtxPacketsCount = this->tcb->getRetransmissionQueue().getRtxPacketsCount(),
+				// .rtxBytesCount   = this->tcb->getRetransmissionQueue().getRtxBytesCount(),
+				// .cwndBytes       = this->tcb->getCwnd(),
+				// .srttMs          = this->tcb->getCurrentSrttMs(),
+				// .unackDataCount =
+				//   this->tcb->getRetransmissionQueue().GetUnackedItems() +
+				//   (this->sendQueue.getTotalBufferedAmount() + packetPayloadLength - 1) / packetPayloadLength,
+				// .peerRwndBytes                = this->tcb->getRetransmissionQueue().getRwnd(),
+				.peerImplementation           = this->privateMetrics.peerImplementation,
+				.negotiatedMaxOutboundStreams = this->privateMetrics.negotiatedMaxOutboundStreams,
+				.negotiatedMaxInboundStreams  = this->privateMetrics.negotiatedMaxInboundStreams,
+				.usesPartialReliability       = this->privateMetrics.usesPartialReliability,
+				.usesMessageInterleaving      = this->privateMetrics.usesMessageInterleaving,
+				.usesReconfig                 = this->privateMetrics.usesReconfig,
+				.usesZeroChecksum             = this->privateMetrics.usesZeroChecksum,
+
+			};
+
+			return metrics;
 		}
 
 		uint16_t Socket::GetStreamPriority(uint16_t streamId) const
@@ -342,7 +374,7 @@ namespace RTC
 
 			const uint64_t now = DepLibUV::GetTimeMs();
 
-			this->metrics.txMessagesCount++;
+			this->privateMetrics.txMessagesCount++;
 
 			// TODO: Implement it.
 			// this->sendQueue.AddMessage(now, std::move(message), sendMessageOptions);
@@ -383,7 +415,7 @@ namespace RTC
 					continue;
 				}
 
-				this->metrics.txMessagesCount++;
+				this->privateMetrics.txMessagesCount++;
 
 				// TODO: Implement it.
 				// this->sendQueue.AddMessage(now, std::move(message), sendMessageOptions);
@@ -405,7 +437,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->metrics.rxPacketsCount++;
+			this->privateMetrics.rxPacketsCount++;
 
 			/* Verify Packet. */
 
@@ -557,12 +589,12 @@ namespace RTC
 			  tieTag,
 			  negotiatedCapabilities);
 
-			this->metrics.negotiatedMaxOutboundStreams = negotiatedCapabilities.maxOutboundStreams;
-			this->metrics.negotiatedMaxInboundStreams  = negotiatedCapabilities.maxInboundStreams;
-			this->metrics.usesPartialReliability       = negotiatedCapabilities.partialReliability;
-			this->metrics.usesMessageInterleaving      = negotiatedCapabilities.messageInterleaving;
-			this->metrics.usesReconfig                 = negotiatedCapabilities.reconfig;
-			this->metrics.usesZeroChecksum             = negotiatedCapabilities.zeroChecksum;
+			this->privateMetrics.negotiatedMaxOutboundStreams = negotiatedCapabilities.maxOutboundStreams;
+			this->privateMetrics.negotiatedMaxInboundStreams  = negotiatedCapabilities.maxInboundStreams;
+			this->privateMetrics.usesPartialReliability       = negotiatedCapabilities.partialReliability;
+			this->privateMetrics.usesMessageInterleaving = negotiatedCapabilities.messageInterleaving;
+			this->privateMetrics.usesReconfig            = negotiatedCapabilities.reconfig;
+			this->privateMetrics.usesZeroChecksum        = negotiatedCapabilities.zeroChecksum;
 		}
 
 		std::unique_ptr<Packet> Socket::CreatePacket() const
@@ -1150,7 +1182,7 @@ namespace RTC
 				return;
 			}
 
-			this->metrics.peerImplementation = StateCookie::DetermineSctpImplementation(
+			this->privateMetrics.peerImplementation = StateCookie::DetermineSctpImplementation(
 			  stateCookieParameter->GetCookie(), stateCookieParameter->GetCookieLength());
 
 			this->t1InitTimer->Stop();
@@ -1253,36 +1285,6 @@ namespace RTC
 			}
 
 			return !skipProcessing;
-		}
-
-		SocketMetrics Socket::ComputeMetrics() const
-		{
-			MS_TRACE();
-
-			SocketMetrics metrics = this->metrics;
-
-			if (!this->tcb)
-			{
-				return metrics;
-			}
-
-			// const size_t packetPayloadLength =
-			//   this->sctpOptions.mtu - Packet::CommonHeaderLength - DataChunk::DataChunkHeaderLength;
-
-			// TODO: Implement it.
-			// metrics.cwndBytes = this->tcb->getCwnd();
-			// metrics.srtt_ms = this->tcb->getCurrentSrttMs();
-			// metrics.unackDataCount =
-			//   this->tcb->getRetransmissionQueue().GetUnackedItems() +
-			//   (this->sendQueue.getTotalBufferedAmount() + packetPayloadLength - 1) / packetPayloadLength;
-			// metrics.peerRwndBytes = this->tcb->getRetransmissionQueue().getRwnd();
-			// metrics.negotiatedMaxOutboundStreams =
-			//   this->tcb->GetCapabilities().negotiatedMaxOutboundStreams;
-			// metrics.negotiatedMaxInboundStreams = this->tcb->GetCapabilities().negotiatedMaxInboundStreams;
-			// metrics.rtxPacketsCount = this->tcb->getRetransmissionQueue().getRtxPacketsCount();
-			// metrics.rtxBytesCount   = this->tcb->getRetransmissionQueue().getRtxBytesCount();
-
-			return metrics;
 		}
 
 		void Socket::OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop)
