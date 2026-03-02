@@ -53,16 +53,6 @@ void BackoffTimerHandle::Stop()
 	this->expirationCount = 0;
 }
 
-void BackoffTimerHandle::Restart()
-{
-	MS_TRACE();
-
-	this->timer->Restart(this->baseTimeoutMs);
-
-	this->running         = true;
-	this->expirationCount = 0;
-}
-
 void BackoffTimerHandle::SetBaseTimeoutMs(uint64_t baseTimeoutMs)
 {
 	MS_TRACE();

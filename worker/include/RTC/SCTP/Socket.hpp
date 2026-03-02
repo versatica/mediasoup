@@ -13,11 +13,14 @@
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
 #include "RTC/SCTP/packet/chunks/AnyInitChunk.hpp"
+#include "RTC/SCTP/packet/chunks/CookieEchoChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
+#include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "RTC/SCTP/packet/chunks/OperationErrorChunk.hpp"
+#include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
@@ -255,8 +258,12 @@ namespace RTC
 			 * The association does not have to be established before calling this
 			 * method. If it's called before there is an established association, the
 			 * message will be queued.
+			 *
+			 * @remarks
+			 * - Copy constructor is disabled and there is move constructor. That's why
+			 *   we don't pass a reference here. We could pass `Message&&` but that's
+			 *   worse opens the door to bugs.
 			 */
-			// TODO: Why not Message&?
 			Types::SendMessageStatus SendMessage(Message message, const SendMessageOptions& sendMessageOptions);
 
 			/**
@@ -270,13 +277,19 @@ namespace RTC
 			 *
 			 * This has identical semantics to `SendMessage()', except that it may
 			 * coalesce many messages into a single SCTP packet if they would fit.
+			 *
+			 * @remarks
+			 * - Same as in `SendMessage()`.
 			 */
-			// TODO: Why not Message&?
 			std::vector<Types::SendMessageStatus> SendManyMessages(
 			  std::span<Message> messages, const SendMessageOptions& sendMessageOptions);
 
 			/**
-			 * Receive a Packet received from the peer.
+			 * Receive a Packet received from the remote peer.
+			 *
+			 * @remarks
+			 * - The caller is responsible of freeing given Packet once this method
+			 *   returns.
 			 */
 			void ReceivePacket(const Packet* receivedPacket);
 
@@ -324,7 +337,21 @@ namespace RTC
 
 			void SendShutdownAckChunk();
 
+			/**
+			 * Sends SHUTDOWN or SHUTDOWN-ACK if the Socket is shutting down and if
+			 * all outstanding data has been acknowledged.
+			 */
 			void MaySendShutdownOrShutdownAckChunk();
+
+			/**
+			 * If the Socket is shutting down, responds SHUTDOWN to any incoming DATA.
+			 */
+			void MaySendShutdownOnPacketReceived(const Packet* receivedPacket);
+
+			/**
+			 * If there are streams pending to be reset, send a request to reset them.
+			 */
+			void MaySendResetStreamsRequest();
 
 			bool ValidateReceivedPacket(const Packet* receivedPacket);
 
@@ -332,12 +359,17 @@ namespace RTC
 
 			void ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
 
+			void ProcessReceivedIDataChunk(const Packet* receivedPacket, const IDataChunk* receivedIDataChunk);
+
 			void ProcessReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk);
 
 			void ProcessReceivedInitAckChunk(
 			  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk);
 
 			void ProcessReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
+
+			void ProcessReceivedCookieEchoChunk(
+			  const Packet* receivedPacket, const CookieEchoChunk* receivedCookieEchoChunk);
 
 			void ProcessReceivedHeartbeatRequestChunk(
 			  const Packet* receivedPacket, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);

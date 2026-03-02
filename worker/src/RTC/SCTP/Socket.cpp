@@ -1,5 +1,6 @@
 #include "RTC/SCTP/Types.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
+#include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
 #include <cstdint>
 #define MS_CLASS "RTC::SCTP::Socket"
 // #define MS_LOG_DEV_LEVEL 3
@@ -232,7 +233,7 @@ namespace RTC
 			}
 			else
 			{
-				MS_DEBUG_TAG(sctp, "called on a closed Socket");
+				MS_DEBUG_TAG(sctp, "Close() called on a closed Socket");
 			}
 
 			AssertAssociationStateIsConsistent();
@@ -254,14 +255,14 @@ namespace RTC
 				.txMessagesCount = this->privateMetrics.txMessagesCount,
 				.rxPacketsCount  = this->privateMetrics.rxPacketsCount,
 				.rxMessagesCount = this->privateMetrics.rxMessagesCount,
-				// .rtxPacketsCount = this->tcb->getRetransmissionQueue().getRtxPacketsCount(),
-				// .rtxBytesCount   = this->tcb->getRetransmissionQueue().getRtxBytesCount(),
-				// .cwndBytes       = this->tcb->getCwnd(),
-				// .srttMs          = this->tcb->getCurrentSrttMs(),
+				// .rtxPacketsCount = this->tcb->GetRetransmissionQueue().GetRtxPacketsCount(),
+				// .rtxBytesCount   = this->tcb->GetRetransmissionQueue().GetRtxBytesCount(),
+				// .cwndBytes       = this->tcb->GetCwnd(),
+				// .srttMs          = this->tcb->GetCurrentSrttMs(),
 				// .unackDataCount =
-				//   this->tcb->getRetransmissionQueue().GetUnackedItems() +
-				//   (this->sendQueue.getTotalBufferedAmount() + packetPayloadLength - 1) / packetPayloadLength,
-				// .peerRwndBytes                = this->tcb->getRetransmissionQueue().getRwnd(),
+				//   this->tcb->GetRetransmissionQueue().GetUnackedItems() +
+				//   (this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) / packetPayloadLength,
+				// .peerRwndBytes                = this->tcb->GetRetransmissionQueue().GetRwnd(),
 				.peerImplementation           = this->privateMetrics.peerImplementation,
 				.negotiatedMaxOutboundStreams = this->privateMetrics.negotiatedMaxOutboundStreams,
 				.negotiatedMaxInboundStreams  = this->privateMetrics.negotiatedMaxInboundStreams,
@@ -331,7 +332,8 @@ namespace RTC
 			if (!this->tcb)
 			{
 				this->listener.OnSocketError(
-				  Types::ErrorKind::WRONG_SEQUENCE, "can't reset streams as the socket is not connected");
+				  Types::ErrorKind::WRONG_SEQUENCE,
+				  "cannot reset outbound streams as the socket is not connected");
 
 				return Types::ResetStreamsStatus::NOT_CONNECTED;
 			}
@@ -340,7 +342,7 @@ namespace RTC
 			// if (!this->tcb->GetCapabilities().reconfig)
 			// {
 			//   this->listener.OnSocketError(Types::ErrorKind::UNSUPPORTED_OPERATION,
-			//                      "can't reset streams as the remote doesn't support it");
+			//                      "cannot reset outbound streams as the remote doesn't support it");
 
 			//   return Types::ResetStreamsStatus::NOT_SUPPORTED;
 			// }
@@ -348,15 +350,13 @@ namespace RTC
 			// TODO: Implement it.
 			// this->tcb->GetStreamResetHandler().ResetStreams(outboundStreamIds);
 
-			// TODO: Implement it.
-			// MaySendResetStreamsRequest();
+			MaySendResetStreamsRequest();
 
 			AssertAssociationStateIsConsistent();
 
 			return Types::ResetStreamsStatus::PERFORMED;
 		}
 
-		// TODO: Why not Message&?
 		Types::SendMessageStatus Socket::SendMessage(
 		  Message message, const SendMessageOptions& sendMessageOptions)
 		{
@@ -364,7 +364,6 @@ namespace RTC
 
 			SocketDeferredListener::ScopedDeferred deferrer(this->listener);
 
-			// TODO: Implement it.
 			Types::SendMessageStatus status = InternalSendMessage(message, sendMessageOptions);
 
 			if (status != Types::SendMessageStatus::SUCCESS)
@@ -390,7 +389,6 @@ namespace RTC
 			return Types::SendMessageStatus::SUCCESS;
 		}
 
-		// TODO: Why not Message&?
 		std::vector<Types::SendMessageStatus> Socket::SendManyMessages(
 		  std::span<Message> messages, const SendMessageOptions& sendMessageOptions)
 		{
@@ -405,7 +403,6 @@ namespace RTC
 
 			for (auto& message : messages)
 			{
-				// TODO: Implement it.
 				Types::SendMessageStatus status = InternalSendMessage(message, sendMessageOptions);
 
 				statuses.push_back(status);
@@ -432,14 +429,13 @@ namespace RTC
 			return statuses;
 		}
 
-		// TODO: Should the caller call free packet after calling this method? or us?
 		void Socket::ReceivePacket(const Packet* receivedPacket)
 		{
 			MS_TRACE();
 
-			this->privateMetrics.rxPacketsCount++;
+			SocketDeferredListener::ScopedDeferred deferrer(this->listener);
 
-			/* Verify Packet. */
+			this->privateMetrics.rxPacketsCount++;
 
 			if (!ValidateReceivedPacket(receivedPacket))
 			{
@@ -448,8 +444,7 @@ namespace RTC
 				return;
 			}
 
-			// TODO
-			// MaybeSendShutdownOnPacketReceived(receivedPacket);
+			MaySendShutdownOnPacketReceived(receivedPacket);
 
 			for (auto it = receivedPacket->ChunksBegin(); it != receivedPacket->ChunksEnd(); ++it)
 			{
@@ -461,11 +456,14 @@ namespace RTC
 				}
 			}
 
-			// TODO
-			// if (tcb_ != nullptr) {
-			//   tcb_->data_tracker().ObservePacketEnd();
-			//   tcb_->MaybeSendSack();
+			// TODO: Implement it.
+			// if (this->tcb)
+			// {
+			//   this->tcb->GetDadaTracker().ObservePacketEnd();
+			//   this->tcb->MaySendSack();
 			// }
+
+			AssertAssociationStateIsConsistent();
 		}
 
 		void Socket::InternalClose(Types::ErrorKind errorKind, const std::string_view& message)
@@ -653,7 +651,71 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			const auto lifecycleId = sendMessageOptions.lifecycleId;
+
+			if (message.GetPayloadLength() == 0)
+			{
+				if (lifecycleId.has_value())
+				{
+					this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
+				}
+
+				this->listener.OnSocketError(
+				  Types::ErrorKind::PROTOCOL_VIOLATION, "cannot send empty message");
+
+				return Types::SendMessageStatus::ERROR_MESSAGE_EMPTY;
+			}
+			else if (message.GetPayloadLength() > this->sctpOptions.maxSendMessageSize)
+			{
+				if (lifecycleId.has_value())
+				{
+					this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
+				}
+
+				this->listener.OnSocketError(
+				  Types::ErrorKind::PROTOCOL_VIOLATION, "cannot send too large message");
+
+				return Types::SendMessageStatus::ERROR_MESSAGE_TOO_LARGE;
+			}
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+			//
+			// "An endpoint SHOULD reject any new data request from its upper layer
+			// if it is in the SHUTDOWN-PENDING, SHUTDOWN-SENT, SHUTDOWN-RECEIVED, or
+			// SHUTDOWN-ACK-SENT state."
+			else if (
+			  this->associationState == AssociationState::SHUTDOWN_PENDING ||
+			  this->associationState == AssociationState::SHUTDOWN_SENT ||
+			  this->associationState == AssociationState::SHUTDOWN_RECEIVED ||
+			  this->associationState == AssociationState::SHUTDOWN_ACK_SENT)
+			{
+				if (lifecycleId.has_value())
+				{
+					this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
+				}
+
+				this->listener.OnSocketError(
+				  Types::ErrorKind::WRONG_SEQUENCE, "cannot send message as the socket is shutting down");
+
+				return Types::SendMessageStatus::ERROR_SHUTTING_DOWN;
+			}
+			// TODO: Implement it.
+			// else if (
+			//   this->sendQueue.GetTotalBufferedAmount() >= this->sctpOptions.maxSendBufferSize ||
+			//   this->sendQueue.GetStreamBufferedAmount(message.GetStreamId()) >=
+			//     this->sctpOptions.perStreamSendQueueLimit)
+			// {
+			// 	if (lifecycleId.has_value())
+			// 	{
+			// 		this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
+			// 	}
+
+			// 	this->listener.OnSocketError(
+			// 	  Types::ErrorKind::RESOURCE_EXHAUSTION, "cannot send message as the send queue is full");
+
+			// 	return Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION;
+			// }
+
+			return Types::SendMessageStatus::SUCCESS;
 		}
 
 		void Socket::SendInitChunk()
@@ -704,7 +766,7 @@ namespace RTC
 
 			// TODO
 			// this->t2ShutdownTimer->SetBaseTimeout(this->tcb->GetCurrentRto());
-			this->t2ShutdownTimer->Restart();
+			this->t2ShutdownTimer->Start();
 		}
 
 		void Socket::MaySendShutdownOrShutdownAckChunk()
@@ -730,7 +792,7 @@ namespace RTC
 
 				// TODO: Implement it.
 				// this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
-				this->t2ShutdownTimer->Restart();
+				this->t2ShutdownTimer->Start();
 
 				SetAssociationState(AssociationState::SHUTDOWN_SENT, "no more outstanding data");
 			}
@@ -749,17 +811,94 @@ namespace RTC
 			}
 		}
 
+		void Socket::MaySendShutdownOnPacketReceived(const Packet* receivedPacket)
+		{
+			MS_TRACE();
+
+			if (this->associationState != AssociationState::SHUTDOWN_SENT)
+			{
+				return;
+			}
+
+			AssertHasTcb();
+
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+			//
+			// "While in the SHUTDOWN-SENT state, the SHUTDOWN chunk sender MUST
+			// immediately respond to each received packet containing one or more
+			// DATA chunks with a SHUTDOWN chunk and restart the T2-shutdown timer."
+			//
+			// @remarks
+			// - This also applies to I-DATA chunks.
+			bool hasDataChunk = std::find_if(
+			                      receivedPacket->ChunksBegin(),
+			                      receivedPacket->ChunksEnd(),
+			                      [](const Chunk* chunk)
+			                      {
+				                      return chunk->GetType() == Chunk::ChunkType::DATA ||
+				                             chunk->GetType() == Chunk::ChunkType::I_DATA;
+			                      }) != receivedPacket->ChunksEnd();
+
+			if (hasDataChunk)
+			{
+				SendShutdownChunk();
+
+				// TODO: Implement it.
+				// this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
+				this->t2ShutdownTimer->Start();
+			}
+		}
+
+		void Socket::MaySendResetStreamsRequest()
+		{
+			MS_TRACE();
+
+			AssertHasTcb();
+
+			// TODO: I don't like this. I don't want to use Packet::AddChunk() (which
+			// clones the given Chunk). I want to use Packet::BuildChunkInPlace() so
+			// we need that `tcb->GetStreamResetHandler().MakeStreamResetRequest()`
+			// doesn't return a `ReConfigChunk` but something different such as the
+			// Re-configuration Request Parameter(s) (OutgoingSSNResetRequestParameter):
+			// https://datatracker.ietf.org/doc/html/rfc6525#section-8.2
+			// Mmmm, but not even that because we also want to use
+			// ReConfigChunk::BuildParameterInPlace() instead of AddParameter() for
+			// same reasons... Ok, let's see.
+			// NOTE: What about if we do some std::move() somewhere?
+
+			// const auto* reconfigChunk =
+			//     this->tcb->GetStreamResetHandler().MakeStreamResetRequest();
+			// const auto* outgoingSSNResetRequestParameter =
+			//   this->tcb->GetStreamResetHandler().MakeOutgoingSSNResetRequestParameter();
+
+			// if (!outgoingSSNResetRequestParameter)
+			// {
+			// 	return;
+			// }
+
+			// auto packet         = this->tcb->CreatePacket();
+			// auto* reconfigChunk = packet->BuildChunkInPlace<ReConfigChunk>();
+
+			// reconfigChunk->AddParameter(outgoingSSNResetRequestParameter);
+
+			// delete outgoingSSNResetRequestParameter;
+
+			// reconfigChunk->Consolidate();
+
+			// SendPacket(packet.get());
+		}
+
 		bool Socket::ValidateReceivedPacket(const Packet* receivedPacket)
 		{
 			MS_TRACE();
 
 			uint32_t localVerificationTag = this->tcb ? this->tcb->GetLocalVerificationTag() : 0;
 
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
+			//
 			// "When an endpoint receives an SCTP packet with the Verification Tag
 			// set to 0, it SHOULD verify that the packet contains only an INIT
 			// chunk. Otherwise, the receiver MUST silently discard the packet."
-			//
-			// @see https://datatracker.ietf.org/doc/html/rfc9260#name-exceptions-in-verification-
 			if (receivedPacket->GetVerificationTag() == 0)
 			{
 				if (receivedPacket->GetChunksCount() == 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::INIT)
@@ -772,40 +911,25 @@ namespace RTC
 					  sctp,
 					  "Packet with Verification Tag 0 must have a single Chunk and it must be an INIT Chunk, packet discarded");
 
-					// TODO: Emit error?
+					this->listener.OnSocketError(
+					  Types::ErrorKind::PARSE_FAILED,
+					  "packet with Verification Tag 0 must have a single chunk and it must be an INIT chunk");
+
 					return false;
 				}
 			}
 
-			if (receivedPacket->GetChunksCount() >= 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::INIT_ACK)
-			{
-				if (receivedPacket->GetVerificationTag() == this->preTcb.localVerificationTag)
-				{
-					return true;
-				}
-				else
-				{
-					MS_WARN_TAG(
-					  sctp,
-					  "invalid Verification Tag %" PRIu32 " (should be %" PRIu32 ")",
-					  receivedPacket->GetVerificationTag(),
-					  this->preTcb.localVerificationTag);
-
-					// TODO: Emit error?
-					return false;
-				}
-			}
-
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
+			//
 			// "The receiver of an ABORT chunk MUST accept the packet if the
 			// Verification Tag field of the packet matches its own tag and the T bit
 			// is not set OR if it is set to its Peer's Tag and the T bit is set in
 			// the Chunk Flags. Otherwise, the receiver MUST silently discard the
 			// packet and take no further action."
-			//
-			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
 			if (receivedPacket->GetChunksCount() == 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::ABORT)
 			{
-				auto* abortChunk = static_cast<const AbortAssociationChunk*>(receivedPacket->GetChunkAt(0));
+				const auto* abortChunk =
+				  static_cast<const AbortAssociationChunk*>(receivedPacket->GetChunkAt(0));
 
 				// We cannot verify the Verification Tag so assume it's okey.
 				if (abortChunk->GetT() && !this->tcb)
@@ -826,29 +950,53 @@ namespace RTC
 					  "ABORT Chunk Verification Tag %" PRIu32 " is wrong, packet discarded",
 					  receivedPacket->GetVerificationTag());
 
-					// TODO: Emit error?
+					this->listener.OnSocketError(
+					  Types::ErrorKind::PARSE_FAILED, "packet with ABORT chunk has invalid Verification Tag");
+
 					return false;
 				}
 			}
 
-			// This is handled in ProcessCookieEchoChunk().
+			if (receivedPacket->GetChunksCount() >= 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::INIT_ACK)
+			{
+				if (receivedPacket->GetVerificationTag() == this->preTcb.localVerificationTag)
+				{
+					return true;
+				}
+				else
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "INIT_ACK Chunk Verification Tag %" PRIu32 " (should be %" PRIu32 ")",
+					  receivedPacket->GetVerificationTag(),
+					  this->preTcb.localVerificationTag);
+
+					this->listener.OnSocketError(
+					  Types::ErrorKind::PARSE_FAILED,
+					  "packet with INIT_ACK chunk has invalid Verification Tag");
+
+					return false;
+				}
+			}
+
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-5.2.4
 			//
-			// @see https://datatracker.ietf.org/doc/html/rfc9260#name-handle-a-cookie-echo-chunk-
+			// This is handled in ProcessReceivedCookieEchoChunk().
 			if (receivedPacket->GetChunksCount() >= 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::COOKIE_ECHO)
 			{
 				return true;
 			}
 
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
+			//
 			// "The receiver of a SHUTDOWN COMPLETE shall accept the packet if the
 			// Verification Tag field of the packet matches its own tag and the T bit is
 			// not set OR if it is set to its peer's tag and the T bit is set in the
 			// Chunk Flags.  Otherwise, the receiver MUST silently discard the packet
 			// and take no further action."
-			//
-			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
 			if (receivedPacket->GetChunksCount() == 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::SHUTDOWN_COMPLETE)
 			{
-				auto* shutdownCompleteChunk =
+				const auto* shutdownCompleteChunk =
 				  static_cast<const ShutdownCompleteChunk*>(receivedPacket->GetChunkAt(0));
 
 				// We cannot verify the Verification Tag so assume it's okey.
@@ -871,19 +1019,22 @@ namespace RTC
 					  "SHUTDOWN_COMPLETE Chunk Verification Tag %" PRIu32 " is wrong, packet discarded",
 					  receivedPacket->GetVerificationTag());
 
-					// TODO: Emit error?
+					this->listener.OnSocketError(
+					  Types::ErrorKind::PARSE_FAILED,
+					  "packet with SHUTDOWN_COMPLETE chunk has invalid Verification Tag");
+
 					return false;
 				}
 			}
 
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-8.5
+			//
 			// "When receiving an SCTP packet, the endpoint MUST ensure that the
 			// value in the Verification Tag field of the received SCTP packet
 			// matches its own tag. If the received Verification Tag value does not
 			// match the receiver's own tag value, the receiver MUST silently discard
 			// the packet and MUST NOT process it any further, except for those cases
 			// listed in Section 8.5.1 below."
-			//
-			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-8.5
 			if (receivedPacket->GetVerificationTag() == localVerificationTag)
 			{
 				return true;
@@ -896,7 +1047,9 @@ namespace RTC
 				  receivedPacket->GetVerificationTag(),
 				  localVerificationTag);
 
-				// TODO: Emit error?
+				this->listener.OnSocketError(
+				  Types::ErrorKind::PARSE_FAILED, "packet has invalid Verification Tag");
+
 				return false;
 			}
 		}
@@ -910,6 +1063,13 @@ namespace RTC
 				case Chunk::ChunkType::DATA:
 				{
 					ProcessReceivedDataChunk(receivedPacket, static_cast<const DataChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::I_DATA:
+				{
+					ProcessReceivedIDataChunk(receivedPacket, static_cast<const IDataChunk*>(receivedChunk));
 
 					break;
 				}
@@ -953,7 +1113,16 @@ namespace RTC
 			return true;
 		}
 
-		void Socket::ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk)
+		void Socket::ProcessReceivedDataChunk(
+		  const Packet* /*receivedPacket*/, const DataChunk* receivedDataChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedIDataChunk(
+		  const Packet* /*receivedPacket*/, const IDataChunk* receivedIDataChunk)
 		{
 			MS_TRACE();
 
@@ -1220,6 +1389,14 @@ namespace RTC
 
 		void Socket::ProcessReceivedSackChunk(
 		  const Packet* /*receivedPacket*/, const SackChunk* receivedSackChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedCookieEchoChunk(
+		  const Packet* /*receivedPacket*/, const CookieEchoChunk* receivedCookieEchoChunk)
 		{
 			MS_TRACE();
 

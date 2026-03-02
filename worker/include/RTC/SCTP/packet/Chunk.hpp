@@ -263,9 +263,9 @@ namespace RTC
 			 * Clone given Parameter into Chunk's buffer.
 			 *
 			 * @remarks
-			 * Once this method is called, the caller may want to free the original
-			 * given Parameter (otherwise it will leak since the manages a clone of
-			 * it).
+			 * - Once this method is called, the caller may want to free the original
+			 *   given Parameter (otherwise it will leak since the manages a clone of
+			 *   it).
 			 *
 			 * @throw MediaSoupError - If the Chunk subclass cannot have Parameters.
 			 */
@@ -376,9 +376,9 @@ namespace RTC
 			 * Clone given Error Cause into Chunk's buffer.
 			 *
 			 * @remarks
-			 * Once this method is called, the caller may want to free the original
-			 * given Error Cause (otherwise it will leak since the Chunk manages
-			 * a clone of it).
+			 * - Once this method is called, the caller may want to free the original
+			 *   given Error Cause (otherwise it will leak since the Chunk manages a
+			 *   clone of it).
 			 *
 			 * @throw MediaSoupError - If the Chunk subclass cannot have Error Causes.
 			 */
@@ -557,9 +557,9 @@ namespace RTC
 			 * needed. It creates Parameter subclasses and adds them to the Chunk.
 			 *
 			 * @remarks
-			 * This method assumes that the Chunk basic parsing has been made already
-			 * so current length of the Chunk is the fixed length of the specific
-			 * Chunk class.
+			 * - This method assumes that the Chunk basic parsing has been made
+			 *   already so current length of the Chunk is the fixed length of the
+			 *   specific Chunk class.
 			 *
 			 * @return True if no error happened while parsing Parameters.
 			 *
@@ -573,9 +573,9 @@ namespace RTC
 			 * needed. It creates ErrorCause subclasses and adds them to the Chunk.
 			 *
 			 * @remarks
-			 * This method assumes that the Chunk basic parsing has been made already
-			 * so current length of the Chunk is the fixed length of the specific
-			 * Chunk class.
+			 * - This method assumes that the Chunk basic parsing has been made
+			 *   already so current length of the Chunk is the fixed length of the
+			 *   specific Chunk class.
 			 *
 			 * @return True if no error happened while parsing Error Causes.
 			 *

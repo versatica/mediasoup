@@ -53,7 +53,7 @@ namespace RTC
 			 * Parse a ReConfigChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * - `bufferLength` may exceed the exact length of the Chunk.
 			 */
 			static ReConfigChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -61,7 +61,7 @@ namespace RTC
 			 * Create a ReConfigChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * - `bufferLength` could be greater than the Chunk real length.
 			 */
 			static ReConfigChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -70,7 +70,7 @@ namespace RTC
 			 * Parse a ReConfigChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static ReConfigChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
