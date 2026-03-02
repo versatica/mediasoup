@@ -9,6 +9,7 @@
 #include "RTC/SCTP/SocketDeferredListener.hpp"
 #include "RTC/SCTP/SocketListener.hpp"
 #include "RTC/SCTP/SocketMetrics.hpp"
+#include "RTC/SCTP/StateCookie.hpp"
 #include "RTC/SCTP/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/Types.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
@@ -354,6 +355,8 @@ namespace RTC
 
 			void ProcessReceivedCookieEchoChunk(
 			  const Packet* receivedPacket, const CookieEchoChunk* receivedCookieEchoChunk);
+
+			bool ProcessReceivedCookieEchoChunkWithTcb(const Packet* receivedPacket, const StateCookie* cookie);
 
 			void ProcessReceivedCookieAckChunk(
 			  const Packet* receivedPacket, const CookieAckChunk* receivedCookieAckChunk);
