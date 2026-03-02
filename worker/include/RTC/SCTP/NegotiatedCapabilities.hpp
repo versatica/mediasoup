@@ -51,11 +51,11 @@ namespace RTC
 			bool messageInterleaving{ false };
 
 			/**
-			 * Stream Reconfiguration.
+			 * Stream Re-Configuration.
 			 *
 			 * @see RFC 6525.
 			 */
-			bool reconfig{ false };
+			bool reConfig{ false };
 
 			/**
 			 * Zero Checksum.

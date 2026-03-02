@@ -110,11 +110,11 @@ namespace RTC
 			bool usesMessageInterleaving{ false };
 
 			/**
-			 * Whether Stream Reconfiguration has been negotiated.
+			 * Whether Stream Re-Configuration has been negotiated.
 			 *
 			 * @see RFC 6525.
 			 */
-			bool usesReconfig{ false };
+			bool usesReConfig{ false };
 
 			/**
 			 * Whether Alternate Error Detection Method for Zero Checksum has been

@@ -49,9 +49,9 @@ namespace RTC
 			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_DATA) &&
 			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_FORWARD_TSN);
 
-			// Stream Reconfiguration is negotiated if peer announces support via
+			// Stream Re-Configuration is negotiated if peer announces support via
 			// Supported Extensions Parameter.
-			negotiatedCapabilities.reconfig =
+			negotiatedCapabilities.reConfig =
 			  remoteSupportedExtensionsParameter &&
 			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::RE_CONFIG);
 
@@ -80,7 +80,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  partial reliability: %s", this->partialReliability ? "yes" : "no");
 			MS_DUMP_CLEAN(
 			  indentation, "  message interleaving: %s", this->messageInterleaving ? "yes" : "no");
-			MS_DUMP_CLEAN(indentation, "  re-config: %s", this->reconfig ? "yes" : "no");
+			MS_DUMP_CLEAN(indentation, "  re-config: %s", this->reConfig ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  zero checksum: %s", this->zeroChecksum ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "</SCTP::NegotiatedCapabilities>");
 		}

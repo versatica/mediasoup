@@ -4,6 +4,8 @@
 
 - `SocketListener` callbacks cannpt include `Socket* socket` as first argument because the `listener` is given to other subclasses and those cannot invoke listener callbacks with `this` (because they are not `Socket` instances). So we may have to remove `Socket* socket` from the signatures of `SocketListener` callbacks. However if we do that, how can the parent class correlate them? Should we assume that we will have a `SCTP::Association` parent class that handles a **single** `SCTP::Socket` instance and also `DataProducers/DataConsumers`?
 
+- We don't have `packet_sender_` so neither `OnSentPacket()` callback so we must manually increase `this->privateMetrics.txPacketsCount`, but we cannot do that in `TransmissionControlBlock::SendPacket()` because there are no metrics in there, so how to do it?
+
 ## Related to dcsctp
 
 - Check all calls to `CreatePacket()` in `Socket.cpp` since many of them must be replaced to `this->tbc->CreatePacket()`.

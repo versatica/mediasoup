@@ -1,15 +1,11 @@
-#include "RTC/SCTP/Types.hpp"
-#include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
-#include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
-#include <cstdint>
 #define MS_CLASS "RTC::SCTP::Socket"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/SCTP/Socket.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
-#include "RTC/SCTP/Socket.hpp"
 #include "RTC/SCTP/StateCookie.hpp"
 #include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
@@ -39,7 +35,12 @@ namespace RTC
 		/* Instance methods. */
 
 		Socket::Socket(const SctpOptions& sctpOptions, SocketListener& listener)
-		  : sctpOptions(sctpOptions), listener(listener),
+		  : sctpOptions(sctpOptions),
+		    // Our `listener` member is a `SocketDeferredListener` which takes
+		    // `SocketListener` as constructor argument.
+		    listener(listener),
+		    // Create the `packetSender` member.
+		    packetSender(*this, this->listener),
 		    t1InitTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
@@ -226,7 +227,7 @@ namespace RTC
 					userInitiatedAbortErrorCause->Consolidate();
 					abortAssociationChunk->Consolidate();
 
-					SendPacket(packet.get());
+					this->packetSender.SendPacket(packet.get());
 				}
 
 				InternalClose(Types::ErrorKind::NO_ERROR, "");
@@ -268,7 +269,7 @@ namespace RTC
 				.negotiatedMaxInboundStreams  = this->privateMetrics.negotiatedMaxInboundStreams,
 				.usesPartialReliability       = this->privateMetrics.usesPartialReliability,
 				.usesMessageInterleaving      = this->privateMetrics.usesMessageInterleaving,
-				.usesReconfig                 = this->privateMetrics.usesReconfig,
+				.usesReConfig                 = this->privateMetrics.usesReConfig,
 				.usesZeroChecksum             = this->privateMetrics.usesZeroChecksum,
 
 			};
@@ -339,7 +340,7 @@ namespace RTC
 			}
 
 			// TODO: Implement it.
-			// if (!this->tcb->GetCapabilities().reconfig)
+			// if (!this->tcb->GetCapabilities().reConfig)
 			// {
 			//   this->listener.OnSocketError(Types::ErrorKind::UNSUPPORTED_OPERATION,
 			//                      "cannot reset outbound streams as the remote doesn't support it");
@@ -578,7 +579,9 @@ namespace RTC
 			MS_TRACE();
 
 			this->tcb = std::make_unique<TransmissionControlBlock>(
+			  this->listener,
 			  this->sctpOptions,
+			  this->packetSender,
 			  localVerificationTag,
 			  remoteVerificationTag,
 			  localInitialTsn,
@@ -591,7 +594,7 @@ namespace RTC
 			this->privateMetrics.negotiatedMaxInboundStreams  = negotiatedCapabilities.maxInboundStreams;
 			this->privateMetrics.usesPartialReliability       = negotiatedCapabilities.partialReliability;
 			this->privateMetrics.usesMessageInterleaving = negotiatedCapabilities.messageInterleaving;
-			this->privateMetrics.usesReconfig            = negotiatedCapabilities.reconfig;
+			this->privateMetrics.usesReConfig            = negotiatedCapabilities.reConfig;
 			this->privateMetrics.usesZeroChecksum        = negotiatedCapabilities.zeroChecksum;
 		}
 
@@ -616,108 +619,6 @@ namespace RTC
 			return packet;
 		}
 
-		bool Socket::SendPacket(Packet* packet, std::optional<bool> writeChecksum)
-		{
-			MS_TRACE();
-
-			// Decide whether to write the CRC32c Checksum field in the Packet or
-			// not. Note that in same special cases the decision is made by the
-			// caller of SendPacket() which explicitly sets the value of the
-			// `writeChecksum` argument.
-
-			// If `writeChecksum` is explicitly set to true then write the checksum.
-			if (writeChecksum.has_value() && *writeChecksum)
-			{
-				packet->WriteCRC32cChecksum();
-			}
-			// If `writeChecksum` is explicitly set to false then do not write the
-			// checksum.
-			else if (writeChecksum.has_value() && !*writeChecksum)
-			{
-				// Nothing to do.
-			}
-			// If `writeChecksum` is not set, decide based on TCB.
-			else if (!this->tcb || !this->tcb->GetNegotiatedCapabilities().zeroChecksum)
-			{
-				packet->WriteCRC32cChecksum();
-			}
-
-			// Send the Packet.
-			return this->listener.OnSocketSendSctpPacket(packet);
-		}
-
-		Types::SendMessageStatus Socket::InternalSendMessage(
-		  const Message& message, const SendMessageOptions& sendMessageOptions)
-		{
-			MS_TRACE();
-
-			const auto lifecycleId = sendMessageOptions.lifecycleId;
-
-			if (message.GetPayloadLength() == 0)
-			{
-				if (lifecycleId.has_value())
-				{
-					this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
-				}
-
-				this->listener.OnSocketError(
-				  Types::ErrorKind::PROTOCOL_VIOLATION, "cannot send empty message");
-
-				return Types::SendMessageStatus::ERROR_MESSAGE_EMPTY;
-			}
-			else if (message.GetPayloadLength() > this->sctpOptions.maxSendMessageSize)
-			{
-				if (lifecycleId.has_value())
-				{
-					this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
-				}
-
-				this->listener.OnSocketError(
-				  Types::ErrorKind::PROTOCOL_VIOLATION, "cannot send too large message");
-
-				return Types::SendMessageStatus::ERROR_MESSAGE_TOO_LARGE;
-			}
-			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
-			//
-			// "An endpoint SHOULD reject any new data request from its upper layer
-			// if it is in the SHUTDOWN-PENDING, SHUTDOWN-SENT, SHUTDOWN-RECEIVED, or
-			// SHUTDOWN-ACK-SENT state."
-			else if (
-			  this->associationState == AssociationState::SHUTDOWN_PENDING ||
-			  this->associationState == AssociationState::SHUTDOWN_SENT ||
-			  this->associationState == AssociationState::SHUTDOWN_RECEIVED ||
-			  this->associationState == AssociationState::SHUTDOWN_ACK_SENT)
-			{
-				if (lifecycleId.has_value())
-				{
-					this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
-				}
-
-				this->listener.OnSocketError(
-				  Types::ErrorKind::WRONG_SEQUENCE, "cannot send message as the socket is shutting down");
-
-				return Types::SendMessageStatus::ERROR_SHUTTING_DOWN;
-			}
-			// TODO: Implement it.
-			// else if (
-			//   this->sendQueue.GetTotalBufferedAmount() >= this->sctpOptions.maxSendBufferSize ||
-			//   this->sendQueue.GetStreamBufferedAmount(message.GetStreamId()) >=
-			//     this->sctpOptions.perStreamSendQueueLimit)
-			// {
-			// 	if (lifecycleId.has_value())
-			// 	{
-			// 		this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
-			// 	}
-
-			// 	this->listener.OnSocketError(
-			// 	  Types::ErrorKind::RESOURCE_EXHAUSTION, "cannot send message as the send queue is full");
-
-			// 	return Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION;
-			// }
-
-			return Types::SendMessageStatus::SUCCESS;
-		}
-
 		void Socket::SendInitChunk()
 		{
 			MS_TRACE();
@@ -739,9 +640,10 @@ namespace RTC
 			initChunk->Consolidate();
 
 			// https://datatracker.ietf.org/doc/html/rfc9653#section-5.2
-			// When a sender sends a packet containing an INIT chunk, it MUST include
-			// a correct CRC32c checksum in the packet containing the INIT chunk.
-			SendPacket(packet.get(), /*writeChecksum*/ true);
+			//
+			// "When a sender sends a packet containing an INIT chunk, it MUST include
+			// a correct CRC32c checksum in the packet containing the INIT chunk."
+			this->packetSender.SendPacket(packet.get());
 		}
 
 		void Socket::SendShutdownChunk()
@@ -757,12 +659,12 @@ namespace RTC
 
 			AssertHasTcb();
 
-			auto packet            = CreatePacket();
+			auto packet            = this->tcb->CreatePacket();
 			auto* shutdownAckChunk = packet->BuildChunkInPlace<ShutdownAckChunk>();
 
 			shutdownAckChunk->Consolidate();
 
-			SendPacket(packet.get());
+			this->packetSender.SendPacket(packet.get());
 
 			// TODO
 			// this->t2ShutdownTimer->SetBaseTimeout(this->tcb->GetCurrentRto());
@@ -866,7 +768,7 @@ namespace RTC
 			// same reasons... Ok, let's see.
 			// NOTE: What about if we do some std::move() somewhere?
 
-			// const auto* reconfigChunk =
+			// const auto* reConfigChunk =
 			//     this->tcb->GetStreamResetHandler().MakeStreamResetRequest();
 			// const auto* outgoingSSNResetRequestParameter =
 			//   this->tcb->GetStreamResetHandler().MakeOutgoingSSNResetRequestParameter();
@@ -877,15 +779,87 @@ namespace RTC
 			// }
 
 			// auto packet         = this->tcb->CreatePacket();
-			// auto* reconfigChunk = packet->BuildChunkInPlace<ReConfigChunk>();
+			// auto* reConfigChunk = packet->BuildChunkInPlace<ReConfigChunk>();
 
-			// reconfigChunk->AddParameter(outgoingSSNResetRequestParameter);
+			// reConfigChunk->AddParameter(outgoingSSNResetRequestParameter);
 
 			// delete outgoingSSNResetRequestParameter;
 
-			// reconfigChunk->Consolidate();
+			// reConfigChunk->Consolidate();
 
-			// SendPacket(packet.get());
+			// this->packetSender.SendPacket(packet.get());
+		}
+
+		Types::SendMessageStatus Socket::InternalSendMessage(
+		  const Message& message, const SendMessageOptions& sendMessageOptions)
+		{
+			MS_TRACE();
+
+			const auto lifecycleId = sendMessageOptions.lifecycleId;
+
+			if (message.GetPayloadLength() == 0)
+			{
+				if (lifecycleId.has_value())
+				{
+					this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
+				}
+
+				this->listener.OnSocketError(
+				  Types::ErrorKind::PROTOCOL_VIOLATION, "cannot send empty message");
+
+				return Types::SendMessageStatus::ERROR_MESSAGE_EMPTY;
+			}
+			else if (message.GetPayloadLength() > this->sctpOptions.maxSendMessageSize)
+			{
+				if (lifecycleId.has_value())
+				{
+					this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
+				}
+
+				this->listener.OnSocketError(
+				  Types::ErrorKind::PROTOCOL_VIOLATION, "cannot send too large message");
+
+				return Types::SendMessageStatus::ERROR_MESSAGE_TOO_LARGE;
+			}
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+			//
+			// "An endpoint SHOULD reject any new data request from its upper layer
+			// if it is in the SHUTDOWN-PENDING, SHUTDOWN-SENT, SHUTDOWN-RECEIVED, or
+			// SHUTDOWN-ACK-SENT state."
+			else if (
+			  this->associationState == AssociationState::SHUTDOWN_PENDING ||
+			  this->associationState == AssociationState::SHUTDOWN_SENT ||
+			  this->associationState == AssociationState::SHUTDOWN_RECEIVED ||
+			  this->associationState == AssociationState::SHUTDOWN_ACK_SENT)
+			{
+				if (lifecycleId.has_value())
+				{
+					this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
+				}
+
+				this->listener.OnSocketError(
+				  Types::ErrorKind::WRONG_SEQUENCE, "cannot send message as the socket is shutting down");
+
+				return Types::SendMessageStatus::ERROR_SHUTTING_DOWN;
+			}
+			// TODO: Implement it.
+			// else if (
+			//   this->sendQueue.GetTotalBufferedAmount() >= this->sctpOptions.maxSendBufferSize ||
+			//   this->sendQueue.GetStreamBufferedAmount(message.GetStreamId()) >=
+			//     this->sctpOptions.perStreamSendQueueLimit)
+			// {
+			// 	if (lifecycleId.has_value())
+			// 	{
+			// 		this->listener.OnSocketLifecycleMessageEnd(lifecycleId.value());
+			// 	}
+
+			// 	this->listener.OnSocketError(
+			// 	  Types::ErrorKind::RESOURCE_EXHAUSTION, "cannot send message as the send queue is full");
+
+			// 	return Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION;
+			// }
+
+			return Types::SendMessageStatus::SUCCESS;
 		}
 
 		bool Socket::ValidateReceivedPacket(const Packet* receivedPacket)
@@ -1060,20 +1034,6 @@ namespace RTC
 
 			switch (receivedChunk->GetType())
 			{
-				case Chunk::ChunkType::DATA:
-				{
-					ProcessReceivedDataChunk(receivedPacket, static_cast<const DataChunk*>(receivedChunk));
-
-					break;
-				}
-
-				case Chunk::ChunkType::I_DATA:
-				{
-					ProcessReceivedIDataChunk(receivedPacket, static_cast<const IDataChunk*>(receivedChunk));
-
-					break;
-				}
-
 				case Chunk::ChunkType::INIT:
 				{
 					ProcessReceivedInitChunk(receivedPacket, static_cast<const InitChunk*>(receivedChunk));
@@ -1088,9 +1048,50 @@ namespace RTC
 					break;
 				}
 
-				case Chunk::ChunkType::SACK:
+				case Chunk::ChunkType::COOKIE_ECHO:
 				{
-					ProcessReceivedSackChunk(receivedPacket, static_cast<const SackChunk*>(receivedChunk));
+					ProcessReceivedCookieEchoChunk(
+					  receivedPacket, static_cast<const CookieEchoChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::COOKIE_ACK:
+				{
+					ProcessReceivedCookieAckChunk(
+					  receivedPacket, static_cast<const CookieAckChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::SHUTDOWN:
+				{
+					ProcessReceivedShutdownChunk(
+					  receivedPacket, static_cast<const ShutdownChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::SHUTDOWN_ACK:
+				{
+					ProcessReceivedShutdownAckChunk(
+					  receivedPacket, static_cast<const ShutdownAckChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::SHUTDOWN_COMPLETE:
+				{
+					ProcessReceivedShutdownCompleteChunk(
+					  receivedPacket, static_cast<const ShutdownCompleteChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::OPERATION_ERROR:
+				{
+					ProcessReceivedOperationErrorChunk(
+					  receivedPacket, static_cast<const OperationErrorChunk*>(receivedChunk));
 
 					break;
 				}
@@ -1103,6 +1104,51 @@ namespace RTC
 					break;
 				}
 
+				case Chunk::ChunkType::RE_CONFIG:
+				{
+					ProcessReceivedReConfigChunk(
+					  receivedPacket, static_cast<const ReConfigChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::FORWARD_TSN:
+				{
+					ProcessReceivedForwardTsnChunk(
+					  receivedPacket, static_cast<const ForwardTsnChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::I_FORWARD_TSN:
+				{
+					ProcessReceivedIForwardTsnChunk(
+					  receivedPacket, static_cast<const IForwardTsnChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::DATA:
+				{
+					ProcessReceivedDataChunk(receivedPacket, static_cast<const DataChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::I_DATA:
+				{
+					ProcessReceivedIDataChunk(receivedPacket, static_cast<const IDataChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::SACK:
+				{
+					ProcessReceivedSackChunk(receivedPacket, static_cast<const SackChunk*>(receivedChunk));
+
+					break;
+				}
+
 				default:
 				{
 					return ProcessReceivedUnknownChunk(
@@ -1111,22 +1157,6 @@ namespace RTC
 			}
 
 			return true;
-		}
-
-		void Socket::ProcessReceivedDataChunk(
-		  const Packet* /*receivedPacket*/, const DataChunk* receivedDataChunk)
-		{
-			MS_TRACE();
-
-			// TODO
-		}
-
-		void Socket::ProcessReceivedIDataChunk(
-		  const Packet* /*receivedPacket*/, const IDataChunk* receivedIDataChunk)
-		{
-			MS_TRACE();
-
-			// TODO
 		}
 
 		void Socket::ProcessReceivedInitChunk(
@@ -1160,7 +1190,7 @@ namespace RTC
 				protocolViolationErrorCause->Consolidate();
 				abortChunk->Consolidate();
 
-				SendPacket(packet.get());
+				this->packetSender.SendPacket(packet.get());
 
 				InternalClose(Types::ErrorKind::PROTOCOL_VIOLATION, "received invalid INIT chunk");
 
@@ -1299,7 +1329,10 @@ namespace RTC
 
 			initAckChunk->Consolidate();
 
-			SendPacket(packet.get(), /*writeChecksum*/ !negotiatedCapabilities.zeroChecksum);
+			// If the peer has signaled that it supports Zero Checksum, INIT-ACK can
+			// then have its checksum as zero.
+			this->packetSender.SendPacket(
+			  packet.get(), /*writeChecksum*/ !negotiatedCapabilities.zeroChecksum);
 		}
 
 		void Socket::ProcessReceivedInitAckChunk(
@@ -1343,7 +1376,7 @@ namespace RTC
 				protocolViolationErrorCause->Consolidate();
 				abortChunk->Consolidate();
 
-				SendPacket(packet.get());
+				this->packetSender.SendPacket(packet.get());
 
 				InternalClose(
 				  Types::ErrorKind::PROTOCOL_VIOLATION, "received INIT_ACK chunk doesn't contain a Cookie");
@@ -1387,14 +1420,6 @@ namespace RTC
 			this->t1CookieTimer->Start();
 		}
 
-		void Socket::ProcessReceivedSackChunk(
-		  const Packet* /*receivedPacket*/, const SackChunk* receivedSackChunk)
-		{
-			MS_TRACE();
-
-			// TODO
-		}
-
 		void Socket::ProcessReceivedCookieEchoChunk(
 		  const Packet* /*receivedPacket*/, const CookieEchoChunk* receivedCookieEchoChunk)
 		{
@@ -1403,8 +1428,96 @@ namespace RTC
 			// TODO
 		}
 
+		void Socket::ProcessReceivedCookieAckChunk(
+		  const Packet* /*receivedPacket*/, const CookieAckChunk* receivedCookieAckChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedShutdownChunk(
+		  const Packet* /*receivedPacket*/, const ShutdownChunk* receivedShutdownChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedShutdownAckChunk(
+		  const Packet* /*receivedPacket*/, const ShutdownAckChunk* receivedShutdownAckChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedShutdownCompleteChunk(
+		  const Packet* /*receivedPacket*/, const ShutdownCompleteChunk* receivedShutdownCompleteChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedOperationErrorChunk(
+		  const Packet* /*receivedPacket*/, const OperationErrorChunk* receivedOperationErrorChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
 		void Socket::ProcessReceivedHeartbeatRequestChunk(
 		  const Packet* /*receivedPacket*/, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedReConfigChunk(
+		  const Packet* /*receivedPacket*/, const ReConfigChunk* receivedReConfigChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedForwardTsnChunk(
+		  const Packet* /*receivedPacket*/, const ForwardTsnChunk* receivedForwardTsnChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedIForwardTsnChunk(
+		  const Packet* /*receivedPacket*/, const IForwardTsnChunk* receivedIForwardTsnChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedDataChunk(
+		  const Packet* /*receivedPacket*/, const DataChunk* receivedDataChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedIDataChunk(
+		  const Packet* /*receivedPacket*/, const IDataChunk* receivedIDataChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedSackChunk(
+		  const Packet* /*receivedPacket*/, const SackChunk* receivedSackChunk)
 		{
 			MS_TRACE();
 
@@ -1440,13 +1553,14 @@ namespace RTC
 
 			if (reportError)
 			{
-				// TODO: Notify error.
+				this->listener.OnSocketError(
+				  Types::ErrorKind::PARSE_FAILED, "unknown chunk with type indicating it should be reported");
 
 				// If there is TCB (we need correct remote verification tag) send an
 				// OPERATION_ERROR Chunk with a Unrecognized Chunk Type Error Cause.
 				if (this->tcb)
 				{
-					auto packet               = CreatePacket();
+					auto packet               = this->tcb->CreatePacket();
 					auto* operationErrorChunk = packet->BuildChunkInPlace<OperationErrorChunk>();
 					auto* unrecognizedChunkTypeErrorCause =
 					  operationErrorChunk->BuildErrorCauseInPlace<UnrecognizedChunkTypeErrorCause>();
@@ -1457,7 +1571,7 @@ namespace RTC
 					unrecognizedChunkTypeErrorCause->Consolidate();
 					operationErrorChunk->Consolidate();
 
-					SendPacket(packet.get());
+					this->packetSender.SendPacket(packet.get());
 				}
 			}
 
@@ -1557,7 +1671,7 @@ namespace RTC
 				userInitiatedAbortErrorCause->Consolidate();
 				abortAssociationChunk->Consolidate();
 
-				SendPacket(packet.get());
+				this->packetSender.SendPacket(packet.get());
 
 				InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "no SHUTDOWN_ACK chunk received");
 			}
@@ -1779,6 +1893,16 @@ namespace RTC
 
 					break;
 				}
+			}
+		}
+
+		void Socket::OnPacketSenderSentPacket(PacketSender* /*packetSender*/, const Packet* packet, bool sent)
+		{
+			MS_TRACE();
+
+			if (sent)
+			{
+				this->privateMetrics.txPacketsCount++;
 			}
 		}
 

@@ -198,6 +198,7 @@ common_sources = [
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
   'src/RTC/SCTP/Message.cpp',
   'src/RTC/SCTP/NegotiatedCapabilities.cpp',
+  'src/RTC/SCTP/PacketSender.cpp',
   'src/RTC/SCTP/Socket.cpp',
   'src/RTC/SCTP/SocketDeferredListener.cpp',
   'src/RTC/SCTP/SocketMetrics.cpp',

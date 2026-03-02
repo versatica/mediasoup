@@ -55,7 +55,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2048);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == true);
-		REQUIRE(negotiatedCapabilities.reconfig == true);
+		REQUIRE(negotiatedCapabilities.reConfig == true);
 		REQUIRE(negotiatedCapabilities.zeroChecksum == true);
 	}
 
@@ -108,7 +108,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2000);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
-		REQUIRE(negotiatedCapabilities.reconfig == false);
+		REQUIRE(negotiatedCapabilities.reConfig == false);
 		REQUIRE(negotiatedCapabilities.zeroChecksum == false);
 	}
 }

@@ -187,7 +187,7 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 			                                                           .maxInboundStreams   = 55555,
 			                                                           .partialReliability  = true,
 			                                                           .messageInterleaving = true,
-			                                                           .reconfig            = true,
+			                                                           .reConfig            = true,
 			                                                           .zeroChecksum        = false };
 
 		// Build the StateCookie in place within the StateCookieParameter.
