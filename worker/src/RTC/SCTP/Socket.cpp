@@ -78,7 +78,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto associationStateStringView = Socket::AssociationStateToString(this->associationState);
+			const auto associationStateStringView =
+			  Socket::AssociationStateToString(this->associationState);
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Socket>");
 
@@ -403,7 +404,7 @@ namespace RTC
 
 			statuses.reserve(messages.size());
 
-			for (auto& message : messages)
+			for (const auto& message : messages)
 			{
 				Types::SendMessageStatus status = InternalSendMessage(message, sendMessageOptions);
 
@@ -2068,11 +2069,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto action         = receivedUnknownChunk->GetActionForUnknownChunkType();
-			auto skipProcessing = action == Chunk::ActionForUnknownChunkType::SKIP ||
-			                      action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
-			auto reportError = action == Chunk::ActionForUnknownChunkType::STOP_AND_REPORT ||
-			                   action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
+			const auto action         = receivedUnknownChunk->GetActionForUnknownChunkType();
+			const bool skipProcessing = action == Chunk::ActionForUnknownChunkType::SKIP ||
+			                            action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
+			const bool reportError = action == Chunk::ActionForUnknownChunkType::STOP_AND_REPORT ||
+			                         action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
 
 			if (skipProcessing)
 			{
@@ -2233,7 +2234,7 @@ namespace RTC
 				return;
 			}
 
-			auto currentAssociationStateStringView =
+			const auto currentAssociationStateStringView =
 			  Socket::AssociationStateToString(this->associationState);
 			std::ostringstream expectedAssociationStatesOss;
 			bool firstExpectedAssociationState = true;
@@ -2265,7 +2266,7 @@ namespace RTC
 			// NOTE: Using fold expression operator.
 			if ((... || (this->associationState == unexpectedAssociationStates)))
 			{
-				auto currentAssociationStateStringView =
+				const auto currentAssociationStateStringView =
 				  Socket::AssociationStateToString(this->associationState);
 				std::ostringstream unexpectedAssociationStatesOss;
 				bool firstUnexpectedAssociationState = true;
@@ -2277,7 +2278,7 @@ namespace RTC
 				  firstUnexpectedAssociationState = false),
 				 ...);
 
-				auto unexpectedAssociationStatesString = unexpectedAssociationStatesOss.str();
+				const auto unexpectedAssociationStatesString = unexpectedAssociationStatesOss.str();
 
 				MS_ABORT(
 				  "current association state %.*s matches one of the given unexpected states (%s)",
@@ -2452,7 +2453,8 @@ namespace RTC
 			}
 		}
 
-		void Socket::OnPacketSenderPacketSent(PacketSender* /*packetSender*/, const Packet* packet, bool sent)
+		void Socket::OnPacketSenderPacketSent(
+		  PacketSender* /*packetSender*/, const Packet* /*packet*/, bool sent)
 		{
 			MS_TRACE();
 
