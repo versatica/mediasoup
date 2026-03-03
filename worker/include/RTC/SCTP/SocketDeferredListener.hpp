@@ -59,7 +59,7 @@ namespace RTC
 
 		public:
 			/* Pure virtual methods inherited from RTC::STCP::SocketListener. */
-			bool OnSocketSendSctpPacket(Packet* packet) override;
+			bool OnSocketSendPacket(Packet* packet) override;
 
 			void OnSocketConnected() override;
 

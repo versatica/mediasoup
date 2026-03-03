@@ -28,9 +28,9 @@ namespace RTC
 				packet->WriteCRC32cChecksum();
 			}
 
-			const bool sent = this->socketListener.OnSocketSendSctpPacket(packet);
+			const bool sent = this->socketListener.OnSocketSendPacket(packet);
 
-			this->listener.OnPacketSenderSentPacket(this, packet, sent);
+			this->listener.OnPacketSenderPacketSent(this, packet, sent);
 
 			return sent;
 		}

@@ -30,7 +30,7 @@ namespace RTC
 			 * @remarks
 			 * - It is NOT allowed to call methods in Socket within this callback.
 			 */
-			virtual bool OnSocketSendSctpPacket(Packet* packet) = 0;
+			virtual bool OnSocketSendPacket(Packet* packet) = 0;
 
 			/**
 			 * Called when calling Connect() succeeds and also for incoming successful

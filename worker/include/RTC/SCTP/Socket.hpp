@@ -412,7 +412,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from PacketSender::Listener. */
 		public:
-			void OnPacketSenderSentPacket(PacketSender* packetSender, const Packet* packet, bool sent) override;
+			void OnPacketSenderPacketSent(PacketSender* packetSender, const Packet* packet, bool sent) override;
 
 			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
 		public:

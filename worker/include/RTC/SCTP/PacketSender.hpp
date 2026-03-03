@@ -18,7 +18,7 @@ namespace RTC
 				virtual ~Listener() = default;
 
 			public:
-				virtual void OnPacketSenderSentPacket(
+				virtual void OnPacketSenderPacketSent(
 				  PacketSender* packetSender, const Packet* packet, bool sent) = 0;
 			};
 

@@ -2174,7 +2174,7 @@ namespace RTC
 			}
 		}
 
-		void Socket::OnPacketSenderSentPacket(PacketSender* /*packetSender*/, const Packet* packet, bool sent)
+		void Socket::OnPacketSenderPacketSent(PacketSender* /*packetSender*/, const Packet* packet, bool sent)
 		{
 			MS_TRACE();
 
