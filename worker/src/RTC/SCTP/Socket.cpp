@@ -1623,7 +1623,7 @@ namespace RTC
 		}
 
 		void Socket::ProcessReceivedCookieAckChunk(
-		  const Packet* /*receivedPacket*/, const CookieAckChunk* receivedCookieAckChunk)
+		  const Packet* /*receivedPacket*/, const CookieAckChunk* /*receivedCookieAckChunk*/)
 		{
 			MS_TRACE();
 
@@ -1654,7 +1654,7 @@ namespace RTC
 		}
 
 		void Socket::ProcessReceivedShutdownChunk(
-		  const Packet* /*receivedPacket*/, const ShutdownChunk* receivedShutdownChunk)
+		  const Packet* /*receivedPacket*/, const ShutdownChunk* /*receivedShutdownChunk*/)
 		{
 			MS_TRACE();
 
@@ -1723,19 +1723,82 @@ namespace RTC
 		}
 
 		void Socket::ProcessReceivedShutdownAckChunk(
-		  const Packet* /*receivedPacket*/, const ShutdownAckChunk* receivedShutdownAckChunk)
+		  const Packet* receivedPacket, const ShutdownAckChunk* receivedShutdownAckChunk)
 		{
 			MS_TRACE();
 
-			// TODO
+			switch (this->associationState)
+			{
+				// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+				//
+				// "Upon the receipt of the SHUTDOWN ACK chunk, the sender of the
+				// SHUTDOWN chunk MUST stop the T2-shutdown timer, send a SHUTDOWN
+				// COMPLETE chunk to its peer, and remove all record of the
+				// association."
+				case AssociationState::SHUTDOWN_SENT:
+				case AssociationState::SHUTDOWN_ACK_SENT:
+				{
+					auto packet                 = this->tcb->CreatePacket();
+					auto* shutdownCompleteChunk = packet->BuildChunkInPlace<ShutdownCompleteChunk>();
+
+					// NOTE: Don't set bit T in the SHUTDOWN_COMPLETE chunk since TCB
+					// knows the Verification Tag expected by the remote.
+
+					shutdownCompleteChunk->Consolidate();
+
+					this->packetSender.SendPacket(packet.get());
+
+					InternalClose(Types::ErrorKind::NO_ERROR, "");
+
+					break;
+				}
+
+				// https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
+				//
+				// "If the receiver is in COOKIE-ECHOED or COOKIE-WAIT state, the
+				// procedures in Section 8.4 SHOULD be followed; in other words, it is
+				// treated as an OOTB packet."
+				//
+				// https://datatracker.ietf.org/doc/html/rfc9260#section-8.4
+				//
+				// "If the packet contains a SHUTDOWN ACK chunk, the receiver SHOULD
+				// respond to the sender of the OOTB packet with a SHUTDOWN COMPLETE
+				// chunk. When sending the SHUTDOWN COMPLETE chunk, the receiver of the
+				// OOTB packet MUST fill in the Verification Tag field of the outbound
+				// packet with the Verification Tag received in the SHUTDOWN ACK chunk
+				// and set the T bit in the Chunk Flags to indicate that the
+				// Verification Tag is reflected."
+				default:
+				{
+					auto packet = this->CreatePacketWithVerificationTag(receivedPacket->GetVerificationTag());
+					auto* shutdownCompleteChunk = packet->BuildChunkInPlace<ShutdownCompleteChunk>();
+
+					shutdownCompleteChunk->SetT(true);
+					shutdownCompleteChunk->Consolidate();
+
+					this->packetSender.SendPacket(packet.get());
+				}
+			}
 		}
 
 		void Socket::ProcessReceivedShutdownCompleteChunk(
-		  const Packet* /*receivedPacket*/, const ShutdownCompleteChunk* receivedShutdownCompleteChunk)
+		  const Packet* /*receivedPacket*/, const ShutdownCompleteChunk* /*receivedShutdownCompleteChunk*/)
 		{
 			MS_TRACE();
 
-			// TODO
+			if (this->associationState != AssociationState::SHUTDOWN_ACK_SENT)
+			{
+				return;
+			}
+
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+			//
+			// "Upon reception of the SHUTDOWN COMPLETE chunk, the endpoint verifies
+			// that it is in the SHUTDOWN-ACK-SENT state; if it is not, the chunk
+			// SHOULD be discarded. If the endpoint is in the SHUTDOWN-ACK-SENT state,
+			// the endpoint SHOULD stop the T2-shutdown timer and remove all knowledge
+			// of the association (and thus the association enters the CLOSED state)."
+			InternalClose(Types::ErrorKind::NO_ERROR, "");
 		}
 
 		void Socket::ProcessReceivedOperationErrorChunk(
@@ -1743,7 +1806,37 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			std::string errorCausesStr;
+
+			errorCausesStr.reserve(50);
+
+			for (auto it = receivedOperationErrorChunk->ErrorCausesBegin();
+			     it != receivedOperationErrorChunk->ErrorCausesEnd();
+			     ++it)
+			{
+				const auto* errorCause = *it;
+
+				if (!errorCausesStr.empty())
+				{
+					errorCausesStr.append(", ");
+				}
+
+				errorCausesStr.append(errorCause->ToString());
+			}
+
+			if (!this->tcb)
+			{
+				MS_DEBUG_TAG(
+				  sctp,
+				  "received OPERATION_ERROR Chunk on a Socket with no TCB, ignoring: %s",
+				  errorCausesStr.c_str());
+
+				return;
+			}
+
+			MS_WARN_TAG(sctp, "received OPERATION_ERROR Chunk: %s", errorCausesStr.c_str());
+
+			this->listener.OnSocketError(Types::ErrorKind::PEER_REPORTED, errorCausesStr);
 		}
 
 		void Socket::ProcessReceivedHeartbeatRequestChunk(
