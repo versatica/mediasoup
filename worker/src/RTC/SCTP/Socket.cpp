@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/SCTP/packet/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UserInitiatedAbortErrorCause.hpp"
@@ -1534,7 +1535,91 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			MS_DEBUG_DEV("handling COOKIE_ECHO with TCB");
+
+			AssertHasTcb();
+
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-5.2.4
+			//
+			// "Handle a COOKIE ECHO Chunk When a TCB Exists"
+			//
+			// "A) In this case, the peer might have restarted."
+			if (
+			  receivedPacket->GetVerificationTag() != this->tcb->GetLocalVerificationTag() &&
+			  cookie->GetRemoteVerificationTag() != this->tcb->GetRemoteVerificationTag() &&
+			  cookie->GetTieTag() == this->tcb->GetTieTag())
+			{
+				// "If the endpoint is in the SHUTDOWN-ACK-SENT state and recognizes
+				// that the peer has restarted (Action A), it MUST NOT set up a new
+				// association but instead resend the SHUTDOWN ACK chunk and send an
+				// ERROR chunk with a "Cookie Received While Shutting Down" error cause
+				// to its peer."
+				if (this->associationState == AssociationState::SHUTDOWN_ACK_SENT)
+				{
+					auto packet = CreatePacketWithVerificationTag(cookie->GetRemoteVerificationTag());
+					auto* shutdownAckChunk = packet->BuildChunkInPlace<ShutdownAckChunk>();
+
+					shutdownAckChunk->Consolidate();
+
+					auto* operationErrorChunk = packet->BuildChunkInPlace<OperationErrorChunk>();
+					auto* cookieReceivedWhileShuttingDownErrorCause =
+					  operationErrorChunk->BuildErrorCauseInPlace<CookieReceivedWhileShuttingDownErrorCause>();
+
+					cookieReceivedWhileShuttingDownErrorCause->Consolidate();
+					operationErrorChunk->Consolidate();
+
+					this->packetSender.SendPacket(packet.get());
+
+					this->listener.OnSocketError(
+					  Types::ErrorKind::WRONG_SEQUENCE, "received COOKIE_ECHO while shutting down");
+
+					return false;
+				}
+
+				MS_DEBUG_DEV("received COOKIE_ECHO indicating a restarted peer");
+
+				this->tcb = nullptr;
+				this->listener.OnSocketConnectionRestarted();
+			}
+			// "B) In this case, both sides might be attempting to start an association
+			// at about the same time, but the peer endpoint sent its INIT chunk after
+			// responding to the local endpoint's INIT chunk."
+			else if (
+			  receivedPacket->GetVerificationTag() == this->tcb->GetLocalVerificationTag() &&
+			  cookie->GetRemoteVerificationTag() != this->tcb->GetRemoteVerificationTag())
+			{
+				// TODO: Handle the case in which remote Verification Tag is 0?
+
+				MS_DEBUG_DEV("received COOKIE_ECHO indicating simultaneous connections");
+
+				this->tcb = nullptr;
+			}
+			// "C) In this case, the local endpoint's cookie has arrived late. Before
+			// it arrived, the local endpoint sent an INIT chunk and received an INIT
+			// ACK chunk and finally sent a COOKIE ECHO chunk with the peer's same tag
+			// but a new tag of its own. The cookie SHOULD be silently discarded. The
+			// endpoint SHOULD NOT change states and SHOULD leave any timers running."
+			else if (
+			  receivedPacket->GetVerificationTag() != this->tcb->GetLocalVerificationTag() &&
+			  cookie->GetRemoteVerificationTag() == this->tcb->GetRemoteVerificationTag() &&
+			  cookie->GetTieTag() == this->tcb->GetTieTag())
+			{
+				MS_DEBUG_DEV("received COOKIE_ECHO indicating a late COOKIE_ECHO, discarding");
+
+				return false;
+			}
+			// "D) When both local and remote tags match, the endpoint SHOULD enter
+			// the ESTABLISHED state if it is in the COOKIE_ECHOED state. It SHOULD
+			// stop any T1-cookie timer that is running and send a COOKIE ACK chunk."
+			else if (
+			  receivedPacket->GetVerificationTag() == this->tcb->GetLocalVerificationTag() &&
+			  cookie->GetRemoteVerificationTag() == this->tcb->GetRemoteVerificationTag())
+			{
+				MS_DEBUG_DEV(
+				  "received duplicate COOKIE_ECHO, probably because of peer not receiving COOKIE_ACK and retransmitting COOKIE_ECHO");
+			}
+
+			return true;
 		}
 
 		void Socket::ProcessReceivedCookieAckChunk(
@@ -1542,7 +1627,30 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-5.2.5
+			//
+			// "At any state other than COOKIE_ECHOED, an endpoint SHOULD silently
+			// discard a received COOKIE ACK chunk."
+			if (this->associationState != AssociationState::COOKIE_ECHOED)
+			{
+				MS_DEBUG_DEV("received COOKIE_ACK not in COOKIE_ECHOED state, discarding");
+
+				return;
+			}
+
+			AssertHasTcb();
+
+			this->t1CookieTimer->Stop();
+
+			// TODO: Implement this.
+			// this->tcb->ClearCookieEchoChunk();
+
+			SetAssociationState(AssociationState::ESTABLISHED, "COOKIE_ACK received");
+
+			// TODO: Implement this.
+			// this->tcb->SendBufferedPackets(callbacks_.Now());
+
+			this->listener.OnSocketConnected();
 		}
 
 		void Socket::ProcessReceivedShutdownChunk(
@@ -1550,7 +1658,68 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			switch (this->associationState)
+			{
+				case AssociationState::CLOSED:
+				{
+					break;
+				}
+
+				// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+				//
+				// "If a SHUTDOWN chunk is received in the COOKIE-WAIT or COOKIE ECHOED
+				// state, the SHUTDOWN chunk SHOULD be silently discarded."
+				case AssociationState::COOKIE_WAIT:
+				case AssociationState::COOKIE_ECHOED:
+				{
+					break;
+				}
+
+				// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+				//
+				// "If an endpoint is in the SHUTDOWN-SENT state and receives a SHUTDOWN
+				// chunk from its peer, the endpoint SHOULD respond immediately with a
+				// SHUTDOWN ACK chunk to its peer and move into the SHUTDOWN-ACK-SENT
+				// state, restarting its T2-shutdown timer.
+				case AssociationState::SHUTDOWN_SENT:
+				{
+					SendShutdownAckChunk();
+					SetAssociationState(AssociationState::SHUTDOWN_ACK_SENT, "SHUTDOWN received");
+
+					break;
+				}
+
+				// TODO: This case block should be removed and handled by the `default`
+				// case block.
+				//
+				// @see https://issues.webrtc.org/issues/42222897
+				case AssociationState::SHUTDOWN_ACK_SENT:
+				{
+					break;
+				}
+
+				case AssociationState::SHUTDOWN_RECEIVED:
+				{
+					break;
+				}
+
+				// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+				//
+				// "Upon reception of the SHUTDOWN chunk, the peer endpoint does the
+				// following:
+				// - enter the SHUTDOWN-RECEIVED state,
+				// - stop accepting new data from its SCTP user, and
+				// - verify, by checking the Cumulative TSN Ack field of the chunk,
+				//   that all its outstanding DATA chunks have been received by the
+				//   SHUTDOWN chunk sender."
+				default:
+				{
+					MS_DEBUG_DEV("received SHUTDOWN, shutting down the Socket");
+
+					SetAssociationState(AssociationState::SHUTDOWN_RECEIVED, "SHUTDOWN received");
+					MaySendShutdownOrShutdownAckChunk();
+				}
+			}
 		}
 
 		void Socket::ProcessReceivedShutdownAckChunk(
