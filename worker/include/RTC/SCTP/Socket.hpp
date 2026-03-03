@@ -407,6 +407,9 @@ namespace RTC
 
 			void ProcessReceivedIDataChunk(const Packet* receivedPacket, const IDataChunk* receivedIDataChunk);
 
+			void ProcessReceivedAnyDataChunk(
+			  const Packet* receivedPacket, const AnyDataChunk* receivedAnyDataChunk);
+
 			void ProcessReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
 
 			bool ProcessReceivedUnknownChunk(

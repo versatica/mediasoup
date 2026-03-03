@@ -2027,18 +2027,30 @@ namespace RTC
 			MayDeliverMessages();
 		}
 
-		void Socket::ProcessReceivedDataChunk(
-		  const Packet* /*receivedPacket*/, const DataChunk* receivedDataChunk)
+		void Socket::ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk)
 		{
 			MS_TRACE();
 
-			// TODO
+			ProcessReceivedAnyDataChunk(receivedPacket, receivedDataChunk);
 		}
 
 		void Socket::ProcessReceivedIDataChunk(
-		  const Packet* /*receivedPacket*/, const IDataChunk* receivedIDataChunk)
+		  const Packet* receivedPacket, const IDataChunk* receivedIDataChunk)
 		{
 			MS_TRACE();
+
+			ProcessReceivedAnyDataChunk(receivedPacket, receivedIDataChunk);
+		}
+
+		void Socket::ProcessReceivedAnyDataChunk(
+		  const Packet* receivedPacket, const AnyDataChunk* receivedAnyDataChunk)
+		{
+			MS_TRACE();
+
+			if (!ValidateHasTcb())
+			{
+				return;
+			}
 
 			// TODO
 		}
