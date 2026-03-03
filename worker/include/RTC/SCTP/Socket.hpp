@@ -15,6 +15,8 @@
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
+#include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
+#include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/AnyInitChunk.hpp"
 #include "RTC/SCTP/packet/chunks/CookieAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/CookieEchoChunk.hpp"
@@ -397,6 +399,9 @@ namespace RTC
 
 			void ProcessReceivedIForwardTsnChunk(
 			  const Packet* receivedPacket, const IForwardTsnChunk* receivedIForwardTsnChunk);
+
+			void ProcessReceivedAnyForwardTsnChunk(
+			  const Packet* receivedPacket, const AnyForwardTsnChunk* receivedAnyForwardTsnChunk);
 
 			void ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
 

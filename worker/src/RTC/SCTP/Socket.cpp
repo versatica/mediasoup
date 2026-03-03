@@ -1963,19 +1963,68 @@ namespace RTC
 		}
 
 		void Socket::ProcessReceivedForwardTsnChunk(
-		  const Packet* /*receivedPacket*/, const ForwardTsnChunk* receivedForwardTsnChunk)
+		  const Packet* receivedPacket, const ForwardTsnChunk* receivedForwardTsnChunk)
 		{
 			MS_TRACE();
 
-			// TODO
+			ProcessReceivedAnyForwardTsnChunk(receivedPacket, receivedForwardTsnChunk);
 		}
 
 		void Socket::ProcessReceivedIForwardTsnChunk(
-		  const Packet* /*receivedPacket*/, const IForwardTsnChunk* receivedIForwardTsnChunk)
+		  const Packet* receivedPacket, const IForwardTsnChunk* receivedIForwardTsnChunk)
 		{
 			MS_TRACE();
 
-			// TODO
+			ProcessReceivedAnyForwardTsnChunk(receivedPacket, receivedIForwardTsnChunk);
+		}
+
+		void Socket::ProcessReceivedAnyForwardTsnChunk(
+		  const Packet* /*receivedPacket*/, const AnyForwardTsnChunk* receivedAnyForwardTsnChunk)
+		{
+			MS_TRACE();
+
+			if (!ValidateHasTcb())
+			{
+				return;
+			}
+
+			if (!this->tcb->GetNegotiatedCapabilities().partialReliability)
+			{
+				auto packet      = this->tcb->CreatePacket();
+				auto* abortChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+
+				// NOTE: Don't set bit T in the ABORT chunk since TCB knows the
+				// Verification Tag expected by the remote.
+
+				auto* protocolViolationErrorCause =
+				  abortChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
+
+				protocolViolationErrorCause->SetAdditionalInformation(
+				  "FORWARD_TSN or I_FORWARD_TSN-TSN chunk received but partial reliability is not negotiated");
+
+				protocolViolationErrorCause->Consolidate();
+				abortChunk->Consolidate();
+
+				this->packetSender.SendPacket(packet.get());
+
+				this->listener.OnSocketError(
+				  Types::ErrorKind::PROTOCOL_VIOLATION,
+				  "received FORWARD_TSN or I_FORWARD_TSN-TSN chunk but partial reliability is not negotiated");
+
+				return;
+			}
+
+			// TODO: Implement it.
+			// if
+			// (this->tcb->GetDataTracker().HandleForwardTsn(receivedAnyForwardTsnChunk->GetNewCumulativeTsn()))
+			// {
+			// 	this->tcb->GetReassemblyQueue().HandleForwardTsn(
+			// 		receivedAnyForwardTsnChunk->GetNewCumulativeTsn(),
+			// 		receivedAnyForwardTsnChunk->GetSkippedStreams());
+			// }
+
+			// A forward TSN (for ordered streams) may allow messages to be delivered.
+			MayDeliverMessages();
 		}
 
 		void Socket::ProcessReceivedDataChunk(
