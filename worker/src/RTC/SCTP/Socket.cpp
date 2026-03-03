@@ -791,6 +791,20 @@ namespace RTC
 			// this->packetSender.SendPacket(packet.get());
 		}
 
+		void Socket::MayDeliverMessages()
+		{
+			MS_TRACE();
+
+			AssertHasTcb();
+
+			// TODO: Implement it.
+			// while (std::optional<Message> message = this->tcb->GetReassemblyQueue().GetNextMessage())
+			// {
+			// 	this->privateMetrics.rxMessagesCount++;
+			// 	this->listener.OnSocketMessageReceived(*std::move(message));
+			// }
+		}
+
 		Types::SendMessageStatus Socket::InternalSendMessage(
 		  const Message& message, const SendMessageOptions& sendMessageOptions)
 		{
@@ -1097,10 +1111,26 @@ namespace RTC
 					break;
 				}
 
+				case Chunk::ChunkType::ABORT:
+				{
+					ProcessReceivedAbortAssociationChunk(
+					  receivedPacket, static_cast<const AbortAssociationChunk*>(receivedChunk));
+
+					break;
+				}
+
 				case Chunk::ChunkType::HEARTBEAT_REQUEST:
 				{
 					ProcessReceivedHeartbeatRequestChunk(
 					  receivedPacket, static_cast<const HeartbeatRequestChunk*>(receivedChunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::HEARTBEAT_ACK:
+				{
+					ProcessReceivedHeartbeatAckChunk(
+					  receivedPacket, static_cast<const HeartbeatAckChunk*>(receivedChunk));
 
 					break;
 				}
@@ -1839,12 +1869,68 @@ namespace RTC
 			this->listener.OnSocketError(Types::ErrorKind::PEER_REPORTED, errorCausesStr);
 		}
 
+		void Socket::ProcessReceivedAbortAssociationChunk(
+		  const Packet* /*receivedPacket*/, const AbortAssociationChunk* receivedAbortAssociationChunk)
+		{
+			MS_TRACE();
+
+			std::string errorCausesStr;
+
+			errorCausesStr.reserve(50);
+
+			for (auto it = receivedAbortAssociationChunk->ErrorCausesBegin();
+			     it != receivedAbortAssociationChunk->ErrorCausesEnd();
+			     ++it)
+			{
+				const auto* errorCause = *it;
+
+				if (!errorCausesStr.empty())
+				{
+					errorCausesStr.append(", ");
+				}
+
+				errorCausesStr.append(errorCause->ToString());
+			}
+
+			if (!this->tcb)
+			{
+				MS_DEBUG_TAG(
+				  sctp, "received ABORT Chunk on a Socket with no TCB, ignoring: %s", errorCausesStr.c_str());
+
+				return;
+			}
+
+			MS_WARN_TAG(sctp, "received ABORT Chunk, closing connection: %s", errorCausesStr.c_str());
+
+			InternalClose(Types::ErrorKind::PEER_REPORTED, errorCausesStr);
+		}
+
 		void Socket::ProcessReceivedHeartbeatRequestChunk(
 		  const Packet* /*receivedPacket*/, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk)
 		{
 			MS_TRACE();
 
-			// TODO
+			if (!ValidateHasTcb())
+			{
+				return;
+			}
+
+			// TODO: Implement it.
+			// this->tcb->GetHearbeatHandler().HandleHeartbeatRequest(*std::move(receivedHeartbeatRequestChunk));
+		}
+
+		void Socket::ProcessReceivedHeartbeatAckChunk(
+		  const Packet* /*receivedPacket*/, const HeartbeatAckChunk* receivedHeartbeatAckChunk)
+		{
+			MS_TRACE();
+
+			if (!ValidateHasTcb())
+			{
+				return;
+			}
+
+			// TODO: Implement it.
+			// this->tcb->GetHearbeatHandler().HandleHeartbeatAck(*std::move(receivedHeartbeatAckChunk));
 		}
 
 		void Socket::ProcessReceivedReConfigChunk(
@@ -1852,7 +1938,28 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			if (!ValidateHasTcb())
+			{
+				return;
+			}
+
+			// TODO: Implement it.
+			// this->tcb->GetStreamResetHandler().HandleReConfig(*std::move(receivedReConfigChunk));
+
+			// Handling this response may result in outgoing stream resets finishing
+			// (either successfully or with failure). If there still are pending
+			// streams that were waiting for this request to finish, continue
+			// resetting them.
+			MaySendResetStreamsRequest();
+
+			// If a response was processed, pending to-be-reset streams may now have
+			// become unpaused. Try to send more DATA/I_DATA chunks.
+			// TODO: Implement it.
+			// this->tcb->SendBufferedPackets(callbacks_.Now());
+
+			// If it leaves "deferred reset processing", there may be chunks to
+			// deliver that were queued while waiting for the stream to reset.
+			MayDeliverMessages();
 		}
 
 		void Socket::ProcessReceivedForwardTsnChunk(
@@ -2119,6 +2226,22 @@ namespace RTC
 			}
 		}
 
+		bool Socket::ValidateHasTcb()
+		{
+			MS_TRACE();
+
+			if (this->tcb)
+			{
+				return true;
+			}
+
+			this->listener.OnSocketError(
+			  Types::ErrorKind::NOT_CONNECTED,
+			  "received unexpected commands on socket that is not connected");
+
+			return false;
+		}
+
 		void Socket::AssertHasTcb() const
 		{
 			MS_TRACE();
@@ -2128,6 +2251,7 @@ namespace RTC
 				MS_ABORT("TCB doesn't exist");
 			}
 		}
+
 		void Socket::AssertAssociationStateIsConsistent() const
 		{
 			MS_TRACE();

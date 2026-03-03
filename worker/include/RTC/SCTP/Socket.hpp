@@ -20,6 +20,7 @@
 #include "RTC/SCTP/packet/chunks/CookieEchoChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
+#include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
@@ -341,6 +342,12 @@ namespace RTC
 			 */
 			void MaySendResetStreamsRequest();
 
+			/**
+			 * Called whenever data has been received, or the cumulative acknowledgment
+			 * TSN has moved, that may result in delivering messages.
+			 */
+			void MayDeliverMessages();
+
 			Types::SendMessageStatus InternalSendMessage(
 			  const Message& message, const SendMessageOptions& sendMessageOptions);
 
@@ -373,8 +380,14 @@ namespace RTC
 			void ProcessReceivedOperationErrorChunk(
 			  const Packet* receivedPacket, const OperationErrorChunk* receivedOperationErrorChunk);
 
+			void ProcessReceivedAbortAssociationChunk(
+			  const Packet* receivedPacket, const AbortAssociationChunk* receivedAbortAssociationChunk);
+
 			void ProcessReceivedHeartbeatRequestChunk(
 			  const Packet* receivedPacket, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
+
+			void ProcessReceivedHeartbeatAckChunk(
+			  const Packet* receivedPacket, const HeartbeatAckChunk* receivedHeartbeatAckChunk);
 
 			void ProcessReceivedReConfigChunk(
 			  const Packet* receivedPacket, const ReConfigChunk* receivedReConfigChunk);
@@ -406,9 +419,15 @@ namespace RTC
 			template<typename... AssociationStates>
 			void AssertNotAssociatonState(AssociationStates... unexpectedAssociationStates) const;
 
-			void AssertAssociationStateIsConsistent() const;
+			/**
+			 * Returns true if there is a TCB, and false otherwise (and reports an
+			 * error).
+			 */
+			bool ValidateHasTcb();
 
 			void AssertHasTcb() const;
+
+			void AssertAssociationStateIsConsistent() const;
 
 			/* Pure virtual methods inherited from PacketSender::Listener. */
 		public:
