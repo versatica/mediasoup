@@ -73,7 +73,7 @@ namespace RTC
 			 * Parse a SCTP Packet.
 			 *
 			 * @remarks
-			 * `bufferLength` must be the exact length of the Packet.
+			 * - `bufferLength` must be the exact length of the Packet.
 			 */
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -171,9 +171,9 @@ namespace RTC
 			 * Clone given Chunk into Packet's buffer.
 			 *
 			 * @remarks
-			 * Once this method is called, the caller may want to free the original
-			 * given Chunk (otherwise it will leak since the Packet manages a clone
-			 * of it).
+			 * - Once this method is called, the caller may want to free the original
+			 *   given Chunk (otherwise it will leak since the Packet manages a clone
+			 *   of it).
 			 */
 			void AddChunk(const Chunk* chunk);
 

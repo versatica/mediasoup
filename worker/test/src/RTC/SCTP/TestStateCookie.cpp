@@ -34,7 +34,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// Negotiated Capabilities
 			// - partialReliability: 1
 			// - messageInterleaving: 0
-			// - reconfig: 1
+			// - re-config: 1
 			// - zeroChecksum: 1
 			// Magic 2: 0xAD81
 			0x00, 0b00001101, 0xAD, 0x81,
@@ -74,7 +74,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
-		REQUIRE(negotiatedCapabilities.reconfig == true);
+		REQUIRE(negotiatedCapabilities.reConfig == true);
 		REQUIRE(negotiatedCapabilities.zeroChecksum == true);
 
 		/* Serialize it. */
@@ -107,7 +107,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
-		REQUIRE(negotiatedCapabilities.reconfig == true);
+		REQUIRE(negotiatedCapabilities.reConfig == true);
 		REQUIRE(negotiatedCapabilities.zeroChecksum == true);
 
 		/* Clone it. */
@@ -143,7 +143,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
-		REQUIRE(negotiatedCapabilities.reconfig == true);
+		REQUIRE(negotiatedCapabilities.reConfig == true);
 		REQUIRE(negotiatedCapabilities.zeroChecksum == true);
 
 		delete clonedStateCookie;
@@ -174,7 +174,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// Negotiated Capabilities
 			// - partialReliability: 1
 			// - messageInterleaving: 0
-			// - reconfig: 1
+			// - re-config: 1
 			// - zeroChecksum: 1
 			// Magic 2: 0xAD81
 			0x00, 0b00001101, 0xAD, 0x81,
@@ -212,7 +212,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// Negotiated Capabilities
 			// - partialReliability: 1
 			// - messageInterleaving: 0
-			// - reconfig: 1
+			// - re-config: 1
 			// - zeroChecksum: 1
 			// Magic 2: 0xAD82 (instead of 0xAD81)
 			0x00, 0b00001101, 0xAD, 0x82,
@@ -250,7 +250,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// Negotiated Capabilities
 			// - partialReliability: 1
 			// - messageInterleaving: 0
-			// - reconfig: 1
+			// - re-config: 1
 			// - zeroChecksum: 1
 			// Magic 2: 0xAD81
 			0x00, 0b00001101, 0xAD, 0x81,
@@ -274,7 +274,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			                                                           .maxInboundStreams   = 55555,
 			                                                           .partialReliability  = true,
 			                                                           .messageInterleaving = true,
-			                                                           .reconfig            = true,
+			                                                           .reConfig            = true,
 			                                                           .zeroChecksum        = false };
 
 		auto* stateCookie = RTC::SCTP::StateCookie::Factory(
@@ -317,7 +317,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(retrievedNegotiatedCapabilities.maxInboundStreams == 55555);
 		REQUIRE(retrievedNegotiatedCapabilities.partialReliability == true);
 		REQUIRE(retrievedNegotiatedCapabilities.messageInterleaving == true);
-		REQUIRE(retrievedNegotiatedCapabilities.reconfig == true);
+		REQUIRE(retrievedNegotiatedCapabilities.reConfig == true);
 		REQUIRE(retrievedNegotiatedCapabilities.zeroChecksum == false);
 
 		/* Parse itself and compare. */
@@ -351,7 +351,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(retrievedParsedNegotiatedCapabilities.maxInboundStreams == 55555);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.partialReliability == true);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.messageInterleaving == true);
-		REQUIRE(retrievedParsedNegotiatedCapabilities.reconfig == true);
+		REQUIRE(retrievedParsedNegotiatedCapabilities.reConfig == true);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.zeroChecksum == false);
 
 		delete parsedStateCookie;
@@ -363,7 +363,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			                                                           .maxInboundStreams   = 55555,
 			                                                           .partialReliability  = true,
 			                                                           .messageInterleaving = true,
-			                                                           .reconfig            = true,
+			                                                           .reConfig            = true,
 			                                                           .zeroChecksum        = false };
 
 		auto* buffer = sctpCommon::FactoryBuffer;
@@ -413,7 +413,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(retrievedNegotiatedCapabilities.maxInboundStreams == 55555);
 		REQUIRE(retrievedNegotiatedCapabilities.partialReliability == true);
 		REQUIRE(retrievedNegotiatedCapabilities.messageInterleaving == true);
-		REQUIRE(retrievedNegotiatedCapabilities.reconfig == true);
+		REQUIRE(retrievedNegotiatedCapabilities.reConfig == true);
 		REQUIRE(retrievedNegotiatedCapabilities.zeroChecksum == false);
 
 		delete stateCookie;

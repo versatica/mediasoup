@@ -112,7 +112,7 @@ namespace RTC
 			negotiatedCapabilitiesField->reserved = 0;
 			negotiatedCapabilitiesField->bitA     = negotiatedCapabilities.partialReliability;
 			negotiatedCapabilitiesField->bitB     = negotiatedCapabilities.messageInterleaving;
-			negotiatedCapabilitiesField->bitC     = negotiatedCapabilities.reconfig;
+			negotiatedCapabilitiesField->bitC     = negotiatedCapabilities.reConfig;
 			negotiatedCapabilitiesField->bitD     = negotiatedCapabilities.zeroChecksum;
 			negotiatedCapabilitiesField->magic2   = uint16_t{ htons(StateCookie::Magic2) };
 			negotiatedCapabilitiesField->maxOutboundStreams =
@@ -212,7 +212,7 @@ namespace RTC
 			  uint16_t{ ntohs(negotiatedCapabilitiesField->maxInboundStreams) };
 			negotiatedCapabilities.partialReliability  = negotiatedCapabilitiesField->bitA;
 			negotiatedCapabilities.messageInterleaving = negotiatedCapabilitiesField->bitB;
-			negotiatedCapabilities.reconfig            = negotiatedCapabilitiesField->bitC;
+			negotiatedCapabilities.reConfig            = negotiatedCapabilitiesField->bitC;
 			negotiatedCapabilities.zeroChecksum        = negotiatedCapabilitiesField->bitD;
 
 			// NOTE: No need to std::move(). Copy elision (RVO) is used for free in GCC

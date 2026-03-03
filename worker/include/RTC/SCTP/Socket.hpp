@@ -4,26 +4,38 @@
 #include "common.hpp"
 #include "RTC/SCTP/Message.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/PacketSender.hpp"
 #include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/SocketDeferredListener.hpp"
 #include "RTC/SCTP/SocketListener.hpp"
 #include "RTC/SCTP/SocketMetrics.hpp"
+#include "RTC/SCTP/StateCookie.hpp"
 #include "RTC/SCTP/TransmissionControlBlock.hpp"
+#include "RTC/SCTP/Types.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
+#include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
+#include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/AnyInitChunk.hpp"
+#include "RTC/SCTP/packet/chunks/CookieAckChunk.hpp"
+#include "RTC/SCTP/packet/chunks/CookieEchoChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
+#include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
+#include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
+#include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
+#include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "RTC/SCTP/packet/chunks/OperationErrorChunk.hpp"
+#include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownAckChunk.hpp"
+#include "RTC/SCTP/packet/chunks/ShutdownChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
 #include "handles/BackoffTimerHandle.hpp"
-#include <cstdint>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -38,7 +50,7 @@ namespace RTC
 		 *
 		 * It manages all Packet and Chunk dispatching and the connection flow.
 		 */
-		class Socket : public BackoffTimerHandle::Listener
+		class Socket : public PacketSender::Listener, public BackoffTimerHandle::Listener
 		{
 		public:
 			/**
@@ -140,7 +152,7 @@ namespace RTC
 				uint16_t negotiatedMaxInboundStreams{ 0 };
 				bool usesPartialReliability{ false };
 				bool usesMessageInterleaving{ false };
-				bool usesReconfig{ false };
+				bool usesReConfig{ false };
 				bool usesZeroChecksum{ false };
 			};
 
@@ -255,8 +267,12 @@ namespace RTC
 			 * The association does not have to be established before calling this
 			 * method. If it's called before there is an established association, the
 			 * message will be queued.
+			 *
+			 * @remarks
+			 * - Copy constructor is disabled and there is move constructor. That's why
+			 *   we don't pass a reference here. We could pass `Message&&` but that's
+			 *   worse opens the door to bugs.
 			 */
-			// TODO: Why not Message&?
 			Types::SendMessageStatus SendMessage(Message message, const SendMessageOptions& sendMessageOptions);
 
 			/**
@@ -270,13 +286,19 @@ namespace RTC
 			 *
 			 * This has identical semantics to `SendMessage()', except that it may
 			 * coalesce many messages into a single SCTP packet if they would fit.
+			 *
+			 * @remarks
+			 * - Same as in `SendMessage()`.
 			 */
-			// TODO: Why not Message&?
 			std::vector<Types::SendMessageStatus> SendManyMessages(
 			  std::span<Message> messages, const SendMessageOptions& sendMessageOptions);
 
 			/**
-			 * Receive a Packet received from the peer.
+			 * Receive a Packet received from the remote peer.
+			 *
+			 * @remarks
+			 * - The caller is responsible of freeing given Packet once this method
+			 *   returns.
 			 */
 			void ReceivePacket(const Packet* receivedPacket);
 
@@ -300,47 +322,92 @@ namespace RTC
 
 			std::unique_ptr<Packet> CreatePacketWithVerificationTag(uint32_t verificationTag) const;
 
-			/**
-			 * Notify the parent about a Packet to be sent to the peer and return a
-			 * boolean indicating whether the Packet was sent or not.
-			 *
-			 * This method also writes the Packet checksum field depending on the value
-			 * of `writeChecksum`. If it's explicitly set then it's honored. Otherwise
-			 * the checksum field is written based on whether Zero Checksum has been
-			 * negotiated or not.
-			 *
-			 * @remarks
-			 * - This method does not delete the given `packet`. The caller must do it
-			 *   after invoking this method.
-			 */
-			bool SendPacket(Packet* packet, std::optional<bool> writeChecksum = std::nullopt);
-
-			Types::SendMessageStatus InternalSendMessage(
-			  const Message& message, const SendMessageOptions& sendMessageOptions);
-
 			void SendInitChunk();
 
 			void SendShutdownChunk();
 
 			void SendShutdownAckChunk();
 
+			/**
+			 * Sends SHUTDOWN or SHUTDOWN-ACK if the Socket is shutting down and if
+			 * all outstanding data has been acknowledged.
+			 */
 			void MaySendShutdownOrShutdownAckChunk();
+
+			/**
+			 * If the Socket is shutting down, responds SHUTDOWN to any incoming DATA.
+			 */
+			void MaySendShutdownOnPacketReceived(const Packet* receivedPacket);
+
+			/**
+			 * If there are streams pending to be reset, send a request to reset them.
+			 */
+			void MaySendResetStreamsRequest();
+
+			/**
+			 * Called whenever data has been received, or the cumulative acknowledgment
+			 * TSN has moved, that may result in delivering messages.
+			 */
+			void MayDeliverMessages();
+
+			Types::SendMessageStatus InternalSendMessage(
+			  const Message& message, const SendMessageOptions& sendMessageOptions);
 
 			bool ValidateReceivedPacket(const Packet* receivedPacket);
 
 			bool ProcessReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk);
-
-			void ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
 
 			void ProcessReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk);
 
 			void ProcessReceivedInitAckChunk(
 			  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk);
 
-			void ProcessReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
+			void ProcessReceivedCookieEchoChunk(
+			  const Packet* receivedPacket, const CookieEchoChunk* receivedCookieEchoChunk);
+
+			bool ProcessReceivedCookieEchoChunkWithTcb(const Packet* receivedPacket, const StateCookie* cookie);
+
+			void ProcessReceivedCookieAckChunk(
+			  const Packet* receivedPacket, const CookieAckChunk* receivedCookieAckChunk);
+
+			void ProcessReceivedShutdownChunk(
+			  const Packet* receivedPacket, const ShutdownChunk* receivedShutdownChunk);
+
+			void ProcessReceivedShutdownAckChunk(
+			  const Packet* receivedPacket, const ShutdownAckChunk* receivedShutdownAckChunk);
+
+			void ProcessReceivedShutdownCompleteChunk(
+			  const Packet* receivedPacket, const ShutdownCompleteChunk* receivedShutdownCompleteChunk);
+
+			void ProcessReceivedOperationErrorChunk(
+			  const Packet* receivedPacket, const OperationErrorChunk* receivedOperationErrorChunk);
+
+			void ProcessReceivedAbortAssociationChunk(
+			  const Packet* receivedPacket, const AbortAssociationChunk* receivedAbortAssociationChunk);
 
 			void ProcessReceivedHeartbeatRequestChunk(
 			  const Packet* receivedPacket, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
+
+			void ProcessReceivedHeartbeatAckChunk(
+			  const Packet* receivedPacket, const HeartbeatAckChunk* receivedHeartbeatAckChunk);
+
+			void ProcessReceivedReConfigChunk(
+			  const Packet* receivedPacket, const ReConfigChunk* receivedReConfigChunk);
+
+			void ProcessReceivedForwardTsnChunk(
+			  const Packet* receivedPacket, const ForwardTsnChunk* receivedForwardTsnChunk);
+
+			void ProcessReceivedIForwardTsnChunk(
+			  const Packet* receivedPacket, const IForwardTsnChunk* receivedIForwardTsnChunk);
+
+			void ProcessReceivedAnyForwardTsnChunk(
+			  const Packet* receivedPacket, const AnyForwardTsnChunk* receivedAnyForwardTsnChunk);
+
+			void ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
+
+			void ProcessReceivedIDataChunk(const Packet* receivedPacket, const IDataChunk* receivedIDataChunk);
+
+			void ProcessReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
 
 			bool ProcessReceivedUnknownChunk(
 			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
@@ -357,9 +424,19 @@ namespace RTC
 			template<typename... AssociationStates>
 			void AssertNotAssociatonState(AssociationStates... unexpectedAssociationStates) const;
 
-			void AssertAssociationStateIsConsistent() const;
+			/**
+			 * Returns true if there is a TCB, and false otherwise (and reports an
+			 * error).
+			 */
+			bool ValidateHasTcb();
 
 			void AssertHasTcb() const;
+
+			void AssertAssociationStateIsConsistent() const;
+
+			/* Pure virtual methods inherited from PacketSender::Listener. */
+		public:
+			void OnPacketSenderPacketSent(PacketSender* packetSender, const Packet* packet, bool sent) override;
 
 			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
 		public:
@@ -385,6 +462,8 @@ namespace RTC
 			// Once the SCTP association is established a Transmission Control Block
 			// is created.
 			std::unique_ptr<TransmissionControlBlock> tcb;
+			// Packet sender.
+			PacketSender packetSender;
 			// T1-init timer.
 			const std::unique_ptr<BackoffTimerHandle> t1InitTimer;
 			// T1-cookie timer.

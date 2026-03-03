@@ -37,7 +37,7 @@ namespace RTC
 			  indentation, "  uses partial reliability: %s", this->usesPartialReliability ? "yes" : "no");
 			MS_DUMP_CLEAN(
 			  indentation, "  uses message interleaving: %s", this->usesMessageInterleaving ? "yes" : "no");
-			MS_DUMP_CLEAN(indentation, "  uses reconfig: %s", this->usesReconfig ? "yes" : "no");
+			MS_DUMP_CLEAN(indentation, "  uses re-config: %s", this->usesReConfig ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  uses zero checksum: %s", this->usesZeroChecksum ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "</SCTP::SocketMetrics>");
 		}

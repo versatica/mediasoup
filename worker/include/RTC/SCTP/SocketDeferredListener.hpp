@@ -59,7 +59,7 @@ namespace RTC
 
 		public:
 			/* Pure virtual methods inherited from RTC::STCP::SocketListener. */
-			bool OnSocketSendSctpPacket(Packet* packet) override;
+			bool OnSocketSendPacket(Packet* packet) override;
 
 			void OnSocketConnected() override;
 
@@ -76,7 +76,6 @@ namespace RTC
 			void OnSocketStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds) override;
 
 			void OnSocketStreamsResetFailed(
-
 			  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage) override;
 
 			void OnSocketInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) override;

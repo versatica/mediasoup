@@ -83,12 +83,6 @@ public:
 	void Stop();
 
 	/**
-	 * Restart the BackoffTimer (if it's running) or start it. It will reset the
-	 * timeout count.
-	 */
-	void Restart();
-
-	/**
 	 * Set the base timeout duration. It will be applied after the next timeout
 	 * and effective duration can be larger if backoff algorithm is exponential.
 	 */

@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/packet/Chunk.hpp"
+#include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
 
 namespace RTC
 {
@@ -42,7 +42,7 @@ namespace RTC
 		// Forward declaration.
 		class Packet;
 
-		class ForwardTsnChunk : public Chunk
+		class ForwardTsnChunk : public AnyForwardTsnChunk
 		{
 			// We need that Packet calls protected and private methods in this class.
 			friend class Packet;
@@ -90,27 +90,19 @@ namespace RTC
 
 			ForwardTsnChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			uint32_t GetNewCumulativeTsn() const
+			uint32_t GetNewCumulativeTsn() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
 			void SetNewCumulativeTsn(uint32_t value);
 
-			uint16_t GetNumberOfStreams() const
+			uint16_t GetNumberOfSkippedStreams() const final
 			{
 				return GetVariableLengthValueLength() / 4;
 			}
 
-			uint16_t GetStreamAt(uint16_t idx) const
-			{
-				return Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 4));
-			}
-
-			uint16_t GetStreamSequenceAt(uint16_t idx) const
-			{
-				return Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 4) + 2);
-			}
+			std::vector<AnyForwardTsnChunk::SkippedStream> GetSkippedStreams() const final;
 
 			void AddStream(uint16_t stream, uint16_t streamSequence);
 
@@ -124,6 +116,17 @@ namespace RTC
 			size_t GetHeaderLength() const final
 			{
 				return ForwardTsnChunk::ForwardTsnChunkHeaderLength;
+			}
+
+		private:
+			uint16_t GetStreamIdAt(uint16_t idx) const
+			{
+				return Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 4));
+			}
+
+			uint16_t GetStreamSequenceAt(uint16_t idx) const
+			{
+				return Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 4) + 2);
 			}
 		};
 	} // namespace SCTP

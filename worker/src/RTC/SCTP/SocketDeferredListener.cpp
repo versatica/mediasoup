@@ -68,14 +68,14 @@ namespace RTC
 			}
 		}
 
-		bool SocketDeferredListener::OnSocketSendSctpPacket(Packet* packet)
+		bool SocketDeferredListener::OnSocketSendPacket(Packet* packet)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			// Will not be deferred but called directly.
-			return this->innerListener.OnSocketSendSctpPacket(packet);
+			return this->innerListener.OnSocketSendPacket(packet);
 		}
 
 		void SocketDeferredListener::OnSocketConnected()

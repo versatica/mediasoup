@@ -30,7 +30,7 @@ namespace RTC
 			 * @remarks
 			 * - It is NOT allowed to call methods in Socket within this callback.
 			 */
-			virtual bool OnSocketSendSctpPacket(Packet* packet) = 0;
+			virtual bool OnSocketSendPacket(Packet* packet) = 0;
 
 			/**
 			 * Called when calling Connect() succeeds and also for incoming successful
@@ -147,11 +147,11 @@ namespace RTC
 			 *                │                                   │
 			 *                │                                   │
 			 *                v                                   v
-			 *    OnLifecycleMessageFullySent ───────> OnLifecycleMessageExpired
+			 * OnSocketLifecycleMessageFullySent ───> OnSocketLifecycleMessageExpired
 			 *                │                                   │
 			 *                │                                   │
 			 *                v                                   v
-			 *    OnLifeCycleMessageDelivered ────────────> OnLifecycleEnd
+			 * OnSocketLifeCycleMessageDelivered ───>   OnSocketLifecycleEnd
 			 */
 
 			/**
@@ -164,7 +164,7 @@ namespace RTC
 			 * - This is a message lifecycle event.
 			 * - It is NOT allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnLifecycleMessageFullySent(uint64_t lifecycleId) {};
+			virtual void OnSocketLifecycleMessageFullySent(uint64_t lifecycleId) {};
 
 			/**
 			 * Called when a message has expired. If it was expired with data
@@ -178,11 +178,11 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This is a message lifecycle event.
-			 * - It's guaranteed that OnLifecycleMessageDelivered() is not called if
-			 *   this callback has triggered.
+			 * - It's guaranteed that OnSocketLifecycleMessageDelivered() is not called
+			 *   if this callback has triggered.
 			 * - It is NOT allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnLifecycleMessageExpired(uint64_t lifecycleId, bool maybeDelivered)
+			virtual void OnSocketLifecycleMessageExpired(uint64_t lifecycleId, bool maybeDelivered)
 			{
 			}
 
@@ -199,11 +199,11 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This is a message lifecycle event.
-			 * - It's guaranteed that OnLifecycleMessageEnd() is not called if this
-			 *   callback has triggered.
+			 * - It's guaranteed that OnSocketLifecycleMessageEnd() is not called if
+			 *   this callback has triggered.
 			 * - It is NOT allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnLifecycleMessageDelivered(uint64_t lifecycleId)
+			virtual void OnSocketLifecycleMessageDelivered(uint64_t lifecycleId)
 			{
 			}
 
@@ -219,13 +219,14 @@ namespace RTC
 			 *
 			 * @remarks:
 			 * - This is a message lifecycle event.
-			 * - When the socket is deallocated, there will be no OnLifecycleMessageEnd()
-			 *   callbacks sent for messages that were enqueued. But as long as the
-			 *   socket is alive, these callbacks are guaranteed to be sent as
-			 *   messages are either expired or successfully acknowledged.
+			 * - When the socket is deallocated, there will be no
+			 *   OnSocketLifecycleMessageEnd() callbacks sent for messages that were
+			 *   enqueued. But as long as the Socket is alive, these callbacks are
+			 *   guaranteed to be sent as messages are either expired or successfully
+			 *   acknowledged.
 			 * - It is NOT allowed to call methods in Socket within this callback.
 			 */
-			virtual void OnLifecycleMessageEnd(uint64_t lifecycleId)
+			virtual void OnSocketLifecycleMessageEnd(uint64_t lifecycleId)
 			{
 			}
 		};
