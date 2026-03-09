@@ -2167,6 +2167,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const uint64_t now = DepLibUV::GetTimeMs();
+
 			// TODO
 		}
 
