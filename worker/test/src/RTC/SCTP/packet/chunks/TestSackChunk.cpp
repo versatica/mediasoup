@@ -298,8 +298,6 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedChunk->GetDuplicateTsns() == expectedDuplicateTsns);
 		REQUIRE(parsedChunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
 
-		parsedChunk->Dump();
-
 		delete parsedChunk;
 	}
 }
