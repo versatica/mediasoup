@@ -1,11 +1,11 @@
 #define MS_CLASS "RTC::SCTP::Socket"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/SCTP/Socket.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
-#include "RTC/SCTP/Socket.hpp"
 #include "RTC/SCTP/packet/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/NoUserDataErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/OutOfResourceErrorCause.hpp"
