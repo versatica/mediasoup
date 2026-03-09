@@ -236,7 +236,7 @@ namespace RTC
 			 * "low" for a given stream, which will trigger
 			 * OnSocketStreamBufferedAmountLow()` event. The default value is 0.
 			 */
-			void SetBufferedAmountLowThreshold(uint16_t stream_id, size_t bytes);
+			void SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes);
 
 			/**
 			 * Resetting streams is an asynchronous operation and the results will be

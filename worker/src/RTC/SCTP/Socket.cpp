@@ -318,7 +318,7 @@ namespace RTC
 			// return this->sendQueue.GetStreamBufferedAmountLowThreshold(streamId);
 		}
 
-		void Socket::SetBufferedAmountLowThreshold(uint16_t stream_id, size_t bytes)
+		void Socket::SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes)
 		{
 			MS_TRACE();
 
