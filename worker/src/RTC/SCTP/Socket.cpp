@@ -1,12 +1,16 @@
+#include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
+#include <cstdint>
 #define MS_CLASS "RTC::SCTP::Socket"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/Socket.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/SCTP/Socket.hpp"
 #include "RTC/SCTP/packet/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
+#include "RTC/SCTP/packet/errorCauses/NoUserDataErrorCause.hpp"
+#include "RTC/SCTP/packet/errorCauses/OutOfResourceErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UserInitiatedAbortErrorCause.hpp"
@@ -918,17 +922,18 @@ namespace RTC
 			// packet and take no further action."
 			if (receivedPacket->GetChunksCount() == 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::ABORT)
 			{
-				const auto* abortChunk =
+				const auto* abortAssociationChunk =
 				  static_cast<const AbortAssociationChunk*>(receivedPacket->GetChunkAt(0));
 
 				// We cannot verify the Verification Tag so assume it's okey.
-				if (abortChunk->GetT() && !this->tcb)
+				if (abortAssociationChunk->GetT() && !this->tcb)
 				{
 					return true;
 				}
 				else if (
-				  (!abortChunk->GetT() && receivedPacket->GetVerificationTag() == localVerificationTag) ||
-				  (abortChunk->GetT() &&
+				  (!abortAssociationChunk->GetT() &&
+				   receivedPacket->GetVerificationTag() == localVerificationTag) ||
+				  (abortAssociationChunk->GetT() &&
 				   receivedPacket->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
 				{
 					return true;
@@ -1223,21 +1228,21 @@ namespace RTC
 				  sctp,
 				  "invalidNumber of Outbound Streams or Number of Inbound Streams in received INIT Chunk, aborting association");
 
-				auto packet      = CreatePacketWithVerificationTag(0);
-				auto* abortChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+				auto packet                 = CreatePacketWithVerificationTag(0);
+				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
 				// NOTE: We are not setting the Verification Tag expected by the peer
 				// so must set be T to 1.
-				abortChunk->SetT(true);
+				abortAssociationChunk->SetT(true);
 
 				auto* protocolViolationErrorCause =
-				  abortChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
+				  abortAssociationChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
 
 				protocolViolationErrorCause->SetAdditionalInformation(
 				  "invalid value 0 in Number of Outbound Streams or Number of Inbound Streams in received INIT chunk");
 
 				protocolViolationErrorCause->Consolidate();
-				abortChunk->Consolidate();
+				abortAssociationChunk->Consolidate();
 
 				this->packetSender.SendPacket(packet.get());
 
@@ -1398,21 +1403,21 @@ namespace RTC
 				MS_WARN_TAG(
 				  sctp, "ignoring received INIT_ACK Chunk without StateCookieParameter or without Cookie");
 
-				auto packet      = CreatePacketWithVerificationTag(this->preTcb.localVerificationTag);
-				auto* abortChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+				auto packet = CreatePacketWithVerificationTag(this->preTcb.localVerificationTag);
+				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
 				// NOTE: We are not setting the Verification Tag expected by the peer
 				// so must set be T to 1.
-				abortChunk->SetT(true);
+				abortAssociationChunk->SetT(true);
 
 				auto* protocolViolationErrorCause =
-				  abortChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
+				  abortAssociationChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
 
 				protocolViolationErrorCause->SetAdditionalInformation(
 				  "INIT_ACK without State Cookie Parameter or without Cookie");
 
 				protocolViolationErrorCause->Consolidate();
-				abortChunk->Consolidate();
+				abortAssociationChunk->Consolidate();
 
 				this->packetSender.SendPacket(packet.get());
 
@@ -1991,20 +1996,20 @@ namespace RTC
 
 			if (!this->tcb->GetNegotiatedCapabilities().partialReliability)
 			{
-				auto packet      = this->tcb->CreatePacket();
-				auto* abortChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+				auto packet                 = this->tcb->CreatePacket();
+				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
 				// NOTE: Don't set bit T in the ABORT chunk since TCB knows the
 				// Verification Tag expected by the remote.
 
 				auto* protocolViolationErrorCause =
-				  abortChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
+				  abortAssociationChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
 
 				protocolViolationErrorCause->SetAdditionalInformation(
 				  "FORWARD_TSN or I_FORWARD_TSN-TSN chunk received but partial reliability is not negotiated");
 
 				protocolViolationErrorCause->Consolidate();
-				abortChunk->Consolidate();
+				abortAssociationChunk->Consolidate();
 
 				this->packetSender.SendPacket(packet.get());
 
@@ -2053,7 +2058,110 @@ namespace RTC
 				return;
 			}
 
-			// TODO
+			const uint32_t tsn      = receivedAnyDataChunk->GetTsn();
+			const bool immediateAck = receivedAnyDataChunk->GetI();
+
+			if (receivedAnyDataChunk->GetUserDataLength() == 0)
+			{
+				auto packet               = this->tcb->CreatePacket();
+				auto* operationErrorChunk = packet->BuildChunkInPlace<OperationErrorChunk>();
+				auto* noUserDataErrorCause =
+				  operationErrorChunk->BuildErrorCauseInPlace<NoUserDataErrorCause>();
+
+				noUserDataErrorCause->SetTsn(tsn);
+				noUserDataErrorCause->Consolidate();
+				operationErrorChunk->Consolidate();
+
+				this->packetSender.SendPacket(packet.get());
+
+				this->listener.OnSocketError(
+				  Types::ErrorKind::PROTOCOL_VIOLATION, "received DATA or I_DATA chunk with no user data");
+
+				return;
+			}
+
+			// TODO: Implement it.
+			// MS_DEBUG_DEV("data received [data length:%" PRIu16 ", queue size:%zu, watermark:%zu,
+			// full:%s, above:%s]", 	receivedAnyDataChunk->GetUserDataLength(),
+			// 	this->tcb->GetReassemblyQueue()->GetQueuedBytes(),
+			// 	this->tcb->GetReassemblyQueue()->GetWaterMarkBytes(),
+			// 	this->tcb->GetReassemblyQueue()->IsFull(),
+			// 	this->tcb->GetReassemblyQueue()->IsAboveWatermark(),
+			// );
+
+			// TODO: Implement it.
+			// if (this->tcb->GetReassemblyQueue()->IsFull())
+			// {
+			// 	// If the reassembly queue is full but there are assembled messages
+			// 	// waiting to be pulled, we can't do anything with this data except drop
+			// 	// it, and hope the upper layer drains the accumulated messages soon.
+			// 	if (this->tcb->GetReassemblyQueue()->HasMessages())
+			// 	{
+			// 		MS_WARN_TAG(sctp, "received data rejected because reassembly queue is full");
+
+			// 		return;
+			// 	}
+			// 	// If the reassembly queue is full and there's no messages waiting,
+			// 	// there is nothing that can be done. The specification only allows
+			// 	// dropping gap-ack-blocks, and that's not likely to help as the socket
+			// 	// has been trying to fill gaps since the watermark was reached.
+			// 	else
+			// 	{
+			// 		auto packet      = this->tcb->CreatePacket();
+			// 		auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+
+			// 		// NOTE: Don't set bit T in the ABORT chunk since TCB knows the
+			// 		// Verification Tag expected by the remote.
+
+			// 		auto* outOfResourceErrorCause =
+			// 		  abortAssociationChunk->BuildErrorCauseInPlace<OutOfResourceErrorCause>();
+
+			// 		outOfResourceErrorCause->Consolidate();
+			// 		abortAssociationChunk->Consolidate();
+
+			// 		this->packetSender.SendPacket(packet.get());
+
+			// 		InternalClose(Types::ErrorKind::RESOURCE_EXHAUSTION, "reassembly queue is exhausted");
+
+			// 		return;
+			// 	}
+			// }
+
+			// If the reassembly queue is above its high watermark, only accept data
+			// chunks that increase its cumulative ack tsn in an attempt to fill gaps
+			// to deliver messages.
+			// TODO: Implement it.
+			// if (this->tcb->GetReassemblyQueue()->IsAboveWatermark())
+			// {
+			// 	MS_WARN_TAG(sctp, "reassembly queue is above watermark");
+
+			// 	if (this->tcb->GetDataTracker()->WillIncreaseCumAckTsn(tsn))
+			// 	{
+			// 		MS_WARN_TAG(sctp, "reassembly queue is above watermark");
+
+			// 		this->tcb->GetDataTracker()->ForceImmediateSack();
+
+			// 		return;
+			// 	}
+			// }
+
+			// TODO: Implement it.
+			// if (this->tcb->GetDataTracker()->IsTsnValid(tsn))
+			// {
+			// 	MS_WARN_TAG(sctp, "data rejected because of failing TSN validity");
+
+			// 	return;
+			// }
+
+			// TODO: Implement it.
+			// if (this->tcb->GetDataTracker()->Observe(tsn, immediateAck))
+			// {
+			// 	// TODO: Here we should have a std::vector<uint8_t> holding the data so
+			// 	// we can move it.
+			// 	this->tcb->GetReassemblyQueue()->Add(tsn, std::move(data));
+
+			// 	MayDeliverMessages();
+			// }
 		}
 
 		void Socket::ProcessReceivedSackChunk(
