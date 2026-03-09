@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memmove()
+#include <ranges>
 
 namespace RTC
 {
@@ -121,20 +122,16 @@ namespace RTC
 			  indentation,
 			  "  advertised receiver window credit: %" PRIu32,
 			  GetAdvertisedReceiverWindowCredit());
-			MS_DUMP_CLEAN(indentation, "  gap blocks: %" PRIu16, GetNumberOfGapAckBlocks());
-			for (uint16_t idx{ 0 }; idx < GetNumberOfGapAckBlocks(); ++idx)
+			MS_DUMP_CLEAN(indentation, "  validated gap ack blocks:");
+			for (const auto& gapAckBlock : GetValidatedGapAckBlocks())
 			{
 				MS_DUMP_CLEAN(
-				  indentation,
-				  "  - idx: %" PRIu16 ", start: %" PRIu16 ", end:%" PRIu16,
-				  idx,
-				  GetAckBlockStartAt(idx),
-				  GetAckBlockEndAt(idx));
+				  indentation, "  - start: %" PRIu16 ", end:%" PRIu16, gapAckBlock.start, gapAckBlock.end);
 			}
-			MS_DUMP_CLEAN(indentation, "  duplicate tsns: %" PRIu16, GetNumberOfDuplicateTsns());
-			for (uint16_t idx{ 0 }; idx < GetNumberOfDuplicateTsns(); ++idx)
+			MS_DUMP_CLEAN(indentation, "  duplicate tsns:");
+			for (const uint32_t duplicateTsn : GetDuplicateTsns())
 			{
-				MS_DUMP_CLEAN(indentation, "  - idx: %" PRIu16 ", tsn: %" PRIu32, idx, GetDuplicateTsnAt(idx));
+				MS_DUMP_CLEAN(indentation, "  - tsn: %" PRIu32, duplicateTsn);
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::SackChunk>");
 		}
@@ -163,6 +160,85 @@ namespace RTC
 			MS_TRACE();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
+		}
+
+		std::vector<SackChunk::GapAckBlock> SackChunk::GetValidatedGapAckBlocks() const
+		{
+			MS_TRACE();
+
+			const uint16_t numberOfGapAckBlocks = GetNumberOfGapAckBlocks();
+			std::vector<SackChunk::GapAckBlock> gapAckBlocks;
+
+			gapAckBlocks.reserve(numberOfGapAckBlocks);
+
+			if (ValidateGapAckBlocks())
+			{
+				for (uint16_t idx{ 0 }; idx < numberOfGapAckBlocks; ++idx)
+				{
+					gapAckBlocks.emplace_back(GetAckBlockStartAt(idx), GetAckBlockEndAt(idx));
+				}
+
+				return gapAckBlocks;
+			}
+
+			// First: Only keep blocks that are sane.
+			for (uint16_t idx{ 0 }; idx < numberOfGapAckBlocks; ++idx)
+			{
+				const uint16_t start = GetAckBlockStartAt(idx);
+				const uint16_t end   = GetAckBlockEndAt(idx);
+
+				if (end > start)
+				{
+					gapAckBlocks.emplace_back(start, end);
+				}
+			}
+
+			// Not more than at most one remaining? Exit early.
+			if (gapAckBlocks.size() == 1)
+			{
+				return gapAckBlocks;
+			}
+
+			// Sort the intervals by their start value, to aid in the merging below.
+			std::ranges::sort(gapAckBlocks, {}, &SackChunk::GapAckBlock::start);
+
+			// Merge overlapping ranges.
+			size_t writeIdx{ 0 };
+
+			for (size_t readIdx{ 1 }; readIdx < gapAckBlocks.size(); ++readIdx)
+			{
+				if (gapAckBlocks[writeIdx].end + 1 >= gapAckBlocks[readIdx].start)
+				{
+					gapAckBlocks[writeIdx].end =
+					  std::max(gapAckBlocks[writeIdx].end, gapAckBlocks[readIdx].end);
+				}
+				else
+				{
+					++writeIdx;
+					gapAckBlocks[writeIdx] = gapAckBlocks[readIdx];
+				}
+			}
+
+			gapAckBlocks.resize(writeIdx + 1);
+
+			return gapAckBlocks;
+		}
+
+		std::vector<uint32_t> SackChunk::GetDuplicateTsns() const
+		{
+			MS_TRACE();
+
+			const uint32_t numberOfDuplicateTsns = GetNumberOfDuplicateTsns();
+			std::vector<uint32_t> duplicateTsns;
+
+			duplicateTsns.reserve(numberOfDuplicateTsns);
+
+			for (uint32_t idx{ 0 }; idx < GetNumberOfDuplicateTsns(); ++idx)
+			{
+				duplicateTsns.emplace_back(GetDuplicateTsnAt(idx));
+			}
+
+			return duplicateTsns;
 		}
 
 		void SackChunk::AddAckBlock(uint16_t start, uint16_t end)
@@ -223,6 +299,41 @@ namespace RTC
 			MS_TRACE();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 14, value);
+		}
+
+		bool SackChunk::ValidateGapAckBlocks() const
+		{
+			MS_TRACE();
+
+			const uint16_t numberOfGapAckBlocks = GetNumberOfGapAckBlocks();
+
+			if (numberOfGapAckBlocks == 0)
+			{
+				return true;
+			}
+
+			// Ensure that gap-ack-blocks are sorted, has an "end" that is not before
+			// "start" and are non-overlapping and non-adjacent.
+			uint16_t prevEnd{ 0 };
+
+			for (uint16_t idx{ 0 }; idx < numberOfGapAckBlocks; ++idx)
+			{
+				const uint16_t start = GetAckBlockStartAt(idx);
+				const uint16_t end   = GetAckBlockEndAt(idx);
+
+				if (end < start)
+				{
+					return false;
+				}
+				else if (start <= (prevEnd + 1))
+				{
+					return false;
+				}
+
+				prevEnd = end;
+			}
+
+			return true;
 		}
 	} // namespace SCTP
 } // namespace RTC
