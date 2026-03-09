@@ -2167,9 +2167,42 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint64_t now = DepLibUV::GetTimeMs();
+			if (!ValidateHasTcb())
+			{
+				return;
+			}
 
-			// TODO
+			// TODO: Implement it.
+			// if (this->tcb->GetRetransmissionQueue()->ProcessSack(receivedSackChunk))
+			// {
+			// 	MaySendShutdownOrShutdownAckChunk();
+
+			// 	// Receiving an ACK may make the socket go into fast recovery mode.
+			// 	//
+			// 	// https://datatracker.ietf.org/doc/html/rfc9260#section-7.2.4
+			// 	//
+			// 	// "If not in Fast Recovery, determine how many of the earliest (i.e.,
+			// 	// lowest TSN) DATA chunks marked for retransmission will fit into a
+			// 	// single packet, subject to constraint of the PMTU of the destination
+			// 	// transport address to which the packet is being sent. Call this value
+			// 	// K. Retransmit those K DATA chunks in a single packet. When a Fast
+			// 	// Retransmit is being performed, the sender SHOULD ignore the value of
+			// 	// cwnd and SHOULD NOT delay retransmission for this single packet."
+			// 	this->tcb->MaySendFastRetransmit();
+
+			// 	// Receiving an ACK will decrease outstanding bytes (maybe now below
+			// 	// cwnd?) or indicate packet loss that may result in sending FORWARD-TSN.
+			// 	const uint64_t now = DepLibUV::GetTimeMs();
+
+			// 	this->tcb->SendBufferedPackets(now);
+			// }
+			// else
+			// {
+			// 	MS_WARN_TAG(
+			// 	  sctp,
+			// 	  "dropping received out-of-order SACK [TSN:%" PRIu32 "]",
+			// 	  receivedSackChunk->GetCumulativeTsnAck());
+			// }
 		}
 
 		bool Socket::ProcessReceivedUnknownChunk(
