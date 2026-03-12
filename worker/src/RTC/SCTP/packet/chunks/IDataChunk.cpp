@@ -126,8 +126,8 @@ namespace RTC
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  user data length: %" PRIu16 " (has user data: %s)",
-			  GetUserDataLength(),
-			  HasUserData() ? "yes" : "no");
+			  GetUserDataPayloadLength(),
+			  HasUserDataPayload() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "</SCTP::IDataChunk>");
 		}
 
@@ -216,11 +216,11 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);
 		}
 
-		void IDataChunk::SetUserData(const uint8_t* userData, uint16_t userDataLength)
+		void IDataChunk::SetUserDataPayload(const uint8_t* userDataPayload, uint16_t userDataPayloadLength)
 		{
 			MS_TRACE();
 
-			SetVariableLengthValue(userData, userDataLength);
+			SetVariableLengthValue(userDataPayload, userDataPayloadLength);
 		}
 
 		IDataChunk* IDataChunk::SoftClone(const uint8_t* buffer) const

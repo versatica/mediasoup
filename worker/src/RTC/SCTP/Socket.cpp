@@ -2059,7 +2059,7 @@ namespace RTC
 			const uint32_t tsn      = receivedAnyDataChunk->GetTsn();
 			const bool immediateAck = receivedAnyDataChunk->GetI();
 
-			if (receivedAnyDataChunk->GetUserDataLength() == 0)
+			if (receivedAnyDataChunk->GetUserDataPayloadLength() == 0)
 			{
 				auto packet               = this->tcb->CreatePacket();
 				auto* operationErrorChunk = packet->BuildChunkInPlace<OperationErrorChunk>();

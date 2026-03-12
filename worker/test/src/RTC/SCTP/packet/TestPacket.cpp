@@ -189,10 +189,10 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetStreamId() == 0xFF00);
 		REQUIRE(chunk1->GetStreamSequenceNumber() == 0x6677);
 		REQUIRE(chunk1->GetPayloadProtocolId() == 0x12341234);
-		REQUIRE(chunk1->HasUserData() == true);
-		REQUIRE(chunk1->GetUserDataLength() == 2);
-		REQUIRE(chunk1->GetUserData()[0] == 0xAB);
-		REQUIRE(chunk1->GetUserData()[1] == 0xCD);
+		REQUIRE(chunk1->HasUserDataPayload() == true);
+		REQUIRE(chunk1->GetUserDataPayloadLength() == 2);
+		REQUIRE(chunk1->GetUserDataPayload()[0] == 0xAB);
+		REQUIRE(chunk1->GetUserDataPayload()[1] == 0xCD);
 
 		const auto* chunk2 = reinterpret_cast<const RTC::SCTP::UnknownChunk*>(packet->GetChunkAt(1));
 
@@ -308,10 +308,10 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetStreamId() == 0xFF00);
 		REQUIRE(chunk1->GetStreamSequenceNumber() == 0x6677);
 		REQUIRE(chunk1->GetPayloadProtocolId() == 0x12341234);
-		REQUIRE(chunk1->HasUserData() == true);
-		REQUIRE(chunk1->GetUserDataLength() == 2);
-		REQUIRE(chunk1->GetUserData()[0] == 0xAB);
-		REQUIRE(chunk1->GetUserData()[1] == 0xCD);
+		REQUIRE(chunk1->HasUserDataPayload() == true);
+		REQUIRE(chunk1->GetUserDataPayloadLength() == 2);
+		REQUIRE(chunk1->GetUserDataPayload()[0] == 0xAB);
+		REQUIRE(chunk1->GetUserDataPayload()[1] == 0xCD);
 
 		chunk2 = reinterpret_cast<const RTC::SCTP::UnknownChunk*>(packet->GetChunkAt(1));
 
@@ -424,10 +424,10 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(chunk1->GetStreamId() == 0xFF00);
 		REQUIRE(chunk1->GetStreamSequenceNumber() == 0x6677);
 		REQUIRE(chunk1->GetPayloadProtocolId() == 0x12341234);
-		REQUIRE(chunk1->HasUserData() == true);
-		REQUIRE(chunk1->GetUserDataLength() == 2);
-		REQUIRE(chunk1->GetUserData()[0] == 0xAB);
-		REQUIRE(chunk1->GetUserData()[1] == 0xCD);
+		REQUIRE(chunk1->HasUserDataPayload() == true);
+		REQUIRE(chunk1->GetUserDataPayloadLength() == 2);
+		REQUIRE(chunk1->GetUserDataPayload()[0] == 0xAB);
+		REQUIRE(chunk1->GetUserDataPayload()[1] == 0xCD);
 
 		chunk2 = reinterpret_cast<const RTC::SCTP::UnknownChunk*>(packet->GetChunkAt(1));
 
@@ -827,7 +827,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		auto* chunk1 = packet->BuildChunkInPlace<RTC::SCTP::DataChunk>();
 
 		// Adding user data 10 bytes, must throw.
-		REQUIRE_THROWS_AS(chunk1->SetUserData(sctpCommon::DataBuffer, 10), MediaSoupError);
+		REQUIRE_THROWS_AS(chunk1->SetUserDataPayload(sctpCommon::DataBuffer, 10), MediaSoupError);
 
 		delete chunk1;
 

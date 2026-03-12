@@ -3,7 +3,9 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
+#include "RTC/SCTP/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -189,22 +191,41 @@ namespace RTC
 
 			void SetPayloadProtocolId(uint32_t value);
 
-			bool HasUserData() const final
+			bool HasUserDataPayload() const final
 			{
 				return HasVariableLengthValue();
 			}
 
-			const uint8_t* GetUserData() const final
+			const uint8_t* GetUserDataPayload() const final
 			{
 				return GetVariableLengthValue();
 			}
 
-			uint16_t GetUserDataLength() const final
+			uint16_t GetUserDataPayloadLength() const final
 			{
 				return GetVariableLengthValueLength();
 			}
 
-			void SetUserData(const uint8_t* userData, uint16_t userDataLength);
+			void SetUserDataPayload(const uint8_t* userDataPayload, uint16_t userDataPayloadLength);
+
+			UserData GetUserData() const final
+			{
+				const auto* userData       = GetUserDataPayload();
+				const uint16_t userDataLen = GetUserDataPayloadLength();
+
+				std::vector<uint8_t> payload(userData, userData + userDataLen);
+
+				return UserData(
+				  GetStreamId(),
+				  GetStreamSequenceNumber(),
+				  GetMessageId(),
+				  GetFragmentSequenceNumber(),
+				  GetPayloadProtocolId(),
+				  std::move(payload),
+				  GetB(),
+				  GetE(),
+				  GetU());
+			}
 
 		protected:
 			DataChunk* SoftClone(const uint8_t* buffer) const final;

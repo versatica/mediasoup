@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_ANY_DATA_CHUNK_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/UserData.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 
 namespace RTC
@@ -70,11 +71,13 @@ namespace RTC
 			 */
 			virtual uint32_t GetPayloadProtocolId() const = 0;
 
-			virtual bool HasUserData() const = 0;
+			virtual bool HasUserDataPayload() const = 0;
 
-			virtual const uint8_t* GetUserData() const = 0;
+			virtual const uint8_t* GetUserDataPayload() const = 0;
 
-			virtual uint16_t GetUserDataLength() const = 0;
+			virtual uint16_t GetUserDataPayloadLength() const = 0;
+
+			virtual UserData GetUserData() const = 0;
 		};
 	} // namespace SCTP
 } // namespace RTC
