@@ -29,6 +29,5 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  payload length: %zu", GetPayloadLength());
 			MS_DUMP_CLEAN(indentation, "</SCTP::Message>");
 		}
-
 	} // namespace SCTP
 } // namespace RTC

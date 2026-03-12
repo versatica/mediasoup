@@ -112,12 +112,11 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  flag B: %" PRIu8, GetB());
 			MS_DUMP_CLEAN(indentation, "  flag E: %" PRIu8, GetE());
 			MS_DUMP_CLEAN(indentation, "  tsn: %" PRIu32, GetTsn());
-			MS_DUMP_CLEAN(indentation, "  stream identifier: %" PRIu16, GetStreamId());
-			MS_DUMP_CLEAN(indentation, "  message identifier: %" PRIu32, GetMessageId());
+			MS_DUMP_CLEAN(indentation, "  stream id: %" PRIu16, GetStreamId());
+			MS_DUMP_CLEAN(indentation, "  message id: %" PRIu32, GetMessageId());
 			if (GetB())
 			{
-				MS_DUMP_CLEAN(
-				  indentation, "  payload protocol identifier (PPID): %" PRIu32, GetPayloadProtocolId());
+				MS_DUMP_CLEAN(indentation, "  payload protocol id (PPID): %" PRIu32, GetPayloadProtocolId());
 			}
 			else
 			{
@@ -199,7 +198,7 @@ namespace RTC
 
 			if (!GetB())
 			{
-				MS_THROW_ERROR("cannot set payload protocol identifier (PPID) if bit B is not set");
+				MS_THROW_ERROR("cannot set payload protocol id (PPID) if bit B is not set");
 			}
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);
@@ -211,7 +210,7 @@ namespace RTC
 
 			if (GetB())
 			{
-				MS_THROW_ERROR("cannot set payload protocol identifier (PPID) if bit B is set");
+				MS_THROW_ERROR("cannot set payload protocol id (PPID) if bit B is set");
 			}
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);

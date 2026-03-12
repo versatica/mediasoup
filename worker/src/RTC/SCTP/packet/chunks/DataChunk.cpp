@@ -109,10 +109,9 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  flag B: %" PRIu8, GetB());
 			MS_DUMP_CLEAN(indentation, "  flag E: %" PRIu8, GetE());
 			MS_DUMP_CLEAN(indentation, "  tsn: %" PRIu32, GetTsn());
-			MS_DUMP_CLEAN(indentation, "  stream identifier: %" PRIu16, GetStreamId());
+			MS_DUMP_CLEAN(indentation, "  stream id: %" PRIu16, GetStreamId());
 			MS_DUMP_CLEAN(indentation, "  stream sequence number: %" PRIu16, GetStreamSequenceNumber());
-			MS_DUMP_CLEAN(
-			  indentation, "  payload protocol identifier (PPID): %" PRIu32, GetPayloadProtocolId());
+			MS_DUMP_CLEAN(indentation, "  payload protocol id (PPID): %" PRIu32, GetPayloadProtocolId());
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  user data length: %" PRIu16 " (has user data: %s)",

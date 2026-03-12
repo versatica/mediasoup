@@ -204,6 +204,7 @@ common_sources = [
   'src/RTC/SCTP/SocketMetrics.cpp',
   'src/RTC/SCTP/StateCookie.cpp',
   'src/RTC/SCTP/TransmissionControlBlock.cpp',
+  'src/RTC/SCTP/UserData.cpp',
   'src/RTC/SCTP/packet/Packet.cpp',
   'src/RTC/SCTP/packet/TLV.cpp',
   'src/RTC/SCTP/packet/Chunk.cpp',
