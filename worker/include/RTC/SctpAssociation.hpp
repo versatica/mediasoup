@@ -81,6 +81,7 @@ namespace RTC
 		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		void TransportConnected();
+		void TransportDisconnected();
 		SctpState GetState() const
 		{
 			return this->state;
@@ -89,18 +90,20 @@ namespace RTC
 		{
 			return this->sctpBufferedAmount;
 		}
-		void ProcessSctpData(const uint8_t* data, size_t len) const;
+		void ProcessSctpData(const uint8_t* data, size_t len);
 		void SendSctpMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  const uint8_t* msg,
 		  size_t len,
 		  uint32_t ppid,
 		  onQueuedCallback* cb = nullptr);
+		void HandleDataProducer(RTC::DataProducer* dataProducer);
 		void HandleDataConsumer(RTC::DataConsumer* dataConsumer);
 		void DataProducerClosed(RTC::DataProducer* dataProducer);
 		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
 
 	private:
+		void MayConnect();
 		void ResetSctpStream(uint16_t streamId, StreamDirection direction) const;
 		void AddOutgoingStreams(bool force = false);
 
@@ -131,6 +134,12 @@ namespace RTC
 		struct socket* socket{ nullptr };
 		uint16_t desiredOs{ 0u };
 		size_t messageBufferLen{ 0u };
+		bool transportConnected{ false };
+		// Whether at least one SCTP stream (AKA DataProducer or DataConsumer) has
+		// already been created, no matter it's still alive.
+		bool firstStreamCreated{ false };
+		// Whether we have received STCP data from the remote peer.
+		bool sctpDataReceived{ false };
 		uint16_t lastSsnReceived{ 0u }; // Valid for us since no SCTP I-DATA support.
 	};
 } // namespace RTC

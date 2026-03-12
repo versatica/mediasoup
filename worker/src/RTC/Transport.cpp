@@ -1139,6 +1139,12 @@ namespace RTC
 
 				request->Accept(FBS::Response::Body::DataProducer_DumpResponse, dumpOffset);
 
+				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+				{
+					// Tell to the SCTP association.
+					this->sctpAssociation->HandleDataProducer(dataProducer);
+				}
+
 				break;
 			}
 
@@ -1532,6 +1538,12 @@ namespace RTC
 			auto* dataConsumer = kv.second;
 
 			dataConsumer->TransportDisconnected();
+		}
+
+		// Tell the SctpAssociation.
+		if (this->sctpAssociation)
+		{
+			this->sctpAssociation->TransportDisconnected();
 		}
 
 		// Stop the RTCP timer.

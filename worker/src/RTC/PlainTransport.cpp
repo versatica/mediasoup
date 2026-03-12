@@ -6,6 +6,10 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+#include "RTC/SCTP/packet/Packet.hpp"
+#endif
 
 namespace RTC
 {
@@ -913,8 +917,28 @@ namespace RTC
 
 		if (!IsConnected())
 		{
+			MS_WARN_TAG(sctp, "not connected, cannot send SCTP data");
+
 			return;
 		}
+
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+		MS_DUMP(">>> sending SCTP packet...");
+
+		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (packet)
+		{
+			packet->Dump();
+
+			delete packet;
+		}
+		else
+		{
+			MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse sent SCTP data");
+		}
+#endif
 
 		this->tuple->Send(data, len);
 
@@ -1208,6 +1232,24 @@ namespace RTC
 
 			return;
 		}
+
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+		MS_DUMP("<<< received SCTP packet...");
+
+		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (packet)
+		{
+			packet->Dump();
+
+			delete packet;
+		}
+		else
+		{
+			MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse received SCTP data");
+		}
+#endif
 
 		// Pass it to the parent transport.
 		RTC::Transport::ReceiveSctpData(data, len);
