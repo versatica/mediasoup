@@ -45,7 +45,9 @@ beforeEach(async () => {
 		})
 	);
 
-	ctx.sctpClient.start(5000);
+	// NOTE: We don't await it on purpose since we don't want to block here until
+	// SCTP connects.
+	void ctx.sctpClient.start(5000);
 
 	// Create a DataProducer with the corresponding SCTP stream id.
 	ctx.dataProducer = await ctx.plainTransport.produceData({
@@ -78,7 +80,11 @@ beforeEach(async () => {
 						if (state === 'connected') {
 							resolve();
 						} else if (state === 'failed' || state === 'closed') {
-							reject('SCTP connection in PlainTransport failed or was closed');
+							reject(
+								new Error(
+									'SCTP connection in PlainTransport failed or was closed'
+								)
+							);
 						}
 					});
 				}
