@@ -524,7 +524,8 @@ namespace RTC
 		// trigger "SCTP failed".
 		else if (!this->firstStreamCreated && !this->sctpDataReceived)
 		{
-			MS_DEBUG_DEV("ignoring because no SCTP stream has been created yet and no SCTP data has been received yet");
+			MS_DEBUG_DEV(
+			  "ignoring because no SCTP stream has been created yet and no SCTP data has been received yet");
 
 			return;
 		}
