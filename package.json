@@ -102,7 +102,7 @@
 		"h264-profile-level-id": "^2.3.2",
 		"node-fetch": "^3.3.2",
 		"supports-color": "^10.2.2",
-		"tar": "^7.5.10"
+		"tar": "^7.5.11"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -117,7 +117,7 @@
 		"eslint-plugin-prettier": "^5.5.5",
 		"globals": "^17.4.0",
 		"ini": "^6.0.0",
-		"jest": "^30.2.0",
+		"jest": "^30.3.0",
 		"knip": "^5.86.0",
 		"marked": "^17.0.4",
 		"open-cli": "^8.0.0",
@@ -125,7 +125,7 @@
 		"prettier": "^3.8.1",
 		"ts-jest": "^29.4.6",
 		"typescript": "^5.9.3",
-		"typescript-eslint": "^8.56.1",
+		"typescript-eslint": "^8.57.0",
 		"werift-sctp": "^0.0.11"
 	}
 }
