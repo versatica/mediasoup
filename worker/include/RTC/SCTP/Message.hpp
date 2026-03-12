@@ -58,8 +58,16 @@ namespace RTC
 			}
 
 			/**
-			 * Useful to extract the payload and its ownership When destructing the
+			 * Useful to extract the payload and its ownership when destructing the
 			 * Message.
+			 *
+			 * @remarks
+			 * - && at the end means that it can only be called from a rvalue.
+			 *
+			 * @usage
+			 * ```c++
+			 * const auto payload = std::move(message).ReleasePayload();
+			 * ```
 			 */
 			std::vector<uint8_t> ReleasePayload() &&
 			{
