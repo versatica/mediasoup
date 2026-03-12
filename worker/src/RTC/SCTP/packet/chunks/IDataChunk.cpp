@@ -50,9 +50,9 @@ namespace RTC
 
 			// Must also initialize extra fields in the header.
 			chunk->SetTsn(0);
-			chunk->SetStreamIdentifier(0);
+			chunk->SetStreamId(0);
 			chunk->SetReserved();
-			chunk->SetMessageIdentifier(0);
+			chunk->SetMessageId(0);
 			// NOTE: BitB is not set so we must set FSN to 0 rather than setting PPID.
 			chunk->SetFragmentSequenceNumber(0);
 
@@ -112,14 +112,12 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  flag B: %" PRIu8, GetB());
 			MS_DUMP_CLEAN(indentation, "  flag E: %" PRIu8, GetE());
 			MS_DUMP_CLEAN(indentation, "  tsn: %" PRIu32, GetTsn());
-			MS_DUMP_CLEAN(indentation, "  stream identifier: %" PRIu16, GetStreamIdentifier());
-			MS_DUMP_CLEAN(indentation, "  message identifier: %" PRIu32, GetMessageIdentifier());
+			MS_DUMP_CLEAN(indentation, "  stream identifier: %" PRIu16, GetStreamId());
+			MS_DUMP_CLEAN(indentation, "  message identifier: %" PRIu32, GetMessageId());
 			if (GetB())
 			{
 				MS_DUMP_CLEAN(
-				  indentation,
-				  "  payload protocol identifier (PPID): %" PRIu32,
-				  GetPayloadProtocolIdentifier());
+				  indentation, "  payload protocol identifier (PPID): %" PRIu32, GetPayloadProtocolId());
 			}
 			else
 			{
@@ -181,21 +179,21 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
-		void IDataChunk::SetStreamIdentifier(uint16_t value)
+		void IDataChunk::SetStreamId(uint16_t value)
 		{
 			MS_TRACE();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
 		}
 
-		void IDataChunk::SetMessageIdentifier(uint32_t value)
+		void IDataChunk::SetMessageId(uint32_t value)
 		{
 			MS_TRACE();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 12, value);
 		}
 
-		void IDataChunk::SetPayloadProtocolIdentifier(uint32_t value)
+		void IDataChunk::SetPayloadProtocolId(uint32_t value)
 		{
 			MS_TRACE();
 

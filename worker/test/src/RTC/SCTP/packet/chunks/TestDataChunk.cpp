@@ -57,9 +57,9 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetB() == true);
 		REQUIRE(chunk->GetE() == true);
 		REQUIRE(chunk->GetTsn() == 0x11223344);
-		REQUIRE(chunk->GetStreamIdentifier() == 0xFF00);
+		REQUIRE(chunk->GetStreamId() == 0xFF00);
 		REQUIRE(chunk->GetStreamSequenceNumber() == 0x6677);
-		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0x12341234);
+		REQUIRE(chunk->GetPayloadProtocolId() == 0x12341234);
 		REQUIRE(chunk->HasUserData() == true);
 		REQUIRE(chunk->GetUserDataLength() == 3);
 		REQUIRE(chunk->GetUserData()[0] == 0xAB);
@@ -93,9 +93,9 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetB() == true);
 		REQUIRE(chunk->GetE() == true);
 		REQUIRE(chunk->GetTsn() == 0x11223344);
-		REQUIRE(chunk->GetStreamIdentifier() == 0xFF00);
+		REQUIRE(chunk->GetStreamId() == 0xFF00);
 		REQUIRE(chunk->GetStreamSequenceNumber() == 0x6677);
-		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0x12341234);
+		REQUIRE(chunk->GetPayloadProtocolId() == 0x12341234);
 		REQUIRE(chunk->HasUserData() == true);
 		REQUIRE(chunk->GetUserDataLength() == 3);
 		REQUIRE(chunk->GetUserData()[0] == 0xAB);
@@ -131,9 +131,9 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(clonedChunk->GetB() == true);
 		REQUIRE(clonedChunk->GetE() == true);
 		REQUIRE(clonedChunk->GetTsn() == 0x11223344);
-		REQUIRE(clonedChunk->GetStreamIdentifier() == 0xFF00);
+		REQUIRE(clonedChunk->GetStreamId() == 0xFF00);
 		REQUIRE(clonedChunk->GetStreamSequenceNumber() == 0x6677);
-		REQUIRE(clonedChunk->GetPayloadProtocolIdentifier() == 0x12341234);
+		REQUIRE(clonedChunk->GetPayloadProtocolId() == 0x12341234);
 		REQUIRE(clonedChunk->HasUserData() == true);
 		REQUIRE(clonedChunk->GetUserDataLength() == 3);
 		REQUIRE(clonedChunk->GetUserData()[0] == 0xAB);
@@ -169,9 +169,9 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetB() == false);
 		REQUIRE(chunk->GetE() == false);
 		REQUIRE(chunk->GetTsn() == 0);
-		REQUIRE(chunk->GetStreamIdentifier() == 0);
+		REQUIRE(chunk->GetStreamId() == 0);
 		REQUIRE(chunk->GetStreamSequenceNumber() == 0);
-		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0);
+		REQUIRE(chunk->GetPayloadProtocolId() == 0);
 		REQUIRE(chunk->HasUserData() == false);
 		REQUIRE(chunk->GetUserDataLength() == 0);
 
@@ -180,9 +180,9 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		chunk->SetI(true);
 		chunk->SetE(true);
 		chunk->SetTsn(12345678);
-		chunk->SetStreamIdentifier(9988);
+		chunk->SetStreamId(9988);
 		chunk->SetStreamSequenceNumber(2211);
-		chunk->SetPayloadProtocolIdentifier(987654321);
+		chunk->SetPayloadProtocolId(987654321);
 
 		// Verify that replacing the value works.
 		chunk->SetUserData(sctpCommon::DataBuffer + 1000, 3000);
@@ -219,9 +219,9 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetB() == false);
 		REQUIRE(chunk->GetE() == true);
 		REQUIRE(chunk->GetTsn() == 12345678);
-		REQUIRE(chunk->GetStreamIdentifier() == 9988);
+		REQUIRE(chunk->GetStreamId() == 9988);
 		REQUIRE(chunk->GetStreamSequenceNumber() == 2211);
-		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 987654321);
+		REQUIRE(chunk->GetPayloadProtocolId() == 987654321);
 		REQUIRE(chunk->HasUserData() == true);
 		REQUIRE(chunk->GetUserDataLength() == 3);
 		REQUIRE(chunk->GetUserData()[0] == 0x00);
@@ -255,9 +255,9 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedChunk->GetB() == false);
 		REQUIRE(parsedChunk->GetE() == true);
 		REQUIRE(parsedChunk->GetTsn() == 12345678);
-		REQUIRE(parsedChunk->GetStreamIdentifier() == 9988);
+		REQUIRE(parsedChunk->GetStreamId() == 9988);
 		REQUIRE(parsedChunk->GetStreamSequenceNumber() == 2211);
-		REQUIRE(parsedChunk->GetPayloadProtocolIdentifier() == 987654321);
+		REQUIRE(parsedChunk->GetPayloadProtocolId() == 987654321);
 		REQUIRE(parsedChunk->HasUserData() == true);
 		REQUIRE(parsedChunk->GetUserDataLength() == 3);
 		REQUIRE(parsedChunk->GetUserData()[0] == 0x00);

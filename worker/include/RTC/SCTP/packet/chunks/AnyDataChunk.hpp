@@ -48,7 +48,7 @@ namespace RTC
 			/**
 			 * Stream Identifier (in DATA and I_DATA chunks).
 			 */
-			virtual uint16_t GetStreamIdentifier() const = 0;
+			virtual uint16_t GetStreamId() const = 0;
 
 			/**
 			 * Stream Sequence Number (only in DATA chunks).
@@ -58,7 +58,7 @@ namespace RTC
 			/**
 			 * Message Identifier (MID) (only in I_DATA chunks).
 			 */
-			virtual uint32_t GetMessageIdentifier() const = 0;
+			virtual uint32_t GetMessageId() const = 0;
 
 			/**
 			 * Fragment Sequence Number (FSN) (only in I_DATA chunks).
@@ -68,7 +68,7 @@ namespace RTC
 			/**
 			 * Payload Protocol Identifier (PPID) (in DATA and I_DATA chunks).
 			 */
-			virtual uint32_t GetPayloadProtocolIdentifier() const = 0;
+			virtual uint32_t GetPayloadProtocolId() const = 0;
 
 			virtual bool HasUserData() const = 0;
 

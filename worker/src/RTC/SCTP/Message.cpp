@@ -25,7 +25,7 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Message>");
 			MS_DUMP_CLEAN(indentation, "  stream id: %" PRIu16, GetStreamId());
-			MS_DUMP_CLEAN(indentation, "  ppid: %" PRIu32, GetPayloadProtocolIdentifier());
+			MS_DUMP_CLEAN(indentation, "  ppid: %" PRIu32, GetPayloadProtocolId());
 			MS_DUMP_CLEAN(indentation, "  payload length: %zu", GetPayloadLength());
 			MS_DUMP_CLEAN(indentation, "</SCTP::Message>");
 		}

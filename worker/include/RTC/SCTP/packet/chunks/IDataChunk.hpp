@@ -149,12 +149,12 @@ namespace RTC
 
 			void SetTsn(uint32_t value);
 
-			uint16_t GetStreamIdentifier() const final
+			uint16_t GetStreamId() const final
 			{
 				return Utils::Byte::Get2Bytes(const_cast<uint8_t*>(GetBuffer()), 8);
 			}
 
-			void SetStreamIdentifier(uint16_t value);
+			void SetStreamId(uint16_t value);
 
 			/**
 			 * @remarks Only in DATA chunks.
@@ -164,14 +164,14 @@ namespace RTC
 				return 0;
 			}
 
-			uint32_t GetMessageIdentifier() const final
+			uint32_t GetMessageId() const final
 			{
 				return Utils::Byte::Get4Bytes(const_cast<uint8_t*>(GetBuffer()), 12);
 			}
 
-			void SetMessageIdentifier(uint32_t value);
+			void SetMessageId(uint32_t value);
 
-			uint32_t GetPayloadProtocolIdentifier() const final
+			uint32_t GetPayloadProtocolId() const final
 			{
 				if (GetB())
 				{
@@ -186,7 +186,7 @@ namespace RTC
 			/**
 			 * @throw MediaSoupError - If the B bit is not set.
 			 */
-			void SetPayloadProtocolIdentifier(uint32_t value);
+			void SetPayloadProtocolId(uint32_t value);
 
 			uint32_t GetFragmentSequenceNumber() const final
 			{

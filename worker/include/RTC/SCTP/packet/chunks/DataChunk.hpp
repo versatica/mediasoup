@@ -152,12 +152,12 @@ namespace RTC
 
 			void SetTsn(uint32_t value);
 
-			uint16_t GetStreamIdentifier() const final
+			uint16_t GetStreamId() const final
 			{
 				return Utils::Byte::Get2Bytes(const_cast<uint8_t*>(GetBuffer()), 8);
 			}
 
-			void SetStreamIdentifier(uint16_t value);
+			void SetStreamId(uint16_t value);
 
 			uint16_t GetStreamSequenceNumber() const final
 			{
@@ -169,12 +169,12 @@ namespace RTC
 			/**
 			 * @remarks Only in I_DATA chunks.
 			 */
-			uint32_t GetMessageIdentifier() const final
+			uint32_t GetMessageId() const final
 			{
 				return 0;
 			}
 
-			uint32_t GetPayloadProtocolIdentifier() const final
+			uint32_t GetPayloadProtocolId() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 12);
 			}
@@ -187,7 +187,7 @@ namespace RTC
 				return 0;
 			}
 
-			void SetPayloadProtocolIdentifier(uint32_t value);
+			void SetPayloadProtocolId(uint32_t value);
 
 			bool HasUserData() const final
 			{
