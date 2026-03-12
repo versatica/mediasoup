@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_MESSAGE_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
+#include <vector>
 
 namespace RTC
 {
