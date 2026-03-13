@@ -74,12 +74,18 @@ beforeEach(async () => {
 			ctx.sctpClient.stateChanged.connected.asPromise(),
 			new Promise<void>((resolve, reject) => {
 				if (ctx.plainTransport?.sctpState === 'connected') {
+					// eslint-disable-next-line no-console
+					console.warn('----- sctpState === "connected" | resolve()');
 					resolve();
 				} else {
 					ctx.plainTransport?.on('sctpstatechange', state => {
 						if (state === 'connected') {
+							// eslint-disable-next-line no-console
+							console.warn('----- sctpstatechange => "connected" | resolve()');
 							resolve();
 						} else if (state === 'failed' || state === 'closed') {
+							// eslint-disable-next-line no-console
+							console.warn(`----- sctpstatechange => "${state}" | reject()`);
 							reject(
 								new Error(
 									'SCTP connection in PlainTransport failed or was closed'
@@ -93,12 +99,17 @@ beforeEach(async () => {
 		new Promise<void>((resolve, reject) => {
 			connectionTimeoutTimer = setTimeout(
 				() => reject(new Error('SCTP connection timeout')),
-				6000
+				3000
 			);
 		}),
 	]);
 
 	clearTimeout(connectionTimeoutTimer);
+
+	// eslint-disable-next-line no-console
+	console.warn(
+		`----- promises resolved so: sctpstatechange => ctx.plainTransport.sctpState: ${ctx.plainTransport.sctpState}, ctx.sctpClient.associationState:${ctx.sctpClient.associationState}`
+	);
 });
 
 afterEach(async () => {
@@ -217,4 +228,4 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			bytesSent: recvMessageBytes,
 		},
 	]);
-}, 12000);
+}, 10000);
