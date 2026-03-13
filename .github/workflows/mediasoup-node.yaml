@@ -23,8 +23,6 @@ concurrency:
 jobs:
   ci:
     strategy:
-      # TODO: REMOVE
-      fail-fast: false
       matrix:
         build:
           - os: ubuntu-24.04
@@ -72,15 +70,14 @@ jobs:
             node: 24
             cc: clang
             cxx: clang++
-          # TODO: REMOVE
-          # - os: windows-2022
-          #   node: 22
-          #   cc: cl
-          #   cxx: cl
-          # - os: windows-2025
-          #   node: 24
-          #   cc: cl
-          #   cxx: cl
+          - os: windows-2022
+            node: 22
+            cc: cl
+            cxx: cl
+          - os: windows-2025
+            node: 24
+            cc: cl
+            cxx: cl
         build-type:
           - Release
           - Debug
@@ -119,8 +116,6 @@ jobs:
           # Disable leak detection because it's detected by the tool flatc uses
           # to build.
           ASAN_OPTIONS: 'detect_leaks=0 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1'
-          # TODO: REMOVE
-          MESON_ARGS: '-Dms_sctp_stack=true'
 
       - name: npm audit --omit dev
         run: npm audit --omit dev
@@ -134,11 +129,7 @@ jobs:
 
       - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build-type != 'Debug' }}
         name: npm run test:node
-        # TODO
         run: npm run test:node
-        # run: npx jest --testPathPatterns node/src/test/test-werift-sctp.ts
-        env:
-          DEBUG: 'werift* mediasoup* WARN* ERROR*'
 
       - name: npm run worker:prebuild-name
         run: npm run worker:prebuild-name

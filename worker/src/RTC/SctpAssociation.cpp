@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::SctpAssociation"
-// TODO: REMOVE
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SctpAssociation.hpp"
 #include "DepUsrSCTP.hpp"
