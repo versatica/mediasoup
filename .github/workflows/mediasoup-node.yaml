@@ -116,6 +116,8 @@ jobs:
           # Disable leak detection because it's detected by the tool flatc uses
           # to build.
           ASAN_OPTIONS: 'detect_leaks=0 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1'
+          # TODO: REMOVE
+          MS_SCTP_STACK: '-Dms_sctp_stack=true'
 
       - name: npm audit --omit dev
         run: npm audit --omit dev
@@ -129,7 +131,11 @@ jobs:
 
       - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build-type != 'Debug' }}
         name: npm run test:node
-        run: npm run test:node
+        # TODO
+        # run: npm run test:node
+        run: npx jest --testPathPatterns node/src/test/test-werift-sctp.ts
+        env:
+          DEBUG: 'werift* mediasoup* WWARN* ERROR*'
 
       - name: npm run worker:prebuild-name
         run: npm run worker:prebuild-name

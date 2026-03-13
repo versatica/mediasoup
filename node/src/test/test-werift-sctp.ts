@@ -5,6 +5,8 @@ import {
 	WEBRTC_PPID,
 	createUdpTransport as createSctpUdpTransport,
 } from 'werift-sctp';
+// TODO: REMOVE
+import { Logger } from '../Logger';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents } from '../types';
@@ -20,9 +22,16 @@ type TestContext = {
 };
 
 const ctx: TestContext = {};
+// TODO: REMOVE
+const logger = new Logger('test-werif-sctp');
 
 beforeEach(async () => {
-	ctx.worker = await mediasoup.createWorker({ disableLiburing: true });
+	ctx.worker = await mediasoup.createWorker({
+		disableLiburing: true,
+		// TODO: REMOVE
+		logLevel: 'debug',
+		logTags: ['sctp'],
+	});
 
 	ctx.router = await ctx.worker.createRouter();
 
@@ -74,18 +83,18 @@ beforeEach(async () => {
 			ctx.sctpClient.stateChanged.connected.asPromise(),
 			new Promise<void>((resolve, reject) => {
 				if (ctx.plainTransport?.sctpState === 'connected') {
-					// eslint-disable-next-line no-console
-					console.warn('----- sctpState === "connected" | resolve()');
+					// TODO: REMOVE
+					logger.debug('++++ sctpState === "connected" | resolve()');
 					resolve();
 				} else {
 					ctx.plainTransport?.on('sctpstatechange', state => {
 						if (state === 'connected') {
-							// eslint-disable-next-line no-console
-							console.warn('----- sctpstatechange => "connected" | resolve()');
+							// TODO: REMOVE
+							logger.debug('++++ sctpstatechange => "connected" | resolve()');
 							resolve();
 						} else if (state === 'failed' || state === 'closed') {
-							// eslint-disable-next-line no-console
-							console.warn(`----- sctpstatechange => "${state}" | reject()`);
+							// TODO: REMOVE
+							logger.debug(`++++ sctpstatechange => "${state}" | reject()`);
 							reject(
 								new Error(
 									'SCTP connection in PlainTransport failed or was closed'
@@ -106,9 +115,9 @@ beforeEach(async () => {
 
 	clearTimeout(connectionTimeoutTimer);
 
-	// eslint-disable-next-line no-console
-	console.warn(
-		`----- promises resolved so: sctpstatechange => ctx.plainTransport.sctpState: ${ctx.plainTransport.sctpState}, ctx.sctpClient.associationState:${ctx.sctpClient.associationState}`
+	// TODO: REMOVE
+	logger.debug(
+		`++++ promises resolved so: sctpstatechange => ctx.plainTransport.sctpState: ${ctx.plainTransport.sctpState}, ctx.sctpClient.associationState:${ctx.sctpClient.associationState}`
 	);
 }, 10000);
 

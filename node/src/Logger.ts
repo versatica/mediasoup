@@ -1,3 +1,8 @@
+import {
+	debug as consoleDebug,
+	warn as consoleWarn,
+	error as consoleError,
+} from 'node:console';
 import debug from 'debug';
 import type { EnhancedEventEmitter } from './enhancedEvents';
 
@@ -41,11 +46,9 @@ export class Logger {
 			this.#error = debug(`${APP_NAME}:ERROR`);
 		}
 
-		/* eslint-disable no-console */
-		this.#debug.log = console.info.bind(console);
-		this.#warn.log = console.warn.bind(console);
-		this.#error.log = console.error.bind(console);
-		/* eslint-enable no-console */
+		this.#debug.log = consoleDebug;
+		this.#warn.log = consoleWarn;
+		this.#error.log = consoleError;
 	}
 
 	debug(log: string): void {
