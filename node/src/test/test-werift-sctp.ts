@@ -56,7 +56,7 @@ beforeEach(async () => {
 
 	// NOTE: We don't await it on purpose since we don't want to block here until
 	// SCTP connects.
-	void ctx.sctpClient.start(5000);
+	// void ctx.sctpClient.start(5000);
 
 	// Create a DataProducer with the corresponding SCTP stream id.
 	ctx.dataProducer = await ctx.plainTransport.produceData({
@@ -80,6 +80,7 @@ beforeEach(async () => {
 		// Wait for SCTP to become connected in both the PlainTransport and in the
 		// werift-sctp client.
 		Promise.all([
+			ctx.sctpClient.start(5000),
 			ctx.sctpClient.stateChanged.connected.asPromise(),
 			new Promise<void>((resolve, reject) => {
 				if (ctx.plainTransport?.sctpState === 'connected') {
