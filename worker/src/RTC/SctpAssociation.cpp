@@ -513,7 +513,7 @@ namespace RTC
 		// anything.
 		else if (!this->transportConnected)
 		{
-			MS_DEBUG_DEV("ignoring because transport is not connected");
+			MS_DEBUG_DEV("transport is not connected, ignoring");
 
 			return;
 		}
@@ -525,12 +525,12 @@ namespace RTC
 		else if (!this->firstStreamCreated && !this->sctpDataReceived)
 		{
 			MS_DEBUG_DEV(
-			  "ignoring because no SCTP stream has been created yet and no SCTP data has been received yet");
+			  "no SCTP stream has been created yet and no SCTP data has been received yet, ignoring");
 
 			return;
 		}
 
-		MS_DEBUG_DEV("connecting SCTP");
+		MS_DEBUG_TAG(sctp, "connecting SCTP");
 
 		try
 		{
