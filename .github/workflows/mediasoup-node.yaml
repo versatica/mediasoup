@@ -23,6 +23,8 @@ concurrency:
 jobs:
   ci:
     strategy:
+      # TODO: REMOVE
+      fail-fast: false
       matrix:
         build:
           - os: ubuntu-24.04
