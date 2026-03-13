@@ -117,7 +117,7 @@ jobs:
           # to build.
           ASAN_OPTIONS: 'detect_leaks=0 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1'
           # TODO: REMOVE
-          MS_SCTP_STACK: '-Dms_sctp_stack=true'
+          MESON_ARGS: '-Dms_sctp_stack=true'
 
       - name: npm audit --omit dev
         run: npm audit --omit dev
