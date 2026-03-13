@@ -135,7 +135,7 @@ jobs:
         # run: npm run test:node
         run: npx jest --testPathPatterns node/src/test/test-werift-sctp.ts
         env:
-          DEBUG: 'werift* mediasoup* WWARN* ERROR*'
+          DEBUG: 'werift* mediasoup* WARN* ERROR*'
 
       - name: npm run worker:prebuild-name
         run: npm run worker:prebuild-name
