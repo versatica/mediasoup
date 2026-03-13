@@ -36,13 +36,13 @@ namespace RTC
 
 			if (encoding.spatialLayers > 1 || encoding.temporalLayers > 1)
 			{
-				if (RTC::RTP::Codecs::Tools::IsValidTypeForCodec(
-				      RtpParameters::Type::SVC, mediaCodec->mimeType))
+				if (RTC::RTP::Codecs::Tools::IsValidTypeForCodec(RtpParameters::Type::SVC, mediaCodec->mimeType))
 				{
 					type.emplace(RtpParameters::Type::SVC);
 				}
-				else if (RTC::RTP::Codecs::Tools::IsValidTypeForCodec(
-				           RtpParameters::Type::SIMULCAST, mediaCodec->mimeType))
+				else if (
+				  RTC::RTP::Codecs::Tools::IsValidTypeForCodec(
+				    RtpParameters::Type::SIMULCAST, mediaCodec->mimeType))
 				{
 					type.emplace(RtpParameters::Type::SIMULCAST);
 				}

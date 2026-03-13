@@ -496,7 +496,7 @@ namespace RTC
 		{
 			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
 			auto traceInfo     = FBS::Consumer::CreateKeyFrameTraceInfo(
-        this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
+			  this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->channelNotifier->GetBufferBuilder(),
@@ -512,7 +512,7 @@ namespace RTC
 		{
 			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
 			auto traceInfo     = FBS::Consumer::CreateRtpTraceInfo(
-        this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
+			  this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->channelNotifier->GetBufferBuilder(),

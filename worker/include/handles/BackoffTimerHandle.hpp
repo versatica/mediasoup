@@ -26,7 +26,7 @@ public:
 	};
 
 public:
-	enum class BackoffAlgorithm
+	enum class BackoffAlgorithm : uint8_t
 	{
 		// The base duration will be used for any restart.
 		FIXED,

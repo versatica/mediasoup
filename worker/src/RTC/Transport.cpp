@@ -61,8 +61,9 @@ namespace RTC
 			}
 		}
 
-		if (auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
-		    initialAvailableOutgoingBitrate.has_value())
+		if (
+		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
+		  initialAvailableOutgoingBitrate.has_value())
 		{
 			this->initialAvailableOutgoingBitrate = initialAvailableOutgoingBitrate.value();
 		}
@@ -1139,6 +1140,12 @@ namespace RTC
 
 				request->Accept(FBS::Response::Body::DataProducer_DumpResponse, dumpOffset);
 
+				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+				{
+					// Tell to the SCTP association.
+					this->sctpAssociation->HandleDataProducer(dataProducer);
+				}
+
 				break;
 			}
 
@@ -1532,6 +1539,12 @@ namespace RTC
 			auto* dataConsumer = kv.second;
 
 			dataConsumer->TransportDisconnected();
+		}
+
+		// Tell the SctpAssociation.
+		if (this->sctpAssociation)
+		{
+			this->sctpAssociation->TransportDisconnected();
 		}
 
 		// Stop the RTCP timer.

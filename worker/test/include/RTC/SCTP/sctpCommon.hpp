@@ -28,16 +28,17 @@ namespace sctpCommon
 } // namespace sctpCommon
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_PACKET(/*const RTC::SCTP::Packet**/ packet,                                     \
-                          /*const uint8_t**/ buffer,                                               \
-                          /*size_t*/ bufferLength,                                                 \
-                          /*size_t*/ length,                                                       \
-                          /*uint16_t*/ sourcePort,                                                 \
-                          /*uint16_t*/ destinationPort,                                            \
-                          /*uint32_t*/ verificationTag,                                            \
-                          /*uint32_t*/ checksum,                                                   \
-                          /*bool*/ hasValidCrc32cChecksum,                                         \
-                          /*size_t*/ chunksCount)                                                  \
+#define CHECK_SCTP_PACKET(                                                                         \
+  /*const RTC::SCTP::Packet**/ packet,                                                             \
+  /*const uint8_t**/ buffer,                                                                       \
+  /*size_t*/ bufferLength,                                                                         \
+  /*size_t*/ length,                                                                               \
+  /*uint16_t*/ sourcePort,                                                                         \
+  /*uint16_t*/ destinationPort,                                                                    \
+  /*uint32_t*/ verificationTag,                                                                    \
+  /*uint32_t*/ checksum,                                                                           \
+  /*bool*/ hasValidCrc32cChecksum,                                                                 \
+  /*size_t*/ chunksCount)                                                                          \
 	do                                                                                               \
 	{                                                                                                \
 		REQUIRE(packet);                                                                               \
@@ -65,67 +66,68 @@ namespace sctpCommon
 	} while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_CHUNK(/*const RTC::SCTP::Chunk**/ chunk,                                         \
-                         /*uint8_t**/ buffer,                                                       \
-                         /*size_t*/ bufferLength,                                                   \
-                         /*size_t*/ length,                                                         \
-                         /*RTC::SCTP::Chunk::ChunkType*/ chunkType,                                 \
-                         /*bool*/ unknownType,                                                      \
-                         /*RTC::SCTP::Chunk::ActionForUnknownChunkType*/ actionForUnknownChunkType, \
-                         /*uint8_t*/ flags,                                                         \
-                         /*bool*/ canHaveParameters,                                                \
-                         /*size_t*/ parametersCount,                                                \
-                         /*bool*/ canHaveErrorCauses,                                               \
-                         /*size_t*/ errorCausesCount)                                               \
-	do                                                                                                \
-	{                                                                                                 \
-		REQUIRE(chunk);                                                                                 \
-		REQUIRE(chunk->GetBuffer() != nullptr);                                                         \
-		if (buffer)                                                                                     \
-		{                                                                                               \
-			REQUIRE(chunk->GetBuffer() == buffer);                                                        \
-		}                                                                                               \
-		REQUIRE(chunk->GetBufferLength() != 0);                                                         \
-		REQUIRE(chunk->GetBufferLength() == bufferLength);                                              \
-		REQUIRE(chunk->GetLength() != 0);                                                               \
-		REQUIRE(chunk->GetLength() == length);                                                          \
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(chunk->GetLength()) == true);                             \
-		REQUIRE(chunk->GetType() == chunkType);                                                         \
-		REQUIRE(chunk->HasUnknownType() == unknownType);                                                \
-		REQUIRE(chunk->GetActionForUnknownChunkType() == actionForUnknownChunkType);                    \
-		REQUIRE(chunk->GetFlags() == flags);                                                            \
-		REQUIRE(chunk->CanHaveParameters() == canHaveParameters);                                       \
-		if (!canHaveParameters)                                                                         \
-		{                                                                                               \
-			REQUIRE_THROWS_AS(                                                                            \
-			  const_cast<RTC::SCTP::Chunk*>(reinterpret_cast<const RTC::SCTP::Chunk*>(chunk))             \
-			    ->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>(),                             \
-			  MediaSoupError);                                                                            \
-		}                                                                                               \
-		REQUIRE(chunk->GetParametersCount() == parametersCount);                                        \
-		REQUIRE(chunk->HasParameters() == (parametersCount > 0));                                       \
-		REQUIRE(chunk->GetParameterAt(parametersCount) == nullptr);                                     \
-		REQUIRE(chunk->CanHaveErrorCauses() == canHaveErrorCauses);                                     \
-		if (!canHaveErrorCauses)                                                                        \
-		{                                                                                               \
-			REQUIRE_THROWS_AS(                                                                            \
-			  const_cast<RTC::SCTP::Chunk*>(reinterpret_cast<const RTC::SCTP::Chunk*>(chunk))             \
-			    ->BuildErrorCauseInPlace<RTC::SCTP::InvalidStreamIdentifierErrorCause>(),                 \
-			  MediaSoupError);                                                                            \
-		}                                                                                               \
-		REQUIRE(chunk->GetErrorCausesCount() == errorCausesCount);                                      \
-		REQUIRE(chunk->HasErrorCauses() == (errorCausesCount > 0));                                     \
-		REQUIRE(chunk->GetErrorCauseAt(errorCausesCount) == nullptr);                                   \
-		if (buffer)                                                                                     \
-		{                                                                                               \
-			REQUIRE(                                                                                      \
-			  helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);  \
-		}                                                                                               \
-		REQUIRE_THROWS_AS(                                                                              \
-		  const_cast<RTC::SCTP::Chunk*>(reinterpret_cast<const RTC::SCTP::Chunk*>(chunk))               \
-		    ->Serialize(sctpCommon::ThrowBuffer, length - 1),                                           \
-		  MediaSoupError);                                                                              \
-		REQUIRE_THROWS_AS(chunk->Clone(sctpCommon::ThrowBuffer, length - 1), MediaSoupError);           \
+#define CHECK_SCTP_CHUNK(                                                                          \
+  /*const RTC::SCTP::Chunk**/ chunk,                                                               \
+  /*uint8_t**/ buffer,                                                                             \
+  /*size_t*/ bufferLength,                                                                         \
+  /*size_t*/ length,                                                                               \
+  /*RTC::SCTP::Chunk::ChunkType*/ chunkType,                                                       \
+  /*bool*/ unknownType,                                                                            \
+  /*RTC::SCTP::Chunk::ActionForUnknownChunkType*/ actionForUnknownChunkType,                       \
+  /*uint8_t*/ flags,                                                                               \
+  /*bool*/ canHaveParameters,                                                                      \
+  /*size_t*/ parametersCount,                                                                      \
+  /*bool*/ canHaveErrorCauses,                                                                     \
+  /*size_t*/ errorCausesCount)                                                                     \
+	do                                                                                               \
+	{                                                                                                \
+		REQUIRE(chunk);                                                                                \
+		REQUIRE(chunk->GetBuffer() != nullptr);                                                        \
+		if (buffer)                                                                                    \
+		{                                                                                              \
+			REQUIRE(chunk->GetBuffer() == buffer);                                                       \
+		}                                                                                              \
+		REQUIRE(chunk->GetBufferLength() != 0);                                                        \
+		REQUIRE(chunk->GetBufferLength() == bufferLength);                                             \
+		REQUIRE(chunk->GetLength() != 0);                                                              \
+		REQUIRE(chunk->GetLength() == length);                                                         \
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(chunk->GetLength()) == true);                            \
+		REQUIRE(chunk->GetType() == chunkType);                                                        \
+		REQUIRE(chunk->HasUnknownType() == unknownType);                                               \
+		REQUIRE(chunk->GetActionForUnknownChunkType() == actionForUnknownChunkType);                   \
+		REQUIRE(chunk->GetFlags() == flags);                                                           \
+		REQUIRE(chunk->CanHaveParameters() == canHaveParameters);                                      \
+		if (!canHaveParameters)                                                                        \
+		{                                                                                              \
+			REQUIRE_THROWS_AS(                                                                           \
+			  const_cast<RTC::SCTP::Chunk*>(reinterpret_cast<const RTC::SCTP::Chunk*>(chunk))            \
+			    ->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>(),                            \
+			  MediaSoupError);                                                                           \
+		}                                                                                              \
+		REQUIRE(chunk->GetParametersCount() == parametersCount);                                       \
+		REQUIRE(chunk->HasParameters() == (parametersCount > 0));                                      \
+		REQUIRE(chunk->GetParameterAt(parametersCount) == nullptr);                                    \
+		REQUIRE(chunk->CanHaveErrorCauses() == canHaveErrorCauses);                                    \
+		if (!canHaveErrorCauses)                                                                       \
+		{                                                                                              \
+			REQUIRE_THROWS_AS(                                                                           \
+			  const_cast<RTC::SCTP::Chunk*>(reinterpret_cast<const RTC::SCTP::Chunk*>(chunk))            \
+			    ->BuildErrorCauseInPlace<RTC::SCTP::InvalidStreamIdentifierErrorCause>(),                \
+			  MediaSoupError);                                                                           \
+		}                                                                                              \
+		REQUIRE(chunk->GetErrorCausesCount() == errorCausesCount);                                     \
+		REQUIRE(chunk->HasErrorCauses() == (errorCausesCount > 0));                                    \
+		REQUIRE(chunk->GetErrorCauseAt(errorCausesCount) == nullptr);                                  \
+		if (buffer)                                                                                    \
+		{                                                                                              \
+			REQUIRE(                                                                                     \
+			  helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true); \
+		}                                                                                              \
+		REQUIRE_THROWS_AS(                                                                             \
+		  const_cast<RTC::SCTP::Chunk*>(reinterpret_cast<const RTC::SCTP::Chunk*>(chunk))              \
+		    ->Serialize(sctpCommon::ThrowBuffer, length - 1),                                          \
+		  MediaSoupError);                                                                             \
+		REQUIRE_THROWS_AS(chunk->Clone(sctpCommon::ThrowBuffer, length - 1), MediaSoupError);          \
 	} while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
@@ -167,12 +169,13 @@ namespace sctpCommon
 	} while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_ERROR_CAUSE(/*const RTC::SCTP::ErrorCause**/ errorCause,                          \
-                               /*const uint8_t**/ buffer,                                            \
-                               /*size_t*/ bufferLength,                                              \
-                               /*size_t*/ length,                                                    \
-                               /*RTC::SCTP::ErrorCause::ErrorCauseCode*/ causeCode,                  \
-                               /*bool*/ unknownCode)                                                 \
+#define CHECK_SCTP_ERROR_CAUSE(                                                                      \
+  /*const RTC::SCTP::ErrorCause**/ errorCause,                                                       \
+  /*const uint8_t**/ buffer,                                                                         \
+  /*size_t*/ bufferLength,                                                                           \
+  /*size_t*/ length,                                                                                 \
+  /*RTC::SCTP::ErrorCause::ErrorCauseCode*/ causeCode,                                               \
+  /*bool*/ unknownCode)                                                                              \
 	do                                                                                                 \
 	{                                                                                                  \
 		REQUIRE(errorCause);                                                                             \

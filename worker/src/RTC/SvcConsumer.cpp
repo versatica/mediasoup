@@ -56,8 +56,7 @@ namespace RTC
 				this->preferredLayers.spatial = static_cast<int16_t>(encoding.spatialLayers - 1);
 			}
 
-			if (flatbuffers::IsFieldPresent(
-			      data->preferredLayers(), FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
+			if (flatbuffers::IsFieldPresent(data->preferredLayers(), FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
 			{
 				if (this->preferredLayers.temporal > encoding.temporalLayers - 1)
 				{

@@ -6,6 +6,7 @@
 - Convert `WORKER_CLOSE` into a notification ([PR #1729](https://github.com/versatica/mediasoup/pull/1729).
 - Node tests: Replace `sctp` unmaintained library with `werift-sctp` ([PR #1732](https://github.com/versatica/mediasoup/pull/1732), thanks to @shinyoshiaki for his help with `werift-sctp`.
 - Worker: Require C++20 ([PR #1741](https://github.com/versatica/mediasoup/pull/1741).
+- Fix "SCTP failed" if no DataChannel is created on a Transport with `enableSctp: true` ([PR #1749](https://github.com/versatica/mediasoup/pull/1749).
 
 ### 3.19.17
 

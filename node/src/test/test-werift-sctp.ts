@@ -22,7 +22,9 @@ type TestContext = {
 const ctx: TestContext = {};
 
 beforeEach(async () => {
-	ctx.worker = await mediasoup.createWorker({ disableLiburing: true });
+	ctx.worker = await mediasoup.createWorker({
+		disableLiburing: true,
+	});
 
 	ctx.router = await ctx.worker.createRouter();
 
@@ -35,31 +37,15 @@ beforeEach(async () => {
 		numSctpStreams: { OS: 256, MIS: 256 },
 	});
 
+	// Create an explicit SCTP outgoing stream id.
+	ctx.sctpSendStreamId = 123;
+
 	ctx.sctpClient = SCTP.client(
 		createSctpUdpTransport(createSocket('udp4'), {
 			port: ctx.plainTransport.tuple.localPort,
 			address: ctx.plainTransport.tuple.localAddress,
 		})
 	);
-
-	await ctx.sctpClient.start(5000);
-
-	let connectionTimeoutTimer: NodeJS.Timeout | undefined;
-
-	await Promise.race([
-		ctx.sctpClient.stateChanged.connected.asPromise(),
-		new Promise<void>((resolve, reject) => {
-			connectionTimeoutTimer = setTimeout(
-				() => reject(new Error('SCTP connection timeout')),
-				3000
-			);
-		}),
-	]);
-
-	clearTimeout(connectionTimeoutTimer);
-
-	// Create an explicit SCTP outgoing stream id.
-	ctx.sctpSendStreamId = 123;
 
 	// Create a DataProducer with the corresponding SCTP stream id.
 	ctx.dataProducer = await ctx.plainTransport.produceData({
@@ -76,7 +62,46 @@ beforeEach(async () => {
 	ctx.dataConsumer = await ctx.plainTransport.consumeData({
 		dataProducerId: ctx.dataProducer.id,
 	});
-});
+
+	let connectionTimeoutTimer: NodeJS.Timeout | undefined;
+
+	await Promise.race([
+		// Wait for SCTP to become connected in both the PlainTransport and in the
+		// werift-sctp client.
+		Promise.all([
+			// Connect werift-sctp client (this resolves once SCTP is connected).
+			ctx.sctpClient.start(5000),
+			// This resolves once connected too.
+			ctx.sctpClient.stateChanged.connected.asPromise(),
+			// Wait for SCTP state in the mediasoup PlainTransport to be "connected".
+			new Promise<void>((resolve, reject) => {
+				if (ctx.plainTransport?.sctpState === 'connected') {
+					resolve();
+				} else {
+					ctx.plainTransport?.on('sctpstatechange', state => {
+						if (state === 'connected') {
+							resolve();
+						} else if (state === 'failed' || state === 'closed') {
+							reject(
+								new Error(
+									'SCTP connection in PlainTransport failed or was closed'
+								)
+							);
+						}
+					});
+				}
+			}),
+		]),
+		new Promise<void>((resolve, reject) => {
+			connectionTimeoutTimer = setTimeout(
+				() => reject(new Error('SCTP connection timeout')),
+				3000
+			);
+		}),
+	]);
+
+	clearTimeout(connectionTimeoutTimer);
+}, 5000);
 
 afterEach(async () => {
 	await ctx.sctpClient?.stop();

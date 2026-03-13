@@ -29,8 +29,7 @@ namespace RTC
 		this->encrypt = data->encrypt();
 
 		// parameters is optional.
-		if (flatbuffers::IsFieldPresent(
-		      data, FBS::RtpParameters::RtpHeaderExtensionParameters::VT_PARAMETERS))
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpHeaderExtensionParameters::VT_PARAMETERS))
 		{
 			this->parameters.Set(data->parameters());
 		}

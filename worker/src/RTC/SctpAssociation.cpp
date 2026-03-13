@@ -290,60 +290,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Just run the SCTP stack if our state is 'new'.
-		if (this->state != SctpState::NEW)
-		{
-			return;
-		}
+		this->transportConnected = true;
 
-		try
-		{
-			int ret;
-			struct sockaddr_conn rconn{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		MayConnect();
+	}
 
-			std::memset(&rconn, 0, sizeof(rconn));
-			rconn.sconn_family = AF_CONN;
-			rconn.sconn_port   = htons(5000);
-			rconn.sconn_addr   = reinterpret_cast<void*>(this->id);
-#ifdef HAVE_SCONN_LEN
-			rconn.sconn_len = sizeof(rconn);
-#endif
+	void SctpAssociation::TransportDisconnected()
+	{
+		MS_TRACE();
 
-			ret = usrsctp_connect(this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(rconn));
-
-			if (ret < 0 && errno != EINPROGRESS)
-			{
-				MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
-			}
-
-			// Disable MTU discovery.
-			sctp_paddrparams peerAddrParams{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-			std::memset(&peerAddrParams, 0, sizeof(peerAddrParams));
-			std::memcpy(&peerAddrParams.spp_address, &rconn, sizeof(rconn));
-			peerAddrParams.spp_flags = SPP_PMTUD_DISABLE;
-
-			// The MTU value provided specifies the space available for chunks in the
-			// packet, so let's subtract the SCTP header size.
-			peerAddrParams.spp_pathmtu = SctpMtu - sizeof(struct sctp_common_header);
-
-			ret = usrsctp_setsockopt(
-			  this->socket, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerAddrParams, sizeof(peerAddrParams));
-
-			if (ret < 0)
-			{
-				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_PEER_ADDR_PARAMS) failed: %s", std::strerror(errno));
-			}
-
-			// Announce connecting state.
-			this->state = SctpState::CONNECTING;
-			this->listener->OnSctpAssociationConnecting(this);
-		}
-		catch (const MediaSoupError& /*error*/)
-		{
-			this->state = SctpState::FAILED;
-			this->listener->OnSctpAssociationFailed(this);
-		}
+		this->transportConnected = false;
 	}
 
 	flatbuffers::Offset<FBS::SctpParameters::SctpParameters> SctpAssociation::FillBuffer(
@@ -369,12 +325,17 @@ namespace RTC
 		  this->isDataChannel);
 	}
 
-	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len) const
+	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
+		this->sctpDataReceived = true;
+
+		MayConnect();
+
 #if MS_LOG_DEV_LEVEL == 3
-		MS_DUMP_DATA(data, len);
+		// NOTE: Only uncomment this during local debugging if needed.
+		// MS_DUMP_DATA(data, len);
 #endif
 
 		usrsctp_conninput(reinterpret_cast<void*>(this->id), data, len, 0);
@@ -445,7 +406,7 @@ namespace RTC
 			// SCTP send buffer being full is legit, not an error.
 			if (sctpSendBufferFull)
 			{
-				MS_DEBUG_DEV(
+				MS_WARN_DEV(
 				  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
 				  parameters.streamId,
 				  ppid,
@@ -481,9 +442,22 @@ namespace RTC
 		}
 	}
 
+	void SctpAssociation::HandleDataProducer(RTC::DataProducer* /*dataProducer*/)
+	{
+		MS_TRACE();
+
+		this->firstStreamCreated = true;
+
+		MayConnect();
+	}
+
 	void SctpAssociation::HandleDataConsumer(RTC::DataConsumer* dataConsumer)
 	{
 		MS_TRACE();
+
+		this->firstStreamCreated = true;
+
+		MayConnect();
 
 		auto streamId = dataConsumer->GetSctpStreamParameters().streamId;
 
@@ -520,6 +494,96 @@ namespace RTC
 
 		// Send SCTP_RESET_STREAMS to the remote.
 		ResetSctpStream(streamId, StreamDirection::OUTGOING);
+	}
+
+	void SctpAssociation::MayConnect()
+	{
+		MS_TRACE();
+
+		// Just run the SCTP stack if our state is 'new'.
+		// Notice that once MayConnect() is called (and the code below is executed),
+		// SCTP state will no longer be "NEW".
+		if (this->state != SctpState::NEW)
+		{
+			MS_DEBUG_DEV("SCTP state is not NEW, ignoring");
+
+			return;
+		}
+		// If the transport is not connected and has never been connected, don't do
+		// anything.
+		else if (!this->transportConnected)
+		{
+			MS_DEBUG_DEV("transport is not connected, ignoring");
+
+			return;
+		}
+		// If there are no SCTP streams yet and no SCTP data has been yet received
+		// from the remote peer, don't do anything.
+		// This is because the peer may never create a DataChannel so we shouldn't
+		// try to connect SCTP (SCTP INIT chunk, etc) since it will timeout and
+		// trigger "SCTP failed".
+		else if (!this->firstStreamCreated && !this->sctpDataReceived)
+		{
+			MS_DEBUG_DEV(
+			  "no SCTP stream has been created yet and no SCTP data has been received yet, ignoring");
+
+			return;
+		}
+
+		MS_DEBUG_TAG(sctp, "connecting SCTP");
+
+		try
+		{
+			int ret;
+			struct sockaddr_conn rconn{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+			std::memset(&rconn, 0, sizeof(rconn));
+			rconn.sconn_family = AF_CONN;
+			rconn.sconn_port   = htons(5000);
+			rconn.sconn_addr   = reinterpret_cast<void*>(this->id);
+#ifdef HAVE_SCONN_LEN
+			rconn.sconn_len = sizeof(rconn);
+#endif
+
+			ret = usrsctp_connect(this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(rconn));
+
+			if (ret < 0 && errno != EINPROGRESS)
+			{
+				MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
+			}
+
+			// Disable MTU discovery.
+			sctp_paddrparams peerAddrParams{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+			std::memset(&peerAddrParams, 0, sizeof(peerAddrParams));
+			std::memcpy(&peerAddrParams.spp_address, &rconn, sizeof(rconn));
+			peerAddrParams.spp_flags = SPP_PMTUD_DISABLE;
+
+			// The MTU value provided specifies the space available for chunks in the
+			// packet, so let's subtract the SCTP header size.
+			peerAddrParams.spp_pathmtu = SctpMtu - sizeof(struct sctp_common_header);
+
+			ret = usrsctp_setsockopt(
+			  this->socket, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerAddrParams, sizeof(peerAddrParams));
+
+			if (ret < 0)
+			{
+				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_PEER_ADDR_PARAMS) failed: %s", std::strerror(errno));
+			}
+
+			// Announce connecting state.
+			MS_DEBUG_DEV("SCTP state switched to CONNECTING (in MayConnect())");
+
+			this->state = SctpState::CONNECTING;
+			this->listener->OnSctpAssociationConnecting(this);
+		}
+		catch (const MediaSoupError& /*error*/)
+		{
+			MS_DEBUG_DEV("SCTP state switched to FAILED (in MayConnect())");
+
+			this->state = SctpState::FAILED;
+			this->listener->OnSctpAssociationFailed(this);
+		}
 	}
 
 	void SctpAssociation::ResetSctpStream(uint16_t streamId, StreamDirection direction) const
@@ -655,7 +719,8 @@ namespace RTC
 		const uint8_t* data = static_cast<uint8_t*>(buffer);
 
 #if MS_LOG_DEV_LEVEL == 3
-		MS_DUMP_DATA(data, len);
+		// NOTE: Only uncomment this during local debugging if needed.
+		// MS_DUMP_DATA(data, len);
 #endif
 
 		this->listener->OnSctpAssociationSendData(this, data, len);
@@ -781,6 +846,8 @@ namespace RTC
 
 						if (this->state != SctpState::CONNECTED)
 						{
+							MS_DEBUG_DEV("SCTP state switched to CONNECTED (in SCTP_ASSOC_CHANGE)");
+
 							this->state = SctpState::CONNECTED;
 							this->listener->OnSctpAssociationConnected(this);
 						}
@@ -813,6 +880,8 @@ namespace RTC
 
 						if (this->state != SctpState::CLOSED)
 						{
+							MS_DEBUG_DEV("SCTP state switched to CLOSED (in SCTP_COMM_LOST)");
+
 							this->state = SctpState::CLOSED;
 							this->listener->OnSctpAssociationClosed(this);
 						}
@@ -839,6 +908,8 @@ namespace RTC
 
 						if (this->state != SctpState::CONNECTED)
 						{
+							MS_DEBUG_DEV("SCTP state switched to CONNECTED (in SCTP_RESTART)");
+
 							this->state = SctpState::CONNECTED;
 							this->listener->OnSctpAssociationConnected(this);
 						}
@@ -852,6 +923,8 @@ namespace RTC
 
 						if (this->state != SctpState::CLOSED)
 						{
+							MS_DEBUG_DEV("SCTP state switched to CLOSED (in SCTP_SHUTDOWN_COMP)");
+
 							this->state = SctpState::CLOSED;
 							this->listener->OnSctpAssociationClosed(this);
 						}
@@ -880,6 +953,8 @@ namespace RTC
 
 						if (this->state != SctpState::FAILED)
 						{
+							MS_DEBUG_DEV("SCTP state switched to FAILED (in SCTP_CANT_STR_ASSOC)");
+
 							this->state = SctpState::FAILED;
 							this->listener->OnSctpAssociationFailed(this);
 						}
@@ -933,6 +1008,8 @@ namespace RTC
 
 				if (this->state != SctpState::CLOSED)
 				{
+					MS_DEBUG_DEV("SCTP state switched to CLOSED (in SCTP_SHUTDOWN_EVENT)");
+
 					this->state = SctpState::CLOSED;
 					this->listener->OnSctpAssociationClosed(this);
 				}

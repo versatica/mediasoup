@@ -83,11 +83,11 @@ namespace RTC
 
 			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
 			auto stats     = FBS::RtpStream::CreateSendStats(
-        builder,
-        baseStats,
-        this->transmissionCounter.GetPacketCount(),
-        this->transmissionCounter.GetBytes(),
-        this->transmissionCounter.GetBitrate(nowMs));
+			  builder,
+			  baseStats,
+			  this->transmissionCounter.GetPacketCount(),
+			  this->transmissionCounter.GetBytes(),
+			  this->transmissionCounter.GetBitrate(nowMs));
 
 			return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::SendStats, stats.Union());
 		}

@@ -131,7 +131,7 @@ namespace RTC
 			{
 				uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
 				err      = uv_udp_init_ex(
-          DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
+				  DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
 
 				break;
 			}
@@ -411,7 +411,7 @@ namespace RTC
 				{
 					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
 					err      = uv_udp_init_ex(
-            DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
+					  DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
 
 					break;
 				}

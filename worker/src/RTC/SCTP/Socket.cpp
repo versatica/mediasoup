@@ -2211,10 +2211,10 @@ namespace RTC
 			MS_TRACE();
 
 			const auto action         = receivedUnknownChunk->GetActionForUnknownChunkType();
-			const bool skipProcessing = action == Chunk::ActionForUnknownChunkType::SKIP ||
+			const auto skipProcessing = action == Chunk::ActionForUnknownChunkType::SKIP ||
 			                            action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
-			const bool reportError = action == Chunk::ActionForUnknownChunkType::STOP_AND_REPORT ||
-			                         action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
+			const auto reportError    = action == Chunk::ActionForUnknownChunkType::STOP_AND_REPORT ||
+			                            action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
 
 			if (skipProcessing)
 			{

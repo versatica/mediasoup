@@ -6,6 +6,10 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+#include "RTC/SCTP/packet/Packet.hpp"
+#endif
 
 namespace RTC
 {
@@ -48,8 +52,7 @@ namespace RTC
 		// This may throw.
 		Utils::IP::NormalizeIp(this->listenInfo.ip);
 
-		if (flatbuffers::IsFieldPresent(
-		      options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 		{
 			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
 		}
@@ -67,8 +70,7 @@ namespace RTC
 
 		if (!this->rtcpMux)
 		{
-			if (flatbuffers::IsFieldPresent(
-			      options, FBS::PlainTransport::PlainTransportOptions::VT_RTCPLISTENINFO))
+			if (flatbuffers::IsFieldPresent(options, FBS::PlainTransport::PlainTransportOptions::VT_RTCPLISTENINFO))
 			{
 				if (options->rtcpListenInfo()->protocol() != FBS::Transport::Protocol::UDP)
 				{
@@ -80,8 +82,7 @@ namespace RTC
 				// This may throw.
 				Utils::IP::NormalizeIp(this->rtcpListenInfo.ip);
 
-				if (flatbuffers::IsFieldPresent(
-				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
+				if (flatbuffers::IsFieldPresent(options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 				{
 					this->rtcpListenInfo.announcedAddress.assign(
 					  options->rtcpListenInfo()->announcedAddress()->str());
@@ -788,7 +789,7 @@ namespace RTC
 
 	inline bool PlainTransport::IsConnected() const
 	{
-		return this->tuple;
+		return this->tuple ? true : false;
 	}
 
 	inline bool PlainTransport::HasSrtp() const
@@ -913,8 +914,28 @@ namespace RTC
 
 		if (!IsConnected())
 		{
+			MS_WARN_TAG(sctp, "not connected, cannot send SCTP data");
+
 			return;
 		}
+
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+		MS_DUMP(">>> sending SCTP packet...");
+
+		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (packet)
+		{
+			packet->Dump();
+
+			delete packet;
+		}
+		else
+		{
+			MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse sent SCTP data");
+		}
+#endif
 
 		this->tuple->Send(data, len);
 
@@ -1208,6 +1229,24 @@ namespace RTC
 
 			return;
 		}
+
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+		MS_DUMP("<<< received SCTP packet...");
+
+		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (packet)
+		{
+			packet->Dump();
+
+			delete packet;
+		}
+		else
+		{
+			MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse received SCTP data");
+		}
+#endif
 
 		// Pass it to the parent transport.
 		RTC::Transport::ReceiveSctpData(data, len);
