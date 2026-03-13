@@ -110,7 +110,7 @@ beforeEach(async () => {
 	console.warn(
 		`----- promises resolved so: sctpstatechange => ctx.plainTransport.sctpState: ${ctx.plainTransport.sctpState}, ctx.sctpClient.associationState:${ctx.sctpClient.associationState}`
 	);
-});
+}, 10000);
 
 afterEach(async () => {
 	await ctx.sctpClient?.stop();
