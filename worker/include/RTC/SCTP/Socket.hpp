@@ -57,7 +57,7 @@ namespace RTC
 			 * Internal SCTP association state. This is different from the public SCTP
 			 * Socket state (`SCTP::Types::SocketState`).
 			 */
-			enum class AssociationState
+			enum class AssociationState : uint8_t
 			{
 				CLOSED,
 				COOKIE_WAIT,

@@ -13,7 +13,7 @@ namespace RTC
 			/**
 			 * Publicly exposed SCTP socket state.
 			 */
-			enum class SocketState
+			enum class SocketState : uint8_t
 			{
 				/**
 				 * The socket is closed.
@@ -66,7 +66,7 @@ namespace RTC
 			/**
 			 * Kinds of errors that are exposed in the Socket API.
 			 */
-			enum class ErrorKind
+			enum class ErrorKind : uint8_t
 			{
 				/**
 				 * Indicates that no error has occurred. This will never be the case when
@@ -165,7 +165,7 @@ namespace RTC
 			 * SCTP implementation determined by first 8 bytes of the State Cookie
 			 * sent by the remote peer.
 			 */
-			enum class SctpImplementation
+			enum class SctpImplementation : uint8_t
 			{
 				UNKNOWN,
 				MEDIASOUP,
@@ -202,7 +202,7 @@ namespace RTC
 			/**
 			 * Return value of Socket::ResetStreams().
 			 */
-			enum class ResetStreamsStatus
+			enum class ResetStreamsStatus : uint8_t
 			{
 				/**
 				 * If the connection is not yet established, this will be returned.
@@ -246,7 +246,7 @@ namespace RTC
 			/**
 			 * Return value of Socket::SendMessage() and Socket::SendManyMessages().
 			 */
-			enum class SendMessageStatus
+			enum class SendMessageStatus : uint8_t
 			{
 				/**
 				 * The message was enqueued successfully. As sending the message is done
