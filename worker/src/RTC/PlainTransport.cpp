@@ -792,7 +792,7 @@ namespace RTC
 
 	inline bool PlainTransport::IsConnected() const
 	{
-		return this->tuple;
+		return this->tuple ? true : false;
 	}
 
 	inline bool PlainTransport::HasSrtp() const

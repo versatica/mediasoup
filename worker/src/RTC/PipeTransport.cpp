@@ -486,7 +486,7 @@ namespace RTC
 
 	inline bool PipeTransport::IsConnected() const
 	{
-		return this->tuple;
+		return this->tuple ? true : false;
 	}
 
 	inline bool PipeTransport::HasSrtp() const

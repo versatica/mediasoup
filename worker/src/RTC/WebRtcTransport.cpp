@@ -667,6 +667,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Dont' start DTLS handshake if ICE is not connected/completed.
+		if (!this->iceServer->GetSelectedTuple())
+		{
+			return;
+		}
+
 		// Do nothing if we have the same local DTLS role as the DTLS transport.
 		// NOTE: local role in DTLS transport can be NONE, but not ours.
 		if (this->dtlsTransport->GetLocalRole() == this->dtlsRole)
