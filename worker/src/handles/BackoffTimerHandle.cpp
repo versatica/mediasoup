@@ -108,6 +108,8 @@ uint64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 
 			return std::min<uint64_t>(timeoutMs, BackoffTimerHandle::MaxTimeoutMs);
 		}
+
+			NO_DEFAULT_GCC();
 	}
 }
 
