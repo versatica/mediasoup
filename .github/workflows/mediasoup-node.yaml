@@ -132,8 +132,8 @@ jobs:
       - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build-type != 'Debug' }}
         name: npm run test:node
         # TODO
-        # run: npm run test:node
-        run: npx jest --testPathPatterns node/src/test/test-werift-sctp.ts
+        run: npm run test:node
+        # run: npx jest --testPathPatterns node/src/test/test-werift-sctp.ts
         env:
           DEBUG: 'werift* mediasoup* WARN* ERROR*'
 
