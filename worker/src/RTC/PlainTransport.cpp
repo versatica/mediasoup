@@ -52,8 +52,7 @@ namespace RTC
 		// This may throw.
 		Utils::IP::NormalizeIp(this->listenInfo.ip);
 
-		if (flatbuffers::IsFieldPresent(
-		      options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 		{
 			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
 		}
@@ -71,8 +70,7 @@ namespace RTC
 
 		if (!this->rtcpMux)
 		{
-			if (flatbuffers::IsFieldPresent(
-			      options, FBS::PlainTransport::PlainTransportOptions::VT_RTCPLISTENINFO))
+			if (flatbuffers::IsFieldPresent(options, FBS::PlainTransport::PlainTransportOptions::VT_RTCPLISTENINFO))
 			{
 				if (options->rtcpListenInfo()->protocol() != FBS::Transport::Protocol::UDP)
 				{
@@ -84,8 +82,7 @@ namespace RTC
 				// This may throw.
 				Utils::IP::NormalizeIp(this->rtcpListenInfo.ip);
 
-				if (flatbuffers::IsFieldPresent(
-				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
+				if (flatbuffers::IsFieldPresent(options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 				{
 					this->rtcpListenInfo.announcedAddress.assign(
 					  options->rtcpListenInfo()->announcedAddress()->str());

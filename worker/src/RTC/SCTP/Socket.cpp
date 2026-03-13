@@ -855,8 +855,8 @@ namespace RTC
 			auto action         = receivedUnknownChunk->GetActionForUnknownChunkType();
 			auto skipProcessing = action == Chunk::ActionForUnknownChunkType::SKIP ||
 			                      action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
-			auto reportError = action == Chunk::ActionForUnknownChunkType::STOP_AND_REPORT ||
-			                   action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
+			auto reportError    = action == Chunk::ActionForUnknownChunkType::STOP_AND_REPORT ||
+			                      action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
 
 			if (skipProcessing)
 			{

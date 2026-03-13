@@ -210,9 +210,9 @@ jobs:
 
       # Install clang-format on macos.
       - if: ${{ matrix.build.run-lint && startsWith(matrix.build.os, 'macos') }}
-        name: brew install clang-format@21
+        name: brew install clang-format@22
         run: |
-          brew install clang-format@21
+          brew install clang-format@22
 
       # We need to install npm deps of worker/scripts/package.json.
       - if: ${{ matrix.build.run-lint }}

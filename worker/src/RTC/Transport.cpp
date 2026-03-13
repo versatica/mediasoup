@@ -61,8 +61,9 @@ namespace RTC
 			}
 		}
 
-		if (auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
-		    initialAvailableOutgoingBitrate.has_value())
+		if (
+		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
+		  initialAvailableOutgoingBitrate.has_value())
 		{
 			this->initialAvailableOutgoingBitrate = initialAvailableOutgoingBitrate.value();
 		}

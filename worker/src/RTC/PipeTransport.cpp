@@ -40,14 +40,12 @@ namespace RTC
 		// This may throw.
 		Utils::IP::NormalizeIp(this->listenInfo.ip);
 
-		if (flatbuffers::IsFieldPresent(
-		      options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 		{
 			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
 		}
 
-		if (flatbuffers::IsFieldPresent(
-		      options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 		{
 			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
 		}

@@ -27,31 +27,32 @@ namespace iceCommon
 } // namespace iceCommon
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_STUN_PACKET(/*const RTC::ICE::StunPacket**/ packet,                                     \
-                          /*const uint8_t**/ buffer,                                                  \
-                          /*size_t*/ bufferLength,                                                    \
-                          /*size_t*/ length,                                                          \
-                          /*RTC::ICE::StunPacket::Class*/ klass,                                      \
-                          /*RTC::ICE::StunPacket::Method*/ method,                                    \
-                          /*bool*/ hasUsername,                                                       \
-                          /*std::string_view*/ username,                                              \
-                          /*bool*/ hasPriority,                                                       \
-                          /*uint32_t*/ priority,                                                      \
-                          /*bool*/ hasIceControlling,                                                 \
-                          /*uint64_t*/ iceControlling,                                                \
-                          /*bool*/ hasIceControlled,                                                  \
-                          /*uint64_t*/ iceControlled,                                                 \
-                          /*bool*/ hasUseCandidate,                                                   \
-                          /*bool*/ hasNomination,                                                     \
-                          /*uint32_t*/ nomination,                                                    \
-                          /*bool*/ hasSoftware,                                                       \
-                          /*std::string_view*/ software,                                              \
-                          /*bool*/ hasXorMappedAddress,                                               \
-                          /*bool*/ hasErrorCode,                                                      \
-                          /*uint16_t*/ errorCode,                                                     \
-                          /*std::string_view*/ errorReasonPhrase,                                     \
-                          /*bool*/ hasMessageIntegrity,                                               \
-                          /*bool*/ hasFingerprint)                                                    \
+#define CHECK_STUN_PACKET(                                                                            \
+  /*const RTC::ICE::StunPacket**/ packet,                                                             \
+  /*const uint8_t**/ buffer,                                                                          \
+  /*size_t*/ bufferLength,                                                                            \
+  /*size_t*/ length,                                                                                  \
+  /*RTC::ICE::StunPacket::Class*/ klass,                                                              \
+  /*RTC::ICE::StunPacket::Method*/ method,                                                            \
+  /*bool*/ hasUsername,                                                                               \
+  /*std::string_view*/ username,                                                                      \
+  /*bool*/ hasPriority,                                                                               \
+  /*uint32_t*/ priority,                                                                              \
+  /*bool*/ hasIceControlling,                                                                         \
+  /*uint64_t*/ iceControlling,                                                                        \
+  /*bool*/ hasIceControlled,                                                                          \
+  /*uint64_t*/ iceControlled,                                                                         \
+  /*bool*/ hasUseCandidate,                                                                           \
+  /*bool*/ hasNomination,                                                                             \
+  /*uint32_t*/ nomination,                                                                            \
+  /*bool*/ hasSoftware,                                                                               \
+  /*std::string_view*/ software,                                                                      \
+  /*bool*/ hasXorMappedAddress,                                                                       \
+  /*bool*/ hasErrorCode,                                                                              \
+  /*uint16_t*/ errorCode,                                                                             \
+  /*std::string_view*/ errorReasonPhrase,                                                             \
+  /*bool*/ hasMessageIntegrity,                                                                       \
+  /*bool*/ hasFingerprint)                                                                            \
 	do                                                                                                  \
 	{                                                                                                   \
 		uint8_t* originalBuffer = static_cast<uint8_t*>(std::malloc(bufferLength));                       \
