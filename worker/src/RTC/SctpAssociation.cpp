@@ -505,7 +505,7 @@ namespace RTC
 		// SCTP state will no longer be "NEW".
 		if (this->state != SctpState::NEW)
 		{
-			MS_DEBUG_DEV("ignoring because SCTP state is not NEW");
+			MS_DEBUG_DEV("SCTP state is not NEW, ignoring");
 
 			return;
 		}
