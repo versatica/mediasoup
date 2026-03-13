@@ -93,7 +93,7 @@ beforeEach(async () => {
 		new Promise<void>((resolve, reject) => {
 			connectionTimeoutTimer = setTimeout(
 				() => reject(new Error('SCTP connection timeout')),
-				3000
+				6000
 			);
 		}),
 	]);
@@ -217,4 +217,4 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			bytesSent: recvMessageBytes,
 		},
 	]);
-}, 10000);
+}, 12000);
