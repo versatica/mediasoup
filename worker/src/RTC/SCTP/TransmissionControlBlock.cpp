@@ -29,7 +29,7 @@ namespace RTC
 		    localVerificationTag(localVerificationTag), remoteVerificationTag(remoteVerificationTag),
 		    localInitialTsn(localInitialTsn), remoteInitialTsn(remoteInitialTsn),
 		    remoteAdvertisedReceiverWindowCredit(remoteAdvertisedReceiverWindowCredit), tieTag(tieTag),
-		    negotiatedCapabilities(negotiatedCapabilities)
+		    negotiatedCapabilities(negotiatedCapabilities), rto(sctpOptions)
 		{
 			MS_TRACE();
 		}

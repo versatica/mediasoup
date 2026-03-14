@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/PacketSender.hpp"
+#include "RTC/SCTP/RetransmissionTimeout.hpp"
 #include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/SocketListener.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
@@ -115,6 +116,7 @@ namespace RTC
 			uint32_t remoteAdvertisedReceiverWindowCredit{ 0 };
 			uint64_t tieTag{ 0 };
 			NegotiatedCapabilities negotiatedCapabilities;
+			RetransmissionTimeout rto;
 		};
 	} // namespace SCTP
 } // namespace RTC

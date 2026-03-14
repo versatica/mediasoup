@@ -96,22 +96,22 @@ namespace RTC
 			 * RTO calculation. The default value is an extreme maximum but can be
 			 * adapted to better match the environment.
 			 */
-			uint32_t rttMaxMs{ 60000 };
+			uint32_t maxRttMs{ 60000 };
 
 			/**
 			 * Initial RTO value.
 			 */
-			uint32_t rtoInitialMs{ 500 };
+			uint32_t initialRtoMs{ 500 };
 
 			/**
 			 * Minimum RTO value.
 			 */
-			uint32_t rtoMinMs{ 400 };
+			uint32_t minRtoMs{ 400 };
 
 			/**
 			 * Minimum RTO value.
 			 */
-			uint32_t rtoMaxMs{ 60000 };
+			uint32_t maxRtoMs{ 60000 };
 
 			/**
 			 * T1-init timeout (ms).
@@ -170,7 +170,7 @@ namespace RTC
 			 * at ~3 and https://research.google/pubs/pub36640/ which argues for at
 			 * least ten segments.
 			 */
-			size_t cwndMtusInitial{ 10 };
+			size_t initialCwndMtus{ 10 };
 
 			/**
 			 * The minimum congestion window size, in number of MTUs, upon detection
@@ -179,7 +179,7 @@ namespace RTC
 			 *
 			 * @see https://tools.ietf.org/html/rfc4960#section-7.2.3.
 			 */
-			size_t cwndMtusMin{ 4 };
+			size_t minCwndMtus{ 4 };
 
 			/**
 			 * When the congestion window is at or above this number of MTUs, the

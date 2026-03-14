@@ -1,10 +1,10 @@
 #ifndef MS_COMMON_HPP
 #define MS_COMMON_HPP
 
-#include <algorithm> // IWYU pragma: export  std::transform(), std::find(), std::min(), std::max(), std::copy()
-#include <cinttypes>  // IWYU pragma: export  PRIu64, etc
-#include <cstddef>    // IWYU pragma: export  size_t
-#include <cstdint>    // IWYU pragma: export  uint8_t, etc
+#include <algorithm> // IWYU pragma: export  std::transform(), std::find(), std::min(), std::max(), std::copy(), std::clamp()
+#include <cinttypes> // IWYU pragma: export  PRIu64, etc
+#include <cstddef>   // IWYU pragma: export  size_t
+#include <cstdint>   // IWYU pragma: export  uint8_t, etc
 #include <functional> // IWYU pragma: export  std::function
 #include <memory>     // IWYU pragma: export  std::addressof(), std::unique_ptr(), etc
 #include <optional>   // IWYU pragma: export
