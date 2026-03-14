@@ -671,7 +671,7 @@ namespace RTC
 			this->packetSender.SendPacket(packet.get());
 
 			// TODO
-			// this->t2ShutdownTimer->SetBaseTimeout(this->tcb->GetCurrentRto());
+			// this->t2ShutdownTimer->SetBaseTimeout(this->tcb->GetCurrentRtoMs());
 			this->t2ShutdownTimer->Start();
 		}
 

@@ -63,6 +63,13 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");
 		}
 
+		void TransmissionControlBlock::ObserveRtt(uint32_t rtt)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
 		std::unique_ptr<Packet> TransmissionControlBlock::CreatePacket() const
 		{
 			MS_TRACE();

@@ -101,6 +101,13 @@ namespace RTC
 				return this->negotiatedCapabilities;
 			}
 
+			void ObserveRtt(uint32_t rtt);
+
+			uint32_t GetCurrentRtoMs() const
+			{
+				return this->rto.GetRtoMs();
+			}
+
 			std::unique_ptr<Packet> CreatePacket() const;
 
 			std::unique_ptr<Packet> CreatePacketWithVerificationTag(uint32_t verificationTag) const;
