@@ -17,8 +17,11 @@ namespace RTC
 
 	SenderBandwidthEstimator::SenderBandwidthEstimator(
 	  RTC::SenderBandwidthEstimator::Listener* listener, uint32_t initialAvailableBitrate)
-	  : listener(listener), initialAvailableBitrate(initialAvailableBitrate), rtt(DefaultRtt),
-	    sendTransmission(1000u), sendTransmissionTrend(0.15f)
+	  : listener(listener),
+	    initialAvailableBitrate(initialAvailableBitrate),
+	    rtt(DefaultRtt),
+	    sendTransmission(1000u),
+	    sendTransmissionTrend(0.15f)
 	{
 		MS_TRACE();
 	}

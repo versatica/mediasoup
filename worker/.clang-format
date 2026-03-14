@@ -42,7 +42,7 @@ BreakStringLiterals: false
 ColumnLimit: 100
 QualifierAlignment: Left
 CommentPragmas: 'NOLINT'
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 2
 Cpp11BracedListStyle: false

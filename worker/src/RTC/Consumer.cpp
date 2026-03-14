@@ -17,8 +17,12 @@ namespace RTC
 	  Listener* listener,
 	  const FBS::Transport::ConsumeRequest* data,
 	  RTC::RtpParameters::Type type)
-	  : id(id), producerId(producerId), shared(shared), listener(listener),
-	    kind(RTC::Media::Kind(data->kind())), type(type)
+	  : id(id),
+	    producerId(producerId),
+	    shared(shared),
+	    listener(listener),
+	    kind(RTC::Media::Kind(data->kind())),
+	    type(type)
 	{
 		MS_TRACE();
 

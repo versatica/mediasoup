@@ -89,7 +89,8 @@ namespace RTC
 			  size_t len,
 			  DependencyDescriptor::Listener* listener,
 			  TemplateDependencyStructure* templateDependencyStructure)
-			  : templateDependencyStructure(templateDependencyStructure), listener(listener),
+			  : templateDependencyStructure(templateDependencyStructure),
+			    listener(listener),
 			    bitStream(const_cast<uint8_t*>(data), len)
 			{
 				MS_TRACE();

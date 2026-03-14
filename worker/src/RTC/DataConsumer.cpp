@@ -19,8 +19,12 @@ namespace RTC
 	  RTC::DataConsumer::Listener* listener,
 	  const FBS::Transport::ConsumeDataRequest* data,
 	  size_t maxMessageSize)
-	  : id(id), dataProducerId(dataProducerId), shared(shared), sctpAssociation(sctpAssociation),
-	    listener(listener), maxMessageSize(maxMessageSize)
+	  : id(id),
+	    dataProducerId(dataProducerId),
+	    shared(shared),
+	    sctpAssociation(sctpAssociation),
+	    listener(listener),
+	    maxMessageSize(maxMessageSize)
 	{
 		MS_TRACE();
 

@@ -34,7 +34,8 @@ namespace RTC
 
 		RtpStreamSend::RtpStreamSend(
 		  RTP::RtpStreamSend::Listener* listener, RTP::RtpStream::Params& params, std::string& mid)
-		  : RTP::RtpStream::RtpStream(listener, params, 10), mid(mid),
+		  : RTP::RtpStream::RtpStream(listener, params, 10),
+		    mid(mid),
 		    transmissionCounter(/*ignorePaddingOnlyPackets*/ true)
 		{
 			MS_TRACE();

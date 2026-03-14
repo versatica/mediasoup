@@ -26,10 +26,13 @@ namespace RTC
 		/* Instance methods. */
 
 		RetransmissionTimeout::RetransmissionTimeout(const SctpOptions& sctpOptions)
-		  : minRtoMs(sctpOptions.minRtoMs), maxRtoMs(sctpOptions.maxRtoMs),
+		  : minRtoMs(sctpOptions.minRtoMs),
+		    maxRtoMs(sctpOptions.maxRtoMs),
 		    maxRttMs(sctpOptions.maxRttMs),
 		    minRttVarianceMs(sctpOptions.minRttVarianceMs / HeuristicVarianceAdjustment),
-		    srttMs(sctpOptions.initialRtoMs), rtoMs(sctpOptions.initialRtoMs), firstMeasurement(true)
+		    srttMs(sctpOptions.initialRtoMs),
+		    rtoMs(sctpOptions.initialRtoMs),
+		    firstMeasurement(true)
 		{
 			MS_TRACE();
 		}

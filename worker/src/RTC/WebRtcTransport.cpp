@@ -284,7 +284,8 @@ namespace RTC
 	  const std::vector<RTC::ICE::IceCandidate>& iceCandidates,
 	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
 	  : RTC::Transport::Transport(shared, id, listener, options->base()),
-	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
+	    webRtcTransportListener(webRtcTransportListener),
+	    iceCandidates(iceCandidates)
 	{
 		MS_TRACE();
 

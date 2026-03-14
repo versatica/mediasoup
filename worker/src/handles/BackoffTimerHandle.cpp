@@ -14,8 +14,11 @@ BackoffTimerHandle::BackoffTimerHandle(
   BackoffAlgorithm backoffAlgorithm,
   std::optional<uint64_t> maxBackoffTimeoutMs,
   std::optional<size_t> maxRestarts)
-  : listener(listener), baseTimeoutMs(baseTimeoutMs), backoffAlgorithm(backoffAlgorithm),
-    maxBackoffTimeoutMs(maxBackoffTimeoutMs), maxRestarts(maxRestarts)
+  : listener(listener),
+    baseTimeoutMs(baseTimeoutMs),
+    backoffAlgorithm(backoffAlgorithm),
+    maxBackoffTimeoutMs(maxBackoffTimeoutMs),
+    maxRestarts(maxRestarts)
 {
 	MS_TRACE();
 

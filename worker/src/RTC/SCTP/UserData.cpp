@@ -18,8 +18,15 @@ namespace RTC
 		  bool isBeginning,
 		  bool isEnd,
 		  bool isUnordered)
-		  : streamId(streamId), ssn(ssn), mid(mid), fsn(fsn), ppid(ppid), payload(std::move(payload)),
-		    isBeginning(isBeginning), isEnd(isEnd), isUnordered(isUnordered)
+		  : streamId(streamId),
+		    ssn(ssn),
+		    mid(mid),
+		    fsn(fsn),
+		    ppid(ppid),
+		    payload(std::move(payload)),
+		    isBeginning(isBeginning),
+		    isEnd(isEnd),
+		    isUnordered(isUnordered)
 		{
 			MS_TRACE();
 		}

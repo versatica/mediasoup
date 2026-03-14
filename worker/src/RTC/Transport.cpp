@@ -42,7 +42,9 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::Transport::Options* options)
-	  : id(id), shared(shared), listener(listener),
+	  : id(id),
+	    shared(shared),
+	    listener(listener),
 	    recvRtpTransmission(/*ignorePaddingOnlyPackets*/ false),
 	    sendRtpTransmission(/*ignorePaddingOnlyPackets*/ false),
 	    recvRtxTransmission(/*ignorePaddingOnlyPackets*/ false, 1000u),

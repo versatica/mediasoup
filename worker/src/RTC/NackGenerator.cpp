@@ -18,7 +18,9 @@ namespace RTC
 	/* Instance methods. */
 
 	NackGenerator::NackGenerator(Listener* listener, unsigned int sendNackDelayMs)
-	  : listener(listener), sendNackDelayMs(sendNackDelayMs), timer(new TimerHandle(this)),
+	  : listener(listener),
+	    sendNackDelayMs(sendNackDelayMs),
+	    timer(new TimerHandle(this)),
 	    rtt(DefaultRtt)
 	{
 		MS_TRACE();

@@ -14,7 +14,8 @@ namespace RTC
 	  Listener* listener, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
 	  : // This may throw.
 	    ::UdpSocketHandle::UdpSocketHandle(RTC::PortManager::BindUdp(ip, port, flags)),
-	    listener(listener), fixedPort(true)
+	    listener(listener),
+	    fixedPort(true)
 	{
 		MS_TRACE();
 	}

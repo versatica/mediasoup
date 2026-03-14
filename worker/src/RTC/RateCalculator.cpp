@@ -11,7 +11,9 @@
 namespace RTC
 {
 	RateCalculator::RateCalculator(size_t windowSizeMs, float scale, uint16_t windowItems)
-	  : windowSizeMs(windowSizeMs), scale(scale), windowItems(windowItems),
+	  : windowSizeMs(windowSizeMs),
+	    scale(scale),
+	    windowItems(windowItems),
 	    itemSizeMs(std::max(windowSizeMs / windowItems, size_t{ 1 }))
 	{
 		MS_TRACE();

@@ -164,7 +164,8 @@ namespace
 	{
 	public:
 		Fixture()
-		  : listener(std::make_unique<ConsumerListener>()), consumer(createConsumer(listener.get())),
+		  : listener(std::make_unique<ConsumerListener>()),
+		    consumer(createConsumer(listener.get())),
 		    rtpStream(createRtpStreamRecv())
 		{
 			// NOTE: This must be static because the Consumer stores the given vector

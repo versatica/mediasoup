@@ -33,7 +33,9 @@ namespace RTC
 			  RTC::TcpServer* tcpServer,
 			  std::string& announcedAddress,
 			  bool exposeInternalIp)
-			  : udpSocket(udpSocket), tcpServer(tcpServer), announcedAddress(announcedAddress),
+			  : udpSocket(udpSocket),
+			    tcpServer(tcpServer),
+			    announcedAddress(announcedAddress),
 			    exposeInternalIp(exposeInternalIp)
 			{
 			}

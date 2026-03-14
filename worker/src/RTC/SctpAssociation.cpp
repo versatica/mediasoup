@@ -115,8 +115,12 @@ namespace RTC
 	  size_t maxSctpMessageSize,
 	  size_t sctpSendBufferSize,
 	  bool isDataChannel)
-	  : id(DepUsrSCTP::GetNextSctpAssociationId()), listener(listener), os(os), mis(mis),
-	    maxSctpMessageSize(maxSctpMessageSize), sctpSendBufferSize(sctpSendBufferSize),
+	  : id(DepUsrSCTP::GetNextSctpAssociationId()),
+	    listener(listener),
+	    os(os),
+	    mis(mis),
+	    maxSctpMessageSize(maxSctpMessageSize),
+	    sctpSendBufferSize(sctpSendBufferSize),
 	    isDataChannel(isDataChannel)
 	{
 		MS_TRACE();
