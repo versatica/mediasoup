@@ -161,7 +161,7 @@ namespace RTC
 			 * This is defined as "G" in the algorithm for TCP in
 			 * https://datatracker.ietf.org/doc/html/rfc6298#section-4.
 			 */
-			uint64_t minRttVariance{ 220 };
+			uint64_t minRttVarianceMs{ 220 };
 
 			/**
 			 * The initial congestion window size, in number of MTUs.
