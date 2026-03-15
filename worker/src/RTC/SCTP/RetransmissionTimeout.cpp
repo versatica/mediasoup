@@ -42,6 +42,20 @@ namespace RTC
 			MS_TRACE();
 		}
 
+		void RetransmissionTimeout::Dump(int indentation) const
+		{
+			MS_TRACE();
+
+			MS_DUMP_CLEAN(indentation, "<SCTP::RetransmissionTimeout>");
+			MS_DUMP_CLEAN(indentation, "  min rto (ms): %" PRIu64, this->minRtoMs);
+			MS_DUMP_CLEAN(indentation, "  max rto (ms): %" PRIu64, this->maxRtoMs);
+			MS_DUMP_CLEAN(indentation, "  max rtt (ms): %" PRIu64, this->maxRttMs);
+			MS_DUMP_CLEAN(indentation, "  min rtt variance (ms): %" PRIu64, this->minRttVarianceMs);
+			MS_DUMP_CLEAN(indentation, "  rto (ms): %" PRIu64, GetRtoMs());
+			MS_DUMP_CLEAN(indentation, "  srtt (ms): %" PRIu64, GetSrttMs());
+			MS_DUMP_CLEAN(indentation, "</SCTP::RetransmissionTimeout>");
+		}
+
 		void RetransmissionTimeout::ObserveRtt(uint64_t rttMs)
 		{
 			MS_TRACE();

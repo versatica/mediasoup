@@ -66,6 +66,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::TransmissionControlBlock>");
+
 			MS_DUMP_CLEAN(indentation, "  local verification tag: %" PRIu32, this->localVerificationTag);
 			MS_DUMP_CLEAN(indentation, "  remote verification tag: %" PRIu32, this->remoteVerificationTag);
 			MS_DUMP_CLEAN(indentation, "  local initial tsn: %" PRIu32, this->localInitialTsn);
@@ -75,7 +76,11 @@ namespace RTC
 			  "  remote advertised receiver window credit: %" PRIu32,
 			  this->remoteAdvertisedReceiverWindowCredit);
 			MS_DUMP_CLEAN(indentation, "  tie-tag: %" PRIu64, this->tieTag);
+
 			this->negotiatedCapabilities.Dump(indentation + 1);
+
+			this->rto.Dump(indentation + 1);
+
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");
 		}
 

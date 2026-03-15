@@ -37,6 +37,7 @@ namespace RTC
 
 			~TransmissionControlBlock() override;
 
+		public:
 			void Dump(int indentation = 0) const;
 
 			/**

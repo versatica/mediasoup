@@ -27,6 +27,8 @@ namespace RTC
 			~RetransmissionTimeout();
 
 		public:
+			void Dump(int indentation = 0) const;
+
 			/**
 			 * To be called when a RTT has been measured, to update the RTO value.
 			 */
