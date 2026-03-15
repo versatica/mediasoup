@@ -18,7 +18,7 @@ namespace RTC
 		 * The Transmission Control Block (TCB) represents an SCTP connection with
 		 * a peer and holds all its state.
 		 *
-		 * @see https://datatracker.ietf.org/doc/html/rfc9260#name-recommended-transmission-co
+		 * @see https://datatracker.ietf.org/doc/html/rfc9260#section-14
 		 */
 		class TransmissionControlBlock : public BackoffTimerHandle::Listener
 		{
