@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
-#include "RTC/SCTP/Types.hpp"
+#include "RTC/SCTP/SctpTypes.hpp"
 #include "RTC/Serializable.hpp"
 #include <string_view>
 

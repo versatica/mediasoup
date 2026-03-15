@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/SctpTypes.hpp"
 #include "RTC/SCTP/StateCookie.hpp"
-#include "RTC/SCTP/Types.hpp"
 #include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()

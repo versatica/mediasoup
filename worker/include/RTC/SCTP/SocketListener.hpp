@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/Message.hpp"
-#include "RTC/SCTP/Types.hpp"
+#include "RTC/SCTP/SctpTypes.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include <span>
 #include <string_view>

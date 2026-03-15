@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_SCTP_OPTIONS_HPP
-#define MS_RTC_SCTP_SCTP_OPTIONS_HPP
+#ifndef MS_RTC_SCTP_OPTIONS_HPP
+#define MS_RTC_SCTP_OPTIONS_HPP
 
 #include "common.hpp"
 #include "RTC/Consts.hpp"
