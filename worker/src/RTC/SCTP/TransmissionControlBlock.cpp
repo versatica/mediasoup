@@ -1,8 +1,10 @@
+#include <cstdint>
 #define MS_CLASS "RTC::SCTP::TransmissionControlBlock"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/TransmissionControlBlock.hpp"
 #include "Logger.hpp"
+#include "RTC/SCTP/TransmissionControlBlock.hpp"
+#include <cmath> // std::min()
 
 namespace RTC
 {
@@ -35,7 +37,21 @@ namespace RTC
 		    remoteAdvertisedReceiverWindowCredit(remoteAdvertisedReceiverWindowCredit),
 		    tieTag(tieTag),
 		    negotiatedCapabilities(negotiatedCapabilities),
-		    rto(sctpOptions)
+		    rto(sctpOptions),
+		    t3RtxTimer(
+		      std::make_unique<BackoffTimerHandle>(
+		        /*listener*/ this,
+		        /*baseTimeoutMs*/ sctpOptions.initialRtoMs,
+		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
+		        /*maxRestarts*/ std::nullopt)),
+		    delayedAckTimer(
+		      std::make_unique<BackoffTimerHandle>(
+		        /*listener*/ this,
+		        /*baseTimeoutMs*/ sctpOptions.delayedAckMaxTimeoutMs,
+		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*maxBackoffTimeoutMs*/ std::nullopt,
+		        /*maxRestarts*/ 0))
 		{
 			MS_TRACE();
 		}
@@ -63,11 +79,29 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");
 		}
 
-		void TransmissionControlBlock::ObserveRtt(uint32_t rtt)
+		void TransmissionControlBlock::ObserveRtt(uint64_t rtt)
 		{
 			MS_TRACE();
 
-			// TODO
+			const auto prevRtoMs = this->rto.GetRtoMs();
+
+			this->rto.ObserveRtt(rtt);
+
+			MS_DEBUG_DEV(
+			  "new rtt:%" PRIu64 ", previous rto:%" PRIu64 ", new rto:%" PRIu64 ", srtt:%" PRIu64,
+			  rtt,
+			  prevRtoMs,
+			  this->rto.GetRtoMs(),
+			  this - rto.GetSrttMs());
+
+			this->t3RtxTimer->SetBaseTimeoutMs(this->rto.GetRtoMs());
+			this->t3RtxTimer->Start();
+
+			const uint64_t delayedAckTimeoutMs = std::min(
+			  static_cast<uint64_t>(this->rto.GetRtoMs() * 0.5), this->sctpOptions.delayedAckMaxTimeoutMs);
+
+			this->delayedAckTimer->SetBaseTimeoutMs(delayedAckTimeoutMs);
+			this->delayedAckTimer->Start();
 		}
 
 		std::unique_ptr<Packet> TransmissionControlBlock::CreatePacket() const
@@ -90,6 +124,51 @@ namespace RTC
 			packet->SetVerificationTag(verificationTag);
 
 			return packet;
+		}
+
+		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& baseTimeoutMs, bool& stop)
+		{
+			MS_TRACE();
+
+			const auto maxRestarts = this->t3RtxTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "T3-rtx timer has expired %zu/%s]",
+			  this->t3RtxTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+
+			// TODO
+		}
+
+		void TransmissionControlBlock::OnDelayedAckTimer(uint64_t& baseTimeoutMs, bool& stop)
+		{
+			MS_TRACE();
+
+			const auto maxRestarts = this->delayedAckTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "delayer ack timer has expired %zu/%s]",
+			  this->delayedAckTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+
+			// TODO
+		}
+
+		void TransmissionControlBlock::OnTimer(
+		  BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		{
+			MS_TRACE();
+
+			if (backoffTimer == this->t3RtxTimer.get())
+			{
+				OnT3RtxTimer(baseTimeoutMs, stop);
+			}
+			else if (backoffTimer == this->delayedAckTimer.get())
+			{
+				OnDelayedAckTimer(baseTimeoutMs, stop);
+			}
 		}
 	} // namespace SCTP
 } // namespace RTC

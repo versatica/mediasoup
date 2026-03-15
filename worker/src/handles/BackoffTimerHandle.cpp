@@ -93,9 +93,9 @@ uint64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 				timeoutMs *= 2;
 				--expirationCount;
 
-				if (this->maxBackoffTimeoutMs.has_value() && timeoutMs > *this->maxBackoffTimeoutMs)
+				if (this->maxBackoffTimeoutMs.has_value() && timeoutMs > this->maxBackoffTimeoutMs.value())
 				{
-					return *this->maxBackoffTimeoutMs;
+					return this->maxBackoffTimeoutMs.value();
 				}
 			}
 
@@ -115,7 +115,8 @@ void BackoffTimerHandle::OnTimer(TimerHandle* timer)
 	// Compute whether the BackoffTimer should still be running after this timeout
 	// expiration so the parent can check IsRunning() within the OnTimer()
 	// callback.
-	this->running = !this->maxRestarts.has_value() || this->expirationCount <= *this->maxRestarts;
+	this->running =
+	  !this->maxRestarts.has_value() || this->expirationCount <= this->maxRestarts.value();
 
 	uint64_t baseTimeoutMs{ this->baseTimeoutMs };
 	bool stop{ false };

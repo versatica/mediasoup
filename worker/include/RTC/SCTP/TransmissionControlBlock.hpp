@@ -8,6 +8,7 @@
 #include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/SocketListener.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
+#include "handles/BackoffTimerHandle.hpp"
 
 namespace RTC
 {
@@ -19,7 +20,7 @@ namespace RTC
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/rfc9260#name-recommended-transmission-co
 		 */
-		class TransmissionControlBlock
+		class TransmissionControlBlock : public BackoffTimerHandle::Listener
 		{
 		public:
 			TransmissionControlBlock(
@@ -34,7 +35,7 @@ namespace RTC
 			  uint64_t tieTag,
 			  const NegotiatedCapabilities& negotiatedCapabilities);
 
-			~TransmissionControlBlock();
+			~TransmissionControlBlock() override;
 
 			void Dump(int indentation = 0) const;
 
@@ -101,9 +102,9 @@ namespace RTC
 				return this->negotiatedCapabilities;
 			}
 
-			void ObserveRtt(uint32_t rtt);
+			void ObserveRtt(uint64_t rtt);
 
-			uint32_t GetCurrentRtoMs() const
+			uint64_t GetCurrentRtoMs() const
 			{
 				return this->rto.GetRtoMs();
 			}
@@ -111,6 +112,15 @@ namespace RTC
 			std::unique_ptr<Packet> CreatePacket() const;
 
 			std::unique_ptr<Packet> CreatePacketWithVerificationTag(uint32_t verificationTag) const;
+
+		private:
+			void OnT3RtxTimer(uint64_t& baseTimeoutMs, bool& stop);
+
+			void OnDelayedAckTimer(uint64_t& baseTimeoutMs, bool& stop);
+
+			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
+		public:
+			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			SocketListener& listener;
@@ -124,6 +134,11 @@ namespace RTC
 			uint64_t tieTag{ 0 };
 			NegotiatedCapabilities negotiatedCapabilities;
 			RetransmissionTimeout rto;
+			// data retransmission timer).
+			const std::unique_ptr<BackoffTimerHandle> t3RtxTimer;
+			// Delayed ack timer, which triggers when acks should be sent (when
+			// delayed).
+			const std::unique_ptr<BackoffTimerHandle> delayedAckTimer;
 		};
 	} // namespace SCTP
 } // namespace RTC

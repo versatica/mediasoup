@@ -30,12 +30,12 @@ namespace RTC
 			/**
 			 * To be called when a RTT has been measured, to update the RTO value.
 			 */
-			void ObserveRtt(uint32_t rtt);
+			void ObserveRtt(uint64_t rtt);
 
 			/**
 			 * Returns the Retransmission Timeout (RTO) value.
 			 */
-			uint32_t GetRtoMs() const
+			uint64_t GetRtoMs() const
 			{
 				return this->rtoMs;
 			}
@@ -43,16 +43,16 @@ namespace RTC
 			/**
 			 * Returns the smoothed RTT value.
 			 */
-			uint32_t GetSrttMs() const
+			uint64_t GetSrttMs() const
 			{
 				return this->srttMs;
 			}
 
 		private:
-			uint32_t minRtoMs{ 0 };
-			uint32_t maxRtoMs{ 0 };
-			uint32_t maxRttMs{ 0 };
-			uint32_t minRttVarianceMs{ 0 };
+			uint64_t minRtoMs{ 0 };
+			uint64_t maxRtoMs{ 0 };
+			uint64_t maxRttMs{ 0 };
+			uint64_t minRttVarianceMs{ 0 };
 			double srttMs{ 0 };
 			double rttVarMs{ 0 };
 			double rtoMs{ 0 };

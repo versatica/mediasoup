@@ -96,22 +96,22 @@ namespace RTC
 			 * RTO calculation. The default value is an extreme maximum but can be
 			 * adapted to better match the environment.
 			 */
-			uint32_t maxRttMs{ 60000 };
+			uint64_t maxRttMs{ 60000 };
 
 			/**
 			 * Initial RTO value.
 			 */
-			uint32_t initialRtoMs{ 500 };
+			uint64_t initialRtoMs{ 500 };
 
 			/**
 			 * Minimum RTO value.
 			 */
-			uint32_t minRtoMs{ 400 };
+			uint64_t minRtoMs{ 400 };
 
 			/**
 			 * Minimum RTO value.
 			 */
-			uint32_t maxRtoMs{ 60000 };
+			uint64_t maxRtoMs{ 60000 };
 
 			/**
 			 * T1-init timeout (ms).

@@ -5,11 +5,11 @@
 
 SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 {
-	constexpr uint32_t MaxRttMs{ 8000 };
-	constexpr uint32_t InitialRtoMs{ 200 };
-	constexpr uint32_t MaxRtoMs{ 800 };
-	constexpr uint32_t MinRtoMs{ 120 };
-	constexpr uint32_t MinRttVarianceMs{ 220 };
+	constexpr uint64_t MaxRttMs{ 8000 };
+	constexpr uint64_t InitialRtoMs{ 200 };
+	constexpr uint64_t MaxRtoMs{ 800 };
+	constexpr uint64_t MinRtoMs{ 120 };
+	constexpr uint64_t MinRttVarianceMs{ 220 };
 
 	// NOTE: No need to pass const integers to the lambda.
 	auto makeSctpOptions = []()

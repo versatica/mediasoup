@@ -103,9 +103,9 @@ public:
 	 * @remarks
 	 * - If `maxRestarts` was not given in the constructor, this method returns 0.
 	 */
-	size_t GetMaxRestarts() const
+	std::optional<size_t> GetMaxRestarts() const
 	{
-		return this->maxRestarts.value_or(0);
+		return this->maxRestarts;
 	}
 
 	/**

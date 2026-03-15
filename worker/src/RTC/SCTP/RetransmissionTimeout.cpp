@@ -42,7 +42,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void RetransmissionTimeout::ObserveRtt(uint32_t rttMs)
+		void RetransmissionTimeout::ObserveRtt(uint64_t rttMs)
 		{
 			MS_TRACE();
 
@@ -51,7 +51,7 @@ namespace RTC
 			// would take a very long time to recover.
 			if (rttMs == 0 || rttMs > this->maxRttMs)
 			{
-				MS_WARN_TAG(sctp, "skipping given unrealistic rttMs value %" PRIu32, rttMs);
+				MS_WARN_TAG(sctp, "skipping given unrealistic rttMs value %" PRIu64, rttMs);
 
 				return;
 			}
@@ -77,7 +77,7 @@ namespace RTC
 			  std::clamp(
 			    this->rtoMs, static_cast<double>(this->minRtoMs), static_cast<double>(this->maxRtoMs)));
 
-			MS_DEBUG_DEV("new computed RTO: %" PRIu32 " ms", this->rtoMs);
+			MS_DEBUG_DEV("new computed RTO: %" PRIu64 " ms", this->rtoMs);
 		}
 	} // namespace SCTP
 } // namespace RTC

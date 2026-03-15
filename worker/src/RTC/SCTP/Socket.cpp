@@ -49,21 +49,21 @@ namespace RTC
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.t1InitTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeout*/ sctpOptions.timerMaxBackoffTimeoutMs,
+		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ sctpOptions.maxInitRetransmissions)),
 		    t1CookieTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.t1CookieTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeout*/ sctpOptions.timerMaxBackoffTimeoutMs,
+		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ sctpOptions.maxInitRetransmissions)),
 		    t2ShutdownTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.t2ShutdownTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeout*/ sctpOptions.timerMaxBackoffTimeoutMs,
+		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ sctpOptions.maxRetransmissions))
 
 		// TODO: Set RRSendQueue this->sendQueue.
@@ -670,8 +670,7 @@ namespace RTC
 
 			this->packetSender.SendPacket(packet.get());
 
-			// TODO
-			// this->t2ShutdownTimer->SetBaseTimeout(this->tcb->GetCurrentRtoMs());
+			this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
 			this->t2ShutdownTimer->Start();
 		}
 
@@ -2263,11 +2262,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const auto maxRestarts = this->t1InitTimer->GetMaxRestarts();
+
 			MS_DEBUG_TAG(
 			  sctp,
-			  "T1-init timer has expired %zu/%zu]",
+			  "T1-init timer has expired %zu/%s]",
 			  this->t1InitTimer->GetExpirationCount(),
-			  this->t1InitTimer->GetMaxRestarts());
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			AssertAssociationState(AssociationState::COOKIE_WAIT);
 
@@ -2287,11 +2288,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const auto maxRestarts = this->t1CookieTimer->GetMaxRestarts();
+
 			MS_DEBUG_TAG(
 			  sctp,
-			  "T1-cookie timer has expired %zu/%zu]",
+			  "T1-cookie timer has expired %zu/%s]",
 			  this->t1CookieTimer->GetExpirationCount(),
-			  this->t1CookieTimer->GetMaxRestarts());
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			AssertAssociationState(AssociationState::COOKIE_ECHOED);
 
@@ -2312,11 +2315,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const auto maxRestarts = this->t2ShutdownTimer->GetMaxRestarts();
+
 			MS_DEBUG_TAG(
 			  sctp,
-			  "T2-shutdown timer has expired %zu/%zu]",
+			  "T2-shutdown timer has expired %zu/%s]",
 			  this->t2ShutdownTimer->GetExpirationCount(),
-			  this->t2ShutdownTimer->GetMaxRestarts());
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
 			//
