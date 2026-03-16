@@ -65,6 +65,9 @@ namespace RTC
 
 						NO_DEFAULT_GCC();
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 
 			/**
@@ -163,6 +166,9 @@ namespace RTC
 						return "UNSUPPORTED_OPERATION";
 					}
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 
 			/**
@@ -203,6 +209,9 @@ namespace RTC
 
 						NO_DEFAULT_GCC();
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 
 			/**
@@ -247,6 +256,9 @@ namespace RTC
 						return "NOT_SUPPORTED";
 					}
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 
 			/**
@@ -314,6 +326,9 @@ namespace RTC
 						return "ERROR_SHUTTING_DOWN";
 					}
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 		} // namespace Types
 	} // namespace SCTP
