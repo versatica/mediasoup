@@ -2,13 +2,13 @@
 #define MS_RTC_SCTP_TRANSMISSION_CONTROL_BLOCK_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/AssociationListener.hpp"
-#include "RTC/SCTP/NegotiatedCapabilities.hpp"
-#include "RTC/SCTP/PacketSender.hpp"
-#include "RTC/SCTP/RetransmissionErrorCounter.hpp"
-#include "RTC/SCTP/RetransmissionTimeout.hpp"
-#include "RTC/SCTP/SctpOptions.hpp"
+#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/PacketSender.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
+#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
+#include "RTC/SCTP/tx/RetransmissionTimeout.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include <vector>
 

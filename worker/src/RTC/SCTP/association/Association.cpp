@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::Association"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/Association.hpp"
+#include "RTC/SCTP/association/Association.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"

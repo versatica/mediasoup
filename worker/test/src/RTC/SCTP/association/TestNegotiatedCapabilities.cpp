@@ -1,11 +1,11 @@
 #include "common.hpp"
-#include "RTC/SCTP/NegotiatedCapabilities.hpp"
-#include "RTC/SCTP/SctpOptions.hpp"
+#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 

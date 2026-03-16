@@ -2,16 +2,11 @@
 #define MS_RTC_SCTP_ASSOCIATION_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/AssociationDeferredListener.hpp"
-#include "RTC/SCTP/AssociationListener.hpp"
-#include "RTC/SCTP/AssociationMetrics.hpp"
-#include "RTC/SCTP/Message.hpp"
-#include "RTC/SCTP/NegotiatedCapabilities.hpp"
-#include "RTC/SCTP/PacketSender.hpp"
-#include "RTC/SCTP/SctpOptions.hpp"
-#include "RTC/SCTP/SctpTypes.hpp"
-#include "RTC/SCTP/StateCookie.hpp"
-#include "RTC/SCTP/TransmissionControlBlock.hpp"
+#include "RTC/SCTP/association/AssociationDeferredListener.hpp"
+#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/PacketSender.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
+#include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
@@ -35,6 +30,12 @@
 #include "RTC/SCTP/packet/chunks/ShutdownChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
+#include "RTC/SCTP/public/AssociationInterface.hpp"
+#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationMetrics.hpp"
+#include "RTC/SCTP/public/Message.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SCTP/public/SctpTypes.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include <span>
 #include <string_view>
@@ -45,12 +46,11 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * The SCTP Association class represents the mediasoup side of an SCTP
-		 * association with a peer.
-		 *
-		 * It manages all Packet and Chunk dispatching and the connection flow.
+		 * This is the implementation of the AssociationInterface.
 		 */
-		class Association : public PacketSender::Listener, public BackoffTimerHandle::Listener
+		class Association : public AssociationInterface,
+		                    public PacketSender::Listener,
+		                    public BackoffTimerHandle::Listener
 		{
 		public:
 			/**
@@ -161,9 +161,9 @@ namespace RTC
 
 			~Association() override;
 
-			void Dump(int indentation = 0) const;
+			void Dump(int indentation = 0) const override;
 
-			Types::AssociationState GetAssociationState() const;
+			Types::AssociationState GetAssociationState() const override;
 
 			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
@@ -172,7 +172,7 @@ namespace RTC
 			 * @remarks
 			 * - The SCTP association must be in Closed state.
 			 */
-			void Connect();
+			void Connect() override;
 
 			/**
 			 * Gracefully shutdowns the Association and sends all outstanding data.
@@ -185,7 +185,7 @@ namespace RTC
 			 *
 			 * @see https://issues.webrtc.org/issues/42222897
 			 */
-			void Shutdown();
+			void Shutdown() override;
 
 			/**
 			 * Closes the Association non-gracefully. Will send ABORT if the connection
@@ -193,50 +193,50 @@ namespace RTC
 			 * returned. However, before Close() returns, it may have called
 			 * `OnAssociationClosed()` or `OnAssociationAborted()` callbacks.
 			 */
-			void Close();
+			void Close() override;
 
 			/**
 			 * Retrieves the latest metrics. If the Association is not fully connected,
 			 * `std::nullopt` will be returned.
 			 */
-			std::optional<AssociationMetrics> GetMetrics() const;
+			std::optional<AssociationMetrics> GetMetrics() const override;
 
 			/**
 			 * Returns the currently set priority for an outgoing stream. The initial
 			 * value, when not set, is `SctpOptions::defaultStreamPriority`.
 			 */
-			uint16_t GetStreamPriority(uint16_t streamId) const;
+			uint16_t GetStreamPriority(uint16_t streamId) const override;
 
 			/**
 			 * Sets the priority of an outgoing stream. The initial value, when not
 			 * set, is `SctpOptions::defaultStreamPriority`.
 			 */
-			void SetStreamPriority(uint16_t streamId, uint16_t priority);
+			void SetStreamPriority(uint16_t streamId, uint16_t priority) override;
 
 			/**
 			 * Sets the maximum size of sent messages. The initial value, when not
 			 * set, is `SctpOptions::maxSendMessageSize`.
 			 */
-			void SetMaxSendMessageSize(size_t maxMessageSize);
+			void SetMaxSendMessageSize(size_t maxMessageSize) override;
 
 			/**
 			 * Returns the number of bytes of data currently queued to be sent on a
 			 * given stream.
 			 */
-			size_t GetStreamBufferedAmount(uint16_t streamId) const;
+			size_t GetStreamBufferedAmount(uint16_t streamId) const override;
 
 			/**
 			 * Returns the number of buffered outgoing bytes that is considered "low"
 			 * for a given stream. See `SetStreamBufferedAmountLowThreshold()`.
 			 */
-			size_t GetStreamBufferedAmountLowThreshold(uint16_t streamId) const;
+			size_t GetStreamBufferedAmountLowThreshold(uint16_t streamId) const override;
 
 			/**
 			 * Specifies the number of bytes of buffered outgoing data that is
 			 * considered "low" for a given stream, which will trigger
 			 * `OnAssociationStreamBufferedAmountLow()` event. The default value is 0.
 			 */
-			void SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes);
+			void SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes) override;
 
 			/**
 			 * Resetting streams is an asynchronous operation and the results will be
@@ -257,7 +257,7 @@ namespace RTC
 			 *   streams, but will ensure that the currently sent message (if any) is
 			 *   fully sent before closing the stream.
 			 */
-			Types::ResetStreamsStatus ResetStreams(std::span<const uint16_t> outboundStreamIds);
+			Types::ResetStreamsStatus ResetStreams(std::span<const uint16_t> outboundStreamIds) override;
 
 			/**
 			 * Sends a SCTP message using the provided send options. Sending a message
@@ -273,7 +273,8 @@ namespace RTC
 			 *   we don't pass a reference here. We could pass `Message&&` but that's
 			 *   worse opens the door to bugs.
 			 */
-			Types::SendMessageStatus SendMessage(Message message, const SendMessageOptions& sendMessageOptions);
+			Types::SendMessageStatus SendMessage(
+			  Message message, const SendMessageOptions& sendMessageOptions) override;
 
 			/**
 			 * Sends SCTP messages using the provided send options. Sending a message
@@ -291,7 +292,7 @@ namespace RTC
 			 * - Same as in `SendMessage()`.
 			 */
 			std::vector<Types::SendMessageStatus> SendManyMessages(
-			  std::span<Message> messages, const SendMessageOptions& sendMessageOptions);
+			  std::span<Message> messages, const SendMessageOptions& sendMessageOptions) override;
 
 			/**
 			 * Receive a Packet received from the remote peer.
@@ -300,7 +301,7 @@ namespace RTC
 			 * - The caller is responsible of freeing given Packet once this method
 			 *   returns.
 			 */
-			void ReceivePacket(const Packet* receivedPacket);
+			void ReceivePacket(const Packet* receivedPacket) override;
 
 		private:
 			void InternalClose(Types::ErrorKind errorKind, const std::string_view& message);

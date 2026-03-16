@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "RTC/SCTP/RetransmissionErrorCounter.hpp"
-#include "RTC/SCTP/SctpOptions.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <optional>
 

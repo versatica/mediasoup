@@ -2,8 +2,8 @@
 #define MS_RTC_SCTP_NEGOTIATED_CAPABILITIES_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/packet/chunks/AnyInitChunk.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
 
 namespace RTC
 {

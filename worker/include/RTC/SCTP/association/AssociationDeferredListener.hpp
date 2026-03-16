@@ -2,10 +2,10 @@
 #define MS_RTC_SCTP_ASSOCIATION_DEFERRED_LISTENER_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/AssociationListener.hpp"
-#include "RTC/SCTP/Message.hpp"
-#include "RTC/SCTP/SctpTypes.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
+#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/Message.hpp"
+#include "RTC/SCTP/public/SctpTypes.hpp"
 #include <span>
 #include <string>
 #include <string_view>

@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "RTC/SCTP/RetransmissionTimeout.hpp"
-#include "RTC/SCTP/SctpOptions.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SCTP/tx/RetransmissionTimeout.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")

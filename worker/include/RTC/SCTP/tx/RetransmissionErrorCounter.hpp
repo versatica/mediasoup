@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_RETRANSMISSION_ERROR_COUNTER_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/SctpOptions.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
 #include <string_view>
 
 namespace RTC

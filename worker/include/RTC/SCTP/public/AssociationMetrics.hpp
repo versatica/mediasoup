@@ -2,8 +2,8 @@
 #define MS_RTC_SCTP_ASSOCIATION_METRICS_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/SctpTypes.hpp"
-#include "RTC/SCTP/StateCookie.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
+#include "RTC/SCTP/public/SctpTypes.hpp"
 
 namespace RTC
 {

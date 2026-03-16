@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::Message"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/Message.hpp"
+#include "RTC/SCTP/public/Message.hpp"
 #include "Logger.hpp"
 
 namespace RTC

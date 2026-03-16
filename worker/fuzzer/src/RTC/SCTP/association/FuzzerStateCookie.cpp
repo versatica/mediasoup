@@ -1,6 +1,6 @@
 #include "RTC/SCTP/FuzzerStateCookie.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/StateCookie.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memcpy()
 

@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::AssociationMetrics"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/AssociationMetrics.hpp"
+#include "RTC/SCTP/public/AssociationMetrics.hpp"
 #include "Logger.hpp"
 
 namespace RTC

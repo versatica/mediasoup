@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_RETRANSMISSION_TIMEOUT_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/SctpOptions.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
 
 namespace RTC
 {
