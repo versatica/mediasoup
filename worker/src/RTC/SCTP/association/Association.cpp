@@ -293,6 +293,9 @@ namespace RTC
 
 			// TODO: Implement it.
 			// return this->sendQueue.GetStreamPriority(streamId);
+
+			// TODO: Remove.
+			return 0;
 		}
 
 		void Association::SetStreamPriority(uint16_t streamId, uint16_t priority)
@@ -316,6 +319,9 @@ namespace RTC
 
 			// TODO: Implement it.
 			// return this->sendQueue.GetStreamBufferedAmount(streamId);
+
+			// TODO: Remove.
+			return 0;
 		}
 
 		size_t Association::GetStreamBufferedAmountLowThreshold(uint16_t streamId) const
@@ -324,6 +330,9 @@ namespace RTC
 
 			// TODO: Implement it.
 			// return this->sendQueue.GetStreamBufferedAmountLowThreshold(streamId);
+
+			// TODO: Remove.
+			return 0;
 		}
 
 		void Association::SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes)
@@ -382,7 +391,8 @@ namespace RTC
 				return status;
 			}
 
-			const uint64_t now = DepLibUV::GetTimeMs();
+			// TODO: Uncomment.
+			// const uint64_t now = DepLibUV::GetTimeMs();
 
 			this->privateMetrics.txMessagesCount++;
 
@@ -407,7 +417,8 @@ namespace RTC
 
 			AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
-			const uint64_t now = DepLibUV::GetTimeMs();
+			// TODO: Uncomment.
+			// const uint64_t now = DepLibUV::GetTimeMs();
 			std::vector<Types::SendMessageStatus> statuses;
 
 			statuses.reserve(messages.size());
@@ -2073,8 +2084,9 @@ namespace RTC
 				return;
 			}
 
-			const uint32_t tsn      = receivedAnyDataChunk->GetTsn();
-			const bool immediateAck = receivedAnyDataChunk->GetI();
+			const uint32_t tsn = receivedAnyDataChunk->GetTsn();
+			// TODO: Uncomment.
+			// const bool immediateAck = receivedAnyDataChunk->GetI();
 
 			if (receivedAnyDataChunk->GetUserDataPayloadLength() == 0)
 			{

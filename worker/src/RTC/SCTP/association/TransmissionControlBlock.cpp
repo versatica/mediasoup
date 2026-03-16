@@ -93,7 +93,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
+#if MS_LOG_DEV_LEVEL == 3
 			const auto prevRtoMs = this->rto.GetRtoMs();
+#endif
 
 			this->rto.ObserveRtt(rtt);
 
