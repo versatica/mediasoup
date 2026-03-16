@@ -269,7 +269,7 @@ namespace RTC
 				// .rtxPacketsCount = this->tcb->GetRetransmissionQueue().GetRtxPacketsCount(),
 				// .rtxBytesCount   = this->tcb->GetRetransmissionQueue().GetRtxBytesCount(),
 				// .cwndBytes       = this->tcb->GetCwnd(),
-				// .srttMs          = this->tcb->GetCurrentSrttMs(),
+				.srttMs = this->tcb->GetCurrentSrttMs(),
 				// .unackDataCount =
 				//   this->tcb->GetRetransmissionQueue().GetUnackedItems() +
 				//   (this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) / packetPayloadLength,
@@ -349,14 +349,14 @@ namespace RTC
 				return Types::ResetStreamsStatus::NOT_CONNECTED;
 			}
 
-			// TODO: Implement it.
-			// if (!this->tcb->GetCapabilities().reConfig)
-			// {
-			//   this->listener.OnAssociationError(Types::ErrorKind::UNSUPPORTED_OPERATION,
-			//                      "cannot reset outbound streams as the remote doesn't support it");
+			if (!this->tcb->GetNegotiatedCapabilities().reConfig)
+			{
+				this->listener.OnAssociationError(
+				  Types::ErrorKind::UNSUPPORTED_OPERATION,
+				  "cannot reset outbound streams as the remote doesn't support it");
 
-			//   return Types::ResetStreamsStatus::NOT_SUPPORTED;
-			// }
+				return Types::ResetStreamsStatus::NOT_SUPPORTED;
+			}
 
 			// TODO: Implement it.
 			// this->tcb->GetStreamResetHandler().ResetStreams(outboundStreamIds);
@@ -467,12 +467,12 @@ namespace RTC
 				}
 			}
 
-			// TODO: Implement it.
-			// if (this->tcb)
-			// {
-			//   this->tcb->GetDadaTracker().ObservePacketEnd();
-			//   this->tcb->MaySendSack();
-			// }
+			if (this->tcb)
+			{
+				// TODO: Implement it.
+				// this->tcb->GetDadaTracker().ObservePacketEnd();
+				this->tcb->MaySendSackChunk();
+			}
 
 			AssertStateIsConsistent();
 		}
@@ -659,7 +659,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			AssertHasTcb();
+
+			auto packet         = this->tcb->CreatePacket();
+			auto* shutdownChunk = packet->BuildChunkInPlace<ShutdownChunk>();
+
+			// TODO: Implement it.
+			// shutdownChunk->SetCumulativeTsnAck(this->tcb->GetDataTracker().GetLastCumulativeAckedTsn());
+			shutdownChunk->Consolidate();
+
+			this->packetSender.SendPacket(packet.get());
 		}
 
 		void Association::SendShutdownAckChunk()
@@ -700,8 +709,7 @@ namespace RTC
 			{
 				SendShutdownChunk();
 
-				// TODO: Implement it.
-				// this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
+				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
 				this->t2ShutdownTimer->Start();
 
 				SetState(State::SHUTDOWN_SENT, "no more outstanding data");
@@ -753,8 +761,7 @@ namespace RTC
 			{
 				SendShutdownChunk();
 
-				// TODO: Implement it.
-				// this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
+				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
 				this->t2ShutdownTimer->Start();
 			}
 		}
@@ -1546,7 +1553,7 @@ namespace RTC
 				// Association is closed and later re-opened, which never happens in
 				// WebRTC, but is a valid operation on the SCTP level.
 				// TODO: Implement it.
-				// this->sendQqueue.Reset();
+				// this->sendQueue.Reset();
 
 				CreateTransmissionControlBlock(
 				  cookie->GetLocalVerificationTag(),
@@ -2514,9 +2521,9 @@ namespace RTC
 					MS_ASSERT(
 					  !this->t2ShutdownTimer->IsRunning(),
 					  "internal state is COOKIE_ECHOED but T2 Shutdown timer is running");
-					// TODO: Implement this.
-					// MS_ASSERT(this->tcb->HasCookieEchoChunk(), "internal state is COOKIE_ECHOED but TCB
-					// does't have ECHO chunk");
+					MS_ASSERT(
+					  this->tcb->HasRemoteStateCookie(),
+					  "internal state is COOKIE_ECHOED but TCB does't have remote state cookie");
 
 					break;
 				}

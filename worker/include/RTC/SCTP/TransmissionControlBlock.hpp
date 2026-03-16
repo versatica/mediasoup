@@ -112,6 +112,11 @@ namespace RTC
 				return this->rto.GetRtoMs();
 			}
 
+			uint64_t GetCurrentSrttMs() const
+			{
+				return this->rto.GetSrttMs();
+			}
+
 			std::unique_ptr<Packet> CreatePacket() const;
 
 			std::unique_ptr<Packet> CreatePacketWithVerificationTag(uint32_t verificationTag) const;
@@ -125,7 +130,11 @@ namespace RTC
 				return this->remoteStateCookie.has_value();
 			}
 
+			void MaySendSackChunk();
+
 		private:
+			void Send(Packet* packet);
+
 			void OnT3RtxTimer(uint64_t& baseTimeoutMs, bool& stop);
 
 			void OnDelayedAckTimer(uint64_t& baseTimeoutMs, bool& stop);
