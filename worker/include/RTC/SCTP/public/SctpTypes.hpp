@@ -62,6 +62,8 @@ namespace RTC
 					{
 						return "ShuttingDown";
 					}
+
+						NO_DEFAULT_GCC();
 				}
 			}
 
@@ -198,6 +200,8 @@ namespace RTC
 					{
 						return "usrsctp";
 					}
+
+						NO_DEFAULT_GCC();
 				}
 			}
 

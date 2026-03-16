@@ -137,6 +137,8 @@ namespace RTC
 				{
 					return Types::AssociationState::SHUTTING_DOWN;
 				}
+
+					NO_DEFAULT_GCC();
 			}
 		}
 
