@@ -69,16 +69,17 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		auto userData1 = chunk->GetUserData();
+		auto userData = chunk->GetUserData();
 
 		std::vector<uint8_t> expectedPayload = { 0xAB, 0xCD, 0xEF };
 
-		REQUIRE(userData1.GetStreamId() == 0xFF00);
-		REQUIRE(userData1.GetStreamSequenceNumber() == 0x6677);
-		REQUIRE(userData1.GetMessageId() == 0);
-		REQUIRE(userData1.GetFragmentSequenceNumber() == 0);
-		REQUIRE(userData1.GetPayloadProtocolId() == 0x12341234);
-		REQUIRE(std::move(userData1).ReleasePayload() == expectedPayload);
+		REQUIRE(userData.GetStreamId() == 0xFF00);
+		REQUIRE(userData.GetStreamSequenceNumber() == 0x6677);
+		REQUIRE(userData.GetMessageId() == 0);
+		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
+		REQUIRE(userData.GetPayloadProtocolId() == 0x12341234);
+		// NOLINTNEXTLINE(bugprone-use-after-move)
+		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		/* Serialize it. */
 
@@ -116,14 +117,15 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		auto userData2 = chunk->GetUserData();
+		userData = chunk->GetUserData();
 
-		REQUIRE(userData2.GetStreamId() == 0xFF00);
-		REQUIRE(userData2.GetStreamSequenceNumber() == 0x6677);
-		REQUIRE(userData2.GetMessageId() == 0);
-		REQUIRE(userData2.GetFragmentSequenceNumber() == 0);
-		REQUIRE(userData2.GetPayloadProtocolId() == 0x12341234);
-		REQUIRE(std::move(userData2).ReleasePayload() == expectedPayload);
+		REQUIRE(userData.GetStreamId() == 0xFF00);
+		REQUIRE(userData.GetStreamSequenceNumber() == 0x6677);
+		REQUIRE(userData.GetMessageId() == 0);
+		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
+		REQUIRE(userData.GetPayloadProtocolId() == 0x12341234);
+		// NOLINTNEXTLINE(bugprone-use-after-move)
+		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		/* Clone it. */
 
@@ -163,14 +165,15 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(clonedChunk->GetUserDataPayload()[3] == 0x00);
 
-		auto userData3 = clonedChunk->GetUserData();
+		userData = clonedChunk->GetUserData();
 
-		REQUIRE(userData3.GetStreamId() == 0xFF00);
-		REQUIRE(userData3.GetStreamSequenceNumber() == 0x6677);
-		REQUIRE(userData3.GetMessageId() == 0);
-		REQUIRE(userData3.GetFragmentSequenceNumber() == 0);
-		REQUIRE(userData3.GetPayloadProtocolId() == 0x12341234);
-		REQUIRE(std::move(userData3).ReleasePayload() == expectedPayload);
+		REQUIRE(userData.GetStreamId() == 0xFF00);
+		REQUIRE(userData.GetStreamSequenceNumber() == 0x6677);
+		REQUIRE(userData.GetMessageId() == 0);
+		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
+		REQUIRE(userData.GetPayloadProtocolId() == 0x12341234);
+		// NOLINTNEXTLINE(bugprone-use-after-move)
+		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		delete clonedChunk;
 	}
@@ -205,16 +208,17 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->HasUserDataPayload() == false);
 		REQUIRE(chunk->GetUserDataPayloadLength() == 0);
 
-		auto userData1 = chunk->GetUserData();
+		auto userData = chunk->GetUserData();
 
 		std::vector<uint8_t> expectedPayload = {};
 
-		REQUIRE(userData1.GetStreamId() == 0);
-		REQUIRE(userData1.GetStreamSequenceNumber() == 0);
-		REQUIRE(userData1.GetMessageId() == 0);
-		REQUIRE(userData1.GetFragmentSequenceNumber() == 0);
-		REQUIRE(userData1.GetPayloadProtocolId() == 0);
-		REQUIRE(std::move(userData1).ReleasePayload() == expectedPayload);
+		REQUIRE(userData.GetStreamId() == 0);
+		REQUIRE(userData.GetStreamSequenceNumber() == 0);
+		REQUIRE(userData.GetMessageId() == 0);
+		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
+		REQUIRE(userData.GetPayloadProtocolId() == 0);
+		// NOLINTNEXTLINE(bugprone-use-after-move)
+		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		/* Modify it. */
 
@@ -271,16 +275,16 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// Last byte must be a zero byte padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		auto userData2 = chunk->GetUserData();
-
+		userData        = chunk->GetUserData();
 		expectedPayload = { 0x00, 0x01, 0x02 };
 
-		REQUIRE(userData2.GetStreamId() == 9988);
-		REQUIRE(userData2.GetStreamSequenceNumber() == 2211);
-		REQUIRE(userData2.GetMessageId() == 0);
-		REQUIRE(userData2.GetFragmentSequenceNumber() == 0);
-		REQUIRE(userData2.GetPayloadProtocolId() == 987654321);
-		REQUIRE(std::move(userData2).ReleasePayload() == expectedPayload);
+		REQUIRE(userData.GetStreamId() == 9988);
+		REQUIRE(userData.GetStreamSequenceNumber() == 2211);
+		REQUIRE(userData.GetMessageId() == 0);
+		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
+		REQUIRE(userData.GetPayloadProtocolId() == 987654321);
+		// NOLINTNEXTLINE(bugprone-use-after-move)
+		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		/* Parse itself and compare. */
 
@@ -318,14 +322,15 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// Last byte must be a zero byte padding.
 		REQUIRE(parsedChunk->GetUserDataPayload()[3] == 0x00);
 
-		auto userData3 = parsedChunk->GetUserData();
+		userData = parsedChunk->GetUserData();
 
-		REQUIRE(userData3.GetStreamId() == 9988);
-		REQUIRE(userData3.GetStreamSequenceNumber() == 2211);
-		REQUIRE(userData3.GetMessageId() == 0);
-		REQUIRE(userData3.GetFragmentSequenceNumber() == 0);
-		REQUIRE(userData3.GetPayloadProtocolId() == 987654321);
-		REQUIRE(std::move(userData3).ReleasePayload() == expectedPayload);
+		REQUIRE(userData.GetStreamId() == 9988);
+		REQUIRE(userData.GetStreamSequenceNumber() == 2211);
+		REQUIRE(userData.GetMessageId() == 0);
+		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
+		REQUIRE(userData.GetPayloadProtocolId() == 987654321);
+		// NOLINTNEXTLINE(bugprone-use-after-move)
+		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		delete parsedChunk;
 	}
