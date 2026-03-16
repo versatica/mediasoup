@@ -93,6 +93,11 @@ namespace RTC
 			  static_cast<int>(stateStringView.size()),
 			  stateStringView.data());
 
+			if (this->tcb)
+			{
+				this->tcb->Dump(indentation + 1);
+			}
+
 			const auto metrics = GetMetrics();
 
 			if (metrics.has_value())
