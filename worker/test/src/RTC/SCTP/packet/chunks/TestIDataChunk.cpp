@@ -77,7 +77,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetMessageId() == 1234567890);
 		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(userData.GetPayloadProtocolId() == 99887766);
-		// NOLINTNEXTLINE(bugprone-use-after-move)
+		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		// Bit B is not set so cannot set FSN.
@@ -128,7 +128,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetMessageId() == 1234567890);
 		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(userData.GetPayloadProtocolId() == 99887766);
-		// NOLINTNEXTLINE(bugprone-use-after-move)
+		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		/* Clone it. */
@@ -176,7 +176,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetMessageId() == 1234567890);
 		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(userData.GetPayloadProtocolId() == 99887766);
-		// NOLINTNEXTLINE(bugprone-use-after-move)
+		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 	}
 
@@ -221,7 +221,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetMessageId() == 0);
 		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(userData.GetPayloadProtocolId() == 0);
-		// NOLINTNEXTLINE(bugprone-use-after-move)
+		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		/* Modify it. */
@@ -293,7 +293,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetMessageId() == 1234);
 		REQUIRE(userData.GetFragmentSequenceNumber() == 987654321);
 		REQUIRE(userData.GetPayloadProtocolId() == 0);
-		// NOLINTNEXTLINE(bugprone-use-after-move)
+		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
 		/* Parse itself and compare. */
@@ -339,7 +339,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetMessageId() == 1234);
 		REQUIRE(userData.GetFragmentSequenceNumber() == 987654321);
 		REQUIRE(userData.GetPayloadProtocolId() == 0);
-		// NOLINTNEXTLINE(bugprone-use-after-move)
+		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 	}
 
