@@ -5,7 +5,6 @@
 #include "RTC/Consts.hpp"
 #include <openssl/evp.h>
 #include <cmath>
-#include <cstdint>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <limits>  // std::numeric_limits
 #include <random>  // std::mt19937_64, std::uniform_int_distribution, std::random_device

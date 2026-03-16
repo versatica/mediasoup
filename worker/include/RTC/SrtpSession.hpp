@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "FBS/srtpParameters.h"
 #include <srtp.h>
-#include <cstdint>
 
 namespace RTC
 {

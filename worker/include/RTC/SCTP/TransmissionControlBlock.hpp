@@ -5,10 +5,12 @@
 #include "RTC/SCTP/AssociationListener.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/PacketSender.hpp"
+#include "RTC/SCTP/RetransmissionErrorCounter.hpp"
 #include "RTC/SCTP/RetransmissionTimeout.hpp"
 #include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "handles/BackoffTimerHandle.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -114,6 +116,15 @@ namespace RTC
 
 			std::unique_ptr<Packet> CreatePacketWithVerificationTag(uint32_t verificationTag) const;
 
+			void SetRemoteStateCookie(std::vector<uint8_t> remoteStateCookie);
+
+			void ClearRemoteStateCookie();
+
+			bool HasRemoteStateCookie() const
+			{
+				return this->remoteStateCookie.has_value();
+			}
+
 		private:
 			void OnT3RtxTimer(uint64_t& baseTimeoutMs, bool& stop);
 
@@ -126,20 +137,31 @@ namespace RTC
 		private:
 			AssociationListener& associationListener;
 			const SctpOptions sctpOptions;
-			PacketSender packetSender;
+			PacketSender& packetSender;
 			uint32_t localVerificationTag{ 0 };
 			uint32_t remoteVerificationTag{ 0 };
 			uint32_t localInitialTsn{ 0 };
 			uint32_t remoteInitialTsn{ 0 };
 			uint32_t remoteAdvertisedReceiverWindowCredit{ 0 };
+			// Nonce, used to detect reconnections.
 			uint64_t tieTag{ 0 };
 			NegotiatedCapabilities negotiatedCapabilities;
-			RetransmissionTimeout rto;
 			// data retransmission timer).
 			const std::unique_ptr<BackoffTimerHandle> t3RtxTimer;
 			// Delayed ack timer, which triggers when acks should be sent (when
 			// delayed).
 			const std::unique_ptr<BackoffTimerHandle> delayedAckTimer;
+			RetransmissionTimeout rto;
+			RetransmissionErrorCounter txErrorCounter;
+			// Rate limiting of FORWARD_TSN. Next can be sent at or after this
+			// timestamp.
+			uint64_t limitForwardTsnUntilMs{ 0 };
+			// Only valid when state is State::COOKIE_ECHOED. In this state, the
+			// Association must wait for COOKIE_ACK to continue sending any packets (not
+			// including a COOKIE_ECHO). So if this state cookie is present, the
+			// `SendBufferedChunks()` method will always only send one Packet, with
+			// a CookieEchoChunk containing this cookie as the first Chunk in the Packet.
+			std::optional<std::vector<uint8_t>> remoteStateCookie;
 		};
 	} // namespace SCTP
 } // namespace RTC

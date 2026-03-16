@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <string>
 
 namespace RTC
 {

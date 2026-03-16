@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "RTC/RTP/Packet.hpp"
-#include <optional>
 #include <vector>
 
 namespace RTC

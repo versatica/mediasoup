@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include <bitset>  // std::bitset()
 #include <cstring> // std::memcpy
+#include <string>
 
 namespace RTC
 {

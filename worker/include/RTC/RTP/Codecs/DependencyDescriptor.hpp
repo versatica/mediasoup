@@ -3,8 +3,6 @@
 
 #include "common.hpp"
 #include "Utils.hpp" // BitStream.
-#include <cstdint>
-#include <optional>
 
 namespace RTC
 {

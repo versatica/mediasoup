@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "Logger.hpp"
+#include <string>
 #include <vector>
 
 namespace RTC

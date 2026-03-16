@@ -16,8 +16,9 @@
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
-#include <limits>      // std::numeric_limits()
-#include <sstream>     // std::ostringstream
+#include <limits>  // std::numeric_limits()
+#include <sstream> // std::ostringstream
+#include <string>
 #include <type_traits> // std::is_same_v
 
 namespace RTC
@@ -1449,9 +1450,15 @@ namespace RTC
 
 			SetState(State::COOKIE_ECHOED, "INIT_ACK received");
 
-			// The connection isn't fully established just yet.
+			// The connection isn't fully established just yet. Store the state cookie
+			// in the TCB.
+			std::vector<uint8_t> remoteStateCookie(
+			  stateCookieParameter->GetCookie(),
+			  stateCookieParameter->GetCookie() + stateCookieParameter->GetCookieLength());
+
+			this->tcb->SetRemoteStateCookie(std::move(remoteStateCookie));
+
 			// TODO: Implement it.
-			// this->tcb->SetCookieEchoChunk(CookieEchoChunk(cookie->data()));
 			// this->tcb->SendBufferedPackets(callbacks_.Now());
 
 			this->t1CookieTimer->Start();
@@ -1518,8 +1525,7 @@ namespace RTC
 			{
 				if (this->tcb)
 				{
-					// TODO: Implement it.
-					// this->tcb->ClearCookieEchoChunk();
+					this->tcb->ClearRemoteStateCookie();
 				}
 
 				SetState(State::ESTABLISHED, "COOKIE_ECHO received");
@@ -1673,8 +1679,7 @@ namespace RTC
 
 			this->t1CookieTimer->Stop();
 
-			// TODO: Implement this.
-			// this->tcb->ClearCookieEchoChunk();
+			this->tcb->ClearRemoteStateCookie();
 
 			SetState(State::ESTABLISHED, "COOKIE_ACK received");
 

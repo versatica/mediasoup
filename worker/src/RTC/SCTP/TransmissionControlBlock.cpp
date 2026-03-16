@@ -1,10 +1,9 @@
-#include <cstdint>
 #define MS_CLASS "RTC::SCTP::TransmissionControlBlock"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/SCTP/TransmissionControlBlock.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "RTC/SCTP/TransmissionControlBlock.hpp"
 #include <cmath> // std::min()
 
 namespace RTC
@@ -38,7 +37,6 @@ namespace RTC
 		    remoteAdvertisedReceiverWindowCredit(remoteAdvertisedReceiverWindowCredit),
 		    tieTag(tieTag),
 		    negotiatedCapabilities(negotiatedCapabilities),
-		    rto(sctpOptions),
 		    t3RtxTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
@@ -52,7 +50,9 @@ namespace RTC
 		        /*baseTimeoutMs*/ sctpOptions.delayedAckMaxTimeoutMs,
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeoutMs*/ std::nullopt,
-		        /*maxRestarts*/ 0))
+		        /*maxRestarts*/ 0)),
+		    rto(sctpOptions),
+		    txErrorCounter(sctpOptions)
 		{
 			MS_TRACE();
 		}
@@ -80,7 +80,11 @@ namespace RTC
 
 			this->negotiatedCapabilities.Dump(indentation + 1);
 
+			MS_DUMP_CLEAN(indentation, "  retransmission timeout:");
 			this->rto.Dump(indentation + 1);
+
+			MS_DUMP_CLEAN(indentation, "  tx error counter:");
+			this->txErrorCounter.Dump(indentation + 1);
 
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");
 		}
@@ -130,6 +134,20 @@ namespace RTC
 			packet->SetVerificationTag(verificationTag);
 
 			return packet;
+		}
+
+		void TransmissionControlBlock::SetRemoteStateCookie(std::vector<uint8_t> remoteStateCookie)
+		{
+			MS_TRACE();
+
+			this->remoteStateCookie = std::move(remoteStateCookie);
+		}
+
+		void TransmissionControlBlock::ClearRemoteStateCookie()
+		{
+			MS_TRACE();
+
+			this->remoteStateCookie.reset();
 		}
 
 		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& baseTimeoutMs, bool& stop)
