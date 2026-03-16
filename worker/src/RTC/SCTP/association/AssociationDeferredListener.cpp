@@ -43,7 +43,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(this->ready, "not ready");
+			if (!this->ready)
+			{
+				return;
+			}
 
 			this->ready = false;
 
