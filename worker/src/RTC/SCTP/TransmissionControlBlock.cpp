@@ -2,6 +2,7 @@
 #define MS_CLASS "RTC::SCTP::TransmissionControlBlock"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/SCTP/TransmissionControlBlock.hpp"
 #include <cmath> // std::min()
@@ -143,7 +144,24 @@ namespace RTC
 			  this->t3RtxTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
-			// TODO
+			// In the COOKIE_ECHO state, let the T1-COOKIE timer trigger
+			// retransmissions, to avoid having two timers doing that.
+			// TODO: Implement it.
+			// if (this->cookieEchoChunk.has_value())
+			// {
+			// 	MS_DEBUG_DEV("not retransmitting as T1-cookie is active");
+			// }
+			// else
+			// {
+			// 	if (IncrementTxErrorCounter("t3-rtx expired"))
+			// 	{
+			// 		this->retransmissionQueue.HandleT3RtxTimerExpiry();
+
+			// 		const uint64_t now = DepLibUV::GetTimeMs();
+
+			// 		SendBufferedPackets(now);
+			// 	}
+			// }
 		}
 
 		void TransmissionControlBlock::OnDelayedAckTimer(uint64_t& baseTimeoutMs, bool& stop)
@@ -158,7 +176,11 @@ namespace RTC
 			  this->delayedAckTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
-			// TODO
+			// TODO: Implement it.
+			// this->dataTracker.HandleDelayedAckTimerExpiry();
+
+			// TODO: Implement it.
+			// MaySendSackChunk();
 		}
 
 		void TransmissionControlBlock::OnTimer(
