@@ -65,7 +65,6 @@ namespace RTC
 		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ sctpOptions.maxRetransmissions))
-
 		// TODO: Set RRSendQueue this->sendQueue.
 		{
 			MS_TRACE();
