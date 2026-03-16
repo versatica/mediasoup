@@ -67,7 +67,7 @@ namespace RTC
 				SHUTDOWN_PENDING,
 				SHUTDOWN_SENT,
 				SHUTDOWN_RECEIVED,
-				SHUTDOWN_ACK_SENT,
+				SHUTDOWN_ACK_SENT
 			};
 
 			static constexpr std::string_view StateToString(State state)

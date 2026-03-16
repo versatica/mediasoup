@@ -36,7 +36,7 @@ namespace RTC
 				/**
 				 * The Association is shutting down, and the connection is not yet closed.
 				 */
-				SHUTTING_DOWN,
+				SHUTTING_DOWN
 			};
 
 			constexpr std::string_view AssociationStateToString(AssociationState associationState)
@@ -111,7 +111,7 @@ namespace RTC
 				/**
 				 * The application has performed an invalid operation.
 				 */
-				UNSUPPORTED_OPERATION,
+				UNSUPPORTED_OPERATION
 			};
 
 			constexpr std::string_view ErrorKindToString(ErrorKind errorKind)
@@ -174,7 +174,7 @@ namespace RTC
 				UNKNOWN,
 				MEDIASOUP,
 				DCSCTP,
-				USRSCTP,
+				USRSCTP
 			};
 
 			constexpr std::string_view SctpImplementationToString(SctpImplementation sctpImplementation)
@@ -225,7 +225,7 @@ namespace RTC
 				 * Indicates that resetting streams has failed as it's not supported by
 				 * the peer.
 				 */
-				NOT_SUPPORTED,
+				NOT_SUPPORTED
 			};
 
 			constexpr std::string_view ResetStreamsStatusToString(ResetStreamsStatus status)
@@ -282,7 +282,7 @@ namespace RTC
 				/**
 				 * The message could not be sent as the Association is shutting down.
 				 */
-				ERROR_SHUTTING_DOWN,
+				ERROR_SHUTTING_DOWN
 			};
 
 			constexpr std::string_view SendMessageStatusToString(SendMessageStatus status)
