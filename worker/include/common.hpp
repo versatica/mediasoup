@@ -40,17 +40,17 @@ using ChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);
 // Returns `ChannelReadFree` on successful read that must be used to free
 // `message`.
 using ChannelReadFn = ChannelReadFreeFn (*)(
-  uint8_t** /* message */,
-  uint32_t* /* messageLen */,
-  size_t* /* messageCtx */,
+  uint8_t** /*message*/,
+  uint32_t* /*messageLen*/,
+  size_t* /*messageCtx*/,
   // This is `uv_async_t` handle that can be called later with `uv_async_send()`
   // when there is more data to read.
-  const void* /* handle */,
-  ChannelReadCtx /* ctx */
+  const void* /*handle*/,
+  ChannelReadCtx /*ctx*/
 );
 
 using ChannelWriteCtx = void*;
 using ChannelWriteFn =
-  void (*)(const uint8_t* /* message */, uint32_t /* messageLen */, ChannelWriteCtx /* ctx */);
+  void (*)(const uint8_t* /*message*/, uint32_t /*messageLen*/, ChannelWriteCtx /*ctx*/);
 
 #endif
