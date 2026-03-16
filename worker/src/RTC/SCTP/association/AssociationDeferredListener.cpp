@@ -237,7 +237,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener& listener)
+			  [](CallbackData /*data*/, AssociationListener& listener)
 			  {
 				  listener.OnAssociationTotalBufferedAmountLow();
 			  },
