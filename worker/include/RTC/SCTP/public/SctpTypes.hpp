@@ -65,6 +65,9 @@ namespace RTC
 
 						NO_DEFAULT_GCC();
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 
 			/**
@@ -165,6 +168,9 @@ namespace RTC
 
 						NO_DEFAULT_GCC();
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 
 			/**
@@ -205,6 +211,9 @@ namespace RTC
 
 						NO_DEFAULT_GCC();
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 
 			/**
@@ -251,6 +260,9 @@ namespace RTC
 
 						NO_DEFAULT_GCC();
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 
 			/**
@@ -320,6 +332,9 @@ namespace RTC
 
 						NO_DEFAULT_GCC();
 				}
+
+				// Make MSVC happy.
+				return "";
 			}
 		} // namespace Types
 	} // namespace SCTP
