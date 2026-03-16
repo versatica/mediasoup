@@ -56,7 +56,7 @@ namespace RTC
 
 			/**
 			 * The default stream priority, if not overridden by
-			 * SctpSocket::SetStreamPriority(). The default value is selected to be
+			 * `Association::SetStreamPriority()`. The default value is selected to be
 			 * compatible with https://www.w3.org/TR/webrtc-priority/, section 4.2-4.3.
 			 */
 			uint16_t defaultStreamPriority{ 256 };
@@ -86,7 +86,7 @@ namespace RTC
 
 			/**
 			 * A threshold that, when the amount of data in the send buffer goes below
-			 * this value, will trigger Socket::OnTotalBufferedAmountLow().
+			 * this value, will trigger `Association::OnAssociationTotalBufferedAmountLow()`.
 			 */
 			size_t totalBufferedAmountLowThreshold{ 1800000 };
 
@@ -206,8 +206,8 @@ namespace RTC
 			/**
 			 * The number of packets that may be sent at once. This is limited to
 			 * avoid bursts that too quickly fill the send buffer. Typically in a
-			 * socket in its "slow start" phase (when it sends as much as it can), it
-			 * will send up to three packets for every SACK received, so the default
+			 * connection in its "slow start" phase (when it sends as much as it can),
+			 * it will send up to three packets for every SACK received, so the default
 			 * limit is set just above that, and then mostly applicable for (but not
 			 * limited to) fast retransmission scenarios.
 			 */
@@ -283,9 +283,9 @@ namespace RTC
 
 			/**
 			 * If set, will generate lifecycle events for this message. See e.g.
-			 * SocketListener::OnSocketMessageLifecycleFullySent(). This value is
-			 * decided by the application and the library will provide it to all
-			 * lifecycle callbacks.
+			 * `AssociationListener::OnAssociationLifecycleMessageFullySent()`. This
+			 * value is decided by the application and the library will provide it to
+			 * all lifecycle callbacks.
 			 */
 			std::optional<uint64_t> lifecycleId{ std::nullopt };
 		};

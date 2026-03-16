@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_PACKET_SENDER_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/SocketListener.hpp"
+#include "RTC/SCTP/AssociationListener.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 
 namespace RTC
@@ -23,7 +23,7 @@ namespace RTC
 			};
 
 		public:
-			PacketSender(Listener& listener, SocketListener& socketListener);
+			PacketSender(Listener& listener, AssociationListener& associationListener);
 
 			~PacketSender();
 
@@ -43,7 +43,7 @@ namespace RTC
 
 		private:
 			Listener& listener;
-			SocketListener& socketListener;
+			AssociationListener& associationListener;
 		};
 	} // namespace SCTP
 } // namespace RTC

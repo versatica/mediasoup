@@ -1,7 +1,7 @@
-#define MS_CLASS "RTC::SCTP::SocketMetrics"
+#define MS_CLASS "RTC::SCTP::AssociationMetrics"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/SocketMetrics.hpp"
+#include "RTC/SCTP/AssociationMetrics.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -10,13 +10,13 @@ namespace RTC
 	{
 		/* Instance methods. */
 
-		void SocketMetrics::Dump(int indentation) const
+		void AssociationMetrics::Dump(int indentation) const
 		{
 			MS_TRACE();
 
 			auto peerImplementationStringView = Types::SctpImplementationToString(this->peerImplementation);
 
-			MS_DUMP_CLEAN(indentation, "<SCTP::SocketMetrics>");
+			MS_DUMP_CLEAN(indentation, "<SCTP::AssociationMetrics>");
 			MS_DUMP_CLEAN(indentation, "  tx packets count: %" PRIu64, this->txPacketsCount);
 			MS_DUMP_CLEAN(indentation, "  tx messages count: %" PRIu64, this->txMessagesCount);
 			MS_DUMP_CLEAN(indentation, "  rx packets count: %" PRIu64, this->rxPacketsCount);
@@ -39,7 +39,7 @@ namespace RTC
 			  indentation, "  uses message interleaving: %s", this->usesMessageInterleaving ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  uses re-config: %s", this->usesReConfig ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  uses zero checksum: %s", this->usesZeroChecksum ? "yes" : "no");
-			MS_DUMP_CLEAN(indentation, "</SCTP::SocketMetrics>");
+			MS_DUMP_CLEAN(indentation, "</SCTP::AssociationMetrics>");
 		}
 	} // namespace SCTP
 } // namespace RTC

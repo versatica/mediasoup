@@ -11,52 +11,54 @@ namespace RTC
 		namespace Types
 		{
 			/**
-			 * Publicly exposed SCTP socket state.
+			 * Publicly exposed SCTP Association state.
 			 */
-			enum class SocketState : uint8_t
+			enum class AssociationState : uint8_t
 			{
 				/**
-				 * The socket is closed.
+				 * The Association is closed.
 				 */
 				CLOSED,
 				/**
-				 * The Socket has initiated a connection, which is not yet established.
+				 * The Association has initiated a connection, which is not yet
+				 * established.
 				 *
 				 * @remarks
-				 * - For incoming connections and for reconnections when the Socket is
-				 *   already connected, the Socket will not transition to this state.
+				 * - For incoming connections and for reconnections when the Association
+				 *   is already connected, the Association will not transition to this
+				 *   state.
 				 */
 				CONNECTING,
 				/**
-				 * The Socket is connected and the connection is established.
+				 * The Association is connected and the connection is established.
 				 */
 				CONNECTED,
 				/**
-				 * The Socket is shutting down, and the connection is not yet closed.
+				 * The Association is shutting down, and the connection is not yet closed.
 				 */
 				SHUTTING_DOWN,
 			};
 
-			constexpr std::string_view SocketStateToString(SocketState socketState)
+			constexpr std::string_view AssociationStateToString(AssociationState associationState)
 			{
-				switch (socketState)
+				switch (associationState)
 				{
-					case SocketState::CLOSED:
+					case AssociationState::CLOSED:
 					{
 						return "Closed";
 					}
 
-					case SocketState::CONNECTING:
+					case AssociationState::CONNECTING:
 					{
 						return "Connecting";
 					}
 
-					case SocketState::CONNECTED:
+					case AssociationState::CONNECTED:
 					{
 						return "Connected";
 					}
 
-					case SocketState::SHUTTING_DOWN:
+					case AssociationState::SHUTTING_DOWN:
 					{
 						return "ShuttingDown";
 					}
@@ -64,7 +66,7 @@ namespace RTC
 			}
 
 			/**
-			 * Kinds of errors that are exposed in the Socket API.
+			 * Kinds of errors that are exposed in the API.
 			 */
 			enum class ErrorKind : uint8_t
 			{
@@ -79,8 +81,8 @@ namespace RTC
 				 */
 				TOO_MANY_RETRIES,
 				/**
-				 * A command was received that is only possible to execute when the Socket
-				 * is connected, which it is not.
+				 * A command was received that is only possible to execute when the
+				 * Association is connected, which it is not.
 				 */
 				NOT_CONNECTED,
 				/**
@@ -200,7 +202,7 @@ namespace RTC
 			}
 
 			/**
-			 * Return value of Socket::ResetStreams().
+			 * Return value of Association::ResetStreams().
 			 */
 			enum class ResetStreamsStatus : uint8_t
 			{
@@ -244,7 +246,8 @@ namespace RTC
 			}
 
 			/**
-			 * Return value of Socket::SendMessage() and Socket::SendManyMessages().
+			 * Return value of Association::SendMessage() and
+			 * Association::SendManyMessages().
 			 */
 			enum class SendMessageStatus : uint8_t
 			{
@@ -267,13 +270,13 @@ namespace RTC
 				ERROR_MESSAGE_TOO_LARGE,
 
 				/**
-				 * The message could not be enqueued as the Socket is out of resources.
-				 * This mainly indicates that the send queue is full.
+				 * The message could not be enqueued as the Association is out of
+				 * resources. This mainly indicates that the send queue is full.
 				 */
 				ERROR_RESOURCE_EXHAUSTION,
 
 				/**
-				 * The message could not be sent as the Socket is shutting down.
+				 * The message could not be sent as the Association is shutting down.
 				 */
 				ERROR_SHUTTING_DOWN,
 			};

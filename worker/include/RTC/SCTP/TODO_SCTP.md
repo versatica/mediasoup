@@ -4,8 +4,6 @@
 
 ## Related to dcsctp
 
-- Check all calls to `CreatePacket()` in `Socket.cpp` since many of them must be replaced to `this->tcb->CreatePacket()`.
-
 - Investigate `DcSctpSocket::HandleTimeout()` which is only called from `media/sctp/dcsctp_transport.cc`.
 
 ## Flow

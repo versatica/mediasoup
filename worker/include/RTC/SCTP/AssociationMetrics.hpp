@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_SOCKET_METRICS_HPP
-#define MS_RTC_SCTP_SOCKET_METRICS_HPP
+#ifndef MS_RTC_SCTP_ASSOCIATION_METRICS_HPP
+#define MS_RTC_SCTP_ASSOCIATION_METRICS_HPP
 
 #include "common.hpp"
 #include "RTC/SCTP/SctpTypes.hpp"
@@ -10,9 +10,9 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Socket metrics.
+		 * SCTP Association metrics.
 		 */
-		struct SocketMetrics
+		struct AssociationMetrics
 		{
 			/**
 			 * Number of SCTP Packets sent.

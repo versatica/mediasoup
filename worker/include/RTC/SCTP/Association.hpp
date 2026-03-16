@@ -1,15 +1,15 @@
-#ifndef MS_RTC_SCTP_SOCKET_HPP
-#define MS_RTC_SCTP_SOCKET_HPP
+#ifndef MS_RTC_SCTP_ASSOCIATION_HPP
+#define MS_RTC_SCTP_ASSOCIATION_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/AssociationDeferredListener.hpp"
+#include "RTC/SCTP/AssociationListener.hpp"
+#include "RTC/SCTP/AssociationMetrics.hpp"
 #include "RTC/SCTP/Message.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/PacketSender.hpp"
 #include "RTC/SCTP/SctpOptions.hpp"
 #include "RTC/SCTP/SctpTypes.hpp"
-#include "RTC/SCTP/SocketDeferredListener.hpp"
-#include "RTC/SCTP/SocketListener.hpp"
-#include "RTC/SCTP/SocketMetrics.hpp"
 #include "RTC/SCTP/StateCookie.hpp"
 #include "RTC/SCTP/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
@@ -45,19 +45,19 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * The SCTP Socket class represents the mediasoup side of an SCTP
+		 * The SCTP Association class represents the mediasoup side of an SCTP
 		 * association with a peer.
 		 *
 		 * It manages all Packet and Chunk dispatching and the connection flow.
 		 */
-		class Socket : public PacketSender::Listener, public BackoffTimerHandle::Listener
+		class Association : public PacketSender::Listener, public BackoffTimerHandle::Listener
 		{
 		public:
 			/**
 			 * Internal SCTP association state. This is different from the public SCTP
-			 * Socket state (`SCTP::Types::SocketState`).
+			 * Association state (`SCTP::Types::AssociationState`).
 			 */
-			enum class AssociationState : uint8_t
+			enum class State : uint8_t
 			{
 				CLOSED,
 				COOKIE_WAIT,
@@ -70,50 +70,50 @@ namespace RTC
 				SHUTDOWN_ACK_SENT,
 			};
 
-			static constexpr std::string_view AssociationStateToString(AssociationState associationState)
+			static constexpr std::string_view StateToString(State state)
 			{
 				// NOTE: We cannot use MS_TRACE() here because clang in Linux will
 				// complain about "read of non-constexpr variable 'configuration' is not
 				// allowed in a constant expression".
 
-				switch (associationState)
+				switch (state)
 				{
-					case Socket::AssociationState::CLOSED:
+					case State::CLOSED:
 					{
 						return "CLOSED";
 					}
 
-					case Socket::AssociationState::COOKIE_WAIT:
+					case State::COOKIE_WAIT:
 					{
 						return "COOKIE_WAIT";
 					}
 
-					case Socket::AssociationState::COOKIE_ECHOED:
+					case State::COOKIE_ECHOED:
 					{
 						return "COOKIE_ECHOED";
 					}
 
-					case Socket::AssociationState::ESTABLISHED:
+					case State::ESTABLISHED:
 					{
 						return "ESTABLISHED";
 					}
 
-					case Socket::AssociationState::SHUTDOWN_PENDING:
+					case State::SHUTDOWN_PENDING:
 					{
 						return "SHUTDOWN_PENDING";
 					}
 
-					case Socket::AssociationState::SHUTDOWN_SENT:
+					case State::SHUTDOWN_SENT:
 					{
 						return "SHUTDOWN_SENT";
 					}
 
-					case Socket::AssociationState::SHUTDOWN_RECEIVED:
+					case State::SHUTDOWN_RECEIVED:
 					{
 						return "SHUTDOWN_RECEIVED";
 					}
 
-					case Socket::AssociationState::SHUTDOWN_ACK_SENT:
+					case State::SHUTDOWN_ACK_SENT:
 					{
 						return "SHUTDOWN_ACK_SENT";
 					}
@@ -136,12 +136,12 @@ namespace RTC
 			};
 
 			/**
-			 * Metrics that are directly filled by the Socket class.
+			 * Metrics that are directly filled by the Association class.
 			 *
 			 * @remarks
-			 * - This struct is a subset of the public SocketMetrics struct.
+			 * - This struct is a subset of the public AssociationMetrics struct.
 			 */
-			struct SocketPrivateMetrics
+			struct AssociationPrivateMetrics
 			{
 				uint64_t txPacketsCount{ 0 };
 				uint64_t txMessagesCount{ 0 };
@@ -157,13 +157,13 @@ namespace RTC
 			};
 
 		public:
-			explicit Socket(const SctpOptions& sctpOptions, SocketListener& listener);
+			explicit Association(const SctpOptions& sctpOptions, AssociationListener& listener);
 
-			~Socket() override;
+			~Association() override;
 
 			void Dump(int indentation = 0) const;
 
-			Types::SocketState GetState() const;
+			Types::AssociationState GetAssociationState() const;
 
 			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
@@ -175,9 +175,9 @@ namespace RTC
 			void Connect();
 
 			/**
-			 * Gracefully shutdowns the Socket and sends all outstanding data. This
-			 * is an asynchronous operation and OnSocketClosed() will be called on
-			 * success.
+			 * Gracefully shutdowns the Association and sends all outstanding data.
+			 * This is an asynchronous operation and `OnAssociationClosed()` will be
+			 * called on success.
 			 *
 			 * @remarks
 			 * - libwebrtc never calls the corresponding DcSctpSocket::Shutdown()
@@ -188,18 +188,18 @@ namespace RTC
 			void Shutdown();
 
 			/**
-			 * Closes the Socket non-gracefully. Will send ABORT if the connection
+			 * Closes the Association non-gracefully. Will send ABORT if the connection
 			 * is not already closed. No callbacks will be made after Close() has
 			 * returned. However, before Close() returns, it may have called
-			 * OnSocketClosed() or OnSocketAborted() callbacks.
+			 * `OnAssociationClosed()` or `OnAssociationAborted()` callbacks.
 			 */
 			void Close();
 
 			/**
-			 * Retrieves the latest metrics. If the Socket is not fully connected,
+			 * Retrieves the latest metrics. If the Association is not fully connected,
 			 * `std::nullopt` will be returned.
 			 */
-			std::optional<SocketMetrics> GetMetrics() const;
+			std::optional<AssociationMetrics> GetMetrics() const;
 
 			/**
 			 * Returns the currently set priority for an outgoing stream. The initial
@@ -232,19 +232,19 @@ namespace RTC
 			size_t GetStreamBufferedAmountLowThreshold(uint16_t streamId) const;
 
 			/**
-			 * Specifies the number of bytes of buffered outgoing data that is considered
-			 * "low" for a given stream, which will trigger
-			 * OnSocketStreamBufferedAmountLow()` event. The default value is 0.
+			 * Specifies the number of bytes of buffered outgoing data that is
+			 * considered "low" for a given stream, which will trigger
+			 * `OnAssociationStreamBufferedAmountLow()` event. The default value is 0.
 			 */
 			void SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes);
 
 			/**
 			 * Resetting streams is an asynchronous operation and the results will be
-			 * notified using `OnSocketStreamsResetPerformed()` on success and
-			 * `OnSocketStreamsResetFailed()` on failure.
+			 * notified using `OnAssociationStreamsResetPerformed()` on success and
+			 * `OnAssociationStreamsResetFailed()` on failure.
 			 *
 			 * When it's known that the peer has reset its own outgoing streams,
-			 * `OnSocketInboundStreamsReset()` is called.
+			 * `OnAssociationInboundStreamsReset()` is called.
 			 *
 			 * Resetting streams can only be done on an established association that
 			 * supports stream resetting. Calling this method on e.g. a closed SCTP
@@ -261,8 +261,8 @@ namespace RTC
 
 			/**
 			 * Sends a SCTP message using the provided send options. Sending a message
-			 * is an asynchronous operation, and the `OnSocketError()` callback may be
-			 * invoked to indicate any errors in sending the message.
+			 * is an asynchronous operation, and the `OnAssociationError()` callback
+			 * may be invoked to indicate any errors in sending the message.
 			 *
 			 * The association does not have to be established before calling this
 			 * method. If it's called before there is an established association, the
@@ -277,8 +277,8 @@ namespace RTC
 
 			/**
 			 * Sends SCTP messages using the provided send options. Sending a message
-			 * is an asynchronous operation, and the `OnSocketError()` callback may be
-			 * invoked to indicate any errors in sending a message.
+			 * is an asynchronous operation, and the `OnAssociationError()` callback
+			 * may be invoked to indicate any errors in sending a message.
 			 *
 			 * The association does not have to be established before calling this
 			 * method. If it's called before there is an established association, the
@@ -305,7 +305,7 @@ namespace RTC
 		private:
 			void InternalClose(Types::ErrorKind errorKind, const std::string_view& message);
 
-			void SetAssociationState(AssociationState associationState, const std::string_view& message);
+			void SetState(State state, const std::string_view& message);
 
 			void AddCapabilitiesParametersToInitOrInitAckChunk(AnyInitChunk* chunk) const;
 
@@ -329,13 +329,14 @@ namespace RTC
 			void SendShutdownAckChunk();
 
 			/**
-			 * Sends SHUTDOWN or SHUTDOWN-ACK if the Socket is shutting down and if
-			 * all outstanding data has been acknowledged.
+			 * Sends SHUTDOWN or SHUTDOWN-ACK if the Association is shutting down and
+			 * if all outstanding data has been acknowledged.
 			 */
 			void MaySendShutdownOrShutdownAckChunk();
 
 			/**
-			 * If the Socket is shutting down, responds SHUTDOWN to any incoming DATA.
+			 * If the Association is shutting down, responds SHUTDOWN to any incoming
+			 * DATA.
 			 */
 			void MaySendShutdownOnPacketReceived(const Packet* receivedPacket);
 
@@ -421,11 +422,11 @@ namespace RTC
 
 			void OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& stop);
 
-			template<typename... AssociationStates>
-			void AssertAssociationState(AssociationStates... expectedAssociationStates) const;
+			template<typename... States>
+			void AssertState(States... expectedStates) const;
 
-			template<typename... AssociationStates>
-			void AssertNotAssociatonState(AssociationStates... unexpectedAssociationStates) const;
+			template<typename... States>
+			void AssertNotState(States... unexpectedStates) const;
 
 			/**
 			 * Returns true if there is a TCB, and false otherwise (and reports an
@@ -435,7 +436,7 @@ namespace RTC
 
 			void AssertHasTcb() const;
 
-			void AssertAssociationStateIsConsistent() const;
+			void AssertStateIsConsistent() const;
 
 			/* Pure virtual methods inherited from PacketSender::Listener. */
 		public:
@@ -448,15 +449,15 @@ namespace RTC
 		private:
 			// SCTP options given in the constructor.
 			SctpOptions sctpOptions;
-			// Listener. It's not a SocketListener but a SocketDeferredListener which
-			// inherits from SocketListener.
-			SocketDeferredListener listener;
-			// SCTP association state.
-			AssociationState associationState{ AssociationState::CLOSED };
+			// Listener. It's not an AssociationListener but an
+			// AssociationDeferredListener which inherits from AssociationListener.
+			AssociationDeferredListener listener;
+			// SCTP association internal state.
+			State state{ State::CLOSED };
 			// Private metrics.
-			SocketPrivateMetrics privateMetrics{};
-			// The actual send queue implementation. As data can be sent on a Socket
-			// before the connection is established, this component is not in the TCB.
+			AssociationPrivateMetrics privateMetrics{};
+			// The actual send queue implementation. As data can be sent before the
+			// connection is established, this component is not in the TCB.
 			// TODO: Implement this class.
 			// RRSendQueue sendQueue;
 			// To keep settings between sending of INIT Chunk and establishment of

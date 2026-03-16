@@ -1,14 +1,15 @@
-#define MS_CLASS "RTC::SCTP::SocketDeferredListener"
+#define MS_CLASS "RTC::SCTP::AssociationDeferredListener"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/SocketDeferredListener.hpp"
+#include "RTC/SCTP/AssociationDeferredListener.hpp"
 #include "Logger.hpp"
 
 namespace RTC
 {
 	namespace SCTP
 	{
-		SocketDeferredListener::ScopedDeferred::ScopedDeferred(SocketDeferredListener& deferredListener)
+		AssociationDeferredListener::ScopedDeferred::ScopedDeferred(
+		  AssociationDeferredListener& deferredListener)
 		  : deferredListener(deferredListener)
 		{
 			MS_TRACE();
@@ -16,14 +17,14 @@ namespace RTC
 			this->deferredListener.SetReady();
 		}
 
-		SocketDeferredListener::ScopedDeferred::~ScopedDeferred()
+		AssociationDeferredListener::ScopedDeferred::~ScopedDeferred()
 		{
 			MS_TRACE();
 
 			this->deferredListener.TriggerDeferredCallbacks();
 		}
 
-		SocketDeferredListener::SocketDeferredListener(SocketListener& innerListener)
+		AssociationDeferredListener::AssociationDeferredListener(AssociationListener& innerListener)
 		  : innerListener(innerListener)
 		{
 			MS_TRACE();
@@ -31,14 +32,14 @@ namespace RTC
 			this->deferredCallbacks.reserve(8);
 		}
 
-		void SocketDeferredListener::SetReady()
+		void AssociationDeferredListener::SetReady()
 		{
 			MS_TRACE();
 
 			this->ready = true;
 		}
 
-		void SocketDeferredListener::TriggerDeferredCallbacks()
+		void AssociationDeferredListener::TriggerDeferredCallbacks()
 		{
 			MS_TRACE();
 
@@ -68,118 +69,121 @@ namespace RTC
 			}
 		}
 
-		bool SocketDeferredListener::OnSocketSendPacket(Packet* packet)
+		bool AssociationDeferredListener::OnAssociationSendPacket(Packet* packet)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			// Will not be deferred but called directly.
-			return this->innerListener.OnSocketSendPacket(packet);
+			return this->innerListener.OnAssociationSendPacket(packet);
 		}
 
-		void SocketDeferredListener::OnSocketConnected()
+		void AssociationDeferredListener::OnAssociationConnected()
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData /*data*/, SocketListener& listener)
+			  [](CallbackData /*data*/, AssociationListener& listener)
 			  {
-				  listener.OnSocketConnected();
+				  listener.OnAssociationConnected();
 			  },
 			  std::monostate{});
 		}
 
-		void SocketDeferredListener::OnSocketClosed()
+		void AssociationDeferredListener::OnAssociationClosed()
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData /*data*/, SocketListener& listener)
+			  [](CallbackData /*data*/, AssociationListener& listener)
 			  {
-				  listener.OnSocketClosed();
+				  listener.OnAssociationClosed();
 			  },
 			  std::monostate{});
 		}
 
-		void SocketDeferredListener::OnSocketConnectionRestarted()
+		void AssociationDeferredListener::OnAssociationConnectionRestarted()
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData /*data*/, SocketListener& listener)
+			  [](CallbackData /*data*/, AssociationListener& listener)
 			  {
-				  listener.OnSocketConnectionRestarted();
+				  listener.OnAssociationConnectionRestarted();
 			  },
 			  std::monostate{});
 		}
 
-		void SocketDeferredListener::OnSocketError(Types::ErrorKind errorKind, std::string_view errorMessage)
+		void AssociationDeferredListener::OnAssociationError(
+		  Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, AssociationListener& listener)
 			  {
 				  Error error = std::get<Error>(std::move(data));
-				  listener.OnSocketError(error.errorKind, error.message);
+				  listener.OnAssociationError(error.errorKind, error.message);
 			  },
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
-		void SocketDeferredListener::OnSocketAborted(Types::ErrorKind errorKind, std::string_view errorMessage)
+		void AssociationDeferredListener::OnAssociationAborted(
+		  Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, AssociationListener& listener)
 			  {
 				  Error error = std::get<Error>(std::move(data));
-				  listener.OnSocketAborted(error.errorKind, error.message);
+				  listener.OnAssociationAborted(error.errorKind, error.message);
 			  },
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
-		void SocketDeferredListener::OnSocketMessageReceived(Message message)
+		void AssociationDeferredListener::OnAssociationMessageReceived(Message message)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, AssociationListener& listener)
 			  {
-				  listener.OnSocketMessageReceived(std::get<Message>(std::move(data)));
+				  listener.OnAssociationMessageReceived(std::get<Message>(std::move(data)));
 			  },
 			  std::move(message));
 		}
 
-		void SocketDeferredListener::OnSocketStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds)
+		void AssociationDeferredListener::OnAssociationStreamsResetPerformed(
+		  std::span<const uint16_t> outboundStreamIds)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, AssociationListener& listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
-				  listener.OnSocketStreamsResetPerformed(streamReset.streamIds);
+				  listener.OnAssociationStreamsResetPerformed(streamReset.streamIds);
       },
 			  StreamReset{ .streamIds = { outboundStreamIds.begin(), outboundStreamIds.end() } });
 		}
 
-		void SocketDeferredListener::OnSocketStreamsResetFailed(
+		void AssociationDeferredListener::OnAssociationStreamsResetFailed(
 		  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage)
 		{
 			MS_TRACE();
@@ -187,54 +191,55 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, AssociationListener& listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
-				  listener.OnSocketStreamsResetFailed(streamReset.streamIds, streamReset.errorMessage);
+				  listener.OnAssociationStreamsResetFailed(streamReset.streamIds, streamReset.errorMessage);
       },
 			  StreamReset{ .streamIds    = { outboundStreamIds.begin(), outboundStreamIds.end() },
 			               .errorMessage = std::string(errorMessage) });
 		}
 
-		void SocketDeferredListener::OnSocketInboundStreamsReset(std::span<const uint16_t> inboundStreamIds)
+		void AssociationDeferredListener::OnAssociationInboundStreamsReset(
+		  std::span<const uint16_t> inboundStreamIds)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, AssociationListener& listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
-				  listener.OnSocketInboundStreamsReset(streamReset.streamIds);
+				  listener.OnAssociationInboundStreamsReset(streamReset.streamIds);
       },
 			  StreamReset{ .streamIds = { inboundStreamIds.begin(), inboundStreamIds.end() } });
 		}
 
-		void SocketDeferredListener::OnSocketStreamBufferedAmountLow(uint16_t streamId)
+		void AssociationDeferredListener::OnAssociationStreamBufferedAmountLow(uint16_t streamId)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, AssociationListener& listener)
 			  {
-				  listener.OnSocketStreamBufferedAmountLow(std::get<uint16_t>(std::move(data)));
+				  listener.OnAssociationStreamBufferedAmountLow(std::get<uint16_t>(std::move(data)));
 			  },
 			  streamId);
 		}
 
-		void SocketDeferredListener::OnSocketTotalBufferedAmountLow()
+		void AssociationDeferredListener::OnAssociationTotalBufferedAmountLow()
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, SocketListener& listener)
+			  [](CallbackData data, AssociationListener& listener)
 			  {
-				  listener.OnSocketTotalBufferedAmountLow();
+				  listener.OnAssociationTotalBufferedAmountLow();
 			  },
 			  std::monostate{});
 		}

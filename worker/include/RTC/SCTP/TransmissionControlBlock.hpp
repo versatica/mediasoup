@@ -2,11 +2,11 @@
 #define MS_RTC_SCTP_TRANSMISSION_CONTROL_BLOCK_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/AssociationListener.hpp"
 #include "RTC/SCTP/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/PacketSender.hpp"
 #include "RTC/SCTP/RetransmissionTimeout.hpp"
 #include "RTC/SCTP/SctpOptions.hpp"
-#include "RTC/SCTP/SocketListener.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 
@@ -24,7 +24,7 @@ namespace RTC
 		{
 		public:
 			TransmissionControlBlock(
-			  SocketListener& listener,
+			  AssociationListener& associationListener,
 			  const SctpOptions& sctpOptions,
 			  PacketSender& packetSender,
 			  uint32_t localVerificationTag,
@@ -124,7 +124,7 @@ namespace RTC
 			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			SocketListener& listener;
+			AssociationListener& associationListener;
 			const SctpOptions sctpOptions;
 			PacketSender packetSender;
 			uint32_t localVerificationTag{ 0 };

@@ -17,7 +17,7 @@ namespace RTC
 		/* Instance methods. */
 
 		TransmissionControlBlock::TransmissionControlBlock(
-		  SocketListener& listener,
+		  AssociationListener& associationListener,
 		  const SctpOptions& sctpOptions,
 		  PacketSender& packetSender,
 		  uint32_t localVerificationTag,
@@ -27,7 +27,7 @@ namespace RTC
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const NegotiatedCapabilities& negotiatedCapabilities)
-		  : listener(listener),
+		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
 		    packetSender(packetSender),
 		    localVerificationTag(localVerificationTag),

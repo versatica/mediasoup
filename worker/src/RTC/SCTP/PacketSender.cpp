@@ -8,8 +8,8 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		PacketSender::PacketSender(Listener& listener, SocketListener& socketListener)
-		  : listener(listener), socketListener(socketListener)
+		PacketSender::PacketSender(Listener& listener, AssociationListener& associationListener)
+		  : listener(listener), associationListener(associationListener)
 		{
 			MS_TRACE();
 		}
@@ -28,7 +28,7 @@ namespace RTC
 				packet->WriteCRC32cChecksum();
 			}
 
-			const bool sent = this->socketListener.OnSocketSendPacket(packet);
+			const bool sent = this->associationListener.OnAssociationSendPacket(packet);
 
 			this->listener.OnPacketSenderPacketSent(this, packet, sent);
 
