@@ -317,7 +317,7 @@ namespace RTC
 			  uint32_t remoteVerificationTag,
 			  uint32_t localInitialTsn,
 			  uint32_t remoteInitialTsn,
-			  uint32_t localAdvertisedReceiverWindowCredit,
+			  uint32_t remoteAdvertisedReceiverWindowCredit,
 			  uint64_t tieTag,
 			  const NegotiatedCapabilities& negotiatedCapabilities);
 
