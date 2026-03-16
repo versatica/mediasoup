@@ -178,7 +178,7 @@ namespace RTC
 			  /*writeChecksum*/ !this->negotiatedCapabilities.zeroChecksum);
 		}
 
-		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& baseTimeoutMs, bool& stop)
+		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -210,7 +210,7 @@ namespace RTC
 			// }
 		}
 
-		void TransmissionControlBlock::OnDelayedAckTimer(uint64_t& baseTimeoutMs, bool& stop)
+		void TransmissionControlBlock::OnDelayedAckTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 

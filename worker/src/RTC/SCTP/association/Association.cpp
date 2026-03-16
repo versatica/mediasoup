@@ -146,7 +146,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			if (this->state == State::CLOSED)
 			{
@@ -179,7 +179,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
 			//
@@ -219,7 +219,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			if (this->state != State::CLOSED)
 			{
@@ -289,7 +289,7 @@ namespace RTC
 			return metrics;
 		}
 
-		uint16_t Association::GetStreamPriority(uint16_t streamId) const
+		uint16_t Association::GetStreamPriority(uint16_t /*streamId*/) const
 		{
 			MS_TRACE();
 
@@ -300,7 +300,7 @@ namespace RTC
 			return 0;
 		}
 
-		void Association::SetStreamPriority(uint16_t streamId, uint16_t priority)
+		void Association::SetStreamPriority(uint16_t /*streamId*/, uint16_t /*priority*/)
 		{
 			MS_TRACE();
 
@@ -315,7 +315,7 @@ namespace RTC
 			this->sctpOptions.maxSendMessageSize = maxMessageSize;
 		}
 
-		size_t Association::GetStreamBufferedAmount(uint16_t streamId) const
+		size_t Association::GetStreamBufferedAmount(uint16_t /*streamId*/) const
 		{
 			MS_TRACE();
 
@@ -326,7 +326,7 @@ namespace RTC
 			return 0;
 		}
 
-		size_t Association::GetStreamBufferedAmountLowThreshold(uint16_t streamId) const
+		size_t Association::GetStreamBufferedAmountLowThreshold(uint16_t /*streamId*/) const
 		{
 			MS_TRACE();
 
@@ -337,7 +337,7 @@ namespace RTC
 			return 0;
 		}
 
-		void Association::SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes)
+		void Association::SetBufferedAmountLowThreshold(uint16_t /*streamId*/, size_t /*bytes*/)
 		{
 			MS_TRACE();
 
@@ -345,11 +345,11 @@ namespace RTC
 			// this->sendQueue.SetBufferedAmountLowThreshold(streamId, bytes);
 		}
 
-		Types::ResetStreamsStatus Association::ResetStreams(std::span<const uint16_t> outboundStreamIds)
+		Types::ResetStreamsStatus Association::ResetStreams(std::span<const uint16_t> /*outboundStreamIds*/)
 		{
 			MS_TRACE();
 
-			AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			if (!this->tcb)
 			{
@@ -384,9 +384,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
-			Types::SendMessageStatus status = InternalSendMessage(message, sendMessageOptions);
+			const auto status = InternalSendMessage(message, sendMessageOptions);
 
 			if (status != Types::SendMessageStatus::SUCCESS)
 			{
@@ -417,7 +417,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			// TODO: Uncomment.
 			// const uint64_t now = DepLibUV::GetTimeMs();
@@ -427,7 +427,7 @@ namespace RTC
 
 			for (const auto& message : messages)
 			{
-				Types::SendMessageStatus status = InternalSendMessage(message, sendMessageOptions);
+				const auto status = InternalSendMessage(message, sendMessageOptions);
 
 				statuses.push_back(status);
 
@@ -457,7 +457,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			this->privateMetrics.rxPacketsCount++;
 
@@ -761,14 +761,14 @@ namespace RTC
 			//
 			// @remarks
 			// - This also applies to I-DATA chunks.
-			bool hasDataChunk = std::find_if(
-			                      receivedPacket->ChunksBegin(),
-			                      receivedPacket->ChunksEnd(),
-			                      [](const Chunk* chunk)
-			                      {
-				                      return chunk->GetType() == Chunk::ChunkType::DATA ||
-				                             chunk->GetType() == Chunk::ChunkType::I_DATA;
-			                      }) != receivedPacket->ChunksEnd();
+			const bool hasDataChunk = std::find_if(
+			                            receivedPacket->ChunksBegin(),
+			                            receivedPacket->ChunksEnd(),
+			                            [](const Chunk* chunk)
+			                            {
+				                            return chunk->GetType() == Chunk::ChunkType::DATA ||
+				                                   chunk->GetType() == Chunk::ChunkType::I_DATA;
+			                            }) != receivedPacket->ChunksEnd();
 
 			if (hasDataChunk)
 			{
@@ -907,7 +907,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint32_t localVerificationTag = this->tcb ? this->tcb->GetLocalVerificationTag() : 0;
+			const uint32_t localVerificationTag = this->tcb ? this->tcb->GetLocalVerificationTag() : 0;
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
 			//
@@ -1784,7 +1784,7 @@ namespace RTC
 		}
 
 		void Association::ProcessReceivedShutdownAckChunk(
-		  const Packet* receivedPacket, const ShutdownAckChunk* receivedShutdownAckChunk)
+		  const Packet* receivedPacket, const ShutdownAckChunk* /*receivedShutdownAckChunk*/)
 		{
 			MS_TRACE();
 
@@ -1939,7 +1939,7 @@ namespace RTC
 		}
 
 		void Association::ProcessReceivedHeartbeatRequestChunk(
-		  const Packet* /*receivedPacket*/, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk)
+		  const Packet* /*receivedPacket*/, const HeartbeatRequestChunk* /*receivedHeartbeatRequestChunk*/)
 		{
 			MS_TRACE();
 
@@ -1953,7 +1953,7 @@ namespace RTC
 		}
 
 		void Association::ProcessReceivedHeartbeatAckChunk(
-		  const Packet* /*receivedPacket*/, const HeartbeatAckChunk* receivedHeartbeatAckChunk)
+		  const Packet* /*receivedPacket*/, const HeartbeatAckChunk* /*receivedHeartbeatAckChunk*/)
 		{
 			MS_TRACE();
 
@@ -1967,7 +1967,7 @@ namespace RTC
 		}
 
 		void Association::ProcessReceivedReConfigChunk(
-		  const Packet* /*receivedPacket*/, const ReConfigChunk* receivedReConfigChunk)
+		  const Packet* /*receivedPacket*/, const ReConfigChunk* /*receivedReConfigChunk*/)
 		{
 			MS_TRACE();
 
@@ -2012,7 +2012,7 @@ namespace RTC
 		}
 
 		void Association::ProcessReceivedAnyForwardTsnChunk(
-		  const Packet* /*receivedPacket*/, const AnyForwardTsnChunk* receivedAnyForwardTsnChunk)
+		  const Packet* /*receivedPacket*/, const AnyForwardTsnChunk* /*receivedAnyForwardTsnChunk*/)
 		{
 			MS_TRACE();
 
@@ -2077,7 +2077,7 @@ namespace RTC
 		}
 
 		void Association::ProcessReceivedAnyDataChunk(
-		  const Packet* receivedPacket, const AnyDataChunk* receivedAnyDataChunk)
+		  const Packet* /*receivedPacket*/, const AnyDataChunk* receivedAnyDataChunk)
 		{
 			MS_TRACE();
 
@@ -2195,7 +2195,7 @@ namespace RTC
 		}
 
 		void Association::ProcessReceivedSackChunk(
-		  const Packet* /*receivedPacket*/, const SackChunk* receivedSackChunk)
+		  const Packet* /*receivedPacket*/, const SackChunk* /*receivedSackChunk*/)
 		{
 			MS_TRACE();
 
@@ -2291,7 +2291,7 @@ namespace RTC
 			return !skipProcessing;
 		}
 
-		void Association::OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop)
+		void Association::OnT1InitTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -2317,7 +2317,7 @@ namespace RTC
 			AssertStateIsConsistent();
 		}
 
-		void Association::OnT1CookieTimer(uint64_t& baseTimeoutMs, bool& stop)
+		void Association::OnT1CookieTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -2344,7 +2344,7 @@ namespace RTC
 			AssertStateIsConsistent();
 		}
 
-		void Association::OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& stop)
+		void Association::OnT2ShutdownTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 

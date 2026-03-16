@@ -25,7 +25,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 	SECTION("has valid initial RTO")
 	{
-		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
+		const RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
 		REQUIRE(rto.GetRtoMs() == InitialRtoMs);
 	}

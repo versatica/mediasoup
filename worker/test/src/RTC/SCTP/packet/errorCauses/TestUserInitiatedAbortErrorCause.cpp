@@ -123,7 +123,7 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->HasUpperLayerAbortReason() == false);
-		REQUIRE(errorCause->GetUpperLayerAbortReason() == "");
+		REQUIRE(errorCause->GetUpperLayerAbortReason().empty());
 
 		/* Modify it. */
 
@@ -138,7 +138,7 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 
 		REQUIRE(errorCause->GetLength() == 4);
 		REQUIRE(errorCause->HasUpperLayerAbortReason() == false);
-		REQUIRE(errorCause->GetUpperLayerAbortReason() == "");
+		REQUIRE(errorCause->GetUpperLayerAbortReason().empty());
 
 		// 6 bytes + 2 bytes of padding.
 		errorCause->SetUpperLayerAbortReason("go go go");
