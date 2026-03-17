@@ -2,7 +2,6 @@
 #define MS_RTC_SCTP_ASSOCIATION_LISTENER_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include <span>
@@ -30,7 +29,7 @@ namespace RTC
 			 * @remarks
 			 * - It is NOT allowed to call methods in Association within this callback.
 			 */
-			virtual bool OnAssociationSendPacket(Packet* packet) = 0;
+			virtual bool OnAssociationSendData(const uint8_t* data, size_t len) = 0;
 
 			/**
 			 * Called when calling Connect() succeeds and also for incoming successful

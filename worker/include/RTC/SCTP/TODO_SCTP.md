@@ -2,17 +2,15 @@
 
 ## Related to mediasoup SCTP implementation
 
+- Missing `Association::IsSctp()`. Use it in `iceCommon.hpp` (tests). Should/may check `IsSctp()` in `WebRtcTransport::OnDtlsTransportApplicationDataReceived()` same as we do in `PlainTransport::OnPacketReceived()`.
+  - _NOTE:_ Maybe we don't need it at all since `association->ReceiveSctpData()` already checks it. And we can only check it if we force ports 5000.
+
+- Why the hell does `DataConsumer` have a `RTC::SctpAssociation* sctpAssociation` member?
+
+- Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.
+
+- Do we need to pass `isDataChannel` to `SCTP::Association` constructor as we do in former `SctpAssociation`?
+
 ## Related to dcsctp
 
 - Investigate `DcSctpSocket::HandleTimeout()` which is only called from `media/sctp/dcsctp_transport.cc`.
-
-## Flow
-
-1. A DTLS packet arrives to `WebRtcTransport` where we check `DtlsTransport::IsDtls()`).
-2. It calls `OnDtlsDataReceived()` that calls `this->dtlsTransport->ProcessDtlsData()`.
-3. It calls `this->listener->OnDtlsTransportApplicationDataReceived()` in `WebRtcTransport`.
-4. It calls `Transport::ReceiveSctpData()` that calls `this->sctpAssociation->ProcessSctpData()`.
-
-However, in step 4 `WebRtcTransport::OnDtlsTransportApplicationDataReceived()` should instead call `RTC::SCTP::Packet::parse()` and `Transport::ReceiveSctpPacket()` with a `SCTP::Packet` instance instead than `data` and `len`. In fact it should be named `Transport::ReceiveSctpPacket()` instead of the current `Transport::ReceiveSctpData()`.
-
-Same in `PipeTransport` and `PlainTransport`.

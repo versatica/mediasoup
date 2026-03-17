@@ -18,7 +18,14 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpListener.hpp"
+#ifdef MS_SCTP_STACK
+#include "RTC/SCTP/public/AssociationInterface.hpp"
+#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/Message.hpp"
+#include "RTC/SCTP/public/SctpTypes.hpp"
+#else
 #include "RTC/SctpAssociation.hpp"
+#endif
 #include "RTC/SctpListener.hpp"
 #include "RTC/Shared.hpp"
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
@@ -37,7 +44,11 @@ namespace RTC
 	                  public RTC::Consumer::Listener,
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
+#ifdef MS_SCTP_STACK
+	                  public RTC::SCTP::AssociationListener,
+#else
 	                  public RTC::SctpAssociation::Listener,
+#endif
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Channel::ChannelSocket::RequestHandler,
@@ -280,6 +291,25 @@ namespace RTC
 		  onQueuedCallback* cb = nullptr) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
+#ifdef MS_SCTP_STACK
+		/* Pure virtual methods inherited from RTC::SCTP::AssociationListener. */
+	public:
+		bool OnAssociationSendData(const uint8_t* data, size_t len) override;
+		void OnAssociationConnected() override;
+		void OnAssociationClosed() override;
+		void OnAssociationConnectionRestarted() override;
+		void OnAssociationError(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage) override;
+		void OnAssociationAborted(
+		  RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage) override;
+		void OnAssociationMessageReceived(RTC::SCTP::Message message) override;
+		void OnAssociationStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds) override;
+		void OnAssociationStreamsResetFailed(
+		  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage) override;
+		void OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) override;
+		void OnAssociationStreamBufferedAmountLow(uint16_t streamId) override;
+		void OnAssociationTotalBufferedAmountLow() override;
+		// TODO: Add OnAssociationLifecycleMessageXxxxxx() methods.
+#else
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
 	public:
 		void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) override;
@@ -296,6 +326,7 @@ namespace RTC
 		  uint32_t ppid) override;
 		void OnSctpAssociationBufferedAmount(
 		  RTC::SctpAssociation* sctpAssociation, uint32_t bufferedAmount) override;
+#endif
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
@@ -333,7 +364,11 @@ namespace RTC
 		RTC::Shared* shared{ nullptr };
 		size_t maxMessageSize{ 262144u };
 		// Allocated by this.
+#ifdef MS_SCTP_STACK
+		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
+#else
 		RTC::SctpAssociation* sctpAssociation{ nullptr };
+#endif
 
 	private:
 		// Passed by argument.

@@ -72,14 +72,14 @@ namespace RTC
 			}
 		}
 
-		bool AssociationDeferredListener::OnAssociationSendPacket(Packet* packet)
+		bool AssociationDeferredListener::OnAssociationSendData(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			// Will not be deferred but called directly.
-			return this->innerListener.OnAssociationSendPacket(packet);
+			return this->innerListener.OnAssociationSendData(data, len);
 		}
 
 		void AssociationDeferredListener::OnAssociationConnected()

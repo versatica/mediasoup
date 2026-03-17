@@ -2,7 +2,6 @@
 #define MS_RTC_SCTP_ASSOCIATION_DEFERRED_LISTENER_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
@@ -59,7 +58,7 @@ namespace RTC
 
 		public:
 			/* Pure virtual methods inherited from RTC::STCP::AssociationListener. */
-			bool OnAssociationSendPacket(Packet* packet) override;
+			bool OnAssociationSendData(const uint8_t* data, size_t len) override;
 
 			void OnAssociationConnected() override;
 

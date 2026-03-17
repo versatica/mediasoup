@@ -28,7 +28,8 @@ namespace RTC
 				packet->WriteCRC32cChecksum();
 			}
 
-			const bool sent = this->associationListener.OnAssociationSendPacket(packet);
+			const bool sent =
+			  this->associationListener.OnAssociationSendData(packet->GetBuffer(), packet->GetLength());
 
 			this->listener.OnPacketSenderPacketSent(this, packet, sent);
 

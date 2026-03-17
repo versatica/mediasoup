@@ -1,4 +1,3 @@
-#include "flatbuffers/stl_emulation.h"
 #define MS_CLASS "RTC::Transport"
 // #define MS_LOG_DEV_LEVEL 3
 
@@ -19,10 +18,11 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
-#ifdef MS_SCTP_STACK
-#include "RTC/SCTP/packet/Packet.hpp"
-#endif
 #include "RTC/RtpDictionaries.hpp"
+#ifdef MS_SCTP_STACK
+#include "RTC/SCTP/association/Association.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
+#endif
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
@@ -111,6 +111,18 @@ namespace RTC
 				sctpSendBufferSize = DefaultSctpSendBufferSize;
 			}
 
+#ifdef MS_SCTP_STACK
+			// TODO: Many interesting options missing.
+			const SctpOptions sctpOptions = { .sourcePort         = 5000,
+				                                .destinationPort    = 5000,
+				                                .maxOutboundStreams = 65535,
+				                                .maxInboundStreams  = options->numSctpStreams()->mis(),
+				                                // TODO: Sure?
+				                                .maxSendMessageSize = this->maxMessageSize,
+				                                .maxSendBufferSize  = sctpSendBufferSize };
+
+			this->sctpAssociation = std::make_unique<RTC::STCP::Association>(sctpOptions, this);
+#else
 			// This may throw.
 			this->sctpAssociation = new RTC::SctpAssociation(
 			  this,
@@ -119,6 +131,7 @@ namespace RTC
 			  this->maxMessageSize,
 			  sctpSendBufferSize,
 			  options->isDataChannel());
+#endif
 		}
 
 		// Create the RTCP timer.
@@ -1685,24 +1698,6 @@ namespace RTC
 
 		// Pass it to the SctpAssociation.
 		this->sctpAssociation->ProcessSctpData(data, len);
-
-// TODO: For testing purposes. Must be removed.
-#ifdef MS_SCTP_STACK
-		MS_DUMP("<<< received SCTP packet...");
-
-		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
-
-		if (packet)
-		{
-			packet->Dump();
-
-			delete packet;
-		}
-		else
-		{
-			MS_ERROR("RTC::SCTP::Packet::Parse() failed to parse received SCTP data");
-		}
-#endif
 	}
 
 	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const
@@ -2434,21 +2429,21 @@ namespace RTC
 		  notification);
 	}
 
-	inline void Transport::OnProducerPaused(RTC::Producer* producer)
+	void Transport::OnProducerPaused(RTC::Producer* producer)
 	{
 		MS_TRACE();
 
 		this->listener->OnTransportProducerPaused(this, producer);
 	}
 
-	inline void Transport::OnProducerResumed(RTC::Producer* producer)
+	void Transport::OnProducerResumed(RTC::Producer* producer)
 	{
 		MS_TRACE();
 
 		this->listener->OnTransportProducerResumed(this, producer);
 	}
 
-	inline void Transport::OnProducerNewRtpStream(
+	void Transport::OnProducerNewRtpStream(
 	  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
@@ -2456,7 +2451,7 @@ namespace RTC
 		this->listener->OnTransportProducerNewRtpStream(this, producer, rtpStream, mappedSsrc);
 	}
 
-	inline void Transport::OnProducerRtpStreamScore(
+	void Transport::OnProducerRtpStreamScore(
 	  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
@@ -2464,7 +2459,7 @@ namespace RTC
 		this->listener->OnTransportProducerRtpStreamScore(this, producer, rtpStream, score, previousScore);
 	}
 
-	inline void Transport::OnProducerRtcpSenderReport(
+	void Transport::OnProducerRtcpSenderReport(
 	  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first)
 	{
 		MS_TRACE();
@@ -2472,21 +2467,21 @@ namespace RTC
 		this->listener->OnTransportProducerRtcpSenderReport(this, producer, rtpStream, first);
 	}
 
-	inline void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet)
+	void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
 		this->listener->OnTransportProducerRtpPacketReceived(this, producer, packet);
 	}
 
-	inline void Transport::OnProducerSendRtcpPacket(RTC::Producer* /*producer*/, RTC::RTCP::Packet* packet)
+	void Transport::OnProducerSendRtcpPacket(RTC::Producer* /*producer*/, RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
 		SendRtcpPacket(packet);
 	}
 
-	inline void Transport::OnProducerNeedWorstRemoteFractionLost(
+	void Transport::OnProducerNeedWorstRemoteFractionLost(
 	  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost)
 	{
 		MS_TRACE();
@@ -2495,7 +2490,7 @@ namespace RTC
 		  this, producer, mappedSsrc, worstRemoteFractionLost);
 	}
 
-	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
+	void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -2590,7 +2585,7 @@ namespace RTC
 		this->sendRtpTransmission.Update(packet);
 	}
 
-	inline void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
+	void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -2675,7 +2670,7 @@ namespace RTC
 		this->sendRtxTransmission.Update(packet);
 	}
 
-	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
+	void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -2689,7 +2684,7 @@ namespace RTC
 		this->listener->OnTransportConsumerKeyFrameRequested(this, consumer, mappedSsrc);
 	}
 
-	inline void Transport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
+	void Transport::OnConsumerNeedBitrateChange(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
 
@@ -2699,7 +2694,7 @@ namespace RTC
 		ComputeOutgoingDesiredBitrate();
 	}
 
-	inline void Transport::OnConsumerNeedZeroBitrate(RTC::Consumer* /*consumer*/)
+	void Transport::OnConsumerNeedZeroBitrate(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
 
@@ -2711,7 +2706,7 @@ namespace RTC
 		ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
 	}
 
-	inline void Transport::OnConsumerProducerClosed(RTC::Consumer* consumer)
+	void Transport::OnConsumerProducerClosed(RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -2747,7 +2742,7 @@ namespace RTC
 		}
 	}
 
-	inline void Transport::OnDataProducerMessageReceived(
+	void Transport::OnDataProducerMessageReceived(
 	  RTC::DataProducer* dataProducer,
 	  const uint8_t* msg,
 	  size_t len,
@@ -2761,21 +2756,21 @@ namespace RTC
 		  this, dataProducer, msg, len, ppid, subchannels, requiredSubchannel);
 	}
 
-	inline void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
+	void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
 
 		this->listener->OnTransportDataProducerPaused(this, dataProducer);
 	}
 
-	inline void Transport::OnDataProducerResumed(RTC::DataProducer* dataProducer)
+	void Transport::OnDataProducerResumed(RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
 
 		this->listener->OnTransportDataProducerResumed(this, dataProducer);
 	}
 
-	inline void Transport::OnDataConsumerSendMessage(
+	void Transport::OnDataConsumerSendMessage(
 	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
 	{
 		MS_TRACE();
@@ -2783,7 +2778,7 @@ namespace RTC
 		SendMessage(dataConsumer, msg, len, ppid, cb);
 	}
 
-	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
+	void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
 	{
 		MS_TRACE();
 
@@ -2803,7 +2798,108 @@ namespace RTC
 		delete dataConsumer;
 	}
 
-	inline void Transport::OnSctpAssociationConnecting(RTC::SctpAssociation* /*sctpAssociation*/)
+#ifdef MS_SCTP_STACK
+	bool Transport::OnAssociationSendData(const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO: Check if this is still true.
+		// Ignore if destroying.
+		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,
+		// its destructor is called first and then the parent Transport's destructor,
+		// and we would end here calling SendSctpData() which is an abstract method.
+		if (this->destroying)
+		{
+			return;
+		}
+
+		if (this->sctpAssociation)
+		{
+			SendSctpData(data, len);
+		}
+	}
+
+	void Transport::OnAssociationConnected()
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::OnAssociationClosed()
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::OnAssociationConnectionRestarted()
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::OnAssociationError(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::OnAssociationAborted(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::OnAssociationMessageReceived(RTC::SCTP::Message message)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::OnAssociationStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::OnAssociationStreamsResetFailed(
+	  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage
+	  {
+		MS_TRACE();
+
+		// TODO
+	  }
+
+	void Transport::OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::OnAssociationStreamBufferedAmountLow(uint16_t streamId)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void Transport::OnAssociationTotalBufferedAmountLow()
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	// TODO: Add OnAssociationLifecycleMessageXxxxxx() methods.
+#else
+	void Transport::OnSctpAssociationConnecting(RTC::SctpAssociation* /*sctpAssociation*/)
 	{
 		MS_TRACE();
 
@@ -2818,7 +2914,7 @@ namespace RTC
 		  sctpStateChangeOffset);
 	}
 
-	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
+	void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
 	{
 		MS_TRACE();
 
@@ -2844,7 +2940,7 @@ namespace RTC
 		  sctpStateChangeOffset);
 	}
 
-	inline void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
+	void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
 	{
 		MS_TRACE();
 
@@ -2870,7 +2966,7 @@ namespace RTC
 		  sctpStateChangeOffset);
 	}
 
-	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
+	void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
 	{
 		MS_TRACE();
 
@@ -2896,7 +2992,7 @@ namespace RTC
 		  sctpStateChangeOffset);
 	}
 
-	inline void Transport::OnSctpAssociationSendData(
+	void Transport::OnSctpAssociationSendData(
 	  RTC::SctpAssociation* /*sctpAssociation*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -2914,27 +3010,9 @@ namespace RTC
 		{
 			SendSctpData(data, len);
 		}
-
-// TODO: For testing purposes. Must be removed.
-#ifdef MS_SCTP_STACK
-		MS_DUMP(">>> sending SCTP packet...");
-
-		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
-
-		if (packet)
-		{
-			packet->Dump();
-
-			delete packet;
-		}
-		else
-		{
-			MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse sent SCTP data");
-		}
-#endif
 	}
 
-	inline void Transport::OnSctpAssociationMessageReceived(
+	void Transport::OnSctpAssociationMessageReceived(
 	  RTC::SctpAssociation* /*sctpAssociation*/,
 	  uint16_t streamId,
 	  const uint8_t* msg,
@@ -2971,7 +3049,7 @@ namespace RTC
 		}
 	}
 
-	inline void Transport::OnSctpAssociationBufferedAmount(
+	void Transport::OnSctpAssociationBufferedAmount(
 	  RTC::SctpAssociation* /*sctpAssociation*/, uint32_t bufferedAmount)
 	{
 		MS_TRACE();
@@ -2986,8 +3064,9 @@ namespace RTC
 			}
 		}
 	}
+#endif
 
-	inline void Transport::OnTransportCongestionControlClientBitrates(
+	void Transport::OnTransportCongestionControlClientBitrates(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,
 	  RTC::TransportCongestionControlClient::Bitrates& bitrates)
 	{
@@ -3002,7 +3081,7 @@ namespace RTC
 		EmitTraceEventBweType(bitrates);
 	}
 
-	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(
+	void Transport::OnTransportCongestionControlClientSendRtpPacket(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,
 	  RTC::RTP::Packet* packet,
 	  const webrtc::PacedPacketInfo& pacingInfo)
@@ -3104,7 +3183,7 @@ namespace RTC
 		  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
 	}
 
-	inline void Transport::OnTransportCongestionControlServerSendRtcpPacket(
+	void Transport::OnTransportCongestionControlServerSendRtcpPacket(
 	  RTC::TransportCongestionControlServer* /*tccServer*/, RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
@@ -3115,7 +3194,7 @@ namespace RTC
 	}
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-	inline void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
+	void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
 	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
 	  uint32_t availableBitrate,
 	  uint32_t previousAvailableBitrate)
@@ -3133,7 +3212,7 @@ namespace RTC
 	}
 #endif
 
-	inline void Transport::OnTimer(TimerHandle* timer)
+	void Transport::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 
