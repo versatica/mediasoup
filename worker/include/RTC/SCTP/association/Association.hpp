@@ -288,7 +288,7 @@ namespace RTC
 			 * message will be queued.
 			 *
 			 * This has identical semantics to `SendMessage()', except that it may
-			 * coalesce many messages into a single SCTP packet if they would fit.
+			 * coalesce many messages into a single SCTP Packet if they would fit.
 			 *
 			 * @remarks
 			 * - Same as in `SendMessage()`.
@@ -297,13 +297,9 @@ namespace RTC
 			  std::span<Message> messages, const SendMessageOptions& sendMessageOptions) override;
 
 			/**
-			 * Receive a Packet received from the remote peer.
-			 *
-			 * @remarks
-			 * - The caller is responsible of freeing given Packet once this method
-			 *   returns.
+			 * Receives SCTP data (hopefully an SCTP Packet) from the remote peer.
 			 */
-			void ReceivePacket(const Packet* receivedPacket) override;
+			void ReceiveSctpData(const uint8_t* data, size_t len) override;
 
 		private:
 			void InternalClose(Types::ErrorKind errorKind, const std::string_view& message);

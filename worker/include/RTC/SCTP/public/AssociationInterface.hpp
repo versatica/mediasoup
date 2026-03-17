@@ -2,7 +2,6 @@
 #define MS_RTC_SCTP_ASSOCIATION_INTERFACE_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/public/AssociationMetrics.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
@@ -150,7 +149,7 @@ namespace RTC
 			 * message will be queued.
 			 *
 			 * This has identical semantics to `SendMessage()', except that it may
-			 * coalesce many messages into a single SCTP packet if they would fit.
+			 * coalesce many messages into a single SCTP Packet if they would fit.
 			 *
 			 * @remarks
 			 * - Same as in `SendMessage()`.
@@ -159,13 +158,9 @@ namespace RTC
 			  std::span<Message> messages, const SendMessageOptions& sendMessageOptions) = 0;
 
 			/**
-			 * Receive a Packet received from the remote peer.
-			 *
-			 * @remarks
-			 * - The caller is responsible of freeing given Packet once this method
-			 *   returns.
+			 * Receives SCTP data (hopefully an SCTP Packet) from the remote peer.
 			 */
-			virtual void ReceivePacket(const Packet* receivedPacket) = 0;
+			virtual void ReceiveSctpData(const uint8_t* data, size_t len) = 0;
 		};
 	} // namespace SCTP
 } // namespace RTC

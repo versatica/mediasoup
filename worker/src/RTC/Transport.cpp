@@ -19,6 +19,9 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#ifdef MS_SCTP_STACK
+#include "RTC/SCTP/packet/Packet.hpp"
+#endif
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
@@ -1682,6 +1685,24 @@ namespace RTC
 
 		// Pass it to the SctpAssociation.
 		this->sctpAssociation->ProcessSctpData(data, len);
+
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+		MS_DUMP("<<< received SCTP packet...");
+
+		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (packet)
+		{
+			packet->Dump();
+
+			delete packet;
+		}
+		else
+		{
+			MS_ERROR("RTC::SCTP::Packet::Parse() failed to parse received SCTP data");
+		}
+#endif
 	}
 
 	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const
@@ -2893,6 +2914,24 @@ namespace RTC
 		{
 			SendSctpData(data, len);
 		}
+
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+		MS_DUMP(">>> sending SCTP packet...");
+
+		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (packet)
+		{
+			packet->Dump();
+
+			delete packet;
+		}
+		else
+		{
+			MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse sent SCTP data");
+		}
+#endif
 	}
 
 	inline void Transport::OnSctpAssociationMessageReceived(

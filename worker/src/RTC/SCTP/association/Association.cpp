@@ -453,7 +453,7 @@ namespace RTC
 			return statuses;
 		}
 
-		void Association::ReceivePacket(const Packet* receivedPacket)
+		void Association::ReceiveSctpData(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
@@ -461,20 +461,34 @@ namespace RTC
 
 			this->privateMetrics.rxPacketsCount++;
 
-			if (!ValidateReceivedPacket(receivedPacket))
+			std::unique_ptr<Packet> receivedPacket{ Packet::Parse(data, len) };
+
+			if (!receivedPacket)
+			{
+				MS_WARN_TAG(sctp, "failed to parse received SCTP packet");
+
+				this->listener.OnAssociationError(
+				  Types::ErrorKind::PARSE_FAILED, "failed to parse received SCTP packet");
+
+				AssertStateIsConsistent();
+
+				return;
+			}
+
+			if (!ValidateReceivedPacket(receivedPacket.get()))
 			{
 				MS_WARN_TAG(sctp, "Packet verification failed, discarded");
 
 				return;
 			}
 
-			MaySendShutdownOnPacketReceived(receivedPacket);
+			MaySendShutdownOnPacketReceived(receivedPacket.get());
 
 			for (auto it = receivedPacket->ChunksBegin(); it != receivedPacket->ChunksEnd(); ++it)
 			{
 				const auto* receivedChunk = *it;
 
-				if (!ProcessReceivedChunk(receivedPacket, receivedChunk))
+				if (!ProcessReceivedChunk(receivedPacket.get(), receivedChunk))
 				{
 					break;
 				}
