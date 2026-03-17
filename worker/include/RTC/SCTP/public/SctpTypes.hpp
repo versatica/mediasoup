@@ -39,12 +39,7 @@ namespace RTC
 				SHUTTING_DOWN
 			};
 
-			/**
-			 * @remarks
-			 * - It would be great to return `constexpr` here but unfortunatelly MSVC
-			 *   fails to parse it for whatever terrible reason.
-			 */
-			inline const std::string_view AssociationStateToString(AssociationState associationState)
+			constexpr std::string_view AssociationStateToString(AssociationState associationState)
 			{
 				switch (associationState)
 				{
@@ -68,7 +63,11 @@ namespace RTC
 						return "ShuttingDown";
 					}
 
-						NO_DEFAULT_GCC();
+					// Cannot happen but some compilers are not smart enough.
+					default:
+					{
+						return "";
+					}
 				}
 			}
 
@@ -119,7 +118,7 @@ namespace RTC
 				UNSUPPORTED_OPERATION
 			};
 
-			inline const std::string_view ErrorKindToString(ErrorKind errorKind)
+			constexpr std::string_view ErrorKindToString(ErrorKind errorKind)
 			{
 				switch (errorKind)
 				{
@@ -167,6 +166,12 @@ namespace RTC
 					{
 						return "UNSUPPORTED_OPERATION";
 					}
+
+					// Cannot happen but some compilers are not smart enough.
+					default:
+					{
+						return "";
+					}
 				}
 			}
 
@@ -182,7 +187,7 @@ namespace RTC
 				USRSCTP
 			};
 
-			inline const std::string_view SctpImplementationToString(SctpImplementation sctpImplementation)
+			constexpr std::string_view SctpImplementationToString(SctpImplementation sctpImplementation)
 			{
 				switch (sctpImplementation)
 				{
@@ -206,7 +211,11 @@ namespace RTC
 						return "usrsctp";
 					}
 
-						NO_DEFAULT_GCC();
+					// Cannot happen but some compilers are not smart enough.
+					default:
+					{
+						return "";
+					}
 				}
 			}
 
@@ -233,7 +242,7 @@ namespace RTC
 				NOT_SUPPORTED
 			};
 
-			inline const std::string_view ResetStreamsStatusToString(ResetStreamsStatus status)
+			constexpr std::string_view ResetStreamsStatusToString(ResetStreamsStatus status)
 			{
 				switch (status)
 				{
@@ -250,6 +259,12 @@ namespace RTC
 					case ResetStreamsStatus::NOT_SUPPORTED:
 					{
 						return "NOT_SUPPORTED";
+					}
+
+					// Cannot happen but some compilers are not smart enough.
+					default:
+					{
+						return "";
 					}
 				}
 			}
@@ -290,7 +305,7 @@ namespace RTC
 				ERROR_SHUTTING_DOWN
 			};
 
-			inline const std::string_view SendMessageStatusToString(SendMessageStatus status)
+			constexpr std::string_view SendMessageStatusToString(SendMessageStatus status)
 			{
 				switch (status)
 				{
@@ -317,6 +332,12 @@ namespace RTC
 					case SendMessageStatus::ERROR_SHUTTING_DOWN:
 					{
 						return "ERROR_SHUTTING_DOWN";
+					}
+
+					// Cannot happen but some compilers are not smart enough.
+					default:
+					{
+						return "";
 					}
 				}
 			}
