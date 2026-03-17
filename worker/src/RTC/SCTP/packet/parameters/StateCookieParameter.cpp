@@ -133,7 +133,7 @@ namespace RTC
 			// StateCookieParameter minus its fixed header length (no matter there
 			// was a Cookie already in the Parameter since we are overriding it
 			// anyway).
-			size_t bufferLength = GetBufferLength() - Parameter::ParameterHeaderLength;
+			const size_t bufferLength = GetBufferLength() - Parameter::ParameterHeaderLength;
 
 			StateCookie::Write(
 			  buffer,

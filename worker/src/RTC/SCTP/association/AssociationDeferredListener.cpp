@@ -134,7 +134,7 @@ namespace RTC
 			this->deferredCallbacks.emplace_back(
 			  [](CallbackData data, AssociationListener& listener)
 			  {
-				  Error error = std::get<Error>(std::move(data));
+				  const Error error = std::get<Error>(std::move(data));
 				  listener.OnAssociationError(error.errorKind, error.message);
 			  },
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
@@ -150,7 +150,7 @@ namespace RTC
 			this->deferredCallbacks.emplace_back(
 			  [](CallbackData data, AssociationListener& listener)
 			  {
-				  Error error = std::get<Error>(std::move(data));
+				  const Error error = std::get<Error>(std::move(data));
 				  listener.OnAssociationAborted(error.errorKind, error.message);
 			  },
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });

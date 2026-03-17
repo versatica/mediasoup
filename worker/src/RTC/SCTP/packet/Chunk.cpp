@@ -356,7 +356,7 @@ namespace RTC
 					return false;
 				}
 
-				Parameter* parameter{ nullptr };
+				const Parameter* parameter{ nullptr };
 
 				switch (parameterType)
 				{
@@ -562,7 +562,7 @@ namespace RTC
 					return false;
 				}
 
-				ErrorCause* errorCause{ nullptr };
+				const ErrorCause* errorCause{ nullptr };
 
 				switch (causeCode)
 				{
