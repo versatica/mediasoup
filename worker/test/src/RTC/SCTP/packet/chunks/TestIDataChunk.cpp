@@ -77,6 +77,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(userData.GetMessageId() == 1234567890);
 		REQUIRE(userData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(userData.GetPayloadProtocolId() == 99887766);
+		// NOTE: clang-tidy doesn't understand that this is fine.
 		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(userData).ReleasePayload() == expectedPayload);
 
