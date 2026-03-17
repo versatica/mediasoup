@@ -39,34 +39,28 @@ namespace RTC
 				SHUTTING_DOWN
 			};
 
-			constexpr std::string_view AssociationStateToString(AssociationState associationState)
+			constexpr std::string_view AssociationStateToString(Types::AssociationState associationState)
 			{
 				switch (associationState)
 				{
-					case AssociationState::CLOSED:
+					case Types::AssociationState::CLOSED:
 					{
 						return "Closed";
 					}
 
-					case AssociationState::CONNECTING:
+					case Types::AssociationState::CONNECTING:
 					{
 						return "Connecting";
 					}
 
-					case AssociationState::CONNECTED:
+					case Types::AssociationState::CONNECTED:
 					{
 						return "Connected";
 					}
 
-					case AssociationState::SHUTTING_DOWN:
+					case Types::AssociationState::SHUTTING_DOWN:
 					{
 						return "ShuttingDown";
-					}
-
-					// Cannot happen but some compilers are not smart enough.
-					default:
-					{
-						return "";
 					}
 				}
 			}
@@ -118,59 +112,53 @@ namespace RTC
 				UNSUPPORTED_OPERATION
 			};
 
-			constexpr std::string_view ErrorKindToString(ErrorKind errorKind)
+			constexpr std::string_view ErrorKindToString(Types::ErrorKind errorKind)
 			{
 				switch (errorKind)
 				{
-					case ErrorKind::NO_ERROR:
+					case Types::ErrorKind::NO_ERROR:
 					{
 						return "NO_ERROR";
 					}
 
-					case ErrorKind::TOO_MANY_RETRIES:
+					case Types::ErrorKind::TOO_MANY_RETRIES:
 					{
 						return "TOO_MANY_RETRIES";
 					}
 
-					case ErrorKind::NOT_CONNECTED:
+					case Types::ErrorKind::NOT_CONNECTED:
 					{
 						return "NOT_CONNECTED";
 					}
 
-					case ErrorKind::PARSE_FAILED:
+					case Types::ErrorKind::PARSE_FAILED:
 					{
 						return "PARSE_FAILED";
 					}
 
-					case ErrorKind::WRONG_SEQUENCE:
+					case Types::ErrorKind::WRONG_SEQUENCE:
 					{
 						return "WRONG_SEQUENCE";
 					}
 
-					case ErrorKind::PEER_REPORTED:
+					case Types::ErrorKind::PEER_REPORTED:
 					{
 						return "PEER_REPORTED";
 					}
 
-					case ErrorKind::PROTOCOL_VIOLATION:
+					case Types::ErrorKind::PROTOCOL_VIOLATION:
 					{
 						return "PROTOCOL_VIOLATION";
 					}
 
-					case ErrorKind::RESOURCE_EXHAUSTION:
+					case Types::ErrorKind::RESOURCE_EXHAUSTION:
 					{
 						return "RESOURCE_EXHAUSTION";
 					}
 
-					case ErrorKind::UNSUPPORTED_OPERATION:
+					case Types::ErrorKind::UNSUPPORTED_OPERATION:
 					{
 						return "UNSUPPORTED_OPERATION";
-					}
-
-					// Cannot happen but some compilers are not smart enough.
-					default:
-					{
-						return "";
 					}
 				}
 			}
@@ -187,34 +175,28 @@ namespace RTC
 				USRSCTP
 			};
 
-			constexpr std::string_view SctpImplementationToString(SctpImplementation sctpImplementation)
+			constexpr std::string_view SctpImplementationToString(Types::SctpImplementation sctpImplementation)
 			{
 				switch (sctpImplementation)
 				{
-					case SctpImplementation::UNKNOWN:
+					case Types::SctpImplementation::UNKNOWN:
 					{
 						return "unknown";
 					}
 
-					case SctpImplementation::MEDIASOUP:
+					case Types::SctpImplementation::MEDIASOUP:
 					{
 						return "mediasoup";
 					}
 
-					case SctpImplementation::DCSCTP:
+					case Types::SctpImplementation::DCSCTP:
 					{
 						return "dcsctp";
 					}
 
-					case SctpImplementation::USRSCTP:
+					case Types::SctpImplementation::USRSCTP:
 					{
 						return "usrsctp";
-					}
-
-					// Cannot happen but some compilers are not smart enough.
-					default:
-					{
-						return "";
 					}
 				}
 			}
@@ -242,29 +224,23 @@ namespace RTC
 				NOT_SUPPORTED
 			};
 
-			constexpr std::string_view ResetStreamsStatusToString(ResetStreamsStatus status)
+			constexpr std::string_view ResetStreamsStatusToString(Types::ResetStreamsStatus status)
 			{
 				switch (status)
 				{
-					case ResetStreamsStatus::NOT_CONNECTED:
+					case Types::ResetStreamsStatus::NOT_CONNECTED:
 					{
 						return "NOT_CONNECTED";
 					}
 
-					case ResetStreamsStatus::PERFORMED:
+					case Types::ResetStreamsStatus::PERFORMED:
 					{
 						return "PERFORMED";
 					}
 
-					case ResetStreamsStatus::NOT_SUPPORTED:
+					case Types::ResetStreamsStatus::NOT_SUPPORTED:
 					{
 						return "NOT_SUPPORTED";
-					}
-
-					// Cannot happen but some compilers are not smart enough.
-					default:
-					{
-						return "";
 					}
 				}
 			}
@@ -305,39 +281,33 @@ namespace RTC
 				ERROR_SHUTTING_DOWN
 			};
 
-			constexpr std::string_view SendMessageStatusToString(SendMessageStatus status)
+			constexpr std::string_view SendMessageStatusToString(Types::SendMessageStatus status)
 			{
 				switch (status)
 				{
-					case SendMessageStatus::SUCCESS:
+					case Types::SendMessageStatus::SUCCESS:
 					{
 						return "SUCCESS";
 					}
 
-					case SendMessageStatus::ERROR_MESSAGE_EMPTY:
+					case Types::SendMessageStatus::ERROR_MESSAGE_EMPTY:
 					{
 						return "ERROR_MESSAGE_EMPTY";
 					}
 
-					case SendMessageStatus::ERROR_MESSAGE_TOO_LARGE:
+					case Types::SendMessageStatus::ERROR_MESSAGE_TOO_LARGE:
 					{
 						return "ERROR_MESSAGE_TOO_LARGE";
 					}
 
-					case SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
+					case Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
 					{
 						return "ERROR_RESOURCE_EXHAUSTION";
 					}
 
-					case SendMessageStatus::ERROR_SHUTTING_DOWN:
+					case Types::SendMessageStatus::ERROR_SHUTTING_DOWN:
 					{
 						return "ERROR_SHUTTING_DOWN";
-					}
-
-					// Cannot happen but some compilers are not smart enough.
-					default:
-					{
-						return "";
 					}
 				}
 			}
