@@ -20,11 +20,11 @@ namespace RTC
 
 			NegotiatedCapabilities negotiatedCapabilities{};
 
-			auto* remoteSupportedExtensionsParameter =
+			const auto* remoteSupportedExtensionsParameter =
 			  remoteChunk->template GetFirstParameterOfType<SupportedExtensionsParameter>();
-			auto* remoteForwardTsnSupportedParameter =
+			const auto* remoteForwardTsnSupportedParameter =
 			  remoteChunk->template GetFirstParameterOfType<ForwardTsnSupportedParameter>();
-			auto* remoteZeroChecksumAcceptableParameter =
+			const auto* remoteZeroChecksumAcceptableParameter =
 			  remoteChunk->template GetFirstParameterOfType<ZeroChecksumAcceptableParameter>();
 
 			negotiatedCapabilities.maxOutboundStreams =
