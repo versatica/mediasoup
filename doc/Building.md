@@ -232,14 +232,14 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 
 - `invoke clean` and `invoke mediasoup-worker` must have been called first.
 - A specific version of `clang-tidy`is required. See [Install clang-tidy](#install-clang-tidy).
-- `clang-tydi-VERSION` or `clang-tidy` (corresponding to the required version) must be in the `PATH`. If not, add it before running the command. Same for other `clang-tidy` related executables such as `run-clang-tidy` and `clang-apply-replacements`,
+- `clang-tidy-VERSION` or `clang-tidy` (corresponding to the required version) must be in the `PATH`. If not, add it before running the command. Same for other `clang-tidy` related executables such as `run-clang-tidy` and `clang-apply-replacements`,
 
 **Environment variables:**
 
 - "MEDIASOUP_TIDY_CHECKS": Optional. Comma separated list of checks. Overrides the checks defined in `worker/.clang-tidy` file.
 - "MEDIASOUP_TIDY_FILES": Optional. Space separated source file paths to process. All `.cpp` files will be processes by default.
   - File paths must be relative to `worker/` folder.
-  - File paths can use [glob](https://github.com/isaacs/node-glob) syntax. Example: `"test/src/**/*.cpp"`.
+  - File paths can use [glob](https://github.com/isaacs/node-glob) syntax. Example: `"src/RTC/SCTP/**/*.cpp"`.
 
 **Usage example in macOS:**
 
