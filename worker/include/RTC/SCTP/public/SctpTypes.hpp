@@ -39,29 +39,31 @@ namespace RTC
 				SHUTTING_DOWN
 			};
 
-			constexpr std::string_view AssociationStateToString(Types::AssociationState associationState)
+			constexpr std::string_view AssociationStateToString(AssociationState associationState)
 			{
 				switch (associationState)
 				{
-					case Types::AssociationState::CLOSED:
+					case AssociationState::CLOSED:
 					{
 						return "Closed";
 					}
 
-					case Types::AssociationState::CONNECTING:
+					case AssociationState::CONNECTING:
 					{
 						return "Connecting";
 					}
 
-					case Types::AssociationState::CONNECTED:
+					case AssociationState::CONNECTED:
 					{
 						return "Connected";
 					}
 
-					case Types::AssociationState::SHUTTING_DOWN:
+					case AssociationState::SHUTTING_DOWN:
 					{
 						return "ShuttingDown";
 					}
+
+						NO_DEFAULT_GCC();
 				}
 			}
 
@@ -74,7 +76,7 @@ namespace RTC
 				 * Indicates that no error has occurred. This will never be the case when
 				 * OnError() or OnAborted() is called.
 				 */
-				NO_ERROR,
+				SUCCESS,
 				/**
 				 * There have been too many retries or timeouts, and the library has given
 				 * up.
@@ -112,51 +114,53 @@ namespace RTC
 				UNSUPPORTED_OPERATION
 			};
 
-			constexpr std::string_view ErrorKindToString(Types::ErrorKind errorKind)
+			constexpr std::string_view ErrorKindToString(ErrorKind errorKind)
 			{
 				switch (errorKind)
 				{
-					case Types::ErrorKind::NO_ERROR:
+					// NOTE: In dcsctp this is `NO_ERROR` but it fails on MSVC because
+					// some Windows headers define `NO_ERROR` macro.
+					case ErrorKind::SUCCESS:
 					{
-						return "NO_ERROR";
+						return "SUCCESS";
 					}
 
-					case Types::ErrorKind::TOO_MANY_RETRIES:
+					case ErrorKind::TOO_MANY_RETRIES:
 					{
 						return "TOO_MANY_RETRIES";
 					}
 
-					case Types::ErrorKind::NOT_CONNECTED:
+					case ErrorKind::NOT_CONNECTED:
 					{
 						return "NOT_CONNECTED";
 					}
 
-					case Types::ErrorKind::PARSE_FAILED:
+					case ErrorKind::PARSE_FAILED:
 					{
 						return "PARSE_FAILED";
 					}
 
-					case Types::ErrorKind::WRONG_SEQUENCE:
+					case ErrorKind::WRONG_SEQUENCE:
 					{
 						return "WRONG_SEQUENCE";
 					}
 
-					case Types::ErrorKind::PEER_REPORTED:
+					case ErrorKind::PEER_REPORTED:
 					{
 						return "PEER_REPORTED";
 					}
 
-					case Types::ErrorKind::PROTOCOL_VIOLATION:
+					case ErrorKind::PROTOCOL_VIOLATION:
 					{
 						return "PROTOCOL_VIOLATION";
 					}
 
-					case Types::ErrorKind::RESOURCE_EXHAUSTION:
+					case ErrorKind::RESOURCE_EXHAUSTION:
 					{
 						return "RESOURCE_EXHAUSTION";
 					}
 
-					case Types::ErrorKind::UNSUPPORTED_OPERATION:
+					case ErrorKind::UNSUPPORTED_OPERATION:
 					{
 						return "UNSUPPORTED_OPERATION";
 					}
@@ -175,29 +179,31 @@ namespace RTC
 				USRSCTP
 			};
 
-			constexpr std::string_view SctpImplementationToString(Types::SctpImplementation sctpImplementation)
+			constexpr std::string_view SctpImplementationToString(SctpImplementation sctpImplementation)
 			{
 				switch (sctpImplementation)
 				{
-					case Types::SctpImplementation::UNKNOWN:
+					case SctpImplementation::UNKNOWN:
 					{
 						return "unknown";
 					}
 
-					case Types::SctpImplementation::MEDIASOUP:
+					case SctpImplementation::MEDIASOUP:
 					{
 						return "mediasoup";
 					}
 
-					case Types::SctpImplementation::DCSCTP:
+					case SctpImplementation::DCSCTP:
 					{
 						return "dcsctp";
 					}
 
-					case Types::SctpImplementation::USRSCTP:
+					case SctpImplementation::USRSCTP:
 					{
 						return "usrsctp";
 					}
+
+						NO_DEFAULT_GCC();
 				}
 			}
 
@@ -224,21 +230,21 @@ namespace RTC
 				NOT_SUPPORTED
 			};
 
-			constexpr std::string_view ResetStreamsStatusToString(Types::ResetStreamsStatus status)
+			constexpr std::string_view ResetStreamsStatusToString(ResetStreamsStatus status)
 			{
 				switch (status)
 				{
-					case Types::ResetStreamsStatus::NOT_CONNECTED:
+					case ResetStreamsStatus::NOT_CONNECTED:
 					{
 						return "NOT_CONNECTED";
 					}
 
-					case Types::ResetStreamsStatus::PERFORMED:
+					case ResetStreamsStatus::PERFORMED:
 					{
 						return "PERFORMED";
 					}
 
-					case Types::ResetStreamsStatus::NOT_SUPPORTED:
+					case ResetStreamsStatus::NOT_SUPPORTED:
 					{
 						return "NOT_SUPPORTED";
 					}
@@ -281,31 +287,31 @@ namespace RTC
 				ERROR_SHUTTING_DOWN
 			};
 
-			constexpr std::string_view SendMessageStatusToString(Types::SendMessageStatus status)
+			constexpr std::string_view SendMessageStatusToString(SendMessageStatus status)
 			{
 				switch (status)
 				{
-					case Types::SendMessageStatus::SUCCESS:
+					case SendMessageStatus::SUCCESS:
 					{
 						return "SUCCESS";
 					}
 
-					case Types::SendMessageStatus::ERROR_MESSAGE_EMPTY:
+					case SendMessageStatus::ERROR_MESSAGE_EMPTY:
 					{
 						return "ERROR_MESSAGE_EMPTY";
 					}
 
-					case Types::SendMessageStatus::ERROR_MESSAGE_TOO_LARGE:
+					case SendMessageStatus::ERROR_MESSAGE_TOO_LARGE:
 					{
 						return "ERROR_MESSAGE_TOO_LARGE";
 					}
 
-					case Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
+					case SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
 					{
 						return "ERROR_RESOURCE_EXHAUSTION";
 					}
 
-					case Types::SendMessageStatus::ERROR_SHUTTING_DOWN:
+					case SendMessageStatus::ERROR_SHUTTING_DOWN:
 					{
 						return "ERROR_SHUTTING_DOWN";
 					}

@@ -209,7 +209,7 @@ namespace RTC
 			// any), as this is the application's intention when calling Shutdown().
 			else
 			{
-				InternalClose(Types::ErrorKind::NO_ERROR, "");
+				InternalClose(Types::ErrorKind::SUCCESS, "");
 			}
 
 			AssertStateIsConsistent();
@@ -242,7 +242,7 @@ namespace RTC
 					this->packetSender.SendPacket(packet.get());
 				}
 
-				InternalClose(Types::ErrorKind::NO_ERROR, "");
+				InternalClose(Types::ErrorKind::SUCCESS, "");
 			}
 			else
 			{
@@ -503,7 +503,7 @@ namespace RTC
 				this->tcb = nullptr;
 			}
 
-			if (errorKind == Types::ErrorKind::NO_ERROR)
+			if (errorKind == Types::ErrorKind::SUCCESS)
 			{
 				this->listener.OnAssociationClosed();
 			}
@@ -1809,7 +1809,7 @@ namespace RTC
 
 					this->packetSender.SendPacket(packet.get());
 
-					InternalClose(Types::ErrorKind::NO_ERROR, "");
+					InternalClose(Types::ErrorKind::SUCCESS, "");
 
 					break;
 				}
@@ -1859,7 +1859,7 @@ namespace RTC
 			// SHOULD be discarded. If the endpoint is in the SHUTDOWN-ACK-SENT state,
 			// the endpoint SHOULD stop the T2-shutdown timer and remove all knowledge
 			// of the association (and thus the association enters the CLOSED state)."
-			InternalClose(Types::ErrorKind::NO_ERROR, "");
+			InternalClose(Types::ErrorKind::SUCCESS, "");
 		}
 
 		void Association::ProcessReceivedOperationErrorChunk(
