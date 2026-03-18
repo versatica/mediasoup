@@ -642,13 +642,13 @@ namespace RTC
 				  chunk->BuildParameterInPlace<ForwardTsnSupportedParameter>();
 
 				// TODO: SCTP: Remove
-				MS_DUMP("--- forwardTsnSupportedParameter 1:");
+				MS_DUMP("--- forwardTsnSupportedParameter before Consolidate():");
 				forwardTsnSupportedParameter->Dump();
 
 				forwardTsnSupportedParameter->Consolidate();
 
 				// TODO: SCTP: Remove
-				MS_DUMP("--- forwardTsnSupportedParameter 2:");
+				MS_DUMP("--- forwardTsnSupportedParameter after Consolidate():");
 				forwardTsnSupportedParameter->Dump();
 			}
 
