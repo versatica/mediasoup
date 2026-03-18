@@ -161,11 +161,11 @@ namespace RTC
 
 				SetState(State::COOKIE_WAIT, "Connect() called");
 			}
-			if (this->state != State::CLOSED)
+			else
 			{
 				const auto stateStringView = Association::StateToString(this->state);
 
-				MS_DEBUG_TAG(
+				MS_WARN_TAG(
 				  sctp,
 				  "cannot initiate the Association since internal state is not CLOSED but %.*s",
 				  static_cast<int>(stateStringView.size()),
@@ -517,6 +517,8 @@ namespace RTC
 				this->tcb = nullptr;
 			}
 
+			SetState(State::CLOSED, message);
+
 			if (errorKind == Types::ErrorKind::SUCCESS)
 			{
 				this->listener.OnAssociationClosed();
@@ -525,8 +527,6 @@ namespace RTC
 			{
 				this->listener.OnAssociationAborted(errorKind, message);
 			}
-
-			SetState(State::CLOSED, message);
 		}
 
 		void Association::SetState(State state, const std::string_view& message)
@@ -1758,8 +1758,8 @@ namespace RTC
 				// state, restarting its T2-shutdown timer.
 				case State::SHUTDOWN_SENT:
 				{
-					SendShutdownAckChunk();
 					SetState(State::SHUTDOWN_ACK_SENT, "SHUTDOWN received");
+					SendShutdownAckChunk();
 
 					break;
 				}
