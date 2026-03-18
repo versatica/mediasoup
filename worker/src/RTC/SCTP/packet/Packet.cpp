@@ -377,6 +377,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			AssertDoesNotNeedConsolidation();
+
 			const size_t length = GetLength() + chunk->GetLength();
 
 			// Let's append the Chunk at the end of existing Chunks.
@@ -429,22 +431,44 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			this->needsConsolidation = true;
+
 			// When the application completes the Chunk it must call
 			// `chunk->Consolidate()` and that will trigger this event.
 			chunk->SetConsolidatedListener(
 			  [this, chunk]()
 			  {
-				  // Fix buffer length assigned to the Chunk.
-				  chunk->SetBufferLength(chunk->GetLength());
+				  try
+				  {
+					  // Fix buffer length assigned to the Chunk.
+					  chunk->SetBufferLength(chunk->GetLength());
 
-				  // Update Packet length.
-				  // NOTE: This will throw if there is no enough space in the Packet
-				  // buffer.
-				  SetLength(GetLength() + chunk->GetLength());
+					  // Update Packet length.
+					  // NOTE: This will throw if there is no enough space in the Packet
+					  // buffer.
+					  SetLength(GetLength() + chunk->GetLength());
 
-				  // Add the Chunk to the list.
-				  this->chunks.push_back(chunk);
+					  // Add the Chunk to the list.
+					  this->chunks.push_back(chunk);
+					  this->needsConsolidation = false;
+				  }
+				  catch (const MediaSoupError& error)
+				  {
+					  this->needsConsolidation = false;
+
+					  throw;
+				  }
 			  });
+		}
+
+		void Packet::AssertDoesNotNeedConsolidation() const
+		{
+			MS_TRACE();
+
+			if (this->needsConsolidation)
+			{
+				MS_THROW_ERROR("Packet needs consolidation of some ongoing Chunk");
+			}
 		}
 	} // namespace SCTP
 } // namespace RTC

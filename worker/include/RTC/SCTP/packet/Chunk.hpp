@@ -261,10 +261,15 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - Once this method is called, the caller may want to free the original
-			 *   given Parameter (otherwise it will leak since the manages a clone of
-			 *   it).
+			 *   given Parameter (otherwise it will leak since the Chunk manages a clone
+			 *   of it).
 			 *
-			 * @throw MediaSoupError - If the Chunk subclass cannot have Parameters.
+			 * @throw
+			 * - MediaSoupError - If the Chunk subclass cannot have Parameters.
+			 * - MediaSoupError - If `BuildParameterInPlace()` or
+			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
+			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
+
 			 */
 			virtual void AddParameter(const Parameter* parameter) final;
 
@@ -276,15 +281,19 @@ namespace RTC
 			 *
 			 * @returns Pointer of the created Parameter specific class.
 			 *
-			 * @throw MediaSoupError - If the Chunk subclass cannot have Parameters.
+			 * @throw
+			 * - MediaSoupError - If the Chunk subclass cannot have Parameters.
+			 * - MediaSoupError - If `BuildParameterInPlace()` or
+			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
+			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
 			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the Parameter is
 			 *   completed.
-			 * - The caller MUST NOT call `BuildChunkInPlace()` while other Parameter
-			 *   is in progress.
 			 * - The caller MUST NOT free the obtained Parameter pointer since it's
 			 *   now part of the Chunk.
+			 * - The caller MUST free the obtained Parameter only in case the
+			 *   `Consolidate()` method on the Parameter throws.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -297,6 +306,7 @@ namespace RTC
 			T* BuildParameterInPlace()
 			{
 				AssertCanHaveParameters();
+				AssertDoesNotNeedConsolidation();
 
 				// The new Parameter will be added after other Parameters in the Chunk,
 				// this is, at the end of the Chunk, whose length we know it's padded to
@@ -374,7 +384,11 @@ namespace RTC
 			 *   given Error Cause (otherwise it will leak since the Chunk manages a
 			 *   clone of it).
 			 *
-			 * @throw MediaSoupError - If the Chunk subclass cannot have Error Causes.
+			 * @throw
+			 * - MediaSoupError - If the Chunk subclass cannot have Error Causes.
+			 * - MediaSoupError - If `BuildParameterInPlace()` or
+			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
+			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
 			 */
 			virtual void AddErrorCause(const ErrorCause* errorCause) final;
 
@@ -387,15 +401,19 @@ namespace RTC
 			 *
 			 * @returns Pointer of the created Error Cause specific class.
 			 *
-			 * @throw MediaSoupError - If the Chunk subclass cannot have Error Causes.
+			 * @throw
+			 * - MediaSoupError - If the Chunk subclass cannot have Error Causes.
+			 * - MediaSoupError - If `BuildParameterInPlace()` or
+			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
+			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
 			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the Error Cause is
 			 *   completed.
-			 * - The caller MUST NOT call `BuildChunkInPlace()` while other Error
-			 *   Cause is in progress.
 			 * - The caller MUST NOT free the obtained Error Cause pointer since it's
 			 *   now part of the Chunk.
+			 * - The caller MUST free the obtained Error Cause only in case the
+			 *   `Consolidate()` method on the Error Cause throws.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -408,6 +426,7 @@ namespace RTC
 			T* BuildErrorCauseInPlace()
 			{
 				AssertCanHaveErrorCauses();
+				AssertDoesNotNeedConsolidation();
 
 				// The new Error Cause will be added after other Error Causes in the
 				// Chunk, this is, at the end of the Chunk, whose length we know it's
@@ -426,6 +445,16 @@ namespace RTC
 				HandleInPlaceErrorCause(errorCause);
 
 				return errorCause;
+			}
+
+			/**
+			 * Whether `BuildParameterInPlace()` or `BuildErrorCauseInPlace()` was
+			 * called before and the caller didn't invoke `Consolidate()` on the
+			 * returned Parameter or Error Cause yet.
+			 */
+			virtual bool NeedsConsolidation() const final
+			{
+				return this->needsConsolidation;
 			}
 
 		protected:
@@ -557,8 +586,8 @@ namespace RTC
 			 *
 			 * @return True if no error happened while parsing Parameters.
 			 *
-			 * @throw MediaSoupError - If the Chunk subclass cannot have Chunk
-			 *   Parameters.
+			 * @throw
+			 * - MediaSoupError - If the Chunk subclass cannot have Chunk Parameters.
 			 */
 			virtual bool ParseParameters() final;
 
@@ -573,8 +602,8 @@ namespace RTC
 			 *
 			 * @return True if no error happened while parsing Error Causes.
 			 *
-			 * @throw MediaSoupError - If the Chunk subclass cannot have Chunk
-			 *   Parameters.
+			 * @throw
+			 * - MediaSoupError - If the Chunk subclass cannot have Chunk Parameters.
 			 */
 			virtual bool ParseErrorCauses() final;
 
@@ -611,11 +640,17 @@ namespace RTC
 
 			virtual void AssertCanHaveErrorCauses() const final;
 
+			virtual void AssertDoesNotNeedConsolidation() const final;
+
 		private:
 			// Parameters.
 			std::vector<Parameter*> parameters;
 			// Error Causes.
 			std::vector<ErrorCause*> errorCauses;
+			// Whether `BuildParameterInPlace()` or `BuildErrorCauseInPlace()` was
+			// called and the caller didn't invoke `Consolidate()` on the returned
+			// Parameter or Error Cause yet.
+			bool needsConsolidation{ false };
 		};
 	} // namespace SCTP
 } // namespace RTC

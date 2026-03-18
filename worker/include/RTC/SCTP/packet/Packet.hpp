@@ -192,6 +192,10 @@ namespace RTC
 			 * - Once this method is called, the caller may want to free the original
 			 *   given Chunk (otherwise it will leak since the Packet manages a clone
 			 *   of it).
+			 *
+			 * @throw
+			 * - MediaSoupError - If `BuildChunkInPlace()` was called before and the
+			 *   caller didn't invoke `Consolidate()` on the returned Chunk yet.
 			 */
 			void AddChunk(const Chunk* chunk);
 
@@ -203,12 +207,18 @@ namespace RTC
 			 *
 			 * @returns Pointer of the created Chunk specific class.
 			 *
+			 * @throw
+			 * - MediaSoupError - If `BuildChunkInPlace()` was called before and the
+			 *   caller didn't invoke `Consolidate()` on the returned Chunk yet.
+			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the Chunk is completed.
 			 * - The caller MUST NOT call `BuildChunkInPlace()` while other Chunk is
 			 *   in progress.
 			 * - The caller MUST NOT free the obtained Chunk pointer since it's now
 			 *   part of the Packet.
+			 * - The caller MUST free the obtained Chunk only in case the
+			 *   `Consolidate()` method on the Chunk throws.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -219,6 +229,8 @@ namespace RTC
 			template<typename T>
 			T* BuildChunkInPlace()
 			{
+				AssertDoesNotNeedConsolidation();
+
 				// The new Chunk will be added after other Chunks in the Packet, this is,
 				// at the end of the Packet,  whose length we know it's padded to 4
 				// bytes, and each Parameter total length is also multiple of 4 bytes.
@@ -235,6 +247,15 @@ namespace RTC
 				HandleInPlaceChunk(chunk);
 
 				return chunk;
+			}
+
+			/**
+			 * Whether `BuildChunkInPlace()` was called and the caller didn't invoke
+			 * `Consolidate()` on the returned Chunk yet.
+			 */
+			bool NeedsConsolidation() const
+			{
+				return this->needsConsolidation;
 			}
 
 			/**
@@ -265,9 +286,14 @@ namespace RTC
 
 			virtual void HandleInPlaceChunk(Chunk* chunk) final;
 
+			virtual void AssertDoesNotNeedConsolidation() const final;
+
 		private:
 			// Chunks.
 			std::vector<Chunk*> chunks;
+			// Whether `BuildChunkInPlace()` was called and the caller didn't invoke
+			// `Consolidate()` on the returned Chunk yet.
+			bool needsConsolidation{ false };
 		};
 	} // namespace SCTP
 } // namespace RTC

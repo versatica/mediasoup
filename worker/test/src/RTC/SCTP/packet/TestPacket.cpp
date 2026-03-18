@@ -744,7 +744,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 	SECTION("Factory() using AddChunk() succeeds")
 	{
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
-			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
+			sctpCommon::FactoryBuffer, 1000) };
 
 		packet->SetSourcePort(1);
 		packet->SetDestinationPort(2);
@@ -752,8 +752,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		packet->SetChecksum(4);
 
 		// 4 bytes Chunk.
-		auto* chunk1 = RTC::SCTP::ShutdownCompleteChunk::Factory(
-		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
+		auto* chunk1 = RTC::SCTP::ShutdownCompleteChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000);
 
 		chunk1->SetT(true);
 
@@ -775,7 +774,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		CHECK_SCTP_PACKET(
 		  /*packet*/ packet.get(),
 		  /*buffer*/ sctpCommon::FactoryBuffer,
-		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
+		  /*bufferLength*/ 1000,
 		  /*length*/ 16,
 		  /*sourcePort*/ 1,
 		  /*destinationPort*/ 2,
@@ -845,5 +844,51 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*checksum*/ 0,
 		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 0);
+	}
+
+	SECTION("BuildChunkInPlace() and AddChunk() throw if the Packet needs consolidation")
+	{
+		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, 1000) };
+
+		REQUIRE(packet->NeedsConsolidation() == false);
+
+		const auto* chunk1 = packet->BuildChunkInPlace<RTC::SCTP::InitChunk>();
+
+		REQUIRE(packet->NeedsConsolidation() == true);
+
+		// We didn't call chunk1->Consolidate() yet so this must throw.
+		REQUIRE_THROWS_AS(packet->BuildChunkInPlace<RTC::SCTP::ShutdownCompleteChunk>(), MediaSoupError);
+
+		const auto* chunk2 = RTC::SCTP::ShutdownCompleteChunk::Factory(
+		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
+
+		// We didn't call chunk1->Consolidate() yet so this must throw.
+		REQUIRE_THROWS_AS(packet->AddChunk(chunk2), MediaSoupError);
+
+		delete chunk2;
+
+		chunk1->Consolidate();
+
+		REQUIRE(packet->NeedsConsolidation() == false);
+
+		// This shouldn't throw now.
+		const auto* chunk3 = packet->BuildChunkInPlace<RTC::SCTP::ShutdownCompleteChunk>();
+
+		REQUIRE(packet->NeedsConsolidation() == true);
+
+		chunk3->Consolidate();
+
+		REQUIRE(packet->NeedsConsolidation() == false);
+
+		const auto* chunk4 = RTC::SCTP::ShutdownCompleteChunk::Factory(
+		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
+
+		// This shouldn't throw now.
+		packet->AddChunk(chunk4);
+
+		REQUIRE(packet->NeedsConsolidation() == false);
+
+		delete chunk4;
 	}
 }
