@@ -41,6 +41,7 @@ namespace sctpCommon
   /*size_t*/ chunksCount)                                                                          \
 	do                                                                                               \
 	{                                                                                                \
+		REQUIRE(RTC::SCTP::Packet::IsSctp(buffer, length) == true);                                    \
 		REQUIRE(packet);                                                                               \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                       \
 		REQUIRE(packet->GetBuffer() == buffer);                                                        \

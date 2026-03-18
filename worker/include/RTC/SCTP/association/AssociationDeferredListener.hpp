@@ -46,10 +46,10 @@ namespace RTC
 			// variant can hold all cases of stored data.
 			using CallbackData = std::variant<std::monostate, Message, Error, StreamReset, uint16_t>;
 
-			using Callback = std::function<void(CallbackData, AssociationListener&)>;
+			using Callback = std::function<void(CallbackData, AssociationListener*)>;
 
 		public:
-			explicit AssociationDeferredListener(AssociationListener& innerListener);
+			explicit AssociationDeferredListener(AssociationListener* innerListener);
 
 		private:
 			void SetReady();
@@ -84,7 +84,7 @@ namespace RTC
 			void OnAssociationTotalBufferedAmountLow() override;
 
 		private:
-			AssociationListener& innerListener;
+			AssociationListener* innerListener;
 			bool ready{ false };
 			std::vector<std::pair<Callback, CallbackData>> deferredCallbacks;
 		};

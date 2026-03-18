@@ -18,7 +18,7 @@ namespace RTC
 
 		public:
 			/**
-			 * Called when a SCTP Packet must be sent to the remote endpoint.
+			 * Called when an SCTP Packet must be sent to the remote endpoint.
 			 *
 			 * @return
 			 * - `true` if the packet was successfully sent. However, since

@@ -54,7 +54,7 @@ namespace RTC
 		  size_t len,
 		  uint32_t ppid,
 		  onQueuedCallback* cb = nullptr) override;
-		void SendSctpData(const uint8_t* data, size_t len) override;
+		bool SendSctpData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
 		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);

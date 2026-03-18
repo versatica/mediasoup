@@ -56,7 +56,7 @@ namespace RTC
 
 		public:
 			/**
-			 * Struct of a SCTP Packet Common Header.
+			 * Struct of an SCTP Packet Common Header.
 			 */
 			struct CommonHeader
 			{
@@ -70,13 +70,31 @@ namespace RTC
 			static const size_t CommonHeaderLength{ 12 };
 
 			/**
-			 * Parse a SCTP Packet.
+			 * Whether given buffer could be a valid SCTP Packet.
+			 *
+			 * @remarks
+			 * - `bufferLength` must be the exact length of the Packet.
+			 * - This check is very lazy. It should NEVER be done before checking if
+			 *   given buffer is an RTP or RTCP packet.
+			 */
+			static bool IsSctp(const uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Parse an SCTP Packet.
 			 *
 			 * @remarks
 			 * - `bufferLength` must be the exact length of the Packet.
 			 */
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Create an SCTP Packet.
+			 *
+			 * @remarks
+			 * - `bufferLength` must be the exact length of the STUN Packet.
+			 * - If `transactionId` is not given then a random Transaction ID is
+			 *   generated.
+			 */
 			static Packet* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:

@@ -219,7 +219,7 @@ namespace RTC
 		  size_t len,
 		  uint32_t ppid,
 		  onQueuedCallback* = nullptr)                             = 0;
-		virtual void SendSctpData(const uint8_t* data, size_t len) = 0;
+		virtual bool SendSctpData(const uint8_t* data, size_t len) = 0;
 		virtual void RecvStreamClosed(uint32_t ssrc)               = 0;
 		virtual void SendStreamClosed(uint32_t ssrc)               = 0;
 		void DistributeAvailableOutgoingBitrate();
@@ -308,7 +308,7 @@ namespace RTC
 		void OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) override;
 		void OnAssociationStreamBufferedAmountLow(uint16_t streamId) override;
 		void OnAssociationTotalBufferedAmountLow() override;
-		// TODO: Add OnAssociationLifecycleMessageXxxxxx() methods.
+		// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.
 #else
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
 	public:

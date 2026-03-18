@@ -151,7 +151,8 @@ namespace RTC
 		{
 			return this->localRole;
 		}
-		void SendApplicationData(const uint8_t* data, size_t len);
+		// Returns a boolean indicating whether the data could be sent.
+		bool SendApplicationData(const uint8_t* data, size_t len);
 		// This method must be public since it's called within an OpenSSL callback.
 		void SendDtlsData(const uint8_t* data, size_t len);
 

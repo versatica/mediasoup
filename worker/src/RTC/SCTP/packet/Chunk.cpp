@@ -351,7 +351,7 @@ namespace RTC
 				if (!Parameter::IsParameter(
 				      ptr, parameterMaxBufferLength, parameterType, parameterLength, padding))
 				{
-					MS_WARN_TAG(sctp, "not a SCTP Parameter");
+					MS_WARN_TAG(sctp, "not an SCTP Parameter");
 
 					return false;
 				}
@@ -557,7 +557,7 @@ namespace RTC
 
 				if (!ErrorCause::IsErrorCause(ptr, errorCauseMaxBufferLength, causeCode, causeLength, padding))
 				{
-					MS_WARN_TAG(sctp, "not a SCTP Error Cause");
+					MS_WARN_TAG(sctp, "not an SCTP Error Cause");
 
 					return false;
 				}

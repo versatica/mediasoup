@@ -38,7 +38,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Association::Association(const SctpOptions& sctpOptions, AssociationListener& listener)
+		Association::Association(const SctpOptions& sctpOptions, AssociationListener* listener)
 		  : sctpOptions(sctpOptions),
 		    // Our `listener` member is a `AssociationDeferredListener` which takes
 		    // `AssociationListener` as constructor argument.

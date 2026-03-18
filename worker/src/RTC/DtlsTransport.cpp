@@ -1022,7 +1022,7 @@ namespace RTC
 		}
 	}
 
-	void DtlsTransport::SendApplicationData(const uint8_t* data, size_t len)
+	bool DtlsTransport::SendApplicationData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -1032,19 +1032,17 @@ namespace RTC
 		{
 			MS_WARN_TAG(dtls, "cannot send application data while DTLS is not fully connected");
 
-			return;
+			return false;
 		}
 
 		if (len == 0)
 		{
 			MS_WARN_TAG(dtls, "ignoring 0 length data");
 
-			return;
+			return false;
 		}
 
-		int written;
-
-		written = SSL_write(this->ssl, static_cast<const void*>(data), static_cast<int>(len));
+		const int written = SSL_write(this->ssl, static_cast<const void*>(data), static_cast<int>(len));
 
 		if (written < 0)
 		{
@@ -1052,14 +1050,18 @@ namespace RTC
 
 			if (!CheckStatus(written))
 			{
-				return;
+				return false;
 			}
 		}
 		else if (written != static_cast<int>(len))
 		{
 			MS_WARN_TAG(
 			  dtls, "OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
+
+			return false;
 		}
+
+		return true;
 	}
 
 	/**

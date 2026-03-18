@@ -90,7 +90,7 @@ namespace RTC
 			};
 
 			/**
-			 * Struct of a SCTP Chunk Header.
+			 * Struct of an SCTP Chunk Header.
 			 */
 			struct ChunkHeader
 			{

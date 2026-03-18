@@ -1,3 +1,4 @@
+#include "RTC/SCTP/public/SctpTypes.hpp"
 #define MS_CLASS "RTC::Transport"
 // #define MS_LOG_DEV_LEVEL 3
 
@@ -112,16 +113,17 @@ namespace RTC
 			}
 
 #ifdef MS_SCTP_STACK
-			// TODO: Many interesting options missing.
-			const SctpOptions sctpOptions = { .sourcePort         = 5000,
-				                                .destinationPort    = 5000,
-				                                .maxOutboundStreams = 65535,
-				                                .maxInboundStreams  = options->numSctpStreams()->mis(),
-				                                // TODO: Sure?
-				                                .maxSendMessageSize = this->maxMessageSize,
-				                                .maxSendBufferSize  = sctpSendBufferSize };
+			// TODO: SCTP: Many interesting options missing.
+			const RTC::SCTP::SctpOptions sctpOptions = { .sourcePort         = 5000,
+				                                           .destinationPort    = 5000,
+				                                           .maxOutboundStreams = 65535,
+				                                           .maxInboundStreams =
+				                                             options->numSctpStreams()->mis(),
+				                                           // TODO: SCTP: Sure?
+				                                           .maxSendMessageSize = this->maxMessageSize,
+				                                           .maxSendBufferSize  = sctpSendBufferSize };
 
-			this->sctpAssociation = std::make_unique<RTC::STCP::Association>(sctpOptions, this);
+			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(sctpOptions, this);
 #else
 			// This may throw.
 			this->sctpAssociation = new RTC::SctpAssociation(
@@ -182,9 +184,11 @@ namespace RTC
 		}
 		this->mapDataConsumers.clear();
 
+#ifndef MS_SCTP_STACK
 		// Delete SCTP association.
 		delete this->sctpAssociation;
 		this->sctpAssociation = nullptr;
+#endif
 
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
@@ -359,6 +363,9 @@ namespace RTC
 
 		if (this->sctpAssociation)
 		{
+#ifdef MS_SCTP_STACK
+			// TODO: SCTP
+#else
 			// Add sctpParameters.
 			sctpParameters = this->sctpAssociation->FillBuffer(builder);
 
@@ -396,6 +403,7 @@ namespace RTC
 			}
 
 			sctpListener = this->sctpListener.FillBuffer(builder);
+#endif
 		}
 
 		// Add traceEventTypes.
@@ -443,6 +451,42 @@ namespace RTC
 		if (this->sctpAssociation)
 		{
 			// Add sctpState.
+#ifdef MS_SCTP_STACK
+			// TODO: SCTP: Our RTC::SCTP::Types::AssociationState values don't match
+			// existing values in FBS.
+			// switch (this->sctpAssociation->GetAssociationState())
+			// {
+			// 	case RTC::SCTP::Types::AssociationState::NEW:
+			// 	{
+			// 		sctpState = FBS::SctpAssociation::SctpState::NEW;
+			// 		break;
+			// 	}
+
+			// 	case RTC::SCTP::Types::AssociationState::CONNECTING:
+			// 	{
+			// 		sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
+			// 		break;
+			// 	}
+
+			// 	case RTC::SCTP::Types::AssociationState::CONNECTED:
+			// 	{
+			// 		sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
+			// 		break;
+			// 	}
+
+			// 	case RTC::SCTP::Types::AssociationState::FAILED:
+			// 	{
+			// 		sctpState = FBS::SctpAssociation::SctpState::FAILED;
+			// 		break;
+			// 	}
+
+			// 	case RTC::SCTP::Types::AssociationState::CLOSED:
+			// 	{
+			// 		sctpState = FBS::SctpAssociation::SctpState::CLOSED;
+			// 		break;
+			// 	}
+			// }
+#else
 			switch (this->sctpAssociation->GetState())
 			{
 				case RTC::SctpAssociation::SctpState::NEW:
@@ -475,6 +519,7 @@ namespace RTC
 					break;
 				}
 			}
+#endif
 		}
 
 		return FBS::Transport::CreateStatsDirect(
@@ -1160,8 +1205,12 @@ namespace RTC
 
 				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
 				{
+#ifdef MS_SCTP_STACK
+					// TODO: SCTP
+#else
 					// Tell to the SCTP association.
 					this->sctpAssociation->HandleDataProducer(dataProducer);
+#endif
 				}
 
 				break;
@@ -1188,7 +1237,9 @@ namespace RTC
 				  this->shared,
 				  dataConsumerId,
 				  dataProducerId,
+#ifndef MS_SCTP_STACK
 				  this->sctpAssociation,
+#endif
 				  this,
 				  body,
 				  this->maxMessageSize);
@@ -1257,13 +1308,21 @@ namespace RTC
 
 				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 				{
+#ifdef MS_SCTP_STACK
+					if (this->sctpAssociation->GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED)
+#else
 					if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
+#endif
 					{
 						dataConsumer->SctpAssociationConnected();
 					}
 
+#ifdef MS_SCTP_STACK
+					// TODO: SCTP
+#else
 					// Tell to the SCTP association.
 					this->sctpAssociation->HandleDataConsumer(dataConsumer);
+#endif
 				}
 
 				break;
@@ -1411,8 +1470,12 @@ namespace RTC
 
 				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
 				{
+#ifdef MS_SCTP_STACK
+					// TODO: SCTP
+#else
 					// Tell the SctpAssociation so it can reset the SCTP stream.
 					this->sctpAssociation->DataProducerClosed(dataProducer);
+#endif
 				}
 
 				// Delete it.
@@ -1440,8 +1503,12 @@ namespace RTC
 
 				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 				{
+#ifdef MS_SCTP_STACK
+					// TODO: SCTP
+#else
 					// Tell the SctpAssociation so it can reset the SCTP stream.
 					this->sctpAssociation->DataConsumerClosed(dataConsumer);
+#endif
 				}
 
 				// Delete it.
@@ -1512,7 +1579,11 @@ namespace RTC
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
 		{
+#ifdef MS_SCTP_STACK
+			// TODO: SCTP
+#else
 			this->sctpAssociation->TransportConnected();
+#endif
 		}
 
 		// Start the RTCP timer.
@@ -1562,7 +1633,11 @@ namespace RTC
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
 		{
+#ifdef MS_SCTP_STACK
+			// TODO: SCTP
+#else
 			this->sctpAssociation->TransportDisconnected();
+#endif
 		}
 
 		// Stop the RTCP timer.
@@ -1696,8 +1771,12 @@ namespace RTC
 			return;
 		}
 
+#ifdef MS_SCTP_STACK
+		// TODO: SCTP
+#else
 		// Pass it to the SctpAssociation.
 		this->sctpAssociation->ProcessSctpData(data, len);
+#endif
 	}
 
 	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const
@@ -2790,8 +2869,12 @@ namespace RTC
 
 		if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 		{
+#ifdef MS_SCTP_STACK
+			// TODO: SCTP
+#else
 			// Tell the SctpAssociation so it can reset the SCTP stream.
 			this->sctpAssociation->DataConsumerClosed(dataConsumer);
+#endif
 		}
 
 		// Delete it.
@@ -2810,12 +2893,16 @@ namespace RTC
 		// and we would end here calling SendSctpData() which is an abstract method.
 		if (this->destroying)
 		{
-			return;
+			return false;
 		}
 
 		if (this->sctpAssociation)
 		{
-			SendSctpData(data, len);
+			return SendSctpData(data, len);
+		}
+		else
+		{
+			return false;
 		}
 	}
 
@@ -2823,81 +2910,81 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
 	void Transport::OnAssociationClosed()
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
 	void Transport::OnAssociationConnectionRestarted()
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
 	void Transport::OnAssociationError(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
 	void Transport::OnAssociationAborted(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
 	void Transport::OnAssociationMessageReceived(RTC::SCTP::Message message)
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
 	void Transport::OnAssociationStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds)
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
 	void Transport::OnAssociationStreamsResetFailed(
-	  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage
-	  {
+	  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage)
+	{
 		MS_TRACE();
 
-		// TODO
-	  }
+		// TODO: SCTP
+	}
 
 	void Transport::OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds)
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
 	void Transport::OnAssociationStreamBufferedAmountLow(uint16_t streamId)
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
 	void Transport::OnAssociationTotalBufferedAmountLow()
 	{
 		MS_TRACE();
 
-		// TODO
+		// TODO: SCTP
 	}
 
-	// TODO: Add OnAssociationLifecycleMessageXxxxxx() methods.
+	// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.
 #else
 	void Transport::OnSctpAssociationConnecting(RTC::SctpAssociation* /*sctpAssociation*/)
 	{

@@ -856,10 +856,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_SCTP_STACK
+		// TODO: SCTP
+#else
 		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+#endif
 	}
 
-	void WebRtcTransport::SendSctpData(const uint8_t* data, size_t len)
+	bool WebRtcTransport::SendSctpData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -867,10 +871,10 @@ namespace RTC
 		{
 			MS_WARN_TAG(sctp, "DTLS not connected, cannot send SCTP data");
 
-			return;
+			return false;
 		}
 
-		this->dtlsTransport->SendApplicationData(data, len);
+		return this->dtlsTransport->SendApplicationData(data, len);
 	}
 
 	void WebRtcTransport::RecvStreamClosed(uint32_t ssrc)

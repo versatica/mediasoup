@@ -30,11 +30,17 @@ namespace RTC
 	{
 		/* Class methods. */
 
+		bool Packet::IsSctp(const uint8_t* buffer, size_t bufferLength)
+		{
+			return (
+			  bufferLength >= Packet::CommonHeaderLength && Utils::Byte::IsPaddedTo4Bytes(bufferLength));
+		}
+
 		Packet* Packet::Parse(const uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
 
-			if ((bufferLength < Packet::CommonHeaderLength) || !Utils::Byte::IsPaddedTo4Bytes(bufferLength))
+			if (!Packet::IsSctp(buffer, bufferLength))
 			{
 				MS_WARN_TAG(sctp, "not an SCTP Packet");
 
@@ -64,7 +70,7 @@ namespace RTC
 
 				if (!Chunk::IsChunk(ptr, chunkMaxBufferLength, chunkType, chunkLength, padding))
 				{
-					MS_WARN_TAG(sctp, "not a SCTP Chunk");
+					MS_WARN_TAG(sctp, "not an SCTP Chunk");
 
 					delete packet;
 					return nullptr;

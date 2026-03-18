@@ -159,7 +159,7 @@ namespace RTC
 			};
 
 		public:
-			explicit Association(const SctpOptions& sctpOptions, AssociationListener& listener);
+			explicit Association(const SctpOptions& sctpOptions, AssociationListener* listener);
 
 			~Association() override;
 
@@ -262,7 +262,7 @@ namespace RTC
 			Types::ResetStreamsStatus ResetStreams(std::span<const uint16_t> outboundStreamIds) override;
 
 			/**
-			 * Sends a SCTP message using the provided send options. Sending a message
+			 * Sends an SCTP message using the provided send options. Sending a message
 			 * is an asynchronous operation, and the `OnAssociationError()` callback
 			 * may be invoked to indicate any errors in sending the message.
 			 *

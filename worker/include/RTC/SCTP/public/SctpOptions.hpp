@@ -41,7 +41,7 @@ namespace RTC
 			uint16_t maxInboundStreams{ 65535 };
 
 			/**
-			 * Maximum size of a SCTP Packet. It doesn't include any overhead of
+			 * Maximum size of an SCTP Packet. It doesn't include any overhead of
 			 * DTLS, TURN, UDP or IP headers.
 			 */
 			size_t mtu{ RTC::Consts::MaxSafeMtuSizeForSctp };
