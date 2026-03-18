@@ -10,6 +10,8 @@
 
 - In `Association::FillBuffer()` we should not pass `this->sctpOptions.maxOutboundStreams/maxInboundStreams` but the current values (they may have been modified via "reconfig").
 
+- We must call `association->Connect()` somewhere!
+
 - Look for "TODO: SCTP" and `MS_SCTP_STACK`.
 
 ## Related to dcsctp
