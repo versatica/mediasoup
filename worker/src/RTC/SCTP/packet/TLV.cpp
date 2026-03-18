@@ -40,6 +40,9 @@ namespace RTC
 			// 65535 would generate a padded length of 0 bytes!
 			const size_t paddedItemLength = Utils::Byte::PadTo4Bytes(size_t{ itemLength });
 
+			// TODO: SCTP: REMOVE
+			MS_DUMP("----- paddedItemLength: %zu", paddedItemLength);
+
 			if (bufferLength < paddedItemLength)
 			{
 				MS_WARN_TAG(
@@ -52,6 +55,9 @@ namespace RTC
 			}
 
 			padding = paddedItemLength - itemLength;
+
+			// TODO: SCTP: REMOVE
+			MS_DUMP("----- padding: %u", padding);
 
 			return true;
 		}
