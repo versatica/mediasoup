@@ -139,6 +139,16 @@ namespace RTC
 
 			SackChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
+			bool CanHaveParameters() const final
+			{
+				return false;
+			}
+
+			bool CanHaveErrorCauses() const final
+			{
+				return false;
+			}
+
 			uint32_t GetCumulativeTsnAck() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);

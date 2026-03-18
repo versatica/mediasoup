@@ -119,6 +119,16 @@ namespace RTC
 
 			DataChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
+			bool CanHaveParameters() const final
+			{
+				return false;
+			}
+
+			bool CanHaveErrorCauses() const final
+			{
+				return false;
+			}
+
 			bool GetI() const final
 			{
 				return GetBit3();

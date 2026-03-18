@@ -208,12 +208,9 @@ namespace RTC
 
 			/**
 			 * Whether this type of Chunk can have Parameters. Subclasses must
-			 * override this method if they can have Parameters.
+			 * override this method.
 			 */
-			virtual bool CanHaveParameters() const
-			{
-				return false;
-			}
+			virtual bool CanHaveParameters() const = 0;
 
 			virtual bool HasParameters() const final
 			{
@@ -321,12 +318,9 @@ namespace RTC
 
 			/**
 			 * Whether this type of Chunk can have Error Causes. Subclasses must
-			 * override this method if they can have Error Causes.
+			 * override this method.
 			 */
-			virtual bool CanHaveErrorCauses() const
-			{
-				return false;
-			}
+			virtual bool CanHaveErrorCauses() const = 0;
 
 			virtual bool HasErrorCauses() const final
 			{

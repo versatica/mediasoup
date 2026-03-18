@@ -93,6 +93,11 @@ namespace RTC
 				return true;
 			}
 
+			bool CanHaveErrorCauses() const final
+			{
+				return false;
+			}
+
 		protected:
 			ReConfigChunk* SoftClone(const uint8_t* buffer) const final;
 		};

@@ -118,6 +118,11 @@ namespace RTC
 				return true;
 			}
 
+			bool CanHaveErrorCauses() const final
+			{
+				return false;
+			}
+
 			uint32_t GetInitiateTag() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);

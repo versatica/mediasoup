@@ -102,6 +102,16 @@ namespace RTC
 
 			IForwardTsnChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
+			bool CanHaveParameters() const final
+			{
+				return false;
+			}
+
+			bool CanHaveErrorCauses() const final
+			{
+				return false;
+			}
+
 			uint32_t GetNewCumulativeTsn() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);

@@ -76,6 +76,16 @@ namespace RTC
 
 			CookieEchoChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
+			bool CanHaveParameters() const final
+			{
+				return false;
+			}
+
+			bool CanHaveErrorCauses() const final
+			{
+				return false;
+			}
+
 			bool HasCookie() const
 			{
 				return HasVariableLengthValue();
