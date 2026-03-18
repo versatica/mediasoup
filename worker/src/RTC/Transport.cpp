@@ -1791,10 +1791,10 @@ namespace RTC
 			return;
 		}
 
-#ifdef MS_SCTP_STACK
-		// TODO: SCTP
-#else
 		// Pass it to the SctpAssociation.
+#ifdef MS_SCTP_STACK
+		this->sctpAssociation->ReceiveSctpData(data, len);
+#else
 		this->sctpAssociation->ProcessSctpData(data, len);
 #endif
 	}
