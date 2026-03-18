@@ -28,6 +28,26 @@ namespace RTC
 				packet->WriteCRC32cChecksum();
 			}
 
+			// TODO: SCTP: For testing purposes. Must be removed.
+			{
+				MS_DUMP(">>> sending SCTP packet:");
+				packet->Dump();
+
+				const auto* parsedPacket = RTC::SCTP::Packet::Parse(packet->GetBuffer(), packet->GetLength());
+
+				if (parsedPacket)
+				{
+					MS_DUMP(">>> sending SCTP packet (parsed to verify):");
+					parsedPacket->Dump();
+
+					delete parsedPacket;
+				}
+				else
+				{
+					MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse sending SCTP data");
+				}
+			}
+
 			const bool sent =
 			  this->associationListener.OnAssociationSendData(packet->GetBuffer(), packet->GetLength());
 

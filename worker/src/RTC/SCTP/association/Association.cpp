@@ -499,6 +499,24 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// TODO: SCTP: For testing purposes. Must be removed.
+			{
+				MS_DUMP("<<< received SCTP packet:");
+
+				const auto* packet = RTC::SCTP::Packet::Parse(data, len);
+
+				if (packet)
+				{
+					packet->Dump();
+
+					delete packet;
+				}
+				else
+				{
+					MS_ABORT("RTC::SCTP::Packet::Parse() failed to parse received SCTP data");
+				}
+			}
+
 			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			this->privateMetrics.rxPacketsCount++;
@@ -620,10 +638,21 @@ namespace RTC
 			{
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::FORWARD_TSN);
 
-				auto* forwardTsnSupportedParameter =
+				// TODO: SCTP
+				MS_DUMP("TODO: UNCOMMENT!!");
+
+				const auto* forwardTsnSupportedParameter =
 				  chunk->BuildParameterInPlace<ForwardTsnSupportedParameter>();
 
+				// TODO: SCTP: Remove
+				MS_DUMP("--- forwardTsnSupportedParameter 1:");
+				forwardTsnSupportedParameter->Dump();
+
 				forwardTsnSupportedParameter->Consolidate();
+
+				// TODO: SCTP: Remove
+				MS_DUMP("--- forwardTsnSupportedParameter 2:");
+				forwardTsnSupportedParameter->Dump();
 			}
 
 			if (this->sctpOptions.enableMessageInterleaving)
@@ -732,8 +761,8 @@ namespace RTC
 
 			AssertHasTcb();
 
-			auto packet         = this->tcb->CreatePacket();
-			auto* shutdownChunk = packet->BuildChunkInPlace<ShutdownChunk>();
+			auto packet               = this->tcb->CreatePacket();
+			const auto* shutdownChunk = packet->BuildChunkInPlace<ShutdownChunk>();
 
 			// TODO: Implement it.
 			// shutdownChunk->SetCumulativeTsnAck(this->tcb->GetDataTracker().GetLastCumulativeAckedTsn());
@@ -748,8 +777,8 @@ namespace RTC
 
 			AssertHasTcb();
 
-			auto packet            = this->tcb->CreatePacket();
-			auto* shutdownAckChunk = packet->BuildChunkInPlace<ShutdownAckChunk>();
+			auto packet                  = this->tcb->CreatePacket();
+			const auto* shutdownAckChunk = packet->BuildChunkInPlace<ShutdownAckChunk>();
 
 			shutdownAckChunk->Consolidate();
 
@@ -1553,23 +1582,18 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto* stateCookieParameter =
-			  receivedCookieEchoChunk->GetFirstParameterOfType<StateCookieParameter>();
-
-			if (!stateCookieParameter || !stateCookieParameter->GetCookie())
+			if (!receivedCookieEchoChunk->HasCookie())
 			{
-				MS_WARN_TAG(
-				  sctp, "ignoring received COOKIE_ECHO Chunk without StateCookieParameter or without Cookie");
+				MS_WARN_TAG(sctp, "ignoring received COOKIE_ECHO Chunk without Cookie");
 
 				this->listener.OnAssociationError(
-				  Types::ErrorKind::PARSE_FAILED,
-				  "received COOKIE_ECHO Chunk without StateCookieParameter or without Cookie");
+				  Types::ErrorKind::PARSE_FAILED, "received COOKIE_ECHO Chunk without Cookie");
 
 				return;
 			}
 
 			std::unique_ptr<StateCookie> cookie{ StateCookie::Parse(
-				stateCookieParameter->GetCookie(), stateCookieParameter->GetCookieLength()) };
+				receivedCookieEchoChunk->GetCookie(), receivedCookieEchoChunk->GetCookieLength()) };
 
 			if (!cookie)
 			{
@@ -1637,8 +1661,8 @@ namespace RTC
 				  cookie->GetNegotiatedCapabilities());
 			}
 
-			auto packet          = this->tcb->CreatePacket();
-			auto* cookieAckChunk = packet->BuildChunkInPlace<CookieAckChunk>();
+			auto packet                = this->tcb->CreatePacket();
+			const auto* cookieAckChunk = packet->BuildChunkInPlace<CookieAckChunk>();
 
 			cookieAckChunk->Consolidate();
 
@@ -1649,6 +1673,11 @@ namespace RTC
 			// packet."
 			// TODO: Implement it. Note that we pass Packet as argument!
 			// this->tcb->SendBufferedPackets(packet.get(), callbacks_.Now());
+
+			// TODO: SCTP: Remove this since COOKIE_ACK must be sent by
+			// tcb->SendBufferedPackets() call above.
+			MS_DUMP("TODO: REMOVE");
+			this->packetSender.SendPacket(packet.get());
 		}
 
 		bool Association::ProcessReceivedCookieEchoChunkWithTcb(
@@ -1678,12 +1707,12 @@ namespace RTC
 				if (this->state == State::SHUTDOWN_ACK_SENT)
 				{
 					auto packet = CreatePacketWithVerificationTag(cookie->GetRemoteVerificationTag());
-					auto* shutdownAckChunk = packet->BuildChunkInPlace<ShutdownAckChunk>();
+					const auto* shutdownAckChunk = packet->BuildChunkInPlace<ShutdownAckChunk>();
 
 					shutdownAckChunk->Consolidate();
 
 					auto* operationErrorChunk = packet->BuildChunkInPlace<OperationErrorChunk>();
-					auto* cookieReceivedWhileShuttingDownErrorCause =
+					const auto* cookieReceivedWhileShuttingDownErrorCause =
 					  operationErrorChunk->BuildErrorCauseInPlace<CookieReceivedWhileShuttingDownErrorCause>();
 
 					cookieReceivedWhileShuttingDownErrorCause->Consolidate();
@@ -1858,8 +1887,8 @@ namespace RTC
 				case State::SHUTDOWN_SENT:
 				case State::SHUTDOWN_ACK_SENT:
 				{
-					auto packet                 = this->tcb->CreatePacket();
-					auto* shutdownCompleteChunk = packet->BuildChunkInPlace<ShutdownCompleteChunk>();
+					auto packet                       = this->tcb->CreatePacket();
+					const auto* shutdownCompleteChunk = packet->BuildChunkInPlace<ShutdownCompleteChunk>();
 
 					// NOTE: Don't set bit T in the SHUTDOWN_COMPLETE chunk since TCB
 					// knows the Verification Tag expected by the remote.
