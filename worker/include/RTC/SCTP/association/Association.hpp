@@ -37,6 +37,7 @@
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "handles/BackoffTimerHandle.hpp"
+#include <FBS/sctpParameters.h>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -169,7 +170,11 @@ namespace RTC
 
 			~Association() override;
 
+		public:
 			void Dump(int indentation = 0) const override;
+
+			flatbuffers::Offset<FBS::SctpParameters::SctpParameters> FillBuffer(
+			  flatbuffers::FlatBufferBuilder& builder) const override;
 
 			Types::AssociationState GetAssociationState() const override;
 

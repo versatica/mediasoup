@@ -297,11 +297,10 @@ namespace RTC
 		bool OnAssociationSendData(const uint8_t* data, size_t len) override;
 		void OnAssociationConnecting() override;
 		void OnAssociationConnected() override;
-		void OnAssociationClosed() override;
+		void OnAssociationFailed(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage) override;
+		void OnAssociationClosed(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage) override;
 		void OnAssociationRestarted() override;
 		void OnAssociationError(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage) override;
-		void OnAssociationAborted(
-		  RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage) override;
 		void OnAssociationMessageReceived(RTC::SCTP::Message message) override;
 		void OnAssociationStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds) override;
 		void OnAssociationStreamsResetFailed(

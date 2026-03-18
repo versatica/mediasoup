@@ -108,6 +108,34 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</SCTP::Association>");
 		}
 
+		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> Association::FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const
+		{
+			MS_TRACE();
+
+			return FBS::SctpParameters::CreateSctpParameters(
+			  builder,
+			  // Add port.
+			  this->sctpOptions.sourcePort,
+			  // Add OS.
+			  // TODO: SCTP: We should put here current value which may be different after
+			  // negotiation with peer and reconfig.
+			  this->sctpOptions.maxOutboundStreams,
+			  // Add MIS.
+			  // TODO: SCTP: We should put here current value which may be different after
+			  // negotiation with peer and reconfig.
+			  this->sctpOptions.maxInboundStreams,
+			  // Add maxMessageSize.
+			  this->sctpOptions.maxSendMessageSize,
+			  // Add sendBufferSize.
+			  this->sctpOptions.maxSendBufferSize,
+			  // Add sctpBufferedAmountLowThreshold.
+			  this->sctpOptions.totalBufferedAmountLowThreshold,
+			  // Add isDataChannel.
+			  // TODO: SCTP: Have a member for this.
+			  /*isDataChannel*/ true);
+		}
+
 		Types::AssociationState Association::GetAssociationState() const
 		{
 			MS_TRACE();
@@ -531,15 +559,17 @@ namespace RTC
 				this->tcb = nullptr;
 			}
 
+			const auto prevState = this->state;
+
 			SetState(State::CLOSED, message);
 
-			if (errorKind == Types::ErrorKind::SUCCESS)
+			if (prevState == State::COOKIE_WAIT || prevState == State::COOKIE_ECHOED)
 			{
-				this->listener.OnAssociationClosed();
+				this->listener.OnAssociationFailed(errorKind, message);
 			}
 			else
 			{
-				this->listener.OnAssociationAborted(errorKind, message);
+				this->listener.OnAssociationClosed(errorKind, message);
 			}
 		}
 

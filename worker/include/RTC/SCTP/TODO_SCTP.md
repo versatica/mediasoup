@@ -2,17 +2,13 @@
 
 ## Related to mediasoup SCTP implementation
 
-- Add `AssociationListener::OnAssociationFailed()`.
-
 - Why the hell does `DataConsumer` have a `RTC::SctpAssociation* sctpAssociation` member?
 
 - Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.
 
-- Do we need to pass `isDataChannel` to `SCTP::Association` constructor as we do in former `SctpAssociation`?
+- We to pass `isDataChannel` to `SCTP::Association` constructor as we do in former `SctpAssociation`. Also use it in `Association::FillBuffer()`.
 
-- In `Transport::FillBuffer()` we need `this->sctpAssociation->FillBuffer(builder)`.
-
-- There is no association state "NEW" or "FAILED" anymore, and this affects `Transport.cpp` and specially FBS types.
+- In `Association::FillBuffer()` we should not pass `this->sctpOptions.maxOutboundStreams/maxInboundStreams` but the current values (they may have been modified via "reconfig").
 
 - Look for "TODO: SCTP" and `MS_SCTP_STACK`.
 

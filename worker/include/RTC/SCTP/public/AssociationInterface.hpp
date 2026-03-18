@@ -6,6 +6,7 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include <FBS/sctpParameters.h>
 #include <span>
 #include <vector>
 
@@ -25,6 +26,9 @@ namespace RTC
 			virtual ~AssociationInterface() = default;
 
 			virtual void Dump(int indentation = 0) const = 0;
+
+			virtual flatbuffers::Offset<FBS::SctpParameters::SctpParameters> FillBuffer(
+			  flatbuffers::FlatBufferBuilder& builder) const = 0;
 
 			virtual Types::AssociationState GetAssociationState() const = 0;
 

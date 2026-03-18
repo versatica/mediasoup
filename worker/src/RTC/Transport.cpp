@@ -363,12 +363,39 @@ namespace RTC
 
 		if (this->sctpAssociation)
 		{
-#ifdef MS_SCTP_STACK
-			// TODO: SCTP
-#else
 			// Add sctpParameters.
 			sctpParameters = this->sctpAssociation->FillBuffer(builder);
 
+#ifdef MS_SCTP_STACK
+			// NOTE: There is never permanent FAILED state.
+			switch (this->sctpAssociation->GetAssociationState())
+			{
+				case RTC::SCTP::Types::AssociationState::NEW:
+				{
+					sctpState = FBS::SctpAssociation::SctpState::NEW;
+					break;
+				}
+
+				case RTC::SCTP::Types::AssociationState::CONNECTING:
+				{
+					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
+					break;
+				}
+
+				case RTC::SCTP::Types::AssociationState::CONNECTED:
+				{
+					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
+					break;
+				}
+
+				case RTC::SCTP::Types::AssociationState::SHUTTING_DOWN:
+				case RTC::SCTP::Types::AssociationState::CLOSED:
+				{
+					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
+					break;
+				}
+			}
+#else
 			switch (this->sctpAssociation->GetState())
 			{
 				case RTC::SctpAssociation::SctpState::NEW:
@@ -401,9 +428,8 @@ namespace RTC
 					break;
 				}
 			}
-
-			sctpListener = this->sctpListener.FillBuffer(builder);
 #endif
+			sctpListener = this->sctpListener.FillBuffer(builder);
 		}
 
 		// Add traceEventTypes.
@@ -452,40 +478,34 @@ namespace RTC
 		{
 			// Add sctpState.
 #ifdef MS_SCTP_STACK
-			// TODO: SCTP: Our RTC::SCTP::Types::AssociationState values don't match
-			// existing values in FBS.
-			// switch (this->sctpAssociation->GetAssociationState())
-			// {
-			// 	case RTC::SCTP::Types::AssociationState::NEW:
-			// 	{
-			// 		sctpState = FBS::SctpAssociation::SctpState::NEW;
-			// 		break;
-			// 	}
+			// NOTE: There is never permanent FAILED state.
+			switch (this->sctpAssociation->GetAssociationState())
+			{
+				case RTC::SCTP::Types::AssociationState::NEW:
+				{
+					sctpState = FBS::SctpAssociation::SctpState::NEW;
+					break;
+				}
 
-			// 	case RTC::SCTP::Types::AssociationState::CONNECTING:
-			// 	{
-			// 		sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
-			// 		break;
-			// 	}
+				case RTC::SCTP::Types::AssociationState::CONNECTING:
+				{
+					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
+					break;
+				}
 
-			// 	case RTC::SCTP::Types::AssociationState::CONNECTED:
-			// 	{
-			// 		sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
-			// 		break;
-			// 	}
+				case RTC::SCTP::Types::AssociationState::CONNECTED:
+				{
+					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
+					break;
+				}
 
-			// 	case RTC::SCTP::Types::AssociationState::FAILED:
-			// 	{
-			// 		sctpState = FBS::SctpAssociation::SctpState::FAILED;
-			// 		break;
-			// 	}
-
-			// 	case RTC::SCTP::Types::AssociationState::CLOSED:
-			// 	{
-			// 		sctpState = FBS::SctpAssociation::SctpState::CLOSED;
-			// 		break;
-			// 	}
-			// }
+				case RTC::SCTP::Types::AssociationState::SHUTTING_DOWN:
+				case RTC::SCTP::Types::AssociationState::CLOSED:
+				{
+					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
+					break;
+				}
+			}
 #else
 			switch (this->sctpAssociation->GetState())
 			{
@@ -2920,7 +2940,16 @@ namespace RTC
 		// TODO: SCTP
 	}
 
-	void Transport::OnAssociationClosed()
+	void Transport::OnAssociationFailed(
+	  RTC::SCTP::Types::ErrorKind /*errorKind*/, std::string_view /*errorMessage*/)
+	{
+		MS_TRACE();
+
+		// TODO: SCTP
+	}
+
+	void Transport::OnAssociationClosed(
+	  RTC::SCTP::Types::ErrorKind /*errorKind*/, std::string_view /*errorMessage*/)
 	{
 		MS_TRACE();
 
@@ -2934,28 +2963,22 @@ namespace RTC
 		// TODO: SCTP
 	}
 
-	void Transport::OnAssociationError(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
+	void Transport::OnAssociationError(
+	  RTC::SCTP::Types::ErrorKind /*errorKind*/, std::string_view /*errorMessage*/)
 	{
 		MS_TRACE();
 
 		// TODO: SCTP
 	}
 
-	void Transport::OnAssociationAborted(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
+	void Transport::OnAssociationMessageReceived(RTC::SCTP::Message /*message*/)
 	{
 		MS_TRACE();
 
 		// TODO: SCTP
 	}
 
-	void Transport::OnAssociationMessageReceived(RTC::SCTP::Message message)
-	{
-		MS_TRACE();
-
-		// TODO: SCTP
-	}
-
-	void Transport::OnAssociationStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds)
+	void Transport::OnAssociationStreamsResetPerformed(std::span<const uint16_t> /*outboundStreamIds*/)
 	{
 		MS_TRACE();
 
@@ -2963,21 +2986,21 @@ namespace RTC
 	}
 
 	void Transport::OnAssociationStreamsResetFailed(
-	  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage)
+	  std::span<const uint16_t> /*outboundStreamIds*/, std::string_view /*errorMessage*/)
 	{
 		MS_TRACE();
 
 		// TODO: SCTP
 	}
 
-	void Transport::OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds)
+	void Transport::OnAssociationInboundStreamsReset(std::span<const uint16_t> /*inboundStreamIds*/)
 	{
 		MS_TRACE();
 
 		// TODO: SCTP
 	}
 
-	void Transport::OnAssociationStreamBufferedAmountLow(uint16_t streamId)
+	void Transport::OnAssociationStreamBufferedAmountLow(uint16_t /*streamId*/)
 	{
 		MS_TRACE();
 

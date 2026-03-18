@@ -49,13 +49,25 @@ namespace RTC
 			virtual void OnAssociationConnected() = 0;
 
 			/**
-			 * Called when the Association is closed in a controlled way. No other
-			 * callbacks will be done after this callback, unless reconnecting.
+			 * Called when calling Connect() and also for incoming connection attempts
+			 * in case the association fails.
 			 *
 			 * @remarks
 			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnAssociationClosed() = 0;
+			virtual void OnAssociationFailed(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
+
+			/**
+			 * Called when the Association is closed in a controlled way or when the
+			 * Association has aborted - either as decided by this Association due to
+			 * e.g. too many retransmission attempts or by the peer when receiving an
+			 * ABORT command. No other callbacks will be done after this callback,
+			 * unless reconnecting.
+			 *
+			 * @remarks
+			 * - It is allowed to call methods in Association within this callback.
+			 */
+			virtual void OnAssociationClosed(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
 
 			/**
 			 * Called on connection restarted (by peer). This is just a notification,
@@ -77,17 +89,6 @@ namespace RTC
 			 * - It is allowed to call methods in Association within this callback.
 			 */
 			virtual void OnAssociationError(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
-
-			/**
-			 * Triggered when the Association has aborted - either as decided by this
-			 * Association due to e.g. too many retransmission attempts, or by the
-			 * peer when receiving an ABORT command. No other callbacks will be done
-			 * after this callback, unless reconnecting.
-			 *
-			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
-			 */
-			virtual void OnAssociationAborted(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
 
 			/**
 			 * Called when an SCTP message in full has been received.

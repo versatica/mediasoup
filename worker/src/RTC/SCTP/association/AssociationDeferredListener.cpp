@@ -110,18 +110,36 @@ namespace RTC
 			  std::monostate{});
 		}
 
-		void AssociationDeferredListener::OnAssociationClosed()
+		void AssociationDeferredListener::OnAssociationFailed(
+		  Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData /*data*/, AssociationListener* listener)
+			  [](CallbackData data, AssociationListener* listener)
 			  {
-				  listener->OnAssociationClosed();
+				  const Error error = std::get<Error>(std::move(data));
+				  listener->OnAssociationFailed(error.errorKind, error.message);
 			  },
-			  std::monostate{});
+			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
+		}
+
+		void AssociationDeferredListener::OnAssociationClosed(
+		  Types::ErrorKind errorKind, std::string_view errorMessage)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [](CallbackData data, AssociationListener* listener)
+			  {
+				  const Error error = std::get<Error>(std::move(data));
+				  listener->OnAssociationClosed(error.errorKind, error.message);
+			  },
+			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
 		void AssociationDeferredListener::OnAssociationRestarted()
@@ -150,22 +168,6 @@ namespace RTC
 			  {
 				  const Error error = std::get<Error>(std::move(data));
 				  listener->OnAssociationError(error.errorKind, error.message);
-			  },
-			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
-		}
-
-		void AssociationDeferredListener::OnAssociationAborted(
-		  Types::ErrorKind errorKind, std::string_view errorMessage)
-		{
-			MS_TRACE();
-
-			MS_ASSERT(this->ready, "not ready");
-
-			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener* listener)
-			  {
-				  const Error error = std::get<Error>(std::move(data));
-				  listener->OnAssociationAborted(error.errorKind, error.message);
 			  },
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
