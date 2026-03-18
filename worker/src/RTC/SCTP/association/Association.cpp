@@ -637,25 +637,22 @@ namespace RTC
 			if (this->sctpOptions.enablePartialReliability)
 			{
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::FORWARD_TSN);
-
-				const auto* forwardTsnSupportedParameter =
-				  chunk->BuildParameterInPlace<ForwardTsnSupportedParameter>();
-
-				// TODO: SCTP: Remove
-				MS_DUMP("--- forwardTsnSupportedParameter before Consolidate():");
-				forwardTsnSupportedParameter->Dump();
-
-				forwardTsnSupportedParameter->Consolidate();
-
-				// TODO: SCTP: Remove
-				MS_DUMP("--- forwardTsnSupportedParameter after Consolidate():");
-				forwardTsnSupportedParameter->Dump();
 			}
 
 			if (this->sctpOptions.enableMessageInterleaving)
 			{
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_DATA);
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_FORWARD_TSN);
+			}
+
+			supportedExtensionsParameter->Consolidate();
+
+			if (this->sctpOptions.enablePartialReliability)
+			{
+				const auto* forwardTsnSupportedParameter =
+				  chunk->BuildParameterInPlace<ForwardTsnSupportedParameter>();
+
+				forwardTsnSupportedParameter->Consolidate();
 			}
 
 			if (
@@ -669,8 +666,6 @@ namespace RTC
 				  this->sctpOptions.zeroChecksumAlternateErrorDetectionMethod);
 				zeroChecksumAcceptableParameter->Consolidate();
 			}
-
-			supportedExtensionsParameter->Consolidate();
 		}
 
 		void Association::CreateTransmissionControlBlock(

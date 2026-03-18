@@ -2,6 +2,8 @@
 
 ## Related to mediasoup SCTP implementation
 
+- `Chunk::BuildParameterInPlace/BuildErrorCauseInPlace()` should set a flag in the Chunk and throw if called again before previous parameter/errorCause was `consolidated.
+
 - Why the hell does `DataConsumer` have a `RTC::SctpAssociation* sctpAssociation` member?
 
 - Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.

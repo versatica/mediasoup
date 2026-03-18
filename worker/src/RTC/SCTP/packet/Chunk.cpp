@@ -418,9 +418,6 @@ namespace RTC
 
 					case Parameter::ParameterType::FORWARD_TSN_SUPPORTED:
 					{
-						// TODO: SCTP: Remove.
-						MS_DUMP("----- Parameter::ParameterType::FORWARD_TSN_SUPPORTED | parameterLength:%u, padding:%u", parameterLength, padding);
-
 						parameter = ForwardTsnSupportedParameter::ParseStrict(
 						  ptr, parameterLength + padding, parameterLength, padding);
 
