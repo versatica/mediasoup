@@ -131,7 +131,7 @@ namespace RTC
 		 *
 		 * @see SetConsolidatedListener()
 		 */
-		virtual void Consolidate() final;
+		virtual void Consolidate() const final;
 
 		/**
 		 * Methods to be used by classes inheriting from Serializable.
