@@ -30,7 +30,7 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		bool Packet::IsSctp(const uint8_t* buffer, size_t bufferLength)
+		bool Packet::IsSctp(const uint8_t* /*buffer*/, size_t bufferLength)
 		{
 			return (
 			  bufferLength >= Packet::CommonHeaderLength && Utils::Byte::IsPaddedTo4Bytes(bufferLength));

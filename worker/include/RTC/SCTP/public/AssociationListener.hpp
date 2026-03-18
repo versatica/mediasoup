@@ -57,7 +57,7 @@ namespace RTC
 			 * @remarks
 			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnAssociationConnectionRestarted() = 0;
+			virtual void OnAssociationRestarted() = 0;
 
 			/**
 			 * Triggered when an non-fatal error is reported by either this library or

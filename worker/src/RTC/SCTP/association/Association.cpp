@@ -179,6 +179,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (this->state == State::CLOSED)
+			{
+				AssertStateIsConsistent();
+
+				return;
+			}
+
 			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
@@ -195,11 +202,11 @@ namespace RTC
 				// @see https://issues.webrtc.org/issues/42222897
 				if (this->state != State::SHUTDOWN_SENT && this->state != State::SHUTDOWN_ACK_SENT)
 				{
-					SetState(State::SHUTDOWN_PENDING, "Shutdown() called");
-
 					this->t1InitTimer->Stop();
 					this->t1CookieTimer->Stop();
 
+					// NOTE: We need to set state before calling method below.
+					SetState(State::SHUTDOWN_PENDING, "Shutdown() called");
 					MaySendShutdownOrShutdownAckChunk();
 				}
 			}
@@ -219,36 +226,35 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (this->state == State::CLOSED)
+			{
+				AssertStateIsConsistent();
+
+				return;
+			}
+
 			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
-			if (this->state != State::CLOSED)
+			if (this->tcb)
 			{
-				if (this->tcb)
-				{
-					auto packet                 = this->tcb->CreatePacket();
-					auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+				auto packet                 = this->tcb->CreatePacket();
+				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
-					// NOTE: Don't set bit T in the ABORT chunk since TCB knows the
-					// Verification Tag expected by the remote.
+				// NOTE: Don't set bit T in the ABORT chunk since TCB knows the
+				// Verification Tag expected by the remote.
 
-					auto* userInitiatedAbortErrorCause =
-					  abortAssociationChunk->BuildErrorCauseInPlace<UserInitiatedAbortErrorCause>();
+				auto* userInitiatedAbortErrorCause =
+				  abortAssociationChunk->BuildErrorCauseInPlace<UserInitiatedAbortErrorCause>();
 
-					userInitiatedAbortErrorCause->SetUpperLayerAbortReason("Close() called");
+				userInitiatedAbortErrorCause->SetUpperLayerAbortReason("Close() called");
 
-					userInitiatedAbortErrorCause->Consolidate();
-					abortAssociationChunk->Consolidate();
+				userInitiatedAbortErrorCause->Consolidate();
+				abortAssociationChunk->Consolidate();
 
-					this->packetSender.SendPacket(packet.get());
-				}
-
-				InternalClose(Types::ErrorKind::SUCCESS, "");
-			}
-			else
-			{
-				MS_DEBUG_TAG(sctp, "Close() called on a closed Association");
+				this->packetSender.SendPacket(packet.get());
 			}
 
+			InternalClose(Types::ErrorKind::SUCCESS, "");
 			AssertStateIsConsistent();
 		}
 
@@ -751,7 +757,6 @@ namespace RTC
 			else if (this->state == State::SHUTDOWN_RECEIVED)
 			{
 				SendShutdownAckChunk();
-
 				SetState(State::SHUTDOWN_ACK_SENT, "no more outstanding data");
 			}
 		}
@@ -1655,7 +1660,7 @@ namespace RTC
 				MS_DEBUG_DEV("received COOKIE_ECHO indicating a restarted peer");
 
 				this->tcb = nullptr;
-				this->listener.OnAssociationConnectionRestarted();
+				this->listener.OnAssociationRestarted();
 			}
 			// "B) In this case, both sides might be attempting to start an association
 			// at about the same time, but the peer endpoint sent its INIT chunk after
@@ -1717,7 +1722,6 @@ namespace RTC
 			AssertHasTcb();
 
 			this->t1CookieTimer->Stop();
-
 			this->tcb->ClearRemoteStateCookie();
 
 			SetState(State::ESTABLISHED, "COOKIE_ACK received");

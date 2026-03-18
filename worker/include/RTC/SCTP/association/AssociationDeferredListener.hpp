@@ -64,7 +64,7 @@ namespace RTC
 
 			void OnAssociationClosed() override;
 
-			void OnAssociationConnectionRestarted() override;
+			void OnAssociationRestarted() override;
 
 			void OnAssociationError(Types::ErrorKind errorKind, std::string_view errorMessage) override;
 

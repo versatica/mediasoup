@@ -110,7 +110,7 @@ namespace RTC
 			  std::monostate{});
 		}
 
-		void AssociationDeferredListener::OnAssociationConnectionRestarted()
+		void AssociationDeferredListener::OnAssociationRestarted()
 		{
 			MS_TRACE();
 
@@ -119,7 +119,7 @@ namespace RTC
 			this->deferredCallbacks.emplace_back(
 			  [](CallbackData /*data*/, AssociationListener* listener)
 			  {
-				  listener->OnAssociationConnectionRestarted();
+				  listener->OnAssociationRestarted();
 			  },
 			  std::monostate{});
 		}

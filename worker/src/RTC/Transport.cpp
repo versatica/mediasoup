@@ -2920,7 +2920,7 @@ namespace RTC
 		// TODO: SCTP
 	}
 
-	void Transport::OnAssociationConnectionRestarted()
+	void Transport::OnAssociationRestarted()
 	{
 		MS_TRACE();
 
