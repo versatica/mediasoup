@@ -2906,6 +2906,13 @@ namespace RTC
 		}
 	}
 
+	void Transport::OnAssociationConnecting()
+	{
+		MS_TRACE();
+
+		// TODO: SCTP
+	}
+
 	void Transport::OnAssociationConnected()
 	{
 		MS_TRACE();

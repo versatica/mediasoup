@@ -59,6 +59,7 @@ namespace RTC
 			 */
 			enum class State : uint8_t
 			{
+				NEW,
 				CLOSED,
 				COOKIE_WAIT,
 				// NOTE: TCB is valid in these states:
@@ -78,6 +79,11 @@ namespace RTC
 
 				switch (state)
 				{
+					case State::NEW:
+					{
+						return "NEW";
+					}
+
 					case State::CLOSED:
 					{
 						return "CLOSED";
@@ -452,7 +458,7 @@ namespace RTC
 			// AssociationDeferredListener which inherits from AssociationListener.
 			AssociationDeferredListener listener;
 			// SCTP association internal state.
-			State state{ State::CLOSED };
+			State state{ State::NEW };
 			// Private metrics.
 			AssociationPrivateMetrics privateMetrics{};
 			// The actual send queue implementation. As data can be sent before the

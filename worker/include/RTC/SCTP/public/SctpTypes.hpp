@@ -16,6 +16,13 @@ namespace RTC
 			enum class AssociationState : uint8_t
 			{
 				/**
+				 * Initial state.
+				 *
+				 * @remarks
+				 * - Once state changes it will never transition to NEW again.
+				 */
+				NEW,
+				/**
 				 * The Association is closed.
 				 */
 				CLOSED,
@@ -43,24 +50,29 @@ namespace RTC
 			{
 				switch (associationState)
 				{
+					case AssociationState::NEW:
+					{
+						return "NEW";
+					}
+
 					case AssociationState::CLOSED:
 					{
-						return "Closed";
+						return "CLOSED";
 					}
 
 					case AssociationState::CONNECTING:
 					{
-						return "Connecting";
+						return "CONNECTING";
 					}
 
 					case AssociationState::CONNECTED:
 					{
-						return "Connected";
+						return "CONNECTED";
 					}
 
 					case AssociationState::SHUTTING_DOWN:
 					{
-						return "ShuttingDown";
+						return "SHUTTING_DOWN";
 					}
 
 						NO_DEFAULT_GCC();

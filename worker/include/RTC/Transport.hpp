@@ -295,6 +295,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::SCTP::AssociationListener. */
 	public:
 		bool OnAssociationSendData(const uint8_t* data, size_t len) override;
+		void OnAssociationConnecting() override;
 		void OnAssociationConnected() override;
 		void OnAssociationClosed() override;
 		void OnAssociationRestarted() override;

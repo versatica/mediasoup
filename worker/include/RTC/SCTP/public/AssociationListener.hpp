@@ -32,6 +32,14 @@ namespace RTC
 			virtual bool OnAssociationSendData(const uint8_t* data, size_t len) = 0;
 
 			/**
+			 * Called when calling Connect() and also for incoming connection attempts.
+			 *
+			 * @remarks
+			 * - It is allowed to call methods in Association within this callback.
+			 */
+			virtual void OnAssociationConnecting() = 0;
+
+			/**
 			 * Called when calling Connect() succeeds and also for incoming successful
 			 * connection attempts.
 			 *

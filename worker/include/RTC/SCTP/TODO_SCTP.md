@@ -2,6 +2,8 @@
 
 ## Related to mediasoup SCTP implementation
 
+- Add `AssociationListener::OnAssociationFailed()`.
+
 - Why the hell does `DataConsumer` have a `RTC::SctpAssociation* sctpAssociation` member?
 
 - Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.

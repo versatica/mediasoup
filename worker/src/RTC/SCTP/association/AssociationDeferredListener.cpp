@@ -82,6 +82,20 @@ namespace RTC
 			return this->innerListener->OnAssociationSendData(data, len);
 		}
 
+		void AssociationDeferredListener::OnAssociationConnecting()
+		{
+			MS_TRACE();
+
+			MS_ASSERT(this->ready, "not ready");
+
+			this->deferredCallbacks.emplace_back(
+			  [](CallbackData /*data*/, AssociationListener* listener)
+			  {
+				  listener->OnAssociationConnecting();
+			  },
+			  std::monostate{});
+		}
+
 		void AssociationDeferredListener::OnAssociationConnected()
 		{
 			MS_TRACE();

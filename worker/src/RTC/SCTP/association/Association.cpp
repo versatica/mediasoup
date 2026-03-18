@@ -114,6 +114,11 @@ namespace RTC
 
 			switch (this->state)
 			{
+				case State::NEW:
+				{
+					return Types::AssociationState::NEW;
+				}
+
 				case State::CLOSED:
 				{
 					return Types::AssociationState::CLOSED;
@@ -146,40 +151,44 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
-
-			if (this->state == State::CLOSED)
-			{
-				this->preTcb.localVerificationTag =
-				  Utils::Crypto::GetRandomUInt<uint32_t>(MinVerificationTag, MaxVerificationTag);
-				this->preTcb.localInitialTsn =
-				  Utils::Crypto::GetRandomUInt<uint32_t>(MinInitialTsn, MaxInitialTsn);
-
-				SendInitChunk();
-
-				this->t1InitTimer->Start();
-
-				SetState(State::COOKIE_WAIT, "Connect() called");
-			}
-			else
+			// NOTE: We could only accept NEW state here so once closed the Association
+			// cannot be reused. However there is no real technical reason for it.
+			if (this->state != State::NEW && this->state != State::CLOSED)
 			{
 				const auto stateStringView = Association::StateToString(this->state);
 
 				MS_WARN_TAG(
 				  sctp,
-				  "cannot initiate the Association since internal state is not CLOSED but %.*s",
+				  "cannot initiate the Association since internal state is not NEW or CLOSED but %.*s",
 				  static_cast<int>(stateStringView.size()),
 				  stateStringView.data());
+
+				return;
 			}
 
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+
+			this->preTcb.localVerificationTag =
+			  Utils::Crypto::GetRandomUInt<uint32_t>(MinVerificationTag, MaxVerificationTag);
+			this->preTcb.localInitialTsn =
+			  Utils::Crypto::GetRandomUInt<uint32_t>(MinInitialTsn, MaxInitialTsn);
+
+			SendInitChunk();
+
+			this->t1InitTimer->Start();
+
+			SetState(State::COOKIE_WAIT, "Connect() called");
+
 			AssertStateIsConsistent();
+
+			this->listener.OnAssociationConnecting();
 		}
 
 		void Association::Shutdown()
 		{
 			MS_TRACE();
 
-			if (this->state == State::CLOSED)
+			if (this->state == State::NEW || this->state == State::CLOSED)
 			{
 				AssertStateIsConsistent();
 
@@ -226,7 +235,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->state == State::CLOSED)
+			if (this->state == State::NEW || this->state == State::CLOSED)
 			{
 				AssertStateIsConsistent();
 
@@ -379,7 +388,6 @@ namespace RTC
 			// this->tcb->GetStreamResetHandler().ResetStreams(outboundStreamIds);
 
 			MaySendResetStreamsRequest();
-
 			AssertStateIsConsistent();
 
 			return Types::ResetStreamsStatus::PERFORMED;
@@ -514,7 +522,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->state != State::CLOSED)
+			if (this->state != State::NEW && this->state != State::CLOSED)
 			{
 				this->t1InitTimer->Stop();
 				this->t1CookieTimer->Stop();
@@ -1314,9 +1322,10 @@ namespace RTC
 
 			switch (this->state)
 			{
+				case State::NEW:
 				case State::CLOSED:
 				{
-					MS_DEBUG_TAG(sctp, "INIT Chunk received in CLOSED state (normal scenario)");
+					MS_DEBUG_TAG(sctp, "INIT Chunk received in NEW or CLOSED state (normal scenario)");
 
 					localVerificationTag =
 					  Utils::Crypto::GetRandomUInt<uint32_t>(MinVerificationTag, MaxVerificationTag);
@@ -1506,6 +1515,7 @@ namespace RTC
 			// this->tcb->SendBufferedPackets(callbacks_.Now());
 
 			this->t1CookieTimer->Start();
+			this->listener.OnAssociationConnecting();
 		}
 
 		void Association::ProcessReceivedCookieEchoChunk(
@@ -1739,6 +1749,7 @@ namespace RTC
 
 			switch (this->state)
 			{
+				case State::NEW:
 				case State::CLOSED:
 				{
 					break;
@@ -2510,6 +2521,21 @@ namespace RTC
 
 			switch (this->state)
 			{
+				case State::NEW:
+				{
+					MS_ASSERT(!this->tcb, "internal state is NEW but there is TCB");
+					MS_ASSERT(
+					  !this->t1InitTimer->IsRunning(), "internal state is NEW but T1 Init timer is running");
+					MS_ASSERT(
+					  !this->t1CookieTimer->IsRunning(),
+					  "internal state is NEW but T1 Cookie timer is running");
+					MS_ASSERT(
+					  !this->t2ShutdownTimer->IsRunning(),
+					  "internal state is NEW but T2 Shutdown timer is running");
+
+					break;
+				}
+
 				case State::CLOSED:
 				{
 					MS_ASSERT(!this->tcb, "internal state is CLOSED but there is TCB");
