@@ -638,9 +638,6 @@ namespace RTC
 			{
 				supportedExtensionsParameter->AddChunkType(Chunk::ChunkType::FORWARD_TSN);
 
-				// TODO: SCTP
-				MS_DUMP("TODO: UNCOMMENT!!");
-
 				const auto* forwardTsnSupportedParameter =
 				  chunk->BuildParameterInPlace<ForwardTsnSupportedParameter>();
 
