@@ -247,10 +247,10 @@ namespace RTC
 					MaySendShutdownOrShutdownAckChunk();
 				}
 			}
-			// Connection closed before even starting to connect, or during the
+			// Association closed before even starting to connect, or during the
 			// initial connection phase. There is no outstanding data, so the
-			// Association can just be closed (stopping any connection timers, if
-			// any), as this is the application's intention when calling Shutdown().
+			// Association can just be closed (stopping any timers, if any), as this
+			// is the application's intention when calling Shutdown().
 			else
 			{
 				InternalClose(Types::ErrorKind::SUCCESS, "");
@@ -1535,8 +1535,8 @@ namespace RTC
 			const auto negotiatedCapabilities =
 			  NegotiatedCapabilities::Factory(this->sctpOptions, receivedInitAckChunk);
 
-			// If the connection is re-established (peer restarted, but re-used old
-			// connection), make sure that all message identifiers are reset and any
+			// If the Association is re-established (peer restarted, but re-used old
+			// Association), make sure that all message identifiers are reset and any
 			// partly sent message is re-sent in full. The same is true when the
 			// Association is closed and later re-opened, which never happens in
 			// WebRTC, but is a valid operation on the SCTP level.
@@ -1554,8 +1554,8 @@ namespace RTC
 
 			SetState(State::COOKIE_ECHOED, "INIT_ACK received");
 
-			// The connection isn't fully established just yet. Store the state cookie
-			// in the TCB.
+			// The Association isn't fully established just yet. Store the stat
+			// cookie in the TCB.
 			std::vector<uint8_t> remoteStateCookie(
 			  stateCookieParameter->GetCookie(),
 			  stateCookieParameter->GetCookie() + stateCookieParameter->GetCookieLength());
@@ -1635,8 +1635,8 @@ namespace RTC
 
 			if (!this->tcb)
 			{
-				// If the connection is re-established (peer restarted, but re-used old
-				// connection), make sure that all message identifiers are reset and any
+				// If the Association is re-established (peer restarted, but re-used old
+				// Association), make sure that all message identifiers are reset and any
 				// partly sent message is re-sent in full. The same is true when the
 				// Association is closed and later re-opened, which never happens in
 				// WebRTC, but is a valid operation on the SCTP level.
@@ -1732,7 +1732,7 @@ namespace RTC
 			{
 				// TODO: Handle the case in which remote Verification Tag is 0?
 
-				MS_DEBUG_DEV("received COOKIE_ECHO indicating simultaneous connections");
+				MS_DEBUG_DEV("received COOKIE_ECHO indicating simultaneous associations");
 
 				this->tcb = nullptr;
 			}
@@ -2013,7 +2013,7 @@ namespace RTC
 				return;
 			}
 
-			MS_WARN_TAG(sctp, "received ABORT Chunk, closing connection: %s", errorCausesStr.c_str());
+			MS_WARN_TAG(sctp, "received ABORT Chunk, closing Association: %s", errorCausesStr.c_str());
 
 			InternalClose(Types::ErrorKind::PEER_REPORTED, errorCausesStr);
 		}
