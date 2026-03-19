@@ -9,7 +9,9 @@
 #include "DepLibUV.hpp"
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
+#ifndef MS_SCTP_STACK
 #include "DepUsrSCTP.hpp"
+#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -146,7 +148,9 @@ extern "C" int mediasoup_worker_run(
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
+#ifndef MS_SCTP_STACK
 		DepUsrSCTP::ClassInit();
+#endif
 #ifdef MS_LIBURING_SUPPORTED
 		DepLibUring::ClassInit();
 #endif
@@ -169,7 +173,9 @@ extern "C" int mediasoup_worker_run(
 		DepLibUring::ClassDestroy();
 #endif
 		RTC::DtlsTransport::ClassDestroy();
+#ifndef MS_SCTP_STACK
 		DepUsrSCTP::ClassDestroy();
+#endif
 		DepLibUV::ClassDestroy();
 
 		return 0;

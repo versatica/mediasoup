@@ -5,7 +5,9 @@
 #include "DepLibUV.hpp"
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
+#ifndef MS_SCTP_STACK
 #include "DepUsrSCTP.hpp"
+#endif
 #include "FuzzerUtils.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -145,7 +147,9 @@ namespace
 		DepLibUV::ClassInit();
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
+#ifndef MS_SCTP_STACK
 		DepUsrSCTP::ClassInit();
+#endif
 		DepLibWebRTC::ClassInit();
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();

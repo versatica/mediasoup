@@ -7,7 +7,9 @@
 #include "DepLibUring.hpp"
 #endif
 #include "DepLibUV.hpp"
+#ifndef MS_SCTP_STACK
 #include "DepUsrSCTP.hpp"
+#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -40,8 +42,10 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 	}
 #endif
 
+#ifndef MS_SCTP_STACK
 	// Create the Checker instance in DepUsrSCTP.
 	DepUsrSCTP::CreateChecker();
+#endif
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())
@@ -105,8 +109,10 @@ void Worker::Close()
 	// Delete the RTC::Shared singleton.
 	delete this->shared;
 
+#ifndef MS_SCTP_STACK
 	// Close the Checker instance in DepUsrSCTP.
 	DepUsrSCTP::CloseChecker();
+#endif
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())

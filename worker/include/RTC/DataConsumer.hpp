@@ -102,7 +102,7 @@ namespace RTC
 		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void SctpAssociationSendBufferFull();
 		void DataProducerClosed();
-		void SendMessage(
+		bool SendMessage(
 		  const uint8_t* msg,
 		  size_t len,
 		  uint32_t ppid,

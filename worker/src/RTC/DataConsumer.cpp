@@ -5,7 +5,9 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#ifndef MS_SCTP_STACK
 #include "RTC/SctpAssociation.hpp"
+#endif
 
 namespace RTC
 {
@@ -529,7 +531,7 @@ namespace RTC
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}
 
-	void DataConsumer::SendMessage(
+	bool DataConsumer::SendMessage(
 	  const uint8_t* msg,
 	  size_t len,
 	  uint32_t ppid,
@@ -547,7 +549,7 @@ namespace RTC
 				delete cb;
 			}
 
-			return;
+			return false;
 		}
 
 		// If a required subchannel is given, verify that this data consumer is
@@ -562,7 +564,7 @@ namespace RTC
 				delete cb;
 			}
 
-			return;
+			return false;
 		}
 
 		// If subchannels are given, verify that this data consumer is subscribed
@@ -589,7 +591,7 @@ namespace RTC
 					delete cb;
 				}
 
-				return;
+				return false;
 			}
 		}
 
@@ -607,12 +609,14 @@ namespace RTC
 				delete cb;
 			}
 
-			return;
+			return false;
 		}
 
 		this->messagesSent++;
 		this->bytesSent += len;
 
 		this->listener->OnDataConsumerSendMessage(this, msg, len, ppid, cb);
+
+		return true;
 	}
 } // namespace RTC
