@@ -80,10 +80,8 @@ namespace RTC
 
 			this->negotiatedCapabilities.Dump(indentation + 1);
 
-			MS_DUMP_CLEAN(indentation, "  retransmission timeout:");
 			this->rto.Dump(indentation + 1);
 
-			MS_DUMP_CLEAN(indentation, "  tx error counter:");
 			this->txErrorCounter.Dump(indentation + 1);
 
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");

@@ -2930,14 +2930,45 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: SCTP
+		// Notify the Node Transport.
+		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::SctpAssociation::SctpState::CONNECTING);
+
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
+		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
+		  sctpStateChangeOffset);
 	}
 
 	void Transport::OnAssociationConnected()
 	{
 		MS_TRACE();
 
-		// TODO: SCTP
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+			{
+				dataConsumer->SctpAssociationConnected();
+			}
+		}
+
+		// Notify the Node Transport.
+		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::SctpAssociation::SctpState::CONNECTED);
+
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
+		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
+		  sctpStateChangeOffset);
+
+		// TODO: SCTP: REMOVE
+		MS_DUMP("---- SCTP Association connected, dump():");
+		this->sctpAssociation->Dump();
 	}
 
 	void Transport::OnAssociationFailed(
@@ -2945,7 +2976,26 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: SCTP
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+			{
+				dataConsumer->SctpAssociationClosed();
+			}
+		}
+
+		// Notify the Node Transport.
+		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::SctpAssociation::SctpState::FAILED);
+
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
+		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
+		  sctpStateChangeOffset);
 	}
 
 	void Transport::OnAssociationClosed(
@@ -2953,7 +3003,26 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: SCTP
+		// Tell all DataConsumers.
+		for (auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+			{
+				dataConsumer->SctpAssociationClosed();
+			}
+		}
+
+		// Notify the Node Transport.
+		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::SctpAssociation::SctpState::CLOSED);
+
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
+		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
+		  sctpStateChangeOffset);
 	}
 
 	void Transport::OnAssociationRestarted()
@@ -2963,12 +3032,19 @@ namespace RTC
 		// TODO: SCTP
 	}
 
-	void Transport::OnAssociationError(
-	  RTC::SCTP::Types::ErrorKind /*errorKind*/, std::string_view /*errorMessage*/)
+	void Transport::OnAssociationError(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
 	{
 		MS_TRACE();
 
-		// TODO: SCTP
+		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+
+		MS_WARN_TAG(
+		  sctp,
+		  "SCTP Association error [kind:%.*s, message:%.*s]",
+		  static_cast<int>(errorKindStringView.size()),
+		  errorKindStringView.data(),
+		  static_cast<int>(errorMessage.size()),
+		  errorMessage.data());
 	}
 
 	void Transport::OnAssociationMessageReceived(RTC::SCTP::Message /*message*/)

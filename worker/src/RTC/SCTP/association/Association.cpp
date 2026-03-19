@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::SCTP::Association"
-// #define MS_LOG_DEV_LEVEL 3
+// TODO: SCTP: COMMENT
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/Association.hpp"
 #include "DepLibUV.hpp"
@@ -87,7 +88,7 @@ namespace RTC
 
 			MS_DUMP_CLEAN(
 			  indentation,
-			  "  SCTP association state: %.*s (internal state: %.*s)",
+			  "  association state: %.*s (internal state: %.*s)",
 			  static_cast<int>(associationStateStringView.size()),
 			  associationStateStringView.data(),
 			  static_cast<int>(stateStringView.size()),
@@ -583,7 +584,14 @@ namespace RTC
 
 			if (prevState == State::COOKIE_WAIT || prevState == State::COOKIE_ECHOED)
 			{
-				this->listener.OnAssociationFailed(errorKind, message);
+				if (errorKind == Types::ErrorKind::SUCCESS)
+				{
+					this->listener.OnAssociationClosed(errorKind, message);
+				}
+				else
+				{
+					this->listener.OnAssociationFailed(errorKind, message);
+				}
 			}
 			else
 			{
@@ -599,8 +607,7 @@ namespace RTC
 
 			if (state == this->state)
 			{
-				MS_WARN_TAG(
-				  sctp,
+				MS_WARN_DEV(
 				  "SCTP Association internal state is already %.*s (message: %.*s)",
 				  static_cast<int>(stateStringView.size()),
 				  stateStringView.data(),
@@ -612,7 +619,7 @@ namespace RTC
 
 			const auto previousStateStringView = Association::StateToString(this->state);
 
-			MS_WARN_TAG(
+			MS_DEBUG_TAG(
 			  sctp,
 			  "SCTP Association internal state changed from %.*s to %.*s (message: %.*s)",
 			  static_cast<int>(previousStateStringView.size()),

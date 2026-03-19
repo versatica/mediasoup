@@ -28,7 +28,7 @@ namespace RTC
 			  "  limit: %s",
 			  this->limit ? std::to_string(this->limit.value()).c_str() : "Infinite");
 			MS_DUMP_CLEAN(indentation, "  counter: %zu", this->counter);
-			MS_DUMP_CLEAN(indentation, "  is exhausted: %s", IsExhausted() ? "yes" : "no");
+			MS_DUMP_CLEAN(indentation, "  exhausted: %s", IsExhausted() ? "yes" : "no");
 
 			MS_DUMP_CLEAN(indentation, "</SCTP::RetransmissionErrorCounter>");
 		}
