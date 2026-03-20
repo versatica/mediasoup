@@ -6,11 +6,19 @@ on:
     paths:
       - 'node/**'
       - 'worker/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'npm-scripts.mjs'
       - '.github/workflows/mediasoup-node.yaml'
   pull_request:
     paths:
       - 'node/**'
       - 'worker/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'npm-scripts.mjs'
       - '.github/workflows/mediasoup-node.yaml'
   workflow_dispatch:
 

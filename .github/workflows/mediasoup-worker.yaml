@@ -5,10 +5,14 @@ on:
     branches: [v3]
     paths:
       - 'worker/**'
+      - 'worker/scripts/package.json'
+      - 'worker/scripts/package-lock.json'
       - '.github/workflows/mediasoup-worker.yaml'
   pull_request:
     paths:
       - 'worker/**'
+      - 'worker/scripts/package.json'
+      - 'worker/scripts/package-lock.json'
       - '.github/workflows/mediasoup-worker.yaml'
   workflow_dispatch:
 
