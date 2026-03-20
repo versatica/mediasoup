@@ -47,10 +47,10 @@ namespace
 
 	public:
 		bool isActive{ true };
-		int keyFrameRequestCount{ 0 };
+		size_t keyFrameRequestCount{ 0 };
 		uint32_t lastKeyFrameRequestedMappedSsrc{ 0 };
-		int layersChangedCount{ 0 };
-		int needBitrateChangeCount{ 0 };
+		size_t layersChangedCount{ 0 };
+		size_t needBitrateChangeCount{ 0 };
 	};
 
 	class RtpStreamRecvListener : public RTC::RTP::RtpStreamRecv::Listener
@@ -544,12 +544,12 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		// Start at layer 0.
 		manager->UpdateTargetLayers(0, 0);
 
-		int kfCountBefore = listener.keyFrameRequestCount;
+		auto keyFrameRequestCountBefore = listener.keyFrameRequestCount;
 
 		// Upgrade spatial: full-SVC requests a keyframe.
 		manager->UpdateTargetLayers(1, 0);
 
-		REQUIRE(listener.keyFrameRequestCount > kfCountBefore);
+		REQUIRE(listener.keyFrameRequestCount > keyFrameRequestCountBefore);
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
 	}
 
