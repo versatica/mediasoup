@@ -71,9 +71,8 @@ namespace RTC
 		// clang-format off
 		return (
 			this->listener->IsActive() &&
-			std::any_of(
-				this->producerRtpStreams.begin(),
-				this->producerRtpStreams.end(),
+			std::ranges::any_of(
+				this->producerRtpStreams,
 				[](const RTC::RTP::RtpStreamRecv* rtpStream)
 				{
 					return (
@@ -697,8 +696,7 @@ namespace RTC
 		// Old-packet filtering after spatial layer switch.
 		if (!shouldSwitchCurrentSpatialLayer && this->checkingForOldPacketsInSpatialLayer)
 		{
-			if (SeqManager<uint16_t>::IsSeqLowerThan(
-			      packet->GetSequenceNumber(), this->snReferenceSpatialLayer))
+			if (SeqManager<uint16_t>::IsSeqLowerThan(packet->GetSequenceNumber(), this->snReferenceSpatialLayer))
 			{
 				result.type = RtpPacketProcessResult::Type::DROP;
 
@@ -709,8 +707,9 @@ namespace RTC
 
 				return result;
 			}
-			else if (SeqManager<uint16_t>::IsSeqHigherThan(
-			           packet->GetSequenceNumber(), this->snReferenceSpatialLayer + MaxSequenceNumberGap))
+			else if (
+			  SeqManager<uint16_t>::IsSeqHigherThan(
+			    packet->GetSequenceNumber(), this->snReferenceSpatialLayer + MaxSequenceNumberGap))
 			{
 				this->checkingForOldPacketsInSpatialLayer = false;
 			}
