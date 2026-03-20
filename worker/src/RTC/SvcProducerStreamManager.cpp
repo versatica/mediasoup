@@ -557,7 +557,7 @@ namespace RTC
 			goto done;
 		}
 
-		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
+		for (; std::cmp_less(spatialLayer , this->producerRtpStream->GetSpatialLayers()); ++spatialLayer)
 		{
 			// If this is higher than current spatial layer and we moved to current
 			// spatial layer due to BWE limitations, check how much it has elapsed
