@@ -15,7 +15,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 	SECTION("AbortAssociationChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:6 (ABORT), Flags:0b00000000, Length: 12
 			0x06, 0b00000001, 0x00, 0x0C,

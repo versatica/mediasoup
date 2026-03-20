@@ -16,7 +16,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 	SECTION("HeartbeatRequestChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:4 (HEARTBEAT_REQUEST), Flags:0b00000000, Length: 22
 			// NOTE: Length field must exclude the padding of the last Parameter.
@@ -240,7 +240,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		// > the Chunk Length.
 
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:4 (HEARTBEAT_REQUEST), Flags:0b00000000, Length: 24
 			// NOTE: Length field must exclude the padding of the last Parameter so

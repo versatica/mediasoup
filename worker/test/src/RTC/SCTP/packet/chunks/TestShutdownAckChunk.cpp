@@ -13,7 +13,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[serializable][sctp][chunk]")
 	SECTION("ShutdownAckChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:8 (SHUTDOWN_ACK), Flags:0x00000000, Length: 4
 			0x08, 0b01000000, 0x00, 0x04,

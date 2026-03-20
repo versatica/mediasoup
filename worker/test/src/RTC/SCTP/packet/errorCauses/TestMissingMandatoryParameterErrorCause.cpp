@@ -14,7 +14,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 	SECTION("MissingMandatoryParameterErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:2 (MISSING_MANDATORY_PARAMETER), Length: 14
 			0x00, 0x02, 0x00, 0x0E,
@@ -117,7 +117,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 	{
 		// Wrong code.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 14
 			0x03, 0xE7, 0x00, 0x0E,
@@ -134,7 +134,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 
 		// Length field doesn't match Number of missing parameters.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:2 (MISSING_MANDATORY_PARAMETER), Length: 14
 			0x00, 0x02, 0x00, 0x0E,
@@ -152,7 +152,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 
 		// Wrong Length field (smaller than buffer).
 		// clang-format off
-		uint8_t buffer3[] =
+		alignas(4) uint8_t buffer3[] =
 		{
 			// Code:2 (MISSING_MANDATORY_PARAMETER), Length: 8 (buffer is 12)
 			0x00, 0x02, 0x00, 0x08,

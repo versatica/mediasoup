@@ -12,7 +12,7 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 	SECTION("UnknownParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:49159 (UNKNOWN), Length: 11
 			0xC0, 0x07, 0x00, 0x0B,
@@ -116,7 +116,7 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 	{
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Type:49159 (UNKNOWN), Length: 3
 			0xC0, 0x07, 0x00, 0x03,
@@ -131,7 +131,7 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Type:49159 (UNKNOWN), Length: 11
 			0xC0, 0x07, 0x00, 0x0B,

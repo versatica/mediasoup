@@ -13,7 +13,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 	SECTION("SupportedAddressTypesParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:12 (SUPPORTED_ADDRESS_TYPES), Length: 10
 			0x00, 0x0C, 0x00, 0x0A,
@@ -92,7 +92,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 	{
 		// Wrong Length field (not even).
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Type:12 (SUPPORTED_ADDRESS_TYPES), Length: 7
 			0x00, 0x0C, 0x00, 0x0A,

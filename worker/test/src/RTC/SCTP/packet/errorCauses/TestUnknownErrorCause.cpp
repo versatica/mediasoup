@@ -12,7 +12,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 	SECTION("UnknownErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:999 (UNKNOWN), Length: 11
 			0x03, 0xE7, 0x00, 0x0B,
@@ -113,7 +113,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 	{
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:49159 (UNKNOWN), Length: 3
 			0xC0, 0x07, 0x00, 0x03,
@@ -128,7 +128,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:49159 (UNKNOWN), Length: 11
 			0xC0, 0x07, 0x00, 0x0B,

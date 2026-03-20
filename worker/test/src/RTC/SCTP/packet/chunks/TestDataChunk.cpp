@@ -16,7 +16,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 	SECTION("DataChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:0 (DATA), I:1, U:0, B:1, E:1, Length: 19
 			0x00, 0b00001011, 0x00, 0x13,

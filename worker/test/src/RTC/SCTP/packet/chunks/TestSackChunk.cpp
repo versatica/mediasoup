@@ -14,7 +14,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 	SECTION("SackChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:3 (SACK), Flags: 0b00000000, Length: 36
 			0x03, 0b00000000, 0x00, 0x24,
@@ -131,7 +131,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		// Length field doesn't match Number of Gap Ack Blocks + Number of
 		// Duplicate TSNs.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Type:3 (SACK), Flags: 0b00000000, Length: 24 (should be 28)
 			0x03, 0b00000000, 0x00, 0x18,
@@ -158,7 +158,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		// Length field doesn't match Number of Gap Ack Blocks + Number of
 		// Duplicate TSNs.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Type:3 (SACK), Flags: 0b00000000, Length: 32 (should be 28)
 			0x03, 0b00000000, 0x00, 0x20,
@@ -186,7 +186,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		// Wrong Length field (smaller than buffer).
 		// clang-format off
-		uint8_t buffer3[] =
+		alignas(4) uint8_t buffer3[] =
 		{
 			// Type:3 (SACK), Flags: 0b00000000, Length: 24 (buffer is 20)
 			0x03, 0b00000000, 0x00, 0x18,

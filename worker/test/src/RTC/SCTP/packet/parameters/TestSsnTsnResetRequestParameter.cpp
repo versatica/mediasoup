@@ -13,7 +13,7 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[serializable][sctp][parameter
 	SECTION("SsnTsnResetRequestParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:15 (SSN_TSN_RESET_REQUEST), Length: 8
 			0x00, 0x0F, 0x00, 0x08,

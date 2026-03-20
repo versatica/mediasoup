@@ -23,7 +23,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 	SECTION("Parse() without Chunks succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Source Port: 10000, Destination Port: 15999
 			0x27, 0x10, 0x3E, 0x7F,
@@ -110,7 +110,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 	SECTION("Parse() with Chunks succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Source Port: 10000, Destination Port: 15999
 			0x27, 0x10, 0x3E, 0x7F,

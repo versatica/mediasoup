@@ -14,7 +14,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 	SECTION("SupportedExtensionsParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:32776 (SUPPORTED_EXTENSIONS), Length: 7
 			0x80, 0x08, 0x00, 0x07,

@@ -13,7 +13,7 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 	SECTION("UserInitiatedAbortErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:12 (USER_INITIATED_ABORT), Length: 10
 			0x00, 0x0C, 0x00, 0x0A,
@@ -84,7 +84,7 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 	{
 		// Wrong code.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
@@ -97,7 +97,7 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:12 (USER_INITIATED_ABORT), Length: 7
 			0x00, 0x0C, 0x00, 0x07,

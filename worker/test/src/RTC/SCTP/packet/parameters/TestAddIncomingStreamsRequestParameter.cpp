@@ -13,7 +13,7 @@ SCENARIO("Add Incoming Streams Request Parameter (18)", "[serializable][sctp][pa
 	SECTION("AddIncomingStreamsRequestParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:18 (ADD_INCOMING_STREAMS_REQUEST), Length: 12
 			0x00, 0x12, 0x00, 0x0C,

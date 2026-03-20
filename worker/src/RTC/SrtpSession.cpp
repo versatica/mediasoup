@@ -15,7 +15,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t EncryptBufferSize{ 65536 };
-	thread_local uint8_t EncryptBuffer[EncryptBufferSize];
+	alignas(4) thread_local uint8_t EncryptBuffer[EncryptBufferSize];
 
 	/* Class methods. */
 
@@ -351,7 +351,7 @@ namespace RTC
 		}
 
 		// Update the given data pointer and len.
-		*data = (const uint8_t*)EncryptBuffer;
+		*data = const_cast<const uint8_t*>(EncryptBuffer);
 		*len  = encryptLen;
 
 		return true;

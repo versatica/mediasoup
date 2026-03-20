@@ -16,7 +16,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 	SECTION("InitAckChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:2 (INIT_ACK), Flags: 0b00000000, Length: 28
 			0x02, 0b00000000, 0x00, 0x1C,

@@ -13,7 +13,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 	SECTION("UnrecognizedChunkTypeErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:6 (UNRECOGNIZED_CHUNK_TYPE), Length: 10
 			0x00, 0x06, 0x00, 0x0A,
@@ -111,7 +111,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 	{
 		// Wrong code.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
@@ -124,7 +124,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:6 (UNRECOGNIZED_CHUNK_TYPE), Length: 7
 			0x00, 0x06, 0x00, 0x07,

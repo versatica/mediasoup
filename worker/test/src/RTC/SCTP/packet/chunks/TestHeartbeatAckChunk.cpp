@@ -16,7 +16,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 	SECTION("HeartbeatAckChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type: 5 (HEARTBEAT_ACK), Flags:0b00000000, Length: 22
 			// NOTE: Chunk Length field must exclude padding of the last Parameter.

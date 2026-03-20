@@ -13,7 +13,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 	SECTION("HeartbeatInfoParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,
@@ -116,7 +116,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 	{
 		// Wrong type.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Type:6 (IPV6_ADDRESS), Length: 8
 			0x00, 0x06, 0x00, 0x0B,
@@ -131,7 +131,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Type:1 (HEARBEAT_INFO), Length: 3
 			0x00, 0x01, 0x00, 0x03,
@@ -146,7 +146,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer4[] =
+		alignas(4) uint8_t buffer4[] =
 		{
 			// Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,

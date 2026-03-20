@@ -28,7 +28,7 @@ namespace RTC
 	{
 		/* Static. */
 
-		thread_local static uint8_t PacketFactoryBuffer[RTC::Consts::MaxSafeMtuSizeForSctp];
+		alignas(4) thread_local static uint8_t PacketFactoryBuffer[RTC::Consts::MaxSafeMtuSizeForSctp];
 		// @see https://tools.ietf.org/html/rfc9260#section-5.1
 		constexpr uint32_t MinVerificationTag{ 1 };
 		constexpr uint32_t MaxVerificationTag{ std::numeric_limits<uint32_t>::max() };

@@ -8,7 +8,7 @@ SCENARIO("RTCP Packet", "[rtcp][packet]")
 	// Version:2, Padding:false, Count:0, Type:200(SR), Lengh:0
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x80, 0xc8, 0x00, 0x00
 	};

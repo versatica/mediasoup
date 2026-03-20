@@ -15,7 +15,7 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 	SECTION("IForwardTsnChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:194 (I_FORWARD_TSN), Flags: 0b00000000, Length: 32
 			0xC2, 0b00000000, 0x00, 0x20,
@@ -123,7 +123,7 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 	{
 		// Length field is not multiple of 8.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Type:194 (I_FORWARD_TSN), Flags: 0b00000000, Length: 20 (should be 24)
 			0xC2, 0b00000000, 0x00, 0x14,

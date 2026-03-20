@@ -488,7 +488,9 @@ def test_asan_undefined(ctx):
             f'"{BUILD_DIR}/mediasoup-worker-test-asan-undefined" --invisibles {mediasoup_test_tags}',
             echo=True,
             pty=PTY_SUPPORTED,
-            shell=SHELL
+            shell=SHELL,
+            # Exit with error if there are ASAN related issues.
+            # env={**os.environ, 'UBSAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1'}
         );
 
 

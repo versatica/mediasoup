@@ -12,7 +12,7 @@ SCENARIO("SCTP Unknown Chunk", "[serializable][sctp][chunk]")
 	SECTION("UnknownChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:0xEE (UNKNOWN), Flags: 0b1100, Length: 7
 			0xEE, 0b10001100, 0x00, 0x07,

@@ -16,7 +16,8 @@ namespace RTC
 
 		thread_local uint8_t ProbationPacketBuffer[ProbationGenerator::ProbationPacketMaxLength];
 		static constexpr size_t ProbationPacketExtensionsBufferLength{ 200 };
-		thread_local uint8_t ProbationPacketExtensionsBuffer[ProbationPacketExtensionsBufferLength];
+		alignas(4) thread_local uint8_t
+		  ProbationPacketExtensionsBuffer[ProbationPacketExtensionsBufferLength];
 		// 8 bytes, same as RTC::Consts::MidRtpExtensionMaxLength.
 		static const std::string MidValue{ "probator" };
 

@@ -10,7 +10,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 	// RTCP Sdes Packet.
 
 	// clang-format off
-	uint8_t buffer1[] =
+	alignas(4) uint8_t buffer1[] =
 	{
 		0x81, 0xca, 0x00, 0x06, // Type: 202 (SDES), Count: 1, Length: 6
 		0x9f, 0x65, 0xe7, 0x42, // SSRC: 0x9f65e742
@@ -31,7 +31,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 	const size_t item1Length{ 16u };
 
 	// clang-format off
-	uint8_t buffer2[] =
+	alignas(4) uint8_t buffer2[] =
 	{
 		0xa2, 0xca, 0x00, 0x0d, // Padding, Type: 202 (SDES), Count: 2, Length: 13
 		// Chunk 2
@@ -71,7 +71,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 	const size_t item4Length{ 17u };
 
 	// clang-format off
-	uint8_t buffer3[] =
+	alignas(4) uint8_t buffer3[] =
 	{
 		0x81, 0xca, 0x00, 0x03, // Type: 202 (SDES), Count: 1, Length: 3
 		// Chunk
@@ -158,7 +158,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 			const uint8_t* chunk1Buffer = buffer1 + RTC::RTCP::Packet::CommonHeaderSize;
 
 			// NOTE: Length of first chunk (including null octets) is 24.
-			uint8_t serialized1[24] = { 0 };
+			alignas(4) uint8_t serialized1[24] = { 0 };
 
 			chunk1->Serialize(serialized1);
 
@@ -282,7 +282,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 			const uint8_t* chunk1Buffer = buffer2 + RTC::RTCP::Packet::CommonHeaderSize;
 
 			// NOTE: Length of first chunk (including null octets) is 24.
-			uint8_t serialized1[24] = { 0 };
+			alignas(4) uint8_t serialized1[24] = { 0 };
 
 			chunk1->Serialize(serialized1);
 
@@ -292,7 +292,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 			const uint8_t* chunk2Buffer = buffer2 + RTC::RTCP::Packet::CommonHeaderSize + 24;
 
 			// NOTE: Length of second chunk (including null octets) is 24.
-			uint8_t serialized2[24] = { 0 };
+			alignas(4) uint8_t serialized2[24] = { 0 };
 
 			chunk2->Serialize(serialized2);
 
@@ -369,7 +369,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 			const uint8_t* chunk1Buffer = buffer3 + RTC::RTCP::Packet::CommonHeaderSize;
 
 			// NOTE: Length of first chunk (including null octets) is 12.
-			uint8_t serialized1[12] = { 0 };
+			alignas(4) uint8_t serialized1[12] = { 0 };
 
 			chunk1->Serialize(serialized1);
 
@@ -380,7 +380,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 	SECTION("parsing a packet with missing null octects fails")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			0x81, 0xca, 0x00, 0x02, // Type: 202 (SDES), Count: 1, Length: 2
 			// Chunk
@@ -423,7 +423,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 		REQUIRE(packet.GetCount() == count);
 		REQUIRE(packet.GetSize() == RTC::RTCP::Packet::CommonHeaderSize + (count * chunkSize));
 
-		uint8_t buffer1[1500] = { 0 };
+		alignas(4) uint8_t buffer1[1500] = { 0 };
 
 		// Serialization must contain 1 SDES packet since report count doesn't
 		// exceed 31.
@@ -486,7 +486,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 		REQUIRE(packet.GetCount() == count);
 		REQUIRE(packet.GetSize() == RTC::RTCP::Packet::CommonHeaderSize + (31 * chunkSize) + RTC::RTCP::Packet::CommonHeaderSize + ((count - 31) * chunkSize));
 
-		uint8_t buffer1[1500] = { 0 };
+		alignas(4) uint8_t buffer1[1500] = { 0 };
 
 		// Serialization must contain 2 SDES packets since report count exceeds 31.
 		packet.Serialize(buffer1);

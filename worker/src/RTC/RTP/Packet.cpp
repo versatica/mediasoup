@@ -27,14 +27,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto* header = const_cast<FixedHeader*>(reinterpret_cast<const FixedHeader*>(buffer));
-
 			return (
-			  (bufferLength >= Packet::FixedHeaderMinLength) &&
+			  bufferLength >= Packet::FixedHeaderMinLength &&
 			  // @see RFC 7983.
 			  (buffer[0] > 127 && buffer[0] < 192) &&
 			  // RTP Version must be 2.
-			  (header->version == 2));
+			  (buffer[0] >> 6) == 2);
 		}
 
 		Packet* Packet::Parse(const uint8_t* buffer, size_t packetLength, size_t bufferLength)

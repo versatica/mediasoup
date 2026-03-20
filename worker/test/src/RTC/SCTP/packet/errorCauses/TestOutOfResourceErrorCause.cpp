@@ -12,7 +12,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 	SECTION("OutOfResourceErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:4 (OUT_OF_RESOURCE), Length: 4
 			0x00, 0x04, 0x00, 0x04,
@@ -70,7 +70,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 	{
 		// Wrong code.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 4
 			0x03, 0xE7, 0x00, 0x04
@@ -81,7 +81,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:4 (OUT_OF_RESOURCE), Length: 5
 			0x00, 0x04, 0x00, 0x07,
@@ -93,7 +93,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer3[] =
+		alignas(4) uint8_t buffer3[] =
 		{
 			// Code:4 (OUT_OF_RESOURCE), Length (broken)
 			0x00, 0x04, 0x00,

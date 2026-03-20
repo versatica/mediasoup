@@ -18,7 +18,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 	SECTION("OperationErrorChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:9 (OPERATION_ERROR), Flags:0b00000000, Length: 21
 			0x09, 0b00000000, 0x00, 0x15,

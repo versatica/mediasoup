@@ -9,7 +9,7 @@ SCENARIO("RTCP BYE", "[rtcp][bye]")
 	// RCTP BYE packet.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x82, 0xcb, 0x00, 0x06, // Type: 203 (Bye), Count: 2, length: 2
 		0x62, 0x42, 0x76, 0xe0, // SSRC: 0x624276e0
@@ -51,7 +51,7 @@ SCENARIO("RTCP BYE", "[rtcp][bye]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 
@@ -75,7 +75,7 @@ SCENARIO("RTCP BYE", "[rtcp][bye]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet.Serialize(serialized);
 

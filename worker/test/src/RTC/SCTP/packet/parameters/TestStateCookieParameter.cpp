@@ -15,7 +15,7 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 	SECTION("StateCookieParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:7 (STATE_COOKIE), Length: 7
 			0x00, 0x07, 0x00, 0x07,

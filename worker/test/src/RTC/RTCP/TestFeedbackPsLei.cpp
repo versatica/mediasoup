@@ -8,7 +8,7 @@ SCENARIO("RTCP Feedback PS LEI", "[rtcp][feedback-ps][lei]")
 	// RTCP LEI packet.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x88, 0xce, 0x00, 0x03, // Type: 206 (Payload Specific), Count: 8 (LEI), Length: 3
 		0xfa, 0x17, 0xfa, 0x17, // Sender SSRC: 0xfa17fa17
@@ -44,7 +44,7 @@ SCENARIO("RTCP Feedback PS LEI", "[rtcp][feedback-ps][lei]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 

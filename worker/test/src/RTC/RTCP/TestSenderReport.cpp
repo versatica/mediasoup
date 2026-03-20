@@ -8,7 +8,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 	// RTCP Packet. Sender Report and Receiver Report.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x80, 0xc8, 0x00, 0x06, // Type: 200 (Sender Report), Count: 0, Length: 6
 		0x5d, 0x93, 0x15, 0x34, // SSRC: 0x5d931534
@@ -53,7 +53,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 
@@ -75,7 +75,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 
 		SECTION("serialize SenderReport instance")
 		{
-			uint8_t serialized[RTC::RTCP::SenderReport::HeaderSize] = { 0 };
+			alignas(4) uint8_t serialized[RTC::RTCP::SenderReport::HeaderSize] = { 0 };
 
 			report->Serialize(serialized);
 
@@ -107,7 +107,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 			packet.AddReport(report);
 		}
 
-		uint8_t buffer[1500] = { 0 };
+		alignas(4) uint8_t buffer[1500] = { 0 };
 
 		// Serialization must contain 3 SR packets.
 		packet.Serialize(buffer);

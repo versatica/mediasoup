@@ -923,14 +923,14 @@ namespace RTC
 			// Ensure there are at least 4 remaining bytes (Attribute with 0 length).
 			while (ptr + 4 <= attributesEnd)
 			{
-				const auto* attribute = reinterpret_cast<StunPacket::Attribute*>(ptr);
+				// NOTE: We cannot cast `ptr` to `StunPacket::Attribute*` here because
+				// `StunPacket::Attribute` requires 8-byte alignment (due to its `size_t`
+				// member) but `ptr` points into a network buffer with no guaranteed
+				// alignment, making the cast undefined behavior.
 
-				// Get the Attribute type.
-				const auto attrType =
-				  static_cast<StunPacket::AttributeType>(ntohs(static_cast<uint16_t>(attribute->type)));
-
-				// Get the Attribute length.
-				const uint16_t attrLen = ntohs(attribute->len);
+				// Read Attribute type and length.
+				const auto attrType = static_cast<StunPacket::AttributeType>(Utils::Byte::Get2Bytes(ptr, 0));
+				const uint16_t attrLen = Utils::Byte::Get2Bytes(ptr, 2);
 
 				// Offset of the Attribute from the start of the attributes.
 				const auto attrOffset = static_cast<size_t>((ptr - attributesStart));

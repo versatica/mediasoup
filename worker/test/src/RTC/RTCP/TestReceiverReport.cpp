@@ -7,7 +7,7 @@ SCENARIO("RTCP ReceiverReport", "[rtcp][receiver-report]")
 	// RTCP Receiver Report Packet.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x81, 0xc9, 0x00, 0x07, // Type: 201 (Receiver Report), Count: 1, Length: 7
 		0x5d, 0x93, 0x15, 0x34, // Sender SSRC: 0x5d931534
@@ -58,7 +58,7 @@ SCENARIO("RTCP ReceiverReport", "[rtcp][receiver-report]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 
@@ -119,7 +119,7 @@ SCENARIO("RTCP ReceiverReport", "[rtcp][receiver-report]")
 
 		REQUIRE(packet.GetCount() == count);
 
-		uint8_t buffer[1500] = { 0 };
+		alignas(4) uint8_t buffer[1500] = { 0 };
 
 		// Serialization must contain 2 RR packets since report count exceeds 31.
 		packet.Serialize(buffer);

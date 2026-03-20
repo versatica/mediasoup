@@ -13,7 +13,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 	SECTION("IPv6AddressParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:6 (IPV6_ADDRESS), Length: 20
 			0x00, 0x06, 0x00, 0x14,
@@ -96,7 +96,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 	{
 		// Wrong type.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Type:5 (IPV4_ADDRESS), Length: 20
 			0x00, 0x05, 0x00, 0x14,
@@ -112,7 +112,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Type:6 (IPV6_ADDRESS), Length: 19
 			0x00, 0x06, 0x00, 0x14,
@@ -128,7 +128,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer3[] =
+		alignas(4) uint8_t buffer3[] =
 		{
 			// Type:6 (IPV6_ADDRESS), Length: 21
 			0x00, 0x06, 0x00, 0x15,
@@ -145,7 +145,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer4[] =
+		alignas(4) uint8_t buffer4[] =
 		{
 			// Type:6 (IPV6_ADDRESS), Length: 20
 			0x00, 0x06, 0x00, 0x14,

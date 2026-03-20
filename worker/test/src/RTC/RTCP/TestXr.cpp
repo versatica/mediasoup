@@ -8,7 +8,7 @@
 SCENARIO("RTCP XR", "[rtcp][xr]")
 {
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0xa0, 0xcf, 0x00, 0x09, // Padding, Type: 207 (XR), Length: 9
 		0x5d, 0x93, 0x15, 0x34, // Sender SSRC: 0x5d931534
@@ -102,11 +102,11 @@ SCENARIO("RTCP XR", "[rtcp][xr]")
 			// buffer.
 
 			const size_t paddingBytes{ 4 };
-			const size_t serializedBufferLength        = sizeof(buffer) - paddingBytes;
-			uint8_t serialized[serializedBufferLength] = { 0 };
+			const size_t serializedBufferLength                   = sizeof(buffer) - paddingBytes;
+			alignas(4) uint8_t serialized[serializedBufferLength] = { 0 };
 
 			// Clone the original buffer into a new buffer without padding.
-			uint8_t clonedBuffer[serializedBufferLength] = { 0 };
+			alignas(4) uint8_t clonedBuffer[serializedBufferLength] = { 0 };
 			std::memcpy(clonedBuffer, buffer, serializedBufferLength);
 
 			// Remove the padding bit in the first byte of the cloned buffer.
@@ -146,7 +146,7 @@ SCENARIO("RTCP XrDelaySinceLastRt", "[rtcp][xr]")
 		REQUIRE(report1->GetNtpFrac() == 22222222);
 
 		// Serialize the report into an external buffer.
-		uint8_t bufferReport1[256]{ 0 };
+		alignas(4) uint8_t bufferReport1[256]{ 0 };
 
 		report1->Serialize(bufferReport1);
 
@@ -178,8 +178,8 @@ SCENARIO("RTCP XrDelaySinceLastRt", "[rtcp][xr]")
 		REQUIRE(packet1->GetSize() == 4 + 4 + 12 + 12);
 
 		// Serialize the packet into an external buffer.
-		uint8_t bufferPacket1[256]{ 0 };
-		uint8_t bufferPacket2[256]{ 0 };
+		alignas(4) uint8_t bufferPacket1[256]{ 0 };
+		alignas(4) uint8_t bufferPacket2[256]{ 0 };
 
 		packet1->Serialize(bufferPacket1);
 
@@ -219,7 +219,7 @@ SCENARIO("RTCP XrDelaySinceLastRt", "[rtcp][xr]")
 		report1->AddSsrcInfo(ssrcInfo1);
 
 		// Serialize the report into an external buffer.
-		uint8_t bufferReport1[256]{ 0 };
+		alignas(4) uint8_t bufferReport1[256]{ 0 };
 
 		report1->Serialize(bufferReport1);
 
@@ -259,8 +259,8 @@ SCENARIO("RTCP XrDelaySinceLastRt", "[rtcp][xr]")
 		REQUIRE(packet1->GetSize() == 4 + 4 + 16 + 16);
 
 		// Serialize the packet into an external buffer.
-		uint8_t bufferPacket1[256]{ 0 };
-		uint8_t bufferPacket2[256]{ 0 };
+		alignas(4) uint8_t bufferPacket1[256]{ 0 };
+		alignas(4) uint8_t bufferPacket2[256]{ 0 };
 
 		packet1->Serialize(bufferPacket1);
 

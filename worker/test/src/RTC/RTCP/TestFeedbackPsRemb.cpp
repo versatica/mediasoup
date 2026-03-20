@@ -8,7 +8,7 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 	// RTCP REMB packet.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x8f, 0xce, 0x00, 0x06, // Type: 206 (Payload Specific), Count: 15 (AFB), Length: 6
 		0xfa, 0x17, 0xfa, 0x17, // Sender SSRC: 0xfa17fa17
@@ -46,7 +46,7 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 
