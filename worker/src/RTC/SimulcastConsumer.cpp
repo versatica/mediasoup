@@ -68,8 +68,7 @@ namespace RTC
 				this->preferredLayers.spatial = static_cast<int16_t>(encoding.spatialLayers - 1);
 			}
 
-			if (auto preferredTemporalLayer = preferredLayers->temporalLayer();
-			    preferredTemporalLayer.has_value())
+			if (auto preferredTemporalLayer = preferredLayers->temporalLayer(); preferredTemporalLayer.has_value())
 			{
 				this->preferredLayers.temporal = preferredTemporalLayer.value();
 
@@ -1010,8 +1009,7 @@ namespace RTC
 			// packet.
 			// NOTE: We drop it in RTP sequence manager because this packet belongs
 			// to current spatial layer.
-			if (SeqManager<uint16_t>::IsSeqLowerThan(
-			      packet->GetSequenceNumber(), this->snReferenceSpatialLayer))
+			if (SeqManager<uint16_t>::IsSeqLowerThan(packet->GetSequenceNumber(), this->snReferenceSpatialLayer))
 			{
 #ifdef MS_RTC_LOGGER_RTP
 				packet->logger.Discarded(
@@ -1022,8 +1020,9 @@ namespace RTC
 
 				return;
 			}
-			else if (SeqManager<uint16_t>::IsSeqHigherThan(
-			           packet->GetSequenceNumber(), this->snReferenceSpatialLayer + MaxSequenceNumberGap))
+			else if (
+			  SeqManager<uint16_t>::IsSeqHigherThan(
+			    packet->GetSequenceNumber(), this->snReferenceSpatialLayer + MaxSequenceNumberGap))
 			{
 				this->checkingForOldPacketsInSpatialLayer = false;
 			}

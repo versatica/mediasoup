@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::Message"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/Message.hpp"
+#include "RTC/SCTP/public/Message.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -25,10 +25,9 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Message>");
 			MS_DUMP_CLEAN(indentation, "  stream id: %" PRIu16, GetStreamId());
-			MS_DUMP_CLEAN(indentation, "  ppid: %" PRIu32, GetPayloadProtocolIdentifier());
+			MS_DUMP_CLEAN(indentation, "  ppid: %" PRIu32, GetPayloadProtocolId());
 			MS_DUMP_CLEAN(indentation, "  payload length: %zu", GetPayloadLength());
 			MS_DUMP_CLEAN(indentation, "</SCTP::Message>");
 		}
-
 	} // namespace SCTP
 } // namespace RTC

@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::Packet"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/StateCookie.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 
@@ -28,7 +28,7 @@ namespace RTC
 			auto* negotiatedCapabilitiesField = reinterpret_cast<NegotiatedCapabilitiesField*>(
 			  const_cast<uint8_t*>(buffer) + StateCookie::NegotiatedCapabilitiesOffset);
 
-			if (uint16_t{ ntohs(negotiatedCapabilitiesField->magic2) } != StateCookie::Magic2)
+			if (ntohs(negotiatedCapabilitiesField->magic2) != StateCookie::Magic2)
 			{
 				return false;
 			}
@@ -112,13 +112,13 @@ namespace RTC
 			negotiatedCapabilitiesField->reserved = 0;
 			negotiatedCapabilitiesField->bitA     = negotiatedCapabilities.partialReliability;
 			negotiatedCapabilitiesField->bitB     = negotiatedCapabilities.messageInterleaving;
-			negotiatedCapabilitiesField->bitC     = negotiatedCapabilities.reconfig;
+			negotiatedCapabilitiesField->bitC     = negotiatedCapabilities.reConfig;
 			negotiatedCapabilitiesField->bitD     = negotiatedCapabilities.zeroChecksum;
-			negotiatedCapabilitiesField->magic2   = uint16_t{ htons(StateCookie::Magic2) };
+			negotiatedCapabilitiesField->magic2   = htons(StateCookie::Magic2);
 			negotiatedCapabilitiesField->maxOutboundStreams =
-			  uint16_t{ htons(negotiatedCapabilities.maxOutboundStreams) };
+			  htons(negotiatedCapabilities.maxOutboundStreams);
 			negotiatedCapabilitiesField->maxInboundStreams =
-			  uint16_t{ htons(negotiatedCapabilities.maxInboundStreams) };
+			  htons(negotiatedCapabilities.maxInboundStreams);
 		}
 
 		Types::SctpImplementation StateCookie::DetermineSctpImplementation(
@@ -131,7 +131,7 @@ namespace RTC
 				return Types::SctpImplementation::UNKNOWN;
 			}
 
-			std::string_view magic1(reinterpret_cast<const char*>(buffer), StateCookie::Magic1Length);
+			const std::string_view magic1(reinterpret_cast<const char*>(buffer), StateCookie::Magic1Length);
 
 			if (magic1 == "msworker")
 			{
@@ -207,12 +207,12 @@ namespace RTC
 			NegotiatedCapabilities negotiatedCapabilities;
 
 			negotiatedCapabilities.maxOutboundStreams =
-			  uint16_t{ ntohs(negotiatedCapabilitiesField->maxOutboundStreams) };
+			  ntohs(negotiatedCapabilitiesField->maxOutboundStreams);
 			negotiatedCapabilities.maxInboundStreams =
-			  uint16_t{ ntohs(negotiatedCapabilitiesField->maxInboundStreams) };
+			  ntohs(negotiatedCapabilitiesField->maxInboundStreams);
 			negotiatedCapabilities.partialReliability  = negotiatedCapabilitiesField->bitA;
 			negotiatedCapabilities.messageInterleaving = negotiatedCapabilitiesField->bitB;
-			negotiatedCapabilities.reconfig            = negotiatedCapabilitiesField->bitC;
+			negotiatedCapabilities.reConfig            = negotiatedCapabilitiesField->bitC;
 			negotiatedCapabilities.zeroChecksum        = negotiatedCapabilitiesField->bitD;
 
 			// NOTE: No need to std::move(). Copy elision (RVO) is used for free in GCC

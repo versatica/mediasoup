@@ -29,7 +29,8 @@ namespace RTC
 
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
-		  : udpSocket(udpSocket), udpRemoteAddr(const_cast<struct sockaddr*>(udpRemoteAddr)),
+		  : udpSocket(udpSocket),
+		    udpRemoteAddr(const_cast<struct sockaddr*>(udpRemoteAddr)),
 		    protocol(Protocol::UDP)
 		{
 			GenerateHash();
@@ -42,8 +43,11 @@ namespace RTC
 		}
 
 		explicit TransportTuple(const TransportTuple* tuple)
-		  : hash(tuple->hash), udpSocket(tuple->udpSocket), udpRemoteAddr(tuple->udpRemoteAddr),
-		    tcpConnection(tuple->tcpConnection), localAnnouncedAddress(tuple->localAnnouncedAddress),
+		  : hash(tuple->hash),
+		    udpSocket(tuple->udpSocket),
+		    udpRemoteAddr(tuple->udpRemoteAddr),
+		    tcpConnection(tuple->tcpConnection),
+		    localAnnouncedAddress(tuple->localAnnouncedAddress),
 		    protocol(tuple->protocol)
 		{
 			if (protocol == TransportTuple::Protocol::UDP)

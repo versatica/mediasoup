@@ -6,11 +6,19 @@ on:
     paths:
       - 'node/**'
       - 'worker/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'npm-scripts.mjs'
       - '.github/workflows/mediasoup-node.yaml'
   pull_request:
     paths:
       - 'node/**'
       - 'worker/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'npm-scripts.mjs'
       - '.github/workflows/mediasoup-node.yaml'
   workflow_dispatch:
 
@@ -62,10 +70,6 @@ jobs:
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=thread'
-          - os: macos-14
-            node: 22
-            cc: clang
-            cxx: clang++
           - os: macos-15
             node: 24
             cc: clang

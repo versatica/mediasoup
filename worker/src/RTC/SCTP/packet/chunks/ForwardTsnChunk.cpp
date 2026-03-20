@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/packet/Chunk.hpp"
 
 namespace RTC
 {
@@ -92,7 +93,7 @@ namespace RTC
 		/* Instance methods. */
 
 		ForwardTsnChunk::ForwardTsnChunk(uint8_t* buffer, size_t bufferLength)
-		  : Chunk(buffer, bufferLength)
+		  : AnyForwardTsnChunk(buffer, bufferLength)
 		{
 			MS_TRACE();
 
@@ -111,15 +112,15 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "<SCTP::ForwardTsnChunk>");
 			DumpCommon(indentation);
 			MS_DUMP_CLEAN(indentation, "  new cumulative tsn: %" PRIu32, GetNewCumulativeTsn());
-			MS_DUMP_CLEAN(indentation, "  number of streams: %" PRIu16, GetNumberOfStreams());
-			for (uint16_t idx{ 0 }; idx < GetNumberOfStreams(); ++idx)
+			MS_DUMP_CLEAN(indentation, "  number of skipped streams: %" PRIu16, GetNumberOfSkippedStreams());
+			MS_DUMP_CLEAN(indentation, "  skipped streams:");
+			for (const auto& skippedStream : GetSkippedStreams())
 			{
 				MS_DUMP_CLEAN(
 				  indentation,
-				  "  - idx: %" PRIu16 ", stream: %" PRIu16 ", stream sequence:%" PRIu16,
-				  idx,
-				  GetStreamAt(idx),
-				  GetStreamSequenceAt(idx));
+				  "  - stream id: %" PRIu16 ", ssn:%" PRIu16,
+				  skippedStream.streamId,
+				  skippedStream.ssn);
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::ForwardTsnChunk>");
 		}
@@ -141,6 +142,23 @@ namespace RTC
 			MS_TRACE();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
+		}
+
+		std::vector<AnyForwardTsnChunk::SkippedStream> ForwardTsnChunk::GetSkippedStreams() const
+		{
+			MS_TRACE();
+
+			std::vector<AnyForwardTsnChunk::SkippedStream> skippedStreams;
+			const uint16_t numSkippedStreams = GetNumberOfSkippedStreams();
+
+			skippedStreams.reserve(numSkippedStreams);
+
+			for (uint16_t idx{ 0 }; idx < numSkippedStreams; ++idx)
+			{
+				skippedStreams.emplace_back(GetStreamIdAt(idx), GetStreamSequenceAt(idx));
+			}
+
+			return skippedStreams;
 		}
 
 		void ForwardTsnChunk::AddStream(uint16_t stream, uint16_t streamSequence)

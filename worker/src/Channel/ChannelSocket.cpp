@@ -49,8 +49,11 @@ namespace Channel
 	  ChannelReadCtx channelReadCtx,
 	  ChannelWriteFn channelWriteFn,
 	  ChannelWriteCtx channelWriteCtx)
-	  : channelReadFn(channelReadFn), channelReadCtx(channelReadCtx), channelWriteFn(channelWriteFn),
-	    channelWriteCtx(channelWriteCtx), uvReadHandle(new uv_async_t)
+	  : channelReadFn(channelReadFn),
+	    channelReadCtx(channelReadCtx),
+	    channelWriteFn(channelWriteFn),
+	    channelWriteCtx(channelWriteCtx),
+	    uvReadHandle(new uv_async_t)
 	{
 		MS_TRACE_STD();
 

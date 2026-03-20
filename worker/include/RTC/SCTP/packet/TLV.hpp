@@ -12,7 +12,7 @@ namespace RTC
 		/**
 		 * SCTP TLV (Type-Length-Value).
 		 *
-		 * This is the base class of all items in a SCTP Packet, this is:
+		 * This is the base class of all items in an SCTP Packet, this is:
 		 * - SCTP Chunk,
 		 * - SCTP Parameter, and
 		 * - SCTP Error Cause.

@@ -1,14 +1,29 @@
 # TODO STCP
 
-Here some notes about our future SCTP implementation.
+## Related to mediasoup SCTP implementation
 
-## Flow
+- Why the hell does `DataConsumer` have a `RTC::SctpAssociation* sctpAssociation` member?
 
-1. A DTLS packet arrives to `WebRtcTransport` where we check `DtlsTransport::IsDtls()`).
-2. It calls `OnDtlsDataReceived()` that calls `this->dtlsTransport->ProcessDtlsData()`.
-3. It calls `this->listener->OnDtlsTransportApplicationDataReceived()` in `WebRtcTransport`.
-4. It calls `Transport::ReceiveSctpData()` that calls `this->sctpAssociation->ProcessSctpData()`.
+- `OnAssociationFailed()` and `OnAssociationClosed()` should report an error (if present) to JS.
 
-However, in step 4 `WebRtcTransport::OnDtlsTransportApplicationDataReceived()` should instead call `RTC::SCTP::Packet::parse()` and `Transport::ReceiveSctpPacket()` with a `SCTP::Packet` instance instead than `data` and `len`. In fact it should be named `Transport::ReceiveSctpPacket()` instead of the current `Transport::ReceiveSctpData()`.
+- Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.
 
-Same in `PipeTransport` and `PlainTransport`.
+- We need to pass `isDataChannel` to `SCTP::Association` constructor as we do in former `SctpAssociation`. Also use it in `Association::FillBuffer()`.
+
+- In `Association::FillBuffer()` we should not pass `this->sctpOptions.maxOutboundStreams/maxInboundStreams` but the current values (they may have been modified via "reconfig").
+
+- We must call `association->Connect()` somewhere when appropriate! Probably same as the `MayConnect()` in former `SctpAssociation`.
+
+- Test Chrome with I-DATA (message interleaving):
+
+  ```
+  open -a "Google Chrome Canary" \
+    --args \
+    --force-fieldtrials="WebRTC-DataChannelMessageInterleaving/Enabled/"
+  ```
+
+- Look for "TODO: SCTP" and `MS_SCTP_STACK`.
+
+## Related to dcsctp
+
+- Investigate `DcSctpSocket::HandleTimeout()` which is only called from `media/sctp/dcsctp_transport.cc`.

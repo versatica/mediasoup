@@ -186,7 +186,8 @@ namespace RTC
 		  RTP::RtpStream::Params& params,
 		  uint32_t sendNackDelayMs,
 		  bool useRtpInactivityCheck)
-		  : RTP::RtpStream::RtpStream(listener, params, 10), sendNackDelayMs(sendNackDelayMs),
+		  : RTP::RtpStream::RtpStream(listener, params, 10),
+		    sendNackDelayMs(sendNackDelayMs),
 		    useRtpInactivityCheck(useRtpInactivityCheck),
 		    transmissionCounter(
 		      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500),

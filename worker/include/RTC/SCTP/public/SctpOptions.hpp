@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_SOCKET_OPTIONS_HPP
-#define MS_RTC_SCTP_SOCKET_OPTIONS_HPP
+#ifndef MS_RTC_SCTP_OPTIONS_HPP
+#define MS_RTC_SCTP_OPTIONS_HPP
 
 #include "common.hpp"
 #include "RTC/Consts.hpp"
@@ -10,9 +10,9 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Options given to Socket constructor.
+		 * SCTP options.
 		 */
-		struct SocketOptions
+		struct SctpOptions
 		{
 			/**
 			 * Signaled source port.
@@ -41,7 +41,7 @@ namespace RTC
 			uint16_t maxInboundStreams{ 65535 };
 
 			/**
-			 * Maximum size of a SCTP Packet. It doesn't include any overhead of
+			 * Maximum size of an SCTP Packet. It doesn't include any overhead of
 			 * DTLS, TURN, UDP or IP headers.
 			 */
 			size_t mtu{ RTC::Consts::MaxSafeMtuSizeForSctp };
@@ -52,11 +52,11 @@ namespace RTC
 			 * incoming messages, which may larger than this value (but smaller than
 			 * `maxReceiverWindowBufferSize`).
 			 */
-			size_t maxMessageSize{ 256 * 1024 };
+			size_t maxSendMessageSize{ 256 * 1024 };
 
 			/**
 			 * The default stream priority, if not overridden by
-			 * SctpSocket::SetStreamPriority(). The default value is selected to be
+			 * `Association::SetStreamPriority()`. The default value is selected to be
 			 * compatible with https://www.w3.org/TR/webrtc-priority/, section 4.2-4.3.
 			 */
 			uint16_t defaultStreamPriority{ 256 };
@@ -86,7 +86,7 @@ namespace RTC
 
 			/**
 			 * A threshold that, when the amount of data in the send buffer goes below
-			 * this value, will trigger Socket::OnTotalBufferedAmountLow().
+			 * this value, will trigger `Association::OnAssociationTotalBufferedAmountLow()`.
 			 */
 			size_t totalBufferedAmountLowThreshold{ 1800000 };
 
@@ -96,22 +96,22 @@ namespace RTC
 			 * RTO calculation. The default value is an extreme maximum but can be
 			 * adapted to better match the environment.
 			 */
-			uint32_t rttMaxMs{ 60000 };
+			uint64_t maxRttMs{ 60000 };
 
 			/**
 			 * Initial RTO value.
 			 */
-			uint32_t rtoInitialMs{ 500 };
+			uint64_t initialRtoMs{ 500 };
 
 			/**
 			 * Minimum RTO value.
 			 */
-			uint32_t rtoMinMs{ 400 };
+			uint64_t minRtoMs{ 400 };
 
 			/**
 			 * Minimum RTO value.
 			 */
-			uint32_t rtoMaxMs{ 60000 };
+			uint64_t maxRtoMs{ 60000 };
 
 			/**
 			 * T1-init timeout (ms).
@@ -161,7 +161,7 @@ namespace RTC
 			 * This is defined as "G" in the algorithm for TCP in
 			 * https://datatracker.ietf.org/doc/html/rfc6298#section-4.
 			 */
-			uint64_t minRttVariance{ 220 };
+			uint64_t minRttVarianceMs{ 220 };
 
 			/**
 			 * The initial congestion window size, in number of MTUs.
@@ -170,7 +170,7 @@ namespace RTC
 			 * at ~3 and https://research.google/pubs/pub36640/ which argues for at
 			 * least ten segments.
 			 */
-			size_t cwndMtusInitial{ 10 };
+			size_t initialCwndMtus{ 10 };
 
 			/**
 			 * The minimum congestion window size, in number of MTUs, upon detection
@@ -179,7 +179,7 @@ namespace RTC
 			 *
 			 * @see https://tools.ietf.org/html/rfc4960#section-7.2.3.
 			 */
-			size_t cwndMtusMin{ 4 };
+			size_t minCwndMtus{ 4 };
 
 			/**
 			 * When the congestion window is at or above this number of MTUs, the
@@ -206,8 +206,8 @@ namespace RTC
 			/**
 			 * The number of packets that may be sent at once. This is limited to
 			 * avoid bursts that too quickly fill the send buffer. Typically in a
-			 * socket in its "slow start" phase (when it sends as much as it can), it
-			 * will send up to three packets for every SACK received, so the default
+			 * connection in its "slow start" phase (when it sends as much as it can),
+			 * it will send up to three packets for every SACK received, so the default
 			 * limit is set just above that, and then mostly applicable for (but not
 			 * limited to) fast retransmission scenarios.
 			 */
@@ -261,7 +261,7 @@ namespace RTC
 		/**
 		 * Send options given when sending SCTP messages.
 		 */
-		struct MessageSendOptions
+		struct SendMessageOptions
 		{
 			/**
 			 * Whether the message should be sent with unordered message delivery.
@@ -283,9 +283,9 @@ namespace RTC
 
 			/**
 			 * If set, will generate lifecycle events for this message. See e.g.
-			 * SocketListener::OnSocketMessageLifecycleFullySent(). This value is
-			 * decided by the application and the library will provide it to all
-			 * lifecycle callbacks.
+			 * `AssociationListener::OnAssociationLifecycleMessageFullySent()`. This
+			 * value is decided by the application and the library will provide it to
+			 * all lifecycle callbacks.
 			 */
 			std::optional<uint64_t> lifecycleId{ std::nullopt };
 		};

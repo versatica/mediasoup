@@ -4,6 +4,8 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
+#include <ostream>
+#include <vector>
 
 namespace RTC
 {
@@ -77,6 +79,24 @@ namespace RTC
 			friend class Packet;
 
 		public:
+			struct GapAckBlock
+			{
+				GapAckBlock(uint16_t start, uint16_t end) : start(start), end(end)
+				{
+				}
+
+				GapAckBlock() = default;
+
+				uint16_t start;
+				uint16_t end;
+
+				bool operator==(const GapAckBlock& other) const
+				{
+					return start == other.start && end == other.end;
+				}
+			};
+
+		public:
 			static const size_t SackChunkHeaderLength{ 16 };
 
 		public:
@@ -119,6 +139,16 @@ namespace RTC
 
 			SackChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
+			bool CanHaveParameters() const final
+			{
+				return false;
+			}
+
+			bool CanHaveErrorCauses() const final
+			{
+				return false;
+			}
+
 			uint32_t GetCumulativeTsnAck() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
@@ -133,30 +163,9 @@ namespace RTC
 
 			void SetAdvertisedReceiverWindowCredit(uint32_t value);
 
-			uint16_t GetNumberOfGapAckBlocks() const
-			{
-				return Utils::Byte::Get2Bytes(GetBuffer(), 12);
-			}
+			std::vector<GapAckBlock> GetValidatedGapAckBlocks() const;
 
-			uint16_t GetNumberOfDuplicateTsns() const
-			{
-				return Utils::Byte::Get2Bytes(GetBuffer(), 14);
-			}
-
-			uint16_t GetAckBlockStartAt(uint16_t idx) const
-			{
-				return Utils::Byte::Get2Bytes(GetAckBlocksPointer(), (idx * 4));
-			}
-
-			uint16_t GetAckBlockEndAt(uint16_t idx) const
-			{
-				return Utils::Byte::Get2Bytes(GetAckBlocksPointer(), (idx * 4) + 2);
-			}
-
-			uint32_t GetDuplicateTsnAt(uint16_t idx) const
-			{
-				return Utils::Byte::Get4Bytes(GetDuplicateTsnsPointer(), (idx * 4));
-			}
+			std::vector<uint32_t> GetDuplicateTsns() const;
 
 			void AddAckBlock(uint16_t start, uint16_t end);
 
@@ -188,7 +197,42 @@ namespace RTC
 			{
 				return GetVariableLengthValuePointer() + (GetNumberOfGapAckBlocks() * 4);
 			}
+
+			uint16_t GetNumberOfGapAckBlocks() const
+			{
+				return Utils::Byte::Get2Bytes(GetBuffer(), 12);
+			}
+
+			uint16_t GetAckBlockStartAt(uint16_t idx) const
+			{
+				return Utils::Byte::Get2Bytes(GetAckBlocksPointer(), (idx * 4));
+			}
+
+			uint16_t GetAckBlockEndAt(uint16_t idx) const
+			{
+				return Utils::Byte::Get2Bytes(GetAckBlocksPointer(), (idx * 4) + 2);
+			}
+
+			uint16_t GetNumberOfDuplicateTsns() const
+			{
+				return Utils::Byte::Get2Bytes(GetBuffer(), 14);
+			}
+
+			uint32_t GetDuplicateTsnAt(uint16_t idx) const
+			{
+				return Utils::Byte::Get4Bytes(GetDuplicateTsnsPointer(), (idx * 4));
+			}
+
+			bool ValidateGapAckBlocks() const;
 		};
+
+		/**
+		 * For logging purposes in Catch2 tests.
+		 */
+		inline std::ostream& operator<<(std::ostream& os, const SackChunk::GapAckBlock& s)
+		{
+			return os << "{start:" << s.start << ", end:" << s.end << "}";
+		}
 	} // namespace SCTP
 } // namespace RTC
 

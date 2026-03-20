@@ -54,8 +54,8 @@ namespace RTC
 			}
 
 			// Make data point to the 4 bytes that must containt the "REMB" identifier.
-			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + Packet::CommonHeaderSize +
-			             FeedbackPacket::HeaderSize;
+			auto* data            = reinterpret_cast<uint8_t*>(commonHeader) + Packet::CommonHeaderSize +
+			                        FeedbackPacket::HeaderSize;
 			const size_t numSsrcs = data[4];
 
 			// Ensure there is space for the the announced number of SSRC feedbacks.

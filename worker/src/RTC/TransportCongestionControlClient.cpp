@@ -28,11 +28,13 @@ namespace RTC
 	  uint32_t initialAvailableBitrate,
 	  uint32_t maxOutgoingBitrate,
 	  uint32_t minOutgoingBitrate)
-	  : listener(listener), bweType(bweType),
+	  : listener(listener),
+	    bweType(bweType),
 	    initialAvailableBitrate(
 	      std::max<uint32_t>(
 	        initialAvailableBitrate, RTC::TransportCongestionControlMinOutgoingBitrate)),
-	    maxOutgoingBitrate(maxOutgoingBitrate), minOutgoingBitrate(minOutgoingBitrate)
+	    maxOutgoingBitrate(maxOutgoingBitrate),
+	    minOutgoingBitrate(minOutgoingBitrate)
 	{
 		MS_TRACE();
 

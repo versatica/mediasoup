@@ -88,6 +88,11 @@ namespace RTC
 
 			void SetT(bool flag);
 
+			bool CanHaveParameters() const final
+			{
+				return false;
+			}
+
 			bool CanHaveErrorCauses() const final
 			{
 				return true;

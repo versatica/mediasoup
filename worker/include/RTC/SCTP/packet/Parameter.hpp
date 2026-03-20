@@ -80,7 +80,7 @@ namespace RTC
 			};
 
 			/**
-			 * Struct of a SCTP Parameter Header.
+			 * Struct of an SCTP Parameter Header.
 			 */
 			struct ParameterHeader
 			{

@@ -66,7 +66,7 @@ namespace RTC
 			};
 
 			/**
-			 * Struct of a SCTP Error Cause Header.
+			 * Struct of an SCTP Error Cause Header.
 			 */
 			struct ErrorCauseHeader
 			{

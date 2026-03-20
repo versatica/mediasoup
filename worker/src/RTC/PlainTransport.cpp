@@ -6,6 +6,10 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#ifdef MS_SCTP_STACK
+#include "RTC/SCTP/packet/Packet.hpp"
+#endif
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
@@ -48,8 +52,7 @@ namespace RTC
 		// This may throw.
 		Utils::IP::NormalizeIp(this->listenInfo.ip);
 
-		if (flatbuffers::IsFieldPresent(
-		      options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 		{
 			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
 		}
@@ -67,8 +70,7 @@ namespace RTC
 
 		if (!this->rtcpMux)
 		{
-			if (flatbuffers::IsFieldPresent(
-			      options, FBS::PlainTransport::PlainTransportOptions::VT_RTCPLISTENINFO))
+			if (flatbuffers::IsFieldPresent(options, FBS::PlainTransport::PlainTransportOptions::VT_RTCPLISTENINFO))
 			{
 				if (options->rtcpListenInfo()->protocol() != FBS::Transport::Protocol::UDP)
 				{
@@ -80,8 +82,7 @@ namespace RTC
 				// This may throw.
 				Utils::IP::NormalizeIp(this->rtcpListenInfo.ip);
 
-				if (flatbuffers::IsFieldPresent(
-				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
+				if (flatbuffers::IsFieldPresent(options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 				{
 					this->rtcpListenInfo.announcedAddress.assign(
 					  options->rtcpListenInfo()->announcedAddress()->str());
@@ -788,7 +789,7 @@ namespace RTC
 
 	inline bool PlainTransport::IsConnected() const
 	{
-		return this->tuple;
+		return this->tuple ? true : false;
 	}
 
 	inline bool PlainTransport::HasSrtp() const
@@ -904,22 +905,30 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_SCTP_STACK
+		// TODO: SCTP
+#else
 		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+#endif
 	}
 
-	void PlainTransport::SendSctpData(const uint8_t* data, size_t len)
+	bool PlainTransport::SendSctpData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
 		if (!IsConnected())
 		{
-			return;
+			MS_WARN_TAG(sctp, "not connected, cannot send SCTP data");
+
+			return false;
 		}
 
 		this->tuple->Send(data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
+
+		return true;
 	}
 
 	void PlainTransport::RecvStreamClosed(uint32_t ssrc)
@@ -961,7 +970,11 @@ namespace RTC
 			OnRtpDataReceived(tuple, data, len, bufferLen);
 		}
 		// Check if it's SCTP.
+#ifdef MS_SCTP_STACK
+		else if (RTC::SCTP::Packet::IsSctp(data, len))
+#else
 		else if (RTC::SctpAssociation::IsSctp(data, len))
+#endif
 		{
 			OnSctpDataReceived(tuple, data, len);
 		}

@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/packet/Chunk.hpp"
 
 namespace RTC
 {
@@ -49,9 +50,9 @@ namespace RTC
 
 			// Must also initialize extra fields in the header.
 			chunk->SetTsn(0);
-			chunk->SetStreamIdentifierS(0);
-			chunk->SetStreamSequenceNumberN(0);
-			chunk->SetPayloadProtocolIdentifier(0);
+			chunk->SetStreamId(0);
+			chunk->SetStreamSequenceNumber(0);
+			chunk->SetPayloadProtocolId(0);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum DataChunk length.
@@ -85,7 +86,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		DataChunk::DataChunk(uint8_t* buffer, size_t bufferLength) : Chunk(buffer, bufferLength)
+		DataChunk::DataChunk(uint8_t* buffer, size_t bufferLength) : AnyDataChunk(buffer, bufferLength)
 		{
 			MS_TRACE();
 
@@ -108,15 +109,14 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  flag B: %" PRIu8, GetB());
 			MS_DUMP_CLEAN(indentation, "  flag E: %" PRIu8, GetE());
 			MS_DUMP_CLEAN(indentation, "  tsn: %" PRIu32, GetTsn());
-			MS_DUMP_CLEAN(indentation, "  stream identifier S: %" PRIu16, GetStreamIdentifierS());
-			MS_DUMP_CLEAN(indentation, "  stream sequence number n: %" PRIu16, GetStreamSequenceNumberN());
-			MS_DUMP_CLEAN(
-			  indentation, "  payload protocol identifier (PPID): %" PRIu32, GetPayloadProtocolIdentifier());
+			MS_DUMP_CLEAN(indentation, "  stream id: %" PRIu16, GetStreamId());
+			MS_DUMP_CLEAN(indentation, "  stream sequence number: %" PRIu16, GetStreamSequenceNumber());
+			MS_DUMP_CLEAN(indentation, "  payload protocol id (PPID): %" PRIu32, GetPayloadProtocolId());
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  user data length: %" PRIu16 " (has user data: %s)",
-			  GetUserDataLength(),
-			  HasUserData() ? "yes" : "no");
+			  GetUserDataPayloadLength(),
+			  HasUserDataPayload() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "</SCTP::DataChunk>");
 		}
 
@@ -167,32 +167,32 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
-		void DataChunk::SetStreamIdentifierS(uint16_t value)
+		void DataChunk::SetStreamId(uint16_t value)
 		{
 			MS_TRACE();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
 		}
 
-		void DataChunk::SetStreamSequenceNumberN(uint16_t value)
+		void DataChunk::SetStreamSequenceNumber(uint16_t value)
 		{
 			MS_TRACE();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 10, value);
 		}
 
-		void DataChunk::SetPayloadProtocolIdentifier(uint32_t value)
+		void DataChunk::SetPayloadProtocolId(uint32_t value)
 		{
 			MS_TRACE();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 12, value);
 		}
 
-		void DataChunk::SetUserData(const uint8_t* userData, uint16_t userDataLength)
+		void DataChunk::SetUserDataPayload(const uint8_t* userDataPayload, uint16_t userDataPayloadLength)
 		{
 			MS_TRACE();
 
-			SetVariableLengthValue(userData, userDataLength);
+			SetVariableLengthValue(userDataPayload, userDataPayloadLength);
 		}
 
 		DataChunk* DataChunk::SoftClone(const uint8_t* buffer) const

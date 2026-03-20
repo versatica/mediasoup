@@ -11,9 +11,11 @@
 
 namespace RTC
 {
+#ifndef MS_SCTP_STACK
 	// Define class here such that we can use it even though we don't know what it looks like yet
 	// (this is to avoid circular dependencies).
 	class SctpAssociation;
+#endif
 
 	class DataConsumer : public Channel::ChannelSocket::RequestHandler
 	{
@@ -48,7 +50,9 @@ namespace RTC
 		  RTC::Shared* shared,
 		  const std::string& id,
 		  const std::string& dataProducerId,
+#ifndef MS_SCTP_STACK
 		  RTC::SctpAssociation* sctpAssociation,
+#endif
 		  RTC::DataConsumer::Listener* listener,
 		  const FBS::Transport::ConsumeDataRequest* data,
 		  size_t maxMessageSize);
@@ -98,7 +102,7 @@ namespace RTC
 		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void SctpAssociationSendBufferFull();
 		void DataProducerClosed();
-		void SendMessage(
+		bool SendMessage(
 		  const uint8_t* msg,
 		  size_t len,
 		  uint32_t ppid,
@@ -118,7 +122,9 @@ namespace RTC
 	private:
 		// Passed by argument.
 		RTC::Shared* shared{ nullptr };
+#ifndef MS_SCTP_STACK
 		RTC::SctpAssociation* sctpAssociation{ nullptr };
+#endif
 		RTC::DataConsumer::Listener* listener{ nullptr };
 		size_t maxMessageSize{ 0u };
 		// Others.

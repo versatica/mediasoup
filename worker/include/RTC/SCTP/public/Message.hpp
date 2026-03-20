@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_MESSAGE_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -42,7 +42,7 @@ namespace RTC
 				return this->streamId;
 			}
 
-			uint32_t GetPayloadProtocolIdentifier() const
+			uint32_t GetPayloadProtocolId() const
 			{
 				return this->ppid;
 			}
@@ -58,8 +58,16 @@ namespace RTC
 			}
 
 			/**
-			 * Useful to extract the payload and its ownership When destructing the
+			 * Useful to extract the payload and its ownership when destructing the
 			 * Message.
+			 *
+			 * @remarks
+			 * - && at the end means that it can only be called from a rvalue.
+			 *
+			 * @usage
+			 * ```c++
+			 * const auto payload = std::move(message).ReleasePayload();
+			 * ```
 			 */
 			std::vector<uint8_t> ReleasePayload() &&
 			{

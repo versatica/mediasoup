@@ -43,27 +43,6 @@ function get_dep()
 	cd ${WORKER_PWD}
 }
 
-function get_clang_fuzzer()
-{
-	NAME="clang+llvm-7.0.0-x86_64-linux-gnu-ubuntu-16.04"
-	TAR_FILE="${NAME}.tar.xz"
-	TAR_URL="http://releases.llvm.org/7.0.0/${TAR_FILE}"
-	DEST="deps/clang-fuzzer"
-
-	set -x
-
-	rm -rf ${DEST}
-	mkdir ${DEST}
-	cd ${DEST}
-	mkdir bin lib
-	wget ${TAR_URL}
-	tar xfJ ${TAR_FILE}
-	rm -f ${TAR_FILE}
-	mv ${NAME}/bin/* bin/
-	mv ${NAME}/lib/clang lib/
-	rm -rf ${NAME}
-}
-
 function get_fuzzer_corpora()
 {
 	GIT_REPO="https://github.com/RTC-Cartel/webrtc-fuzzer-corpora.git"
@@ -76,11 +55,8 @@ function get_fuzzer_corpora()
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [clang-fuzzer|fuzzer-corpora]"
+		echo "  ./scripts/$(basename $0) [fuzzer-corpora]"
 		echo
-		;;
-	clang-fuzzer)
-		get_clang_fuzzer
 		;;
 	fuzzer-corpora)
 		get_fuzzer_corpora

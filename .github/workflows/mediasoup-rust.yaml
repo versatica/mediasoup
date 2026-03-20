@@ -6,11 +6,17 @@ on:
     paths:
       - 'rust/**'
       - 'worker/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
       - '.github/workflows/mediasoup-rust.yaml'
   pull_request:
     paths:
       - 'rust/**'
       - 'worker/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
       - '.github/workflows/mediasoup-rust.yaml'
   workflow_dispatch:
 
@@ -30,7 +36,6 @@ jobs:
         build:
           - os: ubuntu-24.04
           - os: ubuntu-24.04-arm
-          - os: macos-14
           - os: macos-15
           - os: windows-2022
           - os: windows-2025

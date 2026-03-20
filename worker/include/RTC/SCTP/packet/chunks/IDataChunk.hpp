@@ -3,7 +3,9 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/packet/Chunk.hpp"
+#include "RTC/SCTP/packet/UserData.hpp"
+#include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -34,7 +36,7 @@ namespace RTC
 		 *
 		 * - Chunk Type (8 bits): 64.
 		 * - Res (4 bits): All set to 0.
-		 * - I bit (1 bit): The (I)mmediate Bit, if set, indicates that the
+		 * - I bit (1 bit): The (I)mmediate bit, if set, indicates that the
 		 *   receiver SHOULD NOT delay the sending of the corresponding SACK chunk.
 		 * - U bit (1 bit): The (U)nordered bit, if set, indicates the user message
 		 *   is unordered.
@@ -66,7 +68,7 @@ namespace RTC
 		// Forward declaration.
 		class Packet;
 
-		class IDataChunk : public Chunk
+		class IDataChunk : public AnyDataChunk
 		{
 			// We need that Packet calls protected and private methods in this class.
 			friend class Packet;
@@ -114,56 +116,74 @@ namespace RTC
 
 			IDataChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			bool GetI() const
+			bool CanHaveParameters() const final
+			{
+				return false;
+			}
+
+			bool CanHaveErrorCauses() const final
+			{
+				return false;
+			}
+
+			bool GetI() const final
 			{
 				return GetBit3();
 			}
 
 			void SetI(bool flag);
 
-			bool GetU() const
+			bool GetU() const final
 			{
 				return GetBit2();
 			}
 
 			void SetU(bool flag);
 
-			bool GetB() const
+			bool GetB() const final
 			{
 				return GetBit1();
 			}
 
 			void SetB(bool flag);
 
-			bool GetE() const
+			bool GetE() const final
 			{
 				return GetBit0();
 			}
 
 			void SetE(bool flag);
 
-			uint32_t GetTsn() const
+			uint32_t GetTsn() const final
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
 			void SetTsn(uint32_t value);
 
-			uint16_t GetStreamIdentifier() const
+			uint16_t GetStreamId() const final
 			{
 				return Utils::Byte::Get2Bytes(const_cast<uint8_t*>(GetBuffer()), 8);
 			}
 
-			void SetStreamIdentifier(uint16_t value);
+			void SetStreamId(uint16_t value);
 
-			uint32_t GetMessageIdentifier() const
+			/**
+			 * @remarks Only in DATA chunks.
+			 */
+			uint16_t GetStreamSequenceNumber() const final
+			{
+				return 0;
+			}
+
+			uint32_t GetMessageId() const final
 			{
 				return Utils::Byte::Get4Bytes(const_cast<uint8_t*>(GetBuffer()), 12);
 			}
 
-			void SetMessageIdentifier(uint32_t value);
+			void SetMessageId(uint32_t value);
 
-			uint32_t GetPayloadProtocolIdentifier() const
+			uint32_t GetPayloadProtocolId() const final
 			{
 				if (GetB())
 				{
@@ -178,9 +198,9 @@ namespace RTC
 			/**
 			 * @throw MediaSoupError - If the B bit is not set.
 			 */
-			void SetPayloadProtocolIdentifier(uint32_t value);
+			void SetPayloadProtocolId(uint32_t value);
 
-			uint32_t GetFragmentSequenceNumber() const
+			uint32_t GetFragmentSequenceNumber() const final
 			{
 				if (!GetB())
 				{
@@ -197,22 +217,41 @@ namespace RTC
 			 */
 			void SetFragmentSequenceNumber(uint32_t value);
 
-			bool HasUserData() const
+			bool HasUserDataPayload() const final
 			{
 				return HasVariableLengthValue();
 			}
 
-			const uint8_t* GetUserData() const
+			const uint8_t* GetUserDataPayload() const final
 			{
 				return GetVariableLengthValue();
 			}
 
-			uint16_t GetUserDataLength() const
+			uint16_t GetUserDataPayloadLength() const final
 			{
 				return GetVariableLengthValueLength();
 			}
 
-			void SetUserData(const uint8_t* userData, uint16_t userDataLength);
+			void SetUserDataPayload(const uint8_t* userDataPayload, uint16_t userDataPayloadLength);
+
+			UserData GetUserData() const final
+			{
+				const auto* userData       = GetUserDataPayload();
+				const uint16_t userDataLen = GetUserDataPayloadLength();
+
+				std::vector<uint8_t> payload(userData, userData + userDataLen);
+
+				return UserData(
+				  GetStreamId(),
+				  GetStreamSequenceNumber(),
+				  GetMessageId(),
+				  GetFragmentSequenceNumber(),
+				  GetPayloadProtocolId(),
+				  std::move(payload),
+				  GetB(),
+				  GetE(),
+				  GetU());
+			}
 
 		protected:
 			IDataChunk* SoftClone(const uint8_t* buffer) const final;

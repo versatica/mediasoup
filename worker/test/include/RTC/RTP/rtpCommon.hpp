@@ -24,24 +24,25 @@ namespace rtpCommon
 } // namespace rtpCommon
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_RTP_PACKET(/*const RTC::RTP::Packet**/ packet,                                         \
-                         /*const uint8_t**/ buffer,                                                  \
-                         /*size_t*/ bufferLength,                                                    \
-                         /*size_t*/ length,                                                          \
-                         /*uint8_t*/ payloadType,                                                    \
-                         /*bool*/ hasMarker,                                                         \
-                         /*uint16_t*/ seqNumber,                                                     \
-                         /*uint32_t*/ timestamp,                                                     \
-                         /*uint32_t*/ ssrc,                                                          \
-                         /*bool*/ hasCsrcs,                                                          \
-                         /*bool*/ hasHeaderExtension,                                                \
-                         /*size_t*/ headerExtensionValueLength,                                      \
-                         /*bool*/ hasOneByteExtensions,                                              \
-                         /*bool*/ hasTwoBytesExtensions,                                             \
-                         /*bool*/ hasPayload,                                                        \
-                         /*size_t*/ payloadLength,                                                   \
-                         /*bool*/ hasPadding,                                                        \
-                         /*uint8_t*/ paddingLength)                                                  \
+#define CHECK_RTP_PACKET(                                                                            \
+  /*const RTC::RTP::Packet**/ packet,                                                                \
+  /*const uint8_t**/ buffer,                                                                         \
+  /*size_t*/ bufferLength,                                                                           \
+  /*size_t*/ length,                                                                                 \
+  /*uint8_t*/ payloadType,                                                                           \
+  /*bool*/ hasMarker,                                                                                \
+  /*uint16_t*/ seqNumber,                                                                            \
+  /*uint32_t*/ timestamp,                                                                            \
+  /*uint32_t*/ ssrc,                                                                                 \
+  /*bool*/ hasCsrcs,                                                                                 \
+  /*bool*/ hasHeaderExtension,                                                                       \
+  /*size_t*/ headerExtensionValueLength,                                                             \
+  /*bool*/ hasOneByteExtensions,                                                                     \
+  /*bool*/ hasTwoBytesExtensions,                                                                    \
+  /*bool*/ hasPayload,                                                                               \
+  /*size_t*/ payloadLength,                                                                          \
+  /*bool*/ hasPadding,                                                                               \
+  /*uint8_t*/ paddingLength)                                                                         \
 	do                                                                                                 \
 	{                                                                                                  \
 		uint8_t* originalBuffer = static_cast<uint8_t*>(std::malloc(bufferLength));                      \

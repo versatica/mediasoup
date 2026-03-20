@@ -22,8 +22,12 @@ SCENARIO("NACK generator", "[rtp][rtcp][nack]")
 		  size_t numNacked,
 		  bool keyFrameRequired = false,
 		  size_t nackListSize   = 0)
-		  : seq(seq), isKeyFrame(isKeyFrame), firstNacked(firstNacked), numNacked(numNacked),
-		    keyFrameRequired(keyFrameRequired), nackListSize(nackListSize)
+		  : seq(seq),
+		    isKeyFrame(isKeyFrame),
+		    firstNacked(firstNacked),
+		    numNacked(numNacked),
+		    keyFrameRequired(keyFrameRequired),
+		    nackListSize(nackListSize)
 		{
 		}
 

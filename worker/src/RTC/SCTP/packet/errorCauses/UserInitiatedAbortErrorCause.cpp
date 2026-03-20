@@ -90,11 +90,21 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::UserInitiatedAbortErrorCause>");
 			DumpCommon(indentation);
-			MS_DUMP_CLEAN(
-			  indentation,
-			  "  upper layer abort reason length: %" PRIu16 " (has upper layer abort reason: %s)",
-			  GetUpperLayerAbortReasonLength(),
-			  HasUpperLayerAbortReason() ? "yes" : "no");
+			if (HasUpperLayerAbortReason())
+			{
+				const auto reason = GetUpperLayerAbortReason();
+
+				MS_DUMP_CLEAN(indentation, "  has upper layer abort reason: yes");
+				MS_DUMP_CLEAN(
+				  indentation,
+				  "  upper layer abort reason: %.*s",
+				  static_cast<int>(reason.size()),
+				  reason.data());
+			}
+			else
+			{
+				MS_DUMP_CLEAN(indentation, "  has upper layer abort reason: no");
+			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::UserInitiatedAbortErrorCause>");
 		}
 
@@ -110,12 +120,12 @@ namespace RTC
 			return clonedErrorCause;
 		}
 
-		void UserInitiatedAbortErrorCause::SetUpperLayerAbortReason(
-		  const uint8_t* reason, uint16_t reasonLength)
+		void UserInitiatedAbortErrorCause::SetUpperLayerAbortReason(const std::string_view& reason)
 		{
 			MS_TRACE();
 
-			SetVariableLengthValue(reason, reasonLength);
+			SetVariableLengthValue(
+			  reinterpret_cast<const uint8_t*>(reason.data()), static_cast<uint16_t>(reason.size()));
 		}
 
 		UserInitiatedAbortErrorCause* UserInitiatedAbortErrorCause::SoftClone(const uint8_t* buffer) const
@@ -136,11 +146,7 @@ namespace RTC
 
 			if (HasUpperLayerAbortReason())
 			{
-				return "reason:[" +
-				       std::string(
-				         reinterpret_cast<const char*>(GetUpperLayerAbortReason()),
-				         GetUpperLayerAbortReasonLength()) +
-				       "]";
+				return "reason:[" + std::string(GetUpperLayerAbortReason()) + "]";
 			}
 			else
 			{

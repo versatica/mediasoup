@@ -54,7 +54,7 @@ namespace RTC
 		this->bufferReleasedListener = listener;
 	}
 
-	void Serializable::Consolidate()
+	void Serializable::Consolidate() const
 	{
 		MS_TRACE();
 

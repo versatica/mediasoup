@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <sstream> // std::ostringstream
+#include <string>
 
 namespace RTC
 {

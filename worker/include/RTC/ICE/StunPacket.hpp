@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Serializable.hpp"
-#include <cstdint>
 #include <string_view>
 #include <unordered_map>
 

@@ -5,6 +5,7 @@
 #include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+#include <vector>
 
 SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 {
@@ -26,6 +27,8 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 			// Gap Ack Block 1: Start: 1000, End: 1999
 			0x03, 0xE8, 0x07, 0xCF,
 			// Gap Ack Block 2: Start: 2000, End: 2999
+			// Notice that this is wrong since it should be merged with the first
+			// Gap Ack Block.
 			0x07, 0xD0, 0x0B, 0xB7,
 			// Duplicate TSN 1: 287454020,
 			0x11, 0x22, 0x33, 0x44,
@@ -57,15 +60,16 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
-		REQUIRE(chunk->GetNumberOfGapAckBlocks() == 2);
-		REQUIRE(chunk->GetNumberOfDuplicateTsns() == 3);
-		REQUIRE(chunk->GetAckBlockStartAt(0) == 1000);
-		REQUIRE(chunk->GetAckBlockEndAt(0) == 1999);
-		REQUIRE(chunk->GetAckBlockStartAt(1) == 2000);
-		REQUIRE(chunk->GetAckBlockEndAt(1) == 2999);
-		REQUIRE(chunk->GetDuplicateTsnAt(0) == 287454020);
-		REQUIRE(chunk->GetDuplicateTsnAt(1) == 4278216311);
-		REQUIRE(chunk->GetDuplicateTsnAt(2) == 556942164);
+
+		const std::vector<uint32_t> expectedDuplicateTsns{
+			{ 287454020, 4278216311, 556942164 },
+		};
+		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> expectedGapAckBlocks{
+			{ 1000, 2999 },
+		};
+
+		REQUIRE(chunk->GetDuplicateTsns() == expectedDuplicateTsns);
+		REQUIRE(chunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
 
 		/* Serialize it. */
 
@@ -89,15 +93,8 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
-		REQUIRE(chunk->GetNumberOfGapAckBlocks() == 2);
-		REQUIRE(chunk->GetNumberOfDuplicateTsns() == 3);
-		REQUIRE(chunk->GetAckBlockStartAt(0) == 1000);
-		REQUIRE(chunk->GetAckBlockEndAt(0) == 1999);
-		REQUIRE(chunk->GetAckBlockStartAt(1) == 2000);
-		REQUIRE(chunk->GetAckBlockEndAt(1) == 2999);
-		REQUIRE(chunk->GetDuplicateTsnAt(0) == 287454020);
-		REQUIRE(chunk->GetDuplicateTsnAt(1) == 4278216311);
-		REQUIRE(chunk->GetDuplicateTsnAt(2) == 556942164);
+		REQUIRE(chunk->GetDuplicateTsns() == expectedDuplicateTsns);
+		REQUIRE(chunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
 
 		/* Clone it. */
 
@@ -123,15 +120,8 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 287454020);
 		REQUIRE(clonedChunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
-		REQUIRE(clonedChunk->GetNumberOfGapAckBlocks() == 2);
-		REQUIRE(clonedChunk->GetNumberOfDuplicateTsns() == 3);
-		REQUIRE(clonedChunk->GetAckBlockStartAt(0) == 1000);
-		REQUIRE(clonedChunk->GetAckBlockEndAt(0) == 1999);
-		REQUIRE(clonedChunk->GetAckBlockStartAt(1) == 2000);
-		REQUIRE(clonedChunk->GetAckBlockEndAt(1) == 2999);
-		REQUIRE(clonedChunk->GetDuplicateTsnAt(0) == 287454020);
-		REQUIRE(clonedChunk->GetDuplicateTsnAt(1) == 4278216311);
-		REQUIRE(clonedChunk->GetDuplicateTsnAt(2) == 556942164);
+		REQUIRE(clonedChunk->GetDuplicateTsns() == expectedDuplicateTsns);
+		REQUIRE(clonedChunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
 
 		delete clonedChunk;
 	}
@@ -235,15 +225,19 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 0);
-		REQUIRE(chunk->GetNumberOfGapAckBlocks() == 0);
-		REQUIRE(chunk->GetNumberOfDuplicateTsns() == 0);
+
+		std::vector<uint32_t> expectedDuplicateTsns{};
+		std::vector<RTC::SCTP::SackChunk::GapAckBlock> expectedGapAckBlocks{};
+
+		REQUIRE(chunk->GetDuplicateTsns() == expectedDuplicateTsns);
+		REQUIRE(chunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
 
 		/* Modify it. */
 
 		chunk->SetCumulativeTsnAck(1234);
 		chunk->SetAdvertisedReceiverWindowCredit(5678);
 		chunk->AddDuplicateTsn(10000000);
-		chunk->AddAckBlock(10000, 10999);
+		chunk->AddAckBlock(10000, 19999);
 		chunk->AddAckBlock(20000, 20999);
 		chunk->AddDuplicateTsn(20000000);
 		chunk->AddAckBlock(60000, 60999);
@@ -266,18 +260,17 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 1234);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 5678);
-		REQUIRE(chunk->GetNumberOfGapAckBlocks() == 3);
-		REQUIRE(chunk->GetNumberOfDuplicateTsns() == 4);
-		REQUIRE(chunk->GetAckBlockStartAt(0) == 10000);
-		REQUIRE(chunk->GetAckBlockEndAt(0) == 10999);
-		REQUIRE(chunk->GetAckBlockStartAt(1) == 20000);
-		REQUIRE(chunk->GetAckBlockEndAt(1) == 20999);
-		REQUIRE(chunk->GetAckBlockStartAt(2) == 60000);
-		REQUIRE(chunk->GetAckBlockEndAt(2) == 60999);
-		REQUIRE(chunk->GetDuplicateTsnAt(0) == 10000000);
-		REQUIRE(chunk->GetDuplicateTsnAt(1) == 20000000);
-		REQUIRE(chunk->GetDuplicateTsnAt(2) == 30000000);
-		REQUIRE(chunk->GetDuplicateTsnAt(3) == 40000000);
+
+		expectedDuplicateTsns = {
+			{ 10000000, 20000000, 30000000, 40000000 }
+		};
+		expectedGapAckBlocks = {
+			{ 10000, 20999 },
+      { 60000, 60999 }
+		};
+
+		REQUIRE(chunk->GetDuplicateTsns() == expectedDuplicateTsns);
+		REQUIRE(chunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
 
 		/* Parse itself and compare. */
 
@@ -301,18 +294,8 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 1234);
 		REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 5678);
-		REQUIRE(parsedChunk->GetNumberOfGapAckBlocks() == 3);
-		REQUIRE(parsedChunk->GetNumberOfDuplicateTsns() == 4);
-		REQUIRE(parsedChunk->GetAckBlockStartAt(0) == 10000);
-		REQUIRE(parsedChunk->GetAckBlockEndAt(0) == 10999);
-		REQUIRE(parsedChunk->GetAckBlockStartAt(1) == 20000);
-		REQUIRE(parsedChunk->GetAckBlockEndAt(1) == 20999);
-		REQUIRE(parsedChunk->GetAckBlockStartAt(2) == 60000);
-		REQUIRE(parsedChunk->GetAckBlockEndAt(2) == 60999);
-		REQUIRE(parsedChunk->GetDuplicateTsnAt(0) == 10000000);
-		REQUIRE(parsedChunk->GetDuplicateTsnAt(1) == 20000000);
-		REQUIRE(parsedChunk->GetDuplicateTsnAt(2) == 30000000);
-		REQUIRE(parsedChunk->GetDuplicateTsnAt(3) == 40000000);
+		REQUIRE(parsedChunk->GetDuplicateTsns() == expectedDuplicateTsns);
+		REQUIRE(parsedChunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
 
 		delete parsedChunk;
 	}

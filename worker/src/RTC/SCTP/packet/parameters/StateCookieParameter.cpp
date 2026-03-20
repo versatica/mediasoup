@@ -4,7 +4,7 @@
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/StateCookie.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
 
 namespace RTC
 {
@@ -133,7 +133,7 @@ namespace RTC
 			// StateCookieParameter minus its fixed header length (no matter there
 			// was a Cookie already in the Parameter since we are overriding it
 			// anyway).
-			size_t bufferLength = GetBufferLength() - Parameter::ParameterHeaderLength;
+			const size_t bufferLength = GetBufferLength() - Parameter::ParameterHeaderLength;
 
 			StateCookie::Write(
 			  buffer,

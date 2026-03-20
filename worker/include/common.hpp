@@ -1,10 +1,10 @@
 #ifndef MS_COMMON_HPP
 #define MS_COMMON_HPP
 
-#include <algorithm> // IWYU pragma: export  std::transform(), std::find(), std::min(), std::max(), std::copy()
-#include <cinttypes>  // IWYU pragma: export  PRIu64, etc
-#include <cstddef>    // IWYU pragma: export  size_t
-#include <cstdint>    // IWYU pragma: export  uint8_t, etc
+#include <algorithm> // IWYU pragma: export  std::transform(), std::find(), std::min(), std::max(), std::copy(), std::clamp()
+#include <cinttypes> // IWYU pragma: export  PRIu64, etc
+#include <cstddef>   // IWYU pragma: export  size_t
+#include <cstdint>   // IWYU pragma: export  uint8_t, etc
 #include <functional> // IWYU pragma: export  std::function
 #include <memory>     // IWYU pragma: export  std::addressof(), std::unique_ptr(), etc
 #include <optional>   // IWYU pragma: export
@@ -40,17 +40,17 @@ using ChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);
 // Returns `ChannelReadFree` on successful read that must be used to free
 // `message`.
 using ChannelReadFn = ChannelReadFreeFn (*)(
-  uint8_t** /* message */,
-  uint32_t* /* messageLen */,
-  size_t* /* messageCtx */,
+  uint8_t** /*message*/,
+  uint32_t* /*messageLen*/,
+  size_t* /*messageCtx*/,
   // This is `uv_async_t` handle that can be called later with `uv_async_send()`
   // when there is more data to read.
-  const void* /* handle */,
-  ChannelReadCtx /* ctx */
+  const void* /*handle*/,
+  ChannelReadCtx /*ctx*/
 );
 
 using ChannelWriteCtx = void*;
 using ChannelWriteFn =
-  void (*)(const uint8_t* /* message */, uint32_t /* messageLen */, ChannelWriteCtx /* ctx */);
+  void (*)(const uint8_t* /*message*/, uint32_t /*messageLen*/, ChannelWriteCtx /*ctx*/);
 
 #endif

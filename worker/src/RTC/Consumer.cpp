@@ -29,8 +29,12 @@ namespace RTC
 	  const std::string& producerId,
 	  RTC::Consumer::Listener* listener,
 	  const FBS::Transport::ConsumeRequest* data)
-	  : id(id), producerId(producerId), shared(shared), listener(listener),
-	    kind(RTC::Media::Kind(data->kind())), type(RTC::RtpParameters::Type(data->type()))
+	  : id(id),
+	    producerId(producerId),
+	    shared(shared),
+	    listener(listener),
+	    kind(RTC::Media::Kind(data->kind())),
+	    type(RTC::RtpParameters::Type(data->type()))
 	{
 		MS_TRACE();
 
@@ -262,8 +266,9 @@ namespace RTC
 						preferredLayers.spatial = static_cast<int16_t>(encoding.spatialLayers - 1);
 					}
 
-					if (auto preferredTemporalLayer = fbsPreferredLayers->temporalLayer();
-					    preferredTemporalLayer.has_value())
+					if (
+					  auto preferredTemporalLayer = fbsPreferredLayers->temporalLayer();
+					  preferredTemporalLayer.has_value())
 					{
 						preferredLayers.temporal = preferredTemporalLayer.value();
 
@@ -1580,7 +1585,7 @@ namespace RTC
 		{
 			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
 			auto traceInfo     = FBS::Consumer::CreateKeyFrameTraceInfo(
-        this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
+			  this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->channelNotifier->GetBufferBuilder(),
@@ -1596,7 +1601,7 @@ namespace RTC
 		{
 			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
 			auto traceInfo     = FBS::Consumer::CreateRtpTraceInfo(
-        this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
+			  this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->channelNotifier->GetBufferBuilder(),

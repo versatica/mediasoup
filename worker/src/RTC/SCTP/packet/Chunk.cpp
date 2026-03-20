@@ -166,6 +166,7 @@ namespace RTC
 			MS_TRACE();
 
 			AssertCanHaveParameters();
+			AssertDoesNotNeedConsolidation();
 
 			const size_t previousLength = GetLength();
 
@@ -186,6 +187,7 @@ namespace RTC
 			MS_TRACE();
 
 			AssertCanHaveErrorCauses();
+			AssertDoesNotNeedConsolidation();
 
 			const size_t previousLength = GetLength();
 
@@ -351,12 +353,12 @@ namespace RTC
 				if (!Parameter::IsParameter(
 				      ptr, parameterMaxBufferLength, parameterType, parameterLength, padding))
 				{
-					MS_WARN_TAG(sctp, "not a SCTP Parameter");
+					MS_WARN_TAG(sctp, "not an SCTP Parameter");
 
 					return false;
 				}
 
-				Parameter* parameter{ nullptr };
+				Parameter* parameter{ nullptr }; // NOLINT(misc-const-correctness)
 
 				switch (parameterType)
 				{
@@ -557,12 +559,12 @@ namespace RTC
 
 				if (!ErrorCause::IsErrorCause(ptr, errorCauseMaxBufferLength, causeCode, causeLength, padding))
 				{
-					MS_WARN_TAG(sctp, "not a SCTP Error Cause");
+					MS_WARN_TAG(sctp, "not an SCTP Error Cause");
 
 					return false;
 				}
 
-				ErrorCause* errorCause{ nullptr };
+				ErrorCause* errorCause{ nullptr }; // NOLINT(misc-const-correctness)
 
 				switch (causeCode)
 				{
@@ -708,20 +710,34 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			this->needsConsolidation = true;
+
 			// When the application completes the Parameter it must call
 			// `parameter->Consolidate()` and that will trigger this event.
 			parameter->SetConsolidatedListener(
 			  [this, parameter]()
 			  {
-				  // Fix buffer length assigned to the Parameter.
-				  parameter->SetBufferLength(parameter->GetLength());
+				  try
+				  {
+					  // Fix buffer length assigned to the Parameter.
+					  // NOTE: It may throw.
+					  parameter->SetBufferLength(parameter->GetLength());
 
-				  // This will update the total length and Length field of the Chunk.
-				  // NOTE: It may throw.
-				  AddItem(parameter);
+					  // This will update the total length and Length field of the Chunk.
+					  // NOTE: It may throw.
+					  AddItem(parameter);
 
-				  // Add the Parameter to the list.
-				  this->parameters.push_back(parameter);
+					  // Add the Parameter to the list.
+					  this->parameters.push_back(parameter);
+
+					  this->needsConsolidation = false;
+				  }
+				  catch (const MediaSoupError& error)
+				  {
+					  this->needsConsolidation = false;
+
+					  throw;
+				  }
 			  });
 		}
 
@@ -729,20 +745,33 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			this->needsConsolidation = true;
+
 			// When the application completes the Error Cause it must call
 			// `errorCause->Consolidate()` and that will trigger this event.
 			errorCause->SetConsolidatedListener(
 			  [this, errorCause]()
 			  {
-				  // Fix buffer length assigned to the Error Cause.
-				  errorCause->SetBufferLength(errorCause->GetLength());
+				  try
+				  {
+					  // Fix buffer length assigned to the Error Cause.
+					  errorCause->SetBufferLength(errorCause->GetLength());
 
-				  // This will update the total length and Length field of the Chunk.
-				  // NOTE: It may throw.
-				  AddItem(errorCause);
+					  // This will update the total length and Length field of the Chunk.
+					  // NOTE: It may throw.
+					  AddItem(errorCause);
 
-				  // Add the Error Cause to the list.
-				  this->errorCauses.push_back(errorCause);
+					  // Add the Error Cause to the list.
+					  this->errorCauses.push_back(errorCause);
+
+					  this->needsConsolidation = false;
+				  }
+				  catch (const MediaSoupError& error)
+				  {
+					  this->needsConsolidation = false;
+
+					  throw;
+				  }
 			  });
 		}
 
@@ -763,6 +792,16 @@ namespace RTC
 			if (!CanHaveErrorCauses())
 			{
 				MS_THROW_ERROR("this Chunk class cannot have Error Causes");
+			}
+		}
+
+		void Chunk::AssertDoesNotNeedConsolidation() const
+		{
+			MS_TRACE();
+
+			if (this->needsConsolidation)
+			{
+				MS_THROW_ERROR("Chunk needs consolidation of some ongoing Parameter or Error Cause");
 			}
 		}
 	} // namespace SCTP

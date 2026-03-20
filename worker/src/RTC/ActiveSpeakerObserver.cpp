@@ -403,10 +403,16 @@ namespace RTC
 	}
 
 	ActiveSpeakerObserver::Speaker::Speaker()
-	  : immediateActivityScore(MinActivityScore), mediumActivityScore(MinActivityScore),
-	    longActivityScore(MinActivityScore), lastLevelChangeTime(DepLibUV::GetTimeMs()),
-	    minLevel(MinLevel), nextMinLevel(MinLevel), immediates(ImmediateBuffLen, 0),
-	    mediums(MediumsBuffLen, 0), longs(LongsBuffLen, 0), levels(LevelsBuffLen, 0)
+	  : immediateActivityScore(MinActivityScore),
+	    mediumActivityScore(MinActivityScore),
+	    longActivityScore(MinActivityScore),
+	    lastLevelChangeTime(DepLibUV::GetTimeMs()),
+	    minLevel(MinLevel),
+	    nextMinLevel(MinLevel),
+	    immediates(ImmediateBuffLen, 0),
+	    mediums(MediumsBuffLen, 0),
+	    longs(LongsBuffLen, 0),
+	    levels(LevelsBuffLen, 0)
 	{
 		MS_TRACE();
 	}

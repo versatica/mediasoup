@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/errorCauses/StaleCookieErrorCause.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <string>
 
 namespace RTC
 {

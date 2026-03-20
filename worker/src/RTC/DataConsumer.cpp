@@ -5,7 +5,9 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#ifndef MS_SCTP_STACK
 #include "RTC/SctpAssociation.hpp"
+#endif
 
 namespace RTC
 {
@@ -15,12 +17,20 @@ namespace RTC
 	  RTC::Shared* shared,
 	  const std::string& id,
 	  const std::string& dataProducerId,
+#ifndef MS_SCTP_STACK
 	  RTC::SctpAssociation* sctpAssociation,
+#endif
 	  RTC::DataConsumer::Listener* listener,
 	  const FBS::Transport::ConsumeDataRequest* data,
 	  size_t maxMessageSize)
-	  : id(id), dataProducerId(dataProducerId), shared(shared), sctpAssociation(sctpAssociation),
-	    listener(listener), maxMessageSize(maxMessageSize)
+	  : id(id),
+	    dataProducerId(dataProducerId),
+	    shared(shared),
+#ifndef MS_SCTP_STACK
+	    sctpAssociation(sctpAssociation),
+#endif
+	    listener(listener),
+	    maxMessageSize(maxMessageSize)
 	{
 		MS_TRACE();
 
@@ -212,6 +222,9 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
+#ifdef MS_SCTP_STACK
+				// TODO: SCTP
+#else
 				if (!this->sctpAssociation)
 				{
 					MS_THROW_ERROR("no SCTP association present");
@@ -222,6 +235,7 @@ namespace RTC
 				  request->GetBufferBuilder(), this->sctpAssociation->GetSctpBufferedAmount());
 
 				request->Accept(FBS::Response::Body::DataConsumer_GetBufferedAmountResponse, responseOffset);
+#endif
 
 				break;
 			}
@@ -271,10 +285,14 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
+#ifdef MS_SCTP_STACK
+				// TODO: SCTP
+#else
 				if (!this->sctpAssociation)
 				{
 					MS_THROW_ERROR("no SCTP association present");
 				}
+#endif
 
 				const auto* body    = request->data->body_as<FBS::DataConsumer::SendRequest>();
 				const uint8_t* data = body->data()->Data();
@@ -513,7 +531,7 @@ namespace RTC
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}
 
-	void DataConsumer::SendMessage(
+	bool DataConsumer::SendMessage(
 	  const uint8_t* msg,
 	  size_t len,
 	  uint32_t ppid,
@@ -531,7 +549,7 @@ namespace RTC
 				delete cb;
 			}
 
-			return;
+			return false;
 		}
 
 		// If a required subchannel is given, verify that this data consumer is
@@ -546,7 +564,7 @@ namespace RTC
 				delete cb;
 			}
 
-			return;
+			return false;
 		}
 
 		// If subchannels are given, verify that this data consumer is subscribed
@@ -573,7 +591,7 @@ namespace RTC
 					delete cb;
 				}
 
-				return;
+				return false;
 			}
 		}
 
@@ -591,12 +609,14 @@ namespace RTC
 				delete cb;
 			}
 
-			return;
+			return false;
 		}
 
 		this->messagesSent++;
 		this->bytesSent += len;
 
 		this->listener->OnDataConsumerSendMessage(this, msg, len, ppid, cb);
+
+		return true;
 	}
 } // namespace RTC

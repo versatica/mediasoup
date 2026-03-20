@@ -9,7 +9,7 @@ const PYTHON = getPython();
 const ROOT_DIR = getRootDir();
 const BUILD_DIR = getBuildDir();
 const NUM_CORES = getNumCores();
-const CLANG_FORMAT_VERSION = 21;
+const CLANG_FORMAT_VERSION = 22;
 const CLANG_TIDY_VERSION = 21;
 
 const CLANG_FORMAT_PATHS = [

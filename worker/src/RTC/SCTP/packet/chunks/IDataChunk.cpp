@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/packet/Chunk.hpp"
 
 namespace RTC
 {
@@ -49,9 +50,9 @@ namespace RTC
 
 			// Must also initialize extra fields in the header.
 			chunk->SetTsn(0);
-			chunk->SetStreamIdentifier(0);
+			chunk->SetStreamId(0);
 			chunk->SetReserved();
-			chunk->SetMessageIdentifier(0);
+			chunk->SetMessageId(0);
 			// NOTE: BitB is not set so we must set FSN to 0 rather than setting PPID.
 			chunk->SetFragmentSequenceNumber(0);
 
@@ -87,7 +88,8 @@ namespace RTC
 
 		/* Instance methods. */
 
-		IDataChunk::IDataChunk(uint8_t* buffer, size_t bufferLength) : Chunk(buffer, bufferLength)
+		IDataChunk::IDataChunk(uint8_t* buffer, size_t bufferLength)
+		  : AnyDataChunk(buffer, bufferLength)
 		{
 			MS_TRACE();
 
@@ -110,14 +112,11 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  flag B: %" PRIu8, GetB());
 			MS_DUMP_CLEAN(indentation, "  flag E: %" PRIu8, GetE());
 			MS_DUMP_CLEAN(indentation, "  tsn: %" PRIu32, GetTsn());
-			MS_DUMP_CLEAN(indentation, "  stream identifier: %" PRIu16, GetStreamIdentifier());
-			MS_DUMP_CLEAN(indentation, "  message identifier: %" PRIu32, GetMessageIdentifier());
+			MS_DUMP_CLEAN(indentation, "  stream id: %" PRIu16, GetStreamId());
+			MS_DUMP_CLEAN(indentation, "  message id: %" PRIu32, GetMessageId());
 			if (GetB())
 			{
-				MS_DUMP_CLEAN(
-				  indentation,
-				  "  payload protocol identifier (PPID): %" PRIu32,
-				  GetPayloadProtocolIdentifier());
+				MS_DUMP_CLEAN(indentation, "  payload protocol id (PPID): %" PRIu32, GetPayloadProtocolId());
 			}
 			else
 			{
@@ -127,8 +126,8 @@ namespace RTC
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  user data length: %" PRIu16 " (has user data: %s)",
-			  GetUserDataLength(),
-			  HasUserData() ? "yes" : "no");
+			  GetUserDataPayloadLength(),
+			  HasUserDataPayload() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "</SCTP::IDataChunk>");
 		}
 
@@ -179,27 +178,27 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
-		void IDataChunk::SetStreamIdentifier(uint16_t value)
+		void IDataChunk::SetStreamId(uint16_t value)
 		{
 			MS_TRACE();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
 		}
 
-		void IDataChunk::SetMessageIdentifier(uint32_t value)
+		void IDataChunk::SetMessageId(uint32_t value)
 		{
 			MS_TRACE();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 12, value);
 		}
 
-		void IDataChunk::SetPayloadProtocolIdentifier(uint32_t value)
+		void IDataChunk::SetPayloadProtocolId(uint32_t value)
 		{
 			MS_TRACE();
 
 			if (!GetB())
 			{
-				MS_THROW_ERROR("cannot set payload protocol identifier (PPID) if bit B is not set");
+				MS_THROW_ERROR("cannot set payload protocol id (PPID) if bit B is not set");
 			}
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);
@@ -211,17 +210,17 @@ namespace RTC
 
 			if (GetB())
 			{
-				MS_THROW_ERROR("cannot set payload protocol identifier (PPID) if bit B is set");
+				MS_THROW_ERROR("cannot set payload protocol id (PPID) if bit B is set");
 			}
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);
 		}
 
-		void IDataChunk::SetUserData(const uint8_t* userData, uint16_t userDataLength)
+		void IDataChunk::SetUserDataPayload(const uint8_t* userDataPayload, uint16_t userDataPayloadLength)
 		{
 			MS_TRACE();
 
-			SetVariableLengthValue(userData, userDataLength);
+			SetVariableLengthValue(userDataPayload, userDataPayloadLength);
 		}
 
 		IDataChunk* IDataChunk::SoftClone(const uint8_t* buffer) const

@@ -56,7 +56,7 @@ namespace RTC
 
 		public:
 			/**
-			 * Struct of a SCTP Packet Common Header.
+			 * Struct of an SCTP Packet Common Header.
 			 */
 			struct CommonHeader
 			{
@@ -70,13 +70,31 @@ namespace RTC
 			static const size_t CommonHeaderLength{ 12 };
 
 			/**
-			 * Parse a SCTP Packet.
+			 * Whether given buffer could be a valid SCTP Packet.
 			 *
 			 * @remarks
-			 * `bufferLength` must be the exact length of the Packet.
+			 * - `bufferLength` must be the exact length of the Packet.
+			 * - This check is very lazy. It should NEVER be done before checking if
+			 *   given buffer is an RTP or RTCP packet.
+			 */
+			static bool IsSctp(const uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Parse an SCTP Packet.
+			 *
+			 * @remarks
+			 * - `bufferLength` must be the exact length of the Packet.
 			 */
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Create an SCTP Packet.
+			 *
+			 * @remarks
+			 * - `bufferLength` must be the exact length of the STUN Packet.
+			 * - If `transactionId` is not given then a random Transaction ID is
+			 *   generated.
+			 */
 			static Packet* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
@@ -171,9 +189,13 @@ namespace RTC
 			 * Clone given Chunk into Packet's buffer.
 			 *
 			 * @remarks
-			 * Once this method is called, the caller may want to free the original
-			 * given Chunk (otherwise it will leak since the Packet manages a clone
-			 * of it).
+			 * - Once this method is called, the caller may want to free the original
+			 *   given Chunk (otherwise it will leak since the Packet manages a clone
+			 *   of it).
+			 *
+			 * @throw
+			 * - MediaSoupError - If `BuildChunkInPlace()` was called before and the
+			 *   caller didn't invoke `Consolidate()` on the returned Chunk yet.
 			 */
 			void AddChunk(const Chunk* chunk);
 
@@ -185,12 +207,18 @@ namespace RTC
 			 *
 			 * @returns Pointer of the created Chunk specific class.
 			 *
+			 * @throw
+			 * - MediaSoupError - If `BuildChunkInPlace()` was called before and the
+			 *   caller didn't invoke `Consolidate()` on the returned Chunk yet.
+			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the Chunk is completed.
 			 * - The caller MUST NOT call `BuildChunkInPlace()` while other Chunk is
 			 *   in progress.
 			 * - The caller MUST NOT free the obtained Chunk pointer since it's now
 			 *   part of the Packet.
+			 * - The caller MUST free the obtained Chunk only in case the
+			 *   `Consolidate()` method on the Chunk throws.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -201,6 +229,8 @@ namespace RTC
 			template<typename T>
 			T* BuildChunkInPlace()
 			{
+				AssertDoesNotNeedConsolidation();
+
 				// The new Chunk will be added after other Chunks in the Packet, this is,
 				// at the end of the Packet,  whose length we know it's padded to 4
 				// bytes, and each Parameter total length is also multiple of 4 bytes.
@@ -217,6 +247,15 @@ namespace RTC
 				HandleInPlaceChunk(chunk);
 
 				return chunk;
+			}
+
+			/**
+			 * Whether `BuildChunkInPlace()` was called and the caller didn't invoke
+			 * `Consolidate()` on the returned Chunk yet.
+			 */
+			bool NeedsConsolidation() const
+			{
+				return this->needsConsolidation;
 			}
 
 			/**
@@ -247,9 +286,14 @@ namespace RTC
 
 			virtual void HandleInPlaceChunk(Chunk* chunk) final;
 
+			virtual void AssertDoesNotNeedConsolidation() const final;
+
 		private:
 			// Chunks.
 			std::vector<Chunk*> chunks;
+			// Whether `BuildChunkInPlace()` was called and the caller didn't invoke
+			// `Consolidate()` on the returned Chunk yet.
+			bool needsConsolidation{ false };
 		};
 	} // namespace SCTP
 } // namespace RTC

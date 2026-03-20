@@ -1,10 +1,9 @@
-#ifndef MS_RTC_SCTP_SOCKET_LISTENER_HPP
-#define MS_RTC_SCTP_SOCKET_LISTENER_HPP
+#ifndef MS_RTC_SCTP_ASSOCIATION_LISTENER_HPP
+#define MS_RTC_SCTP_ASSOCIATION_LISTENER_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/Message.hpp"
-#include "RTC/SCTP/Types.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
+#include "RTC/SCTP/public/Message.hpp"
+#include "RTC/SCTP/public/SctpTypes.hpp"
 #include <span>
 #include <string_view>
 
@@ -12,17 +11,14 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		// Forward declaration.
-		class Socket;
-
-		class SocketListener
+		class AssociationListener
 		{
 		public:
-			virtual ~SocketListener() = default;
+			virtual ~AssociationListener() = default;
 
 		public:
 			/**
-			 * Called when a SCTP Packet must be sent to the remote endpoint.
+			 * Called when an SCTP Packet must be sent to the remote endpoint.
 			 *
 			 * @return
 			 * - `true` if the packet was successfully sent. However, since
@@ -31,27 +27,47 @@ namespace RTC
 			 * - `false` if the Packet failed to be sent.
 			 *
 			 * @remarks
-			 * - It is NOT allowed to call methods in Socket within this callback.
+			 * - It is NOT allowed to call methods in Association within this callback.
 			 */
-			virtual bool OnSocketSendSctpPacket(Socket* socket, Packet* packet) = 0;
+			virtual bool OnAssociationSendData(const uint8_t* data, size_t len) = 0;
+
+			/**
+			 * Called when calling Connect().
+			 *
+			 * @remarks
+			 * - It is allowed to call methods in Association within this callback.
+			 */
+			virtual void OnAssociationConnecting() = 0;
 
 			/**
 			 * Called when calling Connect() succeeds and also for incoming successful
 			 * connection attempts.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketConnected(Socket* socket) = 0;
+			virtual void OnAssociationConnected() = 0;
 
 			/**
-			 * Called when the Socket is closed in a controlled way. No other callbacks
-			 * will be done after this callback, unless reconnecting.
+			 * Called when calling Connect() and also for incoming connection attempts
+			 * in case the association fails.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketClosed(Socket* socket) = 0;
+			virtual void OnAssociationFailed(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
+
+			/**
+			 * Called when the Association is closed in a controlled way or when the
+			 * Association has aborted - either as decided by this Association due to
+			 * e.g. too many retransmission attempts or by the peer when receiving an
+			 * ABORT command. No other callbacks will be done after this callback,
+			 * unless reconnecting.
+			 *
+			 * @remarks
+			 * - It is allowed to call methods in Association within this callback.
+			 */
+			virtual void OnAssociationClosed(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
 
 			/**
 			 * Called on connection restarted (by peer). This is just a notification,
@@ -59,9 +75,9 @@ namespace RTC
 			 * could have been packet loss as a result of restarting the association.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketConnectionRestarted(Socket* socket) = 0;
+			virtual void OnAssociationRestarted() = 0;
 
 			/**
 			 * Triggered when an non-fatal error is reported by either this library or
@@ -70,77 +86,62 @@ namespace RTC
 			 * viable.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketError(
-			  Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
-
-			/**
-			 * Triggered when the socket has aborted - either as decided by this Socket
-			 * due to e.g. too many retransmission attempts, or by the peer when
-			 * receiving an ABORT command. No other callbacks will be done after this
-			 * callback, unless reconnecting.
-			 *
-			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
-			 */
-			virtual void OnSocketAborted(
-			  Socket* socket, Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
+			virtual void OnAssociationError(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
 
 			/**
 			 * Called when an SCTP message in full has been received.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketMessageReceived(Socket* socket, Message message) = 0;
+			virtual void OnAssociationMessageReceived(Message message) = 0;
 
 			/**
 			 * Indicates that a stream reset request has been performed.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketStreamsResetPerformed(
-			  Socket* socket, std::span<const uint16_t> outboundStreamIds) = 0;
+			virtual void OnAssociationStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds) = 0;
 
 			/**
 			 * Indicates that a stream reset request has failed.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketStreamsResetFailed(
-			  Socket* socket, std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage) = 0;
+			virtual void OnAssociationStreamsResetFailed(
+			  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage) = 0;
 
 			/**
 			 * When a peer has reset some of its outbound streams, this will be
 			 * called. An empty list indicates that all streams have been reset.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketInboundStreamsReset(
-			  Socket* socket, std::span<const uint16_t> inboundStreamIds) = 0;
+			virtual void OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) = 0;
 
 			/**
 			 * Called when the amount of data buffered to be sent falls to or below
-			 * the threshold set when calling SetBufferedAmountLowThreshold().
+			 * the threshold set when calling SetStreamBufferedAmountLowThreshold().
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketBufferedAmountLow(Socket* socket, uint16_t streamId) = 0;
+			virtual void OnAssociationStreamBufferedAmountLow(uint16_t streamId) = 0;
 
 			/**
 			 * Called when the total amount of data buffered (in the entire send
 			 * buffer, for all streams) falls to or below the threshold specified in
-			 * SocketOptions::totalBufferedAmountLowThreshold`.
+			 * SctpOptions::totalBufferedAmountLowThreshold`.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Socket within this callback.
+			 * - It is allowed to call methods in Association within this callback.
 			 */
-			virtual void OnSocketTotalBufferedAmountLow(Socket* socket) = 0;
+			virtual void OnAssociationTotalBufferedAmountLow() = 0;
 
 			/**
 			 * SCTP message lifecycle events.
@@ -150,15 +151,15 @@ namespace RTC
 			 *
 			 * The possible transitions are shown in the graph below:
 			 *
-			 * Socket::SendMessage() ─────────────────────────────┐
+			 * Association::SendMessage() ────────────────────────┐
 			 *                │                                   │
 			 *                │                                   │
 			 *                v                                   v
-			 *    OnLifecycleMessageFullySent ───────> OnLifecycleMessageExpired
+			 * OnAssociationLifecycleMessageFullySent ──> OnAssociationLifecycleMessageExpired
 			 *                │                                   │
 			 *                │                                   │
 			 *                v                                   v
-			 *    OnLifeCycleMessageDelivered ────────────> OnLifecycleEnd
+			 * OnAssociationLifeCycleMessageDelivered ──>   OnAssociationLifecycleEnd
 			 */
 
 			/**
@@ -169,9 +170,9 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This is a message lifecycle event.
-			 * - It is NOT allowed to call methods in Socket within this callback.
+			 * - It is NOT allowed to call methods in Association within this callback.
 			 */
-			virtual void OnLifecycleMessageFullySent(uint64_t lifecycleId) {};
+			virtual void OnAssociationLifecycleMessageFullySent(uint64_t lifecycleId) {};
 
 			/**
 			 * Called when a message has expired. If it was expired with data
@@ -185,11 +186,11 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This is a message lifecycle event.
-			 * - It's guaranteed that OnLifecycleMessageDelivered() is not called if
-			 *   this callback has triggered.
-			 * - It is NOT allowed to call methods in Socket within this callback.
+			 * - It's guaranteed that OnAssociationLifecycleMessageDelivered() is not called
+			 *   if this callback has triggered.
+			 * - It is NOT allowed to call methods in Association within this callback.
 			 */
-			virtual void OnLifecycleMessageExpired(uint64_t lifecycleId, bool maybeDelivered)
+			virtual void OnAssociationLifecycleMessageExpired(uint64_t lifecycleId, bool maybeDelivered)
 			{
 			}
 
@@ -206,11 +207,11 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This is a message lifecycle event.
-			 * - It's guaranteed that OnLifecycleMessageEnd() is not called if this
-			 *   callback has triggered.
-			 * - It is NOT allowed to call methods in Socket within this callback.
+			 * - It's guaranteed that OnAssociationLifecycleMessageEnd() is not called if
+			 *   this callback has triggered.
+			 * - It is NOT allowed to call methods in Association within this callback.
 			 */
-			virtual void OnLifecycleMessageDelivered(uint64_t lifecycleId)
+			virtual void OnAssociationLifecycleMessageDelivered(uint64_t lifecycleId)
 			{
 			}
 
@@ -226,13 +227,14 @@ namespace RTC
 			 *
 			 * @remarks:
 			 * - This is a message lifecycle event.
-			 * - When the socket is deallocated, there will be no OnLifecycleMessageEnd()
-			 *   callbacks sent for messages that were enqueued. But as long as the
-			 *   socket is alive, these callbacks are guaranteed to be sent as
-			 *   messages are either expired or successfully acknowledged.
-			 * - It is NOT allowed to call methods in Socket within this callback.
+			 * - When the Association is deallocated, there will be no
+			 *   OnAssociationLifecycleMessageEnd() callbacks sent for messages that were
+			 *   enqueued. But as long as the Association is alive, these callbacks are
+			 *   guaranteed to be sent as messages are either expired or successfully
+			 *   acknowledged.
+			 * - It is NOT allowed to call methods in Association within this callback.
 			 */
-			virtual void OnLifecycleMessageEnd(uint64_t lifecycleId)
+			virtual void OnAssociationLifecycleMessageEnd(uint64_t lifecycleId)
 			{
 			}
 		};

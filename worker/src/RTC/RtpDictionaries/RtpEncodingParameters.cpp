@@ -51,8 +51,7 @@ namespace RTC
 		this->dtx = data->dtx();
 
 		// scalabilityMode is optional.
-		if (flatbuffers::IsFieldPresent(
-		      data, FBS::RtpParameters::RtpEncodingParameters::VT_SCALABILITYMODE))
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_SCALABILITYMODE))
 		{
 			const std::string scalabilityMode = data->scalabilityMode()->str();
 

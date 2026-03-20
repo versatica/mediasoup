@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/NegotiatedCapabilities.hpp"
-#include "RTC/SCTP/StateCookie.hpp"
+#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "RTC/SCTP/sctpCommon.hpp"
@@ -187,7 +187,7 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 			                                                           .maxInboundStreams   = 55555,
 			                                                           .partialReliability  = true,
 			                                                           .messageInterleaving = true,
-			                                                           .reconfig            = true,
+			                                                           .reConfig            = true,
 			                                                           .zeroChecksum        = false };
 
 		// Build the StateCookie in place within the StateCookieParameter.

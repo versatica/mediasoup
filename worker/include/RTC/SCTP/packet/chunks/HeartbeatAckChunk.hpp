@@ -85,6 +85,11 @@ namespace RTC
 				return true;
 			}
 
+			bool CanHaveErrorCauses() const final
+			{
+				return false;
+			}
+
 		protected:
 			HeartbeatAckChunk* SoftClone(const uint8_t* buffer) const final;
 		};

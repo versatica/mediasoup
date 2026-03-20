@@ -22,7 +22,9 @@ namespace RTC
 	  RTC::Transport::SocketFlags& flags)
 	  : // This may throw.
 	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, port, flags)),
-	    listener(listener), connListener(connListener), fixedPort(true)
+	    listener(listener),
+	    connListener(connListener),
+	    fixedPort(true)
 	{
 		MS_TRACE();
 	}
@@ -38,7 +40,8 @@ namespace RTC
 	  : // This may throw.
 	    ::TcpServerHandle::TcpServerHandle(
 	      RTC::PortManager::BindTcp(ip, minPort, maxPort, flags, portRangeHash)),
-	    listener(listener), connListener(connListener)
+	    listener(listener),
+	    connListener(connListener)
 	{
 		MS_TRACE();
 

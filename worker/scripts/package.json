@@ -10,6 +10,6 @@
 		"normalize-compile-commands": "node clang-scripts.mjs normalize-compile-commands"
 	},
 	"dependencies": {
-		"glob": "^13.0.5"
+		"glob": "^13.0.6"
 	}
 }
