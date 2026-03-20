@@ -544,7 +544,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		// Start at layer 0.
 		manager->UpdateTargetLayers(0, 0);
 
-		auto keyFrameRequestCountBefore = listener.keyFrameRequestCount;
+		const auto keyFrameRequestCountBefore = listener.keyFrameRequestCount;
 
 		// Upgrade spatial: full-SVC requests a keyframe.
 		manager->UpdateTargetLayers(1, 0);
@@ -889,7 +889,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
 		manager->UpdateTargetLayers(1, 1);
 
-		int layersChangedBefore = listener.layersChangedCount;
+		const auto layersChangedBefore = listener.layersChangedCount;
 
 		// Score drops to 0 — MayChangeLayers is called, RecalculateTargetLayers
 		// returns -1,-1 (no active stream), UpdateTargetLayers fires layersChanged.
@@ -1145,7 +1145,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 		// Score is 0 by default.
 		RTC::ConsumerTypes::VideoLayers newTargetLayers;
-		bool changed = manager->RecalculateTargetLayers(newTargetLayers);
+		const auto changed = manager->RecalculateTargetLayers(newTargetLayers);
 
 		REQUIRE(newTargetLayers.spatial == -1);
 		// changed may be false because initial target is also -1.
@@ -1169,12 +1169,12 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		// For K-SVC, even a downgrade should trigger a keyframe request.
 		manager->UpdateTargetLayers(2, 0);
 
-		int kfCountBefore = listener.keyFrameRequestCount;
+		const auto keyFrameRequestCountBefore = listener.keyFrameRequestCount;
 
 		// Downgrade in K-SVC also requests a keyframe.
 		manager->UpdateTargetLayers(0, 0);
 
-		REQUIRE(listener.keyFrameRequestCount > kfCountBefore);
+		REQUIRE(listener.keyFrameRequestCount > keyFrameRequestCountBefore);
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
 	}
 
