@@ -114,16 +114,6 @@ jobs:
             run-test-asan-address: false
             run-test-asan-undefined: false
             run-test-asan-thread: false
-          - os: macos-14
-            cc: clang
-            cxx: clang++
-            build-type: Release
-            pip-break-system-packages: true
-            run-lint: false
-            run-test: true
-            run-test-asan-address: false
-            run-test-asan-undefined: false
-            run-test-asan-thread: false
           - os: macos-15
             cc: clang
             cxx: clang++
