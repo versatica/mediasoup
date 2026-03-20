@@ -61,8 +61,11 @@ namespace RTC
 		  RTC::Media::Kind kind,
 		  bool keyFrameSupported,
 		  Listener* listener)
-		  : listener(listener), keyFrameSupported(keyFrameSupported), kind(kind),
-		    consumableRtpEncodings(consumableRtpEncodings), encodingContext(std::move(encodingContext)),
+		  : listener(listener),
+		    keyFrameSupported(keyFrameSupported),
+		    kind(kind),
+		    consumableRtpEncodings(consumableRtpEncodings),
+		    encodingContext(std::move(encodingContext)),
 		    preferredLayers(preferredLayers)
 		{
 			MS_TRACE();
