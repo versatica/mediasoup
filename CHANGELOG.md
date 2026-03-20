@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Ensure 4-byte alignment for network packet receive buffers and test buffers to avoid undefined behavior ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX).
+- Worker: Ensure 4-byte alignment for network packet receive buffers and test buffers to avoid undefined behavior ([PR #1756](https://github.com/versatica/mediasoup/pull/1756).
 
 ### 3.19.18
 
