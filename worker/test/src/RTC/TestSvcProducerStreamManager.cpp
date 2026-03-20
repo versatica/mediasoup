@@ -155,7 +155,7 @@ namespace
 	{
 		RTC::RtpEncodingParameters encoding;
 		encoding.ssrc = mappedSsrc;
-		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings{ encoding };
+		const std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings{ encoding };
 
 		if (!encodingContext)
 		{
@@ -222,7 +222,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProcessRtpPacket() returns DROP when target spatial layer is -1")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -238,7 +238,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProcessRtpPacket() returns DROP when target temporal layer is -1")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -256,7 +256,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProcessRtpPacket() returns BUFFER when sync required and packet is not a keyframe")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -280,7 +280,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 	SECTION(
 	  "ProcessRtpPacket() returns FORWARD with isSyncPacket and sendBufferedPackets on keyframe sync")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -314,7 +314,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProcessRtpPacket() always requires a keyframe for sync regardless of keyFrameSupported flag")
 	{
-		MockListener listener;
+		const MockListener listener;
 		// keyFrameSupported=false has no effect in SVC: sync always needs a keyframe.
 		auto manager = createManager(
 		  &listener,
@@ -358,7 +358,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProcessRtpPacket() returns DROP for empty payload packets")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager = createManager(
 		  &listener,
 		  /*preferredLayers*/ { 2, 2 },
@@ -391,7 +391,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProcessRtpPacket() returns DROP when ProcessPayload fails")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>();
 		auto manager         = createManager(
 		  &listener,
@@ -430,7 +430,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProcessRtpPacket() returns FORWARD for normal packets after sync")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager = createManager(
 		  &listener,
 		  /*preferredLayers*/ { 2, 2 },
@@ -465,7 +465,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProcessRtpPacket() always sets tsOffset to 0 (SVC uses single stream)")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager = createManager(
 		  &listener,
 		  /*preferredLayers*/ { 2, 2 },
@@ -501,7 +501,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("UpdateTargetLayers() to -1 resets current and target layers")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -520,13 +520,13 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("UpdateTargetLayers() fires OnProducerStreamManagerLayersChanged() when setting -1")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
 
-		int countBefore = listener.layersChangedCount;
+		const int countBefore = listener.layersChangedCount;
 
 		manager->UpdateTargetLayers(-1, -1);
 
@@ -535,7 +535,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("UpdateTargetLayers() requests keyframe for full-SVC spatial upgrade")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -555,7 +555,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("GetProducerCurrentRtpStream() returns nullptr when current spatial layer is -1")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -568,7 +568,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("GetProducerTargetRtpStream() returns nullptr when target spatial layer is -1")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -579,7 +579,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("GetProducerTargetRtpStream() returns the producer stream after UpdateTargetLayers()")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -606,7 +606,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("IsActive() returns false when no producer stream is set")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager = createManager(&listener);
 
 		// No ProducerRtpStream call.
@@ -671,7 +671,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("OnTransportConnected() sets syncRequired")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager = createManager(
 		  &listener,
 		  /*preferredLayers*/ { 2, 2 },
@@ -715,7 +715,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("OnTransportConnected() requests keyframe when active and target changes")
 	{
-		MockListener listener;
+		const MockListener listener;
 		// Use preferred layer 0 so RecalculateTargetLayers can find it with spatial-layer-0 bitrate.
 		auto manager   = createManager(&listener, /*preferredLayers*/ { 0, 0 });
 		auto rtpStream = createRtpStreamRecv(mappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
@@ -752,7 +752,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("OnTransportDisconnected() resets target and current layers to -1")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -770,7 +770,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("OnPaused() resets target and current layers to -1")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -788,7 +788,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("OnResumed() sets syncRequired and requests keyframe when active")
 	{
-		MockListener listener;
+		const MockListener listener;
 		// Use preferred layer 0 so RecalculateTargetLayers can find it with spatial-layer-0 bitrate.
 		auto manager   = createManager(&listener, /*preferredLayers*/ { 0, 0 });
 		auto rtpStream = createRtpStreamRecv(mappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
@@ -817,7 +817,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("OnResumed() sets syncRequired: next packet is a sync packet")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager = createManager(
 		  &listener,
 		  /*preferredLayers*/ { 2, 2 },
@@ -864,7 +864,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProducerNewRtpStream() updates the producer stream and fires score event")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager    = createManager(&listener);
 		auto rtpStream0 = createRtpStreamRecv();
 		auto rtpStream1 = createRtpStreamRecv();
@@ -882,7 +882,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProducerRtpStreamScore() triggers MayChangeLayers() when stream dies (score==0)")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -901,7 +901,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ProducerRtpStreamScore() triggers MayChangeLayers() when stream revives (previousScore==0)")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -919,7 +919,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("IncreaseLayer() returns 0 when no producer stream is set")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager = createManager(&listener);
 
 		manager->SetExternallyManagedBitrate();
@@ -933,7 +933,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("IncreaseLayer() returns 0 when producer stream has score 0")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -950,7 +950,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("IncreaseLayer() returns 0 on second call in same iteration (already at preferred layers)")
 	{
-		MockListener listener;
+		const MockListener listener;
 		// Single spatial/temporal layer so preferred == available immediately.
 		auto encodingContext =
 		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
@@ -985,7 +985,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("IncreaseLayer() works again after ApplyLayers()")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto encodingContext =
 		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
 		auto manager = createManager(
@@ -1018,7 +1018,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("ApplyLayers() records BWE downgrade when spatial layer drops below current")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto encodingContext =
 		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 3u, /*temporalLayers*/ 3u);
 		auto manager = createManager(
@@ -1060,7 +1060,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("GetDesiredBitrate() returns 0 when no producer stream is set")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager = createManager(&listener);
 
 		auto nowMs          = DepLibUV::GetTimeMs();
@@ -1071,7 +1071,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("GetDesiredBitrate() (full SVC) returns total stream bitrate")
 	{
-		MockListener listener;
+		const MockListener listener;
 		// Full SVC (ksvc=false).
 		auto encodingContext = std::make_unique<MockEncodingContext>(3u, 3u, /*ksvc*/ false);
 		auto manager         = createManager(
@@ -1096,7 +1096,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("GetDesiredBitrate() (K-SVC) returns the maximum spatial-layer bitrate")
 	{
-		MockListener listener;
+		const MockListener listener;
 		// K-SVC (ksvc=true): GetDesiredBitrate iterates per-layer bitrates.
 		auto encodingContext = std::make_unique<MockEncodingContext>(3u, 3u, /*ksvc*/ true);
 		auto manager         = createManager(
@@ -1124,7 +1124,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("RecalculateTargetLayers() returns false when no producer stream is set")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager = createManager(&listener);
 
 		RTC::ConsumerTypes::VideoLayers newTargetLayers;
@@ -1137,7 +1137,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("RecalculateTargetLayers() resets layers when stream score is 0")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
@@ -1154,7 +1154,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("K-SVC: UpdateTargetLayers() requests keyframe on any spatial layer change")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>(3u, 3u, /*ksvc*/ true);
 		auto manager         = createManager(
 		  &listener,
@@ -1209,7 +1209,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("IncreaseLayer() uses virtual bitrate when considerLoss is true and loss < 2%")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>(1u, 1u, /*ksvc*/ false);
 		auto manager         = createManager(
 		  &listener,
@@ -1240,7 +1240,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 	SECTION("IncreaseLayer() uses reduced virtual bitrate when considerLoss is true and loss > 10%")
 	{
-		MockListener listener;
+		const MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>(1u, 1u, /*ksvc*/ false);
 		auto manager         = createManager(
 		  &listener,
