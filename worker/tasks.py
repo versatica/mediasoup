@@ -490,7 +490,8 @@ def test_asan_undefined(ctx):
             pty=PTY_SUPPORTED,
             shell=SHELL,
             # Exit with error if there are ASAN related issues.
-            # env={**os.environ, 'UBSAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1'}
+            # NOTE: Ignore well known UBSan errors in OpenSSL.
+            env={**os.environ, 'UBSAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1:suppressions=ubsan_suppressions.txt'}
         );
 
 
