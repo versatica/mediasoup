@@ -184,7 +184,7 @@ namespace RTC
 			temporalLayer = 0;
 
 			// Check bitrate of every temporal layer.
-			for (; temporalLayer < this->producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+			for (; std::cmp_less(temporalLayer , this->producerRtpStream->GetTemporalLayers()); ++temporalLayer)
 			{
 				// Ignore temporal layers lower than the one we already have (taking
 				// into account the spatial layer too).
