@@ -638,7 +638,7 @@ namespace RTC
 						tsExtraOffset = 1u;
 					}
 				}
-				else if (tsExtraOffset > maxTsExtraOffset)
+				else if (std::cmp_greater(tsExtraOffset , maxTsExtraOffset))
 				{
 					MS_WARN_TAG(
 					  simulcast,
