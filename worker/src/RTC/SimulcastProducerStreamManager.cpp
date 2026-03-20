@@ -627,7 +627,7 @@ namespace RTC
 				if (this->keyFrameForTsOffsetRequested)
 				{
 					// Give up and use the theoretical offset.
-					if (tsExtraOffset > maxTsExtraOffset)
+					if (std::cmp_greater(tsExtraOffset , maxTsExtraOffset))
 					{
 						MS_WARN_TAG(
 						  simulcast,
