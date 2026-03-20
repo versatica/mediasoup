@@ -151,9 +151,9 @@ namespace RTC
 
 			const size_t bufferLength = packet->GetLength() + PacketBufferLengthIncrement;
 
-			// NOTE: Buffer must be 4-byte aligned since RTP Packet parsing casts it to
+			// NOTE: Buffer must be 4-byte aligned since RTP packet parsing casts it to
 			// structs (e.g. FixedHeader, HeaderExtension) that require 4-byte alignment.
-			auto* buffer       = new (std::align_val_t{ 4 }) uint8_t[bufferLength];
+			auto* buffer = static_cast<uint8_t*>(::operator new[](bufferLength, std::align_val_t{ 4 }));
 			auto* clonedPacket = packet->Clone(buffer, bufferLength);
 
 			// Set a listener in the Packet to deallocate its buffer once the Packet
