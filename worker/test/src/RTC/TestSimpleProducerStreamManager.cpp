@@ -260,10 +260,10 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>();
 		auto manager         = createManager(
-      &listener,
-      /*keyFrameSupported*/ false,
-      RTC::Media::Kind::VIDEO,
-      std::move(encodingContext));
+		  &listener,
+		  /*keyFrameSupported*/ false,
+		  RTC::Media::Kind::VIDEO,
+		  std::move(encodingContext));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
@@ -331,7 +331,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		REQUIRE(result.tsOffset == 0u);
 	}
 
-	SECTION("OnTransportConnected requests keyframe when active")
+	SECTION("OnTransportConnected() requests keyframe when active")
 	{
 		MockListener listener;
 		auto manager   = createManager(&listener);
@@ -346,7 +346,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
 	}
 
-	SECTION("OnTransportConnected does not request keyframe when not active")
+	SECTION("OnTransportConnected() does not request keyframe when not active")
 	{
 		MockListener listener;
 		listener.isActive = false;
@@ -359,7 +359,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		REQUIRE(listener.keyFrameRequestCount == 0);
 	}
 
-	SECTION("OnResumed sets syncRequired and requests keyframe")
+	SECTION("OnResumed() sets syncRequired and requests keyframe")
 	{
 		MockListener listener;
 		auto manager   = createManager(&listener);
@@ -384,7 +384,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		REQUIRE(result.type == RtpPacketProcessResult::Type::BUFFER);
 	}
 
-	SECTION("IncreaseLayer returns producer bitrate when it is less than available bitrate")
+	SECTION("IncreaseLayer() returns producer bitrate when it is less than available bitrate")
 	{
 		MockListener listener;
 		auto manager   = createManager(&listener);
@@ -400,12 +400,12 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto nowMs        = DepLibUV::GetTimeMs();
 		auto steamBitrate = rtpStream->GetBitrate(nowMs);
 		auto usedBitrate  = manager->IncreaseLayer(
-      /*bitrate*/ steamBitrate + 1u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ steamBitrate + 1u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate == steamBitrate);
 	}
 
-	SECTION("IncreaseLayer returns available bitrate when it is less than producer bitrate")
+	SECTION("IncreaseLayer() returns available bitrate when it is less than producer bitrate")
 	{
 		MockListener listener;
 		auto manager   = createManager(&listener);
@@ -422,12 +422,12 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto streamBitrate        = rtpStream->GetBitrate(nowMs);
 		uint32_t availableBitrate = streamBitrate - 1;
 		auto usedBitrate          = manager->IncreaseLayer(
-      /*bitrate*/ availableBitrate, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ availableBitrate, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate == availableBitrate);
 	}
 
-	SECTION("IncreaseLayer returns 0 on second call in same iteration")
+	SECTION("IncreaseLayer() returns 0 on second call in same iteration")
 	{
 		MockListener listener;
 		auto manager   = createManager(&listener);
@@ -455,7 +455,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		REQUIRE(usedBitrate2 == 0u);
 	}
 
-	SECTION("IncreaseLayer works again after ApplyLayers")
+	SECTION("IncreaseLayer() works again after ApplyLayers()")
 	{
 		MockListener listener;
 		auto manager   = createManager(&listener);
@@ -482,7 +482,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		REQUIRE(usedBitrate > 0u);
 	}
 
-	SECTION("GetDesiredBitrate returns producer bitrate for video")
+	SECTION("GetDesiredBitrate() returns producer bitrate for video")
 	{
 		MockListener listener;
 		auto manager   = createManager(&listener);
@@ -502,7 +502,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		REQUIRE(desiredBitrate == steamBitrate);
 	}
 
-	SECTION("GetDesiredBitrate returns 0 for audio kind")
+	SECTION("GetDesiredBitrate() returns 0 for audio kind")
 	{
 		MockListener listener;
 		auto manager   = createManager(&listener, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);

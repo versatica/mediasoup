@@ -217,7 +217,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	packet->SetTimestamp(1000);
 	packet->SetPayloadLength(40);
 
-	SECTION("ProcessRtpPacket returns DROP when target temporal layer is -1")
+	SECTION("ProcessRtpPacket() returns DROP when target temporal layer is -1")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
@@ -250,7 +250,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	}
 
 	SECTION(
-	  "ProcessRtpPacket returns BUFFER when sync required and packet is from target spatial layer but not keyframe")
+	  "ProcessRtpPacket() returns BUFFER when sync required and packet is from target spatial layer but not keyframe")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
@@ -270,7 +270,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::BUFFER);
 	}
 
-	SECTION("ProcessRtpPacket requires keyframe for spatial layer switch")
+	SECTION("ProcessRtpPacket() requires keyframe for spatial layer switch")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
@@ -327,7 +327,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
 	}
 
-	SECTION("ProcessRtpPacket returns SILENT_DROP for non-target and non-current spatial layer packet")
+	SECTION("ProcessRtpPacket() returns SILENT_DROP for non-target and non-current spatial layer packet")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
@@ -362,7 +362,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	}
 
 	SECTION(
-	  "ProcessRtpPacket returns SILENT_DROP when sync required and packet is from non-target spatial layer")
+	  "ProcessRtpPacket() returns SILENT_DROP when sync required and packet is from non-target spatial layer")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs);
@@ -385,7 +385,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::SILENT_DROP);
 	}
 
-	SECTION("ProcessRtpPacket returns FORWARD with sendBufferedPackets when syncing with a keyframe")
+	SECTION("ProcessRtpPacket() returns FORWARD with sendBufferedPackets when syncing with a keyframe")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
@@ -411,7 +411,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.sendBufferedPackets == true);
 	}
 
-	SECTION("ProcessRtpPacket returns FORWARD and completes sync when keyFrameSupported is false")
+	SECTION("ProcessRtpPacket() returns FORWARD and completes sync when keyFrameSupported is false")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -437,7 +437,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.tsOffset == 0u);
 	}
 
-	SECTION("ProcessRtpPacket returns DROP for empty payload packets on current spatial layer")
+	SECTION("ProcessRtpPacket() returns DROP for empty payload packets on current spatial layer")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -465,7 +465,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::DROP);
 	}
 
-	SECTION("ProcessRtpPacket returns SILENT_DROP for empty payload packets on non-current spatial layer")
+	SECTION(
+	  "ProcessRtpPacket() returns SILENT_DROP for empty payload packets on non-current spatial layer")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -494,7 +495,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::SILENT_DROP);
 	}
 
-	SECTION("ProcessRtpPacket returns FORWARD for current layer packets after sync")
+	SECTION("ProcessRtpPacket() returns FORWARD for current layer packets after sync")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -524,7 +525,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.tsOffset == 0u);
 	}
 
-	SECTION("ProcessRtpPacket forwards packets from current layer after spatial switch")
+	SECTION("ProcessRtpPacket() forwards packets from current layer after spatial switch")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -577,7 +578,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::SILENT_DROP);
 	}
 
-	SECTION("OnTransportConnected sets syncRequired")
+	SECTION("OnTransportConnected() sets syncRequired")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -620,7 +621,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.isSyncPacket == true);
 	}
 
-	SECTION("OnTransportConnected requests keyframe when active and target changes")
+	SECTION("OnTransportConnected() requests keyframe when active and target changes")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
@@ -659,7 +660,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
 	}
 
-	SECTION("OnTransportConnected does not request keyframe when not active")
+	SECTION("OnTransportConnected() does not request keyframe when not active")
 	{
 		MockListener listener;
 		listener.isActive = false;
@@ -672,7 +673,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(listener.keyFrameRequestCount == 0);
 	}
 
-	SECTION("RecalculateTargetLayers skips spatial layer without Sender Report")
+	SECTION("RecalculateTargetLayers() skips spatial layer without Sender Report")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
@@ -724,7 +725,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.tsOffset == 0u);
 	}
 
-	SECTION("RecalculateTargetLayers switches to preferred layer after Sender Report")
+	SECTION("RecalculateTargetLayers() switches to preferred layer after Sender Report")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
@@ -800,7 +801,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
 	}
 
-	SECTION("OnResumed sets syncRequired")
+	SECTION("OnResumed() sets syncRequired")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -843,7 +844,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.isSyncPacket == true);
 	}
 
-	SECTION("OnTransportDisconnected resets target layers")
+	SECTION("OnTransportDisconnected() resets target layers")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
@@ -860,7 +861,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(targetLayers.temporal == -1);
 	}
 
-	SECTION("OnPaused resets target layers")
+	SECTION("OnPaused() resets target layers")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
@@ -877,7 +878,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(targetLayers.temporal == -1);
 	}
 
-	SECTION("IncreaseLayer returns 0 on second call in same iteration")
+	SECTION("IncreaseLayer() returns 0 on second call in same iteration")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener, /*ssrcs*/ oneSsrc, /*preferredLayers*/ { 0, 0 });
@@ -905,7 +906,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(usedBitrate2 == 0u);
 	}
 
-	SECTION("IncreaseLayer works again after ApplyLayers")
+	SECTION("IncreaseLayer() works again after ApplyLayers()")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
@@ -938,7 +939,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(usedBitrate > 0u);
 	}
 
-	SECTION("GetDesiredBitrate returns max bitrate across all producer streams")
+	SECTION("GetDesiredBitrate() returns max bitrate across all producer streams")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
@@ -967,7 +968,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(desiredBitrate == bitrate1);
 	}
 
-	SECTION("GetProducerCurrentRtpStream returns nullptr before sync")
+	SECTION("GetProducerCurrentRtpStream() returns nullptr before sync")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
@@ -979,7 +980,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(manager->GetCurrentSpatialLayer() == -1);
 	}
 
-	SECTION("GetProducerTargetRtpStream returns correct stream after UpdateTargetLayers")
+	SECTION("GetProducerTargetRtpStream() returns correct stream after UpdateTargetLayers()")
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
@@ -996,7 +997,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(manager->GetTargetLayers().temporal == 0);
 	}
 
-	SECTION("RequestKeyFrame requests for both target and current spatial layers")
+	SECTION("RequestKeyFrame() requests for both target and current spatial layers")
 	{
 		MockListener listener;
 		auto manager = createManager(
