@@ -159,7 +159,7 @@ namespace RTC
 		int16_t spatialLayer{ 0 };
 		int16_t temporalLayer{ 0 };
 
-		for (; std::cmp_less(spatialLayer , this->producerRtpStream->GetSpatialLayers()); ++spatialLayer)
+		for (; std::cmp_less(spatialLayer, this->producerRtpStream->GetSpatialLayers()); ++spatialLayer)
 		{
 			// If this is higher than current spatial layer and we moved to current
 			// spatial layer due to BWE limitations, check how much it has elapsed
@@ -184,7 +184,8 @@ namespace RTC
 			temporalLayer = 0;
 
 			// Check bitrate of every temporal layer.
-			for (; std::cmp_less(temporalLayer , this->producerRtpStream->GetTemporalLayers()); ++temporalLayer)
+			for (; std::cmp_less(temporalLayer, this->producerRtpStream->GetTemporalLayers());
+			     ++temporalLayer)
 			{
 				// Ignore temporal layers lower than the one we already have (taking
 				// into account the spatial layer too).
@@ -557,7 +558,7 @@ namespace RTC
 			goto done;
 		}
 
-		for (; std::cmp_less(spatialLayer , this->producerRtpStream->GetSpatialLayers()); ++spatialLayer)
+		for (; std::cmp_less(spatialLayer, this->producerRtpStream->GetSpatialLayers()); ++spatialLayer)
 		{
 			// If this is higher than current spatial layer and we moved to current
 			// spatial layer due to BWE limitations, check how much it has elapsed
