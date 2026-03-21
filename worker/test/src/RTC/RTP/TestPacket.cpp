@@ -2162,7 +2162,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		bool packetBufferReleased{ false };
 
 		RTC::Serializable::BufferReleasedListener packetBufferReleasedListener =
-		  [&packetBufferReleased](const RTC::Serializable* serializable, uint8_t* serializableBuffer)
+		  [&packetBufferReleased](const RTC::Serializable* serializable, const uint8_t* serializableBuffer)
 		{
 			if (serializable->GetBuffer() == rtpCommon::FactoryBuffer && serializable->GetBuffer() == serializableBuffer)
 			{
@@ -2188,7 +2188,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		bool packetBufferReleased{ false };
 
 		RTC::Serializable::BufferReleasedListener packetBufferReleasedListener =
-		  [&packetBufferReleased](const RTC::Serializable* serializable, uint8_t* serializableBuffer)
+		  [&packetBufferReleased](const RTC::Serializable* serializable, const uint8_t* serializableBuffer)
 		{
 			if (serializable->GetBuffer() == rtpCommon::FactoryBuffer && serializable->GetBuffer() == serializableBuffer)
 			{
