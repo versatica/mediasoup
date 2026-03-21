@@ -123,7 +123,7 @@ namespace RTC
 	thread_local X509* DtlsTransport::certificate{ nullptr };
 	thread_local EVP_PKEY* DtlsTransport::privateKey{ nullptr };
 	thread_local SSL_CTX* DtlsTransport::sslCtx{ nullptr };
-	alignas(4) thread_local uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
+	thread_local uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
 	const absl::flat_hash_map<std::string, DtlsTransport::FingerprintAlgorithm>
 	  DtlsTransport::String2FingerprintAlgorithm = {
 		  { "sha-1",   DtlsTransport::FingerprintAlgorithm::SHA1   },
