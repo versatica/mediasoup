@@ -2188,7 +2188,7 @@ r =const
 		bool packetBufferReleased{ false };
 
 		RTC::Serializable::BufferReleasedListener packetBufferReleasedListener =
-		  [&packetBufferReleased](const RTC::Serializable* serializable, uint8_t* serializableBuffer)
+r =const 
 		{
 			if (serializable->GetBuffer() == rtpCommon::FactoryBuffer && serializable->GetBuffer() == serializableBuffer)
 			{
