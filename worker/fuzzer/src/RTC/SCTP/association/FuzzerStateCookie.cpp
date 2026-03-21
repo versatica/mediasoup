@@ -5,9 +5,9 @@
 
 namespace
 {
-	alignas(4) thread_local uint8_t DataBuffer[sizeof(size_t)];
-	alignas(4) thread_local uint8_t StateCookieSerializeBuffer[sizeof(size_t)];
-	alignas(4) thread_local uint8_t StateCookieCloneBuffer[sizeof(size_t)];
+	alignas(4) thread_local uint8_t DataBuffer[65536];
+	alignas(4) thread_local uint8_t StateCookieSerializeBuffer[65536];
+	alignas(4) thread_local uint8_t StateCookieCloneBuffer[65536];
 } // namespace
 
 void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
