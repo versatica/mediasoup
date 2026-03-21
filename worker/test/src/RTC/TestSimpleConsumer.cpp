@@ -191,7 +191,7 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 	// TODO: We should NOT parse RTP packets for tests anymore. We should use
 	// RTC::RTP::Packet::Factory() instead.
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x80, 0x01, 0x00, 0x08,
 		0x00, 0x00, 0x00, 0x04,

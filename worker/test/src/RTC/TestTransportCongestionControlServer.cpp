@@ -78,7 +78,7 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 	};
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x90, 0x01, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x04,
