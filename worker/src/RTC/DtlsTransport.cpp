@@ -1018,7 +1018,7 @@ namespace RTC
 
 			// Notify the listener.
 			this->listener->OnDtlsTransportApplicationDataReceived(
-			  this, (uint8_t*)DtlsTransport::sslReadBuffer, static_cast<size_t>(read));
+			  this, static_cast<const uint8_t*>(DtlsTransport::sslReadBuffer), static_cast<size_t>(read));
 		}
 	}
 
