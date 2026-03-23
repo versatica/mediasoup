@@ -459,13 +459,13 @@ namespace RTC
 		// Check target layers validity.
 		if (this->targetLayers.temporal == -1)
 		{
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
+#endif
+
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 				result.type = RtpPacketProcessResult::Type::DROP;
-
-#ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
-#endif
 			}
 			else
 			{
@@ -505,6 +505,9 @@ namespace RTC
 		// drop it.
 		else if (spatialLayer != this->currentSpatialLayer)
 		{
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::SPATIAL_LAYER_MISMATCH);
+#endif
 			result.type = RtpPacketProcessResult::Type::SILENT_DROP;
 
 			return result;
@@ -525,6 +528,9 @@ namespace RTC
 		// Packets with only padding are not forwarded.
 		if (packet->GetPayloadLength() == 0)
 		{
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
+#endif
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 				result.type = RtpPacketProcessResult::Type::DROP;

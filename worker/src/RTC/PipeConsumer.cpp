@@ -827,7 +827,7 @@ namespace RTC
 			// Let's choose an initial output seq number between 1000 and 32768 to avoid
 			// libsrtp bug:
 			// https://github.com/versatica/mediasoup/issues/1437
-			const uint16_t initialOutputSeq =
+			const auto initialOutputSeq =
 			  Utils::Crypto::GetRandomUInt<uint16_t>(1000u, std::numeric_limits<uint16_t>::max() / 2);
 
 			this->mapRtpStreamRtpSeqManager[rtpStream] = RTC::SeqManager<uint16_t>(initialOutputSeq);

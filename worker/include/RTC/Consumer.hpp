@@ -31,6 +31,9 @@ namespace RTC
 	                 public RTC::RTP::RtpStreamSend::Listener,
 	                 public RTC::ProducerStreamManager::Listener
 	{
+		using RetransmissionBuffer =
+		  std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>;
+
 	public:
 		class Listener
 		{
@@ -172,9 +175,11 @@ namespace RTC
 		void UserOnResumed();
 
 	private:
-		void CreateRtpStream();
-		void StorePacketInTargetLayerRetransmissionBuffer(
-		  RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
+		void CreateRtpStreams();
+		static void StorePacketInTargetLayerRetransmissionBuffer(
+		  RetransmissionBuffer& targetLayerRetransmissionBuffer,
+		  RTC::RTP::Packet* packet,
+		  RTC::RTP::SharedPacket& sharedPacket);
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -214,10 +219,16 @@ namespace RTC
 		struct TraceEventTypes traceEventTypes;
 
 	private:
-		// Allocated by this.
-		RTC::RTP::RtpStreamSend* rtpStream{ nullptr };
+		bool pipe{ false };
 		// Others.
 		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
+		absl::flat_hash_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
+		absl::flat_hash_map<uint32_t, RTC::RTP::RtpStreamSend*> mapSsrcRtpStream;
+		absl::flat_hash_map<RTC::RTP::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
+		// Buffers to store packets that arrive earlier than the first packet of the
+		// video key frame.
+		absl::flat_hash_map<RTC::RTP::RtpStreamSend*, RetransmissionBuffer>
+		  mapRtpStreamTargetLayerRetransmissionBuffer;
 		std::vector<uint32_t> mediaSsrcs;
 		std::vector<uint32_t> rtxSsrcs;
 		bool transportConnected{ false };
@@ -225,10 +236,7 @@ namespace RTC
 		bool producerPaused{ false };
 		bool producerClosed{ false };
 		bool lastSentPacketHasMarker{ false };
-		RTC::SeqManager<uint16_t> rtpSeqManager;
 		std::unique_ptr<RTC::ProducerStreamManager> producerStreamManager;
-		std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
-		  targetLayerRetransmissionBuffer;
 	};
 } // namespace RTC
 
