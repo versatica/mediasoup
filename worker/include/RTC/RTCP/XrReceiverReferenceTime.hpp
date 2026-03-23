@@ -24,6 +24,10 @@ namespace RTC
 		class ReceiverReferenceTime : public ExtendedReportBlock
 		{
 		public:
+			/**
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 4 bytes.
+			 */
 			struct Body
 			{
 				uint32_t ntpSec;

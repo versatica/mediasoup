@@ -13,7 +13,7 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 	SECTION("UnresolvableAddressErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:5 (UNRESOLVABLE_ADDRESS), Length: 9
 			0x00, 0x05, 0x00, 0x09,
@@ -111,7 +111,7 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 	{
 		// Wrong code.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
@@ -124,7 +124,7 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:5 (UNRESOLVABLE_ADDRESS), Length: 7
 			0x00, 0x05, 0x00, 0x07,

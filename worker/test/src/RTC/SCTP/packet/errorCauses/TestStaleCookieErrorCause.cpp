@@ -13,7 +13,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 	SECTION("StaleCookieErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:3 (STALE_COOKIE), Length: 8
 			0x00, 0x03, 0x00, 0x08,
@@ -80,7 +80,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 	{
 		// Wrong code.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
@@ -93,7 +93,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:3 (STALE_COOKIE), Length: 7
 			0x00, 0x03, 0x00, 0x07,
@@ -106,7 +106,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer3[] =
+		alignas(4) uint8_t buffer3[] =
 		{
 			// Code:3 (STALE_COOKIE), Length: 9
 			0x00, 0x03, 0x00, 0x09,
@@ -120,7 +120,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer4[] =
+		alignas(4) uint8_t buffer4[] =
 		{
 			// Code:3 (STALE_COOKIE), Length: 8
 			0x00, 0x03, 0x00, 0x08,

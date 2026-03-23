@@ -13,9 +13,17 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 {
 	rtpCommon::ResetBuffers();
 
+	SECTION("alignof() RTP structs")
+	{
+		REQUIRE(alignof(RTC::RTP::Packet::FixedHeader) == 4);
+		REQUIRE(alignof(RTC::RTP::Packet::HeaderExtension) == 2);
+		REQUIRE(alignof(RTC::RTP::Packet::OneByteExtension) == 1);
+		REQUIRE(alignof(RTC::RTP::Packet::TwoBytesExtension) == 1);
+	}
+
 	SECTION("Packet::Parse() packet1.raw succeeds")
 	{
-		uint8_t buffer[65536];
+		alignas(4) uint8_t buffer[65536];
 		size_t bufferLength;
 
 		if (!helpers::readBinaryFile("data/packet1.raw", buffer, std::addressof(bufferLength)))
@@ -128,7 +136,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 	SECTION("Packet::Parse() packet2.raw succeeds")
 	{
-		uint8_t buffer[65536];
+		alignas(4) uint8_t buffer[65536];
 		size_t bufferLength;
 
 		if (!helpers::readBinaryFile("data/packet2.raw", buffer, std::addressof(bufferLength)))
@@ -241,7 +249,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 	SECTION("Packet::Parse() packet3.raw succeeds")
 	{
-		uint8_t buffer[65536];
+		alignas(4) uint8_t buffer[65536];
 		size_t bufferLength;
 
 		if (!helpers::readBinaryFile("data/packet3.raw", buffer, std::addressof(bufferLength)))
@@ -355,7 +363,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 	SECTION("Packet::Parse() without extensions or payload succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			0x80, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
@@ -476,7 +484,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 	SECTION("Packet::Parse() with One-Byte extensions succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			0x90, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
@@ -659,7 +667,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 	SECTION("Packet::Parse() with Two-Bytes extensions succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			0x90, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
@@ -851,7 +859,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 	SECTION("Packet::Parse() padding-only packet succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			0xA0, 0x01, 0x00, 0x09,
 			0x00, 0x00, 0x00, 0x05,
@@ -1003,7 +1011,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 	SECTION("Packet::Parse() with wrong arguments fails")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			0x90, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
@@ -2154,26 +2162,19 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 	SECTION("Packet::SetBufferReleasedListener() when Packet is destroyed succeeds")
 	{
-		const size_t bufferLength{ 1200 };
-		auto* buffer = new uint8_t[bufferLength];
-
-		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(buffer, bufferLength) };
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
 
 		REQUIRE(packet);
 
 		bool packetBufferReleased{ false };
-		bool bufferDeallocated{ false };
 
 		RTC::Serializable::BufferReleasedListener packetBufferReleasedListener =
-		  [&buffer, &packetBufferReleased, &bufferDeallocated](
-		    const RTC::Serializable* serializable, uint8_t* serializableBuffer)
+		  [&packetBufferReleased](const RTC::Serializable* serializable, const uint8_t* serializableBuffer)
 		{
-			packetBufferReleased = true;
-
-			if (serializable->GetBuffer() == buffer)
+			if (serializable->GetBuffer() == rtpCommon::FactoryBuffer && serializable->GetBuffer() == serializableBuffer)
 			{
-				delete[] serializableBuffer;
-				bufferDeallocated = true;
+				packetBufferReleased = true;
 			}
 		};
 
@@ -2183,31 +2184,23 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		packet.reset(nullptr);
 
 		REQUIRE(packetBufferReleased == true);
-		REQUIRE(bufferDeallocated == true);
 	}
 
 	SECTION("Packet::SetBufferReleasedListener() when Packet is serialized into another buffer succeeds")
 	{
-		const size_t bufferLength{ 1200 };
-		auto* buffer = new uint8_t[bufferLength];
-
-		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(buffer, bufferLength) };
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
 
 		REQUIRE(packet);
 
 		bool packetBufferReleased{ false };
-		bool bufferDeallocated{ false };
 
 		RTC::Serializable::BufferReleasedListener packetBufferReleasedListener =
-		  [&buffer, &packetBufferReleased, &bufferDeallocated](
-		    const RTC::Serializable* serializable, uint8_t* serializableBuffer)
+		  [&packetBufferReleased](const RTC::Serializable* serializable, const uint8_t* serializableBuffer)
 		{
-			packetBufferReleased = true;
-
-			if (serializable->GetBuffer() == buffer)
+			if (serializable->GetBuffer() == rtpCommon::FactoryBuffer && serializable->GetBuffer() == serializableBuffer)
 			{
-				delete[] serializableBuffer;
-				bufferDeallocated = true;
+				packetBufferReleased = true;
 			}
 		};
 
@@ -2218,7 +2211,6 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
 		REQUIRE(packetBufferReleased == true);
-		REQUIRE(bufferDeallocated == true);
 
 		// NOTE: We need to unset the buffer released listener because once the
 		// unique_ptr of the Packet gets out of the scope, the Packet will be

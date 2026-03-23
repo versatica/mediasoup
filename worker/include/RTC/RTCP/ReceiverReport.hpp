@@ -13,7 +13,12 @@ namespace RTC
 		class ReceiverReport
 		{
 		public:
-			/* Struct for RTCP receiver report. */
+			/**
+			 * Struct for RTCP receiver report.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 4 bytes.
+			 */
 			struct Header
 			{
 				uint32_t ssrc;

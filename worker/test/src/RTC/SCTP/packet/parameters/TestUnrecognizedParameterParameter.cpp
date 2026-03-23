@@ -13,7 +13,7 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[serializable][sctp][parameter
 	SECTION("UnrecognizedParameterParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:8 (UNRECOGNIZED_PARAMETER), Length: 7
 			0x00, 0x08, 0x00, 0x07,

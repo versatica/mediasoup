@@ -20,10 +20,15 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 {
 	sctpCommon::ResetBuffers();
 
+	SECTION("alignof() SCTP structs")
+	{
+		REQUIRE(alignof(RTC::SCTP::Packet::CommonHeader) == 4);
+	}
+
 	SECTION("Parse() without Chunks succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Source Port: 10000, Destination Port: 15999
 			0x27, 0x10, 0x3E, 0x7F,
@@ -110,7 +115,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 	SECTION("Parse() with Chunks succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Source Port: 10000, Destination Port: 15999
 			0x27, 0x10, 0x3E, 0x7F,
@@ -203,6 +208,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*chunkType*/ static_cast<RTC::SCTP::Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -320,6 +326,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*chunkType*/ static_cast<RTC::SCTP::Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -438,6 +445,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*chunkType*/ static_cast<RTC::SCTP::Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,

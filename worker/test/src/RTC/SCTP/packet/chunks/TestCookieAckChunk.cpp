@@ -13,7 +13,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[serializable][sctp][chunk]"
 	SECTION("CookieAckChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:11 (COOKIE_ACK), Flags:0x00000001, T: 1, Length: 4
 			0x0B, 0b00000101, 0x00, 0x04,

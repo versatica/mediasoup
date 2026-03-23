@@ -12,7 +12,7 @@ namespace RTC
 	{
 		/* Static. */
 
-		thread_local static uint8_t PacketFactoryBuffer[RTC::Consts::MaxSafeMtuSizeForSctp];
+		alignas(4) thread_local static uint8_t PacketFactoryBuffer[RTC::Consts::MaxSafeMtuSizeForSctp];
 
 		/* Instance methods. */
 

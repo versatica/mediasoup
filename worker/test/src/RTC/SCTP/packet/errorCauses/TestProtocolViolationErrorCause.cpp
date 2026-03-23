@@ -13,7 +13,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 	SECTION("ProtocolViolationErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:13 (PROTOCOL_VIOLATION), Length: 10
 			0x00, 0x0D, 0x00, 0x0A,
@@ -129,7 +129,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 	{
 		// Wrong code.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
@@ -142,7 +142,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:13 (PROTOCOL_VIOLATION), Length: 7
 			0x00, 0x0D, 0x00, 0x07,

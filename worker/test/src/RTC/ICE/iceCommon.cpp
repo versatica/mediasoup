@@ -3,12 +3,14 @@
 
 namespace iceCommon
 {
-	thread_local uint8_t FactoryBuffer[];
-	thread_local uint8_t ResponseFactoryBuffer[];
-	thread_local uint8_t SerializeBuffer[];
-	thread_local uint8_t CloneBuffer[];
-	thread_local uint8_t DataBuffer[];
-	thread_local uint8_t ThrowBuffer[];
+	// NOTE: We don't need `alignas(4)` for STUN Packet parsing. However we do it
+	// for consistency with rtpCommon.cpp and sctpCommon.cpp.
+	alignas(4) thread_local uint8_t FactoryBuffer[];
+	alignas(4) thread_local uint8_t ResponseFactoryBuffer[];
+	alignas(4) thread_local uint8_t SerializeBuffer[];
+	alignas(4) thread_local uint8_t CloneBuffer[];
+	alignas(4) thread_local uint8_t DataBuffer[];
+	alignas(4) thread_local uint8_t ThrowBuffer[];
 
 	void ResetBuffers()
 	{

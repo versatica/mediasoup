@@ -13,7 +13,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 	SECTION("InvalidStreamIdentifierErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:1 (INVALID_STREAM_IDENTIFIER), Length: 8
 			0x00, 0x01, 0x00, 0x08,
@@ -89,7 +89,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 	{
 		// Wrong code.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
@@ -102,7 +102,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:1 (INVALID_STREAM_IDENTIFIER), Length: 7
 			0x00, 0x01, 0x00, 0x07,
@@ -115,7 +115,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer3[] =
+		alignas(4) uint8_t buffer3[] =
 		{
 			// Code:1 (INVALID_STREAM_IDENTIFIER), Length: 9
 			0x00, 0x01, 0x00, 0x09,
@@ -129,7 +129,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer4[] =
+		alignas(4) uint8_t buffer4[] =
 		{
 			// Code:1 (INVALID_STREAM_IDENTIFIER), Length: 8
 			0x00, 0x01, 0x00, 0x08,

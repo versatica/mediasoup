@@ -8,7 +8,7 @@ SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 	// RTCP VBCM packet.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x84, 0xce, 0x00, 0x05, // Type: 206 (Payload Specific), Count: 4 (VBCM), Length: 5
 		0xfa, 0x17, 0xfa, 0x17, // Sender SSRC: 0xfa17fa17
@@ -47,6 +47,11 @@ SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 		REQUIRE((item->GetValue()[item->GetLength() - 1] & 1) == valueMask);
 	};
 
+	SECTION("alignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsVbcmItem::Header) == 4);
+	}
+
 	SECTION("parse FeedbackPsVbcmPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackPsVbcmPacket> packet{ RTC::RTCP::FeedbackPsVbcmPacket::Parse(
@@ -58,7 +63,7 @@ SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 

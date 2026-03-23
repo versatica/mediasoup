@@ -12,7 +12,7 @@ SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[serializable][sctp][er
 	SECTION("InvalidMandatoryParameterErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:7 (INVALID_MANDATORY_PARAMETER), Length: 4
 			0x00, 0x07, 0x00, 0x04,

@@ -1,33 +1,37 @@
 #include "FuzzerUtils.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <cstring> // std::memory()
+#include <cstring> // std::memcpy()
 #include <string>
+
+namespace
+{
+	alignas(4) thread_local uint8_t DataBuffer[65536];
+}
 
 void FuzzerUtils::Fuzz(const uint8_t* data, size_t len)
 {
-	// For some fuzzers below.
-	const std::unique_ptr<uint8_t[]> data2(new uint8_t[len + (INET6_ADDRSTRLEN * 3)]);
-
-	std::memcpy(data2.get(), data, len);
+	// NOTE: We need to copy given data into another buffer because we are gonna
+	// write into it.
+	std::memcpy(DataBuffer, data, len);
 
 	/* IP class. */
 
 	std::string ip;
 
-	ip = std::string(reinterpret_cast<const char*>(data2.get()), INET6_ADDRSTRLEN / 2);
+	ip = std::string(reinterpret_cast<const char*>(DataBuffer), INET6_ADDRSTRLEN / 2);
 	Utils::IP::GetFamily(ip);
 
-	ip = std::string(reinterpret_cast<const char*>(data2.get()), INET6_ADDRSTRLEN);
+	ip = std::string(reinterpret_cast<const char*>(DataBuffer), INET6_ADDRSTRLEN);
 	Utils::IP::GetFamily(ip);
 
-	ip = std::string(reinterpret_cast<const char*>(data2.get()), INET6_ADDRSTRLEN * 2);
+	ip = std::string(reinterpret_cast<const char*>(DataBuffer), INET6_ADDRSTRLEN * 2);
 	Utils::IP::GetFamily(ip);
 
 	// Protect with try/catch since throws are legit.
 	try
 	{
-		auto ip = std::string(reinterpret_cast<const char*>(data2.get()), len);
+		auto ip = std::string(reinterpret_cast<const char*>(DataBuffer), len);
 
 		Utils::IP::NormalizeIp(ip);
 	}
@@ -37,16 +41,16 @@ void FuzzerUtils::Fuzz(const uint8_t* data, size_t len)
 
 	/* Byte class. */
 
-	Utils::Byte::Get1Byte(data2.get(), len);
-	Utils::Byte::Get2Bytes(data2.get(), len);
-	Utils::Byte::Get3Bytes(data2.get(), len);
-	Utils::Byte::Get4Bytes(data2.get(), len);
-	Utils::Byte::Get8Bytes(data2.get(), len);
-	Utils::Byte::Set1Byte(data2.get(), len, uint8_t{ 6u });
-	Utils::Byte::Set2Bytes(data2.get(), len, uint16_t{ 66u });
-	Utils::Byte::Set3Bytes(data2.get(), len, uint32_t{ 666u });
-	Utils::Byte::Set4Bytes(data2.get(), len, uint32_t{ 666u });
-	Utils::Byte::Set8Bytes(data2.get(), len, uint64_t{ 6666u });
+	Utils::Byte::Get1Byte(DataBuffer, len);
+	Utils::Byte::Get2Bytes(DataBuffer, len);
+	Utils::Byte::Get3Bytes(DataBuffer, len);
+	Utils::Byte::Get4Bytes(DataBuffer, len);
+	Utils::Byte::Get8Bytes(DataBuffer, len);
+	Utils::Byte::Set1Byte(DataBuffer, len, uint8_t{ 6u });
+	Utils::Byte::Set2Bytes(DataBuffer, len, uint16_t{ 66u });
+	Utils::Byte::Set3Bytes(DataBuffer, len, uint32_t{ 666u });
+	Utils::Byte::Set4Bytes(DataBuffer, len, uint32_t{ 666u });
+	Utils::Byte::Set8Bytes(DataBuffer, len, uint64_t{ 6666u });
 	Utils::Byte::PadTo4Bytes(static_cast<uint8_t>(len));
 	Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(len));
 	Utils::Byte::PadTo4Bytes(static_cast<uint32_t>(len));
@@ -70,7 +74,7 @@ void FuzzerUtils::Fuzz(const uint8_t* data, size_t len)
 	  static_cast<uint64_t>(len), static_cast<uint64_t>(len + 1000000));
 	Utils::Crypto::GetRandomUInt<size_t>(len, len + 1000000);
 	Utils::Crypto::GetRandomString(len);
-	Utils::Crypto::GetCRC32(data2.get(), len);
+	Utils::Crypto::GetCRC32(DataBuffer, len);
 
 	/* String class. */
 
@@ -79,8 +83,8 @@ void FuzzerUtils::Fuzz(const uint8_t* data, size_t len)
 	{
 		size_t outLen;
 
-		Utils::String::Base64Encode(data2.get(), len);
-		Utils::String::Base64Decode(data2.get(), len, outLen);
+		Utils::String::Base64Encode(DataBuffer, len);
+		Utils::String::Base64Decode(DataBuffer, len, outLen);
 	}
 	catch (const MediaSoupError& error) // NOLINT(bugprone-empty-catch)
 	{

@@ -13,7 +13,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 	SECTION("ReconfigurationResponseParameter::Parse() with Sender's and Receiver's Next TSN succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:16 (RECONFIGURATION_RESPONSE), Length: 20
 			0x00, 0x10, 0x00, 0x14,
@@ -104,7 +104,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 	SECTION("ReconfigurationResponseParameter::Parse() without Sender's and Receiver's Next TSN succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:16 (RECONFIGURATION_RESPONSE), Length: 12
 			0x00, 0x10, 0x00, 0x0C,
@@ -188,7 +188,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 	{
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Type:16 (RECONFIGURATION_RESPONSE), Length: 16 (should be 12 or 20)
 			0x00, 0x10, 0x00, 0x10,
@@ -207,7 +207,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Type:16 (RECONFIGURATION_RESPONSE), Length: 20
 			0x00, 0x10, 0x00, 0x14,

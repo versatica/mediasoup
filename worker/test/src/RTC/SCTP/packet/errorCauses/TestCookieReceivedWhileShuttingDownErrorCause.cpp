@@ -12,7 +12,7 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[serializable]
 	SECTION("CookieReceivedWhileShuttingDownErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:10 (COOKIE_RECEIVED_WHILE_SHUTTING_DOWN), Length: 4
 			0x00, 0x0A, 0x00, 0x04,

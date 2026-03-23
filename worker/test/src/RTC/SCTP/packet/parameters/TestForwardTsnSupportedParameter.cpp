@@ -12,7 +12,7 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[serializable][sctp][parame
 	SECTION("ForwardTsnSupportedParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:49152 (FORWARD_TSN_SUPPORTED), Length: 4
 			0xC0, 0x00, 0x00, 0x04,

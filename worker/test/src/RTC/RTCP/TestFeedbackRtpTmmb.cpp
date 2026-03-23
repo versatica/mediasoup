@@ -8,7 +8,7 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 	// RTCP TMMBR packet.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x83, 0xcd, 0x00, 0x04, // Type: 205 (Generic RTP Feedback), Count: 8 (TMMBR) Length: 7
 		0x00, 0x00, 0x00, 0x01, // Sender SSRC: 0x00000001
@@ -40,6 +40,12 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 		REQUIRE(item->GetOverhead() == overhead);
 	};
 
+	SECTION("alignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackRtpTmmbrItem::Header) == 4);
+		REQUIRE(alignof(RTC::RTCP::FeedbackRtpTmmbnItem::Header) == 4);
+	}
+
 	SECTION("parse FeedbackRtpTmmbrPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackRtpTmmbrPacket> packet{
@@ -52,7 +58,7 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 

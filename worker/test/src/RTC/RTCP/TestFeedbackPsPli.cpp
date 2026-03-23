@@ -8,7 +8,7 @@ SCENARIO("RTCP Feedback RTP PLI", "[rtcp][feedback-ps][pli]")
 	// RTCP PLI packet.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x81, 0xce, 0x00, 0x02, // Type: 206 (Payload Specific), Count: 1 (PLI), Length: 2
 		0x00, 0x00, 0x00, 0x01, // Sender SSRC: 0x00000001
@@ -38,7 +38,7 @@ SCENARIO("RTCP Feedback RTP PLI", "[rtcp][feedback-ps][pli]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 

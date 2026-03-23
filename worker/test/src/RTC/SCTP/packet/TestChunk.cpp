@@ -9,9 +9,15 @@
 #include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-SCENARIO("SCTP Packet", "[serializable][sctp][chunk]")
+SCENARIO("SCTP Chunk", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
+
+	SECTION("alignof() SCTP structs")
+	{
+		REQUIRE(alignof(RTC::SCTP::Chunk::ChunkHeader) == 2);
+		REQUIRE(alignof(RTC::SCTP::Chunk::ChunkFlags) == 1);
+	}
 
 	SECTION("BuildParameterInPlace() and AddParameter() throw if the Chunk needs consolidation")
 	{

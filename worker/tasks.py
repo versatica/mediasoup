@@ -454,10 +454,11 @@ def test_asan_address(ctx):
 
     with cd_worker():
         ctx.run(
-            f'ASAN_OPTIONS=detect_leaks=1 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1 "{BUILD_DIR}/mediasoup-worker-test-asan-address" --invisibles {mediasoup_test_tags}',
+            f'"{BUILD_DIR}/mediasoup-worker-test-asan-address" --invisibles {mediasoup_test_tags}',
             echo=True,
             pty=PTY_SUPPORTED,
-            shell=SHELL
+            shell=SHELL,
+            env={**os.environ, 'ASAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1:detect_leaks=1:symbolize=1:detect_stack_use_after_return=1:strict_init_order=1:check_initialization_order=1:detect_container_overflow=1'}
         );
 
 
@@ -488,7 +489,10 @@ def test_asan_undefined(ctx):
             f'"{BUILD_DIR}/mediasoup-worker-test-asan-undefined" --invisibles {mediasoup_test_tags}',
             echo=True,
             pty=PTY_SUPPORTED,
-            shell=SHELL
+            shell=SHELL,
+            # Exit with error if there are issues.
+            # NOTE: Ignore well known UBSan errors in OpenSSL.
+            env={**os.environ, 'UBSAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1:suppressions=ubsan_suppressions.txt'}
         );
 
 
@@ -516,10 +520,12 @@ def test_asan_thread(ctx):
 
     with cd_worker():
         ctx.run(
-            f'ASAN_OPTIONS=detect_leaks=1 "{BUILD_DIR}/mediasoup-worker-test-asan-thread" --invisibles {mediasoup_test_tags}',
+            f'"{BUILD_DIR}/mediasoup-worker-test-asan-thread" --invisibles {mediasoup_test_tags}',
             echo=True,
             pty=PTY_SUPPORTED,
-            shell=SHELL
+            shell=SHELL,
+            # Exit with error if there are issues.
+            env={**os.environ, 'TSAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1'}
         );
 
 

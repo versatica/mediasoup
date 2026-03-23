@@ -17,7 +17,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 	SECTION("ReConfigChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:130 (RE_CONFIG), Flags:0b00000000, Length: 38
 			// NOTE: Length field must exclude the padding of the last Parameter.

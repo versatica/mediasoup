@@ -8,7 +8,7 @@ SCENARIO("RTCP Feedback PS TSTN", "[rtcp][feedback-ps][tstn]")
 	// RTCP TSTN packet.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x84, 0xce, 0x00, 0x04, // Type: 206 (Payload Specific), Count: 4 (TST), Length: 4
 		0xfa, 0x17, 0xfa, 0x17, // Sender SSRC: 0xfa17fa17
@@ -38,6 +38,12 @@ SCENARIO("RTCP Feedback PS TSTN", "[rtcp][feedback-ps][tstn]")
 		REQUIRE(item->GetSequenceNumber() == seq);
 	};
 
+	SECTION("alignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsTstrItem::Header) == 1);
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsTstnItem::Header) == 1);
+	}
+
 	SECTION("parse FeedbackPsTstnPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackPsTstnPacket> packet{ RTC::RTCP::FeedbackPsTstnPacket::Parse(
@@ -49,7 +55,7 @@ SCENARIO("RTCP Feedback PS TSTN", "[rtcp][feedback-ps][tstn]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 

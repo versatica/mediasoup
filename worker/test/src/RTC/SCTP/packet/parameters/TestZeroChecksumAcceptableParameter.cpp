@@ -13,7 +13,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 	SECTION("ZeroChecksumAcceptableParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:32769 (ZERO_CHECKSUM_ACCEPTABLE), Length: 8
 			0x80, 0x01, 0x00, 0x08,

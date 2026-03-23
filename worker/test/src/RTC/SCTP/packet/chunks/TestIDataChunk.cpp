@@ -14,7 +14,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 	SECTION("IDataChunk::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:64 (I_DATA), I:1, U:0, B:1, E:0, Length: 23
 			0x40, 0b00001010, 0x00, 0x17,

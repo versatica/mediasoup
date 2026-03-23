@@ -1,4 +1,6 @@
 #include "common.hpp"
+#include "RTC/RTCP/FeedbackPs.hpp"
+#include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include <catch2/catch_test_macros.hpp>
 
@@ -8,11 +10,18 @@ SCENARIO("RTCP Packet", "[rtcp][packet]")
 	// Version:2, Padding:false, Count:0, Type:200(SR), Lengh:0
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x80, 0xc8, 0x00, 0x00
 	};
 	// clang-format on
+
+	SECTION("alignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::Packet::CommonHeader) == 2);
+		REQUIRE(alignof(RTC::RTCP::FeedbackRtpPacket::Header) == 4);
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsPacket::Header) == 4);
+	}
 
 	SECTION("a RTCP packet may only contain the RTCP common header")
 	{

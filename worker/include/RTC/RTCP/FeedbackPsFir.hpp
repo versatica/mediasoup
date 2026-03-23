@@ -23,6 +23,10 @@ namespace RTC
 		class FeedbackPsFirItem : public FeedbackItem
 		{
 		public:
+			/**
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 4 bytes.
+			 */
 			struct Header
 			{
 				uint32_t ssrc;

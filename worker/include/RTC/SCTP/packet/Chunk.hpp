@@ -91,6 +91,9 @@ namespace RTC
 
 			/**
 			 * Struct of an SCTP Chunk Header.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 2 bytes.
 			 */
 			struct ChunkHeader
 			{
@@ -106,10 +109,17 @@ namespace RTC
 				uint16_t length;
 			};
 
+#ifdef MS_TEST
+		public:
+#else
 		private:
+#endif
 			/**
 			 * Access to individual bit in the Chunk Flags field. bit0 corresponds
 			 * to the least significant bit.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 1 byte.
 			 */
 			struct ChunkFlags
 			{

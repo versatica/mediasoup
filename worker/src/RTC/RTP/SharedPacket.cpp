@@ -4,6 +4,7 @@
 #include "RTC/RTP/SharedPacket.hpp"
 #include "Logger.hpp"
 #include "RTC/Serializable.hpp"
+#include <new> // std::align_val_t{
 
 namespace RTC
 {
@@ -20,7 +21,8 @@ namespace RTC
 		  // NOLINTNEXTLINE(misc-unused-parameters, readability-non-const-parameter)
 		  [](const Serializable* packet, uint8_t* buffer)
 		{
-			delete[] buffer;
+			// NOTE: Needed since we allocated it using
+			::operator delete[](buffer, std::align_val_t{ 4 });
 
 #ifdef MS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE
 			SharedPacket::allocatedMemory -= packet->GetBufferLength();
@@ -148,8 +150,11 @@ namespace RTC
 			MS_TRACE();
 
 			const size_t bufferLength = packet->GetLength() + PacketBufferLengthIncrement;
-			auto* buffer              = new uint8_t[bufferLength];
-			auto* clonedPacket        = packet->Clone(buffer, bufferLength);
+
+			// NOTE: Buffer must be 4-byte aligned since RTP packet parsing casts it to
+			// structs (e.g. FixedHeader, HeaderExtension) that require 4-byte alignment.
+			auto* buffer = static_cast<uint8_t*>(::operator new[](bufferLength, std::align_val_t{ 4 }));
+			auto* clonedPacket = packet->Clone(buffer, bufferLength);
 
 			// Set a listener in the Packet to deallocate its buffer once the Packet
 			// is destroyed or releases its internal buffer.

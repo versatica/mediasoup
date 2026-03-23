@@ -3,11 +3,14 @@
 
 namespace sctpCommon
 {
-	thread_local uint8_t FactoryBuffer[];
-	thread_local uint8_t SerializeBuffer[];
-	thread_local uint8_t CloneBuffer[];
-	thread_local uint8_t DataBuffer[];
-	thread_local uint8_t ThrowBuffer[];
+	// NOTE: Buffers must be 4-byte aligned since SCTP Packet parsing casts them
+	// to structs that require 4-byte alignment. Without this, accessing multi-byte
+	// fields would be undefined behavior on strict-alignment architectures.
+	alignas(4) thread_local uint8_t FactoryBuffer[];
+	alignas(4) thread_local uint8_t SerializeBuffer[];
+	alignas(4) thread_local uint8_t CloneBuffer[];
+	alignas(4) thread_local uint8_t DataBuffer[];
+	alignas(4) thread_local uint8_t ThrowBuffer[];
 
 	void ResetBuffers()
 	{

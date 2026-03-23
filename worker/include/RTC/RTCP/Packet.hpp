@@ -32,7 +32,12 @@ namespace RTC
 		class Packet
 		{
 		public:
-			/* Struct for RTCP common header. */
+			/**
+			 * Struct for RTCP common header.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 2 bytes.
+			 */
 			struct CommonHeader
 			{
 #if defined(MS_LITTLE_ENDIAN)

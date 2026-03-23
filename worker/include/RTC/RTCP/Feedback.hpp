@@ -13,7 +13,12 @@ namespace RTC
 		class FeedbackPacket : public Packet
 		{
 		public:
-			/* Struct for RTP Feedback message. */
+			/**
+			 * Struct for RTP Feedback message.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 4 bytes.
+			 */
 			struct Header
 			{
 				uint32_t senderSsrc;

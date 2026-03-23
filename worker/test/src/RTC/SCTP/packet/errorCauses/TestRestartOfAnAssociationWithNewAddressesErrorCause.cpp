@@ -13,7 +13,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 	SECTION("RestartOfAnAssociationWithNewAddressesErrorCause::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Code:11 (RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES), Length: 11
 			0x00, 0x0B, 0x00, 0x0B,
@@ -112,7 +112,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 	{
 		// Wrong code.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Code:999 (UNKNOWN), Length: 8
 			0x03, 0xE7, 0x00, 0x08,
@@ -126,7 +126,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Code:11 (RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES), Length: 7
 			0x00, 0x0B, 0x00, 0x07,

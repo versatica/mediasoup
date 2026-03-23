@@ -293,13 +293,6 @@ Runs all fuzzer cases.
 
 Builds a Linux Ubuntu Docker image with fuzzer capable clang++ and all dependencies to run mediasoup.
 
-**NOTE:** Before running this command, a specific version of Linux clang must be downloaded. To get it, run:
-
-```bash
-cd worker
-scripts/get-dep.sh clang-fuzzer
-```
-
 ### `invoke docker-run`
 
 Runs a container of the Ubuntu Docker image created with `invoke docker`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the mediasoup root folder.

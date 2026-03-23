@@ -30,6 +30,11 @@ namespace RTC
 #else
 #define MEDIASOUP_PACKED __attribute__((packed))
 #endif
+			/**
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 1 byte due to the usage
+			 *   of `pack()` and `packed` macros.
+			 */
 			struct Header
 			{
 				uint32_t ssrc;

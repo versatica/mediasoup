@@ -8,7 +8,7 @@ SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 	// RTCP SR-REQ packet.
 
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x85, 0xcd, 0x00, 0x02, // Type: 205 (Generic RTP Feedback), Count: 5 (SR-REQ) Length: 3
 		0x00, 0x00, 0x00, 0x01, // Sender SSRC: 0x00000001
@@ -39,7 +39,7 @@ SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 
 		SECTION("serialize packet instance")
 		{
-			uint8_t serialized[sizeof(buffer)] = { 0 };
+			alignas(4) uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
 

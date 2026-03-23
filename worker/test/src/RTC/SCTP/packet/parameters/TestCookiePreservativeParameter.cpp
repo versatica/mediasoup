@@ -13,7 +13,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 	SECTION("CookiePreservativeParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:9 (COOKIE_PRESERVATIVE), Length: 8
 			0x00, 0x09, 0x00, 0x08,
@@ -81,7 +81,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 	{
 		// Wrong type.
 		// clang-format off
-		uint8_t buffer1[] =
+		alignas(4) uint8_t buffer1[] =
 		{
 			// Type:9 (IPV6_ADDRESS), Length: 8
 			0x00, 0x06, 0x00, 0x08,
@@ -94,7 +94,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer2[] =
+		alignas(4) uint8_t buffer2[] =
 		{
 			// Type:9 (COOKIE_PRESERVATIVE), Length: 7
 			0x00, 0x09, 0x00, 0x07,
@@ -107,7 +107,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 
 		// Wrong Length field.
 		// clang-format off
-		uint8_t buffer3[] =
+		alignas(4) uint8_t buffer3[] =
 		{
 			// Type:9 (COOKIE_PRESERVATIVE), Length: 9
 			0x00, 0x09, 0x00, 0x09,
@@ -121,7 +121,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 
 		// Wrong buffer length.
 		// clang-format off
-		uint8_t buffer4[] =
+		alignas(4) uint8_t buffer4[] =
 		{
 			// Type:5 (IPV4_ADDRESS), Length: 8
 			0x00, 0x05, 0x00, 0x08,

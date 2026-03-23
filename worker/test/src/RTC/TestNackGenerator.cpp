@@ -147,7 +147,7 @@ SCENARIO("NACK generator", "[rtp][rtcp][nack]")
 	};
 
 	// clang-format off
-	uint8_t rtpBuffer[] =
+	alignas(4) uint8_t rtpBuffer[] =
 	{
 		0x80, 0x7b, 0x52, 0x0e,
 		0x5b, 0x6b, 0xca, 0xb5,

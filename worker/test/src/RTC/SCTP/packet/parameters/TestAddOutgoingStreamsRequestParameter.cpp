@@ -13,7 +13,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[serializable][sctp][pa
 	SECTION("AddOutgoingStreamsRequestParameter::Parse() succeeds")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			// Type:17 (ADD_OUTGOING_STREAMS_REQUEST), Length: 12
 			0x00, 0x11, 0x00, 0x0C,

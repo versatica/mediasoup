@@ -40,6 +40,10 @@ namespace RTC
 				static SsrcInfo* Parse(const uint8_t* data, size_t len);
 
 			public:
+				/**
+				 * @remarks
+				 * - This struct is guaranteed to be aligned to 4 bytes.
+				 */
 				struct Body
 				{
 					uint32_t ssrc;

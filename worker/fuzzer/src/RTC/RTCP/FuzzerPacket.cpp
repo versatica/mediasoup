@@ -7,6 +7,12 @@
 #include "RTC/RTCP/FuzzerSenderReport.hpp"
 #include "RTC/RTCP/FuzzerXr.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include <cstring> // std::memcpy()
+
+namespace
+{
+	alignas(4) thread_local uint8_t DataBuffer[65536];
+} // namespace
 
 void FuzzerRtcRtcpPacket::Fuzz(const uint8_t* data, size_t len)
 {
@@ -15,13 +21,11 @@ void FuzzerRtcRtcpPacket::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	// We need to clone the given data into a separate buffer because setters
-	// below will try to write into packet memory.
-	const std::unique_ptr<uint8_t[]> data2(new uint8_t[len]);
+	// NOTE: We need to copy given data into another buffer because we are gonna
+	// write into it.
+	std::memcpy(DataBuffer, data, len);
 
-	std::memcpy(data2.get(), data, len);
-
-	RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data2.get(), len);
+	RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(DataBuffer, len);
 
 	if (!packet)
 	{

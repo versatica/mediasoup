@@ -25,7 +25,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// - fingerprint: 1782005644
 		//
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			0x00, 0x01, 0x00, 0x6C,
 			0x21, 0x12, 0xA4, 0x42,
@@ -192,7 +192,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// - xor-mapped-address: ip 2001:db8:85a3:0:0:8a2e:370:7334, port 1234
 		//
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			0x01, 0x01, 0x00, 0x18,
 			0x21, 0x12, 0xA4, 0x42,
@@ -331,7 +331,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// - error reason phrase: "Something failed Ω∑© :)"
 		//
 		// clang-format off
-		uint8_t buffer[] =
+		alignas(4) uint8_t buffer[] =
 		{
 			0x01, 0x11, 0x00, 0x58,
 	  	0x21, 0x12, 0xA4, 0x42,
@@ -460,7 +460,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 	SECTION("StunPacket::Factory() creating a request succeeds")
 	{
 		// clang-format off
-		uint8_t transactionId[RTC::ICE::StunPacket::TransactionIdLength] =
+		alignas(4) uint8_t transactionId[RTC::ICE::StunPacket::TransactionIdLength] =
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
 			0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC

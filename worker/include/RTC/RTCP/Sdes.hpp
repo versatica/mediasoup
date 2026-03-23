@@ -27,7 +27,15 @@ namespace RTC
 				PRIV
 			};
 
+#ifdef MS_TEST
+		public:
+#else
 		private:
+#endif
+			/**
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 1 byte.
+			 */
 			struct Header
 			{
 				SdesItem::Type type;
