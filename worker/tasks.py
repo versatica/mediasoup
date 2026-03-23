@@ -640,3 +640,41 @@ def docker_alpine_run(ctx):
             pty=True, # NOTE: Needed to enter the terminal of the Docker image.
             shell=SHELL
         );
+
+
+@task
+def docker_386(ctx):
+    """
+    Build a 386 Linux Debian (32 bits arch) Docker image
+    """
+    if os.getenv('DOCKER_NO_CACHE') == 'true':
+        with cd_worker():
+            ctx.run(
+                f'"{DOCKER}" build -f Dockerfile.386 --no-cache --tag mediasoup/docker-386:latest .',
+                echo=True,
+                pty=PTY_SUPPORTED,
+                shell=SHELL
+            );
+    else:
+        with cd_worker():
+            ctx.run(
+                f'"{DOCKER}" build -f Dockerfile.386 --tag mediasoup/docker-386:latest .',
+                echo=True,
+                pty=PTY_SUPPORTED,
+                shell=SHELL
+            );
+
+
+@task
+def docker_386_run(ctx):
+    """
+    Run a container of the 386 Linux Debian (32 bits arch) Docker image created
+    in the docker_386 task
+    """
+    with cd_worker():
+        ctx.run(
+            f'"{DOCKER}" run --name=mediasoupDocker386 -it --rm --privileged --cap-add SYS_PTRACE -v "{WORKER_DIR}/../:/foo bar/mediasoup" mediasoup/docker-386:latest',
+            echo=True,
+            pty=True, # NOTE: Needed to enter the terminal of the Docker image.
+            shell=SHELL
+        );

@@ -295,7 +295,7 @@ Builds a Linux Ubuntu Docker image with fuzzer capable clang++ and all dependenc
 
 ### `invoke docker-run`
 
-Runs a container of the Ubuntu Docker image created with `invoke docker`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the mediasoup root folder.
+Runs a container of the Ubuntu Docker image created with `invoke docker`. It automatically executes a `bash` session in the mediasoup directory, which is a Docker volume that points to the mediasoup root folder.
 
 **NOTE:** To install and run mediasoup in the container, previous installation (if any) must be properly cleaned by entering the `worker` directory and running `invoke clean-all`.
 
@@ -305,9 +305,20 @@ Builds a Linux Alpine Docker image with all dependencies to run mediasoup.
 
 ### `invoke docker-alpine-run`
 
-Runs a container of the Alpine Docker image created with `invoke docker-alpine`. It automatically executes an `ash` session in the `/mediasoup` directory, which is a Docker volume that points to the mediasoup root folder.
+Runs a container of the Alpine Docker image created with `invoke docker-alpine`. It automatically executes an `ash` session in the mediasoup directory, which is a Docker volume that points to the mediasoup root folder.
 
 **NOTE:** To install and run mediasoup in the container, previous installation (if any) must be properly cleaned by entering the `worker` directory and running `invoke clean-all`.
+
+### `invoke docker-386`
+
+Builds a 386 Linux Debian (32 bits arch) Docker image with all dependencies to run mediasoup.
+
+### `invoke docker-alpine-386`
+
+Runs a container of the 386 Linux Debian (32 bits arch) Docker image created with `invoke docker-386`. It automatically executes an `ash` session in the mediasoup directory, which is a Docker volume that points to the mediasoup root folder.
+
+**NOTE:** To install and run mediasoup in the container, previous installation (if any) must be properly cleaned by entering the `worker` directory and running `invoke clean-all`.
+**NOTE:** Due to the very old Node v18 in this image, in order to run mediasoup Node tests, `npm ci` must be executed with `--ignore-scripts --engine-strict=false` arguments.
 
 ## Makefile
 

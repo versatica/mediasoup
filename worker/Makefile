@@ -42,7 +42,9 @@ endif
 	docker \
 	docker-run \
 	docker-alpine \
-	docker-alpine-run
+	docker-alpine-run \
+	docker-386 \
+	docker-386-run
 
 default: mediasoup-worker
 
@@ -131,3 +133,9 @@ docker-alpine: invoke
 
 docker-alpine-run: invoke
 	"$(PYTHON)" -m invoke docker-alpine-run
+
+docker-386: invoke
+	"$(PYTHON)" -m invoke docker-386
+
+docker-386-run: invoke
+	"$(PYTHON)" -m invoke docker-386-run
