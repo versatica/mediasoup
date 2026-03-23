@@ -17,7 +17,7 @@ namespace RTC
 			 * Struct for RTP Feedback message.
 			 *
 			 * @remarks
-			 * - This struct is guaranteed to be aligned to 8 bytes.
+			 * - This struct is guaranteed to be aligned to 4 bytes.
 			 */
 			struct Header
 			{
