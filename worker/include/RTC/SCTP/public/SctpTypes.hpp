@@ -176,6 +176,8 @@ namespace RTC
 					{
 						return "UNSUPPORTED_OPERATION";
 					}
+
+						NO_DEFAULT_GCC();
 				}
 			}
 

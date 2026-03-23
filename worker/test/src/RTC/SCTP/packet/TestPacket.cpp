@@ -208,6 +208,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*chunkType*/ static_cast<RTC::SCTP::Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -325,6 +326,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*chunkType*/ static_cast<RTC::SCTP::Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -443,6 +445,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*chunkType*/ static_cast<RTC::SCTP::Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
