@@ -26,6 +26,13 @@ if host_machine.system() == 'windows'
   ]
 endif
 
+if get_option('ms_build_tests')
+  cpp_args += [
+    '-DMS_TEST',
+    '-DMS_LOG_STD'
+  ]
+endif
+
 if get_option('ms_log_trace')
   cpp_args += [
     '-DMS_LOG_TRACE',
@@ -59,13 +66,6 @@ endif
 if get_option('ms_sctp_stack')
   cpp_args += [
     '-DMS_SCTP_STACK',
-  ]
-endif
-
-if get_option('ms_build_tests')
-  cpp_args += [
-    '-DMS_TEST',
-    '-DMS_LOG_STD'
   ]
 endif
 
