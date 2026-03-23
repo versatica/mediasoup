@@ -2,7 +2,7 @@
 # This container installs a 32-bits Linux Debian.
 #
 
-FROM --platform=linux/386 debian:bookworm
+FROM debian:bookworm
 
 # Install dependencies.
 RUN set -x \

@@ -650,7 +650,7 @@ def docker_386(ctx):
     if os.getenv('DOCKER_NO_CACHE') == 'true':
         with cd_worker():
             ctx.run(
-                f'"{DOCKER}" build -f Dockerfile.386 --no-cache --tag mediasoup/docker-386:latest .',
+                f'"{DOCKER}" build --platform linux/386 -f Dockerfile.386 --no-cache --tag mediasoup/docker-386:latest .',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL
@@ -658,7 +658,7 @@ def docker_386(ctx):
     else:
         with cd_worker():
             ctx.run(
-                f'"{DOCKER}" build -f Dockerfile.386 --tag mediasoup/docker-386:latest .',
+                f'"{DOCKER}" build --platform linux/386 -f Dockerfile.386 --tag mediasoup/docker-386:latest .',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL
