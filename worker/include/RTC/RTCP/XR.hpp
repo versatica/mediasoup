@@ -37,12 +37,17 @@ namespace RTC
 			};
 
 		public:
-			/* Struct for Extended Report Block common header. */
+			/**
+			 * Struct for Extended Report Block common header.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 2 bytes.
+			 */
 			struct CommonHeader
 			{
-				uint8_t blockType : 8;
-				uint8_t reserved : 8;
-				uint16_t length : 16;
+				uint8_t blockType;
+				uint8_t reserved;
+				uint16_t length;
 			};
 
 		public:

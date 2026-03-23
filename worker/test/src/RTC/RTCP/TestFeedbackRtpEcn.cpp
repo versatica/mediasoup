@@ -51,6 +51,11 @@ SCENARIO("RTCP Feedback RTP ECN", "[rtcp][feedback-rtp][ecn]")
 		REQUIRE(item->GetDuplicatedPackets() == duplicatedPackets);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackRtpEcnItem::Header) == 4);
+	}
+
 	SECTION("parse FeedbackRtpEcnPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackRtpEcnPacket> packet{ RTC::RTCP::FeedbackRtpEcnPacket::Parse(

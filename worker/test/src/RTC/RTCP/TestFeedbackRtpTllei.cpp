@@ -37,6 +37,11 @@ SCENARIO("RTCP Feedback RTP TLLEI", "[rtcp][feedback-rtp][tllei]")
 		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackRtpTlleiItem::Header) == 2);
+	}
+
 	SECTION("parse RTC::RTCP::FeedbackRtpTlleiPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackRtpTlleiPacket> packet{

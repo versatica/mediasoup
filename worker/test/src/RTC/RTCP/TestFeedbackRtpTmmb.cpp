@@ -40,6 +40,12 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 		REQUIRE(item->GetOverhead() == overhead);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackRtpTmmbrItem::Header) == 4);
+		REQUIRE(alignof(RTC::RTCP::FeedbackRtpTmmbnItem::Header) == 4);
+	}
+
 	SECTION("parse FeedbackRtpTmmbrPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackRtpTmmbrPacket> packet{

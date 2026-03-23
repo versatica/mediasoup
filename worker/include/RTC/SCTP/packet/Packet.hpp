@@ -57,6 +57,9 @@ namespace RTC
 		public:
 			/**
 			 * Struct of an SCTP Packet Common Header.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 4 bytes.
 			 */
 			struct CommonHeader
 			{

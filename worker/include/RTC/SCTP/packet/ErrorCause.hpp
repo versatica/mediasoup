@@ -67,6 +67,9 @@ namespace RTC
 
 			/**
 			 * Struct of an SCTP Error Cause Header.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 2 bytes.
 			 */
 			struct ErrorCauseHeader
 			{

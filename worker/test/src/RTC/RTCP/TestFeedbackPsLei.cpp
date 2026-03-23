@@ -33,6 +33,11 @@ SCENARIO("RTCP Feedback PS LEI", "[rtcp][feedback-ps][lei]")
 		REQUIRE(item->GetSsrc() == ssrc);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsLeiItem::Header) == 4);
+	}
+
 	SECTION("parse FeedbackPsLeiPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackPsLeiPacket> packet{ RTC::RTCP::FeedbackPsLeiPacket::Parse(

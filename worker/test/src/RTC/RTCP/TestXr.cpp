@@ -24,6 +24,13 @@ SCENARIO("RTCP XR", "[rtcp][xr]")
 	};
 	// clang-format on
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::ExtendedReportBlock::CommonHeader) == 2);
+		REQUIRE(alignof(RTC::RTCP::DelaySinceLastRr::SsrcInfo::Body) == 4);
+		REQUIRE(alignof(RTC::RTCP::ReceiverReferenceTime::Body) == 4);
+	}
+
 	SECTION("parse XR packet")
 	{
 		std::unique_ptr<RTC::RTCP::ExtendedReportPacket> packet(

@@ -37,6 +37,11 @@ SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 		REQUIRE(item->CountRequestedPackets() == 3);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackRtpNackItem::Header) == 2);
+	}
+
 	SECTION("parse FeedbackRtpNackItem")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackRtpNackPacket> packet{ RTC::RTCP::FeedbackRtpNackPacket::Parse(

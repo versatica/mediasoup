@@ -25,6 +25,10 @@ namespace RTC
 			static const size_t MaxBitStringSize{ 6 };
 
 		public:
+			/**
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 1 byte.
+			 */
 			struct Header
 			{
 				uint8_t paddingBits;

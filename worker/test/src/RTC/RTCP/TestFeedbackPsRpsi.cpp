@@ -41,6 +41,11 @@ SCENARIO("RTCP Feedback PS RPSI", "[rtcp][feedback-ps][rpsi]")
 		REQUIRE((item->GetBitString()[item->GetLength() - 1] & 1) == payloadMask);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsRpsiItem::Header) == 1);
+	}
+
 	SECTION("parse FeedbackPsRpsiPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackPsRpsiPacket> packet{ RTC::RTCP::FeedbackPsRpsiPacket::Parse(

@@ -81,6 +81,9 @@ namespace RTC
 
 			/**
 			 * Struct of an SCTP Parameter Header.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 2 bytes.
 			 */
 			struct ParameterHeader
 			{

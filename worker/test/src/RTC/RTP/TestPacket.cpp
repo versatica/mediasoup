@@ -13,6 +13,14 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 {
 	rtpCommon::ResetBuffers();
 
+	SECTION("asignof() RTP structs")
+	{
+		REQUIRE(alignof(RTC::RTP::Packet::FixedHeader) == 4);
+		REQUIRE(alignof(RTC::RTP::Packet::HeaderExtension) == 2);
+		REQUIRE(alignof(RTC::RTP::Packet::OneByteExtension) == 1);
+		REQUIRE(alignof(RTC::RTP::Packet::TwoBytesExtension) == 1);
+	}
+
 	SECTION("Packet::Parse() packet1.raw succeeds")
 	{
 		alignas(4) uint8_t buffer[65536];

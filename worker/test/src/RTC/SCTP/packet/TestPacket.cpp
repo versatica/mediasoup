@@ -20,6 +20,11 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 {
 	sctpCommon::ResetBuffers();
 
+	SECTION("asignof() SCTP structs")
+	{
+		REQUIRE(alignof(RTC::SCTP::Packet::CommonHeader) == 4);
+	}
+
 	SECTION("Parse() without Chunks succeeds")
 	{
 		// clang-format off

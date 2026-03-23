@@ -88,6 +88,11 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 	const std::string item5Value{ "ab" };
 	const size_t item5Length{ 2u };
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::SdesItem::Header) == 1);
+	}
+
 	SECTION("parse packet 1")
 	{
 		std::unique_ptr<RTC::RTCP::SdesPacket> packet{ RTC::RTCP::SdesPacket::Parse(

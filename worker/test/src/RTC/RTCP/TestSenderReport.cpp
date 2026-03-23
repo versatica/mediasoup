@@ -42,6 +42,11 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 		REQUIRE(report->GetOctetCount() == octetCount);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::SenderReport::Header) == 4);
+	}
+
 	SECTION("parse SR packet")
 	{
 		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Parse(

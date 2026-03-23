@@ -45,6 +45,11 @@ SCENARIO("RTCP ReceiverReport", "[rtcp][receiver-report]")
 		REQUIRE(report->GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::ReceiverReport::Header) == 4);
+	}
+
 	SECTION("parse RR packet with a single report")
 	{
 		std::unique_ptr<RTC::RTCP::ReceiverReportPacket> packet{ RTC::RTCP::ReceiverReportPacket::Parse(

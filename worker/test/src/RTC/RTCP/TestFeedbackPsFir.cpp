@@ -36,6 +36,11 @@ SCENARIO("RTCP Feedback PS FIR", "[rtcp][feedback-ps][fir]")
 		REQUIRE(item->GetSequenceNumber() == seq);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsFirItem::Header) == 4);
+	}
+
 	SECTION("parse FeedbackPsFirPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackPsFirPacket> packet{ RTC::RTCP::FeedbackPsFirPacket::Parse(

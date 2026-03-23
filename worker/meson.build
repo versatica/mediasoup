@@ -463,6 +463,8 @@ test_sources = [
   'test/src/RTC/SCTP/tx/TestRetransmissionTimeout.cpp',
   'test/src/RTC/SCTP/packet/TestPacket.cpp',
   'test/src/RTC/SCTP/packet/TestChunk.cpp',
+  'test/src/RTC/SCTP/packet/TestParameter.cpp',
+  'test/src/RTC/SCTP/packet/TestErrorCause.cpp',
   'test/src/RTC/SCTP/packet/chunks/TestDataChunk.cpp',
   'test/src/RTC/SCTP/packet/chunks/TestInitChunk.cpp',
   'test/src/RTC/SCTP/packet/chunks/TestInitAckChunk.cpp',

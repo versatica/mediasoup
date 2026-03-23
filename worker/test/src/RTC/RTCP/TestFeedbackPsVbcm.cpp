@@ -47,6 +47,11 @@ SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 		REQUIRE((item->GetValue()[item->GetLength() - 1] & 1) == valueMask);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsVbcmItem::Header) == 4);
+	}
+
 	SECTION("parse FeedbackPsVbcmPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackPsVbcmPacket> packet{ RTC::RTCP::FeedbackPsVbcmPacket::Parse(

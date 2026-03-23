@@ -125,6 +125,12 @@ namespace RTC
 			};
 
 		private:
+			/**
+			 * @remarks
+			 * - This struct is NOT guaranteed to be aligned to any fixed number of
+			 *   bytes because it contains a `size_t`, which is 4 or 8 bytes depending
+			 *   on the architecture. Anyway we never cast any buffer to this struct.
+			 */
 			struct Attribute
 			{
 				Attribute(AttributeType type, uint16_t len, size_t offset)

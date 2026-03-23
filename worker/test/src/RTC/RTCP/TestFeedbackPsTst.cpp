@@ -38,6 +38,12 @@ SCENARIO("RTCP Feedback PS TSTN", "[rtcp][feedback-ps][tstn]")
 		REQUIRE(item->GetSequenceNumber() == seq);
 	};
 
+	SECTION("asignof() RTCP structs")
+	{
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsTstrItem::Header) == 1);
+		REQUIRE(alignof(RTC::RTCP::FeedbackPsTstnItem::Header) == 1);
+	}
+
 	SECTION("parse FeedbackPsTstnPacket")
 	{
 		std::unique_ptr<RTC::RTCP::FeedbackPsTstnPacket> packet{ RTC::RTCP::FeedbackPsTstnPacket::Parse(
