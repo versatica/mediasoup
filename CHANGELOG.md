@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: Ensure 4-byte alignment for network packet receive buffers and test buffers to avoid undefined behavior ([PR #1756](https://github.com/versatica/mediasoup/pull/1756).
+- Worker: Update liburing from 2.12-1 to 2.14-1 ([PR #1761](https://github.com/versatica/mediasoup/pull/1761).
 
 ### 3.19.18
 
