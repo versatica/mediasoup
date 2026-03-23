@@ -398,6 +398,7 @@ def tidy_fix(ctx):
         );
 
 
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true -Db_lundef=false'), flatc])
 @task(pre=[setup, flatc])
 def test(ctx):
     """
@@ -430,7 +431,7 @@ def test(ctx):
         );
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=address -Db_lundef=false'), flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true -Db_sanitize=address -Db_lundef=false'), flatc])
 def test_asan_address(ctx):
     """
     Run worker test with Address Sanitizer with '-fsanitize=address'
@@ -462,7 +463,7 @@ def test_asan_address(ctx):
         );
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=undefined -Db_lundef=false'), flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true -Db_sanitize=undefined -Db_lundef=false'), flatc])
 def test_asan_undefined(ctx):
     """
     Run worker test with undefined Sanitizer with -fsanitize=undefined
@@ -496,7 +497,7 @@ def test_asan_undefined(ctx):
         );
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=thread -Db_lundef=false'), flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true -Db_sanitize=thread -Db_lundef=false'), flatc])
 def test_asan_thread(ctx):
     """
     Run worker test with thread Sanitizer with -fsanitize=thread
