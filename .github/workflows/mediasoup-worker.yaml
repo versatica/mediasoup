@@ -69,7 +69,7 @@ jobs:
             run-test-asan-thread: false
             # Compile with all Meson option flags enabled once with gcc in
             # Release mode.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_sctp_stack=true'
           - os: ubuntu-24.04
             cc: gcc
             cxx: g++
@@ -95,7 +95,7 @@ jobs:
             run-test-asan-thread: true
             # Let's just compile with all Meson option flags enabled once with
             # clang.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_sctp_stack=true'
           - os: ubuntu-24.04-arm
             cc: gcc
             cxx: g++
