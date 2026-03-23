@@ -989,9 +989,9 @@ namespace RTC
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 		MS_ASSERT(IsActive(), "should be active");
 
+		// Pipe does not play the BWE game.
 		if (this->pipe)
 		{
-			// PipeConsumer does not play the BWE game.
 			return 0u;
 		}
 
@@ -1016,9 +1016,9 @@ namespace RTC
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 		MS_ASSERT(IsActive(), "should be active");
 
+		// Pipe does not play the BWE game.
 		if (this->pipe)
 		{
-			// PipeConsumer does not play the BWE game.
 			return;
 		}
 
@@ -1033,9 +1033,9 @@ namespace RTC
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
+		// Pipe does not play the BWE game.
 		if (this->pipe)
 		{
-			// PipeConsumer does not play the BWE game.
 			return 0u;
 		}
 
