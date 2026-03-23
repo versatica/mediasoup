@@ -42,7 +42,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 		REQUIRE(report->GetOctetCount() == octetCount);
 	};
 
-	SECTION("asignof() RTCP structs")
+	SECTION("alignof() RTCP structs")
 	{
 		REQUIRE(alignof(RTC::RTCP::SenderReport::Header) == 4);
 	}

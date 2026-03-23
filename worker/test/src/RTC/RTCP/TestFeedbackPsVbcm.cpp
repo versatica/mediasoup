@@ -47,7 +47,7 @@ SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 		REQUIRE((item->GetValue()[item->GetLength() - 1] & 1) == valueMask);
 	};
 
-	SECTION("asignof() RTCP structs")
+	SECTION("alignof() RTCP structs")
 	{
 		REQUIRE(alignof(RTC::RTCP::FeedbackPsVbcmItem::Header) == 4);
 	}

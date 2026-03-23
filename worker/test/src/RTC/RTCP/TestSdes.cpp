@@ -88,7 +88,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 	const std::string item5Value{ "ab" };
 	const size_t item5Length{ 2u };
 
-	SECTION("asignof() RTCP structs")
+	SECTION("alignof() RTCP structs")
 	{
 		REQUIRE(alignof(RTC::RTCP::SdesItem::Header) == 1);
 	}

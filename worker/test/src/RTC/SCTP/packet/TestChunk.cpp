@@ -13,7 +13,7 @@ SCENARIO("SCTP Chunk", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 
-	SECTION("asignof() SCTP structs")
+	SECTION("alignof() SCTP structs")
 	{
 		REQUIRE(alignof(RTC::SCTP::Chunk::ChunkHeader) == 2);
 		REQUIRE(alignof(RTC::SCTP::Chunk::ChunkFlags) == 1);

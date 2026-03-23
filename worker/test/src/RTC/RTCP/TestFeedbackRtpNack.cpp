@@ -37,7 +37,7 @@ SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 		REQUIRE(item->CountRequestedPackets() == 3);
 	};
 
-	SECTION("asignof() RTCP structs")
+	SECTION("alignof() RTCP structs")
 	{
 		REQUIRE(alignof(RTC::RTCP::FeedbackRtpNackItem::Header) == 2);
 	}

@@ -13,7 +13,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 {
 	rtpCommon::ResetBuffers();
 
-	SECTION("asignof() RTP structs")
+	SECTION("alignof() RTP structs")
 	{
 		REQUIRE(alignof(RTC::RTP::Packet::FixedHeader) == 4);
 		REQUIRE(alignof(RTC::RTP::Packet::HeaderExtension) == 2);

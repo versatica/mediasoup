@@ -33,7 +33,7 @@ SCENARIO("RTCP Feedback PS LEI", "[rtcp][feedback-ps][lei]")
 		REQUIRE(item->GetSsrc() == ssrc);
 	};
 
-	SECTION("asignof() RTCP structs")
+	SECTION("alignof() RTCP structs")
 	{
 		REQUIRE(alignof(RTC::RTCP::FeedbackPsLeiItem::Header) == 4);
 	}

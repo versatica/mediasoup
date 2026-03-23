@@ -20,7 +20,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 {
 	sctpCommon::ResetBuffers();
 
-	SECTION("asignof() SCTP structs")
+	SECTION("alignof() SCTP structs")
 	{
 		REQUIRE(alignof(RTC::SCTP::Packet::CommonHeader) == 4);
 	}

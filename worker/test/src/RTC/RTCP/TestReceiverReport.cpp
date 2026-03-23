@@ -45,7 +45,7 @@ SCENARIO("RTCP ReceiverReport", "[rtcp][receiver-report]")
 		REQUIRE(report->GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
 	};
 
-	SECTION("asignof() RTCP structs")
+	SECTION("alignof() RTCP structs")
 	{
 		REQUIRE(alignof(RTC::RTCP::ReceiverReport::Header) == 4);
 	}

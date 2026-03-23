@@ -4,7 +4,7 @@
 
 SCENARIO("SCTP Error Cause", "[serializable][sctp][errorcause]")
 {
-	SECTION("asignof() SCTP structs")
+	SECTION("alignof() SCTP structs")
 	{
 		REQUIRE(alignof(RTC::SCTP::ErrorCause::ErrorCauseHeader) == 2);
 	}

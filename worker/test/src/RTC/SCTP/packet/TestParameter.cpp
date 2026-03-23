@@ -4,7 +4,7 @@
 
 SCENARIO("SCTP Parameter", "[serializable][sctp][parameter]")
 {
-	SECTION("asignof() SCTP structs")
+	SECTION("alignof() SCTP structs")
 	{
 		REQUIRE(alignof(RTC::SCTP::Parameter::ParameterHeader) == 2);
 	}

@@ -24,7 +24,7 @@ SCENARIO("RTCP XR", "[rtcp][xr]")
 	};
 	// clang-format on
 
-	SECTION("asignof() RTCP structs")
+	SECTION("alignof() RTCP structs")
 	{
 		REQUIRE(alignof(RTC::RTCP::ExtendedReportBlock::CommonHeader) == 2);
 		REQUIRE(alignof(RTC::RTCP::DelaySinceLastRr::SsrcInfo::Body) == 4);

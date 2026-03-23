@@ -16,7 +16,7 @@ SCENARIO("RTCP Packet", "[rtcp][packet]")
 	};
 	// clang-format on
 
-	SECTION("asignof() RTCP structs")
+	SECTION("alignof() RTCP structs")
 	{
 		REQUIRE(alignof(RTC::RTCP::Packet::CommonHeader) == 2);
 		REQUIRE(alignof(RTC::RTCP::FeedbackRtpPacket::Header) == 4);
