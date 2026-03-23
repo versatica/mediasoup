@@ -398,8 +398,7 @@ def tidy_fix(ctx):
         );
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true -Db_lundef=false'), flatc])
-@task(pre=[setup, flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true'), flatc])
 def test(ctx):
     """
     Run worker tests
