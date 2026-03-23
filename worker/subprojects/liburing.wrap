@@ -1,13 +1,14 @@
 [wrap-file]
-directory = liburing-liburing-2.12
-source_url = https://github.com/axboe/liburing/archive/refs/tags/liburing-2.12.tar.gz
-source_filename = liburing-2.12.tar.gz
-source_hash = f1d10cb058c97c953b4c0c446b11e9177e8c8b32a5a88b309f23fdd389e26370
-patch_filename = liburing_2.12-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/liburing_2.12-1/get_patch
-patch_hash = b21f90196008cde9ed242571a71d8302c703272a2f8b91edd589bd8d6abea47a
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/liburing_2.12-1/liburing-2.12.tar.gz
-wrapdb_version = 2.12-1
+directory = liburing-liburing-2.14
+source_url = https://github.com/axboe/liburing/archive/refs/tags/liburing-2.14.tar.gz
+source_filename = liburing-2.14.tar.gz
+source_hash = 5f80964108981c6ad979c735f0b4877d5f49914c2a062f8e88282f26bf61de0c
+source_fallback_url = https://wrapdb.mesonbuild.com/v2/liburing_2.14-1/get_source/liburing-2.14.tar.gz
+patch_filename = liburing_2.14-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/liburing_2.14-1/get_patch
+patch_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/liburing_2.14-1/liburing_2.14-1_patch.zip
+patch_hash = 4d0ba8f507c25c4fb9a31507a5c06d2a6c253822828084a0101e2bea27dba62a
+wrapdb_version = 2.14-1
 
 [provide]
 dependency_names = liburing
