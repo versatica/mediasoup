@@ -729,7 +729,11 @@ namespace RTC
 			  remoteInitialTsn,
 			  remoteAdvertisedReceiverWindowCredit,
 			  tieTag,
-			  negotiatedCapabilities);
+			  negotiatedCapabilities,
+			  [this]()
+			  {
+				  return this->state == State::ESTABLISHED;
+			  });
 
 			this->privateMetrics.negotiatedMaxOutboundStreams = negotiatedCapabilities.maxOutboundStreams;
 			this->privateMetrics.negotiatedMaxInboundStreams  = negotiatedCapabilities.maxInboundStreams;
@@ -2066,7 +2070,7 @@ namespace RTC
 		}
 
 		void Association::ProcessReceivedHeartbeatRequestChunk(
-		  const Packet* /*receivedPacket*/, const HeartbeatRequestChunk* /*receivedHeartbeatRequestChunk*/)
+		  const Packet* /*receivedPacket*/, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk)
 		{
 			MS_TRACE();
 
@@ -2075,12 +2079,12 @@ namespace RTC
 				return;
 			}
 
-			// TODO: Implement it.
-			// this->tcb->GetHearbeatHandler().HandleHeartbeatRequest(*std::move(receivedHeartbeatRequestChunk));
+			this->tcb->GetHeartbeatHandler().ProcessReceivedHeartbeatRequestChunk(
+			  receivedHeartbeatRequestChunk);
 		}
 
 		void Association::ProcessReceivedHeartbeatAckChunk(
-		  const Packet* /*receivedPacket*/, const HeartbeatAckChunk* /*receivedHeartbeatAckChunk*/)
+		  const Packet* /*receivedPacket*/, const HeartbeatAckChunk* receivedHeartbeatAckChunk)
 		{
 			MS_TRACE();
 
@@ -2089,8 +2093,7 @@ namespace RTC
 				return;
 			}
 
-			// TODO: Implement it.
-			// this->tcb->GetHearbeatHandler().HandleHeartbeatAck(*std::move(receivedHeartbeatAckChunk));
+			this->tcb->GetHeartbeatHandler().ProcessReceivedHeartbeatAckChunk(receivedHeartbeatAckChunk);
 		}
 
 		void Association::ProcessReceivedReConfigChunk(

@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::SCTP::RetransmissionTimeout"
-// #define MS_LOG_DEV_LEVEL 3
+// TODO: SCTP: COMMENT
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/tx/RetransmissionTimeout.hpp"
 #include "Logger.hpp"

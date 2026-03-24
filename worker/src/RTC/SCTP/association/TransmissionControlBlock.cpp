@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::SCTP::TransmissionControlBlock"
-// #define MS_LOG_DEV_LEVEL 3
+// TODO: SCTP: COMMENT
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "DepLibUV.hpp"
@@ -27,7 +28,8 @@ namespace RTC
 		  uint32_t remoteInitialTsn,
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
-		  const NegotiatedCapabilities& negotiatedCapabilities)
+		  const NegotiatedCapabilities& negotiatedCapabilities,
+		  std::function<bool()> isAssociationEstablished)
 		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
 		    packetSender(packetSender),
@@ -38,6 +40,7 @@ namespace RTC
 		    remoteAdvertisedReceiverWindowCredit(remoteAdvertisedReceiverWindowCredit),
 		    tieTag(tieTag),
 		    negotiatedCapabilities(negotiatedCapabilities),
+		    isAssociationEstablished(std::move(isAssociationEstablished)),
 		    t3RtxTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
@@ -53,7 +56,8 @@ namespace RTC
 		        /*maxBackoffTimeoutMs*/ std::nullopt,
 		        /*maxRestarts*/ 0)),
 		    rto(sctpOptions),
-		    txErrorCounter(sctpOptions)
+		    txErrorCounter(sctpOptions),
+		    heartbeatHandler(this->associationListener, sctpOptions, this)
 		{
 			MS_TRACE();
 		}
@@ -137,6 +141,15 @@ namespace RTC
 			return packet;
 		}
 
+		void TransmissionControlBlock::Send(Packet* packet)
+		{
+			MS_TRACE();
+
+			this->packetSender.SendPacket(
+			  packet,
+			  /*writeChecksum*/ !this->negotiatedCapabilities.zeroChecksum);
+		}
+
 		void TransmissionControlBlock::SetRemoteStateCookie(std::vector<uint8_t> remoteStateCookie)
 		{
 			MS_TRACE();
@@ -166,15 +179,6 @@ namespace RTC
 
 			// 	Send(packet.get());
 			// }
-		}
-
-		void TransmissionControlBlock::Send(Packet* packet)
-		{
-			MS_TRACE();
-
-			this->packetSender.SendPacket(
-			  packet,
-			  /*writeChecksum*/ !this->negotiatedCapabilities.zeroChecksum);
 		}
 
 		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)

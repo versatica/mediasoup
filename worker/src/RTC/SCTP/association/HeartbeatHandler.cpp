@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::SCTP::HeartbeatHandler"
-// #define MS_LOG_DEV_LEVEL 3
+// TODO: SCTP: COMMENT
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "Logger.hpp"
@@ -12,10 +13,12 @@ namespace RTC
 		/* Instance methods. */
 
 		HeartbeatHandler::HeartbeatHandler(
-		  AssociationListener& associationListener, const SctpOptions& sctpOptions)
+		  AssociationListener& associationListener, const SctpOptions& sctpOptions, TCBContext* tcbContext)
 		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
+		    tcbContext(tcbContext),
 		    intervalDurationMs(sctpOptions.heartbeatIntervalMs),
+		    intervalDurationShouldIncludeRtt(sctpOptions.heartbeatIntervalIncludeRtt),
 		    intervalTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
@@ -49,9 +52,16 @@ namespace RTC
 				return;
 			}
 
-			// TODO: SCTP: Implement.
-			// this->intervalTimer->SetBaseTimeoutMs(this->intervalDurationMs + ctx_->current_rto());
-			this->intervalTimer->SetBaseTimeoutMs(this->intervalDurationMs);
+			if (intervalDurationShouldIncludeRtt)
+			{
+				this->intervalTimer->SetBaseTimeoutMs(
+				  this->intervalDurationMs + this->tcbContext->GetCurrentRtoMs());
+			}
+			else
+			{
+				this->intervalTimer->SetBaseTimeoutMs(this->intervalDurationMs);
+			}
+
 			this->intervalTimer->Start();
 		}
 
@@ -60,7 +70,29 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-8.3
+			//
+			// "The receiver of the HEARTBEAT chunk SHOULD immediately respond with a
+			// HEARTBEAT ACK chunk that contains the Heartbeat Information TLV,
+			// together with any other received TLVs, copied unchanged from the
+			// received HEARTBEAT chunk."
+			auto packet             = this->tcbContext->CreatePacket();
+			auto* heartbeatAckChunk = packet->BuildChunkInPlace<HeartbeatAckChunk>();
+
+			// Here we have to extract all Parameters from receivedHeartbeatRequestChunk
+			// and add them into heartbeatAckChunk.
+			for (auto it = receivedHeartbeatRequestChunk->ParametersBegin();
+			     it != receivedHeartbeatRequestChunk->ParametersEnd();
+			     ++it)
+			{
+				const auto* parameter = *it;
+
+				heartbeatAckChunk->AddParameter(parameter);
+			}
+
+			heartbeatAckChunk->Consolidate();
+
+			this->tcbContext->Send(packet.get());
 		}
 
 		void HeartbeatHandler::ProcessReceivedHeartbeatAckChunk(

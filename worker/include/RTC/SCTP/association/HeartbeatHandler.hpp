@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_HEARTBEAT_HANDLER_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/association/TCBContext.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
@@ -23,7 +24,10 @@ namespace RTC
 		class HeartbeatHandler : public BackoffTimerHandle::Listener
 		{
 		public:
-			HeartbeatHandler(AssociationListener& associationListener, const SctpOptions& sctpOptions);
+			HeartbeatHandler(
+			  AssociationListener& associationListener,
+			  const SctpOptions& sctpOptions,
+			  TCBContext* tcbContext);
 
 			~HeartbeatHandler() override;
 
@@ -58,8 +62,12 @@ namespace RTC
 		private:
 			AssociationListener& associationListener;
 			const SctpOptions sctpOptions;
+			TCBContext* tcbContext{ nullptr };
 			// The time for a connection to be idle before a heartbeat is sent.
 			const uint64_t intervalDurationMs{ 0 };
+			// Adding RTT to the duration will add some jitter, which is good in
+			// production, but less good in unit tests, which is why it can be disabled.
+			const bool intervalDurationShouldIncludeRtt{ false };
 			const std::unique_ptr<BackoffTimerHandle> intervalTimer;
 			const std::unique_ptr<BackoffTimerHandle> timeoutTimer;
 		};

@@ -2,14 +2,17 @@
 #define MS_RTC_SCTP_TRANSMISSION_CONTROL_BLOCK_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
+#include "RTC/SCTP/association/TCBContext.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
 #include "RTC/SCTP/tx/RetransmissionTimeout.hpp"
 #include "handles/BackoffTimerHandle.hpp"
+#include <string_view>
 #include <vector>
 
 namespace RTC
@@ -22,7 +25,7 @@ namespace RTC
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/rfc9260#section-14
 		 */
-		class TransmissionControlBlock : public BackoffTimerHandle::Listener
+		class TransmissionControlBlock : public TCBContext, public BackoffTimerHandle::Listener
 		{
 		public:
 			TransmissionControlBlock(
@@ -35,12 +38,22 @@ namespace RTC
 			  uint32_t remoteInitialTsn,
 			  uint32_t remoteAdvertisedReceiverWindowCredit,
 			  uint64_t tieTag,
-			  const NegotiatedCapabilities& negotiatedCapabilities);
+			  const NegotiatedCapabilities& negotiatedCapabilities,
+			  std::function<bool()> isAssociationEstablished);
 
 			~TransmissionControlBlock() override;
 
 		public:
 			void Dump(int indentation = 0) const;
+
+			/**
+			 * @remarks
+			 * - Implements TCBContext interface.
+			 */
+			bool IsAssociationEstablished() const override
+			{
+				return this->isAssociationEstablished();
+			}
 
 			/**
 			 * The value of the Initiate Tag field we put in our INIT or INIT_ACK
@@ -65,8 +78,11 @@ namespace RTC
 			/**
 			 * The value of the Initial TSN field we put in our INIT or INIT_ACK
 			 * Chunk.
+			 *
+			 * @remarks
+			 * - Implements TCBContext interface.
 			 */
-			uint32_t GetLocalInitialTsn() const
+			uint32_t GetLocalInitialTsn() const override
 			{
 				return this->localInitialTsn;
 			}
@@ -74,8 +90,11 @@ namespace RTC
 			/**
 			 * The value of the Initial TSN field the peer put in its INIT or
 			 * INIT_ACK Chunk.
+			 *
+			 * @remarks
+			 * - Implements TCBContext interface.
 			 */
-			uint32_t GetRemoteInitialTsn() const
+			uint32_t GetRemoteInitialTsn() const override
 			{
 				return this->remoteInitialTsn;
 			}
@@ -105,9 +124,17 @@ namespace RTC
 				return this->negotiatedCapabilities;
 			}
 
-			void ObserveRtt(uint64_t rtt);
+			/**
+			 * @remarks
+			 * - Implements TCBContext interface.
+			 */
+			void ObserveRtt(uint64_t rtt) override;
 
-			uint64_t GetCurrentRtoMs() const
+			/**
+			 * @remarks
+			 * - Implements TCBContext interface.
+			 */
+			uint64_t GetCurrentRtoMs() const override
 			{
 				return this->rto.GetRtoMs();
 			}
@@ -117,9 +144,24 @@ namespace RTC
 				return this->rto.GetSrttMs();
 			}
 
-			std::unique_ptr<Packet> CreatePacket() const;
+			/**
+			 * @remarks
+			 * - Implements TCBContext interface.
+			 */
+			std::unique_ptr<Packet> CreatePacket() const override;
 
 			std::unique_ptr<Packet> CreatePacketWithVerificationTag(uint32_t verificationTag) const;
+
+			/**
+			 * @remarks
+			 * - Implements TCBContext interface.
+			 */
+			void Send(Packet* packet) override;
+
+			HeartbeatHandler& GetHeartbeatHandler()
+			{
+				return this->heartbeatHandler;
+			}
 
 			void SetRemoteStateCookie(std::vector<uint8_t> remoteStateCookie);
 
@@ -132,9 +174,34 @@ namespace RTC
 
 			void MaySendSackChunk();
 
-		private:
-			void Send(Packet* packet);
+			/**
+			 * @remarks
+			 * - Implements TCBContext interface.
+			 */
+			bool IncrementTxErrorCounter(std::string_view reason) override
+			{
+				return this->txErrorCounter.Increment(reason);
+			}
 
+			/**
+			 * @remarks
+			 * - Implements TCBContext interface.
+			 */
+			void ClearTxErrorCounter() override
+			{
+				return this->txErrorCounter.Clear();
+			}
+
+			/**
+			 * @remarks
+			 * - Implements TCBContext interface.
+			 */
+			bool HasTooManyTxErrors() const override
+			{
+				return this->txErrorCounter.IsExhausted();
+			}
+
+		private:
 			void OnT3RtxTimer(uint64_t& baseTimeoutMs, bool& stop);
 
 			void OnDelayedAckTimer(uint64_t& baseTimeoutMs, bool& stop);
@@ -155,13 +222,15 @@ namespace RTC
 			// Nonce, used to detect reconnections.
 			uint64_t tieTag{ 0 };
 			NegotiatedCapabilities negotiatedCapabilities;
-			// data retransmission timer).
+			std::function<bool()> isAssociationEstablished;
+			// The data retransmission timer.
 			const std::unique_ptr<BackoffTimerHandle> t3RtxTimer;
 			// Delayed ack timer, which triggers when acks should be sent (when
 			// delayed).
 			const std::unique_ptr<BackoffTimerHandle> delayedAckTimer;
 			RetransmissionTimeout rto;
 			RetransmissionErrorCounter txErrorCounter;
+			HeartbeatHandler heartbeatHandler;
 			// Rate limiting of FORWARD_TSN. Next can be sent at or after this
 			// timestamp.
 			uint64_t limitForwardTsnUntilMs{ 0 };

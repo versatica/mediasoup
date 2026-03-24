@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::SCTP::RetransmissionErrorCounter"
-// #define MS_LOG_DEV_LEVEL 3
+// TODO: SCTP: COMMENT
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
 #include "Logger.hpp"
@@ -73,7 +74,7 @@ namespace RTC
 
 			if (this->counter > 0)
 			{
-				MS_DEBUG_DEV("recovered from counter=%zu");
+				MS_DEBUG_DEV("recovered from counter %zu", this->counter);
 
 				this->counter = 0;
 			}

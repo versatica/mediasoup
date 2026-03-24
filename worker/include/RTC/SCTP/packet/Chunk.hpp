@@ -279,7 +279,6 @@ namespace RTC
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
 			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
-
 			 */
 			virtual void AddParameter(const Parameter* parameter) final;
 
