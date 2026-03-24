@@ -1,0 +1,69 @@
+#ifndef MS_RTC_SCTP_HEARTBEAT_HANDLER_HPP
+#define MS_RTC_SCTP_HEARTBEAT_HANDLER_HPP
+
+#include "common.hpp"
+#include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
+#include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
+#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
+#include "handles/BackoffTimerHandle.hpp"
+
+namespace RTC
+{
+	namespace SCTP
+	{
+		/**
+		 * HeartbeatHandler handles all logic around sending heartbeats and receiving
+		 * the responses, as well as receiving incoming heartbeat requests.
+		 *
+		 * Heartbeats are sent on idle connections to ensure that the connection is
+		 * still healthy and to measure the RTT. If a number of heartbeats time out,
+		 * the connection will eventually be closed.
+		 */
+		class HeartbeatHandler : public BackoffTimerHandle::Listener
+		{
+		public:
+			HeartbeatHandler(AssociationListener& associationListener, const SctpOptions& sctpOptions);
+
+			~HeartbeatHandler() override;
+
+		public:
+			/**
+			 * Called when the heartbeat interval timer should be restarted. This is
+			 * generally done every time data is sent, which makes the timer expire
+			 * when the connection is idle.
+			 */
+			void RestartTimer();
+
+			/**
+			 * Called on received HeartbeatRequestChunk chunks.
+			 */
+			void ProcessReceivedHeartbeatRequestChunk(
+			  const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
+
+			/**
+			 * Called on received HeartbeatRequestChunk chunks.
+			 */
+			void ProcessReceivedHeartbeatAckChunk(const HeartbeatAckChunk* receivedHeartbeatAckChunk);
+
+		private:
+			void OnIntervalTimer(uint64_t& baseTimeoutMs, bool& stop);
+
+			void OnTimeoutTimer(uint64_t& baseTimeoutMs, bool& stop);
+
+			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
+		public:
+			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+
+		private:
+			AssociationListener& associationListener;
+			const SctpOptions sctpOptions;
+			// The time for a connection to be idle before a heartbeat is sent.
+			const uint64_t intervalDurationMs{ 0 };
+			const std::unique_ptr<BackoffTimerHandle> intervalTimer;
+			const std::unique_ptr<BackoffTimerHandle> timeoutTimer;
+		};
+	} // namespace SCTP
+} // namespace RTC
+
+#endif

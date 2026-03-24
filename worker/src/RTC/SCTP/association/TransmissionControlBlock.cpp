@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <cmath> // std::min()
+#include <string>
 
 namespace RTC
 {
