@@ -375,7 +375,7 @@ if host_machine.system() == 'linux' and not get_option('ms_disable_liburing')
         'default_library=static',
         # NOTE: We need to add this to disable ASAN in liburing, otherwise when
         # building `mediasoup-test-asan-undefined & -thread` binaries, liburing
-        # receives `use_ubsan: true` and tries to bompile its `sanitize.c` file
+        # receives `use_ubsan: true` and tries to compile its `sanitize.c` file
         # that contains references to `__asan_*` functions, but we don't enable
         # ASAN (`-fsanitize=address) in those binaries so liburing fails to
         # compile.
