@@ -369,7 +369,19 @@ if host_machine.system() == 'linux' and not get_option('ms_disable_liburing')
 
   # Enable liburing for kernel versions greather than or equal to 6.
   if kernel_version[0].to_int() >= 6
-    liburing_proj = subproject('liburing', default_options: ['default_library=static'], required: true)
+    liburing_proj = subproject(
+      'liburing',
+      default_options: [
+        'default_library=static',
+        # NOTE: We need to add this to disable ASAN in liburing, otherwise when
+        # building `mediasoup-test-asan-undefined & -thread` binaries, liburing
+        # receives `use_ubsan: true` and tries to bompile its `sanitize.c` file
+        # that contains references to `__asan_*` functions, but we don't enable
+        # ASAN (`-fsanitize=address) in those binaries so liburing fails to
+        # compile.
+        'b_sanitize=none',
+      ],
+    )
 
     dependencies += [
       liburing_proj.get_variable('uring'),
