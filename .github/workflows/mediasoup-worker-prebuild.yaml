@@ -64,6 +64,6 @@ jobs:
         run: npm run worker:prebuild
 
       - name: Upload mediasoup-worker prebuilt binary
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: worker/prebuild/mediasoup-worker-*.tgz
