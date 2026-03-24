@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # We need to install pip invoke manually.
       - if: ${{ !matrix.build.pip-break-system-packages }}
