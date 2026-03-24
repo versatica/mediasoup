@@ -33,11 +33,17 @@ namespace RTC
 			virtual Types::AssociationState GetAssociationState() const = 0;
 
 			/**
+			 * May invoke `Connect()` but only if the parent transport is ready for
+			 * SCTP transmission (e.g. the WebRtcTransport has ICE and DTLS connected).
+			 */
+			virtual void MayConnect() = 0;
+
+			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
 			 * Chunk.
 			 *
 			 * @remarks
-			 * - The SCTP association must be in Closed state.
+			 * - The SCTP association must be in New state.
 			 */
 			virtual void Connect() = 0;
 

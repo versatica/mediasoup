@@ -2,8 +2,6 @@
 
 ## Related to mediasoup SCTP implementation
 
-- `Association`: We should not accept transition from CLOSED to CONNECTING/CONNECTED. Technically we can but we don't want. Once closed or failed, it must be over.
-
 - `Association`: When transitioning to CLOSED (due to failure while connecting or closure) we should emit a new event "stcpclosed" in all `DataProducers/Consumers`.
 
 - When receiving SCTP RE-CONFIG, we should emit "streamclosed" in those `DataProducers/DataConsumers` whose stream ID have been closed.
@@ -17,8 +15,6 @@
 - We need to pass `isDataChannel` to `SCTP::Association` constructor as we do in former `SctpAssociation`. Also use it in `Association::FillBuffer()`.
 
 - In `Association::FillBuffer()` we should not pass `this->sctpOptions.maxOutboundStreams/maxInboundStreams` but the current values (they may have been modified via "reconfig").
-
-- We must call `association->Connect()` somewhere when appropriate! Probably same as the `MayConnect()` in former `SctpAssociation`.
 
 - Test Chrome with I-DATA (message interleaving):
 

@@ -76,8 +76,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(this->ready, "not ready");
-
 			// Will not be deferred but called directly.
 			return this->innerListener->OnAssociationSendData(data, len);
 		}
@@ -261,6 +259,14 @@ namespace RTC
 				  listener->OnAssociationTotalBufferedAmountLow();
 			  },
 			  std::monostate{});
+		}
+
+		bool AssociationDeferredListener::OnAssociationIsTransportReadyForSctp()
+		{
+			MS_TRACE();
+
+			// Will not be deferred but called directly.
+			return this->innerListener->OnAssociationIsTransportReadyForSctp();
 		}
 	} // namespace SCTP
 } // namespace RTC

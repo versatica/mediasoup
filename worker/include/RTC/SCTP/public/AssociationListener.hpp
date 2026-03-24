@@ -144,6 +144,17 @@ namespace RTC
 			virtual void OnAssociationTotalBufferedAmountLow() = 0;
 
 			/**
+			 * Called when the Association needs to know if the parent transport is
+			 * ready for SCTP traffic (e.g. whether the WebRtcTransport has ICE and
+			 * DTLS connected and at least a DataProducer or DataConsumer has been
+			 * created). Returned boolean indicates it.
+			 *
+			 * @remarks
+			 * - It is NOT allowed to call methods in Association within this callback.
+			 */
+			virtual bool OnAssociationIsTransportReadyForSctp() = 0;
+
+			/**
 			 * SCTP message lifecycle events.
 			 *
 			 * If a `lifecycleId` is provided as `MessageSendOptions`, lifecycle

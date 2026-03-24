@@ -176,19 +176,48 @@ namespace RTC
 			}
 		}
 
+		void Association::MayConnect()
+		{
+			MS_TRACE();
+
+			// Just run the SCTP stack if our state is 'new'.
+			// Notice that once MayConnect() is called (and the code below is executed),
+			// SCTP state will no longer be "NEW".
+			if (this->state != State::NEW)
+			{
+				MS_DEBUG_DEV("internal Association state is not NEW, ignoring");
+
+				return;
+			}
+
+			// If we haven't received any SCTP packet yet and the transport is not
+			// ready for SCTP traffic, don't do anything.
+			if (this->privateMetrics.rxPacketsCount == 0 && !this->listener.OnAssociationIsTransportReadyForSctp())
+			{
+				MS_DEBUG_DEV(
+				  "no SCTP data has been received yet and transport is not ready for SCTP traffic, ignoring");
+
+				return;
+			}
+
+			MS_DEBUG_DEV("invoking Connect()");
+
+			Connect();
+		}
+
 		void Association::Connect()
 		{
 			MS_TRACE();
 
-			// NOTE: We could only accept NEW state here so once closed the Association
-			// cannot be reused. However there is no real technical reason for it.
-			if (this->state != State::NEW && this->state != State::CLOSED)
+			// NOTE: We only accept NEW state here so once the Association is closed
+			// it cannot be reused. However there is no real technical reason for it.
+			if (this->state != State::NEW)
 			{
 				const auto stateStringView = Association::StateToString(this->state);
 
 				MS_WARN_TAG(
 				  sctp,
-				  "cannot initiate the Association since internal state is not NEW or CLOSED but %.*s",
+				  "cannot initiate the Association since internal state is not NEW but %.*s",
 				  static_cast<int>(stateStringView.size()),
 				  stateStringView.data());
 
@@ -521,6 +550,10 @@ namespace RTC
 			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			this->privateMetrics.rxPacketsCount++;
+
+			// If we are received SCTP data from the remote peer it means that we may
+			// initiate the SCTP association (if not already connected).
+			MayConnect();
 
 			std::unique_ptr<Packet> receivedPacket{ Packet::Parse(data, len) };
 
@@ -1381,15 +1414,19 @@ namespace RTC
 			switch (this->state)
 			{
 				case State::NEW:
-				case State::CLOSED:
 				{
-					MS_DEBUG_TAG(sctp, "INIT Chunk received in NEW or CLOSED state (normal scenario)");
+					MS_DEBUG_TAG(sctp, "INIT Chunk received in NEW state (normal scenario)");
 
 					localVerificationTag =
 					  Utils::Crypto::GetRandomUInt<uint32_t>(MinVerificationTag, MaxVerificationTag);
 					localInitialTsn = Utils::Crypto::GetRandomUInt<uint32_t>(MinInitialTsn, MaxInitialTsn);
 
 					break;
+				}
+
+				case State::CLOSED:
+				{
+					MS_WARN_TAG(sctp, "ignoring INIT Chunk received in CLOSED state)");
 				}
 
 				// https://datatracker.ietf.org/doc/html/rfc9260#section-5.2.1
@@ -1570,6 +1607,9 @@ namespace RTC
 			this->tcb->SetRemoteStateCookie(std::move(remoteStateCookie));
 
 			// TODO: Implement it.
+			// TODO: tcb->SendBufferedPackets() must check that the remote state cookie
+			// is set in TCB and must send a COOKIE_ECHO Chunk before potentially
+			// buffered messages.
 			// this->tcb->SendBufferedPackets(callbacks_.Now());
 
 			this->t1CookieTimer->Start();

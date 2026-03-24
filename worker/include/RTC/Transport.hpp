@@ -308,6 +308,7 @@ namespace RTC
 		void OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) override;
 		void OnAssociationStreamBufferedAmountLow(uint16_t streamId) override;
 		void OnAssociationTotalBufferedAmountLow() override;
+		bool OnAssociationIsTransportReadyForSctp() override;
 		// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.
 #else
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */

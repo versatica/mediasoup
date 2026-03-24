@@ -179,11 +179,19 @@ namespace RTC
 			Types::AssociationState GetAssociationState() const override;
 
 			/**
+			 * May invoke `Connect()` but only if the parent transport is ready for
+			 * SCTP transmission (e.g. the WebRtcTransport has ICE and DTLS connected).
+			 */
+			void MayConnect() override;
+
+			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
 			 * Chunk.
 			 *
 			 * @remarks
-			 * - The SCTP association must be in Closed state.
+			 * - The SCTP association must be in New state.
+			 * - Despite this method is public, it's never invoked since `MayConnect()`
+			 *   method is invoked instead.
 			 */
 			void Connect() override;
 

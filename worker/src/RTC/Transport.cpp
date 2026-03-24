@@ -1225,10 +1225,10 @@ namespace RTC
 
 				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
 				{
-#ifdef MS_SCTP_STACK
-					// TODO: SCTP
-#else
 					// Tell to the SCTP association.
+#ifdef MS_SCTP_STACK
+					this->sctpAssociation->MayConnect();
+#else
 					this->sctpAssociation->HandleDataProducer(dataProducer);
 #endif
 				}
@@ -1337,10 +1337,10 @@ namespace RTC
 						dataConsumer->SctpAssociationConnected();
 					}
 
-#ifdef MS_SCTP_STACK
-					// TODO: SCTP
-#else
 					// Tell to the SCTP association.
+#ifdef MS_SCTP_STACK
+					this->sctpAssociation->MayConnect();
+#else
 					this->sctpAssociation->HandleDataConsumer(dataConsumer);
 #endif
 				}
@@ -1600,7 +1600,7 @@ namespace RTC
 		if (this->sctpAssociation)
 		{
 #ifdef MS_SCTP_STACK
-			// TODO: SCTP
+			this->sctpAssociation->MayConnect();
 #else
 			this->sctpAssociation->TransportConnected();
 #endif
@@ -1653,9 +1653,7 @@ namespace RTC
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
 		{
-#ifdef MS_SCTP_STACK
-			// TODO: SCTP
-#else
+#ifndef MS_SCTP_STACK
 			this->sctpAssociation->TransportDisconnected();
 #endif
 		}
@@ -3088,6 +3086,21 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: SCTP
+	}
+
+	bool Transport::OnAssociationIsTransportReadyForSctp()
+	{
+		MS_TRACE();
+
+		// We are ready for SCTP traffic if the transport is connected (e.g. the
+		// WebRtcTransport has ICE and DTLS connected) and there is at least a
+		// DataProducer or DataConsumer.
+		//
+		// NOTE: We don't want to start SCTP connection if there are no DataProducers
+		// and DataConsumers because the peer (e.g. a browser) may have not started
+		// its SCTP stack (e.g. no "m=application" media section in its SDP) so if we
+		// initiate the SCTP connection it would fail after some time.
+		return IsConnected() && (this->mapDataProducers.size() > 0 || this->mapDataConsumers.size() > 0);
 	}
 
 	// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.

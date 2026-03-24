@@ -85,6 +85,8 @@ namespace RTC
 
 			void OnAssociationTotalBufferedAmountLow() override;
 
+			bool OnAssociationIsTransportReadyForSctp() override;
+
 		private:
 			AssociationListener* innerListener;
 			bool ready{ false };

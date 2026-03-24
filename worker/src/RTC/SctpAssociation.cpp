@@ -513,8 +513,7 @@ namespace RTC
 
 			return;
 		}
-		// If the transport is not connected and has never been connected, don't do
-		// anything.
+		// If the transport is not connected, don't do anything.
 		else if (!this->transportConnected)
 		{
 			MS_DEBUG_DEV("transport is not connected, ignoring");
