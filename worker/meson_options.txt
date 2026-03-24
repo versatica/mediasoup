@@ -1,3 +1,4 @@
+option('ms_build_tests', type: 'boolean', value: false, description: 'Whether to build mediasoup worker tests')
 option('ms_log_trace', type: 'boolean', value: false, description: 'Logs the current method/function if current log level is "debug"')
 option('ms_log_file_line', type: 'boolean', value: false, description: 'Logging macros print more verbose information, including current file and line')
 option('ms_rtc_logger_rtp', type: 'boolean', value: false, description: 'Prints a line with information for each processed RTP packet')

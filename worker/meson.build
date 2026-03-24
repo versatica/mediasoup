@@ -26,6 +26,13 @@ if host_machine.system() == 'windows'
   ]
 endif
 
+if get_option('ms_build_tests')
+  cpp_args += [
+    '-DMS_TEST',
+    '-DMS_LOG_STD'
+  ]
+endif
+
 if get_option('ms_log_trace')
   cpp_args += [
     '-DMS_LOG_TRACE',
@@ -312,13 +319,6 @@ flatbuffers_proj = subproject(
   ],
 )
 
-catch2_proj = subproject(
-  'catch2',
-  default_options: [
-    'warning_level=0',
-  ],
-)
-
 # flatbuffers schemas subdirectory.
 subdir('fbs')
 
@@ -396,6 +396,19 @@ if host_machine.system() == 'linux' and not get_option('ms_disable_liburing')
       '-DMS_LIBURING_SUPPORTED',
     ]
   endif
+endif
+
+if get_option('ms_build_tests')
+  catch2_proj = subproject(
+    'catch2',
+    default_options: [
+      'warning_level=0',
+    ],
+  )
+
+  dependencies += [
+    catch2_proj.get_variable('catch2_dep'),
+  ]
 endif
 
 libmediasoup_worker = library(
@@ -540,18 +553,13 @@ mediasoup_worker_test = executable(
   build_by_default: false,
   install: true,
   install_tag: 'mediasoup-worker-test',
-  dependencies: dependencies + [
-    catch2_proj.get_variable('catch2_dep'),
-  ],
+  dependencies: dependencies,
   sources: common_sources + test_sources,
   include_directories: include_directories(
     'include',
     'test/include',
   ),
-  cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
-    '-DMS_TEST',
-  ],
+  cpp_args: cpp_args,
 )
 
 test(
@@ -565,17 +573,13 @@ mediasoup_worker_test_asan_address = executable(
   build_by_default: false,
   install: true,
   install_tag: 'mediasoup-worker-test-asan-address',
-  dependencies: dependencies + [
-    catch2_proj.get_variable('catch2_dep'),
-  ],
+  dependencies: dependencies,
   sources: common_sources + test_sources,
   include_directories: include_directories(
     'include',
     'test/include',
   ),
   cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
-    '-DMS_TEST',
     '-g',
     '-O3',
     '-fno-omit-frame-pointer',
@@ -597,17 +601,13 @@ mediasoup_worker_test_asan_undefined = executable(
   build_by_default: false,
   install: true,
   install_tag: 'mediasoup-worker-test-asan-undefined',
-  dependencies: dependencies + [
-    catch2_proj.get_variable('catch2_dep'),
-  ],
+  dependencies: dependencies,
   sources: common_sources + test_sources,
   include_directories: include_directories(
     'include',
     'test/include',
   ),
   cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
-    '-DMS_TEST',
     '-g',
     '-O3',
     '-fno-omit-frame-pointer',
@@ -629,17 +629,13 @@ mediasoup_worker_test_asan_thread = executable(
   build_by_default: false,
   install: true,
   install_tag: 'mediasoup-worker-test-asan-thread',
-  dependencies: dependencies + [
-    catch2_proj.get_variable('catch2_dep'),
-  ],
+  dependencies: dependencies,
   sources: common_sources + test_sources,
   include_directories: include_directories(
     'include',
     'test/include',
   ),
   cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
-    '-DMS_TEST',
     '-g',
     '-O3',
     '-fno-omit-frame-pointer',
