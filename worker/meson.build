@@ -547,6 +547,7 @@ mediasoup_worker_test = executable(
     'include',
     'test/include',
   ),
+  cpp_args: cpp_args,
 )
 
 test(
