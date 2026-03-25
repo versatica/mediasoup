@@ -16,6 +16,8 @@
 
 - In `Association::FillBuffer()` we should not pass `this->sctpOptions.maxOutboundStreams/maxInboundStreams` but the current values (they may have been modified via "reconfig").
 
+- Probably remove those `MS_DEBUG_TAG(sctp, "xxxx timer has expired")` and make it be `MS_DEBUG_DEV()` instead.
+
 - Test Chrome with I-DATA (message interleaving):
 
   ```

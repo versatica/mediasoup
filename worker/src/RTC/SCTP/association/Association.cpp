@@ -428,7 +428,7 @@ namespace RTC
 			{
 				this->listener.OnAssociationError(
 				  Types::ErrorKind::WRONG_SEQUENCE,
-				  "cannot reset outbound streams as the Association is not connected");
+				  "cannot reset outbound streams as the association is not connected");
 
 				return Types::ResetStreamsStatus::NOT_CONNECTED;
 			}
@@ -1001,7 +1001,7 @@ namespace RTC
 
 				this->listener.OnAssociationError(
 				  Types::ErrorKind::WRONG_SEQUENCE,
-				  "cannot send message as the Association is shutting down");
+				  "cannot send message as the association is shutting down");
 
 				return Types::SendMessageStatus::ERROR_SHUTTING_DOWN;
 			}
@@ -2601,7 +2601,7 @@ namespace RTC
 
 			this->listener.OnAssociationError(
 			  Types::ErrorKind::NOT_CONNECTED,
-			  "received unexpected commands on Association that is not connected");
+			  "received unexpected commands on association that is not connected");
 
 			return false;
 		}

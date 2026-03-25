@@ -107,7 +107,7 @@ namespace RTC
 			  rtt,
 			  prevRtoMs,
 			  this->rto.GetRtoMs(),
-			  this - rto.GetSrttMs());
+			  this->rto.GetSrttMs());
 
 			this->t3RtxTimer->SetBaseTimeoutMs(this->rto.GetRtoMs());
 			this->t3RtxTimer->Start();

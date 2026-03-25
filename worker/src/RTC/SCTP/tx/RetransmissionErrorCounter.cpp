@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::SCTP::RetransmissionErrorCounter"
-// TODO: SCTP: COMMENT
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
 #include "Logger.hpp"
