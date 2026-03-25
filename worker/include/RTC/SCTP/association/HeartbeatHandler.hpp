@@ -46,7 +46,7 @@ namespace RTC
 			  const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
 
 			/**
-			 * Called on received HeartbeatRequestChunk chunks.
+			 * Called on received HeartbeatAckChunk chunks.
 			 */
 			void ProcessReceivedHeartbeatAckChunk(const HeartbeatAckChunk* receivedHeartbeatAckChunk);
 
