@@ -110,7 +110,6 @@ namespace RTC
 			  this->rto.GetSrttMs());
 
 			this->t3RtxTimer->SetBaseTimeoutMs(this->rto.GetRtoMs());
-			this->t3RtxTimer->Start();
 
 			const uint64_t delayedAckTimeoutMs = std::min(
 			  static_cast<uint64_t>(this->rto.GetRtoMs() * 0.5), this->sctpOptions.delayedAckMaxTimeoutMs);
