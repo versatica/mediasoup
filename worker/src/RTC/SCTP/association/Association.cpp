@@ -2424,6 +2424,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+
 			const auto maxRestarts = this->t1InitTimer->GetMaxRestarts();
 
 			MS_DEBUG_TAG(
@@ -2449,6 +2451,8 @@ namespace RTC
 		void Association::OnT1CookieTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			const auto maxRestarts = this->t1CookieTimer->GetMaxRestarts();
 
@@ -2476,6 +2480,8 @@ namespace RTC
 		void Association::OnT2ShutdownTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
 
 			const auto maxRestarts = this->t2ShutdownTimer->GetMaxRestarts();
 

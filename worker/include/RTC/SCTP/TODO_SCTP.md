@@ -2,14 +2,6 @@
 
 ## Related to mediasoup SCTP implementation
 
-- Calling `this->sctpAssociation->Shutdown()` in `~Transport()` destructor produces a crash. Worst thing is that calling `Close()` also crashes.
-  - STR: In demo app in browser run in console `CC._protoo.close()`.
-  - Update: It happens due to the `DirectTransport` (`Bot` member) of the `Room`.
-  - Update: Automagically fixed.
-
-- With the current design we cannot even send the `Abort` (sent by `this->sctpAssociation->Close()`) because `~WebRtcTransport()` destructor closes `DtlsTransport` first and sets `destroyed` flag in `Transport` so `Transport` ignores any "SCTP on send data" callback. We should refactor this since we should be able to at least send a SCTP `Abort`.
-  - Update: Done by calling `this->sctpAssociation->Close()` within `Transport::Destroying()` method.
-
 - `Association`: When transitioning to CLOSED (due to failure while connecting or closure) we should emit a new event "stcpclosed" in all `DataProducers/Consumers`.
 
 - When receiving SCTP RE-CONFIG, we should emit "streamclosed" in those `DataProducers/DataConsumers` whose stream ID have been closed.
@@ -39,3 +31,4 @@
 ## Related to dcsctp
 
 - Investigate `DcSctpSocket::HandleTimeout()` which is only called from `media/sctp/dcsctp_transport.cc`.
+  - Update: This is the entry point when a timer expires. It's the same as our `OnTimer()`.

@@ -36,6 +36,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			MS_ASSERT(!this->ready, "already ready");
+
 			this->ready = true;
 		}
 
@@ -43,10 +45,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (!this->ready)
-			{
-				return;
-			}
+			MS_ASSERT(this->ready, "not ready");
 
 			this->ready = false;
 
@@ -235,7 +234,7 @@ namespace RTC
 
 		void AssociationDeferredListener::OnAssociationStreamBufferedAmountLow(uint16_t streamId)
 		{
-			MS_TRACE();
+			MS_TRACE();;
 
 			MS_ASSERT(this->ready, "not ready");
 
@@ -263,7 +262,7 @@ namespace RTC
 
 		bool AssociationDeferredListener::OnAssociationIsTransportReadyForSctp()
 		{
-			MS_TRACE();
+			MS_TRACE();;
 
 			// Will not be deferred but called directly.
 			return this->innerListener->OnAssociationIsTransportReadyForSctp();
