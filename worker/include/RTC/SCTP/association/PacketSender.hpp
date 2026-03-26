@@ -23,7 +23,7 @@ namespace RTC
 			};
 
 		public:
-			PacketSender(Listener& listener, AssociationListener& associationListener);
+			PacketSender(Listener* listener, AssociationListener& associationListener);
 
 			~PacketSender();
 
@@ -42,7 +42,7 @@ namespace RTC
 			bool SendPacket(Packet* packet, bool writeChecksum = true);
 
 		private:
-			Listener& listener;
+			Listener* listener;
 			AssociationListener& associationListener;
 		};
 	} // namespace SCTP

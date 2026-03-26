@@ -44,8 +44,7 @@ namespace RTC
 		    // Our `listener` member is a `AssociationDeferredListener` which takes
 		    // `AssociationListener` as constructor argument.
 		    listener(listener),
-		    // Create the `packetSender` member.
-		    packetSender(*this, this->listener),
+		    packetSender(this, this->listener),
 		    t1InitTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,

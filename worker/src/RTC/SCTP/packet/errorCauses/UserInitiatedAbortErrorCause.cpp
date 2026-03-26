@@ -97,7 +97,7 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "  has upper layer abort reason: yes");
 				MS_DUMP_CLEAN(
 				  indentation,
-				  "  upper layer abort reason: %.*s",
+				  "  upper layer abort reason: \"%.*s\"",
 				  static_cast<int>(reason.size()),
 				  reason.data());
 			}

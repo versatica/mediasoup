@@ -472,8 +472,8 @@ namespace RTC
 			AssociationDeferredListener listener;
 			// SCTP association internal state.
 			State state{ State::NEW };
-			// Private metrics.
-			AssociationPrivateMetrics privateMetrics{};
+			// Packet sender.
+			PacketSender packetSender;
 			// The actual send queue implementation. As data can be sent before the
 			// connection is established, this component is not in the TCB.
 			// TODO: Implement this class.
@@ -484,8 +484,8 @@ namespace RTC
 			// Once the SCTP association is established a Transmission Control Block
 			// is created.
 			std::unique_ptr<TransmissionControlBlock> tcb;
-			// Packet sender.
-			PacketSender packetSender;
+			// Private metrics.
+			AssociationPrivateMetrics privateMetrics{};
 			// T1-init timer.
 			const std::unique_ptr<BackoffTimerHandle> t1InitTimer;
 			// T1-cookie timer.
