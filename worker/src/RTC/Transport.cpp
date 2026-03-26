@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::Transport"
-// TODO: SCTP: COMMENT
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Transport.hpp"
 #ifdef MS_LIBURING_SUPPORTED
