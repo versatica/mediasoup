@@ -233,7 +233,8 @@ namespace RTC
 			HeartbeatHandler heartbeatHandler;
 			// Rate limiting of FORWARD_TSN. Next can be sent at or after this
 			// timestamp.
-			uint64_t limitForwardTsnUntilMs{ 0 };
+			// TODO: SCTP: Uncomment.
+			// uint64_t limitForwardTsnUntilMs{ 0 };
 			// Only valid when state is State::COOKIE_ECHOED. In this state, the
 			// Association must wait for COOKIE_ACK to continue sending any packets (not
 			// including a COOKIE_ECHO). So if this state cookie is present, the
