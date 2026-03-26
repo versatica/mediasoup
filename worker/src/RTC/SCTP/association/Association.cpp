@@ -641,7 +641,7 @@ namespace RTC
 			if (state == this->state)
 			{
 				MS_WARN_DEV(
-				  "SCTP Association internal state is already %.*s (message: %.*s)",
+				  "SCTP Association internal state is already %.*s (message:\"%.*s\")",
 				  static_cast<int>(stateStringView.size()),
 				  stateStringView.data(),
 				  static_cast<int>(message.size()),
@@ -654,7 +654,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "SCTP Association internal state changed from %.*s to %.*s (message: %.*s)",
+			  "SCTP Association internal state changed from %.*s to %.*s (message:\"%.*s\")",
 			  static_cast<int>(previousStateStringView.size()),
 			  previousStateStringView.data(),
 			  static_cast<int>(stateStringView.size()),

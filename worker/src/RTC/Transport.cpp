@@ -1,6 +1,6 @@
-#include "RTC/SCTP/public/SctpTypes.hpp"
 #define MS_CLASS "RTC::Transport"
-// #define MS_LOG_DEV_LEVEL 3
+// TODO: SCTP: COMMENT
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Transport.hpp"
 #ifdef MS_LIBURING_SUPPORTED
@@ -184,7 +184,13 @@ namespace RTC
 		}
 		this->mapDataConsumers.clear();
 
-#ifndef MS_SCTP_STACK
+#ifdef MS_SCTP_STACK
+		// NOTE: We don't do anything here since the `Destroying()` method has already
+		// been called by the Transport subclass and it closes the SCTP Association.
+		// NOTE: We cannot do it here in the destructor because here we are no longer
+		// the Transport subclass but Transport parent (this is how the destruction
+		// chain works in C++).
+#else
 		// Delete SCTP association.
 		delete this->sctpAssociation;
 		this->sctpAssociation = nullptr;
@@ -1469,6 +1475,16 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATAPRODUCER:
 			{
+				if (!this->sctpAssociation)
+				{
+					MS_WARN_TAG(sctp, "cannot close a DataProducer, no SCTP Association");
+					;
+
+					request->Accept();
+
+					break;
+				}
+
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataProducerRequest>();
 
 				// This may throw.
@@ -1508,6 +1524,16 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATACONSUMER:
 			{
+				if (!this->sctpAssociation)
+				{
+					MS_WARN_TAG(sctp, "cannot close a DataConsumer, no SCTP Association");
+					;
+
+					request->Accept();
+
+					break;
+				}
+
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataConsumerRequest>();
 
 				// This may throw.
@@ -1572,6 +1598,17 @@ namespace RTC
 	void Transport::Destroying()
 	{
 		MS_TRACE();
+
+#ifdef MS_SCTP_STACK
+		if (this->sctpAssociation)
+		{
+			// NOTE: We don't invoke `Shutdown()` but `Close()` in the SCTP Association
+			// because at this point we are closing everything and we won't have any
+			// chance to complete the SCTP SHUTDOWN + SHUTDOWN_ACK + SHUTDOWN_COMPLETE
+			// dance, so we invoke `Close()` which just sends a SCTP ABORT.
+			this->sctpAssociation->Close();
+		}
+#endif
 
 		this->destroying = true;
 	}
@@ -2885,7 +2922,7 @@ namespace RTC
 		// Notify the listener.
 		this->listener->OnTransportDataConsumerDataProducerClosed(this, dataConsumer);
 
-		if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+		if (this->sctpAssociation && dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 		{
 #ifdef MS_SCTP_STACK
 			// TODO: SCTP
@@ -2904,24 +2941,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Check if this is still true.
 		// Ignore if destroying.
 		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,
 		// its destructor is called first and then the parent Transport's destructor,
 		// and we would end here calling SendSctpData() which is an abstract method.
 		if (this->destroying)
 		{
+			MS_WARN_DEV("ignoring sending data because Transport is being destroying");
+
 			return false;
 		}
 
-		if (this->sctpAssociation)
-		{
-			return SendSctpData(data, len);
-		}
-		else
-		{
-			return false;
-		}
+		return SendSctpData(data, len);
 	}
 
 	void Transport::OnAssociationConnecting()
@@ -3209,13 +3240,12 @@ namespace RTC
 		// and we would end here calling SendSctpData() which is an abstract method.
 		if (this->destroying)
 		{
+			MS_WARN_DEV("ignoring sending data because Transport is being destroying");
+
 			return;
 		}
 
-		if (this->sctpAssociation)
-		{
-			SendSctpData(data, len);
-		}
+		SendSctpData(data, len);
 	}
 
 	void Transport::OnSctpAssociationMessageReceived(

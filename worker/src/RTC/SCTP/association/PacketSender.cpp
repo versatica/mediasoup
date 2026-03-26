@@ -40,6 +40,11 @@ namespace RTC
 
 			this->listener.OnPacketSenderPacketSent(this, packet, sent);
 
+			if (!sent)
+			{
+				MS_WARN_TAG(sctp, "coudln't send SCTP Packet");
+			}
+
 			return sent;
 		}
 	} // namespace SCTP
