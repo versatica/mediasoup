@@ -17,6 +17,7 @@ namespace RTC
 			this->listenerDeferrer.SetReady();
 		}
 
+		// NOLINTNEXTLINE(bugprone-exception-escape)
 		AssociationListenerDeferrer::ScopedDeferrer::~ScopedDeferrer()
 		{
 			MS_TRACE();
