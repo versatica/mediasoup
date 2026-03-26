@@ -41,7 +41,7 @@ namespace RTC
 
 		Association::Association(const SctpOptions& sctpOptions, AssociationListener* listener)
 		  : sctpOptions(sctpOptions),
-		    // Our `listener` member is a `AssociationDeferredListener` which takes
+		    // Our `listener` member is a `AssociationListenerDeferrer` which takes
 		    // `AssociationListener` as constructor argument.
 		    listener(listener),
 		    packetSender(this, this->listener),
@@ -223,7 +223,7 @@ namespace RTC
 				return;
 			}
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			this->preTcb.localVerificationTag =
 			  Utils::Crypto::GetRandomUInt<uint32_t>(MinVerificationTag, MaxVerificationTag);
@@ -252,7 +252,7 @@ namespace RTC
 				return;
 			}
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
 			//
@@ -299,7 +299,7 @@ namespace RTC
 				return;
 			}
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			if (this->tcb)
 			{
@@ -421,7 +421,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			if (!this->tcb)
 			{
@@ -455,7 +455,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			const auto status = InternalSendMessage(message, sendMessageOptions);
 
@@ -488,7 +488,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			// TODO: SCTP: Uncomment.
 			// const uint64_t now = DepLibUV::GetTimeMs();
@@ -546,7 +546,7 @@ namespace RTC
 				}
 			}
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			this->privateMetrics.rxPacketsCount++;
 
@@ -2424,7 +2424,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			const auto maxRestarts = this->t1InitTimer->GetMaxRestarts();
 
@@ -2452,7 +2452,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			const auto maxRestarts = this->t1CookieTimer->GetMaxRestarts();
 
@@ -2481,7 +2481,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationDeferredListener::ScopedDeferred deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			const auto maxRestarts = this->t2ShutdownTimer->GetMaxRestarts();
 

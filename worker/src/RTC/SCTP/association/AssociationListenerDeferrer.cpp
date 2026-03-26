@@ -1,30 +1,30 @@
-#define MS_CLASS "RTC::SCTP::AssociationDeferredListener"
+#define MS_CLASS "RTC::SCTP::AssociationListenerDeferrer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/association/AssociationDeferredListener.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "Logger.hpp"
 
 namespace RTC
 {
 	namespace SCTP
 	{
-		AssociationDeferredListener::ScopedDeferred::ScopedDeferred(
-		  AssociationDeferredListener& deferredListener)
-		  : deferredListener(deferredListener)
+		AssociationListenerDeferrer::ScopedDeferrer::ScopedDeferrer(
+		  AssociationListenerDeferrer& listenerDeferrer)
+		  : listenerDeferrer(listenerDeferrer)
 		{
 			MS_TRACE();
 
-			this->deferredListener.SetReady();
+			this->listenerDeferrer.SetReady();
 		}
 
-		AssociationDeferredListener::ScopedDeferred::~ScopedDeferred()
+		AssociationListenerDeferrer::ScopedDeferrer::~ScopedDeferrer()
 		{
 			MS_TRACE();
 
-			this->deferredListener.TriggerDeferredCallbacks();
+			this->listenerDeferrer.TriggerDeferredCallbacks();
 		}
 
-		AssociationDeferredListener::AssociationDeferredListener(AssociationListener* innerListener)
+		AssociationListenerDeferrer::AssociationListenerDeferrer(AssociationListener* innerListener)
 		  : innerListener(innerListener)
 		{
 			MS_TRACE();
@@ -32,7 +32,7 @@ namespace RTC
 			this->deferredCallbacks.reserve(8);
 		}
 
-		void AssociationDeferredListener::SetReady()
+		void AssociationListenerDeferrer::SetReady()
 		{
 			MS_TRACE();
 
@@ -41,7 +41,7 @@ namespace RTC
 			this->ready = true;
 		}
 
-		void AssociationDeferredListener::TriggerDeferredCallbacks()
+		void AssociationListenerDeferrer::TriggerDeferredCallbacks()
 		{
 			MS_TRACE();
 
@@ -71,7 +71,7 @@ namespace RTC
 			}
 		}
 
-		bool AssociationDeferredListener::OnAssociationSendData(const uint8_t* data, size_t len)
+		bool AssociationListenerDeferrer::OnAssociationSendData(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
@@ -79,7 +79,7 @@ namespace RTC
 			return this->innerListener->OnAssociationSendData(data, len);
 		}
 
-		void AssociationDeferredListener::OnAssociationConnecting()
+		void AssociationListenerDeferrer::OnAssociationConnecting()
 		{
 			MS_TRACE();
 
@@ -93,7 +93,7 @@ namespace RTC
 			  std::monostate{});
 		}
 
-		void AssociationDeferredListener::OnAssociationConnected()
+		void AssociationListenerDeferrer::OnAssociationConnected()
 		{
 			MS_TRACE();
 
@@ -107,7 +107,7 @@ namespace RTC
 			  std::monostate{});
 		}
 
-		void AssociationDeferredListener::OnAssociationFailed(
+		void AssociationListenerDeferrer::OnAssociationFailed(
 		  Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
@@ -123,7 +123,7 @@ namespace RTC
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
-		void AssociationDeferredListener::OnAssociationClosed(
+		void AssociationListenerDeferrer::OnAssociationClosed(
 		  Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
@@ -139,7 +139,7 @@ namespace RTC
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
-		void AssociationDeferredListener::OnAssociationRestarted()
+		void AssociationListenerDeferrer::OnAssociationRestarted()
 		{
 			MS_TRACE();
 
@@ -153,7 +153,7 @@ namespace RTC
 			  std::monostate{});
 		}
 
-		void AssociationDeferredListener::OnAssociationError(
+		void AssociationListenerDeferrer::OnAssociationError(
 		  Types::ErrorKind errorKind, std::string_view errorMessage)
 		{
 			MS_TRACE();
@@ -169,7 +169,7 @@ namespace RTC
 			  Error{ .errorKind = errorKind, .message = std::string(errorMessage) });
 		}
 
-		void AssociationDeferredListener::OnAssociationMessageReceived(Message message)
+		void AssociationListenerDeferrer::OnAssociationMessageReceived(Message message)
 		{
 			MS_TRACE();
 
@@ -183,7 +183,7 @@ namespace RTC
 			  std::move(message));
 		}
 
-		void AssociationDeferredListener::OnAssociationStreamsResetPerformed(
+		void AssociationListenerDeferrer::OnAssociationStreamsResetPerformed(
 		  std::span<const uint16_t> outboundStreamIds)
 		{
 			MS_TRACE();
@@ -199,7 +199,7 @@ namespace RTC
 			  StreamReset{ .streamIds = { outboundStreamIds.begin(), outboundStreamIds.end() } });
 		}
 
-		void AssociationDeferredListener::OnAssociationStreamsResetFailed(
+		void AssociationListenerDeferrer::OnAssociationStreamsResetFailed(
 		  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage)
 		{
 			MS_TRACE();
@@ -216,7 +216,7 @@ namespace RTC
 			               .errorMessage = std::string(errorMessage) });
 		}
 
-		void AssociationDeferredListener::OnAssociationInboundStreamsReset(
+		void AssociationListenerDeferrer::OnAssociationInboundStreamsReset(
 		  std::span<const uint16_t> inboundStreamIds)
 		{
 			MS_TRACE();
@@ -232,9 +232,10 @@ namespace RTC
 			  StreamReset{ .streamIds = { inboundStreamIds.begin(), inboundStreamIds.end() } });
 		}
 
-		void AssociationDeferredListener::OnAssociationStreamBufferedAmountLow(uint16_t streamId)
+		void AssociationListenerDeferrer::OnAssociationStreamBufferedAmountLow(uint16_t streamId)
 		{
-			MS_TRACE();;
+			MS_TRACE();
+			;
 
 			MS_ASSERT(this->ready, "not ready");
 
@@ -246,7 +247,7 @@ namespace RTC
 			  streamId);
 		}
 
-		void AssociationDeferredListener::OnAssociationTotalBufferedAmountLow()
+		void AssociationListenerDeferrer::OnAssociationTotalBufferedAmountLow()
 		{
 			MS_TRACE();
 
@@ -260,9 +261,10 @@ namespace RTC
 			  std::monostate{});
 		}
 
-		bool AssociationDeferredListener::OnAssociationIsTransportReadyForSctp()
+		bool AssociationListenerDeferrer::OnAssociationIsTransportReadyForSctp()
 		{
-			MS_TRACE();;
+			MS_TRACE();
+			;
 
 			// Will not be deferred but called directly.
 			return this->innerListener->OnAssociationIsTransportReadyForSctp();

@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_ASSOCIATION_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/association/AssociationDeferredListener.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
@@ -467,9 +467,9 @@ namespace RTC
 		private:
 			// SCTP options given in the constructor.
 			SctpOptions sctpOptions;
-			// Listener. It's not an AssociationListener but an
-			// AssociationDeferredListener which inherits from AssociationListener.
-			AssociationDeferredListener listener;
+			// Listener. It's not an `AssociationListener` but an
+			// `AssociationListenerDeferrer` which inherits from `AssociationListener`.
+			AssociationListenerDeferrer listener;
 			// SCTP association internal state.
 			State state{ State::NEW };
 			// Packet sender.

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_ASSOCIATION_DEFERRED_LISTENER_HPP
-#define MS_RTC_SCTP_ASSOCIATION_DEFERRED_LISTENER_HPP
+#ifndef MS_RTC_SCTP_ASSOCIATION_LISTENER_DEFERRED_HPP
+#define MS_RTC_SCTP_ASSOCIATION_LISTENER_DEFERRED_HPP
 
 #include "common.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
@@ -15,18 +15,18 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		class AssociationDeferredListener : public AssociationListener
+		class AssociationListenerDeferrer : public AssociationListener
 		{
 		public:
-			class ScopedDeferred
+			class ScopedDeferrer
 			{
 			public:
-				explicit ScopedDeferred(AssociationDeferredListener& deferredListener);
+				explicit ScopedDeferrer(AssociationListenerDeferrer& listenerDeferrer);
 
-				~ScopedDeferred();
+				~ScopedDeferrer();
 
 			private:
-				AssociationDeferredListener& deferredListener;
+				AssociationListenerDeferrer& listenerDeferrer;
 			};
 
 		private:
@@ -49,7 +49,7 @@ namespace RTC
 			using Callback = std::function<void(CallbackData, AssociationListener*)>;
 
 		public:
-			explicit AssociationDeferredListener(AssociationListener* innerListener);
+			explicit AssociationListenerDeferrer(AssociationListener* innerListener);
 
 		private:
 			void SetReady();
