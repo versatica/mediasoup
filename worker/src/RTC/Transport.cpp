@@ -1527,7 +1527,6 @@ namespace RTC
 				if (!this->sctpAssociation)
 				{
 					MS_WARN_TAG(sctp, "cannot close a DataConsumer, no SCTP Association");
-					;
 
 					request->Accept();
 
