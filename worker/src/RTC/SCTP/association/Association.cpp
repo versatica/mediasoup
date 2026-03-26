@@ -2379,7 +2379,7 @@ namespace RTC
 
 			if (skipProcessing)
 			{
-				MS_DEBUG_TAG(
+				MS_WARN_TAG(
 				  sctp,
 				  "Chunk with unknown type %" PRIu8
 				  " received, skipping further processing of Chunks in the Packet",
