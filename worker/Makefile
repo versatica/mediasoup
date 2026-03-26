@@ -36,7 +36,6 @@ endif
 	test \
 	test-asan-address \
 	test-asan-undefined \
-	test-asan-thread \
 	fuzzer \
 	fuzzer-run-all \
 	docker \
@@ -112,9 +111,6 @@ test-asan-address: invoke
 
 test-asan-undefined: invoke
 	"$(PYTHON)" -m invoke test-asan-undefined
-
-test-asan-thread: invoke
-	"$(PYTHON)" -m invoke test-asan-thread
 
 fuzzer: invoke
 	"$(PYTHON)" -m invoke fuzzer

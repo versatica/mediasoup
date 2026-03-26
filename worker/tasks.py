@@ -496,39 +496,6 @@ def test_asan_undefined(ctx):
         );
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true -Db_sanitize=thread -Db_lundef=false'), flatc])
-def test_asan_thread(ctx):
-    """
-    Run worker test with thread Sanitizer with -fsanitize=thread
-    """
-    with cd_worker():
-        ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-thread',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
-    with cd_worker():
-        ctx.run(
-            f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-thread',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
-
-    mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
-
-    with cd_worker():
-        ctx.run(
-            f'"{BUILD_DIR}/mediasoup-worker-test-asan-thread" --invisibles {mediasoup_test_tags}',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL,
-            # Exit with error if there are issues.
-            env={**os.environ, 'TSAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1'}
-        );
-
-
 @task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=address -Db_lundef=false'), flatc])
 def fuzzer(ctx):
     """

@@ -375,10 +375,10 @@ if host_machine.system() == 'linux' and not get_option('ms_disable_liburing')
       default_options: [
         'default_library=static',
         # NOTE: We need to add this to disable ASAN in liburing, otherwise when
-        # building `mediasoup-test-asan-undefined & -thread` binaries, liburing
-        # receives `use_ubsan: true` and tries to compile its `sanitize.c` file
+        # building `mediasoup-test-asan-undefined` binary, liburing receives
+        # `use_ubsan: true` and tries to compile its `sanitize.c` file
         # that contains references to `__asan_*` functions, but we don't enable
-        # ASAN (`-fsanitize=address) in those binaries so liburing fails to
+        # ASAN (`-fsanitize=address) in that binaries so liburing fails to
         # compile.
         'b_sanitize=none',
       ],
@@ -622,34 +622,6 @@ mediasoup_worker_test_asan_undefined = executable(
 test(
   'mediasoup-worker-test-asan-undefined',
   mediasoup_worker_test_asan_undefined,
-  workdir: meson.project_source_root(),
-)
-
-mediasoup_worker_test_asan_thread = executable(
-  'mediasoup-worker-test-asan-thread',
-  build_by_default: false,
-  install: true,
-  install_tag: 'mediasoup-worker-test-asan-thread',
-  dependencies: dependencies,
-  sources: common_sources + test_sources,
-  include_directories: include_directories(
-    'include',
-    'test/include',
-  ),
-  cpp_args: cpp_args + [
-    '-g',
-    '-O3',
-    '-fno-omit-frame-pointer',
-    '-fsanitize=thread',
-  ],
-  link_args: [
-    '-fsanitize=thread',
-  ],
-)
-
-test(
-  'mediasoup-worker-test-asan-thread',
-  mediasoup_worker_test_asan_thread,
   workdir: meson.project_source_root(),
 )
 

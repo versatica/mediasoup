@@ -269,10 +269,6 @@ Run test with Address Sanitizer with `-fsanitize=address`.
 
 Run test with Address Sanitizer with `-fsanitize=undefined`.
 
-### `invoke test-asan-thread`
-
-Run test with Address Sanitizer with `-fsanitize=thread`.
-
 ### `invoke fuzzer`
 
 Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) at `worker/out/Release` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug").
