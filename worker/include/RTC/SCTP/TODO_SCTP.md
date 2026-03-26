@@ -26,7 +26,7 @@
     --force-fieldtrials="WebRTC-DataChannelMessageInterleaving/Enabled/"
   ```
 
-- Look for "TODO: SCTP" and `MS_SCTP_STACK`.
+- Look for "TODO: SCTP" and `MS_SCTP_STACK` everywhere.
 
 ## Related to dcsctp
 
