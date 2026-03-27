@@ -45,6 +45,114 @@ namespace RTC
 		 */
 		class StreamResetHandler : public TCBContext, public BackoffTimerHandle::Listener
 		{
+		private:
+			enum class ReqSeqNbrValidationResult : uint8_t
+			{
+				VALID,
+				RETRANSMISSION,
+				BADSEQUENCE_NUMBER,
+			};
+
+			/**
+			 * Represents a stream request operation. There can only be one ongoing at
+			 * any time, and a sent request may either succeed, fail or result in the
+			 * receiver signaling that it can't process it right now, and then it will
+			 * be retried.
+			 */
+			class CurrentRequest
+			{
+			public:
+				CurrentRequest(uint32_t senderLastAssignedTsn, std::vector<uint16_t> streamIds)
+				  : reqSeqNbr(std::nullopt),
+				    senderLastAssignedTsn(senderLastAssignedTsn),
+				    streamIds(std::move(streamIds))
+				{
+				}
+
+				/**
+				 * Returns the current request sequence number, if this request has been
+				 * sent (check `HasBeenFirst()` first). Will return 0 if the request is
+				 * just prepared (or scheduled for retransmission) but not yet sent.
+				 */
+				uint32_t GetReqSeqNbr() const
+				{
+					return this->reqSeqNbr.value_or(0);
+				}
+
+				/**
+				 * The sender's last assigned TSN, from the retransmission queue. The
+				 * receiver uses this to know when all data up to this TSN has been
+				 * received, to know when to safely reset the stream.
+				 */
+				uint32_t GetSenderLastAssignedTsn() const
+				{
+					return senderLastAssignedTsn;
+				}
+
+				/**
+				 * The streams that are to be reset.
+				 */
+				const std::vector<uint16_t>& GetStreamIds() const
+				{
+					return this->streamIds;
+				}
+
+				/**
+				 * If this request has been sent yet. If not, then it's either because
+				 * it has only been prepared and not yet sent, or because the received
+				 * couldn't apply the request, and then the exact same request will be
+				 * retried, but with a new sequence number.
+				 */
+				bool HasBeenSent() const
+				{
+					return this->reqSeqNbr.has_value();
+				}
+
+				/**
+				 * If the receiver can't apply the request yet (and answered "In
+				 * Progress"), this will be called to prepare the request to be
+				 * retransmitted at a later time.
+				 */
+				void PrepareRetransmission()
+				{
+					this->reqSeqNbr = std::nullopt;
+				}
+
+				/**
+				 * If the request hasn't been sent yet, this assigns it a request
+				 * number.
+				 */
+				void PrepareToSend(uint32_t newReqSeqNbr)
+				{
+					this->reqSeqNbr = newReqSeqNbr;
+				}
+
+				void SetDeferred(bool isDeferred)
+				{
+					this->isDeferred = isDeferred;
+				}
+
+				bool IsDeferred() const
+				{
+					return this->isDeferred;
+				}
+
+			private:
+				// If this is set, this request has been sent. If it's not set, the
+				// request has been prepared, but has not yet been sent. This is
+				// typically used when the peer responded "in progress" and the same
+				// request (but a different request number) must be sent again.
+				std::optional<uint32_t> reqSeqNbr{ 0 };
+				// The sender's (that's us) last assigned TSN, from the retransmission
+				// queue.
+				uint32_t senderLastAssignedTsn{ 0 };
+				// The streams that are to be reset in this request.
+				std::vector<uint16_t> streamIds;
+				// If the request is deferred (received "In Progress"), the next timeout
+				// should not be treated as a timeout.
+				bool isDeferred{ false };
+			};
+
 		public:
 			StreamResetHandler(
 			  AssociationListener& associationListener, TCBContext* tcbContext
@@ -74,6 +182,8 @@ namespace RTC
 			// ReassemblyQueue* reassemblyQueue{ nullptr };,
 			// RetransmissionQueue* retransmissionQueue{ nullptr };
 			const std::unique_ptr<BackoffTimerHandle> reconfigTimer;
+			// The next sequence number for outgoing stream requests.
+			uint32_t nextOutgoingReqSeqNbr{ 0 };
 		};
 	} // namespace SCTP
 } // namespace RTC
