@@ -37,6 +37,8 @@ jobs:
 
     runs-on: ${{ matrix.build.os }}
 
+    timeout-minutes: 60
+
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}

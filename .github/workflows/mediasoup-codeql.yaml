@@ -1,9 +1,17 @@
-name: CodeQL
+name: mediasoup-codeql
 
 on:
   push:
     branches: [v3]
+    paths:
+      - 'worker/**'
+      - 'node/src/**'
+      - 'rust/src/**'
   pull_request:
+    paths:
+      - 'worker/**'
+      - 'node/src/**'
+      - 'rust/src/**'
   workflow_dispatch:
 
 concurrency:
@@ -15,8 +23,8 @@ concurrency:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
     permissions:
       actions: read
       contents: read
@@ -26,11 +34,6 @@ jobs:
       fail-fast: false
       matrix:
         language: ['c-cpp', 'javascript-typescript', 'python']
-        # CodeQL supports [ 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift' ]
-        # Use only 'java-kotlin' to analyze code written in Java, Kotlin or both.
-        # Use only 'javascript-typescript' to analyze code written in JavaScript,
-        # TypeScript or both.
-        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support.
 
     env:
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
@@ -51,7 +54,21 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          config-file: .github/workflows/codeql-config.yaml
+          config: |
+            paths-ignore:
+              - 'art/**'
+              - 'doc/**'
+              - 'node_modules/**'
+              - 'node/lib/**'
+              - 'node/src/fbs/**'
+              - 'rust/benches/**'
+              - 'rust/examples/**'
+              - 'rust/examples-frontend/**'
+              - 'worker/deps/**'
+              - 'worker/subprojects/**'
+              - 'worker/fuzzer/new-corpus/**'
+              - 'worker/fuzzer/reports/**'
+              - 'worker/out/**'
           # If you wish to specify custom queries, you can do so here or in a
           # config file. By default, queries listed here will override any
           # specified in a config file. Prefix the list here with "+" to use
@@ -59,26 +76,11 @@ jobs:
           #
           # Details on CodeQL's query packs refer to:
           # https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
+          #
           # queries: security-extended,security-and-quality
 
-      # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, or Java).
-      # If this step fails, then you should remove it and run the build manually (see below)
-      # - name: Autobuild
-      #   uses: github/codeql-action/autobuild@v3
-
-      # ℹ️ Command-line programs to run using the OS shell.
-      # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-
-      # If the Autobuild fails above, remove it and uncomment the following
-      # three lines. Modify them (or add more) to build your code if your
-      # project, please refer to the EXAMPLE below for guidance.
-
-      # - run: |
-      #   echo "Run, Build Application using script"
-      #   ./location_of_script_within_repo/buildscript.sh
-
-      # Use npm ci to build mediasoup Node and worker instead of relying on
-      # Autobuild.
+      # Use `npm ci` to build mediasoup Node and worker instead of relying on
+      # built-in Autobuild.
       - name: npm ci
         run: npm ci --foreground-scripts
 

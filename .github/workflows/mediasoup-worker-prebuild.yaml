@@ -8,6 +8,8 @@ on:
 jobs:
   ci:
     strategy:
+      # Here we want to see all errors, not just the first one.
+      fail-fast: false
       matrix:
         build:
           # Worker prebuild for Linux with kernel version 6 Ubuntu (22.04).
@@ -27,10 +29,10 @@ jobs:
           - os: windows-2025
             cc: cl
             cxx: cl
-        node:
-          - 24
 
     runs-on: ${{ matrix.build.os }}
+
+    timeout-minutes: 90
 
     env:
       CC: ${{ matrix.build.cc }}
@@ -46,7 +48,7 @@ jobs:
       - name: Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 24
 
       # We need to install some NPM production deps for npm-scripts.mjs to
       # work.
