@@ -104,8 +104,8 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [github-actions-mediasoup-worker-fuzzer]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-fuzzer.yaml?query=branch%3Av3
 [github-actions-shield-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml/badge.svg?event=release
 [github-actions-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml?query=event%3Arelease
-[github-actions-mediasoup-codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/github-actions-mediasoup-codeql.yaml/badge.svg?branch=v3
-[github-actions-mediasoup-codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/github-actions-mediasoup-codeql.yaml?query=branch%3Av3
+[github-actions-mediasoup-codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-codeql.yaml/badge.svg?branch=v3
+[github-actions-mediasoup-codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-codeql.yaml?query=branch%3Av3
 [sponsor]: https://mediasoup.org/sponsor
 [mediasoup-architecture]: /art/mediasoup-v3-architecture-01.svg
 [mediasoup-demo-screenshot]: /art/mediasoup-v3.png
