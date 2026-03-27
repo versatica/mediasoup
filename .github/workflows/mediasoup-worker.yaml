@@ -142,11 +142,10 @@ jobs:
             # Address Sanitizer does not work on Windows.
             run-test-asan-address: false
             run-test-asan-undefined: false
-        # A single Node.js version should be fine for C++.
-        node:
-          - 24
 
     runs-on: ${{ matrix.build.os }}
+
+    timeout-minutes: 90
 
     env:
       CC: ${{ matrix.build.cc }}
@@ -163,16 +162,16 @@ jobs:
       - name: Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 24
 
       - name: Configure cache
         uses: actions/cache@v5
         with:
           path: |
             ~/.npm
-          key: ${{ matrix.build.os }}-node-${{matrix.build.cc}}-${{ hashFiles('**/package.json') }}
+          key: ${{ matrix.build.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
+            ${{ matrix.build.os }}-node-
 
       # We need to install pip invoke manually.
       - if: ${{ !matrix.build.pip-break-system-packages }}

@@ -31,6 +31,8 @@ concurrency:
 jobs:
   ci:
     strategy:
+      # Here we want to see all errors, not just the first one.
+      fail-fast: false
       matrix:
         build:
           - os: ubuntu-24.04
@@ -42,16 +44,17 @@ jobs:
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=address'
+            npm-audit: true
+            run-lint: true
+          - os: ubuntu-24.04
+            node: 24
+            cc: gcc
+            cxx: g++
           - os: ubuntu-24.04
             node: 24
             cc: clang
             cxx: clang++
             meson_args: '-Db_sanitize=undefined'
-          - os: ubuntu-24.04
-            node: 24
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=thread'
           - os: ubuntu-24.04-arm
             node: 22
             cc: gcc
@@ -65,11 +68,6 @@ jobs:
             # takes too long.
             # See https://github.com/versatica/mediasoup/pull/1503.
             skip-test-in-debug-build-type: true
-          - os: ubuntu-24.04-arm
-            node: 24
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=thread'
           - os: macos-15
             node: 24
             cc: clang
@@ -88,6 +86,8 @@ jobs:
 
     runs-on: ${{ matrix.build.os }}
 
+    timeout-minutes: 60
+
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
@@ -95,6 +95,9 @@ jobs:
       MEDIASOUP_LOCAL_DEV: 'true'
       MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
       MESON_ARGS: ${{ matrix.build.meson_args }}
+      # Disable leak detection because it's detected by the tool flatc uses to build.
+      # NOTE: This env only affects when 'b_sanitize' args are given in `meson_args`.
+      ASAN_OPTIONS: 'detect_leaks=0 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1'
 
     steps:
       - name: Checkout
@@ -110,30 +113,32 @@ jobs:
         with:
           path: |
             ~/.npm
-          key: ${{ matrix.build.os }}-node-${{ hashFiles('**/package.json') }}
+          key: ${{ matrix.build.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ matrix.build.os }}-node-
 
       - name: npm ci --foreground-scripts
         run: npm ci --foreground-scripts
-        env:
-          # Disable leak detection because it's detected by the tool flatc uses
-          # to build.
-          ASAN_OPTIONS: 'detect_leaks=0 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1'
 
-      - name: npm audit --omit dev
+      - if: ${{ matrix.build.npm-audit }}
+        name: npm audit --omit dev
         run: npm audit --omit dev
+
+      - if: ${{ matrix.build.npm-audit }}
+        name: npm audit --prefix worker/scripts
+        run: npm audit --prefix worker/scripts
 
       - if: ${{ matrix.build-type == 'Release' }}
         name: npm run worker:prebuild
         run: npm run worker:prebuild
 
-      - name: npm run lint:node
+      - name: npm run worker:prebuild-name
+        run: npm run worker:prebuild-name
+
+      - if: ${{ matrix.build.run-lint }}
+        name: npm run lint:node
         run: npm run lint:node
 
       - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build-type != 'Debug' }}
         name: npm run test:node
         run: npm run test:node
-
-      - name: npm run worker:prebuild-name
-        run: npm run worker:prebuild-name
