@@ -95,6 +95,9 @@ jobs:
       MEDIASOUP_LOCAL_DEV: 'true'
       MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
       MESON_ARGS: ${{ matrix.build.meson_args }}
+      # Disable leak detection because it's detected by the tool flatc uses to build.
+      # NOTE: This env only affects when 'b_sanitize' args are given in `meson_args`.
+      ASAN_OPTIONS: 'detect_leaks=0 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1'
 
     steps:
       - name: Checkout
@@ -139,7 +142,3 @@ jobs:
       - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build-type != 'Debug' }}
         name: npm run test:node
         run: npm run test:node
-        env:
-          # Disable leak detection because it's detected by the tool flatc uses
-          # to build.
-          ASAN_OPTIONS: 'detect_leaks=0 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1'
