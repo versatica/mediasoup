@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/association/TCBContext.hpp"
+#include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
+#include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include <span>
@@ -167,6 +169,30 @@ namespace RTC
 		public:
 			void Dump(int indentation = 0) const;
 
+			/**
+			 * Initiates reset of the provided streams. While there can only be one
+			 * ongoing stream reset request at any time, this method can be called at
+			 * any time and also multiple times. It will enqueue requests that can't
+			 * be directly fulfilled, and will asynchronously process them when any
+			 * ongoing request has completed.
+			 */
+			void ResetStreams(std::span<const uint16_t> outgoingStreamIds);
+
+			/**
+			 * Creates a Reset Streams request that must be sent if returned. Will
+			 * start the reconfig timer. Will return `nullptr` if there is no need
+			 * to create a request (no streams to reset) or if there already is an
+			 * ongoing stream reset request that hasn't completed yet.
+			 */
+			// TODO: SCTP: Do we really want to return a Chunk? Maybe we should pass
+			// a Packet to use BuilChunkInPlace().
+			ReConfigChunk* MakeStreamResetRequest();
+
+			/**
+			 * Called when handling and incoming RE-CONFIG chunk.
+			 */
+			void ProcessReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk);
+
 		private:
 			void OnReconfigTimer(uint64_t& baseTimeoutMs, bool& stop);
 
@@ -184,6 +210,13 @@ namespace RTC
 			const std::unique_ptr<BackoffTimerHandle> reconfigTimer;
 			// The next sequence number for outgoing stream requests.
 			uint32_t nextOutgoingReqSeqNbr{ 0 };
+			// The current stream request operation.
+			std::optional<CurrentRequest> currentRequest;
+			// For incoming requests. Last processed request sequence number.
+			// TODO: SCTP
+			// UnwrappedReconfigRequestSn lastProcessedReqSeqNbr;
+			// The result from last processed incoming request.
+			ReconfigurationResponseParameter::Result lastProcessedReqResult;
 		};
 	} // namespace SCTP
 } // namespace RTC

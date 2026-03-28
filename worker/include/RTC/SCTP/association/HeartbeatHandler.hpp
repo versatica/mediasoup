@@ -40,13 +40,13 @@ namespace RTC
 			void RestartTimer();
 
 			/**
-			 * Called on received HeartbeatRequestChunk chunks.
+			 * Called on received HEARTBEAT_REQUEST Chunk.
 			 */
 			void ProcessReceivedHeartbeatRequestChunk(
 			  const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
 
 			/**
-			 * Called on received HeartbeatAckChunk chunks.
+			 * Called on received HEARTBEAT_ACK Chunk.
 			 */
 			void ProcessReceivedHeartbeatAckChunk(const HeartbeatAckChunk* receivedHeartbeatAckChunk);
 
