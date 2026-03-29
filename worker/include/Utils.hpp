@@ -360,6 +360,113 @@ namespace Utils
 			return (lhs == rhs) || ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
 		}
+
+		/**
+		 * Calculates the forward difference between two wrapping numbers.
+		 *
+		 * Example:
+		 * ```c++
+		 * uint8_t x = 253;
+		 * uint8_t y = 2;
+		 *
+		 * ForwardDiff(x, y) == 5
+		 * ```
+		 *
+		 *   252   253   254   255    0     1     2     3
+		 * #################################################
+		 * |     |  x  |     |     |     |     |  y  |     |
+		 * #################################################
+		 *          |----->----->----->----->----->
+		 *
+		 * ForwardDiff(y, x) == 251
+		 *
+		 *   252   253   254   255    0     1     2     3
+		 * #################################################
+		 * |     |  x  |     |     |     |     |  y  |     |
+		 * #################################################
+		 * -->----->                              |----->---
+		 *
+		 * If M > 0 then wrapping occurs at M, if M == 0 then wrapping occurs at the
+		 * largest value representable by T.
+		 */
+		static T ForwardDiff(T lhs, T rhs)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			lhs &= MaxValue;
+			rhs &= MaxValue;
+
+			if (lhs <= rhs)
+			{
+				return rhs - lhs;
+			}
+
+			if constexpr (N == 0)
+			{
+				// Unsigned overflow intencional: 2^bits - (lhs-rhs).
+				return rhs - lhs;
+			}
+			else
+			{
+				return static_cast<T>((uint64_t{ MaxValue } + 1u) - static_cast<uint64_t>(lhs - rhs));
+			}
+		}
+
+		/**
+		 * Calculates the reverse difference between two wrapping numbers.
+		 *
+		 * Example:
+		 * ```c++
+		 * uint8_t x = 253;
+		 * uint8_t y = 2;
+		 *
+		 * ReverseDiff(y, x) == 5
+		 *
+		 *   252   253   254   255    0     1     2     3
+		 * #################################################
+		 * |     |  x  |     |     |     |     |  y  |     |
+		 * #################################################
+		 *          <-----<-----<-----<-----<-----|
+		 *
+		 * ReverseDiff(x, y) == 251
+		 *
+		 *   252   253   254   255    0     1     2     3
+		 * #################################################
+		 * |     |  x  |     |     |     |     |  y  |     |
+		 * #################################################
+		 * ---<-----|                             |<-----<--
+		 *
+		 * If M > 0 then wrapping occurs at M, if M == 0 then wrapping occurs at the
+		 * largest value representable by T.
+		 */
+		static T ReverseDiff(T lhs, T rhs)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			lhs &= MaxValue;
+			rhs &= MaxValue;
+
+			if (rhs <= lhs)
+			{
+				return lhs - rhs;
+			}
+
+			if constexpr (N == 0)
+			{
+				// Unsigned overflow intencional: 2^bits - (rhs-lhs).
+				return lhs - rhs;
+			}
+			else
+			{
+				return static_cast<T>((uint64_t{ MaxValue } + 1u) - static_cast<uint64_t>(rhs - lhs));
+			}
+		}
 	};
 
 	class Time

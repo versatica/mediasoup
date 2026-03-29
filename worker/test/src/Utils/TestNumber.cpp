@@ -126,4 +126,49 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number<uint32_t, 2>::IsLowerOrEqualThan(3, 1) == true);
 		REQUIRE(Utils::Number<uint64_t, 2>::IsLowerOrEqualThan(3, 1) == true);
 	}
+
+	SECTION("ForwardDiff() substract large")
+	{
+		REQUIRE(Utils::Number<uint8_t>::ForwardDiff(123u, 124u) == 1);
+		REQUIRE(Utils::Number<uint8_t>::ForwardDiff(255u, 0u) == 1);
+		REQUIRE(Utils::Number<uint16_t>::ForwardDiff(4711u, 4711u) == 0);
+		REQUIRE(Utils::Number<uint32_t>::ForwardDiff(4711u, 4711u) == 0);
+		REQUIRE(Utils::Number<uint64_t>::ForwardDiff(4711u, 4711u) == 0);
+
+		uint8_t x{ 0 };
+		uint8_t y{ 255 };
+
+		for (uint16_t i{ 0 }; i < 256; ++i)
+		{
+			REQUIRE(Utils::Number<uint8_t>::ForwardDiff(x, y) == 255);
+			REQUIRE(Utils::Number<uint16_t, 8>::ForwardDiff(x, y) == 255);
+			REQUIRE(Utils::Number<uint32_t, 8>::ForwardDiff(x, y) == 255);
+			REQUIRE(Utils::Number<uint64_t, 8>::ForwardDiff(x, y) == 255);
+
+			++x;
+			++y;
+		}
+
+		int yi{ 255 };
+
+		for (uint16_t i{ 0 }; i < 256; ++i)
+		{
+			REQUIRE(static_cast<uint64_t>(Utils::Number<uint8_t>::ForwardDiff(x, yi)) == 255);
+			REQUIRE(static_cast<uint64_t>(Utils::Number<uint16_t, 8>::ForwardDiff(x, yi)) == 255);
+			REQUIRE(static_cast<uint64_t>(Utils::Number<uint32_t, 8>::ForwardDiff(x, yi)) == 255);
+			REQUIRE(static_cast<uint64_t>(Utils::Number<uint64_t, 8>::ForwardDiff(x, yi)) == 255);
+
+			++x;
+			++yi;
+		}
+	}
+
+	SECTION("ForwardDiff() with divisor")
+	{
+		REQUIRE(static_cast<uint64_t>(Utils::Number<uint8_t, 7>::ForwardDiff(0, 122)) == 122);
+		REQUIRE(static_cast<uint64_t>(Utils::Number<uint8_t, 7>::ForwardDiff(122, 122)) == 0);
+		REQUIRE(static_cast<uint64_t>(Utils::Number<uint8_t, 7>::ForwardDiff(1, 0)) == 122);
+		REQUIRE(static_cast<uint64_t>(Utils::Number<uint8_t, 7>::ForwardDiff(0, 0)) == 0);
+		REQUIRE(static_cast<uint64_t>(Utils::Number<uint8_t, 7>::ForwardDiff(122, 0)) == 1);
+	}
 }

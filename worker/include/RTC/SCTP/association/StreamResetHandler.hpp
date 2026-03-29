@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/association/TCBContext.hpp"
+#include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
 #include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"

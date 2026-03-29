@@ -486,6 +486,7 @@ test_sources = [
   'test/src/RTC/SCTP/sctpCommon.cpp',
   'test/src/RTC/SCTP/association/TestStateCookie.cpp',
   'test/src/RTC/SCTP/association/TestNegotiatedCapabilities.cpp',
+  'test/src/RTC/SCTP/common/TestUnwrappedSequenceNumber.cpp',
   'test/src/RTC/SCTP/tx/TestRetransmissionErrorCounter.cpp',
   'test/src/RTC/SCTP/tx/TestRetransmissionTimeout.cpp',
   'test/src/RTC/SCTP/packet/TestPacket.cpp',
