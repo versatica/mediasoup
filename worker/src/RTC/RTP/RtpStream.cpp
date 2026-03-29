@@ -149,7 +149,7 @@ namespace RTC
 			}
 
 			// Update highest seen RTP timestamp.
-			if (Utils::Number<uint32_t>::IsHigherThan(packet->GetTimestamp(), this->maxPacketTs))
+			if (Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 			{
 				this->maxPacketTs = packet->GetTimestamp();
 				this->maxPacketMs = DepLibUV::GetTimeMs();
@@ -208,7 +208,7 @@ namespace RTC
 
 				// Timestamp moved backwards despite in-order sequence number. Likely
 				// caused by prolonged Producer inactivity (e.g., overnight pause).
-				if (Utils::Number<uint32_t>::IsLowerThan(packet->GetTimestamp(), this->maxPacketTs))
+				if (Utils::Number::IsLowerThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 				{
 					MS_DEBUG_TAG(
 					  rtp,

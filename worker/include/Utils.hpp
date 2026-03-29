@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/Consts.hpp"
 #include <openssl/evp.h>
+#include <cassert>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <limits>  // std::numeric_limits
@@ -283,15 +284,12 @@ namespace Utils
 		static uint8_t* Base64Decode(const std::string& str, size_t& outLen);
 	};
 
-	// T is the base type (uint16_t, uint32_t, ...).
-	// N is the max number of bits used in T.
-	template<typename T, uint8_t N = 0>
 	class Number
 	{
-	private:
-		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
-
 	public:
+		// T is the base type (uint16_t, uint32_t, ...).
+		// N is the max number of bits used in T.
+		template<typename T, uint8_t N = 0>
 		static bool IsEqualThan(T lhs, T rhs)
 		{
 			static_assert(
@@ -299,18 +297,25 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
+			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
+
 			lhs &= MaxValue;
 			rhs &= MaxValue;
 
 			return (lhs == rhs);
 		}
 
+		// T is the base type (uint16_t, uint32_t, ...).
+		// N is the max number of bits used in T.
+		template<typename T, uint8_t N = 0>
 		static bool IsHigherThan(T lhs, T rhs)
 		{
 			static_assert(
 			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
 
 			lhs &= MaxValue;
 			rhs &= MaxValue;
@@ -319,12 +324,17 @@ namespace Utils
 			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
 		}
 
+		// T is the base type (uint16_t, uint32_t, ...).
+		// N is the max number of bits used in T.
+		template<typename T, uint8_t N = 0>
 		static bool IsLowerThan(T lhs, T rhs)
 		{
 			static_assert(
 			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
 
 			lhs &= MaxValue;
 			rhs &= MaxValue;
@@ -333,12 +343,17 @@ namespace Utils
 			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
 		}
 
+		// T is the base type (uint16_t, uint32_t, ...).
+		// N is the max number of bits used in T.
+		template<typename T, uint8_t N = 0>
 		static bool IsHigherOrEqualThan(T lhs, T rhs)
 		{
 			static_assert(
 			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
 
 			lhs &= MaxValue;
 			rhs &= MaxValue;
@@ -347,12 +362,17 @@ namespace Utils
 			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
 		}
 
+		// T is the base type (uint16_t, uint32_t, ...).
+		// N is the max number of bits used in T.
+		template<typename T, uint8_t N = 0>
 		static bool IsLowerOrEqualThan(T lhs, T rhs)
 		{
 			static_assert(
 			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
 
 			lhs &= MaxValue;
 			rhs &= MaxValue;
@@ -389,30 +409,29 @@ namespace Utils
 		 * If M > 0 then wrapping occurs at M, if M == 0 then wrapping occurs at the
 		 * largest value representable by T.
 		 */
-		static T ForwardDiff(T lhs, T rhs)
+		template<typename T, T M>
+		static T ForwardDiff(T a, T b) requires(M > 0)
 		{
-			static_assert(
-			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
-			    std::is_same_v<T, uint64_t>,
-			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+			static_assert(std::is_unsigned<T>::value, "type must be an unsigned integer");
 
-			lhs &= MaxValue;
-			rhs &= MaxValue;
+			assert(a < M);
+			assert(b < M);
 
-			if (lhs <= rhs)
-			{
-				return rhs - lhs;
-			}
+			return a <= b ? b - a : M - (a - b);
+		}
 
-			if constexpr (N == 0)
-			{
-				// Unsigned overflow intencional: 2^bits - (lhs-rhs).
-				return rhs - lhs;
-			}
-			else
-			{
-				return static_cast<T>((uint64_t{ MaxValue } + 1u) - static_cast<uint64_t>(lhs - rhs));
-			}
+		template<typename T, T M>
+		static T ForwardDiff(T a, T b) requires(M == 0)
+		{
+			static_assert(std::is_unsigned<T>::value, "type must be an unsigned integer");
+
+			return b - a;
+		}
+
+		template<typename T>
+		static T ForwardDiff(T a, T b)
+		{
+			return ForwardDiff<T, 0>(a, b);
 		}
 
 		/**
@@ -442,30 +461,28 @@ namespace Utils
 		 * If M > 0 then wrapping occurs at M, if M == 0 then wrapping occurs at the
 		 * largest value representable by T.
 		 */
-		static T ReverseDiff(T lhs, T rhs)
+		template<typename T, T M>
+		static T ReverseDiff(T a, T b) requires(M > 0)
 		{
-			static_assert(
-			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
-			    std::is_same_v<T, uint64_t>,
-			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+			static_assert(std::is_unsigned<T>::value, "type must be an unsigned integer");
 
-			lhs &= MaxValue;
-			rhs &= MaxValue;
+			assert(a < M);
+			assert(b < M);
 
-			if (rhs <= lhs)
-			{
-				return lhs - rhs;
-			}
+			return b <= a ? a - b : M - (b - a);
+		}
 
-			if constexpr (N == 0)
-			{
-				// Unsigned overflow intencional: 2^bits - (rhs-lhs).
-				return lhs - rhs;
-			}
-			else
-			{
-				return static_cast<T>((uint64_t{ MaxValue } + 1u) - static_cast<uint64_t>(rhs - lhs));
-			}
+		template<typename T, T M>
+		static T ReverseDiff(T a, T b) requires(M == 0)
+		{
+			static_assert(std::is_unsigned<T>::value, "type must be an unsigned integer");
+			return a - b;
+		}
+
+		template<typename T>
+		static T ReverseDiff(T a, T b)
+		{
+			return ReverseDiff<T, 0>(a, b);
 		}
 	};
 

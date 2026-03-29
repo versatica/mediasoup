@@ -31,7 +31,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Ignore too old data. Should never happen.
-		if (this->oldestItemStartTime.has_value() && Utils::Number<uint64_t>::IsLowerThan(nowMs, *this->oldestItemStartTime))
+		if (this->oldestItemStartTime.has_value() && Utils::Number::IsLowerThan<uint64_t>(nowMs, *this->oldestItemStartTime))
 		{
 			MS_WARN_DEV("nowMs < this->oldestItemStartTime, should never happen");
 
@@ -47,7 +47,7 @@ namespace RTC
 		// item size (in milliseconds), increase the item index.
 		if (
 		  this->newestItemIndex < 0 || !this->newestItemStartTime.has_value() ||
-		  Utils::Number<uint64_t>::IsHigherOrEqualThan(
+		  Utils::Number::IsHigherOrEqualThan<uint64_t>(
 		    nowMs - *this->newestItemStartTime, this->itemSizeMs))
 		{
 			this->newestItemIndex++;
@@ -165,7 +165,7 @@ namespace RTC
 		const uint64_t newOldestTime = nowMs - this->windowSizeMs;
 
 		// Oldest item already removed.
-		if (Utils::Number<uint64_t>::IsLowerThan(newOldestTime, *this->oldestItemStartTime))
+		if (Utils::Number::IsLowerThan<uint64_t>(newOldestTime, *this->oldestItemStartTime))
 		{
 			return;
 		}
@@ -173,7 +173,7 @@ namespace RTC
 		// A whole window size time has elapsed since last entry. Reset the buffer.
 		if (
 		  this->newestItemStartTime.has_value() &&
-		  Utils::Number<uint64_t>::IsHigherOrEqualThan(newOldestTime, *this->newestItemStartTime))
+		  Utils::Number::IsHigherOrEqualThan<uint64_t>(newOldestTime, *this->newestItemStartTime))
 		{
 			MS_DEBUG_DEV("newOldestTime >= this->newestItemStartTime, resetting the buffer");
 
@@ -182,7 +182,7 @@ namespace RTC
 			return;
 		}
 
-		while (Utils::Number<uint64_t>::IsHigherOrEqualThan(newOldestTime, *this->oldestItemStartTime))
+		while (Utils::Number::IsHigherOrEqualThan<uint64_t>(newOldestTime, *this->oldestItemStartTime))
 		{
 			BufferItem& oldestItem = this->buffer[this->oldestItemIndex];
 			this->totalCount -= oldestItem.count;

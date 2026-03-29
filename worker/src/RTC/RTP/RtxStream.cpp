@@ -73,7 +73,7 @@ namespace RTC
 			}
 
 			// Update highest seen RTP timestamp.
-			if (Utils::Number<uint32_t>::IsHigherThan(packet->GetTimestamp(), this->maxPacketTs))
+			if (Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 			{
 				this->maxPacketTs = packet->GetTimestamp();
 				this->maxPacketMs = DepLibUV::GetTimeMs();
