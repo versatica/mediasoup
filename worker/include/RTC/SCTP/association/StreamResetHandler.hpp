@@ -168,8 +168,6 @@ namespace RTC
 			~StreamResetHandler() override;
 
 		public:
-			void Dump(int indentation = 0) const;
-
 			/**
 			 * Initiates reset of the provided streams. While there can only be one
 			 * ongoing stream reset request at any time, this method can be called at
@@ -208,14 +206,14 @@ namespace RTC
 			// DataTracker* dataTracker{ nullptr };,
 			// ReassemblyQueue* reassemblyQueue{ nullptr };,
 			// RetransmissionQueue* retransmissionQueue{ nullptr };
+			UnwrappedSequenceNumber<uint32_t>::Unwrapper incomingReconfigRequestSnUnwrapper;
 			const std::unique_ptr<BackoffTimerHandle> reconfigTimer;
 			// The next sequence number for outgoing stream requests.
 			uint32_t nextOutgoingReqSeqNbr{ 0 };
 			// The current stream request operation.
 			std::optional<CurrentRequest> currentRequest;
 			// For incoming requests. Last processed request sequence number.
-			// TODO: SCTP
-			// UnwrappedReconfigRequestSn lastProcessedReqSeqNbr;
+			UnwrappedSequenceNumber<uint32_t> lastProcessedReqSeqNbr;
 			// The result from last processed incoming request.
 			ReconfigurationResponseParameter::Result lastProcessedReqResult;
 		};

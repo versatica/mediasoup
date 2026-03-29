@@ -147,6 +147,11 @@ namespace RTC
 			static constexpr auto ValueLimit = static_cast<int64_t>(1) << std::numeric_limits<T>::digits;
 
 		public:
+			explicit UnwrappedSequenceNumber(int64_t value) : value(value)
+			{
+			}
+
+		public:
 			/**
 			 * Returns the wrapped value this type represents.
 			 */
@@ -231,11 +236,6 @@ namespace RTC
 			UnwrappedSequenceNumber<T> GetNextValue() const
 			{
 				return UnwrappedSequenceNumber<T>(this->value + 1);
-			}
-
-		private:
-			explicit UnwrappedSequenceNumber(int64_t value) : value(value)
-			{
 			}
 
 		private:
