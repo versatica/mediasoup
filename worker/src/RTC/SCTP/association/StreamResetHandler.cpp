@@ -46,7 +46,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->currentRequest->HasBeenSent())
+			if (this->currentRequest && this->currentRequest->HasBeenSent())
 			{
 				if (this->currentRequest->IsDeferred())
 				{
