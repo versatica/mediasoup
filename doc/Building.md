@@ -230,7 +230,7 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 
 **Requirements:**
 
-- `invoke clean` and `invoke mediasoup-worker` must have been called first.
+- `invoke clean` must have been called first.
 - A specific version of `clang-tidy`is required. See [Install clang-tidy](#install-clang-tidy).
 - `clang-tidy-VERSION` or `clang-tidy` (corresponding to the required version) must be in the `PATH`. If not, add it before running the command. Same for other `clang-tidy` related executables such as `run-clang-tidy` and `clang-apply-replacements`,
 

@@ -33,6 +33,8 @@ jobs:
 
       - name: Setup Meson build (generates compile_commands.json)
         working-directory: worker
+        env:
+          MESON_ARGS: '-Dms_build_tests=true'
         run: invoke setup
 
       - name: Compile flatbuffers FBS files
@@ -47,8 +49,6 @@ jobs:
 
       - uses: ZedThree/clang-tidy-review@v0.23.1
         id: review
-        env:
-          MESON_ARGS: '-Dms_build_tests=true'
         with:
           apt_packages: 'libclang-rt-21-dev'
           build_dir: 'worker/out/Release/build'
