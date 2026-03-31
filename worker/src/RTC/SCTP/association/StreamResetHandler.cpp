@@ -305,8 +305,6 @@ namespace RTC
 			// TODO: SCTP
 		}
 
-		// TODO: SCTP
-
 		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
 		{
 			MS_TRACE();
