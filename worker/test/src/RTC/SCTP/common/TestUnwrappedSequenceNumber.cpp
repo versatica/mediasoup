@@ -196,13 +196,13 @@ SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 	SECTION("difference is absolute")
 	{
 		TestSequence::Unwrapper unwrapper;
-		TestSequence thisValue  = unwrapper.Unwrap(10);
-		TestSequence otherValue = TestSequence::AddTo(thisValue, 100);
+		const TestSequence thisValue  = unwrapper.Unwrap(10);
+		const TestSequence otherValue = TestSequence::AddTo(thisValue, 100);
 
 		REQUIRE(TestSequence::Difference(thisValue, otherValue) == 100);
 		REQUIRE(TestSequence::Difference(otherValue, thisValue) == 100);
 
-		TestSequence minusValue = TestSequence::AddTo(thisValue, -100);
+		const TestSequence minusValue = TestSequence::AddTo(thisValue, -100);
 
 		REQUIRE(TestSequence::Difference(thisValue, minusValue) == 100);
 		REQUIRE(TestSequence::Difference(minusValue, thisValue) == 100);
