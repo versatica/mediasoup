@@ -374,64 +374,64 @@ namespace RTC
 
 			bool ValidateReceivedPacket(const Packet* receivedPacket);
 
-			bool ProcessReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk);
+			bool HandleReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk);
 
-			void ProcessReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk);
+			void HandleReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk);
 
-			void ProcessReceivedInitAckChunk(
+			void HandleReceivedInitAckChunk(
 			  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk);
 
-			void ProcessReceivedCookieEchoChunk(
+			void HandleReceivedCookieEchoChunk(
 			  const Packet* receivedPacket, const CookieEchoChunk* receivedCookieEchoChunk);
 
-			bool ProcessReceivedCookieEchoChunkWithTcb(const Packet* receivedPacket, const StateCookie* cookie);
+			bool HandleReceivedCookieEchoChunkWithTcb(const Packet* receivedPacket, const StateCookie* cookie);
 
-			void ProcessReceivedCookieAckChunk(
+			void HandleReceivedCookieAckChunk(
 			  const Packet* receivedPacket, const CookieAckChunk* receivedCookieAckChunk);
 
-			void ProcessReceivedShutdownChunk(
+			void HandleReceivedShutdownChunk(
 			  const Packet* receivedPacket, const ShutdownChunk* receivedShutdownChunk);
 
-			void ProcessReceivedShutdownAckChunk(
+			void HandleReceivedShutdownAckChunk(
 			  const Packet* receivedPacket, const ShutdownAckChunk* receivedShutdownAckChunk);
 
-			void ProcessReceivedShutdownCompleteChunk(
+			void HandleReceivedShutdownCompleteChunk(
 			  const Packet* receivedPacket, const ShutdownCompleteChunk* receivedShutdownCompleteChunk);
 
-			void ProcessReceivedOperationErrorChunk(
+			void HandleReceivedOperationErrorChunk(
 			  const Packet* receivedPacket, const OperationErrorChunk* receivedOperationErrorChunk);
 
-			void ProcessReceivedAbortAssociationChunk(
+			void HandleReceivedAbortAssociationChunk(
 			  const Packet* receivedPacket, const AbortAssociationChunk* receivedAbortAssociationChunk);
 
-			void ProcessReceivedHeartbeatRequestChunk(
+			void HandleReceivedHeartbeatRequestChunk(
 			  const Packet* receivedPacket, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
 
-			void ProcessReceivedHeartbeatAckChunk(
+			void HandleReceivedHeartbeatAckChunk(
 			  const Packet* receivedPacket, const HeartbeatAckChunk* receivedHeartbeatAckChunk);
 
-			void ProcessReceivedReConfigChunk(
+			void HandleReceivedReConfigChunk(
 			  const Packet* receivedPacket, const ReConfigChunk* receivedReConfigChunk);
 
-			void ProcessReceivedForwardTsnChunk(
+			void HandleReceivedForwardTsnChunk(
 			  const Packet* receivedPacket, const ForwardTsnChunk* receivedForwardTsnChunk);
 
-			void ProcessReceivedIForwardTsnChunk(
+			void HandleReceivedIForwardTsnChunk(
 			  const Packet* receivedPacket, const IForwardTsnChunk* receivedIForwardTsnChunk);
 
-			void ProcessReceivedAnyForwardTsnChunk(
+			void HandleReceivedAnyForwardTsnChunk(
 			  const Packet* receivedPacket, const AnyForwardTsnChunk* receivedAnyForwardTsnChunk);
 
-			void ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
+			void HandleReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
 
-			void ProcessReceivedIDataChunk(const Packet* receivedPacket, const IDataChunk* receivedIDataChunk);
+			void HandleReceivedIDataChunk(const Packet* receivedPacket, const IDataChunk* receivedIDataChunk);
 
-			void ProcessReceivedAnyDataChunk(
+			void HandleReceivedAnyDataChunk(
 			  const Packet* receivedPacket, const AnyDataChunk* receivedAnyDataChunk);
 
-			void ProcessReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
+			void HandleReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
 
-			bool ProcessReceivedUnknownChunk(
+			bool HandleReceivedUnknownChunk(
 			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
 
 			void OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop);

@@ -42,13 +42,13 @@ namespace RTC
 			/**
 			 * Called on received HEARTBEAT_REQUEST Chunk.
 			 */
-			void ProcessReceivedHeartbeatRequestChunk(
+			void HandleReceivedHeartbeatRequestChunk(
 			  const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
 
 			/**
 			 * Called on received HEARTBEAT_ACK Chunk.
 			 */
-			void ProcessReceivedHeartbeatAckChunk(const HeartbeatAckChunk* receivedHeartbeatAckChunk);
+			void HandleReceivedHeartbeatAckChunk(const HeartbeatAckChunk* receivedHeartbeatAckChunk);
 
 		private:
 			void OnIntervalTimer(uint64_t& baseTimeoutMs, bool& stop);

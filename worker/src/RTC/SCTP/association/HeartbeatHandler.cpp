@@ -73,7 +73,7 @@ namespace RTC
 			this->intervalTimer->Start();
 		}
 
-		void HeartbeatHandler::ProcessReceivedHeartbeatRequestChunk(
+		void HeartbeatHandler::HandleReceivedHeartbeatRequestChunk(
 		  const HeartbeatRequestChunk* receivedHeartbeatRequestChunk)
 		{
 			MS_TRACE();
@@ -103,7 +103,7 @@ namespace RTC
 			this->tcbContext->Send(packet.get());
 		}
 
-		void HeartbeatHandler::ProcessReceivedHeartbeatAckChunk(
+		void HeartbeatHandler::HandleReceivedHeartbeatAckChunk(
 		  const HeartbeatAckChunk* receivedHeartbeatAckChunk)
 		{
 			MS_TRACE();

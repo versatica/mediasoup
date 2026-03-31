@@ -120,7 +120,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  number of streams: %" PRIu16, GetNumberOfStreams());
 			for (uint32_t idx{ 0 }; idx < GetNumberOfStreams(); ++idx)
 			{
-				MS_DUMP_CLEAN(indentation, "  - idx: %" PRIu16 ", stream: %" PRIu16, idx, GetStreamAt(idx));
+				MS_DUMP_CLEAN(indentation, "  - idx: %" PRIu16 ", stream id: %" PRIu16, idx, GetStreamAt(idx));
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::OutgoingSsnResetRequestParameter>");
 		}
@@ -158,7 +158,7 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 12, value);
 		}
 
-		void OutgoingSsnResetRequestParameter::AddStream(uint16_t stream)
+		void OutgoingSsnResetRequestParameter::AddStream(uint16_t streamId)
 		{
 			MS_TRACE();
 
@@ -169,7 +169,7 @@ namespace RTC
 
 			// Add the new stream.
 			Utils::Byte::Set2Bytes(
-			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, stream);
+			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, streamId);
 		}
 
 		OutgoingSsnResetRequestParameter* OutgoingSsnResetRequestParameter::SoftClone(

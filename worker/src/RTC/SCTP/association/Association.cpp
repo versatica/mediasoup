@@ -581,7 +581,7 @@ namespace RTC
 			{
 				const auto* receivedChunk = *it;
 
-				if (!ProcessReceivedChunk(receivedPacket.get(), receivedChunk))
+				if (!HandleReceivedChunk(receivedPacket.get(), receivedChunk))
 				{
 					break;
 				}
@@ -1118,7 +1118,7 @@ namespace RTC
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-5.2.4
 			//
-			// This is handled in ProcessReceivedCookieEchoChunk().
+			// This is handled in HandleReceivedCookieEchoChunk().
 			if (receivedPacket->GetChunksCount() >= 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::COOKIE_ECHO)
 			{
 				return true;
@@ -1191,7 +1191,7 @@ namespace RTC
 			}
 		}
 
-		bool Association::ProcessReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk)
+		bool Association::HandleReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk)
 		{
 			MS_TRACE();
 
@@ -1199,21 +1199,21 @@ namespace RTC
 			{
 				case Chunk::ChunkType::INIT:
 				{
-					ProcessReceivedInitChunk(receivedPacket, static_cast<const InitChunk*>(receivedChunk));
+					HandleReceivedInitChunk(receivedPacket, static_cast<const InitChunk*>(receivedChunk));
 
 					break;
 				}
 
 				case Chunk::ChunkType::INIT_ACK:
 				{
-					ProcessReceivedInitAckChunk(receivedPacket, static_cast<const InitAckChunk*>(receivedChunk));
+					HandleReceivedInitAckChunk(receivedPacket, static_cast<const InitAckChunk*>(receivedChunk));
 
 					break;
 				}
 
 				case Chunk::ChunkType::COOKIE_ECHO:
 				{
-					ProcessReceivedCookieEchoChunk(
+					HandleReceivedCookieEchoChunk(
 					  receivedPacket, static_cast<const CookieEchoChunk*>(receivedChunk));
 
 					break;
@@ -1221,7 +1221,7 @@ namespace RTC
 
 				case Chunk::ChunkType::COOKIE_ACK:
 				{
-					ProcessReceivedCookieAckChunk(
+					HandleReceivedCookieAckChunk(
 					  receivedPacket, static_cast<const CookieAckChunk*>(receivedChunk));
 
 					break;
@@ -1229,7 +1229,7 @@ namespace RTC
 
 				case Chunk::ChunkType::SHUTDOWN:
 				{
-					ProcessReceivedShutdownChunk(
+					HandleReceivedShutdownChunk(
 					  receivedPacket, static_cast<const ShutdownChunk*>(receivedChunk));
 
 					break;
@@ -1237,7 +1237,7 @@ namespace RTC
 
 				case Chunk::ChunkType::SHUTDOWN_ACK:
 				{
-					ProcessReceivedShutdownAckChunk(
+					HandleReceivedShutdownAckChunk(
 					  receivedPacket, static_cast<const ShutdownAckChunk*>(receivedChunk));
 
 					break;
@@ -1245,7 +1245,7 @@ namespace RTC
 
 				case Chunk::ChunkType::SHUTDOWN_COMPLETE:
 				{
-					ProcessReceivedShutdownCompleteChunk(
+					HandleReceivedShutdownCompleteChunk(
 					  receivedPacket, static_cast<const ShutdownCompleteChunk*>(receivedChunk));
 
 					break;
@@ -1253,7 +1253,7 @@ namespace RTC
 
 				case Chunk::ChunkType::OPERATION_ERROR:
 				{
-					ProcessReceivedOperationErrorChunk(
+					HandleReceivedOperationErrorChunk(
 					  receivedPacket, static_cast<const OperationErrorChunk*>(receivedChunk));
 
 					break;
@@ -1261,7 +1261,7 @@ namespace RTC
 
 				case Chunk::ChunkType::ABORT:
 				{
-					ProcessReceivedAbortAssociationChunk(
+					HandleReceivedAbortAssociationChunk(
 					  receivedPacket, static_cast<const AbortAssociationChunk*>(receivedChunk));
 
 					break;
@@ -1269,7 +1269,7 @@ namespace RTC
 
 				case Chunk::ChunkType::HEARTBEAT_REQUEST:
 				{
-					ProcessReceivedHeartbeatRequestChunk(
+					HandleReceivedHeartbeatRequestChunk(
 					  receivedPacket, static_cast<const HeartbeatRequestChunk*>(receivedChunk));
 
 					break;
@@ -1277,7 +1277,7 @@ namespace RTC
 
 				case Chunk::ChunkType::HEARTBEAT_ACK:
 				{
-					ProcessReceivedHeartbeatAckChunk(
+					HandleReceivedHeartbeatAckChunk(
 					  receivedPacket, static_cast<const HeartbeatAckChunk*>(receivedChunk));
 
 					break;
@@ -1285,7 +1285,7 @@ namespace RTC
 
 				case Chunk::ChunkType::RE_CONFIG:
 				{
-					ProcessReceivedReConfigChunk(
+					HandleReceivedReConfigChunk(
 					  receivedPacket, static_cast<const ReConfigChunk*>(receivedChunk));
 
 					break;
@@ -1293,7 +1293,7 @@ namespace RTC
 
 				case Chunk::ChunkType::FORWARD_TSN:
 				{
-					ProcessReceivedForwardTsnChunk(
+					HandleReceivedForwardTsnChunk(
 					  receivedPacket, static_cast<const ForwardTsnChunk*>(receivedChunk));
 
 					break;
@@ -1301,7 +1301,7 @@ namespace RTC
 
 				case Chunk::ChunkType::I_FORWARD_TSN:
 				{
-					ProcessReceivedIForwardTsnChunk(
+					HandleReceivedIForwardTsnChunk(
 					  receivedPacket, static_cast<const IForwardTsnChunk*>(receivedChunk));
 
 					break;
@@ -1309,28 +1309,28 @@ namespace RTC
 
 				case Chunk::ChunkType::DATA:
 				{
-					ProcessReceivedDataChunk(receivedPacket, static_cast<const DataChunk*>(receivedChunk));
+					HandleReceivedDataChunk(receivedPacket, static_cast<const DataChunk*>(receivedChunk));
 
 					break;
 				}
 
 				case Chunk::ChunkType::I_DATA:
 				{
-					ProcessReceivedIDataChunk(receivedPacket, static_cast<const IDataChunk*>(receivedChunk));
+					HandleReceivedIDataChunk(receivedPacket, static_cast<const IDataChunk*>(receivedChunk));
 
 					break;
 				}
 
 				case Chunk::ChunkType::SACK:
 				{
-					ProcessReceivedSackChunk(receivedPacket, static_cast<const SackChunk*>(receivedChunk));
+					HandleReceivedSackChunk(receivedPacket, static_cast<const SackChunk*>(receivedChunk));
 
 					break;
 				}
 
 				default:
 				{
-					return ProcessReceivedUnknownChunk(
+					return HandleReceivedUnknownChunk(
 					  receivedPacket, static_cast<const UnknownChunk*>(receivedChunk));
 				}
 			}
@@ -1338,7 +1338,7 @@ namespace RTC
 			return true;
 		}
 
-		void Association::ProcessReceivedInitChunk(
+		void Association::HandleReceivedInitChunk(
 		  const Packet* /*receivedPacket*/, const InitChunk* receivedInitChunk)
 		{
 			MS_TRACE();
@@ -1525,7 +1525,7 @@ namespace RTC
 			  packet.get(), /*writeChecksum*/ !negotiatedCapabilities.zeroChecksum);
 		}
 
-		void Association::ProcessReceivedInitAckChunk(
+		void Association::HandleReceivedInitAckChunk(
 		  const Packet* /*receivedPacket*/, const InitAckChunk* receivedInitAckChunk)
 		{
 			MS_TRACE();
@@ -1619,7 +1619,7 @@ namespace RTC
 			this->listener.OnAssociationConnecting();
 		}
 
-		void Association::ProcessReceivedCookieEchoChunk(
+		void Association::HandleReceivedCookieEchoChunk(
 		  const Packet* receivedPacket, const CookieEchoChunk* receivedCookieEchoChunk)
 		{
 			MS_TRACE();
@@ -1649,7 +1649,7 @@ namespace RTC
 
 			if (this->tcb)
 			{
-				if (!ProcessReceivedCookieEchoChunkWithTcb(receivedPacket, cookie.get()))
+				if (!HandleReceivedCookieEchoChunkWithTcb(receivedPacket, cookie.get()))
 				{
 					return;
 				}
@@ -1722,7 +1722,7 @@ namespace RTC
 			this->packetSender.SendPacket(packet.get());
 		}
 
-		bool Association::ProcessReceivedCookieEchoChunkWithTcb(
+		bool Association::HandleReceivedCookieEchoChunkWithTcb(
 		  const Packet* receivedPacket, const StateCookie* cookie)
 		{
 			MS_TRACE();
@@ -1814,7 +1814,7 @@ namespace RTC
 			return true;
 		}
 
-		void Association::ProcessReceivedCookieAckChunk(
+		void Association::HandleReceivedCookieAckChunk(
 		  const Packet* /*receivedPacket*/, const CookieAckChunk* /*receivedCookieAckChunk*/)
 		{
 			MS_TRACE();
@@ -1843,7 +1843,7 @@ namespace RTC
 			this->listener.OnAssociationConnected();
 		}
 
-		void Association::ProcessReceivedShutdownChunk(
+		void Association::HandleReceivedShutdownChunk(
 		  const Packet* /*receivedPacket*/, const ShutdownChunk* /*receivedShutdownChunk*/)
 		{
 			MS_TRACE();
@@ -1913,7 +1913,7 @@ namespace RTC
 			}
 		}
 
-		void Association::ProcessReceivedShutdownAckChunk(
+		void Association::HandleReceivedShutdownAckChunk(
 		  const Packet* receivedPacket, const ShutdownAckChunk* /*receivedShutdownAckChunk*/)
 		{
 			MS_TRACE();
@@ -1972,7 +1972,7 @@ namespace RTC
 			}
 		}
 
-		void Association::ProcessReceivedShutdownCompleteChunk(
+		void Association::HandleReceivedShutdownCompleteChunk(
 		  const Packet* /*receivedPacket*/, const ShutdownCompleteChunk* /*receivedShutdownCompleteChunk*/)
 		{
 			MS_TRACE();
@@ -1992,7 +1992,7 @@ namespace RTC
 			InternalClose(Types::ErrorKind::SUCCESS, "");
 		}
 
-		void Association::ProcessReceivedOperationErrorChunk(
+		void Association::HandleReceivedOperationErrorChunk(
 		  const Packet* /*receivedPacket*/, const OperationErrorChunk* receivedOperationErrorChunk)
 		{
 			MS_TRACE();
@@ -2030,7 +2030,7 @@ namespace RTC
 			this->listener.OnAssociationError(Types::ErrorKind::PEER_REPORTED, errorCausesStr);
 		}
 
-		void Association::ProcessReceivedAbortAssociationChunk(
+		void Association::HandleReceivedAbortAssociationChunk(
 		  const Packet* /*receivedPacket*/, const AbortAssociationChunk* receivedAbortAssociationChunk)
 		{
 			MS_TRACE();
@@ -2068,7 +2068,7 @@ namespace RTC
 			InternalClose(Types::ErrorKind::PEER_REPORTED, errorCausesStr);
 		}
 
-		void Association::ProcessReceivedHeartbeatRequestChunk(
+		void Association::HandleReceivedHeartbeatRequestChunk(
 		  const Packet* /*receivedPacket*/, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk)
 		{
 			MS_TRACE();
@@ -2078,11 +2078,11 @@ namespace RTC
 				return;
 			}
 
-			this->tcb->GetHeartbeatHandler().ProcessReceivedHeartbeatRequestChunk(
+			this->tcb->GetHeartbeatHandler().HandleReceivedHeartbeatRequestChunk(
 			  receivedHeartbeatRequestChunk);
 		}
 
-		void Association::ProcessReceivedHeartbeatAckChunk(
+		void Association::HandleReceivedHeartbeatAckChunk(
 		  const Packet* /*receivedPacket*/, const HeartbeatAckChunk* receivedHeartbeatAckChunk)
 		{
 			MS_TRACE();
@@ -2092,10 +2092,10 @@ namespace RTC
 				return;
 			}
 
-			this->tcb->GetHeartbeatHandler().ProcessReceivedHeartbeatAckChunk(receivedHeartbeatAckChunk);
+			this->tcb->GetHeartbeatHandler().HandleReceivedHeartbeatAckChunk(receivedHeartbeatAckChunk);
 		}
 
-		void Association::ProcessReceivedReConfigChunk(
+		void Association::HandleReceivedReConfigChunk(
 		  const Packet* /*receivedPacket*/, const ReConfigChunk* /*receivedReConfigChunk*/)
 		{
 			MS_TRACE();
@@ -2124,23 +2124,23 @@ namespace RTC
 			MayDeliverMessages();
 		}
 
-		void Association::ProcessReceivedForwardTsnChunk(
+		void Association::HandleReceivedForwardTsnChunk(
 		  const Packet* receivedPacket, const ForwardTsnChunk* receivedForwardTsnChunk)
 		{
 			MS_TRACE();
 
-			ProcessReceivedAnyForwardTsnChunk(receivedPacket, receivedForwardTsnChunk);
+			HandleReceivedAnyForwardTsnChunk(receivedPacket, receivedForwardTsnChunk);
 		}
 
-		void Association::ProcessReceivedIForwardTsnChunk(
+		void Association::HandleReceivedIForwardTsnChunk(
 		  const Packet* receivedPacket, const IForwardTsnChunk* receivedIForwardTsnChunk)
 		{
 			MS_TRACE();
 
-			ProcessReceivedAnyForwardTsnChunk(receivedPacket, receivedIForwardTsnChunk);
+			HandleReceivedAnyForwardTsnChunk(receivedPacket, receivedIForwardTsnChunk);
 		}
 
-		void Association::ProcessReceivedAnyForwardTsnChunk(
+		void Association::HandleReceivedAnyForwardTsnChunk(
 		  const Packet* /*receivedPacket*/, const AnyForwardTsnChunk* /*receivedAnyForwardTsnChunk*/)
 		{
 			MS_TRACE();
@@ -2189,23 +2189,23 @@ namespace RTC
 			MayDeliverMessages();
 		}
 
-		void Association::ProcessReceivedDataChunk(
+		void Association::HandleReceivedDataChunk(
 		  const Packet* receivedPacket, const DataChunk* receivedDataChunk)
 		{
 			MS_TRACE();
 
-			ProcessReceivedAnyDataChunk(receivedPacket, receivedDataChunk);
+			HandleReceivedAnyDataChunk(receivedPacket, receivedDataChunk);
 		}
 
-		void Association::ProcessReceivedIDataChunk(
+		void Association::HandleReceivedIDataChunk(
 		  const Packet* receivedPacket, const IDataChunk* receivedIDataChunk)
 		{
 			MS_TRACE();
 
-			ProcessReceivedAnyDataChunk(receivedPacket, receivedIDataChunk);
+			HandleReceivedAnyDataChunk(receivedPacket, receivedIDataChunk);
 		}
 
-		void Association::ProcessReceivedAnyDataChunk(
+		void Association::HandleReceivedAnyDataChunk(
 		  const Packet* /*receivedPacket*/, const AnyDataChunk* receivedAnyDataChunk)
 		{
 			MS_TRACE();
@@ -2323,7 +2323,7 @@ namespace RTC
 			// }
 		}
 
-		void Association::ProcessReceivedSackChunk(
+		void Association::HandleReceivedSackChunk(
 		  const Packet* /*receivedPacket*/, const SackChunk* /*receivedSackChunk*/)
 		{
 			MS_TRACE();
@@ -2334,7 +2334,7 @@ namespace RTC
 			}
 
 			// TODO: SCTP: Implement it.
-			// if (this->tcb->GetRetransmissionQueue()->ProcessSack(receivedSackChunk))
+			// if (this->tcb->GetRetransmissionQueue()->HandleReceivedSack(receivedSackChunk))
 			// {
 			// 	MaySendShutdownOrShutdownAckChunk();
 
@@ -2366,7 +2366,7 @@ namespace RTC
 			// }
 		}
 
-		bool Association::ProcessReceivedUnknownChunk(
+		bool Association::HandleReceivedUnknownChunk(
 		  const Packet* /*receivedPacket*/, const UnknownChunk* receivedUnknownChunk)
 		{
 			MS_TRACE();

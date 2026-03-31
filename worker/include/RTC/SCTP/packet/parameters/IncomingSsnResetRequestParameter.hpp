@@ -98,7 +98,7 @@ namespace RTC
 				return Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 2));
 			}
 
-			void AddStream(uint16_t stream);
+			void AddStream(uint16_t streamId);
 
 		protected:
 			IncomingSsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final;

@@ -4,11 +4,17 @@
 
 #include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "Logger.hpp"
+#include "RTC/Consts.hpp"
+#include "RTC/SCTP/packet/Parameter.hpp"
 
 namespace RTC
 {
 	namespace SCTP
 	{
+		/* Static. */
+
+		alignas(4) thread_local static uint8_t ChunkFactoryBuffer[RTC::Consts::MaxSafeMtuSizeForSctp];
+
 		/* Instance methods. */
 
 		StreamResetHandler::StreamResetHandler(
@@ -20,7 +26,7 @@ namespace RTC
 		  )
 		  : associationListener(associationListener),
 		    tcbContext(tcbContext),
-		    reconfigTimer(
+		    reConfigTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ 0,
@@ -40,9 +46,268 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		// TODO
+		void StreamResetHandler::ResetStreams(std::span<const uint16_t> outgoingStreamIds)
+		{
+			MS_TRACE();
 
-		void StreamResetHandler::OnReconfigTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
+			// TODO: SCTP: Uncomment.
+			// for (const auto streamId : outgoingStreamIds)
+			{
+				// TODO: SCTP: Implement it.
+				// this->retransmissionQueue->PrepareResetStream(streamId);
+			}
+		}
+
+		void StreamResetHandler::HandleReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk)
+		{
+			MS_TRACE();
+
+			std::optional<std::vector<ReconfigurationResponseParameter>> responses =
+			  ProcessReceivedReConfigChunk(receivedReConfigChunk);
+
+			if (!responses.has_value())
+			{
+				this->associationListener.OnAssociationError(
+				  Types::ErrorKind::PARSE_FAILED, "failed to parse RE-CONFIG command");
+
+				return;
+			}
+
+			if (responses->empty())
+			{
+				return;
+			}
+
+			auto packet         = this->tcbContext->CreatePacket();
+			auto* reConfigChunk = packet->BuildChunkInPlace<ReConfigChunk>();
+
+			for (const auto& response : responses.value())
+			{
+				reConfigChunk->AddParameter(std::addressof(response));
+			}
+
+			reConfigChunk->Consolidate();
+
+			this->tcbContext->Send(packet.get());
+		}
+
+		bool StreamResetHandler::ValidateReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk)
+		{
+			MS_TRACE();
+
+			if (receivedReConfigChunk->GetParametersCount() == 1)
+			{
+				const auto* firstParameter = receivedReConfigChunk->GetParameterAt(0);
+
+				if (
+				  firstParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST ||
+				  firstParameter->GetType() == Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST ||
+				  firstParameter->GetType() == Parameter::ParameterType::SSN_TSN_RESET_REQUEST ||
+				  firstParameter->GetType() == Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST ||
+				  firstParameter->GetType() == Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST ||
+				  firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE)
+				{
+					return true;
+				}
+			}
+			else if (receivedReConfigChunk->GetParametersCount() == 2)
+			{
+				const auto* firstParameter  = receivedReConfigChunk->GetParameterAt(0);
+				const auto* secondParameter = receivedReConfigChunk->GetParameterAt(1);
+
+				if (
+				  (firstParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST &&
+				   secondParameter->GetType() == Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST) ||
+				  (firstParameter->GetType() == Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST &&
+				   secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
+				  (firstParameter->GetType() == Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST &&
+				   secondParameter->GetType() == Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST) ||
+				  (firstParameter->GetType() == Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST &&
+				   secondParameter->GetType() == Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST) ||
+				  (firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE &&
+				   secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
+				  (firstParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST &&
+				   secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
+				  (firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE &&
+				   secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
+				  (firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE &&
+				   secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE))
+				{
+					return true;
+				}
+			}
+
+			MS_WARN_TAG(sctp, "invalid set of RE-CONFIG Parameters");
+
+			return false;
+		}
+
+		std::optional<std::vector<ReconfigurationResponseParameter>> StreamResetHandler::ProcessReceivedReConfigChunk(
+		  const ReConfigChunk* receivedReConfigChunk)
+		{
+			MS_TRACE();
+
+			if (!ValidateReceivedReConfigChunk(receivedReConfigChunk))
+			{
+				return std::nullopt;
+			}
+
+			std::vector<ReconfigurationResponseParameter> responses;
+
+			for (auto it = receivedReConfigChunk->ParametersBegin();
+			     it != receivedReConfigChunk->ParametersEnd();
+			     ++it)
+			{
+				const auto* parameter = *it;
+
+				switch (parameter->GetType())
+				{
+					case Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST:
+					{
+						HandleReceivedOutgoingSsnResetRequestParameter(
+						  reinterpret_cast<const OutgoingSsnResetRequestParameter*>(parameter), responses);
+
+						break;
+					}
+
+					case Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST:
+					{
+						HandleReceivedIncomingSsnResetRequestParameter(
+						  reinterpret_cast<const IncomingSsnResetRequestParameter*>(parameter), responses);
+
+						break;
+					}
+
+					case Parameter::ParameterType::RECONFIGURATION_RESPONSE:
+					{
+						HandleReceivedReconfigurationResponseParameter(
+						  reinterpret_cast<const ReconfigurationResponseParameter*>(parameter));
+
+						break;
+					}
+
+					default:;
+				}
+			}
+
+			return responses;
+		}
+
+		ReConfigChunk* StreamResetHandler::CreateStreamResetRequest()
+		{
+			MS_TRACE();
+
+			// Only send stream resets if there are streams to reset, and no current
+			// ongoing request (there can only be one at a time), and if the stream
+			// can be reset.
+			// TODO: SCTP: Implement it.
+			// if (this->currentRequest.has_value() ||
+			//     !this->retransmissionQueue->HasStreamsReadyToBeReset())
+			// {
+			//   return nullptr;
+			// }
+
+			// TODO: SCTP: Implement it.
+			// this->currentRequest.emplace(
+			//   this->retransmissionQueue->GetLastAssignedTsn(),
+			//   this->retransmissionQueue->BeginResetStreams());
+
+			this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
+			this->reConfigTimer->Start();
+
+			return CreateReconfigChunk();
+		}
+
+		ReConfigChunk* StreamResetHandler::CreateReconfigChunk()
+		{
+			MS_TRACE();
+
+			// The `reqSeqNbr` will be empty if the request has never been sent before,
+			// or if it was sent, but the sender responded "in progress", and then the
+			// `reqSeqNbr` will be cleared to re-send with a new number. But if the
+			// request is re-sent due to timeout (re-config timer expiring), the same
+			// `reqSeqNbr` will be used.
+			MS_ASSERT(this->currentRequest.has_value(), "currentRequest optional must have value");
+
+			if (this->currentRequest->HasBeenSent())
+			{
+				this->currentRequest->PrepareToSend(this->nextOutgoingReqSeqNbr);
+				this->nextOutgoingReqSeqNbr = uint32_t{ this->nextOutgoingReqSeqNbr + 1 };
+			}
+
+			auto* reConfigChunk = ReConfigChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
+			auto* outgoingSsnResetRequestParameter =
+			  reConfigChunk->BuildParameterInPlace<OutgoingSsnResetRequestParameter>();
+
+			outgoingSsnResetRequestParameter->SetReconfigurationRequestSequenceNumber(
+			  this->currentRequest->GetReqSeqNbr());
+			outgoingSsnResetRequestParameter->SetReconfigurationResponseSequenceNumber(
+			  this->currentRequest->GetReqSeqNbr());
+			outgoingSsnResetRequestParameter->SetSenderLastAssignedTsn(
+			  this->currentRequest->GetSenderLastAssignedTsn());
+
+			for (const auto& streamId : this->currentRequest->GetStreamIds())
+			{
+				outgoingSsnResetRequestParameter->AddStream(streamId);
+			}
+
+			outgoingSsnResetRequestParameter->Consolidate();
+
+			return reConfigChunk;
+		}
+
+		StreamResetHandler::ReqSeqNbrValidationResult StreamResetHandler::ValidateReqSeqNbr(
+		  UnwrappedSequenceNumber<uint32_t> reqSeqNbr)
+		{
+			MS_TRACE();
+
+			if (reqSeqNbr == this->lastProcessedReqSeqNbr)
+			{
+				return ReqSeqNbrValidationResult::RETRANSMISSION;
+			}
+			else if (reqSeqNbr != this->lastProcessedReqSeqNbr.GetNextValue())
+			{
+				// Too old, too new, from wrong Association, etc.
+				MS_WARN_TAG(sctp, "bad reqSeqNbr");
+
+				return ReqSeqNbrValidationResult::BADSEQUENCE_NUMBER;
+			}
+			else
+			{
+				return ReqSeqNbrValidationResult::VALID;
+			}
+		}
+
+		void StreamResetHandler::HandleReceivedOutgoingSsnResetRequestParameter(
+		  const OutgoingSsnResetRequestParameter* receivedOutgoingSsnResetRequestParameter,
+		  std::vector<ReconfigurationResponseParameter>& responses)
+		{
+			MS_TRACE();
+
+			// TODO: SCTP
+		}
+
+		void StreamResetHandler::HandleReceivedIncomingSsnResetRequestParameter(
+		  const IncomingSsnResetRequestParameter* receivedIncomingSsnResetRequestParameter,
+		  std::vector<ReconfigurationResponseParameter>& responses)
+		{
+			MS_TRACE();
+
+			// TODO: SCTP
+		}
+
+		void StreamResetHandler::HandleReceivedReconfigurationResponseParameter(
+		  const ReconfigurationResponseParameter* receivedReconfigurationResponseParameter)
+
+		{
+			MS_TRACE();
+
+			// TODO: SCTP
+		}
+
+		// TODO: SCTP
+
+		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -69,11 +334,14 @@ namespace RTC
 			{
 				// There is no outstanding request, but there is a prepared one. This means
 				// that the receiver has previously responded "in progress", which resulted
-				// in retrying the request (but with a new req_seq_nbr) after a while.
+				// in retrying the request (but with a new `reqSeqNbr`) after a while.
 			}
 
-			// TODO: SCTP: Do it.
-			// ctx_->Send(ctx_->PacketBuilder().Add(MakeReconfigChunk()));
+			auto packet = this->tcbContext->CreatePacket();
+
+			packet->AddChunk(CreateReconfigChunk());
+
+			this->tcbContext->Send(packet.get());
 
 			baseTimeoutMs = this->tcbContext->GetCurrentRtoMs();
 		}
@@ -82,9 +350,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (backoffTimer == this->reconfigTimer.get())
+			if (backoffTimer == this->reConfigTimer.get())
 			{
-				OnReconfigTimer(baseTimeoutMs, stop);
+				OnReConfigTimer(baseTimeoutMs, stop);
 			}
 		}
 	} // namespace SCTP
