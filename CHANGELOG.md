@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Relax log severity for legitimate situations ([PR #1771](https://github.com/versatica/mediasoup/pull/1771).
+
 ### 3.19.19
 
 - Worker: Ensure 4-byte alignment for network packet receive buffers and test buffers to avoid undefined behavior ([PR #1756](https://github.com/versatica/mediasoup/pull/1756).
