@@ -468,7 +468,7 @@ namespace RTC
 
 		if (it2 == this->mapLocalIceUsernameFragmentWebRtcTransport.end())
 		{
-			MS_WARN_TAG(ice, "ignoring received STUN packet with unknown remote ICE usernameFragment");
+			MS_DEBUG_TAG(ice, "ignoring received STUN packet with unknown remote ICE usernameFragment");
 
 			delete packet;
 
@@ -491,7 +491,7 @@ namespace RTC
 
 		if (it == this->mapTupleWebRtcTransport.end())
 		{
-			MS_WARN_TAG(ice, "ignoring received non STUN data from unknown tuple");
+			MS_DEBUG_TAG(ice, "ignoring received non STUN data from unknown tuple");
 
 			return;
 		}

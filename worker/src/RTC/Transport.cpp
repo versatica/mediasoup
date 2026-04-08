@@ -1746,7 +1746,7 @@ namespace RTC
 			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::PRODUCER_NOT_FOUND);
 #endif
 
-			MS_WARN_TAG(
+			MS_DEBUG_TAG(
 			  rtp,
 			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
 			  packet->GetSsrc(),
