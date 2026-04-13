@@ -2,6 +2,8 @@
 
 # NEXT
 
+# 0.21.0
+
 - `router.pipe_producer_to_router()` and `router.pipe_data_producer_to_router()` can now connect two `Routers` in the same `Worker` if `keep_id` is set to `false` (PR #1604).
 - Updates from mediasoup TypeScript `3.18.1.=3.19.0`.
 - Ensure that the order of acquiring the `paused` and `producer_paused` locks in `consumer.rs` is consistent at all times to avoid deadlock (PR #1605).
