@@ -266,7 +266,9 @@ namespace RTC
 				// from ShutdownAckSent to ShutdownPending, which is illegal.
 				//
 				// @see https://issues.webrtc.org/issues/42222897
-				if (this->state != State::SHUTDOWN_SENT && this->state != State::SHUTDOWN_ACK_SENT)
+				if (
+				  this->state != State::SHUTDOWN_SENT && this->state != State::SHUTDOWN_ACK_SENT &&
+				  this->state != State::SHUTDOWN_RECEIVED && this->state != State::SHUTDOWN_PENDING)
 				{
 					this->t1InitTimer->Stop();
 					this->t1CookieTimer->Stop();
