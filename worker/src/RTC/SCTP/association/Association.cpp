@@ -2477,9 +2477,12 @@ namespace RTC
 			AssertStateIsConsistent();
 		}
 
-		void Association::OnT2ShutdownTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void Association::OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			AssertState(State::SHUTDOWN_SENT, State::SHUTDOWN_ACK_SENT);
+			AssertHasTcb();
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
@@ -2493,23 +2496,13 @@ namespace RTC
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
 			//
-			// "If the timer expires, the endpoint MUST resend the SHUTDOWN chunk
-			// with the updated last sequential TSN received from its peer."
-			if (this->t2ShutdownTimer->IsRunning())
-			{
-				SendShutdownChunk();
-			}
-			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
-			//
 			// "An endpoint SHOULD limit the number of retransmissions of the
 			// SHUTDOWN chunk to the protocol parameter 'Association.Max.Retrans'. If
 			// this threshold is exceeded, the endpoint SHOULD destroy the TCB and
 			// SHOULD report the peer endpoint unreachable to the upper layer (and
 			// thus the association enters the CLOSED state)."
-			else
+			if (!this->t2ShutdownTimer->IsRunning())
 			{
-				AssertHasTcb();
-
 				auto packet                 = this->tcb->CreatePacket();
 				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
@@ -2528,9 +2521,33 @@ namespace RTC
 				this->packetSender.SendPacket(packet.get());
 
 				InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "no SHUTDOWN_ACK chunk received");
+				AssertStateIsConsistent();
+
+				return;
+			}
+
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+			//
+			// "the SHUTDOWN chunk receiver MUST send a SHUTDOWN ACK chunk and start
+			// a T2-shutdown timer of its own, entering the SHUTDOWN-ACK-SENT state.
+			// If the timer expires, the endpoint MUST resend the SHUTDOWN ACK chunk."
+			if (this->state == State::SHUTDOWN_ACK_SENT)
+			{
+				SendShutdownAckChunk();
+			}
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+			//
+			// "It SHOULD then start the T2-shutdown timer and enter the SHUTDOWN-SENT
+			// state. If the timer expires, the endpoint MUST resend the SHUTDOWN
+			// chunk with the updated last sequential TSN received from its peer."
+			else
+			{
+				SendShutdownChunk();
 			}
 
 			AssertStateIsConsistent();
+
+			baseTimeoutMs = this->tcb->GetCurrentRtoMs();
 		}
 
 		template<typename... States>
