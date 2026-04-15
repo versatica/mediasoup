@@ -1876,18 +1876,16 @@ namespace RTC
 				// state, restarting its T2-shutdown timer.
 				case State::SHUTDOWN_SENT:
 				{
-					SetState(State::SHUTDOWN_ACK_SENT, "SHUTDOWN received");
 					SendShutdownAckChunk();
+					SetState(State::SHUTDOWN_ACK_SENT, "SHUTDOWN received");
 
 					break;
 				}
 
-				// TODO: dcsctp: This case block should be removed and handled by the
-				// `default` case block.
-				//
-				// @see https://issues.webrtc.org/issues/42222897
 				case State::SHUTDOWN_ACK_SENT:
 				{
+					SendShutdownAckChunk();
+
 					break;
 				}
 
