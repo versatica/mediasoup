@@ -469,21 +469,18 @@ namespace RTC
 
 			if (this->currentRequest && this->currentRequest->HasBeenSent())
 			{
+				// The request was deferred (received "In Progress"). This is not a
+				// timeout, but just time to retry.
 				if (this->currentRequest->IsDeferred())
 				{
-					// The request was deferred (received "In Progress"). This is not a
-					// timeout, but just time to retry.
 					this->currentRequest->SetDeferred(false);
 				}
-				else
+				// There is an outstanding request, which timed out while waiting for a
+				// response.
+				else if (!this->tcbContext->IncrementTxErrorCounter("RECONFIG timeout"))
 				{
-					// There is an outstanding request, which timed out while waiting for a
-					// response.
-					if (!this->tcbContext->IncrementTxErrorCounter("RECONFIG timeout"))
-					{
-						// Timed out. The connection will close after processing the timers.
-						return;
-					}
+					// Timed out. The connection will close after processing the timers.
+					return;
 				}
 			}
 			else
