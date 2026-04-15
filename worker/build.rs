@@ -186,6 +186,14 @@ fn main() {
         println!("cargo:rustc-link-lib=user32");
     }
 
+    // Remove subprojects/.wraplock created by Meson's directory locking
+    // mechanism. It lives in the source tree and would cause `cargo package`
+    // verification to fail with "Source directory was modified by build.rs".
+    let wraplock = std::path::Path::new("subprojects/.wraplock");
+    if wraplock.exists() {
+        fs::remove_file(wraplock).expect("Failed to remove subprojects/.wraplock");
+    }
+
     if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
         // Clean
         if !Command::new(python)
