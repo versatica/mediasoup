@@ -76,7 +76,7 @@ pub enum RequestError {
 /// [Rust-specific](https://rust-lang-nursery.github.io/rust-cookbook/development_tools/debugging/log.html) [docs](https://docs.rs/env_logger)).
 ///
 /// Default [`WorkerLogLevel::Error`].
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum WorkerLogLevel {
     /// Log all severities.
@@ -84,15 +84,10 @@ pub enum WorkerLogLevel {
     /// Log "warn" and "error" severities.
     Warn,
     /// Log "error" severity.
+    #[default]
     Error,
     /// Do not log anything.
     None,
-}
-
-impl Default for WorkerLogLevel {
-    fn default() -> Self {
-        Self::Error
-    }
 }
 
 impl WorkerLogLevel {
@@ -512,10 +507,9 @@ impl Inner {
                         debug!("worker thread running [id:{}]", id);
                         Ok(())
                     }
-                    _ => Err(io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("unexpected first notification from worker [id:{id}]"),
-                    )),
+                    _ => Err(io::Error::other(format!(
+                        "unexpected first notification from worker [id:{id}]"
+                    ))),
                 };
 
                 let _ = sender
@@ -529,9 +523,9 @@ impl Inner {
         // Allow worker messages to go through
         drop(buffer_worker_messages_guard);
 
-        receiver.await.map_err(|_closed| {
-            io::Error::new(io::ErrorKind::Other, "Worker dropped before it is ready")
-        })?
+        receiver
+            .await
+            .map_err(|_closed| io::Error::other("Worker dropped before it is ready"))?
     }
 
     fn setup_message_handling(&mut self) {

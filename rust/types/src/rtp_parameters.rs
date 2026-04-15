@@ -522,10 +522,13 @@ pub struct RtpCapabilities {
 }
 
 /// Direction of RTP header extension.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[derive(
+    Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize, Default,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum RtpHeaderExtensionDirection {
     /// SendRecv
+    #[default]
     SendRecv,
     /// SendOnly
     SendOnly,
@@ -533,12 +536,6 @@ pub enum RtpHeaderExtensionDirection {
     RecvOnly,
     /// Inactive
     Inactive,
-}
-
-impl Default for RtpHeaderExtensionDirection {
-    fn default() -> Self {
-        Self::SendRecv
-    }
 }
 
 /// Error that caused [`RtpHeaderExtensionUri`] parsing error.
@@ -935,7 +932,7 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
                             r#type = Some(map.next_value()?);
                         }
                         Field::Parameter => {
-                            if parameter != "" {
+                            if !parameter.is_empty() {
                                 return Err(de::Error::duplicate_field("parameter"));
                             }
                             parameter = map.next_value()?;
