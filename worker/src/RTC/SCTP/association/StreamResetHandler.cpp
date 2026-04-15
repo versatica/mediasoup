@@ -244,7 +244,7 @@ namespace RTC
 			else if (reqSeqNbr != this->lastProcessedReqSeqNbr.GetNextValue())
 			{
 				// Too old, too new, from wrong Association, etc.
-				MS_WARN_TAG(sctp, "bad reqSeqNbr");
+				MS_WARN_TAG(sctp, "bad reqSeqNbr: %" PRIu32, reqSeqNbr.Wrap());
 
 				return ReqSeqNbrValidationResult::BAD_SEQUENCE_NUMBER;
 			}
@@ -320,7 +320,8 @@ namespace RTC
 			//   // 'In progress' and MUST send the RE-CONFIG chunk.
 			//   this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::IN_PROGRESS;
 
-			//   MS_DEBUG_DEV("reset outgoing in progress");
+			//  	MS_DEBUG_DEV("reset outgoing in progress, sender last assigned tsn %" PRIu32 " not yet
+			//  reached", receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
 			// } else {
 			//   // https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
 			//   //
@@ -336,6 +337,8 @@ namespace RTC
 			//   this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
 
 			//   MS_DEBUG_DEV("reset outgoing performed");
+			//  	MS_DEBUG_DEV("reset outgoing performed, sender last assigned tsn %" PRIu32 " reached",
+			//  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
 			// }
 
 			auto* reconfigurationResponseParameter =
@@ -402,7 +405,8 @@ namespace RTC
 					case RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO:
 					case RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED:
 					{
-						MS_DEBUG_DEV("reset stream success");
+						MS_DEBUG_DEV(
+						  "reset stream success [reqSeqNbr:%" PRIu32 "]", this->currentRequest->GetReqSeqNbr());
 
 						this->associationListener.OnAssociationStreamsResetPerformed(
 						  this->currentRequest->GetStreamIds());
@@ -417,7 +421,9 @@ namespace RTC
 
 					case RTC::SCTP::ReconfigurationResponseParameter::Result::IN_PROGRESS:
 					{
-						MS_DEBUG_DEV("reset stream still pending");
+						MS_DEBUG_DEV(
+						  "reset stream still pending [reqSeqNbr:%" PRIu32 "]",
+						  this->currentRequest->GetReqSeqNbr());
 
 						// Force this request to be sent again, but with the same `reqSeqNbr`.
 						this->currentRequest->SetDeferred(true);
@@ -433,8 +439,10 @@ namespace RTC
 					case RTC::SCTP::ReconfigurationResponseParameter::Result::ERROR_WRONG_SSN:
 					case RTC::SCTP::ReconfigurationResponseParameter::Result::ERROR_BAD_SEQUENCE_NUMBER:
 					{
-						MS_WARN_DEV(
-						  "reset stream error [result:%s]",
+						MS_WARN_TAG(
+						  sctp,
+						  "reset stream error [reqSeqNbr:%" PRIu32 ", result:%s]",
+						  this->currentRequest->GetReqSeqNbr(),
 						  ReconfigurationResponseParameter::ResultToString(
 						    receivedReconfigurationResponseParameter->GetResult())
 						    .c_str());
