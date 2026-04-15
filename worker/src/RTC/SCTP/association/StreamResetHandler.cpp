@@ -1,13 +1,12 @@
-#include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
-#include <optional>
 #define MS_CLASS "RTC::SCTP::StreamResetHandler"
 // TODO: SCTP: COMMENT
 #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "Logger.hpp"
 #include "RTC/Consts.hpp"
-#include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
+#include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
 
 namespace RTC
 {
