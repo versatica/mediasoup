@@ -1573,7 +1573,7 @@ dependencies = [
 
 [[package]]
 name = "mediasoup-types"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "once_cell",
  "regex",
