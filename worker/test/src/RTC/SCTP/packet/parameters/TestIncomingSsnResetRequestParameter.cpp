@@ -5,6 +5,7 @@
 #include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+#include <vector>
 
 SCENARIO("Incoming SSN Reset Request Parameter (14)", "[serializable][sctp][parameter]")
 {
@@ -40,10 +41,12 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[serializable][sctp][para
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0x11223344);
-		REQUIRE(parameter->GetNumberOfStreams() == 3);
-		REQUIRE(parameter->GetStreamAt(0) == 0x5001);
-		REQUIRE(parameter->GetStreamAt(1) == 0x5002);
-		REQUIRE(parameter->GetStreamAt(2) == 0x5003);
+
+		const std::vector<uint16_t> expectedStreamIds{
+			{ 0x5001, 0x5002, 0x5003 },
+		};
+
+		REQUIRE(parameter->GetStreamIds() == expectedStreamIds);
 
 		/* Serialize it. */
 
@@ -61,10 +64,7 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[serializable][sctp][para
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0x11223344);
-		REQUIRE(parameter->GetNumberOfStreams() == 3);
-		REQUIRE(parameter->GetStreamAt(0) == 0x5001);
-		REQUIRE(parameter->GetStreamAt(1) == 0x5002);
-		REQUIRE(parameter->GetStreamAt(2) == 0x5003);
+		REQUIRE(parameter->GetStreamIds() == expectedStreamIds);
 
 		/* Clone it. */
 
@@ -85,10 +85,7 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[serializable][sctp][para
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(clonedParameter->GetReconfigurationRequestSequenceNumber() == 0x11223344);
-		REQUIRE(clonedParameter->GetNumberOfStreams() == 3);
-		REQUIRE(clonedParameter->GetStreamAt(0) == 0x5001);
-		REQUIRE(clonedParameter->GetStreamAt(1) == 0x5002);
-		REQUIRE(clonedParameter->GetStreamAt(2) == 0x5003);
+		REQUIRE(clonedParameter->GetStreamIds() == expectedStreamIds);
 
 		delete clonedParameter;
 	}
@@ -108,15 +105,18 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[serializable][sctp][para
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0);
-		REQUIRE(parameter->GetNumberOfStreams() == 0);
+
+		std::vector<uint16_t> expectedStreamIds{};
+
+		REQUIRE(parameter->GetStreamIds() == expectedStreamIds);
 
 		/* Modify it. */
 
 		parameter->SetReconfigurationRequestSequenceNumber(111000);
-		parameter->AddStream(4444);
-		parameter->AddStream(4445);
-		parameter->AddStream(4446);
-		parameter->AddStream(4447);
+		parameter->AddStreamId(4444);
+		parameter->AddStreamId(4445);
+		parameter->AddStreamId(4446);
+		parameter->AddStreamId(4447);
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
@@ -128,11 +128,12 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[serializable][sctp][para
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 111000);
-		REQUIRE(parameter->GetNumberOfStreams() == 4);
-		REQUIRE(parameter->GetStreamAt(0) == 4444);
-		REQUIRE(parameter->GetStreamAt(1) == 4445);
-		REQUIRE(parameter->GetStreamAt(2) == 4446);
-		REQUIRE(parameter->GetStreamAt(3) == 4447);
+
+		expectedStreamIds = {
+			{ 4444, 4445, 4446, 4447 },
+		};
+
+		REQUIRE(parameter->GetStreamIds() == expectedStreamIds);
 
 		/* Parse itself and compare. */
 
@@ -151,11 +152,7 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[serializable][sctp][para
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parsedParameter->GetReconfigurationRequestSequenceNumber() == 111000);
-		REQUIRE(parsedParameter->GetNumberOfStreams() == 4);
-		REQUIRE(parsedParameter->GetStreamAt(0) == 4444);
-		REQUIRE(parsedParameter->GetStreamAt(1) == 4445);
-		REQUIRE(parsedParameter->GetStreamAt(2) == 4446);
-		REQUIRE(parsedParameter->GetStreamAt(3) == 4447);
+		REQUIRE(parsedParameter->GetStreamIds() == expectedStreamIds);
 
 		delete parsedParameter;
 	}

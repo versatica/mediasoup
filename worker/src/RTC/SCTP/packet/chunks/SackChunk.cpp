@@ -233,7 +233,7 @@ namespace RTC
 
 			duplicateTsns.reserve(numberOfDuplicateTsns);
 
-			for (uint32_t idx{ 0 }; idx < GetNumberOfDuplicateTsns(); ++idx)
+			for (uint32_t idx{ 0 }; idx < numberOfDuplicateTsns; ++idx)
 			{
 				duplicateTsns.emplace_back(GetDuplicateTsnAt(idx));
 			}

@@ -9,6 +9,7 @@
 #include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+#include <vector>
 
 SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 {
@@ -77,10 +78,12 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetReconfigurationRequestSequenceNumber() == 0x11223344);
 		REQUIRE(parameter1->GetReconfigurationResponseSequenceNumber() == 0x55667788);
 		REQUIRE(parameter1->GetSenderLastAssignedTsn() == 0xAABBCCDD);
-		REQUIRE(parameter1->GetNumberOfStreams() == 3);
-		REQUIRE(parameter1->GetStreamAt(0) == 0x5001);
-		REQUIRE(parameter1->GetStreamAt(1) == 0x5002);
-		REQUIRE(parameter1->GetStreamAt(2) == 0x5003);
+
+		const std::vector<uint16_t> expectedStreamIds1{
+			{ 0x5001, 0x5002, 0x5003 },
+		};
+
+		REQUIRE(parameter1->GetStreamIds() == expectedStreamIds1);
 
 		auto* parameter2 =
 		  reinterpret_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
@@ -96,8 +99,12 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter2->GetReconfigurationRequestSequenceNumber() == 0x44332211);
-		REQUIRE(parameter2->GetNumberOfStreams() == 1);
-		REQUIRE(parameter2->GetStreamAt(0) == 0x6001);
+
+		const std::vector<uint16_t> expectedStreamIds2{
+			0x6001,
+		};
+
+		REQUIRE(parameter2->GetStreamIds() == expectedStreamIds2);
 
 		/* Serialize it. */
 
@@ -134,10 +141,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetReconfigurationRequestSequenceNumber() == 0x11223344);
 		REQUIRE(parameter1->GetReconfigurationResponseSequenceNumber() == 0x55667788);
 		REQUIRE(parameter1->GetSenderLastAssignedTsn() == 0xAABBCCDD);
-		REQUIRE(parameter1->GetNumberOfStreams() == 3);
-		REQUIRE(parameter1->GetStreamAt(0) == 0x5001);
-		REQUIRE(parameter1->GetStreamAt(1) == 0x5002);
-		REQUIRE(parameter1->GetStreamAt(2) == 0x5003);
+		REQUIRE(parameter1->GetStreamIds() == expectedStreamIds1);
 
 		parameter2 =
 		  reinterpret_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
@@ -153,8 +157,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter2->GetReconfigurationRequestSequenceNumber() == 0x44332211);
-		REQUIRE(parameter2->GetNumberOfStreams() == 1);
-		REQUIRE(parameter2->GetStreamAt(0) == 0x6001);
+		REQUIRE(parameter2->GetStreamIds() == expectedStreamIds2);
 
 		/* Clone it. */
 
@@ -193,10 +196,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		REQUIRE(parameter1->GetReconfigurationRequestSequenceNumber() == 0x11223344);
 		REQUIRE(parameter1->GetReconfigurationResponseSequenceNumber() == 0x55667788);
 		REQUIRE(parameter1->GetSenderLastAssignedTsn() == 0xAABBCCDD);
-		REQUIRE(parameter1->GetNumberOfStreams() == 3);
-		REQUIRE(parameter1->GetStreamAt(0) == 0x5001);
-		REQUIRE(parameter1->GetStreamAt(1) == 0x5002);
-		REQUIRE(parameter1->GetStreamAt(2) == 0x5003);
+		REQUIRE(parameter1->GetStreamIds() == expectedStreamIds1);
 
 		parameter2 = reinterpret_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(
 		  clonedChunk->GetParameterAt(1));
@@ -212,8 +212,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter2->GetReconfigurationRequestSequenceNumber() == 0x44332211);
-		REQUIRE(parameter2->GetNumberOfStreams() == 1);
-		REQUIRE(parameter2->GetStreamAt(0) == 0x6001);
+		REQUIRE(parameter2->GetStreamIds() == expectedStreamIds2);
 
 		delete clonedChunk;
 	}

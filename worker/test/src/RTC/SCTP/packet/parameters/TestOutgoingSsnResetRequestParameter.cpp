@@ -5,6 +5,7 @@
 #include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+#include <vector>
 
 SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][parameter]")
 {
@@ -46,10 +47,12 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0x11223344);
 		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 0x55667788);
 		REQUIRE(parameter->GetSenderLastAssignedTsn() == 0xAABBCCDD);
-		REQUIRE(parameter->GetNumberOfStreams() == 3);
-		REQUIRE(parameter->GetStreamAt(0) == 0x5001);
-		REQUIRE(parameter->GetStreamAt(1) == 0x5002);
-		REQUIRE(parameter->GetStreamAt(2) == 0x5003);
+
+		const std::vector<uint16_t> expectedStreamIds{
+			{ 0x5001, 0x5002, 0x5003 },
+		};
+
+		REQUIRE(parameter->GetStreamIds() == expectedStreamIds);
 
 		/* Serialize it. */
 
@@ -69,10 +72,7 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0x11223344);
 		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 0x55667788);
 		REQUIRE(parameter->GetSenderLastAssignedTsn() == 0xAABBCCDD);
-		REQUIRE(parameter->GetNumberOfStreams() == 3);
-		REQUIRE(parameter->GetStreamAt(0) == 0x5001);
-		REQUIRE(parameter->GetStreamAt(1) == 0x5002);
-		REQUIRE(parameter->GetStreamAt(2) == 0x5003);
+		REQUIRE(parameter->GetStreamIds() == expectedStreamIds);
 
 		/* Clone it. */
 
@@ -95,10 +95,7 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 		REQUIRE(clonedParameter->GetReconfigurationRequestSequenceNumber() == 0x11223344);
 		REQUIRE(clonedParameter->GetReconfigurationResponseSequenceNumber() == 0x55667788);
 		REQUIRE(clonedParameter->GetSenderLastAssignedTsn() == 0xAABBCCDD);
-		REQUIRE(clonedParameter->GetNumberOfStreams() == 3);
-		REQUIRE(clonedParameter->GetStreamAt(0) == 0x5001);
-		REQUIRE(clonedParameter->GetStreamAt(1) == 0x5002);
-		REQUIRE(clonedParameter->GetStreamAt(2) == 0x5003);
+		REQUIRE(clonedParameter->GetStreamIds() == expectedStreamIds);
 
 		delete clonedParameter;
 	}
@@ -120,18 +117,21 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0);
 		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 0);
 		REQUIRE(parameter->GetSenderLastAssignedTsn() == 0);
-		REQUIRE(parameter->GetNumberOfStreams() == 0);
+
+		std::vector<uint16_t> expectedStreamIds{};
+
+		REQUIRE(parameter->GetStreamIds() == expectedStreamIds);
 
 		/* Modify it. */
 
 		parameter->SetReconfigurationRequestSequenceNumber(111000);
 		parameter->SetReconfigurationResponseSequenceNumber(222000);
 		parameter->SetSenderLastAssignedTsn(333000);
-		parameter->AddStream(4444);
-		parameter->AddStream(4445);
-		parameter->AddStream(4446);
-		parameter->AddStream(4447);
-		parameter->AddStream(4448);
+		parameter->AddStreamId(4444);
+		parameter->AddStreamId(4445);
+		parameter->AddStreamId(4446);
+		parameter->AddStreamId(4447);
+		parameter->AddStreamId(4448);
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
@@ -145,12 +145,12 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 111000);
 		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 222000);
 		REQUIRE(parameter->GetSenderLastAssignedTsn() == 333000);
-		REQUIRE(parameter->GetNumberOfStreams() == 5);
-		REQUIRE(parameter->GetStreamAt(0) == 4444);
-		REQUIRE(parameter->GetStreamAt(1) == 4445);
-		REQUIRE(parameter->GetStreamAt(2) == 4446);
-		REQUIRE(parameter->GetStreamAt(3) == 4447);
-		REQUIRE(parameter->GetStreamAt(4) == 4448);
+
+		expectedStreamIds = {
+			{ 4444, 4445, 4446, 4447, 4448 },
+		};
+
+		REQUIRE(parameter->GetStreamIds() == expectedStreamIds);
 
 		/* Parse itself and compare. */
 
@@ -171,12 +171,7 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 		REQUIRE(parsedParameter->GetReconfigurationRequestSequenceNumber() == 111000);
 		REQUIRE(parsedParameter->GetReconfigurationResponseSequenceNumber() == 222000);
 		REQUIRE(parsedParameter->GetSenderLastAssignedTsn() == 333000);
-		REQUIRE(parsedParameter->GetNumberOfStreams() == 5);
-		REQUIRE(parsedParameter->GetStreamAt(0) == 4444);
-		REQUIRE(parsedParameter->GetStreamAt(1) == 4445);
-		REQUIRE(parsedParameter->GetStreamAt(2) == 4446);
-		REQUIRE(parsedParameter->GetStreamAt(3) == 4447);
-		REQUIRE(parsedParameter->GetStreamAt(4) == 4448);
+		REQUIRE(parsedParameter->GetStreamIds() == expectedStreamIds);
 
 		delete parsedParameter;
 	}
