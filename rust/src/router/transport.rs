@@ -18,7 +18,7 @@ use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
-use log::{error, warn};
+use log::warn;
 use mediasoup_sys::fbs::{response, transport};
 use mediasoup_types::data_structures::{
     AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection,

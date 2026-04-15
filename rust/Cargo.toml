@@ -71,7 +71,7 @@ version = "1.2.1"
 
 [dev-dependencies]
 actix = "0.13.0"
-actix-web-actors = "4.1.0"
+actix-web-actors = "4.2.0"
 async-io = "1.10.0"
 criterion = "0.4.0"
 env_logger = "0.9.1"
@@ -79,8 +79,8 @@ portpicker = "0.1.1"
 
 [dev-dependencies.actix-web]
 default-features = false
-features = ["macros"]
-version = "4.2.1"
+features = ["macros", "ws"]
+version = "4.9.0"
 
 [[bench]]
 name = "direct_data"
