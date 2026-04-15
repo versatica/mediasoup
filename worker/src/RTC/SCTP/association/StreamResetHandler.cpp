@@ -1,10 +1,12 @@
+#include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
+#include <optional>
 #define MS_CLASS "RTC::SCTP::StreamResetHandler"
 // TODO: SCTP: COMMENT
 #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "Logger.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 
 namespace RTC
@@ -259,10 +261,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			UnwrappedReConfigRequestSn requestSn = this->incomingReConfigRequestSnUnwrapper.Unwrap(
+			const UnwrappedReConfigRequestSn requestSn = this->incomingReConfigRequestSnUnwrapper.Unwrap(
 			  receivedOutgoingSsnResetRequestParameter->GetReconfigurationRequestSequenceNumber());
-
-			ReqSeqNbrValidationResult validationResult = ValidateReqSeqNbr(requestSn);
+			const ReqSeqNbrValidationResult validationResult = ValidateReqSeqNbr(requestSn);
 
 			if (validationResult == ReqSeqNbrValidationResult::BAD_SEQUENCE_NUMBER)
 			{
@@ -354,7 +355,34 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: SCTP
+			const UnwrappedReConfigRequestSn requestSn = this->incomingReConfigRequestSnUnwrapper.Unwrap(
+			  receivedIncomingSsnResetRequestParameter->GetReconfigurationRequestSequenceNumber());
+			const ReqSeqNbrValidationResult validationResult = ValidateReqSeqNbr(requestSn);
+
+			if (validationResult == ReqSeqNbrValidationResult::VALID || validationResult == ReqSeqNbrValidationResult::RETRANSMISSION)
+			{
+				auto* reconfigurationResponseParameter =
+				  reConfigChunk->BuildParameterInPlace<ReconfigurationResponseParameter>();
+
+				reconfigurationResponseParameter->SetReconfigurationResponseSequenceNumber(
+				  receivedIncomingSsnResetRequestParameter->GetReconfigurationRequestSequenceNumber());
+				reconfigurationResponseParameter->SetResult(
+				  ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO);
+
+				reconfigurationResponseParameter->Consolidate();
+			}
+			else
+			{
+				auto* reconfigurationResponseParameter =
+				  reConfigChunk->BuildParameterInPlace<ReconfigurationResponseParameter>();
+
+				reconfigurationResponseParameter->SetReconfigurationResponseSequenceNumber(
+				  receivedIncomingSsnResetRequestParameter->GetReconfigurationRequestSequenceNumber());
+				reconfigurationResponseParameter->SetResult(
+				  ReconfigurationResponseParameter::Result::ERROR_BAD_SEQUENCE_NUMBER);
+
+				reconfigurationResponseParameter->Consolidate();
+			}
 		}
 
 		void StreamResetHandler::HandleReceivedReconfigurationResponseParameter(
@@ -363,7 +391,69 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: SCTP
+			if (
+			  this->currentRequest.has_value() && this->currentRequest->HasBeenSent() &&
+			  receivedReconfigurationResponseParameter->GetReconfigurationResponseSequenceNumber() ==
+			    this->currentRequest->GetReqSeqNbr())
+			{
+				this->reConfigTimer->Stop();
+
+				switch (receivedReconfigurationResponseParameter->GetResult())
+				{
+					case RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO:
+					case RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED:
+					{
+						MS_DEBUG_DEV("reset stream success");
+
+						this->associationListener.OnAssociationStreamsResetPerformed(
+						  this->currentRequest->GetStreamIds());
+
+						this->currentRequest = std::nullopt;
+
+						// TODO: SCTP: Implement it.
+						// this->retransmissionQueue->CommitResetSteam();
+
+						break;
+					}
+
+					case RTC::SCTP::ReconfigurationResponseParameter::Result::IN_PROGRESS:
+					{
+						MS_DEBUG_DEV("reset stream still pending");
+
+						// Force this request to be sent again, but with the same `reqSeqNbr`.
+						this->currentRequest->SetDeferred(true);
+
+						this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
+						this->reConfigTimer->Start();
+
+						break;
+					}
+
+					case RTC::SCTP::ReconfigurationResponseParameter::Result::ERROR_REQUEST_ALREADY_IN_PROGRESS:
+					case RTC::SCTP::ReconfigurationResponseParameter::Result::DENIED:
+					case RTC::SCTP::ReconfigurationResponseParameter::Result::ERROR_WRONG_SSN:
+					case RTC::SCTP::ReconfigurationResponseParameter::Result::ERROR_BAD_SEQUENCE_NUMBER:
+					{
+						MS_WARN_DEV(
+						  "reset stream error [result:%s]",
+						  ReconfigurationResponseParameter::ResultToString(
+						    receivedReconfigurationResponseParameter->GetResult())
+						    .c_str());
+
+						this->associationListener.OnAssociationStreamsResetFailed(
+						  this->currentRequest->GetStreamIds(),
+						  ReconfigurationResponseParameter::ResultToString(
+						    receivedReconfigurationResponseParameter->GetResult()));
+
+						this->currentRequest = std::nullopt;
+
+						// TODO: SCTP: Implement it.
+						// this->retransmissionQueue->RollbackResetStreams();
+
+						break;
+					}
+				}
+			}
 		}
 
 		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
