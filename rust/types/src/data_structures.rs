@@ -303,7 +303,9 @@ pub enum SctpState {
 }
 
 /// DTLS role.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize, Default)]
+#[derive(
+    Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize, Default,
+)]
 #[serde(rename_all = "camelCase")]
 pub enum DtlsRole {
     /// The DTLS role is determined based on the resolved ICE role (the `Controlled` role acts as

@@ -522,7 +522,9 @@ pub struct RtpCapabilities {
 }
 
 /// Direction of RTP header extension.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize, Default)]
+#[derive(
+    Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize, Default,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum RtpHeaderExtensionDirection {
     /// SendRecv

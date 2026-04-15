@@ -507,9 +507,9 @@ impl Inner {
                         debug!("worker thread running [id:{}]", id);
                         Ok(())
                     }
-                    _ => Err(io::Error::other(
-                        format!("unexpected first notification from worker [id:{id}]"),
-                    )),
+                    _ => Err(io::Error::other(format!(
+                        "unexpected first notification from worker [id:{id}]"
+                    ))),
                 };
 
                 let _ = sender
@@ -523,9 +523,9 @@ impl Inner {
         // Allow worker messages to go through
         drop(buffer_worker_messages_guard);
 
-        receiver.await.map_err(|_closed| {
-            io::Error::other("Worker dropped before it is ready")
-        })?
+        receiver
+            .await
+            .map_err(|_closed| io::Error::other("Worker dropped before it is ready"))?
     }
 
     fn setup_message_handling(&mut self) {
