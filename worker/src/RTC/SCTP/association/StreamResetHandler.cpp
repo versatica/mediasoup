@@ -47,7 +47,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void StreamResetHandler::ResetStreams(std::span<const uint16_t> outgoingStreamIds)
+		void StreamResetHandler::ResetStreams(std::span<const uint16_t> /*outgoingStreamIds*/)
 		{
 			MS_TRACE();
 
