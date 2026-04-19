@@ -18,14 +18,12 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpListener.hpp"
-#ifdef MS_SCTP_STACK
 #include "RTC/SCTP/public/AssociationInterface.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
-#else
+// TODO: Remove once we only use built-in SCTP stack.
 #include "RTC/SctpAssociation.hpp"
-#endif
 #include "RTC/SctpListener.hpp"
 #include "RTC/Shared.hpp"
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
@@ -44,11 +42,9 @@ namespace RTC
 	                  public RTC::Consumer::Listener,
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
-#ifdef MS_SCTP_STACK
 	                  public RTC::SCTP::AssociationListener,
-#else
+	                  // TODO: Remove once we only use built-in SCTP stack.
 	                  public RTC::SctpAssociation::Listener,
-#endif
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Channel::ChannelSocket::RequestHandler,
@@ -289,9 +285,10 @@ namespace RTC
 		  size_t len,
 		  uint32_t ppid,
 		  onQueuedCallback* cb = nullptr) override;
+		void OnDataConsumerNeedBufferedAmount(
+		  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
-#ifdef MS_SCTP_STACK
 		/* Pure virtual methods inherited from RTC::SCTP::AssociationListener. */
 	public:
 		bool OnAssociationSendData(const uint8_t* data, size_t len) override;
@@ -310,8 +307,9 @@ namespace RTC
 		void OnAssociationTotalBufferedAmountLow() override;
 		bool OnAssociationIsTransportReadyForSctp() override;
 		// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.
-#else
+
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
+		// TODO: Remove once we only use built-in SCTP stack.
 	public:
 		void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) override;
 		void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation) override;
@@ -327,7 +325,6 @@ namespace RTC
 		  uint32_t ppid) override;
 		void OnSctpAssociationBufferedAmount(
 		  RTC::SctpAssociation* sctpAssociation, uint32_t bufferedAmount) override;
-#endif
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
@@ -365,11 +362,9 @@ namespace RTC
 		RTC::Shared* shared{ nullptr };
 		size_t maxMessageSize{ 262144u };
 		// Allocated by this.
-#ifdef MS_SCTP_STACK
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
-#else
-		RTC::SctpAssociation* sctpAssociation{ nullptr };
-#endif
+		// TODO: Remove once we only use built-in SCTP stack.
+		RTC::SctpAssociation* oldSctpAssociation{ nullptr };
 
 	private:
 		// Passed by argument.

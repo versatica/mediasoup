@@ -3,9 +3,8 @@
 #include "DepLibUV.hpp"
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
-#ifndef MS_SCTP_STACK
+// TODO: Remove once we only use built-in SCTP stack.
 #include "DepUsrSCTP.hpp"
-#endif
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include <catch2/catch_session.hpp>
@@ -49,9 +48,11 @@ int main(int argc, char* argv[])
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();
 	DepLibSRTP::ClassInit();
-#ifndef MS_SCTP_STACK
-	DepUsrSCTP::ClassInit();
-#endif
+	// TODO: Remove once we only use built-in SCTP stack.
+	if (!Settings::configuration.useBuiltInSctpStack)
+	{
+		DepUsrSCTP::ClassInit();
+	}
 	DepLibWebRTC::ClassInit();
 	Utils::Crypto::ClassInit();
 
@@ -63,9 +64,11 @@ int main(int argc, char* argv[])
 	DepLibSRTP::ClassDestroy();
 	Utils::Crypto::ClassDestroy();
 	DepLibWebRTC::ClassDestroy();
-#ifndef MS_SCTP_STACK
-	DepUsrSCTP::ClassDestroy();
-#endif
+	// TODO: Remove once we only use built-in SCTP stack.
+	if (!Settings::configuration.useBuiltInSctpStack)
+	{
+		DepUsrSCTP::ClassDestroy();
+	}
 	DepLibUV::ClassDestroy();
 
 	return status;

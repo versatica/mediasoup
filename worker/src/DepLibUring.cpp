@@ -123,7 +123,7 @@ void DepLibUring::ClassInit()
 
 	MS_DEBUG_TAG(info, "io_uring version: \"%i.%i\"", mayor, minor);
 
-	if (Settings::configuration.liburingDisabled)
+	if (Settings::configuration.disableLiburing)
 	{
 		MS_DEBUG_TAG(info, "io_uring disabled by user settings");
 

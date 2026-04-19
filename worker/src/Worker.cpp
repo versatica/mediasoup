@@ -7,9 +7,8 @@
 #include "DepLibUring.hpp"
 #endif
 #include "DepLibUV.hpp"
-#ifndef MS_SCTP_STACK
+// TODO: Remove once we only use built-in SCTP stack.
 #include "DepUsrSCTP.hpp"
-#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -42,10 +41,12 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 	}
 #endif
 
-#ifndef MS_SCTP_STACK
-	// Create the Checker instance in DepUsrSCTP.
-	DepUsrSCTP::CreateChecker();
-#endif
+	// TODO: Remove once we only use built-in SCTP stack.
+	if (!Settings::configuration.useBuiltInSctpStack)
+	{
+		// Create the Checker instance in DepUsrSCTP.
+		DepUsrSCTP::CreateChecker();
+	}
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())
@@ -109,10 +110,12 @@ void Worker::Close()
 	// Delete the RTC::Shared singleton.
 	delete this->shared;
 
-#ifndef MS_SCTP_STACK
-	// Close the Checker instance in DepUsrSCTP.
-	DepUsrSCTP::CloseChecker();
-#endif
+	// TODO: Remove once we only use built-in SCTP stack.
+	if (!Settings::configuration.useBuiltInSctpStack)
+	{
+		// Close the Checker instance in DepUsrSCTP.
+		DepUsrSCTP::CloseChecker();
+	}
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())

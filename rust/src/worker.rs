@@ -192,6 +192,10 @@ pub struct WorkerSettings {
     ///
     /// Default `true`.
     pub enable_liburing: bool,
+    /// Use the mediasoup built-in SCTP stack instead usrsctp.
+    ///
+    /// Default `false`.
+    pub use_built_in_sctp_stack: bool,
     /// Function that will be called under worker thread before worker starts, can be used for
     /// pinning worker threads to CPU cores.
     pub thread_initializer: Option<Arc<dyn Fn() + Send + Sync>>,
@@ -222,6 +226,7 @@ impl Default for WorkerSettings {
             dtls_files: None,
             libwebrtc_field_trials: None,
             enable_liburing: true,
+            use_built_in_sctp_stack: false,
             thread_initializer: None,
             app_data: AppData::default(),
         }
@@ -237,6 +242,7 @@ impl fmt::Debug for WorkerSettings {
             dtls_files,
             libwebrtc_field_trials,
             enable_liburing,
+            use_built_in_sctp_stack,
             thread_initializer,
             app_data,
         } = self;
@@ -248,6 +254,7 @@ impl fmt::Debug for WorkerSettings {
             .field("dtls_files", &dtls_files)
             .field("libwebrtc_field_trials", &libwebrtc_field_trials)
             .field("enable_liburing", &enable_liburing)
+            .field("use_built_in_sctp_stack", &use_built_in_sctp_stack)
             .field(
                 "thread_initializer",
                 &thread_initializer.as_ref().map(|_| "ThreadInitializer"),
@@ -360,6 +367,7 @@ impl Inner {
             dtls_files,
             libwebrtc_field_trials,
             enable_liburing,
+            use_built_in_sctp_stack,
             thread_initializer,
             app_data,
         }: WorkerSettings,
@@ -410,6 +418,12 @@ impl Inner {
 
         if !enable_liburing {
             spawn_args.push("--disableLiburing=true".to_string());
+        }
+
+        if use_built_in_sctp_stack {
+            spawn_args.push("--use_built_in_sctp_stack=true".to_string());
+        } else {
+            spawn_args.push("--use_built_in_sctp_stack=false".to_string());
         }
 
         let id = WorkerId::new();

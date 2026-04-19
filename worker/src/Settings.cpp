@@ -60,6 +60,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ "dtlsPrivateKeyFile",   optional_argument, nullptr, 'p' },
 		{ "libwebrtcFieldTrials", optional_argument, nullptr, 'W' },
 		{ "disableLiburing",      optional_argument, nullptr, 'd' },
+		{ "useBuiltInSctpStack",  optional_argument, nullptr, 's' },
 		{ nullptr,                0,                 nullptr,  0  }
 	};
 	// clang-format on
@@ -165,7 +166,23 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 				if (stringValue == "true")
 				{
-					Settings::configuration.liburingDisabled = true;
+					Settings::configuration.disableLiburing = true;
+				}
+
+				break;
+			}
+
+			case 's':
+			{
+				stringValue = std::string(optarg);
+
+				if (stringValue == "true")
+				{
+					Settings::configuration.useBuiltInSctpStack = true;
+				}
+				else
+				{
+					Settings::configuration.useBuiltInSctpStack = false;
 				}
 
 				break;
@@ -382,6 +399,9 @@ void Settings::PrintConfiguration()
 		MS_DEBUG_TAG(
 		  info, "  libwebrtcFieldTrials: %s", Settings::configuration.libwebrtcFieldTrials.c_str());
 	}
+	MS_DEBUG_TAG(info, "  disableLiburing: %s", Settings::configuration.disableLiburing ? "yes" : "no");
+	MS_DEBUG_TAG(
+	  info, "  useBuiltInSctpStack: %s", Settings::configuration.useBuiltInSctpStack ? "yes" : "no");
 
 	MS_DEBUG_TAG(info, "</configuration>");
 }

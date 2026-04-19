@@ -6,9 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#ifdef MS_SCTP_STACK
 #include "RTC/SCTP/packet/Packet.hpp"
-#endif
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -905,11 +903,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-#ifdef MS_SCTP_STACK
-		// TODO: SCTP
-#else
-		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
-#endif
+		if (Settings::configuration.useBuiltInSctpStack)
+		{
+			// TODO: SCTP
+		}
+		// TODO: Remove once we only use built-in SCTP stack.
+		else
+		{
+			this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+		}
 	}
 
 	bool PlainTransport::SendSctpData(const uint8_t* data, size_t len)
@@ -970,11 +972,12 @@ namespace RTC
 			OnRtpDataReceived(tuple, data, len, bufferLen);
 		}
 		// Check if it's SCTP.
-#ifdef MS_SCTP_STACK
-		else if (RTC::SCTP::Packet::IsSctp(data, len))
-#else
-		else if (RTC::SctpAssociation::IsSctp(data, len))
-#endif
+		else if (Settings::configuration.useBuiltInSctpStack && RTC::SCTP::Packet::IsSctp(data, len))
+		{
+			OnSctpDataReceived(tuple, data, len);
+		}
+		// TODO: Remove once we only use built-in SCTP stack.
+		else if (!Settings::configuration.useBuiltInSctpStack && RTC::SctpAssociation::IsSctp(data, len))
 		{
 			OnSctpDataReceived(tuple, data, len);
 		}

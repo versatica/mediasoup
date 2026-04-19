@@ -856,11 +856,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-#ifdef MS_SCTP_STACK
-		// TODO: SCTP
-#else
-		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
-#endif
+		if (Settings::configuration.useBuiltInSctpStack)
+		{
+			// TODO: SCTP
+		}
+		// TODO: Remove once we only use built-in SCTP stack.
+		else
+		{
+			this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+		}
 	}
 
 	bool WebRtcTransport::SendSctpData(const uint8_t* data, size_t len)

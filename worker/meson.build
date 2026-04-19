@@ -63,12 +63,6 @@ if get_option('ms_dump_rtp_shared_packet_memory_usage')
   ]
 endif
 
-if get_option('ms_sctp_stack')
-  cpp_args += [
-    '-DMS_SCTP_STACK',
-  ]
-endif
-
 cpp = meson.get_compiler('cpp')
 
 # This is a workaround to define FLATBUFFERS_LOCALE_INDEPENDENT=0 outside
@@ -87,6 +81,7 @@ common_sources = [
   'src/DepLibUV.cpp',
   'src/DepLibWebRTC.cpp',
   'src/DepOpenSSL.cpp',
+  # TODO: Remove once we only use built-in SCTP stack.
   'src/DepUsrSCTP.cpp',
   'src/Logger.cpp',
   'src/MediaSoupErrors.cpp',
@@ -128,6 +123,7 @@ common_sources = [
   'src/RTC/RtcLogger.cpp',
   'src/RTC/RtpListener.cpp',
   'src/RTC/RtpObserver.cpp',
+  # TODO: Remove once we only use built-in SCTP stack.
   'src/RTC/SctpAssociation.cpp',
   'src/RTC/SctpListener.cpp',
   'src/RTC/SenderBandwidthEstimator.cpp',

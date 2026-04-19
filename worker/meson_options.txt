@@ -5,4 +5,3 @@ option('ms_rtc_logger_rtp', type: 'boolean', value: false, description: 'Prints 
 option('ms_dump_rtp_payload_descriptor', type: 'boolean', value: false, description: 'RTC::RTP::Packet::Dump() method also dumps payload descriptor details')
 option('ms_dump_rtp_shared_packet_memory_usage', type: 'boolean', value: false, description: 'prints information about total memory allocated by RTC::RTP::SharedPacket instances')
 option('ms_disable_liburing', type: 'boolean', value: false, description: 'When set to true, disables liburing integration despite current host supports it')
-option('ms_sctp_stack', type: 'boolean', value: false, description: 'When set to true, uses mediasoup SCTP stack instead of usrsctp library (not implemented yet)')
