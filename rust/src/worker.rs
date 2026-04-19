@@ -421,9 +421,9 @@ impl Inner {
         }
 
         if use_built_in_sctp_stack {
-            spawn_args.push("--use_built_in_sctp_stack=true".to_string());
+            spawn_args.push("--useBuiltInSctpStack=true".to_string());
         } else {
-            spawn_args.push("--use_built_in_sctp_stack=false".to_string());
+            spawn_args.push("--useBuiltInSctpStack=false".to_string());
         }
 
         let id = WorkerId::new();
