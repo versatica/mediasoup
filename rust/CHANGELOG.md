@@ -2,7 +2,7 @@
 
 # NEXT
 
-- Worker: Add `use_built_in_sctp_stack` setting (defaults to `false`) to enable mediasoup built-in SCTP stack ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Worker: Add `use_built_in_sctp_stack` setting (defaults to `false`) to enable mediasoup built-in SCTP stack (PR #1777).
 
 # 0.21.0
 
