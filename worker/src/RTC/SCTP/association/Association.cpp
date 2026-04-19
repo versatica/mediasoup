@@ -548,13 +548,16 @@ namespace RTC
 				}
 			}
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
-
 			this->privateMetrics.rxPacketsCount++;
 
 			// If we are received SCTP data from the remote peer it means that we may
 			// initiate the SCTP association (if not already connected).
 			MayConnect();
+
+			// NOTE: It's important to create the deferrer here, otherwise it may
+			// happen that MayConnect() ends calling to Connect() so we end with two
+			// nested deferreds (and hence an assertion).
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
 			std::unique_ptr<Packet> receivedPacket{ Packet::Parse(data, len) };
 
