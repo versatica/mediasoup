@@ -63,7 +63,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto* parameter1 =
+		const auto* parameter1 =
 		  reinterpret_cast<const RTC::SCTP::OutgoingSsnResetRequestParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
@@ -85,7 +85,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 
 		REQUIRE(parameter1->GetStreamIds() == expectedStreamIds1);
 
-		auto* parameter2 =
+		const auto* parameter2 =
 		  reinterpret_cast<const RTC::SCTP::IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(

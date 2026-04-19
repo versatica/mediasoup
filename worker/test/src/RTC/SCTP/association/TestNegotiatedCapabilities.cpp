@@ -96,6 +96,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		  remoteChunk->BuildParameterInPlace<RTC::SCTP::ZeroChecksumAcceptableParameter>();
 
 		remoteZeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  static_cast<RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666));
 		remoteZeroChecksumAcceptableParameter->Consolidate();
 

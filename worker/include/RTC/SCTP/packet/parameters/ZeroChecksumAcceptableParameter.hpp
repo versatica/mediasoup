@@ -42,7 +42,7 @@ namespace RTC
 			enum class AlternateErrorDetectionMethod : uint32_t
 			{
 				NONE           = 0x0000,
-				SCTP_OVER_DTLS = 0x0001
+				SCTP_OVER_DTLS = 0x0001,
 			};
 
 		public:
@@ -96,7 +96,18 @@ namespace RTC
 
 			AlternateErrorDetectionMethod GetAlternateErrorDetectionMethod() const
 			{
-				return static_cast<AlternateErrorDetectionMethod>(Utils::Byte::Get4Bytes(GetBuffer(), 4));
+				const auto method = Utils::Byte::Get4Bytes(GetBuffer(), 4);
+
+				if (
+				  method == static_cast<uint32_t>(AlternateErrorDetectionMethod::NONE) ||
+				  method == static_cast<uint32_t>(AlternateErrorDetectionMethod::SCTP_OVER_DTLS))
+				{
+					return static_cast<AlternateErrorDetectionMethod>(method);
+				}
+				else
+				{
+					return AlternateErrorDetectionMethod::NONE;
+				}
 			}
 
 			void SetAlternateErrorDetectionMethod(AlternateErrorDetectionMethod alternateErrorDetectionMethod);

@@ -17,8 +17,8 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 		{
 			// Type:32769 (ZERO_CHECKSUM_ACCEPTABLE), Length: 8
 			0x80, 0x01, 0x00, 0x08,
-			// Alternate Error Detection Method (EDMID) : 666777888
-			0x27, 0xBE, 0x39, 0x20,
+			// Alternate Error Detection Method (EDMID) : 0x0001
+			0x00, 0x00, 0x00, 0x01,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC
@@ -38,8 +38,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 
 		REQUIRE(
 		  parameter->GetAlternateErrorDetectionMethod() ==
-		  static_cast<RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(
-		    666777888));
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
 		/* Serialize it. */
 
@@ -58,8 +57,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 
 		REQUIRE(
 		  parameter->GetAlternateErrorDetectionMethod() ==
-		  static_cast<RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(
-		    666777888));
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
 		/* Clone it. */
 
@@ -81,8 +79,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 
 		REQUIRE(
 		  clonedParameter->GetAlternateErrorDetectionMethod() ==
-		  static_cast<RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(
-		    666777888));
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
 		delete clonedParameter;
 	}

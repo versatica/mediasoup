@@ -71,6 +71,7 @@ namespace RTC
 			 */
 			std::vector<uint8_t> ReleasePayload() &&
 			{
+				// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move)
 				return std::move(this->payload);
 			}
 

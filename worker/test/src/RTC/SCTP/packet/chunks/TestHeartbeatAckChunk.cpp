@@ -53,7 +53,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto* parameter1 =
+		const auto* parameter1 =
 		  reinterpret_cast<const RTC::SCTP::HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
@@ -77,13 +77,15 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		auto* parameter2 = reinterpret_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
+		const auto* parameter2 =
+		  reinterpret_cast<const RTC::SCTP::UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -144,6 +146,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -156,7 +159,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
+		const auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
@@ -207,6 +210,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -314,7 +318,8 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = RTC::SCTP::HeartbeatAckChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+		const auto* parsedChunk =
+		  RTC::SCTP::HeartbeatAckChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
 
 		delete chunk;
 

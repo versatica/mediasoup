@@ -47,7 +47,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetT() == true);
 
-		auto* errorCause1 =
+		const auto* errorCause1 =
 		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(
@@ -268,7 +268,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetT() == true);
 
-		auto* obtainedErrorCause1 =
+		const auto* obtainedErrorCause1 =
 		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(

@@ -61,7 +61,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 22136);
 		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
-		auto* parameter1 =
+		const auto* parameter1 =
 		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
