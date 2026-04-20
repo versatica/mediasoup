@@ -113,14 +113,12 @@ namespace RTC
 			if (Settings::configuration.useBuiltInSctpStack)
 			{
 				// TODO: SCTP: Many interesting options missing.
-				const RTC::SCTP::SctpOptions sctpOptions = { .sourcePort         = 5000,
-					                                           .destinationPort    = 5000,
-					                                           .maxOutboundStreams = 65535,
-					                                           .maxInboundStreams =
-					                                             options->numSctpStreams()->mis(),
-					                                           // TODO: SCTP: Sure?
+				// NOTE: When using the built-in SCTP stack, `numSctpStreams` given to the
+				// transport is ignored.
+				const RTC::SCTP::SctpOptions sctpOptions = { // TODO: SCTP: Sure?
 					                                           .maxSendMessageSize = this->maxMessageSize,
-					                                           .maxSendBufferSize  = sctpSendBufferSize };
+					                                           .maxSendBufferSize  = sctpSendBufferSize
+				};
 
 				this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(sctpOptions, this);
 			}

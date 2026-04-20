@@ -15,6 +15,8 @@ import {
 import * as FbsTransport from '../fbs/transport';
 import * as FbsWebRtcTransport from '../fbs/web-rtc-transport';
 
+const USE_BUILD_IN_SCTP_STACK = false;
+
 type TestContext = {
 	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	worker?: mediasoup.types.Worker;
@@ -53,7 +55,9 @@ const ctx: TestContext = {
 };
 
 beforeEach(async () => {
-	ctx.worker = await mediasoup.createWorker();
+	ctx.worker = await mediasoup.createWorker({
+		useBuiltInSctpStack: USE_BUILD_IN_SCTP_STACK,
+	});
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
@@ -115,7 +119,7 @@ test('router.createWebRtcTransport() succeeds', async () => {
 		enableTcp: true,
 		preferUdp: true,
 		enableSctp: true,
-		numSctpStreams: { OS: 2048, MIS: 2048 },
+		numSctpStreams: { OS: 2048, MIS: 4096 },
 		maxSctpMessageSize: 1000000,
 		appData: { foo: 'bar' },
 	});
@@ -137,8 +141,10 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(typeof webRtcTransport.iceParameters.password).toBe('string');
 	expect(webRtcTransport.sctpParameters).toMatchObject({
 		port: 5000,
-		OS: 2048,
-		MIS: 2048,
+		// NOTE: When using the built-in SCTP stack, `numSctpStreams` given to the
+		// transport is ignored.
+		OS: USE_BUILD_IN_SCTP_STACK ? 65535 : 2048,
+		MIS: USE_BUILD_IN_SCTP_STACK ? 65535 : 4096,
 		maxMessageSize: 1000000,
 	});
 	expect(Array.isArray(webRtcTransport.iceCandidates)).toBe(true);

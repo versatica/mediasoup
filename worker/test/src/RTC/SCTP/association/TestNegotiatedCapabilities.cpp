@@ -17,10 +17,10 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 	{
 		RTC::SCTP::SctpOptions sctpOptions{};
 
-		sctpOptions.maxOutboundStreams        = 8192;
-		sctpOptions.maxInboundStreams         = 2048;
-		sctpOptions.enablePartialReliability  = true;
-		sctpOptions.enableMessageInterleaving = true;
+		sctpOptions.announcedMaxOutboundStreams = 8192;
+		sctpOptions.announcedMaxInboundStreams  = 2048;
+		sctpOptions.enablePartialReliability    = true;
+		sctpOptions.enableMessageInterleaving   = true;
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
@@ -51,8 +51,8 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 
 		delete remoteChunk;
 
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 1024);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2048);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxOutboundStreams == 1024);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxInboundStreams == 2048);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == true);
 		REQUIRE(negotiatedCapabilities.reConfig == true);
@@ -63,10 +63,10 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 	{
 		RTC::SCTP::SctpOptions sctpOptions{};
 
-		sctpOptions.maxOutboundStreams        = 1000;
-		sctpOptions.maxInboundStreams         = 2000;
-		sctpOptions.enablePartialReliability  = true;
-		sctpOptions.enableMessageInterleaving = true;
+		sctpOptions.announcedMaxOutboundStreams = 1000;
+		sctpOptions.announcedMaxInboundStreams  = 2000;
+		sctpOptions.enablePartialReliability    = true;
+		sctpOptions.enableMessageInterleaving   = true;
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
@@ -105,8 +105,8 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 
 		delete remoteChunk;
 
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 1000);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2000);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxOutboundStreams == 1000);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxInboundStreams == 2000);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
 		REQUIRE(negotiatedCapabilities.reConfig == false);

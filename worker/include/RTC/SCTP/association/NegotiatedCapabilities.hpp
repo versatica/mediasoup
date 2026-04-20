@@ -29,12 +29,12 @@ namespace RTC
 			/**
 			 * Negotiated maximum number of outbound streams (OS).
 			 */
-			uint16_t maxOutboundStreams{ 0 };
+			uint16_t negotiatedMaxOutboundStreams{ 0 };
 
 			/**
 			 * Negotiated maximum number of inbound streams (MIS).
 			 */
-			uint16_t maxInboundStreams{ 0 };
+			uint16_t negotiatedMaxInboundStreams{ 0 };
 
 			/**
 			 * Partial Reliability Extension.

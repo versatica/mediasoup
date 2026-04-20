@@ -70,8 +70,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		auto negotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 15000);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxOutboundStreams == 15000);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxInboundStreams == 2500);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
 		REQUIRE(negotiatedCapabilities.reConfig == true);
@@ -103,8 +103,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		negotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 15000);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxOutboundStreams == 15000);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxInboundStreams == 2500);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
 		REQUIRE(negotiatedCapabilities.reConfig == true);
@@ -139,8 +139,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		negotiatedCapabilities = clonedStateCookie->GetNegotiatedCapabilities();
 
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 15000);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxOutboundStreams == 15000);
+		REQUIRE(negotiatedCapabilities.negotiatedMaxInboundStreams == 2500);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
 		REQUIRE(negotiatedCapabilities.reConfig == true);
@@ -270,8 +270,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 	SECTION("StateCookie::Factory() succeeds")
 	{
-		RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
-			                                                           .maxInboundStreams   = 55555,
+		RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = { .negotiatedMaxOutboundStreams = 62000,
+			                                                           .negotiatedMaxInboundStreams = 55555,
 			                                                           .partialReliability  = true,
 			                                                           .messageInterleaving = true,
 			                                                           .reConfig            = true,
@@ -290,8 +290,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		// Change values of the original NegotiatedCapabilities to assert that it
 		// doesn't affect the internals of StateCookie.
-		negotiatedCapabilities.partialReliability = false;
-		negotiatedCapabilities.maxOutboundStreams = 1024;
+		negotiatedCapabilities.partialReliability           = false;
+		negotiatedCapabilities.negotiatedMaxOutboundStreams = 1024;
 
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == sctpCommon::FactoryBuffer);
@@ -313,8 +313,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		const auto retrievedNegotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
-		REQUIRE(retrievedNegotiatedCapabilities.maxOutboundStreams == 62000);
-		REQUIRE(retrievedNegotiatedCapabilities.maxInboundStreams == 55555);
+		REQUIRE(retrievedNegotiatedCapabilities.negotiatedMaxOutboundStreams == 62000);
+		REQUIRE(retrievedNegotiatedCapabilities.negotiatedMaxInboundStreams == 55555);
 		REQUIRE(retrievedNegotiatedCapabilities.partialReliability == true);
 		REQUIRE(retrievedNegotiatedCapabilities.messageInterleaving == true);
 		REQUIRE(retrievedNegotiatedCapabilities.reConfig == true);
@@ -347,8 +347,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		const auto retrievedParsedNegotiatedCapabilities = parsedStateCookie->GetNegotiatedCapabilities();
 
-		REQUIRE(retrievedParsedNegotiatedCapabilities.maxOutboundStreams == 62000);
-		REQUIRE(retrievedParsedNegotiatedCapabilities.maxInboundStreams == 55555);
+		REQUIRE(retrievedParsedNegotiatedCapabilities.negotiatedMaxOutboundStreams == 62000);
+		REQUIRE(retrievedParsedNegotiatedCapabilities.negotiatedMaxInboundStreams == 55555);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.partialReliability == true);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.messageInterleaving == true);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.reConfig == true);
@@ -359,8 +359,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 	SECTION("StateCookie::Write() succeeds")
 	{
-		RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
-			                                                           .maxInboundStreams   = 55555,
+		RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = { .negotiatedMaxOutboundStreams = 62000,
+			                                                           .negotiatedMaxInboundStreams = 55555,
 			                                                           .partialReliability  = true,
 			                                                           .messageInterleaving = true,
 			                                                           .reConfig            = true,
@@ -381,8 +381,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		// Change values of the original NegotiatedCapabilities to assert that it
 		// doesn't affect the internals of StateCookie.
-		negotiatedCapabilities.partialReliability = false;
-		negotiatedCapabilities.maxOutboundStreams = 1024;
+		negotiatedCapabilities.partialReliability           = false;
+		negotiatedCapabilities.negotiatedMaxOutboundStreams = 1024;
 
 		/* Parse the buffer. */
 
@@ -409,8 +409,8 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		const auto retrievedNegotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
-		REQUIRE(retrievedNegotiatedCapabilities.maxOutboundStreams == 62000);
-		REQUIRE(retrievedNegotiatedCapabilities.maxInboundStreams == 55555);
+		REQUIRE(retrievedNegotiatedCapabilities.negotiatedMaxOutboundStreams == 62000);
+		REQUIRE(retrievedNegotiatedCapabilities.negotiatedMaxInboundStreams == 55555);
 		REQUIRE(retrievedNegotiatedCapabilities.partialReliability == true);
 		REQUIRE(retrievedNegotiatedCapabilities.messageInterleaving == true);
 		REQUIRE(retrievedNegotiatedCapabilities.reConfig == true);

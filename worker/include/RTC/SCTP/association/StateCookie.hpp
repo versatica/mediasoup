@@ -79,8 +79,8 @@ namespace RTC
 				uint8_t bitA : 1;
 #endif
 				uint16_t magic2;
-				uint16_t maxOutboundStreams;
-				uint16_t maxInboundStreams;
+				uint16_t negotiatedMaxOutboundStreams;
+				uint16_t negotiatedMaxInboundStreams;
 			};
 
 		public:

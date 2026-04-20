@@ -183,12 +183,14 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		/* Modify it. */
 
 		// Create a StateCookie.
-		const RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
-			                                                                 .maxInboundStreams   = 55555,
-			                                                                 .partialReliability  = true,
-			                                                                 .messageInterleaving = true,
-			                                                                 .reConfig            = true,
-			                                                                 .zeroChecksum = false };
+		const RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = {
+			.negotiatedMaxOutboundStreams = 62000,
+			.negotiatedMaxInboundStreams  = 55555,
+			.partialReliability           = true,
+			.messageInterleaving          = true,
+			.reConfig                     = true,
+			.zeroChecksum                 = false
+		};
 
 		// Build the StateCookie in place within the StateCookieParameter.
 		parameter->WriteStateCookieInPlace(

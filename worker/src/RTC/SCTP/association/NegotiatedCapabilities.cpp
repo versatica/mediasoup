@@ -27,11 +27,11 @@ namespace RTC
 			const auto* remoteZeroChecksumAcceptableParameter =
 			  remoteChunk->template GetFirstParameterOfType<ZeroChecksumAcceptableParameter>();
 
-			negotiatedCapabilities.maxOutboundStreams =
-			  std::min(sctpOptions.maxOutboundStreams, remoteChunk->GetNumberOfInboundStreams());
+			negotiatedCapabilities.negotiatedMaxOutboundStreams =
+			  std::min(sctpOptions.announcedMaxOutboundStreams, remoteChunk->GetNumberOfInboundStreams());
 
-			negotiatedCapabilities.maxInboundStreams =
-			  std::min(sctpOptions.maxInboundStreams, remoteChunk->GetNumberOfOutboundStreams());
+			negotiatedCapabilities.negotiatedMaxInboundStreams =
+			  std::min(sctpOptions.announcedMaxInboundStreams, remoteChunk->GetNumberOfOutboundStreams());
 
 			// Partial Reliability Extension is negotiated if we desire it and
 			// peer announces support via Forward-TSN-Supported Parameter or via
@@ -75,8 +75,10 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::NegotiatedCapabilities>");
-			MS_DUMP_CLEAN(indentation, "  max outbound streams: %" PRIu16, this->maxOutboundStreams);
-			MS_DUMP_CLEAN(indentation, "  max inbound streams: %" PRIu16, this->maxInboundStreams);
+			MS_DUMP_CLEAN(
+			  indentation, "  negotiated max outbound streams: %" PRIu16, this->negotiatedMaxOutboundStreams);
+			MS_DUMP_CLEAN(
+			  indentation, "  negotiated max inbound streams: %" PRIu16, this->negotiatedMaxInboundStreams);
 			MS_DUMP_CLEAN(indentation, "  partial reliability: %s", this->partialReliability ? "yes" : "no");
 			MS_DUMP_CLEAN(
 			  indentation, "  message interleaving: %s", this->messageInterleaving ? "yes" : "no");
