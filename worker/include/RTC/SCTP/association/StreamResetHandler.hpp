@@ -49,7 +49,7 @@ namespace RTC
 		 * not-yet-sent messages will be discarded, but that may change in the future.
 		 * RFC8831 allows both behaviors.
 		 */
-		class StreamResetHandler : public TCBContext, public BackoffTimerHandle::Listener
+		class StreamResetHandler : public BackoffTimerHandle::Listener
 		{
 		private:
 			enum class ReqSeqNbrValidationResult : uint8_t
@@ -184,6 +184,23 @@ namespace RTC
 			void ResetStreams(std::span<const uint16_t> outgoingStreamIds);
 
 			/**
+			 * Whether a Reset Streams request should be send. Will return `false` if
+			 * there is no need to create a request (no streams to reset) or if there
+			 * already is an ongoing stream reset request that hasn't completed yet.
+			 */
+			bool ShouldCreateStreamResetRequest() const;
+
+			/**
+			 * Creates a Reset Streams request that must be sent if returned. Will
+			 * start the reconfig timer.
+			 *
+			 * @remarks
+			 * - The caller must check `ShouldCreateStreamResetRequest()` first and
+			 *   only invoke this method if the former returns `true`.
+			 */
+			void CreateStreamResetRequest(Packet* packet);
+
+			/**
 			 * Called when handling and incoming RE-CONFIG chunk. Processes a stream
 			 * reconfiguration chunk and may send a RE-CONFIG back to the peer with
 			 * either 1 or 2 responses.
@@ -197,18 +214,10 @@ namespace RTC
 			bool ValidateReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk);
 
 			/**
-			 * Creates a Reset Streams request that must be sent if returned. Will
-			 * start the reconfig timer. Will return `nullptr` if there is no need
-			 * to create a request (no streams to reset) or if there already is an
-			 * ongoing stream reset request that hasn't completed yet.
+			 * Adds the actual RE-CONFIG chunk to the given Packet. A request (which
+			 * set `this->currentRequest`) must have been created prior.
 			 */
-			ReConfigChunk* CreateStreamResetRequest();
-
-			/**
-			 * Creates the actual RE-CONFIG chunk. A request (which set
-			 * `currentRequest`) must have been created prior.
-			 */
-			ReConfigChunk* CreateReconfigChunk();
+			void CreateReconfigChunk(Packet* packet);
 
 			/**
 			 * Called to validate the `reqSeqNbr`, that it's the next in sequence.

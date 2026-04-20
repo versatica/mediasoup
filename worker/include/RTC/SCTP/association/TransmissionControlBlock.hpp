@@ -5,6 +5,7 @@
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
+#include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "RTC/SCTP/association/TCBContext.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
@@ -158,13 +159,47 @@ namespace RTC
 			 */
 			void Send(Packet* packet) override;
 
+			// TODO: SCTP: Implement it.
+			// DataTracker& GetDataTracker()
+			// {
+			// 	return this->dataTracker;
+			// }
+
+			// TODO: SCTP: Implement it.
+			// ReassemblyQueue& GetReassemblyQueue()
+			// {
+			// 	return this->reassemblyQueue;
+			// }
+
+			// TODO: SCTP: Implement it.
+			// RetransmissionQueue& GetRetransmissionQueue()
+			// {
+			// 	return this->retransmissionQueue;
+			// }
+
+			StreamResetHandler& GetStreamResetHandler()
+			{
+				return this->streamResetHandler;
+			}
+
 			HeartbeatHandler& GetHeartbeatHandler()
 			{
 				return this->heartbeatHandler;
 			}
 
+			/**
+			 * Will be set while the Association is in COOKIE_ECHOED state. In this
+			 * state, there can only be a single Packet outstanding, and it must
+			 * contain the COOKIE_ECHO Chunk as the first Chunk in that Packet, until
+			 * the COOKIE_ACK has been received, which will make the socket call
+			 * `ClearRemoteStateCookie()`.
+			 */
 			void SetRemoteStateCookie(std::vector<uint8_t> remoteStateCookie);
 
+			/**
+			 * Called when the COOKIE_ACK Chunk has been received, to allow further
+			 * Packets to be sent.
+			 */
 			void ClearRemoteStateCookie();
 
 			bool HasRemoteStateCookie() const
@@ -172,7 +207,18 @@ namespace RTC
 				return this->remoteStateCookie.has_value();
 			}
 
+			/**
+			 * Sends a SACK Chunk, if there is a need to.
+			 */
 			void MaySendSackChunk();
+
+			// TODO: SCTP: Mamy more methods.
+
+			/**
+			 * Sends a FORWARD_TSN, if it is needed and allowed (rate-limited).
+			 */
+			// TODO: SCTP: Implement.
+			// void MaybeSendForwardTsn(Packet* packet, uint64_t now);
 
 			/**
 			 * @remarks
@@ -230,6 +276,13 @@ namespace RTC
 			const std::unique_ptr<BackoffTimerHandle> delayedAckTimer;
 			RetransmissionTimeout rto;
 			RetransmissionErrorCounter txErrorCounter;
+			// TODO: SCTP: Implement.
+			// DataTracker dataTracker;
+			// TODO: SCTP: Implement.
+			// ReassemblyQueue reassemblyQueue;
+			// TODO: SCTP: Implement.
+			// RetransmissionQueue retransmissionQueue;
+			StreamResetHandler streamResetHandler;
 			HeartbeatHandler heartbeatHandler;
 			// Rate limiting of FORWARD_TSN. Next can be sent at or after this
 			// timestamp.

@@ -58,6 +58,19 @@ namespace RTC
 		        /*maxRestarts*/ 0)),
 		    rto(sctpOptions),
 		    txErrorCounter(sctpOptions),
+		    // TODO: SCTP: Implement.
+		    // dataTracker(),
+		    // TODO: SCTP: Implement.
+		    // reassemblyQueue(),
+		    // TODO: SCTP: Implement.
+		    // retransmissionQueue(),
+		    streamResetHandler(
+		      this->associationListener, this
+		      // TODO: SCTP: Implement.
+		      // std::addressof(this->dataTracker),
+		      // std::addressof(this->reassemblyQueue),
+		      // std::addressof(this->retransmissionQueue)
+		      ),
 		    heartbeatHandler(this->associationListener, sctpOptions, this)
 		{
 			MS_TRACE();

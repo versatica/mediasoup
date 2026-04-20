@@ -419,7 +419,7 @@ namespace RTC
 			// this->sendQueue.SetBufferedAmountLowThreshold(streamId, bytes);
 		}
 
-		Types::ResetStreamsStatus Association::ResetStreams(std::span<const uint16_t> /*outboundStreamIds*/)
+		Types::ResetStreamsStatus Association::ResetStreams(std::span<const uint16_t> outboundStreamIds)
 		{
 			MS_TRACE();
 
@@ -443,8 +443,7 @@ namespace RTC
 				return Types::ResetStreamsStatus::NOT_SUPPORTED;
 			}
 
-			// TODO: SCTP: Implement it.
-			// this->tcb->GetStreamResetHandler().ResetStreams(outboundStreamIds);
+			this->tcb->GetStreamResetHandler().ResetStreams(outboundStreamIds);
 
 			MaySendResetStreamsRequest();
 			AssertStateIsConsistent();
@@ -913,37 +912,13 @@ namespace RTC
 
 			AssertHasTcb();
 
-			// TODO: SCTP: I don't like this. I don't want to use Packet::AddChunk() (which
-			// clones the given Chunk). I want to use Packet::BuildChunkInPlace() so
-			// we need that `tcb->GetStreamResetHandler().MakeStreamResetRequest()`
-			// doesn't return a `ReConfigChunk` but something different such as the
-			// Re-configuration Request Parameter(s) (OutgoingSSNResetRequestParameter):
-			// https://datatracker.ietf.org/doc/html/rfc6525#section-8.2
-			// Mmmm, but not even that because we also want to use
-			// ReConfigChunk::BuildParameterInPlace() instead of AddParameter() for
-			// same reasons... Ok, let's see.
-			// NOTE: What about if we do some std::move() somewhere?
+			if (this->tcb->GetStreamResetHandler().ShouldCreateStreamResetRequest())
+			{
+				auto packet = this->tcb->CreatePacket();
 
-			// const auto* reConfigChunk =
-			//     this->tcb->GetStreamResetHandler().MakeStreamResetRequest();
-			// const auto* outgoingSSNResetRequestParameter =
-			//   this->tcb->GetStreamResetHandler().MakeOutgoingSSNResetRequestParameter();
-
-			// if (!outgoingSSNResetRequestParameter)
-			// {
-			// 	return;
-			// }
-
-			// auto packet         = this->tcb->CreatePacket();
-			// auto* reConfigChunk = packet->BuildChunkInPlace<ReConfigChunk>();
-
-			// reConfigChunk->AddParameter(outgoingSSNResetRequestParameter);
-
-			// delete outgoingSSNResetRequestParameter;
-
-			// reConfigChunk->Consolidate();
-
-			// this->packetSender.SendPacket(packet.get());
+				this->tcb->GetStreamResetHandler().CreateStreamResetRequest(packet.get());
+				this->packetSender.SendPacket(packet.get());
+			}
 		}
 
 		void Association::MayDeliverMessages()
@@ -2101,7 +2076,7 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedReConfigChunk(
-		  const Packet* /*receivedPacket*/, const ReConfigChunk* /*receivedReConfigChunk*/)
+		  const Packet* /*receivedPacket*/, const ReConfigChunk* receivedReConfigChunk)
 		{
 			MS_TRACE();
 
@@ -2110,8 +2085,7 @@ namespace RTC
 				return;
 			}
 
-			// TODO: SCTP: Implement it.
-			// this->tcb->GetStreamResetHandler().HandleReConfig(*std::move(receivedReConfigChunk));
+			this->tcb->GetStreamResetHandler().HandleReceivedReConfigChunk(receivedReConfigChunk);
 
 			// Handling this response may result in outgoing stream resets finishing
 			// (either successfully or with failure). If there still are pending

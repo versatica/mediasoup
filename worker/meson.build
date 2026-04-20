@@ -208,6 +208,7 @@ common_sources = [
   'src/RTC/SCTP/association/StreamResetHandler.cpp',
   'src/RTC/SCTP/association/TransmissionControlBlock.cpp',
   'src/RTC/SCTP/tx/RetransmissionErrorCounter.cpp',
+  'src/RTC/SCTP/tx/RetransmissionQueue.cpp',
   'src/RTC/SCTP/tx/RetransmissionTimeout.cpp',
   'src/RTC/SCTP/packet/Packet.cpp',
   'src/RTC/SCTP/packet/TLV.cpp',
