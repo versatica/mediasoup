@@ -16,6 +16,7 @@
   - This is a breaking change.
   - Remove it from `sctpParameters.fbs` and other FBS types (look for `MIS` or `mis`, etc).
   - Remove it in Rust layer.
+  - We must also remove `device.sctpCapabilities` getter from mediasoup-client because anyway we are making up those values!
   - Also must update the website documentation.
 
 - In `transport.dump()` (maybe also in `getStats()`) we must properly obtain `OS` and `MIS` according to the number of SCTP streams negotiated via INIT + INIT_ACK. And if SCTP is not yet established, then... not sure.
