@@ -91,6 +91,20 @@ namespace RTC
 				return this->payload.size();
 			}
 
+			UserData Clone() const
+			{
+				return UserData(
+				  this->streamId,
+				  this->ssn,
+				  this->mid,
+				  this->fsn,
+				  this->ppid,
+				  this->payload,
+				  this->isBeginning,
+				  this->isEnd,
+				  this->isUnordered);
+			}
+
 			/**
 			 * Useful to extract the payload and its ownership when destructing the
 			 * Message.

@@ -161,7 +161,7 @@ namespace RTC
 			return skippedStreams;
 		}
 
-		void ForwardTsnChunk::AddStream(uint16_t stream, uint16_t streamSequence)
+		void ForwardTsnChunk::AddStream(uint16_t streamId, uint16_t streamSequence)
 		{
 			MS_TRACE();
 
@@ -172,7 +172,7 @@ namespace RTC
 
 			// Add the new stream and stream sequence.
 			Utils::Byte::Set2Bytes(
-			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, stream);
+			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, streamId);
 			Utils::Byte::Set2Bytes(
 			  GetVariableLengthValuePointer(), previousVariableLengthValueLength + 2, streamSequence);
 		}

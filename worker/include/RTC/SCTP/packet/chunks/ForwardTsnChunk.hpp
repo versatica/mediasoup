@@ -114,7 +114,7 @@ namespace RTC
 
 			std::vector<AnyForwardTsnChunk::SkippedStream> GetSkippedStreams() const final;
 
-			void AddStream(uint16_t stream, uint16_t streamSequence);
+			void AddStream(uint16_t streamId, uint16_t streamSequence);
 
 		protected:
 			ForwardTsnChunk* SoftClone(const uint8_t* buffer) const final;

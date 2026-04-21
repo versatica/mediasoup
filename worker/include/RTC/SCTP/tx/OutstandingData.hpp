@@ -3,9 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
+#include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
-#include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
-#include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include <deque>
@@ -100,7 +99,7 @@ namespace RTC
 				/**
 				 * The set of lifecycle IDs that were acked using `cumulativeTsnAck`.
 				 */
-				std::vector<uint64_t> ackedLifecycleIdds;
+				std::vector<uint64_t> ackedLifecycleIds;
 
 				/**
 				 * The set of lifecycle IDs that were acked, but had been abandoned.
@@ -351,8 +350,10 @@ namespace RTC
 				return this->unackedItems;
 			}
 
-			// Given the current time `nowMs`, expire and abandon outstanding (sent
-			// at least once) chunks that have a limited lifetime.
+			/**
+			 * Given the current time `nowMs`, expire and abandon outstanding (sent
+			 * at least once) chunks that have a limited lifetime.
+			 */
 			void ExpireOutstandingChunks(uint64_t nowMs);
 
 			bool IsEmpty() const
@@ -391,9 +392,9 @@ namespace RTC
 			  uint32_t messageId,
 			  const UserData& data,
 			  uint64_t timeSentMs,
-			  uint16_t maxRetransmissions         = Item::MaxRetransmitsNoLimit,
-			  std::optional<uint64_t> expiresAtMs = std::nullopt,
-			  uint64_t lifecycleId                = 0);
+			  uint16_t maxRetransmissions = Item::MaxRetransmitsNoLimit,
+			  uint64_t expiresAtMs        = 0,
+			  uint64_t lifecycleId        = 0);
 
 			/**
 			 * Nacks all outstanding data.
@@ -401,14 +402,14 @@ namespace RTC
 			void NackAll();
 
 			/**
-			 * Creates a FORWARD-TSN chunk.
+			 * Creates a FORWARD-TSN chunk and adds it to the given Packet.
 			 */
-			ForwardTsnChunk CreateForwardTsn() const;
+			void CreateForwardTsn(Packet* packet) const;
 
 			/**
-			 * Creates an I-FORWARD-TSN chunk.
+			 * Creates an I-FORWARD-TSN chunk and adds it to the given Packet.
 			 */
-			IForwardTsnChunk CreateIForwardTsn() const;
+			void CreateIForwardTsn(Packet* packet) const;
 
 			/**
 			 * Given the current time and a TSN, it returns the measured RTT between
@@ -513,7 +514,7 @@ namespace RTC
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> ExtractChunksThatCanFit(
 			  std::set<UnwrappedTsn>& chunks, size_t maxLength);
 
-			bool IsConsistent() const;
+			void AssertIsConsistent() const;
 
 		private:
 			// The size of the data chunk (DATA/I-DATA) header that is used.
