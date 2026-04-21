@@ -4,6 +4,8 @@
 
 #include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include <map>
@@ -303,6 +305,431 @@ namespace RTC
 			}
 
 			iForwardTsnChunk->Consolidate();
+		}
+
+		std::optional<uint64_t> OutstandingData::MeasureRtt(uint64_t nowMs, UnwrappedTsn tsn) const
+		{
+			MS_TRACE();
+
+			if (tsn > this->lastCumulativeTsnAck && tsn < GetNextTsn())
+			{
+				const Item& item = GetItem(tsn);
+
+				if (!item.HasBeenRetransmitted())
+				{
+					// https://datatracker.ietf.org/doc/html/rfc9260#section-6.3.1
+					//
+					// "Karn's algorithm: RTT measurements MUST NOT be made using packets
+					// that were retransmitted (and thus for which it is ambiguous
+					// whether the reply was for the first instance of the chunk or for a
+					// later instance)"
+					return nowMs - item.GetTimeSentMs();
+				}
+			}
+
+			return std::nullopt;
+		}
+
+		bool OutstandingData::ShouldSendForwardTsn() const
+		{
+			MS_TRACE();
+
+			if (!this->outstandingData.empty())
+			{
+				return this->outstandingData.front().IsAbandoned();
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		void OutstandingData::BeginResetStreams()
+		{
+			MS_TRACE();
+
+			this->streamResetBreakpointTsns.insert(GetNextTsn());
+		}
+
+#ifdef MS_TEST
+		std::vector<
+		  std::pair<uint32_t /*tsn*/, OutstandingData::State>> OutstandingData::GetChunkStatesForTesting() const
+		{
+			MS_TRACE();
+
+			std::vector<std::pair<uint32_t /*tsn*/, State>> states;
+
+			states.emplace_back(this->lastCumulativeTsnAck.Wrap(), State::ACKED);
+
+			UnwrappedTsn tsn = this->lastCumulativeTsnAck;
+
+			for (const Item& item : this->outstandingData)
+			{
+				tsn.Increment();
+
+				State state;
+
+				if (item.IsAbandoned())
+				{
+					state = State::ABANDONED;
+				}
+				else if (item.ShouldBeRetransmitted())
+				{
+					state = State::TO_BE_RETRANSMITTED;
+				}
+				else if (item.IsAcked())
+				{
+					state = State::ACKED;
+				}
+				else if (item.IsNacked())
+				{
+					state = State::NACKED;
+				}
+				else if (item.IsOutstanding())
+				{
+					state = State::IN_FLIGHT;
+				}
+				else
+				{
+					MS_THROW_ERROR("should not end here");
+				}
+
+				states.emplace_back(tsn.Wrap(), state);
+			}
+
+			return states;
+		}
+#endif
+
+		size_t OutstandingData::GetSerializedChunkLength(const UserData& data) const
+		{
+			MS_TRACE();
+
+			return Utils::Byte::PadTo4Bytes<size_t>(this->dataChunkHeaderLength + data.GetPayloadLength());
+		}
+
+		OutstandingData::Item& OutstandingData::GetItem(UnwrappedTsn tsn)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(
+			  tsn > this->lastCumulativeTsnAck, "tsn must be higher than this->lastCumulativeTsnAck");
+			MS_ASSERT(tsn < GetNextTsn(), "tsn must be higher than GetNextTsn()");
+
+			size_t index = UnwrappedTsn::Difference(tsn, this->lastCumulativeTsnAck) - 1;
+
+			MS_ASSERT(index >= 0, "index must be equal or higher than 0");
+			MS_ASSERT(
+			  index < static_cast<int>(this->outstandingData.size()),
+			  "index must be lower than this->outstandingData.size()");
+
+			return this->outstandingData[index];
+		}
+
+		const OutstandingData::Item& OutstandingData::GetItem(UnwrappedTsn tsn) const
+		{
+			MS_TRACE();
+
+			MS_ASSERT(
+			  tsn > this->lastCumulativeTsnAck, "tsn must be higher than this->lastCumulativeTsnAck");
+			MS_ASSERT(tsn < GetNextTsn(), "tsn must be higher than GetNextTsn()");
+
+			size_t index = UnwrappedTsn::Difference(tsn, this->lastCumulativeTsnAck) - 1;
+
+			MS_ASSERT(index >= 0, "index must be equal or higher than 0");
+			MS_ASSERT(
+			  index < static_cast<int>(this->outstandingData.size()),
+			  "index must be lower than this->outstandingData.size()");
+
+			return this->outstandingData[index];
+		}
+
+		void OutstandingData::RemoveAcked(UnwrappedTsn cumulativeTsnAck, AckInfo& ackInfo)
+		{
+			MS_TRACE();
+
+			while (!this->outstandingData.empty() && this->lastCumulativeTsnAck < cumulativeTsnAck)
+			{
+				UnwrappedTsn tsn = this->lastCumulativeTsnAck.GetNextValue();
+				Item& item       = this->outstandingData.front();
+
+				AckChunk(ackInfo, tsn, item);
+
+				if (item.GetLifecycleId() != 0)
+				{
+					MS_ASSERT(item.GetData().IsEnd(), "item.GetData().IsEnd() must be true");
+
+					if (item.IsAbandoned())
+					{
+						ackInfo.abandonedLifecycleIds.push_back(item.GetLifecycleId());
+					}
+					else
+					{
+						ackInfo.ackedLifecycleIds.push_back(item.GetLifecycleId());
+					}
+				}
+
+				this->outstandingData.pop_front();
+				this->lastCumulativeTsnAck.Increment();
+			}
+
+			this->streamResetBreakpointTsns.erase(
+			  this->streamResetBreakpointTsns.begin(),
+			  this->streamResetBreakpointTsns.upper_bound(cumulativeTsnAck.GetNextValue()));
+		}
+
+		void OutstandingData::AckGapBlocks(
+		  UnwrappedTsn cumulativeTsnAck,
+		  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
+		  AckInfo& ackInfo)
+		{
+			MS_TRACE();
+
+			// Mark all non-gaps as ACKED (but they can't be removed) as (from RFC)
+			// "SCTP considers the information carried in the Gap Ack Blocks in the
+			// SACK chunk as advisory". Note that when NR-SACK is supported, this can
+			// be handled differently.
+
+			for (auto& block : gapAckBlocks)
+			{
+				UnwrappedTsn start = UnwrappedTsn::AddTo(cumulativeTsnAck, block.start);
+				UnwrappedTsn end   = UnwrappedTsn::AddTo(cumulativeTsnAck, block.end);
+
+				for (UnwrappedTsn tsn = start; tsn <= end; tsn = tsn.GetNextValue())
+				{
+					if (tsn > this->lastCumulativeTsnAck && tsn < GetNextTsn())
+					{
+						Item& item = GetItem(tsn);
+
+						AckChunk(ackInfo, tsn, item);
+					}
+				}
+			}
+		}
+
+		void OutstandingData::NackBetweenAckBlocks(
+		  UnwrappedTsn cumulativeTsnAck,
+		  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
+		  bool isInFastRecovery,
+		  bool cumulativeTsnAckedAdvanced,
+		  AckInfo& ackInfo)
+		{
+			MS_TRACE();
+
+			// Mark everything between the blocks as NACKED/TO_BE_RETRANSMITTED.
+			//
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-7.2.4
+			//
+			// "Mark the DATA chunk(s) with three miss indications for retransmission."
+			// "For each incoming SACK, miss indications are incremented only for
+			// missing TSNs prior to the highest TSN newly acknowledged in the SACK."
+			//
+			// What this means is that only when there is a increasing stream of data
+			// received and there are new packets seen (since last time), packets that
+			// are in-flight and between gaps should be nacked. This means that SCTP
+			// relies on the T3-RTX-timer to re-send packets otherwise.
+			UnwrappedTsn maxTsnToNack = ackInfo.highestTsnAcked;
+
+			if (isInFastRecovery && cumulativeTsnAckedAdvanced)
+			{
+				// https://datatracker.ietf.org/doc/html/rfc9260#section-7.2.4
+				//
+				// "If an endpoint is in Fast Recovery and a SACK arrives that advances
+				// the Cumulative TSN Ack Point, the miss indications are incremented
+				// for all TSNs reported missing in the SACK."
+				maxTsnToNack = UnwrappedTsn::AddTo(
+				  cumulativeTsnAck, gapAckBlocks.empty() ? 0 : gapAckBlocks.rbegin()->end);
+			}
+
+			UnwrappedTsn prevBlockLastAcked = cumulativeTsnAck;
+
+			for (auto& block : gapAckBlocks)
+			{
+				UnwrappedTsn curBlockFirstAcked = UnwrappedTsn::AddTo(cumulativeTsnAck, block.start);
+
+				for (UnwrappedTsn tsn = prevBlockLastAcked.GetNextValue();
+				     tsn < curBlockFirstAcked && tsn <= maxTsnToNack && tsn < GetNextTsn();
+				     tsn = tsn.GetNextValue())
+				{
+					ackInfo.hasPacketLoss |= NackItem(
+					  tsn,
+					  /*retransmitNow*/ false,
+					  /*doFastRetransmit*/ !isInFastRecovery);
+				}
+
+				prevBlockLastAcked = UnwrappedTsn::AddTo(cumulativeTsnAck, block.end);
+			}
+
+			// Note that packets are not NACKED which are above the highest
+			// gap-ack-block (or above the cumulative ack TSN if no gap-ack-blocks)
+			// as only packets up until the `highestTsnAcked` (see above) should be
+			// considered when NACKing.
+		}
+
+		void OutstandingData::AckChunk(AckInfo& ackInfo, UnwrappedTsn tsn, Item& item)
+		{
+			MS_TRACE();
+
+			if (!item.IsAcked())
+			{
+				size_t serializedLength = GetSerializedChunkLength(item.GetData());
+
+				ackInfo.bytesAcked += serializedLength;
+
+				if (item.IsOutstanding())
+				{
+					this->unackedPayloadBytes -= item.GetData().GetPayloadLength();
+					this->unackedPacketBytes -= serializedLength;
+					--this->unackedItems;
+				}
+
+				if (item.ShouldBeRetransmitted())
+				{
+					MS_ASSERT(
+					  this->toBeFastRetransmitted.find(tsn) == this->toBeFastRetransmitted.end(),
+					  "tsn should not be present in this->toBeFastRetransmitted");
+
+					this->toBeRetransmitted.erase(tsn);
+				}
+
+				item.Ack();
+
+				ackInfo.highestTsnAcked = std::max(ackInfo.highestTsnAcked, tsn);
+			}
+		}
+
+		bool OutstandingData::NackItem(UnwrappedTsn tsn, bool retransmitNow, bool doFastRetransmit)
+		{
+			MS_TRACE();
+
+			Item& item          = GetItem(tsn);
+			bool wasOutstanding = item.IsOutstanding();
+
+			Item::NackAction action = item.Nack(retransmitNow);
+
+			if (wasOutstanding && !item.IsOutstanding())
+			{
+				this->unackedPayloadBytes -= item.GetData().GetPayloadLength();
+				this->unackedPacketBytes -= GetSerializedChunkLength(item.GetData());
+				--this->unackedItems;
+			}
+
+			switch (action)
+			{
+				case Item::NackAction::NOTHING:
+				{
+					return false;
+				}
+
+				case Item::NackAction::RETRANSMIT:
+				{
+					if (doFastRetransmit)
+					{
+						this->toBeFastRetransmitted.insert(tsn);
+					}
+					else
+					{
+						this->toBeRetransmitted.insert(tsn);
+					}
+
+					MS_DEBUG_TAG(sctp, "tsn %" PRIu32 "  marked for retransmission", tsn.Wrap());
+
+					break;
+				}
+
+				case Item::NackAction::ABANDON:
+				{
+					MS_DEBUG_TAG(sctp, "tsn %" PRIu32 "  nacked, resulted in abandoning", tsn.Wrap());
+
+					AbandonAllFor(item);
+
+					break;
+				}
+			}
+
+			return true;
+		}
+
+		void OutstandingData::AbandonAllFor(const OutstandingData::Item& item)
+		{
+			MS_TRACE();
+
+			// Erase all remaining chunks from the producer, if any.
+			if (this->discardFromSendQueue(item.GetData().GetStreamId(), item.GetMessageId()))
+			{
+				// There were remaining chunks to be produced for this message. Since the
+				// receiver may have already received all chunks (up till now) for this
+				// message, we can't just FORWARD-TSN to the last fragment in this
+				// (abandoned) message and start sending a new message, as the receiver will
+				// then see a new message before the end of the previous one was seen (or
+				// skipped over). So create a new fragment, representing the end, that the
+				// received will never see as it is abandoned immediately and used as cum
+				// TSN in the sent FORWARD-TSN.
+				UserData messageEnd(
+				  item.GetData().GetStreamId(),
+				  item.GetData().GetStreamSequenceNumber(),
+				  item.GetData().GetMessageId(),
+				  item.GetData().GetFragmentSequenceNumber(),
+				  item.GetData().GetPayloadProtocolId(),
+				  std::vector<uint8_t>(),
+				  /*isBeginning*/ false,
+				  /*isEnd*/ true,
+				  /*isUnordered*/ item.GetData().IsUnordered());
+
+				UnwrappedTsn tsn = GetNextTsn();
+				Item& addedItem  = this->outstandingData.emplace_back(
+				  item.GetMessageId(),
+				  std::move(messageEnd),
+				  /*timeSentMs*/ 0,
+				  /*maxRetransmissions*/ 0,
+				  /*expiresAtMs*/ 0,
+				  /*lifecycleId*/ 0);
+
+				// The added chunk shouldn't be included in `this->unackedPacketBytes`,
+				// so set it as acked.
+				addedItem.Ack();
+
+				MS_DEBUG_TAG(sctp, "adding unsent end placeholder for message at TSN %" PRIu32, tsn.Wrap());
+			}
+
+			UnwrappedTsn tsn = this->lastCumulativeTsnAck;
+
+			for (Item& other : this->outstandingData)
+			{
+				tsn.Increment();
+
+				if (
+				  !other.IsAbandoned() && other.GetData().GetStreamId() == item.GetData().GetStreamId() &&
+				  other.GetMessageId() == item.GetMessageId())
+				{
+					MS_WARN_TAG(sctp, "marking chunk %" PRIu32 " as abandone", tsn.Wrap());
+
+					if (other.ShouldBeRetransmitted())
+					{
+						this->toBeFastRetransmitted.erase(tsn);
+						this->toBeRetransmitted.erase(tsn);
+					}
+
+					bool wasOutstanding = other.IsOutstanding();
+
+					other.Abandon();
+
+					if (wasOutstanding)
+					{
+						this->unackedPayloadBytes -= other.GetData().GetPayloadLength();
+						this->unackedPacketBytes -= GetSerializedChunkLength(other.GetData());
+						--this->unackedItems;
+					}
+				}
+			}
+		}
+
+		std::vector<std::pair<uint32_t /*tsn*/, UserData>> OutstandingData::ExtractChunksThatCanFit(
+		  std::set<UnwrappedTsn>& chunks, size_t maxLength)
+		{
+			MS_TRACE();
+
+			// TODO: SCTP
 		}
 
 		void OutstandingData::AssertIsConsistent() const
