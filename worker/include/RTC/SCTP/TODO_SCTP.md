@@ -4,6 +4,8 @@
 
 - Lot of stuff missing in `TransmissionControlBock` class and I forgot to add "TODO: SCTP" in them.
 
+- dcsctp uses µs (webrtc::Timestamp::Micros()) internally, while mediasoup uses ms (`DepLibUV::GetTimeMs()`). When porting dcsctp timeout/duration logic, make sure to convert accordingly. Do not mix units in the same field.
+
 - `Association`: When transitioning to CLOSED (due to failure while connecting or closure) we should emit a new event "stcpclosed" in all `DataProducers/Consumers`.
 
 - When receiving SCTP RE-CONFIG, we should emit "streamclosed" in those `DataProducers/DataConsumers` whose stream ID have been closed.
