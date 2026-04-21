@@ -1506,15 +1506,11 @@ namespace RTC
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATAPRODUCER:
 			{
 				if (
-				  (Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
-				  (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation))
+				  ((Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
+				   (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation)) &&
+				  !this->direct)
 				{
-					MS_WARN_TAG(sctp, "cannot close a DataProducer, no SCTP Association");
-					;
-
-					request->Accept();
-
-					break;
+					MS_THROW_ERROR("cannot close DataProducer, SCTP not enabled and not a direct Transport");
 				}
 
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataProducerRequest>();
@@ -1561,14 +1557,11 @@ namespace RTC
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATACONSUMER:
 			{
 				if (
-				  (Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
-				  (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation))
+				  ((Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
+				   (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation)) &&
+				  !this->direct)
 				{
-					MS_WARN_TAG(sctp, "cannot close a DataConsumer, no SCTP Association");
-
-					request->Accept();
-
-					break;
+					MS_THROW_ERROR("cannot close DataConsumer, SCTP not enabled and not a direct Transport");
 				}
 
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataConsumerRequest>();
