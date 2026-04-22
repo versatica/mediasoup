@@ -106,12 +106,15 @@ namespace RTC
 		  std::function<bool(uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)> discardFromSendQueue)
 		  : dataChunkHeaderLength(dataChunkHeaderLength),
 		    lastCumulativeTsnAck(lastCumulativeTsnAck),
-		    discardFromSendQueue(std::move(discardFromSendQueue)){ MS_TRACE() }
+		    discardFromSendQueue(std::move(discardFromSendQueue))
+		{
+			MS_TRACE();
+		}
 
-		    OutstandingData::AckInfo OutstandingData::HandleSack(
-		      UnwrappedTsn cumulativeTsnAck,
-		      std::span<const SackChunk::GapAckBlock> gapAckBlocks,
-		      bool isInFastRecovery)
+		OutstandingData::AckInfo OutstandingData::HandleSack(
+		  UnwrappedTsn cumulativeTsnAck,
+		  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
+		  bool isInFastRecovery)
 		{
 			MS_TRACE();
 
@@ -706,14 +709,14 @@ namespace RTC
 						this->toBeRetransmitted.insert(tsn);
 					}
 
-					MS_DEBUG_TAG(sctp, "tsn %" PRIu32 "  marked for retransmission", tsn.Wrap());
+					MS_DEBUG_TAG(sctp, "tsn %" PRIu32 " marked for retransmission", tsn.Wrap());
 
 					break;
 				}
 
 				case Item::NackAction::ABANDON:
 				{
-					MS_DEBUG_TAG(sctp, "tsn %" PRIu32 "  nacked, resulted in abandoning", tsn.Wrap());
+					MS_DEBUG_TAG(sctp, "tsn %" PRIu32 " nacked, resulted in abandoning", tsn.Wrap());
 
 					AbandonAllFor(item);
 
