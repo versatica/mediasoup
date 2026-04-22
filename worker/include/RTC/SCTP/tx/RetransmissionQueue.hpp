@@ -35,6 +35,10 @@ namespace RTC
 			// ~RetransmissionQueue() override;
 
 		public:
+			// TODO: SCTP.
+
+		private:
+			// TODO: SCTP.
 		};
 	} // namespace SCTP
 } // namespace RTC

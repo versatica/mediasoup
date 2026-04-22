@@ -10,6 +10,7 @@
 #include <deque>
 #include <limits>
 #include <optional>
+#include <ostream>
 #include <set>
 #include <span>
 #include <vector>
@@ -27,6 +28,10 @@ namespace RTC
 		 */
 		class OutstandingData
 		{
+		public:
+			static constexpr uint16_t MaxRetransmitsNoLimit{ std::numeric_limits<uint16_t>::max() };
+			static constexpr uint16_t ExpiresAtMsInfinite{ 0 };
+
 #ifdef MS_TEST
 		public:
 			/**
@@ -64,7 +69,7 @@ namespace RTC
 			};
 #endif
 
-		private:
+		public:
 			using UnwrappedTsn = UnwrappedSequenceNumber<uint32_t>;
 
 		public:
@@ -119,9 +124,6 @@ namespace RTC
 			class Item
 			{
 			public:
-				static constexpr uint16_t MaxRetransmitsNoLimit{ std::numeric_limits<uint16_t>::max() };
-
-			public:
 				enum class NackAction : uint8_t
 				{
 					NOTHING,
@@ -171,17 +173,10 @@ namespace RTC
 				  uint64_t timeSentMs,
 				  uint16_t maxRetransmissions,
 				  uint64_t expiresAtMs,
-				  uint64_t lifecycleId)
-				  : messageId(messageId),
-				    timeSentMs(timeSentMs),
-				    maxRetransmissions(maxRetransmissions),
-				    expiresAtMs(expiresAtMs),
-				    lifecycleId(lifecycleId),
-				    data(std::move(data))
-				{
-				}
+				  uint64_t lifecycleId);
 
-				Item(const Item&)            = delete;
+				Item(const Item&) = delete;
+
 				Item& operator=(const Item&) = delete;
 
 			public:
@@ -215,7 +210,7 @@ namespace RTC
 
 				/**
 				 * Prepares the item to be retransmitted. Sets it as outstanding and
-				// clears all nack counters.
+				 * clears all nack counters.
 				 */
 				void MarkAsRetransmitted();
 
@@ -264,7 +259,11 @@ namespace RTC
 				 * Given the current time, and the current state of this DATA chunk, it
 				 * will indicate if it has expired (SCTP Partial Reliability Extension).
 				 */
-				bool HasExpired(uint64_t nowMs) const;
+				bool HasExpired(uint64_t nowMs) const
+				{
+					return (
+					  this->expiresAtMs != OutstandingData::ExpiresAtMsInfinite && this->expiresAtMs <= nowMs);
+				}
 
 				uint64_t GetLifecycleId() const
 				{
@@ -291,6 +290,7 @@ namespace RTC
 				uint16_t numRetransmissions{ 0 };
 				// At this exact millisecond, the item is considered expired. If the
 				// message is not to be expired, this is set to the infinite future.
+				// NOTE: If 0 it means infinite time.
 				const uint64_t expiresAtMs;
 				// An optional lifecycle id, which may only be set for the last
 				// fragment.
@@ -392,8 +392,8 @@ namespace RTC
 			  uint32_t messageId,
 			  const UserData& data,
 			  uint64_t timeSentMs,
-			  uint16_t maxRetransmissions = Item::MaxRetransmitsNoLimit,
-			  uint64_t expiresAtMs        = 0,
+			  uint16_t maxRetransmissions = OutstandingData::MaxRetransmitsNoLimit,
+			  uint64_t expiresAtMs        = OutstandingData::ExpiresAtMsInfinite,
 			  uint64_t lifecycleId        = 0);
 
 			/**
@@ -548,6 +548,56 @@ namespace RTC
 			// efficient in read operations.
 			std::set<UnwrappedTsn> streamResetBreakpointTsns;
 		};
+
+#ifdef MS_TEST
+		/**
+		 * For logging purposes in Catch2 tests.
+		 */
+		inline std::ostream& operator<<(std::ostream& os, OutstandingData::State state)
+		{
+			switch (state)
+			{
+				case OutstandingData::State::IN_FLIGHT:
+				{
+					return os << "IN_FLIGHT";
+				}
+
+				case OutstandingData::State::NACKED:
+				{
+					return os << "NACKED";
+				}
+
+				case OutstandingData::State::TO_BE_RETRANSMITTED:
+				{
+					return os << "TO_BE_RETRANSMITTED";
+				}
+
+				case OutstandingData::State::ACKED:
+				{
+					return os << "ACKED";
+				}
+
+				case OutstandingData::State::ABANDONED:
+				{
+					return os << "ABANDONED";
+				}
+
+				default:
+				{
+					return os << "UNKNOWN(" << static_cast<int>(state) << ")";
+				}
+			}
+		}
+
+		/**
+		 * For Catch2 to print it nicely.
+		 */
+		inline std::ostream& operator<<(
+		  std::ostream& os, const std::pair<uint32_t, OutstandingData::State>& s)
+		{
+			return os << "{tsn:" << s.first << ", state:" << s.second << "}";
+		}
+#endif
 	} // namespace SCTP
 } // namespace RTC
 

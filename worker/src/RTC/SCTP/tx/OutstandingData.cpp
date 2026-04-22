@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::SCTP::OutstandingData"
-// TODO: SCTP: COMMENT
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "Logger.hpp"
@@ -8,6 +7,8 @@
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
+#include <algorithm>
+#include <cmath> // std::min()
 #include <map>
 
 namespace RTC
@@ -22,6 +23,82 @@ namespace RTC
 		constexpr uint8_t NumberOfNacksForRetransmission{ 3 };
 
 		/* Instance methods. */
+
+		OutstandingData::Item::Item(
+		  uint32_t messageId,
+		  UserData data,
+		  uint64_t timeSentMs,
+		  uint16_t maxRetransmissions,
+		  uint64_t expiresAtMs,
+		  uint64_t lifecycleId)
+		  : messageId(messageId),
+		    timeSentMs(timeSentMs),
+		    maxRetransmissions(maxRetransmissions),
+		    expiresAtMs(expiresAtMs),
+		    lifecycleId(lifecycleId),
+		    data(std::move(data))
+		{
+			MS_TRACE();
+		}
+
+		void OutstandingData::Item::Ack()
+		{
+			MS_TRACE();
+
+			if (this->lifecycle != Lifecycle::ABANDONED)
+			{
+				this->lifecycle = Lifecycle::ACTIVE;
+			}
+
+			this->ackState = AckState::ACKED;
+		}
+
+		OutstandingData::Item::NackAction OutstandingData::Item::Nack(bool retransmitNow)
+		{
+			MS_TRACE();
+
+			this->ackState = AckState::NACKED;
+			++this->nackCount;
+
+			if (!ShouldBeRetransmitted() && !IsAbandoned() && (retransmitNow || this->nackCount >= NumberOfNacksForRetransmission))
+			{
+				// Nacked enough times, it's considered lost.
+				if (this->numRetransmissions < this->maxRetransmissions)
+				{
+					this->lifecycle = Lifecycle::TO_BE_RETRANSMITTED;
+
+					return NackAction::RETRANSMIT;
+				}
+
+				Abandon();
+
+				return NackAction::ABANDON;
+			}
+
+			return NackAction::NOTHING;
+		}
+
+		void OutstandingData::Item::MarkAsRetransmitted()
+		{
+			MS_TRACE();
+
+			this->lifecycle = Lifecycle::ACTIVE;
+			this->ackState  = AckState::UNACKED;
+			this->nackCount = 0;
+			++this->numRetransmissions;
+		}
+
+		void OutstandingData::Item::Abandon()
+		{
+			MS_TRACE();
+
+			MS_ASSERT(
+			  this->expiresAtMs != OutstandingData::ExpiresAtMsInfinite ||
+			    this->maxRetransmissions != OutstandingData::MaxRetransmitsNoLimit,
+			  "item should not have infinite expiration time or its retransmission times shouldn't be the maximum");
+
+			this->lifecycle = Lifecycle::ABANDONED;
+		}
 
 		OutstandingData::OutstandingData(
 		  size_t dataChunkHeaderLength,
@@ -289,10 +366,7 @@ namespace RTC
 				std::pair<uint16_t /*streamId*/, bool /*isUnordered*/> stream =
 				  std::make_pair(item.GetData().GetStreamId(), item.GetData().IsUnordered());
 
-				if (item.GetData().GetMessageId() > skippedPerStream[stream])
-				{
-					skippedPerStream[stream] = item.GetData().GetMessageId();
-				}
+				skippedPerStream[stream] = std::max(item.GetData().GetMessageId(), skippedPerStream[stream]);
 			}
 
 			auto* iForwardTsnChunk = packet->BuildChunkInPlace<IForwardTsnChunk>();
@@ -682,7 +756,7 @@ namespace RTC
 				  std::move(messageEnd),
 				  /*timeSentMs*/ 0,
 				  /*maxRetransmissions*/ 0,
-				  /*expiresAtMs*/ 0,
+				  /*expiresAtMs*/ OutstandingData::ExpiresAtMsInfinite,
 				  /*lifecycleId*/ 0);
 
 				// The added chunk shouldn't be included in `this->unackedPacketBytes`,
@@ -702,7 +776,7 @@ namespace RTC
 				  !other.IsAbandoned() && other.GetData().GetStreamId() == item.GetData().GetStreamId() &&
 				  other.GetMessageId() == item.GetMessageId())
 				{
-					MS_WARN_TAG(sctp, "marking chunk %" PRIu32 " as abandone", tsn.Wrap());
+					MS_WARN_TAG(sctp, "marking chunk %" PRIu32 " as abandoned", tsn.Wrap());
 
 					if (other.ShouldBeRetransmitted())
 					{
@@ -729,7 +803,45 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: SCTP
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> result;
+
+			for (auto it = chunks.begin(); it != chunks.end();)
+			{
+				UnwrappedTsn tsn = *it;
+				Item& item       = GetItem(tsn);
+
+				MS_ASSERT(item.ShouldBeRetransmitted(), "item should be retransmitted");
+				MS_ASSERT(!item.IsOutstanding(), "item should not be outstanding");
+				MS_ASSERT(!item.IsAbandoned(), "item should not be abandoned");
+				MS_ASSERT(!item.IsAcked(), "item should not be acked");
+
+				size_t serializedLength = GetSerializedChunkLength(item.GetData());
+
+				if (serializedLength <= maxLength)
+				{
+					item.MarkAsRetransmitted();
+					result.emplace_back(tsn.Wrap(), item.GetData().Clone());
+					maxLength -= serializedLength;
+
+					this->unackedPayloadBytes += item.GetData().GetPayloadLength();
+					this->unackedPacketBytes += serializedLength;
+					++this->unackedItems;
+
+					it = chunks.erase(it);
+				}
+				else
+				{
+					++it;
+				}
+
+				// No point in continuing if the packet is full.
+				if (maxLength <= this->dataChunkHeaderLength)
+				{
+					break;
+				}
+			}
+
+			return result;
 		}
 
 		void OutstandingData::AssertIsConsistent() const

@@ -1,6 +1,5 @@
 // #define MS_CLASS "RTC::SCTP::RetransmissionQueue"
-// // TODO: SCTP: COMMENT
-// #define MS_LOG_DEV_LEVEL 3
+// // #define MS_LOG_DEV_LEVEL 3
 
 // #include "RTC/SCTP/association/RetransmissionQueue.hpp"
 // #include "Logger.hpp"
