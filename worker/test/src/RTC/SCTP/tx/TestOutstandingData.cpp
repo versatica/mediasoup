@@ -8,7 +8,6 @@
 #include "RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstdint>
 #include <vector>
 
 SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
