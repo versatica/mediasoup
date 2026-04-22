@@ -8,7 +8,6 @@
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include <algorithm>
-#include <cmath> // std::min()
 #include <map>
 
 namespace RTC
