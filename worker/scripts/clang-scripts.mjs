@@ -287,7 +287,7 @@ function getRootDir() {
 }
 
 function getBuildDir() {
-	const workerDir = path.join(ROOT_DIR, 'worker/');
+	const workerDir = path.join(ROOT_DIR, 'worker');
 	const workerOutDir = process.env.MEDIASOUP_OUT_DIR ?? `${workerDir}/out`;
 	const mediasoupBuildtype = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
 	const workerInstallDir =

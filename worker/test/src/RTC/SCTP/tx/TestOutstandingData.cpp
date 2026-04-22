@@ -113,6 +113,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
 
 		REQUIRE(tsn.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(tsn->Wrap() == 10);
 
 		REQUIRE(buffer.IsEmpty() == false);
@@ -545,6 +546,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto* forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
 
 		REQUIRE(forwardTsnChunk);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 12);
 	}
 
@@ -607,6 +609,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto duration = buffer.MeasureRtt(NowMs + Duration, unwrapper.Unwrap(11));
 
 		REQUIRE(duration.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(duration.value() == Duration - 1);
 	}
 
@@ -888,6 +891,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto* forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
 
 		REQUIRE(forwardTsnChunk);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 13);
 
 		const auto ackInfo2 = buffer.HandleSack(unwrapper.Unwrap(13), {}, false);
@@ -977,9 +981,10 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		buffer.CreateForwardTsn(packet.get());
 
-		auto* forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
+		const auto* forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
 
 		REQUIRE(forwardTsnChunk);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 12);
 
 		std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream> expectedSkippedStreams{
@@ -1001,6 +1006,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
 
 		REQUIRE(forwardTsnChunk);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 14);
 
 		expectedSkippedStreams = {
@@ -1022,6 +1028,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
 
 		REQUIRE(forwardTsnChunk);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 14);
 
 		expectedSkippedStreams = {
@@ -1043,6 +1050,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
 
 		REQUIRE(forwardTsnChunk);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 15);
 
 		expectedSkippedStreams = {
