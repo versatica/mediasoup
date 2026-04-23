@@ -34,15 +34,15 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRtt(MaxRttMs + 100);
+		rto.ObserveRttMs(MaxRttMs + 100);
 
 		REQUIRE(rto.GetRtoMs() == InitialRtoMs);
 
-		rto.ObserveRtt(124);
+		rto.ObserveRttMs(124);
 
 		REQUIRE(rto.GetRtoMs() == 372);
 
-		rto.ObserveRtt(MaxRttMs + 100);
+		rto.ObserveRttMs(MaxRttMs + 100);
 
 		REQUIRE(rto.GetRtoMs() == 372);
 	}
@@ -53,7 +53,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRtt(1);
+			rto.ObserveRttMs(1);
 		}
 
 		REQUIRE(rto.GetRtoMs() <= MinRtoMs);
@@ -65,9 +65,9 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRtt(MaxRttMs - 1);
+			rto.ObserveRttMs(MaxRttMs - 1);
 			// Adding jitter, which would make it RTO be well above RTT.
-			rto.ObserveRtt(MaxRttMs - 100);
+			rto.ObserveRttMs(MaxRttMs - 100);
 		}
 
 		REQUIRE(rto.GetRtoMs() >= MaxRtoMs);
@@ -77,26 +77,26 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRtt(124);
+		rto.ObserveRttMs(124);
 
 		REQUIRE(rto.GetRtoMs() == 372);
 
-		rto.ObserveRtt(128);
+		rto.ObserveRttMs(128);
 
 		REQUIRE(rto.GetRtoMs() == 315);
 
-		rto.ObserveRtt(123);
+		rto.ObserveRttMs(123);
 
 		REQUIRE(rto.GetRtoMs() == 268);
 
-		rto.ObserveRtt(125);
+		rto.ObserveRttMs(125);
 
 		// NOTE: This should be 234 (as per same test in libwebrtc) but we are not
 		// that precise.
 		// REQUIRE(rto.GetRtoMs() == 234);
 		REQUIRE(rto.GetRtoMs() == 233);
 
-		rto.ObserveRtt(127);
+		rto.ObserveRttMs(127);
 
 		// NOTE: This should be 235 (as per same test in libwebrtc) but we are not
 		// that precise.
@@ -108,23 +108,23 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRtt(124);
+		rto.ObserveRttMs(124);
 
 		REQUIRE(rto.GetRtoMs() == 372);
 
-		rto.ObserveRtt(402);
+		rto.ObserveRttMs(402);
 
 		REQUIRE(rto.GetRtoMs() == 623);
 
-		rto.ObserveRtt(728);
+		rto.ObserveRttMs(728);
 
 		REQUIRE(rto.GetRtoMs() == 800);
 
-		rto.ObserveRtt(89);
+		rto.ObserveRttMs(89);
 
 		REQUIRE(rto.GetRtoMs() == 800);
 
-		rto.ObserveRtt(126);
+		rto.ObserveRttMs(126);
 
 		REQUIRE(rto.GetRtoMs() == 800);
 	}
@@ -133,47 +133,47 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRtt(124);
-		rto.ObserveRtt(402);
-		rto.ObserveRtt(728);
-		rto.ObserveRtt(89);
-		rto.ObserveRtt(126);
+		rto.ObserveRttMs(124);
+		rto.ObserveRttMs(402);
+		rto.ObserveRttMs(728);
+		rto.ObserveRttMs(89);
+		rto.ObserveRttMs(126);
 
 		REQUIRE(rto.GetRtoMs() == 800);
 
-		rto.ObserveRtt(124);
+		rto.ObserveRttMs(124);
 
 		REQUIRE(rto.GetRtoMs() == 800);
 
-		rto.ObserveRtt(122);
+		rto.ObserveRttMs(122);
 
 		REQUIRE(rto.GetRtoMs() == 709);
 
-		rto.ObserveRtt(123);
+		rto.ObserveRttMs(123);
 
 		REQUIRE(rto.GetRtoMs() == 630);
 
-		rto.ObserveRtt(124);
+		rto.ObserveRttMs(124);
 
 		REQUIRE(rto.GetRtoMs() == 562);
 
-		rto.ObserveRtt(122);
+		rto.ObserveRttMs(122);
 
 		REQUIRE(rto.GetRtoMs() == 505);
 
-		rto.ObserveRtt(124);
+		rto.ObserveRttMs(124);
 
 		REQUIRE(rto.GetRtoMs() == 454);
 
-		rto.ObserveRtt(124);
+		rto.ObserveRttMs(124);
 
 		REQUIRE(rto.GetRtoMs() == 410);
 
-		rto.ObserveRtt(124);
+		rto.ObserveRttMs(124);
 
 		REQUIRE(rto.GetRtoMs() == 372);
 
-		rto.ObserveRtt(124);
+		rto.ObserveRttMs(124);
 
 		REQUIRE(rto.GetRtoMs() == 340);
 	}
@@ -190,7 +190,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRtt(124);
+			rto.ObserveRttMs(124);
 		}
 
 		// NOTE: This should be 234 (as per same test in libwebrtc) but we are not
@@ -209,7 +209,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRtt(124);
+			rto.ObserveRttMs(124);
 		}
 
 		REQUIRE(rto.GetRtoMs() == 184);
@@ -225,7 +225,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRtt(124);
+			rto.ObserveRttMs(124);
 		}
 
 		REQUIRE(rto.GetRtoMs() == 284);

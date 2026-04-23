@@ -145,11 +145,11 @@ namespace RTC
 
 			if (createdAtMs > 0 && createdAtMs <= nowMs)
 			{
-				const uint64_t rtt = nowMs - createdAtMs;
+				const uint64_t rttMs = nowMs - createdAtMs;
 
-				MS_DEBUG_DEV("valid HEARTBEAT_ACK Chunk received, calling ObserveRtt(%" PRIu64 ")", rtt);
+				MS_DEBUG_DEV("valid HEARTBEAT_ACK Chunk received, calling ObserveRtt(%" PRIu64 ")", rttMs);
 
-				this->tcbContext->ObserveRtt(rtt);
+				this->tcbContext->ObserveRttMs(rttMs);
 			}
 			else
 			{

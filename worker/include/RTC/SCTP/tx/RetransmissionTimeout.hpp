@@ -30,9 +30,10 @@ namespace RTC
 			void Dump(int indentation = 0) const;
 
 			/**
-			 * To be called when a RTT has been measured, to update the RTO value.
+			 * To be called when a RTT (ms) has been measured, to update the RTO
+			 * value.
 			 */
-			void ObserveRtt(uint64_t rtt);
+			void ObserveRttMs(uint64_t rttMs);
 
 			/**
 			 * Returns the Retransmission Timeout (RTO) value.
@@ -43,7 +44,7 @@ namespace RTC
 			}
 
 			/**
-			 * Returns the smoothed RTT value.
+			 * Returns the smoothed RTT value (ms)..
 			 */
 			uint64_t GetSrttMs() const
 			{

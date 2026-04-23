@@ -106,7 +106,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");
 		}
 
-		void TransmissionControlBlock::ObserveRtt(uint64_t rtt)
+		void TransmissionControlBlock::ObserveRttMs(uint64_t rttMs)
 		{
 			MS_TRACE();
 
@@ -114,11 +114,11 @@ namespace RTC
 			const auto prevRtoMs = this->rto.GetRtoMs();
 #endif
 
-			this->rto.ObserveRtt(rtt);
+			this->rto.ObserveRttMs(rttMs);
 
 			MS_DEBUG_DEV(
 			  "new rtt:%" PRIu64 ", previous rto:%" PRIu64 ", new rto:%" PRIu64 ", srtt:%" PRIu64,
-			  rtt,
+			  rttMs,
 			  prevRtoMs,
 			  this->rto.GetRtoMs(),
 			  this->rto.GetSrttMs());

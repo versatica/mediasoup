@@ -129,7 +129,7 @@ namespace RTC
 			 * @remarks
 			 * - Implements TCBContext interface.
 			 */
-			void ObserveRtt(uint64_t rtt) override;
+			void ObserveRttMs(uint64_t rttMs) override;
 
 			/**
 			 * @remarks

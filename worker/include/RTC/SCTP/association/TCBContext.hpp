@@ -32,9 +32,10 @@ namespace RTC
 			virtual uint32_t GetRemoteInitialTsn() const = 0;
 
 			/**
-			 * To be called when a RTT has been measured, to update the RTO value.
+			 * To be called when a RTT (ms) has been measured, to update the RTO
+			 * value.
 			 */
-			virtual void ObserveRtt(uint64_t rtt) = 0;
+			virtual void ObserveRttMs(uint64_t rttMs) = 0;
 
 			/**
 			 * Returns the Retransmission Timeout (RTO) value.

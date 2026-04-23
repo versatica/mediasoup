@@ -56,7 +56,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</SCTP::RetransmissionTimeout>");
 		}
 
-		void RetransmissionTimeout::ObserveRtt(uint64_t rttMs)
+		void RetransmissionTimeout::ObserveRttMs(uint64_t rttMs)
 		{
 			MS_TRACE();
 
