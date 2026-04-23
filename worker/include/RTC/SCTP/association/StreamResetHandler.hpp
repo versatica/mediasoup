@@ -217,7 +217,7 @@ namespace RTC
 			 * Adds the actual RE-CONFIG chunk to the given Packet. A request (which
 			 * set `this->currentRequest`) must have been created prior.
 			 */
-			void CreateReconfigChunk(Packet* packet);
+			void CreateReConfigChunk(Packet* packet);
 
 			/**
 			 * Called to validate the `reqSeqNbr`, that it's the next in sequence.

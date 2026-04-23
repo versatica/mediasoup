@@ -88,7 +88,7 @@ namespace RTC
 			this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
 			this->reConfigTimer->Start();
 
-			CreateReconfigChunk(packet);
+			CreateReConfigChunk(packet);
 		}
 
 		void StreamResetHandler::HandleReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk)
@@ -201,7 +201,7 @@ namespace RTC
 			return false;
 		}
 
-		void StreamResetHandler::CreateReconfigChunk(Packet* packet)
+		void StreamResetHandler::CreateReConfigChunk(Packet* packet)
 		{
 			MS_TRACE();
 
@@ -498,7 +498,7 @@ namespace RTC
 
 			auto packet = this->tcbContext->CreatePacket();
 
-			CreateReconfigChunk(packet.get());
+			CreateReConfigChunk(packet.get());
 
 			this->tcbContext->Send(packet.get());
 
