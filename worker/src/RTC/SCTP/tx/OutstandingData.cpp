@@ -127,7 +127,7 @@ namespace RTC
 			// ACK packets reported in the gap ack blocks.
 			AckGapBlocks(cumulativeTsnAck, gapAckBlocks, ackInfo);
 
-			// NACK and possibly mark for retransmit chunks that weren't acked.
+			// NACK and possibly mark for retransmit Chunks that weren't acked.
 			NackBetweenAckBlocks(
 			  cumulativeTsnAck, gapAckBlocks, isInFastRecovery, cumulativeTsnAckAdvanced, ackInfo);
 
@@ -187,7 +187,7 @@ namespace RTC
 				tsn.Increment();
 
 				// Chunks that are nacked can be expired. Care should be taken not to
-				// expire unacked (in-flight) chunks as they might have been received,
+				// expire unacked (in-flight) Chunks as they might have been received,
 				// but the SACK is either delayed or in-flight and may be received
 				// later.
 				if (item.IsAbandoned())
@@ -200,7 +200,7 @@ namespace RTC
 				}
 				else
 				{
-					// A non-expired chunk. No need to iterate any further.
+					// A non-expired Chunk. No need to iterate any further.
 					break;
 				}
 			}
@@ -214,7 +214,7 @@ namespace RTC
 
 				MS_WARN_TAG(
 				  sctp,
-				  "marking nacked chunk %" PRIu32 " and message %" PRIu32 " as expired",
+				  "marking nacked Chunk %" PRIu32 " and message %" PRIu32 " as expired",
 				  tsnToExpire.Wrap(),
 				  item.GetData().GetMessageId());
 
@@ -241,7 +241,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// All chunks are always padded to be even divisible by 4.
+			// All Chunks are always padded to be even divisible by 4.
 			const size_t chunkLength = GetSerializedChunkLength(data);
 
 			this->unackedPayloadBytes += data.GetPayloadLength();
@@ -257,7 +257,7 @@ namespace RTC
 				// No need to send it, it was expired when it was in the send queue.
 				MS_WARN_TAG(
 				  sctp,
-				  "marking freshly produced chunk %" PRIu32 " and message %" PRIu32 " as expired",
+				  "marking freshly produced Chunk %" PRIu32 " and message %" PRIu32 " as expired",
 				  tsn.Wrap(),
 				  item.GetData().GetMessageId());
 
@@ -398,7 +398,7 @@ namespace RTC
 					//
 					// "Karn's algorithm: RTT measurements MUST NOT be made using packets
 					// that were retransmitted (and thus for which it is ambiguous
-					// whether the reply was for the first instance of the chunk or for a
+					// whether the reply was for the first instance of the Chunk or for a
 					// later instance)"
 					return nowMs - item.GetTimeSentMs();
 				}
@@ -565,7 +565,7 @@ namespace RTC
 
 			// Mark all non-gaps as ACKED (but they can't be removed) as (from RFC)
 			// "SCTP considers the information carried in the Gap Ack Blocks in the
-			// SACK chunk as advisory". Note that when NR-SACK is supported, this can
+			// SACK Chunk as advisory". Note that when NR-SACK is supported, this can
 			// be handled differently.
 
 			for (const auto& block : gapAckBlocks)
@@ -764,7 +764,7 @@ namespace RTC
 				  /*expiresAtMs*/ OutstandingData::ExpiresAtMsInfinite,
 				  /*lifecycleId*/ 0);
 
-				// The added chunk shouldn't be included in `this->unackedPacketBytes`,
+				// The added Chunk shouldn't be included in `this->unackedPacketBytes`,
 				// so set it as acked.
 				addedItem.Ack();
 
@@ -781,7 +781,7 @@ namespace RTC
 				  !other.IsAbandoned() && other.GetData().GetStreamId() == item.GetData().GetStreamId() &&
 				  other.GetMessageId() == item.GetMessageId())
 				{
-					MS_WARN_TAG(sctp, "marking chunk %" PRIu32 " as abandoned", tsn.Wrap());
+					MS_WARN_TAG(sctp, "marking Chunk %" PRIu32 " as abandoned", tsn.Wrap());
 
 					if (other.ShouldBeRetransmitted())
 					{

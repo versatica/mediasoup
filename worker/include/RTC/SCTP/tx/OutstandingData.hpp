@@ -43,26 +43,26 @@ namespace RTC
 			enum class State : uint8_t
 			{
 				/**
-				 * The chunk has been sent but not received yet (from the sender's point
-				 * of view, as no SACK has been received yet that reference this chunk).
+				 * The Chunk has been sent but not received yet (from the sender's point
+				 * of view, as no SACK has been received yet that reference this Chunk).
 				 */
 				IN_FLIGHT,
 				/**
-				 * A SACK has been received which explicitly marked this chunk as missing.
+				 * A SACK has been received which explicitly marked this Chunk as missing.
 				 * It's now NACKED and may be retransmitted if NACKED enough times.
 				 */
 				NACKED,
 				/**
-				 * A chunk that will be retransmitted when possible.
+				 * A Chunk that will be retransmitted when possible.
 				 */
 				TO_BE_RETRANSMITTED,
 				/**
-				 * A SACK has been received which explicitly marked this chunk as
+				 * A SACK has been received which explicitly marked this Chunk as
 				 * received.
 				 */
 				ACKED,
 				/**
-				 * A chunk whose message has expired or has been retransmitted too many
+				 * A Chunk whose message has expired or has been retransmitted too many
 				 * times (RFC3758). It will not be retransmitted anymore.
 				 */
 				ABANDONED,
@@ -114,7 +114,7 @@ namespace RTC
 
 		private:
 			/**
-			 * A fragmented message's DATA chunk while in the retransmission queue,
+			 * A fragmented message's DATA Chunk while in the retransmission queue,
 			 * and its associated metadata.
 			 *
 			 * @remarks
@@ -136,16 +136,16 @@ namespace RTC
 				enum class Lifecycle : uint8_t
 				{
 					/**
-					 * The chunk is alive (sent, received, etc).
+					 * The Chunk is alive (sent, received, etc).
 					 */
 					ACTIVE,
 					/**
-					 * The chunk is scheduled to be retransmitted, and will then
+					 * The Chunk is scheduled to be retransmitted, and will then
 					 * transition to become active.
 					 */
 					TO_BE_RETRANSMITTED,
 					/**
-					 * The chunk has been abandoned. This is a terminal state.
+					 * The Chunk has been abandoned. This is a terminal state.
 					 */
 					ABANDONED
 				};
@@ -153,15 +153,15 @@ namespace RTC
 				enum class AckState : uint8_t
 				{
 					/**
-					 * The chunk is in-flight.
+					 * The Chunk is in-flight.
 					 */
 					UNACKED,
 					/**
-					 * The chunk has been received and acknowledged.
+					 * The Chunk has been received and acknowledged.
 					 */
 					ACKED,
 					/**
-					 * The chunk has been nacked and is possibly lost.
+					 * The Chunk has been nacked and is possibly lost.
 					 */
 					NACKED
 				};
@@ -240,7 +240,7 @@ namespace RTC
 				}
 
 				/**
-				 * Indicates if this chunk should be retransmitted.
+				 * Indicates if this Chunk should be retransmitted.
 				 */
 				bool ShouldBeRetransmitted() const
 				{
@@ -248,7 +248,7 @@ namespace RTC
 				}
 
 				/**
-				 * Indicates if this chunk has ever been retransmitted.
+				 * Indicates if this Chunk has ever been retransmitted.
 				 */
 				bool HasBeenRetransmitted() const
 				{
@@ -256,7 +256,7 @@ namespace RTC
 				}
 
 				/**
-				 * Given the current time, and the current state of this DATA chunk, it
+				 * Given the current time, and the current state of this DATA Chunk, it
 				 * will indicate if it has expired (SCTP Partial Reliability Extension).
 				 */
 				bool HasExpired(uint64_t nowMs) const
@@ -277,16 +277,16 @@ namespace RTC
 				// this is set to that number. The value zero (0) means that it will
 				// never be retransmitted.
 				const uint16_t maxRetransmissions;
-				// Indicates the life cycle status of this chunk.
+				// Indicates the life cycle status of this Chunk.
 				Lifecycle lifecycle{ Lifecycle::ACTIVE };
-				// Indicates the presence of this chunk, if it's in flight (UNACKED),
+				// Indicates the presence of this Chunk, if it's in flight (UNACKED),
 				// has been received (ACKED) or is possibly lost (NACKED).
 				AckState ackState{ AckState::UNACKED };
-				// The number of times the DATA chunk has been nacked (by having
+				// The number of times the DATA Chunk has been nacked (by having
 				// received a SACK which doesn't include it). Will be cleared on
 				// retransmissions.
 				uint8_t nackCount{ 0 };
-				// The number of times the DATA chunk has been retransmitted.
+				// The number of times the DATA Chunk has been retransmitted.
 				uint16_t numRetransmissions{ 0 };
 				// At this exact millisecond, the item is considered expired. If the
 				// message is not to be expired, this is set to the infinite future.
@@ -402,25 +402,25 @@ namespace RTC
 			void NackAll();
 
 			/**
-			 * Creates a FORWARD-TSN chunk and adds it to the given Packet.
+			 * Creates a FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
 			void CreateForwardTsn(Packet* packet) const;
 
 			/**
-			 * Creates an I-FORWARD-TSN chunk and adds it to the given Packet.
+			 * Creates an I-FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
 			void CreateIForwardTsn(Packet* packet) const;
 
 			/**
 			 * Given the current time and a TSN, it returns the measured RTT between
-			 * when the chunk was sent and now. It takes into acccount Karn's
-			 * algorithm, so if the chunk has ever been retransmitted, it will return
+			 * when the Chunk was sent and now. It takes into acccount Karn's
+			 * algorithm, so if the Chunk has ever been retransmitted, it will return
 			 * `std::nullopt`.
 			 */
 			std::optional<uint64_t> MeasureRtt(uint64_t nowMs, UnwrappedTsn tsn) const;
 
 			/**
-			 * Returns true if the next chunk that is not acked by the peer has been
+			 * Returns true if the next Chunk that is not acked by the peer has been
 			 * abandoned, which means that a FORWARD-TSN should be sent.
 			 */
 			bool ShouldSendForwardTsn() const;
@@ -443,7 +443,7 @@ namespace RTC
 
 		private:
 			/**
-			 * Returns how large a chunk will be, serialized, carrying the data.
+			 * Returns how large a Chunk will be, serialized, carrying the data.
 			 */
 			size_t GetSerializedChunkLength(const UserData& data) const;
 
@@ -482,7 +482,7 @@ namespace RTC
 			  AckInfo& ackInfo);
 
 			/**
-			 * Process the acknowledgement of the chunk referenced by `item` and
+			 * Process the acknowledgement of the Chunk referenced by `item` and
 			 * updates state in `ackInfo` and the object's state.
 			 */
 			void AckChunk(AckInfo& ackInfo, UnwrappedTsn tsn, Item& item);
@@ -517,7 +517,7 @@ namespace RTC
 			void AssertIsConsistent() const;
 
 		private:
-			// The size of the data chunk (DATA/I-DATA) header that is used.
+			// The size of the data Chunk (DATA/I-DATA) header that is used.
 			const size_t dataChunkHeaderLength;
 			// The last cumulative TSN ack number.
 			UnwrappedTsn lastCumulativeTsnAck;
