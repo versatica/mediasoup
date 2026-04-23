@@ -22,6 +22,7 @@
 #include "RTC/SeqManager.hpp"
 #include "SharedInterface.hpp"
 #include <ankerl/unordered_dense.h>
+#include <array>
 #include <bitset>
 #include <map>
 #include <string>
@@ -318,6 +319,25 @@ namespace RTC
 		bool bweManaged{ false };
 		uint8_t priority{ 1 };
 		TraceEventTypes traceEventTypes;
+
+		// Per-Consumer egress rewrite state. Populated when the ConsumeRequest
+		// carries a ConsumerRtpMapping; otherwise remains zeroed and the send
+		// path behaves exactly as before (no rewrite, no overhead beyond a
+		// single boolean check).
+		bool hasEgressRemap{ false };
+		// egressPayloadTypeMap[producerPt] = wirePt; 0 means no mapping.
+		std::array<uint8_t, 128> egressPayloadTypeMap{};
+		// egressHeaderExtensionIdMap[producerId] = wireId; 0 means no mapping.
+		// Index 0 is unused; indices 1..14 are meaningful for RFC 8285
+		// one-byte extension ids.
+		std::array<uint8_t, 15> egressHeaderExtensionIdMap{};
+		// Mirror of `rtpHeaderExtensionIds` with every non-zero id routed
+		// through `egressHeaderExtensionIdMap`. Used as the `newExtIds`
+		// argument to `Packet::ApplyEgressRewrite` so that the Transport's
+		// UpdateAbsSendTime / UpdateTransportWideCc01 (which consult the
+		// packet's own headerExtensionIds) observe the wire ids.
+		RTC::RTP::HeaderExtensionIds egressHeaderExtensionIds;
+
 		const bool pipe;
 		// Others.
 		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
