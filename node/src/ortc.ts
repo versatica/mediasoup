@@ -733,7 +733,13 @@ export function getConsumerRtpParameters({
 			continue;
 		}
 
-		codec.rtcpFeedback = (matchedCodec.rtcpFeedback ?? []).filter(
+		// Pick the caller-advertised rtcpFeedback list so that the final
+		// Consumer rtpParameters stay compliant with RFC 4585 §4.2.2
+		// (answer rtcpFeedback must be a subset of the offer):
+		//   - Capabilities path: matchedCodec came from caps (caller side).
+		//   - Parameters  path:  codec       came from override (caller side).
+		const feedbackSource = isOverride ? codec : matchedCodec;
+		codec.rtcpFeedback = (feedbackSource.rtcpFeedback ?? []).filter(
 			fb => enableRtx || fb.type !== 'nack' || fb.parameter
 		);
 

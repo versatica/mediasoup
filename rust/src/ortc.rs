@@ -895,17 +895,23 @@ pub(crate) fn get_consumer_rtp_parameters(
                     continue;
                 }
 
-                if let Some(matched_codec) = consumable_rtp_parameters
+                if consumable_rtp_parameters
                     .codecs
                     .iter()
-                    .find(|cc| match_codecs((&codec).into(), (*cc).into(), true).is_ok())
+                    .any(|cc| match_codecs((&codec).into(), cc.into(), true).is_ok())
                 {
-                    *codec.rtcp_feedback_mut() = matched_codec
+                    // Preserve caller-declared rtcp_feedback (typically
+                    // taken verbatim from the remote SDP answer) so that
+                    // the final Consumer rtp_parameters stay compliant
+                    // with RFC 4585 §4.2.2 (answer feedback must be a
+                    // subset of the offer).
+                    let feedback: Vec<_> = codec
                         .rtcp_feedback()
                         .iter()
                         .filter(|&&fb| enable_rtx || fb != RtcpFeedback::Nack)
                         .copied()
                         .collect();
+                    *codec.rtcp_feedback_mut() = feedback;
                     consumer_params.codecs.push(codec);
                 }
             }
