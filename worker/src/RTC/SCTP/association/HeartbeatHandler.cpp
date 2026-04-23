@@ -147,7 +147,7 @@ namespace RTC
 			{
 				const uint64_t rttMs = nowMs - createdAtMs;
 
-				MS_DEBUG_DEV("valid HEARTBEAT_ACK Chunk received, calling ObserveRtt(%" PRIu64 ")", rttMs);
+				MS_DEBUG_DEV("valid HEARTBEAT_ACK Chunk received, calling ObserveRttMs(%" PRIu64 ")", rttMs);
 
 				this->tcbContext->ObserveRttMs(rttMs);
 			}
