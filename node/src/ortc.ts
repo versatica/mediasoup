@@ -693,6 +693,7 @@ export function getConsumerRtpParameters({
 		}
 
 		consumerParams = {
+			mid: override.mid,
 			codecs: [],
 			headerExtensions: [],
 			encodings: [],
@@ -1032,10 +1033,7 @@ export function getConsumerRtpMapping(
 			if (isRtxCodec(producerCodec)) {
 				const apt = consumerCodec.parameters?.['apt'];
 
-				if (
-					typeof apt !== 'number' ||
-					!consumerCodecPts.has(apt as number)
-				) {
+				if (typeof apt !== 'number' || !consumerCodecPts.has(apt as number)) {
 					continue;
 				}
 			}
@@ -1085,8 +1083,10 @@ export function serializeConsumerRtpMapping(
 		);
 	}
 
-	const codecsOffset =
-		FbsRtpParameters.ConsumerRtpMapping.createCodecsVector(builder, codecs);
+	const codecsOffset = FbsRtpParameters.ConsumerRtpMapping.createCodecsVector(
+		builder,
+		codecs
+	);
 
 	const headerExtensions: number[] = [];
 

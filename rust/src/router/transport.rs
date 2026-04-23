@@ -691,10 +691,14 @@ pub(super) trait TransportImpl: TransportGeneric {
                 ));
             }
 
-            if !pipe {
-                // Set MID.
+            if !pipe && rtp_parameters.mid.is_none() {
+                // Set MID. Priority:
+                //   1. mid already set on rtp_parameters (override path,
+                //      taken from the caller-provided rtpParameters.mid).
+                //   2. ConsumerOptions.mid.
+                //   3. Auto-generated monotonically increasing integer
+                //      (up to 8 bytes).
                 rtp_parameters.mid = mid.or_else(|| {
-                    // We use up to 8 bytes for MID (string).
                     let next_mid_for_consumers = self
                         .next_mid_for_consumers()
                         .fetch_add(1, Ordering::Relaxed);

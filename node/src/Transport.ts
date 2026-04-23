@@ -641,11 +641,15 @@ export abstract class TransportImpl<
 			);
 		}
 
-		// Set MID.
-		if (!pipe) {
+		// Set MID. Priority:
+		//   1. mid already set on rtpParameters (override path, taken from
+		//      the caller-provided rtpParameters.mid).
+		//   2. ConsumerOptions.mid.
+		//   3. Auto-generated monotonically increasing integer.
+		if (!pipe && !rtpParameters.mid) {
 			if (mid) {
 				rtpParameters.mid = mid;
-			} else if (!rtpParameters.mid) {
+			} else {
 				rtpParameters.mid = `${this.#nextMidForConsumers++}`;
 
 				// We use up to 8 bytes for MID (string).

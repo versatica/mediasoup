@@ -879,6 +879,7 @@ pub(crate) fn get_consumer_rtp_parameters(
         }
         RemoteRtpSource::Parameters(override_params) => {
             consumer_params = RtpParameters {
+                mid: override_params.mid.clone(),
                 rtcp: override_params.rtcp.clone(),
                 msid: override_params
                     .msid
