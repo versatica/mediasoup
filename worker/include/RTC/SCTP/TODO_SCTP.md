@@ -23,6 +23,8 @@
   - We must also remove `device.sctpCapabilities` getter from mediasoup-client because anyway we are making up those values!
   - Also must update the website documentation.
 
+- When we invoke `close()` on a `DataProducer/Consumer` in server, we must end calling `sctpAssociation->ResetStream([streamId])` so it sends `ReConfig` to peer.
+
 - In `transport.dump()` (maybe also in `getStats()`) we must properly obtain `OS` and `MIS` according to the number of SCTP streams negotiated via INIT + INIT_ACK. And if SCTP is not yet established, then... not sure.
   - In `Association::FillBuffer()` we should not pass `this->sctpOptions.negotiatedMaxOutboundStreams/negotiatedMaxInboundStreams` but the current values.
 
