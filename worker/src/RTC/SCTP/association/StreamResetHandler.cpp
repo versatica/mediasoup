@@ -68,7 +68,10 @@ namespace RTC
 			//   return false;
 			// }
 
-			return true;
+			// TODO: SCTP: Remove once the above code is implemented.
+			// NOTE: For now we must return false otherwise it would crash if
+			// `this->currentRequest` doesn't exist.
+			return false;
 		}
 
 		void StreamResetHandler::CreateStreamResetRequest(Packet* packet)
