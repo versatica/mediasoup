@@ -135,6 +135,66 @@ impl ToFbs for RtpMapping {
     }
 }
 
+/// Single producer-side -> consumer-side (wire-level) payload-type pair used
+/// by the worker to rewrite outgoing RTP packet headers for a per-Consumer
+/// egress remap.
+#[doc(hidden)]
+#[derive(Debug, Default, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsumerCodecMapping {
+    pub producer_payload_type: u8,
+    pub consumer_payload_type: u8,
+}
+
+/// Single producer-side -> consumer-side (wire-level) RTP header-extension id
+/// pair.
+#[doc(hidden)]
+#[derive(Debug, Default, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsumerHeaderExtensionMapping {
+    pub producer_ext_id: u8,
+    pub consumer_ext_id: u8,
+}
+
+/// Per-Consumer egress mapping between the Router's canonical (consumable)
+/// RTP space and the wire-level RTP space declared by the caller via
+/// [`ConsumerOptions::rtp_parameters`](crate::consumer::ConsumerOptions::rtp_parameters).
+///
+/// The worker uses this mapping to rewrite outgoing RTP packet payload types
+/// and header-extension ids in place for this Consumer only.
+#[doc(hidden)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsumerRtpMapping {
+    pub codecs: Vec<ConsumerCodecMapping>,
+    pub header_extensions: Vec<ConsumerHeaderExtensionMapping>,
+}
+
+impl ToFbs for ConsumerRtpMapping {
+    type FbsType = rtp_parameters::ConsumerRtpMapping;
+
+    fn to_fbs(&self) -> Self::FbsType {
+        rtp_parameters::ConsumerRtpMapping {
+            codecs: self
+                .codecs
+                .iter()
+                .map(|m| rtp_parameters::ConsumerCodecMapping {
+                    producer_payload_type: m.producer_payload_type,
+                    consumer_payload_type: m.consumer_payload_type,
+                })
+                .collect(),
+            header_extensions: self
+                .header_extensions
+                .iter()
+                .map(|m| rtp_parameters::ConsumerHeaderExtensionMapping {
+                    producer_ext_id: m.producer_ext_id,
+                    consumer_ext_id: m.consumer_ext_id,
+                })
+                .collect(),
+        }
+    }
+}
+
 /// Error caused by invalid RTP parameters.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RtpParametersError {
@@ -742,6 +802,20 @@ pub(crate) fn can_consume(
         .unwrap_or_default())
 }
 
+/// Input source for [`get_consumer_rtp_parameters`].
+///
+/// - [`RemoteRtpSource::Capabilities`] runs the default ORTC path: iterate the
+///   producer-side consumable codecs and keep the ones matching any of the
+///   caller's capabilities, inheriting rtcpFeedback from the matched
+///   capability.
+/// - [`RemoteRtpSource::Parameters`] runs the override path: iterate the
+///   caller-provided rtpParameters codecs (which dictate wire PTs / ext ids)
+///   and keep the ones that have a compatible producer-side counterpart.
+pub(crate) enum RemoteRtpSource<'a> {
+    Capabilities(&'a RtpCapabilities),
+    Parameters(&'a RtpParameters),
+}
+
 /// Generate RTP parameters for a specific Consumer.
 ///
 /// It reduces encodings to just one and takes into account given RTP capabilities to reduce codecs,
@@ -749,43 +823,113 @@ pub(crate) fn can_consume(
 #[allow(clippy::suspicious_operation_groupings)]
 pub(crate) fn get_consumer_rtp_parameters(
     consumable_rtp_parameters: &RtpParameters,
-    remote_rtp_capabilities: &RtpCapabilities,
+    remote: RemoteRtpSource<'_>,
     pipe: bool,
     enable_rtx: bool,
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
-    let mut consumer_params = RtpParameters {
-        rtcp: consumable_rtp_parameters.rtcp.clone(),
-        msid: consumable_rtp_parameters.msid.clone(),
-        ..RtpParameters::default()
-    };
+    let mut consumer_params: RtpParameters;
 
-    for cap_codec in &remote_rtp_capabilities.codecs {
-        validate_rtp_codec_capability(cap_codec)
-            .map_err(ConsumerRtpParametersError::InvalidCapabilities)?;
+    match remote {
+        RemoteRtpSource::Capabilities(caps) => {
+            for cap_codec in &caps.codecs {
+                validate_rtp_codec_capability(cap_codec)
+                    .map_err(ConsumerRtpParametersError::InvalidCapabilities)?;
+            }
+
+            consumer_params = RtpParameters {
+                rtcp: consumable_rtp_parameters.rtcp.clone(),
+                msid: consumable_rtp_parameters.msid.clone(),
+                ..RtpParameters::default()
+            };
+            // Iterate producer-side consumable codecs; the caller's
+            // capabilities are used as the codec-match table so that its
+            // rtcpFeedback makes it into the final consumer_params.
+            for mut codec in consumable_rtp_parameters.codecs.clone() {
+                if !enable_rtx && codec.is_rtx() {
+                    continue;
+                }
+
+                if let Some(matched_cap_codec) = caps
+                    .codecs
+                    .iter()
+                    .find(|c| match_codecs((*c).into(), (&codec).into(), true).is_ok())
+                {
+                    *codec.rtcp_feedback_mut() = matched_cap_codec
+                        .rtcp_feedback()
+                        .iter()
+                        .filter(|&&fb| enable_rtx || fb != RtcpFeedback::Nack)
+                        .copied()
+                        .collect();
+                    consumer_params.codecs.push(codec);
+                }
+            }
+
+            // Keep the producer-side extension only when the remote capability
+            // advertises the same URI AND `preferred_id`.
+            consumer_params.header_extensions = consumable_rtp_parameters
+                .header_extensions
+                .iter()
+                .filter(|ext| {
+                    caps.header_extensions
+                        .iter()
+                        .any(|cap_ext| cap_ext.preferred_id == ext.id && cap_ext.uri == ext.uri)
+                })
+                .cloned()
+                .collect();
+        }
+        RemoteRtpSource::Parameters(override_params) => {
+            consumer_params = RtpParameters {
+                rtcp: override_params.rtcp.clone(),
+                msid: override_params
+                    .msid
+                    .clone()
+                    .or_else(|| consumable_rtp_parameters.msid.clone()),
+                ..RtpParameters::default()
+            };
+            // Consumable is still the Router-canonical view used for
+            // structural matching; we iterate the caller's override (which
+            // dictates wire PTs and extension ids).
+            for mut codec in override_params.codecs.clone() {
+                if !enable_rtx && codec.is_rtx() {
+                    continue;
+                }
+
+                if let Some(matched_codec) = consumable_rtp_parameters
+                    .codecs
+                    .iter()
+                    .find(|cc| match_codecs((&codec).into(), (*cc).into(), true).is_ok())
+                {
+                    *codec.rtcp_feedback_mut() = matched_codec
+                        .rtcp_feedback()
+                        .iter()
+                        .filter(|&&fb| enable_rtx || fb != RtcpFeedback::Nack)
+                        .copied()
+                        .collect();
+                    consumer_params.codecs.push(codec);
+                }
+            }
+
+            // The caller explicitly declares wire-level ext ids that may
+            // differ from the Router's canonical ones, so we only check URI
+            // presence in the producer-side consumable set. The worker rewrites
+            // the producer ext-id to the caller-declared one using
+            // `ConsumerRtpMapping`.
+            consumer_params.header_extensions = override_params
+                .header_extensions
+                .iter()
+                .filter(|ext| {
+                    consumable_rtp_parameters
+                        .header_extensions
+                        .iter()
+                        .any(|c_ext| c_ext.uri == ext.uri)
+                })
+                .cloned()
+                .collect();
+        }
     }
 
     let mut rtx_supported = false;
 
-    for mut codec in consumable_rtp_parameters.codecs.clone() {
-        if !enable_rtx && codec.is_rtx() {
-            continue;
-        }
-
-        if let Some(matched_cap_codec) = remote_rtp_capabilities
-            .codecs
-            .iter()
-            .find(|cap_codec| match_codecs((*cap_codec).into(), (&codec).into(), true).is_ok())
-        {
-            *codec.rtcp_feedback_mut() = matched_cap_codec
-                .rtcp_feedback()
-                .iter()
-                .filter(|&&fb| enable_rtx || fb != RtcpFeedback::Nack)
-                .copied()
-                .collect();
-
-            consumer_params.codecs.push(codec);
-        }
-    }
     // Must sanitize the list of matched codecs by removing useless RTX codecs.
     let mut remove_codecs = Vec::new();
     for (idx, codec) in consumer_params.codecs.iter().enumerate() {
@@ -815,18 +959,6 @@ pub(crate) fn get_consumer_rtp_parameters(
     if consumer_params.codecs.is_empty() || consumer_params.codecs[0].is_rtx() {
         return Err(ConsumerRtpParametersError::NoCompatibleMediaCodecs);
     }
-
-    consumer_params.header_extensions = consumable_rtp_parameters
-        .header_extensions
-        .iter()
-        .filter(|ext| {
-            remote_rtp_capabilities
-                .header_extensions
-                .iter()
-                .any(|cap_ext| cap_ext.preferred_id == ext.id && cap_ext.uri == ext.uri)
-        })
-        .cloned()
-        .collect();
 
     // Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
     if consumer_params
@@ -1004,6 +1136,94 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
     }
 
     consumer_params
+}
+
+/// Build a per-Consumer egress mapping between the Router's canonical
+/// (consumable) RTP space and the wire-level RTP space dictated by the final
+/// Consumer rtpParameters. The worker uses this mapping to rewrite outgoing
+/// RTP packet payload types and header-extension ids in place for this
+/// Consumer only.
+pub(crate) fn get_consumer_rtp_mapping(
+    producer_rtp_parameters: &RtpParameters,
+    consumer_rtp_parameters: &RtpParameters,
+) -> ConsumerRtpMapping {
+    let mut mapping = ConsumerRtpMapping::default();
+
+    let consumer_codec_pts: std::collections::HashSet<u8> = consumer_rtp_parameters
+        .codecs
+        .iter()
+        .map(|c| c.payload_type())
+        .collect();
+
+    let mut used_producer_codec_pts: std::collections::HashSet<u8> =
+        std::collections::HashSet::new();
+
+    for consumer_codec in &consumer_rtp_parameters.codecs {
+        for producer_codec in &producer_rtp_parameters.codecs {
+            if used_producer_codec_pts.contains(&producer_codec.payload_type()) {
+                continue;
+            }
+
+            if producer_codec.is_rtx() != consumer_codec.is_rtx() {
+                continue;
+            }
+
+            if match_codecs(producer_codec.into(), consumer_codec.into(), true).is_err() {
+                continue;
+            }
+
+            if producer_codec.is_rtx() {
+                let apt = match consumer_codec.parameters().get("apt") {
+                    Some(RtpCodecParametersParametersValue::Number(apt)) => {
+                        match u8::try_from(*apt) {
+                            Ok(v) => v,
+                            Err(_) => continue,
+                        }
+                    }
+                    _ => continue,
+                };
+
+                if !consumer_codec_pts.contains(&apt) {
+                    continue;
+                }
+            }
+
+            used_producer_codec_pts.insert(producer_codec.payload_type());
+            mapping.codecs.push(ConsumerCodecMapping {
+                producer_payload_type: producer_codec.payload_type(),
+                consumer_payload_type: consumer_codec.payload_type(),
+            });
+            break;
+        }
+    }
+
+    let mut producer_ext_by_uri =
+        std::collections::HashMap::<RtpHeaderExtensionUri, u8>::with_capacity(
+            producer_rtp_parameters.header_extensions.len(),
+        );
+
+    for ext in &producer_rtp_parameters.header_extensions {
+        // NOTE: Header-extension ids are validated upstream to be in 1..=14,
+        // so narrowing u16 -> u8 is safe here.
+        if let Ok(id) = u8::try_from(ext.id) {
+            producer_ext_by_uri.insert(ext.uri, id);
+        }
+    }
+
+    for consumer_ext in &consumer_rtp_parameters.header_extensions {
+        if let Some(&producer_ext_id) = producer_ext_by_uri.get(&consumer_ext.uri) {
+            if let Ok(consumer_ext_id) = u8::try_from(consumer_ext.id) {
+                mapping
+                    .header_extensions
+                    .push(ConsumerHeaderExtensionMapping {
+                        producer_ext_id,
+                        consumer_ext_id,
+                    });
+            }
+        }
+    }
+
+    mapping
 }
 
 struct CodecToMatch<'a> {

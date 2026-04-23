@@ -455,7 +455,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
 
     let consumer_rtp_parameters = get_consumer_rtp_parameters(
         &consumable_rtp_parameters,
-        &remote_rtp_capabilities,
+        RemoteRtpSource::Capabilities(&remote_rtp_capabilities),
         false,
         true,
     )

@@ -512,6 +512,54 @@ namespace RTC
 			 */
 			void AssignExtensionIds(RTP::HeaderExtensionIds& headerExtensionIds);
 
+			/**
+			 * Undo token for `ApplyEgressRewrite`. Keeps the minimum state needed
+			 * to revert the in-place Packet mutations done by the egress rewrite
+			 * so that the same underlying packet buffer can be served to the next
+			 * Consumer in the Router fan-out.
+			 */
+			struct EgressRewriteUndo
+			{
+				uint8_t origPayloadType{ 0u };
+				// Snapshotted producer-side extension layouts. `RevertEgressRewrite`
+				// walks these to rewrite id bytes in-place (length nibbles in the
+				// one-byte scheme are preserved across the rewrite) and then
+				// swaps them back into the live maps.
+				std::array<ssize_t, 14> origOneByteExtensions{
+					{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
+				};
+				std::map<uint8_t, ssize_t> origTwoBytesExtensions;
+				RTP::HeaderExtensionIds origHeaderExtensionIds{};
+			};
+
+			/**
+			 * Per-Consumer egress rewrite. Applied in-place on the live packet
+			 * buffer before `RtpStreamSend::ReceivePacket` so that retransmission
+			 * stores observe the wire PT, then reverted after
+			 * `OnConsumerSendRtpPacket` so the next Consumer in the Router
+			 * fan-out sees the pristine packet.
+			 *
+			 * @param newPayloadType The on-wire payload type for this Consumer.
+			 * @param extIdRemap `extIdRemap[oldId] = newId`; 0 means keep as is.
+			 * @param newExtIds Pre-computed `HeaderExtensionIds` that mirrors the
+			 *        producer-side ids mapped through `extIdRemap`. Used so that
+			 *        `UpdateAbsSendTime` / `UpdateTransportWideCc01` called by the
+			 *        Transport observe the wire ids.
+			 * @param undo Out: token for a subsequent `RevertEgressRewrite`.
+			 */
+			void ApplyEgressRewrite(
+			  uint8_t newPayloadType,
+			  const std::array<uint8_t, 15>& extIdRemap,
+			  const RTP::HeaderExtensionIds& newExtIds,
+			  EgressRewriteUndo& undo);
+
+			/**
+			 * Revert the in-place mutations from a previous
+			 * `ApplyEgressRewrite` call. `undo` must have been initialised by
+			 * a matching `ApplyEgressRewrite`.
+			 */
+			void RevertEgressRewrite(const EgressRewriteUndo& undo);
+
 			bool ReadMid(std::string& mid) const;
 
 			bool UpdateMid(const std::string& mid);
@@ -937,7 +985,8 @@ namespace RTC
 			 */
 			void SetExtensionLength(uint8_t id, uint8_t len);
 
-			/* Pure virtual methods inherited from Codecs::DependencyDescriptor::Listener. */
+			/* Pure virtual methods inherited from Codecs::DependencyDescriptor::Listener.
+			 */
 		public:
 			void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override;
 

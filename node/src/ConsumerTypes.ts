@@ -71,6 +71,25 @@ export type ConsumerOptions<ConsumerAppData extends AppData = AppData> = {
 	pipe?: boolean;
 
 	/**
+	 * When set, bypasses ortc.getConsumerRtpParameters and is used verbatim
+	 * as the Consumer's rtpParameters. The payload types and header-extension
+	 * ids declared here become the on-wire values for this Consumer.
+	 *
+	 * mediasoup validates compatibility against the Producer's
+	 * consumableRtpParameters (1:1 codec mapping, compatible fmtp, matching
+	 * layer/simulcast structure, header-extension URIs being a subset of the
+	 * consumable ones) and asks the worker to rewrite outgoing RTP headers
+	 * accordingly.
+	 *
+	 * Intended for advanced scenarios (e.g. WHEP) where the answer SDP
+	 * dictates wire-level PT / ext-id values that differ from the Router's
+	 * canonical ones.
+	 *
+	 * Not supported together with pipe=true.
+	 */
+	rtpParameters?: RtpParameters;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: ConsumerAppData;

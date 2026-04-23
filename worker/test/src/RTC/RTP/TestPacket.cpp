@@ -2219,4 +2219,179 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// been destroyed.
 		packet->SetBufferReleasedListener(nullptr);
 	}
+
+	SECTION("Packet::ApplyEgressRewrite() and RevertEgressRewrite() on one-byte extensions")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			0x90, 0x01, 0x00, 0x08,
+			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x05,
+			0xbe, 0xde, 0x00, 0x03, // Header Extension
+			0x10, 0xaa, 0x21, 0xbb, // - id: 1, len: 1
+			0xff, 0x00, 0x00, 0x33, // - id: 2, len: 2
+			0xff, 0xff, 0xff, 0xff, // - id: 3, len: 4
+			0x12, 0x23
+		};
+		// clang-format on
+
+		alignas(4) uint8_t snapshotBefore[sizeof(buffer)];
+		std::memcpy(snapshotBefore, buffer, sizeof(buffer));
+
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, sizeof(buffer)) };
+
+		REQUIRE(packet);
+		REQUIRE(packet->HasOneByteExtensions());
+		REQUIRE(packet->GetPayloadType() == 1);
+		REQUIRE(packet->HasExtension(1));
+		REQUIRE(packet->HasExtension(2));
+		REQUIRE(packet->HasExtension(3));
+
+		// Remap producer ids (1,2,3) -> wire ids (5,7,9), and PT 1 -> 97.
+		std::array<uint8_t, 15> extIdRemap{};
+		extIdRemap[1] = 5;
+		extIdRemap[2] = 7;
+		extIdRemap[3] = 9;
+
+		RTC::RTP::HeaderExtensionIds newExtIds{};
+		// For this unit test we do not care about which URI maps to which id;
+		// ApplyEgressRewrite copies the struct wholesale into packet->
+		// headerExtensionIds.
+		newExtIds.mid               = 5;
+		newExtIds.rid               = 7;
+		newExtIds.transportWideCc01 = 9;
+
+		RTC::RTP::Packet::EgressRewriteUndo undo;
+
+		packet->ApplyEgressRewrite(97, extIdRemap, newExtIds, undo);
+
+		// After remap the packet is in wire state.
+		REQUIRE(packet->GetPayloadType() == 97);
+		REQUIRE(packet->HasExtension(5));
+		REQUIRE(packet->HasExtension(7));
+		REQUIRE(packet->HasExtension(9));
+		REQUIRE_FALSE(packet->HasExtension(1));
+		REQUIRE_FALSE(packet->HasExtension(2));
+		REQUIRE_FALSE(packet->HasExtension(3));
+
+		uint8_t len;
+		auto* val1 = packet->GetExtensionValue(5, len);
+		REQUIRE(val1 != nullptr);
+		REQUIRE(len == 1);
+		REQUIRE(val1[0] == 0xaa);
+
+		auto* val2 = packet->GetExtensionValue(7, len);
+		REQUIRE(val2 != nullptr);
+		REQUIRE(len == 2);
+
+		auto* val3 = packet->GetExtensionValue(9, len);
+		REQUIRE(val3 != nullptr);
+		REQUIRE(len == 4);
+
+		// Revert and check bit-for-bit equality.
+		packet->RevertEgressRewrite(undo);
+
+		REQUIRE(packet->GetPayloadType() == 1);
+		REQUIRE(packet->HasExtension(1));
+		REQUIRE(packet->HasExtension(2));
+		REQUIRE(packet->HasExtension(3));
+		REQUIRE_FALSE(packet->HasExtension(5));
+		REQUIRE_FALSE(packet->HasExtension(7));
+		REQUIRE_FALSE(packet->HasExtension(9));
+
+		REQUIRE(std::memcmp(buffer, snapshotBefore, sizeof(buffer)) == 0);
+	}
+
+	SECTION("Packet::ApplyEgressRewrite() identity remap is a no-op")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			0x90, 0x01, 0x00, 0x08,
+			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x05,
+			0xbe, 0xde, 0x00, 0x03,
+			0x10, 0xaa, 0x21, 0xbb,
+			0xff, 0x00, 0x00, 0x33,
+			0xff, 0xff, 0xff, 0xff,
+			0x12, 0x23
+		};
+		// clang-format on
+
+		alignas(4) uint8_t snapshot[sizeof(buffer)];
+		std::memcpy(snapshot, buffer, sizeof(buffer));
+
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, sizeof(buffer)) };
+
+		REQUIRE(packet);
+
+		std::array<uint8_t, 15> extIdRemap{};
+		// All zeros: identity remap (no-op).
+
+		RTC::RTP::HeaderExtensionIds newExtIds{};
+
+		RTC::RTP::Packet::EgressRewriteUndo undo;
+
+		// Remap to same PT value with identity ext id remap.
+		packet->ApplyEgressRewrite(1, extIdRemap, newExtIds, undo);
+
+		// Extension bytes must not have been touched since all remap entries
+		// are 0.
+		REQUIRE(std::memcmp(buffer + 16, snapshot + 16, sizeof(buffer) - 16) == 0);
+
+		packet->RevertEgressRewrite(undo);
+		REQUIRE(std::memcmp(buffer, snapshot, sizeof(buffer)) == 0);
+	}
+
+	SECTION("Packet::ApplyEgressRewrite() and RevertEgressRewrite() on two-byte extensions")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			0x90, 0x01, 0x00, 0x08,
+			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x05,
+			0x10, 0x00, 0x00, 0x04, // Header Extension (Two-Bytes)
+			0x00, 0x00, 0x01, 0x00, // - id: 1, len: 0
+			0x02, 0x01, 0x42, 0x00, // - id: 2, len: 1
+			0x03, 0x02, 0x11, 0x22, // - id: 3, len: 2
+			0x00, 0x00, 0x04, 0x00  // - id: 4, len: 0
+		};
+		// clang-format on
+
+		alignas(4) uint8_t snapshot[sizeof(buffer)];
+		std::memcpy(snapshot, buffer, sizeof(buffer));
+
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, sizeof(buffer)) };
+
+		REQUIRE(packet);
+		REQUIRE(packet->HasTwoBytesExtensions());
+		REQUIRE(packet->HasExtension(1));
+		REQUIRE(packet->HasExtension(3));
+
+		std::array<uint8_t, 15> extIdRemap{};
+		extIdRemap[1] = 11;
+		extIdRemap[3] = 13;
+
+		RTC::RTP::HeaderExtensionIds newExtIds{};
+		RTC::RTP::Packet::EgressRewriteUndo undo;
+
+		packet->ApplyEgressRewrite(42, extIdRemap, newExtIds, undo);
+
+		REQUIRE(packet->GetPayloadType() == 42);
+		REQUIRE(packet->HasExtension(11));
+		REQUIRE(packet->HasExtension(13));
+		REQUIRE_FALSE(packet->HasExtension(1));
+		REQUIRE_FALSE(packet->HasExtension(3));
+
+		// Revert and assert bit-for-bit equality.
+		packet->RevertEgressRewrite(undo);
+
+		REQUIRE(std::memcmp(buffer, snapshot, sizeof(buffer)) == 0);
+		REQUIRE(packet->HasExtension(1));
+		REQUIRE(packet->HasExtension(3));
+		REQUIRE_FALSE(packet->HasExtension(11));
+		REQUIRE_FALSE(packet->HasExtension(13));
+	}
 }

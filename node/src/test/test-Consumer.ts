@@ -666,6 +666,134 @@ test('transport.consume() can be created with user provided mid', async () => {
 	);
 }, 2000);
 
+test('transport.consume() with rtpParameters override rewrites egress PT / ext-id', async () => {
+	// Learn the producer's consumable PT / ext-id mappings.
+	const consumable = ctx.videoProducer!.consumableRtpParameters;
+	const consumableH264 = consumable.codecs.find(c => c.mimeType === 'video/H264')!;
+	const consumableRtx = consumable.codecs.find(c => c.mimeType === 'video/rtx')!;
+	const consumableMid = consumable.headerExtensions!.find(
+		e => e.uri === 'urn:ietf:params:rtp-hdrext:sdes:mid'
+	)!;
+
+	// Pick non-clashing wire PTs / ids different from the consumable ones.
+	const wireH264Pt = 96;
+	const wireRtxPt = 97;
+	const wireMidId = (consumableMid.id % 14) + 1;
+
+	const override: mediasoup.types.RtpParameters = {
+		mid: 'VIDEO-CONSUMER',
+		codecs: [
+			{
+				mimeType: 'video/H264',
+				payloadType: wireH264Pt,
+				clockRate: 90000,
+				parameters: consumableH264.parameters,
+				rtcpFeedback: [{ type: 'nack', parameter: 'pli' }],
+			},
+			{
+				mimeType: 'video/rtx',
+				payloadType: wireRtxPt,
+				clockRate: 90000,
+				parameters: { apt: wireH264Pt },
+				rtcpFeedback: [],
+			},
+		],
+		headerExtensions: [
+			{
+				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id: wireMidId,
+				encrypt: false,
+				parameters: {},
+			},
+		],
+	};
+
+	const videoConsumer = await ctx.webRtcTransport2!.consume({
+		producerId: ctx.videoProducer!.id,
+		rtpCapabilities: ctx.consumerDeviceCapabilities,
+		rtpParameters: override,
+	});
+
+	// The caller-visible rtpParameters must match the override.
+	expect(videoConsumer.rtpParameters.mid).toBe('VIDEO-CONSUMER');
+	expect(videoConsumer.rtpParameters.codecs.length).toBe(2);
+	expect(videoConsumer.rtpParameters.codecs[0]!.mimeType).toBe('video/H264');
+	expect(videoConsumer.rtpParameters.codecs[0]!.payloadType).toBe(wireH264Pt);
+	expect(videoConsumer.rtpParameters.codecs[1]!.mimeType).toBe('video/rtx');
+	expect(videoConsumer.rtpParameters.codecs[1]!.payloadType).toBe(wireRtxPt);
+	expect(videoConsumer.rtpParameters.headerExtensions).toEqual([
+		{
+			uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+			id: wireMidId,
+			encrypt: false,
+			parameters: {},
+		},
+	]);
+
+	// Dump round-trips the wire PTs.
+	const dump = await videoConsumer.dump();
+
+	expect(dump.rtpParameters.codecs[0]!.payloadType).toBe(wireH264Pt);
+	expect(dump.rtpParameters.codecs[1]!.payloadType).toBe(wireRtxPt);
+	expect(dump.rtpParameters.headerExtensions?.[0]?.id).toBe(wireMidId);
+
+	// supportedCodecPayloadTypes must be keyed by the producer-consumable PT
+	// (not the wire PT), otherwise incoming packets would all be dropped.
+	expect(dump.supportedCodecPayloadTypes).toEqual(
+		expect.arrayContaining([
+			consumableH264.payloadType,
+			consumableRtx.payloadType,
+		])
+	);
+	expect(dump.supportedCodecPayloadTypes).not.toContain(wireH264Pt);
+}, 2000);
+
+test('transport.consume() with rtpParameters override rejects on pipe transport', async () => {
+	const override: mediasoup.types.RtpParameters = {
+		codecs: [
+			{
+				mimeType: 'video/H264',
+				payloadType: 96,
+				clockRate: 90000,
+				parameters: { 'packetization-mode': 1, 'profile-level-id': '4d0032' },
+				rtcpFeedback: [],
+			},
+		],
+	};
+
+	await expect(
+		ctx.webRtcTransport2!.consume({
+			producerId: ctx.videoProducer!.id,
+			rtpCapabilities: ctx.consumerDeviceCapabilities,
+			pipe: true,
+			rtpParameters: override,
+		})
+	).rejects.toThrow(TypeError);
+}, 2000);
+
+test('transport.consume() with invalid rtpParameters override rejects', async () => {
+	const override: mediasoup.types.RtpParameters = {
+		codecs: [
+			{
+				// No H264 match (wrong profile-level-id).
+				mimeType: 'video/H264',
+				payloadType: 96,
+				clockRate: 90000,
+				parameters: { 'packetization-mode': 1, 'profile-level-id': '640032' },
+				rtcpFeedback: [],
+			},
+		],
+	};
+
+	await expect(
+		ctx.webRtcTransport2!.consume({
+			producerId: ctx.videoProducer!.id,
+			rtpCapabilities: ctx.consumerDeviceCapabilities,
+			rtpParameters: override,
+		})
+	).rejects.toThrow(TypeError);
+}, 2000);
+
 test('transport.consume() with incompatible rtpCapabilities rejects with UnsupportedError', async () => {
 	let invalidDeviceCapabilities: mediasoup.types.RtpCapabilities;
 
