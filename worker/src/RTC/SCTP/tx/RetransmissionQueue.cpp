@@ -757,8 +757,8 @@ namespace RTC
 			MS_TRACE();
 
 			this->rwnd = this->outstandingData.GetUnackedPayloadBytes() >= aRwnd
-			            ? 0
-			            : aRwnd - this->outstandingData.GetUnackedPayloadBytes();
+			               ? 0
+			               : aRwnd - this->outstandingData.GetUnackedPayloadBytes();
 		}
 
 		void RetransmissionQueue::StartT3RtxTimerIfOutstandingData()
