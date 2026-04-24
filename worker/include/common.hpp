@@ -1,7 +1,7 @@
 #ifndef MS_COMMON_HPP
 #define MS_COMMON_HPP
 
-#include <algorithm> // IWYU pragma: export  std::transform(), std::find(), std::min(), std::max(), std::copy(), std::clamp()
+#include <algorithm> // IWYU pragma: export  std::transform(), std::find(), std::min(), std::max(), std::copy(), std::clamp(), std::ranges
 #include <cinttypes> // IWYU pragma: export  PRIu64, etc
 #include <cstddef>   // IWYU pragma: export  size_t
 #include <cstdint>   // IWYU pragma: export  uint8_t, etc

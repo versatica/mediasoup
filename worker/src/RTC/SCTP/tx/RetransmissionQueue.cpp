@@ -169,8 +169,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t oldCwnd               = this->cwnd;
-			size_t oldUnackedPacketBytes = GetUnackedPacketBytes();
+			const size_t oldCwnd               = this->cwnd;
+			const size_t oldUnackedPacketBytes = GetUnackedPacketBytes();
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-6.3.3
 			//
@@ -303,7 +303,7 @@ namespace RTC
 		}
 
 		std::vector<std::pair<uint32_t /*tsn*/, UserData>> RetransmissionQueue::GetChunksToSend(
-		  uint64_t nowMs, size_t maxLength)
+		  uint64_t /*nowMs*/, size_t maxLength)
 		{
 			MS_TRACE();
 
@@ -338,7 +338,7 @@ namespace RTC
 			}
 
 			size_t maxBytes = Utils::Byte::PadDownTo4Bytes(
-			  std::min(std::min(maxPacketBytesAllowedByCwnd, maxPacketBytesAllowedByRwnd), maxLength));
+			  std::min({ maxPacketBytesAllowedByCwnd, maxPacketBytesAllowedByRwnd, maxLength }));
 
 			result = this->outstandingData.GetChunksToBeRetransmitted(maxBytes);
 
@@ -468,7 +468,7 @@ namespace RTC
 			return this->outstandingData.ShouldSendForwardTsn();
 		}
 
-		void RetransmissionQueue::PrepareResetStream(uint16_t streamId)
+		void RetransmissionQueue::PrepareResetStream(uint16_t /*streamId*/)
 		{
 			MS_TRACE();
 
@@ -561,15 +561,13 @@ namespace RTC
 				return false;
 			}
 
-			for (const auto& block : sackChunk->GetValidatedGapAckBlocks())
-			{
-				if (UnwrappedTsn::AddTo(cumulativeTsnAck, block.end) > this->outstandingData.GetHighestOutstandingTsn())
-				{
-					return false;
-				}
-			}
-
-			return true;
+			return std::ranges::all_of(
+			  sackChunk->GetValidatedGapAckBlocks(),
+			  [&](const auto& block)
+			  {
+				  return UnwrappedTsn::AddTo(cumulativeTsnAck, block.end) <=
+				         this->outstandingData.GetHighestOutstandingTsn();
+			  });
 		}
 
 		void RetransmissionQueue::UpdateRttMs(uint64_t nowMs, UnwrappedTsn cumulativeTsnAck)
@@ -613,7 +611,7 @@ namespace RTC
 			}
 		}
 
-		void RetransmissionQueue::StopT3RtxTimerOnIncreasedCumulativeTsnAck(UnwrappedTsn cumulativeTsnAck)
+		void RetransmissionQueue::StopT3RtxTimerOnIncreasedCumulativeTsnAck(UnwrappedTsn /*cumulativeTsnAck*/)
 		{
 			MS_TRACE();
 
@@ -701,20 +699,20 @@ namespace RTC
 			}
 		}
 
-		void RetransmissionQueue::HandlePacketLoss(UnwrappedTsn highestTsnAcked)
+		void RetransmissionQueue::HandlePacketLoss(UnwrappedTsn /*highestTsnAcked*/)
 		{
 			MS_TRACE();
 
+			// https://tools.ietf.org/html/rfc9260#section-7.2.4
+			//
+			// "If not in Fast Recovery, adjust the ssthresh and cwnd of the
+			// destination address(es) to which the missing DATA chunks were last
+			// sent, according to the formula described in Section 7.2.3."
 			if (!IsInFastRecovery())
 			{
-// https://tools.ietf.org/html/rfc9260#section-7.2.4
-//
-// "If not in Fast Recovery, adjust the ssthresh and cwnd of the
-// destination address(es) to which the missing DATA chunks were last
-// sent, according to the formula described in Section 7.2.3."
 #if MS_LOG_DEV_LEVEL == 3
-				size_t oldCwnd = this->cwnd;
-				size_t oldPba  = this->partialBytesAcked;
+				const size_t oldCwnd = this->cwnd;
+				const size_t oldPba  = this->partialBytesAcked;
 #endif
 
 				this->ssthresh =
@@ -740,14 +738,14 @@ namespace RTC
 				  "fast recovery initiated with exit point %" PRIu32,
 				  this->fastRecoveryExitTsn.value().Wrap());
 			}
+			// https://tools.ietf.org/html/rfc9260#section-7.2.4
+			//
+			// "While in Fast Recovery, the ssthresh and cwnd SHOULD NOT change for
+			// any destinations due to a subsequent Fast Recovery event (i.e., one
+			// SHOULD NOT reduce the cwnd further due to a subsequent Fast
+			// Retransmit)."
 			else
 			{
-				// https://tools.ietf.org/html/rfc9260#section-7.2.4
-				//
-				// "While in Fast Recovery, the ssthresh and cwnd SHOULD NOT change for
-				// any destinations due to a subsequent Fast Recovery event (i.e., one
-				// SHOULD NOT reduce the cwnd further due to a subsequent Fast
-				// Retransmit)."
 				MS_DEBUG_DEV("packet loss detected (fast recovery), no changes");
 			}
 		}
