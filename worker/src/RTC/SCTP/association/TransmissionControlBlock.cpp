@@ -256,13 +256,11 @@ namespace RTC
 			// performed, the sender SHOULD ignore the value of cwnd and SHOULD NOT
 			// delay retransmission for this single packet."
 
-			// TODO: SCTP: Implement
-
 			auto packet = CreatePacket();
 			const auto result =
 			  this->retransmissionQueue.GetChunksForFastRetransmit(packet->GetAvailableLength());
 
-			for (auto& [tsn, data] : result)
+			for (const auto& [tsn, data] : result)
 			{
 				if (this->negotiatedCapabilities.messageInterleaving)
 				{

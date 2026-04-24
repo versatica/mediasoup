@@ -8,6 +8,7 @@
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
+#include <cmath>   // std::min()
 #include <numeric> // std::accumulate()
 #include <string>
 
