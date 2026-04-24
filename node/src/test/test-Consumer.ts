@@ -669,8 +669,12 @@ test('transport.consume() can be created with user provided mid', async () => {
 test('transport.consume() with rtpParameters override rewrites egress PT / ext-id', async () => {
 	// Learn the producer's consumable PT / ext-id mappings.
 	const consumable = ctx.videoProducer!.consumableRtpParameters;
-	const consumableH264 = consumable.codecs.find(c => c.mimeType === 'video/H264')!;
-	const consumableRtx = consumable.codecs.find(c => c.mimeType === 'video/rtx')!;
+	const consumableH264 = consumable.codecs.find(
+		c => c.mimeType === 'video/H264'
+	)!;
+	const consumableRtx = consumable.codecs.find(
+		c => c.mimeType === 'video/rtx'
+	)!;
 	const consumableMid = consumable.headerExtensions!.find(
 		e => e.uri === 'urn:ietf:params:rtp-hdrext:sdes:mid'
 	)!;
@@ -791,7 +795,7 @@ test('transport.consume() with invalid rtpParameters override rejects', async ()
 			rtpCapabilities: ctx.consumerDeviceCapabilities,
 			rtpParameters: override,
 		})
-	).rejects.toThrow(TypeError);
+	).rejects.toThrow(UnsupportedError);
 }, 2000);
 
 test('transport.consume() with incompatible rtpCapabilities rejects with UnsupportedError', async () => {
