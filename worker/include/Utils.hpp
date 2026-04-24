@@ -213,6 +213,12 @@ namespace Utils
 		}
 
 		template<typename T>
+		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadDownTo4Bytes(T size)
+		{
+			return size & ~static_cast<T>(0x03);
+		}
+
+		template<typename T>
 		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadTo8Bytes(T size)
 		{
 			return (size + 7) & ~static_cast<T>(0x07);

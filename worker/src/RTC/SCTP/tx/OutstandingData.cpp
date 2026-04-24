@@ -145,7 +145,7 @@ namespace RTC
 			  ExtractChunksThatCanFit(this->toBeFastRetransmitted, maxLength);
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-7.2.4
-
+			//
 			// "Those TSNs marked for retransmission due to the Fast-Retransmit
 			// algorithm that did not fit in the sent datagram carrying K other TSNs
 			// are also marked as ineligible for a subsequent Fast Retransmit.

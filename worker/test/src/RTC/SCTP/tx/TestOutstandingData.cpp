@@ -93,7 +93,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 0);
 		REQUIRE(buffer.GetUnackedPacketBytes() == 0);
 		REQUIRE(buffer.GetUnackedItems() == 0);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 		REQUIRE(buffer.GetLastCumulativeTsnAck().Wrap() == 9);
 		REQUIRE(buffer.GetNextTsn().Wrap() == 10);
 		REQUIRE(buffer.GetHighestOutstandingTsn().Wrap() == 9);
@@ -118,7 +118,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.IsEmpty() == false);
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 1);
 		REQUIRE(buffer.GetUnackedItems() == 1);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 		REQUIRE(buffer.GetLastCumulativeTsnAck().Wrap() == 9);
 		REQUIRE(buffer.GetNextTsn().Wrap() == 11);
 		REQUIRE(buffer.GetHighestOutstandingTsn().Wrap() == 10);
@@ -147,7 +147,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 0);
 		REQUIRE(buffer.GetUnackedPacketBytes() == 0);
 		REQUIRE(buffer.GetUnackedItems() == 0);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 		REQUIRE(buffer.GetLastCumulativeTsnAck().Wrap() == 10);
 		REQUIRE(buffer.GetNextTsn().Wrap() == 11);
 		REQUIRE(buffer.GetHighestOutstandingTsn().Wrap() == 10);
@@ -166,7 +166,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(buffer.IsEmpty() == false);
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 1);
 		REQUIRE(buffer.GetUnackedItems() == 1);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 		REQUIRE(buffer.GetLastCumulativeTsnAck().Wrap() == 9);
 		REQUIRE(buffer.GetNextTsn().Wrap() == 11);
 		REQUIRE(buffer.GetHighestOutstandingTsn().Wrap() == 10);
@@ -198,7 +198,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		// TSN 10 is still outstanding.
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 1);
 		REQUIRE(buffer.GetUnackedItems() == 1);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 		REQUIRE(buffer.GetLastCumulativeTsnAck().Wrap() == 9);
 		REQUIRE(buffer.GetNextTsn().Wrap() == 12);
 		REQUIRE(buffer.GetHighestOutstandingTsn().Wrap() == 11);
@@ -222,13 +222,13 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<std::pair<uint32_t, RTC::SCTP::OutstandingData::State>> expectedState = {
 			{ 9,  RTC::SCTP::OutstandingData::State::ACKED  },
@@ -256,14 +256,14 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab2 = {
 			{ 2, 3 }
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab2, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab3 = {
 			{ 2, 4 }
@@ -276,7 +276,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(ackInfo.highestTsnAcked.Wrap() == 13);
 		REQUIRE(ackInfo.hasPacketLoss == true);
 
-		REQUIRE(buffer.hasDataToBeRetransmitted() == true);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == true);
 
 		const std::vector<std::pair<uint32_t, RTC::SCTP::OutstandingData::State>> expectedState = {
 			{ 9,  RTC::SCTP::OutstandingData::State::ACKED               },
@@ -331,14 +331,14 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab2 = {
 			{ 2, 3 }
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab2, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
 
@@ -357,7 +357,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  RTC::SCTP::DataChunk::DataChunkHeaderLength + Utils::Byte::PadTo4Bytes<size_t>(1));
 		REQUIRE(ackInfo.highestTsnAcked.Wrap() == 13);
 		REQUIRE(ackInfo.hasPacketLoss == true);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 		REQUIRE(buffer.GetNextTsn().Wrap() == 14);
 
 		const std::vector<std::pair<uint32_t, RTC::SCTP::OutstandingData::State>> expectedState = {
@@ -402,14 +402,14 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab2 = {
 			{ 2, 3 }
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab2, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		discardFromSendQueueTester.Prepare(/*returnValue*/ true);
 
@@ -428,7 +428,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  RTC::SCTP::DataChunk::DataChunkHeaderLength + Utils::Byte::PadTo4Bytes<size_t>(1));
 		REQUIRE(ackInfo.highestTsnAcked.Wrap() == 13);
 		REQUIRE(ackInfo.hasPacketLoss == true);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 		REQUIRE(buffer.GetNextTsn().Wrap() == 15);
 
 		const std::vector<std::pair<uint32_t, RTC::SCTP::OutstandingData::State>> expectedState = {
@@ -481,7 +481,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  /*expectedLastStreamId*/ 1,
 		  /*expectedLastOutgoingMessageId*/ MessageId);
 
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 		REQUIRE(buffer.GetLastCumulativeTsnAck().Wrap() == 9);
 		REQUIRE(buffer.GetNextTsn().Wrap() == 13);
 		REQUIRE(buffer.GetHighestOutstandingTsn().Wrap() == 12);
@@ -525,7 +525,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  /*expectedLastStreamId*/ 1,
 		  /*expectedLastOutgoingMessageId*/ MessageId);
 
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<std::pair<uint32_t, RTC::SCTP::OutstandingData::State>> expectedState = {
 			{ 9,  RTC::SCTP::OutstandingData::State::ACKED     },
@@ -633,14 +633,14 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab1, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab2 = {
 			{ 2, 3 }
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab2, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab3 = {
 			{ 2, 4 }
@@ -649,7 +649,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		REQUIRE(ackInfo.hasPacketLoss == true);
 
-		REQUIRE(buffer.hasDataToBeRetransmitted() == true);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == true);
 
 		// Don't retransmit yet. S simulate congestion window blocking it.
 		// It still gets more SACKs indicating packet loss.
@@ -658,14 +658,14 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab4, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == true);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == true);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab5 = {
 			{ 2, 6 }
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab5, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == true);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == true);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab6 = {
 			{ 2, 7 }
@@ -673,7 +673,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo2 = buffer.HandleSack(unwrapper.Unwrap(9), gab6, false);
 
 		REQUIRE(ackInfo2.hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == true);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == true);
 
 		// Now retransmit.
 		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(1000);
@@ -688,14 +688,14 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab7, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab8 = {
 			{ 2, 9 }
 		};
 
 		REQUIRE(buffer.HandleSack(unwrapper.Unwrap(9), gab8, false).hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab9 = {
 			{ 2, 10 }
@@ -703,7 +703,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo3 = buffer.HandleSack(unwrapper.Unwrap(9), gab9, false);
 
 		REQUIRE(ackInfo3.hasPacketLoss == true);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 	}
 
 	SECTION("lifecyle returns acked items in ack-info")
@@ -777,7 +777,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo1 = buffer.HandleSack(unwrapper.Unwrap(9), gab1, false);
 
 		REQUIRE(ackInfo1.hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab2 = {
 			{ 2, 3 }
@@ -785,7 +785,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo2 = buffer.HandleSack(unwrapper.Unwrap(9), gab2, false);
 
 		REQUIRE(ackInfo2.hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
 
@@ -850,7 +850,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo1 = buffer.HandleSack(unwrapper.Unwrap(9), gab1, false);
 
 		REQUIRE(ackInfo1.hasPacketLoss == false);
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
 		expectedState = {
 			{ 9,  RTC::SCTP::OutstandingData::State::ACKED  },
@@ -1158,6 +1158,6 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		buffer.HandleSack(unwrapper.Unwrap(10), malformedBlocks, /*isInFastRecovery*/ false);
 
-		REQUIRE(buffer.hasDataToBeRetransmitted() == false);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 	}
 }

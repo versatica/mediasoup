@@ -2409,7 +2409,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "T1-init timer has expired %zu/%s]",
+			  "T1-init timer has expired [%zu/%s]",
 			  this->t1InitTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
@@ -2437,7 +2437,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "T1-cookie timer has expired %zu/%s]",
+			  "T1-cookie timer has expired [%zu/%s]",
 			  this->t1CookieTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 

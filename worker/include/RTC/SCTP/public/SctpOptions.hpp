@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_OPTIONS_HPP
 
 #include "common.hpp"
+#include "Utils.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 
@@ -44,7 +45,7 @@ namespace RTC
 			 * Maximum size of an SCTP Packet. It doesn't include any overhead of
 			 * DTLS, TURN, UDP or IP headers.
 			 */
-			size_t mtu{ RTC::Consts::MaxSafeMtuSizeForSctp };
+			size_t mtu{ Utils::Byte::PadDownTo4Bytes(RTC::Consts::MaxSafeMtuSizeForSctp) };
 
 			/**
 			 * The largest allowed message payload to be sent. Messages will be rejected

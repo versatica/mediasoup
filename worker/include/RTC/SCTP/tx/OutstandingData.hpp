@@ -20,7 +20,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * This class keeps track of outstanding data chunks (sent, not yet acked)
+		 * This class keeps track of outstanding data Chunks (sent, not yet acked)
 		 * and handles acking, nacking, rescheduling and abandoning.
 		 *
 		 * Items are added to this queue as they are sent and will be removed when
@@ -35,7 +35,7 @@ namespace RTC
 #ifdef MS_TEST
 		public:
 			/**
-			 * State for DATA chunks (message fragments) in the queue.
+			 * State for DATA Chunks (message fragments) in the queue.
 			 *
 			 * @remarks
 			 * - Used in tests.
@@ -312,15 +312,15 @@ namespace RTC
 			  bool isInFastRecovery);
 
 			/**
-			 * Returns as many of the chunks that are eligible for fast retransmissions
+			 * Returns as many of the Chunks that are eligible for fast retransmissions
 			 * and that would fit in a single packet of `maxLength`. The eligible
-			 * chunks that didn't fit will be marked for (normal) retransmission and
+			 * Chunks that didn't fit will be marked for (normal) retransmission and
 			 * will not be returned if this method is called again.
 			 */
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToBeFastRetransmitted(size_t maxLength);
 
 			/**
-			 * Given `maxLength` of space left in a packet, which chunks can be added
+			 * Given `maxLength` of space left in a packet, which Chunks can be added
 			 * to it?
 			 */
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToBeRetransmitted(size_t maxLength);
@@ -342,7 +342,7 @@ namespace RTC
 			}
 
 			/**
-			 * Returns the number of DATA chunks that are in-flight (not acked or
+			 * Returns the number of DATA Chunks that are in-flight (not acked or
 			 * nacked).
 			 */
 			size_t GetUnackedItems() const
@@ -352,7 +352,7 @@ namespace RTC
 
 			/**
 			 * Given the current time `nowMs`, expire and abandon outstanding (sent
-			 * at least once) chunks that have a limited lifetime.
+			 * at least once) Chunks that have a limited lifetime.
 			 */
 			void ExpireOutstandingChunks(uint64_t nowMs);
 
@@ -366,7 +366,7 @@ namespace RTC
 				return !this->toBeFastRetransmitted.empty();
 			}
 
-			bool hasDataToBeRetransmitted() const
+			bool HasDataToBeRetransmitted() const
 			{
 				return !this->toBeRetransmitted.empty() || !this->toBeFastRetransmitted.empty();
 			}
@@ -433,7 +433,7 @@ namespace RTC
 
 #ifdef MS_TEST
 			/**
-			 * Returns the internal state of all queued chunks.
+			 * Returns the internal state of all queued Chunks.
 			 *
 			 * @remarks
 			 * - Used in tests.
@@ -459,7 +459,7 @@ namespace RTC
 			void RemoveAcked(UnwrappedTsn cumulativeTsnAck, AckInfo& ackInfo);
 
 			/**
-			 * Will mark the chunks covered by the `gapAckBlocks` from an incoming
+			 * Will mark the Chunks covered by the `gapAckBlocks` from an incoming
 			 * SACK as "acked" and update `ackInfo` by adding new TSNs to
 			 * `this->cumulativeTsnAck`.
 			 */
@@ -469,7 +469,7 @@ namespace RTC
 			  AckInfo& ackInfo);
 
 			/**
-			 * Mark chunks reported as "missing", as "nacked" or "to be retransmitted"
+			 * Mark Chunks reported as "missing", as "nacked" or "to be retransmitted"
 			 * depending how many times this has happened. Only packets up until
 			 * `ackInfo.highestTsnAcked` (highest TSN newly acknowledged) are
 			 * nacked/retransmitted. The method will set `ackInfo.hasPacketLoss`.
@@ -507,7 +507,7 @@ namespace RTC
 			/**
 			 * Given that a message fragment, `item` has been abandoned, abandon all
 			 * other fragments that share the same message - both never-before-sent
-			 * fragments that are still in the SendQueue and outstanding chunks.
+			 * fragments that are still in the SendQueue and outstanding Chunks.
 			 */
 			void AbandonAllFor(const OutstandingData::Item& item);
 
@@ -533,12 +533,12 @@ namespace RTC
 			// The number of bytes that are in-flight, as sent on the wire (as
 			// packets).
 			size_t unackedPacketBytes{ 0 };
-			// The number of DATA chunks that are in-flight (sent but not yet acked
+			// The number of DATA Chunks that are in-flight (sent but not yet acked
 			// or nacked).
 			size_t unackedItems{ 0 };
-			// Data chunks that are eligible for fast retransmission.
+			// Data Chunks that are eligible for fast retransmission.
 			std::set<UnwrappedTsn> toBeFastRetransmitted;
-			// Data chunks that are to be retransmitted.
+			// Data Chunks that are to be retransmitted.
 			std::set<UnwrappedTsn> toBeRetransmitted;
 			// Wben a stream reset has begun, the "next TSN to assign" is added to
 			// this set, and removed when the cum-ack TSN reaches it. This is used

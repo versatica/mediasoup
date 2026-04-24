@@ -203,7 +203,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "T3-rtx timer has expired %zu/%s]",
+			  "T3-rtx timer has expired [%zu/%s]",
 			  this->t3RtxTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
@@ -236,7 +236,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "delayer ack timer has expired %zu/%s]",
+			  "delayer ack timer has expired [%zu/%s]",
 			  this->delayedAckTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 

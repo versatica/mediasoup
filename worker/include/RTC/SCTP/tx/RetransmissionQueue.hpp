@@ -95,19 +95,19 @@ namespace RTC
 			}
 
 			/**
-			 * Adds to given Packet a list of Chunks to "fast retransmit" that would
-			 * fit in the SCTP Packet. The current value of `cwnd` is ignored.
+			 * Returns a list of Chunks to "fast retransmit" that would fit in
+			 * `maxLength` (bytes). The current value of `cwnd` is ignored.
 			 */
-			void AddChunksForFastRetransmit(Packet* packet);
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksForFastRetransmit(size_t maxLength);
 
 			/**
-			 * Adds to given Packet a list of Chunks to send that would fit in the
-			 * SCTP Packet. This may be further limited by the congestion control
-			 * windows. Note that `ShouldSendForwardTsn()` must be called prior to
-			 * this method, to abandon expired Chunks, as this method will not expire
-			 * any Chunks.
+			 * Returns a list of Chunks to send that would fit in `maxLength`
+			 * (bytes). This may be further limited by the congestion control windows.
+			 * Note that `ShouldSendForwardTsn()` must be called prior to this method,
+			 * to abandon expired Chunks, as this method will not expire any Chunks.
 			 */
-			void AddChunksToSend(uint64_t nowMs, Packet* packet);
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToSend(
+			  uint64_t nowMs, size_t maxLength);
 
 			/**
 			 * Returns the next TSN that will be allocated for sent DATA Chunks.
@@ -219,6 +219,7 @@ namespace RTC
 			}
 #endif
 
+		private:
 			/**
 			 * Returns how large a chunk will be, serialized, carrying the data.
 			 */
@@ -254,6 +255,10 @@ namespace RTC
 
 			/**
 			 * If Chunks have been ACKed, stop the retransmission timer.
+			 *
+			 * @remarks
+			 * - This method is NOT defined in dcsctp! See bug report:
+			 *   https://issues.webrtc.org/issues/505751236
 			 */
 			void StopT3RtxTimerOnIncreasedCumulativeTsnAck(UnwrappedTsn cumulativeTsnAck);
 

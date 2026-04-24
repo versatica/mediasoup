@@ -182,7 +182,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "interval timer has expired %zu/%s]",
+			  "interval timer has expired [%zu/%s]",
 			  this->intervalTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
@@ -216,7 +216,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "timeout timer has expired %zu/%s]",
+			  "timeout timer has expired [%zu/%s]",
 			  this->timeoutTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
