@@ -68,7 +68,6 @@ namespace RTC
 		    // dataTracker(),
 		    // TODO: SCTP: Implement.
 		    // reassemblyQueue(),
-		    // TODO: SCTP: Implement.
 		    retransmissionQueue(
 		      this,
 		      this->associationListener,
