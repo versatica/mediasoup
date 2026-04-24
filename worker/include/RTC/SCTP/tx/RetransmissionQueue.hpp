@@ -11,7 +11,7 @@
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
-#include "handles/BackoffTimerHandle.hpp"
+#include "handles/BackoffTimerHandleInterface.hpp"
 #include <vector>
 
 namespace RTC
@@ -69,7 +69,7 @@ namespace RTC
 			  uint32_t remoteAdvertisedReceiverWindowCredit,
 			  // TODO: SCTP: Implement
 			  // SendQueue& sendQueue,
-			  BackoffTimerHandle* t3RtxTimer,
+			  BackoffTimerHandleInterface* t3RtxTimer,
 			  const SctpOptions& sctpOptions,
 			  // TODO: SCTP: I don't like these defaults (true and false), let's be explicit.
 			  bool supportsPartialReliability,
@@ -303,7 +303,7 @@ namespace RTC
 			// The length of the data chunk (DATA/I-DATA) header that is used.
 			const size_t dataChunkHeaderLength;
 			// The retransmission timer.
-			BackoffTimerHandle* t3RtxTimer;
+			BackoffTimerHandleInterface* t3RtxTimer;
 			// Unwraps TSNs.
 			UnwrappedTsn::Unwrapper tsnUnwrapper;
 			// Congestion Window. Number of bytes that may be in-flight (sent, not

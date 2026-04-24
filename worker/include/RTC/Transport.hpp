@@ -31,7 +31,7 @@
 #endif
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <string>
 #include <vector>
@@ -52,7 +52,7 @@ namespace RTC
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	                  public RTC::SenderBandwidthEstimator::Listener,
 #endif
-	                  public TimerHandle::Listener
+	                  public TimerHandleInterface::Listener
 	{
 	protected:
 		using onSendCallback   = const std::function<void(bool sent)>;
@@ -350,9 +350,9 @@ namespace RTC
 		  uint32_t previousAvailableBitrate) override;
 #endif
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	public:
 		// Passed by argument.
@@ -376,7 +376,7 @@ namespace RTC
 		absl::flat_hash_map<std::string, RTC::DataConsumer*> mapDataConsumers;
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
-		TimerHandle* rtcpTimer{ nullptr };
+		TimerHandleInterface* rtcpTimer{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlClient> tccClient{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlServer> tccServer{ nullptr };
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR

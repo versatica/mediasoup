@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "handles/TimerHandle.hpp"
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <uv.h>
@@ -1699,7 +1700,7 @@ namespace RTC
 	}
 
 	// NOLINTNEXTLINE(misc-no-recursion)
-	void DtlsTransport::OnTimer(TimerHandle* /*timer*/)
+	void DtlsTransport::OnTimer(TimerHandleInterface* /*timer*/)
 	{
 		MS_TRACE();
 

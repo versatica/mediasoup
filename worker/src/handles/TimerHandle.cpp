@@ -8,19 +8,20 @@
 
 /* Static methods for UV callbacks. */
 
-inline static void onTimer(uv_timer_t* handle)
+static void onTimer(uv_timer_t* handle)
 {
 	static_cast<TimerHandle*>(handle->data)->OnUvTimer();
 }
 
-inline static void onCloseTimer(uv_handle_t* handle)
+static void onCloseTimer(uv_handle_t* handle)
 {
 	delete reinterpret_cast<uv_timer_t*>(handle);
 }
 
 /* Instance methods. */
 
-TimerHandle::TimerHandle(Listener* listener) : listener(listener), uvHandle(new uv_timer_t)
+TimerHandle::TimerHandle(TimerHandleInterface::Listener* listener)
+  : listener(listener), uvHandle(new uv_timer_t)
 {
 	MS_TRACE();
 
@@ -174,7 +175,7 @@ void TimerHandle::InternalClose()
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTimer));
 }
 
-inline void TimerHandle::OnUvTimer()
+void TimerHandle::OnUvTimer()
 {
 	MS_TRACE();
 

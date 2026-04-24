@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "handles/TimerHandle.hpp"
 
 namespace RTC
 {
@@ -468,7 +469,7 @@ namespace RTC
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, &packet);
 	}
 
-	void TransportCongestionControlServer::OnTimer(TimerHandle* timer)
+	void TransportCongestionControlServer::OnTimer(TimerHandleInterface* timer)
 	{
 		MS_TRACE();
 

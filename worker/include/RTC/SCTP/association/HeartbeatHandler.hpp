@@ -7,7 +7,7 @@
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
-#include "handles/BackoffTimerHandle.hpp"
+#include "handles/BackoffTimerHandleInterface.hpp"
 
 namespace RTC
 {
@@ -21,7 +21,7 @@ namespace RTC
 		 * still healthy and to measure the RTT. If a number of heartbeats time out,
 		 * the connection will eventually be closed.
 		 */
-		class HeartbeatHandler : public BackoffTimerHandle::Listener
+		class HeartbeatHandler : public BackoffTimerHandleInterface::Listener
 		{
 		public:
 			HeartbeatHandler(
@@ -55,9 +55,9 @@ namespace RTC
 
 			void OnTimeoutTimer(uint64_t& baseTimeoutMs, bool& stop);
 
-			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
+			/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 		public:
-			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+			void OnTimer(BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			AssociationListener& associationListener;
@@ -68,8 +68,8 @@ namespace RTC
 			// Adding RTT to the duration will add some jitter, which is good in
 			// production, but less good in unit tests, which is why it can be disabled.
 			const bool intervalDurationShouldIncludeRtt{ false };
-			const std::unique_ptr<BackoffTimerHandle> intervalTimer;
-			const std::unique_ptr<BackoffTimerHandle> timeoutTimer;
+			const std::unique_ptr<BackoffTimerHandleInterface> intervalTimer;
+			const std::unique_ptr<BackoffTimerHandleInterface> timeoutTimer;
 		};
 	} // namespace SCTP
 } // namespace RTC

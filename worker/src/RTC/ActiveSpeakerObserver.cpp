@@ -4,6 +4,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "handles/TimerHandle.hpp"
 
 namespace RTC
 {
@@ -249,7 +250,7 @@ namespace RTC
 		this->periodicTimer->Restart();
 	}
 
-	void ActiveSpeakerObserver::OnTimer(TimerHandle* /*timer*/)
+	void ActiveSpeakerObserver::OnTimer(TimerHandleInterface* /*timer*/)
 	{
 		MS_TRACE();
 

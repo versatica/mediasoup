@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "handles/TimerHandle.hpp"
 #ifdef MS_LIBURING_SUPPORTED
 #include "DepLibUring.hpp"
 #endif
@@ -3518,7 +3519,7 @@ namespace RTC
 	}
 #endif
 
-	void Transport::OnTimer(TimerHandle* timer)
+	void Transport::OnTimer(TimerHandleInterface* timer)
 	{
 		MS_TRACE();
 

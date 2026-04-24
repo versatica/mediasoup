@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
+#include "handles/BackoffTimerHandle.hpp"
 
 namespace RTC
 {
@@ -27,7 +28,7 @@ namespace RTC
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ 0,
-		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeoutMs*/ std::nullopt,
 		        /*maxRestarts*/ std::nullopt)),
 		    nextOutgoingReqSeqNbr(tcbContext->GetLocalInitialTsn()),
@@ -491,7 +492,8 @@ namespace RTC
 			baseTimeoutMs = this->tcbContext->GetCurrentRtoMs();
 		}
 
-		void StreamResetHandler::OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		void StreamResetHandler::OnTimer(
+		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

@@ -17,6 +17,7 @@
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
+#include "handles/BackoffTimerHandle.hpp"
 #include <limits>  // std::numeric_limits()
 #include <sstream> // std::ostringstream
 #include <string>
@@ -49,21 +50,21 @@ namespace RTC
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.t1InitTimeoutMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ sctpOptions.maxInitRetransmissions)),
 		    t1CookieTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.t1CookieTimeoutMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ sctpOptions.maxInitRetransmissions)),
 		    t2ShutdownTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.t2ShutdownTimeoutMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ sctpOptions.maxRetransmissions))
 		{
@@ -2781,7 +2782,8 @@ namespace RTC
 			}
 		}
 
-		void Association::OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		void Association::OnTimer(
+		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

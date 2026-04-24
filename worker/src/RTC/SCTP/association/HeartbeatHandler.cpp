@@ -8,6 +8,7 @@
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "handles/BackoffTimerHandle.hpp"
 #include <string>
 
 namespace RTC
@@ -31,14 +32,14 @@ namespace RTC
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.initialRtoMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ std::nullopt)),
 		    timeoutTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.initialRtoMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::FIXED,
+		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::FIXED,
 		        /*maxBackoffTimeoutMs*/ std::nullopt,
 		        /*maxRestarts*/ 0))
 		{
@@ -227,7 +228,8 @@ namespace RTC
 			this->tcbContext->IncrementTxErrorCounter("hearbeat timeout");
 		}
 
-		void HeartbeatHandler::OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		void HeartbeatHandler::OnTimer(
+		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

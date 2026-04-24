@@ -1,12 +1,12 @@
 #ifndef MS_KEY_FRAME_REQUEST_MANAGER_HPP
 #define MS_KEY_FRAME_REQUEST_MANAGER_HPP
 
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 
 namespace RTC
 {
-	class PendingKeyFrameInfo : public TimerHandle::Listener
+	class PendingKeyFrameInfo : public TimerHandleInterface::Listener
 	{
 	public:
 		class Listener
@@ -39,18 +39,18 @@ namespace RTC
 			this->timer->Restart();
 		}
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		Listener* listener{ nullptr };
 		uint32_t ssrc;
-		TimerHandle* timer{ nullptr };
+		TimerHandleInterface* timer{ nullptr };
 		bool retryOnTimeout{ true };
 	};
 
-	class KeyFrameRequestDelayer : public TimerHandle::Listener
+	class KeyFrameRequestDelayer : public TimerHandleInterface::Listener
 	{
 	public:
 		class Listener
@@ -79,14 +79,14 @@ namespace RTC
 			this->keyFrameRequested = flag;
 		}
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		Listener* listener{ nullptr };
 		uint32_t ssrc;
-		TimerHandle* timer{ nullptr };
+		TimerHandleInterface* timer{ nullptr };
 		bool keyFrameRequested{ false };
 	};
 

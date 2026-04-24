@@ -3,6 +3,7 @@
 
 #include "RTC/ICE/IceServer.hpp"
 #include "Logger.hpp"
+#include "handles/TimerHandle.hpp"
 #include <string_view>
 
 namespace RTC
@@ -962,7 +963,7 @@ namespace RTC
 			this->consentCheckTimer->Stop();
 		}
 
-		inline void IceServer::OnTimer(TimerHandle* timer)
+		inline void IceServer::OnTimer(TimerHandleInterface* timer)
 		{
 			MS_TRACE();
 

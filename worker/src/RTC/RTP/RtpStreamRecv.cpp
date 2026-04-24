@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
+#include "handles/TimerHandle.hpp"
 
 namespace RTC
 {
@@ -858,7 +859,7 @@ namespace RTC
 			// Nothing to do.
 		}
 
-		inline void RtpStreamRecv::OnTimer(TimerHandle* timer)
+		inline void RtpStreamRecv::OnTimer(TimerHandleInterface* timer)
 		{
 			MS_TRACE();
 

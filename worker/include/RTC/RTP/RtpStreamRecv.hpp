@@ -5,7 +5,7 @@
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RateCalculator.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <vector>
 
 namespace RTC
@@ -14,7 +14,7 @@ namespace RTC
 	{
 		class RtpStreamRecv : public RTP::RtpStream,
 		                      public RTC::NackGenerator::Listener,
-		                      public TimerHandle::Listener
+		                      public TimerHandleInterface::Listener
 		{
 		public:
 			class Listener : public RTP::RtpStream::Listener
@@ -92,9 +92,9 @@ namespace RTC
 		public:
 			void UserOnSequenceNumberReset() override;
 
-			/* Pure virtual methods inherited from TimerHandle. */
+			/* Pure virtual methods inherited from TimerHandleInterface. */
 		protected:
-			void OnTimer(TimerHandle* timer) override;
+			void OnTimer(TimerHandleInterface* timer) override;
 
 			/* Pure virtual methods inherited from RTC::NackGenerator. */
 		protected:
@@ -124,7 +124,7 @@ namespace RTC
 			uint8_t firSeqNumber{ 0u };
 			int32_t reportedPacketsLost{ 0 };
 			std::unique_ptr<RTC::NackGenerator> nackGenerator;
-			TimerHandle* inactivityCheckPeriodicTimer{ nullptr };
+			TimerHandleInterface* inactivityCheckPeriodicTimer{ nullptr };
 			bool inactive{ false };
 			// Valid media + valid RTX.
 			TransmissionCounter transmissionCounter;

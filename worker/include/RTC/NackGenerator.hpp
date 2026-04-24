@@ -4,14 +4,14 @@
 #include "common.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/SeqManager.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <map>
 #include <set>
 #include <vector>
 
 namespace RTC
 {
-	class NackGenerator : public TimerHandle::Listener
+	class NackGenerator : public TimerHandleInterface::Listener
 	{
 	public:
 		class Listener
@@ -67,16 +67,16 @@ namespace RTC
 		std::vector<uint16_t> GetNackBatch(NackFilter filter);
 		void MayRunTimer() const;
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		unsigned int sendNackDelayMs{ 0u };
 		// Allocated by this.
-		TimerHandle* timer{ nullptr };
+		TimerHandleInterface* timer{ nullptr };
 		// Others.
 		std::map<uint16_t, NackInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> nackList;
 		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> keyFrameList;

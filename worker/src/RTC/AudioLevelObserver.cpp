@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "handles/TimerHandle.hpp"
 #include <absl/container/btree_map.h>
 #include <cmath> // std::lround()
 
@@ -213,7 +214,7 @@ namespace RTC
 		}
 	}
 
-	inline void AudioLevelObserver::OnTimer(TimerHandle* /*timer*/)
+	inline void AudioLevelObserver::OnTimer(TimerHandleInterface* /*timer*/)
 	{
 		MS_TRACE();
 

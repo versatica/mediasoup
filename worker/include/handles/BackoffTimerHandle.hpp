@@ -2,49 +2,18 @@
 #define MS_BACKOFF_TIMER_HANDLE_HPP
 
 #include "common.hpp"
+#include "handles/BackoffTimerHandleInterface.hpp"
 #include "handles/TimerHandle.hpp"
-#include <limits> // std::numeric_limits()
+#include "handles/TimerHandleInterface.hpp"
 
-class BackoffTimerHandle : public TimerHandle::Listener
+class BackoffTimerHandle : public BackoffTimerHandleInterface, public TimerHandleInterface::Listener
 {
-public:
-	class Listener
-	{
-	public:
-		virtual ~Listener() = default;
-
-	public:
-		/**
-		 * Invoked on timeout expiration. The parent can modify the base
-		 * timeout given as reference and affect the next timeout duration.
-		 *
-		 * @remarks
-		 * - If the caller deletes this BackoffTimer instance within the callback
-		 *   it must signal it be setting `stop` to true.
-		 */
-		virtual void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) = 0;
-	};
-
-public:
-	enum class BackoffAlgorithm : uint8_t
-	{
-		// The base duration will be used for any restart.
-		FIXED,
-		// An exponential backoff is used for restarts, with a 2x multiplier,
-		// meaning that every restart will use a duration that is twice as long as
-		// the previous.
-		EXPONENTIAL,
-	};
-
-public:
-	static constexpr uint64_t MaxTimeoutMs{ std::numeric_limits<uint64_t>::max() / 2 };
-
 public:
 	explicit BackoffTimerHandle(
 	  /**
 	   * Listener on which OnTimer() callback will be invoked.
 	   */
-	  Listener* listener,
+	  BackoffTimerHandleInterface::Listener* listener,
 	  /**
 	   * Base timeout duration (ms).
 	   */
@@ -75,24 +44,24 @@ public:
 	 * Start the BackoffTimer (if it's stopped) or restart it (if already
 	 * running). It will reset the timeout count.
 	 */
-	void Start();
+	void Start() override;
 
 	/**
 	 * Stop the BackoffTimer. It will reset the timeout count.
 	 */
-	void Stop();
+	void Stop() override;
 
 	/**
 	 * Set the base timeout duration. It will be applied after the next timeout
 	 * and effective duration can be larger if backoff algorithm is exponential.
 	 */
-	void SetBaseTimeoutMs(uint64_t baseTimeoutMs);
+	void SetBaseTimeoutMs(uint64_t baseTimeoutMs) override;
 
 	/**
 	 * Whether the BackoffTimer is running. Useful to check if this BackoffTimer
 	 * will timeout again within the OnTimer() callback.
 	 */
-	bool IsRunning() const
+	bool IsRunning() const override
 	{
 		return this->running;
 	}
@@ -101,9 +70,10 @@ public:
 	 * Maximum number of restarts.
 	 *
 	 * @remarks
-	 * - If `maxRestarts` was not given in the constructor, this method returns 0.
+	 * - If `maxRestarts` was not given in the constructor, this method returns
+	 *   `std::nullopt`.
 	 */
-	std::optional<size_t> GetMaxRestarts() const
+	std::optional<size_t> GetMaxRestarts() const override
 	{
 		return this->maxRestarts;
 	}
@@ -111,7 +81,7 @@ public:
 	/**
 	 * Number of times the timer has expired.
 	 */
-	size_t GetExpirationCount() const
+	size_t GetExpirationCount() const override
 	{
 		return this->expirationCount;
 	}
@@ -119,13 +89,13 @@ public:
 private:
 	uint64_t ComputeNextTimeoutMs() const;
 
-	/* Pure virtual methods inherited from TimerHandle::Listener. */
+	/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 public:
-	void OnTimer(TimerHandle* timer) override;
+	void OnTimer(TimerHandleInterface* timer) override;
 
 private:
 	// Passed by argument.
-	Listener* listener{ nullptr };
+	BackoffTimerHandleInterface::Listener* listener{ nullptr };
 	uint64_t baseTimeoutMs{ 0 };
 	BackoffAlgorithm backoffAlgorithm;
 	std::optional<uint64_t> maxBackoffTimeoutMs;

@@ -4,6 +4,7 @@
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "handles/TimerHandle.hpp"
 
 namespace RTC
 {
@@ -365,7 +366,7 @@ namespace RTC
 		}
 	}
 
-	inline void NackGenerator::OnTimer(TimerHandle* /*timer*/)
+	inline void NackGenerator::OnTimer(TimerHandleInterface* /*timer*/)
 	{
 		MS_TRACE();
 

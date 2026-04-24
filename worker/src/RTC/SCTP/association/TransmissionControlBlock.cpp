@@ -8,6 +8,7 @@
 #include "RTC/Consts.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
+#include "handles/BackoffTimerHandle.hpp"
 #include <cmath> // std::min()
 #include <string>
 
@@ -52,14 +53,14 @@ namespace RTC
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.initialRtoMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
 		        /*maxRestarts*/ std::nullopt)),
 		    delayedAckTimer(
 		      std::make_unique<BackoffTimerHandle>(
 		        /*listener*/ this,
 		        /*baseTimeoutMs*/ sctpOptions.delayedAckMaxTimeoutMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        /*maxBackoffTimeoutMs*/ std::nullopt,
 		        /*maxRestarts*/ 0)),
 		    rto(sctpOptions),
@@ -335,7 +336,7 @@ namespace RTC
 		}
 
 		void TransmissionControlBlock::OnTimer(
-		  BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

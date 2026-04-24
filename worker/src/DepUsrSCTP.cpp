@@ -7,6 +7,7 @@
 #endif
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "handles/TimerHandle.hpp"
 #include <usrsctp.h>
 #include <cstdio> // std::vsnprintf()
 #include <mutex>
@@ -244,7 +245,7 @@ void DepUsrSCTP::Checker::Stop()
 	this->timer->Stop();
 }
 
-void DepUsrSCTP::Checker::OnTimer(TimerHandle* /*timer*/)
+void DepUsrSCTP::Checker::OnTimer(TimerHandleInterface* /*timer*/)
 {
 	MS_TRACE();
 

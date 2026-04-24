@@ -5,6 +5,7 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "handles/TimerHandle.hpp"
 #include <libwebrtc/api/transport/network_types.h> // webrtc::TargetRateConstraints
 #include <limits>                                  // std::numeric_limits
 
@@ -552,7 +553,7 @@ namespace RTC
 		return this->probationGenerator->GetNextPacket(size);
 	}
 
-	void TransportCongestionControlClient::OnTimer(TimerHandle* timer)
+	void TransportCongestionControlClient::OnTimer(TimerHandleInterface* timer)
 	{
 		MS_TRACE();
 

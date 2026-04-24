@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "FBS/webRtcTransport.h"
 #include "RTC/SrtpSession.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
@@ -14,7 +14,7 @@
 
 namespace RTC
 {
-	class DtlsTransport : public TimerHandle::Listener
+	class DtlsTransport : public TimerHandleInterface::Listener
 	{
 	public:
 		enum class DtlsState : uint8_t
@@ -195,9 +195,9 @@ namespace RTC
 	public:
 		void OnSslInfo(int where, int ret);
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		// Passed by argument.
@@ -206,7 +206,7 @@ namespace RTC
 		SSL* ssl{ nullptr };
 		BIO* sslBioFromNetwork{ nullptr }; // The BIO from which ssl reads.
 		BIO* sslBioToNetwork{ nullptr };   // The BIO in which ssl writes.
-		TimerHandle* timer{ nullptr };
+		TimerHandleInterface* timer{ nullptr };
 		// Others.
 		DtlsState state{ DtlsState::NEW };
 		std::optional<Role> localRole;

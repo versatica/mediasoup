@@ -3,13 +3,13 @@
 
 #include "common.hpp"
 #include "RTC/SctpAssociation.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 
 class DepUsrSCTP
 {
 private:
-	class Checker : public TimerHandle::Listener
+	class Checker : public TimerHandleInterface::Listener
 	{
 	public:
 		Checker();
@@ -19,12 +19,12 @@ private:
 		void Start();
 		void Stop();
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
-		TimerHandle* timer{ nullptr };
+		TimerHandleInterface* timer{ nullptr };
 		uint64_t lastCalledAtMs{ 0u };
 	};
 

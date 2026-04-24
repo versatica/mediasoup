@@ -25,7 +25,7 @@ namespace RTC
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  // TODO: SCTP: Implement
 		  // SendQueue& sendQueue,
-		  BackoffTimerHandle* t3RtxTimer,
+		  BackoffTimerHandleInterface* t3RtxTimer,
 		  const SctpOptions& sctpOptions,
 		  // NOTE: I don't like default argument values in dcsctp (true and false),
 		  // let's be explicit.
