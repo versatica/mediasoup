@@ -49,6 +49,7 @@ namespace sctpCommon
 		REQUIRE(packet->GetBufferLength() == bufferLength);                                            \
 		REQUIRE(packet->GetLength() != 0);                                                             \
 		REQUIRE(packet->GetLength() == length);                                                        \
+		REQUIRE(packet->GetAvailableLength() == packet->GetBufferLength() - packet->GetLength());      \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);                           \
 		REQUIRE(packet->GetSourcePort() == sourcePort);                                                \
 		REQUIRE(packet->GetDestinationPort() == destinationPort);                                      \
@@ -92,6 +93,7 @@ namespace sctpCommon
 		REQUIRE(chunk->GetBufferLength() == bufferLength);                                             \
 		REQUIRE(chunk->GetLength() != 0);                                                              \
 		REQUIRE(chunk->GetLength() == length);                                                         \
+		REQUIRE(chunk->GetAvailableLength() == chunk->GetBufferLength() - chunk->GetLength());         \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(chunk->GetLength()) == true);                            \
 		REQUIRE(chunk->GetType() == chunkType);                                                        \
 		REQUIRE(chunk->HasUnknownType() == unknownType);                                               \
@@ -152,6 +154,8 @@ namespace sctpCommon
 		REQUIRE(parameter->GetBufferLength() == bufferLength);                                          \
 		REQUIRE(parameter->GetLength() != 0);                                                           \
 		REQUIRE(parameter->GetLength() == length);                                                      \
+		REQUIRE(                                                                                        \
+		  parameter->GetAvailableLength() == parameter->GetBufferLength() - parameter->GetLength());    \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(parameter->GetLength()) == true);                         \
 		REQUIRE(parameter->GetType() == parameterType);                                                 \
 		REQUIRE(parameter->HasUnknownType() == unknownType);                                            \
@@ -189,6 +193,8 @@ namespace sctpCommon
 		REQUIRE(errorCause->GetBufferLength() == bufferLength);                                          \
 		REQUIRE(errorCause->GetLength() != 0);                                                           \
 		REQUIRE(errorCause->GetLength() == length);                                                      \
+		REQUIRE(                                                                                         \
+		  errorCause->GetAvailableLength() == errorCause->GetBufferLength() - errorCause->GetLength());  \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(errorCause->GetLength()) == true);                         \
 		REQUIRE(errorCause->GetCode() == causeCode);                                                     \
 		REQUIRE(errorCause->HasUnknownCode() == unknownCode);                                            \

@@ -76,6 +76,14 @@ namespace RTC
 		}
 
 		/**
+		 * Current available length of the Serializable.
+		 */
+		virtual size_t GetAvailableLength() const final
+		{
+			return this->bufferLength - this->length;
+		}
+
+		/**
 		 * Serialize the Serializable into a new buffer. This method copies the
 		 * bytes of the internal buffer into the new buffer and makes `GetBuffer()`
 		 * point to the new one.

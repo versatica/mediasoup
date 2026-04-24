@@ -2,6 +2,10 @@
 
 ## Related to mediasoup SCTP implementation
 
+- `DataChunk`, IDataChunk`and`AnyDataChunk`: Add `SetUserData(UserData)`.
+
+- Remove all default values of class memners in .hpp of all classes in case the constructor must give them initial value.
+
 - Lot of stuff missing in `TransmissionControlBock` class and I forgot to add "TODO: SCTP" in them.
 
 - dcsctp uses µs (webrtc::Timestamp::Micros()) internally, while mediasoup uses ms (`DepLibUV::GetTimeMs()`). When porting dcsctp timeout/duration logic, make sure to convert accordingly. Do not mix units in the same field.

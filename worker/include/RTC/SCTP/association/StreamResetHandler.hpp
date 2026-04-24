@@ -10,6 +10,7 @@
 #include "RTC/SCTP/packet/parameters/OutgoingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include <span>
 #include <vector>
@@ -164,12 +165,12 @@ namespace RTC
 
 		public:
 			StreamResetHandler(
-			  AssociationListener& associationListener, TCBContext* tcbContext
+			  AssociationListener& associationListener,
+			  TCBContext* tcbContext,
 			  // TODO: SCTP: Implement
 			  // DataTracker* dataTracker,
 			  // ReassemblyQueue* reassemblyQueue,
-			  // RetransmissionQueue* retransmissionQueue
-			);
+			  RetransmissionQueue* retransmissionQueue);
 
 			~StreamResetHandler() override;
 
@@ -259,11 +260,12 @@ namespace RTC
 
 		private:
 			AssociationListener& associationListener;
-			TCBContext* tcbContext{ nullptr };
+			TCBContext* tcbContext;
 			// TODO: SCTP: Implement
-			// DataTracker* dataTracker{ nullptr };,
-			// ReassemblyQueue* reassemblyQueue{ nullptr };,
-			// RetransmissionQueue* retransmissionQueue{ nullptr };
+			// DataTracker* dataTracker;,
+			// TODO: SCTP: Implement
+			// ReassemblyQueue* reassemblyQueue;,
+			RetransmissionQueue* retransmissionQueue;
 			UnwrappedReConfigRequestSn::Unwrapper incomingReConfigRequestSnUnwrapper;
 			const std::unique_ptr<BackoffTimerHandle> reConfigTimer;
 			// The next sequence number for outgoing stream requests.

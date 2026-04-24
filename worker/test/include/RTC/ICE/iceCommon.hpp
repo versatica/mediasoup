@@ -65,6 +65,7 @@ namespace iceCommon
 		REQUIRE(packet->GetBufferLength() == bufferLength);                                               \
 		REQUIRE(packet->GetLength() != 0);                                                                \
 		REQUIRE(packet->GetLength() == length);                                                           \
+		REQUIRE(packet->GetAvailableLength() == packet->GetBufferLength() - packet->GetLength());         \
 		REQUIRE(packet->GetClass() == klass);                                                             \
 		REQUIRE(packet->GetMethod() == method);                                                           \
 		REQUIRE(packet->HasAttribute(RTC::ICE::StunPacket::AttributeType::USERNAME) == hasUsername);      \

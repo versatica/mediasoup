@@ -11,6 +11,7 @@
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
+#include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "RTC/SCTP/tx/RetransmissionTimeout.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include <string_view>
@@ -26,12 +27,16 @@ namespace RTC
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/rfc9260#section-14
 		 */
-		class TransmissionControlBlock : public TCBContext, public BackoffTimerHandle::Listener
+		class TransmissionControlBlock : public TCBContext,
+		                                 public RetransmissionQueue::Listener,
+		                                 public BackoffTimerHandle::Listener
 		{
 		public:
 			TransmissionControlBlock(
 			  AssociationListener& associationListener,
 			  const SctpOptions& sctpOptions,
+			  // TODO: SCTP: Implement it.
+			  // SendQueue& sendQueue,
 			  PacketSender& packetSender,
 			  uint32_t localVerificationTag,
 			  uint32_t remoteVerificationTag,
@@ -131,6 +136,11 @@ namespace RTC
 			 */
 			void ObserveRttMs(uint64_t rttMs) override;
 
+			size_t GetCwnd() const
+			{
+				return this->retransmissionQueue.GetCwnd();
+			}
+
 			/**
 			 * @remarks
 			 * - Implements TCBContext interface.
@@ -171,11 +181,10 @@ namespace RTC
 			// 	return this->reassemblyQueue;
 			// }
 
-			// TODO: SCTP: Implement it.
-			// RetransmissionQueue& GetRetransmissionQueue()
-			// {
-			// 	return this->retransmissionQueue;
-			// }
+			RetransmissionQueue& GetRetransmissionQueue()
+			{
+				return this->retransmissionQueue;
+			}
 
 			StreamResetHandler& GetStreamResetHandler()
 			{
@@ -212,13 +221,15 @@ namespace RTC
 			 */
 			void MaySendSackChunk();
 
-			// TODO: SCTP: Mamy more methods.
-
 			/**
-			 * Sends a FORWARD_TSN, if it is needed and allowed (rate-limited).
+			 * Sends a FORWARD-TSN or I-FORWARD-TSN Chunk if it is needed and allowed
+			 * (rate-limited).
 			 */
-			// TODO: SCTP: Implement.
-			// void MaybeSendForwardTsn(Packet* packet, uint64_t now);
+			void MaybeSendForwardTsnChunk(Packet* packet, uint64_t nowMs);
+
+			void MaySendFastRetransmit();
+
+			// TODO: SCTP: Mamy more methods.
 
 			/**
 			 * @remarks
@@ -252,6 +263,12 @@ namespace RTC
 
 			void OnDelayedAckTimer(uint64_t& baseTimeoutMs, bool& stop);
 
+			/* Pure virtual methods inherited from RetransmissionQueue::Listener. */
+		public:
+			void OnRetransmissionQueueNewRttMs(uint64_t newRttMs) override;
+			void OnRetransmissionQueueClearRetransmissionCounter() override;
+			;
+
 			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
 		public:
 			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
@@ -281,13 +298,13 @@ namespace RTC
 			// TODO: SCTP: Implement.
 			// ReassemblyQueue reassemblyQueue;
 			// TODO: SCTP: Implement.
-			// RetransmissionQueue retransmissionQueue;
+			RetransmissionQueue retransmissionQueue;
 			StreamResetHandler streamResetHandler;
 			HeartbeatHandler heartbeatHandler;
 			// Rate limiting of FORWARD_TSN. Next can be sent at or after this
 			// timestamp.
 			// TODO: SCTP: Uncomment.
-			// uint64_t limitForwardTsnUntilMs{ 0 };
+			uint64_t limitForwardTsnUntilMs{ 0 };
 			// Only valid when state is State::COOKIE_ECHOED. In this state, the
 			// Association must wait for COOKIE_ACK to continue sending any packets (not
 			// including a COOKIE_ECHO). So if this state cookie is present, the

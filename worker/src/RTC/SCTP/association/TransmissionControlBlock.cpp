@@ -6,6 +6,8 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/SCTP/packet/chunks/DataChunk.hpp"
+#include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include <cmath> // std::min()
 #include <string>
 
@@ -23,6 +25,8 @@ namespace RTC
 		  AssociationListener& associationListener,
 		  const SctpOptions& sctpOptions,
 		  PacketSender& packetSender,
+		  // TODO: SCTP: Implement it.
+		  // SendQueue& sendQueue,
 		  uint32_t localVerificationTag,
 		  uint32_t remoteVerificationTag,
 		  uint32_t localInitialTsn,
@@ -33,6 +37,8 @@ namespace RTC
 		  std::function<bool()> isAssociationEstablished)
 		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
+		    // TODO: SCTP: Implement it.
+		    // sendQueue(sendQueue),
 		    packetSender(packetSender),
 		    localVerificationTag(localVerificationTag),
 		    remoteVerificationTag(remoteVerificationTag),
@@ -63,14 +69,24 @@ namespace RTC
 		    // TODO: SCTP: Implement.
 		    // reassemblyQueue(),
 		    // TODO: SCTP: Implement.
-		    // retransmissionQueue(),
+		    retransmissionQueue(
+		      this,
+		      this->associationListener,
+		      localInitialTsn,
+		      remoteAdvertisedReceiverWindowCredit,
+		      // TODO: SCTP: Implement
+		      // this->sendQueue,
+		      this->t3RtxTimer.get(),
+		      sctpOptions,
+		      negotiatedCapabilities.partialReliability,
+		      negotiatedCapabilities.messageInterleaving),
 		    streamResetHandler(
-		      this->associationListener, this
+		      this->associationListener,
+		      this,
 		      // TODO: SCTP: Implement.
 		      // std::addressof(this->dataTracker),
 		      // std::addressof(this->reassemblyQueue),
-		      // std::addressof(this->retransmissionQueue)
-		      ),
+		      std::addressof(this->retransmissionQueue)),
 		    heartbeatHandler(this->associationListener, sctpOptions, this)
 		{
 			MS_TRACE();
@@ -195,6 +211,82 @@ namespace RTC
 			// Send(packet.get());
 		}
 
+		void TransmissionControlBlock::MaybeSendForwardTsnChunk(Packet* packet, uint64_t nowMs)
+		{
+			MS_TRACE();
+
+			if (nowMs >= this->limitForwardTsnUntilMs && this->retransmissionQueue.ShouldSendForwardTsn(nowMs))
+			{
+				if (this->negotiatedCapabilities.messageInterleaving)
+				{
+					this->retransmissionQueue.CreateIForwardTsn(packet);
+				}
+				else
+				{
+					this->retransmissionQueue.CreateForwardTsn(packet);
+				}
+
+				// https://datatracker.ietf.org/doc/html/rfc3758
+				//
+				// "IMPLEMENTATION NOTE: An implementation may wish to limit the number
+				// of duplicate FORWARD TSN chunks it sends by ... waiting a full RTT
+				// before sending a duplicate FORWARD TSN."
+				// "Any delay applied to the sending of FORWARD TSN chunk SHOULD NOT
+				// exceed 200ms and MUST NOT exceed 500ms".
+				this->limitForwardTsnUntilMs = nowMs + std::min(uint64_t{ 200 }, this->rto.GetSrttMs());
+			}
+		}
+
+		void TransmissionControlBlock::MaySendFastRetransmit()
+		{
+			MS_TRACE();
+
+			if (!this->retransmissionQueue.HasDataToBeFastRetransmitted())
+			{
+				return;
+			}
+
+			// https://datatracker.ietf.org/doc/html/rfc9260#section-7.2.4
+			//
+			// "Determine how many of the earliest (i.e., lowest TSN) DATA chunks
+			// marked for retransmission will fit into a single packet, subject to
+			// constraint of the path MTU of the destination transport address to
+			// which the packet is being sent. Call this value K. Retransmit those
+			// K DATA chunks in a single packet.  When a Fast Retransmit is being
+			// performed, the sender SHOULD ignore the value of cwnd and SHOULD NOT
+			// delay retransmission for this single packet."
+
+			// TODO: SCTP: Implement
+
+			auto packet = CreatePacket();
+			const auto result =
+			  this->retransmissionQueue.GetChunksForFastRetransmit(packet->GetAvailableLength());
+
+			for (auto& [tsn, data] : result)
+			{
+				if (this->negotiatedCapabilities.messageInterleaving)
+				{
+					auto* iDataChunk = packet->BuildChunkInPlace<IDataChunk>();
+
+					iDataChunk->SetTsn(tsn);
+					// TODO: SCTP: Implement.
+					// iDataChunk->SetUserData(data);
+					iDataChunk->Consolidate();
+				}
+				else
+				{
+					auto* dataChunk = packet->BuildChunkInPlace<DataChunk>();
+
+					dataChunk->SetTsn(tsn);
+					// TODO: SCTP: Implement.
+					// dataChunk->SetUserData(data);
+					dataChunk->Consolidate();
+				}
+			}
+
+			Send(packet.get());
+		}
+
 		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
@@ -217,13 +309,12 @@ namespace RTC
 			{
 				if (IncrementTxErrorCounter("t3-rtx expired"))
 				{
-					// TODO: SCTP: Implement
-					// this->retransmissionQueue.HandleT3RtxTimerExpiry();
+					this->retransmissionQueue.HandleT3RtxTimerExpiry();
 
-					// const uint64_t now = DepLibUV::GetTimeMs();
+					// const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 					// TODO: SCTP: Implement
-					// SendBufferedPackets(now);
+					// SendBufferedPackets(nowMs);
 				}
 			}
 		}
@@ -259,6 +350,20 @@ namespace RTC
 			{
 				OnDelayedAckTimer(baseTimeoutMs, stop);
 			}
+		}
+
+		void TransmissionControlBlock::OnRetransmissionQueueNewRttMs(uint64_t newRttMs)
+		{
+			MS_TRACE();
+
+			ObserveRttMs(newRttMs);
+		}
+
+		void TransmissionControlBlock::OnRetransmissionQueueClearRetransmissionCounter()
+		{
+			MS_TRACE();
+
+			this->txErrorCounter.Clear();
 		}
 	} // namespace SCTP
 } // namespace RTC
