@@ -106,7 +106,7 @@ uint64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 	}
 }
 
-void BackoffTimerHandle::OnTimer(TimerHandleInterface*  /*timer*/)
+void BackoffTimerHandle::OnTimer(TimerHandleInterface* /*timer*/)
 {
 	MS_TRACE();
 

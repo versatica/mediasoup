@@ -46,9 +46,13 @@
 
 - Look for "TODO: SCTP" everywhere.
 
-- Test Chrome with I-DATA (message interleaving):
-
+- Test Chrome/Canary with I-DATA (message interleaving):
+  ```bash
+  open -a "Google Chrome" \
+    --args \
+    --force-fieldtrials="WebRTC-DataChannelMessageInterleaving/Enabled/"
   ```
+  ```bash
   open -a "Google Chrome Canary" \
     --args \
     --force-fieldtrials="WebRTC-DataChannelMessageInterleaving/Enabled/"
