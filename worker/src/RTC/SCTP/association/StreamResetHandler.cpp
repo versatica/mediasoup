@@ -25,12 +25,13 @@ namespace RTC
 		    tcbContext(tcbContext),
 		    retransmissionQueue(retransmissionQueue),
 		    reConfigTimer(
-		      std::make_unique<BackoffTimerHandle>(
-		        /*listener*/ this,
-		        /*baseTimeoutMs*/ 0,
-		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeoutMs*/ std::nullopt,
-		        /*maxRestarts*/ std::nullopt)),
+		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		        .listener            = this,
+		        .baseTimeoutMs       = 0,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
+		        .maxBackoffTimeoutMs = std::nullopt,
+		        .maxRestarts         = std::nullopt,
+		      })),
 		    nextOutgoingReqSeqNbr(tcbContext->GetLocalInitialTsn()),
 		    lastProcessedReqSeqNbr(
 		      this->incomingReConfigRequestSnUnwrapper.Unwrap(tcbContext->GetRemoteInitialTsn() - 1)),

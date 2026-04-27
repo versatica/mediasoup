@@ -8,17 +8,12 @@
 
 /* Instance methods. */
 
-BackoffTimerHandle::BackoffTimerHandle(
-  BackoffTimerHandleInterface::Listener* listener,
-  uint64_t baseTimeoutMs,
-  BackoffAlgorithm backoffAlgorithm,
-  std::optional<uint64_t> maxBackoffTimeoutMs,
-  std::optional<size_t> maxRestarts)
-  : listener(listener),
-    baseTimeoutMs(baseTimeoutMs),
-    backoffAlgorithm(backoffAlgorithm),
-    maxBackoffTimeoutMs(maxBackoffTimeoutMs),
-    maxRestarts(maxRestarts)
+BackoffTimerHandle::BackoffTimerHandle(const BackoffTimerHandleOptions& options)
+  : listener(options.listener),
+    baseTimeoutMs(options.baseTimeoutMs),
+    backoffAlgorithm(options.backoffAlgorithm),
+    maxBackoffTimeoutMs(options.maxBackoffTimeoutMs),
+    maxRestarts(options.maxRestarts)
 {
 	MS_TRACE();
 

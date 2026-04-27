@@ -50,19 +50,19 @@ namespace RTC
 		    negotiatedCapabilities(negotiatedCapabilities),
 		    isAssociationEstablished(std::move(isAssociationEstablished)),
 		    t3RtxTimer(
-		      std::make_unique<BackoffTimerHandle>(
-		        /*listener*/ this,
-		        /*baseTimeoutMs*/ sctpOptions.initialRtoMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
-		        /*maxRestarts*/ std::nullopt)),
+		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		        .listener            = this,
+		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
+		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
+		        .maxRestarts         = std::nullopt })),
 		    delayedAckTimer(
-		      std::make_unique<BackoffTimerHandle>(
-		        /*listener*/ this,
-		        /*baseTimeoutMs*/ sctpOptions.delayedAckMaxTimeoutMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeoutMs*/ std::nullopt,
-		        /*maxRestarts*/ 0)),
+		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		        .listener            = this,
+		        .baseTimeoutMs       = sctpOptions.delayedAckMaxTimeoutMs,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
+		        .maxBackoffTimeoutMs = std::nullopt,
+		        .maxRestarts         = 0 })),
 		    rto(sctpOptions),
 		    txErrorCounter(sctpOptions),
 		    // TODO: SCTP: Implement.

@@ -29,19 +29,19 @@ namespace RTC
 		    intervalDurationMs(sctpOptions.heartbeatIntervalMs),
 		    intervalDurationShouldIncludeRtt(sctpOptions.heartbeatIntervalIncludeRtt),
 		    intervalTimer(
-		      std::make_unique<BackoffTimerHandle>(
-		        /*listener*/ this,
-		        /*baseTimeoutMs*/ sctpOptions.initialRtoMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
-		        /*maxRestarts*/ std::nullopt)),
+		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		        .listener            = this,
+		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
+		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
+		        .maxRestarts         = std::nullopt })),
 		    timeoutTimer(
-		      std::make_unique<BackoffTimerHandle>(
-		        /*listener*/ this,
-		        /*baseTimeoutMs*/ sctpOptions.initialRtoMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::FIXED,
-		        /*maxBackoffTimeoutMs*/ std::nullopt,
-		        /*maxRestarts*/ 0))
+		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		        .listener            = this,
+		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED,
+		        .maxBackoffTimeoutMs = std::nullopt,
+		        .maxRestarts         = 0 }))
 		{
 			MS_TRACE();
 		}

@@ -47,26 +47,27 @@ namespace RTC
 		    listener(listener),
 		    packetSender(this, this->listener),
 		    t1InitTimer(
-		      std::make_unique<BackoffTimerHandle>(
-		        /*listener*/ this,
-		        /*baseTimeoutMs*/ sctpOptions.t1InitTimeoutMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
-		        /*maxRestarts*/ sctpOptions.maxInitRetransmissions)),
+		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		        .listener            = this,
+		        .baseTimeoutMs       = sctpOptions.t1InitTimeoutMs,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
+		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
+		        .maxRestarts         = sctpOptions.maxInitRetransmissions,
+		      })),
 		    t1CookieTimer(
-		      std::make_unique<BackoffTimerHandle>(
-		        /*listener*/ this,
-		        /*baseTimeoutMs*/ sctpOptions.t1CookieTimeoutMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
-		        /*maxRestarts*/ sctpOptions.maxInitRetransmissions)),
+		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		        .listener            = this,
+		        .baseTimeoutMs       = sctpOptions.t1CookieTimeoutMs,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
+		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
+		        .maxRestarts         = sctpOptions.maxInitRetransmissions })),
 		    t2ShutdownTimer(
-		      std::make_unique<BackoffTimerHandle>(
-		        /*listener*/ this,
-		        /*baseTimeoutMs*/ sctpOptions.t2ShutdownTimeoutMs,
-		        /*backoffAlgorithm*/ BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
-		        /*maxBackoffTimeoutMs*/ sctpOptions.timerMaxBackoffTimeoutMs,
-		        /*maxRestarts*/ sctpOptions.maxRetransmissions))
+		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		        .listener            = this,
+		        .baseTimeoutMs       = sctpOptions.t2ShutdownTimeoutMs,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
+		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
+		        .maxRestarts         = sctpOptions.maxRetransmissions }))
 		{
 			MS_TRACE();
 		}

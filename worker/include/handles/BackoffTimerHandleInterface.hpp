@@ -37,6 +37,33 @@ public:
 	};
 
 public:
+	struct BackoffTimerHandleOptions
+	{
+		/**
+		 * Listener on which OnTimer() callback will be invoked.
+		 */
+		BackoffTimerHandleInterface::Listener* listener;
+		/**
+		 * Base timeout duration (ms).
+		 */
+		uint64_t baseTimeoutMs;
+		/**
+		 * Backoff algorithm.
+		 */
+		BackoffAlgorithm backoffAlgorithm;
+		/**
+		 * Maximum duration of the backoff timeout (ms). If no value is given, no
+		 * limit is set.
+		 */
+		std::optional<uint64_t> maxBackoffTimeoutMs;
+		/**
+		 * Maximum number of restarts. If no value is given, it will restart
+		 * forever until stopped.
+		 */
+		std::optional<size_t> maxRestarts;
+	};
+
+public:
 	static constexpr uint64_t MaxTimeoutMs{ std::numeric_limits<uint64_t>::max() / 2 };
 
 public:
