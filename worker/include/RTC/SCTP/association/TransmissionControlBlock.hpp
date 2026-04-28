@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_TRANSMISSION_CONTROL_BLOCK_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
@@ -35,6 +36,7 @@ namespace RTC
 			TransmissionControlBlock(
 			  AssociationListener& associationListener,
 			  const SctpOptions& sctpOptions,
+			  SharedInterface* shared,
 			  // TODO: SCTP: Implement it.
 			  // SendQueue& sendQueue,
 			  PacketSender& packetSender,
@@ -276,6 +278,7 @@ namespace RTC
 		private:
 			AssociationListener& associationListener;
 			const SctpOptions sctpOptions;
+			SharedInterface* shared;
 			PacketSender& packetSender;
 			uint32_t localVerificationTag{ 0 };
 			uint32_t remoteVerificationTag{ 0 };

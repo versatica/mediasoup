@@ -1,3 +1,4 @@
+#include "Shared.hpp"
 #include "flatbuffers/buffer.h"
 #include "Channel/ChannelNotifier.hpp"
 #include "Channel/ChannelSocket.hpp"
@@ -8,7 +9,6 @@
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/Shared.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include <catch2/catch_test_macros.hpp>
 
@@ -19,7 +19,7 @@ namespace
 	auto* channelMessageRegistrator = new ChannelMessageRegistrator();
 	auto* channelSocket             = new Channel::ChannelSocket();
 	auto* channelNotifier           = new Channel::ChannelNotifier(channelSocket);
-	auto shared                     = RTC::Shared(channelMessageRegistrator, channelNotifier);
+	auto shared                     = Shared(channelMessageRegistrator, channelNotifier);
 	// NOLINTEND(readability-identifier-naming)
 
 	class RtpStreamRecvListener : public RTC::RTP::RtpStreamRecv::Listener

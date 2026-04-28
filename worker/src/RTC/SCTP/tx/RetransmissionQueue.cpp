@@ -5,7 +5,6 @@
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include <cmath>   // std::min()

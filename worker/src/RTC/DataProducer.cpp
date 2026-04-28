@@ -12,7 +12,7 @@ namespace RTC
 	/* Instance methods. */
 
 	DataProducer::DataProducer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  size_t maxMessageSize,
 	  RTC::DataProducer::Listener* listener,
@@ -63,7 +63,7 @@ namespace RTC
 		this->paused = data->paused();
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ this);
@@ -73,7 +73,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 	}
 
 	flatbuffers::Offset<FBS::DataProducer::DumpResponse> DataProducer::FillBuffer(

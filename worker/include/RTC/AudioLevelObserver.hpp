@@ -1,8 +1,8 @@
 #ifndef MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 #define MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 
+#include "SharedInterface.hpp"
 #include "RTC/RtpObserver.hpp"
-#include "RTC/Shared.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 
@@ -19,7 +19,7 @@ namespace RTC
 
 	public:
 		AudioLevelObserver(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::RtpObserver::Listener* listener,
 		  const FBS::AudioLevelObserver::AudioLevelObserverOptions* options);

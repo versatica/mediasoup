@@ -22,21 +22,25 @@ namespace RTC
 		/* Instance methods. */
 
 		HeartbeatHandler::HeartbeatHandler(
-		  AssociationListener& associationListener, const SctpOptions& sctpOptions, TCBContext* tcbContext)
+		  AssociationListener& associationListener,
+		  const SctpOptions& sctpOptions,
+		  SharedInterface* shared,
+		  TCBContext* tcbContext)
 		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
+		    shared(shared),
 		    tcbContext(tcbContext),
 		    intervalDurationMs(sctpOptions.heartbeatIntervalMs),
 		    intervalDurationShouldIncludeRtt(sctpOptions.heartbeatIntervalIncludeRtt),
-		    intervalTimer(
-		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		    intervalTimer(this->shared->CreateBackoffTimer(
+		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
 		        .maxRestarts         = std::nullopt })),
-		    timeoutTimer(
-		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		    timeoutTimer(this->shared->CreateBackoffTimer(
+		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED,

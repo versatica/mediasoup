@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_STREAM_RESET_HANDLER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/SCTP/association/TCBContext.hpp"
 #include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
@@ -166,6 +167,7 @@ namespace RTC
 		public:
 			StreamResetHandler(
 			  AssociationListener& associationListener,
+			  SharedInterface* shared,
 			  TCBContext* tcbContext,
 			  // TODO: SCTP: Implement
 			  // DataTracker* dataTracker,
@@ -260,6 +262,7 @@ namespace RTC
 
 		private:
 			AssociationListener& associationListener;
+			SharedInterface* shared;
 			TCBContext* tcbContext;
 			// TODO: SCTP: Implement
 			// DataTracker* dataTracker;,

@@ -32,7 +32,7 @@ namespace RTC
 	/* Instance methods. */
 
 	PlainTransport::PlainTransport(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::PlainTransport::PlainTransportOptions* options)
@@ -243,7 +243,7 @@ namespace RTC
 			}
 
 			// NOTE: This may throw.
-			this->shared->channelMessageRegistrator->RegisterHandler(
+			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*channelNotificationHandler*/ this);
@@ -268,7 +268,7 @@ namespace RTC
 		// the class instance.
 		Destroying();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		delete this->udpSocket;
 		this->udpSocket = nullptr;
@@ -1231,11 +1231,11 @@ namespace RTC
 
 	inline void PlainTransport::EmitTuple() const
 	{
-		auto tuple        = this->tuple->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
+		auto tuple = this->tuple->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
 		auto notification = FBS::PlainTransport::CreateTupleNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), tuple);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), tuple);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::PLAINTRANSPORT_TUPLE,
 		  FBS::Notification::Body::PlainTransport_TupleNotification,
@@ -1244,11 +1244,12 @@ namespace RTC
 
 	inline void PlainTransport::EmitRtcpTuple() const
 	{
-		auto rtcpTuple = this->rtcpTuple->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
+		auto rtcpTuple =
+		  this->rtcpTuple->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
 		auto notification = FBS::PlainTransport::CreateRtcpTupleNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), rtcpTuple);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtcpTuple);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::PLAINTRANSPORT_RTCP_TUPLE,
 		  FBS::Notification::Body::PlainTransport_RtcpTupleNotification,

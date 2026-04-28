@@ -11,7 +11,7 @@ namespace RTC
 	/* Instance methods. */
 
 	DataConsumer::DataConsumer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  const std::string& dataProducerId,
 	  RTC::DataConsumer::Listener* listener,
@@ -75,7 +75,7 @@ namespace RTC
 		}
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ nullptr);
@@ -85,7 +85,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 	}
 
 	flatbuffers::Offset<FBS::DataConsumer::DumpResponse> DataConsumer::FillBuffer(
@@ -245,9 +245,9 @@ namespace RTC
 				{
 					// Notify the Node DataConsumer.
 					auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
-					  this->shared->channelNotifier->GetBufferBuilder(), this->bufferedAmount);
+					  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->bufferedAmount);
 
-					this->shared->channelNotifier->Emit(
+					this->shared->GetChannelNotifier()->Emit(
 					  this->id,
 					  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
 					  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
@@ -417,7 +417,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer paused [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_PAUSE);
 	}
 
@@ -434,7 +434,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer resumed [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_RESUME);
 	}
 
@@ -473,9 +473,9 @@ namespace RTC
 
 			// Notify the Node DataConsumer.
 			auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
-			  this->shared->channelNotifier->GetBufferBuilder(), this->bufferedAmount);
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->bufferedAmount);
 
-			this->shared->channelNotifier->Emit(
+			this->shared->GetChannelNotifier()->Emit(
 			  this->id,
 			  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
 			  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
@@ -487,7 +487,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_SCTP_SENDBUFFER_FULL);
 	}
 
@@ -501,7 +501,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer closed [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_CLOSE);
 
 		this->listener->OnDataConsumerDataProducerClosed(this);

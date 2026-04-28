@@ -1,8 +1,8 @@
 #ifndef MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 #define MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 
+#include "SharedInterface.hpp"
 #include "RTC/RtpObserver.hpp"
-#include "RTC/Shared.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <vector>
@@ -69,7 +69,7 @@ namespace RTC
 
 	public:
 		ActiveSpeakerObserver(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::RtpObserver::Listener* listener,
 		  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options);

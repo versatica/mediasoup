@@ -2,6 +2,7 @@
 #define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
@@ -13,7 +14,6 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/Shared.hpp"
 #include <string>
 #include <vector>
 
@@ -94,7 +94,7 @@ namespace RTC
 
 	public:
 		Producer(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::Producer::Listener* listener,
 		  const FBS::Transport::ProduceRequest* data);
@@ -179,7 +179,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		RTC::Shared* shared{ nullptr };
+		SharedInterface* shared{ nullptr };
 		RTC::Producer::Listener* listener{ nullptr };
 		// Allocated by this.
 		absl::flat_hash_map<uint32_t, RTC::RTP::RtpStreamRecv*> mapSsrcRtpStream;

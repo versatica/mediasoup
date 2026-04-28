@@ -40,29 +40,31 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Association::Association(const SctpOptions& sctpOptions, AssociationListener* listener)
+		Association::Association(
+		  const SctpOptions& sctpOptions, AssociationListener* listener, SharedInterface* shared)
 		  : sctpOptions(sctpOptions),
 		    // Our `listener` member is a `AssociationListenerDeferrer` which takes
 		    // `AssociationListener` as constructor argument.
 		    listener(listener),
+		    shared(shared),
 		    packetSender(this, this->listener),
-		    t1InitTimer(
-		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		    t1InitTimer(this->shared->CreateBackoffTimer(
+		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
 		        .baseTimeoutMs       = sctpOptions.t1InitTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
 		        .maxRestarts         = sctpOptions.maxInitRetransmissions,
 		      })),
-		    t1CookieTimer(
-		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		    t1CookieTimer(this->shared->CreateBackoffTimer(
+		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
 		        .baseTimeoutMs       = sctpOptions.t1CookieTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
 		        .maxRestarts         = sctpOptions.maxInitRetransmissions })),
-		    t2ShutdownTimer(
-		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		    t2ShutdownTimer(this->shared->CreateBackoffTimer(
+		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
 		        .baseTimeoutMs       = sctpOptions.t2ShutdownTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
@@ -727,6 +729,7 @@ namespace RTC
 			this->tcb = std::make_unique<TransmissionControlBlock>(
 			  this->listener,
 			  this->sctpOptions,
+			  this->shared,
 			  this->packetSender,
 			  localVerificationTag,
 			  remoteVerificationTag,

@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Worker.hpp"
-#include "ChannelMessageRegistrator.hpp"
 #ifdef MS_LIBURING_SUPPORTED
 #include "DepLibUring.hpp"
 #endif
@@ -12,13 +11,13 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include "FBS/response.h"
 #include "FBS/worker.h"
 
 /* Instance methods. */
 
-Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
+Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
+  : channel(channel), shared(shared)
 {
 	MS_TRACE();
 
@@ -27,11 +26,6 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 
 	// Set the SignalHandle.
 	this->signalHandle = new SignalHandle(this);
-
-	// Set up the RTC::Shared singleton.
-	this->shared = new RTC::Shared(
-	  /*channelMessageRegistrator*/ new ChannelMessageRegistrator(),
-	  /*channelNotifier*/ new Channel::ChannelNotifier(this->channel));
 
 #ifdef MS_EXECUTABLE
 	{
@@ -57,7 +51,7 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 #endif
 
 	// Tell the Node process that we are running.
-	this->shared->channelNotifier->Emit(
+	this->shared->GetChannelNotifier()->Emit(
 	  std::to_string(Logger::pid), FBS::Notification::Event::WORKER_RUNNING);
 
 	MS_DEBUG_DEV("starting libuv loop");
@@ -107,9 +101,6 @@ void Worker::Close()
 	}
 	this->mapWebRtcServers.clear();
 
-	// Delete the RTC::Shared singleton.
-	delete this->shared;
-
 	// TODO: Remove once we only use built-in SCTP stack.
 	if (!Settings::configuration.useBuiltInSctpStack)
 	{
@@ -155,7 +146,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	}
 
 	// Add channelMessageHandlers.
-	auto channelMessageHandlers = this->shared->channelMessageRegistrator->FillBuffer(builder);
+	auto channelMessageHandlers = this->shared->GetChannelMessageRegistrator()->FillBuffer(builder);
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())
@@ -437,7 +428,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 			try
 			{
 				auto* handler =
-				  this->shared->channelMessageRegistrator->GetChannelRequestHandler(request->handlerId);
+				  this->shared->GetChannelMessageRegistrator()->GetChannelRequestHandler(request->handlerId);
 
 				if (handler == nullptr)
 				{
@@ -486,7 +477,7 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 		{
 			try
 			{
-				auto* handler = this->shared->channelMessageRegistrator->GetChannelNotificationHandler(
+				auto* handler = this->shared->GetChannelMessageRegistrator()->GetChannelNotificationHandler(
 				  notification->handlerId);
 
 				if (handler == nullptr)

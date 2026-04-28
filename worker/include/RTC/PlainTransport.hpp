@@ -1,8 +1,8 @@
 #ifndef MS_RTC_PLAIN_TRANSPORT_HPP
 #define MS_RTC_PLAIN_TRANSPORT_HPP
 
+#include "SharedInterface.hpp"
 #include "FBS/plainTransport.h"
-#include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -15,7 +15,7 @@ namespace RTC
 	{
 	public:
 		PlainTransport(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  const FBS::PlainTransport::PlainTransportOptions* options);

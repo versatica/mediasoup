@@ -1,11 +1,11 @@
 #ifndef MS_RTC_WEBRTC_TRANSPORT_HPP
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
+#include "SharedInterface.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/IceServer.hpp"
 #include "RTC/ICE/StunPacket.hpp"
-#include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
@@ -44,12 +44,12 @@ namespace RTC
 
 	public:
 		WebRtcTransport(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  const FBS::WebRtcTransport::WebRtcTransportOptions* options);
 		WebRtcTransport(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  WebRtcTransportListener* webRtcTransportListener,

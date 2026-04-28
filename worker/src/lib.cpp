@@ -10,12 +10,15 @@
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
 // TODO: Remove once we only use built-in SCTP stack.
+#include "ChannelMessageRegistrator.hpp"
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
+#include "Shared.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
+#include "Channel/ChannelNotifier.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
@@ -81,6 +84,11 @@ extern "C" int mediasoup_worker_run(
 		return 40;
 	}
 #endif
+
+	// Create a Shared singleton.
+	std::unique_ptr<Shared> shared{ new Shared(
+		/*channelMessageRegistrator*/ new ChannelMessageRegistrator(),
+		/*channelNotifier*/ new Channel::ChannelNotifier(channel.get())) };
 
 	// Initialize the Logger.
 	Logger::ClassInit(channel.get());
@@ -164,7 +172,7 @@ extern "C" int mediasoup_worker_run(
 		ignoreSignals();
 
 		// Run the Worker.
-		const Worker worker(channel.get());
+		const Worker worker(channel.get(), shared.get());
 
 		// Free static stuff.
 		DepLibSRTP::ClassDestroy();

@@ -23,9 +23,9 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 // TODO: Remove once we only use built-in SCTP stack.
+#include "SharedInterface.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include "RTC/SctpListener.hpp"
-#include "RTC/Shared.hpp"
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 #include "RTC/SenderBandwidthEstimator.hpp"
 #endif
@@ -157,7 +157,7 @@ namespace RTC
 
 	public:
 		Transport(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  const FBS::Transport::Options* options);
@@ -359,7 +359,7 @@ namespace RTC
 		std::string id;
 
 	protected:
-		RTC::Shared* shared{ nullptr };
+		SharedInterface* shared{ nullptr };
 		size_t maxMessageSize{ 262144u };
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };

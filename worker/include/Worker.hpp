@@ -1,11 +1,11 @@
 #ifndef MS_WORKER_HPP
 #define MS_WORKER_HPP
 
+#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/worker.h"
 #include "RTC/Router.hpp"
-#include "RTC/Shared.hpp"
 #include "RTC/WebRtcServer.hpp"
 #include "handles/SignalHandle.hpp"
 #include <flatbuffers/flatbuffer_builder.h>
@@ -17,7 +17,7 @@ class Worker : public Channel::ChannelSocket::Listener,
                public RTC::Router::Listener
 {
 public:
-	explicit Worker(Channel::ChannelSocket* channel);
+	explicit Worker(Channel::ChannelSocket* channel, SharedInterface* shared);
 	~Worker() override;
 
 private:
@@ -53,7 +53,7 @@ private:
 	Channel::ChannelSocket* channel{ nullptr };
 	// Allocated by this.
 	SignalHandle* signalHandle{ nullptr };
-	RTC::Shared* shared{ nullptr };
+	SharedInterface* shared{ nullptr };
 	absl::flat_hash_map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
 	absl::flat_hash_map<std::string, RTC::Router*> mapRouters;
 	// Others.

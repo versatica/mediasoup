@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_ASSOCIATION_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
@@ -166,7 +167,8 @@ namespace RTC
 			};
 
 		public:
-			explicit Association(const SctpOptions& sctpOptions, AssociationListener* listener);
+			explicit Association(
+			  const SctpOptions& sctpOptions, AssociationListener* listener, SharedInterface* shared);
 
 			~Association() override;
 
@@ -470,6 +472,7 @@ namespace RTC
 			// Listener. It's not an `AssociationListener` but an
 			// `AssociationListenerDeferrer` which inherits from `AssociationListener`.
 			AssociationListenerDeferrer listener;
+			SharedInterface* shared;
 			// SCTP association internal state.
 			State state{ State::NEW };
 			// Packet sender.

@@ -27,7 +27,7 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::Producer::Listener* listener,
 	  const FBS::Transport::ProduceRequest* data)
@@ -213,7 +213,7 @@ namespace RTC
 		}
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ this);
@@ -223,7 +223,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		// Delete all streams.
 		for (auto& kv : this->mapSsrcRtpStream)
@@ -1433,12 +1433,12 @@ namespace RTC
 					this->videoOrientation.rotation = rotation;
 
 					auto notification = FBS::Producer::CreateVideoOrientationChangeNotification(
-					  this->shared->channelNotifier->GetBufferBuilder(),
+					  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 					  this->videoOrientation.camera,
 					  this->videoOrientation.flip,
 					  this->videoOrientation.rotation);
 
-					this->shared->channelNotifier->Emit(
+					this->shared->GetChannelNotifier()->Emit(
 					  this->id,
 					  FBS::Notification::Event::PRODUCER_VIDEO_ORIENTATION_CHANGE,
 					  FBS::Notification::Body::Producer_VideoOrientationChangeNotification,
@@ -1463,7 +1463,7 @@ namespace RTC
 
 			scores.emplace_back(
 			  FBS::Producer::CreateScoreDirect(
-			    this->shared->channelNotifier->GetBufferBuilder(),
+			    this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			    rtpStream->GetEncodingIdx(),
 			    rtpStream->GetSsrc(),
 			    !rtpStream->GetRid().empty() ? rtpStream->GetRid().c_str() : nullptr,
@@ -1471,9 +1471,9 @@ namespace RTC
 		}
 
 		auto notification = FBS::Producer::CreateScoreNotificationDirect(
-		  this->shared->channelNotifier->GetBufferBuilder(), &scores);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), &scores);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::PRODUCER_SCORE,
 		  FBS::Notification::Body::Producer_ScoreNotification,
@@ -1486,12 +1486,12 @@ namespace RTC
 
 		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
-			auto traceInfo     = FBS::Producer::CreateKeyFrameTraceInfo(
-			  this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
+			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+			auto traceInfo = FBS::Producer::CreateKeyFrameTraceInfo(
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Producer::CreateTraceNotification(
-			  this->shared->channelNotifier->GetBufferBuilder(),
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::KEYFRAME,
 			  DepLibUV::GetTimeMs(),
 			  FBS::Common::TraceDirection::DIRECTION_IN,
@@ -1502,12 +1502,12 @@ namespace RTC
 		}
 		else if (this->traceEventTypes.rtp)
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
-			auto traceInfo     = FBS::Producer::CreateRtpTraceInfo(
-			  this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
+			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+			auto traceInfo = FBS::Producer::CreateRtpTraceInfo(
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Producer::CreateTraceNotification(
-			  this->shared->channelNotifier->GetBufferBuilder(),
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::RTP,
 			  DepLibUV::GetTimeMs(),
 			  FBS::Common::TraceDirection::DIRECTION_IN,
@@ -1527,11 +1527,11 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo =
-		  FBS::Producer::CreatePliTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
+		auto traceInfo = FBS::Producer::CreatePliTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
 		auto notification = FBS::Producer::CreateTraceNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::PLI,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
@@ -1550,11 +1550,11 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo =
-		  FBS::Producer::CreateFirTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
+		auto traceInfo = FBS::Producer::CreateFirTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
 		auto notification = FBS::Producer::CreateTraceNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::FIR,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
@@ -1574,7 +1574,7 @@ namespace RTC
 		}
 
 		auto notification = FBS::Producer::CreateTraceNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::NACK,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
@@ -1592,7 +1592,7 @@ namespace RTC
 		}
 
 		auto traceInfo = FBS::Producer::CreateSrTraceInfo(
-		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  report->GetSsrc(),
 		  report->GetNtpSec(),
 		  report->GetNtpFrac(),
@@ -1601,7 +1601,7 @@ namespace RTC
 		  report->GetOctetCount());
 
 		auto notification = FBS::Producer::CreateTraceNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::SR,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
@@ -1616,7 +1616,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::PRODUCER_TRACE,
 		  FBS::Notification::Body::Producer_TraceNotification,

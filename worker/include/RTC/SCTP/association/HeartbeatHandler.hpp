@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_HEARTBEAT_HANDLER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/SCTP/association/TCBContext.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
@@ -27,6 +28,7 @@ namespace RTC
 			HeartbeatHandler(
 			  AssociationListener& associationListener,
 			  const SctpOptions& sctpOptions,
+			  SharedInterface* shared,
 			  TCBContext* tcbContext);
 
 			~HeartbeatHandler() override;
@@ -62,6 +64,7 @@ namespace RTC
 		private:
 			AssociationListener& associationListener;
 			const SctpOptions sctpOptions;
+			SharedInterface* shared;
 			TCBContext* tcbContext{ nullptr };
 			// The time for a connection to be idle before a heartbeat is sent.
 			const uint64_t intervalDurationMs{ 0 };

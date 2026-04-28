@@ -6,11 +6,16 @@
 #include "handles/TimerHandle.hpp"
 #include "handles/TimerHandleInterface.hpp"
 
+class Shared; // Forward declaration.
+
 class BackoffTimerHandle : public BackoffTimerHandleInterface, public TimerHandleInterface::Listener
 {
-public:
+	friend class Shared; // Only Shared class can invoke the constructor.
+
+private:
 	explicit BackoffTimerHandle(const BackoffTimerHandleOptions& options);
 
+public:
 	BackoffTimerHandle& operator=(const BackoffTimerHandle&) = delete;
 
 	BackoffTimerHandle(const BackoffTimerHandle&) = delete;

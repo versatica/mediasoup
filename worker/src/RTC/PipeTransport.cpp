@@ -24,7 +24,7 @@ namespace RTC
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PipeTransport::PipeTransport(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::PipeTransport::PipeTransportOptions* options)
@@ -122,7 +122,7 @@ namespace RTC
 			  udpSocket->GetRecvBufferSize());
 
 			// NOTE: This may throw.
-			this->shared->channelMessageRegistrator->RegisterHandler(
+			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*channelNotificationHandler*/ this);
@@ -146,7 +146,7 @@ namespace RTC
 		// the class instance.
 		Destroying();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		delete this->udpSocket;
 		this->udpSocket = nullptr;

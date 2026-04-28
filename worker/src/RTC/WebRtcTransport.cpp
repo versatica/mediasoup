@@ -33,7 +33,7 @@ namespace RTC
 	 * This constructor is used when the WebRtcTransport doesn't use a WebRtcServer.
 	 */
 	WebRtcTransport::WebRtcTransport(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
@@ -232,7 +232,7 @@ namespace RTC
 			this->dtlsTransport = new RTC::DtlsTransport(this);
 
 			// NOTE: This may throw.
-			this->shared->channelMessageRegistrator->RegisterHandler(
+			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*channelNotificationHandler*/ this);
@@ -273,7 +273,7 @@ namespace RTC
 	 * This constructor is used when the WebRtcTransport uses a WebRtcServer.
 	 */
 	WebRtcTransport::WebRtcTransport(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  WebRtcTransportListener* webRtcTransportListener,
@@ -305,7 +305,7 @@ namespace RTC
 			this->webRtcTransportListener->OnWebRtcTransportCreated(this);
 
 			// NOTE: This may throw.
-			this->shared->channelMessageRegistrator->RegisterHandler(
+			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*channelNotificationHandler*/ this);
@@ -333,7 +333,7 @@ namespace RTC
 		// parent's destructor. See comment in Transport::OnSctpAssociationSendData().
 		Destroying();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
@@ -1221,12 +1221,12 @@ namespace RTC
 
 		// Notify the Node WebRtcTransport.
 		auto tuple = this->iceServer->GetSelectedTuple()->FillBuffer(
-		  this->shared->channelNotifier->GetBufferBuilder());
+		  this->shared->GetChannelNotifier()->GetBufferBuilder());
 
 		auto notification = FBS::WebRtcTransport::CreateIceSelectedTupleChangeNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), tuple);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), tuple);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
 		  FBS::Notification::Body::WebRtcTransport_IceSelectedTupleChangeNotification,
@@ -1241,9 +1241,10 @@ namespace RTC
 
 		// Notify the Node WebRtcTransport.
 		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::IceState::CONNECTED);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+		  FBS::WebRtcTransport::IceState::CONNECTED);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
 		  FBS::Notification::Body::WebRtcTransport_IceStateChangeNotification,
@@ -1267,9 +1268,10 @@ namespace RTC
 
 		// Notify the Node WebRtcTransport.
 		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::IceState::COMPLETED);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+		  FBS::WebRtcTransport::IceState::COMPLETED);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
 		  FBS::Notification::Body::WebRtcTransport_IceStateChangeNotification,
@@ -1293,10 +1295,10 @@ namespace RTC
 
 		// Notify the Node WebRtcTransport.
 		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::WebRtcTransport::IceState::DISCONNECTED);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
 		  FBS::Notification::Body::WebRtcTransport_IceStateChangeNotification,
@@ -1317,9 +1319,10 @@ namespace RTC
 
 		// Notify the Node WebRtcTransport.
 		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::DtlsState::CONNECTING);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+		  FBS::WebRtcTransport::DtlsState::CONNECTING);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
 		  FBS::Notification::Body::WebRtcTransport_DtlsStateChangeNotification,
@@ -1363,11 +1366,11 @@ namespace RTC
 
 			// Notify the Node WebRtcTransport.
 			auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotificationDirect(
-			  this->shared->channelNotifier->GetBufferBuilder(),
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::WebRtcTransport::DtlsState::CONNECTED,
 			  remoteCert.c_str());
 
-			this->shared->channelNotifier->Emit(
+			this->shared->GetChannelNotifier()->Emit(
 			  this->id,
 			  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
 			  FBS::Notification::Body::WebRtcTransport_DtlsStateChangeNotification,
@@ -1393,9 +1396,10 @@ namespace RTC
 
 		// Notify the Node WebRtcTransport.
 		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::DtlsState::FAILED);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+		  FBS::WebRtcTransport::DtlsState::FAILED);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
 		  FBS::Notification::Body::WebRtcTransport_DtlsStateChangeNotification,
@@ -1410,9 +1414,10 @@ namespace RTC
 
 		// Notify the Node WebRtcTransport.
 		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::DtlsState::CLOSED);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+		  FBS::WebRtcTransport::DtlsState::CLOSED);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
 		  FBS::Notification::Body::WebRtcTransport_DtlsStateChangeNotification,

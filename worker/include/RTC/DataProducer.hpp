@@ -2,10 +2,10 @@
 #define MS_RTC_DATA_PRODUCER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/SctpDictionaries.hpp"
-#include "RTC/Shared.hpp"
 #include <string>
 #include <vector>
 
@@ -42,7 +42,7 @@ namespace RTC
 
 	public:
 		DataProducer(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  size_t maxMessageSize,
 		  RTC::DataProducer::Listener* listener,
@@ -87,7 +87,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		RTC::Shared* shared{ nullptr };
+		SharedInterface* shared{ nullptr };
 		size_t maxMessageSize{ 0u };
 		RTC::DataProducer::Listener* listener{ nullptr };
 		// Others.

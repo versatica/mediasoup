@@ -16,16 +16,18 @@ namespace RTC
 
 		StreamResetHandler::StreamResetHandler(
 		  AssociationListener& associationListener,
+		  SharedInterface* shared,
 		  TCBContext* tcbContext,
 		  // TODO: SCTP: Implement
 		  // DataTracker* dataTracker,
 		  // ReassemblyQueue* reassemblyQueue,
 		  RetransmissionQueue* retransmissionQueue)
 		  : associationListener(associationListener),
+		    shared(shared),
 		    tcbContext(tcbContext),
 		    retransmissionQueue(retransmissionQueue),
-		    reConfigTimer(
-		      std::make_unique<BackoffTimerHandle>(BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		    reConfigTimer(this->shared->CreateBackoffTimer(
+		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
 		        .baseTimeoutMs       = 0,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,

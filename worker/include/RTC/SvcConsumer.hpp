@@ -4,7 +4,6 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/SeqManager.hpp"
-#include "RTC/Shared.hpp"
 #include <map>
 
 namespace RTC
@@ -13,7 +12,7 @@ namespace RTC
 	{
 	public:
 		SvcConsumer(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,

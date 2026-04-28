@@ -2,10 +2,10 @@
 #define MS_RTC_DATA_CONSUMER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/SctpDictionaries.hpp"
-#include "RTC/Shared.hpp"
 #include <absl/container/flat_hash_set.h>
 #include <string>
 
@@ -43,7 +43,7 @@ namespace RTC
 
 	public:
 		DataConsumer(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  const std::string& dataProducerId,
 		  RTC::DataConsumer::Listener* listener,
@@ -114,7 +114,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		RTC::Shared* shared{ nullptr };
+		SharedInterface* shared{ nullptr };
 		RTC::DataConsumer::Listener* listener{ nullptr };
 		size_t maxMessageSize{ 0u };
 		// Others.
