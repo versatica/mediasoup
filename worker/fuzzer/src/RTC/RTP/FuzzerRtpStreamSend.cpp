@@ -5,6 +5,7 @@
 
 namespace
 {
+	// NOLINTNEXTLINE(readability-identifier-naming)
 	thread_local mocks::MockShared shared;
 } // namespace
 

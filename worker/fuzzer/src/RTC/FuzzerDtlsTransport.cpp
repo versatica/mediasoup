@@ -8,14 +8,17 @@
 
 namespace
 {
+	// NOLINTNEXTLINE(readability-identifier-naming)
 	thread_local mocks::MockShared shared;
 
 	// DtlsTransport instance. It's reset every time DTLS handshake fails or DTLS
 	// is closed.
+	// NOLINTNEXTLINE(readability-identifier-naming)
 	thread_local RTC::DtlsTransport* dtlsTransportSingleton{ nullptr };
 
 	// DtlsTransport Listener instance. It's reset every time the DtlsTransport
 	// singletonDTLS is reset.
+	// NOLINTNEXTLINE(readability-identifier-naming)
 	thread_local FuzzerRtcDtlsTransport::DtlsTransportListener* dtlsTransportListenerSingleton{ nullptr };
 } // namespace
 
