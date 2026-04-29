@@ -9,14 +9,14 @@ namespace mocks
 {
 	MockShared::MockShared() : channelMessageRegistrator(), channelNotifier()
 	{
-		auto* channelSocket = new Channel::ChannelSocket();
-
+		this->channelSocket             = new Channel::ChannelSocket();
 		this->channelMessageRegistrator = new ChannelMessageRegistrator();
-		this->channelNotifier           = new Channel::ChannelNotifier(channelSocket);
+		this->channelNotifier           = new Channel::ChannelNotifier(this->channelSocket);
 	}
 
 	MockShared::~MockShared()
 	{
+		delete this->channelSocket;
 		delete this->channelMessageRegistrator;
 		delete this->channelNotifier;
 	}

@@ -6,6 +6,7 @@
 #include "ChannelMessageRegistrator.hpp"
 #include "SharedInterface.hpp"
 #include "Channel/ChannelNotifier.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include "handles/TimerHandleInterface.hpp"
 
@@ -35,6 +36,7 @@ namespace mocks
 		  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const override;
 
 	private:
+		Channel::ChannelSocket* channelSocket;
 		ChannelMessageRegistrator* channelMessageRegistrator;
 		Channel::ChannelNotifier* channelNotifier;
 	};
