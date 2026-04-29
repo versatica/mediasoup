@@ -19,12 +19,15 @@ const CLANG_FORMAT_PATHS = [
 	'../test/include/**/**.hpp',
 	'../fuzzer/src/**/*.cpp',
 	'../fuzzer/include/**/*.hpp',
+	'../mocks/src/**/*.cpp',
+	'../mocks/include/**/*.hpp',
 ];
 
 const CLANG_TIDY_PATHS = [
 	'../src/**/*.cpp',
 	'../test/src/**/*.cpp',
 	'../fuzzer/src/**/*.cpp',
+	'../mocks/src/**/*.cpp',
 ];
 
 const task = process.argv.slice(2).join(' ');

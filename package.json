@@ -48,6 +48,8 @@
 		"worker/fuzzer/include",
 		"worker/fuzzer/src",
 		"worker/include",
+		"worker/mocks/include",
+		"worker/mocks/src",
 		"worker/src",
 		"worker/scripts/*.json",
 		"worker/scripts/*.mjs",

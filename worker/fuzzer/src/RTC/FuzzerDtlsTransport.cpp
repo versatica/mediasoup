@@ -4,17 +4,19 @@
 #include "RTC/FuzzerDtlsTransport.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include "mocks/include/MockShared.hpp"
 
 namespace
 {
-	// NOLINTBEGIN(readability-identifier-naming)
+	thread_local MockShared shared;
+
 	// DtlsTransport instance. It's reset every time DTLS handshake fails or DTLS
 	// is closed.
 	thread_local RTC::DtlsTransport* dtlsTransportSingleton{ nullptr };
+
 	// DtlsTransport Listener instance. It's reset every time the DtlsTransport
 	// singletonDTLS is reset.
 	thread_local FuzzerRtcDtlsTransport::DtlsTransportListener* dtlsTransportListenerSingleton{ nullptr };
-	// NOLINTEND(readability-identifier-naming)
 } // namespace
 
 void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
@@ -31,7 +33,8 @@ void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
 		delete dtlsTransportListenerSingleton;
 		dtlsTransportListenerSingleton = new DtlsTransportListener();
 
-		dtlsTransportSingleton = new RTC::DtlsTransport(dtlsTransportListenerSingleton);
+		dtlsTransportSingleton =
+		  new RTC::DtlsTransport(dtlsTransportListenerSingleton, std::addressof(shared));
 
 		RTC::DtlsTransport::Role localRole;
 		RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;

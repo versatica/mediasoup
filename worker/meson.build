@@ -438,7 +438,6 @@ executable(
 test_sources = [
   'test/src/tests.cpp',
   'test/src/testHelpers.cpp',
-  'test/src/MockShared.cpp',
   'test/src/RTC/TestKeyFrameRequestManager.cpp',
   'test/src/RTC/TestNackGenerator.cpp',
   'test/src/RTC/TestRateCalculator.cpp',
@@ -549,6 +548,7 @@ test_sources = [
   'test/src/Utils/TestNumber.cpp',
   'test/src/Utils/TestString.cpp',
   'test/src/Utils/TestTime.cpp',
+  'mocks/src/MockShared.cpp',
 ]
 
 mediasoup_worker_test = executable(
@@ -561,6 +561,7 @@ mediasoup_worker_test = executable(
   include_directories: include_directories(
     'include',
     'test/include',
+    'mocks/include',
   ),
   cpp_args: cpp_args,
 )
@@ -581,6 +582,7 @@ mediasoup_worker_test_asan_address = executable(
   include_directories: include_directories(
     'include',
     'test/include',
+    'mocks/include',
   ),
   cpp_args: cpp_args + [
     '-g',
@@ -609,6 +611,7 @@ mediasoup_worker_test_asan_undefined = executable(
   include_directories: include_directories(
     'include',
     'test/include',
+    'mocks/include',
   ),
   cpp_args: cpp_args + [
     '-g',
@@ -669,7 +672,8 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
   'fuzzer/src/RTC/SCTP/association/FuzzerStateCookie.cpp',
-  'fuzzer/src/RTC/SCTP/packet/FuzzerPacket.cpp'
+  'fuzzer/src/RTC/SCTP/packet/FuzzerPacket.cpp',
+  'mocks/src/MockShared.cpp'
 ]
 
 executable(
@@ -682,6 +686,7 @@ executable(
   include_directories: include_directories(
     'include',
     'fuzzer/include',
+    'mocks/include',
   ),
   cpp_args: cpp_args + [
     '-DMS_LOG_STD',

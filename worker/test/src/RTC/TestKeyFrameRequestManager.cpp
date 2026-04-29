@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "test/include/MockShared.hpp"
+#include "mocks/include/MockShared.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <memory>

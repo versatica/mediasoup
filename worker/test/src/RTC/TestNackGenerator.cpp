@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "test/include/MockShared.hpp"
+#include "mocks/include/MockShared.hpp"
 #include "RTC/NackGenerator.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Packet.hpp"

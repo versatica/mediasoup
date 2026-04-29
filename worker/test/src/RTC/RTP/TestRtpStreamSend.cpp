@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "test/include/MockShared.hpp"
+#include "mocks/include/MockShared.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"

@@ -1,12 +1,11 @@
-#include "test/include/MockShared.hpp"
+#include "mocks/include/MockShared.hpp"
 // TODO: We need MockChannelNotifier class.
 #include "Channel/ChannelSocket.hpp"
 // TODO: We need MockBackoffTimerHandle and MockChannelNotifier classes.
 #include "handles/BackoffTimerHandle.hpp"
 #include "handles/TimerHandle.hpp"
 
-MockShared::MockShared()
-  : channelMessageRegistrator(channelMessageRegistrator), channelNotifier(channelNotifier)
+MockShared::MockShared() : channelMessageRegistrator(), channelNotifier()
 {
 	auto* channelSocket = new Channel::ChannelSocket();
 
