@@ -689,7 +689,6 @@ executable(
     'mocks/include',
   ),
   cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
     '-g',
     '-O3',
     '-fno-omit-frame-pointer',
