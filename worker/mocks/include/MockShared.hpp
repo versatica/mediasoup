@@ -1,10 +1,8 @@
 #ifndef MS_MOCKS_MOCK_SHARED_HPP
 #define MS_MOCKS_MOCK_SHARED_HPP
 
-// TODO: We need ChannelMessageRegistratorInterface and ChannelNotifierInterface
-// classes.
 #include "SharedInterface.hpp"
-#include "Channel/ChannelMessageRegistrator.hpp"
+#include "mocks/include/Channel/MockChannelMessageRegistrator.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
@@ -17,15 +15,15 @@ namespace mocks
 	public:
 		explicit MockShared();
 
-		~MockShared() = default;
+		~MockShared() override = default;
 
 	public:
-		Channel::ChannelMessageRegistrator* GetChannelMessageRegistrator() const override
+		::Channel::ChannelMessageRegistratorInterface* GetChannelMessageRegistrator() const override
 		{
 			return this->channelMessageRegistrator.get();
 		}
 
-		Channel::ChannelNotifier* GetChannelNotifier() const override
+		::Channel::ChannelNotifier* GetChannelNotifier() const override
 		{
 			return this->channelNotifier.get();
 		}
@@ -36,9 +34,9 @@ namespace mocks
 		  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const override;
 
 	private:
-		std::unique_ptr<Channel::ChannelSocket> channelSocket;
-		std::unique_ptr<Channel::ChannelMessageRegistrator> channelMessageRegistrator;
-		std::unique_ptr<Channel::ChannelNotifier> channelNotifier;
+		std::unique_ptr<::Channel::ChannelSocket> channelSocket;
+		std::unique_ptr<mocks::Channel::MockChannelMessageRegistrator> channelMessageRegistrator;
+		std::unique_ptr<::Channel::ChannelNotifier> channelNotifier;
 	};
 } // namespace mocks
 

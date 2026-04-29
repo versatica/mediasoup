@@ -556,6 +556,7 @@ test_sources = [
   'test/src/Utils/TestString.cpp',
   'test/src/Utils/TestTime.cpp',
   'mocks/src/MockShared.cpp',
+  'mocks/src/Channel/MockChannelMessageRegistrator.cpp',
 ]
 
 mediasoup_worker_test = executable(
@@ -680,7 +681,8 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
   'fuzzer/src/RTC/SCTP/association/FuzzerStateCookie.cpp',
   'fuzzer/src/RTC/SCTP/packet/FuzzerPacket.cpp',
-  'mocks/src/MockShared.cpp'
+  'mocks/src/MockShared.cpp',
+  'mocks/src/Channel/MockChannelMessageRegistrator.cpp',
 ]
 
 executable(

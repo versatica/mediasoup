@@ -4,6 +4,7 @@
 #include "Channel/ChannelMessageRegistrator.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <vector>
 
 namespace Channel
 {
@@ -25,6 +26,7 @@ namespace Channel
 	{
 		// Add channelRequestHandlerIds.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> channelRequestHandlerIds;
+
 		for (const auto& kv : this->mapChannelRequestHandlers)
 		{
 			const auto& handlerId = kv.first;
@@ -34,6 +36,7 @@ namespace Channel
 
 		// Add channelNotificationHandlerIds.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> channelNotificationHandlerIds;
+
 		for (const auto& kv : this->mapChannelNotificationHandlers)
 		{
 			const auto& handlerId = kv.first;
@@ -52,7 +55,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		if (channelRequestHandler != nullptr)
+		if (channelRequestHandler)
 		{
 			if (this->mapChannelRequestHandlers.find(id) != this->mapChannelRequestHandlers.end())
 			{
@@ -62,11 +65,11 @@ namespace Channel
 			this->mapChannelRequestHandlers[id] = channelRequestHandler;
 		}
 
-		if (channelNotificationHandler != nullptr)
+		if (channelNotificationHandler)
 		{
 			if (this->mapChannelNotificationHandlers.find(id) != this->mapChannelNotificationHandlers.end())
 			{
-				if (channelRequestHandler != nullptr)
+				if (channelRequestHandler)
 				{
 					this->mapChannelRequestHandlers.erase(id);
 				}

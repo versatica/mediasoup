@@ -17,7 +17,7 @@ public:
 	~Shared() override;
 
 public:
-	Channel::ChannelMessageRegistrator* GetChannelMessageRegistrator() const override
+	Channel::ChannelMessageRegistratorInterface* GetChannelMessageRegistrator() const override
 	{
 		return this->channelMessageRegistrator.get();
 	}
