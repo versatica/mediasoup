@@ -9,7 +9,7 @@ namespace mocks
 {
 	MockShared::MockShared()
 	  : channelSocket(new Channel::ChannelSocket()),
-	    channelMessageRegistrator(new ChannelMessageRegistrator()),
+	    channelMessageRegistrator(new Channel::ChannelMessageRegistrator()),
 	    channelNotifier(new Channel::ChannelNotifier(this->channelSocket.get()))
 	{
 	}

@@ -2,7 +2,7 @@
 #define MS_SHARED_INTERFACE_HPP
 
 // TODO: We should have a ChannelMessageRegistratorInterface class instead.
-#include "ChannelMessageRegistrator.hpp"
+#include "Channel/ChannelMessageRegistrator.hpp"
 // TODO: We should have a ChannelNotifierInterface class instead.
 #include "Channel/ChannelNotifier.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
@@ -17,7 +17,7 @@ public:
 	/**
 	 * @todo We should have a ChannelMessageRegistratorInterface class instead.
 	 */
-	virtual ChannelMessageRegistrator* GetChannelMessageRegistrator() const = 0;
+	virtual Channel::ChannelMessageRegistrator* GetChannelMessageRegistrator() const = 0;
 
 	/**
 	 * @todo We should have a ChannelNotifierInterface class instead.

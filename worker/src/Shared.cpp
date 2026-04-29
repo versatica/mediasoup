@@ -7,7 +7,8 @@
 #include "handles/TimerHandle.hpp"
 
 Shared::Shared(
-  ChannelMessageRegistrator* channelMessageRegistrator, Channel::ChannelNotifier* channelNotifier)
+  Channel::ChannelMessageRegistrator* channelMessageRegistrator,
+  Channel::ChannelNotifier* channelNotifier)
   : channelMessageRegistrator(channelMessageRegistrator), channelNotifier(channelNotifier)
 {
 	MS_TRACE();

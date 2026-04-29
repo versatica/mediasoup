@@ -1,6 +1,7 @@
 #define MS_CLASS "mediasoup-worker"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "lib.hpp"
 #include "common.hpp"
 #include "DepLibSRTP.hpp"
 #ifdef MS_LIBURING_SUPPORTED
@@ -10,7 +11,6 @@
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
 // TODO: Remove once we only use built-in SCTP stack.
-#include "ChannelMessageRegistrator.hpp"
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -18,6 +18,7 @@
 #include "Shared.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
+#include "Channel/ChannelMessageRegistrator.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
@@ -87,7 +88,7 @@ extern "C" int mediasoup_worker_run(
 
 	// Create a Shared singleton.
 	std::unique_ptr<Shared> shared{ new Shared(
-		/*channelMessageRegistrator*/ new ChannelMessageRegistrator(),
+		/*channelMessageRegistrator*/ new Channel::ChannelMessageRegistrator(),
 		/*channelNotifier*/ new Channel::ChannelNotifier(channel.get())) };
 
 	// Initialize the Logger.
