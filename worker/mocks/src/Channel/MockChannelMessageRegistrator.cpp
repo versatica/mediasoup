@@ -59,7 +59,7 @@ namespace mocks
 
 			if (channelRequestHandler)
 			{
-				if (this->mapChannelRequestHandlers.find(id) != this->mapChannelRequestHandlers.end())
+				if (this->mapChannelRequestHandlers.contains(id))
 				{
 					MS_THROW_ERROR("Channel request handler with ID %s already exists", id.c_str());
 				}
@@ -69,7 +69,7 @@ namespace mocks
 
 			if (channelNotificationHandler)
 			{
-				if (this->mapChannelNotificationHandlers.find(id) != this->mapChannelNotificationHandlers.end())
+				if (this->mapChannelNotificationHandlers.contains(id))
 				{
 					if (channelRequestHandler)
 					{
