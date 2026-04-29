@@ -78,7 +78,7 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		TestResults results;
 	};
 
-	MockShared shared;
+	mocks::MockShared shared;
 
 	// clang-format off
 	alignas(4) uint8_t buffer[] =

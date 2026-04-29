@@ -119,7 +119,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		std::vector<uint16_t> nackedSeqNumbers;
 	};
 
-	MockShared shared;
+	mocks::MockShared shared;
 
 	// clang-format off
 	alignas(4) uint8_t buffer[] =

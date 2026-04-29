@@ -106,7 +106,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 	};
 
-	MockShared shared;
+	mocks::MockShared shared;
 
 	// clang-format off
 	uint8_t rtpBuffer1[] =

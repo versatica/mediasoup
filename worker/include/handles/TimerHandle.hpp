@@ -9,7 +9,10 @@
 class Shared;
 class BackoffTimerHandle;
 // TODO: Temporal until we have MockBackoffTimerHandle.
-class MockShared;
+namespace mocks
+{
+	class MockShared;
+}
 
 class TimerHandle : public TimerHandleInterface
 {
@@ -17,7 +20,7 @@ class TimerHandle : public TimerHandleInterface
 	friend class Shared;
 	friend class BackoffTimerHandle;
 	// TODO: Temporal until we have MockBackoffTimerHandle.
-	friend class MockShared;
+	friend class mocks::MockShared;
 
 private:
 	explicit TimerHandle(TimerHandleInterface::Listener* listener);

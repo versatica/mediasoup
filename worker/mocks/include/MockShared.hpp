@@ -1,5 +1,5 @@
-#ifndef MS_TEST_MOCK_SHARED_HPP
-#define MS_TEST_MOCK_SHARED_HPP
+#ifndef MS_MOCKS_MOCK_SHARED_HPP
+#define MS_MOCKS_MOCK_SHARED_HPP
 
 // TODO: We need ChannelMessageRegistratorInterface and ChannelNotifierInterface
 // classes.
@@ -9,32 +9,35 @@
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include "handles/TimerHandleInterface.hpp"
 
-class MockShared : public SharedInterface
+namespace mocks
 {
-public:
-	explicit MockShared();
-
-	~MockShared() override;
-
-public:
-	ChannelMessageRegistrator* GetChannelMessageRegistrator() const override
+	class MockShared : public SharedInterface
 	{
-		return this->channelMessageRegistrator;
-	}
+	public:
+		explicit MockShared();
 
-	Channel::ChannelNotifier* GetChannelNotifier() const override
-	{
-		return this->channelNotifier;
-	}
+		~MockShared() override;
 
-	TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener) const override;
+	public:
+		ChannelMessageRegistrator* GetChannelMessageRegistrator() const override
+		{
+			return this->channelMessageRegistrator;
+		}
 
-	BackoffTimerHandleInterface* CreateBackoffTimer(
-	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const override;
+		Channel::ChannelNotifier* GetChannelNotifier() const override
+		{
+			return this->channelNotifier;
+		}
 
-private:
-	ChannelMessageRegistrator* channelMessageRegistrator;
-	Channel::ChannelNotifier* channelNotifier;
-};
+		TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener) const override;
+
+		BackoffTimerHandleInterface* CreateBackoffTimer(
+		  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const override;
+
+	private:
+		ChannelMessageRegistrator* channelMessageRegistrator;
+		Channel::ChannelNotifier* channelNotifier;
+	};
+} // namespace mocks
 
 #endif

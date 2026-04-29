@@ -5,7 +5,7 @@
 
 namespace
 {
-	thread_local MockShared shared;
+	thread_local mocks::MockShared shared;
 } // namespace
 
 void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)

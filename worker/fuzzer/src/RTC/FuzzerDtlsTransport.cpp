@@ -8,7 +8,7 @@
 
 namespace
 {
-	thread_local MockShared shared;
+	thread_local mocks::MockShared shared;
 
 	// DtlsTransport instance. It's reset every time DTLS handshake fails or DTLS
 	// is closed.

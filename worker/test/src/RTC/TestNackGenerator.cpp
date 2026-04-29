@@ -127,7 +127,7 @@ SCENARIO("NACK generator", "[rtp][rtcp][nack]")
 		bool keyFrameRequiredTriggered{ false };
 	};
 
-	MockShared shared;
+	mocks::MockShared shared;
 
 	auto validate =
 	  [&shared](std::unique_ptr<RTC::RTP::Packet>& packet, std::vector<TestNackGeneratorInput>& inputs)

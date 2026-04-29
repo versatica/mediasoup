@@ -5,27 +5,30 @@
 #include "handles/BackoffTimerHandle.hpp"
 #include "handles/TimerHandle.hpp"
 
-MockShared::MockShared() : channelMessageRegistrator(), channelNotifier()
+namespace mocks
 {
-	auto* channelSocket = new Channel::ChannelSocket();
+	MockShared::MockShared() : channelMessageRegistrator(), channelNotifier()
+	{
+		auto* channelSocket = new Channel::ChannelSocket();
 
-	this->channelMessageRegistrator = new ChannelMessageRegistrator();
-	this->channelNotifier           = new Channel::ChannelNotifier(channelSocket);
-}
+		this->channelMessageRegistrator = new ChannelMessageRegistrator();
+		this->channelNotifier           = new Channel::ChannelNotifier(channelSocket);
+	}
 
-MockShared::~MockShared()
-{
-	delete this->channelMessageRegistrator;
-	delete this->channelNotifier;
-}
+	MockShared::~MockShared()
+	{
+		delete this->channelMessageRegistrator;
+		delete this->channelNotifier;
+	}
 
-TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* listener) const
-{
-	return new TimerHandle(listener);
-}
+	TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* listener) const
+	{
+		return new TimerHandle(listener);
+	}
 
-BackoffTimerHandleInterface* MockShared::CreateBackoffTimer(
-  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const
-{
-	return new BackoffTimerHandle(options);
-}
+	BackoffTimerHandleInterface* MockShared::CreateBackoffTimer(
+	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const
+	{
+		return new BackoffTimerHandle(options);
+	}
+} // namespace mocks

@@ -14,7 +14,7 @@ namespace
 {
 	// NOLINTBEGIN(readability-identifier-naming)
 	const uint8_t payloadType = 111;
-	MockShared shared;
+	mocks::MockShared shared;
 	// NOLINTEND(readability-identifier-naming)
 
 	class RtpStreamRecvListener : public RTC::RTP::RtpStreamRecv::Listener
