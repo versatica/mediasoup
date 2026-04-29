@@ -82,7 +82,7 @@ namespace Channel
 		};
 
 	public:
-#ifdef MS_TEST
+#if defined(MS_TEST) || defined(MS_FUZZER)
 		explicit ChannelSocket();
 #endif
 		explicit ChannelSocket(int consumerFd, int producerFd);

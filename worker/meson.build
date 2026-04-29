@@ -33,6 +33,13 @@ if get_option('ms_build_tests')
   ]
 endif
 
+if get_option('ms_build_fuzzer')
+  cpp_args += [
+    '-DMS_FUZZER',
+    '-DMS_LOG_STD'
+  ]
+endif
+
 if get_option('ms_log_trace')
   cpp_args += [
     '-DMS_LOG_TRACE',

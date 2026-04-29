@@ -30,7 +30,7 @@ namespace Channel
 
 	/* Instance methods. */
 
-#ifdef MS_TEST
+#if defined(MS_TEST) || defined(MS_FUZZER)
 	ChannelSocket::ChannelSocket()
 	{
 		MS_TRACE_STD();
