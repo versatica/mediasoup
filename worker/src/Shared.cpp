@@ -16,9 +16,6 @@ Shared::Shared(
 Shared::~Shared()
 {
 	MS_TRACE();
-
-	delete this->channelMessageRegistrator;
-	delete this->channelNotifier;
 }
 
 TimerHandleInterface* Shared::CreateTimer(TimerHandleInterface::Listener* listener) const

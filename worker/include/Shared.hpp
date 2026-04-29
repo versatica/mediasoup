@@ -18,12 +18,12 @@ public:
 public:
 	ChannelMessageRegistrator* GetChannelMessageRegistrator() const override
 	{
-		return this->channelMessageRegistrator;
+		return this->channelMessageRegistrator.get();
 	}
 
 	Channel::ChannelNotifier* GetChannelNotifier() const override
 	{
-		return this->channelNotifier;
+		return this->channelNotifier.get();
 	}
 
 	TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener) const override;
@@ -32,8 +32,8 @@ public:
 	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const override;
 
 private:
-	ChannelMessageRegistrator* channelMessageRegistrator{ nullptr };
-	Channel::ChannelNotifier* channelNotifier{ nullptr };
+	std::unique_ptr<ChannelMessageRegistrator> channelMessageRegistrator;
+	std::unique_ptr<Channel::ChannelNotifier> channelNotifier;
 };
 
 #endif

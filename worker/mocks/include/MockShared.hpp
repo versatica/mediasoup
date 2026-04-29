@@ -17,17 +17,17 @@ namespace mocks
 	public:
 		explicit MockShared();
 
-		~MockShared() override;
+		~MockShared() = default;
 
 	public:
 		ChannelMessageRegistrator* GetChannelMessageRegistrator() const override
 		{
-			return this->channelMessageRegistrator;
+			return this->channelMessageRegistrator.get();
 		}
 
 		Channel::ChannelNotifier* GetChannelNotifier() const override
 		{
-			return this->channelNotifier;
+			return this->channelNotifier.get();
 		}
 
 		TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener) const override;
@@ -36,9 +36,9 @@ namespace mocks
 		  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const override;
 
 	private:
-		Channel::ChannelSocket* channelSocket;
-		ChannelMessageRegistrator* channelMessageRegistrator;
-		Channel::ChannelNotifier* channelNotifier;
+		std::unique_ptr<Channel::ChannelSocket> channelSocket;
+		std::unique_ptr<ChannelMessageRegistrator> channelMessageRegistrator;
+		std::unique_ptr<Channel::ChannelNotifier> channelNotifier;
 	};
 } // namespace mocks
 

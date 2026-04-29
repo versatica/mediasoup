@@ -7,18 +7,11 @@
 
 namespace mocks
 {
-	MockShared::MockShared() : channelMessageRegistrator(), channelNotifier()
+	MockShared::MockShared()
+	  : channelSocket(new Channel::ChannelSocket()),
+	    channelMessageRegistrator(new ChannelMessageRegistrator()),
+	    channelNotifier(new Channel::ChannelNotifier(this->channelSocket.get()))
 	{
-		this->channelSocket             = new Channel::ChannelSocket();
-		this->channelMessageRegistrator = new ChannelMessageRegistrator();
-		this->channelNotifier           = new Channel::ChannelNotifier(this->channelSocket);
-	}
-
-	MockShared::~MockShared()
-	{
-		delete this->channelSocket;
-		delete this->channelMessageRegistrator;
-		delete this->channelNotifier;
 	}
 
 	TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* listener) const
