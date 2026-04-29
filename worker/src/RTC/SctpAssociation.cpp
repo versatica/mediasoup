@@ -120,7 +120,7 @@ namespace RTC
 	    os(os),
 	    mis(mis),
 	    maxSctpMessageSize(maxSctpMessageSize),
-	    sctpSendBufferSize(sctpSendBufferSize),
+	    sctpSendBufferSize(std::max(sctpSendBufferSize, maxSctpMessageSize)),
 	    isDataChannel(isDataChannel)
 	{
 		MS_TRACE();

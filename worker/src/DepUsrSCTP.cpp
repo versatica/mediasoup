@@ -76,6 +76,12 @@ void DepUsrSCTP::ClassInit()
 	{
 		usrsctp_init_nothreads(0, onSendSctpData, sctpDebug);
 
+		// See https://github.com/sctplab/usrsctp/blob/master/Manual.md#usrsctp_sysctl_set_sctp_sendspace.
+		//
+		// TODO: This doesn't have any effect. So let's comment it.
+		// usrsctp_sysctl_set_sctp_sendspace(std::numeric_limits<uint32_t>::max());
+		// usrsctp_sysctl_set_sctp_recvspace(std::numeric_limits<uint32_t>::max());
+
 		// Disable explicit congestion notifications (ecn).
 		usrsctp_sysctl_set_sctp_ecn_enable(0);
 
