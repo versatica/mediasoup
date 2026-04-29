@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "test/include/MockShared.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
@@ -10,6 +11,7 @@
 #include "RTC/RTP/SharedPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcpy()
+#include <memory>
 #include <vector>
 
 // #define PERFORMANCE_TEST 1
@@ -104,6 +106,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 	};
 
+	MockShared shared;
+
 	// clang-format off
 	uint8_t rtpBuffer1[] =
 	{
@@ -149,7 +153,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params, mid);
+		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
 		sendRtpPacket(
@@ -240,7 +245,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params, mid);
+		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
 		sendRtpPacket(
@@ -319,7 +325,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::AUDIO;
 
 		std::string mid;
-		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params, mid);
+		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
 		sendRtpPacket(
@@ -393,8 +400,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(
-		  new RTC::RTP::RtpStreamSend(&testRtpStreamListener1, params1, mid));
+		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(new RTC::RTP::RtpStreamSend(
+		  std::addressof(testRtpStreamListener1), std::addressof(shared), params1, mid));
 
 		RTC::RTP::RtpStream::Params params2;
 
@@ -403,8 +410,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params2.useNack       = true;
 		params2.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(
-		  new RTC::RTP::RtpStreamSend(&testRtpStreamListener2, params2, mid));
+		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(new RTC::RTP::RtpStreamSend(
+		  std::addressof(testRtpStreamListener2), std::addressof(shared), params2, mid));
 
 		// Receive all the packets in both streams.
 		sendRtpPacket(
@@ -504,8 +511,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(
-		  new RTC::RTP::RtpStreamSend(&testRtpStreamListener1, params1, mid));
+		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(new RTC::RTP::RtpStreamSend(
+		  std::addressof(testRtpStreamListener1), std::addressof(shared), params1, mid));
 
 		RTC::RTP::RtpStream::Params params2;
 
@@ -514,8 +521,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params2.useNack       = true;
 		params2.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(
-		  new RTC::RTP::RtpStreamSend(&testRtpStreamListener2, params2, mid));
+		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(new RTC::RTP::RtpStreamSend(
+		  std::addressof(testRtpStreamListener2), std::addressof(shared), params2, mid));
 
 		// Create two VP8 encoding contexts.
 		RTC::RTP::Codecs::EncodingContext::Params params;
@@ -776,8 +783,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(
-		  new RTC::RTP::RtpStreamSend(&testRtpStreamListener1, params1, mid));
+		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(new RTC::RTP::RtpStreamSend(
+		  std::addressof(testRtpStreamListener1), std::addressof(shared), params1, mid));
 
 		RTC::RTP::RtpStream::Params params2;
 
@@ -786,8 +793,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params2.useNack       = true;
 		params2.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(
-		  new RTC::RTP::RtpStreamSend(&testRtpStreamListener2, params2, mid));
+		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(new RTC::RTP::RtpStreamSend(
+		  std::addressof(testRtpStreamListener2), std::addressof(shared), params2, mid));
 
 		// Create two AV1 encoding contexts.
 		RTC::RTP::Codecs::EncodingContext::Params params;
@@ -920,7 +927,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params1, mid);
+		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params1, mid);
 
 		// Receive all the packets.
 		sendRtpPacket(
@@ -983,7 +991,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params1, mid);
+		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params1, mid);
 
 		// Receive all the packets.
 		sendRtpPacket(
@@ -1047,7 +1056,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params1, mid);
+		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params1, mid);
 
 		sendRtpPacket(
 		  {
@@ -1097,7 +1107,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(&testRtpStreamListener, params, mid);
+		auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		const RTC::RTP::SharedPacket sharedPacket;
 
@@ -1124,8 +1135,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(
-		  new RTC::RTP::RtpStreamSend(&testRtpStreamListener, params, mid));
+		std::unique_ptr<RTC::RTP::RtpStreamSend> stream1(new RTC::RTP::RtpStreamSend(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid));
 
 		size_t iterations = 10000000;
 
@@ -1146,8 +1157,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		std::cout << "nullptr && initialized shared_ptr: \t" << dur.count() << " seconds" << std::endl;
 
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::AUDIO;
-		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(
-		  new RTC::RTP::RtpStreamSend(&testRtpStreamListener, params, mid));
+		std::unique_ptr<RTC::RTP::RtpStreamSend> stream2(new RTC::RTP::RtpStreamSend(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid));
 
 		start = std::chrono::system_clock::now();
 

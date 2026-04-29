@@ -3,14 +3,14 @@
 
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "Logger.hpp"
-#include "handles/TimerHandle.hpp"
 
 static constexpr uint32_t KeyFrameRetransmissionWaitTime{ 1000u };
 
 /* PendingKeyFrameInfo methods. */
 
-RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(PendingKeyFrameInfo::Listener* listener, uint32_t ssrc)
-  : listener(listener), ssrc(ssrc), timer(new TimerHandle(this))
+RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(
+  PendingKeyFrameInfo::Listener* listener, SharedInterface* shared, uint32_t ssrc)
+  : listener(listener), ssrc(ssrc), timer(shared->CreateTimer(this))
 {
 	MS_TRACE();
 
@@ -38,8 +38,8 @@ void RTC::PendingKeyFrameInfo::OnTimer(TimerHandleInterface* timer)
 /* KeyFrameRequestDelayer methods. */
 
 RTC::KeyFrameRequestDelayer::KeyFrameRequestDelayer(
-  KeyFrameRequestDelayer::Listener* listener, uint32_t ssrc, uint32_t delay)
-  : listener(listener), ssrc(ssrc), timer(new TimerHandle(this))
+  KeyFrameRequestDelayer::Listener* listener, SharedInterface* shared, uint32_t ssrc, uint32_t delay)
+  : listener(listener), ssrc(ssrc), timer(shared->CreateTimer(this))
 {
 	MS_TRACE();
 
@@ -67,8 +67,8 @@ void RTC::KeyFrameRequestDelayer::OnTimer(TimerHandleInterface* timer)
 /* KeyFrameRequestManager methods. */
 
 RTC::KeyFrameRequestManager::KeyFrameRequestManager(
-  KeyFrameRequestManager::Listener* listener, uint32_t keyFrameRequestDelay)
-  : listener(listener), keyFrameRequestDelay(keyFrameRequestDelay)
+  KeyFrameRequestManager::Listener* listener, SharedInterface* shared, uint32_t keyFrameRequestDelay)
+  : listener(listener), shared(shared), keyFrameRequestDelay(keyFrameRequestDelay)
 {
 	MS_TRACE();
 }
@@ -119,7 +119,7 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 			MS_DEBUG_DEV("creating a delayer for the given ssrc");
 
 			this->mapSsrcKeyFrameRequestDelayer[ssrc] =
-			  new KeyFrameRequestDelayer(this, ssrc, this->keyFrameRequestDelay);
+			  new KeyFrameRequestDelayer(this, this->shared, ssrc, this->keyFrameRequestDelay);
 		}
 	}
 
@@ -136,7 +136,7 @@ void RTC::KeyFrameRequestManager::KeyFrameNeeded(uint32_t ssrc)
 		return;
 	}
 
-	this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
+	this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, this->shared, ssrc);
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);
 }
@@ -159,7 +159,7 @@ void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
 		}
 
 		this->mapSsrcKeyFrameRequestDelayer[ssrc] =
-		  new KeyFrameRequestDelayer(this, ssrc, this->keyFrameRequestDelay);
+		  new KeyFrameRequestDelayer(this, this->shared, ssrc, this->keyFrameRequestDelay);
 	}
 
 	auto it = this->mapSsrcPendingKeyFrameInfo.find(ssrc);
@@ -174,7 +174,7 @@ void RTC::KeyFrameRequestManager::ForceKeyFrameNeeded(uint32_t ssrc)
 	}
 	else
 	{
-		this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, ssrc);
+		this->mapSsrcPendingKeyFrameInfo[ssrc] = new PendingKeyFrameInfo(this, this->shared, ssrc);
 	}
 
 	this->listener->OnKeyFrameNeeded(this, ssrc);

@@ -33,8 +33,11 @@ namespace RTC
 		/* Instance methods. */
 
 		RtpStreamSend::RtpStreamSend(
-		  RTP::RtpStreamSend::Listener* listener, RTP::RtpStream::Params& params, std::string& mid)
-		  : RTP::RtpStream::RtpStream(listener, params, 10),
+		  RTP::RtpStreamSend::Listener* listener,
+		  SharedInterface* shared,
+		  RTP::RtpStream::Params& params,
+		  std::string& mid)
+		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
 		    mid(mid),
 		    transmissionCounter(/*ignorePaddingOnlyPackets*/ true)
 		{

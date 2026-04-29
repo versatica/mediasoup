@@ -4,7 +4,6 @@
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "handles/TimerHandle.hpp"
 
 namespace RTC
 {
@@ -18,10 +17,10 @@ namespace RTC
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener, unsigned int sendNackDelayMs)
+	NackGenerator::NackGenerator(Listener* listener, SharedInterface* shared, unsigned int sendNackDelayMs)
 	  : listener(listener),
 	    sendNackDelayMs(sendNackDelayMs),
-	    timer(new TimerHandle(this)),
+	    timer(shared->CreateTimer(this)),
 	    rtt(DefaultRtt)
 	{
 		MS_TRACE();

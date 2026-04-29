@@ -5,7 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "handles/TimerHandle.hpp"
 
 namespace RTC
 {
@@ -21,9 +20,10 @@ namespace RTC
 
 	TransportCongestionControlServer::TransportCongestionControlServer(
 	  RTC::TransportCongestionControlServer::Listener* listener,
+	  SharedInterface* shared,
 	  RTC::BweType bweType,
 	  size_t maxRtcpPacketLen)
-	  : listener(listener), bweType(bweType), maxRtcpPacketLen(maxRtcpPacketLen)
+	  : listener(listener), shared(shared), bweType(bweType), maxRtcpPacketLen(maxRtcpPacketLen)
 	{
 		MS_TRACE();
 
@@ -35,7 +35,7 @@ namespace RTC
 				ResetTransportCcFeedback(0u);
 
 				// Create the feedback send periodic timer.
-				this->transportCcFeedbackSendPeriodicTimer = new TimerHandle(this);
+				this->transportCcFeedbackSendPeriodicTimer = this->shared->CreateTimer(this);
 
 				break;
 			}

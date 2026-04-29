@@ -6,7 +6,6 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "handles/TimerHandle.hpp"
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <uv.h>
@@ -710,8 +709,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	DtlsTransport::DtlsTransport(Listener* listener)
-	  : listener(listener), ssl(SSL_new(DtlsTransport::sslCtx))
+	DtlsTransport::DtlsTransport(Listener* listener, SharedInterface* shared)
+	  : listener(listener), shared(shared), ssl(SSL_new(DtlsTransport::sslCtx))
 	{
 		MS_TRACE();
 
@@ -765,7 +764,7 @@ namespace RTC
 		DTLS_set_timer_cb(this->ssl, onSslDtlsTimer);
 
 		// Set the DTLS timer.
-		this->timer = new TimerHandle(this);
+		this->timer = this->shared->CreateTimer(this);
 
 		return;
 

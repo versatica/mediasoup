@@ -2,6 +2,7 @@
 #define MS_RTC_DTLS_TRANSPORT_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "FBS/webRtcTransport.h"
 #include "RTC/SrtpSession.hpp"
 #include "handles/TimerHandleInterface.hpp"
@@ -135,7 +136,7 @@ namespace RTC
 		static const std::vector<SrtpCryptoSuiteMapEntry> SrtpCryptoSuites;
 
 	public:
-		explicit DtlsTransport(Listener* listener);
+		explicit DtlsTransport(Listener* listener, SharedInterface* shared);
 		~DtlsTransport() override;
 
 	public:
@@ -202,6 +203,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		// Allocated by this.
 		SSL* ssl{ nullptr };
 		BIO* sslBioFromNetwork{ nullptr }; // The BIO from which ssl reads.

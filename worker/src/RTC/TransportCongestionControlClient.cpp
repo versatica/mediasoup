@@ -5,7 +5,6 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "handles/TimerHandle.hpp"
 #include <libwebrtc/api/transport/network_types.h> // webrtc::TargetRateConstraints
 #include <limits>                                  // std::numeric_limits
 
@@ -25,11 +24,13 @@ namespace RTC
 
 	TransportCongestionControlClient::TransportCongestionControlClient(
 	  RTC::TransportCongestionControlClient::Listener* listener,
+	  SharedInterface* shared,
 	  RTC::BweType bweType,
 	  uint32_t initialAvailableBitrate,
 	  uint32_t maxOutgoingBitrate,
 	  uint32_t minOutgoingBitrate)
 	  : listener(listener),
+	    shared(shared),
 	    bweType(bweType),
 	    initialAvailableBitrate(
 	      std::max<uint32_t>(
@@ -76,7 +77,7 @@ namespace RTC
 		// videos are muted or using screensharing with still images)
 		this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
 
-		this->processTimer = new TimerHandle(this);
+		this->processTimer = this->shared->CreateTimer(this);
 
 		this->processTimer->Start(
 		  std::min(

@@ -7,7 +7,6 @@
 #endif
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include "handles/TimerHandle.hpp"
 #include <usrsctp.h>
 #include <cstdio> // std::vsnprintf()
 #include <mutex>
@@ -112,13 +111,13 @@ void DepUsrSCTP::ClassDestroy()
 	}
 }
 
-void DepUsrSCTP::CreateChecker()
+void DepUsrSCTP::CreateChecker(SharedInterface* shared)
 {
 	MS_TRACE();
 
 	MS_ASSERT(DepUsrSCTP::checker == nullptr, "Checker already created");
 
-	DepUsrSCTP::checker = new DepUsrSCTP::Checker();
+	DepUsrSCTP::checker = new DepUsrSCTP::Checker(shared);
 }
 
 void DepUsrSCTP::CloseChecker()
@@ -217,7 +216,7 @@ RTC::SctpAssociation* DepUsrSCTP::RetrieveSctpAssociation(uintptr_t id)
 
 /* DepUsrSCTP::Checker instance methods. */
 
-DepUsrSCTP::Checker::Checker() : timer(new TimerHandle(this))
+DepUsrSCTP::Checker::Checker(SharedInterface* shared) : timer(shared->CreateTimer(this))
 {
 	MS_TRACE();
 }

@@ -1,7 +1,5 @@
-#include "Shared.hpp"
 #include "flatbuffers/buffer.h"
-#include "Channel/ChannelNotifier.hpp"
-#include "Channel/ChannelSocket.hpp"
+#include "test/include/MockShared.hpp"
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
 #include "RTC/RTP/Packet.hpp"
@@ -15,11 +13,8 @@
 namespace
 {
 	// NOLINTBEGIN(readability-identifier-naming)
-	const uint8_t payloadType       = 111;
-	auto* channelMessageRegistrator = new ChannelMessageRegistrator();
-	auto* channelSocket             = new Channel::ChannelSocket();
-	auto* channelNotifier           = new Channel::ChannelNotifier(channelSocket);
-	auto shared                     = Shared(channelMessageRegistrator, channelNotifier);
+	const uint8_t payloadType = 111;
+	MockShared shared;
 	// NOLINTEND(readability-identifier-naming)
 
 	class RtpStreamRecvListener : public RTC::RTP::RtpStreamRecv::Listener
@@ -142,7 +137,7 @@ namespace
 		const auto* consumeRequest = flatbuffers::GetRoot<FBS::Transport::ConsumeRequest>(buf);
 
 		return std::make_unique<RTC::SimpleConsumer>(
-		  &shared,
+		  std::addressof(shared),
 		  consumeRequest->consumerId()->str(),
 		  consumeRequest->producerId()->str(),
 		  listener,
@@ -154,7 +149,8 @@ namespace
 		RtpStreamRecvListener streamRecvListener;
 		RTC::RTP::RtpStream::Params params;
 
-		return std::make_unique<RTC::RTP::RtpStreamRecv>(&streamRecvListener, params, 0u, false);
+		return std::make_unique<RTC::RTP::RtpStreamRecv>(
+		  &streamRecvListener, std::addressof(shared), params, 0u, false);
 	}
 
 	/**

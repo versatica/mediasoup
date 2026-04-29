@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "SharedInterface.hpp"
 #include "FBS/rtpStream.h"
 #include "RTC/RTCP/FeedbackPsFir.hpp"           // IWYU pragma: export
 #include "RTC/RTCP/FeedbackPsPli.hpp"           // IWYU pragma: export
@@ -61,7 +62,11 @@ namespace RTC
 			};
 
 		public:
-			RtpStream(RTP::RtpStream::Listener* listener, RTP::RtpStream::Params& params, uint8_t initialScore);
+			RtpStream(
+			  RTP::RtpStream::Listener* listener,
+			  SharedInterface* shared,
+			  RTP::RtpStream::Params& params,
+			  uint8_t initialScore);
 			virtual ~RtpStream();
 
 			flatbuffers::Offset<FBS::RtpStream::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
@@ -185,6 +190,7 @@ namespace RTC
 		protected:
 			// Given as argument.
 			RTP::RtpStream::Listener* listener{ nullptr };
+			SharedInterface* shared{ nullptr };
 			Params params;
 			// Others.
 			//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.

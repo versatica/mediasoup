@@ -1090,7 +1090,8 @@ namespace RTC
 			}
 		}
 
-		this->rtpStream = new RTC::RTP::RtpStreamSend(this, params, this->rtpParameters.mid);
+		this->rtpStream =
+		  new RTC::RTP::RtpStreamSend(this, this->shared, params, this->rtpParameters.mid);
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.

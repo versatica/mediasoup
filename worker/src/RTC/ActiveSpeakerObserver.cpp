@@ -4,7 +4,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "handles/TimerHandle.hpp"
 
 namespace RTC
 {
@@ -106,7 +105,7 @@ namespace RTC
 			this->interval = 5000;
 		}
 
-		this->periodicTimer = new TimerHandle(this);
+		this->periodicTimer = this->shared->CreateTimer(this);
 
 		this->periodicTimer->Start(interval, interval);
 

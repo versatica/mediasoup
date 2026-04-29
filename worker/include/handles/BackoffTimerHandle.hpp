@@ -6,11 +6,17 @@
 #include "handles/TimerHandle.hpp"
 #include "handles/TimerHandleInterface.hpp"
 
-class Shared; // Forward declaration.
+// Forward declaration.
+class Shared;
+// TODO: Temporal until we have MockBackoffTimerHandle.
+class MockShared;
 
 class BackoffTimerHandle : public BackoffTimerHandleInterface, public TimerHandleInterface::Listener
 {
-	friend class Shared; // Only Shared class can invoke the constructor.
+	// Only Shared class can invoke the constructor.
+	friend class Shared;
+	// TODO: Temporal until we have MockBackoffTimerHandle.
+	friend class MockShared;
 
 private:
 	explicit BackoffTimerHandle(const BackoffTimerHandleOptions& options);

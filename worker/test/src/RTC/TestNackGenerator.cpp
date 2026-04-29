@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "test/include/MockShared.hpp"
 #include "RTC/NackGenerator.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Packet.hpp"
@@ -126,11 +127,14 @@ SCENARIO("NACK generator", "[rtp][rtcp][nack]")
 		bool keyFrameRequiredTriggered{ false };
 	};
 
+	MockShared shared;
+
 	auto validate =
-	  [](std::unique_ptr<RTC::RTP::Packet>& packet, std::vector<TestNackGeneratorInput>& inputs)
+	  [&shared](std::unique_ptr<RTC::RTP::Packet>& packet, std::vector<TestNackGeneratorInput>& inputs)
 	{
 		TestNackGeneratorListener listener;
-		auto nackGenerator = RTC::NackGenerator(&listener, SendNackDelay);
+		auto nackGenerator =
+		  RTC::NackGenerator(std::addressof(listener), std::addressof(shared), SendNackDelay);
 
 		for (auto input : inputs)
 		{

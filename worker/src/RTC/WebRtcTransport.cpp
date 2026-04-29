@@ -226,10 +226,14 @@ namespace RTC
 
 			// Create a ICE server.
 			this->iceServer = new RTC::ICE::IceServer(
-			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32), iceConsentTimeout);
+			  this,
+			  this->shared,
+			  Utils::Crypto::GetRandomString(32),
+			  Utils::Crypto::GetRandomString(32),
+			  iceConsentTimeout);
 
 			// Create a DTLS transport.
-			this->dtlsTransport = new RTC::DtlsTransport(this);
+			this->dtlsTransport = new RTC::DtlsTransport(this, this->shared);
 
 			// NOTE: This may throw.
 			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
@@ -296,10 +300,14 @@ namespace RTC
 
 			// Create a ICE server.
 			this->iceServer = new RTC::ICE::IceServer(
-			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32), iceConsentTimeout);
+			  this,
+			  this->shared,
+			  Utils::Crypto::GetRandomString(32),
+			  Utils::Crypto::GetRandomString(32),
+			  iceConsentTimeout);
 
 			// Create a DTLS transport.
-			this->dtlsTransport = new RTC::DtlsTransport(this);
+			this->dtlsTransport = new RTC::DtlsTransport(this, this->shared);
 
 			// Notify the webRtcTransportListener.
 			this->webRtcTransportListener->OnWebRtcTransportCreated(this);

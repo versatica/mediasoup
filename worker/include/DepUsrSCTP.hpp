@@ -2,6 +2,7 @@
 #define MS_DEP_USRSCTP_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
@@ -12,7 +13,7 @@ private:
 	class Checker : public TimerHandleInterface::Listener
 	{
 	public:
-		Checker();
+		Checker(SharedInterface* shared);
 		~Checker() override;
 
 	public:
@@ -31,7 +32,7 @@ private:
 public:
 	static void ClassInit();
 	static void ClassDestroy();
-	static void CreateChecker();
+	static void CreateChecker(SharedInterface* shared);
 	static void CloseChecker();
 	static uintptr_t GetNextSctpAssociationId();
 	static void RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation);

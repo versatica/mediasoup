@@ -2,6 +2,7 @@
 #define MS_RTC_TRANSPORT_CONGESTION_CONTROL_SERVER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/Packet.hpp"
@@ -30,6 +31,7 @@ namespace RTC
 	public:
 		TransportCongestionControlServer(
 		  RTC::TransportCongestionControlServer::Listener* listener,
+		  SharedInterface* shared,
 		  RTC::BweType bweType,
 		  size_t maxRtcpPacketLen);
 		~TransportCongestionControlServer() override;
@@ -79,6 +81,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		// Allocated by this.
 		TimerHandleInterface* transportCcFeedbackSendPeriodicTimer{ nullptr };
 		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> transportCcFeedbackPacket;

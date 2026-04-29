@@ -5,11 +5,24 @@
 #include "handles/TimerHandleInterface.hpp"
 #include <uv.h>
 
+// Forward declaration.
+class Shared;
+class BackoffTimerHandle;
+// TODO: Temporal until we have MockBackoffTimerHandle.
+class MockShared;
+
 class TimerHandle : public TimerHandleInterface
 {
-public:
+	// Only Shared and BackoffTimerHandle classes can invoke the constructor.
+	friend class Shared;
+	friend class BackoffTimerHandle;
+	// TODO: Temporal until we have MockBackoffTimerHandle.
+	friend class MockShared;
+
+private:
 	explicit TimerHandle(TimerHandleInterface::Listener* listener);
 
+public:
 	TimerHandle& operator=(const TimerHandle&) = delete;
 
 	TimerHandle(const TimerHandle&) = delete;

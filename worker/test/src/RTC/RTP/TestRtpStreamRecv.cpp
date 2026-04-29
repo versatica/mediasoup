@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "test/include/MockShared.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -118,8 +119,10 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		std::vector<uint16_t> nackedSeqNumbers;
 	};
 
+	MockShared shared;
+
 	// clang-format off
-	uint8_t buffer[] =
+	alignas(4) uint8_t buffer[] =
 	{
 		0x80, 0x01, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x04,
@@ -148,7 +151,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	SECTION("NACK one packet")
 	{
 		RtpStreamRecvListener listener;
-		RTC::RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet.get());
@@ -177,7 +181,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	SECTION("receive RTX before corresponding RTP")
 	{
 		RtpStreamRecvListener listener;
-		RTC::RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet.get());
@@ -210,7 +215,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	SECTION("wrapping sequence numbers")
 	{
 		RtpStreamRecvListener listener;
-		RTC::RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(0xfffe);
 		rtpStream.ReceivePacket(packet.get());
@@ -230,7 +236,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	SECTION("require key frame")
 	{
 		RtpStreamRecvListener listener;
-		RTC::RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet.get());

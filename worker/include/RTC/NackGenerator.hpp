@@ -2,6 +2,7 @@
 #define MS_RTC_NACK_GENERATOR_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/SeqManager.hpp"
 #include "handles/TimerHandleInterface.hpp"
@@ -47,7 +48,7 @@ namespace RTC
 		};
 
 	public:
-		explicit NackGenerator(Listener* listener, unsigned int sendNackDelayMs);
+		explicit NackGenerator(Listener* listener, SharedInterface* shared, unsigned int sendNackDelayMs);
 		~NackGenerator() override;
 
 		bool ReceivePacket(const RTC::RTP::Packet* packet, bool isRecovered);

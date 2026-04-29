@@ -2,6 +2,7 @@
 #define MS_RTC_TRANSPORT_CONGESTION_CONTROL_CLIENT_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -54,6 +55,7 @@ namespace RTC
 	public:
 		TransportCongestionControlClient(
 		  RTC::TransportCongestionControlClient::Listener* listener,
+		  SharedInterface* shared,
 		  RTC::BweType bweType,
 		  uint32_t initialAvailableBitrate,
 		  uint32_t maxOutgoingBitrate,
@@ -111,6 +113,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		// Allocated by this.
 		webrtc::NetworkControllerFactoryInterface* controllerFactory{ nullptr };
 		webrtc::RtpTransportControllerSend* rtpTransportControllerSend{ nullptr };

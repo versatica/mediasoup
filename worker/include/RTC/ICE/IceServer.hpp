@@ -2,6 +2,7 @@
 #define MS_RTC_ICE_ICE_SERVER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "FBS/webRtcTransport.h"
 #include "RTC/ICE/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -65,6 +66,7 @@ namespace RTC
 		public:
 			IceServer(
 			  Listener* listener,
+			  SharedInterface* shared,
 			  const std::string& usernameFragment,
 			  const std::string& password,
 			  uint8_t consentTimeoutSec);
@@ -136,6 +138,7 @@ namespace RTC
 		private:
 			// Passed by argument.
 			Listener* listener{ nullptr };
+			SharedInterface* shared{ nullptr };
 			std::string usernameFragment;
 			std::string password;
 			uint16_t consentTimeoutMs{ 30000u };

@@ -3,7 +3,6 @@
 
 #include "RTC/ICE/IceServer.hpp"
 #include "Logger.hpp"
-#include "handles/TimerHandle.hpp"
 #include <string_view>
 
 namespace RTC
@@ -73,10 +72,11 @@ namespace RTC
 
 		IceServer::IceServer(
 		  Listener* listener,
+		  SharedInterface* shared,
 		  const std::string& usernameFragment,
 		  const std::string& password,
 		  uint8_t consentTimeoutSec)
-		  : listener(listener), usernameFragment(usernameFragment), password(password)
+		  : listener(listener), shared(shared), usernameFragment(usernameFragment), password(password)
 		{
 			MS_TRACE();
 
@@ -936,7 +936,7 @@ namespace RTC
 			// Create the ICE consent check timer if it doesn't exist.
 			if (!this->consentCheckTimer)
 			{
-				this->consentCheckTimer = new TimerHandle(this);
+				this->consentCheckTimer = this->shared->CreateTimer(this);
 			}
 
 			this->consentCheckTimer->Start(this->consentTimeoutMs);

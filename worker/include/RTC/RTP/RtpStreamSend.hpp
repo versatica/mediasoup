@@ -36,7 +36,10 @@ namespace RTC
 
 		public:
 			RtpStreamSend(
-			  RTP::RtpStreamSend::Listener* listener, RTP::RtpStream::Params& params, std::string& mid);
+			  RTP::RtpStreamSend::Listener* listener,
+			  SharedInterface* shared,
+			  RTP::RtpStream::Params& params,
+			  std::string& mid);
 			~RtpStreamSend() override;
 
 			flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(

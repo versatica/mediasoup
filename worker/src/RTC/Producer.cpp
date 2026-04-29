@@ -209,7 +209,8 @@ namespace RTC
 		{
 			auto keyFrameRequestDelay = data->keyFrameRequestDelay();
 
-			this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameRequestDelay);
+			this->keyFrameRequestManager =
+			  new RTC::KeyFrameRequestManager(this, this->shared, keyFrameRequestDelay);
 		}
 
 		// NOTE: This may throw.
@@ -1131,7 +1132,8 @@ namespace RTC
 		  this->type == RtpParameters::Type::SIMULCAST && this->rtpMapping.encodings.size() > 1;
 
 		// Create a RtpStreamRecv for receiving a media stream.
-		auto* rtpStream = new RTC::RTP::RtpStreamRecv(this, params, SendNackDelay, useRtpInactivityCheck);
+		auto* rtpStream =
+		  new RTC::RTP::RtpStreamRecv(this, this->shared, params, SendNackDelay, useRtpInactivityCheck);
 
 		// Insert into the maps.
 		this->mapSsrcRtpStream[ssrc]              = rtpStream;

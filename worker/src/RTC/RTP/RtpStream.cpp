@@ -19,8 +19,15 @@ namespace RTC
 		/* Instance methods. */
 
 		RtpStream::RtpStream(
-		  RTP::RtpStream::Listener* listener, RTP::RtpStream::Params& params, uint8_t initialScore)
-		  : listener(listener), params(params), score(initialScore), activeSinceMs(DepLibUV::GetTimeMs())
+		  RTP::RtpStream::Listener* listener,
+		  SharedInterface* shared,
+		  RTP::RtpStream::Params& params,
+		  uint8_t initialScore)
+		  : listener(listener),
+		    shared(shared),
+		    params(params),
+		    score(initialScore),
+		    activeSinceMs(DepLibUV::GetTimeMs())
 		{
 			MS_TRACE();
 		}

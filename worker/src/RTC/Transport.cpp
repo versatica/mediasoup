@@ -6,7 +6,6 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "handles/TimerHandle.hpp"
 #ifdef MS_LIBURING_SUPPORTED
 #include "DepLibUring.hpp"
 #endif
@@ -139,7 +138,7 @@ namespace RTC
 		}
 
 		// Create the RTCP timer.
-		this->rtcpTimer = new TimerHandle(this);
+		this->rtcpTimer = this->shared->CreateTimer(this);
 	}
 
 	Transport::~Transport()
@@ -882,7 +881,7 @@ namespace RTC
 					if (createTccServer)
 					{
 						this->tccServer = std::make_shared<RTC::TransportCongestionControlServer>(
-						  this, bweType, RTC::Consts::RtcpPacketMaxSize);
+						  this, this->shared, bweType, RTC::Consts::RtcpPacketMaxSize);
 
 						if (this->maxIncomingBitrate != 0u)
 						{
@@ -1075,6 +1074,7 @@ namespace RTC
 
 						this->tccClient = std::make_shared<RTC::TransportCongestionControlClient>(
 						  this,
+						  this->shared,
 						  bweType,
 						  this->initialAvailableOutgoingBitrate,
 						  this->maxOutgoingBitrate,

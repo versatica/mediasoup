@@ -39,7 +39,7 @@ Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
 	if (!Settings::configuration.useBuiltInSctpStack)
 	{
 		// Create the Checker instance in DepUsrSCTP.
-		DepUsrSCTP::CreateChecker();
+		DepUsrSCTP::CreateChecker(this->shared);
 	}
 
 #ifdef MS_LIBURING_SUPPORTED

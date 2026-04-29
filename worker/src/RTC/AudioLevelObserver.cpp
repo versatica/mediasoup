@@ -5,7 +5,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "handles/TimerHandle.hpp"
 #include <absl/container/btree_map.h>
 #include <cmath> // std::lround()
 
@@ -40,7 +39,7 @@ namespace RTC
 			this->interval = 5000;
 		}
 
-		this->periodicTimer = new TimerHandle(this);
+		this->periodicTimer = this->shared->CreateTimer(this);
 
 		this->periodicTimer->Start(this->interval, this->interval);
 

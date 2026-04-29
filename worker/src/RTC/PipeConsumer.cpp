@@ -803,7 +803,8 @@ namespace RTC
 				}
 			}
 
-			auto* rtpStream = new RTC::RTP::RtpStreamSend(this, params, this->rtpParameters.mid);
+			auto* rtpStream =
+			  new RTC::RTP::RtpStreamSend(this, this->shared, params, this->rtpParameters.mid);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())

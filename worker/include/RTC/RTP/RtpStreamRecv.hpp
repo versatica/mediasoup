@@ -46,6 +46,7 @@ namespace RTC
 		public:
 			RtpStreamRecv(
 			  RTP::RtpStreamRecv::Listener* listener,
+			  SharedInterface* shared,
 			  RTP::RtpStream::Params& params,
 			  unsigned int sendNackDelayMs,
 			  bool useRtpInactivityCheck);
