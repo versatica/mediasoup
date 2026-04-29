@@ -496,7 +496,7 @@ def test_asan_undefined(ctx):
         );
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=address -Db_lundef=false'), flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true -Db_sanitize=address -Db_lundef=false'), flatc])
 def fuzzer(ctx):
     """
     Build the mediasoup-worker-fuzzer binary (which uses libFuzzer)
