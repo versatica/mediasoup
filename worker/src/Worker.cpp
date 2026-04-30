@@ -504,7 +504,8 @@ void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
-	// Only needed for executable, library user can close channel earlier and it is fine.
+	// Only needed for executable, library user can close channel earlier and it
+	// is fine.
 #ifdef MS_EXECUTABLE
 	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
@@ -528,11 +529,6 @@ void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 		case SIGINT:
 		case SIGTERM:
 		{
-			if (this->closed)
-			{
-				return;
-			}
-
 			MS_DEBUG_DEV("%s signal received, closing myself", signum == SIGINT ? "INT" : "TERM");
 
 			Close();
@@ -542,7 +538,7 @@ void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 
 		default:
 		{
-			MS_WARN_DEV("received a non handled signal [signum:%d]", signum);
+			MS_WARN_DEV("ignoring received non handled signal [signum:%d]", signum);
 		}
 	}
 }

@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Node: Avoid "worker died" event when the Node application is closed via signal without calling `worker.close()` ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 3.19.21
 
 - Worker: Fix regression in `DirectTransport` when closing a `DataProducer` or `DataConsumer` ([PR #1780](https://github.com/versatica/mediasoup/pull/1780)).

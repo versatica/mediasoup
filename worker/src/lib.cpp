@@ -172,8 +172,12 @@ extern "C" int mediasoup_worker_run(
 		// Ignore some signals.
 		ignoreSignals();
 
+		MS_DEBUG_TAG(info, "creating Worker instance");
+
 		// Run the Worker.
 		const Worker worker(channel.get(), shared.get());
+
+		MS_DEBUG_TAG(info, "Worker instance terminated");
 
 		// Free static stuff.
 		DepLibSRTP::ClassDestroy();
