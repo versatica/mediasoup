@@ -1160,4 +1160,37 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 	}
+
+	SECTION("handles SACKs with out of bounds TSNs")
+	{
+		// Send chunks with TSNs 10, 11, 12, 13, 14, 15, 16
+		for (int i{ 0 }; i < 7; ++i)
+		{
+			buffer.Insert(
+			  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
+		}
+
+		// This NACKs TSN 11, 13, 15 (1st miss indication).
+		std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab1 = {
+			{ 2, 2 }, // TSN 12
+			{ 4, 4 }, // TSN 14
+			{ 6, 6 }  // TSN 16
+		};
+
+		buffer.HandleSack(unwrapper.Unwrap(10), gab1, /*isInFastRecovery*/ false);
+
+		REQUIRE(buffer.GetUnackedItems() == 3);
+
+		// The gap between block1-end (12) and block2-start (1011) causes
+		// NackBetweenAckBlocks to loop TSN 13..1010, but only TSN 13..16 are valid.
+		std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab2 = {
+			{ 1,    1     }, // TSN 12
+			{ 1000, 60000 }  // TSN 1011..60011
+		};
+
+		buffer.HandleSack(unwrapper.Unwrap(11), gab2, /*isInFastRecovery*/ true);
+
+		// Packet 11 has been acknowledged.
+		REQUIRE(buffer.GetUnackedItems() == 2);
+	}
 }

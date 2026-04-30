@@ -682,6 +682,12 @@ namespace RTC
 
 			Item& item = GetItem(tsn);
 
+			// Ignore NACKs for chunks that have already been acknowledged.
+			if (item.IsAcked())
+			{
+				return false;
+			}
+
 			const bool wasOutstanding     = item.IsOutstanding();
 			const Item::NackAction action = item.Nack(retransmitNow);
 
