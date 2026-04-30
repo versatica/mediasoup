@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Node: Avoid "worker died" event when the Node application is closed via signal without calling `worker.close()` ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Node: Avoid "worker died" event when the Node application is closed via signal without calling `worker.close()` ([PR #1788](https://github.com/versatica/mediasoup/pull/1788)).
 
 ### 3.19.21
 
