@@ -1,6 +1,5 @@
 const config = {
 	$schema: 'https://unpkg.com/knip@5/schema.json',
-	entry: ['node/src/index.ts', 'node/src/types.ts', 'node/src/extras.ts'],
 	project: ['node/src/**/*.ts'],
 	ignore: [
 		'node/src/fbsUtils.ts',
