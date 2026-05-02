@@ -1,10 +1,12 @@
 {
 	"compileOnSave": true,
 	"compilerOptions": {
+		"rootDir": "node/src",
+		"outDir": "node/lib",
 		"lib": ["es2024"],
+		"types": ["node", "jest"],
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
-		"outDir": "node/lib",
 		"declaration": true,
 		"declarationMap": true,
 		"emitDeclarationOnly": false,
@@ -12,7 +14,6 @@
 		"isolatedModules": true,
 		"verbatimModuleSyntax": false,
 		"useDefineForClassFields": true,
-		"esModuleInterop": false,
 		"allowImportingTsExtensions": false,
 		"allowUnreachableCode": false,
 		"allowUnusedLabels": false,

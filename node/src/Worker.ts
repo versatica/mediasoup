@@ -1,4 +1,6 @@
-import * as process from 'node:process';
+// NOTE: Must import `process` using default import otherwise we get the
+// `process` namespace and it doesn't have `removeListener()`.
+import process from 'node:process';
 import * as path from 'node:path';
 import type { Duplex } from 'node:stream';
 import { spawn, ChildProcess } from 'node:child_process';
