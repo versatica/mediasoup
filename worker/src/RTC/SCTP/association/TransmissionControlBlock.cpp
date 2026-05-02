@@ -54,6 +54,7 @@ namespace RTC
 		    t3RtxTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-t3-rtx",
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -61,6 +62,7 @@ namespace RTC
 		    delayedAckTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-delayed-ack",
 		        .baseTimeoutMs       = sctpOptions.delayedAckMaxTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = std::nullopt,
@@ -292,14 +294,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto maxRestarts = this->t3RtxTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "T3-rtx timer has expired [%zu/%s]",
-			  this->t3RtxTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
-
 			// In the COOKIE_ECHO state, let the T1-COOKIE timer trigger
 			// retransmissions, to avoid having two timers doing that.
 			if (this->remoteStateCookie.has_value())
@@ -324,24 +318,25 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto maxRestarts = this->delayedAckTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "delayer ack timer has expired [%zu/%s]",
-			  this->delayedAckTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
-
 			// TODO: SCTP: Implement it.
 			// this->dataTracker.HandleDelayedAckTimerExpiry();
 
 			MaySendSackChunk();
 		}
 
-		void TransmissionControlBlock::OnTimer(
+		void TransmissionControlBlock::OnBackoffTimer(
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = backoffTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired %zu/%s]",
+			  backoffTimer->GetLabel().c_str(),
+			  backoffTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->t3RtxTimer.get())
 			{

@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include <limits> // std::numeric_limits()
+#include <string>
 
 class BackoffTimerHandleInterface
 {
@@ -21,7 +22,7 @@ public:
 		 * - If the caller deletes this BackoffTimer instance within the callback
 		 *   it must signal it be setting `stop` to true.
 		 */
-		virtual void OnTimer(
+		virtual void OnBackoffTimer(
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) = 0;
 	};
 
@@ -43,6 +44,10 @@ public:
 		 * Listener on which OnTimer() callback will be invoked.
 		 */
 		BackoffTimerHandleInterface::Listener* listener;
+		/**
+		 * Label.
+		 */
+		std::string label;
 		/**
 		 * Base timeout duration (ms).
 		 */
@@ -98,6 +103,8 @@ public:
 	 * will timeout again within the OnTimer() callback.
 	 */
 	virtual bool IsRunning() const = 0;
+
+	virtual const std::string GetLabel() const = 0;
 
 	/**
 	 * Maximum number of restarts.

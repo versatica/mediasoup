@@ -51,6 +51,7 @@ namespace RTC
 		    t1InitTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-t1-init",
 		        .baseTimeoutMs       = sctpOptions.t1InitTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -59,6 +60,7 @@ namespace RTC
 		    t1CookieTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-t1-cookie",
 		        .baseTimeoutMs       = sctpOptions.t1CookieTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -66,6 +68,7 @@ namespace RTC
 		    t2ShutdownTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-t2-shutdown",
 		        .baseTimeoutMs       = sctpOptions.t2ShutdownTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -2410,14 +2413,6 @@ namespace RTC
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
 
-			const auto maxRestarts = this->t1InitTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "T1-init timer has expired [%zu/%s]",
-			  this->t1InitTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
-
 			AssertState(State::COOKIE_WAIT);
 
 			if (this->t1InitTimer->IsRunning())
@@ -2437,14 +2432,6 @@ namespace RTC
 			MS_TRACE();
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
-
-			const auto maxRestarts = this->t1CookieTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "T1-cookie timer has expired [%zu/%s]",
-			  this->t1CookieTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			AssertState(State::COOKIE_ECHOED);
 
@@ -2469,14 +2456,6 @@ namespace RTC
 			AssertHasTcb();
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
-
-			const auto maxRestarts = this->t2ShutdownTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "T2-shutdown timer has expired %zu/%s]",
-			  this->t2ShutdownTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
 			//
@@ -2786,10 +2765,19 @@ namespace RTC
 			}
 		}
 
-		void Association::OnTimer(
+		void Association::OnBackoffTimer(
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = backoffTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired %zu/%s]",
+			  backoffTimer->GetLabel().c_str(),
+			  backoffTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->t1InitTimer.get())
 			{

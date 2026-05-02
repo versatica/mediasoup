@@ -35,6 +35,7 @@ namespace RTC
 		    intervalTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-heartbeat-interval",
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -42,6 +43,7 @@ namespace RTC
 		    timeoutTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-heartbeat-timeout",
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED,
 		        .maxBackoffTimeoutMs = std::nullopt,
@@ -183,14 +185,6 @@ namespace RTC
 				return;
 			}
 
-			const auto maxRestarts = this->intervalTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "interval timer has expired [%zu/%s]",
-			  this->intervalTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
-
 			this->timeoutTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
 			this->timeoutTimer->Start();
 
@@ -217,14 +211,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto maxRestarts = this->timeoutTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "timeout timer has expired [%zu/%s]",
-			  this->timeoutTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
-
 			// Note that the timeout timer is not restarted. It will be started again when
 			// the interval timer expires.
 			MS_ASSERT(!this->timeoutTimer->IsRunning(), "timeout timer shouldn't be running");
@@ -232,10 +218,19 @@ namespace RTC
 			this->tcbContext->IncrementTxErrorCounter("hearbeat timeout");
 		}
 
-		void HeartbeatHandler::OnTimer(
+		void HeartbeatHandler::OnBackoffTimer(
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = backoffTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired %zu/%s]",
+			  backoffTimer->GetLabel().c_str(),
+			  backoffTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->intervalTimer.get())
 			{
