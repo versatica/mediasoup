@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Node: Update TypeScript to v6 ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Node: Update TypeScript to v6 ([PR #1790](https://github.com/versatica/mediasoup/pull/1790)).
 
 ### 3.19.22
 
