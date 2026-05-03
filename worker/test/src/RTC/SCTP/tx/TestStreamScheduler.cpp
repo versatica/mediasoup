@@ -114,7 +114,7 @@ namespace
 	private:
 		std::deque<std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(uint64_t, size_t)>>
 		  produceQueue;
-		mutable std::deque<size_t> bytesQueue;
+		std::deque<size_t> bytesQueue;
 	};
 
 	class TestStream
@@ -354,9 +354,9 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		producer1.PushBytesToSend(PayloadLength);
 		producer1.PushProduce(createChunk(1, 1, 101));
 		producer1.PushBytesToSend(PayloadLength);
-		producer1.PushBytesToSend(PayloadLength); // When making active again.
 		producer1.PushProduce(createChunk(2, 1, 102));
 		producer1.PushBytesToSend(0);
+		producer1.PushBytesToSend(PayloadLength); // When making active again.
 
 		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
 
@@ -381,14 +381,14 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		RTC::SCTP::StreamScheduler scheduler(Mtu);
 		MockStreamProducer producer1;
 
-		producer1.PushBytesToSend(PayloadLength); // MayMakeActive().
+		producer1.PushBytesToSend(PayloadLength);
 		producer1.PushProduce(createChunk(0, 1, 100));
 		producer1.PushBytesToSend(PayloadLength);
 		producer1.PushProduce(createChunk(1, 1, 101));
-		producer1.PushBytesToSend(PayloadLength); // When making active again.
-		producer1.PushProduce(createChunk(2, 1, 102));
 		producer1.PushBytesToSend(PayloadLength);
+		producer1.PushProduce(createChunk(2, 1, 102));
 		producer1.PushBytesToSend(0);
+		producer1.PushBytesToSend(PayloadLength); // When making active again.
 
 		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
 
@@ -459,7 +459,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		REQUIRE(counts2.at(1) == 5);
 		// stream2 is inative, it is not in the map.
-		REQUIRE(counts2.count(2) == 0);
+		REQUIRE(!counts2.contains(2));
 		REQUIRE(counts2.at(3) == 5);
 		REQUIRE(counts2.at(4) == 5);
 
@@ -519,9 +519,6 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 202)); // t = 210
 		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
 	}
-
-
-
 
 	// Will do weighted fair queuing with three streams having different priority.
 	SECTION("will do weighted fair queuing with same size and different priority")
