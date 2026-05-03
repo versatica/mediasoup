@@ -8,7 +8,6 @@
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include <deque>
-#include <limits>
 #include <optional>
 #include <ostream>
 #include <set>
@@ -28,10 +27,6 @@ namespace RTC
 		 */
 		class OutstandingData
 		{
-		public:
-			static constexpr uint16_t MaxRetransmitsNoLimit{ std::numeric_limits<uint16_t>::max() };
-			static constexpr uint16_t ExpiresAtMsInfinite{ 0 };
-
 #ifdef MS_TEST
 		public:
 			/**
@@ -168,7 +163,7 @@ namespace RTC
 
 			public:
 				Item(
-				  uint32_t messageId,
+				  uint32_t outgoingMessageId,
 				  UserData data,
 				  uint64_t timeSentMs,
 				  uint16_t maxRetransmissions,
@@ -180,9 +175,9 @@ namespace RTC
 				Item& operator=(const Item&) = delete;
 
 			public:
-				uint32_t GetMessageId() const
+				uint32_t GetOutgoingMessageId() const
 				{
-					return this->messageId;
+					return this->outgoingMessageId;
 				}
 
 				uint64_t GetTimeSentMs() const
@@ -261,8 +256,7 @@ namespace RTC
 				 */
 				bool HasExpired(uint64_t nowMs) const
 				{
-					return (
-					  this->expiresAtMs != OutstandingData::ExpiresAtMsInfinite && this->expiresAtMs <= nowMs);
+					return (this->expiresAtMs != Types::ExpiresAtMsInfinite && this->expiresAtMs <= nowMs);
 				}
 
 				uint64_t GetLifecycleId() const
@@ -270,7 +264,7 @@ namespace RTC
 					return this->lifecycleId;
 				}
 
-				const uint32_t messageId;
+				const uint32_t outgoingMessageId;
 				// When the packet was sent, and placed in this queue.
 				const uint64_t timeSentMs;
 				// If the message was sent with a maximum number of retransmissions,
@@ -389,11 +383,11 @@ namespace RTC
 			 * scheduled to be sent, and std::nullopt if it shouldn't be sent.
 			 */
 			std::optional<UnwrappedTsn> Insert(
-			  uint32_t messageId,
+			  uint32_t outgoingMessageId,
 			  const UserData& data,
 			  uint64_t timeSentMs,
-			  uint16_t maxRetransmissions = OutstandingData::MaxRetransmitsNoLimit,
-			  uint64_t expiresAtMs        = OutstandingData::ExpiresAtMsInfinite,
+			  uint16_t maxRetransmissions = Types::MaxRetransmitsNoLimit,
+			  uint64_t expiresAtMs        = Types::ExpiresAtMsInfinite,
 			  uint64_t lifecycleId        = 0);
 
 			/**

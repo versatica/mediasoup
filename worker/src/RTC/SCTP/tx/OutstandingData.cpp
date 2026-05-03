@@ -7,7 +7,6 @@
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
-#include <algorithm>
 #include <map>
 
 namespace RTC
@@ -24,13 +23,13 @@ namespace RTC
 		/* Instance methods. */
 
 		OutstandingData::Item::Item(
-		  uint32_t messageId,
+		  uint32_t outgoingMessageId,
 		  UserData data,
 		  uint64_t timeSentMs,
 		  uint16_t maxRetransmissions,
 		  uint64_t expiresAtMs,
 		  uint64_t lifecycleId)
-		  : messageId(messageId),
+		  : outgoingMessageId(outgoingMessageId),
 		    timeSentMs(timeSentMs),
 		    maxRetransmissions(maxRetransmissions),
 		    expiresAtMs(expiresAtMs),
@@ -92,8 +91,8 @@ namespace RTC
 			MS_TRACE();
 
 			MS_ASSERT(
-			  this->expiresAtMs != OutstandingData::ExpiresAtMsInfinite ||
-			    this->maxRetransmissions != OutstandingData::MaxRetransmitsNoLimit,
+			  this->expiresAtMs != Types::ExpiresAtMsInfinite ||
+			    this->maxRetransmissions != Types::MaxRetransmitsNoLimit,
 			  "item should not have infinite expiration time or its retransmission times shouldn't be the maximum");
 
 			this->lifecycle = Lifecycle::ABANDONED;
@@ -232,7 +231,7 @@ namespace RTC
 		}
 
 		std::optional<OutstandingData::UnwrappedTsn> OutstandingData::Insert(
-		  uint32_t messageId,
+		  uint32_t outgoingMessageId,
 		  const UserData& data,
 		  uint64_t timeSentMs,
 		  uint16_t maxRetransmissions,
@@ -250,7 +249,7 @@ namespace RTC
 
 			const UnwrappedTsn tsn = GetNextTsn();
 			const Item& item       = this->outstandingData.emplace_back(
-			  messageId, data.Clone(), timeSentMs, maxRetransmissions, expiresAtMs, lifecycleId);
+			  outgoingMessageId, data.Clone(), timeSentMs, maxRetransmissions, expiresAtMs, lifecycleId);
 
 			if (item.HasExpired(timeSentMs))
 			{
@@ -739,7 +738,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Erase all remaining chunks from the producer, if any.
-			if (this->discardFromSendQueue(item.GetData().GetStreamId(), item.GetMessageId()))
+			if (this->discardFromSendQueue(item.GetData().GetStreamId(), item.GetOutgoingMessageId()))
 			{
 				// There were remaining chunks to be produced for this message. Since the
 				// receiver may have already received all chunks (up till now) for this
@@ -763,11 +762,11 @@ namespace RTC
 				const UnwrappedTsn tsn = GetNextTsn();
 
 				Item& addedItem = this->outstandingData.emplace_back(
-				  item.GetMessageId(),
+				  item.GetOutgoingMessageId(),
 				  std::move(messageEnd),
 				  /*timeSentMs*/ 0,
 				  /*maxRetransmissions*/ 0,
-				  /*expiresAtMs*/ OutstandingData::ExpiresAtMsInfinite,
+				  /*expiresAtMs*/ Types::ExpiresAtMsInfinite,
 				  /*lifecycleId*/ 0);
 
 				// The added Chunk shouldn't be included in `this->unackedPacketBytes`,
@@ -785,7 +784,7 @@ namespace RTC
 
 				if (
 				  !other.IsAbandoned() && other.GetData().GetStreamId() == item.GetData().GetStreamId() &&
-				  other.GetMessageId() == item.GetMessageId())
+				  other.GetOutgoingMessageId() == item.GetOutgoingMessageId())
 				{
 					MS_WARN_TAG(sctp, "marking Chunk %" PRIu32 " as abandoned", tsn.Wrap());
 

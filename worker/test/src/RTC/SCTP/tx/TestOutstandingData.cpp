@@ -71,7 +71,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	};
 
 	constexpr uint64_t NowMs{ 42 };
-	constexpr uint32_t MessageId{ 17 };
+	constexpr uint32_t OutgoingMessageId{ 17 };
 
 	RTC::SCTP::OutstandingData::UnwrappedTsn::Unwrapper unwrapper;
 	DiscardFromSendQueueTester discardFromSendQueueTester;
@@ -109,7 +109,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	SECTION("insert chunk")
 	{
 		const auto tsn = buffer.Insert(
-		  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
 
 		REQUIRE(tsn.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -133,7 +133,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 	SECTION("acks single chunk")
 	{
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
 
 		const auto ackInfo = buffer.HandleSack(unwrapper.Unwrap(10), {}, false);
 
@@ -161,7 +162,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 	SECTION("acks previous chunk doesn't update")
 	{
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
 
 		REQUIRE(buffer.IsEmpty() == false);
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 1);
@@ -181,8 +183,10 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 	SECTION("acks and nacks with gap-ack-blocks")
 	{
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false), NowMs);
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false), NowMs);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab = {
 			{ 2, 2 }
@@ -213,9 +217,11 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 	SECTION("nacks three times with same TSN doesn't retransmit")
 	{
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false), NowMs);
 
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false), NowMs);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab1 = {
 			{ 2, 2 }
@@ -241,15 +247,17 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 	SECTION("nacks three times results in retransmission")
 	{
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false), NowMs);
 
 		buffer.Insert(
-		  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
 
 		buffer.Insert(
-		  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
 
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false), NowMs);
 
 		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> gab1 = {
 			{ 2, 2 }
@@ -303,25 +311,25 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	SECTION("nacks three times results in abandoning")
 	{
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
@@ -350,7 +358,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Test(
 		  /*expectedCallCount*/ 1,
 		  /*expectedLastStreamId*/ 1,
-		  /*expectedLastOutgoingMessageId*/ MessageId);
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		REQUIRE(
 		  ackInfo.bytesAcked ==
@@ -374,25 +382,25 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	SECTION("nacks three times results in abandoning with placeholder")
 	{
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
@@ -421,7 +429,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Test(
 		  /*expectedCallCount*/ 1,
 		  /*expectedLastStreamId*/ 1,
-		  /*expectedLastOutgoingMessageId*/ MessageId);
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		REQUIRE(
 		  ackInfo.bytesAcked ==
@@ -448,19 +456,19 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		constexpr uint64_t ExpiresAtMs = NowMs + 1;
 
 		auto tsn = buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false),
 		  NowMs,
-		  /*maxRetransmits*/ RTC::SCTP::OutstandingData::MaxRetransmitsNoLimit,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
 		  ExpiresAtMs);
 
 		REQUIRE(tsn.has_value());
 
 		tsn = buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
-		  /*maxRetransmits*/ RTC::SCTP::OutstandingData::MaxRetransmitsNoLimit,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
 		  ExpiresAtMs);
 
 		REQUIRE(tsn.has_value());
@@ -468,10 +476,10 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
 
 		tsn = buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false),
 		  NowMs + 1,
-		  /*maxRetransmits*/ RTC::SCTP::OutstandingData::MaxRetransmitsNoLimit,
+		  /*maxRetransmits*/ RTC::SCTP::Types::MaxRetransmitsNoLimit,
 		  ExpiresAtMs);
 
 		REQUIRE(!tsn.has_value());
@@ -479,7 +487,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Test(
 		  /*expectedCallCount*/ 1,
 		  /*expectedLastStreamId*/ 1,
-		  /*expectedLastOutgoingMessageId*/ MessageId);
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 		REQUIRE(buffer.GetLastCumulativeTsnAck().Wrap() == 9);
@@ -499,19 +507,19 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	SECTION("can generate Forward TSN")
 	{
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
@@ -523,7 +531,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Test(
 		  /*expectedCallCount*/ 1,
 		  /*expectedLastStreamId*/ 1,
-		  /*expectedLastOutgoingMessageId*/ MessageId);
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
 
@@ -557,7 +565,9 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 			const bool isEnd       = (i == 7);
 
 			buffer.Insert(
-			  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, isBeginning, isEnd, false), NowMs);
+			  OutgoingMessageId,
+			  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, isBeginning, isEnd, false),
+			  NowMs);
 		}
 
 		const std::vector<std::pair<uint32_t, RTC::SCTP::OutstandingData::State>> expectedStateAfterInsert = {
@@ -595,13 +605,14 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 	SECTION("MeasureRtt()")
 	{
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
 
 		buffer.Insert(
-		  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs + 1);
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs + 1);
 
 		buffer.Insert(
-		  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs + 2);
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs + 2);
 
 		constexpr uint64_t Duration{ 123 };
 
@@ -622,7 +633,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 			const bool isEnd       = (i == 10);
 
 			buffer.Insert(
-			  MessageId,
+			  OutgoingMessageId,
 			  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, isBeginning, isEnd, false),
 			  NowMs,
 			  /*maxRetransmits*/ 1);
@@ -712,24 +723,24 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  1,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false),
 		  NowMs,
-		  RTC::SCTP::OutstandingData::MaxRetransmitsNoLimit,
-		  RTC::SCTP::OutstandingData::ExpiresAtMsInfinite,
+		  RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  RTC::SCTP::Types::ExpiresAtMsInfinite,
 		  /*lifecycleId*/ 42);
 
 		buffer.Insert(
 		  2,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false),
 		  NowMs,
-		  RTC::SCTP::OutstandingData::MaxRetransmitsNoLimit,
-		  RTC::SCTP::OutstandingData::ExpiresAtMsInfinite,
+		  RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  RTC::SCTP::Types::ExpiresAtMsInfinite,
 		  /*lifecycleId*/ 43);
 
 		buffer.Insert(
 		  3,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false),
 		  NowMs,
-		  RTC::SCTP::OutstandingData::MaxRetransmitsNoLimit,
-		  RTC::SCTP::OutstandingData::ExpiresAtMsInfinite,
+		  RTC::SCTP::Types::MaxRetransmitsNoLimit,
+		  RTC::SCTP::Types::ExpiresAtMsInfinite,
 		  /*lifecycleId*/ 44);
 
 		const auto ackInfo1 = buffer.HandleSack(unwrapper.Unwrap(11), {}, false);
@@ -748,25 +759,25 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	SECTION("lifecyle returns abandoned nacked three times")
 	{
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
@@ -797,7 +808,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Test(
 		  /*expectedCallCount*/ 1,
 		  /*expectedLastStreamId*/ 1,
-		  /*expectedLastOutgoingMessageId*/ MessageId);
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		REQUIRE(ackInfo3.hasPacketLoss == true);
 
@@ -809,29 +820,29 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	SECTION("lifecyle returns abandoned after T3 RTX timer expired")
 	{
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0);
 
 		buffer.Insert(
-		  MessageId,
+		  OutgoingMessageId,
 		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, true, false),
 		  NowMs,
 		  /*maxRetransmits*/ 0,
-		  /*expiresAtMs*/ RTC::SCTP::OutstandingData::ExpiresAtMsInfinite,
+		  /*expiresAtMs*/ RTC::SCTP::Types::ExpiresAtMsInfinite,
 		  /*lifecycleId*/ 42);
 
 		std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>> expectedState = {
@@ -869,7 +880,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		discardFromSendQueueTester.Test(
 		  /*expectedCallCount*/ 1,
 		  /*expectedLastStreamId*/ 1,
-		  /*expectedLastOutgoingMessageId*/ MessageId);
+		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		expectedState = {
 			{ 9,  RTC::SCTP::OutstandingData::State::ACKED     },
@@ -1065,7 +1076,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 	SECTION("treats unacked payload bytes different from packet bytes")
 	{
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
 
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 1);
 		REQUIRE(
@@ -1073,7 +1085,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  RTC::SCTP::DataChunk::DataChunkHeaderLength + Utils::Byte::PadTo4Bytes<size_t>(1));
 		REQUIRE(buffer.GetUnackedItems() == 1);
 
-		buffer.Insert(MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
+		buffer.Insert(
+		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowMs);
 
 		REQUIRE(buffer.GetUnackedPayloadBytes() == 2);
 		REQUIRE(
@@ -1093,7 +1106,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		for (int i{ 10 }; i <= 16; ++i)
 		{
 			buffer.Insert(
-			  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
+			  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
 		}
 
 		// SACK 1: Cumulative Ack = 10. Gap blocks for 12, 14, 16.
@@ -1147,7 +1160,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		for (int i{ 0 }; i < 5; ++i)
 		{
 			buffer.Insert(
-			  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
+			  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
 		}
 
 		// Inject a malformed SACK where the GapAckBlock exceeds the number of
@@ -1167,7 +1180,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		for (int i{ 0 }; i < 7; ++i)
 		{
 			buffer.Insert(
-			  MessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
+			  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false), NowMs);
 		}
 
 		// This NACKs TSN 11, 13, 15 (1st miss indication).
