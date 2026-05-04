@@ -306,7 +306,7 @@ namespace RTC
 			MS_TRACE();
 
 			std::set<uint16_t> expectedActiveStreamIds;
-			std::set<uint16_t> actualActiveStreamIds = this->scheduler.GetActiveStreamsForTesting();
+			const std::set<uint16_t> actualActiveStreamIds = this->scheduler.GetActiveStreamsForTesting();
 
 			size_t totalBufferedAmount{ 0 };
 
@@ -364,7 +364,7 @@ namespace RTC
 			  bytes,
 			  this->value);
 
-			size_t oldValue = this->value;
+			const size_t oldValue = this->value;
 
 			this->value -= bytes;
 
@@ -391,7 +391,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			bool wasActive = GetBytesToSendInNextMessage() > 0;
+			const bool wasActive = GetBytesToSendInNextMessage() > 0;
 
 			this->bufferedAmountThresholdWatcher.Increase(message.GetPayloadLength());
 			this->parent.totalBufferedAmountThresholdWatcher.Increase(message.GetPayloadLength());
@@ -450,8 +450,8 @@ namespace RTC
 
 				// Grab the next `maxLength` fragment from this message and calculate
 				// flags.
-				std::span<const uint8_t> messagePayload = message.GetPayload();
-				std::span<const uint8_t> chunkPayload   = messagePayload.subspan(
+				const std::span<const uint8_t> messagePayload = message.GetPayload();
+				const std::span<const uint8_t> chunkPayload   = messagePayload.subspan(
 				  item.remainingOffset, std::min(messagePayload.size() - item.remainingOffset, maxLength));
 
 				const bool isBeginning = chunkPayload.data() == messagePayload.data();
@@ -593,7 +593,7 @@ namespace RTC
 				return;
 			}
 
-			bool hadPendingItems = !this->items.empty();
+			const bool hadPendingItems = !this->items.empty();
 
 			// https://datatracker.ietf.org/doc/html/rfc8831#section-6.7
 			//
@@ -667,7 +667,7 @@ namespace RTC
 			// This can be called both when an outgoing stream reset has been responded
 			// to, or when the entire SendQueue is reset due to detecting the peer having
 			// restarted. The stream may be in any state at this time.
-			PauseState oldPauseState = this->pauseState;
+			const PauseState oldPauseState = this->pauseState;
 
 			this->pauseState       = PauseState::NOT_PAUSED;
 			this->nextOrderedMid   = 0;
