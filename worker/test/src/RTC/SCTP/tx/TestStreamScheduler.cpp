@@ -94,12 +94,10 @@ namespace
 		std::optional<RTC::SCTP::SendQueueInterface::DataToSend> Produce(uint64_t nowMs, size_t maxLength) override
 		{
 			REQUIRE(!this->produceQueue.empty());
-			REQUIRE(!this->bytesQueue.empty());
 
 			const auto fn = std::move(this->produceQueue.front());
 
 			this->produceQueue.pop_front();
-			this->bytesQueue.pop_front();
 
 			return fn(nowMs, maxLength);
 		}
@@ -108,13 +106,17 @@ namespace
 		{
 			REQUIRE(!this->bytesQueue.empty());
 
-			return this->bytesQueue.front();
+			const size_t bytes = this->bytesQueue.front();
+
+			this->bytesQueue.pop_front();
+
+			return bytes;
 		}
 
 	private:
 		std::deque<std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(uint64_t, size_t)>>
 		  produceQueue;
-		std::deque<size_t> bytesQueue;
+		mutable std::deque<size_t> bytesQueue;
 	};
 
 	class TestStream
@@ -126,15 +128,14 @@ namespace
 		  uint16_t priority,
 		  size_t packetLength = PayloadLength)
 		{
+			this->producer.PushBytesToSend(packetLength); // MayMakeActive().
+
 			// Equivalent to WillRepeatedly() in dcsctp.
 			for (int i{ 0 }; i < 100; ++i)
 			{
 				this->producer.PushProduce(createChunk(i, streamId, i, packetLength));
 				this->producer.PushBytesToSend(packetLength);
 			}
-
-			// End signal.
-			this->producer.PushBytesToSend(0);
 
 			this->stream = scheduler.CreateStream(std::addressof(producer), streamId, priority);
 			this->stream->MayMakeActive();
@@ -355,8 +356,8 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		producer1.PushProduce(createChunk(1, 1, 101));
 		producer1.PushBytesToSend(PayloadLength);
 		producer1.PushProduce(createChunk(2, 1, 102));
-		producer1.PushBytesToSend(0);
 		producer1.PushBytesToSend(PayloadLength); // When making active again.
+		producer1.PushBytesToSend(0);
 
 		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
 
@@ -387,8 +388,8 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		producer1.PushProduce(createChunk(1, 1, 101));
 		producer1.PushBytesToSend(PayloadLength);
 		producer1.PushProduce(createChunk(2, 1, 102));
-		producer1.PushBytesToSend(0);
 		producer1.PushBytesToSend(PayloadLength); // When making active again.
+		producer1.PushBytesToSend(0);
 
 		auto stream1 = scheduler.CreateStream(std::addressof(producer1), 1, 2);
 
