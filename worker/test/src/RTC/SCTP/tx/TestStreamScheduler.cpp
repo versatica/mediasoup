@@ -428,8 +428,9 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 	SECTION("will distribute round-robin packets evenly between two streams")
 	{
 		RTC::SCTP::StreamScheduler scheduler(Mtu);
-		TestStream stream1(scheduler, 1, 1);
-		TestStream stream2(scheduler, 2, 1);
+
+		const TestStream stream1(scheduler, 1, 1);
+		const TestStream stream2(scheduler, 2, 1);
 
 		const auto packetCounts = getPacketCounts(scheduler, 10);
 
@@ -443,8 +444,9 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 	SECTION("will distribute evenly with paused and added streams")
 	{
 		RTC::SCTP::StreamScheduler scheduler(Mtu);
-		TestStream stream1(scheduler, 1, 1);
-		TestStream stream2(scheduler, 2, 1);
+
+		const TestStream stream1(scheduler, 1, 1);
+		const TestStream stream2(scheduler, 2, 1);
 
 		const auto counts1 = getPacketCounts(scheduler, 10);
 
@@ -453,8 +455,8 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream2.GetStream().MakeInactive();
 
-		TestStream stream3(scheduler, 3, 1);
-		TestStream stream4(scheduler, 4, 1);
+		const TestStream stream3(scheduler, 3, 1);
+		const TestStream stream4(scheduler, 4, 1);
 
 		const auto counts2 = getPacketCounts(scheduler, 15);
 
@@ -662,8 +664,8 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		scheduler.EnableMessageInterleaving(true);
 
-		TestStream stream1(scheduler, 1, 100);
-		TestStream stream2(scheduler, 2, 200);
+		const TestStream stream1(scheduler, 1, 100);
+		const TestStream stream2(scheduler, 2, 200);
 
 		const auto packetCounts = getPacketCounts(scheduler, 15);
 
@@ -677,10 +679,10 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		scheduler.EnableMessageInterleaving(true);
 
-		TestStream stream1(scheduler, 1, 100);
-		TestStream stream2(scheduler, 2, 200);
-		TestStream stream3(scheduler, 3, 300);
-		TestStream stream4(scheduler, 4, 400);
+		const TestStream stream1(scheduler, 1, 100);
+		const TestStream stream2(scheduler, 2, 200);
+		const TestStream stream3(scheduler, 3, 300);
+		const TestStream stream4(scheduler, 4, 400);
 
 		const auto packetCounts = getPacketCounts(scheduler, 50);
 
@@ -708,8 +710,8 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		scheduler.EnableMessageInterleaving(true);
 
-		TestStream stream1(scheduler, 1, 100, /*packetLength*/ 8);
-		TestStream stream2(scheduler, 2, 400, /*packetLength*/ 4);
+		const TestStream stream1(scheduler, 1, 100, /*packetLength*/ 8);
+		const TestStream stream2(scheduler, 2, 400, /*packetLength*/ 4);
 
 		const auto packetCounts = getPacketCounts(scheduler, 90);
 

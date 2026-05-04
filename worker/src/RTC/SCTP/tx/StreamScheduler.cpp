@@ -3,6 +3,7 @@
 
 #include "RTC/SCTP/tx/StreamScheduler.hpp"
 #include "Logger.hpp"
+#include <ranges>
 
 namespace RTC
 {
@@ -45,9 +46,8 @@ namespace RTC
 					MS_DEBUG_DEV("producing from previous stream %" PRIu16, this->currentStream->GetStreamId());
 
 					MS_ASSERT(
-					  std::any_of(
-					    this->activeStreams.begin(),
-					    this->activeStreams.end(),
+					  std::ranges::any_of(
+					    this->activeStreams,
 					    [this](const auto* stream)
 					    {
 						    return stream == this->currentStream;
@@ -122,7 +122,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			for (Stream* stream : this->activeStreams)
+			for (const Stream* stream : this->activeStreams)
 			{
 				if (stream->GetNextFinishTime() == 0)
 				{
@@ -178,9 +178,8 @@ namespace RTC
 			this->nextFinishTime = nextFinishTime;
 
 			MS_ASSERT(
-			  !std::any_of(
-			    this->parent.activeStreams.begin(),
-			    this->parent.activeStreams.end(),
+			  !std::ranges::any_of(
+			    this->parent.activeStreams,
 			    [this](const auto* stream)
 			    {
 				    return stream == this;
