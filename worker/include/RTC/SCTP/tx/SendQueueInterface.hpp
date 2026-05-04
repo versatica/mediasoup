@@ -33,7 +33,7 @@ namespace RTC
 				/**
 				 * Partial reliability (RFC 3758).
 				 */
-				uint16_t maxRetransmits = Types::MaxRetransmitsNoLimit;
+				uint16_t maxRetransmissions = Types::MaxRetransmitsNoLimit;
 
 				uint64_t expiresAtMs = Types::ExpiresAtMsInfinite;
 

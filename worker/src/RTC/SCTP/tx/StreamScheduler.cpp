@@ -102,7 +102,6 @@ namespace RTC
 			return dataToSend;
 		}
 
-#ifdef MS_TEST
 		std::set<uint16_t> StreamScheduler::GetActiveStreamsForTesting() const
 		{
 			MS_TRACE();
@@ -116,7 +115,6 @@ namespace RTC
 
 			return streamIds;
 		}
-#endif
 
 		void StreamScheduler::AssertIsConsistent() const
 		{

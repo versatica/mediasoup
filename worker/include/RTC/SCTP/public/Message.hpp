@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_MESSAGE_HPP
 
 #include "common.hpp"
+#include <span>
 #include <vector>
 
 namespace RTC
@@ -47,9 +48,9 @@ namespace RTC
 				return this->ppid;
 			}
 
-			const uint8_t* GetPayload() const
+			std::span<const uint8_t> GetPayload() const
 			{
-				return this->payload.data();
+				return this->payload;
 			}
 
 			size_t GetPayloadLength() const

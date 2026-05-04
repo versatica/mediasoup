@@ -7,7 +7,9 @@
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include "RTC/SCTP/tx/StreamScheduler.hpp"
+#include <deque>
 #include <map>
+#include <vector>
 
 namespace RTC
 {
@@ -40,82 +42,12 @@ namespace RTC
 		 */
 		class RoundRobinSendQueue : public SendQueueInterface
 		{
-		public:
-			RoundRobinSendQueue(
-			  AssociationListener& associationListener,
-			  size_t mtu,
-			  uint16_t defaultPriority,
-			  size_t totalBufferedAmountLowThreshold);
-
-			~RoundRobinSendQueue() override;
-
-		public:
-			/**
-			 * Indicates if the buffer is full. Note that it's up to the caller to
-			 * ensure that the buffer is not full prior to adding new items to it.
-			 */
-			bool IsFull() const;
-
-			/**
-			 * Indicates if the buffer is empty.
-			 */
-			bool IsEmpty() const;
-
-			/**
-			 * Adds the message to be sent using the `sendMessageOptions` provided.
-			 * The current time should be in `nowMs`. Note that it's the responsibility
-			 * of the caller to ensure that the buffer is not full (by calling
-			 * `IsFull()`) before adding messages to it.
-			 */
-			void Add(uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions = {});
-
-			uint16_t GetStreamPriority(uint16_t streamId) const;
-
-			void SetStreamPriority(uint16_t streamId, uint16_t priority);
-
-			// Methods implementing `SendQueueInterface`.
-		public:
-			void EnableMessageInterleaving(bool enabled) override
-			{
-				this->scheduler.EnableMessageInterleaving(enabled);
-			}
-
-			std::optional<DataToSend> Produce(uint64_t nowMs, size_t maxLength) override;
-
-			bool Discard(uint16_t streamId, uint32_t outgoingMessageId) override;
-
-			void PrepareResetStream(uint16_t streamId) override;
-
-			bool HasStreamsReadyToBeReset() const override;
-
-			std::vector<uint16_t> GetStreamsReadyToBeReset() override;
-
-			void CommitResetStreams() override;
-
-			void RollbackResetStreams() override;
-
-			void Reset() override;
-
-			size_t GetStreamBufferedAmount(uint16_t streamId) const override;
-
-			size_t GetTotalBufferedAmount() const override
-			{
-				return this->totalBufferedAmount.GetValue();
-			}
-
-			size_t GetStreamBufferedAmountLowThreshold(uint16_t streamId) const override;
-
-			void SetStreamBufferedAmountLowThreshold(uint16_t streamId, size_t bytes) override;
-
 		private:
 			struct MessageAttributes
 			{
 				bool isUnordered;
-
-				uint16_t maxRetransmits;
-
+				uint16_t maxRetransmissions;
 				uint64_t expiresAtMs;
-
 				uint64_t lifecycleId{ 0 };
 			};
 
@@ -180,9 +112,6 @@ namespace RTC
 				  std::function<void()> onBufferedAmountLow)
 				  : parent(*parent),
 				    schedulerStream(scheduler->CreateStream(this, streamId, priority)),
-				    nextUnorderedMid(0),
-				    nextOrderedMid(0),
-				    nextSsn(0),
 				    bufferedAmountThresholdWatcher(std::move(onBufferedAmountLow))
 				{
 				}
@@ -192,10 +121,13 @@ namespace RTC
 					return this->schedulerStream->GetStreamId();
 				}
 
-				// Enqueues a message to this stream.
+				/**
+				 * Enqueues a message to this stream.
+				 */
 				void Add(Message message, MessageAttributes attributes);
 
 				// Implementing `StreamScheduler::StreamProducer`.
+
 				std::optional<SendQueueInterface::DataToSend> Produce(uint64_t nowMs, size_t maxLength) override;
 
 				size_t GetBytesToSendInNextMessage() const override;
@@ -232,7 +164,7 @@ namespace RTC
 
 				bool IsResetting() const
 				{
-					return this->pauseState == PauseState::kRESETTING;
+					return this->pauseState == PauseState::RESETTING;
 				}
 
 				void SetAsResetting();
@@ -290,7 +222,7 @@ namespace RTC
 					 * The stream has been added to an outgoing stream reset request and a
 					 * response from the peer hasn't been received yet.
 					 */
-					kRESETTING,
+					RESETTING,
 				};
 
 				// An enqueued message and metadata.
@@ -300,7 +232,6 @@ namespace RTC
 					  : outgoingMessageId(outgoingMessageId),
 					    message(std::move(msg)),
 					    attributes(std::move(attributes)),
-					    remainingOffset(0),
 					    remainingLength(message.GetPayloadLength())
 					{
 					}
@@ -310,7 +241,7 @@ namespace RTC
 					MessageAttributes attributes;
 					// The remaining payload (offset and length) to be sent, when it has
 					// been fragmented.
-					size_t remainingOffset;
+					size_t remainingOffset{ 0 };
 					size_t remainingLength;
 					// If set, an allocated Message ID and SSN. Will be allocated when the
 					// first fragment is sent.
@@ -330,14 +261,83 @@ namespace RTC
 				PauseState pauseState = PauseState::NOT_PAUSED;
 				// MIDs are different for unordered and ordered messages sent on a
 				// stream.
-				uint32_t nextUnorderedMid;
-				uint32_t nextOrderedMid;
-				uint16_t nextSsn;
+				uint32_t nextUnorderedMid{ 0 };
+				uint32_t nextOrderedMid{ 0 };
+				uint16_t nextSsn{ 0 };
 				// Enqueued messages, and metadata.
 				std::deque<Item> items;
 				// The current amount of buffered data.
 				ThresholdWatcher bufferedAmountThresholdWatcher;
 			};
+
+		public:
+			RoundRobinSendQueue(
+			  AssociationListener& associationListener,
+			  size_t mtu,
+			  uint16_t defaultPriority,
+			  size_t totalBufferedAmountLowThreshold);
+
+			~RoundRobinSendQueue() override;
+
+		public:
+			/**
+			 * Indicates if the buffer is empty.
+			 */
+			bool IsEmpty() const
+			{
+				return GetTotalBufferedAmount() == 0;
+			}
+
+			/**
+			 * Adds the message to be sent using the `sendMessageOptions` provided.
+			 * The current time should be in `nowMs`. Note that it's the responsibility
+			 * of the caller to ensure that the buffer is not full (by calling
+			 * `IsFull()`) before adding messages to it.
+			 */
+			void Add(uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions = {});
+
+			uint16_t GetStreamPriority(uint16_t streamId) const;
+
+			void SetStreamPriority(uint16_t streamId, uint16_t priority);
+
+			// Methods implementing `SendQueueInterface`.
+		public:
+			void EnableMessageInterleaving(bool enabled) override
+			{
+				this->scheduler.EnableMessageInterleaving(enabled);
+			}
+
+			std::optional<SendQueueInterface::DataToSend> Produce(uint64_t nowMs, size_t maxLength) override;
+
+			bool Discard(uint16_t streamId, uint32_t outgoingMessageId) override;
+
+			void PrepareResetStream(uint16_t streamId) override;
+
+			bool HasStreamsReadyToBeReset() const override;
+
+			std::vector<uint16_t> GetStreamsReadyToBeReset() override;
+
+			void CommitResetStreams() override;
+
+			void RollbackResetStreams() override;
+
+			void Reset() override;
+
+			size_t GetStreamBufferedAmount(uint16_t streamId) const override;
+
+			size_t GetTotalBufferedAmount() const override
+			{
+				return this->totalBufferedAmountThresholdWatcher.GetValue();
+			}
+
+			size_t GetStreamBufferedAmountLowThreshold(uint16_t streamId) const override;
+
+			void SetStreamBufferedAmountLowThreshold(uint16_t streamId, size_t bytes) override;
+
+		private:
+			OutgoingStream& GetOrCreateStreamInfo(uint16_t streamId);
+
+			void AssertIsConsistent() const;
 
 		private:
 			AssociationListener& associationListener;
@@ -345,7 +345,7 @@ namespace RTC
 			uint32_t currentOutgoingMessageId{ 0 };
 			StreamScheduler scheduler;
 			// The total amount of buffer data, for all streams.
-			ThresholdWatcher totalBufferedAmount;
+			ThresholdWatcher totalBufferedAmountThresholdWatcher;
 			// All streams, and messages added to those.
 			std::map<uint16_t, OutgoingStream> streams;
 		};

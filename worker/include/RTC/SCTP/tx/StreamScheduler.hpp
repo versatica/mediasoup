@@ -212,9 +212,7 @@ namespace RTC
 			 */
 			std::optional<SendQueueInterface::DataToSend> Produce(uint64_t nowMs, size_t maxLength);
 
-#ifdef MS_TEST
 			std::set<uint16_t> GetActiveStreamsForTesting() const;
-#endif
 
 		private:
 			void AssertIsConsistent() const;
