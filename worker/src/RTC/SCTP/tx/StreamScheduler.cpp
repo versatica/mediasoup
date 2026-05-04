@@ -222,8 +222,8 @@ namespace RTC
 			if (this->parent.enableMessageInterleaving)
 			{
 				// Perform weighted fair queuing scheduling.
-				return std::max(this->currentVirtualTime, this->parent.virtualTime) +
-				       static_cast<double>(bytesToSendNext) * this->inverseWeight;
+				return this->currentVirtualTime +
+				       (static_cast<double>(bytesToSendNext) * this->inverseWeight);
 			}
 
 			// Perform round-robin scheduling by letting the stream have its next
@@ -231,7 +231,7 @@ namespace RTC
 			// future, just any positive number so that any other stream that has the
 			// same virtual finish time as this stream gets to produce their data
 			// before revisiting this stream.
-			return std::max(this->currentVirtualTime, this->parent.virtualTime) + 1;
+			return this->currentVirtualTime + 1;
 		}
 
 		std::optional<SendQueueInterface::DataToSend> StreamScheduler::Stream::Produce(

@@ -670,5 +670,49 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		REQUIRE(packetCounts.at(2) == 10);
 	}
 
-	// TODO: SCTP: More tests.
+	SECTION("will distribute WFQ packets in four streams by priority")
+	{
+		RTC::SCTP::StreamScheduler scheduler(Mtu);
+
+		scheduler.EnableMessageInterleaving(true);
+
+		TestStream stream1(scheduler, 1, 100);
+		TestStream stream2(scheduler, 2, 200);
+		TestStream stream3(scheduler, 3, 300);
+		TestStream stream4(scheduler, 4, 400);
+
+		const auto packetCounts = getPacketCounts(scheduler, 50);
+
+		REQUIRE(packetCounts.at(1) == 5);
+		REQUIRE(packetCounts.at(2) == 10);
+		REQUIRE(packetCounts.at(3) == 15);
+		REQUIRE(packetCounts.at(4) == 20);
+	}
+
+	// A simple test with two streams of different priority, but sending packets
+	// of different size. Verifies that the ratio of total packet payload
+	// represents their priority.
+	//
+	// In this example,
+	// - stream1 has priority 100 and sends packets of size 8.
+	// -stream2 has priority 400 and sends packets of size 4.
+	//
+	// With round robin, stream1 would get twice as many payload bytes on the wire
+	// as stream2, but with WFQ and a 4x priority increase, stream2 should 4x as
+	// many payload bytes on the wire. That translates to stream2 getting 8x as
+	// many packets on the wire as they are half as large.
+	SECTION("will distribute from two streams fairly")
+	{
+		RTC::SCTP::StreamScheduler scheduler(Mtu);
+
+		scheduler.EnableMessageInterleaving(true);
+
+		TestStream stream1(scheduler, 1, 100, /*packetLength*/ 8);
+		TestStream stream2(scheduler, 2, 400, /*packetLength*/ 4);
+
+		const auto packetCounts = getPacketCounts(scheduler, 90);
+
+		REQUIRE(packetCounts.at(1) == 10);
+		REQUIRE(packetCounts.at(2) == 80);
+	}
 }
