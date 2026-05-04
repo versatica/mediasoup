@@ -335,7 +335,7 @@ namespace RTC
 
 			constexpr uint16_t MaxRetransmitsNoLimit{ std::numeric_limits<uint16_t>::max() };
 
-			constexpr uint16_t ExpiresAtMsInfinite{ 0 };
+			constexpr uint64_t ExpiresAtMsInfinite{ std::numeric_limits<uint64_t>::max() };
 		} // namespace Types
 	} // namespace SCTP
 } // namespace RTC

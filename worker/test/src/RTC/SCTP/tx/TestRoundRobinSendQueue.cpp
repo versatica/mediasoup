@@ -45,4 +45,25 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(dataToSend->data.IsBeginning());
 		REQUIRE(dataToSend->data.IsEnd());
 	}
+
+	SECTION("carve out beginning middle and end")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		std::vector<uint8_t> payload(60);
+
+		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+
+		std::optional<RTC::SCTP::SendQueueInterface::DataToSend> dataToSendBeg =
+		  q.Produce(NowMs, /*maxLength*/ 20);
+
+		REQUIRE(dataToSendBeg.has_value());
+		REQUIRE(dataToSendBeg->data.IsBeginning());
+		REQUIRE(!dataToSendBeg->data.IsEnd());
+
+		// TODO: SCTP: more.
+	}
+
+	// TODO: SCTP: more tests.
 }

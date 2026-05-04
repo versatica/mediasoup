@@ -368,40 +368,40 @@ namespace RTC
 
 				// TODO: SCTP: Implement and uncomment.
 
-				// std::optional<SendQueue::DataToSend> chunkOpt =
+				// std::optional<SendQueueInterface::DataToSend> dataToSend =
 				//   this->sendQueue.Produce(nowMs, maxBytes - this->dataChunkHeaderLength);
 
-				// if (!chunkOpt.has_value())
+				// if (!dataToSend.has_value())
 				// {
 				// 	break;
 				// }
 
-				// const size_t chunkSize = GetSerializedChunkSize(chunkOpt->data);
+				// const size_t chunkSize = GetSerializedChunkSize(dataToSend->data);
 
 				// maxBytes -= chunkSize;
 
-				// this->rwnd -= chunkOpt->data.size();
+				// this->rwnd -= dataToSend->data.size();
 
 				// const std::optional<UnwrappedTsn> tsn = this->outstandingData.Insert(
-				//   chunkOpt->messageId,
-				//   chunkOpt->data,
+				//   dataToSend->messageId,
+				//   dataToSend->data,
 				//   nowMs,
-				//   this->supportsPartialReliability ? chunkOpt->maxRetransmissions
+				//   this->supportsPartialReliability ? dataToSend->maxRetransmissions
 				//                                    : OutstandingData::MaxRetransmitsNoLimit,
-				//   this->supportsPartialReliability ? chunkOpt->expiresAtMs
+				//   this->supportsPartialReliability ? dataToSend->expiresAtMs
 				//                                    : OutstandingData::ExpiresAtMsInfinite,
-				//   chunkOpt->lifecycleId);
+				//   dataToSend->lifecycleId);
 
 				// if (tsn.has_value())
 				// {
-				// 	if (chunkOpt->lifecycleId != 0)
+				// 	if (dataToSend->lifecycleId != 0)
 				// 	{
-				// 		MS_ASSERT(chunkOpt->data.IsEnd(), "data.IsEnd() should return true");
+				// 		MS_ASSERT(dataToSend->data.IsEnd(), "data.IsEnd() should return true");
 
-				// 		this->associationListener.OnAssociationLifecycleMessageFullySent(chunkOpt->lifecycleId);
+				// 		this->associationListener.OnAssociationLifecycleMessageFullySent(dataToSend->lifecycleId);
 				// 	}
 
-				// 	result.emplace_back(tsn->Wrap(), std::move(chunkOpt->data));
+				// 	result.emplace_back(tsn->Wrap(), std::move(dataToSend->data));
 				// }
 			}
 

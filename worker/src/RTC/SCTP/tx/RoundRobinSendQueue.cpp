@@ -428,7 +428,7 @@ namespace RTC
 				if (!item.mid.has_value())
 				{
 					// This entire message has already expired. Try the next one.
-					if (item.attributes.expiresAtMs <= nowMs)
+					if (item.attributes.expiresAtMs != Types::ExpiresAtMsInfinite && item.attributes.expiresAtMs <= nowMs)
 					{
 						HandleMessageExpired(item);
 						this->items.pop_front();
