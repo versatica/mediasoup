@@ -66,7 +66,7 @@ namespace RTC
 
 			const uint16_t streamId = message.GetStreamId();
 
-			GetOrCreateStreamInfo(streamId).Add(std::move(message), std::move(attributes));
+			GetOrCreateStreamInfo(streamId).Add(std::move(message), attributes);
 
 			AssertIsConsistent();
 		}
@@ -400,7 +400,7 @@ namespace RTC
 
 			this->parent.currentOutgoingMessageId = this->parent.currentOutgoingMessageId + 1;
 
-			this->items.emplace_back(outgoingMessageId, std::move(message), std::move(attributes));
+			this->items.emplace_back(outgoingMessageId, std::move(message), attributes);
 
 			if (!wasActive)
 			{
