@@ -696,14 +696,434 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(dataToSendEight->data.GetPayloadLength() == 8);
 	}
 
-	SECTION("doesn't trigger on buffered amount low when set to zero")
+	SECTION("doesn't trigger stream buffered amount low when set to zero")
 	{
 		RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
-		// TODO: SCTP: more here.
+		q.SetStreamBufferedAmountLowThreshold(1, 0);
+
+		REQUIRE(!associationListener.onStreamBufferedAmountLowCalls.contains(1));
 	}
 
-	// TODO: SCTP: more tests.
+	SECTION("triggers stream buffered amount low when sent")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
+
+		REQUIRE(q.GetStreamBufferedAmount(1) == 1);
+
+		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+
+		REQUIRE(dataToSendOne.has_value());
+		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
+		REQUIRE(dataToSendOne->data.GetPayloadLength() == 1);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 0);
+	}
+
+	SECTION("will retrigger stream buffered amount low if adding more")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
+
+		REQUIRE(q.GetStreamBufferedAmount(1) == 1);
+
+		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
+
+		REQUIRE(q.GetStreamBufferedAmount(1) == 1);
+
+		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 2);
+
+		REQUIRE(dataToSendOne.has_value());
+		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
+		REQUIRE(dataToSendOne->data.GetPayloadLength() == 1);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 0);
+	}
+
+	SECTION("only triggers stream buffered amount low when transitioning from above to below or equal")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		q.SetStreamBufferedAmountLowThreshold(1, 1000);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(10)));
+
+		REQUIRE(q.GetStreamBufferedAmount(1) == 10);
+
+		// Shouldn't trigger the event.
+		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(!associationListener.onStreamBufferedAmountLowCalls.contains(1));
+
+		REQUIRE(dataToSendOne.has_value());
+		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
+		REQUIRE(dataToSendOne->data.GetPayloadLength() == 10);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 0);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(20)));
+
+		REQUIRE(q.GetStreamBufferedAmount(1) == 20);
+
+		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(!associationListener.onStreamBufferedAmountLowCalls.contains(1));
+
+		REQUIRE(dataToSendTwo.has_value());
+		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
+		REQUIRE(dataToSendTwo->data.GetPayloadLength() == 20);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 0);
+	}
+
+	SECTION("will trigger stream buffered amount low set above zero")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		q.SetStreamBufferedAmountLowThreshold(1, 700);
+
+		std::vector<uint8_t> payload(1000);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, payload));
+
+		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(dataToSendOne.has_value());
+		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
+		REQUIRE(dataToSendOne->data.GetPayloadLength() == OneFragmentPacketLength);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 900);
+
+		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(dataToSendTwo.has_value());
+		REQUIRE(dataToSendTwo->data.GetPayloadLength() == OneFragmentPacketLength);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 800);
+
+		// It goes beyond 700 bytes, it should trigger the event.
+		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+
+		REQUIRE(dataToSendThree.has_value());
+		REQUIRE(dataToSendThree->data.GetPayloadLength() == OneFragmentPacketLength);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 700);
+
+		// Buffer decreases so it shouldn't emit the event.
+		const auto dataToSendFour = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+
+		REQUIRE(dataToSendFour.has_value());
+		REQUIRE(dataToSendFour->data.GetPayloadLength() == OneFragmentPacketLength);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 600);
+	}
+
+	SECTION("will retrigger stream buffered amount low set above zero")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		q.SetStreamBufferedAmountLowThreshold(1, 700);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1000)));
+
+		const auto dataToSendOne = q.Produce(NowMs, 400);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+
+		REQUIRE(dataToSendOne.has_value());
+		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
+		REQUIRE(dataToSendOne->data.GetPayloadLength() == 400);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 600);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(200)));
+
+		REQUIRE(q.GetStreamBufferedAmount(1) == 800);
+
+		const auto dataToSendTwo = q.Produce(NowMs, 200);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 2);
+
+		REQUIRE(dataToSendTwo.has_value());
+		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
+		REQUIRE(dataToSendTwo->data.GetPayloadLength() == 200);
+		REQUIRE(q.GetStreamBufferedAmount(1) == 600);
+	}
+
+	SECTION("triggers stream buffered amount low on threshold changed")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(100)));
+
+		// Modifying the threshold, still under buffered_amount, should not trigger
+		// event.
+		q.SetStreamBufferedAmountLowThreshold(StreamId, 50);
+		q.SetStreamBufferedAmountLowThreshold(StreamId, 99);
+
+		REQUIRE(!associationListener.onStreamBufferedAmountLowCalls.contains(StreamId));
+
+		// When the threshold reaches buffered_amount, it will trigger event.
+		q.SetStreamBufferedAmountLowThreshold(StreamId, 100);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(StreamId));
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(StreamId) == 1);
+
+		// But not when it's set low again.
+		q.SetStreamBufferedAmountLowThreshold(StreamId, 50);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(StreamId) == 1);
+
+		// But it will trigger when it overshoots.
+		q.SetStreamBufferedAmountLowThreshold(StreamId, 150);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(StreamId) == 2);
+
+		// But not when it's set back to zero.
+		q.SetStreamBufferedAmountLowThreshold(StreamId, 0);
+
+		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(StreamId) == 2);
+	}
+
+	SECTION("total buffered amount low does not trigger on buffer filling up")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		std::vector<uint8_t> payload(BufferedAmountLowThreshold - 1);
+
+		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+
+		REQUIRE(q.GetTotalBufferedAmount() == payload.size());
+
+		// Will not trigger if going above but never below.
+		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(OneFragmentPacketLength)));
+
+		REQUIRE(associationListener.onTotalBufferedAmountLowCalls == 0);
+		REQUIRE(q.GetTotalBufferedAmount() > payload.size());
+	}
+
+	SECTION("triggers total buffered amount low when crossing")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		std::vector<uint8_t> payload(BufferedAmountLowThreshold);
+
+		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+
+		REQUIRE(q.GetTotalBufferedAmount() == payload.size());
+
+		// Reaches it.
+		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(1)));
+
+		// Drain it a bit, will trigger.
+		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(associationListener.onTotalBufferedAmountLowCalls == 1);
+
+		REQUIRE(dataToSendTwo.has_value());
+		REQUIRE(q.GetTotalBufferedAmount() < BufferedAmountLowThreshold);
+	}
+
+	SECTION("will stay in a stream as long as that message is sending")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		constexpr size_t OneFragmentPacketSize = OneFragmentPacketLength;
+
+		q.Add(NowMs, RTC::SCTP::Message(5, Ppid, std::vector<uint8_t>(1)));
+
+		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketSize);
+
+		REQUIRE(dataToSendOne.has_value());
+		REQUIRE(dataToSendOne->data.GetStreamId() == 5);
+		REQUIRE(dataToSendOne->data.GetPayloadLength() == 1);
+
+		// Next, it should pick a different stream.
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(OneFragmentPacketSize * 2)));
+
+		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketSize);
+
+		REQUIRE(dataToSendTwo.has_value());
+		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
+		REQUIRE(dataToSendTwo->data.GetPayloadLength() == OneFragmentPacketSize);
+
+		// It should still stay on the Stream1 now, even if might be tempted to switch
+		// to this stream, as it's the stream following 5.
+		q.Add(NowMs, RTC::SCTP::Message(6, Ppid, std::vector<uint8_t>(1)));
+
+		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketSize);
+
+		REQUIRE(dataToSendThree.has_value());
+		REQUIRE(dataToSendThree->data.GetStreamId() == 1);
+		REQUIRE(dataToSendThree->data.GetPayloadLength() == OneFragmentPacketSize);
+
+		// After stream 1 message is complete, it should move to stream 6.
+		const auto dataToSendFour = q.Produce(NowMs, OneFragmentPacketSize);
+
+		REQUIRE(dataToSendFour.has_value());
+		REQUIRE(dataToSendFour->data.GetStreamId() == 6);
+		REQUIRE(dataToSendFour->data.GetPayloadLength() == 1);
+
+		REQUIRE(q.Produce(NowMs, OneFragmentPacketSize).has_value() == false);
+	}
+
+	SECTION("streams have initial priority")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		REQUIRE(q.GetStreamPriority(1) == DefaultPriority);
+
+		q.Add(NowMs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(40)));
+
+		REQUIRE(q.GetStreamPriority(2) == DefaultPriority);
+	}
+
+	SECTION("can change stream priority")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		q.SetStreamPriority(1, 42);
+
+		REQUIRE(q.GetStreamPriority(1) == 42);
+
+		q.Add(NowMs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(40)));
+		q.SetStreamPriority(2, 42);
+
+		REQUIRE(q.GetStreamPriority(2) == 42);
+	}
+
+	SECTION("will send messages by priority")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		q.EnableMessageInterleaving(true);
+
+		q.SetStreamPriority(1, 10);
+		q.SetStreamPriority(2, 20);
+		q.SetStreamPriority(3, 30);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(40)));
+		q.Add(NowMs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(20)));
+		q.Add(NowMs, RTC::SCTP::Message(3, Ppid, std::vector<uint8_t>(10)));
+
+		const std::vector<uint16_t> expectedStreams = { 3, 2, 2, 1, 1, 1, 1 };
+
+		for (const uint16_t streamId : expectedStreams)
+		{
+			const auto dataToSend = q.Produce(NowMs, 10);
+
+			REQUIRE(dataToSend.has_value());
+			REQUIRE(dataToSend->data.GetStreamId() == streamId);
+		}
+
+		REQUIRE(q.Produce(NowMs, 1).has_value() == false);
+	}
+
+	SECTION("will send lifecycle expire when expired in send queue")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		const std::vector<uint8_t> payload(OneFragmentPacketLength);
+
+		RTC::SCTP::SendMessageOptions options;
+
+		options.lifetimeMs  = 1000;
+		options.lifecycleId = 1;
+
+		q.Add(NowMs, RTC::SCTP::Message(2, Ppid, payload), options);
+
+		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 1);
+		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
+
+		REQUIRE(q.Produce(NowMs + 1001, OneFragmentPacketLength).has_value() == false);
+	}
+
+	SECTION("will send lifecycle expire when discarding during pause")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		const std::vector<uint8_t> payload(120);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, payload), { .lifecycleId = 1 });
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, payload), { .lifecycleId = 2 });
+
+		const auto dataToSendOne = q.Produce(NowMs, 50);
+
+		REQUIRE(dataToSendOne.has_value());
+		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
+
+		REQUIRE(q.GetTotalBufferedAmount() == (2 * payload.size()) - 50);
+
+		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 2);
+		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
+		REQUIRE(associationListener.onAssociationLifecycleMessageEndLifecycleId == 2);
+
+		q.PrepareResetStream(1);
+
+		REQUIRE(q.GetTotalBufferedAmount() == payload.size() - 50);
+	}
+
+	SECTION("will send lifecycle expire when discarding explicitly")
+	{
+		RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::RoundRobinSendQueue q(
+		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+
+		const std::vector<uint8_t> payload(OneFragmentPacketLength + 20);
+
+		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, payload), { .lifecycleId = 1 });
+
+		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+
+		REQUIRE(dataToSendOne.has_value());
+		REQUIRE(!dataToSendOne->data.IsEnd());
+		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
+
+		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 1);
+		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
+		REQUIRE(associationListener.onAssociationLifecycleMessageEndLifecycleId == 1);
+
+		q.Discard(dataToSendOne->data.GetStreamId(), dataToSendOne->outgoingMessageId);
+	}
 }

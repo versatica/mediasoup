@@ -3,7 +3,9 @@
 
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace RTC
@@ -81,17 +83,44 @@ namespace RTC
 			{
 			}
 
-			void OnAssociationStreamBufferedAmountLow(uint16_t /*streamId*/) override
+			void OnAssociationStreamBufferedAmountLow(uint16_t streamId) override
 			{
+				++this->onStreamBufferedAmountLowCalls[streamId];
 			}
 
 			void OnAssociationTotalBufferedAmountLow() override
 			{
+				++this->onTotalBufferedAmountLowCalls;
 			}
 
 			bool OnAssociationIsTransportReadyForSctp() override
 			{
 				return this->transportReady;
+			}
+
+			void OnAssociationLifecycleMessageFullySent(uint64_t lifecycleId) override
+			{
+				this->onAssociationLifecycleMessageFullySentLifecycleId = lifecycleId;
+			}
+
+			void OnAssociationLifecycleMessageExpired(uint64_t lifecycleId, bool maybeDelivered) override
+			{
+				// TODO: SCTP: REMOVE
+				printf("------ OnAssociationLifecycleMessageExpired(lifecycleId:%" PRIu64 ")\n", lifecycleId);
+				this->onAssociationLifecycleMessageExpiredLifecycleId    = lifecycleId;
+				this->onAssociationLifecycleMessageExpiredMaybeDelivered = maybeDelivered;
+			}
+
+			void OnAssociationLifecycleMessageDelivered(uint64_t lifecycleId) override
+			{
+				this->onAssociationLifecycleMessageDeliveredLifecycleId = lifecycleId;
+			}
+
+			void OnAssociationLifecycleMessageEnd(uint64_t lifecycleId) override
+			{
+				// TODO: SCTP: REMOVE
+				printf("------ OnAssociationLifecycleMessageEnd(lifecycleId:%" PRIu64 ")\n", lifecycleId);
+				this->onAssociationLifecycleMessageEndLifecycleId = lifecycleId;
 			}
 
 		public:
@@ -108,9 +137,16 @@ namespace RTC
 			bool errored{ false };
 			Types::ErrorKind erroredErrorKind;
 			std::string erroredErrorMessage;
+			std::unordered_map<uint16_t /*streamId*/, size_t /*cound*/> onStreamBufferedAmountLowCalls;
+			size_t onTotalBufferedAmountLowCalls{ 0 };
 			std::vector<std::vector<uint8_t>> sentPackets;
 			std::vector<Message> receivedMessages;
 			bool transportReady{ true };
+			uint64_t onAssociationLifecycleMessageFullySentLifecycleId{ 0 };
+			uint64_t onAssociationLifecycleMessageExpiredLifecycleId{ 0 };
+			bool onAssociationLifecycleMessageExpiredMaybeDelivered{ false };
+			uint64_t onAssociationLifecycleMessageDeliveredLifecycleId{ 0 };
+			uint64_t onAssociationLifecycleMessageEndLifecycleId{ 0 };
 		};
 	} // namespace SCTP
 } // namespace RTC

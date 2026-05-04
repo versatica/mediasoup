@@ -87,6 +87,14 @@ namespace RTC
 
 			bool OnAssociationIsTransportReadyForSctp() override;
 
+			void OnAssociationLifecycleMessageFullySent(uint64_t lifecycleId) override;
+
+			void OnAssociationLifecycleMessageExpired(uint64_t lifecycleId, bool maybeDelivered) override;
+
+			void OnAssociationLifecycleMessageDelivered(uint64_t lifecycleId) override;
+
+			void OnAssociationLifecycleMessageEnd(uint64_t lifecycleId) override;
+
 		private:
 			AssociationListener* innerListener;
 			bool ready{ false };

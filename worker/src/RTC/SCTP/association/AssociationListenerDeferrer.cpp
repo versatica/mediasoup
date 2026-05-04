@@ -270,5 +270,38 @@ namespace RTC
 			// Will not be deferred but called directly.
 			return this->innerListener->OnAssociationIsTransportReadyForSctp();
 		}
+
+		void AssociationListenerDeferrer::OnAssociationLifecycleMessageFullySent(uint64_t lifecycleId)
+		{
+			MS_TRACE();
+
+			// Will not be deferred but called directly.
+			this->innerListener->OnAssociationLifecycleMessageFullySent(lifecycleId);
+		}
+
+		void AssociationListenerDeferrer::OnAssociationLifecycleMessageExpired(
+		  uint64_t lifecycleId, bool maybeDelivered)
+		{
+			MS_TRACE();
+
+			// Will not be deferred but called directly.
+			this->innerListener->OnAssociationLifecycleMessageExpired(lifecycleId, maybeDelivered);
+		}
+
+		void AssociationListenerDeferrer::OnAssociationLifecycleMessageDelivered(uint64_t lifecycleId)
+		{
+			MS_TRACE();
+
+			// Will not be deferred but called directly.
+			this->innerListener->OnAssociationLifecycleMessageDelivered(lifecycleId);
+		}
+
+		void AssociationListenerDeferrer::OnAssociationLifecycleMessageEnd(uint64_t lifecycleId)
+		{
+			MS_TRACE();
+
+			// Will not be deferred but called directly.
+			this->innerListener->OnAssociationLifecycleMessageEnd(lifecycleId);
+		}
 	} // namespace SCTP
 } // namespace RTC
