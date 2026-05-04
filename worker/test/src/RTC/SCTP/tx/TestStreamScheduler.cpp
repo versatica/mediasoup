@@ -446,7 +446,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		RTC::SCTP::StreamScheduler scheduler(Mtu);
 
 		const TestStream stream1(scheduler, 1, 1);
-		const TestStream stream2(scheduler, 2, 1);
+		TestStream stream2(scheduler, 2, 1);
 
 		const auto counts1 = getPacketCounts(scheduler, 10);
 
