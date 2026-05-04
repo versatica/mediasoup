@@ -45,14 +45,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(!message.GetPayloadLength(), "message payload cannot be empty");
+			MS_ASSERT(message.GetPayloadLength(), "message payload cannot be empty");
 
 			// Any limited lifetime should start counting from now - when the message
 			// has been added to the queue.
 			// `expiresAtMs` is the time when it expires. Which is slightly larger
 			// than the message's lifetime, as the message is alive during its entire
 			// lifetime (which may be zero).
-			MessageAttributes attributes = {
+			const MessageAttributes attributes = {
 				.isUnordered        = sendMessageOptions.unordered,
 				.maxRetransmissions = static_cast<uint16_t>(
 				  sendMessageOptions.maxRetransmissions.has_value()

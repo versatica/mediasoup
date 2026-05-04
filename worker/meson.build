@@ -498,6 +498,8 @@ test_sources = [
   'test/src/RTC/SCTP/tx/TestRetransmissionErrorCounter.cpp',
   'test/src/RTC/SCTP/tx/TestRetransmissionQueue.cpp',
   'test/src/RTC/SCTP/tx/TestRetransmissionTimeout.cpp',
+  'test/src/RTC/SCTP/tx/TestRoundRobinSendQueue.cpp',
+  'test/src/RTC/SCTP/tx/TestOutstandingData.cpp',
   'test/src/RTC/SCTP/tx/TestStreamScheduler.cpp',
   'test/src/RTC/SCTP/packet/TestPacket.cpp',
   'test/src/RTC/SCTP/packet/TestChunk.cpp',
