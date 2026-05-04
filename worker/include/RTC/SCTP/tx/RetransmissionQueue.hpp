@@ -328,7 +328,6 @@ namespace RTC
 			// been cumulative acked. Note that it also contains chunks that have been
 			// acked in gap-ack-blocks.
 			OutstandingData outstandingData;
-			// TODO: SCTP.
 		};
 	} // namespace SCTP
 } // namespace RTC

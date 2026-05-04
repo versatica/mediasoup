@@ -28,17 +28,15 @@ namespace RTC
 		 * properly established, this send queue is always present - even for closed
 		 * connections.
 		 *
-		 * The send queue may trigger callbacks:
-		 * - `OnAssociationStreamBufferedAmountLow()` and
-		 *   `OnAssociationTotalBufferedAmountLow()` will be triggered as defined in
-		 *   their documentation.
-		 * - `OnAssociationLifecycleMessageExpired()` with `maybeDelivered=false`
-		 *   and `OnAssociationLifecycleMessageEnd()` will be triggered when messages
-		 *   have been expired, abandoned or discarded from the send queue. If a
-		 *   message is fully produced, meaning that the last fragment has been
-		 *   produced, the responsibility to send lifecycle events is then
-		 *   transferred to the retransmission queue, which is the one asking to
-		 *   produce the message.
+		 * The send queue may trigger callbacks. `OnAssociationStreamBufferedAmountLow()`
+		 * and `OnAssociationTotalBufferedAmountLow()` will be triggered as defined in
+		 * their documentation. `OnAssociationLifecycleMessageExpired()` with
+		 * `maybeDelivered=false` and `OnAssociationLifecycleMessageEnd()` will be
+		 * triggered when messages have been expired, abandoned or discarded from the
+		 * send queue. If a message is fully produced, meaning that the last fragment
+		 * has been produced, the responsibility to send lifecycle events is then
+		 * transferred to the retransmission queue, which is the one asking to
+		 * produce the message.
 		 */
 		class RoundRobinSendQueue : public SendQueueInterface
 		{
@@ -79,8 +77,7 @@ namespace RTC
 		public:
 			void EnableMessageInterleaving(bool enabled) override
 			{
-				// TODO: SCTP: Implement.
-				// this->scheduler.EnableMessageInterleaving(enabled);
+				this->scheduler.EnableMessageInterleaving(enabled);
 			}
 
 			std::optional<DataToSend> Produce(uint64_t nowMs, size_t maxLength) override;
@@ -346,10 +343,8 @@ namespace RTC
 			AssociationListener& associationListener;
 			const uint16_t defaultPriority;
 			uint32_t currentOutgoingMessageId{ 0 };
-			// TODO: SCTP: Implement.
-			// StreamScheduler scheduler;
+			StreamScheduler scheduler;
 			// The total amount of buffer data, for all streams.
-			// TODO: SCTP: Implement.
 			ThresholdWatcher totalBufferedAmount;
 			// All streams, and messages added to those.
 			std::map<uint16_t, OutgoingStream> streams;

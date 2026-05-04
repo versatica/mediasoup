@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_ROUND_ROBIN_SEND_QUEUE_HPP
-#define MS_RTC_SCTP_ROUND_ROBIN_SEND_QUEUE_HPP
+#ifndef MS_RTC_SCTP_STREAM_SCHEDULER_HPP
+#define MS_RTC_SCTP_STREAM_SCHEDULER_HPP
 
 #include "common.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
