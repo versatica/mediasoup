@@ -160,7 +160,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
-		std::vector<uint8_t> payload(20);
+		const std::vector<uint8_t> payload(20);
 
 		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
@@ -916,7 +916,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
-		std::vector<uint8_t> payload(BufferedAmountLowThreshold - 1);
+		const std::vector<uint8_t> payload(BufferedAmountLowThreshold - 1);
 
 		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
@@ -935,7 +935,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
-		std::vector<uint8_t> payload(BufferedAmountLowThreshold);
+		const std::vector<uint8_t> payload(BufferedAmountLowThreshold);
 
 		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
