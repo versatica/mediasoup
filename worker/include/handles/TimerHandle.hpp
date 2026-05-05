@@ -8,19 +8,12 @@
 // Forward declaration.
 class Shared;
 class BackoffTimerHandle;
-// TODO: Temporal until we have MockBackoffTimerHandle.
-namespace mocks
-{
-	class MockShared;
-}
 
 class TimerHandle : public TimerHandleInterface
 {
 	// Only Shared and BackoffTimerHandle classes can invoke the constructor.
 	friend class Shared;
 	friend class BackoffTimerHandle;
-	// TODO: Temporal until we have MockBackoffTimerHandle.
-	friend class mocks::MockShared;
 
 private:
 	explicit TimerHandle(TimerHandleInterface::Listener* listener);

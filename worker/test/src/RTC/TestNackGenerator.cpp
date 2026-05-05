@@ -1,11 +1,9 @@
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "mocks/include/MockShared.hpp"
 #include "RTC/NackGenerator.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/rtpCommon.hpp"
-#include "RTC/Serializable.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -304,7 +302,4 @@ SCENARIO("NACK generator", "[rtp][rtcp][nack]")
 
 		validate(packet, inputs);
 	}
-
-	// Must run the loop to wait for UV timers and close them.
-	DepLibUV::RunLoop();
 }

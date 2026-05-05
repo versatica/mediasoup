@@ -4,8 +4,6 @@
 #include "SharedInterface.hpp"
 #include "Channel/ChannelMessageRegistrator.hpp"
 #include "Channel/ChannelNotifier.hpp"
-#include "handles/BackoffTimerHandleInterface.hpp"
-#include "handles/TimerHandleInterface.hpp"
 
 class Shared : public SharedInterface
 {

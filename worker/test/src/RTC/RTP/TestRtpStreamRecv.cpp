@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "mocks/include/MockShared.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
@@ -249,7 +248,4 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		listener.shouldTriggerFIR = false;
 		rtpStream.ReceivePacket(packet.get());
 	}
-
-	// Must run the loop to wait for UV timers and close them.
-	DepLibUV::RunLoop();
 }

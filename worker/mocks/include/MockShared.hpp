@@ -5,8 +5,6 @@
 #include "mocks/include/Channel/MockChannelMessageRegistrator.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "handles/BackoffTimerHandleInterface.hpp"
-#include "handles/TimerHandleInterface.hpp"
 
 namespace mocks
 {

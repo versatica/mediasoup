@@ -1,8 +1,6 @@
 #include "mocks/include/MockShared.hpp"
-// TODO: We need MockBackoffTimerHandle class.
-#include "handles/BackoffTimerHandle.hpp"
-// TODO: We need MockTimerHandle class.
-#include "handles/TimerHandle.hpp"
+#include "mocks/include/handles/MockBackoffTimerHandle.hpp"
+#include "mocks/include/handles/MockTimerHandle.hpp"
 
 namespace mocks
 {
@@ -13,14 +11,14 @@ namespace mocks
 	{
 	}
 
-	TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* listener) const
+	TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* /*listener*/) const
 	{
-		return new TimerHandle(listener);
+		return new MockTimerHandle();
 	}
 
 	BackoffTimerHandleInterface* MockShared::CreateBackoffTimer(
 	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const
 	{
-		return new BackoffTimerHandle(options);
+		return new MockBackoffTimerHandle(options);
 	}
 } // namespace mocks
