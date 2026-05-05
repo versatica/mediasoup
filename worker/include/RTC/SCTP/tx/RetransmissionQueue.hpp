@@ -197,8 +197,8 @@ namespace RTC
 			}
 
 			/**
-			 * @see SendQueue for a longer description of these methods related
-			 * to stream resetting.
+			 * @see SendQueueInterface for a longer description of these methods
+			 * related to stream resetting.
 			 */
 			void PrepareResetStream(uint16_t streamId);
 			bool HasStreamsReadyToBeReset() const;
