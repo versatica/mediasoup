@@ -313,7 +313,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
 
-		REQUIRE(q.GetTotalBufferedAmount() == 2 * payload.size() - 50);
+		REQUIRE(q.GetTotalBufferedAmount() == (2 * payload.size()) - 50);
 
 		q.PrepareResetStream(StreamId);
 
@@ -802,7 +802,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.SetStreamBufferedAmountLowThreshold(1, 700);
 
-		std::vector<uint8_t> payload(1000);
+		const std::vector<uint8_t> payload(1000);
 
 		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, payload));
 
