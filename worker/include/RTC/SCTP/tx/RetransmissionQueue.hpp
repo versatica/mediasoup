@@ -217,6 +217,31 @@ namespace RTC
 			{
 				return this->outstandingData.GetChunkStatesForTesting();
 			}
+
+			/**
+			 * Inserts a chunk directly into outstandingData, bypassing the send queue
+			 * and congestion-control bookkeeping. For testing only.
+			 *
+			 * @remarks
+			 * - OutstandingData::Insert() still updates `unackedPayloadBytes` /
+			 *   `unackedPacketBytes` / `unackedItems`, so GetUnackedXxxx() remain
+			 *   correct.
+			 * - `this->cwnd` is NOT decremented. Use SetCwnd() to set a known value
+			 *   when testing cwnd-sensitive paths.
+			 * - The T3-rtx timer is NOT started. Call HandleT3RtxTimerExpiry()
+			 *   directly to simulate expiry.
+			 */
+			std::optional<UnwrappedTsn> InsertChunkForTesting(
+			  uint32_t messageId,
+			  const UserData& data,
+			  uint64_t timeSentMs,
+			  uint16_t maxRetransmissions = Types::MaxRetransmitsNoLimit,
+			  uint64_t expiresAtMs        = Types::ExpiresAtMsInfinite,
+			  uint64_t lifecycleId        = 0)
+			{
+				return this->outstandingData.Insert(
+				  messageId, data, timeSentMs, maxRetransmissions, expiresAtMs, lifecycleId);
+			}
 #endif
 
 		private:
