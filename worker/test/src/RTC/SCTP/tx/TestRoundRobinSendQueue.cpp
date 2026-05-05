@@ -1075,6 +1075,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 1);
 		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
+		REQUIRE(associationListener.onAssociationLifecycleMessageEndLifecycleId == 1);
 	}
 
 	SECTION("will send lifecycle expire when discarding during pause")
