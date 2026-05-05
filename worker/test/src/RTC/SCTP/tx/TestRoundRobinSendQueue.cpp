@@ -1071,10 +1071,10 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.Add(NowMs, RTC::SCTP::Message(2, Ppid, payload), options);
 
+		REQUIRE(q.Produce(NowMs + 1001, OneFragmentPacketLength).has_value() == false);
+
 		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 1);
 		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
-
-		REQUIRE(q.Produce(NowMs + 1001, OneFragmentPacketLength).has_value() == false);
 	}
 
 	SECTION("will send lifecycle expire when discarding during pause")
@@ -1095,11 +1095,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		REQUIRE(q.GetTotalBufferedAmount() == (2 * payload.size()) - 50);
 
+		q.PrepareResetStream(1);
+
 		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 2);
 		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
 		REQUIRE(associationListener.onAssociationLifecycleMessageEndLifecycleId == 2);
-
-		q.PrepareResetStream(1);
 
 		REQUIRE(q.GetTotalBufferedAmount() == payload.size() - 50);
 	}
@@ -1120,10 +1120,10 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(!dataToSendOne->data.IsEnd());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
 
+		q.Discard(dataToSendOne->data.GetStreamId(), dataToSendOne->outgoingMessageId);
+
 		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 1);
 		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
 		REQUIRE(associationListener.onAssociationLifecycleMessageEndLifecycleId == 1);
-
-		q.Discard(dataToSendOne->data.GetStreamId(), dataToSendOne->outgoingMessageId);
 	}
 }

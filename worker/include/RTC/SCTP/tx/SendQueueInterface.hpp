@@ -41,10 +41,10 @@ namespace RTC
 				uint64_t expiresAtMs{ Types::ExpiresAtMsInfinite };
 
 				/**
-				 * Lifecycle. Set for the last fragment, and `LifecycleId::NotSet()` for
-				// all other fragments.
+				 * Lifecycle. Set for the last fragment and `std::nullopt` for all
+				 * other fragments.
 				 */
-				uint64_t lifecycleId{ 0 };
+				std::optional<uint64_t> lifecycleId;
 			};
 
 		public:

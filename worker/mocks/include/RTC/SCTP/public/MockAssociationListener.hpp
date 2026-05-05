@@ -105,8 +105,6 @@ namespace RTC
 
 			void OnAssociationLifecycleMessageExpired(uint64_t lifecycleId, bool maybeDelivered) override
 			{
-				// TODO: SCTP: REMOVE
-				printf("------ OnAssociationLifecycleMessageExpired(lifecycleId:%" PRIu64 ")\n", lifecycleId);
 				this->onAssociationLifecycleMessageExpiredLifecycleId    = lifecycleId;
 				this->onAssociationLifecycleMessageExpiredMaybeDelivered = maybeDelivered;
 			}
@@ -118,8 +116,6 @@ namespace RTC
 
 			void OnAssociationLifecycleMessageEnd(uint64_t lifecycleId) override
 			{
-				// TODO: SCTP: REMOVE
-				printf("------ OnAssociationLifecycleMessageEnd(lifecycleId:%" PRIu64 ")\n", lifecycleId);
 				this->onAssociationLifecycleMessageEndLifecycleId = lifecycleId;
 			}
 

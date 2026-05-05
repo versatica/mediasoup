@@ -231,7 +231,7 @@ namespace RTC
 					explicit Item(uint32_t outgoingMessageId, Message msg, MessageAttributes attributes)
 					  : outgoingMessageId(outgoingMessageId),
 					    message(std::move(msg)),
-					    attributes(std::move(attributes)),
+					    attributes(attributes),
 					    remainingLength(message.GetPayloadLength())
 					{
 					}

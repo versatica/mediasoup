@@ -431,6 +431,7 @@ namespace RTC
 					if (item.attributes.expiresAtMs != Types::ExpiresAtMsInfinite && item.attributes.expiresAtMs <= nowMs)
 					{
 						HandleMessageExpired(item);
+
 						this->items.pop_front();
 
 						continue;
