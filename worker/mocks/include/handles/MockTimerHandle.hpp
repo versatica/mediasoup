@@ -4,14 +4,11 @@
 #include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
 
-// Forward declaration.
 namespace mocks
 {
+	// Forward declaration.
 	class MockShared;
-}
 
-namespace mocks
-{
 	class MockTimerHandle : public TimerHandleInterface
 	{
 		// Only MockShared class can invoke the constructor.
