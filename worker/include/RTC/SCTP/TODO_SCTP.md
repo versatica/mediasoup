@@ -14,8 +14,6 @@
 
 - When receiving SCTP RE-CONFIG, we should emit "streamclosed" in those `DataProducers/DataConsumers` whose stream ID have been closed.
 
-- Why the hell does `DataConsumer` have a `RTC::SctpAssociation* sctpAssociation` member?
-
 - `OnAssociationFailed()` and `OnAssociationClosed()` should report an error (if present) to JS.
 
 - Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.
@@ -27,8 +25,6 @@
   - We must also remove `device.sctpCapabilities` getter from mediasoup-client because anyway we are making up those values!
   - Also must update the website documentation.
 
-- Replicate `retransmission_queue_test.cc` of dcsctp.
-
 - When we invoke `close()` on a `DataProducer/Consumer` in server, we must end calling `sctpAssociation->ResetStream([streamId])` so it sends `ReConfig` to peer.
 
 - In `transport.dump()` (maybe also in `getStats()`) we must properly obtain `OS` and `MIS` according to the number of SCTP streams negotiated via INIT + INIT_ACK. And if SCTP is not yet established, then... not sure.
@@ -36,8 +32,6 @@
 
 - We need to pass `isDataChannel` to `SCTP::Association` constructor as we do in former `SctpAssociation`. Also use it in `Association::FillBuffer()`.
   - Well, let's see. If it's only for when changing number of OS/MIS... then the new SCTP stack doesn't support it so...
-
-- Instead of having a protected `sctpAssociation` member in `Transport`, let's make `Transport` subclasses invoke a new method `Transport::SendSctpMessage()` or `Transport::SendMessage()` instead of directly calling `this->sctpAssociation->SendSctpMessage()`.
 
 - Fix `dataConsumer.getBufferedAmount()` which in usrsctp returns the data buffered for all data consumers in the transport but now it will be per `DataConsumer` (SCTP stream).
   - In `DataConsumer` class rename `SetAssociationBufferedAmount()` to `SetBufferedAmount()`.

@@ -704,7 +704,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.SetStreamBufferedAmountLowThreshold(1, 0);
 
-		REQUIRE(!associationListener.onStreamBufferedAmountLowCalls.contains(1));
+		REQUIRE(!associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 	}
 
 	SECTION("triggers stream buffered amount low when sent")
@@ -719,8 +719,8 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
@@ -740,8 +740,8 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		q.Add(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
 
@@ -749,8 +749,8 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 2);
+		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 2);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
@@ -773,7 +773,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		// Shouldn't trigger the event.
 		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
 
-		REQUIRE(!associationListener.onStreamBufferedAmountLowCalls.contains(1));
+		REQUIRE(!associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
@@ -786,7 +786,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
 
-		REQUIRE(!associationListener.onStreamBufferedAmountLowCalls.contains(1));
+		REQUIRE(!associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
@@ -822,8 +822,8 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		// It goes beyond 700 bytes, it should trigger the event.
 		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetPayloadLength() == OneFragmentPacketLength);
@@ -832,7 +832,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		// Buffer decreases so it shouldn't emit the event.
 		const auto dataToSendFour = q.Produce(NowMs, OneFragmentPacketLength);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		REQUIRE(dataToSendFour.has_value());
 		REQUIRE(dataToSendFour->data.GetPayloadLength() == OneFragmentPacketLength);
@@ -851,8 +851,8 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		const auto dataToSendOne = q.Produce(NowMs, 400);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(1));
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 1);
+		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
@@ -865,7 +865,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		const auto dataToSendTwo = q.Produce(NowMs, 200);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(1) == 2);
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 2);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
@@ -886,28 +886,28 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		q.SetStreamBufferedAmountLowThreshold(StreamId, 50);
 		q.SetStreamBufferedAmountLowThreshold(StreamId, 99);
 
-		REQUIRE(!associationListener.onStreamBufferedAmountLowCalls.contains(StreamId));
+		REQUIRE(!associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(StreamId));
 
 		// When the threshold reaches buffered_amount, it will trigger event.
 		q.SetStreamBufferedAmountLowThreshold(StreamId, 100);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.contains(StreamId));
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(StreamId) == 1);
+		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(StreamId));
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(StreamId) == 1);
 
 		// But not when it's set low again.
 		q.SetStreamBufferedAmountLowThreshold(StreamId, 50);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(StreamId) == 1);
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(StreamId) == 1);
 
 		// But it will trigger when it overshoots.
 		q.SetStreamBufferedAmountLowThreshold(StreamId, 150);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(StreamId) == 2);
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(StreamId) == 2);
 
 		// But not when it's set back to zero.
 		q.SetStreamBufferedAmountLowThreshold(StreamId, 0);
 
-		REQUIRE(associationListener.onStreamBufferedAmountLowCalls.at(StreamId) == 2);
+		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(StreamId) == 2);
 	}
 
 	SECTION("total buffered amount low does not trigger on buffer filling up")
@@ -925,7 +925,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		// Will not trigger if going above but never below.
 		q.Add(NowMs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(OneFragmentPacketLength)));
 
-		REQUIRE(associationListener.onTotalBufferedAmountLowCalls == 0);
+		REQUIRE(associationListener.CountOnTotalBufferedAmountLowCalls() == 0);
 		REQUIRE(q.GetTotalBufferedAmount() > payload.size());
 	}
 
@@ -947,7 +947,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		// Drain it a bit, will trigger.
 		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
 
-		REQUIRE(associationListener.onTotalBufferedAmountLowCalls == 1);
+		REQUIRE(associationListener.CountOnTotalBufferedAmountLowCalls() == 1);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(q.GetTotalBufferedAmount() < BufferedAmountLowThreshold);
@@ -1073,9 +1073,9 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		REQUIRE(q.Produce(NowMs + 1001, OneFragmentPacketLength).has_value() == false);
 
-		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 1);
-		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
-		REQUIRE(associationListener.onAssociationLifecycleMessageEndLifecycleId == 1);
+		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+		  1, false));
+		REQUIRE(associationListener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(1));
 	}
 
 	SECTION("will send lifecycle expire when discarding during pause")
@@ -1098,9 +1098,9 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.PrepareResetStream(1);
 
-		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 2);
-		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
-		REQUIRE(associationListener.onAssociationLifecycleMessageEndLifecycleId == 2);
+		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+		  2, false));
+		REQUIRE(associationListener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(2));
 
 		REQUIRE(q.GetTotalBufferedAmount() == payload.size() - 50);
 	}
@@ -1123,8 +1123,8 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.Discard(dataToSendOne->data.GetStreamId(), dataToSendOne->outgoingMessageId);
 
-		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredLifecycleId == 1);
-		REQUIRE(associationListener.onAssociationLifecycleMessageExpiredMaybeDelivered == false);
-		REQUIRE(associationListener.onAssociationLifecycleMessageEndLifecycleId == 1);
+		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+		  1, false));
+		REQUIRE(associationListener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(1));
 	}
 }

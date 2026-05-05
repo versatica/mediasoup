@@ -587,7 +587,7 @@ namespace RTC
 		{
 			// TODO: SCTP
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else
 		{
 			this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
@@ -654,7 +654,7 @@ namespace RTC
 		{
 			OnSctpDataReceived(tuple, data, len);
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && RTC::SctpAssociation::IsSctp(data, len))
 		{
 			OnSctpDataReceived(tuple, data, len);

@@ -3,9 +3,9 @@
 
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
-#include <cstdint>
+#include <map>
+#include <set>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace RTC
@@ -72,15 +72,18 @@ namespace RTC
 
 			void OnAssociationStreamsResetPerformed(std::span<const uint16_t> /*outboundStreamIds*/) override
 			{
+				// TODO: Do something here for tests.
 			}
 
 			void OnAssociationStreamsResetFailed(
 			  std::span<const uint16_t> /*outboundStreamIds*/, std::string_view /*errorMessage*/) override
 			{
+				// TODO: Do something here for tests.
 			}
 
 			void OnAssociationInboundStreamsReset(std::span<const uint16_t> /*inboundStreamIds*/) override
 			{
+				// TODO: Do something here for tests.
 			}
 
 			void OnAssociationStreamBufferedAmountLow(uint16_t streamId) override
@@ -100,26 +103,148 @@ namespace RTC
 
 			void OnAssociationLifecycleMessageFullySent(uint64_t lifecycleId) override
 			{
-				this->onAssociationLifecycleMessageFullySentLifecycleId = lifecycleId;
+				this->onAssociationLifecycleMessageFullySentCalls.insert(lifecycleId);
 			}
 
 			void OnAssociationLifecycleMessageExpired(uint64_t lifecycleId, bool maybeDelivered) override
 			{
-				this->onAssociationLifecycleMessageExpiredLifecycleId    = lifecycleId;
-				this->onAssociationLifecycleMessageExpiredMaybeDelivered = maybeDelivered;
+				this->onAssociationLifecycleMessageExpiredCalls[lifecycleId] = maybeDelivered;
 			}
 
 			void OnAssociationLifecycleMessageDelivered(uint64_t lifecycleId) override
 			{
-				this->onAssociationLifecycleMessageDeliveredLifecycleId = lifecycleId;
+				this->onAssociationLifecycleMessageDeliveredCalls.insert(lifecycleId);
 			}
 
 			void OnAssociationLifecycleMessageEnd(uint64_t lifecycleId) override
 			{
-				this->onAssociationLifecycleMessageEndLifecycleId = lifecycleId;
+				this->onAssociationLifecycleMessageEndCalls.insert(lifecycleId);
 			}
 
-		public:
+			// Custom methods to check in tests.
+
+			bool IsConnecting() const
+			{
+				return this->connecting;
+			}
+
+			bool IsConnected() const
+			{
+				return this->connected;
+			}
+
+			bool HasRestarted() const
+			{
+				return this->restarted;
+			}
+
+			bool HasFailed() const
+			{
+				return this->failed;
+			}
+
+			Types::ErrorKind GetFailedErrorKind() const
+			{
+				return this->failedErrorKind;
+			}
+
+			const std::string& GetFailedErrorMessage() const
+			{
+				return this->failedErrorMessage;
+			}
+
+			bool IsClosed() const
+			{
+				return this->closed;
+			}
+
+			Types::ErrorKind GetClosedErrorKind() const
+			{
+				return this->closedErrorKind;
+			}
+
+			const std::string& GetClosedErrorMessage() const
+			{
+				return this->closedErrorMessage;
+			}
+
+			bool HasErrored() const
+			{
+				return this->errored;
+			}
+
+			Types::ErrorKind GetErroredErrorKind() const
+			{
+				return this->erroredErrorKind;
+			}
+
+			const std::string& GetErroredErrorMessage() const
+			{
+				return this->erroredErrorMessage;
+			}
+
+			bool HasOnStreamBufferedAmountLowBeenCalledWithStreamId(uint64_t streamId) const
+			{
+				return this->onStreamBufferedAmountLowCalls.contains(streamId);
+			}
+
+			size_t CountOnStreamBufferedAmountLowCallsWithStreamId(uint64_t streamId) const
+			{
+				if (!this->onStreamBufferedAmountLowCalls.contains(streamId))
+				{
+					return 0;
+				}
+
+				return this->onStreamBufferedAmountLowCalls.at(streamId);
+			}
+
+			size_t CountOnTotalBufferedAmountLowCalls() const
+			{
+				return this->onTotalBufferedAmountLowCalls;
+			}
+
+			const std::vector<std::vector<uint8_t>>& GetSentPackets() const
+			{
+				return this->sentPackets;
+			}
+
+			const std::vector<Message>& GetReceivedMessages() const
+			{
+				return this->receivedMessages;
+			}
+
+			bool IsTransportReady() const
+			{
+				return this->transportReady;
+			}
+
+			bool HasOnAssociationLifecycleMessageFullySentBeenCalledWithLifecycleId(uint64_t lifecycleId) const
+			{
+				return this->onAssociationLifecycleMessageFullySentCalls.contains(lifecycleId);
+			}
+
+			bool HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
+			  uint64_t lifecycleId, bool maybeDelivered) const
+			{
+				if (!this->onAssociationLifecycleMessageExpiredCalls.contains(lifecycleId))
+				{
+					return false;
+				}
+
+				return this->onAssociationLifecycleMessageExpiredCalls.at(lifecycleId) == maybeDelivered;
+			}
+
+			bool HasOnAssociationLifecycleMessageDeliveredBeenCalledWithLifecycleId(uint64_t lifecycleId) const
+			{
+				return this->onAssociationLifecycleMessageDeliveredCalls.contains(lifecycleId);
+			}
+
+			bool HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(uint64_t lifecycleId) const
+			{
+				return this->onAssociationLifecycleMessageEndCalls.contains(lifecycleId);
+			}
+
+		private:
 			// Observable state for tests.
 			bool connecting{ false };
 			bool connected{ false };
@@ -133,16 +258,15 @@ namespace RTC
 			bool errored{ false };
 			Types::ErrorKind erroredErrorKind;
 			std::string erroredErrorMessage;
-			std::unordered_map<uint16_t /*streamId*/, size_t /*cound*/> onStreamBufferedAmountLowCalls;
+			std::map<uint16_t /*streamId*/, size_t /*count*/> onStreamBufferedAmountLowCalls;
 			size_t onTotalBufferedAmountLowCalls{ 0 };
 			std::vector<std::vector<uint8_t>> sentPackets;
 			std::vector<Message> receivedMessages;
 			bool transportReady{ true };
-			uint64_t onAssociationLifecycleMessageFullySentLifecycleId{ 0 };
-			uint64_t onAssociationLifecycleMessageExpiredLifecycleId{ 0 };
-			bool onAssociationLifecycleMessageExpiredMaybeDelivered{ false };
-			uint64_t onAssociationLifecycleMessageDeliveredLifecycleId{ 0 };
-			uint64_t onAssociationLifecycleMessageEndLifecycleId{ 0 };
+			std::set<uint64_t /*lifecycleId*/> onAssociationLifecycleMessageFullySentCalls;
+			std::map<uint64_t /*lifecycleId*/, bool /*maybeDelivered*/> onAssociationLifecycleMessageExpiredCalls;
+			std::set<uint64_t /*lifecycleId*/> onAssociationLifecycleMessageDeliveredCalls;
+			std::set<uint64_t /*lifecycleId*/> onAssociationLifecycleMessageEndCalls;
 		};
 	} // namespace SCTP
 } // namespace RTC

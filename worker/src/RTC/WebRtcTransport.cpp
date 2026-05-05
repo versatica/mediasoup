@@ -868,7 +868,7 @@ namespace RTC
 		{
 			// TODO: SCTP
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else
 		{
 			this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);

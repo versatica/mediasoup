@@ -123,7 +123,7 @@ namespace RTC
 				this->sctpAssociation =
 				  std::make_unique<RTC::SCTP::Association>(sctpOptions, this, this->shared);
 			}
-			// TODO: Remove once we only use built-in SCTP stack.
+			// TODO: SCTP: Remove once we only use built-in SCTP stack.
 			else
 			{
 				// This may throw.
@@ -194,11 +194,11 @@ namespace RTC
 			// the Transport subclass but Transport parent (this is how the destruction
 			// chain works in C++).
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else
 		{
 			// Delete SCTP association.
-			// TODO: Remove once we only use built-in SCTP stack.
+			// TODO: SCTP: Remove once we only use built-in SCTP stack.
 			delete this->oldSctpAssociation;
 			this->oldSctpAssociation = nullptr;
 		}
@@ -410,7 +410,7 @@ namespace RTC
 
 			sctpListener = this->sctpListener.FillBuffer(builder);
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
 			// Add sctpParameters.
@@ -527,7 +527,7 @@ namespace RTC
 				}
 			}
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
 			switch (this->oldSctpAssociation->GetState())
@@ -1259,7 +1259,7 @@ namespace RTC
 					{
 						this->sctpAssociation->MayConnect();
 					}
-					// TODO: Remove once we only use built-in SCTP stack.
+					// TODO: SCTP: Remove once we only use built-in SCTP stack.
 					else
 					{
 						this->oldSctpAssociation->HandleDataProducer(dataProducer);
@@ -1369,7 +1369,7 @@ namespace RTC
 						// Tell to the SCTP association.
 						this->sctpAssociation->MayConnect();
 					}
-					// TODO: Remove once we only use built-in SCTP stack.
+					// TODO: SCTP: Remove once we only use built-in SCTP stack.
 					else
 					{
 						if (this->oldSctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
@@ -1540,7 +1540,7 @@ namespace RTC
 					{
 						// TODO: SCTP
 					}
-					// TODO: Remove once we only use built-in SCTP stack.
+					// TODO: SCTP: Remove once we only use built-in SCTP stack.
 					else
 					{
 						// Tell the SctpAssociation so it can reset the SCTP stream.
@@ -1585,7 +1585,7 @@ namespace RTC
 					{
 						// TODO: SCTP
 					}
-					// TODO: Remove once we only use built-in SCTP stack.
+					// TODO: SCTP: Remove once we only use built-in SCTP stack.
 					else
 					{
 						// Tell the SctpAssociation so it can reset the SCTP stream.
@@ -1675,7 +1675,7 @@ namespace RTC
 		{
 			this->sctpAssociation->MayConnect();
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
 			this->oldSctpAssociation->TransportConnected();
@@ -1725,7 +1725,7 @@ namespace RTC
 			dataConsumer->TransportDisconnected();
 		}
 
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		// Tell the SctpAssociation.
 		if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
@@ -2962,10 +2962,10 @@ namespace RTC
 		if (Settings::configuration.useBuiltInSctpStack && this->sctpAssociation)
 		{
 			// TODO: SCTP
-			// TODO: Let's see how to obtain `streamId` argument from the DataConsumer.
+			// TODO: SCTP: Let's see how to obtain `streamId` argument from the DataConsumer.
 			// bufferedAmount = this->sctpAssociation->GetStreamBufferedAmount(streamId);
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
 			// NOTE: The underlaying SCTP association uses a common send buffer for all
@@ -2996,7 +2996,7 @@ namespace RTC
 				// TODO: SCTP
 			}
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else
 		{
 			if (this->oldSctpAssociation && dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
