@@ -1,12 +1,13 @@
+#include <optional>
 #define MS_CLASS "RTC::SCTP::OutstandingData"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
+#include "RTC/SCTP/tx/OutstandingData.hpp"
 #include <map>
 
 namespace RTC
@@ -28,7 +29,7 @@ namespace RTC
 		  uint64_t timeSentMs,
 		  uint16_t maxRetransmissions,
 		  uint64_t expiresAtMs,
-		  uint64_t lifecycleId)
+		  std::optional<uint64_t> lifecycleId)
 		  : outgoingMessageId(outgoingMessageId),
 		    timeSentMs(timeSentMs),
 		    maxRetransmissions(maxRetransmissions),
@@ -236,7 +237,7 @@ namespace RTC
 		  uint64_t timeSentMs,
 		  uint16_t maxRetransmissions,
 		  uint64_t expiresAtMs,
-		  uint64_t lifecycleId)
+		  std::optional<uint64_t> lifecycleId)
 		{
 			MS_TRACE();
 
@@ -532,17 +533,17 @@ namespace RTC
 
 				AckChunk(ackInfo, tsn, item);
 
-				if (item.GetLifecycleId() != 0)
+				if (item.GetLifecycleId().has_value())
 				{
 					MS_ASSERT(item.GetData().IsEnd(), "item.GetData().IsEnd() must be true");
 
 					if (item.IsAbandoned())
 					{
-						ackInfo.abandonedLifecycleIds.push_back(item.GetLifecycleId());
+						ackInfo.abandonedLifecycleIds.push_back(item.GetLifecycleId().value());
 					}
 					else
 					{
-						ackInfo.ackedLifecycleIds.push_back(item.GetLifecycleId());
+						ackInfo.ackedLifecycleIds.push_back(item.GetLifecycleId().value());
 					}
 				}
 
@@ -767,7 +768,7 @@ namespace RTC
 				  /*timeSentMs*/ 0,
 				  /*maxRetransmissions*/ 0,
 				  /*expiresAtMs*/ Types::ExpiresAtMsInfinite,
-				  /*lifecycleId*/ 0);
+				  /*lifecycleId*/ std::nullopt);
 
 				// The added Chunk shouldn't be included in `this->unackedPacketBytes`,
 				// so set it as acked.

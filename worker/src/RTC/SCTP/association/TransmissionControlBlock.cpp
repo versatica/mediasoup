@@ -26,9 +26,8 @@ namespace RTC
 		  AssociationListener& associationListener,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
+		  SendQueueInterface& sendQueue,
 		  PacketSender& packetSender,
-		  // TODO: SCTP: Implement it.
-		  // SendQueue& sendQueue,
 		  uint32_t localVerificationTag,
 		  uint32_t remoteVerificationTag,
 		  uint32_t localInitialTsn,
@@ -40,8 +39,6 @@ namespace RTC
 		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
 		    shared(shared),
-		    // TODO: SCTP: Implement it.
-		    // sendQueue(sendQueue),
 		    packetSender(packetSender),
 		    localVerificationTag(localVerificationTag),
 		    remoteVerificationTag(remoteVerificationTag),
@@ -78,8 +75,7 @@ namespace RTC
 		      this->associationListener,
 		      localInitialTsn,
 		      remoteAdvertisedReceiverWindowCredit,
-		      // TODO: SCTP: Implement
-		      // this->sendQueue,
+		      sendQueue,
 		      this->t3RtxTimer.get(),
 		      sctpOptions,
 		      negotiatedCapabilities.partialReliability,
@@ -95,6 +91,8 @@ namespace RTC
 		    heartbeatHandler(this->associationListener, sctpOptions, this->shared, this)
 		{
 			MS_TRACE();
+
+			sendQueue.EnableMessageInterleaving(this->negotiatedCapabilities.messageInterleaving);
 		}
 
 		TransmissionControlBlock::~TransmissionControlBlock()

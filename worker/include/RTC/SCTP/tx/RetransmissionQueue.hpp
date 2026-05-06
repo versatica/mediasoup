@@ -10,7 +10,9 @@
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
+#include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include <vector>
 
@@ -57,7 +59,7 @@ namespace RTC
 			 * `localInitialTsn` as the first TSN to use for sent fragments. It will
 			 * poll data from `sendQueue`. When SACKs are received, it will estimate
 			 * the RTT and call `listener->OnRetransmissionQueueNewRttMs()`. When an
-			 * outstanding Chunk has been acked, it will call
+			 * outstanding chunk has been acked, it will call
 			 * `listener->OnRetransmissionQueueClearRetransmissionCounter() and will
 			 * also use `t3RtxTimer`, which is the SCTP retransmission timer to manage
 			 * retransmissions.
@@ -67,11 +69,9 @@ namespace RTC
 			  AssociationListener& associationListener,
 			  uint32_t localInitialTsn,
 			  uint32_t remoteAdvertisedReceiverWindowCredit,
-			  // TODO: SCTP: Implement
-			  // SendQueue& sendQueue,
+			  SendQueueInterface& sendQueue,
 			  BackoffTimerHandleInterface* t3RtxTimer,
 			  const SctpOptions& sctpOptions,
-			  // TODO: SCTP: I don't like these defaults (true and false), let's be explicit.
 			  bool supportsPartialReliability,
 			  bool useMessageInterleaving);
 
@@ -347,8 +347,7 @@ namespace RTC
 			// acked.
 			std::optional<UnwrappedTsn> fastRecoveryExitTsn{ std::nullopt };
 			// The send queue.
-			// TODO: SCTP: Implement.
-			// SendQueue& sendQueue;
+			SendQueueInterface& sendQueue;
 			// All the outstanding data Chunks that are in-flight and that have not
 			// been cumulative acked. Note that it also contains chunks that have been
 			// acked in gap-ack-blocks.

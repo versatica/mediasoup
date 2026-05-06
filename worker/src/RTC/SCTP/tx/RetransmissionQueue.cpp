@@ -22,8 +22,7 @@ namespace RTC
 		  AssociationListener& associationListener,
 		  uint32_t localInitialTsn,
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
-		  // TODO: SCTP: Implement
-		  // SendQueue& sendQueue,
+		  SendQueueInterface& sendQueue,
 		  BackoffTimerHandleInterface* t3RtxTimer,
 		  const SctpOptions& sctpOptions,
 		  // NOTE: I don't like default argument values in dcsctp (true and false),
@@ -45,18 +44,14 @@ namespace RTC
 		    // "The initial value of ssthresh MAY be arbitrarily high (for example,
 		    // implementations MAY use the size of the receiver advertised window)."
 		    ssthresh(this->rwnd),
-		    // TODO: SCTP: Implement.
-		    // sendQueue(sendQueue),
+		    sendQueue(sendQueue),
 		    outstandingData(
 		      this->dataChunkHeaderLength,
 		      this->tsnUnwrapper.Unwrap(localInitialTsn - 1),
-		      [/*this*/](uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)
-		      {
-			      // TODO: SCTP: Implement.
-			      // return this->sendQueue.Discard(streamId, outgoingMessageId);
 
-			      // TODO: SCTP: Remove when the above is uncommented.
-			      return false;
+		      [this](uint16_t streamId, uint32_t outgoingMessageId)
+		      {
+			      return this->sendQueue.Discard(streamId, outgoingMessageId);
 		      })
 		{
 			MS_TRACE();
@@ -303,7 +298,7 @@ namespace RTC
 		}
 
 		std::vector<std::pair<uint32_t /*tsn*/, UserData>> RetransmissionQueue::GetChunksToSend(
-		  uint64_t /*nowMs*/, size_t maxLength)
+		  uint64_t nowMs, size_t maxLength)
 		{
 			MS_TRACE();
 
@@ -366,43 +361,41 @@ namespace RTC
 				  "computed maxBytes %zu during the loop is not divisible by 4",
 				  maxBytes);
 
-				// TODO: SCTP: Implement and uncomment.
+				std::optional<SendQueueInterface::DataToSend> dataToSend =
+				  this->sendQueue.Produce(nowMs, maxBytes - this->dataChunkHeaderLength);
 
-				// std::optional<SendQueueInterface::DataToSend> dataToSend =
-				//   this->sendQueue.Produce(nowMs, maxBytes - this->dataChunkHeaderLength);
+				if (!dataToSend.has_value())
+				{
+					break;
+				}
 
-				// if (!dataToSend.has_value())
-				// {
-				// 	break;
-				// }
+				const size_t chunkSize = GetSerializedChunkLength(dataToSend->data);
 
-				// const size_t chunkSize = GetSerializedChunkSize(dataToSend->data);
+				maxBytes -= chunkSize;
 
-				// maxBytes -= chunkSize;
+				this->rwnd -= dataToSend->data.GetPayloadLength();
 
-				// this->rwnd -= dataToSend->data.size();
+				const std::optional<UnwrappedTsn> tsn = this->outstandingData.Insert(
+				  dataToSend->outgoingMessageId,
+				  dataToSend->data,
+				  nowMs,
+				  this->supportsPartialReliability ? dataToSend->maxRetransmissions
+				                                   : Types::MaxRetransmitsNoLimit,
+				  this->supportsPartialReliability ? dataToSend->expiresAtMs : Types::ExpiresAtMsInfinite,
+				  dataToSend->lifecycleId);
 
-				// const std::optional<UnwrappedTsn> tsn = this->outstandingData.Insert(
-				//   dataToSend->messageId,
-				//   dataToSend->data,
-				//   nowMs,
-				//   this->supportsPartialReliability ? dataToSend->maxRetransmissions
-				//                                    : OutstandingData::MaxRetransmitsNoLimit,
-				//   this->supportsPartialReliability ? dataToSend->expiresAtMs
-				//                                    : OutstandingData::ExpiresAtMsInfinite,
-				//   dataToSend->lifecycleId);
+				if (tsn.has_value())
+				{
+					if (dataToSend->lifecycleId.has_value())
+					{
+						MS_ASSERT(dataToSend->data.IsEnd(), "data.IsEnd() should return true");
 
-				// if (tsn.has_value())
-				// {
-				// 	if (dataToSend->lifecycleId != 0)
-				// 	{
-				// 		MS_ASSERT(dataToSend->data.IsEnd(), "data.IsEnd() should return true");
+						this->associationListener.OnAssociationLifecycleMessageFullySent(
+						  dataToSend->lifecycleId.value());
+					}
 
-				// 		this->associationListener.OnAssociationLifecycleMessageFullySent(dataToSend->lifecycleId);
-				// 	}
-
-				// 	result.emplace_back(tsn->Wrap(), std::move(dataToSend->data));
-				// }
+					result.emplace_back(tsn->Wrap(), std::move(dataToSend->data));
+				}
 			}
 
 			// https://tools.ietf.org/html/rfc9260#section-6.3.2
@@ -468,7 +461,7 @@ namespace RTC
 			return this->outstandingData.ShouldSendForwardTsn();
 		}
 
-		void RetransmissionQueue::PrepareResetStream(uint16_t /*streamId*/)
+		void RetransmissionQueue::PrepareResetStream(uint16_t streamId)
 		{
 			MS_TRACE();
 
@@ -478,19 +471,15 @@ namespace RTC
 			// can also change behavior - for example draining the chunk producer and
 			// eagerly assign TSNs so that an "Outgoing SSN Reset Request" can be sent
 			// quickly, with a known `sender_last_assigned_tsn`.
-			// TODO: SCTP: Implement it.
-			// this->sendQueue.PrepareResetStream(streamId);
+
+			this->sendQueue.PrepareResetStream(streamId);
 		}
 
 		bool RetransmissionQueue::HasStreamsReadyToBeReset() const
 		{
 			MS_TRACE();
 
-			// TODO: SCTP: Implement it.
-			// return this->sendQueue.HasStreamsReadyToBeReset();
-
-			// TODO: SCTP: Remove.
-			return false;
+			return this->sendQueue.HasStreamsReadyToBeReset();
 		}
 
 		std::vector<uint16_t /*streamId*/> RetransmissionQueue::BeginResetStreams()
@@ -499,27 +488,21 @@ namespace RTC
 
 			this->outstandingData.BeginResetStreams();
 
-			// TODO: SCTP: Implement it.
-			// this->sendQueue.GetStreamsReadyToBeReset();
-
-			// TODO: SCTP: Remove.
-			return {};
+			return this->sendQueue.GetStreamsReadyToBeReset();
 		}
 
 		void RetransmissionQueue::CommitResetStreams()
 		{
 			MS_TRACE();
 
-			// TODO: SCTP: Implement it.
-			// this->sendQueue.CommitResetStreams();
+			this->sendQueue.CommitResetStreams();
 		}
 
 		void RetransmissionQueue::RollbackResetStreams()
 		{
 			MS_TRACE();
 
-			// TODO: SCTP: Implement it.
-			// this->sendQueue.RollbackResetStreams();
+			this->sendQueue.RollbackResetStreams();
 		}
 
 		size_t RetransmissionQueue::GetSerializedChunkLength(const UserData& data) const
@@ -615,7 +598,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: This method is NOT defined in dcsctp!
+			// TODO: This method is NOT implemented in dcsctp!
 			//
 			// @see https://issues.webrtc.org/issues/505751236
 		}
@@ -774,7 +757,7 @@ namespace RTC
 				// Note: Already stopped in `StopT3RtxTimerOnIncreasedCumulativeTsnAck()`."
 				//
 				// TODO: As said above, `StopT3RtxTimerOnIncreasedCumulativeTsnAck()`
-				// is NOT defined in dcsctp and of course it's never called from
+				// is NOT implemented in dcsctp and of course it's never called from
 				// anywhere.
 			}
 			else

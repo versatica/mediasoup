@@ -14,6 +14,7 @@
 #include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "RTC/SCTP/tx/RetransmissionTimeout.hpp"
+#include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include <string_view>
 #include <vector>
@@ -37,8 +38,7 @@ namespace RTC
 			  AssociationListener& associationListener,
 			  const SctpOptions& sctpOptions,
 			  SharedInterface* shared,
-			  // TODO: SCTP: Implement it.
-			  // SendQueue& sendQueue,
+			  SendQueueInterface& sendQueue,
 			  PacketSender& packetSender,
 			  uint32_t localVerificationTag,
 			  uint32_t remoteVerificationTag,

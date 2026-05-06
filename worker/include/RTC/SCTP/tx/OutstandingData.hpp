@@ -168,7 +168,7 @@ namespace RTC
 				  uint64_t timeSentMs,
 				  uint16_t maxRetransmissions,
 				  uint64_t expiresAtMs,
-				  uint64_t lifecycleId);
+				  std::optional<uint64_t> lifecycleId);
 
 				Item(const Item&) = delete;
 
@@ -259,7 +259,7 @@ namespace RTC
 					return (this->expiresAtMs != Types::ExpiresAtMsInfinite && this->expiresAtMs <= nowMs);
 				}
 
-				uint64_t GetLifecycleId() const
+				std::optional<uint64_t> GetLifecycleId() const
 				{
 					return this->lifecycleId;
 				}
@@ -288,7 +288,7 @@ namespace RTC
 				const uint64_t expiresAtMs;
 				// An optional lifecycle id, which may only be set for the last
 				// fragment.
-				const uint64_t lifecycleId;
+				const std::optional<uint64_t> lifecycleId;
 				// The actual data to send/retransmit.
 				const UserData data;
 			};
@@ -386,9 +386,9 @@ namespace RTC
 			  uint32_t outgoingMessageId,
 			  const UserData& data,
 			  uint64_t timeSentMs,
-			  uint16_t maxRetransmissions = Types::MaxRetransmitsNoLimit,
-			  uint64_t expiresAtMs        = Types::ExpiresAtMsInfinite,
-			  uint64_t lifecycleId        = 0);
+			  uint16_t maxRetransmissions         = Types::MaxRetransmitsNoLimit,
+			  uint64_t expiresAtMs                = Types::ExpiresAtMsInfinite,
+			  std::optional<uint64_t> lifecycleId = std::nullopt);
 
 			/**
 			 * Nacks all outstanding data.
