@@ -359,7 +359,7 @@ namespace RTC
 				.srttMs          = this->tcb->GetCurrentSrttMs(),
 				.unackDataCount =
 				  this->tcb->GetRetransmissionQueue().GetUnackedItems() +
-				  (this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) / packetPayloadLength,
+				  ((this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) / packetPayloadLength),
 				.peerRwndBytes      = static_cast<uint32_t>(this->tcb->GetRetransmissionQueue().GetRwnd()),
 				.peerImplementation = this->privateMetrics.peerImplementation,
 				.negotiatedMaxOutboundStreams = this->privateMetrics.negotiatedMaxOutboundStreams,
