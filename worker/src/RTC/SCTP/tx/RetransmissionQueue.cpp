@@ -467,10 +467,10 @@ namespace RTC
 
 			// TODO: As per TODO comment in same method in dcsctp:
 			//
-			// "These calls are now only affecting the send queue. The packet buffer
+			// These calls are now only affecting the send queue. The packet buffer
 			// can also change behavior - for example draining the chunk producer and
 			// eagerly assign TSNs so that an "Outgoing SSN Reset Request" can be sent
-			// quickly, with a known `sender_last_assigned_tsn`.
+			// quickly, with a known sender last assigned TSN.
 
 			this->sendQueue.PrepareResetStream(streamId);
 		}
@@ -565,7 +565,7 @@ namespace RTC
 			//
 			// TODO: As per TODO comment in same method in dcsctp:
 			//
-			// "Consider occasionally sending DATA chunks with I-bit set and use only
+			// Consider occasionally sending DATA chunks with I-bit set and use only
 			// those packets for measurement.
 
 			const auto rttMs = this->outstandingData.MeasureRtt(nowMs, cumulativeTsnAck);
