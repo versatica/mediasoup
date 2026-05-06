@@ -260,6 +260,7 @@ namespace RTC
 			// delay retransmission for this single packet."
 
 			auto packet = CreatePacket();
+
 			const auto result =
 			  this->retransmissionQueue.GetChunksForFastRetransmit(packet->GetAvailableLength());
 
