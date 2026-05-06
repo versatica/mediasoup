@@ -260,19 +260,17 @@ namespace RTC
 			// delay retransmission for this single packet."
 
 			auto packet = CreatePacket();
-
-			const auto result =
+			auto result =
 			  this->retransmissionQueue.GetChunksForFastRetransmit(packet->GetAvailableLength());
 
-			for (const auto& [tsn, data] : result)
+			for (auto& [tsn, data] : result)
 			{
 				if (this->negotiatedCapabilities.messageInterleaving)
 				{
 					auto* iDataChunk = packet->BuildChunkInPlace<IDataChunk>();
 
 					iDataChunk->SetTsn(tsn);
-					// TODO: SCTP: Implement.
-					// iDataChunk->SetUserData(data);
+					iDataChunk->SetUserData(std::move(data));
 					iDataChunk->Consolidate();
 				}
 				else
@@ -280,8 +278,7 @@ namespace RTC
 					auto* dataChunk = packet->BuildChunkInPlace<DataChunk>();
 
 					dataChunk->SetTsn(tsn);
-					// TODO: SCTP: Implement.
-					// dataChunk->SetUserData(data);
+					dataChunk->SetUserData(std::move(data));
 					dataChunk->Consolidate();
 				}
 			}

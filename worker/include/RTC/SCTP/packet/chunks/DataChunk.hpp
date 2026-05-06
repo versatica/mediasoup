@@ -237,6 +237,8 @@ namespace RTC
 				  GetU());
 			}
 
+			void SetUserData(UserData userData);
+
 		protected:
 			DataChunk* SoftClone(const uint8_t* buffer) const final;
 

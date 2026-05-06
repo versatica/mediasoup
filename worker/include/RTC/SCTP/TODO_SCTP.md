@@ -2,8 +2,6 @@
 
 ## Related to mediasoup SCTP implementation
 
-- `DataChunk`, IDataChunk`and`AnyDataChunk`: Add `SetUserData(UserData)`.
-
 - Remove all default values of class memners in .hpp of all classes in case the constructor must give them initial value.
 
 - Lot of stuff missing in `TransmissionControlBock` class and I forgot to add "TODO: SCTP" in them.

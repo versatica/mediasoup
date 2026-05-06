@@ -28,11 +28,11 @@ namespace RTC
 
 			// Move constructor. No need to do anything special since std::vector
 			// already implements move.
-			UserData(UserData&& other) = default;
+			UserData(UserData&& other) noexcept = default;
 
 			// Move assignment. No need to do anything special since std::vector
 			// already implements move.
-			UserData& operator=(UserData&& other) = default;
+			UserData& operator=(UserData&& other) noexcept = default;
 
 			// Disable copy constructor.
 			UserData(const UserData&) = delete;
