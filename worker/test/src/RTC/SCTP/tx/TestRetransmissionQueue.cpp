@@ -378,9 +378,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// be resent right now. The send queue will not even be queried.
 		sendQueue.ExpectProduceCalledTimes(0);
 
-		const std::vector<uint32_t> expectedTsnsForFastRetransmit = { 13, 16 };
-
-		REQUIRE(getTSNsForFastRetransmit(queue) == expectedTsnsForFastRetransmit);
+		REQUIRE(getTSNsForFastRetransmit(queue) == std::vector<uint32_t>{ 13, 16 });
 		REQUIRE(
 		  queue.GetChunkStatesForTesting() ==
 		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
