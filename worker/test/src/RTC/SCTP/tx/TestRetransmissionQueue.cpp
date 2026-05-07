@@ -66,7 +66,8 @@
 // 	 *   `SackChunk(TSN(...), RemoteAdvertisedReceiverWindowCredit, {gaps}, {})`
 // 	 */
 // 	auto buildSackChunk =
-// 	  [](uint32_t cumTsn, uint32_t aRwnd, const std::vector<RTC::SCTP::SackChunk::GapAckBlock>& gabs = {})
+// 	  [](uint32_t cumTsn, uint32_t aRwnd, const std::vector<RTC::SCTP::SackChunk::GapAckBlock>& gabs
+// = {})
 // 	{
 // 		auto* sackChunk =
 // 		  RTC::SCTP::SackChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
