@@ -169,6 +169,11 @@ namespace RTC
 
 			void AddAckBlock(uint16_t start, uint16_t end);
 
+			void AddAckBlock(GapAckBlock gapAckBlock)
+			{
+				AddAckBlock(gapAckBlock.start, gapAckBlock.end);
+			}
+
 			void AddDuplicateTsn(uint32_t tsn);
 
 		protected:

@@ -238,7 +238,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		chunk->SetAdvertisedReceiverWindowCredit(5678);
 		chunk->AddDuplicateTsn(10000000);
 		chunk->AddAckBlock(10000, 19999);
-		chunk->AddAckBlock(20000, 20999);
+		chunk->AddAckBlock(RTC::SCTP::SackChunk::GapAckBlock(20000, 20999));
 		chunk->AddDuplicateTsn(20000000);
 		chunk->AddAckBlock(60000, 60999);
 		chunk->AddDuplicateTsn(30000000);
