@@ -109,6 +109,19 @@ namespace RTC
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToSend(
 			  uint64_t nowMs, size_t maxLength);
 
+#ifdef MS_TEST
+			/**
+			 * Returns the internal state of all queued Chunks.
+			 *
+			 * @remarks
+			 * - Used in tests.
+			 */
+			std::vector<std::pair<uint32_t /*tsn*/, OutstandingData::State>> GetChunkStatesForTesting() const
+			{
+				return this->outstandingData.GetChunkStatesForTesting();
+			}
+#endif
+
 			/**
 			 * Returns the next TSN that will be allocated for sent DATA Chunks.
 			 */
