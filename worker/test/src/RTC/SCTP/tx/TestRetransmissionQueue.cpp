@@ -392,12 +392,27 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		REQUIRE(queue.GetChunkStatesForTesting() == expectedState);
 
-		// TODO: SCTP: This is not good... and it's not done!
-
 		// This will trigger "fast retransmit" mode and only chunks 13 and 16 will
 		// be resent right now. The send queue will not even be queried.
-		sendQueue.ResetCallCount();
 		sendQueue.ExpectProduceCalledTimes(0);
+
+		const std::vector<uint32_t> expectedTsnsForFastRetransmit = { 13, 16 };
+
+		REQUIRE(getTSNsForFastRetransmit(queue) == expectedTsnsForFastRetransmit);
+
+		expectedState = {
+			{ 12, RTC::SCTP::OutstandingData::State::ACKED     },
+			{ 13, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+			{ 14, RTC::SCTP::OutstandingData::State::ACKED     },
+			{ 15, RTC::SCTP::OutstandingData::State::ACKED     },
+			{ 16, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+			{ 17, RTC::SCTP::OutstandingData::State::ACKED     },
+			{ 18, RTC::SCTP::OutstandingData::State::ACKED     },
+			{ 19, RTC::SCTP::OutstandingData::State::ACKED     },
+			{ 20, RTC::SCTP::OutstandingData::State::ACKED     },
+		};
+
+		REQUIRE(queue.GetChunkStatesForTesting() == expectedState);
 
 		const auto result = sendQueue.VerifyExpectations();
 

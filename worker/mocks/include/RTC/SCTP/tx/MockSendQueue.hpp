@@ -161,8 +161,13 @@ namespace mocks
 					return *this;
 				}
 
+				/**
+				 * @remarks
+				 * - Must be called before expecting calls to `Produce()`.
+				 */
 				MockSendQueue& ExpectProduceCalledTimes(size_t times)
 				{
+					this->produceCallCount         = 0;
 					this->expectedProduceCallCount = times;
 
 					return *this;
@@ -175,17 +180,16 @@ namespace mocks
 					return *this;
 				}
 
+				/**
+				 * @remarks
+				 * - Must be called before expecting calls to `Discard()`.
+				 */
 				MockSendQueue& ExpectDiscardCalledTimes(size_t times)
 				{
+					this->discardCallCount         = 0;
 					this->expectedDiscardCallCount = times;
 
 					return *this;
-				}
-
-				void ResetCallCount()
-				{
-					this->produceCallCount = 0;
-					this->discardCallCount = 0;
 				}
 
 				VerificationResult VerifyExpectations() const
