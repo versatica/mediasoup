@@ -318,7 +318,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
     })
 		    .get());
 
-		const std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>> expectedState = {
+		std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>> expectedState = {
 			{ 12, RTC::SCTP::OutstandingData::State::ACKED  },
 			{ 13, RTC::SCTP::OutstandingData::State::NACKED },
 			{ 14, RTC::SCTP::OutstandingData::State::ACKED  },
@@ -329,6 +329,82 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		};
 
 		REQUIRE(queue.GetChunkStatesForTesting() == expectedState);
+
+		// Send TSN 19.
+		sendQueue.WillProduceOnce(createDataToSend(9))
+		  .WillProduceRepeatedly(
+		    [](uint64_t, size_t)
+		    {
+			    return std::nullopt;
+		    });
+
+		expectedTsns = { 19 };
+
+		REQUIRE(getSentPacketTSNs(queue) == expectedTsns);
+
+		// Ack 12, 14-15, 17-19.
+		queue.HandleReceivedSackChunk(
+		  nowMs,
+		  createSackChunk(
+		    12,
+		    Arwnd,
+		    {
+		      { 2, 3 },
+          { 5, 7 }
+    })
+		    .get());
+
+		// Send TSN 20.
+		sendQueue.WillProduceOnce(createDataToSend(10))
+		  .WillProduceRepeatedly(
+		    [](uint64_t, size_t)
+		    {
+			    return std::nullopt;
+		    });
+
+		expectedTsns = { 20 };
+
+		REQUIRE(getSentPacketTSNs(queue) == expectedTsns);
+
+		// Ack 12, 14-15, 17-20.
+		queue.HandleReceivedSackChunk(
+		  nowMs,
+		  createSackChunk(
+		    12,
+		    Arwnd,
+		    {
+		      { 2, 3 },
+          { 5, 8 }
+    })
+		    .get());
+
+		expectedState = {
+			{ 12, RTC::SCTP::OutstandingData::State::ACKED               },
+			{ 13, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
+			{ 14, RTC::SCTP::OutstandingData::State::ACKED               },
+			{ 15, RTC::SCTP::OutstandingData::State::ACKED               },
+			{ 16, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
+			{ 17, RTC::SCTP::OutstandingData::State::ACKED               },
+			{ 18, RTC::SCTP::OutstandingData::State::ACKED               },
+			{ 19, RTC::SCTP::OutstandingData::State::ACKED               },
+			{ 20, RTC::SCTP::OutstandingData::State::ACKED               },
+		};
+
+		REQUIRE(queue.GetChunkStatesForTesting() == expectedState);
+
+		// TODO: SCTP: This is not good... and it's not done!
+
+		// This will trigger "fast retransmit" mode and only chunks 13 and 16 will
+		// be resent right now. The send queue will not even be queried.
+		sendQueue.ResetCallCount();
+		sendQueue.ExpectProduceCalledTimes(0);
+
+		const auto result = sendQueue.VerifyExpectations();
+
+		if (!result.ok)
+		{
+			FAIL(result.error);
+		}
 	}
 
 	// TODO: SCTP: A lot of tests.

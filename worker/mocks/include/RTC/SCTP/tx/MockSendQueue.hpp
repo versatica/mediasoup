@@ -182,6 +182,12 @@ namespace mocks
 					return *this;
 				}
 
+				void ResetCallCount()
+				{
+					this->produceCallCount = 0;
+					this->discardCallCount = 0;
+				}
+
 				VerificationResult VerifyExpectations() const
 				{
 					if (
