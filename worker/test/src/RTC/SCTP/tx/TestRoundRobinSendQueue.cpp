@@ -21,7 +21,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("empty buffer")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -31,7 +31,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("add and get single chunk")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -48,7 +48,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("carve out beginning middle and end")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -79,7 +79,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("get chunks from two messages")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -107,7 +107,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("buffer becomes full and emptied")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -156,7 +156,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("defaults to ordered send")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -183,7 +183,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("produce with lifetime expiry")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -234,7 +234,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("discard partial packets")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -272,7 +272,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("prepare reset streams discards stream")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -299,7 +299,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("prepare reset streams not partial packets")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -322,7 +322,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("enqueued items are paused during stream reset")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -361,7 +361,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("paused streams still send partial messages until end")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -396,7 +396,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("committing resets SSN")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -436,7 +436,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("committing does not reset message id")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -478,7 +478,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("committing resets SSN for paused streams only")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -526,7 +526,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("rollback resumes SSN")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -564,7 +564,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("returns fragments for one message before moving to next")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -596,7 +596,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("returns also small fragments before moving to next")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -634,7 +634,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("will cycle in round robin fashion between streams")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -698,7 +698,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("doesn't trigger stream buffered amount low when set to zero")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -709,7 +709,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("triggers stream buffered amount low when sent")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -730,7 +730,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("will retrigger stream buffered amount low if adding more")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -760,7 +760,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("only triggers stream buffered amount low when transitioning from above to below or equal")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -796,7 +796,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("will trigger stream buffered amount low set above zero")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -841,7 +841,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("will retrigger stream buffered amount low set above zero")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -875,7 +875,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("triggers stream buffered amount low on threshold changed")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -912,7 +912,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("total buffered amount low does not trigger on buffer filling up")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -931,7 +931,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("triggers total buffered amount low when crossing")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -955,7 +955,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("will stay in a stream as long as that message is sending")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -1000,7 +1000,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("streams have initial priority")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -1013,7 +1013,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("can change stream priority")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -1029,7 +1029,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("will send messages by priority")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -1058,7 +1058,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("will send lifecycle expire when expired in send queue")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -1080,7 +1080,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("will send lifecycle expire when discarding during pause")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 
@@ -1107,7 +1107,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 	SECTION("will send lifecycle expire when discarding explicitly")
 	{
-		RTC::SCTP::MockAssociationListener associationListener;
+		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
 		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
 

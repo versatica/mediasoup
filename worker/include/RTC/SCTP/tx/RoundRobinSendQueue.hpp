@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/Message.hpp"
-#include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include "RTC/SCTP/tx/StreamScheduler.hpp"
 #include <deque>
