@@ -41,13 +41,13 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 	constexpr uint32_t Arwnd{ 100000 };
 	constexpr uint64_t Mtu{ 1191 };
-	constexpr uint32_t OutgoingMessageId{ 42 };
+	// TODO: SCTP: Uncoment.
+	// constexpr uint32_t OutgoingMessageId{ 42 };
 	// InitialTsn is the first TSN that will be assigned. The TSN before it
 	// (InitialTsn - 1) starts as ACKED in OutstandingData, matching dcsctp's
 	// invariant that the initial state has the previous TSN already
 	// cumulative-acked.
 	constexpr uint32_t InitialTsn{ 10 };
-	constexpr uint32_t PreviousTsn{ InitialTsn - 1 };
 
 	const mocks::MockShared shared;
 	const RTC::SCTP::SctpOptions sctpOptions{ .mtu = Mtu };
@@ -146,7 +146,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(
 		  queue.GetChunkStatesForTesting() ==
 		  std::vector<std::pair<uint32_t, RTC::SCTP::OutstandingData::State>>{
-		    { PreviousTsn, RTC::SCTP::OutstandingData::State::ACKED },
+		    { InitialTsn - 1, RTC::SCTP::OutstandingData::State::ACKED },
     });
 	}
 
