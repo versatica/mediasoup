@@ -14,10 +14,10 @@ namespace test
 } // namespace test
 
 // clang-format off
-#define _MS_REQUIRE_WITH_MESSAGE_1(verificationResult) \
+#define REQUIRE_VERIFICATION_RESULT(verificationResult) \
 	do \
 	{ \
-		const auto&& result = (verificationResult); \
+		const auto& result = (verificationResult); \
 		\
 		if (!(result.ok)) \
 		{ \
@@ -26,7 +26,7 @@ namespace test
 	} while (false)
 
 // clang-format off
-#define _MS_REQUIRE_WITH_MESSAGE_2(condition, errorMessage) \
+#define REQUIRE_WITH_MESSAGE(condition, errorMessage) \
 	do \
 	{ \
 		if (!(condition)) \
@@ -34,12 +34,5 @@ namespace test
 			FAIL(errorMessage); \
 		} \
 	} while (false)
-
-// clang-format off
-#define _MS_REQUIRE_WITH_MESSAGE_IMPL(_1, _2, NAME, ...) NAME
-
-// clang-format off
-#define REQUIRE_WITH_MESSAGE(...) \
-	_MS_REQUIRE_WITH_MESSAGE_IMPL(__VA_ARGS__, _MS_REQUIRE_WITH_MESSAGE_2, _MS_REQUIRE_WITH_MESSAGE_1)(__VA_ARGS__)
 
 #endif

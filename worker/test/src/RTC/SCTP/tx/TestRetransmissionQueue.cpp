@@ -394,7 +394,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 20, RTC::SCTP::OutstandingData::State::ACKED     },
     });
 
-		REQUIRE_WITH_MESSAGE(sendQueue.VerifyExpectations());
+		REQUIRE_VERIFICATION_RESULT(sendQueue.VerifyExpectations());
 	}
 
 	// TODO: SCTP: A lot of tests.
