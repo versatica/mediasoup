@@ -3,6 +3,8 @@
 #include "mocks/include/MockShared.hpp"
 #include "mocks/include/RTC/SCTP/public/MockAssociationListener.hpp"
 #include "mocks/include/RTC/SCTP/tx/MockSendQueue.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
+#include "test/include/catch2Macros.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
@@ -10,7 +12,6 @@
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
-#include "RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -393,12 +394,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 20, RTC::SCTP::OutstandingData::State::ACKED     },
     });
 
-		const auto result = sendQueue.VerifyExpectations();
-
-		if (!result.ok)
-		{
-			FAIL(result.error);
-		}
+		REQUIRE_WITH_MESSAGE(sendQueue.VerifyExpectations());
 	}
 
 	// TODO: SCTP: A lot of tests.

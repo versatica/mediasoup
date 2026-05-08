@@ -1,7 +1,7 @@
 #include "common.hpp"
+#include "test/include/RTC/RTP/rtpCommon.hpp" // in worker/test/include/
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
-#include "RTC/RTP/rtpCommon.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
 
 SCENARIO("RTP SharedPacket", "[rtp][sharedpacket]")

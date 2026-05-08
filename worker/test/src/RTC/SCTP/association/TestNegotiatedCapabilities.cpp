@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
@@ -6,7 +7,6 @@
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
-#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")

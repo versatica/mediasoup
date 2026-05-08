@@ -2,10 +2,10 @@
 #define MS_MOCKS_RTC_SCTP_MOCK_SEND_QUEUE_HPP
 
 #include "common.hpp"
+#include "test/include/catch2Macros.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include <queue>
 #include <stdexcept>
-#include <string>
 
 namespace mocks
 {
@@ -26,12 +26,6 @@ namespace mocks
 					// If std::nullopt, don't check it.
 					std::optional<uint32_t> outgoingMessageId;
 					bool returnValue{ false };
-				};
-
-				struct VerificationResult
-				{
-					bool ok;
-					std::string error;
 				};
 
 			public:
@@ -192,35 +186,36 @@ namespace mocks
 					return *this;
 				}
 
-				VerificationResult VerifyExpectations() const
+				test::VerificationResult VerifyExpectations() const
 				{
 					if (
 					  this->expectedProduceCallCount.has_value() &&
 					  this->produceCallCount != this->expectedProduceCallCount.value())
 					{
-						return { .ok    = false,
-							       .error = "Produce() call count mismatch [expected:" +
-							                std::to_string(this->expectedProduceCallCount.value()) +
-							                ", got:" + std::to_string(this->produceCallCount) + "]" };
+						return { .ok           = false,
+							       .errorMessage = "Produce() call count mismatch [expected:" +
+							                       std::to_string(this->expectedProduceCallCount.value()) +
+							                       ", got:" + std::to_string(this->produceCallCount) + "]" };
 					}
 					else if (
 					  this->expectedDiscardCallCount.has_value() &&
 					  this->discardCallCount != this->expectedDiscardCallCount.value())
 					{
-						return { .ok    = false,
-							       .error = "Discard() call count mismatch [expected:" +
-							                std::to_string(this->expectedDiscardCallCount.value()) +
-							                ", got:" + std::to_string(this->discardCallCount) + "]" };
+						return { .ok           = false,
+							       .errorMessage = "Discard() call count mismatch [expected:" +
+							                       std::to_string(this->expectedDiscardCallCount.value()) +
+							                       ", got:" + std::to_string(this->discardCallCount) + "]" };
 					}
 					else if (!this->discardExpectations.empty())
 					{
-						return { .ok    = false,
-							       .error = "Discard() has " + std::to_string(this->discardExpectations.size()) +
-							                " unconsumed expectation(s)" };
+						return { .ok           = false,
+							       .errorMessage = "Discard() has " +
+							                       std::to_string(this->discardExpectations.size()) +
+							                       " unconsumed expectation(s)" };
 					}
 					else
 					{
-						return { .ok = true, .error = "" };
+						return { .ok = true, .errorMessage = "" };
 					}
 				}
 

@@ -1,5 +1,5 @@
-#include "RTC/ICE/iceCommon.hpp" // in worker/test/include/
-#include <cstring>               // std::memset
+#include "test/include/RTC/ICE/iceCommon.hpp" // in worker/test/include/
+#include <cstring>                            // std::memset
 
 namespace iceCommon
 {
