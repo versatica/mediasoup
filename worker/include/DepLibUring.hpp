@@ -2,6 +2,7 @@
 #define MS_DEP_LIBURING_HPP
 
 #include "FBS/liburing.h"
+#include <uv.h>
 #include <functional>
 #include <liburing.h>
 #include <queue>
