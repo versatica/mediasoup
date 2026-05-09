@@ -309,10 +309,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  10, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, false, false));
 
 		REQUIRE(buffer.GetChunksToBeFastRetransmitted(1000) == expectedChunksToBeFastRetransmitted);
-
-		REQUIRE(
-		  buffer.GetChunksToBeRetransmitted(1000) ==
-		  std::vector<std::pair<uint32_t, RTC::SCTP::UserData>>{});
+		REQUIRE(buffer.GetChunksToBeRetransmitted(1000).empty() == true);
 	}
 
 	SECTION("nacks three times results in abandoning")
@@ -870,7 +867,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  /*expectedLastOutgoingMessageId*/ OutgoingMessageId);
 
 		REQUIRE(ackInfo3.hasPacketLoss == true);
-		REQUIRE(ackInfo3.abandonedLifecycleIds == std::vector<uint64_t>{});
+		REQUIRE(ackInfo3.abandonedLifecycleIds.empty() == true);
 	}
 
 	SECTION("lifecyle returns abandoned after T3 RTX timer expired")
