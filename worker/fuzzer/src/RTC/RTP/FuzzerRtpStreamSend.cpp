@@ -6,7 +6,11 @@
 namespace
 {
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local mocks::MockShared shared;
+	thread_local mocks::MockShared shared(/*getTimeMs*/
+	                                      []()
+	                                      {
+		                                      return 1000;
+	                                      });
 } // namespace
 
 void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
