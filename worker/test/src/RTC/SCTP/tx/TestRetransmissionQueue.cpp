@@ -93,7 +93,15 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		return [outgoingMessageId](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		{
 			RTC::SCTP::UserData data(
-			  1, 0, 0, 0, 53, { 1, 2, 3, 4 }, /*isBeginning*/ true, /*isEnd*/ true, /*isUnordered*/ false);
+			  1,
+			  0,
+			  0,
+			  0,
+			  53,
+			  { 0x01, 0x02, 0x03, 0x04 },
+			  /*isBeginning*/ true,
+			  /*isEnd*/ true,
+			  /*isUnordered*/ false);
 
 			return RTC::SCTP::SendQueueInterface::DataToSend(outgoingMessageId, std::move(data));
 		};
@@ -528,6 +536,43 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		nowMs += 1;
 
 		REQUIRE(backoffTimer->EvaluateHasExpired() == true);
+	}
+
+	SECTION("can only produce two packets but wants to send three")
+	{
+		auto queue = createQueue();
+
+		sendQueue.WillProduceOnce(createDataToSend(0))
+		  .WillProduceOnce(createDataToSend(1))
+		  .WillProduceRepeatedly(
+		    [](uint64_t, size_t)
+		    {
+			    return std::nullopt;
+		    });
+
+		const std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::UserData>> chunksToSend =
+		  queue.GetChunksToSend(nowMs, 1000);
+
+		std::vector<uint32_t> tsnsToSend;
+
+		std::transform(
+		  chunksToSend.begin(),
+		  chunksToSend.end(),
+		  std::back_inserter(tsnsToSend),
+		  [](const auto& p)
+		  {
+			  return p.first; // tsn.
+		  });
+
+		REQUIRE(tsnsToSend == std::vector<uint32_t>{ 10, 11 });
+
+		REQUIRE(
+		  queue.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 11, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+    });
 	}
 
 	// TODO: SCTP: A lot of tests.
