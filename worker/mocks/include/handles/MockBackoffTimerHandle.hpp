@@ -16,13 +16,17 @@ namespace mocks
 		friend class mocks::MockShared;
 
 	private:
-		explicit MockBackoffTimerHandle(BackoffTimerHandleOptions options, std::function<uint64_t()> getTimeMs)
+		explicit MockBackoffTimerHandle(
+		  BackoffTimerHandleOptions options,
+		  std::function<uint64_t()> getTimeMs,
+		  std::function<void()> onDelete)
 		  : label(std::move(options.label)),
 		    baseTimeoutMs(options.baseTimeoutMs),
 		    backoffAlgorithm(options.backoffAlgorithm),
 		    maxBackoffTimeoutMs(options.maxBackoffTimeoutMs),
 		    maxRestarts(options.maxRestarts),
-		    getTimeMs(std::move(getTimeMs))
+		    getTimeMs(std::move(getTimeMs)),
+		    onDelete(std::move(onDelete))
 		{
 			SetBaseTimeoutMs(baseTimeoutMs);
 		}
@@ -32,9 +36,14 @@ namespace mocks
 
 		MockBackoffTimerHandle(const MockBackoffTimerHandle&) = delete;
 
-		~MockBackoffTimerHandle() override = default;
+		~MockBackoffTimerHandle() override
+		{
+			this->onDelete();
+		}
 
 	public:
+		void Dump(int indentation = 0) const;
+
 		void Start() override
 		{
 			this->running     = true;
@@ -79,10 +88,11 @@ namespace mocks
 			return this->expiresAtMs;
 		}
 
-		bool EvaluateHasExpired(uint64_t nowMs)
+		bool EvaluateHasExpired()
 		{
-			if (nowMs > this->expiresAtMs)
+			if (this->getTimeMs() >= this->expiresAtMs)
 			{
+				this->expirationCount++;
 				this->expiresAtMs = std::numeric_limits<uint64_t>::max();
 
 				return true;
@@ -128,14 +138,17 @@ namespace mocks
 		}
 
 	private:
+		// Given by argument.
 		const std::string label;
 		uint64_t baseTimeoutMs{ 0 };
 		BackoffAlgorithm backoffAlgorithm;
 		std::optional<uint64_t> maxBackoffTimeoutMs;
 		std::optional<size_t> maxRestarts;
+		std::function<uint64_t()> getTimeMs;
+		const std::function<void()> onDelete;
+		// Others.
 		bool running{ false };
 		size_t expirationCount{ 0 };
-		std::function<uint64_t()> getTimeMs;
 		uint64_t expiresAtMs{ std::numeric_limits<uint64_t>::max() };
 	};
 } // namespace mocks

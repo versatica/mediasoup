@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "SharedInterface.hpp"
-#include "RTC/SCTP/association/TCBContext.hpp"
+#include "RTC/SCTP/association/TransmissionControlBlockInterface.hpp"
 #include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
@@ -168,7 +168,7 @@ namespace RTC
 			StreamResetHandler(
 			  AssociationListener& associationListener,
 			  SharedInterface* shared,
-			  TCBContext* tcbContext,
+			  TransmissionControlBlockInterface* tcbContext,
 			  // TODO: SCTP: Implement
 			  // DataTracker* dataTracker,
 			  // ReassemblyQueue* reassemblyQueue,
@@ -264,7 +264,7 @@ namespace RTC
 		private:
 			AssociationListener& associationListener;
 			SharedInterface* shared;
-			TCBContext* tcbContext;
+			TransmissionControlBlockInterface* tcbContext;
 			// TODO: SCTP: Implement
 			// DataTracker* dataTracker;,
 			// TODO: SCTP: Implement

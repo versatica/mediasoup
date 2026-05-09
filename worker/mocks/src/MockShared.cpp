@@ -1,50 +1,45 @@
+#define MS_CLASS "mocks::MockShared"
+// #define MS_LOG_DEV_LEVEL 3
+
 #include "mocks/include/MockShared.hpp"
-#include "mocks/include/handles/MockBackoffTimerHandle.hpp"
+#include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include "mocks/include/handles/MockTimerHandle.hpp"
 
 namespace mocks
 {
 	MockShared::MockShared(std::function<uint64_t()> getTimeMs)
-	  : channelSocket(new ::Channel::ChannelSocket()),
+	  : getTimeMs(std::move(getTimeMs)),
+	    channelSocket(new ::Channel::ChannelSocket()),
 	    channelMessageRegistrator(new mocks::Channel::MockChannelMessageRegistrator()),
-	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get())),
-	    getTimeMs(std::move(getTimeMs))
+	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get()))
 	{
 	}
 
-	TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* /*listener*/) const
+	TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* /*listener*/)
 	{
 		return new MockTimerHandle();
 	}
 
 	BackoffTimerHandleInterface* MockShared::CreateBackoffTimer(
-	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const
+	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options)
 	{
-		return new MockBackoffTimerHandle(options, this->getTimeMs);
-	}
+		if (options.label.empty())
+		{
+			MS_THROW_TYPE_ERROR("options.label must be given");
+		}
 
-	uint64_t MockShared::GetTimeMs() const
-	{
-		return this->getTimeMs();
-	}
+		auto* backoffTimer = new MockBackoffTimerHandle(
+		  options,
+		  /*getTimeMs*/ this->getTimeMs,
+		  /*onDelete*/
+		  [this, &options]()
+		  {
+			  this->backoffTimers.erase(options.label);
+		  });
 
-	uint64_t MockShared::GetTimeUs() const
-	{
-		return GetTimeMs() * 1000;
-	}
+		this->backoffTimers[options.label] = backoffTimer;
 
-	uint64_t MockShared::GetTimeNs() const
-	{
-		return GetTimeMs() * 1000 * 1000;
-	}
-
-	int64_t MockShared::GetTimeMsInt64() const
-	{
-		return static_cast<int64_t>(GetTimeMs());
-	}
-
-	int64_t MockShared::GetTimeUsInt64() const
-	{
-		return static_cast<int64_t>(GetTimeUs());
+		return backoffTimer;
 	}
 } // namespace mocks

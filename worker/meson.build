@@ -562,6 +562,7 @@ test_sources = [
   'test/src/Utils/TestString.cpp',
   'test/src/Utils/TestTime.cpp',
   'mocks/src/MockShared.cpp',
+  'mocks/src/handles/MockBackoffTimerHandle.cpp',
   'mocks/src/Channel/MockChannelMessageRegistrator.cpp',
 ]
 

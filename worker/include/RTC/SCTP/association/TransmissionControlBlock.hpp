@@ -7,7 +7,7 @@
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
 #include "RTC/SCTP/association/StreamResetHandler.hpp"
-#include "RTC/SCTP/association/TCBContext.hpp"
+#include "RTC/SCTP/association/TransmissionControlBlockInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
@@ -29,7 +29,7 @@ namespace RTC
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/rfc9260#section-14
 		 */
-		class TransmissionControlBlock : public TCBContext,
+		class TransmissionControlBlock : public TransmissionControlBlockInterface,
 		                                 public RetransmissionQueue::Listener,
 		                                 public BackoffTimerHandleInterface::Listener
 		{
@@ -56,7 +56,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			bool IsAssociationEstablished() const override
 			{
@@ -88,7 +88,7 @@ namespace RTC
 			 * Chunk.
 			 *
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			uint32_t GetLocalInitialTsn() const override
 			{
@@ -100,7 +100,7 @@ namespace RTC
 			 * INIT_ACK Chunk.
 			 *
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			uint32_t GetRemoteInitialTsn() const override
 			{
@@ -134,7 +134,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			void ObserveRttMs(uint64_t rttMs) override;
 
@@ -145,7 +145,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			uint64_t GetCurrentRtoMs() const override
 			{
@@ -159,7 +159,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			std::unique_ptr<Packet> CreatePacket() const override;
 
@@ -167,7 +167,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			void Send(Packet* packet) override;
 
@@ -235,7 +235,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			bool IncrementTxErrorCounter(std::string_view reason) override
 			{
@@ -244,7 +244,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			void ClearTxErrorCounter() override
 			{
@@ -253,7 +253,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TCBContext interface.
+			 * - Implements TransmissionControlBlockInterface interface.
 			 */
 			bool HasTooManyTxErrors() const override
 			{

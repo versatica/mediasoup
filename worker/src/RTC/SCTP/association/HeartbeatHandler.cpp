@@ -24,7 +24,7 @@ namespace RTC
 		  AssociationListener& associationListener,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
-		  TCBContext* tcbContext)
+		  TransmissionControlBlockInterface* tcbContext)
 		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
 		    shared(shared),

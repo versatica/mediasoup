@@ -17,7 +17,7 @@ namespace RTC
 		StreamResetHandler::StreamResetHandler(
 		  AssociationListener& associationListener,
 		  SharedInterface* shared,
-		  TCBContext* tcbContext,
+		  TransmissionControlBlockInterface* tcbContext,
 		  // TODO: SCTP: Implement
 		  // DataTracker* dataTracker,
 		  // ReassemblyQueue* reassemblyQueue,

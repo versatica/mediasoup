@@ -3,6 +3,7 @@
 #include "mocks/include/MockShared.hpp"
 #include "mocks/include/RTC/SCTP/public/MockAssociationListener.hpp"
 #include "mocks/include/RTC/SCTP/tx/MockSendQueue.hpp"
+#include "mocks/include/handles/MockBackoffTimerHandle.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "test/include/catch2Macros.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
@@ -61,14 +62,16 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		                         return nowMs;
 	                         });
 
-	auto* t3RtxTimer = shared.CreateBackoffTimer(
-	  BackoffTimerHandleInterface::BackoffTimerHandleOptions{
-	    // No `listener` given on purpose.
-	    .label               = "mock-sctp-t3-rtx",
-	    .baseTimeoutMs       = sctpOptions.initialRtoMs,
-	    .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
-	    .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
-	    .maxRestarts         = std::nullopt });
+	std::unique_ptr<BackoffTimerHandleInterface> t3RtxTimerUniquePtr{ shared.CreateBackoffTimer(
+		BackoffTimerHandleInterface::BackoffTimerHandleOptions{
+		  // No `listener` given on purpose.
+		  .label               = "mock-sctp-t3-rtx",
+		  .baseTimeoutMs       = sctpOptions.initialRtoMs,
+		  .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
+		  .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
+		  .maxRestarts         = std::nullopt }) };
+
+	auto* t3RtxTimer = t3RtxTimerUniquePtr.get();
 
 	auto createQueue = [&queueListener, &associationListener, &sendQueue, &t3RtxTimer, &sctpOptions](
 	                     bool supportsPartialReliability = true, bool useMessageInterleaving = false)
@@ -496,7 +499,35 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 14, RTC::SCTP::OutstandingData::State::ACKED               },
     });
 
-		// TODO: SCTP: More here!
+		// This will trigger "fast retransmit" mode and only chunks 13 and 16 will
+		// be resent right now. The send queue will not even be queried.
+		sendQueue.ExpectProduceCalledTimes(0);
+
+		REQUIRE(getTSNsForFastRetransmit(queue) == std::vector<uint32_t>{ 11 });
+
+		REQUIRE(
+		  queue.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 10, RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 11, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 12, RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 13, RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 14, RTC::SCTP::OutstandingData::State::ACKED     },
+    });
+
+		// Verify that the timer was really restarted when fast-retransmitting. The
+		// timeout is `sctpOptions.initialRtoMs`, so advance the time just before
+		// that.
+		nowMs += (sctpOptions.initialRtoMs - 1);
+
+		auto* backoffTimer = shared.GetBackoffTimer("mock-sctp-t3-rtx");
+
+		REQUIRE(backoffTimer);
+		REQUIRE(backoffTimer->EvaluateHasExpired() == false);
+
+		nowMs += 1;
+
+		REQUIRE(backoffTimer->EvaluateHasExpired() == true);
 	}
 
 	// TODO: SCTP: A lot of tests.

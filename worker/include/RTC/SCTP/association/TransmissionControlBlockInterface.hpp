@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_TCB_CONTEXT_HPP
-#define MS_RTC_SCTP_TCB_CONTEXT_HPP
+#ifndef MS_RTC_SCTP_TRANSMISSION_CONTROL_BLOCK_CONTEXT_INTERFACE_HPP
+#define MS_RTC_SCTP_TRANSMISSION_CONTROL_BLOCK_CONTEXT_INTERFACE_HPP
 
 #include "common.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
@@ -9,10 +9,10 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		class TCBContext
+		class TransmissionControlBlockInterface
 		{
 		public:
-			virtual ~TCBContext() = default;
+			virtual ~TransmissionControlBlockInterface() = default;
 
 			/**
 			 * Indicates if the SCTP Association has been established.
