@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SimulcastConsumer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -444,7 +443,7 @@ namespace RTC
 		uint32_t requiredBitrate{ 0u };
 		int16_t spatialLayer{ 0 };
 		int16_t temporalLayer{ 0 };
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
@@ -654,7 +653,7 @@ namespace RTC
 				  this->currentSpatialLayer,
 				  this->targetLayers.spatial);
 
-				this->lastBweDowngradeAtMs = DepLibUV::GetTimeMs();
+				this->lastBweDowngradeAtMs = this->shared->GetTimeMs();
 			}
 		}
 	}
@@ -670,7 +669,7 @@ namespace RTC
 			return 0u;
 		}
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 		uint32_t desiredBitrate{ 0u };
 
 		// Let's iterate all streams of the Producer (from highest to lowest) and
@@ -1583,7 +1582,7 @@ namespace RTC
 		// Start with no layers.
 		newTargetLayers.Reset();
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{

@@ -41,3 +41,31 @@ uint64_t Shared::GetTimeMs() const
 
 	return DepLibUV::GetTimeMs();
 }
+
+uint64_t Shared::GetTimeUs() const
+{
+	MS_TRACE();
+
+	return DepLibUV::GetTimeUs();
+}
+
+uint64_t Shared::GetTimeNs() const
+{
+	MS_TRACE();
+
+	return DepLibUV::GetTimeNs();
+}
+
+int64_t Shared::GetTimeMsInt64() const
+{
+	MS_TRACE();
+
+	return DepLibUV::GetTimeMsInt64();
+}
+
+int64_t Shared::GetTimeUsInt64() const
+{
+	MS_TRACE();
+
+	return DepLibUV::GetTimeUsInt64();
+}

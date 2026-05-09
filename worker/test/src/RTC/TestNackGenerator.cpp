@@ -128,7 +128,7 @@ SCENARIO("NACK generator", "[rtp][rtcp][nack]")
 	mocks::MockShared shared(/*getTimeMs*/
 	                         []()
 	                         {
-		                         return 0;
+		                         return 1000;
 	                         });
 
 	auto validate =

@@ -3,7 +3,6 @@
 
 #include "RTC/RTP/Packet.hpp"
 #ifdef MS_RTC_LOGGER_RTP
-#include "DepLibUV.hpp"
 #endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -136,7 +135,7 @@ namespace RTC
 
 #ifdef MS_RTC_LOGGER_RTP
 			// Initialize logger.
-			this->logger.timestamp        = DepLibUV::GetTimeMs();
+			this->logger.timestamp        = this->shared->GetTimeMs();
 			this->logger.recvRtpTimestamp = GetTimestamp();
 			this->logger.recvSeqNumber    = GetSequenceNumber();
 #endif

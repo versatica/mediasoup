@@ -17,7 +17,7 @@ namespace
 	mocks::MockShared shared(/*getTimeMs*/
 	                         []()
 	                         {
-		                         return 0;
+		                         return 1000;
 	                         });
 	// NOLINTEND(readability-identifier-naming)
 

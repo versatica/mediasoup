@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SvcConsumer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -388,7 +387,7 @@ namespace RTC
 		uint32_t requiredBitrate{ 0u };
 		int16_t spatialLayer{ 0 };
 		int16_t temporalLayer{ 0 };
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
 		{
@@ -544,7 +543,7 @@ namespace RTC
 				  this->encodingContext->GetCurrentSpatialLayer(),
 				  this->encodingContext->GetTargetSpatialLayer());
 
-				this->lastBweDowngradeAtMs = DepLibUV::GetTimeMs();
+				this->lastBweDowngradeAtMs = this->shared->GetTimeMs();
 			}
 		}
 	}
@@ -560,7 +559,7 @@ namespace RTC
 			return 0u;
 		}
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 		uint32_t desiredBitrate{ 0u };
 
 		// When using K-SVC each spatial layer is independent of the others.
@@ -1156,7 +1155,7 @@ namespace RTC
 		// Start with no layers.
 		newTargetLayers.Reset();
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)

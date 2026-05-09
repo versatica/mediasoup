@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataProducer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <vector>
@@ -108,7 +107,7 @@ namespace RTC
 		return FBS::DataProducer::CreateGetStatsResponseDirect(
 		  builder,
 		  // timestamp.
-		  DepLibUV::GetTimeMs(),
+		  this->shared->GetTimeMs(),
 		  // label.
 		  this->label.c_str(),
 		  // protocol.

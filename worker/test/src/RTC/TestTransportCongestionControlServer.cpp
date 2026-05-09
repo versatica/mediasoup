@@ -82,7 +82,7 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 	mocks::MockShared shared(/*getTimeMs*/
 	                         []()
 	                         {
-		                         return 0;
+		                         return 1000;
 	                         });
 
 	// clang-format off

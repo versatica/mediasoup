@@ -33,6 +33,14 @@ namespace mocks
 
 		uint64_t GetTimeMs() const override;
 
+		uint64_t GetTimeUs() const override;
+
+		uint64_t GetTimeNs() const override;
+
+		int64_t GetTimeMsInt64() const override;
+
+		int64_t GetTimeUsInt64() const override;
+
 	private:
 		std::unique_ptr<::Channel::ChannelSocket> channelSocket;
 		std::unique_ptr<mocks::Channel::MockChannelMessageRegistrator> channelMessageRegistrator;

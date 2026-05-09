@@ -27,4 +27,24 @@ namespace mocks
 	{
 		return this->getTimeMs();
 	}
+
+	uint64_t MockShared::GetTimeUs() const
+	{
+		return GetTimeMs() * 1000;
+	}
+
+	uint64_t MockShared::GetTimeNs() const
+	{
+		return GetTimeMs() * 1000 * 1000;
+	}
+
+	int64_t MockShared::GetTimeMsInt64() const
+	{
+		return static_cast<int64_t>(GetTimeMs());
+	}
+
+	int64_t MockShared::GetTimeUsInt64() const
+	{
+		return static_cast<int64_t>(GetTimeUs());
+	}
 } // namespace mocks

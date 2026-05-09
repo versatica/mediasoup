@@ -44,6 +44,34 @@ public:
 	 * Get current time in milliseconds.
 	 */
 	virtual uint64_t GetTimeMs() const = 0;
+
+	/**
+	 * Get current time in microseconds.
+	 */
+	virtual uint64_t GetTimeUs() const = 0;
+
+	/**
+	 * Get current time in nanoseconds.
+	 */
+	virtual uint64_t GetTimeNs() const = 0;
+
+	/**
+	 * @remarks
+	 * - Used within libwebrtc dependency which uses int64_t values for time
+	 *   representation.
+	 *
+	 * @todo Remove once not needed.
+	 */
+	virtual int64_t GetTimeMsInt64() const = 0;
+
+	/**
+	 * @remarks
+	 * - Used within libwebrtc dependency which uses int64_t values for time
+	 *   representation.
+	 *
+	 * @todo Remove once not needed.
+	 */
+	virtual int64_t GetTimeUsInt64() const = 0;
 };
 
 #endif

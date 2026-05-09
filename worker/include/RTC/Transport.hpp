@@ -1,9 +1,9 @@
 #ifndef MS_RTC_TRANSPORT_HPP
 #define MS_RTC_TRANSPORT_HPP
+
 // #define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
@@ -185,11 +185,11 @@ namespace RTC
 		void Disconnected();
 		void DataReceived(size_t len)
 		{
-			this->recvTransmission.Update(len, DepLibUV::GetTimeMs());
+			this->recvTransmission.Update(len, this->shared->GetTimeMs());
 		}
 		void DataSent(size_t len)
 		{
-			this->sendTransmission.Update(len, DepLibUV::GetTimeMs());
+			this->sendTransmission.Update(len, this->shared->GetTimeMs());
 		}
 		void ReceiveRtpPacket(RTC::RTP::Packet* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);

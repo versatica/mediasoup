@@ -1,7 +1,6 @@
 #ifndef MS_DEP_LIBURING_HPP
 #define MS_DEP_LIBURING_HPP
 
-#include "DepLibUV.hpp"
 #include "FBS/liburing.h"
 #include <functional>
 #include <liburing.h>

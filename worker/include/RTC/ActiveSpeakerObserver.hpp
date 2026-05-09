@@ -20,7 +20,9 @@ namespace RTC
 		class Speaker
 		{
 		public:
-			Speaker();
+			explicit Speaker(SharedInterface* shared);
+
+		public:
 			void EvalActivityScores();
 			double GetActivityScore(uint8_t interval) const;
 			void LevelChanged(uint32_t level, uint64_t now);
@@ -56,7 +58,7 @@ namespace RTC
 		class ProducerSpeaker
 		{
 		public:
-			explicit ProducerSpeaker(RTC::Producer* producer);
+			ProducerSpeaker(SharedInterface* shared, RTC::Producer* producer);
 			~ProducerSpeaker();
 
 		public:

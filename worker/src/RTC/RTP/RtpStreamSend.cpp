@@ -39,7 +39,7 @@ namespace RTC
 		  std::string& mid)
 		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
 		    mid(mid),
-		    transmissionCounter(/*ignorePaddingOnlyPackets*/ true)
+		    transmissionCounter(shared, /*ignorePaddingOnlyPackets*/ true)
 		{
 			MS_TRACE();
 
@@ -83,7 +83,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
 			auto stats     = FBS::RtpStream::CreateSendStats(
@@ -302,7 +302,7 @@ namespace RTC
 			/* Calculate RTT. */
 
 			// Get the NTP representation of the current timestamp.
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs);
 
 			// Get the compact NTP representation of the current timestamp.
@@ -342,7 +342,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->lastRrReceivedMs = DepLibUV::GetTimeMs();
+			this->lastRrReceivedMs = this->shared->GetTimeMs();
 			this->lastRrTimestamp  = report->GetNtpSec() << 16;
 			this->lastRrTimestamp += report->GetNtpFrac() >> 16;
 		}
@@ -485,7 +485,7 @@ namespace RTC
 			}
 
 			// Look for each requested packet.
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 			const uint16_t rtt   = (this->rtt > 0.0f ? this->rtt : DefaultRtt);
 			uint16_t currentSeq  = seq;
 			bool requested{ true };

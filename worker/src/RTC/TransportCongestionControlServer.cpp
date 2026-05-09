@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TransportCongestionControlServer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 
@@ -287,7 +286,7 @@ namespace RTC
 			// This is to ensure that we send N REMB packets with bitrate 0 (unlimited).
 			this->unlimitedRembCounter = UnlimitedRembNumPackets;
 
-			auto nowMs = DepLibUV::GetTimeMs();
+			auto nowMs = this->shared->GetTimeMs();
 
 			MaySendLimitationRembFeedback(nowMs);
 		}

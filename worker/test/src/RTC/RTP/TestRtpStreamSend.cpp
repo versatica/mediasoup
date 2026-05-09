@@ -109,7 +109,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	mocks::MockShared shared(/*getTimeMs*/
 	                         []()
 	                         {
-		                         return 0;
+		                         return 1000;
 	                         });
 
 	// clang-format off
