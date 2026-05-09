@@ -49,13 +49,17 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	// cumulative-acked.
 	constexpr uint32_t InitialTsn{ 10 };
 
-	const mocks::MockShared shared;
 	const RTC::SCTP::SctpOptions sctpOptions{ .mtu = Mtu };
 
 	MockRetransmissionQueueListener queueListener;
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
 	mocks::RTC::SCTP::MockSendQueue sendQueue;
 	uint64_t nowMs{ 0 };
+	mocks::MockShared shared(/*getTimeMs*/
+	                         [&nowMs]()
+	                         {
+		                         return nowMs;
+	                         });
 
 	auto* t3RtxTimer = shared.CreateBackoffTimer(
 	  BackoffTimerHandleInterface::BackoffTimerHandleOptions{
@@ -395,6 +399,58 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
     });
 
 		REQUIRE_VERIFICATION_RESULT(sendQueue.VerifyExpectations());
+	}
+
+	SECTION("restarts T3-rtx timer on retransmit first outstanding TSN")
+	{
+		auto queue = createQueue();
+
+		sendQueue.WillProduceOnce(createDataToSend(0))
+		  .WillProduceOnce(createDataToSend(1))
+		  .WillProduceOnce(createDataToSend(2))
+		  .WillProduceRepeatedly(
+		    [](uint64_t, size_t)
+		    {
+			    return std::nullopt;
+		    });
+
+		// Starting time.
+		nowMs = 100 * 1000; // 100 seconds.
+
+		REQUIRE(getSentPacketTSNs(queue) == std::vector<uint32_t>{ 10, 11, 12 });
+
+		// Ack 10 and 12 after 100ms.
+		nowMs += 100;
+
+		queue.HandleReceivedSackChunk(
+		  nowMs,
+		  createSackChunk(
+		    10,
+		    Arwnd,
+		    {
+		      { 2, 2 },
+    })
+		    .get());
+
+		REQUIRE(
+		  queue.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 10, RTC::SCTP::OutstandingData::State::ACKED  },
+		    { 11, RTC::SCTP::OutstandingData::State::NACKED },
+		    { 12, RTC::SCTP::OutstandingData::State::ACKED  },
+    });
+
+		// Send 13.
+		sendQueue.WillProduceOnce(createDataToSend(0))
+		  .WillProduceOnce(createDataToSend(3))
+		  .WillProduceRepeatedly(
+		    [](uint64_t, size_t)
+		    {
+			    return std::nullopt;
+		    });
+
+		// TODO: SCTP : More here!
+		REQUIRE(getSentPacketTSNs(queue) == std::vector<uint32_t>{ 13 });
 	}
 
 	// TODO: SCTP: A lot of tests.

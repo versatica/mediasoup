@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Shared.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include "handles/TimerHandle.hpp"
@@ -32,4 +33,11 @@ BackoffTimerHandleInterface* Shared::CreateBackoffTimer(
 	MS_TRACE();
 
 	return new BackoffTimerHandle(options);
+}
+
+uint64_t Shared::GetTimeMs() const
+{
+	MS_TRACE();
+
+	return DepLibUV::GetTimeMs();
 }

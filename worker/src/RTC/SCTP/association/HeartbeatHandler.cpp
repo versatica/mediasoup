@@ -3,7 +3,6 @@
 #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
@@ -148,7 +147,7 @@ namespace RTC
 			}
 
 			const uint64_t createdAtMs = Utils::Byte::Get8Bytes(info, 0);
-			const uint64_t nowMs       = DepLibUV::GetTimeMs();
+			const uint64_t nowMs       = this->shared->GetTimeMs();
 
 			if (createdAtMs > 0 && createdAtMs <= nowMs)
 			{
@@ -189,7 +188,8 @@ namespace RTC
 			this->timeoutTimer->Start();
 
 			alignas(8) uint8_t info[HeartbeatInfoLength];
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			Utils::Byte::Set8Bytes(info, 0, nowMs);
 

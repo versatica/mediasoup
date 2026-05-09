@@ -3,7 +3,6 @@
 #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/Association.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
@@ -462,7 +461,7 @@ namespace RTC
 				return status;
 			}
 
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			this->privateMetrics.txMessagesCount++;
 
@@ -486,7 +485,7 @@ namespace RTC
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			std::vector<Types::SendMessageStatus> statuses;
 
@@ -2306,7 +2305,7 @@ namespace RTC
 				return;
 			}
 
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			if (this->tcb->GetRetransmissionQueue().HandleReceivedSackChunk(nowMs, receivedSackChunk))
 			{

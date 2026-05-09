@@ -11,7 +11,7 @@ namespace mocks
 	class MockShared : public SharedInterface
 	{
 	public:
-		explicit MockShared();
+		explicit MockShared(std::function<uint64_t()> getTimeMs);
 
 		~MockShared() override = default;
 
@@ -31,10 +31,13 @@ namespace mocks
 		BackoffTimerHandleInterface* CreateBackoffTimer(
 		  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const override;
 
+		uint64_t GetTimeMs() const override;
+
 	private:
 		std::unique_ptr<::Channel::ChannelSocket> channelSocket;
 		std::unique_ptr<mocks::Channel::MockChannelMessageRegistrator> channelMessageRegistrator;
 		std::unique_ptr<::Channel::ChannelNotifier> channelNotifier;
+		const std::function<uint64_t()> getTimeMs;
 	};
 } // namespace mocks
 

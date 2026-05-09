@@ -3,7 +3,6 @@
 #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
@@ -302,7 +301,7 @@ namespace RTC
 				{
 					this->retransmissionQueue.HandleT3RtxTimerExpiry();
 
-					// const uint64_t nowMs = DepLibUV::GetTimeMs();
+					// const uint64_t nowMs = this->shared->GetTimeMs();
 
 					// TODO: SCTP: Implement
 					// SendBufferedPackets(nowMs);

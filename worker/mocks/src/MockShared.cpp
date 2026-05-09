@@ -4,10 +4,11 @@
 
 namespace mocks
 {
-	MockShared::MockShared()
+	MockShared::MockShared(std::function<uint64_t()> getTimeMs)
 	  : channelSocket(new ::Channel::ChannelSocket()),
 	    channelMessageRegistrator(new mocks::Channel::MockChannelMessageRegistrator()),
-	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get()))
+	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get())),
+	    getTimeMs(std::move(getTimeMs))
 	{
 	}
 
@@ -19,6 +20,11 @@ namespace mocks
 	BackoffTimerHandleInterface* MockShared::CreateBackoffTimer(
 	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const
 	{
-		return new MockBackoffTimerHandle(options);
+		return new MockBackoffTimerHandle(options, this->getTimeMs);
+	}
+
+	uint64_t MockShared::GetTimeMs() const
+	{
+		return this->getTimeMs();
 	}
 } // namespace mocks

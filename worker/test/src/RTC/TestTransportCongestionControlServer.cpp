@@ -79,7 +79,11 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		TestResults results;
 	};
 
-	mocks::MockShared shared;
+	mocks::MockShared shared(/*getTimeMs*/
+	                         []()
+	                         {
+		                         return 0;
+	                         });
 
 	// clang-format off
 	alignas(4) uint8_t buffer[] =

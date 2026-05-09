@@ -119,7 +119,7 @@ namespace RTC
 			UpdateReceiverWindow(receivedSackChunk->GetAdvertisedReceiverWindowCredit());
 
 			MS_DEBUG_DEV(
-			  "Received SACK [cumulativeTsnAck:%" PRIu32 ", oldLastCumulativeTsnAck:%" PRIu32
+			  "received SACK [cumulativeTsnAck:%" PRIu32 ", oldLastCumulativeTsnAck:%" PRIu32
 			  ", unackedPacketBytes:%zu, oldUnackedPacketBytes:%zu, rwnd:%zu, oldRwnd:%zu]",
 			  cumulativeTsnAck.Wrap(),
 			  oldLastCumulativeTsnAck.Wrap(),
@@ -287,7 +287,7 @@ namespace RTC
 			}
 
 			MS_DEBUG_DEV(
-			  "fast-retransmitting TSN %s - %zu bytes [unackedPacketBytes:%zu, oldUnackedPacketBytes:%zu]",
+			  "fast-retransmitting TSN %s (%zu bytes) [unackedPacketBytes:%zu, oldUnackedPacketBytes:%zu]",
 			  tsnList.c_str(),
 			  bytesRetransmitted,
 			  GetUnackedPacketBytes(),
@@ -433,7 +433,7 @@ namespace RTC
 				  });
 
 				MS_DEBUG_DEV(
-				  "sending TSN %s - %zu bytes [unackedPacketBytes:%zu, oldUnackedPacketBytes:%zu, cwnd:%zu, rwnd:%zu, oldRwnd:%zu]",
+				  "sending TSN %s (%zu bytes) [unackedPacketBytes:%zu, oldUnackedPacketBytes:%zu, cwnd:%zu, rwnd:%zu, oldRwnd:%zu]",
 				  tsnList.c_str(),
 				  bytesRetransmitted,
 				  GetUnackedPacketBytes(),

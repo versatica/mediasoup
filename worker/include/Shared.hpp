@@ -30,6 +30,8 @@ public:
 	BackoffTimerHandleInterface* CreateBackoffTimer(
 	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const override;
 
+	uint64_t GetTimeMs() const override;
+
 private:
 	std::unique_ptr<Channel::ChannelMessageRegistrator> channelMessageRegistrator;
 	std::unique_ptr<Channel::ChannelNotifier> channelNotifier;

@@ -39,6 +39,11 @@ public:
 	 */
 	virtual BackoffTimerHandleInterface* CreateBackoffTimer(
 	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const = 0;
+
+	/**
+	 * Get current time in milliseconds.
+	 */
+	virtual uint64_t GetTimeMs() const = 0;
 };
 
 #endif
