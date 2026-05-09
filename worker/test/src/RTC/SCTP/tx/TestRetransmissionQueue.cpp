@@ -575,5 +575,82 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
     });
 	}
 
+	SECTION("retransmits on T3-rtx expiry")
+	{
+		auto queue = createQueue();
+
+		sendQueue.WillProduceOnce(createDataToSend(0))
+		  .WillProduceRepeatedly(
+		    [](uint64_t, size_t)
+		    {
+			    return std::nullopt;
+		    });
+
+		REQUIRE(queue.ShouldSendForwardTsn(nowMs) == false);
+
+		const std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::UserData>> chunksToSend =
+		  queue.GetChunksToSend(nowMs, 1000);
+
+		std::vector<uint32_t> tsnsToSend;
+
+		std::transform(
+		  chunksToSend.begin(),
+		  chunksToSend.end(),
+		  std::back_inserter(tsnsToSend),
+		  [](const auto& p)
+		  {
+			  return p.first; // tsn.
+		  });
+
+		REQUIRE(tsnsToSend == std::vector<uint32_t>{ 10 });
+		REQUIRE(
+		  queue.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+    });
+
+		// Will force chunks to be retransmitted.
+		queue.HandleT3RtxTimerExpiry();
+
+		REQUIRE(
+		  queue.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED               },
+		    { 10, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
+    });
+
+		REQUIRE(queue.ShouldSendForwardTsn(nowMs) == false);
+
+		REQUIRE(
+		  queue.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED               },
+		    { 10, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
+    });
+
+		const std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::UserData>> chunksToRetransmit =
+		  queue.GetChunksToSend(nowMs, 1000);
+
+		std::vector<uint32_t> tsnsToRetransmit;
+
+		std::transform(
+		  chunksToRetransmit.begin(),
+		  chunksToRetransmit.end(),
+		  std::back_inserter(tsnsToRetransmit),
+		  [](const auto& p)
+		  {
+			  return p.first; // tsn.
+		  });
+
+		REQUIRE(tsnsToRetransmit == std::vector<uint32_t>{ 10 });
+		REQUIRE(
+		  queue.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+    });
+	}
+
 	// TODO: SCTP: A lot of tests.
 }

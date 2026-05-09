@@ -230,21 +230,21 @@ namespace RTC
 			  "given maxLength %zu is not divisible by 4",
 			  maxLength);
 
-			std::vector<std::pair<uint32_t /*tsn*/, UserData>> result;
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> toBeSent;
 
 #if MS_LOG_DEV_LEVEL == 3
 			const size_t oldUnackedPacketBytes = GetUnackedPacketBytes();
 #endif
 
-			result = this->outstandingData.GetChunksToBeFastRetransmitted(maxLength);
+			toBeSent = this->outstandingData.GetChunksToBeFastRetransmitted(maxLength);
 
-			MS_ASSERT(!result.empty(), "result cannot be empty");
+			MS_ASSERT(!toBeSent.empty(), "toBeSent cannot be empty");
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-7.2.4
 			//
 			// "4)  Restart the T3-rtx timer only if ... the endpoint is retransmitting
 			// the first outstanding DATA chunk sent to that address."
-			if (result[0].first == this->outstandingData.GetLastCumulativeTsnAck().GetNextValue().Wrap())
+			if (toBeSent[0].first == this->outstandingData.GetLastCumulativeTsnAck().GetNextValue().Wrap())
 			{
 				MS_DEBUG_DEV("first outstanding data to be retransmitted, restarting T3-rtx timer");
 
@@ -262,8 +262,8 @@ namespace RTC
 			}
 
 			const size_t bytesRetransmitted = std::accumulate(
-			  result.begin(),
-			  result.end(),
+			  toBeSent.begin(),
+			  toBeSent.end(),
 			  size_t{ 0 },
 			  [&](size_t r, const std::pair<uint32_t /*tsn*/, UserData>& data)
 			  {
@@ -276,7 +276,7 @@ namespace RTC
 #if MS_LOG_DEV_LEVEL == 3
 			std::string tsnList;
 
-			for (const auto& [tsn, data] : result)
+			for (const auto& [tsn, data] : toBeSent)
 			{
 				if (!tsnList.empty())
 				{
@@ -294,7 +294,7 @@ namespace RTC
 			  oldUnackedPacketBytes);
 #endif
 
-			return result;
+			return toBeSent;
 		}
 
 		std::vector<std::pair<uint32_t /*tsn*/, UserData>> RetransmissionQueue::GetChunksToSend(
@@ -307,7 +307,7 @@ namespace RTC
 			  "given maxLength %zu is not divisible by 4",
 			  maxLength);
 
-			std::vector<std::pair<uint32_t /*tsn*/, UserData>> result;
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> toBeSent;
 
 			const size_t oldUnackedPacketBytes = GetUnackedPacketBytes();
 #if MS_LOG_DEV_LEVEL == 3
@@ -335,11 +335,11 @@ namespace RTC
 			size_t maxBytes = Utils::Byte::PadDownTo4Bytes(
 			  std::min({ maxPacketBytesAllowedByCwnd, maxPacketBytesAllowedByRwnd, maxLength }));
 
-			result = this->outstandingData.GetChunksToBeRetransmitted(maxBytes);
+			toBeSent = this->outstandingData.GetChunksToBeRetransmitted(maxBytes);
 
 			const size_t bytesRetransmitted = std::accumulate(
-			  result.begin(),
-			  result.end(),
+			  toBeSent.begin(),
+			  toBeSent.end(),
 			  size_t{ 0 },
 			  [&](size_t r, const std::pair<uint32_t /*tsn*/, UserData>& data)
 			  {
@@ -348,7 +348,7 @@ namespace RTC
 
 			maxBytes -= bytesRetransmitted;
 
-			if (!result.empty())
+			if (!toBeSent.empty())
 			{
 				++this->rtxPacketsCount;
 				this->rtxBytesCount += bytesRetransmitted;
@@ -394,7 +394,7 @@ namespace RTC
 						  dataToSend->lifecycleId.value());
 					}
 
-					result.emplace_back(tsn->Wrap(), std::move(dataToSend->data));
+					toBeSent.emplace_back(tsn->Wrap(), std::move(dataToSend->data));
 				}
 			}
 
@@ -403,7 +403,7 @@ namespace RTC
 			// "Every time a DATA chunk is sent to any address (including a
 			// retransmission), if the T3-rtx timer of that address is not running,
 			// start it running so that it will expire after the RTO of that address."
-			if (!result.empty())
+			if (!toBeSent.empty())
 			{
 				if (!this->t3RtxTimer->IsRunning())
 				{
@@ -413,7 +413,7 @@ namespace RTC
 #if MS_LOG_DEV_LEVEL == 3
 				std::string tsnList;
 
-				for (const auto& [tsn, data] : result)
+				for (const auto& [tsn, data] : toBeSent)
 				{
 					if (!tsnList.empty())
 					{
@@ -424,8 +424,8 @@ namespace RTC
 				}
 
 				const size_t bytesRetransmitted = std::accumulate(
-				  result.begin(),
-				  result.end(),
+				  toBeSent.begin(),
+				  toBeSent.end(),
 				  size_t{ 0 },
 				  [&](size_t r, const std::pair<uint32_t, UserData>& d)
 				  {
@@ -444,7 +444,7 @@ namespace RTC
 #endif
 			}
 
-			return result;
+			return toBeSent;
 		}
 
 		bool RetransmissionQueue::ShouldSendForwardTsn(uint64_t nowMs)
