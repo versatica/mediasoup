@@ -172,7 +172,7 @@ namespace RTC
 			// Chunks scheduled for fast retransmission must be sent first.
 			MS_ASSERT(this->toBeFastRetransmitted.empty(), "this->toBeFastRetransmitted is not empty");
 
-			return ExtractChunksThatCanFit(this->toBeFastRetransmitted, maxLength);
+			return ExtractChunksThatCanFit(this->toBeRetransmitted, maxLength);
 		}
 
 		void OutstandingData::ExpireOutstandingChunks(uint64_t nowMs)
