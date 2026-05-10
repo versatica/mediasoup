@@ -1158,7 +1158,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(iForwardTsnChunk2);
 		REQUIRE(iForwardTsnChunk2->GetNewCumulativeTsn() == 16);
 		REQUIRE(
-		  iForwardTsnChunk1->GetSkippedStreams() ==
+		  iForwardTsnChunk2->GetSkippedStreams() ==
 		  std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
 		    RTC::SCTP::IForwardTsnChunk::SkippedStream{ 1, false, 42 },
 		    RTC::SCTP::IForwardTsnChunk::SkippedStream{ 2, true,  42 },
@@ -1186,6 +1186,99 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		queue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get());
 
 		REQUIRE(queueListener.lastRttMs == durationMs);
+	}
+
+	SECTION("validate cumulative TSN at rest")
+	{
+		// Nothing outstanding. TSN 8 is below lastCumulativeTsnAck(9) -> rejected.
+		// TSN 9 equals lastCumulativeTsnAck(9) -> accepted (no-op).
+		// TSN 10 is above highestOutstandingTsn(9) -> rejected.
+
+		auto queue = createQueue();
+
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(8, Arwnd).get()) == false);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(9, Arwnd).get()) == true);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get()) == false);
+	}
+
+	SECTION("validate cumulative TSN ack on inflight data")
+	{
+		auto queue = createQueue();
+
+		sendQueue.WillProduceOnce(createDataToSend(0))
+		  .WillProduceOnce(createDataToSend(1))
+		  .WillProduceOnce(createDataToSend(2))
+		  .WillProduceOnce(createDataToSend(3))
+		  .WillProduceOnce(createDataToSend(4))
+		  .WillProduceOnce(createDataToSend(5))
+		  .WillProduceOnce(createDataToSend(6))
+		  .WillProduceOnce(createDataToSend(7))
+		  .WillProduceRepeatedly(
+		    [](uint64_t, size_t)
+		    {
+			    return std::nullopt;
+		    });
+
+		REQUIRE(getSentPacketTSNs(queue) == std::vector<uint32_t>{ 10, 11, 12, 13, 14, 15, 16, 17 });
+
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(8, Arwnd).get()) == false);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(9, Arwnd).get()) == true);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get()) == true);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(11, Arwnd).get()) == true);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(12, Arwnd).get()) == true);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(13, Arwnd).get()) == true);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(14, Arwnd).get()) == true);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(15, Arwnd).get()) == true);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(16, Arwnd).get()) == true);
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(17, Arwnd).get()) == true);
+		// TSN 18 has never been sent -> rejected.
+		REQUIRE(queue.HandleReceivedSackChunk(nowMs, createSackChunk(18, Arwnd).get()) == false);
+	}
+
+	SECTION("handle gap ack blocks matching no inflight data")
+	{
+		auto queue = createQueue();
+
+		sendQueue.WillProduceOnce(createDataToSend(0))
+		  .WillProduceOnce(createDataToSend(1))
+		  .WillProduceOnce(createDataToSend(2))
+		  .WillProduceOnce(createDataToSend(3))
+		  .WillProduceOnce(createDataToSend(4))
+		  .WillProduceOnce(createDataToSend(5))
+		  .WillProduceOnce(createDataToSend(6))
+		  .WillProduceOnce(createDataToSend(7))
+		  .WillProduceRepeatedly(
+		    [](uint64_t, size_t)
+		    {
+			    return std::nullopt;
+		    });
+
+		REQUIRE(getSentPacketTSNs(queue) == std::vector<uint32_t>{ 10, 11, 12, 13, 14, 15, 16, 17 });
+
+		// Ack 9, 20-25. This is an invalid SACK Chunk, but should still be handled.
+		queue.HandleReceivedSackChunk(
+		  nowMs,
+		  createSackChunk(
+		    9,
+		    Arwnd,
+		    {
+		      { 11, 16 },
+    })
+		    .get());
+
+		REQUIRE(
+		  queue.GetChunkStatesForTesting() ==
+		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
+		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
+		    { 10, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 11, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 12, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 13, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 14, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 15, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 16, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+		    { 17, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
+    });
 	}
 
 	// TODO: SCTP: A lot of tests.
