@@ -196,17 +196,17 @@ namespace RTC
 			/**
 			 * Creates a FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
-			void CreateForwardTsn(Packet* packet) const
+			const ForwardTsnChunk* CreateForwardTsn(Packet* packet) const
 			{
-				this->outstandingData.CreateForwardTsn(packet);
+				return this->outstandingData.CreateForwardTsn(packet);
 			}
 
 			/**
 			 * Creates an I-FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
-			void CreateIForwardTsn(Packet* packet) const
+			const IForwardTsnChunk* CreateIForwardTsn(Packet* packet) const
 			{
-				this->outstandingData.CreateIForwardTsn(packet);
+				return this->outstandingData.CreateIForwardTsn(packet);
 			}
 
 			/**

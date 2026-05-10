@@ -5,10 +5,11 @@
 #include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
+#include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
+#include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include <deque>
-#include <optional>
 #include <ostream>
 #include <set>
 #include <span>
@@ -398,12 +399,12 @@ namespace RTC
 			/**
 			 * Creates a FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
-			void CreateForwardTsn(Packet* packet) const;
+			const ForwardTsnChunk* CreateForwardTsn(Packet* packet) const;
 
 			/**
 			 * Creates an I-FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
-			void CreateIForwardTsn(Packet* packet) const;
+			const IForwardTsnChunk* CreateIForwardTsn(Packet* packet) const;
 
 			/**
 			 * Given the current time and a TSN, it returns the measured RTT between

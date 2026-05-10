@@ -567,9 +567,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
-		buffer.CreateForwardTsn(packet.get());
-
-		const auto* forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
+		const auto* forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -952,9 +950,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
-		buffer.CreateForwardTsn(packet.get());
-
-		const auto* forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
+		const auto* forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -1042,9 +1038,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
-		buffer.CreateForwardTsn(packet.get());
-
-		const auto* forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
+		auto* forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -1062,9 +1056,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		packet.reset(
 		  RTC::SCTP::Packet::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)));
 
-		buffer.CreateForwardTsn(packet.get());
-
-		forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
+		forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -1082,9 +1074,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		packet.reset(
 		  RTC::SCTP::Packet::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)));
 
-		buffer.CreateForwardTsn(packet.get());
-
-		forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
+		forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -1102,9 +1092,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		packet.reset(
 		  RTC::SCTP::Packet::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)));
 
-		buffer.CreateForwardTsn(packet.get());
-
-		forwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::ForwardTsnChunk>();
+		forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)

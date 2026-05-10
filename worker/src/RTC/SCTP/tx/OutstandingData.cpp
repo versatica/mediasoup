@@ -1,13 +1,10 @@
-#include <optional>
 #define MS_CLASS "RTC::SCTP::OutstandingData"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
-#include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
-#include "RTC/SCTP/tx/OutstandingData.hpp"
 #include <map>
 
 namespace RTC
@@ -303,7 +300,7 @@ namespace RTC
 			AssertIsConsistent();
 		}
 
-		void OutstandingData::CreateForwardTsn(Packet* packet) const
+		const ForwardTsnChunk* OutstandingData::CreateForwardTsn(Packet* packet) const
 		{
 			MS_TRACE();
 
@@ -343,9 +340,11 @@ namespace RTC
 			}
 
 			forwardTsnChunk->Consolidate();
+
+			return forwardTsnChunk;
 		}
 
-		void OutstandingData::CreateIForwardTsn(Packet* packet) const
+		const IForwardTsnChunk* OutstandingData::CreateIForwardTsn(Packet* packet) const
 		{
 			MS_TRACE();
 
@@ -382,6 +381,8 @@ namespace RTC
 			}
 
 			iForwardTsnChunk->Consolidate();
+
+			return iForwardTsnChunk;
 		}
 
 		std::optional<uint64_t> OutstandingData::MeasureRtt(uint64_t nowMs, UnwrappedTsn tsn) const
