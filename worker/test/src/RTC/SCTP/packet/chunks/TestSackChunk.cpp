@@ -68,7 +68,10 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 			{ 1000, 2999 },
 		};
 
-		REQUIRE(chunk->GetDuplicateTsns() == expectedDuplicateTsns);
+		REQUIRE(
+		  chunk->GetDuplicateTsns() == std::vector<uint32_t>{
+		                                 { 287454020, 4278216311, 556942164 }
+    });
 		REQUIRE(chunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
 
 		/* Serialize it. */
