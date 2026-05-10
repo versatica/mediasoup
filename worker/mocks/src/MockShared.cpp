@@ -29,13 +29,15 @@ namespace mocks
 			MS_THROW_TYPE_ERROR("options.label must be given");
 		}
 
+		const auto& label = options.label;
+
 		auto* backoffTimer = new MockBackoffTimerHandle(
 		  options,
 		  /*getTimeMs*/ this->getTimeMs,
 		  /*onDelete*/
-		  [this, options]()
+		  [this, label]()
 		  {
-			  this->backoffTimers.erase(options.label);
+			  this->backoffTimers.erase(label);
 		  });
 
 		this->backoffTimers[options.label] = backoffTimer;
