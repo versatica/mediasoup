@@ -62,7 +62,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		                         return nowMs;
 	                         });
 
-	std::unique_ptr<BackoffTimerHandleInterface> t3RtxTimerUniquePtr{ shared.CreateBackoffTimer(
+	const std::unique_ptr<BackoffTimerHandleInterface> t3RtxTimerUniquePtr{ shared.CreateBackoffTimer(
 		BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		  // No `listener` given on purpose.
 		  .label               = "mock-sctp-t3-rtx",
