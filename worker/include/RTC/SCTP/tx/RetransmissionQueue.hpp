@@ -9,7 +9,6 @@
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
-#include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include "Utils/UnwrappedSequenceNumber.hpp"
