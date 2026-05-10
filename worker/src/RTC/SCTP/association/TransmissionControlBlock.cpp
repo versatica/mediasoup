@@ -317,7 +317,7 @@ namespace RTC
 				{
 					this->retransmissionQueue.HandleT3RtxTimerExpiry();
 
-					uint64_t nowMs = this->shared->GetTimeMs();
+					const uint64_t nowMs = this->shared->GetTimeMs();
 
 					SendBufferedPackets(nowMs);
 				}
