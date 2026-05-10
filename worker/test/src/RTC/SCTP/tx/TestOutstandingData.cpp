@@ -1038,7 +1038,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
-		auto* forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
+		const auto* forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
