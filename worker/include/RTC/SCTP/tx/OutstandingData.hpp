@@ -2,13 +2,13 @@
 #define MS_RTC_SCTP_OUTSTANDING_DATA_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "Utils/UnwrappedSequenceNumber.hpp"
 #include <deque>
 #include <ostream>
 #include <set>
@@ -66,7 +66,7 @@ namespace RTC
 #endif
 
 		public:
-			using UnwrappedTsn = UnwrappedSequenceNumber<uint32_t>;
+			using UnwrappedTsn = Utils::UnwrappedSequenceNumber<uint32_t>;
 
 		public:
 			/**

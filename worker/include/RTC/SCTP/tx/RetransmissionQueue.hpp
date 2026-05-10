@@ -2,7 +2,6 @@
 #define MS_RTC_SCTP_RETRANSMISSION_QUEUE_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
@@ -13,6 +12,7 @@
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
+#include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include <vector>
 
@@ -44,7 +44,7 @@ namespace RTC
 			};
 
 		public:
-			using UnwrappedTsn = UnwrappedSequenceNumber<uint32_t>;
+			using UnwrappedTsn = Utils::UnwrappedSequenceNumber<uint32_t>;
 
 		private:
 			enum class CongestionAlgorithmPhase : uint8_t

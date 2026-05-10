@@ -1,10 +1,10 @@
 #include "common.hpp"
-#include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
+#include "Utils/UnwrappedSequenceNumber.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 SCENARIO("SCTP UnwrappedSequenceNumber", "[sctp]")
 {
-	using TestSequence = RTC::SCTP::UnwrappedSequenceNumber<uint16_t>;
+	using TestSequence = Utils::UnwrappedSequenceNumber<uint16_t>;
 
 	SECTION("simple unwrapping")
 	{
