@@ -231,7 +231,19 @@ namespace RTC
 
 			void MaySendFastRetransmit();
 
-			// TODO: SCTP: Mamy more methods.
+			/**
+			 * Fills given Packet (which may already be filled with control Chunks)
+			 * with other control and data Chunks, and sends Packets as much as can
+			 * be allowed by the congestion control algorithm.
+			 */
+			void SendBufferedPackets(Packet* packet, uint64_t nowMs);
+
+			/**
+			 * As above, but without passing in a Packet. If `this->remoteStateCookie`
+			 * is present, then only one Packet will be sent, with this Chunk as the
+			 * first Chunk.
+			 */
+			void SendBufferedPackets(uint64_t nowMs);
 
 			/**
 			 * @remarks

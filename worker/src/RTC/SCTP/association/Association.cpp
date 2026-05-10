@@ -16,7 +16,6 @@
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
-#include "handles/BackoffTimerHandle.hpp"
 #include <limits>  // std::numeric_limits()
 #include <sstream> // std::ostringstream
 #include <string>
@@ -469,8 +468,7 @@ namespace RTC
 
 			if (this->tcb)
 			{
-				// TODO: SCTP: Implement it.
-				// this->tcb->SendBufferedPackets(nowMs);
+				this->tcb->SendBufferedPackets(nowMs);
 			}
 
 			AssertStateIsConsistent();
@@ -509,8 +507,7 @@ namespace RTC
 
 			if (this->tcb)
 			{
-				// TODO: SCTP: Implement it.
-				// this->tcb->SendBufferedPackets(nowMs);
+				this->tcb->SendBufferedPackets(nowMs);
 			}
 
 			AssertStateIsConsistent();
@@ -1584,11 +1581,9 @@ namespace RTC
 
 			this->tcb->SetRemoteStateCookie(std::move(remoteStateCookie));
 
-			// TODO: SCTP: Implement it.
-			// TODO: SCTP: tcb->SendBufferedPackets() must check that the remote state cookie
-			// is set in TCB and must send a COOKIE_ECHO Chunk before potentially
-			// buffered messages.
-			// this->tcb->SendBufferedPackets(nowMs);
+			const uint64_t nowMs = this->shared->GetTimeMs();
+
+			this->tcb->SendBufferedPackets(nowMs);
 
 			this->t1CookieTimer->Start();
 			this->associationListenerDeferrer.OnAssociationConnecting();
@@ -1811,8 +1806,9 @@ namespace RTC
 
 			SetState(State::ESTABLISHED, "COOKIE_ACK received");
 
-			// TODO: SCTP: Implement this.
-			// this->tcb->SendBufferedPackets(nowMs);
+			const uint64_t nowMs = this->shared->GetTimeMs();
+
+			this->tcb->SendBufferedPackets(nowMs);
 
 			this->associationListenerDeferrer.OnAssociationConnected();
 		}
@@ -2088,8 +2084,9 @@ namespace RTC
 
 			// If a response was processed, pending to-be-reset streams may now have
 			// become unpaused. Try to send more DATA/I_DATA chunks.
-			// TODO: SCTP: Implement it.
-			// this->tcb->SendBufferedPackets(nowMs);
+			const uint64_t nowMs = this->shared->GetTimeMs();
+
+			this->tcb->SendBufferedPackets(nowMs);
 
 			// If it leaves "deferred reset processing", there may be chunks to
 			// deliver that were queued while waiting for the stream to reset.
@@ -2326,8 +2323,7 @@ namespace RTC
 
 				// Receiving an ACK will decrease outstanding bytes (maybe now below
 				// cwnd?) or indicate packet loss that may result in sending FORWARD-TSN.
-				// TODO: SCTP: Implement it.
-				// this->tcb->SendBufferedPackets(nowMs);
+				this->tcb->SendBufferedPackets(nowMs);
 			}
 			else
 			{
@@ -2422,8 +2418,9 @@ namespace RTC
 
 			if (this->t1CookieTimer->IsRunning())
 			{
-				// TODO: SCTP: Implement it.
-				// this->tcb->SendBufferedPackets(nowMs);
+				const uint64_t nowMs = this->shared->GetTimeMs();
+
+				this->tcb->SendBufferedPackets(nowMs);
 			}
 			else
 			{

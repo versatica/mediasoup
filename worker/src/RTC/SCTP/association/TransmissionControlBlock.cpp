@@ -285,6 +285,22 @@ namespace RTC
 			Send(packet.get());
 		}
 
+		void TransmissionControlBlock::SendBufferedPackets(Packet* /*packet*/, uint64_t /*nowMs*/)
+		{
+			MS_TRACE();
+
+			// TODO: SCTP: Implement.
+		}
+
+		void TransmissionControlBlock::SendBufferedPackets(uint64_t nowMs)
+		{
+			MS_TRACE();
+
+			auto packet = CreatePacket();
+
+			SendBufferedPackets(packet.get(), nowMs);
+		}
+
 		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
@@ -301,10 +317,9 @@ namespace RTC
 				{
 					this->retransmissionQueue.HandleT3RtxTimerExpiry();
 
-					// const uint64_t nowMs = this->shared->GetTimeMs();
+					const uint64_t nowMs = this->shared->GetTimeMs();
 
-					// TODO: SCTP: Implement
-					// SendBufferedPackets(nowMs);
+					SendBufferedPackets(nowMs);
 				}
 			}
 		}
