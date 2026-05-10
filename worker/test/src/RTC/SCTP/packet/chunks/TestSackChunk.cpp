@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
-#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <vector>
@@ -60,16 +60,19 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
-
-		const std::vector<uint32_t> expectedDuplicateTsns{
-			{ 287454020, 4278216311, 556942164 },
-		};
-		const std::vector<RTC::SCTP::SackChunk::GapAckBlock> expectedGapAckBlocks{
-			{ 1000, 2999 },
-		};
-
-		REQUIRE(chunk->GetDuplicateTsns() == expectedDuplicateTsns);
-		REQUIRE(chunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
+		REQUIRE(
+		  chunk->GetDuplicateTsns() == std::vector<uint32_t>{
+		                                 { 287454020, 4278216311, 556942164 }
+    });
+		REQUIRE(
+		  chunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                { 1000, 1999 },
+                                    { 2000, 2999 }
+    });
+		REQUIRE(
+		  chunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                         { 1000, 2999 },
+    });
 
 		/* Serialize it. */
 
@@ -93,8 +96,19 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
-		REQUIRE(chunk->GetDuplicateTsns() == expectedDuplicateTsns);
-		REQUIRE(chunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
+		REQUIRE(
+		  chunk->GetDuplicateTsns() == std::vector<uint32_t>{
+		                                 { 287454020, 4278216311, 556942164 }
+    });
+		REQUIRE(
+		  chunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                { 1000, 1999 },
+                                    { 2000, 2999 }
+    });
+		REQUIRE(
+		  chunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                         { 1000, 2999 }
+    });
 
 		/* Clone it. */
 
@@ -120,8 +134,19 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 287454020);
 		REQUIRE(clonedChunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
-		REQUIRE(clonedChunk->GetDuplicateTsns() == expectedDuplicateTsns);
-		REQUIRE(clonedChunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
+		REQUIRE(
+		  clonedChunk->GetDuplicateTsns() == std::vector<uint32_t>{
+		                                       { 287454020, 4278216311, 556942164 }
+    });
+		REQUIRE(
+		  clonedChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                      { 1000, 1999 },
+                                          { 2000, 2999 }
+    });
+		REQUIRE(
+		  clonedChunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                               { 1000, 2999 }
+    });
 
 		delete clonedChunk;
 	}
@@ -225,12 +250,9 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 0);
-
-		std::vector<uint32_t> expectedDuplicateTsns{};
-		std::vector<RTC::SCTP::SackChunk::GapAckBlock> expectedGapAckBlocks{};
-
-		REQUIRE(chunk->GetDuplicateTsns() == expectedDuplicateTsns);
-		REQUIRE(chunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
+		REQUIRE(chunk->GetDuplicateTsns().empty());
+		REQUIRE(chunk->GetGapAckBlocks().empty());
+		REQUIRE(chunk->GetValidatedGapAckBlocks().empty());
 
 		/* Modify it. */
 
@@ -238,7 +260,9 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		chunk->SetAdvertisedReceiverWindowCredit(5678);
 		chunk->AddDuplicateTsn(10000000);
 		chunk->AddAckBlock(10000, 19999);
-		chunk->AddAckBlock(20000, 20999);
+		// Notice that here we are creating a semig-wrong SACK Chunk since these
+		// two ranges shoyuld be merged into one.
+		chunk->AddAckBlock(RTC::SCTP::SackChunk::GapAckBlock(20000, 20999));
 		chunk->AddDuplicateTsn(20000000);
 		chunk->AddAckBlock(60000, 60999);
 		chunk->AddDuplicateTsn(30000000);
@@ -260,17 +284,19 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 1234);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 5678);
-
-		expectedDuplicateTsns = {
-			{ 10000000, 20000000, 30000000, 40000000 }
-		};
-		expectedGapAckBlocks = {
-			{ 10000, 20999 },
-      { 60000, 60999 }
-		};
-
-		REQUIRE(chunk->GetDuplicateTsns() == expectedDuplicateTsns);
-		REQUIRE(chunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
+		REQUIRE(
+		  chunk->GetDuplicateTsns() == std::vector<uint32_t>{ 10000000, 20000000, 30000000, 40000000 });
+		REQUIRE(
+		  chunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                { 10000, 19999 },
+                                    { 20000, 20999 },
+                                    { 60000, 60999 }
+    });
+		REQUIRE(
+		  chunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                         { 10000, 20999 },
+                                             { 60000, 60999 }
+    });
 
 		/* Parse itself and compare. */
 
@@ -294,8 +320,20 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 1234);
 		REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 5678);
-		REQUIRE(parsedChunk->GetDuplicateTsns() == expectedDuplicateTsns);
-		REQUIRE(parsedChunk->GetValidatedGapAckBlocks() == expectedGapAckBlocks);
+		REQUIRE(
+		  parsedChunk->GetDuplicateTsns() ==
+		  std::vector<uint32_t>{ 10000000, 20000000, 30000000, 40000000 });
+		REQUIRE(
+		  parsedChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                      { 10000, 19999 },
+                                          { 20000, 20999 },
+                                          { 60000, 60999 }
+    });
+		REQUIRE(
+		  parsedChunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		                                               { 10000, 20999 },
+                                                   { 60000, 60999 }
+    });
 
 		delete parsedChunk;
 	}

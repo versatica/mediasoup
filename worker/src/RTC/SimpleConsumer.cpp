@@ -2,7 +2,6 @@
 #define MS_CLASS "RTC::SimpleConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -257,7 +256,7 @@ namespace RTC
 
 		// Video SimpleConsumer does not really play the BWE game when. However, let's
 		// be honest and try to be nice.
-		auto nowMs          = DepLibUV::GetTimeMs();
+		auto nowMs          = this->shared->GetTimeMs();
 		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
 		if (desiredBitrate < bitrate)
@@ -300,7 +299,7 @@ namespace RTC
 			return 0u;
 		}
 
-		auto nowMs          = DepLibUV::GetTimeMs();
+		auto nowMs          = this->shared->GetTimeMs();
 		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's

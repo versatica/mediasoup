@@ -2,7 +2,6 @@
 #define MS_RTC_SCTP_RETRANSMISSION_QUEUE_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
@@ -11,6 +10,8 @@
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
+#include "RTC/SCTP/tx/SendQueueInterface.hpp"
+#include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include <vector>
 
@@ -42,7 +43,7 @@ namespace RTC
 			};
 
 		public:
-			using UnwrappedTsn = UnwrappedSequenceNumber<uint32_t>;
+			using UnwrappedTsn = Utils::UnwrappedSequenceNumber<uint32_t>;
 
 		private:
 			enum class CongestionAlgorithmPhase : uint8_t
@@ -57,7 +58,7 @@ namespace RTC
 			 * `localInitialTsn` as the first TSN to use for sent fragments. It will
 			 * poll data from `sendQueue`. When SACKs are received, it will estimate
 			 * the RTT and call `listener->OnRetransmissionQueueNewRttMs()`. When an
-			 * outstanding Chunk has been acked, it will call
+			 * outstanding chunk has been acked, it will call
 			 * `listener->OnRetransmissionQueueClearRetransmissionCounter() and will
 			 * also use `t3RtxTimer`, which is the SCTP retransmission timer to manage
 			 * retransmissions.
@@ -67,11 +68,9 @@ namespace RTC
 			  AssociationListener& associationListener,
 			  uint32_t localInitialTsn,
 			  uint32_t remoteAdvertisedReceiverWindowCredit,
-			  // TODO: SCTP: Implement
-			  // SendQueue& sendQueue,
+			  SendQueueInterface& sendQueue,
 			  BackoffTimerHandleInterface* t3RtxTimer,
 			  const SctpOptions& sctpOptions,
-			  // TODO: SCTP: I don't like these defaults (true and false), let's be explicit.
 			  bool supportsPartialReliability,
 			  bool useMessageInterleaving);
 
@@ -108,6 +107,19 @@ namespace RTC
 			 */
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToSend(
 			  uint64_t nowMs, size_t maxLength);
+
+#ifdef MS_TEST
+			/**
+			 * Returns the internal state of all queued Chunks.
+			 *
+			 * @remarks
+			 * - Used in tests.
+			 */
+			std::vector<std::pair<uint32_t /*tsn*/, OutstandingData::State>> GetChunkStatesForTesting() const
+			{
+				return this->outstandingData.GetChunkStatesForTesting();
+			}
+#endif
 
 			/**
 			 * Returns the next TSN that will be allocated for sent DATA Chunks.
@@ -183,41 +195,28 @@ namespace RTC
 			/**
 			 * Creates a FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
-			void CreateForwardTsn(Packet* packet) const
+			const ForwardTsnChunk* CreateForwardTsn(Packet* packet) const
 			{
-				this->outstandingData.CreateForwardTsn(packet);
+				return this->outstandingData.CreateForwardTsn(packet);
 			}
 
 			/**
 			 * Creates an I-FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
-			void CreateIForwardTsn(Packet* packet) const
+			const IForwardTsnChunk* CreateIForwardTsn(Packet* packet) const
 			{
-				this->outstandingData.CreateIForwardTsn(packet);
+				return this->outstandingData.CreateIForwardTsn(packet);
 			}
 
 			/**
-			 * @see SendQueue for a longer description of these methods related
-			 * to stream resetting.
+			 * @see SendQueueInterface for a longer description of these methods
+			 * related to stream resetting.
 			 */
 			void PrepareResetStream(uint16_t streamId);
 			bool HasStreamsReadyToBeReset() const;
 			std::vector<uint16_t /*streamId*/> BeginResetStreams();
 			void CommitResetStreams();
 			void RollbackResetStreams();
-
-#ifdef MS_TEST
-			/**
-			 * Returns the internal state of all queued Chunks.
-			 *
-			 * @remarks
-			 * - This is only used in tests.
-			 */
-			std::vector<std::pair<uint32_t /*tsn*/, OutstandingData::State>> GetChunkStatesForTesting() const
-			{
-				return this->outstandingData.GetChunkStatesForTesting();
-			}
-#endif
 
 		private:
 			/**
@@ -322,13 +321,11 @@ namespace RTC
 			// acked.
 			std::optional<UnwrappedTsn> fastRecoveryExitTsn{ std::nullopt };
 			// The send queue.
-			// TODO: SCTP: Implement.
-			// SendQueue& sendQueue;
+			SendQueueInterface& sendQueue;
 			// All the outstanding data Chunks that are in-flight and that have not
 			// been cumulative acked. Note that it also contains chunks that have been
 			// acked in gap-ack-blocks.
 			OutstandingData outstandingData;
-			// TODO: SCTP.
 		};
 	} // namespace SCTP
 } // namespace RTC

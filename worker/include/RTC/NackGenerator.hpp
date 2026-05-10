@@ -75,6 +75,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		unsigned int sendNackDelayMs{ 0u };
 		// Allocated by this.
 		TimerHandleInterface* timer{ nullptr };

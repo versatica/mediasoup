@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "RTC/RateCalculator.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <limits> // std::numeric_limits
@@ -15,13 +14,13 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	};
 
 	auto validate =
-	  [](RTC::RateCalculator& rate, uint64_t timeBase, std::vector<TestRateCalculatorData>& input)
+	  [](RTC::RateCalculator& rate, uint64_t timeBaseMs, std::vector<TestRateCalculatorData>& input)
 	{
 		for (auto& item : input)
 		{
-			rate.Update(item.size, timeBase + item.offset);
+			rate.Update(item.size, timeBaseMs + item.offset);
 
-			REQUIRE(rate.GetRate(timeBase + item.offset) == item.rate);
+			REQUIRE(rate.GetRate(timeBaseMs + item.offset) == item.rate);
 		}
 
 		// Repeat forcing nowMs to be 0.
@@ -29,7 +28,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 
 		for (auto& item : input)
 		{
-			rate.Update(item.size, timeBase + item.offset);
+			rate.Update(item.size, timeBaseMs + item.offset);
 
 			REQUIRE(rate.GetRate(0 + item.offset) == item.rate);
 		}
@@ -39,13 +38,13 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 
 		for (auto& item : input)
 		{
-			rate.Update(item.size, timeBase + item.offset);
+			rate.Update(item.size, timeBaseMs + item.offset);
 
 			REQUIRE(rate.GetRate(std::numeric_limits<uint64_t>::max() - 100 + item.offset) == item.rate);
 		}
 	};
 
-	const auto nowMs = DepLibUV::GetTimeMs();
+	const uint64_t nowMs = 12345678;
 
 	SECTION("receive single item per 1000 ms")
 	{

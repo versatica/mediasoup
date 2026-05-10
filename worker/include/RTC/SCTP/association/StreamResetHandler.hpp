@@ -3,8 +3,7 @@
 
 #include "common.hpp"
 #include "SharedInterface.hpp"
-#include "RTC/SCTP/association/TCBContext.hpp"
-#include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
+#include "RTC/SCTP/association/TransmissionControlBlockInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
 #include "RTC/SCTP/packet/parameters/IncomingSsnResetRequestParameter.hpp"
@@ -12,6 +11,7 @@
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
+#include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include <span>
 #include <vector>
@@ -162,13 +162,13 @@ namespace RTC
 			};
 
 		private:
-			using UnwrappedReConfigRequestSn = UnwrappedSequenceNumber<uint32_t>;
+			using UnwrappedReConfigRequestSn = Utils::UnwrappedSequenceNumber<uint32_t>;
 
 		public:
 			StreamResetHandler(
 			  AssociationListener& associationListener,
 			  SharedInterface* shared,
-			  TCBContext* tcbContext,
+			  TransmissionControlBlockInterface* tcbContext,
 			  // TODO: SCTP: Implement
 			  // DataTracker* dataTracker,
 			  // ReassemblyQueue* reassemblyQueue,
@@ -258,12 +258,13 @@ namespace RTC
 
 			/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 		public:
-			void OnTimer(BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+			void OnBackoffTimer(
+			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			AssociationListener& associationListener;
 			SharedInterface* shared;
-			TCBContext* tcbContext;
+			TransmissionControlBlockInterface* tcbContext;
 			// TODO: SCTP: Implement
 			// DataTracker* dataTracker;,
 			// TODO: SCTP: Implement

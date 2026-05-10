@@ -8,21 +8,14 @@
 
 // Forward declaration.
 class Shared;
-// TODO: Temporal until we have MockBackoffTimerHandle.
-namespace mocks
-{
-	class MockShared;
-}
 
 class BackoffTimerHandle : public BackoffTimerHandleInterface, public TimerHandleInterface::Listener
 {
 	// Only Shared class can invoke the constructor.
 	friend class Shared;
-	// TODO: Temporal until we have MockBackoffTimerHandle.
-	friend class mocks::MockShared;
 
 private:
-	explicit BackoffTimerHandle(const BackoffTimerHandleOptions& options);
+	explicit BackoffTimerHandle(BackoffTimerHandleOptions options);
 
 public:
 	BackoffTimerHandle& operator=(const BackoffTimerHandle&) = delete;
@@ -58,6 +51,11 @@ public:
 		return this->running;
 	}
 
+	const std::string GetLabel() const override
+	{
+		return this->label;
+	}
+
 	/**
 	 * Maximum number of restarts.
 	 *
@@ -88,6 +86,7 @@ public:
 private:
 	// Passed by argument.
 	BackoffTimerHandleInterface::Listener* listener{ nullptr };
+	const std::string label;
 	uint64_t baseTimeoutMs{ 0 };
 	BackoffAlgorithm backoffAlgorithm;
 	std::optional<uint64_t> maxBackoffTimeoutMs;

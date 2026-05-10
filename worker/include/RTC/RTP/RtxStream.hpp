@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_RTX_STREAM_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "FBS/rtxStream.h"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
@@ -30,7 +31,7 @@ namespace RTC
 			};
 
 		public:
-			explicit RtxStream(RTP::RtxStream::Params& params);
+			explicit RtxStream(SharedInterface* shared, RTP::RtxStream::Params& params);
 			virtual ~RtxStream();
 
 			flatbuffers::Offset<FBS::RtxStream::RtxDump> FillBuffer(
@@ -87,6 +88,7 @@ namespace RTC
 
 		protected:
 			// Given as argument.
+			SharedInterface* shared{ nullptr };
 			Params params;
 			// Others.
 			//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.

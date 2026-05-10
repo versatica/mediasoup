@@ -27,7 +27,7 @@ namespace RTC
 		    shared(shared),
 		    params(params),
 		    score(initialScore),
-		    activeSinceMs(DepLibUV::GetTimeMs())
+		    activeSinceMs(this->shared->GetTimeMs())
 		{
 			MS_TRACE();
 		}
@@ -64,7 +64,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 			const auto mediaKind = this->params.mimeType.type == RTC::RtpCodecMimeType::Type::AUDIO
 			                         ? FBS::RtpParameters::MediaKind::AUDIO
 			                         : FBS::RtpParameters::MediaKind::VIDEO;
@@ -123,7 +123,7 @@ namespace RTC
 			// Tell the RtpCodecMimeType to update its string based on current type and subtype.
 			params.mimeType.UpdateMimeType();
 
-			this->rtxStream = new RTP::RtxStream(params);
+			this->rtxStream = new RTP::RtxStream(this->shared, params);
 		}
 
 		bool RtpStream::ReceiveStreamPacket(const RTP::Packet* packet)
@@ -140,7 +140,7 @@ namespace RTC
 				this->started     = true;
 				this->maxSeq      = seq - 1;
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = DepLibUV::GetTimeMs();
+				this->maxPacketMs = this->shared->GetTimeMs();
 			}
 
 			// If not a valid packet ignore it.
@@ -159,7 +159,7 @@ namespace RTC
 			if (Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 			{
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = DepLibUV::GetTimeMs();
+				this->maxPacketMs = this->shared->GetTimeMs();
 			}
 
 			return true;
@@ -180,7 +180,7 @@ namespace RTC
 				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
 				if (previousScore == 0u)
 				{
-					this->activeSinceMs = DepLibUV::GetTimeMs();
+					this->activeSinceMs = this->shared->GetTimeMs();
 				}
 
 				// Notify the listener.
@@ -227,7 +227,7 @@ namespace RTC
 					  packet->GetTimestamp());
 
 					this->maxPacketTs = packet->GetTimestamp();
-					this->maxPacketMs = DepLibUV::GetTimeMs();
+					this->maxPacketMs = this->shared->GetTimeMs();
 				}
 			}
 			// Too old packet received (older than the allowed misorder).
@@ -249,7 +249,7 @@ namespace RTC
 					InitSeq(seq);
 
 					this->maxPacketTs = packet->GetTimestamp();
-					this->maxPacketMs = DepLibUV::GetTimeMs();
+					this->maxPacketMs = this->shared->GetTimeMs();
 
 					// Notify the subclass about it.
 					UserOnSequenceNumberReset();
@@ -336,7 +336,7 @@ namespace RTC
 				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
 				if (previousScore == 0u)
 				{
-					this->activeSinceMs = DepLibUV::GetTimeMs();
+					this->activeSinceMs = this->shared->GetTimeMs();
 				}
 
 				this->listener->OnRtpStreamScore(this, this->score, previousScore);

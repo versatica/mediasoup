@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
@@ -12,7 +13,6 @@
 #include "RTC/SCTP/packet/parameters/CookiePreservativeParameter.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/IPv4AddressParameter.hpp"
-#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 

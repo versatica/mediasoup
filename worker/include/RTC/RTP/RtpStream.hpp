@@ -2,7 +2,6 @@
 #define MS_RTC_RTP_RTP_STREAM_HPP
 
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "SharedInterface.hpp"
 #include "FBS/rtpStream.h"
 #include "RTC/RTCP/FeedbackPsFir.hpp"           // IWYU pragma: export
@@ -167,7 +166,7 @@ namespace RTC
 			}
 			uint64_t GetActiveMs() const
 			{
-				return DepLibUV::GetTimeMs() - this->activeSinceMs;
+				return this->shared->GetTimeMs() - this->activeSinceMs;
 			}
 
 		protected:

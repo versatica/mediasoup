@@ -274,7 +274,7 @@ namespace RTC
 			 * received before the lifetime has expired. This is only available if
 			 * the peer supports Partial Reliability Extension (RFC 3758).
 			 */
-			std::optional<uint64_t> lifetime{ std::nullopt };
+			std::optional<uint64_t> lifetimeMs{ std::nullopt };
 
 			/**
 			 * If set, limits the number of retransmissions. This is only available

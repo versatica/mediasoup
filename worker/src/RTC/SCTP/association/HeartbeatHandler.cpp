@@ -3,7 +3,6 @@
 #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
@@ -25,7 +24,7 @@ namespace RTC
 		  AssociationListener& associationListener,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
-		  TCBContext* tcbContext)
+		  TransmissionControlBlockInterface* tcbContext)
 		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
 		    shared(shared),
@@ -35,6 +34,7 @@ namespace RTC
 		    intervalTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-heartbeat-interval",
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -42,6 +42,7 @@ namespace RTC
 		    timeoutTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-heartbeat-timeout",
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED,
 		        .maxBackoffTimeoutMs = std::nullopt,
@@ -146,7 +147,7 @@ namespace RTC
 			}
 
 			const uint64_t createdAtMs = Utils::Byte::Get8Bytes(info, 0);
-			const uint64_t nowMs       = DepLibUV::GetTimeMs();
+			const uint64_t nowMs       = this->shared->GetTimeMs();
 
 			if (createdAtMs > 0 && createdAtMs <= nowMs)
 			{
@@ -183,19 +184,12 @@ namespace RTC
 				return;
 			}
 
-			const auto maxRestarts = this->intervalTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "interval timer has expired [%zu/%s]",
-			  this->intervalTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
-
 			this->timeoutTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
 			this->timeoutTimer->Start();
 
 			alignas(8) uint8_t info[HeartbeatInfoLength];
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			Utils::Byte::Set8Bytes(info, 0, nowMs);
 
@@ -217,14 +211,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto maxRestarts = this->timeoutTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "timeout timer has expired [%zu/%s]",
-			  this->timeoutTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
-
 			// Note that the timeout timer is not restarted. It will be started again when
 			// the interval timer expires.
 			MS_ASSERT(!this->timeoutTimer->IsRunning(), "timeout timer shouldn't be running");
@@ -232,10 +218,19 @@ namespace RTC
 			this->tcbContext->IncrementTxErrorCounter("hearbeat timeout");
 		}
 
-		void HeartbeatHandler::OnTimer(
+		void HeartbeatHandler::OnBackoffTimer(
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = backoffTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired %zu/%s]",
+			  backoffTimer->GetLabel().c_str(),
+			  backoffTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->intervalTimer.get())
 			{

@@ -2,14 +2,14 @@
 #define MS_RTC_SCTP_OUTSTANDING_DATA_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/common/UnwrappedSequenceNumber.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
+#include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
+#include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "Utils/UnwrappedSequenceNumber.hpp"
 #include <deque>
-#include <limits>
-#include <optional>
 #include <ostream>
 #include <set>
 #include <span>
@@ -28,10 +28,6 @@ namespace RTC
 		 */
 		class OutstandingData
 		{
-		public:
-			static constexpr uint16_t MaxRetransmitsNoLimit{ std::numeric_limits<uint16_t>::max() };
-			static constexpr uint16_t ExpiresAtMsInfinite{ 0 };
-
 #ifdef MS_TEST
 		public:
 			/**
@@ -70,7 +66,7 @@ namespace RTC
 #endif
 
 		public:
-			using UnwrappedTsn = UnwrappedSequenceNumber<uint32_t>;
+			using UnwrappedTsn = Utils::UnwrappedSequenceNumber<uint32_t>;
 
 		public:
 			/**
@@ -168,21 +164,21 @@ namespace RTC
 
 			public:
 				Item(
-				  uint32_t messageId,
+				  uint32_t outgoingMessageId,
 				  UserData data,
 				  uint64_t timeSentMs,
 				  uint16_t maxRetransmissions,
 				  uint64_t expiresAtMs,
-				  uint64_t lifecycleId);
+				  std::optional<uint64_t> lifecycleId);
 
 				Item(const Item&) = delete;
 
 				Item& operator=(const Item&) = delete;
 
 			public:
-				uint32_t GetMessageId() const
+				uint32_t GetOutgoingMessageId() const
 				{
-					return this->messageId;
+					return this->outgoingMessageId;
 				}
 
 				uint64_t GetTimeSentMs() const
@@ -261,16 +257,15 @@ namespace RTC
 				 */
 				bool HasExpired(uint64_t nowMs) const
 				{
-					return (
-					  this->expiresAtMs != OutstandingData::ExpiresAtMsInfinite && this->expiresAtMs <= nowMs);
+					return (this->expiresAtMs != Types::ExpiresAtMsInfinite && this->expiresAtMs <= nowMs);
 				}
 
-				uint64_t GetLifecycleId() const
+				std::optional<uint64_t> GetLifecycleId() const
 				{
 					return this->lifecycleId;
 				}
 
-				const uint32_t messageId;
+				const uint32_t outgoingMessageId;
 				// When the packet was sent, and placed in this queue.
 				const uint64_t timeSentMs;
 				// If the message was sent with a maximum number of retransmissions,
@@ -294,7 +289,7 @@ namespace RTC
 				const uint64_t expiresAtMs;
 				// An optional lifecycle id, which may only be set for the last
 				// fragment.
-				const uint64_t lifecycleId;
+				const std::optional<uint64_t> lifecycleId;
 				// The actual data to send/retransmit.
 				const UserData data;
 			};
@@ -389,12 +384,12 @@ namespace RTC
 			 * scheduled to be sent, and std::nullopt if it shouldn't be sent.
 			 */
 			std::optional<UnwrappedTsn> Insert(
-			  uint32_t messageId,
+			  uint32_t outgoingMessageId,
 			  const UserData& data,
 			  uint64_t timeSentMs,
-			  uint16_t maxRetransmissions = OutstandingData::MaxRetransmitsNoLimit,
-			  uint64_t expiresAtMs        = OutstandingData::ExpiresAtMsInfinite,
-			  uint64_t lifecycleId        = 0);
+			  uint16_t maxRetransmissions         = Types::MaxRetransmitsNoLimit,
+			  uint64_t expiresAtMs                = Types::ExpiresAtMsInfinite,
+			  std::optional<uint64_t> lifecycleId = std::nullopt);
 
 			/**
 			 * Nacks all outstanding data.
@@ -404,12 +399,12 @@ namespace RTC
 			/**
 			 * Creates a FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
-			void CreateForwardTsn(Packet* packet) const;
+			const ForwardTsnChunk* CreateForwardTsn(Packet* packet) const;
 
 			/**
 			 * Creates an I-FORWARD-TSN Chunk and adds it to the given Packet.
 			 */
-			void CreateIForwardTsn(Packet* packet) const;
+			const IForwardTsnChunk* CreateIForwardTsn(Packet* packet) const;
 
 			/**
 			 * Given the current time and a TSN, it returns the measured RTT between

@@ -1,26 +1,47 @@
+#define MS_CLASS "mocks::MockShared"
+// #define MS_LOG_DEV_LEVEL 3
+
 #include "mocks/include/MockShared.hpp"
-// TODO: We need MockBackoffTimerHandle class.
-#include "handles/BackoffTimerHandle.hpp"
-// TODO: We need MockTimerHandle class.
-#include "handles/TimerHandle.hpp"
+#include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
+#include "mocks/include/handles/MockTimerHandle.hpp"
 
 namespace mocks
 {
-	MockShared::MockShared()
-	  : channelSocket(new ::Channel::ChannelSocket()),
+	MockShared::MockShared(std::function<uint64_t()> getTimeMs)
+	  : getTimeMs(std::move(getTimeMs)),
+	    channelSocket(new ::Channel::ChannelSocket()),
 	    channelMessageRegistrator(new mocks::Channel::MockChannelMessageRegistrator()),
 	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get()))
 	{
 	}
 
-	TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* listener) const
+	TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* /*listener*/)
 	{
-		return new TimerHandle(listener);
+		return new MockTimerHandle();
 	}
 
 	BackoffTimerHandleInterface* MockShared::CreateBackoffTimer(
-	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) const
+	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options)
 	{
-		return new BackoffTimerHandle(options);
+		if (options.label.empty())
+		{
+			MS_THROW_TYPE_ERROR("options.label must be given");
+		}
+
+		const auto& label = options.label;
+
+		auto* backoffTimer = new MockBackoffTimerHandle(
+		  options,
+		  /*getTimeMs*/ this->getTimeMs,
+		  /*onDelete*/
+		  [this, label]()
+		  {
+			  this->backoffTimers.erase(label);
+		  });
+
+		this->backoffTimers[options.label] = backoffTimer;
+
+		return backoffTimer;
 	}
 } // namespace mocks

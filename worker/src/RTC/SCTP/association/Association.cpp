@@ -3,7 +3,6 @@
 #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/Association.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
@@ -45,12 +44,18 @@ namespace RTC
 		  : sctpOptions(sctpOptions),
 		    // Our `listener` member is a `AssociationListenerDeferrer` which takes
 		    // `AssociationListener` as constructor argument.
-		    listener(listener),
+		    associationListenerDeferrer(listener),
 		    shared(shared),
-		    packetSender(this, this->listener),
+		    packetSender(this, this->associationListenerDeferrer),
+		    sendQueue(
+		      this->associationListenerDeferrer,
+		      sctpOptions.mtu,
+		      sctpOptions.defaultStreamPriority,
+		      sctpOptions.totalBufferedAmountLowThreshold),
 		    t1InitTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-t1-init",
 		        .baseTimeoutMs       = sctpOptions.t1InitTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -59,6 +64,7 @@ namespace RTC
 		    t1CookieTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-t1-cookie",
 		        .baseTimeoutMs       = sctpOptions.t1CookieTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -66,6 +72,7 @@ namespace RTC
 		    t2ShutdownTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-t2-shutdown",
 		        .baseTimeoutMs       = sctpOptions.t2ShutdownTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -195,7 +202,7 @@ namespace RTC
 
 			// If we haven't received any SCTP packet yet and the transport is not
 			// ready for SCTP traffic, don't do anything.
-			if (this->privateMetrics.rxPacketsCount == 0 && !this->listener.OnAssociationIsTransportReadyForSctp())
+			if (this->privateMetrics.rxPacketsCount == 0 && !this->associationListenerDeferrer.OnAssociationIsTransportReadyForSctp())
 			{
 				MS_DEBUG_DEV(
 				  "no SCTP data has been received yet and transport is not ready for SCTP traffic, ignoring");
@@ -227,7 +234,7 @@ namespace RTC
 				return;
 			}
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			this->preTcb.localVerificationTag =
 			  Utils::Crypto::GetRandomUInt<uint32_t>(MinVerificationTag, MaxVerificationTag);
@@ -242,7 +249,7 @@ namespace RTC
 
 			AssertStateIsConsistent();
 
-			this->listener.OnAssociationConnecting();
+			this->associationListenerDeferrer.OnAssociationConnecting();
 		}
 
 		void Association::Shutdown()
@@ -256,7 +263,7 @@ namespace RTC
 				return;
 			}
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
 			//
@@ -305,7 +312,7 @@ namespace RTC
 				return;
 			}
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			if (this->tcb)
 			{
@@ -337,10 +344,9 @@ namespace RTC
 				return std::nullopt;
 			}
 
-			// const size_t packetPayloadLength =
-			//   this->sctpOptions.mtu - Packet::CommonHeaderLength - DataChunk::DataChunkHeaderLength;
+			const size_t packetPayloadLength =
+			  this->sctpOptions.mtu - Packet::CommonHeaderLength - DataChunk::DataChunkHeaderLength;
 
-			// TODO: SCTP: Implement missing fields.
 			AssociationMetrics metrics{
 				.txPacketsCount  = this->privateMetrics.txPacketsCount,
 				.txMessagesCount = this->privateMetrics.txMessagesCount,
@@ -350,11 +356,11 @@ namespace RTC
 				.rtxBytesCount   = this->tcb->GetRetransmissionQueue().GetRtxBytesCount(),
 				.cwndBytes       = this->tcb->GetCwnd(),
 				.srttMs          = this->tcb->GetCurrentSrttMs(),
-				// .unackDataCount =
-				//   this->tcb->GetRetransmissionQueue().GetUnackedItems() +
-				//   (this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) / packetPayloadLength,
-				.peerRwndBytes      = static_cast<uint32_t>(this->tcb->GetRetransmissionQueue().GetRwnd()),
-				.peerImplementation = this->privateMetrics.peerImplementation,
+				.unackDataCount  = this->tcb->GetRetransmissionQueue().GetUnackedItems() +
+				                   ((this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) /
+				                    packetPayloadLength),
+				.peerRwndBytes   = static_cast<uint32_t>(this->tcb->GetRetransmissionQueue().GetRwnd()),
+				.peerImplementation           = this->privateMetrics.peerImplementation,
 				.negotiatedMaxOutboundStreams = this->privateMetrics.negotiatedMaxOutboundStreams,
 				.negotiatedMaxInboundStreams  = this->privateMetrics.negotiatedMaxInboundStreams,
 				.usesPartialReliability       = this->privateMetrics.usesPartialReliability,
@@ -367,23 +373,18 @@ namespace RTC
 			return metrics;
 		}
 
-		uint16_t Association::GetStreamPriority(uint16_t /*streamId*/) const
+		uint16_t Association::GetStreamPriority(uint16_t streamId) const
 		{
 			MS_TRACE();
 
-			// TODO: SCTP: Implement it.
-			// return this->sendQueue.GetStreamPriority(streamId);
-
-			// TODO: SCTP: Remove.
-			return 0;
+			return this->sendQueue.GetStreamPriority(streamId);
 		}
 
-		void Association::SetStreamPriority(uint16_t /*streamId*/, uint16_t /*priority*/)
+		void Association::SetStreamPriority(uint16_t streamId, uint16_t priority)
 		{
 			MS_TRACE();
 
-			// TODO: SCTP: Implement it.
-			// this->sendQueue.SetStreamPriority(streamId, priority);
+			this->sendQueue.SetStreamPriority(streamId, priority);
 		}
 
 		void Association::SetMaxSendMessageSize(size_t maxMessageSize)
@@ -393,45 +394,36 @@ namespace RTC
 			this->sctpOptions.maxSendMessageSize = maxMessageSize;
 		}
 
-		size_t Association::GetStreamBufferedAmount(uint16_t /*streamId*/) const
+		size_t Association::GetStreamBufferedAmount(uint16_t streamId) const
 		{
 			MS_TRACE();
 
-			// TODO: SCTP: Implement it.
-			// return this->sendQueue.GetStreamBufferedAmount(streamId);
-
-			// TODO: SCTP: Remove.
-			return 0;
+			return this->sendQueue.GetStreamBufferedAmount(streamId);
 		}
 
-		size_t Association::GetStreamBufferedAmountLowThreshold(uint16_t /*streamId*/) const
+		size_t Association::GetStreamBufferedAmountLowThreshold(uint16_t streamId) const
 		{
 			MS_TRACE();
 
-			// TODO: SCTP: Implement it.
-			// return this->sendQueue.GetStreamBufferedAmountLowThreshold(streamId);
-
-			// TODO: SCTP: Remove.
-			return 0;
+			return this->sendQueue.GetStreamBufferedAmountLowThreshold(streamId);
 		}
 
-		void Association::SetBufferedAmountLowThreshold(uint16_t /*streamId*/, size_t /*bytes*/)
+		void Association::SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes)
 		{
 			MS_TRACE();
 
-			// TODO: SCTP: Implement it.
-			// this->sendQueue.SetBufferedAmountLowThreshold(streamId, bytes);
+			this->sendQueue.SetStreamBufferedAmountLowThreshold(streamId, bytes);
 		}
 
 		Types::ResetStreamsStatus Association::ResetStreams(std::span<const uint16_t> outboundStreamIds)
 		{
 			MS_TRACE();
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			if (!this->tcb)
 			{
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::WRONG_SEQUENCE,
 				  "cannot reset outbound streams as the association is not connected");
 
@@ -440,7 +432,7 @@ namespace RTC
 
 			if (!this->tcb->GetNegotiatedCapabilities().reConfig)
 			{
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::UNSUPPORTED_OPERATION,
 				  "cannot reset outbound streams as the remote doesn't support it");
 
@@ -460,7 +452,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			const auto status = InternalSendMessage(message, sendMessageOptions);
 
@@ -469,13 +461,11 @@ namespace RTC
 				return status;
 			}
 
-			// TODO: SCTP: Uncomment.
-			// const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			this->privateMetrics.txMessagesCount++;
 
-			// TODO: SCTP: Implement it.
-			// this->sendQueue.AddMessage(nowMs, std::move(message), sendMessageOptions);
+			this->sendQueue.Add(nowMs, std::move(message), sendMessageOptions);
 
 			if (this->tcb)
 			{
@@ -493,15 +483,15 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
-			// TODO: SCTP: Uncomment.
-			// const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
+
 			std::vector<Types::SendMessageStatus> statuses;
 
 			statuses.reserve(messages.size());
 
-			for (const auto& message : messages)
+			for (auto& message : messages)
 			{
 				const auto status = InternalSendMessage(message, sendMessageOptions);
 
@@ -514,8 +504,7 @@ namespace RTC
 
 				this->privateMetrics.txMessagesCount++;
 
-				// TODO: SCTP: Implement it.
-				// this->sendQueue.AddMessage(nowMs, std::move(message), sendMessageOptions);
+				this->sendQueue.Add(nowMs, std::move(message), sendMessageOptions);
 			}
 
 			if (this->tcb)
@@ -560,7 +549,7 @@ namespace RTC
 			// NOTE: It's important to create the deferrer here, otherwise it may
 			// happen that MayConnect() ends calling to Connect() so we end with two
 			// nested deferreds (and hence an assertion).
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			std::unique_ptr<Packet> receivedPacket{ Packet::Parse(data, len) };
 
@@ -568,7 +557,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(sctp, "failed to parse received SCTP packet");
 
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "failed to parse received SCTP packet");
 
 				AssertStateIsConsistent();
@@ -626,16 +615,16 @@ namespace RTC
 			{
 				if (errorKind == Types::ErrorKind::SUCCESS)
 				{
-					this->listener.OnAssociationClosed(errorKind, message);
+					this->associationListenerDeferrer.OnAssociationClosed(errorKind, message);
 				}
 				else
 				{
-					this->listener.OnAssociationFailed(errorKind, message);
+					this->associationListenerDeferrer.OnAssociationFailed(errorKind, message);
 				}
 			}
 			else
 			{
-				this->listener.OnAssociationClosed(errorKind, message);
+				this->associationListenerDeferrer.OnAssociationClosed(errorKind, message);
 			}
 		}
 
@@ -727,9 +716,10 @@ namespace RTC
 			MS_TRACE();
 
 			this->tcb = std::make_unique<TransmissionControlBlock>(
-			  this->listener,
+			  this->associationListenerDeferrer,
 			  this->sctpOptions,
 			  this->shared,
+			  this->sendQueue,
 			  this->packetSender,
 			  localVerificationTag,
 			  remoteVerificationTag,
@@ -936,7 +926,7 @@ namespace RTC
 			// while (std::optional<Message> message = this->tcb->GetReassemblyQueue().GetNextMessage())
 			// {
 			// 	this->privateMetrics.rxMessagesCount++;
-			// 	this->listener.OnAssociationMessageReceived(*std::move(message));
+			// 	this->associationListenerDeferrer.OnAssociationMessageReceived(*std::move(message));
 			// }
 		}
 
@@ -951,10 +941,10 @@ namespace RTC
 			{
 				if (lifecycleId.has_value())
 				{
-					this->listener.OnAssociationLifecycleMessageEnd(lifecycleId.value());
+					this->associationListenerDeferrer.OnAssociationLifecycleMessageEnd(lifecycleId.value());
 				}
 
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PROTOCOL_VIOLATION, "cannot send empty message");
 
 				return Types::SendMessageStatus::ERROR_MESSAGE_EMPTY;
@@ -963,10 +953,10 @@ namespace RTC
 			{
 				if (lifecycleId.has_value())
 				{
-					this->listener.OnAssociationLifecycleMessageEnd(lifecycleId.value());
+					this->associationListenerDeferrer.OnAssociationLifecycleMessageEnd(lifecycleId.value());
 				}
 
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PROTOCOL_VIOLATION, "cannot send too large message");
 
 				return Types::SendMessageStatus::ERROR_MESSAGE_TOO_LARGE;
@@ -982,31 +972,30 @@ namespace RTC
 			{
 				if (lifecycleId.has_value())
 				{
-					this->listener.OnAssociationLifecycleMessageEnd(lifecycleId.value());
+					this->associationListenerDeferrer.OnAssociationLifecycleMessageEnd(lifecycleId.value());
 				}
 
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::WRONG_SEQUENCE,
 				  "cannot send message as the association is shutting down");
 
 				return Types::SendMessageStatus::ERROR_SHUTTING_DOWN;
 			}
-			// TODO: SCTP: Implement it.
-			// else if (
-			//   this->sendQueue.GetTotalBufferedAmount() >= this->sctpOptions.maxSendBufferSize ||
-			//   this->sendQueue.GetStreamBufferedAmount(message.GetStreamId()) >=
-			//     this->sctpOptions.perStreamSendQueueLimit)
-			// {
-			// 	if (lifecycleId.has_value())
-			// 	{
-			// 		this->listener.OnAssociationLifecycleMessageEnd(lifecycleId.value());
-			// 	}
+			else if (
+			  this->sendQueue.GetTotalBufferedAmount() >= this->sctpOptions.maxSendBufferSize ||
+			  this->sendQueue.GetStreamBufferedAmount(message.GetStreamId()) >=
+			    this->sctpOptions.perStreamSendQueueLimit)
+			{
+				if (lifecycleId.has_value())
+				{
+					this->associationListenerDeferrer.OnAssociationLifecycleMessageEnd(lifecycleId.value());
+				}
 
-			// 	this->listener.OnAssociationError(
-			// 	  Types::ErrorKind::RESOURCE_EXHAUSTION, "cannot send message as the send queue is full");
+				this->associationListenerDeferrer.OnAssociationError(
+				  Types::ErrorKind::RESOURCE_EXHAUSTION, "cannot send message as the send queue is full");
 
-			// 	return Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION;
-			// }
+				return Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION;
+			}
 
 			return Types::SendMessageStatus::SUCCESS;
 		}
@@ -1034,7 +1023,7 @@ namespace RTC
 					  sctp,
 					  "Packet with Verification Tag 0 must have a single Chunk and it must be an INIT Chunk, packet discarded");
 
-					this->listener.OnAssociationError(
+					this->associationListenerDeferrer.OnAssociationError(
 					  Types::ErrorKind::PARSE_FAILED,
 					  "packet with Verification Tag 0 must have a single chunk and it must be an INIT chunk");
 
@@ -1074,7 +1063,7 @@ namespace RTC
 					  "ABORT Chunk Verification Tag %" PRIu32 " is wrong, packet discarded",
 					  receivedPacket->GetVerificationTag());
 
-					this->listener.OnAssociationError(
+					this->associationListenerDeferrer.OnAssociationError(
 					  Types::ErrorKind::PARSE_FAILED, "packet with ABORT chunk has invalid Verification Tag");
 
 					return false;
@@ -1095,7 +1084,7 @@ namespace RTC
 					  receivedPacket->GetVerificationTag(),
 					  this->preTcb.localVerificationTag);
 
-					this->listener.OnAssociationError(
+					this->associationListenerDeferrer.OnAssociationError(
 					  Types::ErrorKind::PARSE_FAILED,
 					  "packet with INIT_ACK chunk has invalid Verification Tag");
 
@@ -1143,7 +1132,7 @@ namespace RTC
 					  "SHUTDOWN_COMPLETE Chunk Verification Tag %" PRIu32 " is wrong, packet discarded",
 					  receivedPacket->GetVerificationTag());
 
-					this->listener.OnAssociationError(
+					this->associationListenerDeferrer.OnAssociationError(
 					  Types::ErrorKind::PARSE_FAILED,
 					  "packet with SHUTDOWN_COMPLETE chunk has invalid Verification Tag");
 
@@ -1171,7 +1160,7 @@ namespace RTC
 				  receivedPacket->GetVerificationTag(),
 				  localVerificationTag);
 
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "packet has invalid Verification Tag");
 
 				return false;
@@ -1574,8 +1563,7 @@ namespace RTC
 			// partly sent message is re-sent in full. The same is true when the
 			// Association is closed and later re-opened, which never happens in
 			// WebRTC, but is a valid operation on the SCTP level.
-			// TODO: SCTP: Implement it.
-			// this->sendQueue.Reset();
+			this->sendQueue.Reset();
 
 			CreateTransmissionControlBlock(
 			  this->preTcb.localVerificationTag,
@@ -1603,7 +1591,7 @@ namespace RTC
 			// this->tcb->SendBufferedPackets(nowMs);
 
 			this->t1CookieTimer->Start();
-			this->listener.OnAssociationConnecting();
+			this->associationListenerDeferrer.OnAssociationConnecting();
 		}
 
 		void Association::HandleReceivedCookieEchoChunk(
@@ -1615,7 +1603,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(sctp, "ignoring received COOKIE_ECHO Chunk without Cookie");
 
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "received COOKIE_ECHO Chunk without Cookie");
 
 				return;
@@ -1628,7 +1616,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(sctp, "failed to parse Cookie in received COOKIE_ECHO Chunk");
 
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "received COOKIE_ECHO Chunk with invalid Cookie");
 
 				return;
@@ -1647,7 +1635,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(sctp, "received COOKIE_ECHO Chunk with invalid Verification Tag");
 
-					this->listener.OnAssociationError(
+					this->associationListenerDeferrer.OnAssociationError(
 					  Types::ErrorKind::PARSE_FAILED,
 					  "received COOKIE_ECHO Chunk with invalid Verification Tag");
 
@@ -1667,7 +1655,7 @@ namespace RTC
 
 				SetState(State::ESTABLISHED, "COOKIE_ECHO received");
 
-				this->listener.OnAssociationConnected();
+				this->associationListenerDeferrer.OnAssociationConnected();
 			}
 
 			if (!this->tcb)
@@ -1677,8 +1665,7 @@ namespace RTC
 				// partly sent message is re-sent in full. The same is true when the
 				// Association is closed and later re-opened, which never happens in
 				// WebRTC, but is a valid operation on the SCTP level.
-				// TODO: SCTP: Implement it.
-				// this->sendQueue.Reset();
+				this->sendQueue.Reset();
 
 				CreateTransmissionControlBlock(
 				  cookie->GetLocalVerificationTag(),
@@ -1749,7 +1736,7 @@ namespace RTC
 
 					this->packetSender.SendPacket(packet.get());
 
-					this->listener.OnAssociationError(
+					this->associationListenerDeferrer.OnAssociationError(
 					  Types::ErrorKind::WRONG_SEQUENCE, "received COOKIE_ECHO while shutting down");
 
 					return false;
@@ -1758,7 +1745,7 @@ namespace RTC
 				MS_DEBUG_DEV("received COOKIE_ECHO indicating a restarted peer");
 
 				this->tcb = nullptr;
-				this->listener.OnAssociationRestarted();
+				this->associationListenerDeferrer.OnAssociationRestarted();
 			}
 			// "B) In this case, both sides might be attempting to start an association
 			// at about the same time, but the peer endpoint sent its INIT chunk after
@@ -1827,7 +1814,7 @@ namespace RTC
 			// TODO: SCTP: Implement this.
 			// this->tcb->SendBufferedPackets(nowMs);
 
-			this->listener.OnAssociationConnected();
+			this->associationListenerDeferrer.OnAssociationConnected();
 		}
 
 		void Association::HandleReceivedShutdownChunk(
@@ -2012,7 +1999,8 @@ namespace RTC
 
 			MS_WARN_TAG(sctp, "received OPERATION_ERROR Chunk: %s", errorCausesStr.c_str());
 
-			this->listener.OnAssociationError(Types::ErrorKind::PEER_REPORTED, errorCausesStr);
+			this->associationListenerDeferrer.OnAssociationError(
+			  Types::ErrorKind::PEER_REPORTED, errorCausesStr);
 		}
 
 		void Association::HandleReceivedAbortAssociationChunk(
@@ -2153,7 +2141,7 @@ namespace RTC
 
 				this->packetSender.SendPacket(packet.get());
 
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PROTOCOL_VIOLATION,
 				  "received FORWARD_TSN or I_FORWARD_TSN-TSN chunk but partial reliability is not negotiated");
 
@@ -2216,7 +2204,7 @@ namespace RTC
 
 				this->packetSender.SendPacket(packet.get());
 
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PROTOCOL_VIOLATION, "received DATA or I_DATA chunk with no user data");
 
 				return;
@@ -2317,7 +2305,7 @@ namespace RTC
 				return;
 			}
 
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			if (this->tcb->GetRetransmissionQueue().HandleReceivedSackChunk(nowMs, receivedSackChunk))
 			{
@@ -2379,7 +2367,7 @@ namespace RTC
 
 			if (reportError)
 			{
-				this->listener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "unknown chunk with type indicating it should be reported");
 
 				// If there is TCB (we need correct remote verification tag) send an
@@ -2408,15 +2396,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
-
-			const auto maxRestarts = this->t1InitTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "T1-init timer has expired [%zu/%s]",
-			  this->t1InitTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			AssertState(State::COOKIE_WAIT);
 
@@ -2436,15 +2416,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
-
-			const auto maxRestarts = this->t1CookieTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "T1-cookie timer has expired [%zu/%s]",
-			  this->t1CookieTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			AssertState(State::COOKIE_ECHOED);
 
@@ -2468,15 +2440,7 @@ namespace RTC
 			AssertState(State::SHUTDOWN_SENT, State::SHUTDOWN_ACK_SENT);
 			AssertHasTcb();
 
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->listener);
-
-			const auto maxRestarts = this->t2ShutdownTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "T2-shutdown timer has expired %zu/%s]",
-			  this->t2ShutdownTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
 			//
@@ -2605,7 +2569,7 @@ namespace RTC
 				return true;
 			}
 
-			this->listener.OnAssociationError(
+			this->associationListenerDeferrer.OnAssociationError(
 			  Types::ErrorKind::NOT_CONNECTED,
 			  "received unexpected commands on association that is not connected");
 
@@ -2786,10 +2750,19 @@ namespace RTC
 			}
 		}
 
-		void Association::OnTimer(
+		void Association::OnBackoffTimer(
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = backoffTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired %zu/%s]",
+			  backoffTimer->GetLabel().c_str(),
+			  backoffTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->t1InitTimer.get())
 			{

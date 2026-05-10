@@ -37,6 +37,7 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "RTC/SCTP/tx/RoundRobinSendQueue.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include <FBS/sctpParameters.h>
 #include <span>
@@ -464,14 +465,15 @@ namespace RTC
 
 			/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 		public:
-			void OnTimer(BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+			void OnBackoffTimer(
+			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			// SCTP options given in the constructor.
 			SctpOptions sctpOptions;
 			// Listener. It's not an `AssociationListener` but an
 			// `AssociationListenerDeferrer` which inherits from `AssociationListener`.
-			AssociationListenerDeferrer listener;
+			AssociationListenerDeferrer associationListenerDeferrer;
 			SharedInterface* shared;
 			// SCTP association internal state.
 			State state{ State::NEW };
@@ -479,8 +481,7 @@ namespace RTC
 			PacketSender packetSender;
 			// The actual send queue implementation. As data can be sent before the
 			// connection is established, this component is not in the TCB.
-			// TODO: Implement this class.
-			// RRSendQueue sendQueue;
+			RoundRobinSendQueue sendQueue;
 			// To keep settings between sending of INIT Chunk and establishment of
 			// the connection.
 			PreTransmissionControlBlock preTcb;

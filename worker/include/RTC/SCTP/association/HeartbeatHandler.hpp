@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "SharedInterface.hpp"
-#include "RTC/SCTP/association/TCBContext.hpp"
+#include "RTC/SCTP/association/TransmissionControlBlockInterface.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/public/AssociationListener.hpp"
@@ -29,7 +29,7 @@ namespace RTC
 			  AssociationListener& associationListener,
 			  const SctpOptions& sctpOptions,
 			  SharedInterface* shared,
-			  TCBContext* tcbContext);
+			  TransmissionControlBlockInterface* tcbContext);
 
 			~HeartbeatHandler() override;
 
@@ -59,13 +59,14 @@ namespace RTC
 
 			/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 		public:
-			void OnTimer(BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+			void OnBackoffTimer(
+			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			AssociationListener& associationListener;
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;
-			TCBContext* tcbContext{ nullptr };
+			TransmissionControlBlockInterface* tcbContext{ nullptr };
 			// The time for a connection to be idle before a heartbeat is sent.
 			const uint64_t intervalDurationMs{ 0 };
 			// Adding RTT to the duration will add some jitter, which is good in

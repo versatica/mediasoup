@@ -1,9 +1,9 @@
 #ifndef MS_RTC_TRANSPORT_HPP
 #define MS_RTC_TRANSPORT_HPP
+
 // #define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
@@ -22,7 +22,7 @@
 #include "RTC/SCTP/public/AssociationListener.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
-// TODO: Remove once we only use built-in SCTP stack.
+// TODO: SCTP: Remove once we only use built-in SCTP stack.
 #include "SharedInterface.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include "RTC/SctpListener.hpp"
@@ -43,7 +43,7 @@ namespace RTC
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
 	                  public RTC::SCTP::AssociationListener,
-	                  // TODO: Remove once we only use built-in SCTP stack.
+	                  // TODO: SCTP: Remove once we only use built-in SCTP stack.
 	                  public RTC::SctpAssociation::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
@@ -185,11 +185,11 @@ namespace RTC
 		void Disconnected();
 		void DataReceived(size_t len)
 		{
-			this->recvTransmission.Update(len, DepLibUV::GetTimeMs());
+			this->recvTransmission.Update(len, this->shared->GetTimeMs());
 		}
 		void DataSent(size_t len)
 		{
-			this->sendTransmission.Update(len, DepLibUV::GetTimeMs());
+			this->sendTransmission.Update(len, this->shared->GetTimeMs());
 		}
 		void ReceiveRtpPacket(RTC::RTP::Packet* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
@@ -309,7 +309,7 @@ namespace RTC
 		// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.
 
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 	public:
 		void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) override;
 		void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation) override;
@@ -361,9 +361,7 @@ namespace RTC
 	protected:
 		SharedInterface* shared{ nullptr };
 		size_t maxMessageSize{ 262144u };
-		// Allocated by this.
-		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		RTC::SctpAssociation* oldSctpAssociation{ nullptr };
 
 	private:
@@ -377,6 +375,8 @@ namespace RTC
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
 		TimerHandleInterface* rtcpTimer{ nullptr };
+		// Allocated by this.
+		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlClient> tccClient{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlServer> tccServer{ nullptr };
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR

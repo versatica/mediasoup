@@ -3,7 +3,6 @@
 #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
@@ -26,9 +25,8 @@ namespace RTC
 		  AssociationListener& associationListener,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
+		  SendQueueInterface& sendQueue,
 		  PacketSender& packetSender,
-		  // TODO: SCTP: Implement it.
-		  // SendQueue& sendQueue,
 		  uint32_t localVerificationTag,
 		  uint32_t remoteVerificationTag,
 		  uint32_t localInitialTsn,
@@ -40,8 +38,6 @@ namespace RTC
 		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
 		    shared(shared),
-		    // TODO: SCTP: Implement it.
-		    // sendQueue(sendQueue),
 		    packetSender(packetSender),
 		    localVerificationTag(localVerificationTag),
 		    remoteVerificationTag(remoteVerificationTag),
@@ -54,6 +50,7 @@ namespace RTC
 		    t3RtxTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-t3-rtx",
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
@@ -61,6 +58,7 @@ namespace RTC
 		    delayedAckTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
 		        .listener            = this,
+		        .label               = "sctp-delayed-ack",
 		        .baseTimeoutMs       = sctpOptions.delayedAckMaxTimeoutMs,
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = std::nullopt,
@@ -76,8 +74,7 @@ namespace RTC
 		      this->associationListener,
 		      localInitialTsn,
 		      remoteAdvertisedReceiverWindowCredit,
-		      // TODO: SCTP: Implement
-		      // this->sendQueue,
+		      sendQueue,
 		      this->t3RtxTimer.get(),
 		      sctpOptions,
 		      negotiatedCapabilities.partialReliability,
@@ -93,6 +90,8 @@ namespace RTC
 		    heartbeatHandler(this->associationListener, sctpOptions, this->shared, this)
 		{
 			MS_TRACE();
+
+			sendQueue.EnableMessageInterleaving(this->negotiatedCapabilities.messageInterleaving);
 		}
 
 		TransmissionControlBlock::~TransmissionControlBlock()
@@ -260,18 +259,17 @@ namespace RTC
 			// delay retransmission for this single packet."
 
 			auto packet = CreatePacket();
-			const auto result =
+			auto result =
 			  this->retransmissionQueue.GetChunksForFastRetransmit(packet->GetAvailableLength());
 
-			for (const auto& [tsn, data] : result)
+			for (auto& [tsn, data] : result)
 			{
 				if (this->negotiatedCapabilities.messageInterleaving)
 				{
 					auto* iDataChunk = packet->BuildChunkInPlace<IDataChunk>();
 
 					iDataChunk->SetTsn(tsn);
-					// TODO: SCTP: Implement.
-					// iDataChunk->SetUserData(data);
+					iDataChunk->SetUserData(std::move(data));
 					iDataChunk->Consolidate();
 				}
 				else
@@ -279,8 +277,7 @@ namespace RTC
 					auto* dataChunk = packet->BuildChunkInPlace<DataChunk>();
 
 					dataChunk->SetTsn(tsn);
-					// TODO: SCTP: Implement.
-					// dataChunk->SetUserData(data);
+					dataChunk->SetUserData(std::move(data));
 					dataChunk->Consolidate();
 				}
 			}
@@ -291,14 +288,6 @@ namespace RTC
 		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
-
-			const auto maxRestarts = this->t3RtxTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "T3-rtx timer has expired [%zu/%s]",
-			  this->t3RtxTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			// In the COOKIE_ECHO state, let the T1-COOKIE timer trigger
 			// retransmissions, to avoid having two timers doing that.
@@ -312,7 +301,7 @@ namespace RTC
 				{
 					this->retransmissionQueue.HandleT3RtxTimerExpiry();
 
-					// const uint64_t nowMs = DepLibUV::GetTimeMs();
+					// const uint64_t nowMs = this->shared->GetTimeMs();
 
 					// TODO: SCTP: Implement
 					// SendBufferedPackets(nowMs);
@@ -324,24 +313,25 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto maxRestarts = this->delayedAckTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "delayer ack timer has expired [%zu/%s]",
-			  this->delayedAckTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
-
 			// TODO: SCTP: Implement it.
 			// this->dataTracker.HandleDelayedAckTimerExpiry();
 
 			MaySendSackChunk();
 		}
 
-		void TransmissionControlBlock::OnTimer(
+		void TransmissionControlBlock::OnBackoffTimer(
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = backoffTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired %zu/%s]",
+			  backoffTimer->GetLabel().c_str(),
+			  backoffTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->t3RtxTimer.get())
 			{

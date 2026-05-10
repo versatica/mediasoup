@@ -3,7 +3,6 @@
 #define USE_TREND_CALCULATOR
 
 #include "RTC/TransportCongestionControlClient.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <libwebrtc/api/transport/network_types.h> // webrtc::TargetRateConstraints
 #include <limits>                                  // std::numeric_limits
@@ -116,7 +115,7 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef USE_TREND_CALCULATOR
-		auto nowMs = DepLibUV::GetTimeMsInt64();
+		const auto nowMs = this->shared->GetTimeMsInt64();
 #endif
 
 		this->bitrates.desiredBitrate          = 0u;
@@ -309,7 +308,7 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef USE_TREND_CALCULATOR
-		auto nowMs = DepLibUV::GetTimeMsInt64();
+		const auto nowMs = this->shared->GetTimeMsInt64();
 #endif
 
 		// Manage it via trending and increase it a bit to avoid immediate oscillations.
@@ -411,7 +410,7 @@ namespace RTC
 
 		webrtc::TargetRateConstraints constraints;
 
-		constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTimeMs());
+		constraints.at_time       = webrtc::Timestamp::ms(this->shared->GetTimeMs());
 		constraints.min_data_rate = webrtc::DataRate::bps(this->bitrates.minBitrate);
 		constraints.max_data_rate = webrtc::DataRate::bps(this->bitrates.maxBitrate);
 		constraints.starting_rate = webrtc::DataRate::bps(this->bitrates.startBitrate);
@@ -437,14 +436,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
+		this->lastAvailableBitrateEventAtMs = this->shared->GetTimeMs();
 	}
 
 	void TransportCongestionControlClient::MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate)
 	{
 		MS_TRACE();
 
-		const uint64_t nowMs = DepLibUV::GetTimeMsInt64();
+		const uint64_t nowMs = this->shared->GetTimeMsInt64();
 		bool notify{ false };
 
 		// Ignore if first event.

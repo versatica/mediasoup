@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_TYPES_HPP
 
 #include "common.hpp"
+#include <limits>
 #include <string_view>
 
 namespace RTC
@@ -331,6 +332,10 @@ namespace RTC
 					}
 				}
 			}
+
+			constexpr uint16_t MaxRetransmitsNoLimit{ std::numeric_limits<uint16_t>::max() };
+
+			constexpr uint64_t ExpiresAtMsInfinite{ std::numeric_limits<uint64_t>::max() };
 		} // namespace Types
 	} // namespace SCTP
 } // namespace RTC

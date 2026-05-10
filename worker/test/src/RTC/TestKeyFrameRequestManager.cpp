@@ -1,9 +1,7 @@
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "mocks/include/MockShared.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <memory>
 
 SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 {
@@ -25,7 +23,11 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 	};
 
 	TestKeyFrameRequestManagerListener listener;
-	mocks::MockShared shared;
+	mocks::MockShared shared(/*getTimeMs*/
+	                         []()
+	                         {
+		                         return 1000;
+	                         });
 
 	SECTION("key frame requested once, not received on time")
 	{
@@ -35,10 +37,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 
-		// Must run the loop here to consume the timer before doing the check.
-		DepLibUV::RunLoop();
-
-		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
+		REQUIRE(listener.onKeyFrameNeededTimesCalled == 1);
 	}
 
 	SECTION("key frame requested many times, not received on time")
@@ -52,10 +51,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 
-		// Must run the loop here to consume the timer before doing the check.
-		DepLibUV::RunLoop();
-
-		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
+		REQUIRE(listener.onKeyFrameNeededTimesCalled == 1);
 	}
 
 	SECTION("key frame is received on time")
@@ -66,9 +62,6 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.KeyFrameReceived(1111);
-
-		// Must run the loop here to consume the timer before doing the check.
-		DepLibUV::RunLoop();
 
 		REQUIRE(listener.onKeyFrameNeededTimesCalled == 1);
 	}
@@ -82,10 +75,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.ForceKeyFrameNeeded(1111);
 
-		// Must run the loop here to consume the timer before doing the check.
-		DepLibUV::RunLoop();
-
-		REQUIRE(listener.onKeyFrameNeededTimesCalled == 3);
+		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
 	}
 
 	SECTION("key frame is forced, received on time")
@@ -98,14 +88,6 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 		keyFrameRequestManager.ForceKeyFrameNeeded(1111);
 		keyFrameRequestManager.KeyFrameReceived(1111);
 
-		// Must run the loop here to consume the timer before doing the check.
-		DepLibUV::RunLoop();
-
 		REQUIRE(listener.onKeyFrameNeededTimesCalled == 2);
 	}
-
-	// Must run the loop to wait for UV timers and close them.
-	// NOTE: Not really needed in this file since we run it in each SECTION in
-	// purpose.
-	DepLibUV::RunLoop();
 }

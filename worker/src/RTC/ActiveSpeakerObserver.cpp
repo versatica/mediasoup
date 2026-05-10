@@ -149,7 +149,7 @@ namespace RTC
 			MS_THROW_ERROR("Producer already in map");
 		}
 
-		this->mapProducerSpeakers[producer->id] = new ProducerSpeaker(producer);
+		this->mapProducerSpeakers[producer->id] = new ProducerSpeaker(this->shared, producer);
 	}
 
 	void ActiveSpeakerObserver::RemoveProducer(RTC::Producer* producer)
@@ -229,7 +229,7 @@ namespace RTC
 		if (it != this->mapProducerSpeakers.end())
 		{
 			auto* producerSpeaker = it->second;
-			const uint64_t now    = DepLibUV::GetTimeMs();
+			const uint64_t now    = this->shared->GetTimeMs();
 
 			producerSpeaker->speaker->LevelChanged(volume, now);
 		}
@@ -260,7 +260,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const uint64_t now = DepLibUV::GetTimeMs();
+		const uint64_t now = this->shared->GetTimeMs();
 
 		if (now - this->lastLevelIdleTime >= LevelIdleTimeout)
 		{
@@ -387,8 +387,8 @@ namespace RTC
 		}
 	}
 
-	ActiveSpeakerObserver::ProducerSpeaker::ProducerSpeaker(RTC::Producer* producer)
-	  : producer(producer), speaker(new Speaker())
+	ActiveSpeakerObserver::ProducerSpeaker::ProducerSpeaker(SharedInterface* shared, RTC::Producer* producer)
+	  : producer(producer), speaker(new Speaker(shared))
 	{
 		MS_TRACE();
 
@@ -402,11 +402,11 @@ namespace RTC
 		delete this->speaker;
 	}
 
-	ActiveSpeakerObserver::Speaker::Speaker()
+	ActiveSpeakerObserver::Speaker::Speaker(SharedInterface* shared)
 	  : immediateActivityScore(MinActivityScore),
 	    mediumActivityScore(MinActivityScore),
 	    longActivityScore(MinActivityScore),
-	    lastLevelChangeTime(DepLibUV::GetTimeMs()),
+	    lastLevelChangeTime(shared->GetTimeMs()),
 	    minLevel(MinLevel),
 	    nextMinLevel(MinLevel),
 	    immediates(ImmediateBuffLen, 0),

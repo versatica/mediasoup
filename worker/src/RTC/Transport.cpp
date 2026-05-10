@@ -47,11 +47,11 @@ namespace RTC
 	  : id(id),
 	    shared(shared),
 	    listener(listener),
-	    recvRtpTransmission(/*ignorePaddingOnlyPackets*/ false),
-	    sendRtpTransmission(/*ignorePaddingOnlyPackets*/ false),
-	    recvRtxTransmission(/*ignorePaddingOnlyPackets*/ false, 1000u),
-	    sendRtxTransmission(/*ignorePaddingOnlyPackets*/ false, 1000u),
-	    sendProbationTransmission(/*ignorePaddingOnlyPackets*/ false, 100u)
+	    recvRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
+	    sendRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
+	    recvRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000u),
+	    sendRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000u),
+	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100u)
 	{
 		MS_TRACE();
 
@@ -123,7 +123,7 @@ namespace RTC
 				this->sctpAssociation =
 				  std::make_unique<RTC::SCTP::Association>(sctpOptions, this, this->shared);
 			}
-			// TODO: Remove once we only use built-in SCTP stack.
+			// TODO: SCTP: Remove once we only use built-in SCTP stack.
 			else
 			{
 				// This may throw.
@@ -194,11 +194,11 @@ namespace RTC
 			// the Transport subclass but Transport parent (this is how the destruction
 			// chain works in C++).
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else
 		{
 			// Delete SCTP association.
-			// TODO: Remove once we only use built-in SCTP stack.
+			// TODO: SCTP: Remove once we only use built-in SCTP stack.
 			delete this->oldSctpAssociation;
 			this->oldSctpAssociation = nullptr;
 		}
@@ -410,7 +410,7 @@ namespace RTC
 
 			sctpListener = this->sctpListener.FillBuffer(builder);
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
 			// Add sctpParameters.
@@ -490,7 +490,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 
 		// Add sctpState.
 		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
@@ -527,7 +527,7 @@ namespace RTC
 				}
 			}
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
 			switch (this->oldSctpAssociation->GetState())
@@ -1129,7 +1129,7 @@ namespace RTC
 					};
 
 					this->senderBwe = std::make_shared<RTC::SenderBandwidthEstimator>(
-					  this, this->initialAvailableOutgoingBitrate);
+					  this, this->shared, this->initialAvailableOutgoingBitrate);
 
 					if (IsConnected())
 					{
@@ -1259,7 +1259,7 @@ namespace RTC
 					{
 						this->sctpAssociation->MayConnect();
 					}
-					// TODO: Remove once we only use built-in SCTP stack.
+					// TODO: SCTP: Remove once we only use built-in SCTP stack.
 					else
 					{
 						this->oldSctpAssociation->HandleDataProducer(dataProducer);
@@ -1369,7 +1369,7 @@ namespace RTC
 						// Tell to the SCTP association.
 						this->sctpAssociation->MayConnect();
 					}
-					// TODO: Remove once we only use built-in SCTP stack.
+					// TODO: SCTP: Remove once we only use built-in SCTP stack.
 					else
 					{
 						if (this->oldSctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
@@ -1540,7 +1540,7 @@ namespace RTC
 					{
 						// TODO: SCTP
 					}
-					// TODO: Remove once we only use built-in SCTP stack.
+					// TODO: SCTP: Remove once we only use built-in SCTP stack.
 					else
 					{
 						// Tell the SctpAssociation so it can reset the SCTP stream.
@@ -1585,7 +1585,7 @@ namespace RTC
 					{
 						// TODO: SCTP
 					}
-					// TODO: Remove once we only use built-in SCTP stack.
+					// TODO: SCTP: Remove once we only use built-in SCTP stack.
 					else
 					{
 						// Tell the SctpAssociation so it can reset the SCTP stream.
@@ -1675,7 +1675,7 @@ namespace RTC
 		{
 			this->sctpAssociation->MayConnect();
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
 			this->oldSctpAssociation->TransportConnected();
@@ -1725,7 +1725,7 @@ namespace RTC
 			dataConsumer->TransportDisconnected();
 		}
 
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		// Tell the SctpAssociation.
 		if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
@@ -1768,7 +1768,7 @@ namespace RTC
 		// them.
 		packet->AssignExtensionIds(this->recvRtpHeaderExtensionIds);
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 
 		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
@@ -2039,7 +2039,7 @@ namespace RTC
 						}
 					}
 
-					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, DepLibUV::GetTimeMsInt64());
+					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, this->shared->GetTimeMsInt64());
 				}
 
 				break;
@@ -2557,7 +2557,7 @@ namespace RTC
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::PROBATION,
-		  DepLibUV::GetTimeMs(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -2593,7 +2593,7 @@ namespace RTC
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::BWE,
-		  DepLibUV::GetTimeMs(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Transport::TraceInfo::BweTraceInfo,
 		  traceInfo.Union());
@@ -2676,7 +2676,7 @@ namespace RTC
 #endif
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
+		packet->UpdateAbsSendTime(this->shared->GetTimeMs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2704,16 +2704,18 @@ namespace RTC
 			// send callbacks.
 			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
+			auto* shared = this->shared;
+
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr(this->senderBwe);
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
 			sentInfo.wideSeq     = this->transportWideCcSeq;
 			sentInfo.size        = packet->GetLength();
-			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
+			sentInfo.sendingAtMs = this->shared->GetTimeMs();
 
-			auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, packetInfo, senderBweWeakPtr, sentInfo](bool sent)
+			const auto* cb = new onSendCallback(
+			  [tccClientWeakPtr, shared, packetInfo, senderBweWeakPtr, sentInfo](bool sent) mutable
 			  {
 				  if (sent)
 				  {
@@ -2721,14 +2723,14 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
 					  }
 
 					  auto senderBwe = senderBweWeakPtr.lock();
 
 					  if (senderBwe)
 					  {
-						  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+						  sentInfo.sentAtMs = shared->GetTimeMs();
 						  senderBwe->RtpPacketSent(sentInfo);
 					  }
 				  }
@@ -2737,7 +2739,7 @@ namespace RTC
 			SendRtpPacket(consumer, packet, cb);
 #else
 			const auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, packetInfo](bool sent)
+			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
 				  {
@@ -2745,7 +2747,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
 					  }
 				  }
 			  });
@@ -2766,7 +2768,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
+		packet->UpdateAbsSendTime(this->shared->GetTimeMs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2789,16 +2791,18 @@ namespace RTC
 
 			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
+			auto* shared = this->shared;
+
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
 			sentInfo.wideSeq     = this->transportWideCcSeq;
 			sentInfo.size        = packet->GetLength();
-			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
+			sentInfo.sendingAtMs = this->shared->GetTimeMs();
 
-			auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, packetInfo, senderBweWeakPtr, sentInfo](bool sent)
+			const auto* cb = new onSendCallback(
+			  [tccClientWeakPtr, shared, packetInfo, senderBweWeakPtr, sentInfo](bool sent) mutable
 			  {
 				  if (sent)
 				  {
@@ -2806,14 +2810,14 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
 					  }
 
 					  auto senderBwe = senderBweWeakPtr.lock();
 
 					  if (senderBwe)
 					  {
-						  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+						  sentInfo.sentAtMs = shared->GetTimeMs();
 						  senderBwe->RtpPacketSent(sentInfo);
 					  }
 				  }
@@ -2822,7 +2826,7 @@ namespace RTC
 			SendRtpPacket(consumer, packet, cb);
 #else
 			const auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, packetInfo](bool sent)
+			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
 				  {
@@ -2830,7 +2834,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
 					  }
 				  }
 			  });
@@ -2962,10 +2966,10 @@ namespace RTC
 		if (Settings::configuration.useBuiltInSctpStack && this->sctpAssociation)
 		{
 			// TODO: SCTP
-			// TODO: Let's see how to obtain `streamId` argument from the DataConsumer.
+			// TODO: SCTP: Let's see how to obtain `streamId` argument from the DataConsumer.
 			// bufferedAmount = this->sctpAssociation->GetStreamBufferedAmount(streamId);
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
 		{
 			// NOTE: The underlaying SCTP association uses a common send buffer for all
@@ -2996,7 +3000,7 @@ namespace RTC
 				// TODO: SCTP
 			}
 		}
-		// TODO: Remove once we only use built-in SCTP stack.
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else
 		{
 			if (this->oldSctpAssociation && dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
@@ -3405,7 +3409,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
+		packet->UpdateAbsSendTime(this->shared->GetTimeMs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -3431,6 +3435,8 @@ namespace RTC
 
 			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
+			auto* shared = this->shared;
+
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
@@ -3438,10 +3444,10 @@ namespace RTC
 			sentInfo.wideSeq     = this->transportWideCcSeq;
 			sentInfo.size        = packet->GetLength();
 			sentInfo.isProbation = true;
-			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
+			sentInfo.sendingAtMs = this->shared->GetTimeMs();
 
-			auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, packetInfo, senderBweWeakPtr, sentInfo](bool sent)
+			const auto* cb = new onSendCallback(
+			  [tccClientWeakPtr, shared, packetInfo, senderBweWeakPtr, sentInfo](bool sent) mutable
 			  {
 				  if (sent)
 				  {
@@ -3449,14 +3455,14 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
 					  }
 
 					  auto senderBwe = senderBweWeakPtr.lock();
 
 					  if (senderBwe)
 					  {
-						  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+						  sentInfo.sentAtMs = shared->GetTimeMs();
 						  senderBwe->RtpPacketSent(sentInfo);
 					  }
 				  }
@@ -3465,7 +3471,7 @@ namespace RTC
 			SendRtpPacket(nullptr, packet, cb);
 #else
 			const auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, packetInfo](bool sent)
+			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
 				  {
@@ -3473,7 +3479,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
 					  }
 				  }
 			  });
@@ -3496,7 +3502,7 @@ namespace RTC
 		  packet->GetSequenceNumber(),
 		  this->transportWideCcSeq,
 		  packet->GetLength(),
-		  this->sendProbationTransmission.GetBitrate(DepLibUV::GetTimeMs()));
+		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()));
 	}
 
 	void Transport::OnTransportCongestionControlServerSendRtcpPacket(
@@ -3536,7 +3542,7 @@ namespace RTC
 		if (timer == this->rtcpTimer)
 		{
 			auto interval        = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			SendRtcp(nowMs);
 

@@ -2,8 +2,6 @@
 
 ## Related to mediasoup SCTP implementation
 
-- `DataChunk`, IDataChunk`and`AnyDataChunk`: Add `SetUserData(UserData)`.
-
 - Remove all default values of class memners in .hpp of all classes in case the constructor must give them initial value.
 
 - Lot of stuff missing in `TransmissionControlBock` class and I forgot to add "TODO: SCTP" in them.
@@ -13,8 +11,6 @@
 - `Association`: When transitioning to CLOSED (due to failure while connecting or closure) we should emit a new event "stcpclosed" in all `DataProducers/Consumers`.
 
 - When receiving SCTP RE-CONFIG, we should emit "streamclosed" in those `DataProducers/DataConsumers` whose stream ID have been closed.
-
-- Why the hell does `DataConsumer` have a `RTC::SctpAssociation* sctpAssociation` member?
 
 - `OnAssociationFailed()` and `OnAssociationClosed()` should report an error (if present) to JS.
 
@@ -27,8 +23,6 @@
   - We must also remove `device.sctpCapabilities` getter from mediasoup-client because anyway we are making up those values!
   - Also must update the website documentation.
 
-- Replicate `retransmission_queue_test.cc` of dcsctp.
-
 - When we invoke `close()` on a `DataProducer/Consumer` in server, we must end calling `sctpAssociation->ResetStream([streamId])` so it sends `ReConfig` to peer.
 
 - In `transport.dump()` (maybe also in `getStats()`) we must properly obtain `OS` and `MIS` according to the number of SCTP streams negotiated via INIT + INIT_ACK. And if SCTP is not yet established, then... not sure.
@@ -37,14 +31,12 @@
 - We need to pass `isDataChannel` to `SCTP::Association` constructor as we do in former `SctpAssociation`. Also use it in `Association::FillBuffer()`.
   - Well, let's see. If it's only for when changing number of OS/MIS... then the new SCTP stack doesn't support it so...
 
-- Instead of having a protected `sctpAssociation` member in `Transport`, let's make `Transport` subclasses invoke a new method `Transport::SendSctpMessage()` or `Transport::SendMessage()` instead of directly calling `this->sctpAssociation->SendSctpMessage()`.
-
 - Fix `dataConsumer.getBufferedAmount()` which in usrsctp returns the data buffered for all data consumers in the transport but now it will be per `DataConsumer` (SCTP stream).
   - In `DataConsumer` class rename `SetAssociationBufferedAmount()` to `SetBufferedAmount()`.
   - In `DataConsumer` class revisit `SctpAssociationSendBufferFull()` method.
   - Fix the documentation in the website which says: "The underlaying SCTP association uses a common send buffer for all data consumers, hence the value given by this method indicates the data buffered for all data consumers in the transport."
 
-- Look for "TODO: SCTP" everywhere.
+- Look for "TODO: SCTP" everywhere (also in `worker/test/`).
 
 - Test Chrome/Canary with I-DATA (message interleaving):
   ```bash

@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTP/RtxStream.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 
@@ -18,7 +17,8 @@ namespace RTC
 
 		/* Instance methods. */
 
-		RtxStream::RtxStream(RTP::RtxStream::Params& params) : params(params)
+		RtxStream::RtxStream(SharedInterface* shared, RTP::RtxStream::Params& params)
+		  : shared(shared), params(params)
 		{
 			MS_TRACE();
 
@@ -57,7 +57,7 @@ namespace RTC
 				this->started     = true;
 				this->maxSeq      = seq - 1;
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = DepLibUV::GetTimeMs();
+				this->maxPacketMs = this->shared->GetTimeMs();
 			}
 
 			// If not a valid packet ignore it.
@@ -76,7 +76,7 @@ namespace RTC
 			if (Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 			{
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = DepLibUV::GetTimeMs();
+				this->maxPacketMs = this->shared->GetTimeMs();
 			}
 
 			// Increase packet count.
@@ -141,7 +141,7 @@ namespace RTC
 			if (this->lastSrReceived != 0)
 			{
 				// Get delay in milliseconds.
-				const uint32_t delayMs = DepLibUV::GetTimeMs() - this->lastSrReceived;
+				const uint32_t delayMs = this->shared->GetTimeMs() - this->lastSrReceived;
 				// Express delay in units of 1/65536 seconds.
 				uint32_t dlsr = (delayMs / 1000) << 16;
 
@@ -163,7 +163,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->lastSrReceived  = DepLibUV::GetTimeMs();
+			this->lastSrReceived  = this->shared->GetTimeMs();
 			this->lastSrTimestamp = report->GetNtpSec() << 16;
 			this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 		}
@@ -209,7 +209,7 @@ namespace RTC
 					InitSeq(seq);
 
 					this->maxPacketTs = packet->GetTimestamp();
-					this->maxPacketMs = DepLibUV::GetTimeMs();
+					this->maxPacketMs = this->shared->GetTimeMs();
 				}
 				else
 				{
