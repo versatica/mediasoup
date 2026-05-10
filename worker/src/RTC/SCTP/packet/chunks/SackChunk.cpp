@@ -162,6 +162,23 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
 		}
 
+		std::vector<SackChunk::GapAckBlock> SackChunk::GetGapAckBlocks() const
+		{
+			MS_TRACE();
+
+			const uint16_t numberOfGapAckBlocks = GetNumberOfGapAckBlocks();
+			std::vector<SackChunk::GapAckBlock> gapAckBlocks;
+
+			gapAckBlocks.reserve(numberOfGapAckBlocks);
+
+			for (uint16_t idx{ 0 }; idx < numberOfGapAckBlocks; ++idx)
+			{
+				gapAckBlocks.emplace_back(GetAckBlockStartAt(idx), GetAckBlockEndAt(idx));
+			}
+
+			return gapAckBlocks;
+		}
+
 		std::vector<SackChunk::GapAckBlock> SackChunk::GetValidatedGapAckBlocks() const
 		{
 			MS_TRACE();

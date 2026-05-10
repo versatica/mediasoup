@@ -545,7 +545,7 @@ namespace RTC
 			}
 
 			return std::ranges::all_of(
-			  sackChunk->GetValidatedGapAckBlocks(),
+			  sackChunk->GetGapAckBlocks(),
 			  [&](const auto& block)
 			  {
 				  return UnwrappedTsn::AddTo(cumulativeTsnAck, block.end) <=

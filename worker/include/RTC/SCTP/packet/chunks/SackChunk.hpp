@@ -163,6 +163,8 @@ namespace RTC
 
 			void SetAdvertisedReceiverWindowCredit(uint32_t value);
 
+			std::vector<SackChunk::GapAckBlock> GetGapAckBlocks() const;
+
 			std::vector<GapAckBlock> GetValidatedGapAckBlocks() const;
 
 			std::vector<uint32_t> GetDuplicateTsns() const;
