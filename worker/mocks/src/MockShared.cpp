@@ -33,7 +33,7 @@ namespace mocks
 		  options,
 		  /*getTimeMs*/ this->getTimeMs,
 		  /*onDelete*/
-		  [this, &options]()
+		  [this, options]()
 		  {
 			  this->backoffTimers.erase(options.label);
 		  });
