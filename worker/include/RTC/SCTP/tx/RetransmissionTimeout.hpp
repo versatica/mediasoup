@@ -52,13 +52,13 @@ namespace RTC
 			}
 
 		private:
-			uint64_t minRtoMs{ 0 };
-			uint64_t maxRtoMs{ 0 };
-			uint64_t maxRttMs{ 0 };
-			uint64_t minRttVarianceMs{ 0 };
-			double srttMs{ 0 };
+			uint64_t minRtoMs;
+			uint64_t maxRtoMs;
+			uint64_t maxRttMs;
+			uint64_t minRttVarianceMs;
+			double srttMs;
+			double rtoMs;
 			double rttVarMs{ 0 };
-			double rtoMs{ 0 };
 			bool firstMeasurement{ false };
 		};
 	} // namespace SCTP

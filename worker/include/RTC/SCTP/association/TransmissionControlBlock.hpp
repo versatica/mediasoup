@@ -294,13 +294,13 @@ namespace RTC
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;
 			PacketSender& packetSender;
-			uint32_t localVerificationTag{ 0 };
-			uint32_t remoteVerificationTag{ 0 };
-			uint32_t localInitialTsn{ 0 };
-			uint32_t remoteInitialTsn{ 0 };
-			uint32_t remoteAdvertisedReceiverWindowCredit{ 0 };
+			uint32_t localVerificationTag;
+			uint32_t remoteVerificationTag;
+			uint32_t localInitialTsn;
+			uint32_t remoteInitialTsn;
+			uint32_t remoteAdvertisedReceiverWindowCredit;
 			// Nonce, used to detect reconnections.
-			uint64_t tieTag{ 0 };
+			uint64_t tieTag;
 			NegotiatedCapabilities negotiatedCapabilities;
 			// Max SCTP Packet length.
 			const size_t maxPacketLength;

@@ -87,7 +87,7 @@ private:
 	// Passed by argument.
 	BackoffTimerHandleInterface::Listener* listener{ nullptr };
 	const std::string label;
-	uint64_t baseTimeoutMs{ 0 };
+	uint64_t baseTimeoutMs;
 	BackoffAlgorithm backoffAlgorithm;
 	std::optional<uint64_t> maxBackoffTimeoutMs;
 	std::optional<size_t> maxRestarts;

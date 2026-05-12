@@ -28,11 +28,11 @@ namespace RTC
 		  uint64_t expiresAtMs,
 		  std::optional<uint64_t> lifecycleId)
 		  : outgoingMessageId(outgoingMessageId),
+		    data(std::move(data)),
 		    timeSentMs(timeSentMs),
 		    maxRetransmissions(maxRetransmissions),
 		    expiresAtMs(expiresAtMs),
-		    lifecycleId(lifecycleId),
-		    data(std::move(data))
+		    lifecycleId(lifecycleId)
 		{
 			MS_TRACE();
 		}

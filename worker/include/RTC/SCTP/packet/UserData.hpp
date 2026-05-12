@@ -149,15 +149,15 @@ namespace RTC
 			}
 
 		private:
-			uint16_t streamId{ 0 };
-			uint16_t ssn{ 0 };
-			uint32_t mid{ 0 };
-			uint32_t fsn{ 0 };
-			uint32_t ppid{ 0 };
+			uint16_t streamId;
+			uint16_t ssn;
+			uint32_t mid;
+			uint32_t fsn;
+			uint32_t ppid;
 			std::vector<uint8_t> payload;
-			bool isBeginning{ false };
-			bool isEnd{ false };
-			bool isUnordered{ false };
+			bool isBeginning;
+			bool isEnd;
+			bool isUnordered;
 		};
 
 		/**

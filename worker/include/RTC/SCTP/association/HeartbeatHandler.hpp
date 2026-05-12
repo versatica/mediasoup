@@ -66,12 +66,12 @@ namespace RTC
 			AssociationListener& associationListener;
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;
-			TransmissionControlBlockInterface* tcbContext{ nullptr };
+			TransmissionControlBlockInterface* tcbContext;
 			// The time for a connection to be idle before a heartbeat is sent.
-			const uint64_t intervalDurationMs{ 0 };
+			const uint64_t intervalDurationMs;
 			// Adding RTT to the duration will add some jitter, which is good in
 			// production, but less good in unit tests, which is why it can be disabled.
-			const bool intervalDurationShouldIncludeRtt{ false };
+			const bool intervalDurationShouldIncludeRtt;
 			const std::unique_ptr<BackoffTimerHandleInterface> intervalTimer;
 			const std::unique_ptr<BackoffTimerHandleInterface> timeoutTimer;
 		};

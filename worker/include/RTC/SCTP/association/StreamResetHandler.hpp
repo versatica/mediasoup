@@ -273,13 +273,13 @@ namespace RTC
 			UnwrappedReConfigRequestSn::Unwrapper incomingReConfigRequestSnUnwrapper;
 			const std::unique_ptr<BackoffTimerHandleInterface> reConfigTimer;
 			// The next sequence number for outgoing stream requests.
-			uint32_t nextOutgoingReqSeqNbr{ 0 };
-			// The current stream request operation.
-			std::optional<CurrentRequest> currentRequest;
+			uint32_t nextOutgoingReqSeqNbr;
 			// For incoming requests. Last processed request sequence number.
 			UnwrappedReConfigRequestSn lastProcessedReqSeqNbr;
 			// The result from last processed incoming request.
 			ReconfigurationResponseParameter::Result lastProcessedReqResult;
+			// The current stream request operation.
+			std::optional<CurrentRequest> currentRequest;
 		};
 	} // namespace SCTP
 } // namespace RTC

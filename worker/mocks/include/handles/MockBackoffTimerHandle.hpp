@@ -140,7 +140,7 @@ namespace mocks
 	private:
 		// Given by argument.
 		const std::string label;
-		uint64_t baseTimeoutMs{ 0 };
+		uint64_t baseTimeoutMs;
 		BackoffAlgorithm backoffAlgorithm;
 		std::optional<uint64_t> maxBackoffTimeoutMs;
 		std::optional<size_t> maxRestarts;

@@ -43,7 +43,7 @@ public:
 		/**
 		 * Listener on which OnTimer() callback will be invoked.
 		 */
-		BackoffTimerHandleInterface::Listener* listener;
+		BackoffTimerHandleInterface::Listener* listener{ nullptr };
 		/**
 		 * Label.
 		 */

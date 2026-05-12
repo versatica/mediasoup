@@ -489,7 +489,7 @@ namespace RTC
 			// is created.
 			std::unique_ptr<TransmissionControlBlock> tcb;
 			// Private metrics.
-			AssociationPrivateMetrics privateMetrics{};
+			AssociationPrivateMetrics privateMetrics;
 			// T1-init timer.
 			const std::unique_ptr<BackoffTimerHandleInterface> t1InitTimer;
 			// T1-cookie timer.

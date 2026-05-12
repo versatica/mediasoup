@@ -77,8 +77,8 @@ namespace RTC
 			}
 
 		private:
-			uint16_t streamId{ 0 };
-			uint32_t ppid{ 0 };
+			uint16_t streamId;
+			uint32_t ppid;
 			std::vector<uint8_t> payload;
 		};
 	} // namespace SCTP
