@@ -53,7 +53,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	MockRetransmissionQueueListener retransmissionQueueListener;
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
 	mocks::RTC::SCTP::MockSendQueue sendQueue;
-	uint64_t nowMs{ 0 };
+	uint64_t nowMs{ 10000 };
 	mocks::MockShared shared(/*getTimeMs*/
 	                         [&nowMs]()
 	                         {
@@ -1524,26 +1524,26 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		auto retransmissionQueue = createRetransmissionQueue();
 
-		constexpr uint64_t ExpiresAtMs{ 10 }; // nowMs starts at 0.
+		const uint64_t expiresAtMs = nowMs + 10;
 
 		sendQueue
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(17, 0, 0, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
 
-			    dataToSend.expiresAtMs = ExpiresAtMs;
+			    dataToSend.expiresAtMs = expiresAtMs;
 
 			    return dataToSend;
 		    })
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(17, 0, 0, 0, 53, { 0x05, 0x06, 0x07, 0x08 }, false, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
 
-			    dataToSend.expiresAtMs = ExpiresAtMs;
+			    dataToSend.expiresAtMs = expiresAtMs;
 
 			    return dataToSend;
 		    })
@@ -1553,7 +1553,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    return std::nullopt;
 		    });
 
-		// First `GetChunksToSend()` produces TSN 10 (nowMs=0 < ExpiresAtMs=10).
+		// First `GetChunksToSend()` produces TSN 10 (nowMs < expiresAtMs).
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, 24) == std::vector<uint32_t>{ 10 });
 
 		// Advance past expiry.
@@ -1563,7 +1563,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// TSN 12.
 		sendQueue.WillDiscardOnce(17, 42, /*returnValue*/ true);
 
-		// Second `GetChunksToSend()` produces TSN 11 but now > ExpiresAtMs ->
+		// Second `GetChunksToSend()` produces TSN 11 but now > expiresAtMs ->
 		// abandoned on `Insert()`, TSN 10 also abandoned, placeholder TSN 12
 		// created.
 		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 24).empty());
@@ -1588,50 +1588,50 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		auto retransmissionQueue = createRetransmissionQueue();
 
-		constexpr uint64_t ExpiresAtMs{ 10 };
+		const uint64_t expiresAtMs = nowMs + 10;
 
 		// outgoingMessageId=42, MID=0, "BE" — complete message.
 		sendQueue
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 0, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, true, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
 
-			    dataToSend.expiresAtMs = ExpiresAtMs;
+			    dataToSend.expiresAtMs = expiresAtMs;
 
 			    return dataToSend;
 		    })
 		  // outgoingMessageId=43, MID=1, "BE" — complete message.
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 1, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, true, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(43, std::move(data));
 
-			    dataToSend.expiresAtMs = ExpiresAtMs;
+			    dataToSend.expiresAtMs = expiresAtMs;
 
 			    return dataToSend;
 		    })
 		  // outgoingMessageId=44, MID=0 (stream reset), "B" — beginning only.
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 0, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(44, std::move(data));
 
-			    dataToSend.expiresAtMs = ExpiresAtMs;
+			    dataToSend.expiresAtMs = expiresAtMs;
 
 			    return dataToSend;
 		    })
 		  // outgoingMessageId=44, MID=0, middle fragment (produced after expiry).
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 0, 0, 53, { 0x05, 0x06, 0x07, 0x08 }, false, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(44, std::move(data));
 
-			    dataToSend.expiresAtMs = ExpiresAtMs;
+			    dataToSend.expiresAtMs = expiresAtMs;
 
 			    return dataToSend;
 		    })
