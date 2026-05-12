@@ -225,10 +225,10 @@ namespace RTC
 			void MaySendSackChunk();
 
 			/**
-			 * Sends a FORWARD-TSN or I-FORWARD-TSN Chunk if it is needed and allowed
-			 * (rate-limited).
+			 * May add a FORWARD-TSN or I-FORWARD-TSN Chunk to the given Packet if it
+			 * is needed and allowed (rate-limited).
 			 */
-			void MaybeSendForwardTsnChunk(Packet* packet, uint64_t nowMs);
+			void MayAddForwardTsnChunk(Packet* packet, uint64_t nowMs);
 
 			void MaySendFastRetransmit();
 
@@ -316,13 +316,11 @@ namespace RTC
 			// DataTracker dataTracker;
 			// TODO: SCTP: Implement it.
 			// ReassemblyQueue reassemblyQueue;
-			// TODO: SCTP: Implement it.
 			RetransmissionQueue retransmissionQueue;
 			StreamResetHandler streamResetHandler;
 			HeartbeatHandler heartbeatHandler;
 			// Rate limiting of FORWARD_TSN. Next can be sent at or after this
 			// timestamp.
-			// TODO: SCTP: Uncomment.
 			uint64_t limitForwardTsnUntilMs{ 0 };
 			// Only valid when state is State::COOKIE_ECHOED. In this state, the
 			// Association must wait for COOKIE_ACK to continue sending any packets (not

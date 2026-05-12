@@ -567,7 +567,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
-		const auto* forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
+		const auto* forwardTsnChunk = buffer.AddForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -950,7 +950,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
-		const auto* forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
+		const auto* forwardTsnChunk = buffer.AddForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -1038,7 +1038,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
-		const auto* forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
+		const auto* forwardTsnChunk = buffer.AddForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -1056,7 +1056,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		packet.reset(
 		  RTC::SCTP::Packet::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)));
 
-		forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
+		forwardTsnChunk = buffer.AddForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -1074,7 +1074,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		packet.reset(
 		  RTC::SCTP::Packet::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)));
 
-		forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
+		forwardTsnChunk = buffer.AddForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -1092,7 +1092,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		packet.reset(
 		  RTC::SCTP::Packet::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)));
 
-		forwardTsnChunk = buffer.CreateForwardTsn(packet.get());
+		forwardTsnChunk = buffer.AddForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)

@@ -903,7 +903,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sctpOptions.mtu) };
-		const auto* forwardTsnChunk = queue.CreateForwardTsn(packet.get());
+		const auto* forwardTsnChunk = queue.AddForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 13);
@@ -988,7 +988,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sctpOptions.mtu) };
-		const auto* forwardTsnChunk = queue.CreateForwardTsn(packet.get());
+		const auto* forwardTsnChunk = queue.AddForwardTsn(packet.get());
 
 		REQUIRE(forwardTsnChunk);
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 12);
@@ -1113,7 +1113,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sctpOptions.mtu) };
 
-		const auto* iForwardTsnChunk1 = queue.CreateIForwardTsn(packet.get());
+		const auto* iForwardTsnChunk1 = queue.AddIForwardTsn(packet.get());
 
 		REQUIRE(iForwardTsnChunk1);
 		REQUIRE(iForwardTsnChunk1->GetNewCumulativeTsn() == 12);
@@ -1149,7 +1149,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		packet.reset(RTC::SCTP::Packet::Factory(sctpCommon::FactoryBuffer, sctpOptions.mtu));
 
-		const auto* iForwardTsnChunk2 = queue.CreateIForwardTsn(packet.get());
+		const auto* iForwardTsnChunk2 = queue.AddIForwardTsn(packet.get());
 
 		REQUIRE(iForwardTsnChunk2);
 		REQUIRE(iForwardTsnChunk2->GetNewCumulativeTsn() == 16);

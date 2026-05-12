@@ -191,17 +191,17 @@ namespace RTC
 			 * there is no need to create a request (no streams to reset) or if there
 			 * already is an ongoing stream reset request that hasn't completed yet.
 			 */
-			bool ShouldCreateStreamResetRequest() const;
+			bool ShouldSendStreamResetRequest() const;
 
 			/**
-			 * Creates a Reset Streams request that must be sent if returned. Will
-			 * start the reconfig timer.
+			 * Adds a Reset Streams request to the given Packet. Will start the
+			 * reconfig timer.
 			 *
 			 * @remarks
 			 * - The caller must check `ShouldCreateStreamResetRequest()` first and
 			 *   only invoke this method if the former returns `true`.
 			 */
-			void CreateStreamResetRequest(Packet* packet);
+			void AddStreamResetRequest(Packet* packet);
 
 			/**
 			 * Called when handling and incoming RE-CONFIG chunk. Processes a stream
@@ -220,7 +220,7 @@ namespace RTC
 			 * Adds the actual RE-CONFIG chunk to the given Packet. A request (which
 			 * set `this->currentRequest`) must have been created prior.
 			 */
-			void CreateReConfigChunk(Packet* packet);
+			void AddReConfigChunk(Packet* packet);
 
 			/**
 			 * Called to validate the `reqSeqNbr`, that it's the next in sequence.

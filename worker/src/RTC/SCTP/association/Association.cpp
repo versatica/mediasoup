@@ -5,7 +5,6 @@
 #include "RTC/SCTP/association/Association.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
-#include "RTC/Consts.hpp"
 #include "RTC/SCTP/packet/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/NoUserDataErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/OutOfResourceErrorCause.hpp"
@@ -906,11 +905,11 @@ namespace RTC
 
 			AssertHasTcb();
 
-			if (this->tcb->GetStreamResetHandler().ShouldCreateStreamResetRequest())
+			if (this->tcb->GetStreamResetHandler().ShouldSendStreamResetRequest())
 			{
 				auto packet = this->tcb->CreatePacket();
 
-				this->tcb->GetStreamResetHandler().CreateStreamResetRequest(packet.get());
+				this->tcb->GetStreamResetHandler().AddStreamResetRequest(packet.get());
 				this->packetSender.SendPacket(packet.get());
 			}
 		}
@@ -1586,7 +1585,6 @@ namespace RTC
 			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			this->tcb->SendBufferedPackets(nowMs);
-
 			this->t1CookieTimer->Start();
 			this->associationListenerDeferrer.OnAssociationConnecting();
 		}
@@ -1687,11 +1685,6 @@ namespace RTC
 			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			this->tcb->SendBufferedPackets(packet.get(), nowMs);
-
-			// TODO: SCTP: Remove this since COOKIE_ACK must be sent by
-			// tcb->SendBufferedPackets() call above.
-			MS_DUMP("TODO: REMOVE");
-			this->packetSender.SendPacket(packet.get());
 		}
 
 		bool Association::HandleReceivedCookieEchoChunkWithTcb(
@@ -1812,7 +1805,6 @@ namespace RTC
 			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			this->tcb->SendBufferedPackets(nowMs);
-
 			this->associationListenerDeferrer.OnAssociationConnected();
 		}
 

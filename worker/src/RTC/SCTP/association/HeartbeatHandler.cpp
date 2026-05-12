@@ -7,7 +7,6 @@
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
-#include "handles/BackoffTimerHandle.hpp"
 #include <string>
 
 namespace RTC

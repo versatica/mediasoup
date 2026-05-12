@@ -397,14 +397,14 @@ namespace RTC
 			void NackAll();
 
 			/**
-			 * Creates a FORWARD-TSN Chunk and adds it to the given Packet.
+			 * Adds a FORWARD-TSN Chunk to the given Packet and returns it.
 			 */
-			const ForwardTsnChunk* CreateForwardTsn(Packet* packet) const;
+			const ForwardTsnChunk* AddForwardTsn(Packet* packet) const;
 
 			/**
-			 * Creates an I-FORWARD-TSN Chunk and adds it to the given Packet.
+			 * Adds an I-FORWARD-TSN Chunk to the given Packet and returns it.
 			 */
-			const IForwardTsnChunk* CreateIForwardTsn(Packet* packet) const;
+			const IForwardTsnChunk* AddIForwardTsn(Packet* packet) const;
 
 			/**
 			 * Given the current time and a TSN, it returns the measured RTT between
