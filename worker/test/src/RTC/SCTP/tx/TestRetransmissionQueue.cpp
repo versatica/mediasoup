@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "mocks/include/MockShared.hpp"
-#include "mocks/include/RTC/SCTP/public/MockAssociationListener.hpp"
+#include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
 #include "mocks/include/RTC/SCTP/tx/MockSendQueue.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "test/include/catch2Macros.hpp"
