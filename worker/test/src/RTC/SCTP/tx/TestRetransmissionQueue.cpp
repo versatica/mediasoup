@@ -50,7 +50,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 	const RTC::SCTP::SctpOptions sctpOptions{ .mtu = Mtu };
 
-	MockRetransmissionQueueListener queueListener;
+	MockRetransmissionQueueListener retransmissionQueueListener;
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
 	mocks::RTC::SCTP::MockSendQueue sendQueue;
 	uint64_t nowMs{ 0 };
@@ -72,11 +72,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	auto* t3RtxTimer = t3RtxTimerUniquePtr.get();
 
 	auto createRetransmissionQueue =
-	  [&queueListener, &associationListener, &sendQueue, &t3RtxTimer, &sctpOptions](
+	  [&retransmissionQueueListener, &associationListener, &sendQueue, &t3RtxTimer, &sctpOptions](
 	    bool supportsPartialReliability = true, bool useMessageInterleaving = false)
 	{
 		return RTC::SCTP::RetransmissionQueue(
-		  std::addressof(queueListener),
+		  std::addressof(retransmissionQueueListener),
 		  associationListener,
 		  InitialTsn,
 		  Arwnd,
@@ -1190,7 +1190,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get());
 
-		REQUIRE(queueListener.lastRttMs == DurationMs);
+		REQUIRE(retransmissionQueueListener.lastRttMs == DurationMs);
 	}
 
 	SECTION("validate cumulative TSN at rest")
