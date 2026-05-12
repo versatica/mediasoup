@@ -20,7 +20,7 @@ namespace RTC
 
 		RetransmissionQueue::RetransmissionQueue(
 		  Listener* listener,
-		  AssociationListener& associationListener,
+		  AssociationListenerInterface& associationListener,
 		  uint32_t localInitialTsn,
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  SendQueueInterface& sendQueue,

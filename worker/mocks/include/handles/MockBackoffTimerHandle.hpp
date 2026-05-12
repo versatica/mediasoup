@@ -19,17 +19,7 @@ namespace mocks
 		explicit MockBackoffTimerHandle(
 		  BackoffTimerHandleOptions options,
 		  std::function<uint64_t()> getTimeMs,
-		  std::function<void()> onDelete)
-		  : label(std::move(options.label)),
-		    baseTimeoutMs(options.baseTimeoutMs),
-		    backoffAlgorithm(options.backoffAlgorithm),
-		    maxBackoffTimeoutMs(options.maxBackoffTimeoutMs),
-		    maxRestarts(options.maxRestarts),
-		    getTimeMs(std::move(getTimeMs)),
-		    onDelete(std::move(onDelete))
-		{
-			SetBaseTimeoutMs(baseTimeoutMs);
-		}
+		  std::function<void()> onDelete);
 
 	public:
 		MockBackoffTimerHandle& operator=(const MockBackoffTimerHandle&) = delete;
@@ -81,8 +71,8 @@ namespace mocks
 			return this->expirationCount;
 		}
 
-		// For tests.
-
+		// Methods for testing.
+	public:
 		uint64_t GetExpiresAtMs() const
 		{
 			return this->expiresAtMs;
@@ -93,6 +83,9 @@ namespace mocks
 			if (this->getTimeMs() >= this->expiresAtMs)
 			{
 				this->expirationCount++;
+
+				TriggerExpire();
+
 				this->expiresAtMs = std::numeric_limits<uint64_t>::max();
 
 				return true;
@@ -101,6 +94,25 @@ namespace mocks
 			{
 				return false;
 			}
+		}
+
+		void TriggerExpire()
+		{
+			uint64_t baseTimeoutMs{ this->baseTimeoutMs };
+			bool stop{ false };
+
+			// Call the listener by passing base timeout as reference so the parent has
+			// a chance to change it and affect the next timeout.
+			this->listener->OnBackoffTimer(this, baseTimeoutMs, stop);
+
+			// If the parent has set `stop` to true it means that it has deleted the
+			// instance, so stop here.
+			if (stop)
+			{
+				return;
+			}
+
+			this->baseTimeoutMs = baseTimeoutMs;
 		}
 
 	private:
@@ -138,7 +150,8 @@ namespace mocks
 		}
 
 	private:
-		// Given by argument.
+		// Passed by argument.
+		BackoffTimerHandleInterface::Listener* listener{ nullptr };
 		const std::string label;
 		uint64_t baseTimeoutMs;
 		BackoffAlgorithm backoffAlgorithm;

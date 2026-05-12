@@ -40,6 +40,16 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		size_t clearRetransmissionCounterCalls{ 0 };
 	};
 
+	class MockBackoffTimerHandleListener : public BackoffTimerHandleInterface::Listener
+	{
+		/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
+	public:
+		void OnBackoffTimer(
+		  BackoffTimerHandleInterface* /*backoffTimer*/, uint64_t& /*baseTimeoutMs*/, bool& /*stop*/) override
+		{
+		}
+	};
+
 	constexpr uint32_t Arwnd{ 100000 };
 	constexpr uint64_t Mtu{ 1191 };
 	// InitialTsn is the first TSN that will be assigned. The TSN before it
@@ -51,6 +61,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	const RTC::SCTP::SctpOptions sctpOptions{ .mtu = Mtu };
 
 	MockRetransmissionQueueListener retransmissionQueueListener;
+	MockBackoffTimerHandleListener backoffTimerHandleListener;
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
 	mocks::RTC::SCTP::MockSendQueue sendQueue;
 	uint64_t nowMs{ 10000 };
@@ -62,7 +73,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 	const std::unique_ptr<BackoffTimerHandleInterface> t3RtxTimerUniquePtr{ shared.CreateBackoffTimer(
 		BackoffTimerHandleInterface::BackoffTimerHandleOptions{
-		  // No `listener` given on purpose.
+		  .listener            = std::addressof(backoffTimerHandleListener),
 		  .label               = "mock-sctp-t3-rtx",
 		  .baseTimeoutMs       = sctpOptions.initialRtoMs,
 		  .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,

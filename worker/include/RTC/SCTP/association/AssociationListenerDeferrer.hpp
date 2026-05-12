@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_ASSOCIATION_LISTENER_DEFERRED_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include <span>
@@ -15,7 +15,7 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		class AssociationListenerDeferrer : public AssociationListener
+		class AssociationListenerDeferrer : public AssociationListenerInterface
 		{
 		public:
 			class ScopedDeferrer
@@ -46,10 +46,10 @@ namespace RTC
 			// variant can hold all cases of stored data.
 			using CallbackData = std::variant<std::monostate, Message, Error, StreamReset, uint16_t>;
 
-			using Callback = std::function<void(CallbackData, AssociationListener*)>;
+			using Callback = std::function<void(CallbackData, AssociationListenerInterface*)>;
 
 		public:
-			explicit AssociationListenerDeferrer(AssociationListener* innerListener);
+			explicit AssociationListenerDeferrer(AssociationListenerInterface* innerListener);
 
 		private:
 			void SetReady();
@@ -57,7 +57,7 @@ namespace RTC
 			void TriggerDeferredCallbacks();
 
 		public:
-			/* Pure virtual methods inherited from RTC::STCP::AssociationListener. */
+			/* Pure virtual methods inherited from RTC::STCP::AssociationListenerInterface. */
 			bool OnAssociationSendData(const uint8_t* data, size_t len) override;
 
 			void OnAssociationConnecting() override;
@@ -96,7 +96,7 @@ namespace RTC
 			void OnAssociationLifecycleMessageEnd(uint64_t lifecycleId) override;
 
 		private:
-			AssociationListener* innerListener;
+			AssociationListenerInterface* innerListener;
 			bool ready{ false };
 			std::vector<std::pair<Callback, CallbackData>> deferredCallbacks;
 		};

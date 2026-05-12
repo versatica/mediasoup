@@ -18,8 +18,18 @@ BackoffTimerHandle::BackoffTimerHandle(BackoffTimerHandleOptions options)
 {
 	MS_TRACE();
 
+	if (!this->listener)
+	{
+		MS_THROW_TYPE_ERROR("options.listener must be given");
+	}
+
+	if (this->label.empty())
+	{
+		MS_THROW_TYPE_ERROR("options.label must be given");
+	}
+
 	// NOTE: This may throw.
-	SetBaseTimeoutMs(baseTimeoutMs);
+	SetBaseTimeoutMs(this->baseTimeoutMs);
 
 	this->timer = new TimerHandle(this);
 }
@@ -110,7 +120,7 @@ void BackoffTimerHandle::OnTimer(TimerHandleInterface* /*timer*/)
 	this->expirationCount++;
 
 	// Compute whether the BackoffTimer should still be running after this timeout
-	// expiration so the parent can check IsRunning() within the OnBackoffTimer()
+	// expiration so the parent can check IsRunning() within the `OnBackoffTimer()`
 	// callback.
 	this->running =
 	  !this->maxRestarts.has_value() || this->expirationCount <= this->maxRestarts.value();

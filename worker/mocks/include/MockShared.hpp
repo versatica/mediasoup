@@ -60,8 +60,8 @@ namespace mocks
 			return static_cast<int64_t>(GetTimeUs());
 		}
 
-		// For tests.
-
+		// Methods for testing.
+	public:
 		MockBackoffTimerHandle* GetBackoffTimer(const std::string_view label) const
 		{
 			const auto it = this->backoffTimers.find(std::string(label));

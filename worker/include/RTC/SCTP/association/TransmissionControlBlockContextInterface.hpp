@@ -9,10 +9,10 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		class TransmissionControlBlockInterface
+		class TransmissionControlBlockContextInterface
 		{
 		public:
-			virtual ~TransmissionControlBlockInterface() = default;
+			virtual ~TransmissionControlBlockContextInterface() = default;
 
 			/**
 			 * Indicates if the SCTP Association has been established.

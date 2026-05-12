@@ -1,7 +1,8 @@
 #ifndef MS_MOCKS_RTC_SCTP_MOCK_ASSOCIATION_LISTENER_HPP
 #define MS_MOCKS_RTC_SCTP_MOCK_ASSOCIATION_LISTENER_HPP
 
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
+#include <deque>
 #include <map>
 #include <set>
 #include <string>
@@ -13,12 +14,12 @@ namespace mocks
 	{
 		namespace SCTP
 		{
-			class MockAssociationListener : public ::RTC::SCTP::AssociationListener
+			class MockAssociationListener : public ::RTC::SCTP::AssociationListenerInterface
 			{
 			public:
 				bool OnAssociationSendData(const uint8_t* data, size_t len) override
 				{
-					sentPackets.emplace_back(data, data + len);
+					this->sentPackets.emplace_back(data, data + len);
 
 					return true;
 				}
@@ -125,8 +126,8 @@ namespace mocks
 					this->onAssociationLifecycleMessageEndCalls.insert(lifecycleId);
 				}
 
-				// Custom methods to check in tests.
-
+				// Methods for testing.
+			public:
 				bool IsConnecting() const
 				{
 					return this->connecting;
@@ -207,14 +208,37 @@ namespace mocks
 					return this->onTotalBufferedAmountLowCalls;
 				}
 
-				const std::vector<std::vector<uint8_t>>& GetSentPackets() const
+				bool HasSentPackets() const
 				{
-					return this->sentPackets;
+					return !this->sentPackets.empty();
 				}
 
-				const std::vector<::RTC::SCTP::Message>& GetReceivedMessages() const
+				std::vector<uint8_t> ConsumeSentPacket()
 				{
-					return this->receivedMessages;
+					if (this->sentPackets.empty())
+					{
+						return {};
+					}
+
+					const auto packet = std::move(this->sentPackets.front());
+
+					this->sentPackets.pop_front();
+
+					return packet;
+				}
+
+				std::optional<::RTC::SCTP::Message> ConsumeReceivedMessage()
+				{
+					if (this->receivedMessages.empty())
+					{
+						return std::nullopt;
+					}
+
+					auto message = std::move(this->receivedMessages.front());
+
+					this->receivedMessages.pop_front();
+
+					return message;
 				}
 
 				bool IsTransportReady() const
@@ -264,8 +288,8 @@ namespace mocks
 				std::string erroredErrorMessage;
 				std::map<uint16_t /*streamId*/, size_t /*count*/> onStreamBufferedAmountLowCalls;
 				size_t onTotalBufferedAmountLowCalls{ 0 };
-				std::vector<std::vector<uint8_t>> sentPackets;
-				std::vector<::RTC::SCTP::Message> receivedMessages;
+				std::deque<std::vector<uint8_t>> sentPackets;
+				std::deque<::RTC::SCTP::Message> receivedMessages;
 				bool transportReady{ true };
 				std::set<uint64_t /*lifecycleId*/> onAssociationLifecycleMessageFullySentCalls;
 				std::map<uint64_t /*lifecycleId*/, bool /*maybeDelivered*/> onAssociationLifecycleMessageExpiredCalls;

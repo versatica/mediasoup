@@ -20,7 +20,7 @@ namespace RTC
 		/* Instance methods. */
 
 		TransmissionControlBlock::TransmissionControlBlock(
-		  AssociationListener& associationListener,
+		  AssociationListenerInterface& associationListener,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
 		  SendQueueInterface& sendQueue,

@@ -20,10 +20,10 @@ namespace RTC
 		/* Instance methods. */
 
 		HeartbeatHandler::HeartbeatHandler(
-		  AssociationListener& associationListener,
+		  AssociationListenerInterface& associationListener,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
-		  TransmissionControlBlockInterface* tcbContext)
+		  TransmissionControlBlockContextInterface* tcbContext)
 		  : associationListener(associationListener),
 		    sctpOptions(sctpOptions),
 		    shared(shared),
@@ -48,6 +48,11 @@ namespace RTC
 		        .maxRestarts         = 0 }))
 		{
 			MS_TRACE();
+
+			// The interval timer must always be running as long as the association
+			// is up (so when the TCB is created, which is the one that creates the
+			// HeartbeatHandler.
+			RestartTimer();
 		}
 
 		HeartbeatHandler::~HeartbeatHandler()

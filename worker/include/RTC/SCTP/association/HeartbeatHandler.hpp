@@ -3,10 +3,10 @@
 
 #include "common.hpp"
 #include "SharedInterface.hpp"
-#include "RTC/SCTP/association/TransmissionControlBlockInterface.hpp"
+#include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 
@@ -26,10 +26,10 @@ namespace RTC
 		{
 		public:
 			HeartbeatHandler(
-			  AssociationListener& associationListener,
+			  AssociationListenerInterface& associationListener,
 			  const SctpOptions& sctpOptions,
 			  SharedInterface* shared,
-			  TransmissionControlBlockInterface* tcbContext);
+			  TransmissionControlBlockContextInterface* tcbContext);
 
 			~HeartbeatHandler() override;
 
@@ -63,10 +63,10 @@ namespace RTC
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			AssociationListener& associationListener;
+			AssociationListenerInterface& associationListener;
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;
-			TransmissionControlBlockInterface* tcbContext;
+			TransmissionControlBlockContextInterface* tcbContext;
 			// The time for a connection to be idle before a heartbeat is sent.
 			const uint64_t intervalDurationMs;
 			// Adding RTT to the duration will add some jitter, which is good in

@@ -17,7 +17,7 @@ namespace RTC
 		/* Instance methods. */
 
 		RoundRobinSendQueue::RoundRobinSendQueue(
-		  AssociationListener& associationListener,
+		  AssociationListenerInterface& associationListener,
 		  size_t mtu,
 		  uint16_t defaultPriority,
 		  size_t totalBufferedAmountLowThreshold)

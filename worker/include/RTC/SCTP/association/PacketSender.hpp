@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 
 namespace RTC
 {
@@ -23,7 +23,7 @@ namespace RTC
 			};
 
 		public:
-			PacketSender(Listener* listener, AssociationListener& associationListener);
+			PacketSender(Listener* listener, AssociationListenerInterface& associationListener);
 
 			~PacketSender();
 
@@ -43,7 +43,7 @@ namespace RTC
 
 		private:
 			Listener* listener;
-			AssociationListener& associationListener;
+			AssociationListenerInterface& associationListener;
 		};
 	} // namespace SCTP
 } // namespace RTC

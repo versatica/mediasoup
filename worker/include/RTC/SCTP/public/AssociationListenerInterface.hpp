@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_ASSOCIATION_LISTENER_HPP
-#define MS_RTC_SCTP_ASSOCIATION_LISTENER_HPP
+#ifndef MS_RTC_SCTP_ASSOCIATION_LISTENER_INTERFACE_HPP
+#define MS_RTC_SCTP_ASSOCIATION_LISTENER_INTERFACE_HPP
 
 #include "common.hpp"
 #include "RTC/SCTP/public/Message.hpp"
@@ -11,10 +11,10 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		class AssociationListener
+		class AssociationListenerInterface
 		{
 		public:
-			virtual ~AssociationListener() = default;
+			virtual ~AssociationListenerInterface() = default;
 
 		public:
 			/**

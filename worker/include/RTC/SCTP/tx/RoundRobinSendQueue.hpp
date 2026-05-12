@@ -2,8 +2,9 @@
 #define MS_RTC_SCTP_ROUND_ROBIN_SEND_QUEUE_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/Message.hpp"
+#include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include "RTC/SCTP/tx/StreamScheduler.hpp"
 #include <deque>
@@ -271,7 +272,7 @@ namespace RTC
 
 		public:
 			RoundRobinSendQueue(
-			  AssociationListener& associationListener,
+			  AssociationListenerInterface& associationListener,
 			  size_t mtu,
 			  uint16_t defaultPriority,
 			  size_t totalBufferedAmountLowThreshold);
@@ -339,7 +340,7 @@ namespace RTC
 			void AssertIsConsistent() const;
 
 		private:
-			AssociationListener& associationListener;
+			AssociationListenerInterface& associationListener;
 			const uint16_t defaultPriority;
 			StreamScheduler scheduler;
 			// The total amount of buffer data, for all streams.

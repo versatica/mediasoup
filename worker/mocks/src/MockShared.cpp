@@ -3,7 +3,6 @@
 
 #include "mocks/include/MockShared.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 #include "mocks/include/handles/MockTimerHandle.hpp"
 
 namespace mocks
@@ -14,20 +13,20 @@ namespace mocks
 	    channelMessageRegistrator(new mocks::Channel::MockChannelMessageRegistrator()),
 	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get()))
 	{
+		MS_TRACE();
 	}
 
 	TimerHandleInterface* MockShared::CreateTimer(TimerHandleInterface::Listener* /*listener*/)
 	{
+		MS_TRACE();
+
 		return new MockTimerHandle();
 	}
 
 	BackoffTimerHandleInterface* MockShared::CreateBackoffTimer(
 	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options)
 	{
-		if (options.label.empty())
-		{
-			MS_THROW_TYPE_ERROR("options.label must be given");
-		}
+		MS_TRACE();
 
 		const auto& label = options.label;
 

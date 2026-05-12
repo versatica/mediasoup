@@ -444,6 +444,13 @@ executable(
   cpp_args: cpp_args + ['-DMS_EXECUTABLE'],
 )
 
+mock_sources = [
+  'mocks/src/MockShared.cpp',
+  'mocks/src/handles/MockBackoffTimerHandle.cpp',
+  'mocks/src/Channel/MockChannelMessageRegistrator.cpp',
+  'mocks/src/RTC/SCTP/association/MockTransmissionControlBlockContext.cpp',
+]
+
 test_sources = [
   'test/src/tests.cpp',
   'test/src/testHelpers.cpp',
@@ -491,8 +498,9 @@ test_sources = [
   'test/src/RTC/RTCP/TestPacket.cpp',
   'test/src/RTC/RTCP/TestXr.cpp',
   'test/src/RTC/SCTP/sctpCommon.cpp',
-  'test/src/RTC/SCTP/association/TestStateCookie.cpp',
+  'test/src/RTC/SCTP/association/TestHeartbeatHandler.cpp',
   'test/src/RTC/SCTP/association/TestNegotiatedCapabilities.cpp',
+  'test/src/RTC/SCTP/association/TestStateCookie.cpp',
   'test/src/RTC/SCTP/tx/TestOutstandingData.cpp',
   'test/src/RTC/SCTP/tx/TestRetransmissionErrorCounter.cpp',
   'test/src/RTC/SCTP/tx/TestRetransmissionQueue.cpp',
@@ -561,9 +569,6 @@ test_sources = [
   'test/src/Utils/TestString.cpp',
   'test/src/Utils/TestTime.cpp',
   'test/src/Utils/TestUnwrappedSequenceNumber.cpp',
-  'mocks/src/MockShared.cpp',
-  'mocks/src/handles/MockBackoffTimerHandle.cpp',
-  'mocks/src/Channel/MockChannelMessageRegistrator.cpp',
 ]
 
 mediasoup_worker_test = executable(
@@ -572,7 +577,7 @@ mediasoup_worker_test = executable(
   install: true,
   install_tag: 'mediasoup-worker-test',
   dependencies: dependencies,
-  sources: common_sources + test_sources,
+  sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
     'test/include',
@@ -593,7 +598,7 @@ mediasoup_worker_test_asan_address = executable(
   install: true,
   install_tag: 'mediasoup-worker-test-asan-address',
   dependencies: dependencies,
-  sources: common_sources + test_sources,
+  sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
     'test/include',
@@ -622,7 +627,7 @@ mediasoup_worker_test_asan_undefined = executable(
   install: true,
   install_tag: 'mediasoup-worker-test-asan-undefined',
   dependencies: dependencies,
-  sources: common_sources + test_sources,
+  sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
     'test/include',
@@ -688,8 +693,6 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
   'fuzzer/src/RTC/SCTP/association/FuzzerStateCookie.cpp',
   'fuzzer/src/RTC/SCTP/packet/FuzzerPacket.cpp',
-  'mocks/src/MockShared.cpp',
-  'mocks/src/Channel/MockChannelMessageRegistrator.cpp',
 ]
 
 executable(
@@ -698,7 +701,7 @@ executable(
   install: true,
   install_tag: 'mediasoup-worker-fuzzer',
   dependencies: dependencies,
-  sources: fuzzer_sources,
+  sources: fuzzer_sources + mock_sources,
   include_directories: include_directories(
     'include',
     'fuzzer/include',

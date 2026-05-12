@@ -3,10 +3,39 @@
 
 #include "mocks/include/handles/MockBackoffTimerHandle.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include <string>
 
 namespace mocks
 {
+	MockBackoffTimerHandle::MockBackoffTimerHandle(
+	  BackoffTimerHandleOptions options,
+	  std::function<uint64_t()> getTimeMs,
+	  std::function<void()> onDelete)
+	  : listener(options.listener),
+	    label(std::move(options.label)),
+	    baseTimeoutMs(options.baseTimeoutMs),
+	    backoffAlgorithm(options.backoffAlgorithm),
+	    maxBackoffTimeoutMs(options.maxBackoffTimeoutMs),
+	    maxRestarts(options.maxRestarts),
+	    getTimeMs(std::move(getTimeMs)),
+	    onDelete(std::move(onDelete))
+	{
+		MS_TRACE();
+
+		if (!this->listener)
+		{
+			MS_THROW_TYPE_ERROR("options.listener must be given");
+		}
+
+		if (this->label.empty())
+		{
+			MS_THROW_TYPE_ERROR("options.label must be given");
+		}
+
+		SetBaseTimeoutMs(baseTimeoutMs);
+	}
+
 	void MockBackoffTimerHandle::Dump(int indentation) const
 	{
 		MS_TRACE();

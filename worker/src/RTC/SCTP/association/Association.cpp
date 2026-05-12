@@ -38,10 +38,10 @@ namespace RTC
 		/* Instance methods. */
 
 		Association::Association(
-		  const SctpOptions& sctpOptions, AssociationListener* listener, SharedInterface* shared)
+		  const SctpOptions& sctpOptions, AssociationListenerInterface* listener, SharedInterface* shared)
 		  : sctpOptions(sctpOptions),
 		    // Our `listener` member is a `AssociationListenerDeferrer` which takes
-		    // `AssociationListener` as constructor argument.
+		    // `listener` argument as constructor argument.
 		    associationListenerDeferrer(listener),
 		    shared(shared),
 		    packetSender(this, this->associationListenerDeferrer),

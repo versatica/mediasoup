@@ -8,7 +8,7 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		PacketSender::PacketSender(Listener* listener, AssociationListener& associationListener)
+		PacketSender::PacketSender(Listener* listener, AssociationListenerInterface& associationListener)
 		  : listener(listener), associationListener(associationListener)
 		{
 			MS_TRACE();

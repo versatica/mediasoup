@@ -32,7 +32,7 @@
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
 #include "RTC/SCTP/public/AssociationInterface.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/AssociationMetrics.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
@@ -169,7 +169,9 @@ namespace RTC
 
 		public:
 			explicit Association(
-			  const SctpOptions& sctpOptions, AssociationListener* listener, SharedInterface* shared);
+			  const SctpOptions& sctpOptions,
+			  AssociationListenerInterface* listener,
+			  SharedInterface* shared);
 
 			~Association() override;
 
@@ -471,8 +473,8 @@ namespace RTC
 		private:
 			// SCTP options given in the constructor.
 			SctpOptions sctpOptions;
-			// Listener. It's not an `AssociationListener` but an
-			// `AssociationListenerDeferrer` which inherits from `AssociationListener`.
+			// Listener. It's a `AssociationListenerDeferrer` which implements
+			// `AssociationListenerInterface`.
 			AssociationListenerDeferrer associationListenerDeferrer;
 			SharedInterface* shared;
 			// SCTP association internal state.

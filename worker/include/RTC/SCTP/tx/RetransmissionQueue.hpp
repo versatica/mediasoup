@@ -7,7 +7,7 @@
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
@@ -65,7 +65,7 @@ namespace RTC
 			 */
 			RetransmissionQueue(
 			  Listener* listener,
-			  AssociationListener& associationListener,
+			  AssociationListenerInterface& associationListener,
 			  uint32_t localInitialTsn,
 			  uint32_t remoteAdvertisedReceiverWindowCredit,
 			  SendQueueInterface& sendQueue,
@@ -295,7 +295,7 @@ namespace RTC
 
 		private:
 			Listener* listener;
-			AssociationListener& associationListener;
+			AssociationListenerInterface& associationListener;
 			const SctpOptions sctpOptions;
 			// If the peer supports RFC3758 "SCTP Partial Reliability Extension".
 			bool supportsPartialReliability;

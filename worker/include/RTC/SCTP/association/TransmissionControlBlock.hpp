@@ -7,9 +7,9 @@
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
 #include "RTC/SCTP/association/StreamResetHandler.hpp"
-#include "RTC/SCTP/association/TransmissionControlBlockInterface.hpp"
+#include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
@@ -29,13 +29,13 @@ namespace RTC
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/rfc9260#section-14
 		 */
-		class TransmissionControlBlock : public TransmissionControlBlockInterface,
+		class TransmissionControlBlock : public TransmissionControlBlockContextInterface,
 		                                 public RetransmissionQueue::Listener,
 		                                 public BackoffTimerHandleInterface::Listener
 		{
 		public:
 			TransmissionControlBlock(
-			  AssociationListener& associationListener,
+			  AssociationListenerInterface& associationListener,
 			  const SctpOptions& sctpOptions,
 			  SharedInterface* shared,
 			  SendQueueInterface& sendQueue,
@@ -57,7 +57,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			bool IsAssociationEstablished() const override
 			{
@@ -89,7 +89,7 @@ namespace RTC
 			 * Chunk.
 			 *
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			uint32_t GetLocalInitialTsn() const override
 			{
@@ -101,7 +101,7 @@ namespace RTC
 			 * INIT_ACK Chunk.
 			 *
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			uint32_t GetRemoteInitialTsn() const override
 			{
@@ -135,7 +135,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			void ObserveRttMs(uint64_t rttMs) override;
 
@@ -146,7 +146,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			uint64_t GetCurrentRtoMs() const override
 			{
@@ -160,7 +160,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			std::unique_ptr<Packet> CreatePacket() const override;
 
@@ -168,7 +168,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			bool SendPacket(Packet* packet) override;
 
@@ -248,7 +248,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			bool IncrementTxErrorCounter(std::string_view reason) override
 			{
@@ -257,7 +257,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			void ClearTxErrorCounter() override
 			{
@@ -266,7 +266,7 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Implements TransmissionControlBlockInterface interface.
+			 * - Implements TransmissionControlBlockContextInterface.
 			 */
 			bool HasTooManyTxErrors() const override
 			{
@@ -290,7 +290,7 @@ namespace RTC
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			AssociationListener& associationListener;
+			AssociationListenerInterface& associationListener;
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;
 			PacketSender& packetSender;

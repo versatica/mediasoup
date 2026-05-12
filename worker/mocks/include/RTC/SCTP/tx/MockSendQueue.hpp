@@ -139,7 +139,7 @@ namespace mocks
 				{
 				}
 
-				// Helpers for tests.
+				// Methods for testing.
 			public:
 				MockSendQueue& WillProduceOnce(ProduceAction action)
 				{

@@ -25,7 +25,7 @@ namespace RTC
 			this->listenerDeferrer.TriggerDeferredCallbacks();
 		}
 
-		AssociationListenerDeferrer::AssociationListenerDeferrer(AssociationListener* innerListener)
+		AssociationListenerDeferrer::AssociationListenerDeferrer(AssociationListenerInterface* innerListener)
 		  : innerListener(innerListener)
 		{
 			MS_TRACE();
@@ -87,7 +87,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData /*data*/, AssociationListener* listener)
+			  [](CallbackData /*data*/, AssociationListenerInterface* listener)
 			  {
 				  listener->OnAssociationConnecting();
 			  },
@@ -101,7 +101,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData /*data*/, AssociationListener* listener)
+			  [](CallbackData /*data*/, AssociationListenerInterface* listener)
 			  {
 				  listener->OnAssociationConnected();
 			  },
@@ -116,7 +116,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener* listener)
+			  [](CallbackData data, AssociationListenerInterface* listener)
 			  {
 				  const Error error = std::get<Error>(std::move(data));
 				  listener->OnAssociationFailed(error.errorKind, error.message);
@@ -132,7 +132,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener* listener)
+			  [](CallbackData data, AssociationListenerInterface* listener)
 			  {
 				  const Error error = std::get<Error>(std::move(data));
 				  listener->OnAssociationClosed(error.errorKind, error.message);
@@ -147,7 +147,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData /*data*/, AssociationListener* listener)
+			  [](CallbackData /*data*/, AssociationListenerInterface* listener)
 			  {
 				  listener->OnAssociationRestarted();
 			  },
@@ -162,7 +162,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener* listener)
+			  [](CallbackData data, AssociationListenerInterface* listener)
 			  {
 				  const Error error = std::get<Error>(std::move(data));
 				  listener->OnAssociationError(error.errorKind, error.message);
@@ -177,7 +177,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener* listener)
+			  [](CallbackData data, AssociationListenerInterface* listener)
 			  {
 				  listener->OnAssociationMessageReceived(std::get<Message>(std::move(data)));
 			  },
@@ -192,7 +192,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener* listener)
+			  [](CallbackData data, AssociationListenerInterface* listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
 				  listener->OnAssociationStreamsResetPerformed(streamReset.streamIds);
@@ -208,7 +208,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener* listener)
+			  [](CallbackData data, AssociationListenerInterface* listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
 				  listener->OnAssociationStreamsResetFailed(streamReset.streamIds, streamReset.errorMessage);
@@ -225,7 +225,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener* listener)
+			  [](CallbackData data, AssociationListenerInterface* listener)
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
 				  listener->OnAssociationInboundStreamsReset(streamReset.streamIds);
@@ -241,7 +241,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData data, AssociationListener* listener)
+			  [](CallbackData data, AssociationListenerInterface* listener)
 			  {
 				  listener->OnAssociationStreamBufferedAmountLow(std::get<uint16_t>(std::move(data)));
 			  },
@@ -255,7 +255,7 @@ namespace RTC
 			MS_ASSERT(this->ready, "not ready");
 
 			this->deferredCallbacks.emplace_back(
-			  [](CallbackData /*data*/, AssociationListener* listener)
+			  [](CallbackData /*data*/, AssociationListenerInterface* listener)
 			  {
 				  listener->OnAssociationTotalBufferedAmountLow();
 			  },

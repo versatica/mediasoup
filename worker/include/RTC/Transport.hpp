@@ -19,7 +19,7 @@
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/SCTP/public/AssociationInterface.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 // TODO: SCTP: Remove once we only use built-in SCTP stack.
@@ -42,7 +42,7 @@ namespace RTC
 	                  public RTC::Consumer::Listener,
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
-	                  public RTC::SCTP::AssociationListener,
+	                  public RTC::SCTP::AssociationListenerInterface,
 	                  // TODO: SCTP: Remove once we only use built-in SCTP stack.
 	                  public RTC::SctpAssociation::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
@@ -289,7 +289,7 @@ namespace RTC
 		  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
-		/* Pure virtual methods inherited from RTC::SCTP::AssociationListener. */
+		/* Pure virtual methods inherited from RTC::SCTP::AssociationListenerInterface. */
 	public:
 		bool OnAssociationSendData(const uint8_t* data, size_t len) override;
 		void OnAssociationConnecting() override;
