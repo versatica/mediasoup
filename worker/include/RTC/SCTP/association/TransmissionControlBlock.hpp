@@ -170,7 +170,7 @@ namespace RTC
 			 * @remarks
 			 * - Implements TransmissionControlBlockInterface interface.
 			 */
-			void Send(Packet* packet) override;
+			bool SendPacket(Packet* packet) override;
 
 			// TODO: SCTP: Implement it.
 			// DataTracker& GetDataTracker()

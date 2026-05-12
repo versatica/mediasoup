@@ -44,7 +44,8 @@ namespace RTC
 
 			/**
 			 * Increments the transmission error counter, given a human readable
-			 * reason.
+			 * reason. Returns `true` if the maximum error count has been reached,
+			 * `false` will be returned.
 			 */
 			virtual bool IncrementTxErrorCounter(std::string_view reason) = 0;
 
@@ -60,7 +61,11 @@ namespace RTC
 
 			virtual std::unique_ptr<Packet> CreatePacket() const = 0;
 
-			virtual void Send(Packet* packet) = 0;
+			/**
+			 * Sends a Packet and returns a boolean indicating whether the Packet was
+			 * sent or not.
+			 */
+			virtual bool SendPacket(Packet* packet) = 0;
 		};
 	} // namespace SCTP
 } // namespace RTC

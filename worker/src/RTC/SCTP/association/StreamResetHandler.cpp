@@ -138,7 +138,7 @@ namespace RTC
 
 			if (reConfigChunk->GetParametersCount() > 0)
 			{
-				this->tcbContext->Send(packet.get());
+				this->tcbContext->SendPacket(packet.get());
 			}
 		}
 
@@ -490,7 +490,7 @@ namespace RTC
 
 			AddReConfigChunk(packet.get());
 
-			this->tcbContext->Send(packet.get());
+			this->tcbContext->SendPacket(packet.get());
 
 			baseTimeoutMs = this->tcbContext->GetCurrentRtoMs();
 		}

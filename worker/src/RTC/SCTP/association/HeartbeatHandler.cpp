@@ -105,7 +105,7 @@ namespace RTC
 
 			heartbeatAckChunk->Consolidate();
 
-			this->tcbContext->Send(packet.get());
+			this->tcbContext->SendPacket(packet.get());
 		}
 
 		void HeartbeatHandler::HandleReceivedHeartbeatAckChunk(
@@ -203,7 +203,7 @@ namespace RTC
 
 			MS_DEBUG_DEV("sending HEARTBEAT_REQUEST Chunk with info content [nowMs:%" PRIu64 "]", nowMs);
 
-			this->tcbContext->Send(packet.get());
+			this->tcbContext->SendPacket(packet.get());
 		}
 
 		void HeartbeatHandler::OnTimeoutTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)

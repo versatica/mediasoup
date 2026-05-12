@@ -26,8 +26,8 @@ namespace RTC
 			void Dump(int indentation = 0) const;
 
 			/**
-			 * Increments the retransmission timer. If the maximum error count has
-			 * been reached, `false` will be returned.
+			 * Increments the retransmission timer. Returns `true` if the maximum
+			 * error count has been reached, `false` will be returned.
 			 */
 			bool Increment(std::string_view reason);
 
