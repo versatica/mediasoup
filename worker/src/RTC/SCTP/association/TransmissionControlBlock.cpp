@@ -15,7 +15,7 @@ namespace RTC
 	{
 		/* Static. */
 
-		alignas(4) thread_local static uint8_t PacketFactoryBuffer[65536];
+		alignas(4) static thread_local uint8_t PacketFactoryBuffer[65536];
 
 		/* Instance methods. */
 

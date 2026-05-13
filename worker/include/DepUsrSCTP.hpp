@@ -40,7 +40,7 @@ public:
 	static RTC::SctpAssociation* RetrieveSctpAssociation(uintptr_t id);
 
 private:
-	thread_local static Checker* checker;
+	static thread_local Checker* checker;
 	static uint64_t numSctpAssociations;
 	static uintptr_t nextSctpAssociationId;
 	static absl::flat_hash_map<uintptr_t, RTC::SctpAssociation*> mapIdSctpAssociation;

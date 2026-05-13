@@ -41,7 +41,7 @@ public:
 	}
 
 private:
-	thread_local static uv_loop_t* loop;
+	static thread_local uv_loop_t* loop;
 };
 
 #endif

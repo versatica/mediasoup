@@ -26,7 +26,7 @@ namespace RTC
 	{
 		/* Static. */
 
-		alignas(4) thread_local static uint8_t PacketFactoryBuffer[65536];
+		alignas(4) static thread_local uint8_t PacketFactoryBuffer[65536];
 		// @see https://tools.ietf.org/html/rfc9260#section-5.1
 		constexpr uint32_t MinVerificationTag{ 1 };
 		constexpr uint32_t MaxVerificationTag{ std::numeric_limits<uint32_t>::max() };

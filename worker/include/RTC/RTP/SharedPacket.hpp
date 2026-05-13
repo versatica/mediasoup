@@ -12,7 +12,7 @@ namespace RTC
 		{
 		public:
 #ifdef MS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE
-			thread_local static uint64_t allocatedMemory;
+			static thread_local uint64_t allocatedMemory;
 #endif
 
 		public:

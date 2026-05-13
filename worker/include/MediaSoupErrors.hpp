@@ -14,7 +14,7 @@ public:
 
 public:
 	static const size_t BufferSize{ 2000 };
-	thread_local static char buffer[];
+	static thread_local char buffer[];
 };
 
 class MediaSoupTypeError : public MediaSoupError

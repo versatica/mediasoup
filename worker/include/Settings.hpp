@@ -54,7 +54,7 @@ private:
 	static void SetDtlsCertificateAndPrivateKeyFiles();
 
 public:
-	thread_local static struct Configuration configuration;
+	static thread_local struct Configuration configuration;
 
 private:
 	static const absl::flat_hash_map<std::string, LogLevel> String2LogLevel;

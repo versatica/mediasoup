@@ -125,14 +125,14 @@ namespace RTC
 		static void GenerateFingerprints();
 
 	private:
-		thread_local static X509* certificate;
-		thread_local static EVP_PKEY* privateKey;
-		thread_local static SSL_CTX* sslCtx;
-		thread_local static uint8_t sslReadBuffer[];
+		static thread_local X509* certificate;
+		static thread_local EVP_PKEY* privateKey;
+		static thread_local SSL_CTX* sslCtx;
+		static thread_local uint8_t sslReadBuffer[];
 		static const absl::flat_hash_map<std::string, Role> String2Role;
 		static const absl::flat_hash_map<std::string, FingerprintAlgorithm> String2FingerprintAlgorithm;
 		static const absl::flat_hash_map<FingerprintAlgorithm, std::string> FingerprintAlgorithm2String;
-		thread_local static std::vector<Fingerprint> localFingerprints;
+		static thread_local std::vector<Fingerprint> localFingerprints;
 		static const std::vector<SrtpCryptoSuiteMapEntry> SrtpCryptoSuites;
 
 	public:

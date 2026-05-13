@@ -265,10 +265,10 @@ namespace Utils
 		static void WriteRandomBytes(uint8_t* buffer, size_t len);
 
 	private:
-		thread_local static std::mt19937_64 rng;
-		thread_local static EVP_MAC* mac;
-		thread_local static EVP_MAC_CTX* hmacSha1Ctx;
-		thread_local static uint8_t hmacSha1Buffer[];
+		static thread_local std::mt19937_64 rng;
+		static thread_local EVP_MAC* mac;
+		static thread_local EVP_MAC_CTX* hmacSha1Ctx;
+		static thread_local uint8_t hmacSha1Buffer[];
 		static const uint32_t Crc32Table[256];
 		static const uint32_t Crc32cTable[256];
 	};
