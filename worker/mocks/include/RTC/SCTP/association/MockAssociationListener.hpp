@@ -213,7 +213,7 @@ namespace mocks
 					return !this->sentPackets.empty();
 				}
 
-				std::vector<uint8_t> ConsumeSentPacket()
+				std::vector<uint8_t> ConsumeFirstSentPacket()
 				{
 					if (this->sentPackets.empty())
 					{
@@ -227,7 +227,7 @@ namespace mocks
 					return packet;
 				}
 
-				std::optional<::RTC::SCTP::Message> ConsumeReceivedMessage()
+				std::optional<::RTC::SCTP::Message> ConsumeFirstReceivedMessage()
 				{
 					if (this->receivedMessages.empty())
 					{

@@ -84,4 +84,41 @@ namespace mocks
 
 		this->baseTimeoutMs = baseTimeoutMs;
 	}
+
+	void MockBackoffTimerHandle::TriggerExpire()
+	{
+		MS_TRACE();
+
+		this->expirationCount++;
+
+		// Compute whether the BackoffTimer should still be running after this timeout
+		// expiration so the parent can check IsRunning() within the `OnBackoffTimer()`
+		// callback.
+		this->running =
+		  !this->maxRestarts.has_value() || this->expirationCount <= this->maxRestarts.value();
+
+		uint64_t baseTimeoutMs{ this->baseTimeoutMs };
+		bool stop{ false };
+
+		// Call the listener by passing base timeout as reference so the parent has
+		// a chance to change it and affect the next timeout.
+		this->listener->OnBackoffTimer(this, baseTimeoutMs, stop);
+
+		// If the parent has set `stop` to true it means that it has deleted the
+		// instance, so stop here.
+		if (stop)
+		{
+			return;
+		}
+
+		// NOTE: This may throw.
+		SetBaseTimeoutMs(baseTimeoutMs);
+
+		// The caller may have called Stop() within the callback so we must check
+		// the `running` flag.
+		if (this->running)
+		{
+			this->expiresAtMs = this->getTimeMs() + ComputeNextTimeoutMs();
+		}
+	}
 } // namespace mocks

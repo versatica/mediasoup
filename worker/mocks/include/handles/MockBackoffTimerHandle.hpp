@@ -46,12 +46,14 @@ namespace mocks
 			this->expiresAtMs = std::numeric_limits<uint64_t>::max();
 		}
 
-		// NOTE: This method must be defined in the .cpp since it's called by the
-		// constructor. Otherwise clang-tidy complains:
-		//
-		// "warning: Call to virtual method 'BackoffTimerHandle::SetBaseTimeoutMs'
-		// during construction bypasses virtual dispatch
-		// [clang-analyzer-optin.cplusplus.VirtualCall]"
+		/**
+		 * @remarks
+		 * - This method must be defined in the .cpp since it's called by the
+		 *   constructor. Otherwise clang-tidy complains:
+		 *   "warning: Call to virtual method 'BackoffTimerHandle::SetBaseTimeoutMs'
+		 *   during construction bypasses virtual dispatch
+		 *   [clang-analyzer-optin.cplusplus.VirtualCall]"
+		 */
 		void SetBaseTimeoutMs(uint64_t baseTimeoutMs) override;
 
 		bool IsRunning() const override
@@ -85,11 +87,7 @@ namespace mocks
 		{
 			if (this->getTimeMs() >= this->expiresAtMs)
 			{
-				this->expirationCount++;
-
 				TriggerExpire();
-
-				this->expiresAtMs = std::numeric_limits<uint64_t>::max();
 
 				return true;
 			}
@@ -97,25 +95,6 @@ namespace mocks
 			{
 				return false;
 			}
-		}
-
-		void TriggerExpire()
-		{
-			uint64_t baseTimeoutMs{ this->baseTimeoutMs };
-			bool stop{ false };
-
-			// Call the listener by passing base timeout as reference so the parent has
-			// a chance to change it and affect the next timeout.
-			this->listener->OnBackoffTimer(this, baseTimeoutMs, stop);
-
-			// If the parent has set `stop` to true it means that it has deleted the
-			// instance, so stop here.
-			if (stop)
-			{
-				return;
-			}
-
-			this->baseTimeoutMs = baseTimeoutMs;
 		}
 
 	private:
@@ -151,6 +130,8 @@ namespace mocks
 					NO_DEFAULT_GCC();
 			}
 		}
+
+		void TriggerExpire();
 
 	private:
 		// Passed by argument.

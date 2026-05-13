@@ -3,9 +3,13 @@
 #include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
 #include "mocks/include/RTC/SCTP/association/MockTransmissionControlBlockContext.hpp"
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
+#include "RTC/SCTP/packet/Packet.hpp"
+#include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
+#include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <vector>
 
 SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 {
@@ -64,13 +68,28 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 
 		auto* backoffTimer = test.shared.GetBackoffTimer("sctp-heartbeat-interval");
 
-		backoffTimer->Dump();
-
 		REQUIRE(backoffTimer);
 		REQUIRE(backoffTimer->EvaluateHasExpired() == true);
 		REQUIRE(test.associationListener.HasSentPackets() == true);
 
-		// TODO: SCTP: More.
+		const std::vector<uint8_t> buffer = test.associationListener.ConsumeFirstSentPacket();
+
+		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Parse(buffer.data(), buffer.size()) };
+
+		REQUIRE(packet);
+		packet->Dump();
+		REQUIRE(packet->GetChunksCount() == 1);
+
+		const auto* heartbeatRequestChunk =
+		  packet->GetFirstChunkOfType<RTC::SCTP::HeartbeatRequestChunk>();
+
+		REQUIRE(heartbeatRequestChunk);
+
+		const auto* heartbeatInfoParameter =
+		  heartbeatRequestChunk->GetFirstParameterOfType<RTC::SCTP::HeartbeatInfoParameter>();
+
+		REQUIRE(heartbeatInfoParameter);
+		REQUIRE(heartbeatInfoParameter->HasInfo());
 	}
 
 	// TODO: SCTP: More tests.
