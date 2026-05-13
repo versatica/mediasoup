@@ -2,7 +2,7 @@
 #define MS_MOCKS_RTC_SCTP_MOCK_TRANSMISSION_CONTROL_BLOCK_HPP
 
 #include "common.hpp"
-#include "test/include/catch2Macros.hpp"
+#include "mocks/include/mockTypes.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
@@ -130,7 +130,7 @@ namespace mocks
 					return *this;
 				}
 
-				test::VerificationResult VerifyExpectations() const
+				mocks::VerificationResult VerifyExpectations() const
 				{
 					if (
 					  this->expectedObserveRttMsCallCount.has_value() &&

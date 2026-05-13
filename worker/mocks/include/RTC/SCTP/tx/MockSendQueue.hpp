@@ -2,7 +2,7 @@
 #define MS_MOCKS_RTC_SCTP_MOCK_SEND_QUEUE_HPP
 
 #include "common.hpp"
-#include "test/include/catch2Macros.hpp"
+#include "mocks/include/mockTypes.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include <queue>
 #include <stdexcept>
@@ -187,7 +187,7 @@ namespace mocks
 					return *this;
 				}
 
-				test::VerificationResult VerifyExpectations() const
+				mocks::VerificationResult VerifyExpectations() const
 				{
 					if (
 					  this->expectedProduceCallCount.has_value() &&

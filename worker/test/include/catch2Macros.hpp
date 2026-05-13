@@ -2,17 +2,10 @@
 #define MS_CATCH2_MACROS_HPP
 
 #include <catch2/catch_test_macros.hpp>
-#include <string>
 
-namespace test
-{
-	struct VerificationResult
-	{
-		bool ok;
-		std::string errorMessage;
-	};
-} // namespace test
-
+/**
+ * `VerificationResult` struct is defined in mocks/include/mockTypes.hpp.
+ */
 // clang-format off
 #define REQUIRE_VERIFICATION_RESULT(verificationResult) \
 	do \

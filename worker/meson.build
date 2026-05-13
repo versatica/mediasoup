@@ -650,7 +650,7 @@ test(
   workdir: meson.project_source_root(),
 )
 
-fuzzer_sources = common_sources + [
+fuzzer_sources = [
   'fuzzer/src/fuzzer.cpp',
   'fuzzer/src/FuzzerUtils.cpp',
   'fuzzer/src/RTC/FuzzerDtlsTransport.cpp',
@@ -701,7 +701,7 @@ executable(
   install: true,
   install_tag: 'mediasoup-worker-fuzzer',
   dependencies: dependencies,
-  sources: fuzzer_sources + mock_sources,
+  sources: common_sources + fuzzer_sources + mock_sources,
   include_directories: include_directories(
     'include',
     'fuzzer/include',
