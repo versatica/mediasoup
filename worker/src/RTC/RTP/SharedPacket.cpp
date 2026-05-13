@@ -32,7 +32,7 @@ namespace RTC
 			  "[worker.pid:%" PRIu64
 			  "] [RTC::RTP::SharedPacket] memory deallocated [packet buffer:%zu, total allocated memory:%" PRIu64
 			  "]",
-			  Logger::pid,
+			  Logger::Pid,
 			  packet->GetBufferLength(),
 			  SharedPacket::allocatedMemory);
 #endif
@@ -170,7 +170,7 @@ namespace RTC
 			  "[worker.pid:%" PRIu64
 			  "] [RTC::RTP::SharedPacket] memory allocated [packet buffer:%zu, total allocated memory:%" PRIu64
 			  "]",
-			  Logger::pid,
+			  Logger::Pid,
 			  clonedPacket->GetBufferLength(),
 			  SharedPacket::allocatedMemory);
 #endif

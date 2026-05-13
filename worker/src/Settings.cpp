@@ -52,16 +52,16 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	// clang-format off
 	struct option options[] =
 	{
-		{ "logLevel",             optional_argument, nullptr, 'l' },
-		{ "logTags",              optional_argument, nullptr, 't' },
-		{ "rtcMinPort",           optional_argument, nullptr, 'm' },
-		{ "rtcMaxPort",           optional_argument, nullptr, 'M' },
-		{ "dtlsCertificateFile",  optional_argument, nullptr, 'c' },
-		{ "dtlsPrivateKeyFile",   optional_argument, nullptr, 'p' },
-		{ "libwebrtcFieldTrials", optional_argument, nullptr, 'W' },
-		{ "disableLiburing",      optional_argument, nullptr, 'd' },
-		{ "useBuiltInSctpStack",  optional_argument, nullptr, 's' },
-		{ nullptr,                0,                 nullptr,  0  }
+		{ .name="logLevel",             .has_arg=optional_argument, .flag=nullptr, .val='l' },
+		{ .name="logTags",              .has_arg=optional_argument, .flag=nullptr, .val='t' },
+		{ .name="rtcMinPort",           .has_arg=optional_argument, .flag=nullptr, .val='m' },
+		{ .name="rtcMaxPort",           .has_arg=optional_argument, .flag=nullptr, .val='M' },
+		{ .name="dtlsCertificateFile",  .has_arg=optional_argument, .flag=nullptr, .val='c' },
+		{ .name="dtlsPrivateKeyFile",   .has_arg=optional_argument, .flag=nullptr, .val='p' },
+		{ .name="libwebrtcFieldTrials", .has_arg=optional_argument, .flag=nullptr, .val='W' },
+		{ .name="disableLiburing",      .has_arg=optional_argument, .flag=nullptr, .val='d' },
+		{ .name="useBuiltInSctpStack",  .has_arg=optional_argument, .flag=nullptr, .val='s' },
+		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  }
 	};
 	// clang-format on
 	std::string stringValue;
