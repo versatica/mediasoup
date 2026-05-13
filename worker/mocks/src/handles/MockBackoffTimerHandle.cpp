@@ -33,7 +33,14 @@ namespace mocks
 			MS_THROW_TYPE_ERROR("options.label must be given");
 		}
 
-		SetBaseTimeoutMs(baseTimeoutMs);
+		if (this->baseTimeoutMs > BackoffTimerHandleInterface::MaxTimeoutMs)
+		{
+			MS_THROW_ERROR(
+			  "[%s] base timeout (%" PRIu64 " ms) cannot be greater than %" PRIu64 " ms",
+			  this->label.c_str(),
+			  this->baseTimeoutMs,
+			  BackoffTimerHandleInterface::MaxTimeoutMs);
+		}
 	}
 
 	void MockBackoffTimerHandle::Dump(int indentation) const
@@ -60,5 +67,21 @@ namespace mocks
 		MS_DUMP_CLEAN(indentation, "  expires at (ms): %" PRIu64, this->expiresAtMs);
 
 		MS_DUMP_CLEAN(indentation, "</mocks::MockBackoffTimerHandle>");
+	}
+
+	void MockBackoffTimerHandle::SetBaseTimeoutMs(uint64_t baseTimeoutMs)
+	{
+		MS_TRACE();
+
+		if (baseTimeoutMs > BackoffTimerHandleInterface::MaxTimeoutMs)
+		{
+			MS_THROW_ERROR(
+			  "[%s] base timeout (%" PRIu64 " ms) cannot be greater than %" PRIu64 " ms",
+			  this->label.c_str(),
+			  baseTimeoutMs,
+			  BackoffTimerHandleInterface::MaxTimeoutMs);
+		}
+
+		this->baseTimeoutMs = baseTimeoutMs;
 	}
 } // namespace mocks

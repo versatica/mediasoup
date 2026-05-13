@@ -46,10 +46,13 @@ namespace mocks
 			this->expiresAtMs = std::numeric_limits<uint64_t>::max();
 		}
 
-		void SetBaseTimeoutMs(uint64_t baseTimeoutMs) override
-		{
-			this->baseTimeoutMs = baseTimeoutMs;
-		}
+		// NOTE: This method must be defined in the .cpp since it's called by the
+		// constructor. Otherwise clang-tidy complains:
+		//
+		// "warning: Call to virtual method 'BackoffTimerHandle::SetBaseTimeoutMs'
+		// during construction bypasses virtual dispatch
+		// [clang-analyzer-optin.cplusplus.VirtualCall]"
+		void SetBaseTimeoutMs(uint64_t baseTimeoutMs) override;
 
 		bool IsRunning() const override
 		{

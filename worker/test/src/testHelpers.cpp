@@ -1,6 +1,6 @@
 #define MS_CLASS "TEST::HELPERS"
 
-#include "testHelpers.hpp" // in worker/test/include/
+#include "test/include/testHelpers.hpp"
 #include "Logger.hpp"
 #include <cstring> // std::memcmp()
 #include <fstream>

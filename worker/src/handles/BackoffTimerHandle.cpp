@@ -28,8 +28,14 @@ BackoffTimerHandle::BackoffTimerHandle(BackoffTimerHandleOptions options)
 		MS_THROW_TYPE_ERROR("options.label must be given");
 	}
 
-	// NOTE: This may throw.
-	SetBaseTimeoutMs(this->baseTimeoutMs);
+	if (this->baseTimeoutMs > BackoffTimerHandleInterface::MaxTimeoutMs)
+	{
+		MS_THROW_ERROR(
+		  "[%s] base timeout (%" PRIu64 " ms) cannot be greater than %" PRIu64 " ms",
+		  this->label.c_str(),
+		  this->baseTimeoutMs,
+		  BackoffTimerHandleInterface::MaxTimeoutMs);
+	}
 
 	this->timer = new TimerHandle(this);
 }

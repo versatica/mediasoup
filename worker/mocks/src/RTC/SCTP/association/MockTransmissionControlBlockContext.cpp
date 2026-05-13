@@ -3,7 +3,8 @@
 
 #include "mocks/include/RTC/SCTP/association/MockTransmissionControlBlockContext.hpp"
 #include "Logger.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
+
+alignas(4) thread_local uint8_t FactoryBuffer[65536];
 
 namespace mocks
 {
@@ -16,7 +17,7 @@ namespace mocks
 				MS_TRACE();
 
 				auto packet = std::unique_ptr<::RTC::SCTP::Packet>{ ::RTC::SCTP::Packet::Factory(
-					sctpCommon::FactoryBuffer, this->sctpOptions.mtu) };
+					FactoryBuffer, this->sctpOptions.mtu) };
 
 				packet->SetSourcePort(this->sctpOptions.sourcePort);
 				packet->SetDestinationPort(this->sctpOptions.destinationPort);

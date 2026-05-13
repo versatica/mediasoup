@@ -1,28 +1,28 @@
 #ifndef MS_COMMON_HPP
 #define MS_COMMON_HPP
 
-#include <algorithm> // IWYU pragma: export  std::transform(), std::find(), std::min(), std::max(), std::copy(), std::clamp(), std::ranges
-#include <cinttypes> // IWYU pragma: export  PRIu64, etc
-#include <cstddef>   // IWYU pragma: export  size_t
-#include <cstdint>   // IWYU pragma: export  uint8_t, etc
-#include <functional> // IWYU pragma: export  std::function
-#include <memory>     // IWYU pragma: export  std::addressof(), std::unique_ptr(), etc
-#include <optional>   // IWYU pragma: export
-#include <utility>    // std::pair, std::move(), std::piecewise_construct
+#include <algorithm> // std::transform(), std::find(), std::min(), std::max(), std::copy(), std::clamp(), std::ranges
+#include <cinttypes>  // PRIu64, etc
+#include <cstddef>    // size_t
+#include <cstdint>    // uint8_t, etc
+#include <functional> // std::function
+#include <memory>     // std::addressof(), std::unique_ptr(), etc
+#include <optional>
+#include <utility> // std::pair, std::move(), std::piecewise_construct
 #ifdef _WIN32
 #include <winsock2.h>
 // Avoid uv/win.h: error C2628 'intptr_t' followed by 'int' is illegal.
 #if !defined(_SSIZE_T_) && !defined(_SSIZE_T_DEFINED)
-#include <BaseTsd.h> // IWYU pragma: export
+#include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #define SSIZE_MAX INTPTR_MAX
 #define _SSIZE_T_
 #define _SSIZE_T_DEFINED
 #endif
 #else
-#include <arpa/inet.h>  // IWYU pragma: export // htonl(), htons(), ntohl(), ntohs()
-#include <netinet/in.h> // IWYU pragma: export // sockaddr_in, sockaddr_in6
-#include <sys/socket.h> // IWYU pragma: export // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
+#include <arpa/inet.h>  // htonl(), htons(), ntohl(), ntohs()
+#include <netinet/in.h> // sockaddr_in, sockaddr_in6
+#include <sys/socket.h> // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
 #endif
 
 // This is a macro to silence false warnings in GCC in switch() blocks with FBS

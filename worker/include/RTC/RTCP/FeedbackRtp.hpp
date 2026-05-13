@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTCP/Feedback.hpp"
-#include "RTC/RTCP/FeedbackItem.hpp" // IWYU pragma: keep
+#include "RTC/RTCP/FeedbackItem.hpp"
 #include <vector>
 
 namespace RTC

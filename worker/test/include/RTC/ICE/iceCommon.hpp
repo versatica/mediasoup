@@ -2,13 +2,13 @@
 #define MS_TEST_RTC_ICE_COMMON_HPP
 
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"          // IWYU pragma: export
-#include "Utils.hpp"                    // IWYU pragma: export
-#include "testHelpers.hpp"              // IWYU pragma: export
-#include "RTC/ICE/StunPacket.hpp"       // IWYU pragma: export
-#include <catch2/catch_test_macros.hpp> // IWYU pragma: export
-#include <cstdlib>                      // std::malloc(), std::free()
-#include <cstring>                      // std::memcpy()
+#include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
+#include "test/include/testHelpers.hpp"
+#include "RTC/ICE/StunPacket.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include <cstdlib> // std::malloc(), std::free()
+#include <cstring> // std::memcpy()
 #include <string_view>
 
 namespace iceCommon
