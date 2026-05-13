@@ -2,12 +2,15 @@
 #include "RTC/ICE/StunPacket.hpp"
 #include <string_view>
 
-static constexpr size_t ResponseFactoryBufferLength{ 65536 };
-alignas(4) thread_local uint8_t ResponseFactoryBuffer[ResponseFactoryBufferLength];
-static constexpr size_t SerializeBufferLength{ 65536 };
-alignas(4) thread_local uint8_t SerializeBuffer[SerializeBufferLength];
-static constexpr size_t CloneBufferLength{ 65536 };
-alignas(4) thread_local uint8_t CloneBuffer[CloneBufferLength];
+namespace
+{
+	constexpr size_t ResponseFactoryBufferLength{ 65536 };
+	alignas(4) thread_local uint8_t ResponseFactoryBuffer[ResponseFactoryBufferLength];
+	constexpr size_t SerializeBufferLength{ 65536 };
+	alignas(4) thread_local uint8_t SerializeBuffer[SerializeBufferLength];
+	constexpr size_t CloneBufferLength{ 65536 };
+	alignas(4) thread_local uint8_t CloneBuffer[CloneBufferLength];
+} // namespace
 
 void FuzzerRtcIceStunPacket::Fuzz(const uint8_t* data, size_t len)
 {

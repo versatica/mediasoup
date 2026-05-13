@@ -52,7 +52,7 @@ Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
 
 	// Tell the Node process that we are running.
 	this->shared->GetChannelNotifier()->Emit(
-	  std::to_string(Logger::pid), FBS::Notification::Event::WORKER_RUNNING);
+	  std::to_string(Logger::Pid), FBS::Notification::Event::WORKER_RUNNING);
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -153,7 +153,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	{
 		return FBS::Worker::CreateDumpResponseDirect(
 		  builder,
-		  Logger::pid,
+		  Logger::Pid,
 		  &webRtcServerIds,
 		  &routerIds,
 		  channelMessageHandlers,
@@ -162,11 +162,11 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	else
 	{
 		return FBS::Worker::CreateDumpResponseDirect(
-		  builder, Logger::pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
+		  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 	}
 #else
 	return FBS::Worker::CreateDumpResponseDirect(
-	  builder, Logger::pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
+	  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 #endif
 }
 

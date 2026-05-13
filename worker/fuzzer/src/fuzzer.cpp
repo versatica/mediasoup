@@ -163,7 +163,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 {
 	// Trick to initialize our stuff just once.
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local const int unused = init();
+	static thread_local const int unused = init();
 
 	// Avoid [-Wunused-variable].
 	(void)unused;

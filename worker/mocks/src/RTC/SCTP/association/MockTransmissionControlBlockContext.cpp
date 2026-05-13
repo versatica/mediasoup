@@ -4,7 +4,7 @@
 #include "mocks/include/RTC/SCTP/association/MockTransmissionControlBlockContext.hpp"
 #include "Logger.hpp"
 
-alignas(4) thread_local uint8_t FactoryBuffer[65536];
+alignas(4) static thread_local uint8_t FactoryBuffer[65536];
 
 namespace mocks
 {

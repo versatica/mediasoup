@@ -54,7 +54,7 @@ inline static void sctpDebug(const char* format, ...)
 	va_end(ap);
 }
 
-/* Static variables. */
+/* Class variables. */
 
 thread_local DepUsrSCTP::Checker* DepUsrSCTP::checker{ nullptr };
 uint64_t DepUsrSCTP::numSctpAssociations{ 0u };

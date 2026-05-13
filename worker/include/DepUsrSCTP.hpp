@@ -13,7 +13,7 @@ private:
 	class Checker : public TimerHandleInterface::Listener
 	{
 	public:
-		Checker(SharedInterface* shared);
+		explicit Checker(SharedInterface* shared);
 		~Checker() override;
 
 	public:

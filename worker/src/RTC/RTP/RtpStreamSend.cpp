@@ -21,7 +21,7 @@ namespace RTC
 		static constexpr size_t RetransmissionBufferMaxItems{ 2500u };
 		// 17: 16 bit mask + the initial sequence number.
 		static constexpr size_t MaxRequestedPackets{ 17u };
-		thread_local std::vector<RTP::RetransmissionBuffer::Item*> RetransmissionContainer(
+		static thread_local std::vector<RTP::RetransmissionBuffer::Item*> RetransmissionContainer(
 		  MaxRequestedPackets + 1);
 		static constexpr uint32_t DefaultRtt{ 100u };
 

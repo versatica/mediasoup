@@ -15,7 +15,7 @@ namespace RTC
 		/* Static. */
 
 		static constexpr size_t AttributeFactoryBufferLength{ 65536 };
-		thread_local uint8_t AttributeFactoryBuffer[AttributeFactoryBufferLength];
+		static thread_local uint8_t AttributeFactoryBuffer[AttributeFactoryBufferLength];
 
 		/* Class variables. */
 

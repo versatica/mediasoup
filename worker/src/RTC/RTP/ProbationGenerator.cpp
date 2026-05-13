@@ -14,9 +14,9 @@ namespace RTC
 	{
 		/* Static. */
 
-		thread_local uint8_t ProbationPacketBuffer[ProbationGenerator::ProbationPacketMaxLength];
+		static thread_local uint8_t ProbationPacketBuffer[ProbationGenerator::ProbationPacketMaxLength];
 		static constexpr size_t ProbationPacketExtensionsBufferLength{ 200 };
-		alignas(4) thread_local uint8_t
+		alignas(4) static thread_local uint8_t
 		  ProbationPacketExtensionsBuffer[ProbationPacketExtensionsBufferLength];
 		// 8 bytes, same as RTC::Consts::MidRtpExtensionMaxLength.
 		static const std::string MidValue{ "probator" };
@@ -28,7 +28,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Trick to only fill the padding with zeroes once.
-			thread_local bool mustInitializePayload{ true };
+			static thread_local bool mustInitializePayload{ true };
 
 			if (mustInitializePayload)
 			{

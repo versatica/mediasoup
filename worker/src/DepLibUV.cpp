@@ -4,7 +4,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 
-/* Static variables. */
+/* Class variables. */
 
 thread_local uv_loop_t* DepLibUV::loop{ nullptr };
 

@@ -15,7 +15,7 @@ namespace RTC
 	// it to structs (e.g. RTP::Packet::FixedHeader) that require 4-byte alignment.
 	// Without this, accessing multi-byte fields would be undefined behavior on
 	// strict-alignment architectures.
-	alignas(4) thread_local uint8_t ReadBuffer[ReadBufferSize];
+	alignas(4) static thread_local uint8_t ReadBuffer[ReadBufferSize];
 
 	/* Instance methods. */
 
