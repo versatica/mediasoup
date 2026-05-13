@@ -47,6 +47,8 @@ namespace mocks
 	{
 		MS_TRACE();
 
+		const uint64_t nowMs = this->getTimeMs();
+
 		MS_DUMP_CLEAN(indentation, "<mocks::MockBackoffTimerHandle>");
 
 		MS_DUMP_CLEAN(indentation, "  label: %s", this->label.c_str());
@@ -63,8 +65,9 @@ namespace mocks
 		  this->maxRestarts.has_value() ? std::to_string(this->maxRestarts.value()).c_str() : "(unset)");
 		MS_DUMP_CLEAN(indentation, "  running: %s", this->running ? "yes" : "no");
 		MS_DUMP_CLEAN(indentation, "  expiration count: %zu", this->expirationCount);
-		MS_DUMP_CLEAN(indentation, "  now (ms): %" PRIu64, this->getTimeMs());
+		MS_DUMP_CLEAN(indentation, "  now (ms): %" PRIu64, nowMs);
 		MS_DUMP_CLEAN(indentation, "  expires at (ms): %" PRIu64, this->expiresAtMs);
+		MS_DUMP_CLEAN(indentation, "  expires in (ms): %" PRIu64, this->expiresAtMs - nowMs);
 
 		MS_DUMP_CLEAN(indentation, "</mocks::MockBackoffTimerHandle>");
 	}

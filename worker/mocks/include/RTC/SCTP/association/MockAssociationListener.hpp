@@ -213,6 +213,11 @@ namespace mocks
 					return !this->sentPackets.empty();
 				}
 
+				bool HasReceivedMessages() const
+				{
+					return !this->receivedMessages.empty();
+				}
+
 				std::vector<uint8_t> ConsumeFirstSentPacket()
 				{
 					if (this->sentPackets.empty())

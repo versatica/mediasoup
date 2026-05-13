@@ -27,6 +27,8 @@ namespace mocks
 
 			bool MockTransmissionControlBlockContext::SendPacket(::RTC::SCTP::Packet* packet)
 			{
+				MS_TRACE();
+
 				const bool sent =
 				  this->associationListener.OnAssociationSendData(packet->GetBuffer(), packet->GetLength());
 

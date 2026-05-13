@@ -6,6 +6,7 @@
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
 #include <queue>
 #include <stdexcept>
+#include <string>
 
 namespace mocks
 {
@@ -40,7 +41,7 @@ namespace mocks
 
 				std::optional<DataToSend> Produce(uint64_t nowMs, size_t maxLength) override
 				{
-					++this->produceCallCount;
+					this->produceCallCount++;
 
 					if (!this->produceOnceActions.empty())
 					{
@@ -62,7 +63,7 @@ namespace mocks
 
 				bool Discard(uint16_t streamId, uint32_t outgoingMessageId) override
 				{
-					++this->discardCallCount;
+					this->discardCallCount++;
 
 					if (this->discardExpectations.empty())
 					{
@@ -197,7 +198,8 @@ namespace mocks
 							                       std::to_string(this->expectedProduceCallCount.value()) +
 							                       ", got:" + std::to_string(this->produceCallCount) + "]" };
 					}
-					else if (
+
+					if (
 					  this->expectedDiscardCallCount.has_value() &&
 					  this->discardCallCount != this->expectedDiscardCallCount.value())
 					{
@@ -206,17 +208,16 @@ namespace mocks
 							                       std::to_string(this->expectedDiscardCallCount.value()) +
 							                       ", got:" + std::to_string(this->discardCallCount) + "]" };
 					}
-					else if (!this->discardExpectations.empty())
+
+					if (!this->discardExpectations.empty())
 					{
 						return { .ok           = false,
 							       .errorMessage = "Discard() has " +
 							                       std::to_string(this->discardExpectations.size()) +
 							                       " unconsumed expectation(s)" };
 					}
-					else
-					{
-						return { .ok = true, .errorMessage = "" };
-					}
+
+					return { .ok = true, .errorMessage = "" };
 				}
 
 			private:
