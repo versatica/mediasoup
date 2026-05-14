@@ -42,13 +42,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t bytesRemoved = 0;
+			size_t removedBytes = 0;
 
 			// The `skippedStreams` only cover ordered messages - need to iterate all
 			// unordered streams manually to remove those chunks.
 			for (auto& [unused, stream] : this->unorderedStreams)
 			{
-				bytesRemoved += stream.EraseTo(newCumulativeAckTsn);
+				removedBytes += stream.EraseTo(newCumulativeAckTsn);
 			}
 
 			for (const auto& skippedStream : skippedStreams)
@@ -57,10 +57,10 @@ namespace RTC
 
 				auto& stream = it->second;
 
-				bytesRemoved += stream.EraseTo(skippedStream.ssn);
+				removedBytes += stream.EraseTo(skippedStream.ssn);
 			}
 
-			return bytesRemoved;
+			return removedBytes;
 		}
 
 		void TraditionalReassemblyStreams::ResetStreams(std::span<const uint16_t> streamIds)
@@ -115,9 +115,9 @@ namespace RTC
 			  start,
 			  end,
 			  0,
-			  [](size_t acc, const auto& p)
+			  [](size_t acc, const auto& i)
 			  {
-				  const auto& data = p.second;
+				  const auto& data = i.second;
 
 				  return acc + data.GetPayloadLength();
 			  });
@@ -201,15 +201,15 @@ namespace RTC
 			  this->chunksBySsn.begin(),
 			  endIt,
 			  0,
-			  [](size_t acc1, const auto& p)
+			  [](size_t acc1, const auto& i1)
 			  {
 				  return acc1 + std::accumulate(
-				                  p.second.begin(),
-				                  p.second.end(),
+				                  i1.second.begin(),
+				                  i1.second.end(),
 				                  0,
-				                  [](size_t acc2, const auto& i)
+				                  [](size_t acc2, const auto& i2)
 				                  {
-					                  const auto& data = i.second;
+					                  const auto& data = i2.second;
 
 					                  return acc2 + data.GetPayloadLength();
 				                  });
@@ -450,6 +450,5 @@ namespace RTC
 				prevTsn = it->first;
 			}
 		}
-		// TODO: SCTP.
 	} // namespace SCTP
 } // namespace RTC

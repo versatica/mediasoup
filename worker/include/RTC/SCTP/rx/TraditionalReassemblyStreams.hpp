@@ -84,7 +84,6 @@ namespace RTC
 				 * Try to assemble several messages in order from the stream. Returns
 				 * the number of bytes assembled if a message was assembled.
 				 */
-
 				size_t TryToAssembleMessages();
 
 				/**
@@ -161,8 +160,6 @@ namespace RTC
 		public:
 			explicit TraditionalReassemblyStreams(
 			  ReassemblyStreamsInterface::OnAssembledMessage onAssembledMessage);
-
-			// Methods implementing `ReassemblyStreamsInterface`.
 
 		public:
 			int32_t AddData(Types::UnwrappedTsn tsn, UserData data) override;

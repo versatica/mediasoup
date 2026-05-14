@@ -3,12 +3,13 @@
 #include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "RTC/SCTP/rx/InterleavedReassemblyStreams.hpp"
 #include "RTC/SCTP/rx/ReassemblyStreamsInterface.hpp"
-#include "RTC/SCTP/rx/TraditionalReassemblyStreams.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <span>
 #include <vector>
 
-SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystreams]")
+SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystreams]")
 {
 	class OnAssembledMessageTester
 	{
@@ -82,10 +83,10 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 	SECTION("add unordered message returns correct size")
 	{
 		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
+		RTC::SCTP::InterleavedReassemblyStreams interleavedReassemblyStreams(tester.MakeCallback());
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
+		  interleavedReassemblyStreams.AddData(
 		    getTsn(1),
 		    RTC::SCTP::UserData(
 		      /*streamId*/ 1,
@@ -99,18 +100,18 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		      /*isUnordered*/ true)) == 1);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02, 0x03, 0x04 }, false, false, true)) ==
+		  interleavedReassemblyStreams.AddData(
+		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 1, 53, { 0x02, 0x03, 0x04 }, false, false, true)) ==
 		  3);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x05, 0x06 }, false, false, true)) == 2);
+		  interleavedReassemblyStreams.AddData(
+		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 2, 53, { 0x05, 0x06 }, false, false, true)) == 2);
 
 		// Adding the end fragment should make it empty again.
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x07 }, false, true, true)) == -6);
+		  interleavedReassemblyStreams.AddData(
+		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 3, 53, { 0x07 }, false, true, true)) == -6);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 1, 2, 3, 4 });
@@ -119,10 +120,10 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 	SECTION("add simple ordered message returns correct size")
 	{
 		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
+		RTC::SCTP::InterleavedReassemblyStreams interleavedreassemblystreams(tester.MakeCallback());
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
+		  interleavedreassemblystreams.AddData(
 		    getTsn(1),
 		    RTC::SCTP::UserData(
 		      /*streamId*/ 1,
@@ -136,17 +137,17 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		      /*isUnordered*/ false)) == 1);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02, 0x03, 0x04 }, false, false, false)) ==
+		  interleavedreassemblystreams.AddData(
+		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 1, 53, { 0x02, 0x03, 0x04 }, false, false, false)) ==
 		  3);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x05, 0x06 }, false, false, false)) == 2);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 2, 53, { 0x05, 0x06 }, false, false, false)) == 2);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x07 }, false, true, false)) == -6);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 3, 53, { 0x07 }, false, true, false)) == -6);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 1, 2, 3, 4 });
@@ -155,10 +156,10 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 	SECTION("add more complex ordered message returns correct size")
 	{
 		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
+		RTC::SCTP::InterleavedReassemblyStreams interleavedreassemblystreams(tester.MakeCallback());
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
+		  interleavedreassemblystreams.AddData(
 		    getTsn(1),
 		    RTC::SCTP::UserData(
 		      /*streamId*/ 1,
@@ -171,36 +172,36 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		      /*isEnd*/ false,
 		      /*isUnordered*/ false)) == 1);
 
-		// Captured without adding yet: ssn=0, middle fragment of the first message.
-		RTC::SCTP::UserData lateData(1, 0, 0, 0, 53, { 0x02, 0x03, 0x04 }, false, false, false);
+		// Captured without adding yet: mid=0, fsn=1 (second fragment of first message).
+		RTC::SCTP::UserData lateData(1, 0, 0, 1, 53, { 0x02, 0x03, 0x04 }, false, false, false);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x05, 0x06 }, false, false, false)) == 2);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 2, 53, { 0x05, 0x06 }, false, false, false)) == 2);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x07 }, false, true, false)) == 1);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 3, 53, { 0x07 }, false, true, false)) == 1);
 
-		// Second message: ssn=1.
+		// Second message: mid=1, single fragment.
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(5), RTC::SCTP::UserData(1, 1, 0, 0, 53, { 0x01 }, true, true, false)) == 1);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(5), RTC::SCTP::UserData(1, 0, 1, 0, 53, { 0x01 }, true, true, false)) == 1);
 
-		// Third message: ssn=2.
+		// Third message: mid=2, two fragments.
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(6), RTC::SCTP::UserData(1, 2, 0, 0, 53, { 0x05, 0x06 }, true, false, false)) == 2);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(6), RTC::SCTP::UserData(1, 0, 2, 0, 53, { 0x05, 0x06 }, true, false, false)) == 2);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(7), RTC::SCTP::UserData(1, 2, 0, 0, 53, { 0x07 }, false, true, false)) == 1);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(7), RTC::SCTP::UserData(1, 0, 2, 1, 53, { 0x07 }, false, true, false)) == 1);
 
-		// Adding the late chunk completes ssn=0, which triggers delivery of ssn=1
-		// and ssn=2 as well.
+		// Adding the late chunk completes mid=0, which triggers delivery of
+		// mid=1 and mid=2 as well.
 		// NOTE: clang-tidy doesn't understand that this is fine.
 		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
-		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(2), std::move(lateData)) == -8);
+		REQUIRE(interleavedreassemblystreams.AddData(getTsn(2), std::move(lateData)) == -8);
 
 		REQUIRE(tester.GetCallCount(3));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 6, 7 });
@@ -209,10 +210,10 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 	SECTION("delete unordered message returns correct size")
 	{
 		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
+		RTC::SCTP::InterleavedReassemblyStreams interleavedreassemblystreams(tester.MakeCallback());
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
+		  interleavedreassemblystreams.AddData(
 		    getTsn(1),
 		    RTC::SCTP::UserData(
 		      /*streamId*/ 1,
@@ -226,26 +227,30 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		      /*isUnordered*/ true)) == 1);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02, 0x03, 0x04 }, false, false, true)) ==
+		  interleavedreassemblystreams.AddData(
+		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 1, 53, { 0x02, 0x03, 0x04 }, false, false, true)) ==
 		  3);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x05, 0x06 }, false, false, true)) == 2);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 2, 53, { 0x05, 0x06 }, false, false, true)) == 2);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.HandleForwardTsn(
-		    getTsn(3), std::span<const RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{}) == 6);
+		  interleavedreassemblystreams.HandleForwardTsn(
+		    getTsn(3),
+		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
+		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
+		                                                   /*streamId*/ 1, /*unordered*/ true, /*mid*/ 0 }
+    }) == 6);
 	}
 
 	SECTION("delete simple ordered message returns correct size")
 	{
 		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
+		RTC::SCTP::InterleavedReassemblyStreams interleavedreassemblystreams(tester.MakeCallback());
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
+		  interleavedreassemblystreams.AddData(
 		    getTsn(1),
 		    RTC::SCTP::UserData(
 		      /*streamId*/ 1,
@@ -259,29 +264,30 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		      /*isUnordered*/ false)) == 1);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02, 0x03, 0x04 }, false, false, false)) ==
+		  interleavedreassemblystreams.AddData(
+		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 1, 53, { 0x02, 0x03, 0x04 }, false, false, false)) ==
 		  3);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x05, 0x06 }, false, false, false)) == 2);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 2, 53, { 0x05, 0x06 }, false, false, false)) == 2);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.HandleForwardTsn(
+		  interleavedreassemblystreams.HandleForwardTsn(
 		    getTsn(3),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1, /*ssn*/ 0 }
+		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
+		                                                   /*streamId*/ 1, /*unordered*/ false, /*mid*/ 0 }
     }) == 6);
 	}
 
 	SECTION("delete many ordered messages returns correct size")
 	{
 		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
+		RTC::SCTP::InterleavedReassemblyStreams interleavedreassemblystreams(tester.MakeCallback());
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
+		  interleavedreassemblystreams.AddData(
 		    getTsn(1),
 		    RTC::SCTP::UserData(
 		      /*streamId*/ 1,
@@ -294,47 +300,48 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		      /*isEnd*/ false,
 		      /*isUnordered*/ false)) == 1);
 
-		// ssn=0 middle fragment (not added, consumed to advance the generator).
-		// RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02, 0x03, 0x04 }, false, false, false)
+		// mid=0 middle fragment (not added).
+		// RTC::SCTP::UserData(1, 0, 0, 1, 53, { 0x02, 0x03, 0x04 }, false, false, false)
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x05, 0x06 }, false, false, false)) == 2);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 2, 53, { 0x05, 0x06 }, false, false, false)) == 2);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x07 }, false, true, false)) == 1);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 3, 53, { 0x07 }, false, true, false)) == 1);
 
-		// Second message: ssn=1.
+		// Second message: mid=1.
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(5), RTC::SCTP::UserData(1, 1, 0, 0, 53, { 0x01 }, true, true, false)) == 1);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(5), RTC::SCTP::UserData(1, 0, 1, 0, 53, { 0x01 }, true, true, false)) == 1);
 
-		// Third message: ssn=2.
+		// Third message: mid=2.
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(6), RTC::SCTP::UserData(1, 2, 0, 0, 53, { 0x05, 0x06 }, true, false, false)) == 2);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(6), RTC::SCTP::UserData(1, 0, 2, 0, 53, { 0x05, 0x06 }, true, false, false)) == 2);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(7), RTC::SCTP::UserData(1, 2, 0, 0, 53, { 0x07 }, false, true, false)) == 1);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(7), RTC::SCTP::UserData(1, 0, 2, 1, 53, { 0x07 }, false, true, false)) == 1);
 
-		// Expire all three messages (skip through ssn=2 inclusive).
+		// Expire all three messages (skip through mid=2 inclusive).
 		REQUIRE(
-		  traditionalReassemblyStreams.HandleForwardTsn(
+		  interleavedreassemblystreams.HandleForwardTsn(
 		    getTsn(8),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1, /*ssn*/ 2 }
-    }) == 8);
+		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
+		                                                   /*streamId*/ 1, /*unordered*/ false, /*mid*/ 2 }
+    }) == 8u);
 	}
 
 	SECTION("delete ordered message delivers two returns correct size")
 	{
 		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
+		RTC::SCTP::InterleavedReassemblyStreams interleavedreassemblystreams(tester.MakeCallback());
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
+		  interleavedreassemblystreams.AddData(
 		    getTsn(1),
 		    RTC::SCTP::UserData(
 		      /*streamId*/ 1,
@@ -347,89 +354,50 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		      /*isEnd*/ false,
 		      /*isUnordered*/ false)) == 1);
 
-		// ssn=0 middle fragment (not added, consumed to advance the generator).
-		// RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02, 0x03, 0x04 }, false, false, false)
+		// mid=0 middle fragment (not added).
+		// RTC::SCTP::UserData(1, 0, 0, 1, 53, { 0x02, 0x03, 0x04 }, false, false, false)
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x05, 0x06 }, false, false, false)) == 2);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 2, 53, { 0x05, 0x06 }, false, false, false)) == 2);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x07 }, false, true, false)) == 1);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 3, 53, { 0x07 }, false, true, false)) == 1);
 
-		// Second message: ssn=1.
+		// Second message: mid=1.
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(5), RTC::SCTP::UserData(1, 1, 0, 0, 53, { 0x01 }, true, true, false)) == 1);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(5), RTC::SCTP::UserData(1, 0, 1, 0, 53, { 0x01 }, true, true, false)) == 1);
 
-		// Third message: ssn=2.
+		// Third message: mid=2.
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(6), RTC::SCTP::UserData(1, 2, 0, 0, 53, { 0x05, 0x06 }, true, false, false)) == 2);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(6), RTC::SCTP::UserData(1, 0, 2, 0, 53, { 0x05, 0x06 }, true, false, false)) == 2);
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(7), RTC::SCTP::UserData(1, 2, 0, 0, 53, { 0x07 }, false, true, false)) == 1);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(7), RTC::SCTP::UserData(1, 0, 2, 1, 53, { 0x07 }, false, true, false)) == 1);
 
-		// Expire the first message (ssn=0). The following two (ssn=1 and ssn=2) are
+		// Expire the first message (mid=0). The following two (mid=1 and mid=2) are
 		// delivered.
 		REQUIRE(
-		  traditionalReassemblyStreams.HandleForwardTsn(
+		  interleavedreassemblystreams.HandleForwardTsn(
 		    getTsn(4),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1, /*ssn*/ 0 }
-    }) == 8);
-	}
-
-	SECTION("can delete first ordered message")
-	{
-		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
-
-		// Not received: ssn=0, SID=1, TSN=1 (BE, single-chunk message).
-		// Consumed here only to advance the ssn counter conceptually.
-
-		// Deleted via FORWARD-TSN: SID=1, SSN=0.
-		REQUIRE(
-		  traditionalReassemblyStreams.HandleForwardTsn(
-		    getTsn(1),
-		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1, /*ssn*/ 0 }
-    }) == 0);
-
-		// Receive ssn=1 (next after the skipped ssn=0): should be delivered immediately.
-		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(2),
-		    RTC::SCTP::UserData(
-		      /*streamId*/ 1,
-		      /*ssn*/ 1,
-		      /*mid*/ 0,
-		      /*fsn*/ 0,
-		      /*ppid*/ 53,
-		      /*payload*/ { 0x02, 0x03, 0x04 },
-		      /*isBeginning*/ true,
-		      /*isEnd*/ true,
-		      /*isUnordered*/ false)) == 0);
-
-		REQUIRE(tester.GetCallCount(1));
-		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 2 });
-
-		auto& lastMessages = tester.GetLastMessages();
-
-		REQUIRE(lastMessages.size() == 1);
-		REQUIRE(std::move(lastMessages[0]).ReleasePayload() == std::vector<uint8_t>{ 0x02, 0x03, 0x04 });
+		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
+		                                                   /*streamId*/ 1, /*unordered*/ false, /*mid*/ 0 }
+    }) == 8u);
 	}
 
 	SECTION("can reassemble fast path unordered")
 	{
 		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
+		RTC::SCTP::InterleavedReassemblyStreams interleavedreassemblystreams(tester.MakeCallback());
 
 		// Each chunk is a complete single-fragment message (BE), delivered immediately.
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
+		  interleavedreassemblystreams.AddData(
 		    getTsn(1),
 		    RTC::SCTP::UserData(
 		      /*streamId*/ 1,
@@ -453,8 +421,8 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		tester.Reset();
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x03 }, true, true, true)) == 0);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(3), RTC::SCTP::UserData(1, 0, 1, 0, 53, { 0x03 }, true, true, true)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 3 });
@@ -467,8 +435,8 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		tester.Reset();
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02 }, true, true, true)) == 0);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(2), RTC::SCTP::UserData(1, 0, 2, 0, 53, { 0x02 }, true, true, true)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 2 });
@@ -481,8 +449,8 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		tester.Reset();
 
 		REQUIRE(
-		  traditionalReassemblyStreams.AddData(
-		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x04 }, true, true, true)) == 0);
+		  interleavedreassemblystreams.AddData(
+		    getTsn(4), RTC::SCTP::UserData(1, 0, 3, 0, 53, { 0x04 }, true, true, true)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 4 });
@@ -496,16 +464,16 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 	SECTION("can reassemble fast path ordered")
 	{
 		OnAssembledMessageTester tester;
-		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
+		RTC::SCTP::InterleavedReassemblyStreams interleavedreassemblystreams(tester.MakeCallback());
 
 		RTC::SCTP::UserData data1(1, 0, 0, 0, 53, { 0x01 }, true, true, false);
-		RTC::SCTP::UserData data2(1, 1, 0, 0, 53, { 0x02 }, true, true, false);
-		RTC::SCTP::UserData data3(1, 2, 0, 0, 53, { 0x03 }, true, true, false);
-		RTC::SCTP::UserData data4(1, 3, 0, 0, 53, { 0x04 }, true, true, false);
+		RTC::SCTP::UserData data2(1, 0, 1, 0, 53, { 0x02 }, true, true, false);
+		RTC::SCTP::UserData data3(1, 0, 2, 0, 53, { 0x03 }, true, true, false);
+		RTC::SCTP::UserData data4(1, 0, 3, 0, 53, { 0x04 }, true, true, false);
 
-		// tsn(1)/ssn=0: delivered immediately (nextSsn=0).
+		// tsn(1)/mid=0: delivered immediately (nextMid=0).
 		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
-		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(1), std::move(data1)) == 0);
+		REQUIRE(interleavedreassemblystreams.AddData(getTsn(1), std::move(data1)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 1 });
@@ -517,31 +485,30 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		tester.Reset();
 
-		// tsn(3)/ssn=2: buffered (nextSsn=1).
+		// tsn(3)/mid=2: buffered (nextMid=1).
 		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
-		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(3), std::move(data3)) == 1);
+		REQUIRE(interleavedreassemblystreams.AddData(getTsn(3), std::move(data3)) == 1);
 
 		REQUIRE(tester.CheckCallbackNotCalled());
 
-		// tsn(2)/ssn=1: completes ssn=1, then ssn=2 is also delivered.
+		// tsn(2)/mid=1: completes mid=1, then mid=2 is also delivered.
 		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
-		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(2), std::move(data2)) == -1);
+		REQUIRE(interleavedreassemblystreams.AddData(getTsn(2), std::move(data2)) == -1);
 
 		REQUIRE(tester.GetCallCount(2));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 3 });
 
 		auto& lastMessages2 = tester.GetLastMessages();
 
-		// Notice that here we got message ssn=2 before last message ssn=3.
 		REQUIRE(lastMessages2.size() == 2);
 		REQUIRE(std::move(lastMessages2[0]).ReleasePayload() == std::vector<uint8_t>{ 0x02 });
 		REQUIRE(std::move(lastMessages2[1]).ReleasePayload() == std::vector<uint8_t>{ 0x03 });
 
 		tester.Reset();
 
-		// tsn(4)/ssn=3: delivered immediately (nextSsn=3).
+		// tsn(4)/mid=3: delivered immediately (nextMid=3).
 		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
-		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(4), std::move(data4)) == 0);
+		REQUIRE(interleavedreassemblystreams.AddData(getTsn(4), std::move(data4)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 4 });
