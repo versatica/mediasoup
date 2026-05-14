@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_TYPES_HPP
 
 #include "common.hpp"
+#include "Utils/UnwrappedSequenceNumber.hpp"
 #include <limits>
 #include <string_view>
 
@@ -336,6 +337,21 @@ namespace RTC
 			constexpr uint16_t MaxRetransmitsNoLimit{ std::numeric_limits<uint16_t>::max() };
 
 			constexpr uint64_t ExpiresAtMsInfinite{ std::numeric_limits<uint64_t>::max() };
+
+			/**
+			 * Unwrapped Transmission Sequence Numbers (TSN).
+			 */
+			using UnwrappedTsn = Utils::UnwrappedSequenceNumber<uint32_t>;
+
+			/**
+			 * Unwrapped Stream Sequence Numbers (SSN).
+			 */
+			using UnwrappedSsn = Utils::UnwrappedSequenceNumber<uint16_t>;
+
+			/**
+			 * Unwrapped Message Identifier (MID).
+			 */
+			using UnwrappedMid = Utils::UnwrappedSequenceNumber<uint32_t>;
 		} // namespace Types
 	} // namespace SCTP
 } // namespace RTC

@@ -11,7 +11,6 @@
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
-#include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include <vector>
 
@@ -41,9 +40,6 @@ namespace RTC
 				virtual void OnRetransmissionQueueNewRttMs(uint64_t newRttMs)  = 0;
 				virtual void OnRetransmissionQueueClearRetransmissionCounter() = 0;
 			};
-
-		public:
-			using UnwrappedTsn = Utils::UnwrappedSequenceNumber<uint32_t>;
 
 		private:
 			enum class CongestionAlgorithmPhase : uint8_t
@@ -131,7 +127,7 @@ namespace RTC
 
 			uint32_t GetLastAssignedTsn() const
 			{
-				return UnwrappedTsn::AddTo(this->outstandingData.GetNextTsn(), -1).Wrap();
+				return Types::UnwrappedTsn::AddTo(this->outstandingData.GetNextTsn(), -1).Wrap();
 			}
 
 			/**
@@ -244,13 +240,13 @@ namespace RTC
 			 * When a SACK Chunk is received, this method will be called which may
 			 * call into the `RetransmissionTimeout` to update the RTO.
 			 */
-			void UpdateRttMs(uint64_t nowMs, UnwrappedTsn cumulativeTsnAck);
+			void UpdateRttMs(uint64_t nowMs, Types::UnwrappedTsn cumulativeTsnAck);
 
 			/**
 			 * If the congestion control is in "fast recovery mode", this may be
 			 * exited now.
 			 */
-			void MayExitFastRecovery(UnwrappedTsn cumulativeTsnAck);
+			void MayExitFastRecovery(Types::UnwrappedTsn cumulativeTsnAck);
 
 			/**
 			 * If Chunks have been ACKed, stop the retransmission timer.
@@ -259,7 +255,7 @@ namespace RTC
 			 * - This method is NOT defined in dcsctp! See bug report:
 			 *   https://issues.webrtc.org/issues/505751236
 			 */
-			void StopT3RtxTimerOnIncreasedCumulativeTsnAck(UnwrappedTsn cumulativeTsnAck);
+			void StopT3RtxTimerOnIncreasedCumulativeTsnAck(Types::UnwrappedTsn cumulativeTsnAck);
 
 			/**
 			 * Update the congestion control algorithm given as the cumulative ack TSN
@@ -271,7 +267,7 @@ namespace RTC
 			 * Update the congestion control algorithm, given as packet loss has been
 			 * detected, as reported in an incoming SACK Chunk.
 			 */
-			void HandlePacketLoss(UnwrappedTsn highestTsnAcked);
+			void HandlePacketLoss(Types::UnwrappedTsn highestTsnAcked);
 
 			/**
 			 * Update the view of the receiver window size.
@@ -304,7 +300,7 @@ namespace RTC
 			// The retransmission timer.
 			BackoffTimerHandleInterface* t3RtxTimer;
 			// Unwraps TSNs.
-			UnwrappedTsn::Unwrapper tsnUnwrapper;
+			Types::UnwrappedTsn::Unwrapper tsnUnwrapper;
 			// Congestion Window. Number of bytes that may be in-flight (sent, not
 			// acked).
 			size_t cwnd;
@@ -319,7 +315,7 @@ namespace RTC
 			uint64_t rtxBytesCount{ 0 };
 			// If set, fast recovery is enabled until this TSN has been cumulative
 			// acked.
-			std::optional<UnwrappedTsn> fastRecoveryExitTsn{ std::nullopt };
+			std::optional<Types::UnwrappedTsn> fastRecoveryExitTsn{ std::nullopt };
 			// The send queue.
 			SendQueueInterface& sendQueue;
 			// All the outstanding data Chunks that are in-flight and that have not

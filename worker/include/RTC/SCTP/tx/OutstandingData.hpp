@@ -8,7 +8,6 @@
 #include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
-#include "Utils/UnwrappedSequenceNumber.hpp"
 #include <deque>
 #include <ostream>
 #include <set>
@@ -66,15 +65,12 @@ namespace RTC
 #endif
 
 		public:
-			using UnwrappedTsn = Utils::UnwrappedSequenceNumber<uint32_t>;
-
-		public:
 			/**
 			 * Contains variables scoped to a processing of an incoming SACK.
 			 */
 			struct AckInfo
 			{
-				explicit AckInfo(UnwrappedTsn cumulativeTsnAck) : highestTsnAcked(cumulativeTsnAck)
+				explicit AckInfo(Types::UnwrappedTsn cumulativeTsnAck) : highestTsnAcked(cumulativeTsnAck)
 				{
 				}
 
@@ -95,7 +91,7 @@ namespace RTC
 				/**
 				 * Highest TSN Newly Acknowledged, an SCTP variable.
 				 */
-				UnwrappedTsn highestTsnAcked;
+				Types::UnwrappedTsn highestTsnAcked;
 
 				/**
 				 * The set of lifecycle IDs that were acked using `cumulativeTsnAck`.
@@ -297,12 +293,12 @@ namespace RTC
 		public:
 			OutstandingData(
 			  size_t dataChunkHeaderLength,
-			  UnwrappedTsn lastCumulativeTsnAck,
+			  Types::UnwrappedTsn lastCumulativeTsnAck,
 			  std::function<bool(uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)> discardFromSendQueue);
 
 		public:
 			AckInfo HandleSack(
-			  UnwrappedTsn cumulativeTsnAck,
+			  Types::UnwrappedTsn cumulativeTsnAck,
 			  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
 			  bool isInFastRecovery);
 
@@ -366,24 +362,24 @@ namespace RTC
 				return !this->toBeRetransmitted.empty() || !this->toBeFastRetransmitted.empty();
 			}
 
-			UnwrappedTsn GetLastCumulativeTsnAck() const
+			Types::UnwrappedTsn GetLastCumulativeTsnAck() const
 			{
 				return this->lastCumulativeTsnAck;
 			}
 
-			UnwrappedTsn GetNextTsn() const
+			Types::UnwrappedTsn GetNextTsn() const
 			{
 				return this->GetHighestOutstandingTsn().GetNextValue();
 			}
 
-			UnwrappedTsn GetHighestOutstandingTsn() const;
+			Types::UnwrappedTsn GetHighestOutstandingTsn() const;
 
 			/**
 			 * Schedules `data` to be sent, with the provided partial reliability
 			 * parameters. Returns the TSN if the item was actually added and
 			 * scheduled to be sent, and std::nullopt if it shouldn't be sent.
 			 */
-			std::optional<UnwrappedTsn> Insert(
+			std::optional<Types::UnwrappedTsn> Insert(
 			  uint32_t outgoingMessageId,
 			  const UserData& data,
 			  uint64_t timeSentMs,
@@ -412,7 +408,7 @@ namespace RTC
 			 * algorithm, so if the Chunk has ever been retransmitted, it will return
 			 * `std::nullopt`.
 			 */
-			std::optional<uint64_t> MeasureRtt(uint64_t nowMs, UnwrappedTsn tsn) const;
+			std::optional<uint64_t> MeasureRtt(uint64_t nowMs, Types::UnwrappedTsn tsn) const;
 
 			/**
 			 * Returns true if the next Chunk that is not acked by the peer has been
@@ -442,16 +438,16 @@ namespace RTC
 			 */
 			size_t GetSerializedChunkLength(const UserData& data) const;
 
-			Item& GetItem(UnwrappedTsn tsn);
+			Item& GetItem(Types::UnwrappedTsn tsn);
 
-			const Item& GetItem(UnwrappedTsn tsn) const;
+			const Item& GetItem(Types::UnwrappedTsn tsn) const;
 
 			/**
 			 * Given a `cumulativeTsnAck` from an incoming SACK, will remove those
 			 * items in the retransmission queue up until this value and will update
 			 * `ackInfo` by setting `this->lastCumulativeTsnAck`.
 			 */
-			void RemoveAcked(UnwrappedTsn cumulativeTsnAck, AckInfo& ackInfo);
+			void RemoveAcked(Types::UnwrappedTsn cumulativeTsnAck, AckInfo& ackInfo);
 
 			/**
 			 * Will mark the Chunks covered by the `gapAckBlocks` from an incoming
@@ -459,7 +455,7 @@ namespace RTC
 			 * `this->cumulativeTsnAck`.
 			 */
 			void AckGapBlocks(
-			  UnwrappedTsn cumulativeTsnAck,
+			  Types::UnwrappedTsn cumulativeTsnAck,
 			  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
 			  AckInfo& ackInfo);
 
@@ -470,7 +466,7 @@ namespace RTC
 			 * nacked/retransmitted. The method will set `ackInfo.hasPacketLoss`.
 			 */
 			void NackBetweenAckBlocks(
-			  UnwrappedTsn cumulativeTsnAck,
+			  Types::UnwrappedTsn cumulativeTsnAck,
 			  std::span<const SackChunk::GapAckBlock> gapAckBlocks,
 			  bool isInFastRecovery,
 			  bool cumulativeTsnAckedAdvanced,
@@ -480,7 +476,7 @@ namespace RTC
 			 * Process the acknowledgement of the Chunk referenced by `item` and
 			 * updates state in `ackInfo` and the object's state.
 			 */
-			void AckChunk(AckInfo& ackInfo, UnwrappedTsn tsn, Item& item);
+			void AckChunk(AckInfo& ackInfo, Types::UnwrappedTsn tsn, Item& item);
 
 			/**
 			 * Helper method to process an incoming nack of an item and perform the
@@ -497,7 +493,7 @@ namespace RTC
 			 *   which in turn could alter `this->outstandingData`, any iterators are
 			 *   invalidated after having called this method.
 			 */
-			bool NackItem(UnwrappedTsn tsn, bool retransmitNow, bool doFastRetransmit);
+			bool NackItem(Types::UnwrappedTsn tsn, bool retransmitNow, bool doFastRetransmit);
 
 			/**
 			 * Given that a message fragment, `item` has been abandoned, abandon all
@@ -507,7 +503,7 @@ namespace RTC
 			void AbandonAllFor(const OutstandingData::Item& item);
 
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> ExtractChunksThatCanFit(
-			  std::set<UnwrappedTsn>& chunks, size_t maxLength);
+			  std::set<Types::UnwrappedTsn>& chunks, size_t maxLength);
 
 			void AssertIsConsistent() const;
 
@@ -515,7 +511,7 @@ namespace RTC
 			// The size of the data Chunk (DATA/I-DATA) header that is used.
 			const size_t dataChunkHeaderLength;
 			// The last cumulative TSN ack number.
-			UnwrappedTsn lastCumulativeTsnAck;
+			Types::UnwrappedTsn lastCumulativeTsnAck;
 			// Callback when to discard items from the send queue.
 			std::function<bool(uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)> discardFromSendQueue;
 			// Outstanding items. If non-empty, the first element has
@@ -532,16 +528,16 @@ namespace RTC
 			// or nacked).
 			size_t unackedItems{ 0 };
 			// Data Chunks that are eligible for fast retransmission.
-			std::set<UnwrappedTsn> toBeFastRetransmitted;
+			std::set<Types::UnwrappedTsn> toBeFastRetransmitted;
 			// Data Chunks that are to be retransmitted.
-			std::set<UnwrappedTsn> toBeRetransmitted;
+			std::set<Types::UnwrappedTsn> toBeRetransmitted;
 			// Wben a stream reset has begun, the "next TSN to assign" is added to
 			// this set, and removed when the cum-ack TSN reaches it. This is used
 			// to limit a FORWARD-TSN to reset streams past a "stream reset last
 			// assigned TSN".
-			// NOTE: dcsctp uses `webrtc::flat_set<UnwrappedTsn>` type which is more
+			// NOTE: dcsctp uses `webrtc::flat_set<UnwrappedTSN>` type which is more
 			// efficient in read operations.
-			std::set<UnwrappedTsn> streamResetBreakpointTsns;
+			std::set<Types::UnwrappedTsn> streamResetBreakpointTsns;
 		};
 
 #ifdef MS_TEST

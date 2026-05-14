@@ -72,12 +72,13 @@ namespace RTC
 				return false;
 			}
 
-			const UnwrappedTsn oldLastCumulativeTsnAck = this->outstandingData.GetLastCumulativeTsnAck();
-			const size_t oldUnackedPacketBytes         = this->outstandingData.GetUnackedPacketBytes();
+			const Types::UnwrappedTsn oldLastCumulativeTsnAck =
+			  this->outstandingData.GetLastCumulativeTsnAck();
+			const size_t oldUnackedPacketBytes = this->outstandingData.GetUnackedPacketBytes();
 #if MS_LOG_DEV_LEVEL == 3
 			const size_t oldRwnd = this->rwnd;
 #endif
-			const UnwrappedTsn cumulativeTsnAck =
+			const Types::UnwrappedTsn cumulativeTsnAck =
 			  this->tsnUnwrapper.Unwrap(receivedSackChunk->GetCumulativeTsnAck());
 
 			if (receivedSackChunk->GetValidatedGapAckBlocks().empty())
@@ -376,7 +377,7 @@ namespace RTC
 
 				this->rwnd -= dataToSend->data.GetPayloadLength();
 
-				const std::optional<UnwrappedTsn> tsn = this->outstandingData.Insert(
+				const std::optional<Types::UnwrappedTsn> tsn = this->outstandingData.Insert(
 				  dataToSend->outgoingMessageId,
 				  dataToSend->data,
 				  nowMs,
@@ -527,7 +528,7 @@ namespace RTC
 			// @remarks
 			// - Important not to drop SACKs with identical TSN to that previously
 			//   received, as the gap-ack-blocks or dup tsn fields may have changed.
-			const UnwrappedTsn cumulativeTsnAck =
+			const Types::UnwrappedTsn cumulativeTsnAck =
 			  this->tsnUnwrapper.PeekUnwrap(sackChunk->GetCumulativeTsnAck());
 
 			if (cumulativeTsnAck < this->outstandingData.GetLastCumulativeTsnAck())
@@ -549,12 +550,12 @@ namespace RTC
 			  sackChunk->GetGapAckBlocks(),
 			  [&](const auto& block)
 			  {
-				  return UnwrappedTsn::AddTo(cumulativeTsnAck, block.end) <=
+				  return Types::UnwrappedTsn::AddTo(cumulativeTsnAck, block.end) <=
 				         this->outstandingData.GetHighestOutstandingTsn();
 			  });
 		}
 
-		void RetransmissionQueue::UpdateRttMs(uint64_t nowMs, UnwrappedTsn cumulativeTsnAck)
+		void RetransmissionQueue::UpdateRttMs(uint64_t nowMs, Types::UnwrappedTsn cumulativeTsnAck)
 		{
 			MS_TRACE();
 
@@ -577,7 +578,7 @@ namespace RTC
 			}
 		}
 
-		void RetransmissionQueue::MayExitFastRecovery(UnwrappedTsn cumulativeTsnAck)
+		void RetransmissionQueue::MayExitFastRecovery(Types::UnwrappedTsn cumulativeTsnAck)
 		{
 			MS_TRACE();
 
@@ -595,7 +596,8 @@ namespace RTC
 			}
 		}
 
-		void RetransmissionQueue::StopT3RtxTimerOnIncreasedCumulativeTsnAck(UnwrappedTsn /*cumulativeTsnAck*/)
+		void RetransmissionQueue::StopT3RtxTimerOnIncreasedCumulativeTsnAck(
+		  Types::UnwrappedTsn /*cumulativeTsnAck*/)
 		{
 			MS_TRACE();
 
@@ -683,7 +685,7 @@ namespace RTC
 			}
 		}
 
-		void RetransmissionQueue::HandlePacketLoss(UnwrappedTsn /*highestTsnAcked*/)
+		void RetransmissionQueue::HandlePacketLoss(Types::UnwrappedTsn /*highestTsnAcked*/)
 		{
 			MS_TRACE();
 

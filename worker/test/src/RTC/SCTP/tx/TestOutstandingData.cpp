@@ -73,7 +73,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	constexpr uint64_t NowMs{ 42 };
 	constexpr uint32_t OutgoingMessageId{ 17 };
 
-	RTC::SCTP::OutstandingData::UnwrappedTsn::Unwrapper unwrapper;
+	RTC::SCTP::Types::UnwrappedTsn::Unwrapper unwrapper;
 	DiscardFromSendQueueTester discardFromSendQueueTester;
 
 	auto discardFromSendQueue =
