@@ -91,14 +91,32 @@ namespace RTC
 				return this->ppid;
 			}
 
-			const uint8_t* GetPayload() const
+			std::vector<uint8_t>& GetPayload()
 			{
-				return this->payload.data();
+				return this->payload;
 			}
 
 			size_t GetPayloadLength() const
 			{
 				return this->payload.size();
+			}
+
+			/**
+			 * Useful to extract the payload and its ownership when destructing the
+			 * UserData.
+			 *
+			 * @remarks
+			 * - && at the end means that it can only be called from a rvalue.
+			 *
+			 * @usage
+			 * ```c++
+			 * const auto payload = std::move(userData).ReleasePayload();
+			 * ```
+			 */
+			std::vector<uint8_t> ReleasePayload() &&
+			{
+				// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move)
+				return std::move(this->payload);
 			}
 
 			UserData Clone() const
@@ -113,24 +131,6 @@ namespace RTC
 				  this->isBeginning,
 				  this->isEnd,
 				  this->isUnordered);
-			}
-
-			/**
-			 * Useful to extract the payload and its ownership when destructing the
-			 * Message.
-			 *
-			 * @remarks
-			 * - && at the end means that it can only be called from a rvalue.
-			 *
-			 * @usage
-			 * ```c++
-			 * const auto payload = std::move(userData).ReleasePayload();
-			 * ```
-			 */
-			std::vector<uint8_t> ReleasePayload() &&
-			{
-				// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move)
-				return std::move(this->payload);
 			}
 
 			bool IsBeginning() const

@@ -76,6 +76,11 @@ namespace RTC
 				return std::move(this->payload);
 			}
 
+			Message Clone() const
+			{
+				return Message(this->streamId, this->ppid, this->payload);
+			}
+
 		private:
 			uint16_t streamId;
 			uint32_t ppid;
