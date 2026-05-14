@@ -5,7 +5,6 @@
 #include "RTC/SCTP/rx/ReassemblyStreamsInterface.hpp"
 #include "RTC/SCTP/rx/TraditionalReassemblyStreams.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <initializer_list>
 #include <vector>
 
 SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystreams]")
@@ -21,17 +20,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 				// Copy the span to a vector to survive the callback.
 				this->lastTsns = std::vector<RTC::SCTP::Types::UnwrappedTsn>(tsns.begin(), tsns.end());
-
-				if (this->lastMessage.has_value())
-				{
-					this->penultimateMessage = this->lastMessage.value().Clone();
-				}
-				else
-				{
-					this->penultimateMessage.reset();
-				}
-
-				this->lastMessage = std::move(message);
+				this->lastMessages.push_back(std::move(message));
 			};
 		}
 
@@ -42,16 +31,16 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		std::vector<uint32_t> GetLastTsns() const
 		{
-			if (!this->lastTsns.has_value())
+			if (this->lastTsns.empty())
 			{
 				return {};
 			}
 
 			std::vector<uint32_t> tsns;
 
-			tsns.reserve(this->lastTsns->size());
+			tsns.reserve(this->lastTsns.size());
 
-			for (const auto& tsn : this->lastTsns.value())
+			for (const auto& tsn : this->lastTsns)
 			{
 				tsns.push_back(tsn.Wrap());
 			}
@@ -59,34 +48,27 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 			return tsns;
 		}
 
-		std::optional<RTC::SCTP::Message>& GetLastMessage()
+		std::vector<RTC::SCTP::Message>& GetLastMessages()
 		{
-			return this->lastMessage;
-		}
-
-		std::optional<RTC::SCTP::Message>& GetPenultimateMessage()
-		{
-			return this->penultimateMessage;
+			return this->lastMessages;
 		}
 
 		bool CheckCallbackNotCalled() const
 		{
-			return (this->callCount == 0 && !this->lastTsns.has_value() && !this->lastMessage.has_value());
+			return (this->callCount == 0 && this->lastTsns.empty() && this->lastMessages.empty());
 		}
 
 		void Reset()
 		{
 			this->callCount = 0;
-			this->lastTsns.reset();
-			this->lastMessage.reset();
-			this->penultimateMessage.reset();
+			this->lastTsns.clear();
+			this->lastMessages.clear();
 		}
 
 	private:
 		size_t callCount{ 0 };
-		std::optional<std::vector<RTC::SCTP::Types::UnwrappedTsn>> lastTsns;
-		std::optional<RTC::SCTP::Message> lastMessage;
-		std::optional<RTC::SCTP::Message> penultimateMessage;
+		std::vector<RTC::SCTP::Types::UnwrappedTsn> lastTsns;
+		std::vector<RTC::SCTP::Message> lastMessages;
 	};
 
 	RTC::SCTP::Types::UnwrappedTsn::Unwrapper tsn;
@@ -430,11 +412,11 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 2 });
-		REQUIRE(tester.GetLastMessage().has_value());
-		REQUIRE(
-		  std::move(tester.GetLastMessage().value()).ReleasePayload() ==
-		  std::vector<uint8_t>{ 0x02, 0x03, 0x04 });
-		REQUIRE(tester.GetPenultimateMessage().has_value() == false);
+
+		auto& lastMessages = tester.GetLastMessages();
+
+		REQUIRE(lastMessages.size() == 1);
+		REQUIRE(std::move(lastMessages[0]).ReleasePayload() == std::vector<uint8_t>{ 0x02, 0x03, 0x04 });
 	}
 
 	SECTION("can reassemble fast path unordered")
@@ -459,10 +441,11 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 1 });
-		REQUIRE(tester.GetLastMessage().has_value());
-		REQUIRE(
-		  std::move(tester.GetLastMessage().value()).ReleasePayload() == std::vector<uint8_t>{ 0x01 });
-		REQUIRE(tester.GetPenultimateMessage().has_value() == false);
+
+		auto& lastMessages1 = tester.GetLastMessages();
+
+		REQUIRE(lastMessages1.size() == 1);
+		REQUIRE(std::move(lastMessages1[0]).ReleasePayload() == std::vector<uint8_t>{ 0x01 });
 
 		tester.Reset();
 
@@ -472,10 +455,11 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 3 });
-		REQUIRE(tester.GetLastMessage().has_value());
-		REQUIRE(
-		  std::move(tester.GetLastMessage().value()).ReleasePayload() == std::vector<uint8_t>{ 0x03 });
-		REQUIRE(tester.GetPenultimateMessage().has_value() == false);
+
+		auto& lastMessages2 = tester.GetLastMessages();
+
+		REQUIRE(lastMessages2.size() == 1);
+		REQUIRE(std::move(lastMessages2[0]).ReleasePayload() == std::vector<uint8_t>{ 0x03 });
 
 		tester.Reset();
 
@@ -485,10 +469,11 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 2 });
-		REQUIRE(tester.GetLastMessage().has_value());
-		REQUIRE(
-		  std::move(tester.GetLastMessage().value()).ReleasePayload() == std::vector<uint8_t>{ 0x02 });
-		REQUIRE(tester.GetPenultimateMessage().has_value() == false);
+
+		auto& lastMessages3 = tester.GetLastMessages();
+
+		REQUIRE(lastMessages3.size() == 1);
+		REQUIRE(std::move(lastMessages3[0]).ReleasePayload() == std::vector<uint8_t>{ 0x02 });
 
 		tester.Reset();
 
@@ -498,10 +483,11 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 4 });
-		REQUIRE(tester.GetLastMessage().has_value());
-		REQUIRE(
-		  std::move(tester.GetLastMessage().value()).ReleasePayload() == std::vector<uint8_t>{ 0x04 });
-		REQUIRE(tester.GetPenultimateMessage().has_value() == false);
+
+		auto& lastMessages4 = tester.GetLastMessages();
+
+		REQUIRE(lastMessages4.size() == 1);
+		REQUIRE(std::move(lastMessages4[0]).ReleasePayload() == std::vector<uint8_t>{ 0x04 });
 	}
 
 	SECTION("can reassemble fast path ordered")
@@ -519,10 +505,11 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 1 });
-		REQUIRE(tester.GetLastMessage().has_value());
-		REQUIRE(
-		  std::move(tester.GetLastMessage().value()).ReleasePayload() == std::vector<uint8_t>{ 0x01 });
-		REQUIRE(tester.GetPenultimateMessage().has_value() == false);
+
+		auto& lastMessages1 = tester.GetLastMessages();
+
+		REQUIRE(lastMessages1.size() == 1);
+		REQUIRE(std::move(lastMessages1[0]).ReleasePayload() == std::vector<uint8_t>{ 0x01 });
 
 		tester.Reset();
 
@@ -536,14 +523,13 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(tester.GetCallCount(2));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 3 });
-		REQUIRE(tester.GetLastMessage().has_value());
-		REQUIRE(
-		  std::move(tester.GetLastMessage().value()).ReleasePayload() == std::vector<uint8_t>{ 0x03 });
+
+		auto& lastMessages2 = tester.GetLastMessages();
+
 		// Notice that here we got message ssn=2 before last message ssn=3.
-		REQUIRE(tester.GetPenultimateMessage().has_value());
-		REQUIRE(
-		  std::move(tester.GetPenultimateMessage().value()).ReleasePayload() ==
-		  std::vector<uint8_t>{ 0x02 });
+		REQUIRE(lastMessages2.size() == 2);
+		REQUIRE(std::move(lastMessages2[0]).ReleasePayload() == std::vector<uint8_t>{ 0x02 });
+		REQUIRE(std::move(lastMessages2[1]).ReleasePayload() == std::vector<uint8_t>{ 0x03 });
 
 		tester.Reset();
 
@@ -552,9 +538,10 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 4 });
-		REQUIRE(tester.GetLastMessage().has_value());
-		REQUIRE(
-		  std::move(tester.GetLastMessage().value()).ReleasePayload() == std::vector<uint8_t>{ 0x04 });
-		REQUIRE(tester.GetPenultimateMessage().has_value() == false);
+
+		auto& lastMessages3 = tester.GetLastMessages();
+
+		REQUIRE(lastMessages3.size() == 1);
+		REQUIRE(std::move(lastMessages3[0]).ReleasePayload() == std::vector<uint8_t>{ 0x04 });
 	}
 }
