@@ -197,6 +197,8 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		// Adding the late chunk completes ssn=0, which triggers delivery of ssn=1
 		// and ssn=2 as well.
+		// NOTE: clang-tidy doesn't understand that this is fine.
+		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move).
 		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(2), std::move(lateData)) == -8);
 
 		REQUIRE(tester.GetCallCount(3));

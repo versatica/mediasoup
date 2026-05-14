@@ -150,12 +150,15 @@ namespace RTC
 			MS_TRACE();
 
 			// Fast path - zero-copy.
-			const size_t payloadLength = data.GetPayloadLength();
-
-			Types::UnwrappedTsn tsns[1] = { tsn };
+			const size_t payloadLength        = data.GetPayloadLength();
+			const Types::UnwrappedTsn tsns[1] = { tsn };
 
 			Message message(
-			  data.GetStreamId(), data.GetPayloadProtocolId(), std::move(data).ReleasePayload());
+			  data.GetStreamId(),
+			  data.GetPayloadProtocolId(),
+			  // NOTE: clang-tidy doesn't understand that this is fine.
+			  // NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
+			  std::move(data).ReleasePayload());
 
 			this->parent.onAssembledMessage(tsns, std::move(message));
 
@@ -248,7 +251,7 @@ namespace RTC
 				return 0;
 			}
 
-			size_t assembledBytes = AssembleMessage(chunks.begin(), chunks.end());
+			const size_t assembledBytes = AssembleMessage(chunks.begin(), chunks.end());
 
 			this->chunksBySsn.erase(this->chunksBySsn.begin());
 			this->nextSsn.Increment();
@@ -265,6 +268,7 @@ namespace RTC
 			for (;;)
 			{
 				const size_t assembledBytesThisIter = TryToAssembleMessage();
+
 				if (assembledBytesThisIter == 0)
 				{
 					break;

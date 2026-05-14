@@ -157,7 +157,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetNewCumulativeTsn() == 0);
 		REQUIRE(chunk->GetNumberOfSkippedStreams() == 0);
-		REQUIRE(chunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{});
+		REQUIRE(chunk->GetSkippedStreams().empty());
 
 		/* Modify it. */
 
