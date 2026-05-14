@@ -147,7 +147,7 @@ namespace RTC
 		size_t TraditionalReassemblyStreams::StreamBase::AssembleMessage(
 		  Types::UnwrappedTsn tsn, UserData data)
 		{
-			MS_TRACE()
+			MS_TRACE();
 
 			// Fast path - zero-copy.
 			const size_t payloadLength = data.GetPayloadLength();
