@@ -151,11 +151,13 @@ namespace RTC
 
 			// Fast path - zero-copy.
 			const size_t payloadLength        = data.GetPayloadLength();
+			const auto streamId               = data.GetStreamId();
+			const auto pip                    = data.GetPayloadProtocolId();
 			const Types::UnwrappedTsn tsns[1] = { tsn };
 
 			Message message(
-			  data.GetStreamId(),
-			  data.GetPayloadProtocolId(),
+			  streamId,
+			  pip,
 			  // NOTE: clang-tidy doesn't understand that this is fine.
 			  // NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 			  std::move(data).ReleasePayload());
