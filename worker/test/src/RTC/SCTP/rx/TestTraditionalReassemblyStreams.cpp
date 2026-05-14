@@ -198,7 +198,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		// Adding the late chunk completes ssn=0, which triggers delivery of ssn=1
 		// and ssn=2 as well.
 		// NOTE: clang-tidy doesn't understand that this is fine.
-		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move).
+		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(2), std::move(lateData)) == -8);
 
 		REQUIRE(tester.GetCallCount(3));
@@ -503,6 +503,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		RTC::SCTP::UserData data4(1, 3, 0, 0, 53, { 0x04 }, true, true, false);
 
 		// tsn(1)/ssn=0: delivered immediately (nextSsn=0).
+		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(1), std::move(data1)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
@@ -516,11 +517,13 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		tester.Reset();
 
 		// tsn(3)/ssn=2: buffered (nextSsn=1).
+		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(3), std::move(data3)) == 1);
 
 		REQUIRE(tester.CheckCallbackNotCalled());
 
 		// tsn(2)/ssn=1: completes ssn=1, then ssn=2 is also delivered.
+		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(2), std::move(data2)) == -1);
 
 		REQUIRE(tester.GetCallCount(2));
@@ -536,6 +539,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		tester.Reset();
 
 		// tsn(4)/ssn=3: delivered immediately (nextSsn=3).
+		// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(traditionalReassemblyStreams.AddData(getTsn(4), std::move(data4)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
