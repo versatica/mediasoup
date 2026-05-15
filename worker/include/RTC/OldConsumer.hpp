@@ -2,6 +2,7 @@
 #define MS_RTC_OLD_CONSUMER_HPP
 
 #include "common.hpp"
+#include "Shared.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/consumer.h"
@@ -15,7 +16,6 @@
 #include "RTC/RTP/RtpStreamSend.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/Shared.hpp"
 #include <absl/container/flat_hash_set.h>
 #include <string>
 #include <vector>
@@ -54,7 +54,7 @@ namespace RTC
 
 	public:
 		OldConsumer(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::OldConsumer::Listener* listener,
@@ -178,7 +178,7 @@ namespace RTC
 
 	protected:
 		// Passed by argument.
-		RTC::Shared* shared{ nullptr };
+		SharedInterface* shared{ nullptr };
 		RTC::OldConsumer::Listener* listener{ nullptr };
 		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;

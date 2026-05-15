@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SvcProducerStreamManager.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 namespace RTC

@@ -406,7 +406,7 @@ namespace RTC
 		CreateRtpStreams();
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ nullptr);
@@ -416,7 +416,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
@@ -1666,7 +1666,8 @@ namespace RTC
 				}
 			}
 
-			auto* rtpStream = new RTC::RTP::RtpStreamSend(this, params, this->rtpParameters.mid);
+			auto* rtpStream =
+			  new RTC::RTP::RtpStreamSend(this, this->shared, params, this->rtpParameters.mid);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())
@@ -1737,12 +1738,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto scoreOffset = FillBufferScore(this->shared->channelNotifier->GetBufferBuilder());
+		auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
 
 		auto notificationOffset = FBS::Consumer::CreateScoreNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), scoreOffset);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), scoreOffset);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::CONSUMER_SCORE,
 		  FBS::Notification::Body::Consumer_ScoreNotification,
@@ -1764,15 +1765,15 @@ namespace RTC
 		if (this->producerStreamManager->GetCurrentSpatialLayer() >= 0)
 		{
 			layersOffset = FBS::Consumer::CreateConsumerLayers(
-			  this->shared->channelNotifier->GetBufferBuilder(),
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  this->producerStreamManager->GetCurrentSpatialLayer(),
 			  this->producerStreamManager->GetCurrentTemporalLayer());
 		}
 
 		auto notificationOffset = FBS::Consumer::CreateLayersChangeNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), layersOffset);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), layersOffset);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::CONSUMER_LAYERS_CHANGE,
 		  FBS::Notification::Body::Consumer_LayersChangeNotification,
