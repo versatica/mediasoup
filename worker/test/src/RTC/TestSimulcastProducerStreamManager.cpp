@@ -1,4 +1,6 @@
+#include "DepLibUV.hpp"
 #include "Utils.hpp"
+#include "mocks/include/MockShared.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -173,6 +175,11 @@ namespace
 
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
+	mocks::MockShared mockShared(
+	  []()
+	  {
+		  return DepLibUV::GetTimeMs();
+	  }); // NOLINT(readability-identifier-naming)
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(uint32_t ssrc)
 	{
@@ -181,7 +188,8 @@ namespace
 		params.ssrc      = ssrc;
 		params.clockRate = 90000;
 
-		return std::make_unique<RTC::RTP::RtpStreamRecv>(&streamRecvListener, params, 0u, false);
+		return std::make_unique<RTC::RTP::RtpStreamRecv>(
+		  &streamRecvListener, &mockShared, params, 0u, false);
 	}
 
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero.
@@ -190,7 +198,7 @@ namespace
 		auto firstSeq = static_cast<uint16_t>(packet->GetSequenceNumber() + 1);
 		auto lastSeq  = static_cast<uint16_t>(firstSeq + count);
 
-		for (uint16_t seq = firstSeq; Utils::Number<uint16_t>::IsLowerThan(seq, lastSeq); ++seq)
+		for (uint16_t seq = firstSeq; Utils::Number::IsLowerThan<uint16_t>(seq, lastSeq); ++seq)
 		{
 			packet->SetSequenceNumber(seq);
 			rtpStream->ReceivePacket(packet);
