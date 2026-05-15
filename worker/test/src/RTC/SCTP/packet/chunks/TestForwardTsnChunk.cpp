@@ -162,9 +162,12 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 		/* Modify it. */
 
 		chunk->SetNewCumulativeTsn(1234);
-		chunk->AddStream(1111, 11110);
-		chunk->AddStream(2222, 22220);
-		chunk->AddStream(3333, 33330);
+		chunk->AddSkippedStream(
+		  RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1111, /*ssn*/ 11110 });
+		chunk->AddSkippedStream(
+		  RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 2222, /*ssn*/ 22220 });
+		chunk->AddSkippedStream(
+		  RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 3333, /*ssn*/ 33330 });
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,

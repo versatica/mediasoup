@@ -24,7 +24,7 @@ namespace RTC
 				{
 				}
 
-				SkippedStream(uint16_t streamId, uint32_t mid, bool unordered)
+				SkippedStream(bool unordered, uint16_t streamId, uint32_t mid)
 				  : streamId(streamId), ssn(0), mid(mid), unordered(unordered)
 				{
 				}

@@ -155,13 +155,13 @@ namespace RTC
 
 			for (uint16_t idx{ 0 }; idx < numSkippedStreams; ++idx)
 			{
-				skippedStreams.emplace_back(GetStreamIdAt(idx), GetStreamSequenceAt(idx));
+				skippedStreams.emplace_back(GetSkippedStreamIdAt(idx), GetStreamSequenceAt(idx));
 			}
 
 			return skippedStreams;
 		}
 
-		void ForwardTsnChunk::AddStream(uint16_t streamId, uint16_t streamSequence)
+		void ForwardTsnChunk::AddSkippedStream(const AnyForwardTsnChunk::SkippedStream& skippedStream)
 		{
 			MS_TRACE();
 
@@ -172,9 +172,9 @@ namespace RTC
 
 			// Add the new stream and stream sequence.
 			Utils::Byte::Set2Bytes(
-			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, streamId);
+			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, skippedStream.streamId);
 			Utils::Byte::Set2Bytes(
-			  GetVariableLengthValuePointer(), previousVariableLengthValueLength + 2, streamSequence);
+			  GetVariableLengthValuePointer(), previousVariableLengthValueLength + 2, skippedStream.ssn);
 		}
 
 		ForwardTsnChunk* ForwardTsnChunk::SoftClone(const uint8_t* buffer) const

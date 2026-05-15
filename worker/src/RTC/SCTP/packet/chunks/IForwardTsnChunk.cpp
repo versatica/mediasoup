@@ -118,10 +118,10 @@ namespace RTC
 			{
 				MS_DUMP_CLEAN(
 				  indentation,
-				  "  - stream id: %" PRIu16 ", mid:%" PRIu32 ", unordered:%s",
+				  "  - unordered:%s, stream id: %" PRIu16 ", mid:%" PRIu32,
+				  skippedStream.unordered ? "yes" : "no",
 				  skippedStream.streamId,
-				  skippedStream.mid,
-				  skippedStream.unordered ? "yes" : "no");
+				  skippedStream.mid);
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::IForwardTsnChunk>");
 		}
@@ -156,13 +156,14 @@ namespace RTC
 
 			for (uint16_t idx{ 0 }; idx < numSkippedStreams; ++idx)
 			{
-				skippedStreams.emplace_back(GetStreamIdAt(idx), GetMessageIdentifierAt(idx), GetUFlagAt(idx));
+				skippedStreams.emplace_back(
+				  GetUFlagAt(idx), GetSkippedStreamIdAt(idx), GetMessageIdentifierAt(idx));
 			}
 
 			return skippedStreams;
 		}
 
-		void IForwardTsnChunk::AddStream(uint16_t streamId, uint32_t messageIdentifier, bool uFlag)
+		void IForwardTsnChunk::AddSkippedStream(const AnyForwardTsnChunk::SkippedStream& skippedStream)
 		{
 			MS_TRACE();
 
@@ -173,11 +174,13 @@ namespace RTC
 
 			// Add the new stream, flag U and message identifier.
 			Utils::Byte::Set2Bytes(
-			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, streamId);
+			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, skippedStream.streamId);
 			Utils::Byte::Set2Bytes(
-			  GetVariableLengthValuePointer(), previousVariableLengthValueLength + 2, uFlag);
+			  GetVariableLengthValuePointer(),
+			  previousVariableLengthValueLength + 2,
+			  skippedStream.unordered);
 			Utils::Byte::Set4Bytes(
-			  GetVariableLengthValuePointer(), previousVariableLengthValueLength + 4, messageIdentifier);
+			  GetVariableLengthValuePointer(), previousVariableLengthValueLength + 4, skippedStream.mid);
 		}
 
 		IForwardTsnChunk* IForwardTsnChunk::SoftClone(const uint8_t* buffer) const

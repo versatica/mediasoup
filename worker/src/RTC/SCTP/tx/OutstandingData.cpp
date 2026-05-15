@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
 #include <map>
 
 namespace RTC
@@ -336,7 +337,7 @@ namespace RTC
 
 			for (const auto& [streamId, ssn] : skippedPerOrderedStream)
 			{
-				forwardTsnChunk->AddStream(streamId, ssn);
+				forwardTsnChunk->AddSkippedStream(AnyForwardTsnChunk::SkippedStream{ streamId, ssn });
 			}
 
 			forwardTsnChunk->Consolidate();
@@ -348,7 +349,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::map<std::pair<uint16_t /*streamId*/, bool /*isUnordered*/>, uint32_t /*mid*/> skippedPerStream;
+			std::map<std::pair<bool /*unordered*/, uint16_t /*streamId*/>, uint32_t /*mid*/> skippedPerStream;
 			Types::UnwrappedTsn newCumulativeAck = this->lastCumulativeTsnAck;
 			Types::UnwrappedTsn tsn              = this->lastCumulativeTsnAck;
 
@@ -365,8 +366,8 @@ namespace RTC
 
 				newCumulativeAck = tsn;
 
-				const std::pair<uint16_t /*streamId*/, bool /*isUnordered*/> stream =
-				  std::make_pair(item.GetData().GetStreamId(), item.GetData().IsUnordered());
+				const std::pair<bool /*unordered*/, uint16_t /*streamId*/> stream =
+				  std::make_pair(item.GetData().IsUnordered(), item.GetData().GetStreamId());
 
 				skippedPerStream[stream] = std::max(item.GetData().GetMessageId(), skippedPerStream[stream]);
 			}
@@ -377,7 +378,11 @@ namespace RTC
 
 			for (const auto& [stream, mid] : skippedPerStream)
 			{
-				iForwardTsnChunk->AddStream(stream.first, stream.second, mid);
+				const uint16_t streamId = stream.second;
+				const bool unordered    = stream.first;
+
+				iForwardTsnChunk->AddSkippedStream(
+				  AnyForwardTsnChunk::SkippedStream{ unordered, streamId, mid });
 			}
 
 			iForwardTsnChunk->Consolidate();

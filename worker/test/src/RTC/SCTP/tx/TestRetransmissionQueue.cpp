@@ -7,9 +7,8 @@
 #include "test/include/catch2Macros.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
+#include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
-#include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
-#include "RTC/SCTP/packet/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
@@ -926,8 +925,9 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(forwardTsnChunk);
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 13);
 		REQUIRE(
-		  forwardTsnChunk->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
-		                                            RTC::SCTP::ForwardTsnChunk::SkippedStream{ 1, 42 }
+		  forwardTsnChunk->GetSkippedStreams() ==
+		  std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
+		    { 1, 42 }
     });
 	}
 
@@ -1011,8 +1011,9 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(forwardTsnChunk);
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 12);
 		REQUIRE(
-		  forwardTsnChunk->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
-		                                            RTC::SCTP::ForwardTsnChunk::SkippedStream{ 1, 42 }
+		  forwardTsnChunk->GetSkippedStreams() ==
+		  std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
+		    { 1, 42 }
     });
 	}
 
@@ -1137,16 +1138,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(iForwardTsnChunk1);
 		REQUIRE(iForwardTsnChunk1->GetNewCumulativeTsn() == 12);
 		REQUIRE(
-		  iForwardTsnChunk1->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
-		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
-		                                                                                         1,   42,
-		                                                                                         false, },
-		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
-		                                                                                         2,  42,
-		                                                                                         true, },
-		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
-		                                                                                         3,42,
-		                                                                                         false, }
+		  iForwardTsnChunk1->GetSkippedStreams() ==
+		  std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
+		    { false, 1, 42 },
+		    { false, 3, 42 },
+		    { true,  2, 42 },
     });
 
 		// When TSN 13 is acked, the placeholder end fragments must be skipped too.
@@ -1178,16 +1174,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(iForwardTsnChunk2);
 		REQUIRE(iForwardTsnChunk2->GetNewCumulativeTsn() == 16);
 		REQUIRE(
-		  iForwardTsnChunk2->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
-		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
-		                                                                                         1,   42,
-		                                                                                         false, },
-		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
-		                                                                                         2,  42,
-		                                                                                         true, },
-		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
-		                                                                                         3,42,
-		                                                                                         false, }
+		  iForwardTsnChunk2->GetSkippedStreams() ==
+		  std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
+		    { false, 1, 42 },
+		    { false, 3, 42 },
+		    { true,  2, 42 },
     });
 	}
 

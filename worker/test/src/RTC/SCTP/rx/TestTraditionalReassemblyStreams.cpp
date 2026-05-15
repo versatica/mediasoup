@@ -272,7 +272,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		  traditionalReassemblyStreams.HandleForwardTsn(
 		    getTsn(3),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1, /*ssn*/ 0 }
+		      { /*streamId*/ 1, /*ssn*/ 0 }
     }) == 6);
 	}
 
@@ -325,7 +325,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		  traditionalReassemblyStreams.HandleForwardTsn(
 		    getTsn(8),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1, /*ssn*/ 2 }
+		      { /*streamId*/ 1, /*ssn*/ 2 }
     }) == 8);
 	}
 
@@ -379,7 +379,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		  traditionalReassemblyStreams.HandleForwardTsn(
 		    getTsn(4),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1, /*ssn*/ 0 }
+		      { /*streamId*/ 1, /*ssn*/ 0 }
     }) == 8);
 	}
 
@@ -396,7 +396,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		  traditionalReassemblyStreams.HandleForwardTsn(
 		    getTsn(1),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{ /*streamId*/ 1, /*ssn*/ 0 }
+		      { /*streamId*/ 1, /*ssn*/ 0 }
     }) == 0);
 
 		// Receive ssn=1 (next after the skipped ssn=0): should be delivered immediately.
