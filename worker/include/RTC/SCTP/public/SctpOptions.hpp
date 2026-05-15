@@ -17,12 +17,12 @@ namespace RTC
 			/**
 			 * Signaled source port.
 			 */
-			uint16_t sourcePort{ 0 };
+			uint16_t sourcePort{ 5000 };
 
 			/**
 			 * Signaled destination port.
 			 */
-			uint16_t destinationPort{ 0 };
+			uint16_t destinationPort{ 5000 };
 
 			/**
 			 * Announced maximum number of outbound streams (OS).
@@ -30,7 +30,7 @@ namespace RTC
 			 * @remarks
 			 * - We use maximum value by default.
 			 */
-			uint16_t maxOutboundStreams{ 65535 };
+			uint16_t announcedMaxOutboundStreams{ 65535 };
 
 			/**
 			 * Announced maximum number of inbound streams (MIS).
@@ -38,7 +38,7 @@ namespace RTC
 			 * @remarks
 			 * - We use maximum value by default.
 			 */
-			uint16_t maxInboundStreams{ 65535 };
+			uint16_t announcedMaxInboundStreams{ 65535 };
 
 			/**
 			 * Maximum size of an SCTP Packet. It doesn't include any overhead of
@@ -273,7 +273,7 @@ namespace RTC
 			 * received before the lifetime has expired. This is only available if
 			 * the peer supports Partial Reliability Extension (RFC 3758).
 			 */
-			std::optional<uint64_t> lifetime{ std::nullopt };
+			std::optional<uint64_t> lifetimeMs{ std::nullopt };
 
 			/**
 			 * If set, limits the number of retransmissions. This is only available

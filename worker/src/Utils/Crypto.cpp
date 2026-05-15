@@ -8,7 +8,7 @@
 
 namespace Utils
 {
-	/* Static variables. */
+	/* Class variables. */
 
 	thread_local std::mt19937_64 Crypto::rng;
 	thread_local EVP_MAC* Crypto::mac{ nullptr };

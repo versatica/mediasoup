@@ -2,10 +2,11 @@
 #define MS_RTC_ICE_ICE_SERVER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "FBS/webRtcTransport.h"
 #include "RTC/ICE/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <list>
 #include <string>
 #include <unordered_map>
@@ -14,7 +15,7 @@ namespace RTC
 {
 	namespace ICE
 	{
-		class IceServer : public TimerHandle::Listener
+		class IceServer : public TimerHandleInterface::Listener
 		{
 		public:
 			enum class IceState : uint8_t
@@ -65,6 +66,7 @@ namespace RTC
 		public:
 			IceServer(
 			  Listener* listener,
+			  SharedInterface* shared,
 			  const std::string& usernameFragment,
 			  const std::string& password,
 			  uint8_t consentTimeoutSec);
@@ -129,13 +131,14 @@ namespace RTC
 			void RestartConsentCheck();
 			void StopConsentCheck();
 
-			/* Pure virtual methods inherited from TimerHandle::Listener. */
+			/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 		public:
-			void OnTimer(TimerHandle* timer) override;
+			void OnTimer(TimerHandleInterface* timer) override;
 
 		private:
 			// Passed by argument.
 			Listener* listener{ nullptr };
+			SharedInterface* shared{ nullptr };
 			std::string usernameFragment;
 			std::string password;
 			uint16_t consentTimeoutMs{ 30000u };
@@ -146,7 +149,7 @@ namespace RTC
 			uint32_t remoteNomination{ 0u };
 			std::list<RTC::TransportTuple> tuples;
 			RTC::TransportTuple* selectedTuple{ nullptr };
-			TimerHandle* consentCheckTimer{ nullptr };
+			TimerHandleInterface* consentCheckTimer{ nullptr };
 			bool isRemovingTuples{ false };
 		};
 	} // namespace ICE

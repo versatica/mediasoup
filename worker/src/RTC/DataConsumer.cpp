@@ -2,33 +2,23 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataConsumer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#ifndef MS_SCTP_STACK
-#include "RTC/SctpAssociation.hpp"
-#endif
 
 namespace RTC
 {
 	/* Instance methods. */
 
 	DataConsumer::DataConsumer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  const std::string& dataProducerId,
-#ifndef MS_SCTP_STACK
-	  RTC::SctpAssociation* sctpAssociation,
-#endif
 	  RTC::DataConsumer::Listener* listener,
 	  const FBS::Transport::ConsumeDataRequest* data,
 	  size_t maxMessageSize)
 	  : id(id),
 	    dataProducerId(dataProducerId),
 	    shared(shared),
-#ifndef MS_SCTP_STACK
-	    sctpAssociation(sctpAssociation),
-#endif
 	    listener(listener),
 	    maxMessageSize(maxMessageSize)
 	{
@@ -84,7 +74,7 @@ namespace RTC
 		}
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ nullptr);
@@ -94,7 +84,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 	}
 
 	flatbuffers::Offset<FBS::DataConsumer::DumpResponse> DataConsumer::FillBuffer(
@@ -142,7 +132,7 @@ namespace RTC
 		return FBS::DataConsumer::CreateGetStatsResponseDirect(
 		  builder,
 		  // timestamp.
-		  DepLibUV::GetTimeMs(),
+		  this->shared->GetTimeMs(),
 		  // label.
 		  this->label.c_str(),
 		  // protocol.
@@ -222,20 +212,14 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
-#ifdef MS_SCTP_STACK
-				// TODO: SCTP
-#else
-				if (!this->sctpAssociation)
-				{
-					MS_THROW_ERROR("no SCTP association present");
-				}
+				uint32_t bufferedAmount{ 0 };
 
-				// Create status response.
+				this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
+
 				auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
-				  request->GetBufferBuilder(), this->sctpAssociation->GetSctpBufferedAmount());
+				  request->GetBufferBuilder(), bufferedAmount);
 
 				request->Accept(FBS::Response::Body::DataConsumer_GetBufferedAmountResponse, responseOffset);
-#endif
 
 				break;
 			}
@@ -260,9 +244,9 @@ namespace RTC
 				{
 					// Notify the Node DataConsumer.
 					auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
-					  this->shared->channelNotifier->GetBufferBuilder(), this->bufferedAmount);
+					  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->bufferedAmount);
 
-					this->shared->channelNotifier->Emit(
+					this->shared->GetChannelNotifier()->Emit(
 					  this->id,
 					  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
 					  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
@@ -284,15 +268,6 @@ namespace RTC
 				{
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
-
-#ifdef MS_SCTP_STACK
-				// TODO: SCTP
-#else
-				if (!this->sctpAssociation)
-				{
-					MS_THROW_ERROR("no SCTP association present");
-				}
-#endif
 
 				const auto* body    = request->data->body_as<FBS::DataConsumer::SendRequest>();
 				const uint8_t* data = body->data()->Data();
@@ -441,7 +416,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer paused [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_PAUSE);
 	}
 
@@ -458,7 +433,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer resumed [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_RESUME);
 	}
 
@@ -480,7 +455,7 @@ namespace RTC
 		MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
 	}
 
-	void DataConsumer::SctpAssociationBufferedAmount(uint32_t bufferedAmount)
+	void DataConsumer::SetSctpAssociationBufferedAmount(uint32_t bufferedAmount)
 	{
 		MS_TRACE();
 
@@ -497,9 +472,9 @@ namespace RTC
 
 			// Notify the Node DataConsumer.
 			auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
-			  this->shared->channelNotifier->GetBufferBuilder(), this->bufferedAmount);
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->bufferedAmount);
 
-			this->shared->channelNotifier->Emit(
+			this->shared->GetChannelNotifier()->Emit(
 			  this->id,
 			  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
 			  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
@@ -511,7 +486,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_SCTP_SENDBUFFER_FULL);
 	}
 
@@ -525,7 +500,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer closed [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_CLOSE);
 
 		this->listener->OnDataConsumerDataProducerClosed(this);

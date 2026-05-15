@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -88,17 +89,9 @@ namespace RTC
 
 			void SetReconfigurationRequestSequenceNumber(uint32_t value);
 
-			uint16_t GetNumberOfStreams() const
-			{
-				return GetVariableLengthValueLength() / 2;
-			}
+			std::vector<uint16_t> GetStreamIds() const;
 
-			uint16_t GetStreamAt(uint16_t idx) const
-			{
-				return Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 2));
-			}
-
-			void AddStream(uint16_t stream);
+			void AddStreamId(uint16_t streamId);
 
 		protected:
 			IncomingSsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final;
@@ -110,6 +103,17 @@ namespace RTC
 			size_t GetHeaderLength() const final
 			{
 				return IncomingSsnResetRequestParameter::IncomingSsnResetRequestParameterHeaderLength;
+			}
+
+		private:
+			uint16_t GetNumberOfStreams() const
+			{
+				return GetVariableLengthValueLength() / 2;
+			}
+
+			uint16_t GetStreamAt(uint16_t idx) const
+			{
+				return Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 2));
 			}
 		};
 	} // namespace SCTP

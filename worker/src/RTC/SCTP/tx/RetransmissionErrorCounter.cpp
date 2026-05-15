@@ -73,7 +73,7 @@ namespace RTC
 
 			if (this->counter > 0)
 			{
-				MS_DEBUG_DEV("recovered from counter=%zu");
+				MS_DEBUG_DEV("recovered from counter %zu", this->counter);
 
 				this->counter = 0;
 			}

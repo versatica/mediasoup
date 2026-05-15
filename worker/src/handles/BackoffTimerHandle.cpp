@@ -8,22 +8,34 @@
 
 /* Instance methods. */
 
-BackoffTimerHandle::BackoffTimerHandle(
-  Listener* listener,
-  uint64_t baseTimeoutMs,
-  BackoffAlgorithm backoffAlgorithm,
-  std::optional<uint64_t> maxBackoffTimeoutMs,
-  std::optional<size_t> maxRestarts)
-  : listener(listener),
-    baseTimeoutMs(baseTimeoutMs),
-    backoffAlgorithm(backoffAlgorithm),
-    maxBackoffTimeoutMs(maxBackoffTimeoutMs),
-    maxRestarts(maxRestarts)
+BackoffTimerHandle::BackoffTimerHandle(BackoffTimerHandleOptions options)
+  : listener(options.listener),
+    label(std::move(options.label)),
+    baseTimeoutMs(options.baseTimeoutMs),
+    backoffAlgorithm(options.backoffAlgorithm),
+    maxBackoffTimeoutMs(options.maxBackoffTimeoutMs),
+    maxRestarts(options.maxRestarts)
 {
 	MS_TRACE();
 
-	// NOTE: This may throw.
-	SetBaseTimeoutMs(baseTimeoutMs);
+	if (!this->listener)
+	{
+		MS_THROW_TYPE_ERROR("options.listener must be given");
+	}
+
+	if (this->label.empty())
+	{
+		MS_THROW_TYPE_ERROR("options.label must be given");
+	}
+
+	if (this->baseTimeoutMs > BackoffTimerHandleInterface::MaxTimeoutMs)
+	{
+		MS_THROW_ERROR(
+		  "[%s] base timeout (%" PRIu64 " ms) cannot be greater than %" PRIu64 " ms",
+		  this->label.c_str(),
+		  this->baseTimeoutMs,
+		  BackoffTimerHandleInterface::MaxTimeoutMs);
+	}
 
 	this->timer = new TimerHandle(this);
 }
@@ -60,12 +72,13 @@ void BackoffTimerHandle::SetBaseTimeoutMs(uint64_t baseTimeoutMs)
 {
 	MS_TRACE();
 
-	if (baseTimeoutMs > BackoffTimerHandle::MaxTimeoutMs)
+	if (baseTimeoutMs > BackoffTimerHandleInterface::MaxTimeoutMs)
 	{
 		MS_THROW_ERROR(
-		  "base timeout (%" PRIu64 " ms) cannot be greater than %" PRIu64 " ms",
+		  "[%s] base timeout (%" PRIu64 " ms) cannot be greater than %" PRIu64 " ms",
+		  this->label.c_str(),
 		  baseTimeoutMs,
-		  BackoffTimerHandle::MaxTimeoutMs);
+		  BackoffTimerHandleInterface::MaxTimeoutMs);
 	}
 
 	this->baseTimeoutMs = baseTimeoutMs;
@@ -88,7 +101,7 @@ uint64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 		{
 			auto timeoutMs = this->baseTimeoutMs;
 
-			while (expirationCount > 0 && timeoutMs < BackoffTimerHandle::MaxTimeoutMs)
+			while (expirationCount > 0 && timeoutMs < BackoffTimerHandleInterface::MaxTimeoutMs)
 			{
 				timeoutMs *= 2;
 				--expirationCount;
@@ -99,21 +112,21 @@ uint64_t BackoffTimerHandle::ComputeNextTimeoutMs() const
 				}
 			}
 
-			return std::min<uint64_t>(timeoutMs, BackoffTimerHandle::MaxTimeoutMs);
+			return std::min<uint64_t>(timeoutMs, BackoffTimerHandleInterface::MaxTimeoutMs);
 		}
 
 			NO_DEFAULT_GCC();
 	}
 }
 
-void BackoffTimerHandle::OnTimer(TimerHandle* timer)
+void BackoffTimerHandle::OnTimer(TimerHandleInterface* /*timer*/)
 {
 	MS_TRACE();
 
 	this->expirationCount++;
 
 	// Compute whether the BackoffTimer should still be running after this timeout
-	// expiration so the parent can check IsRunning() within the OnTimer()
+	// expiration so the parent can check IsRunning() within the `OnBackoffTimer()`
 	// callback.
 	this->running =
 	  !this->maxRestarts.has_value() || this->expirationCount <= this->maxRestarts.value();
@@ -123,7 +136,7 @@ void BackoffTimerHandle::OnTimer(TimerHandle* timer)
 
 	// Call the listener by passing base timeout as reference so the parent has
 	// a chance to change it and affect the next timeout.
-	this->listener->OnTimer(this, baseTimeoutMs, stop);
+	this->listener->OnBackoffTimer(this, baseTimeoutMs, stop);
 
 	// If the parent has set `stop` to true it means that it has deleted the
 	// instance, so stop here.

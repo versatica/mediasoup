@@ -1,8 +1,11 @@
 #include "RTC/SCTP/packet/FuzzerPacket.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 
-thread_local uint8_t PacketSerializeBuffer[65536];
-thread_local uint8_t PacketCloneBuffer[65536];
+namespace
+{
+	thread_local uint8_t PacketSerializeBuffer[65536];
+	thread_local uint8_t PacketCloneBuffer[65536];
+} // namespace
 
 void FuzzerRtcSctpPacket::Fuzz(const uint8_t* data, size_t len)
 {

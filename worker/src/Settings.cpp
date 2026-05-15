@@ -52,15 +52,16 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	// clang-format off
 	struct option options[] =
 	{
-		{ "logLevel",             optional_argument, nullptr, 'l' },
-		{ "logTags",              optional_argument, nullptr, 't' },
-		{ "rtcMinPort",           optional_argument, nullptr, 'm' },
-		{ "rtcMaxPort",           optional_argument, nullptr, 'M' },
-		{ "dtlsCertificateFile",  optional_argument, nullptr, 'c' },
-		{ "dtlsPrivateKeyFile",   optional_argument, nullptr, 'p' },
-		{ "libwebrtcFieldTrials", optional_argument, nullptr, 'W' },
-		{ "disableLiburing",      optional_argument, nullptr, 'd' },
-		{ nullptr,                0,                 nullptr,  0  }
+		{ .name="logLevel",             .has_arg=optional_argument, .flag=nullptr, .val='l' },
+		{ .name="logTags",              .has_arg=optional_argument, .flag=nullptr, .val='t' },
+		{ .name="rtcMinPort",           .has_arg=optional_argument, .flag=nullptr, .val='m' },
+		{ .name="rtcMaxPort",           .has_arg=optional_argument, .flag=nullptr, .val='M' },
+		{ .name="dtlsCertificateFile",  .has_arg=optional_argument, .flag=nullptr, .val='c' },
+		{ .name="dtlsPrivateKeyFile",   .has_arg=optional_argument, .flag=nullptr, .val='p' },
+		{ .name="libwebrtcFieldTrials", .has_arg=optional_argument, .flag=nullptr, .val='W' },
+		{ .name="disableLiburing",      .has_arg=optional_argument, .flag=nullptr, .val='d' },
+		{ .name="useBuiltInSctpStack",  .has_arg=optional_argument, .flag=nullptr, .val='s' },
+		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  }
 	};
 	// clang-format on
 	std::string stringValue;
@@ -165,7 +166,23 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 				if (stringValue == "true")
 				{
-					Settings::configuration.liburingDisabled = true;
+					Settings::configuration.disableLiburing = true;
+				}
+
+				break;
+			}
+
+			case 's':
+			{
+				stringValue = std::string(optarg);
+
+				if (stringValue == "true")
+				{
+					Settings::configuration.useBuiltInSctpStack = true;
+				}
+				else
+				{
+					Settings::configuration.useBuiltInSctpStack = false;
 				}
 
 				break;
@@ -382,6 +399,9 @@ void Settings::PrintConfiguration()
 		MS_DEBUG_TAG(
 		  info, "  libwebrtcFieldTrials: %s", Settings::configuration.libwebrtcFieldTrials.c_str());
 	}
+	MS_DEBUG_TAG(info, "  disableLiburing: %s", Settings::configuration.disableLiburing ? "yes" : "no");
+	MS_DEBUG_TAG(
+	  info, "  useBuiltInSctpStack: %s", Settings::configuration.useBuiltInSctpStack ? "yes" : "no");
 
 	MS_DEBUG_TAG(info, "</configuration>");
 }

@@ -1,9 +1,9 @@
 #ifndef MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 #define MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 
+#include "SharedInterface.hpp"
 #include "RTC/RtpObserver.hpp"
-#include "RTC/Shared.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <vector>
 
@@ -14,13 +14,15 @@
 // https://github.com/jitsi/jitsi-utils/blob/master/src/main/java/org/jitsi/utils/dsi/DominantSpeakerIdentification.java
 namespace RTC
 {
-	class ActiveSpeakerObserver : public RTC::RtpObserver, public TimerHandle::Listener
+	class ActiveSpeakerObserver : public RTC::RtpObserver, public TimerHandleInterface::Listener
 	{
 	private:
 		class Speaker
 		{
 		public:
-			Speaker();
+			explicit Speaker(SharedInterface* shared);
+
+		public:
 			void EvalActivityScores();
 			double GetActivityScore(uint8_t interval) const;
 			void LevelChanged(uint32_t level, uint64_t now);
@@ -56,7 +58,7 @@ namespace RTC
 		class ProducerSpeaker
 		{
 		public:
-			explicit ProducerSpeaker(RTC::Producer* producer);
+			ProducerSpeaker(SharedInterface* shared, RTC::Producer* producer);
 			~ProducerSpeaker();
 
 		public:
@@ -69,7 +71,7 @@ namespace RTC
 
 	public:
 		ActiveSpeakerObserver(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::RtpObserver::Listener* listener,
 		  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options);
@@ -89,14 +91,14 @@ namespace RTC
 		bool CalculateActiveSpeaker();
 		void TimeoutIdleLevels(uint64_t now);
 
-		/* Pure virtual methods inherited from TimerHandle. */
+		/* Pure virtual methods inherited from TimerHandleInterface. */
 	protected:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		double relativeSpeachActivities[RelativeSpeachActivitiesLen]{};
 		std::string dominantId;
-		TimerHandle* periodicTimer{ nullptr };
+		TimerHandleInterface* periodicTimer{ nullptr };
 		uint16_t interval{ 300u };
 		// Map of ProducerSpeakers indexed by Producer id.
 		absl::flat_hash_map<std::string, ProducerSpeaker*> mapProducerSpeakers;

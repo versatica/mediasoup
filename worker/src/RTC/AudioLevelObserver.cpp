@@ -13,7 +13,7 @@ namespace RTC
 	/* Instance methods. */
 
 	AudioLevelObserver::AudioLevelObserver(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::RtpObserver::Listener* listener,
 	  const FBS::AudioLevelObserver::AudioLevelObserverOptions* options)
@@ -39,12 +39,12 @@ namespace RTC
 			this->interval = 5000;
 		}
 
-		this->periodicTimer = new TimerHandle(this);
+		this->periodicTimer = this->shared->CreateTimer(this);
 
 		this->periodicTimer->Start(this->interval, this->interval);
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ nullptr);
@@ -54,7 +54,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		delete this->periodicTimer;
 	}
@@ -127,7 +127,7 @@ namespace RTC
 		{
 			this->silence = true;
 
-			this->shared->channelNotifier->Emit(
+			this->shared->GetChannelNotifier()->Emit(
 			  this->id, FBS::Notification::Event::AUDIOLEVELOBSERVER_SILENCE);
 		}
 	}
@@ -179,13 +179,15 @@ namespace RTC
 			{
 				volumes.emplace_back(
 				  FBS::AudioLevelObserver::CreateVolumeDirect(
-				    this->shared->channelNotifier->GetBufferBuilder(), rit->second->id.c_str(), rit->first));
+				    this->shared->GetChannelNotifier()->GetBufferBuilder(),
+				    rit->second->id.c_str(),
+				    rit->first));
 			}
 
 			auto notification = FBS::AudioLevelObserver::CreateVolumesNotificationDirect(
-			  this->shared->channelNotifier->GetBufferBuilder(), &volumes);
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(), &volumes);
 
-			this->shared->channelNotifier->Emit(
+			this->shared->GetChannelNotifier()->Emit(
 			  this->id,
 			  FBS::Notification::Event::AUDIOLEVELOBSERVER_VOLUMES,
 			  FBS::Notification::Body::AudioLevelObserver_VolumesNotification,
@@ -195,7 +197,7 @@ namespace RTC
 		{
 			this->silence = true;
 
-			this->shared->channelNotifier->Emit(
+			this->shared->GetChannelNotifier()->Emit(
 			  this->id, FBS::Notification::Event::AUDIOLEVELOBSERVER_SILENCE);
 		}
 	}
@@ -213,7 +215,7 @@ namespace RTC
 		}
 	}
 
-	inline void AudioLevelObserver::OnTimer(TimerHandle* /*timer*/)
+	inline void AudioLevelObserver::OnTimer(TimerHandleInterface* /*timer*/)
 	{
 		MS_TRACE();
 

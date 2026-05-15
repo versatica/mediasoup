@@ -1,7 +1,7 @@
 #include "common.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnknownErrorCause.hpp"
-#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -33,6 +33,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*causeCode*/ static_cast<RTC::SCTP::ErrorCause::ErrorCauseCode>(999),
 		  /*unknownCode*/ true);
 
@@ -60,6 +61,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 		  /*buffer*/ sctpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*causeCode*/ static_cast<RTC::SCTP::ErrorCause::ErrorCauseCode>(999),
 		  /*unknownCode*/ true);
 
@@ -90,6 +92,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 		  /*buffer*/ sctpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*causeCode*/ static_cast<RTC::SCTP::ErrorCause::ErrorCauseCode>(999),
 		  /*unknownCode*/ true);
 

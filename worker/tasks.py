@@ -369,7 +369,7 @@ def format(ctx):
         );
 
 
-@task
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true'), flatc])
 def tidy(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules
@@ -383,7 +383,7 @@ def tidy(ctx):
         );
 
 
-@task
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true'), flatc])
 def tidy_fix(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules and applies
@@ -398,7 +398,7 @@ def tidy_fix(ctx):
         );
 
 
-@task(pre=[setup, flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true'), flatc])
 def test(ctx):
     """
     Run worker tests
@@ -430,7 +430,7 @@ def test(ctx):
         );
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=address -Db_lundef=false'), flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true -Db_sanitize=address -Db_lundef=false'), flatc])
 def test_asan_address(ctx):
     """
     Run worker test with Address Sanitizer with '-fsanitize=address'
@@ -462,7 +462,7 @@ def test_asan_address(ctx):
         );
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=undefined -Db_lundef=false'), flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_tests=true -Db_sanitize=undefined -Db_lundef=false'), flatc])
 def test_asan_undefined(ctx):
     """
     Run worker test with undefined Sanitizer with -fsanitize=undefined
@@ -496,40 +496,7 @@ def test_asan_undefined(ctx):
         );
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=thread -Db_lundef=false'), flatc])
-def test_asan_thread(ctx):
-    """
-    Run worker test with thread Sanitizer with -fsanitize=thread
-    """
-    with cd_worker():
-        ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-thread',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
-    with cd_worker():
-        ctx.run(
-            f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-thread',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
-
-    mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
-
-    with cd_worker():
-        ctx.run(
-            f'"{BUILD_DIR}/mediasoup-worker-test-asan-thread" --invisibles {mediasoup_test_tags}',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL,
-            # Exit with error if there are issues.
-            env={**os.environ, 'TSAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1'}
-        );
-
-
-@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=address -Db_lundef=false'), flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Dms_build_fuzzer=true -Db_sanitize=address -Db_lundef=false'), flatc])
 def fuzzer(ctx):
     """
     Build the mediasoup-worker-fuzzer binary (which uses libFuzzer)
@@ -636,6 +603,44 @@ def docker_alpine_run(ctx):
     with cd_worker():
         ctx.run(
             f'"{DOCKER}" run --name=mediasoupDockerAlpine -it --rm --privileged --cap-add SYS_PTRACE -v "{WORKER_DIR}/../:/foo bar/mediasoup" mediasoup/docker-alpine:latest',
+            echo=True,
+            pty=True, # NOTE: Needed to enter the terminal of the Docker image.
+            shell=SHELL
+        );
+
+
+@task
+def docker_386(ctx):
+    """
+    Build a 386 Linux Debian (32 bits arch) Docker image
+    """
+    if os.getenv('DOCKER_NO_CACHE') == 'true':
+        with cd_worker():
+            ctx.run(
+                f'"{DOCKER}" build --platform linux/386 -f Dockerfile.386 --no-cache --tag mediasoup/docker-386:latest .',
+                echo=True,
+                pty=PTY_SUPPORTED,
+                shell=SHELL
+            );
+    else:
+        with cd_worker():
+            ctx.run(
+                f'"{DOCKER}" build --platform linux/386 -f Dockerfile.386 --tag mediasoup/docker-386:latest .',
+                echo=True,
+                pty=PTY_SUPPORTED,
+                shell=SHELL
+            );
+
+
+@task
+def docker_386_run(ctx):
+    """
+    Run a container of the 386 Linux Debian (32 bits arch) Docker image created
+    in the docker_386 task
+    """
+    with cd_worker():
+        ctx.run(
+            f'"{DOCKER}" run --name=mediasoupDocker386 -it --rm --privileged --cap-add SYS_PTRACE -v "{WORKER_DIR}/../:/foo bar/mediasoup" mediasoup/docker-386:latest',
             echo=True,
             pty=True, # NOTE: Needed to enter the terminal of the Docker image.
             shell=SHELL

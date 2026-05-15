@@ -1,8 +1,8 @@
 #ifndef MS_DEP_LIBURING_HPP
 #define MS_DEP_LIBURING_HPP
 
-#include "DepLibUV.hpp"
 #include "FBS/liburing.h"
+#include <uv.h>
 #include <functional>
 #include <liburing.h>
 #include <queue>
@@ -52,8 +52,8 @@ public:
 	class LibUring;
 
 	// Whether liburing is enabled or not after runtime checks.
-	thread_local static bool enabled;
-	thread_local static LibUring* liburing;
+	static thread_local bool enabled;
+	static thread_local LibUring* liburing;
 
 public:
 	// Singleton.

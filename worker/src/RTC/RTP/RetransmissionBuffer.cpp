@@ -142,7 +142,7 @@ namespace RTC
 			// buffer, however its timestamp is higher. If so, clear the whole buffer.
 			if (
 			  RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, newestItem->sequenceNumber) &&
-			  Utils::Number<uint32_t>::IsHigherThan(timestamp, newestItem->timestamp))
+			  Utils::Number::IsHigherThan<uint32_t>(timestamp, newestItem->timestamp))
 			{
 				MS_WARN_TAG(
 				  rtp,
@@ -166,7 +166,7 @@ namespace RTC
 			// packet loss, received packet has higher timestamp but "older" seq number
 			// than the newest packet in the buffer and, if so, use it to clear too old
 			// packets rather than the newest packet in the buffer.
-			auto newestTimestamp = Utils::Number<uint32_t>::IsHigherThan(timestamp, newestItem->timestamp)
+			auto newestTimestamp = Utils::Number::IsHigherThan<uint32_t>(timestamp, newestItem->timestamp)
 			                         ? timestamp
 			                         : newestItem->timestamp;
 
@@ -205,7 +205,7 @@ namespace RTC
 
 				// Ensure that the timestamp of the packet is equal or higher than the
 				// timestamp of the newest stored packet.
-				if (Utils::Number<uint32_t>::IsLowerThan(timestamp, newestItem->timestamp))
+				if (Utils::Number::IsLowerThan<uint32_t>(timestamp, newestItem->timestamp))
 				{
 					MS_WARN_TAG(
 					  rtp,
@@ -292,7 +292,7 @@ namespace RTC
 
 				// Ensure that the timestamp of the packet is equal or less than the
 				// timestamp of the oldest stored packet.
-				if (Utils::Number<uint32_t>::IsHigherThan(timestamp, oldestItem->timestamp))
+				if (Utils::Number::IsHigherThan<uint32_t>(timestamp, oldestItem->timestamp))
 				{
 					MS_WARN_TAG(
 					  rtp,
@@ -571,7 +571,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (Utils::Number<uint32_t>::IsHigherThan(timestamp, newestTimestamp))
+			if (Utils::Number::IsHigherThan<uint32_t>(timestamp, newestTimestamp))
 			{
 				return false;
 			}

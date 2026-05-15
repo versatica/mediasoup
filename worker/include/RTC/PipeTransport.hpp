@@ -1,8 +1,8 @@
 #ifndef MS_RTC_PIPE_TRANSPORT_HPP
 #define MS_RTC_PIPE_TRANSPORT_HPP
 
+#include "SharedInterface.hpp"
 #include "FBS/pipeTransport.h"
-#include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -19,7 +19,7 @@ namespace RTC
 
 	public:
 		PipeTransport(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  const FBS::PipeTransport::PipeTransportOptions* options);

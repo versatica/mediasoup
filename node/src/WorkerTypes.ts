@@ -36,12 +36,14 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 
 	/**
 	 * Minimun RTC port for ICE, DTLS, RTP, etc. Default 10000.
+	 *
 	 * @deprecated Use |portRange| in TransportListenInfo object instead.
 	 */
 	rtcMinPort?: number;
 
 	/**
 	 * Maximum RTC port for ICE, DTLS, RTP, etc. Default 59999.
+	 *
 	 * @deprecated Use |portRange| in TransportListenInfo object instead.
 	 */
 	rtcMaxPort?: number;
@@ -67,11 +69,9 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 
 	/**
 	 * Field trials for libwebrtc.
-	 * @private
 	 *
-	 * NOTE: For advanced users only. An invalid value will make the worker crash.
-	 * Default value is
-	 * "WebRTC-Bwe-AlrLimitedBackoff/Enabled/".
+	 * @remarks For advanced users only. An invalid value will make the worker
+	 * crash. Default value is "WebRTC-Bwe-AlrLimitedBackoff/Enabled/".
 	 */
 	libwebrtcFieldTrials?: string;
 
@@ -79,6 +79,11 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 	 * Disable liburing (io_uring) despite it's supported in current host.
 	 */
 	disableLiburing?: boolean;
+
+	/**
+	 * Use the mediasoup built-in SCTP stack instead usrsctp.
+	 */
+	useBuiltInSctpStack?: boolean;
 
 	/**
 	 * Custom application data.

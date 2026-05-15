@@ -303,23 +303,20 @@ pub enum SctpState {
 }
 
 /// DTLS role.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(
+    Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize, Default,
+)]
 #[serde(rename_all = "camelCase")]
 pub enum DtlsRole {
     /// The DTLS role is determined based on the resolved ICE role (the `Controlled` role acts as
     /// DTLS client, the `Controlling` role acts as DTLS server).
     /// Since mediasoup is a ICE Lite implementation it always behaves as ICE `Controlled`.
+    #[default]
     Auto,
     /// DTLS client role.
     Client,
     /// DTLS server role.
     Server,
-}
-
-impl Default for DtlsRole {
-    fn default() -> Self {
-        Self::Auto
-    }
 }
 
 /// The hash function algorithm (as defined in the "Hash function Textual Names" registry initially

@@ -335,6 +335,104 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 #endif
 	}
 
+	SECTION("PadDownTo4Bytes()")
+	{
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 1u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 2u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 3u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 4u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 5u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 9u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 15u }) == 12u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 254u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint8_t{ 255u }) == 252u);
+
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 1u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 2u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 3u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 4u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 5u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 9u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 15u }) == 12u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 254u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 255u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 256u }) == 256u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 65532u }) == 65532u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint16_t{ 65535u }) == 65532u);
+
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 1u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 2u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 3u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 4u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 5u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 9u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 15u }) == 12u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 254u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 255u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 256u }) == 256u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 65532u }) == 65532u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 65535u }) == 65532u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 4294967288u }) == 4294967288u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 4294967292u }) == 4294967292u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint32_t{ 4294967295u }) == 4294967292u);
+
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 1u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 2u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 3u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 4u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 5u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 9u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 15u }) == 12u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 254u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 255u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 256u }) == 256u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 65532u }) == 65532u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 65535u }) == 65532u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 4294967288u }) == 4294967288u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 4294967292u }) == 4294967292u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 4294967295u }) == 4294967292u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 18446744073709551608u }) == 18446744073709551608u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 18446744073709551612u }) == 18446744073709551612u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(uint64_t{ 18446744073709551615u }) == 18446744073709551612u);
+
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 1u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 2u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 3u }) == 0u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 4u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 5u }) == 4u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 9u }) == 8u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 15u }) == 12u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 254u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 255u }) == 252u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 256u }) == 256u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 65532u }) == 65532u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 65535u }) == 65532u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 4294967288u }) == 4294967288u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 4294967292u }) == 4294967292u);
+
+// Check if size_t in current host is 64 bits. Otherwise the test would fail.
+#if SIZE_MAX == 0xFFFFFFFFFFFFFFFFu
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 18446744073709551608u }) == 18446744073709551608u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 18446744073709551612u }) == 18446744073709551612u);
+		REQUIRE(Utils::Byte::PadDownTo4Bytes(size_t{ 18446744073709551615u }) == 18446744073709551612u);
+#endif
+	}
+
 	SECTION("PadTo8Bytes()")
 	{
 		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 0u }) == 0u);

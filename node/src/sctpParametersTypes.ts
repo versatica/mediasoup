@@ -8,21 +8,11 @@ export type SctpCapabilities = {
  * (to be used by DataConsumers), while MIS refers to the maximum number of
  * incoming SCTP streams that the server side transport can receive (to be used
  * by DataProducers). So, if the server side transport will just be used to
- * create data producers (but no data consumers), OS can be low (~1). However,
- * if data consumers are desired on the server side transport, OS must have a
- * proper value and such a proper value depends on whether the remote endpoint
- * supports  SCTP_ADD_STREAMS extension or not.
- *
- * libwebrtc (Chrome, Safari, etc) does not enable SCTP_ADD_STREAMS so, if data
- * consumers are required,  OS should be 1024 (the maximum number of DataChannels
- * that libwebrtc enables).
- *
- * Firefox does enable SCTP_ADD_STREAMS so, if data consumers are required, OS
- * can be lower (16 for instance). The mediasoup transport will allocate and
- * announce more outgoing SCTM streams when needed.
+ * create data producers (but no data consumers), OS can be low (~1).
  *
  * mediasoup-client provides specific per browser/version OS and MIS values via
- * the device.sctpCapabilities getter.
+ * the device.sctpCapabilities getter. However those values must be reversed
+ * when provided to the mediasoup server transport.
  */
 export type NumSctpStreams = {
 	/**

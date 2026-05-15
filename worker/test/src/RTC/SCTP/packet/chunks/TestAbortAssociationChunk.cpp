@@ -1,10 +1,10 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
 #include "RTC/SCTP/packet/errorCauses/StaleCookieErrorCause.hpp"
-#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -47,7 +47,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetT() == true);
 
-		auto* errorCause1 =
+		const auto* errorCause1 =
 		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(
@@ -268,7 +268,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetT() == true);
 
-		auto* obtainedErrorCause1 =
+		const auto* obtainedErrorCause1 =
 		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(

@@ -19,12 +19,15 @@ const CLANG_FORMAT_PATHS = [
 	'../test/include/**/**.hpp',
 	'../fuzzer/src/**/*.cpp',
 	'../fuzzer/include/**/*.hpp',
+	'../mocks/src/**/*.cpp',
+	'../mocks/include/**/*.hpp',
 ];
 
 const CLANG_TIDY_PATHS = [
 	'../src/**/*.cpp',
 	'../test/src/**/*.cpp',
 	'../fuzzer/src/**/*.cpp',
+	'../mocks/src/**/*.cpp',
 ];
 
 const task = process.argv.slice(2).join(' ');
@@ -287,7 +290,7 @@ function getRootDir() {
 }
 
 function getBuildDir() {
-	const workerDir = path.join(ROOT_DIR, 'worker/');
+	const workerDir = path.join(ROOT_DIR, 'worker');
 	const workerOutDir = process.env.MEDIASOUP_OUT_DIR ?? `${workerDir}/out`;
 	const mediasoupBuildtype = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
 	const workerInstallDir =

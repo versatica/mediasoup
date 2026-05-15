@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SvcConsumer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -23,7 +22,7 @@ namespace RTC
 	/* Instance methods. */
 
 	SvcConsumer::SvcConsumer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  const std::string& producerId,
 	  RTC::OldConsumer::Listener* listener,
@@ -108,7 +107,7 @@ namespace RTC
 		CreateRtpStream();
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ nullptr);
@@ -118,7 +117,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		delete this->rtpStream;
 		this->targetLayerRetransmissionBuffer.clear();
@@ -389,7 +388,7 @@ namespace RTC
 		uint32_t requiredBitrate{ 0u };
 		int16_t spatialLayer{ 0 };
 		int16_t temporalLayer{ 0 };
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 
 		for (; spatialLayer < this->producerRtpStream->GetSpatialLayers(); ++spatialLayer)
 		{
@@ -545,7 +544,7 @@ namespace RTC
 				  this->encodingContext->GetCurrentSpatialLayer(),
 				  this->encodingContext->GetTargetSpatialLayer());
 
-				this->lastBweDowngradeAtMs = DepLibUV::GetTimeMs();
+				this->lastBweDowngradeAtMs = this->shared->GetTimeMs();
 			}
 		}
 	}
@@ -561,7 +560,7 @@ namespace RTC
 			return 0u;
 		}
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 		uint32_t desiredBitrate{ 0u };
 
 		// When using K-SVC each spatial layer is independent of the others.
@@ -1091,7 +1090,8 @@ namespace RTC
 			}
 		}
 
-		this->rtpStream = new RTC::RTP::RtpStreamSend(this, params, this->rtpParameters.mid);
+		this->rtpStream =
+		  new RTC::RTP::RtpStreamSend(this, this->shared, params, this->rtpParameters.mid);
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.
@@ -1156,7 +1156,7 @@ namespace RTC
 		// Start with no layers.
 		newTargetLayers.Reset();
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)
@@ -1306,12 +1306,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto scoreOffset = FillBufferScore(this->shared->channelNotifier->GetBufferBuilder());
+		auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
 
 		auto notificationOffset = FBS::Consumer::CreateScoreNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), scoreOffset);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), scoreOffset);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::CONSUMER_SCORE,
 		  FBS::Notification::Body::Consumer_ScoreNotification,
@@ -1333,15 +1333,15 @@ namespace RTC
 		if (this->encodingContext->GetCurrentSpatialLayer() >= 0)
 		{
 			layersOffset = FBS::Consumer::CreateConsumerLayers(
-			  this->shared->channelNotifier->GetBufferBuilder(),
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  this->encodingContext->GetCurrentSpatialLayer(),
 			  this->encodingContext->GetCurrentTemporalLayer());
 		}
 
 		auto notificationOffset = FBS::Consumer::CreateLayersChangeNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), layersOffset);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), layersOffset);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::CONSUMER_LAYERS_CHANGE,
 		  FBS::Notification::Body::Consumer_LayersChangeNotification,

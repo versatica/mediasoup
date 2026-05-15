@@ -15,7 +15,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t EncryptBufferSize{ 65536 };
-	alignas(4) thread_local uint8_t EncryptBuffer[EncryptBufferSize];
+	alignas(4) static thread_local uint8_t EncryptBuffer[EncryptBufferSize];
 
 	/* Class methods. */
 

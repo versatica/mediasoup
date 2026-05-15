@@ -21,7 +21,7 @@ namespace Channel
 		using Method = FBS::Request::Method;
 
 	public:
-		thread_local static flatbuffers::FlatBufferBuilder bufferBuilder;
+		static thread_local flatbuffers::FlatBufferBuilder bufferBuilder;
 		static const absl::flat_hash_map<FBS::Request::Method, const char*> Method2String;
 
 	public:

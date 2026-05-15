@@ -2,21 +2,15 @@
 #define MS_RTC_DATA_CONSUMER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/SctpDictionaries.hpp"
-#include "RTC/Shared.hpp"
 #include <absl/container/flat_hash_set.h>
 #include <string>
 
 namespace RTC
 {
-#ifndef MS_SCTP_STACK
-	// Define class here such that we can use it even though we don't know what it looks like yet
-	// (this is to avoid circular dependencies).
-	class SctpAssociation;
-#endif
-
 	class DataConsumer : public Channel::ChannelSocket::RequestHandler
 	{
 	protected:
@@ -34,7 +28,9 @@ namespace RTC
 			  const uint8_t* msg,
 			  size_t len,
 			  uint32_t ppid,
-			  onQueuedCallback* cb)                                                        = 0;
+			  onQueuedCallback* cb) = 0;
+			virtual void OnDataConsumerNeedBufferedAmount(
+			  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount)                   = 0;
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
 		};
 
@@ -47,12 +43,9 @@ namespace RTC
 
 	public:
 		DataConsumer(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  const std::string& dataProducerId,
-#ifndef MS_SCTP_STACK
-		  RTC::SctpAssociation* sctpAssociation,
-#endif
 		  RTC::DataConsumer::Listener* listener,
 		  const FBS::Transport::ConsumeDataRequest* data,
 		  size_t maxMessageSize);
@@ -99,7 +92,7 @@ namespace RTC
 		void DataProducerResumed();
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
-		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
+		void SetSctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void SctpAssociationSendBufferFull();
 		void DataProducerClosed();
 		bool SendMessage(
@@ -121,10 +114,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		RTC::Shared* shared{ nullptr };
-#ifndef MS_SCTP_STACK
-		RTC::SctpAssociation* sctpAssociation{ nullptr };
-#endif
+		SharedInterface* shared{ nullptr };
 		RTC::DataConsumer::Listener* listener{ nullptr };
 		size_t maxMessageSize{ 0u };
 		// Others.

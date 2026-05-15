@@ -6,9 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#ifdef MS_SCTP_STACK
 #include "RTC/SCTP/packet/Packet.hpp"
-#endif
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -34,7 +32,7 @@ namespace RTC
 	/* Instance methods. */
 
 	PlainTransport::PlainTransport(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::PlainTransport::PlainTransportOptions* options)
@@ -245,7 +243,7 @@ namespace RTC
 			}
 
 			// NOTE: This may throw.
-			this->shared->channelMessageRegistrator->RegisterHandler(
+			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*channelNotificationHandler*/ this);
@@ -270,7 +268,7 @@ namespace RTC
 		// the class instance.
 		Destroying();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		delete this->udpSocket;
 		this->udpSocket = nullptr;
@@ -905,11 +903,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-#ifdef MS_SCTP_STACK
-		// TODO: SCTP
-#else
-		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
-#endif
+		if (Settings::configuration.useBuiltInSctpStack)
+		{
+			// TODO: SCTP
+		}
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
+		else
+		{
+			this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+		}
 	}
 
 	bool PlainTransport::SendSctpData(const uint8_t* data, size_t len)
@@ -970,11 +972,12 @@ namespace RTC
 			OnRtpDataReceived(tuple, data, len, bufferLen);
 		}
 		// Check if it's SCTP.
-#ifdef MS_SCTP_STACK
-		else if (RTC::SCTP::Packet::IsSctp(data, len))
-#else
-		else if (RTC::SctpAssociation::IsSctp(data, len))
-#endif
+		else if (Settings::configuration.useBuiltInSctpStack && RTC::SCTP::Packet::IsSctp(data, len))
+		{
+			OnSctpDataReceived(tuple, data, len);
+		}
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
+		else if (!Settings::configuration.useBuiltInSctpStack && RTC::SctpAssociation::IsSctp(data, len))
 		{
 			OnSctpDataReceived(tuple, data, len);
 		}
@@ -1228,11 +1231,11 @@ namespace RTC
 
 	inline void PlainTransport::EmitTuple() const
 	{
-		auto tuple        = this->tuple->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
+		auto tuple = this->tuple->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
 		auto notification = FBS::PlainTransport::CreateTupleNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), tuple);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), tuple);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::PLAINTRANSPORT_TUPLE,
 		  FBS::Notification::Body::PlainTransport_TupleNotification,
@@ -1241,11 +1244,12 @@ namespace RTC
 
 	inline void PlainTransport::EmitRtcpTuple() const
 	{
-		auto rtcpTuple = this->rtcpTuple->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
+		auto rtcpTuple =
+		  this->rtcpTuple->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
 		auto notification = FBS::PlainTransport::CreateRtcpTupleNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), rtcpTuple);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtcpTuple);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::PLAINTRANSPORT_RTCP_TUPLE,
 		  FBS::Notification::Body::PlainTransport_RtcpTupleNotification,

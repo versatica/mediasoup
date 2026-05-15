@@ -2,6 +2,7 @@
 #define MS_RTC_ROUTER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
@@ -10,7 +11,6 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpObserver.hpp"
-#include "RTC/Shared.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
 #include <absl/container/flat_hash_map.h>
@@ -36,7 +36,7 @@ namespace RTC
 		};
 
 	public:
-		explicit Router(RTC::Shared* shared, const std::string& id, Listener* listener);
+		explicit Router(SharedInterface* shared, const std::string& id, Listener* listener);
 		~Router() override;
 
 	public:
@@ -120,7 +120,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		RTC::Shared* shared{ nullptr };
+		SharedInterface* shared{ nullptr };
 		Listener* listener{ nullptr };
 		// Allocated by this.
 		absl::flat_hash_map<std::string, RTC::Transport*> mapTransports;

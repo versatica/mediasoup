@@ -58,7 +58,7 @@ namespace RTC
 	/* Instance methods. */
 
 	PipeConsumer::PipeConsumer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  const std::string& producerId,
 	  RTC::OldConsumer::Listener* listener,
@@ -83,7 +83,7 @@ namespace RTC
 		CreateRtpStreams();
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ nullptr);
@@ -93,7 +93,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
@@ -804,7 +804,8 @@ namespace RTC
 				}
 			}
 
-			auto* rtpStream = new RTC::RTP::RtpStreamSend(this, params, this->rtpParameters.mid);
+			auto* rtpStream =
+			  new RTC::RTP::RtpStreamSend(this, this->shared, params, this->rtpParameters.mid);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())

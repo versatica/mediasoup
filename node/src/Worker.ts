@@ -1,4 +1,6 @@
-import * as process from 'node:process';
+// NOTE: Must import `process` using default import otherwise we get the
+// `process` namespace and it doesn't have `removeListener()`.
+import process from 'node:process';
 import * as path from 'node:path';
 import type { Duplex } from 'node:stream';
 import { spawn, ChildProcess } from 'node:child_process';
@@ -83,6 +85,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		workerBin,
 		libwebrtcFieldTrials,
 		disableLiburing,
+		useBuiltInSctpStack,
 		appData,
 	}: WorkerSettings<WorkerAppData>) {
 		super();
@@ -137,7 +140,13 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		}
 
 		if (disableLiburing) {
-			spawnArgs.push(`--disableLiburing=true`);
+			spawnArgs.push('--disableLiburing=true');
+		}
+
+		if (useBuiltInSctpStack) {
+			spawnArgs.push('--useBuiltInSctpStack=true');
+		} else {
+			spawnArgs.push('--useBuiltInSctpStack=false');
 		}
 
 		logger.debug(`spawning worker process: ${spawnBin} ${spawnArgs.join(' ')}`);
@@ -286,6 +295,16 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 			}
 		});
 
+		// NOTE: Avoid "Possible EventEmitter memory leak detected" Node warning.
+		const processListenerCount = process.getMaxListeners();
+
+		if (processListenerCount >= 10) {
+			process.setMaxListeners(processListenerCount + 2);
+		}
+
+		process.once('SIGINT', this.onSignal);
+		process.once('SIGTERM', this.onSignal);
+
 		this.handleListenerError();
 	}
 
@@ -339,6 +358,9 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		logger.debug('close()');
 
 		this.#closed = true;
+
+		process.removeListener('SIGINT', this.onSignal);
+		process.removeListener('SIGTERM', this.onSignal);
 
 		// Close every Router.
 		for (const router of this.#routers) {
@@ -586,6 +608,15 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 			);
 		});
 	}
+
+	// NOTE: Arrow method on purpose.
+	private onSignal = (signal: 'SIGINT' | 'SIGTERM'): void => {
+		logger.debug(
+			`signal received, closing the worker process [pid:${this.#pid}, signal:${signal}]`
+		);
+
+		this.close();
+	};
 }
 
 function parseWorkerDumpResponse(binary: FbsWorker.DumpResponse): WorkerDump {

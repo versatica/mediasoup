@@ -2,7 +2,6 @@
 #define MS_CLASS "RTC::SimpleConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -22,7 +21,7 @@ namespace RTC
 	/* Instance methods. */
 
 	SimpleConsumer::SimpleConsumer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  const std::string& producerId,
 	  RTC::OldConsumer::Listener* listener,
@@ -70,7 +69,7 @@ namespace RTC
 		}
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ nullptr);
@@ -80,7 +79,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		delete this->rtpStream;
 		this->targetLayerRetransmissionBuffer.clear();
@@ -258,7 +257,7 @@ namespace RTC
 
 		// Video SimpleConsumer does not really play the BWE game when. However, let's
 		// be honest and try to be nice.
-		auto nowMs          = DepLibUV::GetTimeMs();
+		auto nowMs          = this->shared->GetTimeMs();
 		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
 		if (desiredBitrate < bitrate)
@@ -301,7 +300,7 @@ namespace RTC
 			return 0u;
 		}
 
-		auto nowMs          = DepLibUV::GetTimeMs();
+		auto nowMs          = this->shared->GetTimeMs();
 		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
@@ -781,7 +780,8 @@ namespace RTC
 			}
 		}
 
-		this->rtpStream = new RTC::RTP::RtpStreamSend(this, params, this->rtpParameters.mid);
+		this->rtpStream =
+		  new RTC::RTP::RtpStreamSend(this, this->shared, params, this->rtpParameters.mid);
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.
@@ -849,12 +849,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto scoreOffset = FillBufferScore(this->shared->channelNotifier->GetBufferBuilder());
+		auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
 
 		auto notificationOffset = FBS::Consumer::CreateScoreNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(), scoreOffset);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), scoreOffset);
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::CONSUMER_SCORE,
 		  FBS::Notification::Body::Consumer_ScoreNotification,

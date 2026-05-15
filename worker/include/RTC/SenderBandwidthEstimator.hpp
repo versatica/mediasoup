@@ -2,6 +2,7 @@
 #define MS_RTC_SENDER_BANDWIDTH_ESTIMATOR_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/SeqManager.hpp"
@@ -82,7 +83,9 @@ namespace RTC
 
 	public:
 		SenderBandwidthEstimator(
-		  RTC::SenderBandwidthEstimator::Listener* listener, uint32_t initialAvailableBitrate);
+		  RTC::SenderBandwidthEstimator::Listener* listener,
+		  SharedInterface* shared,
+		  uint32_t initialAvailableBitrate);
 		virtual ~SenderBandwidthEstimator();
 
 	public:
@@ -98,6 +101,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		// Others.
 		uint32_t initialAvailableBitrate{ 0u };
 		uint32_t availableBitrate{ 0u };

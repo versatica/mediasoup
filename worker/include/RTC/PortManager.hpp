@@ -78,7 +78,7 @@ namespace RTC
 		static uint8_t ConvertSocketFlags(RTC::Transport::SocketFlags& flags, Protocol protocol, int family);
 
 	private:
-		thread_local static absl::flat_hash_map<uint64_t, PortRange> mapPortRanges;
+		static thread_local absl::flat_hash_map<uint64_t, PortRange> mapPortRanges;
 	};
 } // namespace RTC
 

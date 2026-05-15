@@ -18,7 +18,7 @@ namespace RTC
 		/* TransmissionCounter methods. */
 
 		RtpStreamRecv::TransmissionCounter::TransmissionCounter(
-		  uint8_t spatialLayers, uint8_t temporalLayers, size_t windowSize)
+		  SharedInterface* shared, uint8_t spatialLayers, uint8_t temporalLayers, size_t windowSize)
 		{
 			MS_TRACE();
 
@@ -29,7 +29,7 @@ namespace RTC
 			{
 				for (uint8_t tIdx{ 0u }; tIdx < temporalLayers; ++tIdx)
 				{
-					spatialLayerCounter.emplace_back(/*ignorePaddingOnlyPackets*/ true, windowSize);
+					spatialLayerCounter.emplace_back(shared, /*ignorePaddingOnlyPackets*/ true, windowSize);
 				}
 			}
 		}
@@ -183,21 +183,22 @@ namespace RTC
 
 		RtpStreamRecv::RtpStreamRecv(
 		  RTP::RtpStreamRecv::Listener* listener,
+		  SharedInterface* shared,
 		  RTP::RtpStream::Params& params,
 		  uint32_t sendNackDelayMs,
 		  bool useRtpInactivityCheck)
-		  : RTP::RtpStream::RtpStream(listener, params, 10),
+		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
 		    sendNackDelayMs(sendNackDelayMs),
 		    useRtpInactivityCheck(useRtpInactivityCheck),
 		    transmissionCounter(
-		      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500),
-		    mediaTransmissionCounter(/*ignorePaddingOnlyPackets*/ true)
+		      shared, params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500),
+		    mediaTransmissionCounter(shared, /*ignorePaddingOnlyPackets*/ true)
 		{
 			MS_TRACE();
 
 			if (this->params.useNack)
 			{
-				this->nackGenerator.reset(new RTC::NackGenerator(this, this->sendNackDelayMs));
+				this->nackGenerator.reset(new RTC::NackGenerator(this, this->shared, this->sendNackDelayMs));
 			}
 
 			this->inactive = false;
@@ -206,7 +207,7 @@ namespace RTC
 			{
 				// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 				// enabled).
-				this->inactivityCheckPeriodicTimer = new TimerHandle(this);
+				this->inactivityCheckPeriodicTimer = this->shared->CreateTimer(this);
 
 				this->inactivityCheckPeriodicTimer->Start(
 				  this->params.useDtx ? InactivityCheckIntervalWithDtx : InactivityCheckInterval);
@@ -227,7 +228,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
 
@@ -530,7 +531,7 @@ namespace RTC
 			if (this->lastSrReceived != 0)
 			{
 				// Get delay in milliseconds.
-				auto delayMs = static_cast<uint32_t>(DepLibUV::GetTimeMs() - this->lastSrReceived);
+				auto delayMs = static_cast<uint32_t>(this->shared->GetTimeMs() - this->lastSrReceived);
 				// Express delay in units of 1/65536 seconds.
 				uint32_t dlsr = (delayMs / 1000) << 16;
 
@@ -564,7 +565,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->lastSrReceived  = DepLibUV::GetTimeMs();
+			this->lastSrReceived  = this->shared->GetTimeMs();
 			this->lastSrTimestamp = report->GetNtpSec() << 16;
 			this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 
@@ -598,7 +599,7 @@ namespace RTC
 			/* Calculate RTT. */
 
 			// Get the NTP representation of the current timestamp.
-			const uint64_t nowMs = DepLibUV::GetTimeMs();
+			const uint64_t nowMs = this->shared->GetTimeMs();
 			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs);
 
 			// Get the compact NTP representation of the current timestamp.
@@ -712,7 +713,8 @@ namespace RTC
 			}
 
 			// NOTE: Based on https://github.com/versatica/mediasoup/issues/1018.
-			auto transit = static_cast<int>((DepLibUV::GetTimeMs() * GetClockRate() / 1000) - rtpTimestamp);
+			auto transit =
+			  static_cast<int>((this->shared->GetTimeMs() * GetClockRate() / 1000) - rtpTimestamp);
 			int d = transit - this->transit;
 
 			// First transit calculation, save and return.
@@ -858,7 +860,7 @@ namespace RTC
 			// Nothing to do.
 		}
 
-		inline void RtpStreamRecv::OnTimer(TimerHandle* timer)
+		inline void RtpStreamRecv::OnTimer(TimerHandleInterface* timer)
 		{
 			MS_TRACE();
 

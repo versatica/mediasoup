@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_ASSOCIATION_HPP
-#define MS_RTC_SCTP_ASSOCIATION_HPP
+#ifndef MS_RTC_OLD_SCTP_ASSOCIATION_HPP
+#define MS_RTC_OLD_SCTP_ASSOCIATION_HPP
 
 #include "common.hpp"
 #include "Utils.hpp"

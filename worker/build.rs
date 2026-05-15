@@ -144,7 +144,7 @@ fn main() {
         .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
         .env("MEDIASOUP_BUILDTYPE", build_type)
         // Force forward slashes on Windows too, otherwise Meson thinks path is not absolute 🤷
-        .env("MEDIASOUP_INSTALL_DIR", &out_dir.replace('\\', "/"))
+        .env("MEDIASOUP_INSTALL_DIR", out_dir.replace('\\', "/"))
         .spawn()
         .expect("Failed to start")
         .wait()
@@ -184,6 +184,14 @@ fn main() {
         println!("cargo:rustc-link-lib=advapi32");
         println!("cargo:rustc-link-lib=crypt32");
         println!("cargo:rustc-link-lib=user32");
+    }
+
+    // Remove subprojects/.wraplock created by Meson's directory locking
+    // mechanism. It lives in the source tree and would cause `cargo package`
+    // verification to fail with "Source directory was modified by build.rs".
+    let wraplock = std::path::Path::new("subprojects/.wraplock");
+    if wraplock.exists() {
+        fs::remove_file(wraplock).expect("Failed to remove subprojects/.wraplock");
     }
 
     if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {

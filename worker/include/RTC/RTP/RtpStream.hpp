@@ -2,17 +2,17 @@
 #define MS_RTC_RTP_RTP_STREAM_HPP
 
 #include "common.hpp"
-#include "DepLibUV.hpp"
+#include "SharedInterface.hpp"
 #include "FBS/rtpStream.h"
-#include "RTC/RTCP/FeedbackPsFir.hpp"           // IWYU pragma: export
-#include "RTC/RTCP/FeedbackPsPli.hpp"           // IWYU pragma: export
-#include "RTC/RTCP/FeedbackRtpNack.hpp"         // IWYU pragma: export
-#include "RTC/RTCP/Packet.hpp"                  // IWYU pragma: export
-#include "RTC/RTCP/ReceiverReport.hpp"          // IWYU pragma: export
-#include "RTC/RTCP/Sdes.hpp"                    // IWYU pragma: export
-#include "RTC/RTCP/SenderReport.hpp"            // IWYU pragma: export
-#include "RTC/RTCP/XrDelaySinceLastRr.hpp"      // IWYU pragma: export
-#include "RTC/RTCP/XrReceiverReferenceTime.hpp" // IWYU pragma: export
+#include "RTC/RTCP/FeedbackPsFir.hpp"
+#include "RTC/RTCP/FeedbackPsPli.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/Sdes.hpp"
+#include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtxStream.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -61,7 +61,11 @@ namespace RTC
 			};
 
 		public:
-			RtpStream(RTP::RtpStream::Listener* listener, RTP::RtpStream::Params& params, uint8_t initialScore);
+			RtpStream(
+			  RTP::RtpStream::Listener* listener,
+			  SharedInterface* shared,
+			  RTP::RtpStream::Params& params,
+			  uint8_t initialScore);
 			virtual ~RtpStream();
 
 			flatbuffers::Offset<FBS::RtpStream::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
@@ -162,7 +166,7 @@ namespace RTC
 			}
 			uint64_t GetActiveMs() const
 			{
-				return DepLibUV::GetTimeMs() - this->activeSinceMs;
+				return this->shared->GetTimeMs() - this->activeSinceMs;
 			}
 
 		protected:
@@ -185,6 +189,7 @@ namespace RTC
 		protected:
 			// Given as argument.
 			RTP::RtpStream::Listener* listener{ nullptr };
+			SharedInterface* shared{ nullptr };
 			Params params;
 			// Others.
 			//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.

@@ -2,19 +2,20 @@
 #define MS_RTC_TRANSPORT_CONGESTION_CONTROL_SERVER_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/SeqManager.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h>
 #include <deque>
 
 namespace RTC
 {
 	class TransportCongestionControlServer : public webrtc::RemoteBitrateEstimator::Listener,
-	                                         public TimerHandle::Listener
+	                                         public TimerHandleInterface::Listener
 	{
 	public:
 		class Listener
@@ -30,6 +31,7 @@ namespace RTC
 	public:
 		TransportCongestionControlServer(
 		  RTC::TransportCongestionControlServer::Listener* listener,
+		  SharedInterface* shared,
 		  RTC::BweType bweType,
 		  size_t maxRtcpPacketLen);
 		~TransportCongestionControlServer() override;
@@ -72,15 +74,16 @@ namespace RTC
 		  const std::vector<uint32_t>& ssrcs,
 		  uint32_t availableBitrate) override;
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		// Allocated by this.
-		TimerHandle* transportCcFeedbackSendPeriodicTimer{ nullptr };
+		TimerHandleInterface* transportCcFeedbackSendPeriodicTimer{ nullptr };
 		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> transportCcFeedbackPacket;
 		webrtc::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		// Others.

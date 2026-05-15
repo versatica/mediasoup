@@ -15,9 +15,10 @@ use thiserror::Error;
 ///
 /// Most modes match [webrtc-svc](https://w3c.github.io/webrtc-svc/), but custom ones are also
 /// supported by mediasoup.
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub enum ScalabilityMode {
     /// No scalability used, there is just one spatial and one temporal layer.
+    #[default]
     None,
     /// L1T2.
     L1T2,
@@ -106,12 +107,6 @@ pub enum ScalabilityMode {
         /// K-SVC mode.
         ksvc: bool,
     },
-}
-
-impl Default for ScalabilityMode {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 /// Error that caused [`ScalabilityMode`] parsing error.

@@ -2,16 +2,16 @@
 #define MS_TEST_RTC_SCTP_COMMON_HPP
 
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"                                               // IWYU pragma: export
-#include "Utils.hpp"                                                         // IWYU pragma: export
-#include "testHelpers.hpp"                                                   // IWYU pragma: export
-#include "RTC/SCTP/packet/Chunk.hpp"                                         // IWYU pragma: export
-#include "RTC/SCTP/packet/ErrorCause.hpp"                                    // IWYU pragma: export
-#include "RTC/SCTP/packet/Packet.hpp"                                        // IWYU pragma: export
-#include "RTC/SCTP/packet/Parameter.hpp"                                     // IWYU pragma: export
-#include "RTC/SCTP/packet/errorCauses/InvalidStreamIdentifierErrorCause.hpp" // IWYU pragma: export
-#include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"             // IWYU pragma: export
-#include <catch2/catch_test_macros.hpp>                                      // IWYU pragma: export
+#include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
+#include "test/include/testHelpers.hpp"
+#include "RTC/SCTP/packet/Chunk.hpp"
+#include "RTC/SCTP/packet/ErrorCause.hpp"
+#include "RTC/SCTP/packet/Packet.hpp"
+#include "RTC/SCTP/packet/Parameter.hpp"
+#include "RTC/SCTP/packet/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
+#include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 namespace sctpCommon
 {
@@ -49,6 +49,7 @@ namespace sctpCommon
 		REQUIRE(packet->GetBufferLength() == bufferLength);                                            \
 		REQUIRE(packet->GetLength() != 0);                                                             \
 		REQUIRE(packet->GetLength() == length);                                                        \
+		REQUIRE(packet->GetAvailableLength() == packet->GetBufferLength() - packet->GetLength());      \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);                           \
 		REQUIRE(packet->GetSourcePort() == sourcePort);                                                \
 		REQUIRE(packet->GetDestinationPort() == destinationPort);                                      \
@@ -92,6 +93,7 @@ namespace sctpCommon
 		REQUIRE(chunk->GetBufferLength() == bufferLength);                                             \
 		REQUIRE(chunk->GetLength() != 0);                                                              \
 		REQUIRE(chunk->GetLength() == length);                                                         \
+		REQUIRE(chunk->GetAvailableLength() == chunk->GetBufferLength() - chunk->GetLength());         \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(chunk->GetLength()) == true);                            \
 		REQUIRE(chunk->GetType() == chunkType);                                                        \
 		REQUIRE(chunk->HasUnknownType() == unknownType);                                               \
@@ -152,6 +154,8 @@ namespace sctpCommon
 		REQUIRE(parameter->GetBufferLength() == bufferLength);                                          \
 		REQUIRE(parameter->GetLength() != 0);                                                           \
 		REQUIRE(parameter->GetLength() == length);                                                      \
+		REQUIRE(                                                                                        \
+		  parameter->GetAvailableLength() == parameter->GetBufferLength() - parameter->GetLength());    \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(parameter->GetLength()) == true);                         \
 		REQUIRE(parameter->GetType() == parameterType);                                                 \
 		REQUIRE(parameter->HasUnknownType() == unknownType);                                            \
@@ -189,6 +193,8 @@ namespace sctpCommon
 		REQUIRE(errorCause->GetBufferLength() == bufferLength);                                          \
 		REQUIRE(errorCause->GetLength() != 0);                                                           \
 		REQUIRE(errorCause->GetLength() == length);                                                      \
+		REQUIRE(                                                                                         \
+		  errorCause->GetAvailableLength() == errorCause->GetBufferLength() - errorCause->GetLength());  \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(errorCause->GetLength()) == true);                         \
 		REQUIRE(errorCause->GetCode() == causeCode);                                                     \
 		REQUIRE(errorCause->HasUnknownCode() == unknownCode);                                            \

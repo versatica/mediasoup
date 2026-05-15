@@ -1,6 +1,17 @@
 #include "RTC/RTP/FuzzerRtpStreamSend.hpp"
 #include "Utils.hpp"
+#include "mocks/include/MockShared.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
+
+namespace
+{
+	// NOLINTNEXTLINE(readability-identifier-naming)
+	thread_local mocks::MockShared shared(/*getTimeMs*/
+	                                      []()
+	                                      {
+		                                      return 1000;
+	                                      });
+} // namespace
 
 void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 {
@@ -30,7 +41,8 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	packet->SetSsrc(params.ssrc);
 
 	std::string mid;
-	auto* stream = new RTC::RTP::RtpStreamSend(&testRtpStreamListener, params, mid);
+	auto* stream = new RTC::RTP::RtpStreamSend(
+	  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 	size_t offset{ 0u };
 
 	while (len >= 4u)

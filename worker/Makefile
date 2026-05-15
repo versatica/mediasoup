@@ -36,13 +36,14 @@ endif
 	test \
 	test-asan-address \
 	test-asan-undefined \
-	test-asan-thread \
 	fuzzer \
 	fuzzer-run-all \
 	docker \
 	docker-run \
 	docker-alpine \
-	docker-alpine-run
+	docker-alpine-run \
+	docker-386 \
+	docker-386-run
 
 default: mediasoup-worker
 
@@ -111,9 +112,6 @@ test-asan-address: invoke
 test-asan-undefined: invoke
 	"$(PYTHON)" -m invoke test-asan-undefined
 
-test-asan-thread: invoke
-	"$(PYTHON)" -m invoke test-asan-thread
-
 fuzzer: invoke
 	"$(PYTHON)" -m invoke fuzzer
 
@@ -131,3 +129,9 @@ docker-alpine: invoke
 
 docker-alpine-run: invoke
 	"$(PYTHON)" -m invoke docker-alpine-run
+
+docker-386: invoke
+	"$(PYTHON)" -m invoke docker-386
+
+docker-386-run: invoke
+	"$(PYTHON)" -m invoke docker-386-run

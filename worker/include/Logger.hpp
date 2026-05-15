@@ -156,10 +156,10 @@ public:
 	static void ClassInit(Channel::ChannelSocket* channel);
 
 public:
-	static const uint64_t pid;
-	thread_local static Channel::ChannelSocket* channel;
+	static const uint64_t Pid;
+	static thread_local Channel::ChannelSocket* channel;
 	static const size_t BufferSize {50000};
-	thread_local static char buffer[];
+	static thread_local char buffer[];
 };
 
 /* Logging macros. */

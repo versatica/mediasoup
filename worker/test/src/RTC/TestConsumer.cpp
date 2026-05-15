@@ -1,6 +1,5 @@
 #include "flatbuffers/buffer.h"
-#include "Channel/ChannelNotifier.hpp"
-#include "Channel/ChannelSocket.hpp"
+#include "mocks/include/MockShared.hpp"
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
 #include "RTC/Consumer.hpp"
@@ -9,17 +8,18 @@
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/Shared.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 
 namespace
 {
 	// NOLINTBEGIN(readability-identifier-naming)
-	const uint8_t payloadType       = 111;
-	auto* channelMessageRegistrator = new ChannelMessageRegistrator();
-	auto* channelSocket             = new Channel::ChannelSocket();
-	auto* channelNotifier           = new Channel::ChannelNotifier(channelSocket);
-	auto shared                     = RTC::Shared(channelMessageRegistrator, channelNotifier);
+	const uint8_t payloadType = 111;
+	mocks::MockShared shared(/*getTimeMs*/
+	                         []()
+	                         {
+		                         return 1000;
+	                         });
 	// NOLINTEND(readability-identifier-naming)
 
 	class RtpStreamRecvListener : public RTC::RTP::RtpStreamRecv::Listener
@@ -154,7 +154,8 @@ namespace
 		RtpStreamRecvListener streamRecvListener;
 		RTC::RTP::RtpStream::Params params;
 
-		return std::make_unique<RTC::RTP::RtpStreamRecv>(&streamRecvListener, params, 0u, false);
+		return std::make_unique<RTC::RTP::RtpStreamRecv>(
+		  &streamRecvListener, std::addressof(shared), params, 0u, false);
 	}
 
 	/**

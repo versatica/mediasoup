@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/NackGenerator.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -17,10 +16,11 @@ namespace RTC
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener, unsigned int sendNackDelayMs)
+	NackGenerator::NackGenerator(Listener* listener, SharedInterface* shared, unsigned int sendNackDelayMs)
 	  : listener(listener),
+	    shared(shared),
 	    sendNackDelayMs(sendNackDelayMs),
-	    timer(new TimerHandle(this)),
+	    timer(shared->CreateTimer(this)),
 	    rtt(DefaultRtt)
 	{
 		MS_TRACE();
@@ -211,7 +211,7 @@ namespace RTC
 			this->nackList.emplace(
 			  seq,
 			  NackInfo{
-			    DepLibUV::GetTimeMs(),
+			    this->shared->GetTimeMs(),
 			    seq,
 			    seq,
 			  });
@@ -247,7 +247,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const uint64_t nowMs = DepLibUV::GetTimeMs();
+		const uint64_t nowMs = this->shared->GetTimeMs();
 		std::vector<uint16_t> nackBatch;
 
 		auto it = this->nackList.begin();
@@ -365,7 +365,7 @@ namespace RTC
 		}
 	}
 
-	inline void NackGenerator::OnTimer(TimerHandle* /*timer*/)
+	inline void NackGenerator::OnTimer(TimerHandleInterface* /*timer*/)
 	{
 		MS_TRACE();
 

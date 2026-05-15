@@ -9,7 +9,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpObserver::RtpObserver(RTC::Shared* shared, const std::string& id, RTC::RtpObserver::Listener* listener)
+	RtpObserver::RtpObserver(
+	  SharedInterface* shared, const std::string& id, RTC::RtpObserver::Listener* listener)
 	  : id(id), shared(shared), listener(listener)
 	{
 		MS_TRACE();

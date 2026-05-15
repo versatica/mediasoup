@@ -54,7 +54,7 @@ inline static void sctpDebug(const char* format, ...)
 	va_end(ap);
 }
 
-/* Static variables. */
+/* Class variables. */
 
 thread_local DepUsrSCTP::Checker* DepUsrSCTP::checker{ nullptr };
 uint64_t DepUsrSCTP::numSctpAssociations{ 0u };
@@ -74,6 +74,12 @@ void DepUsrSCTP::ClassInit()
 	if (GlobalInstances == 0)
 	{
 		usrsctp_init_nothreads(0, onSendSctpData, sctpDebug);
+
+		// See https://github.com/sctplab/usrsctp/blob/master/Manual.md#usrsctp_sysctl_set_sctp_sendspace.
+		//
+		// TODO: This doesn't have any effect. So let's comment it.
+		// usrsctp_sysctl_set_sctp_sendspace(std::numeric_limits<uint32_t>::max());
+		// usrsctp_sysctl_set_sctp_recvspace(std::numeric_limits<uint32_t>::max());
 
 		// Disable explicit congestion notifications (ecn).
 		usrsctp_sysctl_set_sctp_ecn_enable(0);
@@ -105,13 +111,13 @@ void DepUsrSCTP::ClassDestroy()
 	}
 }
 
-void DepUsrSCTP::CreateChecker()
+void DepUsrSCTP::CreateChecker(SharedInterface* shared)
 {
 	MS_TRACE();
 
 	MS_ASSERT(DepUsrSCTP::checker == nullptr, "Checker already created");
 
-	DepUsrSCTP::checker = new DepUsrSCTP::Checker();
+	DepUsrSCTP::checker = new DepUsrSCTP::Checker(shared);
 }
 
 void DepUsrSCTP::CloseChecker()
@@ -210,7 +216,7 @@ RTC::SctpAssociation* DepUsrSCTP::RetrieveSctpAssociation(uintptr_t id)
 
 /* DepUsrSCTP::Checker instance methods. */
 
-DepUsrSCTP::Checker::Checker() : timer(new TimerHandle(this))
+DepUsrSCTP::Checker::Checker(SharedInterface* shared) : timer(shared->CreateTimer(this))
 {
 	MS_TRACE();
 }
@@ -244,7 +250,7 @@ void DepUsrSCTP::Checker::Stop()
 	this->timer->Stop();
 }
 
-void DepUsrSCTP::Checker::OnTimer(TimerHandle* /*timer*/)
+void DepUsrSCTP::Checker::OnTimer(TimerHandleInterface* /*timer*/)
 {
 	MS_TRACE();
 

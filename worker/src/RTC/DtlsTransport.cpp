@@ -709,8 +709,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	DtlsTransport::DtlsTransport(Listener* listener)
-	  : listener(listener), ssl(SSL_new(DtlsTransport::sslCtx))
+	DtlsTransport::DtlsTransport(Listener* listener, SharedInterface* shared)
+	  : listener(listener), shared(shared), ssl(SSL_new(DtlsTransport::sslCtx))
 	{
 		MS_TRACE();
 
@@ -764,7 +764,7 @@ namespace RTC
 		DTLS_set_timer_cb(this->ssl, onSslDtlsTimer);
 
 		// Set the DTLS timer.
-		this->timer = new TimerHandle(this);
+		this->timer = this->shared->CreateTimer(this);
 
 		return;
 
@@ -1699,7 +1699,7 @@ namespace RTC
 	}
 
 	// NOLINTNEXTLINE(misc-no-recursion)
-	void DtlsTransport::OnTimer(TimerHandle* /*timer*/)
+	void DtlsTransport::OnTimer(TimerHandleInterface* /*timer*/)
 	{
 		MS_TRACE();
 

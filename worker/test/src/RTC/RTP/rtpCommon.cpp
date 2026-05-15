@@ -1,5 +1,5 @@
-#include "RTC/RTP/rtpCommon.hpp" // in worker/test/include/
-#include <cstring>               // std::memset
+#include "test/include/RTC/RTP/rtpCommon.hpp" // in worker/test/include/
+#include <cstring>                            // std::memset
 
 namespace rtpCommon
 {

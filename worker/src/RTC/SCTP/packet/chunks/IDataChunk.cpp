@@ -223,6 +223,31 @@ namespace RTC
 			SetVariableLengthValue(userDataPayload, userDataPayloadLength);
 		}
 
+		void IDataChunk::SetUserData(UserData userData)
+		{
+			MS_TRACE();
+
+			SetStreamId(userData.GetStreamId());
+			SetMessageId(userData.GetMessageId());
+
+			SetB(userData.IsBeginning());
+			SetE(userData.IsEnd());
+			SetU(userData.IsUnordered());
+
+			if (GetB())
+			{
+				SetPayloadProtocolId(userData.GetPayloadProtocolId());
+			}
+			else
+			{
+				SetFragmentSequenceNumber(userData.GetFragmentSequenceNumber());
+			}
+
+			const auto payload = std::move(userData).ReleasePayload();
+
+			SetUserDataPayload(payload.data(), payload.size());
+		}
+
 		IDataChunk* IDataChunk::SoftClone(const uint8_t* buffer) const
 		{
 			MS_TRACE();

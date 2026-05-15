@@ -20,12 +20,12 @@ namespace RTC
 			struct SkippedStream
 			{
 				SkippedStream(uint16_t streamId, uint16_t ssn)
-				  : streamId(streamId), ssn(ssn), unordered(false), mid(0)
+				  : streamId(streamId), ssn(ssn), mid(0), unordered(false)
 				{
 				}
 
-				SkippedStream(uint16_t streamId, bool unordered, uint32_t mid)
-				  : streamId(streamId), ssn(0), unordered(unordered), mid(mid)
+				SkippedStream(bool unordered, uint16_t streamId, uint32_t mid)
+				  : streamId(streamId), ssn(0), mid(mid), unordered(unordered)
 				{
 				}
 
@@ -39,17 +39,17 @@ namespace RTC
 				/**
 				 * Only set for I_FORWARD_TSN.
 				 */
-				bool unordered;
+				uint32_t mid;
 
 				/**
 				 * Only set for I_FORWARD_TSN.
 				 */
-				uint32_t mid;
+				bool unordered;
 
 				bool operator==(const SkippedStream& other) const
 				{
-					return streamId == other.streamId && ssn == other.ssn && unordered == other.unordered &&
-					       mid == other.mid;
+					return streamId == other.streamId && ssn == other.ssn && mid == other.mid &&
+					       unordered == other.unordered;
 				}
 			};
 
@@ -71,8 +71,8 @@ namespace RTC
 		 */
 		inline std::ostream& operator<<(std::ostream& os, const AnyForwardTsnChunk::SkippedStream& s)
 		{
-			return os << "{streamId:" << s.streamId << ", ssn:" << s.ssn << ", unordered:" << s.unordered
-			          << ", mid:" << s.mid << "}";
+			return os << "{streamId:" << s.streamId << ", ssn:" << s.ssn << ", mid:" << s.mid
+			          << ", unordered:" << s.unordered << "}";
 		}
 	} // namespace SCTP
 } // namespace RTC

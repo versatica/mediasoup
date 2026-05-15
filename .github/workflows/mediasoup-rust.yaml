@@ -32,9 +32,12 @@ env:
 jobs:
   ci:
     strategy:
+      # Here we want to see all errors, not just the first one.
+      fail-fast: false
       matrix:
         build:
           - os: ubuntu-24.04
+            run-cargo-fmt: true
           - os: ubuntu-24.04-arm
           - os: macos-15
           - os: windows-2022
@@ -42,22 +45,27 @@ jobs:
 
     runs-on: ${{ matrix.build.os }}
 
+    timeout-minutes: 60
+
     env:
       KEEP_BUILD_ARTIFACTS: '1'
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure cache
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ matrix.build.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ matrix.build.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ matrix.build.os }}-cargo-
 
-      - name: cargo fmt --all -- --check
+      - if: ${{ matrix.build.run-cargo-fmt }}
+        name: cargo fmt --all -- --check
         run: cargo fmt --all -- --check
 
       - name: cargo clippy --all-targets -- -D warnings

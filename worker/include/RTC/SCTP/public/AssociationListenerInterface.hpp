@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_ASSOCIATION_LISTENER_HPP
-#define MS_RTC_SCTP_ASSOCIATION_LISTENER_HPP
+#ifndef MS_RTC_SCTP_ASSOCIATION_LISTENER_INTERFACE_HPP
+#define MS_RTC_SCTP_ASSOCIATION_LISTENER_INTERFACE_HPP
 
 #include "common.hpp"
 #include "RTC/SCTP/public/Message.hpp"
@@ -11,10 +11,10 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		class AssociationListener
+		class AssociationListenerInterface
 		{
 		public:
-			virtual ~AssociationListener() = default;
+			virtual ~AssociationListenerInterface() = default;
 
 		public:
 			/**
@@ -142,6 +142,17 @@ namespace RTC
 			 * - It is allowed to call methods in Association within this callback.
 			 */
 			virtual void OnAssociationTotalBufferedAmountLow() = 0;
+
+			/**
+			 * Called when the Association needs to know if the parent transport is
+			 * ready for SCTP traffic (e.g. whether the WebRtcTransport has ICE and
+			 * DTLS connected and at least a DataProducer or DataConsumer has been
+			 * created). Returned boolean indicates it.
+			 *
+			 * @remarks
+			 * - It is NOT allowed to call methods in Association within this callback.
+			 */
+			virtual bool OnAssociationIsTransportReadyForSctp() = 0;
 
 			/**
 			 * SCTP message lifecycle events.

@@ -2,12 +2,12 @@
 #define MS_TEST_RTC_RTP_COMMON_HPP
 
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"          // IWYU pragma: export
-#include "testHelpers.hpp"              // IWYU pragma: export
-#include "RTC/RTP/Packet.hpp"           // IWYU pragma: export
-#include <catch2/catch_test_macros.hpp> // IWYU pragma: export
-#include <cstdlib>                      // std::malloc(), std::free()
-#include <cstring>                      // std::memcpy()
+#include "MediaSoupErrors.hpp"
+#include "test/include/testHelpers.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include <cstdlib> // std::malloc(), std::free()
+#include <cstring> // std::memcpy()
 
 namespace rtpCommon
 {
@@ -55,6 +55,7 @@ namespace rtpCommon
 		REQUIRE(packet->GetBufferLength() == bufferLength);                                              \
 		REQUIRE(packet->GetLength() != 0);                                                               \
 		REQUIRE(packet->GetLength() == length);                                                          \
+		REQUIRE(packet->GetAvailableLength() == packet->GetBufferLength() - packet->GetLength());        \
 		REQUIRE(static_cast<unsigned>(packet->GetVersion()) == 2);                                       \
 		REQUIRE(static_cast<unsigned>(packet->GetPayloadType()) == payloadType);                         \
 		REQUIRE(packet->HasMarker() == hasMarker);                                                       \

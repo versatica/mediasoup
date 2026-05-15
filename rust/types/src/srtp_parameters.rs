@@ -14,7 +14,9 @@ pub struct SrtpParameters {
 }
 
 /// SRTP crypto suite.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(
+    Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize, Default,
+)]
 pub enum SrtpCryptoSuite {
     /// AEAD_AES_256_GCM
     #[serde(rename = "AEAD_AES_256_GCM")]
@@ -24,14 +26,9 @@ pub enum SrtpCryptoSuite {
     AeadAes128Gcm,
     /// AES_CM_128_HMAC_SHA1_80
     #[serde(rename = "AES_CM_128_HMAC_SHA1_80")]
+    #[default]
     AesCm128HmacSha180,
     /// AES_CM_128_HMAC_SHA1_32
     #[serde(rename = "AES_CM_128_HMAC_SHA1_32")]
     AesCm128HmacSha132,
-}
-
-impl Default for SrtpCryptoSuite {
-    fn default() -> Self {
-        Self::AesCm128HmacSha180
-    }
 }

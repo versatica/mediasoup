@@ -1,24 +1,28 @@
 # Changelog
 
-# NEXT
+### NEXT
+
+- Worker: Add `use_built_in_sctp_stack` setting (defaults to `false`) to enable mediasoup built-in SCTP stack (PR #1777).
+
+### 0.21.0
 
 - `router.pipe_producer_to_router()` and `router.pipe_data_producer_to_router()` can now connect two `Routers` in the same `Worker` if `keep_id` is set to `false` (PR #1604).
 - Updates from mediasoup TypeScript `3.18.1.=3.19.0`.
 - Ensure that the order of acquiring the `paused` and `producer_paused` locks in `consumer.rs` is consistent at all times to avoid deadlock (PR #1605).
 - Convert `WORKER_CLOSE` into a notification (PR #1729).
 
-# 0.20.0
+### 0.20.0
 
 - Make `parameters` and `rtcp_feedback` optional in `RtpCodecParameters` and `RtpCodecCapability` during deserialization (PR #1597).
 - Make codec `mime_type` case insensitive during deserialization (PR #1599).
 - Only expose `data_structures`, `rtp_parameters`, `sctp_parameters` and `srtp_parameters` through the `mediasoup-types` crate (PR #1600).
 
-# 0.19.1
+### 0.19.1
 
 - Fix installation in paths with spaces (PR #1596).
 - Updates from mediasoup TypeScript `3.17.1.=3.18.1`.
 
-# 0.19.0
+### 0.19.0
 
 - Enable AV1 codec (PR #1563).
 - Remove H265 codec and deprecated frame-marking RTP extension (PR #1564).
@@ -27,7 +31,7 @@
 - `TransportListenInfo`: Add `expose_internal_ip` which, if set to `true` and `announced_address` is set, exposes an additional ICE candidate in `WebRtcTransport` whose IP is `listen_info.ip` rather than `listen_info.announced_address` (PR #1583).
 - Updates from mediasoup TypeScript `3.14.11.=3.17.0`.
 
-# 0.18.2
+### 0.18.2
 
 - Don't log error if `close()` on an object fails because channel is closed already (PR #1560).
 - General mediasoup changes:
@@ -44,27 +48,27 @@
   - `Consumer` classes: Only drop packets in RTP sequence manager when they belong to current spatial layer (PR #1549).
   - `Consumer` classes: Add target layer retransmission buffer to avoid PLIs/FIRs when RTP packets containing a key frame arrive out of order (PR #1550 and PR #1558).
 
-# 0.18.1
+### 0.18.1
 
 - FBS: Provide proper data upon panic (#1523).
 
-# 0.18.0
+### 0.18.0
 
 - Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).
 - New enum variant was added in 0.17.2.
 
-# 0.17.2
+### 0.17.2
 
 - Fix `PipeConsumer::get_stats()` (PR #1511).
 
-# 0.17.1
+### 0.17.1
 
 - Update Rust toolchain channel to version 1.79.0 (PR #1409).
 - Updates from mediasoup TypeScript `3.14.7..=3.14.10`.
 - General mediasoup changes:
   - Worker: Add `enable_liburing` boolean option (`true` by default) to disable `io_uring` even if it's supported by the prebuilt `mediasoup-worker` and by current host (PR #1442).
 
-# 0.17.0
+### 0.17.0
 
 - Updates from mediasoup TypeScript `3.13.18..=3.14.6`.
 - General mediasoup changes:
@@ -78,25 +82,25 @@
   - `TransportListenInfo`: "announced ip" can also be a hostname (PR #1322).
   - `TransportListenInfo`: Rename "announced ip" to "announced address" (PR #1324).
 
-# 0.16.0
+### 0.16.0
 
 - Updates from mediasoup TypeScript `3.13.13..=3.13.17`.
 - General mediasoup changes:
   - `TransportListenInfo.announced_ip` can also be a hostname (PR #1322).
   - `TransportListenInfo.announced_ip` is now `announced_address`, `IceCandidate.ip` is now `IceCandidate.address` and `TransportTuple.local_ip` is not `TransportTuple.local_address` (PR #1324).
 
-# 0.15.0
+### 0.15.0
 
 - Expose DataChannel string message as binary (PR #1289).
 
-# 0.14.0
+### 0.14.0
 
 - Updates from mediasoup TypeScript `3.13.8..=3.13.12`.
 - Update h264-profile-level-id dependency to 0.2.0.
 - Fix docs build (PR #1271).
 - Rename `data_consumer::on_producer_resume` to `data_consumer::on_data_producer_resume` (PR #1271).
 
-# 0.13.0
+### 0.13.0
 
 - Updates from mediasoup TypeScript `3.13.0..=3.13.7`.
 - General mediasoup changes:
@@ -107,37 +111,37 @@
   - `Worker`: Make DTLS fragment stay within MTU size range (PR #1156).
   - Replace make + Makefile with Python Invoke library + tasks.py (also fix installation under path with whitespaces) (PR #1239).
 
-# 0.12.0
+### 0.12.0
 
 - Updates from mediasoup TypeScript `3.11.9..=3.12.16`.
 
-# 0.11.4
+### 0.11.4
 
 - Fix consuming data producer from direct transport by data consumer on non-direct transport.
 
-# 0.11.3
+### 0.11.3
 
 - Updates from mediasoup TypeScript `3.11.3..=3.11.8`.
 
-# 0.11.2
+### 0.11.2
 
 - Updates from mediasoup TypeScript `3.10.11..=3.11.2`.
 
-# 0.11.1
+### 0.11.1
 
 - Updates from mediasoup TypeScript `3.10.7..=3.10.10`.
 
-# 0.11.0
+### 0.11.0
 
 - Updates from mediasoup TypeScript `3.10.2..=3.10.6`.
 
-# 0.10.0
+### 0.10.0
 
 - Updates from mediasoup TypeScript `3.9.10..=3.10.1`.
 - `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834, PR #845).
 - Minor API breaking changes.
 
-# 0.9.3
+### 0.9.3
 
 - Fix a segfaults in tests and under multithreaded executor.
 - Fix another racy deadlock situation.
@@ -153,18 +157,18 @@
   - `RateCalculator`: Reset optimization (PR #785).
   - Fix frozen video due to double call to `Consumer::UserOnTransportDisconnected()` (PR #788, thanks to @ggarber for exposing this issue in PR #787).
 
-# 0.9.2
+### 0.9.2
 
 - Update `lru` dependency to fix security vulnerability
 
-# 0.9.1
+### 0.9.1
 
 - Fix cleanup of build artifacts.
 - Make `Transport` implement `Send`.
 - Another fix to rare deadlock.
 - Improved Windows support (doesn't require MSVS activation).
 
-# 0.9.0
+### 0.9.0
 
 - Fix for receiving data over payload channel.
 - Support thread initializer function for worker threads, can be used for pinning worker threads to CPU cores.
@@ -178,17 +182,17 @@
   - `Consumer`: Modification of bitrate allocation algorithm (PR #708).
   - Single H264/H265 codec configuration in `supportedRtpCapabilities` (PR #718).
 
-# 0.8.5
+### 0.8.5
 
 - Fix types for `round_trip_time` and `bitrate_by_layer` fields `ProducerStat` and `ConsumerStat`.
 - Accumulation of worker fixes.
 
-# 0.8.4
+### 0.8.4
 
 - Add Active Speaker Observer to prelude.
 - Fix consumers preventing producers from being closed (regression introduced in 0.8.3).
 
-# 0.8.3
+### 0.8.3
 
 - prelude module containing traits and structs that should be sufficient for most basic mediasoup-based apps.
 - Dominant Speaker Event (PR #603 by @SteveMcFarlin).

@@ -2,7 +2,8 @@
 #define MS_RTC_SCTP_ASSOCIATION_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/association/AssociationDeferredListener.hpp"
+#include "SharedInterface.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
@@ -31,12 +32,13 @@
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
 #include "RTC/SCTP/public/AssociationInterface.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/AssociationMetrics.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
-#include "handles/BackoffTimerHandle.hpp"
+#include "RTC/SCTP/tx/RoundRobinSendQueue.hpp"
+#include "handles/BackoffTimerHandleInterface.hpp"
 #include <FBS/sctpParameters.h>
 #include <span>
 #include <string_view>
@@ -51,7 +53,7 @@ namespace RTC
 		 */
 		class Association : public AssociationInterface,
 		                    public PacketSender::Listener,
-		                    public BackoffTimerHandle::Listener
+		                    public BackoffTimerHandleInterface::Listener
 		{
 		public:
 			/**
@@ -166,7 +168,10 @@ namespace RTC
 			};
 
 		public:
-			explicit Association(const SctpOptions& sctpOptions, AssociationListener* listener);
+			explicit Association(
+			  const SctpOptions& sctpOptions,
+			  AssociationListenerInterface* listener,
+			  SharedInterface* shared);
 
 			~Association() override;
 
@@ -179,11 +184,19 @@ namespace RTC
 			Types::AssociationState GetAssociationState() const override;
 
 			/**
+			 * May invoke `Connect()` but only if the parent transport is ready for
+			 * SCTP transmission (e.g. the WebRtcTransport has ICE and DTLS connected).
+			 */
+			void MayConnect() override;
+
+			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
 			 * Chunk.
 			 *
 			 * @remarks
-			 * - The SCTP association must be in Closed state.
+			 * - The SCTP association must be in New state.
+			 * - Despite this method is public, it's never invoked since `MayConnect()`
+			 *   method is invoked instead.
 			 */
 			void Connect() override;
 
@@ -366,64 +379,64 @@ namespace RTC
 
 			bool ValidateReceivedPacket(const Packet* receivedPacket);
 
-			bool ProcessReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk);
+			bool HandleReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk);
 
-			void ProcessReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk);
+			void HandleReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk);
 
-			void ProcessReceivedInitAckChunk(
+			void HandleReceivedInitAckChunk(
 			  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk);
 
-			void ProcessReceivedCookieEchoChunk(
+			void HandleReceivedCookieEchoChunk(
 			  const Packet* receivedPacket, const CookieEchoChunk* receivedCookieEchoChunk);
 
-			bool ProcessReceivedCookieEchoChunkWithTcb(const Packet* receivedPacket, const StateCookie* cookie);
+			bool HandleReceivedCookieEchoChunkWithTcb(const Packet* receivedPacket, const StateCookie* cookie);
 
-			void ProcessReceivedCookieAckChunk(
+			void HandleReceivedCookieAckChunk(
 			  const Packet* receivedPacket, const CookieAckChunk* receivedCookieAckChunk);
 
-			void ProcessReceivedShutdownChunk(
+			void HandleReceivedShutdownChunk(
 			  const Packet* receivedPacket, const ShutdownChunk* receivedShutdownChunk);
 
-			void ProcessReceivedShutdownAckChunk(
+			void HandleReceivedShutdownAckChunk(
 			  const Packet* receivedPacket, const ShutdownAckChunk* receivedShutdownAckChunk);
 
-			void ProcessReceivedShutdownCompleteChunk(
+			void HandleReceivedShutdownCompleteChunk(
 			  const Packet* receivedPacket, const ShutdownCompleteChunk* receivedShutdownCompleteChunk);
 
-			void ProcessReceivedOperationErrorChunk(
+			void HandleReceivedOperationErrorChunk(
 			  const Packet* receivedPacket, const OperationErrorChunk* receivedOperationErrorChunk);
 
-			void ProcessReceivedAbortAssociationChunk(
+			void HandleReceivedAbortAssociationChunk(
 			  const Packet* receivedPacket, const AbortAssociationChunk* receivedAbortAssociationChunk);
 
-			void ProcessReceivedHeartbeatRequestChunk(
+			void HandleReceivedHeartbeatRequestChunk(
 			  const Packet* receivedPacket, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
 
-			void ProcessReceivedHeartbeatAckChunk(
+			void HandleReceivedHeartbeatAckChunk(
 			  const Packet* receivedPacket, const HeartbeatAckChunk* receivedHeartbeatAckChunk);
 
-			void ProcessReceivedReConfigChunk(
+			void HandleReceivedReConfigChunk(
 			  const Packet* receivedPacket, const ReConfigChunk* receivedReConfigChunk);
 
-			void ProcessReceivedForwardTsnChunk(
+			void HandleReceivedForwardTsnChunk(
 			  const Packet* receivedPacket, const ForwardTsnChunk* receivedForwardTsnChunk);
 
-			void ProcessReceivedIForwardTsnChunk(
+			void HandleReceivedIForwardTsnChunk(
 			  const Packet* receivedPacket, const IForwardTsnChunk* receivedIForwardTsnChunk);
 
-			void ProcessReceivedAnyForwardTsnChunk(
+			void HandleReceivedAnyForwardTsnChunk(
 			  const Packet* receivedPacket, const AnyForwardTsnChunk* receivedAnyForwardTsnChunk);
 
-			void ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
+			void HandleReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
 
-			void ProcessReceivedIDataChunk(const Packet* receivedPacket, const IDataChunk* receivedIDataChunk);
+			void HandleReceivedIDataChunk(const Packet* receivedPacket, const IDataChunk* receivedIDataChunk);
 
-			void ProcessReceivedAnyDataChunk(
+			void HandleReceivedAnyDataChunk(
 			  const Packet* receivedPacket, const AnyDataChunk* receivedAnyDataChunk);
 
-			void ProcessReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
+			void HandleReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
 
-			bool ProcessReceivedUnknownChunk(
+			bool HandleReceivedUnknownChunk(
 			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
 
 			void OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop);
@@ -452,38 +465,41 @@ namespace RTC
 		public:
 			void OnPacketSenderPacketSent(PacketSender* packetSender, const Packet* packet, bool sent) override;
 
-			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
+			/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 		public:
-			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+			void OnBackoffTimer(
+			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			// SCTP options given in the constructor.
 			SctpOptions sctpOptions;
-			// Listener. It's not an AssociationListener but an
-			// AssociationDeferredListener which inherits from AssociationListener.
-			AssociationDeferredListener listener;
+			// Listener. It's a `AssociationListenerDeferrer` which implements
+			// `AssociationListenerInterface`.
+			AssociationListenerDeferrer associationListenerDeferrer;
+			SharedInterface* shared;
 			// SCTP association internal state.
 			State state{ State::NEW };
-			// Private metrics.
-			AssociationPrivateMetrics privateMetrics{};
+			// Packet sender.
+			PacketSender packetSender;
 			// The actual send queue implementation. As data can be sent before the
 			// connection is established, this component is not in the TCB.
-			// TODO: Implement this class.
-			// RRSendQueue sendQueue;
+			RoundRobinSendQueue sendQueue;
 			// To keep settings between sending of INIT Chunk and establishment of
 			// the connection.
 			PreTransmissionControlBlock preTcb;
 			// Once the SCTP association is established a Transmission Control Block
 			// is created.
 			std::unique_ptr<TransmissionControlBlock> tcb;
-			// Packet sender.
-			PacketSender packetSender;
+			// Private metrics.
+			AssociationPrivateMetrics privateMetrics;
 			// T1-init timer.
-			const std::unique_ptr<BackoffTimerHandle> t1InitTimer;
+			const std::unique_ptr<BackoffTimerHandleInterface> t1InitTimer;
 			// T1-cookie timer.
-			const std::unique_ptr<BackoffTimerHandle> t1CookieTimer;
+			const std::unique_ptr<BackoffTimerHandleInterface> t1CookieTimer;
 			// T2-shutdown timer.
-			const std::unique_ptr<BackoffTimerHandle> t2ShutdownTimer;
+			const std::unique_ptr<BackoffTimerHandleInterface> t2ShutdownTimer;
+			// Max SCTP Packet length.
+			const size_t maxPacketLength;
 		};
 	} // namespace SCTP
 } // namespace RTC

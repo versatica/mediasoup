@@ -5,9 +5,8 @@
 #include "DepLibUV.hpp"
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
-#ifndef MS_SCTP_STACK
+// TODO: Remove once we only use built-in SCTP stack.
 #include "DepUsrSCTP.hpp"
-#endif
 #include "FuzzerUtils.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -147,9 +146,11 @@ namespace
 		DepLibUV::ClassInit();
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
-#ifndef MS_SCTP_STACK
-		DepUsrSCTP::ClassInit();
-#endif
+		// TODO: Remove once we only use built-in SCTP stack.
+		if (!Settings::configuration.useBuiltInSctpStack)
+		{
+			DepUsrSCTP::ClassInit();
+		}
 		DepLibWebRTC::ClassInit();
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
@@ -162,7 +163,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 {
 	// Trick to initialize our stuff just once.
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local const int unused = init();
+	static thread_local const int unused = init();
 
 	// Avoid [-Wunused-variable].
 	(void)unused;

@@ -110,10 +110,10 @@ namespace RTC
 			  indentation,
 			  "  re-configuration request sequence number: %" PRIu32,
 			  GetReconfigurationRequestSequenceNumber());
-			MS_DUMP_CLEAN(indentation, "  number of streams: %" PRIu16, GetNumberOfStreams());
-			for (uint32_t idx{ 0 }; idx < GetNumberOfStreams(); ++idx)
+			MS_DUMP_CLEAN(indentation, "  stream ids:");
+			for (const uint16_t streamId : GetStreamIds())
 			{
-				MS_DUMP_CLEAN(indentation, "  - idx: %" PRIu16 ", stream: %" PRIu16, idx, GetStreamAt(idx));
+				MS_DUMP_CLEAN(indentation, "  - stream id: %" PRIu16, streamId);
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::IncomingSsnResetRequestParameter>");
 		}
@@ -137,7 +137,24 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
-		void IncomingSsnResetRequestParameter::AddStream(uint16_t stream)
+		std::vector<uint16_t> IncomingSsnResetRequestParameter::GetStreamIds() const
+		{
+			MS_TRACE();
+
+			const uint16_t numberOfStreams = GetNumberOfStreams();
+			std::vector<uint16_t> streamIds;
+
+			streamIds.reserve(numberOfStreams);
+
+			for (uint16_t idx{ 0 }; idx < numberOfStreams; ++idx)
+			{
+				streamIds.emplace_back(GetStreamAt(idx));
+			}
+
+			return streamIds;
+		}
+
+		void IncomingSsnResetRequestParameter::AddStreamId(uint16_t streamId)
 		{
 			MS_TRACE();
 
@@ -148,7 +165,7 @@ namespace RTC
 
 			// Add the new stream.
 			Utils::Byte::Set2Bytes(
-			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, stream);
+			  GetVariableLengthValuePointer(), previousVariableLengthValueLength, streamId);
 		}
 
 		IncomingSsnResetRequestParameter* IncomingSsnResetRequestParameter::SoftClone(

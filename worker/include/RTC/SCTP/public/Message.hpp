@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_MESSAGE_HPP
 
 #include "common.hpp"
+#include <span>
 #include <vector>
 
 namespace RTC
@@ -47,9 +48,9 @@ namespace RTC
 				return this->ppid;
 			}
 
-			const uint8_t* GetPayload() const
+			std::span<const uint8_t> GetPayload() const
 			{
-				return this->payload.data();
+				return this->payload;
 			}
 
 			size_t GetPayloadLength() const
@@ -71,12 +72,18 @@ namespace RTC
 			 */
 			std::vector<uint8_t> ReleasePayload() &&
 			{
+				// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move)
 				return std::move(this->payload);
 			}
 
+			Message Clone() const
+			{
+				return Message(this->streamId, this->ppid, this->payload);
+			}
+
 		private:
-			uint16_t streamId{ 0 };
-			uint32_t ppid{ 0 };
+			uint16_t streamId;
+			uint32_t ppid;
 			std::vector<uint8_t> payload;
 		};
 	} // namespace SCTP

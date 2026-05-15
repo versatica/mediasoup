@@ -39,7 +39,8 @@ public:
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
 		std::string libwebrtcFieldTrials{ "WebRTC-Bwe-AlrLimitedBackoff/Enabled/" };
-		bool liburingDisabled{ false };
+		bool disableLiburing{ false };
+		bool useBuiltInSctpStack{ false };
 	};
 
 public:
@@ -53,7 +54,7 @@ private:
 	static void SetDtlsCertificateAndPrivateKeyFiles();
 
 public:
-	thread_local static struct Configuration configuration;
+	static thread_local struct Configuration configuration;
 
 private:
 	static const absl::flat_hash_map<std::string, LogLevel> String2LogLevel;

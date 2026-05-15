@@ -8,7 +8,7 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		PacketSender::PacketSender(Listener& listener, AssociationListener& associationListener)
+		PacketSender::PacketSender(Listener* listener, AssociationListenerInterface& associationListener)
 		  : listener(listener), associationListener(associationListener)
 		{
 			MS_TRACE();
@@ -38,7 +38,12 @@ namespace RTC
 			const bool sent =
 			  this->associationListener.OnAssociationSendData(packet->GetBuffer(), packet->GetLength());
 
-			this->listener.OnPacketSenderPacketSent(this, packet, sent);
+			this->listener->OnPacketSenderPacketSent(this, packet, sent);
+
+			if (!sent)
+			{
+				MS_WARN_TAG(sctp, "coudln't send SCTP Packet");
+			}
 
 			return sent;
 		}

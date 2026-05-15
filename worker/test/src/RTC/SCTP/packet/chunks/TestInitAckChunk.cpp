@@ -1,10 +1,10 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/packet/parameters/IPv4AddressParameter.hpp"
-#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -61,7 +61,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 22136);
 		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
-		auto* parameter1 =
+		const auto* parameter1 =
 		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(

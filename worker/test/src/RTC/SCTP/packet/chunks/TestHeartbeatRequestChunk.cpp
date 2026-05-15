@@ -1,11 +1,11 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/UnknownParameter.hpp"
-#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -86,6 +86,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -148,6 +149,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -213,6 +215,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -309,6 +312,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -374,6 +378,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);

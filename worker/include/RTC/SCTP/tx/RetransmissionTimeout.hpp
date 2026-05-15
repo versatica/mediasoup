@@ -14,7 +14,7 @@ namespace RTC
 		 * as delayed ack.
 		 *
 		 * When a round-trip-time (RTT) is calculated (outside this class), the
-		 * `ObserveRtt()` method is called, which calculates the retransmission
+		 * `ObserveRttMs()` method is called, which calculates the retransmission
 		 * timeout (RTO) value. The RTO value will become larger if the RTT is high
 		 * and/or the RTT values are varying a lot, which is an indicator of a bad
 		 * connection.
@@ -30,9 +30,10 @@ namespace RTC
 			void Dump(int indentation = 0) const;
 
 			/**
-			 * To be called when a RTT has been measured, to update the RTO value.
+			 * To be called when a RTT (ms) has been measured, to update the RTO
+			 * value.
 			 */
-			void ObserveRtt(uint64_t rtt);
+			void ObserveRttMs(uint64_t rttMs);
 
 			/**
 			 * Returns the Retransmission Timeout (RTO) value.
@@ -43,7 +44,7 @@ namespace RTC
 			}
 
 			/**
-			 * Returns the smoothed RTT value.
+			 * Returns the smoothed RTT value (ms)..
 			 */
 			uint64_t GetSrttMs() const
 			{
@@ -51,13 +52,13 @@ namespace RTC
 			}
 
 		private:
-			uint64_t minRtoMs{ 0 };
-			uint64_t maxRtoMs{ 0 };
-			uint64_t maxRttMs{ 0 };
-			uint64_t minRttVarianceMs{ 0 };
-			double srttMs{ 0 };
+			uint64_t minRtoMs;
+			uint64_t maxRtoMs;
+			uint64_t maxRttMs;
+			uint64_t minRttVarianceMs;
+			double srttMs;
+			double rtoMs;
 			double rttVarMs{ 0 };
-			double rtoMs{ 0 };
 			bool firstMeasurement{ false };
 		};
 	} // namespace SCTP

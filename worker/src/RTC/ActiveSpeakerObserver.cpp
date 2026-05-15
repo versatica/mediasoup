@@ -88,7 +88,7 @@ namespace RTC
 	}
 
 	ActiveSpeakerObserver::ActiveSpeakerObserver(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::RtpObserver::Listener* listener,
 	  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options)
@@ -105,12 +105,12 @@ namespace RTC
 			this->interval = 5000;
 		}
 
-		this->periodicTimer = new TimerHandle(this);
+		this->periodicTimer = this->shared->CreateTimer(this);
 
 		this->periodicTimer->Start(interval, interval);
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ nullptr);
@@ -120,7 +120,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		delete this->periodicTimer;
 
@@ -149,7 +149,7 @@ namespace RTC
 			MS_THROW_ERROR("Producer already in map");
 		}
 
-		this->mapProducerSpeakers[producer->id] = new ProducerSpeaker(producer);
+		this->mapProducerSpeakers[producer->id] = new ProducerSpeaker(this->shared, producer);
 	}
 
 	void ActiveSpeakerObserver::RemoveProducer(RTC::Producer* producer)
@@ -229,7 +229,7 @@ namespace RTC
 		if (it != this->mapProducerSpeakers.end())
 		{
 			auto* producerSpeaker = it->second;
-			const uint64_t now    = DepLibUV::GetTimeMs();
+			const uint64_t now    = this->shared->GetTimeMs();
 
 			producerSpeaker->speaker->LevelChanged(volume, now);
 		}
@@ -249,7 +249,7 @@ namespace RTC
 		this->periodicTimer->Restart();
 	}
 
-	void ActiveSpeakerObserver::OnTimer(TimerHandle* /*timer*/)
+	void ActiveSpeakerObserver::OnTimer(TimerHandleInterface* /*timer*/)
 	{
 		MS_TRACE();
 
@@ -260,7 +260,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const uint64_t now = DepLibUV::GetTimeMs();
+		const uint64_t now = this->shared->GetTimeMs();
 
 		if (now - this->lastLevelIdleTime >= LevelIdleTimeout)
 		{
@@ -275,9 +275,9 @@ namespace RTC
 		if (!this->mapProducerSpeakers.empty() && CalculateActiveSpeaker())
 		{
 			auto notification = FBS::ActiveSpeakerObserver::CreateDominantSpeakerNotificationDirect(
-			  this->shared->channelNotifier->GetBufferBuilder(), this->dominantId.c_str());
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->dominantId.c_str());
 
-			this->shared->channelNotifier->Emit(
+			this->shared->GetChannelNotifier()->Emit(
 			  this->id,
 			  FBS::Notification::Event::ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER,
 			  FBS::Notification::Body::ActiveSpeakerObserver_DominantSpeakerNotification,
@@ -387,8 +387,8 @@ namespace RTC
 		}
 	}
 
-	ActiveSpeakerObserver::ProducerSpeaker::ProducerSpeaker(RTC::Producer* producer)
-	  : producer(producer), speaker(new Speaker())
+	ActiveSpeakerObserver::ProducerSpeaker::ProducerSpeaker(SharedInterface* shared, RTC::Producer* producer)
+	  : producer(producer), speaker(new Speaker(shared))
 	{
 		MS_TRACE();
 
@@ -402,11 +402,11 @@ namespace RTC
 		delete this->speaker;
 	}
 
-	ActiveSpeakerObserver::Speaker::Speaker()
+	ActiveSpeakerObserver::Speaker::Speaker(SharedInterface* shared)
 	  : immediateActivityScore(MinActivityScore),
 	    mediumActivityScore(MinActivityScore),
 	    longActivityScore(MinActivityScore),
-	    lastLevelChangeTime(DepLibUV::GetTimeMs()),
+	    lastLevelChangeTime(shared->GetTimeMs()),
 	    minLevel(MinLevel),
 	    nextMinLevel(MinLevel),
 	    immediates(ImmediateBuffLen, 0),

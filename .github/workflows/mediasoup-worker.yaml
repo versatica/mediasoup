@@ -37,7 +37,6 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
@@ -46,7 +45,6 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
           - os: ubuntu-22.04-arm
             cc: gcc
             cxx: g++
@@ -56,7 +54,6 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
           - os: ubuntu-24.04
             cc: gcc
             cxx: g++
@@ -66,10 +63,9 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
             # Compile with all Meson option flags enabled once with gcc in
             # Release mode.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true'
           - os: ubuntu-24.04
             cc: gcc
             cxx: g++
@@ -79,10 +75,9 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
             # Compile with all Meson option flags enabled once with gcc in
             # Debug mode.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true'
           - os: ubuntu-24.04
             cc: clang
             cxx: clang++
@@ -92,10 +87,9 @@ jobs:
             run-test: true
             run-test-asan-address: true
             run-test-asan-undefined: true
-            run-test-asan-thread: true
             # Let's just compile with all Meson option flags enabled once with
             # clang.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true'
           - os: ubuntu-24.04-arm
             cc: gcc
             cxx: g++
@@ -106,7 +100,6 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
           - os: ubuntu-24.04-arm
             cc: clang
             cxx: clang++
@@ -117,7 +110,6 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
           - os: macos-15
             cc: clang
             cxx: clang++
@@ -128,7 +120,6 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
           - os: windows-2022
             cc: cl
             cxx: cl
@@ -140,7 +131,6 @@ jobs:
             # Address Sanitizer does not work on Windows.
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
           - os: windows-2025
             cc: cl
             cxx: cl
@@ -152,12 +142,10 @@ jobs:
             # Address Sanitizer does not work on Windows.
             run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: false
-        # A single Node.js version should be fine for C++.
-        node:
-          - 24
 
     runs-on: ${{ matrix.build.os }}
+
+    timeout-minutes: 90
 
     env:
       CC: ${{ matrix.build.cc }}
@@ -169,21 +157,21 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 24
 
       - name: Configure cache
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: |
             ~/.npm
-          key: ${{ matrix.build.os }}-node-${{matrix.build.cc}}-${{ hashFiles('**/package.json') }}
+          key: ${{ matrix.build.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
+            ${{ matrix.build.os }}-node-
 
       # We need to install pip invoke manually.
       - if: ${{ !matrix.build.pip-break-system-packages }}
@@ -233,8 +221,3 @@ jobs:
       - if: ${{ matrix.build.run-test-asan-undefined }}
         name: invoke -r worker test-asan-undefined
         run: invoke -r worker clean-all && invoke -r worker test-asan-undefined
-
-      # Let's clean everything before rebuilding worker tests with ASAN.
-      - if: ${{ matrix.build.run-test-asan-thread }}
-        name: invoke -r worker test-asan-thread
-        run: invoke -r worker clean-all && invoke -r worker test-asan-thread

@@ -1,12 +1,13 @@
 #ifndef MS_KEY_FRAME_REQUEST_MANAGER_HPP
 #define MS_KEY_FRAME_REQUEST_MANAGER_HPP
 
-#include "handles/TimerHandle.hpp"
+#include "SharedInterface.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 
 namespace RTC
 {
-	class PendingKeyFrameInfo : public TimerHandle::Listener
+	class PendingKeyFrameInfo : public TimerHandleInterface::Listener
 	{
 	public:
 		class Listener
@@ -19,7 +20,7 @@ namespace RTC
 		};
 
 	public:
-		PendingKeyFrameInfo(Listener* listener, uint32_t ssrc);
+		PendingKeyFrameInfo(Listener* listener, SharedInterface* shared, uint32_t ssrc);
 		~PendingKeyFrameInfo() override;
 
 		uint32_t GetSsrc() const
@@ -39,18 +40,18 @@ namespace RTC
 			this->timer->Restart();
 		}
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		Listener* listener{ nullptr };
 		uint32_t ssrc;
-		TimerHandle* timer{ nullptr };
+		TimerHandleInterface* timer{ nullptr };
 		bool retryOnTimeout{ true };
 	};
 
-	class KeyFrameRequestDelayer : public TimerHandle::Listener
+	class KeyFrameRequestDelayer : public TimerHandleInterface::Listener
 	{
 	public:
 		class Listener
@@ -63,7 +64,7 @@ namespace RTC
 		};
 
 	public:
-		KeyFrameRequestDelayer(Listener* listener, uint32_t ssrc, uint32_t delay);
+		KeyFrameRequestDelayer(Listener* listener, SharedInterface* shared, uint32_t ssrc, uint32_t delay);
 		~KeyFrameRequestDelayer() override;
 
 		uint32_t GetSsrc() const
@@ -79,14 +80,14 @@ namespace RTC
 			this->keyFrameRequested = flag;
 		}
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		Listener* listener{ nullptr };
 		uint32_t ssrc;
-		TimerHandle* timer{ nullptr };
+		TimerHandleInterface* timer{ nullptr };
 		bool keyFrameRequested{ false };
 	};
 
@@ -104,7 +105,8 @@ namespace RTC
 		};
 
 	public:
-		explicit KeyFrameRequestManager(Listener* listener, uint32_t keyFrameRequestDelay);
+		explicit KeyFrameRequestManager(
+		  Listener* listener, SharedInterface* shared, uint32_t keyFrameRequestDelay);
 		~KeyFrameRequestManager() override;
 
 		void KeyFrameNeeded(uint32_t ssrc);
@@ -121,6 +123,7 @@ namespace RTC
 
 	private:
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		uint32_t keyFrameRequestDelay{ 0u }; // 0 means disabled.
 		absl::flat_hash_map<uint32_t, PendingKeyFrameInfo*> mapSsrcPendingKeyFrameInfo;
 		absl::flat_hash_map<uint32_t, KeyFrameRequestDelayer*> mapSsrcKeyFrameRequestDelayer;

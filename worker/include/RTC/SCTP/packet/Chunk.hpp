@@ -47,7 +47,7 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			using parametersIterator  = typename std::vector<Parameter*>::const_iterator;
+			using ParametersIterator  = typename std::vector<Parameter*>::const_iterator;
 			using ErrorCausesIterator = typename std::vector<ErrorCause*>::const_iterator;
 
 		public:
@@ -232,12 +232,12 @@ namespace RTC
 				return this->parameters.size();
 			}
 
-			virtual parametersIterator ParametersBegin() const final
+			virtual ParametersIterator ParametersBegin() const final
 			{
 				return this->parameters.begin();
 			}
 
-			virtual parametersIterator ParametersEnd() const final
+			virtual ParametersIterator ParametersEnd() const final
 			{
 				return this->parameters.end();
 			}
@@ -279,7 +279,6 @@ namespace RTC
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
 			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
-
 			 */
 			virtual void AddParameter(const Parameter* parameter) final;
 

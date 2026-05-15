@@ -1,10 +1,12 @@
 #include "common.hpp"
-#include "DepLibUV.hpp"
+#include "mocks/include/MockShared.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <deque>
+#include <vector>
 
 SCENARIO("TransportCongestionControlServer", "[rtp]")
 {
@@ -77,6 +79,12 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		TestResults results;
 	};
 
+	mocks::MockShared shared(/*getTimeMs*/
+	                         []()
+	                         {
+		                         return 1000;
+	                         });
+
 	// clang-format off
 	alignas(4) uint8_t buffer[] =
 	{
@@ -89,11 +97,15 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 	// clang-format on
 
 	auto validate =
-	  [&buffer](std::vector<TestTransportCongestionControlServerInput>& inputs, TestResults& results)
+	  [&buffer,
+	   &shared](std::vector<TestTransportCongestionControlServerInput>& inputs, TestResults& results)
 	{
 		TestTransportCongestionControlServerListener listener;
 		auto tccServer = RTC::TransportCongestionControlServer(
-		  &listener, RTC::BweType::TRANSPORT_CC, RTC::Consts::MtuSize);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  RTC::BweType::TRANSPORT_CC,
+		  RTC::Consts::MtuSize);
 
 		tccServer.SetMaxIncomingBitrate(150000);
 		tccServer.TransportConnected();

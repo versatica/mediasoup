@@ -1,10 +1,10 @@
 #ifndef MS_RTC_WEBRTC_SERVER_HPP
 #define MS_RTC_WEBRTC_SERVER_HPP
 
+#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/StunPacket.hpp"
-#include "RTC/Shared.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -52,7 +52,7 @@ namespace RTC
 
 	public:
 		WebRtcServer(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::ListenInfo>>* listenInfos);
 		~WebRtcServer() override;
@@ -112,7 +112,7 @@ namespace RTC
 		// Passed by argument.
 		std::string id;
 		// Passed by argument.
-		RTC::Shared* shared{ nullptr };
+		SharedInterface* shared{ nullptr };
 		// Vector of UdpSockets and TcpServers in the user given order.
 		std::vector<UdpSocketOrTcpServer> udpSocketOrTcpServers;
 		// Set of WebRtcTransports.

@@ -11,25 +11,25 @@ namespace RTC
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqLowerThan::operator()(T lhs, T rhs) const
 	{
-		return Utils::Number<T, N>::IsLowerThan(lhs, rhs);
+		return Utils::Number::IsLowerThan<T, N>(lhs, rhs);
 	}
 
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqHigherThan::operator()(T lhs, T rhs) const
 	{
-		return Utils::Number<T, N>::IsHigherThan(lhs, rhs);
+		return Utils::Number::IsHigherThan<T, N>(lhs, rhs);
 	}
 
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::IsSeqHigherThan(T lhs, T rhs)
 	{
-		return Utils::Number<T, N>::IsHigherThan(lhs, rhs);
+		return Utils::Number::IsHigherThan<T, N>(lhs, rhs);
 	}
 
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::IsSeqLowerThan(T lhs, T rhs)
 	{
-		return Utils::Number<T, N>::IsLowerThan(lhs, rhs);
+		return Utils::Number::IsLowerThan<T, N>(lhs, rhs);
 	}
 
 	template<typename T, uint8_t N>

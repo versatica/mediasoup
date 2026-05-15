@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataProducer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <vector>
@@ -12,7 +11,7 @@ namespace RTC
 	/* Instance methods. */
 
 	DataProducer::DataProducer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  size_t maxMessageSize,
 	  RTC::DataProducer::Listener* listener,
@@ -63,7 +62,7 @@ namespace RTC
 		this->paused = data->paused();
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ this);
@@ -73,7 +72,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 	}
 
 	flatbuffers::Offset<FBS::DataProducer::DumpResponse> DataProducer::FillBuffer(
@@ -108,7 +107,7 @@ namespace RTC
 		return FBS::DataProducer::CreateGetStatsResponseDirect(
 		  builder,
 		  // timestamp.
-		  DepLibUV::GetTimeMs(),
+		  this->shared->GetTimeMs(),
 		  // label.
 		  this->label.c_str(),
 		  // protocol.

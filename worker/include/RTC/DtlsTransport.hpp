@@ -2,9 +2,10 @@
 #define MS_RTC_DTLS_TRANSPORT_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "FBS/webRtcTransport.h"
 #include "RTC/SrtpSession.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
@@ -14,7 +15,7 @@
 
 namespace RTC
 {
-	class DtlsTransport : public TimerHandle::Listener
+	class DtlsTransport : public TimerHandleInterface::Listener
 	{
 	public:
 		enum class DtlsState : uint8_t
@@ -124,18 +125,18 @@ namespace RTC
 		static void GenerateFingerprints();
 
 	private:
-		thread_local static X509* certificate;
-		thread_local static EVP_PKEY* privateKey;
-		thread_local static SSL_CTX* sslCtx;
-		thread_local static uint8_t sslReadBuffer[];
+		static thread_local X509* certificate;
+		static thread_local EVP_PKEY* privateKey;
+		static thread_local SSL_CTX* sslCtx;
+		static thread_local uint8_t sslReadBuffer[];
 		static const absl::flat_hash_map<std::string, Role> String2Role;
 		static const absl::flat_hash_map<std::string, FingerprintAlgorithm> String2FingerprintAlgorithm;
 		static const absl::flat_hash_map<FingerprintAlgorithm, std::string> FingerprintAlgorithm2String;
-		thread_local static std::vector<Fingerprint> localFingerprints;
+		static thread_local std::vector<Fingerprint> localFingerprints;
 		static const std::vector<SrtpCryptoSuiteMapEntry> SrtpCryptoSuites;
 
 	public:
-		explicit DtlsTransport(Listener* listener);
+		explicit DtlsTransport(Listener* listener, SharedInterface* shared);
 		~DtlsTransport() override;
 
 	public:
@@ -195,18 +196,19 @@ namespace RTC
 	public:
 		void OnSslInfo(int where, int ret);
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		// Allocated by this.
 		SSL* ssl{ nullptr };
 		BIO* sslBioFromNetwork{ nullptr }; // The BIO from which ssl reads.
 		BIO* sslBioToNetwork{ nullptr };   // The BIO in which ssl writes.
-		TimerHandle* timer{ nullptr };
+		TimerHandleInterface* timer{ nullptr };
 		// Others.
 		DtlsState state{ DtlsState::NEW };
 		std::optional<Role> localRole;

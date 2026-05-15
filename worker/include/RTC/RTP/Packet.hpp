@@ -229,7 +229,7 @@ namespace RTC
 			static uint32_t GetNextMediasoupPacketId();
 
 		private:
-			thread_local static uint32_t nextMediasoupPacketId;
+			static thread_local uint32_t nextMediasoupPacketId;
 
 		private:
 			/**

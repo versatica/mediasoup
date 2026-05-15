@@ -124,15 +124,17 @@ fn generate_router_rtp_capabilities_unsupported() {
 fn generate_router_rtp_capabilities_too_many_codecs() {
     assert!(matches!(
         generate_router_rtp_capabilities(
-            iter::repeat(RtpCodecCapability::Audio {
-                mime_type: MimeTypeAudio::Opus,
-                preferred_payload_type: None,
-                clock_rate: NonZeroU32::new(48000).unwrap(),
-                channels: NonZeroU8::new(2).unwrap(),
-                parameters: RtpCodecParametersParameters::default(),
-                rtcp_feedback: vec![],
-            })
-            .take(100)
+            iter::repeat_n(
+                RtpCodecCapability::Audio {
+                    mime_type: MimeTypeAudio::Opus,
+                    preferred_payload_type: None,
+                    clock_rate: NonZeroU32::new(48000).unwrap(),
+                    channels: NonZeroU8::new(2).unwrap(),
+                    parameters: RtpCodecParametersParameters::default(),
+                    rtcp_feedback: vec![],
+                },
+                100
+            )
             .collect::<Vec<_>>()
         ),
         Err(RtpCapabilitiesError::CannotAllocate)

@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SenderBandwidthEstimator.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -16,8 +15,11 @@ namespace RTC
 	/* Instance methods. */
 
 	SenderBandwidthEstimator::SenderBandwidthEstimator(
-	  RTC::SenderBandwidthEstimator::Listener* listener, uint32_t initialAvailableBitrate)
+	  RTC::SenderBandwidthEstimator::Listener* listener,
+	  SharedInterface* shared,
+	  uint32_t initialAvailableBitrate)
 	  : listener(listener),
+	    shared(shared),
 	    initialAvailableBitrate(initialAvailableBitrate),
 	    rtt(DefaultRtt),
 	    sendTransmission(1000u),
@@ -36,7 +38,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->availableBitrate              = this->initialAvailableBitrate;
-		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
+		this->lastAvailableBitrateEventAtMs = this->shared->GetTimeMs();
 	}
 
 	void SenderBandwidthEstimator::TransportDisconnected()
@@ -85,7 +87,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs               = DepLibUV::GetTimeMs();
+		auto nowMs               = this->shared->GetTimeMs();
 		const uint64_t elapsedMs = nowMs - this->cummulativeResult.GetStartedAtMs();
 
 		// Drop ongoing cummulative result if too old.
@@ -226,7 +228,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastAvailableBitrateEventAtMs = DepLibUV::GetTimeMs();
+		this->lastAvailableBitrateEventAtMs = this->shared->GetTimeMs();
 	}
 
 	void SenderBandwidthEstimator::CummulativeResult::AddPacket(

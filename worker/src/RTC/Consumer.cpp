@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Consumer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -24,7 +23,7 @@ namespace RTC
 	/* Instance methods. */
 
 	Consumer::Consumer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  const std::string& producerId,
 	  RTC::Consumer::Listener* listener,
@@ -884,7 +883,8 @@ namespace RTC
 			UserOnPaused();
 		}
 
-		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_PAUSE);
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id, FBS::Notification::Event::CONSUMER_PRODUCER_PAUSE);
 	}
 
 	void Consumer::ProducerResumed()
@@ -905,7 +905,8 @@ namespace RTC
 			UserOnResumed();
 		}
 
-		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_RESUME);
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id, FBS::Notification::Event::CONSUMER_PRODUCER_RESUME);
 	}
 
 	void Consumer::ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
@@ -957,7 +958,8 @@ namespace RTC
 
 		MS_DEBUG_DEV("Producer closed [consumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_CLOSE);
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id, FBS::Notification::Event::CONSUMER_PRODUCER_CLOSE);
 
 		this->listener->OnConsumerProducerClosed(this);
 	}
@@ -1783,14 +1785,14 @@ namespace RTC
 
 		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
-			auto traceInfo     = FBS::Consumer::CreateKeyFrameTraceInfo(
-			  this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
+			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+			auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
-			  this->shared->channelNotifier->GetBufferBuilder(),
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Consumer::TraceEventType::KEYFRAME,
-			  DepLibUV::GetTimeMs(),
+			  this->shared->GetTimeMs(),
 			  FBS::Common::TraceDirection::DIRECTION_OUT,
 			  FBS::Consumer::TraceInfo::KeyFrameTraceInfo,
 			  traceInfo.Union());
@@ -1799,14 +1801,14 @@ namespace RTC
 		}
 		else if (this->traceEventTypes.rtp)
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
-			auto traceInfo     = FBS::Consumer::CreateRtpTraceInfo(
-			  this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
+			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+			auto traceInfo = FBS::Consumer::CreateRtpTraceInfo(
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
-			  this->shared->channelNotifier->GetBufferBuilder(),
+			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Consumer::TraceEventType::RTP,
-			  DepLibUV::GetTimeMs(),
+			  this->shared->GetTimeMs(),
 			  FBS::Common::TraceDirection::DIRECTION_OUT,
 			  FBS::Consumer::TraceInfo::RtpTraceInfo,
 			  traceInfo.Union());
@@ -1824,13 +1826,13 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo =
-		  FBS::Consumer::CreatePliTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
+		auto traceInfo = FBS::Consumer::CreatePliTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
 		auto notification = FBS::Consumer::CreateTraceNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::PLI,
-		  DepLibUV::GetTimeMs(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
 		  FBS::Consumer::TraceInfo::PliTraceInfo,
 		  traceInfo.Union());
@@ -1847,13 +1849,13 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo =
-		  FBS::Consumer::CreateFirTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
+		auto traceInfo = FBS::Consumer::CreateFirTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
 		auto notification = FBS::Consumer::CreateTraceNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::FIR,
-		  DepLibUV::GetTimeMs(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
 		  FBS::Consumer::TraceInfo::FirTraceInfo,
 		  traceInfo.Union());
@@ -1871,9 +1873,9 @@ namespace RTC
 		}
 
 		auto notification = FBS::Consumer::CreateTraceNotification(
-		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::NACK,
-		  DepLibUV::GetTimeMs(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_IN);
 
 		EmitTraceEvent(notification);
@@ -1883,7 +1885,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelNotifier->Emit(
+		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
 		  FBS::Notification::Event::CONSUMER_TRACE,
 		  FBS::Notification::Body::Consumer_TraceNotification,

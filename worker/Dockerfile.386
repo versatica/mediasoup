@@ -1,0 +1,25 @@
+#
+# This container installs a 32-bits Linux Debian.
+#
+
+FROM debian:bookworm
+
+# Install dependencies.
+RUN set -x \
+	&& apt-get update \
+	&& apt-get install --yes \
+		make pkg-config bash-completion wget curl git screen python3-pip python3-yaml \
+		zlib1g-dev libgss-dev libssl-dev libxml2-dev gdb nodejs npm
+
+# Enable core dumps.
+RUN set -x \
+	&& echo "mkdir -p /tmp/cores && chmod 777 /tmp/cores && echo \"/tmp/cores/core.%e.sig%s.%p\" > /proc/sys/kernel/core_pattern && ulimit -c unlimited" >> ~/.bashrc
+
+ENV LANG="C.UTF-8"
+
+ENV MEDIASOUP_LOCAL_DEV="true"
+ENV KEEP_BUILD_ARTIFACTS="1"
+
+WORKDIR "/foo bar/mediasoup"
+
+CMD ["bash"]

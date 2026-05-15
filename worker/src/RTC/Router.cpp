@@ -19,13 +19,13 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Router::Router(RTC::Shared* shared, const std::string& id, Listener* listener)
+	Router::Router(SharedInterface* shared, const std::string& id, Listener* listener)
 	  : id(id), shared(shared), listener(listener)
 	{
 		MS_TRACE();
 
 		// NOTE: This may throw.
-		this->shared->channelMessageRegistrator->RegisterHandler(
+		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*ChannelNotificationHandler*/ nullptr);
@@ -35,7 +35,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		// Close all Transports.
 		for (auto& kv : this->mapTransports)

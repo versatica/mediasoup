@@ -115,10 +115,10 @@ namespace RTC
 			negotiatedCapabilitiesField->bitC     = negotiatedCapabilities.reConfig;
 			negotiatedCapabilitiesField->bitD     = negotiatedCapabilities.zeroChecksum;
 			negotiatedCapabilitiesField->magic2   = htons(StateCookie::Magic2);
-			negotiatedCapabilitiesField->maxOutboundStreams =
-			  htons(negotiatedCapabilities.maxOutboundStreams);
-			negotiatedCapabilitiesField->maxInboundStreams =
-			  htons(negotiatedCapabilities.maxInboundStreams);
+			negotiatedCapabilitiesField->negotiatedMaxOutboundStreams =
+			  htons(negotiatedCapabilities.negotiatedMaxOutboundStreams);
+			negotiatedCapabilitiesField->negotiatedMaxInboundStreams =
+			  htons(negotiatedCapabilities.negotiatedMaxInboundStreams);
 		}
 
 		Types::SctpImplementation StateCookie::DetermineSctpImplementation(
@@ -206,10 +206,10 @@ namespace RTC
 
 			NegotiatedCapabilities negotiatedCapabilities;
 
-			negotiatedCapabilities.maxOutboundStreams =
-			  ntohs(negotiatedCapabilitiesField->maxOutboundStreams);
-			negotiatedCapabilities.maxInboundStreams =
-			  ntohs(negotiatedCapabilitiesField->maxInboundStreams);
+			negotiatedCapabilities.negotiatedMaxOutboundStreams =
+			  ntohs(negotiatedCapabilitiesField->negotiatedMaxOutboundStreams);
+			negotiatedCapabilities.negotiatedMaxInboundStreams =
+			  ntohs(negotiatedCapabilitiesField->negotiatedMaxInboundStreams);
 			negotiatedCapabilities.partialReliability  = negotiatedCapabilitiesField->bitA;
 			negotiatedCapabilities.messageInterleaving = negotiatedCapabilitiesField->bitB;
 			negotiatedCapabilities.reConfig            = negotiatedCapabilitiesField->bitC;

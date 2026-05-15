@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "DepLibUring.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -11,7 +12,8 @@
 #include <sys/resource.h>
 #include <sys/utsname.h>
 
-/* Static variables. */
+/* Class variables. */
+
 thread_local bool DepLibUring::enabled{ false };
 // liburing instance per thread.
 thread_local DepLibUring::LibUring* DepLibUring::liburing{ nullptr };
@@ -123,7 +125,7 @@ void DepLibUring::ClassInit()
 
 	MS_DEBUG_TAG(info, "io_uring version: \"%i.%i\"", mayor, minor);
 
-	if (Settings::configuration.liburingDisabled)
+	if (Settings::configuration.disableLiburing)
 	{
 		MS_DEBUG_TAG(info, "io_uring disabled by user settings");
 
@@ -357,8 +359,8 @@ DepLibUring::LibUring::LibUring()
 				MS_WARN_TAG(
 				  info,
 				  "io_uring_register_buffers() failed due to low RLIMIT_MEMLOCK (soft:%llu, hard:%llu), disabling zero copy: %s",
-				  l.rlim_cur,
-				  l.rlim_max,
+				  static_cast<unsigned long long>(l.rlim_cur),
+				  static_cast<unsigned long long>(l.rlim_max),
 				  std::strerror(error));
 			}
 		}

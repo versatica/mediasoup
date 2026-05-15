@@ -2,24 +2,22 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Worker.hpp"
-#include "ChannelMessageRegistrator.hpp"
 #ifdef MS_LIBURING_SUPPORTED
 #include "DepLibUring.hpp"
 #endif
 #include "DepLibUV.hpp"
-#ifndef MS_SCTP_STACK
+// TODO: Remove once we only use built-in SCTP stack.
 #include "DepUsrSCTP.hpp"
-#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include "FBS/response.h"
 #include "FBS/worker.h"
 
 /* Instance methods. */
 
-Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
+Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
+  : channel(channel), shared(shared)
 {
 	MS_TRACE();
 
@@ -29,11 +27,6 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 	// Set the SignalHandle.
 	this->signalHandle = new SignalHandle(this);
 
-	// Set up the RTC::Shared singleton.
-	this->shared = new RTC::Shared(
-	  /*channelMessageRegistrator*/ new ChannelMessageRegistrator(),
-	  /*channelNotifier*/ new Channel::ChannelNotifier(this->channel));
-
 #ifdef MS_EXECUTABLE
 	{
 		// Add signals to handle.
@@ -42,10 +35,12 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 	}
 #endif
 
-#ifndef MS_SCTP_STACK
-	// Create the Checker instance in DepUsrSCTP.
-	DepUsrSCTP::CreateChecker();
-#endif
+	// TODO: Remove once we only use built-in SCTP stack.
+	if (!Settings::configuration.useBuiltInSctpStack)
+	{
+		// Create the Checker instance in DepUsrSCTP.
+		DepUsrSCTP::CreateChecker(this->shared);
+	}
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())
@@ -56,8 +51,8 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 #endif
 
 	// Tell the Node process that we are running.
-	this->shared->channelNotifier->Emit(
-	  std::to_string(Logger::pid), FBS::Notification::Event::WORKER_RUNNING);
+	this->shared->GetChannelNotifier()->Emit(
+	  std::to_string(Logger::Pid), FBS::Notification::Event::WORKER_RUNNING);
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -106,13 +101,12 @@ void Worker::Close()
 	}
 	this->mapWebRtcServers.clear();
 
-	// Delete the RTC::Shared singleton.
-	delete this->shared;
-
-#ifndef MS_SCTP_STACK
-	// Close the Checker instance in DepUsrSCTP.
-	DepUsrSCTP::CloseChecker();
-#endif
+	// TODO: Remove once we only use built-in SCTP stack.
+	if (!Settings::configuration.useBuiltInSctpStack)
+	{
+		// Close the Checker instance in DepUsrSCTP.
+		DepUsrSCTP::CloseChecker();
+	}
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())
@@ -152,14 +146,14 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	}
 
 	// Add channelMessageHandlers.
-	auto channelMessageHandlers = this->shared->channelMessageRegistrator->FillBuffer(builder);
+	auto channelMessageHandlers = this->shared->GetChannelMessageRegistrator()->FillBuffer(builder);
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())
 	{
 		return FBS::Worker::CreateDumpResponseDirect(
 		  builder,
-		  Logger::pid,
+		  Logger::Pid,
 		  &webRtcServerIds,
 		  &routerIds,
 		  channelMessageHandlers,
@@ -168,11 +162,11 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	else
 	{
 		return FBS::Worker::CreateDumpResponseDirect(
-		  builder, Logger::pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
+		  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 	}
 #else
 	return FBS::Worker::CreateDumpResponseDirect(
-	  builder, Logger::pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
+	  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 #endif
 }
 
@@ -434,7 +428,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 			try
 			{
 				auto* handler =
-				  this->shared->channelMessageRegistrator->GetChannelRequestHandler(request->handlerId);
+				  this->shared->GetChannelMessageRegistrator()->GetChannelRequestHandler(request->handlerId);
 
 				if (handler == nullptr)
 				{
@@ -483,7 +477,7 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 		{
 			try
 			{
-				auto* handler = this->shared->channelMessageRegistrator->GetChannelNotificationHandler(
+				auto* handler = this->shared->GetChannelMessageRegistrator()->GetChannelNotificationHandler(
 				  notification->handlerId);
 
 				if (handler == nullptr)
@@ -510,7 +504,8 @@ void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
-	// Only needed for executable, library user can close channel earlier and it is fine.
+	// Only needed for executable, library user can close channel earlier and it
+	// is fine.
 #ifdef MS_EXECUTABLE
 	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
@@ -534,11 +529,6 @@ void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 		case SIGINT:
 		case SIGTERM:
 		{
-			if (this->closed)
-			{
-				return;
-			}
-
 			MS_DEBUG_DEV("%s signal received, closing myself", signum == SIGINT ? "INT" : "TERM");
 
 			Close();
@@ -548,7 +538,7 @@ void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 
 		default:
 		{
-			MS_WARN_DEV("received a non handled signal [signum:%d]", signum);
+			MS_WARN_DEV("ignoring received non handled signal [signum:%d]", signum);
 		}
 	}
 }

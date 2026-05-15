@@ -1,11 +1,12 @@
+#include "SharedInterface.hpp"
 #define MS_CLASS "RTC::WebRtcServer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/WebRtcServer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "RTC/WebRtcServer.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -53,7 +54,7 @@ namespace RTC
 	/* Instance methods. */
 
 	WebRtcServer::WebRtcServer(
-	  RTC::Shared* shared,
+	  SharedInterface* shared,
 	  const std::string& id,
 	  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::ListenInfo>>* listenInfos)
 	  : id(id), shared(shared)
@@ -205,7 +206,7 @@ namespace RTC
 			}
 
 			// NOTE: This may throw.
-			this->shared->channelMessageRegistrator->RegisterHandler(
+			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*channelNotificationHandler*/ nullptr);
@@ -234,7 +235,7 @@ namespace RTC
 
 		this->closing = true;
 
-		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
 		// NOTE: We need to close WebRtcTransports first since they may need to
 		// send DTLS Close Alert so UDP sockets and TCP connections must remain

@@ -2,13 +2,14 @@
 #define MS_RTC_TRANSPORT_CONGESTION_CONTROL_CLIENT_HPP
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/ProbationGenerator.hpp"
 #include "RTC/TrendCalculator.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <libwebrtc/api/transport/goog_cc_factory.h>
 #include <libwebrtc/api/transport/network_types.h>
 #include <libwebrtc/call/rtp_transport_controller_send.h>
@@ -21,7 +22,7 @@ namespace RTC
 
 	class TransportCongestionControlClient : public webrtc::PacketRouter,
 	                                         public webrtc::TargetTransferRateObserver,
-	                                         public TimerHandle::Listener
+	                                         public TimerHandleInterface::Listener
 	{
 	public:
 		struct Bitrates
@@ -54,6 +55,7 @@ namespace RTC
 	public:
 		TransportCongestionControlClient(
 		  RTC::TransportCongestionControlClient::Listener* listener,
+		  SharedInterface* shared,
 		  RTC::BweType bweType,
 		  uint32_t initialAvailableBitrate,
 		  uint32_t maxOutgoingBitrate,
@@ -104,18 +106,19 @@ namespace RTC
 		void SendPacket(RTC::RTP::Packet* packet, const webrtc::PacedPacketInfo& pacingInfo) override;
 		RTC::RTP::Packet* GeneratePadding(size_t size) override;
 
-		/* Pure virtual methods inherited from RTC::TimerHandle. */
+		/* Pure virtual methods inherited from RTC::TimerHandleInterface. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		// Allocated by this.
 		webrtc::NetworkControllerFactoryInterface* controllerFactory{ nullptr };
 		webrtc::RtpTransportControllerSend* rtpTransportControllerSend{ nullptr };
 		RTC::RTP::ProbationGenerator* probationGenerator{ nullptr };
-		TimerHandle* processTimer{ nullptr };
+		TimerHandleInterface* processTimer{ nullptr };
 		// Others.
 		RTC::BweType bweType;
 		uint32_t initialAvailableBitrate{ 0u };

@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_USER_DATA_HPP
 
 #include "common.hpp"
+#include <ostream>
 #include <vector>
 
 namespace RTC
@@ -38,6 +39,15 @@ namespace RTC
 
 			// Disable copy assignment.
 			UserData& operator=(const UserData&) = delete;
+
+			bool operator==(const UserData& other) const
+			{
+				return (
+				  this->streamId == other.streamId && this->ssn == other.ssn && this->mid == other.mid &&
+				  this->fsn == other.fsn && this->ppid == other.ppid && this->payload == other.payload &&
+				  this->isBeginning == other.isBeginning && this->isEnd == other.isEnd &&
+				  this->isUnordered == other.isUnordered);
+			}
 
 			~UserData();
 
@@ -81,9 +91,9 @@ namespace RTC
 				return this->ppid;
 			}
 
-			const uint8_t* GetPayload() const
+			std::vector<uint8_t>& GetPayload()
 			{
-				return this->payload.data();
+				return this->payload;
 			}
 
 			size_t GetPayloadLength() const
@@ -93,7 +103,7 @@ namespace RTC
 
 			/**
 			 * Useful to extract the payload and its ownership when destructing the
-			 * Message.
+			 * UserData.
 			 *
 			 * @remarks
 			 * - && at the end means that it can only be called from a rvalue.
@@ -105,7 +115,22 @@ namespace RTC
 			 */
 			std::vector<uint8_t> ReleasePayload() &&
 			{
+				// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move)
 				return std::move(this->payload);
+			}
+
+			UserData Clone() const
+			{
+				return UserData(
+				  this->streamId,
+				  this->ssn,
+				  this->mid,
+				  this->fsn,
+				  this->ppid,
+				  this->payload,
+				  this->isBeginning,
+				  this->isEnd,
+				  this->isUnordered);
 			}
 
 			bool IsBeginning() const
@@ -124,16 +149,28 @@ namespace RTC
 			}
 
 		private:
-			uint16_t streamId{ 0 };
-			uint16_t ssn{ 0 };
-			uint32_t mid{ 0 };
-			uint32_t fsn{ 0 };
-			uint32_t ppid{ 0 };
+			uint16_t streamId;
+			uint16_t ssn;
+			uint32_t mid;
+			uint32_t fsn;
+			uint32_t ppid;
 			std::vector<uint8_t> payload;
-			bool isBeginning{ false };
-			bool isEnd{ false };
-			bool isUnordered{ false };
+			bool isBeginning;
+			bool isEnd;
+			bool isUnordered;
 		};
+
+		/**
+		 * For Catch2 to print it nicely.
+		 */
+		inline std::ostream& operator<<(std::ostream& os, const UserData& d)
+		{
+			return os << "{streamId:" << d.GetStreamId() << ", ssn:" << d.GetStreamSequenceNumber()
+			          << ", mid:" << d.GetMessageId() << ", fsn:" << d.GetFragmentSequenceNumber()
+			          << ", ppid:" << d.GetPayloadProtocolId() << ", payloadLen:" << d.GetPayloadLength()
+			          << ", B:" << d.IsBeginning() << ", E:" << d.IsEnd() << ", U:" << d.IsUnordered()
+			          << "}";
+		}
 	} // namespace SCTP
 } // namespace RTC
 

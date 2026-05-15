@@ -1,9 +1,9 @@
 #ifndef MS_RTC_TRANSPORT_HPP
 #define MS_RTC_TRANSPORT_HPP
+
 // #define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
@@ -18,22 +18,20 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpListener.hpp"
-#ifdef MS_SCTP_STACK
 #include "RTC/SCTP/public/AssociationInterface.hpp"
-#include "RTC/SCTP/public/AssociationListener.hpp"
+#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
-#else
+// TODO: SCTP: Remove once we only use built-in SCTP stack.
+#include "SharedInterface.hpp"
 #include "RTC/SctpAssociation.hpp"
-#endif
 #include "RTC/SctpListener.hpp"
-#include "RTC/Shared.hpp"
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 #include "RTC/SenderBandwidthEstimator.hpp"
 #endif
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <string>
 #include <vector>
@@ -44,11 +42,9 @@ namespace RTC
 	                  public RTC::Consumer::Listener,
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
-#ifdef MS_SCTP_STACK
-	                  public RTC::SCTP::AssociationListener,
-#else
+	                  public RTC::SCTP::AssociationListenerInterface,
+	                  // TODO: SCTP: Remove once we only use built-in SCTP stack.
 	                  public RTC::SctpAssociation::Listener,
-#endif
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Channel::ChannelSocket::RequestHandler,
@@ -56,7 +52,7 @@ namespace RTC
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	                  public RTC::SenderBandwidthEstimator::Listener,
 #endif
-	                  public TimerHandle::Listener
+	                  public TimerHandleInterface::Listener
 	{
 	protected:
 		using onSendCallback   = const std::function<void(bool sent)>;
@@ -161,7 +157,7 @@ namespace RTC
 
 	public:
 		Transport(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  const FBS::Transport::Options* options);
@@ -189,11 +185,11 @@ namespace RTC
 		void Disconnected();
 		void DataReceived(size_t len)
 		{
-			this->recvTransmission.Update(len, DepLibUV::GetTimeMs());
+			this->recvTransmission.Update(len, this->shared->GetTimeMs());
 		}
 		void DataSent(size_t len)
 		{
-			this->sendTransmission.Update(len, DepLibUV::GetTimeMs());
+			this->sendTransmission.Update(len, this->shared->GetTimeMs());
 		}
 		void ReceiveRtpPacket(RTC::RTP::Packet* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
@@ -289,10 +285,11 @@ namespace RTC
 		  size_t len,
 		  uint32_t ppid,
 		  onQueuedCallback* cb = nullptr) override;
+		void OnDataConsumerNeedBufferedAmount(
+		  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
-#ifdef MS_SCTP_STACK
-		/* Pure virtual methods inherited from RTC::SCTP::AssociationListener. */
+		/* Pure virtual methods inherited from RTC::SCTP::AssociationListenerInterface. */
 	public:
 		bool OnAssociationSendData(const uint8_t* data, size_t len) override;
 		void OnAssociationConnecting() override;
@@ -308,9 +305,11 @@ namespace RTC
 		void OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) override;
 		void OnAssociationStreamBufferedAmountLow(uint16_t streamId) override;
 		void OnAssociationTotalBufferedAmountLow() override;
+		bool OnAssociationIsTransportReadyForSctp() override;
 		// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.
-#else
+
 		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 	public:
 		void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) override;
 		void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation) override;
@@ -326,7 +325,6 @@ namespace RTC
 		  uint32_t ppid) override;
 		void OnSctpAssociationBufferedAmount(
 		  RTC::SctpAssociation* sctpAssociation, uint32_t bufferedAmount) override;
-#endif
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
@@ -352,23 +350,19 @@ namespace RTC
 		  uint32_t previousAvailableBitrate) override;
 #endif
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
+		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
-		void OnTimer(TimerHandle* timer) override;
+		void OnTimer(TimerHandleInterface* timer) override;
 
 	public:
 		// Passed by argument.
 		std::string id;
 
 	protected:
-		RTC::Shared* shared{ nullptr };
+		SharedInterface* shared{ nullptr };
 		size_t maxMessageSize{ 262144u };
-		// Allocated by this.
-#ifdef MS_SCTP_STACK
-		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
-#else
-		RTC::SctpAssociation* sctpAssociation{ nullptr };
-#endif
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
+		RTC::SctpAssociation* oldSctpAssociation{ nullptr };
 
 	private:
 		// Passed by argument.
@@ -380,7 +374,9 @@ namespace RTC
 		absl::flat_hash_map<std::string, RTC::DataConsumer*> mapDataConsumers;
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
-		TimerHandle* rtcpTimer{ nullptr };
+		TimerHandleInterface* rtcpTimer{ nullptr };
+		// Allocated by this.
+		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlClient> tccClient{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlServer> tccServer{ nullptr };
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR

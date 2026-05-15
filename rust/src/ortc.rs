@@ -623,7 +623,7 @@ pub(crate) fn get_consumable_rtp_parameters(
 
             match cap_rtx_codec_parameters_apt {
                 Some(RtpCodecParametersParametersValue::Number(apt)) => {
-                    u8::try_from(*apt).map_or(false, |apt| apt == consumable_codec.payload_type())
+                    u8::try_from(*apt).is_ok_and(|apt| apt == consumable_codec.payload_type())
                 }
                 _ => false,
             }
@@ -794,7 +794,7 @@ pub(crate) fn get_consumer_rtp_parameters(
             let associated_media_codec = consumer_params.codecs.iter().find(|media_codec| {
                 match codec.parameters().get("apt") {
                     Some(RtpCodecParametersParametersValue::Number(apt)) => {
-                        u8::try_from(*apt).map_or(false, |apt| media_codec.payload_type() == apt)
+                        u8::try_from(*apt).is_ok_and(|apt| media_codec.payload_type() == apt)
                     }
                     _ => false,
                 }

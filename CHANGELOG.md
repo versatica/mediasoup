@@ -2,15 +2,32 @@
 
 ### NEXT
 
-- Worker: Ensure 4-byte alignment for network packet receive buffers and test buffers to avoid undefined behavior ([PR #1756](https://github.com/versatica/mediasoup/pull/1756).
+- Node: Update TypeScript to v6 ([PR #1790](https://github.com/versatica/mediasoup/pull/1790)).
+
+### 3.19.22
+
+- Node: Avoid "worker died" event when the Node application is closed via signal without calling `worker.close()` ([PR #1788](https://github.com/versatica/mediasoup/pull/1788)).
+
+### 3.19.21
+
+- Worker: Fix regression in `DirectTransport` when closing a `DataProducer` or `DataConsumer` ([PR #1780](https://github.com/versatica/mediasoup/pull/1780)).
+
+### 3.19.20
+
+- Worker: Add `useBuiltInSctpStack` setting (defaults to `false`) to enable mediasoup built-in SCTP stack ([PR #1777](https://github.com/versatica/mediasoup/pull/1777)).
+
+### 3.19.19
+
+- Worker: Ensure 4-byte alignment for network packet receive buffers and test buffers to avoid undefined behavior ([PR #1756](https://github.com/versatica/mediasoup/pull/1756)).
+- Worker: Update liburing from 2.12-1 to 2.14-1 ([PR #1761](https://github.com/versatica/mediasoup/pull/1761)).
 
 ### 3.19.18
 
-- Worker: Improve `Utils::Crypto::GetRandomUInt()` ([PR #1725](https://github.com/versatica/mediasoup/pull/1725).
-- Convert `WORKER_CLOSE` into a notification ([PR #1729](https://github.com/versatica/mediasoup/pull/1729).
-- Node tests: Replace `sctp` unmaintained library with `werift-sctp` ([PR #1732](https://github.com/versatica/mediasoup/pull/1732), thanks to @shinyoshiaki for his help with `werift-sctp`.
-- Worker: Require C++20 ([PR #1741](https://github.com/versatica/mediasoup/pull/1741).
-- Fix "SCTP failed" if no DataChannel is created on a Transport with `enableSctp: true` ([PR #1749](https://github.com/versatica/mediasoup/pull/1749).
+- Worker: Improve `Utils::Crypto::GetRandomUInt()` ([PR #1725](https://github.com/versatica/mediasoup/pull/1725)).
+- Convert `WORKER_CLOSE` into a notification ([PR #1729](https://github.com/versatica/mediasoup/pull/1729)).
+- Node tests: Replace `sctp` unmaintained library with `werift-sctp` ([PR #1732](https://github.com/versatica/mediasoup/pull/1732), thanks to @shinyoshiaki for his help with `werift-sctp`).
+- Worker: Require C++20 ([PR #1741](https://github.com/versatica/mediasoup/pull/1741)).
+- Fix "SCTP failed" if no DataChannel is created on a Transport with `enableSctp: true` ([PR #1749](https://github.com/versatica/mediasoup/pull/1749)).
 
 ### 3.19.17
 
@@ -18,15 +35,15 @@
 
 ### 3.19.16
 
-- `RTP::ProbationGenerator`: Remove wrong warning log ([PR #1703](https://github.com/versatica/mediasoup/pull/1703).
+- `RTP::ProbationGenerator`: Remove wrong warning log ([PR #1703](https://github.com/versatica/mediasoup/pull/1703)).
 
 ### 3.19.15
 
-- `RtpStreamSend`: duplicated packets are discarded ([PR #1683](https://github.com/versatica/mediasoup/pull/1683).
-- Worker: Update liburing from 2.5-2 to 2.12-1 ([PR #1686](https://github.com/versatica/mediasoup/pull/1686).
-- Worker: Use the new `RTP::Packet` class ([PR #1689](https://github.com/versatica/mediasoup/pull/1689).
-- Worker: Use the new `ICE::StunPacket` class ([PR #1697](https://github.com/versatica/mediasoup/pull/1697).
-- Node: Expose `ortc` functions in `exports` in `package.json` and main module ([PR #1698](https://github.com/versatica/mediasoup/pull/1698).
+- `RtpStreamSend`: duplicated packets are discarded ([PR #1683](https://github.com/versatica/mediasoup/pull/1683)).
+- Worker: Update liburing from 2.5-2 to 2.12-1 ([PR #1686](https://github.com/versatica/mediasoup/pull/1686)).
+- Worker: Use the new `RTP::Packet` class ([PR #1689](https://github.com/versatica/mediasoup/pull/1689)).
+- Worker: Use the new `ICE::StunPacket` class ([PR #1697](https://github.com/versatica/mediasoup/pull/1697)).
+- Node: Expose `ortc` functions in `exports` in `package.json` and main module ([PR #1698](https://github.com/versatica/mediasoup/pull/1698)).
 
 ### 3.19.14
 

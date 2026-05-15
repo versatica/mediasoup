@@ -1,7 +1,7 @@
 #ifndef MS_RTC_DIRECT_TRANSPORT_HPP
 #define MS_RTC_DIRECT_TRANSPORT_HPP
 
-#include "RTC/Shared.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/Transport.hpp"
 
 namespace RTC
@@ -10,7 +10,7 @@ namespace RTC
 	{
 	public:
 		DirectTransport(
-		  RTC::Shared* shared,
+		  SharedInterface* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  const FBS::DirectTransport::DirectTransportOptions* options);

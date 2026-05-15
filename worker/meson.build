@@ -26,6 +26,20 @@ if host_machine.system() == 'windows'
   ]
 endif
 
+if get_option('ms_build_tests')
+  cpp_args += [
+    '-DMS_TEST',
+    '-DMS_LOG_STD'
+  ]
+endif
+
+if get_option('ms_build_fuzzer')
+  cpp_args += [
+    '-DMS_FUZZER',
+    '-DMS_LOG_STD'
+  ]
+endif
+
 if get_option('ms_log_trace')
   cpp_args += [
     '-DMS_LOG_TRACE',
@@ -56,12 +70,6 @@ if get_option('ms_dump_rtp_shared_packet_memory_usage')
   ]
 endif
 
-if get_option('ms_sctp_stack')
-  cpp_args += [
-    '-DMS_SCTP_STACK',
-  ]
-endif
-
 cpp = meson.get_compiler('cpp')
 
 # This is a workaround to define FLATBUFFERS_LOCALE_INDEPENDENT=0 outside
@@ -80,12 +88,13 @@ common_sources = [
   'src/DepLibUV.cpp',
   'src/DepLibWebRTC.cpp',
   'src/DepOpenSSL.cpp',
+  # TODO: Remove once we only use built-in SCTP stack.
   'src/DepUsrSCTP.cpp',
   'src/Logger.cpp',
   'src/MediaSoupErrors.cpp',
   'src/Settings.cpp',
+  'src/Shared.cpp',
   'src/Worker.cpp',
-  'src/ChannelMessageRegistrator.cpp',
   'src/Utils/BitStream.cpp',
   'src/Utils/Crypto.cpp',
   'src/Utils/File.cpp',
@@ -100,6 +109,7 @@ common_sources = [
   'src/handles/UnixStreamSocketHandle.cpp',
   'src/Channel/ChannelNotifier.cpp',
   'src/Channel/ChannelRequest.cpp',
+  'src/Channel/ChannelMessageRegistrator.cpp',
   'src/Channel/ChannelNotification.cpp',
   'src/Channel/ChannelSocket.cpp',
   'src/RTC/ActiveSpeakerObserver.cpp',
@@ -122,12 +132,12 @@ common_sources = [
   'src/RTC/RtcLogger.cpp',
   'src/RTC/RtpListener.cpp',
   'src/RTC/RtpObserver.cpp',
+  # TODO: Remove once we only use built-in SCTP stack.
   'src/RTC/SctpAssociation.cpp',
   'src/RTC/SctpListener.cpp',
   'src/RTC/SenderBandwidthEstimator.cpp',
   'src/RTC/SeqManager.cpp',
   'src/RTC/Serializable.cpp',
-  'src/RTC/Shared.cpp',
   'src/RTC/SimpleConsumer.cpp',
   'src/RTC/SimpleProducerStreamManager.cpp',
   'src/RTC/SimulcastConsumer.cpp',
@@ -201,13 +211,21 @@ common_sources = [
   'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
   'src/RTC/SCTP/association/Association.cpp',
-  'src/RTC/SCTP/association/AssociationDeferredListener.cpp',
+  'src/RTC/SCTP/association/AssociationListenerDeferrer.cpp',
+  'src/RTC/SCTP/association/HeartbeatHandler.cpp',
   'src/RTC/SCTP/association/NegotiatedCapabilities.cpp',
   'src/RTC/SCTP/association/PacketSender.cpp',
-  'src/RTC/SCTP/association/TransmissionControlBlock.cpp',
   'src/RTC/SCTP/association/StateCookie.cpp',
+  'src/RTC/SCTP/association/StreamResetHandler.cpp',
+  'src/RTC/SCTP/association/TransmissionControlBlock.cpp',
+  'src/RTC/SCTP/rx/InterleavedReassemblyStreams.cpp',
+  'src/RTC/SCTP/rx/TraditionalReassemblyStreams.cpp',
+  'src/RTC/SCTP/tx/OutstandingData.cpp',
   'src/RTC/SCTP/tx/RetransmissionErrorCounter.cpp',
+  'src/RTC/SCTP/tx/RetransmissionQueue.cpp',
   'src/RTC/SCTP/tx/RetransmissionTimeout.cpp',
+  'src/RTC/SCTP/tx/RoundRobinSendQueue.cpp',
+  'src/RTC/SCTP/tx/StreamScheduler.cpp',
   'src/RTC/SCTP/packet/Packet.cpp',
   'src/RTC/SCTP/packet/TLV.cpp',
   'src/RTC/SCTP/packet/UserData.cpp',
@@ -316,13 +334,6 @@ flatbuffers_proj = subproject(
   ],
 )
 
-catch2_proj = subproject(
-  'catch2',
-  default_options: [
-    'warning_level=0',
-  ],
-)
-
 # flatbuffers schemas subdirectory.
 subdir('fbs')
 
@@ -373,7 +384,19 @@ if host_machine.system() == 'linux' and not get_option('ms_disable_liburing')
 
   # Enable liburing for kernel versions greather than or equal to 6.
   if kernel_version[0].to_int() >= 6
-    liburing_proj = subproject('liburing', default_options: ['default_library=static'], required: true)
+    liburing_proj = subproject(
+      'liburing',
+      default_options: [
+        'default_library=static',
+        # NOTE: We need to add this to disable ASAN in liburing, otherwise when
+        # building `mediasoup-test-asan-undefined` binary, liburing receives
+        # `use_ubsan: true` and tries to compile its `sanitize.c` file
+        # that contains references to `__asan_*` functions, but we don't enable
+        # ASAN (`-fsanitize=address) in that binaries so liburing fails to
+        # compile.
+        'b_sanitize=none',
+      ],
+    )
 
     dependencies += [
       liburing_proj.get_variable('uring'),
@@ -388,6 +411,19 @@ if host_machine.system() == 'linux' and not get_option('ms_disable_liburing')
       '-DMS_LIBURING_SUPPORTED',
     ]
   endif
+endif
+
+if get_option('ms_build_tests')
+  catch2_proj = subproject(
+    'catch2',
+    default_options: [
+      'warning_level=0',
+    ],
+  )
+
+  dependencies += [
+    catch2_proj.get_variable('catch2_dep'),
+  ]
 endif
 
 libmediasoup_worker = library(
@@ -413,6 +449,13 @@ executable(
   include_directories: include_directories('include'),
   cpp_args: cpp_args + ['-DMS_EXECUTABLE'],
 )
+
+mock_sources = [
+  'mocks/src/MockShared.cpp',
+  'mocks/src/handles/MockBackoffTimerHandle.cpp',
+  'mocks/src/Channel/MockChannelMessageRegistrator.cpp',
+  'mocks/src/RTC/SCTP/association/MockTransmissionControlBlockContext.cpp',
+]
 
 test_sources = [
   'test/src/tests.cpp',
@@ -464,10 +507,18 @@ test_sources = [
   'test/src/RTC/RTCP/TestPacket.cpp',
   'test/src/RTC/RTCP/TestXr.cpp',
   'test/src/RTC/SCTP/sctpCommon.cpp',
-  'test/src/RTC/SCTP/association/TestStateCookie.cpp',
+  'test/src/RTC/SCTP/association/TestHeartbeatHandler.cpp',
   'test/src/RTC/SCTP/association/TestNegotiatedCapabilities.cpp',
+  'test/src/RTC/SCTP/association/TestStateCookie.cpp',
+  'test/src/RTC/SCTP/rx/TestInterleavedReassemblyStreams.cpp',
+  'test/src/RTC/SCTP/rx/TestTraditionalReassemblyStreams.cpp',
+  'test/src/RTC/SCTP/tx/TestOutstandingData.cpp',
   'test/src/RTC/SCTP/tx/TestRetransmissionErrorCounter.cpp',
+  'test/src/RTC/SCTP/tx/TestRetransmissionQueue.cpp',
   'test/src/RTC/SCTP/tx/TestRetransmissionTimeout.cpp',
+  'test/src/RTC/SCTP/tx/TestRoundRobinSendQueue.cpp',
+  'test/src/RTC/SCTP/tx/TestOutstandingData.cpp',
+  'test/src/RTC/SCTP/tx/TestStreamScheduler.cpp',
   'test/src/RTC/SCTP/packet/TestPacket.cpp',
   'test/src/RTC/SCTP/packet/TestChunk.cpp',
   'test/src/RTC/SCTP/packet/TestParameter.cpp',
@@ -528,6 +579,7 @@ test_sources = [
   'test/src/Utils/TestNumber.cpp',
   'test/src/Utils/TestString.cpp',
   'test/src/Utils/TestTime.cpp',
+  'test/src/Utils/TestUnwrappedSequenceNumber.cpp',
 ]
 
 mediasoup_worker_test = executable(
@@ -535,18 +587,14 @@ mediasoup_worker_test = executable(
   build_by_default: false,
   install: true,
   install_tag: 'mediasoup-worker-test',
-  dependencies: dependencies + [
-    catch2_proj.get_variable('catch2_dep'),
-  ],
-  sources: common_sources + test_sources,
+  dependencies: dependencies,
+  sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
     'test/include',
+    'mocks/include',
   ),
-  cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
-    '-DMS_TEST',
-  ],
+  cpp_args: cpp_args,
 )
 
 test(
@@ -560,17 +608,14 @@ mediasoup_worker_test_asan_address = executable(
   build_by_default: false,
   install: true,
   install_tag: 'mediasoup-worker-test-asan-address',
-  dependencies: dependencies + [
-    catch2_proj.get_variable('catch2_dep'),
-  ],
-  sources: common_sources + test_sources,
+  dependencies: dependencies,
+  sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
     'test/include',
+    'mocks/include',
   ),
   cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
-    '-DMS_TEST',
     '-g',
     '-O3',
     '-fno-omit-frame-pointer',
@@ -592,17 +637,14 @@ mediasoup_worker_test_asan_undefined = executable(
   build_by_default: false,
   install: true,
   install_tag: 'mediasoup-worker-test-asan-undefined',
-  dependencies: dependencies + [
-    catch2_proj.get_variable('catch2_dep'),
-  ],
-  sources: common_sources + test_sources,
+  dependencies: dependencies,
+  sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
     'test/include',
+    'mocks/include',
   ),
   cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
-    '-DMS_TEST',
     '-g',
     '-O3',
     '-fno-omit-frame-pointer',
@@ -619,39 +661,7 @@ test(
   workdir: meson.project_source_root(),
 )
 
-mediasoup_worker_test_asan_thread = executable(
-  'mediasoup-worker-test-asan-thread',
-  build_by_default: false,
-  install: true,
-  install_tag: 'mediasoup-worker-test-asan-thread',
-  dependencies: dependencies + [
-    catch2_proj.get_variable('catch2_dep'),
-  ],
-  sources: common_sources + test_sources,
-  include_directories: include_directories(
-    'include',
-    'test/include',
-  ),
-  cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
-    '-DMS_TEST',
-    '-g',
-    '-O3',
-    '-fno-omit-frame-pointer',
-    '-fsanitize=thread',
-  ],
-  link_args: [
-    '-fsanitize=thread',
-  ],
-)
-
-test(
-  'mediasoup-worker-test-asan-thread',
-  mediasoup_worker_test_asan_thread,
-  workdir: meson.project_source_root(),
-)
-
-fuzzer_sources = common_sources + [
+fuzzer_sources = [
   'fuzzer/src/fuzzer.cpp',
   'fuzzer/src/FuzzerUtils.cpp',
   'fuzzer/src/RTC/FuzzerDtlsTransport.cpp',
@@ -693,7 +703,7 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
   'fuzzer/src/RTC/SCTP/association/FuzzerStateCookie.cpp',
-  'fuzzer/src/RTC/SCTP/packet/FuzzerPacket.cpp'
+  'fuzzer/src/RTC/SCTP/packet/FuzzerPacket.cpp',
 ]
 
 executable(
@@ -702,13 +712,13 @@ executable(
   install: true,
   install_tag: 'mediasoup-worker-fuzzer',
   dependencies: dependencies,
-  sources: fuzzer_sources,
+  sources: common_sources + fuzzer_sources + mock_sources,
   include_directories: include_directories(
     'include',
     'fuzzer/include',
+    'mocks/include',
   ),
   cpp_args: cpp_args + [
-    '-DMS_LOG_STD',
     '-g',
     '-O3',
     '-fno-omit-frame-pointer',
