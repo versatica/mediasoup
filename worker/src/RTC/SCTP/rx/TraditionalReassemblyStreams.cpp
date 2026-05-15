@@ -37,7 +37,7 @@ namespace RTC
 		}
 
 		size_t TraditionalReassemblyStreams::HandleForwardTsn(
-		  Types::UnwrappedTsn newCumulativeAckTsn,
+		  Types::UnwrappedTsn newCumulativeTsn,
 		  std::span<const AnyForwardTsnChunk::SkippedStream> skippedStreams)
 		{
 			MS_TRACE();
@@ -48,7 +48,7 @@ namespace RTC
 			// unordered streams manually to remove those chunks.
 			for (auto& [unused, stream] : this->unorderedStreams)
 			{
-				removedBytes += stream.EraseTo(newCumulativeAckTsn);
+				removedBytes += stream.EraseTo(newCumulativeTsn);
 			}
 
 			for (const auto& skippedStream : skippedStreams)

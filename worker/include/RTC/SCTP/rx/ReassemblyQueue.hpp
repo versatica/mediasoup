@@ -69,10 +69,9 @@ namespace RTC
 
 				Types::UnwrappedTsn senderLastAssignedTsn;
 				std::set<uint16_t> streamIds;
-				// TODO: SCTP: We need to convert this into pure C++. Unfortunatelly
-				// this is not that easy unless we require C++23 (we shouldn't yet).
-				// See "Problem in ReassemblyQueue" section in TODO_SCTP.md file.
-				std::vector<absl::AnyInvocable<void(void)>> deferredActions;
+				std::vector<std::function<void()>> deferredActions;
+				// TODO: Once we upgrade to C++23, replace with:
+				// std::vector<std::move_only_function<void()>> deferredActions;
 			};
 
 		public:
@@ -85,7 +84,7 @@ namespace RTC
 			 * Adds a data chunk to the queue, with a `tsn` and other parameters in
 			 * `data`.
 			 */
-			int32_t AddData(uint32_t tsn, UserData data);
+			void AddData(uint32_t tsn, UserData data);
 
 			/**
 			 * Indicates if the reassembly queue has any reassembled messages that can
@@ -116,9 +115,8 @@ namespace RTC
 			 * that the received (this class) should forget about some chunks. This is
 			 * used to implement partial reliability.
 			 */
-			size_t HandleForwardTsn(
-			  uint32_t newCumulativeAckTsn,
-			  std::span<const AnyForwardTsnChunk::SkippedStream> skippedStreams);
+			void HandleForwardTsn(
+			  uint32_t newCumulativeTsn, std::span<const AnyForwardTsnChunk::SkippedStream> skippedStreams);
 
 			/**
 			 * Resets the provided streams and leaves deferred reset processing, if
@@ -155,7 +153,7 @@ namespace RTC
 			 */
 			bool IsFull() const
 			{
-				return this->queuedBytes >= this->maxSizeBytes;
+				return this->queuedBytes >= this->maxLengthBytes;
 			}
 
 			/**
@@ -176,12 +174,16 @@ namespace RTC
 			}
 
 		private:
+			std::unique_ptr<ReassemblyStreamsInterface> CreateReassemblyStreams(
+			  ReassemblyStreamsInterface::OnAssembledMessage onAssembledMessage,
+			  bool useMessageInterleaving);
+
 			void AddReassembledMessage(std::span<const Types::UnwrappedTsn> tsns, Message message);
 
 			void AssertIsConsistent() const;
 
 		private:
-			const size_t maxSizeBytes;
+			const size_t maxLengthBytes;
 			const size_t watermarkBytes;
 			Types::UnwrappedTsn::Unwrapper tsnUnwrapper;
 			// Messages that have been reassembled, and will be consumed from by

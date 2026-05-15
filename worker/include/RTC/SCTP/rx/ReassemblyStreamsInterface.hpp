@@ -67,7 +67,7 @@ namespace RTC
 			 * operation.
 			 */
 			virtual size_t HandleForwardTsn(
-			  Types::UnwrappedTsn newCumulativeAckTsn,
+			  Types::UnwrappedTsn newCumulativeTsn,
 			  std::span<const AnyForwardTsnChunk::SkippedStream> skippedStreams) = 0;
 
 			/**

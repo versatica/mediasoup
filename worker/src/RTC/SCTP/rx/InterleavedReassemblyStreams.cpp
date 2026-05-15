@@ -25,7 +25,7 @@ namespace RTC
 		}
 
 		size_t InterleavedReassemblyStreams::HandleForwardTsn(
-		  Types::UnwrappedTsn /*newCumulativeAckTsn*/,
+		  Types::UnwrappedTsn /*newCumulativeTsn*/,
 		  std::span<const AnyForwardTsnChunk::SkippedStream> skippedStreams)
 		{
 			MS_TRACE();
