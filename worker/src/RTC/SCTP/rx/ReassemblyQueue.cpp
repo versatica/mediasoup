@@ -179,7 +179,7 @@ namespace RTC
 				streamIdList += std::to_string(streamId);
 			}
 
-			MS_DEBUG_DEV("resetting streams: %s", streamIdList.c_str());
+			MS_DEBUG_DEV("resetting streams [streamIds:%s]", streamIdList.c_str());
 #endif
 
 			// https://tools.ietf.org/html/rfc6525#section-5.2.2
@@ -263,7 +263,7 @@ namespace RTC
 			}
 
 			MS_DEBUG_DEV(
-			  "resetting streams [ppid:%" PRIu32 ", payloadLength:%zu]: %s",
+			  "resetting streams [ppid:%" PRIu32 ", payloadLength:%zu, tsns:%s]",
 			  message.GetPayloadProtocolId(),
 			  message.GetPayloadLength(),
 			  tsnList.c_str());
