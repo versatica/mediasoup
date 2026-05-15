@@ -118,10 +118,10 @@ namespace RTC
 			{
 				MS_DUMP_CLEAN(
 				  indentation,
-				  "  - stream id: %" PRIu16 ", unordered:%s, mid:%" PRIu32,
+				  "  - stream id: %" PRIu16 ", mid:%" PRIu32 ", unordered:%s",
 				  skippedStream.streamId,
-				  skippedStream.unordered ? "yes" : "no",
-				  skippedStream.mid);
+				  skippedStream.mid,
+				  skippedStream.unordered ? "yes" : "no");
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::IForwardTsnChunk>");
 		}
@@ -156,13 +156,13 @@ namespace RTC
 
 			for (uint16_t idx{ 0 }; idx < numSkippedStreams; ++idx)
 			{
-				skippedStreams.emplace_back(GetStreamIdAt(idx), GetUFlagAt(idx), GetMessageIdentifierAt(idx));
+				skippedStreams.emplace_back(GetStreamIdAt(idx), GetMessageIdentifierAt(idx), GetUFlagAt(idx));
 			}
 
 			return skippedStreams;
 		}
 
-		void IForwardTsnChunk::AddStream(uint16_t streamId, bool uFlag, uint32_t messageIdentifier)
+		void IForwardTsnChunk::AddStream(uint16_t streamId, uint32_t messageIdentifier, bool uFlag)
 		{
 			MS_TRACE();
 

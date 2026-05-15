@@ -25,7 +25,7 @@ namespace RTC
 		}
 
 		size_t InterleavedReassemblyStreams::HandleForwardTsn(
-		  Types::UnwrappedTsn newCumulativeAckTsn,
+		  Types::UnwrappedTsn /*newCumulativeAckTsn*/,
 		  std::span<const AnyForwardTsnChunk::SkippedStream> skippedStreams)
 		{
 			MS_TRACE();
@@ -149,8 +149,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			Types::UnwrappedMid unwrappedMid = this->midUnwrapper.Unwrap(mid);
-			size_t removedBytes              = 0;
+			const Types::UnwrappedMid unwrappedMid = this->midUnwrapper.Unwrap(mid);
+			size_t removedBytes                    = 0;
 
 			auto it = this->chunksByMid.begin();
 
@@ -239,7 +239,7 @@ namespace RTC
 
 			for (;;)
 			{
-				size_t removedBytesThisIt = TryToAssembleMessage(this->nextMid);
+				const size_t removedBytesThisIt = TryToAssembleMessage(this->nextMid);
 
 				if (removedBytesThisIt == 0)
 				{
@@ -292,7 +292,7 @@ namespace RTC
 			std::vector<Types::UnwrappedTsn> tsns;
 			std::vector<uint8_t> payload;
 
-			size_t payloadLength = std::accumulate(
+			const size_t payloadLength = std::accumulate(
 			  tsnChunks.begin(),
 			  tsnChunks.end(),
 			  0,

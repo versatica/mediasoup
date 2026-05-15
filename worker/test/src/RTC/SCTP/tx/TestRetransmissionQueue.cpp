@@ -843,9 +843,9 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 	SECTION("produces valid FORWARD-TSN")
 	{
-		// Three middle fragments (no "E"), same message (outgoingMessageId: 42,
-		// SSN: 42). `Discard()` returns true, placeholder TSN 13 created.
-		// FORWARD-TSN newCumulativeTsn: 13, skippedStreams: { (streamId=1, ssn=42) }.
+		// Three middle fragments (no "E"), same message (outgoingMessageId=42,
+		// ssn=42). `Discard()` returns true, placeholder TSN 13 created.
+		// FORWARD-TSN newCumulativeTsn=13, skippedStreams={ (streamId=1, ssn=42) }.
 
 		auto retransmissionQueue = createRetransmissionQueue();
 
@@ -1021,7 +1021,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		auto retransmissionQueue = createRetransmissionQueue(
 		  /*supportsPartialReliability*/ true, /*useMessageInterleaving*/ true);
 
-		// Stream 1, ordered, outgoingMessageId=42, MID=42, "B".
+		// Stream 1, ordered, outgoingMessageId=42, mid=42, "B".
 		sendQueue
 		  .WillProduceOnce(
 		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
@@ -1033,7 +1033,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 			    return dataToSend;
 		    })
-		  // Stream 2, unordered, outgoingMessageId=43, MID=42, "B".
+		  // Stream 2, unordered, outgoingMessageId=43, mid=42, "B".
 		  .WillProduceOnce(
 		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
@@ -1044,7 +1044,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 			    return dataToSend;
 		    })
-		  // Stream 3, ordered, outgoingMessageId=44, MID=42, "B".
+		  // Stream 3, ordered, outgoingMessageId=44, mid=42, "B".
 		  .WillProduceOnce(
 		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
@@ -1055,7 +1055,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 			    return dataToSend;
 		    })
-		  // Stream 4, ordered, outgoingMessageId=45, MID=42, "B".
+		  // Stream 4, ordered, outgoingMessageId=45, mid=42, "B".
 		  .WillProduceOnce(
 		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
@@ -1137,11 +1137,16 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(iForwardTsnChunk1);
 		REQUIRE(iForwardTsnChunk1->GetNewCumulativeTsn() == 12);
 		REQUIRE(
-		  iForwardTsnChunk1->GetSkippedStreams() ==
-		  std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
-		    RTC::SCTP::IForwardTsnChunk::SkippedStream{ 1, false, 42 },
-		    RTC::SCTP::IForwardTsnChunk::SkippedStream{ 2, true,  42 },
-		    RTC::SCTP::IForwardTsnChunk::SkippedStream{ 3, false, 42 }
+		  iForwardTsnChunk1->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
+		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
+		                                                                                         1,   42,
+		                                                                                         false, },
+		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
+		                                                                                         2,  42,
+		                                                                                         true, },
+		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
+		                                                                                         3,42,
+		                                                                                         false, }
     });
 
 		// When TSN 13 is acked, the placeholder end fragments must be skipped too.
@@ -1173,11 +1178,16 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(iForwardTsnChunk2);
 		REQUIRE(iForwardTsnChunk2->GetNewCumulativeTsn() == 16);
 		REQUIRE(
-		  iForwardTsnChunk2->GetSkippedStreams() ==
-		  std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
-		    RTC::SCTP::IForwardTsnChunk::SkippedStream{ 1, false, 42 },
-		    RTC::SCTP::IForwardTsnChunk::SkippedStream{ 2, true,  42 },
-		    RTC::SCTP::IForwardTsnChunk::SkippedStream{ 3, false, 42 }
+		  iForwardTsnChunk2->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
+		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
+		                                                                                         1,   42,
+		                                                                                         false, },
+		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
+		                                                                                         2,  42,
+		                                                                                         true, },
+		                                              RTC::SCTP::IForwardTsnChunk::SkippedStream{
+		                                                                                         3,42,
+		                                                                                         false, }
     });
 	}
 
@@ -1591,8 +1601,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 	SECTION("expire correct message from send queue")
 	{
-		// Three messages on stream 1. Messages 42 (MID=0) and 43 (MID=1) are
-		// complete single-fragment messages. Message 44 (MID=0, stream reset)
+		// Three messages on stream 1. Messages 42 (mid=0) and 43 (mid=1) are
+		// complete single-fragment messages. Message 44 (mid=0, stream reset)
 		// has a beginning fragment produced before expiry and a middle fragment
 		// produced after expiry -> message 44 gets abandoned, messages 42 and 43
 		// remain IN_FLIGHT.
@@ -1601,7 +1611,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		const uint64_t expiresAtMs = nowMs + 10;
 
-		// outgoingMessageId=42, MID=0, "BE" — complete message.
+		// outgoingMessageId=42, mid=0, "BE" — complete message.
 		sendQueue
 		  .WillProduceOnce(
 		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
@@ -1613,7 +1623,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 			    return dataToSend;
 		    })
-		  // outgoingMessageId=43, MID=1, "BE" — complete message.
+		  // outgoingMessageId=43, mid=1, "BE" — complete message.
 		  .WillProduceOnce(
 		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
@@ -1624,7 +1634,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 			    return dataToSend;
 		    })
-		  // outgoingMessageId=44, MID=0 (stream reset), "B" — beginning only.
+		  // outgoingMessageId=44, mid=0 (stream reset), "B" — beginning only.
 		  .WillProduceOnce(
 		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {
@@ -1635,7 +1645,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 			    return dataToSend;
 		    })
-		  // outgoingMessageId=44, MID=0, middle fragment (produced after expiry).
+		  // outgoingMessageId=44, mid=0, middle fragment (produced after expiry).
 		  .WillProduceOnce(
 		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
 		    {

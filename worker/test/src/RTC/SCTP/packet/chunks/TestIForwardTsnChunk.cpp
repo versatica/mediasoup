@@ -59,9 +59,15 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetNumberOfSkippedStreams() == 3);
 		REQUIRE(
 		  chunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		                                  { 4097,  true,  285212689 },
-		                                  { 8194,  false, 570425378 },
-		                                  { 12291, true,  855638067 },
+		                                  {
+                                       4097,       285212689,
+                                       true, },
+		                                  {
+                                       8194,         570425378,
+                                       false, },
+		                                  {
+                                       12291,855638067,
+                                       true, },
     });
 
 		/* Serialize it. */
@@ -88,9 +94,15 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetNumberOfSkippedStreams() == 3);
 		REQUIRE(
 		  chunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		                                  { 4097,  true,  285212689 },
-		                                  { 8194,  false, 570425378 },
-		                                  { 12291, true,  855638067 },
+		                                  {
+                                       4097,       285212689,
+                                       true, },
+		                                  {
+                                       8194,         570425378,
+                                       false, },
+		                                  {
+                                       12291,855638067,
+                                       true, },
     });
 
 		/* Clone it. */
@@ -119,9 +131,15 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 		REQUIRE(clonedChunk->GetNumberOfSkippedStreams() == 3);
 		REQUIRE(
 		  clonedChunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		                                        { 4097,  true,  285212689 },
-		                                        { 8194,  false, 570425378 },
-		                                        { 12291, true,  855638067 },
+		                                        {
+                                             4097,       285212689,
+                                             true, },
+		                                        {
+                                             8194,         570425378,
+                                             false, },
+		                                        {
+                                             12291,855638067,
+                                             true, },
     });
 
 		delete clonedChunk;
@@ -199,9 +217,9 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetNumberOfSkippedStreams() == 3);
 		REQUIRE(
 		  chunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		                                  { 1111, true,  11110001 },
-		                                  { 2222, false, 22220002 },
-		                                  { 3333, true,  33330003 },
+		                                  { 1111, 11110001, true  },
+		                                  { 2222, 22220002, false },
+		                                  { 3333, 33330003, true  },
     });
 
 		/* Parse itself and compare. */
@@ -228,9 +246,9 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 		REQUIRE(parsedChunk->GetNumberOfSkippedStreams() == 3);
 		REQUIRE(
 		  parsedChunk->GetSkippedStreams() == std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
-		                                        { 1111, true,  11110001 },
-		                                        { 2222, false, 22220002 },
-		                                        { 3333, true,  33330003 },
+		                                        { 1111, 11110001, true  },
+		                                        { 2222, 22220002, false },
+		                                        { 3333, 33330003, true  },
     });
 
 		delete parsedChunk;

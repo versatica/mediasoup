@@ -240,7 +240,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		    getTsn(3),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
-		                                                   /*streamId*/ 1, /*unordered*/ true, /*mid*/ 0 }
+		                                                   /*streamId*/ 1, /*mid*/ 0, /*unordered*/ true }
     }) == 6);
 	}
 
@@ -277,7 +277,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		    getTsn(3),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
-		                                                   /*streamId*/ 1, /*unordered*/ false, /*mid*/ 0 }
+		                                                   /*streamId*/ 1, /*mid*/ 0, /*unordered*/ false }
     }) == 6);
 	}
 
@@ -331,7 +331,7 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		    getTsn(8),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
-		                                                   /*streamId*/ 1, /*unordered*/ false, /*mid*/ 2 }
+		                                                   /*streamId*/ 1, /*mid*/ 2, /*unordered*/ false }
     }) == 8u);
 	}
 
@@ -386,8 +386,47 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		    getTsn(4),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
-		                                                   /*streamId*/ 1, /*unordered*/ false, /*mid*/ 0 }
+		                                                   /*streamId*/ 1, /*mid*/ 0, /*unordered*/ false }
     }) == 8u);
+	}
+
+	SECTION("can delete first ordered message")
+	{
+		OnAssembledMessageTester tester;
+		RTC::SCTP::InterleavedReassemblyStreams interleavedreassemblystreams(tester.MakeCallback());
+
+		// Not received: mid=0, sid=1, tsn=1 (BE, single-chunk message).
+		// Deleted via I-FORWARD-tsn: sid=1, mid=0.
+		REQUIRE(
+		  interleavedreassemblystreams.HandleForwardTsn(
+		    getTsn(1),
+		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
+		      RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
+		                                                   /*streamId*/ 1, /*mid*/ 0, /*unordered*/ false }
+    }) == 0);
+
+		// Receive mid=1 (next after the skipped mid=0): should be delivered immediately.
+		REQUIRE(
+		  interleavedreassemblystreams.AddData(
+		    getTsn(2),
+		    RTC::SCTP::UserData(
+		      /*streamId*/ 1,
+		      /*ssn*/ 0,
+		      /*mid*/ 1,
+		      /*fsn*/ 0,
+		      /*ppid*/ 53,
+		      /*payload*/ { 0x02, 0x03, 0x04 },
+		      /*isBeginning*/ true,
+		      /*isEnd*/ true,
+		      /*isUnordered*/ false)) == 0);
+
+		REQUIRE(tester.GetCallCount(1));
+		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 2 });
+
+		auto& lastMessages = tester.GetLastMessages();
+
+		REQUIRE(lastMessages.size() == 1);
+		REQUIRE(std::move(lastMessages[0]).ReleasePayload() == std::vector<uint8_t>{ 0x02, 0x03, 0x04 });
 	}
 
 	SECTION("can reassemble fast path unordered")

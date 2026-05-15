@@ -6,6 +6,7 @@
 #include "RTC/SCTP/rx/ReassemblyStreamsInterface.hpp"
 #include "RTC/SCTP/rx/TraditionalReassemblyStreams.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <span>
 #include <vector>
 
 SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystreams]")
@@ -387,10 +388,10 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 		OnAssembledMessageTester tester;
 		RTC::SCTP::TraditionalReassemblyStreams traditionalReassemblyStreams(tester.MakeCallback());
 
-		// Not received: ssn=0, SID=1, TSN=1 (BE, single-chunk message).
+		// Not received: ssn=0, sid=1, tsn=1 (BE, single-chunk message).
 		// Consumed here only to advance the ssn counter conceptually.
 
-		// Deleted via FORWARD-TSN: SID=1, SSN=0.
+		// Deleted via FORWARD-tsn: sid=1, ssn=0.
 		REQUIRE(
 		  traditionalReassemblyStreams.HandleForwardTsn(
 		    getTsn(1),
