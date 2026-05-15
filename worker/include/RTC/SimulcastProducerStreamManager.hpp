@@ -15,7 +15,8 @@ namespace RTC
 		  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext,
 		  RTC::Media::Kind kind,
 		  bool keyFrameSupported,
-		  Listener* listener);
+		  Listener* listener,
+		  SharedInterface* shared);
 
 	public:
 		RTC::ConsumerTypes::VideoLayers GetTargetLayers() const override

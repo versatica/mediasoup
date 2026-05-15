@@ -14,9 +14,16 @@ namespace RTC
 	  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext,
 	  RTC::Media::Kind kind,
 	  bool keyFrameSupported,
-	  Listener* listener)
+	  Listener* listener,
+	  SharedInterface* shared)
 	  : ProducerStreamManager(
-	      consumableRtpEncodings, preferredLayers, std::move(encodingContext), kind, keyFrameSupported, listener)
+	      consumableRtpEncodings,
+	      preferredLayers,
+	      std::move(encodingContext),
+	      kind,
+	      keyFrameSupported,
+	      listener,
+	      shared)
 	{
 		MS_TRACE();
 	}

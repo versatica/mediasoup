@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SvcProducerStreamManager.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -20,9 +19,16 @@ namespace RTC
 	  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext,
 	  RTC::Media::Kind kind,
 	  bool keyFrameSupported,
-	  Listener* listener)
+	  Listener* listener,
+	  SharedInterface* shared)
 	  : ProducerStreamManager(
-	      consumableRtpEncodings, preferredLayers, std::move(encodingContext), kind, keyFrameSupported, listener)
+	      consumableRtpEncodings,
+	      preferredLayers,
+	      std::move(encodingContext),
+	      kind,
+	      keyFrameSupported,
+	      listener,
+	      shared)
 	{
 		MS_TRACE();
 	}
@@ -315,7 +321,7 @@ namespace RTC
 				  this->encodingContext->GetCurrentSpatialLayer(),
 				  this->encodingContext->GetTargetSpatialLayer());
 
-				this->lastBweDowngradeAtMs = DepLibUV::GetTimeMs();
+				this->lastBweDowngradeAtMs = this->shared->GetTimeMs();
 			}
 		}
 	}
@@ -546,7 +552,7 @@ namespace RTC
 		// Start with no layers.
 		newTargetLayers.Reset();
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		auto nowMs = this->shared->GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)

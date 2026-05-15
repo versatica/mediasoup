@@ -237,7 +237,8 @@ namespace RTC
 				  std::move(encodingContext),
 				  this->kind,
 				  keyFrameSupported,
-				  this);
+				  this,
+				  this->shared);
 
 				break;
 			}
@@ -313,7 +314,8 @@ namespace RTC
 				  std::move(encodingContext),
 				  this->kind,
 				  keyFrameSupported,
-				  this);
+				  this,
+				  this->shared);
 
 				break;
 			}
@@ -391,7 +393,8 @@ namespace RTC
 				  std::move(encodingContext),
 				  this->kind,
 				  keyFrameSupported,
-				  this);
+				  this,
+				  this->shared);
 
 				break;
 			}

@@ -133,6 +133,14 @@ namespace
 		bool processResult{ true };
 	};
 
+	// RtpStreamRecvListener must outlive the RtpStreamRecv.
+	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
+	mocks::MockShared mockShared(
+	  []()
+	  {
+		  return DepLibUV::GetTimeMs();
+	  }); // NOLINT(readability-identifier-naming)
+
 	std::unique_ptr<RTC::SimpleProducerStreamManager> createManager(
 	  MockListener* listener,
 	  bool keyFrameSupported                                             = true,
@@ -151,16 +159,9 @@ namespace
 		  std::move(encodingContext),
 		  kind,
 		  keyFrameSupported,
-		  listener);
+		  listener,
+		  &mockShared);
 	}
-
-	// RtpStreamRecvListener must outlive the RtpStreamRecv.
-	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
-	mocks::MockShared mockShared(
-	  []()
-	  {
-		  return DepLibUV::GetTimeMs();
-	  }); // NOLINT(readability-identifier-naming)
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv()
 	{

@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Logger.hpp"
+#include "SharedInterface.hpp"
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Packet.hpp"
@@ -60,8 +61,10 @@ namespace RTC
 		  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext,
 		  RTC::Media::Kind kind,
 		  bool keyFrameSupported,
-		  Listener* listener)
+		  Listener* listener,
+		  SharedInterface* shared)
 		  : listener(listener),
+		    shared(shared),
 		    keyFrameSupported(keyFrameSupported),
 		    kind(kind),
 		    consumableRtpEncodings(consumableRtpEncodings),
@@ -156,6 +159,7 @@ namespace RTC
 
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		bool keyFrameSupported{ false };
 		RTC::Media::Kind kind{};
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;

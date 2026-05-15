@@ -148,6 +148,14 @@ namespace
 		bool processResult{ true };
 	};
 
+	// RtpStreamRecvListener must outlive the RtpStreamRecv.
+	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
+	mocks::MockShared mockShared(
+	  []()
+	  {
+		  return DepLibUV::GetTimeMs();
+	  }); // NOLINT(readability-identifier-naming)
+
 	std::unique_ptr<RTC::SvcProducerStreamManager> createManager(
 	  MockListener* listener,
 	  RTC::ConsumerTypes::VideoLayers preferredLayers                    = { 2, 2 },
@@ -170,16 +178,9 @@ namespace
 		  std::move(encodingContext),
 		  kind,
 		  keyFrameSupported,
-		  listener);
+		  listener,
+		  &mockShared);
 	}
-
-	// RtpStreamRecvListener must outlive the RtpStreamRecv.
-	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
-	mocks::MockShared mockShared(
-	  []()
-	  {
-		  return DepLibUV::GetTimeMs();
-	  }); // NOLINT(readability-identifier-naming)
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(
 	  uint32_t ssrc = mappedSsrc, uint8_t spatialLayers = 3u, uint8_t temporalLayers = 3u)
