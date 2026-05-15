@@ -445,7 +445,8 @@ namespace RTC
 			UserOnPaused();
 		}
 
-		this->shared->GetChannelNotifier()->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_PAUSE);
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id, FBS::Notification::Event::CONSUMER_PRODUCER_PAUSE);
 	}
 
 	void OldConsumer::ProducerResumed()
@@ -466,7 +467,8 @@ namespace RTC
 			UserOnResumed();
 		}
 
-		this->shared->GetChannelNotifier()->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_RESUME);
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id, FBS::Notification::Event::CONSUMER_PRODUCER_RESUME);
 	}
 
 	void OldConsumer::ProducerRtpStreamScores(const std::vector<uint8_t>* scores)
@@ -487,7 +489,8 @@ namespace RTC
 
 		MS_DEBUG_DEV("Producer closed [consumerId:%s]", this->id.c_str());
 
-		this->shared->GetChannelNotifier()->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_CLOSE);
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id, FBS::Notification::Event::CONSUMER_PRODUCER_CLOSE);
 
 		this->listener->OnConsumerProducerClosed(this);
 	}
@@ -499,7 +502,7 @@ namespace RTC
 		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
 			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-			auto traceInfo     = FBS::Consumer::CreateKeyFrameTraceInfo(
+			auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
@@ -515,7 +518,7 @@ namespace RTC
 		else if (this->traceEventTypes.rtp)
 		{
 			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-			auto traceInfo     = FBS::Consumer::CreateRtpTraceInfo(
+			auto traceInfo = FBS::Consumer::CreateRtpTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
@@ -539,8 +542,8 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo =
-		  FBS::Consumer::CreatePliTraceInfo(this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
+		auto traceInfo = FBS::Consumer::CreatePliTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
 		auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
@@ -562,8 +565,8 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo =
-		  FBS::Consumer::CreateFirTraceInfo(this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
+		auto traceInfo = FBS::Consumer::CreateFirTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ssrc);
 
 		auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
