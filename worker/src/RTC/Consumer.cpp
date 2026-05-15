@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/PipeProducerStreamManager.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/SimpleProducerStreamManager.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
@@ -37,8 +38,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TMP: Remove, pass it on 'data' arg.
-		bool pipe = false;
+		this->pipe = this->type == RTC::RtpParameters::Type::PIPE;
 
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());
@@ -46,12 +46,6 @@ namespace RTC
 		if (this->rtpParameters.encodings.empty())
 		{
 			MS_THROW_TYPE_ERROR("empty rtpParameters.encodings");
-		}
-
-		// Ensure there are as many encodings as consumable encodings for pipe.
-		if (pipe && this->rtpParameters.encodings.size() != this->consumableRtpEncodings.size())
-		{
-			MS_THROW_TYPE_ERROR("number of rtpParameters.encodings and consumableRtpEncodings do not match");
 		}
 
 		// All encodings must have SSRCs.
@@ -88,6 +82,12 @@ namespace RTC
 			{
 				MS_THROW_TYPE_ERROR("wrong encoding in consumableRtpEncodings (missing ssrc)");
 			}
+		}
+
+		// Ensure there are as many encodings as consumable encodings for pipe.
+		if (pipe && this->rtpParameters.encodings.size() != this->consumableRtpEncodings.size())
+		{
+			MS_THROW_TYPE_ERROR("number of rtpParameters.encodings and consumableRtpEncodings do not match");
 		}
 
 		// Fill RTP header extension ids and their mapped values.
@@ -391,6 +391,21 @@ namespace RTC
 				  this->consumableRtpEncodings,
 				  preferredLayers,
 				  std::move(encodingContext),
+				  this->kind,
+				  keyFrameSupported,
+				  this,
+				  this->shared);
+
+				break;
+			}
+
+			case RTC::RtpParameters::Type::PIPE:
+			{
+				// Pipe consumer: no layer management, N streams.
+				this->producerStreamManager = std::make_unique<PipeProducerStreamManager>(
+				  this->consumableRtpEncodings,
+				  preferredLayers,
+				  nullptr,
 				  this->kind,
 				  keyFrameSupported,
 				  this,
@@ -1199,7 +1214,8 @@ namespace RTC
 		const bool origMarker = packet->HasMarker();
 
 		// Rewrite packet.
-		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
+		// For pipe each stream has its own SSRC; for non-pipe always encodings[0].
+		packet->SetSsrc(this->pipe ? rtpStream->GetSsrc() : this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
 		packet->SetMarker(action.marker);
@@ -1326,8 +1342,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Special condition for PipeConsumer since this method will be called in a
-		// loop for each stream in this PipeConsumer.
+		// Special condition for pipe consumer since this method will be called in a
+		// loop for each stream.
 		if (this->pipe)
 		{
 			if (

@@ -912,18 +912,8 @@ namespace RTC
 
 				auto type = RTC::RtpParameters::Type(body->type());
 
-				RTC::Consumer* consumer{ nullptr };
-
-				if (type == RTC::RtpParameters::Type::PIPE)
-				{
-					// TODO: PipeConsumer still inherits from OldConsumer. Handle separately.
-					MS_THROW_TYPE_ERROR("pipe consumer not yet supported in new Consumer");
-				}
-				else
-				{
-					// This may throw.
-					consumer = new RTC::Consumer(this->shared, consumerId, producerId, this, body);
-				}
+				// This may throw.
+				RTC::Consumer* consumer = new RTC::Consumer(this->shared, consumerId, producerId, this, body);
 
 				// Notify the listener.
 				// This may throw if no Producer is found.

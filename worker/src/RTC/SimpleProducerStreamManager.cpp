@@ -100,7 +100,7 @@ namespace RTC
 		MS_ASSERT(IsActive(), "should be active");
 
 		// If this is not the first time this method is called within the same
-		// iteration, return 0 since a video SimpleConsumer does not keep state
+		// iteration, return 0 since a video Simple consumer does not keep state
 		// about this.
 		if (this->managingBitrate)
 		{
@@ -114,7 +114,7 @@ namespace RTC
 			return 0u;
 		}
 
-		// Video SimpleConsumer does not really play the BWE game. However, let's
+		// Video Simple consumer does not really play the BWE game. However, let's
 		// be honest and try to be nice.
 		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
