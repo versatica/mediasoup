@@ -1098,11 +1098,13 @@ namespace RTC
 
 		if (!IsActive())
 		{
+			if (this->producerStreamManager->IsPacketForCurrentStream(packet))
+			{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
 #endif
-
-			rtpSeqManager->Drop(packet->GetSequenceNumber());
+				rtpSeqManager->Drop(packet->GetSequenceNumber());
+			}
 
 			return;
 		}
@@ -1113,13 +1115,15 @@ namespace RTC
 		// in the corresponding Producer.
 		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
-			MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+			if (this->producerStreamManager->IsPacketForCurrentStream(packet))
+			{
+				MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
-
-			rtpSeqManager->Drop(packet->GetSequenceNumber());
+				rtpSeqManager->Drop(packet->GetSequenceNumber());
+			}
 
 			return;
 		}
@@ -1161,16 +1165,6 @@ namespace RTC
 		if (action.isSyncPacket)
 		{
 			rtpSeqManager->Sync(action.syncSeqValue);
-		}
-
-		if (action.shouldSyncEncodingContext)
-		{
-			auto* encodingContext = this->producerStreamManager->GetEncodingContext();
-
-			if (encodingContext)
-			{
-				encodingContext->SyncRequired();
-			}
 		}
 
 		// Handle spatial layer switch.
@@ -1600,9 +1594,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// NOTE: Here we know that SSRCs in Consumer's rtpParameters must be the same
-		// as in the given consumableRtpEncodings.
-		for (size_t idx{ 0u }; idx < this->rtpParameters.encodings.size(); ++idx)
+		// NOTE: For non-pipe consumers, all spatial layers are multiplexed through
+		// a single RtpStreamSend (encodings[0]). Pipe consumers need one stream per
+		// encoding. Here we know that SSRCs in Consumer's rtpParameters must be the
+		// same as in the given consumableRtpEncodings.
+		const size_t numStreams = this->pipe ? this->rtpParameters.encodings.size() : 1u;
+
+		for (size_t idx{ 0u }; idx < numStreams; ++idx)
 		{
 			auto& encoding           = this->rtpParameters.encodings[idx];
 			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);

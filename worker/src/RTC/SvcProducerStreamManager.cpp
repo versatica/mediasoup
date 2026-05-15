@@ -439,6 +439,9 @@ namespace RTC
 			result.syncSeqValue              = packet->GetSequenceNumber() - 1;
 			result.shouldSyncEncodingContext = true;
 
+			// Sync the encoding context before ProcessPayload runs below.
+			this->encodingContext->SyncRequired();
+
 			this->syncRequired = false;
 		}
 

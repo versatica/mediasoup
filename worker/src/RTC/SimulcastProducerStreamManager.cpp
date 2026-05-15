@@ -125,6 +125,16 @@ namespace RTC
 		if (IsActive())
 		{
 			MayChangeLayers(/*force*/ false);
+
+			// If this stream is the target spatial layer and we are still waiting
+			// for a key frame (i.e. the previous RequestKeyFrameForTargetSpatialLayer
+			// call was a no-op because the stream wasn't set yet), request it now.
+			if (
+			  spatialLayer == this->targetLayers.spatial &&
+			  this->currentSpatialLayer != this->targetLayers.spatial)
+			{
+				RequestKeyFrameForTargetSpatialLayer();
+			}
 		}
 	}
 
@@ -700,6 +710,14 @@ namespace RTC
 			result.isSyncPacket = true;
 			result.syncSeqValue = packet->GetSequenceNumber() - (lastSentPacketHasMarker ? 1 : 2);
 			result.shouldSyncEncodingContext = true;
+
+			// Sync the encoding context now, before ProcessPayload runs below.
+			// This must happen before ProcessPayload so the codec handler resets
+			// its state before processing the first (key frame) packet.
+			if (this->encodingContext)
+			{
+				this->encodingContext->SyncRequired();
+			}
 
 			this->syncRequired                 = false;
 			this->spatialLayerToSync           = -1;

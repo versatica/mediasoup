@@ -33,6 +33,15 @@ namespace RTC
 		}
 		RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const override;
 		RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const override;
+		bool IsPacketForCurrentStream(const RTC::RTP::Packet* packet) const override
+		{
+			const auto it = this->mapMappedSsrcSpatialLayer.find(packet->GetSsrc());
+			if (it == this->mapMappedSsrcSpatialLayer.end())
+			{
+				return false;
+			}
+			return it->second == this->currentSpatialLayer;
+		}
 		bool IsActive() const override;
 		void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;

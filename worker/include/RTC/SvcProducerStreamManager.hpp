@@ -32,6 +32,10 @@ namespace RTC
 		}
 		RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const override;
 		RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const override;
+		bool IsPacketForCurrentStream(const RTC::RTP::Packet* /*packet*/) const override
+		{
+			return true;
+		}
 		bool IsActive() const override;
 		void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;

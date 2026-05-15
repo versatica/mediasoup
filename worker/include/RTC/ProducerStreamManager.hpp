@@ -81,6 +81,10 @@ namespace RTC
 		virtual int16_t GetCurrentTemporalLayer() const                      = 0;
 		virtual RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const = 0;
 		virtual RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const  = 0;
+		// Returns true if the given packet belongs to the stream currently being
+		// forwarded to the consumer. Used by Consumer to decide whether to account
+		// a discarded packet in the RTP sequence manager.
+		virtual bool IsPacketForCurrentStream(const RTC::RTP::Packet* packet) const = 0;
 		RTC::RTP::Codecs::EncodingContext* GetEncodingContext() const
 		{
 			return this->encodingContext.get();
