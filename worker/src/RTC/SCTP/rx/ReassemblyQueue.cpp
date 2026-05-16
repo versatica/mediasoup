@@ -46,7 +46,7 @@ namespace RTC
 			   : data.IsEnd()                     ? "last"
 			                                      : "middle"));
 
-			Types::UnwrappedTsn unwrappedTsn = this->tsnUnwrapper.Unwrap(tsn);
+			const Types::UnwrappedTsn unwrappedTsn = this->tsnUnwrapper.Unwrap(tsn);
 
 			// If a stream reset has been received with a "sender's last assigned tsn"
 			// in the future, the association is in "deferred reset processing" mode
@@ -135,7 +135,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			Types::UnwrappedTsn tsn = this->tsnUnwrapper.Unwrap(newCumulativeTsn);
+			const Types::UnwrappedTsn tsn = this->tsnUnwrapper.Unwrap(newCumulativeTsn);
 
 			if (this->deferredResetStreams.has_value() && tsn > this->deferredResetStreams->senderLastAssignedTsn)
 			{

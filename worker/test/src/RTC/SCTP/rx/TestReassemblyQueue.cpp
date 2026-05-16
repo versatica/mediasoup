@@ -7,6 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <iterator>
+#include <ranges>
 #include <span>
 #include <vector>
 
@@ -39,7 +40,7 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 
 	SECTION("empty queue")
 	{
-		RTC::SCTP::ReassemblyQueue reassemblyQueue(BufferLength, /*useMessageInterleaving*/ false);
+		const RTC::SCTP::ReassemblyQueue reassemblyQueue(BufferLength, /*useMessageInterleaving*/ false);
 
 		REQUIRE(reassemblyQueue.HasMessages() == false);
 		REQUIRE(reassemblyQueue.GetQueuedBytes() == 0);
@@ -117,7 +118,7 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 					REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(LongPayload));
 				}
 			}
-		} while (std::next_permutation(std::begin(tsns), std::end(tsns)));
+		} while (std::ranges::next_permutation(tsns).found);
 	}
 
 	SECTION("single ordered chunk message")
@@ -163,7 +164,7 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 				const auto span = payload.subspan((tsns[i] - 10) * 4, 4);
 				const bool isBeginning{ true };
 				const bool isEnd{ true };
-				const uint16_t ssn = static_cast<uint16_t>(tsns[i] - 10);
+				const auto ssn = static_cast<uint16_t>(tsns[i] - 10);
 
 				reassemblyQueue.AddData(
 				  tsns[i],
@@ -196,7 +197,7 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 			REQUIRE(messages[3].GetStreamId() == 1);
 			REQUIRE(messages[3].GetPayloadProtocolId() == 53);
 			REQUIRE_THAT(messages[3].GetPayload(), Catch::Matchers::RangeEquals(payload.subspan(12, 4)));
-		} while (std::next_permutation(std::begin(tsns), std::end(tsns)));
+		} while (std::ranges::next_permutation(tsns).found);
 	}
 
 	SECTION("retransmission in large ordered")
@@ -503,7 +504,7 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 				REQUIRE(message.GetPayloadProtocolId() == 53);
 				REQUIRE_THAT(message.GetPayload(), Catch::Matchers::RangeEquals(SixBytePayload));
 			}
-		} while (std::next_permutation(std::begin(idxs), std::end(idxs)));
+		} while (std::ranges::next_permutation(idxs).found);
 	}
 
 	SECTION("I-Forward-TSN remove a lot ordered")
