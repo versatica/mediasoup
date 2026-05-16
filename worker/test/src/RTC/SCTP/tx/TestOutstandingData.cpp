@@ -525,7 +525,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
     });
 	}
 
-	SECTION("can generate Forward TSN")
+	SECTION("can generate Forward-TSN")
 	{
 		buffer.Insert(
 		  OutgoingMessageId,
@@ -963,7 +963,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(ackInfo2.abandonedLifecycleIds == std::vector<uint64_t>{ 42 });
 	}
 
-	SECTION("generates Forward TSN until next stream reset TSN")
+	SECTION("generates Forward-TSN until next stream reset TSN")
 	{
 		// This test generates:
 		// * Stream 1: TSN 10, 11, 12 <RESET>
