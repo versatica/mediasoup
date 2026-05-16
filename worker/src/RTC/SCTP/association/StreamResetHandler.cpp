@@ -19,11 +19,14 @@ namespace RTC
 		  TransmissionControlBlockContextInterface* tcbContext,
 		  // TODO: SCTP: Implement it.
 		  // DataTracker* dataTracker,
-		  // ReassemblyQueue* reassemblyQueue,
+		  ReassemblyQueue* reassemblyQueue,
 		  RetransmissionQueue* retransmissionQueue)
 		  : associationListener(associationListener),
 		    shared(shared),
 		    tcbContext(tcbContext),
+		    // TODO: SCTP: Implement it.
+		    // dataTracker(dataTracker),
+		    reassemblyQueue(reassemblyQueue),
 		    retransmissionQueue(retransmissionQueue),
 		    reConfigTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
@@ -300,7 +303,11 @@ namespace RTC
 			// "In Progress" request. In all cases, re-evaluate the state.
 			this->lastProcessedReqSeqNbr = requestSn;
 
-			// // TODO: SCTP implement it.
+			// TODO: SCTP: Remove (it's just to avoid "private field 'reassemblyQueue'
+			// is not used" wargning).
+			(void)this->reassemblyQueue;
+
+			// TODO: SCTP: implement it.
 			// if (this->dataTracker->IsLaterThanCumulativeAckedTsn(
 			//         receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn()))
 			// {

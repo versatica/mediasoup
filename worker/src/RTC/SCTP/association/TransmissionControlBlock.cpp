@@ -67,8 +67,8 @@ namespace RTC
 		    txErrorCounter(sctpOptions),
 		    // TODO: SCTP: Implement.
 		    // dataTracker(),
-		    // TODO: SCTP: Implement.
-		    // reassemblyQueue(),
+		    reassemblyQueue(
+		      sctpOptions.maxReceiverWindowBufferSize, negotiatedCapabilities.messageInterleaving),
 		    retransmissionQueue(
 		      this,
 		      this->associationListener,
@@ -85,7 +85,7 @@ namespace RTC
 		      this,
 		      // TODO: SCTP: Implement.
 		      // std::addressof(this->dataTracker),
-		      // std::addressof(this->reassemblyQueue),
+		      std::addressof(this->reassemblyQueue),
 		      std::addressof(this->retransmissionQueue)),
 		    heartbeatHandler(this->associationListener, sctpOptions, this->shared, this)
 		{

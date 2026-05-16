@@ -11,6 +11,7 @@
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SCTP/rx/ReassemblyQueue.hpp"
 #include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "RTC/SCTP/tx/RetransmissionTimeout.hpp"
@@ -178,11 +179,10 @@ namespace RTC
 			// 	return this->dataTracker;
 			// }
 
-			// TODO: SCTP: Implement it.
-			// ReassemblyQueue& GetReassemblyQueue()
-			// {
-			// 	return this->reassemblyQueue;
-			// }
+			ReassemblyQueue& GetReassemblyQueue()
+			{
+				return this->reassemblyQueue;
+			}
 
 			RetransmissionQueue& GetRetransmissionQueue()
 			{
@@ -314,8 +314,7 @@ namespace RTC
 			RetransmissionErrorCounter txErrorCounter;
 			// TODO: SCTP: Implement it.
 			// DataTracker dataTracker;
-			// TODO: SCTP: Implement it.
-			// ReassemblyQueue reassemblyQueue;
+			ReassemblyQueue reassemblyQueue;
 			RetransmissionQueue retransmissionQueue;
 			StreamResetHandler streamResetHandler;
 			HeartbeatHandler heartbeatHandler;

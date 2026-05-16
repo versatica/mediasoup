@@ -920,12 +920,11 @@ namespace RTC
 
 			AssertHasTcb();
 
-			// TODO: SCTP: Implement it.
-			// while (std::optional<Message> message = this->tcb->GetReassemblyQueue().GetNextMessage())
-			// {
-			// 	this->privateMetrics.rxMessagesCount++;
-			// 	this->associationListenerDeferrer.OnAssociationMessageReceived(*std::move(message));
-			// }
+			while (std::optional<Message> message = this->tcb->GetReassemblyQueue().GetNextMessage())
+			{
+				this->privateMetrics.rxMessagesCount++;
+				this->associationListenerDeferrer.OnAssociationMessageReceived(*std::move(message));
+			}
 		}
 
 		Types::SendMessageStatus Association::InternalSendMessage(
@@ -2202,71 +2201,69 @@ namespace RTC
 				return;
 			}
 
-			// TODO: SCTP: Implement it.
-			// MS_DEBUG_DEV("data received [data length:%" PRIu16 ", queue size:%zu, watermark:%zu,
-			// full:%s, above:%s]", 	receivedAnyDataChunk->GetUserDataLength(),
-			// 	this->tcb->GetReassemblyQueue()->GetQueuedBytes(),
-			// 	this->tcb->GetReassemblyQueue()->GetWaterMarkBytes(),
-			// 	this->tcb->GetReassemblyQueue()->IsFull(),
-			// 	this->tcb->GetReassemblyQueue()->IsAboveWatermark(),
-			// );
+			MS_DEBUG_DEV(
+			  "data received [data length:%" PRIu16 ", queue size:%zu, watermark:%zu, full:%s, above:%s]",
+			  receivedAnyDataChunk->GetUserDataPayloadLength(),
+			  this->tcb->GetReassemblyQueue().GetQueuedBytes(),
+			  this->tcb->GetReassemblyQueue().GetWatermarkBytes(),
+			  this->tcb->GetReassemblyQueue().IsFull() ? "yes" : "no",
+			  this->tcb->GetReassemblyQueue().IsAboveWatermark() ? "yes" : "no");
 
-			// TODO: SCTP: Implement it.
-			// if (this->tcb->GetReassemblyQueue()->IsFull())
-			// {
-			// 	// If the reassembly queue is full but there are assembled messages
-			// 	// waiting to be pulled, we can't do anything with this data except drop
-			// 	// it, and hope the upper layer drains the accumulated messages soon.
-			// 	if (this->tcb->GetReassemblyQueue()->HasMessages())
-			// 	{
-			// 		MS_WARN_TAG(sctp, "received data rejected because reassembly queue is full");
+			if (this->tcb->GetReassemblyQueue().IsFull())
+			{
+				// If the reassembly queue is full but there are assembled messages
+				// waiting to be pulled, we can't do anything with this data except drop
+				// it, and hope the upper layer drains the accumulated messages soon.
+				if (this->tcb->GetReassemblyQueue().HasMessages())
+				{
+					MS_WARN_TAG(sctp, "received data rejected because reassembly queue is full");
 
-			// 		return;
-			// 	}
-			// 	// If the reassembly queue is full and there's no messages waiting,
-			// 	// there is nothing that can be done. The specification only allows
-			// 	// dropping gap-ack-blocks, and that's not likely to help as the
-			// 	// Association has been trying to fill gaps since the watermark was
-			// 	// reached.
-			// 	else
-			// 	{
-			// 		auto packet      = this->tcb->CreatePacket();
-			// 		auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+					return;
+				}
+				// If the reassembly queue is full and there's no messages waiting,
+				// there is nothing that can be done. The specification only allows
+				// dropping gap-ack-blocks, and that's not likely to help as the
+				// Association has been trying to fill gaps since the watermark was
+				// reached.
+				else
+				{
+					auto packet                 = this->tcb->CreatePacket();
+					auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
-			// 		// NOTE: Don't set bit T in the ABORT chunk since TCB knows the
-			// 		// Verification Tag expected by the remote.
+					// NOTE: Don't set bit T in the ABORT chunk since TCB knows the
+					// Verification Tag expected by the remote.
 
-			// 		auto* outOfResourceErrorCause =
-			// 		  abortAssociationChunk->BuildErrorCauseInPlace<OutOfResourceErrorCause>();
+					auto* outOfResourceErrorCause =
+					  abortAssociationChunk->BuildErrorCauseInPlace<OutOfResourceErrorCause>();
 
-			// 		outOfResourceErrorCause->Consolidate();
-			// 		abortAssociationChunk->Consolidate();
+					outOfResourceErrorCause->Consolidate();
+					abortAssociationChunk->Consolidate();
 
-			// 		this->packetSender.SendPacket(packet.get());
+					this->packetSender.SendPacket(packet.get());
 
-			// 		InternalClose(Types::ErrorKind::RESOURCE_EXHAUSTION, "reassembly queue is exhausted");
+					InternalClose(Types::ErrorKind::RESOURCE_EXHAUSTION, "reassembly queue is exhausted");
 
-			// 		return;
-			// 	}
-			// }
+					return;
+				}
+			}
 
 			// If the reassembly queue is above its high watermark, only accept data
 			// chunks that increase its cumulative ack tsn in an attempt to fill gaps
 			// to deliver messages.
-			// TODO: SCTP: Implement it.
-			// if (this->tcb->GetReassemblyQueue()->IsAboveWatermark())
-			// {
-			// 	MS_WARN_TAG(sctp, "reassembly queue is above watermark");
+			if (this->tcb->GetReassemblyQueue().IsAboveWatermark())
+			{
+				MS_WARN_TAG(sctp, "reassembly queue is above watermark");
 
-			// 	if (this->tcb->GetDataTracker()->WillIncreaseCumAckTsn(tsn))
-			// 	{
-			// 		MS_WARN_TAG(sctp, "reassembly queue is above watermark");
+				// TODO: SCTP: Implement.
+				// if (this->tcb->GetDataTracker()->WillIncreaseCumAckTsn(tsn))
+				// {
+				// 	MS_WARN_TAG(sctp, "reassembly queue is above watermark");
 
-			// 		this->tcb->GetDataTracker()->ForceImmediateSack();
+				// 	this->tcb->GetDataTracker()->ForceImmediateSack();
 
-			// 		return;
-			// 	}
-			// }
+				// 	return;
+				// }
+			}
 
 			// TODO: SCTP: Implement it.
 			// if (this->tcb->GetDataTracker()->IsTsnValid(tsn))
@@ -2281,7 +2278,7 @@ namespace RTC
 			// {
 			// 	// TODO: SCTP: Here we should have a std::vector<uint8_t> holding the data so
 			// 	// we can move it.
-			// 	this->tcb->GetReassemblyQueue()->Add(tsn, std::move(data));
+			// 	this->tcb->GetReassemblyQueue().Add(tsn, std::move(data));
 
 			// 	MayDeliverMessages();
 			// }

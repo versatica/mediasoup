@@ -10,6 +10,7 @@
 #include "RTC/SCTP/packet/parameters/OutgoingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
+#include "RTC/SCTP/rx/ReassemblyQueue.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
@@ -171,7 +172,7 @@ namespace RTC
 			  TransmissionControlBlockContextInterface* tcbContext,
 			  // TODO: SCTP: Implement it.
 			  // DataTracker* dataTracker,
-			  // ReassemblyQueue* reassemblyQueue,
+			  ReassemblyQueue* reassemblyQueue,
 			  RetransmissionQueue* retransmissionQueue);
 
 			~StreamResetHandler() override;
@@ -266,9 +267,8 @@ namespace RTC
 			SharedInterface* shared;
 			TransmissionControlBlockContextInterface* tcbContext;
 			// TODO: SCTP: Implement it.
-			// DataTracker* dataTracker,
-			// TODO: SCTP: Implement it.
-			// ReassemblyQueue* reassemblyQueue;,
+			// DataTracker* dataTracker;
+			ReassemblyQueue* reassemblyQueue;
 			RetransmissionQueue* retransmissionQueue;
 			UnwrappedReConfigRequestSn::Unwrapper incomingReConfigRequestSnUnwrapper;
 			const std::unique_ptr<BackoffTimerHandleInterface> reConfigTimer;
