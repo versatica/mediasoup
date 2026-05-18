@@ -290,10 +290,6 @@ namespace RTC
 			// https://ieeexplore.ieee.org/document/4697037 and which there is an RFC
 			// draft at https://tools.ietf.org/html/draft-tuexen-tsvwg-sctp-multipath-17.
 
-			std::set<uint32_t> duplicateTsns;
-
-			this->duplicateTsns.swap(duplicateTsns);
-
 			auto* sackChunk = packet->BuildChunkInPlace<SackChunk>();
 
 			sackChunk->SetCumulativeTsnAck(this->lastCumulativeAckedTsn.Wrap());
@@ -309,6 +305,15 @@ namespace RTC
 				  Types::UnwrappedTsn::Difference(tsnBlocks[i].lastTsn, this->lastCumulativeAckedTsn);
 
 				sackChunk->AddAckBlock(startDiff, endDiff);
+			}
+
+			std::set<uint32_t> duplicateTsns;
+
+			this->duplicateTsns.swap(duplicateTsns);
+
+			for (const uint32_t tsn : duplicateTsns)
+			{
+				sackChunk->AddDuplicateTsn(tsn);
 			}
 
 			sackChunk->Consolidate();
