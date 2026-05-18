@@ -154,14 +154,14 @@ namespace RTC
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
-			void SetCumulativeTsnAck(uint32_t value);
+			void SetCumulativeTsnAck(uint32_t tsn);
 
 			uint32_t GetAdvertisedReceiverWindowCredit() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 8);
 			}
 
-			void SetAdvertisedReceiverWindowCredit(uint32_t value);
+			void SetAdvertisedReceiverWindowCredit(uint32_t aRwnd);
 
 			std::vector<SackChunk::GapAckBlock> GetGapAckBlocks() const;
 

@@ -148,18 +148,18 @@ namespace RTC
 			return clonedChunk;
 		}
 
-		void SackChunk::SetCumulativeTsnAck(uint32_t value)
+		void SackChunk::SetCumulativeTsnAck(uint32_t tsn)
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
+			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, tsn);
 		}
 
-		void SackChunk::SetAdvertisedReceiverWindowCredit(uint32_t value)
+		void SackChunk::SetAdvertisedReceiverWindowCredit(uint32_t aRwnd)
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
+			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, aRwnd);
 		}
 
 		std::vector<SackChunk::GapAckBlock> SackChunk::GetGapAckBlocks() const
