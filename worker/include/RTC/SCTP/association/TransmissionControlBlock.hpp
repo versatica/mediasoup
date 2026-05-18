@@ -11,6 +11,7 @@
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SCTP/rx/DataTracker.hpp"
 #include "RTC/SCTP/rx/ReassemblyQueue.hpp"
 #include "RTC/SCTP/tx/RetransmissionErrorCounter.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
@@ -173,11 +174,10 @@ namespace RTC
 			 */
 			bool SendPacket(Packet* packet) override;
 
-			// TODO: SCTP: Implement it.
-			// DataTracker& GetDataTracker()
-			// {
-			// 	return this->dataTracker;
-			// }
+			DataTracker& GetDataTracker()
+			{
+				return this->dataTracker;
+			}
 
 			ReassemblyQueue& GetReassemblyQueue()
 			{
@@ -312,8 +312,7 @@ namespace RTC
 			const std::unique_ptr<BackoffTimerHandleInterface> delayedAckTimer;
 			RetransmissionTimeout rto;
 			RetransmissionErrorCounter txErrorCounter;
-			// TODO: SCTP: Implement it.
-			// DataTracker dataTracker;
+			DataTracker dataTracker;
 			ReassemblyQueue reassemblyQueue;
 			RetransmissionQueue retransmissionQueue;
 			StreamResetHandler streamResetHandler;

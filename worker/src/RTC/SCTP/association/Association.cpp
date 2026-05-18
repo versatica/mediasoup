@@ -795,11 +795,10 @@ namespace RTC
 
 			AssertHasTcb();
 
-			auto packet               = this->tcb->CreatePacket();
-			const auto* shutdownChunk = packet->BuildChunkInPlace<ShutdownChunk>();
+			auto packet         = this->tcb->CreatePacket();
+			auto* shutdownChunk = packet->BuildChunkInPlace<ShutdownChunk>();
 
-			// TODO: SCTP: Implement it.
-			// shutdownChunk->SetCumulativeTsnAck(this->tcb->GetDataTracker().GetLastCumulativeAckedTsn());
+			shutdownChunk->SetCumulativeTsnAck(this->tcb->GetDataTracker().GetLastCumulativeAckedTsn());
 			shutdownChunk->Consolidate();
 
 			this->packetSender.SendPacket(packet.get());
@@ -2104,7 +2103,7 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedAnyForwardTsnChunk(
-		  const Packet* /*receivedPacket*/, const AnyForwardTsnChunk* /*receivedAnyForwardTsnChunk*/)
+		  const Packet* /*receivedPacket*/, const AnyForwardTsnChunk* receivedAnyForwardTsnChunk)
 		{
 			MS_TRACE();
 
@@ -2139,14 +2138,12 @@ namespace RTC
 				return;
 			}
 
-			// TODO: SCTP: Implement it.
-			// if
-			// (this->tcb->GetDataTracker().HandleForwardTsn(receivedAnyForwardTsnChunk->GetNewCumulativeTsn()))
-			// {
-			// 	this->tcb->GetReassemblyQueue().HandleForwardTsn(
-			// 		receivedAnyForwardTsnChunk->GetNewCumulativeTsn(),
-			// 		receivedAnyForwardTsnChunk->GetSkippedStreams());
-			// }
+			if (this->tcb->GetDataTracker().HandleForwardTsn(receivedAnyForwardTsnChunk->GetNewCumulativeTsn()))
+			{
+				this->tcb->GetReassemblyQueue().HandleForwardTsn(
+				  receivedAnyForwardTsnChunk->GetNewCumulativeTsn(),
+				  receivedAnyForwardTsnChunk->GetSkippedStreams());
+			}
 
 			// A forward TSN (for ordered streams) may allow messages to be delivered.
 			MayDeliverMessages();
@@ -2178,9 +2175,8 @@ namespace RTC
 				return;
 			}
 
-			const uint32_t tsn = receivedAnyDataChunk->GetTsn();
-			// TODO: SCTP: Uncomment.
-			// const bool immediateAck = receivedAnyDataChunk->GetI();
+			const uint32_t tsn      = receivedAnyDataChunk->GetTsn();
+			const bool immediateAck = receivedAnyDataChunk->GetI();
 
 			if (receivedAnyDataChunk->GetUserDataPayloadLength() == 0)
 			{
@@ -2254,34 +2250,32 @@ namespace RTC
 			{
 				MS_WARN_TAG(sctp, "reassembly queue is above watermark");
 
-				// TODO: SCTP: Implement.
-				// if (this->tcb->GetDataTracker()->WillIncreaseCumAckTsn(tsn))
-				// {
-				// 	MS_WARN_TAG(sctp, "reassembly queue is above watermark");
+				if (this->tcb->GetDataTracker().WillIncreaseCumAckTsn(tsn))
+				{
+					MS_WARN_TAG(sctp, "reassembly queue is above watermark");
 
-				// 	this->tcb->GetDataTracker()->ForceImmediateSack();
+					this->tcb->GetDataTracker().ForceImmediateSack();
 
-				// 	return;
-				// }
+					return;
+				}
 			}
 
-			// TODO: SCTP: Implement it.
-			// if (this->tcb->GetDataTracker()->IsTsnValid(tsn))
-			// {
-			// 	MS_WARN_TAG(sctp, "data rejected because of failing TSN validity");
+			if (this->tcb->GetDataTracker().IsTsnValid(tsn))
+			{
+				MS_WARN_TAG(sctp, "data rejected because of failing TSN validity");
 
-			// 	return;
-			// }
+				return;
+			}
 
-			// TODO: SCTP: Implement it.
-			// if (this->tcb->GetDataTracker()->Observe(tsn, immediateAck))
-			// {
-			// 	// TODO: SCTP: Here we should have a std::vector<uint8_t> holding the data so
-			// 	// we can move it.
-			// 	this->tcb->GetReassemblyQueue().Add(tsn, std::move(data));
+			if (this->tcb->GetDataTracker().Observe(tsn, immediateAck))
+			{
+				// TODO: SCTP: Is this efficient? dcsctp uses Data::extract() which
+				// "extracts the Data from the chunk as a destructive action" while
+				// our UserData::GetUserData() returns a copy of the UserData!
+				this->tcb->GetReassemblyQueue().AddData(tsn, receivedAnyDataChunk->GetUserData());
 
-			// 	MayDeliverMessages();
-			// }
+				MayDeliverMessages();
+			}
 		}
 
 		void Association::HandleReceivedSackChunk(

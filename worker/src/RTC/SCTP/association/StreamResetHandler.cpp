@@ -17,15 +17,13 @@ namespace RTC
 		  AssociationListenerInterface& associationListener,
 		  SharedInterface* shared,
 		  TransmissionControlBlockContextInterface* tcbContext,
-		  // TODO: SCTP: Implement it.
-		  // DataTracker* dataTracker,
+		  DataTracker* dataTracker,
 		  ReassemblyQueue* reassemblyQueue,
 		  RetransmissionQueue* retransmissionQueue)
 		  : associationListener(associationListener),
 		    shared(shared),
 		    tcbContext(tcbContext),
-		    // TODO: SCTP: Implement it.
-		    // dataTracker(dataTracker),
+		    dataTracker(dataTracker),
 		    reassemblyQueue(reassemblyQueue),
 		    retransmissionQueue(retransmissionQueue),
 		    reConfigTimer(this->shared->CreateBackoffTimer(
@@ -307,44 +305,50 @@ namespace RTC
 			// is not used" wargning).
 			(void)this->reassemblyQueue;
 
-			// TODO: SCTP: implement it.
-			// if (this->dataTracker->IsLaterThanCumulativeAckedTsn(
-			//         receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn()))
-			// {
-			//   // https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
-			//   //
-			//   // E2) "If the Sender's Last Assigned TSN is greater than the cumulative
-			//   // acknowledgment point, then the endpoint MUST enter 'deferred reset
-			//   // processing'."
-			//   this->reassemblyQueue->EnterDeferredReset(
-			//   	receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn(),
-			//   	receivedOutgoingSsnResetRequestParameter->GetStreamIds());
+			if (
+			  this->dataTracker->IsLaterThanCumulativeAckedTsn(
+			    receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn()))
+			{
+				// https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
+				//
+				// E2) "If the Sender's Last Assigned TSN is greater than the cumulative
+				// acknowledgment point, then the endpoint MUST enter 'deferred reset
+				// processing'."
+				this->reassemblyQueue->EnterDeferredReset(
+				  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn(),
+				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
-			//   // "If the endpoint enters 'deferred reset processing', it MUST put a
-			//   // Re-configuration Response Parameter into a RE-CONFIG chunk indicating
-			//   // 'In progress' and MUST send the RE-CONFIG chunk.
-			//   this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::IN_PROGRESS;
+				// "If the endpoint enters 'deferred reset processing', it MUST put a
+				// Re-configuration Response Parameter into a RE-CONFIG chunk indicating
+				// 'In progress' and MUST send the RE-CONFIG chunk.
+				this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::IN_PROGRESS;
 
-			//  	MS_DEBUG_DEV("reset outgoing in progress, sender last assigned tsn %" PRIu32 " not yet
-			//  reached", receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
-			// } else {
-			//   // https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
-			//   //
-			//   // E3) If no stream numbers are listed in the parameter, then all incoming
-			//   // streams MUST be reset to 0 as the next expected SSN. If specific stream
-			//   // numbers are listed, then only these specific streams MUST be reset to
-			//   // 0, and all other non-listed SSNs remain unchanged. E4: Any queued TSNs
-			//   // (queued at step E2) MUST now be released and processed normally.
-			//   this->reassemblyQueue->ResetStreamsAndLeaveDeferredReset(receivedOutgoingSsnResetRequestParameter->GetStreamIds());
+				MS_DEBUG_DEV(
+				  "reset outgoing in progress, sender last assigned tsn %" PRIu32 " not yet reached",
+				  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
+			}
+			else
+			{
+				// https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
+				//
+				// E3) If no stream numbers are listed in the parameter, then all incoming
+				// streams MUST be reset to 0 as the next expected SSN. If specific stream
+				// numbers are listed, then only these specific streams MUST be reset to
+				// 0, and all other non-listed SSNs remain unchanged. E4: Any queued TSNs
+				// (queued at step E2) MUST now be released and processed normally.
+				this->reassemblyQueue->ResetStreamsAndLeaveDeferredReset(
+				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
-			//   this->associationListener.OnAssociationInboundStreamsReset(receivedOutgoingSsnResetRequestParameter->GetStreamIds());
+				this->associationListener.OnAssociationInboundStreamsReset(
+				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
-			//   this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
+				this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
 
-			//   MS_DEBUG_DEV("reset outgoing performed");
-			//  	MS_DEBUG_DEV("reset outgoing performed, sender last assigned tsn %" PRIu32 " reached",
-			//  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
-			// }
+				MS_DEBUG_DEV("reset outgoing performed");
+				MS_DEBUG_DEV(
+				  "reset outgoing performed, sender last assigned tsn %" PRIu32 " reached",
+				  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
+			}
 
 			auto* reconfigurationResponseParameter =
 			  reConfigChunk->BuildParameterInPlace<ReconfigurationResponseParameter>();

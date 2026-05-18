@@ -10,6 +10,7 @@
 #include "RTC/SCTP/packet/parameters/OutgoingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
+#include "RTC/SCTP/rx/DataTracker.hpp"
 #include "RTC/SCTP/rx/ReassemblyQueue.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "Utils/UnwrappedSequenceNumber.hpp"
@@ -170,8 +171,7 @@ namespace RTC
 			  AssociationListenerInterface& associationListener,
 			  SharedInterface* shared,
 			  TransmissionControlBlockContextInterface* tcbContext,
-			  // TODO: SCTP: Implement it.
-			  // DataTracker* dataTracker,
+			  DataTracker* dataTracker,
 			  ReassemblyQueue* reassemblyQueue,
 			  RetransmissionQueue* retransmissionQueue);
 
@@ -266,8 +266,7 @@ namespace RTC
 			AssociationListenerInterface& associationListener;
 			SharedInterface* shared;
 			TransmissionControlBlockContextInterface* tcbContext;
-			// TODO: SCTP: Implement it.
-			// DataTracker* dataTracker;
+			DataTracker* dataTracker;
 			ReassemblyQueue* reassemblyQueue;
 			RetransmissionQueue* retransmissionQueue;
 			UnwrappedReConfigRequestSn::Unwrapper incomingReConfigRequestSnUnwrapper;
