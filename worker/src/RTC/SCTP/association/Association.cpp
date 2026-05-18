@@ -2123,7 +2123,7 @@ namespace RTC
 				  abortAssociationChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
 
 				protocolViolationErrorCause->SetAdditionalInformation(
-				  "FORWARD_TSN or I_FORWARD_TSN-TSN chunk received but partial reliability is not negotiated");
+				  "FORWARD-TSN or I_FORWARD-TSN chunk received but partial reliability is not negotiated");
 
 				protocolViolationErrorCause->Consolidate();
 				abortAssociationChunk->Consolidate();
@@ -2132,7 +2132,7 @@ namespace RTC
 
 				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PROTOCOL_VIOLATION,
-				  "received FORWARD_TSN or I_FORWARD_TSN-TSN chunk but partial reliability is not negotiated");
+				  "received FORWARD-TSN or I-FORWARD-TSN chunk but partial reliability is not negotiated");
 
 				return;
 			}
@@ -2191,7 +2191,7 @@ namespace RTC
 				this->packetSender.SendPacket(packet.get());
 
 				this->associationListenerDeferrer.OnAssociationError(
-				  Types::ErrorKind::PROTOCOL_VIOLATION, "received DATA or I_DATA chunk with no user data");
+				  Types::ErrorKind::PROTOCOL_VIOLATION, "received DATA or I-DATA chunk with no user data");
 
 				return;
 			}
