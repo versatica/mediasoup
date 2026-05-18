@@ -231,7 +231,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "%s timer has expired %zu/%s]",
+			  "%s timer has expired [expìrations:%zu/%s]",
 			  backoffTimer->GetLabel().c_str(),
 			  backoffTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
