@@ -2269,9 +2269,9 @@ namespace RTC
 
 			if (this->tcb->GetDataTracker().Observe(tsn, immediateAck))
 			{
-				// TODO: SCTP: Is this efficient? dcsctp uses Data::extract() which
-				// "extracts the Data from the chunk as a destructive action" while
-				// our UserData::GetUserData() returns a copy of the UserData!
+				// NOTE: Here we are passing an UserData r-value created and returned by
+				// receivedAnyDataChunk->GetUserData() so there is only one copy here.
+				// And ReassemblyQueue::AddData() will std::move() it internally.
 				this->tcb->GetReassemblyQueue().AddData(tsn, receivedAnyDataChunk->GetUserData());
 
 				MayDeliverMessages();
