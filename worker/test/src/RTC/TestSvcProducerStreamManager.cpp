@@ -536,7 +536,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
 
-		const int countBefore = listener.layersChangedCount;
+		const auto countBefore = listener.layersChangedCount;
 
 		manager->UpdateTargetLayers(-1, -1);
 
@@ -814,7 +814,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		// Disconnect: target and current reset to {-1,-1}.
 		manager->OnTransportDisconnected();
 
-		const int keyFrameCountBefore = listener.keyFrameRequestCount;
+		const auto keyFrameCountBefore = listener.keyFrameRequestCount;
 
 		// OnResumed sets syncRequired and calls MayChangeLayers → RecalculateTargetLayers
 		// returns {0,0} which differs from {-1,-1} → UpdateTargetLayers(0,0) →

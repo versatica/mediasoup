@@ -3,6 +3,7 @@
 
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "Logger.hpp"
+#include <utility>
 
 namespace RTC
 {
@@ -303,7 +304,7 @@ namespace RTC
 			temporalLayer = 0;
 
 			// Check bitrate of every temporal layer.
-			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
+			for (; std::cmp_less(temporalLayer, producerRtpStream->GetTemporalLayers()); ++temporalLayer)
 			{
 				// Ignore temporal layers lower than the one we already have (taking
 				// into account the spatial layer too).

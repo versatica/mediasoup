@@ -119,7 +119,7 @@ namespace
 			consumableRtpEncodings.push_back(encoding);
 		}
 
-		RTC::ConsumerTypes::VideoLayers preferredLayers;
+		const RTC::ConsumerTypes::VideoLayers preferredLayers;
 
 		return std::make_unique<RTC::PipeProducerStreamManager>(
 		  consumableRtpEncodings, preferredLayers, nullptr, kind, keyFrameSupported, listener, &shared);

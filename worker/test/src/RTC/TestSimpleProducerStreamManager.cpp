@@ -428,10 +428,10 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		auto nowMs                = DepLibUV::GetTimeMs();
-		const auto streamBitrate  = rtpStream->GetBitrate(nowMs);
-		uint32_t availableBitrate = streamBitrate - 1;
-		auto usedBitrate          = manager->IncreaseLayer(
+		auto nowMs                      = DepLibUV::GetTimeMs();
+		const auto streamBitrate        = rtpStream->GetBitrate(nowMs);
+		const uint32_t availableBitrate = streamBitrate - 1;
+		auto usedBitrate                = manager->IncreaseLayer(
 		  /*bitrate*/ availableBitrate, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate == availableBitrate);
