@@ -246,7 +246,7 @@ namespace RTC
 
 			SetState(State::COOKIE_WAIT, "Connect() called");
 
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 
 			this->associationListenerDeferrer.OnAssociationConnecting();
 		}
@@ -257,7 +257,7 @@ namespace RTC
 
 			if (this->state == State::NEW || this->state == State::CLOSED)
 			{
-				AssertStateIsConsistent();
+				AssertIsConsistent();
 
 				return;
 			}
@@ -297,7 +297,7 @@ namespace RTC
 				InternalClose(Types::ErrorKind::SUCCESS, "");
 			}
 
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 		}
 
 		void Association::Close()
@@ -306,7 +306,7 @@ namespace RTC
 
 			if (this->state == State::NEW || this->state == State::CLOSED)
 			{
-				AssertStateIsConsistent();
+				AssertIsConsistent();
 
 				return;
 			}
@@ -333,7 +333,7 @@ namespace RTC
 			}
 
 			InternalClose(Types::ErrorKind::SUCCESS, "");
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 		}
 
 		std::optional<AssociationMetrics> Association::GetMetrics() const
@@ -441,7 +441,7 @@ namespace RTC
 			this->tcb->GetStreamResetHandler().ResetStreams(outboundStreamIds);
 
 			MaySendResetStreamsRequest();
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 
 			return Types::ResetStreamsStatus::PERFORMED;
 		}
@@ -471,7 +471,7 @@ namespace RTC
 				this->tcb->SendBufferedPackets(nowMs);
 			}
 
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 
 			return Types::SendMessageStatus::SUCCESS;
 		}
@@ -510,7 +510,7 @@ namespace RTC
 				this->tcb->SendBufferedPackets(nowMs);
 			}
 
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 
 			return statuses;
 		}
@@ -557,7 +557,7 @@ namespace RTC
 				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "failed to parse received SCTP packet");
 
-				AssertStateIsConsistent();
+				AssertIsConsistent();
 
 				return;
 			}
@@ -587,7 +587,7 @@ namespace RTC
 				this->tcb->MaySendSackChunk();
 			}
 
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 		}
 
 		void Association::InternalClose(Types::ErrorKind errorKind, const std::string_view& message)
@@ -2390,7 +2390,7 @@ namespace RTC
 				InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "no INIT_ACK chunk received");
 			}
 
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 		}
 
 		void Association::OnT1CookieTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
@@ -2412,7 +2412,7 @@ namespace RTC
 				InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "no COOKIE_ACK chunk received");
 			}
 
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 		}
 
 		void Association::OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
@@ -2451,7 +2451,7 @@ namespace RTC
 				this->packetSender.SendPacket(packet.get());
 
 				InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "no SHUTDOWN_ACK chunk received");
-				AssertStateIsConsistent();
+				AssertIsConsistent();
 
 				return;
 			}
@@ -2475,7 +2475,7 @@ namespace RTC
 				SendShutdownChunk();
 			}
 
-			AssertStateIsConsistent();
+			AssertIsConsistent();
 
 			baseTimeoutMs = this->tcb->GetCurrentRtoMs();
 		}
@@ -2568,9 +2568,13 @@ namespace RTC
 			}
 		}
 
-		void Association::AssertStateIsConsistent() const
+		void Association::AssertIsConsistent() const
 		{
 			MS_TRACE();
+
+			MS_ASSERT(
+			  !(this->tcb && this->tcb->GetReassemblyQueue().HasMessages()),
+			  "this->tcb && this->tcb->GetReassemblyQueue().HasMessages()");
 
 			switch (this->state)
 			{

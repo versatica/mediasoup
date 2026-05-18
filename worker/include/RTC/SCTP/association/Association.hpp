@@ -459,7 +459,7 @@ namespace RTC
 
 			void AssertHasTcb() const;
 
-			void AssertStateIsConsistent() const;
+			void AssertIsConsistent() const;
 
 			/* Pure virtual methods inherited from PacketSender::Listener. */
 		public:
