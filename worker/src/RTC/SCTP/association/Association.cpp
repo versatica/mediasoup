@@ -583,8 +583,7 @@ namespace RTC
 
 			if (this->tcb)
 			{
-				// TODO: SCTP: Implement it.
-				// this->tcb->GetDadaTracker().ObservePacketEnd();
+				this->tcb->GetDataTracker().ObservePacketEnd();
 				this->tcb->MaySendSackChunk();
 			}
 
@@ -2250,7 +2249,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(sctp, "reassembly queue is above watermark");
 
-				if (this->tcb->GetDataTracker().WillIncreaseCumAckTsn(tsn))
+				if (!this->tcb->GetDataTracker().WillIncreaseCumAckTsn(tsn))
 				{
 					MS_WARN_TAG(sctp, "reassembly queue is above watermark");
 
@@ -2260,7 +2259,7 @@ namespace RTC
 				}
 			}
 
-			if (this->tcb->GetDataTracker().IsTsnValid(tsn))
+			if (!this->tcb->GetDataTracker().IsTsnValid(tsn))
 			{
 				MS_WARN_TAG(sctp, "data rejected because of failing TSN validity");
 
