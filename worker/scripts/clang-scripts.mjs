@@ -24,14 +24,10 @@ const CLANG_FORMAT_PATHS = [
 ];
 
 const CLANG_TIDY_PATHS = [
-	// '../src/**/*.cpp',
-	// '../test/src/**/*.cpp',
-	// '../fuzzer/src/**/*.cpp',
-	// '../mocks/src/**/*.cpp',
-	`../test/src/RTC/TestSimpleProducerStreamManager.cpp`,
-	`../test/src/RTC/TestSimulcastProducerStreamManager.cpp`,
-	`../test/src/RTC/TestSvcProducerStreamManager.cpp`,
-	`../test/src/RTC/TestPipeProducerStreamManager.cpp`,
+	'../src/**/*.cpp',
+	'../test/src/**/*.cpp',
+	'../fuzzer/src/**/*.cpp',
+	'../mocks/src/**/*.cpp',
 ];
 
 const task = process.argv.slice(2).join(' ');
