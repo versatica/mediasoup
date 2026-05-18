@@ -910,10 +910,8 @@ namespace RTC
 					MS_THROW_ERROR("a Consumer with same consumerId already exists");
 				}
 
-				auto type = RTC::RtpParameters::Type(body->type());
-
 				// This may throw.
-				RTC::Consumer* consumer = new RTC::Consumer(this->shared, consumerId, producerId, this, body);
+				auto* consumer = new RTC::Consumer(this->shared, consumerId, producerId, this, body);
 
 				// Notify the listener.
 				// This may throw if no Producer is found.

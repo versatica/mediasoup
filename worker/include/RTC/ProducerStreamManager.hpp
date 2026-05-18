@@ -71,7 +71,6 @@ namespace RTC
 		    encodingContext(std::move(encodingContext)),
 		    preferredLayers(preferredLayers)
 		{
-			MS_TRACE();
 		}
 		virtual ~ProducerStreamManager() = default;
 
@@ -129,8 +128,6 @@ namespace RTC
 
 		void MayChangeLayers(bool force)
 		{
-			MS_TRACE();
-
 			RTC::ConsumerTypes::VideoLayers newTargetLayers;
 
 			if (RecalculateTargetLayers(newTargetLayers))
