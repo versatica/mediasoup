@@ -135,11 +135,13 @@ namespace
 
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
-	mocks::MockShared mockShared(
-	  []()
-	  {
-		  return DepLibUV::GetTimeMs();
-	  }); // NOLINT(readability-identifier-naming)
+
+	// NOLINTNEXTLINE(readability-identifier-naming)
+	mocks::MockShared shared(/*getTimeMs*/
+	                         []()
+	                         {
+		                         return DepLibUV::GetTimeMs();
+	                         }); // NOLINT(readability-identifier-naming)
 
 	std::unique_ptr<RTC::SimpleProducerStreamManager> createManager(
 	  MockListener* listener,
@@ -149,9 +151,9 @@ namespace
 	{
 		RTC::RtpEncodingParameters encoding;
 		encoding.ssrc = mappedSsrc;
-		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings{ encoding };
 
-		RTC::ConsumerTypes::VideoLayers preferredLayers;
+		const std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings{ encoding };
+		const RTC::ConsumerTypes::VideoLayers preferredLayers;
 
 		return std::make_unique<RTC::SimpleProducerStreamManager>(
 		  consumableRtpEncodings,
@@ -160,7 +162,7 @@ namespace
 		  kind,
 		  keyFrameSupported,
 		  listener,
-		  &mockShared);
+		  &shared);
 	}
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv()
@@ -170,8 +172,7 @@ namespace
 		params.ssrc      = mappedSsrc;
 		params.clockRate = 90000;
 
-		return std::make_unique<RTC::RTP::RtpStreamRecv>(
-		  &streamRecvListener, &mockShared, params, 0u, false);
+		return std::make_unique<RTC::RTP::RtpStreamRecv>(&streamRecvListener, &shared, params, 0u, false);
 	}
 
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero.
@@ -377,7 +378,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
 		manager->OnTransportConnected();
 
-		int keyFrameCount = listener.keyFrameRequestCount;
+		const int keyFrameCount = listener.keyFrameRequestCount;
 
 		// Call OnResumed — should set syncRequired and request keyframe again.
 		manager->OnResumed();
@@ -428,7 +429,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
 		auto nowMs                = DepLibUV::GetTimeMs();
-		auto streamBitrate        = rtpStream->GetBitrate(nowMs);
+		const auto streamBitrate  = rtpStream->GetBitrate(nowMs);
 		uint32_t availableBitrate = streamBitrate - 1;
 		auto usedBitrate          = manager->IncreaseLayer(
 		  /*bitrate*/ availableBitrate, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);

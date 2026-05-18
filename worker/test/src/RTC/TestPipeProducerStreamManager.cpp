@@ -97,11 +97,12 @@ namespace
 		bool isKeyFrame{ false };
 	};
 
-	mocks::MockShared mockShared( // NOLINT(readability-identifier-naming)
-	  []()
-	  {
-		  return DepLibUV::GetTimeMs();
-	  });
+	// NOLINTNEXTLINE(readability-identifier-naming)
+	mocks::MockShared shared(/*getTimeMs*/
+	                         []()
+	                         {
+		                         return DepLibUV::GetTimeMs();
+	                         });
 
 	std::unique_ptr<RTC::PipeProducerStreamManager> createManager(
 	  MockListener* listener,
@@ -121,7 +122,7 @@ namespace
 		RTC::ConsumerTypes::VideoLayers preferredLayers;
 
 		return std::make_unique<RTC::PipeProducerStreamManager>(
-		  consumableRtpEncodings, preferredLayers, nullptr, kind, keyFrameSupported, listener, &mockShared);
+		  consumableRtpEncodings, preferredLayers, nullptr, kind, keyFrameSupported, listener, &shared);
 	}
 } // namespace
 

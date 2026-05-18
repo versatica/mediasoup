@@ -150,11 +150,13 @@ namespace
 
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
-	mocks::MockShared mockShared(
-	  []()
-	  {
-		  return DepLibUV::GetTimeMs();
-	  }); // NOLINT(readability-identifier-naming)
+
+	// NOLINTNEXTLINE(readability-identifier-naming)
+	mocks::MockShared shared(/*getTimeMs*/
+	                         []()
+	                         {
+		                         return DepLibUV::GetTimeMs();
+	                         }); // NOLINT(readability-identifier-naming)
 
 	std::unique_ptr<RTC::SvcProducerStreamManager> createManager(
 	  MockListener* listener,
@@ -179,7 +181,7 @@ namespace
 		  kind,
 		  keyFrameSupported,
 		  listener,
-		  &mockShared);
+		  &shared);
 	}
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(
@@ -192,8 +194,7 @@ namespace
 		params.spatialLayers  = spatialLayers;
 		params.temporalLayers = temporalLayers;
 
-		return std::make_unique<RTC::RTP::RtpStreamRecv>(
-		  &streamRecvListener, &mockShared, params, 0u, false);
+		return std::make_unique<RTC::RTP::RtpStreamRecv>(&streamRecvListener, &shared, params, 0u, false);
 	}
 
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero.
@@ -813,7 +814,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		// Disconnect: target and current reset to {-1,-1}.
 		manager->OnTransportDisconnected();
 
-		int keyFrameCountBefore = listener.keyFrameRequestCount;
+		const int keyFrameCountBefore = listener.keyFrameRequestCount;
 
 		// OnResumed sets syncRequired and calls MayChangeLayers → RecalculateTargetLayers
 		// returns {0,0} which differs from {-1,-1} → UpdateTargetLayers(0,0) →
@@ -1137,7 +1138,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager = createManager(&listener);
 
 		RTC::ConsumerTypes::VideoLayers newTargetLayers;
-		bool changed = manager->RecalculateTargetLayers(newTargetLayers);
+		const bool changed = manager->RecalculateTargetLayers(newTargetLayers);
 
 		// No change from initial -1,-1 target.
 		REQUIRE(changed == false);

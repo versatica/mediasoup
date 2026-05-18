@@ -144,11 +144,13 @@ namespace
 
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
-	mocks::MockShared mockShared(
-	  []()
-	  {
-		  return DepLibUV::GetTimeMs();
-	  }); // NOLINT(readability-identifier-naming)
+
+	// NOLINTNEXTLINE(readability-identifier-naming)
+	mocks::MockShared shared(/*getTimeMs*/
+	                         []()
+	                         {
+		                         return DepLibUV::GetTimeMs();
+	                         }); // NOLINT(readability-identifier-naming)
 
 	std::unique_ptr<RTC::SimulcastProducerStreamManager> createManager(
 	  MockListener* listener,
@@ -179,7 +181,7 @@ namespace
 		  kind,
 		  keyFrameSupported,
 		  listener,
-		  &mockShared);
+		  &shared);
 	}
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(uint32_t ssrc)
@@ -189,8 +191,7 @@ namespace
 		params.ssrc      = ssrc;
 		params.clockRate = 90000;
 
-		return std::make_unique<RTC::RTP::RtpStreamRecv>(
-		  &streamRecvListener, &mockShared, params, 0u, false);
+		return std::make_unique<RTC::RTP::RtpStreamRecv>(&streamRecvListener, &shared, params, 0u, false);
 	}
 
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero.
