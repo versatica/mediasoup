@@ -910,11 +910,11 @@ namespace RTC
 		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else
 		{
-			this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+			SendSctpMessage(dataConsumer, msg, len, ppid, cb);
 		}
 	}
 
-	bool PlainTransport::SendSctpData(const uint8_t* data, size_t len)
+	bool PlainTransport::SendData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 

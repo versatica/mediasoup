@@ -188,7 +188,7 @@ namespace RTC
 		if (Settings::configuration.useBuiltInSctpStack)
 		{
 			// NOTE: When using the built-in SCTP stack we don't do anything here since
-			// the `Destroying()` method has already been called by the Transport subclas
+			// the `Destroying()` method has already been called by the Transport subclass
 			// and it closed the SCTP Association.
 			// NOTE: We cannot do it here in the destructor because here we are no longer
 			// the Transport subclass but Transport parent (this is how the destruction
@@ -1876,6 +1876,19 @@ namespace RTC
 		}
 	}
 
+	// TODO: SCTP: Remove when we have our own SCTP stack running.
+	void Transport::SendSctpMessage(
+	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  !Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation,
+		  "!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation ocndition not honored");
+
+		this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+	}
+
 	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const
 	{
 		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
@@ -2936,6 +2949,18 @@ namespace RTC
 		  this, dataProducer, msg, len, ppid, subchannels, requiredSubchannel);
 	}
 
+	void Transport::OnDataProducerMessageReceived(
+	  RTC::DataProducer* dataProducer,
+	  RTC::SCTP::Message message,
+	  std::vector<uint16_t>& subchannels,
+	  std::optional<uint16_t> requiredSubchannel)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportDataProducerMessageReceived(
+		  this, dataProducer, std::move(message), subchannels, requiredSubchannel);
+	}
+
 	void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
@@ -2950,12 +2975,26 @@ namespace RTC
 		this->listener->OnTransportDataProducerResumed(this, dataProducer);
 	}
 
+	// TODO: SCTP: Remove once we only use built-in SCTP stack.
 	void Transport::OnDataConsumerSendMessage(
 	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
 		SendMessage(dataConsumer, msg, len, ppid, cb);
+	}
+
+	void Transport::OnDataConsumerSendMessage(
+	  RTC::DataConsumer* dataConsumer, const RTC::SCTP::Message& message, onQueuedCallback* cb)
+	{
+		MS_TRACE();
+
+		SendMessage(
+		  dataConsumer,
+		  message.GetPayload().data(),
+		  message.GetPayloadLength(),
+		  message.GetPayloadProtocolId(),
+		  cb);
 	}
 
 	void Transport::OnDataConsumerNeedBufferedAmount(
@@ -2965,7 +3004,6 @@ namespace RTC
 
 		if (Settings::configuration.useBuiltInSctpStack && this->sctpAssociation)
 		{
-			// TODO: SCTP
 			// TODO: SCTP: Let's see how to obtain `streamId` argument from the DataConsumer.
 			// bufferedAmount = this->sctpAssociation->GetStreamBufferedAmount(streamId);
 		}
@@ -3021,7 +3059,7 @@ namespace RTC
 		// Ignore if destroying.
 		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,
 		// its destructor is called first and then the parent Transport's destructor,
-		// and we would end here calling SendSctpData() which is an abstract method.
+		// and we would end here calling SendData() which is an abstract method.
 		if (this->destroying)
 		{
 			MS_WARN_DEV("ignoring sending data because Transport is being destroying");
@@ -3029,7 +3067,7 @@ namespace RTC
 			return false;
 		}
 
-		return SendSctpData(data, len);
+		return SendData(data, len);
 	}
 
 	void Transport::OnAssociationConnecting()
@@ -3157,11 +3195,38 @@ namespace RTC
 		  errorMessage.data());
 	}
 
-	void Transport::OnAssociationMessageReceived(RTC::SCTP::Message /*message*/)
+	void Transport::OnAssociationMessageReceived(RTC::SCTP::Message message)
 	{
 		MS_TRACE();
 
-		// TODO: SCTP
+		RTC::DataProducer* dataProducer = this->sctpListener.GetDataProducer(message.GetStreamId());
+
+		if (!dataProducer)
+		{
+			MS_WARN_TAG(
+			  sctp,
+			  "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]",
+			  message.GetStreamId());
+
+			return;
+		}
+
+		// Pass the SCTP message to the corresponding DataProducer.
+		try
+		{
+			static thread_local std::vector<uint16_t> emptySubchannels;
+
+			dataProducer->ReceiveMessage(
+			  std::move(message), emptySubchannels, /*requiredSubchannel*/ std::nullopt);
+		}
+		catch (std::exception& error)
+		{
+			MS_WARN_TAG(
+			  sctp,
+			  "DataProducer::ReceiveMessage() failed for received SCTP message [streamId:%" PRIu16 "]: %s",
+			  message.GetStreamId(),
+			  error.what());
+		}
 	}
 
 	void Transport::OnAssociationStreamsResetPerformed(std::span<const uint16_t> /*outboundStreamIds*/)
@@ -3330,7 +3395,7 @@ namespace RTC
 			return;
 		}
 
-		SendSctpData(data, len);
+		SendData(data, len);
 	}
 
 	void Transport::OnSctpAssociationMessageReceived(
@@ -3355,7 +3420,7 @@ namespace RTC
 		// Pass the SCTP message to the corresponding DataProducer.
 		try
 		{
-			static std::vector<uint16_t> emptySubchannels;
+			static thread_local std::vector<uint16_t> emptySubchannels;
 
 			dataProducer->ReceiveMessage(
 			  msg, len, ppid, emptySubchannels, /*requiredSubchannel*/ std::nullopt);

@@ -245,7 +245,7 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	bool DirectTransport::SendSctpData(const uint8_t* /*data*/, size_t /*len*/)
+	bool DirectTransport::SendData(const uint8_t* /*data*/, size_t /*len*/)
 	{
 		MS_TRACE();
 

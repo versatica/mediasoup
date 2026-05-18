@@ -11,6 +11,7 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpObserver.hpp"
+#include "RTC/SCTP/public/Message.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
 #include <absl/container/flat_hash_map.h>
@@ -93,12 +94,19 @@ namespace RTC
 		void OnTransportDataProducerPaused(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
 		void OnTransportDataProducerResumed(
 		  RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
+		// TODO: SCTP: Remove when we migrate to the new SCTP stack.
 		void OnTransportDataProducerMessageReceived(
 		  RTC::Transport* transport,
 		  RTC::DataProducer* dataProducer,
 		  const uint8_t* msg,
 		  size_t len,
 		  uint32_t ppid,
+		  std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel) override;
+		void OnTransportDataProducerMessageReceived(
+		  RTC::Transport* transport,
+		  RTC::DataProducer* dataProducer,
+		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel) override;
 		void OnTransportNewDataConsumer(

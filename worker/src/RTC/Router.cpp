@@ -491,7 +491,7 @@ namespace RTC
 		return it->second;
 	}
 
-	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -510,7 +510,7 @@ namespace RTC
 		this->mapProducerRtpObservers[producer];
 	}
 
-	inline void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -555,7 +555,7 @@ namespace RTC
 		this->mapProducerRtpObservers.erase(mapProducerRtpObserversIt);
 	}
 
-	inline void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -579,7 +579,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerResumed(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	void Router::OnTransportProducerResumed(RTC::Transport* /*transport*/, RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -603,7 +603,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerNewRtpStream(
+	void Router::OnTransportProducerNewRtpStream(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  RTC::RTP::RtpStreamRecv* rtpStream,
@@ -619,7 +619,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerRtpStreamScore(
+	void Router::OnTransportProducerRtpStreamScore(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  RTC::RTP::RtpStreamRecv* rtpStream,
@@ -636,7 +636,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerRtcpSenderReport(
+	void Router::OnTransportProducerRtcpSenderReport(
 	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first)
 	{
 		MS_TRACE();
@@ -649,7 +649,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerRtpPacketReceived(
+	void Router::OnTransportProducerRtpPacketReceived(
 	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
@@ -717,7 +717,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportNeedWorstRemoteFractionLost(
+	void Router::OnTransportNeedWorstRemoteFractionLost(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
 	  uint32_t mappedSsrc,
@@ -733,7 +733,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportNewConsumer(
+	void Router::OnTransportNewConsumer(
 	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, const std::string& producerId)
 	{
 		MS_TRACE();
@@ -780,7 +780,7 @@ namespace RTC
 		consumer->ProducerRtpStreamScores(producer->GetRtpStreamScores());
 	}
 
-	inline void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
+	void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -811,8 +811,7 @@ namespace RTC
 		this->mapConsumerProducer.erase(mapConsumerProducerIt);
 	}
 
-	inline void Router::OnTransportConsumerProducerClosed(
-	  RTC::Transport* /*transport*/, RTC::Consumer* consumer)
+	void Router::OnTransportConsumerProducerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
 	{
 		MS_TRACE();
 
@@ -831,7 +830,7 @@ namespace RTC
 		this->mapConsumerProducer.erase(mapConsumerProducerIt);
 	}
 
-	inline void Router::OnTransportConsumerKeyFrameRequested(
+	void Router::OnTransportConsumerKeyFrameRequested(
 	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
@@ -841,8 +840,7 @@ namespace RTC
 		producer->RequestKeyFrame(mappedSsrc);
 	}
 
-	inline void Router::OnTransportNewDataProducer(
-	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	void Router::OnTransportNewDataProducer(RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
 
@@ -863,8 +861,7 @@ namespace RTC
 		this->mapDataProducerDataConsumers[dataProducer];
 	}
 
-	inline void Router::OnTransportDataProducerClosed(
-	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	void Router::OnTransportDataProducerClosed(RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
 
@@ -899,8 +896,7 @@ namespace RTC
 		this->mapDataProducerDataConsumers.erase(mapDataProducerDataConsumersIt);
 	}
 
-	inline void Router::OnTransportDataProducerPaused(
-	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	void Router::OnTransportDataProducerPaused(RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
 
@@ -912,7 +908,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportDataProducerResumed(
+	void Router::OnTransportDataProducerResumed(
 	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
@@ -925,7 +921,8 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportDataProducerMessageReceived(
+	// TODO: SCTP: Remove when we migrate to the new SCTP stack.
+	void Router::OnTransportDataProducerMessageReceived(
 	  RTC::Transport* /*transport*/,
 	  RTC::DataProducer* dataProducer,
 	  const uint8_t* msg,
@@ -965,7 +962,47 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportNewDataConsumer(
+	void Router::OnTransportDataProducerMessageReceived(
+	  RTC::Transport* /*transport*/,
+	  RTC::DataProducer* dataProducer,
+	  RTC::SCTP::Message message,
+	  std::vector<uint16_t>& subchannels,
+	  std::optional<uint16_t> requiredSubchannel)
+	{
+		MS_TRACE();
+
+		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+
+		if (!dataConsumers.empty())
+		{
+#ifdef MS_LIBURING_SUPPORTED
+			if (DepLibUring::IsEnabled())
+			{
+				// Activate liburing usage.
+				// The effective sending could be synchronous, thus we would send those
+				// messages within a single system call.
+				DepLibUring::SetActive();
+			}
+#endif
+
+			for (auto* dataConsumer : dataConsumers)
+			{
+				// NOTE: Here we cannot pass `std::move(message)` because we need to
+				// deliver this message to many DataConsumers.
+				dataConsumer->SendMessage(message, subchannels, requiredSubchannel);
+			}
+
+#ifdef MS_LIBURING_SUPPORTED
+			if (DepLibUring::IsEnabled())
+			{
+				// Submit all prepared submission entries.
+				DepLibUring::Submit();
+			}
+#endif
+		}
+	}
+
+	void Router::OnTransportNewDataConsumer(
 	  RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer, std::string& dataProducerId)
 	{
 		MS_TRACE();
@@ -1000,8 +1037,7 @@ namespace RTC
 		this->mapDataConsumerDataProducer[dataConsumer] = dataProducer;
 	}
 
-	inline void Router::OnTransportDataConsumerClosed(
-	  RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer)
+	void Router::OnTransportDataConsumerClosed(RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer)
 	{
 		MS_TRACE();
 
@@ -1033,7 +1069,7 @@ namespace RTC
 		this->mapDataConsumerDataProducer.erase(mapDataConsumerDataProducerIt);
 	}
 
-	inline void Router::OnTransportDataConsumerDataProducerClosed(
+	void Router::OnTransportDataConsumerDataProducerClosed(
 	  RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer)
 	{
 		MS_TRACE();
@@ -1053,7 +1089,7 @@ namespace RTC
 		this->mapDataConsumerDataProducer.erase(mapDataConsumerDataProducerIt);
 	}
 
-	inline void Router::OnTransportListenServerClosed(RTC::Transport* transport)
+	void Router::OnTransportListenServerClosed(RTC::Transport* transport)
 	{
 		MS_TRACE();
 

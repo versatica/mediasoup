@@ -866,16 +866,16 @@ namespace RTC
 
 		if (Settings::configuration.useBuiltInSctpStack)
 		{
-			// TODO: SCTP
+			// TODO: SCTP: Implement.
 		}
 		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else
 		{
-			this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+			SendSctpMessage(dataConsumer, msg, len, ppid, cb);
 		}
 	}
 
-	bool WebRtcTransport::SendSctpData(const uint8_t* data, size_t len)
+	bool WebRtcTransport::SendData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 

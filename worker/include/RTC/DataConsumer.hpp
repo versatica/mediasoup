@@ -5,6 +5,7 @@
 #include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include <absl/container/flat_hash_set.h>
 #include <string>
@@ -23,12 +24,15 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
+			// TODO: SCTP: Remove when we migrate to the new SCTP stack.
 			virtual void OnDataConsumerSendMessage(
 			  RTC::DataConsumer* dataConsumer,
 			  const uint8_t* msg,
 			  size_t len,
 			  uint32_t ppid,
 			  onQueuedCallback* cb) = 0;
+			virtual void OnDataConsumerSendMessage(
+			  RTC::DataConsumer* dataConsumer, const RTC::SCTP::Message& message, onQueuedCallback* cb) = 0;
 			virtual void OnDataConsumerNeedBufferedAmount(
 			  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount)                   = 0;
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
@@ -95,10 +99,16 @@ namespace RTC
 		void SetSctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void SctpAssociationSendBufferFull();
 		void DataProducerClosed();
+		// TODO: SCTP: Remove when we migrate to the new SCTP stack.
 		bool SendMessage(
 		  const uint8_t* msg,
 		  size_t len,
 		  uint32_t ppid,
+		  std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel,
+		  const onQueuedCallback* cb = nullptr);
+		bool SendMessage(
+		  const RTC::SCTP::Message& message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel,
 		  const onQueuedCallback* cb = nullptr);
