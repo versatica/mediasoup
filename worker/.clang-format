@@ -17,9 +17,6 @@ AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
-# NOTE: This doesn't do anything because it requires Cpp11BracedListStyle: true,
-# which we don't want.
-BreakAfterOpenBracketBracedList: true
 BraceWrapping:
   AfterClass: true
   AfterControlStatement: Always
