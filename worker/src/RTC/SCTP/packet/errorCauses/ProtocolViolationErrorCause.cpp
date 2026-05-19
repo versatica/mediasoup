@@ -141,11 +141,11 @@ namespace RTC
 
 			if (HasAdditionalInformation())
 			{
-				return "info:[" +
+				return "info::\"" +
 				       std::string(
 				         reinterpret_cast<const char*>(GetAdditionalInformation()),
 				         GetAdditionalInformationLength()) +
-				       "]";
+				       "\"";
 			}
 			else
 			{

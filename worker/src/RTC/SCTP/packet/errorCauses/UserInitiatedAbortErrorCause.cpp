@@ -146,7 +146,7 @@ namespace RTC
 
 			if (HasUpperLayerAbortReason())
 			{
-				return "reason:[" + std::string(GetUpperLayerAbortReason()) + "]";
+				return "reason::\"" + std::string(GetUpperLayerAbortReason()) + "\"";
 			}
 			else
 			{

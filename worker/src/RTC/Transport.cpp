@@ -3279,7 +3279,7 @@ namespace RTC
 
 		MS_WARN_TAG(
 		  sctp,
-		  "SCTP Association error [kind:%.*s, message:%.*s]",
+		  "SCTP Association error [kind:%.*s, message:\"%.*s\"]",
 		  static_cast<int>(errorKindStringView.size()),
 		  errorKindStringView.data(),
 		  static_cast<int>(errorMessage.size()),

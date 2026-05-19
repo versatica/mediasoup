@@ -137,7 +137,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			return "tsn:[" + std::to_string(GetTsn()) + "]";
+			return "tsn:\"" + std::to_string(GetTsn()) + "\"";
 		}
 	} // namespace SCTP
 } // namespace RTC
