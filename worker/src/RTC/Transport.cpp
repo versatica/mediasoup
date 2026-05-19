@@ -1886,9 +1886,9 @@ namespace RTC
 		  !Settings::configuration.useBuiltInSctpStack,
 		  "cannot use this method when built-in SCTP stack is enabled");
 
-		if (!this->oldSctpAssociation && !this->direct)
+		if (!this->oldSctpAssociation)
 		{
-			MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+			MS_THROW_ERROR("SCTP not enabled");
 
 			if (cb)
 			{
