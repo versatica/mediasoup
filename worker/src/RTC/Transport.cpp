@@ -1907,6 +1907,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE: The `message` must already have its `streamId` pointing to the same
+		// as in the `dataConsumer` if its type is "sctp", or 0 otherwise.
+
 		MS_ASSERT(
 		  Settings::configuration.useBuiltInSctpStack,
 		  "cannot use this method when built-in SCTP stack is not enabled");

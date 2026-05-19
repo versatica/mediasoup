@@ -26,18 +26,26 @@ namespace RTC
 			  bool isEnd,
 			  bool isUnordered);
 
-			// Move constructor. No need to do anything special since std::vector
-			// already implements move.
+			/**
+			 * Move constructor. No need to do anything special since std::vector
+			 * already implements move.
+			 */
 			UserData(UserData&& other) = default;
 
-			// Move assignment. No need to do anything special since std::vector
-			// already implements move.
+			/**
+			 * Move assignment. No need to do anything special since std::vector
+			 * already implements move.
+			 */
 			UserData& operator=(UserData&& other) = default;
 
-			// Disable copy constructor.
+			/**
+			 * Copy constructor disabled.
+			 */
 			UserData(const UserData&) = delete;
 
-			// Disable copy assignment.
+			/**
+			 * Copy assignment disabled.
+			 */
 			UserData& operator=(const UserData&) = delete;
 
 			bool operator==(const UserData& other) const

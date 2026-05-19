@@ -19,18 +19,26 @@ namespace RTC
 		public:
 			Message(uint16_t streamId, uint32_t ppid, std::vector<uint8_t> payload);
 
-			// Move constructor. No need to do anything special since std::vector
-			// already implements move.
+			/**
+			 * Move constructor. No need to do anything special since std::vector
+			 * already implements move.
+			 */
 			Message(Message&& other) = default;
 
-			// Move assignment. No need to do anything special since std::vector
-			// already implements move.
+			/**
+			 * Move assignment. No need to do anything special since std::vector
+			 * already implements move.
+			 */
 			Message& operator=(Message&& other) = default;
 
-			// Disable copy constructor.
+			/**
+			 * Copy constructor disabled.
+			 */
 			Message(const Message&) = delete;
 
-			// Disable copy assignment.
+			/**
+			 * Copy assignment disabled.
+			 */
 			Message& operator=(const Message&) = delete;
 
 			~Message();

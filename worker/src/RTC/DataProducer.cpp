@@ -231,16 +231,11 @@ namespace RTC
 
 				if (Settings::configuration.useBuiltInSctpStack)
 				{
-					uint16_t streamId{ 0 };
+					const uint16_t streamId =
+					  this->type == DataProducer::Type::SCTP ? this->sctpStreamParameters.streamId : 0;
 
-					if (this->type == DataProducer::Type::SCTP)
-					{
-						streamId = this->sctpStreamParameters.streamId;
-					}
-
-					// TODO: SCTP: We are doing a copy here. We houl dbe able to pass the
-					// vector within FlatBuffers `body->data()` by using a new second
-					// constructor in Message that accepts a `std::span<uint8_t>`.
+					// NOTE: We are creating a copy of the data here, otherwise we cannot
+					// move the Message and pass its ownership to the SCTP stack.
 					RTC::SCTP::Message message(streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
 
 					ReceiveMessage(std::move(message), subchannels, requiredSubchannel);
