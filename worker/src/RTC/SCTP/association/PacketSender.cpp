@@ -40,6 +40,11 @@ namespace RTC
 				MS_ABORT("cannot send a SCTP packet that needs consolidation");
 			}
 
+			if (packet->GetChunksCount() == 0)
+			{
+				MS_ABORT("cannot send a SCTP packet without any chunk");
+			}
+
 			const bool sent =
 			  this->associationListener.OnAssociationSendData(packet->GetBuffer(), packet->GetLength());
 

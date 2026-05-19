@@ -1,4 +1,3 @@
-#include <optional>
 #define MS_CLASS "RTC::SCTP::RoundRobinSendQueue"
 // #define MS_LOG_DEV_LEVEL 3
 
@@ -730,7 +729,8 @@ namespace RTC
 
 				this->parent.associationListener.OnAssociationLifecycleMessageExpired(
 				  item.attributes.lifecycleId.value(), /*maybeDelivered*/ false);
-				this->parent.associationListener.OnAssociationLifecycleMessageEnd(item.attributes.lifecycleId.value());
+				this->parent.associationListener.OnAssociationLifecycleMessageEnd(
+				  item.attributes.lifecycleId.value());
 			}
 		}
 
