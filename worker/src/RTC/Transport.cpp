@@ -1883,10 +1883,55 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(
-		  !Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation,
-		  "!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation ocndition not honored");
+		  !Settings::configuration.useBuiltInSctpStack,
+		  "cannot use this method when built-in SCTP stack is enabled");
+
+		if (!this->oldSctpAssociation && !this->direct)
+		{
+			MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+
+			if (cb)
+			{
+				(*cb)(false, false);
+				delete cb;
+			}
+
+			return;
+		}
 
 		this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+	}
+
+	void Transport::SendSctpMessage(
+	  RTC::DataConsumer* /*dataConsumer*/, RTC::SCTP::Message message, onQueuedCallback* cb)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  Settings::configuration.useBuiltInSctpStack,
+		  "cannot use this method when built-in SCTP stack is not enabled");
+
+		if (!this->sctpAssociation && !this->direct)
+		{
+			MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+
+			if (cb)
+			{
+				(*cb)(false, false);
+				delete cb;
+			}
+
+			return;
+		}
+
+		// TODO: SCTP: Remove.
+		MS_DUMP("sending SCTP message:");
+		message.Dump();
+
+		// TOOD: SCTP: Need to pass proper SctpMessageOptions. We need to obtain them
+		// from the DataConsumer settings.
+		// TODO: SCTP: What to do with given `cb`?
+		// this->sctpAssociation->SendMessage(dataConsumer, std::move(message), cb);
 	}
 
 	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const
@@ -2985,16 +3030,11 @@ namespace RTC
 	}
 
 	void Transport::OnDataConsumerSendMessage(
-	  RTC::DataConsumer* dataConsumer, const RTC::SCTP::Message& message, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
-		SendMessage(
-		  dataConsumer,
-		  message.GetPayload().data(),
-		  message.GetPayloadLength(),
-		  message.GetPayloadProtocolId(),
-		  cb);
+		SendMessage(dataConsumer, std::move(message), cb);
 	}
 
 	void Transport::OnDataConsumerNeedBufferedAmount(

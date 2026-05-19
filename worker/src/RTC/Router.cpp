@@ -987,9 +987,10 @@ namespace RTC
 
 			for (auto* dataConsumer : dataConsumers)
 			{
-				// NOTE: Here we cannot pass `std::move(message)` because we need to
-				// deliver this message to many DataConsumers.
-				dataConsumer->SendMessage(message, subchannels, requiredSubchannel);
+				// TODO: SCTP: Here we cannot pass `std::move(message)` because we need to
+				// deliver this message to many DataConsumers. So this is gonna crash if
+				// there are more than 1 DataConsumers receiving this message.
+				dataConsumer->SendMessage(std::move(message), subchannels, requiredSubchannel);
 			}
 
 #ifdef MS_LIBURING_SUPPORTED

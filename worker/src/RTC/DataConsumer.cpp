@@ -611,7 +611,7 @@ namespace RTC
 	}
 
 	bool DataConsumer::SendMessage(
-	  const RTC::SCTP::Message& message,
+	  RTC::SCTP::Message message,
 	  std::vector<uint16_t>& subchannels,
 	  std::optional<uint16_t> requiredSubchannel,
 	  const onQueuedCallback* cb)
@@ -694,7 +694,7 @@ namespace RTC
 		this->messagesSent++;
 		this->bytesSent += messageLen;
 
-		this->listener->OnDataConsumerSendMessage(this, message, cb);
+		this->listener->OnDataConsumerSendMessage(this, std::move(message), cb);
 
 		return true;
 	}

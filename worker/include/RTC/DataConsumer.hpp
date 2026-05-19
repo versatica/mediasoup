@@ -32,7 +32,7 @@ namespace RTC
 			  uint32_t ppid,
 			  onQueuedCallback* cb) = 0;
 			virtual void OnDataConsumerSendMessage(
-			  RTC::DataConsumer* dataConsumer, const RTC::SCTP::Message& message, onQueuedCallback* cb) = 0;
+			  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb) = 0;
 			virtual void OnDataConsumerNeedBufferedAmount(
 			  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount)                   = 0;
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
@@ -108,7 +108,7 @@ namespace RTC
 		  std::optional<uint16_t> requiredSubchannel,
 		  const onQueuedCallback* cb = nullptr);
 		bool SendMessage(
-		  const RTC::SCTP::Message& message,
+		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel,
 		  const onQueuedCallback* cb = nullptr);

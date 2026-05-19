@@ -201,12 +201,15 @@ namespace RTC
 		virtual void ReceiveRtpPacket(RTC::RTP::Packet* packet) final;
 		virtual void ReceiveRtcpPacket(RTC::RTCP::Packet* packet) final;
 		virtual void ReceiveSctpData(const uint8_t* data, size_t len) final;
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		virtual void SendSctpMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  const uint8_t* msg,
 		  size_t len,
 		  uint32_t ppid,
 		  onQueuedCallback* cb = nullptr) final;
+		virtual void SendSctpMessage(
+		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb = nullptr) final;
 		virtual RTC::Producer* GetProducerById(const std::string& producerId) const final;
 		virtual RTC::Consumer* GetConsumerById(const std::string& consumerId) const final;
 		virtual RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const final;
@@ -222,12 +225,15 @@ namespace RTC
 		virtual void SendRtcp(uint64_t nowMs) final;
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
+		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		virtual void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  const uint8_t* msg,
 		  size_t len,
 		  uint32_t ppid,
-		  onQueuedCallback* cb = nullptr)                      = 0;
+		  onQueuedCallback* cb = nullptr) = 0;
+		virtual void SendMessage(
+		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb = nullptr) = 0;
 		virtual bool SendData(const uint8_t* data, size_t len) = 0;
 		virtual void RecvStreamClosed(uint32_t ssrc)           = 0;
 		virtual void SendStreamClosed(uint32_t ssrc)           = 0;
@@ -305,7 +311,7 @@ namespace RTC
 		  uint32_t ppid,
 		  onQueuedCallback* cb = nullptr) override;
 		void OnDataConsumerSendMessage(
-		  RTC::DataConsumer* dataConsumer, const RTC::SCTP::Message& message, onQueuedCallback* cb) override;
+		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb) override;
 		void OnDataConsumerNeedBufferedAmount(
 		  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;

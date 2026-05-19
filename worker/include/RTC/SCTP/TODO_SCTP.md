@@ -12,6 +12,10 @@
 
 - Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.
 
+- What to do with the `cb` callback given to `Transport::SendSctpMessage()`?
+
+- Need to fill `SctpMessageOptions` when calling `association->SendMessage()`.
+
 - We must remove `numSctpStreams` option given to `router.createXxxTransport()` and `NumSctpStreams` type. `OS` and `MIS` in `numSctpStreams` are just the max announced number of outbound and incoming SCTP streams, but in the new SCTP stack those should always be 65535. The max number of incoming and outgoing streams will be negotiated later with the SCTP INIT and INIT_ACK and will be the minimum of our values (65535) and the OS and MIS that the peer announces in its INIT or INIT_ACK.
   - This is a breaking change.
   - Remove it from `sctpParameters.fbs` and other FBS types (look for `MIS` or `mis`, etc).
