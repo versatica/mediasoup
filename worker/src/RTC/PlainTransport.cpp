@@ -266,7 +266,7 @@ namespace RTC
 
 		// Tell the Transport parent class that we are about to destroy
 		// the class instance.
-		Destroying();
+		SetDestroying();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 

@@ -339,7 +339,7 @@ namespace RTC
 		// We need to tell the Transport parent class that we are about to destroy
 		// the class instance. This is because child's destructor runs before
 		// parent's destructor. See comment in Transport::OnSctpAssociationSendData().
-		Destroying();
+		SetDestroying();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 

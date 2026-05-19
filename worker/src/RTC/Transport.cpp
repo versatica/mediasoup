@@ -188,8 +188,9 @@ namespace RTC
 		if (Settings::configuration.useBuiltInSctpStack)
 		{
 			// NOTE: When using the built-in SCTP stack we don't do anything here since
-			// the `Destroying()` method has already been called by the Transport subclass
-			// and it closed the SCTP Association.
+			// the `SetDestroying()` method has already been called by the Transport
+			// subclass and it closed the SCTP Association.
+			//
 			// NOTE: We cannot do it here in the destructor because here we are no longer
 			// the Transport subclass but Transport parent (this is how the destruction
 			// chain works in C++).
@@ -1631,7 +1632,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::Destroying()
+	void Transport::SetDestroying()
 	{
 		MS_TRACE();
 
@@ -1647,7 +1648,7 @@ namespace RTC
 			}
 		}
 
-		this->destroying = true;
+		this->isDestroying = true;
 	}
 
 	void Transport::Connected()
@@ -3151,7 +3152,7 @@ namespace RTC
 		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,
 		// its destructor is called first and then the parent Transport's destructor,
 		// and we would end here calling SendData() which is an abstract method.
-		if (this->destroying)
+		if (this->isDestroying)
 		{
 			MS_WARN_DEV("ignoring sending data because Transport is being destroying");
 
@@ -3500,7 +3501,7 @@ namespace RTC
 		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,
 		// its destructor is called first and then the parent Transport's destructor,
 		// and we would end here calling SendSctpData() which is an abstract method.
-		if (this->destroying)
+		if (this->isDestroying)
 		{
 			MS_WARN_DEV("ignoring sending data because Transport is being destroying");
 

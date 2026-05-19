@@ -187,7 +187,7 @@ namespace RTC
 
 	protected:
 		// Must be called from the subclass.
-		virtual void Destroying() final;
+		virtual void SetDestroying() final;
 		virtual void Connected() final;
 		virtual void Disconnected() final;
 		virtual void DataReceived(size_t len) final
@@ -410,7 +410,7 @@ namespace RTC
 #endif
 		// Others.
 		bool direct{ false }; // Whether this Transport allows direct communication.
-		bool destroying{ false };
+		bool isDestroying{ false };
 		struct RTC::RTP::HeaderExtensionIds recvRtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;
 		RTC::SctpListener sctpListener;
