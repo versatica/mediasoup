@@ -985,18 +985,32 @@ namespace RTC
 			}
 #endif
 
+			const auto numDataConsumers = dataConsumers.size();
+
 			for (auto* dataConsumer : dataConsumers)
 			{
-				// TODO: SCTP: Here we are cloning the Message before passing it to each
-				// DataConsumer because each DataConsumer will std::move(message) it
-				// internally when passing and processing it in the SCTP Association and
-				// subclasses. This is not efficient.
-				auto clonedMessage = message.Clone();
+				const uint16_t streamId =
+				  (dataConsumer->GetType() == DataConsumer::Type::SCTP
+				     ? dataConsumer->GetSctpStreamParameters().streamId
+				     : 0);
 
 				// We must update the Message`s `streamId` for each destination DataConsumer.
-				clonedMessage.SetStreamId(dataConsumer->GetSctpStreamParameters().streamId);
+				message.SetStreamId(streamId);
 
-				dataConsumer->SendMessage(std::move(clonedMessage), subchannels, requiredSubchannel);
+				if (numDataConsumers == 1)
+				{
+					dataConsumer->SendMessage(std::move(message), subchannels, requiredSubchannel);
+				}
+				// NOTE: Here we are cloning the Message before passing it to each
+				// DataConsumer (after the first one) because each DataConsumer will
+				// std::move(message) internally when passing and processing it in the
+				// SCTP Association and subclasses.
+				else
+				{
+					auto clonedMessage = message.Clone();
+
+					dataConsumer->SendMessage(std::move(clonedMessage), subchannels, requiredSubchannel);
+				}
 			}
 
 #ifdef MS_LIBURING_SUPPORTED
