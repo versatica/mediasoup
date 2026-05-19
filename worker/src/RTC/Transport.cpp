@@ -1915,9 +1915,9 @@ namespace RTC
 		  Settings::configuration.useBuiltInSctpStack,
 		  "cannot use this method when built-in SCTP stack is not enabled");
 
-		if (!this->sctpAssociation && !this->direct)
+		if (!this->sctpAssociation)
 		{
-			MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+			MS_THROW_ERROR("SCTP not enabled");
 
 			if (cb)
 			{
@@ -1927,10 +1927,6 @@ namespace RTC
 
 			return;
 		}
-
-		// TODO: SCTP: Remove.
-		MS_DUMP("sending SCTP message:");
-		message.Dump();
 
 		const auto& sctpStreamParameters = dataConsumer->GetSctpStreamParameters();
 		const RTC::SCTP::SendMessageOptions sendMessageOptions{
@@ -1944,9 +1940,10 @@ namespace RTC
 			// NOTE: We don't set `lifecyleId` in production.
 		};
 
-		const auto status = this->sctpAssociation->SendMessage(std::move(message), sendMessageOptions);
+		const auto sendStatus =
+		  this->sctpAssociation->SendMessage(std::move(message), sendMessageOptions);
 
-		switch (status)
+		switch (sendStatus)
 		{
 			case RTC::SCTP::Types::SendMessageStatus::SUCCESS:
 			{
@@ -1960,6 +1957,14 @@ namespace RTC
 
 			case RTC::SCTP::Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
 			{
+				const auto sendStatusStringView = RTC::SCTP::Types::SendMessageStatusToString(sendStatus);
+
+				MS_WARN_TAG(
+				  sctp,
+				  "failed to send SCTP message [sendStatus:%.*s]",
+				  static_cast<int>(sendStatusStringView.size()),
+				  sendStatusStringView.data());
+
 				if (cb)
 				{
 					(*cb)(false, /*sctpSendBufferFull*/ true);
@@ -1974,6 +1979,14 @@ namespace RTC
 
 			default:
 			{
+				const auto sendStatusStringView = RTC::SCTP::Types::SendMessageStatusToString(sendStatus);
+
+				MS_WARN_TAG(
+				  sctp,
+				  "failed to send SCTP message [sendStatus:%.*s]",
+				  static_cast<int>(sendStatusStringView.size()),
+				  sendStatusStringView.data());
+
 				if (cb)
 				{
 					(*cb)(false, /*sctpSendBufferFull*/ false);
