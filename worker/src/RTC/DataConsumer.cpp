@@ -303,7 +303,7 @@ namespace RTC
 					// vector within FlatBuffers `body->data()` by using a new second
 					// constructor in Message that accepts a `std::span<uint8_t>`.
 					RTC::SCTP::Message message(
-					  /*streamId*/ 0, body->ppid(), std::vector<uint8_t>(data, data + len));
+					  this->sctpStreamParameters.streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
 
 					SendMessage(std::move(message), emptySubchannels, std::nullopt, cb);
 				}

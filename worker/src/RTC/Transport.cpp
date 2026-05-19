@@ -1903,7 +1903,7 @@ namespace RTC
 	}
 
 	void Transport::SendSctpMessage(
-	  RTC::DataConsumer* /*dataConsumer*/, RTC::SCTP::Message message, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
@@ -1928,10 +1928,58 @@ namespace RTC
 		MS_DUMP("sending SCTP message:");
 		message.Dump();
 
-		// TOOD: SCTP: Need to pass proper SctpMessageOptions. We need to obtain them
-		// from the DataConsumer settings.
-		// TODO: SCTP: What to do with given `cb`?
-		// this->sctpAssociation->SendMessage(dataConsumer, std::move(message), cb);
+		const auto& sctpStreamParameters = dataConsumer->GetSctpStreamParameters();
+		const RTC::SCTP::SendMessageOptions sendMessageOptions{
+			.unordered          = !sctpStreamParameters.ordered,
+			.lifetimeMs         = sctpStreamParameters.ordered
+			                        ? std::nullopt
+			                        : std::optional<uint64_t>(sctpStreamParameters.maxPacketLifeTime),
+			.maxRetransmissions = sctpStreamParameters.ordered
+			                        ? std::nullopt
+			                        : std::optional<uint64_t>(sctpStreamParameters.maxRetransmits),
+			// NOTE: We don't set `lifecyleId` in production.
+		};
+
+		const auto status = this->sctpAssociation->SendMessage(std::move(message), sendMessageOptions);
+
+		switch (status)
+		{
+			case RTC::SCTP::Types::SendMessageStatus::SUCCESS:
+			{
+				if (cb)
+				{
+					(*cb)(true, /*sctpSendBufferFull*/ false);
+				}
+
+				break;
+			}
+
+			case RTC::SCTP::Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
+			{
+				if (cb)
+				{
+					(*cb)(false, /*sctpSendBufferFull*/ true);
+				}
+
+				// TODO: SCTP: We don't want this probably since we have events in Association
+				// for this.
+				dataConsumer->SctpAssociationSendBufferFull();
+
+				break;
+			}
+
+			default:
+			{
+				if (cb)
+				{
+					(*cb)(false, /*sctpSendBufferFull*/ false);
+				}
+
+				break;
+			}
+		}
+
+		delete cb;
 	}
 
 	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const

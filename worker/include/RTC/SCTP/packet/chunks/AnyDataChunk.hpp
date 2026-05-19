@@ -77,7 +77,7 @@ namespace RTC
 
 			virtual uint16_t GetUserDataPayloadLength() const = 0;
 
-			virtual UserData GetUserData() const = 0;
+			virtual UserData MakeUserData() const = 0;
 		};
 	} // namespace SCTP
 } // namespace RTC

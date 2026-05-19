@@ -2269,9 +2269,9 @@ namespace RTC
 			if (this->tcb->GetDataTracker().Observe(tsn, immediateAck))
 			{
 				// NOTE: Here we are passing an UserData r-value created and returned by
-				// receivedAnyDataChunk->GetUserData() so there is only one copy here.
+				// receivedAnyDataChunk->MakeUserData() so there is only one copy here.
 				// And ReassemblyQueue::AddData() will std::move() it internally.
-				this->tcb->GetReassemblyQueue().AddData(tsn, receivedAnyDataChunk->GetUserData());
+				this->tcb->GetReassemblyQueue().AddData(tsn, receivedAnyDataChunk->MakeUserData());
 
 				MayDeliverMessages();
 			}

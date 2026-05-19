@@ -218,7 +218,7 @@ namespace RTC
 
 			void SetUserDataPayload(const uint8_t* userDataPayload, uint16_t userDataPayloadLength);
 
-			UserData GetUserData() const final
+			UserData MakeUserData() const final
 			{
 				const auto* userData       = GetUserDataPayload();
 				const uint16_t userDataLen = GetUserDataPayloadLength();

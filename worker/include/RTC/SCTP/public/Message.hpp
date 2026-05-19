@@ -43,6 +43,8 @@ namespace RTC
 				return this->streamId;
 			}
 
+			void SetStreamId(uint16_t streamId);
+
 			uint32_t GetPayloadProtocolId() const
 			{
 				return this->ppid;

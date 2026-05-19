@@ -987,10 +987,16 @@ namespace RTC
 
 			for (auto* dataConsumer : dataConsumers)
 			{
-				// TODO: SCTP: Here we cannot pass `std::move(message)` because we need to
-				// deliver this message to many DataConsumers. So this is gonna crash if
-				// there are more than 1 DataConsumers receiving this message.
-				dataConsumer->SendMessage(std::move(message), subchannels, requiredSubchannel);
+				// TODO: SCTP: Here we are cloning the Message before passing it to each
+				// DataConsumer because each DataConsumer will std::move(message) it
+				// internally when passing and processing it in the SCTP Association and
+				// subclasses. This is not efficient.
+				auto clonedMessage = message.Clone();
+
+				// We must update the Message`s `streamId` for each destination DataConsumer.
+				clonedMessage.SetStreamId(dataConsumer->GetSctpStreamParameters().streamId);
+
+				dataConsumer->SendMessage(std::move(clonedMessage), subchannels, requiredSubchannel);
 			}
 
 #ifdef MS_LIBURING_SUPPORTED

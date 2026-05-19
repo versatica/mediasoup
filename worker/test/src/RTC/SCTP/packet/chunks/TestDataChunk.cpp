@@ -70,7 +70,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		auto userData = chunk->GetUserData();
+		auto userData = chunk->MakeUserData();
 
 		std::vector<uint8_t> expectedPayload = { 0xAB, 0xCD, 0xEF };
 
@@ -119,7 +119,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		userData = chunk->GetUserData();
+		userData = chunk->MakeUserData();
 
 		REQUIRE(userData.GetStreamId() == 0xFF00);
 		REQUIRE(userData.GetStreamSequenceNumber() == 0x6677);
@@ -167,7 +167,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(clonedChunk->GetUserDataPayload()[3] == 0x00);
 
-		userData = clonedChunk->GetUserData();
+		userData = clonedChunk->MakeUserData();
 
 		REQUIRE(userData.GetStreamId() == 0xFF00);
 		REQUIRE(userData.GetStreamSequenceNumber() == 0x6677);
@@ -210,7 +210,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->HasUserDataPayload() == false);
 		REQUIRE(chunk->GetUserDataPayloadLength() == 0);
 
-		auto userData = chunk->GetUserData();
+		auto userData = chunk->MakeUserData();
 
 		std::vector<uint8_t> expectedPayload = {};
 
@@ -277,7 +277,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// Last byte must be a zero byte padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		userData        = chunk->GetUserData();
+		userData        = chunk->MakeUserData();
 		expectedPayload = { 0x00, 0x01, 0x02 };
 
 		REQUIRE(userData.GetStreamId() == 9988);
@@ -324,7 +324,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		// Last byte must be a zero byte padding.
 		REQUIRE(parsedChunk->GetUserDataPayload()[3] == 0x00);
 
-		userData = parsedChunk->GetUserData();
+		userData = parsedChunk->MakeUserData();
 
 		REQUIRE(userData.GetStreamId() == 9988);
 		REQUIRE(userData.GetStreamSequenceNumber() == 2211);
@@ -421,7 +421,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto gotUserData = chunk->GetUserData();
+		auto gotUserData = chunk->MakeUserData();
 
 		std::vector<uint8_t> expectedPayload = { 1, 2, 3, 4 };
 

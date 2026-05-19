@@ -29,5 +29,13 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  payload length: %zu", GetPayloadLength());
 			MS_DUMP_CLEAN(indentation, "</SCTP::Message>");
 		}
+
+		void Message::SetStreamId(uint16_t streamId)
+		{
+			MS_TRACE();
+
+			this->streamId = streamId;
+			;
+		}
 	} // namespace SCTP
 } // namespace RTC
