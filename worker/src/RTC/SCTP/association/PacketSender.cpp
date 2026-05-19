@@ -40,10 +40,7 @@ namespace RTC
 				packet->Dump();
 			}
 
-			if (packet->NeedsConsolidation())
-			{
-				MS_ABORT("cannot send a SCTP packet that needs consolidation");
-			}
+			MS_ASSERT(!packet->NeedsConsolidation(), "cannot send a SCTP packet that needs consolidation");
 
 			const bool sent =
 			  this->associationListener.OnAssociationSendData(packet->GetBuffer(), packet->GetLength());
