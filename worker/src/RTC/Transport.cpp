@@ -3204,14 +3204,23 @@ namespace RTC
 		  sctpStateChangeOffset);
 
 		// TODO: SCTP: REMOVE
-		MS_DUMP("---- SCTP Association connected, dump():");
+		MS_DUMP("---- SCTP association connected, dump():");
 		this->sctpAssociation->Dump();
 	}
 
-	void Transport::OnAssociationFailed(
-	  RTC::SCTP::Types::ErrorKind /*errorKind*/, std::string_view /*errorMessage*/)
+	void Transport::OnAssociationFailed(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
 	{
 		MS_TRACE();
+
+		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+
+		MS_WARN_TAG(
+		  sctp,
+		  "SCTP association failed [errorKind:%.*s, message:%.*s]",
+		  static_cast<int>(errorKindStringView.size()),
+		  errorKindStringView.data(),
+		  static_cast<int>(errorMessage.size()),
+		  errorMessage.data());
 
 		// Tell all DataConsumers.
 		for (auto& kv : this->mapDataConsumers)
@@ -3236,10 +3245,22 @@ namespace RTC
 		  sctpStateChangeOffset);
 	}
 
-	void Transport::OnAssociationClosed(
-	  RTC::SCTP::Types::ErrorKind /*errorKind*/, std::string_view /*errorMessage*/)
+	void Transport::OnAssociationClosed(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
 	{
 		MS_TRACE();
+
+		if (errorKind != RTC::SCTP::Types::ErrorKind::SUCCESS)
+		{
+			const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+
+			MS_WARN_TAG(
+			  sctp,
+			  "SCTP association closed [errorKind:%.*s, message:%.*s]",
+			  static_cast<int>(errorKindStringView.size()),
+			  errorKindStringView.data(),
+			  static_cast<int>(errorMessage.size()),
+			  errorMessage.data());
+		}
 
 		// Tell all DataConsumers.
 		for (auto& kv : this->mapDataConsumers)
@@ -3268,7 +3289,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: SCTP
+		MS_DEBUG_TAG(sctp, "SCTP association restarted");
 	}
 
 	void Transport::OnAssociationError(RTC::SCTP::Types::ErrorKind errorKind, std::string_view errorMessage)
@@ -3279,7 +3300,7 @@ namespace RTC
 
 		MS_WARN_TAG(
 		  sctp,
-		  "SCTP Association error [kind:%.*s, message:\"%.*s\"]",
+		  "SCTP association error [errorKind:%.*s, message:%.*s]",
 		  static_cast<int>(errorKindStringView.size()),
 		  errorKindStringView.data(),
 		  static_cast<int>(errorMessage.size()),
