@@ -996,7 +996,11 @@ namespace RTC
 
 				if (numDataConsumers == 1)
 				{
-					// We must update the Message`s `streamId` for each destination DataConsumer.
+					// We must update the Message`s `streamId` for each destination
+					// DataConsumer.
+					// NOTE: clang-tidy doesn't understand that we are only doing this
+					// once in the original `message`.
+					// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
 					message.SetStreamId(streamId);
 
 					dataConsumer->SendMessage(std::move(message), subchannels, requiredSubchannel);
@@ -1008,7 +1012,8 @@ namespace RTC
 				{
 					auto clonedMessage = message.Clone();
 
-					// We must update the Message`s `streamId` for each destination DataConsumer.
+					// We must update the Message`s `streamId` for each destination
+					// DataConsumer.
 					clonedMessage.SetStreamId(streamId);
 
 					dataConsumer->SendMessage(std::move(clonedMessage), subchannels, requiredSubchannel);
