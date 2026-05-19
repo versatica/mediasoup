@@ -994,11 +994,11 @@ namespace RTC
 				     ? dataConsumer->GetSctpStreamParameters().streamId
 				     : 0);
 
-				// We must update the Message`s `streamId` for each destination DataConsumer.
-				message.SetStreamId(streamId);
-
 				if (numDataConsumers == 1)
 				{
+					// We must update the Message`s `streamId` for each destination DataConsumer.
+					message.SetStreamId(streamId);
+
 					dataConsumer->SendMessage(std::move(message), subchannels, requiredSubchannel);
 				}
 				// NOTE: Here we are cloning the Message before passing it to each
@@ -1007,6 +1007,9 @@ namespace RTC
 				else
 				{
 					auto clonedMessage = message.Clone();
+
+					// We must update the Message`s `streamId` for each destination DataConsumer.
+					clonedMessage.SetStreamId(streamId);
 
 					dataConsumer->SendMessage(std::move(clonedMessage), subchannels, requiredSubchannel);
 				}

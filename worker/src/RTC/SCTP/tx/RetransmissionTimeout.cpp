@@ -65,7 +65,7 @@ namespace RTC
 			// would take a very long time to recover.
 			if (rttMs == 0 || rttMs > this->maxRttMs)
 			{
-				MS_WARN_TAG(sctp, "skipping given unrealistic rttMs value %" PRIu64, rttMs);
+				MS_WARN_DEV(sctp, "skipping given unrealistic rttMs value %" PRIu64, rttMs);
 
 				return;
 			}

@@ -10,6 +10,10 @@
 
 - `OnAssociationFailed()` and `OnAssociationClosed()` should report an error (if present) to JS.
 
+- Rename all "Packet", "Chunk", "Parameter", "Error Cause", "Association", etc to lowcase everywhere (in code and comments).
+
+- Rename all "I_DATA" etc to `I-DATA" everywhere (in code and comments).
+
 - Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.
 
 - When running `test-PipeTransport.ts` and `test-werift-sctp.ts` with `useBuiltInSctpStack: true`, tests pass but those errors show up:
