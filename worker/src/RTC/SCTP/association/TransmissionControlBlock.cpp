@@ -4,6 +4,8 @@
 
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/packet/chunks/CookieAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/CookieEchoChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
@@ -281,23 +283,39 @@ namespace RTC
 			SendPacket(packet.get());
 		}
 
-		void TransmissionControlBlock::SendBufferedPackets(Packet* packet, uint64_t nowMs)
+		void TransmissionControlBlock::SendBufferedPackets(uint64_t nowMs, bool addCookieAckChunk)
 		{
 			MS_TRACE();
 
 			for (size_t packetIdx{ 0 }; packetIdx < this->sctpOptions.maxBurst; ++packetIdx)
 			{
+				const auto packet = CreatePacket();
+
 				// Only add control Chunks to the first Packet that is sent, if sending
 				// multiple Packets in one go (as allowed by the congestion window).
 				if (packetIdx == 0)
 				{
+					if (addCookieAckChunk)
+					{
+						MS_DEBUG_DEV("adding COOKIE_ACK Chunk to the Packet");
+
+						const auto* cookieAckChunk = packet->BuildChunkInPlace<CookieAckChunk>();
+
+						cookieAckChunk->Consolidate();
+					}
+
 					if (this->remoteStateCookie.has_value())
 					{
 						// https://datatracker.ietf.org/doc/html/rfc9260#section-5.1
 						//
 						// "The COOKIE ECHO chunk can be bundled with any pending outbound
 						// DATA chunks, but it MUST be the first chunk in the packet..."
-						MS_ASSERT(packet->GetChunksCount() == 0, "Packet must have no Chunks");
+						if (packet->GetChunksCount() > 0)
+						{
+							MS_THROW_ERROR(
+							  "Packet must have no Chunks [addCookieAckChunk:%s]",
+							  addCookieAckChunk ? "true" : "no");
+						}
 
 						auto* cookieEchoChunk = packet->BuildChunkInPlace<CookieEchoChunk>();
 
@@ -313,18 +331,19 @@ namespace RTC
 					// sender should create a SACK and bundle it with the outbound DATA
 					// chunk, as long as the size of the final SCTP packet does not exceed
 					// the current MTU."
-					if (this->dataTracker.ShouldSendAck(/*alsoIffDelayed*/ true))
+					if (this->dataTracker.ShouldSendAck(/*alsoIfDelayed*/ true))
 					{
-						this->dataTracker.AddSackSelectiveAck(packet, this->reassemblyQueue.GetRemainingBytes());
+						this->dataTracker.AddSackSelectiveAck(
+						  packet.get(), this->reassemblyQueue.GetRemainingBytes());
 					}
 
 					const uint64_t nowMs = this->shared->GetTimeMs();
 
-					MayAddForwardTsnChunk(packet, nowMs);
+					MayAddForwardTsnChunk(packet.get(), nowMs);
 
 					if (this->streamResetHandler.ShouldSendStreamResetRequest())
 					{
-						this->streamResetHandler.AddStreamResetRequest(packet);
+						this->streamResetHandler.AddStreamResetRequest(packet.get());
 					}
 				}
 
@@ -347,21 +366,21 @@ namespace RTC
 				{
 					if (this->negotiatedCapabilities.messageInterleaving)
 					{
-						auto* dataChunk = packet->BuildChunkInPlace<DataChunk>();
-
-						dataChunk->SetTsn(tsn);
-						dataChunk->SetI(immediateAck);
-						dataChunk->SetUserData(std::move(data));
-						dataChunk->Consolidate();
-					}
-					else
-					{
 						auto* iDataChunk = packet->BuildChunkInPlace<IDataChunk>();
 
 						iDataChunk->SetTsn(tsn);
 						iDataChunk->SetI(immediateAck);
 						iDataChunk->SetUserData(std::move(data));
 						iDataChunk->Consolidate();
+					}
+					else
+					{
+						auto* dataChunk = packet->BuildChunkInPlace<DataChunk>();
+
+						dataChunk->SetTsn(tsn);
+						dataChunk->SetI(immediateAck);
+						dataChunk->SetUserData(std::move(data));
+						dataChunk->Consolidate();
 					}
 				}
 
@@ -371,31 +390,22 @@ namespace RTC
 				// MUST include a correct CRC32c checksum in the packet containing the
 				// COOKIE ECHO chunk."
 				if (!this->packetSender.SendPacket(
-				      packet,
+				      packet.get(),
 				      /*writeChecksum*/ !negotiatedCapabilities.zeroChecksum ||
 				        this->remoteStateCookie.has_value()))
 				{
 					break;
 				}
 
+				// https://datatracker.ietf.org/doc/html/rfc9260#section-5.1
+				//
+				// "until the COOKIE ACK is returned the sender MUST NOT send any
+				// other packets to the peer."
 				if (this->remoteStateCookie.has_value())
 				{
-					// https://datatracker.ietf.org/doc/html/rfc9260#section-5.1
-					//
-					// "until the COOKIE ACK is returned the sender MUST NOT send any
-					// other packets to the peer."
 					break;
 				}
 			}
-		}
-
-		void TransmissionControlBlock::SendBufferedPackets(uint64_t nowMs)
-		{
-			MS_TRACE();
-
-			const auto packet = CreatePacket();
-
-			SendBufferedPackets(packet.get(), nowMs);
 		}
 
 		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)

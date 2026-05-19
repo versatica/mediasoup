@@ -40,7 +40,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void RoundRobinSendQueue::Add(
+		void RoundRobinSendQueue::AddMessage(
 		  uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions)
 		{
 			MS_TRACE();
@@ -54,19 +54,18 @@ namespace RTC
 			// lifetime (which may be zero).
 			const MessageAttributes attributes = {
 				.isUnordered        = sendMessageOptions.unordered,
-				.maxRetransmissions = static_cast<uint16_t>(
-				  sendMessageOptions.maxRetransmissions.has_value()
-				    ? sendMessageOptions.maxRetransmissions.value()
-				    : Types::MaxRetransmitsNoLimit),
-				.expiresAtMs = sendMessageOptions.lifetimeMs.has_value()
-				                 ? nowMs + sendMessageOptions.lifetimeMs.value() + 1
-				                 : Types::ExpiresAtMsInfinite,
-				.lifecycleId = sendMessageOptions.lifecycleId,
+				.maxRetransmissions = sendMessageOptions.maxRetransmissions.has_value()
+				                        ? sendMessageOptions.maxRetransmissions.value()
+				                        : Types::MaxRetransmitsNoLimit,
+				.expiresAtMs        = sendMessageOptions.lifetimeMs.has_value()
+				                        ? nowMs + sendMessageOptions.lifetimeMs.value() + 1
+				                        : Types::ExpiresAtMsInfinite,
+				.lifecycleId        = sendMessageOptions.lifecycleId,
 			};
 
 			const uint16_t streamId = message.GetStreamId();
 
-			GetOrCreateStreamInfo(streamId).Add(std::move(message), attributes);
+			GetOrCreateStreamInfo(streamId).AddMessage(std::move(message), attributes);
 
 			AssertIsConsistent();
 		}
@@ -387,7 +386,7 @@ namespace RTC
 			this->lowThreshold = lowThreshold;
 		}
 
-		void RoundRobinSendQueue::OutgoingStream::Add(Message message, MessageAttributes attributes)
+		void RoundRobinSendQueue::OutgoingStream::AddMessage(Message message, MessageAttributes attributes)
 		{
 			MS_TRACE();
 

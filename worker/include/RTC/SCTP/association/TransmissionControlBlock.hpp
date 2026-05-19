@@ -233,18 +233,16 @@ namespace RTC
 			void MaySendFastRetransmit();
 
 			/**
-			 * Fills given Packet (which may already be filled with control Chunks)
-			 * with other control and data Chunks, and sends Packets as much as can
-			 * be allowed by the congestion control algorithm.
+			 * Create and fill Packets with control and DATA/I-DATA Chunks, and sends
+			 * them as much as can be allowed by the congestion control algorithm.
+			 *
+			 * @remarks
+			 * - If `this->remoteStateCookie` is present, then only one Packet will be
+			 *   sent, with this Chunk as the first Chunk.
+			 * - Cannot pass `addCookieAckChunk=true` if `this->remoteStateCookie` is
+			 *   present (will throw).
 			 */
-			void SendBufferedPackets(Packet* packet, uint64_t nowMs);
-
-			/**
-			 * As above, but without passing in a Packet. If `this->remoteStateCookie`
-			 * is present, then only one Packet will be sent, with this Chunk as the
-			 * first Chunk.
-			 */
-			void SendBufferedPackets(uint64_t nowMs);
+			void SendBufferedPackets(uint64_t nowMs, bool addCookieAckChunk = false);
 
 			/**
 			 * @remarks

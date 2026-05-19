@@ -9,6 +9,7 @@ SCENARIO("SCTP RetransmissionErrorCounter", "[sctp][retransmissionerrorcounter]"
 	SECTION("can handle zero retransmission")
 	{
 		const RTC::SCTP::SctpOptions sctpOptions{ .maxRetransmissions = 0 };
+
 		RTC::SCTP::RetransmissionErrorCounter counter(sctpOptions);
 
 		REQUIRE(counter.GetCounter() == 0);
@@ -19,6 +20,7 @@ SCENARIO("SCTP RetransmissionErrorCounter", "[sctp][retransmissionerrorcounter]"
 	SECTION("is exhausted at maximum")
 	{
 		const RTC::SCTP::SctpOptions sctpOptions{ .maxRetransmissions = 3 };
+
 		RTC::SCTP::RetransmissionErrorCounter counter(sctpOptions);
 
 		REQUIRE(counter.Increment("test") == true); // 1
@@ -41,6 +43,7 @@ SCENARIO("SCTP RetransmissionErrorCounter", "[sctp][retransmissionerrorcounter]"
 	SECTION("clearing counter")
 	{
 		const RTC::SCTP::SctpOptions sctpOptions{ .maxRetransmissions = 3 };
+
 		RTC::SCTP::RetransmissionErrorCounter counter(sctpOptions);
 
 		REQUIRE(counter.Increment("test") == true); // 1
@@ -62,6 +65,7 @@ SCENARIO("SCTP RetransmissionErrorCounter", "[sctp][retransmissionerrorcounter]"
 	SECTION("can be limitless")
 	{
 		const RTC::SCTP::SctpOptions sctpOptions{ .maxRetransmissions = std::nullopt };
+
 		RTC::SCTP::RetransmissionErrorCounter counter(sctpOptions);
 
 		for (size_t i{ 1 }; i < 1000; ++i)

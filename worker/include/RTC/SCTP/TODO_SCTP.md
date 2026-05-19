@@ -38,11 +38,6 @@
 
 - In `DataConsumer.cpp` in `DATACONSUMER_SEND` handler and in `DataProducer.cpp` in `DATAPRODUCER_SEND` handlers we are copying the original FlatBuffer buffer entirely to create a `RTC::SCTP::Message`. We could have a second constructor instead that accepts a `std::span<uint8_t>` although it would need complexity within `Message` class.
 
-- In the demo, when sending a message to the `Bot` with "@bot hello" ugly things happen:
-  - The message uses I-DATA internally (ok, not really a bug but...).
-  - Tons of empty SCTP packets sent. And it's not due to non-consolidated chunks.
-  - And the worst thing: the reply message is not received by the browser sender.
-
 - Look for "TODO: SCTP" everywhere (also in `worker/test/`).
 
 - Test Chrome/Canary with I-DATA (message interleaving):

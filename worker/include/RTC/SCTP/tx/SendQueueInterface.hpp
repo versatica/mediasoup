@@ -64,10 +64,10 @@ namespace RTC
 			 * that may be produced, not including any headers.
 			 *
 			 * @todo
-			 * - As in dcsctp, this interface is obviously missing an "Add()" method,
-			 *   but that is postponed a bit until the story around how to model
-			 *   message prioritization, which is important for any advanced stream
-			 *   scheduler, is further clarified.
+			 * - As in dcsctp, this interface is obviously missing an "AddMessage()"
+			 *   method, but that is postponed a bit until the story around how to
+			 *   model message prioritization, which is important for any advanced
+			 *   stream scheduler, is further clarified.
 			 */
 			virtual std::optional<DataToSend> Produce(uint64_t nowMs, size_t maxLength) = 0;
 

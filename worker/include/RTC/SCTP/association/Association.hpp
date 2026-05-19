@@ -374,7 +374,7 @@ namespace RTC
 			 */
 			void MayDeliverMessages();
 
-			Types::SendMessageStatus InternalSendMessage(
+			Types::SendMessageStatus InternalSendMessageCheck(
 			  const Message& message, const SendMessageOptions& sendMessageOptions);
 
 			bool ValidateReceivedPacket(const Packet* receivedPacket);

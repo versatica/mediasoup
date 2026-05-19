@@ -217,7 +217,7 @@ namespace RTC
 			 * Maximum data retransmit attempts (for DATA, I_DATA and other Chunks).
 			 * Set to std::nullopt for no limit.
 			 */
-			std::optional<size_t> maxRetransmissions{ 10 };
+			std::optional<uint16_t> maxRetransmissions{ 10 };
 
 			/**
 			 * Max.Init.Retransmits. Set to std::nullopt for no limit.
@@ -279,7 +279,7 @@ namespace RTC
 			 * If set, limits the number of retransmissions. This is only available
 			 * if the peer supports Partial Reliability Extension (RFC 3758).
 			 */
-			std::optional<size_t> maxRetransmissions{ std::nullopt };
+			std::optional<uint16_t> maxRetransmissions{ std::nullopt };
 
 			/**
 			 * If set, will generate lifecycle events for this message. See e.g.

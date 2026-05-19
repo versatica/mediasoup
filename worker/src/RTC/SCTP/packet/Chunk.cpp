@@ -215,6 +215,10 @@ namespace RTC
 			MS_DUMP_CLEAN(
 			  indentation, "  flags: " MS_UINT8_TO_BINARY_PATTERN, MS_UINT8_TO_BINARY(GetFlags()));
 			TLV::DumpCommon(indentation);
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  needs consolidation of parameters or error causes: %s",
+			  NeedsConsolidation() ? "yes" : "no");
 		}
 
 		void Chunk::DumpParameters(int indentation) const

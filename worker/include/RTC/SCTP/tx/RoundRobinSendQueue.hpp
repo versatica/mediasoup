@@ -124,7 +124,7 @@ namespace RTC
 				/**
 				 * Enqueues a message to this stream.
 				 */
-				void Add(Message message, MessageAttributes attributes);
+				void AddMessage(Message message, MessageAttributes attributes);
 
 				// Implementing `StreamScheduler::StreamProducer`.
 
@@ -294,7 +294,8 @@ namespace RTC
 			 * of the caller to ensure that the buffer is not full (by calling
 			 * `IsFull()`) before adding messages to it.
 			 */
-			void Add(uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions = {});
+			void AddMessage(
+			  uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions = {});
 
 			uint16_t GetStreamPriority(uint16_t streamId) const;
 

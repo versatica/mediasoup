@@ -453,7 +453,7 @@ namespace RTC
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
-			const auto status = InternalSendMessage(message, sendMessageOptions);
+			const auto status = InternalSendMessageCheck(message, sendMessageOptions);
 
 			if (status != Types::SendMessageStatus::SUCCESS)
 			{
@@ -464,7 +464,7 @@ namespace RTC
 
 			this->privateMetrics.txMessagesCount++;
 
-			this->sendQueue.Add(nowMs, std::move(message), sendMessageOptions);
+			this->sendQueue.AddMessage(nowMs, std::move(message), sendMessageOptions);
 
 			if (this->tcb)
 			{
@@ -491,7 +491,7 @@ namespace RTC
 
 			for (auto& message : messages)
 			{
-				const auto status = InternalSendMessage(message, sendMessageOptions);
+				const auto status = InternalSendMessageCheck(message, sendMessageOptions);
 
 				statuses.push_back(status);
 
@@ -502,7 +502,7 @@ namespace RTC
 
 				this->privateMetrics.txMessagesCount++;
 
-				this->sendQueue.Add(nowMs, std::move(message), sendMessageOptions);
+				this->sendQueue.AddMessage(nowMs, std::move(message), sendMessageOptions);
 			}
 
 			if (this->tcb)
@@ -925,7 +925,7 @@ namespace RTC
 			}
 		}
 
-		Types::SendMessageStatus Association::InternalSendMessage(
+		Types::SendMessageStatus Association::InternalSendMessageCheck(
 		  const Message& message, const SendMessageOptions& sendMessageOptions)
 		{
 			MS_TRACE();
@@ -1669,11 +1669,6 @@ namespace RTC
 				  cookie->GetNegotiatedCapabilities());
 			}
 
-			auto packet                = this->tcb->CreatePacket();
-			const auto* cookieAckChunk = packet->BuildChunkInPlace<CookieAckChunk>();
-
-			cookieAckChunk->Consolidate();
-
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-5.1
 			//
 			// "A COOKIE ACK chunk MAY be bundled with any pending DATA chunks (and/or
@@ -1681,7 +1676,7 @@ namespace RTC
 			// packet."
 			const uint64_t nowMs = this->shared->GetTimeMs();
 
-			this->tcb->SendBufferedPackets(packet.get(), nowMs);
+			this->tcb->SendBufferedPackets(nowMs, /*addCookieAckChunk*/ true);
 		}
 
 		bool Association::HandleReceivedCookieEchoChunkWithTcb(

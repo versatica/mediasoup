@@ -300,6 +300,8 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  verification tag: %" PRIu32, GetVerificationTag());
 			MS_DUMP_CLEAN(indentation, "  checksum: %" PRIu32, GetChecksum());
 			MS_DUMP_CLEAN(indentation, "  chunks count: %zu", GetChunksCount());
+			MS_DUMP_CLEAN(
+			  indentation, "  needs consolidation of chunks: %s", NeedsConsolidation() ? "yes" : "no");
 			for (const auto* chunk : this->chunks)
 			{
 				chunk->Dump(indentation + 1);
@@ -440,6 +442,11 @@ namespace RTC
 			  {
 				  try
 				  {
+					  if (chunk->NeedsConsolidation())
+					  {
+						  MS_THROW_ERROR("ongoing Chunk needs consolidation");
+					  }
+
 					  // Fix buffer length assigned to the Chunk.
 					  chunk->SetBufferLength(chunk->GetLength());
 
