@@ -48,7 +48,7 @@ namespace RTC
 				bool isUnordered;
 				uint16_t maxRetransmissions;
 				uint64_t expiresAtMs;
-				uint64_t lifecycleId{ 0 };
+				std::optional<uint64_t> lifecycleId;
 			};
 
 		private:

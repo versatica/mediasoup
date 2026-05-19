@@ -40,8 +40,7 @@
 
 - In the demo, when sending a message to the `Bot` with "@bot hello" ugly things happen:
   - The message uses I-DATA internally (ok, not really a bug but...).
-  - Tons of empty SCTP packets sent.
-  - `RetransmissionQueue::HandleReceivedSackChunk() | triggering OnAssociationLifecycleMessageDelivered() [lifecycleId:0]` shouldn't happen because `lifecycleId` is supposed to be `std::nullopt`!
+  - Tons of empty SCTP packets sent. And it's not due to non-consolidated chunks.
   - And the worst thing: the reply message is not received by the browser sender.
 
 - Look for "TODO: SCTP" everywhere (also in `worker/test/`).

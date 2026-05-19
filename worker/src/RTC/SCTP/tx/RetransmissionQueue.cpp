@@ -105,6 +105,7 @@ namespace RTC
 				this->associationListener.OnAssociationLifecycleMessageEnd(lifecycleId);
 			}
 
+			// Add lifecycle events for abandoned messages.
 			for (const uint64_t lifecycleId : ackInfo.abandonedLifecycleIds)
 			{
 				MS_DEBUG_TAG(

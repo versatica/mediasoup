@@ -1,3 +1,4 @@
+#include <optional>
 #define MS_CLASS "RTC::SCTP::RoundRobinSendQueue"
 // #define MS_LOG_DEV_LEVEL 3
 
@@ -61,7 +62,7 @@ namespace RTC
 				.expiresAtMs = sendMessageOptions.lifetimeMs.has_value()
 				                 ? nowMs + sendMessageOptions.lifetimeMs.value() + 1
 				                 : Types::ExpiresAtMsInfinite,
-				.lifecycleId = sendMessageOptions.lifecycleId.value_or(0),
+				.lifecycleId = sendMessageOptions.lifecycleId,
 			};
 
 			const uint16_t streamId = message.GetStreamId();
@@ -489,7 +490,7 @@ namespace RTC
 
 				dataToSend.maxRetransmissions = item.attributes.maxRetransmissions;
 				dataToSend.expiresAtMs        = item.attributes.expiresAtMs;
-				dataToSend.lifecycleId        = isEnd ? item.attributes.lifecycleId : 0;
+				dataToSend.lifecycleId        = isEnd ? item.attributes.lifecycleId : std::nullopt;
 
 				if (isEnd)
 				{
@@ -721,15 +722,15 @@ namespace RTC
 
 			this->parent.totalBufferedAmountThresholdWatcher.Decrease(item.remainingLength);
 
-			if (item.attributes.lifecycleId != 0)
+			if (item.attributes.lifecycleId.has_value())
 			{
 				MS_DEBUG_DEV(
 				  "triggering OnAssociationLifecycleMessageExpired(%" PRIu64 "), /*maybeDelivered*/ false)",
 				  item.attributes.lifecycleId);
 
 				this->parent.associationListener.OnAssociationLifecycleMessageExpired(
-				  item.attributes.lifecycleId, /*maybeDelivered*/ false);
-				this->parent.associationListener.OnAssociationLifecycleMessageEnd(item.attributes.lifecycleId);
+				  item.attributes.lifecycleId.value(), /*maybeDelivered*/ false);
+				this->parent.associationListener.OnAssociationLifecycleMessageEnd(item.attributes.lifecycleId.value());
 			}
 		}
 
