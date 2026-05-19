@@ -1002,9 +1002,8 @@ namespace RTC
 					dataConsumer->SendMessage(std::move(message), subchannels, requiredSubchannel);
 				}
 				// NOTE: Here we are cloning the Message before passing it to each
-				// DataConsumer (after the first one) because each DataConsumer will
-				// std::move(message) internally when passing and processing it in the
-				// SCTP Association and subclasses.
+				// DataConsumer because each DataConsumer will pass std::move(message)
+				// internally to its SCTP Association.
 				else
 				{
 					auto clonedMessage = message.Clone();
