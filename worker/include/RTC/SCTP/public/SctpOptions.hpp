@@ -55,11 +55,16 @@ namespace RTC
 			size_t maxSendMessageSize{ 256 * 1024 };
 
 			/**
-			 * The default stream priority, if not overridden by
-			 * `Association::SetStreamPriority()`. The default value is selected to be
-			 * compatible with https://www.w3.org/TR/webrtc-priority/, section 4.2-4.3.
+			 * Send queue total size limit. It will not be possible to queue more data
+			 * if the queue size is larger than this number.
 			 */
-			uint16_t defaultStreamPriority{ 256 };
+			size_t maxSendBufferSize{ 2000000 };
+
+			/**
+			 * Per stream send queue size limit. Similar to `maxSendBufferSize`, but
+			 * limiting the size of individual streams.
+			 */
+			size_t perStreamSendQueueLimit{ 2000000 };
 
 			/**
 			 * Maximum received window buffer size. This should be a bit larger than
@@ -73,22 +78,17 @@ namespace RTC
 			size_t maxReceiverWindowBufferSize{ 5 * 1024 * 1024 };
 
 			/**
-			 * Send queue total size limit. It will not be possible to queue more data
-			 * if the queue size is larger than this number.
-			 */
-			size_t maxSendBufferSize{ 2000000 };
-
-			/**
-			 * Per stream send queue size limit. Similar to `maxSendBufferSize`, but
-			 * limiting the size of individual streams.
-			 */
-			size_t perStreamSendQueueLimit{ 2000000 };
-
-			/**
 			 * A threshold that, when the amount of data in the send buffer goes below
 			 * this value, will trigger `Association::OnAssociationTotalBufferedAmountLow()`.
 			 */
 			size_t totalBufferedAmountLowThreshold{ 1800000 };
+
+			/**
+			 * The default stream priority, if not overridden by
+			 * `Association::SetStreamPriority()`. The default value is selected to be
+			 * compatible with https://www.w3.org/TR/webrtc-priority/, section 4.2-4.3.
+			 */
+			uint16_t defaultStreamPriority{ 256 };
 
 			/**
 			 * Max allowed RTT value. When the RTT is measured and it's found to be
@@ -256,6 +256,8 @@ namespace RTC
 			ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod zeroChecksumAlternateErrorDetectionMethod{
 				ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 			};
+
+			void Dump(int indentation = 0) const;
 		};
 
 		/**

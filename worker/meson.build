@@ -280,6 +280,7 @@ common_sources = [
   'src/RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.cpp',
   'src/RTC/SCTP/packet/errorCauses/UnknownErrorCause.cpp',
   'src/RTC/SCTP/public/AssociationMetrics.cpp',
+  'src/RTC/SCTP/public/SctpOptions.cpp',
   'src/RTC/SCTP/public/Message.cpp',
 ]
 

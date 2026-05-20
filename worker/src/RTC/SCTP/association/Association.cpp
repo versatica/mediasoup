@@ -101,6 +101,8 @@ namespace RTC
 			  static_cast<int>(stateStringView.size()),
 			  stateStringView.data());
 
+			this->sctpOptions.Dump();
+
 			if (this->tcb)
 			{
 				this->tcb->Dump(indentation + 1);
@@ -1717,7 +1719,6 @@ namespace RTC
 					operationErrorChunk->Consolidate();
 
 					this->packetSender.SendPacket(packet.get());
-
 					this->associationListenerDeferrer.OnAssociationError(
 					  Types::ErrorKind::WRONG_SEQUENCE, "received COOKIE_ECHO while shutting down");
 

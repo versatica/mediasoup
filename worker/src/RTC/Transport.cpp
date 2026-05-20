@@ -115,9 +115,12 @@ namespace RTC
 				// TODO: SCTP: Many interesting options missing.
 				// NOTE: When using the built-in SCTP stack, `numSctpStreams` given to the
 				// transport is ignored.
-				const RTC::SCTP::SctpOptions sctpOptions = { // TODO: SCTP: Sure?
-					                                           .maxSendMessageSize = this->maxMessageSize,
-					                                           .maxSendBufferSize  = sctpSendBufferSize
+				const RTC::SCTP::SctpOptions sctpOptions = {
+					// TODO: SCTP: Sure?
+					.maxSendMessageSize = this->maxMessageSize,
+					.maxSendBufferSize  = sctpSendBufferSize,
+					// TODO: SCTP: We may need a separate option for this.
+					.perStreamSendQueueLimit = sctpSendBufferSize
 				};
 
 				this->sctpAssociation =

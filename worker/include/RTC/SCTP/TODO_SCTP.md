@@ -16,6 +16,10 @@
 
 - Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.
 
+- Must check those `maxSctpMessageSize`, `sctpSendBufferSize` in `Router.createXxxxTransport()` (also in Rust) which have default value of 262144.
+
+- Must consider also an option to set `SctpOptions::perStreamSendQueueLimit` which defaults to 2000000 bytes.
+
 - When running `test-PipeTransport.ts` and `test-werift-sctp.ts` with `useBuiltInSctpStack: true`, tests pass but those errors show up:
 
   ```
