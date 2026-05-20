@@ -1,3 +1,18 @@
+The SCTP packet and chunk parsers, factories, and several additional
+classes, as well as other components of the mediasoup SCTP stack, have
+been implemented from scratch. However, most of the core SCTP protocol
+logic is derived from the dcsctp component of the WebRTC project.
+
+The SCTP source code in mediasoup is distributed under the copyright
+and license terms specified in the LICENSE file located in the
+mediasoup root directory.
+
+To acknowledge and preserve the copyright notices and licensing terms
+of dcsctp and the WebRTC project, the corresponding license text is
+reproduced below.
+
+----
+
 Copyright (c) 2011, The WebRTC project authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
