@@ -113,7 +113,7 @@
 		"@types/ini": "^4.1.1",
 		"@types/jest": "^30.0.0",
 		"@types/node": "^25.6.2",
-		"eslint": "^10.3.0",
+		"eslint": "^10.4.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-jest": "^29.15.2",
 		"eslint-plugin-prettier": "^5.5.5",
@@ -121,13 +121,13 @@
 		"ini": "^6.0.0",
 		"jest": "^30.4.2",
 		"knip": "^6.14.0",
-		"marked": "^18.0.3",
+		"marked": "^18.0.4",
 		"open-cli": "^9.0.0",
 		"pick-port": "^2.2.0",
 		"prettier": "^3.8.3",
-		"ts-jest": "^29.4.9",
+		"ts-jest": "^29.4.10",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.59.3",
+		"typescript-eslint": "^8.59.4",
 		"werift-sctp": "^0.0.11"
 	}
 }
