@@ -93,6 +93,12 @@ namespace RTC
 			virtual void SetMaxSendMessageSize(size_t maxMessageSize) = 0;
 
 			/**
+			 * Returns the number of bytes of data currently queued to be sent in
+			 * total.
+			 */
+			virtual size_t GetTotalBufferedAmount() const = 0;
+
+			/**
 			 * Returns the number of bytes of data currently queued to be sent on a
 			 * given stream.
 			 */

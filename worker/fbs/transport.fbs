@@ -122,14 +122,13 @@ table RecvRtpHeaderExtensions {
 
 table Options {
     direct: bool = false;
-
-    /// Only needed for DirectTransport. This value is handled by base Transport.
-    max_message_size: uint32 = null;
     initial_available_outgoing_bitrate: uint32 = null;
     enable_sctp: bool = false;
-    num_sctp_streams: FBS.SctpParameters.NumSctpStreams;
-    max_sctp_message_size: uint32;
+    max_send_message_size: uint32;
+    max_receive_message_size: uint32;
     sctp_send_buffer_size: uint32;
+    sctp_per_stream_send_queue_limit: uint32;
+    sctp_max_receiver_window_buffer_size: uint32;
     is_data_channel: bool = false;
 }
 
@@ -149,7 +148,8 @@ table Dump {
     data_consumer_ids: [string] (required);
     recv_rtp_header_extensions: RecvRtpHeaderExtensions (required);
     rtp_listener: RtpListener (required);
-    max_message_size: uint32;
+    max_send_message_size: uint32;
+    max_receive_message_size: uint32;
     sctp_parameters: FBS.SctpParameters.SctpParameters;
     sctp_state: FBS.SctpAssociation.SctpState = null;
     sctp_listener: SctpListener;

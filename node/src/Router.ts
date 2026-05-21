@@ -82,7 +82,6 @@ import * as FbsWebRtcTransport from './fbs/web-rtc-transport';
 import * as FbsPlainTransport from './fbs/plain-transport';
 import * as FbsPipeTransport from './fbs/pipe-transport';
 import * as FbsDirectTransport from './fbs/direct-transport';
-import * as FbsSctpParameters from './fbs/sctp-parameters';
 
 export type RouterInternal = {
 	routerId: string;
@@ -302,9 +301,11 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		preferTcp = false,
 		initialAvailableOutgoingBitrate = 600000,
 		enableSctp = false,
-		numSctpStreams = { OS: 1024, MIS: 1024 },
-		maxSctpMessageSize = 262144,
-		sctpSendBufferSize = 262144,
+		maxSendMessageSize = 262144,
+		maxReceiveMessageSize = 262144,
+		sctpSendBufferSize = 2000000,
+		sctpPerStreamSendQueueLimit = 2000000,
+		sctpMaxReceiverWindowBufferSize = 5242880,
 		iceConsentTimeout = 30,
 		appData,
 	}: WebRtcTransportOptions<WebRtcTransportAppData>): Promise<
@@ -324,12 +325,6 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			throw new TypeError(
 				'only one of webRtcServer, listenInfos and listenIps must be given'
 			);
-		} else if (
-			numSctpStreams &&
-			(typeof numSctpStreams.OS !== 'number' ||
-				typeof numSctpStreams.MIS !== 'number')
-		) {
-			throw new TypeError('if given, numSctpStreams must contain OS and MIS');
 		} else if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
 		}
@@ -425,17 +420,15 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		}
 
 		const baseTransportOptions = new FbsTransport.OptionsT(
-			undefined /* direct */,
-			undefined /* maxMessageSize */,
+			/* direct */ undefined,
 			initialAvailableOutgoingBitrate,
 			enableSctp,
-			new FbsSctpParameters.NumSctpStreamsT(
-				numSctpStreams.OS,
-				numSctpStreams.MIS
-			),
-			maxSctpMessageSize,
+			maxSendMessageSize,
+			maxReceiveMessageSize,
 			sctpSendBufferSize,
-			true /* isDataChannel */
+			sctpPerStreamSendQueueLimit,
+			sctpMaxReceiverWindowBufferSize,
+			/* isDataChannel */ true
 		);
 
 		const webRtcTransportOptions =
@@ -529,9 +522,11 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		rtcpMux = true,
 		comedia = false,
 		enableSctp = false,
-		numSctpStreams = { OS: 1024, MIS: 1024 },
-		maxSctpMessageSize = 262144,
-		sctpSendBufferSize = 262144,
+		maxSendMessageSize = 262144,
+		maxReceiveMessageSize = 262144,
+		sctpSendBufferSize = 2000000,
+		sctpPerStreamSendQueueLimit = 2000000,
+		sctpMaxReceiverWindowBufferSize = 5242880,
 		enableSrtp = false,
 		srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 		appData,
@@ -578,17 +573,15 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		/* Build Request. */
 		const baseTransportOptions = new FbsTransport.OptionsT(
-			undefined /* direct */,
-			undefined /* maxMessageSize */,
-			undefined /* initialAvailableOutgoingBitrate */,
+			/* direct */ undefined,
+			/* initialAvailableOutgoingBitrate */ undefined,
 			enableSctp,
-			new FbsSctpParameters.NumSctpStreamsT(
-				numSctpStreams.OS,
-				numSctpStreams.MIS
-			),
-			maxSctpMessageSize,
+			maxSendMessageSize,
+			maxReceiveMessageSize,
 			sctpSendBufferSize,
-			false /* isDataChannel */
+			sctpPerStreamSendQueueLimit,
+			sctpMaxReceiverWindowBufferSize,
+			/* isDataChannel */ false
 		);
 
 		const plainTransportOptions = new FbsPlainTransport.PlainTransportOptionsT(
@@ -693,9 +686,11 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		listenIp,
 		port,
 		enableSctp = false,
-		numSctpStreams = { OS: 1024, MIS: 1024 },
-		maxSctpMessageSize = 268435456,
-		sctpSendBufferSize = 268435456,
+		maxSendMessageSize = 262144,
+		maxReceiveMessageSize = 262144,
+		sctpSendBufferSize = 2000000,
+		sctpPerStreamSendQueueLimit = 2000000,
+		sctpMaxReceiverWindowBufferSize = 5242880,
 		enableRtx = false,
 		enableSrtp = false,
 		appData,
@@ -733,17 +728,15 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		/* Build Request. */
 		const baseTransportOptions = new FbsTransport.OptionsT(
-			undefined /* direct */,
-			undefined /* maxMessageSize */,
-			undefined /* initialAvailableOutgoingBitrate */,
+			/* direct */ undefined,
+			/* initialAvailableOutgoingBitrate */ undefined,
 			enableSctp,
-			new FbsSctpParameters.NumSctpStreamsT(
-				numSctpStreams.OS,
-				numSctpStreams.MIS
-			),
-			maxSctpMessageSize,
+			maxSendMessageSize,
+			maxReceiveMessageSize,
 			sctpSendBufferSize,
-			false /* isDataChannel */
+			sctpPerStreamSendQueueLimit,
+			sctpMaxReceiverWindowBufferSize,
+			/* isDataChannel */ false
 		);
 
 		const pipeTransportOptions = new FbsPipeTransport.PipeTransportOptionsT(
@@ -826,19 +819,18 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		return transport;
 	}
 
-	async createDirectTransport<DirectTransportAppData extends AppData = AppData>(
-		{
-			maxMessageSize = 262144,
-			appData,
-		}: DirectTransportOptions<DirectTransportAppData> = {
-			maxMessageSize: 262144,
-		}
-	): Promise<DirectTransport<DirectTransportAppData>> {
+	async createDirectTransport<
+		DirectTransportAppData extends AppData = AppData,
+	>({
+		maxSendMessageSize = 262144,
+		maxReceiveMessageSize = 262144,
+		appData,
+	}: DirectTransportOptions<DirectTransportAppData> = {}): Promise<
+		DirectTransport<DirectTransportAppData>
+	> {
 		logger.debug('createDirectTransport()');
 
-		if (typeof maxMessageSize !== 'number' || maxMessageSize < 0) {
-			throw new TypeError('if given, maxMessageSize must be a positive number');
-		} else if (appData && typeof appData !== 'object') {
+		if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
 		}
 
@@ -846,14 +838,15 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		/* Build Request. */
 		const baseTransportOptions = new FbsTransport.OptionsT(
-			true /* direct */,
-			maxMessageSize,
-			undefined /* initialAvailableOutgoingBitrate */,
-			undefined /* enableSctp */,
-			undefined /* numSctpStreams */,
-			undefined /* maxSctpMessageSize */,
-			undefined /* sctpSendBufferSize */,
-			undefined /* isDataChannel */
+			/* direct */ true,
+			/* initialAvailableOutgoingBitrate */ undefined,
+			/* enableSctp */ undefined,
+			maxSendMessageSize,
+			maxReceiveMessageSize,
+			/* sctpSendBufferSize */ undefined,
+			/* sctpPerStreamSendQueueLimit */ undefined,
+			/* sctpMaxReceiverWindowBufferSize */ undefined,
+			/* isDataChannel */ undefined
 		);
 
 		const directTransportOptions =
@@ -928,7 +921,11 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		listenInfo,
 		listenIp,
 		enableSctp = true,
-		numSctpStreams = { OS: 1024, MIS: 1024 },
+		maxSendMessageSize = 262144,
+		maxReceiveMessageSize = 262144,
+		sctpSendBufferSize = 2000000,
+		sctpPerStreamSendQueueLimit = 2000000,
+		sctpMaxReceiverWindowBufferSize = 5242880,
 		enableRtx = false,
 		enableSrtp = false,
 	}: PipeToRouterOptions): Promise<PipeToRouterResult> {
@@ -1001,14 +998,22 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 					this.createPipeTransport({
 						listenInfo: listenInfo!,
 						enableSctp,
-						numSctpStreams,
+						maxSendMessageSize,
+						maxReceiveMessageSize,
+						sctpSendBufferSize,
+						sctpPerStreamSendQueueLimit,
+						sctpMaxReceiverWindowBufferSize,
 						enableRtx,
 						enableSrtp,
 					}),
 					router.createPipeTransport({
 						listenInfo: listenInfo!,
 						enableSctp,
-						numSctpStreams,
+						maxSendMessageSize,
+						maxReceiveMessageSize,
+						sctpSendBufferSize,
+						sctpPerStreamSendQueueLimit,
+						sctpMaxReceiverWindowBufferSize,
 						enableRtx,
 						enableSrtp,
 					}),

@@ -73,7 +73,7 @@ import type {
 	SctpStreamParameters,
 } from './sctpParametersTypes';
 import {
-	parseSctpParametersDump,
+	parseSctpParameters,
 	serializeSctpStreamParameters,
 } from './sctpParametersFbsUtils';
 import type { AppData } from './types';
@@ -124,6 +124,7 @@ export abstract class TransportImpl<
 	protected readonly internal: TransportInternal;
 
 	// Transport data. This is set by the subclass.
+	// eslint-disable-next-line no-unused-private-class-members
 	readonly #data: TransportData;
 
 	// Channel instance.
@@ -168,9 +169,6 @@ export abstract class TransportImpl<
 
 	// Buffer with available SCTP stream ids.
 	#sctpStreamIds?: Buffer;
-
-	// Next SCTP stream id.
-	#nextSctpStreamId = 0;
 
 	// Observer instance.
 	readonly #observer: Observer;
@@ -865,8 +863,9 @@ export abstract class TransportImpl<
 						ordered: true,
 					};
 
-			this.#sctpStreamIds![sctpStreamId] = 1;
 			sctpStreamParameters.streamId = sctpStreamId;
+
+			this.#sctpStreamIds![sctpStreamId] = 1;
 
 			if (ordered !== undefined) {
 				sctpStreamParameters.ordered = ordered;
@@ -996,28 +995,19 @@ export abstract class TransportImpl<
 	}
 
 	private getNextSctpStreamId(): number {
-		if (
-			!this.#data.sctpParameters ||
-			typeof this.#data.sctpParameters.MIS !== 'number'
-		) {
-			throw new TypeError('missing sctpParameters.MIS');
-		}
-
-		const numStreams = this.#data.sctpParameters.MIS;
-
 		if (!this.#sctpStreamIds) {
-			this.#sctpStreamIds = Buffer.alloc(numStreams, 0);
+			// Allocate a buffer with 65535 elements set to 0.
+			// Notice that 65535 is the maximum number of streams in a SCTP
+			// association.
+			this.#sctpStreamIds = Buffer.alloc(65535, 0);
 		}
 
-		let sctpStreamId;
-
-		for (let idx = 0; idx < this.#sctpStreamIds.length; ++idx) {
-			sctpStreamId =
-				(this.#nextSctpStreamId + idx) % this.#sctpStreamIds.length;
-
-			if (!this.#sctpStreamIds[sctpStreamId]) {
-				this.#nextSctpStreamId = sctpStreamId + 1;
-
+		for (
+			let sctpStreamId = 0;
+			sctpStreamId < this.#sctpStreamIds.length;
+			++sctpStreamId
+		) {
+			if (this.#sctpStreamIds[sctpStreamId] === 0) {
 				return sctpStreamId;
 			}
 		}
@@ -1144,7 +1134,7 @@ export function parseBaseTransportDump(
 	let sctpParameters: SctpParameters | undefined;
 
 	if (fbsSctpParameters) {
-		sctpParameters = parseSctpParametersDump(fbsSctpParameters);
+		sctpParameters = parseSctpParameters(fbsSctpParameters);
 	}
 
 	// Retrieve sctpState.
@@ -1175,7 +1165,8 @@ export function parseBaseTransportDump(
 		dataConsumerIds: dataConsumerIds,
 		recvRtpHeaderExtensions: recvRtpHeaderExtensions,
 		rtpListener: rtpListener,
-		maxMessageSize: binary.maxMessageSize(),
+		maxSendMessageSize: binary.maxSendMessageSize(),
+		maxReceiveMessageSize: binary.maxReceiveMessageSize(),
 		sctpParameters: sctpParameters,
 		sctpState: sctpState,
 		sctpListener: sctpListener,

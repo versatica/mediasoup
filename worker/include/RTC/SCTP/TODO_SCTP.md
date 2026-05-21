@@ -26,12 +26,15 @@
   mediasoup:ERROR:Worker (stderr) UnixStreamSocketHandle::Write() | uv_try_write() failed, trying uv_write(): broken pipe
   ```
 
-- We must remove `numSctpStreams` option given to `router.createXxxTransport()` and `NumSctpStreams` type. `OS` and `MIS` in `numSctpStreams` are just the max announced number of outbound and incoming SCTP streams, but in the new SCTP stack those should always be 65535. The max number of incoming and outgoing streams will be negotiated later with the SCTP INIT and INIT_ACK and will be the minimum of our values (65535) and the OS and MIS that the peer announces in its INIT or INIT_ACK.
+- We must remove `numSctpStreams` option given to `router.createXxxTransport()` and `NumSctpStreams` type. `OS` and `MIS` in `numSctpStreams` are just the max announced number of outbound and incoming SCTP streams, but in the new SCTP stack those should always be 65535. The max number of incoming and outgoing streams will be negotiated later with the SCTP INIT and INIT_ACK and will be the minimum of our values (65535) and the OS and MIS that the peer announces in its INIT or INIT_ACK. And we cannot wait until the SCTP association is established because that can happen much later than when we need to create DataConsumers.
   - This is a breaking change.
   - Remove it from `sctpParameters.fbs` and other FBS types (look for `MIS` or `mis`, etc).
+  - Also remove `os` and `mis` from `SctpParameters` in `sctpParamegers.fbs`.
   - Remove it in Rust layer.
   - We must also remove `device.sctpCapabilities` getter from mediasoup-client because anyway we are making up those values!
   - Also must update the website documentation.
+
+- In the doc add all new options such as `maxSendMessageSize`, `sctpXxx`, etc, deprecate (or remove) `maxMessageSize` and `maxSctpMessageSize` and document also the new default values in `pipeToRouter()`.
 
 - When we invoke `close()` on a `DataProducer/Consumer` in server, we must end calling `sctpAssociation->ResetStream([streamId])` so it sends `ReConfig` to peer.
 
@@ -45,8 +48,7 @@
   - In `DataConsumer` class rename `SetAssociationBufferedAmount()` to `SetBufferedAmount()`.
   - In `DataConsumer` class revisit `SctpAssociationSendBufferFull()` method.
   - Fix the documentation in the website which says: "The underlaying SCTP association uses a common send buffer for all data consumers, hence the value given by this method indicates the data buffered for all data consumers in the transport."
-
-- Look for "TODO: SCTP" everywhere (also in `worker/test/`).
+- Look for "TODO: SCTP" everywhere (also in `worker/test/` and `node/src/` and `rust/`).
 
 - Test Chrome/Canary with I-DATA (message interleaving):
 

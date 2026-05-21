@@ -1,21 +1,20 @@
 import type * as flatbuffers from 'flatbuffers';
 import type {
 	SctpStreamParameters,
-	SctpParametersDump,
+	SctpParameters,
 } from './sctpParametersTypes';
 import * as FbsSctpParameters from './fbs/sctp-parameters';
 
-export function parseSctpParametersDump(
+export function parseSctpParameters(
 	binary: FbsSctpParameters.SctpParameters
-): SctpParametersDump {
+): SctpParameters {
 	return {
-		port: binary.port(),
-		OS: binary.os(),
-		MIS: binary.mis(),
-		maxMessageSize: binary.maxMessageSize(),
+		maxSendMessageSize: binary.maxSendMessageSize(),
 		sendBufferSize: binary.sendBufferSize(),
-		sctpBufferedAmount: binary.sctpBufferedAmount(),
+		perStreamSendQueueLimit: binary.perStreamSendQueueLimit(),
+		maxReceiverWindowBufferSize: binary.maxReceiverWindowBufferSize(),
 		isDataChannel: binary.isDataChannel(),
+		totalBufferedAmount: binary.totalBufferedAmount(),
 	};
 }
 

@@ -6,7 +6,10 @@ import type { WorkerEvents, PlainTransportEvents } from '../types';
 import * as utils from '../utils';
 
 const IS_WINDOWS = os.platform() === 'win32';
-const USE_BUILD_IN_SCTP_STACK = false;
+
+// TODO: SCTP: Temporal untuil we get rid of usrsctp.
+const USE_BUILD_IN_SCTP_STACK =
+	process.env['USE_BUILD_IN_SCTP_STACK'] === 'true';
 
 type TestContext = {
 	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
@@ -104,12 +107,15 @@ test('router.createPlainTransport() succeeds', async () => {
 	expect(plainTransport2.tuple.protocol).toBe('udp');
 	expect(plainTransport2.rtcpTuple).toBeUndefined();
 	expect(plainTransport2.sctpParameters).toMatchObject({
-		port: 5000,
-		// NOTE: When using the built-in SCTP stack, `numSctpStreams` given to the
-		// transport is ignored.
-		OS: USE_BUILD_IN_SCTP_STACK ? 65535 : 1024,
-		MIS: USE_BUILD_IN_SCTP_STACK ? 65535 : 1024,
-		maxMessageSize: 262144,
+		// TODO: SCTP: Temporal untuil we get rid of usrsctp.
+		maxSendMessageSize: 262144,
+		sendBufferSize: 2000000,
+		perStreamSendQueueLimit: 2000000,
+		maxReceiverWindowBufferSize: USE_BUILD_IN_SCTP_STACK ? 5242880 : 2000000,
+		// TODO: SCTP: Must implement `isDataChannel` in new SCTP stack, from now
+		// it's always set to `true`.
+		isDataChannel: USE_BUILD_IN_SCTP_STACK ? true : false,
+		totalBufferedAmount: 0,
 	});
 	expect(plainTransport2.sctpState).toBe('new');
 	expect(plainTransport2.srtpParameters).toBeUndefined();

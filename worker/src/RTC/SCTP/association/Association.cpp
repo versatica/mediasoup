@@ -125,26 +125,13 @@ namespace RTC
 
 			return FBS::SctpParameters::CreateSctpParameters(
 			  builder,
-			  // Add port.
-			  this->sctpOptions.sourcePort,
-			  // Add OS.
-			  // TODO: SCTP: We should put here current value which may be different after
-			  // negotiation with peer and reconfig.
-			  this->sctpOptions.announcedMaxOutboundStreams,
-			  // Add MIS.
-			  // TODO: SCTP: We should put here current value which may be different after
-			  // negotiation with peer and reconfig.
-			  this->sctpOptions.announcedMaxInboundStreams,
-			  // Add maxMessageSize.
-			  this->sctpOptions.maxSendMessageSize,
-			  // Add sendBufferSize.
-			  this->sctpOptions.maxSendBufferSize,
-			  // Add sctpBufferedAmountLowThreshold.
-			  this->sctpOptions.totalBufferedAmountLowThreshold,
-			  // Add isDataChannel.
-			  // TODO: SCTP: Have a member for this.
-			  // TODO: SCTP: So remove this hardcoded `true`.
-			  /*isDataChannel*/ true);
+			  /*maxSendMessageSize*/ this->sctpOptions.maxSendMessageSize,
+			  /*sctpSendBufferSize*/ this->sctpOptions.maxSendBufferSize,
+			  /*sctpPerStreamSendQueueLimit*/ this->sctpOptions.perStreamSendQueueLimit,
+			  /*sctpMaxReceiverWindowBufferSize*/ this->sctpOptions.maxReceiverWindowBufferSize,
+			  // TODO: SCTP: Have a member for this so remove this hardcoded `true`.
+			  /*isDataChannel*/ true,
+			  /*sctpBufferedAmount*/ GetTotalBufferedAmount());
 		}
 
 		Types::AssociationState Association::GetAssociationState() const
@@ -392,6 +379,13 @@ namespace RTC
 			MS_TRACE();
 
 			this->sctpOptions.maxSendMessageSize = maxMessageSize;
+		}
+
+		size_t Association::GetTotalBufferedAmount() const
+		{
+			MS_TRACE();
+
+			return this->sendQueue.GetTotalBufferedAmount();
 		}
 
 		size_t Association::GetStreamBufferedAmount(uint16_t streamId) const

@@ -426,7 +426,14 @@ namespace RTC
 		uint32_t maxIncomingBitrate{ 0u };
 		uint32_t maxOutgoingBitrate{ 0u };
 		uint32_t minOutgoingBitrate{ 0u };
-		size_t maxMessageSize{ 262144u };
+		// For SCTP capable transports and for direct transport.
+		size_t maxSendMessageSize{ 0u };
+		size_t maxReceiveMessageSize{ 0u };
+		// For SCTP capable transports.
+		size_t sctpSendBufferSize{ 0u };
+		size_t sctpPerStreamSendQueueLimit{ 0u };
+		size_t sctpMaxReceiverWindowBufferSize{ 0u };
+
 		struct TraceEventTypes traceEventTypes;
 	};
 } // namespace RTC

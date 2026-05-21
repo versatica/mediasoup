@@ -121,8 +121,8 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		uint16_t os{ 1024u };
-		uint16_t mis{ 1024u };
+		uint16_t os{ 65535 };
+		uint16_t mis{ 65535 };
 		size_t maxSctpMessageSize{ 262144u };
 		size_t sctpSendBufferSize{ 262144u };
 		size_t sctpBufferedAmount{ 0u };

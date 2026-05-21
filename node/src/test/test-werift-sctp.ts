@@ -9,6 +9,9 @@ import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents } from '../types';
 
+const USE_BUILD_IN_SCTP_STACK =
+	process.env['USE_BUILD_IN_SCTP_STACK'] === 'true';
+
 type TestContext = {
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
@@ -23,6 +26,7 @@ const ctx: TestContext = {};
 
 beforeEach(async () => {
 	ctx.worker = await mediasoup.createWorker({
+		useBuiltInSctpStack: USE_BUILD_IN_SCTP_STACK,
 		disableLiburing: true,
 	});
 
@@ -34,7 +38,6 @@ beforeEach(async () => {
 		// So we don't need to call plainTransport.connect().
 		comedia: true,
 		enableSctp: true,
-		numSctpStreams: { OS: 256, MIS: 256 },
 	});
 
 	// Create an explicit SCTP outgoing stream id.

@@ -246,6 +246,12 @@ namespace RTC
 			void SetMaxSendMessageSize(size_t maxMessageSize) override;
 
 			/**
+			 * Returns the number of bytes of data currently queued to be sent in
+			 * total.
+			 */
+			size_t GetTotalBufferedAmount() const override;
+
+			/**
 			 * Returns the number of bytes of data currently queued to be sent on a
 			 * given stream.
 			 */

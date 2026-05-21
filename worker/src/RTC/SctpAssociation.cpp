@@ -313,20 +313,14 @@ namespace RTC
 
 		return FBS::SctpParameters::CreateSctpParameters(
 		  builder,
-		  // Add port (always 5000).
-		  5000,
-		  // Add OS.
-		  this->os,
-		  // Add MIS.
-		  this->mis,
-		  // Add maxMessageSize.
-		  this->maxSctpMessageSize,
-		  // Add sendBufferSize.
-		  this->sctpSendBufferSize,
-		  // Add sctpBufferedAmountLowThreshold.
-		  this->sctpBufferedAmount,
-		  // Add isDataChannel.
-		  this->isDataChannel);
+		  /*maxSendMessageSize*/ this->maxSctpMessageSize,
+		  /*sctpSendBufferSize*/ this->sctpSendBufferSize,
+		  // NOTE: Hack, but will go away soon.
+		  /*sctpPerStreamSendQueueLimit*/ this->sctpSendBufferSize,
+		  // NOTE: Hack, but will go away soon.
+		  /*sctpMaxReceiverWindowBufferSize*/ this->sctpSendBufferSize,
+		  /*isDataChannel*/ this->isDataChannel,
+		  /*sctpBufferedAmount*/ this->sctpBufferedAmount);
 	}
 
 	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)
@@ -839,7 +833,8 @@ namespace RTC
 						  notification->sn_assoc_change.sac_inbound_streams);
 
 						// Update our OS.
-						this->os = notification->sn_assoc_change.sac_outbound_streams;
+						this->os  = notification->sn_assoc_change.sac_outbound_streams;
+						this->mis = notification->sn_assoc_change.sac_inbound_streams;
 
 						// Increase if requested before connected.
 						if (this->desiredOs > this->os)

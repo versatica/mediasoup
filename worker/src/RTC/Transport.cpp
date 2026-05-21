@@ -34,9 +34,6 @@
 
 namespace RTC
 {
-	static const size_t DefaultSctpSendBufferSize{ 262144 }; // 2^18 bytes.
-	static const size_t MaxSctpSendBufferSize{ 268435456 };  // 2^28 bytes.
-
 	/* Instance methods. */
 
 	Transport::Transport(
@@ -55,14 +52,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->maxSendMessageSize    = options->maxSendMessageSize();
+		this->maxReceiveMessageSize = options->maxReceiveMessageSize();
+
 		if (options->direct())
 		{
 			this->direct = true;
-
-			if (auto maxMessageSize = options->maxMessageSize(); maxMessageSize.has_value())
-			{
-				this->maxMessageSize = maxMessageSize.value();
-			}
+		}
+		else
+		{
+			this->sctpSendBufferSize              = options->sctpSendBufferSize();
+			this->sctpPerStreamSendQueueLimit     = options->sctpPerStreamSendQueueLimit();
+			this->sctpMaxReceiverWindowBufferSize = options->sctpMaxReceiverWindowBufferSize();
 		}
 
 		if (
@@ -79,49 +80,15 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
 			}
 
-			// numSctpStreams is mandatory.
-			if (!flatbuffers::IsFieldPresent(options, FBS::Transport::Options::VT_NUMSCTPSTREAMS))
-			{
-				MS_THROW_TYPE_ERROR("numSctpStreams missing");
-			}
-
-			// maxSctpMessageSize is mandatory.
-			if (!flatbuffers::IsFieldPresent(options, FBS::Transport::Options::VT_MAXSCTPMESSAGESIZE))
-			{
-				MS_THROW_TYPE_ERROR("maxSctpMessageSize missing");
-			}
-
-			this->maxMessageSize = options->maxSctpMessageSize();
-
-			size_t sctpSendBufferSize;
-
-			// sctpSendBufferSize is optional.
-			if (flatbuffers::IsFieldPresent(options, FBS::Transport::Options::VT_SCTPSENDBUFFERSIZE))
-			{
-				if (options->sctpSendBufferSize() > MaxSctpSendBufferSize)
-				{
-					MS_THROW_TYPE_ERROR("wrong sctpSendBufferSize (maximum value exceeded)");
-				}
-
-				sctpSendBufferSize = options->sctpSendBufferSize();
-			}
-			else
-			{
-				sctpSendBufferSize = DefaultSctpSendBufferSize;
-			}
-
 			if (Settings::configuration.useBuiltInSctpStack)
 			{
 				// TODO: SCTP: Many interesting options missing.
-				// NOTE: When using the built-in SCTP stack, `numSctpStreams` given to the
-				// transport is ignored.
-				const RTC::SCTP::SctpOptions sctpOptions = {
-					// TODO: SCTP: Sure?
-					.maxSendMessageSize = this->maxMessageSize,
-					.maxSendBufferSize  = sctpSendBufferSize,
-					// TODO: SCTP: We may need a separate option for this.
-					.perStreamSendQueueLimit = sctpSendBufferSize
-				};
+				const RTC::SCTP::SctpOptions sctpOptions = { .maxSendMessageSize = this->maxSendMessageSize,
+					                                           .maxSendBufferSize  = this->sctpSendBufferSize,
+					                                           .perStreamSendQueueLimit =
+					                                             this->sctpPerStreamSendQueueLimit,
+					                                           .maxReceiverWindowBufferSize =
+					                                             this->sctpMaxReceiverWindowBufferSize };
 
 				this->sctpAssociation =
 				  std::make_unique<RTC::SCTP::Association>(sctpOptions, this, this->shared);
@@ -132,10 +99,11 @@ namespace RTC
 				// This may throw.
 				this->oldSctpAssociation = new RTC::SctpAssociation(
 				  this,
-				  options->numSctpStreams()->os(),
-				  options->numSctpStreams()->mis(),
-				  this->maxMessageSize,
-				  sctpSendBufferSize,
+				  /*os*/ 65535,
+				  /*mis*/ 65535,
+				  // NOTE: This is a hack but it will go away soon anyway.
+				  /*maxMessageSize*/ std::max(this->maxSendMessageSize, this->maxReceiveMessageSize),
+				  this->sctpSendBufferSize,
 				  options->isDataChannel());
 			}
 		}
@@ -480,7 +448,8 @@ namespace RTC
 		  &dataConsumerIds,
 		  recvRtpHeaderExtensions,
 		  rtpListenerOffset,
-		  this->maxMessageSize,
+		  this->maxSendMessageSize,
+		  this->maxReceiveMessageSize,
 		  sctpParameters,
 		  (this->sctpAssociation || this->oldSctpAssociation)
 		    ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
@@ -1176,8 +1145,8 @@ namespace RTC
 				CheckNoDataProducer(dataProducerId);
 
 				// This may throw.
-				auto* dataProducer =
-				  new RTC::DataProducer(this->shared, dataProducerId, this->maxMessageSize, this, body);
+				auto* dataProducer = new RTC::DataProducer(
+				  this->shared, dataProducerId, this->maxReceiveMessageSize, this, body);
 
 				// Verify the type of the DataProducer.
 				switch (dataProducer->GetType())
@@ -1294,7 +1263,7 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  this->shared, dataConsumerId, dataProducerId, this, body, this->maxMessageSize);
+				  this->shared, dataConsumerId, dataProducerId, this, body, this->maxSendMessageSize);
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())
