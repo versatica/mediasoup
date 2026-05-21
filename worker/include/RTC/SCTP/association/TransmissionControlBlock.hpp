@@ -259,7 +259,7 @@ namespace RTC
 			 */
 			void ClearTxErrorCounter() override
 			{
-				return this->txErrorCounter.Clear();
+				this->txErrorCounter.Clear();
 			}
 
 			/**

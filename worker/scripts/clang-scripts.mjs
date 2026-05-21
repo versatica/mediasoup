@@ -21,6 +21,7 @@ const CLANG_FORMAT_PATHS = [
 	'../fuzzer/include/**/*.hpp',
 	'../mocks/src/**/*.cpp',
 	'../mocks/include/**/*.hpp',
+	'../deps/libwebrtc/libwebrtc/mediasoup_helpers.h',
 ];
 
 const CLANG_TIDY_PATHS = [
