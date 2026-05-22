@@ -113,7 +113,8 @@ namespace RTC
 
 		this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
 
-		uint32_t bufferedAmountLowThreshold{ 0 };
+		// TODO: SCTP: Remove const.
+		const uint32_t bufferedAmountLowThreshold{ 0 };
 
 		if (this->type == DataConsumer::Type::SCTP)
 		{
