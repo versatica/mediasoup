@@ -126,9 +126,13 @@ namespace RTC
 	}
 
 	flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> DataConsumer::FillBufferStats(
-	  flatbuffers::FlatBufferBuilder& builder) const
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
+
+		uint32_t bufferedAmount{ 0 };
+
+		this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
 
 		return FBS::DataConsumer::CreateGetStatsResponseDirect(
 		  builder,
@@ -143,7 +147,7 @@ namespace RTC
 		  // bytesSent.
 		  this->bytesSent,
 		  // bufferedAmount.
-		  this->bufferedAmount);
+		  bufferedAmount);
 	}
 
 	void DataConsumer::HandleRequest(Channel::ChannelRequest* request)
@@ -239,13 +243,17 @@ namespace RTC
 
 				request->Accept();
 
+				uint32_t bufferedAmount{ 0 };
+
+				this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
+
 				// There is less or same buffered data than the given threshold.
 				// Trigger 'bufferedamountlow' now.
-				if (this->bufferedAmount <= this->bufferedAmountLowThreshold)
+				if (bufferedAmount <= this->bufferedAmountLowThreshold)
 				{
 					// Notify the Node DataConsumer.
 					auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
-					  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->bufferedAmount);
+					  this->shared->GetChannelNotifier()->GetBufferBuilder(), bufferedAmount);
 
 					this->shared->GetChannelNotifier()->Emit(
 					  this->id,
@@ -470,6 +478,7 @@ namespace RTC
 		MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
 	}
 
+	// TODO: SCTP: Remove this method once we use the new SCTP stack.
 	void DataConsumer::SetSctpAssociationBufferedAmount(uint32_t bufferedAmount)
 	{
 		MS_TRACE();
@@ -497,7 +506,22 @@ namespace RTC
 		}
 	}
 
-	void DataConsumer::SctpAssociationSendBufferFull()
+	void DataConsumer::SctpBufferedAmountLow(uint32_t bufferedAmount) const
+	{
+		MS_TRACE();
+
+		// Notify the Node DataConsumer.
+		auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), bufferedAmount);
+
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id,
+		  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
+		  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
+		  bufferedAmountLowOffset);
+	}
+
+	void DataConsumer::SctpSendBufferFull() const
 	{
 		MS_TRACE();
 

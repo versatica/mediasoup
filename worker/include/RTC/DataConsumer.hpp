@@ -59,7 +59,7 @@ namespace RTC
 		flatbuffers::Offset<FBS::DataConsumer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> FillBufferStats(
-		  flatbuffers::FlatBufferBuilder& builder) const;
+		  flatbuffers::FlatBufferBuilder& builder);
 		Type GetType() const
 		{
 			return this->type;
@@ -96,8 +96,10 @@ namespace RTC
 		void DataProducerResumed();
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
+		// TODO: SCTP: Remove this method once we use the new SCTP stack.
 		void SetSctpAssociationBufferedAmount(uint32_t bufferedAmount);
-		void SctpAssociationSendBufferFull();
+		void SctpBufferedAmountLow(uint32_t bufferedAmount) const;
+		void SctpSendBufferFull() const;
 		void DataProducerClosed();
 		// TODO: SCTP: Remove when we migrate to the new SCTP stack.
 		bool SendMessage(
@@ -140,8 +142,11 @@ namespace RTC
 		bool dataProducerClosed{ false };
 		size_t messagesSent{ 0u };
 		size_t bytesSent{ 0u };
+		// TODO: SCTP: Remove once we use the new SCTP stack.
 		uint32_t bufferedAmount{ 0u };
+		// TODO: SCTP: Remove once we use the new SCTP stack.
 		uint32_t bufferedAmountLowThreshold{ 0u };
+		// TODO: SCTP: Remove once we use the new SCTP stack.
 		bool forceTriggerBufferedAmountLow{ false };
 	};
 } // namespace RTC

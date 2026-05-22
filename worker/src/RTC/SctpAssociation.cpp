@@ -430,7 +430,7 @@ namespace RTC
 
 			if (sctpSendBufferFull)
 			{
-				dataConsumer->SctpAssociationSendBufferFull();
+				dataConsumer->SctpSendBufferFull();
 			}
 		}
 		else if (cb)

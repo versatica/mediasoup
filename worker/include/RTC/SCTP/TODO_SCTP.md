@@ -41,11 +41,19 @@
 
 - We need to use `this->isDataChannel` in `Association` as we do in former `SctpAssociation`. Well, let's see. If it's only for when changing number of OS/MIS... then the new SCTP stack doesn't support it so...
 
-- Fix `dataConsumer.getBufferedAmount()` which in usrsctp returns the data buffered for all data consumers in the transport but now it will be per `DataConsumer` (SCTP stream).
+- Use the `AssociationMetrics`. Expose them in transport stats, etc.
 
-- In `DataConsumer` class rename `SetAssociationBufferedAmount()` to `SetBufferedAmount()`.
+- Add `transport.getTotalBufferedAmount()`.
 
-- In `DataConsumer` class revisit `SctpAssociationSendBufferFull()` method.
+- Remove `Transport::OnSctpAssociationBufferedAmount()`. I mean, don't replicate it for the new stack.
+
+- In `DataConsumer` `DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD`... This must not be like this. This must trigger a listener for the `Transport` to invoke the corresponding method in the `Association`.
+
+- Remove `DataConsumer::SetSctpAssociationBufferedAmount()`.
+
+- `Transport`: Add a `std::map` `sctpDataConsumers` indexed by `streamId`.
+
+- How to emit `DATACONSUMER_BUFFERED_AMOUNT_LOW`? In `Association` we have and we have `OnAssociationTotalBufferedAmountLow()` event, but we don't have `OnAssociationStreamBufferedAmountLow()
 
 - Fix the documentation in the website which says: "The underlaying SCTP association uses a common send buffer for all data consumers, hence the value given by this method indicates the data buffered for all data consumers in the transport."
 

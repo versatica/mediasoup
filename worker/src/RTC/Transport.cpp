@@ -1943,9 +1943,7 @@ namespace RTC
 					(*cb)(false, /*sctpSendBufferFull*/ true);
 				}
 
-				// TODO: SCTP: We don't want this probably since we have events in Association
-				// for this.
-				dataConsumer->SctpAssociationSendBufferFull();
+				dataConsumer->SctpSendBufferFull();
 
 				break;
 			}
@@ -3076,14 +3074,18 @@ namespace RTC
 	}
 
 	void Transport::OnDataConsumerNeedBufferedAmount(
-	  RTC::DataConsumer* /*dataConsumer*/, uint32_t& bufferedAmount)
+	  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount)
 	{
 		MS_TRACE();
 
-		if (Settings::configuration.useBuiltInSctpStack && this->sctpAssociation)
+		if (dataConsumer->GetType() == RTC::DataConsumer::Type::DIRECT)
 		{
-			// TODO: SCTP: Let's see how to obtain `streamId` argument from the DataConsumer.
-			// bufferedAmount = this->sctpAssociation->GetStreamBufferedAmount(streamId);
+			bufferedAmount = 0;
+		}
+		else if (Settings::configuration.useBuiltInSctpStack && this->sctpAssociation)
+		{
+			bufferedAmount = static_cast<uint32_t>(this->sctpAssociation->GetStreamBufferedAmount(
+			  dataConsumer->GetSctpStreamParameters().streamId));
 		}
 		// TODO: SCTP: Remove once we only use built-in SCTP stack.
 		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
@@ -3091,7 +3093,7 @@ namespace RTC
 			// NOTE: The underlaying SCTP association uses a common send buffer for all
 			// data consumers, hence the value given by this method indicates the data
 			// buffered for all data consumers in the transport.
-			bufferedAmount = this->oldSctpAssociation->GetSctpBufferedAmount();
+			bufferedAmount = static_cast<uint32_t>(this->oldSctpAssociation->GetSctpBufferedAmount());
 		}
 		else
 		{
@@ -3352,11 +3354,26 @@ namespace RTC
 		// TODO: SCTP
 	}
 
-	void Transport::OnAssociationStreamBufferedAmountLow(uint16_t /*streamId*/)
+	void Transport::OnAssociationStreamBufferedAmountLow(uint16_t streamId)
 	{
 		MS_TRACE();
 
-		// TODO: SCTP
+		// TODO: SCTP: Have a member
+		// `std::map<uint16_t /*streamId*/, DataConsumer> mapStreamIdSctpDataConsumers.
+
+		for (const auto& kv : this->mapDataConsumers)
+		{
+			auto* dataConsumer = kv.second;
+
+			if (
+			  dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP &&
+			  dataConsumer->GetSctpStreamParameters().streamId == streamId)
+			{
+				dataConsumer->SctpBufferedAmountLow(this->sctpAssociation->GetStreamBufferedAmount(streamId));
+
+				break;
+			};
+		}
 	}
 
 	void Transport::OnAssociationTotalBufferedAmountLow()
