@@ -3,6 +3,7 @@
 ### NEXT
 
 - Node: Update TypeScript to v6 ([PR #1790](https://github.com/versatica/mediasoup/pull/1790)).
+- Worker: SeqManager, use std::vector rather than std::set ([1807](https://github.com/versatica/mediasoup/pull/1807)).
 
 ### 3.19.22
 
