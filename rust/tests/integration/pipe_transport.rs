@@ -30,6 +30,13 @@ use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 
+// TODO: SCTP: Temporal until we get rid of usrsctp.
+static USE_BUILT_IN_SCTP_STACK: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
+    std::env::var("USE_BUILT_IN_SCTP_STACK")
+        .map(|v| v == "true")
+        .unwrap_or(false)
+});
+
 struct CustomAppData {
     _foo: &'static str,
 }
@@ -238,12 +245,24 @@ async fn init() -> (
     let worker_manager = WorkerManager::new();
 
     let worker1 = worker_manager
-        .create_worker(WorkerSettings::default())
+        .create_worker({
+            let mut settings = WorkerSettings::default();
+
+            settings.use_built_in_sctp_stack = *USE_BUILT_IN_SCTP_STACK;
+
+            settings
+        })
         .await
         .expect("Failed to create worker");
 
     let worker2 = worker_manager
-        .create_worker(WorkerSettings::default())
+        .create_worker({
+            let mut settings = WorkerSettings::default();
+
+            settings.use_built_in_sctp_stack = *USE_BUILT_IN_SCTP_STACK;
+
+            settings
+        })
         .await
         .expect("Failed to create worker");
 

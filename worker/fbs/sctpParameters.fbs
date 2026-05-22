@@ -15,4 +15,3 @@ table SctpStreamParameters {
     max_packet_life_time: uint16 = null;
     max_retransmits: uint16 = null;
 }
-

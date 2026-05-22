@@ -77,7 +77,8 @@ fn create_succeeds() {
         let transport1 = router
             .create_direct_transport({
                 let mut direct_transport_options = DirectTransportOptions::default();
-                direct_transport_options.max_message_size = 1024;
+                direct_transport_options.max_send_message_size = 1024;
+                direct_transport_options.max_receive_message_size = 1024;
                 direct_transport_options.app_data = AppData::new(CustomAppData { foo: "bar" });
 
                 direct_transport_options

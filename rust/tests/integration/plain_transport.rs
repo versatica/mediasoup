@@ -20,6 +20,13 @@ use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
+// TODO: SCTP: Temporal until we get rid of usrsctp.
+static USE_BUILT_IN_SCTP_STACK: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
+    std::env::var("USE_BUILT_IN_SCTP_STACK")
+        .map(|v| v == "true")
+        .unwrap_or(false)
+});
+
 struct CustomAppData {
     foo: &'static str,
 }
@@ -71,7 +78,13 @@ async fn init() -> (Worker, Router) {
     let worker_manager = WorkerManager::new();
 
     let worker = worker_manager
-        .create_worker(WorkerSettings::default())
+        .create_worker({
+            let mut settings = WorkerSettings::default();
+
+            settings.use_built_in_sctp_stack = *USE_BUILT_IN_SCTP_STACK;
+
+            settings
+        })
         .await
         .expect("Failed to create worker");
 
@@ -180,10 +193,23 @@ fn create_succeeds() {
             assert_eq!(
                 transport1.sctp_parameters(),
                 Some(SctpParameters {
-                    port: 5000,
-                    os: 1024,
-                    mis: 1024,
-                    max_message_size: 262_144,
+                    // TODO: SCTP: Temporal until we get rid of usrsctp.
+                    max_send_message_size: 262_144,
+                    send_buffer_size: 2000000,
+                    per_stream_send_queue_limit: 2000000,
+                    max_receiver_window_buffer_size: if *USE_BUILT_IN_SCTP_STACK {
+                        5242880
+                    } else {
+                        2000000
+                    },
+                    // TODO: SCTP: Must implement `isDataChannel` in new SCTP stack, from now
+                    // it's always set to `true`.
+                    is_data_channel: if *USE_BUILT_IN_SCTP_STACK {
+                        true
+                    } else {
+                        false
+                    },
+                    total_buffered_amount: 0,
                 }),
             );
             assert_eq!(transport1.sctp_state(), Some(SctpState::New));

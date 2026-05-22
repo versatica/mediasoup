@@ -15,7 +15,7 @@ use mediasoup_types::data_structures::{
 use mediasoup_types::rtp_parameters::{
     MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
 };
-use mediasoup_types::sctp_parameters::{NumSctpStreams, SctpParameters};
+use mediasoup_types::sctp_parameters::SctpParameters;
 use portpicker::pick_unused_port;
 use std::convert::TryInto;
 use std::env;
@@ -23,6 +23,13 @@ use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+
+// TODO: SCTP: Temporal until we get rid of usrsctp.
+static USE_BUILT_IN_SCTP_STACK: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
+    std::env::var("USE_BUILT_IN_SCTP_STACK")
+        .map(|v| v == "true")
+        .unwrap_or(false)
+});
 
 struct CustomAppData {
     foo: &'static str,
@@ -75,7 +82,13 @@ async fn init() -> (Worker, Router) {
     let worker_manager = WorkerManager::new();
 
     let worker = worker_manager
-        .create_worker(WorkerSettings::default())
+        .create_worker({
+            let mut settings = WorkerSettings::default();
+
+            settings.use_built_in_sctp_stack = *USE_BUILT_IN_SCTP_STACK;
+
+            settings
+        })
         .await
         .expect("Failed to create worker");
 
@@ -173,11 +186,11 @@ fn create_succeeds() {
                         .unwrap(),
                     );
                     webrtc_transport_options.enable_sctp = true;
-                    webrtc_transport_options.num_sctp_streams = NumSctpStreams {
-                        os: 2048,
-                        mis: 2048,
-                    };
-                    webrtc_transport_options.max_sctp_message_size = 1000000;
+                    webrtc_transport_options.max_send_message_size = 1000001;
+                    webrtc_transport_options.max_receive_message_size = 1000002;
+                    webrtc_transport_options.sctp_send_buffer_size = 2000001;
+                    webrtc_transport_options.sctp_per_stream_send_queue_limit = 2000002;
+                    webrtc_transport_options.sctp_max_receiver_window_buffer_size = 2000003;
                     webrtc_transport_options.app_data = AppData::new(CustomAppData { foo: "bar" });
 
                     webrtc_transport_options
@@ -199,10 +212,25 @@ fn create_succeeds() {
             assert_eq!(
                 transport1.sctp_parameters(),
                 Some(SctpParameters {
-                    port: 5000,
-                    os: 2048,
-                    mis: 2048,
-                    max_message_size: 1000000,
+                    // TODO: SCTP: Temporal until we get rid of usrsctp.
+                    max_send_message_size: if *USE_BUILT_IN_SCTP_STACK {
+                        1000001
+                    } else {
+                        1000002
+                    },
+                    send_buffer_size: 2000001,
+                    per_stream_send_queue_limit: if *USE_BUILT_IN_SCTP_STACK {
+                        2000002
+                    } else {
+                        2000001
+                    },
+                    max_receiver_window_buffer_size: if *USE_BUILT_IN_SCTP_STACK {
+                        2000003
+                    } else {
+                        2000001
+                    },
+                    is_data_channel: true,
+                    total_buffered_amount: 0,
                 }),
             );
             {

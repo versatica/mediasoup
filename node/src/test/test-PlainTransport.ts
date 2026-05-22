@@ -7,7 +7,7 @@ import * as utils from '../utils';
 
 const IS_WINDOWS = os.platform() === 'win32';
 
-// TODO: SCTP: Temporal untuil we get rid of usrsctp.
+// TODO: SCTP: Temporal until we get rid of usrsctp.
 const USE_BUILT_IN_SCTP_STACK =
 	process.env['USE_BUILT_IN_SCTP_STACK'] === 'true';
 
@@ -107,7 +107,7 @@ test('router.createPlainTransport() succeeds', async () => {
 	expect(plainTransport2.tuple.protocol).toBe('udp');
 	expect(plainTransport2.rtcpTuple).toBeUndefined();
 	expect(plainTransport2.sctpParameters).toMatchObject({
-		// TODO: SCTP: Temporal untuil we get rid of usrsctp.
+		// TODO: SCTP: Temporal until we get rid of usrsctp.
 		maxSendMessageSize: 262144,
 		sendBufferSize: 2000000,
 		perStreamSendQueueLimit: 2000000,
