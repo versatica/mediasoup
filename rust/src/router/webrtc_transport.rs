@@ -28,7 +28,7 @@ use mediasoup_types::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
     SctpState, TransportTuple,
 };
-use mediasoup_types::sctp_parameters::{NumSctpStreams, SctpParameters};
+use mediasoup_types::sctp_parameters::SctpParameters;
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -136,14 +136,23 @@ pub struct WebRtcTransportOptions {
     /// Create a SCTP association.
     /// Default false.
     pub enable_sctp: bool,
-    /// SCTP streams number.
-    pub num_sctp_streams: NumSctpStreams,
-    /// Maximum allowed size for SCTP messages sent by DataProducers.
-    // 	Default 262144.
-    pub max_sctp_message_size: u32,
-    /// Maximum SCTP send buffer used by DataConsumers.
-    /// Default 262144.
+    /// Maximum allowed size for SCTP messages sent by DataConsumers (in bytes).
+    /// Default 262_144.
+    pub max_send_message_size: u32,
+    /// Maximum allowed size for SCTP messages received by DataProducers (in bytes).
+    /// Default 262_144.
+    pub max_receive_message_size: u32,
+    /// Maximum SCTP send buffer used by DataConsumers (in bytes).
+    /// Default 2_000_000.
     pub sctp_send_buffer_size: u32,
+    /// Per stream send queue size limit. Similar to `sctp_send_buffer_size`, but
+    /// limiting the size of individual streams.
+    /// Default 2_000_000.
+    pub sctp_per_stream_send_queue_limit: u32,
+    /// Maximum received window buffer size (in bytes). This should be a bit larger
+    /// than the largest sized message you want to be able to receive.
+    /// Default 5_242_880.
+    pub sctp_max_receiver_window_buffer_size: u32,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -161,9 +170,11 @@ impl WebRtcTransportOptions {
             prefer_tcp: false,
             ice_consent_timeout: 30,
             enable_sctp: false,
-            num_sctp_streams: NumSctpStreams::default(),
-            max_sctp_message_size: 262_144,
-            sctp_send_buffer_size: 262_144,
+            max_send_message_size: 262_144,
+            max_receive_message_size: 262_144,
+            sctp_send_buffer_size: 2_000_000,
+            sctp_per_stream_send_queue_limit: 2_000_000,
+            sctp_max_receiver_window_buffer_size: 5_242_880,
             app_data: AppData::default(),
         }
     }
@@ -179,9 +190,11 @@ impl WebRtcTransportOptions {
             prefer_tcp: false,
             ice_consent_timeout: 30,
             enable_sctp: false,
-            num_sctp_streams: NumSctpStreams::default(),
-            max_sctp_message_size: 262_144,
-            sctp_send_buffer_size: 262_144,
+            max_send_message_size: 262_144,
+            max_receive_message_size: 262_144,
+            sctp_send_buffer_size: 2_000_000,
+            sctp_per_stream_send_queue_limit: 2_000_000,
+            sctp_max_receiver_window_buffer_size: 5_242_880,
             app_data: AppData::default(),
         }
     }
@@ -203,7 +216,8 @@ pub struct WebRtcTransportDump {
     pub data_consumer_ids: Vec<DataConsumerId>,
     pub recv_rtp_header_extensions: RecvRtpHeaderExtensions,
     pub rtp_listener: RtpListener,
-    pub max_message_size: u32,
+    pub max_send_message_size: u32,
+    pub max_receive_message_size: u32,
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_state: Option<SctpState>,
     pub sctp_listener: Option<SctpListener>,
@@ -267,7 +281,8 @@ impl<'a> TryFromFbs<'a> for WebRtcTransportDump {
                 dump.base.recv_rtp_header_extensions.as_ref(),
             ),
             rtp_listener: RtpListener::try_from_fbs(*dump.base.rtp_listener)?,
-            max_message_size: dump.base.max_message_size,
+            max_send_message_size: dump.base.max_send_message_size,
+            max_receive_message_size: dump.base.max_receive_message_size,
             sctp_parameters: dump
                 .base
                 .sctp_parameters
@@ -871,11 +886,11 @@ impl WebRtcTransport {
         let next_mid_for_consumers = AtomicUsize::default();
         let used_sctp_stream_ids = Mutex::new({
             let mut used_used_sctp_stream_ids = IntMap::default();
-            if let Some(sctp_parameters) = &data.sctp_parameters {
-                for i in 0..sctp_parameters.mis {
-                    used_used_sctp_stream_ids.insert(i, false);
-                }
+
+            for i in 0..=65535 {
+                used_used_sctp_stream_ids.insert(i, false);
             }
+
             used_used_sctp_stream_ids
         });
         let cname_for_producers = Mutex::new(None);

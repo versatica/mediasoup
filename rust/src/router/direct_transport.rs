@@ -36,9 +36,12 @@ use std::sync::{Arc, Weak};
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct DirectTransportOptions {
-    /// Maximum allowed size for direct messages sent from DataProducers.
+    /// Maximum allowed size for SCTP messages sent by DataConsumers (in bytes).
     /// Default 262_144.
-    pub max_message_size: u32,
+    pub max_send_message_size: u32,
+    /// Maximum allowed size for SCTP messages received by DataProducers (in bytes).
+    /// Default 262_144.
+    pub max_receive_message_size: u32,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -46,7 +49,8 @@ pub struct DirectTransportOptions {
 impl Default for DirectTransportOptions {
     fn default() -> Self {
         Self {
-            max_message_size: 262_144,
+            max_send_message_size: 262_144,
+            max_receive_message_size: 262_144,
             app_data: AppData::default(),
         }
     }
@@ -68,7 +72,8 @@ pub struct DirectTransportDump {
     pub data_consumer_ids: Vec<DataConsumerId>,
     pub recv_rtp_header_extensions: RecvRtpHeaderExtensions,
     pub rtp_listener: RtpListener,
-    pub max_message_size: u32,
+    pub max_send_message_size: u32,
+    pub max_receive_message_size: u32,
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_state: Option<SctpState>,
     pub sctp_listener: Option<SctpListener>,
@@ -123,7 +128,8 @@ impl<'a> TryFromFbs<'a> for DirectTransportDump {
                 dump.base.recv_rtp_header_extensions.as_ref(),
             ),
             rtp_listener: RtpListener::try_from_fbs(*dump.base.rtp_listener)?,
-            max_message_size: dump.base.max_message_size,
+            max_send_message_size: dump.base.max_send_message_size,
+            max_receive_message_size: dump.base.max_receive_message_size,
             sctp_parameters: dump
                 .base
                 .sctp_parameters

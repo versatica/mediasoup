@@ -4,26 +4,17 @@ use crate::fbs::{FromFbs, ToFbs};
 use mediasoup_sys::fbs::sctp_parameters;
 use mediasoup_types::sctp_parameters::*;
 
-impl ToFbs for NumSctpStreams {
-    type FbsType = sctp_parameters::NumSctpStreams;
-
-    fn to_fbs(&self) -> Self::FbsType {
-        sctp_parameters::NumSctpStreams {
-            os: self.os,
-            mis: self.mis,
-        }
-    }
-}
-
 impl FromFbs for SctpParameters {
     type FbsType = sctp_parameters::SctpParameters;
 
     fn from_fbs(parameters: &Self::FbsType) -> Self {
         Self {
-            port: parameters.port,
-            os: parameters.os,
-            mis: parameters.mis,
-            max_message_size: parameters.max_message_size,
+            max_send_message_size: parameters.max_send_message_size,
+            send_buffer_size: parameters.send_buffer_size,
+            per_stream_send_queue_limit: parameters.per_stream_send_queue_limit,
+            max_receiver_window_buffer_size: parameters.max_receiver_window_buffer_size,
+            is_data_channel: parameters.is_data_channel,
+            total_buffered_amount: parameters.total_buffered_amount,
         }
     }
 }

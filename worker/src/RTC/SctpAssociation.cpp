@@ -834,7 +834,6 @@ namespace RTC
 
 						// Update our OS.
 						this->os  = notification->sn_assoc_change.sac_outbound_streams;
-						this->mis = notification->sn_assoc_change.sac_inbound_streams;
 
 						// Increase if requested before connected.
 						if (this->desiredOs > this->os)

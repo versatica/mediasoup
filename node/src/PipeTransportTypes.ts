@@ -49,7 +49,7 @@ export type PipeTransportOptions<
 	sctpPerStreamSendQueueLimit?: number;
 
 	/**
-	 * Maximum received window buffer size (in  ytes). This should be a bit larger
+	 * Maximum received window buffer size (in bytes). This should be a bit larger
 	 * than the largest sized message you want to be able to receive.
 	 * Default 5242880.
 	 */
