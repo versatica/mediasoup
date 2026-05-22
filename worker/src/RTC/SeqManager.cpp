@@ -64,8 +64,10 @@ namespace RTC
 			this->maxInput   = input;
 			this->maxDropped = input;
 			// Insert input in sorted order, if not present.
-			SeqLowerThan seqLowerThan;
-			auto it = std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
+			const SeqLowerThan seqLowerThan;
+			const auto it =
+			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
+
 			if (it == this->dropped.end() || *it != input)
 			{
 				this->dropped.insert(it, input);
@@ -79,8 +81,10 @@ namespace RTC
 		else if (this->maxInput == this->maxDropped && SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
 		{
 			// Insert input in sorted order, if not present.
-			SeqLowerThan seqLowerThan;
-			auto it = std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
+			const SeqLowerThan seqLowerThan;
+			const auto it =
+			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
+
 			if (it == this->dropped.end() || *it != input)
 			{
 				this->dropped.insert(it, input);
@@ -133,9 +137,10 @@ namespace RTC
 		else
 		{
 			// Count dropped numbers less than input.
-			auto droppedCount = std::distance(
+			const auto droppedCount = std::distance(
 			  this->dropped.begin(),
 			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, SeqLowerThan()));
+
 			base = (this->base - droppedCount) & SeqManager::MaxValue;
 		}
 

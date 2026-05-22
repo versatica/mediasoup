@@ -2,8 +2,7 @@
 #define RTC_SEQ_MANAGER_HPP
 
 #include "common.hpp"
-#include <algorithm> // for lower_bound, binary_search, distance, find_if
-#include <limits>    // std::numeric_limits
+#include <limits> // std::numeric_limits
 #include <vector>
 
 namespace RTC
