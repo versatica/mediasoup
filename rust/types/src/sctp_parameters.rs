@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 pub struct SctpParameters {
     /// Maximum allowed size for SCTP send messages.
     pub max_send_message_size: u32,
+    /// Maximum allowed size for SCTP receive messages.
+    pub max_receive_message_size: u32,
     /// Size of the SCTP send buffer.
     pub send_buffer_size: u32,
     /// Per-stream send queue limit.

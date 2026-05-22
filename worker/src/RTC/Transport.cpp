@@ -83,12 +83,13 @@ namespace RTC
 			if (Settings::configuration.useBuiltInSctpStack)
 			{
 				// TODO: SCTP: Many interesting options missing.
-				const RTC::SCTP::SctpOptions sctpOptions = { .maxSendMessageSize = this->maxSendMessageSize,
-					                                           .maxSendBufferSize  = this->sctpSendBufferSize,
-					                                           .perStreamSendQueueLimit =
-					                                             this->sctpPerStreamSendQueueLimit,
-					                                           .maxReceiverWindowBufferSize =
-					                                             this->sctpMaxReceiverWindowBufferSize };
+				const RTC::SCTP::SctpOptions sctpOptions = {
+					.maxSendMessageSize          = this->maxSendMessageSize,
+					.maxSendBufferSize           = this->sctpSendBufferSize,
+					.perStreamSendQueueLimit     = this->sctpPerStreamSendQueueLimit,
+					.maxReceiveMessageSize       = this->maxReceiveMessageSize,
+					.maxReceiverWindowBufferSize = this->sctpMaxReceiverWindowBufferSize
+				};
 
 				this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
 				  sctpOptions, this, this->shared, options->isDataChannel());

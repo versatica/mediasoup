@@ -10,6 +10,7 @@ export function parseSctpParameters(
 ): SctpParameters {
 	return {
 		maxSendMessageSize: binary.maxSendMessageSize(),
+		maxReceiveMessageSize: binary.maxReceiveMessageSize(),
 		sendBufferSize: binary.sendBufferSize(),
 		perStreamSendQueueLimit: binary.perStreamSendQueueLimit(),
 		maxReceiverWindowBufferSize: binary.maxReceiverWindowBufferSize(),

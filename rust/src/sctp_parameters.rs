@@ -10,6 +10,7 @@ impl FromFbs for SctpParameters {
     fn from_fbs(parameters: &Self::FbsType) -> Self {
         Self {
             max_send_message_size: parameters.max_send_message_size,
+            max_receive_message_size: parameters.max_receive_message_size,
             send_buffer_size: parameters.send_buffer_size,
             per_stream_send_queue_limit: parameters.per_stream_send_queue_limit,
             max_receiver_window_buffer_size: parameters.max_receiver_window_buffer_size,

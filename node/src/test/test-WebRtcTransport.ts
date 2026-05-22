@@ -147,6 +147,7 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(webRtcTransport.sctpParameters).toMatchObject({
 		// TODO: SCTP: Temporal until we get rid of usrsctp.
 		maxSendMessageSize: USE_BUILT_IN_SCTP_STACK ? 1000001 : 1000002,
+		maxReceiveMessageSize: 1000002,
 		sendBufferSize: 2000001,
 		perStreamSendQueueLimit: USE_BUILT_IN_SCTP_STACK ? 2000002 : 2000001,
 		maxReceiverWindowBufferSize: USE_BUILT_IN_SCTP_STACK ? 2000003 : 2000001,

@@ -1,5 +1,6 @@
 export type SctpParameters = {
 	maxSendMessageSize: number;
+	maxReceiveMessageSize: number;
 	sendBufferSize: number;
 	perStreamSendQueueLimit: number;
 	maxReceiverWindowBufferSize: number;

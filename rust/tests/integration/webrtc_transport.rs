@@ -218,6 +218,7 @@ fn create_succeeds() {
                     } else {
                         1000002
                     },
+                    max_receive_message_size: 1000002,
                     send_buffer_size: 2000001,
                     per_stream_send_queue_limit: if *USE_BUILT_IN_SCTP_STACK {
                         2000002

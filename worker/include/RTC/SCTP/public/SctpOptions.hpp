@@ -67,6 +67,12 @@ namespace RTC
 			size_t perStreamSendQueueLimit{ 2000000 };
 
 			/**
+			 * The largest allowed message payload to be received. This value should
+			 * be smaller than `maxReceiverWindowBufferSize`.
+			 */
+			size_t maxReceiveMessageSize{ 256 * 1024 };
+
+			/**
 			 * Maximum received window buffer size. This should be a bit larger than
 			 * the largest sized message you want to be able to receive. This
 			 * essentially limits the memory usage on the receive side. Note that

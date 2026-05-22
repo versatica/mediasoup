@@ -130,6 +130,7 @@ namespace RTC
 			return FBS::SctpParameters::CreateSctpParameters(
 			  builder,
 			  /*maxSendMessageSize*/ this->sctpOptions.maxSendMessageSize,
+			  /*maxReceiveMessageSize*/ this->sctpOptions.maxReceiveMessageSize,
 			  /*sctpSendBufferSize*/ this->sctpOptions.maxSendBufferSize,
 			  /*sctpPerStreamSendQueueLimit*/ this->sctpOptions.perStreamSendQueueLimit,
 			  /*sctpMaxReceiverWindowBufferSize*/ this->sctpOptions.maxReceiverWindowBufferSize,
@@ -919,6 +920,18 @@ namespace RTC
 			while (std::optional<Message> message = this->tcb->GetReassemblyQueue().GetNextMessage())
 			{
 				this->privateMetrics.rxMessagesCount++;
+
+				if (message->GetPayloadLength() > this->sctpOptions.maxReceiveMessageSize)
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "dropping too large received message [messageByteLength:%zu, maxReceiveMessageSize:%zu]",
+					  message->GetPayloadLength(),
+					  this->sctpOptions.maxReceiveMessageSize);
+
+					break;
+				}
+
 				this->associationListenerDeferrer.OnAssociationMessageReceived(*std::move(message));
 			}
 		}

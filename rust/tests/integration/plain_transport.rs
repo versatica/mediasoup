@@ -195,6 +195,7 @@ fn create_succeeds() {
                 Some(SctpParameters {
                     // TODO: SCTP: Temporal until we get rid of usrsctp.
                     max_send_message_size: 262_144,
+                    max_receive_message_size: 262_144,
                     send_buffer_size: 2000000,
                     per_stream_send_queue_limit: 2000000,
                     max_receiver_window_buffer_size: if *USE_BUILT_IN_SCTP_STACK {

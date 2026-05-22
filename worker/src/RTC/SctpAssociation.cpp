@@ -314,6 +314,7 @@ namespace RTC
 		return FBS::SctpParameters::CreateSctpParameters(
 		  builder,
 		  /*maxSendMessageSize*/ this->maxSctpMessageSize,
+		  /*maxReceiveMessageSize*/ this->maxSctpMessageSize,
 		  /*sctpSendBufferSize*/ this->sctpSendBufferSize,
 		  // NOTE: Hack, but will go away soon.
 		  /*sctpPerStreamSendQueueLimit*/ this->sctpSendBufferSize,

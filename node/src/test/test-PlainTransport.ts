@@ -109,6 +109,7 @@ test('router.createPlainTransport() succeeds', async () => {
 	expect(plainTransport2.sctpParameters).toMatchObject({
 		// TODO: SCTP: Temporal until we get rid of usrsctp.
 		maxSendMessageSize: 262144,
+		maxReceiveMessageSize: 262144,
 		sendBufferSize: 2000000,
 		perStreamSendQueueLimit: 2000000,
 		maxReceiverWindowBufferSize: USE_BUILT_IN_SCTP_STACK ? 5242880 : 2000000,

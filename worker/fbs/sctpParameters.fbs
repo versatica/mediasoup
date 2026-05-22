@@ -2,6 +2,7 @@ namespace FBS.SctpParameters;
 
 table SctpParameters {
     max_send_message_size: uint32;
+    max_receive_message_size: uint32;
     send_buffer_size: uint32;
     per_stream_send_queue_limit: uint32;
     max_receiver_window_buffer_size: uint32;

@@ -27,6 +27,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  max send message size: %zu", this->maxSendMessageSize);
 			MS_DUMP_CLEAN(indentation, "  max send buffer size: %zu", this->maxSendBufferSize);
 			MS_DUMP_CLEAN(indentation, "  per stream send queue limit: %zu", this->perStreamSendQueueLimit);
+			MS_DUMP_CLEAN(indentation, "  max receive message size: %zu", this->maxReceiveMessageSize);
 			MS_DUMP_CLEAN(indentation, "  max receiver window size: %zu", this->maxReceiverWindowBufferSize);
 			MS_DUMP_CLEAN(
 			  indentation,
