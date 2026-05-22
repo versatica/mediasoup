@@ -204,11 +204,7 @@ fn create_succeeds() {
                     },
                     // TODO: SCTP: Must implement `isDataChannel` in new SCTP stack, from now
                     // it's always set to `true`.
-                    is_data_channel: if *USE_BUILT_IN_SCTP_STACK {
-                        true
-                    } else {
-                        false
-                    },
+                    is_data_channel: *USE_BUILT_IN_SCTP_STACK,
                     total_buffered_amount: 0,
                 }),
             );
