@@ -115,7 +115,7 @@ namespace RTC
 			 * considered "low" for a given stream, which will trigger
 			 * `OnAssociationStreamBufferedAmountLow()` event. The default value is 0.
 			 */
-			virtual void SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes) = 0;
+			virtual void SetStreamBufferedAmountLowThreshold(uint16_t streamId, size_t bytes) = 0;
 
 			/**
 			 * Resetting streams is an asynchronous operation and the results will be

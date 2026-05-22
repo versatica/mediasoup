@@ -43,8 +43,6 @@
 
 - Use the `AssociationMetrics`. Expose them in transport stats, etc.
 
-- Add `transport.getTotalBufferedAmount()`.
-
 - Remove `Transport::OnSctpAssociationBufferedAmount()`. I mean, don't replicate it for the new stack.
 
 - In `DataConsumer` `DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD`... This must not be like this. This must trigger a listener for the `Transport` to invoke the corresponding method in the `Association`.

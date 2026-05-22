@@ -405,7 +405,7 @@ namespace RTC
 			return this->sendQueue.GetStreamBufferedAmountLowThreshold(streamId);
 		}
 
-		void Association::SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes)
+		void Association::SetStreamBufferedAmountLowThreshold(uint16_t streamId, size_t bytes)
 		{
 			MS_TRACE();
 
