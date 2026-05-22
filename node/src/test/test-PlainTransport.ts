@@ -7,10 +7,6 @@ import * as utils from '../utils';
 
 const IS_WINDOWS = os.platform() === 'win32';
 
-// TODO: SCTP: Temporal until we get rid of usrsctp.
-const USE_BUILT_IN_SCTP_STACK =
-	process.env['USE_BUILT_IN_SCTP_STACK'] === 'true';
-
 type TestContext = {
 	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	worker?: mediasoup.types.Worker;
@@ -50,9 +46,7 @@ const ctx: TestContext = {
 };
 
 beforeEach(async () => {
-	ctx.worker = await mediasoup.createWorker({
-		useBuiltInSctpStack: USE_BUILT_IN_SCTP_STACK,
-	});
+	ctx.worker = await mediasoup.createWorker();
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
@@ -107,12 +101,11 @@ test('router.createPlainTransport() succeeds', async () => {
 	expect(plainTransport2.tuple.protocol).toBe('udp');
 	expect(plainTransport2.rtcpTuple).toBeUndefined();
 	expect(plainTransport2.sctpParameters).toMatchObject({
-		// TODO: SCTP: Temporal until we get rid of usrsctp.
 		maxSendMessageSize: 262144,
 		maxReceiveMessageSize: 262144,
 		sendBufferSize: 2000000,
 		perStreamSendQueueLimit: 2000000,
-		maxReceiverWindowBufferSize: USE_BUILT_IN_SCTP_STACK ? 5242880 : 2000000,
+		maxReceiverWindowBufferSize: 5242880,
 		isDataChannel: false,
 	});
 	expect(plainTransport2.sctpState).toBe('new');

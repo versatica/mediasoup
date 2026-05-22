@@ -30,13 +30,6 @@ namespace RTC
 		  RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		void SendMessage(
-		  RTC::DataConsumer* dataConsumer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  onQueuedCallback* cb = nullptr) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  RTC::SCTP::Message message,

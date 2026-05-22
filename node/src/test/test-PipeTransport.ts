@@ -9,9 +9,6 @@ import type {
 } from '../types';
 import * as utils from '../utils';
 
-const USE_BUILT_IN_SCTP_STACK =
-	process.env['USE_BUILT_IN_SCTP_STACK'] === 'true';
-
 type TestContext = {
 	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	audioProducerOptions: mediasoup.types.ProducerOptions;
@@ -180,12 +177,8 @@ const ctx: TestContext = {
 };
 
 beforeEach(async () => {
-	ctx.worker1 = await mediasoup.createWorker({
-		useBuiltInSctpStack: USE_BUILT_IN_SCTP_STACK,
-	});
-	ctx.worker2 = await mediasoup.createWorker({
-		useBuiltInSctpStack: USE_BUILT_IN_SCTP_STACK,
-	});
+	ctx.worker1 = await mediasoup.createWorker();
+	ctx.worker2 = await mediasoup.createWorker();
 	ctx.router1 = await ctx.worker1.createRouter({
 		mediaCodecs: ctx.mediaCodecs,
 	});

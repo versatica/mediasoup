@@ -4,7 +4,6 @@
 #include "RTC/Transport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Settings.hpp"
 #include "Utils.hpp"
 #ifdef MS_LIBURING_SUPPORTED
 #include "DepLibUring.hpp"
@@ -80,33 +79,17 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
 			}
 
-			if (Settings::configuration.useBuiltInSctpStack)
-			{
-				// TODO: SCTP: Many interesting options missing.
-				const RTC::SCTP::SctpOptions sctpOptions = {
-					.maxSendMessageSize          = this->maxSendMessageSize,
-					.maxSendBufferSize           = this->sctpSendBufferSize,
-					.perStreamSendQueueLimit     = this->sctpPerStreamSendQueueLimit,
-					.maxReceiveMessageSize       = this->maxReceiveMessageSize,
-					.maxReceiverWindowBufferSize = this->sctpMaxReceiverWindowBufferSize
-				};
+			// TODO: SCTP: Many interesting options missing.
+			const RTC::SCTP::SctpOptions sctpOptions = {
+				.maxSendMessageSize          = this->maxSendMessageSize,
+				.maxSendBufferSize           = this->sctpSendBufferSize,
+				.perStreamSendQueueLimit     = this->sctpPerStreamSendQueueLimit,
+				.maxReceiveMessageSize       = this->maxReceiveMessageSize,
+				.maxReceiverWindowBufferSize = this->sctpMaxReceiverWindowBufferSize
+			};
 
-				this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
-				  sctpOptions, this, this->shared, options->isDataChannel());
-			}
-			// TODO: SCTP: Remove once we only use built-in SCTP stack.
-			else
-			{
-				// This may throw.
-				this->oldSctpAssociation = new RTC::SctpAssociation(
-				  this,
-				  /*os*/ 65535,
-				  /*mis*/ 65535,
-				  // NOTE: This is a hack but it will go away soon anyway.
-				  /*maxMessageSize*/ std::max(this->maxSendMessageSize, this->maxReceiveMessageSize),
-				  this->sctpSendBufferSize,
-				  options->isDataChannel());
-			}
+			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
+			  sctpOptions, this, this->shared, options->isDataChannel());
 		}
 
 		// Create the RTCP timer.
@@ -157,24 +140,13 @@ namespace RTC
 		}
 		this->mapDataConsumers.clear();
 
-		if (Settings::configuration.useBuiltInSctpStack)
-		{
-			// NOTE: When using the built-in SCTP stack we don't do anything here since
-			// the `SetDestroying()` method has already been called by the Transport
-			// subclass and it closed the SCTP Association.
-			//
-			// NOTE: We cannot do it here in the destructor because here we are no longer
-			// the Transport subclass but Transport parent (this is how the destruction
-			// chain works in C++).
-		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else
-		{
-			// Delete SCTP association.
-			// TODO: SCTP: Remove once we only use built-in SCTP stack.
-			delete this->oldSctpAssociation;
-			this->oldSctpAssociation = nullptr;
-		}
+		// NOTE: We don't close `this->sctpAssociation` here since the
+		// `SetDestroying()` method has already been called by the Transport
+		// subclass and it closed the SCTP Association.
+		//
+		// NOTE: We cannot do it here in the destructor because here we are no longer
+		// the Transport subclass but Transport parent (this is how the destruction
+		// chain works in C++).
 
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
@@ -347,7 +319,7 @@ namespace RTC
 		// Add sctpListener.
 		flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener;
 
-		if (Settings::configuration.useBuiltInSctpStack && this->sctpAssociation)
+		if (this->sctpAssociation)
 		{
 			// Add sctpParameters.
 			sctpParameters = this->sctpAssociation->FillBuffer(builder);
@@ -375,47 +347,6 @@ namespace RTC
 
 				case RTC::SCTP::Types::AssociationState::SHUTTING_DOWN:
 				case RTC::SCTP::Types::AssociationState::CLOSED:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
-					break;
-				}
-			}
-
-			sctpListener = this->sctpListener.FillBuffer(builder);
-		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
-		{
-			// Add sctpParameters.
-			sctpParameters = this->oldSctpAssociation->FillBuffer(builder);
-
-			switch (this->oldSctpAssociation->GetState())
-			{
-				case RTC::SctpAssociation::SctpState::NEW:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::NEW;
-					break;
-				}
-
-				case RTC::SctpAssociation::SctpState::CONNECTING:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
-					break;
-				}
-
-				case RTC::SctpAssociation::SctpState::CONNECTED:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
-					break;
-				}
-
-				case RTC::SctpAssociation::SctpState::FAILED:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::FAILED;
-					break;
-				}
-
-				case RTC::SctpAssociation::SctpState::CLOSED:
 				{
 					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
 					break;
@@ -452,9 +383,8 @@ namespace RTC
 		  this->maxSendMessageSize,
 		  this->maxReceiveMessageSize,
 		  sctpParameters,
-		  (this->sctpAssociation || this->oldSctpAssociation)
-		    ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
-		    : flatbuffers::nullopt,
+		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
+		                        : flatbuffers::nullopt,
 		  sctpListener,
 		  &traceEventTypes);
 	}
@@ -470,7 +400,7 @@ namespace RTC
 		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
 
 		// Add sctpState.
-		if (Settings::configuration.useBuiltInSctpStack && this->sctpAssociation)
+		if (this->sctpAssociation)
 		{
 			// NOTE: There is never permanent FAILED state.
 			switch (this->sctpAssociation->GetAssociationState())
@@ -501,42 +431,6 @@ namespace RTC
 				}
 			}
 		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
-		{
-			switch (this->oldSctpAssociation->GetState())
-			{
-				case RTC::SctpAssociation::SctpState::NEW:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::NEW;
-					break;
-				}
-
-				case RTC::SctpAssociation::SctpState::CONNECTING:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
-					break;
-				}
-
-				case RTC::SctpAssociation::SctpState::CONNECTED:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
-					break;
-				}
-
-				case RTC::SctpAssociation::SctpState::FAILED:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::FAILED;
-					break;
-				}
-
-				case RTC::SctpAssociation::SctpState::CLOSED:
-				{
-					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
-					break;
-				}
-			}
-		}
 
 		return FBS::Transport::CreateStatsDirect(
 		  builder,
@@ -545,9 +439,8 @@ namespace RTC
 		  // timestamp.
 		  nowMs,
 		  // sctpState.
-		  (this->sctpAssociation || this->oldSctpAssociation)
-		    ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
-		    : flatbuffers::nullopt,
+		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
+		                        : flatbuffers::nullopt,
 		  // bytesReceived.
 		  this->recvTransmission.GetBytes(),
 		  // recvBitrate.
@@ -1130,10 +1023,7 @@ namespace RTC
 			case Channel::ChannelRequest::Method::TRANSPORT_PRODUCE_DATA:
 			{
 				// Early check. The Transport must support SCTP or be direct.
-				if (
-				  ((Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
-				   (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation)) &&
-				  !this->direct)
+				if (!this->sctpAssociation && !this->direct)
 				{
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
@@ -1154,9 +1044,7 @@ namespace RTC
 				{
 					case RTC::DataProducer::Type::SCTP:
 					{
-						if (
-						  (Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
-						  (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation))
+						if (!this->sctpAssociation)
 						{
 							delete dataProducer;
 
@@ -1229,15 +1117,7 @@ namespace RTC
 				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
 				{
 					// Tell to the SCTP association.
-					if (Settings::configuration.useBuiltInSctpStack)
-					{
-						this->sctpAssociation->MayConnect();
-					}
-					// TODO: SCTP: Remove once we only use built-in SCTP stack.
-					else
-					{
-						this->oldSctpAssociation->HandleDataProducer(dataProducer);
-					}
+					this->sctpAssociation->MayConnect();
 				}
 
 				break;
@@ -1246,10 +1126,7 @@ namespace RTC
 			case Channel::ChannelRequest::Method::TRANSPORT_CONSUME_DATA:
 			{
 				// Early check. The Transport must support SCTP or be direct.
-				if (
-				  ((Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
-				   (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation)) &&
-				  !this->direct)
+				if (!this->sctpAssociation && !this->direct)
 				{
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
@@ -1271,9 +1148,7 @@ namespace RTC
 				{
 					case RTC::DataConsumer::Type::SCTP:
 					{
-						if (
-						  (Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
-						  (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation))
+						if (!this->sctpAssociation)
 						{
 							delete dataConsumer;
 
@@ -1332,29 +1207,14 @@ namespace RTC
 
 				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 				{
-					if (Settings::configuration.useBuiltInSctpStack)
+					if (this->sctpAssociation->GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED)
 					{
-						if (this->sctpAssociation->GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED)
-						{
-							// Tell to the DataConsumer.
-							dataConsumer->SctpAssociationConnected();
-						}
-
-						// Tell to the SCTP association.
-						this->sctpAssociation->MayConnect();
+						// Tell to the DataConsumer.
+						dataConsumer->SctpAssociationConnected();
 					}
-					// TODO: SCTP: Remove once we only use built-in SCTP stack.
-					else
-					{
-						if (this->oldSctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
-						{
-							// Tell to the DataConsumer.
-							dataConsumer->SctpAssociationConnected();
-						}
 
-						// Tell to the SCTP association.
-						this->oldSctpAssociation->HandleDataConsumer(dataConsumer);
-					}
+					// Tell to the SCTP association.
+					this->sctpAssociation->MayConnect();
 				}
 
 				break;
@@ -1481,10 +1341,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATAPRODUCER:
 			{
-				if (
-				  ((Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
-				   (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation)) &&
-				  !this->direct)
+				if (!this->sctpAssociation && !this->direct)
 				{
 					MS_THROW_ERROR("cannot close DataProducer, SCTP not enabled and not a direct Transport");
 				}
@@ -1510,16 +1367,7 @@ namespace RTC
 
 				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
 				{
-					if (Settings::configuration.useBuiltInSctpStack)
-					{
-						// TODO: SCTP
-					}
-					// TODO: SCTP: Remove once we only use built-in SCTP stack.
-					else
-					{
-						// Tell the SctpAssociation so it can reset the SCTP stream.
-						this->oldSctpAssociation->DataProducerClosed(dataProducer);
-					}
+					// TODO: SCTP
 				}
 
 				// Delete it.
@@ -1532,10 +1380,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATACONSUMER:
 			{
-				if (
-				  ((Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
-				   (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation)) &&
-				  !this->direct)
+				if (!this->sctpAssociation && !this->direct)
 				{
 					MS_THROW_ERROR("cannot close DataConsumer, SCTP not enabled and not a direct Transport");
 				}
@@ -1555,16 +1400,7 @@ namespace RTC
 
 				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 				{
-					if (Settings::configuration.useBuiltInSctpStack)
-					{
-						// TODO: SCTP
-					}
-					// TODO: SCTP: Remove once we only use built-in SCTP stack.
-					else
-					{
-						// Tell the SctpAssociation so it can reset the SCTP stream.
-						this->oldSctpAssociation->DataConsumerClosed(dataConsumer);
-					}
+					// TODO: SCTP
 				}
 
 				// Delete it.
@@ -1609,16 +1445,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (Settings::configuration.useBuiltInSctpStack)
+		if (this->sctpAssociation)
 		{
-			if (this->sctpAssociation)
-			{
-				// NOTE: We don't invoke `Shutdown()` but `Close()` in the SCTP Association
-				// because at this point we are closing everything and we won't have any
-				// chance to complete the SCTP SHUTDOWN + SHUTDOWN_ACK + SHUTDOWN_COMPLETE
-				// dance, so we invoke `Close()` which just sends a SCTP ABORT.
-				this->sctpAssociation->Close();
-			}
+			// NOTE: We don't invoke `Shutdown()` but `Close()` in the SCTP Association
+			// because at this point we are closing everything and we won't have any
+			// chance to complete the SCTP SHUTDOWN + SHUTDOWN_ACK + SHUTDOWN_COMPLETE
+			// dance, so we invoke `Close()` which just sends a SCTP ABORT.
+			this->sctpAssociation->Close();
 		}
 
 		this->isDestroying = true;
@@ -1645,14 +1478,9 @@ namespace RTC
 		}
 
 		// Tell the SctpAssociation.
-		if (Settings::configuration.useBuiltInSctpStack && this->sctpAssociation)
+		if (this->sctpAssociation)
 		{
 			this->sctpAssociation->MayConnect();
-		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
-		{
-			this->oldSctpAssociation->TransportConnected();
 		}
 
 		// Start the RTCP timer.
@@ -1697,13 +1525,6 @@ namespace RTC
 			auto* dataConsumer = kv.second;
 
 			dataConsumer->TransportDisconnected();
-		}
-
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		// Tell the SctpAssociation.
-		if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
-		{
-			this->oldSctpAssociation->TransportDisconnected();
 		}
 
 		// Stop the RTCP timer.
@@ -1830,9 +1651,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (
-		  (Settings::configuration.useBuiltInSctpStack && !this->sctpAssociation) ||
-		  (!Settings::configuration.useBuiltInSctpStack && !this->oldSctpAssociation))
+		if (!this->sctpAssociation)
 		{
 			MS_DEBUG_TAG(sctp, "ignoring SCTP packet (SCTP not enabled)");
 
@@ -1840,40 +1659,7 @@ namespace RTC
 		}
 
 		// Pass it to the SctpAssociation.
-		if (Settings::configuration.useBuiltInSctpStack)
-		{
-			this->sctpAssociation->ReceiveSctpData(data, len);
-		}
-		else
-		{
-			this->oldSctpAssociation->ProcessSctpData(data, len);
-		}
-	}
-
-	// TODO: SCTP: Remove when we have our own SCTP stack running.
-	void Transport::SendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(
-		  !Settings::configuration.useBuiltInSctpStack,
-		  "cannot use this method when built-in SCTP stack is enabled");
-
-		if (!this->oldSctpAssociation)
-		{
-			MS_THROW_ERROR("SCTP not enabled");
-
-			if (cb)
-			{
-				(*cb)(false, false);
-				delete cb;
-			}
-
-			return;
-		}
-
-		this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
+		this->sctpAssociation->ReceiveSctpData(data, len);
 	}
 
 	void Transport::SendSctpMessage(
@@ -1883,10 +1669,6 @@ namespace RTC
 
 		// NOTE: The `message` must already have its `streamId` pointing to the same
 		// as in the `dataConsumer` if its type is "sctp", or 0 otherwise.
-
-		MS_ASSERT(
-		  Settings::configuration.useBuiltInSctpStack,
-		  "cannot use this method when built-in SCTP stack is not enabled");
 
 		if (!this->sctpAssociation)
 		{
@@ -3018,20 +2800,6 @@ namespace RTC
 
 	void Transport::OnDataProducerMessageReceived(
 	  RTC::DataProducer* dataProducer,
-	  const uint8_t* msg,
-	  size_t len,
-	  uint32_t ppid,
-	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel)
-	{
-		MS_TRACE();
-
-		this->listener->OnTransportDataProducerMessageReceived(
-		  this, dataProducer, msg, len, ppid, subchannels, requiredSubchannel);
-	}
-
-	void Transport::OnDataProducerMessageReceived(
-	  RTC::DataProducer* dataProducer,
 	  RTC::SCTP::Message message,
 	  std::vector<uint16_t>& subchannels,
 	  std::optional<uint16_t> requiredSubchannel)
@@ -3056,15 +2824,6 @@ namespace RTC
 		this->listener->OnTransportDataProducerResumed(this, dataProducer);
 	}
 
-	// TODO: SCTP: Remove once we only use built-in SCTP stack.
-	void Transport::OnDataConsumerSendMessage(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
-	{
-		MS_TRACE();
-
-		SendMessage(dataConsumer, msg, len, ppid, cb);
-	}
-
 	void Transport::OnDataConsumerSendMessage(
 	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
 	{
@@ -3074,7 +2833,7 @@ namespace RTC
 	}
 
 	void Transport::OnDataConsumerNeedBufferedAmount(
-	  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount)
+	  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) const
 	{
 		MS_TRACE();
 
@@ -3082,18 +2841,10 @@ namespace RTC
 		{
 			bufferedAmount = 0;
 		}
-		else if (Settings::configuration.useBuiltInSctpStack && this->sctpAssociation)
+		else if (this->sctpAssociation)
 		{
 			bufferedAmount = static_cast<uint32_t>(this->sctpAssociation->GetStreamBufferedAmount(
 			  dataConsumer->GetSctpStreamParameters().streamId));
-		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else if (!Settings::configuration.useBuiltInSctpStack && this->oldSctpAssociation)
-		{
-			// NOTE: The underlaying SCTP association uses a common send buffer for all
-			// data consumers, hence the value given by this method indicates the data
-			// buffered for all data consumers in the transport.
-			bufferedAmount = static_cast<uint32_t>(this->oldSctpAssociation->GetSctpBufferedAmount());
 		}
 		else
 		{
@@ -3111,21 +2862,9 @@ namespace RTC
 		// Notify the listener.
 		this->listener->OnTransportDataConsumerDataProducerClosed(this, dataConsumer);
 
-		if (Settings::configuration.useBuiltInSctpStack)
+		if (this->sctpAssociation && dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 		{
-			if (this->sctpAssociation && dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-			{
-				// TODO: SCTP
-			}
-		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else
-		{
-			if (this->oldSctpAssociation && dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-			{
-				// Tell the SctpAssociation so it can reset the SCTP stream.
-				this->oldSctpAssociation->DataConsumerClosed(dataConsumer);
-			}
+			// TODO: SCTP
 		}
 
 		// Delete it.
@@ -3399,175 +3138,6 @@ namespace RTC
 	}
 
 	// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.
-
-	void Transport::OnSctpAssociationConnecting(RTC::SctpAssociation* /*sctpAssociation*/)
-	{
-		MS_TRACE();
-
-		// Notify the Node Transport.
-		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
-		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
-		  FBS::SctpAssociation::SctpState::CONNECTING);
-
-		this->shared->GetChannelNotifier()->Emit(
-		  this->id,
-		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
-		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
-		  sctpStateChangeOffset);
-	}
-
-	void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
-	{
-		MS_TRACE();
-
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-			{
-				dataConsumer->SctpAssociationConnected();
-			}
-		}
-
-		// Notify the Node Transport.
-		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
-		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
-		  FBS::SctpAssociation::SctpState::CONNECTED);
-
-		this->shared->GetChannelNotifier()->Emit(
-		  this->id,
-		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
-		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
-		  sctpStateChangeOffset);
-	}
-
-	void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
-	{
-		MS_TRACE();
-
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-			{
-				dataConsumer->SctpAssociationClosed();
-			}
-		}
-
-		// Notify the Node Transport.
-		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
-		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
-		  FBS::SctpAssociation::SctpState::FAILED);
-
-		this->shared->GetChannelNotifier()->Emit(
-		  this->id,
-		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
-		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
-		  sctpStateChangeOffset);
-	}
-
-	void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
-	{
-		MS_TRACE();
-
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-			{
-				dataConsumer->SctpAssociationClosed();
-			}
-		}
-
-		// Notify the Node Transport.
-		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
-		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
-		  FBS::SctpAssociation::SctpState::CLOSED);
-
-		this->shared->GetChannelNotifier()->Emit(
-		  this->id,
-		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
-		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
-		  sctpStateChangeOffset);
-	}
-
-	void Transport::OnSctpAssociationSendData(
-	  RTC::SctpAssociation* /*sctpAssociation*/, const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-
-		// Ignore if destroying.
-		// NOTE: This is because when the child class (i.e. WebRtcTransport) is deleted,
-		// its destructor is called first and then the parent Transport's destructor,
-		// and we would end here calling SendSctpData() which is an abstract method.
-		if (this->isDestroying)
-		{
-			MS_WARN_DEV("ignoring sending data because Transport is being destroying");
-
-			return;
-		}
-
-		SendData(data, len);
-	}
-
-	void Transport::OnSctpAssociationMessageReceived(
-	  RTC::SctpAssociation* /*sctpAssociation*/,
-	  uint16_t streamId,
-	  const uint8_t* msg,
-	  size_t len,
-	  uint32_t ppid)
-	{
-		MS_TRACE();
-
-		RTC::DataProducer* dataProducer = this->sctpListener.GetDataProducer(streamId);
-
-		if (!dataProducer)
-		{
-			MS_WARN_TAG(
-			  sctp, "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]", streamId);
-
-			return;
-		}
-
-		// Pass the SCTP message to the corresponding DataProducer.
-		try
-		{
-			static thread_local std::vector<uint16_t> emptySubchannels;
-
-			dataProducer->ReceiveMessage(
-			  msg, len, ppid, emptySubchannels, /*requiredSubchannel*/ std::nullopt);
-		}
-		catch (std::exception& error)
-		{
-			MS_WARN_TAG(
-			  sctp,
-			  "DataProducer::ReceiveMessage() failed for received SCTP message [streamId:%" PRIu16 "]: %s",
-			  streamId,
-			  error.what());
-		}
-	}
-
-	void Transport::OnSctpAssociationBufferedAmount(
-	  RTC::SctpAssociation* /*sctpAssociation*/, uint32_t bufferedAmount)
-	{
-		MS_TRACE();
-
-		for (const auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-			{
-				dataConsumer->SetSctpAssociationBufferedAmount(bufferedAmount);
-			}
-		}
-	}
 
 	void Transport::OnTransportCongestionControlClientBitrates(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,

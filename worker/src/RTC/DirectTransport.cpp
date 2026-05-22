@@ -218,34 +218,6 @@ namespace RTC
 		  notification);
 	}
 
-	// TODO: SCTP: Remove once we only use built-in SCTP stack.
-	void DirectTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
-	{
-		MS_TRACE();
-
-		// Notify the Node DirectTransport.
-		auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(msg, len);
-
-		auto notification = FBS::DataConsumer::CreateMessageNotification(
-		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ppid, data);
-
-		this->shared->GetChannelNotifier()->Emit(
-		  dataConsumer->id,
-		  FBS::Notification::Event::DATACONSUMER_MESSAGE,
-		  FBS::Notification::Body::DataConsumer_MessageNotification,
-		  notification);
-
-		if (cb)
-		{
-			(*cb)(true, false);
-			delete cb;
-		}
-
-		// Increase send transmission.
-		RTC::Transport::DataSent(len);
-	}
-
 	void DirectTransport::SendMessage(
 	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
 	{

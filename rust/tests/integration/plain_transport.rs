@@ -20,13 +20,6 @@ use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
-// TODO: SCTP: Temporal until we get rid of usrsctp.
-static USE_BUILT_IN_SCTP_STACK: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
-    std::env::var("USE_BUILT_IN_SCTP_STACK")
-        .map(|v| v == "true")
-        .unwrap_or(false)
-});
-
 struct CustomAppData {
     foo: &'static str,
 }
@@ -78,13 +71,7 @@ async fn init() -> (Worker, Router) {
     let worker_manager = WorkerManager::new();
 
     let worker = worker_manager
-        .create_worker({
-            let mut settings = WorkerSettings::default();
-
-            settings.use_built_in_sctp_stack = *USE_BUILT_IN_SCTP_STACK;
-
-            settings
-        })
+        .create_worker(WorkerSettings::default())
         .await
         .expect("Failed to create worker");
 
@@ -193,16 +180,11 @@ fn create_succeeds() {
             assert_eq!(
                 transport1.sctp_parameters(),
                 Some(SctpParameters {
-                    // TODO: SCTP: Temporal until we get rid of usrsctp.
                     max_send_message_size: 262_144,
                     max_receive_message_size: 262_144,
-                    send_buffer_size: 2000000,
-                    per_stream_send_queue_limit: 2000000,
-                    max_receiver_window_buffer_size: if *USE_BUILT_IN_SCTP_STACK {
-                        5242880
-                    } else {
-                        2000000
-                    },
+                    send_buffer_size: 2_000_000,
+                    per_stream_send_queue_limit: 2_000_000,
+                    max_receiver_window_buffer_size: 5_242_880,
                     is_data_channel: false,
                 }),
             );

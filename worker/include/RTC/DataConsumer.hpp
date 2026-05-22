@@ -24,17 +24,10 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			// TODO: SCTP: Remove when we migrate to the new SCTP stack.
-			virtual void OnDataConsumerSendMessage(
-			  RTC::DataConsumer* dataConsumer,
-			  const uint8_t* msg,
-			  size_t len,
-			  uint32_t ppid,
-			  onQueuedCallback* cb) = 0;
 			virtual void OnDataConsumerSendMessage(
 			  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb) = 0;
 			virtual void OnDataConsumerNeedBufferedAmount(
-			  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount)                   = 0;
+			  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) const                   = 0;
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
 		};
 
@@ -59,7 +52,7 @@ namespace RTC
 		flatbuffers::Offset<FBS::DataConsumer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> FillBufferStats(
-		  flatbuffers::FlatBufferBuilder& builder);
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		Type GetType() const
 		{
 			return this->type;
@@ -96,19 +89,9 @@ namespace RTC
 		void DataProducerResumed();
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
-		// TODO: SCTP: Remove this method once we use the new SCTP stack.
-		void SetSctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void SctpBufferedAmountLow(uint32_t bufferedAmount) const;
 		void SctpSendBufferFull() const;
 		void DataProducerClosed();
-		// TODO: SCTP: Remove when we migrate to the new SCTP stack.
-		bool SendMessage(
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  std::vector<uint16_t>& subchannels,
-		  std::optional<uint16_t> requiredSubchannel,
-		  const onQueuedCallback* cb = nullptr);
 		bool SendMessage(
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
@@ -142,12 +125,6 @@ namespace RTC
 		bool dataProducerClosed{ false };
 		size_t messagesSent{ 0u };
 		size_t bytesSent{ 0u };
-		// TODO: SCTP: Remove once we use the new SCTP stack.
-		uint32_t bufferedAmount{ 0u };
-		// TODO: SCTP: Remove once we use the new SCTP stack.
-		uint32_t bufferedAmountLowThreshold{ 0u };
-		// TODO: SCTP: Remove once we use the new SCTP stack.
-		bool forceTriggerBufferedAmountLow{ false };
 	};
 } // namespace RTC
 

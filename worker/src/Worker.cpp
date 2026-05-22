@@ -6,8 +6,6 @@
 #include "DepLibUring.hpp"
 #endif
 #include "DepLibUV.hpp"
-// TODO: Remove once we only use built-in SCTP stack.
-#include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -34,13 +32,6 @@ Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
 		this->signalHandle->AddSignal(SIGTERM, "TERM");
 	}
 #endif
-
-	// TODO: Remove once we only use built-in SCTP stack.
-	if (!Settings::configuration.useBuiltInSctpStack)
-	{
-		// Create the Checker instance in DepUsrSCTP.
-		DepUsrSCTP::CreateChecker(this->shared);
-	}
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())
@@ -100,13 +91,6 @@ void Worker::Close()
 		delete webRtcServer;
 	}
 	this->mapWebRtcServers.clear();
-
-	// TODO: Remove once we only use built-in SCTP stack.
-	if (!Settings::configuration.useBuiltInSctpStack)
-	{
-		// Close the Checker instance in DepUsrSCTP.
-		DepUsrSCTP::CloseChecker();
-	}
 
 #ifdef MS_LIBURING_SUPPORTED
 	if (DepLibUring::IsEnabled())

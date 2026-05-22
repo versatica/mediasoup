@@ -157,6 +157,7 @@ pub struct DataConsumerDump {
     pub label: String,
     pub protocol: String,
     pub sctp_stream_parameters: Option<SctpStreamParameters>,
+    pub buffered_amount: u32,
     pub buffered_amount_low_threshold: u32,
     pub paused: bool,
     pub subchannels: Vec<u16>,
@@ -182,6 +183,7 @@ impl<'a> TryFromFbs<'a> for DataConsumerDump {
                 .sctp_stream_parameters
                 .as_ref()
                 .map(|parameters| SctpStreamParameters::from_fbs(parameters.as_ref())),
+            buffered_amount: dump.buffered_amount,
             buffered_amount_low_threshold: dump.buffered_amount_low_threshold,
             paused: dump.paused,
             subchannels: dump.subchannels.clone(),

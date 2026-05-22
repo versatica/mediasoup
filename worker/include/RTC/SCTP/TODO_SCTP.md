@@ -2,8 +2,6 @@
 
 ## Related to mediasoup SCTP implementation
 
-- dcsctp uses µs (webrtc::Timestamp::Micros()) internally, while mediasoup uses ms (`DepLibUV::GetTimeMs()`). When porting dcsctp timeout/duration logic, make sure to convert accordingly. Do not mix units in the same field.
-
 - `Association`: When transitioning to CLOSED (due to failure while connecting or closure) we should emit a new event "stcpclosed" in all `DataProducers/Consumers`.
 
 - When receiving SCTP RE-CONFIG, we should emit "streamclosed" in those `DataProducers/DataConsumers` whose stream ID have been closed.
@@ -16,42 +14,27 @@
 
 - Probably add many more fields in `SctpOptions` given to the `Association` in `Transport.cpp`.
 
-- Must check those `maxSctpMessageSize`, `sctpSendBufferSize` in `Router.createXxxxTransport()` (also in Rust) which have default value of 262144.
-
-- When running `test-PipeTransport.ts` and `test-werift-sctp.ts` with `useBuiltInSctpStack: true`, tests pass but those errors show up (must build worker with `-DMS_LOG_STD`):
+- When running `test-PipeTransport.ts` and `test-werift-sctp.ts` tests pass but those errors show up (must build worker with `-DMS_LOG_STD`):
 
   ```
   mediasoup:ERROR:Worker (stderr) UnixStreamSocketHandle::Write() | uv_try_write() failed, trying uv_write(): broken pipe
   ```
 
-- We must remove `numSctpStreams` option given to `router.createXxxTransport()` and `NumSctpStreams` type. `OS` and `MIS` in `numSctpStreams` are just the max announced number of outbound and incoming SCTP streams, but in the new SCTP stack those should always be 65535. The max number of incoming and outgoing streams will be negotiated later with the SCTP INIT and INIT_ACK and will be the minimum of our values (65535) and the OS and MIS that the peer announces in its INIT or INIT_ACK. And we cannot wait until the SCTP association is established because that can happen much later than when we need to create DataConsumers.
-  - This is almost done.
-  - This is a breaking change.
-  - Remove it from `sctpParameters.fbs` and other FBS types (look for `MIS` or `mis`, etc).
-  - Also remove `os` and `mis` from `SctpParameters` in `sctpParamegers.fbs`.
-  - Remove it in Rust layer.
-  - We must also remove `device.sctpCapabilities` getter from mediasoup-client because anyway we are making up those values!
-  - Also must update the website documentation.
+- Remove `device.sctpCapabilities` getter from mediasoup-client because it's useless. Also must update the website documentation.
 
 - In the doc add all new options such as `maxSendMessageSize`, `sctpXxx`, etc, deprecate (or remove) `maxMessageSize` and `maxSctpMessageSize` and document also the new default values in `pipeToRouter()`.
 
 - When we invoke `close()` on a `DataProducer/Consumer` in server, we must end calling `sctpAssociation->ResetStream([streamId])` so it sends `ReConfig` to peer.
 
-- In `transport.dump()` (maybe also in `getStats()`) we must properly obtain `OS` and `MIS` according to the number of SCTP streams negotiated via INIT + INIT_ACK. And if SCTP is not yet established, then... not sure.
+- In `transport.dump()` (maybe also in `getStats()`) we must properly obtain current `OS` and `MIS` according to the number of SCTP streams negotiated via INIT + INIT_ACK. And if SCTP is not yet established, then... not sure.
 
 - We need to use `this->isDataChannel` in `Association` as we do in former `SctpAssociation`. Well, let's see. If it's only for when changing number of OS/MIS... then the new SCTP stack doesn't support it so...
 
 - Use the `AssociationMetrics`. Expose them in transport stats, etc.
 
-- Remove `Transport::OnSctpAssociationBufferedAmount()`. I mean, don't replicate it for the new stack.
-
 - In `DataConsumer` `DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD`... This must not be like this. This must trigger a listener for the `Transport` to invoke the corresponding method in the `Association`.
 
-- Remove `DataConsumer::SetSctpAssociationBufferedAmount()`.
-
 - `Transport`: Add a `std::map` `sctpDataConsumers` indexed by `streamId`.
-
-- How to emit `DATACONSUMER_BUFFERED_AMOUNT_LOW`? In `Association` we have and we have `OnAssociationTotalBufferedAmountLow()` event, but we don't have `OnAssociationStreamBufferedAmountLow()
 
 - Fix the documentation in the website which says: "The underlaying SCTP association uses a common send buffer for all data consumers, hence the value given by this method indicates the data buffered for all data consumers in the transport."
 

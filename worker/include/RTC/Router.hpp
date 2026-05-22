@@ -94,15 +94,6 @@ namespace RTC
 		void OnTransportDataProducerPaused(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
 		void OnTransportDataProducerResumed(
 		  RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
-		// TODO: SCTP: Remove when we migrate to the new SCTP stack.
-		void OnTransportDataProducerMessageReceived(
-		  RTC::Transport* transport,
-		  RTC::DataProducer* dataProducer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  std::vector<uint16_t>& subchannels,
-		  std::optional<uint16_t> requiredSubchannel) override;
 		void OnTransportDataProducerMessageReceived(
 		  RTC::Transport* transport,
 		  RTC::DataProducer* dataProducer,

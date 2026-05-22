@@ -4,13 +4,14 @@
 
 - Node: Update TypeScript to v6 ([PR #1790](https://github.com/versatica/mediasoup/pull/1790)).
 - New built-in SCTP stack ([PR #1806](https://github.com/versatica/mediasoup/pull/1806)).
-  - Disabled by default. Can be enabled by passing `useBuiltInSctpStack: true` to `createWorker()`.
+  - **Breaking change:** Remove `useBuiltInSctpStack` option in `WorkerSettngs`.
   - **Breaking change:** Remove `SctpCapabilities` type. No longer needed.
   - **Breaking change:** Remove `numSctpStreams` option in all `Transport` options.
   - **Breaking change:** Replace `maxSctpMessageSize` in all `Transport` options with `maxSendMessageSize` and `maxReceiveMessageSize`.
   - **Breaking change:** Replace `maxMessageSize` in `DirectTransport` options with `maxSendMessageSize` and `maxReceiveMessageSize`.
   - Add new `Transport` options: `sctpPerStreamSendQueueLimit` and `sctpMaxReceiverWindowBufferSize`.
   - **Breaking change:** `SctpParameters` type changed from `{ port, OS, MIS, maxMessageSize }` to `{ maxSendMessageSize, maxReceiveMessageSize, sendBufferSize, perStreamSendQueueLimit, maxReceiverWindowBufferSize, isDataChannel}`.
+  - **Breaking change:** Add `bufferedAmount` in `DataConsumerDump`.
 
 ### 3.19.22
 

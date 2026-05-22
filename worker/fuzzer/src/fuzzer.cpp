@@ -5,8 +5,6 @@
 #include "DepLibUV.hpp"
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
-// TODO: Remove once we only use built-in SCTP stack.
-#include "DepUsrSCTP.hpp"
 #include "FuzzerUtils.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -146,11 +144,6 @@ namespace
 		DepLibUV::ClassInit();
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
-		// TODO: Remove once we only use built-in SCTP stack.
-		if (!Settings::configuration.useBuiltInSctpStack)
-		{
-			DepUsrSCTP::ClassInit();
-		}
 		DepLibWebRTC::ClassInit();
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();

@@ -898,15 +898,6 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	// TODO: SCTP: Remove once we only use built-in SCTP stack.
-	void PlainTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
-	{
-		MS_TRACE();
-
-		SendSctpMessage(dataConsumer, msg, len, ppid, cb);
-	}
-
 	void PlainTransport::SendMessage(
 	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
 	{
@@ -973,12 +964,7 @@ namespace RTC
 			OnRtpDataReceived(tuple, data, len, bufferLen);
 		}
 		// Check if it's SCTP.
-		else if (Settings::configuration.useBuiltInSctpStack && RTC::SCTP::Packet::IsSctp(data, len))
-		{
-			OnSctpDataReceived(tuple, data, len);
-		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else if (!Settings::configuration.useBuiltInSctpStack && RTC::SctpAssociation::IsSctp(data, len))
+		else if (RTC::SCTP::Packet::IsSctp(data, len))
 		{
 			OnSctpDataReceived(tuple, data, len);
 		}

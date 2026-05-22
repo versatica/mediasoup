@@ -921,47 +921,6 @@ namespace RTC
 		}
 	}
 
-	// TODO: SCTP: Remove when we migrate to the new SCTP stack.
-	void Router::OnTransportDataProducerMessageReceived(
-	  RTC::Transport* /*transport*/,
-	  RTC::DataProducer* dataProducer,
-	  const uint8_t* msg,
-	  size_t len,
-	  uint32_t ppid,
-	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel)
-	{
-		MS_TRACE();
-
-		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
-
-		if (!dataConsumers.empty())
-		{
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Activate liburing usage.
-				// The effective sending could be synchronous, thus we would send those
-				// messages within a single system call.
-				DepLibUring::SetActive();
-			}
-#endif
-
-			for (auto* dataConsumer : dataConsumers)
-			{
-				dataConsumer->SendMessage(msg, len, ppid, subchannels, requiredSubchannel);
-			}
-
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Submit all prepared submission entries.
-				DepLibUring::Submit();
-			}
-#endif
-		}
-	}
-
 	void Router::OnTransportDataProducerMessageReceived(
 	  RTC::Transport* /*transport*/,
 	  RTC::DataProducer* dataProducer,

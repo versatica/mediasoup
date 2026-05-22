@@ -15,10 +15,6 @@ import {
 import * as FbsTransport from '../fbs/transport';
 import * as FbsWebRtcTransport from '../fbs/web-rtc-transport';
 
-// TODO: SCTP: Temporal until we get rid of usrsctp.
-const USE_BUILT_IN_SCTP_STACK =
-	process.env['USE_BUILT_IN_SCTP_STACK'] === 'true';
-
 type TestContext = {
 	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	worker?: mediasoup.types.Worker;
@@ -57,9 +53,7 @@ const ctx: TestContext = {
 };
 
 beforeEach(async () => {
-	ctx.worker = await mediasoup.createWorker({
-		useBuiltInSctpStack: USE_BUILT_IN_SCTP_STACK,
-	});
+	ctx.worker = await mediasoup.createWorker();
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
@@ -145,12 +139,11 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(typeof webRtcTransport.iceParameters.usernameFragment).toBe('string');
 	expect(typeof webRtcTransport.iceParameters.password).toBe('string');
 	expect(webRtcTransport.sctpParameters).toMatchObject({
-		// TODO: SCTP: Temporal until we get rid of usrsctp.
-		maxSendMessageSize: USE_BUILT_IN_SCTP_STACK ? 1000001 : 1000002,
+		maxSendMessageSize: 1000001,
 		maxReceiveMessageSize: 1000002,
 		sendBufferSize: 2000001,
-		perStreamSendQueueLimit: USE_BUILT_IN_SCTP_STACK ? 2000002 : 2000001,
-		maxReceiverWindowBufferSize: USE_BUILT_IN_SCTP_STACK ? 2000003 : 2000001,
+		perStreamSendQueueLimit: 2000002,
+		maxReceiverWindowBufferSize: 2000003,
 		isDataChannel: true,
 	});
 	expect(Array.isArray(webRtcTransport.iceCandidates)).toBe(true);

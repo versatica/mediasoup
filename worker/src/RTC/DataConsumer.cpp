@@ -4,7 +4,6 @@
 #include "RTC/DataConsumer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Settings.hpp"
 
 namespace RTC
 {
@@ -110,6 +109,18 @@ namespace RTC
 			subchannels.emplace_back(subchannel);
 		}
 
+		uint32_t bufferedAmount{ 0 };
+
+		this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
+
+		uint32_t bufferedAmountLowThreshold{ 0 };
+
+		if (this->type == DataConsumer::Type::SCTP)
+		{
+			// TODO: SCTP: Implement.
+			// this->listener->OnDataConsumerNeedBufferedAmountLowThreshold(this, bufferedAmountLowThreshold);
+		}
+
 		return FBS::DataConsumer::CreateDumpResponseDirect(
 		  builder,
 		  this->id.c_str(),
@@ -119,14 +130,15 @@ namespace RTC
 		  sctpStreamParameters,
 		  this->label.c_str(),
 		  this->protocol.c_str(),
-		  this->bufferedAmountLowThreshold,
+		  bufferedAmount,
+		  bufferedAmountLowThreshold,
 		  this->paused,
 		  this->dataProducerPaused,
 		  std::addressof(subchannels));
 	}
 
 	flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> DataConsumer::FillBufferStats(
-	  flatbuffers::FlatBufferBuilder& builder)
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
@@ -236,37 +248,14 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
-				const auto* body =
-				  request->data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
+				// TODO: SCTP: Uncomment.
+				// const auto* body =
+				//   request->data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
+				// const auto bufferedAmountLowThreshold = static_cast<size_t>(body->threshold());
 
-				this->bufferedAmountLowThreshold = body->threshold();
-
-				request->Accept();
-
-				uint32_t bufferedAmount{ 0 };
-
-				this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
-
-				// There is less or same buffered data than the given threshold.
-				// Trigger 'bufferedamountlow' now.
-				if (bufferedAmount <= this->bufferedAmountLowThreshold)
-				{
-					// Notify the Node DataConsumer.
-					auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
-					  this->shared->GetChannelNotifier()->GetBufferBuilder(), bufferedAmount);
-
-					this->shared->GetChannelNotifier()->Emit(
-					  this->id,
-					  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
-					  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
-					  bufferedAmountLowOffset);
-				}
-				// Force the trigger of 'bufferedamountlow' once there is less or same
-				// buffered data than the given threshold.
-				else
-				{
-					this->forceTriggerBufferedAmountLow = true;
-				}
+				// TODO: SCTP: Invoke a new listener to tell the SCTP Association (via
+				// Transport) to update the buffered amount low threshold of this SCTP
+				// streamId to the value in `bufferedAmountLowThreshold` variable.
 
 				break;
 			}
@@ -303,23 +292,16 @@ namespace RTC
 					  }
 				  });
 
-				static std::vector<uint16_t> emptySubchannels;
+				static thread_local std::vector<uint16_t> emptySubchannels;
 
-				if (Settings::configuration.useBuiltInSctpStack)
-				{
-					const uint16_t streamId =
-					  this->type == DataConsumer::Type::SCTP ? this->sctpStreamParameters.streamId : 0;
+				const uint16_t streamId =
+				  this->type == DataConsumer::Type::SCTP ? this->sctpStreamParameters.streamId : 0;
 
-					// NOTE: We are creating a copy of the data here, otherwise we cannot
-					// move the Message and pass its ownership to the SCTP stack.
-					RTC::SCTP::Message message(streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
+				// NOTE: We are creating a copy of the data here, otherwise we cannot
+				// move the Message and pass its ownership to the SCTP stack.
+				RTC::SCTP::Message message(streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
 
-					SendMessage(std::move(message), emptySubchannels, std::nullopt, cb);
-				}
-				else
-				{
-					SendMessage(data, len, body->ppid(), emptySubchannels, std::nullopt, cb);
-				}
+				SendMessage(std::move(message), emptySubchannels, std::nullopt, cb);
 
 				break;
 			}
@@ -478,34 +460,6 @@ namespace RTC
 		MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
 	}
 
-	// TODO: SCTP: Remove this method once we use the new SCTP stack.
-	void DataConsumer::SetSctpAssociationBufferedAmount(uint32_t bufferedAmount)
-	{
-		MS_TRACE();
-
-		auto previousBufferedAmount = this->bufferedAmount;
-
-		this->bufferedAmount = bufferedAmount;
-
-		if (
-		  (this->forceTriggerBufferedAmountLow ||
-		   previousBufferedAmount > this->bufferedAmountLowThreshold) &&
-		  this->bufferedAmount <= this->bufferedAmountLowThreshold)
-		{
-			this->forceTriggerBufferedAmountLow = false;
-
-			// Notify the Node DataConsumer.
-			auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
-			  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->bufferedAmount);
-
-			this->shared->GetChannelNotifier()->Emit(
-			  this->id,
-			  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
-			  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
-			  bufferedAmountLowOffset);
-		}
-	}
-
 	void DataConsumer::SctpBufferedAmountLow(uint32_t bufferedAmount) const
 	{
 		MS_TRACE();
@@ -543,96 +497,6 @@ namespace RTC
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_CLOSE);
 
 		this->listener->OnDataConsumerDataProducerClosed(this);
-	}
-
-	// TODO: SCTP: Remove when we migrate to the new SCTP stack.
-	bool DataConsumer::SendMessage(
-	  const uint8_t* msg,
-	  size_t len,
-	  uint32_t ppid,
-	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel,
-	  const onQueuedCallback* cb)
-	{
-		MS_TRACE();
-
-		if (!IsActive())
-		{
-			if (cb)
-			{
-				(*cb)(false, false);
-				delete cb;
-			}
-
-			return false;
-		}
-
-		// If a required subchannel is given, verify that this data consumer is
-		// subscribed to it.
-		if (
-		  requiredSubchannel.has_value() &&
-		  this->subchannels.find(requiredSubchannel.value()) == this->subchannels.end())
-		{
-			if (cb)
-			{
-				(*cb)(false, false);
-				delete cb;
-			}
-
-			return false;
-		}
-
-		// If subchannels are given, verify that this data consumer is subscribed
-		// to at least one of them.
-		if (!subchannels.empty())
-		{
-			bool subchannelMatched{ false };
-
-			for (const auto subchannel : subchannels)
-			{
-				if (this->subchannels.find(subchannel) != this->subchannels.end())
-				{
-					subchannelMatched = true;
-
-					break;
-				}
-			}
-
-			if (!subchannelMatched)
-			{
-				if (cb)
-				{
-					(*cb)(false, false);
-					delete cb;
-				}
-
-				return false;
-			}
-		}
-
-		if (len > this->maxMessageSize)
-		{
-			MS_WARN_TAG(
-			  message,
-			  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-			  len,
-			  this->maxMessageSize);
-
-			if (cb)
-			{
-				(*cb)(false, false);
-				delete cb;
-			}
-
-			return false;
-		}
-
-		this->messagesSent++;
-		this->bytesSent += len;
-
-		this->listener->OnDataConsumerSendMessage(this, msg, len, ppid, cb);
-
-		return true;
 	}
 
 	bool DataConsumer::SendMessage(

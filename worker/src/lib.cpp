@@ -10,8 +10,6 @@
 #include "DepLibUV.hpp"
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
-// TODO: Remove once we only use built-in SCTP stack.
-#include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -156,11 +154,6 @@ extern "C" int mediasoup_worker_run(
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
-		// TODO: Remove once we only use built-in SCTP stack.
-		if (!Settings::configuration.useBuiltInSctpStack)
-		{
-			DepUsrSCTP::ClassInit();
-		}
 #ifdef MS_LIBURING_SUPPORTED
 		DepLibUring::ClassInit();
 #endif
@@ -187,11 +180,6 @@ extern "C" int mediasoup_worker_run(
 		DepLibUring::ClassDestroy();
 #endif
 		RTC::DtlsTransport::ClassDestroy();
-		// TODO: Remove once we only use built-in SCTP stack.
-		if (!Settings::configuration.useBuiltInSctpStack)
-		{
-			DepUsrSCTP::ClassDestroy();
-		}
 		DepLibUV::ClassDestroy();
 
 		return 0;

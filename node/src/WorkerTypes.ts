@@ -81,11 +81,6 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 	disableLiburing?: boolean;
 
 	/**
-	 * Use the mediasoup built-in SCTP stack instead usrsctp.
-	 */
-	useBuiltInSctpStack?: boolean;
-
-	/**
 	 * Custom application data.
 	 */
 	appData?: WorkerAppData;

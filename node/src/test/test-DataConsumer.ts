@@ -3,9 +3,6 @@ import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, DataConsumerEvents } from '../types';
 import * as utils from '../utils';
 
-const USE_BUILT_IN_SCTP_STACK =
-	process.env['USE_BUILT_IN_SCTP_STACK'] === 'true';
-
 type TestContext = {
 	sctpDataProducerOptions: mediasoup.types.DataProducerOptions;
 	worker?: mediasoup.types.Worker;
@@ -31,9 +28,7 @@ const ctx: TestContext = {
 };
 
 beforeEach(async () => {
-	ctx.worker = await mediasoup.createWorker({
-		useBuiltInSctpStack: USE_BUILT_IN_SCTP_STACK,
-	});
+	ctx.worker = await mediasoup.createWorker();
 	ctx.router = await ctx.worker.createRouter();
 	ctx.webRtcTransport1 = await ctx.router.createWebRtcTransport({
 		listenIps: ['127.0.0.1'],

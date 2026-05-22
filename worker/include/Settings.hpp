@@ -40,7 +40,6 @@ public:
 		std::string dtlsPrivateKeyFile;
 		std::string libwebrtcFieldTrials{ "WebRTC-Bwe-AlrLimitedBackoff/Enabled/" };
 		bool disableLiburing{ false };
-		bool useBuiltInSctpStack{ false };
 	};
 
 public:

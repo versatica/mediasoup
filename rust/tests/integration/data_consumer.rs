@@ -20,13 +20,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-// TODO: SCTP: Temporal until we get rid of usrsctp.
-static USE_BUILT_IN_SCTP_STACK: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
-    std::env::var("USE_BUILT_IN_SCTP_STACK")
-        .map(|v| v == "true")
-        .unwrap_or(false)
-});
-
 struct CustomAppData {
     baz: &'static str,
 }
@@ -58,13 +51,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, DataProducer) {
     let worker_manager = WorkerManager::new();
 
     let worker = worker_manager
-        .create_worker({
-            let mut settings = WorkerSettings::default();
-
-            settings.use_built_in_sctp_stack = *USE_BUILT_IN_SCTP_STACK;
-
-            settings
-        })
+        .create_worker(WorkerSettings::default())
         .await
         .expect("Failed to create worker");
 

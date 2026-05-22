@@ -610,6 +610,7 @@ export function parseDataConsumerDumpResponse(
 				: undefined,
 		label: data.label()!,
 		protocol: data.protocol()!,
+		bufferedAmount: data.bufferedAmount(),
 		bufferedAmountLowThreshold: data.bufferedAmountLowThreshold(),
 		paused: data.paused(),
 		dataProducerPaused: data.dataProducerPaused(),

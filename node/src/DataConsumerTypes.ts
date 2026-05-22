@@ -66,6 +66,7 @@ export type DataConsumerDump = {
 	sctpStreamParameters?: SctpStreamParameters;
 	label: string;
 	protocol: string;
+	bufferedAmount: number;
 	bufferedAmountLowThreshold: number;
 };
 

@@ -4,6 +4,7 @@
 // #define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 
 #include "common.hpp"
+#include "SharedInterface.hpp"
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
@@ -22,9 +23,6 @@
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
-// TODO: SCTP: Remove once we only use built-in SCTP stack.
-#include "SharedInterface.hpp"
-#include "RTC/SctpAssociation.hpp"
 #include "RTC/SctpListener.hpp"
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 #include "RTC/SenderBandwidthEstimator.hpp"
@@ -43,8 +41,6 @@ namespace RTC
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
 	                  public RTC::SCTP::AssociationListenerInterface,
-	                  // TODO: SCTP: Remove once we only use built-in SCTP stack.
-	                  public RTC::SctpAssociation::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Channel::ChannelSocket::RequestHandler,
@@ -107,15 +103,6 @@ namespace RTC
 			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
 			virtual void OnTransportDataProducerClosed(
 			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
-			// TODO: SCTP: Remove when we migrate to the new SCTP stack.
-			virtual void OnTransportDataProducerMessageReceived(
-			  RTC::Transport* transport,
-			  RTC::DataProducer* dataProducer,
-			  const uint8_t* msg,
-			  size_t len,
-			  uint32_t ppid,
-			  std::vector<uint16_t>& subchannels,
-			  std::optional<uint16_t> requiredSubchannel) = 0;
 			virtual void OnTransportDataProducerMessageReceived(
 			  RTC::Transport* transport,
 			  RTC::DataProducer* dataProducer,
@@ -201,13 +188,6 @@ namespace RTC
 		virtual void ReceiveRtpPacket(RTC::RTP::Packet* packet) final;
 		virtual void ReceiveRtcpPacket(RTC::RTCP::Packet* packet) final;
 		virtual void ReceiveSctpData(const uint8_t* data, size_t len) final;
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		virtual void SendSctpMessage(
-		  RTC::DataConsumer* dataConsumer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  onQueuedCallback* cb = nullptr) final;
 		virtual void SendSctpMessage(
 		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb = nullptr) final;
 		virtual RTC::Producer* GetProducerById(const std::string& producerId) const final;
@@ -225,13 +205,6 @@ namespace RTC
 		virtual void SendRtcp(uint64_t nowMs) final;
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		virtual void SendMessage(
-		  RTC::DataConsumer* dataConsumer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  onQueuedCallback* cb = nullptr) = 0;
 		virtual void SendMessage(
 		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb = nullptr) = 0;
 		virtual bool SendData(const uint8_t* data, size_t len) = 0;
@@ -288,13 +261,6 @@ namespace RTC
 		}
 		void OnDataProducerMessageReceived(
 		  RTC::DataProducer* dataProducer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  std::vector<uint16_t>& subchannels,
-		  std::optional<uint16_t> requiredSubchannel) override;
-		void OnDataProducerMessageReceived(
-		  RTC::DataProducer* dataProducer,
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel) override;
@@ -303,17 +269,10 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
-		// TODO: SCTP: Remove when we migrate to the new SCTP stack.
-		void OnDataConsumerSendMessage(
-		  RTC::DataConsumer* dataConsumer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  onQueuedCallback* cb = nullptr) override;
 		void OnDataConsumerSendMessage(
 		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb) override;
 		void OnDataConsumerNeedBufferedAmount(
-		  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) override;
+		  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) const override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
 		/* Pure virtual methods inherited from RTC::SCTP::AssociationListenerInterface. */
@@ -334,24 +293,6 @@ namespace RTC
 		void OnAssociationTotalBufferedAmountLow() override;
 		bool OnAssociationIsTransportReadyForSctp() override;
 		// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.
-
-		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-	public:
-		void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) override;
-		void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation) override;
-		void OnSctpAssociationFailed(RTC::SctpAssociation* sctpAssociation) override;
-		void OnSctpAssociationClosed(RTC::SctpAssociation* sctpAssociation) override;
-		void OnSctpAssociationSendData(
-		  RTC::SctpAssociation* sctpAssociation, const uint8_t* data, size_t len) override;
-		void OnSctpAssociationMessageReceived(
-		  RTC::SctpAssociation* sctpAssociation,
-		  uint16_t streamId,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid) override;
-		void OnSctpAssociationBufferedAmount(
-		  RTC::SctpAssociation* sctpAssociation, uint32_t bufferedAmount) override;
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
@@ -401,8 +342,6 @@ namespace RTC
 		TimerHandleInterface* rtcpTimer{ nullptr };
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		RTC::SctpAssociation* oldSctpAssociation{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlClient> tccClient{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlServer> tccServer{ nullptr };
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR

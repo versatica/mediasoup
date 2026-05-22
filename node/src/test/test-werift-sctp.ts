@@ -9,9 +9,6 @@ import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents } from '../types';
 
-const USE_BUILT_IN_SCTP_STACK =
-	process.env['USE_BUILT_IN_SCTP_STACK'] === 'true';
-
 type TestContext = {
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
@@ -25,10 +22,7 @@ type TestContext = {
 const ctx: TestContext = {};
 
 beforeEach(async () => {
-	ctx.worker = await mediasoup.createWorker({
-		useBuiltInSctpStack: USE_BUILT_IN_SCTP_STACK,
-		disableLiburing: true,
-	});
+	ctx.worker = await mediasoup.createWorker();
 
 	ctx.router = await ctx.worker.createRouter();
 
