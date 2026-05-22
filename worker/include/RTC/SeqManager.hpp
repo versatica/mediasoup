@@ -2,8 +2,9 @@
 #define RTC_SEQ_MANAGER_HPP
 
 #include "common.hpp"
-#include <limits> // std::numeric_limits
-#include <set>
+#include <algorithm> // for lower_bound, binary_search, distance, find_if
+#include <limits>    // std::numeric_limits
+#include <vector>
 
 namespace RTC
 {
@@ -53,7 +54,7 @@ namespace RTC
 		T maxInput{ 0 };
 		T maxDropped{ 0 };
 		T maxForwarded{ 0 };
-		std::set<T, SeqLowerThan> dropped;
+		std::vector<T> dropped;
 	};
 } // namespace RTC
 
