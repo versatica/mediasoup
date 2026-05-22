@@ -39,8 +39,7 @@
 
 - In `transport.dump()` (maybe also in `getStats()`) we must properly obtain `OS` and `MIS` according to the number of SCTP streams negotiated via INIT + INIT_ACK. And if SCTP is not yet established, then... not sure.
 
-- We need to pass `isDataChannel` to `SCTP::Association` constructor as we do in former `SctpAssociation`. Also use it in `Association::FillBuffer()`.
-  - Well, let's see. If it's only for when changing number of OS/MIS... then the new SCTP stack doesn't support it so...
+- We need to use `this->isDataChannel` in `Association` as we do in former `SctpAssociation`. Well, let's see. If it's only for when changing number of OS/MIS... then the new SCTP stack doesn't support it so...
 
 - Fix `dataConsumer.getBufferedAmount()` which in usrsctp returns the data buffered for all data consumers in the transport but now it will be per `DataConsumer` (SCTP stream).
 

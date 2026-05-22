@@ -90,8 +90,8 @@ namespace RTC
 					                                           .maxReceiverWindowBufferSize =
 					                                             this->sctpMaxReceiverWindowBufferSize };
 
-				this->sctpAssociation =
-				  std::make_unique<RTC::SCTP::Association>(sctpOptions, this, this->shared);
+				this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
+				  sctpOptions, this, this->shared, options->isDataChannel());
 			}
 			// TODO: SCTP: Remove once we only use built-in SCTP stack.
 			else

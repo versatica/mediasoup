@@ -171,7 +171,8 @@ namespace RTC
 			explicit Association(
 			  const SctpOptions& sctpOptions,
 			  AssociationListenerInterface* listener,
-			  SharedInterface* shared);
+			  SharedInterface* shared,
+			  bool isDataChannel);
 
 			~Association() override;
 
@@ -506,6 +507,8 @@ namespace RTC
 			const std::unique_ptr<BackoffTimerHandleInterface> t2ShutdownTimer;
 			// Max SCTP Packet length.
 			const size_t maxPacketLength;
+			// Whether this is DataChannel based SCTP.
+			bool isDataChannel;
 		};
 	} // namespace SCTP
 } // namespace RTC

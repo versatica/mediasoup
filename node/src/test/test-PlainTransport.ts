@@ -112,9 +112,7 @@ test('router.createPlainTransport() succeeds', async () => {
 		sendBufferSize: 2000000,
 		perStreamSendQueueLimit: 2000000,
 		maxReceiverWindowBufferSize: USE_BUILT_IN_SCTP_STACK ? 5242880 : 2000000,
-		// TODO: SCTP: Must implement `isDataChannel` in new SCTP stack, from now
-		// it's always set to `true`.
-		isDataChannel: USE_BUILT_IN_SCTP_STACK ? true : false,
+		isDataChannel: false,
 		totalBufferedAmount: 0,
 	});
 	expect(plainTransport2.sctpState).toBe('new');

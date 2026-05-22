@@ -37,7 +37,10 @@ namespace RTC
 		/* Instance methods. */
 
 		Association::Association(
-		  const SctpOptions& sctpOptions, AssociationListenerInterface* listener, SharedInterface* shared)
+		  const SctpOptions& sctpOptions,
+		  AssociationListenerInterface* listener,
+		  SharedInterface* shared,
+		  bool isDataChannel)
 		  : sctpOptions(sctpOptions),
 		    // Our `listener` member is a `AssociationListenerDeferrer` which takes
 		    // `listener` argument as constructor argument.
@@ -74,7 +77,8 @@ namespace RTC
 		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
 		        .maxRestarts         = sctpOptions.maxRetransmissions })),
-		    maxPacketLength(Utils::Byte::PadDownTo4Bytes(this->sctpOptions.mtu))
+		    maxPacketLength(Utils::Byte::PadDownTo4Bytes(this->sctpOptions.mtu)),
+		    isDataChannel(isDataChannel)
 		{
 			MS_TRACE();
 		}
@@ -129,8 +133,7 @@ namespace RTC
 			  /*sctpSendBufferSize*/ this->sctpOptions.maxSendBufferSize,
 			  /*sctpPerStreamSendQueueLimit*/ this->sctpOptions.perStreamSendQueueLimit,
 			  /*sctpMaxReceiverWindowBufferSize*/ this->sctpOptions.maxReceiverWindowBufferSize,
-			  // TODO: SCTP: Have a member for this so remove this hardcoded `true`.
-			  /*isDataChannel*/ true,
+			  /*isDataChannel*/ this->isDataChannel,
 			  /*sctpBufferedAmount*/ GetTotalBufferedAmount());
 		}
 
