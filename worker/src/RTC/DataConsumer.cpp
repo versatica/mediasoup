@@ -258,6 +258,8 @@ namespace RTC
 				// Transport) to update the buffered amount low threshold of this SCTP
 				// streamId to the value in `bufferedAmountLowThreshold` variable.
 
+				request->Accept();
+
 				break;
 			}
 
