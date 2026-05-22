@@ -152,7 +152,6 @@ test('router.createWebRtcTransport() succeeds', async () => {
 		perStreamSendQueueLimit: USE_BUILT_IN_SCTP_STACK ? 2000002 : 2000001,
 		maxReceiverWindowBufferSize: USE_BUILT_IN_SCTP_STACK ? 2000003 : 2000001,
 		isDataChannel: true,
-		totalBufferedAmount: 0,
 	});
 	expect(Array.isArray(webRtcTransport.iceCandidates)).toBe(true);
 	expect(webRtcTransport.iceCandidates.length).toBe(7);

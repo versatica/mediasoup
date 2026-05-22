@@ -18,8 +18,6 @@ pub struct SctpParameters {
     pub max_receiver_window_buffer_size: u32,
     /// Whether this is a DataChannel SCTP association.
     pub is_data_channel: bool,
-    /// Total buffered amount across all streams.
-    pub total_buffered_amount: u32,
 }
 
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.

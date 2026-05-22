@@ -204,7 +204,6 @@ fn create_succeeds() {
                         2000000
                     },
                     is_data_channel: false,
-                    total_buffered_amount: 0,
                 }),
             );
             assert_eq!(transport1.sctp_state(), Some(SctpState::New));

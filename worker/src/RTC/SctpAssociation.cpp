@@ -320,8 +320,7 @@ namespace RTC
 		  /*sctpPerStreamSendQueueLimit*/ this->sctpSendBufferSize,
 		  // NOTE: Hack, but will go away soon.
 		  /*sctpMaxReceiverWindowBufferSize*/ this->sctpSendBufferSize,
-		  /*isDataChannel*/ this->isDataChannel,
-		  /*sctpBufferedAmount*/ this->sctpBufferedAmount);
+		  /*isDataChannel*/ this->isDataChannel);
 	}
 
 	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)

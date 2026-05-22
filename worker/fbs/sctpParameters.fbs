@@ -7,7 +7,6 @@ table SctpParameters {
     per_stream_send_queue_limit: uint32;
     max_receiver_window_buffer_size: uint32;
     is_data_channel: bool;
-    total_buffered_amount: uint32;
 }
 
 table SctpStreamParameters {

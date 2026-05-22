@@ -114,7 +114,6 @@ test('router.createPlainTransport() succeeds', async () => {
 		perStreamSendQueueLimit: 2000000,
 		maxReceiverWindowBufferSize: USE_BUILT_IN_SCTP_STACK ? 5242880 : 2000000,
 		isDataChannel: false,
-		totalBufferedAmount: 0,
 	});
 	expect(plainTransport2.sctpState).toBe('new');
 	expect(plainTransport2.srtpParameters).toBeUndefined();

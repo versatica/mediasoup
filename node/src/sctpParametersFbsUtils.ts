@@ -15,7 +15,6 @@ export function parseSctpParameters(
 		perStreamSendQueueLimit: binary.perStreamSendQueueLimit(),
 		maxReceiverWindowBufferSize: binary.maxReceiverWindowBufferSize(),
 		isDataChannel: binary.isDataChannel(),
-		totalBufferedAmount: binary.totalBufferedAmount(),
 	};
 }
 

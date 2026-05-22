@@ -5,7 +5,6 @@ export type SctpParameters = {
 	perStreamSendQueueLimit: number;
 	maxReceiverWindowBufferSize: number;
 	isDataChannel: boolean;
-	totalBufferedAmount: number;
 };
 
 /**

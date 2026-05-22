@@ -134,8 +134,7 @@ namespace RTC
 			  /*sctpSendBufferSize*/ this->sctpOptions.maxSendBufferSize,
 			  /*sctpPerStreamSendQueueLimit*/ this->sctpOptions.perStreamSendQueueLimit,
 			  /*sctpMaxReceiverWindowBufferSize*/ this->sctpOptions.maxReceiverWindowBufferSize,
-			  /*isDataChannel*/ this->isDataChannel,
-			  /*sctpBufferedAmount*/ GetTotalBufferedAmount());
+			  /*isDataChannel*/ this->isDataChannel);
 		}
 
 		Types::AssociationState Association::GetAssociationState() const

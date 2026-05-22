@@ -15,7 +15,6 @@ impl FromFbs for SctpParameters {
             per_stream_send_queue_limit: parameters.per_stream_send_queue_limit,
             max_receiver_window_buffer_size: parameters.max_receiver_window_buffer_size,
             is_data_channel: parameters.is_data_channel,
-            total_buffered_amount: parameters.total_buffered_amount,
         }
     }
 }

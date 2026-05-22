@@ -231,7 +231,6 @@ fn create_succeeds() {
                         2000001
                     },
                     is_data_channel: true,
-                    total_buffered_amount: 0,
                 }),
             );
             {
