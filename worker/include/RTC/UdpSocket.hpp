@@ -2,8 +2,8 @@
 #define MS_RTC_UDP_SOCKET_HPP
 
 #include "common.hpp"
-#include "RTC/Transport.hpp"
 #include "handles/UdpSocketHandle.hpp"
+#include "RTC/Transport.hpp"
 #include <string>
 
 namespace RTC

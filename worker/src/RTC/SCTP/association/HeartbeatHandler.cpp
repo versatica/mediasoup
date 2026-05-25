@@ -3,9 +3,9 @@
 
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "Utils.hpp"
 #include <string>
 
 namespace RTC

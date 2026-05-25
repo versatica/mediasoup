@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "test/include/testHelpers.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memcpy()

@@ -2,13 +2,13 @@
 #define MS_RTC_RTP_PACKET_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "FBS/rtpPacket.h"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/Serializable.hpp"
+#include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif

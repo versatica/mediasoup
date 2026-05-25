@@ -2,10 +2,10 @@
 #define MS_RTC_TCP_SERVER_HPP
 
 #include "common.hpp"
-#include "RTC/TcpConnection.hpp"
-#include "RTC/Transport.hpp"
 #include "handles/TcpConnectionHandle.hpp"
 #include "handles/TcpServerHandle.hpp"
+#include "RTC/TcpConnection.hpp"
+#include "RTC/Transport.hpp"
 #include <string>
 
 namespace RTC

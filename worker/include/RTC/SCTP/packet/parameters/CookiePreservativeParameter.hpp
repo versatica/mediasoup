@@ -2,8 +2,8 @@
 #define MS_RTC_SCTP_COOKIE_PRESERVATIVE_PARAMETER_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {

@@ -2,11 +2,11 @@
 #define MS_RTC_DATA_CONSUMER_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SctpDictionaries.hpp"
+#include "SharedInterface.hpp"
 #include <absl/container/flat_hash_set.h>
 #include <string>
 

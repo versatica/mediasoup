@@ -2,8 +2,8 @@
 #define MS_RTC_SCTP_RECONFIGURATION_RESPONSE_PARAMETER_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
+#include "Utils.hpp"
 #include <string>
 #include <unordered_map>
 

@@ -1,10 +1,5 @@
 #include "common.hpp"
-#include "Utils.hpp"
-#include "mocks/include/MockShared.hpp"
-#include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
-#include "mocks/include/RTC/SCTP/tx/MockSendQueue.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
-#include "test/include/catch2Macros.hpp"
+#include "handles/BackoffTimerHandleInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
@@ -13,7 +8,12 @@
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
-#include "handles/BackoffTimerHandleInterface.hpp"
+#include "Utils.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
+#include "test/include/catch2Macros.hpp"
+#include "mocks/include/MockShared.hpp"
+#include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
+#include "mocks/include/RTC/SCTP/tx/MockSendQueue.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 

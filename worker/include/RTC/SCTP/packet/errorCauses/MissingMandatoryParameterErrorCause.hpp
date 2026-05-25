@@ -2,9 +2,9 @@
 #define MS_RTC_SCTP_MISSING_MANDATORY_PARAMETER_ERROR_CAUSE_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {

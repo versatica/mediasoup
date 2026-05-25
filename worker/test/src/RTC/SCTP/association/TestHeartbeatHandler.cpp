@@ -1,10 +1,4 @@
 #include "common.hpp"
-#include "mocks/include/MockShared.hpp"
-#include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
-#include "mocks/include/RTC/SCTP/association/MockTransmissionControlBlockContext.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
-#include "test/include/catch2Macros.hpp"
-#include "test/include/testHelpers.hpp"
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
@@ -12,6 +6,12 @@
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
+#include "test/include/catch2Macros.hpp"
+#include "test/include/testHelpers.hpp"
+#include "mocks/include/MockShared.hpp"
+#include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
+#include "mocks/include/RTC/SCTP/association/MockTransmissionControlBlockContext.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 

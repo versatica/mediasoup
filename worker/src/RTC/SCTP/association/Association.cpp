@@ -3,7 +3,6 @@
 
 #include "RTC/SCTP/association/Association.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/NoUserDataErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/OutOfResourceErrorCause.hpp"
@@ -14,6 +13,7 @@
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
+#include "Utils.hpp"
 #include <limits>  // std::numeric_limits()
 #include <sstream> // std::ostringstream
 #include <string>

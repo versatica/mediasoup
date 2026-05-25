@@ -1,10 +1,10 @@
 #ifndef MS_SHARED_HPP
 #define MS_SHARED_HPP
 
-#include "DepLibUV.hpp"
-#include "SharedInterface.hpp"
 #include "Channel/ChannelMessageRegistrator.hpp"
 #include "Channel/ChannelNotifier.hpp"
+#include "DepLibUV.hpp"
+#include "SharedInterface.hpp"
 
 class Shared : public SharedInterface
 {

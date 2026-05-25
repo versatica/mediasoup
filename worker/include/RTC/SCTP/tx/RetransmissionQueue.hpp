@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_RETRANSMISSION_QUEUE_HPP
 
 #include "common.hpp"
+#include "handles/BackoffTimerHandleInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
@@ -11,7 +12,6 @@
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
-#include "handles/BackoffTimerHandleInterface.hpp"
 #include <vector>
 
 namespace RTC

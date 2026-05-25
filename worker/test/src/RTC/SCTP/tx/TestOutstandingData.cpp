@@ -1,12 +1,12 @@
 #include "common.hpp"
-#include "Utils.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SCTP/tx/OutstandingData.hpp"
+#include "Utils.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <stdexcept>
 #include <vector>

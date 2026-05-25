@@ -4,9 +4,9 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/WebRtcServer.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "RTC/WebRtcServer.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC

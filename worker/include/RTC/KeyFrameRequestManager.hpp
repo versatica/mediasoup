@@ -1,8 +1,8 @@
 #ifndef MS_KEY_FRAME_REQUEST_MANAGER_HPP
 #define MS_KEY_FRAME_REQUEST_MANAGER_HPP
 
-#include "SharedInterface.hpp"
 #include "handles/TimerHandleInterface.hpp"
+#include "SharedInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 
 namespace RTC

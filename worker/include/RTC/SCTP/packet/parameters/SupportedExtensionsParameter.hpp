@@ -2,9 +2,9 @@
 #define MS_RTC_SCTP_SUPPORTED_EXTENSIONS_PARAMETER_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {

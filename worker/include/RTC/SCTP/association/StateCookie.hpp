@@ -2,10 +2,10 @@
 #define MS_RTC_SCTP_STATE_COOKIE_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/Serializable.hpp"
+#include "Utils.hpp"
 #include <string_view>
 
 namespace RTC

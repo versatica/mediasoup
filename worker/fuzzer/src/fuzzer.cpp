@@ -6,8 +6,6 @@
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
 #include "FuzzerUtils.hpp"
-#include "Settings.hpp"
-#include "Utils.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/FuzzerDtlsTransport.hpp"
 #include "RTC/FuzzerRateCalculator.hpp"
@@ -27,6 +25,8 @@
 #include "RTC/RTP/FuzzerRtpStreamSend.hpp"
 #include "RTC/SCTP/FuzzerStateCookie.hpp"
 #include "RTC/SCTP/packet/FuzzerPacket.hpp"
+#include "Settings.hpp"
+#include "Utils.hpp"
 #include <cstdlib> // std::getenv()
 #include <iostream>
 #include <sstream> // std::istringstream()

@@ -4,7 +4,6 @@
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/InvalidMandatoryParameterErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
@@ -36,6 +35,7 @@
 #include "RTC/SCTP/packet/parameters/UnknownParameter.hpp"
 #include "RTC/SCTP/packet/parameters/UnrecognizedParameterParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {

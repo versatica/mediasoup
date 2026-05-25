@@ -492,6 +492,7 @@ test_sources = [
   'test/src/RTC/SCTP/association/TestHeartbeatHandler.cpp',
   'test/src/RTC/SCTP/association/TestNegotiatedCapabilities.cpp',
   'test/src/RTC/SCTP/association/TestStateCookie.cpp',
+  'test/src/RTC/SCTP/association/TestTransmissionControlBlock.cpp',
   'test/src/RTC/SCTP/rx/TestDataTracker.cpp',
   'test/src/RTC/SCTP/rx/TestInterleavedReassemblyStreams.cpp',
   'test/src/RTC/SCTP/rx/TestReassemblyQueue.cpp',
@@ -575,8 +576,6 @@ mediasoup_worker_test = executable(
   sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
-    'test/include',
-    'mocks/include',
   ),
   cpp_args: cpp_args,
 )
@@ -596,8 +595,6 @@ mediasoup_worker_test_asan_address = executable(
   sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
-    'test/include',
-    'mocks/include',
   ),
   cpp_args: cpp_args + [
     '-g',
@@ -625,8 +622,6 @@ mediasoup_worker_test_asan_undefined = executable(
   sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
-    'test/include',
-    'mocks/include',
   ),
   cpp_args: cpp_args + [
     '-g',
@@ -699,8 +694,6 @@ executable(
   sources: common_sources + fuzzer_sources + mock_sources,
   include_directories: include_directories(
     'include',
-    'fuzzer/include',
-    'mocks/include',
   ),
   cpp_args: cpp_args + [
     '-g',

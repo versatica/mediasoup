@@ -2,11 +2,11 @@
 #define MS_RTC_ICE_ICE_SERVER_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "FBS/webRtcTransport.h"
+#include "handles/TimerHandleInterface.hpp"
 #include "RTC/ICE/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
-#include "handles/TimerHandleInterface.hpp"
+#include "SharedInterface.hpp"
 #include <list>
 #include <string>
 #include <unordered_map>

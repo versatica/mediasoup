@@ -1,11 +1,11 @@
 #ifndef MS_MOCKS_MOCK_SHARED_HPP
 #define MS_MOCKS_MOCK_SHARED_HPP
 
+#include "Channel/ChannelNotifier.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "SharedInterface.hpp"
 #include "mocks/include/Channel/MockChannelMessageRegistrator.hpp"
 #include "mocks/include/handles/MockBackoffTimerHandle.hpp"
-#include "Channel/ChannelNotifier.hpp"
-#include "Channel/ChannelSocket.hpp"
 #include <map>
 #include <string>
 #include <string_view>

@@ -2,8 +2,8 @@
 #define MS_SETTINGS_HPP
 
 #include "common.hpp"
-#include "LogLevel.hpp"
 #include "Channel/ChannelRequest.hpp"
+#include "LogLevel.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <string>
 #include <vector>

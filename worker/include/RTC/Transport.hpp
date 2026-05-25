@@ -4,7 +4,6 @@
 // #define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
@@ -24,12 +23,13 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SctpListener.hpp"
+#include "SharedInterface.hpp"
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 #include "RTC/SenderBandwidthEstimator.hpp"
 #endif
+#include "handles/TimerHandleInterface.hpp"
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
-#include "handles/TimerHandleInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <string>
 #include <vector>

@@ -2,8 +2,8 @@
 #define MS_RTC_SCTP_INIT_ACK_CHUNK_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/chunks/AnyInitChunk.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {

@@ -2,7 +2,6 @@
 #define MS_RTC_ROUTER_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
@@ -14,6 +13,7 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
+#include "SharedInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <string>

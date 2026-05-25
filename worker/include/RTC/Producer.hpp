@@ -2,7 +2,6 @@
 #define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
@@ -14,6 +13,7 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "SharedInterface.hpp"
 #include <string>
 #include <vector>
 

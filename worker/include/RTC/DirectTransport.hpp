@@ -1,8 +1,8 @@
 #ifndef MS_RTC_DIRECT_TRANSPORT_HPP
 #define MS_RTC_DIRECT_TRANSPORT_HPP
 
-#include "SharedInterface.hpp"
 #include "RTC/Transport.hpp"
+#include "SharedInterface.hpp"
 
 namespace RTC
 {

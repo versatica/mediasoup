@@ -1,9 +1,9 @@
 #ifndef MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 #define MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 
-#include "SharedInterface.hpp"
-#include "RTC/RtpObserver.hpp"
 #include "handles/TimerHandleInterface.hpp"
+#include "RTC/RtpObserver.hpp"
+#include "SharedInterface.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <vector>
 

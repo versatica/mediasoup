@@ -2,8 +2,8 @@
 #define MS_RTC_SCTP_SUPPORTED_ADDRESS_TYPES_PARAMETER_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {

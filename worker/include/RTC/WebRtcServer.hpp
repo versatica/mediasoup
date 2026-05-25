@@ -1,7 +1,6 @@
 #ifndef MS_RTC_WEBRTC_SERVER_HPP
 #define MS_RTC_WEBRTC_SERVER_HPP
 
-#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/StunPacket.hpp"
@@ -10,6 +9,7 @@
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
 #include "RTC/WebRtcTransport.hpp"
+#include "SharedInterface.hpp"
 #include <flatbuffers/flatbuffers.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>

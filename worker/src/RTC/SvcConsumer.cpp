@@ -4,8 +4,8 @@
 #include "RTC/SvcConsumer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
+#include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif

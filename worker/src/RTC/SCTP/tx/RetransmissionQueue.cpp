@@ -3,10 +3,10 @@
 
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "Utils.hpp"
 #include <cmath>   // std::min()
 #include <numeric> // std::accumulate()
 #include <string>

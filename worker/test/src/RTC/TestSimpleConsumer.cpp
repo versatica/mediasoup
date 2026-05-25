@@ -1,5 +1,3 @@
-#include "flatbuffers/buffer.h"
-#include "mocks/include/MockShared.hpp"
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
 #include "RTC/RTP/Packet.hpp"
@@ -8,6 +6,8 @@
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimpleConsumer.hpp"
+#include "flatbuffers/buffer.h"
+#include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 namespace

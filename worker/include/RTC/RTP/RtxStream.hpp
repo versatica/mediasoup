@@ -2,12 +2,12 @@
 #define MS_RTC_RTP_RTX_STREAM_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "FBS/rtxStream.h"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "SharedInterface.hpp"
 #include <string>
 
 namespace RTC

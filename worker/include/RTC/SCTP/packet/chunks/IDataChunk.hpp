@@ -2,9 +2,9 @@
 #define MS_RTC_SCTP_I_DATA_CHUNK_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
+#include "Utils.hpp"
 #include <vector>
 
 namespace RTC

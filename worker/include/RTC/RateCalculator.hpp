@@ -2,8 +2,8 @@
 #define MS_RTC_RATE_CALCULATOR_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "SharedInterface.hpp"
 #include <vector>
 
 namespace RTC

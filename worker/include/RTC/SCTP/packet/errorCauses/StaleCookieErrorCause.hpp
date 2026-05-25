@@ -2,8 +2,8 @@
 #define MS_RTC_SCTP_STALE_COOKIE_ERROR_CAUSE_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {

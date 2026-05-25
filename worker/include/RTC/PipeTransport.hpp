@@ -1,12 +1,12 @@
 #ifndef MS_RTC_PIPE_TRANSPORT_HPP
 #define MS_RTC_PIPE_TRANSPORT_HPP
 
-#include "SharedInterface.hpp"
 #include "FBS/pipeTransport.h"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
+#include "SharedInterface.hpp"
 
 namespace RTC
 {

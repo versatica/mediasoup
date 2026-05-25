@@ -4,7 +4,6 @@
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
 #include "RTC/SCTP/packet/chunks/CookieAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/CookieEchoChunk.hpp"
@@ -23,6 +22,7 @@
 #include "RTC/SCTP/packet/chunks/ShutdownChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {

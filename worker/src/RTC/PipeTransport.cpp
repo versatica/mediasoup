@@ -4,9 +4,9 @@
 #include "RTC/PipeTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/packet/Packet.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
