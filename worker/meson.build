@@ -694,6 +694,7 @@ executable(
   sources: common_sources + fuzzer_sources + mock_sources,
   include_directories: include_directories(
     'include',
+    'fuzzer/include'
   ),
   cpp_args: cpp_args + [
     '-g',
