@@ -15,6 +15,12 @@ impl FromFbs for SctpParameters {
             per_stream_send_queue_limit: parameters.per_stream_send_queue_limit,
             max_receiver_window_buffer_size: parameters.max_receiver_window_buffer_size,
             is_data_channel: parameters.is_data_channel,
+
+            // TODO: SCTP: For backwards compatibility. Remove them in the future.
+            port: 5000,
+            os: 65535,
+            mis: 65535,
+            max_message_size: parameters.max_receive_message_size,
         }
     }
 }

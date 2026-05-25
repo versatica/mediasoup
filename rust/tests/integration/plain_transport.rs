@@ -186,6 +186,12 @@ fn create_succeeds() {
                     per_stream_send_queue_limit: 2_000_000,
                     max_receiver_window_buffer_size: 5_242_880,
                     is_data_channel: false,
+
+                    // TODO: SCTP: For backwards compatibility. Remove them in the future.
+                    port: 5000,
+                    os: 65535,
+                    mis: 65535,
+                    max_message_size: 262_144,
                 }),
             );
             assert_eq!(transport1.sctp_state(), Some(SctpState::New));

@@ -15,6 +15,12 @@ export function parseSctpParameters(
 		perStreamSendQueueLimit: binary.perStreamSendQueueLimit(),
 		maxReceiverWindowBufferSize: binary.maxReceiverWindowBufferSize(),
 		isDataChannel: binary.isDataChannel(),
+
+		// TODO: SCTP: For backwards compatibility. Remove them in the future.
+		port: 5000,
+		OS: 65535,
+		MIS: 65535,
+		maxMessageSize: binary.maxReceiveMessageSize(),
 	};
 }
 

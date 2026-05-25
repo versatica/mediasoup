@@ -5,6 +5,12 @@ export type SctpParameters = {
 	perStreamSendQueueLimit: number;
 	maxReceiverWindowBufferSize: number;
 	isDataChannel: boolean;
+
+	// TODO: SCTP: For backwards compatibility. Remove them in the future.
+	port: number;
+	OS: number;
+	MIS: number;
+	maxMessageSize: number;
 };
 
 /**

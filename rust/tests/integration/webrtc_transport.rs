@@ -205,6 +205,12 @@ fn create_succeeds() {
                     per_stream_send_queue_limit: 2_000_002,
                     max_receiver_window_buffer_size: 2_000_003,
                     is_data_channel: true,
+
+                    // TODO: SCTP: For backwards compatibility. Remove them in the future.
+                    port: 5000,
+                    os: 65535,
+                    mis: 65535,
+                    max_message_size: 1_000_002,
                 }),
             );
             {

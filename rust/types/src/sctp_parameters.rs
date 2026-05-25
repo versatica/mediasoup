@@ -18,6 +18,14 @@ pub struct SctpParameters {
     pub max_receiver_window_buffer_size: u32,
     /// Whether this is a DataChannel SCTP association.
     pub is_data_channel: bool,
+
+    // TODO: SCTP: For backwards compatibility. Remove them in the future.
+    pub port: u16,
+    #[serde(rename = "OS")]
+    pub os: u16,
+    #[serde(rename = "MIS")]
+    pub mis: u16,
+    pub max_message_size: u32,
 }
 
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.
