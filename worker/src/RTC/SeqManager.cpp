@@ -126,18 +126,21 @@ namespace RTC
 		{
 			goto done;
 		}
-		// This input was dropped.
-		else if (std::binary_search(this->dropped.begin(), this->dropped.end(), input, SeqLowerThan()))
-		{
-			MS_DEBUG_DEV("trying to send a dropped input");
-
-			return false;
-		}
-		// There are dropped inputs, calculate 'base' for this input.
 		else
 		{
-			// Count dropped numbers less than input.
-			const auto droppedCount = std::distance(
+			const SeqLowerThan seqLowerThan;
+			const auto it =
+			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
+
+			if (it != this->dropped.end() && !seqLowerThan(input, *it) && !seqLowerThan(*it, input))
+			{
+				MS_DEBUG_DEV("trying to send a dropped input");
+
+				return false;
+			}
+
+			// There are dropped inputs, calculate 'base' for this input.
+			auto droppedCount = std::distance(
 			  this->dropped.begin(),
 			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, SeqLowerThan()));
 
