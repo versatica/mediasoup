@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::SCTP::Association"
-// #define MS_LOG_DEV_LEVEL 3
+// TODO: SCTP: Comment.
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/Association.hpp"
 #include "Logger.hpp"
@@ -519,12 +520,12 @@ namespace RTC
 
 // For debugging purposes.
 #if MS_LOG_DEV_LEVEL == 3
-			MS_DUMP("<<< received SCTP packet:");
-
 			const auto* packet = RTC::SCTP::Packet::Parse(data, len);
 
 			if (packet)
 			{
+				MS_DUMP("<<< received SCTP packet:");
+
 				packet->Dump();
 
 				delete packet;

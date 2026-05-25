@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::SCTP::RoundRobinSendQueue"
-// #define MS_LOG_DEV_LEVEL 3
+// TODO: SCTP: Comment.
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/tx/RoundRobinSendQueue.hpp"
 #include "Logger.hpp"
@@ -724,7 +725,7 @@ namespace RTC
 			{
 				MS_DEBUG_DEV(
 				  "triggering OnAssociationLifecycleMessageExpired(%" PRIu64 "), /*maybeDelivered*/ false)",
-				  item.attributes.lifecycleId);
+				  item.attributes.lifecycleId.value());
 
 				this->parent.associationListener.OnAssociationLifecycleMessageExpired(
 				  item.attributes.lifecycleId.value(), /*maybeDelivered*/ false);

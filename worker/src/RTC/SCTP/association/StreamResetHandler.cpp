@@ -204,7 +204,7 @@ namespace RTC
 			// `reqSeqNbr` will be used.
 			MS_ASSERT(this->currentRequest.has_value(), "currentRequest optional must have value");
 
-			if (this->currentRequest->HasBeenSent())
+			if (!this->currentRequest->HasBeenSent())
 			{
 				this->currentRequest->PrepareToSend(this->nextOutgoingReqSeqNbr);
 				this->nextOutgoingReqSeqNbr = uint32_t{ this->nextOutgoingReqSeqNbr + 1 };

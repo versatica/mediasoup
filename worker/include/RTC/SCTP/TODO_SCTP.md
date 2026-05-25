@@ -40,6 +40,19 @@
 
 - Need Node/Rust tests for `dataConsumer->setBufferedAmountLowThreshold()` and so on. In Rust there is `smoke.rs`.
 
+- In the demo, if I open a consume only tab and then a produce only tab exists, the consume only tab shows an error:
+  - `CC._dataConsumers.values().next().value.close()`
+  - ""newDataConsumer" request failed:OperationError: Failed to execute 'createDataChannel' on 'RTCPeerConnection': RTCDataChannel creation failed"
+  - This is due to the change in how `Transport.ts` in mediasoup (also in Rust) selects next `streamId`. Npw it always starts from 0 so once `DataConsumer` with streamId=1 is closed and a new one is created, `Transport.ts` in mediasoup assigns streamId=1 again and mediasoup-client fails. However, it shouldn't fail because the old DataConsumer was also closed in mediasoup-client...
+
+- If in the demo client app I close a `dataConsumer`, mediasoup recives the RECONFIG but does NOT send any RECONFIG with SUCCESS, IN_PROGRESS, etc.
+
+- In `Transport::OnAssociationInboundStreamsReset()` must invoke `this->sctpAssociation->ResetStreams(streamIds).
+
+- In `sctpParametersTypes.ts` and `sctp_parameters.rs` I've added back previous fields for backwards compatibility. Must be removed in the future.
+
+- Need a new mediasoup-client version without `SctpCapabilities` and so on and with updated `SctpParameters`.
+
 - Look for "TODO: SCTP" everywhere (also in `worker/test/` and `node/src/` and `rust/`).
 
 - Test Chrome/Canary with I-DATA (message interleaving):
