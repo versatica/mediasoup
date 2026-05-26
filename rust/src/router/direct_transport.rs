@@ -30,7 +30,12 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, Weak};
+use std::sync::{Arc, LazyLock, Weak};
+
+static USED_SCTP_STREAM_IDS: LazyLock<Mutex<IntMap<u16, bool>>> =
+    LazyLock::new(|| Mutex::new(IntMap::default()));
+
+static NEXT_SCTP_STREAM_ID: LazyLock<Mutex<u16>> = LazyLock::new(|| Mutex::new(0));
 
 /// [`DirectTransport`] options.
 #[derive(Debug, Clone)]
@@ -274,7 +279,6 @@ impl<'a> TryFromFbs<'a> for Notification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
-    used_sctp_stream_ids: Mutex<IntMap<u16, bool>>,
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
@@ -355,7 +359,6 @@ impl fmt::Debug for DirectTransport {
         f.debug_struct("DirectTransport")
             .field("id", &self.inner.id)
             .field("next_mid_for_consumers", &self.inner.next_mid_for_consumers)
-            .field("used_sctp_stream_ids", &self.inner.used_sctp_stream_ids)
             .field("cname_for_producers", &self.inner.cname_for_producers)
             .field("router", &self.inner.router)
             .field("closed", &self.inner.closed)
@@ -557,12 +560,20 @@ impl TransportImpl for DirectTransport {
         &self.inner.next_mid_for_consumers
     }
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
-        &self.inner.used_sctp_stream_ids
-    }
-
     fn cname_for_producers(&self) -> &Mutex<Option<String>> {
         &self.inner.cname_for_producers
+    }
+
+    fn sctp_negotiated_max_outbound_streams(&self) -> Option<u16> {
+        None
+    }
+
+    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
+        &USED_SCTP_STREAM_IDS
+    }
+
+    fn next_sctp_stream_id(&self) -> &Mutex<u16> {
+        &NEXT_SCTP_STREAM_ID
     }
 }
 
@@ -601,7 +612,6 @@ impl DirectTransport {
         };
 
         let next_mid_for_consumers = AtomicUsize::default();
-        let used_sctp_stream_ids = Mutex::new(IntMap::default());
         let cname_for_producers = Mutex::new(None);
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_router_close_handler = router.on_close({
@@ -618,7 +628,6 @@ impl DirectTransport {
         let inner = Arc::new(Inner {
             id,
             next_mid_for_consumers,
-            used_sctp_stream_ids,
             cname_for_producers,
             executor,
             channel,

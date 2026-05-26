@@ -72,7 +72,7 @@ namespace RTC
 			 * Retrieves the latest metrics. If the Association is not fully connected,
 			 * `std::nullopt` will be returned.
 			 */
-			virtual std::optional<AssociationMetrics> GetMetrics() const = 0;
+			virtual std::optional<AssociationMetrics> MakeMetrics() const = 0;
 
 			/**
 			 * Returns the currently set priority for an outgoing stream. The initial
@@ -177,6 +177,20 @@ namespace RTC
 			 * Receives SCTP data (hopefully an SCTP Packet) from the remote peer.
 			 */
 			virtual void ReceiveSctpData(const uint8_t* data, size_t len) = 0;
+
+			/**
+			 * Get negotiated max outbound streams. Returns 0 if the association is
+			 * not yet connected.
+			 */
+			virtual uint16_t GetNegotiatedMaxOutboundStreams() const = 0;
+
+			/**
+			 * Get negotiated max inbound streams. Returns 0 if the association is
+			 * not yet connected.
+			 */
+			virtual uint16_t GetNegotiatedMaxInboundStreams() const = 0;
+
+			virtual bool IsDataChannel() const = 0;
 		};
 	} // namespace SCTP
 } // namespace RTC

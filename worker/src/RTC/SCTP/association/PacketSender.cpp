@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::SCTP::PacketSender"
-// TODO: SCTP: Comment.
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/PacketSender.hpp"
 #include "Logger.hpp"
@@ -33,13 +32,6 @@ namespace RTC
 			{
 				packet->WriteCRC32cChecksum();
 			}
-
-// For debugging purposes.
-#if MS_LOG_DEV_LEVEL == 3
-			MS_DUMP(">>> sending SCTP packet:");
-
-			packet->Dump();
-#endif
 
 			MS_ASSERT(!packet->NeedsConsolidation(), "cannot send a SCTP packet that needs consolidation");
 

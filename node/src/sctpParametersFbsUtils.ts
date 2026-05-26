@@ -9,6 +9,7 @@ export function parseSctpParameters(
 	binary: FbsSctpParameters.SctpParameters
 ): SctpParameters {
 	return {
+		port: binary.port(),
 		maxSendMessageSize: binary.maxSendMessageSize(),
 		maxReceiveMessageSize: binary.maxReceiveMessageSize(),
 		sendBufferSize: binary.sendBufferSize(),
@@ -17,7 +18,6 @@ export function parseSctpParameters(
 		isDataChannel: binary.isDataChannel(),
 
 		// TODO: SCTP: For backwards compatibility. Remove them in the future.
-		port: 5000,
 		OS: 65535,
 		MIS: 65535,
 		maxMessageSize: binary.maxReceiveMessageSize(),

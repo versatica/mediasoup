@@ -1983,8 +1983,8 @@ impl Request for TransportConsumeDataRequest {
             self.data_consumer_id.to_string(),
             self.data_producer_id.to_string(),
             match self.r#type {
-                DataConsumerType::Sctp => data_producer::Type::Sctp,
-                DataConsumerType::Direct => data_producer::Type::Direct,
+                DataConsumerType::Sctp => data_consumer::Type::Sctp,
+                DataConsumerType::Direct => data_consumer::Type::Direct,
             },
             ToFbs::to_fbs(&self.sctp_stream_parameters),
             if self.label.is_empty() {
@@ -2025,8 +2025,8 @@ impl Request for TransportConsumeDataRequest {
 
         Ok(TransportConsumeDataResponse {
             r#type: match data.type_ {
-                data_producer::Type::Sctp => DataConsumerType::Sctp,
-                data_producer::Type::Direct => DataConsumerType::Direct,
+                data_consumer::Type::Sctp => DataConsumerType::Sctp,
+                data_consumer::Type::Direct => DataConsumerType::Direct,
             },
             sctp_stream_parameters: data.sctp_stream_parameters.map(|stream_parameters| {
                 SctpStreamParameters::from_fbs(stream_parameters.as_ref())

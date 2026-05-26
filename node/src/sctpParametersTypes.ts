@@ -1,4 +1,5 @@
 export type SctpParameters = {
+	port: number;
 	maxSendMessageSize: number;
 	maxReceiveMessageSize: number;
 	sendBufferSize: number;
@@ -7,10 +8,14 @@ export type SctpParameters = {
 	isDataChannel: boolean;
 
 	// TODO: SCTP: For backwards compatibility. Remove them in the future.
-	port: number;
 	OS: number;
 	MIS: number;
 	maxMessageSize: number;
+};
+
+export type SctpNegotiatedCapabilities = {
+	negotiatedMaxOutboundStreams: number;
+	negotiatedMaxInboundStreams: number;
 };
 
 /**

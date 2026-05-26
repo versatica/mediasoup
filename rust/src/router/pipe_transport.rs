@@ -19,9 +19,9 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
-use mediasoup_sys::fbs::{notification, pipe_transport, response, transport};
+use mediasoup_sys::fbs::{notification, pipe_transport, response, sctp_association, transport};
 use mediasoup_types::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
-use mediasoup_types::sctp_parameters::SctpParameters;
+use mediasoup_types::sctp_parameters::{SctpNegotiatedCapabilities, SctpParameters};
 use mediasoup_types::srtp_parameters::SrtpParameters;
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
@@ -299,6 +299,10 @@ enum Notification {
     SctpStateChange {
         sctp_state: SctpState,
     },
+    #[serde(rename_all = "camelCase")]
+    SctpNegotiatedCapabilities {
+        negotiated_capabilities: SctpNegotiatedCapabilities,
+    },
     Trace(TransportTraceEventData),
 }
 
@@ -318,6 +322,25 @@ impl<'a> TryFromFbs<'a> for Notification {
                 let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
 
                 Ok(Notification::SctpStateChange { sctp_state })
+            }
+            notification::Event::TransportSctpNegotiatedCapabilities => {
+                let Ok(Some(
+                    notification::BodyRef::TransportSctpNegotiatedCapabilitiesNotification(body),
+                )) = notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let negotiated_capabilities = SctpNegotiatedCapabilities::from_fbs(
+                    &sctp_association::SctpNegotiatedCapabilities::try_from(
+                        body.negotiated_capabilities().unwrap().unwrap(),
+                    )
+                    .unwrap(),
+                );
+
+                Ok(Notification::SctpNegotiatedCapabilities {
+                    negotiated_capabilities,
+                })
             }
             notification::Event::TransportTrace => {
                 let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
@@ -340,6 +363,7 @@ struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
     used_sctp_stream_ids: Mutex<IntMap<u16, bool>>,
+    next_sctp_stream_id: Mutex<u16>,
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
@@ -348,6 +372,7 @@ struct Inner {
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
     router: Router,
+    sctp_negotiated_capabilities: Mutex<Option<SctpNegotiatedCapabilities>>,
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
     _subscription_handler: Mutex<Option<SubscriptionHandler>>,
@@ -611,12 +636,23 @@ impl TransportImpl for PipeTransport {
         &self.inner.next_mid_for_consumers
     }
 
+    fn cname_for_producers(&self) -> &Mutex<Option<String>> {
+        &self.inner.cname_for_producers
+    }
+
+    fn sctp_negotiated_max_outbound_streams(&self) -> Option<u16> {
+        self.inner
+            .sctp_negotiated_capabilities
+            .lock()
+            .map(|caps| caps.negotiated_max_outbound_streams)
+    }
+
     fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
         &self.inner.used_sctp_stream_ids
     }
 
-    fn cname_for_producers(&self) -> &Mutex<Option<String>> {
-        &self.inner.cname_for_producers
+    fn next_sctp_stream_id(&self) -> &Mutex<u16> {
+        &self.inner.next_sctp_stream_id
     }
 }
 
@@ -633,10 +669,12 @@ impl PipeTransport {
 
         let handlers = Arc::<Handlers>::default();
         let data = Arc::new(data);
+        let sctp_negotiated_capabilities = Arc::new(Mutex::new(None::<SctpNegotiatedCapabilities>));
 
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
             let data = Arc::clone(&data);
+            let sctp_negotiated_capabilities = Arc::clone(&sctp_negotiated_capabilities);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
                 match Notification::try_from_fbs(notification) {
@@ -647,6 +685,13 @@ impl PipeTransport {
                             handlers.sctp_state_change.call(|callback| {
                                 callback(sctp_state);
                             });
+                        }
+                        Notification::SctpNegotiatedCapabilities {
+                            negotiated_capabilities,
+                        } => {
+                            sctp_negotiated_capabilities
+                                .lock()
+                                .replace(negotiated_capabilities);
                         }
                         Notification::Trace(trace_event_data) => {
                             handlers.trace.call_simple(&trace_event_data);
@@ -661,15 +706,17 @@ impl PipeTransport {
 
         let next_mid_for_consumers = AtomicUsize::default();
         let used_sctp_stream_ids = Mutex::new({
-            let mut used_used_sctp_stream_ids = IntMap::default();
+            let mut used_sctp_stream_ids = IntMap::default();
 
             for i in 0..=65535 {
-                used_used_sctp_stream_ids.insert(i, false);
+                used_sctp_stream_ids.insert(i, false);
             }
 
-            used_used_sctp_stream_ids
+            used_sctp_stream_ids
         });
+        let next_sctp_stream_id = Mutex::new(0);
         let cname_for_producers = Mutex::new(None);
+        let sctp_negotiated_capabilities = Mutex::new(None);
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_router_close_handler = router.on_close({
             let inner_weak = Arc::clone(&inner_weak);
@@ -686,6 +733,7 @@ impl PipeTransport {
             id,
             next_mid_for_consumers,
             used_sctp_stream_ids,
+            next_sctp_stream_id,
             cname_for_producers,
             executor,
             channel,
@@ -693,6 +741,7 @@ impl PipeTransport {
             data,
             app_data,
             router,
+            sctp_negotiated_capabilities,
             closed: AtomicBool::new(false),
             _subscription_handler: Mutex::new(subscription_handler),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
@@ -759,6 +808,12 @@ impl PipeTransport {
     #[must_use]
     pub fn sctp_state(&self) -> Option<SctpState> {
         *self.inner.data.sctp_state.lock()
+    }
+
+    /// SCTP negotiated capabilities. Or `None` if SCTP is not connected.
+    #[must_use]
+    pub fn sctp_negotiated_capabilities(&self) -> Option<SctpNegotiatedCapabilities> {
+        *self.inner.sctp_negotiated_capabilities.lock()
     }
 
     /// Local SRTP parameters representing the crypto suite and key material used to encrypt sending

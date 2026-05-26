@@ -226,7 +226,7 @@ namespace RTC
 			 * Retrieves the latest metrics. If the Association is not fully connected,
 			 * `std::nullopt` will be returned.
 			 */
-			std::optional<AssociationMetrics> GetMetrics() const override;
+			std::optional<AssociationMetrics> MakeMetrics() const override;
 
 			/**
 			 * Returns the currently set priority for an outgoing stream. The initial
@@ -331,6 +331,23 @@ namespace RTC
 			 * Receives SCTP data (hopefully an SCTP Packet) from the remote peer.
 			 */
 			void ReceiveSctpData(const uint8_t* data, size_t len) override;
+
+			/**
+			 * Get negotiated max outbound streams. Returns 0 if the association is
+			 * not yet connected.
+			 */
+			uint16_t GetNegotiatedMaxOutboundStreams() const override;
+
+			/**
+			 * Get negotiated max inbound streams. Returns 0 if the association is
+			 * not yet connected.
+			 */
+			uint16_t GetNegotiatedMaxInboundStreams() const override;
+
+			bool IsDataChannel() const override
+			{
+				return this->isDataChannel;
+			}
 
 		private:
 			void InternalClose(Types::ErrorKind errorKind, const std::string_view& message);

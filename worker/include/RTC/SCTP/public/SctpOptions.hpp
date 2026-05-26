@@ -234,6 +234,7 @@ namespace RTC
 
 			/**
 			 * Enable Partial Reliability Extension.
+			 *
 			 * @see RFC 3758.
 			 */
 			bool enablePartialReliability{ true };

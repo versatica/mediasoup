@@ -10,7 +10,7 @@
   - **Breaking change:** Replace `maxSctpMessageSize` in all `Transport` options with `maxSendMessageSize` and `maxReceiveMessageSize`.
   - **Breaking change:** Replace `maxMessageSize` in `DirectTransport` options with `maxSendMessageSize` and `maxReceiveMessageSize`.
   - Add new `Transport` options: `sctpPerStreamSendQueueLimit` and `sctpMaxReceiverWindowBufferSize`.
-  - **Breaking change:** `SctpParameters` type changed from `{ port, OS, MIS, maxMessageSize }` to `{ maxSendMessageSize, maxReceiveMessageSize, sendBufferSize, perStreamSendQueueLimit, maxReceiverWindowBufferSize, isDataChannel}`.
+  - **Breaking change:** `SctpParameters` type changed from `{ port, OS, MIS, maxMessageSize }` to `{ port, maxSendMessageSize, maxReceiveMessageSize, sendBufferSize, perStreamSendQueueLimit, maxReceiverWindowBufferSize, isDataChannel}`.
   - **Breaking change:** Add `bufferedAmount` in `DataConsumerDump`.
 
 ### 3.19.22

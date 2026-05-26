@@ -139,6 +139,7 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(typeof webRtcTransport.iceParameters.usernameFragment).toBe('string');
 	expect(typeof webRtcTransport.iceParameters.password).toBe('string');
 	expect(webRtcTransport.sctpParameters).toMatchObject({
+		port: 5000,
 		maxSendMessageSize: 1000001,
 		maxReceiveMessageSize: 1000002,
 		sendBufferSize: 2000001,
@@ -207,6 +208,7 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(webRtcTransport.dtlsState).toBe('new');
 	expect(webRtcTransport.dtlsRemoteCert).toBeUndefined();
 	expect(webRtcTransport.sctpState).toBe('new');
+	expect(webRtcTransport.sctpNegotiatedCapabilities).toBeUndefined();
 
 	const dump = await webRtcTransport.dump();
 

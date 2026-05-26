@@ -112,6 +112,10 @@ afterEach(async () => {
 
 test('SCTP state is connected', () => {
 	expect(ctx.plainTransport!.sctpState).toBe('connected');
+	expect(ctx.plainTransport!.sctpNegotiatedCapabilities).toEqual({
+		negotiatedMaxOutboundStreams: 65535,
+		negotiatedMaxInboundStreams: 65535,
+	});
 	expect(ctx.sctpClient!.associationState).toBe(SCTP_STATE.ESTABLISHED);
 });
 

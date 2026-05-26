@@ -216,7 +216,7 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 	  uvRusage.ru_nivcsw);
 }
 
-RTC::WebRtcServer* Worker::GetWebRtcServer(const std::string& webRtcServerId) const
+RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(const std::string& webRtcServerId) const
 {
 	auto it = this->mapWebRtcServers.find(webRtcServerId);
 
@@ -228,7 +228,7 @@ RTC::WebRtcServer* Worker::GetWebRtcServer(const std::string& webRtcServerId) co
 	return it->second;
 }
 
-RTC::Router* Worker::GetRouter(const std::string& routerId) const
+RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId) const
 {
 	MS_TRACE();
 
@@ -332,7 +332,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			try
 			{
-				webRtcServer = GetWebRtcServer(webRtcServerId);
+				webRtcServer = AssertAndGetWebRtcServerById(webRtcServerId);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -387,7 +387,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			try
 			{
-				router = GetRouter(routerId);
+				router = AssertAndGetRouterById(routerId);
 			}
 			catch (const MediaSoupError& error)
 			{

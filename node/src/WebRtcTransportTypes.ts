@@ -12,7 +12,10 @@ import type {
 	TransportObserverEvents,
 } from './TransportTypes';
 import type { WebRtcServer } from './WebRtcServerTypes';
-import type { SctpParameters } from './sctpParametersTypes';
+import type {
+	SctpParameters,
+	SctpNegotiatedCapabilities,
+} from './sctpParametersTypes';
 import type { Either, AppData } from './types';
 
 export type WebRtcTransportOptions<
@@ -301,6 +304,14 @@ export interface WebRtcTransport<
 	 * SCTP state.
 	 */
 	get sctpState(): SctpState | undefined;
+
+	/**
+	 * SCTP negotiated capabilities.
+	 *
+	 * @remarks
+	 * - Only present if SCTP association is connected.
+	 */
+	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined;
 
 	/**
 	 * Dump WebRtcTransport.

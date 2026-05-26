@@ -2,12 +2,6 @@
 
 ## Related to mediasoup SCTP implementation
 
-- `Association`: When transitioning to CLOSED (due to failure while connecting or closure) we should emit a new event "stcpclosed" in all `DataProducers/Consumers`.
-
-- When receiving SCTP RE-CONFIG, we should emit "streamclosed" in those `DataProducers/DataConsumers` whose stream ID have been closed.
-
-- `OnAssociationFailed()` and `OnAssociationClosed()` should report an error (if present) to JS.
-
 - Rename all "Packet", "Chunk", "Parameter", "Error Cause", "Association", etc to lowcase everywhere (in code and comments).
 
 - Rename all "I_DATA" etc to `I-DATA" everywhere (in code and comments).
@@ -20,36 +14,17 @@
   mediasoup:ERROR:Worker (stderr) UnixStreamSocketHandle::Write() | uv_try_write() failed, trying uv_write(): broken pipe
   ```
 
-- Remove `device.sctpCapabilities` getter from mediasoup-client because it's useless. Also must update the website documentation.
-
 - In the doc add all new options such as `maxSendMessageSize`, `sctpXxx`, etc, deprecate (or remove) `maxMessageSize` and `maxSctpMessageSize` and document also the new default values in `pipeToRouter()`.
-
-- When we invoke `close()` on a `DataProducer/Consumer` in server, we must end calling `sctpAssociation->ResetStream([streamId])` so it sends `ReConfig` to peer.
 
 - In `transport.dump()` (maybe also in `getStats()`) we must properly obtain current `OS` and `MIS` according to the number of SCTP streams negotiated via INIT + INIT_ACK. And if SCTP is not yet established, then... not sure.
 
-- We need to use `this->isDataChannel` in `Association` as we do in former `SctpAssociation`. Well, let's see. If it's only for when changing number of OS/MIS... then the new SCTP stack doesn't support it so...
-
 - Use the `AssociationMetrics`. Expose them in transport stats, etc.
-
-- In `DataConsumer` `DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD`... This must not be like this. This must trigger a listener for the `Transport` to invoke the corresponding method in the `Association`.
-
-- `Transport`: Add a `std::map` `sctpDataConsumers` indexed by `streamId`.
 
 - Fix the documentation in the website which says: "The underlaying SCTP association uses a common send buffer for all data consumers, hence the value given by this method indicates the data buffered for all data consumers in the transport."
 
 - Need Node/Rust tests for `dataConsumer->setBufferedAmountLowThreshold()` and so on. In Rust there is `smoke.rs`.
 
-- In the demo, if I open a consume only tab and then a produce only tab exists, the consume only tab shows an error:
-  - `CC._dataConsumers.values().next().value.close()`
-  - ""newDataConsumer" request failed:OperationError: Failed to execute 'createDataChannel' on 'RTCPeerConnection': RTCDataChannel creation failed"
-  - This is due to the change in how `Transport.ts` in mediasoup (also in Rust) selects next `streamId`. Npw it always starts from 0 so once `DataConsumer` with streamId=1 is closed and a new one is created, `Transport.ts` in mediasoup assigns streamId=1 again and mediasoup-client fails. However, it shouldn't fail because the old DataConsumer was also closed in mediasoup-client...
-
-- In `Transport::OnAssociationInboundStreamsReset()` must invoke `this->sctpAssociation->ResetStreams(streamIds).
-
 - In `sctpParametersTypes.ts` and `sctp_parameters.rs` I've added back previous fields for backwards compatibility. Must be removed in the future.
-
-- Need a new mediasoup-client version without `SctpCapabilities` and so on and with updated `SctpParameters`.
 
 - Look for "TODO: SCTP" everywhere (also in `worker/test/` and `node/src/` and `rust/`).
 

@@ -1,7 +1,7 @@
 //! SCTP parameters.
 
 use crate::fbs::{FromFbs, ToFbs};
-use mediasoup_sys::fbs::sctp_parameters;
+use mediasoup_sys::fbs::{sctp_association, sctp_parameters};
 use mediasoup_types::sctp_parameters::*;
 
 impl FromFbs for SctpParameters {
@@ -9,6 +9,7 @@ impl FromFbs for SctpParameters {
 
     fn from_fbs(parameters: &Self::FbsType) -> Self {
         Self {
+            port: parameters.port,
             max_send_message_size: parameters.max_send_message_size,
             max_receive_message_size: parameters.max_receive_message_size,
             send_buffer_size: parameters.send_buffer_size,
@@ -17,10 +18,21 @@ impl FromFbs for SctpParameters {
             is_data_channel: parameters.is_data_channel,
 
             // TODO: SCTP: For backwards compatibility. Remove them in the future.
-            port: 5000,
             os: 65535,
             mis: 65535,
             max_message_size: parameters.max_receive_message_size,
+        }
+    }
+}
+
+impl FromFbs for SctpNegotiatedCapabilities {
+    type FbsType = sctp_association::SctpNegotiatedCapabilities;
+
+    fn from_fbs(negotiated_capabilities: &Self::FbsType) -> Self {
+        SctpNegotiatedCapabilities {
+            negotiated_max_outbound_streams: negotiated_capabilities
+                .negotiated_max_outbound_streams,
+            negotiated_max_inbound_streams: negotiated_capabilities.negotiated_max_inbound_streams,
         }
     }
 }

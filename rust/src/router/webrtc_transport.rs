@@ -23,12 +23,12 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
-use mediasoup_sys::fbs::{notification, response, transport, web_rtc_transport};
+use mediasoup_sys::fbs::{notification, response, sctp_association, transport, web_rtc_transport};
 use mediasoup_types::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
     SctpState, TransportTuple,
 };
-use mediasoup_types::sctp_parameters::SctpParameters;
+use mediasoup_types::sctp_parameters::{SctpNegotiatedCapabilities, SctpParameters};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -446,6 +446,10 @@ enum Notification {
     SctpStateChange {
         sctp_state: SctpState,
     },
+    #[serde(rename_all = "camelCase")]
+    SctpNegotiatedCapabilities {
+        negotiated_capabilities: SctpNegotiatedCapabilities,
+    },
     Trace(TransportTraceEventData),
 }
 
@@ -507,6 +511,25 @@ impl<'a> TryFromFbs<'a> for Notification {
 
                 Ok(Notification::SctpStateChange { sctp_state })
             }
+            notification::Event::TransportSctpNegotiatedCapabilities => {
+                let Ok(Some(
+                    notification::BodyRef::TransportSctpNegotiatedCapabilitiesNotification(body),
+                )) = notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let negotiated_capabilities = SctpNegotiatedCapabilities::from_fbs(
+                    &sctp_association::SctpNegotiatedCapabilities::try_from(
+                        body.negotiated_capabilities().unwrap().unwrap(),
+                    )
+                    .unwrap(),
+                );
+
+                Ok(Notification::SctpNegotiatedCapabilities {
+                    negotiated_capabilities,
+                })
+            }
             notification::Event::TransportTrace => {
                 let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
                     notification.body()
@@ -528,6 +551,7 @@ struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
     used_sctp_stream_ids: Mutex<IntMap<u16, bool>>,
+    next_sctp_stream_id: Mutex<u16>,
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
@@ -538,6 +562,7 @@ struct Inner {
     webrtc_server: Option<WebRtcServer>,
     // Make sure router is not dropped until this transport is not dropped
     router: Router,
+    sctp_negotiated_capabilities: Mutex<Option<SctpNegotiatedCapabilities>>,
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
     _subscription_handler: Mutex<Option<SubscriptionHandler>>,
@@ -805,12 +830,23 @@ impl TransportImpl for WebRtcTransport {
         &self.inner.next_mid_for_consumers
     }
 
+    fn cname_for_producers(&self) -> &Mutex<Option<String>> {
+        &self.inner.cname_for_producers
+    }
+
+    fn sctp_negotiated_max_outbound_streams(&self) -> Option<u16> {
+        self.inner
+            .sctp_negotiated_capabilities
+            .lock()
+            .map(|caps| caps.negotiated_max_outbound_streams)
+    }
+
     fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
         &self.inner.used_sctp_stream_ids
     }
 
-    fn cname_for_producers(&self) -> &Mutex<Option<String>> {
-        &self.inner.cname_for_producers
+    fn next_sctp_stream_id(&self) -> &Mutex<u16> {
+        &self.inner.next_sctp_stream_id
     }
 }
 
@@ -829,10 +865,12 @@ impl WebRtcTransport {
 
         let handlers = Arc::<Handlers>::default();
         let data = Arc::new(data);
+        let sctp_negotiated_capabilities = Arc::new(Mutex::new(None::<SctpNegotiatedCapabilities>));
 
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
             let data = Arc::clone(&data);
+            let sctp_negotiated_capabilities = Arc::clone(&sctp_negotiated_capabilities);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
                 match Notification::try_from_fbs(notification) {
@@ -872,6 +910,13 @@ impl WebRtcTransport {
                                 callback(sctp_state);
                             });
                         }
+                        Notification::SctpNegotiatedCapabilities {
+                            negotiated_capabilities,
+                        } => {
+                            sctp_negotiated_capabilities
+                                .lock()
+                                .replace(negotiated_capabilities);
+                        }
                         Notification::Trace(trace_event_data) => {
                             handlers.trace.call_simple(&trace_event_data);
                         }
@@ -885,15 +930,17 @@ impl WebRtcTransport {
 
         let next_mid_for_consumers = AtomicUsize::default();
         let used_sctp_stream_ids = Mutex::new({
-            let mut used_used_sctp_stream_ids = IntMap::default();
+            let mut used_sctp_stream_ids = IntMap::default();
 
             for i in 0..=65535 {
-                used_used_sctp_stream_ids.insert(i, false);
+                used_sctp_stream_ids.insert(i, false);
             }
 
-            used_used_sctp_stream_ids
+            used_sctp_stream_ids
         });
+        let next_sctp_stream_id = Mutex::new(0);
         let cname_for_producers = Mutex::new(None);
+        let sctp_negotiated_capabilities = Mutex::new(None);
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let on_webrtc_server_close_handler = webrtc_server.as_ref().map(|webrtc_server| {
             webrtc_server.on_close({
@@ -923,6 +970,7 @@ impl WebRtcTransport {
             id,
             next_mid_for_consumers,
             used_sctp_stream_ids,
+            next_sctp_stream_id,
             cname_for_producers,
             executor,
             channel,
@@ -931,6 +979,7 @@ impl WebRtcTransport {
             app_data,
             webrtc_server,
             router,
+            sctp_negotiated_capabilities,
             closed: AtomicBool::new(false),
             _subscription_handler: Mutex::new(subscription_handler),
             _on_webrtc_server_close_handler: Mutex::new(on_webrtc_server_close_handler),
@@ -1093,6 +1142,12 @@ impl WebRtcTransport {
     #[must_use]
     pub fn sctp_state(&self) -> Option<SctpState> {
         *self.inner.data.sctp_state.lock()
+    }
+
+    /// SCTP negotiated capabilities. Or `None` if SCTP is not connected.
+    #[must_use]
+    pub fn sctp_negotiated_capabilities(&self) -> Option<SctpNegotiatedCapabilities> {
+        *self.inner.sctp_negotiated_capabilities.lock()
     }
 
     /// Restarts the ICE layer by generating new local ICE parameters that must be signaled to the

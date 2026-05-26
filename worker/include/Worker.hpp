@@ -26,8 +26,8 @@ private:
 	flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> FillBufferResourceUsage(
 	  flatbuffers::FlatBufferBuilder& builder) const;
 	void SetNewRouterId(std::string& routerId) const;
-	RTC::WebRtcServer* GetWebRtcServer(const std::string& webRtcServerId) const;
-	RTC::Router* GetRouter(const std::string& routerId) const;
+	RTC::WebRtcServer* AssertAndGetWebRtcServerById(const std::string& webRtcServerId) const;
+	RTC::Router* AssertAndGetRouterById(const std::string& routerId) const;
 	void CheckNoWebRtcServer(const std::string& webRtcServerId) const;
 	void CheckNoRouter(const std::string& routerId) const;
 

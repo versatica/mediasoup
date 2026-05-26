@@ -26,13 +26,13 @@ namespace RTC
 
 		switch (data->type())
 		{
-			case FBS::DataProducer::Type::SCTP:
+			case FBS::DataConsumer::Type::SCTP:
 			{
 				this->type = DataConsumer::Type::SCTP;
 
 				break;
 			}
-			case FBS::DataProducer::Type::DIRECT:
+			case FBS::DataConsumer::Type::DIRECT:
 			{
 				this->type = DataConsumer::Type::DIRECT;
 
@@ -126,8 +126,8 @@ namespace RTC
 		  builder,
 		  this->id.c_str(),
 		  this->dataProducerId.c_str(),
-		  this->type == DataConsumer::Type::SCTP ? FBS::DataProducer::Type::SCTP
-		                                         : FBS::DataProducer::Type::DIRECT,
+		  this->type == DataConsumer::Type::SCTP ? FBS::DataConsumer::Type::SCTP
+		                                         : FBS::DataConsumer::Type::DIRECT,
 		  sctpStreamParameters,
 		  this->label.c_str(),
 		  this->protocol.c_str(),
@@ -249,14 +249,11 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
-				// TODO: SCTP: Uncomment.
-				// const auto* body =
-				//   request->data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
-				// const auto bufferedAmountLowThreshold = static_cast<size_t>(body->threshold());
+				const auto* body =
+				  request->data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
+				const auto bufferedAmountLowThreshold = static_cast<size_t>(body->threshold());
 
-				// TODO: SCTP: Invoke a new listener to tell the SCTP Association (via
-				// Transport) to update the buffered amount low threshold of this SCTP
-				// streamId to the value in `bufferedAmountLowThreshold` variable.
+				this->listener->OnDataConsumerSetBufferedAmountLowThreshold(this, bufferedAmountLowThreshold);
 
 				request->Accept();
 
@@ -422,7 +419,7 @@ namespace RTC
 
 		this->dataProducerPaused = true;
 
-		MS_DEBUG_DEV("DataProducer paused [dataConsumerId:%s]", this->id.c_str());
+		MS_DEBUG_DEV("DataConsumer paused [dataConsumerId:%s]", this->id.c_str());
 
 		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_PAUSE);
@@ -439,7 +436,7 @@ namespace RTC
 
 		this->dataProducerPaused = false;
 
-		MS_DEBUG_DEV("DataProducer resumed [dataConsumerId:%s]", this->id.c_str());
+		MS_DEBUG_DEV("DataConsumer resumed [dataConsumerId:%s]", this->id.c_str());
 
 		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_RESUME);
@@ -494,7 +491,7 @@ namespace RTC
 
 		this->dataProducerClosed = true;
 
-		MS_DEBUG_DEV("DataProducer closed [dataConsumerId:%s]", this->id.c_str());
+		MS_DEBUG_DEV("DataConsumer closed [dataConsumerId:%s]", this->id.c_str());
 
 		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_CLOSE);

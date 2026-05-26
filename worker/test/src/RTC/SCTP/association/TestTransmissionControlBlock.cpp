@@ -53,7 +53,7 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 
 		sendQueue.ExpectEnableMessageInterleavingCalledWith(false);
 
-		RTC::SCTP::TransmissionControlBlock tcb(
+		const RTC::SCTP::TransmissionControlBlock tcb(
 		  associationListener,
 		  sctpOptions,
 		  std::addressof(shared),
@@ -78,7 +78,7 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 
 		sendQueue.ExpectEnableMessageInterleavingCalledWith(true);
 
-		RTC::SCTP::TransmissionControlBlock tcb(
+		const RTC::SCTP::TransmissionControlBlock tcb(
 		  associationListener,
 		  sctpOptions,
 		  std::addressof(shared),

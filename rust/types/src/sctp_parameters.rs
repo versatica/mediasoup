@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SctpParameters {
+    pub port: u16,
     /// Maximum allowed size for SCTP send messages.
     pub max_send_message_size: u32,
     /// Maximum allowed size for SCTP receive messages.
@@ -20,12 +21,19 @@ pub struct SctpParameters {
     pub is_data_channel: bool,
 
     // TODO: SCTP: For backwards compatibility. Remove them in the future.
-    pub port: u16,
     #[serde(rename = "OS")]
     pub os: u16,
     #[serde(rename = "MIS")]
     pub mis: u16,
     pub max_message_size: u32,
+}
+
+/// SCTP negotiated capabilities (only available once SCTP association is connected).
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SctpNegotiatedCapabilities {
+    pub negotiated_max_outbound_streams: u16,
+    pub negotiated_max_inbound_streams: u16,
 }
 
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.

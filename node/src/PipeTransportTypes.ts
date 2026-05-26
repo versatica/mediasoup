@@ -12,7 +12,10 @@ import type {
 } from './TransportTypes';
 import type { Consumer } from './ConsumerTypes';
 import type { SrtpParameters } from './srtpParametersTypes';
-import type { SctpParameters } from './sctpParametersTypes';
+import type {
+	SctpParameters,
+	SctpNegotiatedCapabilities,
+} from './sctpParametersTypes';
 import type { Either, AppData } from './types';
 
 export type PipeTransportOptions<
@@ -169,6 +172,14 @@ export interface PipeTransport<
 	 * SCTP state.
 	 */
 	get sctpState(): SctpState | undefined;
+
+	/**
+	 * SCTP negotiated capabilities.
+	 *
+	 * @remarks
+	 * - Only present if SCTP association is connected.
+	 */
+	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined;
 
 	/**
 	 * SRTP parameters.

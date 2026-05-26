@@ -20,6 +20,7 @@ enum Event: uint8 {
     // Notifications from worker.
     WORKER_RUNNING,
     TRANSPORT_SCTP_STATE_CHANGE,
+    TRANSPORT_SCTP_NEGOTIATED_CAPABILITIES,
     TRANSPORT_TRACE,
     WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
     WEBRTCTRANSPORT_ICE_STATE_CHANGE,
@@ -52,6 +53,7 @@ union Body {
     // Notifications to worker.
     Transport_SendRtcpNotification: FBS.Transport.SendRtcpNotification,
     Transport_SctpStateChangeNotification: FBS.Transport.SctpStateChangeNotification,
+    Transport_SctpNegotiatedCapabilitiesNotification: FBS.Transport.SctpNegotiatedCapabilitiesNotification,
     Producer_SendNotification: FBS.Producer.SendNotification,
     DataProducer_SendNotification: FBS.DataProducer.SendNotification,
 

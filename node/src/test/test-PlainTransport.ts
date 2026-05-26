@@ -101,6 +101,7 @@ test('router.createPlainTransport() succeeds', async () => {
 	expect(plainTransport2.tuple.protocol).toBe('udp');
 	expect(plainTransport2.rtcpTuple).toBeUndefined();
 	expect(plainTransport2.sctpParameters).toMatchObject({
+		port: 5000,
 		maxSendMessageSize: 262144,
 		maxReceiveMessageSize: 262144,
 		sendBufferSize: 2000000,
@@ -109,6 +110,7 @@ test('router.createPlainTransport() succeeds', async () => {
 		isDataChannel: false,
 	});
 	expect(plainTransport2.sctpState).toBe('new');
+	expect(plainTransport2.sctpNegotiatedCapabilities).toBeUndefined();
 	expect(plainTransport2.srtpParameters).toBeUndefined();
 
 	const dump1 = await plainTransport2.dump();
@@ -164,6 +166,7 @@ test('router.createPlainTransport() succeeds', async () => {
 	expect(transport2.rtcpTuple?.protocol).toBe('udp');
 	expect(transport2.sctpParameters).toBeUndefined();
 	expect(transport2.sctpState).toBeUndefined();
+	expect(transport2.sctpNegotiatedCapabilities).toBeUndefined();
 
 	const dump2 = await transport2.dump();
 

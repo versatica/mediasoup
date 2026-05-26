@@ -2,6 +2,9 @@
 
 ### NEXT
 
+- New built-in SCTP stack (PR #1806).
+  - Add `SctpNegotiatedCapabilities` type.
+
 ### 0.3.0
 
 - `RtpHeaderExtensionUri`: Add `SsrcAudioLevel`, `AbsSendTime`, `TransportWideCcDraft01`, `DependencyDescriptor`, `AbsCaptureTime`, `PlayoutDelay` and `MediasoupPacketId` variants. Rename `AudioLevel` to `SsrcAudioLevel` (PR #1631).

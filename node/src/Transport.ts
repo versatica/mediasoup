@@ -70,6 +70,7 @@ import {
 } from './rtpParametersFbsUtils';
 import type {
 	SctpParameters,
+	SctpNegotiatedCapabilities,
 	SctpStreamParameters,
 } from './sctpParametersTypes';
 import {
@@ -169,6 +170,12 @@ export abstract class TransportImpl<
 
 	// Buffer with available SCTP stream ids.
 	#sctpStreamIds?: Buffer;
+
+	// Max number of negotiated outbound SCTP streams.
+	#sctpNegotiatedMaxOutboundStreams?: number;
+
+	// Next SCTP stream id.
+	#nextSctpStreamId = 0;
 
 	// Observer instance.
 	readonly #observer: Observer;
@@ -854,7 +861,7 @@ export abstract class TransportImpl<
 			type = 'sctp';
 
 			// This may throw.
-			sctpStreamId = this.getNextSctpStreamId();
+			sctpStreamId = this.allocateSctpStreamId();
 
 			sctpStreamParameters = dataProducer.sctpStreamParameters
 				? utils.clone<SctpStreamParameters>(dataProducer.sctpStreamParameters)
@@ -864,8 +871,6 @@ export abstract class TransportImpl<
 					};
 
 			sctpStreamParameters.streamId = sctpStreamId;
-
-			this.#sctpStreamIds![sctpStreamId] = 1;
 
 			if (ordered !== undefined) {
 				sctpStreamParameters.ordered = ordered;
@@ -994,7 +999,14 @@ export abstract class TransportImpl<
 		);
 	}
 
-	private getNextSctpStreamId(): number {
+	protected handleSctpNegotiatedCapabilities(
+		sctpNegotiatedCapabilities: SctpNegotiatedCapabilities
+	): void {
+		this.#sctpNegotiatedMaxOutboundStreams =
+			sctpNegotiatedCapabilities.negotiatedMaxOutboundStreams;
+	}
+
+	private allocateSctpStreamId(): number {
 		if (!this.#sctpStreamIds) {
 			// Allocate a buffer with 65535 elements set to 0.
 			// Notice that 65535 is the maximum number of streams in a SCTP
@@ -1002,12 +1014,35 @@ export abstract class TransportImpl<
 			this.#sctpStreamIds = Buffer.alloc(65535, 0);
 		}
 
-		for (
-			let sctpStreamId = 0;
-			sctpStreamId < this.#sctpStreamIds.length;
-			++sctpStreamId
+		// It may happen that the SCTP association is connected after having
+		// created many DataConsumers and hence some of them could have
+		// exceeded the max number of SCTP outgoing streams.
+		//
+		// NOTE: This is not an issue in real world because nowadays all the
+		// WebRTC browsers negotiate 65535 (max value) for their inbound
+		// number of streams and mediasoup always negotiates 65565 (max value)
+		// for its outbound number of streams.
+		if (
+			this.#sctpNegotiatedMaxOutboundStreams !== undefined &&
+			this.#nextSctpStreamId + 1 > this.#sctpNegotiatedMaxOutboundStreams
 		) {
+			logger.warn(
+				`SCTP negotiated max outbound streams is higher than current next SCTP streamId + 1, resetting it to 0`
+			);
+
+			this.#nextSctpStreamId = 0;
+		}
+
+		let sctpStreamId;
+
+		for (let idx = 0; idx < this.#sctpStreamIds.length; ++idx) {
+			sctpStreamId =
+				(this.#nextSctpStreamId + idx) % this.#sctpStreamIds.length;
+
 			if (this.#sctpStreamIds[sctpStreamId] === 0) {
+				this.#sctpStreamIds[sctpStreamId] = 1;
+				this.#nextSctpStreamId = sctpStreamId + 1;
+
 				return sctpStreamId;
 			}
 		}

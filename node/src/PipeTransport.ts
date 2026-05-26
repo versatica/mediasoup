@@ -29,7 +29,10 @@ import {
 	serializeRtpEncodingParameters,
 	serializeRtpParameters,
 } from './rtpParametersFbsUtils';
-import type { SctpParameters } from './sctpParametersTypes';
+import type {
+	SctpParameters,
+	SctpNegotiatedCapabilities,
+} from './sctpParametersTypes';
 import type { SrtpParameters } from './srtpParametersTypes';
 import {
 	parseSrtpParameters,
@@ -53,6 +56,7 @@ export type PipeTransportData = {
 	tuple: TransportTuple;
 	sctpParameters?: SctpParameters;
 	sctpState?: SctpState;
+	sctpNegotiatedCapabilities?: SctpNegotiatedCapabilities;
 	rtx: boolean;
 	srtpParameters?: SrtpParameters;
 };
@@ -110,6 +114,10 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 
 	get sctpState(): SctpState | undefined {
 		return this.#data.sctpState;
+	}
+
+	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined {
+		return this.#data.sctpNegotiatedCapabilities;
 	}
 
 	get srtpParameters(): SrtpParameters | undefined {
@@ -307,6 +315,28 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 
 						// Emit observer event.
 						this.observer.safeEmit('sctpstatechange', sctpState);
+
+						break;
+					}
+
+					case Event.TRANSPORT_SCTP_NEGOTIATED_CAPABILITIES: {
+						const notification =
+							new FbsTransport.SctpNegotiatedCapabilitiesNotification();
+
+						data!.body(notification);
+
+						const sctpNegotiatedCapabilities: SctpNegotiatedCapabilities = {
+							negotiatedMaxOutboundStreams: notification
+								.negotiatedCapabilities()!
+								.negotiatedMaxOutboundStreams(),
+							negotiatedMaxInboundStreams: notification
+								.negotiatedCapabilities()!
+								.negotiatedMaxInboundStreams(),
+						};
+
+						this.#data.sctpNegotiatedCapabilities = sctpNegotiatedCapabilities;
+
+						super.handleSctpNegotiatedCapabilities(sctpNegotiatedCapabilities);
 
 						break;
 					}

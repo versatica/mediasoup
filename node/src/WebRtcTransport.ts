@@ -31,7 +31,10 @@ import {
 	parseTransportTraceEventData,
 	parseTuple,
 } from './Transport';
-import type { SctpParameters } from './sctpParametersTypes';
+import type {
+	SctpParameters,
+	SctpNegotiatedCapabilities,
+} from './sctpParametersTypes';
 import type { AppData } from './types';
 import * as fbsUtils from './fbsUtils';
 import { Event, Notification } from './fbs/notification';
@@ -62,6 +65,7 @@ export type WebRtcTransportData = {
 	dtlsRemoteCert?: string;
 	sctpParameters?: SctpParameters;
 	sctpState?: SctpState;
+	sctpNegotiatedCapabilities?: SctpNegotiatedCapabilities;
 };
 
 const logger = new Logger('WebRtcTransport');
@@ -154,6 +158,10 @@ export class WebRtcTransportImpl<
 
 	get sctpState(): SctpState | undefined {
 		return this.#data.sctpState;
+	}
+
+	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined {
+		return this.#data.sctpNegotiatedCapabilities;
 	}
 
 	override close(): void {
@@ -371,6 +379,28 @@ export class WebRtcTransportImpl<
 
 						// Emit observer event.
 						this.observer.safeEmit('sctpstatechange', sctpState);
+
+						break;
+					}
+
+					case Event.TRANSPORT_SCTP_NEGOTIATED_CAPABILITIES: {
+						const notification =
+							new FbsTransport.SctpNegotiatedCapabilitiesNotification();
+
+						data!.body(notification);
+
+						const sctpNegotiatedCapabilities: SctpNegotiatedCapabilities = {
+							negotiatedMaxOutboundStreams: notification
+								.negotiatedCapabilities()!
+								.negotiatedMaxOutboundStreams(),
+							negotiatedMaxInboundStreams: notification
+								.negotiatedCapabilities()!
+								.negotiatedMaxInboundStreams(),
+						};
+
+						this.#data.sctpNegotiatedCapabilities = sctpNegotiatedCapabilities;
+
+						super.handleSctpNegotiatedCapabilities(sctpNegotiatedCapabilities);
 
 						break;
 					}

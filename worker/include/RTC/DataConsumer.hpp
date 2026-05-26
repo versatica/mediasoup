@@ -27,7 +27,9 @@ namespace RTC
 			virtual void OnDataConsumerSendMessage(
 			  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb) = 0;
 			virtual void OnDataConsumerNeedBufferedAmount(
-			  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) const       = 0;
+			  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) const = 0;
+			virtual void OnDataConsumerSetBufferedAmountLowThreshold(
+			  const RTC::DataConsumer* dataConsumer, uint32_t bytes) const                 = 0;
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
 		};
 

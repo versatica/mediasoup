@@ -113,7 +113,7 @@ namespace RTC
 				this->tcb->Dump(indentation + 1);
 			}
 
-			const auto metrics = GetMetrics();
+			const auto metrics = MakeMetrics();
 
 			if (metrics.has_value())
 			{
@@ -130,6 +130,7 @@ namespace RTC
 
 			return FBS::SctpParameters::CreateSctpParameters(
 			  builder,
+			  /*port*/ this->sctpOptions.sourcePort,
 			  /*maxSendMessageSize*/ this->sctpOptions.maxSendMessageSize,
 			  /*maxReceiveMessageSize*/ this->sctpOptions.maxReceiveMessageSize,
 			  /*sctpSendBufferSize*/ this->sctpOptions.maxSendBufferSize,
@@ -325,10 +326,11 @@ namespace RTC
 			}
 
 			InternalClose(Types::ErrorKind::SUCCESS, "");
+
 			AssertIsConsistent();
 		}
 
-		std::optional<AssociationMetrics> Association::GetMetrics() const
+		std::optional<AssociationMetrics> Association::MakeMetrics() const
 		{
 			if (!this->tcb)
 			{
@@ -440,6 +442,7 @@ namespace RTC
 			this->tcb->GetStreamResetHandler().ResetStreams(outboundStreamIds);
 
 			MaySendResetStreamsRequest();
+
 			AssertIsConsistent();
 
 			return Types::ResetStreamsStatus::PERFORMED;
@@ -587,6 +590,42 @@ namespace RTC
 			}
 
 			AssertIsConsistent();
+		}
+
+		uint16_t Association::GetNegotiatedMaxOutboundStreams() const
+		{
+			MS_TRACE();
+
+			if (this->tcb)
+			{
+				return this->tcb->GetNegotiatedCapabilities().negotiatedMaxOutboundStreams;
+			}
+			else
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "calling Association::GetNegotiatedMaxOutboundStreams() before TCB is created returns 0");
+
+				return 0;
+			}
+		}
+
+		uint16_t Association::GetNegotiatedMaxInboundStreams() const
+		{
+			MS_TRACE();
+
+			if (this->tcb)
+			{
+				return this->tcb->GetNegotiatedCapabilities().negotiatedMaxInboundStreams;
+			}
+			else
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "calling Association::GetNegotiatedMaxInboundStreams() before TCB is created returns 0");
+
+				return 0;
+			}
 		}
 
 		void Association::InternalClose(Types::ErrorKind errorKind, const std::string_view& message)
@@ -1594,6 +1633,7 @@ namespace RTC
 
 			this->tcb->SendBufferedPackets(nowMs);
 			this->t1CookieTimer->Start();
+
 			this->associationListenerDeferrer.OnAssociationConnecting();
 		}
 
@@ -1807,6 +1847,7 @@ namespace RTC
 			const uint64_t nowMs = this->shared->GetTimeMs();
 
 			this->tcb->SendBufferedPackets(nowMs);
+
 			this->associationListenerDeferrer.OnAssociationConnected();
 		}
 
@@ -2456,6 +2497,7 @@ namespace RTC
 				this->packetSender.SendPacket(packet.get());
 
 				InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "no SHUTDOWN_ACK chunk received");
+
 				AssertIsConsistent();
 
 				return;
@@ -2577,9 +2619,18 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(
-			  !(this->tcb && this->tcb->GetReassemblyQueue().HasMessages()),
-			  "this->tcb && this->tcb->GetReassemblyQueue().HasMessages()");
+			// NOTE: This assertion is present in dcsctp but we are removing it because
+			// it's dangerous. Depending on where `AssertIsConsistent()` is called from,
+			// it may legitimately happen that tere are SCTP full messages stored in
+			// the reassembly queue. `ReassemblyQueue::HasMessages()` can legitimately
+			// return `true` during stream deferred reset processing, which is a valid
+			// state where the reassembly queue intentionally retains messages while
+			// waiting for the TSN marked by the peer as the "Sender's Last Assigned
+			// TSN". There is no point in the code where we can guarantee that this
+			// state is not active.
+			// MS_ASSERT(
+			//   !(this->tcb && this->tcb->GetReassemblyQueue().HasMessages()),
+			//   "this->tcb && this->tcb->GetReassemblyQueue().HasMessages()");
 
 			switch (this->state)
 			{
@@ -2730,10 +2781,22 @@ namespace RTC
 			}
 		}
 
+#if MS_LOG_DEV_LEVEL == 3
+		void Association::OnPacketSenderPacketSent(
+		  PacketSender* /*packetSender*/, const Packet* packet, bool sent)
+#else
 		void Association::OnPacketSenderPacketSent(
 		  PacketSender* /*packetSender*/, const Packet* /*packet*/, bool sent)
+#endif
 		{
 			MS_TRACE();
+
+// For debugging purposes.
+#if MS_LOG_DEV_LEVEL == 3
+			MS_DUMP(">>> SCTP packet sent [sent:%s]", sent ? "yes" : "no");
+
+			packet->Dump();
+#endif
 
 			if (sent)
 			{

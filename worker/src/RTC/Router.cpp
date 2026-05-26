@@ -392,7 +392,7 @@ namespace RTC
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
-				RTC::Transport* transport = GetTransportById(transportId);
+				RTC::Transport* transport = AssertAndGetTransportById(transportId);
 
 				// Tell the Transport to close all its Producers and Consumers so it will
 				// notify us about their closures.
@@ -417,7 +417,7 @@ namespace RTC
 				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverById(rtpObserverId);
+				RTC::RtpObserver* rtpObserver = AssertAndGetRtpObserverById(rtpObserverId);
 
 				// Remove it from the map.
 				this->mapRtpObservers.erase(rtpObserver->id);
@@ -463,7 +463,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Transport* Router::GetTransportById(const std::string& transportId) const
+	RTC::Transport* Router::AssertAndGetTransportById(const std::string& transportId) const
 	{
 		MS_TRACE();
 
@@ -477,7 +477,7 @@ namespace RTC
 		return it->second;
 	}
 
-	RTC::RtpObserver* Router::GetRtpObserverById(const std::string& rtpObserverId) const
+	RTC::RtpObserver* Router::AssertAndGetRtpObserverById(const std::string& rtpObserverId) const
 	{
 		MS_TRACE();
 

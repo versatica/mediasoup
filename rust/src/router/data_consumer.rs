@@ -15,7 +15,7 @@ use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionH
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
-use mediasoup_sys::fbs::{data_consumer, data_producer, notification, response};
+use mediasoup_sys::fbs::{data_consumer, notification, response};
 use mediasoup_types::data_structures::{AppData, WebRtcMessage};
 use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use parking_lot::Mutex;
@@ -172,7 +172,7 @@ impl<'a> TryFromFbs<'a> for DataConsumerDump {
         Ok(Self {
             id: dump.id.parse()?,
             data_producer_id: dump.data_producer_id.parse()?,
-            r#type: if dump.type_ == data_producer::Type::Sctp {
+            r#type: if dump.type_ == data_consumer::Type::Sctp {
                 DataConsumerType::Sctp
             } else {
                 DataConsumerType::Direct

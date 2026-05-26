@@ -11,7 +11,10 @@ import type {
 	TransportObserverEvents,
 } from './TransportTypes';
 import type { SrtpParameters, SrtpCryptoSuite } from './srtpParametersTypes';
-import type { SctpParameters } from './sctpParametersTypes';
+import type {
+	SctpParameters,
+	SctpNegotiatedCapabilities,
+} from './sctpParametersTypes';
 import type { Either, AppData } from './types';
 
 export type PlainTransportOptions<
@@ -186,6 +189,14 @@ export interface PlainTransport<
 	 * SCTP state.
 	 */
 	get sctpState(): SctpState | undefined;
+
+	/**
+	 * SCTP negotiated capabilities.
+	 *
+	 * @remarks
+	 * - Only present if SCTP association is connected.
+	 */
+	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined;
 
 	/**
 	 * SRTP parameters.

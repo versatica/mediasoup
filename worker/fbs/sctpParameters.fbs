@@ -1,6 +1,7 @@
 namespace FBS.SctpParameters;
 
 table SctpParameters {
+    port: uint16;
     max_send_message_size: uint32;
     max_receive_message_size: uint32;
     send_buffer_size: uint32;
