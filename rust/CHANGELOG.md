@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.22.0
+
 - New built-in SCTP stack (PR #1806):
   - Remove `useBuiltInSctpStack` worker option.
   - `WebRtcTransport`, `PlainTransport`, `PipeTransport`: Add `sctp_negotiated_capabilities()` getter.
