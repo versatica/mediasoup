@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- New built-in SCTP stack (PR #1806).
+- New built-in SCTP stack (PR #1806):
   - Remove `NumSctpStreams` type.
   - Add `SctpNegotiatedCapabilities` type.
 

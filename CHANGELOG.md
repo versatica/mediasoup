@@ -3,7 +3,7 @@
 ### NEXT
 
 - Node: Update TypeScript to v6 ([PR #1790](https://github.com/versatica/mediasoup/pull/1790)).
-- New built-in SCTP stack ([PR #1806](https://github.com/versatica/mediasoup/pull/1806)).
+- New built-in SCTP stack ([PR #1806](https://github.com/versatica/mediasoup/pull/1806)):
   - **Breaking change:** Remove `useBuiltInSctpStack` option in `WorkerSettngs`.
   - **Breaking change:** Remove `SctpCapabilities` type. No longer needed.
   - `WebRtcTransport`, `PlainTransport`, `PipeTransport`: Add `sctpNegotiatedCapabilities()` getter.

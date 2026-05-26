@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- New built-in SCTP stack (PR #1806).
+- New built-in SCTP stack (PR #1806):
   - Remove `useBuiltInSctpStack` worker option.
   - `WebRtcTransport`, `PlainTransport`, `PipeTransport`: Add `sctp_negotiated_capabilities()` getter.
   - `WebRtcTransport`, `PlainTransport`, `PipeTransport` options: Remove `num_sctp_streams` and `max_sctp_message_size`, and add `max_send_message_size`, `max_receive_message_size`, `sctp_per_stream_send_queue_limit` and `sctp_max_receiver_window_buffer_size`.
