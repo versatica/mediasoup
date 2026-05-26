@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::Transport"
-// TODO: SCTP: Comment.
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Transport.hpp"
 #include "Logger.hpp"
@@ -2900,11 +2899,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (dataConsumer->GetType() == RTC::DataConsumer::Type::DIRECT)
-		{
-			bufferedAmount = 0;
-		}
-		else if (this->sctpAssociation)
+		if (this->sctpAssociation)
 		{
 			bufferedAmount = static_cast<uint32_t>(this->sctpAssociation->GetStreamBufferedAmount(
 			  dataConsumer->GetSctpStreamParameters().streamId));
@@ -2912,6 +2907,21 @@ namespace RTC
 		else
 		{
 			bufferedAmount = 0;
+		}
+	}
+
+	void Transport::OnDataConsumerNeedBufferedAmountLowThreshold(
+	  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmountLowThreshold) const
+	{
+		if (this->sctpAssociation)
+		{
+			bufferedAmountLowThreshold =
+			  static_cast<uint32_t>(this->sctpAssociation->GetStreamBufferedAmountLowThreshold(
+			    dataConsumer->GetSctpStreamParameters().streamId));
+		}
+		else
+		{
+			bufferedAmountLowThreshold = 0;
 		}
 	}
 

@@ -275,6 +275,8 @@ namespace RTC
 		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb) override;
 		void OnDataConsumerNeedBufferedAmount(
 		  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) const override;
+		void OnDataConsumerNeedBufferedAmountLowThreshold(
+		  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmountLowThreshold) const override;
 		void OnDataConsumerSetBufferedAmountLowThreshold(
 		  const RTC::DataConsumer* dataConsumer, uint32_t bytes) const override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;

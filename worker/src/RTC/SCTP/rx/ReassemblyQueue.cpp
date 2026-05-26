@@ -85,7 +85,7 @@ namespace RTC
 					  AddData(tsn, std::move(*sharedData));
 				  });
 
-				// TODO: Once we upgrade to C++23, replace the above with:
+				// TODO: SCTP: Once we upgrade to C++23, replace the above with:
 				// this->deferredResetStreams->deferredActions.emplace_back(
 				//   [this, tsn, data = std::move(data)]() mutable
 				//   {

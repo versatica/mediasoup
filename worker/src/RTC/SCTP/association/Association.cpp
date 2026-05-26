@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::SCTP::Association"
-// TODO: SCTP: Comment.
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/Association.hpp"
 #include "Logger.hpp"

@@ -113,13 +113,11 @@ namespace RTC
 
 		this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
 
-		// TODO: SCTP: Remove const.
-		const uint32_t bufferedAmountLowThreshold{ 0 };
+		uint32_t bufferedAmountLowThreshold{ 0 };
 
 		if (this->type == DataConsumer::Type::SCTP)
 		{
-			// TODO: SCTP: Implement.
-			// this->listener->OnDataConsumerNeedBufferedAmountLowThreshold(this, bufferedAmountLowThreshold);
+			this->listener->OnDataConsumerNeedBufferedAmountLowThreshold(this, bufferedAmountLowThreshold);
 		}
 
 		return FBS::DataConsumer::CreateDumpResponseDirect(
