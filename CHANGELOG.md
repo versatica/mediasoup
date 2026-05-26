@@ -6,12 +6,10 @@
 - New built-in SCTP stack ([PR #1806](https://github.com/versatica/mediasoup/pull/1806)).
   - **Breaking change:** Remove `useBuiltInSctpStack` option in `WorkerSettngs`.
   - **Breaking change:** Remove `SctpCapabilities` type. No longer needed.
-  - **Breaking change:** Remove `numSctpStreams` option in all `Transport` options.
-  - **Breaking change:** Replace `maxSctpMessageSize` in all `Transport` options with `maxSendMessageSize` and `maxReceiveMessageSize`.
-  - **Breaking change:** Replace `maxMessageSize` in `DirectTransport` options with `maxSendMessageSize` and `maxReceiveMessageSize`.
-  - Add new `Transport` options: `sctpPerStreamSendQueueLimit` and `sctpMaxReceiverWindowBufferSize`.
-  - **Breaking change:** `SctpParameters` type changed from `{ port, OS, MIS, maxMessageSize }` to `{ port, maxSendMessageSize, maxReceiveMessageSize, sendBufferSize, perStreamSendQueueLimit, maxReceiverWindowBufferSize, isDataChannel}`.
-  - **Breaking change:** Add `bufferedAmount` in `DataConsumerDump`.
+  - **Breaking change:** `WebRtcTransport`, `PlainTransport`, `PipeTransport`: Add `sctpNegotiatedCapabilities()` getter.
+  - `WebRtcTransport`, `PlainTransport`, `PipeTransport` options: Remove `numSctpStreams` and `maxSctpMessageSize`, and add `maxSendMessageSize`, `maxReceiveMessageSize`, `sctpPerStreamSendQueueLimit` and `sctpMaxReceiverWindowBufferSize`.
+  - `DirectTransport` options: Remove `maxMessageSize`, and add `maxSendMessageSize` and `maxReceiveMessageSize`.
+- **Breaking change:** Change `SctpParameters` type from `{ port, OS, MIS, maxMessageSize }` to `{ port, maxSendMessageSize, maxReceiveMessageSize, sendBufferSize, perStreamSendQueueLimit, maxReceiverWindowBufferSize, isDataChannel}`.
 
 ### 3.19.22
 
