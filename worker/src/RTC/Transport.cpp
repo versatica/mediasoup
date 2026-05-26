@@ -3301,7 +3301,7 @@ namespace RTC
 		// and DataConsumers because the peer (e.g. a browser) may have not started
 		// its SCTP stack (e.g. no "m=application" media section in its SDP) so if we
 		// initiate the SCTP connection it would fail after some time.
-		return IsConnected() && (this->mapDataProducers.size() > 0 || this->mapDataConsumers.size() > 0);
+		return IsConnected() && (!this->mapDataProducers.empty() || !this->mapDataConsumers.empty());
 	}
 
 	void Transport::OnTransportCongestionControlClientBitrates(
