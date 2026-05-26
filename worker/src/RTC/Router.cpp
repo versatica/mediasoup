@@ -417,7 +417,7 @@ namespace RTC
 				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.
-				RTC::RtpObserver* rtpObserver = AssertAndGetRtpObserverById(rtpObserverId);
+				const RTC::RtpObserver* rtpObserver = AssertAndGetRtpObserverById(rtpObserverId);
 
 				// Remove it from the map.
 				this->mapRtpObservers.erase(rtpObserver->id);

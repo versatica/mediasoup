@@ -451,7 +451,7 @@ pub(super) trait TransportImpl: TransportGeneric {
         let mut next_guard = self.next_sctp_stream_id().lock();
 
         if let Some(max) = self.sctp_negotiated_max_outbound_streams() {
-            if *next_guard as u16 >= max {
+            if *next_guard >= max {
                 warn!(
                     "SCTP next stream id exceeds negotiated max outbound streams, resetting to 0"
                 );
