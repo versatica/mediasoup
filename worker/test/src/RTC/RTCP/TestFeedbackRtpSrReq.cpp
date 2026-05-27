@@ -10,7 +10,7 @@ SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 	// clang-format off
 	alignas(4) uint8_t buffer[] =
 	{
-		0x85, 0xcd, 0x00, 0x02, // Type: 205 (Generic RTP Feedback), Count: 5 (SR-REQ) Length: 3
+		0x85, 0xcd, 0x00, 0x02, // Type: 205 (Generic RTP feedback), Count: 5 (SR-REQ) Length: 3
 		0x00, 0x00, 0x00, 0x01, // Sender SSRC: 0x00000001
 		0x03, 0x30, 0xbd, 0xee, // Media source SSRC: 0x0330bdee
 	};

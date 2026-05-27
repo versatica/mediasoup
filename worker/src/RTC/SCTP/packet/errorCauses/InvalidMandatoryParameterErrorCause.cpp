@@ -27,7 +27,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}
@@ -65,7 +65,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "InvalidMandatoryParameterErrorCause Length field must be %zu",
+				  "InvalidMandatoryParameterErrorCause length field must be %zu",
 				  ErrorCause::ErrorCauseHeaderLength);
 
 				return nullptr;

@@ -423,7 +423,7 @@ namespace RTC
 				Item& item       = this->items.front();
 				Message& message = item.message;
 
-				// Allocate Message ID and SSN when the first fragment is sent.
+				// Allocate message ID and SSN when the first fragment is sent.
 				if (!item.mid.has_value())
 				{
 					// This entire message has already expired. Try the next one.

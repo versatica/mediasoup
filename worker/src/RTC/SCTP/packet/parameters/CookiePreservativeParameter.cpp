@@ -27,7 +27,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::COOKIE_PRESERVATIVE)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -67,7 +67,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "CookiePreservativeParameter Length field must be %zu",
+				  "CookiePreservativeParameter length field must be %zu",
 				  CookiePreservativeParameter::CookiePreservativeParameterHeaderLength);
 
 				return nullptr;

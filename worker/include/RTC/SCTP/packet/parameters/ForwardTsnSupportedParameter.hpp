@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Forward-TSN-Supported Parameter (FORWARD_TSN_SUPPORTED) (49152).
+		 * SCTP Forward-TSN-Supported Parameter (FORWARD-TSN-SUPPORTED) (49152).
 		 *
 		 * @see RFC 3758.
 		 *
@@ -25,7 +25,7 @@ namespace RTC
 
 		class ForwardTsnSupportedParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -33,7 +33,7 @@ namespace RTC
 			 * Parse a ForwardTsnSupportedParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static ForwardTsnSupportedParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -41,7 +41,7 @@ namespace RTC
 			 * Create a ForwardTsnSupportedParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static ForwardTsnSupportedParameter* Factory(uint8_t* buffer, size_t bufferLength);
 

@@ -195,7 +195,7 @@ namespace RTC
 			bool ShouldSendStreamResetRequest() const;
 
 			/**
-			 * Adds a Reset Streams request to the given Packet. Will start the
+			 * Adds a Reset Streams request to the given packet. Will start the
 			 * reconfig timer.
 			 *
 			 * @remarks
@@ -218,7 +218,7 @@ namespace RTC
 			bool ValidateReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk);
 
 			/**
-			 * Adds the actual RE-CONFIG chunk to the given Packet. A request (which
+			 * Adds the actual RE-CONFIG chunk to the given packet. A request (which
 			 * set `this->currentRequest`) must have been created prior.
 			 */
 			void AddReConfigChunk(Packet* packet);
@@ -229,7 +229,7 @@ namespace RTC
 			ReqSeqNbrValidationResult ValidateReqSeqNbr(UnwrappedReConfigRequestSn reqSeqNbr);
 
 			/**
-			 * Called when this Association receives an outgoing stream reset request.
+			 * Called when this association receives an outgoing stream reset request.
 			 * It might either be performed straight away, or have to be deferred, and
 			 * the result of that will be put in `responses`.
 			 */
@@ -238,7 +238,7 @@ namespace RTC
 			  ReConfigChunk* reConfigChunk);
 
 			/**
-			 * Called when this Association receives an incoming stream reset request.
+			 * Called when this association receives an incoming stream reset request.
 			 * This isn't really supported, but a successful response is put in
 			 * `responses`.
 			 */

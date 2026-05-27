@@ -27,7 +27,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -64,10 +64,10 @@ namespace RTC
 			auto* parameter =
 			  new SupportedAddressTypesParameter(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Here we must validate that Length field is even.
+			// Here we must validate that length field is even.
 			if (parameter->GetLengthField() % 2 != 0)
 			{
-				MS_WARN_TAG(sctp, "wrong Length value (not even)");
+				MS_WARN_TAG(sctp, "wrong length value (not even)");
 
 				delete parameter;
 				return nullptr;

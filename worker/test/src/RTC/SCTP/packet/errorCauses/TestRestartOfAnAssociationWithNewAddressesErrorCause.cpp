@@ -15,7 +15,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:11 (RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES), Length: 11
+			// Code:11 (RESTART-OF-AN-ASSOCIATION-WITH-NEW-ADDRESSES), Length: 11
 			0x00, 0x0B, 0x00, 0x0B,
 			// New Address TLVs: 0x1234567890AB
 			0x12, 0x34, 0x56, 0x78,
@@ -128,7 +128,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[seri
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:11 (RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES), Length: 7
+			// Code:11 (RESTART-OF-AN-ASSOCIATION-WITH-NEW-ADDRESSES), Length: 7
 			0x00, 0x0B, 0x00, 0x07,
 			//  NewAddressTlvs: 0x123456 (missing padding byte)
 			0x12, 0x34, 0x56,

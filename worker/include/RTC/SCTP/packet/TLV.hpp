@@ -12,12 +12,12 @@ namespace RTC
 		/**
 		 * SCTP TLV (Type-Length-Value).
 		 *
-		 * This is the base class of all items in an SCTP Packet, this is:
-		 * - SCTP Chunk,
-		 * - SCTP Parameter, and
-		 * - SCTP Error Cause.
+		 * This is the base class of all items in an SCTP packet, this is:
+		 * - SCTP chunk,
+		 * - SCTP parameter, and
+		 * - SCTP error cause.
 		 *
-		 * All those items have the same Length field and 4-byte padded length.
+		 * All those items have the same length field and 4-byte padded length.
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -59,8 +59,8 @@ namespace RTC
 			/**
 			 * Subclasses with header bigger than default one (4 bytes) must override
 			 * this method and return their header length (excluding variable-length
-			 * field considered "value", Optional/Variable-Length
-			 * Parameters and Error Causes).
+			 * field considered "value", Optional/variable-length
+			 * parameters and error causes).
 			 */
 			virtual size_t GetHeaderLength() const
 			{
@@ -68,7 +68,7 @@ namespace RTC
 			}
 
 			/**
-			 * The value of the Length field, which includes the length of the header
+			 * The value of the length field, which includes the length of the header
 			 * and content (padding excluded).
 			 */
 			virtual uint16_t GetLengthField() const final
@@ -101,9 +101,9 @@ namespace RTC
 			 * @remarks
 			 * - The variable-length value starts after the fixed header, which can be
 			 *   different and have different length in each item definition.
-			 * - In the case of SCTP Chunk class and subclasses (which implements this
-			 *   class) we assume that a Chunk having variable-length value does not
-			 *   have Parameters or Error Causes.
+			 * - In the case of SCTP chunk class and subclasses (which implements this
+			 *   class) we assume that a chunk having variable-length value does not
+			 *   have parameters or error causes.
 			 */
 			virtual const uint8_t* GetVariableLengthValue() const final
 			{
@@ -118,7 +118,7 @@ namespace RTC
 			/**
 			 * Set the variable-length value. It copies the given value into the
 			 * the variable-length value of the item and updates both the length of
-			 * the Serializable and the Length field.
+			 * the Serializable and the length field.
 			 *
 			 * @throw MediaSoupTypeError - If given `valueLength` is higher than
 			 *   available length.
@@ -153,7 +153,7 @@ namespace RTC
 			/**
 			 * This method doesn't really add an item into the item (that must be done
 			 * by each subcass) but updates the length of the Serializable and the
-			 * value of the Length field by incrementing it with the length of the
+			 * value of the length field by incrementing it with the length of the
 			 * given item.
 			 */
 			virtual void AddItem(const TLV* item) final;

@@ -20,10 +20,10 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:130 (RE_CONFIG), Flags:0b00000000, Length: 38
-			// NOTE: Length field must exclude the padding of the last Parameter.
+			// Type:130 (RE-CONFIG), Flags:0b00000000, Length: 38
+			// NOTE: Length field must exclude the padding of the last parameter.
 			0x82, 0b00000000, 0x00, 0x26,
-			// Parameter 1: Type:13 (OUTGOING_SSN_RESET_REQUEST), Length: 22
+			// Parameter 1: Type:13 (OUTGOING-SSN-RESET-REQUEST), Length: 22
 			0x00, 0x0D, 0x00, 0x16,
 			// Re-configuration Request Sequence Number: 0x11223344
 			0x11, 0x22, 0x33, 0x44,
@@ -31,11 +31,11 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 			0x55, 0x66, 0x77, 0x88,
 			// Sender's Last Assigned TSN: 0xAABBCCDD
 			0xAA, 0xBB, 0xCC, 0xDD,
-			// Stream 1: 0x5001, Stream 2: 0x5002
+			// Stream 1: 0x5001, stream 2: 0x5002
 			0x50, 0x01, 0x50, 0x02,
 			// Stream 3: 0x5003, 2 bytes of padding
 			0x50, 0x03, 0x00, 0x00,
-			// Parameter 2: Type:14 (INCOMING_SSN_RESET_REQUEST), Length: 10
+			// Parameter 2: Type:14 (INCOMING-SSN-RESET-REQUEST), Length: 10
 			0x00, 0x0E, 0x00, 0x0A,
 			// Re-configuration Request Sequence Number: 0x44332211
 			0x44, 0x33, 0x22, 0x11,
@@ -236,7 +236,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		/* Modify it by adding Parameters. */
+		/* Modify it by adding parameters. */
 
 		auto* parameter1 = chunk->BuildParameterInPlace<RTC::SCTP::ReconfigurationResponseParameter>();
 

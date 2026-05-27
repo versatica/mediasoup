@@ -489,7 +489,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 			0x90, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
 			0x00, 0x00, 0x00, 0x05,
-			0xbe, 0xde, 0x00, 0x03, // Header Extension
+			0xbe, 0xde, 0x00, 0x03, // Header extension
 			0x10, 0xaa, 0x21, 0xbb, // - id: 1, len: 1
 			0xff, 0x00, 0x00, 0x33, // - id: 2, len: 2
 			0xff, 0xff, 0xff, 0xff, // - id: 3, len: 4
@@ -672,7 +672,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 			0x90, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
 			0x00, 0x00, 0x00, 0x05,
-			0x10, 0x00, 0x00, 0x04, // Header Extension
+			0x10, 0x00, 0x00, 0x04, // Header extension
 			0x00, 0x00, 0x01, 0x00, // - id: 1, len: 0
 			0x02, 0x01, 0x42, 0x00, // - id: 2, len: 1
 			0x03, 0x02, 0x11, 0x22, // - id: 3, len: 2
@@ -1016,7 +1016,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 			0x90, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
 			0x00, 0x00, 0x00, 0x05,
-			0xbe, 0xde, 0x00, 0x03, // Header Extension
+			0xbe, 0xde, 0x00, 0x03, // Header extension
 			0x10, 0xaa, 0x21, 0xbb, // - id: 1, len: 1
 			0xff, 0x00, 0x00, 0x33, // - id: 2, len: 2
 			0xff, 0xff, 0xff, 0xff, // - id: 3, len: 4
@@ -1070,13 +1070,13 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		// Extensions:
 		//
-		// Using One-Byte Extensions:
-		// - Header Extension value length: 1 + 1 + 1 + 2 + 1 + 3 = 9 => 12 (padded)
-		// - Header Extension length: 4 + 12 = 16
+		// Using One-Byte extensions:
+		// - Header extension value length: 1 + 1 + 1 + 2 + 1 + 3 = 9 => 12 (padded)
+		// - Header extension length: 4 + 12 = 16
 		//
-		// Using Two-Bytes Extensions:
-		// - Header Extension value length: 2 + 1 + 2 + 2 + 2 + 3 = 12
-		// - Header Extension length: 4 + 12 = 16
+		// Using Two-Bytes extensions:
+		// - Header extension value length: 2 + 1 + 2 + 2 + 2 + 3 = 12
+		// - Header extension length: 4 + 12 = 16
 		//
 		// Extension id 1.
 		rtpCommon::DataBuffer[0] = 11;
@@ -1106,7 +1106,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*len*/ 3,
 		  /*value*/ rtpCommon::DataBuffer + 3);
 
-		// Add One-Byte Extensions.
+		// Add One-Byte extensions.
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
 
 		packet->SetPayload(rtpCommon::DataBuffer, 10);
@@ -1349,7 +1349,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    packet->GetPayload(), packet->GetPayloadLength(), rtpCommon::DataBuffer, 1) == true);
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 
-		/* Remove Header Extension. */
+		/* Remove header extension. */
 
 		packet->RemoveHeaderExtension();
 
@@ -1383,7 +1383,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    packet->GetPayload(), packet->GetPayloadLength(), rtpCommon::DataBuffer, 1) == true);
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 
-		// Add Two-Bytes Extensions.
+		// Add Two-Bytes extensions.
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);
 
 		CHECK_RTP_PACKET(
@@ -1439,7 +1439,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 
-		// Can fit into One-Byte type Extensions.
+		// Can fit into One-Byte type extensions.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::MID,           1,  1,  rtpCommon::DataBuffer },
@@ -1448,7 +1448,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasOneByteExtensions());
 
-		// Requires Two-Bytes type Extensions due to id > 14.
+		// Requires Two-Bytes type extensions due to id > 14.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 15, 2, rtpCommon::DataBuffer }
@@ -1456,7 +1456,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
-		// Requires Two-Bytes type Extensions due to length 0.
+		// Requires Two-Bytes type extensions due to length 0.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, 1, 0, rtpCommon::DataBuffer }
@@ -1464,7 +1464,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
-		// Requires Two-Bytes type Extensions due to length > 16.
+		// Requires Two-Bytes type extensions due to length > 16.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET, 1, 17, rtpCommon::DataBuffer }
@@ -1595,7 +1595,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 		auto* d = rtpCommon::DataBuffer;
 
-		// Invalid Extension id 0.
+		// Invalid extension id 0.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::MID,           0, 4, d },
@@ -1609,7 +1609,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions),
 		  MediaSoupTypeError);
 
-		// Invalid Extension id > 14 in One-Byte.
+		// Invalid extension id > 14 in One-Byte.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION, 15, 2, d },
@@ -1622,7 +1622,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  MediaSoupTypeError);
 		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions));
 
-		// Invalid Extension length 0 in One-Byte.
+		// Invalid extension length 0 in One-Byte.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::MID,                    3, 0, d },
@@ -1636,7 +1636,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  MediaSoupTypeError);
 		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions));
 
-		// Invalid Extension length > 16 in One-Byte.
+		// Invalid extension length > 16 in One-Byte.
 		extensions.assign(
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID,   3,   17, d },
@@ -1828,9 +1828,9 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 
-		// One-Byte Extensions:
-		// - Header Extension value length: 1 + 1 + 1 + 2 + 1 + 3 = 9 => 12 (padded)
-		// - Header Extension length: 4 + 12 = 16
+		// One-Byte extensions:
+		// - Header extension value length: 1 + 1 + 1 + 2 + 1 + 3 = 9 => 12 (padded)
+		// - Header extension length: 4 + 12 = 16
 		//
 		// clang-format off
 		uint8_t extension1[] =
@@ -2180,7 +2180,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->SetBufferReleasedListener(std::addressof(packetBufferReleasedListener));
 
-		// If we destroy the Packet it should invoke the listener.
+		// If we destroy the packet it should invoke the listener.
 		packet.reset(nullptr);
 
 		REQUIRE(packetBufferReleased == true);
@@ -2206,14 +2206,14 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->SetBufferReleasedListener(std::addressof(packetBufferReleasedListener));
 
-		// If we serialize the Packet into another buffer it should invoke the
+		// If we serialize the packet into another buffer it should invoke the
 		// listener.
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
 		REQUIRE(packetBufferReleased == true);
 
 		// NOTE: We need to unset the buffer released listener because once the
-		// unique_ptr of the Packet gets out of the scope, the Packet will be
+		// unique_ptr of the packet gets out of the scope, the packet will be
 		// deallocated and will invoke the buffer released listener, which at
 		// that time is already out of the scope (it's lifetime ended) so it's
 		// been destroyed.

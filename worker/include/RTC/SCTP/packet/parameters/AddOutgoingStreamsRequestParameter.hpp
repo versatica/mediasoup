@@ -11,7 +11,7 @@ namespace RTC
 	{
 		/**
 		 * SCTP Add Outgoing Streams Request Parameter
-		 * (ADD_OUTGOING_STREAMS_REQUEST) (17).
+		 * (ADD-OUTGOING-STREAMS-REQUEST) (17).
 		 *
 		 * @see RFC 6525.
 		 *
@@ -31,7 +31,7 @@ namespace RTC
 
 		class AddOutgoingStreamsRequestParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -42,7 +42,7 @@ namespace RTC
 			 * Parse a AddOutgoingStreamsRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static AddOutgoingStreamsRequestParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -50,7 +50,7 @@ namespace RTC
 			 * Create a AddOutgoingStreamsRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static AddOutgoingStreamsRequestParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -95,7 +95,7 @@ namespace RTC
 			AddOutgoingStreamsRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Parameter
+			 * We don't really need to override this method since this parameter
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */

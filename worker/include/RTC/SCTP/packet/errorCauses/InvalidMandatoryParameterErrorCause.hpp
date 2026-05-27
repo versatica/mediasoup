@@ -10,7 +10,7 @@ namespace RTC
 	{
 		/**
 		 * SCTP Invalid Mandatory Parameter Error Cause
-		 * (INVALID_MANDATORY_PARAMETER) (7)
+		 * (INVALID-MANDATORY-PARAMETER) (7)
 		 *
 		 * @see RFC 9260.
 		 *
@@ -26,7 +26,7 @@ namespace RTC
 
 		class InvalidMandatoryParameterErrorCause : public ErrorCause
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -34,7 +34,7 @@ namespace RTC
 			 * Parse a InvalidMandatoryParameterErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Error Cause.
+			 * `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static InvalidMandatoryParameterErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -42,7 +42,7 @@ namespace RTC
 			 * Create a InvalidMandatoryParameterErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
+			 * `bufferLength` could be greater than the error cause real length.
 			 */
 			static InvalidMandatoryParameterErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 

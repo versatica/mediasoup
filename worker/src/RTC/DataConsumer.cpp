@@ -296,7 +296,7 @@ namespace RTC
 				  this->type == DataConsumer::Type::SCTP ? this->sctpStreamParameters.streamId : 0;
 
 				// NOTE: We are creating a copy of the data here, otherwise we cannot
-				// move the Message and pass its ownership to the SCTP stack.
+				// move the message and pass its ownership to the SCTP stack.
 				RTC::SCTP::Message message(streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
 
 				SendMessage(std::move(message), emptySubchannels, std::nullopt, cb);

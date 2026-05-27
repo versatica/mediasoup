@@ -5,7 +5,7 @@
 
 SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 {
-	// RTCP Packet. Sender Report and Receiver Report.
+	// RTCP packet. Sender Report and Receiver Report.
 
 	// clang-format off
 	alignas(4) uint8_t buffer[] =

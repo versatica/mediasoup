@@ -26,7 +26,7 @@ namespace RTC
 
 		class UnknownErrorCause : public ErrorCause
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -34,7 +34,7 @@ namespace RTC
 			 * Parse a UnknownErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Error Cause.
+			 * `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static UnknownErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 

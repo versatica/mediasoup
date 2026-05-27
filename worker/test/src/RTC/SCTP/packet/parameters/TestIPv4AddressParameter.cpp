@@ -15,7 +15,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:5 (IPV4_ADDRESS), Length: 8
+			// Type:5 (IPV4-ADDRESS), Length: 8
 			0x00, 0x05, 0x00, 0x08,
 			// IPv4 Address: "1.2.3.4"
 			0x01, 0x02, 0x03, 0x04,
@@ -94,7 +94,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{
-			// Type:6 (IPV6_ADDRESS), Length: 8
+			// Type:6 (IPV6-ADDRESS), Length: 8
 			0x00, 0x06, 0x00, 0x08,
 			// IPv4 Address: 0xAABBCCDD
 			0xAA, 0xBB, 0xCC, 0xDD
@@ -103,11 +103,11 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 
 		REQUIRE(!RTC::SCTP::IPv4AddressParameter::Parse(buffer1, sizeof(buffer1)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Type:5 (IPV4_ADDRESS), Length: 7
+			// Type:5 (IPV4-ADDRESS), Length: 7
 			0x00, 0x05, 0x00, 0x07,
 			// IPv4 Address: 0xAABBCC
 			0xAA, 0xBB, 0xCC
@@ -116,11 +116,11 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 
 		REQUIRE(!RTC::SCTP::IPv4AddressParameter::Parse(buffer2, sizeof(buffer2)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer3[] =
 		{
-			// Type:5 (IPV4_ADDRESS), Length: 9
+			// Type:5 (IPV4-ADDRESS), Length: 9
 			0x00, 0x05, 0x00, 0x09,
 			// IPv4 Address: 0xAABBCCDD
 			0xAA, 0xBB, 0xCC, 0xDD,
@@ -134,7 +134,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer4[] =
 		{
-			// Type:5 (IPV4_ADDRESS), Length: 8
+			// Type:5 (IPV4-ADDRESS), Length: 8
 			0x00, 0x05, 0x00, 0x08,
 			// IPv4 Address (wrong length)
 			0xAA, 0xBB, 0xCC

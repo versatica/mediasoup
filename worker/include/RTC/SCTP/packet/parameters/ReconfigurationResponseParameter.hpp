@@ -12,7 +12,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Re-configuration Response Parameter (RECONFIGURATION_RESPONSE)
+		 * SCTP Re-configuration Response Parameter (RECONFIGURATION-RESPONSE)
 		 * (16).
 		 *
 		 * @see RFC 6525.
@@ -37,7 +37,7 @@ namespace RTC
 
 		class ReconfigurationResponseParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -62,7 +62,7 @@ namespace RTC
 			 * Parse a ReconfigurationResponseParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static ReconfigurationResponseParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -70,7 +70,7 @@ namespace RTC
 			 * Create a ReconfigurationResponseParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static ReconfigurationResponseParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -149,7 +149,7 @@ namespace RTC
 			ReconfigurationResponseParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We need to override this method since this Chunk has a variable-length
+			 * We need to override this method since this chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
 			size_t GetHeaderLength() const final

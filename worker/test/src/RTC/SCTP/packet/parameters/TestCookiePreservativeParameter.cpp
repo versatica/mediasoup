@@ -15,7 +15,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:9 (COOKIE_PRESERVATIVE), Length: 8
+			// Type:9 (COOKIE-PRESERVATIVE), Length: 8
 			0x00, 0x09, 0x00, 0x08,
 			// Suggested Cookie Life-Span Increment: 4278194466
 			0xFF, 0x00, 0x11, 0x22,
@@ -83,7 +83,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{
-			// Type:9 (IPV6_ADDRESS), Length: 8
+			// Type:9 (IPV6-ADDRESS), Length: 8
 			0x00, 0x06, 0x00, 0x08,
 			// Suggested Cookie Life-Span Increment: 4278194466
 			0xFF, 0x00, 0x11, 0x22,
@@ -92,11 +92,11 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 
 		REQUIRE(!RTC::SCTP::CookiePreservativeParameter::Parse(buffer1, sizeof(buffer1)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Type:9 (COOKIE_PRESERVATIVE), Length: 7
+			// Type:9 (COOKIE-PRESERVATIVE), Length: 7
 			0x00, 0x09, 0x00, 0x07,
 			// Suggested Cookie Life-Span Increment: 4278194466
 			0xFF, 0x00, 0x11, 0x22,
@@ -105,11 +105,11 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 
 		REQUIRE(!RTC::SCTP::CookiePreservativeParameter::Parse(buffer2, sizeof(buffer2)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer3[] =
 		{
-			// Type:9 (COOKIE_PRESERVATIVE), Length: 9
+			// Type:9 (COOKIE-PRESERVATIVE), Length: 9
 			0x00, 0x09, 0x00, 0x09,
 			// Suggested Cookie Life-Span Increment: 4278194466
 			0xFF, 0x00, 0x11, 0x22,
@@ -123,7 +123,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer4[] =
 		{
-			// Type:5 (IPV4_ADDRESS), Length: 8
+			// Type:5 (IPV4-ADDRESS), Length: 8
 			0x00, 0x05, 0x00, 0x08,
 			// Suggested Cookie Life-Span Increment (wrong length)
 			0xAA, 0xBB, 0xCC

@@ -16,11 +16,11 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[serializable][sctp][para
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:14 (INCOMING_SSN_RESET_REQUEST), Length: 14
+			// Type:14 (INCOMING-SSN-RESET-REQUEST), Length: 14
 			0x00, 0x0E, 0x00, 0x0E,
 			// Re-configuration Request Sequence Number: 0x11223344
 			0x11, 0x22, 0x33, 0x44,
-			// Stream 1: 0x5001, Stream 2: 0x5002
+			// Stream 1: 0x5001, stream 2: 0x5002
 			0x50, 0x01, 0x50, 0x02,
 			// Stream 3: 0x5003, 2 bytes of padding
 			0x50, 0x03, 0x00, 0x00,

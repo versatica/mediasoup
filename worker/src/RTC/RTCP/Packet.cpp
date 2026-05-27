@@ -167,7 +167,7 @@ namespace RTC
 						  " " + FeedbackRtpPacket::MessageTypeToString(FeedbackRtp::MessageType(header->count));
 					}
 
-					MS_WARN_TAG(rtcp, "error parsing %s Packet", packetType.c_str());
+					MS_WARN_TAG(rtcp, "error parsing %s packet", packetType.c_str());
 
 					return first;
 				}

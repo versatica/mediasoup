@@ -48,23 +48,23 @@ namespace RTC
 		{
 			{ Chunk::ChunkType::DATA,              "DATA"              },
 			{ Chunk::ChunkType::INIT,              "INIT"              },
-			{ Chunk::ChunkType::INIT_ACK,          "INIT_ACK"          },
+			{ Chunk::ChunkType::INIT_ACK,          "INIT-ACK"          },
 			{ Chunk::ChunkType::SACK,              "SACK"              },
-			{ Chunk::ChunkType::HEARTBEAT_REQUEST, "HEARTBEAT_REQUEST" },
-			{ Chunk::ChunkType::HEARTBEAT_ACK,     "HEARTBEAT_ACK"     },
+			{ Chunk::ChunkType::HEARTBEAT_REQUEST, "HEARTBEAT-REQUEST" },
+			{ Chunk::ChunkType::HEARTBEAT_ACK,     "HEARTBEAT-ACK"     },
 			{ Chunk::ChunkType::ABORT,             "ABORT"             },
 			{ Chunk::ChunkType::SHUTDOWN,          "SHUTDOWN"          },
-			{ Chunk::ChunkType::SHUTDOWN_ACK,      "SHUTDOWN_ACK"      },
-			{ Chunk::ChunkType::OPERATION_ERROR,   "OPERATION_ERROR"   },
-			{ Chunk::ChunkType::COOKIE_ECHO,       "COOKIE_ECHO"       },
-			{ Chunk::ChunkType::COOKIE_ACK,        "COOKIE_ACK"        },
+			{ Chunk::ChunkType::SHUTDOWN_ACK,      "SHUTDOWN-ACK"      },
+			{ Chunk::ChunkType::OPERATION_ERROR,   "OPERATION-ERROR"   },
+			{ Chunk::ChunkType::COOKIE_ECHO,       "COOKIE-ECHO"       },
+			{ Chunk::ChunkType::COOKIE_ACK,        "COOKIE-ACK"        },
 			{ Chunk::ChunkType::ECNE,              "ECNE"              },
 			{ Chunk::ChunkType::CWR,               "CWR"               },
-			{ Chunk::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN_COMPLETE" },
-			{ Chunk::ChunkType::FORWARD_TSN,       "FORWARD_TSN"       },
-			{ Chunk::ChunkType::RE_CONFIG,         "RE_CONFIG"         },
-			{ Chunk::ChunkType::I_DATA,            "I_DATA"            },
-			{ Chunk::ChunkType::I_FORWARD_TSN,     "I_FORWARD_TSN"     },
+			{ Chunk::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN-COMPLETE" },
+			{ Chunk::ChunkType::FORWARD_TSN,       "FORWARD-TSN"       },
+			{ Chunk::ChunkType::RE_CONFIG,         "RE-CONFIG"         },
+			{ Chunk::ChunkType::I_DATA,            "I-DATA"            },
+			{ Chunk::ChunkType::I_FORWARD_TSN,     "I-FORWARD-TSN"     },
 		};
 		// clang-format on
 
@@ -117,7 +117,7 @@ namespace RTC
 			MS_TRACE();
 
 			// NOTE: Here we cannot check CanHaveParameters() or CanHaveErrorCauses()
-			// because this is the destructor of Chunk so the subclass has been
+			// because this is the destructor of chunk so the subclass has been
 			// already destroyed (its destructor runs first).
 
 			for (const auto* parameter : this->parameters)
@@ -170,15 +170,15 @@ namespace RTC
 
 			const size_t previousLength = GetLength();
 
-			// This will update the total length and Length field of the Chunk.
+			// This will update the total length and length field of the chunk.
 			// NOTE: It may throw.
 			AddItem(parameter);
 
-			// Let's append the Parameter at the end of existing Parameters.
+			// Let's append the parameter at the end of existing parameters.
 			auto* clonedParameter =
 			  parameter->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, parameter->GetLength());
 
-			// Add the Parameter to the list.
+			// Add the parameter to the list.
 			this->parameters.push_back(clonedParameter);
 		}
 
@@ -191,11 +191,11 @@ namespace RTC
 
 			const size_t previousLength = GetLength();
 
-			// This will update the total length and Length field of the Chunk.
+			// This will update the total length and length field of the chunk.
 			// NOTE: It may throw.
 			AddItem(errorCause);
 
-			// Let's append the Error Cause at the end of existing Error Causes.
+			// Let's append the error cause at the end of existing error causes.
 			auto* clonedErrorCause = errorCause->Clone(
 			  const_cast<uint8_t*>(GetBuffer()) + previousLength, errorCause->GetLength());
 
@@ -282,7 +282,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Soft clone Parameters into the given Chunk.
+			// Soft clone parameters into the given chunk.
 			if (CanHaveParameters())
 			{
 				for (auto* parameter : this->parameters)
@@ -295,7 +295,7 @@ namespace RTC
 				}
 			}
 
-			// Soft clone Error Causes into the given Chunk.
+			// Soft clone error causes into the given chunk.
 			if (CanHaveErrorCauses())
 			{
 				for (auto* errorCause : this->errorCauses)
@@ -327,16 +327,16 @@ namespace RTC
 
 			AssertCanHaveParameters();
 
-			// Here we assume that the Chunk buffer has been validated and
-			// GetLength() returns the fixed minimum length of the specific Chunk
+			// Here we assume that the chunk buffer has been validated and
+			// GetLength() returns the fixed minimum length of the specific chunk
 			// subclass, so GetBuffer() + GetLength() points to the beginning of the
-			// potential Parameters. And of course we assume that a Chunk cannot have
-			// both Parameters and Error Causes.
+			// potential parameters. And of course we assume that a chunk cannot have
+			// both parameters and error causes.
 			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 
-			// Here we assume that the Chunk has been validated so Length field is
-			// reliable. We want to be ready for Length field to include or not the
-			// possible padding of the last Parameter (as per RFC recommendation). In
+			// Here we assume that the chunk has been validated so length field is
+			// reliable. We want to be ready for length field to include or not the
+			// possible padding of the last parameter (as per RFC recommendation). In
 			// fact, we rely on parameter->GetLength() while parsing the buffer so we
 			// want to provide each Parameter::StrictParse() call with a 4-bytes
 			// padded buffer length.
@@ -345,10 +345,10 @@ namespace RTC
 			while (ptr < end)
 			{
 				// The remaining length in the given length is the potential buffer
-				// length of the Parameter.
+				// length of the parameter.
 				const size_t parameterMaxBufferLength = end - ptr;
 
-				// Here we must anticipate the type of each Parameter to use its
+				// Here we must anticipate the type of each parameter to use its
 				// appropriate parser.
 				Parameter::ParameterType parameterType;
 				uint16_t parameterLength;
@@ -357,7 +357,7 @@ namespace RTC
 				if (!Parameter::IsParameter(
 				      ptr, parameterMaxBufferLength, parameterType, parameterLength, padding))
 				{
-					MS_WARN_TAG(sctp, "not an SCTP Parameter");
+					MS_WARN_TAG(sctp, "not an SCTP parameter");
 
 					return false;
 				}
@@ -534,16 +534,16 @@ namespace RTC
 
 			AssertCanHaveErrorCauses();
 
-			// Here we assume that the Chunk buffer has been validated and GetLength()
-			// returns the fixed minimum length of the specific Chunk subclass, so
+			// Here we assume that the chunk buffer has been validated and GetLength()
+			// returns the fixed minimum length of the specific chunk subclass, so
 			// GetBuffer() + GetLength() points to the beginning of the potential
-			// Error Causes. And of course we assume that a Chunk cannot have both
-			// Parameters and Error Causes.
+			// error causes. And of course we assume that a chunk cannot have both
+			// parameters and error causes.
 			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 
-			// Here we assume that the Chunk has been validated so Length field is
-			// reliable. We want to be ready for Length field to include or not the
-			// possible padding of the last Error Cause (as per RFCrecommendation).
+			// Here we assume that the chunk has been validated so length field is
+			// reliable. We want to be ready for length field to include or not the
+			// possible padding of the last error cause (as per RFCrecommendation).
 			// In fact, we rely on errorCause->GetLength() while parsing the buffer
 			// so we want to provide each ErrorCause::StrictParse() call with a
 			// 4-bytes padded buffer length.
@@ -552,10 +552,10 @@ namespace RTC
 			while (ptr < end)
 			{
 				// The remaining length in the given length is the potential buffer
-				// length of the Error Cause.
+				// length of the error cause.
 				const size_t errorCauseMaxBufferLength = end - ptr;
 
-				// Here we must anticipate the type of each Error Cause to use its
+				// Here we must anticipate the type of each error cause to use its
 				// appropriate parser.
 				ErrorCause::ErrorCauseCode causeCode;
 				uint16_t causeLength;
@@ -563,7 +563,7 @@ namespace RTC
 
 				if (!ErrorCause::IsErrorCause(ptr, errorCauseMaxBufferLength, causeCode, causeLength, padding))
 				{
-					MS_WARN_TAG(sctp, "not an SCTP Error Cause");
+					MS_WARN_TAG(sctp, "not an SCTP error cause");
 
 					return false;
 				}
@@ -716,22 +716,22 @@ namespace RTC
 
 			this->needsConsolidation = true;
 
-			// When the application completes the Parameter it must call
+			// When the application completes the parameter it must call
 			// `parameter->Consolidate()` and that will trigger this event.
 			parameter->SetConsolidatedListener(
 			  [this, parameter]()
 			  {
 				  try
 				  {
-					  // Fix buffer length assigned to the Parameter.
+					  // Fix buffer length assigned to the parameter.
 					  // NOTE: It may throw.
 					  parameter->SetBufferLength(parameter->GetLength());
 
-					  // This will update the total length and Length field of the Chunk.
+					  // This will update the total length and length field of the chunk.
 					  // NOTE: It may throw.
 					  AddItem(parameter);
 
-					  // Add the Parameter to the list.
+					  // Add the parameter to the list.
 					  this->parameters.push_back(parameter);
 
 					  this->needsConsolidation = false;
@@ -751,21 +751,21 @@ namespace RTC
 
 			this->needsConsolidation = true;
 
-			// When the application completes the Error Cause it must call
+			// When the application completes the error cause it must call
 			// `errorCause->Consolidate()` and that will trigger this event.
 			errorCause->SetConsolidatedListener(
 			  [this, errorCause]()
 			  {
 				  try
 				  {
-					  // Fix buffer length assigned to the Error Cause.
+					  // Fix buffer length assigned to the error cause.
 					  errorCause->SetBufferLength(errorCause->GetLength());
 
-					  // This will update the total length and Length field of the Chunk.
+					  // This will update the total length and length field of the chunk.
 					  // NOTE: It may throw.
 					  AddItem(errorCause);
 
-					  // Add the Error Cause to the list.
+					  // Add the error cause to the list.
 					  this->errorCauses.push_back(errorCause);
 
 					  this->needsConsolidation = false;
@@ -785,7 +785,7 @@ namespace RTC
 
 			if (!CanHaveParameters())
 			{
-				MS_THROW_ERROR("this Chunk class cannot have Parameters");
+				MS_THROW_ERROR("this chunk class cannot have parameters");
 			}
 		}
 
@@ -795,7 +795,7 @@ namespace RTC
 
 			if (!CanHaveErrorCauses())
 			{
-				MS_THROW_ERROR("this Chunk class cannot have Error Causes");
+				MS_THROW_ERROR("this chunk class cannot have error causes");
 			}
 		}
 
@@ -805,7 +805,7 @@ namespace RTC
 
 			if (this->needsConsolidation)
 			{
-				MS_THROW_ERROR("Chunk needs consolidation of some ongoing Parameter or Error Cause");
+				MS_THROW_ERROR("chunk needs consolidation of some ongoing parameter or error cause");
 			}
 		}
 	} // namespace SCTP

@@ -42,7 +42,7 @@ namespace RTC
 
 			if (!sent)
 			{
-				MS_WARN_TAG(sctp, "couldn't send SCTP Packet");
+				MS_WARN_TAG(sctp, "couldn't send SCTP packet");
 			}
 
 			return sent;

@@ -16,7 +16,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:64 (I_DATA), I:1, U:0, B:1, E:0, Length: 23
+			// Type:64 (I-DATA), I:1, U:0, B:1, E:0, Length: 23
 			0x40, 0b00001010, 0x00, 0x17,
 			// TSN: 0x11223344,
 			0x11, 0x22, 0x33, 0x44,
@@ -433,7 +433,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(gotUserData.GetStreamId() == 123);
 		REQUIRE(gotUserData.GetStreamSequenceNumber() == 0);
 		REQUIRE(gotUserData.GetMessageId() == 5555);
-		// Bit B is set in the I_DATA Chunk so this must be 0.
+		// Bit B is set in the I-DATA chunk so this must be 0.
 		REQUIRE(gotUserData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(gotUserData.GetPayloadProtocolId() == 56789);
 		REQUIRE(gotUserData.GetPayloadLength() == 4);

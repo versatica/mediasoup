@@ -14,7 +14,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:4 (OUT_OF_RESOURCE), Length: 4
+			// Code:4 (OUT-OF-RESOURCE), Length: 4
 			0x00, 0x04, 0x00, 0x04,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
@@ -79,11 +79,11 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 
 		REQUIRE(!RTC::SCTP::OutOfResourceErrorCause::Parse(buffer1, sizeof(buffer1)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:4 (OUT_OF_RESOURCE), Length: 5
+			// Code:4 (OUT-OF-RESOURCE), Length: 5
 			0x00, 0x04, 0x00, 0x07,
 			0x3A,
 		};
@@ -91,11 +91,11 @@ SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 
 		REQUIRE(!RTC::SCTP::OutOfResourceErrorCause::Parse(buffer2, sizeof(buffer2)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer3[] =
 		{
-			// Code:4 (OUT_OF_RESOURCE), Length (broken)
+			// Code:4 (OUT-OF-RESOURCE), length (broken)
 			0x00, 0x04, 0x00,
 		};
 		// clang-format on

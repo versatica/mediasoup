@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Invalid Stream Identifier Error Cause (INVALID_STREAM_IDENTIFIER)
+		 * SCTP Invalid Stream Identifier Error Cause (INVALID-STREAM-IDENTIFIER)
 		 * (1)
 		 *
 		 * @see RFC 9260.
@@ -29,7 +29,7 @@ namespace RTC
 
 		class InvalidStreamIdentifierErrorCause : public ErrorCause
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -40,7 +40,7 @@ namespace RTC
 			 * Parse a InvalidStreamIdentifierErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Error Cause.
+			 * `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static InvalidStreamIdentifierErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -48,7 +48,7 @@ namespace RTC
 			 * Create a InvalidStreamIdentifierErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
+			 * `bufferLength` could be greater than the error cause real length.
 			 */
 			static InvalidStreamIdentifierErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -86,7 +86,7 @@ namespace RTC
 			InvalidStreamIdentifierErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Error Cause
+			 * We don't really need to override this method since this error cause
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */

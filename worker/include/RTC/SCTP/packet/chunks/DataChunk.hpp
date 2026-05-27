@@ -32,7 +32,7 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 0.
+		 * - Chunk type (8 bits): 0.
 		 * - Res (4 bits): All set to 0.
 		 * - I bit (1 bit): The (I)mmediate bit MAY be set by the sender whenever
 		 *   the sender of a DATA chunk can benefit from the corresponding SACK
@@ -47,8 +47,8 @@ namespace RTC
 		 * - Length (16 bits): This field indicates the length of the DATA chunk in
 		 *   bytes from the beginning of the type field to the end of the User Data
 		 *   field excluding any padding. A DATA chunk with one byte of user data
-		 *   will have the Length field set to 17 (indicating 17 bytes). A DATA
-		 *   chunk with a User Data field of length L will have the Length field
+		 *   will have the length field set to 17 (indicating 17 bytes). A DATA
+		 *   chunk with a User Data field of length L will have the length field
 		 *   set to (16 + L) (indicating 16 + L bytes) where L MUST be greater than
 		 *   0.
 		 * - TSN (32 bits): This value represents the TSN for this DATA chunk. The
@@ -56,7 +56,7 @@ namespace RTC
 		 *   to 0 after reaching 4294967295.
 		 * - Stream Identifier S (16 bits): Identifies the stream to which the
 		 *   following user data belongs.
-		 * - Stream Sequence Number n (16 bits): This value represents the Stream
+		 * - Stream Sequence Number n (16 bits): This value represents the stream
 		 *   Sequence Number of the following user data within the stream S. Valid
 		 *   range is 0 to 65535. When a user message is fragmented by SCTP for
 		 *   transport, the same Stream Sequence Number MUST be carried in each of
@@ -65,7 +65,7 @@ namespace RTC
 		 *   application (or upper layer) specified protocol identifier.
 		 * - User Data (variable length): This is the payload user data. The
 		 *   implementation MUST pad the end of the data to a 4-byte boundary with
-		 *   all zero bytes. Any padding MUST NOT be included in the Length field.
+		 *   all zero bytes. Any padding MUST NOT be included in the length field.
 		 */
 
 		// Forward declaration.
@@ -73,7 +73,7 @@ namespace RTC
 
 		class DataChunk : public AnyDataChunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -84,7 +84,7 @@ namespace RTC
 			 * Parse a DataChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static DataChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -92,7 +92,7 @@ namespace RTC
 			 * Create a DataChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static DataChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -179,7 +179,7 @@ namespace RTC
 			void SetStreamSequenceNumber(uint16_t value);
 
 			/**
-			 * @remarks Only in I_DATA chunks.
+			 * @remarks Only in I-DATA chunks.
 			 */
 			uint32_t GetMessageId() const final
 			{
@@ -192,7 +192,7 @@ namespace RTC
 			}
 
 			/**
-			 * @remarks Only in I_DATA chunks.
+			 * @remarks Only in I-DATA chunks.
 			 */
 			uint32_t GetFragmentSequenceNumber() const final
 			{
@@ -243,7 +243,7 @@ namespace RTC
 			DataChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We need to override this method since this Chunk has a variable-length
+			 * We need to override this method since this chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
 			size_t GetHeaderLength() const final

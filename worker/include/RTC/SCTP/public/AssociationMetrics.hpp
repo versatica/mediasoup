@@ -15,7 +15,7 @@ namespace RTC
 		struct AssociationMetrics
 		{
 			/**
-			 * Number of SCTP Packets sent.
+			 * Number of SCTP packets sent.
 			 */
 			uint64_t txPacketsCount{ 0 };
 
@@ -25,7 +25,7 @@ namespace RTC
 			uint64_t txMessagesCount{ 0 };
 
 			/**
-			 * Number of SCTP Packets received.
+			 * Number of SCTP packets received.
 			 */
 			uint64_t rxPacketsCount{ 0 };
 
@@ -35,10 +35,10 @@ namespace RTC
 			uint64_t rxMessagesCount{ 0 };
 
 			/**
-			 * Number of Packets retransmitted. Since SCTP Packets can contain both
-			 * retransmitted DATA or I-DATA Chunks and Chunks that are transmitted for
+			 * Number of packets retransmitted. Since SCTP packets can contain both
+			 * retransmitted DATA or I-DATA chunks and chunks that are transmitted for
 			 * the first time, this represents an upper bound as it's incremented
-			 * every time a Packet contains a retransmitted DATA or I-DATA chunk.
+			 * every time a packet contains a retransmitted DATA or I-DATA chunk.
 			 */
 			uint64_t rtxPacketsCount{ 0 };
 
@@ -76,7 +76,7 @@ namespace RTC
 
 			/**
 			 * SCTP implementation of the peer. Only detected when the peer sends an
-			 * INIT_ACK Chunk to us with a State Cookie.
+			 * INIT-ACK chunk to us with a State Cookie.
 			 */
 			Types::SctpImplementation peerImplementation{ Types::SctpImplementation::UNKNOWN };
 
@@ -102,7 +102,7 @@ namespace RTC
 			bool usesPartialReliability{ false };
 
 			/**
-			 * Whether Stream Schedulers and User Message Interleaving (I-DATA Chunks)
+			 * Whether Stream Schedulers and User Message Interleaving (I-DATA chunks)
 			 * have been negotiated.
 			 *
 			 * @see RFC 8260.

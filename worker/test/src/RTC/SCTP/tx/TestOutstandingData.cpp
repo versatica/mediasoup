@@ -966,9 +966,9 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	SECTION("generates Forward-TSN until next stream reset TSN")
 	{
 		// This test generates:
-		// * Stream 1: TSN 10, 11, 12 <RESET>
-		// * Stream 2: TSN 13, 14 <RESET>
-		// * Stream 3: TSN 15, 16
+		// * stream 1: TSN 10, 11, 12 <RESET>
+		// * stream 2: TSN 13, 14 <RESET>
+		// * stream 3: TSN 15, 16
 		//
 		// Then it expires chunk 12-15, and ensures that the generated FORWARD-TSN
 		// only includes up till TSN 12 until the cum ack TSN has reached 12, and

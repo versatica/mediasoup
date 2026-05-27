@@ -58,10 +58,10 @@ namespace RTC
 			/**
 			 * STUN Attributes.
 			 *
-			 * After the STUN Message Header are zero or more Attributes. Each
-			 * Attribute MUST be TLV encoded, with a 16-bit type, 16-bit length, and
-			 * value. Each STUN Attribute MUST end on a 32-bit boundary.  All fields
-			 * in an Attribute are transmitted most significant bit first.
+			 * After the STUN message header are zero or more attributes. Each
+			 * attribute MUST be TLV encoded, with a 16-bit type, 16-bit length, and
+			 * value. Each STUN attribute MUST end on a 32-bit boundary.  All fields
+			 * in an attribute are transmitted most significant bit first.
 			 *
 			 *  0                   1                   2                   3
 			 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -145,7 +145,7 @@ namespace RTC
 				 */
 				uint16_t len;
 				/**
-				 * Offset of the Attribute from the start of the Attributes.
+				 * Offset of the attribute from the start of the attributes.
 				 */
 				size_t offset;
 			};
@@ -161,23 +161,23 @@ namespace RTC
 			static const size_t FingerprintAttributeLength{ 4 };
 
 			/**
-			 * Whether given buffer could be a valid STUN Packet.
+			 * Whether given buffer could be a valid STUN packet.
 			 */
 			static bool IsStun(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Parse a STUN Packet.
+			 * Parse a STUN packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the STUN Packet.
+			 * - `bufferLength` must be the exact length of the STUN packet.
 			 */
 			static StunPacket* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Create a STUN Packet.
+			 * Create a STUN packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the STUN Packet.
+			 * - `bufferLength` must be the exact length of the STUN packet.
 			 * - If `transactionId` is not given then a random Transaction ID is
 			 *   generated.
 			 */
@@ -196,7 +196,7 @@ namespace RTC
 
 		private:
 			/**
-			 * Constructor is private because we only want to create STUN Packet
+			 * Constructor is private because we only want to create STUN packet
 			 * instances via Parse() and Factory().
 			 */
 			StunPacket(uint8_t* buffer, size_t bufferLength);
@@ -366,8 +366,8 @@ namespace RTC
 			StunPacket::AuthenticationResult CheckAuthentication(std::string_view password) const;
 
 			/**
-			 * Whether the STUN Packet is protected, meaning that it has
-			 * MESSAGE-INTEGRITY and/or FINGERPRINT Attributes.
+			 * Whether the STUN packet is protected, meaning that it has
+			 * MESSAGE-INTEGRITY and/or FINGERPRINT attributes.
 			 */
 			bool IsProtected() const
 			{
@@ -377,17 +377,17 @@ namespace RTC
 			}
 
 			/**
-			 * Adds MESSAGE-INTEGRITY and FINGERPRINT to the STUN Packet.
+			 * Adds MESSAGE-INTEGRITY and FINGERPRINT to the STUN packet.
 			 *
 			 * @remarks
 			 * - MESSAGE-INTEGRITY is only added if given `password` is not empty.
-			 * - The application MUST NOT add more Attributes into the STUN Packet
-			 *   and MUST NOT modify any field of the STUN Packet after calling
+			 * - The application MUST NOT add more attributes into the STUN packet
+			 *   and MUST NOT modify any field of the STUN packet after calling
 			 *   this method.
 			 *
 			 * @throw MediaSoupTypeError - If there is no enough space in the buffer.
-			 * @throw MediaSoupError - If the STUN Packet already has MESSAGE-INTEGRITY
-			 *   or FINGERPRINT Attributes.
+			 * @throw MediaSoupError - If the STUN packet already has MESSAGE-INTEGRITY
+			 *   or FINGERPRINT attributes.
 			 */
 			void Protect(const std::string_view password);
 
@@ -396,15 +396,15 @@ namespace RTC
 			/**
 			 * Creates a STUN success response for the current STUN request.
 			 *
-			 * @throw MediaSoupError - If the STUN Packet is not a STUN request.
+			 * @throw MediaSoupError - If the STUN packet is not a STUN request.
 			 */
 			StunPacket* CreateSuccessResponse(uint8_t* buffer, size_t bufferLength) const;
 
 			/**
 			 * Creates a STUN error response for the current STUN request. It uses
-			 * given `errorCode` and `reasonPhrase` to add a ERROR-CODE Attribute.
+			 * given `errorCode` and `reasonPhrase` to add a ERROR-CODE attribute.
 			 *
-			 * @throw MediaSoupError - If the STUN Packet is not a STUN request.
+			 * @throw MediaSoupError - If the STUN packet is not a STUN request.
 			 */
 			StunPacket* CreateErrorResponse(
 			  uint8_t* buffer,
@@ -444,8 +444,8 @@ namespace RTC
 			}
 
 			/**
-			 * Validates whether the STUN Packet is valid. It also stores internal
-			 * offsets pointing to relevant STUN Attributes if `storeAttributes` is
+			 * Validates whether the STUN packet is valid. It also stores internal
+			 * offsets pointing to relevant STUN attributes if `storeAttributes` is
 			 * `true`.
 			 */
 #ifdef MS_TEST
@@ -457,26 +457,26 @@ namespace RTC
 #endif
 
 			/**
-			 * Parses Attributes. Returns `true` if they are valid. It also stores
-			 * internal containers holding Attributes if `storeAttributes` is `true`.
+			 * Parses attributes. Returns `true` if they are valid. It also stores
+			 * internal containers holding attributes if `storeAttributes` is `true`.
 			 */
 			bool ParseAttributes(bool storeAttributes);
 
 			/**
-			 * Stores the parsed Attribute data into the map of Attributes.
+			 * Stores the parsed attribute data into the map of attributes.
 			 *
-			 * @return `true` if the Attribute was stored and `false` if it couldn't
-			 *   be stored because there was already an Attribute with same type in
+			 * @return `true` if the attribute was stored and `false` if it couldn't
+			 *   be stored because there was already an attribute with same type in
 			 *   the map.
 			 */
 			bool StoreParsedAttribute(StunPacket::AttributeType type, uint16_t len, size_t offset);
 
 			/**
-			 * Stores a new Attribute data into the map of Attributes.
+			 * Stores a new attribute data into the map of attributes.
 			 *
 			 * @throw MediaSoupError - If there is not enough space in the buffer for
-			 *   the new Attribute or if the Attribute couldn't be stored because
-			 *   there was already an Attribute with same type in the map.
+			 *   the new attribute or if the attribute couldn't be stored because
+			 *   there was already an attribute with same type in the map.
 			 */
 			void StoreNewAttribute(StunPacket::AttributeType type, const void* data, uint16_t len);
 
@@ -532,7 +532,7 @@ namespace RTC
 		private:
 			StunPacket::Class klass{ StunPacket::Class::UNSET };
 			StunPacket::Method method{ StunPacket::Method::UNSET };
-			// Map of STUN Attributes indexed by Attribute type.
+			// Map of STUN attributes indexed by attribute type.
 			std::unordered_map<StunPacket::AttributeType, StunPacket::Attribute> attributes;
 		};
 	} // namespace ICE

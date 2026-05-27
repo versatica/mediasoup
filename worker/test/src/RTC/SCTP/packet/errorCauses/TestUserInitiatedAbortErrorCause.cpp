@@ -15,7 +15,7 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:12 (USER_INITIATED_ABORT), Length: 10
+			// Code:12 (USER-INITIATED-ABORT), Length: 10
 			0x00, 0x0C, 0x00, 0x0A,
 			// Upper Layer Abort Reason: "I DIE!"
 			0x49, 0x20, 0x44, 0x49,
@@ -99,7 +99,7 @@ SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcau
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:12 (USER_INITIATED_ABORT), Length: 7
+			// Code:12 (USER-INITIATED-ABORT), Length: 7
 			0x00, 0x0C, 0x00, 0x07,
 			// Upper Layer Abort Reason: 0x123456 (missing padding byte)
 			0x12, 0x34, 0x56,

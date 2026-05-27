@@ -70,7 +70,7 @@ namespace RTC
 
 			/**
 			 * Useful to extract the payload and its ownership when destructing the
-			 * Message.
+			 * message.
 			 *
 			 * @remarks
 			 * - && at the end means that it can only be called from a rvalue.

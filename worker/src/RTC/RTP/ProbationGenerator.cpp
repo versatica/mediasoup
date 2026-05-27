@@ -37,7 +37,7 @@ namespace RTC
 				mustInitializePayload = false;
 			}
 
-			// Create the probation RTP Packet.
+			// Create the probation RTP packet.
 			this->probationPacket.reset(
 			  RTP::Packet::Factory(ProbationPacketBuffer, sizeof(ProbationPacketBuffer)));
 
@@ -102,7 +102,7 @@ namespace RTC
 				// bufferPtr += extenLen;
 			}
 
-			// Set the extensions into the Packet using One-Byte format.
+			// Set the extensions into the packet using One-Byte format.
 			this->probationPacket->SetExtensions(RTP::Packet::ExtensionsType::OneByte, extensions);
 
 			this->probationPacketMinLength = this->probationPacket->GetLength();
@@ -125,7 +125,7 @@ namespace RTC
 			// Pad given length to 4 bytes.
 			len = Utils::Byte::PadTo4Bytes(len);
 
-			// Make the Packet length fit into our available limits.
+			// Make the packet length fit into our available limits.
 			if (len > ProbationGenerator::ProbationPacketMaxLength)
 			{
 				len = ProbationGenerator::ProbationPacketMaxLength;

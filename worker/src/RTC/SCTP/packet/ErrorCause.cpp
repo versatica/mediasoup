@@ -14,19 +14,19 @@ namespace RTC
 		// clang-format off
 		const std::unordered_map<ErrorCause::ErrorCauseCode, std::string> ErrorCause::ErrorCauseCode2String =
 		{
-			{ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,                    "INVALID_STREAM_IDENTIFIER"                    },
-			{ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,                  "MISSING_MANDATORY_PARAMETER"                  },
-			{ ErrorCause::ErrorCauseCode::STALE_COOKIE,                                 "STALE_COOKIE"                                 },
-			{ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,                              "OUT_OF_RESOURCE"                              },
-			{ ErrorCause::ErrorCauseCode::UNRESOLVABLE_ADDRESS,                         "UNRESOLVABLE_ADDRESS"                         },
-			{ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,                      "UNRECOGNIZED_CHUNK_TYPE"                      },
-			{ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,                  "INVALID_MANDATORY_PARAMETER"                  },
-			{ ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,                      "UNRECOGNIZED_PARAMETERS"                      },
-			{ ErrorCause::ErrorCauseCode::NO_USER_DATA,                                 "NO_USER_DATA"                                 },
-			{ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,          "COOKIE_RECEIVED_WHILE_SHUTTING_DOWN"          },
-			{ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES, "RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES" },
-			{ ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT,                         "USER_INITIATED_ABORT"                         },
-			{ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,                           "PROTOCOL_VIOLATION"                           },
+			{ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,                    "INVALID-STREAM-IDENTIFIER"                    },
+			{ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,                  "MISSING-MANDATORY-PARAMETER"                  },
+			{ ErrorCause::ErrorCauseCode::STALE_COOKIE,                                 "STALE-COOKIE"                                 },
+			{ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,                              "OUT-OF-RESOURCE"                              },
+			{ ErrorCause::ErrorCauseCode::UNRESOLVABLE_ADDRESS,                         "UNRESOLVABLE-ADDRESS"                         },
+			{ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,                      "UNRECOGNIZED-CHUNK-TYPE"                      },
+			{ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,                  "INVALID-MANDATORY-PARAMETER"                  },
+			{ ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS,                      "UNRECOGNIZED-PARAMETERS"                      },
+			{ ErrorCause::ErrorCauseCode::NO_USER_DATA,                                 "NO-USER-DATA"                                 },
+			{ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,          "COOKIE-RECEIVED-WHILE-SHUTTING-DOWN"          },
+			{ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES, "RESTART-OF-AN-ASSOCIATION-WITH-NEW-ADDRESSES" },
+			{ ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT,                         "USER-INITIATED-ABORT"                         },
+			{ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,                           "PROTOCOL-VIOLATION"                           },
 		};
 		// clang-format on
 

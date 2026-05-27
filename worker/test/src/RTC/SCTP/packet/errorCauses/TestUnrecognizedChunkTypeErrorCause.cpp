@@ -15,7 +15,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:6 (UNRECOGNIZED_CHUNK_TYPE), Length: 10
+			// Code:6 (UNRECOGNIZED-CHUNK-TYPE), Length: 10
 			0x00, 0x06, 0x00, 0x0A,
 			// Unrecognized Chunk: 0x1234567890AB
 			0x12, 0x34, 0x56, 0x78,
@@ -126,7 +126,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:6 (UNRECOGNIZED_CHUNK_TYPE), Length: 7
+			// Code:6 (UNRECOGNIZED-CHUNK-TYPE), Length: 7
 			0x00, 0x06, 0x00, 0x07,
 			// Unrecognized Chunk: 0x123456 (missing padding byte)
 			0x12, 0x34, 0x56,

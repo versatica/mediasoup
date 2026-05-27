@@ -16,13 +16,13 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:2 (MISSING_MANDATORY_PARAMETER), Length: 14
+			// Code:2 (MISSING-MANDATORY-PARAMETER), Length: 14
 			0x00, 0x02, 0x00, 0x0E,
 			// Number of missing params: 3
 			0x00, 0x00, 0x00, 0x03,
-			// Missing Param 1: 5 (IPV4_ADDRESS), Missing Param 2: 6 (IPV6_ADDRESS)
+			// Missing Param 1: 5 (IPV4-ADDRESS), Missing Param 2: 6 (IPV6-ADDRESS)
 			0x00, 0x05, 0x00, 0x06,
-			// Missing Param 3: 9 (COOKIE_PRESERVATIVE), 2 bytes of padding
+			// Missing Param 3: 9 (COOKIE-PRESERVATIVE), 2 bytes of padding
 			0x00, 0x09, 0x00, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
@@ -123,9 +123,9 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 			0x03, 0xE7, 0x00, 0x0E,
 			// Number of missing params: 3
 			0x00, 0x00, 0x00, 0x03,
-			// Missing Param 1: 5 (IPV4_ADDRESS), Missing Param 2: 6 (IPV6_ADDRESS)
+			// Missing Param 1: 5 (IPV4-ADDRESS), Missing Param 2: 6 (IPV6-ADDRESS)
 			0x00, 0x05, 0x00, 0x06,
-			// Missing Param 3: 9 (COOKIE_PRESERVATIVE), 2 bytes of padding
+			// Missing Param 3: 9 (COOKIE-PRESERVATIVE), 2 bytes of padding
 			0x00, 0x09, 0x00, 0x00,
 		};
 		// clang-format on
@@ -136,13 +136,13 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:2 (MISSING_MANDATORY_PARAMETER), Length: 14
+			// Code:2 (MISSING-MANDATORY-PARAMETER), Length: 14
 			0x00, 0x02, 0x00, 0x0E,
 			// Number of missing params: 2
 			0x00, 0x00, 0x00, 0x02,
-			// Missing Param 1: 5 (IPV4_ADDRESS), Missing Param 2: 6 (IPV6_ADDRESS)
+			// Missing Param 1: 5 (IPV4-ADDRESS), Missing Param 2: 6 (IPV6-ADDRESS)
 			0x00, 0x05, 0x00, 0x06,
-			// Missing Param 3: 9 (COOKIE_PRESERVATIVE) (exceeds number of missing
+			// Missing Param 3: 9 (COOKIE-PRESERVATIVE) (exceeds number of missing
 			// parameters), 2 bytes of padding
 			0x00, 0x09, 0x00, 0x00,
 		};
@@ -150,15 +150,15 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 
 		REQUIRE(!RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(buffer2, sizeof(buffer2)));
 
-		// Wrong Length field (smaller than buffer).
+		// Wrong length field (smaller than buffer).
 		// clang-format off
 		alignas(4) uint8_t buffer3[] =
 		{
-			// Code:2 (MISSING_MANDATORY_PARAMETER), Length: 8 (buffer is 12)
+			// Code:2 (MISSING-MANDATORY-PARAMETER), Length: 8 (buffer is 12)
 			0x00, 0x02, 0x00, 0x08,
 			// Number of missing params: 4
 			0x00, 0x00, 0x00, 0x02,
-			// Missing Param 1: 5 (IPV4_ADDRESS), Missing Param 2: 6 (IPV6_ADDRESS)
+			// Missing Param 1: 5 (IPV4-ADDRESS), Missing Param 2: 6 (IPV6-ADDRESS)
 			0x00, 0x05, 0x00, 0x06,
 		};
 		// clang-format on

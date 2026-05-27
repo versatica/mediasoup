@@ -15,7 +15,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:32769 (ZERO_CHECKSUM_ACCEPTABLE), Length: 8
+			// Type:32769 (ZERO-CHECKSUM-ACCEPTABLE), Length: 8
 			0x80, 0x01, 0x00, 0x08,
 			// Alternate Error Detection Method (EDMID) : 0x0001
 			0x00, 0x00, 0x00, 0x01,

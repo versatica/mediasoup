@@ -18,8 +18,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:4 (HEARTBEAT_REQUEST), Flags:0b00000000, Length: 22
-			// NOTE: Length field must exclude the padding of the last Parameter.
+			// Type:4 (HEARTBEAT-REQUEST), Flags:0b00000000, Length: 22
+			// NOTE: Length field must exclude the padding of the last parameter.
 			0x04, 0b00000000, 0x00, 0x16,
 			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,
@@ -233,21 +233,21 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 
 	SECTION("HeartbeatRequestChunk::Parse() with incorrect but valid Chunk Length field succeeds")
 	{
-		// Here the chunk has incorrect Chunk Length field with value 24 instead of
+		// Here the chunk has incorrect chunk length field with value 24 instead of
 		// 22. It's incorrect because, as per RFC 9260:
 		//
-		// > The Chunk Length field does not count any chunk padding. However, it
+		// > The chunk length field does not count any chunk padding. However, it
 		// > does include any padding of variable-length parameters other than the
 		// > last parameter in the chunk. A robust implementation is expected to
 		// > accept the chunk whether or not the final padding has been included in
-		// > the Chunk Length.
+		// > the chunk length.
 
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:4 (HEARTBEAT_REQUEST), Flags:0b00000000, Length: 24
-			// NOTE: Length field must exclude the padding of the last Parameter so
-			// Length field should be 22 rather than 24. But anyway it's ok.
+			// Type:4 (HEARTBEAT-REQUEST), Flags:0b00000000, Length: 24
+			// NOTE: Length field must exclude the padding of the last parameter so
+			// length field should be 22 rather than 24. But anyway it's ok.
 			0x04, 0b00000000, 0x00, 0x18,
 			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,
@@ -413,7 +413,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		/* Modify it by adding Parameters. */
+		/* Modify it by adding parameters. */
 
 		auto* parameter1 = chunk->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
 

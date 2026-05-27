@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Stale Cookie Error Cause (STALE_COOKIE) (3)
+		 * SCTP Stale Cookie Error Cause (STALE-COOKIE) (3)
 		 *
 		 * @see RFC 9260.
 		 *
@@ -28,7 +28,7 @@ namespace RTC
 
 		class StaleCookieErrorCause : public ErrorCause
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -39,7 +39,7 @@ namespace RTC
 			 * Parse a StaleCookieErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Error Cause.
+			 * `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static StaleCookieErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -47,7 +47,7 @@ namespace RTC
 			 * Create a StaleCookieErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
+			 * `bufferLength` could be greater than the error cause real length.
 			 */
 			static StaleCookieErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -85,7 +85,7 @@ namespace RTC
 			StaleCookieErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Error Cause
+			 * We don't really need to override this method since this error cause
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */

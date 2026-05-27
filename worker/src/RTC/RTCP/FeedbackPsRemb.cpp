@@ -18,10 +18,10 @@ namespace RTC
 
 			// Check that there is space for the REMB unique identifier and basic fields.
 			// NOTE: Feedback.cpp already checked that there is space for CommonHeader and
-			// Feedback Header.
+			// feedback header.
 			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 8u)
 			{
-				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+				MS_WARN_TAG(rtcp, "not enough space for feedback packet, discarded");
 
 				return nullptr;
 			}

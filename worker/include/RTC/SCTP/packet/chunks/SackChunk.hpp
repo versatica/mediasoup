@@ -44,7 +44,7 @@ namespace RTC
 		 * |                        Duplicate TSN M                        |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 3.
+		 * - Chunk type (8 bits): 3.
 		 * - Res (4 bits): All set to 0.
 		 * - Length (16 bits).
 		 * - Cumulative TSN Ack (32 bits): The largest TSN, such that all TSNs
@@ -75,7 +75,7 @@ namespace RTC
 
 		class SackChunk : public Chunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -104,7 +104,7 @@ namespace RTC
 			 * Parse a SackChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static SackChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -112,7 +112,7 @@ namespace RTC
 			 * Create a SackChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static SackChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -182,7 +182,7 @@ namespace RTC
 			SackChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We need to override this method since this Chunk has a variable-length
+			 * We need to override this method since this chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
 			size_t GetHeaderLength() const final

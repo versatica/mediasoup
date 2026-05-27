@@ -15,7 +15,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:A (COOKIE_ECHO), Flags: 0b00000000, Length: 9
+			// Type:A (COOKIE-ECHO), Flags: 0b00000000, Length: 9
 			0x0A, 0b00000000, 0x00, 0x09,
 			// Cookie: 0x1122334455,
 			0x11, 0x22, 0x33, 0x44,

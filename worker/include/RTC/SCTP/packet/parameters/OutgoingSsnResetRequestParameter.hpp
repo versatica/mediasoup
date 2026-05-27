@@ -11,7 +11,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Outgoing SSN Reset Request Parameter (OUTGOING_SSN_RESET_REQUEST)
+		 * SCTP Outgoing SSN Reset Request Parameter (OUTGOING-SSN-RESET-REQUEST)
 		 * (13).
 		 *
 		 * @see RFC 6525.
@@ -40,7 +40,7 @@ namespace RTC
 
 		class OutgoingSsnResetRequestParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -51,7 +51,7 @@ namespace RTC
 			 * Parse a OutgoingSsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static OutgoingSsnResetRequestParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -59,7 +59,7 @@ namespace RTC
 			 * Create a OutgoingSsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static OutgoingSsnResetRequestParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -115,7 +115,7 @@ namespace RTC
 			OutgoingSsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We need to override this method since this Chunk has a variable-length
+			 * We need to override this method since this chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
 			size_t GetHeaderLength() const final

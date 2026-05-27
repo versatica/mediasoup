@@ -98,7 +98,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  request->CheckAuthentication(usernameFragment1, password) ==
 		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
-		// Trying to modify a STUN Packet once protected must throw.
+		// Trying to modify a STUN packet once protected must throw.
 		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(request->Protect(), MediaSoupError);
 
@@ -138,7 +138,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  request->CheckAuthentication(usernameFragment1, password) ==
 		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
-		// Trying to modify a STUN Packet once protected must throw.
+		// Trying to modify a STUN packet once protected must throw.
 		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(request->Protect(), MediaSoupError);
 
@@ -178,7 +178,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  request->CheckAuthentication(usernameFragment1, password) ==
 		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
-		// Trying to modify a STUN Packet once protected must throw.
+		// Trying to modify a STUN packet once protected must throw.
 		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(request->Protect(), MediaSoupError);
 	}
@@ -516,7 +516,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		uint16_t errorCode            = 666;
 		std::string errorReasonPhrase = "UPPS UNKNOWN ERROR 😊";
 
-		// Total length of the Attributes.
+		// Total length of the attributes.
 		size_t attributesLen =
 		  (4 + 27 + 1) + (4 + 4) + (4 + 8) + (4) + (4 + 4) + (4 + 18 + 2) + (4 + 4 + 23 + 1);
 
@@ -528,7 +528,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		request->AddSoftware(software);
 		request->AddErrorCode(errorCode, errorReasonPhrase);
 
-		// It should fail if we try to add a duplicated Attribute.
+		// It should fail if we try to add a duplicated attribute.
 		REQUIRE_THROWS_AS(request->AddUsername(username), MediaSoupError);
 		REQUIRE_THROWS_AS(request->AddPriority(priority), MediaSoupError);
 		REQUIRE_THROWS_AS(request->AddIceControlling(iceControlling), MediaSoupError);
@@ -646,7 +646,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		    transactionId,
 		    RTC::ICE::StunPacket::TransactionIdLength));
 
-		/* Protect the STUN Packet. */
+		/* Protect the STUN packet. */
 
 		std::string password = "asjhdkjhkasd";
 
@@ -683,7 +683,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  request->CheckAuthentication(usernameFragment1, password) ==
 		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
-		// Trying to modify a STUN Packet once protected must throw.
+		// Trying to modify a STUN packet once protected must throw.
 		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(request->Protect(), MediaSoupError);
 	}
@@ -732,7 +732,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		uv_ip4_addr("22.33.0.125", 5678, xorMappedAddressIn);
 
-		// Total length of the Attributes.
+		// Total length of the attributes.
 		size_t attributesLen = (4 + 8);
 
 		successResponse->AddXorMappedAddress(xorMappedAddress);
@@ -797,7 +797,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		uv_ip6_addr("2001:db8::1234", 20002, xorMappedAddressIn6);
 
-		// Total length of the Attributes.
+		// Total length of the attributes.
 		attributesLen = (4 + 20);
 
 		successResponse->AddXorMappedAddress(xorMappedAddress);
@@ -838,7 +838,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(ip == Utils::IP::NormalizeIp(expectedIp));
 		REQUIRE(port == 20002);
 
-		/* Protect the STUN Packet. */
+		/* Protect the STUN packet. */
 
 		std::string password = "asjhdkjhkasd";
 
@@ -875,7 +875,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  successResponse->CheckAuthentication(password) ==
 		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
-		// Trying to modify a STUN Packet once protected must throw.
+		// Trying to modify a STUN packet once protected must throw.
 		REQUIRE_THROWS_AS(successResponse->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(successResponse->Protect(), MediaSoupError);
 	}
@@ -918,7 +918,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		uint16_t errorCode            = 666;
 		std::string errorReasonPhrase = "UPPS UNKNOWN ERROR 😊";
 
-		// Total length of the Attributes.
+		// Total length of the attributes.
 		size_t attributesLen = (4 + 4 + 23 + 1);
 
 		errorResponse->AddErrorCode(errorCode, errorReasonPhrase);
@@ -949,7 +949,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		/* Protect the STUN Packet. */
+		/* Protect the STUN packet. */
 
 		std::string password = "23786asdas123";
 
@@ -985,7 +985,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(
 		  errorResponse->CheckAuthentication(password) == RTC::ICE::StunPacket::AuthenticationResult::OK);
 
-		// Trying to modify a STUN Packet once protected must throw.
+		// Trying to modify a STUN packet once protected must throw.
 		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(errorResponse->Protect(), MediaSoupError);
 
@@ -1002,7 +1002,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		errorCode         = 400;
 		errorReasonPhrase = "Bad Request";
 
-		// Total length of the Attributes.
+		// Total length of the attributes.
 		attributesLen = (4 + 4 + 11 + 1);
 
 		errorResponse->AddErrorCode(errorCode, errorReasonPhrase);
@@ -1033,9 +1033,9 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		/* Protect the STUN Packet (without password). */
+		/* Protect the STUN packet (without password). */
 
-		// Protect() without password only adds FINGERPRINT Attribute.
+		// Protect() without password only adds FINGERPRINT attribute.
 		errorResponse->Protect();
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
@@ -1064,12 +1064,12 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ true);
 
-		// Cannot check authentication in a STUN Packet without MESSAGE-INTEGRITY.
+		// Cannot check authentication in a STUN packet without MESSAGE-INTEGRITY.
 		REQUIRE(
 		  errorResponse->CheckAuthentication(password) ==
 		  RTC::ICE::StunPacket::AuthenticationResult::BAD_MESSAGE);
 
-		// Trying to modify a STUN Packet once protected must throw.
+		// Trying to modify a STUN packet once protected must throw.
 		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(errorResponse->Protect(), MediaSoupError);
 	}
@@ -1151,7 +1151,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  successResponse->CheckAuthentication("qwekqjhwekjahsd") ==
 		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
-		// Trying to modify a STUN Packet once protected must throw.
+		// Trying to modify a STUN packet once protected must throw.
 		REQUIRE_THROWS_AS(successResponse->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(successResponse->Protect(), MediaSoupError);
 	}
@@ -1167,7 +1167,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		std::unique_ptr<RTC::ICE::StunPacket> errorResponse{ request->CreateErrorResponse(
 			iceCommon::ResponseFactoryBuffer, sizeof(iceCommon::ResponseFactoryBuffer), 666, "BAD STUFF") };
 
-		// Total length of the Attributes (ERROR-CODE).
+		// Total length of the attributes (ERROR-CODE).
 		const size_t attributesLen = (4 + 4 + 9 + 3);
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
@@ -1236,7 +1236,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  errorResponse->CheckAuthentication("qwekqjhwekjahsd") ==
 		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
-		// Trying to modify a STUN Packet once protected must throw.
+		// Trying to modify a STUN packet once protected must throw.
 		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);
 		REQUIRE_THROWS_AS(errorResponse->Protect(), MediaSoupError);
 	}

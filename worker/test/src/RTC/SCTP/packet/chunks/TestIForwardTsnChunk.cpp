@@ -17,7 +17,7 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:194 (I_FORWARD_TSN), Flags: 0b00000000, Length: 32
+			// Type:194 (I-FORWARD-TSN), Flags: 0b00000000, Length: 32
 			0xC2, 0b00000000, 0x00, 0x20,
 			// New Cumulative TSN: 287454020,
 			0x11, 0x22, 0x33, 0x44,
@@ -151,7 +151,7 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{
-			// Type:194 (I_FORWARD_TSN), Flags: 0b00000000, Length: 20 (should be 24)
+			// Type:194 (I-FORWARD-TSN), Flags: 0b00000000, Length: 20 (should be 24)
 			0xC2, 0b00000000, 0x00, 0x14,
 			// New Cumulative TSN: 287454020,
 			0x11, 0x22, 0x33, 0x44,
@@ -161,7 +161,7 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 			0x11, 0x00, 0x00, 0x11,
 			// Stream 2: 8194, U: 0
 			0x20, 0x02, 0x00, 0x00,
-			// Message Identifier (missing in Length field)
+			// Message Identifier (missing in length field)
 			0x22, 0x00, 0x00, 0x22,
 		};
 		// clang-format on

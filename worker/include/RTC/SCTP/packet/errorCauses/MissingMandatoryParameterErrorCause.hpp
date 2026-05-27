@@ -12,7 +12,7 @@ namespace RTC
 	{
 		/**
 		 * SCTP Missing Mandatory Parameter Error Cause
-		 * (MISSING_MANDATORY_PARAMETER) (2)
+		 * (MISSING-MANDATORY-PARAMETER) (2)
 		 *
 		 * @see RFC 9260.
 		 *
@@ -34,7 +34,7 @@ namespace RTC
 
 		class MissingMandatoryParameterErrorCause : public ErrorCause
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -45,7 +45,7 @@ namespace RTC
 			 * Parse a MissingMandatoryParameterErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Error Cause.
+			 * `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static MissingMandatoryParameterErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -53,7 +53,7 @@ namespace RTC
 			 * Create a MissingMandatoryParameterErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
+			 * `bufferLength` could be greater than the error cause real length.
 			 */
 			static MissingMandatoryParameterErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -97,7 +97,7 @@ namespace RTC
 			MissingMandatoryParameterErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Error Cause
+			 * We don't really need to override this method since this error cause
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */

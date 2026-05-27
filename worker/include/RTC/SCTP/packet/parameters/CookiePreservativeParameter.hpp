@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Cookie Preservative Parameter (COOKIE_PRESERVATIVE) (9).
+		 * SCTP Cookie Preservative Parameter (COOKIE-PRESERVATIVE) (9).
 		 *
 		 * @see RFC 9260.
 		 *
@@ -28,7 +28,7 @@ namespace RTC
 
 		class CookiePreservativeParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -39,7 +39,7 @@ namespace RTC
 			 * Parse a CookiePreservativeParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static CookiePreservativeParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -47,7 +47,7 @@ namespace RTC
 			 * Create a CookiePreservativeParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static CookiePreservativeParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -85,7 +85,7 @@ namespace RTC
 			CookiePreservativeParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Parameter
+			 * We don't really need to override this method since this parameter
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */

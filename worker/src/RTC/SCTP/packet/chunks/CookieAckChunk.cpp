@@ -26,7 +26,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::COOKIE_ACK)
 			{
-				MS_WARN_DEV("invalid Chunk type");
+				MS_WARN_DEV("invalid chunk type");
 
 				return nullptr;
 			}
@@ -60,7 +60,7 @@ namespace RTC
 
 			if (chunkLength != Chunk::ChunkHeaderLength)
 			{
-				MS_WARN_TAG(sctp, "CookieAckChunk Length field must be %zu", Chunk::ChunkHeaderLength);
+				MS_WARN_TAG(sctp, "CookieAckChunk length field must be %zu", Chunk::ChunkHeaderLength);
 
 				return nullptr;
 			}

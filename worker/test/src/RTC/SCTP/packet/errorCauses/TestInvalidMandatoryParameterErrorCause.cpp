@@ -14,7 +14,7 @@ SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[serializable][sctp][er
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:7 (INVALID_MANDATORY_PARAMETER), Length: 4
+			// Code:7 (INVALID-MANDATORY-PARAMETER), Length: 4
 			0x00, 0x07, 0x00, 0x04,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,

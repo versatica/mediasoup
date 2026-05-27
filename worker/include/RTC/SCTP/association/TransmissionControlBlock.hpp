@@ -67,8 +67,8 @@ namespace RTC
 			}
 
 			/**
-			 * The value of the Initiate Tag field we put in our INIT or INIT_ACK
-			 * Chunk. Packets sent by the remote peer must include this value in
+			 * The value of the Initiate Tag field we put in our INIT or INIT-ACK
+			 * chunk. Packets sent by the remote peer must include this value in
 			 * their Verification Tag field.
 			 */
 			uint32_t GetLocalVerificationTag() const
@@ -78,7 +78,7 @@ namespace RTC
 
 			/**
 			 * The value of the Initiate Tag field the peer put in its INIT or
-			 * INIT_ACK Chunk. Packets sent by us to the peer must include this value
+			 * INIT-ACK chunk. Packets sent by us to the peer must include this value
 			 * in their Verification Tag field.
 			 */
 			uint32_t GetRemoteVerificationTag() const
@@ -87,8 +87,8 @@ namespace RTC
 			}
 
 			/**
-			 * The value of the Initial TSN field we put in our INIT or INIT_ACK
-			 * Chunk.
+			 * The value of the Initial TSN field we put in our INIT or INIT-ACK
+			 * chunk.
 			 *
 			 * @remarks
 			 * - Implements TransmissionControlBlockContextInterface.
@@ -100,7 +100,7 @@ namespace RTC
 
 			/**
 			 * The value of the Initial TSN field the peer put in its INIT or
-			 * INIT_ACK Chunk.
+			 * INIT-ACK chunk.
 			 *
 			 * @remarks
 			 * - Implements TransmissionControlBlockContextInterface.
@@ -112,7 +112,7 @@ namespace RTC
 
 			/**
 			 * The value of the Advertised Receiver Window Credit field we put in our
-			 * INIT or INIT_ACK Chunk.
+			 * INIT or INIT-ACK chunk.
 			 */
 			uint32_t GetRemoteAdvertisedReceiverWindowCredit() const
 			{
@@ -200,17 +200,17 @@ namespace RTC
 			}
 
 			/**
-			 * Will be set while the Association is in COOKIE_ECHOED state. In this
-			 * state, there can only be a single Packet outstanding, and it must
-			 * contain the COOKIE_ECHO Chunk as the first Chunk in that Packet, until
-			 * the COOKIE_ACK has been received, which will make the socket call
+			 * Will be set while the association is in COOKIE_ECHOED state. In this
+			 * state, there can only be a single packet outstanding, and it must
+			 * contain the COOKIE-ECHO chunk as the first chunk in that packet, until
+			 * the COOKIE-ACK has been received, which will make the socket call
 			 * `ClearRemoteStateCookie()`.
 			 */
 			void SetRemoteStateCookie(std::vector<uint8_t> remoteStateCookie);
 
 			/**
-			 * Called when the COOKIE_ACK Chunk has been received, to allow further
-			 * Packets to be sent.
+			 * Called when the COOKIE-ACK chunk has been received, to allow further
+			 * packets to be sent.
 			 */
 			void ClearRemoteStateCookie();
 
@@ -220,12 +220,12 @@ namespace RTC
 			}
 
 			/**
-			 * Sends a SACK Chunk, if there is a need to.
+			 * Sends a SACK chunk, if there is a need to.
 			 */
 			void MaySendSackChunk();
 
 			/**
-			 * May add a FORWARD-TSN or I-FORWARD-TSN Chunk to the given Packet if it
+			 * May add a FORWARD-TSN or I-FORWARD-TSN chunk to the given packet if it
 			 * is needed and allowed (rate-limited).
 			 */
 			void MayAddForwardTsnChunk(Packet* packet, uint64_t nowMs);
@@ -233,12 +233,12 @@ namespace RTC
 			void MaySendFastRetransmit();
 
 			/**
-			 * Create and fill Packets with control and DATA/I-DATA Chunks, and sends
+			 * Create and fill packets with control and DATA/I-DATA chunks, and sends
 			 * them as much as can be allowed by the congestion control algorithm.
 			 *
 			 * @remarks
-			 * - If `this->remoteStateCookie` is present, then only one Packet will be
-			 *   sent, with this Chunk as the first Chunk.
+			 * - If `this->remoteStateCookie` is present, then only one packet will be
+			 *   sent, with this chunk as the first chunk.
 			 * - Cannot pass `addCookieAckChunk=true` if `this->remoteStateCookie` is
 			 *   present (will throw).
 			 */
@@ -300,7 +300,7 @@ namespace RTC
 			// Nonce, used to detect reconnections.
 			uint64_t tieTag;
 			NegotiatedCapabilities negotiatedCapabilities;
-			// Max SCTP Packet length.
+			// Max SCTP packet length.
 			const size_t maxPacketLength;
 			std::function<bool()> isAssociationEstablished;
 			// The data retransmission timer.
@@ -315,14 +315,14 @@ namespace RTC
 			RetransmissionQueue retransmissionQueue;
 			StreamResetHandler streamResetHandler;
 			HeartbeatHandler heartbeatHandler;
-			// Rate limiting of FORWARD_TSN. Next can be sent at or after this
+			// Rate limiting of FORWARD-TSN. Next can be sent at or after this
 			// timestamp.
 			uint64_t limitForwardTsnUntilMs{ 0 };
 			// Only valid when state is State::COOKIE_ECHOED. In this state, the
-			// Association must wait for COOKIE_ACK to continue sending any packets (not
-			// including a COOKIE_ECHO). So if this state cookie is present, the
-			// `SendBufferedChunks()` method will always only send one Packet, with
-			// a CookieEchoChunk containing this cookie as the first Chunk in the Packet.
+			// association must wait for COOKIE-ACK to continue sending any packets (not
+			// including a COOKIE-ECHO). So if this state cookie is present, the
+			// `SendBufferedChunks()` method will always only send one packet, with
+			// a CookieEchoChunk containing this cookie as the first chunk in the packet.
 			std::optional<std::vector<uint8_t>> remoteStateCookie;
 		};
 	} // namespace SCTP

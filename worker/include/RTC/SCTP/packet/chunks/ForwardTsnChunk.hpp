@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Forward Cumulative TSN Chunk (FORWARD_TSN) (192)
+		 * SCTP Forward Cumulative TSN Chunk (FORWARD-TSN) (192)
 		 *
 		 * @see RFC 3758.
 		 *
@@ -29,7 +29,7 @@ namespace RTC
 		 * |         Stream-N              |       Stream Sequence-N       |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 192.
+		 * - Chunk type (8 bits): 192.
 		 * - Flags: All set to 0.
 		 * - Length (16 bits).
 		 * - New Cumulative TSN (32 bits): This indicates the new cumulative TSN to
@@ -44,7 +44,7 @@ namespace RTC
 
 		class ForwardTsnChunk : public AnyForwardTsnChunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -55,7 +55,7 @@ namespace RTC
 			 * Parse a ForwardTsnChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static ForwardTsnChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -63,7 +63,7 @@ namespace RTC
 			 * Create a ForwardTsnChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static ForwardTsnChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -120,7 +120,7 @@ namespace RTC
 			ForwardTsnChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We need to override this method since this Chunk has a variable-length
+			 * We need to override this method since this chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
 			size_t GetHeaderLength() const final

@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Zero Checksum Acceptable Parameter (SSN_TSN_RESET_REQUEST)
+		 * SCTP Zero Checksum Acceptable Parameter (SSN-TSN-RESET-REQUEST)
 		 * (15).
 		 *
 		 * @see RFC 6525.
@@ -29,7 +29,7 @@ namespace RTC
 
 		class SsnTsnResetRequestParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -40,7 +40,7 @@ namespace RTC
 			 * Parse a SsnTsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static SsnTsnResetRequestParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -48,7 +48,7 @@ namespace RTC
 			 * Create a SsnTsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static SsnTsnResetRequestParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -86,7 +86,7 @@ namespace RTC
 			SsnTsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Parameter
+			 * We don't really need to override this method since this parameter
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */

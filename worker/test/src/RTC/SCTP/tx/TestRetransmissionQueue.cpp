@@ -1290,7 +1290,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  getSentPacketTSNs(retransmissionQueue) ==
 		  std::vector<uint32_t>{ 10, 11, 12, 13, 14, 15, 16, 17 });
 
-		// Ack 9, 20-25. This is an invalid SACK Chunk, but should still be handled.
+		// Ack 9, 20-25. This is an invalid SACK chunk, but should still be handled.
 		retransmissionQueue.HandleReceivedSackChunk(
 		  nowMs,
 		  createSackChunk(

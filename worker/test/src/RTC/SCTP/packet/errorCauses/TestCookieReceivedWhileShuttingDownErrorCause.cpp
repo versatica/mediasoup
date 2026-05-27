@@ -14,7 +14,7 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[serializable]
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:10 (COOKIE_RECEIVED_WHILE_SHUTTING_DOWN), Length: 4
+			// Code:10 (COOKIE-RECEIVED-WHILE-SHUTTING-DOWN), Length: 4
 			0x00, 0x0A, 0x00, 0x04,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,

@@ -15,7 +15,7 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[serializable][sctp][parameter
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:8 (UNRECOGNIZED_PARAMETER), Length: 7
+			// Type:8 (UNRECOGNIZED-PARAMETER), Length: 7
 			0x00, 0x08, 0x00, 0x07,
 			// Unrecognized Parameter: 0xDDCCEE, 1 byte of padding
 			0xDD, 0xCC, 0xEE, 0x00,

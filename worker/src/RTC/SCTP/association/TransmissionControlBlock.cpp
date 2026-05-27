@@ -290,13 +290,13 @@ namespace RTC
 			{
 				const auto packet = CreatePacket();
 
-				// Only add control Chunks to the first Packet that is sent, if sending
-				// multiple Packets in one go (as allowed by the congestion window).
+				// Only add control chunks to the first packet that is sent, if sending
+				// multiple packets in one go (as allowed by the congestion window).
 				if (packetIdx == 0)
 				{
 					if (addCookieAckChunk)
 					{
-						MS_DEBUG_DEV("adding COOKIE_ACK Chunk to the Packet");
+						MS_DEBUG_DEV("adding COOKIE-ACK chunk to the packet");
 
 						const auto* cookieAckChunk = packet->BuildChunkInPlace<CookieAckChunk>();
 
@@ -312,7 +312,7 @@ namespace RTC
 						if (packet->GetChunksCount() > 0)
 						{
 							MS_THROW_ERROR(
-							  "Packet must have no Chunks [addCookieAckChunk:%s]",
+							  "packet must have no chunks [addCookieAckChunk:%s]",
 							  addCookieAckChunk ? "true" : "no");
 						}
 
@@ -411,7 +411,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// In the COOKIE_ECHO state, let the T1-COOKIE timer trigger
+			// In the COOKIE-ECHO state, let the T1-COOKIE timer trigger
 			// retransmissions, to avoid having two timers doing that.
 			if (this->remoteStateCookie.has_value())
 			{

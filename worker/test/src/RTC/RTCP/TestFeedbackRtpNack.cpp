@@ -10,7 +10,7 @@ SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 	// clang-format off
 	alignas(4) uint8_t buffer[] =
 	{
-		0x81, 0xcd, 0x00, 0x03, // Type: 205 (Generic RTP Feedback), Length: 3
+		0x81, 0xcd, 0x00, 0x03, // Type: 205 (Generic RTP feedback), Length: 3
 		0x00, 0x00, 0x00, 0x01, // Sender SSRC: 0x00000001
 		0x03, 0x30, 0xbd, 0xee, // Media source SSRC: 0x0330bdee
 		0x0b, 0x8f, 0x00, 0x03  // NACK PID: 2959, NACK BLP: 0x0003

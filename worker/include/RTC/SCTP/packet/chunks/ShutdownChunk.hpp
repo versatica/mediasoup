@@ -22,7 +22,7 @@ namespace RTC
 		 * |                      Cumulative TSN Ack                       |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 7.
+		 * - Chunk type (8 bits): 7.
 		 * - Flags (8 bits): All set to 0.
 		 * - Length (16 bits): 8.
 		 * - Cumulative TSN Ack (32 bits): The largest TSN, such that all TSNs
@@ -35,7 +35,7 @@ namespace RTC
 
 		class ShutdownChunk : public Chunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -46,7 +46,7 @@ namespace RTC
 			 * Parse a ShutdownChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static ShutdownChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -54,7 +54,7 @@ namespace RTC
 			 * Create a ShutdownChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static ShutdownChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -102,7 +102,7 @@ namespace RTC
 			ShutdownChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Chunk doesn't
+			 * We don't really need to override this method since this chunk doesn't
 			 * have variable-length value (despite the fixed header doesn't have
 			 * default length).
 			 */

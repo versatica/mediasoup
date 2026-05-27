@@ -28,13 +28,13 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits).
-		 * - Chunk Flags (8 bits).
-		 * - Chunk Length (16 bits): Total length of the Chunk
-		 *   excluding padding bytes. Minimum value is 4 (if Chunk Value is 0
+		 * - Chunk type (8 bits).
+		 * - Chunk flags (8 bits).
+		 * - Chunk length (16 bits): Total length of the chunk
+		 *   excluding padding bytes. Minimum value is 4 (if chunk value is 0
 		 *   bytes). Maximum value is 65535, which means 1 byte of padding.
-		 * - Chunk Value (variable length).
-		 * - Padding: Bytes of padding to make the Chunk total length be
+		 * - Chunk value (variable length).
+		 * - Padding: Bytes of padding to make the chunk total length be
 		 *   multiple of 4 bytes.
 		 */
 
@@ -43,7 +43,7 @@ namespace RTC
 
 		class Chunk : public TLV
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -79,7 +79,7 @@ namespace RTC
 
 			/**
 			 * Action that is taken if the processing endpoint does not recognize the
-			 * Chunk Type.
+			 * chunk type.
 			 */
 			enum class ActionForUnknownChunkType : uint8_t
 			{
@@ -100,10 +100,10 @@ namespace RTC
 				ChunkType type;
 				uint8_t flags;
 				/**
-				 * The value of the Chunk Length field, which represents the total
-				 * length of the Chunk in bytes, including the Chunk Type, Chunk Flags,
-				 * Chunk Length and Chunk Value fields. So if the Chunk Value field is
-				 * zero-length, the Length field must be 4. The Chunk Length field does
+				 * The value of the chunk length field, which represents the total
+				 * length of the chunk in bytes, including the chunk type, chunk flags,
+				 * chunk length and chunk value fields. So if the chunk value field is
+				 * zero-length, the length field must be 4. The chunk length field does
 				 * not count any padding.
 				 */
 				uint16_t length;
@@ -149,16 +149,16 @@ namespace RTC
 
 		public:
 			/**
-			 * Whether given buffer could be a a valid Chunk.
+			 * Whether given buffer could be a a valid chunk.
 			 *
 			 * @param buffer
-			 * @param bufferLength - Can be greater than real Chunk length.
-			 * @param chunkType - If given buffer is a valid Chunk then `chunkType`
+			 * @param bufferLength - Can be greater than real chunk length.
+			 * @param chunkType - If given buffer is a valid chunk then `chunkType`
 			 *   is rewritten to parsed ChunkType.
-			 * @param chunkLength - If given buffer is a valid Chunk then
-			 *   `chunkLength` is rewritten to the value of the Chunk Length field.
-			 * @param padding - If given buffer is a valid Chunk then `padding` is
-			 *   rewritten to the number of padding bytes in the Chunk (only the
+			 * @param chunkLength - If given buffer is a valid chunk then
+			 *   `chunkLength` is rewritten to the value of the chunk length field.
+			 * @param padding - If given buffer is a valid chunk then `padding` is
+			 *   rewritten to the number of padding bytes in the chunk (only the
 			 *   necessary ones to make total length multiple of 4).
 			 */
 			static bool IsChunk(
@@ -175,7 +175,7 @@ namespace RTC
 
 		protected:
 			/**
-			 * Constructor is protected because we only want to create Chunk
+			 * Constructor is protected because we only want to create chunk
 			 * instances via Parse() and Factory() in subclasses.
 			 */
 			Chunk(uint8_t* buffer, size_t bufferLength);
@@ -217,7 +217,7 @@ namespace RTC
 			}
 
 			/**
-			 * Whether this type of Chunk can have Parameters. Subclasses must
+			 * Whether this type of chunk can have parameters. Subclasses must
 			 * override this method.
 			 */
 			virtual bool CanHaveParameters() const = 0;
@@ -267,42 +267,42 @@ namespace RTC
 			}
 
 			/**
-			 * Clone given Parameter into Chunk's buffer.
+			 * Clone given parameter into chunk's buffer.
 			 *
 			 * @remarks
 			 * - Once this method is called, the caller may want to free the original
-			 *   given Parameter (otherwise it will leak since the Chunk manages a clone
+			 *   given parameter (otherwise it will leak since the chunk manages a clone
 			 *   of it).
 			 *
 			 * @throw
-			 * - MediaSoupError - If the Chunk subclass cannot have Parameters.
+			 * - MediaSoupError - If the chunk subclass cannot have parameters.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
+			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
 			 */
 			virtual void AddParameter(const Parameter* parameter) final;
 
 			/**
-			 * Build a Parameter within the Chunk's buffer and append it to the list
-			 * of Parameters. The caller can perform modifications in that Parameter
-			 * and those will affect the Chunk body where the Parameter is serialized.
-			 * The desired Parameter class type is given via template argument.
+			 * Build a parameter within the chunk's buffer and append it to the list
+			 * of parameters. The caller can perform modifications in that parameter
+			 * and those will affect the chunk body where the parameter is serialized.
+			 * The desired parameter class type is given via template argument.
 			 *
-			 * @returns Pointer of the created Parameter specific class.
+			 * @returns Pointer of the created parameter specific class.
 			 *
 			 * @throw
-			 * - MediaSoupError - If the Chunk subclass cannot have Parameters.
+			 * - MediaSoupError - If the chunk subclass cannot have parameters.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
+			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
 			 *
 			 * @remarks
-			 * - The caller MUST invoke `Consolidate()` once the Parameter is
+			 * - The caller MUST invoke `Consolidate()` once the parameter is
 			 *   completed.
-			 * - The caller MUST NOT free the obtained Parameter pointer since it's
-			 *   now part of the Chunk.
-			 * - The caller MUST free the obtained Parameter only in case the
-			 *   `Consolidate()` method on the Parameter throws.
+			 * - The caller MUST NOT free the obtained parameter pointer since it's
+			 *   now part of the chunk.
+			 * - The caller MUST free the obtained parameter only in case the
+			 *   `Consolidate()` method on the parameter throws.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -317,18 +317,18 @@ namespace RTC
 				AssertCanHaveParameters();
 				AssertDoesNotNeedConsolidation();
 
-				// The new Parameter will be added after other Parameters in the Chunk,
-				// this is, at the end of the Chunk, whose length we know it's padded to
-				// 4 bytes, and each Parameter total length is also multiple of 4 bytes.
+				// The new parameter will be added after other parameters in the chunk,
+				// this is, at the end of the chunk, whose length we know it's padded to
+				// 4 bytes, and each parameter total length is also multiple of 4 bytes.
 				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 				// The remaining length in the buffer is the potential buffer length
-				// of the Parameter.
+				// of the parameter.
 				size_t parameterMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
 				auto* parameter = T::Factory(ptr, parameterMaxBufferLength);
 
-				// NOTE: Do not fix/update the Parameter buffer length since the caller
-				// probably wants to modify the Parameter.
+				// NOTE: Do not fix/update the parameter buffer length since the caller
+				// probably wants to modify the parameter.
 
 				HandleInPlaceParameter(parameter);
 
@@ -336,7 +336,7 @@ namespace RTC
 			}
 
 			/**
-			 * Whether this type of Chunk can have Error Causes. Subclasses must
+			 * Whether this type of chunk can have error causes. Subclasses must
 			 * override this method.
 			 */
 			virtual bool CanHaveErrorCauses() const = 0;
@@ -386,43 +386,43 @@ namespace RTC
 			}
 
 			/**
-			 * Clone given Error Cause into Chunk's buffer.
+			 * Clone given error cause into chunk's buffer.
 			 *
 			 * @remarks
 			 * - Once this method is called, the caller may want to free the original
-			 *   given Error Cause (otherwise it will leak since the Chunk manages a
+			 *   given error cause (otherwise it will leak since the chunk manages a
 			 *   clone of it).
 			 *
 			 * @throw
-			 * - MediaSoupError - If the Chunk subclass cannot have Error Causes.
+			 * - MediaSoupError - If the chunk subclass cannot have error causes.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
+			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
 			 */
 			virtual void AddErrorCause(const ErrorCause* errorCause) final;
 
 			/**
-			 * Build a Error Cause within the Chunk's buffer and append it to the
-			 * list of Error Causes. The caller can perform modifications in that
-			 * Error Cause and those will affect the Chunk body where the Error Cause
-			 * is serialzed. The desired Error Cause class type is given via template
+			 * Build a error cause within the chunk's buffer and append it to the
+			 * list of error causes. The caller can perform modifications in that
+			 * error cause and those will affect the chunk body where the error cause
+			 * is serialzed. The desired error cause class type is given via template
 			 * argument.
 			 *
-			 * @returns Pointer of the created Error Cause specific class.
+			 * @returns Pointer of the created error cause specific class.
 			 *
 			 * @throw
-			 * - MediaSoupError - If the Chunk subclass cannot have Error Causes.
+			 * - MediaSoupError - If the chunk subclass cannot have error causes.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned Parameter or Error Cause yet.
+			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
 			 *
 			 * @remarks
-			 * - The caller MUST invoke `Consolidate()` once the Error Cause is
+			 * - The caller MUST invoke `Consolidate()` once the error cause is
 			 *   completed.
-			 * - The caller MUST NOT free the obtained Error Cause pointer since it's
-			 *   now part of the Chunk.
-			 * - The caller MUST free the obtained Error Cause only in case the
-			 *   `Consolidate()` method on the Error Cause throws.
+			 * - The caller MUST NOT free the obtained error cause pointer since it's
+			 *   now part of the chunk.
+			 * - The caller MUST free the obtained error cause only in case the
+			 *   `Consolidate()` method on the error cause throws.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -437,19 +437,19 @@ namespace RTC
 				AssertCanHaveErrorCauses();
 				AssertDoesNotNeedConsolidation();
 
-				// The new Error Cause will be added after other Error Causes in the
-				// Chunk, this is, at the end of the Chunk, whose length we know it's
-				// padded to 4 bytes, and each Error Cause total length is also
+				// The new error cause will be added after other error causes in the
+				// chunk, this is, at the end of the chunk, whose length we know it's
+				// padded to 4 bytes, and each error cause total length is also
 				// multiple of 4 bytes.
 				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 				// The remaining length in the buffer is the potential buffer length
-				// of the Error Cause.
+				// of the error cause.
 				size_t errorCauseMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
 				auto* errorCause = T::Factory(ptr, errorCauseMaxBufferLength);
 
-				// NOTE: Do not fix/update the Error Cause buffer length since the
-				// caller probably wants to modify the Error Cause.
+				// NOTE: Do not fix/update the error cause buffer length since the
+				// caller probably wants to modify the error cause.
 
 				HandleInPlaceErrorCause(errorCause);
 
@@ -459,7 +459,7 @@ namespace RTC
 			/**
 			 * Whether `BuildParameterInPlace()` or `BuildErrorCauseInPlace()` was
 			 * called before and the caller didn't invoke `Consolidate()` on the
-			 * returned Parameter or Error Cause yet.
+			 * returned parameter or error cause yet.
 			 */
 			virtual bool NeedsConsolidation() const final
 			{
@@ -576,8 +576,8 @@ namespace RTC
 			/**
 			 * Chunk subclasses with header bigger than default one (4 bytes) must
 			 * override this method and return their header length (excluding
-			 * variable-length field considered "value", Optional/Variable-Length
-			 * Parameters and Error Causes).
+			 * variable-length field considered "value", Optional/variable-length
+			 * parameters and error causes).
 			 */
 			size_t GetHeaderLength() const override
 			{
@@ -585,34 +585,34 @@ namespace RTC
 			}
 
 			/**
-			 * To be called by each subclass of Chunk if Parameters parsing is
-			 * needed. It creates Parameter subclasses and adds them to the Chunk.
+			 * To be called by each subclass of chunk if parameters parsing is
+			 * needed. It creates parameter subclasses and adds them to the chunk.
 			 *
 			 * @remarks
-			 * - This method assumes that the Chunk basic parsing has been made
-			 *   already so current length of the Chunk is the fixed length of the
-			 *   specific Chunk class.
+			 * - This method assumes that the chunk basic parsing has been made
+			 *   already so current length of the chunk is the fixed length of the
+			 *   specific chunk class.
 			 *
-			 * @return True if no error happened while parsing Parameters.
+			 * @return True if no error happened while parsing parameters.
 			 *
 			 * @throw
-			 * - MediaSoupError - If the Chunk subclass cannot have Chunk Parameters.
+			 * - MediaSoupError - If the chunk subclass cannot have chunk parameters.
 			 */
 			virtual bool ParseParameters() final;
 
 			/**
-			 * To be called by each subclass of Chunk if Error Causes parsing is
-			 * needed. It creates ErrorCause subclasses and adds them to the Chunk.
+			 * To be called by each subclass of chunk if error causes parsing is
+			 * needed. It creates ErrorCause subclasses and adds them to the chunk.
 			 *
 			 * @remarks
-			 * - This method assumes that the Chunk basic parsing has been made
-			 *   already so current length of the Chunk is the fixed length of the
-			 *   specific Chunk class.
+			 * - This method assumes that the chunk basic parsing has been made
+			 *   already so current length of the chunk is the fixed length of the
+			 *   specific chunk class.
 			 *
-			 * @return True if no error happened while parsing Error Causes.
+			 * @return True if no error happened while parsing error causes.
 			 *
 			 * @throw
-			 * - MediaSoupError - If the Chunk subclass cannot have Chunk Parameters.
+			 * - MediaSoupError - If the chunk subclass cannot have chunk parameters.
 			 */
 			virtual bool ParseErrorCauses() final;
 
@@ -658,7 +658,7 @@ namespace RTC
 			std::vector<ErrorCause*> errorCauses;
 			// Whether `BuildParameterInPlace()` or `BuildErrorCauseInPlace()` was
 			// called and the caller didn't invoke `Consolidate()` on the returned
-			// Parameter or Error Cause yet.
+			// parameter or error cause yet.
 			bool needsConsolidation{ false };
 		};
 	} // namespace SCTP

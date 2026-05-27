@@ -145,7 +145,7 @@ namespace RTC
 
 		// NOTE: We don't close `this->sctpAssociation` here since the
 		// `SetDestroying()` method has already been called by the Transport
-		// subclass and it closed the SCTP Association.
+		// subclass and it closed the SCTP association.
 		//
 		// NOTE: We cannot do it here in the destructor because here we are no longer
 		// the Transport subclass but Transport parent (this is how the destruction
@@ -1483,7 +1483,7 @@ namespace RTC
 
 		if (this->sctpAssociation)
 		{
-			// NOTE: We don't invoke `Shutdown()` but `Close()` in the SCTP Association
+			// NOTE: We don't invoke `Shutdown()` but `Close()` in the SCTP association
 			// because at this point we are closing everything and we won't have any
 			// chance to complete the SCTP SHUTDOWN + SHUTDOWN_ACK + SHUTDOWN_COMPLETE
 			// dance, so we invoke `Close()` which just sends a SCTP ABORT.
@@ -1999,7 +1999,7 @@ namespace RTC
 						{
 							MS_DEBUG_TAG(
 							  rtcp,
-							  "no Consumer found for received PLI Feedback packet "
+							  "no Consumer found for received PLI feedback packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 							  feedback->GetSenderSsrc(),
 							  feedback->GetMediaSsrc());
@@ -2038,7 +2038,7 @@ namespace RTC
 							{
 								MS_DEBUG_TAG(
 								  rtcp,
-								  "no Consumer found for received FIR Feedback packet "
+								  "no Consumer found for received FIR feedback packet "
 								  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 ", item ssrc:%" PRIu32 "]",
 								  feedback->GetSenderSsrc(),
 								  feedback->GetMediaSsrc(),
@@ -2082,7 +2082,7 @@ namespace RTC
 						{
 							MS_DEBUG_TAG(
 							  rtcp,
-							  "ignoring unsupported %s Feedback PS AFB packet "
+							  "ignoring unsupported %s feedback PS AFB packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 							  RTC::RTCP::FeedbackPsPacket::MessageTypeToString(feedback->GetMessageType()).c_str(),
 							  feedback->GetSenderSsrc(),
@@ -2096,7 +2096,7 @@ namespace RTC
 					{
 						MS_DEBUG_TAG(
 						  rtcp,
-						  "ignoring unsupported %s Feedback packet "
+						  "ignoring unsupported %s feedback packet "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 						  RTC::RTCP::FeedbackPsPacket::MessageTypeToString(feedback->GetMessageType()).c_str(),
 						  feedback->GetSenderSsrc(),
@@ -2121,7 +2121,7 @@ namespace RTC
 				{
 					MS_DEBUG_TAG(
 					  rtcp,
-					  "no Consumer found for received Feedback packet "
+					  "no Consumer found for received feedback packet "
 					  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 					  feedback->GetSenderSsrc(),
 					  feedback->GetMediaSsrc());
@@ -2137,7 +2137,7 @@ namespace RTC
 						{
 							MS_DEBUG_TAG(
 							  rtcp,
-							  "no Consumer found for received NACK Feedback packet "
+							  "no Consumer found for received NACK feedback packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 							  feedback->GetSenderSsrc(),
 							  feedback->GetMediaSsrc());
@@ -2176,7 +2176,7 @@ namespace RTC
 					{
 						MS_DEBUG_TAG(
 						  rtcp,
-						  "ignoring unsupported %s Feedback packet "
+						  "ignoring unsupported %s feedback packet "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 						  RTC::RTCP::FeedbackRtpPacket::MessageTypeToString(feedback->GetMessageType()).c_str(),
 						  feedback->GetSenderSsrc(),

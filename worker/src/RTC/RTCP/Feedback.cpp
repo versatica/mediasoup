@@ -122,7 +122,7 @@ namespace RTC
 
 			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize)
 			{
-				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+				MS_WARN_TAG(rtcp, "not enough space for feedback packet, discarded");
 
 				return nullptr;
 			}
@@ -176,7 +176,7 @@ namespace RTC
 
 				default:
 					MS_WARN_TAG(
-					  rtcp, "unknown RTCP PS Feedback message type [packetType:%" PRIu8 "]", commonHeader->count);
+					  rtcp, "unknown RTCP PS feedback message type [packetType:%" PRIu8 "]", commonHeader->count);
 			}
 
 			return packet;
@@ -213,7 +213,7 @@ namespace RTC
 
 			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize)
 			{
-				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+				MS_WARN_TAG(rtcp, "not enough space for feedback packet, discarded");
 
 				return nullptr;
 			}
@@ -262,7 +262,7 @@ namespace RTC
 				default:
 					MS_WARN_TAG(
 					  rtcp,
-					  "unknown RTCP RTP Feedback message type [packetType:%" PRIu8 "]",
+					  "unknown RTCP RTP feedback message type [packetType:%" PRIu8 "]",
 					  commonHeader->count);
 			}
 

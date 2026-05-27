@@ -26,7 +26,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}
@@ -61,7 +61,7 @@ namespace RTC
 			if (causeLength != ErrorCause::ErrorCauseHeaderLength)
 			{
 				MS_WARN_TAG(
-				  sctp, "OutOfResourceErrorCause Length field must be %zu", ErrorCause::ErrorCauseHeaderLength);
+				  sctp, "OutOfResourceErrorCause length field must be %zu", ErrorCause::ErrorCauseHeaderLength);
 
 				return nullptr;
 			}

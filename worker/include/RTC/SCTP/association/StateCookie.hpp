@@ -14,7 +14,7 @@ namespace RTC
 	{
 		/**
 		 * This is the State Cookie we generate and put into a State Cookie
-		 * Parameter when we send INIT_ACK Chunk to the remote peer.
+		 * parameter when we send INIT-ACK chunk to the remote peer.
 		 *
 		 * The syntax we use is as follows. Note that we use a fixed length of
 		 * StateCookieLength bytes.
@@ -115,7 +115,7 @@ namespace RTC
 			 *
 			 * @remarks
 			 * `bufferLength` could be greater than the real length of the State
-			 * Cookie.
+			 * cookie.
 			 */
 			static StateCookie* Factory(
 			  uint8_t* buffer,
@@ -159,8 +159,8 @@ namespace RTC
 			StateCookie* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			/**
-			 * The value of the Initiate Tag field we put in our INIT or INIT_ACK
-			 * Chunk. Packets sent by the remote peer must include this value in
+			 * The value of the Initiate Tag field we put in our INIT or INIT-ACK
+			 * chunk. Packets sent by the remote peer must include this value in
 			 * their Verification Tag field.
 			 */
 			uint32_t GetLocalVerificationTag() const
@@ -170,7 +170,7 @@ namespace RTC
 
 			/**
 			 * The value of the Initiate Tag field the peer put in its INIT or
-			 * INIT_ACK Chunk. Packets sent by us to the peer must include this value
+			 * INIT-ACK chunk. Packets sent by us to the peer must include this value
 			 * in their Verification Tag field.
 			 */
 			uint32_t GetRemoteVerificationTag() const
@@ -179,8 +179,8 @@ namespace RTC
 			}
 
 			/**
-			 * The value of the Initial TSN field we put in our INIT or INIT_ACK
-			 * Chunk.
+			 * The value of the Initial TSN field we put in our INIT or INIT-ACK
+			 * chunk.
 			 */
 			uint32_t GetLocalInitialTsn() const
 			{
@@ -189,7 +189,7 @@ namespace RTC
 
 			/**
 			 * The value of the Initial TSN field the peer put in its INIT or
-			 * INIT_ACK Chunk.
+			 * INIT-ACK chunk.
 			 */
 			uint32_t GetRemoteInitialTsn() const
 			{
@@ -198,7 +198,7 @@ namespace RTC
 
 			/**
 			 * The value of the Advertised Receiver Window Credit field we put in our
-			 * INIT or INIT_ACK Chunk.
+			 * INIT or INIT-ACK chunk.
 			 */
 			uint32_t GetRemoteAdvertisedReceiverWindowCredit() const
 			{

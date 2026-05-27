@@ -15,7 +15,7 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:9 (NO_USER_DATA), Length: 8
+			// Code:9 (NO-USER-DATA), Length: 8
 			0x00, 0x09, 0x00, 0x08,
 			// TSN: 987654321
 			0x3A, 0xDE, 0x68, 0xB1,
@@ -91,11 +91,11 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 
 		REQUIRE(!RTC::SCTP::NoUserDataErrorCause::Parse(buffer1, sizeof(buffer1)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:9 (NO_USER_DATA), Length: 7
+			// Code:9 (NO-USER-DATA), Length: 7
 			0x00, 0x09, 0x00, 0x07,
 			// TSN: 987654321
 			0x3A, 0xDE, 0x68,
@@ -104,11 +104,11 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 
 		REQUIRE(!RTC::SCTP::NoUserDataErrorCause::Parse(buffer2, sizeof(buffer2)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer3[] =
 		{
-			// Code:9 (NO_USER_DATA), Length: 9
+			// Code:9 (NO-USER-DATA), Length: 9
 			0x00, 0x09, 0x00, 0x09,
 			// TSN: 987654321
 			0x3A, 0xDE, 0x68, 0xB1,
@@ -122,7 +122,7 @@ SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 		// clang-format off
 		alignas(4) uint8_t buffer4[] =
 		{
-			// Code:9 (NO_USER_DATA), Length: 8
+			// Code:9 (NO-USER-DATA), Length: 8
 			0x00, 0x09, 0x00, 0x08,
 			// TSN (last byte missing)
 			0x3A, 0xDE, 0x68

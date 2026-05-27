@@ -27,7 +27,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::I_DATA)
 			{
-				MS_WARN_DEV("invalid Chunk type");
+				MS_WARN_DEV("invalid chunk type");
 
 				return nullptr;
 			}
@@ -71,7 +71,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "IDataChunk Length field must be equal or greater than %zu",
+				  "IDataChunk length field must be equal or greater than %zu",
 				  IDataChunk::IDataChunkHeaderLength);
 
 				return nullptr;

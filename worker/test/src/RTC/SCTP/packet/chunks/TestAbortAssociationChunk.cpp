@@ -19,7 +19,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 		{
 			// Type:6 (ABORT), Flags:0b00000000, Length: 12
 			0x06, 0b00000001, 0x00, 0x0C,
-			// Error Cause 3: Code:1 (STALE_COOKIE), Length: 8
+			// Error Cause 3: Code:1 (STALE-COOKIE), Length: 8
 			0x00, 0x03, 0x00, 0x08,
 			// Measure of Staleness: 0x12345678
 			0x12, 0x34, 0x56, 0x78,
@@ -152,7 +152,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 
 		REQUIRE(chunk->GetT() == false);
 
-		/* Modify it and add Error Causes. */
+		/* Modify it and add error causes. */
 
 		chunk->SetT(true);
 
@@ -236,7 +236,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 
 		chunk->SetT(true);
 
-		// 8 bytes Error Cause.
+		// 8 bytes error cause.
 		auto* errorCause1 = RTC::SCTP::StaleCookieErrorCause::Factory(
 		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
 
@@ -244,7 +244,7 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 
 		chunk->AddErrorCause(errorCause1);
 
-		// Once added, we can delete the Error Cause.
+		// Once added, we can delete the error cause.
 		delete errorCause1;
 
 		// Chunk length must be:

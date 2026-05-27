@@ -209,7 +209,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 
 		REQUIRE(!RTC::SCTP::SackChunk::Parse(buffer2, sizeof(buffer2)));
 
-		// Wrong Length field (smaller than buffer).
+		// Wrong length field (smaller than buffer).
 		// clang-format off
 		alignas(4) uint8_t buffer3[] =
 		{
@@ -260,7 +260,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		chunk->SetAdvertisedReceiverWindowCredit(5678);
 		chunk->AddDuplicateTsn(10000000);
 		chunk->AddAckBlock(10000, 19999);
-		// Notice that here we are creating a semig-wrong SACK Chunk since these
+		// Notice that here we are creating a semig-wrong SACK chunk since these
 		// two ranges shoyuld be merged into one.
 		chunk->AddAckBlock(RTC::SCTP::SackChunk::GapAckBlock(20000, 20999));
 		chunk->AddDuplicateTsn(20000000);

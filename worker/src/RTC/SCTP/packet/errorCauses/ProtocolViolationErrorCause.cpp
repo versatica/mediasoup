@@ -27,7 +27,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}

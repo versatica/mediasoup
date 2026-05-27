@@ -90,23 +90,23 @@ namespace RTC
 			}
 
 			/**
-			 * Returns a list of Chunks to "fast retransmit" that would fit in
+			 * Returns a list of chunks to "fast retransmit" that would fit in
 			 * `maxLength` (bytes). The current value of `cwnd` is ignored.
 			 */
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksForFastRetransmit(size_t maxLength);
 
 			/**
-			 * Returns a list of Chunks to send that would fit in `maxLength`
+			 * Returns a list of chunks to send that would fit in `maxLength`
 			 * (bytes). This may be further limited by the congestion control windows.
 			 * Note that `ShouldSendForwardTsn()` must be called prior to this method,
-			 * to abandon expired Chunks, as this method will not expire any Chunks.
+			 * to abandon expired chunks, as this method will not expire any chunks.
 			 */
 			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToSend(
 			  uint64_t nowMs, size_t maxLength);
 
 #ifdef MS_TEST
 			/**
-			 * Returns the internal state of all queued Chunks.
+			 * Returns the internal state of all queued chunks.
 			 *
 			 * @remarks
 			 * - Used in tests.
@@ -118,7 +118,7 @@ namespace RTC
 #endif
 
 			/**
-			 * Returns the next TSN that will be allocated for sent DATA Chunks.
+			 * Returns the next TSN that will be allocated for sent DATA chunks.
 			 */
 			uint32_t GetNextTsn() const
 			{
@@ -182,14 +182,14 @@ namespace RTC
 			}
 
 			/**
-			 * Given the current time `nowMs`, it will evaluate if there are Chunks
+			 * Given the current time `nowMs`, it will evaluate if there are chunks
 			 * that have expired and that need to be discarded. It returns true if a
 			 * FORWARD-TSN should be sent.
 			 */
 			bool ShouldSendForwardTsn(uint64_t nowMs);
 
 			/**
-			 * Adds a FORWARD-TSN Chunk to the given Packet and returns it.
+			 * Adds a FORWARD-TSN chunk to the given packet and returns it.
 			 */
 			const ForwardTsnChunk* AddForwardTsn(Packet* packet) const
 			{
@@ -197,7 +197,7 @@ namespace RTC
 			}
 
 			/**
-			 * Adds an I-FORWARD-TSN Chunk to the given Packet and returns it.
+			 * Adds an I-FORWARD-TSN chunk to the given packet and returns it.
 			 */
 			const IForwardTsnChunk* AddIForwardTsn(Packet* packet) const
 			{
@@ -229,7 +229,7 @@ namespace RTC
 			}
 
 			/**
-			 * Indicates if the provided SACK Chunk is valid given what has previously
+			 * Indicates if the provided SACK chunk is valid given what has previously
 			 * been received. If it returns false, the SACK is most likely a duplicate
 			 * of something already seen, so this returning false doesn't necessarily
 			 * mean that the SACK is illegal.
@@ -237,7 +237,7 @@ namespace RTC
 			bool IsSackChunkValid(const SackChunk* sackChunk) const;
 
 			/**
-			 * When a SACK Chunk is received, this method will be called which may
+			 * When a SACK chunk is received, this method will be called which may
 			 * call into the `RetransmissionTimeout` to update the RTO.
 			 */
 			void UpdateRttMs(uint64_t nowMs, Types::UnwrappedTsn cumulativeTsnAck);
@@ -249,7 +249,7 @@ namespace RTC
 			void MayExitFastRecovery(Types::UnwrappedTsn cumulativeTsnAck);
 
 			/**
-			 * If Chunks have been ACKed, stop the retransmission timer.
+			 * If chunks have been ACKed, stop the retransmission timer.
 			 *
 			 * @remarks
 			 * - This method is NOT defined in dcsctp! See bug report:
@@ -259,13 +259,13 @@ namespace RTC
 
 			/**
 			 * Update the congestion control algorithm given as the cumulative ack TSN
-			 * value has increased, as reported in an incoming SACK Chunk.
+			 * value has increased, as reported in an incoming SACK chunk.
 			 */
 			void HandleIncreasedCumulativeTsnAck(size_t unackedPacketBytes, size_t totalBytesAcked);
 
 			/**
 			 * Update the congestion control algorithm, given as packet loss has been
-			 * detected, as reported in an incoming SACK Chunk.
+			 * detected, as reported in an incoming SACK chunk.
 			 */
 			void HandlePacketLoss(Types::UnwrappedTsn highestTsnAcked);
 
@@ -318,7 +318,7 @@ namespace RTC
 			std::optional<Types::UnwrappedTsn> fastRecoveryExitTsn{ std::nullopt };
 			// The send queue.
 			SendQueueInterface& sendQueue;
-			// All the outstanding data Chunks that are in-flight and that have not
+			// All the outstanding data chunks that are in-flight and that have not
 			// been cumulative acked. Note that it also contains chunks that have been
 			// acked in gap-ack-blocks.
 			OutstandingData outstandingData;

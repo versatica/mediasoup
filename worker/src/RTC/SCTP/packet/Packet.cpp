@@ -42,7 +42,7 @@ namespace RTC
 
 			if (!Packet::IsSctp(buffer, bufferLength))
 			{
-				MS_WARN_TAG(sctp, "not an SCTP Packet");
+				MS_WARN_TAG(sctp, "not an SCTP packet");
 
 				return nullptr;
 			}
@@ -50,7 +50,7 @@ namespace RTC
 			auto* packet = new Packet(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Pointer that initially points to the given data buffer and is later
-			// incremented to point to other parts of the Packet.
+			// incremented to point to other parts of the packet.
 			const auto* ptr = buffer;
 
 			// Move to chunks.
@@ -59,10 +59,10 @@ namespace RTC
 			while (ptr < buffer + bufferLength)
 			{
 				// The remaining length in the buffer is the potential buffer length
-				// of the Chunk.
+				// of the chunk.
 				const size_t chunkMaxBufferLength = bufferLength - (ptr - buffer);
 
-				// Here we must anticipate the type of each Chunk to use its appropriate
+				// Here we must anticipate the type of each chunk to use its appropriate
 				// parser.
 				Chunk::ChunkType chunkType;
 				uint16_t chunkLength;
@@ -70,7 +70,7 @@ namespace RTC
 
 				if (!Chunk::IsChunk(ptr, chunkMaxBufferLength, chunkType, chunkLength, padding))
 				{
-					MS_WARN_TAG(sctp, "not an SCTP Chunk");
+					MS_WARN_TAG(sctp, "not an SCTP chunk");
 
 					delete packet;
 					return nullptr;
@@ -78,7 +78,7 @@ namespace RTC
 
 				Chunk* chunk{ nullptr }; // NOLINT(misc-const-correctness)
 
-				MS_DEBUG_DEV("parsing SCTP Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
+				MS_DEBUG_DEV("parsing SCTP chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
 
 				switch (chunkType)
 				{
@@ -238,7 +238,7 @@ namespace RTC
 			}
 
 			// It's mandatory to call SetLength() once we are done and we know the
-			// exact length of the Packet.
+			// exact length of the packet.
 			packet->SetLength(computedLength);
 
 			return packet;
@@ -265,7 +265,7 @@ namespace RTC
 			packet->SetChecksum(0u);
 
 			// No need to invoke SetLength() since constructor invoked it with
-			// minimum Packet length.
+			// minimum packet length.
 
 			return packet;
 		}
@@ -334,7 +334,7 @@ namespace RTC
 
 			Serializable::CloneInto(clonedPacket);
 
-			// Soft clone Packet Chunks into the given cloned Packet.
+			// Soft clone packet chunks into the given cloned packet.
 			for (auto* chunk : this->chunks)
 			{
 				const size_t offset = chunk->GetBuffer() - GetBuffer();
@@ -383,7 +383,7 @@ namespace RTC
 
 			const size_t length = GetLength() + chunk->GetLength();
 
-			// Let's append the Chunk at the end of existing Chunks.
+			// Let's append the chunk at the end of existing chunks.
 			auto* clonedChunk =
 			  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), chunk->GetLength());
 
@@ -435,7 +435,7 @@ namespace RTC
 
 			this->needsConsolidation = true;
 
-			// When the application completes the Chunk it must call
+			// When the application completes the chunk it must call
 			// `chunk->Consolidate()` and that will trigger this event.
 			chunk->SetConsolidatedListener(
 			  [this, chunk]()
@@ -444,18 +444,18 @@ namespace RTC
 				  {
 					  if (chunk->NeedsConsolidation())
 					  {
-						  MS_THROW_ERROR("ongoing Chunk needs consolidation");
+						  MS_THROW_ERROR("ongoing chunk needs consolidation");
 					  }
 
-					  // Fix buffer length assigned to the Chunk.
+					  // Fix buffer length assigned to the chunk.
 					  chunk->SetBufferLength(chunk->GetLength());
 
-					  // Update Packet length.
-					  // NOTE: This will throw if there is no enough space in the Packet
+					  // Update packet length.
+					  // NOTE: This will throw if there is no enough space in the packet
 					  // buffer.
 					  SetLength(GetLength() + chunk->GetLength());
 
-					  // Add the Chunk to the list.
+					  // Add the chunk to the list.
 					  this->chunks.push_back(chunk);
 					  this->needsConsolidation = false;
 				  }
@@ -474,7 +474,7 @@ namespace RTC
 
 			if (this->needsConsolidation)
 			{
-				MS_THROW_ERROR("Packet needs consolidation of some ongoing Chunk");
+				MS_THROW_ERROR("packet needs consolidation of some ongoing chunk");
 			}
 		}
 	} // namespace SCTP

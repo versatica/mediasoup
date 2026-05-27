@@ -27,7 +27,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::NO_USER_DATA)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}
@@ -67,7 +67,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "NoUserDataErrorCause Length field must be %zu",
+				  "NoUserDataErrorCause length field must be %zu",
 				  NoUserDataErrorCause::NoUserDataErrorCauseHeaderLength);
 
 				return nullptr;

@@ -25,12 +25,12 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
 		 * - Cause Code (16 bits).
-		 * - Cause Length (16 bits): Set to the size of the Error Cause in bytes,
-		 *   including the Cause Code, Cause Length, and Cause-Specific Information
+		 * - Cause length (16 bits): Set to the size of the error cause in bytes,
+		 *   including the Cause Code, Cause length, and Cause-Specific Information
 		 *   fields (padding excluded).
 		 * - Cause-Specific Information (variable length): This field carries the
 		 *   details of the error condition.
-		 * - Padding: Bytes of padding to make the Error Cause total length be
+		 * - Padding: Bytes of padding to make the error cause total length be
 		 *   multiple of 4 bytes.
 		 */
 
@@ -39,7 +39,7 @@ namespace RTC
 
 		class ErrorCause : public TLV
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -75,11 +75,11 @@ namespace RTC
 			{
 				ErrorCauseCode code;
 				/**
-				 * The value of the Error Cause Length field, which represents the
-				 * total length of the Error Cause in bytes, including the Cause Code,
-				 * Cause Length and Cause-Specific Information fields. So if the
-				 * Cause-Specific Information field is zero-length, the Length field
-				 * must be 4. The Cause Length field does not count any padding.
+				 * The value of the error cause length field, which represents the
+				 * total length of the error cause in bytes, including the Cause Code,
+				 * Cause length and Cause-Specific Information fields. So if the
+				 * Cause-Specific Information field is zero-length, the length field
+				 * must be 4. The Cause length field does not count any padding.
 				 */
 				uint16_t length;
 			};
@@ -89,16 +89,16 @@ namespace RTC
 
 		public:
 			/**
-			 * Whether given buffer could be a a valid Error Cause.
+			 * Whether given buffer could be a a valid error cause.
 			 *
 			 * @param buffer
-			 * @param bufferLength - Can be greater than real Error Cause length.
-			 * @param causeCode - If given buffer is a valid Error Cause then
+			 * @param bufferLength - Can be greater than real error cause length.
+			 * @param causeCode - If given buffer is a valid error cause then
 			 *   `causeCode` is rewritten to parsed ErrorCauseCode.
-			 * @param causeLength - If given buffer is a valid Error Cause then
-			 *   `causeLength` is rewritten to the value of the Cause Length field.
-			 * @param padding - If given buffer is a valid Error Cause then `padding`
-			 *   is rewritten to the number of padding bytes in the Error Cause (only
+			 * @param causeLength - If given buffer is a valid error cause then
+			 *   `causeLength` is rewritten to the value of the Cause length field.
+			 * @param padding - If given buffer is a valid error cause then `padding`
+			 *   is rewritten to the number of padding bytes in the error cause (only
 			 *   the necessary ones to make total length multiple of 4).
 			 */
 			static bool IsErrorCause(

@@ -15,7 +15,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:1 (INVALID_STREAM_IDENTIFIER), Length: 8
+			// Code:1 (INVALID-STREAM-IDENTIFIER), Length: 8
 			0x00, 0x01, 0x00, 0x08,
 			// Stream Identifier: 12345
 			0x30, 0x39, 0x00, 0x00,
@@ -100,11 +100,11 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 
 		REQUIRE(!RTC::SCTP::InvalidStreamIdentifierErrorCause::Parse(buffer1, sizeof(buffer1)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:1 (INVALID_STREAM_IDENTIFIER), Length: 7
+			// Code:1 (INVALID-STREAM-IDENTIFIER), Length: 7
 			0x00, 0x01, 0x00, 0x07,
 			// Stream Identifier: 12345
 			0x30, 0x39, 0x00
@@ -113,11 +113,11 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 
 		REQUIRE(!RTC::SCTP::InvalidStreamIdentifierErrorCause::Parse(buffer2, sizeof(buffer2)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer3[] =
 		{
-			// Code:1 (INVALID_STREAM_IDENTIFIER), Length: 9
+			// Code:1 (INVALID-STREAM-IDENTIFIER), Length: 9
 			0x00, 0x01, 0x00, 0x09,
 			// Stream Identifier: 12345
 			0x30, 0x39, 0x00, 0x00,
@@ -131,7 +131,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[serializable][sctp][erro
 		// clang-format off
 		alignas(4) uint8_t buffer4[] =
 		{
-			// Code:1 (INVALID_STREAM_IDENTIFIER), Length: 8
+			// Code:1 (INVALID-STREAM-IDENTIFIER), Length: 8
 			0x00, 0x01, 0x00, 0x08,
 			// Stream Identifier: 12345
 			0x30, 0x39, 0x00

@@ -16,7 +16,7 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:13 (OUTGOING_SSN_RESET_REQUEST), Length: 22
+			// Type:13 (OUTGOING-SSN-RESET-REQUEST), Length: 22
 			0x00, 0x0D, 0x00, 0x16,
 			// Re-configuration Request Sequence Number: 0x11223344
 			0x11, 0x22, 0x33, 0x44,
@@ -24,7 +24,7 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 			0x55, 0x66, 0x77, 0x88,
 			// Sender's Last Assigned TSN: 0xAABBCCDD
 			0xAA, 0xBB, 0xCC, 0xDD,
-			// Stream 1: 0x5001, Stream 2: 0x5002
+			// Stream 1: 0x5001, stream 2: 0x5002
 			0x50, 0x01, 0x50, 0x02,
 			// Stream 3: 0x5003, 2 bytes of padding
 			0x50, 0x03, 0x00, 0x00,

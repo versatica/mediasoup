@@ -96,7 +96,7 @@ namespace RTC
 			auto packet             = this->tcbContext->CreatePacket();
 			auto* heartbeatAckChunk = packet->BuildChunkInPlace<HeartbeatAckChunk>();
 
-			// Here we have to extract all Parameters from receivedHeartbeatRequestChunk
+			// Here we have to extract all parameters from receivedHeartbeatRequestChunk
 			// and add them into heartbeatAckChunk.
 			for (auto it = receivedHeartbeatRequestChunk->ParametersBegin();
 			     it != receivedHeartbeatRequestChunk->ParametersEnd();
@@ -126,7 +126,7 @@ namespace RTC
 			{
 				this->associationListener.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED,
-				  "ignoring HEARTBEAT_ACK chunk without Heartbeat Info parameter");
+				  "ignoring HEARTBEAT-ACK chunk without Heartbeat Info parameter");
 
 				return;
 			}
@@ -156,14 +156,14 @@ namespace RTC
 			{
 				const uint64_t rttMs = nowMs - createdAtMs;
 
-				MS_DEBUG_DEV("valid HEARTBEAT_ACK Chunk received, calling ObserveRttMs(%" PRIu64 ")", rttMs);
+				MS_DEBUG_DEV("valid HEARTBEAT-ACK chunk received, calling ObserveRttMs(%" PRIu64 ")", rttMs);
 
 				this->tcbContext->ObserveRttMs(rttMs);
 			}
 			else
 			{
 				MS_WARN_DEV(
-				  "ignoring received HEARTBEAT_ACK Chunk with invalid info content [createdAtMs:%" PRIu64
+				  "ignoring received HEARTBEAT-ACK chunk with invalid info content [createdAtMs:%" PRIu64
 				  ", nowMs:%" PRIu64 "]",
 				  createdAtMs,
 				  nowMs);
@@ -182,7 +182,7 @@ namespace RTC
 
 			if (!this->tcbContext->IsAssociationEstablished())
 			{
-				MS_DEBUG_DEV("won't send HEARTBEAT_REQUEST when SCTP Association is not established");
+				MS_DEBUG_DEV("won't send HEARTBEAT-REQUEST when SCTP association is not established");
 
 				return;
 			}
@@ -205,7 +205,7 @@ namespace RTC
 			heartbeatInfoParameter->Consolidate();
 			heartbeatRequestChunk->Consolidate();
 
-			MS_DEBUG_DEV("sending HEARTBEAT_REQUEST Chunk with info content [nowMs:%" PRIu64 "]", nowMs);
+			MS_DEBUG_DEV("sending HEARTBEAT-REQUEST chunk with info content [nowMs:%" PRIu64 "]", nowMs);
 
 			this->tcbContext->SendPacket(packet.get());
 		}

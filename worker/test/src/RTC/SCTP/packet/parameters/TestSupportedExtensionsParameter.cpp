@@ -16,10 +16,10 @@ SCENARIO("Supported Extensions Parameter (32776)", "[serializable][sctp][paramet
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:32776 (SUPPORTED_EXTENSIONS), Length: 7
+			// Type:32776 (SUPPORTED-EXTENSIONS), Length: 7
 			0x80, 0x08, 0x00, 0x07,
-			// Chunk Type 1: RE_CONFIG (0x82), Chunk Type 2: ECNE (0x0C),
-			// Chunk Type 3: UNKNOWN (0x42), 1 byte of padding
+			// Chunk type 1: RE-CONFIG (0x82), chunk type 2: ECNE (0x0C),
+			// chunk type 3: UNKNOWN (0x42), 1 byte of padding
 			0x82, 0x0C, 0x42, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC

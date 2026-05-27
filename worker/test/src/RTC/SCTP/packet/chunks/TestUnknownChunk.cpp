@@ -25,8 +25,8 @@ SCENARIO("SCTP Unknown Chunk", "[serializable][sctp][chunk]")
 
 		auto* chunk = RTC::SCTP::UnknownChunk::Parse(buffer, sizeof(buffer));
 
-		// NOTE: Chunk Type is 0xEE (0b11101110) so first 2 bits are 11, meaning
-		// that the action to take if we receive this Chunk Type is SKIP_AND_REPORT.
+		// NOTE: Chunk type is 0xEE (0b11101110) so first 2 bits are 11, meaning
+		// that the action to take if we receive this chunk type is SKIP_AND_REPORT.
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,

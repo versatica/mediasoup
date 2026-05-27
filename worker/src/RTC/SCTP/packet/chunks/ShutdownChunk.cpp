@@ -26,7 +26,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::SHUTDOWN)
 			{
-				MS_WARN_DEV("invalid Chunk type");
+				MS_WARN_DEV("invalid chunk type");
 
 				return nullptr;
 			}
@@ -64,7 +64,7 @@ namespace RTC
 			if (chunkLength != ShutdownChunk::ShutdownChunkHeaderLength)
 			{
 				MS_WARN_TAG(
-				  sctp, "ShutdownChunk Length field must be %zu", ShutdownChunk::ShutdownChunkHeaderLength);
+				  sctp, "ShutdownChunk length field must be %zu", ShutdownChunk::ShutdownChunkHeaderLength);
 
 				return nullptr;
 			}

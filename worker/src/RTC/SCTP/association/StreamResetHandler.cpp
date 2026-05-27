@@ -188,7 +188,7 @@ namespace RTC
 				}
 			}
 
-			MS_WARN_TAG(sctp, "invalid set of RE-CONFIG Parameters");
+			MS_WARN_TAG(sctp, "invalid set of RE-CONFIG parameters");
 
 			return false;
 		}
@@ -241,7 +241,7 @@ namespace RTC
 			}
 			else if (reqSeqNbr != this->lastProcessedReqSeqNbr.GetNextValue())
 			{
-				// Too old, too new, from wrong Association, etc.
+				// Too old, too new, from wrong association, etc.
 				MS_WARN_TAG(sctp, "bad reqSeqNbr: %" PRIu32, reqSeqNbr.Wrap());
 
 				return ReqSeqNbrValidationResult::BAD_SEQUENCE_NUMBER;

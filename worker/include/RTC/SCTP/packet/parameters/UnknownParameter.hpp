@@ -27,7 +27,7 @@ namespace RTC
 
 		class UnknownParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -35,7 +35,7 @@ namespace RTC
 			 * Parse a UnknownParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static UnknownParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 

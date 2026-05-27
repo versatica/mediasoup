@@ -32,7 +32,7 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 1.
+		 * - Chunk type (8 bits): 1.
 		 * - Flags (8 bits): All set to 0.
 		 * - Initiate Tag (32 bits): The receiver of the INIT chunk (the responding
 		 *   end) records the value of the Initiate Tag parameter. This value MUST
@@ -51,7 +51,7 @@ namespace RTC
 		 * - Initial TSN (I-TSN) (32 bits): Defines the TSN that the sender of the
 		 *   INIT chunk will use initially.
 		 *
-		 * Variable-Length Parameters:
+		 * Variable-length Parameters:
 		 * - IPv4 Address (5), optional.
 		 * - IPv6 Address (6), optional.
 		 * - Cookie Preservative (9), optional.
@@ -67,7 +67,7 @@ namespace RTC
 
 		class InitChunk : public AnyInitChunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -78,7 +78,7 @@ namespace RTC
 			 * Parse a InitChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static InitChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -86,7 +86,7 @@ namespace RTC
 			 * Create a InitChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static InitChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -162,10 +162,10 @@ namespace RTC
 			InitChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Chunk doesn't
+			 * We don't really need to override this method since this chunk doesn't
 			 * have variable-length value (despite the fixed header doesn't have
-			 * default length). Optional/Variable-Length Parameters and/or Error
-			 * Causes don't account here.
+			 * default length). Optional/variable-length parameters and/or error
+			 * causes don't account here.
 			 */
 			size_t GetHeaderLength() const final
 			{

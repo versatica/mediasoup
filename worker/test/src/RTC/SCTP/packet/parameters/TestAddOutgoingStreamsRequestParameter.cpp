@@ -15,7 +15,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[serializable][sctp][pa
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:17 (ADD_OUTGOING_STREAMS_REQUEST), Length: 12
+			// Type:17 (ADD-OUTGOING-STREAMS-REQUEST), Length: 12
 			0x00, 0x11, 0x00, 0x0C,
 			// Re-configuration Request Sequence Number: 666777888
 			0x27, 0xBE, 0x39, 0x20,

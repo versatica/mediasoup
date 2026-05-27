@@ -15,11 +15,11 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:12 (SUPPORTED_ADDRESS_TYPES), Length: 10
+			// Type:12 (SUPPORTED-ADDRESS-TYPES), Length: 10
 			0x00, 0x0C, 0x00, 0x0A,
-			// Address Type 1: 0x1001, Address Type 2: 0x2002
+			// Address type 1: 0x1001, Address Type 2: 0x2002
 			0x10, 0x01, 0x20, 0x02,
-			// Address Type 3: 0x3003, 2 bytes of padding
+			// Address type 3: 0x3003, 2 bytes of padding
 			0x30, 0x03, 0x00, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC
@@ -90,13 +90,13 @@ SCENARIO("Supported Address Types Parameter (12)", "[serializable][sctp][paramet
 
 	SECTION("SupportedAddressTypesParameter::Parse() fails")
 	{
-		// Wrong Length field (not even).
+		// Wrong length field (not even).
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{
-			// Type:12 (SUPPORTED_ADDRESS_TYPES), Length: 7
+			// Type:12 (SUPPORTED-ADDRESS-TYPES), Length: 7
 			0x00, 0x0C, 0x00, 0x0A,
-			// Address Type 1: 0x1001, Address Type 2: 0x2002
+			// Address type 1: 0x1001, Address Type 2: 0x2002
 			0x10, 0x01, 0x20, 0x02,
 		};
 		// clang-format on

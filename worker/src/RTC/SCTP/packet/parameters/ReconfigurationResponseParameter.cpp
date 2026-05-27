@@ -42,7 +42,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::RECONFIGURATION_RESPONSE)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -106,7 +106,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "ReconfigurationResponseParameter Length field must be %zu or %zu",
+				  "ReconfigurationResponseParameter length field must be %zu or %zu",
 				  ReconfigurationResponseParameter::ReconfigurationResponseParameterHeaderLength,
 				  ReconfigurationResponseParameter::ReconfigurationResponseParameterHeaderLengthWithOptionalFields);
 

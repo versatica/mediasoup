@@ -26,7 +26,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::HEARTBEAT_REQUEST)
 			{
-				MS_WARN_DEV("invalid Chunk type");
+				MS_WARN_DEV("invalid chunk type");
 
 				return nullptr;
 			}
@@ -60,10 +60,10 @@ namespace RTC
 
 			auto* chunk = new HeartbeatRequestChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Parse Parameters.
+			// Parse parameters.
 			if (!chunk->ParseParameters())
 			{
-				MS_WARN_DEV("failed to parse Parameters");
+				MS_WARN_DEV("failed to parse parameters");
 
 				delete chunk;
 				return nullptr;

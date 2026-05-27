@@ -15,7 +15,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:8 (SHUTDOWN_ACK), Flags:0x00000000, Length: 4
+			// Type:8 (SHUTDOWN-ACK), Flags:0x00000000, Length: 4
 			0x08, 0b01000000, 0x00, 0x04,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,

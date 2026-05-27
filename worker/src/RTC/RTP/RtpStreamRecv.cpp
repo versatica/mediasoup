@@ -296,7 +296,7 @@ namespace RTC
 				}
 			}
 
-			// Calculate Jitter.
+			// Calculate jitter.
 			CalculateJitter(packet->GetTimestamp());
 
 			// Increase transmission counter.
@@ -472,7 +472,7 @@ namespace RTC
 
 			const int32_t prevPacketsLost = this->packetsLost;
 
-			// Calculate Packets Expected and Lost.
+			// Calculate packets expected and lost.
 			auto expected = GetExpectedPackets();
 
 			if (expected > this->mediaTransmissionCounter.GetPacketCount())
@@ -484,7 +484,7 @@ namespace RTC
 				this->packetsLost = 0;
 			}
 
-			// Calculate Fraction Lost.
+			// Calculate fraction lost.
 			const uint32_t expectedInterval = expected - this->expectedPrior;
 
 			this->expectedPrior = expected;

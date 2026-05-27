@@ -118,7 +118,7 @@ namespace RTC
 			{
 				/**
 				 * Auto means that One-Byte or Two-Bytes is choosen based on given
-				 * Extensions.
+				 * extensions.
 				 */
 				Auto     = 0,
 				OneByte  = 1,
@@ -189,7 +189,7 @@ namespace RTC
 			static const size_t FixedHeaderMinLength{ 12 };
 
 			/**
-			 * Whether given buffer could be a valid RTP Packet.
+			 * Whether given buffer could be a valid RTP packet.
 			 *
 			 * @remarks
 			 * - Before calling this static method, the caller should verify whether
@@ -198,10 +198,10 @@ namespace RTC
 			static bool IsRtp(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Parse a RTP Packet.
+			 * Parse a RTP packet.
 			 *
 			 * @remarks
-			 * - `packetLength` must be the exact length of the Packet.
+			 * - `packetLength` must be the exact length of the packet.
 			 * - `bufferLength` must be >= `packetLength`.
 			 *
 			 * @throw MediaSoupTypeError - If `bufferLength` is lower than
@@ -210,21 +210,21 @@ namespace RTC
 			static Packet* Parse(const uint8_t* buffer, size_t packetLength, size_t bufferLength);
 
 			/**
-			 * Parse a RTP Packet.
+			 * Parse a RTP packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the Packet.
+			 * - `bufferLength` must be the exact length of the packet.
 			 */
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Create a RTP Packet.
+			 * Create a RTP packet.
 			 */
 			static Packet* Factory(uint8_t* buffer, size_t bufferLength);
 
 			/**
 			 * Generate value for "urn:mediasoup:params:rtp-hdrext:packet-id"
-			 * mediasoup custom Extension.
+			 * mediasoup custom extension.
 			 */
 			static uint32_t GetNextMediasoupPacketId();
 
@@ -233,7 +233,7 @@ namespace RTC
 
 		private:
 			/**
-			 * Constructor is private because we only want to create Packet instances
+			 * Constructor is private because we only want to create packet instances
 			 * via Parse() and Factory().
 			 */
 			Packet(uint8_t* buffer, size_t bufferLength);
@@ -298,11 +298,11 @@ namespace RTC
 			}
 
 			/**
-			 * Get the Extension Header id or 0 if there isn't.
+			 * Get the extension header id or 0 if there isn't.
 			 *
 			 * @remarks
 			 * - This method doesn't validate whether there is indeed space for the
-			 *   announced Header Extension.
+			 *   announced header extension.
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 */
@@ -317,12 +317,12 @@ namespace RTC
 			}
 
 			/**
-			 * Pointer to the Header Extension value or `nullptr` if there is no
-			 * Header Extension or its has no value.
+			 * Pointer to the header extension value or `nullptr` if there is no
+			 * header extension or its has no value.
 			 *
 			 * @remarks
 			 * - This method doesn't validate whether there is indeed space for the
-			 *   announced Header Extension.
+			 *   announced header extension.
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 */
@@ -339,7 +339,7 @@ namespace RTC
 			}
 
 			/**
-			 * Length of the Header Extension value (excluding the id & length
+			 * Length of the header extension value (excluding the id & length
 			 * four-octet).
 			 */
 			size_t GetHeaderExtensionValueLength() const
@@ -353,12 +353,12 @@ namespace RTC
 			}
 
 			/**
-			 * Remove the Header Extension.
+			 * Remove the header extension.
 			 */
 			void RemoveHeaderExtension();
 
 			/**
-			 * Whether the Packet has One-Byte or Two-Bytes Extensions.
+			 * Whether the packet has One-Byte or Two-Bytes extensions.
 			 *
 			 * @see RFC 8285.
 			 */
@@ -368,7 +368,7 @@ namespace RTC
 			}
 
 			/**
-			 * Whether the Packet has One-Byte Extensions.
+			 * Whether the packet has One-Byte extensions.
 			 *
 			 * @see RFC 8285.
 			 */
@@ -378,7 +378,7 @@ namespace RTC
 			}
 
 			/**
-			 * Whether the Packet has Two-Bytes Extensions.
+			 * Whether the packet has Two-Bytes extensions.
 			 *
 			 * @see RFC 8285.
 			 */
@@ -388,13 +388,13 @@ namespace RTC
 			}
 
 			/**
-			 * Whether the One-Byte or Two-Bytes Extension with given `id` exists in
-			 * the Packet.
+			 * Whether the One-Byte or Two-Bytes extension with given `id` exists in
+			 * the packet.
 			 *
 			 * @see RFC 8285.
 			 *
 			 * @remarks
-			 * - If the length of the Extension value is 0 this method returns `true`.
+			 * - If the length of the extension value is 0 this method returns `true`.
 			 */
 			bool HasExtension(uint8_t id) const
 			{
@@ -426,7 +426,7 @@ namespace RTC
 			}
 
 			/**
-			 * Get a pointer to the value of the the One-Byte or Two-Bytes Extension
+			 * Get a pointer to the value of the the One-Byte or Two-Bytes extension
 			 * with given `id` and set its value length into given `len`.
 			 *
 			 * @see RFC 8285.
@@ -463,7 +463,7 @@ namespace RTC
 
 					auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
 
-					// In One-Byte Extensions value length 0 means 1.
+					// In One-Byte extensions value length 0 means 1.
 					len = extension->len + 1;
 
 					return extension->value;
@@ -496,17 +496,17 @@ namespace RTC
 			}
 
 			/**
-			 * Add or replace Extensions.
+			 * Add or replace extensions.
 			 *
 			 * @see RFC 8285.
 			 *
 			 * @throw MediaSoupTypeError - If there is no space available for given
-			 *   Extensions or if given Extensions are invalid/wrong.
+			 *   extensions or if given extensions are invalid/wrong.
 			 */
 			void SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions);
 
 			/**
-			 * Assign Extension ids.
+			 * Assign extension ids.
 			 *
 			 * @see RFC 8285.
 			 */
@@ -521,7 +521,7 @@ namespace RTC
 			/**
 			 * @remarks
 			 * - `absSendTime` is set with the raw 3 bytes unsigned integer stored
-			 *   in the Extension value.
+			 *   in the extension value.
 			 */
 			bool ReadAbsSendTime(uint32_t& absSendtime) const;
 
@@ -554,11 +554,11 @@ namespace RTC
 			bool ReadMediasoupPacketId(uint32_t& mediasoupPacketId) const;
 
 			/**
-			 * Whether this Packet has payload.
+			 * Whether this packet has payload.
 			 *
 			 * @remarks
 			 * - This method doesn't validate whether the padding length announced in
-			 *   the last byte of the Packet is valid.
+			 *   the last byte of the packet is valid.
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 */
@@ -573,11 +573,11 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This method doesn't validate whether the padding length announced in
-			 *   the last byte of the Packet is valid.
+			 *   the last byte of the packet is valid.
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 * - This method doens't take into account padding, so in a padding-only
-			 *   Packet this method returns `nullptr` with `len` 0.
+			 *   packet this method returns `nullptr` with `len` 0.
 			 */
 			uint8_t* GetPayload(size_t& len) const
 			{
@@ -608,11 +608,11 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This method doesn't validate whether the padding length announced in
-			 *   the last byte of the Packet is valid.
+			 *   the last byte of the packet is valid.
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 * - This method doens't take into account padding, so in a padding-only
-			 *   Packet this method returns `nullptr`.
+			 *   packet this method returns `nullptr`.
 			 */
 			uint8_t* GetPayload() const
 			{
@@ -626,7 +626,7 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This method doesn't validate whether the padding length announced in
-			 *   the last byte of the Packet is valid.
+			 *   the last byte of the packet is valid.
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 */
@@ -651,7 +651,7 @@ namespace RTC
 			}
 
 			/**
-			 * Set the payload. It copies the given `payload` into the Packet.
+			 * Set the payload. It copies the given `payload` into the packet.
 			 *
 			 * @remarks
 			 * - This method removes existing padding (if any).
@@ -696,7 +696,7 @@ namespace RTC
 			void ShiftPayload(size_t payloadOffset, int32_t delta);
 
 			/**
-			 * Whether this Packet has padding.
+			 * Whether this packet has padding.
 			 */
 			bool HasPadding() const
 			{
@@ -708,7 +708,7 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This method doesn't validate whether the padding length announced in
-			 *   the last byte of the Packet is valid.
+			 *   the last byte of the packet is valid.
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 */
@@ -734,7 +734,7 @@ namespace RTC
 			void SetPaddingLength(uint8_t paddingLength);
 
 			/**
-			 * Whether Packet length is padded to 4 bytes.
+			 * Whether packet length is padded to 4 bytes.
 			 */
 			bool IsPaddedTo4Bytes() const
 			{
@@ -742,7 +742,7 @@ namespace RTC
 			}
 
 			/**
-			 * Pad Packet length to 4 bytes by modifying padding bytes.
+			 * Pad packet length to 4 bytes by modifying padding bytes.
 			 *
 			 * @remarks
 			 * - This method removes existing padding and adds up to 3 bytes of
@@ -754,7 +754,7 @@ namespace RTC
 			void PadTo4Bytes();
 
 			/**
-			 * Encode the Packet into a RTX Packet.
+			 * Encode the packet into a RTX packet.
 			 *
 			 * @remarks
 			 * - This method removes existing padding (if any).
@@ -765,7 +765,7 @@ namespace RTC
 			void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
 
 			/**
-			 * Decode the RTX Packet into a regular RTP Packet.
+			 * Decode the RTX packet into a regular RTP packet.
 			 *
 			 * @return `true` if RTX decoding iwas done.
 			 *
@@ -872,7 +872,7 @@ namespace RTC
 			}
 
 			/**
-			 * Pointer to the location where Extension Header is supposed to begin.
+			 * Pointer to the location where extension header is supposed to begin.
 			 */
 			HeaderExtension* GetHeaderExtensionPointer() const
 			{
@@ -880,11 +880,11 @@ namespace RTC
 			}
 
 			/**
-			 * Length of the Header Extension including the id & length four-octet.
+			 * Length of the header extension including the id & length four-octet.
 			 *
 			 * @remarks
 			 * - This method doesn't validate whether there is indeed space for the
-			 *   announced Header Extension.
+			 *   announced header extension.
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 */
@@ -907,8 +907,8 @@ namespace RTC
 			}
 
 			/**
-			 * Validates whether the Packet is valid. It also stores internal
-			 * containers holding Extensions if `storeExtensions` is `true`.
+			 * Validates whether the packet is valid. It also stores internal
+			 * containers holding extensions if `storeExtensions` is `true`.
 			 */
 #ifdef MS_TEST
 		public:
@@ -919,20 +919,20 @@ namespace RTC
 #endif
 
 			/**
-			 * Parses Extensions. Returns `true` if they are valid. It also stores
-			 * internal containers holding Extensions if `storeExtensions` is `true`.
+			 * Parses extensions. Returns `true` if they are valid. It also stores
+			 * internal containers holding extensions if `storeExtensions` is `true`.
 			 *
 			 * @see RFC 8285.
 			 */
 			bool ParseExtensions(bool storeExtensions);
 
 			/**
-			 * Set the value length of the Extension with given `id`.
+			 * Set the value length of the extension with given `id`.
 			 *
 			 * @remarks
 			 * - The caller is responsible of not setting a length higher than the
 			 *   available one (taking into account existing padding bytes).
-			 * - If the Extension with `id` doesn't exist this methods terminates
+			 * - If the extension with `id` doesn't exist this methods terminates
 			 *   the process.
 			 */
 			void SetExtensionLength(uint8_t id, uint8_t len);
@@ -947,14 +947,14 @@ namespace RTC
 #endif
 
 		private:
-			// Array of One Byte Extensions. Index is the id - 1 of the Extension,
-			// each entry is the offset (in bytes) from the beginning of the Header
-			// Extension value to the beginning of the Extension.
+			// Array of One Byte Extensions. Index is the id - 1 of the extension,
+			// each entry is the offset (in bytes) from the beginning of the header
+			// extension value to the beginning of the extension.
 			std::array<ssize_t, 14> oneByteExtensions{ -1, -1, -1, -1, -1, -1, -1,
 				                                         -1, -1, -1, -1, -1, -1, -1 };
-			// Ordered map of Two Bytes Extensions. Key is the id 1 of the Extension,
-			// each entry is the offset (in bytes) from the beginning of the Header
-			// Extension value to the beginning of the Extension.
+			// Ordered map of Two Bytes Extensions. Key is the id 1 of the extension,
+			// each entry is the offset (in bytes) from the beginning of the header
+			// extension value to the beginning of the extension.
 			std::map<uint8_t, ssize_t> twoBytesExtensions;
 			// Extension ids.
 			RTP::HeaderExtensionIds headerExtensionIds{};

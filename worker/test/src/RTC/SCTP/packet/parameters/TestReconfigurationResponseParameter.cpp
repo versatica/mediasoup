@@ -15,7 +15,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:16 (RECONFIGURATION_RESPONSE), Length: 20
+			// Type:16 (RECONFIGURATION-RESPONSE), Length: 20
 			0x00, 0x10, 0x00, 0x14,
 			// Re-configuration Request Sequence Number: 287454020
 			0x11, 0x22, 0x33, 0x44,
@@ -106,7 +106,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:16 (RECONFIGURATION_RESPONSE), Length: 12
+			// Type:16 (RECONFIGURATION-RESPONSE), Length: 12
 			0x00, 0x10, 0x00, 0x0C,
 			// Re-configuration Request Sequence Number: 3333333333
 			0xC6, 0xAE, 0xA1, 0x55,
@@ -186,11 +186,11 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 
 	SECTION("ReconfigurationResponseParameter::Parse() fails")
 	{
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{
-			// Type:16 (RECONFIGURATION_RESPONSE), Length: 16 (should be 12 or 20)
+			// Type:16 (RECONFIGURATION-RESPONSE), Length: 16 (should be 12 or 20)
 			0x00, 0x10, 0x00, 0x10,
 			// Re-configuration Request Sequence Number: 287454020
 			0x11, 0x22, 0x33, 0x44,
@@ -209,7 +209,7 @@ SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][param
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Type:16 (RECONFIGURATION_RESPONSE), Length: 20
+			// Type:16 (RECONFIGURATION-RESPONSE), Length: 20
 			0x00, 0x10, 0x00, 0x14,
 			// Re-configuration Request Sequence Number: 287454020
 			0x11, 0x22, 0x33, 0x44,

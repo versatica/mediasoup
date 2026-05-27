@@ -25,13 +25,13 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Parameter Type (16 bits).
-		 * - Parameter Length (16 bits): Total length of the Parameter, including
-		 *   the Parameter Type, Parameter Length and Parameter Value fields
-		 *   (padding is excluded). Thus, a Parameter with a zero-length Parameter
-		 *   Value field would have a Parameter Length field of 4.
-		 * - Parameter Value (variable length).
-		 * - Padding: Bytes of padding to make the Parameter total length be
+		 * - Parameter type (16 bits).
+		 * - Parameter length (16 bits): Total length of the parameter, including
+		 *   the parameter type, parameter length and parameter value fields
+		 *   (padding is excluded). Thus, a parameter with a zero-length parameter
+		 *   value field would have a parameter length field of 4.
+		 * - Parameter value (variable length).
+		 * - Padding: Bytes of padding to make the parameter total length be
 		 *   multiple of 4 bytes.
 		 */
 
@@ -40,7 +40,7 @@ namespace RTC
 
 		class Parameter : public TLV
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -69,7 +69,7 @@ namespace RTC
 
 			/**
 			 * Action that is taken if the processing endpoint does not recognize the
-			 * Parameter.
+			 * parameter.
 			 */
 			enum class ActionForUnknownParameterType : uint8_t
 			{
@@ -89,11 +89,11 @@ namespace RTC
 			{
 				ParameterType type;
 				/**
-				 * The value of the Parameter Length field, which represents the total
-				 * length of the Parameter in bytes, including the Parameter Type,
-				 * Parameter Length and Parameter Value fields. So if the Parameter
-				 * Value field is zero-length, the Length field must be 4. The
-				 * Parameter Length field does not count any padding.
+				 * The value of the parameter length field, which represents the total
+				 * length of the parameter in bytes, including the parameter type,
+				 * parameter length and parameter value fields. So if the parameter
+				 * value field is zero-length, the length field must be 4. The
+				 * parameter length field does not count any padding.
 				 */
 				uint16_t length;
 			};
@@ -103,17 +103,17 @@ namespace RTC
 
 		public:
 			/**
-			 * Whether given buffer could be a a valid Parameter.
+			 * Whether given buffer could be a a valid parameter.
 			 *
 			 * @param buffer
-			 * @param bufferLength - Can be greater than real Parameter length.
-			 * @param parameterType - If given buffer is a valid Parameter then
+			 * @param bufferLength - Can be greater than real parameter length.
+			 * @param parameterType - If given buffer is a valid parameter then
 			 *   `parameterType` is rewritten to parsed ParameterType.
-			 * @param parameterLength - If given buffer is a valid Parameter then
-			 *   `parameterLength` is rewritten to the value of the Parameter Length
+			 * @param parameterLength - If given buffer is a valid parameter then
+			 *   `parameterLength` is rewritten to the value of the parameter length
 			 *    field.
-			 * @param padding - If given buffer is a valid Parameter then `padding`
-			 *   is rewritten to the number of padding bytes in the Parameter (only
+			 * @param padding - If given buffer is a valid parameter then `padding`
+			 *   is rewritten to the number of padding bytes in the parameter (only
 			 *   the necessary ones to make total length multiple of 4).
 			 */
 			static bool IsParameter(
@@ -130,7 +130,7 @@ namespace RTC
 
 		protected:
 			/**
-			 * Constructor is protected because we only want to create Parameter
+			 * Constructor is protected because we only want to create parameter
 			 * instances via Parse() and Factory() in subclasses.
 			 */
 			Parameter(uint8_t* buffer, size_t bufferLength);

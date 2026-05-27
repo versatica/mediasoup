@@ -114,7 +114,7 @@ SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 
 	SECTION("UnknownErrorCause::Parse() fails")
 	{
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{

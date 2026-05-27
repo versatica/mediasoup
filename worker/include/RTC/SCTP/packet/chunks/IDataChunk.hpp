@@ -12,7 +12,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP I-Data Chunk (I_DATA) (64).
+		 * SCTP I-Data Chunk (I-DATA) (64).
 		 *
 		 * @see RFC 8260.
 		 *
@@ -34,7 +34,7 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 64.
+		 * - Chunk type (8 bits): 64.
 		 * - Res (4 bits): All set to 0.
 		 * - I bit (1 bit): The (I)mmediate bit, if set, indicates that the
 		 *   receiver SHOULD NOT delay the sending of the corresponding SACK chunk.
@@ -70,7 +70,7 @@ namespace RTC
 
 		class IDataChunk : public AnyDataChunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -81,7 +81,7 @@ namespace RTC
 			 * Parse a IDataChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static IDataChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -89,7 +89,7 @@ namespace RTC
 			 * Create a IDataChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static IDataChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -259,7 +259,7 @@ namespace RTC
 			IDataChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We need to override this method since this Chunk has a variable-length
+			 * We need to override this method since this chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
 			size_t GetHeaderLength() const final

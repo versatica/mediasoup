@@ -137,8 +137,8 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 			0xEE, 0b00001100, 0x00, 0x07,
 			// Unknown data: 0xAABBCC, 1 byte of padding
 			0xAA, 0xBB, 0xCC, 0x00,
-			// Chunk 3: Type:5 (HEARTBEAT_ACK), Flags:0b00000000, Length: 10
-			// NOTE: Chunk Length field must exclude padding of the last Parameter.
+			// Chunk 3: Type:5 (HEARTBEAT-ACK), Flags:0b00000000, Length: 10
+			// NOTE: Chunk length field must exclude padding of the last parameter.
 			0x05, 0b00000000, 0x00, 0x0A,
 			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 6
 			0x00, 0x01, 0x00, 0x06,
@@ -521,7 +521,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::InitChunk>() == nullptr);
 
-		/* Modify the Packet and add Chunks. */
+		/* Modify the packet and add chunks. */
 
 		packet->SetSourcePort(1000);
 		packet->SetDestinationPort(6000);
@@ -537,7 +537,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		chunk1->SetNumberOfInboundStreams(22200);
 		chunk1->SetInitialTsn(14141414);
 
-		// Parameter 1.1: IPV4_ADDRESS, length: 8 bytes.
+		// Parameter 1.1: IPV4-ADDRESS, length: 8 bytes.
 		// NOLINTNEXTLINE (readability-identifier-naming)
 		auto* parameter1_1 = chunk1->BuildParameterInPlace<RTC::SCTP::IPv4AddressParameter>();
 
@@ -549,7 +549,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 		REQUIRE(chunk1->GetFirstParameterOfType<RTC::SCTP::IPv4AddressParameter>() == parameter1_1);
 
-		// Parameter 1.2: COOKIE_PRESERVATIVE, length: 8 bytes.
+		// Parameter 1.2: COOKIE-PRESERVATIVE, length: 8 bytes.
 		// NOLINTNEXTLINE (readability-identifier-naming)
 		auto* parameter1_2 = chunk1->BuildParameterInPlace<RTC::SCTP::CookiePreservativeParameter>();
 
@@ -558,7 +558,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 		REQUIRE(chunk1->GetFirstParameterOfType<RTC::SCTP::CookiePreservativeParameter>() == parameter1_2);
 
-		// Consolidate Chunk 1 after consolidating its Parameters 1.1 and 1.2.
+		// Consolidate chunk 1 after consolidating its parameters 1.1 and 1.2.
 		chunk1->Consolidate();
 
 		REQUIRE(chunk1->GetFirstParameterOfType<RTC::SCTP::IPv4AddressParameter>() == parameter1_1);
@@ -566,10 +566,10 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::InitChunk>() == chunk1);
 
-		// Chunk 2: HEARTBEAT_REQUEST, length: 4 bytes.
+		// Chunk 2: HEARTBEAT-REQUEST, length: 4 bytes.
 		auto* chunk2 = packet->BuildChunkInPlace<RTC::SCTP::HeartbeatRequestChunk>();
 
-		// Parameter 2.1: HEARTBEAT_INFO, length: 4 bytes.
+		// Parameter 2.1: HEARTBEAT-INFO, length: 4 bytes.
 		// NOLINTNEXTLINE (readability-identifier-naming)
 		auto* parameter2_1 = chunk2->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
 
@@ -581,7 +581,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 
 		std::memset(sctpCommon::DataBuffer, 0xFF, 3);
 
-		// Consolidate the Chunk after consolidating its Parameters.
+		// Consolidate the chunk after consolidating its parameters.
 		chunk2->Consolidate();
 
 		REQUIRE(chunk2->GetFirstParameterOfType<RTC::SCTP::HeartbeatInfoParameter>() == parameter2_1);
@@ -614,7 +614,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		  /*hasValidCrc32cChecksum*/ true,
 		  /*chunksCount*/ 2);
 
-		/* Serialize the Packet. */
+		/* Serialize the packet. */
 
 		packet->Serialize(sctpCommon::SerializeBuffer, packet->GetLength());
 
@@ -635,7 +635,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::InitChunk>() == chunk1);
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::HeartbeatRequestChunk>() == chunk2);
 
-		/* Clone the Packet. */
+		/* Clone the packet. */
 
 		packet.reset(packet->Clone(sctpCommon::CloneBuffer, packet->GetLength()));
 
@@ -759,7 +759,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		packet->SetVerificationTag(3);
 		packet->SetChecksum(4);
 
-		// 4 bytes Chunk.
+		// 4 bytes chunk.
 		auto* chunk1 = RTC::SCTP::ShutdownCompleteChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000);
 
 		chunk1->SetT(true);
@@ -767,11 +767,11 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		packet->AddChunk(chunk1);
 
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::ShutdownCompleteChunk>() != nullptr);
-		// NOTE: The stored Chunk is not the same than the given one since it's
+		// NOTE: The stored chunk is not the same than the given one since it's
 		// internally cloned.
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::ShutdownCompleteChunk>() != chunk1);
 
-		// Once added, we can delete the Chunk.
+		// Once added, we can delete the chunk.
 		delete chunk1;
 
 		// Packet length must be:

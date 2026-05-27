@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Supported Address Types Parameter (SUPPORTED_ADDRESS_TYPES) (12).
+		 * SCTP Supported Address Types Parameter (SUPPORTED-ADDRESS-TYPES) (12).
 		 *
 		 * @see RFC 9260.
 		 *
@@ -30,7 +30,7 @@ namespace RTC
 
 		class SupportedAddressTypesParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -38,7 +38,7 @@ namespace RTC
 			 * Parse a SupportedAddressTypesParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static SupportedAddressTypesParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -46,7 +46,7 @@ namespace RTC
 			 * Create a SupportedAddressTypesParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static SupportedAddressTypesParameter* Factory(uint8_t* buffer, size_t bufferLength);
 

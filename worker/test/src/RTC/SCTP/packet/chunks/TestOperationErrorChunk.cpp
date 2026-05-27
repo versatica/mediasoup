@@ -20,13 +20,13 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:9 (OPERATION_ERROR), Flags:0b00000000, Length: 21
+			// Type:9 (OPERATION-ERROR), Flags:0b00000000, Length: 21
 			0x09, 0b00000000, 0x00, 0x15,
-			// Error Cause 1: Code:1 (INVALID_STREAM_IDENTIFIER), Length: 8
+			// Error Cause 1: Code:1 (INVALID-STREAM-IDENTIFIER), Length: 8
 			0x00, 0x01, 0x00, 0x08,
 			// Stream Identifier: 0x1234
 			0x12, 0x34, 0x00, 0x00,
-			// Error Cause 2: Code:4 (OUT_OF_RESOURCE), Length: 4
+			// Error Cause 2: Code:4 (OUT-OF-RESOURCE), Length: 4
 			0x00, 0x04, 0x00, 0x04,
 			// Error Cause 3: Type:49159 (UNKNOWN), Length: 5
 			0xC0, 0x07, 0x00, 0x05,
@@ -272,11 +272,11 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetFirstErrorCauseOfCode<RTC::SCTP::UnrecognizedChunkTypeErrorCause>() == nullptr);
 		REQUIRE(chunk->GetFirstErrorCauseOfCode<RTC::SCTP::UnknownErrorCause>() == nullptr);
 
-		/* Modify it by adding Error Causes. */
+		/* Modify it by adding error causes. */
 
 		auto* errorCause1 = chunk->BuildErrorCauseInPlace<RTC::SCTP::UnrecognizedChunkTypeErrorCause>();
 
-		// Unrecognized Chunk length is 5 so 3 bytes of padding will be added.
+		// Unrecognized chunk length is 5 so 3 bytes of padding will be added.
 		errorCause1->SetUnrecognizedChunk(sctpCommon::DataBuffer, 5);
 		errorCause1->Consolidate();
 
@@ -286,11 +286,11 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 		// // Let's add another UnrecognizedChunkTypeErrorCause.
 		auto* errorCause2 = chunk->BuildErrorCauseInPlace<RTC::SCTP::UnrecognizedChunkTypeErrorCause>();
 
-		// Unrecognized Chunk is 2 so 2 bytes of padding will be added.
+		// Unrecognized chunk is 2 so 2 bytes of padding will be added.
 		errorCause2->SetUnrecognizedChunk(sctpCommon::DataBuffer, 2);
 		errorCause2->Consolidate();
 
-		// Still must return the first Error Cause.
+		// Still must return the first error cause.
 		REQUIRE(
 		  chunk->GetFirstErrorCauseOfCode<RTC::SCTP::UnrecognizedChunkTypeErrorCause>() == errorCause1);
 

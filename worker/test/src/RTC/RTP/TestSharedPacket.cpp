@@ -49,7 +49,7 @@ SCENARIO("RTP SharedPacket", "[rtp][sharedpacket]")
 
 	SECTION("constructor with packet and copy constructor")
 	{
-		// Create sharedPacket1 using constructor with a Packet.
+		// Create sharedPacket1 using constructor with a packet.
 		RTC::RTP::SharedPacket sharedPacket1(packetA);
 
 		REQUIRE(sharedPacket1.HasPacket());

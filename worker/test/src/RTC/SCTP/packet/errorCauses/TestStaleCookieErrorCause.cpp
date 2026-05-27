@@ -15,7 +15,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:3 (STALE_COOKIE), Length: 8
+			// Code:3 (STALE-COOKIE), Length: 8
 			0x00, 0x03, 0x00, 0x08,
 			// Measure of Staleness: 987654321
 			0x3A, 0xDE, 0x68, 0xB1,
@@ -91,11 +91,11 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 
 		REQUIRE(!RTC::SCTP::StaleCookieErrorCause::Parse(buffer1, sizeof(buffer1)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:3 (STALE_COOKIE), Length: 7
+			// Code:3 (STALE-COOKIE), Length: 7
 			0x00, 0x03, 0x00, 0x07,
 			// Measure of Staleness: 987654321
 			0x3A, 0xDE, 0x68,
@@ -104,11 +104,11 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 
 		REQUIRE(!RTC::SCTP::StaleCookieErrorCause::Parse(buffer2, sizeof(buffer2)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer3[] =
 		{
-			// Code:3 (STALE_COOKIE), Length: 9
+			// Code:3 (STALE-COOKIE), Length: 9
 			0x00, 0x03, 0x00, 0x09,
 			// Measure of Staleness: 987654321
 			0x3A, 0xDE, 0x68, 0xB1,
@@ -122,7 +122,7 @@ SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 		// clang-format off
 		alignas(4) uint8_t buffer4[] =
 		{
-			// Code:3 (STALE_COOKIE), Length: 8
+			// Code:3 (STALE-COOKIE), Length: 8
 			0x00, 0x03, 0x00, 0x08,
 			// Measure of Staleness (last byte missing)
 			0x3A, 0xDE, 0x68

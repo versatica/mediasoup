@@ -14,22 +14,22 @@ namespace RTC
 		// clang-format off
 		const std::unordered_map<Parameter::ParameterType, std::string> Parameter::ParameterType2String =
 		{
-			{ Parameter::ParameterType::HEARTBEAT_INFO,               "HEARTBEAT_INFO"               },
-			{ Parameter::ParameterType::IPV4_ADDRESS,                 "IPV4_ADDRESS"                 },
-			{ Parameter::ParameterType::IPV6_ADDRESS,                 "IPV6_ADDRESS"                 },
-			{ Parameter::ParameterType::STATE_COOKIE,                 "STATE_COOKIE"                 },
-			{ Parameter::ParameterType::UNRECOGNIZED_PARAMETER,       "UNRECOGNIZED_PARAMETER"       },
-			{ Parameter::ParameterType::COOKIE_PRESERVATIVE,          "COOKIE_PRESERVATIVE"          },
-			{ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,      "SUPPORTED_ADDRESS_TYPES"      },
-			{ Parameter::ParameterType::FORWARD_TSN_SUPPORTED,        "FORWARD_TSN_SUPPORTED"        },
-			{ Parameter::ParameterType::SUPPORTED_EXTENSIONS,         "SUPPORTED_EXTENSIONS"         },
-			{ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,   "OUTGOING_SSN_RESET_REQUEST"   },
-			{ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,   "INCOMING_SSN_RESET_REQUEST"   },
-			{ Parameter::ParameterType::SSN_TSN_RESET_REQUEST,        "SSN_TSN_RESET_REQUEST"        },
-			{ Parameter::ParameterType::RECONFIGURATION_RESPONSE,     "RECONFIGURATION_RESPONSE"     },
-			{ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST, "ADD_OUTGOING_STREAMS_REQUEST" },
-			{ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST, "ADD_INCOMING_STREAMS_REQUEST" },
-			{ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,     "ZERO_CHECKSUM_ACCEPTABLE"     },
+			{ Parameter::ParameterType::HEARTBEAT_INFO,               "HEARTBEAT-INFO"               },
+			{ Parameter::ParameterType::IPV4_ADDRESS,                 "IPV4-ADDRESS"                 },
+			{ Parameter::ParameterType::IPV6_ADDRESS,                 "IPV6-ADDRESS"                 },
+			{ Parameter::ParameterType::STATE_COOKIE,                 "STATE-COOKIE"                 },
+			{ Parameter::ParameterType::UNRECOGNIZED_PARAMETER,       "UNRECOGNIZED-PARAMETER"       },
+			{ Parameter::ParameterType::COOKIE_PRESERVATIVE,          "COOKIE-PRESERVATIVE"          },
+			{ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,      "SUPPORTED-ADDRESS-TYPES"      },
+			{ Parameter::ParameterType::FORWARD_TSN_SUPPORTED,        "FORWARD-TSN-SUPPORTED"        },
+			{ Parameter::ParameterType::SUPPORTED_EXTENSIONS,         "SUPPORTED-EXTENSIONS"         },
+			{ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,   "OUTGOING-SSN-RESET-REQUEST"   },
+			{ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,   "INCOMING-SSN-RESET-REQUEST"   },
+			{ Parameter::ParameterType::SSN_TSN_RESET_REQUEST,        "SSN-TSN-RESET-REQUEST"        },
+			{ Parameter::ParameterType::RECONFIGURATION_RESPONSE,     "RECONFIGURATION-RESPONSE"     },
+			{ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST, "ADD-OUTGOING-STREAMS-REQUEST" },
+			{ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST, "ADD-INCOMING-STREAMS-REQUEST" },
+			{ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,     "ZERO-CHECKSUM-ACCEPTABLE"     },
 		};
 		// clang-format on
 

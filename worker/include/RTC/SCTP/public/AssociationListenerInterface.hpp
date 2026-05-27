@@ -18,16 +18,16 @@ namespace RTC
 
 		public:
 			/**
-			 * Called when an SCTP Packet must be sent to the remote endpoint.
+			 * Called when an SCTP packet must be sent to the remote endpoint.
 			 *
 			 * @return
 			 * - `true` if the packet was successfully sent. However, since
-			 *   sending is unreliable, there are no guarantees that the Packet was
+			 *   sending is unreliable, there are no guarantees that the packet was
 			 *   actually delivered.
-			 * - `false` if the Packet failed to be sent.
+			 * - `false` if the packet failed to be sent.
 			 *
 			 * @remarks
-			 * - It is NOT allowed to call methods in Association within this callback.
+			 * - It is NOT allowed to call methods in association within this callback.
 			 */
 			virtual bool OnAssociationSendData(const uint8_t* data, size_t len) = 0;
 
@@ -35,7 +35,7 @@ namespace RTC
 			 * Called when calling Connect().
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationConnecting() = 0;
 
@@ -44,7 +44,7 @@ namespace RTC
 			 * connection attempts.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationConnected() = 0;
 
@@ -53,19 +53,19 @@ namespace RTC
 			 * in case the association fails.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationFailed(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
 
 			/**
-			 * Called when the Association is closed in a controlled way or when the
-			 * Association has aborted - either as decided by this Association due to
+			 * Called when the association is closed in a controlled way or when the
+			 * association has aborted - either as decided by this association due to
 			 * e.g. too many retransmission attempts or by the peer when receiving an
 			 * ABORT command. No other callbacks will be done after this callback,
 			 * unless reconnecting.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationClosed(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
 
@@ -75,7 +75,7 @@ namespace RTC
 			 * could have been packet loss as a result of restarting the association.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationRestarted() = 0;
 
@@ -86,7 +86,7 @@ namespace RTC
 			 * viable.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationError(Types::ErrorKind errorKind, std::string_view errorMessage) = 0;
 
@@ -94,7 +94,7 @@ namespace RTC
 			 * Called when an SCTP message in full has been received.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationMessageReceived(Message message) = 0;
 
@@ -102,7 +102,7 @@ namespace RTC
 			 * Indicates that a stream reset request has been performed.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds) = 0;
 
@@ -110,7 +110,7 @@ namespace RTC
 			 * Indicates that a stream reset request has failed.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationStreamsResetFailed(
 			  std::span<const uint16_t> outboundStreamIds, std::string_view errorMessage) = 0;
@@ -120,7 +120,7 @@ namespace RTC
 			 * called. An empty list indicates that all streams have been reset.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) = 0;
 
@@ -129,7 +129,7 @@ namespace RTC
 			 * the threshold set when calling SetStreamBufferedAmountLowThreshold().
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationStreamBufferedAmountLow(uint16_t streamId) = 0;
 
@@ -139,18 +139,18 @@ namespace RTC
 			 * `SctpOptions::totalBufferedAmountLowThreshold`.
 			 *
 			 * @remarks
-			 * - It is allowed to call methods in Association within this callback.
+			 * - It is allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationTotalBufferedAmountLow() = 0;
 
 			/**
-			 * Called when the Association needs to know if the parent transport is
+			 * Called when the association needs to know if the parent transport is
 			 * ready for SCTP traffic (e.g. whether the WebRtcTransport has ICE and
 			 * DTLS connected and at least a DataProducer or DataConsumer has been
 			 * created). Returned boolean indicates it.
 			 *
 			 * @remarks
-			 * - It is NOT allowed to call methods in Association within this callback.
+			 * - It is NOT allowed to call methods in association within this callback.
 			 */
 			virtual bool OnAssociationIsTransportReadyForSctp() = 0;
 
@@ -181,7 +181,7 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This is a message lifecycle event.
-			 * - It is NOT allowed to call methods in Association within this callback.
+			 * - It is NOT allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationLifecycleMessageFullySent(uint64_t lifecycleId) {};
 
@@ -199,7 +199,7 @@ namespace RTC
 			 * - This is a message lifecycle event.
 			 * - It's guaranteed that OnAssociationLifecycleMessageDelivered() is not called
 			 *   if this callback has triggered.
-			 * - It is NOT allowed to call methods in Association within this callback.
+			 * - It is NOT allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationLifecycleMessageExpired(uint64_t lifecycleId, bool maybeDelivered)
 			{
@@ -220,7 +220,7 @@ namespace RTC
 			 * - This is a message lifecycle event.
 			 * - It's guaranteed that OnAssociationLifecycleMessageEnd() is not called if
 			 *   this callback has triggered.
-			 * - It is NOT allowed to call methods in Association within this callback.
+			 * - It is NOT allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationLifecycleMessageDelivered(uint64_t lifecycleId)
 			{
@@ -238,12 +238,12 @@ namespace RTC
 			 *
 			 * @remarks:
 			 * - This is a message lifecycle event.
-			 * - When the Association is deallocated, there will be no
+			 * - When the association is deallocated, there will be no
 			 *   OnAssociationLifecycleMessageEnd() callbacks sent for messages that were
-			 *   enqueued. But as long as the Association is alive, these callbacks are
+			 *   enqueued. But as long as the association is alive, these callbacks are
 			 *   guaranteed to be sent as messages are either expired or successfully
 			 *   acknowledged.
-			 * - It is NOT allowed to call methods in Association within this callback.
+			 * - It is NOT allowed to call methods in association within this callback.
 			 */
 			virtual void OnAssociationLifecycleMessageEnd(uint64_t lifecycleId)
 			{

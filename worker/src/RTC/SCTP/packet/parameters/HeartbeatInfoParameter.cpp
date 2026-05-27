@@ -26,7 +26,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::HEARTBEAT_INFO)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}

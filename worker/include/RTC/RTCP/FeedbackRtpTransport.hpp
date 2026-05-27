@@ -5,7 +5,7 @@
 #include "RTC/RTCP/Feedback.hpp"
 #include <vector>
 
-/* RTP Extensions for Transport-wide Congestion Control
+/* RTP extensions for Transport-wide Congestion Control
  * draft-holmer-rmcat-transport-wide-cc-extensions-01
 
    0               1               2               3

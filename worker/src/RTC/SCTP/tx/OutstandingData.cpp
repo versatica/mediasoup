@@ -125,7 +125,7 @@ namespace RTC
 			// ACK packets reported in the gap ack blocks.
 			AckGapBlocks(cumulativeTsnAck, gapAckBlocks, ackInfo);
 
-			// NACK and possibly mark for retransmit Chunks that weren't acked.
+			// NACK and possibly mark for retransmit chunks that weren't acked.
 			NackBetweenAckBlocks(
 			  cumulativeTsnAck, gapAckBlocks, isInFastRecovery, cumulativeTsnAckAdvanced, ackInfo);
 
@@ -185,7 +185,7 @@ namespace RTC
 				tsn.Increment();
 
 				// Chunks that are nacked can be expired. Care should be taken not to
-				// expire unacked (in-flight) Chunks as they might have been received,
+				// expire unacked (in-flight) chunks as they might have been received,
 				// but the SACK is either delayed or in-flight and may be received
 				// later.
 				if (item.IsAbandoned())
@@ -198,7 +198,7 @@ namespace RTC
 				}
 				else
 				{
-					// A non-expired Chunk. No need to iterate any further.
+					// A non-expired chunk. No need to iterate any further.
 					break;
 				}
 			}
@@ -212,7 +212,7 @@ namespace RTC
 
 				MS_WARN_TAG(
 				  sctp,
-				  "marking nacked Chunk %" PRIu32 " and message %" PRIu32 " as expired",
+				  "marking nacked chunk %" PRIu32 " and message %" PRIu32 " as expired",
 				  tsnToExpire.Wrap(),
 				  item.GetData().GetMessageId());
 
@@ -239,7 +239,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// All Chunks are always padded to be even divisible by 4.
+			// All chunks are always padded to be even divisible by 4.
 			const size_t chunkLength = GetSerializedChunkLength(data);
 
 			this->unackedPayloadBytes += data.GetPayloadLength();
@@ -255,7 +255,7 @@ namespace RTC
 				// No need to send it, it was expired when it was in the send queue.
 				MS_WARN_TAG(
 				  sctp,
-				  "marking freshly produced Chunk %" PRIu32 " and message %" PRIu32 " as expired",
+				  "marking freshly produced chunk %" PRIu32 " and message %" PRIu32 " as expired",
 				  tsn.Wrap(),
 				  item.GetData().GetMessageId());
 
@@ -777,7 +777,7 @@ namespace RTC
 				  /*expiresAtMs*/ Types::ExpiresAtMsInfinite,
 				  /*lifecycleId*/ std::nullopt);
 
-				// The added Chunk shouldn't be included in `this->unackedPacketBytes`,
+				// The added chunk shouldn't be included in `this->unackedPacketBytes`,
 				// so set it as acked.
 				addedItem.Ack();
 
@@ -794,7 +794,7 @@ namespace RTC
 				  !other.IsAbandoned() && other.GetData().GetStreamId() == item.GetData().GetStreamId() &&
 				  other.GetOutgoingMessageId() == item.GetOutgoingMessageId())
 				{
-					MS_WARN_TAG(sctp, "marking Chunk %" PRIu32 " as abandoned", tsn.Wrap());
+					MS_WARN_TAG(sctp, "marking chunk %" PRIu32 " as abandoned", tsn.Wrap());
 
 					if (other.ShouldBeRetransmitted())
 					{

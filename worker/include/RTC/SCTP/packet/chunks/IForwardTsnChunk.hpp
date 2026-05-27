@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP I-Forward Cumulative TSN Chunk (I_FORWARD_TSN) (194)
+		 * SCTP I-Forward Cumulative TSN Chunk (I-FORWARD-TSN) (194)
 		 *
 		 * @see RFC 8260.
 		 *
@@ -33,7 +33,7 @@ namespace RTC
 		 * |                       Message Identifier                      |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 194.
+		 * - Chunk type (8 bits): 194.
 		 * - Flags: All set to 0.
 		 * - Length (16 bits).
 		 * - New Cumulative TSN (32 bits): This indicates the new cumulative TSN to
@@ -46,7 +46,7 @@ namespace RTC
 		 *   (U bit is not set).
 		 * - Message Identifier (MID) (32 bits): This field holds the largest
 		 *   Message Identifier for ordered or unordered messages indicated by the
-		 *   U bit that was skipped for the stream specified by the Stream
+		 *   U bit that was skipped for the stream specified by the stream
 		 *   Identifier. For ordered messages, this is similar to the FORWARD-TSN
 		 *   chunk, just replacing the 16-bit SSN by the 32-bit MID.
 		 */
@@ -56,7 +56,7 @@ namespace RTC
 
 		class IForwardTsnChunk : public AnyForwardTsnChunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -67,7 +67,7 @@ namespace RTC
 			 * Parse a IForwardTsnChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static IForwardTsnChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -75,7 +75,7 @@ namespace RTC
 			 * Create a IForwardTsnChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static IForwardTsnChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -132,7 +132,7 @@ namespace RTC
 			IForwardTsnChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We need to override this method since this Chunk has a variable-length
+			 * We need to override this method since this chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
 			size_t GetHeaderLength() const final

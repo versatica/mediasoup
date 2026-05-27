@@ -79,11 +79,11 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		auto* remoteSupportedExtensionsParameter =
 		  remoteChunk->BuildParameterInPlace<RTC::SCTP::SupportedExtensionsParameter>();
 
-		// NOTE: Missing FORWARD_TSN, but peer announced support for it via
-		// Forward-TSN-Supported Parameter negotiation).
-		// NOTE: Missing RE_CONFIG (needed for Partial Reliability Extension
+		// NOTE: Missing FORWARD-TSN, but peer announced support for it via
+		// Forward-TSN-Supported parameter negotiation).
+		// NOTE: Missing RE-CONFIG (needed for Partial Reliability Extension
 		// negotiation).
-		// NOTE: Missing I_FORWARD_TSN (needed for Message Interleaving negotiation).
+		// NOTE: Missing I-FORWARD-TSN (needed for Message Interleaving negotiation).
 		remoteSupportedExtensionsParameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::I_DATA);
 		remoteSupportedExtensionsParameter->Consolidate();
 

@@ -18,7 +18,7 @@ namespace RTC
 		 * The SCTP Association class represents the mediasoup side of an SCTP
 		 * association with a remote peer.
 		 *
-		 * It manages all Packet and Chunk dispatching and the connection flow.
+		 * It manages all packet and chunk dispatching and the connection flow.
 		 */
 		class AssociationInterface
 		{
@@ -40,7 +40,7 @@ namespace RTC
 
 			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
-			 * Chunk.
+			 * chunk.
 			 *
 			 * @remarks
 			 * - The SCTP association must be in New state.
@@ -48,7 +48,7 @@ namespace RTC
 			virtual void Connect() = 0;
 
 			/**
-			 * Gracefully shutdowns the Association and sends all outstanding data.
+			 * Gracefully shutdowns the association and sends all outstanding data.
 			 * This is an asynchronous operation and `OnAssociationClosed()` will be
 			 * called on success.
 			 *
@@ -61,7 +61,7 @@ namespace RTC
 			virtual void Shutdown() = 0;
 
 			/**
-			 * Closes the Association non-gracefully. Will send ABORT if the connection
+			 * Closes the association non-gracefully. Will send ABORT if the connection
 			 * is not already closed. No callbacks will be made after Close() has
 			 * returned. However, before Close() returns, it may have called
 			 * `OnAssociationClosed()` or `OnAssociationAborted()` callbacks.
@@ -69,7 +69,7 @@ namespace RTC
 			virtual void Close() = 0;
 
 			/**
-			 * Retrieves the latest metrics. If the Association is not fully connected,
+			 * Retrieves the latest metrics. If the association is not fully connected,
 			 * `std::nullopt` will be returned.
 			 */
 			virtual std::optional<AssociationMetrics> MakeMetrics() const = 0;
@@ -165,7 +165,7 @@ namespace RTC
 			 * message will be queued.
 			 *
 			 * This has identical semantics to `SendMessage()', except that it may
-			 * coalesce many messages into a single SCTP Packet if they would fit.
+			 * coalesce many messages into a single SCTP packet if they would fit.
 			 *
 			 * @remarks
 			 * - Same as in `SendMessage()`.
@@ -174,7 +174,7 @@ namespace RTC
 			  std::span<Message> messages, const SendMessageOptions& sendMessageOptions) = 0;
 
 			/**
-			 * Receives SCTP data (hopefully an SCTP Packet) from the remote peer.
+			 * Receives SCTP data (hopefully an SCTP packet) from the remote peer.
 			 */
 			virtual void ReceiveSctpData(const uint8_t* data, size_t len) = 0;
 

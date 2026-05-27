@@ -246,7 +246,7 @@ namespace RTC
 			bool WillIncreaseCumAckTsn(uint32_t tsn) const;
 
 			/**
-			 * Adds a SACK chunk with selective ack to the given Packet.
+			 * Adds a SACK chunk with selective ack to the given packet.
 			 *
 			 * @remarks
 			 * - It will clear `this->duplicates`, so every SACK chunk that is

@@ -73,7 +73,7 @@ namespace RTC
 			/**
 			 * Called for incoming (possibly deferred) RE-CONFIG chunks asking for
 			 * either a few streams, or all streams (when the list is empty) to be
-			 * reset - to have their next SSN or Message ID to be zero.
+			 * reset - to have their next SSN or message ID to be zero.
 			 */
 			virtual void ResetStreams(std::span<const uint16_t> streamIds) = 0;
 		};

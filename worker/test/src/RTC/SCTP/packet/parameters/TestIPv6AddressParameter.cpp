@@ -15,7 +15,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:6 (IPV6_ADDRESS), Length: 20
+			// Type:6 (IPV6-ADDRESS), Length: 20
 			0x00, 0x06, 0x00, 0x14,
 			// IPv6 Address: "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
 			0x20, 0x01, 0x0D, 0xB8,
@@ -98,7 +98,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{
-			// Type:5 (IPV4_ADDRESS), Length: 20
+			// Type:5 (IPV4-ADDRESS), Length: 20
 			0x00, 0x05, 0x00, 0x14,
 			// IPv6 Address: "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
 			0x20, 0x01, 0x0D, 0xB8,
@@ -110,11 +110,11 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 
 		REQUIRE(!RTC::SCTP::IPv6AddressParameter::Parse(buffer1, sizeof(buffer1)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Type:6 (IPV6_ADDRESS), Length: 19
+			// Type:6 (IPV6-ADDRESS), Length: 19
 			0x00, 0x06, 0x00, 0x14,
 			// IPv6 Address: "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
 			0x20, 0x01, 0x0D, 0xB8,
@@ -126,11 +126,11 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 
 		REQUIRE(!RTC::SCTP::IPv6AddressParameter::Parse(buffer2, sizeof(buffer2)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer3[] =
 		{
-			// Type:6 (IPV6_ADDRESS), Length: 21
+			// Type:6 (IPV6-ADDRESS), Length: 21
 			0x00, 0x06, 0x00, 0x15,
 			// IPv6 Address: "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
 			0x20, 0x01, 0x0D, 0xB8,
@@ -147,7 +147,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer4[] =
 		{
-			// Type:6 (IPV6_ADDRESS), Length: 20
+			// Type:6 (IPV6-ADDRESS), Length: 20
 			0x00, 0x06, 0x00, 0x14,
 			// IPv6 Address (wrong length)
 			0x20, 0x01, 0x0D, 0xB8,

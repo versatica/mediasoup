@@ -18,7 +18,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:2 (INIT_ACK), Flags: 0b00000000, Length: 28
+			// Type:2 (INIT-ACK), Flags: 0b00000000, Length: 28
 			0x02, 0b00000000, 0x00, 0x1C,
 			// Initiate Tag: 287454020,
 			0x11, 0x22, 0x33, 0x44,
@@ -28,7 +28,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 			0x12, 0x34, 0x56, 0x78,
 			// Initial TSN: 2882339074
 			0xAB, 0xCD, 0x01, 0x02,
-			// Parameter 1: Type:5 (IPV4_ADDRESS), Length: 8
+			// Parameter 1: Type:5 (IPV4-ADDRESS), Length: 8
 			0x00, 0x05, 0x00, 0x08,
 			// IPv4 Address: "2.3.4.5"
 			0x02, 0x03, 0x04, 0x05,
@@ -106,7 +106,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 0);
 		REQUIRE(chunk->GetInitialTsn() == 0);
 
-		/* Modify it and add Parameters. */
+		/* Modify it and add parameters. */
 
 		chunk->SetInitiateTag(1111111110);
 		chunk->SetAdvertisedReceiverWindowCredit(2222222220);

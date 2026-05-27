@@ -30,18 +30,18 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 			0x12, 0x34, 0x56, 0x78,
 			// Initial TSN: 2882339074
 			0xAB, 0xCD, 0x01, 0x02,
-			// Parameter 1: Type:5 (IPV4_ADDRESS), Length: 8
+			// Parameter 1: Type:5 (IPV4-ADDRESS), Length: 8
 			0x00, 0x05, 0x00, 0x08,
 			// IPv4 Address: "2.3.4.5"
 			0x02, 0x03, 0x04, 0x05,
-			// Type:6 (IPV6_ADDRESS), Length: 20
+			// Type:6 (IPV6-ADDRESS), Length: 20
 			0x00, 0x06, 0x00, 0x14,
 			// Parameter 2: IPv6 Address: "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
 			0x20, 0x01, 0x0D, 0xB8,
 			0x85, 0xA3, 0x00, 0x00,
 			0x00, 0x00, 0x8A, 0x2E,
 			0x03, 0x70, 0x73, 0x34,
-			// Parameter 3: Type:9 (COOKIE_PRESERVATIVE), Length: 8
+			// Parameter 3: Type:9 (COOKIE-PRESERVATIVE), Length: 8
 			0x00, 0x09, 0x00, 0x08,
 			// Suggested Cookie Life-Span Increment: 556942164
 			0x21, 0x32, 0x43, 0x54,
@@ -299,7 +299,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 0);
 		REQUIRE(chunk->GetInitialTsn() == 0);
 
-		/* Modify it and add Parameters. */
+		/* Modify it and add parameters. */
 
 		chunk->SetInitiateTag(1111111110);
 		chunk->SetAdvertisedReceiverWindowCredit(2222222220);
@@ -490,12 +490,12 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 		auto* parameter1 = RTC::SCTP::CookiePreservativeParameter::Factory(
 		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
 
-		// 8 bytes Parameter.
+		// 8 bytes parameter.
 		parameter1->SetLifeSpanIncrement(123456);
 
 		chunk->AddParameter(parameter1);
 
-		// Once added, we can delete the Parameter.
+		// Once added, we can delete the parameter.
 		delete parameter1;
 
 		// Chunk length must be:
@@ -531,7 +531,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 
 		REQUIRE(obtainedParameter1->GetLifeSpanIncrement() == 123456);
 
-		// 4 bytes Parameter.
+		// 4 bytes parameter.
 		auto* parameter2 = RTC::SCTP::SupportedAddressTypesParameter::Factory(
 		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
 
@@ -542,7 +542,7 @@ SCENARIO("SCTP Init Chunk (1)", "[serializable][sctp][chunk]")
 
 		chunk->AddParameter(parameter2);
 
-		// Once added, we can delete the Parameter.
+		// Once added, we can delete the parameter.
 		delete parameter2;
 
 		// Chunk length must be:

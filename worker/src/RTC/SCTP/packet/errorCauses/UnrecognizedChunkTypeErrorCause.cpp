@@ -27,7 +27,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}

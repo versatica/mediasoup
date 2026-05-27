@@ -11,7 +11,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Supported Extensions Parameter (SUPPORTED_EXTENSIONS) (32776).
+		 * SCTP Supported Extensions Parameter (SUPPORTED-EXTENSIONS) (32776).
 		 *
 		 * @see RFC 5061.
 		 *
@@ -33,7 +33,7 @@ namespace RTC
 
 		class SupportedExtensionsParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -41,7 +41,7 @@ namespace RTC
 			 * Parse a SupportedExtensionsParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static SupportedExtensionsParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -49,7 +49,7 @@ namespace RTC
 			 * Create a SupportedExtensionsParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static SupportedExtensionsParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
