@@ -29,6 +29,7 @@ import {
 	serializeSrtpParameters,
 } from './srtpParametersFbsUtils';
 import type { AppData } from './types';
+import * as utils from './utils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
@@ -98,15 +99,15 @@ export class PlainTransportImpl<PlainTransportAppData extends AppData = AppData>
 	}
 
 	get tuple(): TransportTuple {
-		return this.#data.tuple;
+		return utils.clone(this.#data.tuple);
 	}
 
 	get rtcpTuple(): TransportTuple | undefined {
-		return this.#data.rtcpTuple;
+		return utils.clone(this.#data.rtcpTuple);
 	}
 
 	get sctpParameters(): SctpParameters | undefined {
-		return this.#data.sctpParameters;
+		return utils.clone(this.#data.sctpParameters);
 	}
 
 	get sctpState(): SctpState | undefined {
@@ -114,11 +115,11 @@ export class PlainTransportImpl<PlainTransportAppData extends AppData = AppData>
 	}
 
 	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined {
-		return this.#data.sctpNegotiatedCapabilities;
+		return utils.clone(this.#data.sctpNegotiatedCapabilities);
 	}
 
 	get srtpParameters(): SrtpParameters | undefined {
-		return this.#data.srtpParameters;
+		return utils.clone(this.#data.srtpParameters);
 	}
 
 	override close(): void {

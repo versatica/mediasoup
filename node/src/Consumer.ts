@@ -33,6 +33,7 @@ import {
 import { parseRtpStreamStats } from './rtpStreamStatsFbsUtils';
 import type { AppData } from './types';
 import * as fbsUtils from './fbsUtils';
+import * as utils from './utils';
 import { Event, Notification } from './fbs/notification';
 import { TraceDirection as FbsTraceDirection } from './fbs/common';
 import * as FbsRequest from './fbs/request';
@@ -151,7 +152,7 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 	}
 
 	get rtpParameters(): RtpParameters {
-		return this.#data.rtpParameters;
+		return utils.clone(this.#data.rtpParameters);
 	}
 
 	get type(): ConsumerType {
@@ -171,15 +172,15 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 	}
 
 	get score(): ConsumerScore {
-		return this.#score;
+		return utils.clone(this.#score);
 	}
 
 	get preferredLayers(): ConsumerLayers | undefined {
-		return this.#preferredLayers;
+		return utils.clone(this.#preferredLayers);
 	}
 
 	get currentLayers(): ConsumerLayers | undefined {
-		return this.#currentLayers;
+		return utils.clone(this.#currentLayers);
 	}
 
 	get appData(): ConsumerAppData {

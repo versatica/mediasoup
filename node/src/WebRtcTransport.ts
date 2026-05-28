@@ -36,6 +36,7 @@ import type {
 	SctpNegotiatedCapabilities,
 } from './sctpParametersTypes';
 import type { AppData } from './types';
+import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
@@ -129,7 +130,7 @@ export class WebRtcTransportImpl<
 	}
 
 	get iceCandidates(): IceCandidate[] {
-		return this.#data.iceCandidates;
+		return utils.clone(this.#data.iceCandidates);
 	}
 
 	get iceState(): IceState {
@@ -137,11 +138,11 @@ export class WebRtcTransportImpl<
 	}
 
 	get iceSelectedTuple(): TransportTuple | undefined {
-		return this.#data.iceSelectedTuple;
+		return utils.clone(this.#data.iceSelectedTuple);
 	}
 
 	get dtlsParameters(): DtlsParameters {
-		return this.#data.dtlsParameters;
+		return utils.clone(this.#data.dtlsParameters);
 	}
 
 	get dtlsState(): DtlsState {
@@ -153,7 +154,7 @@ export class WebRtcTransportImpl<
 	}
 
 	get sctpParameters(): SctpParameters | undefined {
-		return this.#data.sctpParameters;
+		return utils.clone(this.#data.sctpParameters);
 	}
 
 	get sctpState(): SctpState | undefined {
@@ -161,7 +162,7 @@ export class WebRtcTransportImpl<
 	}
 
 	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined {
-		return this.#data.sctpNegotiatedCapabilities;
+		return utils.clone(this.#data.sctpNegotiatedCapabilities);
 	}
 
 	override close(): void {

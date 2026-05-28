@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Node: Make all public methods/getters that return an object/array, return a clone of that object/array ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 3.20.0
 
 - Node: Update TypeScript to v6 ([PR #1790](https://github.com/versatica/mediasoup/pull/1790)).

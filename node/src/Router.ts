@@ -167,7 +167,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 	}
 
 	get rtpCapabilities(): RtpCapabilities {
-		return this.#data.rtpCapabilities;
+		return utils.clone(this.#data.rtpCapabilities);
 	}
 
 	get appData(): RouterAppData {

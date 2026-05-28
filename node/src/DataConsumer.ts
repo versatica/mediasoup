@@ -14,6 +14,7 @@ import type { TransportInternal } from './Transport';
 import type { SctpStreamParameters } from './sctpParametersTypes';
 import { parseSctpStreamParameters } from './sctpParametersFbsUtils';
 import type { AppData } from './types';
+import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsTransport from './fbs/transport';
@@ -118,7 +119,7 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 	}
 
 	get sctpStreamParameters(): SctpStreamParameters | undefined {
-		return this.#data.sctpStreamParameters;
+		return utils.clone(this.#data.sctpStreamParameters);
 	}
 
 	get label(): string {

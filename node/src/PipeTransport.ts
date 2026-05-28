@@ -39,6 +39,7 @@ import {
 	serializeSrtpParameters,
 } from './srtpParametersFbsUtils';
 import type { AppData } from './types';
+import * as utils from './utils';
 import { generateUUIDv4 } from './utils';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
@@ -105,11 +106,11 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 	}
 
 	get tuple(): TransportTuple {
-		return this.#data.tuple;
+		return utils.clone(this.#data.tuple);
 	}
 
 	get sctpParameters(): SctpParameters | undefined {
-		return this.#data.sctpParameters;
+		return utils.clone(this.#data.sctpParameters);
 	}
 
 	get sctpState(): SctpState | undefined {
@@ -117,11 +118,11 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 	}
 
 	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined {
-		return this.#data.sctpNegotiatedCapabilities;
+		return utils.clone(this.#data.sctpNegotiatedCapabilities);
 	}
 
 	get srtpParameters(): SrtpParameters | undefined {
-		return this.#data.srtpParameters;
+		return utils.clone(this.#data.srtpParameters);
 	}
 
 	override close(): void {
