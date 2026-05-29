@@ -26,15 +26,15 @@ namespace RTC
 	  uint16_t minPort,
 	  uint16_t maxPort,
 	  RTC::Transport::SocketFlags& flags,
-	  uint64_t& portRangeHash)
+	  RTC::PortManager::PortRangeKey& portRangeKey)
 	  : // This may throw.
 	    ::UdpSocketHandle::UdpSocketHandle(
-	      RTC::PortManager::BindUdp(ip, minPort, maxPort, flags, portRangeHash)),
+	      RTC::PortManager::BindUdp(ip, minPort, maxPort, flags, portRangeKey)),
 	    listener(listener)
 	{
 		MS_TRACE();
 
-		this->portRangeHash = portRangeHash;
+		this->portRangeKey = portRangeKey;
 	}
 
 	UdpSocket::~UdpSocket()
@@ -43,7 +43,7 @@ namespace RTC
 
 		if (!this->fixedPort)
 		{
-			RTC::PortManager::Unbind(this->portRangeHash, this->localPort);
+			RTC::PortManager::Unbind(this->portRangeKey, this->localPort);
 		}
 	}
 

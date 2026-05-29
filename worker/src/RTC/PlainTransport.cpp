@@ -151,7 +151,7 @@ namespace RTC
 		{
 			if (this->listenInfo.portRange.min != 0 && this->listenInfo.portRange.max != 0)
 			{
-				uint64_t portRangeHash{ 0u };
+				RTC::PortManager::PortRangeKey portRangeKey{};
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,
@@ -159,7 +159,7 @@ namespace RTC
 				  this->listenInfo.portRange.min,
 				  this->listenInfo.portRange.max,
 				  this->listenInfo.flags,
-				  portRangeHash);
+				  portRangeKey);
 			}
 			else if (this->listenInfo.port != 0)
 			{
@@ -171,7 +171,7 @@ namespace RTC
 			// required.
 			else
 			{
-				uint64_t portRangeHash{ 0u };
+				RTC::PortManager::PortRangeKey portRangeKey{};
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,
@@ -179,7 +179,7 @@ namespace RTC
 				  Settings::configuration.rtcMinPort,
 				  Settings::configuration.rtcMaxPort,
 				  this->listenInfo.flags,
-				  portRangeHash);
+				  portRangeKey);
 			}
 
 			if (this->listenInfo.sendBufferSize != 0)
@@ -198,7 +198,7 @@ namespace RTC
 			{
 				if (this->rtcpListenInfo.portRange.min != 0 && this->rtcpListenInfo.portRange.max != 0)
 				{
-					uint64_t portRangeHash{ 0u };
+					RTC::PortManager::PortRangeKey portRangeKey{};
 
 					this->rtcpUdpSocket = new RTC::UdpSocket(
 					  this,
@@ -206,7 +206,7 @@ namespace RTC
 					  this->rtcpListenInfo.portRange.min,
 					  this->rtcpListenInfo.portRange.max,
 					  this->rtcpListenInfo.flags,
-					  portRangeHash);
+					  portRangeKey);
 				}
 				else if (this->rtcpListenInfo.port != 0)
 				{
@@ -218,7 +218,7 @@ namespace RTC
 				// required.
 				else
 				{
-					uint64_t portRangeHash{ 0u };
+					RTC::PortManager::PortRangeKey portRangeKey{};
 
 					this->rtcpUdpSocket = new RTC::UdpSocket(
 					  this,
@@ -226,7 +226,7 @@ namespace RTC
 					  Settings::configuration.rtcMinPort,
 					  Settings::configuration.rtcMaxPort,
 					  this->rtcpListenInfo.flags,
-					  portRangeHash);
+					  portRangeKey);
 				}
 
 				if (this->rtcpListenInfo.sendBufferSize != 0)

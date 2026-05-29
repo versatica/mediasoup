@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "handles/TcpConnectionHandle.hpp"
 #include "handles/TcpServerHandle.hpp"
+#include "RTC/PortManager.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/Transport.hpp"
 #include <string>
@@ -37,7 +38,7 @@ namespace RTC
 		  uint16_t minPort,
 		  uint16_t maxPort,
 		  RTC::Transport::SocketFlags& flags,
-		  uint64_t& portRangeHash);
+		  RTC::PortManager::PortRangeKey& portRangeKey);
 		~TcpServer() override;
 
 		/* Pure virtual methods inherited from ::TcpServerHandle. */
@@ -50,7 +51,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		RTC::TcpConnection::Listener* connListener{ nullptr };
 		bool fixedPort{ false };
-		uint64_t portRangeHash{ 0u };
+		RTC::PortManager::PortRangeKey portRangeKey{};
 	};
 } // namespace RTC
 
