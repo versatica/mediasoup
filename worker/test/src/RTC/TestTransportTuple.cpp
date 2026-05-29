@@ -24,9 +24,9 @@ SCENARIO("TransportTuple", "[transport-tuple]")
 	{
 		UdpSocketListener listener;
 		auto flags = RTC::Transport::SocketFlags{ .ipv6Only = false, .udpReusePort = false };
-		uint64_t portRangeHash{ 0u };
+		RTC::PortManager::PortRangeKey portRangeKey{};
 		auto* udpSocket = new RTC::UdpSocket(
-		  std::addressof(listener), const_cast<std::string&>(ip), minPort, maxPort, flags, portRangeHash);
+		  std::addressof(listener), const_cast<std::string&>(ip), minPort, maxPort, flags, portRangeKey);
 
 		return std::unique_ptr<RTC::UdpSocket>(udpSocket);
 	};
