@@ -9,7 +9,7 @@
 #include "RTC/WebRtcServer.hpp"
 #include "SharedInterface.hpp"
 #include <flatbuffers/flatbuffer_builder.h>
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 
 class Worker : public Channel::ChannelSocket::Listener,
@@ -54,8 +54,8 @@ private:
 	// Allocated by this.
 	SignalHandle* signalHandle{ nullptr };
 	SharedInterface* shared{ nullptr };
-	absl::flat_hash_map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
-	absl::flat_hash_map<std::string, RTC::Router*> mapRouters;
+	ankerl::unordered_dense::map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
+	ankerl::unordered_dense::map<std::string, RTC::Router*> mapRouters;
 	// Others.
 	bool closed{ false };
 };

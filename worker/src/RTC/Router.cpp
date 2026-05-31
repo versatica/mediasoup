@@ -427,7 +427,7 @@ namespace RTC
 				{
 					auto& rtpObservers = kv.second;
 
-					rtpObservers.erase(rtpObserver);
+					rtpObservers.erase(const_cast<RTC::RtpObserver*>(rtpObserver));
 				}
 
 				MS_DEBUG_DEV("RtpObserver closed [rtpObserverId:%s]", rtpObserver->id.c_str());

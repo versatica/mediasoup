@@ -7,7 +7,7 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "SharedInterface.hpp"
-#include <absl/container/flat_hash_set.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 
 namespace RTC
@@ -121,7 +121,7 @@ namespace RTC
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;
-		absl::flat_hash_set<uint16_t> subchannels;
+		ankerl::unordered_dense::set<uint16_t> subchannels;
 		bool transportConnected{ false };
 		bool sctpAssociationConnected{ false };
 		bool paused{ false };

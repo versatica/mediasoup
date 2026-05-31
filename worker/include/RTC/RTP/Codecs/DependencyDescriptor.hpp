@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Utils.hpp" // BitStream.
+#include <ankerl/unordered_dense.h>
 
 namespace RTC
 {
@@ -31,7 +32,7 @@ namespace RTC
 				};
 
 			private:
-				static std::unordered_map<DecodeTargetIndication, std::string> dtiToString;
+				static ankerl::unordered_dense::map<DecodeTargetIndication, std::string> dtiToString;
 
 			private:
 				struct FrameDependencyTemplate

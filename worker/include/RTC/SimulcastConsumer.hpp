@@ -4,6 +4,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/SeqManager.hpp"
+#include <ankerl/unordered_dense.h>
 #include <map>
 
 namespace RTC
@@ -111,7 +112,7 @@ namespace RTC
 		// Allocated by this.
 		RTC::RTP::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
-		absl::flat_hash_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
+		ankerl::unordered_dense::map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
 		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
 		std::vector<RTC::RTP::RtpStreamRecv*> producerRtpStreams; // Indexed by spatial layer.
 		bool syncRequired{ false };

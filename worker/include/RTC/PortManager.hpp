@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "RTC/Transport.hpp"
 #include <uv.h>
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -78,7 +78,7 @@ namespace RTC
 		static uint8_t ConvertSocketFlags(RTC::Transport::SocketFlags& flags, Protocol protocol, int family);
 
 	private:
-		static thread_local absl::flat_hash_map<uint64_t, PortRange> mapPortRanges;
+		static thread_local ankerl::unordered_dense::map<uint64_t, PortRange> mapPortRanges;
 	};
 } // namespace RTC
 

@@ -3,7 +3,7 @@
 
 #include "handles/TimerHandleInterface.hpp"
 #include "SharedInterface.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 
 namespace RTC
 {
@@ -125,8 +125,8 @@ namespace RTC
 		Listener* listener{ nullptr };
 		SharedInterface* shared{ nullptr };
 		uint32_t keyFrameRequestDelay{ 0u }; // 0 means disabled.
-		absl::flat_hash_map<uint32_t, PendingKeyFrameInfo*> mapSsrcPendingKeyFrameInfo;
-		absl::flat_hash_map<uint32_t, KeyFrameRequestDelayer*> mapSsrcKeyFrameRequestDelayer;
+		ankerl::unordered_dense::map<uint32_t, PendingKeyFrameInfo*> mapSsrcPendingKeyFrameInfo;
+		ankerl::unordered_dense::map<uint32_t, KeyFrameRequestDelayer*> mapSsrcKeyFrameRequestDelayer;
 	};
 } // namespace RTC
 

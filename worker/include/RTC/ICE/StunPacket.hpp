@@ -4,8 +4,8 @@
 #include "common.hpp"
 #include "RTC/Serializable.hpp"
 #include "Utils.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string_view>
-#include <unordered_map>
 
 namespace RTC
 {
@@ -533,7 +533,7 @@ namespace RTC
 			StunPacket::Class klass{ StunPacket::Class::UNSET };
 			StunPacket::Method method{ StunPacket::Method::UNSET };
 			// Map of STUN attributes indexed by attribute type.
-			std::unordered_map<StunPacket::AttributeType, StunPacket::Attribute> attributes;
+			ankerl::unordered_dense::map<StunPacket::AttributeType, StunPacket::Attribute> attributes;
 		};
 	} // namespace ICE
 } // namespace RTC

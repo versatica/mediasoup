@@ -5,8 +5,8 @@
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/TLV.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace RTC
@@ -171,7 +171,7 @@ namespace RTC
 			static const std::string& ChunkTypeToString(ChunkType chunkType);
 
 		private:
-			static const std::unordered_map<ChunkType, std::string> ChunkType2String;
+			static const ankerl::unordered_dense::map<ChunkType, std::string> ChunkType2String;
 
 		protected:
 			/**

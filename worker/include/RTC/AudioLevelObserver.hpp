@@ -4,7 +4,7 @@
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "SharedInterface.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 
 namespace RTC
 {
@@ -50,7 +50,7 @@ namespace RTC
 		// Allocated by this.
 		TimerHandleInterface* periodicTimer{ nullptr };
 		// Others.
-		absl::flat_hash_map<RTC::Producer*, DBovs> mapProducerDBovs;
+		ankerl::unordered_dense::map<RTC::Producer*, DBovs> mapProducerDBovs;
 		bool silence{ true };
 	};
 } // namespace RTC

@@ -44,7 +44,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		const std::unordered_map<Chunk::ChunkType, std::string> Chunk::ChunkType2String =
+		const ankerl::unordered_dense::map<Chunk::ChunkType, std::string> Chunk::ChunkType2String =
 		{
 			{ Chunk::ChunkType::DATA,              "DATA"              },
 			{ Chunk::ChunkType::INIT,              "INIT"              },

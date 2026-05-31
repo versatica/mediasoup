@@ -21,7 +21,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		const absl::flat_hash_map<Type, std::string> Packet::Type2String =
+		const ankerl::unordered_dense::map<Type, std::string> Packet::Type2String =
 		{
 			{ Type::SR,    "SR"    },
 			{ Type::RR,    "RR"    },

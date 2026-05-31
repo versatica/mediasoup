@@ -17,7 +17,7 @@
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "SharedInterface.hpp"
-#include <absl/container/flat_hash_set.h>
+#include <bitset>
 #include <string>
 #include <vector>
 

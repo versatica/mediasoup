@@ -14,6 +14,7 @@
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "SharedInterface.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -61,7 +62,7 @@ namespace RTC
 	private:
 		struct RtpMapping
 		{
-			absl::flat_hash_map<uint8_t, uint8_t> codecs;
+			ankerl::unordered_dense::map<uint8_t, uint8_t> codecs;
 			std::vector<RtpEncodingMapping> encodings;
 		};
 
@@ -125,7 +126,7 @@ namespace RTC
 		{
 			return this->paused;
 		}
-		const absl::flat_hash_map<RTC::RTP::RtpStreamRecv*, uint32_t>& GetRtpStreams()
+		const ankerl::unordered_dense::map<RTC::RTP::RtpStreamRecv*, uint32_t>& GetRtpStreams()
 		{
 			return this->mapRtpStreamMappedSsrc;
 		}
@@ -182,7 +183,7 @@ namespace RTC
 		SharedInterface* shared{ nullptr };
 		RTC::Producer::Listener* listener{ nullptr };
 		// Allocated by this.
-		absl::flat_hash_map<uint32_t, RTC::RTP::RtpStreamRecv*> mapSsrcRtpStream;
+		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapSsrcRtpStream;
 		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
 		// Others.
 		RTC::Media::Kind kind;
@@ -191,9 +192,9 @@ namespace RTC
 		struct RtpMapping rtpMapping;
 		std::vector<RTC::RTP::RtpStreamRecv*> rtpStreamByEncodingIdx;
 		std::vector<uint8_t> rtpStreamScores;
-		absl::flat_hash_map<uint32_t, RTC::RTP::RtpStreamRecv*> mapRtxSsrcRtpStream;
-		absl::flat_hash_map<RTC::RTP::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
-		absl::flat_hash_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
+		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapRtxSsrcRtpStream;
+		ankerl::unordered_dense::map<RTC::RTP::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
+		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
 		bool enableMediasoupPacketIdHeaderExtension{ false };

@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/packet/TLV.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
-#include <unordered_map>
 
 namespace RTC
 {
@@ -126,7 +126,7 @@ namespace RTC
 			static const std::string& ParameterTypeToString(ParameterType parameterType);
 
 		private:
-			static const std::unordered_map<ParameterType, std::string> ParameterType2String;
+			static const ankerl::unordered_dense::map<ParameterType, std::string> ParameterType2String;
 
 		protected:
 			/**

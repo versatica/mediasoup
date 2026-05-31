@@ -4,8 +4,8 @@
 #include "common.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "Utils.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
-#include <unordered_map>
 
 namespace RTC
 {
@@ -87,7 +87,7 @@ namespace RTC
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
 
 		private:
-			static const std::unordered_map<Result, std::string> Result2String;
+			static const ankerl::unordered_dense::map<Result, std::string> Result2String;
 
 		private:
 			/**

@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "handles/TcpConnectionHandle.hpp"
 #include <uv.h>
-#include <absl/container/flat_hash_set.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 
 class TcpServerHandle : public TcpConnectionHandle::Listener
@@ -72,7 +72,7 @@ private:
 	// Allocated by this (may be passed by argument).
 	uv_tcp_t* uvHandle{ nullptr };
 	// Others.
-	absl::flat_hash_set<TcpConnectionHandle*> connections;
+	ankerl::unordered_dense::set<TcpConnectionHandle*> connections;
 	bool closed{ false };
 };
 

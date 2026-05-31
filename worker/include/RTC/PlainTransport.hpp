@@ -7,7 +7,6 @@
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
 #include "SharedInterface.hpp"
-#include <absl/container/flat_hash_map.h>
 
 namespace RTC
 {

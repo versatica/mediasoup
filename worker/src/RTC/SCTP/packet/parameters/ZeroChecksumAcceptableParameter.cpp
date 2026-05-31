@@ -12,7 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		const std::unordered_map<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod, std::string> ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String =
+		const ankerl::unordered_dense::map<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod, std::string> ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String =
 		{
 			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE,           "NONE"           },
 			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS, "SCTP_OVER_DTLS" },

@@ -19,7 +19,7 @@ namespace RTC
 		int16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFF };
 
 		// clang-format off
-		const absl::flat_hash_map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String =
+		const ankerl::unordered_dense::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::Status2String =
 		{
 			{ FeedbackRtpTransportPacket::Status::NotReceived, "NR" },
 			{ FeedbackRtpTransportPacket::Status::SmallDelta,  "SD" },

@@ -4,8 +4,8 @@
 #include "Channel/ChannelMessageRegistratorInterface.hpp"
 // TODO: We should have a ChannelSocketInterface class instead.
 #include "Channel/ChannelSocket.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
-#include <unordered_map>
 
 namespace mocks
 {
@@ -35,8 +35,9 @@ namespace mocks
 			  const std::string& id) override;
 
 		private:
-			std::unordered_map<std::string, ::Channel::ChannelSocket::RequestHandler*> mapChannelRequestHandlers;
-			std::unordered_map<std::string, ::Channel::ChannelSocket::NotificationHandler*>
+			ankerl::unordered_dense::map<std::string, ::Channel::ChannelSocket::RequestHandler*>
+			  mapChannelRequestHandlers;
+			ankerl::unordered_dense::map<std::string, ::Channel::ChannelSocket::NotificationHandler*>
 			  mapChannelNotificationHandlers;
 		};
 	} // namespace Channel

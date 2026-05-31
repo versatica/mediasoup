@@ -14,8 +14,7 @@
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
 #include "SharedInterface.hpp"
-#include <absl/container/flat_hash_map.h>
-#include <absl/container/flat_hash_set.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -122,17 +121,19 @@ namespace RTC
 		SharedInterface* shared{ nullptr };
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		absl::flat_hash_map<std::string, RTC::Transport*> mapTransports;
-		absl::flat_hash_map<std::string, RTC::RtpObserver*> mapRtpObservers;
+		ankerl::unordered_dense::map<std::string, RTC::Transport*> mapTransports;
+		ankerl::unordered_dense::map<std::string, RTC::RtpObserver*> mapRtpObservers;
 		// Others.
-		absl::flat_hash_map<RTC::Producer*, absl::flat_hash_set<RTC::Consumer*>> mapProducerConsumers;
-		absl::flat_hash_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
-		absl::flat_hash_map<RTC::Producer*, absl::flat_hash_set<RTC::RtpObserver*>> mapProducerRtpObservers;
-		absl::flat_hash_map<std::string, RTC::Producer*> mapProducers;
-		absl::flat_hash_map<RTC::DataProducer*, absl::flat_hash_set<RTC::DataConsumer*>>
+		ankerl::unordered_dense::map<RTC::Producer*, ankerl::unordered_dense::set<RTC::Consumer*>>
+		  mapProducerConsumers;
+		ankerl::unordered_dense::map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
+		ankerl::unordered_dense::map<RTC::Producer*, ankerl::unordered_dense::set<RTC::RtpObserver*>>
+		  mapProducerRtpObservers;
+		ankerl::unordered_dense::map<std::string, RTC::Producer*> mapProducers;
+		ankerl::unordered_dense::map<RTC::DataProducer*, ankerl::unordered_dense::set<RTC::DataConsumer*>>
 		  mapDataProducerDataConsumers;
-		absl::flat_hash_map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
-		absl::flat_hash_map<std::string, RTC::DataProducer*> mapDataProducers;
+		ankerl::unordered_dense::map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
+		ankerl::unordered_dense::map<std::string, RTC::DataProducer*> mapDataProducers;
 	};
 } // namespace RTC
 

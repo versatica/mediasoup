@@ -9,7 +9,7 @@
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -129,9 +129,9 @@ namespace RTC
 		static thread_local EVP_PKEY* privateKey;
 		static thread_local SSL_CTX* sslCtx;
 		static thread_local uint8_t sslReadBuffer[];
-		static const absl::flat_hash_map<std::string, Role> String2Role;
-		static const absl::flat_hash_map<std::string, FingerprintAlgorithm> String2FingerprintAlgorithm;
-		static const absl::flat_hash_map<FingerprintAlgorithm, std::string> FingerprintAlgorithm2String;
+		static const ankerl::unordered_dense::map<std::string, Role> String2Role;
+		static const ankerl::unordered_dense::map<std::string, FingerprintAlgorithm> String2FingerprintAlgorithm;
+		static const ankerl::unordered_dense::map<FingerprintAlgorithm, std::string> FingerprintAlgorithm2String;
 		static thread_local std::vector<Fingerprint> localFingerprints;
 		static const std::vector<SrtpCryptoSuiteMapEntry> SrtpCryptoSuites;
 

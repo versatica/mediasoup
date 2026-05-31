@@ -4,8 +4,8 @@
 #include "common.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "Utils.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
-#include <unordered_map>
 
 namespace RTC
 {
@@ -78,7 +78,7 @@ namespace RTC
 			static ZeroChecksumAcceptableParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
 
-			static const std::unordered_map<AlternateErrorDetectionMethod, std::string>
+			static const ankerl::unordered_dense::map<AlternateErrorDetectionMethod, std::string>
 			  AlternateErrorDetectionMethod2String;
 
 		private:

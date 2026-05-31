@@ -12,7 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		const std::unordered_map<ErrorCause::ErrorCauseCode, std::string> ErrorCause::ErrorCauseCode2String =
+		const ankerl::unordered_dense::map<ErrorCause::ErrorCauseCode, std::string> ErrorCause::ErrorCauseCode2String =
 		{
 			{ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,                    "INVALID-STREAM-IDENTIFIER"                    },
 			{ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,                  "MISSING-MANDATORY-PARAMETER"                  },

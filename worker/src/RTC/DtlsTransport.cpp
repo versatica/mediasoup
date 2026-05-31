@@ -124,7 +124,7 @@ namespace RTC
 	thread_local EVP_PKEY* DtlsTransport::privateKey{ nullptr };
 	thread_local SSL_CTX* DtlsTransport::sslCtx{ nullptr };
 	thread_local uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
-	const absl::flat_hash_map<std::string, DtlsTransport::FingerprintAlgorithm>
+	const ankerl::unordered_dense::map<std::string, DtlsTransport::FingerprintAlgorithm>
 	  DtlsTransport::String2FingerprintAlgorithm = {
 		  { "sha-1",   DtlsTransport::FingerprintAlgorithm::SHA1   },
 		  { "sha-224", DtlsTransport::FingerprintAlgorithm::SHA224 },
@@ -132,7 +132,7 @@ namespace RTC
 		  { "sha-384", DtlsTransport::FingerprintAlgorithm::SHA384 },
 		  { "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 }
   };
-	const absl::flat_hash_map<DtlsTransport::FingerprintAlgorithm, std::string>
+	const ankerl::unordered_dense::map<DtlsTransport::FingerprintAlgorithm, std::string>
 	  DtlsTransport::FingerprintAlgorithm2String = {
 		  { DtlsTransport::FingerprintAlgorithm::SHA1,   "sha-1"   },
 		  { DtlsTransport::FingerprintAlgorithm::SHA224, "sha-224" },
@@ -140,7 +140,7 @@ namespace RTC
 		  { DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
 		  { DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
   };
-	const absl::flat_hash_map<std::string, DtlsTransport::Role> DtlsTransport::String2Role = {
+	const ankerl::unordered_dense::map<std::string, DtlsTransport::Role> DtlsTransport::String2Role = {
 		{ "auto",   DtlsTransport::Role::AUTO   },
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER }

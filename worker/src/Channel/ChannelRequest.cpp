@@ -4,15 +4,14 @@
 #include "Channel/ChannelRequest.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <ankerl/unordered_dense.h>
 
 namespace Channel
 {
-	/* Class variables. */
-
-	thread_local flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder{};
+	/* Static. */
 
 	// clang-format off
-	const absl::flat_hash_map<FBS::Request::Method, const char*> ChannelRequest::Method2String =
+	static const ankerl::unordered_dense::map<FBS::Request::Method, const char*> Method2String =
 	{
 		{ FBS::Request::Method::WORKER_DUMP,                                    "worker.dump"                                },
 		{ FBS::Request::Method::WORKER_GET_RESOURCE_USAGE,                      "worker.getResourceUsage"                    },
@@ -85,6 +84,10 @@ namespace Channel
 	};
 	// clang-format on
 
+	/* Class variables. */
+
+	thread_local flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder{};
+
 	/* Instance methods. */
 
 	/**
@@ -99,9 +102,9 @@ namespace Channel
 		this->id     = request->id();
 		this->method = request->method();
 
-		const auto methodCStrIt = ChannelRequest::Method2String.find(this->method);
+		const auto methodCStrIt = Method2String.find(this->method);
 
-		if (methodCStrIt == ChannelRequest::Method2String.end())
+		if (methodCStrIt == Method2String.end())
 		{
 			Error("unknown method");
 

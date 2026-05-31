@@ -12,7 +12,6 @@
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
-#include <absl/container/inlined_vector.h>
 #include <cstring> // std::memcpy()
 
 namespace RTC

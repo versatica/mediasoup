@@ -2,7 +2,7 @@
 #define MS_RTC_RTC_LOGGER_HPP
 
 #include "common.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 
 namespace RTC
 {
@@ -30,7 +30,7 @@ namespace RTC
 				SEND_RTP_STREAM_DISCARDED
 			};
 
-			static const absl::flat_hash_map<DiscardReason, std::string> DiscardReason2String;
+			static const ankerl::unordered_dense::map<DiscardReason, std::string> DiscardReason2String;
 
 			RtpPacket()  = default;
 			~RtpPacket() = default;

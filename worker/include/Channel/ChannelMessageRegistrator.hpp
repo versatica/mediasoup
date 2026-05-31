@@ -3,8 +3,8 @@
 
 #include "Channel/ChannelMessageRegistratorInterface.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
-#include <unordered_map>
 
 namespace Channel
 {
@@ -31,8 +31,9 @@ namespace Channel
 		ChannelSocket::NotificationHandler* GetChannelNotificationHandler(const std::string& id) override;
 
 	private:
-		std::unordered_map<std::string, ChannelSocket::RequestHandler*> mapChannelRequestHandlers;
-		std::unordered_map<std::string, ChannelSocket::NotificationHandler*> mapChannelNotificationHandlers;
+		ankerl::unordered_dense::map<std::string, ChannelSocket::RequestHandler*> mapChannelRequestHandlers;
+		ankerl::unordered_dense::map<std::string, ChannelSocket::NotificationHandler*>
+		  mapChannelNotificationHandlers;
 	};
 } // namespace Channel
 

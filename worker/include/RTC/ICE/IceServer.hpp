@@ -7,9 +7,9 @@
 #include "RTC/ICE/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "SharedInterface.hpp"
+#include <ankerl/unordered_dense.h>
 #include <list>
 #include <string>
-#include <unordered_map>
 
 namespace RTC
 {
@@ -61,7 +61,7 @@ namespace RTC
 			static FBS::WebRtcTransport::IceState IceStateToFbs(IceState state);
 
 		private:
-			static std::unordered_map<IceState, std::string> iceStateToString;
+			static ankerl::unordered_dense::map<IceState, std::string> iceStateToString;
 
 		public:
 			IceServer(

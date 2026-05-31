@@ -12,7 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		const std::unordered_map<ReconfigurationResponseParameter::Result, std::string> ReconfigurationResponseParameter::Result2String =
+		const ankerl::unordered_dense::map<ReconfigurationResponseParameter::Result, std::string> ReconfigurationResponseParameter::Result2String =
 		{
 			{ ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO,             "SUCCESS_NOTHING_TO_DO"             },
 			{ ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED,                 "SUCCESS_PERFORMED"                 },

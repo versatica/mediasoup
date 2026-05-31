@@ -30,7 +30,7 @@
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -338,13 +338,13 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		absl::flat_hash_map<std::string, RTC::Producer*> mapProducers;
-		absl::flat_hash_map<std::string, RTC::Consumer*> mapConsumers;
-		absl::flat_hash_map<std::string, RTC::DataProducer*> mapDataProducers;
-		absl::flat_hash_map<std::string, RTC::DataConsumer*> mapDataConsumers;
-		absl::flat_hash_map<uint16_t, RTC::DataConsumer*> mapSctpStreamIdDataConsumers;
-		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
-		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
+		ankerl::unordered_dense::map<std::string, RTC::Producer*> mapProducers;
+		ankerl::unordered_dense::map<std::string, RTC::Consumer*> mapConsumers;
+		ankerl::unordered_dense::map<std::string, RTC::DataProducer*> mapDataProducers;
+		ankerl::unordered_dense::map<std::string, RTC::DataConsumer*> mapDataConsumers;
+		ankerl::unordered_dense::map<uint16_t, RTC::DataConsumer*> mapSctpStreamIdDataConsumers;
+		ankerl::unordered_dense::map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
+		ankerl::unordered_dense::map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
 		TimerHandleInterface* rtcpTimer{ nullptr };
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };

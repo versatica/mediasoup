@@ -158,8 +158,8 @@ namespace RTC
 		// Allocated by this.
 		RTC::ICE::IceServer* iceServer{ nullptr };
 		// Map of UdpSocket/TcpServer and local announced address (if any).
-		absl::flat_hash_map<RTC::UdpSocket*, std::string> udpSockets;
-		absl::flat_hash_map<RTC::TcpServer*, std::string> tcpServers;
+		ankerl::unordered_dense::map<RTC::UdpSocket*, std::string> udpSockets;
+		ankerl::unordered_dense::map<RTC::TcpServer*, std::string> tcpServers;
 		RTC::DtlsTransport* dtlsTransport{ nullptr };
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };

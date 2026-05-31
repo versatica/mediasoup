@@ -31,7 +31,7 @@ namespace RTC
 {
 	/* Class variables. */
 
-	thread_local absl::flat_hash_map<uint64_t, PortManager::PortRange> PortManager::mapPortRanges;
+	thread_local ankerl::unordered_dense::map<uint64_t, PortManager::PortRange> PortManager::mapPortRanges;
 
 	/* Class methods. */
 

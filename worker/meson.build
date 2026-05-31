@@ -280,6 +280,8 @@ common_sources = [
   'src/RTC/SCTP/public/Message.cpp',
 ]
 
+ankerl_unordered_dense_dep = dependency('unordered_dense')
+
 libuv_proj = subproject(
   'libuv',
   default_options: [
@@ -325,10 +327,16 @@ flatbuffers_proj = subproject(
 subdir('fbs')
 
 # Add current build directory so libwebrtc has access to FBS folder.
-libwebrtc_include_directories = include_directories('include', 'fbs')
+libwebrtc_include_directories = include_directories(
+  'include',
+  'fbs',
+  'subprojects/unordered_dense-4.8.1/include'
+)
+
 subdir('deps/libwebrtc')
 
 dependencies = [
+  ankerl_unordered_dense_dep,
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
   libuv_proj.get_variable('libuv_dep'),

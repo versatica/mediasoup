@@ -10,7 +10,7 @@ namespace RTC
 	namespace RtcLogger
 	{
 		// clang-format off
-		const absl::flat_hash_map<RtpPacket::DiscardReason, std::string> RtpPacket::DiscardReason2String = {
+		const ankerl::unordered_dense::map<RtpPacket::DiscardReason, std::string> RtpPacket::DiscardReason2String = {
 			{ RtpPacket::DiscardReason::NONE,                                    "None"                               },
 			{ RtpPacket::DiscardReason::PRODUCER_NOT_FOUND,                      "ProducerNotFound"                   },
 			{ RtpPacket::DiscardReason::RECV_RTP_STREAM_NOT_FOUND,               "RecvRtpStreamNotFound"              },

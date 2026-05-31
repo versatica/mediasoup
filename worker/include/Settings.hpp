@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "LogLevel.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -56,8 +56,8 @@ public:
 	static thread_local struct Configuration configuration;
 
 private:
-	static const absl::flat_hash_map<std::string, LogLevel> String2LogLevel;
-	static const absl::flat_hash_map<LogLevel, std::string> LogLevel2String;
+	static const ankerl::unordered_dense::map<std::string, LogLevel> String2LogLevel;
+	static const ankerl::unordered_dense::map<LogLevel, std::string> LogLevel2String;
 };
 
 #endif

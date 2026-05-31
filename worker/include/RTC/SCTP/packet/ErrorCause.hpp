@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/packet/TLV.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
-#include <unordered_map>
 
 namespace RTC
 {
@@ -111,7 +111,7 @@ namespace RTC
 			static const std::string& ErrorCauseCodeToString(ErrorCauseCode causeCode);
 
 		private:
-			static const std::unordered_map<ErrorCauseCode, std::string> ErrorCauseCode2String;
+			static const ankerl::unordered_dense::map<ErrorCauseCode, std::string> ErrorCauseCode2String;
 
 		protected:
 			/**

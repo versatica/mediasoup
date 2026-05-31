@@ -21,7 +21,6 @@
 #include "Shared.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
-#include <absl/container/flat_hash_map.h>
 #include <csignal> // sigaction()
 #include <string>
 
@@ -210,7 +209,7 @@ static void ignoreSignals()
 	struct sigaction act{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	// clang-format off
-	absl::flat_hash_map<std::string, int> const ignoredSignals =
+	ankerl::unordered_dense::map<std::string, int> const ignoredSignals =
 	{
 		{ "PIPE", SIGPIPE },
 		{ "HUP",  SIGHUP  },

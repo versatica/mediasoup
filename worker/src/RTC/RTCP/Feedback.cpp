@@ -99,7 +99,7 @@ namespace RTC
 
 		// clang-format off
 		template<>
-		const absl::flat_hash_map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::MessageType2String =
+		const ankerl::unordered_dense::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::MessageType2String =
 		{
 			{ FeedbackPs::MessageType::PLI,   "PLI"   },
 			{ FeedbackPs::MessageType::SLI,   "SLI"   },
@@ -189,7 +189,7 @@ namespace RTC
 
 		// clang-format off
 		template<>
-		const absl::flat_hash_map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::MessageType2String =
+		const ankerl::unordered_dense::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::MessageType2String =
 		{
 			{ FeedbackRtp::MessageType::NACK,   "NACK"   },
 			{ FeedbackRtp::MessageType::TMMBR,  "TMMBR"  },

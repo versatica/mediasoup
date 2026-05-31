@@ -12,7 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		const std::unordered_map<Parameter::ParameterType, std::string> Parameter::ParameterType2String =
+		const ankerl::unordered_dense::map<Parameter::ParameterType, std::string> Parameter::ParameterType2String =
 		{
 			{ Parameter::ParameterType::HEARTBEAT_INFO,               "HEARTBEAT-INFO"               },
 			{ Parameter::ParameterType::IPV4_ADDRESS,                 "IPV4-ADDRESS"                 },
