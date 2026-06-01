@@ -4,6 +4,7 @@
 
 - Node: Make all public methods/getters that return an object/array, return a clone of that object/array ([PR #1811](https://github.com/versatica/mediasoup/pull/1811)).
 - Worker: replace `absl-cpp` subproject with `ankerl/unordered_dense` ([PR #1813](https://github.com/versatica/mediasoup/pull/1813)).
+- Worker: Fix `SvcConsumer` ignoring the `temporalLayer` of `preferredLayers` given at consume time ([PR #1814](https://github.com/versatica/mediasoup/pull/1814)).
 
 ### 3.20.0
 
