@@ -20,7 +20,6 @@ import { Event, Notification } from './fbs/notification';
 import * as FbsTransport from './fbs/transport';
 import * as FbsRequest from './fbs/request';
 import * as FbsDataConsumer from './fbs/data-consumer';
-import * as FbsDataProducer from './fbs/data-producer';
 
 type DataConsumerInternal = TransportInternal & {
 	dataConsumerId: string;
@@ -570,14 +569,14 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 
 export function dataConsumerTypeToFbs(
 	type: DataConsumerType
-): FbsDataProducer.Type {
+): FbsDataConsumer.Type {
 	switch (type) {
 		case 'sctp': {
-			return FbsDataProducer.Type.SCTP;
+			return FbsDataConsumer.Type.SCTP;
 		}
 
 		case 'direct': {
-			return FbsDataProducer.Type.DIRECT;
+			return FbsDataConsumer.Type.DIRECT;
 		}
 
 		default: {
@@ -586,13 +585,13 @@ export function dataConsumerTypeToFbs(
 	}
 }
 
-function dataConsumerTypeFromFbs(type: FbsDataProducer.Type): DataConsumerType {
+function dataConsumerTypeFromFbs(type: FbsDataConsumer.Type): DataConsumerType {
 	switch (type) {
-		case FbsDataProducer.Type.SCTP: {
+		case FbsDataConsumer.Type.SCTP: {
 			return 'sctp';
 		}
 
-		case FbsDataProducer.Type.DIRECT: {
+		case FbsDataConsumer.Type.DIRECT: {
 			return 'direct';
 		}
 	}
