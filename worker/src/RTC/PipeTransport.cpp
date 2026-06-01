@@ -4,6 +4,7 @@
 #include "RTC/PipeTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/PortManager.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -72,7 +73,7 @@ namespace RTC
 		{
 			if (this->listenInfo.portRange.min != 0 && this->listenInfo.portRange.max != 0)
 			{
-				RTC::PortManager::PortRangeKey portRangeKey{};
+				RTC::PortManager::PortRangeKey portRangeKey;
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,
@@ -92,7 +93,7 @@ namespace RTC
 			// required.
 			else
 			{
-				RTC::PortManager::PortRangeKey portRangeKey{};
+				RTC::PortManager::PortRangeKey portRangeKey;
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,

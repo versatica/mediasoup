@@ -7,7 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
-SCENARIO("NACK generator", "[rtp][rtcp][nack]")
+SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 {
 	constexpr unsigned int SendNackDelay{ 0u }; // In ms.
 

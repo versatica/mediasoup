@@ -5,6 +5,7 @@
 #include "FBS/webRtcTransport.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/PortManager.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include <cmath> // std::pow()
@@ -81,7 +82,7 @@ namespace RTC
 
 					if (listenInfo->portRange()->min() != 0 && listenInfo->portRange()->max() != 0)
 					{
-						RTC::PortManager::PortRangeKey portRangeKey{};
+						RTC::PortManager::PortRangeKey portRangeKey;
 
 						udpSocket = new RTC::UdpSocket(
 						  this,
@@ -100,7 +101,7 @@ namespace RTC
 					// required.
 					else
 					{
-						RTC::PortManager::PortRangeKey portRangeKey{};
+						RTC::PortManager::PortRangeKey portRangeKey;
 
 						udpSocket = new RTC::UdpSocket(
 						  this,
