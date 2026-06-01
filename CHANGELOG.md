@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- `PortManager`: Replace `uint64_t` hash token with exact-tuple `PortRangeKey` ([PR #1812](https://github.com/versatica/mediasoup/pull/1812), by @999purple999).
+- `PortManager`: Replace `uint64_t` hash token with exact-tuple `PortRangeKey` ([PR #1812](https://github.com/versatica/mediasoup/pull/1812), by @999purple999 and @penguinol).
 
 ### 3.20.1
 
