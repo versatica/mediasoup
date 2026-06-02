@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "handles/UdpSocketHandle.hpp"
+#include "RTC/PortManager.hpp"
 #include "RTC/Transport.hpp"
 #include <string>
 
@@ -33,7 +34,7 @@ namespace RTC
 		  uint16_t minPort,
 		  uint16_t maxPort,
 		  RTC::Transport::SocketFlags& flags,
-		  uint64_t& portRangeHash);
+		  RTC::PortManager::PortRangeKey& portRangeKey);
 		~UdpSocket() override;
 
 		/* Pure virtual methods inherited from ::UdpSocketHandle. */
@@ -45,7 +46,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		bool fixedPort{ false };
-		uint64_t portRangeHash{ 0u };
+		RTC::PortManager::PortRangeKey portRangeKey{};
 	};
 } // namespace RTC
 

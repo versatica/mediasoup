@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- `PortManager`: Replace `uint64_t` hash token with exact-tuple `PortRangeKey` ([PR #1812](https://github.com/versatica/mediasoup/pull/1812), by @999purple999 and @penguinol).
+
 ### 3.20.1
 
 - Node: Make all public methods/getters that return an object/array, return a clone of that object/array ([PR #1811](https://github.com/versatica/mediasoup/pull/1811)).
@@ -1196,7 +1198,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 ### 3.5.9
 
 - `libwebrtc`: Apply patch by @sspanak and @Ivaka to avoid crash. Related issue: #357.
-- `PortManager.cpp`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in `libuv` 1.37.0.
+- `PortManager`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in `libuv` 1.37.0.
 - Update Node deps.
 
 ### 3.5.8
@@ -1290,7 +1292,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.4.7
 
-- `PortManager.cpp`: Do not limit the number of failed `bind()` attempts to 20 since it does not work well in scenarios that launch tons of `Workers` with same port range. Instead iterate all ports in the range given to the Worker.
+- `PortManager`: Do not limit the number of failed `bind()` attempts to 20 since it does not work well in scenarios that launch tons of `Workers` with same port range. Instead iterate all ports in the range given to the Worker.
 - Do not copy `catch.hpp` into `test/include/` but make the GYP `mediasoup-worker-test` target include the corresponding folder in `deps/catch`.
 
 ### 3.4.6

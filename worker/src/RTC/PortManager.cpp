@@ -6,7 +6,8 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <tuple> // std:make_tuple()
+#include <cstring> // std::memcmp(), std::memset()
+#include <tuple>   // std::make_tuple()
 
 /* Static methods for UV callbacks. */
 
@@ -31,9 +32,11 @@ namespace RTC
 {
 	/* Class variables. */
 
-	thread_local ankerl::unordered_dense::map<uint64_t, PortManager::PortRange> PortManager::mapPortRanges;
+	thread_local ankerl::unordered_dense::
+	  map<PortManager::PortRangeKey, PortManager::PortRange, PortManager::PortRangeKeyHash>
+	    PortManager::mapPortRanges;
 
-	/* Class methods. */
+	/* PortManager class methods. */
 
 	uv_handle_t* PortManager::Bind(
 	  Protocol protocol, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
@@ -71,7 +74,8 @@ namespace RTC
 		{
 			case AF_INET:
 			{
-				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
+				err = uv_ip4_addr(
+				  ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(std::addressof(bindAddr)));
 
 				if (err != 0)
 				{
@@ -83,7 +87,8 @@ namespace RTC
 
 			case AF_INET6:
 			{
-				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
+				err = uv_ip6_addr(
+				  ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(std::addressof(bindAddr)));
 
 				if (err != 0)
 				{
@@ -105,14 +110,14 @@ namespace RTC
 		{
 			case AF_INET:
 			{
-				(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(port);
+				(reinterpret_cast<struct sockaddr_in*>(std::addressof(bindAddr)))->sin_port = htons(port);
 
 				break;
 			}
 
 			case AF_INET6:
 			{
-				(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(port);
+				(reinterpret_cast<struct sockaddr_in6*>(std::addressof(bindAddr)))->sin6_port = htons(port);
 
 				break;
 			}
@@ -175,7 +180,7 @@ namespace RTC
 			{
 				err = uv_udp_bind(
 				  reinterpret_cast<uv_udp_t*>(uvHandle),
-				  reinterpret_cast<const struct sockaddr*>(&bindAddr),
+				  reinterpret_cast<const struct sockaddr*>(std::addressof(bindAddr)),
 				  bitFlags);
 
 				if (err != 0)
@@ -198,7 +203,7 @@ namespace RTC
 			{
 				err = uv_tcp_bind(
 				  reinterpret_cast<uv_tcp_t*>(uvHandle),
-				  reinterpret_cast<const struct sockaddr*>(&bindAddr),
+				  reinterpret_cast<const struct sockaddr*>(std::addressof(bindAddr)),
 				  bitFlags);
 
 				if (err != 0)
@@ -250,7 +255,7 @@ namespace RTC
 	  uint16_t minPort,
 	  uint16_t maxPort,
 	  RTC::Transport::SocketFlags& flags,
-	  uint64_t& hash)
+	  PortRangeKey& key)
 	{
 		MS_TRACE();
 
@@ -288,7 +293,8 @@ namespace RTC
 		{
 			case AF_INET:
 			{
-				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
+				err = uv_ip4_addr(
+				  ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(std::addressof(bindAddr)));
 
 				if (err != 0)
 				{
@@ -300,7 +306,8 @@ namespace RTC
 
 			case AF_INET6:
 			{
-				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
+				err = uv_ip6_addr(
+				  ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(std::addressof(bindAddr)));
 
 				if (err != 0)
 				{
@@ -317,9 +324,9 @@ namespace RTC
 			}
 		}
 
-		hash = GeneratePortRangeHash(protocol, std::addressof(bindAddr), minPort, maxPort);
+		key = PortRangeKey(protocol, bindAddr, minPort, maxPort);
 
-		auto& portRange          = PortManager::GetOrCreatePortRange(hash, minPort, maxPort);
+		auto& portRange          = PortManager::GetOrCreatePortRange(key, minPort, maxPort);
 		const size_t numPorts    = portRange.ports.size();
 		const size_t numAttempts = numPorts;
 		size_t attempt{ 0u };
@@ -385,14 +392,14 @@ namespace RTC
 			{
 				case AF_INET:
 				{
-					(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(port);
+					(reinterpret_cast<struct sockaddr_in*>(std::addressof(bindAddr)))->sin_port = htons(port);
 
 					break;
 				}
 
 				case AF_INET6:
 				{
-					(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(port);
+					(reinterpret_cast<struct sockaddr_in6*>(std::addressof(bindAddr)))->sin6_port = htons(port);
 
 					break;
 				}
@@ -455,7 +462,7 @@ namespace RTC
 				{
 					err = uv_udp_bind(
 					  reinterpret_cast<uv_udp_t*>(uvHandle),
-					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
+					  reinterpret_cast<const struct sockaddr*>(std::addressof(bindAddr)),
 					  bitFlags);
 
 					if (err != 0)
@@ -477,7 +484,7 @@ namespace RTC
 				{
 					err = uv_tcp_bind(
 					  reinterpret_cast<uv_tcp_t*>(uvHandle),
-					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
+					  reinterpret_cast<const struct sockaddr*>(std::addressof(bindAddr)),
 					  bitFlags);
 
 					if (err != 0)
@@ -595,16 +602,19 @@ namespace RTC
 		return uvHandle;
 	}
 
-	void PortManager::Unbind(uint64_t hash, uint16_t port)
+	void PortManager::Unbind(const PortRangeKey& key, uint16_t port)
 	{
 		MS_TRACE();
 
-		auto it = PortManager::mapPortRanges.find(hash);
+		auto it = PortManager::mapPortRanges.find(key);
 
 		// This should not happen.
 		if (it == PortManager::mapPortRanges.end())
 		{
-			MS_ERROR("hash %" PRIu64 " doesn't exist in the map", hash);
+			MS_ERROR(
+			  "port range key [minPort:%" PRIu16 ", maxPort:%" PRIu16 "] doesn't exist in the map",
+			  key.minPort,
+			  key.maxPort);
 
 			return;
 		}
@@ -633,13 +643,15 @@ namespace RTC
 	{
 		MS_DUMP_CLEAN(indentation, "<PortManager>");
 
-		for (auto& kv : PortManager::mapPortRanges)
+		for (const auto& kv : PortManager::mapPortRanges)
 		{
-			auto hash      = kv.first;
-			auto portRange = kv.second;
+			const auto& key         = kv.first;
+			const auto& portRange   = kv.second;
+			const char* protocolStr = (key.protocol == Protocol::UDP) ? "udp" : "tcp";
 
 			MS_DUMP_CLEAN(indentation + 1, "<PortRange>");
-			MS_DUMP_CLEAN(indentation + 1, "  hash: %" PRIu64, hash);
+			MS_DUMP_CLEAN(indentation + 1, "  protocol: %s", protocolStr);
+			MS_DUMP_CLEAN(indentation + 1, "  family: %d", key.bindAddr.ss_family);
 			MS_DUMP_CLEAN(indentation + 1, "  minPort: %" PRIu16, portRange.minPort);
 			MS_DUMP_CLEAN(indentation + 1, "  maxPort: %zu", portRange.minPort + portRange.ports.size() - 1);
 			MS_DUMP_CLEAN(indentation + 1, "  numUsedPorts: %" PRIu16, portRange.numUsedPorts);
@@ -649,95 +661,14 @@ namespace RTC
 		MS_DUMP_CLEAN(indentation, "</PortManager>");
 	}
 
-	/*
-	 * Hash for IPv4.
-	 *
-	 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 * |           MIN PORT            |           MAX PORT            |
-	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 * |              IP               |           IP >> 2         |F|P|
-	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 *
-	 * Hash for IPv6.
-	 *
-	 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 * |           MIN PORT            |           MAX PORT            |
-	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 * |IP[0] ^  IP[1] ^ IP[2] ^ IP[3] |           same >> 2       |F|P|
-	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 */
-	uint64_t PortManager::GeneratePortRangeHash(
-	  Protocol protocol, sockaddr_storage* bindAddr, uint16_t minPort, uint16_t maxPort)
-	{
-		MS_TRACE();
-
-		uint64_t hash{ 0u };
-
-		switch (bindAddr->ss_family)
-		{
-			case AF_INET:
-			{
-				auto* bindAddrIn = reinterpret_cast<struct sockaddr_in*>(bindAddr);
-
-				// We want it in network order.
-				const uint64_t address = bindAddrIn->sin_addr.s_addr;
-
-				hash |= static_cast<uint64_t>(minPort) << 48;
-				hash |= static_cast<uint64_t>(maxPort) << 32;
-				hash |= (address >> 2) << 2;
-				hash |= 0x0000; // AF_INET.
-
-				break;
-			}
-
-			case AF_INET6:
-			{
-				auto* bindAddrIn6 = reinterpret_cast<struct sockaddr_in6*>(bindAddr);
-				auto* a           = reinterpret_cast<uint32_t*>(std::addressof(bindAddrIn6->sin6_addr));
-
-				const auto address = a[0] ^ a[1] ^ a[2] ^ a[3];
-
-				hash |= static_cast<uint64_t>(minPort) << 48;
-				hash |= static_cast<uint64_t>(maxPort) << 32;
-				hash |= static_cast<uint64_t>(address) << 16;
-				hash |= (static_cast<uint64_t>(address) >> 2) << 2;
-				hash |= 0x0002; // AF_INET6.
-
-				break;
-			}
-
-			// This cannot happen.
-			default:
-			{
-				MS_THROW_ERROR("unknown IP family");
-			}
-		}
-
-		// Override least significant bit with protocol information:
-		// - If UDP, start with 0.
-		// - If TCP, start with 1.
-		if (protocol == Protocol::UDP)
-		{
-			hash |= 0x0000;
-		}
-		else
-		{
-			hash |= 0x0001;
-		}
-
-		return hash;
-	}
-
 	PortManager::PortRange& PortManager::GetOrCreatePortRange(
-	  uint64_t hash, uint16_t minPort, uint16_t maxPort)
+	  const PortRangeKey& key, uint16_t minPort, uint16_t maxPort)
 	{
 		MS_TRACE();
 
-		auto it = PortManager::mapPortRanges.find(hash);
+		const auto it = PortManager::mapPortRanges.find(key);
 
-		// If the hash is already handled, return its port range.
+		// If the key is already handled, return its port range.
 		if (it != PortManager::mapPortRanges.end())
 		{
 			auto& portRange = it->second;
@@ -747,10 +678,10 @@ namespace RTC
 
 		const uint16_t numPorts = maxPort - minPort + 1;
 
-		// Emplace a new vector filled with numPorts false values, meaning that
+		// Emplace a new vector filled with `numPorts` false values, meaning that
 		// all ports are available.
-		auto pair = PortManager::mapPortRanges.emplace(
-		  std::piecewise_construct, std::make_tuple(hash), std::make_tuple(numPorts, minPort));
+		const auto pair = PortManager::mapPortRanges.emplace(
+		  std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple(numPorts, minPort));
 
 		// pair.first is an iterator to the inserted value.
 		auto& portRange = pair.first->second;
@@ -764,7 +695,7 @@ namespace RTC
 
 		uint8_t bitFlags{ 0b00000000 };
 
-		// Ignore ipv6Only in IPv4, otherwise libuv will throw.
+		// Ignore `ipv6Only` in IPv4, otherwise libuv will throw.
 		if (flags.ipv6Only && family == AF_INET6)
 		{
 			switch (protocol)
@@ -785,12 +716,141 @@ namespace RTC
 			}
 		}
 
-		// Ignore udpReusePort in TCP, otherwise libuv will throw.
+		// Ignore `udpReusePort` in TCP, otherwise libuv will throw.
 		if (flags.udpReusePort && protocol == Protocol::UDP)
 		{
 			bitFlags |= UV_UDP_REUSEADDR;
 		}
 
 		return bitFlags;
+	}
+
+	/* PortRangeKey instance methods. */
+
+	PortManager::PortRangeKey::PortRangeKey(
+	  Protocol protocol, const sockaddr_storage& bindAddr, uint16_t minPort, uint16_t maxPort)
+	  : protocol(protocol), bindAddr(bindAddr), minPort(minPort), maxPort(maxPort)
+	{
+		MS_TRACE();
+
+		// `sockaddr_storage` is padded; the unused tail bytes are caller-controlled.
+		// `operator==` inspects only the meaningful address bytes (`sin_addr` /
+		// `sin6_addr`) so padding does not affect equality, and the hash function
+		// hashes the same exact fields, so two structurally-equal keys always
+		// produce the same hash regardless of how the caller zero-initialized.
+	}
+
+	bool PortManager::PortRangeKey::operator==(const PortRangeKey& other) const noexcept
+	{
+		MS_TRACE();
+
+		if (this->protocol != other.protocol)
+		{
+			return false;
+		}
+		else if (this->minPort != other.minPort)
+		{
+			return false;
+		}
+		else if (this->maxPort != other.maxPort)
+		{
+			return false;
+		}
+		else if (this->bindAddr.ss_family != other.bindAddr.ss_family)
+		{
+			return false;
+		}
+
+		switch (this->bindAddr.ss_family)
+		{
+			case AF_INET:
+			{
+				const auto* a = reinterpret_cast<const sockaddr_in*>(std::addressof(this->bindAddr));
+				const auto* b = reinterpret_cast<const sockaddr_in*>(std::addressof(other.bindAddr));
+
+				return a->sin_addr.s_addr == b->sin_addr.s_addr;
+			}
+
+			case AF_INET6:
+			{
+				const auto* a = reinterpret_cast<const sockaddr_in6*>(std::addressof(this->bindAddr));
+				const auto* b = reinterpret_cast<const sockaddr_in6*>(std::addressof(other.bindAddr));
+
+				return std::memcmp(
+				         std::addressof(a->sin6_addr), std::addressof(b->sin6_addr), sizeof(in6_addr)) == 0;
+			}
+
+			default:
+			{
+				// Unknown family; treat as not equal to avoid accidental merge.
+				return false;
+			}
+		}
+	}
+
+	/* PortRangeKeyHash instance methods. */
+
+	size_t PortManager::PortRangeKeyHash::operator()(const PortRangeKey& key) const noexcept
+	{
+		MS_TRACE();
+
+		const auto protocolBits = static_cast<uint8_t>(key.protocol);
+		const auto familyBits   = static_cast<uint16_t>(key.bindAddr.ss_family);
+
+		auto hashCombine = [](size_t& seed, size_t value)
+		{
+			seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		};
+
+		size_t seed = 0;
+
+		switch (key.bindAddr.ss_family)
+		{
+			case AF_INET:
+			{
+				const auto* in = reinterpret_cast<const sockaddr_in*>(std::addressof(key.bindAddr));
+
+				hashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint32_t>{}(in->sin_addr.s_addr));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.minPort));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.maxPort));
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				const auto* in6  = reinterpret_cast<const sockaddr_in6*>(std::addressof(key.bindAddr));
+				const auto* addr = in6->sin6_addr.s6_addr;
+
+				uint64_t hi;
+				uint64_t lo;
+
+				std::memcpy(std::addressof(hi), addr, sizeof(uint64_t));
+				std::memcpy(std::addressof(lo), addr + sizeof(uint64_t), sizeof(uint64_t));
+
+				hashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(hi));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(lo));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.minPort));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.maxPort));
+
+				break;
+			}
+
+			default:
+			{
+				hashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.minPort));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.maxPort));
+
+				break;
+			}
+		}
+
+		return seed;
 	}
 } // namespace RTC

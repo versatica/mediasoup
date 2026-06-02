@@ -36,16 +36,16 @@ namespace RTC
 	  uint16_t minPort,
 	  uint16_t maxPort,
 	  RTC::Transport::SocketFlags& flags,
-	  uint64_t& portRangeHash)
+	  RTC::PortManager::PortRangeKey& portRangeKey)
 	  : // This may throw.
 	    ::TcpServerHandle::TcpServerHandle(
-	      RTC::PortManager::BindTcp(ip, minPort, maxPort, flags, portRangeHash)),
+	      RTC::PortManager::BindTcp(ip, minPort, maxPort, flags, portRangeKey)),
 	    listener(listener),
 	    connListener(connListener)
 	{
 		MS_TRACE();
 
-		this->portRangeHash = portRangeHash;
+		this->portRangeKey = portRangeKey;
 	}
 
 	TcpServer::~TcpServer()
@@ -54,7 +54,7 @@ namespace RTC
 
 		if (!this->fixedPort)
 		{
-			RTC::PortManager::Unbind(this->portRangeHash, this->localPort);
+			RTC::PortManager::Unbind(this->portRangeKey, this->localPort);
 		}
 	}
 

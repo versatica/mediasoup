@@ -5,6 +5,7 @@
 #include "FBS/webRtcTransport.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/PortManager.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include <cmath> // std::pow()
@@ -81,7 +82,7 @@ namespace RTC
 
 					if (listenInfo->portRange()->min() != 0 && listenInfo->portRange()->max() != 0)
 					{
-						uint64_t portRangeHash{ 0u };
+						RTC::PortManager::PortRangeKey portRangeKey;
 
 						udpSocket = new RTC::UdpSocket(
 						  this,
@@ -89,7 +90,7 @@ namespace RTC
 						  listenInfo->portRange()->min(),
 						  listenInfo->portRange()->max(),
 						  flags,
-						  portRangeHash);
+						  portRangeKey);
 					}
 					else if (listenInfo->port() != 0)
 					{
@@ -100,7 +101,7 @@ namespace RTC
 					// required.
 					else
 					{
-						uint64_t portRangeHash{ 0u };
+						RTC::PortManager::PortRangeKey portRangeKey;
 
 						udpSocket = new RTC::UdpSocket(
 						  this,
@@ -108,7 +109,7 @@ namespace RTC
 						  Settings::configuration.rtcMinPort,
 						  Settings::configuration.rtcMaxPort,
 						  flags,
-						  portRangeHash);
+						  portRangeKey);
 					}
 
 					this->udpSockets[udpSocket] = announcedAddress;
@@ -151,7 +152,7 @@ namespace RTC
 
 					if (listenInfo->portRange()->min() != 0 && listenInfo->portRange()->max() != 0)
 					{
-						uint64_t portRangeHash{ 0u };
+						RTC::PortManager::PortRangeKey portRangeKey{};
 
 						tcpServer = new RTC::TcpServer(
 						  this,
@@ -160,7 +161,7 @@ namespace RTC
 						  listenInfo->portRange()->min(),
 						  listenInfo->portRange()->max(),
 						  flags,
-						  portRangeHash);
+						  portRangeKey);
 					}
 					else if (listenInfo->port() != 0)
 					{
@@ -171,7 +172,7 @@ namespace RTC
 					// required.
 					else
 					{
-						uint64_t portRangeHash{ 0u };
+						RTC::PortManager::PortRangeKey portRangeKey{};
 
 						tcpServer = new RTC::TcpServer(
 						  this,
@@ -180,7 +181,7 @@ namespace RTC
 						  Settings::configuration.rtcMinPort,
 						  Settings::configuration.rtcMaxPort,
 						  flags,
-						  portRangeHash);
+						  portRangeKey);
 					}
 
 					this->tcpServers[tcpServer] = announcedAddress;

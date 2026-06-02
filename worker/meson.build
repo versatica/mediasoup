@@ -451,6 +451,7 @@ test_sources = [
   'test/src/testHelpers.cpp',
   'test/src/RTC/TestKeyFrameRequestManager.cpp',
   'test/src/RTC/TestNackGenerator.cpp',
+  'test/src/RTC/TestPortManager.cpp',
   'test/src/RTC/TestRateCalculator.cpp',
   'test/src/RTC/TestRtpEncodingParameters.cpp',
   'test/src/RTC/TestSeqManager.cpp',
