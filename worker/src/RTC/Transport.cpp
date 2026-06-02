@@ -3058,13 +3058,26 @@ namespace RTC
 
 		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
 
-		MS_WARN_TAG(
-		  sctp,
-		  "SCTP association failed [errorKind:%.*s, message:%.*s]",
-		  static_cast<int>(errorKindStringView.size()),
-		  errorKindStringView.data(),
-		  static_cast<int>(errorMessage.size()),
-		  errorMessage.data());
+		if (errorKind == RTC::SCTP::Types::ErrorKind::SUCCESS || errorKind == RTC::SCTP::Types::ErrorKind::PEER_REPORTED)
+		{
+			MS_DEBUG_TAG(
+			  sctp,
+			  "SCTP association failed [errorKind:%.*s, message:%.*s]",
+			  static_cast<int>(errorKindStringView.size()),
+			  errorKindStringView.data(),
+			  static_cast<int>(errorMessage.size()),
+			  errorMessage.data());
+		}
+		else
+		{
+			MS_WARN_TAG(
+			  sctp,
+			  "SCTP association failed [errorKind:%.*s, message:%.*s]",
+			  static_cast<int>(errorKindStringView.size()),
+			  errorKindStringView.data(),
+			  static_cast<int>(errorMessage.size()),
+			  errorMessage.data());
+		}
 
 		// Tell all DataConsumers.
 		for (auto& kv : this->mapDataConsumers)
@@ -3093,10 +3106,20 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (errorKind != RTC::SCTP::Types::ErrorKind::SUCCESS)
-		{
-			const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
 
+		if (errorKind == RTC::SCTP::Types::ErrorKind::SUCCESS || errorKind == RTC::SCTP::Types::ErrorKind::PEER_REPORTED)
+		{
+			MS_DEBUG_TAG(
+			  sctp,
+			  "SCTP association closed [errorKind:%.*s, message:%.*s]",
+			  static_cast<int>(errorKindStringView.size()),
+			  errorKindStringView.data(),
+			  static_cast<int>(errorMessage.size()),
+			  errorMessage.data());
+		}
+		else
+		{
 			MS_WARN_TAG(
 			  sctp,
 			  "SCTP association closed [errorKind:%.*s, message:%.*s]",

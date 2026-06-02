@@ -1104,11 +1104,12 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  sctp,
-					  "ABORT chunk verification tag %" PRIu32 " is wrong, packet discarded",
+					  "receievd ABORT chunk has invalid verification tag %" PRIu32 ", packet discarded",
 					  receivedPacket->GetVerificationTag());
 
 					this->associationListenerDeferrer.OnAssociationError(
-					  Types::ErrorKind::PARSE_FAILED, "packet with ABORT chunk has invalid verification tag");
+					  Types::ErrorKind::PARSE_FAILED,
+					  "received packet with ABORT chunk has invalid verification tag");
 
 					return false;
 				}
@@ -1124,13 +1125,14 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  sctp,
-					  "INIT-ACK chunk verification tag %" PRIu32 " (should be %" PRIu32 ")",
+					  "received INIT-ACK chunk has invalid verification tag %" PRIu32 " (should be %" PRIu32
+					  "), packet discarded",
 					  receivedPacket->GetVerificationTag(),
 					  this->preTcb.localVerificationTag);
 
 					this->associationListenerDeferrer.OnAssociationError(
 					  Types::ErrorKind::PARSE_FAILED,
-					  "packet with INIT-ACK chunk has invalid verification tag");
+					  "received packet with INIT-ACK chunk has invalid verification tag");
 
 					return false;
 				}
@@ -1173,12 +1175,13 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  sctp,
-					  "SHUTDOWN-COMPLETE chunk verification tag %" PRIu32 " is wrong, packet discarded",
+					  "received SHUTDOWN-COMPLETE chunk has invalid verification tag %" PRIu32
+					  ", packet discarded",
 					  receivedPacket->GetVerificationTag());
 
 					this->associationListenerDeferrer.OnAssociationError(
 					  Types::ErrorKind::PARSE_FAILED,
-					  "packet with SHUTDOWN-COMPLETE chunk has invalid verification tag");
+					  "received packet with SHUTDOWN-COMPLETE chunk has invalid verification tag");
 
 					return false;
 				}
@@ -1200,7 +1203,8 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "invalid verification tag %" PRIu32 " (should be %" PRIu32 ")",
+				  "received packet has invalid verification tag %" PRIu32 " (should be %" PRIu32
+				  "), packet discarded",
 				  receivedPacket->GetVerificationTag(),
 				  localVerificationTag);
 
@@ -1369,7 +1373,7 @@ namespace RTC
 			// be 0, the receiver MUST silently discard the packet."
 			if (receivedInitChunk->GetInitiateTag() == 0)
 			{
-				MS_WARN_TAG(sctp, "invalid value 0 in Initiate Tagin received INIT chunk, discarded");
+				MS_WARN_TAG(sctp, "invalid value 0 in Initiate Tag in received INIT chunk, packet discarded");
 
 				return;
 			}
@@ -1388,7 +1392,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "invalid number of outbound streams or Number of inbound streams in received INIT chunk, aborting association");
+				  "invalid number of outbound streams or number of inbound streams in received INIT chunk, aborting association");
 
 				auto packet                 = CreatePacketWithVerificationTag(0);
 				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
@@ -1557,7 +1561,7 @@ namespace RTC
 			// INIT ACK chunk."
 			if (this->state != State::COOKIE_WAIT)
 			{
-				MS_DEBUG_TAG(sctp, "ignoring received INIT-ACK chunk when not in COOKIE_WAIT state");
+				MS_DEBUG_TAG(sctp, "ignoring INIT-ACK chunk when not in COOKIE_WAIT state");
 
 				return;
 			}
@@ -1567,8 +1571,7 @@ namespace RTC
 
 			if (!stateCookieParameter || !stateCookieParameter->GetCookie())
 			{
-				MS_WARN_TAG(
-				  sctp, "ignoring received INIT-ACK chunk without StateCookieParameter or without cookie");
+				MS_WARN_TAG(sctp, "ignoring INIT-ACK chunk without StateCookieParameter or without cookie");
 
 				auto packet = CreatePacketWithVerificationTag(this->preTcb.localVerificationTag);
 				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
@@ -1643,10 +1646,10 @@ namespace RTC
 
 			if (!receivedCookieEchoChunk->HasCookie())
 			{
-				MS_WARN_TAG(sctp, "ignoring received COOKIE-ECHO chunk without cookie");
+				MS_WARN_TAG(sctp, "ignoring invalid COOKIE-ECHO chunk without cookie");
 
 				this->associationListenerDeferrer.OnAssociationError(
-				  Types::ErrorKind::PARSE_FAILED, "received COOKIE-ECHO chunk without cookie");
+				  Types::ErrorKind::PARSE_FAILED, "received COOKIE-ECHO chunk has no cookie");
 
 				return;
 			}
