@@ -24,6 +24,7 @@ endif
 	clean-pip \
 	clean-subprojects \
 	clean-all \
+	check-wrap-status \
 	update-wrap-file \
 	mediasoup-worker \
 	libmediasoup-worker \
@@ -75,9 +76,12 @@ clean-subprojects: invoke
 clean-all: invoke
 	"$(PYTHON)" -m invoke clean-all
 
+check-wrap-status: invoke
+	"$(PYTHON)" -m invoke check-wrap-status
+
 # It requires the SUBPROJECT environment variable.
 update-wrap-file: invoke
-	"$(PYTHON)" -m invoke subprojects $(SUBPROJECT)
+	"$(PYTHON)" -m invoke update-wrap-file $(SUBPROJECT)
 
 mediasoup-worker: invoke
 	"$(PYTHON)" -m invoke mediasoup-worker

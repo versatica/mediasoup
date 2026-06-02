@@ -237,6 +237,19 @@ def clean_all(ctx):
 
 
 @task(pre=[meson_ninja])
+def check_wrap_status(ctx):
+    """
+    Check status of subprojects
+    """
+    with cd_worker():
+        ctx.run(
+            f'"{MESON}" wrap status',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
+
+@task(pre=[meson_ninja])
 def update_wrap_file(ctx, subproject):
     """
     Update the wrap file of a subproject
