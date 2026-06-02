@@ -212,7 +212,7 @@ Builds a Xcode project for the mediasoup worker subproject.
 
 ### `invoke lint`
 
-Validates mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and rules in `worker/.clang-format`.
+Validates mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and rules in `worker/.clang-format`. It also validates Python code within `worker` folder (i.e. `worker/tasks.py` file).
 
 **Requirements:**
 
