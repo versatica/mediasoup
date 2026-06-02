@@ -4,7 +4,7 @@ target-version = "py313"
 line-length = 92
 
 include = [
-	"tasks.py",
+    "tasks.py",
 ]
 
 [lint]
