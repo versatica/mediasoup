@@ -278,11 +278,18 @@ namespace RTC
 				}
 
 				const auto* cb = new onQueuedCallback(
-				  [&request](bool queued, bool sctpSendBufferFull)
+				  [this, &request](bool queued, bool sctpSendBufferFull)
 				  {
 					  if (queued)
 					  {
-						  request->Accept();
+						  uint32_t bufferedAmount{ 0 };
+
+						  this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
+
+						  auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
+						    request->GetBufferBuilder(), bufferedAmount);
+
+						  request->Accept(FBS::Response::Body::DataConsumer_SendResponse, responseOffset);
 					  }
 					  else
 					  {

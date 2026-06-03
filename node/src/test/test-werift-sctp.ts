@@ -220,4 +220,21 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			bytesSent: recvMessageBytes,
 		},
 	]);
+
+	// console.log(
+	// 	'--- getBufferedAmount():',
+	// 	await ctx.dataConsumer!.getBufferedAmount()
+	// );
+
+	for (let i = 0; i < 100000; i++) {
+		const bufferedAmount = await ctx.dataConsumer!.send('hola');
+		if (bufferedAmount > 0) {
+			console.log('--- bufferedAmount:', bufferedAmount);
+		}
+	}
+
+	console.log(
+		'--- FIN getBufferedAmount():',
+		await ctx.dataConsumer!.getBufferedAmount()
+	);
 }, 10000);

@@ -314,7 +314,7 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 		return data.bufferedAmount();
 	}
 
-	async send(message: string | Buffer, ppid?: number): Promise<void> {
+	async send(message: string | Buffer, ppid?: number): Promise<number> {
 		if (typeof message !== 'string' && !Buffer.isBuffer(message)) {
 			throw new TypeError('message must be a string or a Buffer');
 		}
@@ -370,12 +370,18 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 			dataOffset
 		);
 
-		await this.#channel.request(
+		const response = await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_SEND,
 			FbsRequest.Body.DataConsumer_SendRequest,
 			requestOffset,
 			this.#internal.dataConsumerId
 		);
+
+		const data = new FbsDataConsumer.GetBufferedAmountResponse();
+
+		response.body(data);
+
+		return data.bufferedAmount();
 	}
 
 	async setSubchannels(subchannels: number[]): Promise<void> {
