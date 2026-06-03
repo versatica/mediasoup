@@ -96,6 +96,7 @@
 		"test:worker": "node npm-scripts.mjs test:worker",
 		"coverage": "node npm-scripts.mjs coverage:node",
 		"coverage:node": "node npm-scripts.mjs coverage:node",
+		"publish:dry-run": "node npm-scripts.mjs publish:dry-run",
 		"release:check": "node npm-scripts.mjs release:check",
 		"release": "node npm-scripts.mjs release"
 	},

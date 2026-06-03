@@ -39,6 +39,7 @@ cargo publish
 ## Notes
 
 - Depending on the state in `worker` directory you may need to run `invoke clean-all` or `make clean-all` in `worker` directory first.
+- You can have `KEEP_BUILD_ARTIFACTS=1` exported in your shell (handy to speed up regular local builds) and still publish: `mediasoup-sys`'s `build.rs` detects the `cargo publish` / `cargo package` verification step (Cargo builds the crate inside `target/package/`) and always cleans the Meson subprojects it extracts into the source tree, regardless of `KEEP_BUILD_ARTIFACTS`. This avoids the "Source directory was modified by build.rs" error.
 - `cargo publish` will create the crate package, check if all necessary dependencies are already present on [crates.io](https://crates.io/), will then compile the package (to ensure that you don't publish a broken version) and will upload it to [crates.io](https://crates.io/).
 - Never publish from random branches or local state that is not on GitHub. If you have local files modified Cargo will refuse to publish until you commit all the changes.
 
@@ -46,7 +47,15 @@ cargo publish
 
 ### Check crate without publishing
 
-If you want to do everything except publishing itself, `cargo package` command exists. You can also run `cargo package --dry-run` to avoid package generation or `cargo publish --dry-run`.
+- If you want to do everything except the upload itself, run `cargo publish --dry-run`, which creates the package and compiles it for verification but does not upload anything.
+- To dry-run all crates at once (recommended before bumping versions), pass them as a single group so Cargo resolves the dependencies among them against the locally packaged copies instead of [crates.io](https://crates.io/). This works even if the new versions are not published yet:
+
+```sh
+cargo publish --dry-run -p mediasoup-types -p mediasoup-sys -p mediasoup
+```
+
+- To only build the package tarball without uploading, use `cargo package`.
+- To just list the files that would be included, use `cargo package --list`.
 
 ### Update required Rust version
 

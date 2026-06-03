@@ -38,6 +38,7 @@ jobs:
         build:
           - os: ubuntu-24.04
             run-cargo-fmt: true
+            run-cargo-dry-run: true
           - os: ubuntu-24.04-arm
           - os: macos-15
           - os: windows-2022
@@ -83,3 +84,17 @@ jobs:
         env:
           DOCS_RS: '1'
           RUSTDOCFLAGS: '-D rustdoc::broken-intra-doc-links -D rustdoc::private_intra_doc_links'
+
+      # NOTE: No need to unset the job-level KEEP_BUILD_ARTIFACTS here:
+      # `mediasoup-sys`'s build.rs detects the `cargo publish` verification step
+      # and always cleans the Meson subprojects it extracts into the source
+      # tree, avoiding the "Source directory was modified by build.rs" error.
+      # NOTE: Passing the three crates together as a single group (a
+      # `package-workspace` feature, stable since Rust 1.90) makes Cargo resolve
+      # the dependencies among them against the locally packaged copies instead
+      # of crates.io. This way `mediasoup` verifies fine even when the versions
+      # of `mediasoup-sys` / `mediasoup-types` it depends on have been bumped but
+      # not yet published.
+      - if: ${{ matrix.build.run-cargo-dry-run }}
+        name: cargo publish --dry-run -p mediasoup-types -p mediasoup-sys -p mediasoup
+        run: cargo publish --dry-run -p mediasoup-types -p mediasoup-sys -p mediasoup
