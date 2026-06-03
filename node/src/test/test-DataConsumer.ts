@@ -340,6 +340,14 @@ test('dataConsumer.getStats() on a DirectTransport succeeds', async () => {
 	]);
 }, 2000);
 
+test('dataConsumer.send() on a DirectTransport rejects with TypeError', async () => {
+	const dataConsumer = await ctx.directTransport!.consumeData({
+		dataProducerId: ctx.sctpDataProducer!.id,
+	});
+
+	await expect(dataConsumer.send('foo')).rejects.toThrow(TypeError);
+}, 2000);
+
 test('dataConsumer.pause() and resume() succeed', async () => {
 	const onObserverPause = jest.fn();
 	const onObserverResume = jest.fn();

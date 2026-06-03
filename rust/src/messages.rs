@@ -3175,7 +3175,7 @@ pub(crate) struct DataConsumerSendRequest {
 impl Request for DataConsumerSendRequest {
     const METHOD: request::Method = request::Method::DataconsumerSend;
     type HandlerId = DataConsumerId;
-    type Response = ();
+    type Response = u32;
 
     fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
@@ -3197,9 +3197,15 @@ impl Request for DataConsumerSendRequest {
     }
 
     fn convert_response(
-        _response: Option<response::BodyRef<'_>>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error + Send + Sync>> {
-        Ok(())
+        let Some(response::BodyRef::DataConsumerSendResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        let data = data_consumer::SendResponse::try_from(data)?;
+
+        Ok(data.buffered_amount)
     }
 }
 

@@ -2,6 +2,9 @@
 
 ### NEXT
 
+- `DataConsumer::send()`: Return the current buffered amount size (in bytes) after sending/queuing the message (PR #XXXX):
+  - Fix: move the `send()` method from `DirectDataConsumer` to `RegularDataConsumer` (where the worker actually accepts it).
+
 ### 0.22.0
 
 - New built-in SCTP stack (PR #1806):
