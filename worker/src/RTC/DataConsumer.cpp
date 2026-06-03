@@ -277,6 +277,9 @@ namespace RTC
 					  len);
 				}
 
+				// NOTE: Capturing `this` and `request` (by reference) is safe here because the
+				// callback is always invoked synchronously within this same call stack (never
+				// deferred).
 				const auto* cb = new onQueuedCallback(
 				  [this, &request](bool queued, bool sctpSendBufferFull)
 				  {
