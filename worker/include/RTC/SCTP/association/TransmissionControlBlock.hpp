@@ -3,13 +3,13 @@
 
 #include "common.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
 #include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
-#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/rx/DataTracker.hpp"
 #include "RTC/SCTP/rx/ReassemblyQueue.hpp"
@@ -37,7 +37,7 @@ namespace RTC
 		{
 		public:
 			TransmissionControlBlock(
-			  AssociationListenerInterface& associationListener,
+			  AssociationListenerDeferrer& associationListenerDeferrer,
 			  const SctpOptions& sctpOptions,
 			  SharedInterface* shared,
 			  SendQueueInterface& sendQueue,
@@ -288,7 +288,7 @@ namespace RTC
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			AssociationListenerInterface& associationListener;
+			AssociationListenerDeferrer& associationListenerDeferrer;
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;
 			PacketSender& packetSender;

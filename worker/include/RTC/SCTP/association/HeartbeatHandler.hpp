@@ -3,10 +3,10 @@
 
 #include "common.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
-#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "SharedInterface.hpp"
 
@@ -26,7 +26,7 @@ namespace RTC
 		{
 		public:
 			HeartbeatHandler(
-			  AssociationListenerInterface& associationListener,
+			  AssociationListenerDeferrer& associationListenerDeferrer,
 			  const SctpOptions& sctpOptions,
 			  SharedInterface* shared,
 			  TransmissionControlBlockContextInterface* tcbContext);
@@ -63,7 +63,7 @@ namespace RTC
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			AssociationListenerInterface& associationListener;
+			AssociationListenerDeferrer& associationListenerDeferrer;
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;
 			TransmissionControlBlockContextInterface* tcbContext;

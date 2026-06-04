@@ -21,7 +21,7 @@ namespace RTC
 		/* Instance methods. */
 
 		TransmissionControlBlock::TransmissionControlBlock(
-		  AssociationListenerInterface& associationListener,
+		  AssociationListenerDeferrer& associationListenerDeferrer,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
 		  SendQueueInterface& sendQueue,
@@ -35,7 +35,7 @@ namespace RTC
 		  const NegotiatedCapabilities& negotiatedCapabilities,
 		  size_t maxPacketLength,
 		  std::function<bool()> isAssociationEstablished)
-		  : associationListener(associationListener),
+		  : associationListenerDeferrer(associationListenerDeferrer),
 		    sctpOptions(sctpOptions),
 		    shared(shared),
 		    packetSender(packetSender),
@@ -71,7 +71,7 @@ namespace RTC
 		      sctpOptions.maxReceiverWindowBufferSize, negotiatedCapabilities.messageInterleaving),
 		    retransmissionQueue(
 		      this,
-		      this->associationListener,
+		      this->associationListenerDeferrer,
 		      localInitialTsn,
 		      remoteAdvertisedReceiverWindowCredit,
 		      sendQueue,
@@ -80,13 +80,13 @@ namespace RTC
 		      negotiatedCapabilities.partialReliability,
 		      negotiatedCapabilities.messageInterleaving),
 		    streamResetHandler(
-		      this->associationListener,
+		      this->associationListenerDeferrer,
 		      this->shared,
 		      this,
 		      std::addressof(this->dataTracker),
 		      std::addressof(this->reassemblyQueue),
 		      std::addressof(this->retransmissionQueue)),
-		    heartbeatHandler(this->associationListener, sctpOptions, this->shared, this)
+		    heartbeatHandler(this->associationListenerDeferrer, sctpOptions, this->shared, this)
 		{
 			MS_TRACE();
 
@@ -411,6 +411,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// This is a top-level timer entry point (invoked by libuv outside any other
+			// SCTP API call), so it must establish the deferrer scope itself, just like
+			// Association does in its own timer handlers.
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
+
 			// In the COOKIE-ECHO state, let the T1-COOKIE timer trigger
 			// retransmissions, to avoid having two timers doing that.
 			if (this->remoteStateCookie.has_value())
@@ -433,6 +438,11 @@ namespace RTC
 		void TransmissionControlBlock::OnDelayedAckTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			// This is a top-level timer entry point (invoked by libuv outside any other
+			// SCTP API call), so it must establish the deferrer scope itself, just like
+			// Association does in its own timer handlers.
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			this->dataTracker.HandleDelayedAckTimerExpiry();
 

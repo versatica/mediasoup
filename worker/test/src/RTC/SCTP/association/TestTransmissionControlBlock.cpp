@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
@@ -32,6 +33,8 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 	const RTC::SCTP::SctpOptions sctpOptions;
 
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
+	RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer(
+	  std::addressof(associationListener));
 	mocks::MockShared shared(/*getTimeMs*/
 	                         []()
 	                         {
@@ -54,7 +57,7 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 		sendQueue.ExpectEnableMessageInterleavingCalledWith(false);
 
 		const RTC::SCTP::TransmissionControlBlock tcb(
-		  associationListener,
+		  associationListenerDeferrer,
 		  sctpOptions,
 		  std::addressof(shared),
 		  sendQueue,
@@ -79,7 +82,7 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 		sendQueue.ExpectEnableMessageInterleavingCalledWith(true);
 
 		const RTC::SCTP::TransmissionControlBlock tcb(
-		  associationListener,
+		  associationListenerDeferrer,
 		  sctpOptions,
 		  std::addressof(shared),
 		  sendQueue,

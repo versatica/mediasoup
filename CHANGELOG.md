@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Fix SCTP crash when the t3-rtx timer expires ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 3.20.2
 
 - `PortManager`: Replace `uint64_t` hash token with exact-tuple `PortRangeKey` ([PR #1812](https://github.com/versatica/mediasoup/pull/1812), by @999purple999 and @penguinol).

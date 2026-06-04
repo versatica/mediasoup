@@ -19,11 +19,11 @@ namespace RTC
 		/* Instance methods. */
 
 		HeartbeatHandler::HeartbeatHandler(
-		  AssociationListenerInterface& associationListener,
+		  AssociationListenerDeferrer& associationListenerDeferrer,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
 		  TransmissionControlBlockContextInterface* tcbContext)
-		  : associationListener(associationListener),
+		  : associationListenerDeferrer(associationListenerDeferrer),
 		    sctpOptions(sctpOptions),
 		    shared(shared),
 		    tcbContext(tcbContext),
@@ -124,7 +124,7 @@ namespace RTC
 
 			if (!heartbeatInfoParameter)
 			{
-				this->associationListener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED,
 				  "ignoring HEARTBEAT-ACK chunk without Heartbeat Info parameter");
 
@@ -136,14 +136,14 @@ namespace RTC
 
 			if (!info)
 			{
-				this->associationListener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "ignoring Heartbeat Info parameter without info field");
 
 				return;
 			}
 			else if (infoLen != HeartbeatInfoLength)
 			{
-				this->associationListener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "ignoring Heartbeat Info parameter with wrong length");
 
 				return;
@@ -180,6 +180,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// This is a top-level timer entry point (invoked by libuv outside any other
+			// SCTP API call), so it must establish the deferrer scope itself, just like
+			// Association does in its own timer handlers.
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
+
 			if (!this->tcbContext->IsAssociationEstablished())
 			{
 				MS_DEBUG_DEV("won't send HEARTBEAT-REQUEST when SCTP association is not established");
@@ -213,6 +218,11 @@ namespace RTC
 		void HeartbeatHandler::OnTimeoutTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			// This is a top-level timer entry point (invoked by libuv outside any other
+			// SCTP API call), so it must establish the deferrer scope itself, just like
+			// Association does in its own timer handlers.
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			// Note that the timeout timer is not restarted. It will be started again when
 			// the interval timer expires.

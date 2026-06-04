@@ -4,13 +4,13 @@
 #include "common.hpp"
 #include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
 #include "RTC/SCTP/packet/parameters/IncomingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/OutgoingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
-#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/rx/DataTracker.hpp"
 #include "RTC/SCTP/rx/ReassemblyQueue.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
@@ -168,7 +168,7 @@ namespace RTC
 
 		public:
 			StreamResetHandler(
-			  AssociationListenerInterface& associationListener,
+			  AssociationListenerDeferrer& associationListenerDeferrer,
 			  SharedInterface* shared,
 			  TransmissionControlBlockContextInterface* tcbContext,
 			  DataTracker* dataTracker,
@@ -263,7 +263,7 @@ namespace RTC
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			AssociationListenerInterface& associationListener;
+			AssociationListenerDeferrer& associationListenerDeferrer;
 			SharedInterface* shared;
 			TransmissionControlBlockContextInterface* tcbContext;
 			DataTracker* dataTracker;
