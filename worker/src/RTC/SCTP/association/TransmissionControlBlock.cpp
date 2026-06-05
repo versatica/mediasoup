@@ -21,6 +21,7 @@ namespace RTC
 		/* Instance methods. */
 
 		TransmissionControlBlock::TransmissionControlBlock(
+		  TransmissionControlBlockContextInterface::Listener* listener,
 		  AssociationListenerDeferrer& associationListenerDeferrer,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
@@ -35,7 +36,8 @@ namespace RTC
 		  const NegotiatedCapabilities& negotiatedCapabilities,
 		  size_t maxPacketLength,
 		  std::function<bool()> isAssociationEstablished)
-		  : associationListenerDeferrer(associationListenerDeferrer),
+		  : listener(listener),
+		    associationListenerDeferrer(associationListenerDeferrer),
 		    sctpOptions(sctpOptions),
 		    shared(shared),
 		    packetSender(packetSender),
@@ -407,7 +409,7 @@ namespace RTC
 			}
 		}
 
-		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& stop)
 		{
 			MS_TRACE();
 
@@ -431,6 +433,15 @@ namespace RTC
 					const uint64_t nowMs = this->shared->GetTimeMs();
 
 					SendBufferedPackets(nowMs);
+				}
+				else
+				{
+					// `IncrementTxErrorCounter()` has closed (and destroyed) this TCB and
+					// its timers. Signal the firing timer to stop and don't touch any
+					// member afterwards.
+					stop = true;
+
+					return;
 				}
 			}
 		}

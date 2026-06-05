@@ -34,7 +34,7 @@ namespace RTC
 		        .listener            = this,
 		        .label               = "sctp-heartbeat-interval",
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
-		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED,
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
 		        .maxRestarts         = std::nullopt })),
 		    timeoutTimer(this->shared->CreateBackoffTimer(
@@ -42,7 +42,7 @@ namespace RTC
 		        .listener            = this,
 		        .label               = "sctp-heartbeat-timeout",
 		        .baseTimeoutMs       = sctpOptions.initialRtoMs,
-		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::FIXED,
+		        .backoffAlgorithm    = BackoffTimerHandleInterface::BackoffAlgorithm::EXPONENTIAL,
 		        .maxBackoffTimeoutMs = std::nullopt,
 		        .maxRestarts         = 0 }))
 		{
@@ -215,7 +215,7 @@ namespace RTC
 			this->tcbContext->SendPacket(packet.get());
 		}
 
-		void HeartbeatHandler::OnTimeoutTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void HeartbeatHandler::OnTimeoutTimer(uint64_t& /*baseTimeoutMs*/, bool& stop)
 		{
 			MS_TRACE();
 
@@ -228,7 +228,15 @@ namespace RTC
 			// the interval timer expires.
 			MS_ASSERT(!this->timeoutTimer->IsRunning(), "timeout timer shouldn't be running");
 
-			this->tcbContext->IncrementTxErrorCounter("hearbeat timeout");
+			if (!this->tcbContext->IncrementTxErrorCounter("hearbeat timeout"))
+			{
+				// `IncrementTxErrorCounter()` has closed (and destroyed) the TCB (and
+				// hence this HeartbeatHandler and its timers). Signal the firing timer to
+				// stop and don't touch any member afterwards.
+				stop = true;
+
+				return;
+			}
 		}
 
 		void HeartbeatHandler::OnBackoffTimer(

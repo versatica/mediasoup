@@ -12,6 +12,20 @@ namespace RTC
 		class TransmissionControlBlockContextInterface
 		{
 		public:
+			class Listener
+			{
+			public:
+				virtual ~Listener() = default;
+
+				/**
+				 * Called when the transmission error counter has exceeded its limit and
+				 * the association must therefore be closed. Mirrors dcsctp's
+				 * `CloseConnectionBecauseOfTooManyTransmissionErrors()`.
+				 */
+				virtual void OnTransmissionControlBlockTooManyTxErrors() = 0;
+			};
+
+		public:
 			virtual ~TransmissionControlBlockContextInterface() = default;
 
 			/**

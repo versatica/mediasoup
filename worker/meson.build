@@ -494,6 +494,7 @@ test_sources = [
   'test/src/RTC/RTCP/TestPacket.cpp',
   'test/src/RTC/RTCP/TestXr.cpp',
   'test/src/RTC/SCTP/sctpCommon.cpp',
+  'test/src/RTC/SCTP/association/TestAssociation.cpp',
   'test/src/RTC/SCTP/association/TestHeartbeatHandler.cpp',
   'test/src/RTC/SCTP/association/TestNegotiatedCapabilities.cpp',
   'test/src/RTC/SCTP/association/TestStateCookie.cpp',

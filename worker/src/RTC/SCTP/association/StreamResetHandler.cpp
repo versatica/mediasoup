@@ -465,7 +465,7 @@ namespace RTC
 			}
 		}
 
-		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
+		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 
@@ -486,7 +486,11 @@ namespace RTC
 				// response.
 				else if (!this->tcbContext->IncrementTxErrorCounter("RECONFIG timeout"))
 				{
-					// Timed out. The connection will close after processing the timers.
+					// `IncrementTxErrorCounter()` has closed (and destroyed) the TCB (and
+					// hence this StreamResetHandler and its timer). Signal the firing timer
+					// to stop and don't touch any member afterwards.
+					stop = true;
+
 					return;
 				}
 			}

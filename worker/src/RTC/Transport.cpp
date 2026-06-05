@@ -91,7 +91,7 @@ namespace RTC
 			};
 
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
-			  sctpOptions, this, this->shared, options->isDataChannel());
+			  sctpOptions, this, this->shared, options->isDataChannel(), /*mayConnectOnReceivedSctpData*/ true);
 		}
 
 		// Create the RTCP timer.
