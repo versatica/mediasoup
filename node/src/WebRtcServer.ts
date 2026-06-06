@@ -5,7 +5,6 @@ import type {
 	WebRtcServer,
 	IpPort,
 	IceUserNameFragment,
-	TupleHash,
 	WebRtcServerDump,
 	WebRtcServerEvents,
 	WebRtcServerObserver,
@@ -204,13 +203,6 @@ function parseIceUserNameFragment(
 ): IceUserNameFragment {
 	return {
 		localIceUsernameFragment: binary.localIceUsernameFragment()!,
-		webRtcTransportId: binary.webRtcTransportId()!,
-	};
-}
-
-function parseTupleHash(binary: FbsWebRtcServer.TupleHash): TupleHash {
-	return {
-		tupleHash: Number(binary.tupleHash()),
 		webRtcTransportId: binary.webRtcTransportId()!,
 	};
 }

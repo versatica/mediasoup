@@ -31,11 +31,6 @@ export type IceUserNameFragment = {
 	webRtcTransportId: string;
 };
 
-export type TupleHash = {
-	tupleHash: number;
-	webRtcTransportId: string;
-};
-
 export type WebRtcServerDump = {
 	id: string;
 	udpSockets: IpPort[];
