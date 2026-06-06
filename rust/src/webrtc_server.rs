@@ -50,15 +50,6 @@ pub struct WebRtcServerIceUsernameFragment {
     pub webrtc_transport_id: TransportId,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-#[doc(hidden)]
-pub struct WebRtcServerTupleHash {
-    pub tuple_hash: u64,
-    #[serde(rename = "webRtcTransportId")]
-    pub webrtc_transport_id: TransportId,
-}
-
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]

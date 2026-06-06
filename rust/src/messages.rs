@@ -18,7 +18,7 @@ use crate::rtp_observer::RtpObserverId;
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_server::{
     WebRtcServerDump, WebRtcServerIceUsernameFragment, WebRtcServerId, WebRtcServerIpPort,
-    WebRtcServerListenInfos, WebRtcServerTupleHash,
+    WebRtcServerListenInfos,
 };
 use crate::webrtc_transport::{
     WebRtcTransportListen, WebRtcTransportListenInfos, WebRtcTransportOptions,
