@@ -546,7 +546,7 @@ namespace RTC
 
 		auto tupleKey = tuple->GetTupleKey();
 
-		if (this->mapTupleWebRtcTransport.find(tupleKey) != this->mapTupleWebRtcTransport.end())
+		if (this->mapTupleWebRtcTransport.contains(tupleKey))
 		{
 			MS_WARN_TAG(ice, "tuple hash already exists in the table");
 
