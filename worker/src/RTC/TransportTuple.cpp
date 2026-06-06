@@ -3,7 +3,6 @@
 
 #include "RTC/TransportTuple.hpp"
 #include "Logger.hpp"
-#include <cstring> // std::memcpy()
 
 namespace RTC
 {
@@ -47,22 +46,6 @@ namespace RTC
 
 				NO_DEFAULT_GCC();
 		}
-	}
-
-	uint64_t TransportTuple::GenerateFnv1aHash(const uint8_t* data, size_t size)
-	{
-		MS_TRACE();
-
-		const uint64_t fnvOffsetBasis = 14695981039346656037ull;
-		const uint64_t fnvPrime       = 1099511628211ull;
-		uint64_t hash                 = fnvOffsetBasis;
-
-		for (size_t i = 0; i < size; ++i)
-		{
-			hash = (hash ^ data[i]) * fnvPrime;
-		}
-
-		return hash;
 	}
 
 	/* Instance methods. */
@@ -143,54 +126,105 @@ namespace RTC
 			}
 		}
 
-		MS_DUMP_CLEAN(indentation, "  hash: %" PRIu64, this->hash);
-
 		MS_DUMP_CLEAN(indentation, "</TransportTuple>");
 	}
 
-	void TransportTuple::GenerateHash()
+	bool TransportTuple::TupleKey::operator==(const TupleKey& other) const noexcept
 	{
 		MS_TRACE();
 
-		const auto* localSockAddr  = GetLocalAddress();
-		const auto* remoteSockAddr = GetRemoteAddress();
-
-		// Maximum buffer length for two IPv6 addresses and ports plus protocol.
-		static constexpr size_t BufferSize = ((16 + 2) * 2) + 1;
-		uint8_t buffer[BufferSize]         = {};
-		size_t idx                         = 0;
-
-		auto appendSockAddr = [&](const struct sockaddr* addr)
+		if (this->protocol != other.protocol)
 		{
-			if (addr->sa_family == AF_INET)
-			{
-				const auto* in      = reinterpret_cast<const struct sockaddr_in*>(addr);
-				const auto* ip      = reinterpret_cast<const uint8_t*>(&in->sin_addr.s_addr);
-				const uint16_t port = ntohs(in->sin_port);
+			return false;
+		}
 
-				std::memcpy(buffer + idx, ip, 4);
-				idx += 4;
-				buffer[idx++] = (port >> 8) & 0xFF;
-				buffer[idx++] = port & 0xFF;
-			}
-			else if (addr->sa_family == AF_INET6)
-			{
-				const auto* in6     = reinterpret_cast<const struct sockaddr_in6*>(addr);
-				const auto* ip      = reinterpret_cast<const uint8_t*>(&in6->sin6_addr);
-				const uint16_t port = ntohs(in6->sin6_port);
+		if (!Utils::IP::CompareAddresses(
+		      reinterpret_cast<const sockaddr*>(std::addressof(this->localAddr)),
+		      reinterpret_cast<const sockaddr*>(std::addressof(other.localAddr))))
+		{
+			return false;
+		}
 
-				std::memcpy(buffer + idx, ip, 16);
-				idx += 16;
-				buffer[idx++] = (port >> 8) & 0xFF;
-				buffer[idx++] = port & 0xFF;
-			}
+		if (!Utils::IP::CompareAddresses(
+		      reinterpret_cast<const sockaddr*>(std::addressof(this->remoteAddr)),
+		      reinterpret_cast<const sockaddr*>(std::addressof(other.remoteAddr))))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	size_t TransportTuple::TupleKeyHash::operator()(const TupleKey& key) const noexcept
+	{
+		MS_TRACE();
+
+		const auto protocolBits = static_cast<uint8_t>(key.protocol);
+		const auto familyBits   = static_cast<uint16_t>(key.localAddr.ss_family);
+
+		auto hashCombine = [](size_t& seed, size_t value)
+		{
+			seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		};
 
-		appendSockAddr(localSockAddr);
-		appendSockAddr(remoteSockAddr);
+		size_t seed = 0;
 
-		buffer[idx] = static_cast<uint8_t>(this->protocol);
+		switch (key.localAddr.ss_family)
+		{
+			case AF_INET:
+			{
+				const auto* localIn  = reinterpret_cast<const sockaddr_in*>(std::addressof(key.localAddr));
+				const auto* remoteIn = reinterpret_cast<const sockaddr_in*>(std::addressof(key.remoteAddr));
 
-		this->hash = TransportTuple::GenerateFnv1aHash(buffer, idx + 1);
+				hashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint32_t>{}(localIn->sin_addr.s_addr));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(localIn->sin_port));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint32_t>{}(remoteIn->sin_addr.s_addr));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(remoteIn->sin_port));
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				const auto* localIn6 = reinterpret_cast<const sockaddr_in6*>(std::addressof(key.localAddr));
+				const auto* remoteIn6 = reinterpret_cast<const sockaddr_in6*>(std::addressof(key.remoteAddr));
+
+				const auto* addr = localIn6->sin6_addr.s6_addr;
+
+				uint64_t hi;
+				uint64_t lo;
+				std::memcpy(std::addressof(hi), addr, sizeof(uint64_t));
+				std::memcpy(std::addressof(lo), addr + sizeof(uint64_t), sizeof(uint64_t));
+
+				hashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(hi));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(lo));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(localIn6->sin6_port));
+
+				addr = remoteIn6->sin6_addr.s6_addr;
+
+				std::memcpy(std::addressof(hi), addr, sizeof(uint64_t));
+				std::memcpy(std::addressof(lo), addr + sizeof(uint64_t), sizeof(uint64_t));
+
+				hashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(hi));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(lo));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(remoteIn6->sin6_port));
+
+				break;
+			}
+
+			default:
+			{
+				hashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+				hashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+
+				break;
+			}
+		}
+
+		return seed;
 	}
 } // namespace RTC

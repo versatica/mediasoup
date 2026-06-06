@@ -23,9 +23,39 @@ namespace RTC
 			TCP = 2
 		};
 
+		class TupleKey
+		{
+		private:
+			friend class TransportTuple;
+			friend class TupleKeyHash;
+
+		public:
+			TupleKey(Protocol protocol, const struct sockaddr* localAddr, const struct sockaddr* remoteAddr)
+			  : protocol(protocol)
+			{
+				this->localAddr  = Utils::IP::CopyAddress(localAddr);
+				this->remoteAddr = Utils::IP::CopyAddress(remoteAddr);
+			};
+
+			bool operator==(const TupleKey& other) const noexcept;
+			bool operator!=(const TupleKey& other) const noexcept
+			{
+				return !(*this == other);
+			};
+
+		private:
+			Protocol protocol{ Protocol::UDP };
+			sockaddr_storage localAddr{};
+			sockaddr_storage remoteAddr{};
+		};
+
+		struct TupleKeyHash
+		{
+			size_t operator()(const TupleKey& key) const noexcept;
+		};
+
 		static Protocol ProtocolFromFbs(FBS::Transport::Protocol protocol);
 		static FBS::Transport::Protocol ProtocolToFbs(Protocol protocol);
-		static uint64_t GenerateFnv1aHash(const uint8_t* data, size_t size);
 
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
@@ -33,18 +63,15 @@ namespace RTC
 		    udpRemoteAddr(const_cast<struct sockaddr*>(udpRemoteAddr)),
 		    protocol(Protocol::UDP)
 		{
-			GenerateHash();
 		}
 
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection)
 		  : tcpConnection(tcpConnection), protocol(Protocol::TCP)
 		{
-			GenerateHash();
 		}
 
 		explicit TransportTuple(const TransportTuple* tuple)
-		  : hash(tuple->hash),
-		    udpSocket(tuple->udpSocket),
+		  : udpSocket(tuple->udpSocket),
 		    udpRemoteAddr(tuple->udpRemoteAddr),
 		    tcpConnection(tuple->tcpConnection),
 		    localAnnouncedAddress(tuple->localAnnouncedAddress),
@@ -74,7 +101,31 @@ namespace RTC
 
 		bool Compare(const TransportTuple* tuple) const
 		{
-			return this->hash == tuple->hash;
+			if (this->protocol != tuple->protocol)
+			{
+				return false;
+			}
+
+			if (this->protocol == Protocol::UDP)
+			{
+				if (this->udpSocket != tuple->udpSocket)
+				{
+					return false;
+				}
+
+				if (!Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->udpRemoteAddr))
+				{
+					return false;
+				}
+			}
+			else
+			{
+				if (this->tcpConnection != tuple->tcpConnection)
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		void SetLocalAnnouncedAddress(std::string& localAnnouncedAddress)
@@ -147,12 +198,20 @@ namespace RTC
 			}
 		}
 
-	private:
-		void SetHash();
-		void GenerateHash();
-
-	public:
-		uint64_t hash{ 0u };
+		TupleKey GetTupleKey() const
+		{
+			if (this->protocol == Protocol::UDP)
+			{
+				return TupleKey(this->protocol, this->udpSocket->GetLocalAddress(), this->udpRemoteAddr);
+			}
+			else
+			{
+				return TupleKey(
+				  this->protocol,
+				  this->tcpConnection->GetLocalAddress(),
+				  this->tcpConnection->GetPeerAddress());
+			}
+		}
 
 	private:
 		// Passed by argument.
