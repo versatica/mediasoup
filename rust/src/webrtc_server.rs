@@ -70,7 +70,6 @@ pub struct WebRtcServerDump {
     #[serde(rename = "webRtcTransportIds")]
     pub webrtc_transport_ids: HashedSet<TransportId>,
     pub local_ice_username_fragments: Vec<WebRtcServerIceUsernameFragment>,
-    pub tuple_hashes: Vec<WebRtcServerTupleHash>,
 }
 
 /// Struct that protects an invariant of having non-empty list of listen infos.

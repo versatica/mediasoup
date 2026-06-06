@@ -360,14 +360,6 @@ impl Request for WebRtcServerDumpRequest {
                     webrtc_transport_id: username_fragment.web_rtc_transport_id.parse().unwrap(),
                 })
                 .collect(),
-            tuple_hashes: data
-                .tuple_hashes
-                .into_iter()
-                .map(|tuple_hash| WebRtcServerTupleHash {
-                    tuple_hash: tuple_hash.tuple_hash,
-                    webrtc_transport_id: tuple_hash.web_rtc_transport_id.parse().unwrap(),
-                })
-                .collect(),
         })
     }
 }

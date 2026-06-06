@@ -228,6 +228,5 @@ function parseWebRtcServerDump(
 			'localIceUsernameFragments',
 			parseIceUserNameFragment
 		),
-		tupleHashes: fbsUtils.parseVector(data, 'tupleHashes', parseTupleHash),
 	};
 }

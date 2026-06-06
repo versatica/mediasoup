@@ -42,7 +42,6 @@ export type WebRtcServerDump = {
 	tcpServers: IpPort[];
 	webRtcTransportIds: string[];
 	localIceUsernameFragments: IceUserNameFragment[];
-	tupleHashes: TupleHash[];
 };
 
 export type WebRtcServerEvents = {

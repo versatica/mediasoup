@@ -80,7 +80,6 @@ test('worker.createWebRtcServer() succeeds', async () => {
 		tcpServers: [{ ip: '127.0.0.1', port: port2 }],
 		webRtcTransportIds: [],
 		localIceUsernameFragments: [],
-		tupleHashes: [],
 	});
 
 	// API not exposed in the interface.
@@ -149,7 +148,6 @@ test('worker.createWebRtcServer() with portRange succeeds', async () => {
 		tcpServers: [{ ip: '127.0.0.1', port: port2 }],
 		webRtcTransportIds: [],
 		localIceUsernameFragments: [],
-		tupleHashes: [],
 	});
 
 	// API not exposed in the interface.
@@ -205,7 +203,6 @@ test('worker.createWebRtcServer() without specifying port/portRange succeeds', a
 		tcpServers: [{ ip: '127.0.0.1', port: expect.any(Number) }],
 		webRtcTransportIds: [],
 		localIceUsernameFragments: [],
-		tupleHashes: [],
 	});
 
 	// API not exposed in the interface.
@@ -471,7 +468,6 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 		localIceUsernameFragments: [
 			{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id },
 		],
-		tupleHashes: [],
 	});
 
 	transport.close();
@@ -492,7 +488,6 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 		tcpServers: [{ ip: '127.0.0.1', port: port2 }],
 		webRtcTransportIds: [],
 		localIceUsernameFragments: [],
-		tupleHashes: [],
 	});
 }, 2000);
 
@@ -575,7 +570,6 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 		localIceUsernameFragments: [
 			{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id },
 		],
-		tupleHashes: [],
 	});
 
 	// Let's restart ICE in the transport so it should add a new entry in
@@ -591,7 +585,6 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 			{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id },
 			{ /* localIceUsernameFragment: yyy, */ webRtcTransportId: transport.id },
 		],
-		tupleHashes: [],
 	});
 
 	const onObserverClose = jest.fn();
