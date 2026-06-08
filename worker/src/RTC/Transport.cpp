@@ -13,7 +13,6 @@
 #include "RTC/BweType.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/Consumer.hpp"
-// #include "RTC/PipeConsumer.hpp" // TODO: PipeConsumer not yet ported to new Consumer.
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
