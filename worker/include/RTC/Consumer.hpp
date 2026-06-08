@@ -23,7 +23,6 @@
 #include <ankerl/unordered_dense.h>
 #include <bitset>
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 
