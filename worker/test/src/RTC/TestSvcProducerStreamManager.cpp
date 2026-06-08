@@ -11,9 +11,7 @@ namespace
 {
 	using RtpPacketProcessResult = RTC::ProducerStreamManager::RtpPacketProcessResult;
 
-	// NOLINTBEGIN(readability-identifier-naming)
-	constexpr uint32_t mappedSsrc = 1234567890;
-	// NOLINTEND(readability-identifier-naming)
+	constexpr uint32_t MappedSsrc = 1234567890;
 
 	class MockListener : public RTC::ProducerStreamManager::Listener
 	{
@@ -166,7 +164,7 @@ namespace
 	  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext = nullptr)
 	{
 		RTC::RtpEncodingParameters encoding;
-		encoding.ssrc = mappedSsrc;
+		encoding.ssrc = MappedSsrc;
 		const std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings{ encoding };
 
 		if (!encodingContext)
@@ -185,7 +183,7 @@ namespace
 	}
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(
-	  uint32_t ssrc = mappedSsrc, uint8_t spatialLayers = 3u, uint8_t temporalLayers = 3u)
+	  uint32_t ssrc = MappedSsrc, uint8_t spatialLayers = 3u, uint8_t temporalLayers = 3u)
 	{
 		RTC::RTP::RtpStream::Params params;
 
@@ -226,7 +224,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 	  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
 	packet->SetPayloadType(1);
-	packet->SetSsrc(mappedSsrc);
+	packet->SetSsrc(MappedSsrc);
 	packet->SetTimestamp(1000);
 	packet->SetPayloadLength(40);
 
@@ -236,7 +234,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// Default target layers are -1,-1 — packet must be dropped.
 		packet->SetSequenceNumber(1);
@@ -252,7 +250,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// Set only spatial — temporal stays -1.
 		manager->UpdateTargetLayers(0, -1);
@@ -270,7 +268,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// In SVC, syncRequired is set by OnTransportConnected/OnResumed, not by
@@ -294,7 +292,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// syncRequired is only set by OnTransportConnected/OnResumed in SVC.
@@ -332,7 +330,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// syncRequired is only set by OnTransportConnected/OnResumed in SVC.
@@ -375,7 +373,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// Trigger sync via OnTransportConnected, then re-apply target.
@@ -411,7 +409,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  std::move(encodingContext));
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// Trigger sync via OnTransportConnected, then re-apply target.
@@ -447,7 +445,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// Trigger sync via OnTransportConnected, then re-apply target.
@@ -482,7 +480,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// Trigger sync, then re-apply target.
@@ -515,7 +513,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(1, 1);
 
 		// Reset.
@@ -534,7 +532,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		const auto countBefore = listener.layersChangedCount;
 
@@ -549,7 +547,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// Start at layer 0.
 		manager->UpdateTargetLayers(0, 0);
@@ -560,7 +558,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		manager->UpdateTargetLayers(1, 0);
 
 		REQUIRE(listener.keyFrameRequestCount > keyFrameRequestCountBefore);
-		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
+		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
 	SECTION("GetProducerCurrentRtpStream() returns nullptr when current spatial layer is -1")
@@ -569,7 +567,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// No target set yet — current spatial layer is -1.
 		REQUIRE(manager->GetProducerCurrentRtpStream() == nullptr);
@@ -582,7 +580,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		REQUIRE(manager->GetProducerTargetRtpStream() == nullptr);
 	}
@@ -593,7 +591,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		REQUIRE(manager->GetProducerTargetRtpStream() == rtpStream.get());
@@ -609,7 +607,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		REQUIRE(manager->IsActive() == false);
 	}
@@ -629,14 +627,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		listener.keyFrameRequestCount = 0;
 		manager->RequestKeyFrame();
 
 		REQUIRE(listener.keyFrameRequestCount == 1);
-		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
+		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
 	SECTION("RequestKeyFrameForTargetSpatialLayer() delegates to single-SSRC RequestKeyFrame()")
@@ -645,14 +643,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(1, 0);
 
 		listener.keyFrameRequestCount = 0;
 		manager->RequestKeyFrameForTargetSpatialLayer();
 
 		REQUIRE(listener.keyFrameRequestCount == 1);
-		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
+		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
 	SECTION("RequestKeyFrameForCurrentSpatialLayer() delegates to single-SSRC RequestKeyFrame()")
@@ -664,7 +662,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// Sync so we have a current layer.
@@ -676,7 +674,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		manager->RequestKeyFrameForCurrentSpatialLayer();
 
 		REQUIRE(listener.keyFrameRequestCount == 1);
-		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
+		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
 	SECTION("OnTransportConnected() sets syncRequired")
@@ -688,7 +686,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// First OnTransportConnected to set syncRequired, then sync with a keyframe.
@@ -728,9 +726,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		MockListener listener;
 		// Use preferred layer 0 so RecalculateTargetLayers can find it with spatial-layer-0 bitrate.
 		auto manager   = createManager(&listener, /*preferredLayers*/ { 0, 0 });
-		auto rtpStream = createRtpStreamRecv(mappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// Feed packets so GetSpatialLayerBitrate(0) returns non-zero.
 		// Packets without a PayloadDescriptorHandler default to spatialLayer=0.
@@ -744,7 +742,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		manager->OnTransportConnected();
 
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
-		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
+		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
 	SECTION("OnTransportConnected() does not request keyframe when not active")
@@ -766,7 +764,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(1, 1);
 
 		manager->OnTransportDisconnected();
@@ -784,7 +782,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(2, 2);
 
 		manager->OnPaused();
@@ -801,9 +799,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		MockListener listener;
 		// Use preferred layer 0 so RecalculateTargetLayers can find it with spatial-layer-0 bitrate.
 		auto manager   = createManager(&listener, /*preferredLayers*/ { 0, 0 });
-		auto rtpStream = createRtpStreamRecv(mappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// Feed packets so GetSpatialLayerBitrate(0) returns non-zero.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
@@ -822,7 +820,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		manager->OnResumed();
 
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
-		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
+		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
 	SECTION("OnResumed() sets syncRequired: next packet is a sync packet")
@@ -834,7 +832,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(0, 0);
 
 		// First sync via OnTransportConnected + keyframe.
@@ -879,10 +877,10 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto rtpStream0 = createRtpStreamRecv();
 		auto rtpStream1 = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc);
 
 		// Replace with a new stream.
-		manager->ProducerNewRtpStream(rtpStream1.get(), mappedSsrc);
+		manager->ProducerNewRtpStream(rtpStream1.get(), MappedSsrc);
 
 		// GetProducerTargetRtpStream still returns the new stream when target is set.
 		manager->UpdateTargetLayers(0, 0);
@@ -896,7 +894,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->UpdateTargetLayers(1, 1);
 
 		const auto layersChangedBefore = listener.layersChangedCount;
@@ -915,7 +913,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// First bring score to 0 so target becomes -1.
 		manager->ProducerRtpStreamScore(rtpStream.get(), /*score*/ 0, /*previousScore*/ 7);
@@ -947,7 +945,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		// Score is 0 by default (no RTP received + inactivity check disabled).
@@ -970,9 +968,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(mappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		// Feed packets so the stream has non-zero bitrate.
@@ -1004,9 +1002,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(mappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		// Feed packets so the stream has non-zero bitrate.
@@ -1037,9 +1035,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ false,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(mappedSsrc, /*spatialLayers*/ 3u, /*temporalLayers*/ 3u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 3u, /*temporalLayers*/ 3u);
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		// Manually set current to layer 2 via ProcessRtpPacket() sync.
@@ -1090,9 +1088,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(mappedSsrc, 3u, 3u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, 3u, 3u);
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
@@ -1115,9 +1113,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(mappedSsrc, 3u, 3u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, 3u, 3u);
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		// Feed packets so total stream bitrate > 0.
@@ -1151,7 +1149,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// Score is 0 by default.
 		RTC::ConsumerTypes::VideoLayers newTargetLayers;
@@ -1174,7 +1172,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  std::move(encodingContext));
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// For K-SVC, even a downgrade should trigger a keyframe request.
 		manager->UpdateTargetLayers(2, 0);
@@ -1185,7 +1183,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		manager->UpdateTargetLayers(0, 0);
 
 		REQUIRE(listener.keyFrameRequestCount > keyFrameRequestCountBefore);
-		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
+		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
 	SECTION("Full SVC: UpdateTargetLayers() does NOT request keyframe on spatial downgrade")
@@ -1200,7 +1198,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  std::move(encodingContext));
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// Manually set target AND current spatial layer to 2 so that a downgrade
 		// to 0 does not qualify as an upgrade (newTarget 0 < current 2).
@@ -1227,9 +1225,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(mappedSsrc, 1u, 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, 1u, 1u);
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
@@ -1258,9 +1256,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producer-stream-manager][svc]")
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(mappedSsrc, 1u, 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, 1u, 1u);
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);

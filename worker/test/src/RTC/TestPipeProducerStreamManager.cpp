@@ -9,11 +9,9 @@ namespace
 {
 	using RtpPacketProcessResult = RTC::ProducerStreamManager::RtpPacketProcessResult;
 
-	// NOLINTBEGIN(readability-identifier-naming)
-	constexpr uint32_t mappedSsrc0 = 1000;
-	constexpr uint32_t mappedSsrc1 = 2000;
-	constexpr uint32_t mappedSsrc2 = 3000;
-	// NOLINTEND(readability-identifier-naming)
+	constexpr uint32_t MappedSsrc0 = 1000;
+	constexpr uint32_t MappedSsrc1 = 2000;
+	constexpr uint32_t MappedSsrc2 = 3000;
 
 	class MockListener : public RTC::ProducerStreamManager::Listener
 	{
@@ -106,7 +104,7 @@ namespace
 
 	std::unique_ptr<RTC::PipeProducerStreamManager> createManager(
 	  MockListener* listener,
-	  const std::vector<uint32_t>& ssrcs = { mappedSsrc0, mappedSsrc1, mappedSsrc2 },
+	  const std::vector<uint32_t>& ssrcs = { MappedSsrc0, MappedSsrc1, MappedSsrc2 },
 	  bool keyFrameSupported             = true,
 	  RTC::Media::Kind kind              = RTC::Media::Kind::VIDEO)
 	{
@@ -132,7 +130,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
 	packet->SetPayloadType(1);
-	packet->SetSsrc(mappedSsrc0);
+	packet->SetSsrc(MappedSsrc0);
 	packet->SetPayloadLength(40);
 
 	SECTION("IsActive() returns listener state")
@@ -150,11 +148,11 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	SECTION("ProcessRtpPacket() returns FORWARD with isSyncPacket on first packet after connect")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { mappedSsrc0 }, /*keyFrameSupported*/ false);
+		auto manager = createManager(&listener, { MappedSsrc0 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(10);
 
 		auto result = manager->ProcessRtpPacket(
@@ -182,7 +180,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 
 		manager->OnTransportConnected();
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(10);
 
 		auto result = manager->ProcessRtpPacket(
@@ -195,12 +193,12 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	{
 		MockListener listener;
 		auto manager =
-		  createManager(&listener, { mappedSsrc0, mappedSsrc1 }, /*keyFrameSupported*/ false);
+		  createManager(&listener, { MappedSsrc0, MappedSsrc1 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 
 		// Sync stream 0.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(100);
 
 		auto result0 = manager->ProcessRtpPacket(packet.get(), false, 0, 0);
@@ -210,7 +208,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 		REQUIRE(result0.syncSeqValue == 99);
 
 		// Stream 1 syncs independently.
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(200);
 
 		auto result1 = manager->ProcessRtpPacket(packet.get(), false, 0, 0);
@@ -220,7 +218,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 		REQUIRE(result1.syncSeqValue == 199);
 
 		// Stream 0 next packet is no longer a sync packet.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(101);
 
 		auto result2 = manager->ProcessRtpPacket(packet.get(), false, 0, 0);
@@ -236,7 +234,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 
 		manager->OnTransportConnected();
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(50);
 
 		auto* handler       = new MockPayloadDescriptorHandler();
@@ -254,12 +252,12 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	SECTION("ProcessRtpPacket() returns DROP for empty payload packets")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { mappedSsrc0 }, /*keyFrameSupported*/ false);
+		auto manager = createManager(&listener, { MappedSsrc0 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 
 		// Complete sync first.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 		manager->ProcessRtpPacket(packet.get(), false, 0, 0);
 
@@ -275,11 +273,11 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	SECTION("ProcessRtpPacket() preserves original marker bit")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { mappedSsrc0 }, /*keyFrameSupported*/ false);
+		auto manager = createManager(&listener, { MappedSsrc0 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 		packet->SetMarker(true);
 
@@ -299,28 +297,28 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	SECTION("OnTransportConnected() sets sync required for all streams and requests key frames")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { mappedSsrc0, mappedSsrc1, mappedSsrc2 });
+		auto manager = createManager(&listener, { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		manager->OnTransportConnected();
 
 		REQUIRE(listener.keyFrameRequestCount == 3);
 		REQUIRE(
 		  std::find(
-		    listener.keyFrameRequestedSsrcs.begin(), listener.keyFrameRequestedSsrcs.end(), mappedSsrc0) !=
+		    listener.keyFrameRequestedSsrcs.begin(), listener.keyFrameRequestedSsrcs.end(), MappedSsrc0) !=
 		  listener.keyFrameRequestedSsrcs.end());
 		REQUIRE(
 		  std::find(
-		    listener.keyFrameRequestedSsrcs.begin(), listener.keyFrameRequestedSsrcs.end(), mappedSsrc1) !=
+		    listener.keyFrameRequestedSsrcs.begin(), listener.keyFrameRequestedSsrcs.end(), MappedSsrc1) !=
 		  listener.keyFrameRequestedSsrcs.end());
 		REQUIRE(
 		  std::find(
-		    listener.keyFrameRequestedSsrcs.begin(), listener.keyFrameRequestedSsrcs.end(), mappedSsrc2) !=
+		    listener.keyFrameRequestedSsrcs.begin(), listener.keyFrameRequestedSsrcs.end(), MappedSsrc2) !=
 		  listener.keyFrameRequestedSsrcs.end());
 
 		// All streams require a key frame before forwarding.
 		packet->SetSequenceNumber(1);
 
-		for (auto ssrc : { mappedSsrc0, mappedSsrc1, mappedSsrc2 })
+		for (auto ssrc : { MappedSsrc0, MappedSsrc1, MappedSsrc2 })
 		{
 			packet->SetSsrc(ssrc);
 
@@ -345,7 +343,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener, { mappedSsrc0 }, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
+		  &listener, { MappedSsrc0 }, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
 
 		manager->OnTransportConnected();
 
@@ -356,7 +354,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	{
 		MockListener listener;
 		auto manager =
-		  createManager(&listener, { mappedSsrc0, mappedSsrc1 }, /*keyFrameSupported*/ false);
+		  createManager(&listener, { MappedSsrc0, MappedSsrc1 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 		manager->OnTransportDisconnected();
@@ -364,7 +362,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 		// Sync cleared — packets forward immediately without waiting for key frame.
 		packet->SetSequenceNumber(1);
 
-		for (auto ssrc : { mappedSsrc0, mappedSsrc1 })
+		for (auto ssrc : { MappedSsrc0, MappedSsrc1 })
 		{
 			packet->SetSsrc(ssrc);
 
@@ -378,12 +376,12 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	SECTION("OnPaused() clears sync required for all streams")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { mappedSsrc0 }, /*keyFrameSupported*/ false);
+		auto manager = createManager(&listener, { MappedSsrc0 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 		manager->OnPaused();
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 
 		auto result = manager->ProcessRtpPacket(packet.get(), false, 0, 0);
@@ -395,7 +393,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	SECTION("OnResumed() sets sync required and requests key frames for all streams")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { mappedSsrc0, mappedSsrc1 });
+		auto manager = createManager(&listener, { MappedSsrc0, MappedSsrc1 });
 
 		manager->OnTransportConnected();
 
@@ -408,7 +406,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 		// All streams need sync again.
 		packet->SetSequenceNumber(1);
 
-		for (auto ssrc : { mappedSsrc0, mappedSsrc1 })
+		for (auto ssrc : { MappedSsrc0, MappedSsrc1 })
 		{
 			packet->SetSsrc(ssrc);
 
@@ -421,7 +419,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	SECTION("RequestKeyFrame() requests for all video streams")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { mappedSsrc0, mappedSsrc1, mappedSsrc2 });
+		auto manager = createManager(&listener, { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		manager->RequestKeyFrame();
 
@@ -432,7 +430,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producer-stream-manager][pipe]")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener, { mappedSsrc0 }, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
+		  &listener, { MappedSsrc0 }, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
 
 		manager->RequestKeyFrame();
 

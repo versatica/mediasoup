@@ -11,9 +11,7 @@ namespace
 {
 	using RtpPacketProcessResult = RTC::ProducerStreamManager::RtpPacketProcessResult;
 
-	// NOLINTBEGIN(readability-identifier-naming)
-	constexpr uint32_t mappedSsrc = 1234567890;
-	// NOLINTEND(readability-identifier-naming)
+	constexpr uint32_t MappedSsrc = 1234567890;
 
 	class MockListener : public RTC::ProducerStreamManager::Listener
 	{
@@ -150,7 +148,7 @@ namespace
 	  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext = nullptr)
 	{
 		RTC::RtpEncodingParameters encoding;
-		encoding.ssrc = mappedSsrc;
+		encoding.ssrc = MappedSsrc;
 
 		const std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings{ encoding };
 		const RTC::ConsumerTypes::VideoLayers preferredLayers;
@@ -169,7 +167,7 @@ namespace
 	{
 		RTC::RTP::RtpStream::Params params;
 
-		params.ssrc      = mappedSsrc;
+		params.ssrc      = MappedSsrc;
 		params.clockRate = 90000;
 
 		return std::make_unique<RTC::RTP::RtpStreamRecv>(&streamRecvListener, &shared, params, 0u, false);
@@ -204,7 +202,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 	  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
 	packet->SetPayloadType(1);
-	packet->SetSsrc(mappedSsrc);
+	packet->SetSsrc(MappedSsrc);
 	packet->SetPayloadLength(40);
 
 	SECTION("returns BUFFER when sync required and packet is not a keyframe")
@@ -213,7 +211,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->OnTransportConnected();
 
 		auto result = manager->ProcessRtpPacket(
@@ -228,7 +226,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->OnTransportConnected();
 		const uint16_t seq{ 100 };
 
@@ -254,7 +252,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener, /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->OnTransportConnected();
 
 		packet->SetSequenceNumber(1);
@@ -276,7 +274,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		  std::move(encodingContext));
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->OnTransportConnected();
 
 		packet->SetSequenceNumber(1);
@@ -298,7 +296,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener, /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->OnTransportConnected();
 
 		const uint16_t seq{ 100 };
@@ -321,7 +319,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener, /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->OnTransportConnected();
 
 		// Complete sync with first packet.
@@ -347,13 +345,13 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
 		// OnTransportConnected should request a keyframe since the manager is active.
 		manager->OnTransportConnected();
 
 		REQUIRE(listener.keyFrameRequestCount == 1);
-		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == mappedSsrc);
+		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
 
 	SECTION("OnTransportConnected() does not request keyframe when not active")
@@ -375,7 +373,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->OnTransportConnected();
 
 		const int keyFrameCount = listener.keyFrameRequestCount;
@@ -400,7 +398,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 		manager->OnTransportConnected();
 
@@ -421,7 +419,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 		manager->OnTransportConnected();
 
@@ -443,7 +441,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 		manager->OnTransportConnected();
 
@@ -471,7 +469,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 		manager->OnTransportConnected();
 
@@ -498,7 +496,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 		manager->OnTransportConnected();
 
@@ -518,7 +516,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]"
 		auto manager   = createManager(&listener, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
 		auto rtpStream = createRtpStreamRecv();
 
-		manager->ProducerRtpStream(rtpStream.get(), mappedSsrc);
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 		manager->OnTransportConnected();
 

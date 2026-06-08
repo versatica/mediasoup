@@ -9,15 +9,13 @@
 
 namespace
 {
-	// NOLINTBEGIN(readability-identifier-naming)
-	constexpr uint32_t mappedSsrc0 = 1000;
-	constexpr uint32_t mappedSsrc1 = 2000;
-	constexpr uint32_t mappedSsrc2 = 3000;
+	constexpr uint32_t MappedSsrc0 = 1000;
+	constexpr uint32_t MappedSsrc1 = 2000;
+	constexpr uint32_t MappedSsrc2 = 3000;
 
-	const std::vector<uint32_t> threeSsrcs = { mappedSsrc0, mappedSsrc1, mappedSsrc2 };
-	const std::vector<uint32_t> twoSsrcs   = { mappedSsrc0, mappedSsrc1 };
-	const std::vector<uint32_t> oneSsrc    = { mappedSsrc0 };
-	// NOLINTEND(readability-identifier-naming)
+	const std::vector<uint32_t> ThreeSsrcs = { MappedSsrc0, MappedSsrc1, MappedSsrc2 };
+	const std::vector<uint32_t> TwoSsrcs   = { MappedSsrc0, MappedSsrc1 };
+	const std::vector<uint32_t> OneSsrc    = { MappedSsrc0 };
 
 	class MockListener : public RTC::ProducerStreamManager::Listener
 	{
@@ -154,7 +152,7 @@ namespace
 
 	std::unique_ptr<RTC::SimulcastProducerStreamManager> createManager(
 	  MockListener* listener,
-	  const std::vector<uint32_t>& ssrcs                                 = threeSsrcs,
+	  const std::vector<uint32_t>& ssrcs                                 = ThreeSsrcs,
 	  RTC::ConsumerTypes::VideoLayers preferredLayers                    = { 2, 2 },
 	  bool keyFrameSupported                                             = true,
 	  RTC::Media::Kind kind                                              = RTC::Media::Kind::VIDEO,
@@ -223,7 +221,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
 	packet->SetPayloadType(1);
-	packet->SetSsrc(mappedSsrc0);
+	packet->SetSsrc(MappedSsrc0);
 	packet->SetTimestamp(1000);
 	packet->SetPayloadLength(40);
 
@@ -231,14 +229,14 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 
 		// Set target layer to 0, complete sync.
 		manager->UpdateTargetLayers(0, 0);
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 
 		auto* handler       = new MockPayloadDescriptorHandler();
@@ -264,14 +262,14 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 
 		// Set target layer to 0. This sets syncRequired since target != current.
 		manager->UpdateTargetLayers(0, 0);
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 
 		auto result = manager->ProcessRtpPacket(
@@ -284,16 +282,16 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
 		// Set target layer to 0 and complete sync.
 		manager->UpdateTargetLayers(0, 0);
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 
 		auto* handler0       = new MockPayloadDescriptorHandler();
@@ -307,7 +305,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		manager->UpdateTargetLayers(1, 0);
 
 		// Send non-keyframe from layer 1 — should be buffered.
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(1);
 
 		// Explicitly set a non-keyframe handler.
@@ -341,15 +339,15 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 
 		// Set target to spatial layer 0.
 		manager->UpdateTargetLayers(0, 0);
 
 		// Sync on layer 0 with a keyframe.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 
 		auto* handler0       = new MockPayloadDescriptorHandler();
@@ -362,7 +360,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
 
 		// Now send a packet from spatial layer 1 — should be silently dropped.
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(1);
 
 		result = manager->ProcessRtpPacket(
@@ -375,18 +373,18 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	  "ProcessRtpPacket() returns SILENT_DROP when sync required and packet is from non-target spatial layer")
 	{
 		MockListener listener;
-		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto manager    = createManager(&listener, /*ssrcs*/ TwoSsrcs);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
 		// Set target layer to 0. This sets syncRequired since target != current.
 		manager->UpdateTargetLayers(0, 0);
 
 		// Send a packet from layer 1 (non-target) while sync is pending.
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(1);
 
 		auto result = manager->ProcessRtpPacket(
@@ -399,14 +397,14 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->UpdateTargetLayers(0, 0);
 
 		const uint16_t seq{ 100 };
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(seq);
 
 		auto* handler       = new MockPayloadDescriptorHandler();
@@ -426,17 +424,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		MockListener listener;
 		auto manager = createManager(
 		  &listener,
-		  /*ssrcs*/ threeSsrcs,
+		  /*ssrcs*/ ThreeSsrcs,
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->UpdateTargetLayers(0, 0);
 
 		const uint16_t seq{ 100 };
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(seq);
 
 		auto result = manager->ProcessRtpPacket(
@@ -452,16 +450,16 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		MockListener listener;
 		auto manager = createManager(
 		  &listener,
-		  /*ssrcs*/ threeSsrcs,
+		  /*ssrcs*/ ThreeSsrcs,
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->UpdateTargetLayers(0, 0);
 
 		// Complete sync.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 		manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
@@ -481,22 +479,22 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		MockListener listener;
 		auto manager = createManager(
 		  &listener,
-		  /*ssrcs*/ threeSsrcs,
+		  /*ssrcs*/ ThreeSsrcs,
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->UpdateTargetLayers(0, 0);
 
 		// Complete sync on layer 0.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 		manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
 
 		// Send empty payload packet on non-current layer.
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(1);
 		packet->RemovePayload();
 		auto result = manager->ProcessRtpPacket(
@@ -510,16 +508,16 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		MockListener listener;
 		auto manager = createManager(
 		  &listener,
-		  /*ssrcs*/ threeSsrcs,
+		  /*ssrcs*/ ThreeSsrcs,
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->UpdateTargetLayers(0, 0);
 
 		// Complete sync with first packet.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 		manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
@@ -540,19 +538,19 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		MockListener listener;
 		auto manager = createManager(
 		  &listener,
-		  /*ssrcs*/ twoSsrcs,
+		  /*ssrcs*/ TwoSsrcs,
 		  /*preferredLayers*/ { 1, 0 },
 		  /*keyFrameSupported*/ false);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
 		// Set target layer to 0 and sync.
 		manager->UpdateTargetLayers(0, 0);
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 		manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
@@ -562,7 +560,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		// Switch to layer 1 — keyFrameSupported=false so first packet syncs.
 		manager->UpdateTargetLayers(1, 0);
 
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(1);
 		auto result = manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
@@ -580,7 +578,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(result.spatialLayerSwitched == false);
 
 		// Packets from old layer 0 should be silently dropped.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(2);
 		result = manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
@@ -593,12 +591,12 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		MockListener listener;
 		auto manager = createManager(
 		  &listener,
-		  /*ssrcs*/ oneSsrc,
+		  /*ssrcs*/ OneSsrc,
 		  /*preferredLayers*/ { 0, 0 },
 		  /*keyFrameSupported*/ false);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 
 		// Give score > 0 so RecalculateTargetLayers keeps target at layer 0.
 		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 7, /*previousScore*/ 0);
@@ -606,7 +604,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		// Set target and sync on layer 0.
 		manager->UpdateTargetLayers(0, 0);
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 		manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
@@ -634,12 +632,12 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	SECTION("OnTransportConnected() requests keyframe when active and target changes")
 	{
 		MockListener listener;
-		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto manager    = createManager(&listener, /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
 		// Both streams have score > 0 so RecalculateTargetLayers can pick layers.
 		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 7, /*previousScore*/ 0);
@@ -648,7 +646,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		// Sync on layer 1 with a keyframe.
 		manager->UpdateTargetLayers(1, 0);
 
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(1);
 
 		auto* handler       = new MockPayloadDescriptorHandler();
@@ -686,18 +684,18 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	SECTION("RecalculateTargetLayers() skips spatial layer without Sender Report")
 	{
 		MockListener listener;
-		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto manager    = createManager(&listener, /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
 		// Set target layer to 0. This sets tsReferenceSpatialLayer = 0.
 		manager->UpdateTargetLayers(0, 0);
 
 		// Sync on layer 0 with a keyframe so current = 0.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 
 		auto* handler       = new MockPayloadDescriptorHandler();
@@ -725,7 +723,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(manager->GetTargetLayers().temporal == 0);
 
 		// Verify packets on layer 0 are still forwarded with tsOffset 0.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(2);
 
 		auto result = manager->ProcessRtpPacket(
@@ -738,18 +736,18 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	SECTION("RecalculateTargetLayers() switches to preferred layer after Sender Report")
 	{
 		MockListener listener;
-		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto manager    = createManager(&listener, /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
 		// Set target layer to 0. This sets tsReferenceSpatialLayer = 0.
 		manager->UpdateTargetLayers(0, 0);
 
 		// Sync on layer 0 with a keyframe so current = 0.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 
 		auto* handler       = new MockPayloadDescriptorHandler();
@@ -764,22 +762,22 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 
 		// Feed packets to both streams so ReceiveRtcpSenderReport's UpdateScore
 		// doesn't drop the score to 0.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
 
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 10);
 
 		// Provide Sender Reports for both streams.
 		RTC::RTCP::SenderReport sr0;
-		sr0.SetSsrc(mappedSsrc0);
+		sr0.SetSsrc(MappedSsrc0);
 		sr0.SetNtpSec(1000);
 		sr0.SetNtpFrac(0);
 		sr0.SetRtpTs(90000);
 		rtpStream0->ReceiveRtcpSenderReport(&sr0);
 
 		RTC::RTCP::SenderReport sr1;
-		sr1.SetSsrc(mappedSsrc1);
+		sr1.SetSsrc(MappedSsrc1);
 		sr1.SetNtpSec(1000);
 		sr1.SetNtpFrac(0);
 		sr1.SetRtpTs(90000);
@@ -793,7 +791,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
 
 		// Send a keyframe from layer 1 to complete the spatial switch.
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(100);
 
 		auto* handler1       = new MockPayloadDescriptorHandler();
@@ -816,17 +814,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		MockListener listener;
 		auto manager = createManager(
 		  &listener,
-		  /*ssrcs*/ threeSsrcs,
+		  /*ssrcs*/ ThreeSsrcs,
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 
 		// Set target and sync on layer 0.
 		manager->UpdateTargetLayers(0, 0);
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 		manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
@@ -858,9 +856,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->UpdateTargetLayers(0, 0);
 
 		manager->OnTransportDisconnected();
@@ -875,9 +873,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->UpdateTargetLayers(0, 0);
 
 		manager->OnPaused();
@@ -891,14 +889,14 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	SECTION("IncreaseLayer() returns 0 on second call in same iteration")
 	{
 		MockListener listener;
-		auto manager    = createManager(&listener, /*ssrcs*/ oneSsrc, /*preferredLayers*/ { 0, 0 });
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto manager    = createManager(&listener, /*ssrcs*/ OneSsrc, /*preferredLayers*/ { 0, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->SetExternallyManagedBitrate();
 
 		// Feed packets so the stream has non-zero bitrate.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
 
 		auto nowMs = DepLibUV::GetTimeMs();
@@ -919,16 +917,16 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	SECTION("IncreaseLayer() works again after ApplyLayers()")
 	{
 		MockListener listener;
-		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto manager    = createManager(&listener, /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 		manager->SetExternallyManagedBitrate();
 
 		// Feed packets to layer 0.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
 
 		auto nowMs = DepLibUV::GetTimeMs();
@@ -939,7 +937,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		manager->ApplyLayers(/*rtpStreamActiveMs*/ 0u);
 
 		// Feed packets to layer 1.
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 100);
 
 		// After ApplyLayers, IncreaseLayer should work again for layer 1.
@@ -952,19 +950,19 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	SECTION("GetDesiredBitrate() returns max bitrate across all producer streams")
 	{
 		MockListener listener;
-		auto manager    = createManager(&listener, /*ssrcs*/ twoSsrcs, /*preferredLayers*/ { 1, 0 });
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto manager    = createManager(&listener, /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 		manager->SetExternallyManagedBitrate();
 
 		// Feed packets to both streams with different counts to get different bitrates.
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 50);
 
-		packet->SetSsrc(mappedSsrc1);
+		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 100);
 
 		auto nowMs    = DepLibUV::GetTimeMs();
@@ -982,9 +980,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 
 		REQUIRE(manager->GetProducerCurrentRtpStream() == nullptr);
 		REQUIRE(manager->GetCurrentSpatialLayer() == -1);
@@ -994,11 +992,11 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 	{
 		MockListener listener;
 		auto manager    = createManager(&listener);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
 		manager->UpdateTargetLayers(1, 0);
 
@@ -1012,19 +1010,19 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producer-stream-manager][simul
 		MockListener listener;
 		auto manager = createManager(
 		  &listener,
-		  /*ssrcs*/ twoSsrcs,
+		  /*ssrcs*/ TwoSsrcs,
 		  /*preferredLayers*/ { 1, 0 },
 		  /*keyFrameSupported*/ false);
-		auto rtpStream0 = createRtpStreamRecv(mappedSsrc0);
-		auto rtpStream1 = createRtpStreamRecv(mappedSsrc1);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
 
-		manager->ProducerRtpStream(rtpStream0.get(), mappedSsrc0);
-		manager->ProducerRtpStream(rtpStream1.get(), mappedSsrc1);
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
 		// Set target and sync on layer 0.
 		manager->UpdateTargetLayers(0, 0);
 
-		packet->SetSsrc(mappedSsrc0);
+		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
 		manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
