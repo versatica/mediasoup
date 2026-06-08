@@ -17,10 +17,13 @@ namespace RTC
 			public:
 				virtual ~Listener() = default;
 
+			public:
 				/**
 				 * Called when the transmission error counter has exceeded its limit and
-				 * the association must therefore be closed. Mirrors dcsctp's
-				 * `CloseConnectionBecauseOfTooManyTransmissionErrors()`.
+				 * the association must therefore be closed.
+				 *
+				 * @remarks
+				 * - It mirrors dcsctp's `CloseConnectionBecauseOfTooManyTransmissionErrors()`.
 				 */
 				virtual void OnTransmissionControlBlockTooManyTxErrors() = 0;
 			};
@@ -58,8 +61,8 @@ namespace RTC
 
 			/**
 			 * Increments the transmission error counter, given a human readable
-			 * reason. Returns `true` if the maximum error count has been reached,
-			 * `false` will be returned.
+			 * reason. Returns `false` if the maximum error count has been reached,
+			 * `true` otherwise.
 			 */
 			virtual bool IncrementTxErrorCounter(std::string_view reason) = 0;
 

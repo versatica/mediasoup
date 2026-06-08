@@ -18,7 +18,7 @@ namespace RTC
 		class RetransmissionErrorCounter
 		{
 		public:
-			RetransmissionErrorCounter(const SctpOptions& sctpOptions);
+			explicit RetransmissionErrorCounter(const SctpOptions& sctpOptions);
 
 			~RetransmissionErrorCounter();
 
