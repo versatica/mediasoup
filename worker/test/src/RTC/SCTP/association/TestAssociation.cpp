@@ -877,7 +877,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("initial metrics are unset")
 	{
-	 	const AssociationUnderTest a;
+		const AssociationUnderTest a;
 
 		REQUIRE(a.association.MakeMetrics().has_value() == false);
 	}

@@ -498,6 +498,7 @@ test_sources = [
   'test/src/RTC/SCTP/association/TestHeartbeatHandler.cpp',
   'test/src/RTC/SCTP/association/TestNegotiatedCapabilities.cpp',
   'test/src/RTC/SCTP/association/TestStateCookie.cpp',
+  'test/src/RTC/SCTP/association/TestStreamResetHandler.cpp',
   'test/src/RTC/SCTP/association/TestTransmissionControlBlock.cpp',
   'test/src/RTC/SCTP/rx/TestDataTracker.cpp',
   'test/src/RTC/SCTP/rx/TestInterleavedReassemblyStreams.cpp',
