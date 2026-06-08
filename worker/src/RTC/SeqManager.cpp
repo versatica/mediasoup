@@ -63,9 +63,15 @@ namespace RTC
 		{
 			this->maxInput   = input;
 			this->maxDropped = input;
-			// Insert input in the last position.
-			// Explicitly insert at the end, which is more performant.
-			this->dropped.insert(this->dropped.end(), input);
+			// Insert input in sorted order, if not present.
+			const SeqLowerThan seqLowerThan;
+			const auto it =
+			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
+
+			if (it == this->dropped.end() || *it != input)
+			{
+				this->dropped.insert(it, input);
+			}
 
 			ClearDropped();
 		}
@@ -74,7 +80,15 @@ namespace RTC
 		// Allows for properly accounting for out of order drops until an input is forwarded.
 		else if (this->maxInput == this->maxDropped && SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
 		{
-			this->dropped.insert(input);
+			// Insert input in sorted order, if not present.
+			const SeqLowerThan seqLowerThan;
+			const auto it =
+			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
+
+			if (it == this->dropped.end() || *it != input)
+			{
+				this->dropped.insert(it, input);
+			}
 
 			ClearDropped();
 		}
@@ -112,22 +126,24 @@ namespace RTC
 		{
 			goto done;
 		}
-		// This input was dropped.
-		else if (this->dropped.find(input) != this->dropped.end())
-		{
-			MS_DEBUG_DEV("trying to send a dropped input");
-
-			return false;
-		}
-		// There are dropped inputs, calculate 'base' for this input.
 		else
 		{
-			auto droppedCount = this->dropped.size();
+			const SeqLowerThan seqLowerThan;
+			const auto it =
+			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
 
-			// Get the first dropped input which is higher than or equal 'input'.
-			auto it = this->dropped.lower_bound(input);
+			if (it != this->dropped.end() && *it == input)
+			{
+				MS_DEBUG_DEV("trying to send a dropped input");
 
-			droppedCount -= std::distance(it, this->dropped.end());
+				return false;
+			}
+
+			// There are dropped inputs, calculate 'base' for this input.
+			auto droppedCount = std::distance(
+			  this->dropped.begin(),
+			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, SeqLowerThan()));
+
 			base = (this->base - droppedCount) & SeqManager::MaxValue;
 		}
 
@@ -191,19 +207,16 @@ namespace RTC
 
 		const size_t previousDroppedSize = this->dropped.size();
 
-		for (auto it = this->dropped.begin(); it != this->dropped.end();)
-		{
-			auto value = *it;
-
-			if (SeqManager<T, N>::IsSeqHigherThan(value, this->maxInput))
-			{
-				it = this->dropped.erase(it);
-			}
-			else
-			{
-				break;
-			}
-		}
+		// Cleanup dropped values.
+		this->dropped.erase(
+		  this->dropped.begin(),
+		  std::find_if(
+		    this->dropped.begin(),
+		    this->dropped.end(),
+		    [this](T value)
+		    {
+			    return !SeqManager<T, N>::IsSeqHigherThan(value, this->maxInput);
+		    }));
 
 		// Adapt base.
 		this->base = (this->base - (previousDroppedSize - this->dropped.size())) & SeqManager::MaxValue;
