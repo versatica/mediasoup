@@ -173,9 +173,11 @@ namespace RTC
 
 				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
 				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint32_t>{}(localIn->sin_addr.s_addr));
+				Utils::Hash::Combine(
+				  seed, ankerl::unordered_dense::hash<uint32_t>{}(localIn->sin_addr.s_addr));
 				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(localIn->sin_port));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint32_t>{}(remoteIn->sin_addr.s_addr));
+				Utils::Hash::Combine(
+				  seed, ankerl::unordered_dense::hash<uint32_t>{}(remoteIn->sin_addr.s_addr));
 				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(remoteIn->sin_port));
 
 				break;
