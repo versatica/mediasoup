@@ -53,7 +53,8 @@ namespace RTC
 		 */
 		class Association : public AssociationInterface,
 		                    public PacketSender::Listener,
-		                    public BackoffTimerHandleInterface::Listener
+		                    public BackoffTimerHandleInterface::Listener,
+		                    public TransmissionControlBlockContextInterface::Listener
 		{
 		public:
 			/**
@@ -172,7 +173,13 @@ namespace RTC
 			  const SctpOptions& sctpOptions,
 			  AssociationListenerInterface* listener,
 			  SharedInterface* shared,
-			  bool isDataChannel);
+			  bool isDataChannel,
+			  // Whether `MayConnect()` should be called when SCTP data is received.
+			  // This is always true in production (the association auto-initiates the
+			  // connection as soon as the transport is ready or data arrives). It's
+			  // only set to false in tests that need a purely passive peer to mimic
+			  // dcsctp's asymmetric handshake.
+			  bool mayConnectOnReceivedSctpData);
 
 			~Association() override;
 
@@ -494,6 +501,10 @@ namespace RTC
 			void OnBackoffTimer(
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
+			/* Pure virtual methods inherited from TransmissionControlBlockContextInterface::Listener. */
+		public:
+			void OnTransmissionControlBlockTooManyTxErrors() override;
+
 		private:
 			// SCTP options given in the constructor.
 			SctpOptions sctpOptions;
@@ -526,6 +537,9 @@ namespace RTC
 			const size_t maxPacketLength;
 			// Whether this is DataChannel based SCTP.
 			bool isDataChannel;
+			// Whether `MayConnect()` should be called when SCTP data is received.
+			// See the constructor for details.
+			bool mayConnectOnReceivedSctpData;
 		};
 	} // namespace SCTP
 } // namespace RTC

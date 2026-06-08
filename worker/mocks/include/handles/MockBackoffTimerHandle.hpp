@@ -36,14 +36,20 @@ namespace mocks
 
 		void Start() override
 		{
-			this->running     = true;
-			this->expiresAtMs = this->getTimeMs() + ComputeNextTimeoutMs();
+			this->running = true;
+			// NOTE: Reset the expiration count, just like the real BackoffTimerHandle
+			// does, so that the backoff starts over from the base timeout.
+			this->expirationCount = 0;
+			this->expiresAtMs     = this->getTimeMs() + ComputeNextTimeoutMs();
 		}
 
 		void Stop() override
 		{
-			this->running     = false;
-			this->expiresAtMs = std::numeric_limits<uint64_t>::max();
+			this->running = false;
+			// NOTE: Reset the expiration count, just like the real BackoffTimerHandle
+			// does.
+			this->expirationCount = 0;
+			this->expiresAtMs     = std::numeric_limits<uint64_t>::max();
 		}
 
 		/**

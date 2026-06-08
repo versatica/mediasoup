@@ -18,7 +18,7 @@ namespace RTC
 		class RetransmissionErrorCounter
 		{
 		public:
-			RetransmissionErrorCounter(const SctpOptions& sctpOptions);
+			explicit RetransmissionErrorCounter(const SctpOptions& sctpOptions);
 
 			~RetransmissionErrorCounter();
 
@@ -26,14 +26,13 @@ namespace RTC
 			void Dump(int indentation = 0) const;
 
 			/**
-			 * Increments the retransmission timer. Returns `true` if the maximum
-			 * error count has been reached, `false` will be returned.
+			 * Increments the retransmission timer. Returns `false` if the maximum
+			 * error count has been reached, `true` otherwise.
 			 */
 			bool Increment(std::string_view reason);
 
 			/**
 			 * Whether maximum error count has been reached.
-			 * @return [description]
 			 */
 			bool IsExhausted() const
 			{

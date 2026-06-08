@@ -37,6 +37,7 @@ namespace RTC
 		{
 		public:
 			TransmissionControlBlock(
+			  TransmissionControlBlockContextInterface::Listener* listener,
 			  AssociationListenerDeferrer& associationListenerDeferrer,
 			  const SctpOptions& sctpOptions,
 			  SharedInterface* shared,
@@ -250,7 +251,20 @@ namespace RTC
 			 */
 			bool IncrementTxErrorCounter(std::string_view reason) override
 			{
-				return this->txErrorCounter.Increment(reason);
+				const bool withinLimit = this->txErrorCounter.Increment(reason);
+
+				if (!withinLimit)
+				{
+					// NOTE: This closes (and destroys) this TCB synchronously. It's safe to
+					// do so from within a timer handler because the handler sets the
+					// BackoffTimerHandle `stop` flag and doesn't touch any member
+					// afterwards, so the (now destroyed) firing timer won't be accessed.
+					this->listener->OnTransmissionControlBlockTooManyTxErrors();
+				}
+
+				// NOTE: `withinLimit` is a local, so this is safe even if `this` was
+				// destroyed above.
+				return withinLimit;
 			}
 
 			/**
@@ -288,6 +302,7 @@ namespace RTC
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
+			TransmissionControlBlockContextInterface::Listener* listener;
 			AssociationListenerDeferrer& associationListenerDeferrer;
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;

@@ -40,7 +40,8 @@ namespace RTC
 		  const SctpOptions& sctpOptions,
 		  AssociationListenerInterface* listener,
 		  SharedInterface* shared,
-		  bool isDataChannel)
+		  bool isDataChannel,
+		  bool mayConnectOnReceivedSctpData)
 		  : sctpOptions(sctpOptions),
 		    // Our `listener` member is a `AssociationListenerDeferrer` which takes
 		    // `listener` argument as constructor argument.
@@ -78,7 +79,8 @@ namespace RTC
 		        .maxBackoffTimeoutMs = sctpOptions.timerMaxBackoffTimeoutMs,
 		        .maxRestarts         = sctpOptions.maxRetransmissions })),
 		    maxPacketLength(Utils::Byte::PadDownTo4Bytes(this->sctpOptions.mtu)),
-		    isDataChannel(isDataChannel)
+		    isDataChannel(isDataChannel),
+		    mayConnectOnReceivedSctpData(mayConnectOnReceivedSctpData)
 		{
 			MS_TRACE();
 		}
@@ -542,7 +544,13 @@ namespace RTC
 
 			// If we are received SCTP data from the remote peer it means that we may
 			// initiate the SCTP association (if not already connected).
-			MayConnect();
+			//
+			// NOTE: This is disabled in tests that need a purely passive peer to
+			// mimic dcsctp's asymmetric handshake.
+			if (this->mayConnectOnReceivedSctpData)
+			{
+				MayConnect();
+			}
 
 			// NOTE: It's important to create the deferrer here, otherwise it may
 			// happen that MayConnect() ends calling to Connect() so we end with two
@@ -749,6 +757,7 @@ namespace RTC
 			MS_TRACE();
 
 			this->tcb = std::make_unique<TransmissionControlBlock>(
+			  this,
 			  this->associationListenerDeferrer,
 			  this->sctpOptions,
 			  this->shared,
@@ -2425,6 +2434,15 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const auto maxRestarts = this->t1InitTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->t1InitTimer->GetLabel().c_str(),
+			  this->t1InitTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			AssertState(State::COOKIE_WAIT);
@@ -2444,6 +2462,15 @@ namespace RTC
 		void Association::OnT1CookieTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = this->t1CookieTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->t1CookieTimer->GetLabel().c_str(),
+			  this->t1CookieTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
@@ -2466,6 +2493,15 @@ namespace RTC
 		void Association::OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = this->t2ShutdownTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->t2ShutdownTimer->GetLabel().c_str(),
+			  this->t2ShutdownTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			AssertState(State::SHUTDOWN_SENT, State::SHUTDOWN_ACK_SENT);
 			AssertHasTcb();
@@ -2811,15 +2847,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto maxRestarts = backoffTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "%s timer has expired [expìrations:%zu/%s]",
-			  backoffTimer->GetLabel().c_str(),
-			  backoffTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
-
 			if (backoffTimer == this->t1InitTimer.get())
 			{
 				OnT1InitTimer(baseTimeoutMs, stop);
@@ -2832,6 +2859,19 @@ namespace RTC
 			{
 				OnT2ShutdownTimer(baseTimeoutMs, stop);
 			}
+		}
+
+		void Association::OnTransmissionControlBlockTooManyTxErrors()
+		{
+			MS_TRACE();
+
+			// NOTE: This is invoked from within a TCB timer handler (t3-rtx, heartbeat
+			// or RE-CONFIG timeout). `InternalClose()` destroys the TCB synchronously,
+			// which is safe because the calling timer handler sets the BackoffTimerHandle
+			// `stop` flag and doesn't touch any member afterwards. `InternalClose()` does
+			// not establish its own deferrer scope, so it relies on the active one set up
+			// by the timer handler.
+			InternalClose(Types::ErrorKind::TOO_MANY_RETRIES, "too many transmission errors");
 		}
 	} // namespace SCTP
 } // namespace RTC
