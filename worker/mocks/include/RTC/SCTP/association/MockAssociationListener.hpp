@@ -21,7 +21,7 @@ namespace mocks
 				{
 					this->sentPackets.emplace_back(data, data + len);
 
-					return true;
+					return this->sendDataResult;
 				}
 
 				void OnAssociationConnecting() override
@@ -253,6 +253,15 @@ namespace mocks
 					return this->inboundStreamsReset.contains(streamId);
 				}
 
+				/**
+				 * Sets the value that `OnAssociationSendData()` will return, allowing
+				 * tests to simulate a failed send.
+				 */
+				void SetSendDataResult(bool sendDataResult)
+				{
+					this->sendDataResult = sendDataResult;
+				}
+
 				bool HasSentPackets() const
 				{
 					return !this->sentPackets.empty();
@@ -344,6 +353,7 @@ namespace mocks
 				std::set<uint16_t /*streamId*/> streamsResetFailed;
 				size_t onInboundStreamsResetCalls{ 0 };
 				std::set<uint16_t /*streamId*/> inboundStreamsReset;
+				bool sendDataResult{ true };
 				std::deque<std::vector<uint8_t>> sentPackets;
 				std::deque<::RTC::SCTP::Message> receivedMessages;
 				bool transportReady{ true };

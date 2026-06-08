@@ -18,8 +18,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
-using namespace RTC::SCTP;
-
 namespace
 {
 	constexpr uint32_t Arwnd{ 131072 };
@@ -29,8 +27,8 @@ namespace
 	constexpr uint64_t RtoMs{ 250 };
 
 	/**
-	 * A StreamResetHandler under test, together with all the (real) components it
-	 * depends on, its simulated clock and listener.
+	 * A RTC::SCTP::StreamResetHandler under test, together with all the (real)
+	 * components it depends on, its simulated clock and listener.
 	 */
 	class TestStreamResetHandler
 	{
@@ -98,11 +96,12 @@ namespace
 
 		/**
 		 * Handles a received RE-CONFIG chunk within a deferrer scope, just like
-		 * Association does before dispatching to the handler.
+		 * association does before dispatching to the handler.
 		 */
-		void HandleReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk)
+		void HandleReceivedReConfigChunk(const RTC::SCTP::ReConfigChunk* receivedReConfigChunk)
 		{
-			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
+			const RTC::SCTP::AssociationListenerDeferrer::ScopedDeferrer deferrer(
+			  this->associationListenerDeferrer);
 
 			this->streamResetHandler.HandleReceivedReConfigChunk(receivedReConfigChunk);
 		}
@@ -122,9 +121,9 @@ namespace
 		};
 
 		/**
-		 * A no-op RetransmissionQueue listener.
+		 * A no-op RTC::SCTP::RetransmissionQueue listener.
 		 */
-		class RetransmissionQueueListener : public RetransmissionQueue::Listener
+		class RetransmissionQueueListener : public RTC::SCTP::RetransmissionQueue::Listener
 		{
 		public:
 			void OnRetransmissionQueueNewRttMs(uint64_t /*rttMs*/) override
@@ -139,32 +138,32 @@ namespace
 		// NOTE: Public members for testing.
 	public:
 		uint64_t nowMs{ InitialNowMs };
-		SctpOptions sctpOptions;
+		RTC::SCTP::SctpOptions sctpOptions;
 		BackoffTimerListener backoffTimerListener;
 		RetransmissionQueueListener retransmissionQueueListener;
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
-		AssociationListenerDeferrer associationListenerDeferrer{ std::addressof(
+		RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer{ std::addressof(
 			this->associationListener) };
 		mocks::MockShared shared;
 		mocks::RTC::SCTP::MockTransmissionControlBlockContext tcbContext;
 		const std::unique_ptr<BackoffTimerHandleInterface> delayedAckTimer;
 		const std::unique_ptr<BackoffTimerHandleInterface> t3RtxTimer;
-		RoundRobinSendQueue sendQueue;
-		DataTracker dataTracker;
-		ReassemblyQueue reassemblyQueue;
-		RetransmissionQueue retransmissionQueue;
-		StreamResetHandler streamResetHandler;
+		RTC::SCTP::RoundRobinSendQueue sendQueue;
+		RTC::SCTP::DataTracker dataTracker;
+		RTC::SCTP::ReassemblyQueue reassemblyQueue;
+		RTC::SCTP::RetransmissionQueue retransmissionQueue;
+		RTC::SCTP::StreamResetHandler streamResetHandler;
 	};
 } // namespace
 
-SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
+SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 {
 	SECTION("a chunk with no parameters returns an error")
 	{
 		TestStreamResetHandler test;
 
 		std::vector<uint8_t> buffer(test.sctpOptions.mtu);
-		std::unique_ptr<ReConfigChunk> reConfigChunk{ ReConfigChunk::Factory(
+		std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			buffer.data(), buffer.size()) };
 
 		test.HandleReceivedReConfigChunk(reConfigChunk.get());
@@ -178,13 +177,14 @@ SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
 		TestStreamResetHandler test;
 
 		std::vector<uint8_t> buffer(test.sctpOptions.mtu);
-		std::unique_ptr<ReConfigChunk> reConfigChunk{ ReConfigChunk::Factory(
+		std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			buffer.data(), buffer.size()) };
 
-		// Two OutgoingSsnResetRequestParameter in a RE-CONFIG is not valid.
+		// Two RTC::SCTP::OutgoingSsnResetRequestParameter in a RE-CONFIG is not valid.
 		for (const uint32_t reqSeqNbr : { 1u, 2u })
 		{
-			auto* parameter = reConfigChunk->BuildParameterInPlace<OutgoingSsnResetRequestParameter>();
+			auto* parameter =
+			  reConfigChunk->BuildParameterInPlace<RTC::SCTP::OutgoingSsnResetRequestParameter>();
 
 			parameter->SetReconfigurationRequestSequenceNumber(reqSeqNbr);
 			parameter->SetReconfigurationResponseSequenceNumber(10);
@@ -213,12 +213,12 @@ SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
 
 		test.streamResetHandler.AddStreamResetRequest(packet.get());
 
-		const auto* reConfigChunk = packet->GetFirstChunkOfType<ReConfigChunk>();
+		const auto* reConfigChunk = packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>();
 
 		REQUIRE(reConfigChunk);
 
 		const auto* parameter =
-		  reConfigChunk->GetFirstParameterOfType<OutgoingSsnResetRequestParameter>();
+		  reConfigChunk->GetFirstParameterOfType<RTC::SCTP::OutgoingSsnResetRequestParameter>();
 
 		REQUIRE(parameter);
 		REQUIRE(parameter->GetStreamIds() == std::vector<uint16_t>{ 42 });
@@ -238,12 +238,12 @@ SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
 
 		test.streamResetHandler.AddStreamResetRequest(packet.get());
 
-		const auto* reConfigChunk = packet->GetFirstChunkOfType<ReConfigChunk>();
+		const auto* reConfigChunk = packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>();
 
 		REQUIRE(reConfigChunk);
 
 		const auto* parameter =
-		  reConfigChunk->GetFirstParameterOfType<OutgoingSsnResetRequestParameter>();
+		  reConfigChunk->GetFirstParameterOfType<RTC::SCTP::OutgoingSsnResetRequestParameter>();
 
 		REQUIRE(parameter);
 
@@ -266,8 +266,9 @@ SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
 
 		test.streamResetHandler.AddStreamResetRequest(packet.get());
 
-		const auto* parameter = packet->GetFirstChunkOfType<ReConfigChunk>()
-		                          ->GetFirstParameterOfType<OutgoingSsnResetRequestParameter>();
+		const auto* parameter =
+		  packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>()
+		    ->GetFirstParameterOfType<RTC::SCTP::OutgoingSsnResetRequestParameter>();
 
 		REQUIRE(parameter);
 
@@ -275,13 +276,14 @@ SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
 
 		// Build a RE-CONFIG response with a successful result.
 		std::vector<uint8_t> responseBuffer(test.sctpOptions.mtu);
-		std::unique_ptr<ReConfigChunk> responseChunk{ ReConfigChunk::Factory(
+		std::unique_ptr<RTC::SCTP::ReConfigChunk> responseChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			responseBuffer.data(), responseBuffer.size()) };
 
-		auto* response = responseChunk->BuildParameterInPlace<ReconfigurationResponseParameter>();
+		auto* response =
+		  responseChunk->BuildParameterInPlace<RTC::SCTP::ReconfigurationResponseParameter>();
 
 		response->SetReconfigurationResponseSequenceNumber(reqSeqNbr);
-		response->SetResult(ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED);
+		response->SetResult(RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED);
 		response->Consolidate();
 
 		test.HandleReceivedReConfigChunk(responseChunk.get());
@@ -301,8 +303,9 @@ SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
 
 		test.streamResetHandler.AddStreamResetRequest(packet.get());
 
-		const auto* parameter = packet->GetFirstChunkOfType<ReConfigChunk>()
-		                          ->GetFirstParameterOfType<OutgoingSsnResetRequestParameter>();
+		const auto* parameter =
+		  packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>()
+		    ->GetFirstParameterOfType<RTC::SCTP::OutgoingSsnResetRequestParameter>();
 
 		REQUIRE(parameter);
 
@@ -310,13 +313,15 @@ SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
 
 		// Build a RE-CONFIG response with an error result.
 		std::vector<uint8_t> responseBuffer(test.sctpOptions.mtu);
-		std::unique_ptr<ReConfigChunk> responseChunk{ ReConfigChunk::Factory(
+		std::unique_ptr<RTC::SCTP::ReConfigChunk> responseChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			responseBuffer.data(), responseBuffer.size()) };
 
-		auto* response = responseChunk->BuildParameterInPlace<ReconfigurationResponseParameter>();
+		auto* response =
+		  responseChunk->BuildParameterInPlace<RTC::SCTP::ReconfigurationResponseParameter>();
 
 		response->SetReconfigurationResponseSequenceNumber(reqSeqNbr);
-		response->SetResult(ReconfigurationResponseParameter::Result::ERROR_BAD_SEQUENCE_NUMBER);
+		response->SetResult(
+		  RTC::SCTP::ReconfigurationResponseParameter::Result::ERROR_BAD_SEQUENCE_NUMBER);
 		response->Consolidate();
 
 		test.HandleReceivedReConfigChunk(responseChunk.get());
@@ -329,10 +334,11 @@ SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
 		TestStreamResetHandler test;
 
 		std::vector<uint8_t> buffer(test.sctpOptions.mtu);
-		std::unique_ptr<ReConfigChunk> reConfigChunk{ ReConfigChunk::Factory(
+		std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			buffer.data(), buffer.size()) };
 
-		auto* parameter = reConfigChunk->BuildParameterInPlace<IncomingSsnResetRequestParameter>();
+		auto* parameter =
+		  reConfigChunk->BuildParameterInPlace<RTC::SCTP::IncomingSsnResetRequestParameter>();
 
 		parameter->SetReconfigurationRequestSequenceNumber(RemoteInitialTsn);
 		parameter->AddStreamId(1);
@@ -345,14 +351,17 @@ SCENARIO("SCTP StreamResetHandler", "[sctp][streamresethandler]")
 
 		REQUIRE(!sentBuffer.empty());
 
-		std::unique_ptr<Packet> sentPacket{ Packet::Parse(sentBuffer.data(), sentBuffer.size()) };
+		std::unique_ptr<RTC::SCTP::Packet> sentPacket{ RTC::SCTP::Packet::Parse(
+			sentBuffer.data(), sentBuffer.size()) };
 
 		REQUIRE(sentPacket);
 
-		const auto* response = sentPacket->GetFirstChunkOfType<ReConfigChunk>()
-		                         ->GetFirstParameterOfType<ReconfigurationResponseParameter>();
+		const auto* response = sentPacket->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>()
+		                         ->GetFirstParameterOfType<RTC::SCTP::ReconfigurationResponseParameter>();
 
 		REQUIRE(response);
-		REQUIRE(response->GetResult() == ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO);
+		REQUIRE(
+		  response->GetResult() ==
+		  RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO);
 	}
 }
