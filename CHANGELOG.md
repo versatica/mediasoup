@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: `SeqManager`, use `std::vector` rather than `std::set` ([1807](https://github.com/versatica/mediasoup/pull/1807)).
+- Unify all consumer classes into a single one ([1731](https://github.com/versatica/mediasoup/pull/1731)).
 
 ### 3.20.4
 
