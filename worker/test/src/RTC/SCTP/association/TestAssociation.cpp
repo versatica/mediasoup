@@ -798,7 +798,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		connectAssociations(a, z);
 
-		std::vector<uint8_t> payload(a.sctpOptions.mtu * 20);
+		const std::vector<uint8_t> payload(a.sctpOptions.mtu * 20);
 
 		sendMessage(a, 1, 53, payload);
 
