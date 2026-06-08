@@ -3,14 +3,14 @@
 
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include "test/include/testHelpers.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
+#include "Utils.hpp"
+#include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 namespace sctpCommon

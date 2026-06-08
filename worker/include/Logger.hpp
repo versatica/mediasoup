@@ -96,9 +96,9 @@
 #define MS_LOGGER_HPP
 
 #include "common.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "LogLevel.hpp"
 #include "Settings.hpp"
-#include "Channel/ChannelSocket.hpp"
 #include <cstdio>  // std::snprintf(), std::fprintf(), stdout, stderr
 #include <cstdlib> // std::abort()
 #include <cstring>

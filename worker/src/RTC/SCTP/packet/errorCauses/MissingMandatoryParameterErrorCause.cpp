@@ -29,7 +29,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}
@@ -71,7 +71,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "MissingMandatoryParameterErrorCause Length field must be equal or greater than %zu",
+				  "MissingMandatoryParameterErrorCause length field must be equal or greater than %zu",
 				  MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength);
 
 				return nullptr;
@@ -80,13 +80,13 @@ namespace RTC
 			auto* errorCause =
 			  new MissingMandatoryParameterErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// In this Chunk we must validate that some fields have correct values.
+			// In this chunk we must validate that some fields have correct values.
 			if (
 			  (errorCause->GetNumberOfMissingParameters() * 2) !=
 			  causeLength -
 			    MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength)
 			{
-				MS_WARN_TAG(sctp, "wrong values in Number of Missing Parameters field");
+				MS_WARN_TAG(sctp, "wrong values in Number of Missing parameters field");
 
 				delete errorCause;
 				return nullptr;

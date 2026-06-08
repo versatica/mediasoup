@@ -392,7 +392,7 @@ namespace RTC
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
-				RTC::Transport* transport = GetTransportById(transportId);
+				RTC::Transport* transport = AssertAndGetTransportById(transportId);
 
 				// Tell the Transport to close all its Producers and Consumers so it will
 				// notify us about their closures.
@@ -417,7 +417,7 @@ namespace RTC
 				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverById(rtpObserverId);
+				const RTC::RtpObserver* rtpObserver = AssertAndGetRtpObserverById(rtpObserverId);
 
 				// Remove it from the map.
 				this->mapRtpObservers.erase(rtpObserver->id);
@@ -427,7 +427,7 @@ namespace RTC
 				{
 					auto& rtpObservers = kv.second;
 
-					rtpObservers.erase(rtpObserver);
+					rtpObservers.erase(const_cast<RTC::RtpObserver*>(rtpObserver));
 				}
 
 				MS_DEBUG_DEV("RtpObserver closed [rtpObserverId:%s]", rtpObserver->id.c_str());
@@ -463,7 +463,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Transport* Router::GetTransportById(const std::string& transportId) const
+	RTC::Transport* Router::AssertAndGetTransportById(const std::string& transportId) const
 	{
 		MS_TRACE();
 
@@ -477,7 +477,7 @@ namespace RTC
 		return it->second;
 	}
 
-	RTC::RtpObserver* Router::GetRtpObserverById(const std::string& rtpObserverId) const
+	RTC::RtpObserver* Router::AssertAndGetRtpObserverById(const std::string& rtpObserverId) const
 	{
 		MS_TRACE();
 
@@ -921,47 +921,6 @@ namespace RTC
 		}
 	}
 
-	// TODO: SCTP: Remove when we migrate to the new SCTP stack.
-	void Router::OnTransportDataProducerMessageReceived(
-	  RTC::Transport* /*transport*/,
-	  RTC::DataProducer* dataProducer,
-	  const uint8_t* msg,
-	  size_t len,
-	  uint32_t ppid,
-	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel)
-	{
-		MS_TRACE();
-
-		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
-
-		if (!dataConsumers.empty())
-		{
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Activate liburing usage.
-				// The effective sending could be synchronous, thus we would send those
-				// messages within a single system call.
-				DepLibUring::SetActive();
-			}
-#endif
-
-			for (auto* dataConsumer : dataConsumers)
-			{
-				dataConsumer->SendMessage(msg, len, ppid, subchannels, requiredSubchannel);
-			}
-
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Submit all prepared submission entries.
-				DepLibUring::Submit();
-			}
-#endif
-		}
-	}
-
 	void Router::OnTransportDataProducerMessageReceived(
 	  RTC::Transport* /*transport*/,
 	  RTC::DataProducer* dataProducer,
@@ -996,7 +955,7 @@ namespace RTC
 
 				if (numDataConsumers == 1)
 				{
-					// We must update the Message`s `streamId` for each destination
+					// We must update the message`s `streamId` for each destination
 					// DataConsumer.
 					// NOTE: clang-tidy doesn't understand that we are only doing this
 					// once in the original `message`.
@@ -1005,14 +964,14 @@ namespace RTC
 
 					dataConsumer->SendMessage(std::move(message), subchannels, requiredSubchannel);
 				}
-				// NOTE: Here we are cloning the Message before passing it to each
+				// NOTE: Here we are cloning the message before passing it to each
 				// DataConsumer because each DataConsumer will pass std::move(message)
-				// internally to its SCTP Association.
+				// internally to its SCTP association.
 				else
 				{
 					auto clonedMessage = message.Clone();
 
-					// We must update the Message`s `streamId` for each destination
+					// We must update the message`s `streamId` for each destination
 					// DataConsumer.
 					clonedMessage.SetStreamId(streamId);
 

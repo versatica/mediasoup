@@ -1,51 +1,50 @@
-export type SctpCapabilities = {
-	numStreams: NumSctpStreams;
-};
-
-/**
- * Both OS and MIS are part of the SCTP INIT+ACK handshake. OS refers to the
- * initial number of outgoing SCTP streams that the server side transport creates
- * (to be used by DataConsumers), while MIS refers to the maximum number of
- * incoming SCTP streams that the server side transport can receive (to be used
- * by DataProducers). So, if the server side transport will just be used to
- * create data producers (but no data consumers), OS can be low (~1).
- *
- * mediasoup-client provides specific per browser/version OS and MIS values via
- * the device.sctpCapabilities getter. However those values must be reversed
- * when provided to the mediasoup server transport.
- */
-export type NumSctpStreams = {
-	/**
-	 * Initially requested number of outgoing SCTP streams.
-	 */
-	OS: number;
-
-	/**
-	 * Maximum number of incoming SCTP streams.
-	 */
-	MIS: number;
-};
-
 export type SctpParameters = {
 	/**
-	 * Must always equal 5000.
+	 * SCTP source port of the transport.
 	 */
 	port: number;
 
 	/**
-	 * Initially requested number of outgoing SCTP streams.
+	 * Maximum size for SCTP messages sent by DataConsumers (in bytes).
 	 */
+	maxSendMessageSize: number;
+
+	/**
+	 * Maximum size for SCTP messages received by DataProducers (in bytes).
+	 */
+	maxReceiveMessageSize: number;
+
+	/**
+	 * Maximum SCTP send buffer used by DataConsumers (in bytes).
+	 */
+	sendBufferSize: number;
+
+	/**
+	 * Per stream send queue size limit. Similar to `sendBufferSize`, but
+	 * limiting the size of individual streams.
+	 */
+	perStreamSendQueueLimit: number;
+
+	/**
+	 * Maximum received window buffer size (in bytes).
+	 */
+	maxReceiverWindowBufferSize: number;
+
+	/**
+	 * Whether this is a WebRTC DataChannel based SCTP association. Only `true`
+	 * in WebRTC transports.
+	 */
+	isDataChannel: boolean;
+
+	// TODO: SCTP: For backwards compatibility. Remove them in the future.
 	OS: number;
-
-	/**
-	 * Maximum number of incoming SCTP streams.
-	 */
 	MIS: number;
-
-	/**
-	 * Maximum allowed size for SCTP messages.
-	 */
 	maxMessageSize: number;
+};
+
+export type SctpNegotiatedCapabilities = {
+	negotiatedMaxOutboundStreams: number;
+	negotiatedMaxInboundStreams: number;
 };
 
 /**
@@ -78,14 +77,4 @@ export type SctpStreamParameters = {
 	 * be retransmitted.
 	 */
 	maxRetransmits?: number;
-};
-
-export type SctpParametersDump = {
-	port: number;
-	OS: number;
-	MIS: number;
-	maxMessageSize: number;
-	sendBufferSize: number;
-	sctpBufferedAmount: number;
-	isDataChannel: boolean;
 };

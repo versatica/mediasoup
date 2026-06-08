@@ -4,13 +4,14 @@
 #include "Channel/ChannelNotification.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <ankerl/unordered_dense.h>
 
 namespace Channel
 {
-	/* Class variables. */
+	/* Static. */
 
 	// clang-format off
-	const absl::flat_hash_map<FBS::Notification::Event, const char*> ChannelNotification::Event2String =
+	static const ankerl::unordered_dense::map<FBS::Notification::Event, const char*> Event2String =
 	{
 		{ FBS::Notification::Event::WORKER_CLOSE,        "worker.close"       },
 		{ FBS::Notification::Event::TRANSPORT_SEND_RTCP, "transport.sendRtcp" },
@@ -28,9 +29,9 @@ namespace Channel
 		this->data  = notification;
 		this->event = notification->event();
 
-		auto eventCStrIt = ChannelNotification::Event2String.find(this->event);
+		auto eventCStrIt = Event2String.find(this->event);
 
-		if (eventCStrIt == ChannelNotification::Event2String.end())
+		if (eventCStrIt == Event2String.end())
 		{
 			MS_THROW_ERROR("unknown event '%" PRIu8 "'", static_cast<uint8_t>(this->event));
 		}

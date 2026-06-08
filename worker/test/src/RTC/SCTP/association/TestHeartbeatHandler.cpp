@@ -1,10 +1,5 @@
 #include "common.hpp"
-#include "mocks/include/MockShared.hpp"
-#include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
-#include "mocks/include/RTC/SCTP/association/MockTransmissionControlBlockContext.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
-#include "test/include/catch2Macros.hpp"
-#include "test/include/testHelpers.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
@@ -12,6 +7,12 @@
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
+#include "test/include/catch2Macros.hpp"
+#include "test/include/testHelpers.hpp"
+#include "mocks/include/MockShared.hpp"
+#include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
+#include "mocks/include/RTC/SCTP/association/MockTransmissionControlBlockContext.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -38,7 +39,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 			           return this->nowMs;
 		           }),
 		    heartbeatHandler(
-		      this->associationListener,
+		      this->associationListenerDeferrer,
 		      this->sctpOptions,
 		      std::addressof(this->shared),
 		      std::addressof(this->tcbContext))
@@ -60,6 +61,8 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 	public:
 		RTC::SCTP::SctpOptions sctpOptions;
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
+		RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer{ std::addressof(
+			this->associationListener) };
 		mocks::RTC::SCTP::MockTransmissionControlBlockContext tcbContext;
 		mocks::MockShared shared;
 		RTC::SCTP::HeartbeatHandler heartbeatHandler;

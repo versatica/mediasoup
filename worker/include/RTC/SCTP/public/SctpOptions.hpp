@@ -41,7 +41,7 @@ namespace RTC
 			uint16_t announcedMaxInboundStreams{ 65535 };
 
 			/**
-			 * Maximum size of an SCTP Packet. It doesn't include any overhead of
+			 * Maximum size of an SCTP packet. It doesn't include any overhead of
 			 * DTLS, TURN, UDP or IP headers.
 			 */
 			size_t mtu{ RTC::Consts::MaxSafeMtuSizeForSctp };
@@ -65,6 +65,12 @@ namespace RTC
 			 * limiting the size of individual streams.
 			 */
 			size_t perStreamSendQueueLimit{ 2000000 };
+
+			/**
+			 * The largest allowed message payload to be received. This value should
+			 * be smaller than `maxReceiverWindowBufferSize`.
+			 */
+			size_t maxReceiveMessageSize{ 256 * 1024 };
 
 			/**
 			 * Maximum received window buffer size. This should be a bit larger than
@@ -141,7 +147,7 @@ namespace RTC
 
 			/**
 			 * The maximum time when a SACK will be sent from the arrival of an
-			 * unacknowledged Packet. Whatever is smallest of RTO/2 and this will be
+			 * unacknowledged packet. Whatever is smallest of RTO/2 and this will be
 			 * used.
 			 */
 			uint64_t delayedAckMaxTimeoutMs{ 200 };
@@ -214,7 +220,7 @@ namespace RTC
 			size_t maxBurst{ 4 };
 
 			/**
-			 * Maximum data retransmit attempts (for DATA, I_DATA and other Chunks).
+			 * Maximum data retransmit attempts (for DATA, I-DATA and other chunks).
 			 * Set to std::nullopt for no limit.
 			 */
 			std::optional<uint16_t> maxRetransmissions{ 10 };
@@ -228,12 +234,13 @@ namespace RTC
 
 			/**
 			 * Enable Partial Reliability Extension.
+			 *
 			 * @see RFC 3758.
 			 */
 			bool enablePartialReliability{ true };
 
 			/**
-			 * Enable Stream Schedulers and User Message Interleaving (I-DATA Chunks).
+			 * Enable Stream Schedulers and User Message Interleaving (I-DATA chunks).
 			 *
 			 * @see RFC 8260.
 			 */

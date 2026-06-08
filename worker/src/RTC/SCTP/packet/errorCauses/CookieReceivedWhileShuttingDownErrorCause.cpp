@@ -27,7 +27,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}
@@ -66,7 +66,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "CookieReceivedWhileShuttingDownErrorCause Length field must be %zu",
+				  "CookieReceivedWhileShuttingDownErrorCause length field must be %zu",
 				  ErrorCause::ErrorCauseHeaderLength);
 
 				return nullptr;

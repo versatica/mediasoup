@@ -2,7 +2,6 @@
 #define MS_RTC_ROUTER_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
@@ -14,8 +13,8 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
-#include <absl/container/flat_hash_map.h>
-#include <absl/container/flat_hash_set.h>
+#include "SharedInterface.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -49,8 +48,8 @@ namespace RTC
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
-		RTC::Transport* GetTransportById(const std::string& transportId) const;
-		RTC::RtpObserver* GetRtpObserverById(const std::string& rtpObserverId) const;
+		RTC::Transport* AssertAndGetTransportById(const std::string& transportId) const;
+		RTC::RtpObserver* AssertAndGetRtpObserverById(const std::string& rtpObserverId) const;
 		void CheckNoTransport(const std::string& transportId) const;
 		void CheckNoRtpObserver(const std::string& rtpObserverId) const;
 
@@ -94,15 +93,6 @@ namespace RTC
 		void OnTransportDataProducerPaused(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
 		void OnTransportDataProducerResumed(
 		  RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
-		// TODO: SCTP: Remove when we migrate to the new SCTP stack.
-		void OnTransportDataProducerMessageReceived(
-		  RTC::Transport* transport,
-		  RTC::DataProducer* dataProducer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  std::vector<uint16_t>& subchannels,
-		  std::optional<uint16_t> requiredSubchannel) override;
 		void OnTransportDataProducerMessageReceived(
 		  RTC::Transport* transport,
 		  RTC::DataProducer* dataProducer,
@@ -131,17 +121,19 @@ namespace RTC
 		SharedInterface* shared{ nullptr };
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		absl::flat_hash_map<std::string, RTC::Transport*> mapTransports;
-		absl::flat_hash_map<std::string, RTC::RtpObserver*> mapRtpObservers;
+		ankerl::unordered_dense::map<std::string, RTC::Transport*> mapTransports;
+		ankerl::unordered_dense::map<std::string, RTC::RtpObserver*> mapRtpObservers;
 		// Others.
-		absl::flat_hash_map<RTC::Producer*, absl::flat_hash_set<RTC::Consumer*>> mapProducerConsumers;
-		absl::flat_hash_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
-		absl::flat_hash_map<RTC::Producer*, absl::flat_hash_set<RTC::RtpObserver*>> mapProducerRtpObservers;
-		absl::flat_hash_map<std::string, RTC::Producer*> mapProducers;
-		absl::flat_hash_map<RTC::DataProducer*, absl::flat_hash_set<RTC::DataConsumer*>>
+		ankerl::unordered_dense::map<RTC::Producer*, ankerl::unordered_dense::set<RTC::Consumer*>>
+		  mapProducerConsumers;
+		ankerl::unordered_dense::map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
+		ankerl::unordered_dense::map<RTC::Producer*, ankerl::unordered_dense::set<RTC::RtpObserver*>>
+		  mapProducerRtpObservers;
+		ankerl::unordered_dense::map<std::string, RTC::Producer*> mapProducers;
+		ankerl::unordered_dense::map<RTC::DataProducer*, ankerl::unordered_dense::set<RTC::DataConsumer*>>
 		  mapDataProducerDataConsumers;
-		absl::flat_hash_map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
-		absl::flat_hash_map<std::string, RTC::DataProducer*> mapDataProducers;
+		ankerl::unordered_dense::map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
+		ankerl::unordered_dense::map<std::string, RTC::DataProducer*> mapDataProducers;
 	};
 } // namespace RTC
 

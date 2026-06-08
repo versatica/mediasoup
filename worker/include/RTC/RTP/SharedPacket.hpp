@@ -22,7 +22,7 @@ namespace RTC
 			SharedPacket();
 
 			/**
-			 * Constructor with RTP Packet pointer. If a packet is given it's internally
+			 * Constructor with RTP packet pointer. If a packet is given it's internally
 			 * cloned.
 			 */
 			explicit SharedPacket(RTP::Packet* packet);
@@ -41,7 +41,7 @@ namespace RTC
 			 * @remarks
 			 * - No need to declare it but let's be explicit.
 			 *
-			 * @throws MediasoupError if the Packet is too big.
+			 * @throws MediasoupError if the packet is too big.
 			 */
 			SharedPacket& operator=(const SharedPacket&) = default;
 
@@ -67,7 +67,7 @@ namespace RTC
 			 * Assign given packet (could be nullptr). If packet is given it's internally
 			 * cloned.
 			 *
-			 * @throws MediasoupError if the Packet is too big.
+			 * @throws MediasoupError if the packet is too big.
 			 */
 			void Assign(RTP::Packet* packet);
 
@@ -80,7 +80,7 @@ namespace RTC
 			void Reset();
 
 			/**
-			 * Assert that RTP Packet contained in this SharedPacket is a clone of the
+			 * Assert that RTP packet contained in this SharedPacket is a clone of the
 			 * given other packet (or there is no packet inside and no other packet has
 			 * been given).
 			 */

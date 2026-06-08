@@ -27,7 +27,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::FORWARD_TSN_SUPPORTED)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -64,7 +64,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "ForwardTsnSupportedParameter Length field must be %zu",
+				  "ForwardTsnSupportedParameter length field must be %zu",
 				  Parameter::ParameterHeaderLength);
 
 				return nullptr;

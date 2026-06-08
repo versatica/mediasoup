@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP User-Initiated Abort Error Cause (USER_INITIATED_ABORT) (12)
+		 * SCTP User-Initiated Abort Error Cause (USER-INITIATED-ABORT) (12)
 		 *
 		 * @see RFC 9260.
 		 *
@@ -29,7 +29,7 @@ namespace RTC
 
 		class UserInitiatedAbortErrorCause : public ErrorCause
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -37,7 +37,7 @@ namespace RTC
 			 * Parse a UserInitiatedAbortErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Error Cause.
+			 * `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static UserInitiatedAbortErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -45,7 +45,7 @@ namespace RTC
 			 * Create a UserInitiatedAbortErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
+			 * `bufferLength` could be greater than the error cause real length.
 			 */
 			static UserInitiatedAbortErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 

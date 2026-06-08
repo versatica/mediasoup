@@ -150,6 +150,23 @@ test('worker.createRouter() rejects with InvalidStateError if Worker is closed',
 	).rejects.toThrow(InvalidStateError);
 }, 2000);
 
+test('router.rtpCapabilities getter returns cloned RTP capabilities', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.mediaCodecs,
+	});
+
+	const originalRouterRtpCapabilities = router.rtpCapabilities;
+	const clonedOriginalRouterRtpCapabilities = utils.deepFreeze(
+		originalRouterRtpCapabilities
+	);
+
+	// Application attempts to modify router RTP capabilities, but it's modifying
+	// a returned clone of them.
+	router.rtpCapabilities.headerExtensions = [];
+
+	expect(router.rtpCapabilities).toEqual(clonedOriginalRouterRtpCapabilities);
+}, 2000);
+
 test('router.updateMediaCodecs() succeeds', async () => {
 	const router = await ctx.worker!.createRouter({
 		mediaCodecs: ctx.mediaCodecs,

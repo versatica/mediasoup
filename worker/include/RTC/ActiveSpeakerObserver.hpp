@@ -1,10 +1,10 @@
 #ifndef MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 #define MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 
-#include "SharedInterface.hpp"
-#include "RTC/RtpObserver.hpp"
 #include "handles/TimerHandleInterface.hpp"
-#include <absl/container/flat_hash_map.h>
+#include "RTC/RtpObserver.hpp"
+#include "SharedInterface.hpp"
+#include <ankerl/unordered_dense.h>
 #include <vector>
 
 // Implementation of Dominant Speaker Identification for Multipoint
@@ -101,7 +101,7 @@ namespace RTC
 		TimerHandleInterface* periodicTimer{ nullptr };
 		uint16_t interval{ 300u };
 		// Map of ProducerSpeakers indexed by Producer id.
-		absl::flat_hash_map<std::string, ProducerSpeaker*> mapProducerSpeakers;
+		ankerl::unordered_dense::map<std::string, ProducerSpeaker*> mapProducerSpeakers;
 		uint64_t lastLevelIdleTime{ 0u };
 	};
 } // namespace RTC

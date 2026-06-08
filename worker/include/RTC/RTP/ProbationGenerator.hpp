@@ -12,7 +12,7 @@ namespace RTC
 		{
 		public:
 			/**
-			 * Maximum length of a probation RTP Packet.
+			 * Maximum length of a probation RTP packet.
 			 */
 			static const size_t ProbationPacketMaxLength{ 1400 };
 			/**
@@ -40,7 +40,7 @@ namespace RTC
 			// Allocated by this.
 			std::unique_ptr<RTP::Packet> probationPacket;
 			// Others.
-			// The length of the probation RTP Packet without payload or padding.
+			// The length of the probation RTP packet without payload or padding.
 			size_t probationPacketMinLength{ 0 };
 		};
 	} // namespace RTP

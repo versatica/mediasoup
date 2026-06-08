@@ -435,17 +435,41 @@ pub(super) trait TransportImpl: TransportGeneric {
 
     fn next_mid_for_consumers(&self) -> &AtomicUsize;
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>>;
-
     fn cname_for_producers(&self) -> &Mutex<Option<String>>;
 
+    /// Returns the negotiated max outbound SCTP streams (only known once the SCTP
+    /// association is connected).
+    /// Used by allocate_sctp_stream_id() to guard against exceeding negotiated limit.
+    fn sctp_negotiated_max_outbound_streams(&self) -> Option<u16>;
+
+    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>>;
+
+    fn next_sctp_stream_id(&self) -> &Mutex<u16>;
+
     fn allocate_sctp_stream_id(&self) -> Option<u16> {
-        let mut used_sctp_stream_ids = self.used_sctp_stream_ids().lock();
-        // This is simple, but not the fastest implementation, maybe worth improving
-        for (index, used) in used_sctp_stream_ids.iter_mut() {
-            if !*used {
-                *used = true;
-                return Some(*index);
+        let mut used = self.used_sctp_stream_ids().lock();
+        let mut next_guard = self.next_sctp_stream_id().lock();
+
+        if let Some(max) = self.sctp_negotiated_max_outbound_streams() {
+            if *next_guard >= max {
+                warn!(
+                    "SCTP next stream id exceeds negotiated max outbound streams, resetting to 0"
+                );
+                *next_guard = 0;
+            }
+        }
+
+        let len = 65535u32;
+        let start = *next_guard as u32;
+
+        for i in 0..len {
+            let candidate = ((start + i) % len) as u16;
+            if let Some(is_used) = used.get_mut(&candidate) {
+                if !*is_used {
+                    *is_used = true;
+                    *next_guard = candidate.wrapping_add(1);
+                    return Some(candidate);
+                }
             }
         }
 

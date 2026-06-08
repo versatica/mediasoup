@@ -1,7 +1,6 @@
 #ifndef MS_RTC_WEBRTC_SERVER_HPP
 #define MS_RTC_WEBRTC_SERVER_HPP
 
-#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/StunPacket.hpp"
@@ -10,9 +9,9 @@
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
 #include "RTC/WebRtcTransport.hpp"
+#include "SharedInterface.hpp"
 #include <flatbuffers/flatbuffers.h>
-#include <absl/container/flat_hash_map.h>
-#include <absl/container/flat_hash_set.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -116,11 +115,11 @@ namespace RTC
 		// Vector of UdpSockets and TcpServers in the user given order.
 		std::vector<UdpSocketOrTcpServer> udpSocketOrTcpServers;
 		// Set of WebRtcTransports.
-		absl::flat_hash_set<RTC::WebRtcTransport*> webRtcTransports;
+		ankerl::unordered_dense::set<RTC::WebRtcTransport*> webRtcTransports;
 		// Map of WebRtcTransports indexed by local ICE usernameFragment.
-		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransport;
+		ankerl::unordered_dense::map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransport;
 		// Map of WebRtcTransports indexed by TransportTuple.hash.
-		absl::flat_hash_map<uint64_t, RTC::WebRtcTransport*> mapTupleWebRtcTransport;
+		ankerl::unordered_dense::map<uint64_t, RTC::WebRtcTransport*> mapTupleWebRtcTransport;
 		// Whether the destructor has been called.
 		bool closing{ false };
 	};

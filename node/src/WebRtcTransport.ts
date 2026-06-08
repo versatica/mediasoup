@@ -31,8 +31,12 @@ import {
 	parseTransportTraceEventData,
 	parseTuple,
 } from './Transport';
-import type { SctpParameters } from './sctpParametersTypes';
+import type {
+	SctpParameters,
+	SctpNegotiatedCapabilities,
+} from './sctpParametersTypes';
 import type { AppData } from './types';
+import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
@@ -62,6 +66,7 @@ export type WebRtcTransportData = {
 	dtlsRemoteCert?: string;
 	sctpParameters?: SctpParameters;
 	sctpState?: SctpState;
+	sctpNegotiatedCapabilities?: SctpNegotiatedCapabilities;
 };
 
 const logger = new Logger('WebRtcTransport');
@@ -125,7 +130,7 @@ export class WebRtcTransportImpl<
 	}
 
 	get iceCandidates(): IceCandidate[] {
-		return this.#data.iceCandidates;
+		return utils.clone(this.#data.iceCandidates);
 	}
 
 	get iceState(): IceState {
@@ -133,11 +138,11 @@ export class WebRtcTransportImpl<
 	}
 
 	get iceSelectedTuple(): TransportTuple | undefined {
-		return this.#data.iceSelectedTuple;
+		return utils.clone(this.#data.iceSelectedTuple);
 	}
 
 	get dtlsParameters(): DtlsParameters {
-		return this.#data.dtlsParameters;
+		return utils.clone(this.#data.dtlsParameters);
 	}
 
 	get dtlsState(): DtlsState {
@@ -149,11 +154,15 @@ export class WebRtcTransportImpl<
 	}
 
 	get sctpParameters(): SctpParameters | undefined {
-		return this.#data.sctpParameters;
+		return utils.clone(this.#data.sctpParameters);
 	}
 
 	get sctpState(): SctpState | undefined {
 		return this.#data.sctpState;
+	}
+
+	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined {
+		return utils.clone(this.#data.sctpNegotiatedCapabilities);
 	}
 
 	override close(): void {
@@ -371,6 +380,28 @@ export class WebRtcTransportImpl<
 
 						// Emit observer event.
 						this.observer.safeEmit('sctpstatechange', sctpState);
+
+						break;
+					}
+
+					case Event.TRANSPORT_SCTP_NEGOTIATED_CAPABILITIES: {
+						const notification =
+							new FbsTransport.SctpNegotiatedCapabilitiesNotification();
+
+						data!.body(notification);
+
+						const sctpNegotiatedCapabilities: SctpNegotiatedCapabilities = {
+							negotiatedMaxOutboundStreams: notification
+								.negotiatedCapabilities()!
+								.negotiatedMaxOutboundStreams(),
+							negotiatedMaxInboundStreams: notification
+								.negotiatedCapabilities()!
+								.negotiatedMaxInboundStreams(),
+						};
+
+						this.#data.sctpNegotiatedCapabilities = sctpNegotiatedCapabilities;
+
+						super.handleSctpNegotiatedCapabilities(sctpNegotiatedCapabilities);
 
 						break;
 					}

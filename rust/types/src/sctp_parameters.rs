@@ -2,60 +2,38 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Number of SCTP streams.
-///
-/// Both OS and MIS are part of the SCTP INIT+ACK handshake. OS refers to the initial number of
-/// outgoing SCTP streams that the server side transport creates (to be used by
-/// [DataConsumer](https://docs.rs/mediasoup/latest/mediasoup/data_consumer/enum.DataConsumer.html)s),
-/// while MIS refers to the maximum number of incoming SCTP streams that the server side transport
-/// can receive (to be used by [DataProducer](https://docs.rs/mediasoup/latest/mediasoup/data_producer/enum.DataProducer.html)s).
-/// So, if the server side transport will just re used to create data producers (but no data consumers),
-/// OS can be low (~1). However, if data consumers are desired on the server side transport, OS must
-/// have a proper value and such a proper value depends on whether the remote endpoint supports
-/// `SCTP_ADD_STREAMS` extension or not.
-///
-/// libwebrtc (Chrome, Safari, etc) does not enable `SCTP_ADD_STREAMS` so, if data consumers are
-/// required,  OS should be 1024 (the maximum number of DataChannels that libwebrtc enables).
-///
-/// Firefox does enable `SCTP_ADD_STREAMS` so, if data consumers are required, OS can be lower (16
-/// for instance). The mediasoup transport will allocate and announce more outgoing SCTP streams
-/// when needed.
-///
-/// mediasoup-client provides specific per browser/version OS and MIS values via the
-/// device.sctpCapabilities getter.
-#[derive(Debug, Serialize, Copy, Clone)]
-pub struct NumSctpStreams {
-    /// Initially requested number of outgoing SCTP streams.
-    #[serde(rename = "OS")]
-    pub os: u16,
-    /// Maximum number of incoming SCTP streams.
-    #[serde(rename = "MIS")]
-    pub mis: u16,
-}
-
-impl Default for NumSctpStreams {
-    fn default() -> Self {
-        Self {
-            os: 1024,
-            mis: 1024,
-        }
-    }
-}
-
 /// Parameters of the SCTP association.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SctpParameters {
-    /// Must always equal 5000.
     pub port: u16,
-    /// Initially requested number of outgoing SCTP streams.
+    /// Maximum allowed size for SCTP send messages.
+    pub max_send_message_size: u32,
+    /// Maximum allowed size for SCTP receive messages.
+    pub max_receive_message_size: u32,
+    /// Size of the SCTP send buffer.
+    pub send_buffer_size: u32,
+    /// Per-stream send queue limit.
+    pub per_stream_send_queue_limit: u32,
+    /// Maximum receiver window buffer size.
+    pub max_receiver_window_buffer_size: u32,
+    /// Whether this is a DataChannel SCTP association.
+    pub is_data_channel: bool,
+
+    // TODO: SCTP: For backwards compatibility. Remove them in the future.
     #[serde(rename = "OS")]
     pub os: u16,
-    /// Maximum number of incoming SCTP streams.
     #[serde(rename = "MIS")]
     pub mis: u16,
-    /// Maximum allowed size for SCTP messages.
     pub max_message_size: u32,
+}
+
+/// SCTP negotiated capabilities (only available once SCTP association is connected).
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SctpNegotiatedCapabilities {
+    pub negotiated_max_outbound_streams: u16,
+    pub negotiated_max_inbound_streams: u16,
 }
 
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.

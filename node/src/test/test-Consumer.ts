@@ -17,6 +17,10 @@ type TestContext = {
 	audioProducerOptions: mediasoup.types.ProducerOptions;
 	videoProducerOptions: mediasoup.types.ProducerOptions;
 	consumerDeviceCapabilities: mediasoup.types.RtpCapabilities;
+	vpxMediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
+	vp9SvcProducerOptions: mediasoup.types.ProducerOptions;
+	vp8SimulcastProducerOptions: mediasoup.types.ProducerOptions;
+	vpxConsumerDeviceCapabilities: mediasoup.types.RtpCapabilities;
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
 	webRtcTransport1?: mediasoup.types.WebRtcTransport;
@@ -228,6 +232,113 @@ const ctx: TestContext = {
 			],
 		}
 	),
+	vpxMediaCodecs: utils.deepFreeze<mediasoup.types.RouterRtpCodecCapability[]>([
+		{
+			kind: 'video',
+			mimeType: 'video/VP8',
+			clockRate: 90000,
+			rtcpFeedback: [
+				{ type: 'nack', parameter: '' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' },
+				{ type: 'goog-remb', parameter: '' },
+			],
+		},
+		{
+			kind: 'video',
+			mimeType: 'video/VP9',
+			clockRate: 90000,
+			rtcpFeedback: [
+				{ type: 'nack', parameter: '' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' },
+				{ type: 'goog-remb', parameter: '' },
+			],
+		},
+	]),
+	vp9SvcProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
+		kind: 'video',
+		rtpParameters: {
+			mid: 'VIDEOSVC',
+			codecs: [
+				{
+					mimeType: 'video/VP9',
+					payloadType: 96,
+					clockRate: 90000,
+					parameters: {},
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+						{ type: 'ccm', parameter: 'fir' },
+						{ type: 'goog-remb', parameter: '' },
+					],
+				},
+			],
+			headerExtensions: [],
+			encodings: [{ ssrc: 33333333, scalabilityMode: 'L3T3' }],
+			rtcp: { cname: 'FOOBAR' },
+		},
+		appData: { foo: 1, bar: '2' },
+	}),
+	vp8SimulcastProducerOptions:
+		utils.deepFreeze<mediasoup.types.ProducerOptions>({
+			kind: 'video',
+			rtpParameters: {
+				mid: 'VIDEOVP8',
+				codecs: [
+					{
+						mimeType: 'video/VP8',
+						payloadType: 96,
+						clockRate: 90000,
+						parameters: {},
+						rtcpFeedback: [
+							{ type: 'nack', parameter: '' },
+							{ type: 'nack', parameter: 'pli' },
+							{ type: 'ccm', parameter: 'fir' },
+							{ type: 'goog-remb', parameter: '' },
+						],
+					},
+				],
+				headerExtensions: [],
+				encodings: [
+					{ ssrc: 44444441, scalabilityMode: 'L1T5' },
+					{ ssrc: 44444442, scalabilityMode: 'L1T5' },
+					{ ssrc: 44444443, scalabilityMode: 'L1T5' },
+				],
+				rtcp: { cname: 'FOOBAR' },
+			},
+			appData: { foo: 1, bar: '2' },
+		}),
+	vpxConsumerDeviceCapabilities:
+		utils.deepFreeze<mediasoup.types.RtpCapabilities>({
+			codecs: [
+				{
+					kind: 'video',
+					mimeType: 'video/VP8',
+					preferredPayloadType: 101,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+						{ type: 'ccm', parameter: 'fir' },
+						{ type: 'goog-remb', parameter: '' },
+					],
+				},
+				{
+					kind: 'video',
+					mimeType: 'video/VP9',
+					preferredPayloadType: 102,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+						{ type: 'ccm', parameter: 'fir' },
+						{ type: 'goog-remb', parameter: '' },
+					],
+				},
+			],
+			headerExtensions: [],
+		}),
 };
 
 beforeEach(async () => {
@@ -937,6 +1048,119 @@ test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError'
 		// @ts-expect-error --- Testing purposes.
 		videoConsumer.setPreferredLayers({ temporalLayer: 2 })
 	).rejects.toThrow(TypeError);
+}, 2000);
+
+test('transport.consume() for an SVC producer honors preferredLayers', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.vpxMediaCodecs,
+	});
+	const transport1 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+	const transport2 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+
+	const deviceCapabilities = ctx.vpxConsumerDeviceCapabilities;
+
+	const svcProducer = await transport1.produce(ctx.vp9SvcProducerOptions);
+
+	expect(
+		router.canConsume({
+			producerId: svcProducer.id,
+			rtpCapabilities: deviceCapabilities,
+		})
+	).toBe(true);
+
+	const svcConsumer = await transport2.consume({
+		producerId: svcProducer.id,
+		rtpCapabilities: deviceCapabilities,
+		paused: true,
+		preferredLayers: { spatialLayer: 1, temporalLayer: 0 },
+	});
+
+	expect(svcConsumer.type).toBe('svc');
+	expect(svcConsumer.preferredLayers).toEqual({
+		spatialLayer: 1,
+		temporalLayer: 0,
+	});
+
+	// Out-of-range spatial and temporal layers are clamped to the max.
+	const svcConsumerClamped = await transport2.consume({
+		producerId: svcProducer.id,
+		rtpCapabilities: deviceCapabilities,
+		paused: true,
+		preferredLayers: { spatialLayer: 9, temporalLayer: 9 },
+	});
+
+	expect(svcConsumerClamped.preferredLayers).toEqual({
+		spatialLayer: 2,
+		temporalLayer: 2,
+	});
+
+	// When no temporal layer is given it defaults to the max temporal layer.
+	const svcConsumerNoTemporal = await transport2.consume({
+		producerId: svcProducer.id,
+		rtpCapabilities: deviceCapabilities,
+		paused: true,
+		preferredLayers: { spatialLayer: 1 },
+	});
+
+	expect(svcConsumerNoTemporal.preferredLayers).toEqual({
+		spatialLayer: 1,
+		temporalLayer: 2,
+	});
+}, 2000);
+
+test('transport.consume() for a simulcast producer honors preferredLayers', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.vpxMediaCodecs,
+	});
+	const transport1 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+	const transport2 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+
+	const deviceCapabilities = ctx.vpxConsumerDeviceCapabilities;
+
+	const simulcastProducer = await transport1.produce(
+		ctx.vp8SimulcastProducerOptions
+	);
+
+	expect(
+		router.canConsume({
+			producerId: simulcastProducer.id,
+			rtpCapabilities: deviceCapabilities,
+		})
+	).toBe(true);
+
+	const simulcastConsumer = await transport2.consume({
+		producerId: simulcastProducer.id,
+		rtpCapabilities: deviceCapabilities,
+		paused: true,
+		preferredLayers: { spatialLayer: 1, temporalLayer: 0 },
+	});
+
+	expect(simulcastConsumer.type).toBe('simulcast');
+	expect(simulcastConsumer.preferredLayers).toEqual({
+		spatialLayer: 1,
+		temporalLayer: 0,
+	});
+
+	// Out-of-range spatial layer is clamped to the max (2 = number of encodings - 1).
+	const simulcastConsumerClamped = await transport2.consume({
+		producerId: simulcastProducer.id,
+		rtpCapabilities: deviceCapabilities,
+		paused: true,
+		preferredLayers: { spatialLayer: 9, temporalLayer: 9 },
+	});
+
+	expect(simulcastConsumerClamped.preferredLayers).toEqual({
+		spatialLayer: 2,
+		temporalLayer: 4,
+	});
 }, 2000);
 
 test('consumer.setPriority() succeed', async () => {

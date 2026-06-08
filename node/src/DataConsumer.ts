@@ -14,12 +14,12 @@ import type { TransportInternal } from './Transport';
 import type { SctpStreamParameters } from './sctpParametersTypes';
 import { parseSctpStreamParameters } from './sctpParametersFbsUtils';
 import type { AppData } from './types';
+import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsTransport from './fbs/transport';
 import * as FbsRequest from './fbs/request';
 import * as FbsDataConsumer from './fbs/data-consumer';
-import * as FbsDataProducer from './fbs/data-producer';
 
 type DataConsumerInternal = TransportInternal & {
 	dataConsumerId: string;
@@ -118,7 +118,7 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 	}
 
 	get sctpStreamParameters(): SctpStreamParameters | undefined {
-		return this.#data.sctpStreamParameters;
+		return utils.clone(this.#data.sctpStreamParameters);
 	}
 
 	get label(): string {
@@ -314,7 +314,7 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 		return data.bufferedAmount();
 	}
 
-	async send(message: string | Buffer, ppid?: number): Promise<void> {
+	async send(message: string | Buffer, ppid?: number): Promise<number> {
 		if (typeof message !== 'string' && !Buffer.isBuffer(message)) {
 			throw new TypeError('message must be a string or a Buffer');
 		}
@@ -370,12 +370,18 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 			dataOffset
 		);
 
-		await this.#channel.request(
+		const response = await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_SEND,
 			FbsRequest.Body.DataConsumer_SendRequest,
 			requestOffset,
 			this.#internal.dataConsumerId
 		);
+
+		const data = new FbsDataConsumer.GetBufferedAmountResponse();
+
+		response.body(data);
+
+		return data.bufferedAmount();
 	}
 
 	async setSubchannels(subchannels: number[]): Promise<void> {
@@ -569,14 +575,14 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 
 export function dataConsumerTypeToFbs(
 	type: DataConsumerType
-): FbsDataProducer.Type {
+): FbsDataConsumer.Type {
 	switch (type) {
 		case 'sctp': {
-			return FbsDataProducer.Type.SCTP;
+			return FbsDataConsumer.Type.SCTP;
 		}
 
 		case 'direct': {
-			return FbsDataProducer.Type.DIRECT;
+			return FbsDataConsumer.Type.DIRECT;
 		}
 
 		default: {
@@ -585,13 +591,13 @@ export function dataConsumerTypeToFbs(
 	}
 }
 
-function dataConsumerTypeFromFbs(type: FbsDataProducer.Type): DataConsumerType {
+function dataConsumerTypeFromFbs(type: FbsDataConsumer.Type): DataConsumerType {
 	switch (type) {
-		case FbsDataProducer.Type.SCTP: {
+		case FbsDataConsumer.Type.SCTP: {
 			return 'sctp';
 		}
 
-		case FbsDataProducer.Type.DIRECT: {
+		case FbsDataConsumer.Type.DIRECT: {
 			return 'direct';
 		}
 	}
@@ -610,6 +616,7 @@ export function parseDataConsumerDumpResponse(
 				: undefined,
 		label: data.label()!,
 		protocol: data.protocol()!,
+		bufferedAmount: data.bufferedAmount(),
 		bufferedAmountLowThreshold: data.bufferedAmountLowThreshold(),
 		paused: data.paused(),
 		dataProducerPaused: data.dataProducerPaused(),

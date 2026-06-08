@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/DataProducer.hpp"
-#include <unordered_map>
+#include <ankerl/unordered_dense.h>
 
 namespace RTC
 {
@@ -18,7 +18,7 @@ namespace RTC
 
 	public:
 		// Table of streamId / DataProducer pairs.
-		std::unordered_map<uint16_t, RTC::DataProducer*> streamIdTable;
+		ankerl::unordered_dense::map<uint16_t, RTC::DataProducer*> streamIdTable;
 	};
 } // namespace RTC
 

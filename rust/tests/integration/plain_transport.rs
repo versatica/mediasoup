@@ -180,13 +180,22 @@ fn create_succeeds() {
             assert_eq!(
                 transport1.sctp_parameters(),
                 Some(SctpParameters {
-                    port: 5000,
-                    os: 1024,
-                    mis: 1024,
+                    port: 5_000,
+                    max_send_message_size: 262_144,
+                    max_receive_message_size: 262_144,
+                    send_buffer_size: 2_000_000,
+                    per_stream_send_queue_limit: 2_000_000,
+                    max_receiver_window_buffer_size: 5_242_880,
+                    is_data_channel: false,
+
+                    // TODO: SCTP: For backwards compatibility. Remove them in the future.
+                    os: 65535,
+                    mis: 65535,
                     max_message_size: 262_144,
                 }),
             );
             assert_eq!(transport1.sctp_state(), Some(SctpState::New));
+            assert_eq!(transport1.sctp_negotiated_capabilities(), None);
             assert_eq!(transport1.srtp_parameters(), None);
 
             {

@@ -13,13 +13,13 @@ namespace RTC
 		/* Instance methods. */
 
 		StreamResetHandler::StreamResetHandler(
-		  AssociationListenerInterface& associationListener,
+		  AssociationListenerDeferrer& associationListenerDeferrer,
 		  SharedInterface* shared,
 		  TransmissionControlBlockContextInterface* tcbContext,
 		  DataTracker* dataTracker,
 		  ReassemblyQueue* reassemblyQueue,
 		  RetransmissionQueue* retransmissionQueue)
-		  : associationListener(associationListener),
+		  : associationListenerDeferrer(associationListenerDeferrer),
 		    shared(shared),
 		    tcbContext(tcbContext),
 		    dataTracker(dataTracker),
@@ -89,7 +89,7 @@ namespace RTC
 
 			if (!ValidateReceivedReConfigChunk(receivedReConfigChunk))
 			{
-				this->associationListener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "invalid RE-CONFIG command received");
 
 				return;
@@ -188,7 +188,7 @@ namespace RTC
 				}
 			}
 
-			MS_WARN_TAG(sctp, "invalid set of RE-CONFIG Parameters");
+			MS_WARN_TAG(sctp, "invalid set of RE-CONFIG parameters");
 
 			return false;
 		}
@@ -204,7 +204,7 @@ namespace RTC
 			// `reqSeqNbr` will be used.
 			MS_ASSERT(this->currentRequest.has_value(), "currentRequest optional must have value");
 
-			if (this->currentRequest->HasBeenSent())
+			if (!this->currentRequest->HasBeenSent())
 			{
 				this->currentRequest->PrepareToSend(this->nextOutgoingReqSeqNbr);
 				this->nextOutgoingReqSeqNbr = uint32_t{ this->nextOutgoingReqSeqNbr + 1 };
@@ -241,7 +241,7 @@ namespace RTC
 			}
 			else if (reqSeqNbr != this->lastProcessedReqSeqNbr.GetNextValue())
 			{
-				// Too old, too new, from wrong Association, etc.
+				// Too old, too new, from wrong association, etc.
 				MS_WARN_TAG(sctp, "bad reqSeqNbr: %" PRIu32, reqSeqNbr.Wrap());
 
 				return ReqSeqNbrValidationResult::BAD_SEQUENCE_NUMBER;
@@ -334,7 +334,7 @@ namespace RTC
 				this->reassemblyQueue->ResetStreamsAndLeaveDeferredReset(
 				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
-				this->associationListener.OnAssociationInboundStreamsReset(
+				this->associationListenerDeferrer.OnAssociationInboundStreamsReset(
 				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
 				this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
@@ -412,7 +412,7 @@ namespace RTC
 						MS_DEBUG_DEV(
 						  "reset stream success [reqSeqNbr:%" PRIu32 "]", this->currentRequest->GetReqSeqNbr());
 
-						this->associationListener.OnAssociationStreamsResetPerformed(
+						this->associationListenerDeferrer.OnAssociationStreamsResetPerformed(
 						  this->currentRequest->GetStreamIds());
 
 						this->currentRequest = std::nullopt;
@@ -450,7 +450,7 @@ namespace RTC
 						    receivedReconfigurationResponseParameter->GetResult())
 						    .c_str());
 
-						this->associationListener.OnAssociationStreamsResetFailed(
+						this->associationListenerDeferrer.OnAssociationStreamsResetFailed(
 						  this->currentRequest->GetStreamIds(),
 						  ReconfigurationResponseParameter::ResultToString(
 						    receivedReconfigurationResponseParameter->GetResult()));
@@ -468,6 +468,11 @@ namespace RTC
 		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			// This is a top-level timer entry point (invoked by libuv outside any other
+			// SCTP API call), so it must establish the deferrer scope itself, just like
+			// Association does in its own timer handlers.
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			if (this->currentRequest && this->currentRequest->HasBeenSent())
 			{

@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "FBS/rtpParameters.h"
 #include "RTC/Parameters.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -60,10 +60,10 @@ namespace RTC
 		};
 
 	public:
-		static const absl::flat_hash_map<std::string, Type> String2Type;
-		static const absl::flat_hash_map<Type, std::string> Type2String;
-		static const absl::flat_hash_map<std::string, Subtype> String2Subtype;
-		static const absl::flat_hash_map<Subtype, std::string> Subtype2String;
+		static const ankerl::unordered_dense::map<std::string, Type> String2Type;
+		static const ankerl::unordered_dense::map<Type, std::string> Type2String;
+		static const ankerl::unordered_dense::map<std::string, Subtype> String2Subtype;
+		static const ankerl::unordered_dense::map<Subtype, std::string> Subtype2String;
 
 	public:
 		RtpCodecMimeType() = default;
@@ -254,7 +254,7 @@ namespace RTC
 		static FBS::RtpParameters::Type TypeToFbs(Type type);
 
 	private:
-		static const absl::flat_hash_map<Type, std::string> Type2String;
+		static const ankerl::unordered_dense::map<Type, std::string> Type2String;
 
 	public:
 		RtpParameters() = default;

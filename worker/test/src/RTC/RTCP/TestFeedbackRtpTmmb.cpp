@@ -10,7 +10,7 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 	// clang-format off
 	alignas(4) uint8_t buffer[] =
 	{
-		0x83, 0xcd, 0x00, 0x04, // Type: 205 (Generic RTP Feedback), Count: 8 (TMMBR) Length: 7
+		0x83, 0xcd, 0x00, 0x04, // Type: 205 (Generic RTP feedback), Count: 8 (TMMBR) Length: 7
 		0x00, 0x00, 0x00, 0x01, // Sender SSRC: 0x00000001
 		0x03, 0x30, 0xbd, 0xee, // Media source SSRC: 0x0330bdee
 		0x02, 0xd0, 0x37, 0x02, // SSRC: 0x02d03702

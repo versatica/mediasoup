@@ -5,7 +5,7 @@
 #include "RTC/RTCP/Feedback.hpp"
 #include <vector>
 
-/* RTP Extensions for Transport-wide Congestion Control
+/* RTP extensions for Transport-wide Congestion Control
  * draft-holmer-rmcat-transport-wide-cc-extensions-01
 
    0               1               2               3
@@ -201,7 +201,7 @@ namespace RTC
 			static FeedbackRtpTransportPacket* Parse(const uint8_t* data, size_t len);
 
 		private:
-			static const absl::flat_hash_map<Status, std::string> Status2String;
+			static const ankerl::unordered_dense::map<Status, std::string> Status2String;
 
 		public:
 			FeedbackRtpTransportPacket(uint32_t senderSsrc, uint32_t mediaSsrc)

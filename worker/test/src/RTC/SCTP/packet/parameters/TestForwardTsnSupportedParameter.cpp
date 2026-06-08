@@ -1,7 +1,7 @@
 #include "common.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -14,7 +14,7 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[serializable][sctp][parame
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:49152 (FORWARD_TSN_SUPPORTED), Length: 4
+			// Type:49152 (FORWARD-TSN-SUPPORTED), Length: 4
 			0xC0, 0x00, 0x00, 0x04,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,

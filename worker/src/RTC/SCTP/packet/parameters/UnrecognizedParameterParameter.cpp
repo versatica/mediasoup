@@ -27,7 +27,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::UNRECOGNIZED_PARAMETER)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}

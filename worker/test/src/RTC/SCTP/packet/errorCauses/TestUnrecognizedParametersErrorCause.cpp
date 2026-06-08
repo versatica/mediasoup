@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedParametersErrorCause.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -15,7 +15,7 @@ SCENARIO("Unrecognized Parameters Error Cause (8)", "[serializable][sctp][errorc
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:8 (UNRECOGNIZED_PARAMETERS), Length: 11
+			// Code:8 (UNRECOGNIZED-PARAMETERS), Length: 11
 			0x00, 0x08, 0x00, 0x0B,
 			// Unrecognized Parameters: 0x1234567890ABCD
 			0x12, 0x34, 0x56, 0x78,

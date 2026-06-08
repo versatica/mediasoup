@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_ASSOCIATION_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
+#include "handles/BackoffTimerHandleInterface.hpp"
 #include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
@@ -38,7 +38,7 @@
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SCTP/tx/RoundRobinSendQueue.hpp"
-#include "handles/BackoffTimerHandleInterface.hpp"
+#include "SharedInterface.hpp"
 #include <FBS/sctpParameters.h>
 #include <span>
 #include <string_view>
@@ -58,7 +58,7 @@ namespace RTC
 		public:
 			/**
 			 * Internal SCTP association state. This is different from the public SCTP
-			 * Association state (`SCTP::Types::AssociationState`).
+			 * association state (`SCTP::Types::AssociationState`).
 			 */
 			enum class State : uint8_t
 			{
@@ -133,12 +133,12 @@ namespace RTC
 
 			/**
 			 * Struct holding local verification tag and initial TSN between having
-			 * sent the INIT Chunk until the connection is established (there is no
+			 * sent the INIT chunk until the connection is established (there is no
 			 * TCB in between).
 			 *
 			 * @remarks
 			 * - This is how dcSCTP does, despite RFC 9260 states that the TCB should
-			 *   also be created when an INIT Chunk is sent.
+			 *   also be created when an INIT chunk is sent.
 			 */
 			struct PreTransmissionControlBlock
 			{
@@ -171,7 +171,8 @@ namespace RTC
 			explicit Association(
 			  const SctpOptions& sctpOptions,
 			  AssociationListenerInterface* listener,
-			  SharedInterface* shared);
+			  SharedInterface* shared,
+			  bool isDataChannel);
 
 			~Association() override;
 
@@ -191,7 +192,7 @@ namespace RTC
 
 			/**
 			 * Initiate the SCTP association with the remote peer. It sends an INIT
-			 * Chunk.
+			 * chunk.
 			 *
 			 * @remarks
 			 * - The SCTP association must be in New state.
@@ -201,7 +202,7 @@ namespace RTC
 			void Connect() override;
 
 			/**
-			 * Gracefully shutdowns the Association and sends all outstanding data.
+			 * Gracefully shutdowns the association and sends all outstanding data.
 			 * This is an asynchronous operation and `OnAssociationClosed()` will be
 			 * called on success.
 			 *
@@ -214,7 +215,7 @@ namespace RTC
 			void Shutdown() override;
 
 			/**
-			 * Closes the Association non-gracefully. Will send ABORT if the connection
+			 * Closes the association non-gracefully. Will send ABORT if the connection
 			 * is not already closed. No callbacks will be made after Close() has
 			 * returned. However, before Close() returns, it may have called
 			 * `OnAssociationClosed()` or `OnAssociationAborted()` callbacks.
@@ -222,10 +223,10 @@ namespace RTC
 			void Close() override;
 
 			/**
-			 * Retrieves the latest metrics. If the Association is not fully connected,
+			 * Retrieves the latest metrics. If the association is not fully connected,
 			 * `std::nullopt` will be returned.
 			 */
-			std::optional<AssociationMetrics> GetMetrics() const override;
+			std::optional<AssociationMetrics> MakeMetrics() const override;
 
 			/**
 			 * Returns the currently set priority for an outgoing stream. The initial
@@ -246,6 +247,12 @@ namespace RTC
 			void SetMaxSendMessageSize(size_t maxMessageSize) override;
 
 			/**
+			 * Returns the number of bytes of data currently queued to be sent in
+			 * total.
+			 */
+			size_t GetTotalBufferedAmount() const override;
+
+			/**
 			 * Returns the number of bytes of data currently queued to be sent on a
 			 * given stream.
 			 */
@@ -262,7 +269,7 @@ namespace RTC
 			 * considered "low" for a given stream, which will trigger
 			 * `OnAssociationStreamBufferedAmountLow()` event. The default value is 0.
 			 */
-			void SetBufferedAmountLowThreshold(uint16_t streamId, size_t bytes) override;
+			void SetStreamBufferedAmountLowThreshold(uint16_t streamId, size_t bytes) override;
 
 			/**
 			 * Resetting streams is an asynchronous operation and the results will be
@@ -312,7 +319,7 @@ namespace RTC
 			 * message will be queued.
 			 *
 			 * This has identical semantics to `SendMessage()', except that it may
-			 * coalesce many messages into a single SCTP Packet if they would fit.
+			 * coalesce many messages into a single SCTP packet if they would fit.
 			 *
 			 * @remarks
 			 * - Same as in `SendMessage()`.
@@ -321,9 +328,26 @@ namespace RTC
 			  std::span<Message> messages, const SendMessageOptions& sendMessageOptions) override;
 
 			/**
-			 * Receives SCTP data (hopefully an SCTP Packet) from the remote peer.
+			 * Receives SCTP data (hopefully an SCTP packet) from the remote peer.
 			 */
 			void ReceiveSctpData(const uint8_t* data, size_t len) override;
+
+			/**
+			 * Get negotiated max outbound streams. Returns 0 if the association is
+			 * not yet connected.
+			 */
+			uint16_t GetNegotiatedMaxOutboundStreams() const override;
+
+			/**
+			 * Get negotiated max inbound streams. Returns 0 if the association is
+			 * not yet connected.
+			 */
+			uint16_t GetNegotiatedMaxInboundStreams() const override;
+
+			bool IsDataChannel() const override
+			{
+				return this->isDataChannel;
+			}
 
 		private:
 			void InternalClose(Types::ErrorKind errorKind, const std::string_view& message);
@@ -352,13 +376,13 @@ namespace RTC
 			void SendShutdownAckChunk();
 
 			/**
-			 * Sends SHUTDOWN or SHUTDOWN-ACK if the Association is shutting down and
+			 * Sends SHUTDOWN or SHUTDOWN-ACK if the association is shutting down and
 			 * if all outstanding data has been acknowledged.
 			 */
 			void MaySendShutdownOrShutdownAckChunk();
 
 			/**
-			 * If the Association is shutting down, responds SHUTDOWN to any incoming
+			 * If the association is shutting down, responds SHUTDOWN to any incoming
 			 * DATA.
 			 */
 			void MaySendShutdownOnPacketReceived(const Packet* receivedPacket);
@@ -484,7 +508,7 @@ namespace RTC
 			// The actual send queue implementation. As data can be sent before the
 			// connection is established, this component is not in the TCB.
 			RoundRobinSendQueue sendQueue;
-			// To keep settings between sending of INIT Chunk and establishment of
+			// To keep settings between sending of INIT chunk and establishment of
 			// the connection.
 			PreTransmissionControlBlock preTcb;
 			// Once the SCTP association is established a Transmission Control Block
@@ -498,8 +522,10 @@ namespace RTC
 			const std::unique_ptr<BackoffTimerHandleInterface> t1CookieTimer;
 			// T2-shutdown timer.
 			const std::unique_ptr<BackoffTimerHandleInterface> t2ShutdownTimer;
-			// Max SCTP Packet length.
+			// Max SCTP packet length.
 			const size_t maxPacketLength;
+			// Whether this is DataChannel based SCTP.
+			bool isDataChannel;
 		};
 	} // namespace SCTP
 } // namespace RTC

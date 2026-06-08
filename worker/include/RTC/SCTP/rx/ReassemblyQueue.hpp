@@ -70,7 +70,7 @@ namespace RTC
 				Types::UnwrappedTsn senderLastAssignedTsn;
 				std::set<uint16_t> streamIds;
 				std::vector<std::function<void()>> deferredActions;
-				// TODO: Once we upgrade to C++23, replace with:
+				// TODO: SCTP: Once we upgrade to C++23, replace with:
 				// std::vector<std::move_only_function<void()>> deferredActions;
 			};
 

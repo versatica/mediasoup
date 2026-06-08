@@ -84,7 +84,7 @@ namespace RTC
 			std::unique_ptr<uint8_t[]> raw;
 
 		private:
-			static const absl::flat_hash_map<SdesItem::Type, std::string> Type2String;
+			static const ankerl::unordered_dense::map<SdesItem::Type, std::string> Type2String;
 		};
 
 		class SdesChunk

@@ -28,7 +28,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::SACK)
 			{
-				MS_WARN_DEV("invalid Chunk type");
+				MS_WARN_DEV("invalid chunk type");
 
 				return nullptr;
 			}
@@ -70,7 +70,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "SackChunk Length field must be equal or greater than %zu",
+				  "SackChunk length field must be equal or greater than %zu",
 				  SackChunk::SackChunkHeaderLength);
 
 				return nullptr;
@@ -78,7 +78,7 @@ namespace RTC
 
 			auto* chunk = new SackChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// In this Chunk we must validate that some fields have correct values.
+			// In this chunk we must validate that some fields have correct values.
 			if (
 			  (chunk->GetNumberOfGapAckBlocks() * 4) + (chunk->GetNumberOfDuplicateTsns() * 4) !=
 			  chunkLength - SackChunk::SackChunkHeaderLength)

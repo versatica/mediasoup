@@ -32,17 +32,17 @@ namespace RTC
 				uint16_t streamId;
 
 				/**
-				 * Only set for FORWARD_TSN.
+				 * Only set for FORWARD-TSN.
 				 */
 				uint16_t ssn;
 
 				/**
-				 * Only set for I_FORWARD_TSN.
+				 * Only set for I-FORWARD-TSN.
 				 */
 				uint32_t mid;
 
 				/**
-				 * Only set for I_FORWARD_TSN.
+				 * Only set for I-FORWARD-TSN.
 				 */
 				bool unordered;
 

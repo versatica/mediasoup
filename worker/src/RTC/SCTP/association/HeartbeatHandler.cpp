@@ -3,9 +3,9 @@
 
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "Utils.hpp"
 #include <string>
 
 namespace RTC
@@ -19,11 +19,11 @@ namespace RTC
 		/* Instance methods. */
 
 		HeartbeatHandler::HeartbeatHandler(
-		  AssociationListenerInterface& associationListener,
+		  AssociationListenerDeferrer& associationListenerDeferrer,
 		  const SctpOptions& sctpOptions,
 		  SharedInterface* shared,
 		  TransmissionControlBlockContextInterface* tcbContext)
-		  : associationListener(associationListener),
+		  : associationListenerDeferrer(associationListenerDeferrer),
 		    sctpOptions(sctpOptions),
 		    shared(shared),
 		    tcbContext(tcbContext),
@@ -96,7 +96,7 @@ namespace RTC
 			auto packet             = this->tcbContext->CreatePacket();
 			auto* heartbeatAckChunk = packet->BuildChunkInPlace<HeartbeatAckChunk>();
 
-			// Here we have to extract all Parameters from receivedHeartbeatRequestChunk
+			// Here we have to extract all parameters from receivedHeartbeatRequestChunk
 			// and add them into heartbeatAckChunk.
 			for (auto it = receivedHeartbeatRequestChunk->ParametersBegin();
 			     it != receivedHeartbeatRequestChunk->ParametersEnd();
@@ -124,9 +124,9 @@ namespace RTC
 
 			if (!heartbeatInfoParameter)
 			{
-				this->associationListener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED,
-				  "ignoring HEARTBEAT_ACK chunk without Heartbeat Info parameter");
+				  "ignoring HEARTBEAT-ACK chunk without Heartbeat Info parameter");
 
 				return;
 			}
@@ -136,14 +136,14 @@ namespace RTC
 
 			if (!info)
 			{
-				this->associationListener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "ignoring Heartbeat Info parameter without info field");
 
 				return;
 			}
 			else if (infoLen != HeartbeatInfoLength)
 			{
-				this->associationListener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "ignoring Heartbeat Info parameter with wrong length");
 
 				return;
@@ -156,14 +156,14 @@ namespace RTC
 			{
 				const uint64_t rttMs = nowMs - createdAtMs;
 
-				MS_DEBUG_DEV("valid HEARTBEAT_ACK Chunk received, calling ObserveRttMs(%" PRIu64 ")", rttMs);
+				MS_DEBUG_DEV("valid HEARTBEAT-ACK chunk received, calling ObserveRttMs(%" PRIu64 ")", rttMs);
 
 				this->tcbContext->ObserveRttMs(rttMs);
 			}
 			else
 			{
 				MS_WARN_DEV(
-				  "ignoring received HEARTBEAT_ACK Chunk with invalid info content [createdAtMs:%" PRIu64
+				  "ignoring received HEARTBEAT-ACK chunk with invalid info content [createdAtMs:%" PRIu64
 				  ", nowMs:%" PRIu64 "]",
 				  createdAtMs,
 				  nowMs);
@@ -180,9 +180,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// This is a top-level timer entry point (invoked by libuv outside any other
+			// SCTP API call), so it must establish the deferrer scope itself, just like
+			// Association does in its own timer handlers.
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
+
 			if (!this->tcbContext->IsAssociationEstablished())
 			{
-				MS_DEBUG_DEV("won't send HEARTBEAT_REQUEST when SCTP Association is not established");
+				MS_DEBUG_DEV("won't send HEARTBEAT-REQUEST when SCTP association is not established");
 
 				return;
 			}
@@ -205,7 +210,7 @@ namespace RTC
 			heartbeatInfoParameter->Consolidate();
 			heartbeatRequestChunk->Consolidate();
 
-			MS_DEBUG_DEV("sending HEARTBEAT_REQUEST Chunk with info content [nowMs:%" PRIu64 "]", nowMs);
+			MS_DEBUG_DEV("sending HEARTBEAT-REQUEST chunk with info content [nowMs:%" PRIu64 "]", nowMs);
 
 			this->tcbContext->SendPacket(packet.get());
 		}
@@ -213,6 +218,11 @@ namespace RTC
 		void HeartbeatHandler::OnTimeoutTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			// This is a top-level timer entry point (invoked by libuv outside any other
+			// SCTP API call), so it must establish the deferrer scope itself, just like
+			// Association does in its own timer handlers.
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			// Note that the timeout timer is not restarted. It will be started again when
 			// the interval timer expires.

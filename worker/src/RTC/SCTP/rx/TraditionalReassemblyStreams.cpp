@@ -3,6 +3,7 @@
 
 #include "RTC/SCTP/rx/TraditionalReassemblyStreams.hpp"
 #include "Logger.hpp"
+#include <numeric> // std::accumulate()
 
 namespace RTC
 {

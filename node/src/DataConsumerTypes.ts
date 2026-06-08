@@ -66,6 +66,7 @@ export type DataConsumerDump = {
 	sctpStreamParameters?: SctpStreamParameters;
 	label: string;
 	protocol: string;
+	bufferedAmount: number;
 	bufferedAmountLowThreshold: number;
 };
 
@@ -202,19 +203,20 @@ export interface DataConsumer<
 	resume(): Promise<void>;
 
 	/**
-	 * Set buffered amount low threshold.
+	 * Set buffered amount low threshold (in bytes).
 	 */
 	setBufferedAmountLowThreshold(threshold: number): Promise<void>;
 
 	/**
-	 * Get buffered amount size.
+	 * Get buffered amount size (in bytes).
 	 */
 	getBufferedAmount(): Promise<number>;
 
 	/**
-	 * Send a message.
+	 * Send a message. Only for SCTP data consumers. It returns current buffered
+	 * amount size (in bytes) after sending/queing the message.
 	 */
-	send(message: string | Buffer, ppid?: number): Promise<void>;
+	send(message: string | Buffer, ppid?: number): Promise<number>;
 
 	/**
 	 * Set subchannels.

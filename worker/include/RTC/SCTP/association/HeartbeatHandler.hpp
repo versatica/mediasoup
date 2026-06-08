@@ -2,13 +2,13 @@
 #define MS_RTC_SCTP_HEARTBEAT_HANDLER_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
+#include "handles/BackoffTimerHandleInterface.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
-#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
-#include "handles/BackoffTimerHandleInterface.hpp"
+#include "SharedInterface.hpp"
 
 namespace RTC
 {
@@ -26,7 +26,7 @@ namespace RTC
 		{
 		public:
 			HeartbeatHandler(
-			  AssociationListenerInterface& associationListener,
+			  AssociationListenerDeferrer& associationListenerDeferrer,
 			  const SctpOptions& sctpOptions,
 			  SharedInterface* shared,
 			  TransmissionControlBlockContextInterface* tcbContext);
@@ -42,13 +42,13 @@ namespace RTC
 			void RestartTimer();
 
 			/**
-			 * Called on received HEARTBEAT_REQUEST Chunk.
+			 * Called on received HEARTBEAT-REQUEST chunk.
 			 */
 			void HandleReceivedHeartbeatRequestChunk(
 			  const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
 
 			/**
-			 * Called on received HEARTBEAT_ACK Chunk.
+			 * Called on received HEARTBEAT-ACK chunk.
 			 */
 			void HandleReceivedHeartbeatAckChunk(const HeartbeatAckChunk* receivedHeartbeatAckChunk);
 
@@ -63,7 +63,7 @@ namespace RTC
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			AssociationListenerInterface& associationListener;
+			AssociationListenerDeferrer& associationListenerDeferrer;
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;
 			TransmissionControlBlockContextInterface* tcbContext;

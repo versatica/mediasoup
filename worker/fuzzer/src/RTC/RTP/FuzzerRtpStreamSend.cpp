@@ -1,7 +1,7 @@
 #include "RTC/RTP/FuzzerRtpStreamSend.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include "Utils.hpp"
 #include "mocks/include/MockShared.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 
 namespace
 {

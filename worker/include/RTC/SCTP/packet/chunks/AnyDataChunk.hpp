@@ -22,32 +22,32 @@ namespace RTC
 
 		public:
 			/**
-			 * The (I)mmediate bit (in DATA and I_DATA chunks).
+			 * The (I)mmediate bit (in DATA and I-DATA chunks).
 			 */
 			virtual bool GetI() const = 0;
 
 			/**
-			 * The (U)nordered bit (in DATA and I_DATA chunks).
+			 * The (U)nordered bit (in DATA and I-DATA chunks).
 			 */
 			virtual bool GetU() const = 0;
 
 			/**
-			 * The (B)eginning fragment bit (in DATA and I_DATA chunks).
+			 * The (B)eginning fragment bit (in DATA and I-DATA chunks).
 			 */
 			virtual bool GetB() const = 0;
 
 			/**
-			 * The (E)nding fragment bit (in DATA and I_DATA chunks).
+			 * The (E)nding fragment bit (in DATA and I-DATA chunks).
 			 */
 			virtual bool GetE() const = 0;
 
 			/**
-			 * TSN (in DATA and I_DATA chunks).
+			 * TSN (in DATA and I-DATA chunks).
 			 */
 			virtual uint32_t GetTsn() const = 0;
 
 			/**
-			 * Stream Identifier (in DATA and I_DATA chunks).
+			 * Stream Identifier (in DATA and I-DATA chunks).
 			 */
 			virtual uint16_t GetStreamId() const = 0;
 
@@ -57,17 +57,17 @@ namespace RTC
 			virtual uint16_t GetStreamSequenceNumber() const = 0;
 
 			/**
-			 * Message Identifier (MID) (only in I_DATA chunks).
+			 * Message Identifier (MID) (only in I-DATA chunks).
 			 */
 			virtual uint32_t GetMessageId() const = 0;
 
 			/**
-			 * Fragment Sequence Number (FSN) (only in I_DATA chunks).
+			 * Fragment Sequence Number (FSN) (only in I-DATA chunks).
 			 */
 			virtual uint32_t GetFragmentSequenceNumber() const = 0;
 
 			/**
-			 * Payload Protocol Identifier (PPID) (in DATA and I_DATA chunks).
+			 * Payload Protocol Identifier (PPID) (in DATA and I-DATA chunks).
 			 */
 			virtual uint32_t GetPayloadProtocolId() const = 0;
 

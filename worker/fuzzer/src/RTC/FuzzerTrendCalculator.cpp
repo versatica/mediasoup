@@ -1,7 +1,7 @@
 #include "RTC/FuzzerTrendCalculator.hpp"
 #include "DepLibUV.hpp"
-#include "Utils.hpp"
 #include "RTC/TrendCalculator.hpp"
+#include "Utils.hpp"
 
 void FuzzerRtcTrendCalculator::Fuzz(const uint8_t* data, size_t len)
 {

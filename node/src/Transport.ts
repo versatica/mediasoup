@@ -70,10 +70,11 @@ import {
 } from './rtpParametersFbsUtils';
 import type {
 	SctpParameters,
+	SctpNegotiatedCapabilities,
 	SctpStreamParameters,
 } from './sctpParametersTypes';
 import {
-	parseSctpParametersDump,
+	parseSctpParameters,
 	serializeSctpStreamParameters,
 } from './sctpParametersFbsUtils';
 import type { AppData } from './types';
@@ -124,6 +125,7 @@ export abstract class TransportImpl<
 	protected readonly internal: TransportInternal;
 
 	// Transport data. This is set by the subclass.
+	// eslint-disable-next-line no-unused-private-class-members
 	readonly #data: TransportData;
 
 	// Channel instance.
@@ -168,6 +170,9 @@ export abstract class TransportImpl<
 
 	// Buffer with available SCTP stream ids.
 	#sctpStreamIds?: Buffer;
+
+	// Max number of negotiated outbound SCTP streams.
+	#sctpNegotiatedMaxOutboundStreams?: number;
 
 	// Next SCTP stream id.
 	#nextSctpStreamId = 0;
@@ -856,7 +861,7 @@ export abstract class TransportImpl<
 			type = 'sctp';
 
 			// This may throw.
-			sctpStreamId = this.getNextSctpStreamId();
+			sctpStreamId = this.allocateSctpStreamId();
 
 			sctpStreamParameters = dataProducer.sctpStreamParameters
 				? utils.clone<SctpStreamParameters>(dataProducer.sctpStreamParameters)
@@ -865,7 +870,6 @@ export abstract class TransportImpl<
 						ordered: true,
 					};
 
-			this.#sctpStreamIds![sctpStreamId] = 1;
 			sctpStreamParameters.streamId = sctpStreamId;
 
 			if (ordered !== undefined) {
@@ -995,18 +999,38 @@ export abstract class TransportImpl<
 		);
 	}
 
-	private getNextSctpStreamId(): number {
-		if (
-			!this.#data.sctpParameters ||
-			typeof this.#data.sctpParameters.MIS !== 'number'
-		) {
-			throw new TypeError('missing sctpParameters.MIS');
+	protected handleSctpNegotiatedCapabilities(
+		sctpNegotiatedCapabilities: SctpNegotiatedCapabilities
+	): void {
+		this.#sctpNegotiatedMaxOutboundStreams =
+			sctpNegotiatedCapabilities.negotiatedMaxOutboundStreams;
+	}
+
+	private allocateSctpStreamId(): number {
+		if (!this.#sctpStreamIds) {
+			// Allocate a buffer with 65535 elements set to 0.
+			// Notice that 65535 is the maximum number of streams in a SCTP
+			// association.
+			this.#sctpStreamIds = Buffer.alloc(65535, 0);
 		}
 
-		const numStreams = this.#data.sctpParameters.MIS;
+		// It may happen that the SCTP association is connected after having
+		// created many DataConsumers and hence some of them could have
+		// exceeded the max number of SCTP outgoing streams.
+		//
+		// NOTE: This is not an issue in real world because nowadays all the
+		// WebRTC browsers negotiate 65535 (max value) for their inbound
+		// number of streams and mediasoup always negotiates 65565 (max value)
+		// for its outbound number of streams.
+		if (
+			this.#sctpNegotiatedMaxOutboundStreams !== undefined &&
+			this.#nextSctpStreamId + 1 > this.#sctpNegotiatedMaxOutboundStreams
+		) {
+			logger.warn(
+				`SCTP negotiated max outbound streams is higher than current next SCTP streamId + 1, resetting it to 0`
+			);
 
-		if (!this.#sctpStreamIds) {
-			this.#sctpStreamIds = Buffer.alloc(numStreams, 0);
+			this.#nextSctpStreamId = 0;
 		}
 
 		let sctpStreamId;
@@ -1015,7 +1039,8 @@ export abstract class TransportImpl<
 			sctpStreamId =
 				(this.#nextSctpStreamId + idx) % this.#sctpStreamIds.length;
 
-			if (!this.#sctpStreamIds[sctpStreamId]) {
+			if (this.#sctpStreamIds[sctpStreamId] === 0) {
+				this.#sctpStreamIds[sctpStreamId] = 1;
 				this.#nextSctpStreamId = sctpStreamId + 1;
 
 				return sctpStreamId;
@@ -1144,7 +1169,7 @@ export function parseBaseTransportDump(
 	let sctpParameters: SctpParameters | undefined;
 
 	if (fbsSctpParameters) {
-		sctpParameters = parseSctpParametersDump(fbsSctpParameters);
+		sctpParameters = parseSctpParameters(fbsSctpParameters);
 	}
 
 	// Retrieve sctpState.
@@ -1175,7 +1200,8 @@ export function parseBaseTransportDump(
 		dataConsumerIds: dataConsumerIds,
 		recvRtpHeaderExtensions: recvRtpHeaderExtensions,
 		rtpListener: rtpListener,
-		maxMessageSize: binary.maxMessageSize(),
+		maxSendMessageSize: binary.maxSendMessageSize(),
+		maxReceiveMessageSize: binary.maxReceiveMessageSize(),
 		sctpParameters: sctpParameters,
 		sctpState: sctpState,
 		sctpListener: sctpListener,

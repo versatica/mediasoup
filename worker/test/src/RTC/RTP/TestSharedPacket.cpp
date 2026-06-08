@@ -1,7 +1,7 @@
 #include "common.hpp"
-#include "test/include/RTC/RTP/rtpCommon.hpp" // in worker/test/include/
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
+#include "test/include/RTC/RTP/rtpCommon.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
 
 SCENARIO("RTP SharedPacket", "[rtp][sharedpacket]")
@@ -49,7 +49,7 @@ SCENARIO("RTP SharedPacket", "[rtp][sharedpacket]")
 
 	SECTION("constructor with packet and copy constructor")
 	{
-		// Create sharedPacket1 using constructor with a Packet.
+		// Create sharedPacket1 using constructor with a packet.
 		RTC::RTP::SharedPacket sharedPacket1(packetA);
 
 		REQUIRE(sharedPacket1.HasPacket());

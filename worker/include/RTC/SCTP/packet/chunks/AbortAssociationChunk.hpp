@@ -23,14 +23,14 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 6.
+		 * - Chunk type (8 bits): 6.
 		 * - T bit (1 bit): The T bit is set to 0 if the sender filled in the
 		 *   Verification Tag expected by the peer. If the Verification Tag is
 		 *   reflected, the T bit MUST be set to 1. Reflecting means that the sent
 		 *   Verification Tag is the same as the received one.
 		 * - Length (16 bits).
 		 *
-		 * Optional Variable-Length Error Causes (anyone).
+		 * Optional variable-length error causes (anyone).
 		 */
 
 		// Forward declaration.
@@ -38,7 +38,7 @@ namespace RTC
 
 		class AbortAssociationChunk : public Chunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -46,7 +46,7 @@ namespace RTC
 			 * Parse a AbortAssociationChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static AbortAssociationChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -54,7 +54,7 @@ namespace RTC
 			 * Create a AbortAssociationChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static AbortAssociationChunk* Factory(uint8_t* buffer, size_t bufferLength);
 

@@ -27,7 +27,7 @@ namespace RTC
 
 		class UnknownChunk : public Chunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -35,7 +35,7 @@ namespace RTC
 			 * Parse a UnknownChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static UnknownChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 

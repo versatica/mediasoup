@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "FBS/rtpParameters.h"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -78,7 +78,7 @@ namespace RTC
 		const std::vector<int32_t>& GetArrayOfIntegers(const std::string& key) const;
 
 	private:
-		absl::flat_hash_map<std::string, Value> mapKeyValues;
+		ankerl::unordered_dense::map<std::string, Value> mapKeyValues;
 	};
 } // namespace RTC
 

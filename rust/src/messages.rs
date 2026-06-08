@@ -34,7 +34,7 @@ use mediasoup_types::data_structures::{
     ListenInfo, SctpState, TransportTuple,
 };
 use mediasoup_types::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
-use mediasoup_types::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
+use mediasoup_types::sctp_parameters::{SctpParameters, SctpStreamParameters};
 use mediasoup_types::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use parking_lot::Mutex;
 use planus::Builder;
@@ -547,7 +547,8 @@ impl Request for RouterDumpRequest {
 pub(crate) struct RouterCreateDirectTransportData {
     transport_id: TransportId,
     direct: bool,
-    max_message_size: u32,
+    max_send_message_size: u32,
+    max_receive_message_size: u32,
 }
 
 impl RouterCreateDirectTransportData {
@@ -558,7 +559,8 @@ impl RouterCreateDirectTransportData {
         Self {
             transport_id,
             direct: true,
-            max_message_size: direct_transport_options.max_message_size,
+            max_send_message_size: direct_transport_options.max_send_message_size,
+            max_receive_message_size: direct_transport_options.max_receive_message_size,
         }
     }
 }
@@ -570,12 +572,13 @@ impl ToFbs for RouterCreateDirectTransportData {
         direct_transport::DirectTransportOptions {
             base: Box::new(transport::Options {
                 direct: true,
-                max_message_size: Some(self.max_message_size),
                 initial_available_outgoing_bitrate: None,
-                enable_sctp: false,
-                num_sctp_streams: None,
-                max_sctp_message_size: 0,
+                max_send_message_size: self.max_send_message_size,
+                max_receive_message_size: self.max_receive_message_size,
                 sctp_send_buffer_size: 0,
+                sctp_per_stream_send_queue_limit: 0,
+                sctp_max_receiver_window_buffer_size: 0,
+                enable_sctp: false,
                 is_data_channel: false,
             }),
         }
@@ -668,9 +671,11 @@ pub(crate) struct RouterCreateWebrtcTransportData {
     prefer_tcp: bool,
     ice_consent_timeout: u8,
     enable_sctp: bool,
-    num_sctp_streams: NumSctpStreams,
-    max_sctp_message_size: u32,
+    max_send_message_size: u32,
+    max_receive_message_size: u32,
     sctp_send_buffer_size: u32,
+    sctp_per_stream_send_queue_limit: u32,
+    sctp_max_receiver_window_buffer_size: u32,
     is_data_channel: bool,
 }
 
@@ -701,9 +706,13 @@ impl RouterCreateWebrtcTransportData {
             prefer_tcp: webrtc_transport_options.prefer_tcp,
             ice_consent_timeout: webrtc_transport_options.ice_consent_timeout,
             enable_sctp: webrtc_transport_options.enable_sctp,
-            num_sctp_streams: webrtc_transport_options.num_sctp_streams,
-            max_sctp_message_size: webrtc_transport_options.max_sctp_message_size,
+            max_send_message_size: webrtc_transport_options.max_send_message_size,
+            max_receive_message_size: webrtc_transport_options.max_receive_message_size,
             sctp_send_buffer_size: webrtc_transport_options.sctp_send_buffer_size,
+            sctp_per_stream_send_queue_limit: webrtc_transport_options
+                .sctp_per_stream_send_queue_limit,
+            sctp_max_receiver_window_buffer_size: webrtc_transport_options
+                .sctp_max_receiver_window_buffer_size,
             is_data_channel: true,
         }
     }
@@ -716,12 +725,13 @@ impl ToFbs for RouterCreateWebrtcTransportData {
         web_rtc_transport::WebRtcTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
-                max_message_size: None,
                 initial_available_outgoing_bitrate: Some(self.initial_available_outgoing_bitrate),
                 enable_sctp: self.enable_sctp,
-                num_sctp_streams: Some(Box::new(self.num_sctp_streams.to_fbs())),
-                max_sctp_message_size: self.max_sctp_message_size,
+                max_send_message_size: self.max_send_message_size,
+                max_receive_message_size: self.max_receive_message_size,
                 sctp_send_buffer_size: self.sctp_send_buffer_size,
+                sctp_per_stream_send_queue_limit: self.sctp_per_stream_send_queue_limit,
+                sctp_max_receiver_window_buffer_size: self.sctp_max_receiver_window_buffer_size,
                 is_data_channel: true,
             }),
             listen: self.listen.to_fbs(),
@@ -894,12 +904,14 @@ pub(crate) struct RouterCreatePlainTransportData {
     rtcp_mux: bool,
     comedia: bool,
     enable_sctp: bool,
-    num_sctp_streams: NumSctpStreams,
-    max_sctp_message_size: u32,
+    max_send_message_size: u32,
+    max_receive_message_size: u32,
     sctp_send_buffer_size: u32,
+    sctp_per_stream_send_queue_limit: u32,
+    sctp_max_receiver_window_buffer_size: u32,
+    is_data_channel: bool,
     enable_srtp: bool,
     srtp_crypto_suite: SrtpCryptoSuite,
-    is_data_channel: bool,
 }
 
 impl RouterCreatePlainTransportData {
@@ -914,12 +926,16 @@ impl RouterCreatePlainTransportData {
             rtcp_mux: plain_transport_options.rtcp_mux,
             comedia: plain_transport_options.comedia,
             enable_sctp: plain_transport_options.enable_sctp,
-            num_sctp_streams: plain_transport_options.num_sctp_streams,
-            max_sctp_message_size: plain_transport_options.max_sctp_message_size,
+            max_send_message_size: plain_transport_options.max_send_message_size,
+            max_receive_message_size: plain_transport_options.max_receive_message_size,
             sctp_send_buffer_size: plain_transport_options.sctp_send_buffer_size,
+            sctp_per_stream_send_queue_limit: plain_transport_options
+                .sctp_per_stream_send_queue_limit,
+            sctp_max_receiver_window_buffer_size: plain_transport_options
+                .sctp_max_receiver_window_buffer_size,
+            is_data_channel: false,
             enable_srtp: plain_transport_options.enable_srtp,
             srtp_crypto_suite: plain_transport_options.srtp_crypto_suite,
-            is_data_channel: false,
         }
     }
 }
@@ -931,12 +947,13 @@ impl ToFbs for RouterCreatePlainTransportData {
         plain_transport::PlainTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
-                max_message_size: None,
                 initial_available_outgoing_bitrate: None,
                 enable_sctp: self.enable_sctp,
-                num_sctp_streams: Some(Box::new(self.num_sctp_streams.to_fbs())),
-                max_sctp_message_size: self.max_sctp_message_size,
+                max_send_message_size: self.max_send_message_size,
+                max_receive_message_size: self.max_receive_message_size,
                 sctp_send_buffer_size: self.sctp_send_buffer_size,
+                sctp_per_stream_send_queue_limit: self.sctp_per_stream_send_queue_limit,
+                sctp_max_receiver_window_buffer_size: self.sctp_max_receiver_window_buffer_size,
                 is_data_channel: self.is_data_channel,
             }),
             listen_info: Box::new(self.listen_info.clone().to_fbs()),
@@ -1029,12 +1046,14 @@ pub(crate) struct RouterCreatePipeTransportData {
     transport_id: TransportId,
     listen_info: ListenInfo,
     enable_sctp: bool,
-    num_sctp_streams: NumSctpStreams,
-    max_sctp_message_size: u32,
+    max_send_message_size: u32,
+    max_receive_message_size: u32,
     sctp_send_buffer_size: u32,
+    sctp_per_stream_send_queue_limit: u32,
+    sctp_max_receiver_window_buffer_size: u32,
+    is_data_channel: bool,
     enable_rtx: bool,
     enable_srtp: bool,
-    is_data_channel: bool,
 }
 
 impl RouterCreatePipeTransportData {
@@ -1046,12 +1065,16 @@ impl RouterCreatePipeTransportData {
             transport_id,
             listen_info: pipe_transport_options.listen_info.clone(),
             enable_sctp: pipe_transport_options.enable_sctp,
-            num_sctp_streams: pipe_transport_options.num_sctp_streams,
-            max_sctp_message_size: pipe_transport_options.max_sctp_message_size,
+            max_send_message_size: pipe_transport_options.max_send_message_size,
+            max_receive_message_size: pipe_transport_options.max_receive_message_size,
             sctp_send_buffer_size: pipe_transport_options.sctp_send_buffer_size,
+            sctp_per_stream_send_queue_limit: pipe_transport_options
+                .sctp_per_stream_send_queue_limit,
+            sctp_max_receiver_window_buffer_size: pipe_transport_options
+                .sctp_max_receiver_window_buffer_size,
+            is_data_channel: false,
             enable_rtx: pipe_transport_options.enable_rtx,
             enable_srtp: pipe_transport_options.enable_srtp,
-            is_data_channel: false,
         }
     }
 }
@@ -1063,12 +1086,13 @@ impl ToFbs for RouterCreatePipeTransportData {
         pipe_transport::PipeTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
-                max_message_size: None,
                 initial_available_outgoing_bitrate: None,
                 enable_sctp: self.enable_sctp,
-                num_sctp_streams: Some(Box::new(self.num_sctp_streams.to_fbs())),
-                max_sctp_message_size: self.max_sctp_message_size,
+                max_send_message_size: self.max_send_message_size,
+                max_receive_message_size: self.max_receive_message_size,
                 sctp_send_buffer_size: self.sctp_send_buffer_size,
+                sctp_per_stream_send_queue_limit: self.sctp_per_stream_send_queue_limit,
+                sctp_max_receiver_window_buffer_size: self.sctp_max_receiver_window_buffer_size,
                 is_data_channel: self.is_data_channel,
             }),
             listen_info: Box::new(self.listen_info.clone().to_fbs()),
@@ -1959,8 +1983,8 @@ impl Request for TransportConsumeDataRequest {
             self.data_consumer_id.to_string(),
             self.data_producer_id.to_string(),
             match self.r#type {
-                DataConsumerType::Sctp => data_producer::Type::Sctp,
-                DataConsumerType::Direct => data_producer::Type::Direct,
+                DataConsumerType::Sctp => data_consumer::Type::Sctp,
+                DataConsumerType::Direct => data_consumer::Type::Direct,
             },
             ToFbs::to_fbs(&self.sctp_stream_parameters),
             if self.label.is_empty() {
@@ -2001,8 +2025,8 @@ impl Request for TransportConsumeDataRequest {
 
         Ok(TransportConsumeDataResponse {
             r#type: match data.type_ {
-                data_producer::Type::Sctp => DataConsumerType::Sctp,
-                data_producer::Type::Direct => DataConsumerType::Direct,
+                data_consumer::Type::Sctp => DataConsumerType::Sctp,
+                data_consumer::Type::Direct => DataConsumerType::Direct,
             },
             sctp_stream_parameters: data.sctp_stream_parameters.map(|stream_parameters| {
                 SctpStreamParameters::from_fbs(stream_parameters.as_ref())
@@ -3151,7 +3175,7 @@ pub(crate) struct DataConsumerSendRequest {
 impl Request for DataConsumerSendRequest {
     const METHOD: request::Method = request::Method::DataconsumerSend;
     type HandlerId = DataConsumerId;
-    type Response = ();
+    type Response = u32;
 
     fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
@@ -3173,9 +3197,15 @@ impl Request for DataConsumerSendRequest {
     }
 
     fn convert_response(
-        _response: Option<response::BodyRef<'_>>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error + Send + Sync>> {
-        Ok(())
+        let Some(response::BodyRef::DataConsumerSendResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        let data = data_consumer::SendResponse::try_from(data)?;
+
+        Ok(data.buffered_amount)
     }
 }
 

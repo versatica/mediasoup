@@ -19,7 +19,7 @@ namespace RTC
 
 			if (bufferLength < TLV::TLVHeaderLength)
 			{
-				MS_WARN_TAG(sctp, "no space for Header [bufferLength:%zu]", bufferLength);
+				MS_WARN_TAG(sctp, "no space for header [bufferLength:%zu]", bufferLength);
 
 				return false;
 			}
@@ -29,14 +29,14 @@ namespace RTC
 			if (itemLength < TLV::TLVHeaderLength)
 			{
 				MS_WARN_TAG(
-				  sctp, "Length field must have value greater or equal than %zu", TLV::TLVHeaderLength);
+				  sctp, "length field must have value greater or equal than %zu", TLV::TLVHeaderLength);
 
 				return false;
 			}
 
 			// Item total length must be multiple of 4 bytes and must include padding
-			// bytes despite item Length field does not include padding.
-			// NOTE: We must cast to size_t, otherwise a maximum item Length value of
+			// bytes despite item length field does not include padding.
+			// NOTE: We must cast to size_t, otherwise a maximum item length value of
 			// 65535 would generate a padded length of 0 bytes!
 			const size_t paddedItemLength = Utils::Byte::PadTo4Bytes(size_t{ itemLength });
 
@@ -44,7 +44,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "no space for 4-byte padded announced Length [paddedItemLength:%zu, bufferLength:%zu]",
+				  "no space for 4-byte padded announced length [paddedItemLength:%zu, bufferLength:%zu]",
 				  paddedItemLength,
 				  bufferLength);
 
@@ -131,7 +131,7 @@ namespace RTC
 				// NOTE: If there is no space in the buffer for it, it will throw.
 				SetLength(newPaddedLength);
 
-				// Update Length field.
+				// Update length field.
 				// NOTE: This will throw if computed value is too big.
 				SetLengthField(newNotPaddedLength);
 			}
@@ -161,8 +161,8 @@ namespace RTC
 				// NOTE: This will throw if there is no enough space in the buffer.
 				SetLength(previousLength + item->GetLength());
 
-				// Update Length field.
-				// NOTE: This will throw if computed Length field value is too big.
+				// Update length field.
+				// NOTE: This will throw if computed length field value is too big.
 				SetLengthField(previousLength + item->GetLengthField());
 			}
 			catch (const MediaSoupError& error)

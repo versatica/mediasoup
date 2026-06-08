@@ -49,8 +49,10 @@ abseil_cpp_proj = subproject(
   'abseil-cpp',
   default_options: [
     'warning_level=0',
+    'cpp_std=c++17',
   ],
 )
+
 local_include_directories = declare_dependency(
   include_directories: include_directories('libwebrtc')
 )
@@ -60,11 +62,12 @@ libwebrtc = library(
   libwebrtc_sources,
   dependencies: [
     local_include_directories,
+    libuv_proj.get_variable('libuv_dep'),
     openssl_proj.get_variable('openssl_dep'),
     abseil_cpp_proj.get_variable('absl_strings_dep'),
     abseil_cpp_proj.get_variable('absl_types_dep'),
+    ankerl_unordered_dense_dep,
     flatbuffers_proj.get_variable('flatbuffers_dep'),
-    libuv_proj.get_variable('libuv_dep'),
   ],
   include_directories: libwebrtc_include_directories,
   cpp_args: cpp_args,
@@ -75,6 +78,7 @@ libwebrtc_dep = declare_dependency(
     local_include_directories,
     abseil_cpp_proj.get_variable('absl_strings_dep'),
     abseil_cpp_proj.get_variable('absl_types_dep'),
+    ankerl_unordered_dense_dep,
   ],
   include_directories: include_directories('.'),
   link_with: libwebrtc,

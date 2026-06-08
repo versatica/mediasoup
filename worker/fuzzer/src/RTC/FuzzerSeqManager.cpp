@@ -1,6 +1,6 @@
 #include "RTC/FuzzerSeqManager.hpp"
-#include "Utils.hpp"
 #include "RTC/SeqManager.hpp"
+#include "Utils.hpp"
 #include <iostream>
 
 void FuzzerRtcSeqManager::Fuzz(const uint8_t* data, size_t len)

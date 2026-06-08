@@ -5,14 +5,13 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <absl/container/flat_hash_set.h>
 
 namespace RTC
 {
 	/* Class variables. */
 
 	// clang-format off
-	const absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::Type2String = {
+	const ankerl::unordered_dense::map<RtpParameters::Type, std::string> RtpParameters::Type2String = {
 		{ RtpParameters::Type::SIMPLE, "simple" },
 		{ RtpParameters::Type::SIMULCAST, "simulcast" },
 		{ RtpParameters::Type::SVC, "svc" },
@@ -249,7 +248,7 @@ namespace RTC
 
 		static const std::string AptString{ "apt" };
 
-		absl::flat_hash_set<uint8_t> payloadTypes;
+		ankerl::unordered_dense::set<uint8_t> payloadTypes;
 
 		for (auto& codec : this->codecs)
 		{

@@ -70,6 +70,151 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
     ]
 }
 
+fn media_codecs_vpx() -> Vec<RtpCodecCapability> {
+    vec![
+        RtpCodecCapability::Video {
+            mime_type: MimeTypeVideo::Vp8,
+            preferred_payload_type: None,
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![
+                RtcpFeedback::Nack,
+                RtcpFeedback::NackPli,
+                RtcpFeedback::CcmFir,
+                RtcpFeedback::GoogRemb,
+            ],
+        },
+        RtpCodecCapability::Video {
+            mime_type: MimeTypeVideo::Vp9,
+            preferred_payload_type: None,
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![
+                RtcpFeedback::Nack,
+                RtcpFeedback::NackPli,
+                RtcpFeedback::CcmFir,
+                RtcpFeedback::GoogRemb,
+            ],
+        },
+    ]
+}
+
+fn consumer_device_capabilities_vpx() -> RtpCapabilities {
+    RtpCapabilities {
+        codecs: vec![
+            RtpCodecCapability::Video {
+                mime_type: MimeTypeVideo::Vp8,
+                preferred_payload_type: Some(101),
+                clock_rate: NonZeroU32::new(90000).unwrap(),
+                parameters: RtpCodecParametersParameters::default(),
+                rtcp_feedback: vec![
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                ],
+            },
+            RtpCodecCapability::Video {
+                mime_type: MimeTypeVideo::Vp9,
+                preferred_payload_type: Some(102),
+                clock_rate: NonZeroU32::new(90000).unwrap(),
+                parameters: RtpCodecParametersParameters::default(),
+                rtcp_feedback: vec![
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                ],
+            },
+        ],
+        header_extensions: vec![],
+    }
+}
+
+fn vp9_svc_producer_options() -> ProducerOptions {
+    let mut options = ProducerOptions::new(
+        MediaKind::Video,
+        RtpParameters {
+            mid: Some("VIDEOSVC".to_string()),
+            codecs: vec![RtpCodecParameters::Video {
+                mime_type: MimeTypeVideo::Vp9,
+                payload_type: 96,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
+                parameters: RtpCodecParametersParameters::default(),
+                rtcp_feedback: vec![
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                ],
+            }],
+            header_extensions: vec![],
+            encodings: vec![RtpEncodingParameters {
+                ssrc: Some(33333333),
+                scalability_mode: "L3T3".parse().unwrap(),
+                ..RtpEncodingParameters::default()
+            }],
+            rtcp: RtcpParameters {
+                cname: Some("FOOBAR".to_string()),
+                ..RtcpParameters::default()
+            },
+            msid: None,
+        },
+    );
+
+    options.app_data = AppData::new(ProducerAppData { _foo: 1, _bar: "2" });
+
+    options
+}
+
+fn vp8_simulcast_producer_options() -> ProducerOptions {
+    let mut options = ProducerOptions::new(
+        MediaKind::Video,
+        RtpParameters {
+            mid: Some("VIDEOVP8".to_string()),
+            codecs: vec![RtpCodecParameters::Video {
+                mime_type: MimeTypeVideo::Vp8,
+                payload_type: 96,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
+                parameters: RtpCodecParametersParameters::default(),
+                rtcp_feedback: vec![
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                ],
+            }],
+            header_extensions: vec![],
+            encodings: vec![
+                RtpEncodingParameters {
+                    ssrc: Some(44444441),
+                    scalability_mode: "L1T5".parse().unwrap(),
+                    ..RtpEncodingParameters::default()
+                },
+                RtpEncodingParameters {
+                    ssrc: Some(44444442),
+                    scalability_mode: "L1T5".parse().unwrap(),
+                    ..RtpEncodingParameters::default()
+                },
+                RtpEncodingParameters {
+                    ssrc: Some(44444443),
+                    scalability_mode: "L1T5".parse().unwrap(),
+                    ..RtpEncodingParameters::default()
+                },
+            ],
+            rtcp: RtcpParameters {
+                cname: Some("FOOBAR".to_string()),
+                ..RtcpParameters::default()
+            },
+            msid: None,
+        },
+    );
+
+    options.app_data = AppData::new(ProducerAppData { _foo: 1, _bar: "2" });
+
+    options
+}
+
 fn audio_producer_options() -> ProducerOptions {
     let mut options = ProducerOptions::new(
         MediaKind::Audio,
@@ -339,6 +484,18 @@ async fn init() -> (
     WebRtcTransport,
     WebRtcTransport,
 ) {
+    init_with_media_codecs(media_codecs()).await
+}
+
+async fn init_with_media_codecs(
+    media_codecs: Vec<RtpCodecCapability>,
+) -> (
+    ExecutorGuard,
+    Worker,
+    Router,
+    WebRtcTransport,
+    WebRtcTransport,
+) {
     {
         let mut builder = env_logger::builder();
         if env::var(env_logger::DEFAULT_FILTER_ENV).is_err() {
@@ -357,7 +514,7 @@ async fn init() -> (
         .expect("Failed to create worker");
 
     let router = worker
-        .create_router(RouterOptions::new(media_codecs()))
+        .create_router(RouterOptions::new(media_codecs))
         .await
         .expect("Failed to create router");
 
@@ -1407,6 +1564,155 @@ fn set_preferred_layers_succeeds() {
                 })
             );
         }
+    });
+}
+
+#[test]
+fn consume_svc_honors_preferred_layers() {
+    future::block_on(async move {
+        let (_executor_guard, _worker, router, transport_1, transport_2) =
+            init_with_media_codecs(media_codecs_vpx()).await;
+
+        let device_capabilities = consumer_device_capabilities_vpx();
+
+        let svc_producer = transport_1
+            .produce(vp9_svc_producer_options())
+            .await
+            .expect("Failed to produce VP9 SVC video");
+
+        assert!(router.can_consume(&svc_producer.id(), &device_capabilities));
+
+        let svc_consumer = transport_2
+            .consume({
+                let mut options =
+                    ConsumerOptions::new(svc_producer.id(), device_capabilities.clone());
+                options.paused = true;
+                options.preferred_layers = Some(ConsumerLayers {
+                    spatial_layer: 1,
+                    temporal_layer: Some(0),
+                });
+                options
+            })
+            .await
+            .expect("Failed to consume VP9 SVC video");
+
+        assert_eq!(svc_consumer.r#type(), ConsumerType::Svc);
+        assert_eq!(
+            svc_consumer.preferred_layers(),
+            Some(ConsumerLayers {
+                spatial_layer: 1,
+                temporal_layer: Some(0),
+            })
+        );
+
+        // Out-of-range spatial and temporal layers are clamped to the max.
+        let svc_consumer_clamped = transport_2
+            .consume({
+                let mut options =
+                    ConsumerOptions::new(svc_producer.id(), device_capabilities.clone());
+                options.paused = true;
+                options.preferred_layers = Some(ConsumerLayers {
+                    spatial_layer: 9,
+                    temporal_layer: Some(9),
+                });
+                options
+            })
+            .await
+            .expect("Failed to consume VP9 SVC video (clamped)");
+
+        assert_eq!(
+            svc_consumer_clamped.preferred_layers(),
+            Some(ConsumerLayers {
+                spatial_layer: 2,
+                temporal_layer: Some(2),
+            })
+        );
+
+        // When no temporal layer is given it defaults to the max temporal layer.
+        let svc_consumer_no_temporal = transport_2
+            .consume({
+                let mut options =
+                    ConsumerOptions::new(svc_producer.id(), device_capabilities.clone());
+                options.paused = true;
+                options.preferred_layers = Some(ConsumerLayers {
+                    spatial_layer: 1,
+                    temporal_layer: None,
+                });
+                options
+            })
+            .await
+            .expect("Failed to consume VP9 SVC video (no temporal)");
+
+        assert_eq!(
+            svc_consumer_no_temporal.preferred_layers(),
+            Some(ConsumerLayers {
+                spatial_layer: 1,
+                temporal_layer: Some(2),
+            })
+        );
+    });
+}
+
+#[test]
+fn consume_simulcast_honors_preferred_layers() {
+    future::block_on(async move {
+        let (_executor_guard, _worker, router, transport_1, transport_2) =
+            init_with_media_codecs(media_codecs_vpx()).await;
+
+        let device_capabilities = consumer_device_capabilities_vpx();
+
+        let simulcast_producer = transport_1
+            .produce(vp8_simulcast_producer_options())
+            .await
+            .expect("Failed to produce VP8 simulcast video");
+
+        assert!(router.can_consume(&simulcast_producer.id(), &device_capabilities));
+
+        let simulcast_consumer = transport_2
+            .consume({
+                let mut options =
+                    ConsumerOptions::new(simulcast_producer.id(), device_capabilities.clone());
+                options.paused = true;
+                options.preferred_layers = Some(ConsumerLayers {
+                    spatial_layer: 1,
+                    temporal_layer: Some(0),
+                });
+                options
+            })
+            .await
+            .expect("Failed to consume VP8 simulcast video");
+
+        assert_eq!(simulcast_consumer.r#type(), ConsumerType::Simulcast);
+        assert_eq!(
+            simulcast_consumer.preferred_layers(),
+            Some(ConsumerLayers {
+                spatial_layer: 1,
+                temporal_layer: Some(0),
+            })
+        );
+
+        // Out-of-range spatial layer is clamped to the max (2 = number of encodings - 1).
+        let simulcast_consumer_clamped = transport_2
+            .consume({
+                let mut options =
+                    ConsumerOptions::new(simulcast_producer.id(), device_capabilities.clone());
+                options.paused = true;
+                options.preferred_layers = Some(ConsumerLayers {
+                    spatial_layer: 9,
+                    temporal_layer: Some(9),
+                });
+                options
+            })
+            .await
+            .expect("Failed to consume VP8 simulcast video (clamped)");
+
+        assert_eq!(
+            simulcast_consumer_clamped.preferred_layers(),
+            Some(ConsumerLayers {
+                spatial_layer: 2,
+                temporal_layer: Some(4),
+            })
+        );
     });
 }
 

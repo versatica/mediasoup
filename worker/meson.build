@@ -88,8 +88,6 @@ common_sources = [
   'src/DepLibUV.cpp',
   'src/DepLibWebRTC.cpp',
   'src/DepOpenSSL.cpp',
-  # TODO: Remove once we only use built-in SCTP stack.
-  'src/DepUsrSCTP.cpp',
   'src/Logger.cpp',
   'src/MediaSoupErrors.cpp',
   'src/Settings.cpp',
@@ -131,8 +129,6 @@ common_sources = [
   'src/RTC/RtcLogger.cpp',
   'src/RTC/RtpListener.cpp',
   'src/RTC/RtpObserver.cpp',
-  # TODO: Remove once we only use built-in SCTP stack.
-  'src/RTC/SctpAssociation.cpp',
   'src/RTC/SctpListener.cpp',
   'src/RTC/SenderBandwidthEstimator.cpp',
   'src/RTC/SeqManager.cpp',
@@ -310,14 +306,6 @@ libsrtp3_proj = subproject(
   ],
 )
 
-usrsctp_proj = subproject(
-  'usrsctp',
-  default_options: [
-    'warning_level=0',
-    'sctp_build_programs=false',
-  ],
-)
-
 abseil_cpp_proj = subproject(
   'abseil-cpp',
   default_options: [
@@ -325,6 +313,8 @@ abseil_cpp_proj = subproject(
     'cpp_std=c++17',
   ],
 )
+
+ankerl_unordered_dense_dep = dependency('unordered_dense')
 
 flatbuffers_proj = subproject(
   'flatbuffers',
@@ -338,26 +328,26 @@ subdir('fbs')
 
 # Add current build directory so libwebrtc has access to FBS folder.
 libwebrtc_include_directories = include_directories('include', 'fbs')
+
 subdir('deps/libwebrtc')
 
 dependencies = [
-  abseil_cpp_proj.get_variable('absl_container_dep'),
-  openssl_proj.get_variable('openssl_dep'),
   libuv_proj.get_variable('libuv_dep'),
+  openssl_proj.get_variable('openssl_dep'),
   libsrtp3_proj.get_variable('libsrtp3_dep'),
-  usrsctp_proj.get_variable('usrsctp_dep'),
+  abseil_cpp_proj.get_variable('absl_container_dep'),
+  ankerl_unordered_dense_dep,
   flatbuffers_proj.get_variable('flatbuffers_dep'),
   flatbuffers_generator_dep,
   libwebrtc_dep,
 ]
 
 link_whole = [
-  abseil_cpp_proj.get_variable('absl_container_lib'),
+  libuv_proj.get_variable('libuv'),
   openssl_proj.get_variable('libcrypto_lib'),
   openssl_proj.get_variable('libssl_lib'),
-  libuv_proj.get_variable('libuv'),
   libsrtp3_proj.get_variable('libsrtp3'),
-  usrsctp_proj.get_variable('usrsctp'),
+  abseil_cpp_proj.get_variable('absl_container_lib'),
   flatbuffers_proj.get_variable('flatbuffers_lib'),
   libwebrtc,
 ]
@@ -461,6 +451,7 @@ test_sources = [
   'test/src/testHelpers.cpp',
   'test/src/RTC/TestKeyFrameRequestManager.cpp',
   'test/src/RTC/TestNackGenerator.cpp',
+  'test/src/RTC/TestPortManager.cpp',
   'test/src/RTC/TestRateCalculator.cpp',
   'test/src/RTC/TestRtpEncodingParameters.cpp',
   'test/src/RTC/TestSeqManager.cpp',
@@ -506,6 +497,7 @@ test_sources = [
   'test/src/RTC/SCTP/association/TestHeartbeatHandler.cpp',
   'test/src/RTC/SCTP/association/TestNegotiatedCapabilities.cpp',
   'test/src/RTC/SCTP/association/TestStateCookie.cpp',
+  'test/src/RTC/SCTP/association/TestTransmissionControlBlock.cpp',
   'test/src/RTC/SCTP/rx/TestDataTracker.cpp',
   'test/src/RTC/SCTP/rx/TestInterleavedReassemblyStreams.cpp',
   'test/src/RTC/SCTP/rx/TestReassemblyQueue.cpp',
@@ -589,8 +581,6 @@ mediasoup_worker_test = executable(
   sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
-    'test/include',
-    'mocks/include',
   ),
   cpp_args: cpp_args,
 )
@@ -610,8 +600,6 @@ mediasoup_worker_test_asan_address = executable(
   sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
-    'test/include',
-    'mocks/include',
   ),
   cpp_args: cpp_args + [
     '-g',
@@ -639,8 +627,6 @@ mediasoup_worker_test_asan_undefined = executable(
   sources: common_sources + test_sources + mock_sources,
   include_directories: include_directories(
     'include',
-    'test/include',
-    'mocks/include',
   ),
   cpp_args: cpp_args + [
     '-g',
@@ -713,8 +699,7 @@ executable(
   sources: common_sources + fuzzer_sources + mock_sources,
   include_directories: include_directories(
     'include',
-    'fuzzer/include',
-    'mocks/include',
+    'fuzzer/include'
   ),
   cpp_args: cpp_args + [
     '-g',

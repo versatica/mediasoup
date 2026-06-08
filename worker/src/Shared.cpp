@@ -2,9 +2,9 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Shared.hpp"
-#include "Logger.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include "handles/TimerHandle.hpp"
+#include "Logger.hpp"
 
 Shared::Shared(
   Channel::ChannelMessageRegistrator* channelMessageRegistrator,

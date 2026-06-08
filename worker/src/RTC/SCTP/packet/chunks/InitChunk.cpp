@@ -27,7 +27,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::INIT)
 			{
-				MS_WARN_DEV("invalid Chunk type");
+				MS_WARN_DEV("invalid chunk type");
 
 				return nullptr;
 			}
@@ -70,7 +70,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "InitChunk Length field must be equal or greater than %zu",
+				  "InitChunk length field must be equal or greater than %zu",
 				  InitChunk::InitChunkHeaderLength);
 
 				return nullptr;
@@ -78,10 +78,10 @@ namespace RTC
 
 			auto* chunk = new InitChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Parse Parameters.
+			// Parse parameters.
 			if (!chunk->ParseParameters())
 			{
-				MS_WARN_DEV("failed to parse Parameters");
+				MS_WARN_DEV("failed to parse parameters");
 
 				delete chunk;
 				return nullptr;

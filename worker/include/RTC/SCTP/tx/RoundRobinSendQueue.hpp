@@ -243,7 +243,7 @@ namespace RTC
 					// been fragmented.
 					size_t remainingOffset{ 0 };
 					size_t remainingLength;
-					// If set, an allocated Message ID and SSN. Will be allocated when the
+					// If set, an allocated message ID and SSN. Will be allocated when the
 					// first fragment is sent.
 					std::optional<uint32_t> mid{ std::nullopt };
 					std::optional<uint16_t> ssn{ std::nullopt };

@@ -4,9 +4,10 @@
 #include "RTC/PlainTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/PortManager.hpp"
+#include "RTC/SCTP/packet/Packet.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -151,7 +152,7 @@ namespace RTC
 		{
 			if (this->listenInfo.portRange.min != 0 && this->listenInfo.portRange.max != 0)
 			{
-				uint64_t portRangeHash{ 0u };
+				RTC::PortManager::PortRangeKey portRangeKey;
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,
@@ -159,7 +160,7 @@ namespace RTC
 				  this->listenInfo.portRange.min,
 				  this->listenInfo.portRange.max,
 				  this->listenInfo.flags,
-				  portRangeHash);
+				  portRangeKey);
 			}
 			else if (this->listenInfo.port != 0)
 			{
@@ -171,7 +172,7 @@ namespace RTC
 			// required.
 			else
 			{
-				uint64_t portRangeHash{ 0u };
+				RTC::PortManager::PortRangeKey portRangeKey;
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,
@@ -179,7 +180,7 @@ namespace RTC
 				  Settings::configuration.rtcMinPort,
 				  Settings::configuration.rtcMaxPort,
 				  this->listenInfo.flags,
-				  portRangeHash);
+				  portRangeKey);
 			}
 
 			if (this->listenInfo.sendBufferSize != 0)
@@ -198,7 +199,7 @@ namespace RTC
 			{
 				if (this->rtcpListenInfo.portRange.min != 0 && this->rtcpListenInfo.portRange.max != 0)
 				{
-					uint64_t portRangeHash{ 0u };
+					RTC::PortManager::PortRangeKey portRangeKey;
 
 					this->rtcpUdpSocket = new RTC::UdpSocket(
 					  this,
@@ -206,7 +207,7 @@ namespace RTC
 					  this->rtcpListenInfo.portRange.min,
 					  this->rtcpListenInfo.portRange.max,
 					  this->rtcpListenInfo.flags,
-					  portRangeHash);
+					  portRangeKey);
 				}
 				else if (this->rtcpListenInfo.port != 0)
 				{
@@ -218,7 +219,7 @@ namespace RTC
 				// required.
 				else
 				{
-					uint64_t portRangeHash{ 0u };
+					RTC::PortManager::PortRangeKey portRangeKey;
 
 					this->rtcpUdpSocket = new RTC::UdpSocket(
 					  this,
@@ -226,7 +227,7 @@ namespace RTC
 					  Settings::configuration.rtcMinPort,
 					  Settings::configuration.rtcMaxPort,
 					  this->rtcpListenInfo.flags,
-					  portRangeHash);
+					  portRangeKey);
 				}
 
 				if (this->rtcpListenInfo.sendBufferSize != 0)
@@ -898,15 +899,6 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
-	// TODO: SCTP: Remove once we only use built-in SCTP stack.
-	void PlainTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
-	{
-		MS_TRACE();
-
-		SendSctpMessage(dataConsumer, msg, len, ppid, cb);
-	}
-
 	void PlainTransport::SendMessage(
 	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
 	{
@@ -973,12 +965,7 @@ namespace RTC
 			OnRtpDataReceived(tuple, data, len, bufferLen);
 		}
 		// Check if it's SCTP.
-		else if (Settings::configuration.useBuiltInSctpStack && RTC::SCTP::Packet::IsSctp(data, len))
-		{
-			OnSctpDataReceived(tuple, data, len);
-		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else if (!Settings::configuration.useBuiltInSctpStack && RTC::SctpAssociation::IsSctp(data, len))
+		else if (RTC::SCTP::Packet::IsSctp(data, len))
 		{
 			OnSctpDataReceived(tuple, data, len);
 		}

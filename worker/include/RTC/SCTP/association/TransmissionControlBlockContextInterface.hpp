@@ -15,19 +15,19 @@ namespace RTC
 			virtual ~TransmissionControlBlockContextInterface() = default;
 
 			/**
-			 * Indicates if the SCTP Association has been established.
+			 * Indicates if the SCTP association has been established.
 			 */
 			virtual bool IsAssociationEstablished() const = 0;
 
 			/**
 			 * The value of the Initiate Tag field the peer put in its INIT or
-			 * INIT_ACK Chunk.
+			 * INIT-ACK chunk.
 			 */
 			virtual uint32_t GetLocalInitialTsn() const = 0;
 
 			/**
 			 * The value of the Initial TSN field the peer put in its INIT or
-			 * INIT_ACK Chunk.
+			 * INIT-ACK chunk.
 			 */
 			virtual uint32_t GetRemoteInitialTsn() const = 0;
 
@@ -62,7 +62,7 @@ namespace RTC
 			virtual std::unique_ptr<Packet> CreatePacket() const = 0;
 
 			/**
-			 * Sends a Packet and returns a boolean indicating whether the Packet was
+			 * Sends a packet and returns a boolean indicating whether the packet was
 			 * sent or not.
 			 */
 			virtual bool SendPacket(Packet* packet) = 0;

@@ -8,3 +8,7 @@ enum SctpState: uint8 {
     CLOSED,
 }
 
+table SctpNegotiatedCapabilities {
+    negotiated_max_outbound_streams: uint16;
+    negotiated_max_inbound_streams: uint16;
+}

@@ -1,10 +1,10 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -17,7 +17,7 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:7 (STATE_COOKIE), Length: 7
+			// Type:7 (STATE-COOKIE), Length: 7
 			0x00, 0x07, 0x00, 0x07,
 			// Cookie: 0xDDCCEE, 1 byte of padding
 			0xDD, 0xCC, 0xEE, 0x00,

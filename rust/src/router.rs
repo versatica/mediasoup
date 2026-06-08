@@ -62,7 +62,6 @@ use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
 use mediasoup_types::rtp_parameters::{
     RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability,
 };
-use mediasoup_types::sctp_parameters::NumSctpStreams;
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -134,8 +133,23 @@ pub struct PipeToRouterOptions {
     ///
     /// Default `true`.
     pub enable_sctp: bool,
-    /// SCTP streams number.
-    pub num_sctp_streams: NumSctpStreams,
+    /// Maximum allowed size for SCTP messages sent by DataConsumers (in bytes).
+    /// Default 262_144.
+    pub max_send_message_size: u32,
+    /// Maximum allowed size for SCTP messages received by DataProducers (in bytes).
+    /// Default 262_144.
+    pub max_receive_message_size: u32,
+    /// Maximum SCTP send buffer used by DataConsumers (in bytes).
+    /// Default 2_000_000.
+    pub sctp_send_buffer_size: u32,
+    /// Per stream send queue size limit. Similar to `sctp_send_buffer_size`, but
+    /// limiting the size of individual streams.
+    /// Default 2_000_000.
+    pub sctp_per_stream_send_queue_limit: u32,
+    /// Maximum received window buffer size (in bytes). This should be a bit larger
+    /// than the largest sized message you want to be able to receive.
+    /// Default 5_242_880.
+    pub sctp_max_receiver_window_buffer_size: u32,
     /// Enable RTX and NACK for RTP retransmission.
     ///
     /// Default `false`.
@@ -165,7 +179,11 @@ impl PipeToRouterOptions {
                 recv_buffer_size: None,
             },
             enable_sctp: true,
-            num_sctp_streams: NumSctpStreams::default(),
+            max_send_message_size: 262_144,
+            max_receive_message_size: 262_144,
+            sctp_send_buffer_size: 2_000_000,
+            sctp_per_stream_send_queue_limit: 2_000_000,
+            sctp_max_receiver_window_buffer_size: 5_242_880,
             enable_rtx: false,
             enable_srtp: false,
         }
@@ -1542,7 +1560,11 @@ impl Router {
             keep_id: _,
             listen_info,
             enable_sctp,
-            num_sctp_streams,
+            max_send_message_size,
+            max_receive_message_size,
+            sctp_send_buffer_size,
+            sctp_per_stream_send_queue_limit,
+            sctp_max_receiver_window_buffer_size,
             enable_rtx,
             enable_srtp,
         } = pipe_to_router_options;
@@ -1551,7 +1573,11 @@ impl Router {
 
         let transport_options = PipeTransportOptions {
             enable_sctp,
-            num_sctp_streams,
+            max_send_message_size,
+            max_receive_message_size,
+            sctp_send_buffer_size,
+            sctp_per_stream_send_queue_limit,
+            sctp_max_receiver_window_buffer_size,
             enable_rtx,
             enable_srtp,
             app_data: AppData::default(),

@@ -12,10 +12,16 @@ export type DirectTransportOptions<
 	DirectTransportAppData extends AppData = AppData,
 > = {
 	/**
-	 * Maximum allowed size for direct messages sent from DataProducers.
+	 * Maximum allowed size for messages sent by DataConsumers (in bytes).
 	 * Default 262144.
 	 */
-	maxMessageSize: number;
+	maxSendMessageSize?: number;
+
+	/**
+	 * Maximum allowed size for SCTP messages received by DataProducers (in bytes).
+	 * Default 262144.
+	 */
+	maxReceiveMessageSize?: number;
 
 	/**
 	 * Custom application data.

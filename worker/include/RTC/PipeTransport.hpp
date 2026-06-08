@@ -1,12 +1,12 @@
 #ifndef MS_RTC_PIPE_TRANSPORT_HPP
 #define MS_RTC_PIPE_TRANSPORT_HPP
 
-#include "SharedInterface.hpp"
 #include "FBS/pipeTransport.h"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
+#include "SharedInterface.hpp"
 
 namespace RTC
 {
@@ -48,13 +48,6 @@ namespace RTC
 		  RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		void SendMessage(
-		  RTC::DataConsumer* dataConsumer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  onQueuedCallback* cb = nullptr) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  RTC::SCTP::Message message,

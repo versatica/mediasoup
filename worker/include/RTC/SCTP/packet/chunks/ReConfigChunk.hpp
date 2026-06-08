@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Re-Config Chunk (RE_CONFIG) (130).
+		 * SCTP Re-Config Chunk (RE-CONFIG) (130).
 		 *
 		 * @see RFC 6525.
 		 *
@@ -27,17 +27,17 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 130.
+		 * - Chunk type (8 bits): 130.
 		 * - Flags (8 bits): All set to 0.
 		 * - Length (16 bits).
-		 * - Re-configuration Parameter (variable Length): This field holds a
+		 * - Re-configuration parameter (variable length): This field holds a
 		 *   Re-configuration Request Parameter or a Re-configuration Response
-		 *   Parameter.
+		 *   parameter.
 		 *
-		 * Variable-Length Parameters:
+		 * Variable-length Parameters:
 		 * - Re-configuration Request Parameter or a Re-configuration Response
-		 *   Parameter, mandatory.
-		 * - Another Parameter, optional.
+		 *   parameter, mandatory.
+		 * - Another parameter, optional.
 		 */
 
 		// Forward declaration.
@@ -45,7 +45,7 @@ namespace RTC
 
 		class ReConfigChunk : public Chunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -53,7 +53,7 @@ namespace RTC
 			 * Parse a ReConfigChunk.
 			 *
 			 * @remarks
-			 * - `bufferLength` may exceed the exact length of the Chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static ReConfigChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -61,7 +61,7 @@ namespace RTC
 			 * Create a ReConfigChunk.
 			 *
 			 * @remarks
-			 * - `bufferLength` could be greater than the Chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static ReConfigChunk* Factory(uint8_t* buffer, size_t bufferLength);
 

@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP State Cookie Parameter (STATE_COOKIE) (7).
+		 * SCTP State Cookie Parameter (STATE-COOKIE) (7).
 		 *
 		 * @see RFC 9260.
 		 *
@@ -29,7 +29,7 @@ namespace RTC
 
 		class StateCookieParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -37,7 +37,7 @@ namespace RTC
 			 * Parse a StateCookieParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static StateCookieParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -45,7 +45,7 @@ namespace RTC
 			 * Create a StateCookieParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static StateCookieParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -90,7 +90,7 @@ namespace RTC
 			void SetCookie(const uint8_t* cookie, uint16_t cookieLength);
 
 			/**
-			 * Write a locally generated StateCookie in place within the Cookie
+			 * Write a locally generated StateCookie in place within the cookie
 			 * field.
 			 *
 			 * This method is more performant than SetCookie() since it doesn't
