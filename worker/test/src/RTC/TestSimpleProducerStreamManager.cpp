@@ -196,7 +196,7 @@ namespace
 	}
 } // namespace
 
-SCENARIO("SimpleProducerStreamManager", "[rtp][producer-stream-manager][simple]")
+SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 {
 	std::unique_ptr<RTC::RTP::Packet> packet(
 	  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
