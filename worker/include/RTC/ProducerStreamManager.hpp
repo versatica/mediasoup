@@ -8,7 +8,6 @@
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "SharedInterface.hpp"
-#include <memory>
 #include <vector>
 
 namespace RTC

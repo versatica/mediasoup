@@ -3,7 +3,6 @@
 
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "Logger.hpp"
-#include <utility>
 
 namespace RTC
 {
