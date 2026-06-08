@@ -2,7 +2,6 @@
 #define MS_RTC_PRODUCER_STREAM_MANAGER_HPP
 
 #include "common.hpp"
-#include "Logger.hpp"
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Packet.hpp"
