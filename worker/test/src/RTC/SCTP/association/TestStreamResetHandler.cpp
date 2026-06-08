@@ -163,7 +163,8 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 		TestStreamResetHandler test;
 
 		std::vector<uint8_t> buffer(test.sctpOptions.mtu);
-		std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{ RTC::SCTP::ReConfigChunk::Factory(
+
+		const std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			buffer.data(), buffer.size()) };
 
 		test.HandleReceivedReConfigChunk(reConfigChunk.get());
@@ -177,7 +178,8 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 		TestStreamResetHandler test;
 
 		std::vector<uint8_t> buffer(test.sctpOptions.mtu);
-		std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{ RTC::SCTP::ReConfigChunk::Factory(
+
+		const std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			buffer.data(), buffer.size()) };
 
 		// Two RTC::SCTP::OutgoingSsnResetRequestParameter in a RE-CONFIG is not valid.
