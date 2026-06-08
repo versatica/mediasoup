@@ -877,7 +877,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("initial metrics are unset")
 	{
-		AssociationUnderTest a;
+	 	const AssociationUnderTest a;
 
 		REQUIRE(a.association.MakeMetrics().has_value() == false);
 	}
@@ -1035,7 +1035,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 	SECTION("has a default buffered amount low threshold of zero")
 	{
-		AssociationUnderTest a;
+		const AssociationUnderTest a;
 
 		REQUIRE(a.association.GetStreamBufferedAmountLowThreshold(1) == 0);
 	}
