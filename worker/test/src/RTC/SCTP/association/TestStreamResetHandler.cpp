@@ -278,7 +278,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		// Build a RE-CONFIG response with a successful result.
 		std::vector<uint8_t> responseBuffer(test.sctpOptions.mtu);
-		std::unique_ptr<RTC::SCTP::ReConfigChunk> responseChunk{ RTC::SCTP::ReConfigChunk::Factory(
+		const std::unique_ptr<RTC::SCTP::ReConfigChunk> responseChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			responseBuffer.data(), responseBuffer.size()) };
 
 		auto* response =
@@ -315,7 +315,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		// Build a RE-CONFIG response with an error result.
 		std::vector<uint8_t> responseBuffer(test.sctpOptions.mtu);
-		std::unique_ptr<RTC::SCTP::ReConfigChunk> responseChunk{ RTC::SCTP::ReConfigChunk::Factory(
+		const std::unique_ptr<RTC::SCTP::ReConfigChunk> responseChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			responseBuffer.data(), responseBuffer.size()) };
 
 		auto* response =
@@ -336,7 +336,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 		TestStreamResetHandler test;
 
 		std::vector<uint8_t> buffer(test.sctpOptions.mtu);
-		std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{ RTC::SCTP::ReConfigChunk::Factory(
+		const std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{ RTC::SCTP::ReConfigChunk::Factory(
 			buffer.data(), buffer.size()) };
 
 		auto* parameter =
@@ -353,7 +353,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		REQUIRE(!sentBuffer.empty());
 
-		std::unique_ptr<RTC::SCTP::Packet> sentPacket{ RTC::SCTP::Packet::Parse(
+		const std::unique_ptr<RTC::SCTP::Packet> sentPacket{ RTC::SCTP::Packet::Parse(
 			sentBuffer.data(), sentBuffer.size()) };
 
 		REQUIRE(sentPacket);

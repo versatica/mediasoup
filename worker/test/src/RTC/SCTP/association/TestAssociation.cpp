@@ -161,7 +161,7 @@ namespace
 		{
 			deliveredPacket = false;
 
-			auto bufferFromA = a.listener.ConsumeFirstSentPacket();
+			const auto bufferFromA = a.listener.ConsumeFirstSentPacket();
 
 			if (!bufferFromA.empty())
 			{
@@ -169,7 +169,7 @@ namespace
 				z.association.ReceiveSctpData(bufferFromA.data(), bufferFromA.size());
 			}
 
-			auto bufferFromZ = z.listener.ConsumeFirstSentPacket();
+			const auto bufferFromZ = z.listener.ConsumeFirstSentPacket();
 
 			if (!bufferFromZ.empty())
 			{
@@ -1528,7 +1528,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		const uint32_t verificationTag = connectAndGetVerificationTag(a, z);
 
 		std::vector<uint8_t> buffer(a.sctpOptions.mtu);
-		auto packet = buildPacket(buffer, verificationTag);
+
+		const auto packet = buildPacket(buffer, verificationTag);
 
 		// Build a 4-byte chunk and patch its type to an unknown value (0x49), whose
 		// top two bits (01) request the receiver to skip it and report an error.
@@ -1566,7 +1567,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		const uint32_t verificationTag = connectAndGetVerificationTag(a, z);
 
 		std::vector<uint8_t> buffer(a.sctpOptions.mtu);
-		auto packet = buildPacket(buffer, verificationTag);
+
+		const auto packet = buildPacket(buffer, verificationTag);
 
 		auto* operationErrorChunk = packet->BuildChunkInPlace<RTC::SCTP::OperationErrorChunk>();
 		auto* unrecognizedChunkTypeErrorCause =
@@ -1592,7 +1594,8 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		const uint32_t verificationTag = connectAndGetVerificationTag(a, z);
 
 		std::vector<uint8_t> buffer(a.sctpOptions.mtu);
-		auto packet = buildPacket(buffer, verificationTag);
+
+		const auto packet = buildPacket(buffer, verificationTag);
 
 		auto* heartbeatRequestChunk = packet->BuildChunkInPlace<RTC::SCTP::HeartbeatRequestChunk>();
 		auto* heartbeatInfoParameter =

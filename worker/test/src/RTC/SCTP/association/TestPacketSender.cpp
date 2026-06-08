@@ -69,7 +69,7 @@ SCENARIO("SCTP PacketSender", "[sctp][packetsender]")
 
 		// The checksum was written.
 		const auto sentBuffer = associationListener.ConsumeFirstSentPacket();
-		std::unique_ptr<RTC::SCTP::Packet> sentPacket{ RTC::SCTP::Packet::Parse(
+		const std::unique_ptr<RTC::SCTP::Packet> sentPacket{ RTC::SCTP::Packet::Parse(
 			sentBuffer.data(), sentBuffer.size()) };
 
 		REQUIRE(sentPacket);
@@ -92,7 +92,7 @@ SCENARIO("SCTP PacketSender", "[sctp][packetsender]")
 	SECTION("doesn't send a packet without chunks")
 	{
 		std::vector<uint8_t> buffer(sctpOptions.mtu);
-		std::unique_ptr<RTC::SCTP::Packet> packet(
+		const std::unique_ptr<RTC::SCTP::Packet> packet(
 		  RTC::SCTP::Packet::Factory(buffer.data(), buffer.size()));
 
 		packet->SetVerificationTag(VerificationTag);
@@ -112,7 +112,7 @@ SCENARIO("SCTP PacketSender", "[sctp][packetsender]")
 		REQUIRE(packetSender.SendPacket(packet.get(), /*writeChecksum*/ false) == true);
 
 		const auto sentBuffer = associationListener.ConsumeFirstSentPacket();
-		std::unique_ptr<RTC::SCTP::Packet> sentPacket{ RTC::SCTP::Packet::Parse(
+		const std::unique_ptr<RTC::SCTP::Packet> sentPacket{ RTC::SCTP::Packet::Parse(
 			sentBuffer.data(), sentBuffer.size()) };
 
 		REQUIRE(sentPacket);
