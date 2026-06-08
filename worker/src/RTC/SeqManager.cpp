@@ -132,7 +132,7 @@ namespace RTC
 			const auto it =
 			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
 
-			if (it != this->dropped.end() && !seqLowerThan(input, *it) && !seqLowerThan(*it, input))
+			if (it != this->dropped.end() && *it == input)
 			{
 				MS_DEBUG_DEV("trying to send a dropped input");
 
