@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Shutdown Acknowledgement Chunk (SHUTDOWN_ACK) (8).
+		 * SCTP Shutdown Acknowledgement Chunk (SHUTDOWN-ACK) (8).
 		 *
 		 * @see RFC 9260.
 		 *
@@ -19,7 +19,7 @@ namespace RTC
 		 * |   Type = 8    |  Chunk Flags  |          Length = 4           |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 8.
+		 * - Chunk type (8 bits): 8.
 		 * - Flags (8 bits): All set to 0.
 		 * - Length (16 bits): 4.
 		 */
@@ -29,7 +29,7 @@ namespace RTC
 
 		class ShutdownAckChunk : public Chunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -37,7 +37,7 @@ namespace RTC
 			 * Parse a ShutdownAckChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static ShutdownAckChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -45,7 +45,7 @@ namespace RTC
 			 * Create a ShutdownAckChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static ShutdownAckChunk* Factory(uint8_t* buffer, size_t bufferLength);
 

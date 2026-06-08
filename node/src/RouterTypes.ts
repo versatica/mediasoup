@@ -34,7 +34,6 @@ import type {
 	RtpCapabilities,
 	RouterRtpCodecCapability,
 } from './rtpParametersTypes';
-import type { NumSctpStreams } from './sctpParametersTypes';
 import type { Either, AppData } from './types';
 
 export type RouterOptions<RouterAppData extends AppData = AppData> = {
@@ -81,9 +80,36 @@ export type PipeToRouterOptions = {
 	enableSctp?: boolean;
 
 	/**
-	 * SCTP streams number.
+	 * Maximum allowed size for SCTP messages sent by DataConsumers (in bytes).
+	 * Default 262144.
 	 */
-	numSctpStreams?: NumSctpStreams;
+	maxSendMessageSize?: number;
+
+	/**
+	 * Maximum allowed size for SCTP messages received by DataProducers (in bytes).
+	 * Default 262144.
+	 */
+	maxReceiveMessageSize?: number;
+
+	/**
+	 * Maximum SCTP send buffer used by DataConsumers (in bytes).
+	 * Default 2000000.
+	 */
+	sctpSendBufferSize?: number;
+
+	/**
+	 * Per stream send queue size limit. Similar to `sctpSendBufferSize`, but
+	 * limiting the size of individual streams.
+	 * Default 2000000.
+	 */
+	sctpPerStreamSendQueueLimit?: number;
+
+	/**
+	 * Maximum received window buffer size (in bytes). This should be a bit larger
+	 * than the largest sized message you want to be able to receive.
+	 * Default 5242880.
+	 */
+	sctpMaxReceiverWindowBufferSize?: number;
 
 	/**
 	 * Enable RTX and NACK for RTP retransmission.

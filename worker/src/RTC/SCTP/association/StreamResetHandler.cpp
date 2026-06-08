@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::SCTP::StreamResetHandler"
-// TODO: SCTP: COMMENT
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "Logger.hpp"
@@ -14,16 +13,17 @@ namespace RTC
 		/* Instance methods. */
 
 		StreamResetHandler::StreamResetHandler(
-		  AssociationListenerInterface& associationListener,
+		  AssociationListenerDeferrer& associationListenerDeferrer,
 		  SharedInterface* shared,
 		  TransmissionControlBlockContextInterface* tcbContext,
-		  // TODO: SCTP: Implement it.
-		  // DataTracker* dataTracker,
-		  // ReassemblyQueue* reassemblyQueue,
+		  DataTracker* dataTracker,
+		  ReassemblyQueue* reassemblyQueue,
 		  RetransmissionQueue* retransmissionQueue)
-		  : associationListener(associationListener),
+		  : associationListenerDeferrer(associationListenerDeferrer),
 		    shared(shared),
 		    tcbContext(tcbContext),
+		    dataTracker(dataTracker),
+		    reassemblyQueue(reassemblyQueue),
 		    retransmissionQueue(retransmissionQueue),
 		    reConfigTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{
@@ -89,7 +89,7 @@ namespace RTC
 
 			if (!ValidateReceivedReConfigChunk(receivedReConfigChunk))
 			{
-				this->associationListener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "invalid RE-CONFIG command received");
 
 				return;
@@ -188,7 +188,7 @@ namespace RTC
 				}
 			}
 
-			MS_WARN_TAG(sctp, "invalid set of RE-CONFIG Parameters");
+			MS_WARN_TAG(sctp, "invalid set of RE-CONFIG parameters");
 
 			return false;
 		}
@@ -204,7 +204,7 @@ namespace RTC
 			// `reqSeqNbr` will be used.
 			MS_ASSERT(this->currentRequest.has_value(), "currentRequest optional must have value");
 
-			if (this->currentRequest->HasBeenSent())
+			if (!this->currentRequest->HasBeenSent())
 			{
 				this->currentRequest->PrepareToSend(this->nextOutgoingReqSeqNbr);
 				this->nextOutgoingReqSeqNbr = uint32_t{ this->nextOutgoingReqSeqNbr + 1 };
@@ -241,7 +241,7 @@ namespace RTC
 			}
 			else if (reqSeqNbr != this->lastProcessedReqSeqNbr.GetNextValue())
 			{
-				// Too old, too new, from wrong Association, etc.
+				// Too old, too new, from wrong association, etc.
 				MS_WARN_TAG(sctp, "bad reqSeqNbr: %" PRIu32, reqSeqNbr.Wrap());
 
 				return ReqSeqNbrValidationResult::BAD_SEQUENCE_NUMBER;
@@ -300,44 +300,50 @@ namespace RTC
 			// "In Progress" request. In all cases, re-evaluate the state.
 			this->lastProcessedReqSeqNbr = requestSn;
 
-			// // TODO: SCTP implement it.
-			// if (this->dataTracker->IsLaterThanCumulativeAckedTsn(
-			//         receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn()))
-			// {
-			//   // https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
-			//   //
-			//   // E2) "If the Sender's Last Assigned TSN is greater than the cumulative
-			//   // acknowledgment point, then the endpoint MUST enter 'deferred reset
-			//   // processing'."
-			//   this->reassemblyQueue->EnterDeferredReset(
-			//   	receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn(),
-			//   	receivedOutgoingSsnResetRequestParameter->GetStreamIds());
+			if (
+			  this->dataTracker->IsLaterThanCumulativeAckedTsn(
+			    receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn()))
+			{
+				// https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
+				//
+				// E2) "If the Sender's Last Assigned TSN is greater than the cumulative
+				// acknowledgment point, then the endpoint MUST enter 'deferred reset
+				// processing'."
+				this->reassemblyQueue->EnterDeferredReset(
+				  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn(),
+				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
-			//   // "If the endpoint enters 'deferred reset processing', it MUST put a
-			//   // Re-configuration Response Parameter into a RE-CONFIG chunk indicating
-			//   // 'In progress' and MUST send the RE-CONFIG chunk.
-			//   this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::IN_PROGRESS;
+				// "If the endpoint enters 'deferred reset processing', it MUST put a
+				// Re-configuration Response Parameter into a RE-CONFIG chunk indicating
+				// 'In progress' and MUST send the RE-CONFIG chunk.
+				this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::IN_PROGRESS;
 
-			//  	MS_DEBUG_DEV("reset outgoing in progress, sender last assigned tsn %" PRIu32 " not yet
-			//  reached", receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
-			// } else {
-			//   // https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
-			//   //
-			//   // E3) If no stream numbers are listed in the parameter, then all incoming
-			//   // streams MUST be reset to 0 as the next expected SSN. If specific stream
-			//   // numbers are listed, then only these specific streams MUST be reset to
-			//   // 0, and all other non-listed SSNs remain unchanged. E4: Any queued TSNs
-			//   // (queued at step E2) MUST now be released and processed normally.
-			//   this->reassemblyQueue->ResetStreamsAndLeaveDeferredReset(receivedOutgoingSsnResetRequestParameter->GetStreamIds());
+				MS_DEBUG_DEV(
+				  "reset outgoing in progress, sender last assigned tsn %" PRIu32 " not yet reached",
+				  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
+			}
+			else
+			{
+				// https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
+				//
+				// E3) If no stream numbers are listed in the parameter, then all incoming
+				// streams MUST be reset to 0 as the next expected SSN. If specific stream
+				// numbers are listed, then only these specific streams MUST be reset to
+				// 0, and all other non-listed SSNs remain unchanged. E4: Any queued TSNs
+				// (queued at step E2) MUST now be released and processed normally.
+				this->reassemblyQueue->ResetStreamsAndLeaveDeferredReset(
+				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
-			//   this->associationListener.OnAssociationInboundStreamsReset(receivedOutgoingSsnResetRequestParameter->GetStreamIds());
+				this->associationListenerDeferrer.OnAssociationInboundStreamsReset(
+				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
-			//   this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
+				this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
 
-			//   MS_DEBUG_DEV("reset outgoing performed");
-			//  	MS_DEBUG_DEV("reset outgoing performed, sender last assigned tsn %" PRIu32 " reached",
-			//  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
-			// }
+				MS_DEBUG_DEV("reset outgoing performed");
+				MS_DEBUG_DEV(
+				  "reset outgoing performed, sender last assigned tsn %" PRIu32 " reached",
+				  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
+			}
 
 			auto* reconfigurationResponseParameter =
 			  reConfigChunk->BuildParameterInPlace<ReconfigurationResponseParameter>();
@@ -406,7 +412,7 @@ namespace RTC
 						MS_DEBUG_DEV(
 						  "reset stream success [reqSeqNbr:%" PRIu32 "]", this->currentRequest->GetReqSeqNbr());
 
-						this->associationListener.OnAssociationStreamsResetPerformed(
+						this->associationListenerDeferrer.OnAssociationStreamsResetPerformed(
 						  this->currentRequest->GetStreamIds());
 
 						this->currentRequest = std::nullopt;
@@ -444,7 +450,7 @@ namespace RTC
 						    receivedReconfigurationResponseParameter->GetResult())
 						    .c_str());
 
-						this->associationListener.OnAssociationStreamsResetFailed(
+						this->associationListenerDeferrer.OnAssociationStreamsResetFailed(
 						  this->currentRequest->GetStreamIds(),
 						  ReconfigurationResponseParameter::ResultToString(
 						    receivedReconfigurationResponseParameter->GetResult()));
@@ -462,6 +468,11 @@ namespace RTC
 		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			// This is a top-level timer entry point (invoked by libuv outside any other
+			// SCTP API call), so it must establish the deferrer scope itself, just like
+			// Association does in its own timer handlers.
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			if (this->currentRequest && this->currentRequest->HasBeenSent())
 			{
@@ -504,7 +515,7 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "%s timer has expired %zu/%s]",
+			  "%s timer has expired [expìrations:%zu/%s]",
 			  backoffTimer->GetLabel().c_str(),
 			  backoffTimer->GetExpirationCount(),
 			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");

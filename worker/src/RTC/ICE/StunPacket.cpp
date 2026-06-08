@@ -30,7 +30,7 @@ namespace RTC
 			  (bufferLength >= StunPacket::FixedHeaderLength) &&
 			  // @see RFC 7983.
 			  (buffer[0] < 3) &&
-			  // Magic Cookie must match.
+			  // Magic cookie must match.
 			  (buffer[4] == StunPacket::MagicCookie[0]) && (buffer[5] == StunPacket::MagicCookie[1]) &&
 			  (buffer[6] == StunPacket::MagicCookie[2]) && (buffer[7] == StunPacket::MagicCookie[3]));
 		}
@@ -41,18 +41,18 @@ namespace RTC
 
 			if (!StunPacket::IsStun(buffer, bufferLength))
 			{
-				MS_WARN_TAG(ice, "not a STUN Packet");
+				MS_WARN_TAG(ice, "not a STUN packet");
 
 				return nullptr;
 			}
 
 			auto* packet = new StunPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// `bufferLength` must be the exact length of the STUN Packet, so let's
+			// `bufferLength` must be the exact length of the STUN packet, so let's
 			// assign it immediately.
 			packet->SetLength(bufferLength);
 
-			// Get STUN Message Type field.
+			// Get STUN message type field.
 			const uint16_t typeField = Utils::Byte::Get2Bytes(buffer, 0);
 
 			// Get STUN class.
@@ -109,7 +109,7 @@ namespace RTC
 
 			// NOTE: No need to write message length since it's already 0.
 
-			// Set magic Cookie.
+			// Set magic cookie.
 			std::memcpy(packet->GetFixedHeaderPointer() + 4, StunPacket::MagicCookie, 4);
 
 			if (transactionId)
@@ -123,7 +123,7 @@ namespace RTC
 			}
 
 			// No need to invoke SetLength() since constructor invoked it with
-			// minimum STUN Packet length.
+			// minimum STUN packet length.
 
 			return packet;
 		}
@@ -344,7 +344,7 @@ namespace RTC
 			if (username.length() > StunPacket::UsernameAttributeMaxLength)
 			{
 				MS_THROW_TYPE_ERROR(
-				  "Attribute USERNAME must be at most %zu bytes", StunPacket::UsernameAttributeMaxLength);
+				  "attribute USERNAME must be at most %zu bytes", StunPacket::UsernameAttributeMaxLength);
 			}
 
 			StoreNewAttribute(StunPacket::AttributeType::USERNAME, username.data(), username.length());
@@ -415,7 +415,7 @@ namespace RTC
 			if (software.length() > StunPacket::SoftwareAttributeMaxLength)
 			{
 				MS_THROW_TYPE_ERROR(
-				  "Attribute SOFTWARE must be at most %zu bytes", StunPacket::SoftwareAttributeMaxLength);
+				  "attribute SOFTWARE must be at most %zu bytes", StunPacket::SoftwareAttributeMaxLength);
 			}
 
 			StoreNewAttribute(StunPacket::AttributeType::SOFTWARE, software.data(), software.length());
@@ -450,7 +450,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  ice,
-					  "cannot get XOR_MAPPED_ADDRESS Attribute value, length of the Attribute is not %zu",
+					  "cannot get XOR_MAPPED_ADDRESS attribute value, length of the attribute is not %zu",
 					  StunPacket::XorMappedAddressIPv4Length);
 
 					return false;
@@ -483,7 +483,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  ice,
-					  "cannot get XOR_MAPPED_ADDRESS Attribute value, length of the Attribute is not %zu",
+					  "cannot get XOR_MAPPED_ADDRESS attribute value, length of the attribute is not %zu",
 					  StunPacket::XorMappedAddressIPv6Length);
 
 					return false;
@@ -516,7 +516,7 @@ namespace RTC
 			// Unknown family.
 			else
 			{
-				MS_WARN_TAG(ice, "cannot get XOR_MAPPED_ADDRESS Attribute value, unknown family");
+				MS_WARN_TAG(ice, "cannot get XOR_MAPPED_ADDRESS attribute value, unknown family");
 
 				return false;
 			}
@@ -654,24 +654,24 @@ namespace RTC
 						return StunPacket::AuthenticationResult::BAD_MESSAGE;
 					}
 
-					// USERNAME Attribute must be present.
+					// USERNAME attribute must be present.
 					if (!HasAttribute(StunPacket::AttributeType::USERNAME))
 					{
-						MS_WARN_TAG(ice, "cannot authenticate request or indication, missing USERNAME Attribute");
+						MS_WARN_TAG(ice, "cannot authenticate request or indication, missing USERNAME attribute");
 
 						return StunPacket::AuthenticationResult::BAD_MESSAGE;
 					}
 
-					// MESSAGE-INTEGRITY Attribute must be present.
+					// MESSAGE-INTEGRITY attribute must be present.
 					if (!messageIntegrity)
 					{
 						MS_WARN_TAG(
-						  ice, "cannot authenticate request or indication, missing MESSAGE-INTEGRITY Attribute");
+						  ice, "cannot authenticate request or indication, missing MESSAGE-INTEGRITY attribute");
 
 						return StunPacket::AuthenticationResult::BAD_MESSAGE;
 					}
 
-					// Check that the USERNAME Attribute begins with the first username
+					// Check that the USERNAME attribute begins with the first username
 					// fragment plus ":".
 					const auto username = GetUsername();
 
@@ -689,12 +689,12 @@ namespace RTC
 				case StunPacket::Class::SUCCESS_RESPONSE:
 				case StunPacket::Class::ERROR_RESPONSE:
 				{
-					// MESSAGE-INTEGRITY Attribute must be present.
+					// MESSAGE-INTEGRITY attribute must be present.
 					if (!messageIntegrity)
 					{
 						MS_WARN_TAG(
 						  ice,
-						  "cannot authenticate success response or error response, missing MESSAGE-INTEGRITY Attribute");
+						  "cannot authenticate success response or error response, missing MESSAGE-INTEGRITY attribute");
 
 						return StunPacket::AuthenticationResult::BAD_MESSAGE;
 					}
@@ -706,7 +706,7 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  ice,
-					  "cannot authenticate STUN Packet, unknown STUN class %" PRIu16,
+					  "cannot authenticate STUN packet, unknown STUN class %" PRIu16,
 					  static_cast<uint16_t>(this->klass));
 
 					return StunPacket::AuthenticationResult::BAD_MESSAGE;
@@ -721,7 +721,7 @@ namespace RTC
 			if (hasFingerprint)
 			{
 				// Set the message length field by removing the length of the
-				// FINGERPRINT Attribute (4 + 4).
+				// FINGERPRINT attribute (4 + 4).
 				// NOTE: We cannot use SetMessageLength() because CheckAuthentication()
 				// is marked as a `const` method.
 				Utils::Byte::Set2Bytes(fixedHeader, 2, static_cast<uint16_t>(GetAttributesLength() - 4 - 4));
@@ -729,14 +729,14 @@ namespace RTC
 
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY
 			// rules, this is, by checking the bytes from 0 to the beginning of the
-			// MESSAGE-INTEGRITY Attribute.
+			// MESSAGE-INTEGRITY attribute.
 			const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHmacSha1(
 			  password.data(), password.length(), fixedHeader, (messageIntegrity - 4) - fixedHeader);
 
 			StunPacket::AuthenticationResult result;
 
 			// Compare the computed HMAC-SHA1 with the MESSAGE-INTEGRITY in the STUN
-			// Packet.
+			// packet.
 			if (std::memcmp(messageIntegrity, computedMessageIntegrity, StunPacket::FixedHeaderLength) == 0)
 			{
 				result = StunPacket::AuthenticationResult::OK;
@@ -773,22 +773,22 @@ namespace RTC
 			const auto currentLength = GetLength();
 			const size_t addedLength = 4 + StunPacket::MessageIntegrityAttributeLength + 4 + 4;
 
-			// We need to add Attribute(s) so we must increase the length of the
-			// STUN Packet.
+			// We need to add attribute(s) so we must increase the length of the STUN
+			// packet.
 			// NOTE: This may throw.
 			SetLength(GetLength() + addedLength);
 			// Once we know it doesn't throw (so there is space in the buffer), let's
 			// revert it because code below will do it when needed.
 			SetLength(currentLength);
 
-			// Add MESSAGE-INTEGRITY Attribute (only if password was given).
+			// Add MESSAGE-INTEGRITY attribute (only if password was given).
 			if (!password.empty())
 			{
-				// When must include the length of MESSAGE-INTEGRITY Attribute in
-				// message length field of the STUN Packet.
+				// When must include the length of MESSAGE-INTEGRITY attribute in
+				// message length field of the STUN packet.
 				SetMessageLength(GetMessageLength() + 4 + StunPacket::MessageIntegrityAttributeLength);
 
-				// Calculate the HMAC-SHA1 of the STUN Packet according to
+				// Calculate the HMAC-SHA1 of the STUN packet according to
 				// MESSAGE-INTEGRITY rules.
 				const uint8_t* computedMessageIntegrity =
 				  Utils::Crypto::GetHmacSha1(password.data(), password.length(), GetBuffer(), currentLength);
@@ -799,14 +799,14 @@ namespace RTC
 				  StunPacket::MessageIntegrityAttributeLength);
 			}
 
-			// Add FINGERPRINT Attribute.
+			// Add FINGERPRINT attribute.
 
-			// When must include the length of FINGERPRINT Attribute in
-			// message length field of the STUN Packet.
+			// When must include the length of FINGERPRINT attribute in
+			// message length field of the STUN packet.
 			SetMessageLength(GetMessageLength() + 4 + 4);
 
-			// Compute the CRC32 of the STUN Packet up to (but excluding) the
-			// FINGERPRINT Attribute and XOR it with 0x5354554e.
+			// Compute the CRC32 of the STUN packet up to (but excluding) the
+			// FINGERPRINT attribute and XOR it with 0x5354554e.
 			const uint32_t computedFingerprint =
 			  Utils::Crypto::GetCRC32(GetBuffer(), GetLength()) ^ 0x5354554e;
 
@@ -828,7 +828,7 @@ namespace RTC
 
 			if (this->klass != StunPacket::Class::REQUEST)
 			{
-				MS_THROW_ERROR("cannot create a success response, original STUN Packet is not a request");
+				MS_THROW_ERROR("cannot create a success response, original STUN packet is not a request");
 			}
 
 			auto* successResponse = Factory(
@@ -844,7 +844,7 @@ namespace RTC
 
 			if (this->klass != StunPacket::Class::REQUEST)
 			{
-				MS_THROW_ERROR("cannot create an error response, original STUN Packet is not a request");
+				MS_THROW_ERROR("cannot create an error response, original STUN packet is not a request");
 			}
 
 			auto* errorResponse = Factory(
@@ -866,13 +866,13 @@ namespace RTC
 
 			// Message length field must be total length minus header's 20 bytes, and
 			// must be multiple of 4 Bytes.
-			// NOTE: Message length is effectively the total length of the Attributes
+			// NOTE: Message length is effectively the total length of the attributes
 			// (with all paddings).
 			if (static_cast<size_t>(msgLength) != GetAttributesLength() || !Utils::Byte::IsPaddedTo4Bytes(msgLength))
 			{
 				MS_WARN_TAG(
 				  ice,
-				  "invalid STUN Packet, message length field (%" PRIu16
+				  "invalid STUN packet, message length field (%" PRIu16
 				  ") does not match given buffer length or it's not multiple of 4 bytes",
 				  msgLength);
 
@@ -881,29 +881,29 @@ namespace RTC
 
 			if (!ParseAttributes(storeAttributes))
 			{
-				MS_WARN_TAG(rtp, "invalid STUN Packet, invalid Attributes");
+				MS_WARN_TAG(rtp, "invalid STUN packet, invalid attributes");
 
 				return false;
 			}
 
-			// If it has FINGERPRINT Attribute then verify it.
+			// If it has FINGERPRINT attribute then verify it.
 			const auto* fingerprintAttr = GetAttribute(StunPacket::AttributeType::FINGERPRINT);
 
 			if (fingerprintAttr)
 			{
-				// Compute the CRC32 of the received STUN Packet up to (but excluding)
-				// the FINGERPRINT Attribute and XOR it with 0x5354554e.
+				// Compute the CRC32 of the received STUN packet up to (but excluding)
+				// the FINGERPRINT attribute and XOR it with 0x5354554e.
 				const auto computedFingerprint =
 				  Utils::Crypto::GetCRC32(
 				    fixedHeader, StunPacket::FixedHeaderLength + fingerprintAttr->offset) ^
 				  0x5354554e;
 
-				// Compare with the FINGERPRINT value in the STUN Packet.
+				// Compare with the FINGERPRINT value in the STUN packet.
 				if (GetFingerprint() != computedFingerprint)
 				{
 					MS_WARN_TAG(
 					  ice,
-					  "invalid STUN Packet, computed fingerprint value does not match the value in the FINGERPRINT Attribute");
+					  "invalid STUN packet, computed fingerprint value does not match the value in the FINGERPRINT attribute");
 
 					return false;
 				}
@@ -920,7 +920,7 @@ namespace RTC
 			const uint8_t* attributesEnd   = attributesStart + GetAttributesLength();
 			auto* ptr                      = const_cast<uint8_t*>(attributesStart);
 
-			// Ensure there are at least 4 remaining bytes (Attribute with 0 length).
+			// Ensure there are at least 4 remaining bytes (attribute with 0 length).
 			while (ptr + 4 <= attributesEnd)
 			{
 				// NOTE: We cannot cast `ptr` to `StunPacket::Attribute*` here because
@@ -928,40 +928,40 @@ namespace RTC
 				// member) but `ptr` points into a network buffer with no guaranteed
 				// alignment, making the cast undefined behavior.
 
-				// Read Attribute type and length.
+				// Read attribute type and length.
 				const auto attrType = static_cast<StunPacket::AttributeType>(Utils::Byte::Get2Bytes(ptr, 0));
 				const uint16_t attrLen = Utils::Byte::Get2Bytes(ptr, 2);
 
-				// Offset of the Attribute from the start of the attributes.
+				// Offset of the attribute from the start of the attributes.
 				const auto attrOffset = static_cast<size_t>((ptr - attributesStart));
 
-				// Ensure the Attribute length is not greater than the remaining length.
+				// Ensure the attribute length is not greater than the remaining length.
 				if (ptr + 4 + attrLen > attributesEnd)
 				{
 					MS_WARN_TAG(
 					  ice,
-					  "invalid STUN Packet, not enough space for the announced value of the Attribute with type %" PRIu16,
+					  "invalid STUN packet, not enough space for the announced value of the attribute with type %" PRIu16,
 					  static_cast<uint16_t>(attrType));
 
 					return false;
 				}
 
-				// FINGERPRINT must be the last Attribute.
+				// FINGERPRINT must be the last attribute.
 				if (storeAttributes && HasAttribute(StunPacket::AttributeType::FINGERPRINT))
 				{
-					MS_WARN_TAG(ice, "invalid STUN Packet, Attribute after FINGERPRINT is not allowed");
+					MS_WARN_TAG(ice, "invalid STUN packet, attribute after FINGERPRINT is not allowed");
 
 					return false;
 				}
 
-				// After a MESSAGE-INTEGRITY Attribute only FINGERPRINT is allowed.
+				// After a MESSAGE-INTEGRITY attribute only FINGERPRINT is allowed.
 				if (
 				  storeAttributes && HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) &&
 				  attrType != StunPacket::AttributeType::FINGERPRINT)
 				{
 					MS_WARN_TAG(
 					  ice,
-					  "invalid STUN Packet, Attribute after MESSAGE-INTEGRITY other than FINGERPRINT is not allowed");
+					  "invalid STUN packet, attribute after MESSAGE-INTEGRITY other than FINGERPRINT is not allowed");
 
 					return false;
 				}
@@ -974,7 +974,7 @@ namespace RTC
 						{
 							MS_WARN_TAG(
 							  ice,
-							  "invalid STUN Packet, Attribute USERNAME must be at most %zu bytes",
+							  "invalid STUN packet, attribute USERNAME must be at most %zu bytes",
 							  StunPacket::UsernameAttributeMaxLength);
 
 							return false;
@@ -992,7 +992,7 @@ namespace RTC
 					{
 						if (attrLen != 4)
 						{
-							MS_WARN_TAG(ice, "invalid STUN Packet, Attribute PRIORITY must be 4 bytes length");
+							MS_WARN_TAG(ice, "invalid STUN packet, attribute PRIORITY must be 4 bytes length");
 
 							return false;
 						}
@@ -1010,7 +1010,7 @@ namespace RTC
 						if (attrLen != 8)
 						{
 							MS_WARN_TAG(
-							  ice, "invalid STUN Packet, Attribute ICE-CONTROLLING must be 8 bytes length");
+							  ice, "invalid STUN packet, attribute ICE-CONTROLLING must be 8 bytes length");
 
 							return false;
 						}
@@ -1027,7 +1027,7 @@ namespace RTC
 					{
 						if (attrLen != 8)
 						{
-							MS_WARN_TAG(ice, "invalid STUN Packet, Attribute ICE-CONTROLLED must be 8 bytes length");
+							MS_WARN_TAG(ice, "invalid STUN packet, attribute ICE-CONTROLLED must be 8 bytes length");
 
 							return false;
 						}
@@ -1044,7 +1044,7 @@ namespace RTC
 					{
 						if (attrLen != 0)
 						{
-							MS_WARN_TAG(ice, "invalid STUN Packet, Attribute USE-CANDIDATE must be 0 bytes length");
+							MS_WARN_TAG(ice, "invalid STUN packet, attribute USE-CANDIDATE must be 0 bytes length");
 
 							return false;
 						}
@@ -1061,7 +1061,7 @@ namespace RTC
 					{
 						if (attrLen != 4)
 						{
-							MS_WARN_TAG(ice, "invalid STUN Packet, Attribute NOMINATION must be 4 bytes length");
+							MS_WARN_TAG(ice, "invalid STUN packet, attribute NOMINATION must be 4 bytes length");
 
 							return false;
 						}
@@ -1080,7 +1080,7 @@ namespace RTC
 						{
 							MS_WARN_TAG(
 							  ice,
-							  "invalid STUN Packet, Attribute SOFTWARE must be at most %zu bytes length",
+							  "invalid STUN packet, attribute SOFTWARE must be at most %zu bytes length",
 							  StunPacket::SoftwareAttributeMaxLength);
 
 							return false;
@@ -1100,7 +1100,7 @@ namespace RTC
 						{
 							MS_WARN_TAG(
 							  ice,
-							  "invalid STUN Packet, Attribute XOR_MAPPED_ADDRESS-CODE must be %zu or %zu bytes length",
+							  "invalid STUN packet, attribute XOR_MAPPED_ADDRESS-CODE must be %zu or %zu bytes length",
 							  StunPacket::XorMappedAddressIPv4Length,
 							  StunPacket::XorMappedAddressIPv6Length);
 
@@ -1119,7 +1119,7 @@ namespace RTC
 					{
 						if (attrLen < 4)
 						{
-							MS_WARN_TAG(ice, "invalid STUN Packet, Attribute ERROR-CODE must be >= 4 bytes length");
+							MS_WARN_TAG(ice, "invalid STUN packet, attribute ERROR-CODE must be >= 4 bytes length");
 
 							return false;
 						}
@@ -1138,7 +1138,7 @@ namespace RTC
 						{
 							MS_WARN_TAG(
 							  ice,
-							  "invalid STUN Packet, Attribute MESSAGE-INTEGRITY must be %zu bytes length",
+							  "invalid STUN packet, attribute MESSAGE-INTEGRITY must be %zu bytes length",
 							  StunPacket::MessageIntegrityAttributeLength);
 
 							return false;
@@ -1156,7 +1156,7 @@ namespace RTC
 					{
 						if (attrLen != 4)
 						{
-							MS_WARN_TAG(ice, "invalid STUN Packet, Attribute FINGERPRINT must be 4 bytes length");
+							MS_WARN_TAG(ice, "invalid STUN packet, attribute FINGERPRINT must be 4 bytes length");
 
 							return false;
 						}
@@ -1171,20 +1171,20 @@ namespace RTC
 
 					default:
 					{
-						MS_DEBUG_DEV("unknown Attribute with type %" PRIu16, attrType);
+						MS_DEBUG_DEV("unknown attribute with type %" PRIu16, attrType);
 					}
 				}
 
-				// Move to next Attribute.
+				// Move to next attribute.
 				ptr += Utils::Byte::PadTo4Bytes(static_cast<size_t>(4 + attrLen));
 			}
 
-			// Ensure we read the Attributes length entirely.
+			// Ensure we read the attributes length entirely.
 			if (ptr != attributesStart + GetAttributesLength())
 			{
 				MS_WARN_TAG(
 				  ice,
-				  "invalid STUN Packet, computed length of Attributes (%zu) does not match announced length (%zu)",
+				  "invalid STUN packet, computed length of attributes (%zu) does not match announced length (%zu)",
 				  static_cast<size_t>(ptr - attributesStart),
 				  GetAttributesLength());
 
@@ -1202,8 +1202,8 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  ice,
-				  "cannot store parsed Attribute with type %" PRIu16
-				  ", there is an Attribute with same type already in the map",
+				  "cannot store parsed attribute with type %" PRIu16
+				  ", there is an attribute with same type already in the map",
 				  static_cast<uint16_t>(type));
 
 				return false;
@@ -1223,20 +1223,20 @@ namespace RTC
 			if (this->attributes.find(type) != this->attributes.end())
 			{
 				MS_THROW_ERROR(
-				  "cannot store new Attribute with type %" PRIu16
-				  ", there is an Attribute with same type already in the map",
+				  "cannot store new attribute with type %" PRIu16
+				  ", there is an attribute with same type already in the map",
 				  static_cast<uint16_t>(type));
 			}
 
-			// Add the Attribute at the end of the STUN Packet.
+			// Add the attribute at the end of the STUN packet.
 
 			const auto attrTotalPaddedLength = Utils::Byte::PadTo4Bytes(static_cast<size_t>(4 + len));
 
-			// Get the pointer in which the new Attribute must be written.
+			// Get the pointer in which the new attribute must be written.
 			// NOTE: Do this before updating lengths.
 			auto* attrPtr = GetAttributesPointer() + GetAttributesLength();
 
-			// First update STUN Packet length (it may throw).
+			// First update STUN packet length (it may throw).
 			SetLength(GetLength() + attrTotalPaddedLength);
 
 			// Also update the message length field.
@@ -1255,10 +1255,10 @@ namespace RTC
 			const auto [it, inserted] = this->attributes.try_emplace(type, type, len, 0);
 			auto& attribute           = it->second;
 
-			// Update stored Attribute's offset.
+			// Update stored attribute's offset.
 			attribute.offset = attrPtr - GetAttributesPointer();
 
-			MS_ASSERT(inserted, "Attribute not inserted in the map (this shouldn't happen)");
+			MS_ASSERT(inserted, "attribute not inserted in the map (this shouldn't happen)");
 		}
 
 		void StunPacket::AssertNotProtected() const
@@ -1267,7 +1267,7 @@ namespace RTC
 
 			if (IsProtected())
 			{
-				MS_THROW_ERROR("STUN Packet is protected");
+				MS_THROW_ERROR("STUN packet is protected");
 			}
 		}
 	} // namespace ICE

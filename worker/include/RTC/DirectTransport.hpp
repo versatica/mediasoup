@@ -1,8 +1,8 @@
 #ifndef MS_RTC_DIRECT_TRANSPORT_HPP
 #define MS_RTC_DIRECT_TRANSPORT_HPP
 
-#include "SharedInterface.hpp"
 #include "RTC/Transport.hpp"
+#include "SharedInterface.hpp"
 
 namespace RTC
 {
@@ -32,11 +32,9 @@ namespace RTC
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
+		  RTC::SCTP::Message message,
 		  onQueuedCallback* cb = nullptr) override;
-		bool SendSctpData(const uint8_t* data, size_t len) override;
+		bool SendData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
 

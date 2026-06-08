@@ -102,7 +102,6 @@ export async function createWorker<WorkerAppData extends AppData = AppData>({
 	workerBin,
 	libwebrtcFieldTrials,
 	disableLiburing = false,
-	useBuiltInSctpStack = false,
 	appData,
 }: WorkerSettings<WorkerAppData> = {}): Promise<Worker<WorkerAppData>> {
 	logger.debug('createWorker()');
@@ -121,7 +120,6 @@ export async function createWorker<WorkerAppData extends AppData = AppData>({
 		workerBin,
 		libwebrtcFieldTrials,
 		disableLiburing,
-		useBuiltInSctpStack,
 		appData,
 	});
 

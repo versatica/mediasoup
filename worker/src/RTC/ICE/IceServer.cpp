@@ -20,7 +20,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		std::unordered_map<IceServer::IceState, std::string> IceServer::iceStateToString =
+		ankerl::unordered_dense::map<IceServer::IceState, std::string> IceServer::iceStateToString =
 		{
 			{ IceServer::IceState::NEW,          "new"          },
 			{ IceServer::IceState::CONNECTED,    "connected"    },

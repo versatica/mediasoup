@@ -41,7 +41,7 @@ namespace RTC
 			uint16_t announcedMaxInboundStreams{ 65535 };
 
 			/**
-			 * Maximum size of an SCTP Packet. It doesn't include any overhead of
+			 * Maximum size of an SCTP packet. It doesn't include any overhead of
 			 * DTLS, TURN, UDP or IP headers.
 			 */
 			size_t mtu{ RTC::Consts::MaxSafeMtuSizeForSctp };
@@ -53,24 +53,6 @@ namespace RTC
 			 * `maxReceiverWindowBufferSize`).
 			 */
 			size_t maxSendMessageSize{ 256 * 1024 };
-
-			/**
-			 * The default stream priority, if not overridden by
-			 * `Association::SetStreamPriority()`. The default value is selected to be
-			 * compatible with https://www.w3.org/TR/webrtc-priority/, section 4.2-4.3.
-			 */
-			uint16_t defaultStreamPriority{ 256 };
-
-			/**
-			 * Maximum received window buffer size. This should be a bit larger than
-			 * the largest sized message you want to be able to receive. This
-			 * essentially limits the memory usage on the receive side. Note that
-			 * memory is allocated dynamically, and this represents the maximum amount
-			 * of buffered data. The actual memory usage of the library will be
-			 * smaller in normal operation, and will be larger than this due to other
-			 * allocations and overhead if the buffer is fully utilized.
-			 */
-			size_t maxReceiverWindowBufferSize{ 5 * 1024 * 1024 };
 
 			/**
 			 * Send queue total size limit. It will not be possible to queue more data
@@ -85,10 +67,34 @@ namespace RTC
 			size_t perStreamSendQueueLimit{ 2000000 };
 
 			/**
+			 * The largest allowed message payload to be received. This value should
+			 * be smaller than `maxReceiverWindowBufferSize`.
+			 */
+			size_t maxReceiveMessageSize{ 256 * 1024 };
+
+			/**
+			 * Maximum received window buffer size. This should be a bit larger than
+			 * the largest sized message you want to be able to receive. This
+			 * essentially limits the memory usage on the receive side. Note that
+			 * memory is allocated dynamically, and this represents the maximum amount
+			 * of buffered data. The actual memory usage of the library will be
+			 * smaller in normal operation, and will be larger than this due to other
+			 * allocations and overhead if the buffer is fully utilized.
+			 */
+			size_t maxReceiverWindowBufferSize{ 5 * 1024 * 1024 };
+
+			/**
 			 * A threshold that, when the amount of data in the send buffer goes below
 			 * this value, will trigger `Association::OnAssociationTotalBufferedAmountLow()`.
 			 */
 			size_t totalBufferedAmountLowThreshold{ 1800000 };
+
+			/**
+			 * The default stream priority, if not overridden by
+			 * `Association::SetStreamPriority()`. The default value is selected to be
+			 * compatible with https://www.w3.org/TR/webrtc-priority/, section 4.2-4.3.
+			 */
+			uint16_t defaultStreamPriority{ 256 };
 
 			/**
 			 * Max allowed RTT value. When the RTT is measured and it's found to be
@@ -141,7 +147,7 @@ namespace RTC
 
 			/**
 			 * The maximum time when a SACK will be sent from the arrival of an
-			 * unacknowledged Packet. Whatever is smallest of RTO/2 and this will be
+			 * unacknowledged packet. Whatever is smallest of RTO/2 and this will be
 			 * used.
 			 */
 			uint64_t delayedAckMaxTimeoutMs{ 200 };
@@ -214,10 +220,10 @@ namespace RTC
 			size_t maxBurst{ 4 };
 
 			/**
-			 * Maximum data retransmit attempts (for DATA, I_DATA and other Chunks).
+			 * Maximum data retransmit attempts (for DATA, I-DATA and other chunks).
 			 * Set to std::nullopt for no limit.
 			 */
-			std::optional<size_t> maxRetransmissions{ 10 };
+			std::optional<uint16_t> maxRetransmissions{ 10 };
 
 			/**
 			 * Max.Init.Retransmits. Set to std::nullopt for no limit.
@@ -228,12 +234,13 @@ namespace RTC
 
 			/**
 			 * Enable Partial Reliability Extension.
+			 *
 			 * @see RFC 3758.
 			 */
 			bool enablePartialReliability{ true };
 
 			/**
-			 * Enable Stream Schedulers and User Message Interleaving (I-DATA Chunks).
+			 * Enable Stream Schedulers and User Message Interleaving (I-DATA chunks).
 			 *
 			 * @see RFC 8260.
 			 */
@@ -256,6 +263,8 @@ namespace RTC
 			ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod zeroChecksumAlternateErrorDetectionMethod{
 				ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 			};
+
+			void Dump(int indentation = 0) const;
 		};
 
 		/**
@@ -279,7 +288,7 @@ namespace RTC
 			 * If set, limits the number of retransmissions. This is only available
 			 * if the peer supports Partial Reliability Extension (RFC 3758).
 			 */
-			std::optional<size_t> maxRetransmissions{ std::nullopt };
+			std::optional<uint16_t> maxRetransmissions{ std::nullopt };
 
 			/**
 			 * If set, will generate lifecycle events for this message. See e.g.

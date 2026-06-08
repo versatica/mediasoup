@@ -27,7 +27,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}
@@ -146,7 +146,7 @@ namespace RTC
 
 			if (HasUpperLayerAbortReason())
 			{
-				return "reason:[" + std::string(GetUpperLayerAbortReason()) + "]";
+				return "reason::\"" + std::string(GetUpperLayerAbortReason()) + "\"";
 			}
 			else
 			{

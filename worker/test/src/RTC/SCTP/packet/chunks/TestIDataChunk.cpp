@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <vector>
@@ -16,7 +16,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:64 (I_DATA), I:1, U:0, B:1, E:0, Length: 23
+			// Type:64 (I-DATA), I:1, U:0, B:1, E:0, Length: 23
 			0x40, 0b00001010, 0x00, 0x17,
 			// TSN: 0x11223344,
 			0x11, 0x22, 0x33, 0x44,
@@ -68,7 +68,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		auto userData = chunk->GetUserData();
+		auto userData = chunk->MakeUserData();
 
 		std::vector<uint8_t> expectedPayload = { 0xAB, 0xCD, 0xEF };
 
@@ -122,7 +122,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		userData = chunk->GetUserData();
+		userData = chunk->MakeUserData();
 
 		REQUIRE(userData.GetStreamId() == 5001);
 		REQUIRE(userData.GetStreamSequenceNumber() == 0);
@@ -170,7 +170,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		// This should be padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		userData = chunk->GetUserData();
+		userData = chunk->MakeUserData();
 
 		REQUIRE(userData.GetStreamId() == 5001);
 		REQUIRE(userData.GetStreamSequenceNumber() == 0);
@@ -213,7 +213,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		REQUIRE(chunk->HasUserDataPayload() == false);
 		REQUIRE(chunk->GetUserDataPayloadLength() == 0);
 
-		auto userData = chunk->GetUserData();
+		auto userData = chunk->MakeUserData();
 
 		std::vector<uint8_t> expectedPayload = {};
 
@@ -285,7 +285,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		// Last byte must be a zero byte padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		userData = chunk->GetUserData();
+		userData = chunk->MakeUserData();
 
 		expectedPayload = { 0x00, 0x01, 0x02 };
 
@@ -333,7 +333,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		// Last byte must be a zero byte padding.
 		REQUIRE(chunk->GetUserDataPayload()[3] == 0x00);
 
-		userData = chunk->GetUserData();
+		userData = chunk->MakeUserData();
 
 		REQUIRE(userData.GetStreamId() == 9988);
 		REQUIRE(userData.GetStreamSequenceNumber() == 0);
@@ -426,14 +426,14 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto gotUserData = chunk->GetUserData();
+		auto gotUserData = chunk->MakeUserData();
 
 		std::vector<uint8_t> expectedPayload = { 1, 2, 3, 4 };
 
 		REQUIRE(gotUserData.GetStreamId() == 123);
 		REQUIRE(gotUserData.GetStreamSequenceNumber() == 0);
 		REQUIRE(gotUserData.GetMessageId() == 5555);
-		// Bit B is set in the I_DATA Chunk so this must be 0.
+		// Bit B is set in the I-DATA chunk so this must be 0.
 		REQUIRE(gotUserData.GetFragmentSequenceNumber() == 0);
 		REQUIRE(gotUserData.GetPayloadProtocolId() == 56789);
 		REQUIRE(gotUserData.GetPayloadLength() == 4);

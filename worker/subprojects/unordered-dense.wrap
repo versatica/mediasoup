@@ -1,0 +1,9 @@
+[wrap-file]
+directory = unordered_dense-4.8.1
+source_url = https://github.com/martinus/unordered_dense/archive/refs/tags/v4.8.1.tar.gz
+source_filename = unordered_dense-4.8.1.tar.gz
+source_hash = 9f7202ec6d8353932ef865d33f5872e4b7a1356e9032da7cd09c3a0c5bb2b7de
+patch_directory = ankerl-unordered-dense
+
+[provide]
+unordered_dense = ankerl_unordered_dense_dep

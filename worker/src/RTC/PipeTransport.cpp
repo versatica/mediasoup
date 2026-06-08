@@ -4,9 +4,10 @@
 #include "RTC/PipeTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/PortManager.hpp"
+#include "RTC/SCTP/packet/Packet.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -72,7 +73,7 @@ namespace RTC
 		{
 			if (this->listenInfo.portRange.min != 0 && this->listenInfo.portRange.max != 0)
 			{
-				uint64_t portRangeHash{ 0u };
+				RTC::PortManager::PortRangeKey portRangeKey;
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,
@@ -80,7 +81,7 @@ namespace RTC
 				  this->listenInfo.portRange.min,
 				  this->listenInfo.portRange.max,
 				  this->listenInfo.flags,
-				  portRangeHash);
+				  portRangeKey);
 			}
 			else if (this->listenInfo.port != 0)
 			{
@@ -92,7 +93,7 @@ namespace RTC
 			// required.
 			else
 			{
-				uint64_t portRangeHash{ 0u };
+				RTC::PortManager::PortRangeKey portRangeKey;
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,
@@ -100,7 +101,7 @@ namespace RTC
 				  Settings::configuration.rtcMinPort,
 				  Settings::configuration.rtcMaxPort,
 				  this->listenInfo.flags,
-				  portRangeHash);
+				  portRangeKey);
 			}
 
 			if (this->listenInfo.sendBufferSize != 0)
@@ -144,7 +145,7 @@ namespace RTC
 
 		// Tell the Transport parent class that we are about to destroy
 		// the class instance.
-		Destroying();
+		SetDestroying();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
@@ -579,22 +580,14 @@ namespace RTC
 	}
 
 	void PipeTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
-		if (Settings::configuration.useBuiltInSctpStack)
-		{
-			// TODO: SCTP
-		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else
-		{
-			this->oldSctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
-		}
+		SendSctpMessage(dataConsumer, std::move(message), cb);
 	}
 
-	bool PipeTransport::SendSctpData(const uint8_t* data, size_t len)
+	bool PipeTransport::SendData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -650,12 +643,7 @@ namespace RTC
 			OnRtpDataReceived(tuple, data, len, bufferLen);
 		}
 		// Check if it's SCTP.
-		else if (Settings::configuration.useBuiltInSctpStack && RTC::SCTP::Packet::IsSctp(data, len))
-		{
-			OnSctpDataReceived(tuple, data, len);
-		}
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		else if (!Settings::configuration.useBuiltInSctpStack && RTC::SctpAssociation::IsSctp(data, len))
+		else if (RTC::SCTP::Packet::IsSctp(data, len))
 		{
 			OnSctpDataReceived(tuple, data, len);
 		}

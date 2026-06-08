@@ -162,9 +162,13 @@ Cleans subprojects downloaded with Meson.
 
 Cleans built objects and binaries, `meson` and `ninja` installed in local prefix with pip and all subprojects downloaded with Meson.
 
+### `invoke check-wrap-status`
+
+Check the status of the Meson subprojects. It also prints whether there are updates available.
+
 ### `invoke update-wrap-file [subproject]`
 
-Updates the wrap file of a subproject (those in `worker/subprojects` folder) with Meson. After updating it, `invoke setup` must be called by passing `MESON_ARGS="--reconfigure"` environment variable. Usage example:
+Updates the wrap file of a Meson subproject (those in `worker/subprojects` folder). After updating it, `invoke setup` must be called by passing `MESON_ARGS="--reconfigure"` environment variable. Usage example:
 
 ```bash
 cd worker
@@ -208,7 +212,7 @@ Builds a Xcode project for the mediasoup worker subproject.
 
 ### `invoke lint`
 
-Validates mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and rules in `worker/.clang-format`.
+Validates mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and rules in `worker/.clang-format`. It also validates Python code within `worker` folder (i.e. `worker/tasks.py` file).
 
 **Requirements:**
 

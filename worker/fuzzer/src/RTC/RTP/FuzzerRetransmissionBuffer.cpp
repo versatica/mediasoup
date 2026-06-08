@@ -1,8 +1,8 @@
 #include "RTC/RTP/FuzzerRetransmissionBuffer.hpp"
-#include "Utils.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RetransmissionBuffer.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
+#include "Utils.hpp"
 
 void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 {

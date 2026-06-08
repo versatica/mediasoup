@@ -2,10 +2,10 @@
 #define MS_RTC_NACK_GENERATOR_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/SeqManager.hpp"
-#include "handles/TimerHandleInterface.hpp"
+#include "SharedInterface.hpp"
 #include <map>
 #include <set>
 #include <vector>

@@ -455,7 +455,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(
 		  traditionalReassemblyStreams.AddData(
-		    getTsn(3), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x03 }, true, true, true)) == 0);
+		    getTsn(3), RTC::SCTP::UserData(1, 1, 0, 0, 53, { 0x03 }, true, true, true)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 3 });
@@ -469,7 +469,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(
 		  traditionalReassemblyStreams.AddData(
-		    getTsn(2), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x02 }, true, true, true)) == 0);
+		    getTsn(2), RTC::SCTP::UserData(1, 2, 0, 0, 53, { 0x02 }, true, true, true)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 2 });
@@ -483,7 +483,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 		REQUIRE(
 		  traditionalReassemblyStreams.AddData(
-		    getTsn(4), RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x04 }, true, true, true)) == 0);
+		    getTsn(4), RTC::SCTP::UserData(1, 3, 0, 0, 53, { 0x04 }, true, true, true)) == 0);
 
 		REQUIRE(tester.GetCallCount(1));
 		REQUIRE(tester.GetLastTsns() == std::vector<uint32_t>{ 4 });

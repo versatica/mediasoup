@@ -21,7 +21,7 @@ namespace RTC
 			 * the SCTP association handshake flow.
 			 *
 			 * @remarks
-			 * - Given `remoteChunk` must be an INIT or an INIT_ACK Chunk.
+			 * - Given `remoteChunk` must be an INIT or an INIT-ACK chunk.
 			 */
 			static NegotiatedCapabilities Factory(
 			  const SctpOptions& sctpOptions, const AnyInitChunk* remoteChunk);
@@ -44,7 +44,7 @@ namespace RTC
 			bool partialReliability{ false };
 
 			/**
-			 * Stream Schedulers and User Message Interleaving (I-DATA Chunks).
+			 * Stream Schedulers and User Message Interleaving (I-DATA chunks).
 			 *
 			 * @see RFC 8260.
 			 */

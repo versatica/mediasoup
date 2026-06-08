@@ -27,7 +27,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::STALE_COOKIE)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}
@@ -67,7 +67,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "StaleCookieErrorCause Length field must be %zu",
+				  "StaleCookieErrorCause length field must be %zu",
 				  StaleCookieErrorCause::StaleCookieErrorCauseHeaderLength);
 
 				return nullptr;

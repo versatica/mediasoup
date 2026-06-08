@@ -95,7 +95,7 @@ namespace RTC
 
 			const int32_t prevPacketsLost = this->packetsLost;
 
-			// Calculate Packets Expected and Lost.
+			// Calculate packets xxpected and lost.
 			auto expected = GetExpectedPackets();
 
 			if (expected > this->packetsCount)
@@ -107,7 +107,7 @@ namespace RTC
 				this->packetsLost = 0u;
 			}
 
-			// Calculate Fraction Lost.
+			// Calculate fraction lost.
 			const uint32_t expectedInterval = expected - this->expectedPrior;
 
 			this->expectedPrior = expected;

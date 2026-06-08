@@ -1,19 +1,8 @@
 //! SCTP parameters.
 
 use crate::fbs::{FromFbs, ToFbs};
-use mediasoup_sys::fbs::sctp_parameters;
+use mediasoup_sys::fbs::{sctp_association, sctp_parameters};
 use mediasoup_types::sctp_parameters::*;
-
-impl ToFbs for NumSctpStreams {
-    type FbsType = sctp_parameters::NumSctpStreams;
-
-    fn to_fbs(&self) -> Self::FbsType {
-        sctp_parameters::NumSctpStreams {
-            os: self.os,
-            mis: self.mis,
-        }
-    }
-}
 
 impl FromFbs for SctpParameters {
     type FbsType = sctp_parameters::SctpParameters;
@@ -21,9 +10,29 @@ impl FromFbs for SctpParameters {
     fn from_fbs(parameters: &Self::FbsType) -> Self {
         Self {
             port: parameters.port,
-            os: parameters.os,
-            mis: parameters.mis,
-            max_message_size: parameters.max_message_size,
+            max_send_message_size: parameters.max_send_message_size,
+            max_receive_message_size: parameters.max_receive_message_size,
+            send_buffer_size: parameters.send_buffer_size,
+            per_stream_send_queue_limit: parameters.per_stream_send_queue_limit,
+            max_receiver_window_buffer_size: parameters.max_receiver_window_buffer_size,
+            is_data_channel: parameters.is_data_channel,
+
+            // TODO: SCTP: For backwards compatibility. Remove them in the future.
+            os: 65535,
+            mis: 65535,
+            max_message_size: parameters.max_receive_message_size,
+        }
+    }
+}
+
+impl FromFbs for SctpNegotiatedCapabilities {
+    type FbsType = sctp_association::SctpNegotiatedCapabilities;
+
+    fn from_fbs(negotiated_capabilities: &Self::FbsType) -> Self {
+        SctpNegotiatedCapabilities {
+            negotiated_max_outbound_streams: negotiated_capabilities
+                .negotiated_max_outbound_streams,
+            negotiated_max_inbound_streams: negotiated_capabilities.negotiated_max_inbound_streams,
         }
     }
 }

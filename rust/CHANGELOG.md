@@ -2,7 +2,23 @@
 
 ### NEXT
 
-- Worker: Add `use_built_in_sctp_stack` setting (defaults to `false`) to enable mediasoup built-in SCTP stack (PR #1777).
+### 0.22.2
+
+- Fix SCTP crash when the t3-rtx timer expires (PR #1822).
+
+### 0.22.1
+
+- `DataConsumer::send()`: Return the current buffered amount size (in bytes) after sending/queuing the message (PR #1819):
+  - Fix: move the `send()` method from `DirectDataConsumer` to `RegularDataConsumer` (where the worker actually accepts it).
+
+### 0.22.0
+
+- New built-in SCTP stack (PR #1806):
+  - Remove `useBuiltInSctpStack` worker option.
+  - `WebRtcTransport`, `PlainTransport`, `PipeTransport`: Add `sctp_negotiated_capabilities()` getter.
+  - `WebRtcTransport`, `PlainTransport`, `PipeTransport` options: Remove `num_sctp_streams` and `max_sctp_message_size`, and add `max_send_message_size`, `max_receive_message_size`, `sctp_per_stream_send_queue_limit` and `sctp_max_receiver_window_buffer_size`.
+  - `DirectTransport` options: Remove `max_message_size`, and add `max_send_message_size` and `max_receive_message_size`.
+  - Change `SctpParameters` type from `{ port, OS, MIS, maxMessageSize }` to `{ port, max_send_message_size, max_receive_message_size, send_buffer_size, per_stream_send_queue_limit,max_receiver_window_buffer_size, is_data_channel}`.
 
 ### 0.21.0
 

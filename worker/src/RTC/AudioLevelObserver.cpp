@@ -5,8 +5,8 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <absl/container/btree_map.h>
 #include <cmath> // std::lround()
+#include <map>   // std::multimap
 
 namespace RTC
 {
@@ -143,7 +143,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		absl::btree_multimap<int8_t, RTC::Producer*> mapDBovsProducer;
+		std::multimap<int8_t, RTC::Producer*> mapDBovsProducer;
 
 		for (auto& kv : this->mapProducerDBovs)
 		{

@@ -28,7 +28,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::IPV6_ADDRESS)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -68,7 +68,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "IPv6AddressParameter Length field must be %zu",
+				  "IPv6AddressParameter length field must be %zu",
 				  IPv6AddressParameter::IPv6AddressParameterHeaderLength);
 
 				return nullptr;

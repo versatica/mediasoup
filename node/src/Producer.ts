@@ -19,6 +19,7 @@ import type { MediaKind, RtpParameters } from './rtpParametersTypes';
 import { parseRtpParameters } from './rtpParametersFbsUtils';
 import { parseRtpStreamRecvStats } from './rtpStreamStatsFbsUtils';
 import type { AppData } from './types';
+import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import { Event, Notification } from './fbs/notification';
 import { TraceDirection as FbsTraceDirection } from './fbs/common';
@@ -111,7 +112,7 @@ export class ProducerImpl<ProducerAppData extends AppData = AppData>
 	}
 
 	get rtpParameters(): RtpParameters {
-		return this.#data.rtpParameters;
+		return utils.clone(this.#data.rtpParameters);
 	}
 
 	get type(): ProducerType {
@@ -119,7 +120,7 @@ export class ProducerImpl<ProducerAppData extends AppData = AppData>
 	}
 
 	get consumableRtpParameters(): RtpParameters {
-		return this.#data.consumableRtpParameters;
+		return utils.clone(this.#data.consumableRtpParameters);
 	}
 
 	get paused(): boolean {
@@ -127,7 +128,7 @@ export class ProducerImpl<ProducerAppData extends AppData = AppData>
 	}
 
 	get score(): ProducerScore[] {
-		return this.#score;
+		return utils.clone(this.#score);
 	}
 
 	get appData(): ProducerAppData {

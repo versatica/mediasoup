@@ -6,7 +6,6 @@ import type { WorkerEvents, PlainTransportEvents } from '../types';
 import * as utils from '../utils';
 
 const IS_WINDOWS = os.platform() === 'win32';
-const USE_BUILD_IN_SCTP_STACK = false;
 
 type TestContext = {
 	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
@@ -47,9 +46,7 @@ const ctx: TestContext = {
 };
 
 beforeEach(async () => {
-	ctx.worker = await mediasoup.createWorker({
-		useBuiltInSctpStack: USE_BUILD_IN_SCTP_STACK,
-	});
+	ctx.worker = await mediasoup.createWorker();
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
@@ -105,13 +102,15 @@ test('router.createPlainTransport() succeeds', async () => {
 	expect(plainTransport2.rtcpTuple).toBeUndefined();
 	expect(plainTransport2.sctpParameters).toMatchObject({
 		port: 5000,
-		// NOTE: When using the built-in SCTP stack, `numSctpStreams` given to the
-		// transport is ignored.
-		OS: USE_BUILD_IN_SCTP_STACK ? 65535 : 1024,
-		MIS: USE_BUILD_IN_SCTP_STACK ? 65535 : 1024,
-		maxMessageSize: 262144,
+		maxSendMessageSize: 262144,
+		maxReceiveMessageSize: 262144,
+		sendBufferSize: 2000000,
+		perStreamSendQueueLimit: 2000000,
+		maxReceiverWindowBufferSize: 5242880,
+		isDataChannel: false,
 	});
 	expect(plainTransport2.sctpState).toBe('new');
+	expect(plainTransport2.sctpNegotiatedCapabilities).toBeUndefined();
 	expect(plainTransport2.srtpParameters).toBeUndefined();
 
 	const dump1 = await plainTransport2.dump();
@@ -167,6 +166,7 @@ test('router.createPlainTransport() succeeds', async () => {
 	expect(transport2.rtcpTuple?.protocol).toBe('udp');
 	expect(transport2.sctpParameters).toBeUndefined();
 	expect(transport2.sctpState).toBeUndefined();
+	expect(transport2.sctpNegotiatedCapabilities).toBeUndefined();
 
 	const dump2 = await transport2.dump();
 

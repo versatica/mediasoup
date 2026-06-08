@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/SsnTsnResetRequestParameter.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -15,7 +15,7 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[serializable][sctp][parameter
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type:15 (SSN_TSN_RESET_REQUEST), Length: 8
+			// Type:15 (SSN-TSN-RESET-REQUEST), Length: 8
 			0x00, 0x0F, 0x00, 0x08,
 			// Re-configuration Request Sequence Number: 666777888
 			0x27, 0xBE, 0x39, 0x20,

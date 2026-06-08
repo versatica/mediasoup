@@ -27,7 +27,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -71,7 +71,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "AddIncomingStreamsRequestParameter Length field must be %zu",
+				  "AddIncomingStreamsRequestParameter length field must be %zu",
 				  AddIncomingStreamsRequestParameter::AddIncomingStreamsRequestParameterHeaderLength);
 
 				return nullptr;

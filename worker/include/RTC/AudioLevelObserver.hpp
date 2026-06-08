@@ -1,10 +1,10 @@
 #ifndef MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 #define MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 
-#include "SharedInterface.hpp"
-#include "RTC/RtpObserver.hpp"
 #include "handles/TimerHandleInterface.hpp"
-#include <absl/container/flat_hash_map.h>
+#include "RTC/RtpObserver.hpp"
+#include "SharedInterface.hpp"
+#include <ankerl/unordered_dense.h>
 
 namespace RTC
 {
@@ -50,7 +50,7 @@ namespace RTC
 		// Allocated by this.
 		TimerHandleInterface* periodicTimer{ nullptr };
 		// Others.
-		absl::flat_hash_map<RTC::Producer*, DBovs> mapProducerDBovs;
+		ankerl::unordered_dense::map<RTC::Producer*, DBovs> mapProducerDBovs;
 		bool silence{ true };
 	};
 } // namespace RTC

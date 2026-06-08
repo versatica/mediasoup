@@ -26,13 +26,13 @@ namespace RTC
 
 		switch (data->type())
 		{
-			case FBS::DataProducer::Type::SCTP:
+			case FBS::DataConsumer::Type::SCTP:
 			{
 				this->type = DataConsumer::Type::SCTP;
 
 				break;
 			}
-			case FBS::DataProducer::Type::DIRECT:
+			case FBS::DataConsumer::Type::DIRECT:
 			{
 				this->type = DataConsumer::Type::DIRECT;
 
@@ -109,16 +109,28 @@ namespace RTC
 			subchannels.emplace_back(subchannel);
 		}
 
+		uint32_t bufferedAmount{ 0 };
+
+		this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
+
+		uint32_t bufferedAmountLowThreshold{ 0 };
+
+		if (this->type == DataConsumer::Type::SCTP)
+		{
+			this->listener->OnDataConsumerNeedBufferedAmountLowThreshold(this, bufferedAmountLowThreshold);
+		}
+
 		return FBS::DataConsumer::CreateDumpResponseDirect(
 		  builder,
 		  this->id.c_str(),
 		  this->dataProducerId.c_str(),
-		  this->type == DataConsumer::Type::SCTP ? FBS::DataProducer::Type::SCTP
-		                                         : FBS::DataProducer::Type::DIRECT,
+		  this->type == DataConsumer::Type::SCTP ? FBS::DataConsumer::Type::SCTP
+		                                         : FBS::DataConsumer::Type::DIRECT,
 		  sctpStreamParameters,
 		  this->label.c_str(),
 		  this->protocol.c_str(),
-		  this->bufferedAmountLowThreshold,
+		  bufferedAmount,
+		  bufferedAmountLowThreshold,
 		  this->paused,
 		  this->dataProducerPaused,
 		  std::addressof(subchannels));
@@ -128,6 +140,10 @@ namespace RTC
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
+
+		uint32_t bufferedAmount{ 0 };
+
+		this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
 
 		return FBS::DataConsumer::CreateGetStatsResponseDirect(
 		  builder,
@@ -142,7 +158,7 @@ namespace RTC
 		  // bytesSent.
 		  this->bytesSent,
 		  // bufferedAmount.
-		  this->bufferedAmount);
+		  bufferedAmount);
 	}
 
 	void DataConsumer::HandleRequest(Channel::ChannelRequest* request)
@@ -233,31 +249,11 @@ namespace RTC
 
 				const auto* body =
 				  request->data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
+				const auto bufferedAmountLowThreshold = static_cast<size_t>(body->threshold());
 
-				this->bufferedAmountLowThreshold = body->threshold();
+				this->listener->OnDataConsumerSetBufferedAmountLowThreshold(this, bufferedAmountLowThreshold);
 
 				request->Accept();
-
-				// There is less or same buffered data than the given threshold.
-				// Trigger 'bufferedamountlow' now.
-				if (this->bufferedAmount <= this->bufferedAmountLowThreshold)
-				{
-					// Notify the Node DataConsumer.
-					auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
-					  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->bufferedAmount);
-
-					this->shared->GetChannelNotifier()->Emit(
-					  this->id,
-					  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
-					  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
-					  bufferedAmountLowOffset);
-				}
-				// Force the trigger of 'bufferedamountlow' once there is less or same
-				// buffered data than the given threshold.
-				else
-				{
-					this->forceTriggerBufferedAmountLow = true;
-				}
 
 				break;
 			}
@@ -281,12 +277,22 @@ namespace RTC
 					  len);
 				}
 
+				// NOTE: Capturing `this` and `request` (by reference) is safe here because the
+				// callback is always invoked synchronously within this same call stack (never
+				// deferred).
 				const auto* cb = new onQueuedCallback(
-				  [&request](bool queued, bool sctpSendBufferFull)
+				  [this, &request](bool queued, bool sctpSendBufferFull)
 				  {
 					  if (queued)
 					  {
-						  request->Accept();
+						  uint32_t bufferedAmount{ 0 };
+
+						  this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
+
+						  auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
+						    request->GetBufferBuilder(), bufferedAmount);
+
+						  request->Accept(FBS::Response::Body::DataConsumer_SendResponse, responseOffset);
 					  }
 					  else
 					  {
@@ -294,9 +300,16 @@ namespace RTC
 					  }
 				  });
 
-				static std::vector<uint16_t> emptySubchannels;
+				static thread_local std::vector<uint16_t> emptySubchannels;
 
-				SendMessage(data, len, body->ppid(), emptySubchannels, std::nullopt, cb);
+				const uint16_t streamId =
+				  this->type == DataConsumer::Type::SCTP ? this->sctpStreamParameters.streamId : 0;
+
+				// NOTE: We are creating a copy of the data here, otherwise we cannot
+				// move the message and pass its ownership to the SCTP stack.
+				RTC::SCTP::Message message(streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
+
+				SendMessage(std::move(message), emptySubchannels, std::nullopt, cb);
 
 				break;
 			}
@@ -414,7 +427,7 @@ namespace RTC
 
 		this->dataProducerPaused = true;
 
-		MS_DEBUG_DEV("DataProducer paused [dataConsumerId:%s]", this->id.c_str());
+		MS_DEBUG_DEV("DataConsumer paused [dataConsumerId:%s]", this->id.c_str());
 
 		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_PAUSE);
@@ -431,7 +444,7 @@ namespace RTC
 
 		this->dataProducerPaused = false;
 
-		MS_DEBUG_DEV("DataProducer resumed [dataConsumerId:%s]", this->id.c_str());
+		MS_DEBUG_DEV("DataConsumer resumed [dataConsumerId:%s]", this->id.c_str());
 
 		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_RESUME);
@@ -455,34 +468,22 @@ namespace RTC
 		MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
 	}
 
-	void DataConsumer::SetSctpAssociationBufferedAmount(uint32_t bufferedAmount)
+	void DataConsumer::SctpBufferedAmountLow(uint32_t bufferedAmount) const
 	{
 		MS_TRACE();
 
-		auto previousBufferedAmount = this->bufferedAmount;
+		// Notify the Node DataConsumer.
+		auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), bufferedAmount);
 
-		this->bufferedAmount = bufferedAmount;
-
-		if (
-		  (this->forceTriggerBufferedAmountLow ||
-		   previousBufferedAmount > this->bufferedAmountLowThreshold) &&
-		  this->bufferedAmount <= this->bufferedAmountLowThreshold)
-		{
-			this->forceTriggerBufferedAmountLow = false;
-
-			// Notify the Node DataConsumer.
-			auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
-			  this->shared->GetChannelNotifier()->GetBufferBuilder(), this->bufferedAmount);
-
-			this->shared->GetChannelNotifier()->Emit(
-			  this->id,
-			  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
-			  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
-			  bufferedAmountLowOffset);
-		}
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id,
+		  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
+		  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
+		  bufferedAmountLowOffset);
 	}
 
-	void DataConsumer::SctpAssociationSendBufferFull()
+	void DataConsumer::SctpSendBufferFull() const
 	{
 		MS_TRACE();
 
@@ -498,7 +499,7 @@ namespace RTC
 
 		this->dataProducerClosed = true;
 
-		MS_DEBUG_DEV("DataProducer closed [dataConsumerId:%s]", this->id.c_str());
+		MS_DEBUG_DEV("DataConsumer closed [dataConsumerId:%s]", this->id.c_str());
 
 		this->shared->GetChannelNotifier()->Emit(
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_CLOSE);
@@ -507,9 +508,7 @@ namespace RTC
 	}
 
 	bool DataConsumer::SendMessage(
-	  const uint8_t* msg,
-	  size_t len,
-	  uint32_t ppid,
+	  RTC::SCTP::Message message,
 	  std::vector<uint16_t>& subchannels,
 	  std::optional<uint16_t> requiredSubchannel,
 	  const onQueuedCallback* cb)
@@ -570,12 +569,14 @@ namespace RTC
 			}
 		}
 
-		if (len > this->maxMessageSize)
+		const size_t messageLen = message.GetPayloadLength();
+
+		if (messageLen > this->maxMessageSize)
 		{
 			MS_WARN_TAG(
 			  message,
 			  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-			  len,
+			  messageLen,
 			  this->maxMessageSize);
 
 			if (cb)
@@ -588,9 +589,9 @@ namespace RTC
 		}
 
 		this->messagesSent++;
-		this->bytesSent += len;
+		this->bytesSent += messageLen;
 
-		this->listener->OnDataConsumerSendMessage(this, msg, len, ppid, cb);
+		this->listener->OnDataConsumerSendMessage(this, std::move(message), cb);
 
 		return true;
 	}

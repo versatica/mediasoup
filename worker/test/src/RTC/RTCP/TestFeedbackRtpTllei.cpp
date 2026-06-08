@@ -10,7 +10,7 @@ SCENARIO("RTCP Feedback RTP TLLEI", "[rtcp][feedback-rtp][tllei]")
 	// clang-format off
 	alignas(4) uint8_t buffer[] =
 	{
-		0x87, 0xcd, 0x00, 0x03, // Type: 205 (Generic RTP Feedback), Count: 7 (TLLEI) Length: 3
+		0x87, 0xcd, 0x00, 0x03, // Type: 205 (Generic RTP feedback), Count: 7 (TLLEI) Length: 3
 		0x00, 0x00, 0x00, 0x01, // Sender SSRC: 0x00000001
 		0x03, 0x30, 0xbd, 0xee, // Media source SSRC: 0x0330bdee
 		0x00, 0x01, 0xaa, 0x55

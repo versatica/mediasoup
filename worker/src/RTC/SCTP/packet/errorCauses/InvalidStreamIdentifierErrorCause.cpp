@@ -28,7 +28,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}
@@ -71,7 +71,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "InvalidStreamIdentifierErrorCause Length field must be %zu",
+				  "InvalidStreamIdentifierErrorCause length field must be %zu",
 				  InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength);
 
 				return nullptr;

@@ -2,8 +2,8 @@
 #define MS_MOCKS_RTC_SCTP_MOCK_SEND_QUEUE_HPP
 
 #include "common.hpp"
-#include "mocks/include/mockTypes.hpp"
 #include "RTC/SCTP/tx/SendQueueInterface.hpp"
+#include "mocks/include/mockTypes.hpp"
 #include <queue>
 #include <stdexcept>
 #include <string>
@@ -35,8 +35,9 @@ namespace mocks
 				~MockSendQueue() override = default;
 
 			public:
-				void EnableMessageInterleaving(bool /*enabled*/) override
+				void EnableMessageInterleaving(bool enabled) override
 				{
+					this->messageInterleavingCalledWith = enabled;
 				}
 
 				std::optional<DataToSend> Produce(uint64_t nowMs, size_t maxLength) override
@@ -142,6 +143,13 @@ namespace mocks
 
 				// Methods for testing.
 			public:
+				MockSendQueue& ExpectEnableMessageInterleavingCalledWith(bool enabled)
+				{
+					this->expectedMessageInterleavingCalledWith = enabled;
+
+					return *this;
+				}
+
 				MockSendQueue& WillProduceOnce(ProduceAction action)
 				{
 					this->produceOnceActions.push(std::move(action));
@@ -190,6 +198,17 @@ namespace mocks
 				mocks::VerificationResult VerifyExpectations() const
 				{
 					if (
+					  this->expectedMessageInterleavingCalledWith.has_value() &&
+					  this->messageInterleavingCalledWith != this->expectedMessageInterleavingCalledWith.value())
+					{
+						return { .ok = false,
+							       .errorMessage =
+							         std::string("EnableMessageInterleaving() call mismatch [expected:") +
+							         (this->expectedMessageInterleavingCalledWith.value() ? "true" : "false") +
+							         ", got:" + (this->messageInterleavingCalledWith ? "true" : "false") + "]" };
+					}
+
+					if (
 					  this->expectedProduceCallCount.has_value() &&
 					  this->produceCallCount != this->expectedProduceCallCount.value())
 					{
@@ -221,6 +240,10 @@ namespace mocks
 				}
 
 			private:
+				// EnableMessageInterleaving().
+				bool messageInterleavingCalledWith{ false };
+				std::optional<bool> expectedMessageInterleavingCalledWith;
+
 				// Produce().
 				std::queue<ProduceAction> produceOnceActions;
 				ProduceAction produceRepeatedlyAction;

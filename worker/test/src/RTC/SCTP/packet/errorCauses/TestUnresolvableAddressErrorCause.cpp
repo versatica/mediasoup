@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnresolvableAddressErrorCause.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -15,7 +15,7 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:5 (UNRESOLVABLE_ADDRESS), Length: 9
+			// Code:5 (UNRESOLVABLE-ADDRESS), Length: 9
 			0x00, 0x05, 0x00, 0x09,
 			// Unresolvable Address: 0x1234567890
 			0x12, 0x34, 0x56, 0x78,
@@ -126,7 +126,7 @@ SCENARIO("Unresolvable Address Error Cause (5)", "[serializable][sctp][errorcaus
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:5 (UNRESOLVABLE_ADDRESS), Length: 7
+			// Code:5 (UNRESOLVABLE-ADDRESS), Length: 7
 			0x00, 0x05, 0x00, 0x07,
 			// Unresolvable Address: 0x123456 (missing padding byte)
 			0x12, 0x34, 0x56,

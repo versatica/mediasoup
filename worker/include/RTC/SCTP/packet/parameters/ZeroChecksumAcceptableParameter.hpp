@@ -2,17 +2,17 @@
 #define MS_RTC_SCTP_ZERO_CHECKSUM_ACCEPTABLE_PARAMETER_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
+#include "Utils.hpp"
+#include <ankerl/unordered_dense.h>
 #include <string>
-#include <unordered_map>
 
 namespace RTC
 {
 	namespace SCTP
 	{
 		/**
-		 * SCTP Zero Checksum Acceptable Parameter (ZERO_CHECKSUM_ACCEPTABLE)
+		 * SCTP Zero Checksum Acceptable Parameter (ZERO-CHECKSUM-ACCEPTABLE)
 		 * (32769).
 		 *
 		 * @see RFC 9653.
@@ -31,7 +31,7 @@ namespace RTC
 
 		class ZeroChecksumAcceptableParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -53,7 +53,7 @@ namespace RTC
 			 * Parse a ZeroChecksumAcceptableParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static ZeroChecksumAcceptableParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -61,7 +61,7 @@ namespace RTC
 			 * Create a ZeroChecksumAcceptableParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static ZeroChecksumAcceptableParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -78,7 +78,7 @@ namespace RTC
 			static ZeroChecksumAcceptableParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
 
-			static const std::unordered_map<AlternateErrorDetectionMethod, std::string>
+			static const ankerl::unordered_dense::map<AlternateErrorDetectionMethod, std::string>
 			  AlternateErrorDetectionMethod2String;
 
 		private:
@@ -116,7 +116,7 @@ namespace RTC
 			ZeroChecksumAcceptableParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Parameter
+			 * We don't really need to override this method since this parameter
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */

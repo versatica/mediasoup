@@ -22,17 +22,15 @@
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
-// TODO: SCTP: Remove once we only use built-in SCTP stack.
-#include "SharedInterface.hpp"
-#include "RTC/SctpAssociation.hpp"
 #include "RTC/SctpListener.hpp"
+#include "SharedInterface.hpp"
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 #include "RTC/SenderBandwidthEstimator.hpp"
 #endif
+#include "handles/TimerHandleInterface.hpp"
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
-#include "handles/TimerHandleInterface.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
 
@@ -43,8 +41,6 @@ namespace RTC
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
 	                  public RTC::SCTP::AssociationListenerInterface,
-	                  // TODO: SCTP: Remove once we only use built-in SCTP stack.
-	                  public RTC::SctpAssociation::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Channel::ChannelSocket::RequestHandler,
@@ -110,9 +106,7 @@ namespace RTC
 			virtual void OnTransportDataProducerMessageReceived(
 			  RTC::Transport* transport,
 			  RTC::DataProducer* dataProducer,
-			  const uint8_t* msg,
-			  size_t len,
-			  uint32_t ppid,
+			  RTC::SCTP::Message message,
 			  std::vector<uint16_t>& subchannels,
 			  std::optional<uint16_t> requiredSubchannel) = 0;
 			virtual void OnTransportNewDataConsumer(
@@ -180,51 +174,51 @@ namespace RTC
 
 	protected:
 		// Must be called from the subclass.
-		void Destroying();
-		void Connected();
-		void Disconnected();
-		void DataReceived(size_t len)
+		virtual void SetDestroying() final;
+		virtual void Connected() final;
+		virtual void Disconnected() final;
+		virtual void DataReceived(size_t len) final
 		{
 			this->recvTransmission.Update(len, this->shared->GetTimeMs());
 		}
-		void DataSent(size_t len)
+		virtual void DataSent(size_t len) final
 		{
 			this->sendTransmission.Update(len, this->shared->GetTimeMs());
 		}
-		void ReceiveRtpPacket(RTC::RTP::Packet* packet);
-		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
-		void ReceiveSctpData(const uint8_t* data, size_t len);
-		RTC::Producer* GetProducerById(const std::string& producerId) const;
-		RTC::Consumer* GetConsumerById(const std::string& consumerId) const;
-		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
-		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
-		RTC::DataProducer* GetDataProducerById(const std::string& dataProducerId) const;
-		RTC::DataConsumer* GetDataConsumerById(const std::string& dataConsumerId) const;
+		virtual void ReceiveRtpPacket(RTC::RTP::Packet* packet) final;
+		virtual void ReceiveRtcpPacket(RTC::RTCP::Packet* packet) final;
+		virtual void ReceiveSctpData(const uint8_t* data, size_t len) final;
+		virtual void SendSctpMessage(
+		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb = nullptr) final;
 
 	private:
+		virtual RTC::Producer* AssertAndGetProducerById(const std::string& producerId) const final;
+		virtual RTC::Consumer* AssertAndGetConsumerById(const std::string& consumerId) const final;
+		virtual RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const final;
+		virtual RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const final;
+		virtual RTC::DataProducer* AssertAndGetDataProducerById(const std::string& dataProducerId) const final;
+		virtual RTC::DataConsumer* AssertAndGetDataConsumerById(const std::string& dataConsumerId) const final;
+		virtual RTC::DataConsumer* GetSctpDataConsumerByStreamId(uint16_t streamId) const final;
 		virtual bool IsConnected() const = 0;
 		virtual void SendRtpPacket(
 		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, const onSendCallback* cb = nullptr) = 0;
-		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
-		void SendRtcp(uint64_t nowMs);
+		virtual void HandleRtcpPacket(RTC::RTCP::Packet* packet) final;
+		virtual void SendRtcp(uint64_t nowMs) final;
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendMessage(
-		  RTC::DataConsumer* dataConsumer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  onQueuedCallback* = nullptr)                             = 0;
-		virtual bool SendSctpData(const uint8_t* data, size_t len) = 0;
-		virtual void RecvStreamClosed(uint32_t ssrc)               = 0;
-		virtual void SendStreamClosed(uint32_t ssrc)               = 0;
-		void DistributeAvailableOutgoingBitrate();
-		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
-		void EmitTraceEventProbationType(RTC::RTP::Packet* packet) const;
-		void EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
-		void CheckNoProducer(const std::string& producerId) const;
-		void CheckNoDataProducer(const std::string& dataProducerId) const;
-		void CheckNoDataConsumer(const std::string& dataConsumerId) const;
+		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb = nullptr) = 0;
+		virtual bool SendData(const uint8_t* data, size_t len) = 0;
+		virtual void RecvStreamClosed(uint32_t ssrc)           = 0;
+		virtual void SendStreamClosed(uint32_t ssrc)           = 0;
+		virtual void DistributeAvailableOutgoingBitrate() final;
+		virtual void ComputeOutgoingDesiredBitrate(bool forceBitrate = false) final;
+		virtual void EmitTraceEventProbationType(RTC::RTP::Packet* packet) const final;
+		virtual void EmitTraceEventBweType(
+		  RTC::TransportCongestionControlClient::Bitrates& bitrates) const final;
+		virtual void CheckNoDataProducer(const std::string& dataProducerId) const final;
+		virtual void CheckNoDataConsumer(const std::string& dataConsumerId) const final;
+		virtual void CheckNoSctpDataConsumer(uint16_t streamId) const final;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
@@ -269,9 +263,7 @@ namespace RTC
 		}
 		void OnDataProducerMessageReceived(
 		  RTC::DataProducer* dataProducer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
+		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel) override;
 		void OnDataProducerPaused(RTC::DataProducer* dataProducer) override;
@@ -280,13 +272,13 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
 		void OnDataConsumerSendMessage(
-		  RTC::DataConsumer* dataConsumer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
-		  onQueuedCallback* cb = nullptr) override;
+		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb) override;
 		void OnDataConsumerNeedBufferedAmount(
-		  RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) override;
+		  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) const override;
+		void OnDataConsumerNeedBufferedAmountLowThreshold(
+		  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmountLowThreshold) const override;
+		void OnDataConsumerSetBufferedAmountLowThreshold(
+		  const RTC::DataConsumer* dataConsumer, uint32_t bytes) const override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
 		/* Pure virtual methods inherited from RTC::SCTP::AssociationListenerInterface. */
@@ -306,25 +298,6 @@ namespace RTC
 		void OnAssociationStreamBufferedAmountLow(uint16_t streamId) override;
 		void OnAssociationTotalBufferedAmountLow() override;
 		bool OnAssociationIsTransportReadyForSctp() override;
-		// TODO: SCTP: Add OnAssociationLifecycleMessageXxxxxx() methods.
-
-		/* Pure virtual methods inherited from RTC::SctpAssociation::Listener. */
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-	public:
-		void OnSctpAssociationConnecting(RTC::SctpAssociation* sctpAssociation) override;
-		void OnSctpAssociationConnected(RTC::SctpAssociation* sctpAssociation) override;
-		void OnSctpAssociationFailed(RTC::SctpAssociation* sctpAssociation) override;
-		void OnSctpAssociationClosed(RTC::SctpAssociation* sctpAssociation) override;
-		void OnSctpAssociationSendData(
-		  RTC::SctpAssociation* sctpAssociation, const uint8_t* data, size_t len) override;
-		void OnSctpAssociationMessageReceived(
-		  RTC::SctpAssociation* sctpAssociation,
-		  uint16_t streamId,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid) override;
-		void OnSctpAssociationBufferedAmount(
-		  RTC::SctpAssociation* sctpAssociation, uint32_t bufferedAmount) override;
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
@@ -360,20 +333,18 @@ namespace RTC
 
 	protected:
 		SharedInterface* shared{ nullptr };
-		size_t maxMessageSize{ 262144u };
-		// TODO: SCTP: Remove once we only use built-in SCTP stack.
-		RTC::SctpAssociation* oldSctpAssociation{ nullptr };
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		absl::flat_hash_map<std::string, RTC::Producer*> mapProducers;
-		absl::flat_hash_map<std::string, RTC::Consumer*> mapConsumers;
-		absl::flat_hash_map<std::string, RTC::DataProducer*> mapDataProducers;
-		absl::flat_hash_map<std::string, RTC::DataConsumer*> mapDataConsumers;
-		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
-		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
+		ankerl::unordered_dense::map<std::string, RTC::Producer*> mapProducers;
+		ankerl::unordered_dense::map<std::string, RTC::Consumer*> mapConsumers;
+		ankerl::unordered_dense::map<std::string, RTC::DataProducer*> mapDataProducers;
+		ankerl::unordered_dense::map<std::string, RTC::DataConsumer*> mapDataConsumers;
+		ankerl::unordered_dense::map<uint16_t, RTC::DataConsumer*> mapSctpStreamIdDataConsumers;
+		ankerl::unordered_dense::map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
+		ankerl::unordered_dense::map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
 		TimerHandleInterface* rtcpTimer{ nullptr };
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
@@ -384,7 +355,7 @@ namespace RTC
 #endif
 		// Others.
 		bool direct{ false }; // Whether this Transport allows direct communication.
-		bool destroying{ false };
+		bool isDestroying{ false };
 		struct RTC::RTP::HeaderExtensionIds recvRtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;
 		RTC::SctpListener sctpListener;
@@ -400,6 +371,14 @@ namespace RTC
 		uint32_t maxIncomingBitrate{ 0u };
 		uint32_t maxOutgoingBitrate{ 0u };
 		uint32_t minOutgoingBitrate{ 0u };
+		// For SCTP capable transports and for direct transport.
+		size_t maxSendMessageSize{ 0u };
+		size_t maxReceiveMessageSize{ 0u };
+		// For SCTP capable transports.
+		size_t sctpSendBufferSize{ 0u };
+		size_t sctpPerStreamSendQueueLimit{ 0u };
+		size_t sctpMaxReceiverWindowBufferSize{ 0u };
+
 		struct TraceEventTypes traceEventTypes;
 	};
 } // namespace RTC

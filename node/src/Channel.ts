@@ -27,9 +27,8 @@ type Sent = {
 	close: () => void;
 };
 
-// Binary length for a 4194304 bytes payload.
-const MESSAGE_MAX_LEN = 4194308;
-const PAYLOAD_MAX_LEN = 4194304;
+const MESSAGE_MAX_LEN = 8388608;
+const PAYLOAD_MAX_LEN = MESSAGE_MAX_LEN - 4;
 
 export class Channel extends EnhancedEventEmitter {
 	// Closed flag.

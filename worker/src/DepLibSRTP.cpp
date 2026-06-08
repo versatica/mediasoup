@@ -16,7 +16,7 @@ static size_t GlobalInstances = 0;
 //   https://github.com/cisco/libsrtp/blob/main/include/srtp.h
 //
 // clang-format off
-const std::unordered_map<srtp_err_status_t, std::string> DepLibSRTP::ErrorCode2String =
+const ankerl::unordered_dense::map<srtp_err_status_t, std::string> DepLibSRTP::ErrorCode2String =
 {
 	{ srtp_err_status_ok,            "nothing to report" },
 	{ srtp_err_status_fail,          "unspecified failure" },

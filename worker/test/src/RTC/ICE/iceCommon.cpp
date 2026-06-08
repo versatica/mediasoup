@@ -3,7 +3,7 @@
 
 namespace iceCommon
 {
-	// NOTE: We don't need `alignas(4)` for STUN Packet parsing. However we do it
+	// NOTE: We don't need `alignas(4)` for STUN packet parsing. However we do it
 	// for consistency with rtpCommon.cpp and sctpCommon.cpp.
 	alignas(4) thread_local uint8_t FactoryBuffer[];
 	alignas(4) thread_local uint8_t ResponseFactoryBuffer[];

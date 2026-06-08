@@ -85,7 +85,6 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		workerBin,
 		libwebrtcFieldTrials,
 		disableLiburing,
-		useBuiltInSctpStack,
 		appData,
 	}: WorkerSettings<WorkerAppData>) {
 		super();
@@ -141,12 +140,6 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 
 		if (disableLiburing) {
 			spawnArgs.push('--disableLiburing=true');
-		}
-
-		if (useBuiltInSctpStack) {
-			spawnArgs.push('--useBuiltInSctpStack=true');
-		} else {
-			spawnArgs.push('--useBuiltInSctpStack=false');
 		}
 
 		logger.debug(`spawning worker process: ${spawnBin} ${spawnArgs.join(' ')}`);

@@ -2,10 +2,11 @@
 #define MS_RTC_DATA_PRODUCER_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SctpDictionaries.hpp"
+#include "SharedInterface.hpp"
 #include <string>
 #include <vector>
 
@@ -24,9 +25,7 @@ namespace RTC
 			virtual void OnDataProducerReceiveData(RTC::DataProducer* producer, size_t len) = 0;
 			virtual void OnDataProducerMessageReceived(
 			  RTC::DataProducer* dataProducer,
-			  const uint8_t* msg,
-			  size_t len,
-			  uint32_t ppid,
+			  RTC::SCTP::Message message,
 			  std::vector<uint16_t>& subchannels,
 			  std::optional<uint16_t> requiredSubchannel)                       = 0;
 			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer)  = 0;
@@ -67,9 +66,7 @@ namespace RTC
 			return this->paused;
 		}
 		void ReceiveMessage(
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
+		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel);
 

@@ -163,7 +163,8 @@ export type BaseTransportDump = {
 	mapRtxSsrcConsumerId: { key: number; value: string }[];
 	recvRtpHeaderExtensions: RecvRtpHeaderExtensions;
 	rtpListener: RtpListenerDump;
-	maxMessageSize: number;
+	maxSendMessageSize: number;
+	maxReceiveMessageSize: number;
 	dataProducerIds: string[];
 	dataConsumerIds: string[];
 	sctpParameters?: SctpParameters;

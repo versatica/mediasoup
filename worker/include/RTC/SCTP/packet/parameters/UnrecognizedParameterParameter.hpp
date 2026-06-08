@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Unrecognized Parameter Parameter (UNRECOGNIZED_PARAMETER) (7).
+		 * SCTP Unrecognized Parameter Parameter (UNRECOGNIZED-PARAMETER) (7).
 		 *
 		 * @see RFC 9260.
 		 *
@@ -28,7 +28,7 @@ namespace RTC
 
 		class UnrecognizedParameterParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -36,7 +36,7 @@ namespace RTC
 			 * Parse a UnrecognizedParameterParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static UnrecognizedParameterParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -44,7 +44,7 @@ namespace RTC
 			 * Create a UnrecognizedParameterParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static UnrecognizedParameterParameter* Factory(uint8_t* buffer, size_t bufferLength);
 

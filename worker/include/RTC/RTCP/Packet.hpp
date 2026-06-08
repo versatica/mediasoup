@@ -2,7 +2,7 @@
 #define MS_RTC_RTCP_PACKET_HPP
 
 #include "common.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <string>
 
 namespace RTC
@@ -77,7 +77,7 @@ namespace RTC
 			static const std::string& TypeToString(Type type);
 
 		private:
-			static const absl::flat_hash_map<Type, std::string> Type2String;
+			static const ankerl::unordered_dense::map<Type, std::string> Type2String;
 
 		public:
 			explicit Packet(Type type) : type(type)

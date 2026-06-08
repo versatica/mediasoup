@@ -1,13 +1,12 @@
 #define MS_CLASS "RTC::SCTP::RetransmissionQueue"
-// TODO: SCTP: Comment.
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "Utils.hpp"
 #include <cmath>   // std::min()
 #include <numeric> // std::accumulate()
 #include <string>
@@ -105,6 +104,7 @@ namespace RTC
 				this->associationListener.OnAssociationLifecycleMessageEnd(lifecycleId);
 			}
 
+			// Add lifecycle events for abandoned messages.
 			for (const uint64_t lifecycleId : ackInfo.abandonedLifecycleIds)
 			{
 				MS_DEBUG_TAG(
@@ -212,7 +212,8 @@ namespace RTC
 
 			MS_DEBUG_TAG(
 			  sctp,
-			  "T3-rtx timer has expired [cwnd:%zu, oldCwnd:%zu, ssthresh:%zu, unackedPacketBytes:%zu, oldUnackedPacketBytes:%zu]",
+			  "%s timer has expired [cwnd:%zu, oldCwnd:%zu, ssthresh:%zu, unackedPacketBytes:%zu, oldUnackedPacketBytes:%zu]",
+			  this->t3RtxTimer->GetLabel().c_str(),
 			  this->cwnd,
 			  oldCwnd,
 			  this->ssthresh,

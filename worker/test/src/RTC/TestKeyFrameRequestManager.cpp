@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "mocks/include/MockShared.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
+#include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")

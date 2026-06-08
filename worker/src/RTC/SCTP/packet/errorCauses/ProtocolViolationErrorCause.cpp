@@ -27,7 +27,7 @@ namespace RTC
 
 			if (causeCode != ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION)
 			{
-				MS_WARN_DEV("invalid Error Cause code");
+				MS_WARN_DEV("invalid error cause code");
 
 				return nullptr;
 			}
@@ -141,11 +141,11 @@ namespace RTC
 
 			if (HasAdditionalInformation())
 			{
-				return "info:[" +
+				return "info::\"" +
 				       std::string(
 				         reinterpret_cast<const char*>(GetAdditionalInformation()),
 				         GetAdditionalInformationLength()) +
-				       "]";
+				       "\"";
 			}
 			else
 			{

@@ -29,7 +29,8 @@ test('router.createDirectTransport() succeeds', async () => {
 	ctx.router!.observer.once('newtransport', onObserverNewTransport);
 
 	const directTransport = await ctx.router!.createDirectTransport({
-		maxMessageSize: 1024,
+		maxSendMessageSize: 1024,
+		maxReceiveMessageSize: 1024,
 		appData: { foo: 'bar' },
 	});
 
@@ -56,17 +57,6 @@ test('router.createDirectTransport() succeeds', async () => {
 
 	directTransport.close();
 	expect(directTransport.closed).toBe(true);
-}, 2000);
-
-test('router.createDirectTransport() with wrong arguments rejects with TypeError', async () => {
-	await expect(
-		// @ts-expect-error --- Testing purposes.
-		ctx.router!.createDirectTransport({ maxMessageSize: 'foo' })
-	).rejects.toThrow(TypeError);
-
-	await expect(
-		ctx.router!.createDirectTransport({ maxMessageSize: -2000 })
-	).rejects.toThrow(TypeError);
 }, 2000);
 
 test('directTransport.getStats() succeeds', async () => {

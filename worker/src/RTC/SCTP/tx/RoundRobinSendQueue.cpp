@@ -40,7 +40,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void RoundRobinSendQueue::Add(
+		void RoundRobinSendQueue::AddMessage(
 		  uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions)
 		{
 			MS_TRACE();
@@ -54,19 +54,18 @@ namespace RTC
 			// lifetime (which may be zero).
 			const MessageAttributes attributes = {
 				.isUnordered        = sendMessageOptions.unordered,
-				.maxRetransmissions = static_cast<uint16_t>(
-				  sendMessageOptions.maxRetransmissions.has_value()
-				    ? sendMessageOptions.maxRetransmissions.value()
-				    : Types::MaxRetransmitsNoLimit),
-				.expiresAtMs = sendMessageOptions.lifetimeMs.has_value()
-				                 ? nowMs + sendMessageOptions.lifetimeMs.value() + 1
-				                 : Types::ExpiresAtMsInfinite,
-				.lifecycleId = sendMessageOptions.lifecycleId.value_or(0),
+				.maxRetransmissions = sendMessageOptions.maxRetransmissions.has_value()
+				                        ? sendMessageOptions.maxRetransmissions.value()
+				                        : Types::MaxRetransmitsNoLimit,
+				.expiresAtMs        = sendMessageOptions.lifetimeMs.has_value()
+				                        ? nowMs + sendMessageOptions.lifetimeMs.value() + 1
+				                        : Types::ExpiresAtMsInfinite,
+				.lifecycleId        = sendMessageOptions.lifecycleId,
 			};
 
 			const uint16_t streamId = message.GetStreamId();
 
-			GetOrCreateStreamInfo(streamId).Add(std::move(message), attributes);
+			GetOrCreateStreamInfo(streamId).AddMessage(std::move(message), attributes);
 
 			AssertIsConsistent();
 		}
@@ -387,7 +386,7 @@ namespace RTC
 			this->lowThreshold = lowThreshold;
 		}
 
-		void RoundRobinSendQueue::OutgoingStream::Add(Message message, MessageAttributes attributes)
+		void RoundRobinSendQueue::OutgoingStream::AddMessage(Message message, MessageAttributes attributes)
 		{
 			MS_TRACE();
 
@@ -424,7 +423,7 @@ namespace RTC
 				Item& item       = this->items.front();
 				Message& message = item.message;
 
-				// Allocate Message ID and SSN when the first fragment is sent.
+				// Allocate message ID and SSN when the first fragment is sent.
 				if (!item.mid.has_value())
 				{
 					// This entire message has already expired. Try the next one.
@@ -489,7 +488,7 @@ namespace RTC
 
 				dataToSend.maxRetransmissions = item.attributes.maxRetransmissions;
 				dataToSend.expiresAtMs        = item.attributes.expiresAtMs;
-				dataToSend.lifecycleId        = isEnd ? item.attributes.lifecycleId : 0;
+				dataToSend.lifecycleId        = isEnd ? item.attributes.lifecycleId : std::nullopt;
 
 				if (isEnd)
 				{
@@ -721,15 +720,16 @@ namespace RTC
 
 			this->parent.totalBufferedAmountThresholdWatcher.Decrease(item.remainingLength);
 
-			if (item.attributes.lifecycleId != 0)
+			if (item.attributes.lifecycleId.has_value())
 			{
 				MS_DEBUG_DEV(
 				  "triggering OnAssociationLifecycleMessageExpired(%" PRIu64 "), /*maybeDelivered*/ false)",
-				  item.attributes.lifecycleId);
+				  item.attributes.lifecycleId.value());
 
 				this->parent.associationListener.OnAssociationLifecycleMessageExpired(
-				  item.attributes.lifecycleId, /*maybeDelivered*/ false);
-				this->parent.associationListener.OnAssociationLifecycleMessageEnd(item.attributes.lifecycleId);
+				  item.attributes.lifecycleId.value(), /*maybeDelivered*/ false);
+				this->parent.associationListener.OnAssociationLifecycleMessageEnd(
+				  item.attributes.lifecycleId.value());
 			}
 		}
 

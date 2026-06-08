@@ -35,7 +35,7 @@ namespace RTC
 
 			// Partial Reliability Extension is negotiated if we desire it and
 			// peer announces support via Forward-TSN-Supported Parameter or via
-			// Supported Extensions Parameter.
+			// Supported extensions parameter.
 			negotiatedCapabilities.partialReliability =
 			  sctpOptions.enablePartialReliability &&
 			  (remoteForwardTsnSupportedParameter ||
@@ -43,14 +43,14 @@ namespace RTC
 			    remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::FORWARD_TSN)));
 
 			// Message Interleaving is negotiated if we desire it and peer
-			// announces support via Supported Extensions Parameter.
+			// announces support via Supported Extensions parameter.
 			negotiatedCapabilities.messageInterleaving =
 			  sctpOptions.enableMessageInterleaving && remoteSupportedExtensionsParameter &&
 			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_DATA) &&
 			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_FORWARD_TSN);
 
 			// Stream Re-Configuration is negotiated if peer announces support via
-			// Supported Extensions Parameter.
+			// Supported extensions parameter.
 			negotiatedCapabilities.reConfig =
 			  remoteSupportedExtensionsParameter &&
 			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::RE_CONFIG);

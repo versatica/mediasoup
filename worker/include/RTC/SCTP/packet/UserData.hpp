@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Represents user data extracted from a DATA or I_DATA Chunk.
+		 * Represents user data extracted from a DATA or I-DATA Chunk.
 		 */
 		class UserData
 		{
@@ -26,18 +26,26 @@ namespace RTC
 			  bool isEnd,
 			  bool isUnordered);
 
-			// Move constructor. No need to do anything special since std::vector
-			// already implements move.
+			/**
+			 * Move constructor. No need to do anything special since std::vector
+			 * already implements move.
+			 */
 			UserData(UserData&& other) = default;
 
-			// Move assignment. No need to do anything special since std::vector
-			// already implements move.
+			/**
+			 * Move assignment. No need to do anything special since std::vector
+			 * already implements move.
+			 */
 			UserData& operator=(UserData&& other) = default;
 
-			// Disable copy constructor.
+			/**
+			 * Copy constructor disabled.
+			 */
 			UserData(const UserData&) = delete;
 
-			// Disable copy assignment.
+			/**
+			 * Copy assignment disabled.
+			 */
 			UserData& operator=(const UserData&) = delete;
 
 			bool operator==(const UserData& other) const
@@ -55,7 +63,7 @@ namespace RTC
 			void Dump(int indentation = 0) const;
 
 			/**
-			 * Stream Identifier (in DATA and I_DATA chunks).
+			 * Stream Identifier (in DATA and I-DATA chunks).
 			 */
 			uint16_t GetStreamId() const
 			{
@@ -71,7 +79,7 @@ namespace RTC
 			}
 
 			/**
-			 * Message Identifier (MID) (only in I_DATA chunks).
+			 * Message Identifier (MID) (only in I-DATA chunks).
 			 */
 			uint32_t GetMessageId() const
 			{
@@ -79,7 +87,7 @@ namespace RTC
 			}
 
 			/**
-			 * Fragment Sequence Number (FSN) (only in I_DATA chunks).
+			 * Fragment Sequence Number (FSN) (only in I-DATA chunks).
 			 */
 			uint32_t GetFragmentSequenceNumber() const
 			{

@@ -2,11 +2,11 @@
 #define MS_RTC_SENDER_BANDWIDTH_ESTIMATOR_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/TrendCalculator.hpp"
+#include "SharedInterface.hpp"
 #include <map>
 
 namespace RTC

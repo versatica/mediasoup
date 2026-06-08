@@ -12,7 +12,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		const std::unordered_map<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod, std::string> ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String =
+		const ankerl::unordered_dense::map<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod, std::string> ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String =
 		{
 			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE,           "NONE"           },
 			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS, "SCTP_OVER_DTLS" },
@@ -37,7 +37,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -79,7 +79,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "ZeroChecksumAcceptableParameter Length field must be %zu",
+				  "ZeroChecksumAcceptableParameter length field must be %zu",
 				  ZeroChecksumAcceptableParameter::ZeroChecksumAcceptableParameterHeaderLength);
 
 				return nullptr;

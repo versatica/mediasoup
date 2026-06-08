@@ -1,11 +1,11 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/UnknownParameter.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -18,8 +18,8 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Type: 5 (HEARTBEAT_ACK), Flags:0b00000000, Length: 22
-			// NOTE: Chunk Length field must exclude padding of the last Parameter.
+			// Type: 5 (HEARTBEAT-ACK), Flags:0b00000000, Length: 22
+			// NOTE: Chunk length field must exclude padding of the last parameter.
 			0x05, 0b00000000, 0x00, 0x16,
 			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,
@@ -243,7 +243,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		/* Modify it by adding Parameters. */
+		/* Modify it by adding parameters. */
 
 		auto* parameter1 = chunk->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
 

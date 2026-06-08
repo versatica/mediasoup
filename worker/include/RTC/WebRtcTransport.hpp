@@ -1,7 +1,6 @@
 #ifndef MS_RTC_WEBRTC_TRANSPORT_HPP
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
-#include "SharedInterface.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/IceServer.hpp"
@@ -12,6 +11,7 @@
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
+#include "SharedInterface.hpp"
 #include <vector>
 
 namespace RTC
@@ -87,11 +87,9 @@ namespace RTC
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
-		  const uint8_t* msg,
-		  size_t len,
-		  uint32_t ppid,
+		  RTC::SCTP::Message message,
 		  onQueuedCallback* cb = nullptr) override;
-		bool SendSctpData(const uint8_t* data, size_t len) override;
+		bool SendData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
 		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
@@ -160,8 +158,8 @@ namespace RTC
 		// Allocated by this.
 		RTC::ICE::IceServer* iceServer{ nullptr };
 		// Map of UdpSocket/TcpServer and local announced address (if any).
-		absl::flat_hash_map<RTC::UdpSocket*, std::string> udpSockets;
-		absl::flat_hash_map<RTC::TcpServer*, std::string> tcpServers;
+		ankerl::unordered_dense::map<RTC::UdpSocket*, std::string> udpSockets;
+		ankerl::unordered_dense::map<RTC::TcpServer*, std::string> tcpServers;
 		RTC::DtlsTransport* dtlsTransport{ nullptr };
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };

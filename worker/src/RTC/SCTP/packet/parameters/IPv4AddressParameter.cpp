@@ -28,7 +28,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::IPV4_ADDRESS)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -68,7 +68,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "IPv4AddressParameter Length field must be %zu",
+				  "IPv4AddressParameter length field must be %zu",
 				  IPv4AddressParameter::IPv4AddressParameterHeaderLength);
 
 				return nullptr;

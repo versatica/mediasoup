@@ -27,7 +27,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::STATE_COOKIE)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -127,11 +127,11 @@ namespace RTC
 			MS_TRACE();
 
 			// The buffer in which the StateCookie will be written starts at the
-			// position of the Cookie field in the StateCookieParameter.
+			// position of the cookie field in the StateCookieParameter.
 			auto* buffer = GetVariableLengthValuePointer();
 			// The available buffer length is the total buffer length of the
 			// StateCookieParameter minus its fixed header length (no matter there
-			// was a Cookie already in the Parameter since we are overriding it
+			// was a cookie already in the parameter since we are overriding it
 			// anyway).
 			const size_t bufferLength = GetBufferLength() - Parameter::ParameterHeaderLength;
 

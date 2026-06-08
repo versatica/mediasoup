@@ -27,7 +27,7 @@ namespace RTC
 
 			if (parameterType != Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST)
 			{
-				MS_WARN_DEV("invalid Parameter type");
+				MS_WARN_DEV("invalid parameter type");
 
 				return nullptr;
 			}
@@ -71,7 +71,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "OutgoingSsnResetRequestParameter Length field must be equal or greater than %zu",
+				  "OutgoingSsnResetRequestParameter length field must be equal or greater than %zu",
 				  OutgoingSsnResetRequestParameter::OutgoingSsnResetRequestParameterHeaderLength);
 
 				return nullptr;

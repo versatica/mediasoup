@@ -64,7 +64,7 @@ SCENARIO("Utils::String", "[utils][string]")
 		// clang-format off
 		uint8_t rtpPacket[] =
 		{
-			0xBE, 0xDE, 0, 3, // Header Extension
+			0xBE, 0xDE, 0, 3, // Header extension
 			0b00010000, 0xFF, 0b00100001, 0xFF,
 			0xFF, 0, 0, 0b00110011,
 			0xFF, 0xFF, 0xFF, 0xFF

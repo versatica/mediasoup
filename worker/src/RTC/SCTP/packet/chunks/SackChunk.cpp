@@ -28,7 +28,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::SACK)
 			{
-				MS_WARN_DEV("invalid Chunk type");
+				MS_WARN_DEV("invalid chunk type");
 
 				return nullptr;
 			}
@@ -70,7 +70,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "SackChunk Length field must be equal or greater than %zu",
+				  "SackChunk length field must be equal or greater than %zu",
 				  SackChunk::SackChunkHeaderLength);
 
 				return nullptr;
@@ -78,7 +78,7 @@ namespace RTC
 
 			auto* chunk = new SackChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// In this Chunk we must validate that some fields have correct values.
+			// In this chunk we must validate that some fields have correct values.
 			if (
 			  (chunk->GetNumberOfGapAckBlocks() * 4) + (chunk->GetNumberOfDuplicateTsns() * 4) !=
 			  chunkLength - SackChunk::SackChunkHeaderLength)
@@ -148,18 +148,18 @@ namespace RTC
 			return clonedChunk;
 		}
 
-		void SackChunk::SetCumulativeTsnAck(uint32_t value)
+		void SackChunk::SetCumulativeTsnAck(uint32_t tsn)
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
+			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, tsn);
 		}
 
-		void SackChunk::SetAdvertisedReceiverWindowCredit(uint32_t value)
+		void SackChunk::SetAdvertisedReceiverWindowCredit(uint32_t aRwnd)
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
+			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, aRwnd);
 		}
 
 		std::vector<SackChunk::GapAckBlock> SackChunk::GetGapAckBlocks() const

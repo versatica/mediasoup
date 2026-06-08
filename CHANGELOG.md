@@ -2,7 +2,31 @@
 
 ### NEXT
 
+### 3.20.3
+
+- Fix SCTP crash when the t3-rtx timer expires ([PR #1822](https://github.com/versatica/mediasoup/pull/1822)).
+
+### 3.20.2
+
+- `PortManager`: Replace `uint64_t` hash token with exact-tuple `PortRangeKey` ([PR #1812](https://github.com/versatica/mediasoup/pull/1812), by @999purple999 and @penguinol).
+- Make `DataConsumer.send()` return current buffered amount ([PR #1819](https://github.com/versatica/mediasoup/pull/1819)).
+
+### 3.20.1
+
+- Node: Make all public methods/getters that return an object/array, return a clone of that object/array ([PR #1811](https://github.com/versatica/mediasoup/pull/1811)).
+- Worker: replace `absl-cpp` subproject with `ankerl/unordered_dense` ([PR #1813](https://github.com/versatica/mediasoup/pull/1813)).
+- Worker: Fix `SvcConsumer` ignoring the `temporalLayer` of `preferredLayers` given at consume time ([PR #1814](https://github.com/versatica/mediasoup/pull/1814), credits to @mstyura).
+
+### 3.20.0
+
 - Node: Update TypeScript to v6 ([PR #1790](https://github.com/versatica/mediasoup/pull/1790)).
+- New built-in SCTP stack ([PR #1806](https://github.com/versatica/mediasoup/pull/1806)):
+  - **Breaking change:** Remove `useBuiltInSctpStack` option in `WorkerSettngs`.
+  - **Breaking change:** Remove `SctpCapabilities` type. No longer needed.
+  - `WebRtcTransport`, `PlainTransport`, `PipeTransport`: Add `sctpNegotiatedCapabilities()` getter.
+  - **Breaking change:** `WebRtcTransport`, `PlainTransport`, `PipeTransport` options: Remove `numSctpStreams` and `maxSctpMessageSize`, and add `maxSendMessageSize`, `maxReceiveMessageSize`, `sctpPerStreamSendQueueLimit` and `sctpMaxReceiverWindowBufferSize`.
+  - **Breaking change:** `DirectTransport` options: Remove `maxMessageSize`, and add `maxSendMessageSize` and `maxReceiveMessageSize`.
+  - **Breaking change:** Change `SctpParameters` type from `{ port, OS, MIS, maxMessageSize }` to `{ port, maxSendMessageSize, maxReceiveMessageSize, sendBufferSize, perStreamSendQueueLimit, maxReceiverWindowBufferSize, isDataChannel}`.
 
 ### 3.19.22
 
@@ -1181,7 +1205,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 ### 3.5.9
 
 - `libwebrtc`: Apply patch by @sspanak and @Ivaka to avoid crash. Related issue: #357.
-- `PortManager.cpp`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in `libuv` 1.37.0.
+- `PortManager`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in `libuv` 1.37.0.
 - Update Node deps.
 
 ### 3.5.8
@@ -1275,7 +1299,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.4.7
 
-- `PortManager.cpp`: Do not limit the number of failed `bind()` attempts to 20 since it does not work well in scenarios that launch tons of `Workers` with same port range. Instead iterate all ports in the range given to the Worker.
+- `PortManager`: Do not limit the number of failed `bind()` attempts to 20 since it does not work well in scenarios that launch tons of `Workers` with same port range. Instead iterate all ports in the range given to the Worker.
 - Do not copy `catch.hpp` into `test/include/` but make the GYP `mediasoup-worker-test` target include the corresponding folder in `deps/catch`.
 
 ### 3.4.6

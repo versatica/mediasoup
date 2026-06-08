@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Heartbeat Request Chunk (HEARTBEAT_REQUEST) (4).
+		 * SCTP Heartbeat Request Chunk (HEARTBEAT-REQUEST) (4).
 		 *
 		 * @see RFC 9260.
 		 *
@@ -23,12 +23,12 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 4.
+		 * - Chunk type (8 bits): 4.
 		 * - Flags (8 bits): All set to 0.
 		 * - Length (16 bits).
 		 * - Heartbeat Information (variable length).
 		 *
-		 * Mandatory Variable-Length Parameters:
+		 * Mandatory variable-length Parameters:
 		 * - Heartbeat Info (1), mandatory.
 		 */
 
@@ -37,7 +37,7 @@ namespace RTC
 
 		class HeartbeatRequestChunk : public Chunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -45,7 +45,7 @@ namespace RTC
 			 * Parse a HeartbeatRequestChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static HeartbeatRequestChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -53,7 +53,7 @@ namespace RTC
 			 * Create a HeartbeatRequestChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static HeartbeatRequestChunk* Factory(uint8_t* buffer, size_t bufferLength);
 

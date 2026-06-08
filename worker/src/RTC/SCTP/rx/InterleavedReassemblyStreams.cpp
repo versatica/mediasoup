@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::SCTP::InterleavedReassemblyStreams"
-// TODO: SCTP: COMMENT
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SCTP/rx/InterleavedReassemblyStreams.hpp"
 #include "Logger.hpp"
+#include <numeric> // std::accumulate()
 
 namespace RTC
 {
@@ -25,7 +25,7 @@ namespace RTC
 		}
 
 		size_t InterleavedReassemblyStreams::HandleForwardTsn(
-		  Types::UnwrappedTsn /*newCumulativeAckTsn*/,
+		  Types::UnwrappedTsn /*newCumulativeTsn*/,
 		  std::span<const AnyForwardTsnChunk::SkippedStream> skippedStreams)
 		{
 			MS_TRACE();

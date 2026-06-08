@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "Logger.hpp"
+#include <bitset>
 #include <string>
 #include <vector>
 
@@ -15,7 +16,7 @@ namespace RTC
 			/* Static members. */
 
 			// clang-format off
-			std::unordered_map<DependencyDescriptor::DecodeTargetIndication, std::string> DependencyDescriptor::dtiToString =
+			ankerl::unordered_dense::map<DependencyDescriptor::DecodeTargetIndication, std::string> DependencyDescriptor::dtiToString =
 			{
 				{ DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT, "-" },
 				{ DependencyDescriptor::DecodeTargetIndication::DISCARDABLE, "D" },

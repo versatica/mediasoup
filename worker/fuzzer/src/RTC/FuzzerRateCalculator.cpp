@@ -1,8 +1,8 @@
 #include "RTC/FuzzerRateCalculator.hpp"
 #include "DepLibUV.hpp"
-#include "Utils.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RateCalculator.hpp"
+#include "Utils.hpp"
 
 namespace
 {

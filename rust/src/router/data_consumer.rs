@@ -15,7 +15,7 @@ use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionH
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
-use mediasoup_sys::fbs::{data_consumer, data_producer, notification, response};
+use mediasoup_sys::fbs::{data_consumer, notification, response};
 use mediasoup_types::data_structures::{AppData, WebRtcMessage};
 use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use parking_lot::Mutex;
@@ -157,6 +157,7 @@ pub struct DataConsumerDump {
     pub label: String,
     pub protocol: String,
     pub sctp_stream_parameters: Option<SctpStreamParameters>,
+    pub buffered_amount: u32,
     pub buffered_amount_low_threshold: u32,
     pub paused: bool,
     pub subchannels: Vec<u16>,
@@ -171,7 +172,7 @@ impl<'a> TryFromFbs<'a> for DataConsumerDump {
         Ok(Self {
             id: dump.id.parse()?,
             data_producer_id: dump.data_producer_id.parse()?,
-            r#type: if dump.type_ == data_producer::Type::Sctp {
+            r#type: if dump.type_ == data_consumer::Type::Sctp {
                 DataConsumerType::Sctp
             } else {
                 DataConsumerType::Direct
@@ -182,6 +183,7 @@ impl<'a> TryFromFbs<'a> for DataConsumerDump {
                 .sctp_stream_parameters
                 .as_ref()
                 .map(|parameters| SctpStreamParameters::from_fbs(parameters.as_ref())),
+            buffered_amount: dump.buffered_amount,
             buffered_amount_low_threshold: dump.buffered_amount_low_threshold,
             paused: dump.paused,
             subchannels: dump.subchannels.clone(),
@@ -963,9 +965,16 @@ impl DataConsumer {
     }
 }
 
-impl DirectDataConsumer {
-    /// Sends direct messages from the Rust process.
-    pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<(), RequestError> {
+impl RegularDataConsumer {
+    /// Sends a message to the consuming endpoint over the SCTP association.
+    ///
+    /// Only available on data consumers created on a transport other than
+    /// [`DirectTransport`](crate::direct_transport::DirectTransport) (i.e. of type
+    /// [`DataConsumerType::Sctp`]), since the worker rejects this request for data consumers of
+    /// type [`DataConsumerType::Direct`].
+    ///
+    /// Returns the current buffered amount size (in bytes) after sending/queuing the message.
+    pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<u32, RequestError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
         self.inner

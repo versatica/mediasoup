@@ -1,7 +1,7 @@
 #include "common.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/UnknownParameter.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -114,7 +114,7 @@ SCENARIO("Unknown Parameter", "[serializable][sctp][parameter]")
 
 	SECTION("UnknownParameter::Parse() fails")
 	{
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{

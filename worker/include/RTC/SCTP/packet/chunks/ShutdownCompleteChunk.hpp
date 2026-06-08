@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Shutdown Complete Chunk (SHUTDOWN_COMPLETE) (14).
+		 * SCTP Shutdown Complete Chunk (SHUTDOWN-COMPLETE) (14).
 		 *
 		 * @see RFC 9260.
 		 *
@@ -19,7 +19,7 @@ namespace RTC
 		 * |   Type = 14   |  Reserved   |T|          Length = 4           |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 14
+		 * - Chunk type (8 bits): 14
 		 * - T bit (1 bit): The T bit is set to 0 if the sender filled in the
 		 *   Verification Tag expected by the peer. If the Verification Tag is
 		 *   reflected, the T bit MUST be set to 1. Reflecting means that the sent
@@ -32,7 +32,7 @@ namespace RTC
 
 		class ShutdownCompleteChunk : public Chunk
 		{
-			// We need that Packet calls protected and private methods in this class.
+			// We need that packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -40,7 +40,7 @@ namespace RTC
 			 * Parse a ShutdownCompleteChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static ShutdownCompleteChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -48,7 +48,7 @@ namespace RTC
 			 * Create a ShutdownCompleteChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the chunk real length.
 			 */
 			static ShutdownCompleteChunk* Factory(uint8_t* buffer, size_t bufferLength);
 

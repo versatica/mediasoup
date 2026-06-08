@@ -26,7 +26,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::OPERATION_ERROR)
 			{
-				MS_WARN_DEV("invalid Chunk type");
+				MS_WARN_DEV("invalid chunk type");
 
 				return nullptr;
 			}
@@ -60,10 +60,10 @@ namespace RTC
 
 			auto* chunk = new OperationErrorChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Parse Error Causes.
+			// Parse error causes.
 			if (!chunk->ParseErrorCauses())
 			{
-				MS_WARN_DEV("failed to parse Error Causes");
+				MS_WARN_DEV("failed to parse error causes");
 
 				delete chunk;
 				return nullptr;

@@ -22,9 +22,7 @@ type TestContext = {
 const ctx: TestContext = {};
 
 beforeEach(async () => {
-	ctx.worker = await mediasoup.createWorker({
-		disableLiburing: true,
-	});
+	ctx.worker = await mediasoup.createWorker();
 
 	ctx.router = await ctx.worker.createRouter();
 
@@ -34,7 +32,6 @@ beforeEach(async () => {
 		// So we don't need to call plainTransport.connect().
 		comedia: true,
 		enableSctp: true,
-		numSctpStreams: { OS: 256, MIS: 256 },
 	});
 
 	// Create an explicit SCTP outgoing stream id.
@@ -115,6 +112,10 @@ afterEach(async () => {
 
 test('SCTP state is connected', () => {
 	expect(ctx.plainTransport!.sctpState).toBe('connected');
+	expect(ctx.plainTransport!.sctpNegotiatedCapabilities).toEqual({
+		negotiatedMaxOutboundStreams: 65535,
+		negotiatedMaxInboundStreams: 65535,
+	});
 	expect(ctx.sctpClient!.associationState).toBe(SCTP_STATE.ESTABLISHED);
 });
 
@@ -219,4 +220,14 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			bytesSent: recvMessageBytes,
 		},
 	]);
+
+	expect(await ctx.dataConsumer!.getBufferedAmount()).toBe(0);
 }, 10000);
+
+test('can send messages from the SCTP DataConsumer', async () => {
+	expect(await ctx.dataConsumer!.getBufferedAmount()).toBe(0);
+
+	// We can send messages directly from the DataConsumer and it should return
+	// current buffered amount, so 0 bytes.
+	await expect(ctx.dataConsumer!.send('foo')).resolves.toBe(0);
+}, 2000);

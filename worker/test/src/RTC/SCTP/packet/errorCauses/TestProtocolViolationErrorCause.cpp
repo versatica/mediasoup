@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -15,7 +15,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
 		{
-			// Code:13 (PROTOCOL_VIOLATION), Length: 10
+			// Code:13 (PROTOCOL-VIOLATION), Length: 10
 			0x00, 0x0D, 0x00, 0x0A,
 			// Additional Information: "error1"
 			0x65, 0x72, 0x72, 0x6F,
@@ -144,7 +144,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{
-			// Code:13 (PROTOCOL_VIOLATION), Length: 7
+			// Code:13 (PROTOCOL-VIOLATION), Length: 7
 			0x00, 0x0D, 0x00, 0x07,
 			// Additional Information: 0x123456 (missing padding byte)
 			0x12, 0x34, 0x56,

@@ -27,7 +27,7 @@ namespace RTC
 		 * |                           Chunk #n                            |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * It's mandatory that the Packet total length is multiple of 4 bytes.
+		 * It's mandatory that the packet total length is multiple of 4 bytes.
 		 */
 
 		/**
@@ -73,28 +73,28 @@ namespace RTC
 			static const size_t CommonHeaderLength{ 12 };
 
 			/**
-			 * Whether given buffer could be a valid SCTP Packet.
+			 * Whether given buffer could be a valid SCTP packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the Packet.
+			 * - `bufferLength` must be the exact length of the packet.
 			 * - This check is very lazy. It should NEVER be done before checking if
 			 *   given buffer is an RTP or RTCP packet.
 			 */
 			static bool IsSctp(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Parse an SCTP Packet.
+			 * Parse an SCTP packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the Packet.
+			 * - `bufferLength` must be the exact length of the packet.
 			 */
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Create an SCTP Packet.
+			 * Create an SCTP packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the STUN Packet.
+			 * - `bufferLength` must be the exact length of the STUN packet.
 			 * - If `transactionId` is not given then a random Transaction ID is
 			 *   generated.
 			 */
@@ -102,8 +102,8 @@ namespace RTC
 
 		private:
 			/**
-			 * Constructor is private because we only want to create Packet instances
-			 * via Parse() and Factory().
+			 * Constructor is private because we only want to create packet instances
+			 * via `Parse()` and `Factory()`.
 			 */
 			Packet(uint8_t* buffer, size_t bufferLength);
 
@@ -189,39 +189,39 @@ namespace RTC
 			}
 
 			/**
-			 * Clone given Chunk into Packet's buffer.
+			 * Clone given chunk into packet's buffer.
 			 *
 			 * @remarks
 			 * - Once this method is called, the caller may want to free the original
-			 *   given Chunk (otherwise it will leak since the Packet manages a clone
+			 *   given chunk (otherwise it will leak since the packet manages a clone
 			 *   of it).
 			 *
 			 * @throw
 			 * - MediaSoupError - If `BuildChunkInPlace()` was called before and the
-			 *   caller didn't invoke `Consolidate()` on the returned Chunk yet.
+			 *   caller didn't invoke `Consolidate()` on the returned chunk yet.
 			 */
 			void AddChunk(const Chunk* chunk);
 
 			/**
-			 * Build a Chunk within the Packet's buffer and append it to the list of
-			 * Chunks. The caller can perform modifications in that Chunk and those
-			 * will affect the Packet body where the Chunk is serialzed. The desired
-			 * Chunk class type is given via template argument.
+			 * Build a chunk within the packet's buffer and append it to the list of
+			 * chunks. The caller can perform modifications in that chunk and those
+			 * will affect the packet body where the chunk is serialzed. The desired
+			 * chunk class type is given via template argument.
 			 *
-			 * @returns Pointer of the created Chunk specific class.
+			 * @returns Pointer of the created chunk specific class.
 			 *
 			 * @throw
 			 * - MediaSoupError - If `BuildChunkInPlace()` was called before and the
-			 *   caller didn't invoke `Consolidate()` on the returned Chunk yet.
+			 *   caller didn't invoke `Consolidate()` on the returned chunk yet.
 			 *
 			 * @remarks
-			 * - The caller MUST invoke `Consolidate()` once the Chunk is completed.
-			 * - The caller MUST NOT call `BuildChunkInPlace()` while other Chunk is
+			 * - The caller MUST invoke `Consolidate()` once the chunk is completed.
+			 * - The caller MUST NOT call `BuildChunkInPlace()` while other chunk is
 			 *   in progress.
-			 * - The caller MUST NOT free the obtained Chunk pointer since it's now
-			 *   part of the Packet.
-			 * - The caller MUST free the obtained Chunk only in case the
-			 *   `Consolidate()` method on the Chunk throws.
+			 * - The caller MUST NOT free the obtained chunk pointer since it's now
+			 *   part of the packet.
+			 * - The caller MUST free the obtained chunk only in case the
+			 *   `Consolidate()` method on the chunk throws.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -234,18 +234,18 @@ namespace RTC
 			{
 				AssertDoesNotNeedConsolidation();
 
-				// The new Chunk will be added after other Chunks in the Packet, this is,
-				// at the end of the Packet,  whose length we know it's padded to 4
-				// bytes, and each Parameter total length is also multiple of 4 bytes.
+				// The new chunk will be added after other chunks in the packet, this is,
+				// at the end of the packet, whose length we know it's padded to 4 bytes,
+				// and each parameter total length is also multiple of 4 bytes.
 				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 				// The remaining length in the buffer is the potential buffer length
-				// of the Chunk.
+				// of the chunk.
 				size_t chunkMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
 				auto* chunk = T::Factory(ptr, chunkMaxBufferLength);
 
-				// NOTE: Do not fix/update the Chunk buffer length since the caller
-				// probably wants to modify the Chunk.
+				// NOTE: Do not fix/update the chunk buffer length since the caller
+				// probably wants to modify the chunk.
 
 				HandleInPlaceChunk(chunk);
 
@@ -254,7 +254,7 @@ namespace RTC
 
 			/**
 			 * Whether `BuildChunkInPlace()` was called and the caller didn't invoke
-			 * `Consolidate()` on the returned Chunk yet.
+			 * `Consolidate()` on the returned chunk yet.
 			 */
 			bool NeedsConsolidation() const
 			{
@@ -262,7 +262,7 @@ namespace RTC
 			}
 
 			/**
-			 * Calculate CRC32C value of the whole Packet and insert it into the
+			 * Calculate CRC32C value of the whole packet and insert it into the
 			 * Checksum field.
 			 */
 			void WriteCRC32cChecksum();
@@ -295,7 +295,7 @@ namespace RTC
 			// Chunks.
 			std::vector<Chunk*> chunks;
 			// Whether `BuildChunkInPlace()` was called and the caller didn't invoke
-			// `Consolidate()` on the returned Chunk yet.
+			// `Consolidate()` on the returned chunk yet.
 			bool needsConsolidation{ false };
 		};
 	} // namespace SCTP

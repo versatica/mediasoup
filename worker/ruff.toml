@@ -1,0 +1,22 @@
+# Ruff configuration: https://docs.astral.sh/ruff/configuration/
+
+target-version = "py313"
+line-length = 92
+
+include = [
+    "tasks.py",
+]
+
+[lint]
+extend-select = [
+    "W",    # pycodestyle warnings.
+    "I",    # isort (import order).
+    "UP",   # pyupgrade (modernize syntax for target Python version).
+    "B",    # flake8-bugbear (likely bugs and design problems).
+    "C4",   # flake8-comprehensions.
+    "PIE",  # flake8-pie (miscellaneous anti-patterns).
+    "SIM",  # flake8-simplify.
+    "ISC",  # flake8-implicit-str-concat.
+    "PERF", # Performance anti-patterns.
+    "RUF",  # Ruff-specific rules.
+]

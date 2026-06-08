@@ -2,17 +2,19 @@
 #define MS_RTC_SCTP_STREAM_RESET_HANDLER_HPP
 
 #include "common.hpp"
-#include "SharedInterface.hpp"
+#include "Utils/UnwrappedSequenceNumber.hpp"
+#include "handles/BackoffTimerHandleInterface.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
 #include "RTC/SCTP/packet/parameters/IncomingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/OutgoingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
-#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
+#include "RTC/SCTP/rx/DataTracker.hpp"
+#include "RTC/SCTP/rx/ReassemblyQueue.hpp"
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
-#include "Utils/UnwrappedSequenceNumber.hpp"
-#include "handles/BackoffTimerHandleInterface.hpp"
+#include "SharedInterface.hpp"
 #include <span>
 #include <vector>
 
@@ -166,12 +168,11 @@ namespace RTC
 
 		public:
 			StreamResetHandler(
-			  AssociationListenerInterface& associationListener,
+			  AssociationListenerDeferrer& associationListenerDeferrer,
 			  SharedInterface* shared,
 			  TransmissionControlBlockContextInterface* tcbContext,
-			  // TODO: SCTP: Implement it.
-			  // DataTracker* dataTracker,
-			  // ReassemblyQueue* reassemblyQueue,
+			  DataTracker* dataTracker,
+			  ReassemblyQueue* reassemblyQueue,
 			  RetransmissionQueue* retransmissionQueue);
 
 			~StreamResetHandler() override;
@@ -194,7 +195,7 @@ namespace RTC
 			bool ShouldSendStreamResetRequest() const;
 
 			/**
-			 * Adds a Reset Streams request to the given Packet. Will start the
+			 * Adds a Reset Streams request to the given packet. Will start the
 			 * reconfig timer.
 			 *
 			 * @remarks
@@ -217,7 +218,7 @@ namespace RTC
 			bool ValidateReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk);
 
 			/**
-			 * Adds the actual RE-CONFIG chunk to the given Packet. A request (which
+			 * Adds the actual RE-CONFIG chunk to the given packet. A request (which
 			 * set `this->currentRequest`) must have been created prior.
 			 */
 			void AddReConfigChunk(Packet* packet);
@@ -228,7 +229,7 @@ namespace RTC
 			ReqSeqNbrValidationResult ValidateReqSeqNbr(UnwrappedReConfigRequestSn reqSeqNbr);
 
 			/**
-			 * Called when this Association receives an outgoing stream reset request.
+			 * Called when this association receives an outgoing stream reset request.
 			 * It might either be performed straight away, or have to be deferred, and
 			 * the result of that will be put in `responses`.
 			 */
@@ -237,7 +238,7 @@ namespace RTC
 			  ReConfigChunk* reConfigChunk);
 
 			/**
-			 * Called when this Association receives an incoming stream reset request.
+			 * Called when this association receives an incoming stream reset request.
 			 * This isn't really supported, but a successful response is put in
 			 * `responses`.
 			 */
@@ -262,13 +263,11 @@ namespace RTC
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			AssociationListenerInterface& associationListener;
+			AssociationListenerDeferrer& associationListenerDeferrer;
 			SharedInterface* shared;
 			TransmissionControlBlockContextInterface* tcbContext;
-			// TODO: SCTP: Implement it.
-			// DataTracker* dataTracker,
-			// TODO: SCTP: Implement it.
-			// ReassemblyQueue* reassemblyQueue;,
+			DataTracker* dataTracker;
+			ReassemblyQueue* reassemblyQueue;
 			RetransmissionQueue* retransmissionQueue;
 			UnwrappedReConfigRequestSn::Unwrapper incomingReConfigRequestSnUnwrapper;
 			const std::unique_ptr<BackoffTimerHandleInterface> reConfigTimer;

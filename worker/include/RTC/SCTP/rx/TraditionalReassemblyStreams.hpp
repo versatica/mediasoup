@@ -165,7 +165,7 @@ namespace RTC
 			int32_t AddData(Types::UnwrappedTsn tsn, UserData data) override;
 
 			size_t HandleForwardTsn(
-			  Types::UnwrappedTsn newCumulativeAckTsn,
+			  Types::UnwrappedTsn newCumulativeTsn,
 			  std::span<const AnyForwardTsnChunk::SkippedStream> skippedStreams) override;
 
 			void ResetStreams(std::span<const uint16_t> streamIds) override;

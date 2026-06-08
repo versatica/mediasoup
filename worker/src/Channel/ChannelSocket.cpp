@@ -9,9 +9,8 @@
 
 namespace Channel
 {
-	// Binary length for a 4194304 bytes payload.
-	static constexpr size_t MessageMaxLen{ 4194308 };
-	static constexpr size_t PayloadMaxLen{ 4194304 };
+	static constexpr size_t MessageMaxLen{ 8388608 };
+	static constexpr size_t PayloadMaxLen{ MessageMaxLen - 4 };
 
 	/* Static methods for UV callbacks. */
 

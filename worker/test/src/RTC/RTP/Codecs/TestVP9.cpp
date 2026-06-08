@@ -1,7 +1,7 @@
 #include "common.hpp"
-#include "test/include/RTC/RTP/rtpCommon.hpp"
 #include "RTC/RTP/Codecs/VP9.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 

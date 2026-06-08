@@ -23,17 +23,17 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (packet->GetChunksCount() == 0)
+			{
+				return false;
+			}
+
 			if (writeChecksum)
 			{
 				packet->WriteCRC32cChecksum();
 			}
 
-			// TODO: SCTP: For testing purposes. Must be removed.
-			{
-				MS_DUMP(">>> sending SCTP packet:");
-
-				packet->Dump();
-			}
+			MS_ASSERT(!packet->NeedsConsolidation(), "cannot send a SCTP packet that needs consolidation");
 
 			const bool sent =
 			  this->associationListener.OnAssociationSendData(packet->GetBuffer(), packet->GetLength());
@@ -42,7 +42,7 @@ namespace RTC
 
 			if (!sent)
 			{
-				MS_WARN_TAG(sctp, "coudln't send SCTP Packet");
+				MS_WARN_TAG(sctp, "couldn't send SCTP packet");
 			}
 
 			return sent;

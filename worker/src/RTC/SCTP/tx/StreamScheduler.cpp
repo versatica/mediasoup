@@ -36,14 +36,15 @@ namespace RTC
 
 					this->currentStream = *it;
 
-					MS_DEBUG_DEV("rescheduling to stream %" PRIu16, this->currentStream->GetStreamId());
+					MS_DEBUG_DEV("rescheduling to streamId %" PRIu16, this->currentStream->GetStreamId());
 
 					this->activeStreams.erase(it);
 					this->currentStream->ForceMarkInactive();
 				}
 				else
 				{
-					MS_DEBUG_DEV("producing from previous stream %" PRIu16, this->currentStream->GetStreamId());
+					MS_DEBUG_DEV(
+					  "producing from previous streamId %" PRIu16, this->currentStream->GetStreamId());
 
 					MS_ASSERT(
 					  std::ranges::any_of(
@@ -169,7 +170,8 @@ namespace RTC
 
 			MS_ASSERT(nextFinishTime > 0, "nextFinishTime must be higher than 0");
 
-			MS_DEBUG_DEV("making stream %" PRIu16 " active, expiring at %f", GetStreamId(), nextFinishTime);
+			MS_DEBUG_DEV(
+			  "making streamId %" PRIu16 " active, expiring at %f", GetStreamId(), nextFinishTime);
 
 			MS_ASSERT(this->nextFinishTime == 0, "this->nextFinishTime must be 0");
 
@@ -191,7 +193,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("making stream %" PRIu16 " inactive", GetStreamId());
+			MS_DEBUG_DEV("making streamId %" PRIu16 " inactive", GetStreamId());
 
 			MS_ASSERT(this->nextFinishTime != 0, "this->nextFinishTime must be different than 0");
 

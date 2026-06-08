@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
+#include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -118,7 +118,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 		// clang-format off
 		alignas(4) uint8_t buffer1[] =
 		{
-			// Type:6 (IPV6_ADDRESS), Length: 8
+			// Type:6 (IPV6-ADDRESS), Length: 8
 			0x00, 0x06, 0x00, 0x0B,
 			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
@@ -129,7 +129,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 
 		REQUIRE(!RTC::SCTP::HeartbeatInfoParameter::Parse(buffer1, sizeof(buffer1)));
 
-		// Wrong Length field.
+		// Wrong length field.
 		// clang-format off
 		alignas(4) uint8_t buffer2[] =
 		{

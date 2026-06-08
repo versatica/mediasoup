@@ -32,7 +32,7 @@ namespace RTC
 
 		// Tell the Transport parent class that we are about to destroy
 		// the class instance.
-		Destroying();
+		SetDestroying();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 	}
@@ -219,15 +219,16 @@ namespace RTC
 	}
 
 	void DirectTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
 		// Notify the Node DirectTransport.
-		auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(msg, len);
+		auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
+		  message.GetPayload().data(), message.GetPayloadLength());
 
 		auto notification = FBS::DataConsumer::CreateMessageNotification(
-		  this->shared->GetChannelNotifier()->GetBufferBuilder(), ppid, data);
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), message.GetPayloadProtocolId(), data);
 
 		this->shared->GetChannelNotifier()->Emit(
 		  dataConsumer->id,
@@ -242,10 +243,10 @@ namespace RTC
 		}
 
 		// Increase send transmission.
-		RTC::Transport::DataSent(len);
+		RTC::Transport::DataSent(message.GetPayloadLength());
 	}
 
-	bool DirectTransport::SendSctpData(const uint8_t* /*data*/, size_t /*len*/)
+	bool DirectTransport::SendData(const uint8_t* /*data*/, size_t /*len*/)
 	{
 		MS_TRACE();
 

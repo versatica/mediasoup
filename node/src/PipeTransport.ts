@@ -29,13 +29,17 @@ import {
 	serializeRtpEncodingParameters,
 	serializeRtpParameters,
 } from './rtpParametersFbsUtils';
-import type { SctpParameters } from './sctpParametersTypes';
+import type {
+	SctpParameters,
+	SctpNegotiatedCapabilities,
+} from './sctpParametersTypes';
 import type { SrtpParameters } from './srtpParametersTypes';
 import {
 	parseSrtpParameters,
 	serializeSrtpParameters,
 } from './srtpParametersFbsUtils';
 import type { AppData } from './types';
+import * as utils from './utils';
 import { generateUUIDv4 } from './utils';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
@@ -53,6 +57,7 @@ export type PipeTransportData = {
 	tuple: TransportTuple;
 	sctpParameters?: SctpParameters;
 	sctpState?: SctpState;
+	sctpNegotiatedCapabilities?: SctpNegotiatedCapabilities;
 	rtx: boolean;
 	srtpParameters?: SrtpParameters;
 };
@@ -101,19 +106,23 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 	}
 
 	get tuple(): TransportTuple {
-		return this.#data.tuple;
+		return utils.clone(this.#data.tuple);
 	}
 
 	get sctpParameters(): SctpParameters | undefined {
-		return this.#data.sctpParameters;
+		return utils.clone(this.#data.sctpParameters);
 	}
 
 	get sctpState(): SctpState | undefined {
 		return this.#data.sctpState;
 	}
 
+	get sctpNegotiatedCapabilities(): SctpNegotiatedCapabilities | undefined {
+		return utils.clone(this.#data.sctpNegotiatedCapabilities);
+	}
+
 	get srtpParameters(): SrtpParameters | undefined {
-		return this.#data.srtpParameters;
+		return utils.clone(this.#data.srtpParameters);
 	}
 
 	override close(): void {
@@ -307,6 +316,28 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 
 						// Emit observer event.
 						this.observer.safeEmit('sctpstatechange', sctpState);
+
+						break;
+					}
+
+					case Event.TRANSPORT_SCTP_NEGOTIATED_CAPABILITIES: {
+						const notification =
+							new FbsTransport.SctpNegotiatedCapabilitiesNotification();
+
+						data!.body(notification);
+
+						const sctpNegotiatedCapabilities: SctpNegotiatedCapabilities = {
+							negotiatedMaxOutboundStreams: notification
+								.negotiatedCapabilities()!
+								.negotiatedMaxOutboundStreams(),
+							negotiatedMaxInboundStreams: notification
+								.negotiatedCapabilities()!
+								.negotiatedMaxInboundStreams(),
+						};
+
+						this.#data.sctpNegotiatedCapabilities = sctpNegotiatedCapabilities;
+
+						super.handleSctpNegotiatedCapabilities(sctpNegotiatedCapabilities);
 
 						break;
 					}

@@ -19,7 +19,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	// We need to serialize the Packet into a separate buffer because setters
+	// We need to serialize the packet into a separate buffer because setters
 	// below will try to write into packet memory.
 	//
 	// NOTE: Let's make the buffer bigger to test API that increases packet size.
@@ -180,7 +180,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	  value3                                                   // value
 	);
 
-	// NOTE: Cannot use One-Byte Extensions because we are using big ids and
+	// NOTE: Cannot use One-Byte extensions because we are using big ids and
 	// lengths.
 	// packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
 	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);

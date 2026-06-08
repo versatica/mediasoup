@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP IPv6 Adress Parameter (IPV6_ADDRESS) (6).
+		 * SCTP IPv6 Adress Parameter (IPV6-ADDRESS) (6).
 		 *
 		 * @see RFC 9260.
 		 *
@@ -30,7 +30,7 @@ namespace RTC
 
 		class IPv6AddressParameter : public Parameter
 		{
-			// We need that Chunk calls protected and private methods in this class.
+			// We need that chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -41,7 +41,7 @@ namespace RTC
 			 * Parse a IPv6AddressParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Parameter.
+			 * `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static IPv6AddressParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -49,7 +49,7 @@ namespace RTC
 			 * Create a IPv6AddressParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the parameter real length.
 			 */
 			static IPv6AddressParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -95,7 +95,7 @@ namespace RTC
 			IPv6AddressParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * We don't really need to override this method since this Parameter
+			 * We don't really need to override this method since this parameter
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */

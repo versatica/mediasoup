@@ -3,8 +3,8 @@
 
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "Utils.hpp"
 #include <cstring>
 
 namespace RTC
@@ -19,7 +19,7 @@ namespace RTC
 
 			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize)
 			{
-				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
+				MS_WARN_TAG(rtcp, "not enough space for feedback packet, discarded");
 
 				return nullptr;
 			}

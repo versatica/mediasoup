@@ -49,7 +49,7 @@ namespace RTC
 
 			if (!Packet::IsRtp(buffer, packetLength))
 			{
-				MS_WARN_TAG(rtp, "not a RTP Packet");
+				MS_WARN_TAG(rtp, "not a RTP packet");
 
 				return nullptr;
 			}
@@ -73,7 +73,7 @@ namespace RTC
 
 			if (!Packet::IsRtp(buffer, bufferLength))
 			{
-				MS_WARN_TAG(rtp, "not a RTP Packet");
+				MS_WARN_TAG(rtp, "not a RTP packet");
 
 				return nullptr;
 			}
@@ -114,7 +114,7 @@ namespace RTC
 			fixedHeader->ssrc           = 0;
 
 			// No need to invoke SetLength() since constructor invoked it with
-			// minimum Packet length.
+			// minimum packet length.
 
 			return packet;
 		}
@@ -417,11 +417,11 @@ namespace RTC
 
 			Serializable::CloneInto(clonedPacket);
 
-			// Clone Extension containers.
+			// Clone extension containers.
 			clonedPacket->oneByteExtensions  = this->oneByteExtensions;
 			clonedPacket->twoBytesExtensions = this->twoBytesExtensions;
 
-			// Clone Extension ids.
+			// Clone extension ids.
 			clonedPacket->headerExtensionIds = this->headerExtensionIds;
 
 			// Assign the payload descriptor handler.
@@ -527,7 +527,7 @@ namespace RTC
 				return;
 			}
 
-			// Clear One-Byte and Two-Bytes Extensions.
+			// Clear One-Byte and Two-Bytes extensions.
 			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
 			this->twoBytesExtensions.clear();
 
@@ -537,11 +537,11 @@ namespace RTC
 			const auto payloadLength = GetPayloadLength();
 			const auto paddingLength = GetPaddingLength();
 
-			// Update Packet length.
+			// Update packet length.
 			// NOTE: This throws if given length is higher than buffer length.
 			SetLength(GetLength() - headerExtensionLength);
 
-			// Unset the Header Extension flag.
+			// Unset the header extension flag.
 			GetFixedHeaderPointer()->extension = 0;
 
 			// Shift the payload.
@@ -552,18 +552,18 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Clear One-Byte and Two-Bytes Extensions.
+			// Clear One-Byte and Two-Bytes extensions.
 			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
 			this->twoBytesExtensions.clear();
 
-			// Reset Extension ids.
+			// Reset extension ids.
 			this->headerExtensionIds = {};
 
 			const auto hadHeaderExtension                 = HasHeaderExtension();
 			const auto previousHeaderExtensionValueLength = GetHeaderExtensionValueLength();
 
 			// If no explicit ExtensionType is given then select the best one based
-			// on given Extensions.
+			// on given extensions.
 			if (type == ExtensionsType::Auto)
 			{
 				uint8_t highestId{ 0 };
@@ -585,19 +585,19 @@ namespace RTC
 				  highestLen);
 			}
 
-			// If One-Byte is requested and the Packet already has One-Byte Extensions,
-			// keep the Header Extension id.
+			// If One-Byte is requested and the packet already has One-Byte extensions,
+			// keep the header extension id.
 			if (type == ExtensionsType::OneByte && HasOneByteExtensions())
 			{
 				// Nothing to do.
 			}
-			// If Two-Bytes is requested and the Packet already has Two-Bytes Extensions,
-			// keep the Header Extension id.
+			// If Two-Bytes is requested and the packet already has Two-Bytes extensions,
+			// keep the header extension id.
 			else if (type == ExtensionsType::TwoBytes && HasTwoBytesExtensions())
 			{
 				// Nothing to do.
 			}
-			// Otherwise, if there is Header Extension of non matching type, modify its id.
+			// Otherwise, if there is header extension of non matching type, modify its id.
 			else if (hadHeaderExtension)
 			{
 				if (type == ExtensionsType::OneByte)
@@ -610,7 +610,7 @@ namespace RTC
 				}
 			}
 
-			// Calculate total length required for all Extensions (with padding if needed).
+			// Calculate total length required for all extensions (with padding if needed).
 			size_t extensionsLength{ 0 };
 
 			if (type == ExtensionsType::OneByte)
@@ -619,25 +619,25 @@ namespace RTC
 				{
 					if (extension.id == 0)
 					{
-						MS_THROW_TYPE_ERROR("invalid Extension with id 0");
+						MS_THROW_TYPE_ERROR("invalid extension with id 0");
 					}
 					else if (extension.id > 14)
 					{
 						MS_THROW_TYPE_ERROR(
-						  "invalid Extension with id %" PRIu8 " > 14 when using One-Byte Extensions",
+						  "invalid extension with id %" PRIu8 " > 14 when using One-Byte extensions",
 						  extension.id);
 					}
 					else if (extension.len == 0)
 					{
 						MS_THROW_TYPE_ERROR(
-						  "invalid Extension with id %" PRIu8 " and length 0 when using One-Byte Extensions",
+						  "invalid extension with id %" PRIu8 " and length 0 when using One-Byte extensions",
 						  extension.id);
 					}
 					else if (extension.len > 16)
 					{
 						MS_THROW_TYPE_ERROR(
-						  "invalid Extension with id %" PRIu8 " and length %" PRIu8
-						  " when using One-Byte Extensions",
+						  "invalid extension with id %" PRIu8 " and length %" PRIu8
+						  " when using One-Byte extensions",
 						  extension.id,
 						  extension.len);
 					}
@@ -651,7 +651,7 @@ namespace RTC
 				{
 					if (extension.id == 0)
 					{
-						MS_THROW_TYPE_ERROR("invalid Extension with id 0");
+						MS_THROW_TYPE_ERROR("invalid extension with id 0");
 					}
 
 					extensionsLength += (2 + extension.len);
@@ -661,8 +661,8 @@ namespace RTC
 			auto paddedExtensionsLength          = Utils::Byte::PadTo4Bytes(extensionsLength);
 			const size_t extensionsPaddingLength = paddedExtensionsLength - extensionsLength;
 
-			// Calculate the number of bytes to shift (may be negative if the Packet
-			// already had Header Extension).
+			// Calculate the number of bytes to shift (may be negative if the packet
+			// already had header extension).
 			int16_t shift{ 0 };
 
 			if (hadHeaderExtension)
@@ -680,11 +680,11 @@ namespace RTC
 
 			if (hadHeaderExtension && shift != 0)
 			{
-				// Update Packet length.
+				// Update packet length.
 				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() + shift);
 
-				// Update the Header Extension length.
+				// Update the header extension length.
 				GetHeaderExtensionPointer()->len = htons(paddedExtensionsLength / 4);
 
 				// Shift the payload.
@@ -692,11 +692,11 @@ namespace RTC
 			}
 			else if (!hadHeaderExtension)
 			{
-				// Update Packet length.
+				// Update packet length.
 				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() + shift);
 
-				// Set the Header Extension flag.
+				// Set the header extension flag.
 				GetFixedHeaderPointer()->extension = 1;
 
 				auto* headerExtension = GetHeaderExtensionPointer();
@@ -706,7 +706,7 @@ namespace RTC
 				// override written bytes later.
 				std::memmove(payload + shift, payload, payloadLength + paddingLength);
 
-				// Set the Header Extension id.
+				// Set the header extension id.
 				if (type == ExtensionsType::OneByte)
 				{
 					headerExtension->id = htons(0xBEDE);
@@ -716,7 +716,7 @@ namespace RTC
 					headerExtension->id = htons(0b0001000000000000);
 				}
 
-				// Set the Header Extension length.
+				// Set the header extension length.
 				headerExtension->len = htons(paddedExtensionsLength / 4);
 			}
 
@@ -727,7 +727,7 @@ namespace RTC
 			{
 				for (const auto& extension : extensions)
 				{
-					// Store the One-Byte Extension offset in the array.
+					// Store the One-Byte extension offset in the array.
 					// `-1` because we have 14 elements total 0..13 and `id` is in the
 					// range 1..14.
 					this->oneByteExtensions[extension.id - 1] = ptr - extensionsStart;
@@ -742,7 +742,7 @@ namespace RTC
 			{
 				for (const auto& extension : extensions)
 				{
-					// Store the Two-Bytes Extension offset in the map.
+					// Store the Two-Bytes extension offset in the map.
 					this->twoBytesExtensions[extension.id] = ptr - extensionsStart;
 
 					*ptr = extension.id;
@@ -760,7 +760,7 @@ namespace RTC
 				++ptr;
 			}
 
-			// Assign Extension ids.
+			// Assign extension ids.
 			for (const auto& extension : extensions)
 			{
 				switch (extension.type)
@@ -844,7 +844,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Reset Extension ids.
+			// Reset extension ids.
 			this->headerExtensionIds = headerExtensionIds;
 		}
 
@@ -1247,7 +1247,7 @@ namespace RTC
 			const auto newLength =
 			  previousLength - previousPayloadLength - previousPaddingLength + payloadLength;
 
-			// Set the new Packet total length.
+			// Set the new packet total length.
 			// NOTE: This throws if given length is higher than buffer length.
 			SetLength(newLength);
 
@@ -1270,7 +1270,7 @@ namespace RTC
 			const auto newLength =
 			  previousLength - previousPayloadLength - previousPaddingLength + payloadLength;
 
-			// Set the new Packet total length.
+			// Set the new packet total length.
 			// NOTE: This throws if given length is higher than buffer length.
 			SetLength(newLength);
 
@@ -1310,7 +1310,7 @@ namespace RTC
 
 			if (delta > 0)
 			{
-				// Update Packet length.
+				// Update packet length.
 				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() + delta);
 
@@ -1319,7 +1319,7 @@ namespace RTC
 			}
 			else
 			{
-				// Update Packet length.
+				// Update packet length.
 				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() - absDelta);
 
@@ -1338,7 +1338,7 @@ namespace RTC
 			const auto previousPaddingLength = GetPaddingLength();
 			const auto newLength             = previousLength - previousPaddingLength + paddingLength;
 
-			// Set the new Packet total length.
+			// Set the new packet total length.
 			// NOTE: This throws if given length is higher than buffer length.
 			SetLength(newLength);
 
@@ -1368,7 +1368,7 @@ namespace RTC
 				return;
 			}
 
-			// Set the new Packet total length.
+			// Set the new packet total length.
 			// NOTE: This throws if given length is higher than buffer length.
 			SetLength(newPaddedLength);
 
@@ -1397,7 +1397,7 @@ namespace RTC
 				SetPaddingLength(0);
 			}
 
-			// Update Packet length.
+			// Update packet length.
 			// NOTE: This throws if given length is higher than buffer length.
 			SetLength(GetLength() + 2);
 
@@ -1451,7 +1451,7 @@ namespace RTC
 				SetPaddingLength(0);
 			}
 
-			// Update Packet length.
+			// Update packet length.
 			SetLength(GetLength() - 2);
 
 			return true;
@@ -1516,12 +1516,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Here we are at the beginning of the Packet.
+			// Here we are at the beginning of the packet.
 			const auto* ptr = const_cast<uint8_t*>(GetBuffer());
 
 			if (GetVersion() != 2)
 			{
-				MS_WARN_TAG(rtp, "invalid Packet, version must be 2");
+				MS_WARN_TAG(rtp, "invalid packet, version must be 2");
 
 				return false;
 			}
@@ -1535,7 +1535,7 @@ namespace RTC
 
 				if (GetLength() < static_cast<size_t>(ptr - GetBuffer()) + csrcsLength)
 				{
-					MS_WARN_TAG(rtp, "invalid Packet, not enough space for the announced CSRC list");
+					MS_WARN_TAG(rtp, "invalid packet, not enough space for the announced CSRC list");
 
 					return false;
 				}
@@ -1543,13 +1543,13 @@ namespace RTC
 				ptr += csrcsLength;
 			}
 
-			// Here we are at the beginning of the optional Header Extension.
+			// Here we are at the beginning of the optional header extension.
 			if (HasHeaderExtension())
 			{
-				// The Header Extension is at least 4 bytes.
+				// The header extension is at least 4 bytes.
 				if (GetLength() < static_cast<size_t>(ptr - GetBuffer()) + 4)
 				{
-					MS_WARN_TAG(rtp, "invalid Packet, not enough space for the announced Header Extension");
+					MS_WARN_TAG(rtp, "invalid packet, not enough space for the announced header extension");
 
 					return false;
 				}
@@ -1559,14 +1559,14 @@ namespace RTC
 				if (GetLength() < static_cast<size_t>(ptr - GetBuffer()) + headerExtensionLength)
 				{
 					MS_WARN_TAG(
-					  rtp, "invalid Packet, not enough space for the announced Header Extension value");
+					  rtp, "invalid packet, not enough space for the announced header extension value");
 
 					return false;
 				}
 
 				if (!ParseExtensions(storeExtensions))
 				{
-					MS_WARN_TAG(rtp, "invalid Packet, invalid Extensions");
+					MS_WARN_TAG(rtp, "invalid packet, invalid extensions");
 
 					return false;
 				}
@@ -1581,24 +1581,24 @@ namespace RTC
 
 			if (payloadLength + paddingLength != availablePayloadAndPaddingLength)
 			{
-				MS_WARN_TAG(rtp, "invalid Packet, not enough space for announced padding");
+				MS_WARN_TAG(rtp, "invalid packet, not enough space for announced padding");
 
 				return false;
 			}
 
 			if (HasPadding() && paddingLength == 0)
 			{
-				MS_WARN_TAG(rtp, "invalid Packet, padding byte cannot be 0");
+				MS_WARN_TAG(rtp, "invalid packet, padding byte cannot be 0");
 
 				return false;
 			}
 
 			ptr += availablePayloadAndPaddingLength;
 
-			// Here we are at the end of the Packet.
+			// Here we are at the end of the packet.
 			MS_ASSERT(
 			  static_cast<size_t>(ptr - GetBuffer()) == GetLength(),
-			  "Packet computed length does not match its assigned length");
+			  "packet computed length does not match its assigned length");
 
 			return true;
 		}
@@ -1613,12 +1613,12 @@ namespace RTC
 				const uint8_t* extensionsEnd   = extensionsStart + GetHeaderExtensionValueLength();
 				auto* ptr                      = const_cast<uint8_t*>(extensionsStart);
 
-				// One-Byte Extensions cannot have length 0.
+				// One-Byte extensions cannot have length 0.
 				while (ptr < extensionsEnd)
 				{
 					const auto* extension = reinterpret_cast<OneByteExtension*>(ptr);
 					const uint8_t id      = extension->id;
-					// NOTE: In One-Byte Extensions, announced value must be incremented
+					// NOTE: In One-Byte extensions, announced value must be incremented
 					// by 1.
 					const size_t len = extension->len + 1;
 
@@ -1632,14 +1632,14 @@ namespace RTC
 					{
 						break;
 					}
-					// Valid Extension id.
+					// Valid extension id.
 					else
 					{
 						if (ptr + 1 + len > extensionsEnd)
 						{
 							MS_WARN_TAG(
 							  rtp,
-							  "not enough space for the announced value of the One-Byte Extension with id %" PRIu8,
+							  "not enough space for the announced value of the One-Byte extension with id %" PRIu8,
 							  id);
 
 							return false;
@@ -1647,7 +1647,7 @@ namespace RTC
 
 						if (storeExtensions)
 						{
-							// Store the One-Byte Extension offset in the array.
+							// Store the One-Byte extension offset in the array.
 							// `-1` because we have 14 elements total 0..13 and `id` is in the
 							// range 1..14.
 							this->oneByteExtensions[id - 1] = ptr - extensionsStart;
@@ -1669,11 +1669,11 @@ namespace RTC
 			{
 				const uint8_t* extensionsStart = GetHeaderExtensionValue();
 				const uint8_t* extensionsEnd   = extensionsStart + GetHeaderExtensionValueLength();
-				// ptr points to the Extension id field (1 byte).
+				// ptr points to the extension id field (1 byte).
 				// ptr+1 points to the length field (1 byte, can have value 0).
 				auto* ptr = const_cast<uint8_t*>(extensionsStart);
 
-				// Two-Byte Extensions can have length 0.
+				// Two-Byte extensions can have length 0.
 				while (ptr + 1 < extensionsEnd)
 				{
 					const auto* extension = reinterpret_cast<TwoBytesExtension*>(ptr);
@@ -1685,14 +1685,14 @@ namespace RTC
 					{
 						++ptr;
 					}
-					// Valid Extension id.
+					// Valid extension id.
 					else
 					{
 						if (ptr + 2 + len > extensionsEnd)
 						{
 							MS_WARN_TAG(
 							  rtp,
-							  "not enough space for the announced value of the Two-Bytes Extension with id %" PRIu8,
+							  "not enough space for the announced value of the Two-Bytes extension with id %" PRIu8,
 							  id);
 
 							return false;
@@ -1700,7 +1700,7 @@ namespace RTC
 
 						if (storeExtensions)
 						{
-							// Store the Two-Bytes Extension offset in the map.
+							// Store the Two-Bytes extension offset in the map.
 							this->twoBytesExtensions[id] = ptr - extensionsStart;
 						}
 
@@ -1716,8 +1716,8 @@ namespace RTC
 
 				return true;
 			}
-			// If there is no Header Extension of if there is but it doesn't conform
-			// to RFC 8285 Extensions, then this is ok.
+			// If there is no header extension of if there is but it doesn't conform
+			// to RFC 8285 extensions, then this is ok.
 			else
 			{
 				return true;
@@ -1740,7 +1740,7 @@ namespace RTC
 
 				auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
 
-				// In One-Byte Extensions value length 0 means 1.
+				// In One-Byte extensions value length 0 means 1.
 				const auto currentLen = extension->len + 1;
 
 				// Fill with 0's if new length is minor.

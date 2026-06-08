@@ -48,7 +48,7 @@ namespace RTC
 				bool isUnordered;
 				uint16_t maxRetransmissions;
 				uint64_t expiresAtMs;
-				uint64_t lifecycleId{ 0 };
+				std::optional<uint64_t> lifecycleId;
 			};
 
 		private:
@@ -124,7 +124,7 @@ namespace RTC
 				/**
 				 * Enqueues a message to this stream.
 				 */
-				void Add(Message message, MessageAttributes attributes);
+				void AddMessage(Message message, MessageAttributes attributes);
 
 				// Implementing `StreamScheduler::StreamProducer`.
 
@@ -243,7 +243,7 @@ namespace RTC
 					// been fragmented.
 					size_t remainingOffset{ 0 };
 					size_t remainingLength;
-					// If set, an allocated Message ID and SSN. Will be allocated when the
+					// If set, an allocated message ID and SSN. Will be allocated when the
 					// first fragment is sent.
 					std::optional<uint32_t> mid{ std::nullopt };
 					std::optional<uint16_t> ssn{ std::nullopt };
@@ -294,7 +294,8 @@ namespace RTC
 			 * of the caller to ensure that the buffer is not full (by calling
 			 * `IsFull()`) before adding messages to it.
 			 */
-			void Add(uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions = {});
+			void AddMessage(
+			  uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions = {});
 
 			uint16_t GetStreamPriority(uint16_t streamId) const;
 
