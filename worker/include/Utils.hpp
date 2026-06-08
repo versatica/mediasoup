@@ -562,6 +562,15 @@ namespace Utils
 		uint32_t offset{ 0 };
 	};
 
+	class Hash
+	{
+	public:
+		static void Combine(size_t& seed, size_t value)
+		{
+			seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		};
+	};
+
 } // namespace Utils
 
 #endif
