@@ -180,6 +180,18 @@ namespace RTC
 		{
 			MS_TRACE();
 
+#if MS_LOG_DEV_LEVEL == 3
+			const auto maxRestarts = this->intervalTimer->GetMaxRestarts();
+#endif
+
+			// NOTE: This timer expires periodically on idle connections (forever), so
+			// it's logged at dev level to avoid being noisy.
+			MS_DEBUG_DEV(
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->intervalTimer->GetLabel().c_str(),
+			  this->intervalTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+
 			// This is a top-level timer entry point (invoked by libuv outside any other
 			// SCTP API call), so it must establish the deferrer scope itself, just like
 			// Association does in its own timer handlers.
@@ -219,6 +231,15 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const auto maxRestarts = this->timeoutTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->timeoutTimer->GetLabel().c_str(),
+			  this->timeoutTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+
 			// This is a top-level timer entry point (invoked by libuv outside any other
 			// SCTP API call), so it must establish the deferrer scope itself, just like
 			// Association does in its own timer handlers.
@@ -243,15 +264,6 @@ namespace RTC
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
-
-			const auto maxRestarts = backoffTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
-			  backoffTimer->GetLabel().c_str(),
-			  backoffTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->intervalTimer.get())
 			{

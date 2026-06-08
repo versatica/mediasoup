@@ -2434,6 +2434,15 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const auto maxRestarts = this->t1InitTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->t1InitTimer->GetLabel().c_str(),
+			  this->t1InitTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			AssertState(State::COOKIE_WAIT);
@@ -2453,6 +2462,15 @@ namespace RTC
 		void Association::OnT1CookieTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = this->t1CookieTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->t1CookieTimer->GetLabel().c_str(),
+			  this->t1CookieTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
@@ -2475,6 +2493,15 @@ namespace RTC
 		void Association::OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = this->t2ShutdownTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->t2ShutdownTimer->GetLabel().c_str(),
+			  this->t2ShutdownTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			AssertState(State::SHUTDOWN_SENT, State::SHUTDOWN_ACK_SENT);
 			AssertHasTcb();
@@ -2819,15 +2846,6 @@ namespace RTC
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
-
-			const auto maxRestarts = backoffTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
-			  backoffTimer->GetLabel().c_str(),
-			  backoffTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->t1InitTimer.get())
 			{

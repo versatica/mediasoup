@@ -469,6 +469,15 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const auto maxRestarts = this->reConfigTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->reConfigTimer->GetLabel().c_str(),
+			  this->reConfigTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+
 			// This is a top-level timer entry point (invoked by libuv outside any other
 			// SCTP API call), so it must establish the deferrer scope itself, just like
 			// Association does in its own timer handlers.
@@ -514,15 +523,6 @@ namespace RTC
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
-
-			const auto maxRestarts = backoffTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
-			  backoffTimer->GetLabel().c_str(),
-			  backoffTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->reConfigTimer.get())
 			{
