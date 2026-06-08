@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- SCTP: Fix `HeartbeatHandler` timers and close the association with `TOO_MANY_RETRIES` error when t3-rtx timer, heartbeat-timeout timer and RE-CONFIG timer expire ([PR #1824](https://github.com/versatica/mediasoup/pull/1824)).
+
 ### 3.20.3
 
 - Fix SCTP crash when the t3-rtx timer expires ([PR #1822](https://github.com/versatica/mediasoup/pull/1822)).
