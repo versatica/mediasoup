@@ -1,8 +1,8 @@
 #include "DepLibUV.hpp"
-#include "mocks/include/MockShared.hpp"
 #include "RTC/PipeProducerStreamManager.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/RTP/rtpCommon.hpp"
+#include "test/include/RTC/RTP/rtpCommon.hpp"
+#include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 namespace
