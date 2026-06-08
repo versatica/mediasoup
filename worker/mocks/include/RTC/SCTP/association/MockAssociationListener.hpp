@@ -21,7 +21,7 @@ namespace mocks
 				{
 					this->sentPackets.emplace_back(data, data + len);
 
-					return true;
+					return this->sendDataResult;
 				}
 
 				void OnAssociationConnecting() override
@@ -75,20 +75,35 @@ namespace mocks
 					this->receivedMessages.emplace_back(std::move(message));
 				}
 
-				void OnAssociationStreamsResetPerformed(std::span<const uint16_t> /*outboundStreamIds*/) override
+				void OnAssociationStreamsResetPerformed(std::span<const uint16_t> outboundStreamIds) override
 				{
-					// TODO: Do something here for tests.
+					++this->onStreamsResetPerformedCalls;
+
+					for (const auto streamId : outboundStreamIds)
+					{
+						this->streamsResetPerformed.insert(streamId);
+					}
 				}
 
 				void OnAssociationStreamsResetFailed(
-				  std::span<const uint16_t> /*outboundStreamIds*/, std::string_view /*errorMessage*/) override
+				  std::span<const uint16_t> outboundStreamIds, std::string_view /*errorMessage*/) override
 				{
-					// TODO: Do something here for tests.
+					++this->onStreamsResetFailedCalls;
+
+					for (const auto streamId : outboundStreamIds)
+					{
+						this->streamsResetFailed.insert(streamId);
+					}
 				}
 
-				void OnAssociationInboundStreamsReset(std::span<const uint16_t> /*inboundStreamIds*/) override
+				void OnAssociationInboundStreamsReset(std::span<const uint16_t> inboundStreamIds) override
 				{
-					// TODO: Do something here for tests.
+					++this->onInboundStreamsResetCalls;
+
+					for (const auto streamId : inboundStreamIds)
+					{
+						this->inboundStreamsReset.insert(streamId);
+					}
 				}
 
 				void OnAssociationStreamBufferedAmountLow(uint16_t streamId) override
@@ -208,6 +223,45 @@ namespace mocks
 					return this->onTotalBufferedAmountLowCalls;
 				}
 
+				size_t CountOnStreamsResetPerformedCalls() const
+				{
+					return this->onStreamsResetPerformedCalls;
+				}
+
+				bool HasStreamsResetPerformedForStreamId(uint16_t streamId) const
+				{
+					return this->streamsResetPerformed.contains(streamId);
+				}
+
+				size_t CountOnStreamsResetFailedCalls() const
+				{
+					return this->onStreamsResetFailedCalls;
+				}
+
+				bool HasStreamsResetFailedForStreamId(uint16_t streamId) const
+				{
+					return this->streamsResetFailed.contains(streamId);
+				}
+
+				size_t CountOnInboundStreamsResetCalls() const
+				{
+					return this->onInboundStreamsResetCalls;
+				}
+
+				bool HasInboundStreamsResetForStreamId(uint16_t streamId) const
+				{
+					return this->inboundStreamsReset.contains(streamId);
+				}
+
+				/**
+				 * Sets the value that `OnAssociationSendData()` will return, allowing
+				 * tests to simulate a failed send.
+				 */
+				void SetSendDataResult(bool sendDataResult)
+				{
+					this->sendDataResult = sendDataResult;
+				}
+
 				bool HasSentPackets() const
 				{
 					return !this->sentPackets.empty();
@@ -293,6 +347,13 @@ namespace mocks
 				std::string erroredErrorMessage;
 				std::map<uint16_t /*streamId*/, size_t /*count*/> onStreamBufferedAmountLowCalls;
 				size_t onTotalBufferedAmountLowCalls{ 0 };
+				size_t onStreamsResetPerformedCalls{ 0 };
+				std::set<uint16_t /*streamId*/> streamsResetPerformed;
+				size_t onStreamsResetFailedCalls{ 0 };
+				std::set<uint16_t /*streamId*/> streamsResetFailed;
+				size_t onInboundStreamsResetCalls{ 0 };
+				std::set<uint16_t /*streamId*/> inboundStreamsReset;
+				bool sendDataResult{ true };
 				std::deque<std::vector<uint8_t>> sentPackets;
 				std::deque<::RTC::SCTP::Message> receivedMessages;
 				bool transportReady{ true };

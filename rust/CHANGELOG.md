@@ -2,6 +2,11 @@
 
 ### NEXT
 
+### 0.22.3
+
+- SCTP: Fix `HeartbeatHandler` timers and close the association with `TOO_MANY_RETRIES` error when t3-rtx timer, heartbeat-timeout timer and RE-CONFIG timer expire (PR #1824).
+- SCTP: Fix `ReassemblyQueue::EnterDeferredReset()` (PR #1825).
+
 ### 0.22.2
 
 - Fix SCTP crash when the t3-rtx timer expires (PR #1822).

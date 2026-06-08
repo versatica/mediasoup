@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup"
-version = "0.22.2"
+version = "0.22.3"
 description = "Cutting Edge WebRTC Video Conferencing in Rust"
 categories = ["api-bindings", "multimedia", "network-programming"]
 authors = [
@@ -46,7 +46,7 @@ version = "0.8.1"
 
 [dependencies.mediasoup-sys]
 path = "../worker"
-version = "0.12.2"
+version = "0.12.3"
 
 [dependencies.mediasoup-types]
 path = "./types"

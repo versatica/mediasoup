@@ -554,4 +554,28 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 		REQUIRE(messages[0].GetPayloadProtocolId() == 53);
 		REQUIRE_THAT(messages[0].GetPayload(), Catch::Matchers::RangeEquals(Message2Payload));
 	}
+
+	SECTION("account Forward-TSN size in deferred reset")
+	{
+		RTC::SCTP::ReassemblyQueue reassemblyQueue(BufferLength, /*useMessageInterleaving*/ false);
+
+		reassemblyQueue.EnterDeferredReset(
+		  /*senderLastAssignedTsn*/ 12, std::vector<uint16_t>{ /*streamId*/ 1 });
+
+		REQUIRE(reassemblyQueue.GetQueuedBytes() == 0);
+
+		reassemblyQueue.HandleForwardTsn(
+		  13,
+		  std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
+		    { /*unordered*/ false, /*streamId*/ 1, /*mid*/ 0 }
+    });
+
+		REQUIRE(reassemblyQueue.GetQueuedBytes() > 0);
+
+		// When deferred Forward-TSN are processed, GetQueuedBytes() should return
+		// to the earlier value.
+		reassemblyQueue.ResetStreamsAndLeaveDeferredReset(std::vector<uint16_t>{ /*streamId*/ 1 });
+
+		REQUIRE(reassemblyQueue.GetQueuedBytes() == 0);
+	}
 }

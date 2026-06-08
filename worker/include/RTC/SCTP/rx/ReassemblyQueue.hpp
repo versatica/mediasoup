@@ -178,6 +178,13 @@ namespace RTC
 			  ReassemblyStreamsInterface::OnAssembledMessage onAssembledMessage,
 			  bool useMessageInterleaving);
 
+			/**
+			 * Treat Forward-TSN message as payload. size is calculated based on wire
+			 * size rather than used memory size: 32bit for TSN + 16+16 bits for each
+			 * skipped stream entry.
+			 */
+			size_t ForwardTsnCost(size_t numStreams);
+
 			void AddReassembledMessage(std::span<const Types::UnwrappedTsn> tsns, Message message);
 
 			void AssertIsConsistent() const;

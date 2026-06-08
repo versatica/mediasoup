@@ -30,6 +30,14 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 		}
 	};
 
+	class MockTcbContextListener : public RTC::SCTP::TransmissionControlBlockContextInterface::Listener
+	{
+	public:
+		void OnTransmissionControlBlockTooManyTxErrors() override
+		{
+		}
+	};
+
 	const RTC::SCTP::SctpOptions sctpOptions;
 
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
@@ -44,6 +52,7 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 	RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities;
 	MockPacketSenderListener packetSenderListener;
 	RTC::SCTP::PacketSender packetSender(std::addressof(packetSenderListener), associationListener);
+	MockTcbContextListener tcbContextListener;
 
 	auto isAssociationEstablished = []()
 	{
@@ -57,6 +66,7 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 		sendQueue.ExpectEnableMessageInterleavingCalledWith(false);
 
 		const RTC::SCTP::TransmissionControlBlock tcb(
+		  std::addressof(tcbContextListener),
 		  associationListenerDeferrer,
 		  sctpOptions,
 		  std::addressof(shared),
@@ -82,6 +92,7 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 		sendQueue.ExpectEnableMessageInterleavingCalledWith(true);
 
 		const RTC::SCTP::TransmissionControlBlock tcb(
+		  std::addressof(tcbContextListener),
 		  associationListenerDeferrer,
 		  sctpOptions,
 		  std::addressof(shared),
