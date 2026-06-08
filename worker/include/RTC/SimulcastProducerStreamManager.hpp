@@ -2,7 +2,7 @@
 #define MS_RTC_SIMULCAST_CONSUMER_STREAM_HPP
 
 #include "RTC/ProducerStreamManager.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 
 namespace RTC
 {
@@ -74,7 +74,7 @@ namespace RTC
 	private:
 		// Producer RTP streams (multiple for Simulcast).
 		std::vector<RTC::RTP::RtpStreamRecv*> producerRtpStreams;
-		absl::flat_hash_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
+		ankerl::unordered_dense::map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
 		RTC::ConsumerTypes::VideoLayers targetLayers;
 		int16_t currentSpatialLayer{ -1 };
 		int16_t spatialLayerToSync{ -1 };

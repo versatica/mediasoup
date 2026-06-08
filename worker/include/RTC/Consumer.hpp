@@ -20,7 +20,7 @@
 #include "RTC/SeqManager.hpp"
 #include "Shared.hpp"
 #include "SharedInterface.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 #include <bitset>
 #include <map>
 #include <memory>
@@ -224,12 +224,12 @@ namespace RTC
 		bool pipe{ false };
 		// Others.
 		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
-		absl::flat_hash_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		absl::flat_hash_map<uint32_t, RTC::RTP::RtpStreamSend*> mapSsrcRtpStream;
-		absl::flat_hash_map<RTC::RTP::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
+		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
+		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamSend*> mapSsrcRtpStream;
+		ankerl::unordered_dense::map<RTC::RTP::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
 		// Buffers to store packets that arrive earlier than the first packet of the
 		// video key frame.
-		absl::flat_hash_map<RTC::RTP::RtpStreamSend*, RetransmissionBuffer>
+		ankerl::unordered_dense::map<RTC::RTP::RtpStreamSend*, RetransmissionBuffer>
 		  mapRtpStreamTargetLayerRetransmissionBuffer;
 		std::vector<uint32_t> mediaSsrcs;
 		std::vector<uint32_t> rtxSsrcs;

@@ -2,7 +2,7 @@
 #define MS_RTC_PIPE_PRODUCER_STREAM_MANAGER_HPP
 
 #include "RTC/ProducerStreamManager.hpp"
-#include <absl/container/flat_hash_map.h>
+#include <ankerl/unordered_dense.h>
 
 namespace RTC
 {
@@ -71,7 +71,7 @@ namespace RTC
 
 	private:
 		// Per-stream sync state, keyed by mapped SSRC.
-		absl::flat_hash_map<uint32_t, bool> mapMappedSsrcSyncRequired;
+		ankerl::unordered_dense::map<uint32_t, bool> mapMappedSsrcSyncRequired;
 	};
 } // namespace RTC
 
