@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: `SeqManager`, use `std::vector` rather than `std::set` ([1807](https://github.com/versatica/mediasoup/pull/1807)).
+- SCTP: Fixes in `Association.cpp`, `StreamResetHandler.cpp` and `DataTracker.cpp` ([PR #1826](https://github.com/versatica/mediasoup/pull/1826)).
 
 ### 3.20.4
 

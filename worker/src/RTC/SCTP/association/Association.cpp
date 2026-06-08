@@ -1462,7 +1462,9 @@ namespace RTC
 
 				case State::CLOSED:
 				{
-					MS_WARN_TAG(sctp, "ignoring INIT chunk received in CLOSED state)");
+					MS_WARN_TAG(sctp, "ignoring INIT chunk received in CLOSED state");
+
+					return;
 				}
 
 				// https://datatracker.ietf.org/doc/html/rfc9260#section-5.2.1
@@ -1812,7 +1814,7 @@ namespace RTC
 			else if (
 			  receivedPacket->GetVerificationTag() != this->tcb->GetLocalVerificationTag() &&
 			  cookie->GetRemoteVerificationTag() == this->tcb->GetRemoteVerificationTag() &&
-			  cookie->GetTieTag() == this->tcb->GetTieTag())
+			  cookie->GetTieTag() == 0)
 			{
 				MS_DEBUG_DEV("received COOKIE-ECHO indicating a late COOKIE-ECHO, discarding");
 
