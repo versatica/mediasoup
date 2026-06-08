@@ -140,12 +140,16 @@ namespace RTC
 			{
 				MS_DEBUG_DEV("forward TSN to %" PRIu32 ", deferring", tsn.Wrap());
 
+				this->queuedBytes += ForwardTsnCost(skippedStreams.size());
+
 				this->deferredResetStreams->deferredActions.emplace_back(
 				  [this,
 				   newCumulativeTsn,
 				   skippedStreams2 = std::vector<AnyForwardTsnChunk::SkippedStream>(
 				     skippedStreams.begin(), skippedStreams.end())]
 				  {
+					  this->queuedBytes -= ForwardTsnCost(skippedStreams2.size());
+
 					  HandleForwardTsn(newCumulativeTsn, skippedStreams2);
 				  });
 
@@ -216,15 +220,13 @@ namespace RTC
 
 			if (!this->deferredResetStreams.has_value())
 			{
-				return;
+				MS_DEBUG_DEV(
+				  "entering deferred reset [senderLastAssignedTsn:%" PRIu32 "]", senderLastAssignedTsn);
+
+				this->deferredResetStreams = std::make_optional<DeferredResetStreams>(
+				  this->tsnUnwrapper.Unwrap(senderLastAssignedTsn),
+				  std::set<uint16_t>(streamIds.begin(), streamIds.end()));
 			}
-
-			MS_DEBUG_DEV(
-			  "entering deferred reset [senderLastAssignedTsn:%" PRIu32 "]", senderLastAssignedTsn);
-
-			this->deferredResetStreams = std::make_optional<DeferredResetStreams>(
-			  this->tsnUnwrapper.Unwrap(senderLastAssignedTsn),
-			  std::set<uint16_t>(streamIds.begin(), streamIds.end()));
 
 			AssertIsConsistent();
 		}
@@ -242,6 +244,13 @@ namespace RTC
 			{
 				return std::make_unique<TraditionalReassemblyStreams>(std::move(onAssembledMessage));
 			}
+		}
+
+		size_t ReassemblyQueue::ForwardTsnCost(size_t numStreams)
+		{
+			MS_TRACE();
+
+			return (1 + numStreams) * 4;
 		}
 
 		void ReassemblyQueue::AddReassembledMessage(std::span<const Types::UnwrappedTsn> tsns, Message message)

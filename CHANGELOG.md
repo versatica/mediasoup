@@ -3,7 +3,11 @@
 ### NEXT
 
 - Worker: `SeqManager`, use `std::vector` rather than `std::set` ([1807](https://github.com/versatica/mediasoup/pull/1807)).
+
+### 3.20.4
+
 - SCTP: Fix `HeartbeatHandler` timers and close the association with `TOO_MANY_RETRIES` error when t3-rtx timer, heartbeat-timeout timer and RE-CONFIG timer expire ([PR #1824](https://github.com/versatica/mediasoup/pull/1824)).
+- SCTP: Fix `ReassemblyQueue::EnterDeferredReset()` ([PR #1825](https://github.com/versatica/mediasoup/pull/1825)).
 
 ### 3.20.3
 
