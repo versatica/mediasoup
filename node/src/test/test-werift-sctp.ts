@@ -220,4 +220,14 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			bytesSent: recvMessageBytes,
 		},
 	]);
+
+	expect(await ctx.dataConsumer!.getBufferedAmount()).toBe(0);
 }, 10000);
+
+test('can send messages from the SCTP DataConsumer', async () => {
+	expect(await ctx.dataConsumer!.getBufferedAmount()).toBe(0);
+
+	// We can send messages directly from the DataConsumer and it should return
+	// current buffered amount, so 0 bytes.
+	await expect(ctx.dataConsumer!.send('foo')).resolves.toBe(0);
+}, 2000);

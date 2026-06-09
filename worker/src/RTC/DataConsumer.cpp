@@ -277,12 +277,22 @@ namespace RTC
 					  len);
 				}
 
+				// NOTE: Capturing `this` and `request` (by reference) is safe here because the
+				// callback is always invoked synchronously within this same call stack (never
+				// deferred).
 				const auto* cb = new onQueuedCallback(
-				  [&request](bool queued, bool sctpSendBufferFull)
+				  [this, &request](bool queued, bool sctpSendBufferFull)
 				  {
 					  if (queued)
 					  {
-						  request->Accept();
+						  uint32_t bufferedAmount{ 0 };
+
+						  this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
+
+						  auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
+						    request->GetBufferBuilder(), bufferedAmount);
+
+						  request->Accept(FBS::Response::Body::DataConsumer_SendResponse, responseOffset);
 					  }
 					  else
 					  {

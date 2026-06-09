@@ -13,13 +13,13 @@ namespace RTC
 		/* Instance methods. */
 
 		StreamResetHandler::StreamResetHandler(
-		  AssociationListenerInterface& associationListener,
+		  AssociationListenerDeferrer& associationListenerDeferrer,
 		  SharedInterface* shared,
 		  TransmissionControlBlockContextInterface* tcbContext,
 		  DataTracker* dataTracker,
 		  ReassemblyQueue* reassemblyQueue,
 		  RetransmissionQueue* retransmissionQueue)
-		  : associationListener(associationListener),
+		  : associationListenerDeferrer(associationListenerDeferrer),
 		    shared(shared),
 		    tcbContext(tcbContext),
 		    dataTracker(dataTracker),
@@ -89,7 +89,7 @@ namespace RTC
 
 			if (!ValidateReceivedReConfigChunk(receivedReConfigChunk))
 			{
-				this->associationListener.OnAssociationError(
+				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "invalid RE-CONFIG command received");
 
 				return;
@@ -334,7 +334,7 @@ namespace RTC
 				this->reassemblyQueue->ResetStreamsAndLeaveDeferredReset(
 				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
-				this->associationListener.OnAssociationInboundStreamsReset(
+				this->associationListenerDeferrer.OnAssociationInboundStreamsReset(
 				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
 
 				this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
@@ -376,6 +376,10 @@ namespace RTC
 				  ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO);
 
 				reconfigurationResponseParameter->Consolidate();
+
+				this->lastProcessedReqSeqNbr = requestSn;
+				this->lastProcessedReqResult =
+				  ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO;
 			}
 			else
 			{
@@ -412,7 +416,7 @@ namespace RTC
 						MS_DEBUG_DEV(
 						  "reset stream success [reqSeqNbr:%" PRIu32 "]", this->currentRequest->GetReqSeqNbr());
 
-						this->associationListener.OnAssociationStreamsResetPerformed(
+						this->associationListenerDeferrer.OnAssociationStreamsResetPerformed(
 						  this->currentRequest->GetStreamIds());
 
 						this->currentRequest = std::nullopt;
@@ -450,7 +454,7 @@ namespace RTC
 						    receivedReconfigurationResponseParameter->GetResult())
 						    .c_str());
 
-						this->associationListener.OnAssociationStreamsResetFailed(
+						this->associationListenerDeferrer.OnAssociationStreamsResetFailed(
 						  this->currentRequest->GetStreamIds(),
 						  ReconfigurationResponseParameter::ResultToString(
 						    receivedReconfigurationResponseParameter->GetResult()));
@@ -465,9 +469,23 @@ namespace RTC
 			}
 		}
 
-		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
+		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
+
+			const auto maxRestarts = this->reConfigTimer->GetMaxRestarts();
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "%s timer has expired [expirations:%zu, maxRestarts:%s]",
+			  this->reConfigTimer->GetLabel().c_str(),
+			  this->reConfigTimer->GetExpirationCount(),
+			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
+
+			// This is a top-level timer entry point (invoked by libuv outside any other
+			// SCTP API call), so it must establish the deferrer scope itself, just like
+			// Association does in its own timer handlers.
+			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
 			if (this->currentRequest && this->currentRequest->HasBeenSent())
 			{
@@ -481,7 +499,11 @@ namespace RTC
 				// response.
 				else if (!this->tcbContext->IncrementTxErrorCounter("RECONFIG timeout"))
 				{
-					// Timed out. The connection will close after processing the timers.
+					// `IncrementTxErrorCounter()` has closed (and destroyed) the TCB (and
+					// hence this StreamResetHandler and its timer). Signal the firing timer
+					// to stop and don't touch any member afterwards.
+					stop = true;
+
 					return;
 				}
 			}
@@ -505,15 +527,6 @@ namespace RTC
 		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
-
-			const auto maxRestarts = backoffTimer->GetMaxRestarts();
-
-			MS_DEBUG_TAG(
-			  sctp,
-			  "%s timer has expired [expìrations:%zu/%s]",
-			  backoffTimer->GetLabel().c_str(),
-			  backoffTimer->GetExpirationCount(),
-			  maxRestarts ? std::to_string(maxRestarts.value()).c_str() : "Infinite");
 
 			if (backoffTimer == this->reConfigTimer.get())
 			{

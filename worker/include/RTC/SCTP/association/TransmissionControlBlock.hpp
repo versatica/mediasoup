@@ -3,13 +3,13 @@
 
 #include "common.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
 #include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlockContextInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
-#include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/rx/DataTracker.hpp"
 #include "RTC/SCTP/rx/ReassemblyQueue.hpp"
@@ -37,7 +37,8 @@ namespace RTC
 		{
 		public:
 			TransmissionControlBlock(
-			  AssociationListenerInterface& associationListener,
+			  TransmissionControlBlockContextInterface::Listener* listener,
+			  AssociationListenerDeferrer& associationListenerDeferrer,
 			  const SctpOptions& sctpOptions,
 			  SharedInterface* shared,
 			  SendQueueInterface& sendQueue,
@@ -250,7 +251,20 @@ namespace RTC
 			 */
 			bool IncrementTxErrorCounter(std::string_view reason) override
 			{
-				return this->txErrorCounter.Increment(reason);
+				const bool withinLimit = this->txErrorCounter.Increment(reason);
+
+				if (!withinLimit)
+				{
+					// NOTE: This closes (and destroys) this TCB synchronously. It's safe to
+					// do so from within a timer handler because the handler sets the
+					// BackoffTimerHandle `stop` flag and doesn't touch any member
+					// afterwards, so the (now destroyed) firing timer won't be accessed.
+					this->listener->OnTransmissionControlBlockTooManyTxErrors();
+				}
+
+				// NOTE: `withinLimit` is a local, so this is safe even if `this` was
+				// destroyed above.
+				return withinLimit;
 			}
 
 			/**
@@ -288,7 +302,8 @@ namespace RTC
 			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
-			AssociationListenerInterface& associationListener;
+			TransmissionControlBlockContextInterface::Listener* listener;
+			AssociationListenerDeferrer& associationListenerDeferrer;
 			const SctpOptions sctpOptions;
 			SharedInterface* shared;
 			PacketSender& packetSender;

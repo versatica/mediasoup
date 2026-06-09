@@ -46,6 +46,7 @@ jobs:
             meson_args: '-Db_sanitize=address'
             npm-audit: true
             run-lint: true
+            run-publish-dry-run: true
           - os: ubuntu-24.04
             node: 24
             cc: gcc
@@ -142,3 +143,8 @@ jobs:
       - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build-type != 'Debug' }}
         name: npm run test:node
         run: npm run test:node
+
+      # Only in Release build type to avoid running it twice (Release + Debug).
+      - if: ${{ matrix.build.run-publish-dry-run && matrix.build-type == 'Release' }}
+        name: npm run publish:dry-run
+        run: npm run publish:dry-run

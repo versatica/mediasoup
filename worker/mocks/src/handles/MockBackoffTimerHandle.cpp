@@ -123,5 +123,12 @@ namespace mocks
 		{
 			this->expiresAtMs = this->getTimeMs() + ComputeNextTimeoutMs();
 		}
+		// Once the timer is no longer running (e.g. max restarts reached), the real
+		// BackoffTimerHandle doesn't restart the underlying timer, so it won't fire
+		// again. Mirror that here so a stopped timer doesn't keep expiring.
+		else
+		{
+			this->expiresAtMs = std::numeric_limits<uint64_t>::max();
+		}
 	}
 } // namespace mocks

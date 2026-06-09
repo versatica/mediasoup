@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/PacketSender.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
@@ -29,9 +30,19 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 		}
 	};
 
+	class MockTcbContextListener : public RTC::SCTP::TransmissionControlBlockContextInterface::Listener
+	{
+	public:
+		void OnTransmissionControlBlockTooManyTxErrors() override
+		{
+		}
+	};
+
 	const RTC::SCTP::SctpOptions sctpOptions;
 
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
+	RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer(
+	  std::addressof(associationListener));
 	mocks::MockShared shared(/*getTimeMs*/
 	                         []()
 	                         {
@@ -41,6 +52,7 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 	RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities;
 	MockPacketSenderListener packetSenderListener;
 	RTC::SCTP::PacketSender packetSender(std::addressof(packetSenderListener), associationListener);
+	MockTcbContextListener tcbContextListener;
 
 	auto isAssociationEstablished = []()
 	{
@@ -54,7 +66,8 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 		sendQueue.ExpectEnableMessageInterleavingCalledWith(false);
 
 		const RTC::SCTP::TransmissionControlBlock tcb(
-		  associationListener,
+		  std::addressof(tcbContextListener),
+		  associationListenerDeferrer,
 		  sctpOptions,
 		  std::addressof(shared),
 		  sendQueue,
@@ -79,7 +92,8 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 		sendQueue.ExpectEnableMessageInterleavingCalledWith(true);
 
 		const RTC::SCTP::TransmissionControlBlock tcb(
-		  associationListener,
+		  std::addressof(tcbContextListener),
+		  associationListenerDeferrer,
 		  sctpOptions,
 		  std::addressof(shared),
 		  sendQueue,

@@ -202,7 +202,20 @@ fn main() {
         fs::remove_dir_all(packagecache).expect("Failed to remove subprojects/packagecache");
     }
 
-    if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
+    // Detect whether this build is the verification step of `cargo publish` /
+    // `cargo package`. In that case Cargo unpacks the crate into
+    // `<workspace>/target/package/<name>-<version>/` and builds it there, so
+    // `CARGO_MANIFEST_DIR` points inside `target/package`. During that step the
+    // source tree must be left untouched, otherwise Cargo fails with "Source
+    // directory was modified by build.rs". Meson extracts the wrap subprojects
+    // into the source tree, so we must always clean them here regardless of
+    // `KEEP_BUILD_ARTIFACTS` (which a developer may have exported to speed up
+    // their regular local builds).
+    let is_publish_verification = env::var("CARGO_MANIFEST_DIR")
+        .map(|dir| dir.replace('\\', "/").contains("/target/package/"))
+        .unwrap_or(false);
+
+    if is_publish_verification || env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
         // Clean
         if !Command::new(python)
             .arg("-m")

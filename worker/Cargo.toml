@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup-sys"
-version = "0.12.0"
+version = "0.12.4"
 description = "FFI bindings to C++ libmediasoup-worker"
 authors = [
     "Nazar Mokrynskyi <nazar@mokrynskyi.com>",
@@ -23,6 +23,7 @@ include = [
     "!/scripts/node_modules",
     "/src",
     "/subprojects/*.wrap",
+    "/subprojects/packagefiles",
     "/test/include",
     "/test/src",
     "/build.rs",

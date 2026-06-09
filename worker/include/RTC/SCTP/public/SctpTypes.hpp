@@ -331,6 +331,8 @@ namespace RTC
 					{
 						return "ERROR_SHUTTING_DOWN";
 					}
+
+						NO_DEFAULT_GCC();
 				}
 			}
 

@@ -44,6 +44,10 @@ table SendRequest {
     data: [uint8] (required);
 }
 
+table SendResponse {
+    buffered_amount: uint32 = 0;
+}
+
 table SetSubchannelsRequest {
     subchannels: [uint16] (required);
 }

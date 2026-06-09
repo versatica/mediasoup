@@ -965,9 +965,16 @@ impl DataConsumer {
     }
 }
 
-impl DirectDataConsumer {
-    /// Sends direct messages from the Rust process.
-    pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<(), RequestError> {
+impl RegularDataConsumer {
+    /// Sends a message to the consuming endpoint over the SCTP association.
+    ///
+    /// Only available on data consumers created on a transport other than
+    /// [`DirectTransport`](crate::direct_transport::DirectTransport) (i.e. of type
+    /// [`DataConsumerType::Sctp`]), since the worker rejects this request for data consumers of
+    /// type [`DataConsumerType::Direct`].
+    ///
+    /// Returns the current buffered amount size (in bytes) after sending/queuing the message.
+    pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<u32, RequestError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
         self.inner

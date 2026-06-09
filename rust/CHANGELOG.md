@@ -2,6 +2,25 @@
 
 ### NEXT
 
+### 0.22.4
+
+- Worker: `SeqManager`, use `std::vector` rather than `std::set` (PR #1807).
+- SCTP: Fixes in `Association.cpp`, `StreamResetHandler.cpp` and `DataTracker.cpp` (PR #1826).
+
+### 0.22.3
+
+- SCTP: Fix `HeartbeatHandler` timers and close the association with `TOO_MANY_RETRIES` error when t3-rtx timer, heartbeat-timeout timer and RE-CONFIG timer expire (PR #1824).
+- SCTP: Fix `ReassemblyQueue::EnterDeferredReset()` (PR #1825).
+
+### 0.22.2
+
+- Fix SCTP crash when the t3-rtx timer expires (PR #1822).
+
+### 0.22.1
+
+- `DataConsumer::send()`: Return the current buffered amount size (in bytes) after sending/queuing the message (PR #1819):
+  - Fix: move the `send()` method from `DirectDataConsumer` to `RegularDataConsumer` (where the worker actually accepts it).
+
 ### 0.22.0
 
 - New built-in SCTP stack (PR #1806):
