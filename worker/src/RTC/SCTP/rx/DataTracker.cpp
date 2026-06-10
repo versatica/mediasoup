@@ -268,7 +268,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			UpdateAckState(AckState::IMMEDIATE, "force immediate SACK");
+			// NOTE: Assign directly instead of going through UpdateAckState() to avoid
+			// its side effect of stopping the delayed-ack timer.
+			this->ackState = AckState::IMMEDIATE;
 		}
 
 		bool DataTracker::WillIncreaseCumAckTsn(uint32_t tsn) const
@@ -359,6 +361,7 @@ namespace RTC
 				{
 					this->delayedAckTimer->Start();
 				}
+
 				this->ackState = newAckState;
 			}
 		}

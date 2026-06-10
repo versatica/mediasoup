@@ -2,6 +2,11 @@
 
 ### NEXT
 
+### 0.22.4
+
+- Worker: `SeqManager`, use `std::vector` rather than `std::set` (PR #1807).
+- SCTP: Fixes in `Association.cpp`, `StreamResetHandler.cpp` and `DataTracker.cpp` (PR #1826).
+
 ### 0.22.3
 
 - SCTP: Fix `HeartbeatHandler` timers and close the association with `TOO_MANY_RETRIES` error when t3-rtx timer, heartbeat-timeout timer and RE-CONFIG timer expire (PR #1824).

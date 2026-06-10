@@ -376,6 +376,10 @@ namespace RTC
 				  ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO);
 
 				reconfigurationResponseParameter->Consolidate();
+
+				this->lastProcessedReqSeqNbr = requestSn;
+				this->lastProcessedReqResult =
+				  ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO;
 			}
 			else
 			{
