@@ -548,7 +548,7 @@ namespace RTC
 
 		if (this->mapTupleWebRtcTransport.contains(tupleKey))
 		{
-			MS_WARN_TAG(ice, "tuple hash already exists in the table");
+			MS_WARN_TAG(ice, "tuple key already exists in the table");
 
 			return;
 		}
