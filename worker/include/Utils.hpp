@@ -567,6 +567,7 @@ namespace Utils
 	public:
 		static void Combine(size_t& seed, size_t value)
 		{
+			// The implementation is the same as boost::hash_combine
 			seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		};
 	};

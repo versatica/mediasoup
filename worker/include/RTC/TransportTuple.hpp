@@ -45,8 +45,8 @@ namespace RTC
 
 		private:
 			Protocol protocol{ Protocol::UDP };
-			sockaddr_storage localAddr{};
-			sockaddr_storage remoteAddr{};
+			sockaddr_storage localAddr;
+			sockaddr_storage remoteAddr;
 		};
 
 		struct TupleKeyHash
@@ -106,25 +106,20 @@ namespace RTC
 				return false;
 			}
 
-			if (this->protocol == Protocol::UDP)
+			switch (this->protocol)
 			{
-				if (this->udpSocket != tuple->udpSocket)
+				case Protocol::UDP:
 				{
-					return false;
+					return (
+					  this->udpSocket == tuple->udpSocket &&
+					  Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->udpRemoteAddr));
 				}
+				case Protocol::TCP:
+				{
+					return (this->tcpConnection == tuple->tcpConnection);
+				}
+			}
 
-				if (!Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->udpRemoteAddr))
-				{
-					return false;
-				}
-			}
-			else
-			{
-				if (this->tcpConnection != tuple->tcpConnection)
-				{
-					return false;
-				}
-			}
 			return true;
 		}
 

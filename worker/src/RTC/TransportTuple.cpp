@@ -137,17 +137,15 @@ namespace RTC
 		{
 			return false;
 		}
-
-		if (!Utils::IP::CompareAddresses(
-		      reinterpret_cast<const sockaddr*>(std::addressof(this->remoteAddr)),
-		      reinterpret_cast<const sockaddr*>(std::addressof(other.remoteAddr))))
+		else if (!Utils::IP::CompareAddresses(
+		           reinterpret_cast<const sockaddr*>(std::addressof(this->remoteAddr)),
+		           reinterpret_cast<const sockaddr*>(std::addressof(other.remoteAddr))))
 		{
 			return false;
 		}
-
-		if (!Utils::IP::CompareAddresses(
-		      reinterpret_cast<const sockaddr*>(std::addressof(this->localAddr)),
-		      reinterpret_cast<const sockaddr*>(std::addressof(other.localAddr))))
+		else if (!Utils::IP::CompareAddresses(
+		           reinterpret_cast<const sockaddr*>(std::addressof(this->localAddr)),
+		           reinterpret_cast<const sockaddr*>(std::addressof(other.localAddr))))
 		{
 			return false;
 		}
