@@ -3,7 +3,7 @@
 ### NEXT
 
 - Unify all consumer classes into a single one ([1731](https://github.com/versatica/mediasoup/pull/1731)).
-- SCTP: Validate CRC32c checksum in received packets ([XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- SCTP: Validate CRC32c checksum in received packets ([1828](https://github.com/versatica/mediasoup/pull/1828)).
 
 ### 3.20.5
 
