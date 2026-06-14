@@ -1057,6 +1057,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (!receivedPacket->ValidateCRC32cChecksum())
+			{
+				MS_WARN_TAG(sctp, "invalid CRC32c cheksum, packet discarded");
+
+				this->associationListenerDeferrer.OnAssociationError(
+				  Types::ErrorKind::PARSE_FAILED, "invalid CRC32c cheksum");
+
+				return false;
+			}
+
 			const uint32_t localVerificationTag = this->tcb ? this->tcb->GetLocalVerificationTag() : 0;
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
