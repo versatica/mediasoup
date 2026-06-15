@@ -435,7 +435,7 @@ namespace RTC
 			 * in a COOKIE-ECHO chunk. Only called when
 			 * `SctpOptions::requireAuthenticatedCookie` is enabled.
 			 *
-			 * @returns true if the cookie is authentic and not stale, false
+			 * Returns `true` if the cookie is authentic and not stale, `false`
 			 * otherwise (in which case the COOKIE-ECHO must be discarded). A Stale
 			 * Cookie ERROR chunk is sent to the peer if the cookie is stale.
 			 *
