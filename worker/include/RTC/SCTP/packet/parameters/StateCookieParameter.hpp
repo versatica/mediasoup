@@ -104,7 +104,10 @@ namespace RTC
 			  uint32_t remoteInitialTsn,
 			  uint32_t remoteAdvertisedReceiverWindowCredit,
 			  uint64_t tieTag,
-			  const NegotiatedCapabilities& negotiatedCapabilities);
+			  const NegotiatedCapabilities& negotiatedCapabilities,
+			  uint64_t creationTimestampMs = 0,
+			  const uint8_t* macKey        = nullptr,
+			  size_t macKeyLength          = 0);
 
 		protected:
 			StateCookieParameter* SoftClone(const uint8_t* buffer) const final;

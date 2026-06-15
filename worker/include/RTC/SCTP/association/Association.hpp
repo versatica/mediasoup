@@ -422,6 +422,19 @@ namespace RTC
 
 			bool HandleReceivedCookieEchoChunkWithTcb(const Packet* receivedPacket, const StateCookie* cookie);
 
+			/**
+			 * Verify the MAC and freshness of an authenticated State Cookie received
+			 * in a COOKIE-ECHO chunk. Only called when
+			 * `SctpOptions::requireAuthenticatedCookie` is enabled.
+			 *
+			 * @returns true if the cookie is authentic and not stale, false
+			 * otherwise (in which case the COOKIE-ECHO must be discarded). A Stale
+			 * Cookie ERROR chunk is sent to the peer if the cookie is stale.
+			 *
+			 * @see RFC 9260 section 5.1.4.
+			 */
+			bool VerifyReceivedStateCookie(const StateCookie* cookie);
+
 			void HandleReceivedCookieAckChunk(
 			  const Packet* receivedPacket, const CookieAckChunk* receivedCookieAckChunk);
 
@@ -540,6 +553,12 @@ namespace RTC
 			// Whether `MayConnect()` should be called when SCTP data is received.
 			// See the constructor for details.
 			bool mayConnectOnReceivedSctpData;
+			// Per-association random secret key used to authenticate the State
+			// Cookies we generate, when `SctpOptions::requireAuthenticatedCookie` is
+			// enabled. RFC 9260 section 5.1.3 mandates a MAC keyed with a secret to
+			// prevent State Cookie forgery.
+			static constexpr size_t StateCookieSecretLength{ 32 };
+			uint8_t stateCookieSecret[StateCookieSecretLength]{};
 		};
 	} // namespace SCTP
 } // namespace RTC

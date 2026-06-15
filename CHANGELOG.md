@@ -4,6 +4,7 @@
 
 - Unify all consumer classes into a single one ([1731](https://github.com/versatica/mediasoup/pull/1731)).
 - SCTP: Validate CRC32c checksum in received packets ([1828](https://github.com/versatica/mediasoup/pull/1828)).
+- SCTP: Authenticate State Cookie in plain and pipe transports ([1829](https://github.com/versatica/mediasoup/pull/1829)).
 
 ### 3.20.5
 

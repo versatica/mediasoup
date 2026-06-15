@@ -29,7 +29,10 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::PipeTransport::PipeTransportOptions* options)
-	  : RTC::Transport::Transport(shared, id, listener, options->base())
+	  // SCTP over PipeTransport is not protected by DTLS, so received State
+	  // Cookies must be authenticated to prevent forgery (RFC 9260 section 5.1.3).
+	  : RTC::Transport::Transport(
+	      shared, id, listener, options->base(), /*requireSctpStateCookieAuthentication*/ true)
 	{
 		MS_TRACE();
 

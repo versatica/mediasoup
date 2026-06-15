@@ -84,6 +84,10 @@ namespace RTC
 			  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethodToString(
 			    this->zeroChecksumAlternateErrorDetectionMethod)
 			    .c_str());
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  require authenticated cookie: %s",
+			  this->requireAuthenticatedCookie ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "</SCTP::SctpOptions>");
 		}
 	} // namespace SCTP

@@ -264,6 +264,19 @@ namespace RTC
 				ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 			};
 
+			/**
+			 * Whether received State Cookies must be authenticated with a MAC keyed
+			 * by a per-association secret, and checked for staleness.
+			 *
+			 * This MUST be enabled in transports whose SCTP traffic is not protected
+			 * by DTLS to comply with RFC 9260 section 5.1.3 and prevent State Cookie
+			 * forgery (an on-path attacker could otherwise craft a COOKIE-ECHO chunk
+			 * that passes validation and establish an unauthorized association).
+			 *
+			 * @see RFC 9260 sections 5.1.3 and 5.1.4.
+			 */
+			bool requireAuthenticatedCookie{ false };
+
 			void Dump(int indentation = 0) const;
 		};
 

@@ -15,7 +15,10 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::DirectTransport::DirectTransportOptions* options)
-	  : RTC::Transport::Transport(shared, id, listener, options->base())
+	  // DirectTransport doesn't support SCTP, so State Cookie authentication is
+	  // irrelevant here.
+	  : RTC::Transport::Transport(
+	      shared, id, listener, options->base(), /*requireSctpStateCookieAuthentication*/ false)
 	{
 		MS_TRACE();
 
