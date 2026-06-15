@@ -419,7 +419,7 @@ namespace RTC
 
 			auto crc32c = GetChecksum();
 
-			// NOTE: Cannot use SetChecksum() because its a `const` method.
+			// NOTE: Cannot use `SetChecksum()` because this is a `const` method.
 			GetHeaderPointer()->checksum = 0;
 
 			auto computedCrc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());

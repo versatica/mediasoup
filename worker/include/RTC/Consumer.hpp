@@ -7,6 +7,7 @@
 #include "FBS/consumer.h"
 #include "FBS/transport.h"
 #include "RTC/ConsumerTypes.hpp"
+#include "RTC/ProducerStreamManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -16,15 +17,24 @@
 #include "RTC/RTP/RtpStreamSend.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/SeqManager.hpp"
+#include "Shared.hpp"
 #include "SharedInterface.hpp"
+#include <ankerl/unordered_dense.h>
 #include <bitset>
+#include <map>
 #include <string>
 #include <vector>
 
 namespace RTC
 {
-	class Consumer : public Channel::ChannelSocket::RequestHandler
+	class Consumer : public Channel::ChannelSocket::RequestHandler,
+	                 public RTC::RTP::RtpStreamSend::Listener,
+	                 public RTC::ProducerStreamManager::Listener
 	{
+		using RetransmissionBuffer =
+		  std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>;
+
 	public:
 		class Listener
 		{
@@ -56,20 +66,18 @@ namespace RTC
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
-		  const FBS::Transport::ConsumeRequest* data,
-		  RTC::RtpParameters::Type type);
+		  const FBS::Transport::ConsumeRequest* data);
 		~Consumer() override;
 
 	public:
-		flatbuffers::Offset<FBS::Consumer::BaseConsumerDump> FillBuffer(
+		flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
-		virtual flatbuffers::Offset<FBS::Consumer::GetStatsResponse> FillBufferStats(
-		  flatbuffers::FlatBufferBuilder& builder) = 0;
-		virtual flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
-		  flatbuffers::FlatBufferBuilder& /*builder*/) const
-		{
-			return 0;
-		};
+		flatbuffers::Offset<FBS::Consumer::BaseConsumerDump> FillBufferBase(
+		  flatbuffers::FlatBufferBuilder& builder) const;
+		flatbuffers::Offset<FBS::Consumer::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder);
+		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		RTC::Media::Kind GetKind() const
 		{
 			return this->kind;
@@ -86,12 +94,9 @@ namespace RTC
 		{
 			return this->type;
 		}
-		virtual RTC::ConsumerTypes::VideoLayers GetPreferredLayers() const
+		RTC::ConsumerTypes::VideoLayers GetPreferredLayers() const
 		{
-			// By default return 1:1.
-			RTC::ConsumerTypes::VideoLayers layers;
-
-			return layers;
+			return this->producerStreamManager->GetPreferredLayers();
 		}
 		const std::vector<uint32_t>& GetMediaSsrcs() const
 		{
@@ -101,10 +106,8 @@ namespace RTC
 		{
 			return this->rtxSsrcs;
 		}
-		virtual bool IsActive() const
+		bool IsActive() const override
 		{
-			// The parent Consumer just checks whether Consumer and Producer are
-			// not paused and the transport connected.
 			// clang-format off
 			return (
 				this->transportConnected &&
@@ -126,32 +129,30 @@ namespace RTC
 		}
 		void ProducerPaused();
 		void ProducerResumed();
-		virtual void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)    = 0;
-		virtual void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
+		void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc);
+		void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc);
 		void ProducerRtpStreamScores(const std::vector<uint8_t>* scores);
-		virtual void ProducerRtpStreamScore(
-		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
-		virtual void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
+		void ProducerRtpStreamScore(RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore);
+		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first);
 		void ProducerClosed();
 		void SetExternallyManagedBitrate()
 		{
 			this->externallyManagedBitrate = true;
+			this->producerStreamManager->SetExternallyManagedBitrate();
 		}
-		virtual uint8_t GetBitratePriority() const                                                 = 0;
-		virtual uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss)                        = 0;
-		virtual void ApplyLayers()                                                                 = 0;
-		virtual uint32_t GetDesiredBitrate() const                                                 = 0;
-		virtual void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket) = 0;
-		virtual bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)                    = 0;
-		virtual const std::vector<RTC::RTP::RtpStreamSend*>& GetRtpStreams() const                 = 0;
-		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
-		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) = 0;
-		virtual void ReceiveKeyFrameRequest(
-		  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)                          = 0;
-		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)                 = 0;
-		virtual void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report) = 0;
-		virtual uint32_t GetTransmissionRate(uint64_t nowMs)                                      = 0;
-		virtual float GetRtt() const                                                              = 0;
+		uint8_t GetBitratePriority() const;
+		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss);
+		void ApplyLayers();
+		uint32_t GetDesiredBitrate() const;
+		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
+		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
+		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost);
+		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
+		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc);
+		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
+		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report);
+		uint32_t GetTransmissionRate(uint64_t nowMs);
+		float GetRtt() const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
@@ -165,10 +166,35 @@ namespace RTC
 		void EmitTraceEvent(flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const;
 
 	private:
-		virtual void UserOnTransportConnected()    = 0;
-		virtual void UserOnTransportDisconnected() = 0;
-		virtual void UserOnPaused()                = 0;
-		virtual void UserOnResumed()               = 0;
+		void EmitScore() const;
+		void EmitLayersChange() const;
+
+	private:
+		void UserOnTransportConnected();
+		void UserOnTransportDisconnected();
+		void UserOnPaused();
+		void UserOnResumed();
+
+	private:
+		void CreateRtpStreams();
+		static void StorePacketInTargetLayerRetransmissionBuffer(
+		  RetransmissionBuffer& targetLayerRetransmissionBuffer,
+		  RTC::RTP::Packet* packet,
+		  RTC::RTP::SharedPacket& sharedPacket);
+
+		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
+	public:
+		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void OnRtpStreamRetransmitRtpPacket(
+		  RTC::RTP::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet) override;
+
+		/* Pure virtual methods inherited from ProducerStreamManager::Listener. */
+	public:
+		void OnProducerStreamManagerKeyFrameRequested(uint32_t mappedSsrc) override;
+		void OnProducerStreamManagerNeedBitrateChange() override;
+		void OnProducerStreamManagerLayersChanged() override;
+		void OnProducerStreamManagerClearRetransmissionBuffer() override;
+		void OnProducerStreamManagerScore() override;
 
 	public:
 		// Passed by argument.
@@ -186,8 +212,6 @@ namespace RTC
 		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
-		// Whether a payload type is supported or not is represented in the
-		// corresponding position of the bitset.
 		std::bitset<128u> supportedCodecPayloadTypes;
 		uint64_t lastRtcpSentTime{ 0u };
 		uint16_t maxRtcpInterval{ 0u };
@@ -196,13 +220,24 @@ namespace RTC
 		struct TraceEventTypes traceEventTypes;
 
 	private:
+		bool pipe{ false };
 		// Others.
+		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
+		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
+		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamSend*> mapSsrcRtpStream;
+		ankerl::unordered_dense::map<RTC::RTP::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
+		// Buffers to store packets that arrive earlier than the first packet of the
+		// video key frame.
+		ankerl::unordered_dense::map<RTC::RTP::RtpStreamSend*, RetransmissionBuffer>
+		  mapRtpStreamTargetLayerRetransmissionBuffer;
 		std::vector<uint32_t> mediaSsrcs;
 		std::vector<uint32_t> rtxSsrcs;
 		bool transportConnected{ false };
 		bool paused{ false };
 		bool producerPaused{ false };
 		bool producerClosed{ false };
+		bool lastSentPacketHasMarker{ false };
+		std::unique_ptr<RTC::ProducerStreamManager> producerStreamManager;
 	};
 } // namespace RTC
 

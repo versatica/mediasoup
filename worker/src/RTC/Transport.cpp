@@ -12,7 +12,7 @@
 #include "FBS/transport.h"
 #include "RTC/BweType.hpp"
 #include "RTC/Consts.hpp"
-#include "RTC/PipeConsumer.hpp"
+#include "RTC/Consumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
@@ -22,9 +22,6 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SCTP/association/Association.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
-#include "RTC/SimpleConsumer.hpp"
-#include "RTC/SimulcastConsumer.hpp"
-#include "RTC/SvcConsumer.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
@@ -780,44 +777,8 @@ namespace RTC
 					MS_THROW_ERROR("a Consumer with same consumerId already exists");
 				}
 
-				auto type = RTC::RtpParameters::Type(body->type());
-
-				RTC::Consumer* consumer{ nullptr };
-
-				switch (type)
-				{
-					case RTC::RtpParameters::Type::SIMPLE:
-					{
-						// This may throw.
-						consumer = new RTC::SimpleConsumer(this->shared, consumerId, producerId, this, body);
-
-						break;
-					}
-
-					case RTC::RtpParameters::Type::SIMULCAST:
-					{
-						// This may throw.
-						consumer = new RTC::SimulcastConsumer(this->shared, consumerId, producerId, this, body);
-
-						break;
-					}
-
-					case RTC::RtpParameters::Type::SVC:
-					{
-						// This may throw.
-						consumer = new RTC::SvcConsumer(this->shared, consumerId, producerId, this, body);
-
-						break;
-					}
-
-					case RTC::RtpParameters::Type::PIPE:
-					{
-						// This may throw.
-						consumer = new RTC::PipeConsumer(this->shared, consumerId, producerId, this, body);
-
-						break;
-					}
-				}
+				// This may throw.
+				auto* consumer = new RTC::Consumer(this->shared, consumerId, producerId, this, body);
 
 				// Notify the listener.
 				// This may throw if no Producer is found.

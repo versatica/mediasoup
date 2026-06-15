@@ -25,7 +25,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(alignof(RTC::SCTP::Packet::CommonHeader) == 4);
 	}
 
-	SECTION("Parse() without Chunks succeeds")
+	SECTION("Parse() without chunks succeeds")
 	{
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
@@ -112,7 +112,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::DataChunk>() == nullptr);
 	}
 
-	SECTION("Parse() with Chunks succeeds")
+	SECTION("Parse() with chunks succeeds")
 	{
 		// clang-format off
 		alignas(4) uint8_t buffer[] =
@@ -502,7 +502,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(parameter3_1->GetInfo()[3] == 0x00);
 	}
 
-	SECTION("Factory() with Chunks succeeds")
+	SECTION("Factory() with chunks succeeds")
 	{
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
@@ -813,7 +813,7 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(obtainedChunk1->GetT() == true);
 	}
 
-	SECTION("BuildChunkInPlace() throws if given Chunk exceeds Packet buffer length")
+	SECTION("BuildChunkInPlace() throws if given chunk exceeds Packet buffer length")
 	{
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, 28) };

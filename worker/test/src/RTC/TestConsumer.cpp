@@ -1,11 +1,11 @@
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
+#include "RTC/Consumer.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/SimpleConsumer.hpp"
 #include "flatbuffers/buffer.h"
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -112,7 +112,7 @@ namespace
 		return rtpParameters.FillBuffer(builder);
 	};
 
-	std::unique_ptr<RTC::SimpleConsumer> createConsumer(ConsumerListener* listener)
+	std::unique_ptr<RTC::Consumer> createConsumer(ConsumerListener* listener)
 	{
 		flatbuffers::FlatBufferBuilder bufferBuilder;
 
@@ -140,8 +140,8 @@ namespace
 
 		const auto* consumeRequest = flatbuffers::GetRoot<FBS::Transport::ConsumeRequest>(buf);
 
-		return std::make_unique<RTC::SimpleConsumer>(
-		  std::addressof(shared),
+		return std::make_unique<RTC::Consumer>(
+		  &shared,
 		  consumeRequest->consumerId()->str(),
 		  consumeRequest->producerId()->str(),
 		  listener,
@@ -181,12 +181,12 @@ namespace
 		}
 
 		std::unique_ptr<ConsumerListener> listener;
-		std::unique_ptr<RTC::SimpleConsumer> consumer;
+		std::unique_ptr<RTC::Consumer> consumer;
 		std::unique_ptr<RTC::RTP::RtpStreamRecv> rtpStream;
 	};
 } // namespace
 
-SCENARIO("SimpleConsumer", "[rtp][consumer]")
+SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 {
 	// TODO: We should NOT parse RTP packets for tests anymore. We should use
 	// RTC::RTP::Packet::Factory() instead.
@@ -200,7 +200,6 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		0xFF, 0xFF, 0xFF, 0xFF,
 		// From here this is just buffer enough for the variable length payload so
 		// when cloning the packet it doesn't read non allocated memory.
-		0xFF, 0xFF, 0xFF, 0xFF,
 		0xFF, 0xFF, 0xFF, 0xFF,
 		0xFF, 0xFF, 0xFF, 0xFF,
 		0xFF, 0xFF, 0xFF, 0xFF,

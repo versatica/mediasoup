@@ -1057,6 +1057,32 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// https://datatracker.ietf.org/doc/html/rfc9653#section-5.3
+			//
+			// "If an endpoint has sent the Zero Checksum Acceptable Chunk Parameter
+			// indicating the support of an alternate error detection method in an INIT
+			// or INIT ACK chunk, in addition to SCTP packets containing the correct
+			// CRC32c checksum value it MUST accept SCTP packets that have an incorrect
+			// checksum value of zero [...]"
+			const bool acceptsZeroChecksum =
+			  this->sctpOptions.zeroChecksumAlternateErrorDetectionMethod !=
+			  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE;
+
+			// Validate the CRC32c checksum unless this is a zero checksum packet that we
+			// announced we are willing to accept.
+			if (!acceptsZeroChecksum || receivedPacket->GetChecksum() != 0)
+			{
+				if (!receivedPacket->ValidateCRC32cChecksum())
+				{
+					MS_WARN_TAG(sctp, "invalid CRC32c checksum, packet discarded");
+
+					this->associationListenerDeferrer.OnAssociationError(
+					  Types::ErrorKind::PARSE_FAILED, "invalid CRC32c checksum");
+
+					return false;
+				}
+			}
+
 			const uint32_t localVerificationTag = this->tcb ? this->tcb->GetLocalVerificationTag() : 0;
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
