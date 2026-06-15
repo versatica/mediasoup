@@ -109,7 +109,7 @@ jobs:
             cxx: clang++
             build-type: Release
             pip-break-system-packages: true
-            run-lint: false
+            run-lint: true
             run-test: true
             run-test-asan-address: true
             run-test-asan-undefined: true
@@ -141,7 +141,6 @@ jobs:
             cxx: clang++
             build-type: Release
             pip-break-system-packages: true
-            # Run lint for the latest macos.
             run-lint: true
             run-test: true
             run-test-asan-address: false
