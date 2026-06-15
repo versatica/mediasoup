@@ -87,6 +87,39 @@ jobs:
           DOCS_RS: '1'
           RUSTDOCFLAGS: '-D rustdoc::broken-intra-doc-links -D rustdoc::private_intra_doc_links'
 
+      # NOTE: Only run the publish dry-run when at least one of the three crates
+      # has a version not yet on crates.io (i.e. it's been bumped and is about to
+      # be published). Otherwise Cargo resolves the dependencies among them
+      # against the already-published copies on crates.io, and any schema/API
+      # change made since the last release fails verification spuriously even
+      # though nothing is being published.
+      - if: ${{ matrix.build.run-cargo-dry-run }}
+        id: check-versions
+        name: Check whether any Rust crate version was bumped
+        shell: bash
+        run: |
+          set -euo pipefail
+          bumped=false
+          check() {
+            local manifest="$1" name version status
+            name=$(grep -m1 -E '^name *=' "$manifest" | sed -E 's/.*"(.*)".*/\1/')
+            version=$(grep -m1 -E '^version *=' "$manifest" | sed -E 's/.*"(.*)".*/\1/')
+            status=$(curl -sS -o /dev/null -w '%{http_code}' \
+              -A 'mediasoup-ci (https://github.com/versatica/mediasoup)' \
+              "https://crates.io/api/v1/crates/${name}/${version}" || echo 000)
+            echo "${name} ${version} -> HTTP ${status}"
+            if [ "${status}" = "200" ]; then
+              echo "  already published, no bump"
+            else
+              echo "  not published (or unreachable), treating as bumped"
+              bumped=true
+            fi
+          }
+          check worker/Cargo.toml
+          check rust/Cargo.toml
+          check rust/types/Cargo.toml
+          echo "bumped=${bumped}" >> "$GITHUB_OUTPUT"
+
       # NOTE: No need to unset the job-level KEEP_BUILD_ARTIFACTS here:
       # `mediasoup-sys`'s build.rs detects the `cargo publish` verification step
       # and always cleans the Meson subprojects it extracts into the source
@@ -97,6 +130,6 @@ jobs:
       # of crates.io. This way `mediasoup` verifies fine even when the versions
       # of `mediasoup-sys` / `mediasoup-types` it depends on have been bumped but
       # not yet published.
-      - if: ${{ matrix.build.run-cargo-dry-run }}
+      - if: ${{ matrix.build.run-cargo-dry-run && steps.check-versions.outputs.bumped == 'true' }}
         name: cargo publish --dry-run -p mediasoup-types -p mediasoup-sys -p mediasoup
         run: cargo publish --dry-run -p mediasoup-types -p mediasoup-sys -p mediasoup
