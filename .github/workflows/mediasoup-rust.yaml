@@ -37,9 +37,11 @@ jobs:
       matrix:
         build:
           - os: ubuntu-24.04
+          - os: ubuntu-24.04-arm
+          - os: ubuntu-26.04
             run-cargo-fmt: true
             run-cargo-dry-run: true
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-26.04-arm
           - os: macos-15
           - os: windows-2022
           - os: windows-2025

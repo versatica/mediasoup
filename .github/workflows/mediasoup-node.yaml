@@ -36,18 +36,6 @@ jobs:
       matrix:
         build:
           - os: ubuntu-24.04
-            node: 22
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-24.04
-            node: 24
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=address'
-            npm-audit: true
-            run-lint: true
-            run-publish-dry-run: true
-          - os: ubuntu-24.04
             node: 24
             cc: gcc
             cxx: g++
@@ -55,7 +43,6 @@ jobs:
             node: 24
             cc: clang
             cxx: clang++
-            meson_args: '-Db_sanitize=undefined'
           - os: ubuntu-24.04-arm
             node: 22
             cc: gcc
@@ -64,7 +51,6 @@ jobs:
             node: 24
             cc: gcc
             cxx: g++
-            meson_args: '-Db_sanitize=address'
             # In Ubuntu 24.04 ARM in Debug build type with ASAN, createWorker()
             # takes too long.
             # See https://github.com/versatica/mediasoup/pull/1503.
@@ -83,17 +69,9 @@ jobs:
             run-publish-dry-run: true
           - os: ubuntu-26.04
             node: 24
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-26.04
-            node: 24
             cc: clang
             cxx: clang++
             meson_args: '-Db_sanitize=undefined'
-          - os: ubuntu-26.04-arm
-            node: 22
-            cc: gcc
-            cxx: g++
           - os: ubuntu-26.04-arm
             node: 24
             cc: gcc
