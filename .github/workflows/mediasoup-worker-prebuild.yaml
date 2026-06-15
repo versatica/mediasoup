@@ -55,7 +55,7 @@ jobs:
       - name: Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 26
 
       # We need to install some NPM production deps for npm-scripts.mjs to
       # work.

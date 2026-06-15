@@ -187,7 +187,7 @@ jobs:
       - name: Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Configure cache
         uses: actions/cache@v5

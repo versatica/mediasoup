@@ -52,7 +52,7 @@ jobs:
             cc: gcc
             cxx: g++
           - os: ubuntu-26.04
-            node: 24
+            node: 26
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=address'
@@ -60,17 +60,17 @@ jobs:
             run-lint: true
             run-publish-dry-run: true
           - os: ubuntu-26.04
-            node: 24
+            node: 26
             cc: clang
             cxx: clang++
             meson_args: '-Db_sanitize=undefined'
           - os: ubuntu-26.04-arm
-            node: 24
+            node: 26
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=address'
           - os: macos-15
-            node: 24
+            node: 26
             cc: clang
             cxx: clang++
           - os: windows-2022
@@ -78,7 +78,7 @@ jobs:
             cc: cl
             cxx: cl
           - os: windows-2025
-            node: 24
+            node: 26
             cc: cl
             cxx: cl
         build-type:
