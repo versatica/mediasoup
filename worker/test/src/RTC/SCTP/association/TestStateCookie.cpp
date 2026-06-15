@@ -507,4 +507,127 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer4, sizeof(buffer4)) ==
 		  RTC::SCTP::Types::SctpImplementation::UNKNOWN);
 	}
+
+	SECTION("authenticated StateCookie::Write() and StateCookie::VerifyMac() succeed")
+	{
+		const RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = {
+			.negotiatedMaxOutboundStreams = 62000,
+			.negotiatedMaxInboundStreams  = 55555,
+			.partialReliability           = true,
+			.messageInterleaving          = true,
+			.reConfig                     = true,
+			.zeroChecksum                 = false
+		};
+
+		const uint8_t macKey[]             = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+			                                     0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+		const uint64_t creationTimestampMs = 1234567890;
+
+		auto* buffer = sctpCommon::FactoryBuffer;
+
+		RTC::SCTP::StateCookie::Write(
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ RTC::SCTP::StateCookie::AuthenticatedStateCookieLength,
+		  /*localVerificationTag*/ 6660666,
+		  /*remoteVerificationTag*/ 9990999,
+		  /*localInitialTsn*/ 1110111,
+		  /*remoteInitialTsn*/ 2220222,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 999909999,
+		  /*tieTag*/ 1111222233334444,
+		  negotiatedCapabilities,
+		  /*creationTimestampMs*/ creationTimestampMs,
+		  /*macKey*/ macKey,
+		  /*macKeyLength*/ sizeof(macKey));
+
+		/* It must be recognized as a (longer) mediasoup State Cookie. */
+
+		REQUIRE(
+		  RTC::SCTP::StateCookie::IsMediasoupStateCookie(
+		    buffer, RTC::SCTP::StateCookie::AuthenticatedStateCookieLength) == true);
+
+		/* Parse it. */
+
+		auto* stateCookie =
+		  RTC::SCTP::StateCookie::Parse(buffer, RTC::SCTP::StateCookie::AuthenticatedStateCookieLength);
+
+		REQUIRE(stateCookie);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::AuthenticatedStateCookieLength);
+		REQUIRE(stateCookie->IsAuthenticated() == true);
+		REQUIRE(stateCookie->GetCreationTimestampMs() == creationTimestampMs);
+		REQUIRE(stateCookie->GetLocalVerificationTag() == 6660666);
+		REQUIRE(stateCookie->GetRemoteVerificationTag() == 9990999);
+
+		/* The MAC must verify with the right key. */
+
+		REQUIRE(
+		  RTC::SCTP::StateCookie::VerifyMac(
+		    buffer, RTC::SCTP::StateCookie::AuthenticatedStateCookieLength, macKey, sizeof(macKey)) ==
+		  true);
+
+		/* The MAC must NOT verify with a wrong key. */
+
+		const uint8_t wrongMacKey[] = { 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88,
+			                              0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00 };
+
+		REQUIRE(
+		  RTC::SCTP::StateCookie::VerifyMac(
+		    buffer,
+		    RTC::SCTP::StateCookie::AuthenticatedStateCookieLength,
+		    wrongMacKey,
+		    sizeof(wrongMacKey)) == false);
+
+		/* Tampering with any byte must invalidate the MAC. */
+
+		buffer[8] ^= 0x01;
+
+		REQUIRE(
+		  RTC::SCTP::StateCookie::VerifyMac(
+		    buffer, RTC::SCTP::StateCookie::AuthenticatedStateCookieLength, macKey, sizeof(macKey)) ==
+		  false);
+
+		buffer[8] ^= 0x01;
+
+		/* It verifies again once restored. */
+
+		REQUIRE(
+		  RTC::SCTP::StateCookie::VerifyMac(
+		    buffer, RTC::SCTP::StateCookie::AuthenticatedStateCookieLength, macKey, sizeof(macKey)) ==
+		  true);
+
+		delete stateCookie;
+	}
+
+	SECTION("StateCookie::VerifyMac() fails on a non-authenticated (plain) cookie")
+	{
+		const RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = {
+			.negotiatedMaxOutboundStreams = 62000,
+			.negotiatedMaxInboundStreams  = 55555,
+			.partialReliability           = true,
+			.messageInterleaving          = true,
+			.reConfig                     = true,
+			.zeroChecksum                 = false
+		};
+
+		const uint8_t macKey[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77 };
+
+		auto* buffer = sctpCommon::FactoryBuffer;
+
+		// Write a plain (44 bytes) cookie.
+		RTC::SCTP::StateCookie::Write(
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ RTC::SCTP::StateCookie::StateCookieLength,
+		  /*localVerificationTag*/ 6660666,
+		  /*remoteVerificationTag*/ 9990999,
+		  /*localInitialTsn*/ 1110111,
+		  /*remoteInitialTsn*/ 2220222,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 999909999,
+		  /*tieTag*/ 1111222233334444,
+		  negotiatedCapabilities);
+
+		// A plain cookie has no MAC, so `VerifyMac()` must fail regardless of the
+		// key.
+		REQUIRE(
+		  RTC::SCTP::StateCookie::VerifyMac(
+		    buffer, RTC::SCTP::StateCookie::StateCookieLength, macKey, sizeof(macKey)) == false);
+	}
 }

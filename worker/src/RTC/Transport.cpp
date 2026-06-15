@@ -38,7 +38,8 @@ namespace RTC
 	  SharedInterface* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
-	  const FBS::Transport::Options* options)
+	  const FBS::Transport::Options* options,
+	  bool requireSctpStateCookieAuthentication)
 	  : id(id),
 	    shared(shared),
 	    listener(listener),
@@ -84,7 +85,8 @@ namespace RTC
 				.maxSendBufferSize           = this->sctpSendBufferSize,
 				.perStreamSendQueueLimit     = this->sctpPerStreamSendQueueLimit,
 				.maxReceiveMessageSize       = this->maxReceiveMessageSize,
-				.maxReceiverWindowBufferSize = this->sctpMaxReceiverWindowBufferSize
+				.maxReceiverWindowBufferSize = this->sctpMaxReceiverWindowBufferSize,
+				.requireAuthenticatedCookie  = requireSctpStateCookieAuthentication
 			};
 
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(

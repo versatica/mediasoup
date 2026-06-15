@@ -1,5 +1,7 @@
 #include "common.hpp"
 #include "RTC/SCTP/association/Association.hpp"
+#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
@@ -1751,5 +1753,118 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.listener.HasOnAssociationLifecycleMessageEndBeenCalledWithLifecycleId(1) == true);
 
 		REQUIRE(getReceivedMessagePpids(z).empty() == true);
+	}
+
+	SECTION("establishes connection with State Cookie authentication enabled")
+	{
+		auto sctpOptions = makeSctpOptions();
+
+		sctpOptions.requireAuthenticatedCookie = true;
+
+		AssociationUnderTest a(sctpOptions);
+		AssociationUnderTest z(sctpOptions);
+
+		// The full handshake must succeed: Z generates an authenticated cookie that
+		// A echoes back and Z verifies against its own secret.
+		connectAssociations(a, z);
+	}
+
+	SECTION("forged COOKIE-ECHO is accepted without authentication but rejected with it")
+	{
+		// Forge a plain (unauthenticated) State Cookie with attacker-chosen values,
+		// as in the published PoC. It passes the magic checks but carries no MAC.
+		const uint32_t forgedTag = 0xDEADBEEF;
+		const RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities;
+
+		std::vector<uint8_t> cookieBuffer(RTC::SCTP::StateCookie::StateCookieLength);
+
+		RTC::SCTP::StateCookie::Write(
+		  cookieBuffer.data(),
+		  cookieBuffer.size(),
+		  /*localVerificationTag*/ forgedTag,
+		  /*remoteVerificationTag*/ 0xCAFEBABE,
+		  /*localInitialTsn*/ 1000,
+		  /*remoteInitialTsn*/ 2000,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 65535,
+		  /*tieTag*/ 0,
+		  negotiatedCapabilities);
+
+		// Builds a COOKIE-ECHO packet carrying the forged cookie. `buffers` must
+		// outlive the returned packet.
+		const auto buildForgedCookieEcho =
+		  [&](std::vector<uint8_t>& packetBuffer) -> std::unique_ptr<RTC::SCTP::Packet>
+		{
+			auto packet           = buildPacket(packetBuffer, forgedTag);
+			auto* cookieEchoChunk = packet->BuildChunkInPlace<RTC::SCTP::CookieEchoChunk>();
+
+			cookieEchoChunk->SetCookie(cookieBuffer.data(), cookieBuffer.size());
+			cookieEchoChunk->Consolidate();
+
+			return packet;
+		};
+
+		// Without authentication, the forged COOKIE-ECHO is accepted and an
+		// association is wrongly established (this is the vulnerability).
+		{
+			AssociationUnderTest z;
+
+			std::vector<uint8_t> packetBuffer(1500);
+
+			const auto packet = buildForgedCookieEcho(packetBuffer);
+
+			injectPacket(z, packet.get());
+
+			REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
+		}
+
+		// With authentication required, the forged COOKIE-ECHO fails MAC
+		// verification and is silently discarded.
+		{
+			auto sctpOptions = makeSctpOptions();
+
+			sctpOptions.requireAuthenticatedCookie = true;
+
+			AssociationUnderTest z(sctpOptions);
+
+			std::vector<uint8_t> packetBuffer(1500);
+
+			const auto packet = buildForgedCookieEcho(packetBuffer);
+
+			injectPacket(z, packet.get());
+
+			REQUIRE(z.association.GetAssociationState() != RTC::SCTP::Types::AssociationState::CONNECTED);
+			// No COOKIE-ACK (nor any other packet) is sent in response.
+			REQUIRE(z.listener.ConsumeFirstSentPacket().empty() == true);
+		}
+	}
+
+	SECTION("rejects a stale COOKIE-ECHO when authentication is required")
+	{
+		auto sctpOptions = makeSctpOptions();
+
+		sctpOptions.requireAuthenticatedCookie = true;
+
+		AssociationUnderTest a(sctpOptions);
+		AssociationUnderTest z(sctpOptions);
+
+		a.association.Connect();
+		// Z reads INIT, produces INIT-ACK with an authenticated cookie timestamped
+		// with Z's current time.
+		deliverFirstSentPacket(a, z);
+		// A reads INIT-ACK, produces COOKIE-ECHO (echoing Z's cookie).
+		deliverFirstSentPacket(z, a);
+
+		// Make the cookie stale on Z's side by advancing its clock beyond the cookie
+		// lifespan before the COOKIE-ECHO is delivered.
+		z.AdvanceTimeMs(RTC::SCTP::StateCookie::ValidCookieLifeMs + 1000);
+
+		// Z reads the now stale COOKIE-ECHO.
+		deliverFirstSentPacket(a, z);
+
+		REQUIRE(z.association.GetAssociationState() != RTC::SCTP::Types::AssociationState::CONNECTED);
+		// Z responds with an ERROR chunk (carrying a Stale Cookie error cause).
+		REQUIRE(
+		  packetHasSingleChunkOfType<RTC::SCTP::OperationErrorChunk>(
+		    z.listener.ConsumeFirstSentPacket()) == true);
 	}
 }

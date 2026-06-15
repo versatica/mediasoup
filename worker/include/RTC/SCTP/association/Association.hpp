@@ -168,6 +168,14 @@ namespace RTC
 				bool usesZeroChecksum{ false };
 			};
 
+		private:
+			/**
+			 * Length of the per-association random secret key used to authenticate the
+			 * State Cookies we generate when `SctpOptions::requireAuthenticatedCookie`
+			 * is enabled.
+			 */
+			static constexpr size_t StateCookieSecretLength{ 32 };
+
 		public:
 			explicit Association(
 			  const SctpOptions& sctpOptions,
@@ -470,6 +478,19 @@ namespace RTC
 			bool HandleReceivedUnknownChunk(
 			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
 
+			/**
+			 * Verify the MAC and freshness of an authenticated State Cookie received
+			 * in a COOKIE-ECHO chunk. Only called when
+			 * `SctpOptions::requireAuthenticatedCookie` is enabled.
+			 *
+			 * Returns `true` if the cookie is authentic and not stale, `false`
+			 * otherwise (in which case the COOKIE-ECHO must be discarded). A Stale
+			 * Cookie ERROR chunk is sent to the peer if the cookie is stale.
+			 *
+			 * @see RFC 9260 section 5.1.4.
+			 */
+			bool VerifyReceivedStateCookie(const StateCookie* cookie);
+
 			void OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop);
 
 			void OnT1CookieTimer(uint64_t& baseTimeoutMs, bool& stop);
@@ -540,6 +561,9 @@ namespace RTC
 			// Whether `MayConnect()` should be called when SCTP data is received.
 			// See the constructor for details.
 			bool mayConnectOnReceivedSctpData;
+			// Per-association random secret key used to authenticate the State Cookies
+			// we generate when `SctpOptions::requireAuthenticatedCookie` is enabled.
+			uint8_t stateCookieSecret[Association::StateCookieSecretLength]{};
 		};
 	} // namespace SCTP
 } // namespace RTC

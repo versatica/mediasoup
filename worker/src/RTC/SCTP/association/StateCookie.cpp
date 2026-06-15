@@ -4,37 +4,14 @@
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <cstring> // std::memcpy(), std::memcmp()
+#include <string_view>
 
 namespace RTC
 {
 	namespace SCTP
 	{
 		/* Class methods. */
-
-		bool StateCookie::IsMediasoupStateCookie(const uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength != StateCookie::StateCookieLength)
-			{
-				return false;
-			}
-
-			if (Utils::Byte::Get8Bytes(buffer, 0) != StateCookie::Magic1)
-			{
-				return false;
-			}
-
-			auto* negotiatedCapabilitiesField = reinterpret_cast<NegotiatedCapabilitiesField*>(
-			  const_cast<uint8_t*>(buffer) + StateCookie::NegotiatedCapabilitiesOffset);
-
-			if (ntohs(negotiatedCapabilitiesField->magic2) != StateCookie::Magic2)
-			{
-				return false;
-			}
-
-			return true;
-		}
 
 		StateCookie* StateCookie::Parse(const uint8_t* buffer, size_t bufferLength)
 		{
@@ -61,7 +38,10 @@ namespace RTC
 		  uint32_t remoteInitialTsn,
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
-		  const NegotiatedCapabilities& negotiatedCapabilities)
+		  const NegotiatedCapabilities& negotiatedCapabilities,
+		  uint64_t creationTimestampMs,
+		  const uint8_t* macKey,
+		  size_t macKeyLength)
 		{
 			MS_TRACE();
 
@@ -75,9 +55,15 @@ namespace RTC
 			  remoteInitialTsn,
 			  remoteAdvertisedReceiverWindowCredit,
 			  tieTag,
-			  negotiatedCapabilities);
+			  negotiatedCapabilities,
+			  creationTimestampMs,
+			  macKey,
+			  macKeyLength);
 
-			return new StateCookie(buffer, StateCookie::StateCookieLength);
+			const size_t cookieLength = macKey != nullptr ? StateCookie::AuthenticatedStateCookieLength
+			                                              : StateCookie::StateCookieLength;
+
+			return new StateCookie(buffer, cookieLength);
 		}
 
 		void StateCookie::Write(
@@ -89,11 +75,18 @@ namespace RTC
 		  uint32_t remoteInitialTsn,
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
-		  const NegotiatedCapabilities& negotiatedCapabilities)
+		  const NegotiatedCapabilities& negotiatedCapabilities,
+		  uint64_t creationTimestampMs,
+		  const uint8_t* macKey,
+		  size_t macKeyLength)
 		{
 			MS_TRACE();
 
-			if (bufferLength < StateCookie::StateCookieLength)
+			const bool authenticate = macKey != nullptr;
+			const size_t cookieLength =
+			  authenticate ? StateCookie::AuthenticatedStateCookieLength : StateCookie::StateCookieLength;
+
+			if (bufferLength < cookieLength)
 			{
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
@@ -119,6 +112,65 @@ namespace RTC
 			  htons(negotiatedCapabilities.negotiatedMaxOutboundStreams);
 			negotiatedCapabilitiesField->negotiatedMaxInboundStreams =
 			  htons(negotiatedCapabilities.negotiatedMaxInboundStreams);
+
+			if (!authenticate)
+			{
+				return;
+			}
+
+			// Append the creation timestamp and the MAC computed over all preceding
+			// bytes (including the timestamp).
+			//
+			// @see RFC 9260 section 5.1.3.
+			Utils::Byte::Set8Bytes(buffer, StateCookie::TimestampOffset, creationTimestampMs);
+
+			const uint8_t* mac = Utils::Crypto::GetHmacSha1(
+			  reinterpret_cast<const char*>(macKey), macKeyLength, buffer, StateCookie::MacOffset);
+
+			std::memcpy(buffer + StateCookie::MacOffset, mac, StateCookie::MacLength);
+		}
+
+		bool StateCookie::IsMediasoupStateCookie(const uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength != StateCookie::StateCookieLength && bufferLength != StateCookie::AuthenticatedStateCookieLength)
+			{
+				return false;
+			}
+
+			if (Utils::Byte::Get8Bytes(buffer, 0) != StateCookie::Magic1)
+			{
+				return false;
+			}
+
+			auto* negotiatedCapabilitiesField = reinterpret_cast<NegotiatedCapabilitiesField*>(
+			  const_cast<uint8_t*>(buffer) + StateCookie::NegotiatedCapabilitiesOffset);
+
+			if (ntohs(negotiatedCapabilitiesField->magic2) != StateCookie::Magic2)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		bool StateCookie::VerifyMac(
+		  const uint8_t* buffer, size_t bufferLength, const uint8_t* macKey, size_t macKeyLength)
+		{
+			MS_TRACE();
+
+			// An authenticated cookie has a fixed length.
+			if (bufferLength != StateCookie::AuthenticatedStateCookieLength)
+			{
+				return false;
+			}
+
+			// Recompute the MAC over all bytes preceding the MAC field.
+			const uint8_t* expectedMac = Utils::Crypto::GetHmacSha1(
+			  reinterpret_cast<const char*>(macKey), macKeyLength, buffer, StateCookie::MacOffset);
+
+			return std::memcmp(buffer + StateCookie::MacOffset, expectedMac, StateCookie::MacLength) == 0;
 		}
 
 		Types::SctpImplementation StateCookie::DetermineSctpImplementation(
@@ -158,7 +210,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(StateCookie::StateCookieLength);
+			// The cookie length is determined by whether it carries a MAC. When the
+			// cookie is cloned into a larger buffer, `CloneInto()` will set the
+			// proper length afterwards.
+			SetLength(
+			  bufferLength == StateCookie::AuthenticatedStateCookieLength
+			    ? StateCookie::AuthenticatedStateCookieLength
+			    : StateCookie::StateCookieLength);
 		}
 
 		StateCookie::~StateCookie()
@@ -183,6 +241,13 @@ namespace RTC
 			  "  remote advertised receiver window credit: %" PRIu32,
 			  GetRemoteAdvertisedReceiverWindowCredit());
 			MS_DUMP_CLEAN(indentation, "  tie-tag: %" PRIu64, GetTieTag());
+			MS_DUMP_CLEAN(indentation, "  authenticated: %s", IsAuthenticated() ? "yes" : "no");
+
+			if (IsAuthenticated())
+			{
+				MS_DUMP_CLEAN(indentation, "  creation timestamp (ms): %" PRIu64, GetCreationTimestampMs());
+			}
+
 			negotiatedCapabilities.Dump(indentation + 1);
 			MS_DUMP_CLEAN(indentation, "</SCTP::StateCookie>");
 		}

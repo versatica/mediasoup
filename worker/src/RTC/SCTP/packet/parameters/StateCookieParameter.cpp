@@ -122,7 +122,10 @@ namespace RTC
 		  uint32_t remoteInitialTsn,
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
-		  const NegotiatedCapabilities& negotiatedCapabilities)
+		  const NegotiatedCapabilities& negotiatedCapabilities,
+		  uint64_t creationTimestampMs,
+		  const uint8_t* macKey,
+		  size_t macKeyLength)
 		{
 			MS_TRACE();
 
@@ -144,9 +147,15 @@ namespace RTC
 			  remoteInitialTsn,
 			  remoteAdvertisedReceiverWindowCredit,
 			  tieTag,
-			  negotiatedCapabilities);
+			  negotiatedCapabilities,
+			  creationTimestampMs,
+			  macKey,
+			  macKeyLength);
 
-			SetVariableLengthValueLength(StateCookie::StateCookieLength);
+			const size_t cookieLength = macKey != nullptr ? StateCookie::AuthenticatedStateCookieLength
+			                                              : StateCookie::StateCookieLength;
+
+			SetVariableLengthValueLength(cookieLength);
 		}
 
 		StateCookieParameter* StateCookieParameter::SoftClone(const uint8_t* buffer) const
