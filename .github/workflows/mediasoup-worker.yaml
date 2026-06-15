@@ -63,9 +63,6 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            # Compile with all Meson option flags enabled once with gcc in
-            # Release mode.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true'
           - os: ubuntu-24.04
             cc: gcc
             cxx: g++
@@ -75,21 +72,6 @@ jobs:
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
-            # Compile with all Meson option flags enabled once with gcc in
-            # Debug mode.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true'
-          - os: ubuntu-24.04
-            cc: clang
-            cxx: clang++
-            build-type: Release
-            pip-break-system-packages: true
-            run-lint: false
-            run-test: true
-            run-test-asan-address: true
-            run-test-asan-undefined: true
-            # Let's just compile with all Meson option flags enabled once with
-            # clang.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true'
           - os: ubuntu-24.04-arm
             cc: gcc
             cxx: g++
@@ -101,6 +83,50 @@ jobs:
             run-test-asan-address: false
             run-test-asan-undefined: false
           - os: ubuntu-24.04-arm
+            cc: clang
+            cxx: clang++
+            build-type: Release
+            pip-break-system-packages: true
+            # No clang-format for ARM.
+            run-lint: false
+            run-test: true
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+          - os: ubuntu-26.04
+            cc: gcc
+            cxx: g++
+            build-type: Debug
+            pip-break-system-packages: true
+            run-lint: false
+            run-test: true
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+            # Compile with all Meson option flags enabled once with gcc in
+            # Debug mode.
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true'
+          - os: ubuntu-26.04
+            cc: clang
+            cxx: clang++
+            build-type: Release
+            pip-break-system-packages: true
+            run-lint: true
+            run-test: true
+            run-test-asan-address: true
+            run-test-asan-undefined: true
+            # Let's just compile with all Meson option flags enabled once with
+            # clang.
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true'
+          - os: ubuntu-26.04-arm
+            cc: gcc
+            cxx: g++
+            build-type: Release
+            pip-break-system-packages: true
+            # No clang-format for ARM.
+            run-lint: false
+            run-test: true
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+          - os: ubuntu-26.04-arm
             cc: clang
             cxx: clang++
             build-type: Release
@@ -115,7 +141,6 @@ jobs:
             cxx: clang++
             build-type: Release
             pip-break-system-packages: true
-            # Run lint for the latest macos.
             run-lint: true
             run-test: true
             run-test-asan-address: false
@@ -162,7 +187,7 @@ jobs:
       - name: Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Configure cache
         uses: actions/cache@v5
@@ -183,18 +208,18 @@ jobs:
         name: pip3 install --break-system-packages invoke
         run: pip3 install --break-system-packages invoke
 
-      # Fail if run-lint is set for non macos.
-      - if: ${{ matrix.build.run-lint && !startsWith(matrix.build.os, 'macos') }}
-        name: fail if run-lint is set for non macos
-        run: |
-          echo "run-lint set for non macos"
-          exit 1
-
       # Install clang-format on macos.
       - if: ${{ matrix.build.run-lint && startsWith(matrix.build.os, 'macos') }}
         name: brew install clang-format@22
         run: |
           brew install clang-format@22
+
+      # Install clang-format on ubuntu.
+      - if: ${{ matrix.build.run-lint && startsWith(matrix.build.os, 'ubuntu') }}
+        name: apt install clang-format-22
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes clang-format-22
 
       # We need to install npm deps of worker/scripts/package.json.
       - if: ${{ matrix.build.run-lint }}

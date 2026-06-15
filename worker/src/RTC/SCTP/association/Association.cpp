@@ -660,6 +660,8 @@ namespace RTC
 
 			const auto prevState = this->state;
 
+			// Notice that, contrary to what happens in dcsctp, here the association
+			// never transitions back to NEW state.
 			SetState(State::CLOSED, message);
 
 			if (prevState == State::COOKIE_WAIT || prevState == State::COOKIE_ECHOED)

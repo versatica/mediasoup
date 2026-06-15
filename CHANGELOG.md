@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- CI: Add `ubuntu-26.04` hosts ([1830](https://github.com/versatica/mediasoup/pull/1830)).
+
 ### 3.20.6
 
 - Unify all consumer classes into a single one ([1731](https://github.com/versatica/mediasoup/pull/1731)).

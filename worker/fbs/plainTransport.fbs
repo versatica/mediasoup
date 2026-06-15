@@ -22,7 +22,7 @@ table ConnectRequest {
 }
 
 table ConnectResponse {
-    tuple: FBS.Transport.Tuple (required);
+    tuple: FBS.Transport.Tuple;
     rtcp_tuple: FBS.Transport.Tuple;
     srtp_parameters: FBS.SrtpParameters.SrtpParameters;
 }

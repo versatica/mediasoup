@@ -326,6 +326,47 @@ test('router.createPlainTransport() with enableSrtp succeeds', async () => {
 	expect(plainTransport.srtpParameters?.keyBase64.length).toBe(60);
 }, 2000);
 
+test('plainTransport.connect() with srtpParameters and comedia enabled succeeds', async () => {
+	// In comedia mode the remote endpoint is not known until the first packet is
+	// received, so the worker's connect response carries no tuple. `connect()`
+	// (called with just `srtpParameters`, as documented for comedia + SRTP) must
+	// still succeed.
+	const plainTransport = await ctx.router!.createPlainTransport({
+		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+		enableSrtp: true,
+		comedia: true,
+	});
+
+	// Default cryptoSuite: 'AES_CM_128_HMAC_SHA1_80'.
+	expect(plainTransport.srtpParameters?.cryptoSuite).toBe(
+		'AES_CM_128_HMAC_SHA1_80'
+	);
+	expect(plainTransport.srtpParameters?.keyBase64.length).toBe(40);
+
+	// The tuple only carries local information until comedia latches a remote.
+	expect(plainTransport.tuple.localAddress).toBe('127.0.0.1');
+	expect(plainTransport.tuple.protocol).toBe('udp');
+	expect(plainTransport.tuple.remoteIp).toBeUndefined();
+
+	// Valid srtpParameters. And no need for ip and port since comedia is enabled.
+	await expect(
+		plainTransport.connect({
+			srtpParameters: {
+				cryptoSuite: 'AEAD_AES_256_GCM',
+				keyBase64:
+					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
+			},
+		})
+	).resolves.toBeUndefined();
+
+	// The remote SRTP crypto suite has been applied.
+	expect(plainTransport.srtpParameters?.cryptoSuite).toBe('AEAD_AES_256_GCM');
+	expect(plainTransport.srtpParameters?.keyBase64.length).toBe(60);
+
+	// The tuple is still local only. Comedia will latch the remote later.
+	expect(plainTransport.tuple.remoteIp).toBeUndefined();
+}, 2000);
+
 test('router.createPlainTransport() with non bindable IP rejects with Error', async () => {
 	await expect(
 		ctx.router!.createPlainTransport({ listenIp: '8.8.8.8' })

@@ -1507,7 +1507,7 @@ impl Request for PipeTransportConnectRequest {
 
 #[derive(Debug)]
 pub(crate) struct PlainTransportConnectResponse {
-    pub(crate) tuple: TransportTuple,
+    pub(crate) tuple: Option<TransportTuple>,
     pub(crate) rtcp_tuple: Option<TransportTuple>,
     pub(crate) srtp_parameters: Option<SrtpParameters>,
 }
@@ -1559,7 +1559,9 @@ impl Request for TransportConnectPlainRequest {
         let data = plain_transport::ConnectResponse::try_from(data)?;
 
         Ok(PlainTransportConnectResponse {
-            tuple: TransportTuple::from_fbs(data.tuple.as_ref()),
+            tuple: data
+                .tuple
+                .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
             rtcp_tuple: data
                 .rtcp_tuple
                 .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),

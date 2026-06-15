@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          # Worker prebuild for Linux with kernel version 6 Ubuntu (22.04).
+          # Worker prebuild for Linux with kernel version 6 Ubuntu 22.04.
           # Let's use Ubuntu 22.04 instead of 24.04 so that it builds the
           # mediasoup-worker binary using an old version of GLib that will work
           # on Linux hosts running more modern GLib versions.
@@ -21,6 +21,13 @@ jobs:
             cc: gcc
             cxx: g++
           - os: ubuntu-22.04-arm
+            cc: gcc
+            cxx: g++
+          # Linux with kernel version 7 Ubuntu 26.04.
+          - os: ubuntu-26.04
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-26.04-arm
             cc: gcc
             cxx: g++
           - os: macos-15
@@ -48,7 +55,7 @@ jobs:
       - name: Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 26
 
       # We need to install some NPM production deps for npm-scripts.mjs to
       # work.

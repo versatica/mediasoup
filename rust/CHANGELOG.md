@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Fix `connect()` method in `PlainTransport` when comedia mode and SRTP mode are enabled (PR #1831).
+
 ### 0.22.5
 
 - Unify all consumer classes into a single one (PR #1731).

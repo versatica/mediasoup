@@ -949,7 +949,9 @@ impl PlainTransport {
             )
             .await?;
 
-        *self.inner.data.tuple.lock() = response.tuple;
+        if let Some(tuple) = response.tuple {
+            *self.inner.data.tuple.lock() = tuple;
+        }
 
         if let Some(rtcp_tuple) = response.rtcp_tuple {
             self.inner.data.rtcp_tuple.lock().replace(rtcp_tuple);

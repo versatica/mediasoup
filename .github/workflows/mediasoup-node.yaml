@@ -36,18 +36,6 @@ jobs:
       matrix:
         build:
           - os: ubuntu-24.04
-            node: 22
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-24.04
-            node: 24
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=address'
-            npm-audit: true
-            run-lint: true
-            run-publish-dry-run: true
-          - os: ubuntu-24.04
             node: 24
             cc: gcc
             cxx: g++
@@ -55,22 +43,34 @@ jobs:
             node: 24
             cc: clang
             cxx: clang++
-            meson_args: '-Db_sanitize=undefined'
           - os: ubuntu-24.04-arm
+            node: 24
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-26.04
             node: 22
             cc: gcc
             cxx: g++
-          - os: ubuntu-24.04-arm
-            node: 24
+          - os: ubuntu-26.04
+            node: 26
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=address'
-            # In Ubuntu 24.04 ARM in Debug build type with ASAN, createWorker()
-            # takes too long.
-            # See https://github.com/versatica/mediasoup/pull/1503.
-            skip-test-in-debug-build-type: true
+            npm-audit: true
+            run-lint: true
+            run-publish-dry-run: true
+          - os: ubuntu-26.04
+            node: 26
+            cc: clang
+            cxx: clang++
+            meson_args: '-Db_sanitize=undefined'
+          - os: ubuntu-26.04-arm
+            node: 26
+            cc: gcc
+            cxx: g++
+            meson_args: '-Db_sanitize=address'
           - os: macos-15
-            node: 24
+            node: 26
             cc: clang
             cxx: clang++
           - os: windows-2022
@@ -78,7 +78,7 @@ jobs:
             cc: cl
             cxx: cl
           - os: windows-2025
-            node: 24
+            node: 26
             cc: cl
             cxx: cl
         build-type:
