@@ -13,49 +13,6 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		bool StateCookie::IsMediasoupStateCookie(const uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength != StateCookie::StateCookieLength && bufferLength != StateCookie::AuthenticatedStateCookieLength)
-			{
-				return false;
-			}
-
-			if (Utils::Byte::Get8Bytes(buffer, 0) != StateCookie::Magic1)
-			{
-				return false;
-			}
-
-			auto* negotiatedCapabilitiesField = reinterpret_cast<NegotiatedCapabilitiesField*>(
-			  const_cast<uint8_t*>(buffer) + StateCookie::NegotiatedCapabilitiesOffset);
-
-			if (ntohs(negotiatedCapabilitiesField->magic2) != StateCookie::Magic2)
-			{
-				return false;
-			}
-
-			return true;
-		}
-
-		bool StateCookie::VerifyMac(
-		  const uint8_t* buffer, size_t bufferLength, const uint8_t* macKey, size_t macKeyLength)
-		{
-			MS_TRACE();
-
-			// An authenticated cookie has a fixed length.
-			if (bufferLength != StateCookie::AuthenticatedStateCookieLength)
-			{
-				return false;
-			}
-
-			// Recompute the MAC over all bytes preceding the MAC field.
-			const uint8_t* expectedMac = Utils::Crypto::GetHmacSha1(
-			  reinterpret_cast<const char*>(macKey), macKeyLength, buffer, StateCookie::MacOffset);
-
-			return std::memcmp(buffer + StateCookie::MacOffset, expectedMac, StateCookie::MacLength) == 0;
-		}
-
 		StateCookie* StateCookie::Parse(const uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -171,6 +128,49 @@ namespace RTC
 			  reinterpret_cast<const char*>(macKey), macKeyLength, buffer, StateCookie::MacOffset);
 
 			std::memcpy(buffer + StateCookie::MacOffset, mac, StateCookie::MacLength);
+		}
+
+		bool StateCookie::IsMediasoupStateCookie(const uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength != StateCookie::StateCookieLength && bufferLength != StateCookie::AuthenticatedStateCookieLength)
+			{
+				return false;
+			}
+
+			if (Utils::Byte::Get8Bytes(buffer, 0) != StateCookie::Magic1)
+			{
+				return false;
+			}
+
+			auto* negotiatedCapabilitiesField = reinterpret_cast<NegotiatedCapabilitiesField*>(
+			  const_cast<uint8_t*>(buffer) + StateCookie::NegotiatedCapabilitiesOffset);
+
+			if (ntohs(negotiatedCapabilitiesField->magic2) != StateCookie::Magic2)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		bool StateCookie::VerifyMac(
+		  const uint8_t* buffer, size_t bufferLength, const uint8_t* macKey, size_t macKeyLength)
+		{
+			MS_TRACE();
+
+			// An authenticated cookie has a fixed length.
+			if (bufferLength != StateCookie::AuthenticatedStateCookieLength)
+			{
+				return false;
+			}
+
+			// Recompute the MAC over all bytes preceding the MAC field.
+			const uint8_t* expectedMac = Utils::Crypto::GetHmacSha1(
+			  reinterpret_cast<const char*>(macKey), macKeyLength, buffer, StateCookie::MacOffset);
+
+			return std::memcmp(buffer + StateCookie::MacOffset, expectedMac, StateCookie::MacLength) == 0;
 		}
 
 		Types::SctpImplementation StateCookie::DetermineSctpImplementation(

@@ -430,19 +430,6 @@ namespace RTC
 
 			bool HandleReceivedCookieEchoChunkWithTcb(const Packet* receivedPacket, const StateCookie* cookie);
 
-			/**
-			 * Verify the MAC and freshness of an authenticated State Cookie received
-			 * in a COOKIE-ECHO chunk. Only called when
-			 * `SctpOptions::requireAuthenticatedCookie` is enabled.
-			 *
-			 * Returns `true` if the cookie is authentic and not stale, `false`
-			 * otherwise (in which case the COOKIE-ECHO must be discarded). A Stale
-			 * Cookie ERROR chunk is sent to the peer if the cookie is stale.
-			 *
-			 * @see RFC 9260 section 5.1.4.
-			 */
-			bool VerifyReceivedStateCookie(const StateCookie* cookie);
-
 			void HandleReceivedCookieAckChunk(
 			  const Packet* receivedPacket, const CookieAckChunk* receivedCookieAckChunk);
 
@@ -490,6 +477,19 @@ namespace RTC
 
 			bool HandleReceivedUnknownChunk(
 			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
+
+			/**
+			 * Verify the MAC and freshness of an authenticated State Cookie received
+			 * in a COOKIE-ECHO chunk. Only called when
+			 * `SctpOptions::requireAuthenticatedCookie` is enabled.
+			 *
+			 * Returns `true` if the cookie is authentic and not stale, `false`
+			 * otherwise (in which case the COOKIE-ECHO must be discarded). A Stale
+			 * Cookie ERROR chunk is sent to the peer if the cookie is stale.
+			 *
+			 * @see RFC 9260 section 5.1.4.
+			 */
+			bool VerifyReceivedStateCookie(const StateCookie* cookie);
 
 			void OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop);
 
