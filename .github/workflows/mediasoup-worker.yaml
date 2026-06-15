@@ -208,18 +208,18 @@ jobs:
         name: pip3 install --break-system-packages invoke
         run: pip3 install --break-system-packages invoke
 
-      # Fail if run-lint is set for non macos.
-      - if: ${{ matrix.build.run-lint && !startsWith(matrix.build.os, 'macos') }}
-        name: fail if run-lint is set for non macos
-        run: |
-          echo "run-lint set for non macos"
-          exit 1
-
       # Install clang-format on macos.
       - if: ${{ matrix.build.run-lint && startsWith(matrix.build.os, 'macos') }}
         name: brew install clang-format@22
         run: |
           brew install clang-format@22
+
+      # Install clang-format on ubuntu.
+      - if: ${{ matrix.build.run-lint && startsWith(matrix.build.os, 'ubuntu') }}
+        name: apt install clang-format-22
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes clang-format-22
 
       # We need to install npm deps of worker/scripts/package.json.
       - if: ${{ matrix.build.run-lint }}
