@@ -428,6 +428,76 @@ fn create_enable_srtp_succeeds() {
 }
 
 #[test]
+fn connect_enable_srtp_comedia_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_plain_transport({
+                let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_address: None,
+                    expose_internal_ip: false,
+                    port: None,
+                    port_range: None,
+                    flags: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                });
+                plain_transport_options.enable_srtp = true;
+                plain_transport_options.comedia = true;
+
+                plain_transport_options
+            })
+            .await
+            .expect("Failed to create Plain transport");
+
+        // Use default cryptoSuite: 'AES_CM_128_HMAC_SHA1_80'.
+        assert_eq!(
+            transport.srtp_parameters().unwrap().crypto_suite,
+            SrtpCryptoSuite::AesCm128HmacSha180,
+        );
+
+        // In comedia mode the remote endpoint is not known until the first
+        // packet is received, so the tuple has no remote info yet.
+        assert!(matches!(
+            transport.tuple(),
+            TransportTuple::LocalOnly { .. }
+        ));
+
+        // connect() with just srtp_parameters (no ip/port) must succeed even
+        // though the worker's connect response carries no tuple.
+        transport
+            .connect(PlainTransportRemoteParameters {
+                ip: None,
+                port: None,
+                rtcp_port: None,
+                srtp_parameters: Some(SrtpParameters {
+                    crypto_suite: SrtpCryptoSuite::AeadAes256Gcm,
+                    key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo="
+                        .to_string(),
+                }),
+            })
+            .await
+            .expect("Failed to establish Plain transport connection");
+
+        // The remote SRTP crypto suite has been applied.
+        assert_eq!(
+            transport.srtp_parameters().unwrap().crypto_suite,
+            SrtpCryptoSuite::AeadAes256Gcm,
+        );
+        assert_eq!(transport.srtp_parameters().unwrap().key_base64.len(), 60);
+
+        // The tuple is still local-only; comedia will latch the remote later.
+        assert!(matches!(
+            transport.tuple(),
+            TransportTuple::LocalOnly { .. }
+        ));
+    });
+}
+
+#[test]
 fn create_non_bindable_ip() {
     future::block_on(async move {
         let (_worker, router) = init().await;
