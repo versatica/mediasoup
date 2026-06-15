@@ -168,6 +168,14 @@ namespace RTC
 				bool usesZeroChecksum{ false };
 			};
 
+		private:
+			/**
+			 * Length of the per-association random secret key used to authenticate the
+			 * State Cookies we generate when `SctpOptions::requireAuthenticatedCookie`
+			 * is enabled.
+			 */
+			static constexpr size_t StateCookieSecretLength{ 32 };
+
 		public:
 			explicit Association(
 			  const SctpOptions& sctpOptions,
@@ -553,12 +561,9 @@ namespace RTC
 			// Whether `MayConnect()` should be called when SCTP data is received.
 			// See the constructor for details.
 			bool mayConnectOnReceivedSctpData;
-			// Per-association random secret key used to authenticate the State
-			// Cookies we generate, when `SctpOptions::requireAuthenticatedCookie` is
-			// enabled. RFC 9260 section 5.1.3 mandates a MAC keyed with a secret to
-			// prevent State Cookie forgery.
-			static constexpr size_t StateCookieSecretLength{ 32 };
-			uint8_t stateCookieSecret[StateCookieSecretLength]{};
+			// Per-association random secret key used to authenticate the State Cookies
+			// we generate when `SctpOptions::requireAuthenticatedCookie` is enabled.
+			uint8_t stateCookieSecret[Association::StateCookieSecretLength]{};
 		};
 	} // namespace SCTP
 } // namespace RTC
