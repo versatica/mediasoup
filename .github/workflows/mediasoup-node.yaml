@@ -69,6 +69,36 @@ jobs:
             # takes too long.
             # See https://github.com/versatica/mediasoup/pull/1503.
             skip-test-in-debug-build-type: true
+          - os: ubuntu-26.04
+            node: 22
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-26.04
+            node: 24
+            cc: gcc
+            cxx: g++
+            meson_args: '-Db_sanitize=address'
+            npm-audit: true
+            run-lint: true
+            run-publish-dry-run: true
+          - os: ubuntu-26.04
+            node: 24
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-26.04
+            node: 24
+            cc: clang
+            cxx: clang++
+            meson_args: '-Db_sanitize=undefined'
+          - os: ubuntu-26.04-arm
+            node: 22
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-26.04-arm
+            node: 24
+            cc: gcc
+            cxx: g++
+            meson_args: '-Db_sanitize=address'
           - os: macos-15
             node: 24
             cc: clang
