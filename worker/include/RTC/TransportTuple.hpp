@@ -80,12 +80,12 @@ namespace RTC
 			if (protocol == TransportTuple::Protocol::UDP)
 			{
 				StoreUdpRemoteAddress();
-				tupleKey = TupleKey(Protocol::UDP, udpSocket->GetLocalAddress(), udpRemoteAddr);
+				tupleKey = TupleKey(protocol, udpSocket->GetLocalAddress(), udpRemoteAddr);
 			}
 			else
 			{
 				tupleKey =
-				  TupleKey(Protocol::TCP, tcpConnection->GetLocalAddress(), tcpConnection->GetPeerAddress());
+				  TupleKey(protocol, tcpConnection->GetLocalAddress(), tcpConnection->GetPeerAddress());
 			}
 		}
 
