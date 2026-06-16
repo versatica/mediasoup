@@ -86,7 +86,7 @@ async function run() {
 		// So here we generate flatbuffers definitions for TypeScript and compile
 		// TypeScript to JavaScript.
 		case 'prepare': {
-			await flatcNode();
+			await flatcNode({ force: false });
 			buildTypescript({ force: false });
 
 			break;
@@ -203,7 +203,7 @@ async function run() {
 		}
 
 		case 'flatc:node': {
-			await flatcNode();
+			await flatcNode({ force: true });
 
 			break;
 		}
@@ -318,6 +318,7 @@ function deleteNodeLib() {
 }
 
 function buildTypescript({ force }) {
+	// Skip JavaScript code generation if the output already exists, unless forced.
 	if (!force && fs.existsSync('node/lib')) {
 		return;
 	}
@@ -419,8 +420,13 @@ function tidyWorker({ fix }) {
 	}
 }
 
-async function flatcNode() {
-	logInfo('flatcNode()');
+async function flatcNode({ force }) {
+	// Skip flatbuffers generation if the output already exists, unless forced.
+	if (!force && fs.existsSync(path.join('node', 'src', 'fbs'))) {
+		return;
+	}
+
+	logInfo(`flatcNode() [force:${force}]`);
 
 	// NOTE: Load dep on demand since it's a devDependency.
 	const ini = await import('ini');
@@ -537,7 +543,7 @@ async function checkRelease() {
 	logInfo('checkRelease()');
 
 	installNodeDeps();
-	await flatcNode();
+	await flatcNode({ force: true });
 	buildTypescript({ force: true });
 	buildWorker();
 	lintNode();
