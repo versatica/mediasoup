@@ -3,7 +3,7 @@
 ### NEXT
 
 - CI: Add `ubuntu-26.04` hosts ([PR #1830](https://github.com/versatica/mediasoup/pull/1830)).
-- Worker: Remove `io_uring` support ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Worker: Remove `io_uring` support ([PR #1832](https://github.com/versatica/mediasoup/pull/1832)).
 
 ### 3.20.6
 
@@ -841,7 +841,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 - `pipeToRouter()`: Reuse same `PipeTransport` when possible ([PR #697](https://github.com/versatica/mediasoup/pull/697)).
 - Add `worker.died` boolean getter.
-- Update TypeScript version to 4.X.X and use `target: "esnext"` so transpilation of ECMAScript private fields (`#xxxxx`) don't use `WeakMaps` tricks but use standard syntax instead.
+- Update TypeScript version to 4.X.X and use `target: "esnext"` so transpilation of ECMAScript private fields (`#foo`) don't use `WeakMaps` tricks but use standard syntax instead.
 - Use more than one core for compilation on Windows ([PR #709](https://github.com/versatica/mediasoup/pull/709)).
 - `Consumer`: Modification of bitrate allocation algorithm ([PR #708](https://github.com/versatica/mediasoup/pull/708)).
 
