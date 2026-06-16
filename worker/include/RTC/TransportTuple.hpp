@@ -30,12 +30,9 @@ namespace RTC
 			friend class TupleKeyHash;
 
 		public:
+			TupleKey() = default;
 			TupleKey(Protocol protocol, const struct sockaddr* localAddr, const struct sockaddr* remoteAddr)
-			  : protocol(protocol)
-			{
-				this->localAddr  = Utils::IP::CopyAddress(localAddr);
-				this->remoteAddr = Utils::IP::CopyAddress(remoteAddr);
-			};
+			  : protocol(protocol), localAddr(localAddr), remoteAddr(remoteAddr) {};
 
 			bool operator==(const TupleKey& other) const noexcept;
 			bool operator!=(const TupleKey& other) const noexcept
@@ -45,8 +42,8 @@ namespace RTC
 
 		private:
 			Protocol protocol{ Protocol::UDP };
-			sockaddr_storage localAddr;
-			sockaddr_storage remoteAddr;
+			const struct sockaddr* localAddr{ nullptr };
+			const struct sockaddr* remoteAddr{ nullptr };
 		};
 
 		struct TupleKeyHash
@@ -61,12 +58,15 @@ namespace RTC
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
 		  : udpSocket(udpSocket),
 		    udpRemoteAddr(const_cast<struct sockaddr*>(udpRemoteAddr)),
-		    protocol(Protocol::UDP)
+		    protocol(Protocol::UDP),
+		    tupleKey(Protocol::UDP, udpSocket->GetLocalAddress(), udpRemoteAddr)
 		{
 		}
 
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection)
-		  : tcpConnection(tcpConnection), protocol(Protocol::TCP)
+		  : tcpConnection(tcpConnection),
+		    protocol(Protocol::TCP),
+		    tupleKey(Protocol::TCP, tcpConnection->GetLocalAddress(), tcpConnection->GetPeerAddress())
 		{
 		}
 
@@ -80,6 +80,12 @@ namespace RTC
 			if (protocol == TransportTuple::Protocol::UDP)
 			{
 				StoreUdpRemoteAddress();
+				tupleKey = TupleKey(Protocol::UDP, udpSocket->GetLocalAddress(), udpRemoteAddr);
+			}
+			else
+			{
+				tupleKey =
+				  TupleKey(Protocol::TCP, tcpConnection->GetLocalAddress(), tcpConnection->GetPeerAddress());
 			}
 		}
 
@@ -193,19 +199,9 @@ namespace RTC
 			}
 		}
 
-		TupleKey GetTupleKey() const
+		const TupleKey& GetTupleKey() const
 		{
-			if (this->protocol == Protocol::UDP)
-			{
-				return TupleKey(this->protocol, this->udpSocket->GetLocalAddress(), this->udpRemoteAddr);
-			}
-			else
-			{
-				return TupleKey(
-				  this->protocol,
-				  this->tcpConnection->GetLocalAddress(),
-				  this->tcpConnection->GetPeerAddress());
-			}
+			return this->tupleKey;
 		}
 
 	private:
@@ -217,6 +213,7 @@ namespace RTC
 		// Others.
 		struct sockaddr_storage udpRemoteAddrStorage{};
 		Protocol protocol;
+		TupleKey tupleKey;
 	};
 } // namespace RTC
 

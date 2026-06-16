@@ -3,6 +3,7 @@
 ### NEXT
 
 - CI: Add `ubuntu-26.04` hosts ([1830](https://github.com/versatica/mediasoup/pull/1830)).
+- Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([1823](https://github.com/versatica/mediasoup/pull/1823)).
 
 ### 3.20.6
 

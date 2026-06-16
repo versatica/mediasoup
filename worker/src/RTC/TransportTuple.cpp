@@ -3,6 +3,7 @@
 
 #include "RTC/TransportTuple.hpp"
 #include "Logger.hpp"
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
@@ -137,15 +138,11 @@ namespace RTC
 		{
 			return false;
 		}
-		else if (!Utils::IP::CompareAddresses(
-		           reinterpret_cast<const sockaddr*>(std::addressof(this->remoteAddr)),
-		           reinterpret_cast<const sockaddr*>(std::addressof(other.remoteAddr))))
+		else if (!Utils::IP::CompareAddresses(this->remoteAddr, other.remoteAddr))
 		{
 			return false;
 		}
-		else if (!Utils::IP::CompareAddresses(
-		           reinterpret_cast<const sockaddr*>(std::addressof(this->localAddr)),
-		           reinterpret_cast<const sockaddr*>(std::addressof(other.localAddr))))
+		else if (!Utils::IP::CompareAddresses(this->localAddr, other.localAddr))
 		{
 			return false;
 		}
@@ -158,16 +155,16 @@ namespace RTC
 		MS_TRACE();
 
 		const auto protocolBits = static_cast<uint8_t>(key.protocol);
-		const auto familyBits   = static_cast<uint16_t>(key.localAddr.ss_family);
+		const auto familyBits   = static_cast<uint16_t>(key.localAddr->sa_family);
 
 		size_t seed = 0;
 
-		switch (key.localAddr.ss_family)
+		switch (key.localAddr->sa_family)
 		{
 			case AF_INET:
 			{
-				const auto* localIn  = reinterpret_cast<const sockaddr_in*>(std::addressof(key.localAddr));
-				const auto* remoteIn = reinterpret_cast<const sockaddr_in*>(std::addressof(key.remoteAddr));
+				const auto* localIn  = reinterpret_cast<const sockaddr_in*>(key.localAddr);
+				const auto* remoteIn = reinterpret_cast<const sockaddr_in*>(key.remoteAddr);
 
 				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
 				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
@@ -183,13 +180,14 @@ namespace RTC
 
 			case AF_INET6:
 			{
-				const auto* localIn6 = reinterpret_cast<const sockaddr_in6*>(std::addressof(key.localAddr));
-				const auto* remoteIn6 = reinterpret_cast<const sockaddr_in6*>(std::addressof(key.remoteAddr));
+				const auto* localIn6  = reinterpret_cast<const sockaddr_in6*>(key.localAddr);
+				const auto* remoteIn6 = reinterpret_cast<const sockaddr_in6*>(key.remoteAddr);
 
 				const auto* addr = localIn6->sin6_addr.s6_addr;
 
 				uint64_t hi;
 				uint64_t lo;
+
 				std::memcpy(std::addressof(hi), addr, sizeof(uint64_t));
 				std::memcpy(std::addressof(lo), addr + sizeof(uint64_t), sizeof(uint64_t));
 
