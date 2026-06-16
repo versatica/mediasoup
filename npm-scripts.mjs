@@ -530,7 +530,7 @@ function publishDryRun() {
 	// real publish would, reporting its contents without writing any file or
 	// contacting the registry. Useful to validate the `files` list in
 	// package.json and that the package builds before tagging a release.
-	executeCmd('npm pack --dry-run');
+	executeCmd('npm pack --dry-run --loglevel warn');
 }
 
 async function checkRelease() {
