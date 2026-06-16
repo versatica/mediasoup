@@ -6,7 +6,6 @@ flatbuffers_schemas = [
   'dataConsumer.fbs',
   'dataProducer.fbs',
   'directTransport.fbs',
-  'liburing.fbs',
   'log.fbs',
   'message.fbs',
   'notification.fbs',

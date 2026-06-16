@@ -84,7 +84,6 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		dtlsPrivateKeyFile,
 		workerBin,
 		libwebrtcFieldTrials,
-		disableLiburing,
 		appData,
 	}: WorkerSettings<WorkerAppData>) {
 		super();
@@ -136,10 +135,6 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 
 		if (typeof libwebrtcFieldTrials === 'string' && libwebrtcFieldTrials) {
 			spawnArgs.push(`--libwebrtcFieldTrials=${libwebrtcFieldTrials}`);
-		}
-
-		if (disableLiburing) {
-			spawnArgs.push('--disableLiburing=true');
 		}
 
 		logger.debug(`spawning worker process: ${spawnBin} ${spawnArgs.join(' ')}`);
@@ -628,14 +623,6 @@ function parseWorkerDumpResponse(binary: FbsWorker.DumpResponse): WorkerDump {
 			),
 		},
 	};
-
-	if (binary.liburing()) {
-		dump.liburing = {
-			sqeProcessCount: Number(binary.liburing()!.sqeProcessCount()),
-			sqeMissCount: Number(binary.liburing()!.sqeMissCount()),
-			userDataMissCount: Number(binary.liburing()!.userDataMissCount()),
-		};
-	}
 
 	return dump;
 }

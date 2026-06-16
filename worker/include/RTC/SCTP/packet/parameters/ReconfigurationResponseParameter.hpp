@@ -54,8 +54,8 @@ namespace RTC
 			};
 
 		public:
-			static const size_t ReconfigurationResponseParameterHeaderLength{ 12 };
-			static const size_t ReconfigurationResponseParameterHeaderLengthWithOptionalFields{ 20 };
+			static constexpr size_t ReconfigurationResponseParameterHeaderLength{ 12 };
+			static constexpr size_t ReconfigurationResponseParameterHeaderLengthWithOptionalFields{ 20 };
 
 		public:
 			/**

@@ -2,9 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "handles/UdpSocketHandle.hpp"
-#ifdef MS_LIBURING_SUPPORTED
-#include "DepLibUring.hpp"
-#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -73,7 +70,7 @@ UdpSocketHandle::UdpSocketHandle(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 	this->uvHandle->data = static_cast<void*>(this);
 
 	// NOLINTNEXTLINE(misc-const-correctness)
-	int err = uv_udp_recv_start(
+	const int err = uv_udp_recv_start(
 	  this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
 
 	if (err != 0)
@@ -90,18 +87,6 @@ UdpSocketHandle::UdpSocketHandle(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 
 		MS_THROW_ERROR("error setting local IP and port");
 	}
-
-#ifdef MS_LIBURING_SUPPORTED
-	if (DepLibUring::IsEnabled())
-	{
-		err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
-
-		if (err != 0)
-		{
-			MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
-		}
-	}
-#endif
 }
 
 UdpSocketHandle::~UdpSocketHandle()
@@ -156,32 +141,6 @@ void UdpSocketHandle::Send(
 
 		return;
 	}
-
-#ifdef MS_LIBURING_SUPPORTED
-	if (DepLibUring::IsEnabled())
-	{
-		if (!DepLibUring::IsActive())
-		{
-			goto send_libuv;
-		}
-
-		// Prepare the data to be sent.
-		// NOTE: If all SQEs are currently in use or no UserData entry is available we'll
-		// fall back to libuv.
-		auto prepared = DepLibUring::PrepareSend(this->fd, data, len, addr, cb);
-
-		if (!prepared)
-		{
-			MS_DEBUG_DEV("cannot send via liburing, fallback to libuv");
-
-			goto send_libuv;
-		}
-
-		return;
-	}
-
-send_libuv:
-#endif
 
 	// First try uv_udp_try_send(). In case it can not directly send the datagram
 	// then build a uv_req_t and use uv_udp_send().

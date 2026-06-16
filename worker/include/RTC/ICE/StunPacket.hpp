@@ -151,14 +151,14 @@ namespace RTC
 			};
 
 		public:
-			static const size_t FixedHeaderLength{ 20 };
-			static const size_t TransactionIdLength{ 12 };
-			static const size_t UsernameAttributeMaxLength{ 513 };
-			static const size_t XorMappedAddressIPv4Length{ 8 };
-			static const size_t XorMappedAddressIPv6Length{ 20 };
-			static const size_t SoftwareAttributeMaxLength{ 763 };
-			static const size_t MessageIntegrityAttributeLength{ 20 };
-			static const size_t FingerprintAttributeLength{ 4 };
+			static constexpr size_t FixedHeaderLength{ 20 };
+			static constexpr size_t TransactionIdLength{ 12 };
+			static constexpr size_t UsernameAttributeMaxLength{ 513 };
+			static constexpr size_t XorMappedAddressIPv4Length{ 8 };
+			static constexpr size_t XorMappedAddressIPv6Length{ 20 };
+			static constexpr size_t SoftwareAttributeMaxLength{ 763 };
+			static constexpr size_t MessageIntegrityAttributeLength{ 20 };
+			static constexpr size_t FingerprintAttributeLength{ 4 };
 
 			/**
 			 * Whether given buffer could be a valid STUN packet.
@@ -177,7 +177,6 @@ namespace RTC
 			 * Create a STUN packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the STUN packet.
 			 * - If `transactionId` is not given then a random Transaction ID is
 			 *   generated.
 			 */

@@ -71,7 +71,7 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static const size_t InitAckChunkHeaderLength{ 20 };
+			static constexpr size_t InitAckChunkHeaderLength{ 20 };
 
 		public:
 			/**

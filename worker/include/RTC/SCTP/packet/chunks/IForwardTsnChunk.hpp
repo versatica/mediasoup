@@ -60,7 +60,7 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static const size_t IForwardTsnChunkHeaderLength{ 8 };
+			static constexpr size_t IForwardTsnChunkHeaderLength{ 8 };
 
 		public:
 			/**

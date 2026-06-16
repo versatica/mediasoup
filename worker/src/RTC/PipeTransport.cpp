@@ -517,7 +517,7 @@ namespace RTC
 		const uint8_t* data = packet->GetBuffer();
 		auto len            = packet->GetLength();
 
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(&data, &len))
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(&data, std::addressof(len)))
 		{
 			if (cb)
 			{
@@ -546,7 +546,7 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		auto len            = packet->GetSize();
 
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &len))
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, std::addressof(len)))
 		{
 			return;
 		}
@@ -571,7 +571,7 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		auto len            = packet->GetSize();
 
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &len))
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, std::addressof(len)))
 		{
 			return;
 		}
@@ -667,7 +667,7 @@ namespace RTC
 		}
 
 		// Decrypt the SRTP packet.
-		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
+		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), std::addressof(len)))
 		{
 			const auto* packet = RTC::RTP::Packet::Parse(data, len, bufferLen);
 
@@ -727,7 +727,7 @@ namespace RTC
 		}
 
 		// Decrypt the SRTCP packet.
-		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &len))
+		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), std::addressof(len)))
 		{
 			return;
 		}

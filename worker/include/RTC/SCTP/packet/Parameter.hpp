@@ -99,7 +99,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t ParameterHeaderLength{ 4 };
+			static constexpr size_t ParameterHeaderLength{ 4 };
 
 		public:
 			/**

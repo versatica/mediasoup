@@ -32,7 +32,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t NoUserDataErrorCauseHeaderLength{ 8 };
+			static constexpr size_t NoUserDataErrorCauseHeaderLength{ 8 };
 
 		public:
 			/**

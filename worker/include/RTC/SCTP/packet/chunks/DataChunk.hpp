@@ -77,7 +77,7 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static const size_t DataChunkHeaderLength{ 16 };
+			static constexpr size_t DataChunkHeaderLength{ 16 };
 
 		public:
 			/**

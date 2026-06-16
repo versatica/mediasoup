@@ -1,6 +1,6 @@
 {
 	"name": "mediasoup",
-	"version": "3.20.6",
+	"version": "3.20.7",
 	"description": "Cutting Edge WebRTC Video Conferencing",
 	"contributors": [
 		"Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -103,7 +103,7 @@
 	"dependencies": {
 		"debug": "^4.4.3",
 		"flatbuffers": "^25.9.23",
-		"h264-profile-level-id": "^2.3.2",
+		"h264-profile-level-id": "^2.3.3",
 		"node-fetch": "^3.3.2",
 		"supports-color": "^10.2.2",
 		"tar": "^7.5.16"
@@ -114,7 +114,7 @@
 		"@types/debug": "^4.1.13",
 		"@types/ini": "^4.1.1",
 		"@types/jest": "^30.0.0",
-		"@types/node": "^25.6.2",
+		"@types/node": "^25.9.3",
 		"eslint": "^10.5.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-jest": "^29.15.2",
@@ -122,14 +122,14 @@
 		"globals": "^17.6.0",
 		"ini": "^6.0.0",
 		"jest": "^30.4.2",
-		"knip": "^6.16.1",
+		"knip": "^6.17.1",
 		"marked": "^18.0.5",
 		"open-cli": "^9.0.0",
-		"pick-port": "^2.2.0",
+		"pick-port": "^2.2.1",
 		"prettier": "^3.8.4",
 		"ts-jest": "^29.4.11",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.61.0",
+		"typescript-eslint": "^8.61.1",
 		"werift-sctp": "^0.0.11"
 	}
 }

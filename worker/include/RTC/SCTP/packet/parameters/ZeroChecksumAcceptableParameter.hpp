@@ -46,7 +46,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t ZeroChecksumAcceptableParameterHeaderLength{ 8 };
+			static constexpr size_t ZeroChecksumAcceptableParameterHeaderLength{ 8 };
 
 		public:
 			/**

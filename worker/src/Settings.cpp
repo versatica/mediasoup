@@ -59,7 +59,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ .name="dtlsCertificateFile",  .has_arg=optional_argument, .flag=nullptr, .val='c' },
 		{ .name="dtlsPrivateKeyFile",   .has_arg=optional_argument, .flag=nullptr, .val='p' },
 		{ .name="libwebrtcFieldTrials", .has_arg=optional_argument, .flag=nullptr, .val='W' },
-		{ .name="disableLiburing",      .has_arg=optional_argument, .flag=nullptr, .val='d' },
 		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  }
 	};
 	// clang-format on
@@ -154,18 +153,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 					  "overriding default value of libwebrtcFieldTrials may generate crashes in mediasoup-worker");
 
 					Settings::configuration.libwebrtcFieldTrials = stringValue;
-				}
-
-				break;
-			}
-
-			case 'd':
-			{
-				stringValue = std::string(optarg);
-
-				if (stringValue == "true")
-				{
-					Settings::configuration.disableLiburing = true;
 				}
 
 				break;
@@ -382,7 +369,6 @@ void Settings::PrintConfiguration()
 		MS_DEBUG_TAG(
 		  info, "  libwebrtcFieldTrials: %s", Settings::configuration.libwebrtcFieldTrials.c_str());
 	}
-	MS_DEBUG_TAG(info, "  disableLiburing: %s", Settings::configuration.disableLiburing ? "yes" : "no");
 
 	MS_DEBUG_TAG(info, "</configuration>");
 }

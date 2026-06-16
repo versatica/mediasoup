@@ -33,7 +33,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t SsnTsnResetRequestParameterHeaderLength{ 8 };
+			static constexpr size_t SsnTsnResetRequestParameterHeaderLength{ 8 };
 
 		public:
 			/**

@@ -186,7 +186,7 @@ namespace RTC
 			/**
 			 * Minimum size (in bytes) of the RTP Fixed Header (without CSRC fields).
 			 */
-			static const size_t FixedHeaderMinLength{ 12 };
+			static constexpr size_t FixedHeaderMinLength{ 12 };
 
 			/**
 			 * Whether given buffer could be a valid RTP packet.

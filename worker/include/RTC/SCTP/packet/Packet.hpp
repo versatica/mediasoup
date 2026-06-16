@@ -70,7 +70,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t CommonHeaderLength{ 12 };
+			static constexpr size_t CommonHeaderLength{ 12 };
 
 			/**
 			 * Whether given buffer could be a valid SCTP packet.
@@ -94,7 +94,6 @@ namespace RTC
 			 * Create an SCTP packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the STUN packet.
 			 * - If `transactionId` is not given then a random Transaction ID is
 			 *   generated.
 			 */
