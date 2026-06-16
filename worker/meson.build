@@ -202,6 +202,7 @@ common_sources = [
   'src/RTC/RTCP/XR.cpp',
   'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
+  'src/RTC/NEW_RTCP/Packet.cpp',
   'src/RTC/SCTP/association/Association.cpp',
   'src/RTC/SCTP/association/AssociationListenerDeferrer.cpp',
   'src/RTC/SCTP/association/HeartbeatHandler.cpp',
