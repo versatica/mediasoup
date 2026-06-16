@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Remove `io_uring` support (PR #XXXX).
+
 ### 0.22.6
 
 - Fix `connect()` method in `PlainTransport` when comedia mode and SRTP mode are enabled (PR #1831).

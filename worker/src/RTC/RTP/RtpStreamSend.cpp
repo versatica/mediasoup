@@ -2,11 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTP/RtpStreamSend.hpp"
-#ifdef MS_LIBURING_SUPPORTED
-#include "DepLibUring.hpp"
-#endif
 #include "Logger.hpp"
-#include "RTC/Consts.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
 #include <vector>
@@ -155,14 +151,6 @@ namespace RTC
 
 			this->nackCount++;
 
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Activate liburing usage.
-				DepLibUring::SetActive();
-			}
-#endif
-
 			for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 			{
 				const RTC::RTCP::FeedbackRtpNackItem* item = *it;
@@ -261,14 +249,6 @@ namespace RTC
 					packet->SetMarker(origMarker);
 				}
 			}
-
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Submit all prepared submission entries.
-				DepLibUring::Submit();
-			}
-#endif
 		}
 
 		void RtpStreamSend::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)

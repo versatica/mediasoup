@@ -3,9 +3,6 @@
 
 #include "RTC/SrtpSession.hpp"
 #include "DepLibSRTP.hpp"
-#ifdef MS_LIBURING_SUPPORTED
-#include "DepLibUring.hpp"
-#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memset()
@@ -250,27 +247,6 @@ namespace RTC
 
 		uint8_t* encryptBuffer = EncryptBuffer;
 		size_t encryptLen      = EncryptBufferSize;
-
-#ifdef MS_LIBURING_SUPPORTED
-		if (DepLibUring::IsEnabled())
-		{
-			if (!DepLibUring::IsActive())
-			{
-				goto protect;
-			}
-
-			// Use a preallocated buffer, if available.
-			auto* sendBuffer = DepLibUring::GetSendBuffer();
-
-			if (sendBuffer)
-			{
-				encryptBuffer = sendBuffer;
-				encryptLen    = DepLibUring::SendBufferSize;
-			}
-		}
-
-	protect:
-#endif
 
 		const srtp_err_status_t err = srtp_protect(
 		  /*srtp_t ctx*/ this->session,
