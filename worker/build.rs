@@ -209,13 +209,19 @@ fn main() {
     // source tree must be left untouched, otherwise Cargo fails with "Source
     // directory was modified by build.rs". Meson extracts the wrap subprojects
     // into the source tree, so we must always clean them here regardless of
-    // `KEEP_BUILD_ARTIFACTS` (which a developer may have exported to speed up
+    // `MEDIASOUP_LOCAL_DEV` (which a developer may have exported to speed up
     // their regular local builds).
     let is_publish_verification = env::var("CARGO_MANIFEST_DIR")
         .map(|dir| dir.replace('\\', "/").contains("/target/package/"))
         .unwrap_or(false);
 
-    if is_publish_verification || env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
+    // `MEDIASOUP_LOCAL_DEV` is considered enabled when set to any non-empty value
+    // (matching how npm-scripts.mjs treats it).
+    let is_local_dev = env::var("MEDIASOUP_LOCAL_DEV")
+        .map(|value| !value.is_empty())
+        .unwrap_or(false);
+
+    if is_publish_verification || !is_local_dev {
         // Clean
         if !Command::new(python)
             .arg("-m")

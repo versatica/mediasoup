@@ -10,7 +10,6 @@ ENV CC="gcc"
 ENV CXX="g++"
 
 ENV MEDIASOUP_LOCAL_DEV="true"
-ENV KEEP_BUILD_ARTIFACTS="1"
 
 WORKDIR "/foo bar/mediasoup"
 

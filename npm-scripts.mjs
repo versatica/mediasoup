@@ -27,6 +27,7 @@ const ESLINT_PATHS = [
 	'knip.config.mjs',
 	'node/src',
 	'npm-scripts.mjs',
+	'rust-scripts.mjs',
 	'worker/scripts',
 ];
 
@@ -47,6 +48,7 @@ const PRETTIER_PATHS = [
 	'node/src',
 	'npm-scripts.mjs',
 	'package.json',
+	'rust-scripts.mjs',
 	'tsconfig.json',
 	'worker/scripts',
 ];
@@ -542,6 +544,18 @@ function publishDryRun() {
 async function checkRelease() {
 	logInfo('checkRelease()');
 
+	// Verify that CHANGELOG.md has an entry for the new version (and grab its
+	// changes, used as the GitHub release body) before the slow build steps.
+	let versionChanges;
+
+	try {
+		versionChanges = await getVersionChanges();
+	} catch (error) {
+		logError(error.message);
+
+		exitWithError();
+	}
+
 	installNodeDeps();
 	await flatcNode({ force: true });
 	buildTypescript({ force: true });
@@ -553,30 +567,31 @@ async function checkRelease() {
 	// Validate packaging (the `files` list in package.json) before the
 	// irreversible release steps (git push, GitHub release, npm publish).
 	publishDryRun();
+
+	return { versionChanges };
 }
 
 async function release() {
 	logInfo('release()');
 
 	let octokit;
-	let versionChanges;
 
 	try {
 		octokit = await getOctokit();
-		versionChanges = await getVersionChanges();
 	} catch (error) {
 		logError(error.message);
 
 		exitWithError();
 	}
 
-	await checkRelease();
+	const { versionChanges } = await checkRelease();
+
 	executeCmd(`git commit -am '${pkg.version}'`);
 	executeCmd(`git tag -a ${pkg.version} -m '${pkg.version}'`);
 	executeCmd(`git push origin v${MAYOR_VERSION}`);
 	executeCmd(`git push origin '${pkg.version}'`);
 
-	logInfo('creating release in GitHub');
+	logInfo(`release() | creating release '${pkg.version}' in GitHub`);
 
 	await octokit.repos.createRelease({
 		owner: GH_OWNER,
@@ -785,9 +800,26 @@ async function getVersionChanges() {
 		const entry = entries[idx];
 
 		if (entry.type === 'heading' && entry.text === pkg.version) {
-			const changes = entries[idx + 1].raw;
+			// Collect every token after the matching heading until the next heading.
+			// NOTE: We cannot just use `entries[idx + 1].raw` because `marked`
+			// inserts a `space` token between the heading and its content.
+			let changes = '';
 
-			return changes;
+			for (let next = idx + 1; next < entries.length; ++next) {
+				if (entries[next].type === 'heading') {
+					break;
+				}
+
+				changes += entries[next].raw;
+			}
+
+			changes = changes.trim();
+
+			if (changes) {
+				return changes;
+			}
+
+			break;
 		}
 	}
 
@@ -809,11 +841,11 @@ function executeCmd(command) {
 	}
 }
 
-function executeInteractiveCmd(command) {
-	logInfo(`executeInteractiveCmd(): ${command}`);
+function executeInteractiveCmd(command, { cwd } = {}) {
+	logInfo(`executeInteractiveCmd(): ${command}${cwd ? ` [cwd:${cwd}]` : ''}`);
 
 	try {
-		execSync(command, { stdio: 'inherit', env: process.env });
+		execSync(command, { cwd, stdio: 'inherit', env: process.env });
 	} catch (error) {
 		logError(`executeInteractiveCmd() failed, exiting: ${error}`);
 

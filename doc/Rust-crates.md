@@ -23,7 +23,8 @@ git tag -a rust-X.X.X -m rust-X.X.X
 git push origin rust-X.X.X
 ```
 
-6. Publish crates (you need an account and permissions and so on). Always pass `--locked` so Cargo aborts if `Cargo.lock` is out of date instead of silently regenerating it (see note below):
+6. Create a GitHub release for the new `rust-X.X.X` tag, using the matching `rust/CHANGELOG.md` entry as its body.
+7. Publish crates (you need an account and permissions and so on). Always pass `--locked` so Cargo aborts if `Cargo.lock` is out of date instead of silently regenerating it (see note below):
 
 ```sh
 cd rust/types
@@ -39,7 +40,7 @@ cargo publish --locked
 ## Notes
 
 - Depending on the state in `worker` directory you may need to run `invoke clean-all` or `make clean-all` in `worker` directory first.
-- You can have `KEEP_BUILD_ARTIFACTS=1` exported in your shell (handy to speed up regular local builds) and still publish: `mediasoup-sys`'s `build.rs` detects the `cargo publish` / `cargo package` verification step (Cargo builds the crate inside `target/package/`) and always cleans the Meson subprojects it extracts into the source tree, regardless of `KEEP_BUILD_ARTIFACTS`. This avoids the "Source directory was modified by build.rs" error.
+- You can have `MEDIASOUP_LOCAL_DEV=true` exported in your shell (handy to speed up regular local builds) and still publish: `mediasoup-sys`'s `build.rs` detects the `cargo publish` / `cargo package` verification step (Cargo builds the crate inside `target/package/`) and always cleans the Meson subprojects it extracts into the source tree, regardless of `MEDIASOUP_LOCAL_DEV`. This avoids the "Source directory was modified by build.rs" error.
 - `cargo publish` will create the crate package, check if all necessary dependencies are already present on [crates.io](https://crates.io/), will then compile the package (to ensure that you don't publish a broken version) and will upload it to [crates.io](https://crates.io/).
 - Never publish from random branches or local state that is not on GitHub. If you have local files modified Cargo will refuse to publish until you commit all the changes.
 - Use `cargo publish --locked`. The dirty-repo check runs _before_ the verification build, but the verification build is exactly when Cargo regenerates `Cargo.lock`, so a stale lock slips past the dirty check and gets silently updated. `--locked` makes `cargo publish` fail up front if `Cargo.lock` needs updating, forcing step 3 to have been done and committed first.

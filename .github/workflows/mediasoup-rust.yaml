@@ -51,7 +51,7 @@ jobs:
     timeout-minutes: 60
 
     env:
-      KEEP_BUILD_ARTIFACTS: '1'
+      MEDIASOUP_LOCAL_DEV: 'true'
 
     steps:
       - name: Checkout
@@ -120,7 +120,7 @@ jobs:
           check rust/types/Cargo.toml
           echo "bumped=${bumped}" >> "$GITHUB_OUTPUT"
 
-      # NOTE: No need to unset the job-level KEEP_BUILD_ARTIFACTS here:
+      # NOTE: No need to unset the job-level MEDIASOUP_LOCAL_DEV here:
       # `mediasoup-sys`'s build.rs detects the `cargo publish` verification step
       # and always cleans the Meson subprojects it extracts into the source
       # tree, avoiding the "Source directory was modified by build.rs" error.
