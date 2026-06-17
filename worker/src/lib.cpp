@@ -3,13 +3,10 @@
 
 #include "lib.hpp"
 #include "common.hpp"
-#include "DepLibSRTP.hpp"
-#ifdef MS_LIBURING_SUPPORTED
-#include "DepLibUring.hpp"
-#endif
 #include "Channel/ChannelMessageRegistrator.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
@@ -153,9 +150,6 @@ extern "C" int mediasoup_worker_run(
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
-#ifdef MS_LIBURING_SUPPORTED
-		DepLibUring::ClassInit();
-#endif
 		DepLibWebRTC::ClassInit();
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
@@ -175,9 +169,6 @@ extern "C" int mediasoup_worker_run(
 		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
 		DepLibWebRTC::ClassDestroy();
-#ifdef MS_LIBURING_SUPPORTED
-		DepLibUring::ClassDestroy();
-#endif
 		RTC::DtlsTransport::ClassDestroy();
 		DepLibUV::ClassDestroy();
 

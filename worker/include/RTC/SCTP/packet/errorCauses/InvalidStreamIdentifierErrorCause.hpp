@@ -33,7 +33,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t InvalidStreamIdentifierErrorCauseHeaderLength{ 8 };
+			static constexpr size_t InvalidStreamIdentifierErrorCauseHeaderLength{ 8 };
 
 		public:
 			/**

@@ -2,8 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTP/Packet.hpp"
-#ifdef MS_RTC_LOGGER_RTP
-#endif
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"

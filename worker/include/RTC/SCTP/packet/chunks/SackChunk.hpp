@@ -97,7 +97,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t SackChunkHeaderLength{ 16 };
+			static constexpr size_t SackChunkHeaderLength{ 16 };
 
 		public:
 			/**

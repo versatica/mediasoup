@@ -33,7 +33,7 @@ namespace RTC
 		class TLV : public Serializable
 		{
 		public:
-			static const size_t TLVHeaderLength{ 4 };
+			static constexpr size_t TLVHeaderLength{ 4 };
 
 		public:
 			/**

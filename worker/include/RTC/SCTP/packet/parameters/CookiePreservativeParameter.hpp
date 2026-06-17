@@ -32,7 +32,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t CookiePreservativeParameterHeaderLength{ 8 };
+			static constexpr size_t CookiePreservativeParameterHeaderLength{ 8 };
 
 		public:
 			/**

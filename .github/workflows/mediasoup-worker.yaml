@@ -103,7 +103,7 @@ jobs:
             run-test-asan-undefined: false
             # Compile with all Meson option flags enabled once with gcc in
             # Debug mode.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true'
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true'
           - os: ubuntu-26.04
             cc: clang
             cxx: clang++

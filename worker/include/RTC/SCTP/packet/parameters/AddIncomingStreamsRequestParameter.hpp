@@ -35,7 +35,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t AddIncomingStreamsRequestParameterHeaderLength{ 12 };
+			static constexpr size_t AddIncomingStreamsRequestParameterHeaderLength{ 12 };
 
 		public:
 			/**

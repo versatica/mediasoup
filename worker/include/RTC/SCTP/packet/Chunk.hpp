@@ -145,7 +145,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t ChunkHeaderLength{ 4 };
+			static constexpr size_t ChunkHeaderLength{ 4 };
 
 		public:
 			/**

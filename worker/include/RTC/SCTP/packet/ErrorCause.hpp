@@ -85,7 +85,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t ErrorCauseHeaderLength{ 4 };
+			static constexpr size_t ErrorCauseHeaderLength{ 4 };
 
 		public:
 			/**

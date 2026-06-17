@@ -38,7 +38,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t MissingMandatoryParameterErrorCauseHeaderLength{ 8 };
+			static constexpr size_t MissingMandatoryParameterErrorCauseHeaderLength{ 8 };
 
 		public:
 			/**

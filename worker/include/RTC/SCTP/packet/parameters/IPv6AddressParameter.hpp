@@ -34,7 +34,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t IPv6AddressParameterHeaderLength{ 20 };
+			static constexpr size_t IPv6AddressParameterHeaderLength{ 20 };
 
 		public:
 			/**
