@@ -120,7 +120,7 @@ namespace RTC
 		// Map of WebRtcTransports indexed by local ICE usernameFragment.
 		ankerl::unordered_dense::map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransport;
 		// Map of WebRtcTransports indexed by TransportTuple.hash.
-		ankerl::unordered_dense::map<TransportTuple::TupleKey, RTC::WebRtcTransport*, TransportTuple::TupleKeyHash>
+		ankerl::unordered_dense::map<RTC::TransportTuple::TupleKey, RTC::WebRtcTransport*, RTC::TransportTuple::TupleKeyHash>
 		  mapTupleWebRtcTransport;
 		// Whether the destructor has been called.
 		bool closing{ false };
