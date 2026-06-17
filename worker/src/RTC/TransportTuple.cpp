@@ -138,16 +138,25 @@ namespace RTC
 		{
 			return false;
 		}
-		else if (!Utils::IP::CompareAddresses(this->remoteAddr, other.remoteAddr))
-		{
-			return false;
-		}
-		else if (!Utils::IP::CompareAddresses(this->localAddr, other.localAddr))
-		{
-			return false;
-		}
 
-		return true;
+		switch (this->protocol)
+		{
+			// For UDP compare the remote address first (it discriminates faster) and then
+			// the socket.
+			case Protocol::UDP:
+			{
+				return Utils::IP::CompareAddresses(this->udpRemoteAddr, other.udpRemoteAddr) &&
+				       this->udpSocketOrTcpConnection == other.udpSocketOrTcpConnection;
+			}
+
+			// For TCP the connection pointer fully identifies the tuple.
+			case Protocol::TCP:
+			{
+				return this->udpSocketOrTcpConnection == other.udpSocketOrTcpConnection;
+			}
+
+				NO_DEFAULT_GCC();
+		}
 	}
 
 	size_t TransportTuple::TupleKeyHash::operator()(const TupleKey& key) const noexcept
@@ -155,72 +164,70 @@ namespace RTC
 		MS_TRACE();
 
 		const auto protocolBits = static_cast<uint8_t>(key.protocol);
-		const auto familyBits   = static_cast<uint16_t>(key.localAddr->sa_family);
 
 		size_t seed = 0;
 
-		switch (key.localAddr->sa_family)
+		Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+		Utils::Crypto::HashCombine(
+		  seed,
+		  ankerl::unordered_dense::hash<uintptr_t>{}(
+		    reinterpret_cast<uintptr_t>(key.udpSocketOrTcpConnection)));
+
+		switch (key.protocol)
 		{
-			case AF_INET:
+			case Protocol::UDP:
 			{
-				const auto* localIn  = reinterpret_cast<const sockaddr_in*>(key.localAddr);
-				const auto* remoteIn = reinterpret_cast<const sockaddr_in*>(key.remoteAddr);
+				// For UDP also combine the remote address.
+				const auto familyBits = static_cast<uint16_t>(key.udpRemoteAddr->sa_family);
 
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
-				Utils::Crypto::HashCombine(
-				  seed, ankerl::unordered_dense::hash<uint32_t>{}(localIn->sin_addr.s_addr));
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(localIn->sin_port));
-				Utils::Crypto::HashCombine(
-				  seed, ankerl::unordered_dense::hash<uint32_t>{}(remoteIn->sin_addr.s_addr));
-				Utils::Crypto::HashCombine(
-				  seed, ankerl::unordered_dense::hash<uint16_t>{}(remoteIn->sin_port));
-
-				break;
-			}
-
-			case AF_INET6:
-			{
-				const auto* localIn6  = reinterpret_cast<const sockaddr_in6*>(key.localAddr);
-				const auto* remoteIn6 = reinterpret_cast<const sockaddr_in6*>(key.remoteAddr);
-
-				const auto* addr = localIn6->sin6_addr.s6_addr;
-
-				uint64_t hi;
-				uint64_t lo;
-
-				std::memcpy(std::addressof(hi), addr, sizeof(uint64_t));
-				std::memcpy(std::addressof(lo), addr + sizeof(uint64_t), sizeof(uint64_t));
-
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(hi));
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(lo));
-				Utils::Crypto::HashCombine(
-				  seed, ankerl::unordered_dense::hash<uint16_t>{}(localIn6->sin6_port));
-
-				addr = remoteIn6->sin6_addr.s6_addr;
-
-				std::memcpy(std::addressof(hi), addr, sizeof(uint64_t));
-				std::memcpy(std::addressof(lo), addr + sizeof(uint64_t), sizeof(uint64_t));
-
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(hi));
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(lo));
-				Utils::Crypto::HashCombine(
-				  seed, ankerl::unordered_dense::hash<uint16_t>{}(remoteIn6->sin6_port));
-
-				break;
-			}
-
-			default:
-			{
-				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
 				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
 
-				break;
+				switch (key.udpRemoteAddr->sa_family)
+				{
+					case AF_INET:
+					{
+						const auto* remoteIn = reinterpret_cast<const sockaddr_in*>(key.udpRemoteAddr);
+
+						Utils::Crypto::HashCombine(
+						  seed, ankerl::unordered_dense::hash<uint32_t>{}(remoteIn->sin_addr.s_addr));
+						Utils::Crypto::HashCombine(
+						  seed, ankerl::unordered_dense::hash<uint16_t>{}(remoteIn->sin_port));
+
+						break;
+					}
+
+					case AF_INET6:
+					{
+						const auto* remoteIn6 = reinterpret_cast<const sockaddr_in6*>(key.udpRemoteAddr);
+						const auto* addr      = remoteIn6->sin6_addr.s6_addr;
+
+						uint64_t hi;
+						uint64_t lo;
+
+						std::memcpy(std::addressof(hi), addr, sizeof(uint64_t));
+						std::memcpy(std::addressof(lo), addr + sizeof(uint64_t), sizeof(uint64_t));
+
+						Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(hi));
+						Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(lo));
+						Utils::Crypto::HashCombine(
+						  seed, ankerl::unordered_dense::hash<uint16_t>{}(remoteIn6->sin6_port));
+
+						break;
+					}
+
+					default:;
+				}
+
+				return seed;
 			}
+
+			case Protocol::TCP:
+			{
+				// For TCP the connection pointer is enough.
+				return seed;
+			}
+
+				NO_DEFAULT_GCC();
 		}
-
-		return seed;
 	}
 } // namespace RTC

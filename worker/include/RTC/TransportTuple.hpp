@@ -31,8 +31,10 @@ namespace RTC
 
 		public:
 			TupleKey() = default;
-			TupleKey(Protocol protocol, const struct sockaddr* localAddr, const struct sockaddr* remoteAddr)
-			  : protocol(protocol), localAddr(localAddr), remoteAddr(remoteAddr) {};
+			TupleKey(Protocol protocol, const void* udpSocketOrTcpConnection, const struct sockaddr* udpRemoteAddr)
+			  : protocol(protocol),
+			    udpSocketOrTcpConnection(udpSocketOrTcpConnection),
+			    udpRemoteAddr(udpRemoteAddr) {};
 
 			bool operator==(const TupleKey& other) const noexcept;
 			bool operator!=(const TupleKey& other) const noexcept
@@ -42,8 +44,11 @@ namespace RTC
 
 		private:
 			Protocol protocol{ Protocol::UDP };
-			const struct sockaddr* localAddr{ nullptr };
-			const struct sockaddr* remoteAddr{ nullptr };
+			// The local endpoint is identified by object pointer identity: the
+			// UdpSocket or the TcpConnection. For TCP the connection alone identifies
+			// the whole tuple, so `udpRemoteAddr` is unused.
+			const void* udpSocketOrTcpConnection{ nullptr };
+			const struct sockaddr* udpRemoteAddr{ nullptr };
 		};
 
 		struct TupleKeyHash
@@ -59,14 +64,14 @@ namespace RTC
 		  : udpSocket(udpSocket),
 		    udpRemoteAddr(const_cast<struct sockaddr*>(udpRemoteAddr)),
 		    protocol(Protocol::UDP),
-		    tupleKey(Protocol::UDP, udpSocket->GetLocalAddress(), udpRemoteAddr)
+		    tupleKey(Protocol::UDP, udpSocket, udpRemoteAddr)
 		{
 		}
 
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection)
 		  : tcpConnection(tcpConnection),
 		    protocol(Protocol::TCP),
-		    tupleKey(Protocol::TCP, tcpConnection->GetLocalAddress(), tcpConnection->GetPeerAddress())
+		    tupleKey(Protocol::TCP, tcpConnection, nullptr)
 		{
 		}
 
@@ -83,10 +88,7 @@ namespace RTC
 			}
 			else
 			{
-				this->tupleKey = TupleKey(
-				  this->protocol,
-				  this->tcpConnection->GetLocalAddress(),
-				  this->tcpConnection->GetPeerAddress());
+				this->tupleKey = TupleKey(this->protocol, this->tcpConnection, nullptr);
 			}
 		}
 
@@ -104,8 +106,7 @@ namespace RTC
 			this->udpRemoteAddrStorage = Utils::IP::CopyAddress(this->udpRemoteAddr);
 			this->udpRemoteAddr =
 			  reinterpret_cast<struct sockaddr*>(std::addressof(this->udpRemoteAddrStorage));
-			this->tupleKey =
-			  TupleKey(this->protocol, this->udpSocket->GetLocalAddress(), this->udpRemoteAddr);
+			this->tupleKey = TupleKey(this->protocol, this->udpSocket, this->udpRemoteAddr);
 		}
 
 		bool Compare(const TransportTuple* tuple) const
