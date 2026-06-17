@@ -9,6 +9,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - 'rust-scripts.mjs'
       - '.github/workflows/mediasoup-rust.yaml'
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - 'rust-scripts.mjs'
       - '.github/workflows/mediasoup-rust.yaml'
   workflow_dispatch:
 
