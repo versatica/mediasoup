@@ -117,13 +117,13 @@ Publishes a new NPM version of mediasoup. Requirements for it to work:
 
 ### `npm run release:rust:check`
 
-Dry-run of the Rust release. Checks which of the three Rust crate versions (`mediasoup-sys` in `worker/Cargo.toml`, `mediasoup-types` in `rust/types/Cargo.toml` and `mediasoup` in `rust/Cargo.toml`) are not yet published on crates.io, verifies that `rust/CHANGELOG.md` has an entry matching the `mediasoup` crate version (when that crate is going to be published), and reports what would be done without creating any tag/release or publishing anything.
+Dry-run of the Rust release. Always runs the `cargo fmt`, `cargo clippy`, `cargo test` and `cargo doc` checks (even when there is nothing to publish). Then checks which of the three Rust crate versions (`mediasoup-sys` in `worker/Cargo.toml`, `mediasoup-types` in `rust/types/Cargo.toml` and `mediasoup` in `rust/Cargo.toml`) are not yet published on crates.io, verifies that `rust/CHANGELOG.md` has an entry matching the `mediasoup` crate version (when that crate is going to be published), and reports what would be done without creating any tag/release or publishing anything.
 
 ### `npm run release:rust`
 
-Publishes to crates.io (with `cargo publish --locked`, in dependency order: `mediasoup-types`, `mediasoup-sys`, `mediasoup`) every Rust crate whose version is not yet on crates.io. Additionally, when the `mediasoup` crate itself is being published, it also creates the Git tag (`rust-X.X.X`, matching its version in `rust/Cargo.toml`) and the corresponding GitHub release (see `release:rust:check` above and `doc/Rust-crates.md`). Requirements for it to work:
+Runs the same checks as `release:rust:check` (including the cargo `fmt`, `clippy`, `test` and `doc` checks) and then publishes to crates.io (with `cargo publish --locked`, in dependency order: `mediasoup-types`, `mediasoup-sys`, `mediasoup`) every Rust crate whose version is not yet on crates.io. Additionally, when the `mediasoup` crate itself is being published, it also creates the Git tag (`rust-X.X.X`, matching its version in `rust/Cargo.toml`) and the corresponding GitHub release (see `release:rust:check` above and `doc/Rust-crates.md`). Requirements for it to work:
 
-- At least one of the three Rust crate versions must have been incremented (and commited to Git).
+- Git local repository must be clean. No pending commits or dirty status.
 - When the `mediasoup` crate version is incremented, `rust/CHANGELOG.md` must have been updated with an entry matching it.
 - A `GITHUB_TOKEN` environment variable with permissions to create releases in GitHub is required (only when the `mediasoup` crate is published).
 - Of course, permissions to publish in crates.io are required.

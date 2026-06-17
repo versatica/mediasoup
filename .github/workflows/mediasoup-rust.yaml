@@ -37,12 +37,17 @@ jobs:
       matrix:
         build:
           - os: ubuntu-24.04
+            run-test-in-debug-mode: true
           - os: ubuntu-24.04-arm
+            run-test-in-debug-mode: true
           - os: ubuntu-26.04
             run-cargo-fmt: true
             run-cargo-dry-run: true
+            run-test-in-debug-mode: true
           - os: ubuntu-26.04-arm
+            run-test-in-debug-mode: true
           - os: macos-15
+            run-test-in-debug-mode: true
           - os: windows-2022
           - os: windows-2025
 
@@ -74,12 +79,17 @@ jobs:
       - name: cargo clippy --all-targets -- -D warnings
         run: cargo clippy --all-targets -- -D warnings
 
-      # NOTE: In Windows this will build and test libmediasoupworker in release
-      # mode twice since build.rs doesn't allow debug mode on Windows.
-      - name: cargo test
-        run: |
-          cargo test --verbose
-          cargo test --release --verbose
+      # NOTE: On Windows build.rs builds and tests libmediasoupworker in release
+      # mode even for a debug `cargo test`, so running the debug pass there would
+      # just build and test the release library a second time. Hence the debug
+      # pass only runs where debug mode is actually different (non-Windows). The
+      # release pass always runs.
+      - if: ${{ matrix.build.run-test-in-debug-mode }}
+        name: cargo test --verbose
+        run: cargo test --verbose
+
+      - name: cargo test --release --verbose
+        run: cargo test --release --verbose
 
       - name: cargo doc --locked --all --no-deps --lib
         run: cargo doc --locked --all --no-deps --lib

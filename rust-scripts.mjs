@@ -80,6 +80,11 @@ async function checkRelease() {
 	).version;
 	const tag = `rust-${mediasoupVersion}`;
 
+	// Run the cargo checks always, even if there ends up being nothing to publish.
+	lintRust();
+	testRust();
+	docRust();
+
 	// Detect which crates have a version not yet published on crates.io.
 	let cratesToPublish;
 
@@ -190,6 +195,32 @@ async function release() {
 	for (const crate of cratesToPublish) {
 		executeInteractiveCmd('cargo publish --locked', { cwd: crate.dir });
 	}
+}
+
+function lintRust() {
+	logInfo('lintRust()');
+
+	executeCmd('cargo fmt --all -- --check');
+	executeCmd('cargo clippy --all-targets -- -D warnings');
+}
+
+function testRust() {
+	logInfo('testRust()');
+
+	executeCmd('cargo test --verbose');
+	executeCmd('cargo test --release --verbose');
+}
+
+function docRust() {
+	logInfo('docRust()');
+
+	// Fail on broken/private intra-doc links, same as when building the docs for
+	// docs.rs.
+	process.env.DOCS_RS = '1';
+	process.env.RUSTDOCFLAGS =
+		'-D rustdoc::broken-intra-doc-links -D rustdoc::private_intra_doc_links';
+
+	executeCmd('cargo doc --locked --all --no-deps --lib');
 }
 
 /**
