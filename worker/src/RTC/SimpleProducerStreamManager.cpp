@@ -97,7 +97,6 @@ namespace RTC
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 		MS_ASSERT(this->kind == RTC::Media::Kind::VIDEO, "should be video");
-		MS_ASSERT(IsActive(), "should be active");
 
 		// If this is not the first time this method is called within the same
 		// iteration, return 0 since a video Simple consumer does not keep state
@@ -109,7 +108,12 @@ namespace RTC
 
 		this->managingBitrate = true;
 
-		if (!this->producerRtpStream)
+		// Do nothing if the producer stream is not active. NOTE: This may happen
+		// because Consumer::GetBitratePriority() does not account for the producer
+		// stream presence/score, so the Transport may still ask us to increase.
+		if (
+		  !this->producerRtpStream || (this->producerRtpStream->GetScore() == 0u &&
+		                               this->producerRtpStream->HasRtpInactivityCheckEnabled()))
 		{
 			return 0u;
 		}
@@ -134,7 +138,6 @@ namespace RTC
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 		MS_ASSERT(this->kind == RTC::Media::Kind::VIDEO, "should be video");
-		MS_ASSERT(IsActive(), "should be active");
 
 		this->managingBitrate = false;
 

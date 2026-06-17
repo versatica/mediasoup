@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker `Consumer`: Fix crash when using simple producer stream mode ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 0.22.7
 
 - Worker: Remove `io_uring` support ([PR #1832](https://github.com/versatica/mediasoup/pull/1832)).
