@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([1823](https://github.com/versatica/mediasoup/pull/1823)).
+
 ### 0.22.7
 
 - Worker: Remove `io_uring` support ([PR #1832](https://github.com/versatica/mediasoup/pull/1832)).
