@@ -119,7 +119,7 @@ namespace RTC
 		ankerl::unordered_dense::set<RTC::WebRtcTransport*> webRtcTransports;
 		// Map of WebRtcTransports indexed by local ICE usernameFragment.
 		ankerl::unordered_dense::map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransport;
-		// Map of WebRtcTransports indexed by TransportTuple.hash.
+		// Map of WebRtcTransports indexed by TransportTuple::TupleKey.
 		ankerl::unordered_dense::
 		  map<RTC::TransportTuple::TupleKey, RTC::WebRtcTransport*, RTC::TransportTuple::TupleKeyHash>
 		    mapTupleWebRtcTransport;
