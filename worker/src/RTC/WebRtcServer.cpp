@@ -304,7 +304,12 @@ namespace RTC
 		}
 
 		return FBS::WebRtcServer::CreateDumpResponseDirect(
-		  builder, this->id.c_str(), &udpSockets, &tcpServers, &webRtcTransportIds, &localIceUsernameFragments);
+		  builder,
+		  this->id.c_str(),
+		  std::addressof(udpSockets),
+		  std::addressof(tcpServers),
+		  std::addressof(webRtcTransportIds),
+		  std::addressof(localIceUsernameFragments));
 	}
 
 	void WebRtcServer::HandleRequest(Channel::ChannelRequest* request)
@@ -584,7 +589,7 @@ namespace RTC
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len, bufferLen);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen);
 	}
 
 	inline void WebRtcServer::OnRtcTcpConnectionClosed(
@@ -607,7 +612,7 @@ namespace RTC
 
 		auto* webRtcTransport = it->second;
 
-		webRtcTransport->RemoveTuple(&tuple);
+		webRtcTransport->RemoveTuple(std::addressof(tuple));
 	}
 
 	inline void WebRtcServer::OnTcpConnectionPacketReceived(
@@ -617,6 +622,6 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
-		OnPacketReceived(&tuple, data, len, bufferLen);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen);
 	}
 } // namespace RTC
