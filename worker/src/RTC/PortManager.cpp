@@ -805,11 +805,12 @@ namespace RTC
 			{
 				const auto* in = reinterpret_cast<const sockaddr_in*>(std::addressof(key.bindAddr));
 
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint32_t>{}(in->sin_addr.s_addr));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.minPort));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.maxPort));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+				Utils::Crypto::HashCombine(
+				  seed, ankerl::unordered_dense::hash<uint32_t>{}(in->sin_addr.s_addr));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.minPort));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.maxPort));
 
 				break;
 			}
@@ -825,22 +826,22 @@ namespace RTC
 				std::memcpy(std::addressof(hi), addr, sizeof(uint64_t));
 				std::memcpy(std::addressof(lo), addr + sizeof(uint64_t), sizeof(uint64_t));
 
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint64_t>{}(hi));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint64_t>{}(lo));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.minPort));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.maxPort));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(hi));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(lo));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.minPort));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.maxPort));
 
 				break;
 			}
 
 			default:
 			{
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.minPort));
-				Utils::Hash::Combine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.maxPort));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.minPort));
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(key.maxPort));
 
 				break;
 			}
