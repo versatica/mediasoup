@@ -1,5 +1,7 @@
 # Changelog
 
+### NEXT
+
 ### 3.20.8
 
 - Worker `Consumer`: Fix crash when using simple producer stream mode ([PR #XXXX](https://github.com/versatica/mediasoup/pull/1835)).
