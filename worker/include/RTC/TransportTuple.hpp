@@ -80,8 +80,6 @@ namespace RTC
 			if (protocol == TransportTuple::Protocol::UDP)
 			{
 				StoreUdpRemoteAddress();
-				this->tupleKey =
-				  TupleKey(this->protocol, this->udpSocket->GetLocalAddress(), this->udpRemoteAddr);
 			}
 			else
 			{
@@ -106,6 +104,8 @@ namespace RTC
 			this->udpRemoteAddrStorage = Utils::IP::CopyAddress(this->udpRemoteAddr);
 			this->udpRemoteAddr =
 			  reinterpret_cast<struct sockaddr*>(std::addressof(this->udpRemoteAddrStorage));
+			this->tupleKey =
+			  TupleKey(this->protocol, this->udpSocket->GetLocalAddress(), this->udpRemoteAddr);
 		}
 
 		bool Compare(const TransportTuple* tuple) const
