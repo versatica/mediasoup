@@ -120,6 +120,7 @@ namespace RTC
 					  this->udpSocket == tuple->udpSocket &&
 					  Utils::IP::CompareAddresses(this->udpRemoteAddr, tuple->udpRemoteAddr));
 				}
+
 				case Protocol::TCP:
 				{
 					return (this->tcpConnection == tuple->tcpConnection);
