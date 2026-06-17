@@ -4,6 +4,10 @@
 
 - Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([1823](https://github.com/versatica/mediasoup/pull/1823)).
 
+### 0.22.8
+
+- Worker `Consumer`: Fix crash when using simple producer stream mode ([PR #1835](https://github.com/versatica/mediasoup/pull/1835)). The bug was introduced in version 3.20.6.
+
 ### 0.22.7
 
 - Worker: Remove `io_uring` support ([PR #1832](https://github.com/versatica/mediasoup/pull/1832)).
