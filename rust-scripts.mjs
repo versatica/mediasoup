@@ -12,7 +12,7 @@ const MAIN_BRANCH = `v${pkg.version.split('.')[0]}`;
 
 // The three Rust crates with their Cargo.toml manifest and directory (relative
 // to repo root). Listed in the order in which they must be published to
-// crates.io (dependencies first). See doc/Rust-crates.md.
+// crates.io (dependencies first).
 const CRATES = [
 	// `mediasoup-types` crate.
 	{ manifest: 'rust/types/Cargo.toml', dir: 'rust/types' },
@@ -166,7 +166,7 @@ async function release() {
 	}
 
 	// Refuse to release with a dirty working tree. `cargo publish` would refuse
-	// to publish modified local files anyway (see doc/Rust-crates.md).
+	// to publish modified local files anyway.
 	checkGitClean();
 
 	const releaseInfo = await checkRelease();
@@ -180,8 +180,8 @@ async function release() {
 		releaseInfo;
 
 	// Push local commits first so everything we tag and publish is already on
-	// GitHub (see doc/Rust-crates.md).
-	executeCmd('git push');
+	// GitHub.
+	executeCmd(`git push origin ${MAIN_BRANCH}`);
 
 	// Create the Git tag and the GitHub release only when the `mediasoup` crate
 	// itself is being published. If the tag already exists (e.g. a previous run
@@ -197,7 +197,7 @@ async function release() {
 			exitWithError();
 		}
 
-		// Create and push the annotated tag (see doc/Rust-crates.md).
+		// Create and push the annotated tag.
 		executeCmd(`git tag -a ${tag} -m ${tag}`);
 		executeCmd(`git push origin ${tag}`);
 
@@ -213,10 +213,9 @@ async function release() {
 		});
 	}
 
-	// Publish the crates to crates.io (see doc/Rust-crates.md). They are
-	// published in dependency order (the order of `CRATES`). `--locked` makes
-	// cargo abort if Cargo.lock is out of date instead of silently regenerating
-	// it.
+	// Publish the crates to crates.io. They are published in dependency order
+	// (the order of `CRATES`). `--locked` makes cargo abort if Cargo.lock is out
+	// of date instead of silently regenerating it.
 	for (const crate of cratesToPublish) {
 		executeInteractiveCmd('cargo publish --locked', { cwd: crate.dir });
 	}
@@ -348,10 +347,10 @@ async function getVersionChanges(version) {
 }
 
 /**
- * Validates packaging of the three Rust crates without uploading anything, the
- * same way doc/Rust-crates.md recommends. They are passed as a single group so
- * Cargo resolves the dependencies among them against the locally packaged copies
- * instead of crates.io (works even if the new versions are not published yet).
+ * Validates packaging of all mediasoup Rust crates without uploading anything.
+ * They are passed as a single group so cargo resolves the dependencies among
+ * them against the locally packaged copies instead of crates.io (works even if
+ * the new versions are not published yet).
  */
 function publishDryRun() {
 	logInfo('publishDryRun()');

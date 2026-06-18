@@ -601,9 +601,10 @@ async function release() {
 
 	const { versionChanges } = await checkRelease();
 
+	// The local repo ust be "dirty" so the script can commit now.
 	executeCmd(`git commit -am '${pkg.version}'`);
-	executeCmd(`git tag -a ${pkg.version} -m '${pkg.version}'`);
 	executeCmd(`git push origin ${MAIN_BRANCH}`);
+	executeCmd(`git tag -a ${pkg.version} -m '${pkg.version}'`);
 	executeCmd(`git push origin '${pkg.version}'`);
 
 	logInfo(`release() | creating release '${pkg.version}' in GitHub`);
