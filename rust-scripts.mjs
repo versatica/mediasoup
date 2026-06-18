@@ -2,9 +2,13 @@ import * as process from 'node:process';
 import * as fs from 'node:fs';
 import { execSync } from 'node:child_process';
 import fetch from 'node-fetch';
+import pkg from './package.json' with { type: 'json' };
 
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
+// Main Git branch is 'v' concatenated with the major SEMVER number of the
+// "version" field in package.json.
+const MAIN_BRANCH = `v${pkg.version.split('.')[0]}`;
 
 // The three Rust crates with their Cargo.toml manifest and directory (relative
 // to repo root). Listed in the order in which they must be published to
@@ -80,6 +84,10 @@ async function checkRelease() {
 	).version;
 	const tag = `rust-${mediasoupVersion}`;
 
+	// Ensure Cargo.lock is in sync before running any cargo command that could
+	// silently regenerate it.
+	checkCargoLock();
+
 	// Run the cargo checks always, even if there ends up being nothing to publish.
 	lintRust();
 	testRust();
@@ -144,6 +152,19 @@ async function checkRelease() {
 async function release() {
 	logInfo('release()');
 
+	// Make sure we are on the main branch.
+	const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+		encoding: 'utf-8',
+	}).trim();
+
+	if (branch !== MAIN_BRANCH) {
+		logError(
+			`release() | must be on '${MAIN_BRANCH}' branch, but it is on '${branch}' branch`
+		);
+
+		exitWithError();
+	}
+
 	// Refuse to release with a dirty working tree. `cargo publish` would refuse
 	// to publish modified local files anyway (see doc/Rust-crates.md).
 	checkGitClean();
@@ -157,6 +178,10 @@ async function release() {
 
 	const { tag, releaseMediasoup, versionChanges, cratesToPublish } =
 		releaseInfo;
+
+	// Push local commits first so everything we tag and publish is already on
+	// GitHub (see doc/Rust-crates.md).
+	executeCmd('git push');
 
 	// Create the Git tag and the GitHub release only when the `mediasoup` crate
 	// itself is being published. If the tag already exists (e.g. a previous run
@@ -360,6 +385,25 @@ function checkGitClean() {
 	if (status.trim()) {
 		logError(
 			'checkGitClean() | Git working tree is not clean, commit or stash your changes first'
+		);
+
+		exitWithError();
+	}
+}
+
+function checkCargoLock() {
+	logInfo('checkCargoLock()');
+
+	// `--locked` makes cargo fail if Cargo.lock is out of date instead of
+	// regenerating it. We resolve metadata (no build) just to assert the lock is
+	// in sync, otherwise run `cargo build` and commit Cargo.lock first.
+	try {
+		execSync('cargo metadata --locked --format-version 1', {
+			stdio: ['ignore', 'ignore', process.stderr],
+		});
+	} catch (error) {
+		logError(
+			'checkCargoLock() | Cargo.lock is out of date, run `cargo build` and commit it'
 		);
 
 		exitWithError();

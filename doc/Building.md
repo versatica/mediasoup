@@ -110,6 +110,7 @@ Runs linters and tests in Node and C++ code. Also verifies that `CHANGELOG.md` h
 
 Publishes a new NPM version of mediasoup. Requirements for it to work:
 
+- Must be in the main branch.
 - "version" field in `package.json` must have been incremented (and not commited to Git).
 - `CHANGELOG.md` file must have been updated with an entry matching the new version.
 - A `GITHUB_TOKEN` environment variable with permissions to create releases in GitHub is required.
@@ -121,9 +122,11 @@ Dry-run of the Rust release. Always runs the `cargo fmt`, `cargo clippy`, `cargo
 
 ### `npm run release:rust`
 
-Runs the same checks as `release:rust:check` (including the cargo `fmt`, `clippy`, `test` and `doc` checks) and then publishes to crates.io (with `cargo publish --locked`, in dependency order: `mediasoup-types`, `mediasoup-sys`, `mediasoup`) every Rust crate whose version is not yet on crates.io. Additionally, when the `mediasoup` crate itself is being published, it also creates the Git tag (`rust-X.X.X`, matching its version in `rust/Cargo.toml`) and the corresponding GitHub release (see `release:rust:check` above and `doc/Rust-crates.md`). Requirements for it to work:
+Runs the same checks as `release:rust:check` (including the cargo `fmt`, `clippy`, `test` and `doc` checks), then pushes local commits to GitHub (so everything that gets tagged and published is already there) and publishes to crates.io (with `cargo publish --locked`, in dependency order: `mediasoup-types`, `mediasoup-sys`, `mediasoup`) every Rust crate whose version is not yet on crates.io. Additionally, when the `mediasoup` crate itself is being published, it also creates the Git tag (`rust-X.X.X`, matching its version in `rust/Cargo.toml`) and the corresponding GitHub release (see `release:rust:check` above and `doc/Rust-crates.md`). Requirements for it to work:
 
+- Must be in the main branch.
 - Git local repository must be clean. No pending commits or dirty status.
+- `Cargo.lock` must be in sync (run `cargo build` and commit it if needed); otherwise the release aborts before doing anything irreversible.
 - When the `mediasoup` crate version is incremented, `rust/CHANGELOG.md` must have been updated with an entry matching it.
 - A `GITHUB_TOKEN` environment variable with permissions to create releases in GitHub is required (only when the `mediasoup` crate is published).
 - Of course, permissions to publish in crates.io are required.

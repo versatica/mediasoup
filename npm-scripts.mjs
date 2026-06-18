@@ -8,7 +8,9 @@ import * as tar from 'tar';
 import pkg from './package.json' with { type: 'json' };
 
 const IS_WINDOWS = os.platform() === 'win32';
-const MAYOR_VERSION = pkg.version.split('.')[0];
+// Main Git branch is 'v' concatenated with the major SEMVER number of the
+// "version" field in package.json.
+const MAIN_BRANCH = `v${pkg.version.split('.')[0]}`;
 const PYTHON = getPython();
 const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
 const WORKER_RELEASE_DIR = 'worker/out/Release';
@@ -574,6 +576,19 @@ async function checkRelease() {
 async function release() {
 	logInfo('release()');
 
+	// Make sure we are on the main branch.
+	const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+		encoding: 'utf-8',
+	}).trim();
+
+	if (branch !== MAIN_BRANCH) {
+		logError(
+			`release() | must be on '${MAIN_BRANCH}' branch, but it is on '${branch}' branch`
+		);
+
+		exitWithError();
+	}
+
 	let octokit;
 
 	try {
@@ -588,7 +603,7 @@ async function release() {
 
 	executeCmd(`git commit -am '${pkg.version}'`);
 	executeCmd(`git tag -a ${pkg.version} -m '${pkg.version}'`);
-	executeCmd(`git push origin v${MAYOR_VERSION}`);
+	executeCmd(`git push origin ${MAIN_BRANCH}`);
 	executeCmd(`git push origin '${pkg.version}'`);
 
 	logInfo(`release() | creating release '${pkg.version}' in GitHub`);
