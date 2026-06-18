@@ -21,7 +21,6 @@ ENV CC="clang-21"
 ENV CXX="clang++-21"
 
 ENV MEDIASOUP_LOCAL_DEV="true"
-ENV KEEP_BUILD_ARTIFACTS="1"
 
 WORKDIR "/foo bar/mediasoup"
 

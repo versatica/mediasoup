@@ -98,7 +98,9 @@
 		"coverage:node": "node npm-scripts.mjs coverage:node",
 		"publish:dry-run": "node npm-scripts.mjs publish:dry-run",
 		"release:check": "node npm-scripts.mjs release:check",
-		"release": "node npm-scripts.mjs release"
+		"release": "node npm-scripts.mjs release",
+		"release:rust:check": "node rust-scripts.mjs release:check",
+		"release:rust": "node rust-scripts.mjs release"
 	},
 	"dependencies": {
 		"debug": "^4.4.3",

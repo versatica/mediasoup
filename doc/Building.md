@@ -104,21 +104,40 @@ Same as `test:node` task but it also opens a browser window with TypeScript cove
 
 ### `npm run release:check`
 
-Runs linters and tests in Node and C++ code.
+Runs linters and tests in Node and C++ code. Also verifies that `CHANGELOG.md` has an entry matching the `mediasoup` version in `package.json`.
 
 ### `npm run release`
 
 Publishes a new NPM version of mediasoup. Requirements for it to work:
 
+- Must be in the main branch.
 - "version" field in `package.json` must have been incremented (and not commited to Git).
 - `CHANGELOG.md` file must have been updated with an entry matching the new version.
+- A `GITHUB_TOKEN` environment variable with permissions to create releases in GitHub is required.
 - Of course, permissions to publish in NPM registry are required.
+
+### `npm run release:rust:check`
+
+Dry-run of the Rust release. Always runs the `cargo fmt`, `cargo clippy`, `cargo test` and `cargo doc` checks (even when there is nothing to publish). Then checks which of the three Rust crate versions (`mediasoup-sys` in `worker/Cargo.toml`, `mediasoup-types` in `rust/types/Cargo.toml` and `mediasoup` in `rust/Cargo.toml`) are not yet published on crates.io, verifies that `rust/CHANGELOG.md` has an entry matching the `mediasoup` crate version (when that crate is going to be published), and reports what would be done without creating any tag/release or publishing anything.
+
+### `npm run release:rust`
+
+Runs the same checks as `release:rust:check` (including the cargo `fmt`, `clippy`, `test` and `doc` checks), then pushes local commits to GitHub (so everything that gets tagged and published is already there) and publishes to crates.io (with `cargo publish --locked`, in dependency order: `mediasoup-types`, `mediasoup-sys`, `mediasoup`) every Rust crate whose version is not yet on crates.io. Additionally, when the `mediasoup` crate itself is being published, it also creates the Git tag (`rust-X.X.X`, matching its version in `rust/Cargo.toml`) and the corresponding GitHub release (see `release:rust:check` above and `doc/Rust-crates.md`). Requirements for it to work:
+
+- Must be in the main branch.
+- Git local repository must be clean. No pending commits or dirty status.
+- `Cargo.lock` must be in sync (run `cargo build` and commit it if needed); otherwise the release aborts before doing anything irreversible.
+- When the `mediasoup` crate version is incremented, `rust/CHANGELOG.md` must have been updated with an entry matching it.
+- A `GITHUB_TOKEN` environment variable with permissions to create releases in GitHub is required (only when the `mediasoup` crate is published).
+- Of course, permissions to publish in crates.io are required.
 
 ## Rust
 
-The only special feature in Rust case is special environment variable "KEEP_BUILD_ARTIFACTS", that when set to "1" will allow incremental recompilation of changed C++ sources during hacking on mediasoup.
+The only special feature in Rust case is special environment variable "MEDIASOUP_LOCAL_DEV", that when set to "true" will allow incremental recompilation of changed C++ sources during hacking on mediasoup.
 
 It is not necessary for normal usage of mediasoup as a dependency.
+
+Other than that and normal `cargo` commands, see `npm run release:rust:check` and `npm run release:rust` above.
 
 ## Python Invoke and `tasks.py` file
 

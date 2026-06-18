@@ -9,6 +9,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - 'rust-scripts.mjs'
       - '.github/workflows/mediasoup-rust.yaml'
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'rust-toolchain.toml'
+      - 'rust-scripts.mjs'
       - '.github/workflows/mediasoup-rust.yaml'
   workflow_dispatch:
 
@@ -37,12 +39,17 @@ jobs:
       matrix:
         build:
           - os: ubuntu-24.04
+            run-test-in-debug-mode: true
           - os: ubuntu-24.04-arm
+            run-test-in-debug-mode: true
           - os: ubuntu-26.04
             run-cargo-fmt: true
             run-cargo-dry-run: true
+            run-test-in-debug-mode: true
           - os: ubuntu-26.04-arm
+            run-test-in-debug-mode: true
           - os: macos-15
+            run-test-in-debug-mode: true
           - os: windows-2022
           - os: windows-2025
 
@@ -51,7 +58,7 @@ jobs:
     timeout-minutes: 60
 
     env:
-      KEEP_BUILD_ARTIFACTS: '1'
+      MEDIASOUP_LOCAL_DEV: 'true'
 
     steps:
       - name: Checkout
@@ -74,12 +81,17 @@ jobs:
       - name: cargo clippy --all-targets -- -D warnings
         run: cargo clippy --all-targets -- -D warnings
 
-      # NOTE: In Windows this will build and test libmediasoupworker in release
-      # mode twice since build.rs doesn't allow debug mode on Windows.
-      - name: cargo test
-        run: |
-          cargo test --verbose
-          cargo test --release --verbose
+      # NOTE: On Windows build.rs builds and tests libmediasoupworker in release
+      # mode even for a debug `cargo test`, so running the debug pass there would
+      # just build and test the release library a second time. Hence the debug
+      # pass only runs where debug mode is actually different (non-Windows). The
+      # release pass always runs.
+      - if: ${{ matrix.build.run-test-in-debug-mode }}
+        name: cargo test --verbose
+        run: cargo test --verbose
+
+      - name: cargo test --release --verbose
+        run: cargo test --release --verbose
 
       - name: cargo doc --locked --all --no-deps --lib
         run: cargo doc --locked --all --no-deps --lib
@@ -120,7 +132,7 @@ jobs:
           check rust/types/Cargo.toml
           echo "bumped=${bumped}" >> "$GITHUB_OUTPUT"
 
-      # NOTE: No need to unset the job-level KEEP_BUILD_ARTIFACTS here:
+      # NOTE: No need to unset the job-level MEDIASOUP_LOCAL_DEV here:
       # `mediasoup-sys`'s build.rs detects the `cargo publish` verification step
       # and always cleans the Meson subprojects it extracts into the source
       # tree, avoiding the "Source directory was modified by build.rs" error.
