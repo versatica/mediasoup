@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([1823](https://github.com/versatica/mediasoup/pull/1823)).
+- Worker: Fix `SeqManager::GetMaxOutput()` ([XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 0.22.8
 

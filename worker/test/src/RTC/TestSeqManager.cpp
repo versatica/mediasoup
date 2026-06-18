@@ -97,8 +97,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
+
 		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -119,8 +122,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
+
 		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -146,8 +152,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
+
 		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -165,6 +174,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -181,8 +191,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
+
 		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -197,7 +210,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -216,8 +230,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
+
 		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -235,8 +252,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
+
 		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -254,8 +274,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
+
 		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -314,6 +337,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -334,9 +358,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 
 		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -378,9 +404,11 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format on
 
 		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 
 		result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -421,7 +449,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint8_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint8_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -479,7 +508,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -513,7 +543,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -535,7 +566,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -569,7 +601,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -591,7 +624,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -610,7 +644,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		}
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -629,7 +664,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		}
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -648,7 +684,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -671,7 +708,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint8_t, 3>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint8_t, 3>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -710,7 +748,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -729,7 +768,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -744,7 +784,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -768,10 +809,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 
-		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1000u }, inputs);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -791,10 +834,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 2000u }, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 2000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 
-		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 2000u }, inputs);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 2000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -819,10 +864,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 3000u }, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 3000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 
-		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 3000u }, inputs);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 3000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -839,7 +886,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -855,7 +903,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 32000u }, inputs1);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 32000 }, inputs1);
+
 		REQUIRE(result.first == result.second);
 
 		// clang-format off
@@ -868,7 +917,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 32000u }, inputs2);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 32000 }, inputs2);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -883,7 +933,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -901,10 +952,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 
-		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1000u }, inputs);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -921,10 +974,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 2000u }, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 2000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 
-		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 2000u }, inputs);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 2000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -941,10 +996,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 2000u }, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 2000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 
-		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 2000u }, inputs);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 2000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1002,7 +1059,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 10000u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 10000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1022,10 +1080,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1u }, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1 }, inputs);
+
 		REQUIRE(result.first == result.second);
 
-		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1u }, inputs);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1066,10 +1126,12 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 
-		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1000u }, inputs);
+		result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 1000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1110,7 +1172,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint8_t>{ /*initialOutput*/ 200u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint8_t>{ /*initialOutput*/ 200 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1168,7 +1231,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1202,7 +1266,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 200u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 200 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1224,7 +1289,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 200u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 200 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1259,7 +1325,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1281,7 +1348,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1290,17 +1358,21 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 101, true, false, 0 },
+			{ 0, 101, true, false, 0 }
 		};
-		for (uint16_t j = 0; j < 3; ++j) {
-			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i) {
-				const uint16_t output = (i + 1 + 100) & std::numeric_limits<uint16_t>::max();
-				inputs.emplace_back( i, output, false, false, i );
-			}
-		}
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 100u }, inputs);
+		for (uint16_t j = 0; j < 3; ++j)
+		{
+			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i)
+			{
+				const uint16_t output = (i + 1 + 100) & std::numeric_limits<uint16_t>::max();
+				inputs.emplace_back(i, output, false, false, i);
+			}
+		}
+
+		const auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 100 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1309,17 +1381,22 @@ SCENARIO("SeqManager", "[seqmanager]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 101, true, false, 0, },
+			{ 0, 101, true, false, 0, }
 		};
-		for (uint16_t j = 0; j < 3; ++j) {
-			for (uint16_t i = 1; i < MaxNumberFor15Bits; ++i) {
-				const uint16_t output = (i + 1 + 100) & MaxNumberFor15Bits;
-				inputs.emplace_back( i, output, false, false, i );
-			}
-		}
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100u }, inputs);
+		for (uint16_t j = 0; j < 3; ++j)
+		{
+			for (uint16_t i = 1; i < MaxNumberFor15Bits; ++i)
+			{
+				const uint16_t output = (i + 1 + 100) & MaxNumberFor15Bits;
+
+				inputs.emplace_back(i, output, false, false, i);
+			}
+		}
+
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 100 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1339,7 +1416,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 10000u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t, 15>{ /*initialOutput*/ 10000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1362,7 +1440,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint8_t, 3>{ /*initialOutput*/ 2u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint8_t, 3>{ /*initialOutput*/ 2 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1401,7 +1480,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 10000u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 10000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1420,7 +1500,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 100u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 100 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1435,7 +1516,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000u }, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{ /*initialOutput*/ 1000 }, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1452,7 +1534,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1475,7 +1558,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1497,7 +1581,8 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
 	}
 
@@ -1573,7 +1658,27 @@ SCENARIO("SeqManager", "[seqmanager]")
 		};
 		// clang-format on
 
-		auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
 		REQUIRE(result.first == result.second);
+	}
+
+	SECTION("GetMaxOutput() returns the real max output (with initial output)")
+	{
+		RTC::SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000);
+		uint16_t output;
+
+		seqManager.Input(100, output);
+
+		// Output must be 100 + initialOutput (1000) = 1100.
+		REQUIRE(output == 1100);
+		// GetMaxOutput() must report the same value as the last (and highest)
+		// output.
+		REQUIRE(seqManager.GetMaxOutput() == 1100);
+
+		seqManager.Input(101, output);
+
+		REQUIRE(output == 1101);
+		REQUIRE(seqManager.GetMaxOutput() == 1101);
 	}
 }
