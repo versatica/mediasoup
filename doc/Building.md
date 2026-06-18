@@ -137,6 +137,8 @@ The only special feature in Rust case is special environment variable "MEDIASOUP
 
 It is not necessary for normal usage of mediasoup as a dependency.
 
+Other than that and normal `cargo` commands, see `npm run release:rust:check` and `npm run release:rust` above.
+
 ## Python Invoke and `tasks.py` file
 
 mediasoup uses Python [Invoke](https://www.pyinvoke.org) library for managing and organizing tasks in the `worker` folder (mediasoup worker C++ subproject). `Invoke` is basically a replacemente of `make` + `Makefile` written in Python. mediasoup automatically installs `Invoke` in a local custom path during the installation process (in both Node and Rust) so the user doesn't need to worry about it.
