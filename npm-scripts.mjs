@@ -612,7 +612,16 @@ async function release({ args = '' } = {}) {
 	// mediasoup-npm-publish.yaml, which checks, creates the GitHub release and
 	// publishes to NPM; on its success mediasoup-worker-prebuild.yaml builds and
 	// uploads the prebuilt binaries.
-	executeCmd(`git commit -am 'release ${version}'`);
+	//
+	// The commit message carries a "[no-ci]" marker so the regular branch CI
+	// workflows (node, worker, rust, fuzzer, codeql) skip this commit: it only
+	// bumps version/CHANGELOG (no code change) and its parent already passed CI,
+	// and the release is driven by the tag-triggered workflows instead.
+	//
+	// NOTE: "[no-ci]" (with a hyphen) is a custom marker, NOT GitHub's native
+	// "[skip ci]"/"[no ci]" (which would also skip mediasoup-npm-publish, since
+	// the tag push shares this same commit).
+	executeCmd(`git commit -am 'release ${version} [no-ci]'`);
 	executeCmd(`git tag -a ${version} -m '${version}'`);
 	executeCmd(`git push origin ${MAIN_BRANCH}`);
 	executeCmd(`git push origin '${version}'`);
