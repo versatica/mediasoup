@@ -106,15 +106,20 @@ Same as `test:node` task but it also opens a browser window with TypeScript cove
 
 Runs linters and tests in Node and C++ code. Also verifies that `CHANGELOG.md` has an entry matching the `mediasoup` version in `package.json`.
 
-### `npm run release`
+### `npm run release x.y.z`
 
-Publishes a new NPM version of mediasoup. Requirements for it to work:
+Prepares and triggers the release of a new NPM version "x.y.z" of mediasoup. The actual GitHub release and NPM publish are done by CI (`mediasoup-npm-publish.yaml`) once the pushed tag arrives. It:
 
+- Performs checks (lint + test + build + publish dry-run + `CHANGELOG.md` entry check). It runs before the version bump, so the CHANGELOG check validates the previous version's entry (still in package.json), which is harmless.
+- Bumps the version to "x.y.z" in `package.json` and `package-lock.json` with `npm version x.y.z --no-git-tag-version`, and sets the top `### NEXT` heading of `CHANGELOG.md` to `### x.y.z`.
+- Commits the bump as "version x.y.z", creates the "x.y.z" tag, and pushes the branch and the tag.
+
+Requirements for it to work:
+
+- Must be called with a SEMVER version as single argument.
 - Must be in the main branch.
-- "version" field in `package.json` must have been incremented (and not commited to Git).
-- `CHANGELOG.md` file must have been updated with an entry matching the new version.
-- A `GITHUB_TOKEN` environment variable with permissions to create releases in GitHub is required.
-- Of course, permissions to publish in NPM registry are required.
+- Work tree must be clean.
+- Changes for the new version must be under the `### NEXT` heading in `CHANGELOG.md`.
 
 ### `npm run release:rust:check`
 

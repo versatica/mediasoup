@@ -1,0 +1,130 @@
+name: mediasoup-npm-publish
+
+# Triggered by pushing a Node release tag (SEMVER, e.g. 3.20.8), which the
+# `release` task in npm-scripts.mjs creates. It checks version consistency,
+# creates the GitHub release from the CHANGELOG and publishes the NPM package via
+# OIDC trusted publishing.
+#
+# Only if this workflow succeeds, mediasoup-worker-prebuild.yaml runs (via its
+# workflow_run trigger) to build the mediasoup-worker prebuilt binaries and
+# upload them to the GitHub release.
+on:
+  push:
+    tags:
+      # Node release tags only (SEMVER). Rust tags (rust-X.Y.Z) don't match.
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  # Don't cancel an in-progress publish if a new run lands in the same group.
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 26
+
+      - name: Check version consistency
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag='${{ github.ref_name }}'
+          version=$(jq -r '.version' package.json)
+          package_lock_version=$(jq -r '.version' package-lock.json)
+          package_lock_root_version=$(jq -r '.packages[""].version' package-lock.json)
+          echo "tag=${tag} package.json=${version} package-lock.json=${package_lock_version}/${package_lock_root_version}"
+          if [ "${version}" != "${tag}" ]; then
+            echo "package.json version '${version}' does not match release tag '${tag}'"
+            exit 1
+          fi
+          if [ "${package_lock_version}" != "${version}" ] || [ "${package_lock_root_version}" != "${version}" ]; then
+            echo "package-lock.json version does not match package.json version '${version}'"
+            exit 1
+          fi
+
+      - name: Ensure mediasoup version is not already published on NPM
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(jq -r '.version' package.json)
+          published_version=$(npm view "mediasoup@${version}" version 2>/dev/null || true)
+          if [ "${published_version}" = "${version}" ]; then
+            echo "mediasoup@${version} is already published on NPM, this should not happen"
+            exit 1
+          fi
+
+  # Create the GitHub release from the matching CHANGELOG.md entry.
+  release:
+    needs: check
+    if: ${{ !cancelled() && needs.check.result == 'success' }}
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Extract the CHANGELOG.md section for this version.
+          notes=$(awk -v h="### ${TAG}" '$0==h {f=1; next} /^### / && f {exit} f {print}' CHANGELOG.md)
+          if [ -z "$(printf '%s' "${notes}" | tr -d '[:space:]')" ]; then
+            echo "No CHANGELOG.md entry found for '${TAG}'"
+            exit 1
+          fi
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "GitHub release '${TAG}' already exists, skipping creation"
+          else
+            printf '%s\n' "${notes}" | gh release create "${TAG}" --title "${TAG}" --notes-file -
+          fi
+
+  # Publish the NPM package via OIDC trusted publishing.
+  publish:
+    needs: [check, release]
+    if: ${{ !cancelled() && needs.check.result == 'success' && needs.release.result == 'success' }}
+    runs-on: ubuntu-26.04
+    permissions:
+      # Allow requesting short-lived OIDC token used for NPM trusted publishing.
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 26
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing requires a recent npm (>= 11.5.1).
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      # `--ignore-scripts` skips the package postinstall (no mediasoup-worker
+      # build/download needed here). `npm publish` below then runs the `prepare`
+      # script (flatbuffers generation and TypeScript build) to assemble the
+      # package, and publishes via OIDC with provenance.
+      - name: npm ci --ignore-scripts --foreground-scripts
+        run: npm ci --ignore-scripts --foreground-scripts
+
+      - name: npm publish
+        run: npm publish

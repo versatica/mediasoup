@@ -1,16 +1,47 @@
 name: mediasoup-worker-prebuild
 
-# Only trigger on GitHub releases.
+# Triggered when mediasoup-npm-publish.yaml finishes successfully (workflow_run).
+# It builds the mediasoup-worker prebuilt binaries for all supported platforms
+# and uploads them to the GitHub release that mediasoup-npm-publish.yaml already
+# created.
+#
+# It can also be triggered manually (workflow_dispatch) to re-build and re-upload
+# the prebuilt binaries for a given release tag (for example if a platform
+# failed), by entering the release tag/version in the GitHub Actions tab.
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ['mediasoup-npm-publish']
+    # workflow_run can fire on different activity types of the upstream run:
+    #   - requested: the upstream run was created/queued.
+    #   - in_progress: the upstream run started executing.
+    #   - completed: the upstream run finished, with ANY conclusion (success,
+    #     failure, cancelled, skipped, timed_out, action_required, ...).
+    # We want 'completed' because that's the only activity type that fires once
+    # the upstream run has fully finished. The conclusion is then gated in the
+    # job's `if` below, so we only build the prebuilt binaries when the NPM
+    # publish actually succeeded.
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to (re)build and upload mediasoup-worker prebuilt binaries'
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.release_tag || github.event.workflow_run.head_branch }}
+  # Don't cancel an in-progress prebuild if a new run lands in the same group.
+  cancel-in-progress: false
 
 jobs:
-  ci:
-    # Only run for Node releases (tag X.Y.Z) and not for Rust releases (tag
-    # rust-X.Y.Z), which are created by rust-scripts.mjs and must not trigger
-    # mediasoup-worker prebuilds.
-    if: ${{ !startsWith(github.event.release.tag_name, 'rust-') }}
+  # Build the mediasoup-worker prebuilt binaries and upload them to the GH
+  # release.
+  prebuild:
+    # Run only when triggered manually, or when the upstream mediasoup-npm-publish
+    # run finished successfully. This guarantees we never build/upload binaries
+    # for a release whose NPM publish failed.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write
     strategy:
       # Here we want to see all errors, not just the first one.
       fail-fast: false
@@ -55,14 +86,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_tag || github.event.workflow_run.head_branch }}
 
       - name: Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 26
 
-      # We need to install some NPM production deps for npm-scripts.mjs to
-      # work.
+      # We need to install some NPM production deps for npm-scripts.mjs to work.
       - name: npm ci --ignore-scripts --omit=dev --foreground-scripts
         run: npm ci --ignore-scripts --omit=dev --foreground-scripts
 
@@ -72,11 +104,11 @@ jobs:
       - name: npm run worker:build
         run: npm run worker:build
 
-      # Publish prebuild binaries on tag.
       - name: npm run worker:prebuild
         run: npm run worker:prebuild
 
       - name: Upload mediasoup-worker prebuilt binary
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.release_tag || github.event.workflow_run.head_branch }}
           files: worker/prebuild/mediasoup-worker-*.tgz

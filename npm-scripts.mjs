@@ -19,8 +19,6 @@ const WORKER_RELEASE_BIN = IS_WINDOWS
 	: 'mediasoup-worker';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
-const GH_OWNER = 'versatica';
-const GH_REPO = 'mediasoup';
 
 // Paths for ESLint to check.
 const ESLINT_PATHS = [
@@ -576,7 +574,17 @@ async function checkRelease() {
 async function release() {
 	logInfo('release()');
 
-	// Make sure we are on the main branch.
+	const version = taskArgs.trim();
+
+	if (!/^\d+\.\d+\.\d+$/.test(version)) {
+		logError(
+			`release() | a SEMVER 'x.y.z' argument is required, but got '${version}'`
+		);
+
+		exitWithError();
+	}
+
+	// Must be on the main branch.
 	const branch = execSync('git rev-parse --abbrev-ref HEAD', {
 		encoding: 'utf-8',
 	}).trim();
@@ -589,36 +597,25 @@ async function release() {
 		exitWithError();
 	}
 
-	let octokit;
+	// Clean working tree required before bumping the version.
+	checkGitClean();
 
-	try {
-		octokit = await getOctokit();
-	} catch (error) {
-		logError(error.message);
+	// Lint, test, build, publish dry-run, and verify the CHANGELOG entry (of the
+	// previous version still in package.json, which is harmless).
+	await checkRelease();
 
-		exitWithError();
-	}
+	// Bump the version in package.json + package-lock.json and in CHANGELOG.md.
+	executeCmd(`npm version ${version} --no-git-tag-version`);
+	await updateChangelog(version);
 
-	const { versionChanges } = await checkRelease();
-
-	// The local repo ust be "dirty" so the script can commit now.
-	executeCmd(`git commit -am '${pkg.version}'`);
+	// Commit the bump, tag it, and push both. The pushed tag triggers
+	// mediasoup-npm-publish.yaml, which checks, creates the GitHub release and
+	// publishes to NPM; on its success mediasoup-worker-prebuild.yaml builds and
+	// uploads the prebuilt binaries.
+	executeCmd(`git commit -am 'version ${version}'`);
+	executeCmd(`git tag -a ${version} -m '${version}'`);
 	executeCmd(`git push origin ${MAIN_BRANCH}`);
-	executeCmd(`git tag -a ${pkg.version} -m '${pkg.version}'`);
-	executeCmd(`git push origin '${pkg.version}'`);
-
-	logInfo(`release() | creating release '${pkg.version}' in GitHub`);
-
-	await octokit.repos.createRelease({
-		owner: GH_OWNER,
-		repo: GH_REPO,
-		name: pkg.version,
-		body: versionChanges,
-		tag_name: pkg.version,
-		draft: false,
-	});
-
-	executeInteractiveCmd('npm publish');
+	executeCmd(`git push origin '${version}'`);
 }
 
 function ensureDir(dir) {
@@ -788,19 +785,21 @@ async function downloadPrebuiltWorker() {
 	});
 }
 
-async function getOctokit() {
-	if (!process.env.GITHUB_TOKEN) {
-		throw new Error('missing GITHUB_TOKEN environment variable');
-	}
+function checkGitClean() {
+	logInfo('checkGitClean()');
 
-	// NOTE: Load dep on demand since it's a devDependency.
-	const { Octokit } = await import('@octokit/rest');
-
-	const octokit = new Octokit({
-		auth: process.env.GITHUB_TOKEN,
+	const status = execSync('git status --porcelain', {
+		encoding: 'utf-8',
+		stdio: ['ignore', 'pipe', 'ignore'],
 	});
 
-	return octokit;
+	if (status.trim()) {
+		logError(
+			'checkGitClean() | Git working tree is not clean, commit or stash your changes first'
+		);
+
+		exitWithError();
+	}
 }
 
 async function getVersionChanges() {
@@ -845,6 +844,35 @@ async function getVersionChanges() {
 	);
 }
 
+async function updateChangelog(version) {
+	logInfo(`updateChangelog() [version:${version}]`);
+
+	// NOTE: Load dep on demand since it's a devDependency.
+	const marked = await import('marked');
+
+	const changelog = fs.readFileSync('./CHANGELOG.md', { encoding: 'utf-8' });
+	const tokens = marked.lexer(changelog);
+
+	// Locate the top "### NEXT" heading.
+	const nextHeading = tokens.find(
+		token =>
+			token.type === 'heading' && token.depth === 3 && token.text === 'NEXT'
+	);
+
+	if (!nextHeading) {
+		throw new Error("no '### NEXT' heading found in CHANGELOG.md");
+	}
+
+	// Insert "### <version>" right below "### NEXT" (keeping the empty "### NEXT"
+	// for future unreleased changes), preserving the heading's trailing newlines.
+	const updatedChangelog = changelog.replace(
+		nextHeading.raw,
+		`### NEXT\n\n### ${version}${nextHeading.raw.slice('### NEXT'.length)}`
+	);
+
+	fs.writeFileSync('./CHANGELOG.md', updatedChangelog);
+}
+
 function executeCmd(command) {
 	logInfo(`executeCmd(): ${command}`);
 
@@ -857,6 +885,7 @@ function executeCmd(command) {
 	}
 }
 
+// eslint-disable-next-line no-unused-vars
 function executeInteractiveCmd(command, { cwd } = {}) {
 	logInfo(`executeInteractiveCmd(): ${command}${cwd ? ` [cwd:${cwd}]` : ''}`);
 

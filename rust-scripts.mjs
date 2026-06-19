@@ -376,6 +376,8 @@ async function getOctokit() {
 }
 
 function checkGitClean() {
+	logInfo('checkGitClean()');
+
 	const status = execSync('git status --porcelain', {
 		encoding: 'utf-8',
 		stdio: ['ignore', 'pipe', 'ignore'],
