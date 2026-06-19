@@ -188,7 +188,7 @@ namespace RTC
 			void Serialize(uint8_t* buffer, size_t bufferLength) final;
 
 			/**
-			 * Can be overridden by each subclass.
+			 * Must be overridden by each subclass.
 			 */
 			Chunk* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
