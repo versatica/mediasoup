@@ -1,0 +1,50 @@
+name: mediasoup-website-publish
+
+# Triggered when mediasoup-npm-publish.yaml finishes successfully (workflow_run).
+# It triggers the `website-publish` workflow in versatica/mediasoup-website (via
+# workflow_dispatch, no inputs), which builds the website and deploys it.
+#
+# It can also be triggered manually (workflow_dispatch) to re-trigger the website
+# update (for example if the previous attempt failed).
+on:
+  workflow_run:
+    workflows: ['mediasoup-npm-publish']
+    # workflow_run only has 'requested', 'in_progress' and 'completed' activity
+    # types (there is no 'success'/'failure' type). 'completed' fires once the
+    # upstream run has fully finished, regardless of its conclusion. The actual
+    # success is gated in the job's `if` below, via
+    # github.event.workflow_run.conclusion.
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  # Don't cancel an in-progress trigger if a new run lands in the same group.
+  cancel-in-progress: false
+
+jobs:
+  # Trigger the `website-publish` workflow in versatica/mediasoup-website.
+  trigger:
+    # Run only when triggered manually, or when the upstream mediasoup-npm-publish
+    # run finished successfully. This guarantees we never update the website for a
+    # release whose NPM publish failed.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-26.04
+    steps:
+      # Allow a short-lived installation token for the GitHub App. The App's
+      # private key (stored as a secret) does not expire but this token does, but
+      # it is generated automatically on every run, so there is nothing to renew
+      # manually.
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.WEBSITE_APP_ID }}
+          private-key: ${{ secrets.WEBSITE_APP_PRIVATE_KEY }}
+          owner: versatica
+          repositories: mediasoup-website
+
+      - name: Trigger website-publish workflow
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: gh workflow run website-publish.yaml --repo versatica/mediasoup-website

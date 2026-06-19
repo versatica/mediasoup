@@ -14,6 +14,7 @@
 [![][github-actions-shield-mediasoup-worker-fuzzer]][github-actions-mediasoup-worker-fuzzer]
 [![][github-actions-shield-mediasoup-npm-publish]][github-actions-mediasoup-npm-publish]
 [![][github-actions-shield-mediasoup-worker-prebuild]][github-actions-mediasoup-worker-prebuild]
+[![][github-actions-shield-mediasoup-website-publish]][github-actions-mediasoup-website-publish]
 [![][github-actions-mediasoup-codeql-shield-mediasoup]][github-actions-mediasoup-codeql-mediasoup]
 
 ## Website and Documentation
@@ -107,6 +108,8 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [github-actions-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml?query=event%3Aworkflow_run
 [github-actions-shield-mediasoup-npm-publish]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-npm-publish.yaml/badge.svg?event=push
 [github-actions-mediasoup-npm-publish]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-npm-publish.yaml?query=event%3Apush
+[github-actions-shield-mediasoup-website-publish]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-website-publish.yaml/badge.svg?event=workflow_run
+[github-actions-mediasoup-website-publish]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-website-publish.yaml?query=event%3Aworkflow_run
 [github-actions-mediasoup-codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-codeql.yaml/badge.svg?branch=v3
 [github-actions-mediasoup-codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-codeql.yaml?query=branch%3Av3
 [sponsor]: https://mediasoup.org/sponsor
