@@ -10,6 +10,7 @@
 #include "RTC/UdpSocket.hpp"
 #include "RTC/WebRtcTransport.hpp"
 #include "SharedInterface.hpp"
+#include "TransportTuple.hpp"
 #include <flatbuffers/flatbuffers.h>
 #include <ankerl/unordered_dense.h>
 #include <string>
@@ -118,8 +119,10 @@ namespace RTC
 		ankerl::unordered_dense::set<RTC::WebRtcTransport*> webRtcTransports;
 		// Map of WebRtcTransports indexed by local ICE usernameFragment.
 		ankerl::unordered_dense::map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransport;
-		// Map of WebRtcTransports indexed by TransportTuple.hash.
-		ankerl::unordered_dense::map<uint64_t, RTC::WebRtcTransport*> mapTupleWebRtcTransport;
+		// Map of WebRtcTransports indexed by TransportTuple::TupleKey.
+		ankerl::unordered_dense::
+		  map<RTC::TransportTuple::TupleKey, RTC::WebRtcTransport*, RTC::TransportTuple::TupleKeyHash>
+		    mapTupleWebRtcTransport;
 		// Whether the destructor has been called.
 		bool closing{ false };
 	};

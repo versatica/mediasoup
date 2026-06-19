@@ -67,6 +67,8 @@ SCENARIO("TransportTuple", "[transport-tuple]")
 		}
 	};
 
+	// We can only make sure that if key1 == key2 then hash(key1) == hash(key2). The opposite is not
+	// true since different keys may have the same hash.
 	SECTION("2 tuples with same local and remote IP:port have the same hash")
 	{
 		auto udpSocket      = makeUdpSocket("0.0.0.0", 10000, 50000);
@@ -76,11 +78,14 @@ SCENARIO("TransportTuple", "[transport-tuple]")
 		RTC::TransportTuple udpTuple1(udpSocket.get(), udpRemoteAddr1.get());
 		RTC::TransportTuple udpTuple2(udpSocket.get(), udpRemoteAddr2.get());
 
-		REQUIRE(udpTuple1.hash == udpTuple2.hash);
+		REQUIRE(
+		  RTC::TransportTuple::TupleKeyHash{}(udpTuple1.GetTupleKey()) ==
+		  RTC::TransportTuple::TupleKeyHash{}(udpTuple2.GetTupleKey()));
+		REQUIRE(udpTuple1.GetTupleKey() == udpTuple2.GetTupleKey());
+		REQUIRE(udpTuple1.Compare(std::addressof(udpTuple2)));
 	}
 
-	SECTION(
-	  "2 tuples with same local IP:port, same remote IP and different remote port have different hashes")
+	SECTION("2 tuples with same local IP:port, same remote IP and different remote port")
 	{
 		auto udpSocket      = makeUdpSocket("0.0.0.0", 10000, 50000);
 		auto udpRemoteAddr1 = makeUdpSockAddr(AF_INET, "1.2.3.4", 10001);
@@ -89,7 +94,8 @@ SCENARIO("TransportTuple", "[transport-tuple]")
 		RTC::TransportTuple udpTuple1(udpSocket.get(), udpRemoteAddr1.get());
 		RTC::TransportTuple udpTuple2(udpSocket.get(), udpRemoteAddr2.get());
 
-		REQUIRE(udpTuple1.hash != udpTuple2.hash);
+		REQUIRE(udpTuple1.GetTupleKey() != udpTuple2.GetTupleKey());
+		REQUIRE(!udpTuple1.Compare(std::addressof(udpTuple2)));
 
 		for (uint16_t remotePort{ 1 }; remotePort < 65535; ++remotePort)
 		{
@@ -103,12 +109,12 @@ SCENARIO("TransportTuple", "[transport-tuple]")
 
 			RTC::TransportTuple udpTuple3(udpSocket.get(), udpRemoteAddr3.get());
 
-			REQUIRE(udpTuple1.hash != udpTuple3.hash);
+			REQUIRE(udpTuple1.GetTupleKey() != udpTuple3.GetTupleKey());
+			REQUIRE(!udpTuple1.Compare(std::addressof(udpTuple3)));
 		}
 	}
 
-	SECTION(
-	  "2 tuples with same local IP:port, different remote IP and same remote port have different hashes")
+	SECTION("2 tuples with same local IP:port, different remote IP and same remote port")
 	{
 		auto udpSocket      = makeUdpSocket("0.0.0.0", 10000, 50000);
 		auto udpRemoteAddr1 = makeUdpSockAddr(AF_INET, "1.2.3.4", 10001);
@@ -117,11 +123,11 @@ SCENARIO("TransportTuple", "[transport-tuple]")
 		RTC::TransportTuple udpTuple1(udpSocket.get(), udpRemoteAddr1.get());
 		RTC::TransportTuple udpTuple2(udpSocket.get(), udpRemoteAddr2.get());
 
-		REQUIRE(udpTuple1.hash != udpTuple2.hash);
+		REQUIRE(udpTuple1.GetTupleKey() != udpTuple2.GetTupleKey());
+		REQUIRE(!udpTuple1.Compare(std::addressof(udpTuple2)));
 	}
 
-	SECTION(
-	  "2 tuples with same remote IP:port, same local IP and different local port have different hashes")
+	SECTION("2 tuples with same remote IP:port, same local IP and different local port")
 	{
 		auto udpSocket1     = makeUdpSocket("0.0.0.0", 10000, 20000);
 		auto udpSocket2     = makeUdpSocket("0.0.0.0", 30000, 40000);
@@ -131,11 +137,11 @@ SCENARIO("TransportTuple", "[transport-tuple]")
 		RTC::TransportTuple udpTuple1(udpSocket1.get(), udpRemoteAddr1.get());
 		RTC::TransportTuple udpTuple2(udpSocket2.get(), udpRemoteAddr2.get());
 
-		REQUIRE(udpTuple1.hash != udpTuple2.hash);
+		REQUIRE(udpTuple1.GetTupleKey() != udpTuple2.GetTupleKey());
+		REQUIRE(!udpTuple1.Compare(std::addressof(udpTuple2)));
 	}
 
-	SECTION(
-	  "2 tuples with same local IP:port, same remote IP and different remote port have different hashes")
+	SECTION("2 tuples with same local IP:port, same remote IP and different remote port")
 	{
 		auto udpSocket      = makeUdpSocket("0.0.0.0", 10000, 50000);
 		auto udpRemoteAddr1 = makeUdpSockAddr(AF_INET, "1.2.3.4", 40001);
@@ -144,6 +150,7 @@ SCENARIO("TransportTuple", "[transport-tuple]")
 		RTC::TransportTuple udpTuple1(udpSocket.get(), udpRemoteAddr1.get());
 		RTC::TransportTuple udpTuple2(udpSocket.get(), udpRemoteAddr2.get());
 
-		REQUIRE(udpTuple1.hash != udpTuple2.hash);
+		REQUIRE(udpTuple1.GetTupleKey() != udpTuple2.GetTupleKey());
+		REQUIRE(!udpTuple1.Compare(std::addressof(udpTuple2)));
 	}
 }

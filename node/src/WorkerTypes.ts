@@ -76,11 +76,6 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 	libwebrtcFieldTrials?: string;
 
 	/**
-	 * Disable liburing (io_uring) despite it's supported in current host.
-	 */
-	disableLiburing?: boolean;
-
-	/**
 	 * Custom application data.
 	 */
 	appData?: WorkerAppData;
@@ -186,11 +181,6 @@ export type WorkerDump = {
 	channelMessageHandlers: {
 		channelRequestHandlers: string[];
 		channelNotificationHandlers: string[];
-	};
-	liburing?: {
-		sqeProcessCount: number;
-		sqeMissCount: number;
-		userDataMissCount: number;
 	};
 };
 

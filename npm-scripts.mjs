@@ -8,7 +8,9 @@ import * as tar from 'tar';
 import pkg from './package.json' with { type: 'json' };
 
 const IS_WINDOWS = os.platform() === 'win32';
-const MAYOR_VERSION = pkg.version.split('.')[0];
+// Main Git branch is 'v' concatenated with the major SEMVER number of the
+// "version" field in package.json.
+const MAIN_BRANCH = `v${pkg.version.split('.')[0]}`;
 const PYTHON = getPython();
 const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
 const WORKER_RELEASE_DIR = 'worker/out/Release';
@@ -17,8 +19,6 @@ const WORKER_RELEASE_BIN = IS_WINDOWS
 	: 'mediasoup-worker';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
-const GH_OWNER = 'versatica';
-const GH_REPO = 'mediasoup';
 
 // Paths for ESLint to check.
 const ESLINT_PATHS = [
@@ -27,6 +27,7 @@ const ESLINT_PATHS = [
 	'knip.config.mjs',
 	'node/src',
 	'npm-scripts.mjs',
+	'rust-scripts.mjs',
 	'worker/scripts',
 ];
 
@@ -47,6 +48,7 @@ const PRETTIER_PATHS = [
 	'node/src',
 	'npm-scripts.mjs',
 	'package.json',
+	'rust-scripts.mjs',
 	'tsconfig.json',
 	'worker/scripts',
 ];
@@ -86,7 +88,7 @@ async function run() {
 		// So here we generate flatbuffers definitions for TypeScript and compile
 		// TypeScript to JavaScript.
 		case 'prepare': {
-			await flatcNode();
+			await flatcNode({ force: false });
 			buildTypescript({ force: false });
 
 			break;
@@ -137,13 +139,13 @@ async function run() {
 		}
 
 		case 'typescript:build': {
-			buildTypescript({ force: true });
+			buildTypescript({ force: true, args: taskArgs });
 
 			break;
 		}
 
 		case 'typescript:watch': {
-			watchTypescript();
+			watchTypescript({ args: taskArgs });
 
 			break;
 		}
@@ -203,7 +205,7 @@ async function run() {
 		}
 
 		case 'flatc:node': {
-			await flatcNode();
+			await flatcNode({ force: true });
 
 			break;
 		}
@@ -215,7 +217,7 @@ async function run() {
 		}
 
 		case 'test:node': {
-			testNode();
+			testNode({ args: taskArgs });
 
 			break;
 		}
@@ -227,7 +229,7 @@ async function run() {
 		}
 
 		case 'coverage:node': {
-			coverageNode();
+			coverageNode({ args: taskArgs });
 
 			break;
 		}
@@ -245,7 +247,7 @@ async function run() {
 		}
 
 		case 'release': {
-			await release();
+			await release({ args: taskArgs });
 
 			break;
 		}
@@ -277,8 +279,7 @@ function getPython() {
 function getWorkerPrebuildTarName() {
 	let workerPrebuildTarName = `mediasoup-worker-${pkg.version}-${os.platform()}-${os.arch()}`;
 
-	// In Linux we want to know about kernel version since kernel >= 6 supports
-	// io-uring.
+	// In Linux we want to know about kernel version.
 	if (os.platform() === 'linux') {
 		const kernelMajorVersion = Number(os.release().split('.')[0]);
 
@@ -318,7 +319,8 @@ function deleteNodeLib() {
 	fs.rmSync('node/lib', { recursive: true, force: true });
 }
 
-function buildTypescript({ force }) {
+function buildTypescript({ force, args = '' }) {
+	// Skip JavaScript code generation if the output already exists, unless forced.
 	if (!force && fs.existsSync('node/lib')) {
 		return;
 	}
@@ -327,15 +329,15 @@ function buildTypescript({ force }) {
 
 	deleteNodeLib();
 
-	executeCmd(`tsc ${taskArgs}`);
+	executeCmd(`tsc ${args}`);
 }
 
-function watchTypescript() {
+function watchTypescript({ args = '' } = {}) {
 	logInfo('watchTypescript()');
 
 	deleteNodeLib();
 
-	executeCmd(`tsc --watch ${taskArgs}`);
+	executeCmd(`tsc --watch ${args}`);
 }
 
 function buildWorker() {
@@ -420,8 +422,13 @@ function tidyWorker({ fix }) {
 	}
 }
 
-async function flatcNode() {
-	logInfo('flatcNode()');
+async function flatcNode({ force }) {
+	// Skip flatbuffers generation if the output already exists, unless forced.
+	if (!force && fs.existsSync(path.join('node', 'src', 'fbs'))) {
+		return;
+	}
+
+	logInfo(`flatcNode() [force:${force}]`);
 
 	// NOTE: Load dep on demand since it's a devDependency.
 	const ini = await import('ini');
@@ -482,10 +489,10 @@ function flatcWorker() {
 	executeCmd(`"${PYTHON}" -m invoke -r worker flatc`);
 }
 
-function testNode() {
+function testNode({ args = '' } = {}) {
 	logInfo('testNode()');
 
-	executeCmd(`jest --silent false --detectOpenHandles ${taskArgs}`);
+	executeCmd(`jest --silent false --detectOpenHandles ${args}`);
 }
 
 function testWorker() {
@@ -496,10 +503,10 @@ function testWorker() {
 	executeCmd(`"${PYTHON}" -m invoke -r worker test`);
 }
 
-function coverageNode() {
+function coverageNode({ args = '' } = {}) {
 	logInfo('coverageNode()');
 
-	executeCmd(`jest --coverage ${taskArgs}`);
+	executeCmd(`jest --coverage ${args}`);
 	executeCmd('open-cli coverage/lcov-report/index.html');
 }
 
@@ -531,14 +538,26 @@ function publishDryRun() {
 	// real publish would, reporting its contents without writing any file or
 	// contacting the registry. Useful to validate the `files` list in
 	// package.json and that the package builds before tagging a release.
-	executeCmd('npm pack --dry-run');
+	executeCmd('npm pack --dry-run --loglevel warn');
 }
 
 async function checkRelease() {
 	logInfo('checkRelease()');
 
+	// Verify that CHANGELOG.md has an entry for the new version (and grab its
+	// changes, used as the GitHub release body) before the slow build steps.
+	let versionChanges;
+
+	try {
+		versionChanges = await getVersionChanges();
+	} catch (error) {
+		logError(error.message);
+
+		exitWithError();
+	}
+
 	installNodeDeps();
-	await flatcNode();
+	await flatcNode({ force: true });
 	buildTypescript({ force: true });
 	buildWorker();
 	lintNode();
@@ -548,41 +567,64 @@ async function checkRelease() {
 	// Validate packaging (the `files` list in package.json) before the
 	// irreversible release steps (git push, GitHub release, npm publish).
 	publishDryRun();
+
+	return { versionChanges };
 }
 
-async function release() {
+async function release({ args = '' } = {}) {
 	logInfo('release()');
 
-	let octokit;
-	let versionChanges;
+	const version = args.trim();
 
-	try {
-		octokit = await getOctokit();
-		versionChanges = await getVersionChanges();
-	} catch (error) {
-		logError(error.message);
+	if (!/^\d+\.\d+\.\d+$/.test(version)) {
+		logError(
+			`release() | a SEMVER 'x.y.z' argument is required, but got '${version}'`
+		);
 
 		exitWithError();
 	}
 
+	// Must be on the main branch.
+	const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+		encoding: 'utf-8',
+	}).trim();
+
+	if (branch !== MAIN_BRANCH) {
+		logError(
+			`release() | must be on '${MAIN_BRANCH}' branch, but it is on '${branch}' branch`
+		);
+
+		exitWithError();
+	}
+
+	// Clean working tree required before bumping the version.
+	checkGitClean();
+
+	// Lint, test, build, publish dry-run, and verify the CHANGELOG entry (of the
+	// previous version still in package.json, which is harmless).
 	await checkRelease();
-	executeCmd(`git commit -am '${pkg.version}'`);
-	executeCmd(`git tag -a ${pkg.version} -m '${pkg.version}'`);
-	executeCmd(`git push origin v${MAYOR_VERSION}`);
-	executeCmd(`git push origin '${pkg.version}'`);
 
-	logInfo('creating release in GitHub');
+	// Bump the version in package.json + package-lock.json and in CHANGELOG.md.
+	executeCmd(`npm version ${version} --no-git-tag-version`);
+	await updateChangelog(version);
 
-	await octokit.repos.createRelease({
-		owner: GH_OWNER,
-		repo: GH_REPO,
-		name: pkg.version,
-		body: versionChanges,
-		tag_name: pkg.version,
-		draft: false,
-	});
-
-	executeInteractiveCmd('npm publish');
+	// Commit the bump, tag it, and push both. The pushed tag triggers
+	// mediasoup-npm-publish.yaml, which checks, creates the GitHub release and
+	// publishes to NPM; on its success mediasoup-worker-prebuild.yaml builds and
+	// uploads the prebuilt binaries.
+	//
+	// The commit message carries a "[no-ci]" marker so the regular branch CI
+	// workflows (node, worker, rust, fuzzer, codeql) skip this commit: it only
+	// bumps version/CHANGELOG (no code change) and its parent already passed CI,
+	// and the release is driven by the tag-triggered workflows instead.
+	//
+	// NOTE: "[no-ci]" (with a hyphen) is a custom marker, NOT GitHub's native
+	// "[skip ci]"/"[no ci]" (which would also skip mediasoup-npm-publish, since
+	// the tag push shares this same commit).
+	executeCmd(`git commit -am 'release ${version} [no-ci]'`);
+	executeCmd(`git tag -a ${version} -m '${version}'`);
+	executeCmd(`git push origin ${MAIN_BRANCH}`);
+	executeCmd(`git push origin '${version}'`);
 }
 
 function ensureDir(dir) {
@@ -752,19 +794,21 @@ async function downloadPrebuiltWorker() {
 	});
 }
 
-async function getOctokit() {
-	if (!process.env.GITHUB_TOKEN) {
-		throw new Error('missing GITHUB_TOKEN environment variable');
-	}
+function checkGitClean() {
+	logInfo('checkGitClean()');
 
-	// NOTE: Load dep on demand since it's a devDependency.
-	const { Octokit } = await import('@octokit/rest');
-
-	const octokit = new Octokit({
-		auth: process.env.GITHUB_TOKEN,
+	const status = execSync('git status --porcelain', {
+		encoding: 'utf-8',
+		stdio: ['ignore', 'pipe', 'ignore'],
 	});
 
-	return octokit;
+	if (status.trim()) {
+		logError(
+			'checkGitClean() | Git working tree is not clean, commit or stash your changes first'
+		);
+
+		exitWithError();
+	}
 }
 
 async function getVersionChanges() {
@@ -780,9 +824,26 @@ async function getVersionChanges() {
 		const entry = entries[idx];
 
 		if (entry.type === 'heading' && entry.text === pkg.version) {
-			const changes = entries[idx + 1].raw;
+			// Collect every token after the matching heading until the next heading.
+			// NOTE: We cannot just use `entries[idx + 1].raw` because `marked`
+			// inserts a `space` token between the heading and its content.
+			let changes = '';
 
-			return changes;
+			for (let next = idx + 1; next < entries.length; ++next) {
+				if (entries[next].type === 'heading') {
+					break;
+				}
+
+				changes += entries[next].raw;
+			}
+
+			changes = changes.trim();
+
+			if (changes) {
+				return changes;
+			}
+
+			break;
 		}
 	}
 
@@ -790,6 +851,35 @@ async function getVersionChanges() {
 	throw new Error(
 		`no entry found in CHANGELOG.md for version '${pkg.version}'`
 	);
+}
+
+async function updateChangelog(version) {
+	logInfo(`updateChangelog() [version:${version}]`);
+
+	// NOTE: Load dep on demand since it's a devDependency.
+	const marked = await import('marked');
+
+	const changelog = fs.readFileSync('./CHANGELOG.md', { encoding: 'utf-8' });
+	const tokens = marked.lexer(changelog);
+
+	// Locate the top "### NEXT" heading.
+	const nextHeading = tokens.find(
+		token =>
+			token.type === 'heading' && token.depth === 3 && token.text === 'NEXT'
+	);
+
+	if (!nextHeading) {
+		throw new Error("no '### NEXT' heading found in CHANGELOG.md");
+	}
+
+	// Insert "### <version>" right below "### NEXT" (keeping the empty "### NEXT"
+	// for future unreleased changes), preserving the heading's trailing newlines.
+	const updatedChangelog = changelog.replace(
+		nextHeading.raw,
+		`### NEXT\n\n### ${version}${nextHeading.raw.slice('### NEXT'.length)}`
+	);
+
+	fs.writeFileSync('./CHANGELOG.md', updatedChangelog);
 }
 
 function executeCmd(command) {
@@ -804,11 +894,12 @@ function executeCmd(command) {
 	}
 }
 
-function executeInteractiveCmd(command) {
-	logInfo(`executeInteractiveCmd(): ${command}`);
+// eslint-disable-next-line no-unused-vars
+function executeInteractiveCmd(command, { cwd } = {}) {
+	logInfo(`executeInteractiveCmd(): ${command}${cwd ? ` [cwd:${cwd}]` : ''}`);
 
 	try {
-		execSync(command, { stdio: 'inherit', env: process.env });
+		execSync(command, { cwd, stdio: 'inherit', env: process.env });
 	} catch (error) {
 		logError(`executeInteractiveCmd() failed, exiting: ${error}`);
 

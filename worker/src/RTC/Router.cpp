@@ -2,9 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Router.hpp"
-#ifdef MS_LIBURING_SUPPORTED
-#include "DepLibUring.hpp"
-#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/ActiveSpeakerObserver.hpp"
@@ -667,14 +664,6 @@ namespace RTC
 			// Clone only happens if needed and only once.
 			RTC::RTP::SharedPacket sharedPacket;
 
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Activate liburing usage.
-				DepLibUring::SetActive();
-			}
-#endif
-
 			for (auto* consumer : consumers)
 			{
 				// Update MID RTP extension value.
@@ -694,14 +683,6 @@ namespace RTC
 					sharedPacket.AssertSamePacket(packet);
 				}
 			}
-
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Submit all prepared submission entries.
-				DepLibUring::Submit();
-			}
-#endif
 		}
 
 		auto it = this->mapProducerRtpObservers.find(producer);
@@ -934,16 +915,6 @@ namespace RTC
 
 		if (!dataConsumers.empty())
 		{
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Activate liburing usage.
-				// The effective sending could be synchronous, thus we would send those
-				// messages within a single system call.
-				DepLibUring::SetActive();
-			}
-#endif
-
 			const auto numDataConsumers = dataConsumers.size();
 
 			for (auto* dataConsumer : dataConsumers)
@@ -978,14 +949,6 @@ namespace RTC
 					dataConsumer->SendMessage(std::move(clonedMessage), subchannels, requiredSubchannel);
 				}
 			}
-
-#ifdef MS_LIBURING_SUPPORTED
-			if (DepLibUring::IsEnabled())
-			{
-				// Submit all prepared submission entries.
-				DepLibUring::Submit();
-			}
-#endif
 		}
 	}
 

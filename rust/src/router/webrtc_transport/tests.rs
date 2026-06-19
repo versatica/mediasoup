@@ -180,7 +180,6 @@ fn create_with_webrtc_server_succeeds() {
                 webrtc_server_dump.local_ice_username_fragments[0].webrtc_transport_id,
                 transport.id()
             );
-            assert_eq!(webrtc_server_dump.tuple_hashes, vec![]);
         }
 
         {
@@ -222,7 +221,6 @@ fn create_with_webrtc_server_succeeds() {
                 HashedSet::default()
             );
             assert_eq!(webrtc_server_dump.local_ice_username_fragments, vec![]);
-            assert_eq!(webrtc_server_dump.tuple_hashes, vec![]);
         }
     });
 }

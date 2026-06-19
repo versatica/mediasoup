@@ -18,12 +18,12 @@ use crate::rtp_observer::RtpObserverId;
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_server::{
     WebRtcServerDump, WebRtcServerIceUsernameFragment, WebRtcServerId, WebRtcServerIpPort,
-    WebRtcServerListenInfos, WebRtcServerTupleHash,
+    WebRtcServerListenInfos,
 };
 use crate::webrtc_transport::{
     WebRtcTransportListen, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
-use crate::worker::{ChannelMessageHandlers, LibUringDump, WorkerDump, WorkerUpdateSettings};
+use crate::worker::{ChannelMessageHandlers, WorkerDump, WorkerUpdateSettings};
 use mediasoup_sys::fbs::{
     active_speaker_observer, audio_level_observer, consumer, data_consumer, data_producer,
     direct_transport, message, notification, pipe_transport, plain_transport, producer, request,
@@ -136,11 +136,6 @@ impl Request for WorkerDumpRequest {
                     .map(|id| id.parse())
                     .collect::<Result<_, _>>()?,
             },
-            liburing: data.liburing.map(|liburing| LibUringDump {
-                sqe_process_count: liburing.sqe_process_count,
-                sqe_miss_count: liburing.sqe_miss_count,
-                user_data_miss_count: liburing.user_data_miss_count,
-            }),
         })
     }
 }
@@ -358,14 +353,6 @@ impl Request for WebRtcServerDumpRequest {
                         .parse()
                         .unwrap(),
                     webrtc_transport_id: username_fragment.web_rtc_transport_id.parse().unwrap(),
-                })
-                .collect(),
-            tuple_hashes: data
-                .tuple_hashes
-                .into_iter()
-                .map(|tuple_hash| WebRtcServerTupleHash {
-                    tuple_hash: tuple_hash.tuple_hash,
-                    webrtc_transport_id: tuple_hash.web_rtc_transport_id.parse().unwrap(),
                 })
                 .collect(),
         })

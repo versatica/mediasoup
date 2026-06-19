@@ -50,15 +50,6 @@ pub struct WebRtcServerIceUsernameFragment {
     pub webrtc_transport_id: TransportId,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-#[doc(hidden)]
-pub struct WebRtcServerTupleHash {
-    pub tuple_hash: u64,
-    #[serde(rename = "webRtcTransportId")]
-    pub webrtc_transport_id: TransportId,
-}
-
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
@@ -70,7 +61,6 @@ pub struct WebRtcServerDump {
     #[serde(rename = "webRtcTransportIds")]
     pub webrtc_transport_ids: HashedSet<TransportId>,
     pub local_ice_username_fragments: Vec<WebRtcServerIceUsernameFragment>,
-    pub tuple_hashes: Vec<WebRtcServerTupleHash>,
 }
 
 /// Struct that protects an invariant of having non-empty list of listen infos.

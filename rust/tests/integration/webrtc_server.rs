@@ -131,7 +131,6 @@ fn create_webrtc_server_succeeds() {
         );
         assert_eq!(dump.webrtc_transport_ids, HashedSet::default());
         assert_eq!(dump.local_ice_username_fragments, vec![]);
-        assert_eq!(dump.tuple_hashes, vec![]);
     });
 }
 
@@ -209,7 +208,6 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
 
         assert_eq!(dump.webrtc_transport_ids, HashedSet::default());
         assert_eq!(dump.local_ice_username_fragments, vec![]);
-        assert_eq!(dump.tuple_hashes, vec![]);
     });
 }
 

@@ -264,6 +264,12 @@ namespace Utils
 
 		static void WriteRandomBytes(uint8_t* buffer, size_t len);
 
+		static void HashCombine(size_t& seed, size_t value)
+		{
+			// The implementation is the same as boost::hash_combine().
+			seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		};
+
 	private:
 		static thread_local std::mt19937_64 rng;
 		static thread_local EVP_MAC* mac;

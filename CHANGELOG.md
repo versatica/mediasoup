@@ -2,13 +2,25 @@
 
 ### NEXT
 
-- CI: Add `ubuntu-26.04` hosts ([1830](https://github.com/versatica/mediasoup/pull/1830)).
+### 3.20.9
+
+- Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([1823](https://github.com/versatica/mediasoup/pull/1823)).
+- Worker: Fix `SeqManager::GetMaxOutput()` ([1840](https://github.com/versatica/mediasoup/pull/1840)).
+
+### 3.20.8
+
+- Worker `Consumer`: Fix crash when using simple producer stream mode ([PR #1835](https://github.com/versatica/mediasoup/pull/1835)). The bug was introduced in version 3.20.6.
+
+### 3.20.7
+
+- CI: Add `ubuntu-26.04` hosts ([PR #1830](https://github.com/versatica/mediasoup/pull/1830)).
+- Worker: Remove `io_uring` support ([PR #1832](https://github.com/versatica/mediasoup/pull/1832)).
 
 ### 3.20.6
 
-- Unify all consumer classes into a single one ([1731](https://github.com/versatica/mediasoup/pull/1731)).
-- SCTP: Validate CRC32c checksum in received packets ([1828](https://github.com/versatica/mediasoup/pull/1828)).
-- SCTP: Authenticate State Cookie in plain and pipe transports ([1829](https://github.com/versatica/mediasoup/pull/1829)).
+- Worker: Unify all `Consumer` classes into a single one ([PR #1731](https://github.com/versatica/mediasoup/pull/1731)).
+- SCTP: Validate CRC32c checksum in received packets ([PR #1828](https://github.com/versatica/mediasoup/pull/1828)).
+- SCTP: Authenticate State Cookie in plain and pipe transports ([PR #1829](https://github.com/versatica/mediasoup/pull/1829)).
 
 ### 3.20.5
 
@@ -840,7 +852,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 - `pipeToRouter()`: Reuse same `PipeTransport` when possible ([PR #697](https://github.com/versatica/mediasoup/pull/697)).
 - Add `worker.died` boolean getter.
-- Update TypeScript version to 4.X.X and use `target: "esnext"` so transpilation of ECMAScript private fields (`#xxxxx`) don't use `WeakMaps` tricks but use standard syntax instead.
+- Update TypeScript version to 4.X.X and use `target: "esnext"` so transpilation of ECMAScript private fields (`#foo`) don't use `WeakMaps` tricks but use standard syntax instead.
 - Use more than one core for compilation on Windows ([PR #709](https://github.com/versatica/mediasoup/pull/709)).
 - `Consumer`: Modification of bitrate allocation algorithm ([PR #708](https://github.com/versatica/mediasoup/pull/708)).
 

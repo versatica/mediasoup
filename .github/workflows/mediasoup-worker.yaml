@@ -24,6 +24,11 @@ concurrency:
 
 jobs:
   ci:
+    # Skip the release commit pushed by `npm run release` (its message carries a
+    # "[no-ci]" marker): it only bumps version/CHANGELOG and the release is
+    # driven by the tag-triggered workflows. On pull_request there is no
+    # head_commit, so the guard is a no-op and the job runs.
+    if: ${{ !contains(github.event.head_commit.message, '[no-ci]') }}
     strategy:
       # Here we want to see all errors, not just the first one.
       fail-fast: false
@@ -103,7 +108,7 @@ jobs:
             run-test-asan-undefined: false
             # Compile with all Meson option flags enabled once with gcc in
             # Debug mode.
-            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true -Dms_disable_liburing=true'
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_dump_rtp_payload_descriptor=true -Dms_dump_rtp_shared_packet_memory_usage=true'
           - os: ubuntu-26.04
             cc: clang
             cxx: clang++

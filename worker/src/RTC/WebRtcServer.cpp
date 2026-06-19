@@ -303,26 +303,13 @@ namespace RTC
 			    builder, localIceUsernameFragment.c_str(), webRtcTransport->id.c_str()));
 		}
 
-		// Add tupleHashes.
-		std::vector<flatbuffers::Offset<FBS::WebRtcServer::TupleHash>> tupleHashes;
-
-		for (const auto& kv : this->mapTupleWebRtcTransport)
-		{
-			const auto& tupleHash       = kv.first;
-			const auto* webRtcTransport = kv.second;
-
-			tupleHashes.emplace_back(
-			  FBS::WebRtcServer::CreateTupleHashDirect(builder, tupleHash, webRtcTransport->id.c_str()));
-		}
-
 		return FBS::WebRtcServer::CreateDumpResponseDirect(
 		  builder,
 		  this->id.c_str(),
-		  &udpSockets,
-		  &tcpServers,
-		  &webRtcTransportIds,
-		  &localIceUsernameFragments,
-		  &tupleHashes);
+		  std::addressof(udpSockets),
+		  std::addressof(tcpServers),
+		  std::addressof(webRtcTransportIds),
+		  std::addressof(localIceUsernameFragments));
 	}
 
 	void WebRtcServer::HandleRequest(Channel::ChannelRequest* request)
@@ -450,7 +437,7 @@ namespace RTC
 		}
 
 		// First try doing lookup in the tuples table.
-		auto it1 = this->mapTupleWebRtcTransport.find(tuple->hash);
+		auto it1 = this->mapTupleWebRtcTransport.find(tuple->GetTupleKey());
 
 		if (it1 != this->mapTupleWebRtcTransport.end())
 		{
@@ -488,7 +475,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapTupleWebRtcTransport.find(tuple->hash);
+		auto it = this->mapTupleWebRtcTransport.find(tuple->GetTupleKey());
 
 		if (it == this->mapTupleWebRtcTransport.end())
 		{
@@ -562,14 +549,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->mapTupleWebRtcTransport.find(tuple->hash) != this->mapTupleWebRtcTransport.end())
+		auto tupleKey = tuple->GetTupleKey();
+
+		if (this->mapTupleWebRtcTransport.contains(tupleKey))
 		{
-			MS_WARN_TAG(ice, "tuple hash already exists in the table");
+			MS_WARN_TAG(ice, "tuple key already exists in the table");
 
 			return;
 		}
 
-		this->mapTupleWebRtcTransport[tuple->hash] = webRtcTransport;
+		this->mapTupleWebRtcTransport[tupleKey] = webRtcTransport;
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleRemoved(
@@ -577,14 +566,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->mapTupleWebRtcTransport.find(tuple->hash) == this->mapTupleWebRtcTransport.end())
+		auto it = this->mapTupleWebRtcTransport.find(tuple->GetTupleKey());
+
+		if (it == this->mapTupleWebRtcTransport.end())
 		{
-			MS_DEBUG_TAG(ice, "tuple hash not found in the table");
+			MS_DEBUG_TAG(ice, "tuple key not found in the table");
 
 			return;
 		}
 
-		this->mapTupleWebRtcTransport.erase(tuple->hash);
+		this->mapTupleWebRtcTransport.erase(it);
 	}
 
 	inline void WebRtcServer::OnUdpSocketPacketReceived(
@@ -598,7 +589,7 @@ namespace RTC
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len, bufferLen);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen);
 	}
 
 	inline void WebRtcServer::OnRtcTcpConnectionClosed(
@@ -612,7 +603,7 @@ namespace RTC
 		// mapTupleWebRtcTransport because this event may be called after the tuple
 		// was removed from it.
 
-		auto it = this->mapTupleWebRtcTransport.find(tuple.hash);
+		auto it = this->mapTupleWebRtcTransport.find(tuple.GetTupleKey());
 
 		if (it == this->mapTupleWebRtcTransport.end())
 		{
@@ -621,7 +612,7 @@ namespace RTC
 
 		auto* webRtcTransport = it->second;
 
-		webRtcTransport->RemoveTuple(&tuple);
+		webRtcTransport->RemoveTuple(std::addressof(tuple));
 	}
 
 	inline void WebRtcServer::OnTcpConnectionPacketReceived(
@@ -631,6 +622,6 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
-		OnPacketReceived(&tuple, data, len, bufferLen);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen);
 	}
 } // namespace RTC

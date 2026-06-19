@@ -49,22 +49,6 @@ namespace RTC
 		}
 	}
 
-	uint64_t TransportTuple::GenerateFnv1aHash(const uint8_t* data, size_t size)
-	{
-		MS_TRACE();
-
-		const uint64_t fnvOffsetBasis = 14695981039346656037ull;
-		const uint64_t fnvPrime       = 1099511628211ull;
-		uint64_t hash                 = fnvOffsetBasis;
-
-		for (size_t i = 0; i < size; ++i)
-		{
-			hash = (hash ^ data[i]) * fnvPrime;
-		}
-
-		return hash;
-	}
-
 	/* Instance methods. */
 
 	void TransportTuple::CloseTcpConnection()
@@ -143,54 +127,107 @@ namespace RTC
 			}
 		}
 
-		MS_DUMP_CLEAN(indentation, "  hash: %" PRIu64, this->hash);
-
 		MS_DUMP_CLEAN(indentation, "</TransportTuple>");
 	}
 
-	void TransportTuple::GenerateHash()
+	bool TransportTuple::TupleKey::operator==(const TupleKey& other) const noexcept
 	{
 		MS_TRACE();
 
-		const auto* localSockAddr  = GetLocalAddress();
-		const auto* remoteSockAddr = GetRemoteAddress();
-
-		// Maximum buffer length for two IPv6 addresses and ports plus protocol.
-		static constexpr size_t BufferSize = ((16 + 2) * 2) + 1;
-		uint8_t buffer[BufferSize]         = {};
-		size_t idx                         = 0;
-
-		auto appendSockAddr = [&](const struct sockaddr* addr)
+		if (this->protocol != other.protocol)
 		{
-			if (addr->sa_family == AF_INET)
+			return false;
+		}
+
+		switch (this->protocol)
+		{
+			// For UDP compare the remote address first (it discriminates faster) and then
+			// the socket.
+			case Protocol::UDP:
 			{
-				const auto* in      = reinterpret_cast<const struct sockaddr_in*>(addr);
-				const auto* ip      = reinterpret_cast<const uint8_t*>(&in->sin_addr.s_addr);
-				const uint16_t port = ntohs(in->sin_port);
-
-				std::memcpy(buffer + idx, ip, 4);
-				idx += 4;
-				buffer[idx++] = (port >> 8) & 0xFF;
-				buffer[idx++] = port & 0xFF;
+				return Utils::IP::CompareAddresses(this->udpRemoteAddr, other.udpRemoteAddr) &&
+				       this->udpSocketOrTcpConnection == other.udpSocketOrTcpConnection;
 			}
-			else if (addr->sa_family == AF_INET6)
+
+			// For TCP the connection pointer fully identifies the tuple.
+			case Protocol::TCP:
 			{
-				const auto* in6     = reinterpret_cast<const struct sockaddr_in6*>(addr);
-				const auto* ip      = reinterpret_cast<const uint8_t*>(&in6->sin6_addr);
-				const uint16_t port = ntohs(in6->sin6_port);
-
-				std::memcpy(buffer + idx, ip, 16);
-				idx += 16;
-				buffer[idx++] = (port >> 8) & 0xFF;
-				buffer[idx++] = port & 0xFF;
+				return this->udpSocketOrTcpConnection == other.udpSocketOrTcpConnection;
 			}
-		};
 
-		appendSockAddr(localSockAddr);
-		appendSockAddr(remoteSockAddr);
+				NO_DEFAULT_GCC();
+		}
+	}
 
-		buffer[idx] = static_cast<uint8_t>(this->protocol);
+	size_t TransportTuple::TupleKeyHash::operator()(const TupleKey& key) const noexcept
+	{
+		MS_TRACE();
 
-		this->hash = TransportTuple::GenerateFnv1aHash(buffer, idx + 1);
+		const auto protocolBits = static_cast<uint8_t>(key.protocol);
+
+		size_t seed = 0;
+
+		Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint8_t>{}(protocolBits));
+		Utils::Crypto::HashCombine(
+		  seed,
+		  ankerl::unordered_dense::hash<uintptr_t>{}(
+		    reinterpret_cast<uintptr_t>(key.udpSocketOrTcpConnection)));
+
+		switch (key.protocol)
+		{
+			case Protocol::UDP:
+			{
+				// For UDP also combine the remote address.
+				const auto familyBits = static_cast<uint16_t>(key.udpRemoteAddr->sa_family);
+
+				Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint16_t>{}(familyBits));
+
+				switch (key.udpRemoteAddr->sa_family)
+				{
+					case AF_INET:
+					{
+						const auto* remoteIn = reinterpret_cast<const sockaddr_in*>(key.udpRemoteAddr);
+
+						Utils::Crypto::HashCombine(
+						  seed, ankerl::unordered_dense::hash<uint32_t>{}(remoteIn->sin_addr.s_addr));
+						Utils::Crypto::HashCombine(
+						  seed, ankerl::unordered_dense::hash<uint16_t>{}(remoteIn->sin_port));
+
+						break;
+					}
+
+					case AF_INET6:
+					{
+						const auto* remoteIn6 = reinterpret_cast<const sockaddr_in6*>(key.udpRemoteAddr);
+						const auto* addr      = remoteIn6->sin6_addr.s6_addr;
+
+						uint64_t hi;
+						uint64_t lo;
+
+						std::memcpy(std::addressof(hi), addr, sizeof(uint64_t));
+						std::memcpy(std::addressof(lo), addr + sizeof(uint64_t), sizeof(uint64_t));
+
+						Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(hi));
+						Utils::Crypto::HashCombine(seed, ankerl::unordered_dense::hash<uint64_t>{}(lo));
+						Utils::Crypto::HashCombine(
+						  seed, ankerl::unordered_dense::hash<uint16_t>{}(remoteIn6->sin6_port));
+
+						break;
+					}
+
+					default:;
+				}
+
+				return seed;
+			}
+
+			case Protocol::TCP:
+			{
+				// For TCP the connection pointer is enough.
+				return seed;
+			}
+
+				NO_DEFAULT_GCC();
+		}
 	}
 } // namespace RTC

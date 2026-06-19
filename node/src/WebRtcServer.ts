@@ -5,7 +5,6 @@ import type {
 	WebRtcServer,
 	IpPort,
 	IceUserNameFragment,
-	TupleHash,
 	WebRtcServerDump,
 	WebRtcServerEvents,
 	WebRtcServerObserver,
@@ -208,13 +207,6 @@ function parseIceUserNameFragment(
 	};
 }
 
-function parseTupleHash(binary: FbsWebRtcServer.TupleHash): TupleHash {
-	return {
-		tupleHash: Number(binary.tupleHash()),
-		webRtcTransportId: binary.webRtcTransportId()!,
-	};
-}
-
 function parseWebRtcServerDump(
 	data: FbsWebRtcServer.DumpResponse
 ): WebRtcServerDump {
@@ -228,6 +220,5 @@ function parseWebRtcServerDump(
 			'localIceUsernameFragments',
 			parseIceUserNameFragment
 		),
-		tupleHashes: fbsUtils.parseVector(data, 'tupleHashes', parseTupleHash),
 	};
 }

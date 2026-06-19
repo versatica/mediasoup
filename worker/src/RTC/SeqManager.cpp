@@ -187,7 +187,10 @@ namespace RTC
 	template<typename T, uint8_t N>
 	T SeqManager<T, N>::GetMaxOutput() const
 	{
-		return this->maxOutput;
+		// 'maxOutput' is stored in the offset-less space (as 'base' and comparisons
+		// use it), so apply 'initialOutput' here, just like `Input()` does before
+		// returning the output to the caller.
+		return (this->maxOutput + this->initialOutput) & SeqManager::MaxValue;
 	}
 
 	/*
