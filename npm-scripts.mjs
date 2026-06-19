@@ -139,13 +139,13 @@ async function run() {
 		}
 
 		case 'typescript:build': {
-			buildTypescript({ force: true });
+			buildTypescript({ force: true, args: taskArgs });
 
 			break;
 		}
 
 		case 'typescript:watch': {
-			watchTypescript();
+			watchTypescript({ args: taskArgs });
 
 			break;
 		}
@@ -217,7 +217,7 @@ async function run() {
 		}
 
 		case 'test:node': {
-			testNode();
+			testNode({ args: taskArgs });
 
 			break;
 		}
@@ -229,7 +229,7 @@ async function run() {
 		}
 
 		case 'coverage:node': {
-			coverageNode();
+			coverageNode({ args: taskArgs });
 
 			break;
 		}
@@ -247,7 +247,7 @@ async function run() {
 		}
 
 		case 'release': {
-			await release();
+			await release({ args: taskArgs });
 
 			break;
 		}
@@ -319,7 +319,7 @@ function deleteNodeLib() {
 	fs.rmSync('node/lib', { recursive: true, force: true });
 }
 
-function buildTypescript({ force }) {
+function buildTypescript({ force, args = '' }) {
 	// Skip JavaScript code generation if the output already exists, unless forced.
 	if (!force && fs.existsSync('node/lib')) {
 		return;
@@ -329,15 +329,15 @@ function buildTypescript({ force }) {
 
 	deleteNodeLib();
 
-	executeCmd(`tsc ${taskArgs}`);
+	executeCmd(`tsc ${args}`);
 }
 
-function watchTypescript() {
+function watchTypescript({ args = '' } = {}) {
 	logInfo('watchTypescript()');
 
 	deleteNodeLib();
 
-	executeCmd(`tsc --watch ${taskArgs}`);
+	executeCmd(`tsc --watch ${args}`);
 }
 
 function buildWorker() {
@@ -489,10 +489,10 @@ function flatcWorker() {
 	executeCmd(`"${PYTHON}" -m invoke -r worker flatc`);
 }
 
-function testNode() {
+function testNode({ args = '' } = {}) {
 	logInfo('testNode()');
 
-	executeCmd(`jest --silent false --detectOpenHandles ${taskArgs}`);
+	executeCmd(`jest --silent false --detectOpenHandles ${args}`);
 }
 
 function testWorker() {
@@ -503,10 +503,10 @@ function testWorker() {
 	executeCmd(`"${PYTHON}" -m invoke -r worker test`);
 }
 
-function coverageNode() {
+function coverageNode({ args = '' } = {}) {
 	logInfo('coverageNode()');
 
-	executeCmd(`jest --coverage ${taskArgs}`);
+	executeCmd(`jest --coverage ${args}`);
 	executeCmd('open-cli coverage/lcov-report/index.html');
 }
 
@@ -571,10 +571,10 @@ async function checkRelease() {
 	return { versionChanges };
 }
 
-async function release() {
+async function release({ args = '' } = {}) {
 	logInfo('release()');
 
-	const version = taskArgs.trim();
+	const version = args.trim();
 
 	if (!/^\d+\.\d+\.\d+$/.test(version)) {
 		logError(
