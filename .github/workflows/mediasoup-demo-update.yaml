@@ -1,0 +1,67 @@
+name: mediasoup-demo-update
+
+# Triggered when mediasoup-worker-prebuild.yaml finishes successfully
+# (workflow_run). We wait for the prebuild (rather than for mediasoup-npm-publish)
+# so that, by the time the mediasoup-demo workflow runs `npm install mediasoup`,
+# the mediasoup-worker prebuilt binary already exists in this release's GitHub
+# assets and the install is fast (no worker compilation needed).
+#
+# It triggers the `update-mediasoup` workflow in versatica/mediasoup-demo (via
+# workflow_dispatch), passing the released version, which bumps the mediasoup
+# dependency in server/package.json and server/package-lock.json and commits the
+# change.
+#
+# It can also be triggered manually (workflow_dispatch) to re-trigger the
+# mediasoup-demo update (for example if the previous attempt failed), optionally
+# entering the version to update to.
+on:
+  workflow_run:
+    workflows: ['mediasoup-worker-prebuild']
+    # workflow_run only has 'requested', 'in_progress' and 'completed' activity
+    # types (there is no 'success'/'failure' type). 'completed' fires once the
+    # upstream run has fully finished, regardless of its conclusion. The actual
+    # success is gated in the job's `if` below, via
+    # github.event.workflow_run.conclusion.
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'mediasoup version to update mediasoup-demo to (defaults to the latest published on NPM if empty)'
+        required: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  # Don't cancel an in-progress trigger if a new run lands in the same group.
+  cancel-in-progress: false
+
+jobs:
+  # Trigger the `update-mediasoup` workflow in versatica/mediasoup-demo.
+  trigger:
+    # Run only when triggered manually, or when the upstream
+    # mediasoup-worker-prebuild run finished successfully. This guarantees we
+    # never update mediasoup-demo for a release whose worker prebuild failed.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-26.04
+    steps:
+      # Allow a short-lived installation token for the GitHub App. The App's
+      # private key (stored as a secret) does not expire but this token does, but
+      # it is generated automatically on every run, so there is nothing to renew
+      # manually.
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DEMO_APP_ID }}
+          private-key: ${{ secrets.DEMO_APP_PRIVATE_KEY }}
+          owner: versatica
+          repositories: mediasoup-demo
+
+      # The released version is the pushed Git tag. For workflow_run events it is
+      # propagated through the upstream runs as head_branch. For manual runs it
+      # comes from the optional `version` input (empty means "latest on NPM",
+      # which the mediasoup-demo workflow resolves on its side).
+      - name: Trigger update-mediasoup workflow
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          VERSION: ${{ inputs.version || github.event.workflow_run.head_branch }}
+        run: gh workflow run update-mediasoup.yaml --repo versatica/mediasoup-demo --field version="${VERSION}"
