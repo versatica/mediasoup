@@ -113,7 +113,6 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
-		"@octokit/rest": "^22.0.1",
 		"@types/debug": "^4.1.13",
 		"@types/ini": "^4.1.1",
 		"@types/jest": "^30.0.0",

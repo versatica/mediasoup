@@ -13,6 +13,7 @@
 [![][github-actions-shield-mediasoup-rust]][github-actions-mediasoup-rust]
 [![][github-actions-shield-mediasoup-worker-fuzzer]][github-actions-mediasoup-worker-fuzzer]
 [![][github-actions-shield-mediasoup-npm-publish]][github-actions-mediasoup-npm-publish]
+[![][github-actions-shield-mediasoup-crate-publish]][github-actions-mediasoup-crate-publish]
 [![][github-actions-shield-mediasoup-worker-prebuild]][github-actions-mediasoup-worker-prebuild]
 [![][github-actions-shield-mediasoup-website-update]][github-actions-mediasoup-website-update]
 [![][github-actions-shield-mediasoup-demo-update]][github-actions-mediasoup-demo-update]
@@ -109,6 +110,8 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [github-actions-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml?query=event%3Aworkflow_run
 [github-actions-shield-mediasoup-npm-publish]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-npm-publish.yaml/badge.svg?event=push
 [github-actions-mediasoup-npm-publish]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-npm-publish.yaml?query=event%3Apush
+[github-actions-shield-mediasoup-crate-publish]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-crate-publish.yaml/badge.svg?event=push
+[github-actions-mediasoup-crate-publish]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-crate-publish.yaml?query=event%3Apush
 [github-actions-shield-mediasoup-website-update]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-website-update.yaml/badge.svg?event=workflow_run
 [github-actions-mediasoup-website-update]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-website-update.yaml?query=event%3Aworkflow_run
 [github-actions-shield-mediasoup-demo-update]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-demo-update.yaml/badge.svg?event=workflow_run

@@ -1,14 +1,15 @@
 name: mediasoup-website-update
 
-# Triggered when `mediasoup-npm-publish.yaml` finishes successfully (`workflow_run`).
-# It triggers the `update-website` workflow in versatica/mediasoup-website (via
-# `workflow_dispatch`, no inputs), which builds the website and deploys it.
+# Triggered when `mediasoup-npm-publish.yaml` or `mediasoup-crate-publish.yaml`
+# finishes successfully (`workflow_run`). It triggers the `update-website`
+# workflow in versatica/mediasoup-website (via `workflow_dispatch`, no inputs),
+# which builds the website and deploys it.
 #
 # It can also be triggered manually (`workflow_dispatch`) to re-trigger the website
 # update (for example if the previous attempt failed).
 on:
   workflow_run:
-    workflows: ['mediasoup-npm-publish']
+    workflows: ['mediasoup-npm-publish', 'mediasoup-crate-publish']
     # `workflow_run` only has 'requested', 'in_progress' and 'completed' activity
     # types (there is no 'success'/'failure' type). 'completed' fires once the
     # upstream run has fully finished, regardless of its conclusion. The actual

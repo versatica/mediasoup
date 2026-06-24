@@ -1,0 +1,228 @@
+name: mediasoup-crate-publish
+
+# Publishes a mediasoup Rust crate to crates.io. Triggered by the `release` task
+# in rust-scripts.mjs in one of two ways:
+#
+# - `mediasoup` crate: a pushed `rust-X.Y.Z` Git tag. A GitHub release is created
+#   from the matching rust/CHANGELOG.md entry and the crate is published.
+# - `mediasoup-sys` / `mediasoup-types` crates: a pushed commit on the main
+#   branch whose message is `<crate> X.Y.Z [crate-publish] [no-ci]` (no tag, no
+#   GitHub release). The "[crate-publish]" marker opts the commit in and the
+#   crate name and version are read from the start of the message.
+#
+# Publishing uses crates.io OIDC trusted publishing (no long-lived token secret),
+# mirroring the NPM trusted publishing in mediasoup-npm-publish.yaml.
+#
+# On its success, mediasoup-website-update.yaml runs (via its `workflow_run`
+# trigger) to update the mediasoup website. Pushes to the main branch that are
+# not crate-publish commits leave the `setup` job (and thus the whole run)
+# skipped, so they never trigger the website update.
+on:
+  push:
+    tags:
+      # Rust release tags (rust- + SEMVER). Node tags (X.Y.Z) don't match.
+      - 'rust-[0-9]+.[0-9]+.[0-9]+'
+    branches:
+      - v3
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.sha }}
+  # Don't cancel an in-progress publish if a new run lands in the same group.
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Decide whether this push is a crate publish and, if so, for which crate and
+  # version. A `rust-X.Y.Z` tag publishes the `mediasoup` crate (with a GitHub
+  # release); a `<crate> X.Y.Z [crate-publish] [no-ci]` commit on the branch
+  # publishes that sibling crate (without a GitHub release). Any other push to the
+  # branch skips this job (the `if` below), which skips every downstream job too.
+  setup:
+    if: ${{ github.ref_type == 'tag' || contains(github.event.head_commit.message, '[crate-publish]') }}
+    runs-on: ubuntu-26.04
+    outputs:
+      crate: ${{ steps.detect.outputs.crate }}
+      version: ${{ steps.detect.outputs.version }}
+      release: ${{ steps.detect.outputs.release }}
+    steps:
+      - name: Detect crate and version
+        id: detect
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${REF_TYPE}" = "tag" ]; then
+            # `rust-X.Y.Z` tag releases the `mediasoup` crate (with a GitHub release).
+            crate=mediasoup
+            version="${REF_NAME#rust-}"
+            release=true
+          else
+            # `<crate> X.Y.Z [crate-publish] [no-ci]` commit: read crate and
+            # version from the start of the message.
+            line=$(printf '%s\n' "${COMMIT_MSG}" | head -n1)
+            crate=$(printf '%s' "${line}" | awk '{ print $1 }')
+            version=$(printf '%s' "${line}" | awk '{ print $2 }')
+            release=false
+            case "${crate}" in
+              mediasoup-sys | mediasoup-types) ;;
+              *)
+                echo "unexpected crate '${crate}' in crate-publish commit: ${line}"
+                exit 1
+                ;;
+            esac
+          fi
+          if ! printf '%s' "${version}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "invalid version '${version}'"
+            exit 1
+          fi
+          echo "crate=${crate}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "release=${release}" >> "$GITHUB_OUTPUT"
+          echo "detected crate=${crate} version=${version} release=${release}"
+
+  check:
+    needs: setup
+    runs-on: ubuntu-26.04
+    env:
+      CRATE: ${{ needs.setup.outputs.crate }}
+      VERSION: ${{ needs.setup.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Check version consistency
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${CRATE}" in
+            mediasoup) manifest=rust/Cargo.toml ;;
+            mediasoup-sys) manifest=worker/Cargo.toml ;;
+            mediasoup-types) manifest=rust/types/Cargo.toml ;;
+            *) echo "unknown crate '${CRATE}'"; exit 1 ;;
+          esac
+          # First `version =` line in the manifest is the [package] one.
+          manifest_version=$(grep -m1 -E '^version *=' "${manifest}" | sed -E 's/.*"(.*)".*/\1/')
+          # Version of this crate's package (not the others) in the workspace root
+          # Cargo.lock.
+          lock_version=$(awk -v c="${CRATE}" '
+            /^\[\[package\]\]/ { name=""; ver="" }
+            /^name = / { name=$3; gsub(/"/, "", name) }
+            /^version = / { ver=$3; gsub(/"/, "", ver); if (name == c) { print ver; exit } }
+          ' Cargo.lock)
+          echo "crate=${CRATE} ${manifest}=${manifest_version} Cargo.lock=${lock_version} expected=${VERSION}"
+          if [ "${manifest_version}" != "${VERSION}" ]; then
+            echo "${manifest} version '${manifest_version}' does not match expected version '${VERSION}'"
+            exit 1
+          fi
+          if [ "${lock_version}" != "${VERSION}" ]; then
+            echo "Cargo.lock ${CRATE} version '${lock_version}' does not match expected version '${VERSION}'"
+            exit 1
+          fi
+
+      - name: Ensure crate version is not already published on crates.io
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            -A 'versatica/mediasoup (https://github.com/versatica/mediasoup)' \
+            "https://crates.io/api/v1/crates/${CRATE}/${VERSION}" || echo 000)
+          echo "crates.io ${CRATE}@${VERSION} -> HTTP ${status}"
+          if [ "${status}" = "200" ]; then
+            echo "${CRATE}@${VERSION} is already published on crates.io, this should not happen"
+            exit 1
+          fi
+          if [ "${status}" != "404" ]; then
+            echo "unexpected crates.io response (HTTP ${status}), aborting"
+            exit 1
+          fi
+
+  # Create the GitHub release from the matching rust/CHANGELOG.md entry. Only for
+  # the `mediasoup` crate (tag push); the sibling crates get no GitHub release.
+  release:
+    needs: [setup, check]
+    if: ${{ !cancelled() && needs.check.result == 'success' && needs.setup.outputs.release == 'true' }}
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.setup.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # rust/CHANGELOG.md headings carry the bare SEMVER (no "rust-" prefix).
+          notes=$(awk -v h="### ${VERSION}" '$0==h {f=1; next} /^### / && f {exit} f {print}' rust/CHANGELOG.md)
+          if [ -z "$(printf '%s' "${notes}" | tr -d '[:space:]')" ]; then
+            echo "No rust/CHANGELOG.md entry found for '${VERSION}'"
+            exit 1
+          fi
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "GitHub release '${TAG}' already exists, skipping creation"
+          else
+            printf '%s\n' "${notes}" | gh release create "${TAG}" --title "${TAG}" --notes-file -
+          fi
+
+  # Publish the crate to crates.io via OIDC trusted publishing.
+  publish:
+    needs: [setup, check, release]
+    # Run after a passing check, and (for `mediasoup`) only once its GitHub
+    # release succeeded. The sibling crates set release=false and their `release`
+    # job is skipped, so they don't require it.
+    if: ${{ !cancelled() && needs.check.result == 'success' && (needs.setup.outputs.release != 'true' || needs.release.result == 'success') }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    permissions:
+      # Allow requesting the short-lived OIDC token used for crates.io trusted
+      # publishing.
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Configure cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ubuntu-26.04-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-26.04-cargo-
+
+      # Exchange the GitHub OIDC token for a short-lived crates.io token. This
+      # mirrors the OIDC trusted publishing used for NPM in
+      # mediasoup-npm-publish.yaml (no long-lived registry token secret needed).
+      - name: Authenticate to crates.io
+        id: auth
+        uses: rust-lang/crates-io-auth-action@v1
+
+      # Publish only the selected crate. `--locked` makes cargo abort if
+      # Cargo.lock is out of date instead of silently regenerating it.
+      #
+      # NOTE: No need to set/unset MEDIASOUP_LOCAL_DEV: `mediasoup-sys`'s build.rs
+      # detects the `cargo publish` verification build and always cleans the
+      # Meson subprojects it extracts into the source tree, avoiding the "Source
+      # directory was modified by build.rs" error.
+      - name: cargo publish --locked -p ${{ needs.setup.outputs.crate }}
+        env:
+          CRATE: ${{ needs.setup.outputs.crate }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: cargo publish --locked -p "${CRATE}"

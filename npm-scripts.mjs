@@ -575,7 +575,7 @@ async function checkRelease() {
 	try {
 		versionChanges = await getVersionChanges();
 	} catch (error) {
-		logError(error.message);
+		logError(`checkRelease() | ${error.message}`);
 
 		exitWithError();
 	}
@@ -697,8 +697,10 @@ async function prebuildWorker() {
 	}
 }
 
-// Returns a Promise resolving to true if a mediasoup-worker prebuilt binary
-// was downloaded and uncompressed, false otherwise.
+/**
+ * Returns a Promise resolving to true if a mediasoup-worker prebuilt binary was
+ * downloaded and uncompressed, false otherwise.
+ */
 async function downloadPrebuiltWorker() {
 	const releaseBase =
 		process.env.MEDIASOUP_WORKER_PREBUILT_DOWNLOAD_BASE_URL ||
