@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Handle new STUN "NOMINATION`" attribute `0x0030` ([XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Worker: Handle new STUN "NOMINATION" attribute `0x0030` ([1846](https://github.com/versatica/mediasoup/pull/1846)).
 
 ### 3.20.9
 
