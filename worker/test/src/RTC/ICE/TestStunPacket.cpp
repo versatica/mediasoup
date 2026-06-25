@@ -508,7 +508,9 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Byte length: 8.
 		uint64_t iceControlling = 15697499370457501716u;
 		// Byte length of USE_CANDIDATE: 0.
-		// // Byte length: 4.
+		// NOTE: `AddNomination()` adds the "NOMINATION" attribute with both the old
+		// and the new value, so it will insert 2 attributes instead of one.
+		// Byte length: 4 x 2.
 		uint32_t nomination = 12345678u;
 		// Byte length: 18 (2 byte of padding needed).
 		std::string software = "mediasoup x.y.z :)";
@@ -518,7 +520,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		// Total length of the attributes.
 		size_t attributesLen =
-		  (4 + 27 + 1) + (4 + 4) + (4 + 8) + (4) + (4 + 4) + (4 + 18 + 2) + (4 + 4 + 23 + 1);
+		  (4 + 27 + 1) + (4 + 4) + (4 + 8) + (4) + ((4 + 4) * 2) + (4 + 18 + 2) + (4 + 4 + 23 + 1);
 
 		request->AddUsername(username);
 		request->AddPriority(priority);
@@ -533,6 +535,8 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE_THROWS_AS(request->AddPriority(priority), MediaSoupError);
 		REQUIRE_THROWS_AS(request->AddIceControlling(iceControlling), MediaSoupError);
 		REQUIRE_THROWS_AS(request->AddUseCandidate(), MediaSoupError);
+		// NOTE: `AddNomination()` adds the "NOMINATION" attribute with both the old
+		// and the new value, so it will insert 2 attributes instead of one.
 		REQUIRE_THROWS_AS(request->AddNomination(nomination), MediaSoupError);
 		REQUIRE_THROWS_AS(request->AddSoftware(software), MediaSoupError);
 		REQUIRE_THROWS_AS(request->AddErrorCode(errorCode, errorReasonPhrase), MediaSoupError);

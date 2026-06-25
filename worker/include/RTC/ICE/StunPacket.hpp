@@ -113,7 +113,21 @@ namespace RTC
 				FINGERPRINT        = 0x8028,
 				ICE_CONTROLLED     = 0x8029,
 				ICE_CONTROLLING    = 0x802A,
-				NOMINATION         = 0xC001
+				/**
+				 * In libwebrtc native code, STUN_ATTR_NOMINATION is defined as 0xC001.
+				 * However that value is not defined in any RFC/draft, not even in the
+				 * draft that defines the NOMINATION attribute.
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/draft-thatcher-ice-renomination
+				 * @see https://issues.webrtc.org/issues/496629058
+				 */
+				NOMINATION_OLD = 0xC001,
+				/**
+				 * Value of the NOMINATION attribute in the new specification.
+				 *
+				 * @see https://juberti.github.io/draft-renomination/draft-thatcher-tsvwg-renomination.html
+				 */
+				NOMINATION = 0x0030
 			};
 
 			// Authentication result.
@@ -290,7 +304,12 @@ namespace RTC
 
 			uint32_t GetNomination() const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::NOMINATION);
+				auto* attribute = GetAttribute(StunPacket::AttributeType::NOMINATION);
+
+				if (!attribute)
+				{
+					attribute = GetAttribute(StunPacket::AttributeType::NOMINATION_OLD);
+				}
 
 				if (!attribute)
 				{

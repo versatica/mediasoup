@@ -523,7 +523,8 @@ namespace RTC
 			HandleTuple(
 			  tuple,
 			  request->HasAttribute(StunPacket::AttributeType::USE_CANDIDATE),
-			  request->HasAttribute(StunPacket::AttributeType::NOMINATION),
+			  request->HasAttribute(StunPacket::AttributeType::NOMINATION) ||
+			    request->HasAttribute(StunPacket::AttributeType::NOMINATION_OLD),
 			  request->GetNomination());
 
 			// If state is 'connected' or 'completed' after handling the tuple, then

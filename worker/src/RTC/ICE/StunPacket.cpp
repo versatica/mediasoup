@@ -250,6 +250,11 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation + 1, "  nomination: %" PRIu32, GetNomination());
 			}
 
+			if (HasAttribute(StunPacket::AttributeType::NOMINATION_OLD))
+			{
+				MS_DUMP_CLEAN(indentation + 1, "  nomination (old): %" PRIu32, GetNomination());
+			}
+
 			if (HasAttribute(StunPacket::AttributeType::SOFTWARE))
 			{
 				const auto software = GetSoftware();
@@ -404,6 +409,8 @@ namespace RTC
 
 			StoreNewAttribute(
 			  StunPacket::AttributeType::NOMINATION, AttributeFactoryBuffer, sizeof(nomination));
+			StoreNewAttribute(
+			  StunPacket::AttributeType::NOMINATION_OLD, AttributeFactoryBuffer, sizeof(nomination));
 		}
 
 		void StunPacket::AddSoftware(const std::string_view software)
@@ -1058,6 +1065,7 @@ namespace RTC
 					}
 
 					case StunPacket::AttributeType::NOMINATION:
+					case StunPacket::AttributeType::NOMINATION_OLD:
 					{
 						if (attrLen != 4)
 						{
