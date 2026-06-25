@@ -9,15 +9,26 @@ const GH_REPO = 'mediasoup';
 // Main Git branch is 'v' concatenated with the major SEMVER number of the
 // "version" field in package.json.
 const MAIN_BRANCH = `v${pkg.version.split('.')[0]}`;
-// The three publishable mediasoup Rust crates and the Cargo.toml manifest that
-// holds each one's version. The `mediasoup` crate is special: releasing it
-// creates a `rust-X.Y.Z` Git tag and a GitHub release built from its CHANGELOG;
-// the other two are published without a tag or a GitHub release (the
-// `mediasoup-crate-publish.yaml` workflow detects them from the commit message).
+// The three publishable mediasoup Rust crates. For each one: `manifest` is the
+// Cargo.toml that holds its `[package].version`, and `dependents` lists the
+// workspace manifests that declare it as a dependency (whose `version`
+// requirement is bumped to the released version too). The `mediasoup` crate is
+// special: releasing it creates a `rust-X.Y.Z` Git tag and a GitHub release
+// built from its CHANGELOG; the other two are published without a tag or a
+// GitHub release (the `mediasoup-crate-publish.yaml` workflow detects them from
+// the commit message).
 const CRATES = [
 	{ name: 'mediasoup', manifest: 'rust/Cargo.toml' },
-	{ name: 'mediasoup-sys', manifest: 'worker/Cargo.toml' },
-	{ name: 'mediasoup-types', manifest: 'rust/types/Cargo.toml' },
+	{
+		name: 'mediasoup-sys',
+		manifest: 'worker/Cargo.toml',
+		dependents: ['rust/Cargo.toml'],
+	},
+	{
+		name: 'mediasoup-types',
+		manifest: 'rust/types/Cargo.toml',
+		dependents: ['rust/Cargo.toml'],
+	},
 ];
 // The `mediasoup` crate, whose rust/CHANGELOG.md drives the GitHub release body.
 const MEDIASOUP_CRATE = CRATES[0];
@@ -196,6 +207,19 @@ async function release({ args = '' } = {}) {
 	// Bump the crate version in its Cargo.toml and reflect it in the (workspace)
 	// root Cargo.lock.
 	bumpCargoVersion(crate.manifest, version);
+
+	// Keep every workspace manifest that depends on this crate pointing at the
+	// just-released version (the `mediasoup` crate's `version` requirement on
+	// `mediasoup-sys` / `mediasoup-types` in rust/Cargo.toml). These are
+	// `path` + `version` dependencies, so the requirement must keep accepting the
+	// sibling's actual version (otherwise a breaking bump would fail the
+	// `cargo metadata` in syncCargoLock()); bumping it here also makes the next
+	// `mediasoup` release depend on the new version, and it is committed together
+	// with this release commit.
+	for (const dependent of crate.dependents ?? []) {
+		updateDependencyVersion(dependent, crate.name, version);
+	}
+
 	syncCargoLock();
 
 	if (crate.name === 'mediasoup') {
@@ -405,6 +429,56 @@ function bumpCargoVersion(manifestPath, version) {
 	if (!bumped) {
 		logError(
 			`bumpCargoVersion() | no 'version' key found in [package] section of '${manifestPath}'`
+		);
+
+		exitWithError();
+	}
+
+	fs.writeFileSync(manifestPath, lines.join('\n'));
+}
+
+/**
+ * Rewrites the `version` key of the `[dependencies.<depName>]` table of the
+ * given Cargo.toml (the table form used across the workspace, e.g.
+ * `[dependencies.mediasoup-sys]`), leaving its `path` and any other keys
+ * untouched. Used to keep the `mediasoup` crate's requirement on a sibling crate
+ * in sync when that sibling is released.
+ */
+function updateDependencyVersion(manifestPath, depName, version) {
+	logInfo(
+		`updateDependencyVersion() [manifest:${manifestPath}, dep:${depName}, version:${version}]`
+	);
+
+	const content = fs.readFileSync(manifestPath, { encoding: 'utf-8' });
+	const lines = content.split('\n');
+	const sectionHeader = `[dependencies.${depName}]`;
+
+	let inDepSection = false;
+	let bumped = false;
+
+	for (let idx = 0; idx < lines.length; ++idx) {
+		const trimmed = lines[idx].trim();
+
+		if (trimmed.startsWith('[')) {
+			inDepSection = trimmed === sectionHeader;
+
+			continue;
+		}
+
+		if (inDepSection && /^version\s*=\s*"[^"]+"/.test(trimmed)) {
+			lines[idx] = lines[idx].replace(
+				/version\s*=\s*"[^"]+"/,
+				`version = "${version}"`
+			);
+			bumped = true;
+
+			break;
+		}
+	}
+
+	if (!bumped) {
+		logError(
+			`updateDependencyVersion() | no 'version' key found in '${sectionHeader}' section of '${manifestPath}'`
 		);
 
 		exitWithError();

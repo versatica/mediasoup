@@ -132,7 +132,7 @@ The publish dry-run is skipped when the `mediasoup` crate version is already pub
 Prepares and triggers the release of a new version "x.y.z" of a mediasoup Rust crate (`mediasoup`, `mediasoup-sys` or `mediasoup-types`). The actual GitHub release (if any) and crates.io publish are done by GitHub Actions (`mediasoup-crate-publish.yaml`) once the pushed commit/tag arrives. It:
 
 - Performs checks (lint + test + build + publish dry-run, plus the `rust/CHANGELOG.md` entry check when releasing the `mediasoup` crate). They run before the version bump, so the CHANGELOG check validates the previous version's entry (still in the manifest), which is harmless.
-- Bumps the crate version to "x.y.z" in its `Cargo.toml` (`rust/Cargo.toml`, `worker/Cargo.toml` or `rust/types/Cargo.toml`) and reflects it in the (workspace root) `Cargo.lock`.
+- Bumps the crate version to "x.y.z" in its `Cargo.toml` (`rust/Cargo.toml`, `worker/Cargo.toml` or `rust/types/Cargo.toml`) and reflects it in the (workspace root) `Cargo.lock`. When releasing `mediasoup-sys` / `mediasoup-types`, it also bumps the matching `version` requirement of that dependency in the `mediasoup` crate's `rust/Cargo.toml` (committed together with the release), so the `mediasoup` crate keeps depending on the just-released version.
 
 Then, depending on the crate:
 
