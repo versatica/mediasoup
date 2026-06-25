@@ -140,9 +140,7 @@ namespace RTC
 			}
 
 			// There are dropped inputs, calculate 'base' for this input.
-			auto droppedCount = std::distance(
-			  this->dropped.begin(),
-			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, SeqLowerThan()));
+			auto droppedCount = std::distance(this->dropped.begin(), it);
 
 			base = (this->base - droppedCount) & SeqManager::MaxValue;
 		}

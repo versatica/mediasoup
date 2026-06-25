@@ -8,7 +8,7 @@
 
 // 17: 16 bit mask + the initial sequence number.
 static constexpr size_t MaxRequestedPackets{ 17 };
-static constexpr unsigned int SendNackDelay{ 0u }; // In ms.
+static constexpr uint32_t SendNackDelay{ 0u }; // In ms.
 static const bool UseRtpInactivityCheck{ false };
 
 SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
