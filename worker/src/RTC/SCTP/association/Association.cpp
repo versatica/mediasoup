@@ -619,10 +619,6 @@ namespace RTC
 			}
 			else
 			{
-				MS_WARN_TAG(
-				  sctp,
-				  "calling Association::GetNegotiatedMaxOutboundStreams() before TCB is created returns 0");
-
 				return 0;
 			}
 		}
@@ -637,10 +633,6 @@ namespace RTC
 			}
 			else
 			{
-				MS_WARN_TAG(
-				  sctp,
-				  "calling Association::GetNegotiatedMaxInboundStreams() before TCB is created returns 0");
-
 				return 0;
 			}
 		}

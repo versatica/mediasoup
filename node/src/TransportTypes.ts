@@ -3,7 +3,10 @@ import type { Producer, ProducerOptions } from './ProducerTypes';
 import type { Consumer, ConsumerOptions } from './ConsumerTypes';
 import type { DataProducer, DataProducerOptions } from './DataProducerTypes';
 import type { DataConsumer, DataConsumerOptions } from './DataConsumerTypes';
-import type { SctpParameters } from './sctpParametersTypes';
+import type {
+	SctpParameters,
+	SctpNegotiatedCapabilities,
+} from './sctpParametersTypes';
 import type { AppData } from './types';
 
 /**
@@ -169,6 +172,7 @@ export type BaseTransportDump = {
 	dataConsumerIds: string[];
 	sctpParameters?: SctpParameters;
 	sctpState?: SctpState;
+	sctpNegotiatedCapabilities?: SctpNegotiatedCapabilities;
 	sctpListener?: SctpListenerDump;
 	traceEventTypes?: string[];
 };
