@@ -11,7 +11,7 @@ use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol, SctpState,
 use mediasoup_types::rtp_parameters::{
     MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
 };
-use mediasoup_types::sctp_parameters::SctpParameters;
+use mediasoup_types::sctp_parameters::{SctpNegotiatedCapabilities, SctpParameters};
 use mediasoup_types::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use portpicker::pick_unused_port;
 use std::env;
@@ -194,9 +194,9 @@ fn create_succeeds() {
                     max_message_size: 262_144,
                 }),
             );
+            assert_eq!(transport1.srtp_parameters(), None);
             assert_eq!(transport1.sctp_state(), Some(SctpState::New));
             assert_eq!(transport1.sctp_negotiated_capabilities(), None);
-            assert_eq!(transport1.srtp_parameters(), None);
 
             {
                 let transport_dump = transport1
@@ -210,8 +210,15 @@ fn create_succeeds() {
                 assert_eq!(transport_dump.consumer_ids, vec![]);
                 assert_eq!(transport_dump.tuple, transport1.tuple());
                 assert_eq!(transport_dump.rtcp_tuple, transport1.rtcp_tuple());
-                assert_eq!(transport_dump.srtp_parameters, transport1.srtp_parameters());
                 assert_eq!(transport_dump.sctp_state, transport1.sctp_state());
+                assert_eq!(transport_dump.srtp_parameters, transport1.srtp_parameters());
+                assert_eq!(
+                    transport_dump.sctp_negotiated_capabilities,
+                    Some(SctpNegotiatedCapabilities {
+                        negotiated_max_outbound_streams: 0,
+                        negotiated_max_inbound_streams: 0
+                    })
+                );
             }
         }
 
