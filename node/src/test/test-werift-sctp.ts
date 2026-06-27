@@ -110,13 +110,21 @@ afterEach(async () => {
 	}
 });
 
-test('SCTP state is connected', () => {
+test('SCTP state is connected', async () => {
 	expect(ctx.plainTransport!.sctpState).toBe('connected');
 	expect(ctx.plainTransport!.sctpNegotiatedCapabilities).toEqual({
 		negotiatedMaxOutboundStreams: 65535,
 		negotiatedMaxInboundStreams: 65535,
 	});
 	expect(ctx.sctpClient!.associationState).toBe(SCTP_STATE.ESTABLISHED);
+
+	const dump = await ctx.plainTransport!.dump();
+
+	expect(dump.sctpState).toBe('connected');
+	expect(dump.sctpNegotiatedCapabilities).toEqual({
+		negotiatedMaxOutboundStreams: 65535,
+		negotiatedMaxInboundStreams: 65535,
+	});
 });
 
 test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () => {

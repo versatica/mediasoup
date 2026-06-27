@@ -224,6 +224,10 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(dump.dtlsState).toBe(webRtcTransport.dtlsState);
 	expect(dump.sctpParameters).toEqual(webRtcTransport.sctpParameters);
 	expect(dump.sctpState).toBe(webRtcTransport.sctpState);
+	expect(dump.sctpNegotiatedCapabilities).toEqual({
+		negotiatedMaxOutboundStreams: 0,
+		negotiatedMaxInboundStreams: 0,
+	});
 	expect(dump.recvRtpHeaderExtensions).toBeDefined();
 	expect(typeof dump.rtpListener).toBe('object');
 
