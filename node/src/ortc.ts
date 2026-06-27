@@ -637,7 +637,7 @@ export function getConsumerRtpParameters({
 	let matchConsumerExt: (ext: RtpHeaderExtensionParameters) => boolean;
 
 	if (!isOverride) {
-		const caps = remoteRtpCapabilities as RtpCapabilities;
+		const caps = remoteRtpCapabilities;
 
 		for (const capCodec of caps.codecs ?? []) {
 			validateAndNormalizeRtpCodecCapability(capCodec);
@@ -659,7 +659,7 @@ export function getConsumerRtpParameters({
 			) ?? [];
 		consumableCodecs = (caps.codecs ?? []).map(c => ({
 			mimeType: c.mimeType,
-			payloadType: c.preferredPayloadType!,
+			payloadType: c.preferredPayloadType,
 			clockRate: c.clockRate,
 			channels: c.channels,
 			parameters: c.parameters ?? {},
@@ -673,7 +673,7 @@ export function getConsumerRtpParameters({
 				capExt => capExt.preferredId === ext.id && capExt.uri === ext.uri
 			);
 	} else {
-		const override = remoteRtpCapabilities as RtpParameters;
+		const override = remoteRtpCapabilities;
 
 		// validateAndNormalizeRtpParameters dereferences params.rtcp. Fall back
 		// to the producer-side consumable values for rtcp / msid the caller
@@ -688,7 +688,8 @@ export function getConsumerRtpParameters({
 			throw new TypeError(
 				`invalid consumer.rtpParameters: ${
 					err instanceof Error ? err.message : String(err)
-				}`
+				}`,
+				{ cause: err }
 			);
 		}
 
@@ -739,6 +740,7 @@ export function getConsumerRtpParameters({
 		//   - Capabilities path: matchedCodec came from caps (caller side).
 		//   - Parameters  path:  codec       came from override (caller side).
 		const feedbackSource = isOverride ? codec : matchedCodec;
+
 		codec.rtcpFeedback = (feedbackSource.rtcpFeedback ?? []).filter(
 			fb => enableRtx || fb.type !== 'nack' || fb.parameter
 		);
@@ -890,10 +892,7 @@ export function getConsumerRtpParameters({
 function isRtpParameters(
 	value: RtpCapabilities | RtpParameters
 ): value is RtpParameters {
-	const firstCodec = value.codecs?.[0] as
-		| RtpCodecCapability
-		| RtpCodecParameters
-		| undefined;
+	const firstCodec = value.codecs?.[0];
 
 	if (firstCodec) {
 		return (firstCodec as RtpCodecParameters).payloadType !== undefined;
@@ -1014,13 +1013,13 @@ export function getConsumerRtpMapping(
 		headerExtensions: [],
 	};
 
-	const consumerCodecPts = new Set<number>();
+	const consumerCodecPts: Set<number> = new Set();
 
 	for (const codec of consumerRtpParameters.codecs) {
 		consumerCodecPts.add(codec.payloadType);
 	}
 
-	const usedProducerCodecPts = new Set<number>();
+	const usedProducerCodecPts: Set<number> = new Set();
 
 	for (const consumerCodec of consumerRtpParameters.codecs) {
 		for (const producerCodec of producerRtpParameters.codecs) {
@@ -1039,7 +1038,7 @@ export function getConsumerRtpMapping(
 			if (isRtxCodec(producerCodec)) {
 				const apt = consumerCodec.parameters?.['apt'];
 
-				if (typeof apt !== 'number' || !consumerCodecPts.has(apt as number)) {
+				if (typeof apt !== 'number' || !consumerCodecPts.has(apt)) {
 					continue;
 				}
 			}
@@ -1053,7 +1052,7 @@ export function getConsumerRtpMapping(
 		}
 	}
 
-	const producerExtByUri = new Map<string, number>();
+	const producerExtByUri: Map<string, number> = new Map();
 
 	for (const ext of producerRtpParameters.headerExtensions ?? []) {
 		producerExtByUri.set(ext.uri, ext.id);
