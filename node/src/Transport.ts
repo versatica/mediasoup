@@ -1179,12 +1179,12 @@ export function parseBaseTransportDump(
 			? undefined
 			: parseSctpState(binary.sctpState()!);
 
-	// Retrive sctpNegotiatedCapabilities.
+	// Retrieve sctpNegotiatedCapabilities.
 	const sctpNegotiatedCapabilities = binary.sctpNegotiatedCapabilities()
 		? parseSctpNegotiatedCapabilitiesDump(binary.sctpNegotiatedCapabilities()!)
 		: undefined;
 
-	// Retrive sctpListener.
+	// Retrieve sctpListener.
 	const sctpListener = binary.sctpListener()
 		? parseSctpListenerDump(binary.sctpListener()!)
 		: undefined;
