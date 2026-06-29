@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Fix new consumer regressions ([1849](https://github.com/versatica/mediasoup/pull/1849)).
+- Worker: Fix new consumer regressions ([PR #1849](https://github.com/versatica/mediasoup/pull/1849)).
 
 ### 3.20.10
 
