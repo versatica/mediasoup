@@ -330,7 +330,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->producerRtpStream)
+		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0u)
 		{
 			return 0u;
 		}
