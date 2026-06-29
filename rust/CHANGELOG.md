@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Fix new consumer regressions ([PR #1849](https://github.com/versatica/mediasoup/pull/1849)).
+
 ### 0.22.9
 
 - Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([PR #1823](https://github.com/versatica/mediasoup/pull/1823)).
