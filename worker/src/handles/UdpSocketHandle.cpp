@@ -146,7 +146,7 @@ void UdpSocketHandle::Send(
 	// then build a uv_req_t and use uv_udp_send().
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
-	const int sent  = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
+	const int sent  = uv_udp_try_send(this->uvHandle, std::addressof(buffer), 1, addr);
 
 	// Entire datagram was sent. Done.
 	if (sent == static_cast<int>(len))
@@ -192,7 +192,12 @@ void UdpSocketHandle::Send(
 	buffer = uv_buf_init(reinterpret_cast<char*>(sendData->store), len);
 
 	const int err = uv_udp_send(
-	  &sendData->req, this->uvHandle, &buffer, 1, addr, static_cast<uv_udp_send_cb>(onSend));
+	  std::addressof(sendData->req),
+	  this->uvHandle,
+	  std::addressof(buffer),
+	  1,
+	  addr,
+	  static_cast<uv_udp_send_cb>(onSend));
 
 	if (err != 0)
 	{
@@ -319,8 +324,10 @@ bool UdpSocketHandle::SetLocalAddress()
 	int err;
 	int len = sizeof(this->localAddr);
 
-	err =
-	  uv_udp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->localAddr), &len);
+	err = uv_udp_getsockname(
+	  this->uvHandle,
+	  reinterpret_cast<struct sockaddr*>(std::addressof(this->localAddr)),
+	  std::addressof(len));
 
 	if (err != 0)
 	{
@@ -332,7 +339,10 @@ bool UdpSocketHandle::SetLocalAddress()
 	int family;
 
 	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(&this->localAddr), family, this->localIp, this->localPort);
+	  reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr)),
+	  family,
+	  this->localIp,
+	  this->localPort);
 
 	return true;
 }
