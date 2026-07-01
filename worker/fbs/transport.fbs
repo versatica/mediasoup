@@ -153,6 +153,7 @@ table Dump {
     max_receive_message_size: uint32;
     sctp_parameters: FBS.SctpParameters.SctpParameters;
     sctp_state: FBS.SctpAssociation.SctpState = null;
+    sctp_negotiated_capabilities: FBS.SctpAssociation.SctpNegotiatedCapabilities;
     sctp_listener: SctpListener;
     trace_event_types: [TraceEventType] (required);
 }

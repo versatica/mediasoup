@@ -10,59 +10,30 @@ There are 3 crates: `mediasoup`, `mediasoup-sys` and `mediasoup-types`:
 
 **Important:** Adding new APIs that `mediasoup` crate has to understand to continue working normally is a breaking change because it'll start crashing/printing errors if unexpected things happen.
 
-## Steps to publish new mediasoup crates
+## Publishing crates
 
-1. Update versions in `worker/Cargo.toml` (for `mediasoup-sys` crate), `rust/types/Cargo.toml` (for `mediasoup-types` crate) and `rust/Cargo.toml` (for `mediasoup` crate). Note that in `rust/Cargo.toml` you may need to update the version of `[dependencies.mediasoup-sys]` and/or `[dependencies.mediasoup-types]` if they also changed.
-2. Update `rust/CHANGELOG.md`.
-3. Run `cargo build` to reflect changes in `Cargo.lock` and commit the updated `Cargo.lock`. Do not skip this: a stale `Cargo.lock` is harmless for crate consumers (they ignore the packaged lock) but leaves the repo and CI out of sync.
-4. Create PR and have it merged in mediasoup main branch.
-5. Upload Git tags (the new one in `rust/CHANGELOG.md`, so the new `mediasoup` crate version):
+Each crate is published through an automated flow (mirroring how the NPM package is released): `npm run release:rust <crate> X.Y.Z` bumps the version, commits and pushes, and the `mediasoup-crate-publish.yaml` workflow then publishes the crate to crates.io via OIDC trusted publishing.
 
-```sh
-git tag -a rust-X.X.X -m rust-X.X.X
-git push origin rust-X.X.X
-```
+Because `mediasoup` depends on `mediasoup-sys` and `mediasoup-types`, when more than one crate needs a new version, **publish the dependencies first** (`mediasoup-types` and/or `mediasoup-sys`) and `mediasoup` last, so each crate's dependencies are already on crates.io when it is published. Each release updates only the released crate's own resolved version in `Cargo.lock` (within that crate's release commit), so releasing a dependency is what refreshes its `Cargo.lock` entry, and the later `mediasoup` release only touches `mediasoup`'s own entry.
 
-6. Create a GitHub release for the new `rust-X.X.X` tag, using the matching `rust/CHANGELOG.md` entry as its body.
-7. Publish crates (you need an account and permissions and so on). Always pass `--locked` so Cargo aborts if `Cargo.lock` is out of date instead of silently regenerating it (see note below):
+You do **not** bump the crate's `[package].version`, edit `rust/CHANGELOG.md`, nor edit the sibling `version` requirements in `rust/Cargo.toml` yourself; `npm run release:rust` does all that. For each crate to publish:
+
+1. Have the crate's code changes merged on the main branch. When publishing the `mediasoup` crate, the changes for the new version must be under the `### NEXT` heading of `rust/CHANGELOG.md`.
+2. You do **not** edit the `version` of `[dependencies.mediasoup-sys]` / `[dependencies.mediasoup-types]` in `rust/Cargo.toml` yourself: that requirement is what the _published_ `mediasoup` crate depends on (its `path` is only used for local builds and is dropped when published). Releasing `mediasoup-sys` / `mediasoup-types` automatically bumps that requirement to the just-released version and commits it together with the release, so the `mediasoup` crate always depends on the latest version of its siblings (and the workspace stays buildable after a breaking minor/major bump, where the requirement must keep accepting the sibling's actual version).
+3. Make sure `Cargo.lock` is already in sync with the merged code, committing it if an earlier change to third-party dependencies left it stale (run `cargo build`). This is only about pre-existing code changes, **not** the version bump: `npm run release:rust` regenerates `Cargo.lock` for the bumped version itself and commits it within the crate's own release commit. A stale `Cargo.lock` is harmless for crate consumers (they ignore the packaged lock) but leaves the repo out of sync and breaks the `--locked` GitHub Actions workflows, and the release aborts on it.
+4. On the main branch, with a clean work tree, run:
 
 ```sh
-cd rust/types
-cargo publish --locked
-
-cd worker
-cargo publish --locked
-
-cd rust
-cargo publish --locked
+npm run release:rust mediasoup-types X.Y.Z
+# and/or
+npm run release:rust mediasoup-sys X.Y.Z
+# and finally, when a new mediasoup must depend on the version(s) just released
+npm run release:rust mediasoup X.Y.Z
 ```
 
-## Notes
+This runs the checks, bumps the crate version in its `Cargo.toml` (and, for `mediasoup-sys` / `mediasoup-types`, the matching `version` requirement in the `mediasoup` crate's `rust/Cargo.toml`) and in `Cargo.lock`, and then:
 
-- Depending on the state in `worker` directory you may need to run `invoke clean-all` or `make clean-all` in `worker` directory first.
-- You can have `MEDIASOUP_LOCAL_DEV=true` exported in your shell (handy to speed up regular local builds) and still publish: `mediasoup-sys`'s `build.rs` detects the `cargo publish` / `cargo package` verification step (Cargo builds the crate inside `target/package/`) and always cleans the Meson subprojects it extracts into the source tree, regardless of `MEDIASOUP_LOCAL_DEV`. This avoids the "Source directory was modified by build.rs" error.
-- `cargo publish` will create the crate package, check if all necessary dependencies are already present on [crates.io](https://crates.io/), will then compile the package (to ensure that you don't publish a broken version) and will upload it to [crates.io](https://crates.io/).
-- Never publish from random branches or local state that is not on GitHub. If you have local files modified Cargo will refuse to publish until you commit all the changes.
-- Use `cargo publish --locked`. The dirty-repo check runs _before_ the verification build, but the verification build is exactly when Cargo regenerates `Cargo.lock`, so a stale lock slips past the dirty check and gets silently updated. `--locked` makes `cargo publish` fail up front if `Cargo.lock` needs updating, forcing step 3 to have been done and committed first.
+- For `mediasoup`: sets the top `### NEXT` heading of `rust/CHANGELOG.md` to `### X.Y.Z`, commits (`release rust-X.Y.Z [no-ci]`), creates the `rust-X.Y.Z` tag and pushes the branch and the tag. The tag triggers `mediasoup-crate-publish.yaml`, which creates the GitHub release from `rust/CHANGELOG.md` and publishes the crate.
+- For `mediasoup-sys` / `mediasoup-types`: commits (`<crate> X.Y.Z [crate-publish] [no-ci]`) and pushes the branch (no tag, no GitHub release). The `[crate-publish]` marker is what `mediasoup-crate-publish.yaml` detects on the branch push to publish that crate.
 
-## Extras
-
-### Check crate without publishing
-
-- If you want to do everything except the upload itself, run `cargo publish --dry-run`, which creates the package and compiles it for verification but does not upload anything.
-- To dry-run all crates at once (recommended before bumping versions), pass them as a single group so Cargo resolves the dependencies among them against the locally packaged copies instead of [crates.io](https://crates.io/). This works even if the new versions are not published yet:
-
-```sh
-cargo publish --dry-run -p mediasoup-types -p mediasoup-sys -p mediasoup
-```
-
-- To only build the package tarball without uploading, use `cargo package`.
-- To just list the files that would be included, use `cargo package --list`.
-
-### Update required Rust version
-
-Using `rustup` command:
-
-```sh
-rustup update
-```
+See `npm run release:rust` in [Building.md](Building.md) for more details.

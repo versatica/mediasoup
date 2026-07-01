@@ -1,19 +1,20 @@
-name: mediasoup-website-publish
+name: mediasoup-website-update
 
-# Triggered when mediasoup-npm-publish.yaml finishes successfully (workflow_run).
-# It triggers the `website-publish` workflow in versatica/mediasoup-website (via
-# workflow_dispatch, no inputs), which builds the website and deploys it.
+# Triggered when `mediasoup-npm-publish.yaml` or `mediasoup-crate-publish.yaml`
+# finishes successfully (`workflow_run`). It triggers the `update-website`
+# workflow in versatica/mediasoup-website (via `workflow_dispatch`, no inputs),
+# which builds the website and deploys it.
 #
-# It can also be triggered manually (workflow_dispatch) to re-trigger the website
+# It can also be triggered manually (`workflow_dispatch`) to re-trigger the website
 # update (for example if the previous attempt failed).
 on:
   workflow_run:
-    workflows: ['mediasoup-npm-publish']
-    # workflow_run only has 'requested', 'in_progress' and 'completed' activity
+    workflows: ['mediasoup-npm-publish', 'mediasoup-crate-publish']
+    # `workflow_run` only has 'requested', 'in_progress' and 'completed' activity
     # types (there is no 'success'/'failure' type). 'completed' fires once the
     # upstream run has fully finished, regardless of its conclusion. The actual
     # success is gated in the job's `if` below, via
-    # github.event.workflow_run.conclusion.
+    # `github.event.workflow_run.conclusion`.
     types: [completed]
   workflow_dispatch:
 
@@ -23,9 +24,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Trigger the `website-publish` workflow in versatica/mediasoup-website.
+  # Trigger the `update-website` workflow in versatica/mediasoup-website.
   trigger:
-    # Run only when triggered manually, or when the upstream mediasoup-npm-publish
+    # Run only when triggered manually, or when the upstream `mediasoup-npm-publish`
     # run finished successfully. This guarantees we never update the website for a
     # release whose NPM publish failed.
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
@@ -44,7 +45,7 @@ jobs:
           owner: versatica
           repositories: mediasoup-website
 
-      - name: Trigger website-publish workflow
+      - name: Trigger update-website workflow
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: gh workflow run website-publish.yaml --repo versatica/mediasoup-website
+        run: gh workflow run update-website.yaml --repo versatica/mediasoup-website

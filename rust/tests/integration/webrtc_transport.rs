@@ -15,7 +15,7 @@ use mediasoup_types::data_structures::{
 use mediasoup_types::rtp_parameters::{
     MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
 };
-use mediasoup_types::sctp_parameters::SctpParameters;
+use mediasoup_types::sctp_parameters::{SctpNegotiatedCapabilities, SctpParameters};
 use portpicker::pick_unused_port;
 use std::convert::TryInto;
 use std::env;
@@ -270,6 +270,13 @@ fn create_succeeds() {
                 assert_eq!(transport_dump.dtls_state, transport1.dtls_state());
                 assert_eq!(transport_dump.sctp_parameters, transport1.sctp_parameters());
                 assert_eq!(transport_dump.sctp_state, transport1.sctp_state());
+                assert_eq!(
+                    transport_dump.sctp_negotiated_capabilities,
+                    Some(SctpNegotiatedCapabilities {
+                        negotiated_max_outbound_streams: 0,
+                        negotiated_max_inbound_streams: 0
+                    })
+                );
             }
         }
     });

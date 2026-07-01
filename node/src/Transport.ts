@@ -90,6 +90,7 @@ import * as FbsTransport from './fbs/transport';
 import * as FbsRouter from './fbs/router';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 import { SctpState as FbsSctpState } from './fbs/sctp-association/sctp-state';
+import { SctpNegotiatedCapabilities as FbsSctpNegotiatedCapabilities } from './fbs/sctp-association/sctp-negotiated-capabilities';
 
 export type TransportConstructorOptions<TransportAppData> = {
 	internal: TransportInternal;
@@ -1178,7 +1179,12 @@ export function parseBaseTransportDump(
 			? undefined
 			: parseSctpState(binary.sctpState()!);
 
-	// Retrive sctpListener.
+	// Retrieve sctpNegotiatedCapabilities.
+	const sctpNegotiatedCapabilities = binary.sctpNegotiatedCapabilities()
+		? parseSctpNegotiatedCapabilitiesDump(binary.sctpNegotiatedCapabilities()!)
+		: undefined;
+
+	// Retrieve sctpListener.
 	const sctpListener = binary.sctpListener()
 		? parseSctpListenerDump(binary.sctpListener()!)
 		: undefined;
@@ -1204,6 +1210,7 @@ export function parseBaseTransportDump(
 		maxReceiveMessageSize: binary.maxReceiveMessageSize(),
 		sctpParameters: sctpParameters,
 		sctpState: sctpState,
+		sctpNegotiatedCapabilities: sctpNegotiatedCapabilities,
 		sctpListener: sctpListener,
 		traceEventTypes: traceEventTypes,
 	};
@@ -1638,4 +1645,13 @@ function parseSctpListenerDump(
 	);
 
 	return { streamIdTable };
+}
+
+function parseSctpNegotiatedCapabilitiesDump(
+	binary: FbsSctpNegotiatedCapabilities
+): SctpNegotiatedCapabilities {
+	return {
+		negotiatedMaxOutboundStreams: binary.negotiatedMaxOutboundStreams(),
+		negotiatedMaxInboundStreams: binary.negotiatedMaxInboundStreams(),
+	};
 }

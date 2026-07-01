@@ -24,9 +24,9 @@ jobs:
   analyze:
     name: Analyze
     # Skip the release commit pushed by `npm run release` (its message carries a
-    # "[no-ci]" marker): it only bumps version/CHANGELOG and the release is
-    # driven by the tag-triggered workflows. On pull_request there is no
-    # head_commit, so the guard is a no-op and the job runs.
+    # `[no-ci]` marker): it only bumps version/CHANGELOG and the release is
+    # driven by the tag-triggered workflows. On `pull_request` there is no
+    # `head_commit`, so the guard is a no-op and the job runs.
     if: ${{ !contains(github.event.head_commit.message, '[no-ci]') }}
     runs-on: ubuntu-26.04
     timeout-minutes: 120

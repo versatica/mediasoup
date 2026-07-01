@@ -5,8 +5,8 @@ name: mediasoup-npm-publish
 # creates the GitHub release from the CHANGELOG and publishes the NPM package via
 # OIDC trusted publishing.
 #
-# Only if this workflow succeeds, mediasoup-worker-prebuild.yaml runs (via its
-# workflow_run trigger) to build the mediasoup-worker prebuilt binaries and
+# Only if this workflow succeeds, `mediasoup-worker-prebuild.yaml` runs (via its
+# `workflow_run` trigger) to build the mediasoup-worker prebuilt binaries and
 # upload them to the GitHub release.
 on:
   push:

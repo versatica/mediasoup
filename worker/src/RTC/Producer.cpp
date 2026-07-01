@@ -20,7 +20,7 @@ namespace RTC
 
 	static constexpr size_t ProducerSendBufferSize{ 65536 };
 	static thread_local uint8_t ProducerSendBuffer[ProducerSendBufferSize];
-	static constexpr unsigned int SendNackDelay{ 10u }; // In ms.
+	static constexpr uint32_t SendNackDelay{ 10u }; // In ms.
 
 	/* Instance methods. */
 

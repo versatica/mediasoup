@@ -48,7 +48,7 @@ namespace RTC
 		};
 
 	public:
-		explicit NackGenerator(Listener* listener, SharedInterface* shared, unsigned int sendNackDelayMs);
+		explicit NackGenerator(Listener* listener, SharedInterface* shared, uint32_t sendNackDelayMs);
 		~NackGenerator() override;
 
 		bool ReceivePacket(const RTC::RTP::Packet* packet, bool isRecovered);
@@ -76,7 +76,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		SharedInterface* shared{ nullptr };
-		unsigned int sendNackDelayMs{ 0u };
+		uint32_t sendNackDelayMs{ 0u };
 		// Allocated by this.
 		TimerHandleInterface* timer{ nullptr };
 		// Others.

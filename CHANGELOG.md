@@ -2,10 +2,16 @@
 
 ### NEXT
 
+- Worker: Fix new consumer regressions ([PR #1849](https://github.com/versatica/mediasoup/pull/1849)).
+
+### 3.20.10
+
+- Worker: Handle new STUN "NOMINATION" attribute `0x0030` ([PR #1846](https://github.com/versatica/mediasoup/pull/1846)).
+
 ### 3.20.9
 
-- Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([1823](https://github.com/versatica/mediasoup/pull/1823)).
-- Worker: Fix `SeqManager::GetMaxOutput()` ([1840](https://github.com/versatica/mediasoup/pull/1840)).
+- Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([PR #1823](https://github.com/versatica/mediasoup/pull/1823)).
+- Worker: Fix `SeqManager::GetMaxOutput()` ([PR #1840](https://github.com/versatica/mediasoup/pull/1840)).
 
 ### 3.20.8
 

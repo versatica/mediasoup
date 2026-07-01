@@ -39,6 +39,7 @@ fn main() {
             .expect("Failed to generate Rust code from flatbuffers"),
     )
     .expect("Failed to write generated Rust flatbuffers into fbs.rs");
+
     if env::var("DOCS_RS").is_ok() {
         // Skip everything when building docs on docs.rs
         return;
@@ -64,6 +65,7 @@ fn main() {
         );
         println!("cargo:rustc-link-lib=static=stdc++");
     }
+
     #[cfg(any(
         target_os = "freebsd",
         target_os = "dragonfly",
@@ -85,6 +87,7 @@ fn main() {
         );
         println!("cargo:rustc-link-lib=static=c++");
     }
+
     #[cfg(target_os = "macos")]
     {
         let path = Command::new("xcrun")

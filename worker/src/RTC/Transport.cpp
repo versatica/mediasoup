@@ -312,10 +312,10 @@ namespace RTC
 
 		auto rtpListenerOffset = this->rtpListener.FillBuffer(builder);
 
-		// Add sctpParameters.
 		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters;
-		// Add sctpState.
 		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
+		flatbuffers::Offset<FBS::SctpAssociation::SctpNegotiatedCapabilities> sctpNegotiatedCapabilities;
+
 		// Add sctpListener.
 		flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener;
 
@@ -330,18 +330,21 @@ namespace RTC
 				case RTC::SCTP::Types::AssociationState::NEW:
 				{
 					sctpState = FBS::SctpAssociation::SctpState::NEW;
+
 					break;
 				}
 
 				case RTC::SCTP::Types::AssociationState::CONNECTING:
 				{
 					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
+
 					break;
 				}
 
 				case RTC::SCTP::Types::AssociationState::CONNECTED:
 				{
 					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
+
 					break;
 				}
 
@@ -349,10 +352,18 @@ namespace RTC
 				case RTC::SCTP::Types::AssociationState::CLOSED:
 				{
 					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
+
 					break;
 				}
 			}
 
+			// Add sctpNegotiatedCapabilities.
+			sctpNegotiatedCapabilities = FBS::SctpAssociation::CreateSctpNegotiatedCapabilities(
+			  builder,
+			  this->sctpAssociation->GetNegotiatedMaxOutboundStreams(),
+			  this->sctpAssociation->GetNegotiatedMaxInboundStreams());
+
+			// Add sctpListener.
 			sctpListener = this->sctpListener.FillBuffer(builder);
 		}
 
@@ -372,12 +383,12 @@ namespace RTC
 		  builder,
 		  this->id.c_str(),
 		  this->direct,
-		  &producerIds,
-		  &consumerIds,
-		  &mapSsrcConsumerId,
-		  &mapRtxSsrcConsumerId,
-		  &dataProducerIds,
-		  &dataConsumerIds,
+		  std::addressof(producerIds),
+		  std::addressof(consumerIds),
+		  std::addressof(mapSsrcConsumerId),
+		  std::addressof(mapRtxSsrcConsumerId),
+		  std::addressof(dataProducerIds),
+		  std::addressof(dataConsumerIds),
 		  recvRtpHeaderExtensions,
 		  rtpListenerOffset,
 		  this->maxSendMessageSize,
@@ -385,8 +396,9 @@ namespace RTC
 		  sctpParameters,
 		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
 		                        : flatbuffers::nullopt,
+		  sctpNegotiatedCapabilities,
 		  sctpListener,
-		  &traceEventTypes);
+		  std::addressof(traceEventTypes));
 	}
 
 	flatbuffers::Offset<FBS::Transport::Stats> Transport::FillBufferStats(
@@ -814,6 +826,7 @@ namespace RTC
 				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
 				{
 					const flatbuffers::Optional<int16_t> preferredTemporalLayer{ preferredLayers.temporal };
+
 					preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
 					  request->GetBufferBuilder(), preferredLayers.spatial, preferredTemporalLayer);
 				}

@@ -138,13 +138,13 @@ void TcpConnectionHandle::Setup(
 	this->localPort = localPort;
 }
 
-void TcpConnectionHandle::Start()
+bool TcpConnectionHandle::Start() noexcept
 {
 	MS_TRACE();
 
 	if (this->closed)
 	{
-		return;
+		return false;
 	}
 
 	// NOLINTNEXTLINE(misc-const-correctness)
@@ -155,14 +155,18 @@ void TcpConnectionHandle::Start()
 
 	if (err != 0)
 	{
-		MS_THROW_ERROR("uv_read_start() failed: %s", uv_strerror(err));
+		MS_ERROR("uv_read_start() failed: %s", uv_strerror(err));
+
+		return false;
 	}
 
 	// Get the peer address.
 	if (!SetPeerAddress())
 	{
-		MS_THROW_ERROR("error setting peer IP and port");
+		return false;
 	}
+
+	return true;
 }
 
 void TcpConnectionHandle::Write(
@@ -364,11 +368,18 @@ bool TcpConnectionHandle::SetPeerAddress()
 	int err;
 	int len = sizeof(this->peerAddr);
 
-	err = uv_tcp_getpeername(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->peerAddr), &len);
+	// NOTE: `uv_tcp_getpeername()` fails if the socket is not connected. This is
+	// a legitimate scenario since at the time `uv_accept()` was called it may
+	// happen that the peer sent a TCP RST already. In fact, this is the proper
+	// and only way to check whether the socket remains connected now.
+	err = uv_tcp_getpeername(
+	  this->uvHandle,
+	  reinterpret_cast<struct sockaddr*>(std::addressof(this->peerAddr)),
+	  std::addressof(len));
 
 	if (err != 0)
 	{
-		MS_ERROR("uv_tcp_getpeername() failed: %s", uv_strerror(err));
+		MS_DEBUG_DEV("uv_tcp_getpeername() failed: %s", uv_strerror(err));
 
 		return false;
 	}
@@ -376,7 +387,10 @@ bool TcpConnectionHandle::SetPeerAddress()
 	int family;
 
 	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(&this->peerAddr), family, this->peerIp, this->peerPort);
+	  reinterpret_cast<const struct sockaddr*>(std::addressof(this->peerAddr)),
+	  family,
+	  this->peerIp,
+	  this->peerPort);
 
 	return true;
 }

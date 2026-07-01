@@ -16,7 +16,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener, SharedInterface* shared, unsigned int sendNackDelayMs)
+	NackGenerator::NackGenerator(Listener* listener, SharedInterface* shared, uint32_t sendNackDelayMs)
 	  : listener(listener),
 	    shared(shared),
 	    sendNackDelayMs(sendNackDelayMs),

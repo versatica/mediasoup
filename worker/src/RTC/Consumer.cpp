@@ -1755,6 +1755,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Pipe consumers never emit score events: score is always a constant 10/10.
+		if (this->pipe)
+		{
+			return;
+		}
+
 		auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
 
 		auto notificationOffset = FBS::Consumer::CreateScoreNotification(

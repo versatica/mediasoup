@@ -1,17 +1,17 @@
 name: mediasoup-worker-prebuild
 
-# Triggered when mediasoup-npm-publish.yaml finishes successfully (workflow_run).
+# Triggered when `mediasoup-npm-publish.yaml` finishes successfully (`workflow_run`).
 # It builds the mediasoup-worker prebuilt binaries for all supported platforms
-# and uploads them to the GitHub release that mediasoup-npm-publish.yaml already
+# and uploads them to the GitHub release that `mediasoup-npm-publish.yaml` already
 # created.
 #
-# It can also be triggered manually (workflow_dispatch) to re-build and re-upload
+# It can also be triggered manually (`workflow_dispatch`) to re-build and re-upload
 # the prebuilt binaries for a given release tag (for example if a platform
 # failed), by entering the release tag/version in the GitHub Actions tab.
 on:
   workflow_run:
     workflows: ['mediasoup-npm-publish']
-    # workflow_run can fire on different activity types of the upstream run:
+    # `workflow_run` can fire on different activity types of the upstream run:
     #   - requested: the upstream run was created/queued.
     #   - in_progress: the upstream run started executing.
     #   - completed: the upstream run finished, with ANY conclusion (success,
@@ -36,7 +36,7 @@ jobs:
   # Build the mediasoup-worker prebuilt binaries and upload them to the GH
   # release.
   prebuild:
-    # Run only when triggered manually, or when the upstream mediasoup-npm-publish
+    # Run only when triggered manually, or when the upstream `mediasoup-npm-publish`
     # run finished successfully. This guarantees we never build/upload binaries
     # for a release whose NPM publish failed.
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
