@@ -57,6 +57,7 @@ namespace RTC
 				{
 					case Packet::PacketType::IJ:
 					{
+						// TODO
 						// packet = ExtendedJitterReportPacket::ParseStrict(ptr, packetLength);
 
 						break;
@@ -64,6 +65,7 @@ namespace RTC
 
 					default:
 					{
+						// TODO
 						// packet = UnknownPacket::ParseStrict(ptr, packetLength);
 					}
 				}
@@ -118,7 +120,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			MS_DUMP_CLEAN(indentation, "<RTCP::CompoundPacket>");
+			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP_CLEAN(indentation, "  packets count: %zu", GetPacketsCount());
+			MS_DUMP_CLEAN(
+			  indentation, "  needs consolidation of chunks: %s", NeedsConsolidation() ? "yes" : "no");
+			for (const auto* packet : this->packets)
+			{
+				packet->Dump(indentation + 1);
+			}
+			MS_DUMP_CLEAN(indentation, "</RTCP::CompoundPacket>");
 		}
 
 		CompoundPacket* CompoundPacket::Clone(uint8_t* buffer, size_t bufferLength) const

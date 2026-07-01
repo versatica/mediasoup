@@ -105,13 +105,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  type: %" PRIu8 " (%s) (unknown: %s)",
 			  static_cast<uint8_t>(GetType()),
 			  Packet::PacketTypeToString(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
+			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 		}
 
 		void Packet::SoftSerialize(const uint8_t* buffer)
