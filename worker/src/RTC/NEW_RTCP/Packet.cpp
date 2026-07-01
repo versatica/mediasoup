@@ -48,6 +48,32 @@ namespace RTC
 			  Utils::Byte::IsPaddedTo4Bytes(bufferLength));
 		}
 
+		bool Packet::IsPacket(
+		  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, uint16_t& packetLength)
+		{
+			MS_TRACE();
+
+			if (!Packet::IsRtcp(buffer, bufferLength))
+			{
+				return false;
+			}
+
+			packetLength = (Utils::Byte::Get2Bytes(buffer, 2) + 1) * 4;
+
+			if (bufferLength < packetLength)
+			{
+				MS_WARN_TAG(
+				  rtcp,
+				  "no space for announced packet length [packetLength:%zu, bufferLength:%zu]",
+				  packetLength,
+				  bufferLength);
+
+				return false;
+			}
+
+			return true;
+		}
+
 		const std::string& Packet::PacketTypeToString(PacketType packetType)
 		{
 			MS_TRACE();

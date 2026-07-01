@@ -43,7 +43,7 @@ namespace RTC
 
 		class Chunk : public TLV
 		{
-			// We need that packet calls protected and private methods in this class.
+			// We need that Packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:

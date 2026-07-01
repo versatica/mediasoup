@@ -40,7 +40,7 @@ namespace RTC
 
 		class Parameter : public TLV
 		{
-			// We need that chunk calls protected and private methods in this class.
+			// We need that Chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:

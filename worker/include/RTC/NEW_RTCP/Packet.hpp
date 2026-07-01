@@ -21,6 +21,10 @@ namespace RTC
 		 */
 		class Packet : public Serializable
 		{
+			// We need that CompoundPacket calls protected and private methods in this
+			// class.
+			friend class CompoundPacket;
+
 		public:
 			/**
 			 * RTCP Packet Type.
@@ -28,7 +32,7 @@ namespace RTC
 			enum class PacketType : uint8_t
 			{
 				/**
-				 * Extended Jitter Reports.
+				 * Extended Jitter Report.
 				 */
 				IJ = 195,
 				/**
@@ -126,6 +130,19 @@ namespace RTC
 			 * Whether given buffer could be a valid RTCP packet.
 			 */
 			static bool IsRtcp(const uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Whether given buffer could be a a valid RTCP packet.
+			 *
+			 * @param buffer
+			 * @param bufferLength - Can be greater than real packet length.
+			 * @param packetType - If given buffer is a valid packet then `packetType`
+			 *   is rewritten to parsed PacketType.
+			 * @param packetLength - If given buffer is a valid packet then
+			 *   `packetLength` is rewritten to the computed length of the packet.
+			 */
+			static bool IsPacket(
+			  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, uint16_t& packetLength);
 
 			static const std::string& PacketTypeToString(PacketType packetType);
 
