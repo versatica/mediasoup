@@ -142,7 +142,7 @@ namespace RTC
 			 *   `packetLength` is rewritten to the computed length of the packet.
 			 */
 			static bool IsPacket(
-			  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, uint16_t& packetLength);
+			  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength);
 
 			static const std::string& PacketTypeToString(PacketType packetType);
 
@@ -214,12 +214,12 @@ namespace RTC
 			virtual void SoftCloneInto(Packet* packet) const final;
 
 			/**
-			 * The value of the length field, which is in 32-bit words minus one,
-			 * including the Common Header and any padding.
+			 * The computed length (in bytes) of the packet according to the length
+			 * field (padding included).
 			 */
-			virtual uint16_t GetLengthField() const final
+			virtual size_t GetLengthField() const final
 			{
-				return Utils::Byte::Get2Bytes(GetBuffer(), 2);
+				return (static_cast<size_t>(Utils::Byte::Get2Bytes(GetBuffer(), 2)) + 1) * 4;
 			}
 
 			/**
@@ -269,7 +269,7 @@ namespace RTC
 			/**
 			 * The length of the variable-length value.
 			 */
-			virtual uint16_t GetVariableLengthValueLength() const final
+			virtual size_t GetVariableLengthValueLength() const final
 			{
 				if (!HasVariableLengthValue())
 				{

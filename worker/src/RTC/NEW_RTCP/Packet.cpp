@@ -4,7 +4,6 @@
 #include "RTC/NEW_RTCP/Packet.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include <cstring> // std::memmove()
 
 namespace RTC
@@ -49,7 +48,7 @@ namespace RTC
 		}
 
 		bool Packet::IsPacket(
-		  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, uint16_t& packetLength)
+		  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength)
 		{
 			MS_TRACE();
 
@@ -58,7 +57,7 @@ namespace RTC
 				return false;
 			}
 
-			packetLength = (Utils::Byte::Get2Bytes(buffer, 2) + 1) * 4;
+			packetLength = (static_cast<size_t>(Utils::Byte::Get2Bytes(buffer, 2)) + 1) * 4;
 
 			if (bufferLength < packetLength)
 			{

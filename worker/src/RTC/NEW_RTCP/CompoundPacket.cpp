@@ -39,7 +39,7 @@ namespace RTC
 				// Here we must anticipate the type of each packet to use its appropriate
 				// parser.
 				Packet::PacketType packetType;
-				uint16_t packetLength;
+				size_t packetLength;
 
 				if (!Packet::IsPacket(ptr, packetMaxBufferLength, packetType, packetLength))
 				{
