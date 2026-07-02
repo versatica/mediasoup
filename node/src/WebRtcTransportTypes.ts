@@ -160,11 +160,7 @@ export type DtlsParameters = {
  * registry initially specified in RFC 4572 Section 8).
  */
 export type FingerprintAlgorithm =
-	| 'sha-1'
-	| 'sha-224'
-	| 'sha-256'
-	| 'sha-384'
-	| 'sha-512';
+	'sha-1' | 'sha-224' | 'sha-256' | 'sha-384' | 'sha-512';
 
 /**
  * The hash function algorithm and its corresponding certificate fingerprint
@@ -179,11 +175,7 @@ export type DtlsFingerprint = {
 export type IceRole = 'controlled' | 'controlling';
 
 export type IceState =
-	| 'new'
-	| 'connected'
-	| 'completed'
-	| 'disconnected'
-	| 'closed';
+	'new' | 'connected' | 'completed' | 'disconnected' | 'closed';
 
 export type IceCandidateType = 'host';
 
@@ -192,11 +184,7 @@ export type IceCandidateTcpType = 'passive';
 export type DtlsRole = 'auto' | 'client' | 'server';
 
 export type DtlsState =
-	| 'new'
-	| 'connecting'
-	| 'connected'
-	| 'failed'
-	| 'closed';
+	'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 
 export type WebRtcTransportDump = BaseTransportDump & {
 	iceRole: 'controlled';

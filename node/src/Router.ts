@@ -384,11 +384,9 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		/* Build Request. */
 		let webRtcTransportListenServer:
-			| FbsWebRtcTransport.ListenServerT
-			| undefined;
+			FbsWebRtcTransport.ListenServerT | undefined;
 		let webRtcTransportListenIndividual:
-			| FbsWebRtcTransport.ListenIndividualT
-			| undefined;
+			FbsWebRtcTransport.ListenIndividualT | undefined;
 
 		if (webRtcServer) {
 			webRtcTransportListenServer = new FbsWebRtcTransport.ListenServerT(

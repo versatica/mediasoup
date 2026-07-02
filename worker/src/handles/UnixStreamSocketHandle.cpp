@@ -211,7 +211,8 @@ void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
 	// then build a uv_req_t and use uv_write().
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
-	int written     = uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), &buffer, 1);
+	int written =
+	  uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), std::addressof(buffer), 1);
 
 	// All the data was written. Done.
 	if (written == static_cast<int>(len))
@@ -242,9 +243,9 @@ void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
 	const int err = uv_write(
-	  &writeData->req,
+	  std::addressof(writeData->req),
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	  &buffer,
+	  std::addressof(buffer),
 	  1,
 	  static_cast<uv_write_cb>(onWrite));
 

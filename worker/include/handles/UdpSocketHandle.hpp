@@ -51,11 +51,11 @@ public:
 	  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandle::onSendCallback* cb);
 	const struct sockaddr* GetLocalAddress() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(&this->localAddr);
+		return reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr));
 	}
 	int GetLocalFamily() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(&this->localAddr)->sa_family;
+		return reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr))->sa_family;
 	}
 	const std::string& GetLocalIp() const
 	{
