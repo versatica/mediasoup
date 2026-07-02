@@ -178,6 +178,9 @@ namespace RTC
 					return false;
 				}
 
+				// H264 always has a single spatial layer (0).
+				context->SetCurrentSpatialLayer(0);
+
 				// Update/fix current temporal layer.
 				if (this->payloadDescriptor->temporalLayer > context->GetCurrentTemporalLayer())
 				{

@@ -447,7 +447,10 @@ namespace RTC
 
 		auto previousLayers = this->encodingContext->GetCurrentLayers();
 
-		bool marker{ false };
+		// Preserve the original marker bit. ProcessPayload may update it (VP9/AV1
+		// overwrite it based on spatial-layer end-of-frame; VP8/H264 do not, so the
+		// original packet marker must survive).
+		bool marker{ packet->HasMarker() };
 
 		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{

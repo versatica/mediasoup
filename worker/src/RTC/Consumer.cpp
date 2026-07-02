@@ -33,12 +33,11 @@ namespace RTC
 	    producerId(producerId),
 	    shared(shared),
 	    listener(listener),
-	    kind(RTC::Media::Kind(data->kind())),
-	    type(RTC::RtpParameters::Type(data->type()))
+	    kind(RTC::Media::Kind(data->kind()))
 	{
 		MS_TRACE();
 
-		this->pipe = this->type == RTC::RtpParameters::Type::PIPE;
+		this->pipe = data->type() == FBS::RtpParameters::Type::PIPE;
 
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());
@@ -85,7 +84,7 @@ namespace RTC
 		}
 
 		// Ensure there are as many encodings as consumable encodings for pipe.
-		if (pipe && this->rtpParameters.encodings.size() != this->consumableRtpEncodings.size())
+		if (this->pipe && this->rtpParameters.encodings.size() != this->consumableRtpEncodings.size())
 		{
 			MS_THROW_TYPE_ERROR("number of rtpParameters.encodings and consumableRtpEncodings do not match");
 		}
@@ -202,6 +201,25 @@ namespace RTC
 
 		// Build preferred layers from FBS data.
 		RTC::ConsumerTypes::VideoLayers preferredLayers;
+
+		// Derive the stream type from consumableRtpEncodings.
+		if (this->pipe)
+		{
+			this->type = RTC::RtpParameters::Type::PIPE;
+		}
+		else if (this->consumableRtpEncodings.size() > 1u)
+		{
+			this->type = RTC::RtpParameters::Type::SIMULCAST;
+		}
+		else if (this->consumableRtpEncodings[0].spatialLayers > 1u || this->consumableRtpEncodings[0].temporalLayers > 1u)
+		{
+			// Single encoding with multiple layers is always SVC.
+			this->type = RTC::RtpParameters::Type::SVC;
+		}
+		else
+		{
+			this->type = RTC::RtpParameters::Type::SIMPLE;
+		}
 
 		// Create the appropriate ProducerStreamManager subclass based on type.
 		switch (this->type)
