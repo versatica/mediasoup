@@ -133,7 +133,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(value != nullptr || valueLength == 0, "value cannot be nullptr if valueLength is > 0");
+			if (value == nullptr && valueLength > 0)
+			{
+				MS_THROW_TYPE_ERROR("value cannot be nullptr if valueLength is > 0");
+			}
 
 			// NOTE: This can throw.
 			SetVariableLengthValueLength(valueLength);

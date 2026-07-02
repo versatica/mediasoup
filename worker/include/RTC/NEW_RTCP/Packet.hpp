@@ -103,7 +103,7 @@ namespace RTC
 			 *   the packet type (PT).
 			 *
 			 * @remarks
-			 * - This struct is guaranteed to be aligned to 2 bytes.
+			 * - This struct is guaranteed to be aligned to 4 bytes.
 			 */
 			struct CommonHeader
 			{
@@ -281,9 +281,9 @@ namespace RTC
 
 			/**
 			 * Set the length of the variable-length value. It doesn't copy any value
-			 * into the variable-length value. This method is used in items that have
-			 * variable-length value but it doesn't consist on a buffer + length, but
-			 * instead is an structure with fields (with variable length).
+			 * into the variable-length value. This method is used in packets that
+			 * have variable-length value but it doesn't consist on a buffer + length,
+			 * but instead is an structure with fields (with variable length).
 			 *
 			 * @see GetVariableLengthValue()
 			 */
