@@ -2,6 +2,8 @@
 
 ### NEXT
 
+Worker: Enable SVC for VP8 and H264 ([PR #1851](https://github.com/versatica/mediasoup/pull/1851)).
+
 ### 0.22.9
 
 - Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([PR #1823](https://github.com/versatica/mediasoup/pull/1823)).

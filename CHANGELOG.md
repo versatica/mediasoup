@@ -2,6 +2,8 @@
 
 ### NEXT
 
+Worker: Enable SVC for VP8 and H264 ([PR #1851](https://github.com/versatica/mediasoup/pull/1851)).
+
 ### 3.20.10
 
 - Worker: Handle new STUN "NOMINATION" attribute `0x0030` ([PR #1846](https://github.com/versatica/mediasoup/pull/1846)).
