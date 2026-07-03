@@ -1717,6 +1717,151 @@ fn consume_simulcast_honors_preferred_layers() {
 }
 
 #[test]
+fn consume_single_encoding_no_temporal_is_simple() {
+    future::block_on(async move {
+        let (_executor_guard, _worker, router, transport_1, transport_2) =
+            init_with_media_codecs(media_codecs_vpx()).await;
+
+        let device_capabilities = consumer_device_capabilities_vpx();
+
+        let producer = transport_1
+            .produce(ProducerOptions::new(
+                MediaKind::Video,
+                RtpParameters {
+                    mid: None,
+                    codecs: vec![RtpCodecParameters::Video {
+                        mime_type: MimeTypeVideo::Vp8,
+                        payload_type: 96,
+                        clock_rate: NonZeroU32::new(90000).unwrap(),
+                        parameters: RtpCodecParametersParameters::default(),
+                        rtcp_feedback: vec![RtcpFeedback::Nack, RtcpFeedback::NackPli],
+                    }],
+                    header_extensions: vec![],
+                    encodings: vec![RtpEncodingParameters {
+                        ssrc: Some(11111111),
+                        ..RtpEncodingParameters::default()
+                    }],
+                    rtcp: RtcpParameters {
+                        cname: Some("test".to_string()),
+                        ..RtcpParameters::default()
+                    },
+                    msid: None,
+                },
+            ))
+            .await
+            .expect("Failed to produce single-encoding no temporal video");
+
+        assert!(router.can_consume(&producer.id(), &device_capabilities));
+
+        let consumer = transport_2
+            .consume(ConsumerOptions::new(producer.id(), device_capabilities))
+            .await
+            .expect("Failed to consume single-encoding no temporal video");
+
+        assert_eq!(consumer.r#type(), ConsumerType::Simple);
+    });
+}
+
+#[test]
+fn consume_single_encoding_temporal_is_svc() {
+    future::block_on(async move {
+        let (_executor_guard, _worker, router, transport_1, transport_2) =
+            init_with_media_codecs(media_codecs_vpx()).await;
+
+        let device_capabilities = consumer_device_capabilities_vpx();
+
+        let producer = transport_1
+            .produce(ProducerOptions::new(
+                MediaKind::Video,
+                RtpParameters {
+                    mid: None,
+                    codecs: vec![RtpCodecParameters::Video {
+                        mime_type: MimeTypeVideo::Vp8,
+                        payload_type: 96,
+                        clock_rate: NonZeroU32::new(90000).unwrap(),
+                        parameters: RtpCodecParametersParameters::default(),
+                        rtcp_feedback: vec![RtcpFeedback::Nack, RtcpFeedback::NackPli],
+                    }],
+                    header_extensions: vec![],
+                    encodings: vec![RtpEncodingParameters {
+                        ssrc: Some(11111111),
+                        scalability_mode: "L1T3".parse().unwrap(),
+                        ..RtpEncodingParameters::default()
+                    }],
+                    rtcp: RtcpParameters {
+                        cname: Some("test".to_string()),
+                        ..RtcpParameters::default()
+                    },
+                    msid: None,
+                },
+            ))
+            .await
+            .expect("Failed to produce single-encoding temporal video");
+
+        assert!(router.can_consume(&producer.id(), &device_capabilities));
+
+        let consumer = transport_2
+            .consume(ConsumerOptions::new(producer.id(), device_capabilities))
+            .await
+            .expect("Failed to consume single-encoding temporal video");
+
+        assert_eq!(consumer.r#type(), ConsumerType::Svc);
+    });
+}
+
+#[test]
+fn consume_multiple_encoding_is_simulcast() {
+    future::block_on(async move {
+        let (_executor_guard, _worker, router, transport_1, transport_2) =
+            init_with_media_codecs(media_codecs_vpx()).await;
+
+        let device_capabilities = consumer_device_capabilities_vpx();
+
+        let producer = transport_1
+            .produce(ProducerOptions::new(
+                MediaKind::Video,
+                RtpParameters {
+                    mid: None,
+                    codecs: vec![RtpCodecParameters::Video {
+                        mime_type: MimeTypeVideo::Vp8,
+                        payload_type: 96,
+                        clock_rate: NonZeroU32::new(90000).unwrap(),
+                        parameters: RtpCodecParametersParameters::default(),
+                        rtcp_feedback: vec![RtcpFeedback::Nack, RtcpFeedback::NackPli],
+                    }],
+                    header_extensions: vec![],
+                    encodings: vec![
+                        RtpEncodingParameters {
+                            ssrc: Some(11111111),
+                            ..RtpEncodingParameters::default()
+                        },
+                        RtpEncodingParameters {
+                            ssrc: Some(22222222),
+                            ..RtpEncodingParameters::default()
+                        },
+                    ],
+                    rtcp: RtcpParameters {
+                        cname: Some("test".to_string()),
+                        ..RtcpParameters::default()
+                    },
+                    msid: None,
+                },
+            ))
+            .await
+            .expect("Failed to produce multiple-encoding video");
+
+        assert!(router.can_consume(&producer.id(), &device_capabilities));
+
+        let consumer = transport_2
+            .consume(ConsumerOptions::new(producer.id(), device_capabilities))
+            .await
+            .expect("Failed to consume multiple-encoding video");
+
+        assert_eq!(consumer.r#type(), ConsumerType::Simulcast);
+    });
+}
+
+#[test]
 fn set_unset_priority_succeeds() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
