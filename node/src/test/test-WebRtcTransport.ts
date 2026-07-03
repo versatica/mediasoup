@@ -6,6 +6,7 @@ import type { WorkerEvents, WebRtcTransportEvents } from '../types';
 import type { WebRtcTransportImpl } from '../WebRtcTransport';
 import type { TransportTuple } from '../TransportTypes';
 import { serializeProtocol } from '../Transport';
+import { WorkerClosedError, NotFoundError } from '../errors';
 import * as utils from '../utils';
 import {
 	Notification,
@@ -839,26 +840,26 @@ test('WebRtcTransport methods reject if closed', async () => {
 	expect(webRtcTransport.dtlsState).toBe('closed');
 	expect(webRtcTransport.sctpState).toBeUndefined();
 
-	await expect(webRtcTransport.dump()).rejects.toThrow(Error);
+	await expect(webRtcTransport.dump()).rejects.toThrow(NotFoundError);
 
-	await expect(webRtcTransport.getStats()).rejects.toThrow(Error);
+	await expect(webRtcTransport.getStats()).rejects.toThrow(NotFoundError);
 
 	// @ts-expect-error --- Testing purposes.
-	await expect(webRtcTransport.connect({})).rejects.toThrow(Error);
+	await expect(webRtcTransport.connect({})).rejects.toThrow(TypeError);
 
 	await expect(webRtcTransport.setMaxIncomingBitrate(200000)).rejects.toThrow(
-		Error
+		NotFoundError
 	);
 
 	await expect(webRtcTransport.setMaxOutgoingBitrate(200000)).rejects.toThrow(
-		Error
+		NotFoundError
 	);
 
 	await expect(webRtcTransport.setMinOutgoingBitrate(100000)).rejects.toThrow(
-		Error
+		NotFoundError
 	);
 
-	await expect(webRtcTransport.restartIce()).rejects.toThrow(Error);
+	await expect(webRtcTransport.restartIce()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('WebRtcTransport emits "routerclose" if Router is closed', async () => {
@@ -885,6 +886,8 @@ test('WebRtcTransport emits "routerclose" if Router is closed', async () => {
 	expect(webRtcTransport.iceSelectedTuple).toBeUndefined();
 	expect(webRtcTransport.dtlsState).toBe('closed');
 	expect(webRtcTransport.sctpState).toBe('closed');
+
+	await expect(webRtcTransport.dump()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('WebRtcTransport emits "routerclose" if Worker is closed', async () => {
@@ -912,4 +915,6 @@ test('WebRtcTransport emits "routerclose" if Worker is closed', async () => {
 	expect(webRtcTransport.iceSelectedTuple).toBeUndefined();
 	expect(webRtcTransport.dtlsState).toBe('closed');
 	expect(webRtcTransport.sctpState).toBeUndefined();
+
+	await expect(webRtcTransport.dump()).rejects.toThrow(WorkerClosedError);
 }, 2000);

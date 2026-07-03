@@ -4,7 +4,7 @@ import { info, warn } from 'node:console';
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
-import { InvalidStateError } from './errors';
+import { WorkerClosedError, NotFoundError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request';
 import { Response } from './fbs/response';
 import { Message, Body as MessageBody } from './fbs/message';
@@ -238,7 +238,7 @@ export class Channel extends EnhancedEventEmitter {
 		logger.debug(`notify() [event:${Event[event]}]`);
 
 		if (this.#closed) {
-			throw new InvalidStateError(
+			throw new WorkerClosedError(
 				`Channel closed, cannot send notification [event:${Event[event]}]`
 			);
 		}
@@ -306,7 +306,7 @@ export class Channel extends EnhancedEventEmitter {
 		logger.debug(`request() [method:${Method[method]}]`);
 
 		if (this.#closed) {
-			throw new InvalidStateError(
+			throw new WorkerClosedError(
 				`Channel closed, cannot send request [method:${Method[method]}]`
 			);
 		}
@@ -385,7 +385,7 @@ export class Channel extends EnhancedEventEmitter {
 				},
 				close: () => {
 					pReject(
-						new InvalidStateError(
+						new WorkerClosedError(
 							`Channel closed, pending request aborted [method:${Method[method]}, id:${id}]`
 						)
 					);
@@ -422,6 +422,12 @@ export class Channel extends EnhancedEventEmitter {
 			switch (response.error()!) {
 				case 'TypeError': {
 					sent.reject(new TypeError(response.reason()!));
+
+					break;
+				}
+
+				case 'NotFoundError': {
+					sent.reject(new NotFoundError(response.reason()!));
 
 					break;
 				}

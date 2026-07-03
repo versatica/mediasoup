@@ -3,7 +3,7 @@ import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, ConsumerEvents } from '../types';
 import type { ConsumerImpl } from '../Consumer';
-import { UnsupportedError } from '../errors';
+import { UnsupportedError, NotFoundError } from '../errors';
 import * as utils from '../utils';
 import {
 	Notification,
@@ -1341,6 +1341,8 @@ test('consumer.close() succeeds', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
 
+	await expect(audioConsumer.dump()).rejects.toThrow(NotFoundError);
+
 	const routerDump = await ctx.router!.dump();
 
 	expect(routerDump.mapProducerIdConsumerIds).toEqual(
@@ -1370,20 +1372,20 @@ test('Consumer methods reject if closed', async () => {
 
 	audioConsumer.close();
 
-	await expect(audioConsumer.dump()).rejects.toThrow(Error);
+	await expect(audioConsumer.dump()).rejects.toThrow(NotFoundError);
 
-	await expect(audioConsumer.getStats()).rejects.toThrow(Error);
+	await expect(audioConsumer.getStats()).rejects.toThrow(NotFoundError);
 
-	await expect(audioConsumer.pause()).rejects.toThrow(Error);
+	await expect(audioConsumer.pause()).rejects.toThrow(NotFoundError);
 
-	await expect(audioConsumer.resume()).rejects.toThrow(Error);
+	await expect(audioConsumer.resume()).rejects.toThrow(NotFoundError);
 
 	// @ts-expect-error --- Testing purposes.
-	await expect(audioConsumer.setPreferredLayers({})).rejects.toThrow(Error);
+	await expect(audioConsumer.setPreferredLayers({})).rejects.toThrow(TypeError);
 
-	await expect(audioConsumer.setPriority(2)).rejects.toThrow(Error);
+	await expect(audioConsumer.setPriority(2)).rejects.toThrow(NotFoundError);
 
-	await expect(audioConsumer.requestKeyFrame()).rejects.toThrow(Error);
+	await expect(audioConsumer.requestKeyFrame()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('Consumer emits "producerclose" if Producer is closed', async () => {
@@ -1402,6 +1404,8 @@ test('Consumer emits "producerclose" if Producer is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
+
+	await expect(audioConsumer.dump()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('Consumer emits "transportclose" if Transport is closed', async () => {
@@ -1421,6 +1425,8 @@ test('Consumer emits "transportclose" if Transport is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(videoConsumer.closed).toBe(true);
+
+	await expect(videoConsumer.dump()).rejects.toThrow(NotFoundError);
 
 	await expect(ctx.router!.dump()).resolves.toMatchObject({
 		mapProducerIdConsumerIds: expect.arrayContaining([

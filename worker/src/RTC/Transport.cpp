@@ -608,13 +608,10 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_PRODUCE:
 			{
-				const auto* body = request->data->body_as<FBS::Transport::ProduceRequest>();
-				auto producerId  = body->producerId()->str();
+				const auto* body      = request->data->body_as<FBS::Transport::ProduceRequest>();
+				const auto producerId = body->producerId()->str();
 
-				if (this->mapProducers.find(producerId) != this->mapProducers.end())
-				{
-					MS_THROW_ERROR("a Producer with same producerId already exists");
-				}
+				CheckNoProducer(producerId, request->methodCStr);
 
 				// This may throw.
 				auto* producer = new RTC::Producer(this->shared, producerId, this, body);
@@ -779,14 +776,11 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CONSUME:
 			{
-				const auto* body             = request->data->body_as<FBS::Transport::ConsumeRequest>();
-				const std::string producerId = body->producerId()->str();
-				const std::string consumerId = body->consumerId()->str();
+				const auto* body      = request->data->body_as<FBS::Transport::ConsumeRequest>();
+				const auto producerId = body->producerId()->str();
+				const auto consumerId = body->consumerId()->str();
 
-				if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
-				{
-					MS_THROW_ERROR("a Consumer with same consumerId already exists");
-				}
+				CheckNoConsumer(consumerId, request->methodCStr);
 
 				// This may throw.
 				auto* consumer = new RTC::Consumer(this->shared, consumerId, producerId, this, body);
@@ -821,7 +815,8 @@ namespace RTC
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
 				flatbuffers::Offset<FBS::Consumer::ConsumerLayers> preferredLayersOffset;
-				auto preferredLayers = consumer->GetPreferredLayers();
+
+				const auto preferredLayers = consumer->GetPreferredLayers();
 
 				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
 				{
@@ -1005,12 +1000,11 @@ namespace RTC
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
 
-				const auto* body = request->data->body_as<FBS::Transport::ProduceDataRequest>();
-
-				auto dataProducerId = body->dataProducerId()->str();
+				const auto* body          = request->data->body_as<FBS::Transport::ProduceDataRequest>();
+				const auto dataProducerId = body->dataProducerId()->str();
 
 				// This may throw.
-				CheckNoDataProducer(dataProducerId);
+				CheckNoDataProducer(dataProducerId, request->methodCStr);
 
 				// This may throw.
 				auto* dataProducer = new RTC::DataProducer(
@@ -1108,13 +1102,12 @@ namespace RTC
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
 
-				const auto* body = request->data->body_as<FBS::Transport::ConsumeDataRequest>();
-
-				auto dataProducerId = body->dataProducerId()->str();
-				auto dataConsumerId = body->dataConsumerId()->str();
+				const auto* body          = request->data->body_as<FBS::Transport::ConsumeDataRequest>();
+				const auto dataProducerId = body->dataProducerId()->str();
+				const auto dataConsumerId = body->dataConsumerId()->str();
 
 				// This may throw.
-				CheckNoDataConsumer(dataConsumerId);
+				CheckNoDataConsumer(dataConsumerId, request->methodCStr);
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
@@ -1137,7 +1130,8 @@ namespace RTC
 						try
 						{
 							// This may throw.
-							CheckNoSctpDataConsumer(dataConsumer->GetSctpStreamParameters().streamId);
+							CheckNoSctpDataConsumer(
+							  dataConsumer->GetSctpStreamParameters().streamId, request->methodCStr);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -1254,7 +1248,8 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::CloseProducerRequest>();
 
 				// This may throw.
-				RTC::Producer* producer = AssertAndGetProducerById(body->producerId()->str());
+				RTC::Producer* producer =
+				  AssertAndGetProducerById(body->producerId()->str(), request->methodCStr);
 
 				// Remove it from the RtpListener.
 				this->rtpListener.RemoveProducer(producer);
@@ -1293,7 +1288,8 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::CloseConsumerRequest>();
 
 				// This may throw.
-				RTC::Consumer* consumer = AssertAndGetConsumerById(body->consumerId()->str());
+				RTC::Consumer* consumer =
+				  AssertAndGetConsumerById(body->consumerId()->str(), request->methodCStr);
 
 				// Remove it from the maps.
 				this->mapConsumers.erase(consumer->id);
@@ -1344,7 +1340,8 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataProducerRequest>();
 
 				// This may throw.
-				RTC::DataProducer* dataProducer = AssertAndGetDataProducerById(body->dataProducerId()->str());
+				RTC::DataProducer* dataProducer =
+				  AssertAndGetDataProducerById(body->dataProducerId()->str(), request->methodCStr);
 
 				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
 				{
@@ -1391,7 +1388,8 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataConsumerRequest>();
 
 				// This may throw.
-				RTC::DataConsumer* dataConsumer = AssertAndGetDataConsumerById(body->dataConsumerId()->str());
+				RTC::DataConsumer* dataConsumer =
+				  AssertAndGetDataConsumerById(body->dataConsumerId()->str(), request->methodCStr);
 
 				// Remove it from the maps.
 				this->mapDataConsumers.erase(dataConsumer->id);
@@ -1761,35 +1759,8 @@ namespace RTC
 		delete cb;
 	}
 
-	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const
-	{
-		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
-		{
-			MS_THROW_ERROR("a DataProducer with same dataProducerId already exists");
-		}
-	}
-
-	void Transport::CheckNoDataConsumer(const std::string& dataConsumerId) const
-	{
-		MS_TRACE();
-
-		if (this->mapDataConsumers.find(dataConsumerId) != this->mapDataConsumers.end())
-		{
-			MS_THROW_ERROR("a DataConsumer with same dataConsumerId already exists");
-		}
-	}
-
-	void Transport::CheckNoSctpDataConsumer(uint16_t streamId) const
-	{
-		MS_TRACE();
-
-		if (this->mapSctpStreamIdDataConsumers.find(streamId) != this->mapSctpStreamIdDataConsumers.end())
-		{
-			MS_THROW_ERROR("an SCTP DataConsumer with same streamId %" PRIu16 " already exists", streamId);
-		}
-	}
-
-	RTC::Producer* Transport::AssertAndGetProducerById(const std::string& producerId) const
+	RTC::Producer* Transport::AssertAndGetProducerById(
+	  const std::string& producerId, const std::string& message) const
 	{
 		MS_TRACE();
 
@@ -1797,13 +1768,14 @@ namespace RTC
 
 		if (it == this->mapProducers.end())
 		{
-			MS_THROW_ERROR("Producer not found");
+			MS_THROW_NOT_FOUND_ERROR("Producer not found [method:%s]", message.c_str());
 		}
 
 		return it->second;
 	}
 
-	RTC::Consumer* Transport::AssertAndGetConsumerById(const std::string& consumerId) const
+	RTC::Consumer* Transport::AssertAndGetConsumerById(
+	  const std::string& consumerId, const std::string& message) const
 	{
 		MS_TRACE();
 
@@ -1811,7 +1783,7 @@ namespace RTC
 
 		if (it == this->mapConsumers.end())
 		{
-			MS_THROW_ERROR("Consumer not found");
+			MS_THROW_NOT_FOUND_ERROR("Consumer not found [method:%s]", message.c_str());
 		}
 
 		return it->second;
@@ -1849,7 +1821,8 @@ namespace RTC
 		return consumer;
 	}
 
-	RTC::DataProducer* Transport::AssertAndGetDataProducerById(const std::string& dataProducerId) const
+	RTC::DataProducer* Transport::AssertAndGetDataProducerById(
+	  const std::string& dataProducerId, const std::string& message) const
 	{
 		MS_TRACE();
 
@@ -1857,13 +1830,14 @@ namespace RTC
 
 		if (it == this->mapDataProducers.end())
 		{
-			MS_THROW_ERROR("DataProducer not found");
+			MS_THROW_NOT_FOUND_ERROR("DataProducer not found [method:%s]", message.c_str());
 		}
 
 		return it->second;
 	}
 
-	RTC::DataConsumer* Transport::AssertAndGetDataConsumerById(const std::string& dataConsumerId) const
+	RTC::DataConsumer* Transport::AssertAndGetDataConsumerById(
+	  const std::string& dataConsumerId, const std::string& message) const
 	{
 		MS_TRACE();
 
@@ -1871,13 +1845,13 @@ namespace RTC
 
 		if (it == this->mapDataConsumers.end())
 		{
-			MS_THROW_ERROR("DataConsumer not found");
+			MS_THROW_NOT_FOUND_ERROR("DataConsumer not found [method:%s]", message.c_str());
 		}
 
 		return it->second;
 	}
 
-	RTC::DataConsumer* Transport::GetSctpDataConsumerByStreamId(uint16_t streamId) const
+	RTC::DataConsumer* Transport::AssertAndGetSctpDataConsumerByStreamId(uint16_t streamId) const
 	{
 		MS_TRACE();
 
@@ -1885,10 +1859,65 @@ namespace RTC
 
 		if (it == this->mapSctpStreamIdDataConsumers.end())
 		{
-			MS_THROW_ERROR("SCTP DataConsumer with streamId %" PRIu16 " not found", streamId);
+			MS_THROW_NOT_FOUND_ERROR("SCTP DataConsumer with streamId %" PRIu16 " not found", streamId);
 		}
 
 		return it->second;
+	}
+
+	void Transport::CheckNoProducer(const std::string& producerId, const std::string& message) const
+	{
+		MS_TRACE();
+
+		if (this->mapProducers.find(producerId) != this->mapProducers.end())
+		{
+			MS_THROW_ERROR("a Producer with same producerId already exists [method:%s]", message.c_str());
+		}
+	}
+
+	void Transport::CheckNoConsumer(const std::string& dataConsumerId, const std::string& message) const
+	{
+		MS_TRACE();
+
+		if (this->mapConsumers.find(dataConsumerId) != this->mapConsumers.end())
+		{
+			MS_THROW_ERROR("a Consumer with same consumerId already exists [method:%s]", message.c_str());
+		}
+	}
+
+	void Transport::CheckNoDataProducer(const std::string& dataProducerId, const std::string& message) const
+	{
+		MS_TRACE();
+
+		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
+		{
+			MS_THROW_ERROR(
+			  "a DataProducer with same dataProducerId already exists [method:%s]", message.c_str());
+		}
+	}
+
+	void Transport::CheckNoDataConsumer(const std::string& dataConsumerId, const std::string& message) const
+	{
+		MS_TRACE();
+
+		if (this->mapDataConsumers.find(dataConsumerId) != this->mapDataConsumers.end())
+		{
+			MS_THROW_ERROR(
+			  "a DataConsumer with same dataConsumerId already exists [method:%s]", message.c_str());
+		}
+	}
+
+	void Transport::CheckNoSctpDataConsumer(uint16_t streamId, const std::string& message) const
+	{
+		MS_TRACE();
+
+		if (this->mapSctpStreamIdDataConsumers.find(streamId) != this->mapSctpStreamIdDataConsumers.end())
+		{
+			MS_THROW_ERROR(
+			  "an SCTP DataConsumer with same streamId %" PRIu16 " already exists [method:%s]",
+			  streamId,
+			  message.c_str());
+		}
 	}
 
 	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)
@@ -3250,7 +3279,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto* dataConsumer = GetSctpDataConsumerByStreamId(streamId);
+		const auto* dataConsumer = AssertAndGetSctpDataConsumerByStreamId(streamId);
 
 		if (!dataConsumer)
 		{

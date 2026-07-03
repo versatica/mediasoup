@@ -183,19 +183,22 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 	  uvRusage.ru_nivcsw);
 }
 
-RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(const std::string& webRtcServerId) const
+RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(
+  const std::string& webRtcServerId, const std::string& message) const
 {
+	MS_TRACE();
+
 	auto it = this->mapWebRtcServers.find(webRtcServerId);
 
 	if (it == this->mapWebRtcServers.end())
 	{
-		MS_THROW_ERROR("WebRtcServer not found");
+		MS_THROW_NOT_FOUND_ERROR("WebRtcServer not found [method:%s]", message.c_str());
 	}
 
 	return it->second;
 }
 
-RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId) const
+RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const std::string& message) const
 {
 	MS_TRACE();
 
@@ -203,25 +206,30 @@ RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId) const
 
 	if (it == this->mapRouters.end())
 	{
-		MS_THROW_ERROR("Router not found");
+		MS_THROW_NOT_FOUND_ERROR("Router not found [method:%s]", message.c_str());
 	}
 
 	return it->second;
 }
 
-void Worker::CheckNoWebRtcServer(const std::string& webRtcServerId) const
+void Worker::CheckNoWebRtcServer(const std::string& webRtcServerId, const std::string& message) const
 {
+	MS_TRACE();
+
 	if (this->mapWebRtcServers.find(webRtcServerId) != this->mapWebRtcServers.end())
 	{
-		MS_THROW_ERROR("a WebRtcServer with same webRtcServerId already exists");
+		MS_THROW_ERROR(
+		  "a WebRtcServer with same webRtcServerId already exists [method:%s]", message.c_str());
 	}
 }
 
-void Worker::CheckNoRouter(const std::string& routerId) const
+void Worker::CheckNoRouter(const std::string& routerId, const std::string& message) const
 {
+	MS_TRACE();
+
 	if (this->mapRouters.find(routerId) != this->mapRouters.end())
 	{
-		MS_THROW_ERROR("a Router with same routerId already exists");
+		MS_THROW_ERROR("a Router with same routerId already exists [method:%s]", message.c_str());
 	}
 }
 
@@ -261,50 +269,28 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CREATE_WEBRTCSERVER:
 		{
-			try
-			{
-				const auto* const body = request->data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
+			const auto* const body    = request->data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
+			const auto webRtcServerId = body->webRtcServerId()->str();
 
-				const std::string webRtcServerId = body->webRtcServerId()->str();
+			CheckNoWebRtcServer(webRtcServerId, request->methodCStr);
 
-				CheckNoWebRtcServer(webRtcServerId);
+			auto* webRtcServer = new RTC::WebRtcServer(this->shared, webRtcServerId, body->listenInfos());
 
-				auto* webRtcServer = new RTC::WebRtcServer(this->shared, webRtcServerId, body->listenInfos());
+			this->mapWebRtcServers[webRtcServerId] = webRtcServer;
 
-				this->mapWebRtcServers[webRtcServerId] = webRtcServer;
+			MS_DEBUG_DEV("WebRtcServer created [webRtcServerId:%s]", webRtcServerId.c_str());
 
-				MS_DEBUG_DEV("WebRtcServer created [webRtcServerId:%s]", webRtcServerId.c_str());
-
-				request->Accept();
-			}
-			catch (const MediaSoupTypeError& error)
-			{
-				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodCStr);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
-			}
+			request->Accept();
 
 			break;
 		}
 
 		case Channel::ChannelRequest::Method::WORKER_WEBRTCSERVER_CLOSE:
 		{
-			const RTC::WebRtcServer* webRtcServer{ nullptr };
-
-			const auto* body = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
-
-			auto webRtcServerId = body->webRtcServerId()->str();
-
-			try
-			{
-				webRtcServer = AssertAndGetWebRtcServerById(webRtcServerId);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
-			}
+			const auto* body          = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
+			const auto webRtcServerId = body->webRtcServerId()->str();
+			const RTC::WebRtcServer* webRtcServer =
+			  AssertAndGetWebRtcServerById(webRtcServerId, request->methodCStr);
 
 			// Remove it from the map and delete it.
 			this->mapWebRtcServers.erase(webRtcServer->GetId());
@@ -320,18 +306,10 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CREATE_ROUTER:
 		{
-			const auto* body = request->data->body_as<FBS::Worker::CreateRouterRequest>();
+			const auto* body    = request->data->body_as<FBS::Worker::CreateRouterRequest>();
+			const auto routerId = body->routerId()->str();
 
-			auto routerId = body->routerId()->str();
-
-			try
-			{
-				CheckNoRouter(routerId);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
-			}
+			CheckNoRouter(routerId, request->methodCStr);
 
 			auto* router = new RTC::Router(this->shared, routerId, this);
 
@@ -346,20 +324,9 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CLOSE_ROUTER:
 		{
-			const RTC::Router* router{ nullptr };
-
-			const auto* body = request->data->body_as<FBS::Worker::CloseRouterRequest>();
-
-			auto routerId = body->routerId()->str();
-
-			try
-			{
-				router = AssertAndGetRouterById(routerId);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
-			}
+			const auto* body          = request->data->body_as<FBS::Worker::CloseRouterRequest>();
+			const auto routerId       = body->routerId()->str();
+			const RTC::Router* router = AssertAndGetRouterById(routerId, request->methodCStr);
 
 			// Remove it from the map and delete it.
 			this->mapRouters.erase(router->id);
@@ -376,26 +343,18 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 		// Any other request must be delivered to the corresponding Router.
 		default:
 		{
-			try
-			{
-				auto* handler =
-				  this->shared->GetChannelMessageRegistrator()->GetChannelRequestHandler(request->handlerId);
+			auto* handler =
+			  this->shared->GetChannelMessageRegistrator()->GetChannelRequestHandler(request->handlerId);
 
-				if (handler == nullptr)
-				{
-					MS_THROW_ERROR("Channel request handler with ID %s not found", request->handlerId.c_str());
-				}
+			if (!handler)
+			{
+				MS_THROW_NOT_FOUND_ERROR(
+				  "Channel request handler with ID %s not found [method:%s]",
+				  request->handlerId.c_str(),
+				  request->methodCStr);
+			}
 
-				handler->HandleRequest(request);
-			}
-			catch (const MediaSoupTypeError& error)
-			{
-				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodCStr);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
-			}
+			handler->HandleRequest(request);
 
 			break;
 		}
@@ -426,27 +385,16 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 
 		default:
 		{
-			try
-			{
-				auto* handler = this->shared->GetChannelMessageRegistrator()->GetChannelNotificationHandler(
-				  notification->handlerId);
+			auto* handler = this->shared->GetChannelMessageRegistrator()->GetChannelNotificationHandler(
+			  notification->handlerId);
 
-				if (handler == nullptr)
-				{
-					MS_THROW_ERROR(
-					  "Channel notification handler with ID %s not found", notification->handlerId.c_str());
-				}
+			if (handler == nullptr)
+			{
+				MS_THROW_ERROR(
+				  "Channel notification handler with ID %s not found", notification->handlerId.c_str());
+			}
 
-				handler->HandleNotification(notification);
-			}
-			catch (const MediaSoupTypeError& error)
-			{
-				MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->eventCStr);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [event:%s]", error.what(), notification->eventCStr);
-			}
+			handler->HandleNotification(notification);
 		}
 	}
 }
@@ -494,7 +442,8 @@ void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 	}
 }
 
-RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(RTC::Router* /*router*/, std::string& webRtcServerId)
+RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(
+  const RTC::Router* /*router*/, const std::string& webRtcServerId)
 {
 	MS_TRACE();
 

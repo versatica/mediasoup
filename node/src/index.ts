@@ -20,6 +20,11 @@ import * as utils from './utils';
 export type * as types from './types';
 
 /**
+ * Expose all errors.
+ */
+export * as errors from './errors';
+
+/**
  * Expose mediasoup version.
  */
 // eslint-disable-next-line @typescript-eslint/no-require-imports

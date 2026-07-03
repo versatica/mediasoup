@@ -1,7 +1,7 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
-import { InvalidStateError } from './errors';
+import { NotFoundError } from './errors';
 import type { Channel } from './Channel';
 import type {
 	Router,
@@ -1102,7 +1102,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 				// Ensure that the producer has not been closed in the meanwhile.
 				if (producer.closed) {
-					throw new InvalidStateError('original Producer closed');
+					throw new NotFoundError('original Producer closed');
 				}
 
 				// Ensure that producer.paused has not changed in the meanwhile and, if
@@ -1160,7 +1160,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 				// Ensure that the dataProducer has not been closed in the meanwhile.
 				if (dataProducer.closed) {
-					throw new InvalidStateError('original DataProducer closed');
+					throw new NotFoundError('original DataProducer closed');
 				}
 
 				// Pipe events from the pipe DataConsumer to the pipe DataProducer.

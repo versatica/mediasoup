@@ -2,6 +2,7 @@ import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { DirectTransportEvents } from '../DirectTransportTypes';
 import type { WorkerEvents } from '../types';
+import { WorkerClosedError, NotFoundError } from '../errors';
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;
@@ -379,9 +380,9 @@ test('DirectTransport methods reject if closed', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(directTransport.closed).toBe(true);
 
-	await expect(directTransport.dump()).rejects.toThrow(Error);
+	await expect(directTransport.dump()).rejects.toThrow(NotFoundError);
 
-	await expect(directTransport.getStats()).rejects.toThrow(Error);
+	await expect(directTransport.getStats()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('DirectTransport emits "routerclose" if Router is closed', async () => {
@@ -400,6 +401,8 @@ test('DirectTransport emits "routerclose" if Router is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(directTransport.closed).toBe(true);
+
+	await expect(directTransport.getStats()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('DirectTransport emits "routerclose" if Worker is closed', async () => {
@@ -418,4 +421,6 @@ test('DirectTransport emits "routerclose" if Worker is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(directTransport.closed).toBe(true);
+
+	await expect(directTransport.getStats()).rejects.toThrow(WorkerClosedError);
 }, 2000);

@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: Fix new consumer regressions ([PR #1849](https://github.com/versatica/mediasoup/pull/1849)).
+- Add `NotFoundError`, thrown when the referenced entity in the Worker doesn't exist ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 0.22.9
 
