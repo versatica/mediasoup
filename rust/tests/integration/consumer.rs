@@ -897,9 +897,8 @@ fn consume_with_unknown_producer_id_fails() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, _transport_1, transport_2) = init().await;
 
-        let unknown_producer_id: ProducerId = "12345678-1234-1234-1234-123456789012"
-            .parse()
-            .unwrap();
+        let unknown_producer_id: ProducerId =
+            "12345678-1234-1234-1234-123456789012".parse().unwrap();
 
         assert!(matches!(
             transport_2
