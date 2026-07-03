@@ -1,7 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
-import { NotFoundError } from './errors';
 import type { Channel } from './Channel';
 import type {
 	Router,
@@ -68,6 +67,7 @@ import type {
 	RouterRtpCodecCapability,
 } from './rtpParametersTypes';
 import { cryptoSuiteToFbs } from './srtpParametersFbsUtils';
+import { NotFoundError } from './errors';
 import type { AppData } from './types';
 import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
@@ -969,13 +969,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			producer = this.#producers.get(producerId);
 
 			if (!producer) {
-				throw new TypeError('Producer not found');
+				throw new NotFoundError('Producer not found');
 			}
 		} else if (dataProducerId) {
 			dataProducer = this.#dataProducers.get(dataProducerId);
 
 			if (!dataProducer) {
-				throw new TypeError('DataProducer not found');
+				throw new NotFoundError('DataProducer not found');
 			}
 		}
 

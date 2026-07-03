@@ -611,6 +611,15 @@ test('transport.consume() succeeds', async () => {
 	});
 }, 2000);
 
+test('transport.consume() with unknown producerId fails', async () => {
+	await expect(
+		ctx.webRtcTransport2!.consume({
+			producerId: '12345678',
+			rtpCapabilities: ctx.consumerDeviceCapabilities,
+		})
+	).rejects.toThrow(NotFoundError);
+}, 2000);
+
 test('transport.consume() with enableRtx succeeds', async () => {
 	const audioConsumer2 = await ctx.webRtcTransport2!.consume({
 		producerId: ctx.audioProducer!.id,

@@ -500,6 +500,35 @@ test('router.pipeToRouter() succeeds with video', async () => {
 	expect(pipeProducer.paused).toBe(true);
 }, 2000);
 
+test('router.pipeToRouter() with unknown router, producerId or dataProducerId fails', async () => {
+	const router3 = await ctx.worker1!.createRouter({
+		mediaCodecs: ctx.mediaCodecs,
+	});
+
+	router3.close();
+
+	await expect(
+		ctx.router1!.pipeToRouter({
+			router: router3,
+			producerId: ctx.videoProducer!.id,
+		})
+	).rejects.toThrow(NotFoundError);
+
+	await expect(
+		ctx.router1!.pipeToRouter({
+			router: ctx.router2!,
+			producerId: '12345678',
+		})
+	).rejects.toThrow(NotFoundError);
+
+	await expect(
+		ctx.router1!.pipeToRouter({
+			router: ctx.router2!,
+			dataProducerId: '12345678',
+		})
+	).rejects.toThrow(NotFoundError);
+}, 2000);
+
 test('router.createPipeTransport() with wrong arguments rejects with TypeError', async () => {
 	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.router1!.createPipeTransport({})).rejects.toThrow(TypeError);

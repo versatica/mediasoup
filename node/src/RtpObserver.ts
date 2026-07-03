@@ -7,6 +7,7 @@ import type {
 import type { Channel } from './Channel';
 import type { RouterInternal } from './Router';
 import type { Producer } from './ProducerTypes';
+import { NotFoundError } from './errors';
 import type { AppData } from './types';
 import * as FbsRequest from './fbs/request';
 import * as FbsRouter from './fbs/router';
@@ -193,7 +194,7 @@ export abstract class RtpObserverImpl<
 		const producer = this.getProducerById(producerId);
 
 		if (!producer) {
-			throw Error(`Producer with id "${producerId}" not found`);
+			throw new NotFoundError(`Producer with id "${producerId}" not found`);
 		}
 
 		const requestOffset = new FbsRtpObserver.AddProducerRequestT(
@@ -217,7 +218,7 @@ export abstract class RtpObserverImpl<
 		const producer = this.getProducerById(producerId);
 
 		if (!producer) {
-			throw Error(`Producer with id "${producerId}" not found`);
+			throw new NotFoundError(`Producer with id "${producerId}" not found`);
 		}
 
 		const requestOffset = new FbsRtpObserver.RemoveProducerRequestT(

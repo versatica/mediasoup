@@ -111,6 +111,14 @@ test('transport.consumeData() succeeds', async () => {
 	});
 }, 2000);
 
+test('transport.consumeData() with unknown dataProducerId fails', async () => {
+	await expect(
+		ctx.webRtcTransport2!.consumeData({
+			dataProducerId: '12345678',
+		})
+	).rejects.toThrow(NotFoundError);
+}, 2000);
+
 test('dataConsumer.dump() succeeds', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
 		dataProducerId: ctx.sctpDataProducer!.id,

@@ -726,7 +726,7 @@ namespace RTC
 
 		if (mapProducersIt == this->mapProducers.end())
 		{
-			MS_THROW_ERROR("Producer not found [producerId:%s]", producerId.c_str());
+			MS_THROW_NOT_FOUND_ERROR("Producer not found [producerId:%s]", producerId.c_str());
 		}
 
 		auto* producer              = mapProducersIt->second;
@@ -964,7 +964,7 @@ namespace RTC
 
 		if (mapDataProducersIt == this->mapDataProducers.end())
 		{
-			MS_THROW_ERROR("DataProducer not found [dataProducerId:%s]", dataProducerId.c_str());
+			MS_THROW_NOT_FOUND_ERROR("DataProducer not found [dataProducerId:%s]", dataProducerId.c_str());
 		}
 
 		auto* dataProducer                  = mapDataProducersIt->second;
@@ -1080,7 +1080,7 @@ namespace RTC
 
 		if (it == this->mapProducers.end())
 		{
-			MS_THROW_ERROR("Producer not found");
+			MS_THROW_NOT_FOUND_ERROR("Producer not found");
 		}
 
 		RTC::Producer* producer = it->second;
