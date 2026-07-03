@@ -943,7 +943,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		} else if (producerId && dataProducerId) {
 			throw new TypeError('just producerId or dataProducerId can be given');
 		} else if (!router) {
-			throw new TypeError('Router not found');
+			throw new TypeError('missing router');
 		} else if (router === this) {
 			throw new TypeError('cannot use this Router as destination');
 		}
