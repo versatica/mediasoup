@@ -390,7 +390,7 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 
 			if (handler == nullptr)
 			{
-				MS_THROW_ERROR(
+				MS_THROW_NOT_FOUND_ERROR(
 				  "Channel notification handler with ID %s not found", notification->handlerId.c_str());
 			}
 
