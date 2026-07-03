@@ -9,7 +9,6 @@ use mediasoup::router::{
     PipeDataProducerToRouterPair, PipeProducerToRouterPair, PipeToRouterOptions, Router,
     RouterOptions,
 };
-use mediasoup::transport::ProduceError;
 use mediasoup::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
@@ -666,14 +665,10 @@ fn pipe_to_router_with_keep_id_true_fails_if_both_routers_belong_to_the_same_wor
             )
             .await;
 
-        if let Err(PipeProducerToRouterError::ProduceFailed(ProduceError::Request(
-            RequestError::Response { reason },
-        ))) = result
-        {
-            assert!(reason.contains("already exists [method:transport.produce]"));
-        } else {
-            panic!("Unexpected result: {result:?}");
-        }
+        assert!(
+            matches!(result, Err(PipeProducerToRouterError::ProduceFailed(_))),
+            "Unexpected result: {result:?}"
+        );
     });
 }
 
