@@ -202,6 +202,24 @@ fn consume_data_succeeds() {
 }
 
 #[test]
+fn consume_data_with_unknown_data_producer_id_fails() {
+    future::block_on(async move {
+        let (_worker, _router, webrtc_transport, _sctp_data_producer) = init().await;
+
+        let unknown_data_producer_id: DataProducerId = "12345678-1234-1234-1234-123456789012"
+            .parse()
+            .unwrap();
+
+        assert!(matches!(
+            webrtc_transport
+                .consume_data(DataConsumerOptions::new_sctp(unknown_data_producer_id))
+                .await,
+            Err(ConsumeDataError::DataProducerNotFound(id)) if id == unknown_data_producer_id
+        ));
+    });
+}
+
+#[test]
 fn weak() {
     future::block_on(async move {
         let (_worker, router, _webrtc_transport, sctp_data_producer) = init().await;

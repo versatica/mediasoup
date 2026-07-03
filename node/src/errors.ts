@@ -1,5 +1,5 @@
 /**
- * Error indicating not support for something.
+ * Error indicating that something is not supported.
  */
 export class UnsupportedError extends Error {
 	constructor(message: string) {

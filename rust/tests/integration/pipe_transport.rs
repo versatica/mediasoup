@@ -604,6 +604,49 @@ fn pipe_to_router_succeeds_with_video() {
 }
 
 #[test]
+fn pipe_producer_to_router_with_unknown_producer_id_fails() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, _transport1, _transport2) = init().await;
+
+        let unknown_producer_id: ProducerId = "12345678-1234-1234-1234-123456789012"
+            .parse()
+            .unwrap();
+
+        assert!(matches!(
+            router1
+                .pipe_producer_to_router(
+                    unknown_producer_id,
+                    PipeToRouterOptions::new(router2.clone()),
+                )
+                .await,
+            Err(PipeProducerToRouterError::ProducerNotFound(id)) if id == unknown_producer_id
+        ));
+    });
+}
+
+#[test]
+fn pipe_data_producer_to_router_with_unknown_data_producer_id_fails() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, _transport1, _transport2) = init().await;
+
+        let unknown_data_producer_id: DataProducerId = "12345678-1234-1234-1234-123456789012"
+            .parse()
+            .unwrap();
+
+        assert!(matches!(
+            router1
+                .pipe_data_producer_to_router(
+                    unknown_data_producer_id,
+                    PipeToRouterOptions::new(router2.clone()),
+                )
+                .await,
+            Err(PipeDataProducerToRouterError::DataProducerNotFound(id))
+                if id == unknown_data_producer_id
+        ));
+    });
+}
+
+#[test]
 fn pipe_to_router_with_keep_id_true_fails_if_both_routers_belong_to_the_same_worker() {
     future::block_on(async move {
         let (worker1, _worker2, router1, _router2, transport1, _transport2) = init().await;
