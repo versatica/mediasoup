@@ -1869,7 +1869,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->mapProducers.find(producerId) != this->mapProducers.end())
+		if (this->mapProducers.contains(producerId))
 		{
 			MS_THROW_ERROR("a Producer with same producerId already exists [method:%s]", message.c_str());
 		}
@@ -1879,7 +1879,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->mapConsumers.find(dataConsumerId) != this->mapConsumers.end())
+		if (this->mapConsumers.contains(dataConsumerId))
 		{
 			MS_THROW_ERROR("a Consumer with same consumerId already exists [method:%s]", message.c_str());
 		}
@@ -1889,7 +1889,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
+		if (this->mapDataProducers.contains(dataProducerId))
 		{
 			MS_THROW_ERROR(
 			  "a DataProducer with same dataProducerId already exists [method:%s]", message.c_str());
@@ -1900,7 +1900,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->mapDataConsumers.find(dataConsumerId) != this->mapDataConsumers.end())
+		if (this->mapDataConsumers.contains(dataConsumerId))
 		{
 			MS_THROW_ERROR(
 			  "a DataConsumer with same dataConsumerId already exists [method:%s]", message.c_str());
@@ -1911,7 +1911,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->mapSctpStreamIdDataConsumers.find(streamId) != this->mapSctpStreamIdDataConsumers.end())
+		if (this->mapSctpStreamIdDataConsumers.contains(streamId))
 		{
 			MS_THROW_ERROR(
 			  "an SCTP DataConsumer with same streamId %" PRIu16 " already exists [method:%s]",

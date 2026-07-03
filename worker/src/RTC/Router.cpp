@@ -475,7 +475,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->mapTransports.find(transportId) != this->mapTransports.end())
+		if (this->mapTransports.contains(transportId))
 		{
 			MS_THROW_ERROR("a Transport with same id already exists [method:%s]", message.c_str());
 		}
@@ -485,7 +485,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->mapRtpObservers.find(rtpObserverId) != this->mapRtpObservers.end())
+		if (this->mapRtpObservers.contains(rtpObserverId))
 		{
 			MS_THROW_ERROR("an RtpObserver with same id already exists [method:%s]", message.c_str());
 		}
