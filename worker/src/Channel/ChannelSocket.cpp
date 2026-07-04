@@ -223,6 +223,10 @@ namespace Channel
 				{
 					request->TypeError(error.what());
 				}
+				catch (const MediaSoupNotFoundError& error)
+				{
+					request->NotFoundError(error.what());
+				}
 				catch (const MediaSoupError& error)
 				{
 					request->Error(error.what());
@@ -303,6 +307,10 @@ namespace Channel
 			catch (const MediaSoupTypeError& error)
 			{
 				request->TypeError(error.what());
+			}
+			catch (const MediaSoupNotFoundError& error)
+			{
+				request->NotFoundError(error.what());
 			}
 			catch (const MediaSoupError& error)
 			{

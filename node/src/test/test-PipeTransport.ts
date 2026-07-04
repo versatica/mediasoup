@@ -7,6 +7,7 @@ import type {
 	ProducerObserverEvents,
 	DataConsumerEvents,
 } from '../types';
+import { NotFoundError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -499,6 +500,35 @@ test('router.pipeToRouter() succeeds with video', async () => {
 	expect(pipeProducer.paused).toBe(true);
 }, 2000);
 
+test('router.pipeToRouter() with unknown router, producerId or dataProducerId fails', async () => {
+	const router3 = await ctx.worker1!.createRouter({
+		mediaCodecs: ctx.mediaCodecs,
+	});
+
+	router3.close();
+
+	await expect(
+		ctx.router1!.pipeToRouter({
+			router: router3,
+			producerId: ctx.videoProducer!.id,
+		})
+	).rejects.toThrow(NotFoundError);
+
+	await expect(
+		ctx.router1!.pipeToRouter({
+			router: ctx.router2!,
+			producerId: '12345678',
+		})
+	).rejects.toThrow(NotFoundError);
+
+	await expect(
+		ctx.router1!.pipeToRouter({
+			router: ctx.router2!,
+			dataProducerId: '12345678',
+		})
+	).rejects.toThrow(NotFoundError);
+}, 2000);
+
 test('router.createPipeTransport() with wrong arguments rejects with TypeError', async () => {
 	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.router1!.createPipeTransport({})).rejects.toThrow(TypeError);
@@ -872,7 +902,7 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 
 	// We need to obtain the pipeProducer to await for its 'puase' and 'resume'
 	// events, otherwise we may get errors like this:
-	// InvalidStateError: Channel closed, pending request aborted [method:PRODUCER_PAUSE, id:8]
+	// WorkerClosedError: Channel closed, pending request aborted [method:PRODUCER_PAUSE, id:8]
 	// See related fixed issue:
 	// https://github.com/versatica/mediasoup/issues/1374
 	const { pipeProducer: pipeVideoProducer } = await ctx.router1!.pipeToRouter({
@@ -941,6 +971,8 @@ test('producer.close() is transmitted to pipe Consumer', async () => {
 	}
 
 	expect(videoConsumer.closed).toBe(true);
+
+	await expect(videoConsumer.dump()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('router.pipeToRouter() with keepId: true fails if both Routers belong to the same Worker', async () => {
@@ -1060,6 +1092,8 @@ test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {
 	}
 
 	expect(dataConsumer.closed).toBe(true);
+
+	await expect(dataConsumer.dump()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('router.pipeToRouter() called twice generates a single PipeTransport pair', async () => {

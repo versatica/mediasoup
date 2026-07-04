@@ -39,6 +39,7 @@ import {
 	serializeSrtpParameters,
 } from './srtpParametersFbsUtils';
 import type { AppData } from './types';
+import { NotFoundError } from './errors';
 import * as utils from './utils';
 import { generateUUIDv4 } from './utils';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
@@ -237,7 +238,7 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 		const producer = this.getProducerById(producerId);
 
 		if (!producer) {
-			throw Error(`Producer with id "${producerId}" not found`);
+			throw new NotFoundError(`Producer with id "${producerId}" not found`);
 		}
 
 		// This may throw.

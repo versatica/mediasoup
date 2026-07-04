@@ -1,7 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
-import { InvalidStateError } from './errors';
 import type { Channel } from './Channel';
 import type {
 	Router,
@@ -68,6 +67,7 @@ import type {
 	RouterRtpCodecCapability,
 } from './rtpParametersTypes';
 import { cryptoSuiteToFbs } from './srtpParametersFbsUtils';
+import { NotFoundError } from './errors';
 import type { AppData } from './types';
 import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
@@ -943,7 +943,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		} else if (producerId && dataProducerId) {
 			throw new TypeError('just producerId or dataProducerId can be given');
 		} else if (!router) {
-			throw new TypeError('Router not found');
+			throw new TypeError('missing router');
 		} else if (router === this) {
 			throw new TypeError('cannot use this Router as destination');
 		}
@@ -969,13 +969,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			producer = this.#producers.get(producerId);
 
 			if (!producer) {
-				throw new TypeError('Producer not found');
+				throw new NotFoundError('Producer not found');
 			}
 		} else if (dataProducerId) {
 			dataProducer = this.#dataProducers.get(dataProducerId);
 
 			if (!dataProducer) {
-				throw new TypeError('DataProducer not found');
+				throw new NotFoundError('DataProducer not found');
 			}
 		}
 
@@ -1102,7 +1102,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 				// Ensure that the producer has not been closed in the meanwhile.
 				if (producer.closed) {
-					throw new InvalidStateError('original Producer closed');
+					throw new NotFoundError('original Producer closed');
 				}
 
 				// Ensure that producer.paused has not changed in the meanwhile and, if
@@ -1160,7 +1160,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 				// Ensure that the dataProducer has not been closed in the meanwhile.
 				if (dataProducer.closed) {
-					throw new InvalidStateError('original DataProducer closed');
+					throw new NotFoundError('original DataProducer closed');
 				}
 
 				// Pipe events from the pipe DataConsumer to the pipe DataProducer.

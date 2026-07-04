@@ -110,7 +110,9 @@ namespace RTC
 			  std::vector<uint16_t>& subchannels,
 			  std::optional<uint16_t> requiredSubchannel) = 0;
 			virtual void OnTransportNewDataConsumer(
-			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) = 0;
+			  RTC::Transport* transport,
+			  RTC::DataConsumer* dataConsumer,
+			  const std::string& dataProducerId) = 0;
 			virtual void OnTransportDataConsumerClosed(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
 			virtual void OnTransportDataConsumerDataProducerClosed(
@@ -198,13 +200,24 @@ namespace RTC
 		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb = nullptr) final;
 
 	private:
-		virtual RTC::Producer* AssertAndGetProducerById(const std::string& producerId) const final;
-		virtual RTC::Consumer* AssertAndGetConsumerById(const std::string& consumerId) const final;
+		virtual RTC::Producer* AssertAndGetProducerById(
+		  const std::string& producerId, const std::string& message) const final;
+		virtual RTC::Consumer* AssertAndGetConsumerById(
+		  const std::string& consumerId, const std::string& message) const final;
 		virtual RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const final;
 		virtual RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const final;
-		virtual RTC::DataProducer* AssertAndGetDataProducerById(const std::string& dataProducerId) const final;
-		virtual RTC::DataConsumer* AssertAndGetDataConsumerById(const std::string& dataConsumerId) const final;
-		virtual RTC::DataConsumer* GetSctpDataConsumerByStreamId(uint16_t streamId) const final;
+		virtual RTC::DataProducer* AssertAndGetDataProducerById(
+		  const std::string& dataProducerId, const std::string& message) const final;
+		virtual RTC::DataConsumer* AssertAndGetDataConsumerById(
+		  const std::string& dataConsumerId, const std::string& message) const final;
+		virtual RTC::DataConsumer* AssertAndGetSctpDataConsumerByStreamId(uint16_t streamId) const final;
+		virtual void CheckNoProducer(const std::string& producerId, const std::string& message) const final;
+		virtual void CheckNoConsumer(const std::string& consumerId, const std::string& message) const final;
+		virtual void CheckNoDataProducer(
+		  const std::string& dataProducerId, const std::string& message) const final;
+		virtual void CheckNoDataConsumer(
+		  const std::string& dataConsumerId, const std::string& message) const final;
+		virtual void CheckNoSctpDataConsumer(uint16_t streamId, const std::string& message) const final;
 		virtual bool IsConnected() const = 0;
 		virtual void SendRtpPacket(
 		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, const onSendCallback* cb = nullptr) = 0;
@@ -222,9 +235,6 @@ namespace RTC
 		virtual void EmitTraceEventProbationType(RTC::RTP::Packet* packet) const final;
 		virtual void EmitTraceEventBweType(
 		  RTC::TransportCongestionControlClient::Bitrates& bitrates) const final;
-		virtual void CheckNoDataProducer(const std::string& dataProducerId) const final;
-		virtual void CheckNoDataConsumer(const std::string& dataConsumerId) const final;
-		virtual void CheckNoSctpDataConsumer(uint16_t streamId) const final;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
