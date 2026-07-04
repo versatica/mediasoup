@@ -42,6 +42,7 @@
 		}
 	},
 	"files": [
+		"CHANGELOG.md",
 		"LICENSE",
 		"README.md",
 		"node/lib",
