@@ -1,6 +1,7 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, DataConsumerEvents } from '../types';
+import { NotFoundError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -108,6 +109,14 @@ test('transport.consumeData() succeeds', async () => {
 		dataProducerIds: [],
 		dataConsumerIds: [dataConsumer.id],
 	});
+}, 2000);
+
+test('transport.consumeData() with unknown dataProducerId fails', async () => {
+	await expect(
+		ctx.webRtcTransport2!.consumeData({
+			dataProducerId: '12345678',
+		})
+	).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('dataConsumer.dump() succeeds', async () => {
@@ -427,6 +436,8 @@ test('dataConsumer.close() succeeds', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataConsumer.closed).toBe(true);
 
+	await expect(dataConsumer.dump()).rejects.toThrow(NotFoundError);
+
 	const dump = await ctx.router!.dump();
 
 	expect(dump.mapDataProducerIdDataConsumerIds).toEqual(
@@ -449,9 +460,9 @@ test('Consumer methods reject if closed', async () => {
 
 	dataConsumer.close();
 
-	await expect(dataConsumer.dump()).rejects.toThrow(Error);
+	await expect(dataConsumer.dump()).rejects.toThrow(NotFoundError);
 
-	await expect(dataConsumer.getStats()).rejects.toThrow(Error);
+	await expect(dataConsumer.getStats()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async () => {
@@ -472,6 +483,8 @@ test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async (
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataConsumer.closed).toBe(true);
+
+	await expect(dataConsumer.dump()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('DataConsumer emits "transportclose" if Transport is closed', async () => {
@@ -492,6 +505,8 @@ test('DataConsumer emits "transportclose" if Transport is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataConsumer.closed).toBe(true);
+
+	await expect(dataConsumer.dump()).rejects.toThrow(NotFoundError);
 
 	await expect(ctx.router!.dump()).resolves.toMatchObject({
 		mapDataProducerIdDataConsumerIds: {},

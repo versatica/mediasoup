@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents } from '../types';
-import { InvalidStateError } from '../errors';
+import { WorkerClosedError } from '../errors';
 
 test('mediasoup.workerBin matches mediasoup-worker absolute path', () => {
 	const workerBin = process.env['MEDIASOUP_WORKER_BIN']
@@ -144,7 +144,7 @@ test('worker.updateSettings() with wrong settings rejects with TypeError', async
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 }, 2000);
 
-test('worker.updateSettings() rejects with InvalidStateError if closed', async () => {
+test('worker.updateSettings() rejects with WorkerClosedError if closed', async () => {
 	const worker = await mediasoup.createWorker();
 
 	worker.close();
@@ -152,7 +152,7 @@ test('worker.updateSettings() rejects with InvalidStateError if closed', async (
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 
 	await expect(worker.updateSettings({ logLevel: 'error' })).rejects.toThrow(
-		InvalidStateError
+		WorkerClosedError
 	);
 }, 2000);
 
@@ -176,14 +176,14 @@ test('worker.dump() succeeds', async () => {
 	worker.close();
 }, 2000);
 
-test('worker.dump() rejects with InvalidStateError if closed', async () => {
+test('worker.dump() rejects with WorkerClosedError if closed', async () => {
 	const worker = await mediasoup.createWorker();
 
 	worker.close();
 
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 
-	await expect(worker.dump()).rejects.toThrow(InvalidStateError);
+	await expect(worker.dump()).rejects.toThrow(WorkerClosedError);
 }, 2000);
 
 test('worker.getResourceUsage() succeeds', async () => {

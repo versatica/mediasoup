@@ -197,11 +197,7 @@ export type ConsumerStat = RtpStreamSendStats;
  * Valid types for 'trace' event.
  */
 export type ConsumerTraceEventType =
-	| 'rtp'
-	| 'keyframe'
-	| 'nack'
-	| 'pli'
-	| 'fir';
+	'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
 
 /**
  * 'trace' event data.

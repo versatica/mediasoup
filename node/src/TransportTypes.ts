@@ -134,11 +134,7 @@ export type TransportTuple = {
 };
 
 export type SctpState =
-	| 'new'
-	| 'connecting'
-	| 'connected'
-	| 'failed'
-	| 'closed';
+	'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 
 export type RtpListenerDump = {
 	ssrcTable: { key: number; value: string }[];

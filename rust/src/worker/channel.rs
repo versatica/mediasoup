@@ -129,6 +129,8 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage<'_> {
 }
 
 struct ResponseError {
+    /// Error type name ("Error", "TypeError", "NotFoundError" or "WorkerClosedError").
+    name: String,
     reason: String,
 }
 
@@ -280,6 +282,12 @@ impl Channel {
                             // Request did not succeed.
                             if let Ok(Some(reason)) = response.reason() {
                                 let _ = sender.send(Err(ResponseError {
+                                    name: response
+                                        .error()
+                                        .ok()
+                                        .flatten()
+                                        .unwrap_or("Error")
+                                        .to_string(),
                                     reason: reason.to_string(),
                                 }));
                             }
@@ -417,6 +425,7 @@ impl Channel {
         let response_result = match response_result_fut {
             Ok(response_result) => response_result,
             Err(_closed) => Err(ResponseError {
+                name: String::from("WorkerClosedError"),
                 reason: String::from("ChannelClosed"),
             }),
         };
@@ -442,14 +451,15 @@ impl Channel {
                     }
                 }
             }
-            Err(ResponseError { reason }) => {
+            Err(ResponseError { name, reason }) => {
                 debug!(
-                    "request failed [method:{:?}, id:{}]: {}",
+                    "request failed [method:{:?}, id:{}]: {} [name:{}]",
                     R::METHOD,
                     id,
-                    reason
+                    reason,
+                    name
                 );
-                if reason.contains("not found") {
+                if name == "NotFoundError" {
                     if let Some(default_response) = R::default_for_soft_error() {
                         Ok(default_response)
                     } else {

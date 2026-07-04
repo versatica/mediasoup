@@ -32,7 +32,7 @@ namespace RTC
 
 		public:
 			virtual RTC::WebRtcServer* OnRouterNeedWebRtcServer(
-			  RTC::Router* router, std::string& webRtcServerId) = 0;
+			  const RTC::Router* router, const std::string& webRtcServerId) = 0;
 		};
 
 	public:
@@ -48,10 +48,12 @@ namespace RTC
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
-		RTC::Transport* AssertAndGetTransportById(const std::string& transportId) const;
-		RTC::RtpObserver* AssertAndGetRtpObserverById(const std::string& rtpObserverId) const;
-		void CheckNoTransport(const std::string& transportId) const;
-		void CheckNoRtpObserver(const std::string& rtpObserverId) const;
+		RTC::Transport* AssertAndGetTransportById(
+		  const std::string& transportId, const std::string& message) const;
+		RTC::RtpObserver* AssertAndGetRtpObserverById(
+		  const std::string& rtpObserverId, const std::string& message) const;
+		void CheckNoTransport(const std::string& transportId, const std::string& message) const;
+		void CheckNoRtpObserver(const std::string& rtpObserverId, const std::string& message) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
@@ -100,7 +102,9 @@ namespace RTC
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel) override;
 		void OnTransportNewDataConsumer(
-		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) override;
+		  RTC::Transport* transport,
+		  RTC::DataConsumer* dataConsumer,
+		  const std::string& dataProducerId) override;
 		void OnTransportDataConsumerClosed(RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
 		void OnTransportDataConsumerDataProducerClosed(
 		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;

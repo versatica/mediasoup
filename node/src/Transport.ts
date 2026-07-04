@@ -78,6 +78,7 @@ import {
 	serializeSctpStreamParameters,
 } from './sctpParametersFbsUtils';
 import type { AppData } from './types';
+import { NotFoundError } from './errors';
 import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import { TraceDirection as FbsTraceDirection } from './fbs/common';
@@ -612,7 +613,7 @@ export abstract class TransportImpl<
 		const producer = this.getProducerById(producerId);
 
 		if (!producer) {
-			throw Error(`Producer with id "${producerId}" not found`);
+			throw new NotFoundError(`Producer with id "${producerId}" not found`);
 		}
 
 		// If enableRtx is not given, set it to true if video and false if audio.
@@ -833,7 +834,9 @@ export abstract class TransportImpl<
 		const dataProducer = this.getDataProducerById(dataProducerId);
 
 		if (!dataProducer) {
-			throw Error(`DataProducer with id "${dataProducerId}" not found`);
+			throw new NotFoundError(
+				`DataProducer with id "${dataProducerId}" not found`
+			);
 		}
 
 		let type: DataConsumerType;

@@ -2,7 +2,7 @@ import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerImpl } from '../Worker';
 import type { WorkerEvents, RouterEvents } from '../types';
-import { InvalidStateError, UnsupportedError } from '../errors';
+import { WorkerClosedError, UnsupportedError, NotFoundError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -142,12 +142,12 @@ test('worker.createRouter() with wrong arguments rejects with TypeError', async 
 	).rejects.toThrow(TypeError);
 }, 2000);
 
-test('worker.createRouter() rejects with InvalidStateError if Worker is closed', async () => {
+test('worker.createRouter() rejects with WorkerClosedError if Worker is closed', async () => {
 	ctx.worker!.close();
 
 	await expect(
 		ctx.worker!.createRouter({ mediaCodecs: ctx.mediaCodecs })
-	).rejects.toThrow(InvalidStateError);
+	).rejects.toThrow(WorkerClosedError);
 }, 2000);
 
 test('router.rtpCapabilities getter returns cloned RTP capabilities', async () => {
@@ -198,6 +198,8 @@ test('router.close() succeeds', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(router.closed).toBe(true);
+
+	await expect(router.dump()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('Router emits "workerclose" if Worker is closed', async () => {
@@ -216,4 +218,6 @@ test('Router emits "workerclose" if Worker is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(router.closed).toBe(true);
+
+	await expect(router.dump()).rejects.toThrow(WorkerClosedError);
 }, 2000);

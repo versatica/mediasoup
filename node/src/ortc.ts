@@ -323,13 +323,13 @@ export function generateRouterRtpCapabilities(
 	// We need to create and store this Dependency-Descriptor header extension to
 	// leter be used by `getPipeConsumerRtpParameters()` function.
 	const dependencyDescriptorHeaderExtensionForPipeConsumer:
-		| RtpHeaderExtension
-		| undefined = supportedRtpCapabilities.headerExtensions!.find(
-		headerExtension =>
-			headerExtension.uri ===
-				'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension' &&
-			headerExtension.direction !== 'sendrecv'
-	);
+		RtpHeaderExtension | undefined =
+		supportedRtpCapabilities.headerExtensions!.find(
+			headerExtension =>
+				headerExtension.uri ===
+					'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension' &&
+				headerExtension.direction !== 'sendrecv'
+		);
 
 	if (dependencyDescriptorHeaderExtensionForPipeConsumer) {
 		cache.dependencyDescriptorHeaderExtensionParametersForPipeConsumer = {
