@@ -162,7 +162,6 @@ async function release({ args = '' } = {}) {
 	logInfo('release()');
 
 	const [name, version] = args.trim().split(/\s+/);
-
 	const crate = CRATES.find(entry => entry.name === name);
 
 	if (!crate) {
