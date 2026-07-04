@@ -2,8 +2,14 @@
 
 ### NEXT
 
-- Worker: Fix new consumer regressions ([PR #1849](https://github.com/versatica/mediasoup/pull/1849)).
 - Worker: Enable SVC for VP8 and H264 ([PR #1851](https://github.com/versatica/mediasoup/pull/1851)).
+
+### 3.21.0
+
+- Worker: Fix new consumer regressions ([PR #1849](https://github.com/versatica/mediasoup/pull/1849)).
+- Add `NotFoundError`, thrown when the referenced entity in the Worker doesn't exist ([PR #1852](https://github.com/versatica/mediasoup/pull/1852)).
+  - Expose mediasoup Node `errors` via `mediasoup/errors` (in EMS).
+  - **Breaking change:** Rename `InvalidStateError` to `WorkerClosedError`.
 
 ### 3.20.10
 
@@ -159,7 +165,7 @@
 - CI: Remove `macos-13` hosts.
 - VP8: Fix keyframe detection if "extended" bit is not set ([PR #1612](https://github.com/versatica/mediasoup/pull/1612), credits to @nifigase).
 - CI: Remove `node-20` GitHub actions.
-- Require Node.js >= 22 ([PR #1614](https://github.com/versatica/mediasoup/pull/1614)).
+- Require Node >= 22 ([PR #1614](https://github.com/versatica/mediasoup/pull/1614)).
 
 ### 3.19.2
 
@@ -361,7 +367,7 @@
 ### 3.14.0
 
 - `TransportListenInfo`: Add `portRange` (deprecate worker port range) ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
-- Require Node.js >= 18 ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
+- Require Node >= 18 ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
 
 ### 3.13.24
 
@@ -505,7 +511,7 @@
 
 ### 3.12.14
 
-- CI: Use Node.js version 20 ([PR #1177](https://github.com/versatica/mediasoup/pull/1177)).
+- CI: Use Node version 20 ([PR #1177](https://github.com/versatica/mediasoup/pull/1177)).
 - Use given `PYTHON` environment variable (if given) when running `worker/scripts/getmake.py` ([PR #1186](https://github.com/versatica/mediasoup/pull/1186)).
 
 ### 3.12.13
@@ -665,7 +671,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.11.5
 
-- Require Node.js >= 16 ([PR #973](https://github.com/versatica/mediasoup/pull/973)).
+- Require Node >= 16 ([PR #973](https://github.com/versatica/mediasoup/pull/973)).
 - Fix wrong `Consumer` bandwidth estimation under `Producer` packet loss ([PR #962](https://github.com/versatica/mediasoup/pull/962) by @ggarber).
 
 ### 3.11.4
@@ -878,7 +884,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 - Worker communication optimization (aka removing netstring dependency) ([PR #644](https://github.com/versatica/mediasoup/pull/644)).
 - Move TypeScript and compiled JavaScript code to a new `node` folder.
 - Use ES6 private fields.
-- Require Node.js version >= 12.
+- Require Node version >= 12.
 
 ### 3.8.4
 
@@ -1072,7 +1078,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.6.23
 
-- Fix yet another memory leak in Node.js layer due to `PayloadChannel` event listener not being removed.
+- Fix yet another memory leak in Node layer due to `PayloadChannel` event listener not being removed.
 
 ### 3.6.22
 
@@ -1083,7 +1089,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.6.21
 
-- Fix memory leak in Node.js layer due to `PayloadChannel` event listener not being removed (related to #463).
+- Fix memory leak in Node layer due to `PayloadChannel` event listener not being removed (related to #463).
 
 ### 3.6.20
 
@@ -1231,7 +1237,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 - `SeqManager.cpp`: Fix a bug and improve performance.
   - Fixes issue #395 via [PR #396](https://github.com/versatica/mediasoup/pull/396) (credits to @penguinol).
-- Drop Node.js 8 support. Minimum supported Node.js version is now 10.
+- Drop Node 8 support. Minimum supported Node version is now 10.
 - Upgrade `eslint` and `jest` major versions.
 
 ### 3.5.10

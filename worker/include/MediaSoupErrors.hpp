@@ -25,6 +25,14 @@ public:
 	}
 };
 
+class MediaSoupNotFoundError : public MediaSoupError
+{
+public:
+	explicit MediaSoupNotFoundError(const char* description) : MediaSoupError(description)
+	{
+	}
+};
+
 // clang-format off
 #define MS_THROW_ERROR(desc, ...) \
 	do \
@@ -56,6 +64,22 @@ public:
 		MS_ERROR_STD("throwing MediaSoupTypeError: " desc, ##__VA_ARGS__); \
 		std::snprintf(MediaSoupError::buffer, MediaSoupError::BufferSize, desc, ##__VA_ARGS__); \
 		throw MediaSoupTypeError(MediaSoupError::buffer); \
+	} while (false)
+
+#define MS_THROW_NOT_FOUND_ERROR(desc, ...) \
+	do \
+	{ \
+		MS_ERROR("throwing MediaSoupNotFoundError: " desc, ##__VA_ARGS__); \
+		std::snprintf(MediaSoupError::buffer, MediaSoupError::BufferSize, desc, ##__VA_ARGS__); \
+		throw MediaSoupNotFoundError(MediaSoupError::buffer); \
+	} while (false)
+
+#define MS_THROW_NOT_FOUND_ERROR_STD(desc, ...) \
+	do \
+	{ \
+		MS_ERROR_STD("throwing MediaSoupNotFoundError: " desc, ##__VA_ARGS__); \
+		std::snprintf(MediaSoupError::buffer, MediaSoupError::BufferSize, desc, ##__VA_ARGS__); \
+		throw MediaSoupNotFoundError(MediaSoupError::buffer); \
 	} while (false)
 // clang-format on
 

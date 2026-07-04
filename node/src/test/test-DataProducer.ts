@@ -1,6 +1,7 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, DataProducerEvents } from '../types';
+import { NotFoundError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -320,6 +321,8 @@ test('dataProducer.close() succeeds', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataProducer1.closed).toBe(true);
 
+	await expect(dataProducer1.dump()).rejects.toThrow(NotFoundError);
+
 	await expect(ctx.router!.dump()).resolves.toMatchObject({
 		mapDataProducerIdDataConsumerIds: {},
 		mapDataConsumerIdDataProducerId: {},
@@ -339,9 +342,9 @@ test('DataProducer methods reject if closed', async () => {
 
 	dataProducer1.close();
 
-	await expect(dataProducer1.dump()).rejects.toThrow(Error);
+	await expect(dataProducer1.dump()).rejects.toThrow(NotFoundError);
 
-	await expect(dataProducer1.getStats()).rejects.toThrow(Error);
+	await expect(dataProducer1.getStats()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('DataProducer emits "transportclose" if Transport is closed', async () => {
@@ -363,4 +366,6 @@ test('DataProducer emits "transportclose" if Transport is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataProducer2.closed).toBe(true);
+
+	await expect(dataProducer2.dump()).rejects.toThrow(NotFoundError);
 }, 2000);

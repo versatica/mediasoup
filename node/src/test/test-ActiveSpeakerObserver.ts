@@ -1,6 +1,7 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, ActiveSpeakerObserverEvents } from '../types';
+import { WorkerClosedError, NotFoundError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -101,6 +102,8 @@ test('activeSpeakerObserver.close() succeeds', async () => {
 	dump = await ctx.router!.dump();
 
 	expect(dump.rtpObserverIds.length).toBe(0);
+
+	await expect(activeSpeakerObserver.pause()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('ActiveSpeakerObserver emits "routerclose" if Router is closed', async () => {
@@ -115,6 +118,8 @@ test('ActiveSpeakerObserver emits "routerclose" if Router is closed', async () =
 	await promise;
 
 	expect(activeSpeakerObserver.closed).toBe(true);
+
+	await expect(activeSpeakerObserver.pause()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('ActiveSpeakerObserver emits "routerclose" if Worker is closed', async () => {
@@ -129,4 +134,8 @@ test('ActiveSpeakerObserver emits "routerclose" if Worker is closed', async () =
 	await promise;
 
 	expect(activeSpeakerObserver.closed).toBe(true);
+
+	await expect(activeSpeakerObserver.pause()).rejects.toThrow(
+		WorkerClosedError
+	);
 }, 2000);

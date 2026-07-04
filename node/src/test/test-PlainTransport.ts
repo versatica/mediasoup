@@ -3,6 +3,7 @@ import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, PlainTransportEvents } from '../types';
+import { WorkerClosedError, NotFoundError } from '../errors';
 import * as utils from '../utils';
 
 const IS_WINDOWS = os.platform() === 'win32';
@@ -555,11 +556,11 @@ test('PlainTransport methods reject if closed', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(plainTransport.closed).toBe(true);
 
-	await expect(plainTransport.dump()).rejects.toThrow(Error);
+	await expect(plainTransport.dump()).rejects.toThrow(NotFoundError);
 
-	await expect(plainTransport.getStats()).rejects.toThrow(Error);
+	await expect(plainTransport.getStats()).rejects.toThrow(NotFoundError);
 
-	await expect(plainTransport.connect({})).rejects.toThrow(Error);
+	await expect(plainTransport.connect({})).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('router.createPlainTransport() with fixed port succeeds', async () => {
@@ -594,6 +595,8 @@ test('PlainTransport emits "routerclose" if Router is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(plainTransport.closed).toBe(true);
+
+	await expect(plainTransport.dump()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('PlainTransport emits "routerclose" if Worker is closed', async () => {
@@ -615,4 +618,6 @@ test('PlainTransport emits "routerclose" if Worker is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(plainTransport.closed).toBe(true);
+
+	await expect(plainTransport.dump()).rejects.toThrow(WorkerClosedError);
 }, 2000);

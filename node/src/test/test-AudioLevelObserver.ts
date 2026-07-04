@@ -1,6 +1,7 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, AudioLevelObserverEvents } from '../types';
+import { WorkerClosedError, NotFoundError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -110,6 +111,8 @@ test('audioLevelObserver.close() succeeds', async () => {
 	dump = await ctx.router!.dump();
 
 	expect(dump.rtpObserverIds.length).toBe(0);
+
+	await expect(audioLevelObserver.pause()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('AudioLevelObserver emits "routerclose" if Router is closed', async () => {
@@ -124,6 +127,8 @@ test('AudioLevelObserver emits "routerclose" if Router is closed', async () => {
 	await promise;
 
 	expect(audioLevelObserver.closed).toBe(true);
+
+	await expect(audioLevelObserver.pause()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('AudioLevelObserver emits "routerclose" if Worker is closed', async () => {
@@ -138,4 +143,6 @@ test('AudioLevelObserver emits "routerclose" if Worker is closed', async () => {
 	await promise;
 
 	expect(audioLevelObserver.closed).toBe(true);
+
+	await expect(audioLevelObserver.pause()).rejects.toThrow(WorkerClosedError);
 }, 2000);

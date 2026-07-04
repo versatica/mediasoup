@@ -210,11 +210,10 @@ namespace RTC
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTCTRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
-
-				auto transportId = body->transportId()->str();
+				const auto transportId = body->transportId()->str();
 
 				// This may throw.
-				CheckNoTransport(transportId);
+				CheckNoTransport(transportId, request->methodCStr);
 
 				// This may throw.
 				auto* webRtcTransport =
@@ -235,17 +234,16 @@ namespace RTC
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTCTRANSPORT_WITH_SERVER:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
-				auto transportId = body->transportId()->str();
+				const auto transportId = body->transportId()->str();
 
 				// This may throw.
-				CheckNoTransport(transportId);
+				CheckNoTransport(transportId, request->methodCStr);
 
 				const auto* options    = body->options();
 				const auto* listenInfo = options->listen_as<FBS::WebRtcTransport::ListenServer>();
 
 				auto webRtcServerId = listenInfo->webRtcServerId()->str();
-
-				auto* webRtcServer = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
+				auto* webRtcServer  = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
 
 				if (!webRtcServer)
 				{
@@ -274,11 +272,11 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_PLAINTRANSPORT:
 			{
-				const auto* body = request->data->body_as<FBS::Router::CreatePlainTransportRequest>();
-				auto transportId = body->transportId()->str();
+				const auto* body       = request->data->body_as<FBS::Router::CreatePlainTransportRequest>();
+				const auto transportId = body->transportId()->str();
 
 				// This may throw.
-				CheckNoTransport(transportId);
+				CheckNoTransport(transportId, request->methodCStr);
 
 				auto* plainTransport =
 				  new RTC::PlainTransport(this->shared, transportId, this, body->options());
@@ -297,11 +295,11 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_PIPETRANSPORT:
 			{
-				const auto* body = request->data->body_as<FBS::Router::CreatePipeTransportRequest>();
-				auto transportId = body->transportId()->str();
+				const auto* body       = request->data->body_as<FBS::Router::CreatePipeTransportRequest>();
+				const auto transportId = body->transportId()->str();
 
 				// This may throw.
-				CheckNoTransport(transportId);
+				CheckNoTransport(transportId, request->methodCStr);
 
 				auto* pipeTransport =
 				  new RTC::PipeTransport(this->shared, transportId, this, body->options());
@@ -321,10 +319,10 @@ namespace RTC
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_DIRECTTRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateDirectTransportRequest>();
-				auto transportId = body->transportId()->str();
+				const auto transportId = body->transportId()->str();
 
 				// This may throw.
-				CheckNoTransport(transportId);
+				CheckNoTransport(transportId, request->methodCStr);
 
 				auto* directTransport =
 				  new RTC::DirectTransport(this->shared, transportId, this, body->options());
@@ -344,10 +342,10 @@ namespace RTC
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVESPEAKEROBSERVER:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateActiveSpeakerObserverRequest>();
-				auto rtpObserverId = body->rtpObserverId()->str();
+				const auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.
-				CheckNoRtpObserver(rtpObserverId);
+				CheckNoRtpObserver(rtpObserverId, request->methodCStr);
 
 				auto* activeSpeakerObserver =
 				  new RTC::ActiveSpeakerObserver(this->shared, rtpObserverId, this, body->options());
@@ -364,11 +362,11 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIOLEVELOBSERVER:
 			{
-				const auto* body   = request->data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
-				auto rtpObserverId = body->rtpObserverId()->str();
+				const auto* body = request->data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
+				const auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.
-				CheckNoRtpObserver(rtpObserverId);
+				CheckNoRtpObserver(rtpObserverId, request->methodCStr);
 
 				auto* audioLevelObserver =
 				  new RTC::AudioLevelObserver(this->shared, rtpObserverId, this, body->options());
@@ -385,11 +383,11 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_TRANSPORT:
 			{
-				const auto* body = request->data->body_as<FBS::Router::CloseTransportRequest>();
-				auto transportId = body->transportId()->str();
+				const auto* body       = request->data->body_as<FBS::Router::CloseTransportRequest>();
+				const auto transportId = body->transportId()->str();
 
 				// This may throw.
-				RTC::Transport* transport = AssertAndGetTransportById(transportId);
+				RTC::Transport* transport = AssertAndGetTransportById(transportId, request->methodCStr);
 
 				// Tell the Transport to close all its Producers and Consumers so it will
 				// notify us about their closures.
@@ -410,11 +408,10 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTPOBSERVER:
 			{
-				const auto* body   = request->data->body_as<FBS::Router::CloseRtpObserverRequest>();
-				auto rtpObserverId = body->rtpObserverId()->str();
-
-				// This may throw.
-				const RTC::RtpObserver* rtpObserver = AssertAndGetRtpObserverById(rtpObserverId);
+				const auto* body         = request->data->body_as<FBS::Router::CloseRtpObserverRequest>();
+				const auto rtpObserverId = body->rtpObserverId()->str();
+				const RTC::RtpObserver* rtpObserver =
+				  AssertAndGetRtpObserverById(rtpObserverId, request->methodCStr);
 
 				// Remove it from the map.
 				this->mapRtpObservers.erase(rtpObserver->id);
@@ -439,28 +436,13 @@ namespace RTC
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method");
+				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 			}
 		}
 	}
 
-	void Router::CheckNoTransport(const std::string& transportId) const
-	{
-		if (this->mapTransports.find(transportId) != this->mapTransports.end())
-		{
-			MS_THROW_ERROR("a Transport with same id already exists");
-		}
-	}
-
-	void Router::CheckNoRtpObserver(const std::string& rtpObserverId) const
-	{
-		if (this->mapRtpObservers.find(rtpObserverId) != this->mapRtpObservers.end())
-		{
-			MS_THROW_ERROR("an RtpObserver with same id already exists");
-		}
-	}
-
-	RTC::Transport* Router::AssertAndGetTransportById(const std::string& transportId) const
+	RTC::Transport* Router::AssertAndGetTransportById(
+	  const std::string& transportId, const std::string& message) const
 	{
 		MS_TRACE();
 
@@ -468,13 +450,14 @@ namespace RTC
 
 		if (this->mapTransports.find(transportId) == this->mapTransports.end())
 		{
-			MS_THROW_ERROR("Transport not found");
+			MS_THROW_NOT_FOUND_ERROR("Transport not found [method:%s]", message.c_str());
 		}
 
 		return it->second;
 	}
 
-	RTC::RtpObserver* Router::AssertAndGetRtpObserverById(const std::string& rtpObserverId) const
+	RTC::RtpObserver* Router::AssertAndGetRtpObserverById(
+	  const std::string& rtpObserverId, const std::string& message) const
 	{
 		MS_TRACE();
 
@@ -482,10 +465,30 @@ namespace RTC
 
 		if (this->mapRtpObservers.find(rtpObserverId) == this->mapRtpObservers.end())
 		{
-			MS_THROW_ERROR("RtpObserver not found");
+			MS_THROW_NOT_FOUND_ERROR("RtpObserver not found [method:%s]", message.c_str());
 		}
 
 		return it->second;
+	}
+
+	void Router::CheckNoTransport(const std::string& transportId, const std::string& message) const
+	{
+		MS_TRACE();
+
+		if (this->mapTransports.contains(transportId))
+		{
+			MS_THROW_ERROR("a Transport with same id already exists [method:%s]", message.c_str());
+		}
+	}
+
+	void Router::CheckNoRtpObserver(const std::string& rtpObserverId, const std::string& message) const
+	{
+		MS_TRACE();
+
+		if (this->mapRtpObservers.contains(rtpObserverId))
+		{
+			MS_THROW_ERROR("an RtpObserver with same id already exists [method:%s]", message.c_str());
+		}
 	}
 
 	void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -723,7 +726,7 @@ namespace RTC
 
 		if (mapProducersIt == this->mapProducers.end())
 		{
-			MS_THROW_ERROR("Producer not found [producerId:%s]", producerId.c_str());
+			MS_THROW_NOT_FOUND_ERROR("Producer not found [producerId:%s]", producerId.c_str());
 		}
 
 		auto* producer              = mapProducersIt->second;
@@ -953,7 +956,7 @@ namespace RTC
 	}
 
 	void Router::OnTransportNewDataConsumer(
-	  RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer, std::string& dataProducerId)
+	  RTC::Transport* /*transport*/, RTC::DataConsumer* dataConsumer, const std::string& dataProducerId)
 	{
 		MS_TRACE();
 
@@ -961,7 +964,7 @@ namespace RTC
 
 		if (mapDataProducersIt == this->mapDataProducers.end())
 		{
-			MS_THROW_ERROR("DataProducer not found [dataProducerId:%s]", dataProducerId.c_str());
+			MS_THROW_NOT_FOUND_ERROR("DataProducer not found [dataProducerId:%s]", dataProducerId.c_str());
 		}
 
 		auto* dataProducer                  = mapDataProducersIt->second;
@@ -1077,7 +1080,7 @@ namespace RTC
 
 		if (it == this->mapProducers.end())
 		{
-			MS_THROW_ERROR("Producer not found");
+			MS_THROW_NOT_FOUND_ERROR("Producer not found");
 		}
 
 		RTC::Producer* producer = it->second;

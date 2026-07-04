@@ -56,6 +56,8 @@ namespace Channel
 
 		void TypeError(const char* reason = nullptr);
 
+		void NotFoundError(const char* reason = nullptr);
+
 	private:
 		void Send(const uint8_t* buffer, size_t size) const;
 
