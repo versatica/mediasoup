@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.21.0
+
 - Worker: Fix new consumer regressions ([PR #1849](https://github.com/versatica/mediasoup/pull/1849)).
 - Add `NotFoundError`, thrown when the referenced entity in the Worker doesn't exist ([PR #1852](https://github.com/versatica/mediasoup/pull/1852)).
   - Expose mediasoup Node `errors` via `mediasoup/errors` (in EMS).
