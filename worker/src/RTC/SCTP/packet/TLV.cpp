@@ -80,30 +80,21 @@ namespace RTC
 			  GetBufferLength());
 		}
 
-		void TLV::InitializeTLVHeader(uint16_t lengthFieldValue)
+		void TLV::InitializeTLVHeader(uint16_t length)
 		{
 			MS_TRACE();
 
-			SetLengthField(lengthFieldValue);
-		}
-
-		void TLV::SetLengthField(size_t lengthField)
-		{
-			MS_TRACE();
-
-			if (lengthField > std::numeric_limits<uint16_t>::max())
-			{
-				MS_THROW_TYPE_ERROR("lengthField (%zu bytes) cannot be greater than 65535", lengthField);
-			}
-
-			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 2, lengthField);
+			SetLengthField(length);
 		}
 
 		void TLV::SetVariableLengthValue(const uint8_t* value, size_t valueLength)
 		{
 			MS_TRACE();
 
-			MS_ASSERT(value != nullptr || valueLength == 0, "value cannot be nullptr if valueLength is > 0");
+			if (value == nullptr && valueLength > 0)
+			{
+				MS_THROW_TYPE_ERROR("value cannot be nullptr if valueLength is > 0");
+			}
 
 			// NOTE: This can throw.
 			SetVariableLengthValueLength(valueLength);
@@ -118,12 +109,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto previousLength      = GetLength();
-			auto previousLengthField = GetLengthField();
-			auto previousValueLength = GetVariableLengthValueLength();
-			auto newNotPaddedLength =
+			const auto previousLength      = GetLength();
+			const auto previousLengthField = GetLengthField();
+			const auto previousValueLength = GetVariableLengthValueLength();
+			const auto newNotPaddedLength =
 			  size_t{ previousLengthField } - size_t{ previousValueLength } + valueLength;
-			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
+			const auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
 			try
 			{
@@ -173,6 +164,18 @@ namespace RTC
 
 				throw;
 			}
+		}
+
+		void TLV::SetLengthField(size_t length)
+		{
+			MS_TRACE();
+
+			if (length > std::numeric_limits<uint16_t>::max())
+			{
+				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);
+			}
+
+			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 2, length);
 		}
 	} // namespace SCTP
 } // namespace RTC

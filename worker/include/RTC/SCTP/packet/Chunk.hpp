@@ -43,7 +43,7 @@ namespace RTC
 
 		class Chunk : public TLV
 		{
-			// We need that packet calls protected and private methods in this class.
+			// We need that Packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
@@ -183,12 +183,15 @@ namespace RTC
 		public:
 			~Chunk() override;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			void Dump(int indentation = 0) const override = 0;
 
 			void Serialize(uint8_t* buffer, size_t bufferLength) final;
 
 			/**
-			 * Can be overridden by each subclass.
+			 * Must be overridden by each subclass.
 			 */
 			Chunk* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
@@ -323,7 +326,7 @@ namespace RTC
 				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 				// The remaining length in the buffer is the potential buffer length
 				// of the parameter.
-				size_t parameterMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
+				const size_t parameterMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
 				auto* parameter = T::Factory(ptr, parameterMaxBufferLength);
 
@@ -444,7 +447,7 @@ namespace RTC
 				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 				// The remaining length in the buffer is the potential buffer length
 				// of the error cause.
-				size_t errorCauseMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
+				const size_t errorCauseMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
 				auto* errorCause = T::Factory(ptr, errorCauseMaxBufferLength);
 
@@ -491,7 +494,7 @@ namespace RTC
 
 			virtual void SoftCloneInto(Chunk* chunk) const final;
 
-			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue) final;
+			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t length) final;
 
 			virtual bool GetBit0() const final
 			{

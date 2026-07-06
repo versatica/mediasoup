@@ -54,7 +54,7 @@ namespace RTC
 			 */
 			virtual void DumpCommon(int indentation) const;
 
-			virtual void InitializeTLVHeader(uint16_t lengthFieldValue) final;
+			virtual void InitializeTLVHeader(uint16_t length) final;
 
 			/**
 			 * Subclasses with header bigger than default one (4 bytes) must override
@@ -163,7 +163,7 @@ namespace RTC
 			 * @throw MediaSoupTypeError - If given `length` is higher than maximum
 			 *   allowed one (65535).
 			 */
-			virtual void SetLengthField(size_t lengthField) final;
+			virtual void SetLengthField(size_t length) final;
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -39,7 +39,7 @@ namespace RTC
 
 		class ErrorCause : public TLV
 		{
-			// We need that chunk calls protected and private methods in this class.
+			// We need that Chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -123,8 +123,14 @@ namespace RTC
 		public:
 			~ErrorCause() override;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			void Dump(int indentation = 0) const override = 0;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			ErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ErrorCauseCode GetCode() const final
@@ -170,7 +176,7 @@ namespace RTC
 
 			virtual void SoftCloneInto(ErrorCause* errorCause) const final;
 
-			virtual void InitializeHeader(ErrorCauseCode errorCauseCode, uint16_t lengthFieldValue) final;
+			virtual void InitializeHeader(ErrorCauseCode errorCauseCode, uint16_t length) final;
 
 			/**
 			 * Error Cause subclasses with header bigger than default one (4 bytes)

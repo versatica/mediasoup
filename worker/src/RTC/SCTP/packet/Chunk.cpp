@@ -312,13 +312,13 @@ namespace RTC
 			chunk->SetLength(GetLength());
 		}
 
-		void Chunk::InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue)
+		void Chunk::InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t length)
 		{
 			MS_TRACE();
 
 			SetType(chunkType);
 			SetFlags(flags);
-			InitializeTLVHeader(lengthFieldValue);
+			InitializeTLVHeader(length);
 		}
 
 		bool Chunk::ParseParameters()
