@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Enable SVC for VP8 and H264 ([PR #1851](https://github.com/versatica/mediasoup/pull/1851)).
+
 ### 3.21.0
 
 - Worker: Fix new consumer regressions ([PR #1849](https://github.com/versatica/mediasoup/pull/1849)).

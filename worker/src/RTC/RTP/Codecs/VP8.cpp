@@ -348,6 +348,9 @@ namespace RTC
 					return false;
 				}
 
+				// VP8 always has a single spatial layer (0).
+				context->SetCurrentSpatialLayer(0);
+
 				// Update/fix current temporal layer.
 				if (this->payloadDescriptor->hasTlIndex && this->payloadDescriptor->tlIndex == context->GetTargetTemporalLayer())
 				{

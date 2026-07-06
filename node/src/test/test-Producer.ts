@@ -487,6 +487,66 @@ test('transport.produce() with no MID and with single encoding without RID or SS
 	).rejects.toThrow(Error);
 }, 2000);
 
+test('transport.produce() with single encoding and no temporal layers is of type simple', async () => {
+	const producer = await ctx.webRtcTransport1!.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+				},
+			],
+			encodings: [{ ssrc: 11111111 }],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('simple');
+}, 2000);
+
+test('transport.produce() with single encoding and temporal layers is of type svc', async () => {
+	const producer = await ctx.webRtcTransport1!.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+				},
+			],
+			encodings: [{ ssrc: 11111111, scalabilityMode: 'L1T3' }],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('svc');
+}, 2000);
+
+test('transport.produce() with multiple encodings is of type simulcast', async () => {
+	const producer = await ctx.webRtcTransport1!.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+				},
+			],
+			encodings: [
+				{ ssrc: 11111111, scalabilityMode: 'L1T3' },
+				{ ssrc: 22222222, scalabilityMode: 'L1T3' },
+			],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('simulcast');
+}, 2000);
+
 test('producer.dump() succeeds', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
 		ctx.audioProducerOptions

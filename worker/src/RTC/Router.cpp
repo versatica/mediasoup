@@ -442,7 +442,7 @@ namespace RTC
 	}
 
 	RTC::Transport* Router::AssertAndGetTransportById(
-	  const std::string& transportId, const std::string& message) const
+	  const std::string& transportId, const std::string& method) const
 	{
 		MS_TRACE();
 
@@ -450,14 +450,14 @@ namespace RTC
 
 		if (this->mapTransports.find(transportId) == this->mapTransports.end())
 		{
-			MS_THROW_NOT_FOUND_ERROR("Transport not found [method:%s]", message.c_str());
+			MS_THROW_NOT_FOUND_ERROR("Transport not found [method:%s]", method.c_str());
 		}
 
 		return it->second;
 	}
 
 	RTC::RtpObserver* Router::AssertAndGetRtpObserverById(
-	  const std::string& rtpObserverId, const std::string& message) const
+	  const std::string& rtpObserverId, const std::string& method) const
 	{
 		MS_TRACE();
 
@@ -465,29 +465,29 @@ namespace RTC
 
 		if (this->mapRtpObservers.find(rtpObserverId) == this->mapRtpObservers.end())
 		{
-			MS_THROW_NOT_FOUND_ERROR("RtpObserver not found [method:%s]", message.c_str());
+			MS_THROW_NOT_FOUND_ERROR("RtpObserver not found [method:%s]", method.c_str());
 		}
 
 		return it->second;
 	}
 
-	void Router::CheckNoTransport(const std::string& transportId, const std::string& message) const
+	void Router::CheckNoTransport(const std::string& transportId, const std::string& method) const
 	{
 		MS_TRACE();
 
 		if (this->mapTransports.contains(transportId))
 		{
-			MS_THROW_ERROR("a Transport with same id already exists [method:%s]", message.c_str());
+			MS_THROW_ERROR("a Transport with same id already exists [method:%s]", method.c_str());
 		}
 	}
 
-	void Router::CheckNoRtpObserver(const std::string& rtpObserverId, const std::string& message) const
+	void Router::CheckNoRtpObserver(const std::string& rtpObserverId, const std::string& method) const
 	{
 		MS_TRACE();
 
 		if (this->mapRtpObservers.contains(rtpObserverId))
 		{
-			MS_THROW_ERROR("an RtpObserver with same id already exists [method:%s]", message.c_str());
+			MS_THROW_ERROR("an RtpObserver with same id already exists [method:%s]", method.c_str());
 		}
 	}
 
