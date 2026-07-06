@@ -494,7 +494,7 @@ namespace RTC
 
 			virtual void SoftCloneInto(Chunk* chunk) const final;
 
-			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue) final;
+			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t length) final;
 
 			virtual bool GetBit0() const final
 			{

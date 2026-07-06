@@ -179,7 +179,7 @@ namespace RTC
 
 			virtual void SoftCloneInto(Parameter* parameter) const final;
 
-			virtual void InitializeHeader(ParameterType parameterType, uint16_t lengthFieldValue) final;
+			virtual void InitializeHeader(ParameterType parameterType, uint16_t length) final;
 
 			/**
 			 * Parameter subclasses with header bigger than default one (4 bytes)

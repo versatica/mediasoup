@@ -110,12 +110,12 @@ namespace RTC
 			SetBuffer(const_cast<uint8_t*>(buffer));
 		}
 
-		void Parameter::InitializeHeader(ParameterType parameterType, uint16_t lengthFieldValue)
+		void Parameter::InitializeHeader(ParameterType parameterType, uint16_t length)
 		{
 			MS_TRACE();
 
 			SetType(parameterType);
-			InitializeTLVHeader(lengthFieldValue);
+			InitializeTLVHeader(length);
 		}
 	} // namespace SCTP
 } // namespace RTC

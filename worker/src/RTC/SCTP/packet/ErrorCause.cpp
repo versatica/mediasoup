@@ -107,12 +107,12 @@ namespace RTC
 			SetBuffer(const_cast<uint8_t*>(buffer));
 		}
 
-		void ErrorCause::InitializeHeader(ErrorCauseCode causeCode, uint16_t lengthFieldValue)
+		void ErrorCause::InitializeHeader(ErrorCauseCode causeCode, uint16_t length)
 		{
 			MS_TRACE();
 
 			SetCode(causeCode);
-			InitializeTLVHeader(lengthFieldValue);
+			InitializeTLVHeader(length);
 		}
 	} // namespace SCTP
 } // namespace RTC

@@ -156,19 +156,6 @@ namespace RTC
 
 			static const std::string& PacketTypeToString(PacketType packetType);
 
-			/**
-			 * Parse an RTCP packet.
-			 *
-			 * @remarks
-			 * - `bufferLength` must be the exact length of the packet.
-			 */
-			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
-
-			/**
-			 * Create an RTCP packet.
-			 */
-			static Packet* Factory(uint8_t* buffer, size_t bufferLength);
-
 		private:
 			static const ankerl::unordered_dense::map<PacketType, std::string> PacketType2String;
 
@@ -242,12 +229,21 @@ namespace RTC
 			virtual void SoftCloneInto(Packet* packet) const final;
 
 			/**
-			 * The computed length (in bytes) of the packet according to the length
-			 * field (padding included).
+			 * Value of the Length field, which is the length of the RTCP packet in
+			 * 32-bit words minus one, including the Common Header and any padding.
+			 * Therefore the total size in bytes is (Length + 1) * 4.
 			 */
-			virtual size_t GetLengthField() const final
+			virtual uint16_t GetLengthField() const final
 			{
-				return (static_cast<size_t>(Utils::Byte::Get2Bytes(GetBuffer(), 2)) + 1) * 4;
+				return Utils::Byte::Get2Bytes(GetBuffer(), 2);
+			}
+
+			/**
+			 * Computed value (in bytes) of the Length field.
+			 */
+			virtual size_t GetLengthFieldComputed() const final
+			{
+				return (static_cast<size_t>(GetLengthField()) + 1) * 4;
 			}
 
 			/**
@@ -266,7 +262,7 @@ namespace RTC
 			 */
 			virtual bool HasVariableLengthValue() const final
 			{
-				return GetLengthField() > Packet::CommonHeaderLength;
+				return GetLengthFieldComputed() > Packet::CommonHeaderLength;
 			}
 
 			/**
@@ -304,7 +300,7 @@ namespace RTC
 					return 0u;
 				}
 
-				return GetLengthField() - Packet::CommonHeaderLength;
+				return GetLengthFieldComputed() - Packet::CommonHeaderLength;
 			}
 
 			/**
@@ -332,6 +328,16 @@ namespace RTC
 			{
 				GetCommonHeaderPointer()->packetType = packetType;
 			}
+
+			/**
+			 * Set the Length field given the total packet length in bytes. It
+			 * encodes it as 32-bit words minus one as required by the RTCP Length
+			 * field.
+			 *
+			 * @throw MediaSoupTypeError - If given `length` is higher than the maximum
+			 *   representable packet length (262144 bytes).
+			 */
+			virtual void SetLengthField(size_t length) final;
 		};
 	} // namespace NEW_RTCP
 } // namespace RTC

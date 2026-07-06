@@ -176,7 +176,7 @@ namespace RTC
 
 			virtual void SoftCloneInto(ErrorCause* errorCause) const final;
 
-			virtual void InitializeHeader(ErrorCauseCode errorCauseCode, uint16_t lengthFieldValue) final;
+			virtual void InitializeHeader(ErrorCauseCode errorCauseCode, uint16_t length) final;
 
 			/**
 			 * Error Cause subclasses with header bigger than default one (4 bytes)

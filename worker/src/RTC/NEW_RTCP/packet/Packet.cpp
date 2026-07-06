@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memmove()
+#include <limits>  // std::numeric_limits
 
 namespace RTC
 {
@@ -164,10 +165,43 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: See TLV::SetVariableLengthValueLength() but here we need to update Length
-			// field properly (32-bit words - 1, etc) and take into account padding, and the
-			// padding bit, and write padding lenght in the last byte of the value, etc. So
-			// also check RTP::Packet.
+			const auto previousLength      = GetLength();
+			const auto previousLengthField = GetLengthFieldComputed();
+			const auto previousValueLength = GetVariableLengthValueLength();
+			const auto newLength           = previousLengthField - previousValueLength + valueLength;
+
+			try
+			{
+				// Let's call SetLength() on parent with the new computed length.
+				// NOTE: If there is no space in the buffer for it, it will throw.
+				SetLength(newLength);
+
+				// Update length field.
+				// NOTE: This will throw if computed value is too big.
+				SetLengthField(newLength);
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Rollback.
+				SetLength(previousLength);
+				SetLengthField(previousLengthField);
+
+				throw;
+			}
+		}
+
+		void Packet::SetLengthField(size_t length)
+		{
+			MS_TRACE();
+
+			// The Length field is the length of the RTCP packet in 32-bit words minus
+			// one, so the maximum representable packet length is (65535 + 1) * 4 bytes.
+			if (length > (std::numeric_limits<uint16_t>::max() + 1) * 4)
+			{
+				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 262144", length);
+			}
+
+			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 2, (length / 4) - 1);
 		}
 	} // namespace NEW_RTCP
 } // namespace RTC
