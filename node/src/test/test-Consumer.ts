@@ -1172,6 +1172,132 @@ test('transport.consume() for a simulcast producer honors preferredLayers', asyn
 	});
 }, 2000);
 
+test('transport.consume() from a single-encoding no temporal layer producer is of type simple', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.vpxMediaCodecs,
+	});
+	const transport1 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+	const transport2 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+
+	const producer = await transport1.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+					],
+				},
+			],
+			headerExtensions: [],
+			encodings: [{ ssrc: 11111111 }],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('simple');
+
+	const consumer = await transport2.consume({
+		producerId: producer.id,
+		rtpCapabilities: ctx.vpxConsumerDeviceCapabilities,
+	});
+
+	expect(consumer.type).toBe('simple');
+}, 2000);
+
+test('transport.consume() from a single-encoding multiple temporal layer producer is of type svc', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.vpxMediaCodecs,
+	});
+	const transport1 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+	const transport2 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+
+	const producer = await transport1.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+					],
+				},
+			],
+			headerExtensions: [],
+			encodings: [{ ssrc: 55555555, scalabilityMode: 'L1T3' }],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('svc');
+
+	const consumer = await transport2.consume({
+		producerId: producer.id,
+		rtpCapabilities: ctx.vpxConsumerDeviceCapabilities,
+	});
+
+	expect(consumer.type).toBe('svc');
+}, 2000);
+
+test('transport.consume() from a multiple-encoding producer is of type simulcast', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.vpxMediaCodecs,
+	});
+	const transport1 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+	const transport2 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+
+	const producer = await transport1.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+					],
+				},
+			],
+			headerExtensions: [],
+			encodings: [
+				{ ssrc: 11111111, scalabilityMode: 'L1T3' },
+				{ ssrc: 22222222, scalabilityMode: 'L1T3' },
+			],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('simulcast');
+
+	const consumer = await transport2.consume({
+		producerId: producer.id,
+		rtpCapabilities: ctx.vpxConsumerDeviceCapabilities,
+	});
+
+	expect(consumer.type).toBe('simulcast');
+}, 2000);
+
 test('consumer.setPriority() succeed', async () => {
 	const videoConsumer = await ctx.webRtcTransport2!.consume({
 		producerId: ctx.videoProducer!.id,
