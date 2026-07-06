@@ -201,23 +201,23 @@ namespace RTC
 
 	private:
 		virtual RTC::Producer* AssertAndGetProducerById(
-		  const std::string& producerId, const std::string& message) const final;
+		  const std::string& producerId, const std::string& method) const final;
 		virtual RTC::Consumer* AssertAndGetConsumerById(
-		  const std::string& consumerId, const std::string& message) const final;
+		  const std::string& consumerId, const std::string& method) const final;
 		virtual RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const final;
 		virtual RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const final;
 		virtual RTC::DataProducer* AssertAndGetDataProducerById(
-		  const std::string& dataProducerId, const std::string& message) const final;
+		  const std::string& dataProducerId, const std::string& method) const final;
 		virtual RTC::DataConsumer* AssertAndGetDataConsumerById(
-		  const std::string& dataConsumerId, const std::string& message) const final;
+		  const std::string& dataConsumerId, const std::string& method) const final;
 		virtual RTC::DataConsumer* AssertAndGetSctpDataConsumerByStreamId(uint16_t streamId) const final;
-		virtual void CheckNoProducer(const std::string& producerId, const std::string& message) const final;
-		virtual void CheckNoConsumer(const std::string& consumerId, const std::string& message) const final;
+		virtual void CheckNoProducer(const std::string& producerId, const std::string& method) const final;
+		virtual void CheckNoConsumer(const std::string& consumerId, const std::string& method) const final;
 		virtual void CheckNoDataProducer(
-		  const std::string& dataProducerId, const std::string& message) const final;
+		  const std::string& dataProducerId, const std::string& method) const final;
 		virtual void CheckNoDataConsumer(
-		  const std::string& dataConsumerId, const std::string& message) const final;
-		virtual void CheckNoSctpDataConsumer(uint16_t streamId, const std::string& message) const final;
+		  const std::string& dataConsumerId, const std::string& method) const final;
+		virtual void CheckNoSctpDataConsumer(uint16_t streamId, const std::string& method) const final;
 		virtual bool IsConnected() const = 0;
 		virtual void SendRtpPacket(
 		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, const onSendCallback* cb = nullptr) = 0;

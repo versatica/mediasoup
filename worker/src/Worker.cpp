@@ -184,7 +184,7 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 }
 
 RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(
-  const std::string& webRtcServerId, const std::string& message) const
+  const std::string& webRtcServerId, const std::string& method) const
 {
 	MS_TRACE();
 
@@ -192,13 +192,13 @@ RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(
 
 	if (it == this->mapWebRtcServers.end())
 	{
-		MS_THROW_NOT_FOUND_ERROR("WebRtcServer not found [method:%s]", message.c_str());
+		MS_THROW_NOT_FOUND_ERROR("WebRtcServer not found [method:%s]", method.c_str());
 	}
 
 	return it->second;
 }
 
-RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const std::string& message) const
+RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const std::string& method) const
 {
 	MS_TRACE();
 
@@ -206,30 +206,30 @@ RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const s
 
 	if (it == this->mapRouters.end())
 	{
-		MS_THROW_NOT_FOUND_ERROR("Router not found [method:%s]", message.c_str());
+		MS_THROW_NOT_FOUND_ERROR("Router not found [method:%s]", method.c_str());
 	}
 
 	return it->second;
 }
 
-void Worker::CheckNoWebRtcServer(const std::string& webRtcServerId, const std::string& message) const
+void Worker::CheckNoWebRtcServer(const std::string& webRtcServerId, const std::string& method) const
 {
 	MS_TRACE();
 
 	if (this->mapWebRtcServers.find(webRtcServerId) != this->mapWebRtcServers.end())
 	{
 		MS_THROW_ERROR(
-		  "a WebRtcServer with same webRtcServerId already exists [method:%s]", message.c_str());
+		  "a WebRtcServer with same webRtcServerId already exists [method:%s]", method.c_str());
 	}
 }
 
-void Worker::CheckNoRouter(const std::string& routerId, const std::string& message) const
+void Worker::CheckNoRouter(const std::string& routerId, const std::string& method) const
 {
 	MS_TRACE();
 
 	if (this->mapRouters.find(routerId) != this->mapRouters.end())
 	{
-		MS_THROW_ERROR("a Router with same routerId already exists [method:%s]", message.c_str());
+		MS_THROW_ERROR("a Router with same routerId already exists [method:%s]", method.c_str());
 	}
 }
 

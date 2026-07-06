@@ -49,11 +49,11 @@ namespace RTC
 
 	private:
 		RTC::Transport* AssertAndGetTransportById(
-		  const std::string& transportId, const std::string& message) const;
+		  const std::string& transportId, const std::string& method) const;
 		RTC::RtpObserver* AssertAndGetRtpObserverById(
-		  const std::string& rtpObserverId, const std::string& message) const;
-		void CheckNoTransport(const std::string& transportId, const std::string& message) const;
-		void CheckNoRtpObserver(const std::string& rtpObserverId, const std::string& message) const;
+		  const std::string& rtpObserverId, const std::string& method) const;
+		void CheckNoTransport(const std::string& transportId, const std::string& method) const;
+		void CheckNoRtpObserver(const std::string& rtpObserverId, const std::string& method) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:

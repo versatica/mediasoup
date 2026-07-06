@@ -27,10 +27,10 @@ private:
 	  flatbuffers::FlatBufferBuilder& builder) const;
 	void SetNewRouterId(std::string& routerId) const;
 	RTC::WebRtcServer* AssertAndGetWebRtcServerById(
-	  const std::string& webRtcServerId, const std::string& message) const;
-	RTC::Router* AssertAndGetRouterById(const std::string& routerId, const std::string& message) const;
-	void CheckNoWebRtcServer(const std::string& webRtcServerId, const std::string& message) const;
-	void CheckNoRouter(const std::string& routerId, const std::string& message) const;
+	  const std::string& webRtcServerId, const std::string& method) const;
+	RTC::Router* AssertAndGetRouterById(const std::string& routerId, const std::string& method) const;
+	void CheckNoWebRtcServer(const std::string& webRtcServerId, const std::string& method) const;
+	void CheckNoRouter(const std::string& routerId, const std::string& method) const;
 
 	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:
