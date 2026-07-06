@@ -124,7 +124,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(indentation, "  packets count: %zu", GetPacketsCount());
 			MS_DUMP_CLEAN(
-			  indentation, "  needs consolidation of chunks: %s", NeedsConsolidation() ? "yes" : "no");
+			  indentation, "  needs consolidation of packets: %s", NeedsConsolidation() ? "yes" : "no");
 			for (const auto* packet : this->packets)
 			{
 				packet->Dump(indentation + 1);
