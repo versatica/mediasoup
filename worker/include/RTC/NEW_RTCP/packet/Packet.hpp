@@ -77,7 +77,7 @@ namespace RTC
 			 *  0                   1                   2                   3
 			 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |V=2|P| Custom  |      PT       |            Length             |
+			 * |V=2|P|  Count  |      PT       |            Length             |
 			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 			 * \                                                               \
 			 * /                             Value                             /
@@ -89,7 +89,7 @@ namespace RTC
 			 *   end that are not part of the value. The last padding byte indicates
 			 *   how many padding bytes must be ignored, including itself (it will be
 			 *   a multiple of four).
-			 * - Custom (5 bits): Field whose meaning depends on the packet type
+			 * - Count (5 bits): Field whose meaning depends on the packet type
 			 *   (PT). RFC 3550 does not assign it a single name because it varies
 			 *   per packet: in Sender/Receiver Report it is the reception report
 			 *   block count (RC), in SDES and BYE it is the source count (SC), and
