@@ -138,8 +138,14 @@ namespace RTC
 		public:
 			~Parameter() override;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			void Dump(int indentation = 0) const override = 0;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			Parameter* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ParameterType GetType() const final

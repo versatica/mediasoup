@@ -85,9 +85,10 @@ namespace RTC
 			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 			 *
 			 * - Version (2 bits): RTP/RTCP version. Always 2.
-			 * - Padding (1 bit): If set, the packet contains one or more padding
-			 *   bytes at the end that are not part of the value. The last padding
-			 *   byte indicates how many padding bytes must be ignored.
+			 * - Padding (1 bit): If set, the packet contains padding bytes at the
+			 *   end that are not part of the value. The last padding byte indicates
+			 *   how many padding bytes must be ignored, including itself (it will be
+			 *   a multiple of four).
 			 * - Custom (5 bits): Field whose meaning depends on the packet type
 			 *   (PT). RFC 3550 does not assign it a single name because it varies
 			 *   per packet: in Sender/Receiver Report it is the reception report
@@ -104,6 +105,11 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This struct is guaranteed to be aligned to 4 bytes.
+			 * - The padding mechanism is not implemented since it's only used when
+			 *   encrypting the compound packet by following the section 9.1 of RFC
+			 *   3550 which absolutely nobody does (SRTCP is used instead). So
+			 *   packets with Padding bit set to 1 are considered invalid and
+			 *   rejected.
 			 */
 			struct CommonHeader
 			{
@@ -140,6 +146,10 @@ namespace RTC
 			 *   is rewritten to parsed PacketType.
 			 * @param packetLength - If given buffer is a valid packet then
 			 *   `packetLength` is rewritten to the computed length of the packet.
+			 *
+			 * @remarks
+			 * - Packets with Padding bit set to 1 are not supported (see note above)
+			 *   and hence this function returns false if it's set.
 			 */
 			static bool IsPacket(
 			  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength);
@@ -172,6 +182,9 @@ namespace RTC
 		public:
 			~Packet() override;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			void Dump(int indentation = 0) const override = 0;
 
 			/**
@@ -187,6 +200,21 @@ namespace RTC
 			PacketType GetType() const
 			{
 				return GetCommonHeaderPointer()->packetType;
+			}
+
+			/**
+			 * Whether the Padding bit is set to 1.
+			 *
+			 * @remarks
+			 * - The padding mechanism is not implemented since it's only used when
+			 *   encrypting the compound packet by following the section 9.1 of RFC
+			 *   3550 which absolutely nobody does (SRTCP is used instead). So
+			 *   packets with Padding bit set to 1 are considered invalid and
+			 *   rejected.
+			 */
+			bool HasPadding() const
+			{
+				return GetCommonHeaderPointer()->padding;
 			}
 
 			/**

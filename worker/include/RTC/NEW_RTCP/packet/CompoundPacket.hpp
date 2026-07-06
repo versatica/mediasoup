@@ -2,7 +2,7 @@
 #define MS_RTC_NEW_RTCP_COMPOUND_PACKET_HPP
 
 #include "common.hpp"
-#include "RTC/NEW_RTCP/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "RTC/Serializable.hpp"
 #include <vector>
 
@@ -43,12 +43,11 @@ namespace RTC
 		public:
 			~CompoundPacket() override;
 
-			void Dump(int indentation = 0) const override;
+			void Dump(int indentation = 0) const final;
 
-			/**
-			 * Must be overridden by each subclass.
-			 */
-			CompoundPacket* Clone(uint8_t* buffer, size_t bufferLength) const override;
+			void Serialize(uint8_t* buffer, size_t bufferLength) final;
+
+			CompoundPacket* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			bool HasPackets() const
 			{
@@ -142,10 +141,10 @@ namespace RTC
 
 				// The new packet will be added after other packet in the compound
 				// packet, this is, at the end of the compound packet.
-				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+				const auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 				// The remaining length in the buffer is the potential buffer length
 				// of the packet.
-				size_t packetMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
+				const size_t packetMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
 				auto* packet = T::Factory(ptr, packetMaxBufferLength);
 

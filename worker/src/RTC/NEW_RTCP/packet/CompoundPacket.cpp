@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::RTCP::CompoundPacket"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/NEW_RTCP/CompoundPacket.hpp"
+#include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -132,11 +132,42 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</RTCP::CompoundPacket>");
 		}
 
+		void CompoundPacket::Serialize(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			const auto* previousBuffer = GetBuffer();
+
+			// Invoke the parent method to copy the whole buffer.
+			Serializable::Serialize(buffer, bufferLength);
+
+			for (auto* packet : this->packets)
+			{
+				const size_t offset = packet->GetBuffer() - previousBuffer;
+
+				packet->SoftSerialize(buffer + offset);
+			}
+		}
+
 		CompoundPacket* CompoundPacket::Clone(uint8_t* buffer, size_t bufferLength) const
 		{
 			MS_TRACE();
 
-			// TODO
+			auto* clonedCompoundPacket = new CompoundPacket(buffer, bufferLength);
+
+			Serializable::CloneInto(clonedCompoundPacket);
+
+			// Soft clone packets into the given cloned compound packet.
+			for (auto* packet : this->packets)
+			{
+				const size_t offset = packet->GetBuffer() - GetBuffer();
+
+				auto* softClonedPacket = packet->SoftClone(buffer + offset);
+
+				clonedCompoundPacket->packets.push_back(softClonedPacket);
+			}
+
+			return clonedCompoundPacket;
 		}
 
 		void CompoundPacket::HandleInPlacePacket(Packet* packet)

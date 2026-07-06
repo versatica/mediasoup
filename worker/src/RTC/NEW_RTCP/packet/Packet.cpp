@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::RTCP::Packet"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/NEW_RTCP/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memmove()
@@ -57,13 +57,26 @@ namespace RTC
 				return false;
 			}
 
+			// The padding mechanism is not implemented since it's only used when
+			// encrypting the compound packet by following the section 9.1 of RFC
+			// 3550 which absolutely nobody does (SRTCP is used instead). So packets
+			// with Padding bit set to 1 are considered invalid and rejected.
+			if ((buffer[0] >> 5) & 0x01)
+			{
+				MS_WARN_TAG(rtcp, "RTCP packet with Padding bit set to 1 not supported");
+
+				return false;
+			}
+
+			packetType   = static_cast<Packet::PacketType>(buffer[1]);
 			packetLength = (static_cast<size_t>(Utils::Byte::Get2Bytes(buffer, 2)) + 1) * 4;
 
 			if (bufferLength < packetLength)
 			{
 				MS_WARN_TAG(
 				  rtcp,
-				  "no space for announced packet length [packetLength:%zu, bufferLength:%zu]",
+				  "no space for announced packet length [packetType:%s, packetLength:%zu, bufferLength:%zu]",
+				  Packet::PacketTypeToString(packetType).c_str(),
 				  packetLength,
 				  bufferLength);
 

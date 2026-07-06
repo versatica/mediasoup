@@ -123,8 +123,14 @@ namespace RTC
 		public:
 			~ErrorCause() override;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			void Dump(int indentation = 0) const override = 0;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			ErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ErrorCauseCode GetCode() const final
