@@ -102,6 +102,9 @@ namespace RTC
 			static constexpr size_t ParameterHeaderLength{ 4 };
 
 		public:
+			static const std::string& ParameterTypeToString(ParameterType parameterType);
+
+		protected:
 			/**
 			 * Whether given buffer could be a a valid parameter.
 			 *
@@ -122,8 +125,6 @@ namespace RTC
 			  ParameterType& parameterType,
 			  uint16_t& parameterLength,
 			  uint8_t& padding);
-
-			static const std::string& ParameterTypeToString(ParameterType parameterType);
 
 		private:
 			static const ankerl::unordered_dense::map<ParameterType, std::string> ParameterType2String;

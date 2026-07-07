@@ -47,7 +47,7 @@ namespace rtpCommon
 	{                                                                                                  \
 		uint8_t* originalBuffer = static_cast<uint8_t*>(std::malloc(bufferLength));                      \
 		std::memcpy(originalBuffer, buffer, bufferLength);                                               \
-		REQUIRE(RTC::RTP::Packet::IsRtp(buffer, bufferLength) == true);                                  \
+		REQUIRE(RTC::RTP::Packet::IsRtp(buffer, length) == true);                                        \
 		REQUIRE(packet);                                                                                 \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                         \
 		REQUIRE(packet->GetBuffer() == buffer);                                                          \

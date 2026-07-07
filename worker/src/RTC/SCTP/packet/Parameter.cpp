@@ -35,6 +35,22 @@ namespace RTC
 
 		/* Class methods. */
 
+		const std::string& Parameter::ParameterTypeToString(ParameterType parameterType)
+		{
+			MS_TRACE();
+
+			static const std::string Unknown("UNKNOWN");
+
+			auto it = Parameter::ParameterType2String.find(parameterType);
+
+			if (it == Parameter::ParameterType2String.end())
+			{
+				return Unknown;
+			}
+
+			return it->second;
+		}
+
 		bool Parameter::IsParameter(
 		  const uint8_t* buffer,
 		  size_t bufferLength,
@@ -52,22 +68,6 @@ namespace RTC
 			parameterType = static_cast<Parameter::ParameterType>(Utils::Byte::Get2Bytes(buffer, 0));
 
 			return true;
-		}
-
-		const std::string& Parameter::ParameterTypeToString(ParameterType parameterType)
-		{
-			MS_TRACE();
-
-			static const std::string Unknown("UNKNOWN");
-
-			auto it = Parameter::ParameterType2String.find(parameterType);
-
-			if (it == Parameter::ParameterType2String.end())
-			{
-				return Unknown;
-			}
-
-			return it->second;
 		}
 
 		/* Instance methods. */

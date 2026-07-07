@@ -48,6 +48,22 @@ namespace RTC
 			  Utils::Byte::IsPaddedTo4Bytes(bufferLength));
 		}
 
+		const std::string& Packet::PacketTypeToString(PacketType packetType)
+		{
+			MS_TRACE();
+
+			static const std::string Unknown("UNKNOWN");
+
+			auto it = Packet::PacketType2String.find(packetType);
+
+			if (it == Packet::PacketType2String.end())
+			{
+				return Unknown;
+			}
+
+			return it->second;
+		}
+
 		bool Packet::IsPacket(
 		  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength)
 		{
@@ -87,22 +103,6 @@ namespace RTC
 			return true;
 		}
 
-		const std::string& Packet::PacketTypeToString(PacketType packetType)
-		{
-			MS_TRACE();
-
-			static const std::string Unknown("UNKNOWN");
-
-			auto it = Packet::PacketType2String.find(packetType);
-
-			if (it == Packet::PacketType2String.end())
-			{
-				return Unknown;
-			}
-
-			return it->second;
-		}
-
 		/* Instance methods. */
 
 		Packet::Packet(uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
@@ -126,6 +126,7 @@ namespace RTC
 			  Packet::PacketTypeToString(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP_CLEAN(indentation, "  count field: %" PRIu8, GetCount());
 		}
 
 		void Packet::SoftSerialize(const uint8_t* buffer)
@@ -141,6 +142,34 @@ namespace RTC
 
 			// Need to manually set Serializable length.
 			packet->SetLength(GetLength());
+		}
+
+		void Packet::InitializeHeader(PacketType packetType, uint16_t length)
+		{
+			MS_TRACE();
+
+			auto* commonHeader = GetCommonHeaderPointer();
+
+			commonHeader->version    = 2;
+			commonHeader->padding    = 0;
+			commonHeader->count      = 0;
+			commonHeader->packetType = packetType;
+
+			SetLengthField(length);
+		}
+
+		void Packet::SetLengthField(size_t length)
+		{
+			MS_TRACE();
+
+			// The Length field is the length of the RTCP packet in 32-bit words minus
+			// one, so the maximum representable packet length is (65535 + 1) * 4 bytes.
+			if (length > (std::numeric_limits<uint16_t>::max() + 1) * 4)
+			{
+				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 262144", length);
+			}
+
+			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 2, (length / 4) - 1);
 		}
 
 		void Packet::SetVariableLengthValue(const uint8_t* value, size_t valueLength)
@@ -165,10 +194,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto previousLength      = GetLength();
-			const auto previousLengthField = GetLengthFieldComputed();
-			const auto previousValueLength = GetVariableLengthValueLength();
-			const auto newLength           = previousLengthField - previousValueLength + valueLength;
+			const size_t previousLength      = GetLength();
+			const size_t previousLengthField = GetLengthFieldComputed();
+			const size_t previousValueLength = GetVariableLengthValueLength();
+			const size_t newLength           = previousLengthField - previousValueLength + valueLength;
 
 			try
 			{
@@ -188,20 +217,6 @@ namespace RTC
 
 				throw;
 			}
-		}
-
-		void Packet::SetLengthField(size_t length)
-		{
-			MS_TRACE();
-
-			// The Length field is the length of the RTCP packet in 32-bit words minus
-			// one, so the maximum representable packet length is (65535 + 1) * 4 bytes.
-			if (length > (std::numeric_limits<uint16_t>::max() + 1) * 4)
-			{
-				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 262144", length);
-			}
-
-			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 2, (length / 4) - 1);
 		}
 	} // namespace NEW_RTCP
 } // namespace RTC

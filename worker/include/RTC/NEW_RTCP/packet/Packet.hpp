@@ -5,6 +5,7 @@
 #include "RTC/Serializable.hpp"
 #include "Utils.hpp"
 #include <ankerl/unordered_dense.h>
+#include <cstdint>
 #include <string>
 
 namespace RTC
@@ -137,6 +138,9 @@ namespace RTC
 			 */
 			static bool IsRtcp(const uint8_t* buffer, size_t bufferLength);
 
+			static const std::string& PacketTypeToString(PacketType packetType);
+
+		protected:
 			/**
 			 * Whether given buffer could be a a valid RTCP packet.
 			 *
@@ -153,8 +157,6 @@ namespace RTC
 			 */
 			static bool IsPacket(
 			  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength);
-
-			static const std::string& PacketTypeToString(PacketType packetType);
 
 		private:
 			static const ankerl::unordered_dense::map<PacketType, std::string> PacketType2String;
@@ -190,6 +192,15 @@ namespace RTC
 			}
 
 			/**
+			 * False by default. UnknownPacket class overrides this method to return
+			 * true instead.
+			 */
+			virtual bool HasUnknownType() const
+			{
+				return false;
+			}
+
+			/**
 			 * Whether the Padding bit is set to 1.
 			 *
 			 * @remarks
@@ -202,15 +213,6 @@ namespace RTC
 			bool HasPadding() const
 			{
 				return GetCommonHeaderPointer()->padding;
-			}
-
-			/**
-			 * False by default. UnknownPacket class overrides this method to return
-			 * true instead.
-			 */
-			virtual bool HasUnknownType() const
-			{
-				return false;
 			}
 
 		protected:
@@ -227,6 +229,18 @@ namespace RTC
 			virtual Packet* SoftClone(const uint8_t* buffer) const = 0;
 
 			virtual void SoftCloneInto(Packet* packet) const final;
+
+			virtual void InitializeHeader(PacketType packetType, uint16_t length) final;
+
+			virtual uint8_t GetCount() const final
+			{
+				return GetCommonHeaderPointer()->count;
+			}
+
+			virtual void SetCount(uint8_t count) final
+			{
+				GetCommonHeaderPointer()->count = count;
+			}
 
 			/**
 			 * Value of the Length field, which is the length of the RTCP packet in
@@ -245,6 +259,16 @@ namespace RTC
 			{
 				return (static_cast<size_t>(GetLengthField()) + 1) * 4;
 			}
+
+			/**
+			 * Set the Length field given the total packet length in bytes. It
+			 * encodes it as 32-bit words minus one as required by the RTCP Length
+			 * field.
+			 *
+			 * @throw MediaSoupTypeError - If given `length` is higher than the maximum
+			 *   representable packet length (262144 bytes).
+			 */
+			virtual void SetLengthField(size_t length) final;
 
 			/**
 			 * A pointer to the position in the buffer where the variable-length value
@@ -323,21 +347,6 @@ namespace RTC
 			{
 				return reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(GetBuffer()));
 			}
-
-			void SetType(PacketType packetType)
-			{
-				GetCommonHeaderPointer()->packetType = packetType;
-			}
-
-			/**
-			 * Set the Length field given the total packet length in bytes. It
-			 * encodes it as 32-bit words minus one as required by the RTCP Length
-			 * field.
-			 *
-			 * @throw MediaSoupTypeError - If given `length` is higher than the maximum
-			 *   representable packet length (262144 bytes).
-			 */
-			virtual void SetLengthField(size_t length) final;
 		};
 	} // namespace NEW_RTCP
 } // namespace RTC

@@ -32,6 +32,22 @@ namespace RTC
 
 		/* Class methods. */
 
+		const std::string& ErrorCause::ErrorCauseCodeToString(ErrorCauseCode causeCode)
+		{
+			MS_TRACE();
+
+			static const std::string Unknown("UNKNOWN");
+
+			auto it = ErrorCause::ErrorCauseCode2String.find(causeCode);
+
+			if (it == ErrorCause::ErrorCauseCode2String.end())
+			{
+				return Unknown;
+			}
+
+			return it->second;
+		}
+
 		bool ErrorCause::IsErrorCause(
 		  const uint8_t* buffer,
 		  size_t bufferLength,
@@ -49,22 +65,6 @@ namespace RTC
 			causeCode = static_cast<ErrorCause::ErrorCauseCode>(Utils::Byte::Get2Bytes(buffer, 0));
 
 			return true;
-		}
-
-		const std::string& ErrorCause::ErrorCauseCodeToString(ErrorCauseCode causeCode)
-		{
-			MS_TRACE();
-
-			static const std::string Unknown("UNKNOWN");
-
-			auto it = ErrorCause::ErrorCauseCode2String.find(causeCode);
-
-			if (it == ErrorCause::ErrorCauseCode2String.end())
-			{
-				return Unknown;
-			}
-
-			return it->second;
 		}
 
 		/* Instance methods. */
