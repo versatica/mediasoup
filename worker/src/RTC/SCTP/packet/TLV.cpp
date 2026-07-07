@@ -109,12 +109,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto previousLength      = GetLength();
-			const auto previousLengthField = GetLengthField();
-			const auto previousValueLength = GetVariableLengthValueLength();
-			const auto newNotPaddedLength =
+			const size_t previousLength        = GetLength();
+			const uint16_t previousLengthField = GetLengthField();
+			const uint16_t previousValueLength = GetVariableLengthValueLength();
+			const size_t newNotPaddedLength =
 			  size_t{ previousLengthField } - size_t{ previousValueLength } + valueLength;
-			const auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
+			const size_t newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
 			try
 			{
@@ -125,6 +125,10 @@ namespace RTC
 				// Update length field.
 				// NOTE: This will throw if computed value is too big.
 				SetLengthField(newNotPaddedLength);
+
+				// Fill padding bytes with zero.
+				// NOTE: This may throw.
+				FillPadding(newPaddedLength - newNotPaddedLength);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -134,17 +138,13 @@ namespace RTC
 
 				throw;
 			}
-
-			// Fill padding bytes with zero.
-			FillPadding(newPaddedLength - newNotPaddedLength);
 		}
 
 		void TLV::AddItem(const TLV* item)
 		{
 			MS_TRACE();
 
-			auto previousLength      = GetLength();
-			auto previousLengthField = GetLengthField();
+			const size_t previousLength = GetLength();
 
 			try
 			{
@@ -160,7 +160,6 @@ namespace RTC
 			{
 				// Rollback.
 				SetLength(previousLength);
-				SetLengthField(previousLengthField);
 
 				throw;
 			}

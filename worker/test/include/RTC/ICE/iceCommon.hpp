@@ -57,7 +57,7 @@ namespace iceCommon
 	{                                                                                                   \
 		uint8_t* originalBuffer = static_cast<uint8_t*>(std::malloc(bufferLength));                       \
 		std::memcpy(originalBuffer, buffer, bufferLength);                                                \
-		REQUIRE(RTC::ICE::StunPacket::IsStun(buffer, bufferLength) == true);                              \
+		REQUIRE(RTC::ICE::StunPacket::IsStun(buffer, length) == true);                                    \
 		REQUIRE(packet);                                                                                  \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                          \
 		REQUIRE(packet->GetBuffer() == buffer);                                                           \
