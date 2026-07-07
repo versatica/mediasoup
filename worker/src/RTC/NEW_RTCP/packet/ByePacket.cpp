@@ -60,21 +60,38 @@ namespace RTC
 
 			auto* packet = new ByePacket(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Validate that Reason length value fits into the packet.
-			if (packet->HasReason())
+			// Must always invoke SetLength() after constructing a Serializable with
+			// not fixed length. It's also required so the getters below operate
+			// against the real packet bounds.
+			packet->SetLength(packetLength);
+
+			// Validate that the announced SSRC/CSRC count fits into the packet.
+			const size_t ssrcsEndOffset = Packet::CommonHeaderLength + (packet->GetCount() * 4);
+
+			if (ssrcsEndOffset > packetLength)
 			{
-				MS_WARN_TAG(
-				  rtcp,
-				  "length indicated in the Reason length field (%" PRIu8
-				  " bytes) exceeds the available space for the Reason field");
+				MS_WARN_TAG(rtcp, "SSRC/CSRC count exceeds the packet length");
 
 				delete packet;
 				return nullptr;
 			}
 
-			// Must always invoke SetLength() after constructing a Serializable with
-			// not fixed length.
-			packet->SetLength(packetLength);
+			// Validate that the value of the Reason length field fits into the packet.
+			if (packet->HasReason())
+			{
+				const uint8_t reasonLength = packet->GetReasonLength();
+				// The Reason string starts right after the 1 byte Reason length field.
+				const size_t reasonEndOffset = ssrcsEndOffset + 1 + reasonLength;
+
+				if (reasonEndOffset > packetLength)
+				{
+					MS_WARN_TAG(
+					  rtcp, "Reason length (%" PRIu8 " bytes) exceeds the packet length", reasonLength);
+
+					delete packet;
+					return nullptr;
+				}
+			}
 
 			return packet;
 		}
@@ -152,11 +169,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: Must be checked before growing the length below, otherwise
+			// `HasReason()` would be unreliable since the length grows before the
+			// Count field is incremented.
+			const bool hadReason = HasReason();
+
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(GetVariableLengthValueLength() + 4);
 
-			// Must move Reason fields down.
-			if (HasReason())
+			// Must move Reason fields down to make room for the new SSRC.
+			if (hadReason)
 			{
 				std::memmove(
 				  GetReasonLengthPointer() + 4,
