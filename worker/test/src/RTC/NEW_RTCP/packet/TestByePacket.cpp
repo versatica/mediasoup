@@ -206,7 +206,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
 		  /*unknownType*/ false);
 
-		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{});
+		REQUIRE(packet->GetSsrcs().empty());
 		REQUIRE(packet->HasReason() == false);
 		REQUIRE(packet->GetReason().empty());
 
