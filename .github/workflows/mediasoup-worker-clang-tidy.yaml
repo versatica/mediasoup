@@ -23,10 +23,7 @@ concurrency:
 
 jobs:
   clang-tidy:
-    # TODO: Cannot upgrade to ubuntu-26.04 because something in
-    # ZedThree/clang-tidy-review@v0.23.1 fails when generating comments for the
-    # PR.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - uses: actions/checkout@v6

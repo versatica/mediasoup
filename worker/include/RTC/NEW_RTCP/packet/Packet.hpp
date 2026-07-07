@@ -237,7 +237,7 @@ namespace RTC
 				return GetCommonHeaderPointer()->count;
 			}
 
-			virtual void SetCount(uint8_t count)
+			virtual void SetCount(uint8_t count) final
 			{
 				GetCommonHeaderPointer()->count = count;
 			}

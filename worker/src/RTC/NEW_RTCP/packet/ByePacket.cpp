@@ -169,6 +169,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (GetCount() == 31)
+			{
+				MS_THROW_ERROR("cannot add more than 31 ssrcs");
+			}
+
 			// NOTE: Must be checked before growing the length below, otherwise
 			// `HasReason()` would be unreliable since the length grows before the
 			// Count field is incremented.
