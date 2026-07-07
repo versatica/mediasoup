@@ -46,8 +46,10 @@ namespace rtcpCommon
 		REQUIRE(packet->GetLength() == length);                                                        \
 		REQUIRE(packet->GetAvailableLength() == packet->GetBufferLength() - packet->GetLength());      \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);                           \
+		REQUIRE(static_cast<unsigned>(packet->GetVersion()) == 2);                                     \
 		REQUIRE(packet->GetType() == packetType);                                                      \
 		REQUIRE(packet->HasUnknownType() == unknownType);                                              \
+		REQUIRE(packet->HasPadding() == false);                                                        \
 		REQUIRE_THROWS_AS(packet->Serialize(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);     \
 		REQUIRE_THROWS_AS(packet->Clone(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);         \
 		std::free(originalBuffer);                                                                     \

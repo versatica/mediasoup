@@ -148,6 +148,9 @@ namespace RTC
 			static constexpr size_t ChunkHeaderLength{ 4 };
 
 		public:
+			static const std::string& ChunkTypeToString(ChunkType chunkType);
+
+		protected:
 			/**
 			 * Whether given buffer could be a a valid chunk.
 			 *
@@ -167,8 +170,6 @@ namespace RTC
 			  ChunkType& chunkType,
 			  uint16_t& chunkLength,
 			  uint8_t& padding);
-
-			static const std::string& ChunkTypeToString(ChunkType chunkType);
 
 		private:
 			static const ankerl::unordered_dense::map<ChunkType, std::string> ChunkType2String;

@@ -160,6 +160,76 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
 		  /*unknownType*/ false);
 
-		// TODO
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{});
+		REQUIRE(packet->HasReason() == false);
+		REQUIRE(packet->GetReason().empty());
+
+		/* Modify it. */
+
+		packet->AddSsrc(1111);
+		packet->AddSsrc(2222);
+		// Reason string is 25 bytes, so padded(1 + 25) is needed = 28 bytes.
+		packet->SetReason("amazing reason, isn't it?");
+		packet->AddSsrc(3333);
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ rtcpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
+		  /*length*/ 4 + 4 + 4 + 4 + 28,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
+		  /*unknownType*/ false);
+
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111, 2222, 3333 });
+		REQUIRE(packet->HasReason() == true);
+		REQUIRE(packet->GetReason() == "amazing reason, isn't it?");
+		// Check padding bytes.
+		REQUIRE(packet->GetBuffer()[packet->GetLength() - 1] == 0);
+		REQUIRE(packet->GetBuffer()[packet->GetLength() - 2] == 0);
+		REQUIRE(packet->GetBuffer()[packet->GetLength() - 3] == '?');
+
+		/* Serialize it. */
+
+		packet->Serialize(rtcpCommon::SerializeBuffer, sizeof(rtcpCommon::SerializeBuffer));
+
+		std::memset(rtcpCommon::FactoryBuffer, 0xFF, packet->GetBufferLength());
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ rtcpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
+		  /*length*/ 4 + 4 + 4 + 4 + 28,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
+		  /*unknownType*/ false);
+
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111, 2222, 3333 });
+		REQUIRE(packet->HasReason() == true);
+		REQUIRE(packet->GetReason() == "amazing reason, isn't it?");
+		// Check padding bytes.
+		REQUIRE(packet->GetBuffer()[packet->GetLength() - 1] == 0);
+		REQUIRE(packet->GetBuffer()[packet->GetLength() - 2] == 0);
+		REQUIRE(packet->GetBuffer()[packet->GetLength() - 3] == '?');
+
+		/* Clone it. */
+
+		packet.reset(packet->Clone(rtcpCommon::CloneBuffer, sizeof(rtcpCommon::CloneBuffer)));
+
+		std::memset(rtcpCommon::SerializeBuffer, 0xFF, sizeof(rtcpCommon::SerializeBuffer));
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ rtcpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
+		  /*length*/ 4 + 4 + 4 + 4 + 28,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
+		  /*unknownType*/ false);
+
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111, 2222, 3333 });
+		REQUIRE(packet->HasReason() == true);
+		REQUIRE(packet->GetReason() == "amazing reason, isn't it?");
+		// Check padding bytes.
+		REQUIRE(packet->GetBuffer()[packet->GetLength() - 1] == 0);
+		REQUIRE(packet->GetBuffer()[packet->GetLength() - 2] == 0);
+		REQUIRE(packet->GetBuffer()[packet->GetLength() - 3] == '?');
 	}
 }

@@ -1161,6 +1161,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
+		std::memset(rtpCommon::FactoryBuffer, 0x00, packet->GetBufferLength());
+
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
 		  /*buffer*/ rtpCommon::SerializeBuffer,

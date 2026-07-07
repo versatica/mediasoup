@@ -88,6 +88,9 @@ namespace RTC
 			static constexpr size_t ErrorCauseHeaderLength{ 4 };
 
 		public:
+			static const std::string& ErrorCauseCodeToString(ErrorCauseCode causeCode);
+
+		protected:
 			/**
 			 * Whether given buffer could be a a valid error cause.
 			 *
@@ -107,8 +110,6 @@ namespace RTC
 			  ErrorCauseCode& causeCode,
 			  uint16_t& causeLength,
 			  uint8_t& padding);
-
-			static const std::string& ErrorCauseCodeToString(ErrorCauseCode causeCode);
 
 		private:
 			static const ankerl::unordered_dense::map<ErrorCauseCode, std::string> ErrorCauseCode2String;

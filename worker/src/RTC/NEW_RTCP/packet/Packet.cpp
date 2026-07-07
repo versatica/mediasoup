@@ -48,6 +48,22 @@ namespace RTC
 			  Utils::Byte::IsPaddedTo4Bytes(bufferLength));
 		}
 
+		const std::string& Packet::PacketTypeToString(PacketType packetType)
+		{
+			MS_TRACE();
+
+			static const std::string Unknown("UNKNOWN");
+
+			auto it = Packet::PacketType2String.find(packetType);
+
+			if (it == Packet::PacketType2String.end())
+			{
+				return Unknown;
+			}
+
+			return it->second;
+		}
+
 		bool Packet::IsPacket(
 		  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength)
 		{
@@ -85,22 +101,6 @@ namespace RTC
 			}
 
 			return true;
-		}
-
-		const std::string& Packet::PacketTypeToString(PacketType packetType)
-		{
-			MS_TRACE();
-
-			static const std::string Unknown("UNKNOWN");
-
-			auto it = Packet::PacketType2String.find(packetType);
-
-			if (it == Packet::PacketType2String.end())
-			{
-				return Unknown;
-			}
-
-			return it->second;
 		}
 
 		/* Instance methods. */

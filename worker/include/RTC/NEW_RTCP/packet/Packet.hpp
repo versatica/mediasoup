@@ -138,6 +138,9 @@ namespace RTC
 			 */
 			static bool IsRtcp(const uint8_t* buffer, size_t bufferLength);
 
+			static const std::string& PacketTypeToString(PacketType packetType);
+
+		protected:
 			/**
 			 * Whether given buffer could be a a valid RTCP packet.
 			 *
@@ -154,8 +157,6 @@ namespace RTC
 			 */
 			static bool IsPacket(
 			  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength);
-
-			static const std::string& PacketTypeToString(PacketType packetType);
 
 		private:
 			static const ankerl::unordered_dense::map<PacketType, std::string> PacketType2String;
@@ -191,6 +192,15 @@ namespace RTC
 			}
 
 			/**
+			 * False by default. UnknownPacket class overrides this method to return
+			 * true instead.
+			 */
+			virtual bool HasUnknownType() const
+			{
+				return false;
+			}
+
+			/**
 			 * Whether the Padding bit is set to 1.
 			 *
 			 * @remarks
@@ -203,15 +213,6 @@ namespace RTC
 			bool HasPadding() const
 			{
 				return GetCommonHeaderPointer()->padding;
-			}
-
-			/**
-			 * False by default. UnknownPacket class overrides this method to return
-			 * true instead.
-			 */
-			virtual bool HasUnknownType() const
-			{
-				return false;
 			}
 
 		protected:
