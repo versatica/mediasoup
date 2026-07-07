@@ -65,20 +65,6 @@ namespace RTC
 			// against the real packet bounds.
 			packet->SetLength(packetLength);
 
-			// Validate that Length field has a value that corresponds to the given
-			// packet length.
-			if (packet->GetLengthFieldComputed() != packetLength)
-			{
-				MS_WARN_TAG(
-				  rtcp,
-				  "computed value of Length field (%zu bytes) doesn't match given packet length (%zu bytes)",
-				  packet->GetLengthFieldComputed(),
-				  packetLength);
-
-				delete packet;
-				return nullptr;
-			}
-
 			// Validate that the announced SSRC/CSRC count fits into the packet.
 			const size_t ssrcsEndOffset = Packet::CommonHeaderLength + (packet->GetCount() * 4);
 
