@@ -147,6 +147,52 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		REQUIRE(packet->GetBuffer()[packet->GetLength() - 3] == 'e');
 	}
 
+	SECTION("ByePacket::Parse() fails")
+	{
+		// Length field should be 5 (24 bytes).
+		// clang-format off
+		alignas(4) uint8_t buffer1[] =
+		{
+			// V=2, P=0, SC=3, PT:203, Length: 6
+			0b10000011, 0xCB, 0x00, 0x06,
+			// SSRC 1: 1111111
+			0x00, 0x10, 0xF4, 0x47,
+			// SSRC 2: 2222222
+			0x00, 0x21, 0xE8, 0x8E,
+			// SSRC 3: 12345678
+			0x00, 0xBC, 0x61, 0x4E,
+			// Reason length: 6, Reason: "foo"
+			0x06, 0x66, 0x6F, 0x6F,
+			// Reason: "bar", 1 byte of padding
+			0x62, 0x61, 0x72, 0x00
+		};
+		// clang-format on
+
+		REQUIRE(!RTC::NEW_RTCP::ByePacket::Parse(buffer1, sizeof(buffer1)));
+
+		// SC should be 3 instead of 4 (first byte should be 0b10000011). So the parser ends
+		// reading a wrong value of the Reason length field and fails.
+		// clang-format off
+		alignas(4) uint8_t buffer2[] =
+		{
+			// V=2, P=0, SC=3, PT:203, Length: 5
+			0b10000100, 0xCB, 0x00, 0x05,
+			// SSRC 1: 1111111
+			0x00, 0x10, 0xF4, 0x47,
+			// SSRC 2: 2222222
+			0x00, 0x21, 0xE8, 0x8E,
+			// SSRC 3: 12345678
+			0x00, 0xBC, 0x61, 0x4E,
+			// Reason length: 6, Reason: "foo"
+			0x06, 0x66, 0x6F, 0x6F,
+			// Reason: "bar", 1 byte of padding
+			0x62, 0x61, 0x72, 0x00
+		};
+		// clang-format on
+
+		REQUIRE(!RTC::NEW_RTCP::ByePacket::Parse(buffer2, sizeof(buffer2)));
+	}
+
 	SECTION("ByePacket::Factory() succeeds")
 	{
 		std::unique_ptr<RTC::NEW_RTCP::ByePacket> packet{ RTC::NEW_RTCP::ByePacket::Factory(
