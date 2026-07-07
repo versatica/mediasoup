@@ -12,4 +12,6 @@
 
 - All the `TODO` comments.
 
-- Fuzzer.
+- Tests for `Packet` and `CompoundPacket`.
+
+- Fuzzer for `Packet` and `CompoundPacket`.

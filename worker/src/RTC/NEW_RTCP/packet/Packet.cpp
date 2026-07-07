@@ -148,7 +148,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetType(packetType);
+			auto* commonHeader = GetCommonHeaderPointer();
+
+			commonHeader->version    = 2;
+			commonHeader->padding    = 0;
+			commonHeader->count      = 0;
+			commonHeader->packetType = packetType;
+
 			SetLengthField(length);
 		}
 

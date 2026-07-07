@@ -64,7 +64,9 @@ namespace RTC
 			if (packet->HasReason())
 			{
 				MS_WARN_TAG(
-				  rtcp, "length indicated in the Reason length field exceeds the length of the packet");
+				  rtcp,
+				  "length indicated in the Reason length field (%" PRIu8
+				  " bytes) exceeds the available space for the Reason field");
 
 				delete packet;
 				return nullptr;
@@ -121,12 +123,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedChunk = new ByePacket(buffer, bufferLength);
+			auto* clonedPacket = new ByePacket(buffer, bufferLength);
 
-			CloneInto(clonedChunk);
-			SoftCloneInto(clonedChunk);
+			CloneInto(clonedPacket);
+			SoftCloneInto(clonedPacket);
 
-			return clonedChunk;
+			return clonedPacket;
 		}
 
 		std::vector<uint32_t> ByePacket::GetSsrcs() const
@@ -182,14 +184,14 @@ namespace RTC
 			const size_t previousLengthField = GetLengthFieldComputed();
 			// The previous total length of Reason length and Reason fields padded
 			// to 4 bytes.
-			const uint8_t previousReasonFieldsPaddedLength =
+			const uint16_t previousReasonFieldsPaddedLength =
 			  HasReason() ? Utils::Byte::PadTo4Bytes(1u + GetReasonLength()) : 0;
 			// The new total length of Reason length and Reason fields padded to
 			// 4 bytes.
-			const uint8_t newReasonFieldsPaddedLength =
-			  reason.size() > 0 ? Utils::Byte::PadTo4Bytes(1 + reason.size()) : 0;
+			const uint16_t newReasonFieldsPaddedLength =
+			  !reason.empty() ? Utils::Byte::PadTo4Bytes(1 + reason.size()) : 0;
 			const size_t newLength = size_t{ previousLength } - size_t{ previousReasonFieldsPaddedLength } +
-			                         newReasonFieldsPaddedLength;
+			                         size_t{ newReasonFieldsPaddedLength };
 
 			try
 			{
@@ -201,7 +203,7 @@ namespace RTC
 				// NOTE: This will throw if computed value is too big.
 				SetLengthField(newLength);
 
-				if (reason.size() > 0)
+				if (!reason.empty())
 				{
 					// Write Reason length field.
 					Utils::Byte::Set1Byte(GetReasonLengthPointer(), 0, reason.size());

@@ -126,7 +126,7 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111111, 2222222, 12345678, 3333 });
 		REQUIRE(packet->HasReason() == false);
-		REQUIRE(packet->GetReason() == "");
+		REQUIRE(packet->GetReason().empty());
 
 		packet->SetReason("abcde");
 

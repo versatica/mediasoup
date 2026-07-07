@@ -346,11 +346,6 @@ namespace RTC
 			{
 				return reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(GetBuffer()));
 			}
-
-			void SetType(PacketType packetType)
-			{
-				GetCommonHeaderPointer()->packetType = packetType;
-			}
 		};
 	} // namespace NEW_RTCP
 } // namespace RTC
