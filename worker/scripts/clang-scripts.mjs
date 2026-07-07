@@ -170,6 +170,27 @@ function normalizeCompileCommands() {
 				// Convert to relative path from repo root.
 				entry.file = path.relative(ROOT_DIR, absolutePath);
 			}
+
+			// Make include search paths absolute. Meson emits them relative to the
+			// build directory, which makes clang-tidy report note locations (such as
+			// those coming from Catch2 macro expansions) with relative paths that
+			// ZedThree/clang-tidy-review fails to open (it resolves them against its
+			// own working directory). Absolutizing them avoids that.
+			if (entry.directory) {
+				if (typeof entry.command === 'string') {
+					entry.command = normalizeIncludePaths(
+						entry.command.split(/\s+/),
+						entry.directory
+					).join(' ');
+				}
+
+				if (Array.isArray(entry.arguments)) {
+					entry.arguments = normalizeIncludePaths(
+						entry.arguments,
+						entry.directory
+					);
+				}
+			}
 		}
 
 		fs.writeFileSync(compileCommandsFile, JSON.stringify(commands, null, 2));
@@ -180,6 +201,39 @@ function normalizeCompileCommands() {
 
 		exitWithError();
 	}
+}
+
+function normalizeIncludePaths(tokens, directory) {
+	const includeFlags = ['-I', '-isystem', '-iquote', '-idirafter'];
+	const result = [];
+
+	for (let i = 0; i < tokens.length; ++i) {
+		const token = tokens[i];
+
+		// Attached form, e.g. `-I../../../subprojects/foo`.
+		const attachedFlag = includeFlags.find(
+			flag => token.startsWith(flag) && token.length > flag.length
+		);
+
+		if (attachedFlag) {
+			const includePath = token.slice(attachedFlag.length);
+
+			result.push(`${attachedFlag}${path.resolve(directory, includePath)}`);
+
+			continue;
+		}
+
+		// Separated form, e.g. `-isystem ../../../subprojects/foo`.
+		if (includeFlags.includes(token) && i + 1 < tokens.length) {
+			result.push(token, path.resolve(directory, tokens[++i]));
+
+			continue;
+		}
+
+		result.push(token);
+	}
+
+	return result;
 }
 
 function getClangToolBinary({ clangToolName, version, checkRequireVersion }) {
