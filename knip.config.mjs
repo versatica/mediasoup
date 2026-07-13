@@ -8,7 +8,6 @@ const config = {
 		'node/src/srtpParametersFbsUtils.ts',
 	],
 	ignoreDependencies: ['open-cli', 'supports-color'],
-	ignoreBinaries: ['python3'],
 	typescript: {
 		config: ['tsconfig.json'],
 	},
