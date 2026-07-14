@@ -288,10 +288,19 @@ namespace RTC
 			remoteCapabilities.partialReliability  = remoteCapabilitiesField->bitA;
 			remoteCapabilities.messageInterleaving = remoteCapabilitiesField->bitB;
 			remoteCapabilities.reConfig            = remoteCapabilitiesField->bitC;
+
+			// Only keep the zero checksum method if it's a value we know about.
+			// Anything else (unknown/future method or a tampered cookie) is treated
+			// as none.
+			const uint32_t zeroChecksumAlternateErrorDetectionMethod =
+			  ntohl(remoteCapabilitiesField->zeroChecksumAlternateErrorDetectionMethod);
+
 			remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod =
-			  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
-			  static_cast<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(
-			    ntohl(remoteCapabilitiesField->zeroChecksumAlternateErrorDetectionMethod));
+			  zeroChecksumAlternateErrorDetectionMethod ==
+			      static_cast<uint32_t>(
+			        ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS)
+			    ? ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS
+			    : ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE;
 
 			// NOTE: No need to std::move(). Copy elision (RVO) is used for free in GCC
 			// and clang in C++17 or higher.
