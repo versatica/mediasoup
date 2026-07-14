@@ -1,9 +1,9 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
+#include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
@@ -183,13 +183,14 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		/* Modify it. */
 
 		// Create a StateCookie.
-		const RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = {
-			.negotiatedMaxOutboundStreams = 62000,
-			.negotiatedMaxInboundStreams  = 55555,
-			.partialReliability           = true,
-			.messageInterleaving          = true,
-			.reConfig                     = true,
-			.zeroChecksum                 = false
+		const RTC::SCTP::Capabilities remoteCapabilities = {
+			.maxOutboundStreams  = 62000,
+			.maxInboundStreams   = 55555,
+			.partialReliability  = true,
+			.messageInterleaving = true,
+			.reConfig            = true,
+			.zeroChecksumAlternateErrorDetectionMethod =
+			  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 		};
 
 		// Build the StateCookie in place within the StateCookieParameter.
@@ -200,7 +201,7 @@ SCENARIO("State Cookie Parameter (7)", "[serializable][sctp][parameter]")
 		  /*remoteInitialTsn*/ 2220222,
 		  /*remoteAdvertisedReceiverWindowCredit*/ 999909999,
 		  /*tieTag*/ 1111222233334444,
-		  negotiatedCapabilities);
+		  remoteCapabilities);
 
 		REQUIRE(parameter->HasCookie() == true);
 		REQUIRE(parameter->GetCookieLength() == RTC::SCTP::StateCookie::StateCookieLength);

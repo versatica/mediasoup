@@ -3,6 +3,7 @@
 
 #include "RTC/SCTP/association/Association.hpp"
 #include "Logger.hpp"
+#include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/packet/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/NoUserDataErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/OutOfResourceErrorCause.hpp"
@@ -615,7 +616,7 @@ namespace RTC
 
 			if (this->tcb)
 			{
-				return this->tcb->GetNegotiatedCapabilities().negotiatedMaxOutboundStreams;
+				return this->tcb->GetNegotiatedCapabilities().maxOutboundStreams;
 			}
 			else
 			{
@@ -629,7 +630,7 @@ namespace RTC
 
 			if (this->tcb)
 			{
-				return this->tcb->GetNegotiatedCapabilities().negotiatedMaxInboundStreams;
+				return this->tcb->GetNegotiatedCapabilities().maxInboundStreams;
 			}
 			else
 			{
@@ -780,11 +781,9 @@ namespace RTC
 				  return this->state == State::ESTABLISHED;
 			  });
 
-			this->privateMetrics.negotiatedMaxOutboundStreams =
-			  negotiatedCapabilities.negotiatedMaxOutboundStreams;
-			this->privateMetrics.negotiatedMaxInboundStreams =
-			  negotiatedCapabilities.negotiatedMaxInboundStreams;
-			this->privateMetrics.usesPartialReliability  = negotiatedCapabilities.partialReliability;
+			this->privateMetrics.negotiatedMaxOutboundStreams = negotiatedCapabilities.maxOutboundStreams;
+			this->privateMetrics.negotiatedMaxInboundStreams  = negotiatedCapabilities.maxInboundStreams;
+			this->privateMetrics.usesPartialReliability       = negotiatedCapabilities.partialReliability;
 			this->privateMetrics.usesMessageInterleaving = negotiatedCapabilities.messageInterleaving;
 			this->privateMetrics.usesReConfig            = negotiatedCapabilities.reConfig;
 			this->privateMetrics.usesZeroChecksum        = negotiatedCapabilities.zeroChecksum;
@@ -1564,8 +1563,13 @@ namespace RTC
 			// Insert a StateCookieParameter in the INIT-ACK chunk.
 			auto* stateCookieParameter = initAckChunk->BuildParameterInPlace<StateCookieParameter>();
 
+			// The raw capabilities announced by the remote endpoint are stored in the
+			// cookie (not the negotiated ones). This way, when the COOKIE-ECHO is
+			// received they are re-negotiated against our local options, limiting the
+			// effect of a tampered/forged cookie.
+			const auto remoteCapabilities = Capabilities::Factory(receivedInitChunk);
 			const auto negotiatedCapabilities =
-			  NegotiatedCapabilities::Factory(this->sctpOptions, receivedInitChunk);
+			  NegotiatedCapabilities::Factory(this->sctpOptions, remoteCapabilities);
 
 			// When authentication is enabled, generate an authenticated cookie with a
 			// creation timestamp and a MAC keyed with our per-association secret.
@@ -1581,7 +1585,7 @@ namespace RTC
 			  receivedInitChunk->GetInitialTsn(),
 			  receivedInitChunk->GetAdvertisedReceiverWindowCredit(),
 			  tieTag,
-			  negotiatedCapabilities,
+			  remoteCapabilities,
 			  /*creationTimestampMs*/ authenticateCookie ? this->shared->GetTimeMs() : 0,
 			  /*macKey*/ authenticateCookie ? this->stateCookieSecret : nullptr,
 			  /*macKeyLength*/ authenticateCookie ? Association::StateCookieSecretLength : 0);
@@ -1652,8 +1656,9 @@ namespace RTC
 
 			this->t1InitTimer->Stop();
 
+			const auto remoteCapabilities = Capabilities::Factory(receivedInitAckChunk);
 			const auto negotiatedCapabilities =
-			  NegotiatedCapabilities::Factory(this->sctpOptions, receivedInitAckChunk);
+			  NegotiatedCapabilities::Factory(this->sctpOptions, remoteCapabilities);
 
 			// If the association is re-established (peer restarted, but re-used old
 			// association), make sure that all message identifiers are reset and any
@@ -1774,6 +1779,13 @@ namespace RTC
 				// WebRTC, but is a valid operation on the SCTP level.
 				this->sendQueue.Reset();
 
+				// Re-negotiate the raw capabilities stored in the cookie against our
+				// local options. This limits the effect of a tampered/forged cookie
+				// since it can never enable an extension we didn't signal nor raise
+				// the stream limits above what we announced.
+				const auto negotiatedCapabilities =
+				  NegotiatedCapabilities::Factory(this->sctpOptions, cookie->GetRemoteCapabilities());
+
 				CreateTransmissionControlBlock(
 				  cookie->GetLocalVerificationTag(),
 				  cookie->GetRemoteVerificationTag(),
@@ -1781,7 +1793,7 @@ namespace RTC
 				  cookie->GetRemoteInitialTsn(),
 				  cookie->GetRemoteAdvertisedReceiverWindowCredit(),
 				  /*tieTag*/ Utils::Crypto::GetRandomUInt<uint64_t>(0, MaxTieTag),
-				  cookie->GetNegotiatedCapabilities());
+				  negotiatedCapabilities);
 			}
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-5.1

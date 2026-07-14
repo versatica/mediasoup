@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/SCTP/association/Association.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
@@ -1774,7 +1774,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		// Forge a plain (unauthenticated) State Cookie with attacker-chosen values,
 		// as in the published PoC. It passes the magic checks but carries no MAC.
 		const uint32_t forgedTag = 0xDEADBEEF;
-		const RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities;
+		const RTC::SCTP::Capabilities remoteCapabilities;
 
 		std::vector<uint8_t> cookieBuffer(RTC::SCTP::StateCookie::StateCookieLength);
 
@@ -1787,7 +1787,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		  /*remoteInitialTsn*/ 2000,
 		  /*remoteAdvertisedReceiverWindowCredit*/ 65535,
 		  /*tieTag*/ 0,
-		  negotiatedCapabilities);
+		  remoteCapabilities);
 
 		// Builds a COOKIE-ECHO packet carrying the forged cookie. `buffers` must
 		// outlive the returned packet.

@@ -27,9 +27,7 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 		{
 			Utils::Byte::Set8Bytes(DataBuffer, 0, RTC::SCTP::StateCookie::Magic1);
 			Utils::Byte::Set2Bytes(
-			  DataBuffer,
-			  RTC::SCTP::StateCookie::NegotiatedCapabilitiesOffset,
-			  RTC::SCTP::StateCookie::Magic2);
+			  DataBuffer, RTC::SCTP::StateCookie::RemoteCapabilitiesOffset, RTC::SCTP::StateCookie::Magic2);
 		}
 	}
 
@@ -46,7 +44,7 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 	stateCookie->GetRemoteInitialTsn();
 	stateCookie->GetRemoteAdvertisedReceiverWindowCredit();
 	stateCookie->GetTieTag();
-	stateCookie->GetNegotiatedCapabilities();
+	stateCookie->GetRemoteCapabilities();
 
 	stateCookie->Serialize(StateCookieSerializeBuffer, len);
 
@@ -56,7 +54,7 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 	stateCookie->GetRemoteInitialTsn();
 	stateCookie->GetRemoteAdvertisedReceiverWindowCredit();
 	stateCookie->GetTieTag();
-	stateCookie->GetNegotiatedCapabilities();
+	stateCookie->GetRemoteCapabilities();
 
 	auto* clonedStateCookie = stateCookie->Clone(StateCookieCloneBuffer, len);
 
@@ -68,7 +66,7 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 	clonedStateCookie->GetRemoteInitialTsn();
 	clonedStateCookie->GetRemoteAdvertisedReceiverWindowCredit();
 	clonedStateCookie->GetTieTag();
-	clonedStateCookie->GetNegotiatedCapabilities();
+	clonedStateCookie->GetRemoteCapabilities();
 
 	clonedStateCookie->Serialize(StateCookieSerializeBuffer, len);
 

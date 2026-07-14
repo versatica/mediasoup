@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_STATE_COOKIE_PARAMETER_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 
 namespace RTC
@@ -104,7 +104,7 @@ namespace RTC
 			  uint32_t remoteInitialTsn,
 			  uint32_t remoteAdvertisedReceiverWindowCredit,
 			  uint64_t tieTag,
-			  const NegotiatedCapabilities& negotiatedCapabilities,
+			  const Capabilities& remoteCapabilities,
 			  uint64_t creationTimestampMs = 0,
 			  const uint8_t* macKey        = nullptr,
 			  size_t macKeyLength          = 0);
