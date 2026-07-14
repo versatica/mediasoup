@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: Enable SVC for VP8 and H264 ([PR #1851](https://github.com/versatica/mediasoup/pull/1851)).
+- SCTP: Limit the state of State Cookie tampering ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 3.21.0
 

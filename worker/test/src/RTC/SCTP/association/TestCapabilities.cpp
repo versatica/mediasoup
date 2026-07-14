@@ -1,29 +1,19 @@
 #include "common.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
-#include "RTC/SCTP/public/SctpOptions.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
+SCENARIO("SCTP Capabilities", "[sctp][capabilities]")
 {
 	sctpCommon::ResetBuffers();
 
-	SECTION("NegotiatedCapabilities::Factory() succeeds (1)")
+	SECTION("Capabilities::Factory() succeeds (1)")
 	{
-		RTC::SCTP::SctpOptions sctpOptions{};
-
-		sctpOptions.announcedMaxOutboundStreams = 8192;
-		sctpOptions.announcedMaxInboundStreams  = 2048;
-		sctpOptions.enablePartialReliability    = true;
-		sctpOptions.enableMessageInterleaving   = true;
-		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
-		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
-
 		const std::unique_ptr<RTC::SCTP::InitChunk> remoteChunk{ RTC::SCTP::InitChunk::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
@@ -47,28 +37,20 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		remoteZeroChecksumAcceptableParameter->Consolidate();
 
 		const auto remoteCapabilities = RTC::SCTP::Capabilities::Factory(remoteChunk.get());
-		const auto negotiatedCapabilities =
-		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteCapabilities);
 
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 1024);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2048);
-		REQUIRE(negotiatedCapabilities.partialReliability == true);
-		REQUIRE(negotiatedCapabilities.messageInterleaving == true);
-		REQUIRE(negotiatedCapabilities.reConfig == true);
-		REQUIRE(negotiatedCapabilities.zeroChecksum == true);
+		// Raw remote-announced values (no local option is applied).
+		REQUIRE(remoteCapabilities.maxOutboundStreams == 4096);
+		REQUIRE(remoteCapabilities.maxInboundStreams == 1024);
+		REQUIRE(remoteCapabilities.partialReliability == true);
+		REQUIRE(remoteCapabilities.messageInterleaving == true);
+		REQUIRE(remoteCapabilities.reConfig == true);
+		REQUIRE(
+		  remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 	}
 
-	SECTION("NegotiatedCapabilities::Factory() succeeds (2)")
+	SECTION("Capabilities::Factory() succeeds (2)")
 	{
-		RTC::SCTP::SctpOptions sctpOptions{};
-
-		sctpOptions.announcedMaxOutboundStreams = 1000;
-		sctpOptions.announcedMaxInboundStreams  = 2000;
-		sctpOptions.enablePartialReliability    = true;
-		sctpOptions.enableMessageInterleaving   = true;
-		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
-		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
-
 		const std::unique_ptr<RTC::SCTP::InitChunk> remoteChunk{ RTC::SCTP::InitChunk::Factory(
 			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
@@ -78,11 +60,10 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		auto* remoteSupportedExtensionsParameter =
 		  remoteChunk->BuildParameterInPlace<RTC::SCTP::SupportedExtensionsParameter>();
 
-		// NOTE: Missing FORWARD-TSN, but peer announced support for it via
-		// Forward-TSN-Supported parameter negotiation).
-		// NOTE: Missing RE-CONFIG (needed for Partial Reliability Extension
-		// negotiation).
-		// NOTE: Missing I-FORWARD-TSN (needed for Message Interleaving negotiation).
+		// NOTE: Missing FORWARD-TSN, but remote announces support for it via
+		// Forward-TSN-Supported parameter.
+		// NOTE: Missing RE-CONFIG (needed for Stream Re-Configuration).
+		// NOTE: Missing I-FORWARD-TSN (needed for Message Interleaving).
 		remoteSupportedExtensionsParameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::I_DATA);
 		remoteSupportedExtensionsParameter->Consolidate();
 
@@ -100,14 +81,19 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		remoteZeroChecksumAcceptableParameter->Consolidate();
 
 		const auto remoteCapabilities = RTC::SCTP::Capabilities::Factory(remoteChunk.get());
-		const auto negotiatedCapabilities =
-		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteCapabilities);
 
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 1000);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2000);
-		REQUIRE(negotiatedCapabilities.partialReliability == true);
-		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
-		REQUIRE(negotiatedCapabilities.reConfig == false);
-		REQUIRE(negotiatedCapabilities.zeroChecksum == false);
+		// Raw remote-announced values (no local option is applied).
+		REQUIRE(remoteCapabilities.maxOutboundStreams == 4000);
+		REQUIRE(remoteCapabilities.maxInboundStreams == 3000);
+		// Announced via Forward-TSN-Supported parameter.
+		REQUIRE(remoteCapabilities.partialReliability == true);
+		// Not announced (missing I-FORWARD-TSN).
+		REQUIRE(remoteCapabilities.messageInterleaving == false);
+		// Not announced (missing RE-CONFIG).
+		REQUIRE(remoteCapabilities.reConfig == false);
+		// Unknown/invalid method is parsed as NONE.
+		REQUIRE(
+		  remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
 	}
 }

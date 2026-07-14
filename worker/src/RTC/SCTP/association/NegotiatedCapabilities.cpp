@@ -3,8 +3,6 @@
 
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "Logger.hpp"
-#include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
-#include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 
 namespace RTC
@@ -14,55 +12,39 @@ namespace RTC
 		/* Class methods. */
 
 		NegotiatedCapabilities NegotiatedCapabilities::Factory(
-		  const SctpOptions& sctpOptions, const AnyInitChunk* remoteChunk)
+		  const SctpOptions& sctpOptions, const Capabilities& remoteCapabilities)
 		{
 			MS_TRACE();
 
 			NegotiatedCapabilities negotiatedCapabilities{};
 
-			const auto* remoteSupportedExtensionsParameter =
-			  remoteChunk->template GetFirstParameterOfType<SupportedExtensionsParameter>();
-			const auto* remoteForwardTsnSupportedParameter =
-			  remoteChunk->template GetFirstParameterOfType<ForwardTsnSupportedParameter>();
-			const auto* remoteZeroChecksumAcceptableParameter =
-			  remoteChunk->template GetFirstParameterOfType<ZeroChecksumAcceptableParameter>();
+			negotiatedCapabilities.maxOutboundStreams =
+			  std::min(sctpOptions.announcedMaxOutboundStreams, remoteCapabilities.maxInboundStreams);
 
-			negotiatedCapabilities.negotiatedMaxOutboundStreams =
-			  std::min(sctpOptions.announcedMaxOutboundStreams, remoteChunk->GetNumberOfInboundStreams());
+			negotiatedCapabilities.maxInboundStreams =
+			  std::min(sctpOptions.announcedMaxInboundStreams, remoteCapabilities.maxOutboundStreams);
 
-			negotiatedCapabilities.negotiatedMaxInboundStreams =
-			  std::min(sctpOptions.announcedMaxInboundStreams, remoteChunk->GetNumberOfOutboundStreams());
-
-			// Partial Reliability Extension is negotiated if we desire it and
-			// peer announces support via Forward-TSN-Supported Parameter or via
-			// Supported extensions parameter.
+			// Partial Reliability Extension is negotiated if we desire it and the
+			// remote announces support for it.
 			negotiatedCapabilities.partialReliability =
-			  sctpOptions.enablePartialReliability &&
-			  (remoteForwardTsnSupportedParameter ||
-			   (remoteSupportedExtensionsParameter &&
-			    remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::FORWARD_TSN)));
+			  sctpOptions.enablePartialReliability && remoteCapabilities.partialReliability;
 
-			// Message Interleaving is negotiated if we desire it and peer
-			// announces support via Supported Extensions parameter.
+			// Message Interleaving is negotiated if we desire it and the remote
+			// announces support for it.
 			negotiatedCapabilities.messageInterleaving =
-			  sctpOptions.enableMessageInterleaving && remoteSupportedExtensionsParameter &&
-			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_DATA) &&
-			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_FORWARD_TSN);
+			  sctpOptions.enableMessageInterleaving && remoteCapabilities.messageInterleaving;
 
-			// Stream Re-Configuration is negotiated if peer announces support via
-			// Supported extensions parameter.
-			negotiatedCapabilities.reConfig =
-			  remoteSupportedExtensionsParameter &&
-			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::RE_CONFIG);
+			// Stream Re-Configuration is negotiated if the remote announces support
+			// for it.
+			negotiatedCapabilities.reConfig = remoteCapabilities.reConfig;
 
-			// Alternate Error Detection Method for Zero Checksum is negotiated
-			// if we desire it and peer announces the same non-none alternate
-			// error detection method.
+			// Alternate Error Detection Method for Zero Checksum is negotiated if we
+			// desire it and the remote announces the same non-none alternate error
+			// detection method.
 			negotiatedCapabilities.zeroChecksum =
 			  sctpOptions.zeroChecksumAlternateErrorDetectionMethod !=
 			    ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE &&
-			  remoteZeroChecksumAcceptableParameter &&
-			  remoteZeroChecksumAcceptableParameter->GetAlternateErrorDetectionMethod() ==
+			  remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
 			    sctpOptions.zeroChecksumAlternateErrorDetectionMethod;
 
 			return negotiatedCapabilities;
@@ -75,10 +57,8 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::NegotiatedCapabilities>");
-			MS_DUMP_CLEAN(
-			  indentation, "  negotiated max outbound streams: %" PRIu16, this->negotiatedMaxOutboundStreams);
-			MS_DUMP_CLEAN(
-			  indentation, "  negotiated max inbound streams: %" PRIu16, this->negotiatedMaxInboundStreams);
+			MS_DUMP_CLEAN(indentation, "  max outbound streams: %" PRIu16, this->maxOutboundStreams);
+			MS_DUMP_CLEAN(indentation, "  max inbound streams: %" PRIu16, this->maxInboundStreams);
 			MS_DUMP_CLEAN(indentation, "  partial reliability: %s", this->partialReliability ? "yes" : "no");
 			MS_DUMP_CLEAN(
 			  indentation, "  message interleaving: %s", this->messageInterleaving ? "yes" : "no");

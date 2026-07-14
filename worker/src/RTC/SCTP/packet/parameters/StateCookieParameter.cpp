@@ -122,7 +122,7 @@ namespace RTC
 		  uint32_t remoteInitialTsn,
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
-		  const NegotiatedCapabilities& negotiatedCapabilities,
+		  const Capabilities& remoteCapabilities,
 		  uint64_t creationTimestampMs,
 		  const uint8_t* macKey,
 		  size_t macKeyLength)
@@ -147,7 +147,7 @@ namespace RTC
 			  remoteInitialTsn,
 			  remoteAdvertisedReceiverWindowCredit,
 			  tieTag,
-			  negotiatedCapabilities,
+			  remoteCapabilities,
 			  creationTimestampMs,
 			  macKey,
 			  macKeyLength);

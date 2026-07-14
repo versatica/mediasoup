@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_NEGOTIATED_CAPABILITIES_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/packet/chunks/AnyInitChunk.hpp"
+#include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 
 namespace RTC
@@ -17,24 +17,22 @@ namespace RTC
 		struct NegotiatedCapabilities
 		{
 			/**
-			 * Create a NegotiatedCapabilities struct. Intended to be used during
-			 * the SCTP association handshake flow.
-			 *
-			 * @remarks
-			 * - Given `remoteChunk` must be an INIT or an INIT-ACK chunk.
+			 * Create a NegotiatedCapabilities struct by negotiating the capabilities
+			 * announced by the remote endpoint against our local options. Intended
+			 * to be used during the SCTP association handshake flow.
 			 */
 			static NegotiatedCapabilities Factory(
-			  const SctpOptions& sctpOptions, const AnyInitChunk* remoteChunk);
+			  const SctpOptions& sctpOptions, const Capabilities& remoteCapabilities);
 
 			/**
 			 * Negotiated maximum number of outbound streams (OS).
 			 */
-			uint16_t negotiatedMaxOutboundStreams{ 0 };
+			uint16_t maxOutboundStreams{ 0 };
 
 			/**
 			 * Negotiated maximum number of inbound streams (MIS).
 			 */
-			uint16_t negotiatedMaxInboundStreams{ 0 };
+			uint16_t maxInboundStreams{ 0 };
 
 			/**
 			 * Partial Reliability Extension.
