@@ -17,8 +17,43 @@ namespace RTC
 		 *
 		 * @see RFC 3550.
 		 *
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |V=2|P|  Count  |      PT       |            Length             |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * \                                                               \
+		 * /                             Value                             /
+		 * \                                                               \
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 *
+		 * - Version (2 bits): RTP/RTCP version. Always 2.
+		 * - Padding (1 bit): If set, the packet contains padding bytes at the
+		 *   end that are not part of the value. The last padding byte indicates
+		 *   how many padding bytes must be ignored, including itself (it will be
+		 *   a multiple of four).
+		 * - Count (5 bits): Field whose meaning depends on the packet type
+		 *   (PT). RFC 3550 does not assign it a single name because it varies
+		 *   per packet: in Sender/Receiver Report it is the reception report
+		 *   block count (RC), in SDES and BYE it is the source count (SC), and
+		 *   in APP it acts as an application-defined subtype. It is treated
+		 *   generically as a 5-bit value specific to each packet type.
+		 * - Packet type (8 bits): Identifies the RTCP packet type. Common
+		 *   values: 200 (SR), 201 (RR), 202 (SDES), 203 (BYE), 204 (APP).
+		 * - Length (16 bits): Length of the RTCP packet in 32-bit words minus
+		 *   one, including the Common Header and any padding. Therefore the
+		 *   total size in bytes is (Length + 1) * 4.
+		 * - Value (variable length): Packet content, whose format depends on
+		 *   the packet type (PT).
+		 *
 		 * @remarks
 		 * - This class represents a single RTCP packet and not a compound packet.
+		 * - This struct is guaranteed to be aligned to 4 bytes.
+		 * - The padding mechanism is not implemented since it's only used when
+		 *   encrypting the compound packet by following the section 9.1 of RFC
+		 *   3550 which absolutely nobody does (SRTCP is used instead). So
+		 *   packets with Padding bit set to 1 are considered invalid and
+		 *   rejected.
 		 */
 		class Packet : public Serializable
 		{
@@ -70,48 +105,6 @@ namespace RTC
 				XR = 207,
 			};
 
-			/**
-			 * RTCP Packet (RTCP Common Header + Value).
-			 *
-			 * @see RFC 3550.
-			 *
-			 *  0                   1                   2                   3
-			 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |V=2|P|  Count  |      PT       |            Length             |
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * \                                                               \
-			 * /                             Value                             /
-			 * \                                                               \
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 *
-			 * - Version (2 bits): RTP/RTCP version. Always 2.
-			 * - Padding (1 bit): If set, the packet contains padding bytes at the
-			 *   end that are not part of the value. The last padding byte indicates
-			 *   how many padding bytes must be ignored, including itself (it will be
-			 *   a multiple of four).
-			 * - Count (5 bits): Field whose meaning depends on the packet type
-			 *   (PT). RFC 3550 does not assign it a single name because it varies
-			 *   per packet: in Sender/Receiver Report it is the reception report
-			 *   block count (RC), in SDES and BYE it is the source count (SC), and
-			 *   in APP it acts as an application-defined subtype. It is treated
-			 *   generically as a 5-bit value specific to each packet type.
-			 * - Packet type (8 bits): Identifies the RTCP packet type. Common
-			 *   values: 200 (SR), 201 (RR), 202 (SDES), 203 (BYE), 204 (APP).
-			 * - Length (16 bits): Length of the RTCP packet in 32-bit words minus
-			 *   one, including the Common Header and any padding. Therefore the
-			 *   total size in bytes is (Length + 1) * 4.
-			 * - Value (variable length): Packet content, whose format depends on
-			 *   the packet type (PT).
-			 *
-			 * @remarks
-			 * - This struct is guaranteed to be aligned to 4 bytes.
-			 * - The padding mechanism is not implemented since it's only used when
-			 *   encrypting the compound packet by following the section 9.1 of RFC
-			 *   3550 which absolutely nobody does (SRTCP is used instead). So
-			 *   packets with Padding bit set to 1 are considered invalid and
-			 *   rejected.
-			 */
 			struct CommonHeader
 			{
 #if defined(MS_LITTLE_ENDIAN)

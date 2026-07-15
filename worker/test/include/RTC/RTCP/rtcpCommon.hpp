@@ -7,8 +7,6 @@
 #include "Utils.hpp"
 #include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstdlib> // std::malloc(), std::free()
-#include <cstring> // std::memcpy()
 
 namespace rtcpCommon
 {
@@ -25,8 +23,37 @@ namespace rtcpCommon
 } // namespace rtcpCommon
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
+#define CHECK_RTCP_COMPOUND_PACKET(                                                                \
+  /*const RTC::RTCP::CompoundPacket**/ compoundPacket,                                             \
+  /*const uint8_t**/ buffer,                                                                       \
+  /*size_t*/ bufferLength,                                                                         \
+  /*size_t*/ length,                                                                               \
+  /*size_t*/ packetsCount)                                                                         \
+	do                                                                                               \
+	{                                                                                                \
+		REQUIRE(RTC::NEW_RTCP::Packet::IsRtcp(buffer, length) == true);                                \
+		REQUIRE(compoundPacket);                                                                       \
+		REQUIRE(compoundPacket->GetBuffer() != nullptr);                                               \
+		REQUIRE(compoundPacket->GetBuffer() == buffer);                                                \
+		REQUIRE(compoundPacket->GetBufferLength() != 0);                                               \
+		REQUIRE(compoundPacket->GetBufferLength() == bufferLength);                                    \
+		REQUIRE(compoundPacket->GetLength() != 0);                                                     \
+		REQUIRE(compoundPacket->GetLength() == length);                                                \
+		REQUIRE(                                                                                       \
+		  compoundPacket->GetAvailableLength() ==                                                      \
+		  compoundPacket->GetBufferLength() - compoundPacket->GetLength());                            \
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(compoundPacket->GetLength()) == true);                   \
+		REQUIRE(compoundPacket->GetPacketsCount() == packetsCount);                                    \
+		REQUIRE_THROWS_AS(                                                                             \
+		  const_cast<RTC::NEW_RTCP::CompoundPacket*>(compoundPacket)                                   \
+		    ->Serialize(rtcpCommon::ThrowBuffer, length - 1),                                          \
+		  MediaSoupError);                                                                             \
+		REQUIRE_THROWS_AS(compoundPacket->Clone(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError); \
+	} while (false)
+
+// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_RTCP_PACKET(                                                                         \
-  /*const RTC::RTCP::Packet**/ packet,                                                             \
+  /*RTC::RTCP::Packet**/ packet,                                                                   \
   /*const uint8_t**/ buffer,                                                                       \
   /*size_t*/ bufferLength,                                                                         \
   /*size_t*/ length,                                                                               \
@@ -34,12 +61,16 @@ namespace rtcpCommon
   /*bool*/ unknownType)                                                                            \
 	do                                                                                               \
 	{                                                                                                \
-		uint8_t* originalBuffer = static_cast<uint8_t*>(std::malloc(bufferLength));                    \
-		std::memcpy(originalBuffer, buffer, bufferLength);                                             \
-		REQUIRE(RTC::NEW_RTCP::Packet::IsRtcp(buffer, length) == true);                                \
+		if (buffer)                                                                                    \
+		{                                                                                              \
+			REQUIRE(RTC::NEW_RTCP::Packet::IsRtcp(buffer, length) == true);                              \
+		}                                                                                              \
 		REQUIRE(packet);                                                                               \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                       \
-		REQUIRE(packet->GetBuffer() == buffer);                                                        \
+		if (buffer)                                                                                    \
+		{                                                                                              \
+			REQUIRE(packet->GetBuffer() == buffer);                                                      \
+		}                                                                                              \
 		REQUIRE(packet->GetBufferLength() != 0);                                                       \
 		REQUIRE(packet->GetBufferLength() == bufferLength);                                            \
 		REQUIRE(packet->GetLength() != 0);                                                             \
@@ -52,7 +83,6 @@ namespace rtcpCommon
 		REQUIRE(packet->HasPadding() == false);                                                        \
 		REQUIRE_THROWS_AS(packet->Serialize(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);     \
 		REQUIRE_THROWS_AS(packet->Clone(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);         \
-		std::free(originalBuffer);                                                                     \
 	} while (false)
 
 #endif

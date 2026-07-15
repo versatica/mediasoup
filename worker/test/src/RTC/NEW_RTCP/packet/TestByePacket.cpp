@@ -6,7 +6,7 @@
 #include <cstring> // std::memset()
 #include <vector>
 
-SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
+SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 {
 	rtcpCommon::ResetBuffers();
 
