@@ -188,7 +188,7 @@ RTC::WebRtcServer* Worker::AssertAndGetWebRtcServerById(
 {
 	MS_TRACE();
 
-	auto it = this->mapWebRtcServers.find(webRtcServerId);
+	const auto it = this->mapWebRtcServers.find(webRtcServerId);
 
 	if (it == this->mapWebRtcServers.end())
 	{
@@ -202,7 +202,7 @@ RTC::Router* Worker::AssertAndGetRouterById(const std::string& routerId, const s
 {
 	MS_TRACE();
 
-	auto it = this->mapRouters.find(routerId);
+	const auto it = this->mapRouters.find(routerId);
 
 	if (it == this->mapRouters.end())
 	{

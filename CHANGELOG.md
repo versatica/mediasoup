@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Fix crash when an SCTP `DataConsumer` is closed and triggers buffered amount low event ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 3.21.1
 
 - Worker: Enable SVC for VP8 and H264 ([PR #1851](https://github.com/versatica/mediasoup/pull/1851)).

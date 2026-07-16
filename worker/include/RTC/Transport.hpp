@@ -210,7 +210,7 @@ namespace RTC
 		  const std::string& dataProducerId, const std::string& method) const final;
 		virtual RTC::DataConsumer* AssertAndGetDataConsumerById(
 		  const std::string& dataConsumerId, const std::string& method) const final;
-		virtual RTC::DataConsumer* AssertAndGetSctpDataConsumerByStreamId(uint16_t streamId) const final;
+		virtual RTC::DataConsumer* GetSctpDataConsumerByStreamId(uint16_t streamId) const final;
 		virtual void CheckNoProducer(const std::string& producerId, const std::string& method) const final;
 		virtual void CheckNoConsumer(const std::string& consumerId, const std::string& method) const final;
 		virtual void CheckNoDataProducer(

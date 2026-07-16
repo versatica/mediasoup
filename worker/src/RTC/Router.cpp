@@ -446,7 +446,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapTransports.find(transportId);
+		const auto it = this->mapTransports.find(transportId);
 
 		if (this->mapTransports.find(transportId) == this->mapTransports.end())
 		{
@@ -461,7 +461,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapRtpObservers.find(rtpObserverId);
+		const auto it = this->mapRtpObservers.find(rtpObserverId);
 
 		if (this->mapRtpObservers.find(rtpObserverId) == this->mapRtpObservers.end())
 		{
@@ -566,7 +566,7 @@ namespace RTC
 			consumer->ProducerPaused();
 		}
 
-		auto it = this->mapProducerRtpObservers.find(producer);
+		const auto it = this->mapProducerRtpObservers.find(producer);
 
 		if (it != this->mapProducerRtpObservers.end())
 		{
@@ -590,7 +590,7 @@ namespace RTC
 			consumer->ProducerResumed();
 		}
 
-		auto it = this->mapProducerRtpObservers.find(producer);
+		const auto it = this->mapProducerRtpObservers.find(producer);
 
 		if (it != this->mapProducerRtpObservers.end())
 		{
@@ -688,7 +688,7 @@ namespace RTC
 			}
 		}
 
-		auto it = this->mapProducerRtpObservers.find(producer);
+		const auto it = this->mapProducerRtpObservers.find(producer);
 
 		if (it != this->mapProducerRtpObservers.end())
 		{
@@ -1076,7 +1076,7 @@ namespace RTC
 	RTC::Producer* Router::RtpObserverGetProducer(
 	  RTC::RtpObserver* /* rtpObserver */, const std::string& id)
 	{
-		auto it = this->mapProducers.find(id);
+		const auto it = this->mapProducers.find(id);
 
 		if (it == this->mapProducers.end())
 		{
