@@ -1401,6 +1401,10 @@ namespace RTC
 
 				if (this->sctpAssociation)
 				{
+					// NOTE: This must be called after removing data consumers from the maps,
+					// otherwise if `OnAssociationStreamBufferedAmountLow()` was triggered it
+					// would end up emitting an event associated to an already closed data
+					// consumer.
 					this->sctpAssociation->ResetStreams(
 					  std::array<uint16_t, 1>{ dataConsumer->GetSctpStreamParameters().streamId });
 				}
@@ -1764,7 +1768,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapProducers.find(producerId);
+		const auto it = this->mapProducers.find(producerId);
 
 		if (it == this->mapProducers.end())
 		{
@@ -1779,7 +1783,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapConsumers.find(consumerId);
+		const auto it = this->mapConsumers.find(consumerId);
 
 		if (it == this->mapConsumers.end())
 		{
@@ -1793,7 +1797,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto mapSsrcConsumerIt = this->mapSsrcConsumer.find(ssrc);
+		const auto mapSsrcConsumerIt = this->mapSsrcConsumer.find(ssrc);
 
 		if (mapSsrcConsumerIt == this->mapSsrcConsumer.end())
 		{
@@ -1809,7 +1813,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto mapRtxSsrcConsumerIt = this->mapRtxSsrcConsumer.find(ssrc);
+		const auto mapRtxSsrcConsumerIt = this->mapRtxSsrcConsumer.find(ssrc);
 
 		if (mapRtxSsrcConsumerIt == this->mapRtxSsrcConsumer.end())
 		{
@@ -1826,7 +1830,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapDataProducers.find(dataProducerId);
+		const auto it = this->mapDataProducers.find(dataProducerId);
 
 		if (it == this->mapDataProducers.end())
 		{
@@ -1841,7 +1845,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapDataConsumers.find(dataConsumerId);
+		const auto it = this->mapDataConsumers.find(dataConsumerId);
 
 		if (it == this->mapDataConsumers.end())
 		{
@@ -1851,15 +1855,15 @@ namespace RTC
 		return it->second;
 	}
 
-	RTC::DataConsumer* Transport::AssertAndGetSctpDataConsumerByStreamId(uint16_t streamId) const
+	RTC::DataConsumer* Transport::GetSctpDataConsumerByStreamId(uint16_t streamId) const
 	{
 		MS_TRACE();
 
-		auto it = this->mapSctpStreamIdDataConsumers.find(streamId);
+		const auto it = this->mapSctpStreamIdDataConsumers.find(streamId);
 
 		if (it == this->mapSctpStreamIdDataConsumers.end())
 		{
-			MS_THROW_NOT_FOUND_ERROR("SCTP DataConsumer with streamId %" PRIu16 " not found", streamId);
+			return nullptr;
 		}
 
 		return it->second;
@@ -2938,6 +2942,10 @@ namespace RTC
 			this->mapSctpStreamIdDataConsumers.erase(dataConsumer->GetSctpStreamParameters().streamId);
 		}
 
+		// NOTE: This must be called after removing the data consumer from the maps,
+		// otherwise if `OnAssociationStreamBufferedAmountLow()` was triggered it
+		// would end up emitting an event associated to an already closed data
+		// consumer.
 		if (this->sctpAssociation)
 		{
 			this->sctpAssociation->ResetStreams(
@@ -3247,8 +3255,6 @@ namespace RTC
 
 			if (!dataConsumersToClose.empty())
 			{
-				this->sctpAssociation->ResetStreams(streamsToReset);
-
 				for (auto* dataConsumer : dataConsumersToClose)
 				{
 					// Remove it from the maps.
@@ -3271,6 +3277,12 @@ namespace RTC
 					// Delete it.
 					delete dataConsumer;
 				}
+
+				// NOTE: This must be called after removing data consumers from the maps,
+				// otherwise if `OnAssociationStreamBufferedAmountLow()` was triggered it
+				// would end up emitting an event associated to an already closed data
+				// consumer.
+				this->sctpAssociation->ResetStreams(streamsToReset);
 			}
 		}
 	}
@@ -3279,7 +3291,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto* dataConsumer = AssertAndGetSctpDataConsumerByStreamId(streamId);
+		const auto* dataConsumer = GetSctpDataConsumerByStreamId(streamId);
 
 		if (!dataConsumer)
 		{
