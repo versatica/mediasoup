@@ -1126,7 +1126,12 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				// Pipe events from the pipe Producer to the pipe Consumer.
 				pipeProducer.observer.on('close', () => pipeConsumer!.close());
 
-				return { pipeConsumer, pipeProducer };
+				return {
+					pipeConsumer,
+					pipeProducer,
+					localPipeTransport: localPipeTransport!,
+					remotePipeTransport: remotePipeTransport!,
+				};
 			} catch (error) {
 				logger.error(
 					'pipeToRouter() | error creating pipe Consumer/Producer pair:',
@@ -1172,7 +1177,12 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				// Pipe events from the pipe DataProducer to the pipe DataConsumer.
 				pipeDataProducer.observer.on('close', () => pipeDataConsumer!.close());
 
-				return { pipeDataConsumer, pipeDataProducer };
+				return {
+					pipeDataConsumer,
+					pipeDataProducer,
+					localPipeTransport: localPipeTransport!,
+					remotePipeTransport: remotePipeTransport!,
+				};
 			} catch (error) {
 				logger.error(
 					'pipeToRouter() | error creating pipe DataConsumer/DataProducer pair:',
