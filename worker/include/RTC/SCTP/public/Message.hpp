@@ -69,6 +69,22 @@ namespace RTC
 			}
 
 			/**
+			 * Replace the whole payload of the message.
+			 */
+			void SetPayload(std::vector<uint8_t> payload)
+			{
+				this->payload = std::move(payload);
+			}
+
+			/**
+			 * Remove the first `len` bytes from the beginning of the payload.
+			 */
+			void RemovePayloadFront(size_t len)
+			{
+				this->payload.erase(this->payload.begin(), this->payload.begin() + len);
+			}
+
+			/**
 			 * Useful to extract the payload and its ownership when destructing the
 			 * message.
 			 *

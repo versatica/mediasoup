@@ -4,6 +4,7 @@
 #include "RTC/DataConsumer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SubchannelsCodec.hpp"
 
 namespace RTC
 {
@@ -528,38 +529,13 @@ namespace RTC
 			return false;
 		}
 
-		// If a required subchannel is given, verify that this data consumer is
-		// subscribed to it.
-		if (
-		  requiredSubchannel.has_value() &&
-		  this->subchannels.find(requiredSubchannel.value()) == this->subchannels.end())
+		if (!this->pipe)
 		{
-			if (cb)
-			{
-				(*cb)(false, false);
-				delete cb;
-			}
-
-			return false;
-		}
-
-		// If subchannels are given, verify that this data consumer is subscribed
-		// to at least one of them.
-		if (!subchannels.empty())
-		{
-			bool subchannelMatched{ false };
-
-			for (const auto subchannel : subchannels)
-			{
-				if (this->subchannels.find(subchannel) != this->subchannels.end())
-				{
-					subchannelMatched = true;
-
-					break;
-				}
-			}
-
-			if (!subchannelMatched)
+			// If a required subchannel is given, verify that this data consumer is
+			// subscribed to it.
+			if (
+			  requiredSubchannel.has_value() &&
+			  this->subchannels.find(requiredSubchannel.value()) == this->subchannels.end())
 			{
 				if (cb)
 				{
@@ -569,6 +545,42 @@ namespace RTC
 
 				return false;
 			}
+
+			// If subchannels are given, verify that this data consumer is subscribed
+			// to at least one of them.
+			if (!subchannels.empty())
+			{
+				bool subchannelMatched{ false };
+
+				for (const auto subchannel : subchannels)
+				{
+					if (this->subchannels.find(subchannel) != this->subchannels.end())
+					{
+						subchannelMatched = true;
+
+						break;
+					}
+				}
+
+				if (!subchannelMatched)
+				{
+					if (cb)
+					{
+						(*cb)(false, false);
+						delete cb;
+					}
+
+					return false;
+				}
+			}
+		}
+		// This is a piped DataConsumer, so instead of verifying subchannels locally,
+		// encode the subchannels and required subchannel at the beginning of the
+		// message payload so the receiving PipeTransport can decode them and apply
+		// them to its own DataConsumers.
+		else
+		{
+			RTC::SubchannelsCodec::EncodeSubchannels(message, subchannels, requiredSubchannel);
 		}
 
 		const size_t messageLen = message.GetPayloadLength();
@@ -577,7 +589,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  message,
-			  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
+			  "message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
 			  messageLen,
 			  this->maxMessageSize);
 

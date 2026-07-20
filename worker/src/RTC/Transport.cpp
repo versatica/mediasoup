@@ -18,6 +18,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SCTP/association/Association.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SubchannelsCodec.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
@@ -3193,10 +3194,17 @@ namespace RTC
 		// Pass the SCTP message to the corresponding DataProducer.
 		try
 		{
-			static thread_local std::vector<uint16_t> emptySubchannels;
+			std::vector<uint16_t> subchannels;
+			std::optional<uint16_t> requiredSubchannel;
 
-			dataProducer->ReceiveMessage(
-			  std::move(message), emptySubchannels, /*requiredSubchannel*/ std::nullopt);
+			// When this is a pipe transport, the subchannels and required subchannel
+			// may be encoded at the beginning of the message payload.
+			if (this->IsPipe())
+			{
+				RTC::SubchannelsCodec::DecodeSubchannels(message, subchannels, requiredSubchannel);
+			}
+
+			dataProducer->ReceiveMessage(std::move(message), subchannels, requiredSubchannel);
 		}
 		catch (std::exception& error)
 		{

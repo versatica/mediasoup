@@ -1051,7 +1051,7 @@ test('router.pipeToRouter() succeeds with data', async () => {
 	expect(pipeDataProducer.protocol).toBe('bar');
 }, 2000);
 
-test('transport.dataConsume() for a pipe DataProducer succeeds', async () => {
+test('transport.consumeData() for a pipe DataProducer succeeds', async () => {
 	const { pipeDataProducer } = await ctx.router1!.pipeToRouter({
 		dataProducerId: ctx.dataProducer!.id,
 		router: ctx.router2!,
