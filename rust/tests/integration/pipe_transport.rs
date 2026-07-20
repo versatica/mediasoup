@@ -1,7 +1,8 @@
 use futures_lite::future;
 use mediasoup::consumer::{ConsumerOptions, ConsumerScore, ConsumerType};
 use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
-use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
+use mediasoup::data_producer::{DataProducer, DataProducerOptions, DataProducerType};
+use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::pipe_transport::{PipeTransportOptions, PipeTransportRemoteParameters};
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
@@ -14,7 +15,7 @@ use mediasoup::webrtc_transport::{
 };
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
-use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol, WebRtcMessage};
 use mediasoup_types::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities,
     RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters, RtpEncodingParameters,
@@ -25,6 +26,7 @@ use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use mediasoup_types::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use parking_lot::Mutex;
 use portpicker::pick_unused_port;
+use std::borrow::Cow;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
@@ -1277,6 +1279,93 @@ fn data_consume_for_pipe_data_producer_succeeds() {
         }
         assert_eq!(data_consumer.label().as_str(), "foo");
         assert_eq!(data_consumer.protocol().as_str(), "bar");
+    });
+}
+
+#[test]
+fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, _transport1, _transport2) = init().await;
+
+        let direct_transport_1 = router1
+            .create_direct_transport(DirectTransportOptions::default())
+            .await
+            .expect("Failed to create direct transport in router1");
+
+        let data_producer = direct_transport_1
+            .produce_data({
+                let mut options = DataProducerOptions::new_direct();
+
+                options.label = "foo".to_string();
+                options.protocol = "bar".to_string();
+
+                options
+            })
+            .await
+            .expect("Failed to produce data");
+
+        let PipeDataProducerToRouterPair {
+            pipe_data_producer,
+            pipe_data_consumer: _,
+        } = router1
+            .pipe_data_producer_to_router(
+                data_producer.id(),
+                PipeToRouterOptions::new(router2.clone()),
+            )
+            .await
+            .expect("Failed to pipe data producer to router");
+
+        let pipe_data_producer = pipe_data_producer.into_inner();
+
+        let direct_transport_2 = router2
+            .create_direct_transport(DirectTransportOptions::default())
+            .await
+            .expect("Failed to create direct transport in router2");
+
+        let data_consumer = direct_transport_2
+            .consume_data(DataConsumerOptions::new_direct(
+                pipe_data_producer.id(),
+                Some(vec![123]),
+            ))
+            .await
+            .expect("Failed to create data consumer");
+
+        let (received_tx, received_rx) = async_oneshot::oneshot::<String>();
+        let _handler = data_consumer.on_message({
+            let received_tx = Mutex::new(Some(received_tx));
+
+            move |message| {
+                let text = match message {
+                    WebRtcMessage::String(binary) => String::from_utf8(binary.to_vec()).unwrap(),
+                    _ => {
+                        panic!("Unexpected non-string message");
+                    }
+                };
+
+                if let Some(mut received_tx) = received_tx.lock().take() {
+                    let _ = received_tx.send(text);
+                }
+            }
+        });
+
+        let direct_data_producer = match &data_producer {
+            DataProducer::Direct(direct_data_producer) => direct_data_producer,
+            _ => {
+                panic!("Expected direct data producer");
+            }
+        };
+
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello".as_bytes())),
+                Some(vec![123]),
+                None,
+            )
+            .expect("Failed to send message");
+
+        let received_message = received_rx.await.expect("Failed to receive message");
+
+        assert_eq!(received_message, "hello");
     });
 }
 
