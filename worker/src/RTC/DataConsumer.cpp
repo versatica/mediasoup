@@ -533,9 +533,7 @@ namespace RTC
 		{
 			// If a required subchannel is given, verify that this data consumer is
 			// subscribed to it.
-			if (
-			  requiredSubchannel.has_value() &&
-			  !this->subchannels.contains(requiredSubchannel.value()))
+			if (requiredSubchannel.has_value() && !this->subchannels.contains(requiredSubchannel.value()))
 			{
 				if (cb)
 				{
