@@ -1304,18 +1304,13 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
             .await
             .expect("Failed to produce data");
 
-        let PipeDataProducerToRouterPair {
-            pipe_data_producer,
-            pipe_data_consumer: _,
-        } = router1
+        router1
             .pipe_data_producer_to_router(
                 data_producer.id(),
                 PipeToRouterOptions::new(router2.clone()),
             )
             .await
             .expect("Failed to pipe data producer to router");
-
-        let pipe_data_producer = pipe_data_producer.into_inner();
 
         let direct_transport_2 = router2
             .create_direct_transport(DirectTransportOptions::default())
@@ -1324,8 +1319,8 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
 
         let data_consumer = direct_transport_2
             .consume_data(DataConsumerOptions::new_direct(
-                pipe_data_producer.id(),
-                Some(vec![123]),
+                data_producer.id(),
+                Some(vec![123, 666]),
             ))
             .await
             .expect("Failed to create data consumer");
@@ -1358,8 +1353,8 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
         direct_data_producer
             .send(
                 WebRtcMessage::String(Cow::Borrowed("hello".as_bytes())),
-                Some(vec![123]),
-                None,
+                Some(vec![123, 124]),
+                Some(666),
             )
             .expect("Failed to send message");
 
