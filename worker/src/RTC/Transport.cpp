@@ -3010,7 +3010,7 @@ namespace RTC
 
 // For debugging purposes.
 #if MS_LOG_DEV_LEVEL == 3
-		MS_DUMP("--- SCTP association connected:");
+		MS_DUMP("SCTP association connected:");
 		this->sctpAssociation->Dump();
 #endif
 	}
