@@ -554,7 +554,7 @@ namespace RTC
 
 				for (const auto subchannel : subchannels)
 				{
-					if (this->subchannels.find(subchannel) != this->subchannels.end())
+					if (this->subchannels.contains(subchannel))
 					{
 						subchannelMatched = true;
 
