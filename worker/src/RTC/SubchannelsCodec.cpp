@@ -9,75 +9,6 @@ namespace RTC
 {
 	/* Class methods. */
 
-	bool SubchannelsCodec::DecodeSubchannels(
-	  RTC::SCTP::Message& message,
-	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t>& requiredSubchannel)
-	{
-		MS_TRACE();
-
-		const auto payload = message.GetPayload();
-		const size_t len   = payload.size();
-
-		// Not even enough bytes to hold the Magic Token and `subchannelsCount` field,
-		// so nothing to decode.
-		if (len < 10)
-		{
-			return false;
-		}
-
-		const uint64_t magicToken = Utils::Byte::Get8Bytes(payload.data(), 0);
-
-		// The message does not start with the Magic Token, so nothing to decode.
-		if ((magicToken & ~SubchannelsCodec::RequiredSubchannelFlagMask) != SubchannelsCodec::MagicToken)
-		{
-			return false;
-		}
-
-		const bool requiredSubchannelFlag =
-		  (magicToken & SubchannelsCodec::RequiredSubchannelFlagMask) != 0;
-
-		const uint16_t subchannelsCount = Utils::Byte::Get2Bytes(payload.data(), 8);
-
-		// Offset right after the Magic Token and subchannelsCount fields.
-		size_t offset = 10;
-
-		// Bytes needed to hold all announced subchannels and, if present, the
-		// requiredSubchannel.
-		size_t neededLen = offset + (static_cast<size_t>(subchannelsCount) * 2);
-
-		if (requiredSubchannelFlag)
-		{
-			neededLen += 2;
-		}
-
-		if (len < neededLen)
-		{
-			MS_WARN_DEV("message too short to hold announced subchannels, ignoring");
-
-			return false;
-		}
-
-		subchannels.reserve(subchannelsCount);
-
-		for (uint16_t i = 0; i < subchannelsCount; ++i)
-		{
-			subchannels.push_back(Utils::Byte::Get2Bytes(payload.data(), offset));
-			offset += 2;
-		}
-
-		if (requiredSubchannelFlag)
-		{
-			requiredSubchannel = Utils::Byte::Get2Bytes(payload.data(), offset);
-			offset += 2;
-		}
-
-		// Remove the decoded header from the beginning of the message payload.
-		message.RemovePayloadFront(offset);
-
-		return true;
-	}
-
 	bool SubchannelsCodec::EncodeSubchannels(
 	  RTC::SCTP::Message& message,
 	  const std::vector<uint16_t>& subchannels,
@@ -147,6 +78,75 @@ namespace RTC
 		std::ranges::copy(payload, newPayload.begin() + offset);
 
 		message.SetPayload(std::move(newPayload));
+
+		return true;
+	}
+
+	bool SubchannelsCodec::DecodeSubchannels(
+	  RTC::SCTP::Message& message,
+	  std::vector<uint16_t>& subchannels,
+	  std::optional<uint16_t>& requiredSubchannel)
+	{
+		MS_TRACE();
+
+		const auto payload = message.GetPayload();
+		const size_t len   = payload.size();
+
+		// Not even enough bytes to hold the Magic Token and `subchannelsCount` field,
+		// so nothing to decode.
+		if (len < 10)
+		{
+			return false;
+		}
+
+		const uint64_t magicToken = Utils::Byte::Get8Bytes(payload.data(), 0);
+
+		// The message does not start with the Magic Token, so nothing to decode.
+		if ((magicToken & ~SubchannelsCodec::RequiredSubchannelFlagMask) != SubchannelsCodec::MagicToken)
+		{
+			return false;
+		}
+
+		const bool requiredSubchannelFlag =
+		  (magicToken & SubchannelsCodec::RequiredSubchannelFlagMask) != 0;
+
+		const uint16_t subchannelsCount = Utils::Byte::Get2Bytes(payload.data(), 8);
+
+		// Offset right after the Magic Token and subchannelsCount fields.
+		size_t offset = 10;
+
+		// Bytes needed to hold all announced subchannels and, if present, the
+		// requiredSubchannel.
+		size_t neededLen = offset + (static_cast<size_t>(subchannelsCount) * 2);
+
+		if (requiredSubchannelFlag)
+		{
+			neededLen += 2;
+		}
+
+		if (len < neededLen)
+		{
+			MS_WARN_DEV("message too short to hold announced subchannels, ignoring");
+
+			return false;
+		}
+
+		subchannels.reserve(subchannelsCount);
+
+		for (uint16_t i = 0; i < subchannelsCount; ++i)
+		{
+			subchannels.push_back(Utils::Byte::Get2Bytes(payload.data(), offset));
+			offset += 2;
+		}
+
+		if (requiredSubchannelFlag)
+		{
+			requiredSubchannel = Utils::Byte::Get2Bytes(payload.data(), offset);
+			offset += 2;
+		}
+
+		// Remove the decoded header from the beginning of the message payload.
+		message.RemovePayloadFront(offset);
 
 		return true;
 	}

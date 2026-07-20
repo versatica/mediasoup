@@ -46,6 +46,17 @@ namespace RTC
 
 	public:
 		/**
+		 * If `subchannels` is not empty or `requiredSubchannel` has value, encodes
+		 * them at the beginning of the given message payload.
+		 *
+		 * @returns true if the message was encoded, false otherwise.
+		 */
+		static bool EncodeSubchannels(
+		  RTC::SCTP::Message& message,
+		  const std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel);
+
+		/**
 		 * If the given message payload starts with the Magic Token, extracts the
 		 * encoded subchannels and (optionally) the required subchannel, fills the
 		 * given arguments and removes the encoded header from the message payload.
@@ -56,17 +67,6 @@ namespace RTC
 		  RTC::SCTP::Message& message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t>& requiredSubchannel);
-
-		/**
-		 * If `subchannels` is not empty or `requiredSubchannel` has value, encodes
-		 * them at the beginning of the given message payload.
-		 *
-		 * @returns true if the message was encoded, false otherwise.
-		 */
-		static bool EncodeSubchannels(
-		  RTC::SCTP::Message& message,
-		  const std::vector<uint16_t>& subchannels,
-		  std::optional<uint16_t> requiredSubchannel);
 	};
 } // namespace RTC
 
