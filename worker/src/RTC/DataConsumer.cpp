@@ -535,7 +535,7 @@ namespace RTC
 			// subscribed to it.
 			if (
 			  requiredSubchannel.has_value() &&
-			  this->subchannels.find(requiredSubchannel.value()) == this->subchannels.end())
+			  !this->subchannels.contains(requiredSubchannel.value()))
 			{
 				if (cb)
 				{
