@@ -37,11 +37,14 @@ namespace RTC
 
 	public:
 		/**
-		 * 8-byte Magic Token that prefixes an encoded payload. Its least significant
-		 * bit is reserved as the `requiredSubchannelFlag`, so it is always 0 in the
-		 * token constant itself.
+		 * 8-byte Magic Token that prefixes an encoded payload. It is intentionally
+		 * made of non-printable high bytes and starts with a byte that is not a valid
+		 * UTF-8 leading byte (0x80-0xBF), so a real string message (valid UTF-8) can
+		 * never begin with it and the chance of colliding with a binary message is
+		 * negligible. Its least significant bit is reserved as the
+		 * `requiredSubchannelFlag`, so it is always 0 in the token constant itself.
 		 */
-		static constexpr uint64_t MagicToken{ 0x5375624368616E00 };
+		static constexpr uint64_t MagicToken{ 0xA5F09CB3D6E1F28C };
 		static constexpr uint64_t RequiredSubchannelFlagMask{ 0x1 };
 
 	public:
