@@ -1196,19 +1196,8 @@ namespace RTC
 
 				request->Accept(FBS::Response::Body::DataConsumer_DumpResponse, dumpOffset);
 
-				if (IsConnected())
-				{
-					dataConsumer->TransportConnected();
-				}
-
 				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 				{
-					if (this->sctpAssociation->GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED)
-					{
-						// Tell to the DataConsumer.
-						dataConsumer->SctpAssociationConnected();
-					}
-
 					// Tell to the SCTP association.
 					this->sctpAssociation->MayConnect();
 				}
@@ -1487,14 +1476,6 @@ namespace RTC
 			consumer->TransportConnected();
 		}
 
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			dataConsumer->TransportConnected();
-		}
-
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
 		{
@@ -1535,14 +1516,6 @@ namespace RTC
 			auto* consumer = kv.second;
 
 			consumer->TransportDisconnected();
-		}
-
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			dataConsumer->TransportDisconnected();
 		}
 
 		// Stop the RTCP timer.
@@ -3005,17 +2978,6 @@ namespace RTC
 	void Transport::OnAssociationConnected()
 	{
 		MS_TRACE();
-
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-			{
-				dataConsumer->SctpAssociationConnected();
-			}
-		}
 
 		// Notify the upper layer.
 

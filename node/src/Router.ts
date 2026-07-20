@@ -1129,8 +1129,6 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				return {
 					pipeConsumer,
 					pipeProducer,
-					localPipeTransport: localPipeTransport!,
-					remotePipeTransport: remotePipeTransport!,
 				};
 			} catch (error) {
 				logger.error(
@@ -1180,8 +1178,6 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				return {
 					pipeDataConsumer,
 					pipeDataProducer,
-					localPipeTransport: localPipeTransport!,
-					remotePipeTransport: remotePipeTransport!,
 				};
 			} catch (error) {
 				logger.error(

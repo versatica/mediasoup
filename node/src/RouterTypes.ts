@@ -155,16 +155,6 @@ export type PipeToRouterResult = {
 	 * The DataProducer created in the target Router.
 	 */
 	pipeDataProducer?: DataProducer;
-
-	/**
-	 * Local PipeTransport.
-	 */
-	localPipeTransport: PipeTransport;
-
-	/**
-	 * Remote PipeTransport.
-	 */
-	remotePipeTransport: PipeTransport;
 };
 
 export type PipeTransportPair = {

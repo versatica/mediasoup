@@ -401,24 +401,6 @@ namespace RTC
 		}
 	}
 
-	void DataConsumer::TransportConnected()
-	{
-		MS_TRACE();
-
-		this->transportConnected = true;
-
-		MS_DEBUG_DEV("Transport connected [dataConsumerId:%s]", this->id.c_str());
-	}
-
-	void DataConsumer::TransportDisconnected()
-	{
-		MS_TRACE();
-
-		this->transportConnected = false;
-
-		MS_DEBUG_DEV("Transport disconnected [dataConsumerId:%s]", this->id.c_str());
-	}
-
 	void DataConsumer::DataProducerPaused()
 	{
 		MS_TRACE();
@@ -453,22 +435,11 @@ namespace RTC
 		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_RESUME);
 	}
 
-	void DataConsumer::SctpAssociationConnected()
-	{
-		MS_TRACE();
-
-		this->sctpAssociationConnected = true;
-
-		MS_DEBUG_DEV("SctpAssociation connected [dataConsumerId:%s]", this->id.c_str());
-	}
-
 	void DataConsumer::SctpAssociationClosed()
 	{
 		MS_TRACE();
 
-		this->sctpAssociationConnected = false;
-
-		MS_DEBUG_DEV("SctpAssociation closed [dataConsumerId:%s]", this->id.c_str());
+		this->sctpAssociationClosed = true;
 	}
 
 	void DataConsumer::SctpBufferedAmountLow(uint32_t bufferedAmount) const

@@ -68,20 +68,17 @@ namespace RTC
 		}
 		bool IsActive() const
 		{
-			// It's active it DataConsumer and DataProducer are not paused and the transport
-			// is connected.
+			// It's active it DataConsumer and DataProducer are not paused and the SCTP
+			// association (if any) is not closed.
 			// clang-format off
 			return (
-				this->transportConnected &&
-				(this->type == DataConsumer::Type::DIRECT || this->sctpAssociationConnected) &&
+				(this->type == DataConsumer::Type::DIRECT || !this->sctpAssociationClosed) &&
 				!this->paused &&
 				!this->dataProducerPaused &&
 				!this->dataProducerClosed
 			);
 			// clang-format on
 		}
-		void TransportConnected();
-		void TransportDisconnected();
 		bool IsPaused() const
 		{
 			return this->paused;
@@ -92,7 +89,6 @@ namespace RTC
 		}
 		void DataProducerPaused();
 		void DataProducerResumed();
-		void SctpAssociationConnected();
 		void SctpAssociationClosed();
 		void SctpBufferedAmountLow(uint32_t bufferedAmount) const;
 		void SctpSendBufferFull() const;
@@ -124,8 +120,7 @@ namespace RTC
 		std::string label;
 		std::string protocol;
 		ankerl::unordered_dense::set<uint16_t> subchannels;
-		bool transportConnected{ false };
-		bool sctpAssociationConnected{ false };
+		bool sctpAssociationClosed{ false };
 		bool paused{ false };
 		bool dataProducerPaused{ false };
 		bool dataProducerClosed{ false };

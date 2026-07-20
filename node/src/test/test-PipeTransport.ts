@@ -1080,67 +1080,16 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 		protocol: 'bar',
 	});
 
-	const { localPipeTransport, remotePipeTransport } =
-		await ctx.router1!.pipeToRouter({
-			dataProducerId: directDataProducer.id,
-			router: ctx.router2!,
-		});
+	await ctx.router1!.pipeToRouter({
+		dataProducerId: directDataProducer.id,
+		router: ctx.router2!,
+	});
 
 	const directTransport2 = await ctx.router2!.createDirectTransport();
 	const directDataConsumer = await directTransport2.consumeData({
 		dataProducerId: directDataProducer.id,
 		subchannels: [123, 666],
 	});
-
-	let sctpConnectionTimer: NodeJS.Timeout | undefined;
-
-	// Wait for SCTP to become connected in the PipeTransports.
-	await Promise.race([
-		Promise.all([
-			new Promise<void>((resolve, reject) => {
-				if (localPipeTransport.sctpState === 'connected') {
-					resolve();
-				} else {
-					localPipeTransport.on('sctpstatechange', state => {
-						if (state === 'connected') {
-							resolve();
-						} else if (state === 'failed' || state === 'closed') {
-							reject(
-								new Error(
-									'SCTP connection in local PipeTransport failed or was closed'
-								)
-							);
-						}
-					});
-				}
-			}),
-			new Promise<void>((resolve, reject) => {
-				if (remotePipeTransport.sctpState === 'connected') {
-					resolve();
-				} else {
-					remotePipeTransport.on('sctpstatechange', state => {
-						if (state === 'connected') {
-							resolve();
-						} else if (state === 'failed' || state === 'closed') {
-							reject(
-								new Error(
-									'SCTP connection in remote PipeTransport failed or was closed'
-								)
-							);
-						}
-					});
-				}
-			}),
-		]),
-		new Promise<void>((resolve, reject) => {
-			sctpConnectionTimer = setTimeout(
-				() => reject(new Error('SCTP connection timeout')),
-				3000
-			);
-		}),
-	]);
-
-	clearTimeout(sctpConnectionTimer);
 
 	await new Promise<void>((resolve, reject) => {
 		directDataConsumer.on('message', (message, ppid) => {
