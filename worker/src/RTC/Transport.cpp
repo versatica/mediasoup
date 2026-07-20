@@ -1111,7 +1111,13 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  this->shared, dataConsumerId, dataProducerId, this, body, this->maxSendMessageSize);
+				  this->shared,
+				  dataConsumerId,
+				  dataProducerId,
+				  this,
+				  body,
+				  this->maxSendMessageSize,
+				  this->IsPipe());
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())

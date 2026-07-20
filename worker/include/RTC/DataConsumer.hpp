@@ -49,7 +49,8 @@ namespace RTC
 		  const std::string& dataProducerId,
 		  RTC::DataConsumer::Listener* listener,
 		  const FBS::Transport::ConsumeDataRequest* data,
-		  size_t maxMessageSize);
+		  size_t maxMessageSize,
+		  bool pipe);
 		~DataConsumer() override;
 
 	public:
@@ -116,6 +117,7 @@ namespace RTC
 		SharedInterface* shared{ nullptr };
 		RTC::DataConsumer::Listener* listener{ nullptr };
 		size_t maxMessageSize{ 0u };
+		bool pipe{ false };
 		// Others.
 		Type type;
 		RTC::SctpStreamParameters sctpStreamParameters;

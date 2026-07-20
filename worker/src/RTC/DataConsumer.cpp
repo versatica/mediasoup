@@ -15,12 +15,14 @@ namespace RTC
 	  const std::string& dataProducerId,
 	  RTC::DataConsumer::Listener* listener,
 	  const FBS::Transport::ConsumeDataRequest* data,
-	  size_t maxMessageSize)
+	  size_t maxMessageSize,
+	  bool pipe)
 	  : id(id),
 	    dataProducerId(dataProducerId),
 	    shared(shared),
 	    listener(listener),
-	    maxMessageSize(maxMessageSize)
+	    maxMessageSize(maxMessageSize),
+	    pipe(pipe)
 	{
 		MS_TRACE();
 

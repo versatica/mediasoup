@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- SCTP: Encode subchannels in SCTP messages ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 0.22.12
 
 - Worker: Fix crash when an SCTP `DataConsumer` is closed and triggers buffered amount low event ([PR #1858](https://github.com/versatica/mediasoup/pull/1858)).
