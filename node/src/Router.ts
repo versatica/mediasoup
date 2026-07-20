@@ -1077,7 +1077,10 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				pipeTransportPairPromise
 			);
 
-			router.addPipeTransportPair(this.id, pipeTransportPairPromise);
+			(router as RouterImpl).addPipeTransportPair(
+				this.id,
+				pipeTransportPairPromise
+			);
 
 			await pipeTransportPairPromise;
 		}
@@ -1186,40 +1189,6 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			// dataProducer exists, but TypeScript is not that smart.
 			throw new Error('internal error');
 		}
-	}
-
-	addPipeTransportPair(
-		pipeTransportPairKey: string,
-		pipeTransportPairPromise: Promise<PipeTransportPair>
-	): void {
-		if (this.#mapRouterPairPipeTransportPairPromise.has(pipeTransportPairKey)) {
-			throw new Error(
-				'given pipeTransportPairKey already exists in this Router'
-			);
-		}
-
-		this.#mapRouterPairPipeTransportPairPromise.set(
-			pipeTransportPairKey,
-			pipeTransportPairPromise
-		);
-
-		pipeTransportPairPromise
-			.then(pipeTransportPair => {
-				const localPipeTransport = pipeTransportPair[this.id]!;
-
-				// NOTE: No need to do any other cleanup here since that is done by the
-				// Router calling this method on us.
-				localPipeTransport.observer.on('close', () => {
-					this.#mapRouterPairPipeTransportPairPromise.delete(
-						pipeTransportPairKey
-					);
-				});
-			})
-			.catch(() => {
-				this.#mapRouterPairPipeTransportPairPromise.delete(
-					pipeTransportPairKey
-				);
-			});
 	}
 
 	async createActiveSpeakerObserver<
@@ -1395,6 +1364,40 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			ortc.generateRouterRtpCapabilities(clonedMediaCodecs);
 
 		this.#data.rtpCapabilities = rtpCapabilities;
+	}
+
+	private addPipeTransportPair(
+		pipeTransportPairKey: string,
+		pipeTransportPairPromise: Promise<PipeTransportPair>
+	): void {
+		if (this.#mapRouterPairPipeTransportPairPromise.has(pipeTransportPairKey)) {
+			throw new Error(
+				'given pipeTransportPairKey already exists in this Router'
+			);
+		}
+
+		this.#mapRouterPairPipeTransportPairPromise.set(
+			pipeTransportPairKey,
+			pipeTransportPairPromise
+		);
+
+		pipeTransportPairPromise
+			.then(pipeTransportPair => {
+				const localPipeTransport = pipeTransportPair[this.id]!;
+
+				// NOTE: No need to do any other cleanup here since that is done by the
+				// Router calling this method on us.
+				localPipeTransport.observer.on('close', () => {
+					this.#mapRouterPairPipeTransportPairPromise.delete(
+						pipeTransportPairKey
+					);
+				});
+			})
+			.catch(() => {
+				this.#mapRouterPairPipeTransportPairPromise.delete(
+					pipeTransportPairKey
+				);
+			});
 	}
 
 	private handleListenerError(): void {
