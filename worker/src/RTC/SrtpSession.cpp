@@ -167,7 +167,7 @@ namespace RTC
 
 		// Create the policy object.
 		srtp_policy_t policy{ nullptr };
-		srtp_err_status_t err = srtp_policy_create(&policy);
+		srtp_err_status_t err = srtp_policy_create(std::addressof(policy));
 
 		if (DepLibSRTP::IsError(err))
 		{
