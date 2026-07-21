@@ -23,6 +23,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The `release` and `release:rust` npm scripts push a version-bump commit whose
+  # message carries a `[no-ci]` marker, which skips the `ci` job below. A run
+  # whose jobs are all skipped concludes as "skipped", which GitHub renders as a
+  # red "failing" status badge. This tiny job runs ONLY on those commits so the
+  # run concludes as "success" -> the branch badge stays green. On any other
+  # event it is skipped and `ci` alone drives the result.
+  no-ci-badge-guard:
+    if: ${{ contains(github.event.head_commit.message, '[no-ci]') }}
+    runs-on: ubuntu-26.04
+    steps:
+      - run: 'true'
   ci:
     # Skip the release commit pushed by `npm run release` (its message carries a
     # `[no-ci]` marker): it only bumps version/CHANGELOG and the release is
