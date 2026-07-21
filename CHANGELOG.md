@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- SCTP: Encode subchannels in SCTP messages to enable subchannels mechanism when using pipe transport ([PR #1859](https://github.com/versatica/mediasoup/pull/1859)).
+
 ### 3.21.2
 
 - Worker: Fix crash when an SCTP `DataConsumer` is closed and triggers buffered amount low event ([PR #1858](https://github.com/versatica/mediasoup/pull/1858)).

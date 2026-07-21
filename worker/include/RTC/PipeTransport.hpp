@@ -41,6 +41,10 @@ namespace RTC
 
 	private:
 		bool IsConnected() const override;
+		bool IsPipe() const override
+		{
+			return true;
+		}
 		bool HasSrtp() const;
 		void SendRtpPacket(
 		  RTC::Consumer* consumer,
