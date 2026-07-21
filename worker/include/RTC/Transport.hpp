@@ -219,6 +219,10 @@ namespace RTC
 		  const std::string& dataConsumerId, const std::string& method) const final;
 		virtual void CheckNoSctpDataConsumer(uint16_t streamId, const std::string& method) const final;
 		virtual bool IsConnected() const = 0;
+		virtual bool IsPipe() const
+		{
+			return false;
+		}
 		virtual void SendRtpPacket(
 		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, const onSendCallback* cb = nullptr) = 0;
 		virtual void HandleRtcpPacket(RTC::RTCP::Packet* packet) final;
