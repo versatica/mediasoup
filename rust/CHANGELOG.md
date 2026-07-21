@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Update libsrtp to 3.0.0-beta-2fc078db ([PR #](https://github.com/versatica/mediasoup/pull/)).
+- Worker: Update libsrtp to 3.0.0-beta-2fc078db ([PR #1860](https://github.com/versatica/mediasoup/pull/1860)).
 
 ### 0.22.12
 
