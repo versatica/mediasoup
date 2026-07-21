@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Update libsrtp to 3.0.0-beta-2fc078db ([PR #](https://github.com/versatica/mediasoup/pull/)).
+
 ### 0.22.12
 
 - Worker: Fix crash when an SCTP `DataConsumer` is closed and triggers buffered amount low event ([PR #1858](https://github.com/versatica/mediasoup/pull/1858)).

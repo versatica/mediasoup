@@ -127,42 +127,34 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		srtp_policy_t policy; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-		// Set all policy fields to 0.
-		std::memset(&policy, 0, sizeof(srtp_policy_t));
+		srtp_profile_t profile;
 
 		switch (cryptoSuite)
 		{
 			case CryptoSuite::AEAD_AES_256_GCM:
 			{
-				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtp);
-				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtcp);
+				profile = srtp_profile_aead_aes_256_gcm;
 
 				break;
 			}
 
 			case CryptoSuite::AEAD_AES_128_GCM:
 			{
-				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtp);
-				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtcp);
+				profile = srtp_profile_aead_aes_128_gcm;
 
 				break;
 			}
 
 			case CryptoSuite::AES_CM_128_HMAC_SHA1_80:
 			{
-				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
-				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
+				profile = srtp_profile_aes128_cm_sha1_80;
 
 				break;
 			}
 
 			case CryptoSuite::AES_CM_128_HMAC_SHA1_32:
 			{
-				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
-				// NOTE: Must be 80 for RTCP.
-				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
+				profile = srtp_profile_aes128_cm_sha1_32;
 
 				break;
 			}
@@ -173,35 +165,101 @@ namespace RTC
 			}
 		}
 
-		MS_ASSERT(
-		  keyLen == policy.rtp.cipher_key_len, "given keyLen does not match policy.rtp.cipher_keyLen");
+		// Create the policy object.
+		srtp_policy_t policy{ nullptr };
+		srtp_err_status_t err = srtp_policy_create(&policy);
+
+		if (DepLibSRTP::IsError(err))
+		{
+			MS_THROW_ERROR("srtp_policy_create() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
+		}
+
+		// Set SSRC.
+		srtp_ssrc_t ssrc{};
 
 		switch (type)
 		{
 			case Type::INBOUND:
 			{
-				policy.ssrc.type = ssrc_any_inbound;
+				ssrc.type = ssrc_any_inbound;
 
 				break;
 			}
 
 			case Type::OUTBOUND:
 			{
-				policy.ssrc.type = ssrc_any_outbound;
+				ssrc.type = ssrc_any_outbound;
 
 				break;
 			}
 		}
 
-		policy.ssrc.value = 0;
-		policy.key        = key;
-		// Required for sending RTP retransmission without RTX.
-		policy.allow_repeat_tx = true;
-		policy.window_size     = 1024;
-		policy.next            = nullptr;
+		ssrc.value = 0;
 
-		// Set the SRTP session.
-		const srtp_err_status_t err = srtp_create(&this->session, &policy);
+		err = srtp_policy_set_ssrc(policy, ssrc);
+
+		if (DepLibSRTP::IsError(err))
+		{
+			srtp_policy_destroy(policy);
+			MS_THROW_ERROR("srtp_policy_set_ssrc() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
+		}
+
+		// Set the crypto profile.
+		err = srtp_policy_set_profile(policy, profile);
+
+		if (DepLibSRTP::IsError(err))
+		{
+			srtp_policy_destroy(policy);
+			MS_THROW_ERROR("srtp_policy_set_profile() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
+		}
+
+		// Split the concatenated key+salt buffer using the profile's lengths.
+		const size_t masterKeyLen  = srtp_profile_get_master_key_length(profile);
+		const size_t masterSaltLen = srtp_profile_get_master_salt_length(profile);
+
+		MS_ASSERT(
+		  keyLen == masterKeyLen + masterSaltLen,
+		  "given keyLen does not match profile master key + salt length");
+
+		err = srtp_policy_add_key(
+		  policy,
+		  /*key*/ key,
+		  /*key_len*/ masterKeyLen,
+		  /*salt*/ key + masterKeyLen,
+		  /*salt_len*/ masterSaltLen,
+		  /*mki*/ nullptr,
+		  /*mki_len*/ 0);
+
+		if (DepLibSRTP::IsError(err))
+		{
+			srtp_policy_destroy(policy);
+			MS_THROW_ERROR("srtp_policy_add_key() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
+		}
+
+		// Required for sending RTP retransmission without RTX.
+		err = srtp_policy_set_allow_repeat_tx(policy, true);
+
+		if (DepLibSRTP::IsError(err))
+		{
+			srtp_policy_destroy(policy);
+			MS_THROW_ERROR(
+			  "srtp_policy_set_allow_repeat_tx() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
+		}
+
+		err = srtp_policy_set_window_size(policy, 1024);
+
+		if (DepLibSRTP::IsError(err))
+		{
+			srtp_policy_destroy(policy);
+			MS_THROW_ERROR(
+			  "srtp_policy_set_window_size() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
+		}
+
+		// Create the SRTP session.
+		err = srtp_create(&this->session, policy);
+
+		// Policy is no longer needed once the session is created.
+		srtp_policy_destroy(policy);
 
 		if (DepLibSRTP::IsError(err))
 		{
