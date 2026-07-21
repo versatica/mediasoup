@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Bump up Meson from 1.9.1 to 1.11.2 ([PR #1861](https://github.com/versatica/mediasoup/pull/1861)).
+
 ### 0.23.0
 
 - SCTP: Encode subchannels in SCTP messages to enable subchannels mechanism when using pipe transport ([PR #1859](https://github.com/versatica/mediasoup/pull/1859)).
