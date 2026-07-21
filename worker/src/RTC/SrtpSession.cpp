@@ -255,7 +255,7 @@ namespace RTC
 		}
 
 		// Create the SRTP session.
-		err = srtp_create(&this->session, policy);
+		err = srtp_create(std::addressof(this->session), policy);
 
 		// Policy is no longer needed once the session is created.
 		srtp_policy_destroy(policy);
