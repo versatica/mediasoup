@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - run: 'true'
+
   analyze:
     name: Analyze
     # Skip the release commit pushed by `npm run release` (its message carries a

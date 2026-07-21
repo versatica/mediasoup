@@ -34,6 +34,7 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - run: 'true'
+
   ci:
     # Skip the release commit pushed by `npm run release` (its message carries a
     # `[no-ci]` marker): it only bumps version/CHANGELOG and the release is
