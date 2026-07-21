@@ -5,7 +5,6 @@
 #include "DepLibSRTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring> // std::memset()
 
 namespace RTC
 {
