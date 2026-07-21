@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.22.0
+
 - SCTP: Encode subchannels in SCTP messages to enable subchannels mechanism when using pipe transport ([PR #1859](https://github.com/versatica/mediasoup/pull/1859)).
 
 ### 3.21.2
