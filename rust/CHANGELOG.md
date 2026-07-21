@@ -3,6 +3,9 @@
 ### NEXT
 
 - Worker: Update libsrtp to 3.0.0-beta-2fc078db ([PR #1860](https://github.com/versatica/mediasoup/pull/1860)).
+
+### 0.23.0
+
 - SCTP: Encode subchannels in SCTP messages to enable subchannels mechanism when using pipe transport ([PR #1859](https://github.com/versatica/mediasoup/pull/1859)).
 
 ### 0.22.12
