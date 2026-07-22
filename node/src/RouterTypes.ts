@@ -294,14 +294,6 @@ export interface Router<
 	pipeToRouter(options: PipeToRouterOptions): Promise<PipeToRouterResult>;
 
 	/**
-	 * @private
-	 */
-	addPipeTransportPair(
-		pipeTransportPairKey: string,
-		pipeTransportPairPromise: Promise<PipeTransportPair>
-	): void;
-
-	/**
 	 * Create an ActiveSpeakerObserver
 	 */
 	createActiveSpeakerObserver<

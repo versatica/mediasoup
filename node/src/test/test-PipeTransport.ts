@@ -1051,7 +1051,7 @@ test('router.pipeToRouter() succeeds with data', async () => {
 	expect(pipeDataProducer.protocol).toBe('bar');
 }, 2000);
 
-test('transport.dataConsume() for a pipe DataProducer succeeds', async () => {
+test('transport.consumeData() for a pipe DataProducer succeeds', async () => {
 	const { pipeDataProducer } = await ctx.router1!.pipeToRouter({
 		dataProducerId: ctx.dataProducer!.id,
 		router: ctx.router2!,
@@ -1071,6 +1071,45 @@ test('transport.dataConsume() for a pipe DataProducer succeeds', async () => {
 	expect(dataConsumer.sctpStreamParameters?.maxRetransmits).toBeUndefined();
 	expect(dataConsumer.label).toBe('foo');
 	expect(dataConsumer.protocol).toBe('bar');
+}, 2000);
+
+test('transport.consumeData() for a pipe DataProducer succeeds with subchannels', async () => {
+	const directTransport1 = await ctx.router1!.createDirectTransport();
+	const directDataProducer = await directTransport1.produceData({
+		label: 'foo',
+		protocol: 'bar',
+	});
+
+	await ctx.router1!.pipeToRouter({
+		dataProducerId: directDataProducer.id,
+		router: ctx.router2!,
+	});
+
+	const directTransport2 = await ctx.router2!.createDirectTransport();
+	const directDataConsumer = await directTransport2.consumeData({
+		dataProducerId: directDataProducer.id,
+		subchannels: [123, 666],
+	});
+
+	await new Promise<void>((resolve, reject) => {
+		directDataConsumer.on('message', (message, ppid) => {
+			try {
+				expect(message.toString('utf8')).toBe('hello');
+				expect(ppid).toBe(51);
+
+				resolve();
+			} catch (error) {
+				reject(error as Error);
+			}
+		});
+
+		directDataProducer.send(
+			'hello',
+			/* ppid */ undefined,
+			/* subchannels */ [123, 124],
+			/* requiredSubchannel */ 666
+		);
+	});
 }, 2000);
 
 test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {

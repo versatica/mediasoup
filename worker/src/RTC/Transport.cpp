@@ -18,6 +18,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SCTP/association/Association.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SubchannelsCodec.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
@@ -1111,7 +1112,13 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  this->shared, dataConsumerId, dataProducerId, this, body, this->maxSendMessageSize);
+				  this->shared,
+				  dataConsumerId,
+				  dataProducerId,
+				  this,
+				  body,
+				  this->maxSendMessageSize,
+				  this->IsPipe());
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())
@@ -1189,19 +1196,8 @@ namespace RTC
 
 				request->Accept(FBS::Response::Body::DataConsumer_DumpResponse, dumpOffset);
 
-				if (IsConnected())
-				{
-					dataConsumer->TransportConnected();
-				}
-
 				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 				{
-					if (this->sctpAssociation->GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED)
-					{
-						// Tell to the DataConsumer.
-						dataConsumer->SctpAssociationConnected();
-					}
-
 					// Tell to the SCTP association.
 					this->sctpAssociation->MayConnect();
 				}
@@ -1480,14 +1476,6 @@ namespace RTC
 			consumer->TransportConnected();
 		}
 
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			dataConsumer->TransportConnected();
-		}
-
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
 		{
@@ -1528,14 +1516,6 @@ namespace RTC
 			auto* consumer = kv.second;
 
 			consumer->TransportDisconnected();
-		}
-
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			dataConsumer->TransportDisconnected();
 		}
 
 		// Stop the RTCP timer.
@@ -2999,17 +2979,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-			{
-				dataConsumer->SctpAssociationConnected();
-			}
-		}
-
 		// Notify the upper layer.
 
 		// First tell it about the SCTP negotiated capabilities.
@@ -3041,7 +3010,7 @@ namespace RTC
 
 // For debugging purposes.
 #if MS_LOG_DEV_LEVEL == 3
-		MS_DUMP("--- SCTP association connected:");
+		MS_DUMP("SCTP association connected:");
 		this->sctpAssociation->Dump();
 #endif
 	}
@@ -3187,10 +3156,17 @@ namespace RTC
 		// Pass the SCTP message to the corresponding DataProducer.
 		try
 		{
-			static thread_local std::vector<uint16_t> emptySubchannels;
+			std::vector<uint16_t> subchannels;
+			std::optional<uint16_t> requiredSubchannel;
 
-			dataProducer->ReceiveMessage(
-			  std::move(message), emptySubchannels, /*requiredSubchannel*/ std::nullopt);
+			// When this is a pipe transport, the subchannels and required subchannel
+			// may be encoded at the beginning of the message payload.
+			if (this->IsPipe())
+			{
+				RTC::SubchannelsCodec::DecodeSubchannels(message, subchannels, requiredSubchannel);
+			}
+
+			dataProducer->ReceiveMessage(std::move(message), subchannels, requiredSubchannel);
 		}
 		catch (std::exception& error)
 		{

@@ -2,6 +2,13 @@
 
 ### NEXT
 
+- Bump up Meson from 1.9.1 to 1.11.2 ([PR #1861](https://github.com/versatica/mediasoup/pull/1861)).
+- Worker: Update libsrtp to 3.0.0-beta-2fc078db ([PR #1860](https://github.com/versatica/mediasoup/pull/1860)).
+
+### 0.23.0
+
+- SCTP: Encode subchannels in SCTP messages to enable subchannels mechanism when using pipe transport ([PR #1859](https://github.com/versatica/mediasoup/pull/1859)).
+
 ### 0.22.12
 
 - Worker: Fix crash when an SCTP `DataConsumer` is closed and triggers buffered amount low event ([PR #1858](https://github.com/versatica/mediasoup/pull/1858)).
