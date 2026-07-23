@@ -5,6 +5,7 @@ on:
     branches: [v3]
     paths:
       - 'rust/**'
+      - '!rust/CHANGELOG.md'
       - 'worker/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -14,6 +15,7 @@ on:
   pull_request:
     paths:
       - 'rust/**'
+      - '!rust/CHANGELOG.md'
       - 'worker/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
