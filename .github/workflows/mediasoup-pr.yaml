@@ -1,0 +1,56 @@
+name: mediasoup-pr
+
+# Triggered when a pull request is opened (or reopened). It replaces the `XXXX`
+# placeholder in the PR CHANGELOG entries with the actual PR number and pushes
+# the change back to the PR branch.
+#
+# NOTE: This only works for PRs whose branch lives in this repository. Pull
+# requests opened from a fork get a read-only token, so the push back is
+# skipped.
+on:
+  pull_request:
+    types: [opened, reopened]
+    paths:
+      - CHANGELOG.md
+      - rust/CHANGELOG.md
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update-changelog:
+    # Skip PRs coming from a fork (no write access to push the commit back).
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Replace XXXX placeholder with PR number
+        env:
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          for f in CHANGELOG.md rust/CHANGELOG.md; do
+            sed -i "s~(\[PR #XXXX\](https://github\.com/${REPO}/pull/XXXX))~([PR #${PR}](https://github.com/${REPO}/pull/${PR}))~g" "$f"
+          done
+
+      - name: Commit and push if changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No XXXX placeholder found in changelogs, nothing to do"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add CHANGELOG.md rust/CHANGELOG.md
+          git commit -m "update CHANGELOG with PR number"
+          git push
