@@ -4,7 +4,7 @@
 
 - Bump up Meson from 1.9.1 to 1.11.2 ([PR #1861](https://github.com/versatica/mediasoup/pull/1861)).
 - Worker: Update libsrtp to 3.0.0-beta-2fc078db ([PR #1860](https://github.com/versatica/mediasoup/pull/1860)).
-- Test PR number 3 ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Test PR number 3 ([PR #1865](https://github.com/versatica/mediasoup/pull/1865)).
 
 ### 0.23.0
 
