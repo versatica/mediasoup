@@ -1,15 +1,19 @@
 name: mediasoup-pr
 
-# Triggered when a pull request is opened (or reopened). It replaces the `XXXX`
-# placeholder in the PR CHANGELOG entries with the actual PR number and pushes
-# the change back to the PR branch.
+# Triggered when a pull request is opened, reopened or gets new commits
+# ('synchronize'). It replaces the `XXXX` placeholder in the PR CHANGELOG
+# entries with the actual PR number and pushes the change back to the PR
+# branch.
+#
+# The push back uses `GITHUB_TOKEN`, and GitHub does not trigger workflows for
+# commits pushed with that token, so `synchronize` does not cause a loop.
 #
 # NOTE: This only works for PRs whose branch lives in this repository. Pull
 # requests opened from a fork get a read-only token, so the push back is
 # skipped.
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
     paths:
       - CHANGELOG.md
       - rust/CHANGELOG.md
