@@ -43,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           for f in CHANGELOG.md rust/CHANGELOG.md; do
-            sed -i "s~(\[PR #XXXX\](https://github\.com/${REPO}/pull/XXXX))~([PR #${PR}](https://github.com/${REPO}/pull/${PR}))~g" "$f"
+            sed -i "s~\[PR #XXXX\](https://github\.com/${REPO}/pull/XXXX)~[PR #${PR}](https://github.com/${REPO}/pull/${PR})~g" "$f"
           done
 
       - name: Commit and push if changed
