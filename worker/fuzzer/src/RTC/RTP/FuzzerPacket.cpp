@@ -256,7 +256,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->RemovePayload();
 
 	// Regression test for GHSA-jhm4-v227-4375 (CWE-787 OOB write in
-	// UpdateDependencyDescriptor). Build a fresh packet with a tightly-sized
+	// UpdateDependencyDescriptor()). Build a fresh packet with a tightly-sized
 	// DEPENDENCY_DESCRIPTOR value and attempt to update it with the raw fuzzer
 	// input as the new descriptor bytes. When the new length exceeds the original
 	// the fixed code must return false without writing out of bounds; when it
@@ -291,7 +291,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
 
-		// Call UpdateDependencyDescriptor with the full fuzzer input as
+		// Call UpdateDependencyDescriptor() with the full fuzzer input as
 		// the replacement bytes. This covers:
 		//   len > slotLen  → no OOB write (was the bug).
 		//   len <= slotLen → in-place update.
