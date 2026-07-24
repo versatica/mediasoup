@@ -1083,6 +1083,17 @@ namespace RTC
 				return false;
 			}
 
+			if (len > extenLen)
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "no enough space for updated dependency descriptor [needed:%zu, available:%" PRIu8 "]",
+				  len,
+				  extenLen);
+
+				return false;
+			}
+
 			std::memcpy(extenValue, data, len);
 
 			SetExtensionLength(this->headerExtensionIds.dependencyDescriptor, len);
