@@ -1241,6 +1241,61 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	expect(pipeTransportsB.size).toBe(0);
 }, 2000);
 
+test('crafted SubchannelsCodec MagicToken payload injected via piped DataChannel bypasses subchannel filtering', async () => {
+	// Pipe ctx.dataProducer (on router1's WebRTC transport) to router2.
+	await ctx.router1!.pipeToRouter({
+		dataProducerId: ctx.dataProducer!.id,
+		router: ctx.router2!,
+	});
+
+	// Create a DirectTransport on router2 so we can receive messages
+	// programmatically in the test.
+	const directTransport = await ctx.router2!.createDirectTransport();
+
+	// Consumer on router2 subscribed to subchannel 5 only — it should only
+	// receive messages legitimately sent with subchannels=[5].
+	const dataConsumer = await directTransport.consumeData({
+		dataProducerId: ctx.dataProducer!.id,
+		subchannels: [5],
+	});
+
+	// Craft a binary payload that starts with the SubchannelsCodec MagicToken
+	// followed by subchannel=5 encoding.  Wire layout (all fields big-endian):
+	//
+	//   [0..7]   MagicToken       : 0xA5F09CB3D6E1F28C
+	//   [8..9]   subchannelsCount : 1
+	//   [10..11] subchannel[0]    : 5
+	//   [12..]   actual content   : "hello"
+	//
+	const magicToken = Buffer.from('A5F09CB3D6E1F28C', 'hex');
+	const content = Buffer.from('hello');
+	const craftedPayload = Buffer.alloc(12 + content.length);
+
+	magicToken.copy(craftedPayload, 0);
+	craftedPayload.writeUInt16BE(1, 8); // subchannelsCount = 1
+	craftedPayload.writeUInt16BE(5, 10); // subchannel[0] = 5
+	content.copy(craftedPayload, 12);
+
+	// If dataConsumer receives the message 'hello' it means that the crafted
+	// payload passed though all the chain as if it was legitimate and reached
+	// an endpoint.
+	await new Promise<void>((resolve, reject) => {
+		dataConsumer.on('message', () => {
+			reject(
+				new Error(
+					'dataConsumer received a message it should not have: subchannel injection via crafted MagicToken succeeded'
+				)
+			);
+		});
+
+		ctx.dataProducer!.send(craftedPayload);
+
+		// If no message arrives within the timeout, consumer5 correctly rejected
+		// the crafted payload.
+		setTimeout(resolve, 1000);
+	});
+}, 2000);
+
 test('router.pipeToRouter() with neither producerId nor dataProducerId fails', async () => {
 	const router1bis = await ctx.worker1!.createRouter({
 		mediaCodecs: ctx.mediaCodecs,
