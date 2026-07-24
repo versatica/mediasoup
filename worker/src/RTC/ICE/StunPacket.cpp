@@ -4,8 +4,9 @@
 #include "RTC/ICE/StunPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <openssl/crypto.h>
 #include <cstdio>  // std::snprintf()
-#include <cstring> // std::memcmp(), std::memcpy(), std::memset()
+#include <cstring> // std::memcpy(), std::memset()
 #include <string>
 
 namespace RTC
@@ -744,7 +745,10 @@ namespace RTC
 
 			// Compare the computed HMAC-SHA1 with the MESSAGE-INTEGRITY in the STUN
 			// packet.
-			if (std::memcmp(messageIntegrity, computedMessageIntegrity, StunPacket::FixedHeaderLength) == 0)
+			//
+			// NOTE: Use `CRYPTO_memcmp()` to have constant time memory comparison.
+			// See https://github.com/versatica/mediasoup/security/advisories/GHSA-xvjj-6cm4-ppgq
+			if (CRYPTO_memcmp(messageIntegrity, computedMessageIntegrity, StunPacket::FixedHeaderLength) == 0)
 			{
 				result = StunPacket::AuthenticationResult::OK;
 			}

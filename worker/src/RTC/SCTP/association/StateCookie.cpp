@@ -4,7 +4,8 @@
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring> // std::memcpy(), std::memcmp()
+#include <openssl/crypto.h>
+#include <cstring> // std::memcpy()
 #include <string_view>
 
 namespace RTC
@@ -179,7 +180,9 @@ namespace RTC
 			const uint8_t* expectedMac = Utils::Crypto::GetHmacSha1(
 			  reinterpret_cast<const char*>(macKey), macKeyLength, buffer, StateCookie::MacOffset);
 
-			return std::memcmp(buffer + StateCookie::MacOffset, expectedMac, StateCookie::MacLength) == 0;
+			// NOTE: Use `CRYPTO_memcmp()` to have constant time memory comparison.
+			// See https://github.com/versatica/mediasoup/security/advisories/GHSA-xvjj-6cm4-ppgq
+			return CRYPTO_memcmp(buffer + StateCookie::MacOffset, expectedMac, StateCookie::MacLength) == 0;
 		}
 
 		Types::SctpImplementation StateCookie::DetermineSctpImplementation(
