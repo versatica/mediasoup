@@ -1290,7 +1290,7 @@ test('crafted SubchannelsCodec MagicToken payload injected via piped DataChannel
 
 		ctx.dataProducer!.send(craftedPayload);
 
-		// If no message arrives within the timeout, consumer5 correctly rejected
+		// If no message arrives within the timeout, dataConsumer correctly rejected
 		// the crafted payload.
 		setTimeout(resolve, 1000);
 	});
