@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 #include "test/include/RTC/RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
