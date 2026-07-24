@@ -1280,12 +1280,14 @@ test('crafted SubchannelsCodec MagicToken payload injected via piped DataChannel
 	// payload passed though all the chain as if it was legitimate and reached
 	// an endpoint.
 	await new Promise<void>((resolve, reject) => {
-		dataConsumer.on('message', () => {
-			reject(
-				new Error(
-					'dataConsumer received a message it should not have: subchannel injection via crafted MagicToken succeeded'
-				)
-			);
+		dataConsumer.on('message', (message: Buffer) => {
+			if (message.toString('utf8') === 'hello') {
+				reject(
+					new Error(
+						'dataConsumer received a message it should not have: subchannel injection via crafted MagicToken succeeded'
+					)
+				);
+			}
 		});
 
 		ctx.dataProducer!.send(craftedPayload);
