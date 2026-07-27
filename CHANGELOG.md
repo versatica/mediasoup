@@ -5,6 +5,7 @@
 - Bump up Meson from 1.9.1 to 1.11.2 ([PR #1861](https://github.com/versatica/mediasoup/pull/1861)).
 - Worker: Update libsrtp to 3.0.0-beta-2fc078db ([PR #1860](https://github.com/versatica/mediasoup/pull/1860)).
 - Worker: Use constant-time memory comparison in MAC/credential verification (SCTP State Cookie MAC and STUN "MESSAGE-INTEGRITY") ([PR #1867](https://github.com/versatica/mediasoup/pull/1867), credits to @alanturing881).
+- Worker: Fix OOB write in `RTP::Packet::UpdateDependencyDescriptor()` ([PR #1868](https://github.com/versatica/mediasoup/pull/1868), credits to @alanturing881).
 - Worker: Fix integer overflow in SCTP `MissingMandatoryParameterErrorCause` ([PR #1869](https://github.com/versatica/mediasoup/pull/1869), credits to @alanturing881).
 
 ### 3.22.0
