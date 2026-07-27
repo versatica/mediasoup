@@ -130,6 +130,7 @@ table Options {
     sctp_send_buffer_size: uint32;
     sctp_per_stream_send_queue_limit: uint32;
     sctp_max_receiver_window_buffer_size: uint32;
+    sctp_default_stream_buffered_amount_low_threshold: uint32;
     is_data_channel: bool = false;
 }
 

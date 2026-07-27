@@ -84,6 +84,13 @@ namespace RTC
 			size_t maxReceiverWindowBufferSize{ 5 * 1024 * 1024 };
 
 			/**
+			 * The default threshold that, when the amount of data in a stream send
+			 * buffer goes below this value, will trigger
+			 * `Association::OnAssociationStreamBufferedAmountLow()`.
+			 */
+			size_t defaultStreamBufferedAmountLowThreshold{ 0 };
+
+			/**
 			 * A threshold that, when the amount of data in the send buffer goes below
 			 * this value, will trigger `Association::OnAssociationTotalBufferedAmountLow()`.
 			 */

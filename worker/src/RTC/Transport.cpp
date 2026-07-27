@@ -49,19 +49,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->direct                = options->direct();
 		this->maxSendMessageSize    = options->maxSendMessageSize();
 		this->maxReceiveMessageSize = options->maxReceiveMessageSize();
-
-		if (options->direct())
-		{
-			this->direct = true;
-		}
-		else
-		{
-			this->sctpSendBufferSize              = options->sctpSendBufferSize();
-			this->sctpPerStreamSendQueueLimit     = options->sctpPerStreamSendQueueLimit();
-			this->sctpMaxReceiverWindowBufferSize = options->sctpMaxReceiverWindowBufferSize();
-		}
 
 		if (
 		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
@@ -80,11 +70,13 @@ namespace RTC
 			const RTC::SCTP::SctpOptions sctpOptions = {
 				.mtu                         = RTC::Consts::MaxSafeMtuSizeForSctp,
 				.maxSendMessageSize          = this->maxSendMessageSize,
-				.maxSendBufferSize           = this->sctpSendBufferSize,
-				.perStreamSendQueueLimit     = this->sctpPerStreamSendQueueLimit,
+				.maxSendBufferSize           = options->sctpSendBufferSize(),
+				.perStreamSendQueueLimit     = options->sctpPerStreamSendQueueLimit(),
 				.maxReceiveMessageSize       = this->maxReceiveMessageSize,
-				.maxReceiverWindowBufferSize = this->sctpMaxReceiverWindowBufferSize,
-				.requireAuthenticatedCookie  = requireSctpStateCookieAuthentication
+				.maxReceiverWindowBufferSize = options->sctpMaxReceiverWindowBufferSize(),
+				.defaultStreamBufferedAmountLowThreshold =
+				  options->sctpDefaultStreamBufferedAmountLowThreshold(),
+				.requireAuthenticatedCookie = requireSctpStateCookieAuthentication
 			};
 
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(

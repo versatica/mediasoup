@@ -148,6 +148,9 @@ test('dataConsumer.dump() succeeds', async () => {
 	expect(dump.subchannels).toEqual(
 		expect.arrayContaining([0, 1, 2, 100, 65535])
 	);
+	expect(dump.bufferedAmount).toBe(0);
+	// Default per stream buffered amount threshold is 1024.
+	expect(dump.bufferedAmountLowThreshold).toBe(1024);
 }, 2000);
 
 test('dataConsumer.getStats() succeeds', async () => {

@@ -305,6 +305,9 @@ fn dump_succeeds() {
         }
         assert_eq!(dump.label.as_str(), "foo");
         assert_eq!(dump.protocol.as_str(), "bar");
+        assert_eq!(dump.buffered_amount, 0);
+        // Default per stream buffered amount threshold is 1024.
+        assert_eq!(dump.buffered_amount_low_threshold, 1024);
     });
 }
 

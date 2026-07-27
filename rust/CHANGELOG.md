@@ -7,6 +7,7 @@
 - Worker: Use constant-time memory comparison in MAC/credential verification (SCTP State Cookie MAC and STUN "MESSAGE-INTEGRITY") ([PR #1867](https://github.com/versatica/mediasoup/pull/1867), credits to @alanturing881).
 - Worker: Fix OOB write in `RTP::Packet::UpdateDependencyDescriptor()` ([PR #1868](https://github.com/versatica/mediasoup/pull/1868), credits to @alanturing881).
 - Worker: Fix integer overflow in SCTP `MissingMandatoryParameterErrorCause` ([PR #1869](https://github.com/versatica/mediasoup/pull/1869), credits to @alanturing881).
+- SCTP: Add default per stream buffered amount low threshold option ([PR #1871](https://github.com/versatica/mediasoup/pull/1871)).
 
 ### 0.23.0
 

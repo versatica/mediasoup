@@ -77,6 +77,12 @@ pub struct PlainTransportOptions {
     /// than the largest sized message you want to be able to receive.
     /// Default 5_242_880.
     pub sctp_max_receiver_window_buffer_size: u32,
+    /// SCTP default stream buffered amount low threshold (in bytes). When the
+    /// buffered amount of a DataConsumer stream drops to or below this value, the
+    /// buffered amount low event is emitted. It can be overridden per DataConsumer
+    /// via DataConsumer::set_buffered_amount_low_threshold().
+    /// Default 1024.
+    pub sctp_default_stream_buffered_amount_low_threshold: u32,
     /// Enable SRTP. For this to work, connect() must be called with remote SRTP parameters.
     /// Default false.
     pub enable_srtp: bool,
@@ -102,6 +108,7 @@ impl PlainTransportOptions {
             sctp_send_buffer_size: 2_000_000,
             sctp_per_stream_send_queue_limit: 2_000_000,
             sctp_max_receiver_window_buffer_size: 5_242_880,
+            sctp_default_stream_buffered_amount_low_threshold: 1024,
             enable_srtp: false,
             srtp_crypto_suite: SrtpCryptoSuite::default(),
             app_data: AppData::default(),
