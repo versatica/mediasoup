@@ -113,8 +113,8 @@
 		"flatbuffers": "^25.9.23",
 		"h264-profile-level-id": "^2.3.3",
 		"node-fetch": "^3.3.2",
-		"supports-color": "^10.2.2",
-		"tar": "^7.5.21"
+		"supports-color": "^11.0.0",
+		"tar": "^7.5.22"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -122,11 +122,11 @@
 		"@types/ini": "^4.1.1",
 		"@types/jest": "^30.0.0",
 		"@types/node": "^26.1.1",
-		"eslint": "^10.7.0",
+		"eslint": "^10.8.0",
 		"eslint-config-prettier": "^10.1.8",
-		"eslint-plugin-jest": "^29.15.5",
+		"eslint-plugin-jest": "^29.16.0",
 		"eslint-plugin-prettier": "^5.5.6",
-		"globals": "^17.7.0",
+		"globals": "^17.8.0",
 		"ini": "^7.0.0",
 		"jest": "^30.4.2",
 		"knip": "^6.29.0",
