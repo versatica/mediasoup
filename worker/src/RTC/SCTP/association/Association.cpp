@@ -54,6 +54,7 @@ namespace RTC
 		      this->associationListenerDeferrer,
 		      sctpOptions.mtu,
 		      sctpOptions.defaultStreamPriority,
+		      sctpOptions.defaultStreamBufferedAmountLowThreshold,
 		      sctpOptions.totalBufferedAmountLowThreshold),
 		    t1InitTimer(this->shared->CreateBackoffTimer(
 		      BackoffTimerHandleInterface::BackoffTimerHandleOptions{

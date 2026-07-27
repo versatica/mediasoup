@@ -275,6 +275,7 @@ namespace RTC
 			  AssociationListenerInterface& associationListener,
 			  size_t mtu,
 			  uint16_t defaultPriority,
+			  size_t defaultStreamBufferedAmountLowThreshold,
 			  size_t totalBufferedAmountLowThreshold);
 
 			~RoundRobinSendQueue() override;
@@ -343,6 +344,7 @@ namespace RTC
 		private:
 			AssociationListenerInterface& associationListener;
 			const uint16_t defaultPriority;
+			const size_t defaultStreamBufferedAmountLowThreshold;
 			StreamScheduler scheduler;
 			// The total amount of buffer data, for all streams.
 			ThresholdWatcher totalBufferedAmountThresholdWatcher;

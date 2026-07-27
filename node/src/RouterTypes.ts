@@ -112,6 +112,15 @@ export type PipeToRouterOptions = {
 	sctpMaxReceiverWindowBufferSize?: number;
 
 	/**
+	 * SCTP default stream buffered amount low threshold (in bytes). When the
+	 * buffered amount of a DataConsumer stream drops to or below this value, the
+	 * 'bufferedamountlow' event is emitted. It can be overridden per DataConsumer
+	 * via `dataConsumer.setBufferedAmountLowThreshold()`.
+	 * Default 1024.
+	 */
+	sctpDefaultStreamBufferedAmountLowThreshold?: number;
+
+	/**
 	 * Enable RTX and NACK for RTP retransmission.
 	 */
 	enableRtx?: boolean;

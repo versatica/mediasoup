@@ -20,9 +20,11 @@ namespace RTC
 		  AssociationListenerInterface& associationListener,
 		  size_t mtu,
 		  uint16_t defaultPriority,
+		  size_t defaultStreamBufferedAmountLowThreshold,
 		  size_t totalBufferedAmountLowThreshold)
 		  : associationListener(associationListener),
 		    defaultPriority(defaultPriority),
+		    defaultStreamBufferedAmountLowThreshold(defaultStreamBufferedAmountLowThreshold),
 		    scheduler(mtu),
 		    totalBufferedAmountThresholdWatcher(
 		      [this]()
@@ -256,7 +258,9 @@ namespace RTC
 
 			if (it == this->streams.end())
 			{
-				return 0;
+				// The stream is created lazily (on first send or when its threshold is
+				// explicitly set), so report the default that it will be created with.
+				return this->defaultStreamBufferedAmountLowThreshold;
 			}
 
 			const auto& stream = it->second;
@@ -297,7 +301,11 @@ namespace RTC
 				    this->associationListener.OnAssociationStreamBufferedAmountLow(streamId);
 			    }));
 
-			return it2->second;
+			auto& stream = it2->second;
+
+			stream.GetBufferedAmount().SetLowThreshold(this->defaultStreamBufferedAmountLowThreshold);
+
+			return stream;
 		}
 
 		void RoundRobinSendQueue::AssertIsConsistent() const
