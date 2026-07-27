@@ -14,7 +14,7 @@ There are 3 crates: `mediasoup`, `mediasoup-sys` and `mediasoup-types`:
 
 Each crate is published through an automated flow (mirroring how the NPM package is released): `npm run release:rust <crate> X.Y.Z` bumps the version, commits and pushes, and the `mediasoup-crate-publish.yaml` workflow then publishes the crate to crates.io via OIDC trusted publishing.
 
-Because `mediasoup` depends on `mediasoup-sys` and `mediasoup-types`, when more than one crate needs a new version, **publish the dependencies first** (`mediasoup-types` and/or `mediasoup-sys`) and `mediasoup` last, so each crate's dependencies are already on crates.io when it is published. Each release updates only the released crate's own resolved version in `Cargo.lock` (within that crate's release commit), so releasing a dependency is what refreshes its `Cargo.lock` entry, and the later `mediasoup` release only touches `mediasoup`'s own entry.
+Because `mediasoup` depends on `mediasoup-sys` and `mediasoup-types`, when more than one crate needs a new version, **publish the dependencies first** (`mediasoup-types` and/or `mediasoup-sys`) and `mediasoup` last, so each crate's dependencies are already on crates.io when it is published. You don't need to wait for the dependencies' workflow runs to finish before releasing `mediasoup`. The publish workflow runs are serialized, so its own run stays queued until they are done. Each release updates only the released crate's own resolved version in `Cargo.lock` (within that crate's release commit), so releasing a dependency is what refreshes its `Cargo.lock` entry, and the later `mediasoup` release only touches `mediasoup`'s own entry.
 
 You do **not** bump the crate's `[package].version`, edit `rust/CHANGELOG.md`, nor edit the sibling `version` requirements in `rust/Cargo.toml` yourself; `npm run release:rust` does all that. For each crate to publish:
 
@@ -28,8 +28,8 @@ npm run release:rust mediasoup-types X.Y.Z
 # and/or
 npm run release:rust mediasoup-sys X.Y.Z
 
-# and finally, once the triggered GitHub actions complete, release a new version
-# of the main mediasoup crate:
+# and finally release a new version of the main mediasoup crate (no need to wait
+# for the GitHub Actions runs above to complete):
 npm run release:rust mediasoup X.Y.Z
 ```
 
@@ -39,7 +39,3 @@ This runs the checks, bumps the crate version in its `Cargo.toml` (and, for `med
 - For `mediasoup-sys` / `mediasoup-types`: commits (`<crate> X.Y.Z [crate-publish] [no-ci]`) and pushes the branch (no tag, no GitHub release). The `[crate-publish]` marker is what `mediasoup-crate-publish.yaml` detects on the branch push to publish that crate.
 
 See `npm run release:rust` in [Building.md](Building.md) for more details.
-
-### Important
-
-If you bump `mediasoup-sys` and/or `mediasoup-types` crates and want to also release a new version of the main `mediasoup` crate, you need to **wait** for GitHub Actions to finish so they publish the new versions of `mediasoup-sys` and/or `mediasoup-types` crates, and then you can bump `mediasoup` main crate.
