@@ -2,6 +2,8 @@
 
 ### NEXT
 
+Rust: Fix, increase worker thread stack size ([PR#1873](https://github.com/versatica/mediasoup/pull/1873)).
+
 ### 0.24.0
 
 - Bump up Meson from 1.9.1 to 1.11.2 ([PR #1861](https://github.com/versatica/mediasoup/pull/1861)).
