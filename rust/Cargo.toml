@@ -46,7 +46,7 @@ version = "0.8.1"
 
 [dependencies.mediasoup-sys]
 path = "../worker"
-version = "0.14.0"
+version = "0.14.1"
 
 [dependencies.mediasoup-types]
 path = "./types"

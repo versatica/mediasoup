@@ -1568,7 +1568,7 @@ dependencies = [
 
 [[package]]
 name = "mediasoup-sys"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "planus",
  "planus-codegen",
