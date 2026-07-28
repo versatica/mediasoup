@@ -2,7 +2,7 @@
 
 ### NEXT
 
-Worker: Fix, use thread_local buffer on MS_ABORT ([PR#1873](https://github.com/versatica/mediasoup/pull/1873)).
+Worker: Fix, use `thread_local` buffer on `MS_ABORT()` ([PR#1873](https://github.com/versatica/mediasoup/pull/1873)).
 
 ### 0.24.0
 
