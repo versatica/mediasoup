@@ -2,6 +2,8 @@
 
 ### NEXT
 
+Worker: Fix, use thread_local buffer on MS_ABORT ([PR#1873](https://github.com/versatica/mediasoup/pull/1873)).
+
 ### 3.23.0
 
 - Bump up Meson from 1.9.1 to 1.11.2 ([PR #1861](https://github.com/versatica/mediasoup/pull/1861)).
