@@ -558,6 +558,7 @@ namespace RTC
 			// subscribed to. Otherwise the receiving Router would deliver the message to
 			// DataConsumers subscribed to subchannels that this pipe does not carry.
 			const bool reduceSubchannels = verifySubchannels && !subchannels.empty();
+
 			std::vector<uint16_t> reducedSubchannels;
 
 			if (reduceSubchannels)
