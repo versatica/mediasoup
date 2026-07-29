@@ -1140,8 +1140,9 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 	);
 
 	// Send a message without subchannels so it's guaranteed that it will reach
-	// the final `directDataConsumer`. And wait for reception of tis message so
-	// at this time we know that previous ones also arrived.
+	// the final `directDataConsumer`. And wait for reception of this message so
+	// at this time we know that previous ones already reached the final
+	// `directDataConsumer`.
 	await new Promise<void>(resolve => {
 		directDataConsumer.on('message', message => {
 			const receivedMessage = message.toString('utf8');
