@@ -1304,7 +1304,10 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
             .await
             .expect("Failed to produce data");
 
-        router1
+        let PipeDataProducerToRouterPair {
+            pipe_data_producer: _pipe_data_producer,
+            pipe_data_consumer,
+        } = router1
             .pipe_data_producer_to_router(
                 data_producer.id(),
                 PipeToRouterOptions::new(router2.clone()),
@@ -1325,9 +1328,11 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
             .await
             .expect("Failed to create data consumer");
 
-        let (received_tx, received_rx) = async_oneshot::oneshot::<String>();
+        // Resolved with all received messages once the last sent one is received.
+        let (received_tx, received_rx) = async_oneshot::oneshot::<Vec<String>>();
         let _handler = data_consumer.on_message({
             let received_tx = Mutex::new(Some(received_tx));
+            let received_messages = Mutex::new(Vec::<String>::new());
 
             move |message| {
                 let text = match message {
@@ -1336,9 +1341,14 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
                         panic!("Unexpected non-string message");
                     }
                 };
+                let is_last_message = text == "hello5";
 
-                if let Some(mut received_tx) = received_tx.lock().take() {
-                    let _ = received_tx.send(text);
+                received_messages.lock().push(text);
+
+                if is_last_message {
+                    if let Some(mut received_tx) = received_tx.lock().take() {
+                        let _ = received_tx.send(received_messages.lock().clone());
+                    }
                 }
             }
         });
@@ -1350,17 +1360,67 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
             }
         };
 
+        // The pipe DataConsumer is not subscribed to any subchannel, so it must allow the
+        // message to pass through and reach the final DataConsumer.
         direct_data_producer
             .send(
-                WebRtcMessage::String(Cow::Borrowed("hello".as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed("hello1".as_bytes())),
                 Some(vec![123, 124]),
                 Some(666),
             )
             .expect("Failed to send message");
 
-        let received_message = received_rx.await.expect("Failed to receive message");
+        // Subscribe the pipe DataConsumer to subchannels 123, 124 and 666.
+        pipe_data_consumer
+            .set_subchannels(vec![123, 124, 666])
+            .await
+            .expect("Failed to set data consumer subchannels");
 
-        assert_eq!(received_message, "hello");
+        // The pipe DataConsumer is subscribed to subchannels 123 and 666 so it must allow
+        // the message to pass through and reach the final DataConsumer.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello2".as_bytes())),
+                Some(vec![123]),
+                Some(666),
+            )
+            .expect("Failed to send message");
+
+        // The pipe DataConsumer is subscribed to subchannels 124 and 666 so it must allow
+        // the message to pass through, however the final DataConsumer is not subscribed to
+        // subchannel 124 so the message must not reach it.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello3".as_bytes())),
+                Some(vec![124]),
+                Some(666),
+            )
+            .expect("Failed to send message");
+
+        // The pipe DataConsumer is not subscribed to subchannel 125 so it must not allow
+        // the message to pass through.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello4".as_bytes())),
+                Some(vec![125]),
+                Some(666),
+            )
+            .expect("Failed to send message");
+
+        // Send a message without subchannels so it's guaranteed that it will reach the
+        // final DataConsumer. And wait for reception of this message so at this time we
+        // know that previous ones also arrived.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello5".as_bytes())),
+                None,
+                None,
+            )
+            .expect("Failed to send message");
+
+        let received_messages = received_rx.await.expect("Failed to receive messages");
+
+        assert_eq!(received_messages, ["hello1", "hello2", "hello5"]);
     });
 }
 

@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/SubchannelsCodec.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -500,7 +501,11 @@ namespace RTC
 			return false;
 		}
 
-		if (!this->pipe)
+		// Only verify subchannels if this is not a piped DataConsumer or if this is
+		// a piped DataConsumer and it's subscribed to at least one subchannel.
+		const bool verifySubchannels = !this->pipe || !this->subchannels.empty();
+
+		if (verifySubchannels)
 		{
 			// If a required subchannel is given, verify that this data consumer is
 			// subscribed to it.
@@ -543,13 +548,34 @@ namespace RTC
 				}
 			}
 		}
-		// This is a piped DataConsumer, so instead of verifying subchannels locally,
-		// encode the subchannels and required subchannel at the beginning of the
-		// message payload so the receiving PipeTransport can decode them and apply
-		// them to its own DataConsumers.
-		else
+
+		// If this is a piped DataConsumer, encode given subchannels and required
+		// subchannel at the beginning of the message payload so the receiving
+		// PipeTransport can decode them and apply them to its own DataConsumers.
+		if (this->pipe)
 		{
-			RTC::SubchannelsCodec::EncodeSubchannels(message, subchannels, requiredSubchannel);
+			// If subchannels were verified, encode just those this DataConsumer is
+			// subscribed to. Otherwise the receiving Router would deliver the message to
+			// DataConsumers subscribed to subchannels that this pipe does not carry.
+			const bool reduceSubchannels = verifySubchannels && !subchannels.empty();
+
+			std::vector<uint16_t> reducedSubchannels;
+
+			if (reduceSubchannels)
+			{
+				reducedSubchannels.reserve(subchannels.size());
+
+				for (const auto subchannel : subchannels)
+				{
+					if (this->subchannels.contains(subchannel))
+					{
+						reducedSubchannels.push_back(subchannel);
+					}
+				}
+			}
+
+			RTC::SubchannelsCodec::EncodeSubchannels(
+			  message, reduceSubchannels ? reducedSubchannels : subchannels, requiredSubchannel);
 		}
 
 		const size_t messageLen = message.GetPayloadLength();

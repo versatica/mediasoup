@@ -1080,7 +1080,7 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 		protocol: 'bar',
 	});
 
-	await ctx.router1!.pipeToRouter({
+	const { pipeDataConsumer } = await ctx.router1!.pipeToRouter({
 		dataProducerId: directDataProducer.id,
 		router: ctx.router2!,
 	});
@@ -1091,25 +1091,72 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 		subchannels: [123, 666],
 	});
 
-	await new Promise<void>((resolve, reject) => {
-		directDataConsumer.on('message', (message, ppid) => {
-			try {
-				expect(message.toString('utf8')).toBe('hello');
-				expect(ppid).toBe(51);
+	const receivedMessages: string[] = [];
 
+	directDataConsumer.on('message', message => {
+		const receivedMessage = message.toString('utf8');
+
+		receivedMessages.push(receivedMessage);
+	});
+
+	// The `pipeDataConsumer` is not subscribed to any subchannel, so it must allow
+	// the message to pass through and reach the final `directDataConsumer`.
+	directDataProducer.send(
+		'hello1',
+		/* ppid */ undefined,
+		/* subchannels */ [123, 124],
+		/* requiredSubchannel */ 666
+	);
+
+	// Subscribe `pipeDataConsumer` to subchannels 123, 124 and 666.
+	await pipeDataConsumer!.setSubchannels([123, 124, 666]);
+
+	// The `pipeDataConsumer` is subscribed to subchannels 123 and 666 so it must
+	// allow the message to pass through and reach the final `directDataConsumer`.
+	directDataProducer.send(
+		'hello2',
+		/* ppid */ undefined,
+		/* subchannels */ [123],
+		/* requiredSubchannel */ 666
+	);
+
+	// The `pipeDataConsumer` is subscribed to subchannels 124 and 666 so it must
+	// allow the message to pass through, however the final `directDataConsumer`
+	// is not subscribed to subchannel 124 so the message must not reach it.
+	directDataProducer.send(
+		'hello3',
+		/* ppid */ undefined,
+		/* subchannels */ [124],
+		/* requiredSubchannel */ 666
+	);
+
+	// The `pipeDataConsumer` is not subscribed to subchannel 125 so it must not
+	// allow the message to pass through.
+	directDataProducer.send(
+		'hello4',
+		/* ppid */ undefined,
+		/* subchannels */ [125],
+		/* requiredSubchannel */ 666
+	);
+
+	// Send a message without subchannels so it's guaranteed that it will reach
+	// the final `directDataConsumer`. And wait for reception of this message so
+	// at this time we know that previous ones already reached the final
+	// `directDataConsumer`.
+	await new Promise<void>(resolve => {
+		directDataConsumer.on('message', message => {
+			const receivedMessage = message.toString('utf8');
+
+			// Resolve once the last sent message is received.
+			if (receivedMessage === 'hello5') {
 				resolve();
-			} catch (error) {
-				reject(error as Error);
 			}
 		});
 
-		directDataProducer.send(
-			'hello',
-			/* ppid */ undefined,
-			/* subchannels */ [123, 124],
-			/* requiredSubchannel */ 666
-		);
+		directDataProducer.send('hello5');
 	});
+
+	expect(receivedMessages).toStrictEqual(['hello1', 'hello2', 'hello5']);
 }, 2000);
 
 test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {
