@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.23.2
+
 - Handle subchannels in pipe `DataConsumers` ([PR #1875](https://github.com/versatica/mediasoup/pull/1875)).
 
 ### 3.23.1
