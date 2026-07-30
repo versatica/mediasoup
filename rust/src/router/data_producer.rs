@@ -52,7 +52,8 @@ pub struct DataProducerOptions {
 
 impl DataProducerOptions {
     #[must_use]
-    pub(super) fn new_pipe_transport(
+    /// Create data producer options that will be used with Pipe transport.
+    pub fn new_pipe_transport(
         data_producer_id: DataProducerId,
         sctp_stream_parameters: SctpStreamParameters,
     ) -> Self {
@@ -66,7 +67,7 @@ impl DataProducerOptions {
         }
     }
 
-    /// Data producer options for non-Direct transport.
+    /// Create data producer options for non-Direct transport.
     #[must_use]
     pub fn new_sctp(sctp_stream_parameters: SctpStreamParameters) -> Self {
         Self {
