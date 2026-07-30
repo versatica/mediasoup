@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- `DataProducerOptions`: make `new_pipe_transport()` public ([PR #1876](https://github.com/versatica/mediasoup/pull/1876)).
+
 ### 0.24.2
 
 - Handle subchannels in pipe `DataConsumers` ([PR #1875](https://github.com/versatica/mediasoup/pull/1875)).
