@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.24.3
+
 - `DataProducerOptions`: make `new_pipe_transport()` public ([PR #1876](https://github.com/versatica/mediasoup/pull/1876)).
 
 ### 0.24.2
