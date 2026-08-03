@@ -563,6 +563,7 @@ impl DirectDataProducer {
         message: WebRtcMessage<'_>,
         subchannels: Option<Vec<u16>>,
         required_subchannel: Option<u16>,
+        ignored_subchannel: Option<u16>,
     ) -> Result<(), NotificationError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
@@ -573,6 +574,7 @@ impl DirectDataProducer {
                 payload: payload.into_owned(),
                 subchannels,
                 required_subchannel,
+                ignored_subchannel,
             },
         )
     }

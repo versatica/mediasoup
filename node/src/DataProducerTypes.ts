@@ -166,6 +166,7 @@ export interface DataProducer<
 		message: string | Buffer,
 		ppid?: number,
 		subchannels?: number[],
-		requiredSubchannel?: number
+		requiredSubchannel?: number,
+		ignoredSubchannel?: number
 	): void;
 }

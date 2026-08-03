@@ -27,7 +27,8 @@ namespace RTC
 			  RTC::DataProducer* dataProducer,
 			  RTC::SCTP::Message message,
 			  std::vector<uint16_t>& subchannels,
-			  std::optional<uint16_t> requiredSubchannel)                       = 0;
+			  std::optional<uint16_t> requiredSubchannel,
+			  std::optional<uint16_t> ignoredSubchannel)                        = 0;
 			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer)  = 0;
 			virtual void OnDataProducerResumed(RTC::DataProducer* dataProducer) = 0;
 		};
@@ -68,7 +69,8 @@ namespace RTC
 		void ReceiveMessage(
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
-		  std::optional<uint16_t> requiredSubchannel);
+		  std::optional<uint16_t> requiredSubchannel,
+		  std::optional<uint16_t> ignoredSubchannel);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:

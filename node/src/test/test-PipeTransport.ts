@@ -1088,7 +1088,7 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 	const directTransport2 = await ctx.router2!.createDirectTransport();
 	const directDataConsumer = await directTransport2.consumeData({
 		dataProducerId: directDataProducer.id,
-		subchannels: [123, 666],
+		subchannels: [123, 666, 777],
 	});
 
 	const receivedMessages: string[] = [];
@@ -1139,6 +1139,26 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 		/* requiredSubchannel */ 666
 	);
 
+	// The `pipeDataConsumer` is subscribed to subchannel 666 so it must not
+	// allow the message to pass through.
+	directDataProducer.send(
+		'hello5',
+		/* ppid */ undefined,
+		/* subchannels */ [123],
+		/* requiredSubchannel */ undefined,
+		/* ignoredSubchannel */ 666
+	);
+
+	// The final `directDataConsumer` is subscribed to subchannel 777 so it must
+	// not receive the message.
+	directDataProducer.send(
+		'hello6',
+		/* ppid */ undefined,
+		/* subchannels */ undefined,
+		/* requiredSubchannel */ undefined,
+		/* ignoredSubchannel */ 777
+	);
+
 	// Send a message without subchannels so it's guaranteed that it will reach
 	// the final `directDataConsumer`. And wait for reception of this message so
 	// at this time we know that previous ones already reached the final
@@ -1148,15 +1168,15 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 			const receivedMessage = message.toString('utf8');
 
 			// Resolve once the last sent message is received.
-			if (receivedMessage === 'hello5') {
+			if (receivedMessage === 'bye') {
 				resolve();
 			}
 		});
 
-		directDataProducer.send('hello5');
+		directDataProducer.send('bye');
 	});
 
-	expect(receivedMessages).toStrictEqual(['hello1', 'hello2', 'hello5']);
+	expect(receivedMessages).toStrictEqual(['hello1', 'hello2', 'bye']);
 }, 2000);
 
 test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {

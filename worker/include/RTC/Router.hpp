@@ -100,7 +100,8 @@ namespace RTC
 		  RTC::DataProducer* dataProducer,
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
-		  std::optional<uint16_t> requiredSubchannel) override;
+		  std::optional<uint16_t> requiredSubchannel,
+		  std::optional<uint16_t> ignoredSubchannel) override;
 		void OnTransportNewDataConsumer(
 		  RTC::Transport* transport,
 		  RTC::DataConsumer* dataConsumer,

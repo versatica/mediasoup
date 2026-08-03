@@ -2878,6 +2878,7 @@ pub(crate) struct DataProducerSendNotification {
     pub(crate) payload: Vec<u8>,
     pub(crate) subchannels: Option<Vec<u16>>,
     pub(crate) required_subchannel: Option<u16>,
+    pub(crate) ignored_subchannel: Option<u16>,
 }
 
 impl Notification for DataProducerSendNotification {
@@ -2893,6 +2894,7 @@ impl Notification for DataProducerSendNotification {
             self.payload,
             self.subchannels,
             self.required_subchannel,
+            self.ignored_subchannel,
         );
         let notification_body =
             notification::Body::create_data_producer_send_notification(&mut builder, data);

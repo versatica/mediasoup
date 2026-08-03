@@ -287,7 +287,7 @@ fn send_succeeds() {
             };
 
             direct_data_producer
-                .send(message, None, None)
+                .send(message, None, None, None)
                 .expect("Failed to send message");
 
             if id == num_messages {
@@ -449,6 +449,7 @@ fn send_with_subchannels_succeeds() {
                 WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 None,
                 None,
+                None,
             )
             .expect("Failed to send message");
 
@@ -457,6 +458,7 @@ fn send_with_subchannels_succeeds() {
             .send(
                 WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 Some(vec![1, 2]),
+                None,
                 None,
             )
             .expect("Failed to send message");
@@ -467,6 +469,7 @@ fn send_with_subchannels_succeeds() {
                 WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 Some(vec![11, 22, 33]),
                 Some(666),
+                None,
             )
             .expect("Failed to send message");
 
@@ -476,6 +479,7 @@ fn send_with_subchannels_succeeds() {
                 WebRtcMessage::String(Cow::Borrowed(none.as_bytes())),
                 Some(vec![3]),
                 Some(666),
+                None,
             )
             .expect("Failed to send message");
 
@@ -485,6 +489,7 @@ fn send_with_subchannels_succeeds() {
                 WebRtcMessage::String(Cow::Borrowed(none.as_bytes())),
                 Some(vec![666]),
                 Some(3),
+                None,
             )
             .expect("Failed to send message");
 
@@ -493,6 +498,7 @@ fn send_with_subchannels_succeeds() {
             .send(
                 WebRtcMessage::String(Cow::Borrowed(dc1.as_bytes())),
                 Some(vec![1]),
+                None,
                 None,
             )
             .expect("Failed to send message");
@@ -503,6 +509,7 @@ fn send_with_subchannels_succeeds() {
                 WebRtcMessage::String(Cow::Borrowed(dc1.as_bytes())),
                 Some(vec![11]),
                 None,
+                None,
             )
             .expect("Failed to send message");
 
@@ -512,6 +519,7 @@ fn send_with_subchannels_succeeds() {
                 WebRtcMessage::String(Cow::Borrowed(dc1.as_bytes())),
                 Some(vec![666]),
                 Some(11),
+                None,
             )
             .expect("Failed to send message");
 
@@ -521,6 +529,7 @@ fn send_with_subchannels_succeeds() {
                 WebRtcMessage::String(Cow::Borrowed(dc2.as_bytes())),
                 Some(vec![666]),
                 Some(2),
+                None,
             )
             .expect("Failed to send message");
 
@@ -538,6 +547,7 @@ fn send_with_subchannels_succeeds() {
                 WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 Some(vec![1]),
                 Some(666),
+                None,
             )
             .expect("Failed to send message");
 
