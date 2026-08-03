@@ -490,11 +490,15 @@ namespace RTC
 
 	inline bool PipeTransport::IsConnected() const
 	{
+		MS_TRACE();
+
 		return this->tuple ? true : false;
 	}
 
 	inline bool PipeTransport::HasSrtp() const
 	{
+		MS_TRACE();
+
 		return !this->srtpKey.empty();
 	}
 

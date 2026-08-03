@@ -105,12 +105,16 @@ namespace RTC
 
 	void AudioLevelObserver::ProducerPaused(RTC::Producer* producer)
 	{
+		MS_TRACE();
+
 		// Remove from the map.
 		this->mapProducerDBovs.erase(producer);
 	}
 
 	void AudioLevelObserver::ProducerResumed(RTC::Producer* producer)
 	{
+		MS_TRACE();
+
 		// Insert into the map.
 		this->mapProducerDBovs[producer];
 	}

@@ -1642,6 +1642,8 @@ namespace RTC
 	inline void Producer::OnRtpStreamSendRtcpPacket(
 	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet)
 	{
+		MS_TRACE();
+
 		switch (packet->GetType())
 		{
 			case RTC::RTCP::Type::PSFB:
@@ -1698,6 +1700,8 @@ namespace RTC
 	inline void Producer::OnRtpStreamNeedWorstRemoteFractionLost(
 	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost)
 	{
+		MS_TRACE();
+
 		auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 
 		// Notify the listener.

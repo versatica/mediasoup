@@ -791,16 +791,22 @@ namespace RTC
 
 	inline bool PlainTransport::IsConnected() const
 	{
+		MS_TRACE();
+
 		return this->tuple ? true : false;
 	}
 
 	inline bool PlainTransport::HasSrtp() const
 	{
+		MS_TRACE();
+
 		return !this->srtpKey.empty();
 	}
 
 	inline bool PlainTransport::IsSrtpReady() const
 	{
+		MS_TRACE();
+
 		return HasSrtp() && this->srtpSendSession && this->srtpRecvSession;
 	}
 
@@ -1222,6 +1228,8 @@ namespace RTC
 
 	inline void PlainTransport::EmitTuple() const
 	{
+		MS_TRACE();
+
 		auto tuple = this->tuple->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
 		auto notification = FBS::PlainTransport::CreateTupleNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), tuple);
@@ -1235,6 +1243,8 @@ namespace RTC
 
 	inline void PlainTransport::EmitRtcpTuple() const
 	{
+		MS_TRACE();
+
 		auto rtcpTuple =
 		  this->rtcpTuple->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
 		auto notification = FBS::PlainTransport::CreateRtcpTupleNotification(

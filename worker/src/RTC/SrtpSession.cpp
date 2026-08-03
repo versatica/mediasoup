@@ -17,6 +17,8 @@ namespace RTC
 
 	void SrtpSession::ClassInit()
 	{
+		MS_TRACE();
+
 		// Set libsrtp event handler.
 		const srtp_err_status_t err =
 		  srtp_install_event_handler(static_cast<srtp_event_handler_func_t*>(OnSrtpEvent));
@@ -30,6 +32,8 @@ namespace RTC
 
 	FBS::SrtpParameters::SrtpCryptoSuite SrtpSession::CryptoSuiteToFbs(CryptoSuite cryptoSuite)
 	{
+		MS_TRACE();
+
 		switch (cryptoSuite)
 		{
 			case SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
@@ -58,6 +62,8 @@ namespace RTC
 
 	SrtpSession::CryptoSuite SrtpSession::CryptoSuiteFromFbs(FBS::SrtpParameters::SrtpCryptoSuite cryptoSuite)
 	{
+		MS_TRACE();
+
 		switch (cryptoSuite)
 		{
 			case FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_256_GCM:

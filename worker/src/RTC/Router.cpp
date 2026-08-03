@@ -1063,12 +1063,16 @@ namespace RTC
 
 	void Router::OnRtpObserverAddProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer)
 	{
+		MS_TRACE();
+
 		// Add to the map.
 		this->mapProducerRtpObservers[producer].insert(rtpObserver);
 	}
 
 	void Router::OnRtpObserverRemoveProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer)
 	{
+		MS_TRACE();
+
 		// Remove from the map.
 		this->mapProducerRtpObservers[producer].erase(rtpObserver);
 	}
@@ -1076,6 +1080,8 @@ namespace RTC
 	RTC::Producer* Router::RtpObserverGetProducer(
 	  RTC::RtpObserver* /* rtpObserver */, const std::string& id)
 	{
+		MS_TRACE();
+
 		const auto it = this->mapProducers.find(id);
 
 		if (it == this->mapProducers.end())

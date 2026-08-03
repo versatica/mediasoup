@@ -176,6 +176,8 @@ namespace RTC
 
 		bool DataTracker::HandleForwardTsn(uint32_t newCumulativeTsn)
 		{
+			MS_TRACE();
+
 			// Forward-TSN is sent to make the receiver (this association) "forget"
 			// about partly received (or not received at all) data, up until
 			// `newCumulativeTsn`.

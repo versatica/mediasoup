@@ -26,6 +26,8 @@ namespace RTC
 
 		bool StunPacket::IsStun(const uint8_t* buffer, size_t bufferLength)
 		{
+			MS_TRACE();
+
 			return (
 			  // STUN headers are 20 bytes.
 			  (bufferLength >= StunPacket::FixedHeaderLength) &&

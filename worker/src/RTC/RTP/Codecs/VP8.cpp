@@ -264,6 +264,8 @@ namespace RTC
 			void VP8::PayloadDescriptor::Encoder::Encode(
 			  uint8_t* data, const PayloadDescriptor* payloadDescriptor) const
 			{
+				MS_TRACE();
+
 				payloadDescriptor->Encode(
 				  data, this->encodingData.pictureId, this->encodingData.tl0PictureIndex);
 			}

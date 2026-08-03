@@ -394,6 +394,8 @@ namespace RTC
 
 	void TransportCongestionControlServer::UpdatePacketLoss(double packetLoss)
 	{
+		MS_TRACE();
+
 		// Add the lost into the histogram.
 		if (this->packetLossHistory.size() == PacketLossHistogramLength)
 		{

@@ -42,6 +42,8 @@ namespace RTC
 		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader, size_t availableLen)
 		  : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
 		{
+			MS_TRACE();
+
 			const size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
 
 			if (len > availableLen)

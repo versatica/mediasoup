@@ -20,6 +20,8 @@ alignas(4) static thread_local uint8_t ReadBuffer[ReadBufferSize];
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
+	MS_TRACE();
+
 	auto* socket = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
@@ -31,6 +33,8 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 inline static void onRecv(
   uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
+	MS_TRACE();
+
 	auto* socket = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
@@ -41,6 +45,8 @@ inline static void onRecv(
 
 inline static void onSend(uv_udp_send_t* req, int status)
 {
+	MS_TRACE();
+
 	auto* sendData = static_cast<UdpSocketHandle::UvSendData*>(req->data);
 	auto* handle   = req->handle;
 	auto* socket   = static_cast<UdpSocketHandle*>(handle->data);
@@ -57,6 +63,8 @@ inline static void onSend(uv_udp_send_t* req, int status)
 
 inline static void onCloseUdp(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_udp_t*>(handle);
 }
 
@@ -108,6 +116,8 @@ UdpSocketHandle::~UdpSocketHandle()
 
 void UdpSocketHandle::Dump(int indentation) const
 {
+	MS_TRACE();
+
 	MS_DUMP_CLEAN(indentation, "<UdpSocketHandle>");
 	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
 	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));

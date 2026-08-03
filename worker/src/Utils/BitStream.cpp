@@ -98,6 +98,8 @@ namespace Utils
 	 */
 	std::optional<uint32_t> BitStream::ReadNs(uint32_t n)
 	{
+		MS_TRACE();
+
 		unsigned w = 0;
 		unsigned x = n;
 

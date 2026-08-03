@@ -2875,6 +2875,8 @@ namespace RTC
 	void Transport::OnDataConsumerNeedBufferedAmountLowThreshold(
 	  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmountLowThreshold) const
 	{
+		MS_TRACE();
+
 		if (this->sctpAssociation)
 		{
 			bufferedAmountLowThreshold =

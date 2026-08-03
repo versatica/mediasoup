@@ -14,11 +14,14 @@ namespace RTC
 		FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(const Header* header)
 		  : FeedbackRtpTmmbItem<T>(reinterpret_cast<const uint8_t*>(header))
 		{
+			MS_TRACE();
 		}
 
 		template<typename T>
 		FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(const uint8_t* data)
 		{
+			MS_TRACE();
+
 			this->ssrc = Utils::Byte::Get4Bytes(data, 0);
 
 			// Read the 4 bytes block.
@@ -42,6 +45,8 @@ namespace RTC
 		template<typename T>
 		size_t FeedbackRtpTmmbItem<T>::Serialize(uint8_t* buffer)
 		{
+			MS_TRACE();
+
 			static constexpr uint32_t MaxMantissa{ 0x1ffff }; // 17 bits.
 
 			uint64_t mantissa = this->bitrate;

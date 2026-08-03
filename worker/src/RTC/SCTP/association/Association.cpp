@@ -345,6 +345,8 @@ namespace RTC
 
 		std::optional<AssociationMetrics> Association::MakeMetrics() const
 		{
+			MS_TRACE();
+
 			if (!this->tcb)
 			{
 				return std::nullopt;

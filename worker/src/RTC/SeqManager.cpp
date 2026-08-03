@@ -11,24 +11,32 @@ namespace RTC
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqLowerThan::operator()(T lhs, T rhs) const
 	{
+		MS_TRACE();
+
 		return Utils::Number::IsLowerThan<T, N>(lhs, rhs);
 	}
 
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqHigherThan::operator()(T lhs, T rhs) const
 	{
+		MS_TRACE();
+
 		return Utils::Number::IsHigherThan<T, N>(lhs, rhs);
 	}
 
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::IsSeqHigherThan(T lhs, T rhs)
 	{
+		MS_TRACE();
+
 		return Utils::Number::IsHigherThan<T, N>(lhs, rhs);
 	}
 
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::IsSeqLowerThan(T lhs, T rhs)
 	{
+		MS_TRACE();
+
 		return Utils::Number::IsLowerThan<T, N>(lhs, rhs);
 	}
 
@@ -179,12 +187,16 @@ namespace RTC
 	template<typename T, uint8_t N>
 	T SeqManager<T, N>::GetMaxInput() const
 	{
+		MS_TRACE();
+
 		return this->maxInput;
 	}
 
 	template<typename T, uint8_t N>
 	T SeqManager<T, N>::GetMaxOutput() const
 	{
+		MS_TRACE();
+
 		// 'maxOutput' is stored in the offset-less space (as 'base' and comparisons
 		// use it), so apply 'initialOutput' here, just like `Input()` does before
 		// returning the output to the caller.

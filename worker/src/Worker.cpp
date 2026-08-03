@@ -88,6 +88,8 @@ void Worker::Close()
 flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
   flatbuffers::FlatBufferBuilder& builder) const
 {
+	MS_TRACE();
+
 	// Add webRtcServerIds.
 	std::vector<flatbuffers::Offset<flatbuffers::String>> webRtcServerIds;
 	webRtcServerIds.reserve(this->mapWebRtcServers.size());

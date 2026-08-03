@@ -183,6 +183,8 @@ namespace Channel
 
 	void ChannelRequest::Send(const uint8_t* buffer, size_t size) const
 	{
+		MS_TRACE();
+
 		this->channel->Send(buffer, size);
 	}
 
