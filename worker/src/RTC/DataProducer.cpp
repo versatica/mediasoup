@@ -4,7 +4,6 @@
 #include "RTC/DataProducer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Settings.hpp"
 #include <vector>
 
 namespace RTC
@@ -229,6 +228,13 @@ namespace RTC
 					requiredSubchannel = body->requiredSubchannel();
 				}
 
+				std::optional<uint16_t> ignoredSubchannel{ std::nullopt };
+
+				if (body->ignoredSubchannel().has_value())
+				{
+					ignoredSubchannel = body->ignoredSubchannel();
+				}
+
 				const uint16_t streamId =
 				  this->type == DataProducer::Type::SCTP ? this->sctpStreamParameters.streamId : 0;
 
@@ -236,7 +242,7 @@ namespace RTC
 				// move the message and pass its ownership to the SCTP stack.
 				RTC::SCTP::Message message(streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
 
-				ReceiveMessage(std::move(message), subchannels, requiredSubchannel);
+				ReceiveMessage(std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 
 				// Increase receive transmission.
 				this->listener->OnDataProducerReceiveData(this, len);
@@ -254,7 +260,8 @@ namespace RTC
 	void DataProducer::ReceiveMessage(
 	  RTC::SCTP::Message message,
 	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel)
+	  std::optional<uint16_t> requiredSubchannel,
+	  std::optional<uint16_t> ignoredSubchannel)
 	{
 		MS_TRACE();
 
@@ -268,6 +275,6 @@ namespace RTC
 		}
 
 		this->listener->OnDataProducerMessageReceived(
-		  this, std::move(message), subchannels, requiredSubchannel);
+		  this, std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 	}
 } // namespace RTC

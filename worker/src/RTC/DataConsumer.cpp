@@ -313,7 +313,7 @@ namespace RTC
 				// move the message and pass its ownership to the SCTP stack.
 				RTC::SCTP::Message message(streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
 
-				SendMessage(std::move(message), emptySubchannels, std::nullopt, cb);
+				SendMessage(std::move(message), emptySubchannels, std::nullopt, std::nullopt, cb);
 
 				break;
 			}
@@ -486,6 +486,7 @@ namespace RTC
 	  RTC::SCTP::Message message,
 	  std::vector<uint16_t>& subchannels,
 	  std::optional<uint16_t> requiredSubchannel,
+	  std::optional<uint16_t> ignoredSubchannel,
 	  const onQueuedCallback* cb)
 	{
 		MS_TRACE();
@@ -510,6 +511,19 @@ namespace RTC
 			// If a required subchannel is given, verify that this data consumer is
 			// subscribed to it.
 			if (requiredSubchannel.has_value() && !this->subchannels.contains(requiredSubchannel.value()))
+			{
+				if (cb)
+				{
+					(*cb)(false, false);
+					delete cb;
+				}
+
+				return false;
+			}
+
+			// If an ignored subchannel is given, verify that this data consumer is not
+			// subscribed to it, otherwise don't send this message to it.
+			if (ignoredSubchannel.has_value() && this->subchannels.contains(ignoredSubchannel.value()))
 			{
 				if (cb)
 				{
@@ -575,7 +589,10 @@ namespace RTC
 			}
 
 			RTC::SubchannelsCodec::EncodeSubchannels(
-			  message, reduceSubchannels ? reducedSubchannels : subchannels, requiredSubchannel);
+			  message,
+			  reduceSubchannels ? reducedSubchannels : subchannels,
+			  requiredSubchannel,
+			  ignoredSubchannel);
 		}
 
 		const size_t messageLen = message.GetPayloadLength();

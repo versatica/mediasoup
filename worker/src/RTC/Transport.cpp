@@ -2826,12 +2826,13 @@ namespace RTC
 	  RTC::DataProducer* dataProducer,
 	  RTC::SCTP::Message message,
 	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel)
+	  std::optional<uint16_t> requiredSubchannel,
+	  std::optional<uint16_t> ignoredSubchannel)
 	{
 		MS_TRACE();
 
 		this->listener->OnTransportDataProducerMessageReceived(
-		  this, dataProducer, std::move(message), subchannels, requiredSubchannel);
+		  this, dataProducer, std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 	}
 
 	void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
@@ -3152,15 +3153,18 @@ namespace RTC
 		{
 			std::vector<uint16_t> subchannels;
 			std::optional<uint16_t> requiredSubchannel;
+			std::optional<uint16_t> ignoredSubchannel;
 
-			// When this is a pipe transport, the subchannels and required subchannel
-			// may be encoded at the beginning of the message payload.
+			// When this is a pipe transport, the subchannels, required subchannel and
+			// ignored subchannel may be encoded at the beginning of the message payload.
 			if (this->IsPipe())
 			{
-				RTC::SubchannelsCodec::DecodeSubchannels(message, subchannels, requiredSubchannel);
+				RTC::SubchannelsCodec::DecodeSubchannels(
+				  message, subchannels, requiredSubchannel, ignoredSubchannel);
 			}
 
-			dataProducer->ReceiveMessage(std::move(message), subchannels, requiredSubchannel);
+			dataProducer->ReceiveMessage(
+			  std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 		}
 		catch (std::exception& error)
 		{

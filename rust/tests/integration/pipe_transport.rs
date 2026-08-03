@@ -1323,7 +1323,7 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
         let data_consumer = direct_transport_2
             .consume_data(DataConsumerOptions::new_direct(
                 data_producer.id(),
-                Some(vec![123, 666]),
+                Some(vec![123, 666, 777]),
             ))
             .await
             .expect("Failed to create data consumer");
@@ -1341,7 +1341,7 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
                         panic!("Unexpected non-string message");
                     }
                 };
-                let is_last_message = text == "hello5";
+                let is_last_message = text == "bye";
 
                 received_messages.lock().push(text);
 
@@ -1367,6 +1367,7 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
                 WebRtcMessage::String(Cow::Borrowed("hello1".as_bytes())),
                 Some(vec![123, 124]),
                 Some(666),
+                None,
             )
             .expect("Failed to send message");
 
@@ -1383,6 +1384,7 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
                 WebRtcMessage::String(Cow::Borrowed("hello2".as_bytes())),
                 Some(vec![123]),
                 Some(666),
+                None,
             )
             .expect("Failed to send message");
 
@@ -1394,6 +1396,7 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
                 WebRtcMessage::String(Cow::Borrowed("hello3".as_bytes())),
                 Some(vec![124]),
                 Some(666),
+                None,
             )
             .expect("Failed to send message");
 
@@ -1404,6 +1407,29 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
                 WebRtcMessage::String(Cow::Borrowed("hello4".as_bytes())),
                 Some(vec![125]),
                 Some(666),
+                None,
+            )
+            .expect("Failed to send message");
+
+        // The pipe DataConsumer is subscribed to subchannel 666 so it must not allow the
+        // message to pass through.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello5".as_bytes())),
+                Some(vec![123]),
+                None,
+                Some(666),
+            )
+            .expect("Failed to send message");
+
+        // The final DataConsumer is subscribed to subchannel 777 so it must not receive
+        // the message.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello6".as_bytes())),
+                None,
+                None,
+                Some(777),
             )
             .expect("Failed to send message");
 
@@ -1412,7 +1438,8 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
         // know that previous ones also arrived.
         direct_data_producer
             .send(
-                WebRtcMessage::String(Cow::Borrowed("hello5".as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed("bye".as_bytes())),
+                None,
                 None,
                 None,
             )
@@ -1420,7 +1447,7 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
 
         let received_messages = received_rx.await.expect("Failed to receive messages");
 
-        assert_eq!(received_messages, ["hello1", "hello2", "hello5"]);
+        assert_eq!(received_messages, ["hello1", "hello2", "bye"]);
     });
 }
 

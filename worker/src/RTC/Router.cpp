@@ -910,7 +910,8 @@ namespace RTC
 	  RTC::DataProducer* dataProducer,
 	  RTC::SCTP::Message message,
 	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel)
+	  std::optional<uint16_t> requiredSubchannel,
+	  std::optional<uint16_t> ignoredSubchannel)
 	{
 		MS_TRACE();
 
@@ -936,7 +937,8 @@ namespace RTC
 					// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
 					message.SetStreamId(streamId);
 
-					dataConsumer->SendMessage(std::move(message), subchannels, requiredSubchannel);
+					dataConsumer->SendMessage(
+					  std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 				}
 				// NOTE: Here we are cloning the message before passing it to each
 				// DataConsumer because each DataConsumer will pass std::move(message)
@@ -949,7 +951,8 @@ namespace RTC
 					// DataConsumer.
 					clonedMessage.SetStreamId(streamId);
 
-					dataConsumer->SendMessage(std::move(clonedMessage), subchannels, requiredSubchannel);
+					dataConsumer->SendMessage(
+					  std::move(clonedMessage), subchannels, requiredSubchannel, ignoredSubchannel);
 				}
 			}
 		}

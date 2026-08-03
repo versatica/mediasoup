@@ -97,6 +97,7 @@ namespace RTC
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel,
+		  std::optional<uint16_t> ignoredSubchannel,
 		  const onQueuedCallback* cb = nullptr);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
