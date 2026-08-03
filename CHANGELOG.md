@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.24.0
+
 - `DataProducer.send()`: Add `ignoredSubchannel` optional argument ([PR #1877](https://github.com/versatica/mediasoup/pull/1877)).
 
 ### 3.23.2
