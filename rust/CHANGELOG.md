@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.25.0
+
 - `DirectDataProducer.send()`: Add `ignored_subchannel` optional argument ([PR #1877](https://github.com/versatica/mediasoup/pull/1877)).
 
 ### 0.24.3
