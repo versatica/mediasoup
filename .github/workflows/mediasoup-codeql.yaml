@@ -5,6 +5,8 @@ on:
     branches: [v3]
     paths:
       - 'worker/**'
+      - '!worker/package.json'
+      - '!worker/package-lock.json'
       - 'rust/**'
       - '!rust/CHANGELOG.md'
       - 'Cargo.toml'
@@ -14,6 +16,8 @@ on:
   pull_request:
     paths:
       - 'worker/**'
+      - '!worker/package.json'
+      - '!worker/package-lock.json'
       - 'rust/**'
       - '!rust/CHANGELOG.md'
       - 'Cargo.toml'

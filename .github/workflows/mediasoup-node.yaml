@@ -6,6 +6,8 @@ on:
     paths:
       - 'node/**'
       - 'worker/**'
+      - '!worker/package.json'
+      - '!worker/package-lock.json'
       - 'package.json'
       - 'package-lock.json'
       - 'tsconfig.json'
@@ -15,6 +17,8 @@ on:
     paths:
       - 'node/**'
       - 'worker/**'
+      - '!worker/package.json'
+      - '!worker/package-lock.json'
       - 'package.json'
       - 'package-lock.json'
       - 'tsconfig.json'
