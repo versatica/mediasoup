@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Don't check `ignoredSubchannel` in piped `DataConsumers` ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Worker: Don't check `ignoredSubchannel` in piped `DataConsumers` ([PR #1879](https://github.com/versatica/mediasoup/pull/1879)).
 
 ### 3.24.0
 
