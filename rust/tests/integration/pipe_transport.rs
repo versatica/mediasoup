@@ -1411,8 +1411,8 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
             )
             .expect("Failed to send message");
 
-        // The pipe DataConsumer is subscribed to subchannel 666 so it must not allow the
-        // message to pass through.
+        // The final DataConsumer is subscribed to subchannel 666 so it must not receive
+        // the message.
         direct_data_producer
             .send(
                 WebRtcMessage::String(Cow::Borrowed("hello5".as_bytes())),
@@ -1428,7 +1428,7 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
             .send(
                 WebRtcMessage::String(Cow::Borrowed("hello6".as_bytes())),
                 None,
-                None,
+                Some(123),
                 Some(777),
             )
             .expect("Failed to send message");
@@ -1448,6 +1448,158 @@ fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
         let received_messages = received_rx.await.expect("Failed to receive messages");
 
         assert_eq!(received_messages, ["hello1", "hello2", "bye"]);
+    });
+}
+
+#[test]
+fn data_consume_for_pipe_data_producer_succeeds_with_ignored_subchannel() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, _transport1, _transport2) = init().await;
+
+        let direct_transport_1 = router1
+            .create_direct_transport(DirectTransportOptions::default())
+            .await
+            .expect("Failed to create direct transport in router1");
+
+        let data_producer = direct_transport_1
+            .produce_data({
+                let mut options = DataProducerOptions::new_direct();
+
+                options.label = "foo".to_string();
+                options.protocol = "bar".to_string();
+
+                options
+            })
+            .await
+            .expect("Failed to produce data");
+
+        let PipeDataProducerToRouterPair {
+            pipe_data_producer: _pipe_data_producer,
+            pipe_data_consumer,
+        } = router1
+            .pipe_data_producer_to_router(
+                data_producer.id(),
+                PipeToRouterOptions::new(router2.clone()),
+            )
+            .await
+            .expect("Failed to pipe data producer to router");
+
+        let direct_transport_2 = router2
+            .create_direct_transport(DirectTransportOptions::default())
+            .await
+            .expect("Failed to create direct transport in router2");
+
+        let data_consumer_1 = direct_transport_2
+            .consume_data(DataConsumerOptions::new_direct(
+                data_producer.id(),
+                Some(vec![111]),
+            ))
+            .await
+            .expect("Failed to create data consumer");
+
+        let data_consumer_2 = direct_transport_2
+            .consume_data(DataConsumerOptions::new_direct(
+                data_producer.id(),
+                Some(vec![222]),
+            ))
+            .await
+            .expect("Failed to create data consumer");
+
+        // A pipe DataConsumer must be subscribed to the union of the subchannels of all
+        // the DataConsumers behind it.
+        pipe_data_consumer
+            .set_subchannels(vec![111, 222])
+            .await
+            .expect("Failed to set data consumer subchannels");
+
+        // Resolved with all received messages once the last sent one is received.
+        let (received_tx_1, received_rx_1) = async_oneshot::oneshot::<Vec<String>>();
+        let _handler_1 = data_consumer_1.on_message({
+            let received_tx = Mutex::new(Some(received_tx_1));
+            let received_messages = Mutex::new(Vec::<String>::new());
+
+            move |message| {
+                let text = match message {
+                    WebRtcMessage::String(binary) => String::from_utf8(binary.to_vec()).unwrap(),
+                    _ => {
+                        panic!("Unexpected non-string message");
+                    }
+                };
+                let is_last_message = text == "bye";
+
+                received_messages.lock().push(text);
+
+                if is_last_message {
+                    if let Some(mut received_tx) = received_tx.lock().take() {
+                        let _ = received_tx.send(received_messages.lock().clone());
+                    }
+                }
+            }
+        });
+
+        // Resolved with all received messages once the last sent one is received.
+        let (received_tx_2, received_rx_2) = async_oneshot::oneshot::<Vec<String>>();
+        let _handler_2 = data_consumer_2.on_message({
+            let received_tx = Mutex::new(Some(received_tx_2));
+            let received_messages = Mutex::new(Vec::<String>::new());
+
+            move |message| {
+                let text = match message {
+                    WebRtcMessage::String(binary) => String::from_utf8(binary.to_vec()).unwrap(),
+                    _ => {
+                        panic!("Unexpected non-string message");
+                    }
+                };
+                let is_last_message = text == "bye";
+
+                received_messages.lock().push(text);
+
+                if is_last_message {
+                    if let Some(mut received_tx) = received_tx.lock().take() {
+                        let _ = received_tx.send(received_messages.lock().clone());
+                    }
+                }
+            }
+        });
+
+        let direct_data_producer = match &data_producer {
+            DataProducer::Direct(direct_data_producer) => direct_data_producer,
+            _ => {
+                panic!("Expected direct data producer");
+            }
+        };
+
+        // The pipe DataConsumer is subscribed to subchannel 111, but being a pipe
+        // DataConsumer it must not apply the ignored subchannel itself. Otherwise it would
+        // drop the message for every DataConsumer behind it rather than just for the first
+        // one. The ignored subchannel travels within the message and is applied by the
+        // final DataConsumers, so the second one must still receive it.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello1".as_bytes())),
+                None,
+                None,
+                Some(111),
+            )
+            .expect("Failed to send message");
+
+        // Send a message without subchannels so it's guaranteed that it will reach both
+        // final DataConsumers. And wait for reception of this message so at this time we
+        // know whether the previous one arrived.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("bye".as_bytes())),
+                None,
+                None,
+                None,
+            )
+            .expect("Failed to send message");
+
+        let received_messages_1 = received_rx_1.await.expect("Failed to receive messages");
+        let received_messages_2 = received_rx_2.await.expect("Failed to receive messages");
+
+        assert_eq!(received_messages_1, ["bye"]);
+        assert_eq!(received_messages_2, ["hello1", "bye"]);
     });
 }
 
