@@ -1139,8 +1139,8 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 		/* requiredSubchannel */ 666
 	);
 
-	// The `pipeDataConsumer` is subscribed to subchannel 666 so it must not
-	// allow the message to pass through.
+	// The final `directDataConsumer` is subscribed to subchannel 666 so it must
+	// not receive the message.
 	directDataProducer.send(
 		'hello5',
 		/* ppid */ undefined,
@@ -1155,7 +1155,7 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 		'hello6',
 		/* ppid */ undefined,
 		/* subchannels */ undefined,
-		/* requiredSubchannel */ undefined,
+		/* requiredSubchannel */ 123,
 		/* ignoredSubchannel */ 777
 	);
 
@@ -1177,6 +1177,82 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 	});
 
 	expect(receivedMessages).toStrictEqual(['hello1', 'hello2', 'bye']);
+}, 2000);
+
+test('transport.consumeData() for a pipe DataProducer succeeds with ignoredSubchannel', async () => {
+	const directTransport1 = await ctx.router1!.createDirectTransport();
+	const directDataProducer = await directTransport1.produceData({
+		label: 'foo',
+		protocol: 'bar',
+	});
+
+	const { pipeDataConsumer } = await ctx.router1!.pipeToRouter({
+		dataProducerId: directDataProducer.id,
+		router: ctx.router2!,
+	});
+
+	const directTransport2 = await ctx.router2!.createDirectTransport();
+	const directDataConsumer1 = await directTransport2.consumeData({
+		dataProducerId: directDataProducer.id,
+		subchannels: [111],
+	});
+	const directDataConsumer2 = await directTransport2.consumeData({
+		dataProducerId: directDataProducer.id,
+		subchannels: [222],
+	});
+
+	// A pipe DataConsumer must be subscribed to the union of the subchannels of
+	// all the DataConsumers behind it.
+	await pipeDataConsumer!.setSubchannels([111, 222]);
+
+	const receivedMessages1: string[] = [];
+	const receivedMessages2: string[] = [];
+
+	// Resolved once both final DataConsumers have received the last sent message.
+	const allReceived = Promise.all(
+		[
+			[directDataConsumer1, receivedMessages1] as const,
+			[directDataConsumer2, receivedMessages2] as const,
+		].map(
+			([dataConsumer, receivedMessages]) =>
+				new Promise<void>(resolve => {
+					dataConsumer.on('message', message => {
+						const receivedMessage = message.toString('utf8');
+
+						receivedMessages.push(receivedMessage);
+
+						// Resolve once the last sent message is received.
+						if (receivedMessage === 'bye') {
+							resolve();
+						}
+					});
+				})
+		)
+	);
+
+	// The `pipeDataConsumer` is subscribed to subchannel 111, but being a pipe
+	// DataConsumer it must not apply `ignoredSubchannel` itself. Otherwise it
+	// would drop the message for every DataConsumer behind it rather than just
+	// for `directDataConsumer1`. `ignoredSubchannel` travels within the message
+	// and is applied by the final DataConsumers, so `directDataConsumer2` must
+	// still receive it.
+	directDataProducer.send(
+		'hello1',
+		/* ppid */ undefined,
+		/* subchannels */ undefined,
+		/* requiredSubchannel */ undefined,
+		/* ignoredSubchannel */ 111
+	);
+
+	// Send a message without subchannels so it's guaranteed that it will reach
+	// both final DataConsumers. And wait for reception of this message so at
+	// this time we know whether the previous one reached them.
+	directDataProducer.send('bye');
+
+	await allReceived;
+
+	expect(receivedMessages1).toStrictEqual(['bye']);
+	expect(receivedMessages2).toStrictEqual(['hello1', 'bye']);
 }, 2000);
 
 test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {

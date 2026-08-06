@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Don't check `ignoredSubchannel` in piped `DataConsumers` ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 3.24.0
 
 - `DataProducer.send()`: Add `ignoredSubchannel` optional argument ([PR #1877](https://github.com/versatica/mediasoup/pull/1877)).
