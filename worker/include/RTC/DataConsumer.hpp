@@ -93,6 +93,18 @@ namespace RTC
 		void SctpBufferedAmountLow(uint32_t bufferedAmount) const;
 		void SctpSendBufferFull() const;
 		void DataProducerClosed();
+		/**
+		 * Verifies if given subchannels would allow a message to be delivered to
+		 * the DataConsumer endpoint or not.
+		 *
+		 * @remarks
+		 * - This method must be called before invoking `SendMessage()` if subchannels
+		 *   are given to `SendMessage()`.
+		 */
+		bool VerifySubchannels(
+		  const std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel,
+		  std::optional<uint16_t> ignoredSubchannel) const;
 		bool SendMessage(
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,

@@ -917,44 +917,57 @@ namespace RTC
 
 		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
 
-		if (!dataConsumers.empty())
+		const auto getStreamId = [](const RTC::DataConsumer* dataConsumer) -> uint16_t
 		{
-			const auto numDataConsumers = dataConsumers.size();
+			return dataConsumer->GetType() == DataConsumer::Type::SCTP
+			         ? dataConsumer->GetSctpStreamParameters().streamId
+			         : 0;
+		};
 
-			for (auto* dataConsumer : dataConsumers)
+		// NOTE: We don't send the message to a matching DataConsumer right away.
+		// Instead we hold it as pending until we know whether there is another
+		// matching DataConsumer after it. This way just the last matching one needs
+		// no message clone since it can take ownership of the original message.
+		RTC::DataConsumer* pendingDataConsumer{ nullptr };
+
+		for (auto* dataConsumer : dataConsumers)
+		{
+			// Verify subchannels first to avoid cloning the message needlessly.
+			if (!dataConsumer->IsActive() || !dataConsumer->VerifySubchannels(subchannels, requiredSubchannel, ignoredSubchannel))
 			{
-				const uint16_t streamId =
-				  (dataConsumer->GetType() == DataConsumer::Type::SCTP
-				     ? dataConsumer->GetSctpStreamParameters().streamId
-				     : 0);
-
-				if (numDataConsumers == 1)
-				{
-					// We must update the message`s `streamId` for each destination
-					// DataConsumer.
-					// NOTE: clang-tidy doesn't understand that we are only doing this
-					// once in the original `message`.
-					// NOLINTNEXTLINE(clang-analyzer-cplusplus.Move, bugprone-use-after-move, hicpp-invalid-access-moved)
-					message.SetStreamId(streamId);
-
-					dataConsumer->SendMessage(
-					  std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
-				}
-				// NOTE: Here we are cloning the message before passing it to each
-				// DataConsumer because each DataConsumer will pass std::move(message)
-				// internally to its SCTP association.
-				else
-				{
-					auto clonedMessage = message.Clone();
-
-					// We must update the message`s `streamId` for each destination
-					// DataConsumer.
-					clonedMessage.SetStreamId(streamId);
-
-					dataConsumer->SendMessage(
-					  std::move(clonedMessage), subchannels, requiredSubchannel, ignoredSubchannel);
-				}
+				continue;
 			}
+
+			// There is a matching DataConsumer after the pending one, so the pending
+			// one must be given a clone of the message.
+			// NOTE: Here we are cloning the message before passing it to the
+			// DataConsumer because each DataConsumer will pass std::move(message)
+			// internally to its SCTP association.
+			if (pendingDataConsumer)
+			{
+				auto clonedMessage = message.Clone();
+
+				// We must update the message`s `streamId` for each destination
+				// DataConsumer.
+				clonedMessage.SetStreamId(getStreamId(pendingDataConsumer));
+
+				pendingDataConsumer->SendMessage(
+				  std::move(clonedMessage), subchannels, requiredSubchannel, ignoredSubchannel);
+			}
+
+			pendingDataConsumer = dataConsumer;
+		}
+
+		// The last matching DataConsumer (if any) takes ownership of the original
+		// message.
+		if (pendingDataConsumer)
+		{
+			// We must update the message`s `streamId` for each destination
+			// DataConsumer.
+			message.SetStreamId(getStreamId(pendingDataConsumer));
+
+			pendingDataConsumer->SendMessage(
+			  std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 		}
 	}
 
