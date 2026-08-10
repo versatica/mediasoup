@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Verify `DataConsumer` subchannels before cloning the message ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 3.24.1
 
 - Worker: Don't check `ignoredSubchannel` in piped `DataConsumers` ([PR #1879](https://github.com/versatica/mediasoup/pull/1879)).
