@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.25.2
+
 - Worker: Verify `DataConsumer` subchannels before cloning the message ([PR #1880](https://github.com/versatica/mediasoup/pull/1880)).
 
 ### 0.25.1
