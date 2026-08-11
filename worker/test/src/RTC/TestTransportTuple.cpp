@@ -6,7 +6,7 @@
 #include <uv.h>
 #include <catch2/catch_test_macros.hpp>
 
-SCENARIO("TransportTuple", "[transport-tuple]")
+SCENARIO("TransportTuple", "[transporttuple]")
 {
 	class UdpSocketListener : public RTC::UdpSocket::Listener
 	{
