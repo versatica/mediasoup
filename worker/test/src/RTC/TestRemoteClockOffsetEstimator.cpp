@@ -48,6 +48,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 		feed(estimator, RemoteBaseMs + elapsedMs, LocalBaseMs + elapsedMs, 1, 0, 0);
 
 		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs);
 	}
 
@@ -55,6 +56,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	{
 		feed(estimator, RemoteBaseMs, LocalBaseMs, minSampleCount, 40, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs + 40);
 	}
 
@@ -62,6 +65,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	{
 		feed(estimator, RemoteBaseMs, LocalBaseMs, minSampleCount, 40, 80);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs);
 	}
 
@@ -69,6 +74,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	{
 		feed(estimator, RemoteBaseMs, LocalBaseMs, windowSize, 20, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs + 20);
 
 		// A Sender Report that took much longer to reach us must be rejected by the
@@ -77,6 +84,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 
 		feed(estimator, RemoteBaseMs + elapsedMs, LocalBaseMs + elapsedMs, 1, 500, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs + 20);
 	}
 
@@ -84,6 +93,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	{
 		feed(estimator, RemoteBaseMs, LocalBaseMs, windowSize, 0, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs);
 
 		// Once the whole window has been replaced the new delay is fully reflected.
@@ -91,6 +102,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 
 		feed(estimator, RemoteBaseMs + elapsedMs, LocalBaseMs + elapsedMs, windowSize, 100, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs + 100);
 	}
 
@@ -98,6 +111,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	{
 		feed(estimator, RemoteBaseMs, LocalBaseMs, windowSize, 0, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs);
 
 		// Less than half of the window delayed, so the median still falls on a
@@ -106,6 +121,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 
 		feed(estimator, RemoteBaseMs + elapsedMs, LocalBaseMs + elapsedMs, windowSize / 2, 300, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs);
 
 		// One more delayed Sender Report makes them the majority.
@@ -113,6 +130,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 
 		feed(estimator, RemoteBaseMs + elapsedMs, LocalBaseMs + elapsedMs, 1, 300, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs + 300);
 	}
 
@@ -129,8 +148,10 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 			  0);
 		}
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
 		// The samples in the window grow by one millisecond each, so the median is
 		// the middle of that ramp.
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs + static_cast<int64_t>(windowSize / 2));
 
 		// The drift keeps going, so the offset keeps up with it rather than sticking
@@ -143,7 +164,9 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 			  0);
 		}
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
 		REQUIRE(
+		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		  estimator.GetOffsetMs().value() ==
 		  BaseOffsetMs + static_cast<int64_t>(windowSize + (windowSize / 2)));
 	}
@@ -163,6 +186,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 		estimator.AddSenderReport(RemoteBaseMs + 1001, LocalBaseMs + 1000, 0);
 		estimator.AddSenderReport(RemoteBaseMs + 2000, LocalBaseMs + 2000, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs);
 	}
 
@@ -205,6 +230,8 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 		// the very same times as before the reset are not taken as duplicates.
 		feed(estimator, RemoteBaseMs, LocalBaseMs, minSampleCount, 0, 0);
 
+		REQUIRE(estimator.GetOffsetMs().has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.GetOffsetMs().value() == BaseOffsetMs);
 	}
 }
