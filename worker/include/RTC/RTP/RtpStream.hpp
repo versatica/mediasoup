@@ -61,109 +61,161 @@ namespace RTC
 			};
 
 		public:
+			/**
+			 * Correspondence between wall clock and RTP timeline carried by an RTCP Sender
+			 * Report.
+			 */
+			struct SenderReportMapping
+			{
+				/**
+				 * NTP timestamp of the Sender Report (ms).
+				 */
+				uint64_t ntpMs;
+				/**
+				 * RTP timestamp the NTP timestamp above corresponds to.
+				 */
+				uint32_t ts;
+			};
+
+		public:
 			RtpStream(
 			  RTP::RtpStream::Listener* listener,
 			  SharedInterface* shared,
 			  RTP::RtpStream::Params& params,
 			  uint8_t initialScore);
+
 			virtual ~RtpStream();
 
+		public:
 			flatbuffers::Offset<FBS::RtpStream::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
+
 			virtual flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
 			  flatbuffers::FlatBufferBuilder& builder);
+
 			uint32_t GetEncodingIdx() const
 			{
 				return this->params.encodingIdx;
 			}
+
 			uint32_t GetSsrc() const
 			{
 				return this->params.ssrc;
 			}
+
 			uint8_t GetPayloadType() const
 			{
 				return this->params.payloadType;
 			}
+
 			const RTC::RtpCodecMimeType& GetMimeType() const
 			{
 				return this->params.mimeType;
 			}
+
 			uint32_t GetClockRate() const
 			{
 				return this->params.clockRate;
 			}
+
 			const std::string& GetRid() const
 			{
 				return this->params.rid;
 			}
+
 			const std::string& GetCname() const
 			{
 				return this->params.cname;
 			}
+
 			bool HasRtx() const
 			{
 				return this->rtxStream != nullptr;
 			}
+
 			virtual void SetRtx(uint8_t payloadType, uint32_t ssrc);
+
 			uint32_t GetRtxSsrc() const
 			{
 				return this->params.rtxSsrc;
 			}
+
 			uint8_t GetRtxPayloadType() const
 			{
 				return this->params.rtxPayloadType;
 			}
+
 			uint8_t GetSpatialLayers() const
 			{
 				return this->params.spatialLayers;
 			}
+
 			bool HasDtx() const
 			{
 				return this->params.useDtx;
 			}
+
 			uint8_t GetTemporalLayers() const
 			{
 				return this->params.temporalLayers;
 			}
+
 			virtual bool ReceiveStreamPacket(const RTP::Packet* packet);
-			virtual void Pause()                                                                     = 0;
-			virtual void Resume()                                                                    = 0;
-			virtual uint32_t GetBitrate(uint64_t nowMs)                                              = 0;
+
+			virtual void Pause() = 0;
+
+			virtual void Resume() = 0;
+
+			virtual uint32_t GetBitrate(uint64_t nowMs) = 0;
+
 			virtual uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
-			virtual uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer)            = 0;
+
+			virtual uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer) = 0;
+
 			virtual uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
+
 			void ResetScore(uint8_t score, bool notify);
+
 			uint8_t GetFractionLost() const
 			{
 				return this->fractionLost;
 			}
+
 			float GetLossPercentage() const
 			{
 				return static_cast<float>(this->fractionLost) * 100 / 256;
 			}
+
 			float GetRtt() const
 			{
 				return this->rtt;
 			}
+
 			uint64_t GetMaxPacketMs() const
 			{
 				return this->maxPacketMs;
 			}
+
 			uint32_t GetMaxPacketTs() const
 			{
 				return this->maxPacketTs;
 			}
-			uint64_t GetSenderReportNtpMs() const
+
+			/**
+			 * Correspondence between wall clock and RTP timeline given by the last Sender
+			 * Report.
+			 *
+			 * @returns No value if there has been no Sender Report yet.
+			 */
+			std::optional<RTP::RtpStream::SenderReportMapping> GetSenderReportMapping() const
 			{
-				return this->lastSenderReportNtpMs;
+				return this->lastSenderReportMapping;
 			}
-			uint32_t GetSenderReportTs() const
-			{
-				return this->lastSenderReportTs;
-			}
+
 			uint8_t GetScore() const
 			{
 				return this->score;
 			}
+
 			uint64_t GetActiveMs() const
 			{
 				return this->shared->GetTimeMs() - this->activeSinceMs;
@@ -171,9 +223,13 @@ namespace RTC
 
 		protected:
 			bool UpdateSeq(const RTP::Packet* packet);
+
 			void UpdateScore(uint8_t score);
+
 			void PacketRetransmitted(const RTP::Packet* packet);
+
 			void PacketRepaired(const RTP::Packet* packet);
+
 			uint32_t GetExpectedPackets() const
 			{
 				return (this->cycles + this->maxSeq) - this->baseSeq + 1;
@@ -221,10 +277,9 @@ namespace RTC
 			size_t repairedPriorScore{ 0u };
 			// Packets retransmitted at last interval for score calculation.
 			size_t retransmittedPriorScore{ 0u };
-			// NTP timestamp in last Sender Report (in ms).
-			uint64_t lastSenderReportNtpMs{ 0u };
-			// RTP timestamp in last Sender Report.
-			uint32_t lastSenderReportTs{ 0u };
+			// Correspondence between wall clock and RTP timeline given by the last Sender
+			// Report.
+			std::optional<RTP::RtpStream::SenderReportMapping> lastSenderReportMapping;
 			float rtt{ 0.0f };
 			// Instance of RtxStream.
 			RTP::RtxStream* rtxStream{ nullptr };

@@ -317,9 +317,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->lastRrReceivedMs = this->shared->GetTimeMs();
-			this->lastRrTimestamp  = report->GetNtpSec() << 16;
-			this->lastRrTimestamp += report->GetNtpFrac() >> 16;
+			uint32_t compactNtp = report->GetNtpSec() << 16;
+
+			compactNtp += report->GetNtpFrac() >> 16;
+
+			this->lastReceiverReferenceTime = ReceiverReferenceTime{
+				.compactNtp = compactNtp,
+				.receivedMs = this->shared->GetTimeMs(),
+			};
 		}
 
 		RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t nowMs)
@@ -335,19 +340,22 @@ namespace RTC
 			auto* report = new RTC::RTCP::SenderReport();
 
 			// Calculate TS difference between now and maxPacketMs.
-			auto diffMs = nowMs - this->maxPacketMs;
-			auto diffTs = diffMs * GetClockRate() / 1000;
+			const uint64_t diffMs = nowMs - this->maxPacketMs;
+			const uint64_t diffTs = diffMs * GetClockRate() / 1000;
+			const auto rtpTs      = static_cast<uint32_t>(this->maxPacketTs + diffTs);
 
 			report->SetSsrc(GetSsrc());
 			report->SetPacketCount(this->transmissionCounter.GetPacketCount());
 			report->SetOctetCount(this->transmissionCounter.GetBytes());
 			report->SetNtpSec(ntp.seconds);
 			report->SetNtpFrac(ntp.fractions);
-			report->SetRtpTs(this->maxPacketTs + diffTs);
+			report->SetRtpTs(rtpTs);
 
 			// Update info about last Sender Report.
-			this->lastSenderReportNtpMs = nowMs;
-			this->lastSenderReportTs    = this->maxPacketTs + diffTs;
+			this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
+				.ntpMs = nowMs,
+				.ts    = rtpTs,
+			};
 
 			return report;
 		}
@@ -356,13 +364,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->lastRrReceivedMs == 0u)
+			if (!this->lastReceiverReferenceTime.has_value())
 			{
 				return nullptr;
 			}
 
+			const auto& receiverReferenceTime = this->lastReceiverReferenceTime.value();
 			// Get delay in milliseconds.
-			auto delayMs = static_cast<uint32_t>(nowMs - this->lastRrReceivedMs);
+			auto delayMs = static_cast<uint32_t>(nowMs - receiverReferenceTime.receivedMs);
 			// Express delay in units of 1/65536 seconds.
 			uint32_t dlrr = (delayMs / 1000) << 16;
 
@@ -372,7 +381,7 @@ namespace RTC
 
 			ssrcInfo->SetSsrc(GetSsrc());
 			ssrcInfo->SetDelaySinceLastReceiverReport(dlrr);
-			ssrcInfo->SetLastReceiverReport(this->lastRrTimestamp);
+			ssrcInfo->SetLastReceiverReport(receiverReferenceTime.compactNtp);
 
 			return ssrcInfo;
 		}
