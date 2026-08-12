@@ -304,7 +304,8 @@ namespace RTC
 				uint64_t absCaptureTimestamp{ 0 };
 				int64_t estimatedCaptureClockOffset{ 0 };
 
-				if (packet->ReadAbsCaptureTime(absCaptureTimestamp, estimatedCaptureClockOffset))
+				// NOTE: A zeroed capture timestamp gives no capture instant to store.
+				if (packet->ReadAbsCaptureTime(absCaptureTimestamp, estimatedCaptureClockOffset) && absCaptureTimestamp != 0)
 				{
 					Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
@@ -589,25 +590,31 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint32_t compactNtp = report->GetNtpSec() << 16;
-
-			compactNtp += report->GetNtpFrac() >> 16;
-
-			this->lastSenderReportTiming = SenderReportTiming{
-				.compactNtp = compactNtp,
-				.receivedMs = this->shared->GetTimeMs(),
-			};
-
 			// Update info about last Sender Report.
-			Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+			//
+			// NOTE: A sender with no wall clock may report a zeroed NTP timestamp, which
+			// gives nothing to store.
+			if (report->GetNtpSec() != 0 || report->GetNtpFrac() != 0)
+			{
+				uint32_t compactNtp = report->GetNtpSec() << 16;
 
-			ntp.seconds   = report->GetNtpSec();
-			ntp.fractions = report->GetNtpFrac();
+				compactNtp += report->GetNtpFrac() >> 16;
 
-			this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
-				.ntpMs = Utils::Time::Ntp2TimeMs(ntp),
-				.ts    = report->GetRtpTs(),
-			};
+				this->lastSenderReportTiming = SenderReportTiming{
+					.compactNtp = compactNtp,
+					.receivedMs = this->shared->GetTimeMs(),
+				};
+
+				Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+				ntp.seconds   = report->GetNtpSec();
+				ntp.fractions = report->GetNtpFrac();
+
+				this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
+					.ntpMs = Utils::Time::Ntp2TimeMs(ntp),
+					.ts    = report->GetRtpTs(),
+				};
+			}
 
 			// Update the score with the current RR.
 			UpdateScore();
@@ -703,9 +710,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const auto clockRate = GetClockRate();
+
+			if (clockRate == 0)
+			{
+				return std::nullopt;
+			}
+
 			// Distance in RTP timestamp units, taking wrap around into account.
 			const auto distanceTs    = static_cast<int64_t>(static_cast<int32_t>(ts - referenceTs));
-			const int64_t distanceMs = (distanceTs * 1000) / static_cast<int64_t>(GetClockRate());
+			const int64_t distanceMs = (distanceTs * 1000) / static_cast<int64_t>(clockRate);
 			// NOTE: The negation is safe since `distanceMs` comes from a 32 bits
 			// distance scaled down by the clock rate.
 			const auto absDistanceMs = static_cast<uint64_t>(distanceMs < 0 ? -distanceMs : distanceMs);
