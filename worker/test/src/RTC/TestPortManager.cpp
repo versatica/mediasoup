@@ -10,7 +10,7 @@
 // merged unrelated bindings. This scenario locks down the post-fix
 // behavior: distinct tuples produce distinct keys, equal tuples produce equal
 // keys.
-SCENARIO("PortManager", "[rtc][portmanager]")
+SCENARIO("PortManager", "[portmanager]")
 {
 	// Helper: build an IPv4 `sockaddr_storage` from a dotted-quad string + port=0.
 	auto makeV4 = [](const char* dottedQuad)

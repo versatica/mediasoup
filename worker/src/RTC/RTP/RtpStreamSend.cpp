@@ -21,11 +21,6 @@ namespace RTC
 		  MaxRequestedPackets + 1);
 		static constexpr uint32_t DefaultRtt{ 100u };
 
-		/* Class Static. */
-
-		const uint32_t RtpStreamSend::MaxRetransmissionDelayForVideoMs{ 2000u };
-		const uint32_t RtpStreamSend::MaxRetransmissionDelayForAudioMs{ 1000u };
-
 		/* Instance methods. */
 
 		RtpStreamSend::RtpStreamSend(

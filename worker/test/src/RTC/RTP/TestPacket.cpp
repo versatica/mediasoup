@@ -1059,12 +1059,16 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->GetCaptureMs() == std::nullopt);
 
 		packet->SetPayloadType(100);
 		packet->SetMarker(true);
 		packet->SetSequenceNumber(12345);
 		packet->SetTimestamp(987654321);
 		packet->SetSsrc(1234567890);
+		packet->SetCaptureMs(99998888);
+
+		REQUIRE(packet->GetCaptureMs() == 99998888);
 
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 
@@ -1204,6 +1208,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(extensionLen == 3);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->GetCaptureMs() == 99998888);
 
 		/* Clone it. */
 
@@ -1252,6 +1257,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(extensionLen == 3);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->GetCaptureMs() == 99998888);
 
 		/* Set payload. */
 
