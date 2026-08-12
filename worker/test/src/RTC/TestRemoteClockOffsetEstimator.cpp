@@ -203,13 +203,17 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 
 	SECTION("remote times are translated into our clock")
 	{
-		RTC::RemoteClockOffsetEstimator untrainedEstimator;
+		const RTC::RemoteClockOffsetEstimator untrainedEstimator;
 
 		REQUIRE_FALSE(untrainedEstimator.RemoteMsToLocalMs(RemoteBaseMs).has_value());
 
 		feed(estimator, RemoteBaseMs, LocalBaseMs, minSampleCount, 0, 0);
 
+		REQUIRE(estimator.RemoteMsToLocalMs(RemoteBaseMs).has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.RemoteMsToLocalMs(RemoteBaseMs).value() == LocalBaseMs);
+		REQUIRE(estimator.RemoteMsToLocalMs(RemoteBaseMs + 500).has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimator.RemoteMsToLocalMs(RemoteBaseMs + 500).value() == LocalBaseMs + 500);
 
 		// A remote time older than the origin of our clock cannot be translated.
