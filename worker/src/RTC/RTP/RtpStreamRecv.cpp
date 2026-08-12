@@ -706,8 +706,11 @@ namespace RTC
 			// Distance in RTP timestamp units, taking wrap around into account.
 			const auto distanceTs    = static_cast<int64_t>(static_cast<int32_t>(ts - referenceTs));
 			const int64_t distanceMs = (distanceTs * 1000) / static_cast<int64_t>(GetClockRate());
+			// NOTE: The negation is safe since `distanceMs` comes from a 32 bits
+			// distance scaled down by the clock rate.
+			const auto absDistanceMs = static_cast<uint64_t>(distanceMs < 0 ? -distanceMs : distanceMs);
 
-			if (distanceMs > static_cast<int64_t>(maxDistanceMs) || distanceMs < -static_cast<int64_t>(maxDistanceMs))
+			if (absDistanceMs > maxDistanceMs)
 			{
 				return std::nullopt;
 			}
