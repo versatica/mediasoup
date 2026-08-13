@@ -26,7 +26,7 @@ namespace RTC
 		this->source = absCaptureTimeNegotiated ? RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME
 		                                        : RemoteCaptureTimeEstimator::Source::SENDER_REPORT;
 
-		MS_WARN_2TAGS(
+		MS_DEBUG_2TAGS(
 		  rtp,
 		  rtcp,
 		  "capture instant source set to %s",
