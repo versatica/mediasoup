@@ -336,6 +336,13 @@ namespace RTC
 				return nullptr;
 			}
 
+			// A stream that stopped sending cannot tell where its RTP timeline is now, and
+			// extrapolating would claim RTP timestamps of packets never sent.
+			if (nowMs - this->maxPacketMs > RtpStreamSend::MaxSenderReportReferenceAgeMs)
+			{
+				return nullptr;
+			}
+
 			auto ntp     = Utils::Time::TimeMs2Ntp(nowMs);
 			auto* report = new RTC::RTCP::SenderReport();
 

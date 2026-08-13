@@ -21,6 +21,16 @@ namespace RTC
 			 * Maximum retransmission buffer size for audio (ms).
 			 */
 			static constexpr uint32_t MaxRetransmissionDelayForAudioMs{ 1000 };
+			/**
+			 * How old the last packet sent may be for a Sender Report to still be generated
+			 * (ms).
+			 *
+			 * @remarks
+			 * - Above the interval between packets of any legitimate stream, including Opus
+			 *   with a 120 ms ptime and screen sharing at 1 fps, so that it only triggers on
+			 *   a stream that has really stopped sending.
+			 */
+			static constexpr uint32_t MaxSenderReportReferenceAgeMs{ 2000 };
 
 		public:
 			enum class ReceivePacketResult : uint8_t

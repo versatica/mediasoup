@@ -1155,10 +1155,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			  packet.get());
 
 			const std::unique_ptr<RTC::RTCP::SenderReport> report(
-			  stream.GetRtcpSenderReport(PacketMs + 2000));
+			  stream.GetRtcpSenderReport(PacketMs + 1000));
 
 			REQUIRE(report);
-			REQUIRE(report->GetRtpTs() == PacketTs + (2 * params.clockRate));
+			REQUIRE(report->GetRtpTs() == PacketTs + params.clockRate);
 		}
 
 		// With capture instant, the extra half second since it is accounted for.
@@ -1176,10 +1176,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			  packet.get());
 
 			const std::unique_ptr<RTC::RTCP::SenderReport> report(
-			  stream.GetRtcpSenderReport(PacketMs + 2000));
+			  stream.GetRtcpSenderReport(PacketMs + 1000));
 
 			REQUIRE(report);
-			REQUIRE(report->GetRtpTs() == PacketTs + ((2500 * params.clockRate) / 1000));
+			REQUIRE(report->GetRtpTs() == PacketTs + ((1500 * params.clockRate) / 1000));
 		}
 
 		// A capture instant ahead of now, which the estimation may yield, does not make the
@@ -1198,11 +1198,50 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			  packet.get());
 
 			const std::unique_ptr<RTC::RTCP::SenderReport> report(
-			  stream.GetRtcpSenderReport(PacketMs + 2000));
+			  stream.GetRtcpSenderReport(PacketMs + 1000));
 
 			REQUIRE(report);
 			REQUIRE(report->GetRtpTs() == PacketTs);
 		}
+	}
+
+	SECTION("no Sender Report is generated once the stream has stopped sending")
+	{
+		// Instant reported by the mocked clock, and hence the one at which packets are seen.
+		constexpr uint64_t PacketMs{ 1000 };
+		constexpr uint32_t PacketTs{ 1533790901 };
+
+		TestRtpStreamListener testRtpStreamListener;
+
+		RTC::RTP::RtpStream::Params params;
+
+		params.ssrc          = 1111;
+		params.clockRate     = 90000;
+		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+
+		RTC::RTP::RtpStreamSend stream(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+		auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
+
+		sendRtpPacket(
+		  {
+		    { std::addressof(stream), params.ssrc }
+    },
+		  packet.get());
+
+		// Right at the limit the Sender Report is still generated.
+		const std::unique_ptr<RTC::RTCP::SenderReport> report(
+		  stream.GetRtcpSenderReport(PacketMs + RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs));
+
+		REQUIRE(report);
+
+		// Past the limit it is not.
+		const std::unique_ptr<RTC::RTCP::SenderReport> staleReport(stream.GetRtcpSenderReport(
+		  PacketMs + RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs + 1));
+
+		REQUIRE_FALSE(staleReport);
 	}
 
 #ifdef PERFORMANCE_TEST
