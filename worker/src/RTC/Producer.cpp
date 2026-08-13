@@ -580,6 +580,9 @@ namespace RTC
 
 		ReceiveRtpPacketResult result;
 		bool isRtx{ false };
+		// Highest RTP timestamp of the stream before this packet is processed, so that it
+		// can be told afterwards whether this packet made it advance.
+		const auto previousMaxPacketTs = rtpStream->GetMaxPacketTs();
 
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
@@ -675,7 +678,10 @@ namespace RTC
 		}
 
 		// Post-process the packet.
-		PostProcessRtpPacket(packet);
+		PostProcessRtpPacket(
+		  packet,
+		  rtpStream,
+		  /*maxPacketTsChanged*/ rtpStream->GetMaxPacketTs() != previousMaxPacketTs);
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
 
@@ -1409,9 +1415,23 @@ namespace RTC
 		return true;
 	}
 
-	inline void Producer::PostProcessRtpPacket(RTC::RTP::Packet* packet)
+	inline void Producer::PostProcessRtpPacket(
+	  RTC::RTP::Packet* packet, const RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged)
 	{
 		MS_TRACE();
+
+		// Store the capture instant of the packet holding the highest RTP timestamp of its
+		// stream, which is the only one the Sender Reports we send are built upon.
+		if (maxPacketTsChanged)
+		{
+			const auto captureMs =
+			  this->listener->OnProducerNeedLocalCaptureMs(this, rtpStream, packet->GetTimestamp());
+
+			if (captureMs.has_value())
+			{
+				packet->SetCaptureMs(captureMs.value());
+			}
+		}
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
@@ -1697,15 +1717,14 @@ namespace RTC
 		this->listener->OnProducerSendRtcpPacket(this, packet);
 	}
 
-	inline void Producer::OnRtpStreamNeedWorstRemoteFractionLost(
-	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost)
+	inline uint8_t Producer::OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
-		auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
+		const auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 
 		// Notify the listener.
-		this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc, worstRemoteFractionLost);
+		return this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc);
 	}
 
 	inline void Producer::OnKeyFrameNeeded(

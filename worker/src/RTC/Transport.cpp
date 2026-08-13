@@ -640,6 +640,22 @@ namespace RTC
 				// Insert into the map.
 				this->mapProducers[producerId] = producer;
 
+				// Take this Producer into account for the capture time estimation of its
+				// sender.
+				//
+				// NOTE: A Producer with no CNAME cannot be grouped with the other Producers
+				// of its sender, and sharing a single estimator among all the CNAME less
+				// Producers of a PipeTransport would mix the clocks of different senders.
+				{
+					const auto& cname = producer->GetRtpParameters().rtcp.cname;
+
+					if (!cname.empty())
+					{
+						this->mapCnameRemoteCaptureTimeEstimator[cname].UpdateSource(
+						  producer->GetRtpHeaderExtensionIds().absCaptureTime != 0);
+					}
+				}
+
 				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
 
 				// Take the transport related RTP header extensions of the Producer and
@@ -1244,6 +1260,26 @@ namespace RTC
 
 				// Remove it from the map.
 				this->mapProducers.erase(producer->id);
+
+				// Remove the capture time estimator of its sender once its last Producer
+				// is gone.
+				{
+					const auto& cname = producer->GetRtpParameters().rtcp.cname;
+
+					const bool cnameStillInUse = std::ranges::any_of(
+					  this->mapProducers,
+					  [&cname](const auto& kv) -> bool
+					  {
+						  const auto* otherProducer = kv.second;
+
+						  return otherProducer->GetRtpParameters().rtcp.cname == cname;
+					  });
+
+					if (!cnameStillInUse)
+					{
+						this->mapCnameRemoteCaptureTimeEstimator.erase(cname);
+					}
+				}
 
 				// Tell the child class to clear associated SSRCs.
 				for (const auto& kv : producer->GetRtpStreams())
@@ -2538,6 +2574,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Feed the capture time estimator of the sender of this Producer.
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it != this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			auto& remoteCaptureTimeEstimator = it->second;
+
+			remoteCaptureTimeEstimator.SenderReportReceived(rtpStream);
+		}
+
 		this->listener->OnTransportProducerRtcpSenderReport(this, producer, rtpStream, first);
 	}
 
@@ -2555,13 +2602,29 @@ namespace RTC
 		SendRtcpPacket(packet);
 	}
 
-	void Transport::OnProducerNeedWorstRemoteFractionLost(
-	  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost)
+	uint8_t Transport::OnProducerNeedWorstRemoteFractionLost(RTC::Producer* producer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
-		this->listener->OnTransportNeedWorstRemoteFractionLost(
-		  this, producer, mappedSsrc, worstRemoteFractionLost);
+		return this->listener->OnTransportNeedWorstRemoteFractionLost(this, producer, mappedSsrc);
+	}
+
+	std::optional<uint64_t> Transport::OnProducerNeedLocalCaptureMs(
+	  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts)
+	{
+		MS_TRACE();
+
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it == this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			return std::nullopt;
+		}
+
+		const auto& remoteCaptureTimeEstimator = it->second;
+
+		return remoteCaptureTimeEstimator.GetLocalCaptureMs(rtpStream, ts);
 	}
 
 	void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)

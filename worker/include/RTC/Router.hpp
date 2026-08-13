@@ -79,11 +79,8 @@ namespace RTC
 		  bool first) override;
 		void OnTransportProducerRtpPacketReceived(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RTP::Packet* packet) override;
-		void OnTransportNeedWorstRemoteFractionLost(
-		  RTC::Transport* transport,
-		  RTC::Producer* producer,
-		  uint32_t mappedSsrc,
-		  uint8_t& worstRemoteFractionLost) override;
+		uint8_t OnTransportNeedWorstRemoteFractionLost(
+		  RTC::Transport* transport, RTC::Producer* producer, uint32_t mappedSsrc) override;
 		void OnTransportNewConsumer(
 		  RTC::Transport* transport, RTC::Consumer* consumer, const std::string& producerId) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;

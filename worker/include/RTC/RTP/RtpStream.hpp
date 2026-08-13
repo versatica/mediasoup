@@ -261,6 +261,9 @@ namespace RTC
 			uint32_t maxPacketTs{ 0u };
 			// When the packet with highest timestammp was seen.
 			uint64_t maxPacketMs{ 0u };
+			// When the media in the packet with highest timestamp was captured, in our own
+			// monotonic clock.
+			std::optional<uint64_t> maxPacketCaptureMs;
 			int32_t packetsLost{ 0 };
 			uint8_t fractionLost{ 0u };
 			// Jitter in RTP timestamp units. As per spec it's kept as floating value

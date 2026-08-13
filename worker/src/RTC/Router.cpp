@@ -701,20 +701,22 @@ namespace RTC
 		}
 	}
 
-	void Router::OnTransportNeedWorstRemoteFractionLost(
-	  RTC::Transport* /*transport*/,
-	  RTC::Producer* producer,
-	  uint32_t mappedSsrc,
-	  uint8_t& worstRemoteFractionLost)
+	uint8_t Router::OnTransportNeedWorstRemoteFractionLost(
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		const auto& consumers = this->mapProducerConsumers.at(producer);
 
-		for (auto* consumer : consumers)
+		uint8_t worstRemoteFractionLost{ 0 };
+
+		for (const auto* consumer : consumers)
 		{
-			consumer->NeedWorstRemoteFractionLost(mappedSsrc, worstRemoteFractionLost);
+			worstRemoteFractionLost =
+			  std::max(consumer->GetWorstRemoteFractionLost(mappedSsrc), worstRemoteFractionLost);
 		}
+
+		return worstRemoteFractionLost;
 	}
 
 	void Router::OnTransportNewConsumer(
