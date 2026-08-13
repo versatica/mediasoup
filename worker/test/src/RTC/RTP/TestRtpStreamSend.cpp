@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Codecs/VP8.hpp"
@@ -1123,6 +1124,85 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		result = stream->ReceivePacket(packet.get(), sharedPacket);
 
 		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED);
+	}
+
+	SECTION("Sender Report RTP timestamp is based on the capture instant when known")
+	{
+		// Instant reported by the mocked clock, and hence the one at which packets are seen.
+		constexpr uint64_t PacketMs{ 1000 };
+		constexpr uint32_t PacketTs{ 1533790901 };
+
+		TestRtpStreamListener testRtpStreamListener;
+
+		RTC::RTP::RtpStream::Params params;
+
+		params.ssrc          = 1111;
+		params.clockRate     = 90000;
+		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+
+		// Without capture instant, the instant at which the packet was seen is used.
+		{
+			RTC::RTP::RtpStreamSend stream(
+			  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+			auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
+
+			sendRtpPacket(
+			  {
+			    { std::addressof(stream), params.ssrc }
+      },
+			  packet.get());
+
+			const std::unique_ptr<RTC::RTCP::SenderReport> report(
+			  stream.GetRtcpSenderReport(PacketMs + 2000));
+
+			REQUIRE(report);
+			REQUIRE(report->GetRtpTs() == PacketTs + (2 * params.clockRate));
+		}
+
+		// With capture instant, the extra half second since it is accounted for.
+		{
+			RTC::RTP::RtpStreamSend stream(
+			  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+			auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
+
+			packet->SetCaptureMs(PacketMs - 500);
+
+			sendRtpPacket(
+			  {
+			    { std::addressof(stream), params.ssrc }
+      },
+			  packet.get());
+
+			const std::unique_ptr<RTC::RTCP::SenderReport> report(
+			  stream.GetRtcpSenderReport(PacketMs + 2000));
+
+			REQUIRE(report);
+			REQUIRE(report->GetRtpTs() == PacketTs + ((2500 * params.clockRate) / 1000));
+		}
+
+		// A capture instant ahead of now, which the estimation may yield, does not make the
+		// difference wrap around.
+		{
+			RTC::RTP::RtpStreamSend stream(
+			  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+			auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
+
+			packet->SetCaptureMs(PacketMs + 3000);
+
+			sendRtpPacket(
+			  {
+			    { std::addressof(stream), params.ssrc }
+      },
+			  packet.get());
+
+			const std::unique_ptr<RTC::RTCP::SenderReport> report(
+			  stream.GetRtcpSenderReport(PacketMs + 2000));
+
+			REQUIRE(report);
+			REQUIRE(report->GetRtpTs() == PacketTs);
+		}
 	}
 
 #ifdef PERFORMANCE_TEST
