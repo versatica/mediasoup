@@ -581,7 +581,7 @@ namespace RTC
 		ReceiveRtpPacketResult result;
 		bool isRtx{ false };
 		// Highest RTP timestamp of the stream before this packet is processed, so that it
-		// can be told afterwards whether this packet made it advance.
+		// can be told afterwards whether this packet made it change.
 		const auto previousMaxPacketTs = rtpStream->GetMaxPacketTs();
 
 		// Media packet.

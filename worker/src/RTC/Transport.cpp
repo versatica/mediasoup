@@ -1268,7 +1268,7 @@ namespace RTC
 
 					const bool cnameStillInUse = std::ranges::any_of(
 					  this->mapProducers,
-					  [&cname](const auto& kv) -> bool
+					  [&cname](const auto& kv)
 					  {
 						  const auto* otherProducer = kv.second;
 
