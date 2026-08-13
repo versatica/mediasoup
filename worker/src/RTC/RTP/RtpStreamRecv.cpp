@@ -475,18 +475,15 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint8_t worstRemoteFractionLost{ 0 };
+			// Ask the listener for the worst remote fraction lost.
+			const uint8_t worstRemoteFractionLost =
+			  this->params.useInBandFec ? static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
+			                                ->OnRtpStreamNeedWorstRemoteFractionLost(this)
+			                            : 0;
 
-			if (this->params.useInBandFec)
+			if (worstRemoteFractionLost > 0)
 			{
-				// Notify the listener so we'll get the worst remote fraction lost.
-				static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
-				  ->OnRtpStreamNeedWorstRemoteFractionLost(this, worstRemoteFractionLost);
-
-				if (worstRemoteFractionLost > 0)
-				{
-					MS_DEBUG_TAG(rtcp, "using worst remote fraction lost:%" PRIu8, worstRemoteFractionLost);
-				}
+				MS_DEBUG_TAG(rtcp, "using worst remote fraction lost:%" PRIu8, worstRemoteFractionLost);
 			}
 
 			auto* report = new RTC::RTCP::ReceiverReport();

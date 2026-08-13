@@ -1414,22 +1414,25 @@ namespace RTC
 		return true;
 	}
 
-	void Consumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
+	uint8_t Consumer::GetWorstRemoteFractionLost(uint32_t /*mappedSsrc*/) const
 	{
 		MS_TRACE();
 
 		if (!IsActive())
 		{
-			return;
+			return 0;
 		}
 
-		for (auto* rtpStream : this->rtpStreams)
-		{
-			auto fractionLost = rtpStream->GetFractionLost();
+		uint8_t worstRemoteFractionLost{ 0 };
 
-			// If our fraction lost is worse than the given one, update it.
+		for (const auto* rtpStream : this->rtpStreams)
+		{
+			const auto fractionLost = rtpStream->GetFractionLost();
+
 			worstRemoteFractionLost = std::max(fractionLost, worstRemoteFractionLost);
 		}
+
+		return worstRemoteFractionLost;
 	}
 
 	void Consumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)

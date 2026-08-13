@@ -39,9 +39,11 @@ namespace RTC
 			public:
 				virtual void OnRtpStreamSendRtcpPacket(
 				  RTP::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) = 0;
-
-				virtual void OnRtpStreamNeedWorstRemoteFractionLost(
-				  RTP::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost) = 0;
+				/**
+				 * Obtains the worst remote fraction lost of all the RtpStreamSend
+				 * streams consuming this RtpStreamRecv.
+				 */
+				virtual uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTP::RtpStreamRecv* rtpStream) = 0;
 			};
 
 		public:

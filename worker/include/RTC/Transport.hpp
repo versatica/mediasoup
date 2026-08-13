@@ -17,6 +17,7 @@
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RateCalculator.hpp"
+#include "RTC/RemoteCaptureTimeEstimator.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/SCTP/public/AssociationInterface.hpp"
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
@@ -83,11 +84,12 @@ namespace RTC
 			  bool first) = 0;
 			virtual void OnTransportProducerRtpPacketReceived(
 			  RTC::Transport* transport, RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
-			virtual void OnTransportNeedWorstRemoteFractionLost(
-			  RTC::Transport* transport,
-			  RTC::Producer* producer,
-			  uint32_t mappedSsrc,
-			  uint8_t& worstRemoteFractionLost) = 0;
+			/**
+			 * Obtains the worst remote fraction lost of all the Consumers consuming the
+			 * given mapped SSRC of the given Producer.
+			 */
+			virtual uint8_t OnTransportNeedWorstRemoteFractionLost(
+			  RTC::Transport* transport, RTC::Producer* producer, uint32_t mappedSsrc) = 0;
 			virtual void OnTransportNewConsumer(
 			  RTC::Transport* transport, RTC::Consumer* consumer, const std::string& producerId) = 0;
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
@@ -264,8 +266,9 @@ namespace RTC
 		  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
 		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) override;
 		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
-		void OnProducerNeedWorstRemoteFractionLost(
-		  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
+		uint8_t OnProducerNeedWorstRemoteFractionLost(RTC::Producer* producer, uint32_t mappedSsrc) override;
+		std::optional<uint64_t> OnProducerNeedLocalCaptureMs(
+		  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
@@ -367,6 +370,10 @@ namespace RTC
 		ankerl::unordered_dense::map<uint16_t, RTC::DataConsumer*> mapSctpStreamIdDataConsumers;
 		ankerl::unordered_dense::map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		ankerl::unordered_dense::map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
+		// Capture time estimator of each sender publishing to this Transport, keyed by
+		// its CNAME.
+		ankerl::unordered_dense::map<std::string, RTC::RemoteCaptureTimeEstimator>
+		  mapCnameRemoteCaptureTimeEstimator;
 		TimerHandleInterface* rtcpTimer{ nullptr };
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };

@@ -47,8 +47,20 @@ namespace RTC
 			  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
-			virtual void OnProducerNeedWorstRemoteFractionLost(
-			  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
+			/**
+			 * Obtains the worst remote fraction lost of all the Consumers consuming the
+			 * given mapped SSRC of this Producer.
+			 */
+			virtual uint8_t OnProducerNeedWorstRemoteFractionLost(
+			  RTC::Producer* producer, uint32_t mappedSsrc) = 0;
+			/**
+			 * Capture instant of the given RTP timestamp of the given RTP stream, expressed
+			 * in our own monotonic clock.
+			 *
+			 * @returns No value while the capture instant cannot be told yet.
+			 */
+			virtual std::optional<uint64_t> OnProducerNeedLocalCaptureMs(
+			  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) = 0;
 		};
 
 	private:
@@ -154,7 +166,18 @@ namespace RTC
 		  const RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
 		void NotifyNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream);
 		bool MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const;
-		void PostProcessRtpPacket(RTC::RTP::Packet* packet);
+		/**
+		 * @param maxPacketTsChanged - Whether this packet became the one holding the
+		 * highest RTP timestamp of its RTP stream, which happens just for the first
+		 * arriving packet of each frame.
+		 *
+		 * @remarks
+		 * - Not "advanced": the stream also takes a packet as its new reference when its
+		 *   RTP timestamp is lower, be it the very first packet, a timestamp moving
+		 *   backwards after prolonged sender inactivity or a sequence number resync.
+		 */
+		void PostProcessRtpPacket(
+		  RTC::RTP::Packet* packet, const RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged);
 		void EmitScore() const;
 		void EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;
@@ -167,8 +190,7 @@ namespace RTC
 	public:
 		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamSendRtcpPacket(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override;
-		void OnRtpStreamNeedWorstRemoteFractionLost(
-		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost) override;
+		uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream) override;
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */
 	public:
