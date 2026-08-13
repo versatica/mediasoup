@@ -895,6 +895,15 @@ namespace RTC
 				return;
 			}
 
+			// We expected packets but received none of them, so there is nothing to
+			// compute (and ratios below would divide by zero).
+			if (received == 0)
+			{
+				RTP::RtpStream::UpdateScore(0);
+
+				return;
+			}
+
 			lost = std::min(lost, received);
 
 			if (repaired > lost)
