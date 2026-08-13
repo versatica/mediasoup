@@ -176,7 +176,7 @@ namespace RTC
 		// since we know we won't be able to switch.
 		auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
 
-		if (!producerTsReferenceRtpStream || !producerTsReferenceRtpStream->GetSenderReportNtpMs())
+		if (!producerTsReferenceRtpStream || !producerTsReferenceRtpStream->GetSenderReportMapping().has_value())
 		{
 			return;
 		}
@@ -596,19 +596,19 @@ namespace RTC
 				auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
 				auto* producerTargetRtpStream      = GetProducerTargetRtpStream();
 
+				const auto tsReferenceMapping = producerTsReferenceRtpStream->GetSenderReportMapping();
+				const auto targetMapping      = producerTargetRtpStream->GetSenderReportMapping();
+
 				// NOTE: If we are here is because we have Sender Reports for both the
 				// TS reference stream and the target one.
-				MS_ASSERT(
-				  producerTsReferenceRtpStream->GetSenderReportNtpMs(),
-				  "no Sender Report for TS reference RTP stream");
-				MS_ASSERT(
-				  producerTargetRtpStream->GetSenderReportNtpMs(), "no Sender Report for current RTP stream");
+				MS_ASSERT(tsReferenceMapping.has_value(), "no Sender Report for TS reference RTP stream");
+				MS_ASSERT(targetMapping.has_value(), "no Sender Report for current RTP stream");
 
 				// Calculate NTP and TS stuff.
-				auto ntpMs1 = producerTsReferenceRtpStream->GetSenderReportNtpMs();
-				auto ts1    = producerTsReferenceRtpStream->GetSenderReportTs();
-				auto ntpMs2 = producerTargetRtpStream->GetSenderReportNtpMs();
-				auto ts2    = producerTargetRtpStream->GetSenderReportTs();
+				auto ntpMs1 = tsReferenceMapping.value().ntpMs;
+				auto ts1    = tsReferenceMapping.value().ts;
+				auto ntpMs2 = targetMapping.value().ntpMs;
+				auto ts2    = targetMapping.value().ts;
 				int64_t diffMs;
 
 				if (ntpMs2 >= ntpMs1)
@@ -857,8 +857,9 @@ namespace RTC
 
 		// If we don't have yet a RTP timestamp reference, set it now.
 		if (
-		  newTargetSpatialLayer != -1 && (this->tsReferenceSpatialLayer == -1 ||
-		                                  !GetProducerTsReferenceRtpStream()->GetSenderReportNtpMs()))
+		  newTargetSpatialLayer != -1 &&
+		  (this->tsReferenceSpatialLayer == -1 ||
+		   !GetProducerTsReferenceRtpStream()->GetSenderReportMapping().has_value()))
 		{
 			MS_DEBUG_TAG(
 			  simulcast, "using spatial layer %" PRIi16 " as RTP timestamp reference", newTargetSpatialLayer);
@@ -1050,7 +1051,7 @@ namespace RTC
 
 		return (
 		  this->tsReferenceSpatialLayer == -1 || spatialLayer == this->tsReferenceSpatialLayer ||
-		  this->producerRtpStreams.at(spatialLayer)->GetSenderReportNtpMs());
+		  this->producerRtpStreams.at(spatialLayer)->GetSenderReportMapping().has_value());
 	}
 
 	RTC::RTP::RtpStreamRecv* SimulcastProducerStreamManager::GetProducerTsReferenceRtpStream() const

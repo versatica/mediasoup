@@ -691,7 +691,7 @@ namespace RTC
 		if (it != this->mapSsrcRtpStream.end())
 		{
 			auto* rtpStream  = it->second;
-			const bool first = rtpStream->GetSenderReportNtpMs() == 0;
+			const bool first = !rtpStream->GetSenderReportMapping().has_value();
 
 			rtpStream->ReceiveRtcpSenderReport(report);
 
