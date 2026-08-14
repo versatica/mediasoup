@@ -696,6 +696,14 @@ namespace RTC
 					  producerRtpHeaderExtensionIds.dependencyDescriptor;
 				}
 
+				// NOTE: Not transport related, but needed here so that received packets carry
+				// its id and `RtpStreamRecv` can read the extension off them.
+				if (producerRtpHeaderExtensionIds.absCaptureTime != 0)
+				{
+					this->recvRtpHeaderExtensionIds.absCaptureTime =
+					  producerRtpHeaderExtensionIds.absCaptureTime;
+				}
+
 				// Create status response.
 				auto responseOffset = FBS::Transport::CreateProduceResponse(
 				  request->GetBufferBuilder(), FBS::RtpParameters::Type(producer->GetType()));
