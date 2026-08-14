@@ -177,7 +177,7 @@ namespace RTC
 		 *   backwards after prolonged sender inactivity or a sequence number resync.
 		 */
 		void PostProcessRtpPacket(
-		  RTC::RTP::Packet* packet, const RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged);
+		  RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged);
 		void EmitScore() const;
 		void EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;

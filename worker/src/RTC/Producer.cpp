@@ -1416,12 +1416,12 @@ namespace RTC
 	}
 
 	inline void Producer::PostProcessRtpPacket(
-	  RTC::RTP::Packet* packet, const RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged)
+	  RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged)
 	{
 		MS_TRACE();
 
 		// Store the capture instant of the packet holding the highest RTP timestamp of its
-		// stream, which is the only one the Sender Reports we send are built upon.
+		// stream, which is the one the Sender Reports we send are built upon.
 		if (maxPacketTsChanged)
 		{
 			const auto captureMs =
@@ -1430,6 +1430,10 @@ namespace RTC
 			if (captureMs.has_value())
 			{
 				packet->SetCaptureMs(captureMs.value());
+
+				// Also let the stream remember it, since this is the only place where the
+				// capture instant of a received packet can be told.
+				rtpStream->SetCaptureMapping(captureMs.value(), packet->GetTimestamp());
 			}
 		}
 

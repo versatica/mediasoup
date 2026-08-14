@@ -508,6 +508,13 @@ export abstract class TransportImpl<
 			clonedRtpParameters.rtcp = clonedRtpParameters.rtcp ?? {};
 			clonedRtpParameters.rtcp.cname = this.#cnameForProducers;
 		}
+		// In a PipeTransport, give a random CNAME to a Producer that comes without one.
+		// Its own one, since a CNAME shared with the other Producers without CNAME would
+		// tell the worker that they all come from a same sender and share its clock.
+		else if (!clonedRtpParameters.rtcp?.cname) {
+			clonedRtpParameters.rtcp = clonedRtpParameters.rtcp ?? {};
+			clonedRtpParameters.rtcp.cname = utils.generateUUIDv4().substr(0, 8);
+		}
 
 		const routerRtpCapabilities = this.#getRouterRtpCapabilities();
 

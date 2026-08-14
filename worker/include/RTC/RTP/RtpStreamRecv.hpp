@@ -72,6 +72,24 @@ namespace RTC
 				std::vector<std::vector<RTC::RtpDataCounter>> spatialLayerCounters;
 			};
 
+		public:
+			/**
+			 * Correspondence between the RTP timeline of this stream and our own monotonic
+			 * clock.
+			 */
+			struct CaptureMapping
+			{
+				/**
+				 * Capture instant of the media carried by the RTP timestamp below, in our own
+				 * monotonic clock (ms).
+				 */
+				uint64_t captureMs;
+				/**
+				 * RTP timestamp the capture instant above refers to.
+				 */
+				uint32_t ts;
+			};
+
 		private:
 			/**
 			 * Data of a received RTCP Sender Report needed to report LSR and DLSR back in a
@@ -146,6 +164,41 @@ namespace RTC
 				}
 
 				return this->lastSenderReportTiming.value().receivedMs;
+			}
+
+			/**
+			 * Store the correspondence between the RTP timeline of this stream and our own
+			 * monotonic clock.
+			 *
+			 * @remarks
+			 * - Only the Producer can tell it, since translating the capture instant of the
+			 *   remote sender into our own clock needs the whole set of streams of that
+			 *   sender.
+			 *
+			 * @param captureMs - Capture instant of `ts` in our own monotonic clock.
+			 * @param ts - RTP timestamp the capture instant refers to.
+			 */
+			void SetCaptureMapping(uint64_t captureMs, uint32_t ts)
+			{
+				this->lastCaptureMapping = RTP::RtpStreamRecv::CaptureMapping{
+					.captureMs = captureMs,
+					.ts        = ts,
+				};
+			}
+
+			/**
+			 * Correspondence between the RTP timeline of this stream and our own monotonic
+			 * clock, as of the last RTP timestamp whose capture instant could be told.
+			 *
+			 * @remarks
+			 * - Once set it is never unset, so any two streams of a same sender that have it
+			 *   can always be aligned to each other.
+			 *
+			 * @returns No value if no capture instant could be told yet.
+			 */
+			std::optional<RTP::RtpStreamRecv::CaptureMapping> GetCaptureMapping() const
+			{
+				return this->lastCaptureMapping;
 			}
 
 			/**
@@ -250,6 +303,8 @@ namespace RTC
 			std::optional<SenderReportTiming> lastSenderReportTiming;
 			// Most recent `abs-capture-time` RTP header extension received.
 			std::optional<AbsCaptureTime> lastAbsCaptureTime;
+			// Most recent RTP timestamp whose capture instant could be told, along with it.
+			std::optional<CaptureMapping> lastCaptureMapping;
 			// Relative transit time for prev packet.
 			int32_t transit{ 0u };
 			uint8_t firSeqNumber{ 0u };
