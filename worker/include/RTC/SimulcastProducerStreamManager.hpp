@@ -80,6 +80,9 @@ namespace RTC
 		int16_t spatialLayerToSync{ -1 };
 		// Timestamp synchronization.
 		int16_t tsReferenceSpatialLayer{ -1 };
+		// Spatial layer that was the RTP timestamp reference the last time its capture
+		// instant was known upon a received Sender Report.
+		int16_t tsReferenceSpatialLayerWithCaptureMapping{ -1 };
 		uint32_t tsOffset{ 0u };
 		bool keyFrameForTsOffsetRequested{ false };
 		// Old-packet filtering after spatial switch.

@@ -642,18 +642,11 @@ namespace RTC
 
 				// Take this Producer into account for the capture time estimation of its
 				// sender.
-				//
-				// NOTE: A Producer with no CNAME cannot be grouped with the other Producers
-				// of its sender, and sharing a single estimator among all the CNAME less
-				// Producers of a PipeTransport would mix the clocks of different senders.
 				{
 					const auto& cname = producer->GetRtpParameters().rtcp.cname;
 
-					if (!cname.empty())
-					{
-						this->mapCnameRemoteCaptureTimeEstimator[cname].UpdateSource(
-						  producer->GetRtpHeaderExtensionIds().absCaptureTime != 0);
-					}
+					this->mapCnameRemoteCaptureTimeEstimator[cname].UpdateSource(
+					  producer->GetRtpHeaderExtensionIds().absCaptureTime != 0);
 				}
 
 				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
