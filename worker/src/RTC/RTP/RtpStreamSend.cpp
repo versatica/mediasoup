@@ -336,11 +336,22 @@ namespace RTC
 				return nullptr;
 			}
 
+			// A stream that stopped sending cannot tell where its RTP timeline is now, and
+			// extrapolating would claim RTP timestamps of packets never sent.
+			if (nowMs - this->maxPacketMs > RtpStreamSend::MaxSenderReportReferenceAgeMs)
+			{
+				return nullptr;
+			}
+
 			auto ntp     = Utils::Time::TimeMs2Ntp(nowMs);
 			auto* report = new RTC::RTCP::SenderReport();
 
-			// Calculate TS difference between now and maxPacketMs.
-			const uint64_t diffMs = nowMs - this->maxPacketMs;
+			// Calculate TS difference between now and the instant at which the media in the
+			// packet holding the highest RTP timestamp was captured, falling back to the
+			// instant that packet was seen while the capture instant cannot be told.
+			const uint64_t referenceMs = this->maxPacketCaptureMs.value_or(this->maxPacketMs);
+			// NOTE: The capture instant is an estimation, so it may land ahead of now.
+			const uint64_t diffMs = nowMs > referenceMs ? nowMs - referenceMs : 0;
 			const uint64_t diffTs = diffMs * GetClockRate() / 1000;
 			const auto rtpTs      = static_cast<uint32_t>(this->maxPacketTs + diffTs);
 
