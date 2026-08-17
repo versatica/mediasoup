@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.26.0
+
 - Worker: Fix undefined behavior in `RtpStreamRecv::UpdateScore()` when no packets were received ([PR #1886](https://github.com/versatica/mediasoup/pull/1886)).
 - SCTP: Fix `SackChunk::GetValidatedGapAckBlocks()` returning a bogus gap-ack-block ([PR #1891](https://github.com/versatica/mediasoup/pull/1891)).
 - Do not make generated RTCP Sender Reports depend on RTP packet arrival time ([issue #1881](https://github.com/versatica/mediasoup/issues/1881)):
