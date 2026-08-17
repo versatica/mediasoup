@@ -356,11 +356,6 @@ fn pipe_to_router_succeeds_with_audio() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
                     id: 11,
                     encrypt: false,
@@ -413,11 +408,6 @@ fn pipe_to_router_succeeds_with_audio() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::DependencyDescriptor,
                     id: 7,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
@@ -523,11 +513,6 @@ fn pipe_to_router_succeeds_with_video() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
                     id: 11,
                     encrypt: false,
@@ -581,11 +566,6 @@ fn pipe_to_router_succeeds_with_video() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::TimeOffset,
                     id: 9,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
@@ -855,11 +835,6 @@ fn create_with_enable_rtx_succeeds() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::TimeOffset,
                     id: 9,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {

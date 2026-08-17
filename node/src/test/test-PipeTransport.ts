@@ -274,12 +274,6 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
 		},
 		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
-			encrypt: false,
-			parameters: {},
-		},
-		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
 			id: 11,
 			encrypt: false,
@@ -332,12 +326,6 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 			id: 7,
 			parameters: {},
 			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
-		},
-		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
-			encrypt: false,
-			parameters: {},
 		},
 		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
@@ -413,12 +401,6 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			parameters: {},
 		},
 		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
-			encrypt: false,
-			parameters: {},
-		},
-		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
 			id: 11,
 			encrypt: false,
@@ -475,12 +457,6 @@ test('router.pipeToRouter() succeeds with video', async () => {
 		{
 			uri: 'urn:ietf:params:rtp-hdrext:toffset',
 			id: 9,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
 			encrypt: false,
 			parameters: {},
 		},
@@ -624,12 +600,6 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 		{
 			uri: 'urn:ietf:params:rtp-hdrext:toffset',
 			id: 9,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
 			encrypt: false,
 			parameters: {},
 		},
