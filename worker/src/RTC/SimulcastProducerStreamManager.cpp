@@ -262,8 +262,13 @@ namespace RTC
 			{
 				continue;
 			}
-			// If this is higher than preferred spatial layer, abort.
-			else if (spatialLayer > this->preferredLayers.spatial)
+			// If this is higher than preferred spatial layer, abort unless we don't
+			// have a provisional spatial layer yet (so no lower one is usable) or this
+			// is the provisional one (so we may still increase its temporal layer).
+			else if (
+			  spatialLayer > this->preferredLayers.spatial &&
+			  this->provisionalTargetLayers.spatial != -1 &&
+			  spatialLayer != this->provisionalTargetLayers.spatial)
 			{
 				MS_DEBUG_DEV(
 				  "avoid upgrading to spatial layer %" PRIi16
@@ -315,8 +320,14 @@ namespace RTC
 
 			temporalLayer = 0;
 
+			// Don't consider temporal layers above the preferred one, nor above the
+			// ones this stream has.
+			const auto maxTemporalLayer = std::min(
+			  static_cast<int16_t>(producerRtpStream->GetTemporalLayers() - 1),
+			  this->preferredLayers.temporal);
+
 			// Check bitrate of every temporal layer.
-			for (; std::cmp_less(temporalLayer, producerRtpStream->GetTemporalLayers()); ++temporalLayer)
+			for (; temporalLayer <= maxTemporalLayer; ++temporalLayer)
 			{
 				// Ignore temporal layers lower than the one we already have (taking
 				// into account the spatial layer too).
@@ -1004,6 +1015,13 @@ namespace RTC
 				continue;
 			}
 
+			// Don't go above the preferred spatial layer if we already found a usable
+			// lower one.
+			if (spatialLayer > this->preferredLayers.spatial && newTargetLayers.spatial != -1)
+			{
+				break;
+			}
+
 			newTargetLayers.spatial = spatialLayer;
 
 			// If this is the preferred or higher spatial layer take it and exit.
@@ -1015,19 +1033,11 @@ namespace RTC
 
 		if (newTargetLayers.spatial != -1)
 		{
-			if (newTargetLayers.spatial == this->preferredLayers.spatial)
-			{
-				newTargetLayers.temporal = this->preferredLayers.temporal;
-			}
-			else if (newTargetLayers.spatial < this->preferredLayers.spatial)
-			{
-				newTargetLayers.temporal =
-				  static_cast<int16_t>(this->encodingContext->GetTemporalLayers() - 1);
-			}
-			else
-			{
-				newTargetLayers.temporal = 0;
-			}
+			// Don't consider temporal layers above the preferred one, nor above the
+			// ones this stream has.
+			newTargetLayers.temporal = std::min(
+			  this->preferredLayers.temporal,
+			  static_cast<int16_t>(this->encodingContext->GetTemporalLayers() - 1));
 		}
 
 		// Return true if any target layer changed.

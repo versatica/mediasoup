@@ -190,9 +190,14 @@ namespace RTC
 
 			temporalLayer = 0;
 
+			// Don't consider temporal layers above the preferred one, nor above the
+			// ones this stream has.
+			const auto maxTemporalLayer = std::min(
+			  static_cast<int16_t>(this->producerRtpStream->GetTemporalLayers() - 1),
+			  this->preferredLayers.temporal);
+
 			// Check bitrate of every temporal layer.
-			for (; std::cmp_less(temporalLayer, this->producerRtpStream->GetTemporalLayers());
-			     ++temporalLayer)
+			for (; temporalLayer <= maxTemporalLayer; ++temporalLayer)
 			{
 				// Ignore temporal layers lower than the one we already have (taking
 				// into account the spatial layer too).
@@ -247,8 +252,11 @@ namespace RTC
 				}
 			}
 
-			// If this is the preferred or higher spatial layer, take it and exit.
-			if (spatialLayer >= this->preferredLayers.spatial)
+			// If this is the preferred or higher spatial layer, take it and exit,
+			// unless we have not found any usable spatial layer yet.
+			if (
+			  spatialLayer >= this->preferredLayers.spatial &&
+			  this->provisionalTargetLayers.spatial != -1)
 			{
 				break;
 			}
@@ -589,6 +597,13 @@ namespace RTC
 				continue;
 			}
 
+			// Don't go above the preferred spatial layer if we already found a usable
+			// lower one.
+			if (spatialLayer > this->preferredLayers.spatial && newTargetLayers.spatial != -1)
+			{
+				break;
+			}
+
 			newTargetLayers.spatial = spatialLayer;
 
 			// If this is the preferred or higher spatial layer and has bitrate,
@@ -601,19 +616,11 @@ namespace RTC
 
 		if (newTargetLayers.spatial != -1)
 		{
-			if (newTargetLayers.spatial == this->preferredLayers.spatial)
-			{
-				newTargetLayers.temporal = this->preferredLayers.temporal;
-			}
-			else if (newTargetLayers.spatial < this->preferredLayers.spatial)
-			{
-				newTargetLayers.temporal =
-				  static_cast<int16_t>(this->encodingContext->GetTemporalLayers() - 1);
-			}
-			else
-			{
-				newTargetLayers.temporal = 0;
-			}
+			// Don't consider temporal layers above the preferred one, nor above the
+			// ones this stream has.
+			newTargetLayers.temporal = std::min(
+			  this->preferredLayers.temporal,
+			  static_cast<int16_t>(this->encodingContext->GetTemporalLayers() - 1));
 		}
 
 	done:
