@@ -238,6 +238,11 @@ namespace RTC
 		uint32_t requiredBitrate{ 0u };
 		int16_t spatialLayer{ 0 };
 		int16_t temporalLayer{ 0 };
+		// Whether a usable spatial layer has been found, in which case we must not
+		// go above the preferred spatial layer. Same criteria as in
+		// RecalculateTargetLayers(), so both take the same decision no matter the
+		// bitrate of the layer.
+		bool usableSpatialLayerFound{ this->provisionalTargetLayers.spatial != -1 };
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
@@ -262,12 +267,11 @@ namespace RTC
 			{
 				continue;
 			}
-			// If this is higher than preferred spatial layer, abort unless we don't
-			// have a provisional spatial layer yet (so no lower one is usable) or this
-			// is the provisional one (so we may still increase its temporal layer).
+			// If this is higher than preferred spatial layer, abort unless no lower
+			// spatial layer is usable or this is the provisional one (so we may still
+			// increase its temporal layer).
 			else if (
-			  spatialLayer > this->preferredLayers.spatial &&
-			  this->provisionalTargetLayers.spatial != -1 &&
+			  spatialLayer > this->preferredLayers.spatial && usableSpatialLayerFound &&
 			  spatialLayer != this->provisionalTargetLayers.spatial)
 			{
 				MS_DEBUG_DEV(
@@ -317,6 +321,9 @@ namespace RTC
 			{
 				continue;
 			}
+
+			// This spatial layer is usable even if it has no bitrate at all.
+			usableSpatialLayerFound = true;
 
 			temporalLayer = 0;
 
