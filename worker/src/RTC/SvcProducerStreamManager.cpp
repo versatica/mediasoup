@@ -254,9 +254,7 @@ namespace RTC
 
 			// If this is the preferred or higher spatial layer, take it and exit,
 			// unless we have not found any usable spatial layer yet.
-			if (
-			  spatialLayer >= this->preferredLayers.spatial &&
-			  this->provisionalTargetLayers.spatial != -1)
+			if (spatialLayer >= this->preferredLayers.spatial && this->provisionalTargetLayers.spatial != -1)
 			{
 				break;
 			}

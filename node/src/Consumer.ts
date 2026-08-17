@@ -339,7 +339,7 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 		if (typeof spatialLayer !== 'number') {
 			throw new TypeError('spatialLayer must be a number');
 		}
-		if (temporalLayer !== undefined && typeof temporalLayer !== 'number') {
+		if (temporalLayer != null && typeof temporalLayer !== 'number') {
 			throw new TypeError('if given, temporalLayer must be a number');
 		}
 
