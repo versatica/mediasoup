@@ -514,6 +514,19 @@ export function getConsumableRtpParameters(
 			continue;
 		}
 
+		// 'abs-capture-time' RTP extension is just proxied from the packets of this
+		// Producer, so don't announce it to Consumers unless this Producer negotiated
+		// it. Otherwise a Producer created out of a pipe Consumer would announce it
+		// and the worker would wait forever for an extension that is never going to
+		// arrive.
+		if (
+			capExt.uri ===
+				'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time' &&
+			!params.headerExtensions!.some(ext => ext.uri === capExt.uri)
+		) {
+			continue;
+		}
+
 		const consumableExt = {
 			uri: capExt.uri,
 			id: capExt.preferredId,

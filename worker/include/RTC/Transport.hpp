@@ -269,6 +269,7 @@ namespace RTC
 		uint8_t OnProducerNeedWorstRemoteFractionLost(RTC::Producer* producer, uint32_t mappedSsrc) override;
 		std::optional<uint64_t> OnProducerNeedLocalCaptureMs(
 		  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) override;
+		std::optional<int64_t> OnProducerNeedRemoteClockOffsetMs(const RTC::Producer* producer) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:

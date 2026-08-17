@@ -642,18 +642,11 @@ namespace RTC
 
 				// Take this Producer into account for the capture time estimation of its
 				// sender.
-				//
-				// NOTE: A Producer with no CNAME cannot be grouped with the other Producers
-				// of its sender, and sharing a single estimator among all the CNAME less
-				// Producers of a PipeTransport would mix the clocks of different senders.
 				{
 					const auto& cname = producer->GetRtpParameters().rtcp.cname;
 
-					if (!cname.empty())
-					{
-						this->mapCnameRemoteCaptureTimeEstimator[cname].UpdateSource(
-						  producer->GetRtpHeaderExtensionIds().absCaptureTime != 0);
-					}
+					this->mapCnameRemoteCaptureTimeEstimator[cname].UpdateSource(
+					  producer->GetRtpHeaderExtensionIds().absCaptureTime != 0);
 				}
 
 				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
@@ -2633,6 +2626,34 @@ namespace RTC
 		const auto& remoteCaptureTimeEstimator = it->second;
 
 		return remoteCaptureTimeEstimator.GetLocalCaptureMs(rtpStream, ts);
+	}
+
+	std::optional<int64_t> Transport::OnProducerNeedRemoteClockOffsetMs(const RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it == this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			return std::nullopt;
+		}
+
+		const auto& remoteCaptureTimeEstimator = it->second;
+		const auto clockOffsetMs               = remoteCaptureTimeEstimator.GetClockOffsetMs();
+
+		if (!clockOffsetMs.has_value())
+		{
+			return std::nullopt;
+		}
+
+		// NOTE: The estimator gives the offset against our own monotonic clock, while what
+		// a receiver reconstructs out of the Sender Reports we send is the clock we
+		// announce, so the distance to the NTP epoch has to be taken into account. Both
+		// terms are huge and their sum is small, so they are added as milliseconds before
+		// anything scales them up.
+		return clockOffsetMs.value() + static_cast<int64_t>(this->shared->GetNtpOffsetMs());
 	}
 
 	void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)

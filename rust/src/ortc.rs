@@ -679,6 +679,19 @@ pub(crate) fn get_consumable_rtp_parameters(
             continue;
         }
 
+        // 'abs-capture-time' is just proxied from the packets of this Producer, so don't announce it
+        // to Consumers unless this Producer negotiated it. Otherwise a Producer created out of a
+        // pipe Consumer would announce it and the worker would wait forever for an extension that
+        // is never going to arrive.
+        if cap_ext.uri == RtpHeaderExtensionUri::AbsCaptureTime
+            && !params
+                .header_extensions
+                .iter()
+                .any(|ext| ext.uri == cap_ext.uri)
+        {
+            continue;
+        }
+
         let consumable_ext = RtpHeaderExtensionParameters {
             uri: cap_ext.uri,
             id: cap_ext.preferred_id,

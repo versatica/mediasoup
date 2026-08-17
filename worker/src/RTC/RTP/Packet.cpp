@@ -1182,7 +1182,7 @@ namespace RTC
 			// Extension value can be 8 or 16 bytes depending on whether it contains
 			// estimated capture clock offset or not.
 			//
-			// https://webrtc.googlesource.com/src/+/refs/heads/main/docs/native-code/rtp-hdrext/abs-capture-time
+			// @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 			if (!extenValue || (extenLen != 8u && extenLen != 16u))
 			{
 				return false;

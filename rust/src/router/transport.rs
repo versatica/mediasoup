@@ -571,6 +571,12 @@ pub(super) trait TransportImpl: TransportGeneric {
                 rtp_parameters.rtcp.cname = Some(cname);
             }
         }
+        // In a PipeTransport, give a random CNAME to a Producer that comes without one. Its own
+        // one, since a CNAME shared with the other Producers without CNAME would tell the worker
+        // that they all come from a same sender and share its clock.
+        else if rtp_parameters.rtcp.cname.is_none() {
+            rtp_parameters.rtcp.cname = Some(Uuid::new_v4().to_string());
+        }
 
         let router_rtp_capabilities = self.router().rtp_capabilities();
 

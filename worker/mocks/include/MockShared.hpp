@@ -60,6 +60,13 @@ namespace mocks
 			return static_cast<int64_t>(GetTimeUs());
 		}
 
+		// NOTE: The NTP epoch is made to be the very clock given by argument, so that tests
+		// can reason about a single set of values.
+		uint64_t GetNtpOffsetMs() override
+		{
+			return 0;
+		}
+
 		// Methods for testing.
 	public:
 		MockBackoffTimerHandle* GetBackoffTimer(const std::string_view label) const

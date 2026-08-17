@@ -72,6 +72,12 @@ public:
 	 * @todo Remove once not needed.
 	 */
 	virtual int64_t GetTimeUsInt64() = 0;
+
+	/**
+	 * Distance from the clock above to the NTP epoch (ms), which is what has to be added
+	 * to it to obtain the NTP timestamps of the RTCP we generate.
+	 */
+	virtual uint64_t GetNtpOffsetMs() = 0;
 };
 
 #endif

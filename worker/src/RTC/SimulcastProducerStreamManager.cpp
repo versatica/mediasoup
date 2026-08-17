@@ -164,19 +164,32 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Just interested if this is the first Sender Report for a RTP stream.
-		if (!first)
+		if (first)
+		{
+			MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		}
+
+		// If the capture instant of our RTP timestamp reference stream cannot be told
+		// yet, do nothing since we know we won't be able to switch.
+		auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
+
+		if (!producerTsReferenceRtpStream || !producerTsReferenceRtpStream->GetCaptureMapping().has_value())
 		{
 			return;
 		}
 
-		MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		// Other than the first Sender Report of each stream, the only one worth checking
+		// layers upon is the one that makes the capture instant of the RTP timestamp
+		// reference stream known, since other spatial layers may become switchable then.
+		// NOTE: Doing it on every single Sender Report would ask the Transport to
+		// redistribute its outgoing bitrate at the pace of the RTCP of the sender and we
+		// don't want that.
+		const bool tsReferenceCaptureMappingIsNew =
+		  this->tsReferenceSpatialLayerWithCaptureMapping != this->tsReferenceSpatialLayer;
 
-		// If our RTP timestamp reference stream does not yet have SR, do nothing
-		// since we know we won't be able to switch.
-		auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
+		this->tsReferenceSpatialLayerWithCaptureMapping = this->tsReferenceSpatialLayer;
 
-		if (!producerTsReferenceRtpStream || !producerTsReferenceRtpStream->GetSenderReportMapping().has_value())
+		if (!first && !tsReferenceCaptureMappingIsNew)
 		{
 			return;
 		}
@@ -589,43 +602,71 @@ namespace RTC
 			{
 				tsOffset = 0u;
 			}
-			// If this is not the RTP stream we use as TS reference, do NTP based RTP
-			// TS synchronization.
+			// If this is not the RTP stream we use as TS reference, synchronize its RTP
+			// timestamps based on the capture instant of the media.
 			else
 			{
-				auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
-				auto* producerTargetRtpStream      = GetProducerTargetRtpStream();
+				const auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
+				// NOTE: The stream of the spatial layer of this packet, which is not always
+				// the one of the target spatial layer. A resync may be pending for the
+				// current spatial layer while the target one is a different one.
+				const auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
 
-				const auto tsReferenceMapping = producerTsReferenceRtpStream->GetSenderReportMapping();
-				const auto targetMapping      = producerTargetRtpStream->GetSenderReportMapping();
+				const auto tsReferenceCaptureMapping = producerTsReferenceRtpStream->GetCaptureMapping();
+				const auto captureMapping            = producerRtpStream->GetCaptureMapping();
 
-				// NOTE: If we are here is because we have Sender Reports for both the
-				// TS reference stream and the target one.
-				MS_ASSERT(tsReferenceMapping.has_value(), "no Sender Report for TS reference RTP stream");
-				MS_ASSERT(targetMapping.has_value(), "no Sender Report for current RTP stream");
-
-				// Calculate NTP and TS stuff.
-				auto ntpMs1 = tsReferenceMapping.value().ntpMs;
-				auto ts1    = tsReferenceMapping.value().ts;
-				auto ntpMs2 = targetMapping.value().ntpMs;
-				auto ts2    = targetMapping.value().ts;
-				int64_t diffMs;
-
-				if (ntpMs2 >= ntpMs1)
+				// Without the capture instant of the TS reference stream there is nothing to
+				// align this one to, so take this spatial layer as the new TS reference and
+				// let its RTP timestamps go untouched, which is what would have been done had
+				// it been chosen as TS reference in the first place.
+				if (!tsReferenceCaptureMapping.has_value())
 				{
-					diffMs = ntpMs2 - ntpMs1;
+					MS_DEBUG_TAG(
+					  simulcast,
+					  "cannot tell the capture instant of the TS reference stream, using spatial layer "
+					  "%" PRIi16 " as RTP timestamp reference",
+					  spatialLayer);
+
+					this->tsReferenceSpatialLayer = spatialLayer;
+				}
+				// The capture instant of this stream cannot be told yet, so there is no way to
+				// align it and no reason to give up a TS reference stream that is good. Discard
+				// the packet and wait, since the Sender Report that is missing is on its way.
+				else if (!captureMapping.has_value())
+				{
+					MS_DEBUG_TAG(
+					  simulcast,
+					  "cannot tell yet the capture instant of spatial layer %" PRIi16
+					  ", discarding packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+					  spatialLayer,
+					  packet->GetSsrc(),
+					  packet->GetSequenceNumber());
+
+					// Ask for another key frame since this one is being discarded.
+					if (packet->IsKeyFrame())
+					{
+						RequestKeyFrame();
+					}
+
+					result.type = RtpPacketProcessResult::Type::SILENT_DROP;
+
+					return result;
 				}
 				else
 				{
-					diffMs = -1 * (ntpMs1 - ntpMs2);
+					// Calculate capture instant and TS stuff.
+					const auto captureMs1 = tsReferenceCaptureMapping.value().captureMs;
+					const auto ts1        = tsReferenceCaptureMapping.value().ts;
+					const auto captureMs2 = captureMapping.value().captureMs;
+					const auto ts2        = captureMapping.value().ts;
+					const int64_t diffMs = static_cast<int64_t>(captureMs2) - static_cast<int64_t>(captureMs1);
+					const int64_t diffTs  = diffMs * clockRate / 1000;
+					const uint32_t newTs2 = ts2 - diffTs;
+
+					// Apply offset. This is the difference that later must be removed from
+					// the sending RTP packet.
+					tsOffset = newTs2 - ts1;
 				}
-
-				const int64_t diffTs  = diffMs * clockRate / 1000;
-				const uint32_t newTs2 = ts2 - diffTs;
-
-				// Apply offset. This is the difference that later must be removed from
-				// the sending RTP packet.
-				tsOffset = newTs2 - ts1;
 			}
 
 			// When switching to a new stream it may happen that the timestamp of this
@@ -859,7 +900,7 @@ namespace RTC
 		if (
 		  newTargetSpatialLayer != -1 &&
 		  (this->tsReferenceSpatialLayer == -1 ||
-		   !GetProducerTsReferenceRtpStream()->GetSenderReportMapping().has_value()))
+		   !GetProducerTsReferenceRtpStream()->GetCaptureMapping().has_value()))
 		{
 			MS_DEBUG_TAG(
 			  simulcast, "using spatial layer %" PRIi16 " as RTP timestamp reference", newTargetSpatialLayer);
@@ -1051,7 +1092,7 @@ namespace RTC
 
 		return (
 		  this->tsReferenceSpatialLayer == -1 || spatialLayer == this->tsReferenceSpatialLayer ||
-		  this->producerRtpStreams.at(spatialLayer)->GetSenderReportMapping().has_value());
+		  this->producerRtpStreams.at(spatialLayer)->GetCaptureMapping().has_value());
 	}
 
 	RTC::RTP::RtpStreamRecv* SimulcastProducerStreamManager::GetProducerTsReferenceRtpStream() const

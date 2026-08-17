@@ -278,7 +278,7 @@ namespace RTC
 
 			// Get the NTP representation of the current timestamp.
 			const uint64_t nowMs = this->shared->GetTimeMs();
-			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs);
+			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs + this->shared->GetNtpOffsetMs());
 
 			// Get the compact NTP representation of the current timestamp.
 			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
@@ -343,7 +343,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto ntp     = Utils::Time::TimeMs2Ntp(nowMs);
+			auto ntp     = Utils::Time::TimeMs2Ntp(nowMs + this->shared->GetNtpOffsetMs());
 			auto* report = new RTC::RTCP::SenderReport();
 
 			// Calculate TS difference between now and the instant at which the media in the

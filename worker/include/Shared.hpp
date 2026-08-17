@@ -56,6 +56,11 @@ public:
 		return DepLibUV::GetTimeUsInt64();
 	}
 
+	uint64_t GetNtpOffsetMs() override
+	{
+		return DepLibUV::GetNtpOffsetMs();
+	}
+
 private:
 	std::unique_ptr<Channel::ChannelMessageRegistrator> channelMessageRegistrator;
 	std::unique_ptr<Channel::ChannelNotifier> channelNotifier;

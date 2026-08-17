@@ -153,6 +153,36 @@ fn video_producer_options() -> ProducerOptions {
     options
 }
 
+fn video_producer_options_with_abs_capture_time() -> ProducerOptions {
+    ProducerOptions::new(
+        MediaKind::Video,
+        RtpParameters {
+            mid: Some("VIDEO2".to_string()),
+            codecs: vec![RtpCodecParameters::Video {
+                mime_type: MimeTypeVideo::Vp8,
+                payload_type: 112,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
+                parameters: RtpCodecParametersParameters::default(),
+                rtcp_feedback: vec![],
+            }],
+            header_extensions: vec![RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::AbsCaptureTime,
+                id: 12,
+                encrypt: false,
+            }],
+            encodings: vec![RtpEncodingParameters {
+                ssrc: Some(44444444),
+                ..RtpEncodingParameters::default()
+            }],
+            rtcp: RtcpParameters {
+                cname: Some("FOOBAR".to_string()),
+                ..RtcpParameters::default()
+            },
+            msid: None,
+        },
+    )
+}
+
 fn data_producer_options() -> DataProducerOptions {
     let mut options = DataProducerOptions::new_sctp(
         SctpStreamParameters::new_unordered_with_life_time(666, 5000),
@@ -356,11 +386,6 @@ fn pipe_to_router_succeeds_with_audio() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
                     id: 11,
                     encrypt: false,
@@ -413,11 +438,6 @@ fn pipe_to_router_succeeds_with_audio() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::DependencyDescriptor,
                     id: 7,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
@@ -523,11 +543,6 @@ fn pipe_to_router_succeeds_with_video() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
                     id: 11,
                     encrypt: false,
@@ -584,11 +599,6 @@ fn pipe_to_router_succeeds_with_video() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
                     id: 11,
                     encrypt: false,
@@ -601,6 +611,34 @@ fn pipe_to_router_succeeds_with_video() {
             ],
         );
         assert!(pipe_producer.paused());
+    });
+}
+
+#[test]
+fn pipe_to_router_gives_abs_capture_time_to_pipe_consumer_if_producer_has_it() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, transport1, _transport2) = init().await;
+
+        let video_producer = transport1
+            .produce(video_producer_options_with_abs_capture_time())
+            .await
+            .expect("Failed to produce video");
+
+        let PipeProducerToRouterPair { pipe_consumer, .. } = router1
+            .pipe_producer_to_router(
+                video_producer.id(),
+                PipeToRouterOptions::new(router2.clone()),
+            )
+            .await
+            .expect("Failed to pipe video producer to router");
+
+        assert!(pipe_consumer.rtp_parameters().header_extensions.contains(
+            &RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::AbsCaptureTime,
+                id: 10,
+                encrypt: false,
+            }
+        ));
     });
 }
 
@@ -855,11 +893,6 @@ fn create_with_enable_rtx_succeeds() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::TimeOffset,
                     id: 9,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
