@@ -1247,19 +1247,18 @@ namespace RTC
 			{
 				// Offset between our own clock and the clock of the sender of this stream, in
 				// the format the extension uses.
+				//
+				// NOTE: While it cannot be told yet, and it never can if the sender sends no
+				// RTCP at all, both clocks are taken to be the same. Our own clock is real NTP
+				// and so is the one of any sender that fills this extension, so no offset is
+				// the most likely case rather than a wild guess.
 				const auto remoteClockOffsetMs = this->listener->OnProducerNeedRemoteClockOffsetMs(this);
+				const auto remoteClockOffsetQ32x32 =
+				  Utils::Time::TimeMs2Q32x32(remoteClockOffsetMs.value_or(0));
 
-				std::optional<int64_t> remoteClockOffsetQ32x32;
-
-				if (remoteClockOffsetMs.has_value())
-				{
-					remoteClockOffsetQ32x32 = Utils::Time::TimeMs2Q32x32(remoteClockOffsetMs.value());
-				}
-
-				// NOTE: While that offset cannot be told, or is so large that it does not fit in
-				// the extension, there is no way to rewrite the capture clock offset, and it is
-				// better not to forward the extension than to forward it with a value we know
-				// wrong.
+				// NOTE: An offset that does not fit in the extension means a sender whose clock
+				// is decades away from ours, and there is no value to write that would not be a
+				// lie, so the extension is not forwarded.
 				if (remoteClockOffsetQ32x32.has_value())
 				{
 					const auto absCaptureTimestamp = Utils::Byte::Get8Bytes(extenValue, 0);
