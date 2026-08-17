@@ -2628,6 +2628,34 @@ namespace RTC
 		return remoteCaptureTimeEstimator.GetLocalCaptureMs(rtpStream, ts);
 	}
 
+	std::optional<int64_t> Transport::OnProducerNeedRemoteClockOffsetMs(const RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it == this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			return std::nullopt;
+		}
+
+		const auto& remoteCaptureTimeEstimator = it->second;
+		const auto clockOffsetMs               = remoteCaptureTimeEstimator.GetClockOffsetMs();
+
+		if (!clockOffsetMs.has_value())
+		{
+			return std::nullopt;
+		}
+
+		// NOTE: The estimator gives the offset against our own monotonic clock, while what
+		// a receiver reconstructs out of the Sender Reports we send is the clock we
+		// announce, so the distance to the NTP epoch has to be taken into account. Both
+		// terms are huge and their sum is small, so they are added as milliseconds before
+		// anything scales them up.
+		return clockOffsetMs.value() + static_cast<int64_t>(this->shared->GetNtpOffsetMs());
+	}
+
 	void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();

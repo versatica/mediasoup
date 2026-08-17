@@ -771,7 +771,8 @@ namespace RTC
 		// Add a receiver reference time report if no present in the packet.
 		if (!packet->HasReceiverReferenceTime())
 		{
-			auto ntp                    = Utils::Time::TimeMs2Ntp(nowMs);
+			auto ntp = Utils::Time::TimeMs2Ntp(nowMs + this->shared->GetNtpOffsetMs());
+
 			receiverReferenceTimeReport = new RTC::RTCP::ReceiverReferenceTime();
 
 			receiverReferenceTimeReport->SetNtpSec(ntp.seconds);
@@ -1229,19 +1230,65 @@ namespace RTC
 			}
 
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time.
+			//
+			// The capture timestamp is left untouched since it belongs to the clock of the
+			// capture system, but the capture clock offset has to be rewritten. It tells the
+			// offset between the clock of the capture system and the clock of whoever sends
+			// the stream, and by forwarding the stream we become that sender:
+			//
+			//   capture NTP clock = sender NTP clock + capture clock offset
+			//
+			// @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 			extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
 
-			if (extenValue)
+			// NOTE: The extension value is 8 or 16 bytes long depending on whether it holds
+			// the capture clock offset or not.
+			if (extenValue && (extenLen == 8u || extenLen == 16u))
 			{
-				std::memcpy(bufferPtr, extenValue, extenLen);
+				// Offset between our own clock and the clock of the sender of this stream, in
+				// the format the extension uses.
+				const auto remoteClockOffsetMs = this->listener->OnProducerNeedRemoteClockOffsetMs(this);
 
-				extensions.emplace_back(
-				  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
-				  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
-				  /*len*/ extenLen,
-				  /*value*/ bufferPtr);
+				std::optional<int64_t> remoteClockOffsetQ32x32;
 
-				bufferPtr += extenLen;
+				if (remoteClockOffsetMs.has_value())
+				{
+					remoteClockOffsetQ32x32 = Utils::Time::TimeMs2Q32x32(remoteClockOffsetMs.value());
+				}
+
+				// NOTE: While that offset cannot be told, or is so large that it does not fit in
+				// the extension, there is no way to rewrite the capture clock offset, and it is
+				// better not to forward the extension than to forward it with a value we know
+				// wrong.
+				if (remoteClockOffsetQ32x32.has_value())
+				{
+					const auto absCaptureTimestamp = Utils::Byte::Get8Bytes(extenValue, 0);
+					// Offset between the clock of the capture system and the clock of the sender
+					// of this stream, as told by that sender. There is none when the extension
+					// comes in its shortened form, which is what a sender that captures its own
+					// media sends.
+					const int64_t incomingCaptureClockOffset =
+					  extenLen == 16u ? static_cast<int64_t>(Utils::Byte::Get8Bytes(extenValue, 8)) : 0;
+					// NOTE: The estimator gives our own clock minus the one of the sender, so
+					// subtracting it adds the offset of the sender against ours.
+					const int64_t captureClockOffset =
+					  incomingCaptureClockOffset - remoteClockOffsetQ32x32.value();
+
+					// The extension is always forwarded in its extended form, since the capture
+					// clock offset is always written.
+					extenLen = 16u;
+
+					Utils::Byte::Set8Bytes(bufferPtr, 0, absCaptureTimestamp);
+					Utils::Byte::Set8Bytes(bufferPtr, 8, static_cast<uint64_t>(captureClockOffset));
+
+					extensions.emplace_back(
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
+
+					bufferPtr += extenLen;
+				}
 			}
 
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/playout-delay

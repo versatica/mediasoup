@@ -61,6 +61,13 @@ namespace RTC
 			 */
 			virtual std::optional<uint64_t> OnProducerNeedLocalCaptureMs(
 			  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) = 0;
+			/**
+			 * Offset between the wall clock of the sender of this Producer and our own
+			 * monotonic one (ms).
+			 *
+			 * @returns No value while the offset cannot be told yet.
+			 */
+			virtual std::optional<int64_t> OnProducerNeedRemoteClockOffsetMs(const RTC::Producer* producer) = 0;
 		};
 
 	private:

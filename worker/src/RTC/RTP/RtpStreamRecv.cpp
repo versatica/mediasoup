@@ -312,13 +312,24 @@ namespace RTC
 					ntp.seconds   = static_cast<uint32_t>(absCaptureTimestamp >> 32);
 					ntp.fractions = static_cast<uint32_t>(absCaptureTimestamp);
 
-					// NOTE: The estimated capture clock offset is ignored on purpose. All the
-					// streams of a same sender share its clock, which is all that inter stream
-					// synchronization needs.
-					this->lastAbsCaptureTime = AbsCaptureTime{
-						.ts    = packet->GetTimestamp(),
-						.ntpMs = Utils::Time::Ntp2TimeMs(ntp),
-					};
+					// The capture timestamp belongs to the clock of the capture system, which is
+					// not the clock of the sender of this stream when the media comes from
+					// somewhere else. The capture clock offset gives the instant back in the clock
+					// of the sender, which is the one this stream is estimated against:
+					//
+					//   capture NTP clock = sender NTP clock + capture clock offset
+					const auto captureMs = static_cast<int64_t>(Utils::Time::Ntp2TimeMs(ntp)) -
+					                       Utils::Time::Q32x32ToTimeMs(estimatedCaptureClockOffset);
+
+					// NOTE: A capture instant that is not positive means a capture clock offset
+					// that cannot be true, so there is nothing to store.
+					if (captureMs > 0)
+					{
+						this->lastAbsCaptureTime = AbsCaptureTime{
+							.ts    = packet->GetTimestamp(),
+							.ntpMs = static_cast<uint64_t>(captureMs),
+						};
+					}
 				}
 			}
 
@@ -635,7 +646,7 @@ namespace RTC
 
 			// Get the NTP representation of the current timestamp.
 			const uint64_t nowMs = this->shared->GetTimeMs();
-			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs);
+			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs + this->shared->GetNtpOffsetMs());
 
 			// Get the compact NTP representation of the current timestamp.
 			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;

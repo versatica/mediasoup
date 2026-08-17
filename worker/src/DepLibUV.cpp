@@ -3,10 +3,12 @@
 
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 
 /* Class variables. */
 
 thread_local uv_loop_t* DepLibUV::loop{ nullptr };
+thread_local uint64_t DepLibUV::ntpOffsetMs{ 0 };
 
 /* Static methods for UV callbacks. */
 
@@ -48,6 +50,21 @@ void DepLibUV::ClassInit()
 	{
 		MS_ABORT("libuv loop initialization failed");
 	}
+
+	// Take the distance from our own monotonic clock to the NTP epoch just once, so that
+	// the NTP timestamps we generate never step when the system clock is adjusted.
+	uv_timeval64_t timeval{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+	if (uv_gettimeofday(std::addressof(timeval)) != 0)
+	{
+		MS_ABORT("uv_gettimeofday() failed");
+	}
+
+	const auto unixSec = static_cast<uint64_t>(timeval.tv_sec);
+	const auto unixMs  = (unixSec * 1000) + (static_cast<uint64_t>(timeval.tv_usec) / 1000);
+	const auto ntpMs   = unixMs + (static_cast<uint64_t>(Utils::Time::UnixNtpOffsetSec) * 1000);
+
+	DepLibUV::ntpOffsetMs = ntpMs - DepLibUV::GetTimeMs();
 }
 
 void DepLibUV::ClassDestroy()

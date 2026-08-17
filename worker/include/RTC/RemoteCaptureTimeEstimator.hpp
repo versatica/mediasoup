@@ -61,6 +61,16 @@ namespace RTC
 		void SenderReportReceived(const RTC::RTP::RtpStreamRecv* rtpStream);
 
 		/**
+		 * Offset between the wall clock of this sender and our own monotonic one (ms).
+		 *
+		 * @returns No value while the offset cannot be told yet.
+		 */
+		std::optional<int64_t> GetClockOffsetMs() const
+		{
+			return this->clockOffsetEstimator.GetOffsetMs();
+		}
+
+		/**
 		 * Capture instant of the given RTP timestamp of the given RTP stream,
 		 * expressed in our own monotonic clock.
 		 *
