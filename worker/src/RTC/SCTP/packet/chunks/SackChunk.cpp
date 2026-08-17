@@ -204,14 +204,18 @@ namespace RTC
 				const uint16_t start = GetAckBlockStartAt(idx);
 				const uint16_t end   = GetAckBlockEndAt(idx);
 
-				if (end > start)
+				// NOTE: A block with `end == start` is a legal single TSN block, so it
+				// must be kept. dcSCTP's `ChunkValidators::Clean()` uses `end > start`
+				// here, which contradicts its own `ChunkValidators::Validate()` (it
+				// accepts `end == start`) and needlessly discards valid ack information.
+				if (end >= start)
 				{
 					gapAckBlocks.emplace_back(start, end);
 				}
 			}
 
 			// Not more than at most one remaining? Exit early.
-			if (gapAckBlocks.size() == 1)
+			if (gapAckBlocks.size() <= 1)
 			{
 				return gapAckBlocks;
 			}
