@@ -147,7 +147,10 @@ namespace RTC
 		uint32_t GetDesiredBitrate() const;
 		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
-		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost);
+		/**
+		 * Worst remote fraction lost among the RTP streams of this Consumer.
+		 */
+		uint8_t GetWorstRemoteFractionLost(uint32_t mappedSsrc) const;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);

@@ -25,6 +25,8 @@ namespace RTC
 
 		size_t FeedbackPsSliItem::Serialize(uint8_t* buffer)
 		{
+			MS_TRACE();
+
 			const uint32_t compact = (this->first << 19) | (this->number << 6) | this->pictureId;
 			auto* header           = reinterpret_cast<Header*>(buffer);
 

@@ -16,6 +16,8 @@ namespace Channel
 
 	inline static void onAsync(uv_handle_t* handle)
 	{
+		MS_TRACE_STD();
+
 		while (static_cast<ChannelSocket*>(handle->data)->CallbackRead())
 		{
 			// Read while there are new messages.
@@ -24,6 +26,8 @@ namespace Channel
 
 	inline static void onCloseAsync(uv_handle_t* handle)
 	{
+		MS_TRACE_STD();
+
 		delete reinterpret_cast<uv_async_t*>(handle);
 	}
 
@@ -223,6 +227,10 @@ namespace Channel
 				{
 					request->TypeError(error.what());
 				}
+				catch (const MediaSoupNotFoundError& error)
+				{
+					request->NotFoundError(error.what());
+				}
 				catch (const MediaSoupError& error)
 				{
 					request->Error(error.what());
@@ -303,6 +311,10 @@ namespace Channel
 			catch (const MediaSoupTypeError& error)
 			{
 				request->TypeError(error.what());
+			}
+			catch (const MediaSoupNotFoundError& error)
+			{
+				request->NotFoundError(error.what());
 			}
 			catch (const MediaSoupError& error)
 			{

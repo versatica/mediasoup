@@ -70,6 +70,22 @@ namespace RTC
 
 		/* Class methods. */
 
+		const std::string& Chunk::ChunkTypeToString(ChunkType chunkType)
+		{
+			MS_TRACE();
+
+			static const std::string Unknown("UNKNOWN");
+
+			auto it = Chunk::ChunkType2String.find(chunkType);
+
+			if (it == Chunk::ChunkType2String.end())
+			{
+				return Unknown;
+			}
+
+			return it->second;
+		}
+
 		bool Chunk::IsChunk(
 		  const uint8_t* buffer,
 		  size_t bufferLength,
@@ -87,22 +103,6 @@ namespace RTC
 			chunkType = static_cast<Chunk::ChunkType>(buffer[0]);
 
 			return true;
-		}
-
-		const std::string& Chunk::ChunkTypeToString(ChunkType chunkType)
-		{
-			MS_TRACE();
-
-			static const std::string Unknown("UNKNOWN");
-
-			auto it = Chunk::ChunkType2String.find(chunkType);
-
-			if (it == Chunk::ChunkType2String.end())
-			{
-				return Unknown;
-			}
-
-			return it->second;
 		}
 
 		/* Instance methods. */
@@ -312,13 +312,13 @@ namespace RTC
 			chunk->SetLength(GetLength());
 		}
 
-		void Chunk::InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue)
+		void Chunk::InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t length)
 		{
 			MS_TRACE();
 
 			SetType(chunkType);
 			SetFlags(flags);
-			InitializeTLVHeader(lengthFieldValue);
+			InitializeTLVHeader(length);
 		}
 
 		bool Chunk::ParseParameters()

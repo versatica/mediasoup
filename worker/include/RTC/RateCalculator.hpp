@@ -41,7 +41,7 @@ namespace RTC
 		struct BufferItem
 		{
 			size_t count{ 0u };
-			uint64_t time{ 0u };
+			uint64_t timeMs{ 0u };
 		};
 
 	private:
@@ -56,11 +56,11 @@ namespace RTC
 		// Buffer to keep data.
 		std::vector<BufferItem> buffer;
 		// Time (in milliseconds) for last item in the time window.
-		std::optional<uint64_t> newestItemStartTime{ std::nullopt };
+		std::optional<uint64_t> newestItemStartTimeMs{ std::nullopt };
 		// Index for the last item in the time window.
 		int32_t newestItemIndex{ -1 };
 		// Time (in milliseconds) for oldest item in the time window.
-		std::optional<uint64_t> oldestItemStartTime{ std::nullopt };
+		std::optional<uint64_t> oldestItemStartTimeMs{ std::nullopt };
 		// Index for the oldest item in the time window.
 		int32_t oldestItemIndex{ -1 };
 		// Total count in the time window.
@@ -70,7 +70,7 @@ namespace RTC
 		// Last value calculated by GetRate().
 		uint32_t lastRate{ 0u };
 		// Last time GetRate() was called.
-		std::optional<uint64_t> lastTime{ std::nullopt };
+		std::optional<uint64_t> lastTimeMs{ std::nullopt };
 	};
 
 	class RtpDataCounter
@@ -103,7 +103,7 @@ namespace RTC
 	private:
 		SharedInterface* shared{ nullptr };
 		// Whether the size of padding only RTP packets should not be taken into
-		// account
+		// account.
 		bool ignorePaddingOnlyPackets{ false };
 		RateCalculator rate;
 		size_t packets{ 0u };

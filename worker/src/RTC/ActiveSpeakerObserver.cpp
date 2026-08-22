@@ -32,6 +32,8 @@ namespace RTC
 
 	static inline int64_t binomialCoefficient(int32_t n, int32_t r)
 	{
+		MS_TRACE();
+
 		const int32_t m = n - r;
 
 		r = std::max(r, m);
@@ -49,6 +51,8 @@ namespace RTC
 	static inline double computeActivityScore(
 	  const uint8_t vL, const uint32_t nR, const double p, const double lambda)
 	{
+		MS_TRACE();
+
 		double activityScore = std::log(binomialCoefficient(nR, vL)) + (vL * std::log(p)) +
 		                       ((nR - vL) * std::log(1 - p)) - std::log(lambda) + (lambda * vL);
 
@@ -60,6 +64,8 @@ namespace RTC
 	static inline bool computeBigs(
 	  const std::vector<uint8_t>& littles, std::vector<uint8_t>& bigs, uint8_t threashold)
 	{
+		MS_TRACE();
+
 		const uint32_t littleLen       = littles.size();
 		const uint32_t bigLen          = bigs.size();
 		const uint32_t littleLenPerBig = littleLen / bigLen;
@@ -458,6 +464,8 @@ namespace RTC
 
 	void ActiveSpeakerObserver::Speaker::LevelChanged(uint32_t level, uint64_t now)
 	{
+		MS_TRACE();
+
 		if (this->lastLevelChangeTime <= now)
 		{
 			const uint64_t elapsed = now - this->lastLevelChangeTime;

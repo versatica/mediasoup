@@ -886,6 +886,22 @@ namespace RTC
 				return this->payloadDescriptorHandler->GetTemporalLayer();
 			}
 
+			/**
+			 * Capture time (in ms) of the packet.
+			 */
+			std::optional<uint64_t> GetCaptureMs() const
+			{
+				return this->captureMs;
+			}
+
+			/**
+			 * Set the capture time (in ms) of the packet.
+			 */
+			void SetCaptureMs(uint64_t captureMs)
+			{
+				this->captureMs = captureMs;
+			}
+
 		private:
 			/**
 			 * @remarks
@@ -1009,6 +1025,8 @@ namespace RTC
 			RTP::HeaderExtensionIds headerExtensionIds{};
 			// Codec related.
 			std::shared_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
+			// Capture time of the packet.
+			std::optional<uint64_t> captureMs;
 		};
 	} // namespace RTP
 } // namespace RTC

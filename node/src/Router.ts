@@ -1,7 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
-import { InvalidStateError } from './errors';
 import type { Channel } from './Channel';
 import type {
 	Router,
@@ -68,6 +67,7 @@ import type {
 	RouterRtpCodecCapability,
 } from './rtpParametersTypes';
 import { cryptoSuiteToFbs } from './srtpParametersFbsUtils';
+import { NotFoundError } from './errors';
 import type { AppData } from './types';
 import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
@@ -306,6 +306,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpSendBufferSize = 2000000,
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
+		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
 		iceConsentTimeout = 30,
 		appData,
 	}: WebRtcTransportOptions<WebRtcTransportAppData>): Promise<
@@ -384,11 +385,9 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		/* Build Request. */
 		let webRtcTransportListenServer:
-			| FbsWebRtcTransport.ListenServerT
-			| undefined;
+			FbsWebRtcTransport.ListenServerT | undefined;
 		let webRtcTransportListenIndividual:
-			| FbsWebRtcTransport.ListenIndividualT
-			| undefined;
+			FbsWebRtcTransport.ListenIndividualT | undefined;
 
 		if (webRtcServer) {
 			webRtcTransportListenServer = new FbsWebRtcTransport.ListenServerT(
@@ -428,6 +427,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			sctpSendBufferSize,
 			sctpPerStreamSendQueueLimit,
 			sctpMaxReceiverWindowBufferSize,
+			sctpDefaultStreamBufferedAmountLowThreshold,
 			/* isDataChannel */ true
 		);
 
@@ -527,6 +527,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpSendBufferSize = 2000000,
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
+		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
 		enableSrtp = false,
 		srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 		appData,
@@ -581,6 +582,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			sctpSendBufferSize,
 			sctpPerStreamSendQueueLimit,
 			sctpMaxReceiverWindowBufferSize,
+			sctpDefaultStreamBufferedAmountLowThreshold,
 			/* isDataChannel */ false
 		);
 
@@ -691,6 +693,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpSendBufferSize = 2000000,
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
+		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
 		enableRtx = false,
 		enableSrtp = false,
 		appData,
@@ -736,6 +739,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			sctpSendBufferSize,
 			sctpPerStreamSendQueueLimit,
 			sctpMaxReceiverWindowBufferSize,
+			sctpDefaultStreamBufferedAmountLowThreshold,
 			/* isDataChannel */ false
 		);
 
@@ -846,6 +850,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			/* sctpSendBufferSize */ undefined,
 			/* sctpPerStreamSendQueueLimit */ undefined,
 			/* sctpMaxReceiverWindowBufferSize */ undefined,
+			/* sctpDefaultStreamBufferedAmountLowThreshold */ undefined,
 			/* isDataChannel */ undefined
 		);
 
@@ -926,6 +931,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpSendBufferSize = 2000000,
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
+		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
 		enableRtx = false,
 		enableSrtp = false,
 	}: PipeToRouterOptions): Promise<PipeToRouterResult> {
@@ -945,7 +951,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		} else if (producerId && dataProducerId) {
 			throw new TypeError('just producerId or dataProducerId can be given');
 		} else if (!router) {
-			throw new TypeError('Router not found');
+			throw new TypeError('missing router');
 		} else if (router === this) {
 			throw new TypeError('cannot use this Router as destination');
 		}
@@ -971,13 +977,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			producer = this.#producers.get(producerId);
 
 			if (!producer) {
-				throw new TypeError('Producer not found');
+				throw new NotFoundError('Producer not found');
 			}
 		} else if (dataProducerId) {
 			dataProducer = this.#dataProducers.get(dataProducerId);
 
 			if (!dataProducer) {
-				throw new TypeError('DataProducer not found');
+				throw new NotFoundError('DataProducer not found');
 			}
 		}
 
@@ -1003,6 +1009,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 						sctpSendBufferSize,
 						sctpPerStreamSendQueueLimit,
 						sctpMaxReceiverWindowBufferSize,
+						sctpDefaultStreamBufferedAmountLowThreshold,
 						enableRtx,
 						enableSrtp,
 					}),
@@ -1014,6 +1021,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 						sctpSendBufferSize,
 						sctpPerStreamSendQueueLimit,
 						sctpMaxReceiverWindowBufferSize,
+						sctpDefaultStreamBufferedAmountLowThreshold,
 						enableRtx,
 						enableSrtp,
 					}),
@@ -1079,7 +1087,10 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				pipeTransportPairPromise
 			);
 
-			router.addPipeTransportPair(this.id, pipeTransportPairPromise);
+			(router as RouterImpl).addPipeTransportPair(
+				this.id,
+				pipeTransportPairPromise
+			);
 
 			await pipeTransportPairPromise;
 		}
@@ -1104,7 +1115,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 				// Ensure that the producer has not been closed in the meanwhile.
 				if (producer.closed) {
-					throw new InvalidStateError('original Producer closed');
+					throw new NotFoundError('original Producer closed');
 				}
 
 				// Ensure that producer.paused has not changed in the meanwhile and, if
@@ -1162,7 +1173,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 				// Ensure that the dataProducer has not been closed in the meanwhile.
 				if (dataProducer.closed) {
-					throw new InvalidStateError('original DataProducer closed');
+					throw new NotFoundError('original DataProducer closed');
 				}
 
 				// Pipe events from the pipe DataConsumer to the pipe DataProducer.
@@ -1188,40 +1199,6 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			// dataProducer exists, but TypeScript is not that smart.
 			throw new Error('internal error');
 		}
-	}
-
-	addPipeTransportPair(
-		pipeTransportPairKey: string,
-		pipeTransportPairPromise: Promise<PipeTransportPair>
-	): void {
-		if (this.#mapRouterPairPipeTransportPairPromise.has(pipeTransportPairKey)) {
-			throw new Error(
-				'given pipeTransportPairKey already exists in this Router'
-			);
-		}
-
-		this.#mapRouterPairPipeTransportPairPromise.set(
-			pipeTransportPairKey,
-			pipeTransportPairPromise
-		);
-
-		pipeTransportPairPromise
-			.then(pipeTransportPair => {
-				const localPipeTransport = pipeTransportPair[this.id]!;
-
-				// NOTE: No need to do any other cleanup here since that is done by the
-				// Router calling this method on us.
-				localPipeTransport.observer.on('close', () => {
-					this.#mapRouterPairPipeTransportPairPromise.delete(
-						pipeTransportPairKey
-					);
-				});
-			})
-			.catch(() => {
-				this.#mapRouterPairPipeTransportPairPromise.delete(
-					pipeTransportPairKey
-				);
-			});
 	}
 
 	async createActiveSpeakerObserver<
@@ -1397,6 +1374,40 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			ortc.generateRouterRtpCapabilities(clonedMediaCodecs);
 
 		this.#data.rtpCapabilities = rtpCapabilities;
+	}
+
+	private addPipeTransportPair(
+		pipeTransportPairKey: string,
+		pipeTransportPairPromise: Promise<PipeTransportPair>
+	): void {
+		if (this.#mapRouterPairPipeTransportPairPromise.has(pipeTransportPairKey)) {
+			throw new Error(
+				'given pipeTransportPairKey already exists in this Router'
+			);
+		}
+
+		this.#mapRouterPairPipeTransportPairPromise.set(
+			pipeTransportPairKey,
+			pipeTransportPairPromise
+		);
+
+		pipeTransportPairPromise
+			.then(pipeTransportPair => {
+				const localPipeTransport = pipeTransportPair[this.id]!;
+
+				// NOTE: No need to do any other cleanup here since that is done by the
+				// Router calling this method on us.
+				localPipeTransport.observer.on('close', () => {
+					this.#mapRouterPairPipeTransportPairPromise.delete(
+						pipeTransportPairKey
+					);
+				});
+			})
+			.catch(() => {
+				this.#mapRouterPairPipeTransportPairPromise.delete(
+					pipeTransportPairKey
+				);
+			});
 	}
 
 	private handleListenerError(): void {

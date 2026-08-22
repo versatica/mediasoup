@@ -13,6 +13,8 @@ namespace RTC
 		IceCandidate::CandidateType IceCandidate::CandidateTypeFromFbs(
 		  FBS::WebRtcTransport::IceCandidateType type)
 		{
+			MS_TRACE();
+
 			switch (type)
 			{
 				case FBS::WebRtcTransport::IceCandidateType::HOST:
@@ -27,6 +29,8 @@ namespace RTC
 		FBS::WebRtcTransport::IceCandidateType IceCandidate::CandidateTypeToFbs(
 		  IceCandidate::CandidateType type)
 		{
+			MS_TRACE();
+
 			switch (type)
 			{
 				case IceCandidate::CandidateType::HOST:
@@ -41,6 +45,8 @@ namespace RTC
 		IceCandidate::TcpCandidateType IceCandidate::TcpCandidateTypeFromFbs(
 		  FBS::WebRtcTransport::IceCandidateTcpType type)
 		{
+			MS_TRACE();
+
 			switch (type)
 			{
 				case FBS::WebRtcTransport::IceCandidateTcpType::PASSIVE:
@@ -55,6 +61,8 @@ namespace RTC
 		FBS::WebRtcTransport::IceCandidateTcpType IceCandidate::TcpCandidateTypeToFbs(
 		  IceCandidate::TcpCandidateType type)
 		{
+			MS_TRACE();
+
 			switch (type)
 			{
 				case IceCandidate::TcpCandidateType::PASSIVE:

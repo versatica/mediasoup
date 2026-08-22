@@ -100,11 +100,15 @@ namespace RTC
 
 			uint8_t DependencyDescriptor::GetSpatialLayer() const
 			{
+				MS_TRACE();
+
 				return this->templateDependencyStructure->templateLayers[this->templateId].spatialLayer;
 			}
 
 			uint8_t DependencyDescriptor::GetTemporalLayer() const
 			{
+				MS_TRACE();
+
 				return this->templateDependencyStructure->templateLayers[this->templateId].temporalLayer;
 			}
 
@@ -188,6 +192,8 @@ namespace RTC
 
 			void DependencyDescriptor::UpdateListener(DependencyDescriptor::Listener* listener)
 			{
+				MS_TRACE();
+
 				this->listener = listener;
 			}
 

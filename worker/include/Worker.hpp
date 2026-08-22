@@ -26,10 +26,11 @@ private:
 	flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> FillBufferResourceUsage(
 	  flatbuffers::FlatBufferBuilder& builder) const;
 	void SetNewRouterId(std::string& routerId) const;
-	RTC::WebRtcServer* AssertAndGetWebRtcServerById(const std::string& webRtcServerId) const;
-	RTC::Router* AssertAndGetRouterById(const std::string& routerId) const;
-	void CheckNoWebRtcServer(const std::string& webRtcServerId) const;
-	void CheckNoRouter(const std::string& routerId) const;
+	RTC::WebRtcServer* AssertAndGetWebRtcServerById(
+	  const std::string& webRtcServerId, const std::string& method) const;
+	RTC::Router* AssertAndGetRouterById(const std::string& routerId, const std::string& method) const;
+	void CheckNoWebRtcServer(const std::string& webRtcServerId, const std::string& method) const;
+	void CheckNoRouter(const std::string& routerId, const std::string& method) const;
 
 	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:
@@ -46,7 +47,8 @@ public:
 
 	/* Pure virtual methods inherited from RTC::Router::Listener. */
 public:
-	RTC::WebRtcServer* OnRouterNeedWebRtcServer(RTC::Router* router, std::string& webRtcServerId) override;
+	RTC::WebRtcServer* OnRouterNeedWebRtcServer(
+	  const RTC::Router* router, const std::string& webRtcServerId) override;
 
 private:
 	// Passed by argument.

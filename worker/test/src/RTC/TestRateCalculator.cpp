@@ -14,9 +14,9 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	};
 
 	auto validate =
-	  [](RTC::RateCalculator& rate, uint64_t timeBaseMs, std::vector<TestRateCalculatorData>& input)
+	  [](RTC::RateCalculator& rate, uint64_t timeBaseMs, const std::vector<TestRateCalculatorData>& input)
 	{
-		for (auto& item : input)
+		for (const auto& item : input)
 		{
 			rate.Update(item.size, timeBaseMs + item.offset);
 
@@ -26,7 +26,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// Repeat forcing nowMs to be 0.
 		rate.Reset();
 
-		for (auto& item : input)
+		for (const auto& item : input)
 		{
 			rate.Update(item.size, timeBaseMs + item.offset);
 
@@ -36,7 +36,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// Repeat forcing nowMs to be std::numeric_limits<uint64_t>::max() - 100.
 		rate.Reset();
 
-		for (auto& item : input)
+		for (const auto& item : input)
 		{
 			rate.Update(item.size, timeBaseMs + item.offset);
 
@@ -51,9 +51,9 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate;
 
 		// clang-format off
-		std::vector<TestRateCalculatorData> input =
+		const std::vector<TestRateCalculatorData> input =
 		{
-			{ 0, 5, 40 }
+			{ .offset=0, .size=5, .rate=40 }
 		};
 		// clang-format on
 
@@ -65,12 +65,12 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate;
 
 		// clang-format off
-		std::vector<TestRateCalculatorData> input =
+		const std::vector<TestRateCalculatorData> input =
 		{
-			{ 0,   5, 40  },
-			{ 100, 2, 56  },
-			{ 300, 2, 72  },
-			{ 999, 4, 104 }
+			{ .offset=0,   .size=5, .rate=40  },
+			{ .offset=100, .size=2, .rate=56  },
+			{ .offset=300, .size=2, .rate=72  },
+			{ .offset=999, .size=4, .rate=104 }
 		};
 		// clang-format on
 
@@ -82,11 +82,11 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate(1000, 8000, 100);
 
 		// clang-format off
-		std::vector<TestRateCalculatorData> input =
+		const std::vector<TestRateCalculatorData> input =
 		{
-			{ 0,    5, 40 },
-			{ 1000, 5, 40 },
-			{ 2000, 5, 40 }
+			{ .offset=0,    .size=5, .rate=40 },
+			{ .offset=1000, .size=5, .rate=40 },
+			{ .offset=2000, .size=5, .rate=40 }
 		};
 		// clang-format on
 
@@ -98,13 +98,13 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate(1000, 8000, 1000);
 
 		// clang-format off
-		std::vector<TestRateCalculatorData> input =
+		const std::vector<TestRateCalculatorData> input =
 		{
-			{ 0,    5, 40 },
-			{ 999,  2, 56 },
-			{ 1001, 1, 24 },
-			{ 1001, 1, 32 },
-			{ 2000, 1, 24 }
+			{ .offset=0,    .size=5, .rate=40 },
+			{ .offset=999,  .size=2, .rate=56 },
+			{ .offset=1001, .size=1, .rate=24 },
+			{ .offset=1001, .size=1, .rate=32 },
+			{ .offset=2000, .size=1, .rate=24 }
 		};
 		// clang-format on
 
@@ -118,15 +118,15 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate(1000, 8000, 100);
 
 		// clang-format off
-		std::vector<TestRateCalculatorData> input =
+		const std::vector<TestRateCalculatorData> input =
 		{
-			{ 0,    5, 40 },
-			{ 999,  2, 56 },
-			{ 1001, 1, 24 }, // merged inside 999
-			{ 1001, 1, 32 }, // merged inside 999
-			{ 2000, 1, 8 } 	 // it will erase the item with timestamp=999,
-							 // removing also the next two samples.
-							 // The end estimation will include only the last sample.
+			{ .offset=0,    .size=5, .rate=40 },
+			{ .offset=999,  .size=2, .rate=56 },
+			{ .offset=1001, .size=1, .rate=24 }, // merged inside 999
+			{ .offset=1001, .size=1, .rate=32 }, // merged inside 999
+			{ .offset=2000, .size=1, .rate=8  }  // it will erase the item with
+			                // timestamp=999, removing also the next two samples. The
+			                // end estimation will include only the last sample.
 		};
 		// clang-format on
 
@@ -141,18 +141,18 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate(1000, 8000, 5);
 
 		// clang-format off
-		std::vector<TestRateCalculatorData> input =
+		const std::vector<TestRateCalculatorData> input =
 		{
-			{ 1000, 1, 1*8 },
-			{ 1200, 1, 1*8 + 1*8 },
-			{ 1400, 1, 1*8 + 2*8 },
-			{ 1600, 1, 1*8 + 3*8 },
-			{ 1800, 1, 1*8 + 4*8 },
-			{ 2000, 1, 1*8 + (5-1)*8 }, // starts wrap here
-			{ 2200, 1, 1*8 + (6-2)*8 },
-			{ 2400, 1, 1*8 + (7-3)*8 },
-			{ 2600, 1, 1*8 + (8-4)*8 },
-			{ 2800, 1, 1*8 + (9-5)*8 },
+			{ .offset=1000, .size=1, .rate=1*8 },
+			{ .offset=1200, .size=1, .rate=(1*8) + (1*8) },
+			{ .offset=1400, .size=1, .rate=(1*8) + (2*8) },
+			{ .offset=1600, .size=1, .rate=(1*8) + (3*8) },
+			{ .offset=1800, .size=1, .rate=(1*8) + (4*8) },
+			{ .offset=2000, .size=1, .rate=(1*8) + ((5-1)*8) }, // starts wrap here
+			{ .offset=2200, .size=1, .rate=(1*8) + ((6-2)*8) },
+			{ .offset=2400, .size=1, .rate=(1*8) + ((7-3)*8) },
+			{ .offset=2600, .size=1, .rate=(1*8) + ((8-4)*8) },
+			{ .offset=2800, .size=1, .rate=(1*8) + ((9-5)*8) },
 		};
 		// clang-format on
 
@@ -167,12 +167,12 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate(1000, 8000, 3);
 
 		// clang-format off
-		std::vector<TestRateCalculatorData> input =
+		const std::vector<TestRateCalculatorData> input =
 		{
-			{ 0,   1, 8  },
-			{ 333, 1, 16  },
-			{ 666, 1, 24  },
-			{ 999, 1, 32 },
+			{ .offset=0,   .size=1, .rate=8  },
+			{ .offset=333, .size=1, .rate=16 },
+			{ .offset=666, .size=1, .rate=24 },
+			{ .offset=999, .size=1, .rate=32 },
   	};
 		// clang-format on
 

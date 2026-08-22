@@ -13,6 +13,8 @@ namespace RTC
 
 		size_t CompoundPacket::GetSize()
 		{
+			MS_TRACE();
+
 			size_t size{ 0 };
 
 			if (this->senderReportPacket.GetCount() > 0u)
@@ -77,6 +79,8 @@ namespace RTC
 		  SdesChunk* sdesChunk,
 		  DelaySinceLastRr::SsrcInfo* delaySinceLastRrSsrcInfo)
 		{
+			MS_TRACE();
+
 			// Add the items into the packet.
 
 			if (senderReport)
@@ -136,6 +140,8 @@ namespace RTC
 		  std::vector<SdesChunk*>& sdesChunks,
 		  std::vector<DelaySinceLastRr::SsrcInfo*>& delaySinceLastRrSsrcInfos)
 		{
+			MS_TRACE();
+
 			// Add the items into the packet.
 
 			for (auto* report : senderReports)
@@ -194,6 +200,8 @@ namespace RTC
 		  std::vector<ReceiverReport*>& receiverReports,
 		  ReceiverReferenceTime* receiverReferenceTimeReport)
 		{
+			MS_TRACE();
+
 			// Add the items into the packet.
 
 			for (auto* report : receiverReports)

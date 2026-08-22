@@ -12,6 +12,8 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
+	MS_TRACE();
+
 	auto* connection = static_cast<TcpConnectionHandle*>(handle->data);
 
 	if (connection)
@@ -22,6 +24,8 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
+	MS_TRACE();
+
 	auto* connection = static_cast<TcpConnectionHandle*>(handle->data);
 
 	if (connection)
@@ -32,6 +36,8 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
+	MS_TRACE();
+
 	auto* writeData  = static_cast<TcpConnectionHandle::UvWriteData*>(req->data);
 	auto* handle     = req->handle;
 	auto* connection = static_cast<TcpConnectionHandle*>(handle->data);
@@ -50,11 +56,15 @@ inline static void onWrite(uv_write_t* req, int status)
 // ensuring that we call `delete xxx` with same type as `new xxx` before.
 inline static void onCloseTcp(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
 inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
+	MS_TRACE();
+
 	auto* handle = req->handle;
 
 	delete req;
@@ -104,6 +114,8 @@ void TcpConnectionHandle::TriggerClose()
 
 void TcpConnectionHandle::Dump(int indentation) const
 {
+	MS_TRACE();
+
 	MS_DUMP_CLEAN(indentation, "<TcpConnectionHandle>");
 	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
 	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));
@@ -138,13 +150,13 @@ void TcpConnectionHandle::Setup(
 	this->localPort = localPort;
 }
 
-void TcpConnectionHandle::Start()
+bool TcpConnectionHandle::Start() noexcept
 {
 	MS_TRACE();
 
 	if (this->closed)
 	{
-		return;
+		return false;
 	}
 
 	// NOLINTNEXTLINE(misc-const-correctness)
@@ -155,14 +167,18 @@ void TcpConnectionHandle::Start()
 
 	if (err != 0)
 	{
-		MS_THROW_ERROR("uv_read_start() failed: %s", uv_strerror(err));
+		MS_ERROR("uv_read_start() failed: %s", uv_strerror(err));
+
+		return false;
 	}
 
 	// Get the peer address.
 	if (!SetPeerAddress())
 	{
-		MS_THROW_ERROR("error setting peer IP and port");
+		return false;
 	}
+
+	return true;
 }
 
 void TcpConnectionHandle::Write(
@@ -364,11 +380,18 @@ bool TcpConnectionHandle::SetPeerAddress()
 	int err;
 	int len = sizeof(this->peerAddr);
 
-	err = uv_tcp_getpeername(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->peerAddr), &len);
+	// NOTE: `uv_tcp_getpeername()` fails if the socket is not connected. This is
+	// a legitimate scenario since at the time `uv_accept()` was called it may
+	// happen that the peer sent a TCP RST already. In fact, this is the proper
+	// and only way to check whether the socket remains connected now.
+	err = uv_tcp_getpeername(
+	  this->uvHandle,
+	  reinterpret_cast<struct sockaddr*>(std::addressof(this->peerAddr)),
+	  std::addressof(len));
 
 	if (err != 0)
 	{
-		MS_ERROR("uv_tcp_getpeername() failed: %s", uv_strerror(err));
+		MS_DEBUG_DEV("uv_tcp_getpeername() failed: %s", uv_strerror(err));
 
 		return false;
 	}
@@ -376,7 +399,10 @@ bool TcpConnectionHandle::SetPeerAddress()
 	int family;
 
 	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(&this->peerAddr), family, this->peerIp, this->peerPort);
+	  reinterpret_cast<const struct sockaddr*>(std::addressof(this->peerAddr)),
+	  family,
+	  this->peerIp,
+	  this->peerPort);
 
 	return true;
 }

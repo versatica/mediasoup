@@ -565,6 +565,7 @@ impl ToFbs for RouterCreateDirectTransportData {
                 sctp_send_buffer_size: 0,
                 sctp_per_stream_send_queue_limit: 0,
                 sctp_max_receiver_window_buffer_size: 0,
+                sctp_default_stream_buffered_amount_low_threshold: 0,
                 enable_sctp: false,
                 is_data_channel: false,
             }),
@@ -663,6 +664,7 @@ pub(crate) struct RouterCreateWebrtcTransportData {
     sctp_send_buffer_size: u32,
     sctp_per_stream_send_queue_limit: u32,
     sctp_max_receiver_window_buffer_size: u32,
+    sctp_default_stream_buffered_amount_low_threshold: u32,
     is_data_channel: bool,
 }
 
@@ -700,6 +702,8 @@ impl RouterCreateWebrtcTransportData {
                 .sctp_per_stream_send_queue_limit,
             sctp_max_receiver_window_buffer_size: webrtc_transport_options
                 .sctp_max_receiver_window_buffer_size,
+            sctp_default_stream_buffered_amount_low_threshold: webrtc_transport_options
+                .sctp_default_stream_buffered_amount_low_threshold,
             is_data_channel: true,
         }
     }
@@ -719,6 +723,8 @@ impl ToFbs for RouterCreateWebrtcTransportData {
                 sctp_send_buffer_size: self.sctp_send_buffer_size,
                 sctp_per_stream_send_queue_limit: self.sctp_per_stream_send_queue_limit,
                 sctp_max_receiver_window_buffer_size: self.sctp_max_receiver_window_buffer_size,
+                sctp_default_stream_buffered_amount_low_threshold: self
+                    .sctp_default_stream_buffered_amount_low_threshold,
                 is_data_channel: true,
             }),
             listen: self.listen.to_fbs(),
@@ -896,6 +902,7 @@ pub(crate) struct RouterCreatePlainTransportData {
     sctp_send_buffer_size: u32,
     sctp_per_stream_send_queue_limit: u32,
     sctp_max_receiver_window_buffer_size: u32,
+    sctp_default_stream_buffered_amount_low_threshold: u32,
     is_data_channel: bool,
     enable_srtp: bool,
     srtp_crypto_suite: SrtpCryptoSuite,
@@ -920,6 +927,8 @@ impl RouterCreatePlainTransportData {
                 .sctp_per_stream_send_queue_limit,
             sctp_max_receiver_window_buffer_size: plain_transport_options
                 .sctp_max_receiver_window_buffer_size,
+            sctp_default_stream_buffered_amount_low_threshold: plain_transport_options
+                .sctp_default_stream_buffered_amount_low_threshold,
             is_data_channel: false,
             enable_srtp: plain_transport_options.enable_srtp,
             srtp_crypto_suite: plain_transport_options.srtp_crypto_suite,
@@ -941,6 +950,8 @@ impl ToFbs for RouterCreatePlainTransportData {
                 sctp_send_buffer_size: self.sctp_send_buffer_size,
                 sctp_per_stream_send_queue_limit: self.sctp_per_stream_send_queue_limit,
                 sctp_max_receiver_window_buffer_size: self.sctp_max_receiver_window_buffer_size,
+                sctp_default_stream_buffered_amount_low_threshold: self
+                    .sctp_default_stream_buffered_amount_low_threshold,
                 is_data_channel: self.is_data_channel,
             }),
             listen_info: Box::new(self.listen_info.clone().to_fbs()),
@@ -1038,6 +1049,7 @@ pub(crate) struct RouterCreatePipeTransportData {
     sctp_send_buffer_size: u32,
     sctp_per_stream_send_queue_limit: u32,
     sctp_max_receiver_window_buffer_size: u32,
+    sctp_default_stream_buffered_amount_low_threshold: u32,
     is_data_channel: bool,
     enable_rtx: bool,
     enable_srtp: bool,
@@ -1059,6 +1071,8 @@ impl RouterCreatePipeTransportData {
                 .sctp_per_stream_send_queue_limit,
             sctp_max_receiver_window_buffer_size: pipe_transport_options
                 .sctp_max_receiver_window_buffer_size,
+            sctp_default_stream_buffered_amount_low_threshold: pipe_transport_options
+                .sctp_default_stream_buffered_amount_low_threshold,
             is_data_channel: false,
             enable_rtx: pipe_transport_options.enable_rtx,
             enable_srtp: pipe_transport_options.enable_srtp,
@@ -1080,6 +1094,8 @@ impl ToFbs for RouterCreatePipeTransportData {
                 sctp_send_buffer_size: self.sctp_send_buffer_size,
                 sctp_per_stream_send_queue_limit: self.sctp_per_stream_send_queue_limit,
                 sctp_max_receiver_window_buffer_size: self.sctp_max_receiver_window_buffer_size,
+                sctp_default_stream_buffered_amount_low_threshold: self
+                    .sctp_default_stream_buffered_amount_low_threshold,
                 is_data_channel: self.is_data_channel,
             }),
             listen_info: Box::new(self.listen_info.clone().to_fbs()),
@@ -2863,6 +2879,7 @@ pub(crate) struct DataProducerSendNotification {
     pub(crate) payload: Vec<u8>,
     pub(crate) subchannels: Option<Vec<u16>>,
     pub(crate) required_subchannel: Option<u16>,
+    pub(crate) ignored_subchannel: Option<u16>,
 }
 
 impl Notification for DataProducerSendNotification {
@@ -2878,6 +2895,7 @@ impl Notification for DataProducerSendNotification {
             self.payload,
             self.subchannels,
             self.required_subchannel,
+            self.ignored_subchannel,
         );
         let notification_body =
             notification::Body::create_data_producer_send_notification(&mut builder, data);

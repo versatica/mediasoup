@@ -28,6 +28,8 @@ namespace RTC
 		template<typename T>
 		const std::string& FeedbackPacket<T>::MessageTypeToString(typename T::MessageType type)
 		{
+			MS_TRACE();
+
 			static const std::string Unknown("UNKNOWN");
 
 			auto it = FeedbackPacket<T>::MessageType2String.find(type);
@@ -46,6 +48,8 @@ namespace RTC
 		FeedbackPacket<T>::FeedbackPacket(CommonHeader* commonHeader)
 		  : Packet(commonHeader), messageType(typename T::MessageType(commonHeader->count))
 		{
+			MS_TRACE();
+
 			this->header = reinterpret_cast<Header*>(
 			  reinterpret_cast<uint8_t*>(commonHeader) + Packet::CommonHeaderSize);
 		}
@@ -55,6 +59,8 @@ namespace RTC
 		  typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc)
 		  : Packet(rtcpType), messageType(messageType)
 		{
+			MS_TRACE();
+
 			this->raw                = new uint8_t[HeaderSize];
 			this->header             = reinterpret_cast<Header*>(this->raw);
 			this->header->senderSsrc = htonl(senderSsrc);
@@ -64,6 +70,8 @@ namespace RTC
 		template<typename T>
 		FeedbackPacket<T>::~FeedbackPacket()
 		{
+			MS_TRACE();
+
 			delete[] this->raw;
 		}
 

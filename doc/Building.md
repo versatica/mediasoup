@@ -139,7 +139,7 @@ Then, depending on the crate:
 - For `mediasoup`: it also sets the top `### NEXT` heading of `rust/CHANGELOG.md` to `### x.y.z`, commits the bump (with a `release rust-x.y.z [no-ci]` message), creates the `rust-x.y.z` tag and pushes the branch and the tag. The tag triggers `mediasoup-crate-publish.yaml`, which creates the GitHub release from `rust/CHANGELOG.md` and publishes the crate.
 - For `mediasoup-sys` / `mediasoup-types`: it commits the bump with a `<crate> x.y.z [crate-publish] [no-ci]` message and pushes the branch (no tag, no CHANGELOG change). The `[crate-publish]` marker is what `mediasoup-crate-publish.yaml` detects on the branch push to publish that crate (without a GitHub release).
 
-Since `mediasoup` depends on `mediasoup-sys` and `mediasoup-types`, when several crates need a new version publish the dependencies first (`mediasoup-types` / `mediasoup-sys`) and `mediasoup` last, so each crate's dependencies are already on crates.io. Requirements for it to work:
+Since `mediasoup` depends on `mediasoup-sys` and `mediasoup-types`, when several crates need a new version publish the dependencies first (`mediasoup-types` / `mediasoup-sys`) and `mediasoup` last, so each crate's dependencies are already on crates.io. The releases can be run back to back without waiting for the dependencies' GitHub Actions runs to complete: `mediasoup-crate-publish.yaml` runs are serialized through a single concurrency queue, so the `mediasoup` one stays queued until the sibling crates are published (see [Rust-crates.md](Rust-crates.md)). Requirements for it to work:
 
 - Must be called with a crate name and a SEMVER version as the two arguments.
 - Must be in the main branch.

@@ -64,7 +64,7 @@ public:
 	{
 		return this->uvHandle;
 	}
-	void Start();
+	bool Start() noexcept;
 	void Write(
 	  const uint8_t* data1,
 	  size_t len1,
@@ -90,7 +90,7 @@ public:
 	}
 	const struct sockaddr* GetPeerAddress() const
 	{
-		return reinterpret_cast<const struct sockaddr*>(&this->peerAddr);
+		return reinterpret_cast<const struct sockaddr*>(std::addressof(this->peerAddr));
 	}
 	const std::string& GetPeerIp() const
 	{

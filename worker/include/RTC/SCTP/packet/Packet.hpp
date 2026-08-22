@@ -239,7 +239,7 @@ namespace RTC
 				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 				// The remaining length in the buffer is the potential buffer length
 				// of the chunk.
-				size_t chunkMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
+				const size_t chunkMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
 				auto* chunk = T::Factory(ptr, chunkMaxBufferLength);
 

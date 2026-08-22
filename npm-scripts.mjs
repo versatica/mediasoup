@@ -19,7 +19,6 @@ const WORKER_RELEASE_BIN = IS_WINDOWS
 	: 'mediasoup-worker';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
-
 // Paths for ESLint to check.
 const ESLINT_PATHS = [
 	'eslint.config.mjs',
@@ -30,10 +29,8 @@ const ESLINT_PATHS = [
 	'rust-scripts.mjs',
 	'worker/scripts',
 ];
-
 // Paths for ESLint to ignore.
 const ESLINT_IGNORE_PATHS = ['node/src/fbs'];
-
 // Paths for Prettier to check/write.
 // NOTE: Prettier ignores paths in .gitignore so we don't need to care about
 // node/src/fbs.
@@ -457,7 +454,6 @@ async function flatcNode({ force }) {
 		})
 	);
 	const flatbuffersDir = flatbuffersWrap['wrap-file']['directory'];
-
 	const flatc = path.resolve(
 		path.join(
 			'worker',
@@ -709,7 +705,6 @@ async function downloadPrebuiltWorker() {
 		`${pkg.repository.url
 			.replace(/^git\+/, '')
 			.replace(/\.git$/, '')}/releases/download`;
-
 	const workerPrebuildTar = getWorkerPrebuildTarName();
 	const workerPrebuildTarUrl = `${releaseBase}/${pkg.version}/${workerPrebuildTar}`;
 

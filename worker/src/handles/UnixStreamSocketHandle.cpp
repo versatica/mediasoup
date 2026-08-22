@@ -16,6 +16,8 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
+	MS_TRACE_STD();
+
 	auto* socket = static_cast<UnixStreamSocketHandle*>(handle->data);
 
 	if (socket)
@@ -26,6 +28,8 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
+	MS_TRACE_STD();
+
 	auto* socket = static_cast<UnixStreamSocketHandle*>(handle->data);
 
 	if (socket)
@@ -36,6 +40,8 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
+	MS_TRACE_STD();
+
 	auto* writeData = static_cast<UnixStreamSocketHandle::UvWriteData*>(req->data);
 	auto* handle    = req->handle;
 	auto* socket    = static_cast<UnixStreamSocketHandle*>(handle->data);
@@ -54,11 +60,15 @@ inline static void onWrite(uv_write_t* req, int status)
 // ensuring that we call `delete xxx` with same type as `new xxx` before.
 inline static void onClosePipe(uv_handle_t* handle)
 {
+	MS_TRACE_STD();
+
 	delete reinterpret_cast<uv_pipe_t*>(handle);
 }
 
 inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
+	MS_TRACE_STD();
+
 	auto* handle = req->handle;
 
 	delete req;
@@ -211,7 +221,8 @@ void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
 	// then build a uv_req_t and use uv_write().
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
-	int written     = uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), &buffer, 1);
+	int written =
+	  uv_try_write(reinterpret_cast<uv_stream_t*>(this->uvHandle), std::addressof(buffer), 1);
 
 	// All the data was written. Done.
 	if (written == static_cast<int>(len))
@@ -242,9 +253,9 @@ void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
 	const int err = uv_write(
-	  &writeData->req,
+	  std::addressof(writeData->req),
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	  &buffer,
+	  std::addressof(buffer),
 	  1,
 	  static_cast<uv_write_cb>(onWrite));
 

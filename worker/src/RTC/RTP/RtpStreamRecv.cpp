@@ -299,6 +299,40 @@ namespace RTC
 			// Calculate jitter.
 			CalculateJitter(packet->GetTimestamp());
 
+			// Store the capture instant if the packet carries it.
+			{
+				uint64_t absCaptureTimestamp{ 0 };
+				int64_t estimatedCaptureClockOffset{ 0 };
+
+				// NOTE: A zeroed capture timestamp gives no capture instant to store.
+				if (packet->ReadAbsCaptureTime(absCaptureTimestamp, estimatedCaptureClockOffset) && absCaptureTimestamp != 0)
+				{
+					Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+					ntp.seconds   = static_cast<uint32_t>(absCaptureTimestamp >> 32);
+					ntp.fractions = static_cast<uint32_t>(absCaptureTimestamp);
+
+					// The capture timestamp belongs to the clock of the capture system, which is
+					// not the clock of the sender of this stream when the media comes from
+					// somewhere else. The capture clock offset gives the instant back in the clock
+					// of the sender, which is the one this stream is estimated against:
+					//
+					//   capture NTP clock = sender NTP clock + capture clock offset
+					const auto captureMs = static_cast<int64_t>(Utils::Time::Ntp2TimeMs(ntp)) -
+					                       Utils::Time::Q32x32ToTimeMs(estimatedCaptureClockOffset);
+
+					// NOTE: A capture instant that is not positive means a capture clock offset
+					// that cannot be true, so there is nothing to store.
+					if (captureMs > 0)
+					{
+						this->lastAbsCaptureTime = AbsCaptureTime{
+							.ts    = packet->GetTimestamp(),
+							.ntpMs = static_cast<uint64_t>(captureMs),
+						};
+					}
+				}
+			}
+
 			// Increase transmission counter.
 			this->transmissionCounter.Update(packet);
 
@@ -452,18 +486,15 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint8_t worstRemoteFractionLost{ 0 };
+			// Ask the listener for the worst remote fraction lost.
+			const uint8_t worstRemoteFractionLost =
+			  this->params.useInBandFec ? static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
+			                                ->OnRtpStreamNeedWorstRemoteFractionLost(this)
+			                            : 0;
 
-			if (this->params.useInBandFec)
+			if (worstRemoteFractionLost > 0)
 			{
-				// Notify the listener so we'll get the worst remote fraction lost.
-				static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
-				  ->OnRtpStreamNeedWorstRemoteFractionLost(this, worstRemoteFractionLost);
-
-				if (worstRemoteFractionLost > 0)
-				{
-					MS_DEBUG_TAG(rtcp, "using worst remote fraction lost:%" PRIu8, worstRemoteFractionLost);
-				}
+				MS_DEBUG_TAG(rtcp, "using worst remote fraction lost:%" PRIu8, worstRemoteFractionLost);
 			}
 
 			auto* report = new RTC::RTCP::ReceiverReport();
@@ -528,17 +559,19 @@ namespace RTC
 			report->SetLastSeq(static_cast<uint32_t>(this->maxSeq) + this->cycles);
 			report->SetJitter(this->jitter);
 
-			if (this->lastSrReceived != 0)
+			if (this->lastSenderReportTiming.has_value())
 			{
+				const auto& senderReportTiming = this->lastSenderReportTiming.value();
 				// Get delay in milliseconds.
-				auto delayMs = static_cast<uint32_t>(this->shared->GetTimeMs() - this->lastSrReceived);
+				auto delayMs =
+				  static_cast<uint32_t>(this->shared->GetTimeMs() - senderReportTiming.receivedMs);
 				// Express delay in units of 1/65536 seconds.
 				uint32_t dlsr = (delayMs / 1000) << 16;
 
 				dlsr |= uint32_t{ (delayMs % 1000) * 65536 / 1000 };
 
 				report->SetDelaySinceLastSenderReport(dlsr);
-				report->SetLastSenderReport(this->lastSrTimestamp);
+				report->SetLastSenderReport(senderReportTiming.compactNtp);
 			}
 			else
 			{
@@ -565,18 +598,31 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->lastSrReceived  = this->shared->GetTimeMs();
-			this->lastSrTimestamp = report->GetNtpSec() << 16;
-			this->lastSrTimestamp += report->GetNtpFrac() >> 16;
-
 			// Update info about last Sender Report.
-			Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+			//
+			// NOTE: A sender with no wall clock may report a zeroed NTP timestamp, which
+			// gives nothing to store.
+			if (report->GetNtpSec() != 0 || report->GetNtpFrac() != 0)
+			{
+				uint32_t compactNtp = report->GetNtpSec() << 16;
 
-			ntp.seconds   = report->GetNtpSec();
-			ntp.fractions = report->GetNtpFrac();
+				compactNtp += report->GetNtpFrac() >> 16;
 
-			this->lastSenderReportNtpMs = Utils::Time::Ntp2TimeMs(ntp);
-			this->lastSenderReportTs    = report->GetRtpTs();
+				this->lastSenderReportTiming = SenderReportTiming{
+					.compactNtp = compactNtp,
+					.receivedMs = this->shared->GetTimeMs(),
+				};
+
+				Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+				ntp.seconds   = report->GetNtpSec();
+				ntp.fractions = report->GetNtpFrac();
+
+				this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
+					.ntpMs = Utils::Time::Ntp2TimeMs(ntp),
+					.ts    = report->GetRtpTs(),
+				};
+			}
 
 			// Update the score with the current RR.
 			UpdateScore();
@@ -600,7 +646,7 @@ namespace RTC
 
 			// Get the NTP representation of the current timestamp.
 			const uint64_t nowMs = this->shared->GetTimeMs();
-			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs);
+			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs + this->shared->GetNtpOffsetMs());
 
 			// Get the compact NTP representation of the current timestamp.
 			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
@@ -632,6 +678,78 @@ namespace RTC
 			{
 				this->nackGenerator->UpdateRtt(static_cast<uint32_t>(this->rtt));
 			}
+		}
+
+		std::optional<uint64_t> RtpStreamRecv::GetRemoteCaptureMsFromAbsCaptureTime(uint32_t ts) const
+		{
+			MS_TRACE();
+
+			if (!this->lastAbsCaptureTime.has_value())
+			{
+				return std::nullopt;
+			}
+
+			const auto& absCaptureTime = this->lastAbsCaptureTime.value();
+
+			return InterpolateRemoteCaptureMs(
+			  absCaptureTime.ntpMs, absCaptureTime.ts, ts, RtpStreamRecv::MaxAbsCaptureTimeInterpolationMs);
+		}
+
+		std::optional<uint64_t> RtpStreamRecv::GetRemoteCaptureMsFromSenderReport(uint32_t ts) const
+		{
+			MS_TRACE();
+
+			if (!this->lastSenderReportMapping.has_value())
+			{
+				return std::nullopt;
+			}
+
+			const auto& senderReportMapping = this->lastSenderReportMapping.value();
+
+			return InterpolateRemoteCaptureMs(
+			  senderReportMapping.ntpMs,
+			  senderReportMapping.ts,
+			  ts,
+			  RtpStreamRecv::MaxSenderReportInterpolationMs);
+		}
+
+		std::optional<uint64_t> RtpStreamRecv::InterpolateRemoteCaptureMs(
+		  uint64_t referenceNtpMs, uint32_t referenceTs, uint32_t ts, uint64_t maxDistanceMs) const
+		{
+			MS_TRACE();
+
+			const auto clockRate = GetClockRate();
+
+			if (clockRate == 0)
+			{
+				return std::nullopt;
+			}
+
+			// Distance in RTP timestamp units, taking wrap around into account.
+			const auto distanceTs    = static_cast<int64_t>(static_cast<int32_t>(ts - referenceTs));
+			const int64_t distanceMs = (distanceTs * 1000) / static_cast<int64_t>(clockRate);
+			// NOTE: The negation is safe since `distanceMs` comes from a 32 bits
+			// distance scaled down by the clock rate.
+			const auto absDistanceMs = static_cast<uint64_t>(distanceMs < 0 ? -distanceMs : distanceMs);
+
+			if (absDistanceMs > maxDistanceMs)
+			{
+				return std::nullopt;
+			}
+
+			const int64_t captureMs = static_cast<int64_t>(referenceNtpMs) + distanceMs;
+
+			// The reference does not map into a valid capture instant, so the remote
+			// endpoint is reporting nonsense.
+			if (captureMs < 0)
+			{
+				MS_WARN_2TAGS(
+				  rtp, rtcp, "invalid interpolated capture instant [distanceMs:%" PRIi64 "]", distanceMs);
+
+				return std::nullopt;
+			}
+
+			return static_cast<uint64_t>(captureMs);
 		}
 
 		void RtpStreamRecv::RequestKeyFrame()
@@ -784,6 +902,15 @@ namespace RTC
 			if (expected == 0)
 			{
 				RTP::RtpStream::UpdateScore(10);
+
+				return;
+			}
+
+			// We expected packets but received none of them, so there is nothing to
+			// compute (and ratios below would divide by zero).
+			if (received == 0)
+			{
+				RTP::RtpStream::UpdateScore(0);
 
 				return;
 			}

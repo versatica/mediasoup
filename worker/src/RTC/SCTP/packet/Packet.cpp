@@ -32,6 +32,8 @@ namespace RTC
 
 		bool Packet::IsSctp(const uint8_t* /*buffer*/, size_t bufferLength)
 		{
+			MS_TRACE();
+
 			return (
 			  bufferLength >= Packet::CommonHeaderLength && Utils::Byte::IsPaddedTo4Bytes(bufferLength));
 		}

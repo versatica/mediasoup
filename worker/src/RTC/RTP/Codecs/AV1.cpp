@@ -110,6 +110,8 @@ namespace RTC
 
 			void AV1::PayloadDescriptor::Encoder::Encode(PayloadDescriptor* payloadDescriptor) const
 			{
+				MS_TRACE();
+
 				payloadDescriptor->UpdateActiveDecodeTargets(
 				  this->encodingData.maxSpatialLayer, this->encodingData.maxTemporalLayer);
 			}

@@ -43,6 +43,8 @@ namespace RTC
 	flatbuffers::Offset<FBS::DirectTransport::DumpResponse> DirectTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
+		MS_TRACE();
+
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 
@@ -138,6 +140,8 @@ namespace RTC
 
 	inline bool DirectTransport::IsConnected() const
 	{
+		MS_TRACE();
+
 		return true;
 	}
 

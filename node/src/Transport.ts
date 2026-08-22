@@ -78,6 +78,7 @@ import {
 	serializeSctpStreamParameters,
 } from './sctpParametersFbsUtils';
 import type { AppData } from './types';
+import { NotFoundError } from './errors';
 import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import { TraceDirection as FbsTraceDirection } from './fbs/common';
@@ -90,6 +91,7 @@ import * as FbsTransport from './fbs/transport';
 import * as FbsRouter from './fbs/router';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 import { SctpState as FbsSctpState } from './fbs/sctp-association/sctp-state';
+import { SctpNegotiatedCapabilities as FbsSctpNegotiatedCapabilities } from './fbs/sctp-association/sctp-negotiated-capabilities';
 
 export type TransportConstructorOptions<TransportAppData> = {
 	internal: TransportInternal;
@@ -506,6 +508,13 @@ export abstract class TransportImpl<
 			clonedRtpParameters.rtcp = clonedRtpParameters.rtcp ?? {};
 			clonedRtpParameters.rtcp.cname = this.#cnameForProducers;
 		}
+		// In a PipeTransport, give a random CNAME to a Producer that comes without one.
+		// Its own one, since a CNAME shared with the other Producers without CNAME would
+		// tell the worker that they all come from a same sender and share its clock.
+		else if (!clonedRtpParameters.rtcp?.cname) {
+			clonedRtpParameters.rtcp = clonedRtpParameters.rtcp ?? {};
+			clonedRtpParameters.rtcp.cname = utils.generateUUIDv4().substr(0, 8);
+		}
 
 		const routerRtpCapabilities = this.#getRouterRtpCapabilities();
 
@@ -616,7 +625,7 @@ export abstract class TransportImpl<
 		const producer = this.getProducerById(producerId);
 
 		if (!producer) {
-			throw Error(`Producer with id "${producerId}" not found`);
+			throw new NotFoundError(`Producer with id "${producerId}" not found`);
 		}
 
 		// If enableRtx is not given, set it to true if video and false if audio.
@@ -851,7 +860,9 @@ export abstract class TransportImpl<
 		const dataProducer = this.getDataProducerById(dataProducerId);
 
 		if (!dataProducer) {
-			throw Error(`DataProducer with id "${dataProducerId}" not found`);
+			throw new NotFoundError(
+				`DataProducer with id "${dataProducerId}" not found`
+			);
 		}
 
 		let type: DataConsumerType;
@@ -1197,7 +1208,12 @@ export function parseBaseTransportDump(
 			? undefined
 			: parseSctpState(binary.sctpState()!);
 
-	// Retrive sctpListener.
+	// Retrieve sctpNegotiatedCapabilities.
+	const sctpNegotiatedCapabilities = binary.sctpNegotiatedCapabilities()
+		? parseSctpNegotiatedCapabilitiesDump(binary.sctpNegotiatedCapabilities()!)
+		: undefined;
+
+	// Retrieve sctpListener.
 	const sctpListener = binary.sctpListener()
 		? parseSctpListenerDump(binary.sctpListener()!)
 		: undefined;
@@ -1223,6 +1239,7 @@ export function parseBaseTransportDump(
 		maxReceiveMessageSize: binary.maxReceiveMessageSize(),
 		sctpParameters: sctpParameters,
 		sctpState: sctpState,
+		sctpNegotiatedCapabilities: sctpNegotiatedCapabilities,
 		sctpListener: sctpListener,
 		traceEventTypes: traceEventTypes,
 	};
@@ -1672,4 +1689,13 @@ function parseSctpListenerDump(
 	);
 
 	return { streamIdTable };
+}
+
+function parseSctpNegotiatedCapabilitiesDump(
+	binary: FbsSctpNegotiatedCapabilities
+): SctpNegotiatedCapabilities {
+	return {
+		negotiatedMaxOutboundStreams: binary.negotiatedMaxOutboundStreams(),
+		negotiatedMaxInboundStreams: binary.negotiatedMaxInboundStreams(),
+	};
 }

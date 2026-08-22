@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/SCTP/association/Association.hpp"
-#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/Capabilities.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
@@ -1057,6 +1057,40 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.listener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1) == true);
 	}
 
+	SECTION("applies the configured default buffered amount low threshold to new streams")
+	{
+		auto sctpOptions = makeSctpOptions();
+
+		sctpOptions.defaultStreamBufferedAmountLowThreshold = 1024;
+
+		AssociationUnderTest a(sctpOptions);
+
+		// Sending a message creates the outgoing stream, which must inherit the
+		// configured default buffered amount low threshold.
+		sendMessage(a, 1, 53, std::vector<uint8_t>(10));
+
+		REQUIRE(a.association.GetStreamBufferedAmountLowThreshold(1) == 1024);
+	}
+
+	SECTION("does not trigger buffered amount low until crossing a non-zero default threshold")
+	{
+		auto sctpOptions = makeSctpOptions();
+
+		sctpOptions.defaultStreamBufferedAmountLowThreshold = 1024;
+
+		AssociationUnderTest a(sctpOptions);
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		// A small message never takes the buffered amount above the threshold, so
+		// draining it must not trigger the event.
+		sendMessage(a, 1, 53, std::vector<uint8_t>(10));
+		exchangeMessages(a, z);
+
+		REQUIRE(a.listener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1) == false);
+	}
+
 	SECTION("detects the peer implementation")
 	{
 		AssociationUnderTest a;
@@ -1774,7 +1808,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		// Forge a plain (unauthenticated) State Cookie with attacker-chosen values,
 		// as in the published PoC. It passes the magic checks but carries no MAC.
 		const uint32_t forgedTag = 0xDEADBEEF;
-		const RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities;
+		const RTC::SCTP::Capabilities remoteCapabilities;
 
 		std::vector<uint8_t> cookieBuffer(RTC::SCTP::StateCookie::StateCookieLength);
 
@@ -1787,7 +1821,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		  /*remoteInitialTsn*/ 2000,
 		  /*remoteAdvertisedReceiverWindowCredit*/ 65535,
 		  /*tieTag*/ 0,
-		  negotiatedCapabilities);
+		  remoteCapabilities);
 
 		// Builds a COOKIE-ECHO packet carrying the forged cookie. `buffers` must
 		// outlive the returned packet.

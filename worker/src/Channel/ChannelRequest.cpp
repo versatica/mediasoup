@@ -160,8 +160,31 @@ namespace Channel
 		SendResponse(response);
 	}
 
+	void ChannelRequest::NotFoundError(const char* reason)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(!this->replied, "request already replied");
+
+		this->replied = true;
+
+		auto& builder = ChannelRequest::bufferBuilder;
+		auto response = FBS::Response::CreateResponseDirect(
+		  builder,
+		  this->id,
+		  /*accepted*/ false,
+		  FBS::Response::Body::NONE,
+		  0,
+		  /*error*/ "NotFoundError",
+		  reason);
+
+		SendResponse(response);
+	}
+
 	void ChannelRequest::Send(const uint8_t* buffer, size_t size) const
 	{
+		MS_TRACE();
+
 		this->channel->Send(buffer, size);
 	}
 

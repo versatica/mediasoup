@@ -3,7 +3,7 @@ import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, ConsumerEvents } from '../types';
 import type { ConsumerImpl } from '../Consumer';
-import { UnsupportedError } from '../errors';
+import { UnsupportedError, NotFoundError } from '../errors';
 import * as utils from '../utils';
 import {
 	Notification,
@@ -609,6 +609,15 @@ test('transport.consume() succeeds', async () => {
 			videoPipeConsumer.id,
 		]),
 	});
+}, 2000);
+
+test('transport.consume() with unknown producerId fails', async () => {
+	await expect(
+		ctx.webRtcTransport2!.consume({
+			producerId: '12345678',
+			rtpCapabilities: ctx.consumerDeviceCapabilities,
+		})
+	).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('transport.consume() with enableRtx succeeds', async () => {
@@ -1295,6 +1304,132 @@ test('transport.consume() for a simulcast producer honors preferredLayers', asyn
 	});
 }, 2000);
 
+test('transport.consume() from a single-encoding no temporal layer producer is of type simple', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.vpxMediaCodecs,
+	});
+	const transport1 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+	const transport2 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+
+	const producer = await transport1.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+					],
+				},
+			],
+			headerExtensions: [],
+			encodings: [{ ssrc: 11111111 }],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('simple');
+
+	const consumer = await transport2.consume({
+		producerId: producer.id,
+		rtpCapabilities: ctx.vpxConsumerDeviceCapabilities,
+	});
+
+	expect(consumer.type).toBe('simple');
+}, 2000);
+
+test('transport.consume() from a single-encoding multiple temporal layer producer is of type svc', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.vpxMediaCodecs,
+	});
+	const transport1 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+	const transport2 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+
+	const producer = await transport1.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+					],
+				},
+			],
+			headerExtensions: [],
+			encodings: [{ ssrc: 55555555, scalabilityMode: 'L1T3' }],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('svc');
+
+	const consumer = await transport2.consume({
+		producerId: producer.id,
+		rtpCapabilities: ctx.vpxConsumerDeviceCapabilities,
+	});
+
+	expect(consumer.type).toBe('svc');
+}, 2000);
+
+test('transport.consume() from a multiple-encoding producer is of type simulcast', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.vpxMediaCodecs,
+	});
+	const transport1 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+	const transport2 = await router.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+	});
+
+	const producer = await transport1.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+					],
+				},
+			],
+			headerExtensions: [],
+			encodings: [
+				{ ssrc: 11111111, scalabilityMode: 'L1T3' },
+				{ ssrc: 22222222, scalabilityMode: 'L1T3' },
+			],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('simulcast');
+
+	const consumer = await transport2.consume({
+		producerId: producer.id,
+		rtpCapabilities: ctx.vpxConsumerDeviceCapabilities,
+	});
+
+	expect(consumer.type).toBe('simulcast');
+}, 2000);
+
 test('consumer.setPriority() succeed', async () => {
 	const videoConsumer = await ctx.webRtcTransport2!.consume({
 		producerId: ctx.videoProducer!.id,
@@ -1473,6 +1608,8 @@ test('consumer.close() succeeds', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
 
+	await expect(audioConsumer.dump()).rejects.toThrow(NotFoundError);
+
 	const routerDump = await ctx.router!.dump();
 
 	expect(routerDump.mapProducerIdConsumerIds).toEqual(
@@ -1502,20 +1639,20 @@ test('Consumer methods reject if closed', async () => {
 
 	audioConsumer.close();
 
-	await expect(audioConsumer.dump()).rejects.toThrow(Error);
+	await expect(audioConsumer.dump()).rejects.toThrow(NotFoundError);
 
-	await expect(audioConsumer.getStats()).rejects.toThrow(Error);
+	await expect(audioConsumer.getStats()).rejects.toThrow(NotFoundError);
 
-	await expect(audioConsumer.pause()).rejects.toThrow(Error);
+	await expect(audioConsumer.pause()).rejects.toThrow(NotFoundError);
 
-	await expect(audioConsumer.resume()).rejects.toThrow(Error);
+	await expect(audioConsumer.resume()).rejects.toThrow(NotFoundError);
 
 	// @ts-expect-error --- Testing purposes.
-	await expect(audioConsumer.setPreferredLayers({})).rejects.toThrow(Error);
+	await expect(audioConsumer.setPreferredLayers({})).rejects.toThrow(TypeError);
 
-	await expect(audioConsumer.setPriority(2)).rejects.toThrow(Error);
+	await expect(audioConsumer.setPriority(2)).rejects.toThrow(NotFoundError);
 
-	await expect(audioConsumer.requestKeyFrame()).rejects.toThrow(Error);
+	await expect(audioConsumer.requestKeyFrame()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('Consumer emits "producerclose" if Producer is closed', async () => {
@@ -1534,6 +1671,8 @@ test('Consumer emits "producerclose" if Producer is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
+
+	await expect(audioConsumer.dump()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('Consumer emits "transportclose" if Transport is closed', async () => {
@@ -1553,6 +1692,8 @@ test('Consumer emits "transportclose" if Transport is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(videoConsumer.closed).toBe(true);
+
+	await expect(videoConsumer.dump()).rejects.toThrow(NotFoundError);
 
 	await expect(ctx.router!.dump()).resolves.toMatchObject({
 		mapProducerIdConsumerIds: expect.arrayContaining([

@@ -5,13 +5,25 @@ on:
     branches: [v3]
     paths:
       - 'worker/**'
-      - 'node/src/**'
-      - 'rust/src/**'
+      - '!worker/package.json'
+      - '!worker/package-lock.json'
+      - 'rust/**'
+      - '!rust/CHANGELOG.md'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - '.github/workflows/**'
   pull_request:
     paths:
       - 'worker/**'
-      - 'node/src/**'
-      - 'rust/src/**'
+      - '!worker/package.json'
+      - '!worker/package-lock.json'
+      - 'rust/**'
+      - '!rust/CHANGELOG.md'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 concurrency:
@@ -21,6 +33,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The `release` and `release:rust` npm scripts push a version-bump commit whose
+  # message carries a `[no-ci]` marker, which skips the `analyze` job below. A
+  # run whose jobs are all skipped concludes as "skipped", which GitHub renders
+  # as a red "failing" status badge. This tiny job runs ONLY on those commits so
+  # the run concludes as "success" -> the branch badge stays green. On any other
+  # event it is skipped and `analyze` alone drives the result.
+  no-ci-badge-guard:
+    if: ${{ contains(github.event.head_commit.message, '[no-ci]') }}
+    runs-on: ubuntu-26.04
+    steps:
+      - run: 'true'
+
   analyze:
     name: Analyze
     # Skip the release commit pushed by `npm run release` (its message carries a
@@ -35,61 +59,99 @@ jobs:
       contents: read
       security-events: write
 
+    # NOTE: This workflow deliberately only covers what the other CI workflows
+    # cannot check:
+    #
+    # - `c-cpp`: `mediasoup-worker-clang-tidy` (clang-tidy with every
+    #   `clang-analyzer-*` / `bugprone-*` check enabled), `mediasoup-worker`
+    #   (ASAN address + undefined) and `mediasoup-worker-fuzzer` all reason
+    #   within a single translation unit (clang-tidy) or need a concrete input
+    #   to reach the bug (ASAN, fuzzer). CodeQL is static and never executes
+    #   anything, but its dataflow is whole-program and crosses translation
+    #   units, so it reports buffer overruns, wrong allocation sizes, offsets
+    #   used before their range check and invalid pointer dereferences that no
+    #   single translation unit shows and that no test input happened to hit.
+    #   It also adds OpenSSL/TLS misuse queries, which nothing else here does.
+    # - `rust`: `mediasoup-rust` runs `cargo clippy -D warnings`, which is a
+    #   lint pass with no dataflow. CodeQL adds the "access of invalid pointer"
+    #   and "access after lifetime ended" queries, relevant for the raw pointer
+    #   FFI glue in `mediasoup-sys` and in `rust/src/worker/`.
+    # - `actions`: Not covered by any other workflow at all. It audits these
+    #   very workflow files for script injection, untrusted checkout, cache
+    #   poisoning, secret exposure, missing `permissions` and unpinned actions.
+    #
+    # Python and JavaScript/TypeScript are not analyzed: the Python code is just
+    # the `invoke` build tasks and the Node code is a thin layer over the worker,
+    # neither of which is attack surface.
     strategy:
+      # Here we want to see all errors, not just the first one.
       fail-fast: false
       matrix:
-        language: ['c-cpp', 'javascript-typescript', 'python']
+        build:
+          - language: c-cpp
+            # The worker is built explicitly below so CodeQL traces the real
+            # Meson/ninja compiler invocations instead of guessing.
+            build-mode: manual
+          - language: rust
+            # Rust does not support `manual`, it must use `none`.
+            build-mode: none
+          - language: actions
+            build-mode: none
 
     env:
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'true'
       MEDIASOUP_BUILDTYPE: 'Release'
+      MESON_ARGS: '-Dms_build_tests=true'
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
-          languages: ${{ matrix.language }}
+          languages: ${{ matrix.build.language }}
+          build-mode: ${{ matrix.build.build-mode }}
+          # NOTE: `security-extended` adds the lower severity and precision
+          # security queries on top of the default suite. We deliberately do NOT
+          # use `security-and-quality`: its extra maintainability and
+          # reliability queries are exactly the ones that duplicate our
+          # clang-tidy configuration.
+          queries: security-extended
           config: |
             paths-ignore:
-              - 'art/**'
-              - 'doc/**'
-              - 'node_modules/**'
-              - 'node/lib/**'
-              - 'node/src/fbs/**'
               - 'rust/benches/**'
               - 'rust/examples/**'
               - 'rust/examples-frontend/**'
               - 'worker/deps/**'
               - 'worker/subprojects/**'
-              - 'worker/fuzzer/new-corpus/**'
-              - 'worker/fuzzer/reports/**'
+              # The fuzzer needs its own clang + libFuzzer sanitizer flags, so
+              # it is not built here. `mediasoup-worker-fuzzer` covers it.
+              - 'worker/fuzzer/**'
               - 'worker/out/**'
-          # If you wish to specify custom queries, you can do so here or in a
-          # config file. By default, queries listed here will override any
-          # specified in a config file. Prefix the list here with "+" to use
-          # these queries and those in the config file.
-          #
-          # Details on CodeQL's query packs refer to:
-          # https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
-          #
-          # queries: security-extended,security-and-quality
+            query-filters:
+              # Already reported by the `readability-misleading-indentation`
+              # clang-tidy check in `mediasoup-worker-clang-tidy`.
+              - exclude:
+                  id: cpp/comma-before-misleading-indentation
 
-      # Use `npm ci` to build mediasoup Node and worker instead of relying on
-      # built-in Autobuild.
-      - name: npm ci
-        run: npm ci --foreground-scripts
+      # We need to install pip invoke manually to build the worker.
+      - if: ${{ matrix.build.language == 'c-cpp' }}
+        name: pip3 install --break-system-packages invoke
+        run: pip3 install --break-system-packages invoke
+
+      # Build the `mediasoup-worker-test` binary (`MESON_ARGS` above adds
+      # `-Dms_build_tests=true`) so CodeQL traces the compilation of both the
+      # whole worker and its tests. The tests are what actually feed crafted
+      # buffers into the RTP/RTCP/STUN/SCTP parsers, so they give CodeQL the
+      # concrete call sites its interprocedural dataflow needs. This task also
+      # runs the tests, which is harmless here.
+      - if: ${{ matrix.build.language == 'c-cpp' }}
+        name: invoke -r worker test
+        run: invoke -r worker test
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
-          category: '/language:${{matrix.language}}'
+          category: '/language:${{ matrix.build.language }}'

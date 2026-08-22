@@ -49,7 +49,8 @@ namespace RTC
 		  const std::string& dataProducerId,
 		  RTC::DataConsumer::Listener* listener,
 		  const FBS::Transport::ConsumeDataRequest* data,
-		  size_t maxMessageSize);
+		  size_t maxMessageSize,
+		  bool pipe);
 		~DataConsumer() override;
 
 	public:
@@ -67,20 +68,17 @@ namespace RTC
 		}
 		bool IsActive() const
 		{
-			// It's active it DataConsumer and DataProducer are not paused and the transport
-			// is connected.
+			// It's active it DataConsumer and DataProducer are not paused and the SCTP
+			// association (if any) is not closed.
 			// clang-format off
 			return (
-				this->transportConnected &&
-				(this->type == DataConsumer::Type::DIRECT || this->sctpAssociationConnected) &&
+				(this->type == DataConsumer::Type::DIRECT || !this->sctpAssociationClosed) &&
 				!this->paused &&
 				!this->dataProducerPaused &&
 				!this->dataProducerClosed
 			);
 			// clang-format on
 		}
-		void TransportConnected();
-		void TransportDisconnected();
 		bool IsPaused() const
 		{
 			return this->paused;
@@ -91,15 +89,27 @@ namespace RTC
 		}
 		void DataProducerPaused();
 		void DataProducerResumed();
-		void SctpAssociationConnected();
 		void SctpAssociationClosed();
 		void SctpBufferedAmountLow(uint32_t bufferedAmount) const;
 		void SctpSendBufferFull() const;
 		void DataProducerClosed();
+		/**
+		 * Verifies if given subchannels would allow a message to be delivered to
+		 * the DataConsumer endpoint or not.
+		 *
+		 * @remarks
+		 * - This method must be called before invoking `SendMessage()` if subchannels
+		 *   are given to `SendMessage()`.
+		 */
+		bool VerifySubchannels(
+		  const std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel,
+		  std::optional<uint16_t> ignoredSubchannel) const;
 		bool SendMessage(
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel,
+		  std::optional<uint16_t> ignoredSubchannel,
 		  const onQueuedCallback* cb = nullptr);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -116,14 +126,14 @@ namespace RTC
 		SharedInterface* shared{ nullptr };
 		RTC::DataConsumer::Listener* listener{ nullptr };
 		size_t maxMessageSize{ 0u };
+		bool pipe{ false };
 		// Others.
 		Type type;
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;
 		ankerl::unordered_dense::set<uint16_t> subchannels;
-		bool transportConnected{ false };
-		bool sctpAssociationConnected{ false };
+		bool sctpAssociationClosed{ false };
 		bool paused{ false };
 		bool dataProducerPaused{ false };
 		bool dataProducerClosed{ false };

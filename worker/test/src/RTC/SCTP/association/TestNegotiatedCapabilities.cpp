@@ -24,8 +24,8 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
-		auto* remoteChunk =
-		  RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::InitChunk> remoteChunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		remoteChunk->SetNumberOfOutboundStreams(4096);
 		remoteChunk->SetNumberOfInboundStreams(1024);
@@ -46,13 +46,12 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 		remoteZeroChecksumAcceptableParameter->Consolidate();
 
-		auto negotiatedCapabilities =
-		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteChunk);
+		const auto remoteCapabilities = RTC::SCTP::Capabilities::Factory(remoteChunk.get());
+		const auto negotiatedCapabilities =
+		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteCapabilities);
 
-		delete remoteChunk;
-
-		REQUIRE(negotiatedCapabilities.negotiatedMaxOutboundStreams == 1024);
-		REQUIRE(negotiatedCapabilities.negotiatedMaxInboundStreams == 2048);
+		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 1024);
+		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2048);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == true);
 		REQUIRE(negotiatedCapabilities.reConfig == true);
@@ -70,8 +69,8 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
-		auto* remoteChunk =
-		  RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+		const std::unique_ptr<RTC::SCTP::InitChunk> remoteChunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
 
 		remoteChunk->SetNumberOfOutboundStreams(4000);
 		remoteChunk->SetNumberOfInboundStreams(3000);
@@ -100,13 +99,12 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		  static_cast<RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666));
 		remoteZeroChecksumAcceptableParameter->Consolidate();
 
-		auto negotiatedCapabilities =
-		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteChunk);
+		const auto remoteCapabilities = RTC::SCTP::Capabilities::Factory(remoteChunk.get());
+		const auto negotiatedCapabilities =
+		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteCapabilities);
 
-		delete remoteChunk;
-
-		REQUIRE(negotiatedCapabilities.negotiatedMaxOutboundStreams == 1000);
-		REQUIRE(negotiatedCapabilities.negotiatedMaxInboundStreams == 2000);
+		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 1000);
+		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2000);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
 		REQUIRE(negotiatedCapabilities.reConfig == false);

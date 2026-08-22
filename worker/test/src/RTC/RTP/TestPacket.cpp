@@ -57,7 +57,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0x00, sizeof(buffer));
+		std::memset(buffer, 0xAA, sizeof(buffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -83,7 +83,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet.reset(packet->Clone(rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)));
 
-		std::memset(rtpCommon::SerializeBuffer, 0x00, sizeof(rtpCommon::SerializeBuffer));
+		std::memset(rtpCommon::SerializeBuffer, 0xAA, sizeof(rtpCommon::SerializeBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -170,7 +170,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0x00, sizeof(buffer));
+		std::memset(buffer, 0xAA, sizeof(buffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -196,7 +196,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet.reset(packet->Clone(rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)));
 
-		std::memset(rtpCommon::SerializeBuffer, 0x00, sizeof(rtpCommon::SerializeBuffer));
+		std::memset(rtpCommon::SerializeBuffer, 0xAA, sizeof(rtpCommon::SerializeBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -283,7 +283,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0x00, sizeof(buffer));
+		std::memset(buffer, 0xAA, sizeof(buffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -309,7 +309,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet.reset(packet->Clone(rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)));
 
-		std::memset(rtpCommon::SerializeBuffer, 0x00, sizeof(rtpCommon::SerializeBuffer));
+		std::memset(rtpCommon::SerializeBuffer, 0xAA, sizeof(rtpCommon::SerializeBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -399,7 +399,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0x00, sizeof(buffer));
+		std::memset(buffer, 0xAA, sizeof(buffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -427,7 +427,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet.reset(packet->Clone(rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)));
 
-		std::memset(rtpCommon::SerializeBuffer, 0x00, sizeof(rtpCommon::SerializeBuffer));
+		std::memset(rtpCommon::SerializeBuffer, 0xAA, sizeof(rtpCommon::SerializeBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -546,7 +546,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0x00, sizeof(buffer));
+		std::memset(buffer, 0xAA, sizeof(buffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -592,7 +592,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet.reset(packet->Clone(rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)));
 
-		std::memset(rtpCommon::SerializeBuffer, 0x00, sizeof(rtpCommon::SerializeBuffer));
+		std::memset(rtpCommon::SerializeBuffer, 0xAA, sizeof(rtpCommon::SerializeBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -732,7 +732,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0x00, sizeof(buffer));
+		std::memset(buffer, 0xAA, sizeof(buffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -781,7 +781,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet.reset(packet->Clone(rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)));
 
-		std::memset(rtpCommon::SerializeBuffer, 0x00, sizeof(rtpCommon::SerializeBuffer));
+		std::memset(rtpCommon::SerializeBuffer, 0xAA, sizeof(rtpCommon::SerializeBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -897,7 +897,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0x00, sizeof(buffer));
+		std::memset(buffer, 0xAA, sizeof(buffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -925,7 +925,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet.reset(packet->Clone(rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)));
 
-		std::memset(rtpCommon::SerializeBuffer, 0x00, sizeof(rtpCommon::SerializeBuffer));
+		std::memset(rtpCommon::SerializeBuffer, 0xAA, sizeof(rtpCommon::SerializeBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -1059,12 +1059,16 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->GetCaptureMs() == std::nullopt);
 
 		packet->SetPayloadType(100);
 		packet->SetMarker(true);
 		packet->SetSequenceNumber(12345);
 		packet->SetTimestamp(987654321);
 		packet->SetSsrc(1234567890);
+		packet->SetCaptureMs(99998888);
+
+		REQUIRE(packet->GetCaptureMs() == 99998888);
 
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 
@@ -1161,6 +1165,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
+		std::memset(rtpCommon::FactoryBuffer, 0xAA, sizeof(rtpCommon::FactoryBuffer));
+
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
 		  /*buffer*/ rtpCommon::SerializeBuffer,
@@ -1202,12 +1208,13 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(extensionLen == 3);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->GetCaptureMs() == 99998888);
 
 		/* Clone it. */
 
 		packet.reset(packet->Clone(rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)));
 
-		std::memset(rtpCommon::SerializeBuffer, 0x00, sizeof(rtpCommon::SerializeBuffer));
+		std::memset(rtpCommon::SerializeBuffer, 0xAA, sizeof(rtpCommon::SerializeBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -1250,6 +1257,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(extensionLen == 3);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->GetCaptureMs() == 99998888);
 
 		/* Set payload. */
 

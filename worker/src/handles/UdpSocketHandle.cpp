@@ -20,6 +20,8 @@ alignas(4) static thread_local uint8_t ReadBuffer[ReadBufferSize];
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
+	MS_TRACE();
+
 	auto* socket = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
@@ -31,6 +33,8 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 inline static void onRecv(
   uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
+	MS_TRACE();
+
 	auto* socket = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
@@ -41,6 +45,8 @@ inline static void onRecv(
 
 inline static void onSend(uv_udp_send_t* req, int status)
 {
+	MS_TRACE();
+
 	auto* sendData = static_cast<UdpSocketHandle::UvSendData*>(req->data);
 	auto* handle   = req->handle;
 	auto* socket   = static_cast<UdpSocketHandle*>(handle->data);
@@ -57,6 +63,8 @@ inline static void onSend(uv_udp_send_t* req, int status)
 
 inline static void onCloseUdp(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_udp_t*>(handle);
 }
 
@@ -108,6 +116,8 @@ UdpSocketHandle::~UdpSocketHandle()
 
 void UdpSocketHandle::Dump(int indentation) const
 {
+	MS_TRACE();
+
 	MS_DUMP_CLEAN(indentation, "<UdpSocketHandle>");
 	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
 	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));
@@ -146,7 +156,7 @@ void UdpSocketHandle::Send(
 	// then build a uv_req_t and use uv_udp_send().
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
-	const int sent  = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
+	const int sent  = uv_udp_try_send(this->uvHandle, std::addressof(buffer), 1, addr);
 
 	// Entire datagram was sent. Done.
 	if (sent == static_cast<int>(len))
@@ -192,7 +202,12 @@ void UdpSocketHandle::Send(
 	buffer = uv_buf_init(reinterpret_cast<char*>(sendData->store), len);
 
 	const int err = uv_udp_send(
-	  &sendData->req, this->uvHandle, &buffer, 1, addr, static_cast<uv_udp_send_cb>(onSend));
+	  std::addressof(sendData->req),
+	  this->uvHandle,
+	  std::addressof(buffer),
+	  1,
+	  addr,
+	  static_cast<uv_udp_send_cb>(onSend));
 
 	if (err != 0)
 	{
@@ -319,8 +334,10 @@ bool UdpSocketHandle::SetLocalAddress()
 	int err;
 	int len = sizeof(this->localAddr);
 
-	err =
-	  uv_udp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->localAddr), &len);
+	err = uv_udp_getsockname(
+	  this->uvHandle,
+	  reinterpret_cast<struct sockaddr*>(std::addressof(this->localAddr)),
+	  std::addressof(len));
 
 	if (err != 0)
 	{
@@ -332,7 +349,10 @@ bool UdpSocketHandle::SetLocalAddress()
 	int family;
 
 	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(&this->localAddr), family, this->localIp, this->localPort);
+	  reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr)),
+	  family,
+	  this->localIp,
+	  this->localPort);
 
 	return true;
 }

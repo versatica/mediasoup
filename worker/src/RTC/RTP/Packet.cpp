@@ -391,6 +391,11 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  padding length: %" PRIu8, GetPaddingLength());
 			MS_DUMP_CLEAN(indentation, "  padded to 4 bytes: %s", IsPaddedTo4Bytes() ? "yes" : "no");
 
+			if (GetCaptureMs())
+			{
+				MS_DUMP_CLEAN(indentation, "  capture time (ms):%" PRIu64, GetCaptureMs().value());
+			}
+
 			if (this->payloadDescriptorHandler)
 			{
 				MS_DUMP_CLEAN(indentation + 1, "<PayloadDescriptorHandler>");
@@ -421,6 +426,9 @@ namespace RTC
 
 			// Clone extension ids.
 			clonedPacket->headerExtensionIds = this->headerExtensionIds;
+
+			// Clone capture time.
+			clonedPacket->captureMs = this->captureMs;
 
 			// Assign the payload descriptor handler.
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
@@ -1190,6 +1198,17 @@ namespace RTC
 				return false;
 			}
 
+			if (len > extenLen)
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "no enough space for updated dependency descriptor [needed:%zu, available:%" PRIu8 "]",
+				  len,
+				  extenLen);
+
+				return false;
+			}
+
 			std::memcpy(extenValue, data, len);
 
 			SetExtensionLength(this->headerExtensionIds.dependencyDescriptor, len);
@@ -1270,7 +1289,7 @@ namespace RTC
 			// Extension value can be 8 or 16 bytes depending on whether it contains
 			// estimated capture clock offset or not.
 			//
-			// https://webrtc.googlesource.com/src/+/refs/heads/main/docs/native-code/rtp-hdrext/abs-capture-time
+			// @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 			if (!extenValue || (extenLen != 8u && extenLen != 16u))
 			{
 				return false;

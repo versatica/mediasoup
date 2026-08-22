@@ -556,6 +556,8 @@ namespace RTC
 
 		void FeedbackRtpTransportPacket::CreateRunLengthChunk(Status status, uint16_t count)
 		{
+			MS_TRACE();
+
 			auto* chunk = new RunLengthChunk(status, count);
 
 			this->chunks.push_back(chunk);
@@ -565,6 +567,8 @@ namespace RTC
 
 		void FeedbackRtpTransportPacket::CreateOneBitVectorChunk(std::vector<Status>& statuses)
 		{
+			MS_TRACE();
+
 			auto* chunk = new OneBitVectorChunk(statuses);
 
 			this->chunks.push_back(chunk);
@@ -574,6 +578,8 @@ namespace RTC
 
 		void FeedbackRtpTransportPacket::CreateTwoBitVectorChunk(std::vector<Status>& statuses)
 		{
+			MS_TRACE();
+
 			auto* chunk = new TwoBitVectorChunk(statuses);
 
 			this->chunks.push_back(chunk);
@@ -583,6 +589,8 @@ namespace RTC
 
 		void FeedbackRtpTransportPacket::AddPendingChunks()
 		{
+			MS_TRACE();
+
 			// No pending status packets.
 			if (this->context.statuses.empty())
 			{

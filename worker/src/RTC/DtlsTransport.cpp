@@ -45,6 +45,8 @@ inline static int onSslCertificateVerify(int /*preverifyOk*/, X509_STORE_CTX* /*
 
 inline static void onSslInfo(const SSL* ssl, int where, int ret)
 {
+	MS_TRACE();
+
 	static_cast<RTC::DtlsTransport*>(SSL_get_ex_data(ssl, 0))->OnSslInfo(where, ret);
 }
 
@@ -66,6 +68,8 @@ inline static long onSslBioOut(
   int ret,
   size_t* /*processed*/)
 {
+	MS_TRACE();
+
 	const long resultOfcallback = (operationType == BIO_CB_RETURN) ? static_cast<long>(ret) : 1;
 
 	// This callback is called twice for write operations:
@@ -84,6 +88,8 @@ inline static long onSslBioOut(
 
 inline static unsigned int onSslDtlsTimer(SSL* /*ssl*/, unsigned int timerUs)
 {
+	MS_TRACE();
+
 	if (timerUs == 0u)
 	{
 		return 100000u;
@@ -200,6 +206,8 @@ namespace RTC
 
 	DtlsTransport::Role DtlsTransport::RoleFromFbs(FBS::WebRtcTransport::DtlsRole role)
 	{
+		MS_TRACE();
+
 		switch (role)
 		{
 			case FBS::WebRtcTransport::DtlsRole::AUTO:
@@ -223,6 +231,8 @@ namespace RTC
 
 	FBS::WebRtcTransport::DtlsRole DtlsTransport::RoleToFbs(DtlsTransport::Role role)
 	{
+		MS_TRACE();
+
 		switch (role)
 		{
 			case DtlsTransport::Role::AUTO:
@@ -246,6 +256,8 @@ namespace RTC
 
 	FBS::WebRtcTransport::DtlsState DtlsTransport::StateToFbs(DtlsTransport::DtlsState state)
 	{
+		MS_TRACE();
+
 		switch (state)
 		{
 			case DtlsTransport::DtlsState::NEW:
@@ -280,6 +292,8 @@ namespace RTC
 	DtlsTransport::FingerprintAlgorithm DtlsTransport::AlgorithmFromFbs(
 	  FBS::WebRtcTransport::FingerprintAlgorithm algorithm)
 	{
+		MS_TRACE();
+
 		switch (algorithm)
 		{
 			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA1:
@@ -314,6 +328,8 @@ namespace RTC
 	FBS::WebRtcTransport::FingerprintAlgorithm DtlsTransport::AlgorithmToFbs(
 	  DtlsTransport::FingerprintAlgorithm algorithm)
 	{
+		MS_TRACE();
+
 		switch (algorithm)
 		{
 			case DtlsTransport::FingerprintAlgorithm::SHA1:

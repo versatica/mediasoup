@@ -58,6 +58,12 @@ pub struct PipeTransportOptions {
     /// than the largest sized message you want to be able to receive.
     /// Default 5_242_880.
     pub sctp_max_receiver_window_buffer_size: u32,
+    /// SCTP default stream buffered amount low threshold (in bytes). When the
+    /// buffered amount of a DataConsumer stream drops to or below this value, the
+    /// buffered amount low event is emitted. It can be overridden per DataConsumer
+    /// via DataConsumer::set_buffered_amount_low_threshold().
+    /// Default 1024.
+    pub sctp_default_stream_buffered_amount_low_threshold: u32,
     /// Enable RTX and NACK for RTP retransmission. Useful if both Routers are located in different
     /// hosts and there is packet lost in the link. For this to work, both PipeTransports must
     /// enable this setting.
@@ -83,6 +89,7 @@ impl PipeTransportOptions {
             sctp_send_buffer_size: 2_000_000,
             sctp_per_stream_send_queue_limit: 2_000_000,
             sctp_max_receiver_window_buffer_size: 5_242_880,
+            sctp_default_stream_buffered_amount_low_threshold: 1024,
             enable_rtx: false,
             enable_srtp: false,
             app_data: AppData::default(),
@@ -110,6 +117,7 @@ pub struct PipeTransportDump {
     pub max_receive_message_size: u32,
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_state: Option<SctpState>,
+    pub sctp_negotiated_capabilities: Option<SctpNegotiatedCapabilities>,
     pub sctp_listener: Option<SctpListener>,
     pub trace_event_types: Vec<TransportTraceEventType>,
     // PipeTransport specific.
@@ -175,6 +183,11 @@ impl<'a> TryFromFbs<'a> for PipeTransportDump {
                 .as_ref()
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
             sctp_state: FromFbs::from_fbs(&dump.base.sctp_state),
+            sctp_negotiated_capabilities: dump
+                .base
+                .sctp_negotiated_capabilities
+                .as_ref()
+                .map(|caps| SctpNegotiatedCapabilities::from_fbs(caps)),
             sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
                 SctpListener::try_from_fbs(listener.as_ref().clone())
                     .expect("Error parsing SctpListner")

@@ -10,11 +10,15 @@
 
 static void onTimer(uv_timer_t* handle)
 {
+	MS_TRACE();
+
 	static_cast<TimerHandle*>(handle->data)->OnUvTimer();
 }
 
 static void onCloseTimer(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_timer_t*>(handle);
 }
 

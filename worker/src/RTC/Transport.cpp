@@ -18,6 +18,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SCTP/association/Association.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
+#include "RTC/SubchannelsCodec.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
@@ -48,19 +49,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->direct                = options->direct();
 		this->maxSendMessageSize    = options->maxSendMessageSize();
 		this->maxReceiveMessageSize = options->maxReceiveMessageSize();
-
-		if (options->direct())
-		{
-			this->direct = true;
-		}
-		else
-		{
-			this->sctpSendBufferSize              = options->sctpSendBufferSize();
-			this->sctpPerStreamSendQueueLimit     = options->sctpPerStreamSendQueueLimit();
-			this->sctpMaxReceiverWindowBufferSize = options->sctpMaxReceiverWindowBufferSize();
-		}
 
 		if (
 		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
@@ -79,11 +70,13 @@ namespace RTC
 			const RTC::SCTP::SctpOptions sctpOptions = {
 				.mtu                         = RTC::Consts::MaxSafeMtuSizeForSctp,
 				.maxSendMessageSize          = this->maxSendMessageSize,
-				.maxSendBufferSize           = this->sctpSendBufferSize,
-				.perStreamSendQueueLimit     = this->sctpPerStreamSendQueueLimit,
+				.maxSendBufferSize           = options->sctpSendBufferSize(),
+				.perStreamSendQueueLimit     = options->sctpPerStreamSendQueueLimit(),
 				.maxReceiveMessageSize       = this->maxReceiveMessageSize,
-				.maxReceiverWindowBufferSize = this->sctpMaxReceiverWindowBufferSize,
-				.requireAuthenticatedCookie  = requireSctpStateCookieAuthentication
+				.maxReceiverWindowBufferSize = options->sctpMaxReceiverWindowBufferSize(),
+				.defaultStreamBufferedAmountLowThreshold =
+				  options->sctpDefaultStreamBufferedAmountLowThreshold(),
+				.requireAuthenticatedCookie = requireSctpStateCookieAuthentication
 			};
 
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
@@ -312,10 +305,10 @@ namespace RTC
 
 		auto rtpListenerOffset = this->rtpListener.FillBuffer(builder);
 
-		// Add sctpParameters.
 		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters;
-		// Add sctpState.
 		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
+		flatbuffers::Offset<FBS::SctpAssociation::SctpNegotiatedCapabilities> sctpNegotiatedCapabilities;
+
 		// Add sctpListener.
 		flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener;
 
@@ -330,18 +323,21 @@ namespace RTC
 				case RTC::SCTP::Types::AssociationState::NEW:
 				{
 					sctpState = FBS::SctpAssociation::SctpState::NEW;
+
 					break;
 				}
 
 				case RTC::SCTP::Types::AssociationState::CONNECTING:
 				{
 					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
+
 					break;
 				}
 
 				case RTC::SCTP::Types::AssociationState::CONNECTED:
 				{
 					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
+
 					break;
 				}
 
@@ -349,10 +345,18 @@ namespace RTC
 				case RTC::SCTP::Types::AssociationState::CLOSED:
 				{
 					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
+
 					break;
 				}
 			}
 
+			// Add sctpNegotiatedCapabilities.
+			sctpNegotiatedCapabilities = FBS::SctpAssociation::CreateSctpNegotiatedCapabilities(
+			  builder,
+			  this->sctpAssociation->GetNegotiatedMaxOutboundStreams(),
+			  this->sctpAssociation->GetNegotiatedMaxInboundStreams());
+
+			// Add sctpListener.
 			sctpListener = this->sctpListener.FillBuffer(builder);
 		}
 
@@ -372,12 +376,12 @@ namespace RTC
 		  builder,
 		  this->id.c_str(),
 		  this->direct,
-		  &producerIds,
-		  &consumerIds,
-		  &mapSsrcConsumerId,
-		  &mapRtxSsrcConsumerId,
-		  &dataProducerIds,
-		  &dataConsumerIds,
+		  std::addressof(producerIds),
+		  std::addressof(consumerIds),
+		  std::addressof(mapSsrcConsumerId),
+		  std::addressof(mapRtxSsrcConsumerId),
+		  std::addressof(dataProducerIds),
+		  std::addressof(dataConsumerIds),
 		  recvRtpHeaderExtensions,
 		  rtpListenerOffset,
 		  this->maxSendMessageSize,
@@ -385,8 +389,9 @@ namespace RTC
 		  sctpParameters,
 		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
 		                        : flatbuffers::nullopt,
+		  sctpNegotiatedCapabilities,
 		  sctpListener,
-		  &traceEventTypes);
+		  std::addressof(traceEventTypes));
 	}
 
 	flatbuffers::Offset<FBS::Transport::Stats> Transport::FillBufferStats(
@@ -596,13 +601,10 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_PRODUCE:
 			{
-				const auto* body = request->data->body_as<FBS::Transport::ProduceRequest>();
-				auto producerId  = body->producerId()->str();
+				const auto* body      = request->data->body_as<FBS::Transport::ProduceRequest>();
+				const auto producerId = body->producerId()->str();
 
-				if (this->mapProducers.find(producerId) != this->mapProducers.end())
-				{
-					MS_THROW_ERROR("a Producer with same producerId already exists");
-				}
+				CheckNoProducer(producerId, request->methodCStr);
 
 				// This may throw.
 				auto* producer = new RTC::Producer(this->shared, producerId, this, body);
@@ -637,6 +639,15 @@ namespace RTC
 
 				// Insert into the map.
 				this->mapProducers[producerId] = producer;
+
+				// Take this Producer into account for the capture time estimation of its
+				// sender.
+				{
+					const auto& cname = producer->GetRtpParameters().rtcp.cname;
+
+					this->mapCnameRemoteCaptureTimeEstimator[cname].UpdateSource(
+					  producer->GetRtpHeaderExtensionIds().absCaptureTime != 0);
+				}
 
 				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
 
@@ -676,6 +687,14 @@ namespace RTC
 				{
 					this->recvRtpHeaderExtensionIds.dependencyDescriptor =
 					  producerRtpHeaderExtensionIds.dependencyDescriptor;
+				}
+
+				// NOTE: Not transport related, but needed here so that received packets carry
+				// its id and `RtpStreamRecv` can read the extension off them.
+				if (producerRtpHeaderExtensionIds.absCaptureTime != 0)
+				{
+					this->recvRtpHeaderExtensionIds.absCaptureTime =
+					  producerRtpHeaderExtensionIds.absCaptureTime;
 				}
 
 				// Create status response.
@@ -767,14 +786,11 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CONSUME:
 			{
-				const auto* body             = request->data->body_as<FBS::Transport::ConsumeRequest>();
-				const std::string producerId = body->producerId()->str();
-				const std::string consumerId = body->consumerId()->str();
+				const auto* body      = request->data->body_as<FBS::Transport::ConsumeRequest>();
+				const auto producerId = body->producerId()->str();
+				const auto consumerId = body->consumerId()->str();
 
-				if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
-				{
-					MS_THROW_ERROR("a Consumer with same consumerId already exists");
-				}
+				CheckNoConsumer(consumerId, request->methodCStr);
 
 				// This may throw.
 				auto* consumer = new RTC::Consumer(this->shared, consumerId, producerId, this, body);
@@ -809,11 +825,13 @@ namespace RTC
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
 				flatbuffers::Offset<FBS::Consumer::ConsumerLayers> preferredLayersOffset;
-				auto preferredLayers = consumer->GetPreferredLayers();
+
+				const auto preferredLayers = consumer->GetPreferredLayers();
 
 				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
 				{
 					const flatbuffers::Optional<int16_t> preferredTemporalLayer{ preferredLayers.temporal };
+
 					preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
 					  request->GetBufferBuilder(), preferredLayers.spatial, preferredTemporalLayer);
 				}
@@ -992,12 +1010,11 @@ namespace RTC
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
 
-				const auto* body = request->data->body_as<FBS::Transport::ProduceDataRequest>();
-
-				auto dataProducerId = body->dataProducerId()->str();
+				const auto* body          = request->data->body_as<FBS::Transport::ProduceDataRequest>();
+				const auto dataProducerId = body->dataProducerId()->str();
 
 				// This may throw.
-				CheckNoDataProducer(dataProducerId);
+				CheckNoDataProducer(dataProducerId, request->methodCStr);
 
 				// This may throw.
 				auto* dataProducer = new RTC::DataProducer(
@@ -1095,17 +1112,22 @@ namespace RTC
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
 
-				const auto* body = request->data->body_as<FBS::Transport::ConsumeDataRequest>();
-
-				auto dataProducerId = body->dataProducerId()->str();
-				auto dataConsumerId = body->dataConsumerId()->str();
+				const auto* body          = request->data->body_as<FBS::Transport::ConsumeDataRequest>();
+				const auto dataProducerId = body->dataProducerId()->str();
+				const auto dataConsumerId = body->dataConsumerId()->str();
 
 				// This may throw.
-				CheckNoDataConsumer(dataConsumerId);
+				CheckNoDataConsumer(dataConsumerId, request->methodCStr);
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  this->shared, dataConsumerId, dataProducerId, this, body, this->maxSendMessageSize);
+				  this->shared,
+				  dataConsumerId,
+				  dataProducerId,
+				  this,
+				  body,
+				  this->maxSendMessageSize,
+				  this->IsPipe());
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())
@@ -1124,7 +1146,8 @@ namespace RTC
 						try
 						{
 							// This may throw.
-							CheckNoSctpDataConsumer(dataConsumer->GetSctpStreamParameters().streamId);
+							CheckNoSctpDataConsumer(
+							  dataConsumer->GetSctpStreamParameters().streamId, request->methodCStr);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -1182,19 +1205,8 @@ namespace RTC
 
 				request->Accept(FBS::Response::Body::DataConsumer_DumpResponse, dumpOffset);
 
-				if (IsConnected())
-				{
-					dataConsumer->TransportConnected();
-				}
-
 				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 				{
-					if (this->sctpAssociation->GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED)
-					{
-						// Tell to the DataConsumer.
-						dataConsumer->SctpAssociationConnected();
-					}
-
 					// Tell to the SCTP association.
 					this->sctpAssociation->MayConnect();
 				}
@@ -1241,13 +1253,34 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::CloseProducerRequest>();
 
 				// This may throw.
-				RTC::Producer* producer = AssertAndGetProducerById(body->producerId()->str());
+				RTC::Producer* producer =
+				  AssertAndGetProducerById(body->producerId()->str(), request->methodCStr);
 
 				// Remove it from the RtpListener.
 				this->rtpListener.RemoveProducer(producer);
 
 				// Remove it from the map.
 				this->mapProducers.erase(producer->id);
+
+				// Remove the capture time estimator of its sender once its last Producer
+				// is gone.
+				{
+					const auto& cname = producer->GetRtpParameters().rtcp.cname;
+
+					const bool cnameStillInUse = std::ranges::any_of(
+					  this->mapProducers,
+					  [&cname](const auto& kv)
+					  {
+						  const auto* otherProducer = kv.second;
+
+						  return otherProducer->GetRtpParameters().rtcp.cname == cname;
+					  });
+
+					if (!cnameStillInUse)
+					{
+						this->mapCnameRemoteCaptureTimeEstimator.erase(cname);
+					}
+				}
 
 				// Tell the child class to clear associated SSRCs.
 				for (const auto& kv : producer->GetRtpStreams())
@@ -1280,7 +1313,8 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::CloseConsumerRequest>();
 
 				// This may throw.
-				RTC::Consumer* consumer = AssertAndGetConsumerById(body->consumerId()->str());
+				RTC::Consumer* consumer =
+				  AssertAndGetConsumerById(body->consumerId()->str(), request->methodCStr);
 
 				// Remove it from the maps.
 				this->mapConsumers.erase(consumer->id);
@@ -1331,7 +1365,8 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataProducerRequest>();
 
 				// This may throw.
-				RTC::DataProducer* dataProducer = AssertAndGetDataProducerById(body->dataProducerId()->str());
+				RTC::DataProducer* dataProducer =
+				  AssertAndGetDataProducerById(body->dataProducerId()->str(), request->methodCStr);
 
 				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
 				{
@@ -1378,7 +1413,8 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataConsumerRequest>();
 
 				// This may throw.
-				RTC::DataConsumer* dataConsumer = AssertAndGetDataConsumerById(body->dataConsumerId()->str());
+				RTC::DataConsumer* dataConsumer =
+				  AssertAndGetDataConsumerById(body->dataConsumerId()->str(), request->methodCStr);
 
 				// Remove it from the maps.
 				this->mapDataConsumers.erase(dataConsumer->id);
@@ -1390,6 +1426,10 @@ namespace RTC
 
 				if (this->sctpAssociation)
 				{
+					// NOTE: This must be called after removing data consumers from the maps,
+					// otherwise if `OnAssociationStreamBufferedAmountLow()` was triggered it
+					// would end up emitting an event associated to an already closed data
+					// consumer.
 					this->sctpAssociation->ResetStreams(
 					  std::array<uint16_t, 1>{ dataConsumer->GetSctpStreamParameters().streamId });
 				}
@@ -1465,14 +1505,6 @@ namespace RTC
 			consumer->TransportConnected();
 		}
 
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			dataConsumer->TransportConnected();
-		}
-
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
 		{
@@ -1513,14 +1545,6 @@ namespace RTC
 			auto* consumer = kv.second;
 
 			consumer->TransportDisconnected();
-		}
-
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			dataConsumer->TransportDisconnected();
 		}
 
 		// Stop the RTCP timer.
@@ -1748,57 +1772,31 @@ namespace RTC
 		delete cb;
 	}
 
-	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const
-	{
-		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
-		{
-			MS_THROW_ERROR("a DataProducer with same dataProducerId already exists");
-		}
-	}
-
-	void Transport::CheckNoDataConsumer(const std::string& dataConsumerId) const
+	RTC::Producer* Transport::AssertAndGetProducerById(
+	  const std::string& producerId, const std::string& method) const
 	{
 		MS_TRACE();
 
-		if (this->mapDataConsumers.find(dataConsumerId) != this->mapDataConsumers.end())
-		{
-			MS_THROW_ERROR("a DataConsumer with same dataConsumerId already exists");
-		}
-	}
-
-	void Transport::CheckNoSctpDataConsumer(uint16_t streamId) const
-	{
-		MS_TRACE();
-
-		if (this->mapSctpStreamIdDataConsumers.find(streamId) != this->mapSctpStreamIdDataConsumers.end())
-		{
-			MS_THROW_ERROR("an SCTP DataConsumer with same streamId %" PRIu16 " already exists", streamId);
-		}
-	}
-
-	RTC::Producer* Transport::AssertAndGetProducerById(const std::string& producerId) const
-	{
-		MS_TRACE();
-
-		auto it = this->mapProducers.find(producerId);
+		const auto it = this->mapProducers.find(producerId);
 
 		if (it == this->mapProducers.end())
 		{
-			MS_THROW_ERROR("Producer not found");
+			MS_THROW_NOT_FOUND_ERROR("Producer not found [method:%s]", method.c_str());
 		}
 
 		return it->second;
 	}
 
-	RTC::Consumer* Transport::AssertAndGetConsumerById(const std::string& consumerId) const
+	RTC::Consumer* Transport::AssertAndGetConsumerById(
+	  const std::string& consumerId, const std::string& method) const
 	{
 		MS_TRACE();
 
-		auto it = this->mapConsumers.find(consumerId);
+		const auto it = this->mapConsumers.find(consumerId);
 
 		if (it == this->mapConsumers.end())
 		{
-			MS_THROW_ERROR("Consumer not found");
+			MS_THROW_NOT_FOUND_ERROR("Consumer not found [method:%s]", method.c_str());
 		}
 
 		return it->second;
@@ -1808,7 +1806,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto mapSsrcConsumerIt = this->mapSsrcConsumer.find(ssrc);
+		const auto mapSsrcConsumerIt = this->mapSsrcConsumer.find(ssrc);
 
 		if (mapSsrcConsumerIt == this->mapSsrcConsumer.end())
 		{
@@ -1824,7 +1822,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto mapRtxSsrcConsumerIt = this->mapRtxSsrcConsumer.find(ssrc);
+		const auto mapRtxSsrcConsumerIt = this->mapRtxSsrcConsumer.find(ssrc);
 
 		if (mapRtxSsrcConsumerIt == this->mapRtxSsrcConsumer.end())
 		{
@@ -1836,29 +1834,31 @@ namespace RTC
 		return consumer;
 	}
 
-	RTC::DataProducer* Transport::AssertAndGetDataProducerById(const std::string& dataProducerId) const
+	RTC::DataProducer* Transport::AssertAndGetDataProducerById(
+	  const std::string& dataProducerId, const std::string& method) const
 	{
 		MS_TRACE();
 
-		auto it = this->mapDataProducers.find(dataProducerId);
+		const auto it = this->mapDataProducers.find(dataProducerId);
 
 		if (it == this->mapDataProducers.end())
 		{
-			MS_THROW_ERROR("DataProducer not found");
+			MS_THROW_NOT_FOUND_ERROR("DataProducer not found [method:%s]", method.c_str());
 		}
 
 		return it->second;
 	}
 
-	RTC::DataConsumer* Transport::AssertAndGetDataConsumerById(const std::string& dataConsumerId) const
+	RTC::DataConsumer* Transport::AssertAndGetDataConsumerById(
+	  const std::string& dataConsumerId, const std::string& method) const
 	{
 		MS_TRACE();
 
-		auto it = this->mapDataConsumers.find(dataConsumerId);
+		const auto it = this->mapDataConsumers.find(dataConsumerId);
 
 		if (it == this->mapDataConsumers.end())
 		{
-			MS_THROW_ERROR("DataConsumer not found");
+			MS_THROW_NOT_FOUND_ERROR("DataConsumer not found [method:%s]", method.c_str());
 		}
 
 		return it->second;
@@ -1868,14 +1868,69 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapSctpStreamIdDataConsumers.find(streamId);
+		const auto it = this->mapSctpStreamIdDataConsumers.find(streamId);
 
 		if (it == this->mapSctpStreamIdDataConsumers.end())
 		{
-			MS_THROW_ERROR("SCTP DataConsumer with streamId %" PRIu16 " not found", streamId);
+			return nullptr;
 		}
 
 		return it->second;
+	}
+
+	void Transport::CheckNoProducer(const std::string& producerId, const std::string& method) const
+	{
+		MS_TRACE();
+
+		if (this->mapProducers.contains(producerId))
+		{
+			MS_THROW_ERROR("a Producer with same producerId already exists [method:%s]", method.c_str());
+		}
+	}
+
+	void Transport::CheckNoConsumer(const std::string& dataConsumerId, const std::string& method) const
+	{
+		MS_TRACE();
+
+		if (this->mapConsumers.contains(dataConsumerId))
+		{
+			MS_THROW_ERROR("a Consumer with same consumerId already exists [method:%s]", method.c_str());
+		}
+	}
+
+	void Transport::CheckNoDataProducer(const std::string& dataProducerId, const std::string& method) const
+	{
+		MS_TRACE();
+
+		if (this->mapDataProducers.contains(dataProducerId))
+		{
+			MS_THROW_ERROR(
+			  "a DataProducer with same dataProducerId already exists [method:%s]", method.c_str());
+		}
+	}
+
+	void Transport::CheckNoDataConsumer(const std::string& dataConsumerId, const std::string& method) const
+	{
+		MS_TRACE();
+
+		if (this->mapDataConsumers.contains(dataConsumerId))
+		{
+			MS_THROW_ERROR(
+			  "a DataConsumer with same dataConsumerId already exists [method:%s]", method.c_str());
+		}
+	}
+
+	void Transport::CheckNoSctpDataConsumer(uint16_t streamId, const std::string& method) const
+	{
+		MS_TRACE();
+
+		if (this->mapSctpStreamIdDataConsumers.contains(streamId))
+		{
+			MS_THROW_ERROR(
+			  "an SCTP DataConsumer with same streamId %" PRIu16 " already exists [method:%s]",
+			  streamId,
+			  method.c_str());
+		}
 	}
 
 	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)
@@ -2520,6 +2575,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Feed the capture time estimator of the sender of this Producer.
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it != this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			auto& remoteCaptureTimeEstimator = it->second;
+
+			remoteCaptureTimeEstimator.SenderReportReceived(rtpStream);
+		}
+
 		this->listener->OnTransportProducerRtcpSenderReport(this, producer, rtpStream, first);
 	}
 
@@ -2537,13 +2603,57 @@ namespace RTC
 		SendRtcpPacket(packet);
 	}
 
-	void Transport::OnProducerNeedWorstRemoteFractionLost(
-	  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost)
+	uint8_t Transport::OnProducerNeedWorstRemoteFractionLost(RTC::Producer* producer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
-		this->listener->OnTransportNeedWorstRemoteFractionLost(
-		  this, producer, mappedSsrc, worstRemoteFractionLost);
+		return this->listener->OnTransportNeedWorstRemoteFractionLost(this, producer, mappedSsrc);
+	}
+
+	std::optional<uint64_t> Transport::OnProducerNeedLocalCaptureMs(
+	  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts)
+	{
+		MS_TRACE();
+
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it == this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			return std::nullopt;
+		}
+
+		const auto& remoteCaptureTimeEstimator = it->second;
+
+		return remoteCaptureTimeEstimator.GetLocalCaptureMs(rtpStream, ts);
+	}
+
+	std::optional<int64_t> Transport::OnProducerNeedRemoteClockOffsetMs(const RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it == this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			return std::nullopt;
+		}
+
+		const auto& remoteCaptureTimeEstimator = it->second;
+		const auto clockOffsetMs               = remoteCaptureTimeEstimator.GetClockOffsetMs();
+
+		if (!clockOffsetMs.has_value())
+		{
+			return std::nullopt;
+		}
+
+		// NOTE: The estimator gives the offset against our own monotonic clock, while what
+		// a receiver reconstructs out of the Sender Reports we send is the clock we
+		// announce, so the distance to the NTP epoch has to be taken into account. Both
+		// terms are huge and their sum is small, so they are added as milliseconds before
+		// anything scales them up.
+		return clockOffsetMs.value() + static_cast<int64_t>(this->shared->GetNtpOffsetMs());
 	}
 
 	void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
@@ -2808,12 +2918,13 @@ namespace RTC
 	  RTC::DataProducer* dataProducer,
 	  RTC::SCTP::Message message,
 	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel)
+	  std::optional<uint16_t> requiredSubchannel,
+	  std::optional<uint16_t> ignoredSubchannel)
 	{
 		MS_TRACE();
 
 		this->listener->OnTransportDataProducerMessageReceived(
-		  this, dataProducer, std::move(message), subchannels, requiredSubchannel);
+		  this, dataProducer, std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 	}
 
 	void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
@@ -2857,6 +2968,8 @@ namespace RTC
 	void Transport::OnDataConsumerNeedBufferedAmountLowThreshold(
 	  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmountLowThreshold) const
 	{
+		MS_TRACE();
+
 		if (this->sctpAssociation)
 		{
 			bufferedAmountLowThreshold =
@@ -2896,6 +3009,10 @@ namespace RTC
 			this->mapSctpStreamIdDataConsumers.erase(dataConsumer->GetSctpStreamParameters().streamId);
 		}
 
+		// NOTE: This must be called after removing the data consumer from the maps,
+		// otherwise if `OnAssociationStreamBufferedAmountLow()` was triggered it
+		// would end up emitting an event associated to an already closed data
+		// consumer.
 		if (this->sctpAssociation)
 		{
 			this->sctpAssociation->ResetStreams(
@@ -2949,17 +3066,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Tell all DataConsumers.
-		for (auto& kv : this->mapDataConsumers)
-		{
-			auto* dataConsumer = kv.second;
-
-			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-			{
-				dataConsumer->SctpAssociationConnected();
-			}
-		}
-
 		// Notify the upper layer.
 
 		// First tell it about the SCTP negotiated capabilities.
@@ -2991,7 +3097,7 @@ namespace RTC
 
 // For debugging purposes.
 #if MS_LOG_DEV_LEVEL == 3
-		MS_DUMP("--- SCTP association connected:");
+		MS_DUMP("SCTP association connected:");
 		this->sctpAssociation->Dump();
 #endif
 	}
@@ -3137,10 +3243,20 @@ namespace RTC
 		// Pass the SCTP message to the corresponding DataProducer.
 		try
 		{
-			static thread_local std::vector<uint16_t> emptySubchannels;
+			std::vector<uint16_t> subchannels;
+			std::optional<uint16_t> requiredSubchannel;
+			std::optional<uint16_t> ignoredSubchannel;
+
+			// When this is a pipe transport, the subchannels, required subchannel and
+			// ignored subchannel may be encoded at the beginning of the message payload.
+			if (this->IsPipe())
+			{
+				RTC::SubchannelsCodec::DecodeSubchannels(
+				  message, subchannels, requiredSubchannel, ignoredSubchannel);
+			}
 
 			dataProducer->ReceiveMessage(
-			  std::move(message), emptySubchannels, /*requiredSubchannel*/ std::nullopt);
+			  std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 		}
 		catch (std::exception& error)
 		{
@@ -3205,8 +3321,6 @@ namespace RTC
 
 			if (!dataConsumersToClose.empty())
 			{
-				this->sctpAssociation->ResetStreams(streamsToReset);
-
 				for (auto* dataConsumer : dataConsumersToClose)
 				{
 					// Remove it from the maps.
@@ -3229,6 +3343,12 @@ namespace RTC
 					// Delete it.
 					delete dataConsumer;
 				}
+
+				// NOTE: This must be called after removing data consumers from the maps,
+				// otherwise if `OnAssociationStreamBufferedAmountLow()` was triggered it
+				// would end up emitting an event associated to an already closed data
+				// consumer.
+				this->sctpAssociation->ResetStreams(streamsToReset);
 			}
 		}
 	}

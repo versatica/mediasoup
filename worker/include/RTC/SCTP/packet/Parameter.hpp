@@ -40,7 +40,7 @@ namespace RTC
 
 		class Parameter : public TLV
 		{
-			// We need that chunk calls protected and private methods in this class.
+			// We need that Chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -102,6 +102,9 @@ namespace RTC
 			static constexpr size_t ParameterHeaderLength{ 4 };
 
 		public:
+			static const std::string& ParameterTypeToString(ParameterType parameterType);
+
+		protected:
 			/**
 			 * Whether given buffer could be a a valid parameter.
 			 *
@@ -123,8 +126,6 @@ namespace RTC
 			  uint16_t& parameterLength,
 			  uint8_t& padding);
 
-			static const std::string& ParameterTypeToString(ParameterType parameterType);
-
 		private:
 			static const ankerl::unordered_dense::map<ParameterType, std::string> ParameterType2String;
 
@@ -138,8 +139,14 @@ namespace RTC
 		public:
 			~Parameter() override;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			void Dump(int indentation = 0) const override = 0;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			Parameter* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ParameterType GetType() const final
@@ -173,7 +180,7 @@ namespace RTC
 
 			virtual void SoftCloneInto(Parameter* parameter) const final;
 
-			virtual void InitializeHeader(ParameterType parameterType, uint16_t lengthFieldValue) final;
+			virtual void InitializeHeader(ParameterType parameterType, uint16_t length) final;
 
 			/**
 			 * Parameter subclasses with header bigger than default one (4 bytes)

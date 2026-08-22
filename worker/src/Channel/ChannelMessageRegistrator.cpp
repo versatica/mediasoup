@@ -24,6 +24,8 @@ namespace Channel
 	flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> ChannelMessageRegistrator::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder)
 	{
+		MS_TRACE();
+
 		// Add channelRequestHandlerIds.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> channelRequestHandlerIds;
 

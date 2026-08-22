@@ -342,13 +342,13 @@ export function generateRouterRtpCapabilities(
 	// We need to create and store this Dependency-Descriptor header extension to
 	// leter be used by `getPipeConsumerRtpParameters()` function.
 	const dependencyDescriptorHeaderExtensionForPipeConsumer:
-		| RtpHeaderExtension
-		| undefined = supportedRtpCapabilities.headerExtensions!.find(
-		headerExtension =>
-			headerExtension.uri ===
-				'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension' &&
-			headerExtension.direction !== 'sendrecv'
-	);
+		RtpHeaderExtension | undefined =
+		supportedRtpCapabilities.headerExtensions!.find(
+			headerExtension =>
+				headerExtension.uri ===
+					'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension' &&
+				headerExtension.direction !== 'sendrecv'
+		);
 
 	if (dependencyDescriptorHeaderExtensionForPipeConsumer) {
 		cache.dependencyDescriptorHeaderExtensionParametersForPipeConsumer = {
@@ -529,6 +529,19 @@ export function getConsumableRtpParameters(
 		if (
 			capExt.kind !== kind ||
 			(capExt.direction !== 'sendrecv' && capExt.direction !== 'sendonly')
+		) {
+			continue;
+		}
+
+		// 'abs-capture-time' RTP extension is just proxied from the packets of this
+		// Producer, so don't announce it to Consumers unless this Producer negotiated
+		// it. Otherwise a Producer created out of a pipe Consumer would announce it
+		// and the worker would wait forever for an extension that is never going to
+		// arrive.
+		if (
+			capExt.uri ===
+				'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time' &&
+			!params.headerExtensions!.some(ext => ext.uri === capExt.uri)
 		) {
 			continue;
 		}

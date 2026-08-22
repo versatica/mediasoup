@@ -59,6 +59,8 @@ namespace RTC
 
 	void TransportCongestionControlClient::InitializeController()
 	{
+		MS_TRACE();
+
 		MS_ASSERT(this->rtpTransportControllerSend == nullptr, "transport controller already initialized");
 
 		webrtc::BitrateConstraints bitrateConfig;
@@ -88,6 +90,8 @@ namespace RTC
 
 	void TransportCongestionControlClient::DestroyController()
 	{
+		MS_TRACE();
+
 		delete this->rtpTransportControllerSend;
 		this->rtpTransportControllerSend = nullptr;
 
@@ -243,6 +247,8 @@ namespace RTC
 
 	void TransportCongestionControlClient::UpdatePacketLoss(double packetLoss)
 	{
+		MS_TRACE();
+
 		// Add the lost into the histogram.
 		if (this->packetLossHistory.size() == PacketLossHistogramLength)
 		{
@@ -282,6 +288,8 @@ namespace RTC
 
 	void TransportCongestionControlClient::SetMaxOutgoingBitrate(uint32_t maxBitrate)
 	{
+		MS_TRACE();
+
 		this->maxOutgoingBitrate = maxBitrate;
 
 		ApplyBitrateUpdates();
@@ -295,6 +303,8 @@ namespace RTC
 
 	void TransportCongestionControlClient::SetMinOutgoingBitrate(uint32_t minBitrate)
 	{
+		MS_TRACE();
+
 		this->minOutgoingBitrate = minBitrate;
 
 		ApplyBitrateUpdates();
@@ -344,6 +354,8 @@ namespace RTC
 
 	void TransportCongestionControlClient::ApplyBitrateUpdates()
 	{
+		MS_TRACE();
+
 		auto currentMaxBitrate = this->bitrates.maxBitrate;
 		uint32_t newMaxBitrate = 0;
 

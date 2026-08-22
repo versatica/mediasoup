@@ -355,6 +355,8 @@ namespace RTC
 
 	inline void NackGenerator::MayRunTimer() const
 	{
+		MS_TRACE();
+
 		if (this->nackList.empty())
 		{
 			this->timer->Stop();

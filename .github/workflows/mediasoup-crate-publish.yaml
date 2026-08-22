@@ -25,8 +25,21 @@ on:
     branches:
       - v3
 
+# Every crate publish goes through a single serialized queue, so a run never
+# starts while another one is still publishing. This is what makes it safe to
+# release several crates back to back (e.g. `mediasoup-sys` and right after
+# `mediasoup`): the `mediasoup` crate depends on its siblings by `path` +
+# `version`, but `cargo publish` drops the `path` and resolves them from
+# crates.io, so their new versions must already be published by the time the
+# `mediasoup` run publishes. `cargo publish` polls the index and only returns
+# once the crate is visible there, hence "previous run finished" means "its
+# crate is resolvable".
 concurrency:
-  group: ${{ github.workflow }}-${{ github.sha }}
+  group: ${{ github.workflow }}
+  # Queue every run instead of keeping just one pending (the default, which would
+  # cancel the pending `mediasoup-sys` run when the `mediasoup` one arrives while
+  # `mediasoup-types` is still publishing). FIFO, up to 100 pending runs.
+  queue: max
   # Don't cancel an in-progress publish if a new run lands in the same group.
   cancel-in-progress: false
 

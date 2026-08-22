@@ -14,6 +14,8 @@ static constexpr int ListenBacklog{ 512 };
 
 inline static void onConnection(uv_stream_t* handle, int status)
 {
+	MS_TRACE();
+
 	auto* server = static_cast<TcpServerHandle*>(handle->data);
 
 	if (server)
@@ -24,6 +26,8 @@ inline static void onConnection(uv_stream_t* handle, int status)
 
 inline static void onCloseTcp(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
@@ -71,6 +75,8 @@ TcpServerHandle::~TcpServerHandle()
 
 void TcpServerHandle::Dump(int indentation) const
 {
+	MS_TRACE();
+
 	MS_DUMP_CLEAN(indentation, "<TcpServerHandle>");
 	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
 	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));
@@ -159,7 +165,7 @@ void TcpServerHandle::AcceptTcpConnection(TcpConnectionHandle* connection)
 
 	try
 	{
-		connection->Setup(this, &(this->localAddr), this->localIp, this->localPort);
+		connection->Setup(this, std::addressof(this->localAddr), this->localIp, this->localPort);
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -179,12 +185,7 @@ void TcpServerHandle::AcceptTcpConnection(TcpConnectionHandle* connection)
 	}
 
 	// Start receiving data.
-	try
-	{
-		// NOTE: This may throw.
-		connection->Start();
-	}
-	catch (const MediaSoupError& error)
+	if (!connection->Start())
 	{
 		delete connection;
 
@@ -226,8 +227,10 @@ bool TcpServerHandle::SetLocalAddress()
 	int err;
 	int len = sizeof(this->localAddr);
 
-	err =
-	  uv_tcp_getsockname(this->uvHandle, reinterpret_cast<struct sockaddr*>(&this->localAddr), &len);
+	err = uv_tcp_getsockname(
+	  this->uvHandle,
+	  reinterpret_cast<struct sockaddr*>(std::addressof(this->localAddr)),
+	  std::addressof(len));
 
 	if (err != 0)
 	{
@@ -239,7 +242,10 @@ bool TcpServerHandle::SetLocalAddress()
 	int family;
 
 	Utils::IP::GetAddressInfo(
-	  reinterpret_cast<const struct sockaddr*>(&this->localAddr), family, this->localIp, this->localPort);
+	  reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr)),
+	  family,
+	  this->localIp,
+	  this->localPort);
 
 	return true;
 }

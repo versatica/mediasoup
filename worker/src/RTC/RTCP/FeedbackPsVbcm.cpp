@@ -13,6 +13,8 @@ namespace RTC
 		FeedbackPsVbcmItem::FeedbackPsVbcmItem(
 		  uint32_t ssrc, uint8_t sequenceNumber, uint8_t payloadType, uint16_t length, uint8_t* value)
 		{
+			MS_TRACE();
+
 			this->raw    = new uint8_t[8 + length];
 			this->header = reinterpret_cast<Header*>(this->raw);
 

@@ -164,6 +164,30 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][erro
 		// clang-format on
 
 		REQUIRE(!RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(buffer3, sizeof(buffer3)));
+
+		// Security advisory.
+		// See https://github.com/versatica/mediasoup/security/advisories/GHSA-p9cq-fqxc-987w
+		//
+		// Number of missing parameters chosen so that, multiplied by 2 in 32-bit
+		// arithmetic, it wraps around to a value that would falsely match the
+		// length field. 0x80000001 (2147483649) * 2 wraps to 2, which equals
+		// Length 10 minus the 8-byte header. The check must be done in 64-bit
+		// arithmetic so this malformed cause is rejected instead of accepted
+		// (which would later drive an out-of-bounds read while iterating the
+		// bogus 2.1 billion parameter count).
+		// clang-format off
+		alignas(4) uint8_t buffer4[] =
+		{
+			// Code:2 (MISSING-MANDATORY-PARAMETER), Length: 10
+			0x00, 0x02, 0x00, 0x0A,
+			// Number of missing params: 0x80000001 (2147483649)
+			0x80, 0x00, 0x00, 0x01,
+			// A single param type (2 bytes) plus 2 bytes of padding
+			0x00, 0x05, 0x00, 0x00,
+		};
+		// clang-format on
+
+		REQUIRE(!RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(buffer4, sizeof(buffer4)));
 	}
 
 	SECTION("MissingMandatoryParameterErrorCause::Factory() succeeds")

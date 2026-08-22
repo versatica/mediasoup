@@ -264,6 +264,8 @@ namespace RTC
 			void VP8::PayloadDescriptor::Encoder::Encode(
 			  uint8_t* data, const PayloadDescriptor* payloadDescriptor) const
 			{
+				MS_TRACE();
+
 				payloadDescriptor->Encode(
 				  data, this->encodingData.pictureId, this->encodingData.tl0PictureIndex);
 			}
@@ -347,6 +349,9 @@ namespace RTC
 				{
 					return false;
 				}
+
+				// VP8 always has a single spatial layer (0).
+				context->SetCurrentSpatialLayer(0);
 
 				// Update/fix current temporal layer.
 				if (this->payloadDescriptor->hasTlIndex && this->payloadDescriptor->tlIndex == context->GetTargetTemporalLayer())

@@ -3,7 +3,7 @@ import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, ProducerEvents } from '../types';
 import type { ProducerImpl } from '../Producer';
-import { UnsupportedError } from '../errors';
+import { UnsupportedError, NotFoundError } from '../errors';
 import * as utils from '../utils';
 import {
 	Notification,
@@ -487,6 +487,66 @@ test('transport.produce() with no MID and with single encoding without RID or SS
 	).rejects.toThrow(Error);
 }, 2000);
 
+test('transport.produce() with single encoding and no temporal layers is of type simple', async () => {
+	const producer = await ctx.webRtcTransport1!.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+				},
+			],
+			encodings: [{ ssrc: 11111111 }],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('simple');
+}, 2000);
+
+test('transport.produce() with single encoding and temporal layers is of type svc', async () => {
+	const producer = await ctx.webRtcTransport1!.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+				},
+			],
+			encodings: [{ ssrc: 11111111, scalabilityMode: 'L1T3' }],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('svc');
+}, 2000);
+
+test('transport.produce() with multiple encodings is of type simulcast', async () => {
+	const producer = await ctx.webRtcTransport1!.produce({
+		kind: 'video',
+		rtpParameters: {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+				},
+			],
+			encodings: [
+				{ ssrc: 11111111, scalabilityMode: 'L1T3' },
+				{ ssrc: 22222222, scalabilityMode: 'L1T3' },
+			],
+			rtcp: { cname: 'test' },
+		},
+	});
+
+	expect(producer.type).toBe('simulcast');
+}, 2000);
+
 test('producer.dump() succeeds', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
 		ctx.audioProducerOptions
@@ -787,6 +847,8 @@ test('producer.close() succeeds', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioProducer.closed).toBe(true);
 
+	await expect(audioProducer.dump()).rejects.toThrow(NotFoundError);
+
 	await expect(ctx.router!.dump()).resolves.toMatchObject({
 		mapProducerIdConsumerIds: [],
 		mapConsumerIdProducerId: [],
@@ -806,10 +868,10 @@ test('Producer methods reject if closed', async () => {
 
 	audioProducer.close();
 
-	await expect(audioProducer.dump()).rejects.toThrow(Error);
-	await expect(audioProducer.getStats()).rejects.toThrow(Error);
-	await expect(audioProducer.pause()).rejects.toThrow(Error);
-	await expect(audioProducer.resume()).rejects.toThrow(Error);
+	await expect(audioProducer.dump()).rejects.toThrow(NotFoundError);
+	await expect(audioProducer.getStats()).rejects.toThrow(NotFoundError);
+	await expect(audioProducer.pause()).rejects.toThrow(NotFoundError);
+	await expect(audioProducer.resume()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('Producer emits "transportclose" if Transport is closed', async () => {
@@ -828,4 +890,6 @@ test('Producer emits "transportclose" if Transport is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(videoProducer.closed).toBe(true);
+
+	await expect(videoProducer.dump()).rejects.toThrow(NotFoundError);
 }, 2000);

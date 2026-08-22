@@ -39,7 +39,7 @@ namespace RTC
 
 		class ErrorCause : public TLV
 		{
-			// We need that chunk calls protected and private methods in this class.
+			// We need that Chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
@@ -88,6 +88,9 @@ namespace RTC
 			static constexpr size_t ErrorCauseHeaderLength{ 4 };
 
 		public:
+			static const std::string& ErrorCauseCodeToString(ErrorCauseCode causeCode);
+
+		protected:
 			/**
 			 * Whether given buffer could be a a valid error cause.
 			 *
@@ -108,8 +111,6 @@ namespace RTC
 			  uint16_t& causeLength,
 			  uint8_t& padding);
 
-			static const std::string& ErrorCauseCodeToString(ErrorCauseCode causeCode);
-
 		private:
 			static const ankerl::unordered_dense::map<ErrorCauseCode, std::string> ErrorCauseCode2String;
 
@@ -123,8 +124,14 @@ namespace RTC
 		public:
 			~ErrorCause() override;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			void Dump(int indentation = 0) const override = 0;
 
+			/**
+			 * Must be overridden by each subclass.
+			 */
 			ErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ErrorCauseCode GetCode() const final
@@ -170,7 +177,7 @@ namespace RTC
 
 			virtual void SoftCloneInto(ErrorCause* errorCause) const final;
 
-			virtual void InitializeHeader(ErrorCauseCode errorCauseCode, uint16_t lengthFieldValue) final;
+			virtual void InitializeHeader(ErrorCauseCode errorCauseCode, uint16_t length) final;
 
 			/**
 			 * Error Cause subclasses with header bigger than default one (4 bytes)

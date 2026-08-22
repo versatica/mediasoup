@@ -14,7 +14,8 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	constexpr uint16_t StreamId{ 1 };
 	constexpr uint32_t Ppid{ 53 };
 	constexpr uint16_t DefaultPriority{ 10 };
-	constexpr size_t BufferedAmountLowThreshold{ 500 };
+	constexpr size_t DefaultStreamBufferedAmountLowThreshold{ 0 };
+	constexpr size_t TotalBufferedAmountLowThreshold{ 500 };
 	constexpr size_t OneFragmentPacketLength{ 100 };
 	constexpr size_t TwoFragmentPacketLength{ 101 };
 
@@ -22,7 +23,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		REQUIRE(q.IsEmpty());
 		REQUIRE(q.Produce(NowMs, OneFragmentPacketLength).has_value() == false);
@@ -32,7 +37,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, { 1, 2, 4, 5, 6 }));
 
@@ -49,7 +58,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(60);
 
@@ -80,7 +93,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(60);
 
@@ -108,7 +125,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(600);
 
@@ -157,7 +178,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(20);
 
@@ -184,7 +209,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(20);
 
@@ -235,7 +264,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(120);
 
@@ -273,7 +306,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, { 1, 2, 3 }));
 		q.AddMessage(NowMs, RTC::SCTP::Message(2, 54, { 1, 2, 3, 4, 5 }));
@@ -300,7 +337,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(120);
 
@@ -323,7 +364,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
@@ -362,7 +407,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const size_t payloadLength  = 100;
 		const size_t fragmentLength = 50;
@@ -397,7 +446,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
@@ -437,7 +490,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
@@ -479,7 +536,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
@@ -527,7 +588,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
@@ -565,7 +630,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(200);
 
@@ -597,7 +666,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(TwoFragmentPacketLength);
 
@@ -635,7 +708,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
 		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(2)));
@@ -699,7 +776,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamBufferedAmountLowThreshold(1, 0);
 
@@ -710,7 +791,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
 
@@ -731,7 +816,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
 
@@ -761,7 +850,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamBufferedAmountLowThreshold(1, 1000);
 
@@ -797,7 +890,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamBufferedAmountLowThreshold(1, 700);
 
@@ -842,7 +939,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamBufferedAmountLowThreshold(1, 700);
 
@@ -876,7 +977,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(100)));
 
@@ -913,9 +1018,13 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		const std::vector<uint8_t> payload(BufferedAmountLowThreshold - 1);
+		const std::vector<uint8_t> payload(TotalBufferedAmountLowThreshold - 1);
 
 		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
@@ -933,9 +1042,13 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		const std::vector<uint8_t> payload(BufferedAmountLowThreshold);
+		const std::vector<uint8_t> payload(TotalBufferedAmountLowThreshold);
 
 		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
@@ -950,14 +1063,18 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(associationListener.CountOnTotalBufferedAmountLowCalls() == 1);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(q.GetTotalBufferedAmount() < BufferedAmountLowThreshold);
+		REQUIRE(q.GetTotalBufferedAmount() < TotalBufferedAmountLowThreshold);
 	}
 
 	SECTION("will stay in a stream as long as that message is sending")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		constexpr size_t OneFragmentPacketSize = OneFragmentPacketLength;
 
@@ -1002,7 +1119,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		REQUIRE(q.GetStreamPriority(1) == DefaultPriority);
 
@@ -1015,7 +1136,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamPriority(1, 42);
 
@@ -1031,7 +1156,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.EnableMessageInterleaving(true);
 
@@ -1060,7 +1189,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(OneFragmentPacketLength);
 
@@ -1082,7 +1215,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(120);
 
@@ -1109,7 +1246,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(OneFragmentPacketLength + 20);
 

@@ -2,6 +2,73 @@
 
 ### NEXT
 
+### 0.27.0
+
+- **Breaking change:** Simulcast and SVC: Limit temporal layer to the preferred one ([PR #1892](https://github.com/versatica/mediasoup/pull/1892)).
+
+### 0.26.0
+
+- Worker: Fix undefined behavior in `RtpStreamRecv::UpdateScore()` when no packets were received ([PR #1886](https://github.com/versatica/mediasoup/pull/1886)).
+- SCTP: Fix `SackChunk::GetValidatedGapAckBlocks()` returning a bogus gap-ack-block ([PR #1891](https://github.com/versatica/mediasoup/pull/1891)).
+- Do not make generated RTCP Sender Reports depend on RTP packet arrival time ([issue #1881](https://github.com/versatica/mediasoup/issues/1881)):
+  - `RemoteClockOffsetEstimator` class ([PR #1882](https://github.com/versatica/mediasoup/pull/1882)).
+  - Prepare `RtpStream` classes for capture time based RTCP Sender Reports ([PR #1883](https://github.com/versatica/mediasoup/pull/1883), [PR #1888](https://github.com/versatica/mediasoup/pull/1888)).
+  - `RemoteCaptureTimeEstimator` class ([PR #1884](https://github.com/versatica/mediasoup/pull/1884)).
+  - Estimate the capture instant of each received RTP packet ([PR #1885](https://github.com/versatica/mediasoup/pull/1885)).
+  - Generate RTCP Sender Reports based on the capture instant of the media rather than on the packet arrival time ([PR #1887](https://github.com/versatica/mediasoup/pull/1887)).
+  - `SimulcastProducerStreamManager`: Apply new capture time logic and fix 'abs-capture-time' rewriting ([PR #1889](https://github.com/versatica/mediasoup/pull/1889)).
+
+### 0.25.2
+
+- Worker: Verify `DataConsumer` subchannels before cloning the message ([PR #1880](https://github.com/versatica/mediasoup/pull/1880)).
+
+### 0.25.1
+
+- Worker: Don't check `ignoredSubchannel` in piped `DataConsumers` ([PR #1879](https://github.com/versatica/mediasoup/pull/1879)).
+
+### 0.25.0
+
+- `DirectDataProducer.send()`: Add `ignored_subchannel` optional argument ([PR #1877](https://github.com/versatica/mediasoup/pull/1877)).
+
+### 0.24.3
+
+- `DataProducerOptions`: make `new_pipe_transport()` public ([PR #1876](https://github.com/versatica/mediasoup/pull/1876)).
+
+### 0.24.2
+
+- Handle subchannels in pipe `DataConsumers` ([PR #1875](https://github.com/versatica/mediasoup/pull/1875)).
+
+### 0.24.1
+
+- Worker: Fix, use `thread_local` buffer on `MS_ABORT()` ([PR#1873](https://github.com/versatica/mediasoup/pull/1873)).
+
+### 0.24.0
+
+- Bump up Meson from 1.9.1 to 1.11.2 ([PR #1861](https://github.com/versatica/mediasoup/pull/1861)).
+- Worker: Update libsrtp to 3.0.0-beta-2fc078db ([PR #1860](https://github.com/versatica/mediasoup/pull/1860)).
+- Worker: Use constant-time memory comparison in MAC/credential verification (SCTP State Cookie MAC and STUN "MESSAGE-INTEGRITY") ([PR #1867](https://github.com/versatica/mediasoup/pull/1867), credits to @alanturing881).
+- Worker: Fix OOB write in `RTP::Packet::UpdateDependencyDescriptor()` ([PR #1868](https://github.com/versatica/mediasoup/pull/1868), credits to @alanturing881).
+- Worker: Fix integer overflow in SCTP `MissingMandatoryParameterErrorCause` ([PR #1869](https://github.com/versatica/mediasoup/pull/1869), credits to @alanturing881).
+- SCTP: Add default per stream buffered amount low threshold option ([PR #1871](https://github.com/versatica/mediasoup/pull/1871)).
+
+### 0.23.0
+
+- SCTP: Encode subchannels in SCTP messages to enable subchannels mechanism when using pipe transport ([PR #1859](https://github.com/versatica/mediasoup/pull/1859)).
+
+### 0.22.12
+
+- Worker: Fix crash when an SCTP `DataConsumer` is closed and triggers buffered amount low event ([PR #1858](https://github.com/versatica/mediasoup/pull/1858)).
+
+### 0.22.11
+
+- Worker: Enable SVC for VP8 and H264 ([PR #1851](https://github.com/versatica/mediasoup/pull/1851)).
+- SCTP: Limit the state of State Cookie tampering ([PR #1856](https://github.com/versatica/mediasoup/pull/1856)).
+
+### 0.22.10
+
+- Worker: Fix new consumer regressions ([PR #1849](https://github.com/versatica/mediasoup/pull/1849)).
+- Add `NotFoundError`, thrown when the referenced entity in the Worker doesn't exist ([PR #1852](https://github.com/versatica/mediasoup/pull/1852)).
+
 ### 0.22.9
 
 - Worker: Replace `uint64_t` hash with `TupleKey` in `TransportTuple` to avoid hash collisions ([PR #1823](https://github.com/versatica/mediasoup/pull/1823)).

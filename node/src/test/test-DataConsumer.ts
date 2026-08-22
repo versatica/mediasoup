@@ -1,6 +1,7 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, DataConsumerEvents } from '../types';
+import { NotFoundError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -110,6 +111,14 @@ test('transport.consumeData() succeeds', async () => {
 	});
 }, 2000);
 
+test('transport.consumeData() with unknown dataProducerId fails', async () => {
+	await expect(
+		ctx.webRtcTransport2!.consumeData({
+			dataProducerId: '12345678',
+		})
+	).rejects.toThrow(NotFoundError);
+}, 2000);
+
 test('dataConsumer.dump() succeeds', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
 		dataProducerId: ctx.sctpDataProducer!.id,
@@ -139,6 +148,9 @@ test('dataConsumer.dump() succeeds', async () => {
 	expect(dump.subchannels).toEqual(
 		expect.arrayContaining([0, 1, 2, 100, 65535])
 	);
+	expect(dump.bufferedAmount).toBe(0);
+	// Default per stream buffered amount threshold is 1024.
+	expect(dump.bufferedAmountLowThreshold).toBe(1024);
 }, 2000);
 
 test('dataConsumer.getStats() succeeds', async () => {
@@ -427,6 +439,8 @@ test('dataConsumer.close() succeeds', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataConsumer.closed).toBe(true);
 
+	await expect(dataConsumer.dump()).rejects.toThrow(NotFoundError);
+
 	const dump = await ctx.router!.dump();
 
 	expect(dump.mapDataProducerIdDataConsumerIds).toEqual(
@@ -449,9 +463,9 @@ test('Consumer methods reject if closed', async () => {
 
 	dataConsumer.close();
 
-	await expect(dataConsumer.dump()).rejects.toThrow(Error);
+	await expect(dataConsumer.dump()).rejects.toThrow(NotFoundError);
 
-	await expect(dataConsumer.getStats()).rejects.toThrow(Error);
+	await expect(dataConsumer.getStats()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async () => {
@@ -472,6 +486,8 @@ test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async (
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataConsumer.closed).toBe(true);
+
+	await expect(dataConsumer.dump()).rejects.toThrow(NotFoundError);
 }, 2000);
 
 test('DataConsumer emits "transportclose" if Transport is closed', async () => {
@@ -492,6 +508,8 @@ test('DataConsumer emits "transportclose" if Transport is closed', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataConsumer.closed).toBe(true);
+
+	await expect(dataConsumer.dump()).rejects.toThrow(NotFoundError);
 
 	await expect(ctx.router!.dump()).resolves.toMatchObject({
 		mapDataProducerIdDataConsumerIds: {},

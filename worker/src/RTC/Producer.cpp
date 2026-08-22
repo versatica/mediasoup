@@ -580,6 +580,9 @@ namespace RTC
 
 		ReceiveRtpPacketResult result;
 		bool isRtx{ false };
+		// Highest RTP timestamp of the stream before this packet is processed, so that it
+		// can be told afterwards whether this packet made it change.
+		const auto previousMaxPacketTs = rtpStream->GetMaxPacketTs();
 
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
@@ -675,7 +678,10 @@ namespace RTC
 		}
 
 		// Post-process the packet.
-		PostProcessRtpPacket(packet);
+		PostProcessRtpPacket(
+		  packet,
+		  rtpStream,
+		  /*maxPacketTsChanged*/ rtpStream->GetMaxPacketTs() != previousMaxPacketTs);
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
 
@@ -691,7 +697,7 @@ namespace RTC
 		if (it != this->mapSsrcRtpStream.end())
 		{
 			auto* rtpStream  = it->second;
-			const bool first = rtpStream->GetSenderReportNtpMs() == 0;
+			const bool first = !rtpStream->GetSenderReportMapping().has_value();
 
 			rtpStream->ReceiveRtcpSenderReport(report);
 
@@ -765,7 +771,8 @@ namespace RTC
 		// Add a receiver reference time report if no present in the packet.
 		if (!packet->HasReceiverReferenceTime())
 		{
-			auto ntp                    = Utils::Time::TimeMs2Ntp(nowMs);
+			auto ntp = Utils::Time::TimeMs2Ntp(nowMs + this->shared->GetNtpOffsetMs());
+
 			receiverReferenceTimeReport = new RTC::RTCP::ReceiverReferenceTime();
 
 			receiverReferenceTimeReport->SetNtpSec(ntp.seconds);
@@ -1223,19 +1230,64 @@ namespace RTC
 			}
 
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time.
+			//
+			// The capture timestamp is left untouched since it belongs to the clock of the
+			// capture system, but the capture clock offset has to be rewritten. It tells the
+			// offset between the clock of the capture system and the clock of whoever sends
+			// the stream, and by forwarding the stream we become that sender:
+			//
+			//   capture NTP clock = sender NTP clock + capture clock offset
+			//
+			// @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 			extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
 
-			if (extenValue)
+			// NOTE: The extension value is 8 or 16 bytes long depending on whether it holds
+			// the capture clock offset or not.
+			if (extenValue && (extenLen == 8u || extenLen == 16u))
 			{
-				std::memcpy(bufferPtr, extenValue, extenLen);
+				// Offset between our own clock and the clock of the sender of this stream, in
+				// the format the extension uses.
+				//
+				// NOTE: While it cannot be told yet, and it never can if the sender sends no
+				// RTCP at all, both clocks are taken to be the same. Our own clock is real NTP
+				// and so is the one of any sender that fills this extension, so no offset is
+				// the most likely case rather than a wild guess.
+				const auto remoteClockOffsetMs = this->listener->OnProducerNeedRemoteClockOffsetMs(this);
+				const auto remoteClockOffsetQ32x32 =
+				  Utils::Time::TimeMs2Q32x32(remoteClockOffsetMs.value_or(0));
 
-				extensions.emplace_back(
-				  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
-				  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
-				  /*len*/ extenLen,
-				  /*value*/ bufferPtr);
+				// NOTE: An offset that does not fit in the extension means a sender whose clock
+				// is decades away from ours, and there is no value to write that would not be a
+				// lie, so the extension is not forwarded.
+				if (remoteClockOffsetQ32x32.has_value())
+				{
+					const auto absCaptureTimestamp = Utils::Byte::Get8Bytes(extenValue, 0);
+					// Offset between the clock of the capture system and the clock of the sender
+					// of this stream, as told by that sender. There is none when the extension
+					// comes in its shortened form, which is what a sender that captures its own
+					// media sends.
+					const int64_t incomingCaptureClockOffset =
+					  extenLen == 16u ? static_cast<int64_t>(Utils::Byte::Get8Bytes(extenValue, 8)) : 0;
+					// NOTE: The estimator gives our own clock minus the one of the sender, so
+					// subtracting it adds the offset of the sender against ours.
+					const int64_t captureClockOffset =
+					  incomingCaptureClockOffset - remoteClockOffsetQ32x32.value();
 
-				bufferPtr += extenLen;
+					// The extension is always forwarded in its extended form, since the capture
+					// clock offset is always written.
+					extenLen = 16u;
+
+					Utils::Byte::Set8Bytes(bufferPtr, 0, absCaptureTimestamp);
+					Utils::Byte::Set8Bytes(bufferPtr, 8, static_cast<uint64_t>(captureClockOffset));
+
+					extensions.emplace_back(
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
+
+					bufferPtr += extenLen;
+				}
 			}
 
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
@@ -1409,9 +1461,27 @@ namespace RTC
 		return true;
 	}
 
-	inline void Producer::PostProcessRtpPacket(RTC::RTP::Packet* packet)
+	inline void Producer::PostProcessRtpPacket(
+	  RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged)
 	{
 		MS_TRACE();
+
+		// Store the capture instant of the packet holding the highest RTP timestamp of its
+		// stream, which is the one the Sender Reports we send are built upon.
+		if (maxPacketTsChanged)
+		{
+			const auto captureMs =
+			  this->listener->OnProducerNeedLocalCaptureMs(this, rtpStream, packet->GetTimestamp());
+
+			if (captureMs.has_value())
+			{
+				packet->SetCaptureMs(captureMs.value());
+
+				// Also let the stream remember it, since this is the only place where the
+				// capture instant of a received packet can be told.
+				rtpStream->SetCaptureMapping(captureMs.value(), packet->GetTimestamp());
+			}
+		}
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
@@ -1642,6 +1712,8 @@ namespace RTC
 	inline void Producer::OnRtpStreamSendRtcpPacket(
 	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet)
 	{
+		MS_TRACE();
+
 		switch (packet->GetType())
 		{
 			case RTC::RTCP::Type::PSFB:
@@ -1695,13 +1767,14 @@ namespace RTC
 		this->listener->OnProducerSendRtcpPacket(this, packet);
 	}
 
-	inline void Producer::OnRtpStreamNeedWorstRemoteFractionLost(
-	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost)
+	inline uint8_t Producer::OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream)
 	{
-		auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
+		MS_TRACE();
+
+		const auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 
 		// Notify the listener.
-		this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc, worstRemoteFractionLost);
+		return this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc);
 	}
 
 	inline void Producer::OnKeyFrameNeeded(

@@ -43,7 +43,7 @@ NUM_CORES = (
 )
 PYTHON = os.getenv("PYTHON") or sys.executable
 MESON = os.getenv("MESON") or f"{PIP_MESON_NINJA_DIR}/bin/meson"
-MESON_VERSION = os.getenv("MESON_VERSION") or "1.9.1"
+MESON_VERSION = os.getenv("MESON_VERSION") or "1.11.2"
 # MESON_ARGS can be used to provide extra configuration parameters to meson,
 # such as adding defines or changing optimization options. For instance, use
 # `MESON_ARGS="-Dms_log_trace=true -Dms_log_file_line=true" npm i` to compile

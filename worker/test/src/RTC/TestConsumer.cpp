@@ -33,9 +33,9 @@ namespace
 		{
 		}
 
-		void OnRtpStreamNeedWorstRemoteFractionLost(
-		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
+		uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
 		{
+			return 0;
 		}
 	};
 
@@ -104,7 +104,8 @@ namespace
 
 		encoding.ssrc = 1234567890;
 
-		rtpParameters.mid = "mid";
+		rtpParameters.mid        = "mid";
+		rtpParameters.rtcp.cname = "cname";
 		rtpParameters.codecs.emplace_back(codec);
 		rtpParameters.encodings.emplace_back(encoding);
 		rtpParameters.headerExtensions = std::vector<RTC::RtpHeaderExtensionParameters>();

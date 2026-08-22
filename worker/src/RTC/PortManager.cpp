@@ -15,16 +15,22 @@
 // ensuring that we call `delete xxx` with same type as `new xxx` before.
 static inline void onCloseUdp(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_udp_t*>(handle);
 }
 
 static inline void onCloseTcp(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
 inline static void onFakeConnection(uv_stream_t* /*handle*/, int /*status*/)
 {
+	MS_TRACE();
+
 	// Do nothing.
 }
 
@@ -641,6 +647,8 @@ namespace RTC
 
 	void PortManager::Dump(int indentation) const
 	{
+		MS_TRACE();
+
 		MS_DUMP_CLEAN(indentation, "<PortManager>");
 
 		for (const auto& kv : PortManager::mapPortRanges)

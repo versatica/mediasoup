@@ -137,10 +137,11 @@ namespace RTC
 			{
 				InitSeq(seq);
 
-				this->started     = true;
-				this->maxSeq      = seq - 1;
-				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = this->shared->GetTimeMs();
+				this->started            = true;
+				this->maxSeq             = seq - 1;
+				this->maxPacketTs        = packet->GetTimestamp();
+				this->maxPacketMs        = this->shared->GetTimeMs();
+				this->maxPacketCaptureMs = packet->GetCaptureMs();
 			}
 
 			// If not a valid packet ignore it.
@@ -158,8 +159,9 @@ namespace RTC
 			// Update highest seen RTP timestamp.
 			if (Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 			{
-				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = this->shared->GetTimeMs();
+				this->maxPacketTs        = packet->GetTimestamp();
+				this->maxPacketMs        = this->shared->GetTimeMs();
+				this->maxPacketCaptureMs = packet->GetCaptureMs();
 			}
 
 			return true;
@@ -226,8 +228,9 @@ namespace RTC
 					  this->maxPacketTs,
 					  packet->GetTimestamp());
 
-					this->maxPacketTs = packet->GetTimestamp();
-					this->maxPacketMs = this->shared->GetTimeMs();
+					this->maxPacketTs        = packet->GetTimestamp();
+					this->maxPacketMs        = this->shared->GetTimeMs();
+					this->maxPacketCaptureMs = packet->GetCaptureMs();
 				}
 			}
 			// Too old packet received (older than the allowed misorder).
@@ -248,8 +251,9 @@ namespace RTC
 
 					InitSeq(seq);
 
-					this->maxPacketTs = packet->GetTimestamp();
-					this->maxPacketMs = this->shared->GetTimeMs();
+					this->maxPacketTs        = packet->GetTimestamp();
+					this->maxPacketMs        = this->shared->GetTimeMs();
+					this->maxPacketCaptureMs = packet->GetCaptureMs();
 
 					// Notify the subclass about it.
 					UserOnSequenceNumberReset();

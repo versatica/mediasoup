@@ -1,7 +1,8 @@
 use futures_lite::future;
 use mediasoup::consumer::{ConsumerOptions, ConsumerScore, ConsumerType};
 use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
-use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
+use mediasoup::data_producer::{DataProducer, DataProducerOptions, DataProducerType};
+use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::pipe_transport::{PipeTransportOptions, PipeTransportRemoteParameters};
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
@@ -9,13 +10,12 @@ use mediasoup::router::{
     PipeDataProducerToRouterPair, PipeProducerToRouterPair, PipeToRouterOptions, Router,
     RouterOptions,
 };
-use mediasoup::transport::ProduceError;
 use mediasoup::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
-use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol, WebRtcMessage};
 use mediasoup_types::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities,
     RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters, RtpEncodingParameters,
@@ -26,6 +26,7 @@ use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use mediasoup_types::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use parking_lot::Mutex;
 use portpicker::pick_unused_port;
+use std::borrow::Cow;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
@@ -150,6 +151,36 @@ fn video_producer_options() -> ProducerOptions {
     options.app_data = AppData::new(CustomAppData { _foo: "bar2" });
 
     options
+}
+
+fn video_producer_options_with_abs_capture_time() -> ProducerOptions {
+    ProducerOptions::new(
+        MediaKind::Video,
+        RtpParameters {
+            mid: Some("VIDEO2".to_string()),
+            codecs: vec![RtpCodecParameters::Video {
+                mime_type: MimeTypeVideo::Vp8,
+                payload_type: 112,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
+                parameters: RtpCodecParametersParameters::default(),
+                rtcp_feedback: vec![],
+            }],
+            header_extensions: vec![RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::AbsCaptureTime,
+                id: 12,
+                encrypt: false,
+            }],
+            encodings: vec![RtpEncodingParameters {
+                ssrc: Some(44444444),
+                ..RtpEncodingParameters::default()
+            }],
+            rtcp: RtcpParameters {
+                cname: Some("FOOBAR".to_string()),
+                ..RtcpParameters::default()
+            },
+            msid: None,
+        },
+    )
 }
 
 fn data_producer_options() -> DataProducerOptions {
@@ -355,11 +386,6 @@ fn pipe_to_router_succeeds_with_audio() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
                     id: 11,
                     encrypt: false,
@@ -412,11 +438,6 @@ fn pipe_to_router_succeeds_with_audio() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::DependencyDescriptor,
                     id: 7,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
@@ -522,11 +543,6 @@ fn pipe_to_router_succeeds_with_video() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
                     id: 11,
                     encrypt: false,
@@ -583,11 +599,6 @@ fn pipe_to_router_succeeds_with_video() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
                     id: 11,
                     encrypt: false,
@@ -600,6 +611,75 @@ fn pipe_to_router_succeeds_with_video() {
             ],
         );
         assert!(pipe_producer.paused());
+    });
+}
+
+#[test]
+fn pipe_to_router_gives_abs_capture_time_to_pipe_consumer_if_producer_has_it() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, transport1, _transport2) = init().await;
+
+        let video_producer = transport1
+            .produce(video_producer_options_with_abs_capture_time())
+            .await
+            .expect("Failed to produce video");
+
+        let PipeProducerToRouterPair { pipe_consumer, .. } = router1
+            .pipe_producer_to_router(
+                video_producer.id(),
+                PipeToRouterOptions::new(router2.clone()),
+            )
+            .await
+            .expect("Failed to pipe video producer to router");
+
+        assert!(pipe_consumer.rtp_parameters().header_extensions.contains(
+            &RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::AbsCaptureTime,
+                id: 10,
+                encrypt: false,
+            }
+        ));
+    });
+}
+
+#[test]
+fn pipe_producer_to_router_with_unknown_producer_id_fails() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, _transport1, _transport2) = init().await;
+
+        let unknown_producer_id: ProducerId =
+            "12345678-1234-1234-1234-123456789012".parse().unwrap();
+
+        assert!(matches!(
+            router1
+                .pipe_producer_to_router(
+                    unknown_producer_id,
+                    PipeToRouterOptions::new(router2.clone()),
+                )
+                .await,
+            Err(PipeProducerToRouterError::ProducerNotFound(id)) if id == unknown_producer_id
+        ));
+    });
+}
+
+#[test]
+fn pipe_data_producer_to_router_with_unknown_data_producer_id_fails() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, _transport1, _transport2) = init().await;
+
+        let unknown_data_producer_id: DataProducerId =
+            "12345678-1234-1234-1234-123456789012".parse().unwrap();
+
+        assert!(matches!(
+            router1
+                .pipe_data_producer_to_router(
+                    unknown_data_producer_id,
+                    PipeToRouterOptions::new(router2.clone()),
+                )
+                .await,
+            Err(PipeDataProducerToRouterError::DataProducerNotFound(id))
+                if id == unknown_data_producer_id
+        ));
     });
 }
 
@@ -625,14 +705,10 @@ fn pipe_to_router_with_keep_id_true_fails_if_both_routers_belong_to_the_same_wor
             )
             .await;
 
-        if let Err(PipeProducerToRouterError::ProduceFailed(ProduceError::Request(
-            RequestError::Response { reason },
-        ))) = result
-        {
-            assert!(reason.contains("already exists [method:transport.produce]"));
-        } else {
-            panic!("Unexpected result: {result:?}");
-        }
+        assert!(
+            matches!(result, Err(PipeProducerToRouterError::ProduceFailed(_))),
+            "Unexpected result: {result:?}"
+        );
     });
 }
 
@@ -817,11 +893,6 @@ fn create_with_enable_rtx_succeeds() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::TimeOffset,
                     id: 9,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
@@ -1241,6 +1312,327 @@ fn data_consume_for_pipe_data_producer_succeeds() {
         }
         assert_eq!(data_consumer.label().as_str(), "foo");
         assert_eq!(data_consumer.protocol().as_str(), "bar");
+    });
+}
+
+#[test]
+fn data_consume_for_pipe_data_producer_succeeds_with_subchannels() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, _transport1, _transport2) = init().await;
+
+        let direct_transport_1 = router1
+            .create_direct_transport(DirectTransportOptions::default())
+            .await
+            .expect("Failed to create direct transport in router1");
+
+        let data_producer = direct_transport_1
+            .produce_data({
+                let mut options = DataProducerOptions::new_direct();
+
+                options.label = "foo".to_string();
+                options.protocol = "bar".to_string();
+
+                options
+            })
+            .await
+            .expect("Failed to produce data");
+
+        let PipeDataProducerToRouterPair {
+            pipe_data_producer: _pipe_data_producer,
+            pipe_data_consumer,
+        } = router1
+            .pipe_data_producer_to_router(
+                data_producer.id(),
+                PipeToRouterOptions::new(router2.clone()),
+            )
+            .await
+            .expect("Failed to pipe data producer to router");
+
+        let direct_transport_2 = router2
+            .create_direct_transport(DirectTransportOptions::default())
+            .await
+            .expect("Failed to create direct transport in router2");
+
+        let data_consumer = direct_transport_2
+            .consume_data(DataConsumerOptions::new_direct(
+                data_producer.id(),
+                Some(vec![123, 666, 777]),
+            ))
+            .await
+            .expect("Failed to create data consumer");
+
+        // Resolved with all received messages once the last sent one is received.
+        let (received_tx, received_rx) = async_oneshot::oneshot::<Vec<String>>();
+        let _handler = data_consumer.on_message({
+            let received_tx = Mutex::new(Some(received_tx));
+            let received_messages = Mutex::new(Vec::<String>::new());
+
+            move |message| {
+                let text = match message {
+                    WebRtcMessage::String(binary) => String::from_utf8(binary.to_vec()).unwrap(),
+                    _ => {
+                        panic!("Unexpected non-string message");
+                    }
+                };
+                let is_last_message = text == "bye";
+
+                received_messages.lock().push(text);
+
+                if is_last_message {
+                    if let Some(mut received_tx) = received_tx.lock().take() {
+                        let _ = received_tx.send(received_messages.lock().clone());
+                    }
+                }
+            }
+        });
+
+        let direct_data_producer = match &data_producer {
+            DataProducer::Direct(direct_data_producer) => direct_data_producer,
+            _ => {
+                panic!("Expected direct data producer");
+            }
+        };
+
+        // The pipe DataConsumer is not subscribed to any subchannel, so it must allow the
+        // message to pass through and reach the final DataConsumer.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello1".as_bytes())),
+                Some(vec![123, 124]),
+                Some(666),
+                None,
+            )
+            .expect("Failed to send message");
+
+        // Subscribe the pipe DataConsumer to subchannels 123, 124 and 666.
+        pipe_data_consumer
+            .set_subchannels(vec![123, 124, 666])
+            .await
+            .expect("Failed to set data consumer subchannels");
+
+        // The pipe DataConsumer is subscribed to subchannels 123 and 666 so it must allow
+        // the message to pass through and reach the final DataConsumer.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello2".as_bytes())),
+                Some(vec![123]),
+                Some(666),
+                None,
+            )
+            .expect("Failed to send message");
+
+        // The pipe DataConsumer is subscribed to subchannels 124 and 666 so it must allow
+        // the message to pass through, however the final DataConsumer is not subscribed to
+        // subchannel 124 so the message must not reach it.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello3".as_bytes())),
+                Some(vec![124]),
+                Some(666),
+                None,
+            )
+            .expect("Failed to send message");
+
+        // The pipe DataConsumer is not subscribed to subchannel 125 so it must not allow
+        // the message to pass through.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello4".as_bytes())),
+                Some(vec![125]),
+                Some(666),
+                None,
+            )
+            .expect("Failed to send message");
+
+        // The final DataConsumer is subscribed to subchannel 666 so it must not receive
+        // the message.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello5".as_bytes())),
+                Some(vec![123]),
+                None,
+                Some(666),
+            )
+            .expect("Failed to send message");
+
+        // The final DataConsumer is subscribed to subchannel 777 so it must not receive
+        // the message.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello6".as_bytes())),
+                None,
+                Some(123),
+                Some(777),
+            )
+            .expect("Failed to send message");
+
+        // Send a message without subchannels so it's guaranteed that it will reach the
+        // final DataConsumer. And wait for reception of this message so at this time we
+        // know that previous ones also arrived.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("bye".as_bytes())),
+                None,
+                None,
+                None,
+            )
+            .expect("Failed to send message");
+
+        let received_messages = received_rx.await.expect("Failed to receive messages");
+
+        assert_eq!(received_messages, ["hello1", "hello2", "bye"]);
+    });
+}
+
+#[test]
+fn data_consume_for_pipe_data_producer_succeeds_with_ignored_subchannel() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, router2, _transport1, _transport2) = init().await;
+
+        let direct_transport_1 = router1
+            .create_direct_transport(DirectTransportOptions::default())
+            .await
+            .expect("Failed to create direct transport in router1");
+
+        let data_producer = direct_transport_1
+            .produce_data({
+                let mut options = DataProducerOptions::new_direct();
+
+                options.label = "foo".to_string();
+                options.protocol = "bar".to_string();
+
+                options
+            })
+            .await
+            .expect("Failed to produce data");
+
+        let PipeDataProducerToRouterPair {
+            pipe_data_producer: _pipe_data_producer,
+            pipe_data_consumer,
+        } = router1
+            .pipe_data_producer_to_router(
+                data_producer.id(),
+                PipeToRouterOptions::new(router2.clone()),
+            )
+            .await
+            .expect("Failed to pipe data producer to router");
+
+        let direct_transport_2 = router2
+            .create_direct_transport(DirectTransportOptions::default())
+            .await
+            .expect("Failed to create direct transport in router2");
+
+        let data_consumer_1 = direct_transport_2
+            .consume_data(DataConsumerOptions::new_direct(
+                data_producer.id(),
+                Some(vec![111]),
+            ))
+            .await
+            .expect("Failed to create data consumer");
+
+        let data_consumer_2 = direct_transport_2
+            .consume_data(DataConsumerOptions::new_direct(
+                data_producer.id(),
+                Some(vec![222]),
+            ))
+            .await
+            .expect("Failed to create data consumer");
+
+        // A pipe DataConsumer must be subscribed to the union of the subchannels of all
+        // the DataConsumers behind it.
+        pipe_data_consumer
+            .set_subchannels(vec![111, 222])
+            .await
+            .expect("Failed to set data consumer subchannels");
+
+        // Resolved with all received messages once the last sent one is received.
+        let (received_tx_1, received_rx_1) = async_oneshot::oneshot::<Vec<String>>();
+        let _handler_1 = data_consumer_1.on_message({
+            let received_tx = Mutex::new(Some(received_tx_1));
+            let received_messages = Mutex::new(Vec::<String>::new());
+
+            move |message| {
+                let text = match message {
+                    WebRtcMessage::String(binary) => String::from_utf8(binary.to_vec()).unwrap(),
+                    _ => {
+                        panic!("Unexpected non-string message");
+                    }
+                };
+                let is_last_message = text == "bye";
+
+                received_messages.lock().push(text);
+
+                if is_last_message {
+                    if let Some(mut received_tx) = received_tx.lock().take() {
+                        let _ = received_tx.send(received_messages.lock().clone());
+                    }
+                }
+            }
+        });
+
+        // Resolved with all received messages once the last sent one is received.
+        let (received_tx_2, received_rx_2) = async_oneshot::oneshot::<Vec<String>>();
+        let _handler_2 = data_consumer_2.on_message({
+            let received_tx = Mutex::new(Some(received_tx_2));
+            let received_messages = Mutex::new(Vec::<String>::new());
+
+            move |message| {
+                let text = match message {
+                    WebRtcMessage::String(binary) => String::from_utf8(binary.to_vec()).unwrap(),
+                    _ => {
+                        panic!("Unexpected non-string message");
+                    }
+                };
+                let is_last_message = text == "bye";
+
+                received_messages.lock().push(text);
+
+                if is_last_message {
+                    if let Some(mut received_tx) = received_tx.lock().take() {
+                        let _ = received_tx.send(received_messages.lock().clone());
+                    }
+                }
+            }
+        });
+
+        let direct_data_producer = match &data_producer {
+            DataProducer::Direct(direct_data_producer) => direct_data_producer,
+            _ => {
+                panic!("Expected direct data producer");
+            }
+        };
+
+        // The pipe DataConsumer is subscribed to subchannel 111, but being a pipe
+        // DataConsumer it must not apply the ignored subchannel itself. Otherwise it would
+        // drop the message for every DataConsumer behind it rather than just for the first
+        // one. The ignored subchannel travels within the message and is applied by the
+        // final DataConsumers, so the second one must still receive it.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("hello1".as_bytes())),
+                None,
+                None,
+                Some(111),
+            )
+            .expect("Failed to send message");
+
+        // Send a message without subchannels so it's guaranteed that it will reach both
+        // final DataConsumers. And wait for reception of this message so at this time we
+        // know whether the previous one arrived.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed("bye".as_bytes())),
+                None,
+                None,
+                None,
+            )
+            .expect("Failed to send message");
+
+        let received_messages_1 = received_rx_1.await.expect("Failed to receive messages");
+        let received_messages_2 = received_rx_2.await.expect("Failed to receive messages");
+
+        assert_eq!(received_messages_1, ["bye"]);
+        assert_eq!(received_messages_2, ["hello1", "bye"]);
     });
 }
 

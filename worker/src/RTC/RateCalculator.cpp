@@ -30,9 +30,9 @@ namespace RTC
 		MS_TRACE();
 
 		// Ignore too old data. Should never happen.
-		if (this->oldestItemStartTime.has_value() && Utils::Number::IsLowerThan<uint64_t>(nowMs, *this->oldestItemStartTime))
+		if (this->oldestItemStartTimeMs.has_value() && Utils::Number::IsLowerThan<uint64_t>(nowMs, *this->oldestItemStartTimeMs))
 		{
-			MS_WARN_DEV("nowMs < this->oldestItemStartTime, should never happen");
+			MS_WARN_DEV("nowMs < this->oldestItemStartTimeMs, should never happen");
 
 			return;
 		}
@@ -45,12 +45,12 @@ namespace RTC
 		// If the elapsed time from the newest item start time is greater than the
 		// item size (in milliseconds), increase the item index.
 		if (
-		  this->newestItemIndex < 0 || !this->newestItemStartTime.has_value() ||
+		  this->newestItemIndex < 0 || !this->newestItemStartTimeMs.has_value() ||
 		  Utils::Number::IsHigherOrEqualThan<uint64_t>(
-		    nowMs - *this->newestItemStartTime, this->itemSizeMs))
+		    nowMs - *this->newestItemStartTimeMs, this->itemSizeMs))
 		{
 			this->newestItemIndex++;
-			this->newestItemStartTime = nowMs;
+			this->newestItemStartTimeMs = nowMs;
 
 			if (this->newestItemIndex >= this->windowItems)
 			{
@@ -79,13 +79,15 @@ namespace RTC
 
 			// Set the newest item.
 			BufferItem& item = this->buffer[this->newestItemIndex];
-			item.count       = size;
-			item.time        = nowMs;
+
+			item.count  = size;
+			item.timeMs = nowMs;
 		}
 		else
 		{
 			// Update the newest item.
 			BufferItem& item = this->buffer[this->newestItemIndex];
+
 			item.count += size;
 		}
 
@@ -93,27 +95,27 @@ namespace RTC
 		if (this->oldestItemIndex < 0)
 		{
 			MS_DEBUG_DEV(
-			  "this->oldestItemIndex < 0, setting this->oldestItemIndex and this->oldestItemStartTime");
+			  "this->oldestItemIndex < 0, setting this->oldestItemIndex and this->oldestItemStartTimeMs");
 
-			this->oldestItemIndex     = this->newestItemIndex;
-			this->oldestItemStartTime = nowMs;
+			this->oldestItemIndex       = this->newestItemIndex;
+			this->oldestItemStartTimeMs = nowMs;
 		}
 
 		this->totalCount += size;
 
-		// Reset lastRate and lastTime so GetRate() will calculate rate again even
-		// if called with same now in the same loop iteration.
-		this->lastRate = 0;
-		this->lastTime = std::nullopt;
+		// Reset `lastRate` and `lastTimeMs` so `GetRate()` will calculate rate
+		// again even if called with same now in the same loop iteration.
+		this->lastRate   = 0;
+		this->lastTimeMs = std::nullopt;
 	}
 
 	uint32_t RateCalculator::GetRate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		if (this->lastTime.has_value() && nowMs == *this->lastTime)
+		if (this->lastTimeMs.has_value() && nowMs == *this->lastTimeMs)
 		{
-			MS_DEBUG_DEV("nowMs == this->lastTime, early return");
+			MS_DEBUG_DEV("nowMs == this->lastTimeMs, early return");
 
 			return this->lastRate;
 		}
@@ -122,8 +124,8 @@ namespace RTC
 
 		const float scale = this->scale / this->windowSizeMs;
 
-		this->lastTime = nowMs;
-		this->lastRate = static_cast<uint32_t>(std::trunc((this->totalCount * scale) + 0.5f));
+		this->lastTimeMs = nowMs;
+		this->lastRate   = static_cast<uint32_t>(std::trunc((this->totalCount * scale) + 0.5f));
 
 		return this->lastRate;
 	}
@@ -137,20 +139,20 @@ namespace RTC
 		  0,
 		  sizeof(BufferItem) * this->buffer.size());
 
-		this->newestItemStartTime = std::nullopt;
-		this->newestItemIndex     = -1;
-		this->oldestItemStartTime = std::nullopt;
-		this->oldestItemIndex     = -1;
-		this->totalCount          = 0u;
-		this->lastRate            = 0u;
-		this->lastTime            = std::nullopt;
+		this->newestItemStartTimeMs = std::nullopt;
+		this->newestItemIndex       = -1;
+		this->oldestItemStartTimeMs = std::nullopt;
+		this->oldestItemIndex       = -1;
+		this->totalCount            = 0u;
+		this->lastRate              = 0u;
+		this->lastTimeMs            = std::nullopt;
 	}
 
 	void RateCalculator::RemoveOldData(uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		if (!this->oldestItemStartTime.has_value())
+		if (!this->oldestItemStartTimeMs.has_value())
 		{
 			return;
 		}
@@ -164,29 +166,31 @@ namespace RTC
 		const uint64_t newOldestTime = nowMs - this->windowSizeMs;
 
 		// Oldest item already removed.
-		if (Utils::Number::IsLowerThan<uint64_t>(newOldestTime, *this->oldestItemStartTime))
+		if (Utils::Number::IsLowerThan<uint64_t>(newOldestTime, *this->oldestItemStartTimeMs))
 		{
 			return;
 		}
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
 		if (
-		  this->newestItemStartTime.has_value() &&
-		  Utils::Number::IsHigherOrEqualThan<uint64_t>(newOldestTime, *this->newestItemStartTime))
+		  this->newestItemStartTimeMs.has_value() &&
+		  Utils::Number::IsHigherOrEqualThan<uint64_t>(newOldestTime, *this->newestItemStartTimeMs))
 		{
-			MS_DEBUG_DEV("newOldestTime >= this->newestItemStartTime, resetting the buffer");
+			MS_DEBUG_DEV("newOldestTime >= this->newestItemStartTimeMs, resetting the buffer");
 
 			Reset();
 
 			return;
 		}
 
-		while (Utils::Number::IsHigherOrEqualThan<uint64_t>(newOldestTime, *this->oldestItemStartTime))
+		while (Utils::Number::IsHigherOrEqualThan<uint64_t>(newOldestTime, *this->oldestItemStartTimeMs))
 		{
 			BufferItem& oldestItem = this->buffer[this->oldestItemIndex];
+
 			this->totalCount -= oldestItem.count;
-			oldestItem.count = 0u;
-			oldestItem.time  = 0u;
+
+			oldestItem.count  = 0u;
+			oldestItem.timeMs = 0u;
 
 			if (++this->oldestItemIndex >= this->windowItems)
 			{
@@ -194,19 +198,20 @@ namespace RTC
 			}
 
 			const BufferItem& newOldestItem = this->buffer[this->oldestItemIndex];
-			this->oldestItemStartTime       = newOldestItem.time;
+
+			this->oldestItemStartTimeMs = newOldestItem.timeMs;
 		}
 	}
 
 	void RtpDataCounter::Update(const RTC::RTP::Packet* packet)
 	{
+		MS_TRACE();
+
 		this->packets++;
 
 		if (!this->ignorePaddingOnlyPackets || packet->GetPayloadLength() > 0)
 		{
-			const uint64_t nowMs = this->shared->GetTimeMs();
-
-			this->rate.Update(packet->GetLength(), nowMs);
+			this->rate.Update(packet->GetLength(), this->shared->GetTimeMs());
 		}
 	}
 } // namespace RTC
