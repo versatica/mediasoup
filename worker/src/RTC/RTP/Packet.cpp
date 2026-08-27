@@ -348,8 +348,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  absCaptureTime: id:%" PRIu8 ", absCaptureTimestamp:%" PRIu64
-						  ", estimatedCaptureClockOffset:%" PRId64,
+						  "  absCaptureTime: id:%" PRIu8 ", timestamp:%" PRIu64 ", clock offset:%" PRId64,
 						  this->headerExtensionIds.absCaptureTime,
 						  absCaptureTimestamp,
 						  estimatedCaptureClockOffset);
@@ -364,7 +363,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  playoutDelay: id:%" PRIu8 ", minDelay:%" PRIu16 ", maxDelay:%" PRIu16,
+						  "  playoutDelay: id:%" PRIu8 ", min delay:%" PRIu16 ", max delay:%" PRIu16,
 						  this->headerExtensionIds.playoutDelay,
 						  minDelay,
 						  maxDelay);
@@ -378,7 +377,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  mediasoupPacketId: id:%" PRIu8 ", mediasoupPacketId:%" PRIu32,
+						  "  mediasoupPacketId: id:%" PRIu8 ", value:%" PRIu32,
 						  this->headerExtensionIds.mediasoupPacketId,
 						  mediasoupPacketId);
 					}
@@ -393,7 +392,7 @@ namespace RTC
 
 			if (GetCaptureMs())
 			{
-				MS_DUMP_CLEAN(indentation, "  capture time (ms):%" PRIu64, GetCaptureMs().value());
+				MS_DUMP_CLEAN(indentation, "  capture time (ms): %" PRIu64, GetCaptureMs().value());
 			}
 
 			if (this->payloadDescriptorHandler)
