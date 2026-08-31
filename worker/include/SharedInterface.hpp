@@ -29,7 +29,8 @@ public:
 	 * @remarks
 	 * - The caller is responsible for freeing it.
 	 */
-	virtual TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener) = 0;
+	virtual TimerHandleInterface* CreateTimer(
+	  TimerHandleInterface::Listener* listener, std::string label) = 0;
 
 	/**
 	 * Creates a BackoffTimerHandle timer.

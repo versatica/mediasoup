@@ -6,6 +6,7 @@
 #include "SharedInterface.hpp"
 #include "mocks/include/Channel/MockChannelMessageRegistrator.hpp"
 #include "mocks/include/handles/MockBackoffTimerHandle.hpp"
+#include "mocks/include/handles/MockTimerHandle.hpp"
 #include <map>
 #include <string>
 #include <string_view>
@@ -30,7 +31,7 @@ namespace mocks
 			return this->channelNotifier.get();
 		}
 
-		TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener) override;
+		TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener, std::string label) override;
 
 		BackoffTimerHandleInterface* CreateBackoffTimer(
 		  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) override;
@@ -69,6 +70,20 @@ namespace mocks
 
 		// Methods for testing.
 	public:
+		MockTimerHandle* GetTimer(const std::string_view label) const
+		{
+			const auto it = this->timers.find(std::string(label));
+
+			if (it != this->timers.end())
+			{
+				return it->second;
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+
 		MockBackoffTimerHandle* GetBackoffTimer(const std::string_view label) const
 		{
 			const auto it = this->backoffTimers.find(std::string(label));
@@ -90,6 +105,7 @@ namespace mocks
 		std::unique_ptr<::Channel::ChannelSocket> channelSocket;
 		std::unique_ptr<mocks::Channel::MockChannelMessageRegistrator> channelMessageRegistrator;
 		std::unique_ptr<::Channel::ChannelNotifier> channelNotifier;
+		std::map<std::string /*label*/, MockTimerHandle* /*timer*/> timers;
 		std::map<std::string /*label*/, MockBackoffTimerHandle* /*backoffTimer*/> backoffTimers;
 	};
 } // namespace mocks

@@ -24,10 +24,26 @@ static void onCloseTimer(uv_handle_t* handle)
 
 /* Instance methods. */
 
-TimerHandle::TimerHandle(TimerHandleInterface::Listener* listener)
-  : listener(listener), uvHandle(new uv_timer_t)
+TimerHandle::TimerHandle(TimerHandleInterface::Listener* listener, std::string label)
+  : listener(listener), label(std::move(label)), uvHandle(new uv_timer_t)
 {
 	MS_TRACE();
+
+	if (!this->listener)
+	{
+		delete this->uvHandle;
+		this->uvHandle = nullptr;
+
+		MS_THROW_TYPE_ERROR("listener must be given");
+	}
+
+	if (this->label.empty())
+	{
+		delete this->uvHandle;
+		this->uvHandle = nullptr;
+
+		MS_THROW_TYPE_ERROR("label must be given");
+	}
 
 	this->uvHandle->data = static_cast<void*>(this);
 

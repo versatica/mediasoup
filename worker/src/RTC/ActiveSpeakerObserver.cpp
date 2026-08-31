@@ -111,7 +111,7 @@ namespace RTC
 			this->interval = 5000;
 		}
 
-		this->periodicTimer = this->shared->CreateTimer(this);
+		this->periodicTimer = this->shared->CreateTimer(this, "active-speaker-observer");
 
 		this->periodicTimer->Start(interval, interval);
 

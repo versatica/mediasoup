@@ -20,7 +20,7 @@ namespace RTC
 	  : listener(listener),
 	    shared(shared),
 	    sendNackDelayMs(sendNackDelayMs),
-	    timer(shared->CreateTimer(this)),
+	    timer(shared->CreateTimer(this, "nack-generator")),
 	    rtt(DefaultRtt)
 	{
 		MS_TRACE();

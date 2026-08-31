@@ -780,7 +780,7 @@ namespace RTC
 		DTLS_set_timer_cb(this->ssl, onSslDtlsTimer);
 
 		// Set the DTLS timer.
-		this->timer = this->shared->CreateTimer(this);
+		this->timer = this->shared->CreateTimer(this, "dtls-transport");
 
 		return;
 
