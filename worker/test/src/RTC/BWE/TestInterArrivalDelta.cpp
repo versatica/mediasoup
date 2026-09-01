@@ -9,14 +9,16 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 	constexpr uint64_t BaseDelayMs{ 100 };
 	constexpr uint64_t InitialSendTimeMs{ 1000000 };
 
-	// Feed a packet with explicit arrival and feedback times.
+	// Feed a packet with explicit arrival and feedback times. Times are given in
+	// ms for readability and converted into us, which is what the class takes.
 	auto feedAt = [](
 	                RTC::BWE::InterArrivalDelta& interArrivalDelta,
 	                uint64_t sendTimeMs,
 	                uint64_t arrivalTimeMs,
 	                uint64_t feedbackAtMs) -> std::optional<RTC::BWE::InterArrivalDelta::Deltas>
 	{
-		return interArrivalDelta.ComputeDeltas(sendTimeMs, arrivalTimeMs, feedbackAtMs, PacketSize);
+		return interArrivalDelta.ComputeDeltas(
+		  sendTimeMs * 1000, arrivalTimeMs * 1000, feedbackAtMs * 1000, PacketSize);
 	};
 
 	// Feed a packet whose arrival time is its send time plus the base network
@@ -77,10 +79,10 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 		REQUIRE(deltas.has_value());
 		// Send time of B (+10) minus send time of A (+4).
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sendDeltaMs == 6);
+		REQUIRE(deltas.value().sendDeltaUs == 6 * 1000);
 		// Same value since every packet had the very same network delay.
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().arrivalDeltaMs == 6);
+		REQUIRE(deltas.value().arrivalDeltaUs == 6 * 1000);
 		// B holds a single packet while A holds three of them.
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(deltas.value().sizeDelta == -2 * static_cast<int64_t>(PacketSize));
@@ -115,10 +117,10 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 		REQUIRE(deltas.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().sendDeltaMs == 10);
+		REQUIRE(deltas.value().sendDeltaUs == 10 * 1000);
 		// 20 ms of extra queuing delay on top of the send delta.
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(deltas.value().arrivalDeltaMs == 30);
+		REQUIRE(deltas.value().arrivalDeltaUs == 30 * 1000);
 	}
 
 	SECTION("packet sent before the current group is discarded")
