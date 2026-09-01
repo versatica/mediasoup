@@ -84,7 +84,7 @@ namespace RTC
 		}
 
 		// Create the RTCP timer.
-		this->rtcpTimer = this->shared->CreateTimer(this);
+		this->rtcpTimer = this->shared->CreateTimer(this, "transport-rtcp");
 	}
 
 	Transport::~Transport()

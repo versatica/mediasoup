@@ -78,7 +78,8 @@ namespace RTC
 		// videos are muted or using screensharing with still images)
 		this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
 
-		this->processTimer = this->shared->CreateTimer(this);
+		this->processTimer =
+		  this->shared->CreateTimer(this, "transport-congestion-control-client-process");
 
 		this->processTimer->Start(
 		  std::min(

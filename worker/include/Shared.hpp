@@ -26,7 +26,7 @@ public:
 		return this->channelNotifier.get();
 	}
 
-	TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener) override;
+	TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener, std::string label) override;
 
 	BackoffTimerHandleInterface* CreateBackoffTimer(
 	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) override;

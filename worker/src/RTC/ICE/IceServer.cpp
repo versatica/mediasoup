@@ -937,7 +937,7 @@ namespace RTC
 			// Create the ICE consent check timer if it doesn't exist.
 			if (!this->consentCheckTimer)
 			{
-				this->consentCheckTimer = this->shared->CreateTimer(this);
+				this->consentCheckTimer = this->shared->CreateTimer(this, "ice-server-consent-check");
 			}
 
 			this->consentCheckTimer->Start(this->consentTimeoutMs);

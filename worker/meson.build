@@ -415,6 +415,7 @@ executable(
 mock_sources = [
   'mocks/src/MockShared.cpp',
   'mocks/src/handles/MockBackoffTimerHandle.cpp',
+  'mocks/src/handles/MockTimerHandle.cpp',
   'mocks/src/Channel/MockChannelMessageRegistrator.cpp',
   'mocks/src/RTC/SCTP/association/MockTransmissionControlBlockContext.cpp',
 ]

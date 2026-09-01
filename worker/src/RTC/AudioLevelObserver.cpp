@@ -39,7 +39,7 @@ namespace RTC
 			this->interval = 5000;
 		}
 
-		this->periodicTimer = this->shared->CreateTimer(this);
+		this->periodicTimer = this->shared->CreateTimer(this, "audio-level-observer");
 
 		this->periodicTimer->Start(this->interval, this->interval);
 

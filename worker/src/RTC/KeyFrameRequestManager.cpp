@@ -10,7 +10,9 @@ static constexpr uint32_t KeyFrameRetransmissionWaitTime{ 1000u };
 
 RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(
   PendingKeyFrameInfo::Listener* listener, SharedInterface* shared, uint32_t ssrc)
-  : listener(listener), ssrc(ssrc), timer(shared->CreateTimer(this))
+  : listener(listener),
+    ssrc(ssrc),
+    timer(shared->CreateTimer(this, "key-frame-request-manager-pending-key-frame-info"))
 {
 	MS_TRACE();
 
@@ -39,7 +41,9 @@ void RTC::PendingKeyFrameInfo::OnTimer(TimerHandleInterface* timer)
 
 RTC::KeyFrameRequestDelayer::KeyFrameRequestDelayer(
   KeyFrameRequestDelayer::Listener* listener, SharedInterface* shared, uint32_t ssrc, uint32_t delay)
-  : listener(listener), ssrc(ssrc), timer(shared->CreateTimer(this))
+  : listener(listener),
+    ssrc(ssrc),
+    timer(shared->CreateTimer(this, "key-frame-request-manager-key-frame-request-delayer"))
 {
 	MS_TRACE();
 

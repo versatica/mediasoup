@@ -37,7 +37,7 @@ BackoffTimerHandle::BackoffTimerHandle(BackoffTimerHandleOptions options)
 		  BackoffTimerHandleInterface::MaxTimeoutMs);
 	}
 
-	this->timer = new TimerHandle(this);
+	this->timer = new TimerHandle(this, this->label);
 }
 
 BackoffTimerHandle::~BackoffTimerHandle()

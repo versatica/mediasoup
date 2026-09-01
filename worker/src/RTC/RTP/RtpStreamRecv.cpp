@@ -207,7 +207,8 @@ namespace RTC
 			{
 				// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 				// enabled).
-				this->inactivityCheckPeriodicTimer = this->shared->CreateTimer(this);
+				this->inactivityCheckPeriodicTimer =
+				  this->shared->CreateTimer(this, "rtp-stream-recv-inactivity-check");
 
 				this->inactivityCheckPeriodicTimer->Start(
 				  this->params.useDtx ? InactivityCheckIntervalWithDtx : InactivityCheckInterval);

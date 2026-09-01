@@ -2,6 +2,7 @@
 #define MS_TIMER_HANDLE_INTERFACE_HPP
 
 #include "common.hpp"
+#include <string>
 
 class TimerHandleInterface
 {
@@ -38,6 +39,11 @@ public:
 	virtual uint64_t GetRepeat() const = 0;
 
 	virtual bool IsActive() const = 0;
+
+	/**
+	 * Label of this timer, given at creation time.
+	 */
+	virtual const std::string GetLabel() const = 0;
 };
 
 #endif

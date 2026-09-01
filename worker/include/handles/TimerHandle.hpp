@@ -16,7 +16,7 @@ class TimerHandle : public TimerHandleInterface
 	friend class BackoffTimerHandle;
 
 private:
-	explicit TimerHandle(TimerHandleInterface::Listener* listener);
+	explicit TimerHandle(TimerHandleInterface::Listener* listener, std::string label);
 
 public:
 	TimerHandle& operator=(const TimerHandle&) = delete;
@@ -49,6 +49,11 @@ public:
 		return uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0;
 	}
 
+	const std::string GetLabel() const override
+	{
+		return this->label;
+	}
+
 private:
 	void InternalClose();
 
@@ -59,6 +64,7 @@ public:
 private:
 	// Passed by argument.
 	TimerHandleInterface::Listener* listener{ nullptr };
+	const std::string label;
 	// Allocated by this.
 	uv_timer_t* uvHandle{ nullptr };
 	// Others.

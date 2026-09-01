@@ -34,7 +34,8 @@ namespace RTC
 				ResetTransportCcFeedback(0u);
 
 				// Create the feedback send periodic timer.
-				this->transportCcFeedbackSendPeriodicTimer = this->shared->CreateTimer(this);
+				this->transportCcFeedbackSendPeriodicTimer =
+				  this->shared->CreateTimer(this, "transport-congestion-control-server-feedback-send");
 
 				break;
 			}
