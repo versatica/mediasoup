@@ -131,7 +131,6 @@ common_sources = [
   'src/RTC/RtpListener.cpp',
   'src/RTC/RtpObserver.cpp',
   'src/RTC/SctpListener.cpp',
-  'src/RTC/SenderBandwidthEstimator.cpp',
   'src/RTC/SeqManager.cpp',
   'src/RTC/Serializable.cpp',
   'src/RTC/PipeProducerStreamManager.cpp',
