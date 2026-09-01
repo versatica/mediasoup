@@ -11,7 +11,7 @@ namespace RTC
 		 * Groups sent packets into send bursts and computes the deltas between two
 		 * consecutive bursts.
 		 *
-		 * All packets sent within `SendTimeGroupLengthMs` of the first packet of a
+		 * All packets sent within `SendTimeGroupLengthUs` of the first packet of a
 		 * group belong to that group. This means that a burst of packets written
 		 * into the socket at once produces a single sample rather than one per
 		 * packet, which is what prevents a key frame being forwarded as a burst from
@@ -30,14 +30,14 @@ namespace RTC
 			struct Deltas
 			{
 				/**
-				 * Time elapsed between the send times of both groups (ms).
+				 * Time elapsed between the send times of both groups (us).
 				 */
-				int64_t sendDeltaMs;
+				int64_t sendDeltaUs;
 
 				/**
-				 * Time elapsed between the arrival times of both groups (ms).
+				 * Time elapsed between the arrival times of both groups (us).
 				 */
-				int64_t arrivalDeltaMs;
+				int64_t arrivalDeltaUs;
 
 				/**
 				 * Difference of size between both groups (bytes).
@@ -50,25 +50,25 @@ namespace RTC
 			{
 				bool IsFirstPacket() const
 				{
-					return !this->completeTimeMs.has_value();
+					return !this->completeTimeUs.has_value();
 				}
 
 				size_t size{ 0 };
-				uint64_t firstSendTimeMs{ 0 };
-				uint64_t sendTimeMs{ 0 };
-				uint64_t firstArrivalTimeMs{ 0 };
-				std::optional<uint64_t> completeTimeMs;
-				uint64_t lastFeedbackAtMs{ 0 };
+				uint64_t firstSendTimeUs{ 0 };
+				uint64_t sendTimeUs{ 0 };
+				uint64_t firstArrivalTimeUs{ 0 };
+				std::optional<uint64_t> completeTimeUs;
+				uint64_t lastFeedbackAtUs{ 0 };
 			};
 
 		public:
 			/**
 			 * Feed a sent packet whose arrival time is already known.
 			 *
-			 * @param sendTimeMs - Time at which the packet was sent.
-			 * @param arrivalTimeMs - Time at which the packet arrived, in the remote
+			 * @param sendTimeUs - Time at which the packet was sent.
+			 * @param arrivalTimeUs - Time at which the packet arrived, in the remote
 			 *   clock reference.
-			 * @param feedbackAtMs - Time, in our own clock reference, at which the
+			 * @param feedbackAtUs - Time, in our own clock reference, at which the
 			 *   RTCP feedback reporting this packet was received. It's the very same
 			 *   value for every packet within a given feedback, and it's used to
 			 *   detect that the remote clock has jumped by comparing how much it
@@ -79,12 +79,12 @@ namespace RTC
 			 *   if they cannot be computed yet.
 			 */
 			std::optional<Deltas> ComputeDeltas(
-			  uint64_t sendTimeMs, uint64_t arrivalTimeMs, uint64_t feedbackAtMs, size_t packetSize);
+			  uint64_t sendTimeUs, uint64_t arrivalTimeUs, uint64_t feedbackAtUs, size_t packetSize);
 
 		private:
-			bool IsNewSendTimeGroup(uint64_t arrivalTimeMs, uint64_t sendTimeMs) const;
+			bool IsNewSendTimeGroup(uint64_t arrivalTimeUs, uint64_t sendTimeUs) const;
 
-			bool BelongsToBurst(uint64_t arrivalTimeMs, uint64_t sendTimeMs) const;
+			bool BelongsToBurst(uint64_t arrivalTimeUs, uint64_t sendTimeUs) const;
 
 			void Reset();
 
