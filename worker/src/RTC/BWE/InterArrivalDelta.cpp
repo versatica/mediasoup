@@ -55,7 +55,9 @@ namespace RTC
 					const int64_t sendDeltaMs = static_cast<int64_t>(this->currentGroup.sendTimeMs) -
 					                            static_cast<int64_t>(this->prevGroup.sendTimeMs);
 					const int64_t arrivalDeltaMs =
+					  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 					  static_cast<int64_t>(this->currentGroup.completeTimeMs.value()) -
+					  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 					  static_cast<int64_t>(this->prevGroup.completeTimeMs.value());
 					const int64_t ownDeltaMs = static_cast<int64_t>(this->currentGroup.lastFeedbackAtMs) -
 					                           static_cast<int64_t>(this->prevGroup.lastFeedbackAtMs);
@@ -148,6 +150,7 @@ namespace RTC
 			MS_ASSERT(!this->currentGroup.IsFirstPacket(), "current group is empty");
 
 			const int64_t arrivalDeltaMs = static_cast<int64_t>(arrivalTimeMs) -
+			                               // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			                               static_cast<int64_t>(this->currentGroup.completeTimeMs.value());
 			const int64_t sendDeltaMs =
 			  static_cast<int64_t>(sendTimeMs) - static_cast<int64_t>(this->currentGroup.sendTimeMs);
