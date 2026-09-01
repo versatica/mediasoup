@@ -57,7 +57,7 @@ namespace RTC
 			// Exponential backoff filter.
 			this->accumulatedDelayMs += deltaMs;
 			this->smoothedDelayMs =
-			  (SmoothingCoef * this->smoothedDelayMs) + (1 - SmoothingCoef) * this->accumulatedDelayMs;
+			  (SmoothingCoef * this->smoothedDelayMs) + ((1 - SmoothingCoef) * this->accumulatedDelayMs);
 
 			// Maintain the samples window.
 			// NOTE: Signed subtraction since a group may arrive before the first one
