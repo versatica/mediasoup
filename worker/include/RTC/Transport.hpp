@@ -1,13 +1,12 @@
 #ifndef MS_RTC_TRANSPORT_HPP
 #define MS_RTC_TRANSPORT_HPP
 
-// #define ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-
 #include "common.hpp"
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/transport.h"
+#include "handles/TimerHandleInterface.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -24,13 +23,9 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SctpListener.hpp"
-#include "SharedInterface.hpp"
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-#include "RTC/SenderBandwidthEstimator.hpp"
-#endif
-#include "handles/TimerHandleInterface.hpp"
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
+#include "SharedInterface.hpp"
 #include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
@@ -46,9 +41,6 @@ namespace RTC
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Channel::ChannelSocket::RequestHandler,
 	                  public Channel::ChannelSocket::NotificationHandler,
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-	                  public RTC::SenderBandwidthEstimator::Listener,
-#endif
 	                  public TimerHandleInterface::Listener
 	{
 	protected:
@@ -340,15 +332,6 @@ namespace RTC
 		void OnTransportCongestionControlServerSendRtcpPacket(
 		  RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet) override;
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-		/* Pure virtual methods inherited from RTC::SenderBandwidthEstimator::Listener. */
-	public:
-		void OnSenderBandwidthEstimatorAvailableBitrate(
-		  RTC::SenderBandwidthEstimator* senderBwe,
-		  uint32_t availableBitrate,
-		  uint32_t previousAvailableBitrate) override;
-#endif
-
 		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
 		void OnTimer(TimerHandleInterface* timer) override;
@@ -380,9 +363,6 @@ namespace RTC
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlClient> tccClient{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlServer> tccServer{ nullptr };
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-		std::shared_ptr<RTC::SenderBandwidthEstimator> senderBwe{ nullptr };
-#endif
 		// Others.
 		bool direct{ false }; // Whether this Transport allows direct communication.
 		bool isDestroying{ false };

@@ -943,57 +943,6 @@ namespace RTC
 					consumer->SetExternallyManagedBitrate();
 				}
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-				// Create SenderBandwidthEstimator if:
-				// - not already created,
-				// - it's a video Consumer, and
-				// - there is transport-wide-cc-01 RTP header extension, and
-				// - there is "transport-cc" in codecs RTCP feedback.
-				//
-				if (
-				  !this->senderBwe && consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-				  rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-				  std::any_of(
-				    codecs.begin(),
-				    codecs.end(),
-				    [](const RTC::RtpCodecParameters& codec)
-				    {
-					    return std::any_of(
-					      codec.rtcpFeedback.begin(),
-					      codec.rtcpFeedback.end(),
-					      [](const RTC::RtcpFeedback& fb)
-					      {
-						      return fb.type == "transport-cc";
-					      });
-				    }))
-				{
-					MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
-
-					// Tell all the Consumers that we are gonna manage their bitrate.
-					for (auto& kv : this->mapConsumers)
-					{
-						auto* consumer = kv.second;
-
-						consumer->SetExternallyManagedBitrate();
-					};
-
-					this->senderBwe = std::make_shared<RTC::SenderBandwidthEstimator>(
-					  this, this->shared, this->initialAvailableOutgoingBitrate);
-
-					if (IsConnected())
-					{
-						this->senderBwe->TransportConnected();
-					}
-				}
-
-				// If applicable, tell the new Consumer that we are gonna manage its
-				// bitrate.
-				if (this->senderBwe)
-				{
-					consumer->SetExternallyManagedBitrate();
-				}
-#endif
-
 				if (IsConnected())
 				{
 					consumer->TransportConnected();
@@ -1525,14 +1474,6 @@ namespace RTC
 		{
 			this->tccServer->TransportConnected();
 		}
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-		// Tell the SenderBandwidthEstimator.
-		if (this->senderBwe)
-		{
-			this->senderBwe->TransportConnected();
-		}
-#endif
 	}
 
 	void Transport::Disconnected()
@@ -1561,14 +1502,6 @@ namespace RTC
 		{
 			this->tccServer->TransportDisconnected();
 		}
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-		// Tell the SenderBandwidthEstimator.
-		if (this->senderBwe)
-		{
-			this->senderBwe->TransportDisconnected();
-		}
-#endif
 	}
 
 	void Transport::ReceiveRtpPacket(RTC::RTP::Packet* packet)
@@ -2176,14 +2109,6 @@ namespace RTC
 							this->tccClient->ReceiveRtcpTransportFeedback(feedback);
 						}
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-						// Pass it to the SenderBandwidthEstimator client.
-						if (this->senderBwe)
-						{
-							this->senderBwe->ReceiveRtcpTransportFeedback(feedback);
-						}
-#endif
-
 						break;
 					}
 
@@ -2696,38 +2621,6 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr(this->senderBwe);
-			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
-
-			sentInfo.wideSeq     = this->transportWideCcSeq;
-			sentInfo.size        = packet->GetLength();
-			sentInfo.sendingAtMs = this->shared->GetTimeMs();
-
-			const auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, shared, packetInfo, senderBweWeakPtr, sentInfo](bool sent) mutable
-			  {
-				  if (sent)
-				  {
-					  auto tccClient = tccClientWeakPtr.lock();
-
-					  if (tccClient)
-					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
-					  }
-
-					  auto senderBwe = senderBweWeakPtr.lock();
-
-					  if (senderBwe)
-					  {
-						  sentInfo.sentAtMs = shared->GetTimeMs();
-						  senderBwe->RtpPacketSent(sentInfo);
-					  }
-				  }
-			  });
-
-			SendRtpPacket(consumer, packet, cb);
-#else
 			const auto* cb = new onSendCallback(
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
@@ -2743,7 +2636,6 @@ namespace RTC
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
-#endif
 		}
 		else
 		{
@@ -2783,38 +2675,6 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
-			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
-
-			sentInfo.wideSeq     = this->transportWideCcSeq;
-			sentInfo.size        = packet->GetLength();
-			sentInfo.sendingAtMs = this->shared->GetTimeMs();
-
-			const auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, shared, packetInfo, senderBweWeakPtr, sentInfo](bool sent) mutable
-			  {
-				  if (sent)
-				  {
-					  auto tccClient = tccClientWeakPtr.lock();
-
-					  if (tccClient)
-					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
-					  }
-
-					  auto senderBwe = senderBweWeakPtr.lock();
-
-					  if (senderBwe)
-					  {
-						  sentInfo.sentAtMs = shared->GetTimeMs();
-						  senderBwe->RtpPacketSent(sentInfo);
-					  }
-				  }
-			  });
-
-			SendRtpPacket(consumer, packet, cb);
-#else
 			const auto* cb = new onSendCallback(
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
@@ -2830,7 +2690,6 @@ namespace RTC
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
-#endif
 		}
 		else
 		{
@@ -3442,39 +3301,6 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
-			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
-
-			sentInfo.wideSeq     = this->transportWideCcSeq;
-			sentInfo.size        = packet->GetLength();
-			sentInfo.isProbation = true;
-			sentInfo.sendingAtMs = this->shared->GetTimeMs();
-
-			const auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, shared, packetInfo, senderBweWeakPtr, sentInfo](bool sent) mutable
-			  {
-				  if (sent)
-				  {
-					  auto tccClient = tccClientWeakPtr.lock();
-
-					  if (tccClient)
-					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
-					  }
-
-					  auto senderBwe = senderBweWeakPtr.lock();
-
-					  if (senderBwe)
-					  {
-						  sentInfo.sentAtMs = shared->GetTimeMs();
-						  senderBwe->RtpPacketSent(sentInfo);
-					  }
-				  }
-			  });
-
-			SendRtpPacket(nullptr, packet, cb);
-#else
 			const auto* cb = new onSendCallback(
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
@@ -3490,7 +3316,6 @@ namespace RTC
 			  });
 
 			SendRtpPacket(nullptr, packet, cb);
-#endif
 		}
 		else
 		{
@@ -3519,25 +3344,6 @@ namespace RTC
 
 		SendRtcpPacket(packet);
 	}
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-	void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
-	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
-	  uint32_t availableBitrate,
-	  uint32_t previousAvailableBitrate)
-	{
-		MS_TRACE();
-
-		MS_DEBUG_DEV(
-		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
-		  availableBitrate,
-		  previousAvailableBitrate);
-
-		// TODO: Uncomment once just SenderBandwidthEstimator is used.
-		// DistributeAvailableOutgoingBitrate();
-		// ComputeOutgoingDesiredBitrate();
-	}
-#endif
 
 	void Transport::OnTimer(TimerHandleInterface* timer)
 	{
