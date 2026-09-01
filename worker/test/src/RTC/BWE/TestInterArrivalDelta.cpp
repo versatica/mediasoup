@@ -76,10 +76,13 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 		REQUIRE(deltas.has_value());
 		// Send time of B (+10) minus send time of A (+4).
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(deltas.value().sendDeltaMs == 6);
 		// Same value since every packet had the very same network delay.
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(deltas.value().arrivalDeltaMs == 6);
 		// B holds a single packet while A holds three of them.
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(deltas.value().sizeDelta == -2 * static_cast<int64_t>(PacketSize));
 	}
 
@@ -111,8 +114,10 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 		  /*feedbackAtMs*/ InitialSendTimeMs + 20 + BaseDelayMs + 20);
 
 		REQUIRE(deltas.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(deltas.value().sendDeltaMs == 10);
 		// 20 ms of extra queuing delay on top of the send delta.
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(deltas.value().arrivalDeltaMs == 30);
 	}
 
