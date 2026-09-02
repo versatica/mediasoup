@@ -223,16 +223,20 @@ jobs:
 
       # Install clang-format on macos.
       - if: ${{ matrix.build.run-lint && startsWith(matrix.build.os, 'macos') }}
-        name: brew install clang-format@22
+        name: brew install clang-format@23
         run: |
-          brew install clang-format@22
+          brew install clang-format@23
 
       # Install clang-format on ubuntu.
       - if: ${{ matrix.build.run-lint && startsWith(matrix.build.os, 'ubuntu') }}
-        name: apt install clang-format-22
+        name: apt install clang-format-23
         run: |
+          sudo mkdir -p /etc/apt/keyrings
+          sudo wget -qO /etc/apt/keyrings/apt.llvm.org.asc https://apt.llvm.org/llvm-snapshot.gpg.key
+          echo "deb [signed-by=/etc/apt/keyrings/apt.llvm.org.asc] https://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-23 main" \
+            | sudo tee /etc/apt/sources.list.d/llvm23.list
           sudo apt-get update
-          sudo apt-get install --yes clang-format-22
+          sudo apt-get install --yes clang-format-23
 
       # We need to install npm deps of worker/scripts/package.json.
       - if: ${{ matrix.build.run-lint }}
