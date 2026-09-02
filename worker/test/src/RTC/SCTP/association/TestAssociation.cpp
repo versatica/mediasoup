@@ -79,8 +79,8 @@ namespace
 		  // NOTE: The order in which these members are initialized is **critical**.
 		  : sctpOptions(sctpOptions),
 		    shared(/*getTimeMs*/
-		           [this]()
-		           {
+				       [this]()
+				       {
 			           return this->nowMs;
 		           }),
 		    association(

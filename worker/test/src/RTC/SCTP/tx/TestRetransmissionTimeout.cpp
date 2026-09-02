@@ -15,10 +15,10 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	auto makeSctpOptions = []()
 	{
 		RTC::SCTP::SctpOptions sctpOptions{ .maxRttMs         = MaxRttMs,
-			                                  .initialRtoMs     = InitialRtoMs,
-			                                  .minRtoMs         = MinRtoMs,
-			                                  .maxRtoMs         = MaxRtoMs,
-			                                  .minRttVarianceMs = MinRttVarianceMs };
+		                                    .initialRtoMs     = InitialRtoMs,
+		                                    .minRtoMs         = MinRtoMs,
+		                                    .maxRtoMs         = MaxRtoMs,
+		                                    .minRttVarianceMs = MinRttVarianceMs };
 
 		return sctpOptions;
 	};

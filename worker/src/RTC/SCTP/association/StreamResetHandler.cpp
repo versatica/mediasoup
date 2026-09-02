@@ -168,21 +168,21 @@ namespace RTC
 
 				if (
 				  (firstParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE &&
-				   secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
+					 secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE &&
-				   secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
+					 secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE &&
-				   secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE))
+					 secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE))
 				{
 					return true;
 				}

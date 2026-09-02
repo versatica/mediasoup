@@ -66,8 +66,8 @@ namespace RTC
 		  this->streamId,
 		  this->ordered,
 		  this->maxPacketLifeTime ? flatbuffers::Optional<uint16_t>(this->maxPacketLifeTime)
-		                          : flatbuffers::nullopt,
+			                        : flatbuffers::nullopt,
 		  this->maxRetransmits ? flatbuffers::Optional<uint16_t>(this->maxRetransmits)
-		                       : flatbuffers::nullopt);
+			                     : flatbuffers::nullopt);
 	}
 } // namespace RTC

@@ -238,7 +238,7 @@ namespace RTC
 				if (
 				  mediaCodec->mimeType.type == RTC::RtpCodecMimeType::Type::AUDIO &&
 				  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
-				   mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
+					 mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
 				{
 					RTC::RTP::Codecs::EncodingContext::Params params;
 
@@ -556,7 +556,7 @@ namespace RTC
 		  RTC::RtpParameters::TypeToFbs(this->type),
 		  this->producerId.c_str(),
 		  this->kind == RTC::Media::Kind::AUDIO ? FBS::RtpParameters::MediaKind::AUDIO
-		                                        : FBS::RtpParameters::MediaKind::VIDEO,
+			                                      : FBS::RtpParameters::MediaKind::VIDEO,
 		  rtpParameters,
 		  &consumableRtpEncodings,
 		  &supportedCodecPayloadTypes,

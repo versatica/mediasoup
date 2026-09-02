@@ -90,7 +90,7 @@ namespace RTC
 		  this->ssrc != 0u ? flatbuffers::Optional<uint32_t>(this->ssrc) : flatbuffers::nullopt,
 		  !this->rid.empty() ? this->rid.c_str() : nullptr,
 		  this->hasCodecPayloadType ? flatbuffers::Optional<uint8_t>(this->codecPayloadType)
-		                            : flatbuffers::nullopt,
+			                          : flatbuffers::nullopt,
 		  this->hasRtx ? this->rtx.FillBuffer(builder) : 0u,
 		  this->dtx,
 		  this->scalabilityMode.c_str());

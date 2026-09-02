@@ -137,7 +137,7 @@ namespace mocks
 					  this->observeRttMsCallCount != this->expectedObserveRttMsCallCount.value())
 					{
 						return { .ok           = false,
-							       .errorMessage = "ObserveRttMs() call count mismatch [expected:" +
+						         .errorMessage = "ObserveRttMs() call count mismatch [expected:" +
 							                       std::to_string(this->expectedObserveRttMsCallCount.value()) +
 							                       ", got:" + std::to_string(this->observeRttMsCallCount) + "]" };
 					}
@@ -148,10 +148,10 @@ namespace mocks
 					    this->expectedIncrementTxErrorCounterCallCount.value())
 					{
 						return { .ok = false,
-							       .errorMessage =
-							         "IncrementTxErrorCounter() call count mismatch [expected:" +
-							         std::to_string(this->expectedIncrementTxErrorCounterCallCount.value()) +
-							         ", got:" + std::to_string(this->incrementTxErrorCounterCallCount) + "]" };
+						         .errorMessage =
+						           "IncrementTxErrorCounter() call count mismatch [expected:" +
+						           std::to_string(this->expectedIncrementTxErrorCounterCallCount.value()) +
+						           ", got:" + std::to_string(this->incrementTxErrorCounterCallCount) + "]" };
 					}
 
 					return { .ok = true, .errorMessage = "" };

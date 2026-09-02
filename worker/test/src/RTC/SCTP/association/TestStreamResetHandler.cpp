@@ -36,8 +36,8 @@ namespace
 		TestStreamResetHandler()
 		  // NOTE: The order in which these members are initialized is **critical**.
 		  : shared(/*getTimeMs*/
-		           [this]()
-		           {
+			         [this]()
+			         {
 			           return this->nowMs;
 		           }),
 		    tcbContext(this->associationListener, this->sctpOptions),

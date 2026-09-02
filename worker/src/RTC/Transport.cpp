@@ -388,7 +388,7 @@ namespace RTC
 		  this->maxReceiveMessageSize,
 		  sctpParameters,
 		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
-		                        : flatbuffers::nullopt,
+			                      : flatbuffers::nullopt,
 		  sctpNegotiatedCapabilities,
 		  sctpListener,
 		  std::addressof(traceEventTypes));
@@ -445,7 +445,7 @@ namespace RTC
 		  nowMs,
 		  // sctpState.
 		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
-		                        : flatbuffers::nullopt,
+			                      : flatbuffers::nullopt,
 		  // bytesReceived.
 		  this->recvTransmission.GetBytes(),
 		  // recvBitrate.
@@ -476,25 +476,25 @@ namespace RTC
 		  this->sendProbationTransmission.GetBitrate(nowMs),
 		  // availableOutgoingBitrate.
 		  this->tccClient ? flatbuffers::Optional<uint32_t>(this->tccClient->GetAvailableBitrate())
-		                  : flatbuffers::nullopt,
+			                : flatbuffers::nullopt,
 		  // availableIncomingBitrate.
 		  this->tccServer ? flatbuffers::Optional<uint32_t>(this->tccServer->GetAvailableBitrate())
-		                  : flatbuffers::nullopt,
+			                : flatbuffers::nullopt,
 		  // maxIncomingBitrate.
 		  this->maxIncomingBitrate ? flatbuffers::Optional<uint32_t>(this->maxIncomingBitrate)
-		                           : flatbuffers::nullopt,
+			                         : flatbuffers::nullopt,
 		  // maxOutgoingBitrate.
 		  this->maxOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->maxOutgoingBitrate)
-		                           : flatbuffers::nullopt,
+			                         : flatbuffers::nullopt,
 		  // minOutgoingBitrate.
 		  this->minOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->minOutgoingBitrate)
-		                           : flatbuffers::nullopt,
+			                         : flatbuffers::nullopt,
 		  // rtpPacketLossReceived.
 		  this->tccServer ? flatbuffers::Optional<double>(this->tccServer->GetPacketLoss())
-		                  : flatbuffers::nullopt,
+			                : flatbuffers::nullopt,
 		  // rtpPacketLossSent.
 		  this->tccClient ? flatbuffers::Optional<double>(this->tccClient->GetPacketLoss())
-		                  : flatbuffers::nullopt);
+			                : flatbuffers::nullopt);
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
@@ -2065,7 +2065,7 @@ namespace RTC
 				if (
 				  !consumer && feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC &&
 				  (feedback->GetMediaSsrc() != RTC::RTP::ProbationGenerator::Ssrc ||
-				   !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())))
+					 !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())))
 				{
 					MS_DEBUG_TAG(
 					  rtcp,

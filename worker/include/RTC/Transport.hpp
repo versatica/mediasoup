@@ -153,10 +153,10 @@ namespace RTC
 		  RTC::Transport::Listener* listener,
 		  const FBS::Transport::Options* options,
 		  /**
-		   * Whether the SCTP association (if enabled) must authenticate received
-		   * State Cookies. This must be `true` for transports whose SCTP traffic
-		   * is not protected by DTLS (PlainTransport and PipeTransport).
-		   */
+			 * Whether the SCTP association (if enabled) must authenticate received
+			 * State Cookies. This must be `true` for transports whose SCTP traffic
+			 * is not protected by DTLS (PlainTransport and PipeTransport).
+			 */
 		  bool requireSctpStateCookieAuthentication);
 		~Transport() override;
 

@@ -11,7 +11,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	constexpr uint64_t LocalBaseMs{ 1000000 };
 	// Offset expected when Sender Reports reach us with no delay at all.
 	constexpr int64_t BaseOffsetMs{ static_cast<int64_t>(LocalBaseMs) -
-		                              static_cast<int64_t>(RemoteBaseMs) };
+	                                static_cast<int64_t>(RemoteBaseMs) };
 
 	const auto minSampleCount = RTC::RemoteClockOffsetEstimator::MinSampleCount;
 	const auto windowSize     = RTC::RemoteClockOffsetEstimator::WindowSize;

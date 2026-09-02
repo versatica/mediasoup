@@ -196,7 +196,7 @@ namespace RTC
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
 				  listener->OnAssociationStreamsResetPerformed(streamReset.streamIds);
-      },
+			},
 			  StreamReset{ .streamIds = { outboundStreamIds.begin(), outboundStreamIds.end() } });
 		}
 
@@ -212,9 +212,9 @@ namespace RTC
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
 				  listener->OnAssociationStreamsResetFailed(streamReset.streamIds, streamReset.errorMessage);
-      },
+			},
 			  StreamReset{ .streamIds    = { outboundStreamIds.begin(), outboundStreamIds.end() },
-			               .errorMessage = std::string(errorMessage) });
+				             .errorMessage = std::string(errorMessage) });
 		}
 
 		void AssociationListenerDeferrer::OnAssociationInboundStreamsReset(
@@ -229,7 +229,7 @@ namespace RTC
 			  {
 				  StreamReset streamReset = std::get<StreamReset>(std::move(data));
 				  listener->OnAssociationInboundStreamsReset(streamReset.streamIds);
-      },
+			},
 			  StreamReset{ .streamIds = { inboundStreamIds.begin(), inboundStreamIds.end() } });
 		}
 
