@@ -35,6 +35,19 @@ namespace RTC
 
 		public:
 			/**
+			 * Number of samples of the least squares regression window used unless
+			 * another one is given.
+			 */
+			static constexpr size_t DefaultWindowSize{ 20 };
+
+		public:
+			/**
+			 * @param windowSize - Number of samples of the least squares regression
+			 *   window. A shorter window reacts sooner at the cost of being noisier.
+			 */
+			explicit TrendlineEstimator(size_t windowSize = DefaultWindowSize);
+
+			/**
 			 * Feed the deltas between two consecutive groups of packets.
 			 *
 			 * @param sendDeltaUs - Time elapsed between the send times of both groups.
@@ -65,6 +78,7 @@ namespace RTC
 			void UpdateThreshold(double modifiedTrend, int64_t arrivalTimeMs);
 
 		private:
+			const size_t windowSize;
 			int numOfDeltas{ 0 };
 			std::optional<uint64_t> firstArrivalTimeUs;
 			double accumulatedDelayMs{ 0 };

@@ -11,7 +11,7 @@ namespace RTC
 		 * Groups sent packets into send bursts and computes the deltas between two
 		 * consecutive bursts.
 		 *
-		 * All packets sent within `SendTimeGroupLengthUs` of the first packet of a
+		 * All packets sent within `sendTimeGroupLengthUs` of the first packet of a
 		 * group belong to that group. This means that a burst of packets written
 		 * into the socket at once produces a single sample rather than one per
 		 * packet, which is what prevents a key frame being forwarded as a burst from
@@ -63,6 +63,12 @@ namespace RTC
 
 		public:
 			/**
+			 * @param sendTimeGroupLengthUs - Every packet sent within this time of the
+			 *   first packet of a group belongs to that group.
+			 */
+			explicit InterArrivalDelta(uint64_t sendTimeGroupLengthUs);
+
+			/**
 			 * Feed a sent packet whose arrival time is already known.
 			 *
 			 * @param sendTimeUs - Time at which the packet was sent.
@@ -89,6 +95,7 @@ namespace RTC
 			void Reset();
 
 		private:
+			const uint64_t sendTimeGroupLengthUs;
 			SendTimeGroup currentGroup;
 			SendTimeGroup prevGroup;
 			size_t numConsecutiveReorderedGroups{ 0 };

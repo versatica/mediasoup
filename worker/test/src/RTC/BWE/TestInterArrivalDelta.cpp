@@ -5,6 +5,9 @@
 SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 {
 	constexpr size_t PacketSize{ 1000 };
+	// Length of a send time group, which is the value that the delay based
+	// estimator gives to its own instances.
+	constexpr uint64_t SendTimeGroupLengthUs{ 5 * 1000 };
 	// Base network delay between send and arrival times.
 	constexpr uint64_t BaseDelayMs{ 100 };
 	constexpr uint64_t InitialSendTimeMs{ 1000000 };
@@ -34,14 +37,14 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	SECTION("first packet doesn't produce deltas")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		REQUIRE(!feed(interArrivalDelta, InitialSendTimeMs).has_value());
 	}
 
 	SECTION("packets within the same send time group don't produce deltas")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		// All of them are sent within 5 ms of the first one.
 		REQUIRE(!feed(interArrivalDelta, InitialSendTimeMs).has_value());
@@ -52,7 +55,7 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	SECTION("first group transition doesn't produce deltas yet")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		REQUIRE(!feed(interArrivalDelta, InitialSendTimeMs).has_value());
 
@@ -63,7 +66,7 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	SECTION("third group produces deltas between the two previous ones")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		// Group A: three packets, the last one sent at +4.
 		REQUIRE(!feed(interArrivalDelta, InitialSendTimeMs).has_value());
@@ -88,9 +91,37 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 		REQUIRE(deltas.value().sizeDelta == -2 * static_cast<int64_t>(PacketSize));
 	}
 
+	SECTION("a longer send time group absorbs packets that would otherwise start a new one")
+	{
+		RTC::BWE::InterArrivalDelta interArrivalDelta(/*sendTimeGroupLengthUs*/ 20 * 1000);
+
+		// Group A: sent 10 ms apart, which is beyond the default group length but
+		// still within the 20 ms given to this instance. Note that their arrival
+		// delta matches their send delta, so they are not absorbed as a burst
+		// either, which leaves the group length as the only thing grouping them.
+		REQUIRE(!feed(interArrivalDelta, InitialSendTimeMs).has_value());
+		REQUIRE(!feed(interArrivalDelta, InitialSendTimeMs + 10).has_value());
+		REQUIRE(!feed(interArrivalDelta, InitialSendTimeMs + 20).has_value());
+
+		// Group B: a single packet, sent 20 ms after the first packet of A.
+		REQUIRE(!feed(interArrivalDelta, InitialSendTimeMs + 40).has_value());
+
+		// Group C starts, so the deltas between B and A are ready.
+		const auto deltas = feed(interArrivalDelta, InitialSendTimeMs + 80);
+
+		REQUIRE(deltas.has_value());
+		// Send time of B (+40) minus send time of A (+20), which is the last packet
+		// absorbed into A.
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		REQUIRE(deltas.value().sendDeltaUs == 20 * 1000);
+		// B holds a single packet while A holds three of them.
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		REQUIRE(deltas.value().sizeDelta == -2 * static_cast<int64_t>(PacketSize));
+	}
+
 	SECTION("increasing network delay produces a bigger arrival delta")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		// Group A.
 		REQUIRE(!feedAt(
@@ -125,7 +156,7 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	SECTION("packet sent before the current group is discarded")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		REQUIRE(!feed(interArrivalDelta, InitialSendTimeMs + 100).has_value());
 
@@ -135,7 +166,7 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	SECTION("a packet serialized by the network is absorbed into the ongoing burst")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		// Group A.
 		REQUIRE(!feedAt(
@@ -167,7 +198,7 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	SECTION("a burst longer than the maximum duration ends")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		uint64_t sendTimeMs    = InitialSendTimeMs;
 		uint64_t arrivalTimeMs = InitialSendTimeMs + BaseDelayMs;
@@ -194,7 +225,7 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	SECTION("a remote clock jump resets the state")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		// Group A.
 		REQUIRE(!feedAt(
@@ -231,7 +262,7 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	SECTION("groups arriving out of order don't produce deltas")
 	{
-		RTC::BWE::InterArrivalDelta interArrivalDelta;
+		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
 		// Group A, completed at +400.
 		REQUIRE(!feedAt(
