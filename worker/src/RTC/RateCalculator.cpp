@@ -13,13 +13,13 @@ namespace RTC
 		MS_TRACE();
 
 		// Clamp the given values so every derived value is safe to use.
-		this->windowSizeMs = std::max(windowSizeMs, size_t{ 1u });
+		this->windowSizeMs = std::max<size_t>(windowSizeMs, 1);
 
-		const size_t items = std::max<size_t>(windowItems, 1u);
+		const size_t items = std::max<size_t>(windowItems, 1);
 
 		// Item granularity, rounded up so that `items` items always suffice to cover
 		// the window.
-		this->itemSizeMs = std::max((this->windowSizeMs + items - 1) / items, size_t{ 1u });
+		this->itemSizeMs = std::max<size_t>((this->windowSizeMs + items - 1) / items, 1);
 
 		// Number of items needed to cover the whole window, rounded up. It is never
 		// higher than `items`, and it guarantees that in-window data can never
@@ -80,14 +80,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::ranges::fill(this->buffer, 0u);
+		std::ranges::fill(this->buffer, 0);
 
-		this->newestItemIndex       = 0u;
-		this->newestItemStartTimeMs = 0u;
-		this->totalCount            = 0u;
-		this->lastRate              = 0u;
-		this->lastTimeMs            = 0u;
-		this->lastTotalCount        = 0u;
+		this->newestItemIndex       = 0;
+		this->newestItemStartTimeMs = 0;
+		this->totalCount            = 0;
+		this->lastRate              = 0;
+		this->lastTimeMs            = 0;
+		this->lastTotalCount        = 0;
 	}
 
 	/**
@@ -128,14 +128,14 @@ namespace RTC
 
 			// NOTE: totalCount is the sum of every item, so a zero total means that
 			// the ring is already zeroed.
-			if (this->totalCount != 0u)
+			if (this->totalCount != 0)
 			{
-				std::ranges::fill(this->buffer, 0u);
+				std::ranges::fill(this->buffer, 0);
 
-				this->totalCount = 0u;
+				this->totalCount = 0;
 			}
 
-			this->newestItemIndex       = 0u;
+			this->newestItemIndex       = 0;
 			this->newestItemStartTimeMs = nowMs;
 
 			return true;
@@ -143,16 +143,16 @@ namespace RTC
 
 		// Walk the ring forward. Every item being passed holds the count of exactly
 		// buffer.size() items ago, which is now out of the window.
-		for (uint64_t i{ 0u }; i < steps; ++i)
+		for (uint64_t i{ 0 }; i < steps; ++i)
 		{
 			if (++this->newestItemIndex == this->buffer.size())
 			{
-				this->newestItemIndex = 0u;
+				this->newestItemIndex = 0;
 			}
 
 			this->totalCount -= this->buffer[this->newestItemIndex];
 
-			this->buffer[this->newestItemIndex] = 0u;
+			this->buffer[this->newestItemIndex] = 0;
 		}
 
 		// Advance by whole items rather than jumping to `nowMs`. The window is
