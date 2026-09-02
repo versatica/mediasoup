@@ -23,9 +23,9 @@ namespace RTC
 	class RateCalculator
 	{
 	public:
-		static constexpr size_t DefaultWindowSize{ 1000u };
+		static constexpr size_t DefaultWindowSize{ 1000 };
 		static constexpr float DefaultBpsScale{ 8000.0f };
-		static constexpr uint16_t DefaultWindowItems{ 100u };
+		static constexpr uint16_t DefaultWindowItems{ 100 };
 
 	public:
 		explicit RateCalculator(
