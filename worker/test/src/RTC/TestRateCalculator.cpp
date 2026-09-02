@@ -190,14 +190,14 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate(1000, 8000, 100);
 
 		// 11ms spacing, deliberately not a multiple of the 10ms granularity.
-		for (uint64_t i{ 0u }; i <= 100u; ++i)
+		for (uint64_t i{ 0 }; i <= 100; ++i)
 		{
-			rate.Update(1, nowMs + (i * 11u));
+			rate.Update(1, nowMs + (i * 11));
 		}
 
 		// The ring spans the items starting at [110, 1100], which hold the 91
 		// packets sent at 110, 121 ... 1100.
-		REQUIRE(rate.GetRate(nowMs + 1100u) == 91u * 8u);
+		REQUIRE(rate.GetRate(nowMs + 1100) == 91 * 8);
 	}
 
 	// NOTE: This pins the GetRate() memoization key, which is both nowMs and the
@@ -232,13 +232,13 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate(1000, 8000, 3);
 
 		// Feed way past the ring size, so that any extra span accumulates.
-		for (uint64_t i{ 0u }; i < 100u; ++i)
+		for (uint64_t i{ 0 }; i < 100; ++i)
 		{
-			rate.Update(1, nowMs + (i * 334u));
+			rate.Update(1, nowMs + (i * 334));
 		}
 
 		// Steady state is a full ring of 3 items holding 1 byte each.
-		REQUIRE(rate.GetRate(nowMs + (99u * 334u)) == 24);
+		REQUIRE(rate.GetRate(nowMs + (99 * 334)) == 24);
 	}
 
 	// NOTE: This pins that the GetRate() memoization needs no "not calculated yet"
