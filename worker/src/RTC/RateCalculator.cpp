@@ -3,8 +3,9 @@
 
 #include "RTC/RateCalculator.hpp"
 #include "Logger.hpp"
-#include <cmath>  // std::trunc()
-#include <limits> // std::numeric_limits()
+#include <cmath>   // std::trunc()
+#include <limits>  // std::numeric_limits()
+#include <utility> // std::cmp_less()
 
 namespace RTC
 {
@@ -114,7 +115,7 @@ namespace RTC
 
 		// `nowMs` belongs to the newest item, or to an already existing one still
 		// within the window, so there is nothing to expire.
-		if (elapsedMs < static_cast<int64_t>(this->itemSizeMs))
+		if (std::cmp_less(elapsedMs, this->itemSizeMs))
 		{
 			return true;
 		}
