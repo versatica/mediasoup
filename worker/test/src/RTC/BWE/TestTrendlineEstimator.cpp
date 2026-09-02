@@ -8,7 +8,7 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 	constexpr size_t PacketCount{ 25 };
 	// Time between two consecutive groups of packets.
 	constexpr int64_t SendDeltaUs{ 20 * 1000 };
-	constexpr uint64_t InitialArrivalTimeUs{ 987654321000 };
+	constexpr int64_t InitialArrivalTimeUs{ 987654321000 };
 
 	// Feed groups delivered at `deliveryPace` times the pace they were sent at,
 	// until the state changes or the packets are exhausted.
@@ -21,7 +21,7 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 	                             double deliveryPace,
 	                             size_t& count,
 	                             size_t packetCount,
-	                             uint64_t& arrivalTimeUs) -> void
+	                             int64_t& arrivalTimeUs) -> void
 	{
 		const auto initialState   = trendlineEstimator.GetState();
 		const auto arrivalDeltaUs = static_cast<int64_t>(SendDeltaUs * deliveryPace);
@@ -43,7 +43,7 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 	{
 		RTC::BWE::TrendlineEstimator trendlineEstimator;
 		size_t count{ 1 };
-		uint64_t arrivalTimeUs{ InitialArrivalTimeUs };
+		int64_t arrivalTimeUs{ InitialArrivalTimeUs };
 
 		REQUIRE(trendlineEstimator.GetState() == RTC::BWE::Types::BandwidthUsage::NORMAL);
 
@@ -58,7 +58,7 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 	{
 		RTC::BWE::TrendlineEstimator trendlineEstimator;
 		size_t count{ 1 };
-		uint64_t arrivalTimeUs{ InitialArrivalTimeUs };
+		int64_t arrivalTimeUs{ InitialArrivalTimeUs };
 
 		REQUIRE(trendlineEstimator.GetState() == RTC::BWE::Types::BandwidthUsage::NORMAL);
 
@@ -77,7 +77,7 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 	{
 		RTC::BWE::TrendlineEstimator trendlineEstimator;
 		size_t count{ 1 };
-		uint64_t arrivalTimeUs{ InitialArrivalTimeUs };
+		int64_t arrivalTimeUs{ InitialArrivalTimeUs };
 
 		REQUIRE(trendlineEstimator.GetState() == RTC::BWE::Types::BandwidthUsage::NORMAL);
 
@@ -96,7 +96,7 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 	{
 		RTC::BWE::TrendlineEstimator trendlineEstimator;
 		size_t count{ 1 };
-		uint64_t arrivalTimeUs{ InitialArrivalTimeUs };
+		int64_t arrivalTimeUs{ InitialArrivalTimeUs };
 
 		// Fill the regression window with a well behaved network.
 		runUntilStateChange(trendlineEstimator, /*deliveryPace*/ 1.0, count, PacketCount, arrivalTimeUs);
@@ -120,7 +120,7 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 	{
 		RTC::BWE::TrendlineEstimator trendlineEstimator;
 		size_t count{ 1 };
-		uint64_t arrivalTimeUs{ InitialArrivalTimeUs };
+		int64_t arrivalTimeUs{ InitialArrivalTimeUs };
 
 		runUntilStateChange(
 		  trendlineEstimator, /*deliveryPace*/ 1.1, count, /*packetCount*/ 100, arrivalTimeUs);

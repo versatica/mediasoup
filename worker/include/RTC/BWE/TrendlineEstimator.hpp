@@ -44,6 +44,10 @@ namespace RTC
 			/**
 			 * @param windowSize - Number of samples of the least squares regression
 			 *   window. A shorter window reacts sooner at the cost of being noisier.
+			 *
+			 * @remarks
+			 * - `windowSize` must be at least 2, since a line cannot be fitted to a
+			 *   single point.
 			 */
 			explicit TrendlineEstimator(size_t windowSize = DefaultWindowSize);
 
@@ -56,7 +60,7 @@ namespace RTC
 			 * @param arrivalTimeUs - Arrival time of the latest group, in the remote
 			 *   clock reference.
 			 */
-			void Update(int64_t sendDeltaUs, int64_t arrivalDeltaUs, uint64_t arrivalTimeUs);
+			void Update(int64_t sendDeltaUs, int64_t arrivalDeltaUs, int64_t arrivalTimeUs);
 
 			/**
 			 * Current hypothesis about how the network is behaving.
@@ -80,7 +84,7 @@ namespace RTC
 		private:
 			const size_t windowSize;
 			int numOfDeltas{ 0 };
-			std::optional<uint64_t> firstArrivalTimeUs;
+			std::optional<int64_t> firstArrivalTimeUs;
 			double accumulatedDelayMs{ 0 };
 			double smoothedDelayMs{ 0 };
 			std::deque<PacketTiming> delayHist;

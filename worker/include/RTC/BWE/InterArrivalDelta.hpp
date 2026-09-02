@@ -54,11 +54,11 @@ namespace RTC
 				}
 
 				size_t size{ 0 };
-				uint64_t firstSendTimeUs{ 0 };
-				uint64_t sendTimeUs{ 0 };
-				uint64_t firstArrivalTimeUs{ 0 };
-				std::optional<uint64_t> completeTimeUs;
-				uint64_t lastFeedbackAtUs{ 0 };
+				int64_t firstSendTimeUs{ 0 };
+				int64_t sendTimeUs{ 0 };
+				int64_t firstArrivalTimeUs{ 0 };
+				std::optional<int64_t> completeTimeUs;
+				int64_t lastFeedbackAtUs{ 0 };
 			};
 
 		public:
@@ -66,7 +66,7 @@ namespace RTC
 			 * @param sendTimeGroupLengthUs - Every packet sent within this time of the
 			 *   first packet of a group belongs to that group.
 			 */
-			explicit InterArrivalDelta(uint64_t sendTimeGroupLengthUs);
+			explicit InterArrivalDelta(int64_t sendTimeGroupLengthUs);
 
 			/**
 			 * Feed a sent packet whose arrival time is already known.
@@ -85,17 +85,17 @@ namespace RTC
 			 *   if they cannot be computed yet.
 			 */
 			std::optional<Deltas> ComputeDeltas(
-			  uint64_t sendTimeUs, uint64_t arrivalTimeUs, uint64_t feedbackAtUs, size_t packetSize);
+			  int64_t sendTimeUs, int64_t arrivalTimeUs, int64_t feedbackAtUs, size_t packetSize);
 
 		private:
-			bool IsNewSendTimeGroup(uint64_t arrivalTimeUs, uint64_t sendTimeUs) const;
+			bool IsNewSendTimeGroup(int64_t arrivalTimeUs, int64_t sendTimeUs) const;
 
-			bool BelongsToBurst(uint64_t arrivalTimeUs, uint64_t sendTimeUs) const;
+			bool BelongsToBurst(int64_t arrivalTimeUs, int64_t sendTimeUs) const;
 
 			void Reset();
 
 		private:
-			const uint64_t sendTimeGroupLengthUs;
+			const int64_t sendTimeGroupLengthUs;
 			SendTimeGroup currentGroup;
 			SendTimeGroup prevGroup;
 			size_t numConsecutiveReorderedGroups{ 0 };
