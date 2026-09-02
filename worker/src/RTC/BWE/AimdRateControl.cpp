@@ -429,7 +429,8 @@ namespace RTC
 				  this->currentBitrate,
 				  std::max(
 				    newBitrate,
-				    std::llround(this->options.backoffFactor * static_cast<double>(linkCapacityLower))));
+				    static_cast<int64_t>(
+				      std::llround(this->options.backoffFactor * static_cast<double>(linkCapacityLower)))));
 			}
 
 			return std::max(newBitrate, this->minConfiguredBitrate);
@@ -451,7 +452,8 @@ namespace RTC
 			}
 
 			return std::max(
-			  std::llround(static_cast<double>(currentBitrate) * (alpha - 1.0)), MinMultiplicativeIncrease);
+			  static_cast<int64_t>(std::llround(static_cast<double>(currentBitrate) * (alpha - 1.0))),
+			  MinMultiplicativeIncrease);
 		}
 
 		int64_t AimdRateControl::AdditiveRateIncrease(int64_t atTimeUs, int64_t lastTimeUs) const
