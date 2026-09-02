@@ -100,8 +100,8 @@ namespace RTC
 					this->numConsecutiveReorderedGroups = 0;
 
 					deltas = Deltas{ .sendDeltaUs    = sendDeltaUs,
-						               .arrivalDeltaUs = arrivalDeltaUs,
-						               .sizeDelta      = static_cast<int64_t>(this->currentGroup.size) -
+					                 .arrivalDeltaUs = arrivalDeltaUs,
+					                 .sizeDelta      = static_cast<int64_t>(this->currentGroup.size) -
 						                                 static_cast<int64_t>(this->prevGroup.size) };
 				}
 

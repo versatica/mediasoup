@@ -98,7 +98,7 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 
 	auto validate =
 	  [&buffer,
-	   &shared](std::vector<TestTransportCongestionControlServerInput>& inputs, TestResults& results)
+		 &shared](std::vector<TestTransportCongestionControlServerInput>& inputs, TestResults& results)
 	{
 		TestTransportCongestionControlServerListener listener;
 		auto tccServer = RTC::TransportCongestionControlServer(

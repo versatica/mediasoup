@@ -102,7 +102,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  buffer.GetChunkStatesForTesting() ==
 		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
 		    { 9, RTC::SCTP::OutstandingData::State::ACKED },
-    });
+		});
 		REQUIRE(buffer.ShouldSendForwardTsn() == false);
 	}
 
@@ -127,7 +127,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
 		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
 		    { 10, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-    });
+		});
 	}
 
 	SECTION("acks single chunk")
@@ -155,7 +155,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  buffer.GetChunkStatesForTesting() ==
 		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
 		    { 10, RTC::SCTP::OutstandingData::State::ACKED },
-    });
+		});
 	}
 
 	SECTION("acks previous chunk doesn't update")
@@ -175,7 +175,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
 		    { 9,  RTC::SCTP::OutstandingData::State::ACKED     },
 		    { 10, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-    });
+		});
 	}
 
 	SECTION("acks and nacks with gap-ack-blocks")
@@ -211,7 +211,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 9,  RTC::SCTP::OutstandingData::State::ACKED  },
 		    { 10, RTC::SCTP::OutstandingData::State::NACKED },
 		    { 11, RTC::SCTP::OutstandingData::State::ACKED  },
-    });
+		});
 	}
 
 	SECTION("nacks three times with same TSN doesn't retransmit")
@@ -241,7 +241,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 9,  RTC::SCTP::OutstandingData::State::ACKED  },
 		    { 10, RTC::SCTP::OutstandingData::State::NACKED },
 		    { 11, RTC::SCTP::OutstandingData::State::ACKED  },
-    });
+		});
 	}
 
 	SECTION("nacks three times results in retransmission")
@@ -302,7 +302,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 11, RTC::SCTP::OutstandingData::State::ACKED               },
 		    { 12, RTC::SCTP::OutstandingData::State::ACKED               },
 		    { 13, RTC::SCTP::OutstandingData::State::ACKED               },
-    });
+		});
 
 		std::vector<std::pair<uint32_t, RTC::SCTP::UserData>> expectedChunksToBeFastRetransmitted;
 
@@ -389,7 +389,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 13, RTC::SCTP::OutstandingData::State::ABANDONED },
-    });
+		});
 	}
 
 	SECTION("nacks three times results in abandoning with placeholder")
@@ -470,7 +470,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 13, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 14, RTC::SCTP::OutstandingData::State::ABANDONED },
-    });
+		});
 	}
 
 	SECTION("expires chunk before it is inserted")
@@ -522,7 +522,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 10, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
-    });
+		});
 	}
 
 	SECTION("can generate Forward-TSN")
@@ -562,7 +562,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 10, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
-    });
+		});
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
@@ -600,7 +600,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 15, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		    { 16, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		    { 17, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-    });
+		});
 
 		buffer.HandleSack(
 		  unwrapper.Unwrap(12),
@@ -619,7 +619,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 15, RTC::SCTP::OutstandingData::State::ACKED  },
 		    { 16, RTC::SCTP::OutstandingData::State::NACKED },
 		    { 17, RTC::SCTP::OutstandingData::State::ACKED  },
-    });
+		});
 	}
 
 	SECTION("MeasureRtt()")
@@ -905,7 +905,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 11, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		    { 12, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		    { 13, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-    });
+		});
 
 		const auto ackInfo1 = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
@@ -925,7 +925,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 11, RTC::SCTP::OutstandingData::State::ACKED  },
 		    { 12, RTC::SCTP::OutstandingData::State::ACKED  },
 		    { 13, RTC::SCTP::OutstandingData::State::ACKED  },
-    });
+		});
 
 		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
 
@@ -944,7 +944,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 11, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
 		    { 13, RTC::SCTP::OutstandingData::State::ABANDONED },
-    });
+		});
 		;
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
@@ -1033,7 +1033,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 14, RTC::SCTP::OutstandingData::State::ABANDONED           },
 		    { 15, RTC::SCTP::OutstandingData::State::ABANDONED           },
 		    { 16, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
-    });
+		});
 		REQUIRE(buffer.ShouldSendForwardTsn() == true);
 
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
@@ -1047,7 +1047,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  forwardTsnChunk->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
 		                                            { 1, 44 },
-    });
+		});
 
 		// Ack 12, allowing a FORWARD-TSN that spans to TSN=14 to be created.
 		buffer.HandleSack(unwrapper.Unwrap(12), {}, false);
@@ -1065,7 +1065,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  forwardTsnChunk->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
 		                                            { 2, 46 },
-    });
+		});
 
 		// Ack 13, allowing a FORWARD-TSN that spans to TSN=14 to be created.
 		buffer.HandleSack(unwrapper.Unwrap(13), {}, false);
@@ -1083,7 +1083,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  forwardTsnChunk->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
 		                                            { 2, 46 },
-    });
+		});
 
 		// Ack 14, allowing a FORWARD-TSN that spans to TSN=15 to be created.
 		buffer.HandleSack(unwrapper.Unwrap(14), {}, false);
@@ -1101,7 +1101,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(
 		  forwardTsnChunk->GetSkippedStreams() == std::vector<RTC::SCTP::ForwardTsnChunk::SkippedStream>{
 		                                            { 3, 47 },
-    });
+		});
 
 		buffer.HandleSack(unwrapper.Unwrap(15), {}, false);
 
@@ -1153,7 +1153,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 2, 2 }, // TSN 12
 		    { 4, 4 }, // TSN 14
 		    { 6, 6 }  // TSN 16
-    },
+		},
 		  /*isInFastRecovery*/ false);
 
 		// SACK 2: Cumulative Ack advances to 11. Same gap blocks (12, 14, 16).
@@ -1166,7 +1166,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 1, 1 }, // TSN 12
 		    { 3, 3 }, // TSN 14
 		    { 5, 5 }  // TSN 16
-    },
+		},
 		  /*isInFastRecovery*/ true);
 
 		// SACK 3: Cumulative Ack advances to 12.
@@ -1178,7 +1178,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 2, 2 }, // TSN 14
 		    { 4, 4 }  // TSN 16
-    },
+		},
 		  /*isInFastRecovery*/ true);
 
 		REQUIRE(
@@ -1189,7 +1189,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 14, RTC::SCTP::OutstandingData::State::ACKED               },
 		    { 15, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
 		    { 16, RTC::SCTP::OutstandingData::State::ACKED               },
-    });
+		});
 	}
 
 	SECTION("nack between ack blocks does not access out of bounds")
@@ -1227,7 +1227,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    { 2, 2 }, // TSN 12
 		    { 4, 4 }, // TSN 14
 		    { 6, 6 }  // TSN 16
-    },
+		},
 		  /*isInFastRecovery*/ false);
 
 		REQUIRE(buffer.GetUnackedItems() == 3);
@@ -1239,7 +1239,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		    { 1,    1     }, // TSN 12
 		    { 1000, 60000 }  // TSN 1011..60011
-    },
+		},
 		  /*isInFastRecovery*/ true);
 
 		// Packet 11 has been acknowledged.

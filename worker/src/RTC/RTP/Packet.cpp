@@ -485,7 +485,7 @@ namespace RTC
 			  rid.empty() ? nullptr : rid.c_str(),
 			  rrid.empty() ? nullptr : rrid.c_str(),
 			  wideSequenceNumberSet ? flatbuffers::Optional<uint16_t>(wideSequenceNumber)
-			                        : flatbuffers::nullopt);
+				                      : flatbuffers::nullopt);
 		}
 
 		void Packet::SetPayloadType(uint8_t payloadType)

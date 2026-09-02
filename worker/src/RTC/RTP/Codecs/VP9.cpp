@@ -215,7 +215,7 @@ namespace RTC
 
 				const bool isOldPacket =
 				  (this->payloadDescriptor->hasPictureId &&
-				   RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+					 RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
 				     this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()));
 
 				if (!isOldPacket)
@@ -283,12 +283,12 @@ namespace RTC
 				// (interframe p bit = 1)
 				const uint16_t spatialLayerForPictureId =
 				  isOldPacket ? context->GetSpatialLayerForPictureId(this->payloadDescriptor->pictureId)
-				              : tmpSpatialLayer;
+					            : tmpSpatialLayer;
 
 				if (
 				  packetSpatialLayer > spatialLayerForPictureId ||
 				  (context->IsKSvc() && this->payloadDescriptor->p &&
-				   packetSpatialLayer != spatialLayerForPictureId))
+					 packetSpatialLayer != spatialLayerForPictureId))
 				{
 					return false;
 				}
@@ -336,7 +336,7 @@ namespace RTC
 				// Filter temporal layers higher than current one.
 				const uint16_t temporalLayerForPictureId =
 				  isOldPacket ? context->GetTemporalLayerForPictureId(this->payloadDescriptor->pictureId)
-				              : tmpTemporalLayer;
+					            : tmpTemporalLayer;
 
 				if (packetTemporalLayer > temporalLayerForPictureId)
 				{

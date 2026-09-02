@@ -491,7 +491,7 @@ namespace RTC
 			const uint8_t worstRemoteFractionLost =
 			  this->params.useInBandFec ? static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
 			                                ->OnRtpStreamNeedWorstRemoteFractionLost(this)
-			                            : 0;
+				                          : 0;
 
 			if (worstRemoteFractionLost > 0)
 			{

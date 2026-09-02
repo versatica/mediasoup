@@ -113,7 +113,7 @@ namespace RTC
 		// stream presence/score, so the Transport may still ask us to increase.
 		if (
 		  !this->producerRtpStream || (this->producerRtpStream->GetScore() == 0u &&
-		                               this->producerRtpStream->HasRtpInactivityCheckEnabled()))
+			                             this->producerRtpStream->HasRtpInactivityCheckEnabled()))
 		{
 			return 0u;
 		}

@@ -923,7 +923,7 @@ namespace RTC
 		{
 			return dataConsumer->GetType() == DataConsumer::Type::SCTP
 			         ? dataConsumer->GetSctpStreamParameters().streamId
-			         : 0;
+							 : 0;
 		};
 
 		// NOTE: We don't send the message to a matching DataConsumer right away.

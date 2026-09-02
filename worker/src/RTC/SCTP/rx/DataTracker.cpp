@@ -256,7 +256,7 @@ namespace RTC
 			if (
 			  this->ackState == AckState::IMMEDIATE ||
 			  (alsoIfDelayed &&
-			   (this->ackState == AckState::BECOMING_DELAYED || this->ackState == AckState::DELAYED)))
+				 (this->ackState == AckState::BECOMING_DELAYED || this->ackState == AckState::DELAYED)))
 			{
 				UpdateAckState(AckState::IDLE, "should send SACK");
 

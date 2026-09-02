@@ -671,7 +671,7 @@ namespace RTC
 
 		return (
 		  (this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
-		   this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED) &&
+			 this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED) &&
 		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
 	}
 

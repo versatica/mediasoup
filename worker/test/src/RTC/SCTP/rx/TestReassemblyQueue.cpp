@@ -22,7 +22,7 @@ SCENARIO("SCTP ReassemblyQueue", "[sctp][reassemblyqueue]")
 	constexpr std::array<uint8_t, 8> MediumPayload1  = { 1, 2, 3, 4, 5, 6, 7, 8 };
 	constexpr std::array<uint8_t, 8> MediumPayload2  = { 9, 10, 11, 12, 13, 14, 15, 16 };
 	constexpr std::array<uint8_t, 16> LongPayload    = { 1, 2,  3,  4,  5,  6,  7,  8,
-		                                                   9, 10, 11, 12, 13, 14, 15, 16 };
+	                                                     9, 10, 11, 12, 13, 14, 15, 16 };
 
 	auto flushMessages = [](RTC::SCTP::ReassemblyQueue& reassemblyQueue)
 	{

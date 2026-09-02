@@ -87,7 +87,7 @@ namespace RTC
 			  this->firCount,
 			  !this->params.rid.empty() ? this->params.rid.c_str() : nullptr,
 			  this->params.rtxSsrc ? flatbuffers::Optional<uint32_t>(this->params.rtxSsrc)
-			                       : flatbuffers::nullopt,
+				                     : flatbuffers::nullopt,
 			  this->rtxStream ? this->rtxStream->GetPacketsDiscarded() : 0,
 			  this->rtt > 0.0f ? this->rtt : 0,
 			  this->score);
@@ -399,7 +399,7 @@ namespace RTC
 			  this->cname.c_str(),
 			  this->rtxSsrc != 0 ? flatbuffers::Optional<uint32_t>(this->rtxSsrc) : flatbuffers::nullopt,
 			  this->rtxSsrc != 0 ? flatbuffers::Optional<uint8_t>(this->rtxPayloadType)
-			                     : flatbuffers::nullopt,
+				                   : flatbuffers::nullopt,
 			  this->useNack,
 			  this->usePli,
 			  this->useFir,

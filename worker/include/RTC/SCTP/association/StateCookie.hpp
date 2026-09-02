@@ -139,7 +139,7 @@ namespace RTC
 			// Fixed length of our generated State Cookies when authentication is
 			// enabled.
 			static constexpr size_t AuthenticatedStateCookieLength{ StateCookie::MacOffset +
-				                                                      StateCookie::MacLength };
+			                                                        StateCookie::MacLength };
 			// State Cookie lifespan (Valid.Cookie.Life) in milliseconds. Used to
 			// reject stale authenticated cookies.
 			//

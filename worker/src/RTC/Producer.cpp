@@ -270,7 +270,7 @@ namespace RTC
 			    builder,
 			    encodingMapping.rid.c_str(),
 			    encodingMapping.ssrc != 0u ? flatbuffers::Optional<uint32_t>(encodingMapping.ssrc)
-			                               : flatbuffers::nullopt,
+					                           : flatbuffers::nullopt,
 			    nullptr, /* capability mode. NOTE: Present in NODE*/
 			    encodingMapping.mappedSsrc));
 		}
@@ -319,7 +319,7 @@ namespace RTC
 		  builder,
 		  this->id.c_str(),
 		  this->kind == RTC::Media::Kind::AUDIO ? FBS::RtpParameters::MediaKind::AUDIO
-		                                        : FBS::RtpParameters::MediaKind::VIDEO,
+			                                      : FBS::RtpParameters::MediaKind::VIDEO,
 		  RTC::RtpParameters::TypeToFbs(this->type),
 		  rtpParameters,
 		  rtpMapping,

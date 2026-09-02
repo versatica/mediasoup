@@ -31,7 +31,7 @@ namespace RTC
 		  rtcp,
 		  "capture instant source set to %s",
 		  this->source == RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME ? "abs-capture-time"
-		                                                                       : "Sender Report");
+			                                                                     : "Sender Report");
 	}
 
 	void RemoteCaptureTimeEstimator::SenderReportReceived(const RTC::RTP::RtpStreamRecv* rtpStream)

@@ -918,7 +918,7 @@ namespace RTC
 		if (
 		  newTargetSpatialLayer != -1 &&
 		  (this->tsReferenceSpatialLayer == -1 ||
-		   !GetProducerTsReferenceRtpStream()->GetCaptureMapping().has_value()))
+			 !GetProducerTsReferenceRtpStream()->GetCaptureMapping().has_value()))
 		{
 			MS_DEBUG_TAG(
 			  simulcast, "using spatial layer %" PRIi16 " as RTP timestamp reference", newTargetSpatialLayer);

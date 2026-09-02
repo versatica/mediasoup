@@ -22,11 +22,11 @@ namespace RTC
 	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32 };
 	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12 };
 	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength +
-		                                                 SrtpAesGcm256MasterSaltLength };
+	                                                   SrtpAesGcm256MasterSaltLength };
 	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16 };
 	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12 };
 	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength +
-		                                                 SrtpAesGcm128MasterSaltLength };
+	                                                   SrtpAesGcm128MasterSaltLength };
 
 	/* Class variables. */
 

@@ -58,7 +58,7 @@ namespace mocks
 		  "  max backoff timeout (ms): %s",
 		  this->maxBackoffTimeoutMs.has_value()
 		    ? std::to_string(this->maxBackoffTimeoutMs.value()).c_str()
-		    : "(unset)");
+				: "(unset)");
 		MS_DUMP_CLEAN(
 		  indentation,
 		  "  max restarts (ms): %s",

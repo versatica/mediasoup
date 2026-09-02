@@ -129,7 +129,7 @@ namespace RTC
 		  this->id.c_str(),
 		  this->dataProducerId.c_str(),
 		  this->type == DataConsumer::Type::SCTP ? FBS::DataConsumer::Type::SCTP
-		                                         : FBS::DataConsumer::Type::DIRECT,
+			                                       : FBS::DataConsumer::Type::DIRECT,
 		  sctpStreamParameters,
 		  this->label.c_str(),
 		  this->protocol.c_str(),
