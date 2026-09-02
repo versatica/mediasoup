@@ -51,32 +51,32 @@ namespace RTC
 		// Window size (in milliseconds). Always >= 1.
 		size_t windowSizeMs{ DefaultWindowSize };
 		// Item size (in milliseconds). Always >= 1.
-		size_t itemSizeMs{ 1u };
+		size_t itemSizeMs{ 1 };
 		// Precomputed `scale / windowSizeMs`.
 		double rateScale{ 0.0 };
 		// Ring of items, each one holding the count of the data within it. Never
 		// empty, and always long enough to cover the whole window.
 		std::vector<size_t> buffer;
 		// Index of the newest item. Always < buffer.size().
-		size_t newestItemIndex{ 0u };
+		size_t newestItemIndex{ 0 };
 		// Time (in milliseconds) at which the newest item starts.
-		uint64_t newestItemStartTimeMs{ 0u };
+		uint64_t newestItemStartTimeMs{ 0 };
 		// Sum of the count of every item.
-		size_t totalCount{ 0u };
+		size_t totalCount{ 0 };
 		// Total bytes accounted for. Not affected by Reset().
-		size_t bytes{ 0u };
+		size_t bytes{ 0 };
 		// Rate memoized by GetRate(), only valid while both `lastTimeMs` and
 		// `lastTotalCount` below still match. `lastTotalCount` is the one that makes
 		// any Update() changing the rate invalidate this implicitly, so that the hot
 		// path needs no memoization store.
 		// NOTE: No "not calculated yet" mark is needed, since the initial and post
 		// Reset() state is a valid entry on its own: a zero rate for a zero count.
-		uint32_t lastRate{ 0u };
+		uint32_t lastRate{ 0 };
 		// Time of the latest GetRate() call. Prevents reusing `lastRate` once time
 		// has moved on and there is data pending expiration.
-		uint64_t lastTimeMs{ 0u };
+		uint64_t lastTimeMs{ 0 };
 		// Total count at the latest GetRate() call.
-		size_t lastTotalCount{ 0u };
+		size_t lastTotalCount{ 0 };
 	};
 
 	class RtpDataCounter
@@ -112,7 +112,7 @@ namespace RTC
 		// account.
 		bool ignorePaddingOnlyPackets{ false };
 		RateCalculator rate;
-		size_t packets{ 0u };
+		size_t packets{ 0 };
 	};
 } // namespace RTC
 
