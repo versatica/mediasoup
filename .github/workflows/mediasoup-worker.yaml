@@ -225,6 +225,7 @@ jobs:
       - if: ${{ matrix.build.run-lint && startsWith(matrix.build.os, 'macos') }}
         name: brew install clang-format@23
         run: |
+          brew update
           brew install clang-format@23
 
       # Install clang-format on ubuntu.
