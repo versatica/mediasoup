@@ -19,7 +19,7 @@ namespace RTC
 
 		// Item granularity, rounded up so that `items` items always suffice to cover
 		// the window.
-		this->itemSizeMs = std::max<size_t>((this->windowSizeMs + items - 1) / items, 1);
+		this->itemSizeMs = (this->windowSizeMs + items - 1) / items;
 
 		// Number of items needed to cover the whole window, rounded up. It is never
 		// higher than `items`, and it guarantees that in-window data can never
