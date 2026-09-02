@@ -10,9 +10,6 @@ namespace RTC
 	{
 		/* Static. */
 
-		// A send time group holds every packet sent within this time of the first
-		// packet of the group.
-		static constexpr uint64_t SendTimeGroupLengthUs{ 5000 };
 		// Maximum arrival time delta for a packet to be absorbed into the ongoing
 		// burst.
 		static constexpr int64_t BurstDeltaThresholdUs{ 5000 };
@@ -25,6 +22,12 @@ namespace RTC
 		static constexpr int64_t ArrivalTimeOffsetThresholdUs{ 3000000 };
 
 		/* Instance methods. */
+
+		InterArrivalDelta::InterArrivalDelta(uint64_t sendTimeGroupLengthUs)
+		  : sendTimeGroupLengthUs(sendTimeGroupLengthUs)
+		{
+			MS_TRACE();
+		}
 
 		std::optional<InterArrivalDelta::Deltas> InterArrivalDelta::ComputeDeltas(
 		  uint64_t sendTimeUs, uint64_t arrivalTimeUs, uint64_t feedbackAtUs, size_t packetSize)
@@ -139,7 +142,7 @@ namespace RTC
 			{
 				// NOTE: Safe unsigned subtraction since the caller already discarded
 				// packets sent before the first one of the current group.
-				return sendTimeUs - this->currentGroup.firstSendTimeUs > SendTimeGroupLengthUs;
+				return sendTimeUs - this->currentGroup.firstSendTimeUs > this->sendTimeGroupLengthUs;
 			}
 		}
 

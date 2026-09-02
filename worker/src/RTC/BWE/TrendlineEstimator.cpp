@@ -11,8 +11,6 @@ namespace RTC
 	{
 		/* Static. */
 
-		// Number of samples of the least squares regression window.
-		static constexpr size_t WindowSize{ 20 };
 		// Coefficient of the exponential filter applied to the accumulated delay.
 		static constexpr double SmoothingCoef{ 0.9 };
 		// Gain applied to the slope before comparing it against the threshold.
@@ -36,6 +34,11 @@ namespace RTC
 		static constexpr int64_t MaxThresholdUpdateDeltaMs{ 100 };
 
 		/* Instance methods. */
+
+		TrendlineEstimator::TrendlineEstimator(size_t windowSize) : windowSize(windowSize)
+		{
+			MS_TRACE();
+		}
 
 		void TrendlineEstimator::Update(int64_t sendDeltaUs, int64_t arrivalDeltaUs, uint64_t arrivalTimeUs)
 		{
@@ -69,7 +72,7 @@ namespace RTC
 
 			this->delayHist.push_back({ elapsedMs, this->smoothedDelayMs });
 
-			if (this->delayHist.size() > WindowSize)
+			if (this->delayHist.size() > this->windowSize)
 			{
 				this->delayHist.pop_front();
 			}
@@ -81,7 +84,7 @@ namespace RTC
 			//   trend < 0      ->  the delay decreases, queues are being emptied.
 			double trend = this->prevTrend;
 
-			if (this->delayHist.size() == WindowSize)
+			if (this->delayHist.size() == this->windowSize)
 			{
 				// Keep the previous trend if the line cannot be fitted.
 				trend = LinearFitSlope().value_or(trend);
