@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: New `RateCalculator` ([PR #1899](https://github.com/versatica/mediasoup/pull/1899)).
+
 ### 3.26.0
 
 - **Breaking change:** Simulcast and SVC: Limit temporal layer to the preferred one ([PR #1892](https://github.com/versatica/mediasoup/pull/1892)).

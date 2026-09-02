@@ -8,14 +8,24 @@
 
 namespace RTC
 {
-	// It is considered that the time source increases monotonically.
-	// ie: the current timestamp can never be minor than a timestamp in the past.
+	/**
+	 * Sliding window rate meter.
+	 *
+	 * Data is accumulated into a ring of fixed duration items that covers the
+	 * whole window. The in-window total is kept incrementally, so both Update()
+	 * and GetRate() are O(1) amortized.
+	 *
+	 * It is considered that the time source increases monotonically. Timestamps
+	 * going backwards are however tolerated (time comparisons are wrap safe):
+	 * data still within the window is added to the newest item, older data is
+	 * ignored, and nothing is ever expired ahead of time.
+	 */
 	class RateCalculator
 	{
 	public:
-		static constexpr size_t DefaultWindowSize{ 1000u };
+		static constexpr size_t DefaultWindowSize{ 1000 };
 		static constexpr float DefaultBpsScale{ 8000.0f };
-		static constexpr uint16_t DefaultWindowItems{ 100u };
+		static constexpr uint16_t DefaultWindowItems{ 100 };
 
 	public:
 		explicit RateCalculator(
@@ -35,42 +45,38 @@ namespace RTC
 		void Reset();
 
 	private:
-		void RemoveOldData(uint64_t nowMs);
+		bool SlideWindow(uint64_t nowMs);
 
 	private:
-		struct BufferItem
-		{
-			size_t count{ 0u };
-			uint64_t timeMs{ 0u };
-		};
-
-	private:
-		// Window Size (in milliseconds).
+		// Window size (in milliseconds). Always >= 1.
 		size_t windowSizeMs{ DefaultWindowSize };
-		// Scale in which the rate is represented.
-		float scale{ DefaultBpsScale };
-		// Window Size (number of items).
-		uint16_t windowItems{ DefaultWindowItems };
-		// Item Size (in milliseconds), calculated as: windowSizeMs / windowItems.
-		size_t itemSizeMs{ 0u };
-		// Buffer to keep data.
-		std::vector<BufferItem> buffer;
-		// Time (in milliseconds) for last item in the time window.
-		std::optional<uint64_t> newestItemStartTimeMs{ std::nullopt };
-		// Index for the last item in the time window.
-		int32_t newestItemIndex{ -1 };
-		// Time (in milliseconds) for oldest item in the time window.
-		std::optional<uint64_t> oldestItemStartTimeMs{ std::nullopt };
-		// Index for the oldest item in the time window.
-		int32_t oldestItemIndex{ -1 };
-		// Total count in the time window.
-		size_t totalCount{ 0u };
-		// Total bytes transmitted.
-		size_t bytes{ 0u };
-		// Last value calculated by GetRate().
-		uint32_t lastRate{ 0u };
-		// Last time GetRate() was called.
-		std::optional<uint64_t> lastTimeMs{ std::nullopt };
+		// Item size (in milliseconds). Always >= 1.
+		size_t itemSizeMs{ 1 };
+		// Precomputed `scale / windowSizeMs`.
+		double rateScale{ 0.0 };
+		// Ring of items, each one holding the count of the data within it. Never
+		// empty, and always long enough to cover the whole window.
+		std::vector<size_t> buffer;
+		// Index of the newest item. Always < buffer.size().
+		size_t newestItemIndex{ 0 };
+		// Time (in milliseconds) at which the newest item starts.
+		uint64_t newestItemStartTimeMs{ 0 };
+		// Sum of the count of every item.
+		size_t totalCount{ 0 };
+		// Total bytes accounted for. Not affected by Reset().
+		size_t bytes{ 0 };
+		// Rate memoized by GetRate(), only valid while both `lastTimeMs` and
+		// `lastTotalCount` below still match. `lastTotalCount` is the one that makes
+		// any Update() changing the rate invalidate this implicitly, so that the hot
+		// path needs no memoization store.
+		// NOTE: No "not calculated yet" mark is needed, since the initial and post
+		// Reset() state is a valid entry on its own: a zero rate for a zero count.
+		uint32_t lastRate{ 0 };
+		// Time of the latest GetRate() call. Prevents reusing `lastRate` once time
+		// has moved on and there is data pending expiration.
+		uint64_t lastTimeMs{ 0 };
+		// Total count at the latest GetRate() call.
+		size_t lastTotalCount{ 0 };
 	};
 
 	class RtpDataCounter
@@ -106,7 +112,7 @@ namespace RTC
 		// account.
 		bool ignorePaddingOnlyPackets{ false };
 		RateCalculator rate;
-		size_t packets{ 0u };
+		size_t packets{ 0 };
 	};
 } // namespace RTC
 
