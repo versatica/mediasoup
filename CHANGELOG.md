@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: New RateCalculator ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Worker: New RateCalculator ([PR #1899](https://github.com/versatica/mediasoup/pull/1899)).
 
 ### 3.26.0
 
