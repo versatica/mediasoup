@@ -3,129 +3,75 @@
 
 #include "RTC/RateCalculator.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
-#include <cmath>   // std::trunc()
-#include <cstring> // std::memset()
+#include <cmath>  // std::trunc()
+#include <limits> // std::numeric_limits()
 
 namespace RTC
 {
 	RateCalculator::RateCalculator(size_t windowSizeMs, float scale, uint16_t windowItems)
-	  : windowSizeMs(windowSizeMs),
-	    scale(scale),
-	    windowItems(windowItems),
-	    itemSizeMs(std::max(windowSizeMs / windowItems, size_t{ 1 }))
 	{
 		MS_TRACE();
 
-		this->buffer.resize(windowItems);
+		// Clamp the given values so every derived value is safe to use.
+		this->windowSizeMs = std::max(windowSizeMs, size_t{ 1u });
 
-		std::memset(
-		  static_cast<void*>(std::addressof(this->buffer.front())),
-		  0,
-		  sizeof(BufferItem) * this->buffer.size());
+		const size_t items = std::max<size_t>(windowItems, 1u);
+
+		// Item granularity, rounded up so that `items` items always suffice to cover
+		// the window.
+		this->itemSizeMs = std::max((this->windowSizeMs + items - 1) / items, size_t{ 1u });
+
+		// Number of items needed to cover the whole window, rounded up. It is never
+		// higher than `items`, and it guarantees that in-window data can never
+		// overrun the ring. The window it spans overshoots windowSizeMs by less than
+		// one item, which is inherent to splitting the window into items.
+		this->buffer.resize((this->windowSizeMs + this->itemSizeMs - 1) / this->itemSizeMs);
+
+		this->rateScale = static_cast<double>(scale) / static_cast<double>(this->windowSizeMs);
 	}
 
 	void RateCalculator::Update(size_t size, uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		// Ignore too old data. Should never happen.
-		if (this->oldestItemStartTimeMs.has_value() && Utils::Number::IsLowerThan<uint64_t>(nowMs, *this->oldestItemStartTimeMs))
+		// Ignore data older than the window. Should never happen.
+		if (!SlideWindow(nowMs))
 		{
-			MS_WARN_DEV("nowMs < this->oldestItemStartTimeMs, should never happen");
+			MS_WARN_DEV("given nowMs is older than the current window, ignoring data");
 
 			return;
 		}
 
-		// Increase bytes.
-		this->bytes += size;
-
-		RemoveOldData(nowMs);
-
-		// If the elapsed time from the newest item start time is greater than the
-		// item size (in milliseconds), increase the item index.
-		if (
-		  this->newestItemIndex < 0 || !this->newestItemStartTimeMs.has_value() ||
-		  Utils::Number::IsHigherOrEqualThan<uint64_t>(
-		    nowMs - *this->newestItemStartTimeMs, this->itemSizeMs))
-		{
-			this->newestItemIndex++;
-			this->newestItemStartTimeMs = nowMs;
-
-			if (this->newestItemIndex >= this->windowItems)
-			{
-				MS_DEBUG_DEV("this->newestItemIndex >= this->windowItems, setting this->newestItemIndex = 0");
-
-				this->newestItemIndex = 0;
-			}
-
-			// Advance oldestItemIndex if buffer is full.
-			// NOTE: This avoids a crash:
-			//   https://github.com/versatica/mediasoup/issues/1316
-			if (this->newestItemIndex == this->oldestItemIndex && this->oldestItemIndex != -1)
-			{
-				if (++this->oldestItemIndex >= this->windowItems)
-				{
-					this->oldestItemIndex = 0;
-				}
-			}
-
-			MS_ASSERT(
-			  this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
-			  "newest index overlaps with the oldest one [newestItemIndex:%" PRIi32
-			  ", oldestItemIndex:%" PRIi32 "]",
-			  this->newestItemIndex,
-			  this->oldestItemIndex);
-
-			// Set the newest item.
-			BufferItem& item = this->buffer[this->newestItemIndex];
-
-			item.count  = size;
-			item.timeMs = nowMs;
-		}
-		else
-		{
-			// Update the newest item.
-			BufferItem& item = this->buffer[this->newestItemIndex];
-
-			item.count += size;
-		}
-
-		// Set the oldest item index and time, if not set.
-		if (this->oldestItemIndex < 0)
-		{
-			MS_DEBUG_DEV(
-			  "this->oldestItemIndex < 0, setting this->oldestItemIndex and this->oldestItemStartTimeMs");
-
-			this->oldestItemIndex       = this->newestItemIndex;
-			this->oldestItemStartTimeMs = nowMs;
-		}
-
+		this->buffer[this->newestItemIndex] += size;
 		this->totalCount += size;
-
-		// Reset `lastRate` and `lastTimeMs` so `GetRate()` will calculate rate
-		// again even if called with same now in the same loop iteration.
-		this->lastRate   = 0;
-		this->lastTimeMs = std::nullopt;
+		this->bytes += size;
 	}
 
 	uint32_t RateCalculator::GetRate(uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		if (this->lastTimeMs.has_value() && nowMs == *this->lastTimeMs)
+		// If both keys match, the memoized rate is still exact. `lastRate` is a pure
+		// function of `totalCount`, so the value is right, and no expiration can be
+		// pending: SlideWindow() already ran for this very `nowMs` and
+		// `newestItemStartTimeMs` only moves forward afterwards, while the initial and
+		// post Reset() state has an empty ring anyway.
+		if (nowMs == this->lastTimeMs && this->totalCount == this->lastTotalCount)
 		{
-			MS_DEBUG_DEV("nowMs == this->lastTimeMs, early return");
+			MS_DEBUG_DEV("nothing changed since the latest call, early return");
 
 			return this->lastRate;
 		}
 
-		RemoveOldData(nowMs);
+		SlideWindow(nowMs);
 
-		const float scale = this->scale / this->windowSizeMs;
+		const double rate = std::trunc((static_cast<double>(this->totalCount) * this->rateScale) + 0.5);
 
-		this->lastTimeMs = nowMs;
-		this->lastRate   = static_cast<uint32_t>(std::trunc((this->totalCount * scale) + 0.5f));
+		// NOTE: Must be read after SlideWindow(), which may have expired data.
+		this->lastTotalCount = this->totalCount;
+		this->lastTimeMs     = nowMs;
+		this->lastRate       = static_cast<uint32_t>(
+		  std::min(rate, static_cast<double>(std::numeric_limits<uint32_t>::max())));
 
 		return this->lastRate;
 	}
@@ -134,73 +80,89 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::memset(
-		  static_cast<void*>(std::addressof(this->buffer.front())),
-		  0,
-		  sizeof(BufferItem) * this->buffer.size());
+		std::ranges::fill(this->buffer, 0u);
 
-		this->newestItemStartTimeMs = std::nullopt;
-		this->newestItemIndex       = -1;
-		this->oldestItemStartTimeMs = std::nullopt;
-		this->oldestItemIndex       = -1;
+		this->newestItemIndex       = 0u;
+		this->newestItemStartTimeMs = 0u;
 		this->totalCount            = 0u;
 		this->lastRate              = 0u;
-		this->lastTimeMs            = std::nullopt;
+		this->lastTimeMs            = 0u;
+		this->lastTotalCount        = 0u;
 	}
 
-	void RateCalculator::RemoveOldData(uint64_t nowMs)
+	/**
+	 * Expires the items that no longer belong to the window ending at `nowMs`,
+	 * and makes the item holding `nowMs` the newest one.
+	 *
+	 * Returns false if `nowMs` is so far in the past that it lies outside of the
+	 * window, in which case nothing is modified.
+	 */
+	bool RateCalculator::SlideWindow(uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		if (!this->oldestItemStartTimeMs.has_value())
+		// Time elapsed since the newest item started. The subtraction is done in
+		// unsigned arithmetic and then reinterpreted as signed, so it is wrap safe
+		// and negative when `nowMs` lies in the past.
+		const auto elapsedMs = static_cast<int64_t>(nowMs - this->newestItemStartTimeMs);
+
+		// `nowMs` is older than the whole window.
+		if (elapsedMs <= -static_cast<int64_t>(this->windowSizeMs))
 		{
-			return;
+			return false;
 		}
 
-		// No item set.
-		if (this->newestItemIndex < 0 || this->oldestItemIndex < 0)
+		// `nowMs` belongs to the newest item, or to an already existing one still
+		// within the window, so there is nothing to expire.
+		if (elapsedMs < static_cast<int64_t>(this->itemSizeMs))
 		{
-			return;
+			return true;
 		}
 
-		const uint64_t newOldestTime = nowMs - this->windowSizeMs;
+		const uint64_t steps = static_cast<uint64_t>(elapsedMs) / this->itemSizeMs;
 
-		// Oldest item already removed.
-		if (Utils::Number::IsLowerThan<uint64_t>(newOldestTime, *this->oldestItemStartTimeMs))
+		// A whole window elapsed since the newest item, so every item is gone.
+		if (steps >= this->buffer.size())
 		{
-			return;
-		}
+			MS_DEBUG_DEV("a whole window elapsed, resetting every item");
 
-		// A whole window size time has elapsed since last entry. Reset the buffer.
-		if (
-		  this->newestItemStartTimeMs.has_value() &&
-		  Utils::Number::IsHigherOrEqualThan<uint64_t>(newOldestTime, *this->newestItemStartTimeMs))
-		{
-			MS_DEBUG_DEV("newOldestTime >= this->newestItemStartTimeMs, resetting the buffer");
-
-			Reset();
-
-			return;
-		}
-
-		while (Utils::Number::IsHigherOrEqualThan<uint64_t>(newOldestTime, *this->oldestItemStartTimeMs))
-		{
-			BufferItem& oldestItem = this->buffer[this->oldestItemIndex];
-
-			this->totalCount -= oldestItem.count;
-
-			oldestItem.count  = 0u;
-			oldestItem.timeMs = 0u;
-
-			if (++this->oldestItemIndex >= this->windowItems)
+			// NOTE: totalCount is the sum of every item, so a zero total means that
+			// the ring is already zeroed.
+			if (this->totalCount != 0u)
 			{
-				this->oldestItemIndex = 0;
+				std::ranges::fill(this->buffer, 0u);
+
+				this->totalCount = 0u;
 			}
 
-			const BufferItem& newOldestItem = this->buffer[this->oldestItemIndex];
+			this->newestItemIndex       = 0u;
+			this->newestItemStartTimeMs = nowMs;
 
-			this->oldestItemStartTimeMs = newOldestItem.timeMs;
+			return true;
 		}
+
+		// Walk the ring forward. Every item being passed holds the count of exactly
+		// buffer.size() items ago, which is now out of the window.
+		for (uint64_t i{ 0u }; i < steps; ++i)
+		{
+			if (++this->newestItemIndex == this->buffer.size())
+			{
+				this->newestItemIndex = 0u;
+			}
+
+			this->totalCount -= this->buffer[this->newestItemIndex];
+
+			this->buffer[this->newestItemIndex] = 0u;
+		}
+
+		// Advance by whole items rather than jumping to `nowMs`. The window is
+		// derived from item geometry (buffer.size() * itemSizeMs) instead of from per
+		// item timestamps, so absorbing the `elapsedMs % itemSizeMs` remainder here
+		// would stretch items past itemSizeMs, making the ring span more time than
+		// windowSizeMs and hence over-report the rate.
+		this->newestItemStartTimeMs += steps * this->itemSizeMs;
+
+		return true;
 	}
 
 	void RtpDataCounter::Update(const RTC::RTP::Packet* packet)
