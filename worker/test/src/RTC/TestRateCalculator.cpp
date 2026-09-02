@@ -163,7 +163,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	//   https://github.com/versatica/mediasoup/issues/1316
 	SECTION("buffer overflow should not crash")
 	{
-		// window: 1000ms, items: 3 (granularity: 333ms)
+		// window: 1000ms, items: 3 (granularity: 334ms)
 		RTC::RateCalculator rate(1000, 8000, 3);
 
 		// clang-format off
