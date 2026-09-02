@@ -12,7 +12,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	constexpr double FractionAfterOveruse{ 0.85 };
 
 	// Options of a rate control running in the sending endpoint.
-	const RTC::BWE::AimdRateControl::AimdRateControlOptions SendSideOptions{ .sendSide = true };
+	const RTC::BWE::AimdRateControl::AimdRateControlOptions sendSideOptions{ .sendSide = true };
 
 	SECTION("the increase rate has a floor of 4 kbps per second")
 	{
@@ -116,7 +116,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		// And it's still the value it had grown to, rather than both being wrong.
 		REQUIRE_THAT(
 		  static_cast<double>(aimdRateControl.LatestEstimate()),
-		  Catch::Matchers::WithinAbs((3 * AckedBitrate / 2) + 10000, 2000));
+		  Catch::Matchers::WithinAbs((1.5 * AckedBitrate) + 10000, 2000));
 	}
 
 	SECTION("an overuse drops the bitrate to the backoff fraction of the throughput")
@@ -185,7 +185,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		// While in an application limited region the network gives no feedback that
 		// could tell whether a higher estimate is correct, so it must not grow.
-		auto options = SendSideOptions;
+		auto options = sendSideOptions;
 
 		options.noBitrateIncreaseInAlr = true;
 
@@ -219,7 +219,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t InitialBitrate{ 123000 };
 
-		auto options = SendSideOptions;
+		auto options = sendSideOptions;
 
 		options.noBitrateIncreaseInAlr = true;
 
@@ -241,7 +241,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		// Not being in ALR must let the estimate grow, so that it cannot get stuck
 		// at a given bitrate.
-		auto options = SendSideOptions;
+		auto options = sendSideOptions;
 
 		options.noBitrateIncreaseInAlr = true;
 
@@ -273,13 +273,13 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t LinkCapacityUpper{ 400000 };
 
-		const RTC::BWE::Types::NetworkStateEstimate NetworkEstimate{ .linkCapacityUpper =
+		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
 			                                                             LinkCapacityUpper };
 
-		RTC::BWE::AimdRateControl aimdRateControl(SendSideOptions);
+		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
 
 		aimdRateControl.SetEstimate(300000, InitialTimeUs);
-		aimdRateControl.SetNetworkStateEstimate(NetworkEstimate);
+		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 		aimdRateControl.SetEstimate(500000, InitialTimeUs);
 
 		REQUIRE(aimdRateControl.LatestEstimate() == LinkCapacityUpper);
@@ -290,15 +290,15 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		constexpr int64_t CurrentBitrate{ 500000 };
 
 		// Below the current bitrate, so it must not drag it down.
-		const RTC::BWE::Types::NetworkStateEstimate NetworkEstimate{ .linkCapacityUpper = 300000 };
+		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper = 300000 };
 
-		RTC::BWE::AimdRateControl aimdRateControl(SendSideOptions);
+		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
 
 		aimdRateControl.SetEstimate(CurrentBitrate, InitialTimeUs);
 
 		REQUIRE(aimdRateControl.LatestEstimate() == CurrentBitrate);
 
-		aimdRateControl.SetNetworkStateEstimate(NetworkEstimate);
+		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 		aimdRateControl.SetEstimate(700000, InitialTimeUs);
 
 		REQUIRE(aimdRateControl.LatestEstimate() == CurrentBitrate);
@@ -308,10 +308,10 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t LinkCapacityUpper{ 300000 };
 
-		const RTC::BWE::Types::NetworkStateEstimate NetworkEstimate{ .linkCapacityUpper =
+		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
 			                                                             LinkCapacityUpper };
 
-		auto options = SendSideOptions;
+		auto options = sendSideOptions;
 
 		options.useCurrentEstimateAsMinUpperBound = false;
 
@@ -321,7 +321,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		REQUIRE(aimdRateControl.LatestEstimate() == 500000);
 
-		aimdRateControl.SetNetworkStateEstimate(NetworkEstimate);
+		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 		aimdRateControl.SetEstimate(700000, InitialTimeUs);
 
 		REQUIRE(aimdRateControl.LatestEstimate() == LinkCapacityUpper);
@@ -331,12 +331,12 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t LinkCapacityLower{ 400000 };
 
-		const RTC::BWE::Types::NetworkStateEstimate NetworkEstimate{ .linkCapacityLower =
+		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityLower =
 			                                                             LinkCapacityLower };
 
-		RTC::BWE::AimdRateControl aimdRateControl(SendSideOptions);
+		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
 
-		aimdRateControl.SetNetworkStateEstimate(NetworkEstimate);
+		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 		aimdRateControl.SetEstimate(100000, InitialTimeUs);
 
 		REQUIRE(
@@ -347,15 +347,15 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 	{
 		constexpr int64_t CurrentBitrate{ 200000 };
 
-		const RTC::BWE::Types::NetworkStateEstimate NetworkEstimate{ .linkCapacityLower = 400000 };
+		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityLower = 400000 };
 
-		RTC::BWE::AimdRateControl aimdRateControl(SendSideOptions);
+		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
 
 		aimdRateControl.SetEstimate(CurrentBitrate, InitialTimeUs);
 
 		REQUIRE(aimdRateControl.LatestEstimate() == CurrentBitrate);
 
-		aimdRateControl.SetNetworkStateEstimate(NetworkEstimate);
+		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 
 		// Ignored, since it's lower than the backoff fraction of the network state
 		// estimate.
@@ -369,10 +369,10 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		constexpr int64_t InitialBitrate{ 123000 };
 		constexpr int64_t LinkCapacityUpper{ 150000 };
 
-		const RTC::BWE::Types::NetworkStateEstimate NetworkEstimate{ .linkCapacityUpper =
+		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
 			                                                             LinkCapacityUpper };
 
-		auto options = SendSideOptions;
+		auto options = sendSideOptions;
 
 		options.estimateBoundedIncrease = false;
 
@@ -382,7 +382,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		aimdRateControl.SetEstimate(InitialBitrate, nowUs);
 		aimdRateControl.SetInApplicationLimitedRegion(false);
-		aimdRateControl.SetNetworkStateEstimate(NetworkEstimate);
+		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 
 		for (int i{ 0 }; i < 100; ++i)
 		{

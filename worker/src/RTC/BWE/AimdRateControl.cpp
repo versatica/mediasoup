@@ -201,10 +201,11 @@ namespace RTC
 			// Time the network takes to react to a change, which is a round trip plus
 			// the delay of the overuse detector, doubled to stay on the safe side.
 			const int64_t responseTimeUs = (this->rttUs + DetectorDelayUs) * 2;
-			const double increaseRateBpsPerSecond =
-			  static_cast<double>(avgPacketSizeBytes * 8000000 / responseTimeUs);
+			// NOTE: The division is deliberately an integer one, since it's the
+			// resolution at which a bitrate is expressed.
+			const int64_t increaseRateBpsPerSecond = avgPacketSizeBytes * 8000000 / responseTimeUs;
 
-			return std::max(MinIncreaseRateBpsPerSecond, increaseRateBpsPerSecond);
+			return std::max(MinIncreaseRateBpsPerSecond, static_cast<double>(increaseRateBpsPerSecond));
 		}
 
 		int64_t AimdRateControl::GetFeedbackIntervalUs() const
