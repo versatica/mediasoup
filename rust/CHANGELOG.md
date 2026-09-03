@@ -3,7 +3,6 @@
 ### NEXT
 
 - Worker: New `RateCalculator` ([PR #1899](https://github.com/versatica/mediasoup/pull/1899)).
-- Fix `DataConsumer::Send()` response generation ([PR #1907](https://github.com/versatica/mediasoup/pull/1907)).
 
 ### 0.27.0
 
