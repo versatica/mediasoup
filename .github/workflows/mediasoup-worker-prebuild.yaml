@@ -80,11 +80,6 @@ jobs:
           # `getWorkerPrebuildTarName()` in npm-scripts.mjs), so hosts running
           # a kernel 7 look for a different tarball than those running a
           # kernel 6.
-          #
-          # TODO: That per kernel naming was introduced to ship a separate
-          # binary with `io_uring` support (which required kernel >= 6), but
-          # `io_uring` support was removed in PR #1832, so this split is no
-          # longer strictly needed.
           - os: ubuntu-26.04
             cc: gcc
             cxx: g++
