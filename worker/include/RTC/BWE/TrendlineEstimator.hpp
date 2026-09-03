@@ -75,7 +75,7 @@ namespace RTC
 			 * Slope of the least squares line fitted to the samples window, or no
 			 * value if it cannot be computed.
 			 */
-			std::optional<double> LinearFitSlope() const;
+			std::optional<double> GetLinearFitSlope() const;
 
 			void Detect(double trend, double sendDeltaMs, int64_t arrivalTimeMs);
 

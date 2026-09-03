@@ -78,8 +78,8 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			nowUs += 100 * 1000;
 		}
 
-		REQUIRE(aimdRateControl.ValidEstimate());
-		REQUIRE(aimdRateControl.LatestEstimate() == (3 * AckedBitrate / 2) + 10000);
+		REQUIRE(aimdRateControl.IsValidEstimate());
+		REQUIRE(aimdRateControl.GetLatestEstimate() == (3 * AckedBitrate / 2) + 10000);
 	}
 
 	SECTION("a decreasing acknowledged bitrate doesn't drag the estimate down")
@@ -102,21 +102,21 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			nowUs += 100 * 1000;
 		}
 
-		REQUIRE(aimdRateControl.ValidEstimate());
+		REQUIRE(aimdRateControl.IsValidEstimate());
 
 		// The estimate must not be reduced to 1.5x what is being acknowledged, but
 		// it must not grow any further either.
-		const int64_t prevEstimate = aimdRateControl.LatestEstimate();
+		const int64_t prevEstimate = aimdRateControl.GetLatestEstimate();
 
 		aimdRateControl.Update(
 		  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
 			  .estimatedThroughput = AckedBitrate / 2 },
 		  nowUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == prevEstimate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == prevEstimate);
 		// And it's still the value it had grown to, rather than both being wrong.
 		REQUIRE_THAT(
-		  static_cast<double>(aimdRateControl.LatestEstimate()),
+		  static_cast<double>(aimdRateControl.GetLatestEstimate()),
 		  Catch::Matchers::WithinAbs((1.5 * AckedBitrate) + 10000, 2000));
 	}
 
@@ -141,7 +141,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			  .estimatedThroughput = ackedBitrate },
 		  nowUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == UpdatedBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == UpdatedBitrate);
 		// The increase rate at 216 kbps is 12 kbps per second.
 		REQUIRE(aimdRateControl.GetNearMaxIncreaseRateBpsPerSecond() == 12000);
 	}
@@ -177,7 +177,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			nowUs += 100 * 1000;
 		}
 
-		REQUIRE(aimdRateControl.LatestEstimate() <= (3 * InitialBitrate / 2) + 10000);
+		REQUIRE(aimdRateControl.GetLatestEstimate() <= (3 * InitialBitrate / 2) + 10000);
 	}
 
 	SECTION("the estimate doesn't increase in ALR when so configured")
@@ -201,7 +201,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			  .estimatedThroughput = InitialBitrate },
 		  nowUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == InitialBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == InitialBitrate);
 
 		for (int i{ 0 }; i < 100; ++i)
 		{
@@ -213,7 +213,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			nowUs += 100 * 1000;
 		}
 
-		REQUIRE(aimdRateControl.LatestEstimate() == InitialBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == InitialBitrate);
 	}
 
 	SECTION("the estimate can still be set from outside while in ALR")
@@ -229,11 +229,11 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		aimdRateControl.SetEstimate(InitialBitrate, InitialTimeUs);
 		aimdRateControl.SetInApplicationLimitedRegion(true);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == InitialBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == InitialBitrate);
 
 		aimdRateControl.SetEstimate(2 * InitialBitrate, InitialTimeUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == 2 * InitialBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == 2 * InitialBitrate);
 	}
 
 	SECTION("the estimate increases while not in ALR")
@@ -267,7 +267,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			nowUs += 100 * 1000;
 		}
 
-		REQUIRE(aimdRateControl.LatestEstimate() > InitialBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() > InitialBitrate);
 	}
 
 	SECTION("the estimate is upper limited by the network state estimate")
@@ -283,7 +283,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 		aimdRateControl.SetEstimate(500000, InitialTimeUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == LinkCapacityUpper);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == LinkCapacityUpper);
 	}
 
 	SECTION("the current bitrate is the lowest possible upper limit")
@@ -297,12 +297,12 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		aimdRateControl.SetEstimate(CurrentBitrate, InitialTimeUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == CurrentBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == CurrentBitrate);
 
 		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 		aimdRateControl.SetEstimate(700000, InitialTimeUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == CurrentBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == CurrentBitrate);
 	}
 
 	SECTION("the current bitrate is not the lowest possible upper limit when so configured")
@@ -320,12 +320,12 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		aimdRateControl.SetEstimate(500000, InitialTimeUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == 500000);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == 500000);
 
 		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 		aimdRateControl.SetEstimate(700000, InitialTimeUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == LinkCapacityUpper);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == LinkCapacityUpper);
 	}
 
 	SECTION("the estimate is lower limited by the network state estimate")
@@ -341,7 +341,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		aimdRateControl.SetEstimate(100000, InitialTimeUs);
 
 		REQUIRE(
-		  aimdRateControl.LatestEstimate() == std::llround(LinkCapacityLower * FractionAfterOveruse));
+		  aimdRateControl.GetLatestEstimate() == std::llround(LinkCapacityLower * FractionAfterOveruse));
 	}
 
 	SECTION("setting an estimate below the network state estimate is ignored")
@@ -354,7 +354,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		aimdRateControl.SetEstimate(CurrentBitrate, InitialTimeUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == CurrentBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == CurrentBitrate);
 
 		aimdRateControl.SetNetworkStateEstimate(networkEstimate);
 
@@ -362,7 +362,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		// estimate.
 		aimdRateControl.SetEstimate(100000, InitialTimeUs);
 
-		REQUIRE(aimdRateControl.LatestEstimate() == CurrentBitrate);
+		REQUIRE(aimdRateControl.GetLatestEstimate() == CurrentBitrate);
 	}
 
 	SECTION("the estimate is not limited by the network state estimate when so configured")
@@ -395,6 +395,6 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 			nowUs += 100 * 1000;
 		}
 
-		REQUIRE(aimdRateControl.LatestEstimate() > LinkCapacityUpper);
+		REQUIRE(aimdRateControl.GetLatestEstimate() > LinkCapacityUpper);
 	}
 }

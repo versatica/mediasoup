@@ -150,7 +150,7 @@ namespace RTC
 			this->networkEstimate = estimate;
 		}
 
-		bool AimdRateControl::TimeToReduceFurther(int64_t atTimeUs, int64_t estimatedThroughput) const
+		bool AimdRateControl::IsTimeToReduceFurther(int64_t atTimeUs, int64_t estimatedThroughput) const
 		{
 			MS_TRACE();
 
@@ -168,9 +168,9 @@ namespace RTC
 				return true;
 			}
 
-			if (ValidEstimate())
+			if (IsValidEstimate())
 			{
-				const int64_t threshold = std::llround(0.5 * static_cast<double>(LatestEstimate()));
+				const int64_t threshold = std::llround(0.5 * static_cast<double>(GetLatestEstimate()));
 
 				return estimatedThroughput < threshold;
 			}
@@ -178,11 +178,11 @@ namespace RTC
 			return false;
 		}
 
-		bool AimdRateControl::InitialTimeToReduceFurther(int64_t atTimeUs) const
+		bool AimdRateControl::IsInitialTimeToReduceFurther(int64_t atTimeUs) const
 		{
 			MS_TRACE();
 
-			return ValidEstimate() && TimeToReduceFurther(atTimeUs, (LatestEstimate() / 2) - 1);
+			return IsValidEstimate() && IsTimeToReduceFurther(atTimeUs, (GetLatestEstimate() / 2) - 1);
 		}
 
 		double AimdRateControl::GetNearMaxIncreaseRateBpsPerSecond() const
