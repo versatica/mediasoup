@@ -377,7 +377,7 @@ export class DataConsumerImpl<DataConsumerAppData extends AppData = AppData>
 			this.#internal.dataConsumerId
 		);
 
-		const data = new FbsDataConsumer.GetBufferedAmountResponse();
+		const data = new FbsDataConsumer.SendResponse();
 
 		response.body(data);
 

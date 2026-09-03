@@ -293,8 +293,8 @@ namespace RTC
 
 						  this->listener->OnDataConsumerNeedBufferedAmount(this, bufferedAmount);
 
-						  auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
-						    request->GetBufferBuilder(), bufferedAmount);
+						  auto responseOffset =
+						    FBS::DataConsumer::CreateSendResponse(request->GetBufferBuilder(), bufferedAmount);
 
 						  request->Accept(FBS::Response::Body::DataConsumer_SendResponse, responseOffset);
 					  }
