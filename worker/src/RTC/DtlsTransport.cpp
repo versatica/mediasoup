@@ -118,11 +118,11 @@ namespace RTC
 	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32u };
 	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12u };
 	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength +
-		                                                 SrtpAesGcm256MasterSaltLength };
+	                                                   SrtpAesGcm256MasterSaltLength };
 	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16u };
 	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12u };
 	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength +
-		                                                 SrtpAesGcm128MasterSaltLength };
+	                                                   SrtpAesGcm128MasterSaltLength };
 
 	/* Class variables. */
 
@@ -137,7 +137,7 @@ namespace RTC
 		  { "sha-256", DtlsTransport::FingerprintAlgorithm::SHA256 },
 		  { "sha-384", DtlsTransport::FingerprintAlgorithm::SHA384 },
 		  { "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 }
-  };
+	};
 	const ankerl::unordered_dense::map<DtlsTransport::FingerprintAlgorithm, std::string>
 	  DtlsTransport::FingerprintAlgorithm2String = {
 		  { DtlsTransport::FingerprintAlgorithm::SHA1,   "sha-1"   },
@@ -145,7 +145,7 @@ namespace RTC
 		  { DtlsTransport::FingerprintAlgorithm::SHA256, "sha-256" },
 		  { DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
 		  { DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
-  };
+	};
 	const ankerl::unordered_dense::map<std::string, DtlsTransport::Role> DtlsTransport::String2Role = {
 		{ "auto",   DtlsTransport::Role::AUTO   },
 		{ "client", DtlsTransport::Role::CLIENT },

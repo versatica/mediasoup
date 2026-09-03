@@ -192,7 +192,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk1->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                     { 2, 4 },
-    });
+		});
 
 		// Fill in the hole.
 		observe({ 12, 16, 17, 18 });
@@ -231,7 +231,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 2, 2 },
-    });
+		});
 		REQUIRE(sackChunk->GetDuplicateTsns().empty());
 	}
 
@@ -268,7 +268,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 2, 2 },
-    });
+		});
 	}
 
 	SECTION("empty all acks")
@@ -392,7 +392,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 2, 5 },
-    });
+		});
 		REQUIRE(sackChunk->GetDuplicateTsns() == std::vector<uint32_t>{ 13, 14 });
 	}
 
@@ -614,7 +614,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 2, 2 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block adds another")
@@ -631,7 +631,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 2, 2 },
 		                                    { 4, 4 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block adds duplicate")
@@ -647,7 +647,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 2, 2 },
-    });
+		});
 		REQUIRE(sackChunk->GetDuplicateTsns() == std::vector<uint32_t>{ 12 });
 	}
 
@@ -664,7 +664,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 2, 3 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block expands to right with other")
@@ -684,7 +684,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                                    { 2,  2  },
 		                                    { 10, 11 },
 		                                    { 20, 20 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block expands to left")
@@ -700,7 +700,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 2, 3 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block expands to left with other")
@@ -720,7 +720,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                                    { 2,  2  },
 		                                    { 10, 11 },
 		                                    { 20, 20 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block expands to right and merges")
@@ -741,7 +741,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                                    { 2,  2  },
 		                                    { 10, 12 },
 		                                    { 20, 20 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block merges many blocks into one")
@@ -769,7 +769,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  getGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                         { 12, 12 },
 		                         { 20, 20 },
-    });
+		});
 
 		observe({ 24 });
 
@@ -778,7 +778,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                         { 12, 12 },
 		                         { 14, 14 },
 		                         { 20, 20 },
-    });
+		});
 
 		observe({ 28 });
 
@@ -788,7 +788,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                         { 14, 14 },
 		                         { 18, 18 },
 		                         { 20, 20 },
-    });
+		});
 
 		observe({ 26 });
 
@@ -799,7 +799,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                         { 16, 16 },
 		                         { 18, 18 },
 		                         { 20, 20 },
-    });
+		});
 
 		observe({ 29 });
 
@@ -809,7 +809,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                         { 14, 14 },
 		                         { 16, 16 },
 		                         { 18, 20 },
-    });
+		});
 
 		observe({ 23 });
 
@@ -818,7 +818,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                         { 12, 14 },
 		                         { 16, 16 },
 		                         { 18, 20 },
-    });
+		});
 
 		observe({ 27 });
 
@@ -826,7 +826,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  getGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                         { 12, 14 },
 		                         { 16, 20 },
-    });
+		});
 
 		observe({ 25 });
 
@@ -841,7 +841,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  getGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                         { 10, 10 },
 		                         { 12, 20 },
-    });
+		});
 
 		observe({ 32 });
 
@@ -850,7 +850,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                         { 10, 10 },
 		                         { 12, 20 },
 		                         { 22, 22 },
-    });
+		});
 
 		observe({ 21 });
 
@@ -858,7 +858,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  getGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                         { 10, 20 },
 		                         { 22, 22 },
-    });
+		});
 
 		observe({ 31 });
 
@@ -884,7 +884,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		                                    { 2,  4  },
 		                                    { 10, 12 },
 		                                    { 20, 21 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove before first block")
@@ -902,7 +902,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 6,  8  },
 		                                    { 16, 17 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove at beginning of first block")
@@ -920,7 +920,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 6,  8  },
 		                                    { 16, 17 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove at middle of first block")
@@ -938,7 +938,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 6,  8  },
 		                                    { 16, 17 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove at end of first block")
@@ -956,7 +956,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 6,  8  },
 		                                    { 16, 17 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove right after first block")
@@ -974,7 +974,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 2,  4  },
 		                                    { 12, 13 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove right before second block")
@@ -991,7 +991,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 8, 9 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove right at start of second block")
@@ -1008,7 +1008,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 8, 9 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove right at middle of second block")
@@ -1025,7 +1025,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 8, 9 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove right at end of second block")
@@ -1042,7 +1042,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(
 		  sackChunk->GetGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                    { 8, 9 },
-    });
+		});
 	}
 
 	SECTION("gap-ack-block remove far after all blocks")

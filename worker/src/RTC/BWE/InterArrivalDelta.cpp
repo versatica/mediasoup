@@ -23,14 +23,14 @@ namespace RTC
 
 		/* Instance methods. */
 
-		InterArrivalDelta::InterArrivalDelta(uint64_t sendTimeGroupLengthUs)
+		InterArrivalDelta::InterArrivalDelta(int64_t sendTimeGroupLengthUs)
 		  : sendTimeGroupLengthUs(sendTimeGroupLengthUs)
 		{
 			MS_TRACE();
 		}
 
 		std::optional<InterArrivalDelta::Deltas> InterArrivalDelta::ComputeDeltas(
-		  uint64_t sendTimeUs, uint64_t arrivalTimeUs, uint64_t feedbackAtUs, size_t packetSize)
+		  int64_t sendTimeUs, int64_t arrivalTimeUs, int64_t feedbackAtUs, size_t packetSize)
 		{
 			MS_TRACE();
 
@@ -55,15 +55,14 @@ namespace RTC
 				// ongoing group is ready.
 				if (!this->prevGroup.IsFirstPacket())
 				{
-					const int64_t sendDeltaUs = static_cast<int64_t>(this->currentGroup.sendTimeUs) -
-					                            static_cast<int64_t>(this->prevGroup.sendTimeUs);
+					const int64_t sendDeltaUs = this->currentGroup.sendTimeUs - this->prevGroup.sendTimeUs;
 					const int64_t arrivalDeltaUs =
 					  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-					  static_cast<int64_t>(this->currentGroup.completeTimeUs.value()) -
+					  this->currentGroup.completeTimeUs.value() -
 					  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-					  static_cast<int64_t>(this->prevGroup.completeTimeUs.value());
-					const int64_t ownDeltaUs = static_cast<int64_t>(this->currentGroup.lastFeedbackAtUs) -
-					                           static_cast<int64_t>(this->prevGroup.lastFeedbackAtUs);
+					  this->prevGroup.completeTimeUs.value();
+					const int64_t ownDeltaUs =
+					  this->currentGroup.lastFeedbackAtUs - this->prevGroup.lastFeedbackAtUs;
 
 					if (arrivalDeltaUs - ownDeltaUs >= ArrivalTimeOffsetThresholdUs)
 					{
@@ -100,8 +99,8 @@ namespace RTC
 					this->numConsecutiveReorderedGroups = 0;
 
 					deltas = Deltas{ .sendDeltaUs    = sendDeltaUs,
-						               .arrivalDeltaUs = arrivalDeltaUs,
-						               .sizeDelta      = static_cast<int64_t>(this->currentGroup.size) -
+					                 .arrivalDeltaUs = arrivalDeltaUs,
+					                 .sizeDelta      = static_cast<int64_t>(this->currentGroup.size) -
 						                                 static_cast<int64_t>(this->prevGroup.size) };
 				}
 
@@ -126,7 +125,7 @@ namespace RTC
 			return deltas;
 		}
 
-		bool InterArrivalDelta::IsNewSendTimeGroup(uint64_t arrivalTimeUs, uint64_t sendTimeUs) const
+		bool InterArrivalDelta::IsNewSendTimeGroup(int64_t arrivalTimeUs, int64_t sendTimeUs) const
 		{
 			MS_TRACE();
 
@@ -140,23 +139,20 @@ namespace RTC
 			}
 			else
 			{
-				// NOTE: Safe unsigned subtraction since the caller already discarded
-				// packets sent before the first one of the current group.
 				return sendTimeUs - this->currentGroup.firstSendTimeUs > this->sendTimeGroupLengthUs;
 			}
 		}
 
-		bool InterArrivalDelta::BelongsToBurst(uint64_t arrivalTimeUs, uint64_t sendTimeUs) const
+		bool InterArrivalDelta::BelongsToBurst(int64_t arrivalTimeUs, int64_t sendTimeUs) const
 		{
 			MS_TRACE();
 
 			MS_ASSERT(!this->currentGroup.IsFirstPacket(), "current group is empty");
 
-			const int64_t arrivalDeltaUs = static_cast<int64_t>(arrivalTimeUs) -
-			                               // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			                               static_cast<int64_t>(this->currentGroup.completeTimeUs.value());
-			const int64_t sendDeltaUs =
-			  static_cast<int64_t>(sendTimeUs) - static_cast<int64_t>(this->currentGroup.sendTimeUs);
+			const int64_t arrivalDeltaUs =
+			  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+			  arrivalTimeUs - this->currentGroup.completeTimeUs.value();
+			const int64_t sendDeltaUs = sendTimeUs - this->currentGroup.sendTimeUs;
 
 			// Packets sent at the very same time always belong to the same burst.
 			if (sendDeltaUs == 0)
@@ -165,8 +161,7 @@ namespace RTC
 			}
 
 			const int64_t propagationDeltaUs = arrivalDeltaUs - sendDeltaUs;
-			const int64_t burstDurationUs = static_cast<int64_t>(arrivalTimeUs) -
-			                                static_cast<int64_t>(this->currentGroup.firstArrivalTimeUs);
+			const int64_t burstDurationUs    = arrivalTimeUs - this->currentGroup.firstArrivalTimeUs;
 
 			// The packet arrived earlier than its send time gap would suggest, meaning
 			// that it was serialized by the network together with the ongoing group.

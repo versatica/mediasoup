@@ -369,9 +369,9 @@ namespace RTC
 		// In case this is the first unlimited REMB packet, send it fast.
 		if (
 		  ((this->bweType != RTC::BweType::REMB && this->maxIncomingBitrate != 0u) ||
-		   this->unlimitedRembCounter > 0u) &&
+			 this->unlimitedRembCounter > 0u) &&
 		  (nowMs - this->limitationRembSentAtMs > LimitationRembInterval ||
-		   this->unlimitedRembCounter == UnlimitedRembNumPackets))
+			 this->unlimitedRembCounter == UnlimitedRembNumPackets))
 		{
 			MS_DEBUG_DEV(
 			  "sending limitation RTCP REMB packet [bitrate:%" PRIu32 "]", this->maxIncomingBitrate);

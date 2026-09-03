@@ -38,15 +38,17 @@ namespace RTC
 		TrendlineEstimator::TrendlineEstimator(size_t windowSize) : windowSize(windowSize)
 		{
 			MS_TRACE();
+
+			MS_ASSERT(windowSize >= 2, "window size must be at least 2 [windowSize:%zu]", windowSize);
 		}
 
-		void TrendlineEstimator::Update(int64_t sendDeltaUs, int64_t arrivalDeltaUs, uint64_t arrivalTimeUs)
+		void TrendlineEstimator::Update(int64_t sendDeltaUs, int64_t arrivalDeltaUs, int64_t arrivalTimeUs)
 		{
 			MS_TRACE();
 
-			// NOTE: The trendline math is done in ms as double, just like libwebrtc
-			// does, since all its constants are expressed in those units. Being fed us
-			// means that the sub-millisecond precision survives as the fractional part.
+			// NOTE: The trendline math is done in ms as double since every constant
+			// above is expressed in those units. Being fed us means that the
+			// sub-millisecond precision survives as the fractional part.
 			const double sendDeltaMs = static_cast<double>(sendDeltaUs) / 1000.0;
 			const double deltaMs     = static_cast<double>(arrivalDeltaUs - sendDeltaUs) / 1000.0;
 
@@ -62,13 +64,10 @@ namespace RTC
 			this->smoothedDelayMs =
 			  (SmoothingCoef * this->smoothedDelayMs) + ((1 - SmoothingCoef) * this->accumulatedDelayMs);
 
-			// Maintain the samples window.
-			// NOTE: Signed subtraction since a group may arrive before the first one
-			// of the window did, in which case the regression just gets a negative x.
-			const double elapsedMs = static_cast<double>(
-			                           static_cast<int64_t>(arrivalTimeUs) -
-			                           static_cast<int64_t>(this->firstArrivalTimeUs.value())) /
-			                         1000.0;
+			// Maintain the samples window. A group may arrive before the first one of
+			// the window did, in which case the regression just gets a negative x.
+			const double elapsedMs =
+			  static_cast<double>(arrivalTimeUs - this->firstArrivalTimeUs.value()) / 1000.0;
 
 			this->delayHist.push_back({ elapsedMs, this->smoothedDelayMs });
 
@@ -90,12 +89,17 @@ namespace RTC
 				trend = LinearFitSlope().value_or(trend);
 			}
 
-			Detect(trend, sendDeltaMs, static_cast<int64_t>(arrivalTimeUs / 1000));
+			Detect(trend, sendDeltaMs, arrivalTimeUs / 1000);
 		}
 
 		std::optional<double> TrendlineEstimator::LinearFitSlope() const
 		{
 			MS_TRACE();
+
+			MS_ASSERT(
+			  this->delayHist.size() >= 2,
+			  "not enough samples to fit a line [samples:%zu]",
+			  this->delayHist.size());
 
 			// Compute the "center of mass".
 			double sumX{ 0 };

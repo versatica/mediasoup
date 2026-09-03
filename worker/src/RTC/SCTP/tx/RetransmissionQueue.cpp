@@ -35,7 +35,7 @@ namespace RTC
 		    supportsPartialReliability(supportsPartialReliability),
 		    dataChunkHeaderLength(
 		      useMessageInterleaving ? IDataChunk::IDataChunkHeaderLength
-		                             : DataChunk::DataChunkHeaderLength),
+					                       : DataChunk::DataChunkHeaderLength),
 		    t3RtxTimer(t3RtxTimer),
 		    cwnd(sctpOptions.initialCwndMtus * sctpOptions.mtu),
 		    rwnd(remoteAdvertisedReceiverWindowCredit),
@@ -383,7 +383,7 @@ namespace RTC
 				  dataToSend->data,
 				  nowMs,
 				  this->supportsPartialReliability ? dataToSend->maxRetransmissions
-				                                   : Types::MaxRetransmitsNoLimit,
+					                                 : Types::MaxRetransmitsNoLimit,
 				  this->supportsPartialReliability ? dataToSend->expiresAtMs : Types::ExpiresAtMsInfinite,
 				  dataToSend->lifecycleId);
 
@@ -552,7 +552,7 @@ namespace RTC
 			  [&](const auto& block)
 			  {
 				  return Types::UnwrappedTsn::AddTo(cumulativeTsnAck, block.end) <=
-				         this->outstandingData.GetHighestOutstandingTsn();
+					       this->outstandingData.GetHighestOutstandingTsn();
 			  });
 		}
 

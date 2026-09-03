@@ -202,10 +202,10 @@ namespace mocks
 					  this->messageInterleavingCalledWith != this->expectedMessageInterleavingCalledWith.value())
 					{
 						return { .ok = false,
-							       .errorMessage =
-							         std::string("EnableMessageInterleaving() call mismatch [expected:") +
-							         (this->expectedMessageInterleavingCalledWith.value() ? "true" : "false") +
-							         ", got:" + (this->messageInterleavingCalledWith ? "true" : "false") + "]" };
+						         .errorMessage =
+						           std::string("EnableMessageInterleaving() call mismatch [expected:") +
+						           (this->expectedMessageInterleavingCalledWith.value() ? "true" : "false") +
+						           ", got:" + (this->messageInterleavingCalledWith ? "true" : "false") + "]" };
 					}
 
 					if (
@@ -213,7 +213,7 @@ namespace mocks
 					  this->produceCallCount != this->expectedProduceCallCount.value())
 					{
 						return { .ok           = false,
-							       .errorMessage = "Produce() call count mismatch [expected:" +
+						         .errorMessage = "Produce() call count mismatch [expected:" +
 							                       std::to_string(this->expectedProduceCallCount.value()) +
 							                       ", got:" + std::to_string(this->produceCallCount) + "]" };
 					}
@@ -223,7 +223,7 @@ namespace mocks
 					  this->discardCallCount != this->expectedDiscardCallCount.value())
 					{
 						return { .ok           = false,
-							       .errorMessage = "Discard() call count mismatch [expected:" +
+						         .errorMessage = "Discard() call count mismatch [expected:" +
 							                       std::to_string(this->expectedDiscardCallCount.value()) +
 							                       ", got:" + std::to_string(this->discardCallCount) + "]" };
 					}
@@ -231,7 +231,7 @@ namespace mocks
 					if (!this->discardExpectations.empty())
 					{
 						return { .ok           = false,
-							       .errorMessage = "Discard() has " +
+						         .errorMessage = "Discard() has " +
 							                       std::to_string(this->discardExpectations.size()) +
 							                       " unconsumed expectation(s)" };
 					}

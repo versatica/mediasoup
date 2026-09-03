@@ -34,8 +34,8 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		          RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE }),
 		    tcbContext(this->associationListener, this->sctpOptions),
 		    shared(/*getTimeMs*/
-		           [this]()
-		           {
+				       [this]()
+				       {
 			           return this->nowMs;
 		           }),
 		    heartbeatHandler(

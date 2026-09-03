@@ -46,7 +46,7 @@ namespace RTC
 			  "  timer max backoff timeout (ms): %s",
 			  this->timerMaxBackoffTimeoutMs
 			    ? std::to_string(this->timerMaxBackoffTimeoutMs.value()).c_str()
-			    : "Infinite");
+					: "Infinite");
 			MS_DUMP_CLEAN(indentation, "  heartbeat interval (ms): %" PRIu64, this->heartbeatIntervalMs);
 			MS_DUMP_CLEAN(
 			  indentation, "  delayed ack max timeout (ms): %" PRIu64, this->delayedAckMaxTimeoutMs);
@@ -62,12 +62,12 @@ namespace RTC
 			  indentation,
 			  "  max retransmissions: %s",
 			  this->maxRetransmissions ? std::to_string(this->maxRetransmissions.value()).c_str()
-			                           : "Infinite");
+				                         : "Infinite");
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  max init retransmissions: %s",
 			  this->maxInitRetransmissions ? std::to_string(this->maxInitRetransmissions.value()).c_str()
-			                               : "Infinite");
+				                             : "Infinite");
 			MS_DUMP_CLEAN(
 			  indentation, "  enable partial reliability: %s", this->enablePartialReliability ? "yes" : "no");
 			MS_DUMP_CLEAN(

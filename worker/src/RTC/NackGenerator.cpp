@@ -266,7 +266,7 @@ namespace RTC
 			if (
 			  filter == NackFilter::SEQ && nackInfo.sentAtMs == 0 &&
 			  (nackInfo.sendAtSeq == this->lastSeq ||
-			   SeqManager<uint16_t>::IsSeqHigherThan(this->lastSeq, nackInfo.sendAtSeq)))
+				 SeqManager<uint16_t>::IsSeqHigherThan(this->lastSeq, nackInfo.sendAtSeq)))
 			{
 				nackBatch.emplace_back(seq);
 				nackInfo.retries++;
@@ -293,7 +293,7 @@ namespace RTC
 			if (
 			  filter == NackFilter::TIME &&
 			  (nackInfo.sentAtMs == 0 ||
-			   nowMs - nackInfo.sentAtMs >= (this->rtt > 0u ? this->rtt : DefaultRtt)))
+				 nowMs - nackInfo.sentAtMs >= (this->rtt > 0u ? this->rtt : DefaultRtt)))
 			{
 				nackBatch.emplace_back(seq);
 				nackInfo.retries++;

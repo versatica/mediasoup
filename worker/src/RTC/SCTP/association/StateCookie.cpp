@@ -228,7 +228,7 @@ namespace RTC
 			SetLength(
 			  bufferLength == StateCookie::AuthenticatedStateCookieLength
 			    ? StateCookie::AuthenticatedStateCookieLength
-			    : StateCookie::StateCookieLength);
+					: StateCookie::StateCookieLength);
 		}
 
 		StateCookie::~StateCookie()

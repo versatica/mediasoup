@@ -316,7 +316,7 @@ namespace RTC
 					if (
 					  this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer() ||
 					  (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer() &&
-					   !this->payloadDescriptor->y))
+						 !this->payloadDescriptor->y))
 					{
 						context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
 

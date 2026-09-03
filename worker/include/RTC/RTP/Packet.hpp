@@ -967,7 +967,7 @@ namespace RTC
 			// each entry is the offset (in bytes) from the beginning of the header
 			// extension value to the beginning of the extension.
 			std::array<ssize_t, 14> oneByteExtensions{ -1, -1, -1, -1, -1, -1, -1,
-				                                         -1, -1, -1, -1, -1, -1, -1 };
+			                                           -1, -1, -1, -1, -1, -1, -1 };
 			// Ordered map of Two Bytes Extensions. Key is the id 1 of the extension,
 			// each entry is the offset (in bytes) from the beginning of the header
 			// extension value to the beginning of the extension.

@@ -937,7 +937,7 @@ namespace RTC
 			                            [](const Chunk* chunk)
 			                            {
 				                            return chunk->GetType() == Chunk::ChunkType::DATA ||
-				                                   chunk->GetType() == Chunk::ChunkType::I_DATA;
+																		       chunk->GetType() == Chunk::ChunkType::I_DATA;
 			                            }) != receivedPacket->ChunksEnd();
 
 			if (hasDataChunk)
@@ -1135,9 +1135,9 @@ namespace RTC
 				}
 				else if (
 				  (!abortAssociationChunk->GetT() &&
-				   receivedPacket->GetVerificationTag() == localVerificationTag) ||
+					 receivedPacket->GetVerificationTag() == localVerificationTag) ||
 				  (abortAssociationChunk->GetT() &&
-				   receivedPacket->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
+					 receivedPacket->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
 				{
 					return true;
 				}
@@ -1206,9 +1206,9 @@ namespace RTC
 				}
 				else if (
 				  (!shutdownCompleteChunk->GetT() &&
-				   receivedPacket->GetVerificationTag() == localVerificationTag) ||
+					 receivedPacket->GetVerificationTag() == localVerificationTag) ||
 				  (shutdownCompleteChunk->GetT() &&
-				   receivedPacket->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
+					 receivedPacket->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
 				{
 					return true;
 				}
@@ -2565,7 +2565,7 @@ namespace RTC
 
 				staleCookieErrorCause->SetMeasureOfStaleness(
 				  stalenessUs > std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max()
-				                                                     : static_cast<uint32_t>(stalenessUs));
+					                                                   : static_cast<uint32_t>(stalenessUs));
 
 				staleCookieErrorCause->Consolidate();
 				operationErrorChunk->Consolidate();

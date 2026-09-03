@@ -92,7 +92,7 @@ namespace RTC
 		  builder,
 		  this->id.c_str(),
 		  this->type == DataProducer::Type::SCTP ? FBS::DataProducer::Type::SCTP
-		                                         : FBS::DataProducer::Type::DIRECT,
+			                                       : FBS::DataProducer::Type::DIRECT,
 		  sctpStreamParametersOffset,
 		  this->label.c_str(),
 		  this->protocol.c_str(),

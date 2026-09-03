@@ -7,18 +7,18 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 	constexpr size_t PacketSize{ 1000 };
 	// Length of a send time group, which is the value that the delay based
 	// estimator gives to its own instances.
-	constexpr uint64_t SendTimeGroupLengthUs{ 5 * 1000 };
+	constexpr int64_t SendTimeGroupLengthUs{ 5 * 1000 };
 	// Base network delay between send and arrival times.
-	constexpr uint64_t BaseDelayMs{ 100 };
-	constexpr uint64_t InitialSendTimeMs{ 1000000 };
+	constexpr int64_t BaseDelayMs{ 100 };
+	constexpr int64_t InitialSendTimeMs{ 1000000 };
 
 	// Feed a packet with explicit arrival and feedback times. Times are given in
 	// ms for readability and converted into us, which is what the class takes.
 	auto feedAt = [](
 	                RTC::BWE::InterArrivalDelta& interArrivalDelta,
-	                uint64_t sendTimeMs,
-	                uint64_t arrivalTimeMs,
-	                uint64_t feedbackAtMs) -> std::optional<RTC::BWE::InterArrivalDelta::Deltas>
+	                int64_t sendTimeMs,
+	                int64_t arrivalTimeMs,
+	                int64_t feedbackAtMs) -> std::optional<RTC::BWE::InterArrivalDelta::Deltas>
 	{
 		return interArrivalDelta.ComputeDeltas(
 		  sendTimeMs * 1000, arrivalTimeMs * 1000, feedbackAtMs * 1000, PacketSize);
@@ -28,9 +28,9 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 	// delay, which is the well behaved case.
 	auto feed = [&feedAt](
 	              RTC::BWE::InterArrivalDelta& interArrivalDelta,
-	              uint64_t sendTimeMs) -> std::optional<RTC::BWE::InterArrivalDelta::Deltas>
+	              int64_t sendTimeMs) -> std::optional<RTC::BWE::InterArrivalDelta::Deltas>
 	{
-		const uint64_t arrivalTimeMs = sendTimeMs + BaseDelayMs;
+		const int64_t arrivalTimeMs = sendTimeMs + BaseDelayMs;
 
 		return feedAt(interArrivalDelta, sendTimeMs, arrivalTimeMs, /*feedbackAtMs*/ arrivalTimeMs);
 	};
@@ -200,8 +200,8 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 	{
 		RTC::BWE::InterArrivalDelta interArrivalDelta(SendTimeGroupLengthUs);
 
-		uint64_t sendTimeMs    = InitialSendTimeMs;
-		uint64_t arrivalTimeMs = InitialSendTimeMs + BaseDelayMs;
+		int64_t sendTimeMs    = InitialSendTimeMs;
+		int64_t arrivalTimeMs = InitialSendTimeMs + BaseDelayMs;
 		bool gotDeltas{ false };
 
 		// Each packet is sent 10 ms after the previous one but arrives just 4 ms

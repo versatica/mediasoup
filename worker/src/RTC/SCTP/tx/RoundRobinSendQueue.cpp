@@ -472,7 +472,7 @@ namespace RTC
 				// Zero-copy the payload if the message fits in a single chunk.
 				std::vector<uint8_t> payload =
 				  isBeginning && isEnd ? std::move(message).ReleasePayload()
-				                       : std::vector<uint8_t>(chunkPayload.begin(), chunkPayload.end());
+					                     : std::vector<uint8_t>(chunkPayload.begin(), chunkPayload.end());
 
 				const uint32_t fsn = item.currentFsn;
 
