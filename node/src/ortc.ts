@@ -29,7 +29,6 @@ export type RtpCodecsEncodingsMapping = {
 	encodings: {
 		ssrc?: number;
 		rid?: string;
-		scalabilityMode?: string;
 		mappedSsrc: number;
 	}[];
 };
@@ -434,7 +433,6 @@ export function getProducerRtpParametersMapping(
 		const mappedEncoding = {
 			ssrc: encoding.ssrc,
 			rid: encoding.rid,
-			scalabilityMode: encoding.scalabilityMode,
 			mappedSsrc: mappedSsrc++,
 		};
 
@@ -912,7 +910,6 @@ export function serializeRtpMapping(
 				builder,
 				builder.createString(encoding.rid),
 				encoding.ssrc ?? null,
-				builder.createString(encoding.scalabilityMode),
 				encoding.mappedSsrc
 			)
 		);

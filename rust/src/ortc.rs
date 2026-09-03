@@ -8,7 +8,6 @@ use mediasoup_types::rtp_parameters::{
     RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionDirection,
     RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
 };
-use mediasoup_types::scalability_modes::ScalabilityMode;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -60,8 +59,6 @@ pub struct RtpMappingEncoding {
     pub ssrc: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rid: Option<String>,
-    #[serde(default, skip_serializing_if = "ScalabilityMode::is_none")]
-    pub scalability_mode: ScalabilityMode,
     pub mapped_ssrc: u32,
 }
 
@@ -95,11 +92,6 @@ impl<'a> TryFromFbs<'a> for RtpMapping {
                     Ok(RtpMappingEncoding {
                         rid: mapping?.rid()?.map(|rid| rid.to_string()),
                         ssrc: mapping?.ssrc()?,
-                        scalability_mode: mapping?
-                            .scalability_mode()?
-                            .map(|maybe_scalability_mode| maybe_scalability_mode.parse())
-                            .transpose()?
-                            .unwrap_or_default(),
                         mapped_ssrc: mapping?.mapped_ssrc()?,
                     })
                 })
@@ -127,7 +119,6 @@ impl ToFbs for RtpMapping {
                 .map(|mapping| rtp_parameters::EncodingMapping {
                     rid: mapping.rid.clone().map(|rid| rid.to_string()),
                     ssrc: mapping.ssrc,
-                    scalability_mode: Some(mapping.scalability_mode.to_string()),
                     mapped_ssrc: mapping.mapped_ssrc,
                 })
                 .collect(),
@@ -540,7 +531,6 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
         rtp_mapping.encodings.push(RtpMappingEncoding {
             ssrc: encoding.ssrc,
             rid: encoding.rid.clone(),
-            scalability_mode: encoding.scalability_mode.clone(),
             mapped_ssrc,
         });
 

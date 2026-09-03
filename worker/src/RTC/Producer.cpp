@@ -271,7 +271,6 @@ namespace RTC
 			    encodingMapping.rid.c_str(),
 			    encodingMapping.ssrc != 0u ? flatbuffers::Optional<uint32_t>(encodingMapping.ssrc)
 					                           : flatbuffers::nullopt,
-			    nullptr, /* capability mode. NOTE: Present in NODE*/
 			    encodingMapping.mappedSsrc));
 		}
 
