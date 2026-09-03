@@ -60,51 +60,69 @@ jobs:
             node: 24
             cc: gcc
             cxx: g++
+            build-type: Release
+          - os: ubuntu-24.04
+            node: 24
+            cc: gcc
+            cxx: g++
+            build-type: Debug
           - os: ubuntu-24.04
             node: 24
             cc: clang
             cxx: clang++
+            build-type: Release
           - os: ubuntu-24.04-arm
             node: 24
             cc: gcc
             cxx: g++
+            build-type: Release
           - os: ubuntu-26.04
             node: 22
             cc: gcc
             cxx: g++
+            build-type: Release
           - os: ubuntu-26.04
             node: 26
             cc: gcc
             cxx: g++
+            build-type: Release
             meson_args: '-Db_sanitize=address'
             npm-audit: true
             run-lint: true
             run-publish-dry-run: true
           - os: ubuntu-26.04
             node: 26
+            cc: gcc
+            cxx: g++
+            build-type: Debug
+            meson_args: '-Db_sanitize=address'
+          - os: ubuntu-26.04
+            node: 26
             cc: clang
             cxx: clang++
+            build-type: Release
             meson_args: '-Db_sanitize=undefined'
           - os: ubuntu-26.04-arm
             node: 26
             cc: gcc
             cxx: g++
+            build-type: Release
             meson_args: '-Db_sanitize=address'
           - os: macos-15
             node: 26
             cc: clang
             cxx: clang++
+            build-type: Release
           - os: windows-2022
             node: 22
             cc: cl
             cxx: cl
+            build-type: Release
           - os: windows-2025
             node: 26
             cc: cl
             cxx: cl
-        build-type:
-          - Release
-          - Debug
+            build-type: Release
 
     runs-on: ${{ matrix.build.os }}
 
@@ -115,7 +133,7 @@ jobs:
       CXX: ${{ matrix.build.cxx }}
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'true'
-      MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
+      MEDIASOUP_BUILDTYPE: ${{ matrix.build.build-type }}
       MESON_ARGS: ${{ matrix.build.meson_args }}
       # Disable leak detection because it's detected by the tool flatc uses to build.
       # NOTE: This env only affects when 'b_sanitize' args are given in `meson_args`.
@@ -150,7 +168,7 @@ jobs:
         name: npm audit --prefix worker/scripts
         run: npm audit --prefix worker/scripts
 
-      - if: ${{ matrix.build-type == 'Release' }}
+      - if: ${{ matrix.build.build-type == 'Release' }}
         name: npm run worker:prebuild
         run: npm run worker:prebuild
 
@@ -161,11 +179,10 @@ jobs:
         name: npm run lint:node
         run: npm run lint:node
 
-      - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build-type != 'Debug' }}
+      - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build.build-type != 'Debug' }}
         name: npm run test:node
         run: npm run test:node
 
-      # Only in Release build type to avoid running it twice (Release + Debug).
-      - if: ${{ matrix.build.run-publish-dry-run && matrix.build-type == 'Release' }}
+      - if: ${{ matrix.build.run-publish-dry-run }}
         name: npm run publish:dry-run
         run: npm run publish:dry-run
