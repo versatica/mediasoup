@@ -72,7 +72,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-			    .estimatedThroughput = AckedBitrate },
+				  .estimatedThroughput = AckedBitrate },
 			  nowUs);
 
 			nowUs += 100 * 1000;
@@ -96,7 +96,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-			    .estimatedThroughput = AckedBitrate },
+				  .estimatedThroughput = AckedBitrate },
 			  nowUs);
 
 			nowUs += 100 * 1000;
@@ -110,7 +110,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		aimdRateControl.Update(
 		  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-		    .estimatedThroughput = AckedBitrate / 2 },
+			  .estimatedThroughput = AckedBitrate / 2 },
 		  nowUs);
 
 		REQUIRE(aimdRateControl.LatestEstimate() == prevEstimate);
@@ -138,7 +138,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		aimdRateControl.Update(
 		  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::OVERUSING,
-		    .estimatedThroughput = ackedBitrate },
+			  .estimatedThroughput = ackedBitrate },
 		  nowUs);
 
 		REQUIRE(aimdRateControl.LatestEstimate() == UpdatedBitrate);
@@ -156,7 +156,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		aimdRateControl.Update(
 		  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-		    .estimatedThroughput = InitialBitrate },
+			  .estimatedThroughput = InitialBitrate },
 		  nowUs);
 
 		// The initial bitrate is taken from what has been measured for five seconds.
@@ -164,14 +164,14 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 
 		aimdRateControl.Update(
 		  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-		    .estimatedThroughput = InitialBitrate },
+			  .estimatedThroughput = InitialBitrate },
 		  nowUs);
 
 		for (int i{ 0 }; i < 100; ++i)
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-			    .estimatedThroughput = std::nullopt },
+				  .estimatedThroughput = std::nullopt },
 			  nowUs);
 
 			nowUs += 100 * 1000;
@@ -198,7 +198,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		aimdRateControl.SetInApplicationLimitedRegion(true);
 		aimdRateControl.Update(
 		  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-		    .estimatedThroughput = InitialBitrate },
+			  .estimatedThroughput = InitialBitrate },
 		  nowUs);
 
 		REQUIRE(aimdRateControl.LatestEstimate() == InitialBitrate);
@@ -207,7 +207,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-			    .estimatedThroughput = std::nullopt },
+				  .estimatedThroughput = std::nullopt },
 			  nowUs);
 
 			nowUs += 100 * 1000;
@@ -254,14 +254,14 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		aimdRateControl.SetInApplicationLimitedRegion(false);
 		aimdRateControl.Update(
 		  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-		    .estimatedThroughput = InitialBitrate },
+			  .estimatedThroughput = InitialBitrate },
 		  nowUs);
 
 		for (int i{ 0 }; i < 100; ++i)
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-			    .estimatedThroughput = std::nullopt },
+				  .estimatedThroughput = std::nullopt },
 			  nowUs);
 
 			nowUs += 100 * 1000;
@@ -275,7 +275,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		constexpr int64_t LinkCapacityUpper{ 400000 };
 
 		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
-			                                                             LinkCapacityUpper };
+		                                                               LinkCapacityUpper };
 
 		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
 
@@ -310,7 +310,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		constexpr int64_t LinkCapacityUpper{ 300000 };
 
 		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
-			                                                             LinkCapacityUpper };
+		                                                               LinkCapacityUpper };
 
 		auto options = sendSideOptions;
 
@@ -333,7 +333,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		constexpr int64_t LinkCapacityLower{ 400000 };
 
 		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityLower =
-			                                                             LinkCapacityLower };
+		                                                               LinkCapacityLower };
 
 		RTC::BWE::AimdRateControl aimdRateControl(sendSideOptions);
 
@@ -371,7 +371,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		constexpr int64_t LinkCapacityUpper{ 150000 };
 
 		const RTC::BWE::Types::NetworkStateEstimate networkEstimate{ .linkCapacityUpper =
-			                                                             LinkCapacityUpper };
+		                                                               LinkCapacityUpper };
 
 		auto options = sendSideOptions;
 
@@ -389,7 +389,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		{
 			aimdRateControl.Update(
 			  { .bandwidthUsage      = RTC::BWE::Types::BandwidthUsage::NORMAL,
-			    .estimatedThroughput = std::nullopt },
+				  .estimatedThroughput = std::nullopt },
 			  nowUs);
 
 			nowUs += 100 * 1000;
