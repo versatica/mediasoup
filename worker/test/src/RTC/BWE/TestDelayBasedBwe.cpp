@@ -122,7 +122,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		 * @returns The bitrate it settled at.
 		 */
 		int64_t SteadyStateRun(
-		  int maxNumberOfFrames,
+		  int64_t maxNumberOfFrames,
 		  int64_t startBitrate,
 		  int64_t minBitrate,
 		  int64_t maxBitrate,
@@ -131,7 +131,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 			int64_t bitrateBps{ startBitrate };
 			bool bitrateUpdateSeen{ false };
 
-			for (int i{ 0 }; i < maxNumberOfFrames; ++i)
+			for (int64_t i{ 0 }; i < maxNumberOfFrames; ++i)
 			{
 				const bool overuse = GenerateAndProcessFrame(bitrateBps);
 
@@ -180,7 +180,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 	// it, and measure how long the estimate takes to follow.
 	auto capacityDropTestHelper = [](
 	                                SimulatedTransport& simulatedTransport,
-	                                int numberOfStreams,
+	                                int64_t numberOfStreams,
 	                                int64_t expectedBitrateDropDeltaUs,
 	                                int64_t receiverClockOffsetChangeUs)
 	{
@@ -191,7 +191,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		constexpr int64_t InitialCapacityBps{ 1000000 };
 		constexpr int64_t ReducedCapacityBps{ 500000 };
 
-		int steadyStateTime{ 0 };
+		int64_t steadyStateTime{ 0 };
 
 		if (numberOfStreams <= 1)
 		{
@@ -206,7 +206,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 			int64_t bitrateSum{ 0 };
 			const int64_t bitrateDenom = numberOfStreams * (numberOfStreams - 1);
 
-			for (int i{ 0 }; i < numberOfStreams; ++i)
+			for (int64_t i{ 0 }; i < numberOfStreams; ++i)
 			{
 				// The first stream gets half of the bitrate and the rest share the
 				// other half.
@@ -249,7 +249,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		const int64_t overuseStartTimeUs = simulatedTransport.nowUs;
 		int64_t bitrateDropTimeUs{ -1 };
 
-		for (int i{ 0 }; i < 100 * numberOfStreams; ++i)
+		for (int64_t i{ 0 }; i < 100 * numberOfStreams; ++i)
 		{
 			simulatedTransport.GenerateAndProcessFrame(bitrateBps);
 
