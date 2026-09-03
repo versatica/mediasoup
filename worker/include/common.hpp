@@ -1,6 +1,9 @@
 #ifndef MS_COMMON_HPP
 #define MS_COMMON_HPP
 
+// NOTE: This is an umbrella header. The includes below are not meant to be used
+// by this file, but re-exported to whoever includes it.
+// IWYU pragma: begin_exports
 #include <algorithm> // std::transform(), std::find(), std::min(), std::max(), std::copy(), std::clamp(), std::ranges
 #include <cinttypes>  // PRIu64, etc
 #include <cstddef>    // size_t
@@ -24,6 +27,7 @@ typedef SSIZE_T ssize_t;
 #include <netinet/in.h> // sockaddr_in, sockaddr_in6
 #include <sys/socket.h> // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
 #endif
+// IWYU pragma: end_exports
 
 // This is a macro to silence false warnings in GCC in switch() blocks with FBS
 // types.
