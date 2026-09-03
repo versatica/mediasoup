@@ -66,8 +66,8 @@ namespace RTC
 					std::swap(this->window[idx], this->window[idx - 1]);
 				}
 
-				// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 				const int64_t receiveDeltaUs =
+				  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 				  this->window.back().receiveTimeUs.value() - packetResult.receiveTimeUs.value();
 
 				if (receiveDeltaUs > MaxReorderingTimeUs)
@@ -109,8 +109,8 @@ namespace RTC
 				return true;
 			}
 
-			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			const int64_t currentWindowDurationUs =
+			  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			  this->window.back().receiveTimeUs.value() - this->window.front().receiveTimeUs.value();
 
 			if (currentWindowDurationUs > this->options.maxWindowDurationUs)
@@ -136,8 +136,8 @@ namespace RTC
 
 			for (size_t idx = 1; idx < this->window.size(); ++idx)
 			{
-				// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 				const int64_t gapUs =
+				  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 				  this->window[idx].receiveTimeUs.value() - this->window[idx - 1].receiveTimeUs.value();
 
 				if (gapUs > largestRecvGapUs)

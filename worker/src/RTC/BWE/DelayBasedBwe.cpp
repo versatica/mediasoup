@@ -105,12 +105,14 @@ namespace RTC
 
 			// As an alternative to ignoring small packets, audio and video can be given
 			// a delay detector of their own.
+			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			auto* delayDetectorForPacket = std::addressof(this->videoDelayDetector.value());
 
 			if (this->options.separateAudioPackets)
 			{
 				if (packetResult.sentPacket.audio)
 				{
+					// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 					delayDetectorForPacket = std::addressof(this->audioDelayDetector.value());
 
 					this->audioPacketsSinceLastVideo++;
@@ -123,6 +125,7 @@ namespace RTC
 						 receiveTimeUs - this->lastVideoPacketRecvTimeUs.value() >
 						   this->options.separateAudioTimeThresholdUs))
 					{
+						// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 						this->activeDelayDetector = std::addressof(this->audioDelayDetector.value());
 					}
 				}
@@ -132,13 +135,16 @@ namespace RTC
 
 					this->lastVideoPacketRecvTimeUs =
 					  std::max(this->lastVideoPacketRecvTimeUs.value_or(receiveTimeUs), receiveTimeUs);
+					// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 					this->activeDelayDetector = std::addressof(this->videoDelayDetector.value());
 				}
 			}
 
 			auto& interArrivalForPacket =
 			  (this->options.separateAudioPackets && packetResult.sentPacket.audio)
+			    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			    ? this->audioInterArrivalDelta.value()
+			    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			    : this->videoInterArrivalDelta.value();
 
 			const auto deltas = interArrivalForPacket.ComputeDeltas(
