@@ -51,7 +51,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(bwe, "very late feedback received");
 
-				return Result();
+				return {};
 			}
 
 			bool recoveredFromOveruse{ false };

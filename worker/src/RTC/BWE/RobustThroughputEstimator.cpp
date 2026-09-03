@@ -3,6 +3,7 @@
 
 #include "RTC/BWE/RobustThroughputEstimator.hpp"
 #include "Logger.hpp"
+#include <cmath>
 
 namespace RTC
 {
@@ -158,7 +159,7 @@ namespace RTC
 			int64_t sendSize{ 0 };
 			int64_t firstRecvSize{ 0 };
 			int64_t lastSendSize{ 0 };
-			int64_t numSentPacketsInWindow{ 0 };
+			size_t numSentPacketsInWindow{ 0 };
 
 			for (const auto& packetResult : this->window)
 			{
@@ -223,7 +224,7 @@ namespace RTC
 			  (lastRecvTimeUs.value() - firstRecvTimeUs.value()) - largestRecvGapUs + secondLargestRecvGapUs,
 			  MinDurationUs);
 
-			if (numSentPacketsInWindow < static_cast<int64_t>(this->options.requiredPackets))
+			if (numSentPacketsInWindow < this->options.requiredPackets)
 			{
 				// Too few send times to compute a reliable send rate.
 				return recvSize * 8 * 1000000 / recvDurationUs;

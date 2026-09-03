@@ -4,6 +4,7 @@
 #include "RTC/BWE/RobustThroughputEstimator.hpp"
 #include "test/include/RTC/BWE/helpers/LinkSimulator.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <cmath>
 
 SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 {
@@ -518,7 +519,6 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 				REQUIRE(simulatedTransport.latestBitrate <= InitialCapacity);
 				REQUIRE(simulatedTransport.latestBitrate > 0.8 * InitialCapacity);
 
-				bitrateBps  = simulatedTransport.latestBitrate;
 				seenOveruse = true;
 
 				break;

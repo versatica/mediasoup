@@ -102,6 +102,13 @@ namespace bweHelpers
 			totalBitrateBefore += stream->GetBitrateBps();
 		}
 
+		// The ratios each stream keeps are taken from what they add up to, so there
+		// has to be something to take them from.
+		MS_ASSERT(
+		  totalBitrateBefore > 0,
+		  "the streams add up to no bitrate at all [streams:%zu]",
+		  this->streams.size());
+
 		int64_t bitrateBefore{ 0 };
 		int64_t totalBitrateAfter{ 0 };
 
