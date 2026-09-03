@@ -3,7 +3,7 @@
 ### NEXT
 
 - Worker: New `RateCalculator` ([PR #1899](https://github.com/versatica/mediasoup/pull/1899)).
-- **Breaking change:** Remove unused `scalability_mode` field from `FBS.RtpParameters.EncodingMapping` ([PR #1910](https://github.com/versatica/mediasoup/pull/1910)).
+- Remove unused `scalability_mode` field from `FBS.RtpParameters.EncodingMapping` ([PR #1910](https://github.com/versatica/mediasoup/pull/1910)).
 
 ### 0.27.0
 
