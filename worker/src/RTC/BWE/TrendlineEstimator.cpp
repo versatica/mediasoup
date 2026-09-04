@@ -86,13 +86,13 @@ namespace RTC
 			if (this->delayHist.size() == this->windowSize)
 			{
 				// Keep the previous trend if the line cannot be fitted.
-				trend = LinearFitSlope().value_or(trend);
+				trend = GetLinearFitSlope().value_or(trend);
 			}
 
 			Detect(trend, sendDeltaMs, arrivalTimeUs / 1000);
 		}
 
-		std::optional<double> TrendlineEstimator::LinearFitSlope() const
+		std::optional<double> TrendlineEstimator::GetLinearFitSlope() const
 		{
 			MS_TRACE();
 

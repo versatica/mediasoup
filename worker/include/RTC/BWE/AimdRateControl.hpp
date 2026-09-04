@@ -73,7 +73,7 @@ namespace RTC
 			 * when it's explicitly set or once a throughput has been measured for long
 			 * enough.
 			 */
-			bool ValidEstimate() const
+			bool IsValidEstimate() const
 			{
 				return this->bitrateIsInitialized;
 			}
@@ -81,7 +81,7 @@ namespace RTC
 			/**
 			 * Current target bitrate (bps).
 			 */
-			int64_t LatestEstimate() const
+			int64_t GetLatestEstimate() const
 			{
 				return this->currentBitrate;
 			}
@@ -126,13 +126,13 @@ namespace RTC
 			 * below the current target. It's what keeps a single overuse from
 			 * collapsing the bitrate in a few milliseconds.
 			 */
-			bool TimeToReduceFurther(int64_t atTimeUs, int64_t estimatedThroughput) const;
+			bool IsTimeToReduceFurther(int64_t atTimeUs, int64_t estimatedThroughput) const;
 
 			/**
 			 * As above, to be used when overusing before any throughput has been
 			 * measured.
 			 */
-			bool InitialTimeToReduceFurther(int64_t atTimeUs) const;
+			bool IsInitialTimeToReduceFurther(int64_t atTimeUs) const;
 
 			/**
 			 * Rate at which the bitrate is increased once it's close to the capacity of
