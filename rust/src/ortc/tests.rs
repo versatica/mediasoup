@@ -1,5 +1,6 @@
 use super::*;
 use mediasoup_types::rtp_parameters::{MimeTypeAudio, RtpHeaderExtension};
+use mediasoup_types::scalability_modes::ScalabilityMode;
 use std::iter;
 
 #[test]

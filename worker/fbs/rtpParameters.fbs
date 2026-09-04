@@ -119,7 +119,6 @@ table CodecMapping {
 table EncodingMapping {
     rid: string;
     ssrc: uint32 = null;
-    scalability_mode: string;
     mapped_ssrc: uint32;
 }
 
