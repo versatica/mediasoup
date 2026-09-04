@@ -34,6 +34,25 @@ export type RtpCodecsEncodingsMapping = {
 	}[];
 };
 
+/**
+ * Per-Consumer egress mapping between the Router's canonical (consumable) RTP
+ * space and the wire-level RTP space declared by the caller via
+ * `ConsumerOptions.rtpParameters`.
+ *
+ * The worker uses this mapping to rewrite outgoing RTP packet payload types
+ * and header-extension ids in place.
+ */
+export type ConsumerRtpMapping = {
+	codecs: {
+		producerPayloadType: number;
+		consumerPayloadType: number;
+	}[];
+	headerExtensions: {
+		producerExtId: number;
+		consumerExtId: number;
+	}[];
+};
+
 const DynamicPayloadTypes = [
 	100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114,
 	115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 96, 97, 98,
@@ -612,55 +631,144 @@ export function getConsumerRtpParameters({
 	enableRtx,
 }: {
 	consumableRtpParameters: RtpParameters;
-	remoteRtpCapabilities: RtpCapabilities;
+	// Can be either RtpCapabilities (default path, derived from the remote
+	// endpoint's capabilities) or RtpParameters (override path, where the
+	// caller explicitly dictates the on-wire PT / header-extension ids).
+	remoteRtpCapabilities: RtpCapabilities | RtpParameters;
 	pipe: boolean;
 	enableRtx: boolean;
 }): RtpParameters {
-	const consumerParams: RtpParameters = {
-		codecs: [],
-		headerExtensions: [],
-		encodings: [],
-		rtcp: consumableRtpParameters.rtcp,
-		msid: consumableRtpParameters.msid,
-	};
+	const isOverride = isRtpParameters(remoteRtpCapabilities);
 
-	for (const capCodec of remoteRtpCapabilities.codecs!) {
-		validateAndNormalizeRtpCodecCapability(capCodec);
+	let consumerParams: RtpParameters;
+	let consumableCodecs: RtpCodecParameters[];
+	let remoteCodecs: RtpCodecParameters[];
+	let remoteHeaderExtensions: RtpHeaderExtensionParameters[];
+	// Decides whether a given header extension from `remoteHeaderExtensions`
+	// should make it into the final consumerParams.headerExtensions. Differs
+	// between the RtpCapabilities and RtpParameters branches.
+	let matchConsumerExt: (ext: RtpHeaderExtensionParameters) => boolean;
+
+	if (!isOverride) {
+		const caps = remoteRtpCapabilities;
+
+		for (const capCodec of caps.codecs ?? []) {
+			validateAndNormalizeRtpCodecCapability(capCodec);
+		}
+
+		consumerParams = {
+			codecs: [],
+			headerExtensions: [],
+			encodings: [],
+			rtcp: consumableRtpParameters.rtcp,
+			msid: consumableRtpParameters.msid,
+		};
+		// Iterate producer-side consumable codecs; the caller's capabilities
+		// are used as the codec-match table so that its rtcpFeedback makes it
+		// into the final consumerParams.
+		remoteCodecs =
+			utils.clone<RtpCodecParameters[] | undefined>(
+				consumableRtpParameters.codecs
+			) ?? [];
+		consumableCodecs = (caps.codecs ?? []).map(c => ({
+			mimeType: c.mimeType,
+			payloadType: c.preferredPayloadType,
+			clockRate: c.clockRate,
+			channels: c.channels,
+			parameters: c.parameters ?? {},
+			rtcpFeedback: c.rtcpFeedback ?? [],
+		}));
+		remoteHeaderExtensions = consumableRtpParameters.headerExtensions ?? [];
+		// Keep the producer-side extension only when the remote capability
+		// advertises the same URI AND `preferredId`.
+		matchConsumerExt = ext =>
+			(caps.headerExtensions ?? []).some(
+				capExt => capExt.preferredId === ext.id && capExt.uri === ext.uri
+			);
+	} else {
+		const override = remoteRtpCapabilities;
+
+		// validateAndNormalizeRtpParameters dereferences params.rtcp. Fall back
+		// to the producer-side consumable values for rtcp / msid the caller
+		// did not provide so that validation has a valid view.
+		const rtcp = override.rtcp ?? consumableRtpParameters.rtcp;
+		const msid = override.msid ?? consumableRtpParameters.msid;
+		const toValidate: RtpParameters = { ...override, rtcp };
+
+		try {
+			validateAndNormalizeRtpParameters(toValidate);
+		} catch (err) {
+			throw new TypeError(
+				`invalid consumer.rtpParameters: ${
+					err instanceof Error ? err.message : String(err)
+				}`,
+				{ cause: err }
+			);
+		}
+
+		consumerParams = {
+			mid: override.mid,
+			codecs: [],
+			headerExtensions: [],
+			encodings: [],
+			rtcp,
+			msid,
+		};
+		// Consumable is still the Router-canonical view used for structural
+		// matching; we iterate the caller's override (which dictates wire PTs
+		// and extension ids).
+		consumableCodecs =
+			utils.clone<RtpCodecParameters[] | undefined>(
+				consumableRtpParameters.codecs
+			) ?? [];
+		remoteCodecs =
+			utils.clone<RtpCodecParameters[] | undefined>(override.codecs) ?? [];
+		remoteHeaderExtensions = override.headerExtensions ?? [];
+		// The caller explicitly declares wire-level ext ids that may differ
+		// from the Router's canonical ones, so we only check URI presence in
+		// the producer-side consumable set. The worker rewrites the producer
+		// ext-id to the caller-declared one using ConsumerRtpMapping.
+		matchConsumerExt = ext =>
+			(consumableRtpParameters.headerExtensions ?? []).some(
+				cExt => cExt.uri === ext.uri
+			);
 	}
 
-	const consumableCodecs =
-		utils.clone<RtpCodecParameters[] | undefined>(
-			consumableRtpParameters.codecs
-		) ?? [];
-
-	let rtxSupported = false;
-
-	for (const codec of consumableCodecs) {
+	for (const codec of remoteCodecs) {
 		if (!enableRtx && isRtxCodec(codec)) {
 			continue;
 		}
 
-		const matchedCapCodec = remoteRtpCapabilities.codecs!.find(capCodec =>
-			matchCodecs(capCodec, codec, { strict: true })
+		const matchedCodec = consumableCodecs.find(cc =>
+			matchCodecs(cc, codec, { strict: true })
 		);
 
-		if (!matchedCapCodec) {
+		if (!matchedCodec) {
 			continue;
 		}
 
-		codec.rtcpFeedback = matchedCapCodec.rtcpFeedback!.filter(
+		// Pick the caller-advertised rtcpFeedback list so that the final
+		// Consumer rtpParameters stay compliant with RFC 4585 §4.2.2
+		// (answer rtcpFeedback must be a subset of the offer):
+		//   - Capabilities path: matchedCodec came from caps (caller side).
+		//   - Parameters  path:  codec       came from override (caller side).
+		const feedbackSource = isOverride ? codec : matchedCodec;
+
+		codec.rtcpFeedback = (feedbackSource.rtcpFeedback ?? []).filter(
 			fb => enableRtx || fb.type !== 'nack' || fb.parameter
 		);
 
 		consumerParams.codecs.push(codec);
 	}
 
-	// Must sanitize the list of matched codecs by removing useless RTX codecs.
+	let rtxSupported = false;
+
+	// Sanitize the matched codec list by removing useless RTX codecs (whose
+	// `apt` does not point to any remaining media codec).
 	for (let idx = consumerParams.codecs.length - 1; idx >= 0; --idx) {
 		const codec = consumerParams.codecs[idx]!;
 
 		if (isRtxCodec(codec)) {
-			// Search for the associated media codec.
 			const associatedMediaCodec = consumerParams.codecs.find(
 				mediaCodec => mediaCodec.payloadType === codec.parameters!['apt']
 			);
@@ -673,7 +781,6 @@ export function getConsumerRtpParameters({
 		}
 	}
 
-	// Ensure there is at least one media codec.
 	if (
 		consumerParams.codecs.length === 0 ||
 		isRtxCodec(consumerParams.codecs[0]!)
@@ -681,16 +788,15 @@ export function getConsumerRtpParameters({
 		throw new UnsupportedError('no compatible media codecs');
 	}
 
-	consumerParams.headerExtensions =
-		consumableRtpParameters.headerExtensions!.filter(ext =>
-			remoteRtpCapabilities.headerExtensions!.some(
-				capExt => capExt.preferredId === ext.id && capExt.uri === ext.uri
-			)
-		);
+	for (const ext of remoteHeaderExtensions) {
+		if (matchConsumerExt(ext)) {
+			consumerParams.headerExtensions!.push(ext);
+		}
+	}
 
 	// Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
 	if (
-		consumerParams.headerExtensions.some(
+		consumerParams.headerExtensions!.some(
 			ext =>
 				ext.uri ===
 				'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
@@ -702,7 +808,7 @@ export function getConsumerRtpParameters({
 			);
 		}
 	} else if (
-		consumerParams.headerExtensions.some(
+		consumerParams.headerExtensions!.some(
 			ext =>
 				ext.uri === 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time'
 		)
@@ -720,55 +826,7 @@ export function getConsumerRtpParameters({
 		}
 	}
 
-	if (!pipe) {
-		const consumerEncoding: RtpEncodingParameters = {
-			ssrc: utils.generateRandomNumber(),
-		};
-
-		if (rtxSupported) {
-			consumerEncoding.rtx = { ssrc: consumerEncoding.ssrc! + 1 };
-		}
-
-		// If any of the consumableRtpParameters.encodings has scalabilityMode,
-		// process it (assume all encodings have the same value).
-		const encodingWithScalabilityMode = consumableRtpParameters.encodings!.find(
-			encoding => encoding.scalabilityMode
-		);
-
-		let scalabilityMode = encodingWithScalabilityMode
-			? encodingWithScalabilityMode.scalabilityMode
-			: undefined;
-
-		// If there is simulast, mangle spatial layers in scalabilityMode.
-		if (consumableRtpParameters.encodings!.length > 1) {
-			const { temporalLayers } = parseScalabilityMode(scalabilityMode);
-
-			scalabilityMode = `L${
-				consumableRtpParameters.encodings!.length
-			}T${temporalLayers}`;
-		}
-
-		if (scalabilityMode) {
-			consumerEncoding.scalabilityMode = scalabilityMode;
-		}
-
-		// Use the maximum maxBitrate in any encoding and honor it in the Consumer's
-		// encoding.
-		const maxEncodingMaxBitrate = consumableRtpParameters.encodings!.reduce(
-			(maxBitrate, encoding) =>
-				encoding.maxBitrate && encoding.maxBitrate > maxBitrate
-					? encoding.maxBitrate
-					: maxBitrate,
-			0
-		);
-
-		if (maxEncodingMaxBitrate) {
-			consumerEncoding.maxBitrate = maxEncodingMaxBitrate;
-		}
-
-		// Set a single encoding for the Consumer.
-		consumerParams.encodings!.push(consumerEncoding);
-	} else {
+	if (pipe) {
 		const consumableEncodings =
 			utils.clone<RtpEncodingParameters[] | undefined>(
 				consumableRtpParameters.encodings
@@ -789,9 +847,78 @@ export function getConsumerRtpParameters({
 
 			consumerParams.encodings!.push(encoding);
 		}
+	} else {
+		const consumerEncoding: RtpEncodingParameters = {
+			ssrc: utils.generateRandomNumber(),
+		};
+
+		if (rtxSupported) {
+			consumerEncoding.rtx = { ssrc: consumerEncoding.ssrc! + 1 };
+		}
+
+		const encodingWithScalabilityMode = (
+			consumableRtpParameters.encodings ?? []
+		).find(encoding => encoding.scalabilityMode);
+
+		let scalabilityMode = encodingWithScalabilityMode
+			? encodingWithScalabilityMode.scalabilityMode
+			: undefined;
+
+		if ((consumableRtpParameters.encodings ?? []).length > 1) {
+			const { temporalLayers } = parseScalabilityMode(scalabilityMode);
+
+			scalabilityMode = `L${
+				consumableRtpParameters.encodings!.length
+			}T${temporalLayers}`;
+		}
+
+		if (scalabilityMode) {
+			consumerEncoding.scalabilityMode = scalabilityMode;
+		}
+
+		const maxEncodingMaxBitrate = (
+			consumableRtpParameters.encodings ?? []
+		).reduce(
+			(maxBitrate, encoding) =>
+				encoding.maxBitrate && encoding.maxBitrate > maxBitrate
+					? encoding.maxBitrate
+					: maxBitrate,
+			0
+		);
+
+		if (maxEncodingMaxBitrate) {
+			consumerEncoding.maxBitrate = maxEncodingMaxBitrate;
+		}
+
+		consumerParams.encodings!.push(consumerEncoding);
 	}
 
 	return consumerParams;
+}
+
+// Heuristic to discriminate the two input shapes of
+// `getConsumerRtpParameters.remoteRtpCapabilities`: RtpCodecParameters has a
+// required `payloadType`, RtpCodecCapability has `preferredPayloadType`
+// instead. We fall back to checking for `encodings` / `rtcp` / `msid` / `mid`
+// if the codec list is empty so the empty-override edge case still lands on
+// the `RtpParameters` branch.
+function isRtpParameters(
+	value: RtpCapabilities | RtpParameters
+): value is RtpParameters {
+	const firstCodec = value.codecs?.[0];
+
+	if (firstCodec) {
+		return (firstCodec as RtpCodecParameters).payloadType !== undefined;
+	}
+
+	const asParams = value as RtpParameters;
+
+	return (
+		Array.isArray(asParams.encodings) ||
+		asParams.rtcp !== undefined ||
+		asParams.msid !== undefined ||
+		asParams.mid !== undefined
+	);
 }
 
 /**
@@ -882,6 +1009,126 @@ export function getPipeConsumerRtpParameters({
 	}
 
 	return consumerParams;
+}
+
+/**
+ * Build a per-Consumer egress mapping between the Router's canonical
+ * (consumable) RTP space and the wire-level RTP space dictated by the final
+ * Consumer rtpParameters. The worker uses this mapping to rewrite outgoing
+ * RTP packet payload types and header-extension ids in place.
+ */
+export function getConsumerRtpMapping(
+	producerRtpParameters: RtpParameters,
+	consumerRtpParameters: RtpParameters
+): ConsumerRtpMapping {
+	const mapping: ConsumerRtpMapping = {
+		codecs: [],
+		headerExtensions: [],
+	};
+
+	const consumerCodecPts: Set<number> = new Set();
+
+	for (const codec of consumerRtpParameters.codecs) {
+		consumerCodecPts.add(codec.payloadType);
+	}
+
+	const usedProducerCodecPts: Set<number> = new Set();
+
+	for (const consumerCodec of consumerRtpParameters.codecs) {
+		for (const producerCodec of producerRtpParameters.codecs) {
+			if (usedProducerCodecPts.has(producerCodec.payloadType)) {
+				continue;
+			}
+
+			if (isRtxCodec(producerCodec) !== isRtxCodec(consumerCodec)) {
+				continue;
+			}
+
+			if (!matchCodecs(producerCodec, consumerCodec, { strict: true })) {
+				continue;
+			}
+
+			if (isRtxCodec(producerCodec)) {
+				const apt = consumerCodec.parameters?.['apt'];
+
+				if (typeof apt !== 'number' || !consumerCodecPts.has(apt)) {
+					continue;
+				}
+			}
+
+			usedProducerCodecPts.add(producerCodec.payloadType);
+			mapping.codecs.push({
+				producerPayloadType: producerCodec.payloadType,
+				consumerPayloadType: consumerCodec.payloadType,
+			});
+			break;
+		}
+	}
+
+	const producerExtByUri: Map<string, number> = new Map();
+
+	for (const ext of producerRtpParameters.headerExtensions ?? []) {
+		producerExtByUri.set(ext.uri, ext.id);
+	}
+
+	for (const consumerExt of consumerRtpParameters.headerExtensions ?? []) {
+		const producerExtId = producerExtByUri.get(consumerExt.uri);
+
+		if (producerExtId !== undefined) {
+			mapping.headerExtensions.push({
+				producerExtId,
+				consumerExtId: consumerExt.id,
+			});
+		}
+	}
+
+	return mapping;
+}
+
+export function serializeConsumerRtpMapping(
+	builder: flatbuffers.Builder,
+	consumerRtpMapping: ConsumerRtpMapping
+): number {
+	const codecs: number[] = [];
+
+	for (const m of consumerRtpMapping.codecs) {
+		codecs.push(
+			FbsRtpParameters.ConsumerCodecMapping.createConsumerCodecMapping(
+				builder,
+				m.producerPayloadType,
+				m.consumerPayloadType
+			)
+		);
+	}
+
+	const codecsOffset = FbsRtpParameters.ConsumerRtpMapping.createCodecsVector(
+		builder,
+		codecs
+	);
+
+	const headerExtensions: number[] = [];
+
+	for (const m of consumerRtpMapping.headerExtensions) {
+		headerExtensions.push(
+			FbsRtpParameters.ConsumerHeaderExtensionMapping.createConsumerHeaderExtensionMapping(
+				builder,
+				m.producerExtId,
+				m.consumerExtId
+			)
+		);
+	}
+
+	const headerExtensionsOffset =
+		FbsRtpParameters.ConsumerRtpMapping.createHeaderExtensionsVector(
+			builder,
+			headerExtensions
+		);
+
+	return FbsRtpParameters.ConsumerRtpMapping.createConsumerRtpMapping(
+		builder,
+		codecsOffset,
+		headerExtensionsOffset
+	);
 }
 
 export function serializeRtpMapping(

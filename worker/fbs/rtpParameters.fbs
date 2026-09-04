@@ -127,3 +127,18 @@ table RtpMapping {
     codecs: [CodecMapping] (required);
     encodings: [EncodingMapping] (required);
 }
+
+table ConsumerCodecMapping {
+    producer_payload_type: uint8;
+    consumer_payload_type: uint8;
+}
+
+table ConsumerHeaderExtensionMapping {
+    producer_ext_id: uint8;
+    consumer_ext_id: uint8;
+}
+
+table ConsumerRtpMapping {
+    codecs: [ConsumerCodecMapping] (required);
+    header_extensions: [ConsumerHeaderExtensionMapping] (required);
+}

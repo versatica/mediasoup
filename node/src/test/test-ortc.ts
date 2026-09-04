@@ -552,3 +552,378 @@ test('getProducerRtpParametersMapping() with incompatible params throws Unsuppor
 		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities)
 	).toThrow(UnsupportedError);
 });
+
+describe('getConsumerRtpParameters() with RtpParameters override', () => {
+	const makeConsumable = (): mediasoup.types.RtpParameters => ({
+		codecs: [
+			{
+				mimeType: 'video/H264',
+				payloadType: 101,
+				clockRate: 90000,
+				parameters: {
+					'packetization-mode': 1,
+					'profile-level-id': '4d0032',
+				},
+				rtcpFeedback: [
+					{ type: 'nack', parameter: '' },
+					{ type: 'nack', parameter: 'pli' },
+				],
+			},
+			{
+				mimeType: 'video/rtx',
+				payloadType: 102,
+				clockRate: 90000,
+				parameters: { apt: 101 },
+				rtcpFeedback: [],
+			},
+		],
+		headerExtensions: [
+			{
+				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+				id: 1,
+				encrypt: false,
+				parameters: {},
+			},
+			{
+				uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+				id: 5,
+				encrypt: false,
+				parameters: {},
+			},
+		],
+		encodings: [
+			{
+				ssrc: 10000001,
+				maxBitrate: 500000,
+				scalabilityMode: 'L1T3',
+			},
+		],
+		rtcp: { cname: 'cname1234', reducedSize: true },
+	});
+
+	test('succeeds with happy path and produces a mapping', () => {
+		const consumable = makeConsumable();
+		const override: mediasoup.types.RtpParameters = {
+			codecs: [
+				{
+					mimeType: 'video/H264',
+					payloadType: 97,
+					clockRate: 90000,
+					parameters: {
+						'packetization-mode': 1,
+						'profile-level-id': '4d0032',
+					},
+					rtcpFeedback: [],
+				},
+				{
+					mimeType: 'video/rtx',
+					payloadType: 98,
+					clockRate: 90000,
+					parameters: { apt: 97 },
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [
+				{
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					id: 3,
+					encrypt: false,
+					parameters: {},
+				},
+				{
+					uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+					id: 7,
+					encrypt: false,
+					parameters: {},
+				},
+			],
+		};
+
+		const rtpParameters = ortc.getConsumerRtpParameters({
+			consumableRtpParameters: consumable,
+			remoteRtpCapabilities: override,
+			pipe: false,
+			enableRtx: true,
+		});
+
+		expect(rtpParameters.codecs.length).toBe(2);
+		expect(rtpParameters.codecs[0]!.payloadType).toBe(97);
+		expect(rtpParameters.codecs[1]!.payloadType).toBe(98);
+
+		expect(rtpParameters.rtcp).toEqual({
+			cname: 'cname1234',
+			reducedSize: true,
+		});
+
+		const mapping = ortc.getConsumerRtpMapping(consumable, rtpParameters);
+
+		expect(mapping.codecs).toEqual(
+			expect.arrayContaining([
+				{ producerPayloadType: 101, consumerPayloadType: 97 },
+				{ producerPayloadType: 102, consumerPayloadType: 98 },
+			])
+		);
+
+		expect(mapping.headerExtensions).toEqual([
+			{ producerExtId: 1, consumerExtId: 3 },
+			{ producerExtId: 5, consumerExtId: 7 },
+		]);
+	});
+
+	test('auto-generates SSRCs regardless of caller-provided encodings', () => {
+		const consumable = makeConsumable();
+		const override: mediasoup.types.RtpParameters = {
+			codecs: [
+				{
+					mimeType: 'video/H264',
+					payloadType: 97,
+					clockRate: 90000,
+					parameters: {
+						'packetization-mode': 1,
+						'profile-level-id': '4d0032',
+					},
+					rtcpFeedback: [],
+				},
+				{
+					mimeType: 'video/rtx',
+					payloadType: 98,
+					clockRate: 90000,
+					parameters: { apt: 97 },
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [
+				{
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					id: 3,
+					encrypt: false,
+					parameters: {},
+				},
+			],
+		};
+
+		const rtpParameters = ortc.getConsumerRtpParameters({
+			consumableRtpParameters: consumable,
+			remoteRtpCapabilities: override,
+			pipe: false,
+			enableRtx: true,
+		});
+
+		expect(rtpParameters.encodings).toBeDefined();
+		expect(rtpParameters.encodings!.length).toBe(1);
+		expect(typeof rtpParameters.encodings![0]!.ssrc).toBe('number');
+		expect(typeof rtpParameters.encodings![0]!.rtx?.ssrc).toBe('number');
+	});
+
+	test('rtcp.cname from caller is preserved when provided', () => {
+		const consumable = makeConsumable();
+		const override: mediasoup.types.RtpParameters = {
+			codecs: [
+				{
+					mimeType: 'video/H264',
+					payloadType: 97,
+					clockRate: 90000,
+					parameters: {
+						'packetization-mode': 1,
+						'profile-level-id': '4d0032',
+					},
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [],
+			rtcp: { cname: 'custom-cname' },
+		};
+
+		const rtpParameters = ortc.getConsumerRtpParameters({
+			consumableRtpParameters: consumable,
+			remoteRtpCapabilities: override,
+			pipe: false,
+			enableRtx: false,
+		});
+
+		expect(rtpParameters.rtcp?.cname).toBe('custom-cname');
+	});
+
+	test('throws when no codec has a consumable counterpart', () => {
+		const consumable = makeConsumable();
+		const override: mediasoup.types.RtpParameters = {
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 97,
+					clockRate: 90000,
+					parameters: {},
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [],
+		};
+
+		expect(() =>
+			ortc.getConsumerRtpParameters({
+				consumableRtpParameters: consumable,
+				remoteRtpCapabilities: override,
+				pipe: false,
+				enableRtx: true,
+			})
+		).toThrow(UnsupportedError);
+	});
+
+	test('drops RTX codec when its apt points to no consumer-side codec', () => {
+		const consumable = makeConsumable();
+		const override: mediasoup.types.RtpParameters = {
+			codecs: [
+				{
+					mimeType: 'video/H264',
+					payloadType: 97,
+					clockRate: 90000,
+					parameters: {
+						'packetization-mode': 1,
+						'profile-level-id': '4d0032',
+					},
+					rtcpFeedback: [],
+				},
+				{
+					mimeType: 'video/rtx',
+					payloadType: 98,
+					clockRate: 90000,
+					parameters: { apt: 123 },
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [],
+		};
+
+		const rtpParameters = ortc.getConsumerRtpParameters({
+			consumableRtpParameters: consumable,
+			remoteRtpCapabilities: override,
+			pipe: false,
+			enableRtx: true,
+		});
+
+		expect(rtpParameters.codecs.length).toBe(1);
+		expect(rtpParameters.codecs[0]!.payloadType).toBe(97);
+	});
+
+	test('drops unknown header extension URIs from the final rtpParameters', () => {
+		const consumable = makeConsumable();
+		const override: mediasoup.types.RtpParameters = {
+			codecs: [
+				{
+					mimeType: 'video/H264',
+					payloadType: 97,
+					clockRate: 90000,
+					parameters: {
+						'packetization-mode': 1,
+						'profile-level-id': '4d0032',
+					},
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [
+				{
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					id: 3,
+					encrypt: false,
+					parameters: {},
+				},
+				{
+					uri: 'urn:3gpp:video-orientation',
+					id: 2,
+					encrypt: false,
+					parameters: {},
+				},
+			],
+		};
+
+		const rtpParameters = ortc.getConsumerRtpParameters({
+			consumableRtpParameters: consumable,
+			remoteRtpCapabilities: override,
+			pipe: false,
+			enableRtx: false,
+		});
+
+		expect(rtpParameters.headerExtensions!.length).toBe(1);
+		expect(rtpParameters.headerExtensions![0]!.uri).toBe(
+			'urn:ietf:params:rtp-hdrext:sdes:mid'
+		);
+	});
+
+	test('keeps all matching header extensions (no early break)', () => {
+		const consumable = makeConsumable();
+		const override: mediasoup.types.RtpParameters = {
+			codecs: [
+				{
+					mimeType: 'video/H264',
+					payloadType: 97,
+					clockRate: 90000,
+					parameters: {
+						'packetization-mode': 1,
+						'profile-level-id': '4d0032',
+					},
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [
+				{
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					id: 3,
+					encrypt: false,
+					parameters: {},
+				},
+				{
+					uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+					id: 7,
+					encrypt: false,
+					parameters: {},
+				},
+			],
+		};
+
+		const rtpParameters = ortc.getConsumerRtpParameters({
+			consumableRtpParameters: consumable,
+			remoteRtpCapabilities: override,
+			pipe: false,
+			enableRtx: false,
+		});
+
+		expect(rtpParameters.headerExtensions!.length).toBe(2);
+	});
+
+	test('enableRtx=false strips RTX from the caller-provided codec list', () => {
+		const consumable = makeConsumable();
+		const override: mediasoup.types.RtpParameters = {
+			codecs: [
+				{
+					mimeType: 'video/H264',
+					payloadType: 97,
+					clockRate: 90000,
+					parameters: {
+						'packetization-mode': 1,
+						'profile-level-id': '4d0032',
+					},
+					rtcpFeedback: [],
+				},
+				{
+					mimeType: 'video/rtx',
+					payloadType: 98,
+					clockRate: 90000,
+					parameters: { apt: 97 },
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [],
+		};
+
+		const rtpParameters = ortc.getConsumerRtpParameters({
+			consumableRtpParameters: consumable,
+			remoteRtpCapabilities: override,
+			pipe: false,
+			enableRtx: false,
+		});
+
+		expect(rtpParameters.codecs.length).toBe(1);
+		expect(rtpParameters.codecs[0]!.payloadType).toBe(97);
+		expect(rtpParameters.encodings?.[0]?.rtx).toBeUndefined();
+	});
+});

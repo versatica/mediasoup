@@ -599,6 +599,7 @@ export abstract class TransportImpl<
 		ignoreDtx = false,
 		enableRtx,
 		pipe = false,
+		rtpParameters: overrideRtpParameters,
 		appData,
 	}: ConsumerOptions<ConsumerAppData>): Promise<Consumer<ConsumerAppData>> {
 		logger.debug('consume()');
@@ -609,6 +610,10 @@ export abstract class TransportImpl<
 			throw new TypeError('if given, appData must be an object');
 		} else if (mid && (typeof mid !== 'string' || mid.length === 0)) {
 			throw new TypeError('if given, mid must be non empty string');
+		} else if (overrideRtpParameters && pipe) {
+			throw new TypeError(
+				'rtpParameters override is not supported together with pipe=true'
+			);
 		}
 
 		// Clone given RTP capabilities to not modify input data.
@@ -628,16 +633,29 @@ export abstract class TransportImpl<
 			enableRtx = producer.kind === 'video';
 		}
 
+		let consumerRtpMapping: ortc.ConsumerRtpMapping | undefined;
+
 		// This may throw.
-		const rtpParameters = ortc.getConsumerRtpParameters({
+		const rtpParameters: RtpParameters = ortc.getConsumerRtpParameters({
 			consumableRtpParameters: producer.consumableRtpParameters,
-			remoteRtpCapabilities: clonedRtpCapabilities,
+			remoteRtpCapabilities: overrideRtpParameters ?? clonedRtpCapabilities,
 			pipe,
 			enableRtx,
 		});
 
-		// Set MID.
-		if (!pipe) {
+		if (overrideRtpParameters) {
+			consumerRtpMapping = ortc.getConsumerRtpMapping(
+				producer.consumableRtpParameters,
+				rtpParameters
+			);
+		}
+
+		// Set MID. Priority:
+		//   1. mid already set on rtpParameters (override path, taken from
+		//      the caller-provided rtpParameters.mid).
+		//   2. ConsumerOptions.mid.
+		//   3. Auto-generated monotonically increasing integer.
+		if (!pipe && !rtpParameters.mid) {
 			if (mid) {
 				rtpParameters.mid = mid;
 			} else {
@@ -664,6 +682,7 @@ export abstract class TransportImpl<
 			preferredLayers,
 			ignoreDtx,
 			pipe,
+			consumerRtpMapping,
 		});
 
 		const response = await this.channel.request(
@@ -1391,6 +1410,7 @@ function createConsumeRequest({
 	preferredLayers,
 	ignoreDtx,
 	pipe,
+	consumerRtpMapping,
 }: {
 	builder: flatbuffers.Builder;
 	producer: Producer;
@@ -1400,6 +1420,7 @@ function createConsumeRequest({
 	preferredLayers?: ConsumerLayers;
 	ignoreDtx?: boolean;
 	pipe: boolean;
+	consumerRtpMapping?: ortc.ConsumerRtpMapping;
 }): number {
 	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
 	const consumerIdOffset = builder.createString(consumerId);
@@ -1432,6 +1453,15 @@ function createConsumeRequest({
 			FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
 	}
 
+	let consumerRtpMappingOffset: number | undefined;
+
+	if (consumerRtpMapping) {
+		consumerRtpMappingOffset = ortc.serializeConsumerRtpMapping(
+			builder,
+			consumerRtpMapping
+		);
+	}
+
 	const ConsumeRequest = FbsTransport.ConsumeRequest;
 
 	// Create Consume Request.
@@ -1462,6 +1492,10 @@ function createConsumeRequest({
 	}
 
 	ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
+
+	if (consumerRtpMappingOffset !== undefined) {
+		ConsumeRequest.addConsumerRtpMapping(builder, consumerRtpMappingOffset);
+	}
 
 	return ConsumeRequest.endConsumeRequest(builder);
 }

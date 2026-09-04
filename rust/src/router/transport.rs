@@ -394,6 +394,10 @@ pub enum ConsumeError {
     /// Bad consumer RTP parameters.
     #[error("Bad consumer RTP parameters: {0}")]
     BadConsumerRtpParameters(ConsumerRtpParametersError),
+    /// [`ConsumerOptions::rtp_parameters`] override is not supported together with `pipe=true`
+    /// or on pipe transports.
+    #[error("ConsumerOptions.rtp_parameters override is not supported on pipe transports")]
+    OverrideNotSupportedOnPipe,
     /// Request to worker failed.
     #[error("Request to worker failed: {0}")]
     Request(RequestError),
@@ -644,8 +648,18 @@ pub(super) trait TransportImpl: TransportGeneric {
             enable_rtx,
             ignore_dtx,
             pipe,
+            rtp_parameters: override_rtp_parameters,
             app_data,
         } = consumer_options;
+
+        // Caller-provided wire-level rtpParameters are incompatible with pipe
+        // semantics (which already passes through all encodings verbatim).
+        if override_rtp_parameters.is_some()
+            && (pipe || transport_type == TransportType::Pipe)
+        {
+            return Err(ConsumeError::OverrideNotSupportedOnPipe);
+        }
+
         ortc::validate_rtp_capabilities(&rtp_capabilities)
             .map_err(ConsumeError::FailedRtpCapabilitiesValidation)?;
 
@@ -658,21 +672,39 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let enable_rtx = enable_rtx.unwrap_or(producer.kind() == MediaKind::Video);
 
+        let mut consumer_rtp_mapping: Option<ortc::ConsumerRtpMapping> = None;
+
         let rtp_parameters = if transport_type == TransportType::Pipe {
             ortc::get_pipe_consumer_rtp_parameters(producer.consumable_rtp_parameters(), rtx)
         } else {
+            let source = match &override_rtp_parameters {
+                Some(o) => ortc::RemoteRtpSource::Parameters(o),
+                None => ortc::RemoteRtpSource::Capabilities(&rtp_capabilities),
+            };
+
             let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
                 producer.consumable_rtp_parameters(),
-                &rtp_capabilities,
+                source,
                 pipe,
                 enable_rtx,
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 
-            if !pipe {
-                // Set MID.
+            if override_rtp_parameters.is_some() {
+                consumer_rtp_mapping = Some(ortc::get_consumer_rtp_mapping(
+                    producer.consumable_rtp_parameters(),
+                    &rtp_parameters,
+                ));
+            }
+
+            if !pipe && rtp_parameters.mid.is_none() {
+                // Set MID. Priority:
+                //   1. mid already set on rtp_parameters (override path,
+                //      taken from the caller-provided rtpParameters.mid).
+                //   2. ConsumerOptions.mid.
+                //   3. Auto-generated monotonically increasing integer
+                //      (up to 8 bytes).
                 rtp_parameters.mid = mid.or_else(|| {
-                    // We use up to 8 bytes for MID (string).
                     let next_mid_for_consumers = self
                         .next_mid_for_consumers()
                         .fetch_add(1, Ordering::Relaxed);
@@ -711,6 +743,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                     paused,
                     preferred_layers,
                     ignore_dtx,
+                    consumer_rtp_mapping,
                 },
             )
             .await
