@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: New `RateCalculator` ([PR #1899](https://github.com/versatica/mediasoup/pull/1899)).
+- Worker: Fix transport-cc arrival time precision by working in microseconds ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 3.26.0
 

@@ -190,33 +190,27 @@ namespace RTC
 				chunk->Dump(indentation + 1);
 			}
 
-			MS_DUMP_CLEAN(indentation + 1, "<Deltas>");
-			for (auto delta : this->deltas)
-			{
-				MS_DUMP_CLEAN(indentation + 1, "  %" PRIi16 " ms", static_cast<int16_t>(delta / 4));
-			}
-			MS_DUMP_CLEAN(indentation + 1, "</Deltas>");
+			auto packetStatuses = GetPacketStatuses();
 
-			auto packetResults = GetPacketResults();
-
-			MS_DUMP_CLEAN(indentation + 1, "<PacketResults>");
-			for (auto& packetResult : packetResults)
+			MS_DUMP_CLEAN(indentation + 1, "<PacketStatuses>");
+			for (auto& packetStatus : packetStatuses)
 			{
-				if (packetResult.received)
+				if (packetStatus.received)
 				{
 					MS_DUMP_CLEAN(
 					  indentation + 1,
-					  "  seq:%" PRIu16 ", received:yes, receivedAtMs:%" PRIi64,
-					  packetResult.sequenceNumber,
-					  packetResult.receivedAtMs);
+					  "  seq:%" PRIu16 ", received:yes, delta:%" PRIi64 " us, receivedAtUs:%" PRIi64,
+					  packetStatus.sequenceNumber,
+					  static_cast<int64_t>(packetStatus.delta) * DeltaTickUs,
+					  packetStatus.receivedAtUs);
 				}
 				else
 				{
 					MS_DUMP_CLEAN(
-					  indentation + 1, "  seq:%" PRIu16 ", received:no", packetResult.sequenceNumber);
+					  indentation + 1, "  seq:%" PRIu16 ", received:no", packetStatus.sequenceNumber);
 				}
 			}
-			MS_DUMP_CLEAN(indentation + 1, "</PacketResults>");
+			MS_DUMP_CLEAN(indentation + 1, "</PacketStatuses>");
 			MS_DUMP_CLEAN(indentation, "</FeedbackRtpTransportPacket>");
 		}
 
@@ -279,21 +273,30 @@ namespace RTC
 			return offset;
 		}
 
-		void FeedbackRtpTransportPacket::SetBase(uint16_t sequenceNumber, uint64_t timestamp)
+		void FeedbackRtpTransportPacket::SetBase(uint16_t sequenceNumber, int64_t timestampUs)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(!this->baseSet, "base already set");
 
-			this->baseSet              = true;
-			this->baseSequenceNumber   = sequenceNumber;
-			this->referenceTime        = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
+			// Number of whole base time ticks elapsed.
+			const int64_t baseTimeTicks = timestampUs / BaseTimeTickUs;
+
+			this->baseSet            = true;
+			this->baseSequenceNumber = sequenceNumber;
+			// NOTE: The reference time is a 24 bits field that wraps around, which is
+			// what GetBaseDeltaUs() compensates for. Keeping fewer bits than that
+			// would make it wrap sooner than the compensation expects.
+			this->referenceTime        = static_cast<int32_t>(baseTimeTicks & 0xFFFFFF);
 			this->latestSequenceNumber = sequenceNumber - 1;
-			this->latestTimestamp      = (timestamp >> 6) * 64; // IMPORTANT: Loose precision.
+			// IMPORTANT: The reference time only carries whole base time ticks, so
+			// the remainder is lost here and recovered by the delta of the first
+			// added packet.
+			this->latestTimestampUs = baseTimeTicks * BaseTimeTickUs;
 		}
 
 		FeedbackRtpTransportPacket::AddPacketResult FeedbackRtpTransportPacket::AddPacket(
-		  uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen)
+		  uint16_t sequenceNumber, int64_t timestampUs, size_t maxRtcpPacketLen)
 		{
 			MS_TRACE();
 
@@ -323,24 +326,27 @@ namespace RTC
 				}
 			}
 
-			// Deltas are represented as multiples of 250 us.
+			// Deltas are represented as multiples of DeltaTickUs, rounded to the
+			// nearest tick.
 			// NOTE: Read it as int 64 to detect long elapsed times.
-			const int64_t delta64 = (timestamp - this->latestTimestamp) * 4;
+			const int64_t elapsedUs = timestampUs - this->latestTimestampUs;
+			const int64_t delta64   = elapsedUs >= 0 ? (elapsedUs + (DeltaTickUs / 2)) / DeltaTickUs
+			                                         : (elapsedUs - (DeltaTickUs / 2)) / DeltaTickUs;
 
 			if (
 			  delta64 > FeedbackRtpTransportPacket::maxPacketDelta ||
 			  delta64 < -1 * static_cast<int64_t>(FeedbackRtpTransportPacket::maxPacketDelta))
 			{
 				MS_WARN_DEV(
-				  "RTP packet delta exceeded [latestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
-				  this->latestTimestamp,
-				  timestamp);
+				  "RTP packet delta exceeded [latestTimestampUs:%" PRIi64 ", timestampUs:%" PRIi64 "]",
+				  this->latestTimestampUs,
+				  timestampUs);
 
 				return AddPacketResult::FATAL;
 			}
 
 			// Delta in 16 bits signed.
-			auto delta = static_cast<int16_t>(delta64);
+			const auto delta = static_cast<int16_t>(delta64);
 
 			// Check whether another chunks and corresponding delta infos could be
 			// added.
@@ -370,8 +376,11 @@ namespace RTC
 			FillChunk(this->latestSequenceNumber, sequenceNumber, delta);
 
 			// Update latest seen sequence number and timestamp.
+			// NOTE: The timestamp is advanced by the quantized delta rather than set
+			// to the given one so that the rounding above doesn't accumulate along
+			// the packet.
 			this->latestSequenceNumber = sequenceNumber;
-			this->latestTimestamp      = timestamp;
+			this->latestTimestampUs += delta * DeltaTickUs;
 
 			return AddPacketResult::SUCCESS;
 		}
@@ -383,39 +392,38 @@ namespace RTC
 			AddPendingChunks();
 		}
 
-		std::vector<struct FeedbackRtpTransportPacket::PacketResult> FeedbackRtpTransportPacket::GetPacketResults() const
+		std::vector<struct FeedbackRtpTransportPacket::PacketStatus> FeedbackRtpTransportPacket::GetPacketStatuses() const
 		{
 			MS_TRACE();
 
-			std::vector<struct PacketResult> packetResults;
+			std::vector<struct PacketStatus> packetStatuses;
 
 			uint16_t currentSequenceNumber = this->baseSequenceNumber - 1;
 
 			for (auto* chunk : this->chunks)
 			{
-				chunk->FillResults(packetResults, currentSequenceNumber);
+				chunk->FillStatuses(packetStatuses, currentSequenceNumber);
 			}
 
 			size_t deltaIdx{ 0u };
-			// NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
-			auto currentReceivedAtMs = static_cast<int64_t>(this->referenceTime * 64);
+			auto currentReceivedAtUs = GetReferenceTimestampUs();
 
-			for (size_t idx{ 0u }; idx < packetResults.size(); ++idx)
+			for (size_t idx{ 0u }; idx < packetStatuses.size(); ++idx)
 			{
-				auto& packetResult = packetResults[idx];
+				auto& packetStatus = packetStatuses[idx];
 
-				if (!packetResult.received)
+				if (!packetStatus.received)
 				{
 					continue;
 				}
 
-				currentReceivedAtMs += this->deltas.at(deltaIdx) / 4;
-				packetResult.delta        = this->deltas.at(deltaIdx);
-				packetResult.receivedAtMs = currentReceivedAtMs;
+				currentReceivedAtUs += this->deltas.at(deltaIdx) * DeltaTickUs;
+				packetStatus.delta        = this->deltas.at(deltaIdx);
+				packetStatus.receivedAtUs = currentReceivedAtUs;
 				deltaIdx++;
 			}
 
-			return packetResults;
+			return packetStatuses;
 		}
 
 		uint8_t FeedbackRtpTransportPacket::GetPacketFractionLost() const
@@ -752,8 +760,8 @@ namespace RTC
 			}
 		}
 
-		void FeedbackRtpTransportPacket::RunLengthChunk::FillResults(
-		  std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults,
+		void FeedbackRtpTransportPacket::RunLengthChunk::FillStatuses(
+		  std::vector<struct FeedbackRtpTransportPacket::PacketStatus>& packetStatuses,
 		  uint16_t& currentSequenceNumber) const
 		{
 			MS_TRACE();
@@ -763,7 +771,7 @@ namespace RTC
 
 			for (uint16_t count{ 1u }; count <= this->count; ++count)
 			{
-				packetResults.emplace_back(++currentSequenceNumber, received);
+				packetStatuses.emplace_back(++currentSequenceNumber, received);
 			}
 		}
 
@@ -876,8 +884,8 @@ namespace RTC
 			return count;
 		}
 
-		void FeedbackRtpTransportPacket::OneBitVectorChunk::FillResults(
-		  std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults,
+		void FeedbackRtpTransportPacket::OneBitVectorChunk::FillStatuses(
+		  std::vector<struct FeedbackRtpTransportPacket::PacketStatus>& packetStatuses,
 		  uint16_t& currentSequenceNumber) const
 		{
 			MS_TRACE();
@@ -886,7 +894,7 @@ namespace RTC
 			{
 				const bool received = (status == Status::SmallDelta || status == Status::LargeDelta);
 
-				packetResults.emplace_back(++currentSequenceNumber, received);
+				packetStatuses.emplace_back(++currentSequenceNumber, received);
 			}
 		}
 
@@ -1016,8 +1024,8 @@ namespace RTC
 			return count;
 		}
 
-		void FeedbackRtpTransportPacket::TwoBitVectorChunk::FillResults(
-		  std::vector<struct FeedbackRtpTransportPacket::PacketResult>& packetResults,
+		void FeedbackRtpTransportPacket::TwoBitVectorChunk::FillStatuses(
+		  std::vector<struct FeedbackRtpTransportPacket::PacketStatus>& packetStatuses,
 		  uint16_t& currentSequenceNumber) const
 		{
 			MS_TRACE();
@@ -1026,7 +1034,7 @@ namespace RTC
 			{
 				const bool received = (status == Status::SmallDelta || status == Status::LargeDelta);
 
-				packetResults.emplace_back(++currentSequenceNumber, received);
+				packetStatuses.emplace_back(++currentSequenceNumber, received);
 			}
 		}
 

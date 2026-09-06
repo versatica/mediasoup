@@ -18,11 +18,11 @@ namespace mediasoup_helpers
 		{
 			std::vector<webrtc::rtcp::ReceivedPacket> receivedPackets;
 
-			for (auto& packetResult : packet->GetPacketResults())
+			for (auto& packetStatus : packet->GetPacketStatuses())
 			{
-				if (packetResult.received)
+				if (packetStatus.received)
 				{
-					receivedPackets.emplace_back(packetResult.sequenceNumber, packetResult.delta);
+					receivedPackets.emplace_back(packetStatus.sequenceNumber, packetStatus.delta);
 				}
 			}
 
@@ -30,11 +30,11 @@ namespace mediasoup_helpers
 		}
 
 		/**
-		 * Get the reference time in microseconds, including any precision loss.
+		 * Get the reference time in microseconds.
 		 */
 		int64_t GetBaseTimeUs(const RTC::RTCP::FeedbackRtpTransportPacket* packet)
 		{
-			return packet->GetReferenceTimestamp() * 1000;
+			return packet->GetReferenceTimestampUs();
 		}
 
 		/**
@@ -42,7 +42,7 @@ namespace mediasoup_helpers
 		 */
 		int64_t GetBaseDeltaUs(const RTC::RTCP::FeedbackRtpTransportPacket* packet, int64_t prev_timestamp_us)
 		{
-			return packet->GetBaseDelta(prev_timestamp_us / 1000) * 1000;
+			return packet->GetBaseDeltaUs(prev_timestamp_us);
 		}
 	} // namespace FeedbackRtpTransport
 } // namespace mediasoup_helpers

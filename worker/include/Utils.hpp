@@ -538,9 +538,18 @@ namespace Utils
 			    std::round((static_cast<double>(ntp.fractions) * 1000) / NtpFractionalUnit)));
 		}
 
-		static uint32_t TimeMsToAbsSendTime(uint64_t ms)
+		/**
+		 * Convert microseconds into the 6.18 fixed point seconds of the
+		 * `abs-send-time` RTP header extension, whose resolution is hence 1/262144
+		 * of a second.
+		 */
+		static uint32_t TimeUsToAbsSendTime(int64_t us)
 		{
-			return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
+			// NOTE: Only 24 bits are kept, so the value wraps every 64 seconds. Reduce
+			// the input to that period first so that the shift below cannot overflow.
+			const int64_t wrappedUs = us % (64 * 1000000);
+
+			return static_cast<uint32_t>(((wrappedUs << 18) + 500000) / 1000000) & 0x00FFFFFF;
 		}
 
 		/**

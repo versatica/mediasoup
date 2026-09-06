@@ -527,10 +527,10 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - Contrary to `ReadAbsSendTime()` method, given `ms` is internally
+			 * - Contrary to `ReadAbsSendTime()` method, given `us` is internally
 			 *   converted to ABS Send Time.
 			 */
-			bool UpdateAbsSendTime(uint64_t ms) const;
+			bool UpdateAbsSendTime(int64_t us) const;
 
 			bool ReadTransportWideCc01(uint16_t& wideSeqNumber) const;
 

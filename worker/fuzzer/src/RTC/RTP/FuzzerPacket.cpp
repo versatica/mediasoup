@@ -91,7 +91,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(3);
 	packet->GetExtensionValue(3, extenLen);
 	packet->ReadAbsSendTime(absSendTime);
-	packet->UpdateAbsSendTime(12345678u);
+	packet->UpdateAbsSendTime(12345678);
 
 	packet->HasExtension(4);
 	packet->GetExtensionValue(4, extenLen);

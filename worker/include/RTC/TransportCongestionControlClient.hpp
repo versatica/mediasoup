@@ -71,7 +71,7 @@ namespace RTC
 		void TransportDisconnected();
 		void InsertPacket(webrtc::RtpPacketSendInfo& packetInfo);
 		webrtc::PacedPacketInfo GetPacingInfo();
-		void PacketSent(const webrtc::RtpPacketSendInfo& packetInfo, int64_t nowMs);
+		void PacketSent(const webrtc::RtpPacketSendInfo& packetInfo, int64_t nowUs);
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReportPacket* packet, float rtt, int64_t nowMs);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);

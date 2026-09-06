@@ -10,11 +10,11 @@ void FuzzerRtcRtcpFeedbackRtpTransport::Fuzz(RTC::RTCP::FeedbackRtpTransportPack
 	packet->GetBaseSequenceNumber();
 	packet->GetPacketStatusCount();
 	packet->GetReferenceTime();
-	packet->GetReferenceTimestamp();
+	packet->GetReferenceTimestampUs();
 	packet->GetFeedbackPacketCount();
 	packet->GetLatestSequenceNumber();
-	packet->GetLatestTimestamp();
-	packet->GetPacketResults();
+	packet->GetLatestTimestampUs();
+	packet->GetPacketStatuses();
 	packet->GetPacketFractionLost();
 	packet->Serialize(RTC::RTCP::SerializationBuffer);
 }

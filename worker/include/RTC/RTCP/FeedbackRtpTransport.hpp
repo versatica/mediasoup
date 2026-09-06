@@ -42,21 +42,25 @@ namespace RTC
 		class FeedbackRtpTransportPacket : public FeedbackRtpPacket
 		{
 		public:
-			static constexpr int64_t BaseTimeTick   = 64;
-			static constexpr int64_t TimeWrapPeriod = BaseTimeTick * (1ll << 24);
+			// Receive deltas are expressed in multiples of this.
+			static constexpr int64_t DeltaTickUs = 250;
+			// The reference time is expressed in multiples of this.
+			static constexpr int64_t BaseTimeTickUs = DeltaTickUs * (1 << 8);
+			// Period after which the reference time wraps around.
+			static constexpr int64_t TimeWrapPeriodUs = BaseTimeTickUs * (1ll << 24);
 
 		public:
-			struct PacketResult
+			struct PacketStatus
 			{
-				PacketResult(uint16_t sequenceNumber, bool received)
+				PacketStatus(uint16_t sequenceNumber, bool received)
 				  : sequenceNumber(sequenceNumber), received(received)
 				{
 				}
 
 				uint16_t sequenceNumber;   // Wide sequence number.
-				int16_t delta{ 0 };        // Delta.
+				int16_t delta{ 0 };        // Delta in DeltaTickUs units.
 				bool received{ false };    // Packet received or not.
-				int64_t receivedAtMs{ 0 }; // Received time (ms) in remote timestamp reference.
+				int64_t receivedAtUs{ 0 }; // Received time (us) in remote timestamp reference.
 			};
 
 		public:
@@ -100,8 +104,8 @@ namespace RTC
 				virtual void Dump(int indentation = 0) const                                     = 0;
 				virtual uint16_t GetCount() const                                                = 0;
 				virtual uint16_t GetReceivedStatusCount() const                                  = 0;
-				virtual void FillResults(
-				  std::vector<struct PacketResult>& packetResults, uint16_t& currentSequenceNumber) const = 0;
+				virtual void FillStatuses(
+				  std::vector<struct PacketStatus>& packetStatuses, uint16_t& currentSequenceNumber) const = 0;
 				virtual size_t Serialize(uint8_t* buffer) = 0;
 			};
 
@@ -127,8 +131,8 @@ namespace RTC
 					return this->count;
 				}
 				uint16_t GetReceivedStatusCount() const override;
-				void FillResults(
-				  std::vector<struct PacketResult>& packetResults,
+				void FillStatuses(
+				  std::vector<struct PacketStatus>& packetStatuses,
 				  uint16_t& currentSequenceNumber) const override;
 				size_t Serialize(uint8_t* buffer) override;
 
@@ -155,8 +159,8 @@ namespace RTC
 					return this->statuses.size();
 				}
 				uint16_t GetReceivedStatusCount() const override;
-				void FillResults(
-				  std::vector<struct PacketResult>& packetResults,
+				void FillStatuses(
+				  std::vector<struct PacketStatus>& packetStatuses,
 				  uint16_t& currentSequenceNumber) const override;
 				size_t Serialize(uint8_t* buffer) override;
 
@@ -182,8 +186,8 @@ namespace RTC
 					return this->statuses.size();
 				}
 				uint16_t GetReceivedStatusCount() const override;
-				void FillResults(
-				  std::vector<struct PacketResult>& packetResults,
+				void FillStatuses(
+				  std::vector<struct PacketStatus>& packetStatuses,
 				  uint16_t& currentSequenceNumber) const override;
 				size_t Serialize(uint8_t* buffer) override;
 
@@ -216,8 +220,8 @@ namespace RTC
 			{
 				return this->baseSet;
 			}
-			void SetBase(uint16_t sequenceNumber, uint64_t timestamp);
-			AddPacketResult AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
+			void SetBase(uint16_t sequenceNumber, int64_t timestampUs);
+			AddPacketResult AddPacket(uint16_t sequenceNumber, int64_t timestampUs, size_t maxRtcpPacketLen);
 			// Just for locally generated packets.
 			void Finish();
 			bool IsFull() const
@@ -247,27 +251,30 @@ namespace RTC
 			{
 				return this->referenceTime;
 			}
-			// NOTE: We only use this for testing purpose.
-			void SetReferenceTime(int64_t referenceTime)
+			/**
+			 * @remarks
+			 * - Only used for testing purposes.
+			 */
+			void SetReferenceTimeUs(int64_t referenceTimeUs)
 			{
-				this->referenceTime = (referenceTime % TimeWrapPeriod) / BaseTimeTick;
+				this->referenceTime = (referenceTimeUs % TimeWrapPeriodUs) / BaseTimeTickUs;
 			}
-			int64_t GetReferenceTimestamp() const // Reference time in ms.
+			int64_t GetReferenceTimestampUs() const // Reference time in us.
 			{
-				return TimeWrapPeriod + (static_cast<int64_t>(this->referenceTime) * BaseTimeTick);
+				return TimeWrapPeriodUs + (static_cast<int64_t>(this->referenceTime) * BaseTimeTickUs);
 			}
-			int64_t GetBaseDelta(const int64_t previousTimestampMs) const
+			int64_t GetBaseDeltaUs(const int64_t previousTimestampUs) const
 			{
-				int64_t delta = GetReferenceTimestamp() - previousTimestampMs;
+				int64_t delta = GetReferenceTimestampUs() - previousTimestampUs;
 
 				// Compensate for wrap around.
-				if (std::abs(delta - TimeWrapPeriod) < std::abs(delta))
+				if (std::abs(delta - TimeWrapPeriodUs) < std::abs(delta))
 				{
-					delta -= TimeWrapPeriod;
+					delta -= TimeWrapPeriodUs;
 				}
-				else if (std::abs(delta + TimeWrapPeriod) < std::abs(delta))
+				else if (std::abs(delta + TimeWrapPeriodUs) < std::abs(delta))
 				{
-					delta += TimeWrapPeriod;
+					delta += TimeWrapPeriodUs;
 				}
 
 				return delta;
@@ -284,11 +291,11 @@ namespace RTC
 			{
 				return this->latestSequenceNumber;
 			}
-			uint64_t GetLatestTimestamp() const // Just for locally generated packets.
+			int64_t GetLatestTimestampUs() const // Just for locally generated packets.
 			{
-				return this->latestTimestamp;
+				return this->latestTimestampUs;
 			}
-			std::vector<struct PacketResult> GetPacketResults() const;
+			std::vector<struct PacketStatus> GetPacketStatuses() const;
 			uint8_t GetPacketFractionLost() const;
 
 			/* Pure virtual methods inherited from Packet. */
@@ -330,7 +337,7 @@ namespace RTC
 			// Just for locally generated packets.
 			uint16_t latestSequenceNumber{ 0u };
 			// Just for locally generated packets.
-			uint64_t latestTimestamp{ 0u };
+			int64_t latestTimestampUs{ 0 };
 			uint16_t packetStatusCount{ 0u };
 			uint8_t feedbackPacketCount{ 0u };
 			std::vector<Chunk*> chunks;

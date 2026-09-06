@@ -95,5 +95,5 @@ void FuzzerUtils::Fuzz(const uint8_t* data, size_t len)
 	auto ntp = Utils::Time::TimeMs2Ntp(static_cast<uint64_t>(len));
 
 	Utils::Time::Ntp2TimeMs(ntp);
-	Utils::Time::TimeMsToAbsSendTime(static_cast<uint64_t>(len));
+	Utils::Time::TimeUsToAbsSendTime(static_cast<int64_t>(len));
 }

@@ -159,7 +159,7 @@ namespace RTC
 	}
 
 	void TransportCongestionControlClient::PacketSent(
-	  const webrtc::RtpPacketSendInfo& packetInfo, int64_t nowMs)
+	  const webrtc::RtpPacketSendInfo& packetInfo, int64_t nowUs)
 	{
 		MS_TRACE();
 
@@ -169,7 +169,10 @@ namespace RTC
 		}
 
 		// Notify the transport feedback adapter about the sent packet.
-		const rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, nowMs);
+		// NOTE: The send time is truncated to whole milliseconds because that's the
+		// resolution the current estimator takes.
+		const rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, nowUs / 1000);
+
 		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
 	}
 
@@ -225,9 +228,9 @@ namespace RTC
 		const size_t expectedPackets = feedback->GetPacketStatusCount();
 		size_t lostPackets           = 0;
 
-		for (const auto& result : feedback->GetPacketResults())
+		for (const auto& packetStatus : feedback->GetPacketStatuses())
 		{
-			if (!result.received)
+			if (!packetStatus.received)
 			{
 				lostPackets += 1;
 			}

@@ -55,14 +55,14 @@ namespace RTC
 			}
 		}
 		double GetPacketLoss() const;
-		void IncomingPacket(uint64_t nowMs, const RTC::RTP::Packet* packet);
+		void IncomingPacket(int64_t nowUs, const RTC::RTP::Packet* packet);
 		void SetMaxIncomingBitrate(uint32_t bitrate);
 		void FillAndSendTransportCcFeedback();
 
 	private:
 		// Returns true if a feedback packet was sent.
 		bool SendTransportCcFeedback();
-		void MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs);
+		void MayDropOldPacketArrivalTimes(uint16_t seqNum, int64_t nowUs);
 		void MaySendLimitationRembFeedback(uint64_t nowMs);
 		void UpdatePacketLoss(double packetLoss);
 		void ResetTransportCcFeedback(uint8_t feedbackPacketCount);
@@ -100,8 +100,8 @@ namespace RTC
 		// Whether any packet with transport wide sequence number was received.
 		bool transportWideSeqNumberReceived{ false };
 		uint16_t transportCcFeedbackWideSeqNumStart{ 0u };
-		// Map of arrival timestamp (ms) indexed by wide seq number.
-		std::map<uint16_t, uint64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
+		// Map of arrival timestamp (us) indexed by wide seq number.
+		std::map<uint16_t, int64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
 	};
 } // namespace RTC
 

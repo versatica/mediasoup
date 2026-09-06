@@ -13,14 +13,14 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 	struct TestTransportCongestionControlServerInput
 	{
 		uint16_t wideSeqNumber;
-		uint64_t nowMs;
+		int64_t nowUs;
 	};
 
 	struct TestTransportCongestionControlServerResult
 	{
 		uint16_t wideSeqNumber;
 		bool received;
-		uint64_t timestamp;
+		int64_t timestampUs;
 	};
 
 	using TestResults = std::deque<std::vector<TestTransportCongestionControlServerResult>>;
@@ -39,27 +39,32 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 				return;
 			}
 
-			auto packetResults = tccPacket->GetPacketResults();
+			auto packetStatuses = tccPacket->GetPacketStatuses();
 
 			REQUIRE(!this->results.empty());
 
 			auto testResults = this->results.front();
 			this->results.pop_front();
 
-			REQUIRE(testResults.size() == packetResults.size());
+			REQUIRE(testResults.size() == packetStatuses.size());
 
-			auto packetResultIt = packetResults.begin();
+			auto packetStatusIt = packetStatuses.begin();
 			auto testResultIt   = testResults.begin();
 
-			for (; packetResultIt != packetResults.end() && testResultIt != testResults.end();
-			     ++packetResultIt, ++testResultIt)
+			for (; packetStatusIt != packetStatuses.end() && testResultIt != testResults.end();
+			     ++packetStatusIt, ++testResultIt)
 			{
-				REQUIRE(packetResultIt->sequenceNumber == testResultIt->wideSeqNumber);
-				REQUIRE(packetResultIt->received == testResultIt->received);
+				REQUIRE(packetStatusIt->sequenceNumber == testResultIt->wideSeqNumber);
+				REQUIRE(packetStatusIt->received == testResultIt->received);
 
-				if (packetResultIt->received)
+				if (packetStatusIt->received)
 				{
-					REQUIRE(packetResultIt->receivedAtMs == static_cast<int64_t>(testResultIt->timestamp));
+					// The reconstructed times sit in the frame of the reference time,
+					// which is shifted by a whole wrap period so that it's positive
+					// regardless of the sign of the reference time on the wire.
+					REQUIRE(
+					  packetStatusIt->receivedAtUs ==
+					  RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriodUs + testResultIt->timestampUs);
 				}
 			}
 		}
@@ -122,22 +127,23 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		// Save results.
 		listener.SetResults(results);
 
-		uint64_t startTs = inputs[0].nowMs;
-		uint64_t TransportCcFeedbackSendInterval{ 100u }; // In ms.
+		static constexpr int64_t TransportCcFeedbackSendIntervalUs{ 100 * 1000 };
+
+		int64_t startTsUs = inputs[0].nowUs;
 
 		for (auto input : inputs)
 		{
 			// Periodic sending TCC packets.
-			uint64_t diffTs = input.nowMs - startTs;
+			const int64_t diffTsUs = input.nowUs - startTsUs;
 
-			if (diffTs >= TransportCcFeedbackSendInterval)
+			if (diffTsUs >= TransportCcFeedbackSendIntervalUs)
 			{
 				tccServer.FillAndSendTransportCcFeedback();
-				startTs = input.nowMs;
+				startTsUs = input.nowUs;
 			}
 
 			packet->UpdateTransportWideCc01(input.wideSeqNumber);
-			tccServer.IncomingPacket(input.nowMs, packet.get());
+			tccServer.IncomingPacket(input.nowUs, packet.get());
 		}
 
 		tccServer.FillAndSendTransportCcFeedback();
@@ -149,25 +155,25 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs
 		{
-			{ 1u, 1000u },
-			{ 2u, 1050u },
-			{ 3u, 1100u },
-			{ 4u, 1150u },
-			{ 5u, 1200u },
+			{ 1u, 1000000 },
+			{ 2u, 1050000 },
+			{ 3u, 1100000 },
+			{ 4u, 1150000 },
+			{ 5u, 1200000 },
 		};
 
 		TestResults results
 		{
 			{
-				{ 1u, true, 1000u },
-				{ 2u, true, 1050u },
+				{ 1u, true, 1000000 },
+				{ 2u, true, 1050000 },
 			},
 			{
-				{ 3u, true, 1100u },
-				{ 4u, true, 1150u },
+				{ 3u, true, 1100000 },
+				{ 4u, true, 1150000 },
 			},
 			{
-				{ 5u, true, 1200u },
+				{ 5u, true, 1200000 },
 			},
 		};
 		// clang-format on
@@ -180,23 +186,23 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs
 		{
-			{  1u, 1000u },
-			{  3u, 1050u },
-			{  5u, 1100u },
-			{  6u, 1150u },
+			{  1u, 1000000 },
+			{  3u, 1050000 },
+			{  5u, 1100000 },
+			{  6u, 1150000 },
 		};
 
 		TestResults results
 		{
 			{
-				{ 1u,  true, 1000u },
-				{ 2u, false,    0u },
-				{ 3u,  true, 1050u },
+				{ 1u,  true, 1000000 },
+				{ 2u, false,       0 },
+				{ 3u,  true, 1050000 },
 			},
 			{
-				{ 4u, false,    0u },
-				{ 5u,  true, 1100u },
-				{ 6u,  true, 1150u },
+				{ 4u, false,       0 },
+				{ 5u,  true, 1100000 },
+				{ 6u,  true, 1150000 },
 			},
 		};
 		// clang-format on
@@ -209,25 +215,25 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs
 		{
-			{  1u, 1000u },
-			{  1u, 1050u },
-			{  2u, 1100u },
-			{  3u, 1150u },
-			{  3u, 1200u },
-			{  4u, 1250u },
+			{  1u, 1000000 },
+			{  1u, 1050000 },
+			{  2u, 1100000 },
+			{  3u, 1150000 },
+			{  3u, 1200000 },
+			{  4u, 1250000 },
 		};
 
 		TestResults results
 		{
 			{
-				{ 1u,  true, 1000u },
+				{ 1u,  true, 1000000 },
 			},
 			{
-				{ 2u,  true, 1100u },
-				{ 3u,  true, 1150u },
+				{ 2u,  true, 1100000 },
+				{ 3u,  true, 1150000 },
 			},
 			{
-				{ 4u,  true, 1250u },
+				{ 4u,  true, 1250000 },
 			},
 		};
 		// clang-format on
@@ -240,30 +246,30 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs
 		{
-			{ 1u, 1000u },
-			{ 2u, 1050u },
-			{ 4u, 1100u },
-			{ 5u, 1150u },
-			{ 3u, 1200u }, // Out of order
-			{ 6u, 1250u },
+			{ 1u, 1000000 },
+			{ 2u, 1050000 },
+			{ 4u, 1100000 },
+			{ 5u, 1150000 },
+			{ 3u, 1200000 }, // Out of order
+			{ 6u, 1250000 },
 		};
 
 		TestResults results
 		{
 			{
-				{ 1u, true, 1000u },
-				{ 2u, true, 1050u },
+				{ 1u, true, 1000000 },
+				{ 2u, true, 1050000 },
 			},
 			{
-				{ 3u, false,    0u },
-				{ 4u,  true, 1100u },
-				{ 5u,  true, 1150u },
+				{ 3u, false,       0 },
+				{ 4u,  true, 1100000 },
+				{ 5u,  true, 1150000 },
 			},
 			{
-				{ 3u, true, 1200u },
-				{ 4u, true, 1100u },
-				{ 5u, true, 1150u },
-				{ 6u, true, 1250u },
+				{ 3u, true, 1200000 },
+				{ 4u, true, 1100000 },
+				{ 5u, true, 1150000 },
+				{ 6u, true, 1250000 },
 			},
 		};
 		// clang-format on

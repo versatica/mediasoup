@@ -1516,12 +1516,10 @@ namespace RTC
 		// them.
 		packet->AssignExtensionIds(this->recvRtpHeaderExtensionIds);
 
-		auto nowMs = this->shared->GetTimeMs();
-
 		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
 		{
-			this->tccServer->IncomingPacket(nowMs, packet);
+			this->tccServer->IncomingPacket(this->shared->GetTimeUsInt64(), packet);
 		}
 
 		// Get the associated Producer.
@@ -2591,7 +2589,7 @@ namespace RTC
 #endif
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeMs());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUsInt64());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2630,7 +2628,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUsInt64());
 					  }
 				  }
 			  });
@@ -2650,7 +2648,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeMs());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUsInt64());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2684,7 +2682,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUsInt64());
 					  }
 				  }
 			  });
@@ -3273,7 +3271,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeMs());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUsInt64());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -3310,7 +3308,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUsInt64());
 					  }
 				  }
 			  });
