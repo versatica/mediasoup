@@ -32,6 +32,32 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(Utils::Time::Ntp2TimeMs(ntp) == 3990000000750);
 	}
 
+	SECTION("TimeUsToAbsSendTime()")
+	{
+		// A whole second is the fractional unit itself, being the format 6.18 fixed
+		// point seconds.
+		REQUIRE(Utils::Time::TimeUsToAbsSendTime(1000000) == 262144);
+		REQUIRE(Utils::Time::TimeUsToAbsSendTime(1500000) == 393216);
+		REQUIRE(Utils::Time::TimeUsToAbsSendTime(0) == 0);
+		// Resolution is 1/262144 of a second, so a couple of microseconds already
+		// move the value.
+		REQUIRE(Utils::Time::TimeUsToAbsSendTime(2) == 1);
+
+		// Only 6 bits of seconds are kept, so the value wraps every 64 seconds.
+		constexpr int64_t WrapPeriodUs{ 64 * 1000000 };
+
+		REQUIRE(Utils::Time::TimeUsToAbsSendTime(WrapPeriodUs) == 0);
+		REQUIRE(
+		  Utils::Time::TimeUsToAbsSendTime(WrapPeriodUs + 1000000) ==
+		  Utils::Time::TimeUsToAbsSendTime(1000000));
+
+		// A negative time yields the value of the positive time it's congruent with.
+		REQUIRE(
+		  Utils::Time::TimeUsToAbsSendTime(-1000000) ==
+		  Utils::Time::TimeUsToAbsSendTime(WrapPeriodUs - 1000000));
+		REQUIRE(Utils::Time::TimeUsToAbsSendTime(-WrapPeriodUs) == 0);
+	}
+
 	SECTION("TimeMs2Q32x32()")
 	{
 		// A whole second is the fractional unit itself.

@@ -545,9 +545,13 @@ namespace Utils
 		 */
 		static uint32_t TimeUsToAbsSendTime(int64_t us)
 		{
-			// NOTE: Only 24 bits are kept, so the value wraps every 64 seconds. Reduce
-			// the input to that period first so that the shift below cannot overflow.
-			const int64_t wrappedUs = us % (64 * 1000000);
+			// Period after which the 24 bits of the field wrap around.
+			constexpr int64_t WrapPeriodUs{ 64 * 1000000 };
+
+			// NOTE: Bring the given time into the period first. This keeps the shift
+			// below from overflowing, and makes a negative time yield the same value
+			// as the positive time it's congruent with rather than a meaningless one.
+			const int64_t wrappedUs = ((us % WrapPeriodUs) + WrapPeriodUs) % WrapPeriodUs;
 
 			return static_cast<uint32_t>(((wrappedUs << 18) + 500000) / 1000000) & 0x00FFFFFF;
 		}
