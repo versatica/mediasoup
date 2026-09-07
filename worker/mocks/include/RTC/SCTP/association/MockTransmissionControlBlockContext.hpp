@@ -49,9 +49,10 @@ namespace mocks
 					return 0;
 				}
 
-				void ObserveRttUs(int64_t /*rttUs*/) override
+				void ObserveRttUs(int64_t rttUs) override
 				{
 					this->observeRttUsCallCount++;
+					this->observeRttUsCalledWith = rttUs;
 				}
 
 				int64_t GetCurrentRtoUs() const override
@@ -111,6 +112,13 @@ namespace mocks
 					return *this;
 				}
 
+				MockTransmissionControlBlockContext& ExpectObserveRttUsCalledWith(int64_t rttUs)
+				{
+					this->expectedObserveRttUsCalledWith = rttUs;
+
+					return *this;
+				}
+
 				/**
 				 * @remarks
 				 * - Must be called before expecting calls to `IncrementTxErrorCounter()`.
@@ -137,9 +145,23 @@ namespace mocks
 					  this->observeRttUsCallCount != this->expectedObserveRttUsCallCount.value())
 					{
 						return { .ok           = false,
-						         .errorMessage = "ObserveRttMs() call count mismatch [expected:" +
+						         .errorMessage = "ObserveRttUs() call count mismatch [expected:" +
 							                       std::to_string(this->expectedObserveRttUsCallCount.value()) +
 							                       ", got:" + std::to_string(this->observeRttUsCallCount) + "]" };
+					}
+
+					if (
+					  this->expectedObserveRttUsCalledWith.has_value() &&
+					  this->observeRttUsCalledWith != this->expectedObserveRttUsCalledWith)
+					{
+						return { .ok           = false,
+						         .errorMessage = "ObserveRttUs() call mismatch [expected:" +
+							                       std::to_string(this->expectedObserveRttUsCalledWith.value()) +
+							                       ", got:" +
+							                       (this->observeRttUsCalledWith.has_value()
+							                          ? std::to_string(this->observeRttUsCalledWith.value())
+							                          : "none") +
+							                       "]" };
 					}
 
 					if (
@@ -162,11 +184,13 @@ namespace mocks
 				::RTC::SCTP::AssociationListenerInterface& associationListener;
 				const ::RTC::SCTP::SctpOptions sctpOptions;
 
-				// ObserveRttMs().
+				// ObserveRttUs().
 				size_t observeRttUsCallCount{ 0 };
 				std::optional<size_t> expectedObserveRttUsCallCount;
+				std::optional<int64_t> observeRttUsCalledWith;
+				std::optional<int64_t> expectedObserveRttUsCalledWith;
 
-				// GetCurrentRtoMs().
+				// GetCurrentRtoUs().
 				mutable std::queue<GetCurrentRtoUsAction> getCurrentRtoUsOnceActions;
 
 				// IncrementTxErrorCounter().

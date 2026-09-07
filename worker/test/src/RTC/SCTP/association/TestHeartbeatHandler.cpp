@@ -187,7 +187,8 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		// Respond a while later.
 		const uint64_t rttMs{ 313 };
 
-		test.tcbContext.ExpectObserveRttUsCalledTimes(1);
+		test.tcbContext.ExpectObserveRttUsCalledTimes(1).ExpectObserveRttUsCalledWith(
+		  static_cast<int64_t>(rttMs * 1000));
 
 		test.AdvanceTimeMs(rttMs);
 		test.heartbeatHandler.HandleReceivedHeartbeatAckChunk(receivedHeartbeatAckChunk.get());
