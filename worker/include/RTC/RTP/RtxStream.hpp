@@ -124,23 +124,23 @@ namespace RTC
 			Params params;
 			// Others.
 			//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
-			uint16_t maxSeq{ 0u };      // Highest seq. number seen.
-			uint32_t cycles{ 0u };      // Shifted count of seq. number cycles.
-			uint32_t baseSeq{ 0u };     // Base seq number.
-			uint32_t badSeq{ 0u };      // Last 'bad' seq number + 1.
-			uint32_t maxPacketTs{ 0u }; // Highest timestamp seen.
-			uint64_t maxPacketMs{ 0u }; // When the packet with highest timestammp was seen.
+			uint16_t maxSeq{ 0 };      // Highest seq. number seen.
+			uint32_t cycles{ 0 };      // Shifted count of seq. number cycles.
+			uint32_t baseSeq{ 0 };     // Base seq number.
+			uint32_t badSeq{ 0 };      // Last 'bad' seq number + 1.
+			uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
+			uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
 			int32_t packetsLost{ 0 };
-			uint8_t fractionLost{ 0u };
-			size_t packetsDiscarded{ 0u };
-			size_t packetsCount{ 0u };
+			uint8_t fractionLost{ 0 };
+			size_t packetsDiscarded{ 0 };
+			size_t packetsCount{ 0 };
 
 		private:
 			// Whether at least a RTP packet has been received.
 			bool started{ false };
 			// Fields for generating Receiver Reports.
-			uint32_t expectedPrior{ 0u };
-			uint32_t receivedPrior{ 0u };
+			uint32_t expectedPrior{ 0 };
+			uint32_t receivedPrior{ 0 };
 			// Timing data of the most recent Sender Report received.
 			std::optional<SenderReportTiming> lastSenderReportTiming;
 			int32_t reportedPacketsLost{ 0 };

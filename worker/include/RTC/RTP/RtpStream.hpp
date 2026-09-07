@@ -68,9 +68,9 @@ namespace RTC
 			struct SenderReportMapping
 			{
 				/**
-				 * NTP timestamp of the Sender Report (ms).
+				 * NTP timestamp of the Sender Report (us).
 				 */
-				uint64_t ntpMs;
+				int64_t ntpUs;
 				/**
 				 * RTP timestamp the NTP timestamp above corresponds to.
 				 */
@@ -190,9 +190,9 @@ namespace RTC
 				return this->rtt;
 			}
 
-			uint64_t GetMaxPacketMs() const
+			int64_t GetMaxPacketAtUs() const
 			{
-				return this->maxPacketMs;
+				return this->maxPacketAtUs;
 			}
 
 			uint32_t GetMaxPacketTs() const
@@ -260,14 +260,14 @@ namespace RTC
 			// Highest timestamp seen.
 			uint32_t maxPacketTs{ 0u };
 			// When the packet with highest timestammp was seen.
-			uint64_t maxPacketMs{ 0u };
+			int64_t maxPacketAtUs{ 0 };
 			// When the media in the packet with highest timestamp was captured, in our own
 			// monotonic clock.
 			// NOTE: Only meaningful in a send stream, whose packets arrive already carrying
 			// their capture instant. In a receive stream it is the Producer that tells it,
 			// once this class has already seen the packet, so
 			// RtpStreamRecv::GetCaptureMapping() is what must be used there.
-			std::optional<uint64_t> maxPacketCaptureMs;
+			std::optional<int64_t> maxPacketCaptureAtUs;
 			int32_t packetsLost{ 0 };
 			uint8_t fractionLost{ 0u };
 			// Jitter in RTP timestamp units. As per spec it's kept as floating value

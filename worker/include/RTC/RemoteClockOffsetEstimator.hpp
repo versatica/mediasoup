@@ -9,9 +9,9 @@ namespace RTC
 	/**
 	 * Estimates the offset between the wall clock of a remote sender, as reported in
 	 * the NTP field of the RTCP Sender Reports it sends, and mediasoup's own monotonic
-	 * clock. Both are expressed in milliseconds, so the estimated offset satisfies:
+	 * clock. Both are expressed in microseconds, so the estimated offset satisfies:
 	 *
-	 *   localMs = remoteMs + offsetMs
+	 *   localUs = remoteUs + offsetUs
 	 *
 	 * Each sample is the difference between the arrival time of a Sender Report and
 	 * the NTP value it carries, so it holds the clock offset plus the one way delay
@@ -46,19 +46,19 @@ namespace RTC
 		/**
 		 * Feed a received RTCP Sender Report.
 		 *
-		 * @param remoteNtpMs - NTP field of the Sender Report, in milliseconds.
-		 * @param localArrivalMs - Our local time at which the Sender Report arrived.
+		 * @param remoteNtpUs - NTP field of the Sender Report, in microseconds.
+		 * @param localArrivalAtUs - Our local time at which the Sender Report arrived.
 		 * @param rttMs - RTT towards the sender, or 0 if not known yet.
 		 */
-		void AddSenderReport(uint64_t remoteNtpMs, uint64_t localArrivalMs, uint32_t rttMs);
+		void AddSenderReport(int64_t remoteNtpUs, int64_t localArrivalAtUs, uint32_t rttMs);
 
 		/**
 		 * The estimated offset, or no value while less than `MinSampleCount` samples
 		 * have been gathered.
 		 */
-		std::optional<int64_t> GetOffsetMs() const
+		std::optional<int64_t> GetOffsetUs() const
 		{
-			return this->offsetMs;
+			return this->offsetUs;
 		}
 
 		/**
@@ -66,21 +66,21 @@ namespace RTC
 		 * monotonic clock. Returns no value if there is no offset yet or if the given
 		 * time does not map into our clock.
 		 */
-		std::optional<uint64_t> RemoteMsToLocalMs(uint64_t remoteMs) const;
+		std::optional<int64_t> RemoteUsToLocalUs(int64_t remoteUs) const;
 
 		void Reset();
 
 	private:
-		void UpdateOffsetMs();
+		void UpdateOffsetUs();
 
 	private:
 		// Most recent samples, oldest first.
 		std::vector<int64_t> samples;
 		// Arrival time of the last accepted Sender Report, so that all the Sender
 		// Reports of a same compound packet produce a single sample.
-		uint64_t lastLocalArrivalMs{ 0 };
+		int64_t lastLocalArrivalAtUs{ 0 };
 		// Median of the samples in the window.
-		std::optional<int64_t> offsetMs;
+		std::optional<int64_t> offsetUs;
 	};
 } // namespace RTC
 

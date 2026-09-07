@@ -52,11 +52,6 @@ public:
 	virtual uint64_t GetTimeUs() = 0;
 
 	/**
-	 * Get current time in nanoseconds.
-	 */
-	virtual uint64_t GetTimeNs() = 0;
-
-	/**
 	 * Get current time in milliseconds in int64_t.
 	 */
 	virtual int64_t GetTimeMsInt64() = 0;
@@ -67,10 +62,10 @@ public:
 	virtual int64_t GetTimeUsInt64() = 0;
 
 	/**
-	 * Distance from the clock above to the NTP epoch (ms), which is what has to be added
+	 * Distance from the clock above to the NTP epoch (us), which is what has to be added
 	 * to it to obtain the NTP timestamps of the RTCP we generate.
 	 */
-	virtual uint64_t GetNtpOffsetMs() = 0;
+	virtual int64_t GetNtpOffsetUs() = 0;
 };
 
 #endif

@@ -9,10 +9,10 @@
 namespace
 {
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local mocks::MockShared shared(/*getTimeMs*/
-	                                      []()
+	thread_local mocks::MockShared shared(/*getTimeUsInt64*/
+	                                      []() -> int64_t
 	                                      {
-		                                      return 1000;
+		                                      return 1000 * 1000;
 	                                      });
 
 	// DtlsTransport instance. It's reset every time DTLS handshake fails or DTLS

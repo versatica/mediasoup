@@ -135,10 +135,10 @@ namespace
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
 
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	mocks::MockShared shared(/*getTimeMs*/
-	                         []()
+	mocks::MockShared shared(/*getTimeUsInt64*/
+	                         []() -> int64_t
 	                         {
-		                         return DepLibUV::GetTimeMs();
+		                         return DepLibUV::GetTimeUsInt64();
 	                         }); // NOLINT(readability-identifier-naming)
 
 	std::unique_ptr<RTC::SimpleProducerStreamManager> createManager(

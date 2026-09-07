@@ -1901,7 +1901,7 @@ namespace RTC
 						continue;
 					}
 
-					consumer->ReceiveRtcpReceiverReport(report);
+					consumer->ReceiveRtcpReceiverReport(report, receivedAtUs);
 				}
 
 				if (this->tccClient && !this->mapConsumers.empty())
@@ -2206,7 +2206,7 @@ namespace RTC
 									continue;
 								}
 
-								producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
+								producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
 							}
 
 							break;
@@ -2220,7 +2220,7 @@ namespace RTC
 							{
 								auto* consumer = kv.second;
 
-								consumer->ReceiveRtcpXrReceiverReferenceTime(rrt);
+								consumer->ReceiveRtcpXrReceiverReferenceTime(rrt, receivedAtUs);
 							}
 
 							break;
@@ -2243,7 +2243,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::SendRtcp(uint64_t nowMs)
+	void Transport::SendRtcp(int64_t nowUs)
 	{
 		MS_TRACE();
 
@@ -2252,7 +2252,7 @@ namespace RTC
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
-			auto rtcpAdded = consumer->GetRtcp(packet.get(), nowMs);
+			auto rtcpAdded = consumer->GetRtcp(packet.get(), nowUs);
 
 			// RTCP data couldn't be added because the Compound packet is full.
 			// Send the RTCP compound packet and request for RTCP again.
@@ -2264,14 +2264,14 @@ namespace RTC
 				packet.reset(new RTC::RTCP::CompoundPacket());
 
 				// Retrieve the RTCP again.
-				consumer->GetRtcp(packet.get(), nowMs);
+				consumer->GetRtcp(packet.get(), nowUs);
 			}
 		}
 
 		for (auto& kv : this->mapProducers)
 		{
 			auto* producer = kv.second;
-			auto rtcpAdded = producer->GetRtcp(packet.get(), nowMs);
+			auto rtcpAdded = producer->GetRtcp(packet.get(), nowUs);
 
 			// RTCP data couldn't be added because the Compound packet is full.
 			// Send the RTCP compound packet and request for RTCP again.
@@ -2283,7 +2283,7 @@ namespace RTC
 				packet.reset(new RTC::RTCP::CompoundPacket());
 
 				// Retrieve the RTCP again.
-				producer->GetRtcp(packet.get(), nowMs);
+				producer->GetRtcp(packet.get(), nowUs);
 			}
 		}
 
@@ -2533,7 +2533,7 @@ namespace RTC
 		return this->listener->OnTransportNeedWorstRemoteFractionLost(this, producer, mappedSsrc);
 	}
 
-	std::optional<uint64_t> Transport::OnProducerNeedLocalCaptureMs(
+	std::optional<int64_t> Transport::OnProducerNeedLocalCaptureAtUs(
 	  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts)
 	{
 		MS_TRACE();
@@ -2548,10 +2548,10 @@ namespace RTC
 
 		const auto& remoteCaptureTimeEstimator = it->second;
 
-		return remoteCaptureTimeEstimator.GetLocalCaptureMs(rtpStream, ts);
+		return remoteCaptureTimeEstimator.GetLocalCaptureAtUs(rtpStream, ts);
 	}
 
-	std::optional<int64_t> Transport::OnProducerNeedRemoteClockOffsetMs(const RTC::Producer* producer)
+	std::optional<int64_t> Transport::OnProducerNeedRemoteClockOffsetUs(const RTC::Producer* producer)
 	{
 		MS_TRACE();
 
@@ -2564,9 +2564,9 @@ namespace RTC
 		}
 
 		const auto& remoteCaptureTimeEstimator = it->second;
-		const auto clockOffsetMs               = remoteCaptureTimeEstimator.GetClockOffsetMs();
+		const auto clockOffsetUs               = remoteCaptureTimeEstimator.GetClockOffsetUs();
 
-		if (!clockOffsetMs.has_value())
+		if (!clockOffsetUs.has_value())
 		{
 			return std::nullopt;
 		}
@@ -2574,9 +2574,9 @@ namespace RTC
 		// NOTE: The estimator gives the offset against our own monotonic clock, while what
 		// a receiver reconstructs out of the Sender Reports we send is the clock we
 		// announce, so the distance to the NTP epoch has to be taken into account. Both
-		// terms are huge and their sum is small, so they are added as milliseconds before
+		// terms are huge and their sum is small, so they are added as microseconds before
 		// anything scales them up.
-		return clockOffsetMs.value() + static_cast<int64_t>(this->shared->GetNtpOffsetMs());
+		return clockOffsetUs.value() + this->shared->GetNtpOffsetUs();
 	}
 
 	void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
@@ -3350,19 +3350,18 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
-			auto interval        = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			auto intervalMs = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
 
-			SendRtcp(nowMs);
+			SendRtcp(this->shared->GetTimeUsInt64());
 
 			/*
 			 * The interval between RTCP packets is varied randomly over the range
 			 * [1.0, 1.5] times the calculated interval to avoid unintended
 			 * synchronization of all participants.
 			 */
-			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt<uint16_t>(10, 15)) / 10;
+			intervalMs *= static_cast<float>(Utils::Crypto::GetRandomUInt<uint16_t>(10, 15)) / 10;
 
-			this->rtcpTimer->Start(interval);
+			this->rtcpTimer->Start(intervalMs);
 		}
 	}
 } // namespace RTC

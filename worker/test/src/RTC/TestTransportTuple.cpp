@@ -25,10 +25,10 @@ SCENARIO("TransportTuple", "[transporttuple]")
 
 	// NOTE: These outlive the sockets created below, which hold pointers to them.
 	UdpSocketListener listener;
-	mocks::MockShared shared(/*getTimeMs*/
-	                         []()
+	mocks::MockShared shared(/*getTimeUsInt64*/
+	                         []() -> int64_t
 	                         {
-		                         return 1000;
+		                         return 1000 * 1000;
 	                         });
 
 	auto makeUdpSocket = [&listener, &shared](const std::string& ip, uint16_t minPort, uint16_t maxPort)

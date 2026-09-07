@@ -137,11 +137,11 @@ namespace RTC
 			{
 				InitSeq(seq);
 
-				this->started            = true;
-				this->maxSeq             = seq - 1;
-				this->maxPacketTs        = packet->GetTimestamp();
-				this->maxPacketMs        = this->shared->GetTimeMs();
-				this->maxPacketCaptureMs = packet->GetCaptureMs();
+				this->started              = true;
+				this->maxSeq               = seq - 1;
+				this->maxPacketTs          = packet->GetTimestamp();
+				this->maxPacketAtUs        = this->shared->GetTimeUsInt64();
+				this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
 			}
 
 			// If not a valid packet ignore it.
@@ -159,9 +159,9 @@ namespace RTC
 			// Update highest seen RTP timestamp.
 			if (Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 			{
-				this->maxPacketTs        = packet->GetTimestamp();
-				this->maxPacketMs        = this->shared->GetTimeMs();
-				this->maxPacketCaptureMs = packet->GetCaptureMs();
+				this->maxPacketTs          = packet->GetTimestamp();
+				this->maxPacketAtUs        = this->shared->GetTimeUsInt64();
+				this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
 			}
 
 			return true;
@@ -228,9 +228,9 @@ namespace RTC
 					  this->maxPacketTs,
 					  packet->GetTimestamp());
 
-					this->maxPacketTs        = packet->GetTimestamp();
-					this->maxPacketMs        = this->shared->GetTimeMs();
-					this->maxPacketCaptureMs = packet->GetCaptureMs();
+					this->maxPacketTs          = packet->GetTimestamp();
+					this->maxPacketAtUs        = this->shared->GetTimeUsInt64();
+					this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
 				}
 			}
 			// Too old packet received (older than the allowed misorder).
@@ -251,9 +251,9 @@ namespace RTC
 
 					InitSeq(seq);
 
-					this->maxPacketTs        = packet->GetTimestamp();
-					this->maxPacketMs        = this->shared->GetTimeMs();
-					this->maxPacketCaptureMs = packet->GetCaptureMs();
+					this->maxPacketTs          = packet->GetTimestamp();
+					this->maxPacketAtUs        = this->shared->GetTimeUsInt64();
+					this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
 
 					// Notify the subclass about it.
 					UserOnSequenceNumberReset();

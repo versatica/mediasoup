@@ -429,6 +429,7 @@ mock_sources = [
 test_sources = [
   'test/src/tests.cpp',
   'test/src/testHelpers.cpp',
+  'test/src/TestDepLibUV.cpp',
   'test/src/RTC/TestConsumer.cpp',
   'test/src/RTC/TestPipeProducerStreamManager.cpp',
   'test/src/RTC/TestSimpleProducerStreamManager.cpp',

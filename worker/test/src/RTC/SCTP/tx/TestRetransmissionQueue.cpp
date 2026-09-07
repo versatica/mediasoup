@@ -64,10 +64,10 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
 	mocks::RTC::SCTP::MockSendQueue sendQueue;
 	int64_t nowUs{ 10000 * 1000 };
-	mocks::MockShared shared(/*getTimeMs*/
-	                         [&nowUs]()
+	mocks::MockShared shared(/*getTimeUsInt64*/
+	                         [&nowUs]() -> int64_t
 	                         {
-		                         return static_cast<uint64_t>(nowUs / 1000);
+		                         return nowUs;
 	                         });
 
 	const std::unique_ptr<BackoffTimerHandleInterface> t3RtxTimerUniquePtr{ shared.CreateBackoffTimer(

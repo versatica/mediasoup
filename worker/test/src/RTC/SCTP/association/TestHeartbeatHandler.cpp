@@ -18,7 +18,7 @@
 
 SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 {
-	constexpr uint64_t InitialNowMs{ 1000000 };
+	constexpr int64_t InitialNowUs{ 1000000 * 1000 };
 	constexpr uint64_t HeartbeatIntervalMs{ 30000 };
 
 	class TestHeartbeatHandler
@@ -33,10 +33,10 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		        .zeroChecksumAlternateErrorDetectionMethod =
 		          RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE }),
 		    tcbContext(this->associationListener, this->sctpOptions),
-		    shared(/*getTimeMs*/
-				       [this]()
+		    shared(/*getTimeUsInt64*/
+				       [this]() -> int64_t
 				       {
-			           return this->nowMs;
+			           return this->nowUs;
 		           }),
 		    heartbeatHandler(
 		      this->associationListenerDeferrer,
@@ -49,13 +49,18 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		};
 
 	public:
+		/**
+		 * @remarks
+		 * - The increment is given in milliseconds since it comes from the SCTP
+		 *   options and the timers, which work in milliseconds.
+		 */
 		void AdvanceTimeMs(int64_t incrementMs)
 		{
-			this->nowMs += incrementMs;
+			this->nowUs += incrementMs * 1000;
 		}
 
 	private:
-		uint64_t nowMs{ InitialNowMs };
+		int64_t nowUs{ InitialNowUs };
 
 		// NOTE: Public members for testing.
 	public:

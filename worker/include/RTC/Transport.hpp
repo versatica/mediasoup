@@ -221,7 +221,7 @@ namespace RTC
 		virtual void SendRtpPacket(
 		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, const onSendCallback* cb = nullptr) = 0;
 		virtual void HandleRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs) final;
-		virtual void SendRtcp(uint64_t nowMs) final;
+		virtual void SendRtcp(int64_t nowUs) final;
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendMessage(
@@ -260,9 +260,9 @@ namespace RTC
 		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) override;
 		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
 		uint8_t OnProducerNeedWorstRemoteFractionLost(RTC::Producer* producer, uint32_t mappedSsrc) override;
-		std::optional<uint64_t> OnProducerNeedLocalCaptureMs(
+		std::optional<int64_t> OnProducerNeedLocalCaptureAtUs(
 		  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) override;
-		std::optional<int64_t> OnProducerNeedRemoteClockOffsetMs(const RTC::Producer* producer) override;
+		std::optional<int64_t> OnProducerNeedRemoteClockOffsetUs(const RTC::Producer* producer) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:

@@ -144,10 +144,10 @@ namespace
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
 
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	mocks::MockShared shared(/*getTimeMs*/
-	                         []()
+	mocks::MockShared shared(/*getTimeUsInt64*/
+	                         []() -> int64_t
 	                         {
-		                         return DepLibUV::GetTimeMs();
+		                         return DepLibUV::GetTimeUsInt64();
 	                         }); // NOLINT(readability-identifier-naming)
 
 	std::unique_ptr<RTC::SimulcastProducerStreamManager> createManager(
@@ -766,8 +766,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		// Both layers hold RTP timestamp 1000 and both were captured at the same instant,
 		// which is what makes them alignable to each other.
-		rtpStream0->SetCaptureMapping(/*captureMs*/ 1000, /*ts*/ 1000);
-		rtpStream1->SetCaptureMapping(/*captureMs*/ 1000, /*ts*/ 1000);
+		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
+		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
 
 		// Feed packets to both streams so ReceiveRtcpSenderReport's UpdateScore
 		// doesn't drop the score to 0.
@@ -845,8 +845,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		// Both layers hold RTP timestamp 1000, but the one of layer 1 was captured 500 ms
 		// before the one of layer 0, so its RTP timeline runs 45000 ticks ahead.
-		rtpStream0->SetCaptureMapping(/*captureMs*/ 1000, /*ts*/ 1000);
-		rtpStream1->SetCaptureMapping(/*captureMs*/ 500, /*ts*/ 1000);
+		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
+		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 500 * 1000, /*ts*/ 1000);
 
 		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
@@ -908,7 +908,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		// Only layer 0 can tell its capture instant, so it remains the TS reference one and
 		// layer 1 cannot be aligned to it yet.
-		rtpStream0->SetCaptureMapping(/*captureMs*/ 1000, /*ts*/ 1000);
+		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
 
 		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
 		manager->UpdateTargetLayers(0, 0);
@@ -938,7 +938,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		// Once layer 1 can tell its capture instant the switch completes with the proper
 		// offset.
-		rtpStream1->SetCaptureMapping(/*captureMs*/ 500, /*ts*/ 1000);
+		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 500 * 1000, /*ts*/ 1000);
 
 		packet->SetSequenceNumber(2);
 
@@ -1029,8 +1029,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
-		rtpStream0->SetCaptureMapping(/*captureMs*/ 1000, /*ts*/ 1000);
-		rtpStream1->SetCaptureMapping(/*captureMs*/ 1000, /*ts*/ 1000);
+		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
+		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
 
 		// Feed packets and a Sender Report to both streams so that they get a score and
 		// RecalculateTargetLayers() takes them into account.
@@ -1078,9 +1078,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		// All layers hold RTP timestamp 1000. Layer 1 was captured 500 ms before layer 0
 		// and layer 2 a whole second before it, so their offsets differ.
-		rtpStream0->SetCaptureMapping(/*captureMs*/ 1000, /*ts*/ 1000);
-		rtpStream1->SetCaptureMapping(/*captureMs*/ 500, /*ts*/ 1000);
-		rtpStream2->SetCaptureMapping(/*captureMs*/ 0, /*ts*/ 1000);
+		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
+		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 500 * 1000, /*ts*/ 1000);
+		rtpStream2->SetCaptureMapping(/*captureAtUs*/ 0, /*ts*/ 1000);
 
 		// Feed packets and a Sender Report to every stream so that they all get a score
 		// and RecalculateTargetLayers() takes them into account.

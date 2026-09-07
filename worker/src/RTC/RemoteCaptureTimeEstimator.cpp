@@ -47,15 +47,13 @@ namespace RTC
 			return;
 		}
 
-		// NOTE: The estimator works in milliseconds, so the arrival time is
-		// truncated here.
 		this->clockOffsetEstimator.AddSenderReport(
-		  senderReportMapping.value().ntpMs,
-		  static_cast<uint64_t>(senderReportReceivedAtUs.value() / 1000),
+		  senderReportMapping.value().ntpUs,
+		  senderReportReceivedAtUs.value(),
 		  static_cast<uint32_t>(rtpStream->GetRtt()));
 	}
 
-	std::optional<uint64_t> RemoteCaptureTimeEstimator::GetLocalCaptureMs(
+	std::optional<int64_t> RemoteCaptureTimeEstimator::GetLocalCaptureAtUs(
 	  const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) const
 	{
 		MS_TRACE();
@@ -65,15 +63,15 @@ namespace RTC
 			return std::nullopt;
 		}
 
-		const auto remoteCaptureMs = this->source == RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME
-		                               ? rtpStream->GetRemoteCaptureMsFromAbsCaptureTime(ts)
-		                               : rtpStream->GetRemoteCaptureMsFromSenderReport(ts);
+		const auto remoteCaptureAtUs = this->source == RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME
+		                                 ? rtpStream->GetRemoteCaptureAtUsFromAbsCaptureTime(ts)
+		                                 : rtpStream->GetRemoteCaptureAtUsFromSenderReport(ts);
 
-		if (!remoteCaptureMs.has_value())
+		if (!remoteCaptureAtUs.has_value())
 		{
 			return std::nullopt;
 		}
 
-		return this->clockOffsetEstimator.RemoteMsToLocalMs(remoteCaptureMs.value());
+		return this->clockOffsetEstimator.RemoteUsToLocalUs(remoteCaptureAtUs.value());
 	}
 } // namespace RTC

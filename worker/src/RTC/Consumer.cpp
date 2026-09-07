@@ -186,11 +186,11 @@ namespace RTC
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
 		{
-			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
+			this->maxRtcpIntervalMs = RTC::RTCP::MaxAudioIntervalMs;
 		}
 		else
 		{
-			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
+			this->maxRtcpIntervalMs = RTC::RTCP::MaxVideoIntervalMs;
 		}
 
 		auto& encoding = this->rtpParameters.encodings[0];
@@ -1356,22 +1356,24 @@ namespace RTC
 		}
 	}
 
-	bool Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
+	bool Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs)
 	{
 		MS_TRACE();
+
+		// NOTE: The interval is in milliseconds, being it given to a timer, so the
+		// elapsed time is truncated here.
+		const auto elapsedMs = static_cast<uint64_t>((nowUs - this->lastRtcpSentAtUs) / 1000);
 
 		// Special condition for pipe consumer since this method will be called in a
 		// loop for each stream.
 		if (this->pipe)
 		{
-			if (
-			  nowMs != this->lastRtcpSentTime &&
-			  static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+			if (nowUs != this->lastRtcpSentAtUs && static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
 			{
 				return true;
 			}
 		}
-		else if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+		else if (static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
 		{
 			return true;
 		}
@@ -1382,7 +1384,7 @@ namespace RTC
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto* report = rtpStream->GetRtcpSenderReport(nowMs);
+			auto* report = rtpStream->GetRtcpSenderReport(nowUs);
 
 			if (!report)
 			{
@@ -1395,7 +1397,7 @@ namespace RTC
 			auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
 			sdesChunks.push_back(sdesChunk);
 
-			auto* delaySinceLastRrSsrcInfo = rtpStream->GetRtcpXrDelaySinceLastRrSsrcInfo(nowMs);
+			auto* delaySinceLastRrSsrcInfo = rtpStream->GetRtcpXrDelaySinceLastRrSsrcInfo(nowUs);
 
 			if (delaySinceLastRrSsrcInfo)
 			{
@@ -1409,7 +1411,7 @@ namespace RTC
 			return false;
 		}
 
-		this->lastRtcpSentTime = nowMs;
+		this->lastRtcpSentAtUs = nowUs;
 
 		return true;
 	}
@@ -1512,22 +1514,23 @@ namespace RTC
 		}
 	}
 
-	void Consumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
+	void Consumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		auto* rtpStream = this->mapSsrcRtpStream.at(report->GetSsrc());
 
-		rtpStream->ReceiveRtcpReceiverReport(report);
+		rtpStream->ReceiveRtcpReceiverReport(report, receivedAtUs);
 	}
 
-	void Consumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	void Consumer::ReceiveRtcpXrReceiverReferenceTime(
+	  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
+			rtpStream->ReceiveRtcpXrReceiverReferenceTime(report, receivedAtUs);
 		}
 	}
 

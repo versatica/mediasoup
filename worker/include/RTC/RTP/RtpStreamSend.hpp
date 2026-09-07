@@ -63,7 +63,7 @@ namespace RTC
 				/**
 				 * Local time at which the Receiver Reference Time arrived.
 				 */
-				uint64_t receivedMs;
+				int64_t receivedAtUs;
 			};
 
 		public:
@@ -87,13 +87,14 @@ namespace RTC
 
 			void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 
-			void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
+			void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
 
-			void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report);
+			void ReceiveRtcpXrReceiverReferenceTime(
+			  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
 
-			RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t nowMs);
+			RTC::RTCP::SenderReport* GetRtcpSenderReport(int64_t nowUs);
 
-			RTC::RTCP::DelaySinceLastRr::SsrcInfo* GetRtcpXrDelaySinceLastRrSsrcInfo(uint64_t nowMs);
+			RTC::RTCP::DelaySinceLastRr::SsrcInfo* GetRtcpXrDelaySinceLastRrSsrcInfo(int64_t nowUs);
 
 			RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 
@@ -125,9 +126,9 @@ namespace RTC
 			// Packets lost at last interval for score calculation.
 			int32_t lostPriorScore{ 0 };
 			// Packets sent at last interval for score calculation.
-			uint32_t sentPriorScore{ 0u };
+			uint32_t sentPriorScore{ 0 };
 			std::string mid;
-			uint16_t rtxSeq{ 0u };
+			uint16_t rtxSeq{ 0 };
 			RTC::RtpDataCounter transmissionCounter;
 			RTP::RetransmissionBuffer* retransmissionBuffer{ nullptr };
 			// Timing data of the most recent Receiver Reference Time received.

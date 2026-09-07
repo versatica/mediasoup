@@ -118,10 +118,10 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		std::vector<uint16_t> nackedSeqNumbers;
 	};
 
-	mocks::MockShared shared(/*getTimeMs*/
-	                         []()
+	mocks::MockShared shared(/*getTimeUsInt64*/
+	                         []() -> int64_t
 	                         {
-		                         return 1000;
+		                         return 1000 * 1000;
 	                         });
 
 	// clang-format off

@@ -8,7 +8,7 @@
 /* Class variables. */
 
 thread_local uv_loop_t* DepLibUV::loop{ nullptr };
-thread_local uint64_t DepLibUV::ntpOffsetMs{ 0 };
+thread_local int64_t DepLibUV::ntpOffsetUs{ 0 };
 
 /* Static methods for UV callbacks. */
 
@@ -60,11 +60,10 @@ void DepLibUV::ClassInit()
 		MS_ABORT("uv_gettimeofday() failed");
 	}
 
-	const auto unixSec = static_cast<uint64_t>(timeval.tv_sec);
-	const auto unixMs  = (unixSec * 1000) + (static_cast<uint64_t>(timeval.tv_usec) / 1000);
-	const auto ntpMs   = unixMs + (static_cast<uint64_t>(Utils::Time::UnixNtpOffsetSec) * 1000);
+	const auto unixUs = (timeval.tv_sec * 1000000) + static_cast<int64_t>(timeval.tv_usec);
+	const auto ntpUs  = unixUs + (static_cast<int64_t>(Utils::Time::UnixNtpOffsetSec) * 1000000);
 
-	DepLibUV::ntpOffsetMs = ntpMs - DepLibUV::GetTimeMs();
+	DepLibUV::ntpOffsetUs = ntpUs - DepLibUV::GetTimeUsInt64();
 }
 
 void DepLibUV::ClassDestroy()

@@ -390,9 +390,9 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  padding length: %" PRIu8, GetPaddingLength());
 			MS_DUMP_CLEAN(indentation, "  padded to 4 bytes: %s", IsPaddedTo4Bytes() ? "yes" : "no");
 
-			if (GetCaptureMs())
+			if (GetCaptureAtUs())
 			{
-				MS_DUMP_CLEAN(indentation, "  capture time (ms): %" PRIu64, GetCaptureMs().value());
+				MS_DUMP_CLEAN(indentation, "  capture time (us): %" PRIi64, GetCaptureAtUs().value());
 			}
 
 			if (this->payloadDescriptorHandler)
@@ -427,7 +427,7 @@ namespace RTC
 			clonedPacket->headerExtensionIds = this->headerExtensionIds;
 
 			// Clone capture time.
-			clonedPacket->captureMs = this->captureMs;
+			clonedPacket->captureAtUs = this->captureAtUs;
 
 			// Assign the payload descriptor handler.
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;

@@ -14,10 +14,10 @@ namespace
 {
 	// NOLINTBEGIN(readability-identifier-naming)
 	const uint8_t payloadType = 111;
-	mocks::MockShared shared(/*getTimeMs*/
-	                         []()
+	mocks::MockShared shared(/*getTimeUsInt64*/
+	                         []() -> int64_t
 	                         {
-		                         return 1000;
+		                         return 1000 * 1000;
 	                         });
 	// NOLINTEND(readability-identifier-naming)
 

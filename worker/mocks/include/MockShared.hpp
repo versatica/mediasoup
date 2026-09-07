@@ -16,7 +16,7 @@ namespace mocks
 	class MockShared : public SharedInterface
 	{
 	public:
-		explicit MockShared(std::function<uint64_t()> getTimeMs);
+		explicit MockShared(std::function<int64_t()> getTimeUsInt64);
 
 		~MockShared() override = default;
 
@@ -38,32 +38,27 @@ namespace mocks
 
 		uint64_t GetTimeMs() override
 		{
-			return this->getTimeMs();
+			return static_cast<uint64_t>(GetTimeMsInt64());
 		}
 
 		uint64_t GetTimeUs() override
 		{
-			return GetTimeMs() * 1000;
-		}
-
-		uint64_t GetTimeNs() override
-		{
-			return GetTimeMs() * 1000 * 1000;
+			return static_cast<uint64_t>(GetTimeUsInt64());
 		}
 
 		int64_t GetTimeMsInt64() override
 		{
-			return static_cast<int64_t>(GetTimeMs());
+			return GetTimeUsInt64() / 1000;
 		}
 
 		int64_t GetTimeUsInt64() override
 		{
-			return static_cast<int64_t>(GetTimeUs());
+			return this->getTimeUsInt64();
 		}
 
 		// NOTE: The NTP epoch is made to be the very clock given by argument, so that tests
 		// can reason about a single set of values.
-		uint64_t GetNtpOffsetMs() override
+		int64_t GetNtpOffsetUs() override
 		{
 			return 0;
 		}
@@ -100,7 +95,7 @@ namespace mocks
 
 	private:
 		// Given by argument.
-		const std::function<uint64_t()> getTimeMs;
+		const std::function<int64_t()> getTimeUsInt64;
 		// Others.
 		std::unique_ptr<::Channel::ChannelSocket> channelSocket;
 		std::unique_ptr<mocks::Channel::MockChannelMessageRegistrator> channelMessageRegistrator;

@@ -319,16 +319,16 @@ namespace RTC
 					// of the sender, which is the one this stream is estimated against:
 					//
 					//   capture NTP clock = sender NTP clock + capture clock offset
-					const auto captureMs = static_cast<int64_t>(Utils::Time::Ntp2TimeMs(ntp)) -
-					                       Utils::Time::Q32x32ToTimeMs(estimatedCaptureClockOffset);
+					const auto captureAtUs =
+					  Utils::Time::Ntp2TimeUs(ntp) - Utils::Time::Q32x32ToTimeUs(estimatedCaptureClockOffset);
 
 					// NOTE: A capture instant that is not positive means a capture clock offset
 					// that cannot be true, so there is nothing to store.
-					if (captureMs > 0)
+					if (captureAtUs > 0)
 					{
 						this->lastAbsCaptureTime = AbsCaptureTime{
 							.ts    = packet->GetTimestamp(),
-							.ntpMs = static_cast<uint64_t>(captureMs),
+							.ntpUs = captureAtUs,
 						};
 					}
 				}
@@ -619,7 +619,7 @@ namespace RTC
 				ntp.fractions = report->GetNtpFrac();
 
 				this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
-					.ntpMs = Utils::Time::Ntp2TimeMs(ntp),
+					.ntpUs = Utils::Time::Ntp2TimeUs(ntp),
 					.ts    = report->GetRtpTs(),
 				};
 			}
@@ -638,17 +638,18 @@ namespace RTC
 			}
 		}
 
-		void RtpStreamRecv::ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo)
+		void RtpStreamRecv::ReceiveRtcpXrDelaySinceLastRr(
+		  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
 			/* Calculate RTT. */
 
-			// Get the NTP representation of the current timestamp.
-			const uint64_t nowMs = this->shared->GetTimeMs();
-			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs + this->shared->GetNtpOffsetMs());
+			// Get the NTP representation of the time at which the report arrived, which
+			// is what the round trip is measured against.
+			auto ntp = Utils::Time::TimeUs2Ntp(receivedAtUs + this->shared->GetNtpOffsetUs());
 
-			// Get the compact NTP representation of the current timestamp.
+			// Get the compact NTP representation of the arrival time.
 			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
 
 			compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
@@ -680,7 +681,7 @@ namespace RTC
 			}
 		}
 
-		std::optional<uint64_t> RtpStreamRecv::GetRemoteCaptureMsFromAbsCaptureTime(uint32_t ts) const
+		std::optional<int64_t> RtpStreamRecv::GetRemoteCaptureAtUsFromAbsCaptureTime(uint32_t ts) const
 		{
 			MS_TRACE();
 
@@ -691,11 +692,11 @@ namespace RTC
 
 			const auto& absCaptureTime = this->lastAbsCaptureTime.value();
 
-			return InterpolateRemoteCaptureMs(
-			  absCaptureTime.ntpMs, absCaptureTime.ts, ts, RtpStreamRecv::MaxAbsCaptureTimeInterpolationMs);
+			return InterpolateRemoteCaptureAtUs(
+			  absCaptureTime.ntpUs, absCaptureTime.ts, ts, RtpStreamRecv::MaxAbsCaptureTimeInterpolationMs);
 		}
 
-		std::optional<uint64_t> RtpStreamRecv::GetRemoteCaptureMsFromSenderReport(uint32_t ts) const
+		std::optional<int64_t> RtpStreamRecv::GetRemoteCaptureAtUsFromSenderReport(uint32_t ts) const
 		{
 			MS_TRACE();
 
@@ -706,15 +707,15 @@ namespace RTC
 
 			const auto& senderReportMapping = this->lastSenderReportMapping.value();
 
-			return InterpolateRemoteCaptureMs(
-			  senderReportMapping.ntpMs,
+			return InterpolateRemoteCaptureAtUs(
+			  senderReportMapping.ntpUs,
 			  senderReportMapping.ts,
 			  ts,
 			  RtpStreamRecv::MaxSenderReportInterpolationMs);
 		}
 
-		std::optional<uint64_t> RtpStreamRecv::InterpolateRemoteCaptureMs(
-		  uint64_t referenceNtpMs, uint32_t referenceTs, uint32_t ts, uint64_t maxDistanceMs) const
+		std::optional<int64_t> RtpStreamRecv::InterpolateRemoteCaptureAtUs(
+		  int64_t referenceNtpUs, uint32_t referenceTs, uint32_t ts, uint64_t maxDistanceMs) const
 		{
 			MS_TRACE();
 
@@ -727,29 +728,30 @@ namespace RTC
 
 			// Distance in RTP timestamp units, taking wrap around into account.
 			const auto distanceTs    = static_cast<int64_t>(static_cast<int32_t>(ts - referenceTs));
-			const int64_t distanceMs = (distanceTs * 1000) / static_cast<int64_t>(clockRate);
-			// NOTE: The negation is safe since `distanceMs` comes from a 32 bits
+			const int64_t distanceUs = (distanceTs * 1000000) / static_cast<int64_t>(clockRate);
+			// NOTE: The negation is safe since `distanceUs` comes from a 32 bits
 			// distance scaled down by the clock rate.
-			const auto absDistanceMs = static_cast<uint64_t>(distanceMs < 0 ? -distanceMs : distanceMs);
+			const auto absDistanceMs =
+			  static_cast<uint64_t>(distanceUs < 0 ? -distanceUs : distanceUs) / 1000;
 
 			if (absDistanceMs > maxDistanceMs)
 			{
 				return std::nullopt;
 			}
 
-			const int64_t captureMs = static_cast<int64_t>(referenceNtpMs) + distanceMs;
+			const int64_t captureAtUs = referenceNtpUs + distanceUs;
 
 			// The reference does not map into a valid capture instant, so the remote
 			// endpoint is reporting nonsense.
-			if (captureMs < 0)
+			if (captureAtUs < 0)
 			{
 				MS_WARN_2TAGS(
-				  rtp, rtcp, "invalid interpolated capture instant [distanceMs:%" PRIi64 "]", distanceMs);
+				  rtp, rtcp, "invalid interpolated capture instant [distanceUs:%" PRIi64 "]", distanceUs);
 
 				return std::nullopt;
 			}
 
-			return static_cast<uint64_t>(captureMs);
+			return captureAtUs;
 		}
 
 		void RtpStreamRecv::RequestKeyFrame()

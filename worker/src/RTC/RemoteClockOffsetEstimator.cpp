@@ -16,12 +16,12 @@ namespace RTC
 	}
 
 	void RemoteClockOffsetEstimator::AddSenderReport(
-	  uint64_t remoteNtpMs, uint64_t localArrivalMs, uint32_t rttMs)
+	  int64_t remoteNtpUs, int64_t localArrivalAtUs, uint32_t rttMs)
 	{
 		MS_TRACE();
 
 		// Ignore Sender Reports with no NTP timestamp.
-		if (remoteNtpMs == 0)
+		if (remoteNtpUs == 0)
 		{
 			MS_DEBUG_DEV("ignoring Sender Report with no NTP timestamp");
 
@@ -31,17 +31,19 @@ namespace RTC
 		// Ignore a Sender Report belonging to a compound packet already accounted
 		// for. Otherwise a single delayed compound packet would contribute as many
 		// samples as streams it reports about, and hence bias the median.
-		if (localArrivalMs == this->lastLocalArrivalMs)
+		if (localArrivalAtUs == this->lastLocalArrivalAtUs)
 		{
 			return;
 		}
 
-		this->lastLocalArrivalMs = localArrivalMs;
+		this->lastLocalArrivalAtUs = localArrivalAtUs;
 
 		// The sample holds the clock offset plus the one way delay of this Sender
 		// Report. Assume a symmetric path and remove half of the RTT.
-		const int64_t sample = static_cast<int64_t>(localArrivalMs) -
-		                       static_cast<int64_t>(remoteNtpMs) - (static_cast<int64_t>(rttMs) / 2);
+		//
+		// NOTE: The RTT is given in milliseconds, hence the conversion.
+		const int64_t sample =
+		  localArrivalAtUs - remoteNtpUs - ((static_cast<int64_t>(rttMs) * 1000) / 2);
 
 		if (this->samples.size() == RemoteClockOffsetEstimator::WindowSize)
 		{
@@ -50,30 +52,30 @@ namespace RTC
 
 		this->samples.push_back(sample);
 
-		UpdateOffsetMs();
+		UpdateOffsetUs();
 	}
 
-	std::optional<uint64_t> RemoteClockOffsetEstimator::RemoteMsToLocalMs(uint64_t remoteMs) const
+	std::optional<int64_t> RemoteClockOffsetEstimator::RemoteUsToLocalUs(int64_t remoteUs) const
 	{
 		MS_TRACE();
 
-		if (!this->offsetMs.has_value())
+		if (!this->offsetUs.has_value())
 		{
 			return std::nullopt;
 		}
 
-		const int64_t localMs = static_cast<int64_t>(remoteMs) + this->offsetMs.value();
+		const int64_t localUs = remoteUs + this->offsetUs.value();
 
 		// The given time does not map into our clock, so the input is bogus.
-		if (localMs < 0)
+		if (localUs < 0)
 		{
 			MS_WARN_2TAGS(
-			  rtp, rtcp, "remote time does not map into our clock [remoteMs:%" PRIu64 "]", remoteMs);
+			  rtp, rtcp, "remote time does not map into our clock [remoteUs:%" PRIi64 "]", remoteUs);
 
 			return std::nullopt;
 		}
 
-		return static_cast<uint64_t>(localMs);
+		return localUs;
 	}
 
 	void RemoteClockOffsetEstimator::Reset()
@@ -81,11 +83,11 @@ namespace RTC
 		MS_TRACE();
 
 		this->samples.clear();
-		this->lastLocalArrivalMs = 0;
-		this->offsetMs.reset();
+		this->lastLocalArrivalAtUs = 0;
+		this->offsetUs.reset();
 	}
 
-	void RemoteClockOffsetEstimator::UpdateOffsetMs()
+	void RemoteClockOffsetEstimator::UpdateOffsetUs()
 	{
 		MS_TRACE();
 
@@ -101,6 +103,6 @@ namespace RTC
 
 		std::nth_element(sortedSamples.begin(), middle, sortedSamples.end());
 
-		this->offsetMs = *middle;
+		this->offsetUs = *middle;
 	}
 } // namespace RTC

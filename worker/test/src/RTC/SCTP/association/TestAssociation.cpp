@@ -33,8 +33,8 @@
 
 namespace
 {
-	// Initial value of the simulated clock (ms).
-	constexpr uint64_t InitialNowMs{ 1000000 };
+	// Initial value of the simulated clock (us).
+	constexpr int64_t InitialNowUs{ 1000000 * 1000 };
 
 	// All backoff timer labels an SCTP association may create. Used by `runTimers()`
 	// to fire whichever timers have expired after advancing time.
@@ -78,10 +78,10 @@ namespace
 		  bool mayConnectOnReceivedSctpData  = false)
 		  // NOTE: The order in which these members are initialized is **critical**.
 		  : sctpOptions(sctpOptions),
-		    shared(/*getTimeMs*/
-				       [this]()
+		    shared(/*getTimeUsInt64*/
+				       [this]() -> int64_t
 				       {
-			           return this->nowMs;
+			           return this->nowUs;
 		           }),
 		    association(
 		      this->sctpOptions,
@@ -94,14 +94,18 @@ namespace
 
 		/**
 		 * Advances the simulated clock of this association by `incrementMs`.
+		 *
+		 * @remarks
+		 * - The increment is given in milliseconds since it comes from the SCTP
+		 *   options and the timers, which work in milliseconds.
 		 */
-		void AdvanceTimeMs(uint64_t incrementMs)
+		void AdvanceTimeMs(int64_t incrementMs)
 		{
-			this->nowMs += incrementMs;
+			this->nowUs += incrementMs * 1000;
 		}
 
 	public:
-		uint64_t nowMs{ InitialNowMs };
+		int64_t nowUs{ InitialNowUs };
 		RTC::SCTP::SctpOptions sctpOptions;
 		mocks::RTC::SCTP::MockAssociationListener listener;
 		mocks::MockShared shared;
