@@ -15,6 +15,10 @@ namespace mocks
 	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get()))
 	{
 		MS_TRACE();
+
+		// Give the Channel the Shared instance, which it needs to take the arrival
+		// time of received notifications.
+		this->channelSocket->SetShared(this);
 	}
 
 	TimerHandleInterface* MockShared::CreateTimer(

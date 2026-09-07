@@ -11,7 +11,7 @@ namespace RTC
 	{
 		/* Instance methods. */
 
-		std::optional<SendQueueInterface::DataToSend> StreamScheduler::Produce(uint64_t nowMs, size_t maxLength)
+		std::optional<SendQueueInterface::DataToSend> StreamScheduler::Produce(int64_t nowUs, size_t maxLength)
 		{
 			MS_TRACE();
 
@@ -56,7 +56,7 @@ namespace RTC
 					  "current stream should be in active streams");
 				}
 
-				dataToSend = this->currentStream->Produce(nowMs, maxLength);
+				dataToSend = this->currentStream->Produce(nowUs, maxLength);
 			}
 
 			if (!dataToSend.has_value())
@@ -234,12 +234,12 @@ namespace RTC
 		}
 
 		std::optional<SendQueueInterface::DataToSend> StreamScheduler::Stream::Produce(
-		  uint64_t nowMs, size_t maxLength)
+		  int64_t nowUs, size_t maxLength)
 		{
 			MS_TRACE();
 
 			std::optional<SendQueueInterface::DataToSend> dataToSend =
-			  this->producer.Produce(nowMs, maxLength);
+			  this->producer.Produce(nowUs, maxLength);
 
 			if (dataToSend.has_value())
 			{

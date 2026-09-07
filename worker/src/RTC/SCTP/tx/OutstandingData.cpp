@@ -24,15 +24,15 @@ namespace RTC
 		OutstandingData::Item::Item(
 		  uint32_t outgoingMessageId,
 		  UserData data,
-		  uint64_t timeSentMs,
+		  int64_t timeSentUs,
 		  uint16_t maxRetransmissions,
-		  uint64_t expiresAtMs,
+		  int64_t expiresAtUs,
 		  std::optional<uint64_t> lifecycleId)
 		  : outgoingMessageId(outgoingMessageId),
 		    data(std::move(data)),
-		    timeSentMs(timeSentMs),
+		    timeSentUs(timeSentUs),
 		    maxRetransmissions(maxRetransmissions),
-		    expiresAtMs(expiresAtMs),
+		    expiresAtUs(expiresAtUs),
 		    lifecycleId(lifecycleId)
 		{
 			MS_TRACE();
@@ -90,7 +90,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_ASSERT(
-			  this->expiresAtMs != Types::ExpiresAtMsInfinite ||
+			  this->expiresAtUs != Types::ExpiresAtUsInfinite ||
 			    this->maxRetransmissions != Types::MaxRetransmitsNoLimit,
 			  "item should not have infinite expiration time or its retransmission times shouldn't be the maximum");
 
@@ -173,7 +173,7 @@ namespace RTC
 			return ExtractChunksThatCanFit(this->toBeRetransmitted, maxLength);
 		}
 
-		void OutstandingData::ExpireOutstandingChunks(uint64_t nowMs)
+		void OutstandingData::ExpireOutstandingChunks(int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -192,7 +192,7 @@ namespace RTC
 				{
 					// Already abandoned.
 				}
-				else if (item.IsNacked() && item.HasExpired(nowMs))
+				else if (item.IsNacked() && item.HasExpired(nowUs))
 				{
 					tsnsToExpire.push_back(tsn);
 				}
@@ -232,9 +232,9 @@ namespace RTC
 		std::optional<Types::UnwrappedTsn> OutstandingData::Insert(
 		  uint32_t outgoingMessageId,
 		  const UserData& data,
-		  uint64_t timeSentMs,
+		  int64_t timeSentUs,
 		  uint16_t maxRetransmissions,
-		  uint64_t expiresAtMs,
+		  int64_t expiresAtUs,
 		  std::optional<uint64_t> lifecycleId)
 		{
 			MS_TRACE();
@@ -248,9 +248,9 @@ namespace RTC
 
 			const Types::UnwrappedTsn tsn = GetNextTsn();
 			const Item& item              = this->outstandingData.emplace_back(
-			  outgoingMessageId, data.Clone(), timeSentMs, maxRetransmissions, expiresAtMs, lifecycleId);
+			  outgoingMessageId, data.Clone(), timeSentUs, maxRetransmissions, expiresAtUs, lifecycleId);
 
-			if (item.HasExpired(timeSentMs))
+			if (item.HasExpired(timeSentUs))
 			{
 				// No need to send it, it was expired when it was in the send queue.
 				MS_WARN_TAG(
@@ -390,7 +390,7 @@ namespace RTC
 			return iForwardTsnChunk;
 		}
 
-		std::optional<uint64_t> OutstandingData::MeasureRtt(uint64_t nowMs, Types::UnwrappedTsn tsn) const
+		std::optional<int64_t> OutstandingData::MeasureRtt(int64_t nowUs, Types::UnwrappedTsn tsn) const
 		{
 			MS_TRACE();
 
@@ -406,7 +406,7 @@ namespace RTC
 					// that were retransmitted (and thus for which it is ambiguous
 					// whether the reply was for the first instance of the Chunk or for a
 					// later instance)"
-					return nowMs - item.GetTimeSentMs();
+					return nowUs - item.GetTimeSentUs();
 				}
 			}
 
@@ -772,9 +772,9 @@ namespace RTC
 				Item& addedItem = this->outstandingData.emplace_back(
 				  item.GetOutgoingMessageId(),
 				  std::move(messageEnd),
-				  /*timeSentMs*/ 0,
+				  /*timeSentUs*/ 0,
 				  /*maxRetransmissions*/ 0,
-				  /*expiresAtMs*/ Types::ExpiresAtMsInfinite,
+				  /*expiresAtUs*/ Types::ExpiresAtUsInfinite,
 				  /*lifecycleId*/ std::nullopt);
 
 				// The added chunk shouldn't be included in `this->unackedPacketBytes`,

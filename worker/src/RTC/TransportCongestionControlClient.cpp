@@ -189,7 +189,7 @@ namespace RTC
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpReceiverReport(
-	  RTC::RTCP::ReceiverReportPacket* packet, float rtt, int64_t nowMs)
+	  RTC::RTCP::ReceiverReportPacket* packet, float rtt, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -215,8 +215,10 @@ namespace RTC
 			return;
 		}
 
+		// NOTE: The dependency works in milliseconds, so the arrival time is
+		// truncated here.
 		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
-		  reportBlockList, static_cast<int64_t>(rtt), nowMs);
+		  reportBlockList, static_cast<int64_t>(rtt), receivedAtUs / 1000);
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpTransportFeedback(

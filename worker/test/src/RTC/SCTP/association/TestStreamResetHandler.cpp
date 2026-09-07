@@ -79,10 +79,10 @@ namespace
 		      std::addressof(this->reassemblyQueue),
 		      std::addressof(this->retransmissionQueue))
 		{
-			this->tcbContext.WillGetCurrentRtoMsOnce(
+			this->tcbContext.WillGetCurrentRtoUsOnce(
 			  []()
 			  {
-				  return RtoMs;
+				  return static_cast<int64_t>(RtoMs * 1000);
 			  });
 		}
 
@@ -127,7 +127,7 @@ namespace
 		class RetransmissionQueueListener : public RTC::SCTP::RetransmissionQueue::Listener
 		{
 		public:
-			void OnRetransmissionQueueNewRttMs(uint64_t /*rttMs*/) override
+			void OnRetransmissionQueueNewRttUs(int64_t /*rttUs*/) override
 			{
 			}
 

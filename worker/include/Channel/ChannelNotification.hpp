@@ -12,16 +12,16 @@ namespace Channel
 		using Event = FBS::Notification::Event;
 
 	public:
-		explicit ChannelNotification(const FBS::Notification::Notification* notification);
+		ChannelNotification(const FBS::Notification::Notification* notification, int64_t receivedAtUs);
 		~ChannelNotification() = default;
 
 	public:
 		// Passed by argument.
-		Event event;
+		const FBS::Notification::Notification* data{ nullptr };
+		int64_t receivedAtUs{ 0 };
 		// Others.
 		const char* eventCStr;
 		std::string handlerId;
-		const FBS::Notification::Notification* data{ nullptr };
 	};
 } // namespace Channel
 

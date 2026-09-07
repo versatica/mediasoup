@@ -30,35 +30,39 @@ namespace RTC
 			void Dump(int indentation = 0) const;
 
 			/**
-			 * To be called when a RTT (ms) has been measured, to update the RTO
+			 * To be called when a RTT (us) has been measured, to update the RTO
 			 * value.
 			 */
-			void ObserveRttMs(uint64_t rttMs);
+			void ObserveRttUs(int64_t rttUs);
 
 			/**
-			 * Returns the Retransmission Timeout (RTO) value.
+			 * Returns the Retransmission Timeout (RTO) value (us).
 			 */
-			uint64_t GetRtoMs() const
+			int64_t GetRtoUs() const
 			{
-				return this->rtoMs;
+				return static_cast<int64_t>(this->rtoUs);
 			}
 
 			/**
-			 * Returns the smoothed RTT value (ms)..
+			 * Returns the smoothed RTT value (us).
+			 *
+			 * @remarks
+			 * - The smoothed RTT is not rounded, so the sub-microsecond part is
+			 *   truncated here.
 			 */
-			uint64_t GetSrttMs() const
+			int64_t GetSrttUs() const
 			{
-				return this->srttMs;
+				return static_cast<int64_t>(this->srttUs);
 			}
 
 		private:
-			uint64_t minRtoMs;
-			uint64_t maxRtoMs;
-			uint64_t maxRttMs;
-			uint64_t minRttVarianceMs;
-			double srttMs;
-			double rtoMs;
-			double rttVarMs{ 0 };
+			int64_t minRtoUs;
+			int64_t maxRtoUs;
+			int64_t maxRttUs;
+			int64_t minRttVarianceUs;
+			double srttUs;
+			double rtoUs;
+			double rttVarUs{ 0 };
 			bool firstMeasurement{ false };
 		};
 	} // namespace SCTP

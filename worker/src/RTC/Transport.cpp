@@ -1417,7 +1417,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (notification->event)
+		switch (notification->data->event())
 		{
 			default:
 			{
@@ -1504,7 +1504,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::ReceiveRtpPacket(RTC::RTP::Packet* packet)
+	void Transport::ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1519,7 +1519,7 @@ namespace RTC
 		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
 		{
-			this->tccServer->IncomingPacket(this->shared->GetTimeUsInt64(), packet);
+			this->tccServer->IncomingPacket(receivedAtUs, packet);
 		}
 
 		// Get the associated Producer.
@@ -1581,14 +1581,14 @@ namespace RTC
 		delete packet;
 	}
 
-	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
+	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		// Handle each RTCP packet.
 		while (packet)
 		{
-			HandleRtcpPacket(packet);
+			HandleRtcpPacket(packet, receivedAtUs);
 
 			auto* previousPacket = packet;
 
@@ -1598,7 +1598,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::ReceiveSctpData(const uint8_t* data, size_t len)
+	void Transport::ReceiveSctpData(const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1610,7 +1610,7 @@ namespace RTC
 		}
 
 		// Pass it to the SctpAssociation.
-		this->sctpAssociation->ReceiveSctpData(data, len);
+		this->sctpAssociation->ReceiveSctpData(data, len, receivedAtUs);
 	}
 
 	void Transport::SendSctpMessage(
@@ -1864,7 +1864,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)
+	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1921,7 +1921,7 @@ namespace RTC
 						}
 					}
 
-					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, this->shared->GetTimeMsInt64());
+					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, receivedAtUs);
 				}
 
 				break;

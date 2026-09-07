@@ -6,6 +6,10 @@
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocketHandle.hpp"
 
+// Avoid cyclic #include problem by declaring the class instead of including the
+// corresponding header file.
+class SharedInterface;
+
 namespace Channel
 {
 	class ConsumerSocket : public UnixStreamSocketHandle
@@ -96,6 +100,12 @@ namespace Channel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
+		/**
+		 * @remarks
+		 * - Must be called before the libuv loop runs, since notifications take
+		 *   their arrival time from it.
+		 */
+		void SetShared(SharedInterface* shared);
 		void Send(const uint8_t* data, uint32_t dataLen);
 		void SendLog(const char* data, uint32_t dataLen);
 		bool CallbackRead();
@@ -111,6 +121,7 @@ namespace Channel
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		// Others.
 		bool closed{ false };
 		ConsumerSocket* consumerSocket{ nullptr };

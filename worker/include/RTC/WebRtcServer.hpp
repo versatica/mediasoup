@@ -68,10 +68,20 @@ namespace RTC
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
-		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
-		void OnStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnPacketReceived(
+		  RTC::TransportTuple* tuple,
+		  const uint8_t* data,
+		  size_t len,
+		  size_t bufferLen,
+		  int64_t receivedAtUs);
+		void OnStunDataReceived(
+		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs);
 		void OnNonStunDataReceived(
-		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
+		  RTC::TransportTuple* tuple,
+		  const uint8_t* data,
+		  size_t len,
+		  size_t bufferLen,
+		  int64_t receivedAtUs);
 
 		/* Pure virtual methods inherited from RTC::WebRtcTransport::WebRtcTransportListener. */
 	public:
@@ -93,7 +103,8 @@ namespace RTC
 		  const uint8_t* data,
 		  size_t len,
 		  size_t bufferLen,
-		  const struct sockaddr* remoteAddr) override;
+		  const struct sockaddr* remoteAddr,
+		  int64_t receivedAtUs) override;
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
@@ -102,7 +113,11 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
 		void OnTcpConnectionPacketReceived(
-		  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen) override;
+		  RTC::TcpConnection* connection,
+		  const uint8_t* data,
+		  size_t len,
+		  size_t bufferLen,
+		  int64_t receivedAtUs) override;
 		const std::string& GetId() const
 		{
 			return this->id;

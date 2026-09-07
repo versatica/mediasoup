@@ -49,7 +49,7 @@ namespace RTC
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const Capabilities& remoteCapabilities,
-		  uint64_t creationTimestampMs,
+		  int64_t creationTimestampUs,
 		  const uint8_t* macKey,
 		  size_t macKeyLength)
 		{
@@ -66,7 +66,7 @@ namespace RTC
 			  remoteAdvertisedReceiverWindowCredit,
 			  tieTag,
 			  remoteCapabilities,
-			  creationTimestampMs,
+			  creationTimestampUs,
 			  macKey,
 			  macKeyLength);
 
@@ -86,7 +86,7 @@ namespace RTC
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const Capabilities& remoteCapabilities,
-		  uint64_t creationTimestampMs,
+		  int64_t creationTimestampUs,
 		  const uint8_t* macKey,
 		  size_t macKeyLength)
 		{
@@ -132,7 +132,8 @@ namespace RTC
 			// bytes (including the timestamp).
 			//
 			// @see RFC 9260 section 5.1.3.
-			Utils::Byte::Set8Bytes(buffer, StateCookie::TimestampOffset, creationTimestampMs);
+			Utils::Byte::Set8Bytes(
+			  buffer, StateCookie::TimestampOffset, static_cast<uint64_t>(creationTimestampUs));
 
 			const uint8_t* mac = Utils::Crypto::GetHmacSha1(
 			  reinterpret_cast<const char*>(macKey), macKeyLength, buffer, StateCookie::MacOffset);
@@ -258,7 +259,7 @@ namespace RTC
 
 			if (IsAuthenticated())
 			{
-				MS_DUMP_CLEAN(indentation, "  creation timestamp (ms): %" PRIu64, GetCreationTimestampMs());
+				MS_DUMP_CLEAN(indentation, "  creation timestamp (us): %" PRIi64, GetCreationTimestampUs());
 			}
 
 			MS_DUMP_CLEAN(indentation, "  remote capabilities:");

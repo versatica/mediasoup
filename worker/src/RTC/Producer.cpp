@@ -508,7 +508,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (notification->event)
+		switch (notification->data->event())
 		{
 			case Channel::ChannelNotification::Event::PRODUCER_SEND:
 			{
@@ -538,7 +538,7 @@ namespace RTC
 				}
 
 				// Pass the packet to the parent transport.
-				this->listener->OnProducerReceiveRtpPacket(this, packet);
+				this->listener->OnProducerReceiveRtpPacket(this, packet, notification->receivedAtUs);
 
 				break;
 			}

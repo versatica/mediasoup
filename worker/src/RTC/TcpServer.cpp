@@ -17,6 +17,7 @@ namespace RTC
 	TcpServer::TcpServer(
 	  Listener* listener,
 	  RTC::TcpConnection::Listener* connListener,
+	  SharedInterface* shared,
 	  std::string& ip,
 	  uint16_t port,
 	  RTC::Transport::SocketFlags& flags)
@@ -24,6 +25,7 @@ namespace RTC
 	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, port, flags)),
 	    listener(listener),
 	    connListener(connListener),
+	    shared(shared),
 	    fixedPort(true)
 	{
 		MS_TRACE();
@@ -32,6 +34,7 @@ namespace RTC
 	TcpServer::TcpServer(
 	  Listener* listener,
 	  RTC::TcpConnection::Listener* connListener,
+	  SharedInterface* shared,
 	  std::string& ip,
 	  uint16_t minPort,
 	  uint16_t maxPort,
@@ -41,7 +44,8 @@ namespace RTC
 	    ::TcpServerHandle::TcpServerHandle(
 	      RTC::PortManager::BindTcp(ip, minPort, maxPort, flags, portRangeKey)),
 	    listener(listener),
-	    connListener(connListener)
+	    connListener(connListener),
+	    shared(shared)
 	{
 		MS_TRACE();
 
@@ -63,7 +67,8 @@ namespace RTC
 		MS_TRACE();
 
 		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
-		auto* connection = new RTC::TcpConnection(this->connListener, TcpConnectionBufferSize);
+		auto* connection =
+		  new RTC::TcpConnection(this->connListener, this->shared, TcpConnectionBufferSize);
 
 		// Accept it.
 		AcceptTcpConnection(connection);

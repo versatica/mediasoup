@@ -19,6 +19,10 @@ Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
 	// Set us as Channel's listener.
 	this->channel->SetListener(this);
 
+	// Give the Channel the Shared instance, which it needs to take the arrival
+	// time of received notifications.
+	this->channel->SetShared(this->shared);
+
 	// Set the SignalHandle.
 	this->signalHandle = new SignalHandle(this);
 
@@ -369,7 +373,7 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 
 	MS_DEBUG_DEV("Channel notification received [event:%s]", notification->eventCStr);
 
-	switch (notification->event)
+	switch (notification->data->event())
 	{
 		case Channel::ChannelNotification::Event::WORKER_CLOSE:
 		{

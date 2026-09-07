@@ -98,7 +98,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (notification->event)
+		switch (notification->data->event())
 		{
 			case Channel::ChannelNotification::Event::TRANSPORT_SEND_RTCP:
 			{
@@ -125,7 +125,7 @@ namespace RTC
 				}
 
 				// Pass the packet to the parent transport.
-				RTC::Transport::ReceiveRtcpPacket(packet);
+				RTC::Transport::ReceiveRtcpPacket(packet, notification->receivedAtUs);
 
 				break;
 			}

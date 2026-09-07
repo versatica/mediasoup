@@ -188,9 +188,9 @@ namespace RTC
 		{
 			this->sendTransmission.Update(len, this->shared->GetTimeMs());
 		}
-		virtual void ReceiveRtpPacket(RTC::RTP::Packet* packet) final;
-		virtual void ReceiveRtcpPacket(RTC::RTCP::Packet* packet) final;
-		virtual void ReceiveSctpData(const uint8_t* data, size_t len) final;
+		virtual void ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs) final;
+		virtual void ReceiveRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs) final;
+		virtual void ReceiveSctpData(const uint8_t* data, size_t len, int64_t receivedAtUs) final;
 		virtual void SendSctpMessage(
 		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb = nullptr) final;
 
@@ -220,7 +220,7 @@ namespace RTC
 		}
 		virtual void SendRtpPacket(
 		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, const onSendCallback* cb = nullptr) = 0;
-		virtual void HandleRtcpPacket(RTC::RTCP::Packet* packet) final;
+		virtual void HandleRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs) final;
 		virtual void SendRtcp(uint64_t nowMs) final;
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
@@ -241,9 +241,10 @@ namespace RTC
 		{
 			this->DataReceived(len);
 		}
-		void OnProducerReceiveRtpPacket(RTC::Producer* /*producer*/, RTC::RTP::Packet* packet) override
+		void OnProducerReceiveRtpPacket(
+		  RTC::Producer* /*producer*/, RTC::RTP::Packet* packet, int64_t receivedAtUs) override
 		{
-			this->ReceiveRtpPacket(packet);
+			this->ReceiveRtpPacket(packet, receivedAtUs);
 		}
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;

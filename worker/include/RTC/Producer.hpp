@@ -33,9 +33,10 @@ namespace RTC
 
 		public:
 			virtual void OnProducerReceiveData(RTC::Producer* producer, size_t len) = 0;
-			virtual void OnProducerReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
-			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
-			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
+			virtual void OnProducerReceiveRtpPacket(
+			  RTC::Producer* producer, RTC::RTP::Packet* packet, int64_t receivedAtUs) = 0;
+			virtual void OnProducerPaused(RTC::Producer* producer)                     = 0;
+			virtual void OnProducerResumed(RTC::Producer* producer)                    = 0;
 			virtual void OnProducerNewRtpStream(
 			  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 			virtual void OnProducerRtpStreamScore(

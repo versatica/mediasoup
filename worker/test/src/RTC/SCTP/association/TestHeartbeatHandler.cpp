@@ -187,7 +187,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		// Respond a while later.
 		const uint64_t rttMs{ 313 };
 
-		test.tcbContext.ExpectObserveRttMsCalledTimes(1);
+		test.tcbContext.ExpectObserveRttUsCalledTimes(1);
 
 		test.AdvanceTimeMs(rttMs);
 		test.heartbeatHandler.HandleReceivedHeartbeatAckChunk(receivedHeartbeatAckChunk.get());
@@ -237,7 +237,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		  sentHeartbeatInfoParameter->GetInfo(), sentHeartbeatInfoParameter->GetInfoLength());
 		receivedHeartbeatInfoParameter->Consolidate();
 
-		test.tcbContext.ExpectObserveRttMsCalledTimes(0);
+		test.tcbContext.ExpectObserveRttUsCalledTimes(0);
 
 		// Go backwards in time to make the HEARTBEAT-ACK have an invalid timestamp
 		// in it, as it will be in the future.
@@ -253,10 +253,10 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 
 		const uint64_t rtoMs{ 105 };
 
-		test.tcbContext.WillGetCurrentRtoMsOnce(
+		test.tcbContext.WillGetCurrentRtoUsOnce(
 		  []()
 		  {
-			  return rtoMs;
+			  return static_cast<int64_t>(rtoMs * 1000);
 		  });
 
 		test.AdvanceTimeMs(test.sctpOptions.heartbeatIntervalMs);

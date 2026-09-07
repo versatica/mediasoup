@@ -11,7 +11,7 @@ namespace
 {
 	constexpr uint64_t Mtu{ 1000 };
 	constexpr size_t PayloadLength{ 4 };
-	constexpr uint64_t NowMs{ 0 };
+	constexpr int64_t NowUs{ 0 };
 
 	bool checkDataToSendHasMid(
 	  std::optional<RTC::SCTP::SendQueueInterface::DataToSend> dataToSend, uint32_t mid)
@@ -29,11 +29,10 @@ namespace
 		return true;
 	}
 
-	std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(uint64_t, size_t)> createChunk(
+	std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(int64_t, size_t)> createChunk(
 	  uint32_t outgoingMessageId, uint16_t streamId, uint32_t mid, size_t payloadLength = PayloadLength)
 	{
-		return
-		  [streamId, mid, payloadLength, outgoingMessageId](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		return [streamId, mid, payloadLength, outgoingMessageId](int64_t /*nowUs*/, size_t /*maxLength*/)
 		{
 			return RTC::SCTP::SendQueueInterface::DataToSend(
 			  outgoingMessageId,
@@ -58,7 +57,7 @@ namespace
 		for (size_t i{ 0 }; i < packetsToGenerate; ++i)
 		{
 			const std::optional<RTC::SCTP::SendQueueInterface::DataToSend> dataToSend =
-			  scheduler.Produce(NowMs, Mtu);
+			  scheduler.Produce(NowUs, Mtu);
 
 			if (dataToSend.has_value())
 			{
@@ -77,7 +76,7 @@ namespace
 		 * in dcsctp.
 		 */
 		void PushProduce(
-		  std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(uint64_t, size_t)> fn)
+		  std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(int64_t, size_t)> fn)
 		{
 			this->produceQueue.push_back(std::move(fn));
 		}
@@ -91,7 +90,7 @@ namespace
 			this->bytesQueue.push_back(bytes);
 		}
 
-		std::optional<RTC::SCTP::SendQueueInterface::DataToSend> Produce(uint64_t nowMs, size_t maxLength) override
+		std::optional<RTC::SCTP::SendQueueInterface::DataToSend> Produce(int64_t nowUs, size_t maxLength) override
 		{
 			REQUIRE(!this->produceQueue.empty());
 
@@ -99,7 +98,7 @@ namespace
 
 			this->produceQueue.pop_front();
 
-			return fn(nowMs, maxLength);
+			return fn(nowUs, maxLength);
 		}
 
 		size_t GetBytesToSendInNextMessage() const override
@@ -114,7 +113,7 @@ namespace
 		}
 
 	private:
-		std::deque<std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(uint64_t, size_t)>>
+		std::deque<std::function<std::optional<RTC::SCTP::SendQueueInterface::DataToSend>(int64_t, size_t)>>
 		  produceQueue;
 		mutable std::deque<size_t> bytesQueue;
 	};
@@ -159,7 +158,7 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 	{
 		RTC::SCTP::StreamScheduler scheduler(Mtu);
 
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// Stream properties can be set and retrieved.
@@ -190,8 +189,8 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 0));
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 0));
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// A scheduler with a single stream produced packets from it.
@@ -226,13 +225,13 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream2->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 100));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 200));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 201));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 102));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 202));
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 200));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 201));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 202));
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// Switches between two streams after every packet.
@@ -267,13 +266,13 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream2->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 100));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 200));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 201));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 102));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 202));
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 200));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 201));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 202));
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// Switches between two streams after every packet, but keeps producing from
@@ -291,21 +290,21 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 		// 2. beginning:false, end:false
 		// 3. beginning:false, end:true
 		producer1.PushProduce(
-		  [](uint64_t, size_t)
+		  [](int64_t, size_t)
 		  {
 			  return RTC::SCTP::SendQueueInterface::DataToSend(
 			    1, RTC::SCTP::UserData(1, 0, 101, 0, 42, std::vector<uint8_t>(4), true, false, true));
 		  });
 		producer1.PushBytesToSend(PayloadLength);
 		producer1.PushProduce(
-		  [](uint64_t, size_t)
+		  [](int64_t, size_t)
 		  {
 			  return RTC::SCTP::SendQueueInterface::DataToSend(
 			    1, RTC::SCTP::UserData(1, 0, 101, 0, 42, std::vector<uint8_t>(4), false, false, true));
 		  });
 		producer1.PushBytesToSend(PayloadLength);
 		producer1.PushProduce(
-		  [](uint64_t, size_t)
+		  [](int64_t, size_t)
 		  {
 			  return RTC::SCTP::SendQueueInterface::DataToSend(
 			    1, RTC::SCTP::UserData(1, 0, 101, 0, 42, std::vector<uint8_t>(4), false, true, true));
@@ -332,16 +331,16 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream2->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 100));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 200));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 200));
 		// MID(101) is fully produced before giving up on stream2.
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 201));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 102));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 202));
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 201));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 202));
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// Resumes a paused stream - makes a stream active after inactivating it.
@@ -363,17 +362,17 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream1->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 100));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101));
 
 		stream1->MakeInactive();
 
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 
 		stream1->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 102));
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102));
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// Iterates between streams, where one is suddenly paused and later resumed.
@@ -409,18 +408,18 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream2->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 100));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 200));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 200));
 
 		stream1->MakeInactive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 201));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 202));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 201));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 202));
 
 		stream1->MayMakeActive();
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101));
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 102));
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101));
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102));
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// Verifies that packet counts are evenly distributed in round robin
@@ -514,13 +513,13 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream2->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 100)); // t = 30
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101)); // t = 60
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 200)); // t = 70
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 102)); // t = 90
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 201)); // t = 140
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 202)); // t = 210
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100)); // t = 30
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101)); // t = 60
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 200)); // t = 70
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102)); // t = 90
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 201)); // t = 140
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 202)); // t = 210
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// Will do weighted fair queuing with three streams having different priority.
@@ -575,16 +574,16 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream3->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 300)); // t ~= 20
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 301)); // t ~= 40
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 200)); // t ~= 50
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 302)); // t ~= 60
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 100)); // t ~= 80
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 201)); // t ~= 100
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 202)); // t ~= 150
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101)); // t ~= 160
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 102)); // t ~= 240
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 300)); // t ~= 20
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 301)); // t ~= 40
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 200)); // t ~= 50
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 302)); // t ~= 60
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100)); // t ~= 80
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 201)); // t ~= 100
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 202)); // t ~= 150
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101)); // t ~= 160
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102)); // t ~= 240
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// Will do weighted fair queuing with three streams having different priority
@@ -644,16 +643,16 @@ SCENARIO("SCTP StreamScheduler", "[sctp][streamscheduler]")
 
 		stream3->MayMakeActive();
 
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 300)); // t ~= 400
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 301)); // t ~= 1400
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 200)); // t ~= 2500
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 302)); // t ~= 2800
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 100)); // t ~= 4000
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 101)); // t ~= 5600
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 201)); // t ~= 6000
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 202)); // t ~= 7000
-		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowMs, Mtu), 102)); // t ~= 11200
-		REQUIRE(!scheduler.Produce(NowMs, Mtu).has_value());
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 300)); // t ~= 400
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 301)); // t ~= 1400
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 200)); // t ~= 2500
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 302)); // t ~= 2800
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 100)); // t ~= 4000
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 101)); // t ~= 5600
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 201)); // t ~= 6000
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 202)); // t ~= 7000
+		REQUIRE(checkDataToSendHasMid(scheduler.Produce(NowUs, Mtu), 102)); // t ~= 11200
+		REQUIRE(!scheduler.Produce(NowUs, Mtu).has_value());
 	}
 
 	// Two streams of different priority, identical packet size: ratio of packets

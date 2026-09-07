@@ -11,10 +11,15 @@ namespace RTC
 	/* Instance methods. */
 
 	UdpSocket::UdpSocket(
-	  Listener* listener, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
+	  Listener* listener,
+	  SharedInterface* shared,
+	  std::string& ip,
+	  uint16_t port,
+	  RTC::Transport::SocketFlags& flags)
 	  : // This may throw.
 	    ::UdpSocketHandle::UdpSocketHandle(RTC::PortManager::BindUdp(ip, port, flags)),
 	    listener(listener),
+	    shared(shared),
 	    fixedPort(true)
 	{
 		MS_TRACE();
@@ -22,6 +27,7 @@ namespace RTC
 
 	UdpSocket::UdpSocket(
 	  Listener* listener,
+	  SharedInterface* shared,
 	  std::string& ip,
 	  uint16_t minPort,
 	  uint16_t maxPort,
@@ -30,7 +36,8 @@ namespace RTC
 	  : // This may throw.
 	    ::UdpSocketHandle::UdpSocketHandle(
 	      RTC::PortManager::BindUdp(ip, minPort, maxPort, flags, portRangeKey)),
-	    listener(listener)
+	    listener(listener),
+	    shared(shared)
 	{
 		MS_TRACE();
 
@@ -52,6 +59,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE: Take the arrival time before anything else is done with the
+		// datagram, so that it doesn't include the cost of processing it.
+		const int64_t receivedAtUs = this->shared->GetTimeUsInt64();
+
 		if (!this->listener)
 		{
 			MS_ERROR("no listener set");
@@ -60,6 +71,6 @@ namespace RTC
 		}
 
 		// Notify the reader.
-		this->listener->OnUdpSocketPacketReceived(this, data, len, bufferLen, addr);
+		this->listener->OnUdpSocketPacketReceived(this, data, len, bufferLen, addr, receivedAtUs);
 	}
 } // namespace RTC

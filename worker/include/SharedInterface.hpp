@@ -57,20 +57,12 @@ public:
 	virtual uint64_t GetTimeNs() = 0;
 
 	/**
-	 * @remarks
-	 * - Used within libwebrtc dependency which uses int64_t values for time
-	 *   representation.
-	 *
-	 * @todo Remove once not needed.
+	 * Get current time in milliseconds in int64_t.
 	 */
 	virtual int64_t GetTimeMsInt64() = 0;
 
 	/**
-	 * @remarks
-	 * - Used within libwebrtc dependency which uses int64_t values for time
-	 *   representation.
-	 *
-	 * @todo Remove once not needed.
+	 * Get current time in microseconds in int64_t.
 	 */
 	virtual int64_t GetTimeUsInt64() = 0;
 

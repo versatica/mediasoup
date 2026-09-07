@@ -24,9 +24,9 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	class MockRetransmissionQueueListener : public RTC::SCTP::RetransmissionQueue::Listener
 	{
 	public:
-		void OnRetransmissionQueueNewRttMs(uint64_t rttMs) override
+		void OnRetransmissionQueueNewRttUs(int64_t rttUs) override
 		{
-			this->lastRttMs = rttMs;
+			this->lastRttUs = rttUs;
 		}
 
 		void OnRetransmissionQueueClearRetransmissionCounter() override
@@ -35,7 +35,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		}
 
 	public:
-		uint64_t lastRttMs{ 0 };
+		int64_t lastRttUs{ 0 };
 		size_t clearRetransmissionCounterCalls{ 0 };
 	};
 
@@ -63,11 +63,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	MockBackoffTimerHandleListener backoffTimerHandleListener;
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
 	mocks::RTC::SCTP::MockSendQueue sendQueue;
-	uint64_t nowMs{ 10000 };
+	int64_t nowUs{ 10000 * 1000 };
 	mocks::MockShared shared(/*getTimeMs*/
-	                         [&nowMs]()
+	                         [&nowUs]()
 	                         {
-		                         return nowMs;
+		                         return static_cast<uint64_t>(nowUs / 1000);
 	                         });
 
 	const std::unique_ptr<BackoffTimerHandleInterface> t3RtxTimerUniquePtr{ shared.CreateBackoffTimer(
@@ -101,7 +101,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	                          uint32_t outgoingMessageId,
 	                          uint16_t maxRetransmissions = RTC::SCTP::Types::MaxRetransmitsNoLimit)
 	{
-		return [outgoingMessageId, maxRetransmissions](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		return [outgoingMessageId, maxRetransmissions](int64_t /*nowUs*/, size_t /*maxLength*/)
 		{
 			RTC::SCTP::UserData data(
 			  /*streamId*/ 1,
@@ -153,11 +153,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		return tsns;
 	};
 
-	auto getSentPacketTSNs = [&nowMs](RTC::SCTP::RetransmissionQueue& queue, size_t maxLength = 10000)
+	auto getSentPacketTSNs = [&nowUs](RTC::SCTP::RetransmissionQueue& queue, size_t maxLength = 10000)
 	{
 		std::vector<uint32_t> tsns;
 
-		for (const auto& elem : queue.GetChunksToSend(nowMs, maxLength))
+		for (const auto& elem : queue.GetChunksToSend(nowUs, maxLength))
 		{
 			tsns.push_back(elem.first);
 		}
@@ -172,7 +172,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(retransmissionQueue.GetUnackedItems() == 0);
 		REQUIRE(retransmissionQueue.GetUnackedPacketBytes() == 0);
 		REQUIRE(retransmissionQueue.GetNextTsn() == InitialTsn);
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
 		  std::vector<std::pair<uint32_t, RTC::SCTP::OutstandingData::State>>{
@@ -186,7 +186,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue.WillProduceOnce(createDataToSend(0))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -206,14 +206,14 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue.WillProduceOnce(createDataToSend(0))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
 		REQUIRE(getSentPacketTSNs(retransmissionQueue) == std::vector<uint32_t>{ 10 });
 
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(10, Arwnd).get());
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -230,14 +230,14 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(1))
 		  .WillProduceOnce(createDataToSend(2))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
 		REQUIRE(getSentPacketTSNs(retransmissionQueue) == std::vector<uint32_t>{ 10, 11, 12 });
 
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(11, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(11, Arwnd).get());
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -260,7 +260,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(6))
 		  .WillProduceOnce(createDataToSend(7))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -270,7 +270,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  std::vector<uint32_t>{ 10, 11, 12, 13, 14, 15, 16, 17 });
 
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    12,
 		    Arwnd,
@@ -305,7 +305,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(6))
 		  .WillProduceOnce(createDataToSend(7))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -320,7 +320,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Send TSN 18.
 		sendQueue.WillProduceOnce(createDataToSend(8))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -329,7 +329,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// Ack 12, 14-15, 17-18.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    12,
 		    Arwnd,
@@ -354,7 +354,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Send TSN 19.
 		sendQueue.WillProduceOnce(createDataToSend(9))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -363,7 +363,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// Ack 12, 14-15, 17-19.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    12,
 		    Arwnd,
@@ -376,7 +376,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Send TSN 20.
 		sendQueue.WillProduceOnce(createDataToSend(10))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -385,7 +385,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// Ack 12, 14-15, 17-20.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    12,
 		    Arwnd,
@@ -438,21 +438,21 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(1))
 		  .WillProduceOnce(createDataToSend(2))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
 		// Starting time.
-		nowMs = 100 * 1000; // 100 seconds.
+		nowUs = 100 * 1000 * 1000; // 100 seconds.
 
 		REQUIRE(getSentPacketTSNs(retransmissionQueue) == std::vector<uint32_t>{ 10, 11, 12 });
 
 		// Ack 10, 12, after 100ms.
-		nowMs += 100;
+		nowUs += 100 * 1000;
 
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    10,
 		    Arwnd,
@@ -472,7 +472,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Send 13.
 		sendQueue.WillProduceOnce(createDataToSend(3))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -480,10 +480,10 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(getSentPacketTSNs(retransmissionQueue) == std::vector<uint32_t>{ 13 });
 
 		// Ack 10, 12-13, after 100ms.
-		nowMs += 100;
+		nowUs += 100 * 1000;
 
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    10,
 		    Arwnd,
@@ -495,7 +495,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Send 14.
 		sendQueue.WillProduceOnce(createDataToSend(4))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -503,10 +503,10 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(getSentPacketTSNs(retransmissionQueue) == std::vector<uint32_t>{ 14 });
 
 		// Ack 10, 12-14, after 100 ms.
-		nowMs += 100;
+		nowUs += 100 * 1000;
 
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    10,
 		    Arwnd,
@@ -544,14 +544,14 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Verify that the timer was really restarted when fast-retransmitting. The
 		// timeout is `sctpOptions.initialRtoMs`, so advance the time just before
 		// that.
-		nowMs += (sctpOptions.initialRtoMs - 1);
+		nowUs += static_cast<int64_t>(sctpOptions.initialRtoMs - 1) * 1000;
 
 		auto* backoffTimer = shared.GetBackoffTimer("mock-sctp-t3-rtx");
 
 		REQUIRE(backoffTimer);
 		REQUIRE(backoffTimer->EvaluateHasExpired() == false);
 
-		nowMs += 1;
+		nowUs += 1000;
 
 		REQUIRE(backoffTimer->EvaluateHasExpired() == true);
 	}
@@ -563,7 +563,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		sendQueue.WillProduceOnce(createDataToSend(0))
 		  .WillProduceOnce(createDataToSend(1))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -584,12 +584,12 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue.WillProduceOnce(createDataToSend(0))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, 1000) == std::vector<uint32_t>{ 10 });
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -608,7 +608,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 10, RTC::SCTP::OutstandingData::State::TO_BE_RETRANSMITTED },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -632,12 +632,12 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue.WillProduceOnce(createDataToSend(42, /*maxRetransmissions*/ 0))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, 1000) == std::vector<uint32_t>{ 10 });
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -659,7 +659,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Discard must NOT be called.
 		sendQueue.ExpectDiscardCalledTimes(0);
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 		REQUIRE_VERIFICATION_RESULT(sendQueue.VerifyExpectations());
 	}
 
@@ -669,12 +669,12 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue.WillProduceOnce(createDataToSend(42, /*maxRetransmissions*/ 0))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
 		REQUIRE(getSentPacketTSNs(retransmissionQueue) == std::vector<uint32_t>{ 10 });
 		REQUIRE(
@@ -697,7 +697,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 10, RTC::SCTP::OutstandingData::State::ABANDONED },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == true);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -721,12 +721,12 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue.WillProduceOnce(createDataToSend(42, /*maxRetransmissions*/ 3))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, 1000) == std::vector<uint32_t>{ 10 });
 		REQUIRE(
@@ -742,20 +742,20 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Retransmission 1.
 		retransmissionQueue.HandleT3RtxTimerExpiry();
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 1000).size() == 1);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).size() == 1);
 
 		// Retransmission 2.
 		retransmissionQueue.HandleT3RtxTimerExpiry();
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 1000).size() == 1);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).size() == 1);
 
 		// Retransmission 3.
 		retransmissionQueue.HandleT3RtxTimerExpiry();
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 1000).size() == 1);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).size() == 1);
 
 		REQUIRE_VERIFICATION_RESULT(sendQueue.VerifyExpectations());
 
@@ -764,8 +764,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		retransmissionQueue.HandleT3RtxTimerExpiry();
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == true);
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 1000).empty());
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).empty());
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -791,13 +791,13 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue
 		  .WillProduceOnce(
-		    [&payload](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [&payload](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    return RTC::SCTP::SendQueueInterface::DataToSend(
 			      0, RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, true, true, false));
 		    })
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -851,7 +851,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// "B" — beginning.
 		sendQueue
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 42, 0, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -862,7 +862,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    })
 		  // Middle fragment.
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 42, 0, 0, 53, { 0x05, 0x06, 0x07, 0x08 }, false, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -873,7 +873,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    })
 		  // Another middle fragment (message not fully sent — no "E").
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 42, 0, 0, 53, { 0x09, 0x0a, 0x0b, 0x0c }, false, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -883,7 +883,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    return dataToSend;
 		    })
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -899,7 +899,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		});
 
 		// Ack TSN 10, but the remaining are lost.
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(10, Arwnd).get());
 
 		// T3 expiry: TSN 11, 12 abandoned. `Discard()` returns true, placeholder TSN 13.
 		sendQueue.WillDiscardOnce(1, 42, /*returnValue*/ true);
@@ -916,7 +916,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 13, RTC::SCTP::OutstandingData::State::ABANDONED },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == true);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sctpOptions.mtu) };
@@ -940,7 +940,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 42, 0, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -950,7 +950,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    return dataToSend;
 		    })
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 42, 0, 0, 53, { 0x05, 0x06, 0x07, 0x08 }, false, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -961,7 +961,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    })
 		  // "E" — end fragment (message fully sent).
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 42, 0, 0, 53, { 0x09, 0x0a, 0x0b, 0x0c }, false, true, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -971,7 +971,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    return dataToSend;
 		    })
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -987,7 +987,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		});
 
 		// Ack TSN 10, but the remaining are lost.
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(10, Arwnd).get());
 
 		// T3 expiry: TSN 11, 12 abandoned. `Discard()` returns false, no placeholder.
 		sendQueue.WillDiscardOnce(1, 42, /*returnValue*/ false);
@@ -1002,7 +1002,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 12, RTC::SCTP::OutstandingData::State::ABANDONED },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == true);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 
 		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, sctpOptions.mtu) };
@@ -1025,7 +1025,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Stream 1, ordered, outgoingMessageId=42, mid=42, "B".
 		sendQueue
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 42, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -1036,7 +1036,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    })
 		  // Stream 2, unordered, outgoingMessageId=43, mid=42, "B".
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(2, 0, 42, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, false, true);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(43, std::move(data));
@@ -1047,7 +1047,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    })
 		  // Stream 3, ordered, outgoingMessageId=44, mid=42, "B".
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(3, 0, 42, 0, 53, { 0x09, 0x0a, 0x0b, 0x0c }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(44, std::move(data));
@@ -1058,7 +1058,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    })
 		  // Stream 4, ordered, outgoingMessageId=45, mid=42, "B".
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(4, 0, 42, 0, 53, { 0x0d, 0x0e, 0x0f, 0x10 }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(45, std::move(data));
@@ -1068,7 +1068,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    return dataToSend;
 		    })
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -1086,7 +1086,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// TSN 13 is acked via gap block; TSN 10-12 are nacked.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    Arwnd,
@@ -1127,7 +1127,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 16, RTC::SCTP::OutstandingData::State::ABANDONED },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == true);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 
 		// I-FORWARD-TSN: newCumulativeTsn=12 (can't go past ACKED TSN 13).
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
@@ -1147,16 +1147,16 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// When TSN 13 is acked, the placeholder end fragments must be skipped too.
 		// A receiver is more likely to ack TSN 13, but do it incrementally.
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(12, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(12, Arwnd).get());
 
 		sendQueue.ExpectDiscardCalledTimes(0);
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 		REQUIRE_VERIFICATION_RESULT(sendQueue.VerifyExpectations());
 
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(13, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(13, Arwnd).get());
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == true);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -1189,20 +1189,20 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue.WillProduceOnce(createDataToSend(0, /*maxRetranmissions*/ 0))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
 		REQUIRE(getSentPacketTSNs(retransmissionQueue) == std::vector<uint32_t>{ 10 });
 
-		constexpr uint64_t DurationMs{ 123 };
+		constexpr int64_t DurationUs{ 123 * 1000 };
 
-		nowMs += DurationMs;
+		nowUs += DurationUs;
 
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(10, Arwnd).get());
 
-		REQUIRE(retransmissionQueueListener.lastRttMs == DurationMs);
+		REQUIRE(retransmissionQueueListener.lastRttUs == DurationUs);
 	}
 
 	SECTION("validate cumulative TSN at rest")
@@ -1214,11 +1214,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		auto retransmissionQueue = createRetransmissionQueue();
 
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(8, Arwnd).get()) == false);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(8, Arwnd).get()) == false);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(9, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(9, Arwnd).get()) == true);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get()) == false);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(10, Arwnd).get()) == false);
 	}
 
 	SECTION("validate cumulative TSN ack on inflight data")
@@ -1234,7 +1234,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(6))
 		  .WillProduceOnce(createDataToSend(7))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -1244,28 +1244,28 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  std::vector<uint32_t>{ 10, 11, 12, 13, 14, 15, 16, 17 });
 
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(8, Arwnd).get()) == false);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(8, Arwnd).get()) == false);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(9, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(9, Arwnd).get()) == true);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(10, Arwnd).get()) == true);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(11, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(11, Arwnd).get()) == true);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(12, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(12, Arwnd).get()) == true);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(13, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(13, Arwnd).get()) == true);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(14, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(14, Arwnd).get()) == true);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(15, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(15, Arwnd).get()) == true);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(16, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(16, Arwnd).get()) == true);
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(17, Arwnd).get()) == true);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(17, Arwnd).get()) == true);
 		// TSN 18 has never been sent -> rejected.
 		REQUIRE(
-		  retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(18, Arwnd).get()) == false);
+		  retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(18, Arwnd).get()) == false);
 	}
 
 	SECTION("handle gap-ack-blocks matching no inflight data")
@@ -1281,7 +1281,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(6))
 		  .WillProduceOnce(createDataToSend(7))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -1292,7 +1292,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// Ack 9, 20-25. This is an invalid SACK chunk, but should still be handled.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    Arwnd,
@@ -1326,7 +1326,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// cumTsn=9 (no change), gap {3,4} -> TSN 12-13, both beyond
 		// highestOutstandingTsn(9) -> rejected. State unchanged.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    Arwnd,
@@ -1358,7 +1358,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(6))
 		  .WillProduceOnce(createDataToSend(7))
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -1371,7 +1371,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// adjacent to the cum-tsn-ack, but it's not strictly forbidden. However,
 		// the cum-tsn-ack should not move, as the gap-ack-blocks are just advisory.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    Arwnd,
@@ -1397,7 +1397,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 	SECTION("stays within available size")
 	{
-		// With `GetChunksToSend(nowMs, 1188-12=1176)`, the first `Produce()` receives
+		// With `GetChunksToSend(nowUs, 1188-12=1176)`, the first `Produce()` receives
 		// 1176 - DataChunkHeaderLength bytes, the second receives the remainder.
 
 		auto retransmissionQueue = createRetransmissionQueue();
@@ -1408,7 +1408,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue
 		  .WillProduceOnce(
-		    [&sizeCheck1Ok](uint64_t /*nowMs*/, size_t maxLength)
+		    [&sizeCheck1Ok](int64_t /*nowUs*/, size_t maxLength)
 		    {
 			    sizeCheck1Ok = (maxLength == AvailableBytes - RTC::SCTP::DataChunk::DataChunkHeaderLength);
 
@@ -1418,7 +1418,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			      0, RTC::SCTP::UserData(1, 0, 0, 0, 53, std::move(payload), true, true, false));
 		    })
 		  .WillProduceOnce(
-		    [&sizeCheck2Ok](uint64_t /*nowMs*/, size_t maxLength)
+		    [&sizeCheck2Ok](int64_t /*nowUs*/, size_t maxLength)
 		    {
 			    sizeCheck2Ok = (maxLength == 976 - RTC::SCTP::DataChunk::DataChunkHeaderLength);
 
@@ -1444,7 +1444,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Three middle fragments of the same message, maxRetransmissions=0.
 		sendQueue
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 0, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -1454,7 +1454,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    return dataToSend;
 		    })
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 0, 0, 53, { 0x05, 0x06, 0x07, 0x08 }, false, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -1464,7 +1464,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    return dataToSend;
 		    })
 		  .WillProduceOnce(
-		    [](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 0, 0, 53, { 0x09, 0x0a, 0x0b, 0x0c }, false, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
@@ -1474,7 +1474,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 			    return dataToSend;
 		    })
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -1496,7 +1496,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		retransmissionQueue.HandleT3RtxTimerExpiry();
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == true);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -1511,17 +1511,17 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(retransmissionQueue.GetUnackedItems() == 0);
 
 		// Acking abandoned chunks one by one changes nothing in the counters.
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(10, Arwnd).get());
 
 		REQUIRE(retransmissionQueue.GetUnackedPacketBytes() == 0);
 		REQUIRE(retransmissionQueue.GetUnackedItems() == 0);
 
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(11, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(11, Arwnd).get());
 
 		REQUIRE(retransmissionQueue.GetUnackedPacketBytes() == 0);
 		REQUIRE(retransmissionQueue.GetUnackedItems() == 0);
 
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(12, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(12, Arwnd).get());
 
 		REQUIRE(retransmissionQueue.GetUnackedPacketBytes() == 0);
 		REQUIRE(retransmissionQueue.GetUnackedItems() == 0);
@@ -1530,55 +1530,55 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	SECTION("expire from send queue when partially sent")
 	{
 		// Two fragments on stream 17, outgoingMessageId=42. First is produced and
-		// goes in flight. After nowMs advances past `expiresAtMs`, the second is
+		// goes in flight. After nowUs advances past `expiresAtUs`, the second is
 		// produced but expired on Insert() -> first also abandoned, `Discard()`
 		// called (returns true -> placeholder TSN 12).
 
 		auto retransmissionQueue = createRetransmissionQueue();
 
-		const uint64_t expiresAtMs = nowMs + 10;
+		const int64_t expiresAtUs = nowUs + (10 * 1000);
 
 		sendQueue
 		  .WillProduceOnce(
-		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtUs](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(17, 0, 0, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
 
-			    dataToSend.expiresAtMs = expiresAtMs;
+			    dataToSend.expiresAtUs = expiresAtUs;
 
 			    return dataToSend;
 		    })
 		  .WillProduceOnce(
-		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtUs](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(17, 0, 0, 0, 53, { 0x05, 0x06, 0x07, 0x08 }, false, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
 
-			    dataToSend.expiresAtMs = expiresAtMs;
+			    dataToSend.expiresAtUs = expiresAtUs;
 
 			    return dataToSend;
 		    })
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
-		// First `GetChunksToSend()` produces TSN 10 (nowMs < expiresAtMs).
+		// First `GetChunksToSend()` produces TSN 10 (nowUs < expiresAtUs).
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, 24) == std::vector<uint32_t>{ 10 });
 
 		// Advance past expiry.
-		nowMs += 100;
+		nowUs += 100 * 1000;
 
 		// `Discard()` called for TSN 11 (unsent tail) -> returns true -> placeholder
 		// TSN 12.
 		sendQueue.WillDiscardOnce(17, 42, /*returnValue*/ true);
 
-		// Second `GetChunksToSend()` produces TSN 11 but now > expiresAtMs ->
+		// Second `GetChunksToSend()` produces TSN 11 but now > expiresAtUs ->
 		// abandoned on `Insert()`, TSN 10 also abandoned, placeholder TSN 12
 		// created.
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 24).empty());
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 24).empty());
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -1600,55 +1600,55 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		auto retransmissionQueue = createRetransmissionQueue();
 
-		const uint64_t expiresAtMs = nowMs + 10;
+		const int64_t expiresAtUs = nowUs + (10 * 1000);
 
 		// outgoingMessageId=42, mid=0, "BE" — complete message.
 		sendQueue
 		  .WillProduceOnce(
-		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtUs](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 0, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, true, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(42, std::move(data));
 
-			    dataToSend.expiresAtMs = expiresAtMs;
+			    dataToSend.expiresAtUs = expiresAtUs;
 
 			    return dataToSend;
 		    })
 		  // outgoingMessageId=43, mid=1, "BE" — complete message.
 		  .WillProduceOnce(
-		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtUs](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 1, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, true, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(43, std::move(data));
 
-			    dataToSend.expiresAtMs = expiresAtMs;
+			    dataToSend.expiresAtUs = expiresAtUs;
 
 			    return dataToSend;
 		    })
 		  // outgoingMessageId=44, mid=0 (stream reset), "B" — beginning only.
 		  .WillProduceOnce(
-		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtUs](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 0, 0, 53, { 0x01, 0x02, 0x03, 0x04 }, true, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(44, std::move(data));
 
-			    dataToSend.expiresAtMs = expiresAtMs;
+			    dataToSend.expiresAtUs = expiresAtUs;
 
 			    return dataToSend;
 		    })
 		  // outgoingMessageId=44, mid=0, middle fragment (produced after expiry).
 		  .WillProduceOnce(
-		    [expiresAtMs](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [expiresAtUs](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    RTC::SCTP::UserData data(1, 0, 0, 0, 53, { 0x05, 0x06, 0x07, 0x08 }, false, false, false);
 			    RTC::SCTP::SendQueueInterface::DataToSend dataToSend(44, std::move(data));
 
-			    dataToSend.expiresAtMs = expiresAtMs;
+			    dataToSend.expiresAtUs = expiresAtUs;
 
 			    return dataToSend;
 		    })
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -1663,7 +1663,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
              true, true, false
     });
 
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 24) == expectedChunksToSend);
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 24) == expectedChunksToSend);
 
 		// TSN 11, msgId=43.
 		expectedChunksToSend.clear();
@@ -1674,7 +1674,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
              true, true, false
     });
 
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 24) == expectedChunksToSend);
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 24) == expectedChunksToSend);
 
 		// TSN 12, msgId=44 "B"
 		expectedChunksToSend.clear();
@@ -1685,10 +1685,10 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
              true, false, false
     });
 
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 24) == expectedChunksToSend);
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 24) == expectedChunksToSend);
 
 		// Advance past expiry.
-		nowMs += 100;
+		nowUs += 100 * 1000;
 
 		// `Discard()` called for message 44 (unsent middle fragment), returns true
 		// -> placeholder TSN 14 created.
@@ -1696,7 +1696,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// Fourth call produces TSN 13 (middle of message 44) but it's now expired
 		// -> TSN 12 and 13 abandoned, placeholder TSN 14 created.
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 24).empty());
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 24).empty());
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -1724,12 +1724,12 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(1)) // TSN 12.
 		  .WillProduceOnce(createDataToSend(2)) // TSN 13.
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
 		REQUIRE(getSentPacketTSNs(retransmissionQueue) == std::vector<uint32_t>{ 10, 11, 12, 13 });
 		REQUIRE(
@@ -1742,14 +1742,14 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 13, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
 		// `Discard()` must NOT be called for the first two nacks.
 		sendQueue.ExpectDiscardCalledTimes(0);
 
 		// First nack for TSN 10.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    Arwnd,
@@ -1768,11 +1768,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 13, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
 		// Second nack for TSN 10.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    Arwnd,
@@ -1791,7 +1791,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 13, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
 		REQUIRE_VERIFICATION_RESULT(sendQueue.VerifyExpectations());
 
@@ -1800,7 +1800,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		sendQueue.WillDiscardOnce(1, 42, /*returnValue*/ false);
 
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    Arwnd,
@@ -1819,7 +1819,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 13, RTC::SCTP::OutstandingData::State::ACKED     },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == true);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 	}
 
 	SECTION("abandons rtx limit 2 when nacked nine times")
@@ -1841,12 +1841,12 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(7)) // TSN 18.
 		  .WillProduceOnce(createDataToSend(8)) // TSN 19.
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
 		REQUIRE(
 		  getSentPacketTSNs(retransmissionQueue) ==
@@ -1874,7 +1874,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		for (uint32_t tsn{ 11 }; tsn <= 13; ++tsn)
 		{
 			retransmissionQueue.HandleReceivedSackChunk(
-			  nowMs,
+			  nowUs,
 			  createSackChunk(
 			    9,
 			    Arwnd,
@@ -1907,7 +1907,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		for (uint32_t tsn{ 14 }; tsn <= 16; ++tsn)
 		{
 			retransmissionQueue.HandleReceivedSackChunk(
-			  nowMs,
+			  nowUs,
 			  createSackChunk(
 			    9,
 			    Arwnd,
@@ -1940,7 +1940,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		for (uint32_t tsn{ 17 }; tsn <= 18; ++tsn)
 		{
 			retransmissionQueue.HandleReceivedSackChunk(
-			  nowMs,
+			  nowUs,
 			  createSackChunk(
 			    9,
 			    Arwnd,
@@ -1966,7 +1966,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 19, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == false);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
 		REQUIRE_VERIFICATION_RESULT(sendQueue.VerifyExpectations());
 
@@ -1975,7 +1975,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		sendQueue.WillDiscardOnce(1, 42, /*returnValue*/ false);
 
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    Arwnd,
@@ -1984,7 +1984,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
     })
 		    .get());
 
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, 1000).empty());
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, 1000).empty());
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -2002,7 +2002,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 19, RTC::SCTP::OutstandingData::State::ACKED     },
 		});
 
-		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowMs) == true);
+		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == true);
 	}
 
 	SECTION("cwnd recovers when acking")
@@ -2020,13 +2020,13 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue
 		  .WillProduceOnce(
-		    [&payload](uint64_t /*nowMs*/, size_t /*maxLength*/)
+		    [&payload](int64_t /*nowUs*/, size_t /*maxLength*/)
 		    {
 			    return RTC::SCTP::SendQueueInterface::DataToSend(
 			      0, RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, true, true, false));
 		    })
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -2034,7 +2034,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, 1500) == std::vector<uint32_t>{ 10 });
 		REQUIRE(retransmissionQueue.GetUnackedPacketBytes() == chunkSerializedLength);
 
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, Arwnd).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(10, Arwnd).get());
 
 		REQUIRE(retransmissionQueue.GetCwnd() == Cwnd + chunkSerializedLength);
 	}
@@ -2048,37 +2048,37 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		sendQueue
 		  .WillProduceOnce(
-		    [&payload](uint64_t, size_t)
+		    [&payload](int64_t, size_t)
 		    {
 			    return RTC::SCTP::SendQueueInterface::DataToSend(
 			      0, RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, true, false, false));
 		    })
 		  .WillProduceOnce(
-		    [&payload](uint64_t, size_t)
+		    [&payload](int64_t, size_t)
 		    {
 			    return RTC::SCTP::SendQueueInterface::DataToSend(
 			      0, RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, false, false, false));
 		    })
 		  .WillProduceOnce(
-		    [&payload](uint64_t, size_t)
+		    [&payload](int64_t, size_t)
 		    {
 			    return RTC::SCTP::SendQueueInterface::DataToSend(
 			      0, RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, false, false, false));
 		    })
 		  .WillProduceOnce(
-		    [&payload](uint64_t, size_t)
+		    [&payload](int64_t, size_t)
 		    {
 			    return RTC::SCTP::SendQueueInterface::DataToSend(
 			      0, RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, false, false, false));
 		    })
 		  .WillProduceOnce(
-		    [&payload](uint64_t, size_t)
+		    [&payload](int64_t, size_t)
 		    {
 			    return RTC::SCTP::SendQueueInterface::DataToSend(
 			      0, RTC::SCTP::UserData(1, 0, 0, 0, 53, payload, false, true, false));
 		    })
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -2100,7 +2100,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		// Ack 12, and report an empty receiver window (the peer obviously has a
 		// tiny receive window).
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    /*aRwnd*/ 0,
@@ -2120,7 +2120,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// Still rwnd=0, TSN 10 in-flight.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    9,
 		    /*aRwnd=*/0,
@@ -2131,11 +2131,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// There is in-flight data, so new data should not be allowed to be send since
 		// the receiver window is full.
-		REQUIRE(retransmissionQueue.GetChunksToSend(nowMs, mtu).empty());
+		REQUIRE(retransmissionQueue.GetChunksToSend(nowUs, mtu).empty());
 
 		// Ack TSN 10 (no more in-flight data), still rwnd=0.
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs,
+		  nowUs,
 		  createSackChunk(
 		    10,
 		    /*aRwnd=*/0,
@@ -2152,7 +2152,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 		// Ack and recover the receiver window
 		retransmissionQueue.HandleReceivedSackChunk(
-		  nowMs, createSackChunk(12, static_cast<uint32_t>(5 * mtu)).get());
+		  nowUs, createSackChunk(12, static_cast<uint32_t>(5 * mtu)).get());
 
 		// Remaining TO_BE_RETRANSMITTED chunks can now be sent.
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, mtu) == std::vector<uint32_t>{ 13 });
@@ -2174,7 +2174,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  .WillProduceOnce(createDataToSend(1)) // TSN 11.
 		  .WillProduceOnce(createDataToSend(2)) // TSN 12.
 		  .WillProduceRepeatedly(
-		    [](uint64_t, size_t)
+		    [](int64_t, size_t)
 		    {
 			    return std::nullopt;
 		    });
@@ -2192,7 +2192,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(retransmissionQueue.GetRwnd() == Arwnd - (PayloadSize * 3));
 
 		// Ack TSN 10, new aRwnd=1000.
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(10, 1000).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(10, 1000).get());
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
@@ -2205,7 +2205,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(retransmissionQueue.GetRwnd() == 1000 - (PayloadSize * 2));
 
 		// Ack everything, new aRwnd=2000.
-		retransmissionQueue.HandleReceivedSackChunk(nowMs, createSackChunk(12, 2000).get());
+		retransmissionQueue.HandleReceivedSackChunk(nowUs, createSackChunk(12, 2000).get());
 
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==

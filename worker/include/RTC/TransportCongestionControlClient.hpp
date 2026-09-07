@@ -73,7 +73,8 @@ namespace RTC
 		webrtc::PacedPacketInfo GetPacingInfo();
 		void PacketSent(const webrtc::RtpPacketSendInfo& packetInfo, int64_t nowUs);
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
-		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReportPacket* packet, float rtt, int64_t nowMs);
+		void ReceiveRtcpReceiverReport(
+		  RTC::RTCP::ReceiverReportPacket* packet, float rtt, int64_t receivedAtUs);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void SetDesiredBitrate(uint32_t desiredBitrate, bool force);
 		void SetMaxOutgoingBitrate(uint32_t maxBitrate);

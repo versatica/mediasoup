@@ -38,7 +38,7 @@ namespace RTC
 				/**
 				 * Time when it expires.
 				 */
-				uint64_t expiresAtMs{ Types::ExpiresAtMsInfinite };
+				int64_t expiresAtUs{ Types::ExpiresAtUsInfinite };
 
 				/**
 				 * Lifecycle. Set for the last fragment and `std::nullopt` for all
@@ -69,7 +69,7 @@ namespace RTC
 			 *   model message prioritization, which is important for any advanced
 			 *   stream scheduler, is further clarified.
 			 */
-			virtual std::optional<DataToSend> Produce(uint64_t nowMs, size_t maxLength) = 0;
+			virtual std::optional<DataToSend> Produce(int64_t nowUs, size_t maxLength) = 0;
 
 			/**
 			 * Discards a partially sent message identified by the parameters `streamId`
