@@ -28,10 +28,11 @@ namespace RTC
 		RetransmissionTimeout::RetransmissionTimeout(const SctpOptions& sctpOptions)
 		  // NOTE: The options are in milliseconds, while this class works in
 		  // microseconds so that sub-millisecond RTTs are not lost.
-		  : minRtoUs(sctpOptions.minRtoMs * 1000),
-		    maxRtoUs(sctpOptions.maxRtoMs * 1000),
-		    maxRttUs(sctpOptions.maxRttMs * 1000),
-		    minRttVarianceUs((sctpOptions.minRttVarianceMs * 1000) / HeuristicVarianceAdjustment),
+		  : minRtoUs(static_cast<int64_t>(sctpOptions.minRtoMs * 1000)),
+		    maxRtoUs(static_cast<int64_t>(sctpOptions.maxRtoMs * 1000)),
+		    maxRttUs(static_cast<int64_t>(sctpOptions.maxRttMs * 1000)),
+		    minRttVarianceUs(
+		      static_cast<int64_t>((sctpOptions.minRttVarianceMs * 1000) / HeuristicVarianceAdjustment)),
 		    srttUs(sctpOptions.initialRtoMs * 1000),
 		    rtoUs(sctpOptions.initialRtoMs * 1000),
 		    firstMeasurement(true)
