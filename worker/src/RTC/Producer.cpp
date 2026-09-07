@@ -550,7 +550,8 @@ namespace RTC
 		}
 	}
 
-	Producer::ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RTP::Packet* packet)
+	Producer::ReceiveRtpPacketResult Producer::ReceiveRtpPacket(
+	  RTC::RTP::Packet* packet, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -589,7 +590,7 @@ namespace RTC
 			result = ReceiveRtpPacketResult::MEDIA;
 
 			// Process the packet.
-			if (!rtpStream->ReceivePacket(packet))
+			if (!rtpStream->ReceivePacket(packet, receivedAtUs))
 			{
 				// May have to announce a new RTP stream to the listener.
 				if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
@@ -687,7 +688,7 @@ namespace RTC
 		return result;
 	}
 
-	void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
+	void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -698,7 +699,7 @@ namespace RTC
 			auto* rtpStream  = it->second;
 			const bool first = !rtpStream->GetSenderReportMapping().has_value();
 
-			rtpStream->ReceiveRtcpSenderReport(report);
+			rtpStream->ReceiveRtcpSenderReport(report, receivedAtUs);
 
 			this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
 
@@ -714,7 +715,7 @@ namespace RTC
 		{
 			auto* rtpStream = it2->second;
 
-			rtpStream->ReceiveRtxRtcpSenderReport(report);
+			rtpStream->ReceiveRtxRtcpSenderReport(report, receivedAtUs);
 
 			return;
 		}

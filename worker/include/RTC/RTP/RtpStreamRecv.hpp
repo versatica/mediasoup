@@ -104,7 +104,7 @@ namespace RTC
 				/**
 				 * Local time at which the Sender Report arrived.
 				 */
-				uint64_t receivedMs;
+				int64_t receivedAtUs;
 			};
 
 			/**
@@ -137,7 +137,7 @@ namespace RTC
 			flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
 			  flatbuffers::FlatBufferBuilder& builder) override;
 
-			bool ReceivePacket(RTP::Packet* packet);
+			bool ReceivePacket(RTP::Packet* packet, int64_t receivedAtUs);
 
 			bool ReceiveRtxPacket(RTP::Packet* packet);
 
@@ -145,9 +145,9 @@ namespace RTC
 
 			RTC::RTCP::ReceiverReport* GetRtxRtcpReceiverReport();
 
-			void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
+			void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
 
-			void ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report);
+			void ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
 
 			void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
 
@@ -156,14 +156,14 @@ namespace RTC
 			 *
 			 * @returns No value if no Sender Report has arrived yet.
 			 */
-			std::optional<uint64_t> GetSenderReportReceivedMs() const
+			std::optional<int64_t> GetSenderReportReceivedAtUs() const
 			{
 				if (!this->lastSenderReportTiming.has_value())
 				{
 					return std::nullopt;
 				}
 
-				return this->lastSenderReportTiming.value().receivedMs;
+				return this->lastSenderReportTiming.value().receivedAtUs;
 			}
 
 			/**
@@ -256,7 +256,7 @@ namespace RTC
 			}
 
 		private:
-			void CalculateJitter(uint32_t rtpTimestamp);
+			void CalculateJitter(uint32_t rtpTimestamp, int64_t receivedAtUs);
 
 			void UpdateScore();
 

@@ -154,8 +154,8 @@ namespace RTC
 			// NOTE: The peer echoes back the info we wrote, so this value cannot be
 			// trusted. The guard below rejects it unless it's a past instant, which
 			// also rejects a negative resulting from garbage above 2^63.
-			const int64_t createdAtUs = static_cast<int64_t>(Utils::Byte::Get8Bytes(info, 0));
-			const int64_t nowUs       = this->shared->GetTimeUsInt64();
+			const auto createdAtUs = static_cast<int64_t>(Utils::Byte::Get8Bytes(info, 0));
+			const int64_t nowUs    = this->shared->GetTimeUsInt64();
 
 			if (createdAtUs > 0 && createdAtUs <= nowUs)
 			{

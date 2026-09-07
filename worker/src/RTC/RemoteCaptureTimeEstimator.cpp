@@ -38,18 +38,20 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto senderReportMapping    = rtpStream->GetSenderReportMapping();
-		const auto senderReportReceivedMs = rtpStream->GetSenderReportReceivedMs();
+		const auto senderReportMapping      = rtpStream->GetSenderReportMapping();
+		const auto senderReportReceivedAtUs = rtpStream->GetSenderReportReceivedAtUs();
 
 		// Both are stored together, so either both are set or none of them is.
-		if (!senderReportMapping.has_value() || !senderReportReceivedMs.has_value())
+		if (!senderReportMapping.has_value() || !senderReportReceivedAtUs.has_value())
 		{
 			return;
 		}
 
+		// NOTE: The estimator works in milliseconds, so the arrival time is
+		// truncated here.
 		this->clockOffsetEstimator.AddSenderReport(
 		  senderReportMapping.value().ntpMs,
-		  senderReportReceivedMs.value(),
+		  static_cast<uint64_t>(senderReportReceivedAtUs.value() / 1000),
 		  static_cast<uint32_t>(rtpStream->GetRtt()));
 	}
 

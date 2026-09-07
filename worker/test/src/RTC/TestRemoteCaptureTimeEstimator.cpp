@@ -61,7 +61,7 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 
 	// Makes the Sender Report about `RemoteBaseTs` plus `idx` seconds of media reach
 	// us with no delay at all, and feeds it to the estimator.
-	auto receiveSenderReport = [&nowMs, &rtpStream, &estimator](uint32_t idx) -> void
+	auto receiveSenderReport = [&nowMs, &shared, &rtpStream, &estimator](uint32_t idx) -> void
 	{
 		nowMs = LocalBaseMs + (idx * 1000);
 
@@ -72,7 +72,7 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		report.SetNtpFrac(0);
 		report.SetRtpTs(RemoteBaseTs + (idx * ClockRate));
 
-		rtpStream.ReceiveRtcpSenderReport(std::addressof(report));
+		rtpStream.ReceiveRtcpSenderReport(std::addressof(report), shared.GetTimeUsInt64());
 		estimator.SenderReportReceived(std::addressof(rtpStream));
 	};
 

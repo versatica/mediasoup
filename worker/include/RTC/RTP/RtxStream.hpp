@@ -44,7 +44,7 @@ namespace RTC
 				/**
 				 * Local time at which the Sender Report arrived.
 				 */
-				uint64_t receivedMs;
+				int64_t receivedAtUs;
 			};
 
 		public:
@@ -105,7 +105,7 @@ namespace RTC
 
 			RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 
-			void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
+			void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
 
 		protected:
 			bool UpdateSeq(const RTP::Packet* packet);

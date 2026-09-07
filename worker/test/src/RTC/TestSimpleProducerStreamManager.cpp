@@ -160,7 +160,7 @@ namespace
 		  kind,
 		  keyFrameSupported,
 		  listener,
-		  &shared);
+		  std::addressof(shared));
 	}
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv()
@@ -170,7 +170,8 @@ namespace
 		params.ssrc      = MappedSsrc;
 		params.clockRate = 90000;
 
-		return std::make_unique<RTC::RTP::RtpStreamRecv>(&streamRecvListener, &shared, params, 0u, false);
+		return std::make_unique<RTC::RTP::RtpStreamRecv>(
+		  std::addressof(streamRecvListener), std::addressof(shared), params, 0u, false);
 	}
 
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero.
@@ -182,7 +183,7 @@ namespace
 		for (uint16_t seq = firstSeq; Utils::Number::IsLowerThan<uint16_t>(seq, lastSeq); ++seq)
 		{
 			packet->SetSequenceNumber(seq);
-			rtpStream->ReceivePacket(packet);
+			rtpStream->ReceivePacket(packet, shared.GetTimeUsInt64());
 		}
 
 		auto nowMs = DepLibUV::GetTimeMs();
@@ -208,7 +209,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("returns BUFFER when sync required and packet is not a keyframe")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener);
+		auto manager   = createManager(std::addressof(listener));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -223,7 +224,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("returns FORWARD with sendBufferedPackets when syncing with a keyframe")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener);
+		auto manager   = createManager(std::addressof(listener));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -249,7 +250,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("returns DROP for empty payload packets")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener, /*keyFrameSupported*/ false);
+		auto manager   = createManager(std::addressof(listener), /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -293,7 +294,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("returns FORWARD and completes sync when keyFrameSupported is false for the first packet")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener, /*keyFrameSupported*/ false);
+		auto manager   = createManager(std::addressof(listener), /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -316,7 +317,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("returns FORWARD for normal packets after sync")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener, /*keyFrameSupported*/ false);
+		auto manager   = createManager(std::addressof(listener), /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -342,7 +343,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("OnTransportConnected() requests keyframe when active")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener);
+		auto manager   = createManager(std::addressof(listener));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -359,7 +360,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		MockListener listener;
 		listener.isActive = false;
 
-		auto manager = createManager(&listener);
+		auto manager = createManager(std::addressof(listener));
 
 		// Don't wire producerRtpStream — manager is not active.
 		manager->OnTransportConnected();
@@ -370,7 +371,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("OnResumed() sets syncRequired and requests keyframe")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener);
+		auto manager   = createManager(std::addressof(listener));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -395,7 +396,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("IncreaseLayer() returns producer bitrate when it is less than available bitrate")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener);
+		auto manager   = createManager(std::addressof(listener));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -416,7 +417,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("IncreaseLayer() returns available bitrate when it is less than producer bitrate")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener);
+		auto manager   = createManager(std::addressof(listener));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -438,7 +439,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("IncreaseLayer() returns 0 on second call in same iteration")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener);
+		auto manager   = createManager(std::addressof(listener));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -466,7 +467,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("IncreaseLayer() works again after ApplyLayers()")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener);
+		auto manager   = createManager(std::addressof(listener));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -493,7 +494,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("GetDesiredBitrate() returns producer bitrate for video")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener);
+		auto manager   = createManager(std::addressof(listener));
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
@@ -513,7 +514,8 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	SECTION("GetDesiredBitrate() returns 0 for audio kind")
 	{
 		MockListener listener;
-		auto manager   = createManager(&listener, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
+		auto manager =
+		  createManager(std::addressof(listener), /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);

@@ -261,7 +261,7 @@ namespace RTC
 			return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::RecvStats, stats.Union());
 		}
 
-		bool RtpStreamRecv::ReceivePacket(RTP::Packet* packet)
+		bool RtpStreamRecv::ReceivePacket(RTP::Packet* packet, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -298,7 +298,7 @@ namespace RTC
 			}
 
 			// Calculate jitter.
-			CalculateJitter(packet->GetTimestamp());
+			CalculateJitter(packet->GetTimestamp(), receivedAtUs);
 
 			// Store the capture instant if the packet carries it.
 			{
@@ -563,13 +563,12 @@ namespace RTC
 			if (this->lastSenderReportTiming.has_value())
 			{
 				const auto& senderReportTiming = this->lastSenderReportTiming.value();
-				// Get delay in milliseconds.
-				auto delayMs =
-				  static_cast<uint32_t>(this->shared->GetTimeMs() - senderReportTiming.receivedMs);
+				// Get delay in microseconds.
+				const int64_t delayUs = this->shared->GetTimeUsInt64() - senderReportTiming.receivedAtUs;
 				// Express delay in units of 1/65536 seconds.
-				uint32_t dlsr = (delayMs / 1000) << 16;
+				auto dlsr = static_cast<uint32_t>((delayUs / 1000000) << 16);
 
-				dlsr |= uint32_t{ (delayMs % 1000) * 65536 / 1000 };
+				dlsr |= static_cast<uint32_t>(((delayUs % 1000000) * 65536) / 1000000);
 
 				report->SetDelaySinceLastSenderReport(dlsr);
 				report->SetLastSenderReport(senderReportTiming.compactNtp);
@@ -595,7 +594,7 @@ namespace RTC
 			return nullptr;
 		}
 
-		void RtpStreamRecv::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
+		void RtpStreamRecv::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -610,8 +609,8 @@ namespace RTC
 				compactNtp += report->GetNtpFrac() >> 16;
 
 				this->lastSenderReportTiming = SenderReportTiming{
-					.compactNtp = compactNtp,
-					.receivedMs = this->shared->GetTimeMs(),
+					.compactNtp   = compactNtp,
+					.receivedAtUs = receivedAtUs,
 				};
 
 				Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -629,13 +628,13 @@ namespace RTC
 			UpdateScore();
 		}
 
-		void RtpStreamRecv::ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report)
+		void RtpStreamRecv::ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
 			if (HasRtx())
 			{
-				this->rtxStream->ReceiveRtcpSenderReport(report);
+				this->rtxStream->ReceiveRtcpSenderReport(report, receivedAtUs);
 			}
 		}
 
@@ -822,7 +821,7 @@ namespace RTC
 			}
 		}
 
-		void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp)
+		void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -831,10 +830,19 @@ namespace RTC
 				return;
 			}
 
+			// The arrival time expressed in the clock rate of the stream, which is
+			// the R of RFC 3550 section 6.4.1.
+			//
+			// NOTE: The seconds and the sub-second parts are converted separately
+			// because a single multiplication of the whole time by the clock rate
+			// would overflow on a long lived host.
+			const auto arrivalTs =
+			  static_cast<uint32_t>((receivedAtUs / 1000000) * GetClockRate()) +
+			  static_cast<uint32_t>(((receivedAtUs % 1000000) * GetClockRate()) / 1000000);
+
 			// NOTE: Based on https://github.com/versatica/mediasoup/issues/1018.
-			auto transit =
-			  static_cast<int>((this->shared->GetTimeMs() * GetClockRate() / 1000) - rtpTimestamp);
-			int d = transit - this->transit;
+			auto transit = static_cast<int>(arrivalTs - rtpTimestamp);
+			int d        = transit - this->transit;
 
 			// First transit calculation, save and return.
 			if (this->transit == 0)
