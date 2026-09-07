@@ -129,7 +129,6 @@ namespace RTC
 			uint32_t baseSeq{ 0 };     // Base seq number.
 			uint32_t badSeq{ 0 };      // Last 'bad' seq number + 1.
 			uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
-			uint64_t maxPacketMs{ 0 }; // When the packet with highest timestammp was seen.
 			int32_t packetsLost{ 0 };
 			uint8_t fractionLost{ 0 };
 			size_t packetsDiscarded{ 0 };

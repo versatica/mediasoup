@@ -18,7 +18,6 @@
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SeqManager.hpp"
-#include "Shared.hpp"
 #include "SharedInterface.hpp"
 #include <ankerl/unordered_dense.h>
 #include <bitset>

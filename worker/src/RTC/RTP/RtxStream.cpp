@@ -57,7 +57,6 @@ namespace RTC
 				this->started     = true;
 				this->maxSeq      = seq - 1;
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = this->shared->GetTimeMs();
 			}
 
 			// If not a valid packet ignore it.
@@ -76,7 +75,6 @@ namespace RTC
 			if (Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 			{
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = this->shared->GetTimeMs();
 			}
 
 			// Increase packet count.
@@ -215,7 +213,6 @@ namespace RTC
 					InitSeq(seq);
 
 					this->maxPacketTs = packet->GetTimestamp();
-					this->maxPacketMs = this->shared->GetTimeMs();
 				}
 				else
 				{

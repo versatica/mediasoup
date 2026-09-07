@@ -1042,7 +1042,7 @@ namespace RTC
 			lossPercentage = rtpStream->GetLossPercentage();
 		}
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const auto nowMs = this->shared->GetTimeMs();
 
 		return this->producerStreamManager->IncreaseLayer(bitrate, considerLoss, lossPercentage, nowMs);
 	}
@@ -1088,7 +1088,8 @@ namespace RTC
 			return 0u;
 		}
 
-		auto nowMs          = DepLibUV::GetTimeMs();
+		const auto nowMs = this->shared->GetTimeMs();
+
 		auto desiredBitrate = this->producerStreamManager->GetDesiredBitrate(nowMs);
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
