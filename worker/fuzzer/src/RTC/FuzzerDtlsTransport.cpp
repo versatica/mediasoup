@@ -70,7 +70,7 @@ void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
 		dtlsTransportSingleton->SetRemoteFingerprint(dtlsRemoteFingerprint);
 	}
 
-	dtlsTransportSingleton->ProcessDtlsData(data, len);
+	dtlsTransportSingleton->ProcessDtlsData(data, len, shared.GetTimeUsInt64());
 
 	// DTLS may have failed or closed after ProcessDtlsData(). If so, unset it.
 	if (
@@ -125,7 +125,10 @@ void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportSendData(
 }
 
 void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportApplicationDataReceived(
-  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t /*len*/)
+  const RTC::DtlsTransport* /*dtlsTransport*/,
+  const uint8_t* /*data*/,
+  size_t /*len*/,
+  int64_t /*receivedAtUs*/)
 {
 	MS_DEBUG_DEV("DtlsTransport singleton received application data");
 }

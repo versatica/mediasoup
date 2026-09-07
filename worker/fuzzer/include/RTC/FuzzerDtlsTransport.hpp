@@ -24,7 +24,10 @@ namespace FuzzerRtcDtlsTransport
 		void OnDtlsTransportSendData(
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 		void OnDtlsTransportApplicationDataReceived(
-		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
+		  const RTC::DtlsTransport* dtlsTransport,
+		  const uint8_t* data,
+		  size_t len,
+		  int64_t receivedAtUs) override;
 	};
 
 	void Fuzz(const uint8_t* data, size_t len);
