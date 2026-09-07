@@ -14,7 +14,7 @@ namespace RTC
 		 * as delayed ack.
 		 *
 		 * When a round-trip-time (RTT) is calculated (outside this class), the
-		 * `ObserveRttMs()` method is called, which calculates the retransmission
+		 * `ObserveRttUs()` method is called, which calculates the retransmission
 		 * timeout (RTO) value. The RTO value will become larger if the RTT is high
 		 * and/or the RTT values are varying a lot, which is an indicator of a bad
 		 * connection.
