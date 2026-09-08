@@ -25,19 +25,6 @@ public:
 		return static_cast<uint64_t>(uv_hrtime() / 1000000u);
 	}
 
-	/**
-	 * Offset between our own monotonic clock and the NTP epoch (us).
-	 *
-	 * @remarks
-	 * - It is taken just once, in ClassInit(), so that the NTP timestamps we generate
-	 *   never step when the system clock is adjusted. They just drift away from the real
-	 *   wall clock as much as our monotonic clock does.
-	 */
-	static int64_t GetNtpOffsetUs()
-	{
-		return DepLibUV::ntpOffsetUs;
-	}
-
 	static uint64_t GetTimeUs()
 	{
 		return static_cast<uint64_t>(uv_hrtime() / 1000);
@@ -50,6 +37,19 @@ public:
 	static int64_t GetTimeMsInt64()
 	{
 		return static_cast<int64_t>(DepLibUV::GetTimeMs());
+	}
+
+	/**
+	 * Offset between our own monotonic clock and the NTP epoch (us).
+	 *
+	 * @remarks
+	 * - It is taken just once, in ClassInit(), so that the NTP timestamps we generate
+	 *   never step when the system clock is adjusted. They just drift away from the real
+	 *   wall clock as much as our monotonic clock does.
+	 */
+	static int64_t GetNtpOffsetUs()
+	{
+		return DepLibUV::ntpOffsetUs;
 	}
 
 	/**
