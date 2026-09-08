@@ -44,12 +44,12 @@ public:
 	/**
 	 * Get current time in milliseconds.
 	 */
-	virtual int64_t GetTimeMsInt64() = 0;
+	virtual int64_t GetTimeMs() = 0;
 
 	/**
 	 * Get current time in microseconds.
 	 */
-	virtual int64_t GetTimeUsInt64() = 0;
+	virtual int64_t GetTimeUs() = 0;
 
 	/**
 	 * Distance from the clock above to the NTP epoch (us), which is what has to be added

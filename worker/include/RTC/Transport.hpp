@@ -182,11 +182,11 @@ namespace RTC
 		virtual void Disconnected() final;
 		virtual void DataReceived(size_t len) final
 		{
-			this->recvTransmission.Update(len, this->shared->GetTimeMsInt64());
+			this->recvTransmission.Update(len, this->shared->GetTimeMs());
 		}
 		virtual void DataSent(size_t len) final
 		{
-			this->sendTransmission.Update(len, this->shared->GetTimeMsInt64());
+			this->sendTransmission.Update(len, this->shared->GetTimeMs());
 		}
 		virtual void ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs) final;
 		virtual void ReceiveRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs) final;

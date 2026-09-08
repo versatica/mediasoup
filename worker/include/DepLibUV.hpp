@@ -23,7 +23,7 @@ public:
 	/**
 	 * Current value of the monotonic clock (ms).
 	 */
-	static int64_t GetTimeMsInt64()
+	static int64_t GetTimeMs()
 	{
 		return static_cast<int64_t>(uv_hrtime() / 1000000);
 	}
@@ -31,7 +31,7 @@ public:
 	/**
 	 * Current value of the monotonic clock (us).
 	 */
-	static int64_t GetTimeUsInt64()
+	static int64_t GetTimeUs()
 	{
 		return static_cast<int64_t>(uv_hrtime() / 1000);
 	}

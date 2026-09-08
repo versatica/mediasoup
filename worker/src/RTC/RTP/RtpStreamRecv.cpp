@@ -228,7 +228,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const int64_t nowMs = this->shared->GetTimeMsInt64();
+			const int64_t nowMs = this->shared->GetTimeMs();
 
 			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
 
@@ -563,7 +563,7 @@ namespace RTC
 			{
 				const auto& senderReportTiming = this->lastSenderReportTiming.value();
 				// Get delay in microseconds.
-				const int64_t delayUs = this->shared->GetTimeUsInt64() - senderReportTiming.receivedAtUs;
+				const int64_t delayUs = this->shared->GetTimeUs() - senderReportTiming.receivedAtUs;
 				// Express delay in units of 1/65536 seconds.
 				auto dlsr = static_cast<uint32_t>((delayUs / 1000000) << 16);
 

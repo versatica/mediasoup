@@ -64,7 +64,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
 	mocks::RTC::SCTP::MockSendQueue sendQueue;
 	int64_t nowUs{ 10000 * 1000 };
-	mocks::MockShared shared(/*getTimeUsInt64*/
+	mocks::MockShared shared(/*getTimeUs*/
 	                         [&nowUs]() -> int64_t
 	                         {
 		                         return nowUs;

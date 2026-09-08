@@ -107,7 +107,7 @@ namespace RTC
 		return FBS::DataProducer::CreateGetStatsResponseDirect(
 		  builder,
 		  // timestamp.
-		  this->shared->GetTimeMsInt64(),
+		  this->shared->GetTimeMs(),
 		  // label.
 		  this->label.c_str(),
 		  // protocol.

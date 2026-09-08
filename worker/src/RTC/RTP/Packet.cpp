@@ -136,7 +136,7 @@ namespace RTC
 			// Initialize logger.
 			// NOTE: Here we use DepLibUV directly since `this->logger` doesn't
 			// have any purpose during tests.
-			this->logger.timestamp        = DepLibUV::GetTimeMsInt64();
+			this->logger.timestamp        = DepLibUV::GetTimeMs();
 			this->logger.recvRtpTimestamp = GetTimestamp();
 			this->logger.recvSeqNumber    = GetSequenceNumber();
 #endif

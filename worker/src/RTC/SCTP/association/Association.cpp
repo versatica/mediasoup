@@ -479,7 +479,7 @@ namespace RTC
 				return status;
 			}
 
-			const int64_t nowUs = this->shared->GetTimeUsInt64();
+			const int64_t nowUs = this->shared->GetTimeUs();
 
 			this->privateMetrics.txMessagesCount++;
 
@@ -502,7 +502,7 @@ namespace RTC
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
-			const int64_t nowUs = this->shared->GetTimeUsInt64();
+			const int64_t nowUs = this->shared->GetTimeUs();
 
 			std::vector<Types::SendMessageStatus> statuses;
 
@@ -1600,7 +1600,7 @@ namespace RTC
 			  receivedInitChunk->GetAdvertisedReceiverWindowCredit(),
 			  tieTag,
 			  remoteCapabilities,
-			  /*creationTimestampUs*/ authenticateCookie ? this->shared->GetTimeUsInt64() : 0,
+			  /*creationTimestampUs*/ authenticateCookie ? this->shared->GetTimeUs() : 0,
 			  /*macKey*/ authenticateCookie ? this->stateCookieSecret : nullptr,
 			  /*macKeyLength*/ authenticateCookie ? Association::StateCookieSecretLength : 0);
 
@@ -1702,7 +1702,7 @@ namespace RTC
 
 			this->tcb->SetRemoteStateCookie(std::move(remoteStateCookie));
 
-			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUs());
 			this->t1CookieTimer->Start();
 
 			this->associationListenerDeferrer.OnAssociationConnecting();
@@ -1815,7 +1815,7 @@ namespace RTC
 			// "A COOKIE ACK chunk MAY be bundled with any pending DATA chunks (and/or
 			// SACK chunks), but the COOKIE ACK chunk MUST be the first chunk in the
 			// packet."
-			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64(), /*addCookieAckChunk*/ true);
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUs(), /*addCookieAckChunk*/ true);
 		}
 
 		bool Association::HandleReceivedCookieEchoChunkWithTcb(
@@ -1934,7 +1934,7 @@ namespace RTC
 
 			SetState(State::ESTABLISHED, "COOKIE-ACK received");
 
-			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUs());
 
 			this->associationListenerDeferrer.OnAssociationConnected();
 		}
@@ -2230,7 +2230,7 @@ namespace RTC
 
 			// If a response was processed, pending to-be-reset streams may now have
 			// become unpaused. Try to send more DATA/I-DATA chunks.
-			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUs());
 
 			// If it leaves "deferred reset processing", there may be chunks to
 			// deliver that were queued while waiting for the stream to reset.
@@ -2445,7 +2445,7 @@ namespace RTC
 				return;
 			}
 
-			const int64_t nowUs = this->shared->GetTimeUsInt64();
+			const int64_t nowUs = this->shared->GetTimeUs();
 
 			if (this->tcb->GetRetransmissionQueue().HandleReceivedSackChunk(nowUs, receivedSackChunk))
 			{
@@ -2659,7 +2659,7 @@ namespace RTC
 
 			if (this->t1CookieTimer->IsRunning())
 			{
-				this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
+				this->tcb->SendBufferedPackets(this->shared->GetTimeUs());
 			}
 			else
 			{

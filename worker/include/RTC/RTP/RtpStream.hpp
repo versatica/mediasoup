@@ -213,7 +213,7 @@ namespace RTC
 
 			int64_t GetActiveMs() const
 			{
-				return this->shared->GetTimeMsInt64() - this->activeSinceMs;
+				return this->shared->GetTimeMs() - this->activeSinceMs;
 			}
 
 		protected:

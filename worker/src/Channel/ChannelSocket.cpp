@@ -214,7 +214,7 @@ namespace Channel
 		{
 			// NOTE: Take the arrival time before the message is parsed, so that it
 			// doesn't include the cost of processing it.
-			const int64_t receivedAtUs = this->shared->GetTimeUsInt64();
+			const int64_t receivedAtUs = this->shared->GetTimeUs();
 
 			const auto* message = FBS::Message::GetMessage(msg);
 
@@ -304,7 +304,7 @@ namespace Channel
 
 		// NOTE: Take the arrival time before the message is parsed, so that it
 		// doesn't include the cost of processing it.
-		const int64_t receivedAtUs = this->shared->GetTimeUsInt64();
+		const int64_t receivedAtUs = this->shared->GetTimeUs();
 
 		const auto* message = FBS::Message::GetMessage(msg);
 

@@ -441,7 +441,7 @@ namespace RTC
 				{
 					this->retransmissionQueue.HandleT3RtxTimerExpiry();
 
-					const int64_t nowUs = this->shared->GetTimeUsInt64();
+					const int64_t nowUs = this->shared->GetTimeUs();
 
 					SendBufferedPackets(nowUs);
 				}

@@ -13,7 +13,7 @@ namespace
 
 	int init()
 	{
-		nowMs = DepLibUV::GetTimeMsInt64();
+		nowMs = DepLibUV::GetTimeMs();
 
 		return 0;
 	}

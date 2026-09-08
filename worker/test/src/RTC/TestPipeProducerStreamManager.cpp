@@ -96,10 +96,10 @@ namespace
 	};
 
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	mocks::MockShared shared(/*getTimeUsInt64*/
+	mocks::MockShared shared(/*getTimeUs*/
 	                         []() -> int64_t
 	                         {
-		                         return DepLibUV::GetTimeUsInt64();
+		                         return DepLibUV::GetTimeUs();
 	                         });
 
 	std::unique_ptr<RTC::PipeProducerStreamManager> createManager(
@@ -454,7 +454,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		manager->SetExternallyManagedBitrate();
 
-		const auto used = manager->IncreaseLayer(1000000u, false, 0.0f, DepLibUV::GetTimeMsInt64());
+		const auto used = manager->IncreaseLayer(1000000u, false, 0.0f, DepLibUV::GetTimeMs());
 
 		REQUIRE(used == 0u);
 	}
@@ -466,6 +466,6 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		manager->SetExternallyManagedBitrate();
 
-		REQUIRE(manager->GetDesiredBitrate(DepLibUV::GetTimeMsInt64()) == 0u);
+		REQUIRE(manager->GetDesiredBitrate(DepLibUV::GetTimeMs()) == 0u);
 	}
 }

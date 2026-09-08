@@ -35,7 +35,7 @@ namespace
 	public:
 		TestStreamResetHandler()
 		  // NOTE: The order in which these members are initialized is **critical**.
-		  : shared(/*getTimeUsInt64*/
+		  : shared(/*getTimeUs*/
 			         [this]() -> int64_t
 			         {
 			           return this->nowUs;

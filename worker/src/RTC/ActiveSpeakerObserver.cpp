@@ -236,7 +236,7 @@ namespace RTC
 		if (it != this->mapProducerSpeakers.end())
 		{
 			auto* producerSpeaker = it->second;
-			const int64_t nowMs   = this->shared->GetTimeMsInt64();
+			const int64_t nowMs   = this->shared->GetTimeMs();
 
 			producerSpeaker->speaker->LevelChanged(volume, nowMs);
 		}
@@ -267,7 +267,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const int64_t nowMs = this->shared->GetTimeMsInt64();
+		const int64_t nowMs = this->shared->GetTimeMs();
 
 		if (nowMs - this->lastLevelIdleAtMs >= LevelIdleTimeoutMs)
 		{
@@ -413,7 +413,7 @@ namespace RTC
 	  : immediateActivityScore(MinActivityScore),
 	    mediumActivityScore(MinActivityScore),
 	    longActivityScore(MinActivityScore),
-	    lastLevelChangeAtMs(shared->GetTimeMsInt64()),
+	    lastLevelChangeAtMs(shared->GetTimeMs()),
 	    minLevel(MinLevel),
 	    nextMinLevel(MinLevel),
 	    immediates(ImmediateBuffLen, 0),

@@ -284,7 +284,7 @@ namespace RTC
 			// This is to ensure that we send N REMB packets with bitrate 0 (unlimited).
 			this->unlimitedRembCounter = UnlimitedRembNumPackets;
 
-			const int64_t nowMs = this->shared->GetTimeMsInt64();
+			const int64_t nowMs = this->shared->GetTimeMs();
 
 			MaySendLimitationRembFeedback(nowMs);
 		}

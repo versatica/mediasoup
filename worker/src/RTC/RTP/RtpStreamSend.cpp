@@ -74,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const int64_t nowMs = this->shared->GetTimeMsInt64();
+			const int64_t nowMs = this->shared->GetTimeMs();
 
 			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
 			auto stats     = FBS::RtpStream::CreateSendStats(
@@ -483,7 +483,7 @@ namespace RTC
 			}
 
 			// Look for each requested packet.
-			const int64_t nowMs = this->shared->GetTimeMsInt64();
+			const int64_t nowMs = this->shared->GetTimeMs();
 			const int64_t rttMs = (this->rttMs > 0.0f ? this->rttMs : DefaultRttMs);
 			uint16_t currentSeq = seq;
 			bool requested{ true };

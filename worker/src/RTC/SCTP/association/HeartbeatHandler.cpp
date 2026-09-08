@@ -154,7 +154,7 @@ namespace RTC
 			// trusted. The guard below rejects it unless it's a past instant, which
 			// also rejects a negative resulting from garbage above 2^63.
 			const auto createdAtUs = static_cast<int64_t>(Utils::Byte::Get8Bytes(info, 0));
-			const int64_t nowUs    = this->shared->GetTimeUsInt64();
+			const int64_t nowUs    = this->shared->GetTimeUs();
 
 			if (createdAtUs > 0 && createdAtUs <= nowUs)
 			{
@@ -216,7 +216,7 @@ namespace RTC
 
 			// NOTE: This is read back in HandleReceivedHeartbeatAckChunk() when the
 			// peer echoes it, so both sides of it must use the same unit.
-			const int64_t nowUs = this->shared->GetTimeUsInt64();
+			const int64_t nowUs = this->shared->GetTimeUs();
 
 			Utils::Byte::Set8Bytes(info, 0, static_cast<uint64_t>(nowUs));
 

@@ -6,7 +6,7 @@
 void FuzzerRtcTrendCalculator::Fuzz(const uint8_t* data, size_t len)
 {
 	RTC::TrendCalculator trend;
-	int64_t nowMs = DepLibUV::GetTimeMsInt64();
+	int64_t nowMs = DepLibUV::GetTimeMs();
 	size_t offset{ 0 };
 
 	while (len >= 4)

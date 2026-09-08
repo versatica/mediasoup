@@ -10,7 +10,7 @@ namespace mocks
 {
 	MockBackoffTimerHandle::MockBackoffTimerHandle(
 	  BackoffTimerHandleOptions options,
-	  std::function<int64_t()> getTimeMsInt64,
+	  std::function<int64_t()> getTimeMs,
 	  std::function<void()> onDelete)
 	  : listener(options.listener),
 	    label(std::move(options.label)),
@@ -18,7 +18,7 @@ namespace mocks
 	    backoffAlgorithm(options.backoffAlgorithm),
 	    maxBackoffTimeoutMs(options.maxBackoffTimeoutMs),
 	    maxRestarts(options.maxRestarts),
-	    getTimeMsInt64(std::move(getTimeMsInt64)),
+	    getTimeMs(std::move(getTimeMs)),
 	    onDelete(std::move(onDelete))
 	{
 		MS_TRACE();
@@ -55,7 +55,7 @@ namespace mocks
 	{
 		MS_TRACE();
 
-		const int64_t nowMs = this->getTimeMsInt64();
+		const int64_t nowMs = this->getTimeMs();
 
 		MS_DUMP_CLEAN(indentation, "<mocks::MockBackoffTimerHandle>");
 
@@ -135,7 +135,7 @@ namespace mocks
 		// the `running` flag.
 		if (this->running)
 		{
-			this->expiresAtMs = this->getTimeMsInt64() + ComputeNextTimeoutMs();
+			this->expiresAtMs = this->getTimeMs() + ComputeNextTimeoutMs();
 		}
 		// Once the timer is no longer running (e.g. max restarts reached), the real
 		// BackoffTimerHandle doesn't restart the underlying timer, so it won't fire

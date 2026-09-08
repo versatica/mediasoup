@@ -10,11 +10,11 @@ namespace mocks
 	MockTimerHandle::MockTimerHandle(
 	  TimerHandleInterface::Listener* listener,
 	  std::string label,
-	  std::function<int64_t()> getTimeMsInt64,
+	  std::function<int64_t()> getTimeMs,
 	  std::function<void()> onDelete)
 	  : listener(listener),
 	    label(std::move(label)),
-	    getTimeMsInt64(std::move(getTimeMsInt64)),
+	    getTimeMs(std::move(getTimeMs)),
 	    onDelete(std::move(onDelete))
 	{
 		MS_TRACE();
@@ -34,7 +34,7 @@ namespace mocks
 	{
 		MS_TRACE();
 
-		const int64_t nowMs = this->getTimeMsInt64();
+		const int64_t nowMs = this->getTimeMs();
 
 		MS_DUMP_CLEAN(indentation, "<mocks::MockTimerHandle>");
 
@@ -69,7 +69,7 @@ namespace mocks
 		this->repeatMs  = repeatMs;
 
 		this->running     = true;
-		this->expiresAtMs = this->getTimeMsInt64() + this->timeoutMs;
+		this->expiresAtMs = this->getTimeMs() + this->timeoutMs;
 	}
 
 	void MockTimerHandle::Restart(int64_t timeoutMs, int64_t repeatMs)
@@ -103,7 +103,7 @@ namespace mocks
 		if (this->repeatMs != 0)
 		{
 			this->running     = true;
-			this->expiresAtMs = this->getTimeMsInt64() + this->repeatMs;
+			this->expiresAtMs = this->getTimeMs() + this->repeatMs;
 		}
 		else
 		{

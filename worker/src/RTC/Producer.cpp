@@ -1568,7 +1568,7 @@ namespace RTC
 			auto notification = FBS::Producer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::KEYFRAME,
-			  this->shared->GetTimeMsInt64(),
+			  this->shared->GetTimeMs(),
 			  FBS::Common::TraceDirection::DIRECTION_IN,
 			  FBS::Producer::TraceInfo::KeyFrameTraceInfo,
 			  traceInfo.Union());
@@ -1584,7 +1584,7 @@ namespace RTC
 			auto notification = FBS::Producer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::RTP,
-			  this->shared->GetTimeMsInt64(),
+			  this->shared->GetTimeMs(),
 			  FBS::Common::TraceDirection::DIRECTION_IN,
 			  FBS::Producer::TraceInfo::RtpTraceInfo,
 			  traceInfo.Union());
@@ -1608,7 +1608,7 @@ namespace RTC
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::PLI,
-		  this->shared->GetTimeMsInt64(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Producer::TraceInfo::PliTraceInfo,
 		  traceInfo.Union());
@@ -1631,7 +1631,7 @@ namespace RTC
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::FIR,
-		  this->shared->GetTimeMsInt64(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Producer::TraceInfo::FirTraceInfo,
 		  traceInfo.Union());
@@ -1651,7 +1651,7 @@ namespace RTC
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::NACK,
-		  this->shared->GetTimeMsInt64(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
 
 		EmitTraceEvent(notification);
@@ -1678,7 +1678,7 @@ namespace RTC
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::SR,
-		  this->shared->GetTimeMsInt64(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
 		  FBS::Producer::TraceInfo::SrTraceInfo,
 		  traceInfo.Union());

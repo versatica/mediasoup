@@ -61,7 +61,7 @@ namespace RTC
 
 		// NOTE: Take the arrival time before anything else is done with the
 		// datagram, so that it doesn't include the cost of processing it.
-		const int64_t receivedAtUs = this->shared->GetTimeUsInt64();
+		const int64_t receivedAtUs = this->shared->GetTimeUs();
 
 		if (!this->listener)
 		{

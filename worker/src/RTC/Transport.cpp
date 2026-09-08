@@ -399,7 +399,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const int64_t nowMs = this->shared->GetTimeMsInt64();
+		const int64_t nowMs = this->shared->GetTimeMs();
 
 		// Add sctpState.
 		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
@@ -2415,7 +2415,7 @@ namespace RTC
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::PROBATION,
-		  this->shared->GetTimeMsInt64(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -2451,7 +2451,7 @@ namespace RTC
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::BWE,
-		  this->shared->GetTimeMsInt64(),
+		  this->shared->GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Transport::TraceInfo::BweTraceInfo,
 		  traceInfo.Union());
@@ -2589,7 +2589,7 @@ namespace RTC
 #endif
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUsInt64());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2628,7 +2628,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeUsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
 			  });
@@ -2648,7 +2648,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUsInt64());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2682,7 +2682,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeUsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
 			  });
@@ -3271,7 +3271,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUsInt64());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -3308,7 +3308,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeUsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
 			  });
@@ -3330,7 +3330,7 @@ namespace RTC
 		  packet->GetSequenceNumber(),
 		  this->transportWideCcSeq,
 		  packet->GetLength(),
-		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMsInt64()));
+		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()));
 	}
 
 	void Transport::OnTransportCongestionControlServerSendRtcpPacket(
@@ -3352,7 +3352,7 @@ namespace RTC
 		{
 			auto intervalMs = static_cast<int64_t>(RTC::RTCP::MaxVideoIntervalMs);
 
-			SendRtcp(this->shared->GetTimeUsInt64());
+			SendRtcp(this->shared->GetTimeUs());
 
 			/*
 			 * The interval between RTCP packets is varied randomly over the range

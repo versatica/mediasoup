@@ -120,7 +120,7 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef USE_TREND_CALCULATOR
-		const auto nowMs = this->shared->GetTimeMsInt64();
+		const auto nowMs = this->shared->GetTimeMs();
 #endif
 
 		this->bitrates.desiredBitrate          = 0u;
@@ -324,7 +324,7 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef USE_TREND_CALCULATOR
-		const auto nowMs = this->shared->GetTimeMsInt64();
+		const auto nowMs = this->shared->GetTimeMs();
 #endif
 
 		// Manage it via trending and increase it a bit to avoid immediate oscillations.
@@ -428,7 +428,7 @@ namespace RTC
 
 		webrtc::TargetRateConstraints constraints;
 
-		constraints.at_time       = webrtc::Timestamp::ms(this->shared->GetTimeMsInt64());
+		constraints.at_time       = webrtc::Timestamp::ms(this->shared->GetTimeMs());
 		constraints.min_data_rate = webrtc::DataRate::bps(this->bitrates.minBitrate);
 		constraints.max_data_rate = webrtc::DataRate::bps(this->bitrates.maxBitrate);
 		constraints.starting_rate = webrtc::DataRate::bps(this->bitrates.startBitrate);
@@ -454,14 +454,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastAvailableBitrateEventAtMs = this->shared->GetTimeMsInt64();
+		this->lastAvailableBitrateEventAtMs = this->shared->GetTimeMs();
 	}
 
 	void TransportCongestionControlClient::MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate)
 	{
 		MS_TRACE();
 
-		const int64_t nowMs = this->shared->GetTimeMsInt64();
+		const int64_t nowMs = this->shared->GetTimeMs();
 		bool notify{ false };
 
 		// Ignore if first event.

@@ -63,7 +63,7 @@ void DepLibUV::ClassInit()
 	const auto unixUs = (timeval.tv_sec * 1000000) + static_cast<int64_t>(timeval.tv_usec);
 	const auto ntpUs  = unixUs + (static_cast<int64_t>(Utils::Time::UnixNtpOffsetSec) * 1000000);
 
-	DepLibUV::ntpOffsetUs = ntpUs - DepLibUV::GetTimeUsInt64();
+	DepLibUV::ntpOffsetUs = ntpUs - DepLibUV::GetTimeUs();
 }
 
 void DepLibUV::ClassDestroy()

@@ -211,7 +211,7 @@ namespace RTC
 			this->nackList.emplace(
 			  seq,
 			  NackInfo{
-			    this->shared->GetTimeMsInt64(),
+			    this->shared->GetTimeMs(),
 			    seq,
 			    seq,
 			  });
@@ -247,7 +247,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const int64_t nowMs = this->shared->GetTimeMsInt64();
+		const int64_t nowMs = this->shared->GetTimeMs();
 		std::vector<uint16_t> nackBatch;
 
 		auto it = this->nackList.begin();

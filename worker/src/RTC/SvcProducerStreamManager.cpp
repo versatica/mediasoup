@@ -327,7 +327,7 @@ namespace RTC
 				  this->encodingContext->GetCurrentSpatialLayer(),
 				  this->encodingContext->GetTargetSpatialLayer());
 
-				this->lastBweDowngradeAtMs = this->shared->GetTimeMsInt64();
+				this->lastBweDowngradeAtMs = this->shared->GetTimeMs();
 			}
 		}
 	}
@@ -564,7 +564,7 @@ namespace RTC
 		// Start with no layers.
 		newTargetLayers.Reset();
 
-		const int64_t nowMs = this->shared->GetTimeMsInt64();
+		const int64_t nowMs = this->shared->GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)

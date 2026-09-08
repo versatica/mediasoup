@@ -16,7 +16,7 @@ namespace mocks
 	class MockShared : public SharedInterface
 	{
 	public:
-		explicit MockShared(std::function<int64_t()> getTimeUsInt64);
+		explicit MockShared(std::function<int64_t()> getTimeUs);
 
 		~MockShared() override = default;
 
@@ -36,14 +36,14 @@ namespace mocks
 		BackoffTimerHandleInterface* CreateBackoffTimer(
 		  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) override;
 
-		int64_t GetTimeMsInt64() override
+		int64_t GetTimeMs() override
 		{
-			return GetTimeUsInt64() / 1000;
+			return GetTimeUs() / 1000;
 		}
 
-		int64_t GetTimeUsInt64() override
+		int64_t GetTimeUs() override
 		{
-			return this->getTimeUsInt64();
+			return this->getTimeUs();
 		}
 
 		// NOTE: The NTP epoch is made to be the very clock given by argument, so that tests
@@ -85,7 +85,7 @@ namespace mocks
 
 	private:
 		// Given by argument.
-		const std::function<int64_t()> getTimeUsInt64;
+		const std::function<int64_t()> getTimeUs;
 		// Others.
 		std::unique_ptr<::Channel::ChannelSocket> channelSocket;
 		std::unique_ptr<mocks::Channel::MockChannelMessageRegistrator> channelMessageRegistrator;

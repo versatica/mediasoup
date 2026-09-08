@@ -8,8 +8,8 @@
 
 namespace mocks
 {
-	MockShared::MockShared(std::function<int64_t()> getTimeUsInt64)
-	  : getTimeUsInt64(std::move(getTimeUsInt64)),
+	MockShared::MockShared(std::function<int64_t()> getTimeUs)
+	  : getTimeUs(std::move(getTimeUs)),
 	    channelSocket(new ::Channel::ChannelSocket()),
 	    channelMessageRegistrator(new mocks::Channel::MockChannelMessageRegistrator()),
 	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get()))
@@ -39,10 +39,10 @@ namespace mocks
 		  label,
 		  // NOTE: The timer mocks take a milliseconds callback, being that the
 		  // resolution of the libuv handles they mimic.
-		  /*getTimeMsInt64*/
-		  [getTimeUsInt64 = this->getTimeUsInt64]() -> int64_t
+		  /*getTimeMs*/
+		  [getTimeUs = this->getTimeUs]() -> int64_t
 		  {
-			  return getTimeUsInt64() / 1000;
+			  return getTimeUs() / 1000;
 		  },
 		  /*onDelete*/
 		  [this, label]()
@@ -74,10 +74,10 @@ namespace mocks
 		  options,
 		  // NOTE: The timer mocks take a milliseconds callback, being that the
 		  // resolution of the libuv handles they mimic.
-		  /*getTimeMsInt64*/
-		  [getTimeUsInt64 = this->getTimeUsInt64]() -> int64_t
+		  /*getTimeMs*/
+		  [getTimeUs = this->getTimeUs]() -> int64_t
 		  {
-			  return getTimeUsInt64() / 1000;
+			  return getTimeUs() / 1000;
 		  },
 		  /*onDelete*/
 		  [this, label]()

@@ -12,7 +12,7 @@ SCENARIO("DepLibUV", "[deplibuv]")
 		// Seconds since Jan 1, 1900 at Jan 1, 2026.
 		constexpr int64_t Jan2026NtpSec{ 3976214400 };
 
-		const int64_t ntpUs = DepLibUV::GetTimeUsInt64() + DepLibUV::GetNtpOffsetUs();
+		const int64_t ntpUs = DepLibUV::GetTimeUs() + DepLibUV::GetNtpOffsetUs();
 
 		REQUIRE(ntpUs / 1000000 > Jan2026NtpSec);
 	}

@@ -18,7 +18,7 @@ namespace mocks
 	private:
 		explicit MockBackoffTimerHandle(
 		  BackoffTimerHandleOptions options,
-		  std::function<int64_t()> getTimeMsInt64,
+		  std::function<int64_t()> getTimeMs,
 		  std::function<void()> onDelete);
 
 	public:
@@ -40,7 +40,7 @@ namespace mocks
 			// NOTE: Reset the expiration count, just like the real BackoffTimerHandle
 			// does, so that the backoff starts over from the base timeout.
 			this->expirationCount = 0;
-			this->expiresAtMs     = this->getTimeMsInt64() + ComputeNextTimeoutMs();
+			this->expiresAtMs     = this->getTimeMs() + ComputeNextTimeoutMs();
 		}
 
 		void Stop() override
@@ -91,7 +91,7 @@ namespace mocks
 
 		bool EvaluateHasExpired()
 		{
-			if (this->getTimeMsInt64() >= this->expiresAtMs)
+			if (this->getTimeMs() >= this->expiresAtMs)
 			{
 				TriggerExpire();
 
@@ -147,7 +147,7 @@ namespace mocks
 		BackoffAlgorithm backoffAlgorithm;
 		std::optional<int64_t> maxBackoffTimeoutMs;
 		std::optional<size_t> maxRestarts;
-		std::function<int64_t()> getTimeMsInt64;
+		std::function<int64_t()> getTimeMs;
 		const std::function<void()> onDelete;
 		// Others.
 		bool running{ false };

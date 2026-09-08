@@ -174,7 +174,7 @@ namespace RTC
 
 		if (!this->ignorePaddingOnlyPackets || packet->GetPayloadLength() > 0)
 		{
-			this->rate.Update(packet->GetLength(), this->shared->GetTimeMsInt64());
+			this->rate.Update(packet->GetLength(), this->shared->GetTimeMs());
 		}
 	}
 } // namespace RTC
