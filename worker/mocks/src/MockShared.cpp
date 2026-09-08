@@ -39,10 +39,10 @@ namespace mocks
 		  label,
 		  // NOTE: The timer mocks take a milliseconds callback, being that the
 		  // resolution of the libuv handles they mimic.
-		  /*getTimeMs*/
-		  [getTimeUsInt64 = this->getTimeUsInt64]()
+		  /*getTimeMsInt64*/
+		  [getTimeUsInt64 = this->getTimeUsInt64]() -> int64_t
 		  {
-			  return static_cast<uint64_t>(getTimeUsInt64() / 1000);
+			  return getTimeUsInt64() / 1000;
 		  },
 		  /*onDelete*/
 		  [this, label]()
@@ -74,10 +74,10 @@ namespace mocks
 		  options,
 		  // NOTE: The timer mocks take a milliseconds callback, being that the
 		  // resolution of the libuv handles they mimic.
-		  /*getTimeMs*/
-		  [getTimeUsInt64 = this->getTimeUsInt64]()
+		  /*getTimeMsInt64*/
+		  [getTimeUsInt64 = this->getTimeUsInt64]() -> int64_t
 		  {
-			  return static_cast<uint64_t>(getTimeUsInt64() / 1000);
+			  return getTimeUsInt64() / 1000;
 		  },
 		  /*onDelete*/
 		  [this, label]()

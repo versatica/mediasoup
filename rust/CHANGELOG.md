@@ -5,6 +5,7 @@
 - Worker: New `RateCalculator` ([PR #1899](https://github.com/versatica/mediasoup/pull/1899)).
 - Worker: Fix transport-cc arrival time precision by working in microseconds ([PR #1914](https://github.com/versatica/mediasoup/pull/1914)).
 - Worker: Use real receive time of packets ([PR #1917](https://github.com/versatica/mediasoup/pull/1917)).
+- Worker: Use `int64_t` for time everywhere ([PR #1918](https://github.com/versatica/mediasoup/pull/1918)).
 
 ### 0.27.0
 

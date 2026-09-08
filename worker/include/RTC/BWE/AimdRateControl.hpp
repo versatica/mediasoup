@@ -114,7 +114,7 @@ namespace RTC
 			 */
 			void SetMinBitrate(int64_t minBitrate);
 
-			void SetRtt(int64_t rttUs);
+			void SetRttUs(int64_t rttUs);
 
 			void SetInApplicationLimitedRegion(bool inAlr);
 

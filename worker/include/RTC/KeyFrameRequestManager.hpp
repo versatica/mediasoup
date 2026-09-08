@@ -64,7 +64,7 @@ namespace RTC
 		};
 
 	public:
-		KeyFrameRequestDelayer(Listener* listener, SharedInterface* shared, uint32_t ssrc, uint32_t delay);
+		KeyFrameRequestDelayer(Listener* listener, SharedInterface* shared, uint32_t ssrc, int64_t delayMs);
 		~KeyFrameRequestDelayer() override;
 
 		uint32_t GetSsrc() const
@@ -106,7 +106,7 @@ namespace RTC
 
 	public:
 		explicit KeyFrameRequestManager(
-		  Listener* listener, SharedInterface* shared, uint32_t keyFrameRequestDelay);
+		  Listener* listener, SharedInterface* shared, int64_t keyFrameRequestDelayMs);
 		~KeyFrameRequestManager() override;
 
 		void KeyFrameNeeded(uint32_t ssrc);
@@ -124,7 +124,7 @@ namespace RTC
 	private:
 		Listener* listener{ nullptr };
 		SharedInterface* shared{ nullptr };
-		uint32_t keyFrameRequestDelay{ 0u }; // 0 means disabled.
+		int64_t keyFrameRequestDelayMs{ 0 }; // 0 means disabled.
 		ankerl::unordered_dense::map<uint32_t, PendingKeyFrameInfo*> mapSsrcPendingKeyFrameInfo;
 		ankerl::unordered_dense::map<uint32_t, KeyFrameRequestDelayer*> mapSsrcKeyFrameRequestDelayer;
 	};

@@ -46,7 +46,7 @@ namespace RTC
 		// Passed by argument.
 		uint16_t maxEntries{ 1u };
 		int8_t threshold{ -80 };
-		uint16_t interval{ 1000u };
+		int64_t intervalMs{ 1000 };
 		// Allocated by this.
 		TimerHandleInterface* periodicTimer{ nullptr };
 		// Others.

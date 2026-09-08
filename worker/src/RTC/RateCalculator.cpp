@@ -8,14 +8,14 @@
 
 namespace RTC
 {
-	RateCalculator::RateCalculator(size_t windowSizeMs, float scale, uint16_t windowItems)
+	RateCalculator::RateCalculator(int64_t windowSizeMs, float scale, uint16_t windowItems)
 	{
 		MS_TRACE();
 
 		// Clamp the given values so every derived value is safe to use.
-		this->windowSizeMs = std::max<size_t>(windowSizeMs, 1);
+		this->windowSizeMs = std::max<int64_t>(windowSizeMs, 1);
 
-		const size_t items = std::max<size_t>(windowItems, 1);
+		const int64_t items = std::max<int64_t>(windowItems, 1);
 
 		// Item granularity, rounded up so that `items` items always suffice to cover
 		// the window.
@@ -25,12 +25,13 @@ namespace RTC
 		// higher than `items`, and it guarantees that in-window data can never
 		// overrun the ring. The window it spans overshoots windowSizeMs by less than
 		// one item, which is inherent to splitting the window into items.
-		this->buffer.resize((this->windowSizeMs + this->itemSizeMs - 1) / this->itemSizeMs);
+		this->buffer.resize(
+		  static_cast<size_t>((this->windowSizeMs + this->itemSizeMs - 1) / this->itemSizeMs));
 
 		this->rateScale = static_cast<double>(scale) / static_cast<double>(this->windowSizeMs);
 	}
 
-	void RateCalculator::Update(size_t size, uint64_t nowMs)
+	void RateCalculator::Update(size_t size, int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -47,7 +48,7 @@ namespace RTC
 		this->bytes += size;
 	}
 
-	uint32_t RateCalculator::GetRate(uint64_t nowMs)
+	uint32_t RateCalculator::GetRate(int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -97,32 +98,32 @@ namespace RTC
 	 * Returns false if `nowMs` is so far in the past that it lies outside of the
 	 * window, in which case nothing is modified.
 	 */
-	bool RateCalculator::SlideWindow(uint64_t nowMs)
+	bool RateCalculator::SlideWindow(int64_t nowMs)
 	{
 		MS_TRACE();
 
-		// Time elapsed since the newest item started. The subtraction is done in
-		// unsigned arithmetic and then reinterpreted as signed, so it is wrap safe
-		// and negative when `nowMs` lies in the past.
-		const auto elapsedMs = static_cast<int64_t>(nowMs - this->newestItemStartTimeMs);
+		// Time elapsed since the newest item started, negative when `nowMs` lies in
+		// the past.
+		const int64_t elapsedMs = nowMs - this->newestItemStartTimeMs;
 
 		// `nowMs` is older than the whole window.
-		if (elapsedMs <= -static_cast<int64_t>(this->windowSizeMs))
+		if (elapsedMs <= -this->windowSizeMs)
 		{
 			return false;
 		}
 
 		// `nowMs` belongs to the newest item, or to an already existing one still
 		// within the window, so there is nothing to expire.
-		if (std::cmp_less(elapsedMs, this->itemSizeMs))
+		if (elapsedMs < this->itemSizeMs)
 		{
 			return true;
 		}
 
-		const uint64_t steps = static_cast<uint64_t>(elapsedMs) / this->itemSizeMs;
+		// NOTE: Positive since `elapsedMs` is not lower than `itemSizeMs` here.
+		const int64_t steps = elapsedMs / this->itemSizeMs;
 
 		// A whole window elapsed since the newest item, so every item is gone.
-		if (steps >= this->buffer.size())
+		if (std::cmp_greater_equal(steps, this->buffer.size()))
 		{
 			MS_DEBUG_DEV("a whole window elapsed, resetting every item");
 
@@ -143,7 +144,7 @@ namespace RTC
 
 		// Walk the ring forward. Every item being passed holds the count of exactly
 		// buffer.size() items ago, which is now out of the window.
-		for (uint64_t i{ 0 }; i < steps; ++i)
+		for (int64_t i{ 0 }; i < steps; ++i)
 		{
 			if (++this->newestItemIndex == this->buffer.size())
 			{
@@ -173,7 +174,7 @@ namespace RTC
 
 		if (!this->ignorePaddingOnlyPackets || packet->GetPayloadLength() > 0)
 		{
-			this->rate.Update(packet->GetLength(), this->shared->GetTimeMs());
+			this->rate.Update(packet->GetLength(), this->shared->GetTimeMsInt64());
 		}
 	}
 } // namespace RTC

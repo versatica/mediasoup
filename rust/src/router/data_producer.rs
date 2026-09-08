@@ -146,7 +146,7 @@ impl<'a> TryFromFbs<'a> for DataProducerDump {
 #[allow(missing_docs)]
 pub struct DataProducerStat {
     // `type` field is present in worker, but ignored here
-    pub timestamp: u64,
+    pub timestamp: i64,
     pub label: String,
     pub protocol: String,
     pub messages_received: u64,

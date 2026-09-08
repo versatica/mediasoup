@@ -4,25 +4,26 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include <cmath> // std::log()
 
 namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t C1{ 3u };
-	static constexpr uint32_t C2{ 2u };
-	static constexpr uint32_t C3{ 0u };
-	static constexpr uint32_t N1{ 13u };
-	static constexpr uint32_t N2{ 5u };
-	static constexpr uint32_t N3{ 10u };
-	static constexpr uint32_t LongCount{ 1u };
-	static constexpr uint32_t LevelIdleTimeout{ 40u };
-	static constexpr uint64_t SpeakerIdleTimeout{ 60 * 60 * 1000 };
-	static constexpr uint32_t LongThreashold{ 4u };
-	static constexpr uint32_t MaxLevel{ 127u };
-	static constexpr uint32_t MinLevel{ 0u };
+	static constexpr uint32_t C1{ 3 };
+	static constexpr uint32_t C2{ 2 };
+	static constexpr uint32_t C3{ 0 };
+	static constexpr uint32_t N1{ 13 };
+	static constexpr uint32_t N2{ 5 };
+	static constexpr uint32_t N3{ 10 };
+	static constexpr uint32_t LongCount{ 1 };
+	static constexpr int64_t LevelIdleTimeoutMs{ 40 };
+	static constexpr int64_t SpeakerIdleTimeoutMs{ 60 * 60 * 1000 };
+	static constexpr uint32_t LongThreashold{ 4 };
+	static constexpr uint32_t MaxLevel{ 127 };
+	static constexpr uint32_t MinLevel{ 0 };
 	static constexpr uint32_t MinLevelWindowLen{ 15 * 1000 / 20 };
-	static constexpr uint32_t MediumThreshold{ 7u };
+	static constexpr uint32_t MediumThreshold{ 7 };
 	static constexpr uint32_t SubunitLengthN1{ (MaxLevel - MinLevel + N1 - 1) / N1 };
 	static constexpr uint32_t ImmediateBuffLen{ LongCount * N3 * N2 };
 	static constexpr uint32_t MediumsBuffLen{ LongCount * N3 };
@@ -71,9 +72,9 @@ namespace RTC
 		const uint32_t littleLenPerBig = littleLen / bigLen;
 		bool changed{ false };
 
-		for (uint32_t b = 0u, l = 0u; b < bigLen; ++b)
+		for (uint32_t b = 0, l = 0; b < bigLen; ++b)
 		{
-			uint8_t sum{ 0u };
+			uint8_t sum{ 0 };
 
 			for (const uint32_t lEnd = l + littleLenPerBig; l < lEnd; ++l)
 			{
@@ -98,22 +99,22 @@ namespace RTC
 	  const std::string& id,
 	  RTC::RtpObserver::Listener* listener,
 	  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options)
-	  : RTC::RtpObserver(shared, id, listener), interval(options->interval())
+	  : RTC::RtpObserver(shared, id, listener), intervalMs(options->interval())
 	{
 		MS_TRACE();
 
-		if (this->interval < 100)
+		if (this->intervalMs < 100)
 		{
-			this->interval = 100;
+			this->intervalMs = 100;
 		}
-		else if (this->interval > 5000)
+		else if (this->intervalMs > 5000)
 		{
-			this->interval = 5000;
+			this->intervalMs = 5000;
 		}
 
 		this->periodicTimer = this->shared->CreateTimer(this, "active-speaker-observer");
 
-		this->periodicTimer->Start(interval, interval);
+		this->periodicTimer->Start(this->intervalMs, this->intervalMs);
 
 		// NOTE: This may throw.
 		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
@@ -235,9 +236,9 @@ namespace RTC
 		if (it != this->mapProducerSpeakers.end())
 		{
 			auto* producerSpeaker = it->second;
-			const uint64_t now    = this->shared->GetTimeMs();
+			const int64_t nowMs   = this->shared->GetTimeMsInt64();
 
-			producerSpeaker->speaker->LevelChanged(volume, now);
+			producerSpeaker->speaker->LevelChanged(volume, nowMs);
 		}
 	}
 
@@ -266,16 +267,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const uint64_t now = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMsInt64();
 
-		if (now - this->lastLevelIdleTime >= LevelIdleTimeout)
+		if (nowMs - this->lastLevelIdleAtMs >= LevelIdleTimeoutMs)
 		{
-			if (this->lastLevelIdleTime != 0)
+			if (this->lastLevelIdleAtMs != 0)
 			{
-				TimeoutIdleLevels(now);
+				TimeoutIdleLevels(nowMs);
 			}
 
-			this->lastLevelIdleTime = now;
+			this->lastLevelIdleAtMs = nowMs;
 		}
 
 		if (!this->mapProducerSpeakers.empty() && CalculateActiveSpeaker())
@@ -342,7 +343,7 @@ namespace RTC
 
 				speaker->EvalActivityScores();
 
-				for (uint8_t interval = 0u; interval < ActiveSpeakerObserver::RelativeSpeachActivitiesLen;
+				for (uint8_t interval = 0; interval < ActiveSpeakerObserver::RelativeSpeachActivitiesLen;
 				     ++interval)
 				{
 					this->relativeSpeachActivities[interval] = std::log(
@@ -371,7 +372,7 @@ namespace RTC
 		return false;
 	}
 
-	void ActiveSpeakerObserver::TimeoutIdleLevels(uint64_t now)
+	void ActiveSpeakerObserver::TimeoutIdleLevels(int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -380,15 +381,15 @@ namespace RTC
 			auto* producerSpeaker = kv.second;
 			auto* speaker         = producerSpeaker->speaker;
 			const auto& id        = producerSpeaker->producer->id;
-			const uint64_t idle   = now - speaker->lastLevelChangeTime;
+			const int64_t idleMs  = nowMs - speaker->lastLevelChangeAtMs;
 
-			if (SpeakerIdleTimeout < idle && (this->dominantId.empty() || id != this->dominantId))
+			if (SpeakerIdleTimeoutMs < idleMs && (this->dominantId.empty() || id != this->dominantId))
 			{
 				speaker->paused = true;
 			}
-			else if (LevelIdleTimeout < idle)
+			else if (LevelIdleTimeoutMs < idleMs)
 			{
-				speaker->LevelTimedOut(now);
+				speaker->LevelTimedOut(nowMs);
 			}
 		}
 	}
@@ -412,7 +413,7 @@ namespace RTC
 	  : immediateActivityScore(MinActivityScore),
 	    mediumActivityScore(MinActivityScore),
 	    longActivityScore(MinActivityScore),
-	    lastLevelChangeTime(shared->GetTimeMs()),
+	    lastLevelChangeAtMs(shared->GetTimeMsInt64()),
 	    minLevel(MinLevel),
 	    nextMinLevel(MinLevel),
 	    immediates(ImmediateBuffLen, 0),
@@ -449,28 +450,39 @@ namespace RTC
 
 		switch (interval)
 		{
-			case 0u:
+			case 0:
+			{
 				return this->immediateActivityScore;
-			case 1u:
+			}
+
+			case 1:
+			{
 				return this->mediumActivityScore;
-			case 2u:
+			}
+
+			case 2:
+			{
 				return this->longActivityScore;
+			}
+
 			default:
+			{
 				MS_ABORT("interval is invalid");
+			}
 		}
 
 		return 0;
 	}
 
-	void ActiveSpeakerObserver::Speaker::LevelChanged(uint32_t level, uint64_t now)
+	void ActiveSpeakerObserver::Speaker::LevelChanged(uint32_t level, int64_t nowMs)
 	{
 		MS_TRACE();
 
-		if (this->lastLevelChangeTime <= now)
+		if (this->lastLevelChangeAtMs <= nowMs)
 		{
-			const uint64_t elapsed = now - this->lastLevelChangeTime;
+			const int64_t elapsedMs = nowMs - this->lastLevelChangeAtMs;
 
-			this->lastLevelChangeTime = now;
+			this->lastLevelChangeAtMs = nowMs;
 
 			int8_t b{ 0 };
 
@@ -491,9 +503,9 @@ namespace RTC
 			// Producer is paused, using a different packetization time or using DTX
 			// we need to update more than one sample when receiving an audio packet.
 			const uint32_t intervalsUpdated =
-			  std::min(std::max(static_cast<uint32_t>(elapsed / 20), 1U), LevelsBuffLen);
+			  std::min(std::max(static_cast<uint32_t>(elapsedMs / 20), uint32_t{ 1 }), LevelsBuffLen);
 
-			for (uint32_t i{ 0u }; i < intervalsUpdated; ++i)
+			for (uint32_t i{ 0 }; i < intervalsUpdated; ++i)
 			{
 				this->levels[this->nextLevelIndex] = b;
 				this->nextLevelIndex               = (this->nextLevelIndex + 1) % LevelsBuffLen;
@@ -503,11 +515,11 @@ namespace RTC
 		}
 	}
 
-	void ActiveSpeakerObserver::Speaker::LevelTimedOut(uint64_t now)
+	void ActiveSpeakerObserver::Speaker::LevelTimedOut(int64_t nowMs)
 	{
 		MS_TRACE();
 
-		LevelChanged(MinLevel, now);
+		LevelChanged(MinLevel, nowMs);
 	}
 
 	bool ActiveSpeakerObserver::Speaker::ComputeImmediates()

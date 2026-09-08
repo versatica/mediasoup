@@ -205,7 +205,7 @@ namespace
 			rtpStream->ReceivePacket(packet, shared.GetTimeUsInt64());
 		}
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
 
 		// bitrate (bps) = totalBytes * 8000 / windowSizeMs.
 		// windowSizeMs for RtpStreamRecv is 2500.
@@ -1231,7 +1231,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
 
 		// First call claims bitrate.
 		auto usedBitrate = manager->IncreaseLayer(
@@ -1262,7 +1262,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
 
 		// First iteration: claim layer 0.
 		manager->IncreaseLayer(
@@ -1299,9 +1299,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 100);
 
-		auto nowMs    = DepLibUV::GetTimeMs();
-		auto bitrate0 = rtpStream0->GetBitrate(nowMs);
-		auto bitrate1 = rtpStream1->GetBitrate(nowMs);
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
+		auto bitrate0       = rtpStream0->GetBitrate(nowMs);
+		auto bitrate1       = rtpStream1->GetBitrate(nowMs);
 
 		REQUIRE(bitrate1 > bitrate0);
 

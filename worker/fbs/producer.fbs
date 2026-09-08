@@ -93,7 +93,7 @@ table SrTraceInfo {
 
 table TraceNotification {
     type: TraceEventType;
-    timestamp: uint64;
+    timestamp: int64;
     direction: FBS.Common.TraceDirection;
     info: TraceInfo;
 }

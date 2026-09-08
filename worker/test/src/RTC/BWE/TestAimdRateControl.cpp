@@ -38,7 +38,7 @@ SCENARIO("BWE AimdRateControl", "[bwe][aimdratecontrol]")
 		RTC::BWE::AimdRateControl aimdRateControl;
 
 		aimdRateControl.SetEstimate(60000, InitialTimeUs);
-		aimdRateControl.SetRtt(100 * 1000);
+		aimdRateControl.SetRttUs(100 * 1000);
 
 		REQUIRE(aimdRateControl.GetNearMaxIncreaseRateBpsPerSecond() == 5000);
 	}

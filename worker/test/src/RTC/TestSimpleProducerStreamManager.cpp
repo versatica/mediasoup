@@ -186,7 +186,7 @@ namespace
 			rtpStream->ReceivePacket(packet, shared.GetTimeUsInt64());
 		}
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
 
 		// bitrate (bps) = totalBytes * 8000 / windowSizeMs.
 		// windowSizeMs for RtpStreamRecv is 2500.
@@ -406,9 +406,9 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		auto nowMs        = DepLibUV::GetTimeMs();
-		auto steamBitrate = rtpStream->GetBitrate(nowMs);
-		auto usedBitrate  = manager->IncreaseLayer(
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
+		auto steamBitrate   = rtpStream->GetBitrate(nowMs);
+		auto usedBitrate    = manager->IncreaseLayer(
 		  /*bitrate*/ steamBitrate + 1u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate == steamBitrate);
@@ -427,7 +427,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		auto nowMs                      = DepLibUV::GetTimeMs();
+		const int64_t nowMs             = DepLibUV::GetTimeMsInt64();
 		const auto streamBitrate        = rtpStream->GetBitrate(nowMs);
 		const uint32_t availableBitrate = streamBitrate - 1;
 		auto usedBitrate                = manager->IncreaseLayer(
@@ -449,7 +449,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
 
 		// First call claims bitrate.
 		auto usedBitrate = manager->IncreaseLayer(
@@ -477,7 +477,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
 
 		// First iteration: claim bitrate and apply.
 		manager->IncreaseLayer(
@@ -504,7 +504,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		auto nowMs          = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
 		auto steamBitrate   = rtpStream->GetBitrate(nowMs);
 		auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
 
@@ -525,7 +525,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		auto nowMs          = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMsInt64();
 		auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
 
 		REQUIRE(desiredBitrate == 0u);

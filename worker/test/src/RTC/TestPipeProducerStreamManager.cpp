@@ -454,7 +454,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		manager->SetExternallyManagedBitrate();
 
-		const auto used = manager->IncreaseLayer(1000000u, false, 0.0f, DepLibUV::GetTimeMs());
+		const auto used = manager->IncreaseLayer(1000000u, false, 0.0f, DepLibUV::GetTimeMsInt64());
 
 		REQUIRE(used == 0u);
 	}
@@ -466,6 +466,6 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		manager->SetExternallyManagedBitrate();
 
-		REQUIRE(manager->GetDesiredBitrate(DepLibUV::GetTimeMs()) == 0u);
+		REQUIRE(manager->GetDesiredBitrate(DepLibUV::GetTimeMsInt64()) == 0u);
 	}
 }

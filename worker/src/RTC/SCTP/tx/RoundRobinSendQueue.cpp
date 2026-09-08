@@ -60,11 +60,10 @@ namespace RTC
 				.maxRetransmissions = sendMessageOptions.maxRetransmissions.has_value()
 				                        ? sendMessageOptions.maxRetransmissions.value()
 				                        : Types::MaxRetransmitsNoLimit,
-				.expiresAtUs =
-				  sendMessageOptions.lifetimeMs.has_value()
-				    ? nowUs + static_cast<int64_t>(sendMessageOptions.lifetimeMs.value() * 1000) + 1
-				    : Types::ExpiresAtUsInfinite,
-				.lifecycleId = sendMessageOptions.lifecycleId,
+				.expiresAtUs        = sendMessageOptions.lifetimeMs.has_value()
+				                        ? nowUs + (sendMessageOptions.lifetimeMs.value() * 1000) + 1
+				                        : Types::ExpiresAtUsInfinite,
+				.lifecycleId        = sendMessageOptions.lifecycleId,
 			};
 
 			const uint16_t streamId = message.GetStreamId();

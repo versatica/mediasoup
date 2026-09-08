@@ -252,7 +252,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->rateControl.SetRtt(avgRttUs);
+			this->rateControl.SetRttUs(avgRttUs);
 		}
 
 		void DelayBasedBwe::SetStartBitrate(int64_t startBitrate)

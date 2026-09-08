@@ -518,7 +518,7 @@ namespace Utils
 		/**
 		 * Convert microseconds into an NTP timestamp.
 		 */
-		static Time::Ntp TimeUs2Ntp(int64_t us)
+		static Time::Ntp TimeUs2Ntp(int64_t timeUs)
 		{
 			Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
@@ -526,9 +526,9 @@ namespace Utils
 			// every 2^32 seconds since Jan 1, 1900, being Feb 7, 2036 the next time it
 			// happens. That is the NTP era and receivers deal with it by doing modular
 			// arithmetic, so there is nothing to protect against here.
-			ntp.seconds = static_cast<uint32_t>(us / 1000000);
+			ntp.seconds = static_cast<uint32_t>(timeUs / 1000000);
 			ntp.fractions =
-			  static_cast<uint32_t>((static_cast<double>(us % 1000000) / 1000000) * NtpFractionalUnit);
+			  static_cast<uint32_t>((static_cast<double>(timeUs % 1000000) / 1000000) * NtpFractionalUnit);
 
 			return ntp;
 		}
@@ -549,7 +549,7 @@ namespace Utils
 		 * `abs-send-time` RTP header extension, whose resolution is hence 1/262144
 		 * of a second.
 		 */
-		static uint32_t TimeUsToAbsSendTime(int64_t us)
+		static uint32_t TimeUsToAbsSendTime(int64_t timeUs)
 		{
 			// Period after which the 24 bits of the field wrap around.
 			constexpr int64_t WrapPeriodUs{ 64 * 1000000 };
@@ -557,7 +557,7 @@ namespace Utils
 			// NOTE: Bring the given time into the period first. This keeps the shift
 			// below from overflowing, and makes a negative time yield the same value
 			// as the positive time it's congruent with rather than a meaningless one.
-			const int64_t wrappedUs = ((us % WrapPeriodUs) + WrapPeriodUs) % WrapPeriodUs;
+			const int64_t wrappedUs = ((timeUs % WrapPeriodUs) + WrapPeriodUs) % WrapPeriodUs;
 
 			return static_cast<uint32_t>(((wrappedUs << 18) + 500000) / 1000000) & 0x00FFFFFF;
 		}
@@ -572,18 +572,18 @@ namespace Utils
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 		 */
-		static std::optional<int64_t> TimeUs2Q32x32(int64_t us)
+		static std::optional<int64_t> TimeUs2Q32x32(int64_t timeUs)
 		{
 			// The seconds of the format are 32 bits wide, so from here on it does not fit.
 			static constexpr int64_t OutOfRangeUs{ (1LL << 31) * 1000000 };
 
-			if (us >= OutOfRangeUs || us <= -OutOfRangeUs)
+			if (timeUs >= OutOfRangeUs || timeUs <= -OutOfRangeUs)
 			{
 				return std::nullopt;
 			}
 
-			return static_cast<int64_t>(
-			  std::round(static_cast<double>(us) * (static_cast<double>(NtpFractionalUnit) / 1000000)));
+			return static_cast<int64_t>(std::round(
+			  static_cast<double>(timeUs) * (static_cast<double>(NtpFractionalUnit) / 1000000)));
 		}
 
 		/**

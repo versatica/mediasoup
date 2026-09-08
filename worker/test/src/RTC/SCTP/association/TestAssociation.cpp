@@ -218,7 +218,7 @@ namespace
 	 * Advances the simulated clock of both associations by `durationMs` and fires
 	 * any timer that has expired.
 	 */
-	void advanceTimeMs(AssociationUnderTest& a, AssociationUnderTest& z, uint64_t durationMs)
+	void advanceTimeMs(AssociationUnderTest& a, AssociationUnderTest& z, int64_t durationMs)
 	{
 		a.AdvanceTimeMs(durationMs);
 		z.AdvanceTimeMs(durationMs);
@@ -1320,7 +1320,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto maxRetransmissions = a.sctpOptions.maxRetransmissions.value();
 
-		uint64_t timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs;
+		int64_t timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs;
 
 		for (size_t i = 0; i < maxRetransmissions; ++i)
 		{
@@ -1369,7 +1369,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto maxRetransmissions = a.sctpOptions.maxRetransmissions.value();
 
-		uint64_t timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs;
+		int64_t timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs;
 
 		for (size_t i = 0; i < maxRetransmissions; ++i)
 		{

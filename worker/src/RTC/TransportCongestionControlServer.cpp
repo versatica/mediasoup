@@ -9,8 +9,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t TransportCcFeedbackSendIntervalMs{ 100u };
-	static constexpr uint64_t LimitationRembIntervalMs{ 1500u };
+	static constexpr int64_t TransportCcFeedbackSendIntervalMs{ 100 };
+	static constexpr int64_t LimitationRembIntervalMs{ 1500 };
 	static constexpr int64_t PacketArrivalTimestampWindowUs{ 500 * 1000 };
 	static constexpr uint8_t UnlimitedRembNumPackets{ 4u };
 	static constexpr size_t PacketLossHistogramLength{ 24 };
@@ -284,7 +284,7 @@ namespace RTC
 			// This is to ensure that we send N REMB packets with bitrate 0 (unlimited).
 			this->unlimitedRembCounter = UnlimitedRembNumPackets;
 
-			auto nowMs = this->shared->GetTimeMs();
+			const int64_t nowMs = this->shared->GetTimeMsInt64();
 
 			MaySendLimitationRembFeedback(nowMs);
 		}
@@ -353,7 +353,7 @@ namespace RTC
 		}
 	}
 
-	void TransportCongestionControlServer::MaySendLimitationRembFeedback(uint64_t nowMs)
+	void TransportCongestionControlServer::MaySendLimitationRembFeedback(int64_t nowMs)
 	{
 		MS_TRACE();
 

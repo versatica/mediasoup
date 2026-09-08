@@ -165,7 +165,7 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "  selected tuple:");
 				this->selectedTuple->Dump(indentation + 2);
 			}
-			MS_DUMP_CLEAN(indentation, "  consent timeout (ms): %" PRIu16, this->consentTimeoutMs);
+			MS_DUMP_CLEAN(indentation, "  consent timeout (ms): %" PRIi64, this->consentTimeoutMs);
 			MS_DUMP_CLEAN(indentation, "  remote nomination: %" PRIu32, this->remoteNomination);
 			MS_DUMP_CLEAN(indentation, "</IceServer>");
 		}

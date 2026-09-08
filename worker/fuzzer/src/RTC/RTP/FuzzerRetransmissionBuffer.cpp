@@ -6,8 +6,8 @@
 
 void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 {
-	const uint16_t maxItems{ 2500u };
-	const uint32_t maxRetransmissionDelayMs{ 2000u };
+	const uint16_t maxItems{ 2500 };
+	const int64_t maxRetransmissionDelayMs{ 2000 };
 	const uint32_t clockRate{ 90000 };
 
 	// Trick to initialize our stuff just once (use static).
@@ -25,9 +25,9 @@ void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 
 	// Create base RtpPacket instance.
 	auto* packet = RTC::RTP::Packet::Parse(buffer, 12);
-	size_t offset{ 0u };
+	size_t offset{ 0 };
 
-	while (len >= 4u)
+	while (len >= 4)
 	{
 		const RTC::RTP::SharedPacket sharedPacket;
 
@@ -37,7 +37,7 @@ void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 
 		retransmissionBuffer.Insert(packet, sharedPacket);
 
-		len -= 4u;
+		len -= 4;
 		offset += 4;
 	}
 

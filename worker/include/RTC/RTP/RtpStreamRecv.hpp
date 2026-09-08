@@ -26,12 +26,12 @@ namespace RTC
 			 * - Same value libwebrtc uses in `AbsoluteCaptureTimeInterpolator`, which
 			 *   pairs with senders emitting the extension at least once per second.
 			 */
-			static constexpr uint64_t MaxAbsCaptureTimeInterpolationMs{ 5000 };
+			static constexpr int64_t MaxAbsCaptureTimeInterpolationMs{ 5000 };
 			/**
 			 * How far the RTP timestamp of a packet may be from the last received RTCP
 			 * Sender Report for its capture instant to still be interpolated from it (ms).
 			 */
-			static constexpr uint64_t MaxSenderReportInterpolationMs{ 10000 };
+			static constexpr int64_t MaxSenderReportInterpolationMs{ 10000 };
 
 		public:
 			class Listener : public RTP::RtpStream::Listener
@@ -51,18 +51,18 @@ namespace RTC
 			{
 			public:
 				TransmissionCounter(
-				  SharedInterface* shared, uint8_t spatialLayers, uint8_t temporalLayers, size_t windowSize);
+				  SharedInterface* shared, uint8_t spatialLayers, uint8_t temporalLayers, int64_t windowSizeMs);
 
 			public:
 				void Update(const RTP::Packet* packet);
 
-				uint32_t GetBitrate(uint64_t nowMs);
+				uint32_t GetBitrate(int64_t nowMs);
 
-				uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+				uint32_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 
-				uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer);
+				uint32_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer);
 
-				uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+				uint32_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 
 				size_t GetPacketCount() const;
 
@@ -128,7 +128,7 @@ namespace RTC
 			  RTP::RtpStreamRecv::Listener* listener,
 			  SharedInterface* shared,
 			  RTP::RtpStream::Params& params,
-			  uint32_t sendNackDelayMs,
+			  int64_t sendNackDelayMs,
 			  bool useRtpInactivityCheck);
 
 			~RtpStreamRecv() override;
@@ -231,22 +231,22 @@ namespace RTC
 
 			void Resume() override;
 
-			uint32_t GetBitrate(uint64_t nowMs) override
+			uint32_t GetBitrate(int64_t nowMs) override
 			{
 				return this->transmissionCounter.GetBitrate(nowMs);
 			}
 
-			uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+			uint32_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
 			{
 				return this->transmissionCounter.GetBitrate(nowMs, spatialLayer, temporalLayer);
 			}
 
-			uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer) override
+			uint32_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) override
 			{
 				return this->transmissionCounter.GetSpatialLayerBitrate(nowMs, spatialLayer);
 			}
 
-			uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+			uint32_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
 			{
 				return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
 			}
@@ -289,7 +289,7 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			uint32_t sendNackDelayMs{ 0 };
+			int64_t sendNackDelayMs{ 0 };
 			bool useRtpInactivityCheck{ false };
 			// Others.
 			// Packets expected at last interval.

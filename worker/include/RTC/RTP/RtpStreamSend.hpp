@@ -16,11 +16,11 @@ namespace RTC
 			/**
 			 * Maximum retransmission buffer size for video (ms).
 			 */
-			static constexpr uint32_t MaxRetransmissionDelayForVideoMs{ 2000 };
+			static constexpr int64_t MaxRetransmissionDelayForVideoMs{ 2000 };
 			/**
 			 * Maximum retransmission buffer size for audio (ms).
 			 */
-			static constexpr uint32_t MaxRetransmissionDelayForAudioMs{ 1000 };
+			static constexpr int64_t MaxRetransmissionDelayForAudioMs{ 1000 };
 			/**
 			 * How old the last packet sent may be for a Sender Report to still be generated
 			 * (ms).
@@ -30,7 +30,7 @@ namespace RTC
 			 *   with a 120 ms ptime and screen sharing at 1 fps, so that it only triggers on
 			 *   a stream that has really stopped sending.
 			 */
-			static constexpr uint32_t MaxSenderReportReferenceAgeMs{ 2000 };
+			static constexpr int64_t MaxSenderReportReferenceAgeMs{ 2000 };
 
 		public:
 			enum class ReceivePacketResult : uint8_t
@@ -102,16 +102,16 @@ namespace RTC
 
 			void Resume() override;
 
-			uint32_t GetBitrate(uint64_t nowMs) override
+			uint32_t GetBitrate(int64_t nowMs) override
 			{
 				return this->transmissionCounter.GetBitrate(nowMs);
 			}
 
-			uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
+			uint32_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
-			uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer) override;
+			uint32_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) override;
 
-			uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
+			uint32_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 		private:
 			void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);

@@ -73,8 +73,7 @@ namespace RTC
 			{
 				// NOTE: The timer takes milliseconds, so the RTO is truncated here.
 				this->intervalTimer->SetBaseTimeoutMs(
-				  this->intervalDurationMs +
-				  static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000));
+				  this->intervalDurationMs + (this->tcbContext->GetCurrentRtoUs() / 1000));
 			}
 			else
 			{
@@ -181,7 +180,7 @@ namespace RTC
 			this->tcbContext->ClearTxErrorCounter();
 		}
 
-		void HeartbeatHandler::OnIntervalTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void HeartbeatHandler::OnIntervalTimer(int64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -210,8 +209,7 @@ namespace RTC
 			}
 
 			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-			this->timeoutTimer->SetBaseTimeoutMs(
-			  static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000));
+			this->timeoutTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoUs() / 1000);
 			this->timeoutTimer->Start();
 
 			alignas(8) uint8_t info[HeartbeatInfoLength];
@@ -236,7 +234,7 @@ namespace RTC
 			this->tcbContext->SendPacket(packet.get());
 		}
 
-		void HeartbeatHandler::OnTimeoutTimer(uint64_t& /*baseTimeoutMs*/, bool& stop)
+		void HeartbeatHandler::OnTimeoutTimer(int64_t& /*baseTimeoutMs*/, bool& stop)
 		{
 			MS_TRACE();
 
@@ -270,7 +268,7 @@ namespace RTC
 		}
 
 		void HeartbeatHandler::OnBackoffTimer(
-		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

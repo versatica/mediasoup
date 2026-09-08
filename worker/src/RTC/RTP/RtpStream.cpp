@@ -27,7 +27,7 @@ namespace RTC
 		    shared(shared),
 		    params(params),
 		    score(initialScore),
-		    activeSinceMs(this->shared->GetTimeMs())
+		    activeSinceMs(this->shared->GetTimeMsInt64())
 		{
 			MS_TRACE();
 		}
@@ -64,7 +64,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			const int64_t nowMs  = this->shared->GetTimeMsInt64();
 			const auto mediaKind = this->params.mimeType.type == RTC::RtpCodecMimeType::Type::AUDIO
 			                         ? FBS::RtpParameters::MediaKind::AUDIO
 			                         : FBS::RtpParameters::MediaKind::VIDEO;
@@ -89,7 +89,7 @@ namespace RTC
 			  this->params.rtxSsrc ? flatbuffers::Optional<uint32_t>(this->params.rtxSsrc)
 				                     : flatbuffers::nullopt,
 			  this->rtxStream ? this->rtxStream->GetPacketsDiscarded() : 0,
-			  this->rtt > 0.0f ? this->rtt : 0,
+			  this->rttMs > 0.0f ? this->rttMs : 0,
 			  this->score);
 
 			return FBS::RtpStream::CreateStats(
@@ -182,7 +182,7 @@ namespace RTC
 				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
 				if (previousScore == 0u)
 				{
-					this->activeSinceMs = this->shared->GetTimeMs();
+					this->activeSinceMs = this->shared->GetTimeMsInt64();
 				}
 
 				// Notify the listener.
@@ -340,7 +340,7 @@ namespace RTC
 				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
 				if (previousScore == 0u)
 				{
-					this->activeSinceMs = this->shared->GetTimeMs();
+					this->activeSinceMs = this->shared->GetTimeMsInt64();
 				}
 
 				this->listener->OnRtpStreamScore(this, this->score, previousScore);

@@ -44,7 +44,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 	public:
 		void OnBackoffTimer(
-		  BackoffTimerHandleInterface* /*backoffTimer*/, uint64_t& /*baseTimeoutMs*/, bool& /*stop*/) override
+		  BackoffTimerHandleInterface* /*backoffTimer*/, int64_t& /*baseTimeoutMs*/, bool& /*stop*/) override
 		{
 		}
 	};

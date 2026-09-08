@@ -91,7 +91,7 @@ namespace RTC
 	}
 
 	uint32_t SimpleProducerStreamManager::IncreaseLayer(
-	  uint32_t bitrate, bool /*considerLoss*/, float /*lossPercentage*/, uint64_t nowMs)
+	  uint32_t bitrate, bool /*considerLoss*/, float /*lossPercentage*/, int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -132,7 +132,7 @@ namespace RTC
 		}
 	}
 
-	void SimpleProducerStreamManager::ApplyLayers(uint64_t /*rtpStreamActiveMs*/)
+	void SimpleProducerStreamManager::ApplyLayers(int64_t /*rtpStreamActiveMs*/)
 	{
 		MS_TRACE();
 
@@ -144,7 +144,7 @@ namespace RTC
 		// Simple does not play the BWE game (even if video kind).
 	}
 
-	uint32_t SimpleProducerStreamManager::GetDesiredBitrate(uint64_t nowMs) const
+	uint32_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 

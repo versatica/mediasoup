@@ -31,16 +31,6 @@ public:
 	BackoffTimerHandleInterface* CreateBackoffTimer(
 	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) override;
 
-	uint64_t GetTimeMs() override
-	{
-		return DepLibUV::GetTimeMs();
-	}
-
-	uint64_t GetTimeUs() override
-	{
-		return DepLibUV::GetTimeUs();
-	}
-
 	int64_t GetTimeMsInt64() override
 	{
 		return DepLibUV::GetTimeMsInt64();

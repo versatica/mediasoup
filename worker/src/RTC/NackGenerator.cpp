@@ -8,20 +8,20 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr size_t MaxPacketAge{ 10000u };
-	static constexpr size_t MaxNackPackets{ 1000u };
-	static constexpr uint32_t DefaultRtt{ 100u };
-	static constexpr uint8_t MaxNackRetries{ 10u };
-	static constexpr uint64_t TimerInterval{ 40u };
+	static constexpr size_t MaxPacketAge{ 10000 };
+	static constexpr size_t MaxNackPackets{ 1000 };
+	static constexpr int64_t DefaultRttMs{ 100 };
+	static constexpr uint8_t MaxNackRetries{ 10 };
+	static constexpr int64_t TimerIntervalMs{ 40 };
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener, SharedInterface* shared, uint32_t sendNackDelayMs)
+	NackGenerator::NackGenerator(Listener* listener, SharedInterface* shared, int64_t sendNackDelayMs)
 	  : listener(listener),
 	    shared(shared),
 	    sendNackDelayMs(sendNackDelayMs),
 	    timer(shared->CreateTimer(this, "nack-generator")),
-	    rtt(DefaultRtt)
+	    rttMs(DefaultRttMs)
 	{
 		MS_TRACE();
 	}
@@ -211,7 +211,7 @@ namespace RTC
 			this->nackList.emplace(
 			  seq,
 			  NackInfo{
-			    this->shared->GetTimeMs(),
+			    this->shared->GetTimeMsInt64(),
 			    seq,
 			    seq,
 			  });
@@ -247,7 +247,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const uint64_t nowMs = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMsInt64();
 		std::vector<uint16_t> nackBatch;
 
 		auto it = this->nackList.begin();
@@ -293,7 +293,7 @@ namespace RTC
 			if (
 			  filter == NackFilter::TIME &&
 			  (nackInfo.sentAtMs == 0 ||
-				 nowMs - nackInfo.sentAtMs >= (this->rtt > 0u ? this->rtt : DefaultRtt)))
+				 nowMs - nackInfo.sentAtMs >= (this->rttMs > 0 ? this->rttMs : DefaultRttMs)))
 			{
 				nackBatch.emplace_back(seq);
 				nackInfo.retries++;
@@ -363,7 +363,7 @@ namespace RTC
 		}
 		else
 		{
-			this->timer->Start(TimerInterval);
+			this->timer->Start(TimerIntervalMs);
 		}
 	}
 

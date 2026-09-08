@@ -399,7 +399,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMsInt64();
 
 		// Add sctpState.
 		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
@@ -1461,7 +1461,7 @@ namespace RTC
 		}
 
 		// Start the RTCP timer.
-		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+		this->rtcpTimer->Start(RTC::RTCP::MaxVideoIntervalMs / 2);
 
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
@@ -1639,7 +1639,7 @@ namespace RTC
 			.unordered          = !sctpStreamParameters.ordered,
 			.lifetimeMs         = sctpStreamParameters.ordered
 			                        ? std::nullopt
-			                        : std::optional<uint64_t>(sctpStreamParameters.maxPacketLifeTime),
+			                        : std::optional<int64_t>(sctpStreamParameters.maxPacketLifeTime),
 			.maxRetransmissions = sctpStreamParameters.ordered
 			                        ? std::nullopt
 			                        : std::optional<uint64_t>(sctpStreamParameters.maxRetransmits),
@@ -1906,7 +1906,7 @@ namespace RTC
 
 				if (this->tccClient && !this->mapConsumers.empty())
 				{
-					float rtt = 0;
+					float rttMs = 0;
 
 					// Retrieve the RTT from the first active consumer.
 					for (auto& kv : this->mapConsumers)
@@ -1915,13 +1915,13 @@ namespace RTC
 
 						if (consumer->IsActive())
 						{
-							rtt = consumer->GetRtt();
+							rttMs = consumer->GetRttMs();
 
 							break;
 						}
 					}
 
-					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, receivedAtUs);
+					this->tccClient->ReceiveRtcpReceiverReport(rr, rttMs, receivedAtUs);
 				}
 
 				break;
@@ -2415,7 +2415,7 @@ namespace RTC
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::PROBATION,
-		  this->shared->GetTimeMs(),
+		  this->shared->GetTimeMsInt64(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -2451,7 +2451,7 @@ namespace RTC
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::BWE,
-		  this->shared->GetTimeMs(),
+		  this->shared->GetTimeMsInt64(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Transport::TraceInfo::BweTraceInfo,
 		  traceInfo.Union());
@@ -3330,7 +3330,7 @@ namespace RTC
 		  packet->GetSequenceNumber(),
 		  this->transportWideCcSeq,
 		  packet->GetLength(),
-		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()));
+		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMsInt64()));
 	}
 
 	void Transport::OnTransportCongestionControlServerSendRtcpPacket(
@@ -3350,7 +3350,7 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
-			auto intervalMs = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
+			auto intervalMs = static_cast<int64_t>(RTC::RTCP::MaxVideoIntervalMs);
 
 			SendRtcp(this->shared->GetTimeUsInt64());
 

@@ -286,9 +286,9 @@ namespace RTC
 			}
 
 		private:
-			void OnT3RtxTimer(uint64_t& baseTimeoutMs, bool& stop);
+			void OnT3RtxTimer(int64_t& baseTimeoutMs, bool& stop);
 
-			void OnDelayedAckTimer(uint64_t& baseTimeoutMs, bool& stop);
+			void OnDelayedAckTimer(int64_t& baseTimeoutMs, bool& stop);
 
 			/* Pure virtual methods inherited from RetransmissionQueue::Listener. */
 		public:
@@ -299,7 +299,7 @@ namespace RTC
 			/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 		public:
 			void OnBackoffTimer(
-			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+			  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			TransmissionControlBlockContextInterface::Listener* listener;

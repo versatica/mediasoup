@@ -391,7 +391,7 @@ impl FromFbs for ConsumerType {
 pub struct ConsumerStat {
     // Common to all RtpStreams.
     // `type` field is present in worker, but ignored here
-    pub timestamp: u64,
+    pub timestamp: i64,
     pub ssrc: u32,
     pub rtx_ssrc: Option<u32>,
     pub kind: MediaKind,
@@ -483,7 +483,7 @@ pub enum ConsumerTraceEventData {
     /// RTP packet.
     Rtp {
         /// Event timestamp.
-        timestamp: u64,
+        timestamp: i64,
         /// Event direction.
         direction: TraceEventDirection,
         /// RTP packet info.
@@ -492,7 +492,7 @@ pub enum ConsumerTraceEventData {
     /// RTP video keyframe packet.
     KeyFrame {
         /// Event timestamp.
-        timestamp: u64,
+        timestamp: i64,
         /// Event direction.
         direction: TraceEventDirection,
         /// RTP packet info.
@@ -501,14 +501,14 @@ pub enum ConsumerTraceEventData {
     /// RTCP NACK packet.
     Nack {
         /// Event timestamp.
-        timestamp: u64,
+        timestamp: i64,
         /// Event direction.
         direction: TraceEventDirection,
     },
     /// RTCP PLI packet.
     Pli {
         /// Event timestamp.
-        timestamp: u64,
+        timestamp: i64,
         /// Event direction.
         direction: TraceEventDirection,
         /// SSRC info.
@@ -517,7 +517,7 @@ pub enum ConsumerTraceEventData {
     /// RTCP FIR packet.
     Fir {
         /// Event timestamp.
-        timestamp: u64,
+        timestamp: i64,
         /// Event direction.
         direction: TraceEventDirection,
         /// SSRC info.

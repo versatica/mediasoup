@@ -212,7 +212,7 @@ pub struct PipeTransportStat {
     // Common to all Transports.
     // `type` field is present in worker, but ignored here
     pub transport_id: TransportId,
-    pub timestamp: u64,
+    pub timestamp: i64,
     pub sctp_state: Option<SctpState>,
     pub bytes_received: u64,
     pub recv_bitrate: u32,

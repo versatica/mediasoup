@@ -109,55 +109,55 @@ namespace RTC
 			 * RTO calculation. The default value is an extreme maximum but can be
 			 * adapted to better match the environment.
 			 */
-			uint64_t maxRttMs{ 60000 };
+			int64_t maxRttMs{ 60000 };
 
 			/**
 			 * Initial RTO value.
 			 */
-			uint64_t initialRtoMs{ 500 };
+			int64_t initialRtoMs{ 500 };
 
 			/**
 			 * Minimum RTO value.
 			 */
-			uint64_t minRtoMs{ 400 };
+			int64_t minRtoMs{ 400 };
 
 			/**
 			 * Minimum RTO value.
 			 */
-			uint64_t maxRtoMs{ 60000 };
+			int64_t maxRtoMs{ 60000 };
 
 			/**
 			 * T1-init timeout (ms).
 			 */
-			uint64_t t1InitTimeoutMs{ 1000 };
+			int64_t t1InitTimeoutMs{ 1000 };
 
 			/**
 			 * T1-cookie timeout (ms).
 			 */
-			uint64_t t1CookieTimeoutMs{ 1000 };
+			int64_t t1CookieTimeoutMs{ 1000 };
 
 			/**
 			 * T2-shutdown timeout (ms).
 			 */
-			uint64_t t2ShutdownTimeoutMs{ 1000 };
+			int64_t t2ShutdownTimeoutMs{ 1000 };
 
 			/**
 			 * Maximum duration of the backoff timeout. If no value is given, no
 			 * limit is set.
 			 */
-			std::optional<uint64_t> timerMaxBackoffTimeoutMs{ std::nullopt };
+			std::optional<int64_t> timerMaxBackoffTimeoutMs{ std::nullopt };
 
 			/**
 			 * Hearbeat interval (on idle connections only). Set to zero to disable.
 			 */
-			uint64_t heartbeatIntervalMs{ 30000 };
+			int64_t heartbeatIntervalMs{ 30000 };
 
 			/**
 			 * The maximum time when a SACK will be sent from the arrival of an
 			 * unacknowledged packet. Whatever is smallest of RTO/2 and this will be
 			 * used.
 			 */
-			uint64_t delayedAckMaxTimeoutMs{ 200 };
+			int64_t delayedAckMaxTimeoutMs{ 200 };
 
 			/**
 			 * The minimum limit for the measured RTT variance.
@@ -174,7 +174,7 @@ namespace RTC
 			 * This is defined as "G" in the algorithm for TCP in
 			 * https://datatracker.ietf.org/doc/html/rfc6298#section-4.
 			 */
-			uint64_t minRttVarianceMs{ 220 };
+			int64_t minRttVarianceMs{ 220 };
 
 			/**
 			 * The initial congestion window size, in number of MTUs.
@@ -302,7 +302,7 @@ namespace RTC
 			 * received before the lifetime has expired. This is only available if
 			 * the peer supports Partial Reliability Extension (RFC 3758).
 			 */
-			std::optional<uint64_t> lifetimeMs{ std::nullopt };
+			std::optional<int64_t> lifetimeMs{ std::nullopt };
 
 			/**
 			 * If set, limits the number of retransmissions. This is only available

@@ -50,7 +50,7 @@ namespace RTC
 		 * @param localArrivalAtUs - Our local time at which the Sender Report arrived.
 		 * @param rttMs - RTT towards the sender, or 0 if not known yet.
 		 */
-		void AddSenderReport(int64_t remoteNtpUs, int64_t localArrivalAtUs, uint32_t rttMs);
+		void AddSenderReport(int64_t remoteNtpUs, int64_t localArrivalAtUs, int64_t rttMs);
 
 		/**
 		 * The estimated offset, or no value while less than `MinSampleCount` samples

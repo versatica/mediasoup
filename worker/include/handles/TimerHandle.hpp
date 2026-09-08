@@ -26,22 +26,22 @@ public:
 	~TimerHandle() override;
 
 public:
-	void Start(uint64_t timeout, uint64_t repeat = 0) override;
+	void Start(int64_t timeoutMs, int64_t repeatMs = 0) override;
 
 	void Stop() override;
 
 	void Restart() override;
 
-	void Restart(uint64_t timeout, uint64_t repeat = 0) override;
+	void Restart(int64_t timeoutMs, int64_t repeatMs = 0) override;
 
-	uint64_t GetTimeout() const override
+	int64_t GetTimeoutMs() const override
 	{
-		return this->timeout;
+		return this->timeoutMs;
 	}
 
-	uint64_t GetRepeat() const override
+	int64_t GetRepeatMs() const override
 	{
-		return this->repeat;
+		return this->repeatMs;
 	}
 
 	bool IsActive() const override
@@ -69,8 +69,8 @@ private:
 	uv_timer_t* uvHandle{ nullptr };
 	// Others.
 	bool closed{ false };
-	uint64_t timeout{ 0u };
-	uint64_t repeat{ 0u };
+	int64_t timeoutMs{ 0 };
+	int64_t repeatMs{ 0 };
 };
 
 #endif

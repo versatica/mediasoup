@@ -44,20 +44,10 @@ public:
 	/**
 	 * Get current time in milliseconds.
 	 */
-	virtual uint64_t GetTimeMs() = 0;
-
-	/**
-	 * Get current time in microseconds.
-	 */
-	virtual uint64_t GetTimeUs() = 0;
-
-	/**
-	 * Get current time in milliseconds in int64_t.
-	 */
 	virtual int64_t GetTimeMsInt64() = 0;
 
 	/**
-	 * Get current time in microseconds in int64_t.
+	 * Get current time in microseconds.
 	 */
 	virtual int64_t GetTimeUsInt64() = 0;
 

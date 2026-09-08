@@ -365,7 +365,7 @@ namespace RTC
 				.cwndBytes       = this->tcb->GetCwnd(),
 				// NOTE: The metric mirrors RFC 6458's `spinfo_srtt`, which is in
 				// milliseconds.
-				.srttMs         = static_cast<uint64_t>(this->tcb->GetCurrentSrttUs() / 1000),
+				.srttMs         = this->tcb->GetCurrentSrttUs() / 1000,
 				.unackDataCount = this->tcb->GetRetransmissionQueue().GetUnackedItems() +
 				                  ((this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) /
 				                   packetPayloadLength),
@@ -871,8 +871,7 @@ namespace RTC
 			this->packetSender.SendPacket(packet.get());
 
 			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-			this->t2ShutdownTimer->SetBaseTimeoutMs(
-			  static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000));
+			this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
 			this->t2ShutdownTimer->Start();
 		}
 
@@ -898,8 +897,7 @@ namespace RTC
 				SendShutdownChunk();
 
 				// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-				this->t2ShutdownTimer->SetBaseTimeoutMs(
-				  static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000));
+				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
 				this->t2ShutdownTimer->Start();
 
 				SetState(State::SHUTDOWN_SENT, "no more outstanding data");
@@ -951,8 +949,7 @@ namespace RTC
 				SendShutdownChunk();
 
 				// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-				this->t2ShutdownTimer->SetBaseTimeoutMs(
-				  static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000));
+				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
 				this->t2ShutdownTimer->Start();
 			}
 		}
@@ -2614,7 +2611,7 @@ namespace RTC
 			return true;
 		}
 
-		void Association::OnT1InitTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void Association::OnT1InitTimer(int64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -2643,7 +2640,7 @@ namespace RTC
 			AssertIsConsistent();
 		}
 
-		void Association::OnT1CookieTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void Association::OnT1CookieTimer(int64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -2672,7 +2669,7 @@ namespace RTC
 			AssertIsConsistent();
 		}
 
-		void Association::OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
+		void Association::OnT2ShutdownTimer(int64_t& baseTimeoutMs, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -2745,7 +2742,7 @@ namespace RTC
 			AssertIsConsistent();
 
 			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-			baseTimeoutMs = static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000);
+			baseTimeoutMs = this->tcb->GetCurrentRtoUs() / 1000;
 		}
 
 		template<typename... States>
@@ -3026,7 +3023,7 @@ namespace RTC
 		}
 
 		void Association::OnBackoffTimer(
-		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

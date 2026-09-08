@@ -23,19 +23,19 @@ namespace RTC
 	class RateCalculator
 	{
 	public:
-		static constexpr size_t DefaultWindowSize{ 1000 };
+		static constexpr int64_t DefaultWindowSizeMs{ 1000 };
 		static constexpr float DefaultBpsScale{ 8000.0f };
 		static constexpr uint16_t DefaultWindowItems{ 100 };
 
 	public:
 		explicit RateCalculator(
-		  size_t windowSizeMs  = DefaultWindowSize,
+		  int64_t windowSizeMs = DefaultWindowSizeMs,
 		  float scale          = DefaultBpsScale,
 		  uint16_t windowItems = DefaultWindowItems);
 
-		void Update(size_t size, uint64_t nowMs);
+		void Update(size_t size, int64_t nowMs);
 
-		uint32_t GetRate(uint64_t nowMs);
+		uint32_t GetRate(int64_t nowMs);
 
 		size_t GetBytes() const
 		{
@@ -45,13 +45,13 @@ namespace RTC
 		void Reset();
 
 	private:
-		bool SlideWindow(uint64_t nowMs);
+		bool SlideWindow(int64_t nowMs);
 
 	private:
 		// Window size (in milliseconds). Always >= 1.
-		size_t windowSizeMs{ DefaultWindowSize };
+		int64_t windowSizeMs{ DefaultWindowSizeMs };
 		// Item size (in milliseconds). Always >= 1.
-		size_t itemSizeMs{ 1 };
+		int64_t itemSizeMs{ 1 };
 		// Precomputed `scale / windowSizeMs`.
 		double rateScale{ 0.0 };
 		// Ring of items, each one holding the count of the data within it. Never
@@ -60,7 +60,7 @@ namespace RTC
 		// Index of the newest item. Always < buffer.size().
 		size_t newestItemIndex{ 0 };
 		// Time (in milliseconds) at which the newest item starts.
-		uint64_t newestItemStartTimeMs{ 0 };
+		int64_t newestItemStartTimeMs{ 0 };
 		// Sum of the count of every item.
 		size_t totalCount{ 0 };
 		// Total bytes accounted for. Not affected by Reset().
@@ -74,7 +74,7 @@ namespace RTC
 		uint32_t lastRate{ 0 };
 		// Time of the latest GetRate() call. Prevents reusing `lastRate` once time
 		// has moved on and there is data pending expiration.
-		uint64_t lastTimeMs{ 0 };
+		int64_t lastTimeMs{ 0 };
 		// Total count at the latest GetRate() call.
 		size_t lastTotalCount{ 0 };
 	};
@@ -83,7 +83,7 @@ namespace RTC
 	{
 	public:
 		explicit RtpDataCounter(
-		  SharedInterface* shared, bool ignorePaddingOnlyPackets, size_t windowSizeMs = 2500)
+		  SharedInterface* shared, bool ignorePaddingOnlyPackets, int64_t windowSizeMs = 2500)
 		  : shared(shared), ignorePaddingOnlyPackets(ignorePaddingOnlyPackets), rate(windowSizeMs)
 		{
 		}
@@ -91,7 +91,7 @@ namespace RTC
 	public:
 		void Update(const RTC::RTP::Packet* packet);
 
-		uint32_t GetBitrate(uint64_t nowMs)
+		uint32_t GetBitrate(int64_t nowMs)
 		{
 			return this->rate.GetRate(nowMs);
 		}

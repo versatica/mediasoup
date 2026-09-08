@@ -36,16 +36,6 @@ namespace mocks
 		BackoffTimerHandleInterface* CreateBackoffTimer(
 		  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) override;
 
-		uint64_t GetTimeMs() override
-		{
-			return static_cast<uint64_t>(GetTimeMsInt64());
-		}
-
-		uint64_t GetTimeUs() override
-		{
-			return static_cast<uint64_t>(GetTimeUsInt64());
-		}
-
 		int64_t GetTimeMsInt64() override
 		{
 			return GetTimeUsInt64() / 1000;

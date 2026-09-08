@@ -78,8 +78,7 @@ namespace RTC
 			  this->retransmissionQueue->BeginResetStreams());
 
 			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-			this->reConfigTimer->SetBaseTimeoutMs(
-			  static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000));
+			this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoUs() / 1000);
 			this->reConfigTimer->Start();
 
 			AddReConfigChunk(packet);
@@ -438,8 +437,7 @@ namespace RTC
 						this->currentRequest->SetDeferred(true);
 
 						// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-						this->reConfigTimer->SetBaseTimeoutMs(
-						  static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000));
+						this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoUs() / 1000);
 						this->reConfigTimer->Start();
 
 						break;
@@ -473,7 +471,7 @@ namespace RTC
 			}
 		}
 
-		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& stop)
+		void StreamResetHandler::OnReConfigTimer(int64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 
@@ -525,11 +523,11 @@ namespace RTC
 			this->tcbContext->SendPacket(packet.get());
 
 			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-			baseTimeoutMs = static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000);
+			baseTimeoutMs = this->tcbContext->GetCurrentRtoUs() / 1000;
 		}
 
 		void StreamResetHandler::OnBackoffTimer(
-		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

@@ -16,7 +16,7 @@ namespace RTC
 	}
 
 	void RemoteClockOffsetEstimator::AddSenderReport(
-	  int64_t remoteNtpUs, int64_t localArrivalAtUs, uint32_t rttMs)
+	  int64_t remoteNtpUs, int64_t localArrivalAtUs, int64_t rttMs)
 	{
 		MS_TRACE();
 
@@ -42,8 +42,7 @@ namespace RTC
 		// Report. Assume a symmetric path and remove half of the RTT.
 		//
 		// NOTE: The RTT is given in milliseconds, hence the conversion.
-		const int64_t sample =
-		  localArrivalAtUs - remoteNtpUs - ((static_cast<int64_t>(rttMs) * 1000) / 2);
+		const int64_t sample = localArrivalAtUs - remoteNtpUs - ((rttMs * 1000) / 2);
 
 		if (this->samples.size() == RemoteClockOffsetEstimator::WindowSize)
 		{

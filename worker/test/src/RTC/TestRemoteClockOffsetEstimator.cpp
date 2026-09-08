@@ -25,7 +25,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	              int64_t localArrivalAtUs,
 	              size_t count,
 	              int64_t owdUs,
-	              uint32_t rttMs) -> void
+	              int64_t rttMs) -> void
 	{
 		for (size_t idx{ 0 }; idx < count; ++idx)
 		{

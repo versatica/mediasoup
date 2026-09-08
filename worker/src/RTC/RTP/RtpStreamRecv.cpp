@@ -12,13 +12,13 @@ namespace RTC
 	{
 		/* Static. */
 
-		static constexpr uint64_t InactivityCheckInterval{ 1500u };        // In ms.
-		static constexpr uint64_t InactivityCheckIntervalWithDtx{ 5000u }; // In ms.
+		static constexpr int64_t InactivityCheckIntervalMs{ 1500 };
+		static constexpr int64_t InactivityCheckIntervalWithDtxMs{ 5000 };
 
 		/* TransmissionCounter methods. */
 
 		RtpStreamRecv::TransmissionCounter::TransmissionCounter(
-		  SharedInterface* shared, uint8_t spatialLayers, uint8_t temporalLayers, size_t windowSize)
+		  SharedInterface* shared, uint8_t spatialLayers, uint8_t temporalLayers, int64_t windowSizeMs)
 		{
 			MS_TRACE();
 
@@ -29,7 +29,7 @@ namespace RTC
 			{
 				for (uint8_t tIdx{ 0u }; tIdx < temporalLayers; ++tIdx)
 				{
-					spatialLayerCounter.emplace_back(shared, /*ignorePaddingOnlyPackets*/ true, windowSize);
+					spatialLayerCounter.emplace_back(shared, /*ignorePaddingOnlyPackets*/ true, windowSizeMs);
 				}
 			}
 		}
@@ -54,7 +54,7 @@ namespace RTC
 			counter.Update(packet);
 		}
 
-		uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(uint64_t nowMs)
+		uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(int64_t nowMs)
 		{
 			MS_TRACE();
 
@@ -72,7 +72,7 @@ namespace RTC
 		}
 
 		uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(
-		  uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
+		  int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 		{
 			MS_TRACE();
 
@@ -112,8 +112,7 @@ namespace RTC
 			return rate;
 		}
 
-		uint32_t RtpStreamRecv::TransmissionCounter::GetSpatialLayerBitrate(
-		  uint64_t nowMs, uint8_t spatialLayer)
+		uint32_t RtpStreamRecv::TransmissionCounter::GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer)
 		{
 			MS_TRACE();
 
@@ -132,7 +131,7 @@ namespace RTC
 		}
 
 		uint32_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
-		  uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
+		  int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 		{
 			MS_TRACE();
 
@@ -185,7 +184,7 @@ namespace RTC
 		  RTP::RtpStreamRecv::Listener* listener,
 		  SharedInterface* shared,
 		  RTP::RtpStream::Params& params,
-		  uint32_t sendNackDelayMs,
+		  int64_t sendNackDelayMs,
 		  bool useRtpInactivityCheck)
 		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
 		    sendNackDelayMs(sendNackDelayMs),
@@ -211,7 +210,7 @@ namespace RTC
 				  this->shared->CreateTimer(this, "rtp-stream-recv-inactivity-check");
 
 				this->inactivityCheckPeriodicTimer->Start(
-				  this->params.useDtx ? InactivityCheckIntervalWithDtx : InactivityCheckInterval);
+				  this->params.useDtx ? InactivityCheckIntervalWithDtxMs : InactivityCheckIntervalMs);
 			}
 		}
 
@@ -229,7 +228,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			const int64_t nowMs = this->shared->GetTimeMsInt64();
 
 			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
 
@@ -658,26 +657,25 @@ namespace RTC
 			const uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
 
 			// RTT in 1/2^16 second fractions.
-			uint32_t rtt{ 0 };
+			uint32_t rttCompactNtp{ 0 };
 
 			// If no Receiver Extended Report was received by the remote endpoint yet,
 			// ignore lastRr and dlrr values in the Sender Extended Report.
 			if (lastRr && dlrr && (compactNtp > dlrr + lastRr))
 			{
-				rtt = compactNtp - dlrr - lastRr;
+				rttCompactNtp = compactNtp - dlrr - lastRr;
 			}
 
-			// RTT in milliseconds.
-			this->rtt = static_cast<float>(rtt >> 16) * 1000;
-			this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
+			this->rttMs = static_cast<float>(rttCompactNtp >> 16) * 1000;
+			this->rttMs += (static_cast<float>(rttCompactNtp & 0x0000FFFF) / 65536) * 1000;
 
 			// Avoid negative RTT value since it doesn't make sense.
-			this->rtt = std::max(this->rtt, 0.0f);
+			this->rttMs = std::max(this->rttMs, 0.0f);
 
 			// Tell it to the NackGenerator.
 			if (this->params.useNack)
 			{
-				this->nackGenerator->UpdateRtt(static_cast<uint32_t>(this->rtt));
+				this->nackGenerator->UpdateRttMs(static_cast<int64_t>(this->rttMs));
 			}
 		}
 

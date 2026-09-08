@@ -10,7 +10,7 @@ namespace mocks
 {
 	MockBackoffTimerHandle::MockBackoffTimerHandle(
 	  BackoffTimerHandleOptions options,
-	  std::function<uint64_t()> getTimeMs,
+	  std::function<int64_t()> getTimeMsInt64,
 	  std::function<void()> onDelete)
 	  : listener(options.listener),
 	    label(std::move(options.label)),
@@ -18,14 +18,14 @@ namespace mocks
 	    backoffAlgorithm(options.backoffAlgorithm),
 	    maxBackoffTimeoutMs(options.maxBackoffTimeoutMs),
 	    maxRestarts(options.maxRestarts),
-	    getTimeMs(std::move(getTimeMs)),
+	    getTimeMsInt64(std::move(getTimeMsInt64)),
 	    onDelete(std::move(onDelete))
 	{
 		MS_TRACE();
 
 		if (!this->listener)
 		{
-			MS_THROW_TYPE_ERROR("options.listener must be given");
+			MS_THROW_TYPE_ERROR("[%s] options.listener must be given", this->label.c_str());
 		}
 
 		if (this->label.empty())
@@ -33,10 +33,18 @@ namespace mocks
 			MS_THROW_TYPE_ERROR("options.label must be given");
 		}
 
+		if (this->baseTimeoutMs < 0)
+		{
+			MS_THROW_TYPE_ERROR(
+			  "[%s] options.baseTimeoutMs (%" PRIi64 " ms) cannot be negative",
+			  this->label.c_str(),
+			  this->baseTimeoutMs);
+		}
+
 		if (this->baseTimeoutMs > BackoffTimerHandleInterface::MaxTimeoutMs)
 		{
-			MS_THROW_ERROR(
-			  "[%s] base timeout (%" PRIu64 " ms) cannot be greater than %" PRIu64 " ms",
+			MS_THROW_TYPE_ERROR(
+			  "[%s] options.baseTimeoutMs (%" PRIi64 " ms) cannot be greater than %" PRIi64 " ms",
 			  this->label.c_str(),
 			  this->baseTimeoutMs,
 			  BackoffTimerHandleInterface::MaxTimeoutMs);
@@ -47,12 +55,12 @@ namespace mocks
 	{
 		MS_TRACE();
 
-		const uint64_t nowMs = this->getTimeMs();
+		const int64_t nowMs = this->getTimeMsInt64();
 
 		MS_DUMP_CLEAN(indentation, "<mocks::MockBackoffTimerHandle>");
 
 		MS_DUMP_CLEAN(indentation, "  label: %s", this->label.c_str());
-		MS_DUMP_CLEAN(indentation, "  base timeout (ms): %" PRIu64, this->baseTimeoutMs);
+		MS_DUMP_CLEAN(indentation, "  base timeout (ms): %" PRIi64, this->baseTimeoutMs);
 		MS_DUMP_CLEAN(
 		  indentation,
 		  "  max backoff timeout (ms): %s",
@@ -65,21 +73,27 @@ namespace mocks
 		  this->maxRestarts.has_value() ? std::to_string(this->maxRestarts.value()).c_str() : "(unset)");
 		MS_DUMP_CLEAN(indentation, "  running: %s", this->running ? "yes" : "no");
 		MS_DUMP_CLEAN(indentation, "  expiration count: %zu", this->expirationCount);
-		MS_DUMP_CLEAN(indentation, "  now (ms): %" PRIu64, nowMs);
-		MS_DUMP_CLEAN(indentation, "  expires at (ms): %" PRIu64, this->expiresAtMs);
-		MS_DUMP_CLEAN(indentation, "  expires in (ms): %" PRIu64, this->expiresAtMs - nowMs);
+		MS_DUMP_CLEAN(indentation, "  now (ms): %" PRIi64, nowMs);
+		MS_DUMP_CLEAN(indentation, "  expires at (ms): %" PRIi64, this->expiresAtMs);
+		MS_DUMP_CLEAN(indentation, "  expires in (ms): %" PRIi64, this->expiresAtMs - nowMs);
 
 		MS_DUMP_CLEAN(indentation, "</mocks::MockBackoffTimerHandle>");
 	}
 
-	void MockBackoffTimerHandle::SetBaseTimeoutMs(uint64_t baseTimeoutMs)
+	void MockBackoffTimerHandle::SetBaseTimeoutMs(int64_t baseTimeoutMs)
 	{
 		MS_TRACE();
 
+		if (baseTimeoutMs < 0)
+		{
+			MS_THROW_TYPE_ERROR(
+			  "[%s] baseTimeoutMs (%" PRIi64 " ms) cannot be negative", this->label.c_str(), baseTimeoutMs);
+		}
+
 		if (baseTimeoutMs > BackoffTimerHandleInterface::MaxTimeoutMs)
 		{
-			MS_THROW_ERROR(
-			  "[%s] base timeout (%" PRIu64 " ms) cannot be greater than %" PRIu64 " ms",
+			MS_THROW_TYPE_ERROR(
+			  "[%s] baseTimeoutMs (%" PRIi64 " ms) cannot be greater than %" PRIi64 " ms",
 			  this->label.c_str(),
 			  baseTimeoutMs,
 			  BackoffTimerHandleInterface::MaxTimeoutMs);
@@ -100,7 +114,7 @@ namespace mocks
 		this->running =
 		  !this->maxRestarts.has_value() || this->expirationCount <= this->maxRestarts.value();
 
-		uint64_t baseTimeoutMs{ this->baseTimeoutMs };
+		int64_t baseTimeoutMs{ this->baseTimeoutMs };
 		bool stop{ false };
 
 		// Call the listener by passing base timeout as reference so the parent has
@@ -121,14 +135,14 @@ namespace mocks
 		// the `running` flag.
 		if (this->running)
 		{
-			this->expiresAtMs = this->getTimeMs() + ComputeNextTimeoutMs();
+			this->expiresAtMs = this->getTimeMsInt64() + ComputeNextTimeoutMs();
 		}
 		// Once the timer is no longer running (e.g. max restarts reached), the real
 		// BackoffTimerHandle doesn't restart the underlying timer, so it won't fire
 		// again. Mirror that here so a stopped timer doesn't keep expiring.
 		else
 		{
-			this->expiresAtMs = std::numeric_limits<uint64_t>::max();
+			this->expiresAtMs = std::numeric_limits<int64_t>::max();
 		}
 	}
 } // namespace mocks

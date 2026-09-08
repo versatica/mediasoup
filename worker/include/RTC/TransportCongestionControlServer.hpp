@@ -63,7 +63,7 @@ namespace RTC
 		// Returns true if a feedback packet was sent.
 		bool SendTransportCcFeedback();
 		void MayDropOldPacketArrivalTimes(uint16_t seqNum, int64_t nowUs);
-		void MaySendLimitationRembFeedback(uint64_t nowMs);
+		void MaySendLimitationRembFeedback(int64_t nowMs);
 		void UpdatePacketLoss(double packetLoss);
 		void ResetTransportCcFeedback(uint8_t feedbackPacketCount);
 
@@ -88,18 +88,18 @@ namespace RTC
 		webrtc::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		// Others.
 		RTC::BweType bweType;
-		size_t maxRtcpPacketLen{ 0u };
-		uint8_t transportCcFeedbackPacketCount{ 0u };
-		uint32_t transportCcFeedbackSenderSsrc{ 0u };
-		uint32_t transportCcFeedbackMediaSsrc{ 0u };
-		uint32_t maxIncomingBitrate{ 0u };
-		uint64_t limitationRembSentAtMs{ 0u };
-		uint8_t unlimitedRembCounter{ 0u };
+		size_t maxRtcpPacketLen{ 0 };
+		uint8_t transportCcFeedbackPacketCount{ 0 };
+		uint32_t transportCcFeedbackSenderSsrc{ 0 };
+		uint32_t transportCcFeedbackMediaSsrc{ 0 };
+		uint32_t maxIncomingBitrate{ 0 };
+		int64_t limitationRembSentAtMs{ 0 };
+		uint8_t unlimitedRembCounter{ 0 };
 		std::deque<double> packetLossHistory;
 		double packetLoss{ 0 };
 		// Whether any packet with transport wide sequence number was received.
 		bool transportWideSeqNumberReceived{ false };
-		uint16_t transportCcFeedbackWideSeqNumStart{ 0u };
+		uint16_t transportCcFeedbackWideSeqNumStart{ 0 };
 		// Map of arrival timestamp (us) indexed by wide seq number.
 		std::map<uint16_t, int64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
 	};

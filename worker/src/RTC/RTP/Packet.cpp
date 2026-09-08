@@ -136,7 +136,7 @@ namespace RTC
 			// Initialize logger.
 			// NOTE: Here we use DepLibUV directly since `this->logger` doesn't
 			// have any purpose during tests.
-			this->logger.timestamp        = DepLibUV::GetTimeMs();
+			this->logger.timestamp        = DepLibUV::GetTimeMsInt64();
 			this->logger.recvRtpTimestamp = GetTimestamp();
 			this->logger.recvSeqNumber    = GetSequenceNumber();
 #endif
@@ -962,7 +962,7 @@ namespace RTC
 			return true;
 		}
 
-		bool Packet::UpdateAbsSendTime(int64_t us) const
+		bool Packet::UpdateAbsSendTime(int64_t sentAtUs) const
 		{
 			MS_TRACE();
 
@@ -974,7 +974,7 @@ namespace RTC
 				return false;
 			}
 
-			auto absSendTime = Utils::Time::TimeUsToAbsSendTime(us);
+			auto absSendTime = Utils::Time::TimeUsToAbsSendTime(sentAtUs);
 
 			Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
 

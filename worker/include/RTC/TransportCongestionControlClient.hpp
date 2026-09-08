@@ -74,7 +74,7 @@ namespace RTC
 		void PacketSent(const webrtc::RtpPacketSendInfo& packetInfo, int64_t nowUs);
 		void ReceiveEstimatedBitrate(uint32_t bitrate);
 		void ReceiveRtcpReceiverReport(
-		  RTC::RTCP::ReceiverReportPacket* packet, float rtt, int64_t receivedAtUs);
+		  RTC::RTCP::ReceiverReportPacket* packet, float rttMs, int64_t receivedAtUs);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void SetDesiredBitrate(uint32_t desiredBitrate, bool force);
 		void SetMaxOutgoingBitrate(uint32_t maxBitrate);
@@ -127,7 +127,7 @@ namespace RTC
 		uint32_t minOutgoingBitrate{ 0u };
 		Bitrates bitrates;
 		bool availableBitrateEventCalled{ false };
-		uint64_t lastAvailableBitrateEventAtMs{ 0u };
+		int64_t lastAvailableBitrateEventAtMs{ 0 };
 		RTC::TrendCalculator desiredBitrateTrend;
 		std::deque<double> packetLossHistory;
 		double packetLoss{ 0 };

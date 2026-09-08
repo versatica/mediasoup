@@ -23,25 +23,25 @@ namespace RTC
 
 		this->maxEntries = options->maxEntries();
 		this->threshold  = options->threshold();
-		this->interval   = options->interval();
+		this->intervalMs = options->interval();
 
 		if (this->threshold > 0)
 		{
 			MS_THROW_TYPE_ERROR("invalid threshold value %" PRIi8, this->threshold);
 		}
 
-		if (this->interval < 250)
+		if (this->intervalMs < 250)
 		{
-			this->interval = 250;
+			this->intervalMs = 250;
 		}
-		else if (this->interval > 5000)
+		else if (this->intervalMs > 5000)
 		{
-			this->interval = 5000;
+			this->intervalMs = 5000;
 		}
 
 		this->periodicTimer = this->shared->CreateTimer(this, "audio-level-observer");
 
-		this->periodicTimer->Start(this->interval, this->interval);
+		this->periodicTimer->Start(this->intervalMs, this->intervalMs);
 
 		// NOTE: This may throw.
 		this->shared->GetChannelMessageRegistrator()->RegisterHandler(

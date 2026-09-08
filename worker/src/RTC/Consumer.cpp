@@ -1042,7 +1042,7 @@ namespace RTC
 			lossPercentage = rtpStream->GetLossPercentage();
 		}
 
-		const auto nowMs = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMsInt64();
 
 		return this->producerStreamManager->IncreaseLayer(bitrate, considerLoss, lossPercentage, nowMs);
 	}
@@ -1088,7 +1088,7 @@ namespace RTC
 			return 0u;
 		}
 
-		const auto nowMs = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMsInt64();
 
 		auto desiredBitrate = this->producerStreamManager->GetDesiredBitrate(nowMs);
 
@@ -1363,7 +1363,7 @@ namespace RTC
 
 		// NOTE: The interval is in milliseconds, being it given to a timer, so the
 		// elapsed time is truncated here.
-		const auto elapsedMs = static_cast<uint64_t>((nowUs - this->lastRtcpSentAtUs) / 1000);
+		const int64_t elapsedMs = (nowUs - this->lastRtcpSentAtUs) / 1000;
 
 		// Special condition for pipe consumer since this method will be called in a
 		// loop for each stream.
@@ -1535,7 +1535,7 @@ namespace RTC
 		}
 	}
 
-	uint32_t Consumer::GetTransmissionRate(uint64_t nowMs)
+	uint32_t Consumer::GetTransmissionRate(int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -1554,18 +1554,18 @@ namespace RTC
 		return rate;
 	}
 
-	float Consumer::GetRtt() const
+	float Consumer::GetRttMs() const
 	{
 		MS_TRACE();
 
-		float rtt{ 0 };
+		float rttMs{ 0 };
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			rtt = std::max(rtpStream->GetRtt(), rtt);
+			rttMs = std::max(rtpStream->GetRttMs(), rttMs);
 		}
 
-		return rtt;
+		return rttMs;
 	}
 
 	void Consumer::UserOnTransportConnected()
@@ -1841,7 +1841,7 @@ namespace RTC
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Consumer::TraceEventType::KEYFRAME,
-			  this->shared->GetTimeMs(),
+			  this->shared->GetTimeMsInt64(),
 			  FBS::Common::TraceDirection::DIRECTION_OUT,
 			  FBS::Consumer::TraceInfo::KeyFrameTraceInfo,
 			  traceInfo.Union());
@@ -1857,7 +1857,7 @@ namespace RTC
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Consumer::TraceEventType::RTP,
-			  this->shared->GetTimeMs(),
+			  this->shared->GetTimeMsInt64(),
 			  FBS::Common::TraceDirection::DIRECTION_OUT,
 			  FBS::Consumer::TraceInfo::RtpTraceInfo,
 			  traceInfo.Union());
@@ -1881,7 +1881,7 @@ namespace RTC
 		auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::PLI,
-		  this->shared->GetTimeMs(),
+		  this->shared->GetTimeMsInt64(),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
 		  FBS::Consumer::TraceInfo::PliTraceInfo,
 		  traceInfo.Union());
@@ -1904,7 +1904,7 @@ namespace RTC
 		auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::FIR,
-		  this->shared->GetTimeMs(),
+		  this->shared->GetTimeMsInt64(),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
 		  FBS::Consumer::TraceInfo::FirTraceInfo,
 		  traceInfo.Union());
@@ -1924,7 +1924,7 @@ namespace RTC
 		auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::NACK,
-		  this->shared->GetTimeMs(),
+		  this->shared->GetTimeMsInt64(),
 		  FBS::Common::TraceDirection::DIRECTION_IN);
 
 		EmitTraceEvent(notification);
