@@ -46,7 +46,7 @@ namespace RTC
 				// Ignore the packets without a valid send or arrival time. It shouldn't
 				// happen, since the lost ones are filtered out before reaching here, but
 				// handling it explicitly avoids a state that would be hard to diagnose.
-				if (!packetResult.IsReceived() || packetResult.sentPacket.sendTimeUs == Types::TimeInfinite)
+				if (!packetResult.IsReceived() || packetResult.sentPacket.sendTimeUs == Types::TimeUsInfinite)
 				{
 					continue;
 				}

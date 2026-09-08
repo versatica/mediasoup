@@ -622,7 +622,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		});
 	}
 
-	SECTION("MeasureRtt()")
+	SECTION("MeasureRttUs()")
 	{
 		buffer.Insert(
 		  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowUs);
@@ -635,7 +635,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 
 		constexpr int64_t DurationUs{ 123 };
 
-		const auto duration = buffer.MeasureRtt(NowUs + DurationUs, unwrapper.Unwrap(11));
+		const auto duration = buffer.MeasureRttUs(NowUs + DurationUs, unwrapper.Unwrap(11));
 
 		REQUIRE(duration.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)

@@ -20,7 +20,7 @@ namespace RTC
 			/**
 			 * Time meaning that no time was ever assigned.
 			 */
-			constexpr int64_t TimeInfinite{ std::numeric_limits<int64_t>::max() };
+			constexpr int64_t TimeUsInfinite{ std::numeric_limits<int64_t>::max() };
 
 			/**
 			 * How the network is behaving according to the delay based detector.
@@ -112,10 +112,10 @@ namespace RTC
 				 */
 				int64_t sequenceNumber;
 				/**
-				 * Time at which the packet was sent, or `Types::TimeInfinite` if it was
+				 * Time at which the packet was sent, or `Types::TimeUsInfinite` if it was
 				 * never assigned one.
 				 */
-				int64_t sendTimeUs{ TimeInfinite };
+				int64_t sendTimeUs{ TimeUsInfinite };
 				/**
 				 * Size of the packet including overhead up to the IP layer (bytes).
 				 */

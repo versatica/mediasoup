@@ -390,7 +390,7 @@ namespace RTC
 			return iForwardTsnChunk;
 		}
 
-		std::optional<int64_t> OutstandingData::MeasureRtt(int64_t nowUs, Types::UnwrappedTsn tsn) const
+		std::optional<int64_t> OutstandingData::MeasureRttUs(int64_t nowUs, Types::UnwrappedTsn tsn) const
 		{
 			MS_TRACE();
 
