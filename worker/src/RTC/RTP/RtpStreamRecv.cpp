@@ -693,7 +693,10 @@ namespace RTC
 			const auto& absCaptureTime = this->lastAbsCaptureTime.value();
 
 			return InterpolateRemoteCaptureAtUs(
-			  absCaptureTime.ntpUs, absCaptureTime.ts, ts, RtpStreamRecv::MaxAbsCaptureTimeInterpolationMs);
+			  absCaptureTime.ntpUs,
+			  absCaptureTime.ts,
+			  ts,
+			  RtpStreamRecv::MaxAbsCaptureTimeInterpolationMs * 1000);
 		}
 
 		std::optional<int64_t> RtpStreamRecv::GetRemoteCaptureAtUsFromSenderReport(uint32_t ts) const
@@ -711,11 +714,11 @@ namespace RTC
 			  senderReportMapping.ntpUs,
 			  senderReportMapping.ts,
 			  ts,
-			  RtpStreamRecv::MaxSenderReportInterpolationMs);
+			  RtpStreamRecv::MaxSenderReportInterpolationMs * 1000);
 		}
 
 		std::optional<int64_t> RtpStreamRecv::InterpolateRemoteCaptureAtUs(
-		  int64_t referenceNtpUs, uint32_t referenceTs, uint32_t ts, uint64_t maxDistanceMs) const
+		  int64_t referenceNtpUs, uint32_t referenceTs, uint32_t ts, int64_t maxDistanceUs) const
 		{
 			MS_TRACE();
 
@@ -731,10 +734,9 @@ namespace RTC
 			const int64_t distanceUs = (distanceTs * 1000000) / static_cast<int64_t>(clockRate);
 			// NOTE: The negation is safe since `distanceUs` comes from a 32 bits
 			// distance scaled down by the clock rate.
-			const auto absDistanceMs =
-			  static_cast<uint64_t>(distanceUs < 0 ? -distanceUs : distanceUs) / 1000;
+			const int64_t absDistanceUs = distanceUs < 0 ? -distanceUs : distanceUs;
 
-			if (absDistanceMs > maxDistanceMs)
+			if (absDistanceUs > maxDistanceUs)
 			{
 				return std::nullopt;
 			}

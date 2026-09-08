@@ -265,13 +265,13 @@ namespace RTC
 			 * Interpolate the capture instant of `ts` from a reference pair, all of them
 			 * expressed in the remote sender's wall clock.
 			 *
-			 * @param referenceNtpMs - Capture instant of `referenceTs`.
+			 * @param referenceNtpUs - Capture instant of `referenceTs`.
 			 * @param referenceTs - RTP timestamp the reference instant refers to.
 			 * @param ts - RTP timestamp whose capture instant is wanted.
-			 * @param maxDistanceMs - How far `ts` may be from `referenceTs`.
+			 * @param maxDistanceUs - How far `ts` may be from `referenceTs`.
 			 */
 			std::optional<int64_t> InterpolateRemoteCaptureAtUs(
-			  int64_t referenceNtpUs, uint32_t referenceTs, uint32_t ts, uint64_t maxDistanceMs) const;
+			  int64_t referenceNtpUs, uint32_t referenceTs, uint32_t ts, int64_t maxDistanceUs) const;
 
 			/* Pure virtual methods inherited from RTP::RtpStream. */
 		public:

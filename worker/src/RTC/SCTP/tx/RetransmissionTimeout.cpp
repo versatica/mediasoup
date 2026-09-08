@@ -38,6 +38,13 @@ namespace RTC
 		    firstMeasurement(true)
 		{
 			MS_TRACE();
+
+			// The RTO is clamped between both bounds, which requires them to be ordered.
+			MS_ASSERT(
+			  this->minRtoUs <= this->maxRtoUs,
+			  "min RTO higher than max RTO [minRtoMs:%" PRIu64 ", maxRtoMs:%" PRIu64 "]",
+			  sctpOptions.minRtoMs,
+			  sctpOptions.maxRtoMs);
 		}
 
 		RetransmissionTimeout::~RetransmissionTimeout()

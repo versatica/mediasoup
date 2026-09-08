@@ -6,9 +6,6 @@ SCENARIO("DepLibUV", "[deplibuv]")
 {
 	SECTION("GetNtpOffsetUs()")
 	{
-		// It is taken just once, in ClassInit(), so it must never move.
-		REQUIRE(DepLibUV::GetNtpOffsetUs() == DepLibUV::GetNtpOffsetUs());
-
 		// Added to our own clock it must give an NTP instant of the current era, so
 		// past the moment this test was written.
 		//

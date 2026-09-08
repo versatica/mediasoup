@@ -271,8 +271,7 @@ namespace RTC
 				// never be retransmitted.
 				const uint16_t maxRetransmissions;
 				// At this exact microsecond, the item is considered expired. If the
-				// message is not to be expired, this is set to the infinite future.
-				// NOTE: If 0 it means infinite time.
+				// message is not to be expired, this is set to `ExpiresAtUsInfinite`.
 				const int64_t expiresAtUs;
 				// An optional lifecycle id, which may only be set for the last
 				// fragment.

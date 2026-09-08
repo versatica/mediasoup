@@ -190,11 +190,6 @@ namespace RTC
 				return this->rtt;
 			}
 
-			int64_t GetMaxPacketAtUs() const
-			{
-				return this->maxPacketAtUs;
-			}
-
 			uint32_t GetMaxPacketTs() const
 			{
 				return this->maxPacketTs;
