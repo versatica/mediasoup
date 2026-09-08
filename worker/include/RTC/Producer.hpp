@@ -33,9 +33,10 @@ namespace RTC
 
 		public:
 			virtual void OnProducerReceiveData(RTC::Producer* producer, size_t len) = 0;
-			virtual void OnProducerReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
-			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
-			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
+			virtual void OnProducerReceiveRtpPacket(
+			  RTC::Producer* producer, RTC::RTP::Packet* packet, int64_t receivedAtUs) = 0;
+			virtual void OnProducerPaused(RTC::Producer* producer)                     = 0;
+			virtual void OnProducerResumed(RTC::Producer* producer)                    = 0;
 			virtual void OnProducerNewRtpStream(
 			  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 			virtual void OnProducerRtpStreamScore(
@@ -59,15 +60,15 @@ namespace RTC
 			 *
 			 * @returns No value while the capture instant cannot be told yet.
 			 */
-			virtual std::optional<uint64_t> OnProducerNeedLocalCaptureMs(
+			virtual std::optional<int64_t> OnProducerNeedLocalCaptureAtUs(
 			  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) = 0;
 			/**
 			 * Offset between the wall clock of the sender of this Producer and our own
-			 * monotonic one (ms).
+			 * monotonic one (us).
 			 *
 			 * @returns No value while the offset cannot be told yet.
 			 */
-			virtual std::optional<int64_t> OnProducerNeedRemoteClockOffsetMs(const RTC::Producer* producer) = 0;
+			virtual std::optional<int64_t> OnProducerNeedRemoteClockOffsetUs(const RTC::Producer* producer) = 0;
 		};
 
 	private:
@@ -153,10 +154,11 @@ namespace RTC
 		{
 			return std::addressof(this->rtpStreamScores);
 		}
-		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RTP::Packet* packet);
-		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
-		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
-		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
+		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs);
+		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
+		void ReceiveRtcpXrDelaySinceLastRr(
+		  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
+		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
 		void RequestKeyFrame(uint32_t mappedSsrc);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -229,8 +231,8 @@ namespace RTC
 		bool enableMediasoupPacketIdHeaderExtension{ false };
 		RTC::RTP::Packet* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
-		uint64_t lastRtcpSentTime{ 0u };
-		uint16_t maxRtcpInterval{ 0u };
+		int64_t lastRtcpSentAtUs{ 0 };
+		uint16_t maxRtcpIntervalMs{ 0u };
 		// Video orientation.
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;

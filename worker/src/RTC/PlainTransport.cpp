@@ -159,6 +159,7 @@ namespace RTC
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,
+				  this->shared,
 				  this->listenInfo.ip,
 				  this->listenInfo.portRange.min,
 				  this->listenInfo.portRange.max,
@@ -168,7 +169,7 @@ namespace RTC
 			else if (this->listenInfo.port != 0)
 			{
 				this->udpSocket = new RTC::UdpSocket(
-				  this, this->listenInfo.ip, this->listenInfo.port, this->listenInfo.flags);
+				  this, this->shared, this->listenInfo.ip, this->listenInfo.port, this->listenInfo.flags);
 			}
 			// NOTE: This is temporal to allow deprecated usage of worker port range.
 			// In the future this should throw since |port| or |portRange| will be
@@ -179,6 +180,7 @@ namespace RTC
 
 				this->udpSocket = new RTC::UdpSocket(
 				  this,
+				  this->shared,
 				  this->listenInfo.ip,
 				  Settings::configuration.rtcMinPort,
 				  Settings::configuration.rtcMaxPort,
@@ -206,6 +208,7 @@ namespace RTC
 
 					this->rtcpUdpSocket = new RTC::UdpSocket(
 					  this,
+					  this->shared,
 					  this->rtcpListenInfo.ip,
 					  this->rtcpListenInfo.portRange.min,
 					  this->rtcpListenInfo.portRange.max,
@@ -215,7 +218,11 @@ namespace RTC
 				else if (this->rtcpListenInfo.port != 0)
 				{
 					this->rtcpUdpSocket = new RTC::UdpSocket(
-					  this, this->rtcpListenInfo.ip, this->rtcpListenInfo.port, this->rtcpListenInfo.flags);
+					  this,
+					  this->shared,
+					  this->rtcpListenInfo.ip,
+					  this->rtcpListenInfo.port,
+					  this->rtcpListenInfo.flags);
 				}
 				// NOTE: This is temporal to allow deprecated usage of worker port range.
 				// In the future this should throw since |port| or |portRange| will be
@@ -226,6 +233,7 @@ namespace RTC
 
 					this->rtcpUdpSocket = new RTC::UdpSocket(
 					  this,
+					  this->shared,
 					  this->rtcpListenInfo.ip,
 					  Settings::configuration.rtcMinPort,
 					  Settings::configuration.rtcMaxPort,
@@ -956,7 +964,7 @@ namespace RTC
 	}
 
 	inline void PlainTransport::OnPacketReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -966,17 +974,17 @@ namespace RTC
 		// Check if it's RTCP.
 		if (RTC::RTCP::Packet::IsRtcp(data, len))
 		{
-			OnRtcpDataReceived(tuple, data, len);
+			OnRtcpDataReceived(tuple, data, len, receivedAtUs);
 		}
 		// Check if it's RTP.
 		else if (RTC::RTP::Packet::IsRtp(data, len))
 		{
-			OnRtpDataReceived(tuple, data, len, bufferLen);
+			OnRtpDataReceived(tuple, data, len, bufferLen, receivedAtUs);
 		}
 		// Check if it's SCTP.
 		else if (RTC::SCTP::Packet::IsSctp(data, len))
 		{
-			OnSctpDataReceived(tuple, data, len);
+			OnSctpDataReceived(tuple, data, len, receivedAtUs);
 		}
 		else
 		{
@@ -985,7 +993,7 @@ namespace RTC
 	}
 
 	inline void PlainTransport::OnRtpDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1077,11 +1085,11 @@ namespace RTC
 		}
 
 		// Pass the packet to the parent transport.
-		RTC::Transport::ReceiveRtpPacket(packet);
+		RTC::Transport::ReceiveRtpPacket(packet, receivedAtUs);
 	}
 
 	inline void PlainTransport::OnRtcpDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1175,11 +1183,11 @@ namespace RTC
 		}
 
 		// Pass the packet to the parent transport.
-		RTC::Transport::ReceiveRtcpPacket(packet);
+		RTC::Transport::ReceiveRtcpPacket(packet, receivedAtUs);
 	}
 
 	inline void PlainTransport::OnSctpDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1223,7 +1231,7 @@ namespace RTC
 		}
 
 		// Pass it to the parent transport.
-		RTC::Transport::ReceiveSctpData(data, len);
+		RTC::Transport::ReceiveSctpData(data, len, receivedAtUs);
 	}
 
 	inline void PlainTransport::EmitTuple() const
@@ -1262,12 +1270,13 @@ namespace RTC
 	  const uint8_t* data,
 	  size_t len,
 	  size_t bufferLen,
-	  const struct sockaddr* remoteAddr)
+	  const struct sockaddr* remoteAddr,
+	  int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len, bufferLen);
+		OnPacketReceived(&tuple, data, len, bufferLen, receivedAtUs);
 	}
 } // namespace RTC

@@ -5,6 +5,7 @@
 #include "handles/UdpSocketHandle.hpp"
 #include "RTC/PortManager.hpp"
 #include "RTC/Transport.hpp"
+#include "SharedInterface.hpp"
 #include <string>
 
 namespace RTC
@@ -23,13 +24,20 @@ namespace RTC
 			  const uint8_t* data,
 			  size_t len,
 			  size_t bufferLen,
-			  const struct sockaddr* remoteAddr) = 0;
+			  const struct sockaddr* remoteAddr,
+			  int64_t receivedAtUs) = 0;
 		};
 
 	public:
-		UdpSocket(Listener* listener, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags);
 		UdpSocket(
 		  Listener* listener,
+		  SharedInterface* shared,
+		  std::string& ip,
+		  uint16_t port,
+		  RTC::Transport::SocketFlags& flags);
+		UdpSocket(
+		  Listener* listener,
+		  SharedInterface* shared,
 		  std::string& ip,
 		  uint16_t minPort,
 		  uint16_t maxPort,
@@ -45,6 +53,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		bool fixedPort{ false };
 		RTC::PortManager::PortRangeKey portRangeKey{};
 	};

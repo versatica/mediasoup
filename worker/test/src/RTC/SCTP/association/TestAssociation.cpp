@@ -33,8 +33,8 @@
 
 namespace
 {
-	// Initial value of the simulated clock (ms).
-	constexpr uint64_t InitialNowMs{ 1000000 };
+	// Initial value of the simulated clock (us).
+	constexpr int64_t InitialNowUs{ 1000000 * 1000 };
 
 	// All backoff timer labels an SCTP association may create. Used by `runTimers()`
 	// to fire whichever timers have expired after advancing time.
@@ -78,10 +78,10 @@ namespace
 		  bool mayConnectOnReceivedSctpData  = false)
 		  // NOTE: The order in which these members are initialized is **critical**.
 		  : sctpOptions(sctpOptions),
-		    shared(/*getTimeMs*/
-				       [this]()
+		    shared(/*getTimeUsInt64*/
+				       [this]() -> int64_t
 				       {
-			           return this->nowMs;
+			           return this->nowUs;
 		           }),
 		    association(
 		      this->sctpOptions,
@@ -94,14 +94,18 @@ namespace
 
 		/**
 		 * Advances the simulated clock of this association by `incrementMs`.
+		 *
+		 * @remarks
+		 * - The increment is given in milliseconds since it comes from the SCTP
+		 *   options and the timers, which work in milliseconds.
 		 */
-		void AdvanceTimeMs(uint64_t incrementMs)
+		void AdvanceTimeMs(int64_t incrementMs)
 		{
-			this->nowMs += incrementMs;
+			this->nowUs += incrementMs * 1000;
 		}
 
 	public:
-		uint64_t nowMs{ InitialNowMs };
+		int64_t nowUs{ InitialNowUs };
 		RTC::SCTP::SctpOptions sctpOptions;
 		mocks::RTC::SCTP::MockAssociationListener listener;
 		mocks::MockShared shared;
@@ -148,7 +152,7 @@ namespace
 
 		REQUIRE(!buffer.empty());
 
-		to.association.ReceiveSctpData(buffer.data(), buffer.size());
+		to.association.ReceiveSctpData(buffer.data(), buffer.size(), to.shared.GetTimeUsInt64());
 	}
 
 	/**
@@ -168,7 +172,8 @@ namespace
 			if (!bufferFromA.empty())
 			{
 				deliveredPacket = true;
-				z.association.ReceiveSctpData(bufferFromA.data(), bufferFromA.size());
+				z.association.ReceiveSctpData(
+				  bufferFromA.data(), bufferFromA.size(), z.shared.GetTimeUsInt64());
 			}
 
 			const auto bufferFromZ = z.listener.ConsumeFirstSentPacket();
@@ -176,7 +181,8 @@ namespace
 			if (!bufferFromZ.empty())
 			{
 				deliveredPacket = true;
-				a.association.ReceiveSctpData(bufferFromZ.data(), bufferFromZ.size());
+				a.association.ReceiveSctpData(
+				  bufferFromZ.data(), bufferFromZ.size(), a.shared.GetTimeUsInt64());
 			}
 		} while (deliveredPacket);
 	}
@@ -259,7 +265,7 @@ namespace
 		const uint32_t verificationTag = parsePacket(buffer)->GetVerificationTag();
 
 		// Deliver the COOKIE-ACK so the connection is fully established on A.
-		a.association.ReceiveSctpData(buffer.data(), buffer.size());
+		a.association.ReceiveSctpData(buffer.data(), buffer.size(), a.shared.GetTimeUsInt64());
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
 		REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
@@ -291,7 +297,8 @@ namespace
 	{
 		packet->WriteCRC32cChecksum();
 
-		target.association.ReceiveSctpData(packet->GetBuffer(), packet->GetLength());
+		target.association.ReceiveSctpData(
+		  packet->GetBuffer(), packet->GetLength(), target.shared.GetTimeUsInt64());
 	}
 
 	/**
@@ -836,7 +843,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(buffer) == true);
 
 		// Feed it to Z and expect a HEARTBEAT-ACK that is propagated back to A.
-		z.association.ReceiveSctpData(buffer.data(), buffer.size());
+		z.association.ReceiveSctpData(buffer.data(), buffer.size(), z.shared.GetTimeUsInt64());
 		deliverFirstSentPacket(z, a);
 	}
 
@@ -1282,7 +1289,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(bufferA) == true);
 
 		// Z receives the heartbeat and sends an ACK that is propagated back to A.
-		z.association.ReceiveSctpData(bufferA.data(), bufferA.size());
+		z.association.ReceiveSctpData(bufferA.data(), bufferA.size(), z.shared.GetTimeUsInt64());
 		deliverFirstSentPacket(z, a);
 
 		// A little while later, Z should send heartbeats to A.
@@ -1293,7 +1300,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(bufferZ) == true);
 
 		// A receives the heartbeat and sends an ACK that is propagated back to Z.
-		a.association.ReceiveSctpData(bufferZ.data(), bufferZ.size());
+		a.association.ReceiveSctpData(bufferZ.data(), bufferZ.size(), a.shared.GetTimeUsInt64());
 		deliverFirstSentPacket(a, z);
 	}
 
@@ -1384,7 +1391,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(buffer) == true);
 
-		z.association.ReceiveSctpData(buffer.data(), buffer.size());
+		z.association.ReceiveSctpData(buffer.data(), buffer.size(), z.shared.GetTimeUsInt64());
 		// A reads the HEARTBEAT-ACK, which clears the error counter.
 		deliverFirstSentPacket(z, a);
 
@@ -1890,7 +1897,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// Make the cookie stale on Z's side by advancing its clock beyond the cookie
 		// lifespan before the COOKIE-ECHO is delivered.
-		z.AdvanceTimeMs(RTC::SCTP::StateCookie::ValidCookieLifeMs + 1000);
+		z.AdvanceTimeMs((RTC::SCTP::StateCookie::ValidCookieLifeUs / 1000) + 1000);
 
 		// Z reads the now stale COOKIE-ECHO.
 		deliverFirstSentPacket(a, z);

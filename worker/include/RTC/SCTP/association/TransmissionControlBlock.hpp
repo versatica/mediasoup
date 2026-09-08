@@ -140,7 +140,7 @@ namespace RTC
 			 * @remarks
 			 * - Implements TransmissionControlBlockContextInterface.
 			 */
-			void ObserveRttMs(uint64_t rttMs) override;
+			void ObserveRttUs(int64_t rttUs) override;
 
 			size_t GetCwnd() const
 			{
@@ -151,14 +151,14 @@ namespace RTC
 			 * @remarks
 			 * - Implements TransmissionControlBlockContextInterface.
 			 */
-			uint64_t GetCurrentRtoMs() const override
+			int64_t GetCurrentRtoUs() const override
 			{
-				return this->rto.GetRtoMs();
+				return this->rto.GetRtoUs();
 			}
 
-			uint64_t GetCurrentSrttMs() const
+			int64_t GetCurrentSrttUs() const
 			{
-				return this->rto.GetSrttMs();
+				return this->rto.GetSrttUs();
 			}
 
 			/**
@@ -229,7 +229,7 @@ namespace RTC
 			 * May add a FORWARD-TSN or I-FORWARD-TSN chunk to the given packet if it
 			 * is needed and allowed (rate-limited).
 			 */
-			void MayAddForwardTsnChunk(Packet* packet, uint64_t nowMs);
+			void MayAddForwardTsnChunk(Packet* packet, int64_t nowUs);
 
 			void MaySendFastRetransmit();
 
@@ -243,7 +243,7 @@ namespace RTC
 			 * - Cannot pass `addCookieAckChunk=true` if `this->remoteStateCookie` is
 			 *   present (will throw).
 			 */
-			void SendBufferedPackets(uint64_t nowMs, bool addCookieAckChunk = false);
+			void SendBufferedPackets(int64_t nowUs, bool addCookieAckChunk = false);
 
 			/**
 			 * @remarks
@@ -292,7 +292,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from RetransmissionQueue::Listener. */
 		public:
-			void OnRetransmissionQueueNewRttMs(uint64_t newRttMs) override;
+			void OnRetransmissionQueueNewRttUs(int64_t newRttUs) override;
 			void OnRetransmissionQueueClearRetransmissionCounter() override;
 			;
 
@@ -332,7 +332,7 @@ namespace RTC
 			HeartbeatHandler heartbeatHandler;
 			// Rate limiting of FORWARD-TSN. Next can be sent at or after this
 			// timestamp.
-			uint64_t limitForwardTsnUntilMs{ 0 };
+			int64_t limitForwardTsnUntilUs{ 0 };
 			// Only valid when state is State::COOKIE_ECHOED. In this state, the
 			// association must wait for COOKIE-ACK to continue sending any packets (not
 			// including a COOKIE-ECHO). So if this state cookie is present, the

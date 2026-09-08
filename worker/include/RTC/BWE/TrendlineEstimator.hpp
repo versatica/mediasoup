@@ -29,8 +29,8 @@ namespace RTC
 		private:
 			struct PacketTiming
 			{
-				double arrivalTimeMs;
-				double smoothedDelayMs;
+				double arrivalTimeUs;
+				double smoothedDelayUs;
 			};
 
 		public:
@@ -77,22 +77,22 @@ namespace RTC
 			 */
 			std::optional<double> GetLinearFitSlope() const;
 
-			void Detect(double trend, double sendDeltaMs, int64_t arrivalTimeMs);
+			void Detect(double trend, double sendDeltaUs, int64_t arrivalTimeUs);
 
-			void UpdateThreshold(double modifiedTrend, int64_t arrivalTimeMs);
+			void UpdateThreshold(double modifiedTrend, int64_t arrivalTimeUs);
 
 		private:
 			const size_t windowSize;
 			int numOfDeltas{ 0 };
 			std::optional<int64_t> firstArrivalTimeUs;
-			double accumulatedDelayMs{ 0 };
-			double smoothedDelayMs{ 0 };
+			double accumulatedDelayUs{ 0 };
+			double smoothedDelayUs{ 0 };
 			std::deque<PacketTiming> delayHist;
 			double threshold{ 12.5 };
 			double prevTrend{ 0 };
-			std::optional<double> timeOverUsingMs;
+			std::optional<double> timeOverUsingUs;
 			int overuseCounter{ 0 };
-			std::optional<int64_t> lastThresholdUpdateTimeMs;
+			std::optional<int64_t> lastThresholdUpdateAtUs;
 			Types::BandwidthUsage state{ Types::BandwidthUsage::NORMAL };
 		};
 	} // namespace BWE

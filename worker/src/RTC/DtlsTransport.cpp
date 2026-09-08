@@ -978,7 +978,7 @@ namespace RTC
 		return true;
 	}
 
-	void DtlsTransport::ProcessDtlsData(const uint8_t* data, size_t len)
+	void DtlsTransport::ProcessDtlsData(const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1034,7 +1034,10 @@ namespace RTC
 
 			// Notify the listener.
 			this->listener->OnDtlsTransportApplicationDataReceived(
-			  this, static_cast<const uint8_t*>(DtlsTransport::sslReadBuffer), static_cast<size_t>(read));
+			  this,
+			  static_cast<const uint8_t*>(DtlsTransport::sslReadBuffer),
+			  static_cast<size_t>(read),
+			  receivedAtUs);
 		}
 	}
 

@@ -345,7 +345,7 @@ namespace RTC
 			/**
 			 * Receives SCTP data (hopefully an SCTP packet) from the remote peer.
 			 */
-			void ReceiveSctpData(const uint8_t* data, size_t len) override;
+			void ReceiveSctpData(const uint8_t* data, size_t len, int64_t receivedAtUs) override;
 
 			/**
 			 * Get negotiated max outbound streams. Returns 0 if the association is
@@ -418,65 +418,93 @@ namespace RTC
 
 			bool ValidateReceivedPacket(const Packet* receivedPacket);
 
-			bool HandleReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk);
+			bool HandleReceivedChunk(
+			  const Packet* receivedPacket, const Chunk* receivedChunk, int64_t receivedAtUs);
 
-			void HandleReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk);
+			void HandleReceivedInitChunk(
+			  const Packet* receivedPacket, const InitChunk* receivedInitChunk, int64_t receivedAtUs);
 
 			void HandleReceivedInitAckChunk(
-			  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk);
+			  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk, int64_t receivedAtUs);
 
 			void HandleReceivedCookieEchoChunk(
-			  const Packet* receivedPacket, const CookieEchoChunk* receivedCookieEchoChunk);
+			  const Packet* receivedPacket,
+			  const CookieEchoChunk* receivedCookieEchoChunk,
+			  int64_t receivedAtUs);
 
-			bool HandleReceivedCookieEchoChunkWithTcb(const Packet* receivedPacket, const StateCookie* cookie);
+			bool HandleReceivedCookieEchoChunkWithTcb(
+			  const Packet* receivedPacket, const StateCookie* cookie, int64_t receivedAtUs);
 
 			void HandleReceivedCookieAckChunk(
-			  const Packet* receivedPacket, const CookieAckChunk* receivedCookieAckChunk);
+			  const Packet* receivedPacket,
+			  const CookieAckChunk* receivedCookieAckChunk,
+			  int64_t receivedAtUs);
 
 			void HandleReceivedShutdownChunk(
-			  const Packet* receivedPacket, const ShutdownChunk* receivedShutdownChunk);
+			  const Packet* receivedPacket, const ShutdownChunk* receivedShutdownChunk, int64_t receivedAtUs);
 
 			void HandleReceivedShutdownAckChunk(
-			  const Packet* receivedPacket, const ShutdownAckChunk* receivedShutdownAckChunk);
+			  const Packet* receivedPacket,
+			  const ShutdownAckChunk* receivedShutdownAckChunk,
+			  int64_t receivedAtUs);
 
 			void HandleReceivedShutdownCompleteChunk(
-			  const Packet* receivedPacket, const ShutdownCompleteChunk* receivedShutdownCompleteChunk);
+			  const Packet* receivedPacket,
+			  const ShutdownCompleteChunk* receivedShutdownCompleteChunk,
+			  int64_t receivedAtUs);
 
 			void HandleReceivedOperationErrorChunk(
-			  const Packet* receivedPacket, const OperationErrorChunk* receivedOperationErrorChunk);
+			  const Packet* receivedPacket,
+			  const OperationErrorChunk* receivedOperationErrorChunk,
+			  int64_t receivedAtUs);
 
 			void HandleReceivedAbortAssociationChunk(
-			  const Packet* receivedPacket, const AbortAssociationChunk* receivedAbortAssociationChunk);
+			  const Packet* receivedPacket,
+			  const AbortAssociationChunk* receivedAbortAssociationChunk,
+			  int64_t receivedAtUs);
 
 			void HandleReceivedHeartbeatRequestChunk(
-			  const Packet* receivedPacket, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
+			  const Packet* receivedPacket,
+			  const HeartbeatRequestChunk* receivedHeartbeatRequestChunk,
+			  int64_t receivedAtUs);
 
 			void HandleReceivedHeartbeatAckChunk(
-			  const Packet* receivedPacket, const HeartbeatAckChunk* receivedHeartbeatAckChunk);
+			  const Packet* receivedPacket,
+			  const HeartbeatAckChunk* receivedHeartbeatAckChunk,
+			  int64_t receivedAtUs);
 
 			void HandleReceivedReConfigChunk(
-			  const Packet* receivedPacket, const ReConfigChunk* receivedReConfigChunk);
+			  const Packet* receivedPacket, const ReConfigChunk* receivedReConfigChunk, int64_t receivedAtUs);
 
 			void HandleReceivedForwardTsnChunk(
-			  const Packet* receivedPacket, const ForwardTsnChunk* receivedForwardTsnChunk);
+			  const Packet* receivedPacket,
+			  const ForwardTsnChunk* receivedForwardTsnChunk,
+			  int64_t receivedAtUs);
 
 			void HandleReceivedIForwardTsnChunk(
-			  const Packet* receivedPacket, const IForwardTsnChunk* receivedIForwardTsnChunk);
+			  const Packet* receivedPacket,
+			  const IForwardTsnChunk* receivedIForwardTsnChunk,
+			  int64_t receivedAtUs);
 
 			void HandleReceivedAnyForwardTsnChunk(
-			  const Packet* receivedPacket, const AnyForwardTsnChunk* receivedAnyForwardTsnChunk);
+			  const Packet* receivedPacket,
+			  const AnyForwardTsnChunk* receivedAnyForwardTsnChunk,
+			  int64_t receivedAtUs);
 
-			void HandleReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
+			void HandleReceivedDataChunk(
+			  const Packet* receivedPacket, const DataChunk* receivedDataChunk, int64_t receivedAtUs);
 
-			void HandleReceivedIDataChunk(const Packet* receivedPacket, const IDataChunk* receivedIDataChunk);
+			void HandleReceivedIDataChunk(
+			  const Packet* receivedPacket, const IDataChunk* receivedIDataChunk, int64_t receivedAtUs);
 
 			void HandleReceivedAnyDataChunk(
-			  const Packet* receivedPacket, const AnyDataChunk* receivedAnyDataChunk);
+			  const Packet* receivedPacket, const AnyDataChunk* receivedAnyDataChunk, int64_t receivedAtUs);
 
-			void HandleReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
+			void HandleReceivedSackChunk(
+			  const Packet* receivedPacket, const SackChunk* receivedSackChunk, int64_t receivedAtUs);
 
 			bool HandleReceivedUnknownChunk(
-			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
+			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk, int64_t receivedAtUs);
 
 			/**
 			 * Verify the MAC and freshness of an authenticated State Cookie received
@@ -489,7 +517,7 @@ namespace RTC
 			 *
 			 * @see RFC 9260 section 5.1.4.
 			 */
-			bool VerifyReceivedStateCookie(const StateCookie* cookie);
+			bool VerifyReceivedStateCookie(const StateCookie* cookie, int64_t receivedAtUs);
 
 			void OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop);
 

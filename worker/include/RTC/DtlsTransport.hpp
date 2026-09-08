@@ -91,7 +91,10 @@ namespace RTC
 			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
 			// DTLS application data received.
 			virtual void OnDtlsTransportApplicationDataReceived(
-			  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) = 0;
+			  const RTC::DtlsTransport* dtlsTransport,
+			  const uint8_t* data,
+			  size_t len,
+			  int64_t receivedAtUs) = 0;
 		};
 
 	public:
@@ -143,7 +146,7 @@ namespace RTC
 		void Dump(int indentation = 0) const;
 		void Run(Role localRole);
 		bool SetRemoteFingerprint(const Fingerprint& fingerprint);
-		void ProcessDtlsData(const uint8_t* data, size_t len);
+		void ProcessDtlsData(const uint8_t* data, size_t len, int64_t receivedAtUs);
 		DtlsState GetState() const
 		{
 			return this->state;

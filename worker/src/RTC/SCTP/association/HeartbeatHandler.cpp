@@ -71,8 +71,10 @@ namespace RTC
 
 			if (intervalDurationShouldIncludeRtt)
 			{
+				// NOTE: The timer takes milliseconds, so the RTO is truncated here.
 				this->intervalTimer->SetBaseTimeoutMs(
-				  this->intervalDurationMs + this->tcbContext->GetCurrentRtoMs());
+				  this->intervalDurationMs +
+				  static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000));
 			}
 			else
 			{
@@ -149,24 +151,27 @@ namespace RTC
 				return;
 			}
 
-			const uint64_t createdAtMs = Utils::Byte::Get8Bytes(info, 0);
-			const uint64_t nowMs       = this->shared->GetTimeMs();
+			// NOTE: The peer echoes back the info we wrote, so this value cannot be
+			// trusted. The guard below rejects it unless it's a past instant, which
+			// also rejects a negative resulting from garbage above 2^63.
+			const auto createdAtUs = static_cast<int64_t>(Utils::Byte::Get8Bytes(info, 0));
+			const int64_t nowUs    = this->shared->GetTimeUsInt64();
 
-			if (createdAtMs > 0 && createdAtMs <= nowMs)
+			if (createdAtUs > 0 && createdAtUs <= nowUs)
 			{
-				const uint64_t rttMs = nowMs - createdAtMs;
+				const int64_t rttUs = nowUs - createdAtUs;
 
-				MS_DEBUG_DEV("valid HEARTBEAT-ACK chunk received, calling ObserveRttMs(%" PRIu64 ")", rttMs);
+				MS_DEBUG_DEV("valid HEARTBEAT-ACK chunk received, calling ObserveRttUs(%" PRIi64 ")", rttUs);
 
-				this->tcbContext->ObserveRttMs(rttMs);
+				this->tcbContext->ObserveRttUs(rttUs);
 			}
 			else
 			{
 				MS_WARN_DEV(
-				  "ignoring received HEARTBEAT-ACK chunk with invalid info content [createdAtMs:%" PRIu64
-				  ", nowMs:%" PRIu64 "]",
-				  createdAtMs,
-				  nowMs);
+				  "ignoring received HEARTBEAT-ACK chunk with invalid info content [createdAtUs:%" PRIi64
+				  ", nowUs:%" PRIi64 "]",
+				  createdAtUs,
+				  nowUs);
 			}
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-8.1
@@ -204,14 +209,18 @@ namespace RTC
 				return;
 			}
 
-			this->timeoutTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
+			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+			this->timeoutTimer->SetBaseTimeoutMs(
+			  static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000));
 			this->timeoutTimer->Start();
 
 			alignas(8) uint8_t info[HeartbeatInfoLength];
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			// NOTE: This is read back in HandleReceivedHeartbeatAckChunk() when the
+			// peer echoes it, so both sides of it must use the same unit.
+			const int64_t nowUs = this->shared->GetTimeUsInt64();
 
-			Utils::Byte::Set8Bytes(info, 0, nowMs);
+			Utils::Byte::Set8Bytes(info, 0, static_cast<uint64_t>(nowUs));
 
 			auto packet                 = this->tcbContext->CreatePacket();
 			auto* heartbeatRequestChunk = packet->BuildChunkInPlace<HeartbeatRequestChunk>();
@@ -222,7 +231,7 @@ namespace RTC
 			heartbeatInfoParameter->Consolidate();
 			heartbeatRequestChunk->Consolidate();
 
-			MS_DEBUG_DEV("sending HEARTBEAT-REQUEST chunk with info content [nowMs:%" PRIu64 "]", nowMs);
+			MS_DEBUG_DEV("sending HEARTBEAT-REQUEST chunk with info content [nowUs:%" PRIi64 "]", nowUs);
 
 			this->tcbContext->SendPacket(packet.get());
 		}

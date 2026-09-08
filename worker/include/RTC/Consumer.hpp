@@ -18,7 +18,6 @@
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SeqManager.hpp"
-#include "Shared.hpp"
 #include "SharedInterface.hpp"
 #include <ankerl/unordered_dense.h>
 #include <bitset>
@@ -145,15 +144,16 @@ namespace RTC
 		void ApplyLayers();
 		uint32_t GetDesiredBitrate() const;
 		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
-		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
+		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
 		/**
 		 * Worst remote fraction lost among the RTP streams of this Consumer.
 		 */
 		uint8_t GetWorstRemoteFractionLost(uint32_t mappedSsrc) const;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc);
-		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
-		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report);
+		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
+		void ReceiveRtcpXrReceiverReferenceTime(
+		  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
 		uint32_t GetTransmissionRate(uint64_t nowMs);
 		float GetRtt() const;
 
@@ -216,8 +216,8 @@ namespace RTC
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
 		std::bitset<128u> supportedCodecPayloadTypes;
-		uint64_t lastRtcpSentTime{ 0u };
-		uint16_t maxRtcpInterval{ 0u };
+		int64_t lastRtcpSentAtUs{ 0 };
+		uint16_t maxRtcpIntervalMs{ 0u };
 		bool externallyManagedBitrate{ false };
 		uint8_t priority{ 1u };
 		struct TraceEventTypes traceEventTypes;

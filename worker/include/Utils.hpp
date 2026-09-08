@@ -515,7 +515,10 @@ namespace Utils
 			uint32_t fractions;
 		};
 
-		static Time::Ntp TimeMs2Ntp(uint64_t ms)
+		/**
+		 * Convert microseconds into an NTP timestamp.
+		 */
+		static Time::Ntp TimeUs2Ntp(int64_t us)
 		{
 			Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
@@ -523,19 +526,22 @@ namespace Utils
 			// every 2^32 seconds since Jan 1, 1900, being Feb 7, 2036 the next time it
 			// happens. That is the NTP era and receivers deal with it by doing modular
 			// arithmetic, so there is nothing to protect against here.
-			ntp.seconds = static_cast<uint32_t>(ms / 1000);
+			ntp.seconds = static_cast<uint32_t>(us / 1000000);
 			ntp.fractions =
-			  static_cast<uint32_t>((static_cast<double>(ms % 1000) / 1000) * NtpFractionalUnit);
+			  static_cast<uint32_t>((static_cast<double>(us % 1000000) / 1000000) * NtpFractionalUnit);
 
 			return ntp;
 		}
 
-		static uint64_t Ntp2TimeMs(Time::Ntp ntp)
+		/**
+		 * Convert an NTP timestamp into microseconds.
+		 */
+		static int64_t Ntp2TimeUs(Time::Ntp ntp)
 		{
 			return (
-			  (static_cast<uint64_t>(ntp.seconds) * 1000) +
-			  static_cast<uint64_t>(
-			    std::round((static_cast<double>(ntp.fractions) * 1000) / NtpFractionalUnit)));
+			  (static_cast<int64_t>(ntp.seconds) * 1000000) +
+			  static_cast<int64_t>(
+			    std::round((static_cast<double>(ntp.fractions) * 1000000) / NtpFractionalUnit)));
 		}
 
 		/**
@@ -557,7 +563,7 @@ namespace Utils
 		}
 
 		/**
-		 * Convert milliseconds into signed Q32.32 fixed point seconds, which is how the
+		 * Convert microseconds into signed Q32.32 fixed point seconds, which is how the
 		 * `abs-capture-time` RTP header extension encodes its clock offset, being the
 		 * capture timestamp itself unsigned instead (UQ32.32).
 		 *
@@ -566,29 +572,29 @@ namespace Utils
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 		 */
-		static std::optional<int64_t> TimeMs2Q32x32(int64_t ms)
+		static std::optional<int64_t> TimeUs2Q32x32(int64_t us)
 		{
 			// The seconds of the format are 32 bits wide, so from here on it does not fit.
-			static constexpr int64_t OutOfRangeMs{ (1LL << 31) * 1000 };
+			static constexpr int64_t OutOfRangeUs{ (1LL << 31) * 1000000 };
 
-			if (ms >= OutOfRangeMs || ms <= -OutOfRangeMs)
+			if (us >= OutOfRangeUs || us <= -OutOfRangeUs)
 			{
 				return std::nullopt;
 			}
 
 			return static_cast<int64_t>(
-			  std::round(static_cast<double>(ms) * (static_cast<double>(NtpFractionalUnit) / 1000)));
+			  std::round(static_cast<double>(us) * (static_cast<double>(NtpFractionalUnit) / 1000000)));
 		}
 
 		/**
-		 * Convert signed Q32.32 fixed point seconds into milliseconds.
+		 * Convert signed Q32.32 fixed point seconds into microseconds.
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 		 */
-		static int64_t Q32x32ToTimeMs(int64_t q32x32)
+		static int64_t Q32x32ToTimeUs(int64_t q32x32)
 		{
-			return static_cast<int64_t>(
-			  std::round(static_cast<double>(q32x32) * (1000 / static_cast<double>(NtpFractionalUnit))));
+			return static_cast<int64_t>(std::round(
+			  static_cast<double>(q32x32) * (1000000 / static_cast<double>(NtpFractionalUnit))));
 		}
 	};
 

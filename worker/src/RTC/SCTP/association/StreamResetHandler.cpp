@@ -77,7 +77,9 @@ namespace RTC
 			  this->retransmissionQueue->GetLastAssignedTsn(),
 			  this->retransmissionQueue->BeginResetStreams());
 
-			this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
+			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+			this->reConfigTimer->SetBaseTimeoutMs(
+			  static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000));
 			this->reConfigTimer->Start();
 
 			AddReConfigChunk(packet);
@@ -435,7 +437,9 @@ namespace RTC
 						// Force this request to be sent again, but with the same `reqSeqNbr`.
 						this->currentRequest->SetDeferred(true);
 
-						this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
+						// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+						this->reConfigTimer->SetBaseTimeoutMs(
+						  static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000));
 						this->reConfigTimer->Start();
 
 						break;
@@ -520,7 +524,8 @@ namespace RTC
 
 			this->tcbContext->SendPacket(packet.get());
 
-			baseTimeoutMs = this->tcbContext->GetCurrentRtoMs();
+			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+			baseTimeoutMs = static_cast<uint64_t>(this->tcbContext->GetCurrentRtoUs() / 1000);
 		}
 
 		void StreamResetHandler::OnBackoffTimer(

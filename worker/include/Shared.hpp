@@ -41,11 +41,6 @@ public:
 		return DepLibUV::GetTimeUs();
 	}
 
-	uint64_t GetTimeNs() override
-	{
-		return DepLibUV::GetTimeNs();
-	}
-
 	int64_t GetTimeMsInt64() override
 	{
 		return DepLibUV::GetTimeMsInt64();
@@ -56,9 +51,9 @@ public:
 		return DepLibUV::GetTimeUsInt64();
 	}
 
-	uint64_t GetNtpOffsetMs() override
+	int64_t GetNtpOffsetUs() override
 	{
-		return DepLibUV::GetNtpOffsetMs();
+		return DepLibUV::GetNtpOffsetUs();
 	}
 
 private:

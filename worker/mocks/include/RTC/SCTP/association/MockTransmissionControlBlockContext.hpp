@@ -21,7 +21,7 @@ namespace mocks
 			  : public ::RTC::SCTP::TransmissionControlBlockContextInterface
 			{
 			public:
-				using GetCurrentRtoMsAction = std::function<uint64_t()>;
+				using GetCurrentRtoUsAction = std::function<int64_t()>;
 
 			public:
 				explicit MockTransmissionControlBlockContext(
@@ -49,18 +49,19 @@ namespace mocks
 					return 0;
 				}
 
-				void ObserveRttMs(uint64_t rttMs) override
+				void ObserveRttUs(int64_t rttUs) override
 				{
-					this->observeRttMsCallCount++;
+					this->observeRttUsCallCount++;
+					this->observeRttUsCalledWith = rttUs;
 				}
 
-				uint64_t GetCurrentRtoMs() const override
+				int64_t GetCurrentRtoUs() const override
 				{
-					if (!this->getCurrentRtoMsOnceActions.empty())
+					if (!this->getCurrentRtoUsOnceActions.empty())
 					{
-						auto action = std::move(this->getCurrentRtoMsOnceActions.front());
+						auto action = std::move(this->getCurrentRtoUsOnceActions.front());
 
-						this->getCurrentRtoMsOnceActions.pop();
+						this->getCurrentRtoUsOnceActions.pop();
 
 						return action();
 					}
@@ -101,12 +102,19 @@ namespace mocks
 
 				/**
 				 * @remarks
-				 * - Must be called before expecting calls to `ObserveRttMs()`.
+				 * - Must be called before expecting calls to `ObserveRttUs()`.
 				 */
-				MockTransmissionControlBlockContext& ExpectObserveRttMsCalledTimes(size_t times)
+				MockTransmissionControlBlockContext& ExpectObserveRttUsCalledTimes(size_t times)
 				{
-					this->observeRttMsCallCount         = 0;
-					this->expectedObserveRttMsCallCount = times;
+					this->observeRttUsCallCount         = 0;
+					this->expectedObserveRttUsCallCount = times;
+
+					return *this;
+				}
+
+				MockTransmissionControlBlockContext& ExpectObserveRttUsCalledWith(int64_t rttUs)
+				{
+					this->expectedObserveRttUsCalledWith = rttUs;
 
 					return *this;
 				}
@@ -123,9 +131,9 @@ namespace mocks
 					return *this;
 				}
 
-				MockTransmissionControlBlockContext& WillGetCurrentRtoMsOnce(GetCurrentRtoMsAction action)
+				MockTransmissionControlBlockContext& WillGetCurrentRtoUsOnce(GetCurrentRtoUsAction action)
 				{
-					this->getCurrentRtoMsOnceActions.push(std::move(action));
+					this->getCurrentRtoUsOnceActions.push(std::move(action));
 
 					return *this;
 				}
@@ -133,13 +141,27 @@ namespace mocks
 				mocks::VerificationResult VerifyExpectations() const
 				{
 					if (
-					  this->expectedObserveRttMsCallCount.has_value() &&
-					  this->observeRttMsCallCount != this->expectedObserveRttMsCallCount.value())
+					  this->expectedObserveRttUsCallCount.has_value() &&
+					  this->observeRttUsCallCount != this->expectedObserveRttUsCallCount.value())
 					{
 						return { .ok           = false,
-						         .errorMessage = "ObserveRttMs() call count mismatch [expected:" +
-							                       std::to_string(this->expectedObserveRttMsCallCount.value()) +
-							                       ", got:" + std::to_string(this->observeRttMsCallCount) + "]" };
+						         .errorMessage = "ObserveRttUs() call count mismatch [expected:" +
+							                       std::to_string(this->expectedObserveRttUsCallCount.value()) +
+							                       ", got:" + std::to_string(this->observeRttUsCallCount) + "]" };
+					}
+
+					if (
+					  this->expectedObserveRttUsCalledWith.has_value() &&
+					  this->observeRttUsCalledWith != this->expectedObserveRttUsCalledWith)
+					{
+						return { .ok           = false,
+						         .errorMessage = "ObserveRttUs() call mismatch [expected:" +
+							                       std::to_string(this->expectedObserveRttUsCalledWith.value()) +
+							                       ", got:" +
+							                       (this->observeRttUsCalledWith.has_value()
+							                          ? std::to_string(this->observeRttUsCalledWith.value())
+							                          : "none") +
+							                       "]" };
 					}
 
 					if (
@@ -162,12 +184,14 @@ namespace mocks
 				::RTC::SCTP::AssociationListenerInterface& associationListener;
 				const ::RTC::SCTP::SctpOptions sctpOptions;
 
-				// ObserveRttMs().
-				size_t observeRttMsCallCount{ 0 };
-				std::optional<size_t> expectedObserveRttMsCallCount;
+				// ObserveRttUs().
+				size_t observeRttUsCallCount{ 0 };
+				std::optional<size_t> expectedObserveRttUsCallCount;
+				std::optional<int64_t> observeRttUsCalledWith;
+				std::optional<int64_t> expectedObserveRttUsCalledWith;
 
-				// GetCurrentRtoMs().
-				mutable std::queue<GetCurrentRtoMsAction> getCurrentRtoMsOnceActions;
+				// GetCurrentRtoUs().
+				mutable std::queue<GetCurrentRtoUsAction> getCurrentRtoUsOnceActions;
 
 				// IncrementTxErrorCounter().
 				size_t incrementTxErrorCounterCallCount{ 0 };

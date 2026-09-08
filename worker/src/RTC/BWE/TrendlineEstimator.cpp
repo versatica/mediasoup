@@ -21,7 +21,7 @@ namespace RTC
 		static constexpr int DeltaCounterMax{ 1000 };
 		// Time the trend must stay above the threshold before declaring overuse.
 		static constexpr double OverusingTimeThresholdMs{ 10 };
-		// Rates at which the threshold adapts upwards and downwards.
+		// Rates at which the threshold adapts upwards and downwards, per millisecond.
 		static constexpr double ThresholdUpCoef{ 0.0087 };
 		static constexpr double ThresholdDownCoef{ 0.039 };
 		// Bounds of the adaptive threshold.
@@ -29,7 +29,10 @@ namespace RTC
 		static constexpr double ThresholdMax{ 600.0 };
 		// Distance from the threshold beyond which it stops adapting, so that a
 		// sudden capacity drop doesn't drag it along.
-		static constexpr double MaxAdaptOffsetMs{ 15.0 };
+		//
+		// NOTE: It is not a time, being compared against the trend, which is a slope
+		// and hence dimensionless.
+		static constexpr double MaxAdaptOffset{ 15.0 };
 		// Maximum time step used when adapting the threshold.
 		static constexpr int64_t MaxThresholdUpdateDeltaMs{ 100 };
 
@@ -46,11 +49,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// NOTE: The trendline math is done in ms as double since every constant
-			// above is expressed in those units. Being fed us means that the
-			// sub-millisecond precision survives as the fractional part.
-			const double sendDeltaMs = static_cast<double>(sendDeltaUs) / 1000.0;
-			const double deltaMs     = static_cast<double>(arrivalDeltaUs - sendDeltaUs) / 1000.0;
+			const auto deltaUs = static_cast<double>(arrivalDeltaUs - sendDeltaUs);
 
 			this->numOfDeltas = std::min(this->numOfDeltas + 1, DeltaCounterMax);
 
@@ -60,16 +59,15 @@ namespace RTC
 			}
 
 			// Exponential backoff filter.
-			this->accumulatedDelayMs += deltaMs;
-			this->smoothedDelayMs =
-			  (SmoothingCoef * this->smoothedDelayMs) + ((1 - SmoothingCoef) * this->accumulatedDelayMs);
+			this->accumulatedDelayUs += deltaUs;
+			this->smoothedDelayUs =
+			  (SmoothingCoef * this->smoothedDelayUs) + ((1 - SmoothingCoef) * this->accumulatedDelayUs);
 
 			// Maintain the samples window. A group may arrive before the first one of
 			// the window did, in which case the regression just gets a negative x.
-			const double elapsedMs =
-			  static_cast<double>(arrivalTimeUs - this->firstArrivalTimeUs.value()) / 1000.0;
+			const auto elapsedUs = static_cast<double>(arrivalTimeUs - this->firstArrivalTimeUs.value());
 
-			this->delayHist.push_back({ elapsedMs, this->smoothedDelayMs });
+			this->delayHist.push_back({ elapsedUs, this->smoothedDelayUs });
 
 			if (this->delayHist.size() > this->windowSize)
 			{
@@ -89,7 +87,7 @@ namespace RTC
 				trend = GetLinearFitSlope().value_or(trend);
 			}
 
-			Detect(trend, sendDeltaMs, arrivalTimeUs / 1000);
+			Detect(trend, static_cast<double>(sendDeltaUs), arrivalTimeUs);
 		}
 
 		std::optional<double> TrendlineEstimator::GetLinearFitSlope() const
@@ -107,8 +105,8 @@ namespace RTC
 
 			for (const auto& sample : this->delayHist)
 			{
-				sumX += sample.arrivalTimeMs;
-				sumY += sample.smoothedDelayMs;
+				sumX += sample.arrivalTimeUs;
+				sumY += sample.smoothedDelayUs;
 			}
 
 			const double avgX = sumX / this->delayHist.size();
@@ -120,8 +118,8 @@ namespace RTC
 
 			for (const auto& sample : this->delayHist)
 			{
-				const double x = sample.arrivalTimeMs - avgX;
-				const double y = sample.smoothedDelayMs - avgY;
+				const double x = sample.arrivalTimeUs - avgX;
+				const double y = sample.smoothedDelayUs - avgY;
 
 				numerator += x * y;
 				denominator += x * x;
@@ -137,7 +135,7 @@ namespace RTC
 			return numerator / denominator;
 		}
 
-		void TrendlineEstimator::Detect(double trend, double sendDeltaMs, int64_t arrivalTimeMs)
+		void TrendlineEstimator::Detect(double trend, double sendDeltaUs, int64_t arrivalTimeUs)
 		{
 			MS_TRACE();
 
@@ -154,15 +152,15 @@ namespace RTC
 
 			if (modifiedTrend > this->threshold)
 			{
-				if (!this->timeOverUsingMs.has_value())
+				if (!this->timeOverUsingUs.has_value())
 				{
 					// Initialize the timer assuming that we have been over-using half of
 					// the time since the previous sample.
-					this->timeOverUsingMs = sendDeltaMs / 2;
+					this->timeOverUsingUs = sendDeltaUs / 2;
 				}
 				else
 				{
-					this->timeOverUsingMs = this->timeOverUsingMs.value() + sendDeltaMs;
+					this->timeOverUsingUs = this->timeOverUsingUs.value() + sendDeltaUs;
 				}
 
 				this->overuseCounter++;
@@ -170,11 +168,11 @@ namespace RTC
 				// Only declare overuse once the condition has persisted for long enough,
 				// over more than a single sample, and while the trend is not decreasing
 				// already. This is what filters out isolated jitter spikes.
-				if (this->timeOverUsingMs.value() > OverusingTimeThresholdMs && this->overuseCounter > 1)
+				if (this->timeOverUsingUs.value() / 1000.0 > OverusingTimeThresholdMs && this->overuseCounter > 1)
 				{
 					if (trend >= this->prevTrend)
 					{
-						this->timeOverUsingMs = 0;
+						this->timeOverUsingUs = 0;
 						this->overuseCounter  = 0;
 						this->state           = Types::BandwidthUsage::OVERUSING;
 					}
@@ -182,36 +180,36 @@ namespace RTC
 			}
 			else if (modifiedTrend < -this->threshold)
 			{
-				this->timeOverUsingMs.reset();
+				this->timeOverUsingUs.reset();
 				this->overuseCounter = 0;
 				this->state          = Types::BandwidthUsage::UNDERUSING;
 			}
 			else
 			{
-				this->timeOverUsingMs.reset();
+				this->timeOverUsingUs.reset();
 				this->overuseCounter = 0;
 				this->state          = Types::BandwidthUsage::NORMAL;
 			}
 
 			this->prevTrend = trend;
 
-			UpdateThreshold(modifiedTrend, arrivalTimeMs);
+			UpdateThreshold(modifiedTrend, arrivalTimeUs);
 		}
 
-		void TrendlineEstimator::UpdateThreshold(double modifiedTrend, int64_t arrivalTimeMs)
+		void TrendlineEstimator::UpdateThreshold(double modifiedTrend, int64_t arrivalTimeUs)
 		{
 			MS_TRACE();
 
-			if (!this->lastThresholdUpdateTimeMs.has_value())
+			if (!this->lastThresholdUpdateAtUs.has_value())
 			{
-				this->lastThresholdUpdateTimeMs = arrivalTimeMs;
+				this->lastThresholdUpdateAtUs = arrivalTimeUs;
 			}
 
 			// Avoid adapting the threshold to big latency spikes, caused for instance
 			// by a sudden capacity drop.
-			if (std::fabs(modifiedTrend) > this->threshold + MaxAdaptOffsetMs)
+			if (std::fabs(modifiedTrend) > this->threshold + MaxAdaptOffset)
 			{
-				this->lastThresholdUpdateTimeMs = arrivalTimeMs;
+				this->lastThresholdUpdateAtUs = arrivalTimeUs;
 
 				return;
 			}
@@ -220,13 +218,16 @@ namespace RTC
 			// once the network calms down.
 			const double coef =
 			  std::fabs(modifiedTrend) < this->threshold ? ThresholdDownCoef : ThresholdUpCoef;
-			const int64_t elapsedMs =
-			  std::min(arrivalTimeMs - this->lastThresholdUpdateTimeMs.value(), MaxThresholdUpdateDeltaMs);
+			// NOTE: The coefficients above are rates per millisecond, so the step is
+			// expressed in those units no matter that the instants are microseconds.
+			const double elapsedMs = std::min(
+			  static_cast<double>(arrivalTimeUs - this->lastThresholdUpdateAtUs.value()) / 1000.0,
+			  static_cast<double>(MaxThresholdUpdateDeltaMs));
 
 			this->threshold += coef * (std::fabs(modifiedTrend) - this->threshold) * elapsedMs;
 			this->threshold = std::clamp(this->threshold, ThresholdMin, ThresholdMax);
 
-			this->lastThresholdUpdateTimeMs = arrivalTimeMs;
+			this->lastThresholdUpdateAtUs = arrivalTimeUs;
 		}
 	} // namespace BWE
 } // namespace RTC

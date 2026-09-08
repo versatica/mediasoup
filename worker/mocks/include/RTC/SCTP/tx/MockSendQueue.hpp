@@ -18,7 +18,7 @@ namespace mocks
 			{
 			public:
 				using ProduceAction =
-				  std::function<std::optional<DataToSend>(uint64_t /*nowMs*/, size_t /*maxLength*/)>;
+				  std::function<std::optional<DataToSend>(int64_t /*nowUs*/, size_t /*maxLength*/)>;
 
 				struct DiscardExpectation
 				{
@@ -40,7 +40,7 @@ namespace mocks
 					this->messageInterleavingCalledWith = enabled;
 				}
 
-				std::optional<DataToSend> Produce(uint64_t nowMs, size_t maxLength) override
+				std::optional<DataToSend> Produce(int64_t nowUs, size_t maxLength) override
 				{
 					this->produceCallCount++;
 
@@ -50,11 +50,11 @@ namespace mocks
 
 						this->produceOnceActions.pop();
 
-						return action(nowMs, maxLength);
+						return action(nowUs, maxLength);
 					}
 					else if (this->produceRepeatedlyAction)
 					{
-						return this->produceRepeatedlyAction(nowMs, maxLength);
+						return this->produceRepeatedlyAction(nowUs, maxLength);
 					}
 					else
 					{

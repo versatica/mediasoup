@@ -81,9 +81,9 @@ namespace RTC
 			{
 				/**
 				 * Capture instant of the media carried by the RTP timestamp below, in our own
-				 * monotonic clock (ms).
+				 * monotonic clock (us).
 				 */
-				uint64_t captureMs;
+				int64_t captureAtUs;
 				/**
 				 * RTP timestamp the capture instant above refers to.
 				 */
@@ -104,7 +104,7 @@ namespace RTC
 				/**
 				 * Local time at which the Sender Report arrived.
 				 */
-				uint64_t receivedMs;
+				int64_t receivedAtUs;
 			};
 
 			/**
@@ -118,9 +118,9 @@ namespace RTC
 				 */
 				uint32_t ts;
 				/**
-				 * Capture instant in the remote sender's wall clock (ms).
+				 * Capture instant in the remote sender's wall clock (us).
 				 */
-				uint64_t ntpMs;
+				int64_t ntpUs;
 			};
 
 		public:
@@ -137,7 +137,7 @@ namespace RTC
 			flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
 			  flatbuffers::FlatBufferBuilder& builder) override;
 
-			bool ReceivePacket(RTP::Packet* packet);
+			bool ReceivePacket(RTP::Packet* packet, int64_t receivedAtUs);
 
 			bool ReceiveRtxPacket(RTP::Packet* packet);
 
@@ -145,25 +145,26 @@ namespace RTC
 
 			RTC::RTCP::ReceiverReport* GetRtxRtcpReceiverReport();
 
-			void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
+			void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
 
-			void ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report);
+			void ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
 
-			void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
+			void ReceiveRtcpXrDelaySinceLastRr(
+			  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
 
 			/**
 			 * Local time at which the last RTCP Sender Report arrived.
 			 *
 			 * @returns No value if no Sender Report has arrived yet.
 			 */
-			std::optional<uint64_t> GetSenderReportReceivedMs() const
+			std::optional<int64_t> GetSenderReportReceivedAtUs() const
 			{
 				if (!this->lastSenderReportTiming.has_value())
 				{
 					return std::nullopt;
 				}
 
-				return this->lastSenderReportTiming.value().receivedMs;
+				return this->lastSenderReportTiming.value().receivedAtUs;
 			}
 
 			/**
@@ -175,14 +176,14 @@ namespace RTC
 			 *   remote sender into our own clock needs the whole set of streams of that
 			 *   sender.
 			 *
-			 * @param captureMs - Capture instant of `ts` in our own monotonic clock.
+			 * @param captureAtUs - Capture instant of `ts` in our own monotonic clock.
 			 * @param ts - RTP timestamp the capture instant refers to.
 			 */
-			void SetCaptureMapping(uint64_t captureMs, uint32_t ts)
+			void SetCaptureMapping(int64_t captureAtUs, uint32_t ts)
 			{
 				this->lastCaptureMapping = RTP::RtpStreamRecv::CaptureMapping{
-					.captureMs = captureMs,
-					.ts        = ts,
+					.captureAtUs = captureAtUs,
+					.ts          = ts,
 				};
 			}
 
@@ -211,7 +212,7 @@ namespace RTC
 			 * @returns No value if no such extension has been received, or if the given RTP
 			 * timestamp is too far away from the one it referred to.
 			 */
-			std::optional<uint64_t> GetRemoteCaptureMsFromAbsCaptureTime(uint32_t ts) const;
+			std::optional<int64_t> GetRemoteCaptureAtUsFromAbsCaptureTime(uint32_t ts) const;
 
 			/**
 			 * Capture instant of the given RTP timestamp, expressed in the remote sender's
@@ -222,7 +223,7 @@ namespace RTC
 			 * @returns No value if no Sender Report has been received, or if the given RTP
 			 * timestamp is too far away from the one it reported.
 			 */
-			std::optional<uint64_t> GetRemoteCaptureMsFromSenderReport(uint32_t ts) const;
+			std::optional<int64_t> GetRemoteCaptureAtUsFromSenderReport(uint32_t ts) const;
 
 			void RequestKeyFrame();
 
@@ -256,7 +257,7 @@ namespace RTC
 			}
 
 		private:
-			void CalculateJitter(uint32_t rtpTimestamp);
+			void CalculateJitter(uint32_t rtpTimestamp, int64_t receivedAtUs);
 
 			void UpdateScore();
 
@@ -264,13 +265,13 @@ namespace RTC
 			 * Interpolate the capture instant of `ts` from a reference pair, all of them
 			 * expressed in the remote sender's wall clock.
 			 *
-			 * @param referenceNtpMs - Capture instant of `referenceTs`.
+			 * @param referenceNtpUs - Capture instant of `referenceTs`.
 			 * @param referenceTs - RTP timestamp the reference instant refers to.
 			 * @param ts - RTP timestamp whose capture instant is wanted.
-			 * @param maxDistanceMs - How far `ts` may be from `referenceTs`.
+			 * @param maxDistanceUs - How far `ts` may be from `referenceTs`.
 			 */
-			std::optional<uint64_t> InterpolateRemoteCaptureMs(
-			  uint64_t referenceNtpMs, uint32_t referenceTs, uint32_t ts, uint64_t maxDistanceMs) const;
+			std::optional<int64_t> InterpolateRemoteCaptureAtUs(
+			  int64_t referenceNtpUs, uint32_t referenceTs, uint32_t ts, int64_t maxDistanceUs) const;
 
 			/* Pure virtual methods inherited from RTP::RtpStream. */
 		public:
@@ -288,17 +289,17 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			uint32_t sendNackDelayMs{ 0u };
+			uint32_t sendNackDelayMs{ 0 };
 			bool useRtpInactivityCheck{ false };
 			// Others.
 			// Packets expected at last interval.
-			uint32_t expectedPrior{ 0u };
+			uint32_t expectedPrior{ 0 };
 			// Packets expected at last interval for score calculation.
-			uint32_t expectedPriorScore{ 0u };
+			uint32_t expectedPriorScore{ 0 };
 			// Packets received at last interval.
-			uint32_t receivedPrior{ 0u };
+			uint32_t receivedPrior{ 0 };
 			// Packets received at last interval for score calculation.
-			uint32_t receivedPriorScore{ 0u };
+			uint32_t receivedPriorScore{ 0 };
 			// Timing data of the most recent Sender Report received.
 			std::optional<SenderReportTiming> lastSenderReportTiming;
 			// Most recent `abs-capture-time` RTP header extension received.
@@ -306,8 +307,8 @@ namespace RTC
 			// Most recent RTP timestamp whose capture instant could be told, along with it.
 			std::optional<CaptureMapping> lastCaptureMapping;
 			// Relative transit time for prev packet.
-			int32_t transit{ 0u };
-			uint8_t firSeqNumber{ 0u };
+			int32_t transit{ 0 };
+			uint8_t firSeqNumber{ 0 };
 			int32_t reportedPacketsLost{ 0 };
 			std::unique_ptr<RTC::NackGenerator> nackGenerator;
 			TimerHandleInterface* inactivityCheckPeriodicTimer{ nullptr };

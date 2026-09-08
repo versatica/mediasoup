@@ -338,7 +338,7 @@ namespace RTC
 
 			constexpr uint16_t MaxRetransmitsNoLimit{ std::numeric_limits<uint16_t>::max() };
 
-			constexpr uint64_t ExpiresAtMsInfinite{ std::numeric_limits<uint64_t>::max() };
+			constexpr int64_t ExpiresAtUsInfinite{ std::numeric_limits<int64_t>::max() };
 
 			/**
 			 * Unwrapped Transmission Sequence Numbers (TSN).

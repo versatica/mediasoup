@@ -5,31 +5,36 @@
 
 SCENARIO("Utils::Time", "[utils][time]")
 {
-	SECTION("Ntp2TimeMs()")
+	SECTION("Ntp2TimeUs()")
 	{
-		const auto nowMs  = DepLibUV::GetTimeMs();
-		const auto ntp    = Utils::Time::TimeMs2Ntp(nowMs);
-		const auto nowMs2 = Utils::Time::Ntp2TimeMs(ntp);
-		const auto ntp2   = Utils::Time::TimeMs2Ntp(nowMs2);
+		const auto nowUs  = DepLibUV::GetTimeUsInt64();
+		const auto ntp    = Utils::Time::TimeUs2Ntp(nowUs);
+		const auto nowUs2 = Utils::Time::Ntp2TimeUs(ntp);
+		const auto ntp2   = Utils::Time::TimeUs2Ntp(nowUs2);
 
-		REQUIRE(nowMs2 == nowMs);
+		REQUIRE(nowUs2 == nowUs);
 		REQUIRE(ntp2.seconds == ntp.seconds);
 		REQUIRE(ntp2.fractions == ntp.fractions);
 	}
 
-	SECTION("TimeMs2Ntp()")
+	SECTION("TimeUs2Ntp()")
 	{
-		auto ntp = Utils::Time::TimeMs2Ntp(1500);
+		auto ntp = Utils::Time::TimeUs2Ntp(1500000);
 
 		REQUIRE(ntp.seconds == 1);
 		// Half a second in NTP fractional units.
 		REQUIRE(ntp.fractions == 2147483648);
 
 		// A real NTP instant, seconds since Jan 1, 1900, which still fits in 32 bits.
-		ntp = Utils::Time::TimeMs2Ntp(3990000000750);
+		ntp = Utils::Time::TimeUs2Ntp(3990000000750000);
 
 		REQUIRE(ntp.seconds == 3990000000);
-		REQUIRE(Utils::Time::Ntp2TimeMs(ntp) == 3990000000750);
+		REQUIRE(Utils::Time::Ntp2TimeUs(ntp) == 3990000000750000);
+
+		// Sub-millisecond times are kept.
+		REQUIRE(Utils::Time::TimeUs2Ntp(1000500).fractions > Utils::Time::TimeUs2Ntp(1000000).fractions);
+		REQUIRE(Utils::Time::TimeUs2Ntp(1000500).fractions < Utils::Time::TimeUs2Ntp(1001000).fractions);
+		REQUIRE(Utils::Time::Ntp2TimeUs(Utils::Time::TimeUs2Ntp(1000500)) == 1000500);
 	}
 
 	SECTION("TimeUsToAbsSendTime()")
@@ -58,37 +63,37 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(Utils::Time::TimeUsToAbsSendTime(-WrapPeriodUs) == 0);
 	}
 
-	SECTION("TimeMs2Q32x32()")
+	SECTION("TimeUs2Q32x32()")
 	{
 		// A whole second is the fractional unit itself.
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(Utils::Time::TimeMs2Q32x32(1000).value() == 4294967296);
+		REQUIRE(Utils::Time::TimeUs2Q32x32(1000000).value() == 4294967296);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(Utils::Time::TimeMs2Q32x32(-1000).value() == -4294967296);
+		REQUIRE(Utils::Time::TimeUs2Q32x32(-1000000).value() == -4294967296);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(Utils::Time::TimeMs2Q32x32(0).value() == 0);
+		REQUIRE(Utils::Time::TimeUs2Q32x32(0).value() == 0);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(Utils::Time::TimeMs2Q32x32(1).value() == 4294967);
+		REQUIRE(Utils::Time::TimeUs2Q32x32(1000).value() == 4294967);
 
 		// Seconds are 32 bits wide in the format, so 2^31 seconds no longer fit.
-		constexpr int64_t OutOfRangeMs{ (1LL << 31) * 1000 };
+		constexpr int64_t OutOfRangeUs{ (1LL << 31) * 1000000 };
 
-		REQUIRE(Utils::Time::TimeMs2Q32x32(OutOfRangeMs) == std::nullopt);
-		REQUIRE(Utils::Time::TimeMs2Q32x32(-OutOfRangeMs) == std::nullopt);
-		REQUIRE(Utils::Time::TimeMs2Q32x32(OutOfRangeMs - 1).has_value());
-		REQUIRE(Utils::Time::TimeMs2Q32x32(-OutOfRangeMs + 1).has_value());
+		REQUIRE(Utils::Time::TimeUs2Q32x32(OutOfRangeUs) == std::nullopt);
+		REQUIRE(Utils::Time::TimeUs2Q32x32(-OutOfRangeUs) == std::nullopt);
+		REQUIRE(Utils::Time::TimeUs2Q32x32(OutOfRangeUs - 1).has_value());
+		REQUIRE(Utils::Time::TimeUs2Q32x32(-OutOfRangeUs + 1).has_value());
 	}
 
-	SECTION("Q32x32ToTimeMs()")
+	SECTION("Q32x32ToTimeUs()")
 	{
-		REQUIRE(Utils::Time::Q32x32ToTimeMs(4294967296) == 1000);
-		REQUIRE(Utils::Time::Q32x32ToTimeMs(-4294967296) == -1000);
-		REQUIRE(Utils::Time::Q32x32ToTimeMs(0) == 0);
+		REQUIRE(Utils::Time::Q32x32ToTimeUs(4294967296) == 1000000);
+		REQUIRE(Utils::Time::Q32x32ToTimeUs(-4294967296) == -1000000);
+		REQUIRE(Utils::Time::Q32x32ToTimeUs(0) == 0);
 
-		for (const int64_t ms : { 1, -1, 1000, -1000, 123456, -123456 })
+		for (const int64_t us : { 1, -1, 1000, -1000, 1000000, -1000000, 123456789, -123456789 })
 		{
 			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			REQUIRE(Utils::Time::Q32x32ToTimeMs(Utils::Time::TimeMs2Q32x32(ms).value()) == ms);
+			REQUIRE(Utils::Time::Q32x32ToTimeUs(Utils::Time::TimeUs2Q32x32(us).value()) == us);
 		}
 	}
 }

@@ -162,9 +162,9 @@ namespace RTC
 				Item(
 				  uint32_t outgoingMessageId,
 				  UserData data,
-				  uint64_t timeSentMs,
+				  int64_t timeSentUs,
 				  uint16_t maxRetransmissions,
-				  uint64_t expiresAtMs,
+				  int64_t expiresAtUs,
 				  std::optional<uint64_t> lifecycleId);
 
 				Item(const Item&) = delete;
@@ -177,9 +177,9 @@ namespace RTC
 					return this->outgoingMessageId;
 				}
 
-				uint64_t GetTimeSentMs() const
+				int64_t GetTimeSentUs() const
 				{
-					return this->timeSentMs;
+					return this->timeSentUs;
 				}
 
 				const UserData& GetData() const
@@ -251,9 +251,9 @@ namespace RTC
 				 * Given the current time, and the current state of this DATA chunk, it
 				 * will indicate if it has expired (SCTP Partial Reliability Extension).
 				 */
-				bool HasExpired(uint64_t nowMs) const
+				bool HasExpired(int64_t nowUs) const
 				{
-					return (this->expiresAtMs != Types::ExpiresAtMsInfinite && this->expiresAtMs <= nowMs);
+					return (this->expiresAtUs != Types::ExpiresAtUsInfinite && this->expiresAtUs <= nowUs);
 				}
 
 				std::optional<uint64_t> GetLifecycleId() const
@@ -265,15 +265,14 @@ namespace RTC
 				// The actual data to send/retransmit.
 				const UserData data;
 				// When the packet was sent, and placed in this queue.
-				const uint64_t timeSentMs;
+				const int64_t timeSentUs;
 				// If the message was sent with a maximum number of retransmissions,
 				// this is set to that number. The value zero (0) means that it will
 				// never be retransmitted.
 				const uint16_t maxRetransmissions;
-				// At this exact millisecond, the item is considered expired. If the
-				// message is not to be expired, this is set to the infinite future.
-				// NOTE: If 0 it means infinite time.
-				const uint64_t expiresAtMs;
+				// At this exact microsecond, the item is considered expired. If the
+				// message is not to be expired, this is set to `ExpiresAtUsInfinite`.
+				const int64_t expiresAtUs;
 				// An optional lifecycle id, which may only be set for the last
 				// fragment.
 				const std::optional<uint64_t> lifecycleId;
@@ -342,10 +341,10 @@ namespace RTC
 			}
 
 			/**
-			 * Given the current time `nowMs`, expire and abandon outstanding (sent
+			 * Given the current time `nowUs`, expire and abandon outstanding (sent
 			 * at least once) chunks that have a limited lifetime.
 			 */
-			void ExpireOutstandingChunks(uint64_t nowMs);
+			void ExpireOutstandingChunks(int64_t nowUs);
 
 			bool IsEmpty() const
 			{
@@ -382,9 +381,9 @@ namespace RTC
 			std::optional<Types::UnwrappedTsn> Insert(
 			  uint32_t outgoingMessageId,
 			  const UserData& data,
-			  uint64_t timeSentMs,
+			  int64_t timeSentUs,
 			  uint16_t maxRetransmissions         = Types::MaxRetransmitsNoLimit,
-			  uint64_t expiresAtMs                = Types::ExpiresAtMsInfinite,
+			  int64_t expiresAtUs                 = Types::ExpiresAtUsInfinite,
 			  std::optional<uint64_t> lifecycleId = std::nullopt);
 
 			/**
@@ -408,7 +407,7 @@ namespace RTC
 			 * algorithm, so if the chunk has ever been retransmitted, it will return
 			 * `std::nullopt`.
 			 */
-			std::optional<uint64_t> MeasureRtt(uint64_t nowMs, Types::UnwrappedTsn tsn) const;
+			std::optional<int64_t> MeasureRtt(int64_t nowUs, Types::UnwrappedTsn tsn) const;
 
 			/**
 			 * Returns true if the next chunk that is not acked by the peer has been

@@ -107,10 +107,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 	};
 
-	mocks::MockShared shared(/*getTimeMs*/
-	                         []()
+	mocks::MockShared shared(/*getTimeUsInt64*/
+	                         []() -> int64_t
 	                         {
-		                         return 1000;
+		                         return 1000 * 1000;
 	                         });
 
 	// clang-format off
@@ -1129,7 +1129,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	SECTION("Sender Report RTP timestamp is based on the capture instant when known")
 	{
 		// Instant reported by the mocked clock, and hence the one at which packets are seen.
-		constexpr uint64_t PacketMs{ 1000 };
+		constexpr int64_t PacketAtUs{ 1000 * 1000 };
 		constexpr uint32_t PacketTs{ 1533790901 };
 
 		TestRtpStreamListener testRtpStreamListener;
@@ -1155,7 +1155,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			  packet.get());
 
 			const std::unique_ptr<RTC::RTCP::SenderReport> report(
-			  stream.GetRtcpSenderReport(PacketMs + 1000));
+			  stream.GetRtcpSenderReport(PacketAtUs + 1000000));
 
 			REQUIRE(report);
 			REQUIRE(report->GetRtpTs() == PacketTs + params.clockRate);
@@ -1167,7 +1167,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 			auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
 
-			packet->SetCaptureMs(PacketMs - 500);
+			packet->SetCaptureAtUs(PacketAtUs - 500000);
 
 			sendRtpPacket(
 			  {
@@ -1176,7 +1176,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			  packet.get());
 
 			const std::unique_ptr<RTC::RTCP::SenderReport> report(
-			  stream.GetRtcpSenderReport(PacketMs + 1000));
+			  stream.GetRtcpSenderReport(PacketAtUs + 1000000));
 
 			REQUIRE(report);
 			REQUIRE(report->GetRtpTs() == PacketTs + ((1500 * params.clockRate) / 1000));
@@ -1189,7 +1189,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 			auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, PacketTs));
 
-			packet->SetCaptureMs(PacketMs + 3000);
+			packet->SetCaptureAtUs(PacketAtUs + 3000000);
 
 			sendRtpPacket(
 			  {
@@ -1198,7 +1198,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			  packet.get());
 
 			const std::unique_ptr<RTC::RTCP::SenderReport> report(
-			  stream.GetRtcpSenderReport(PacketMs + 1000));
+			  stream.GetRtcpSenderReport(PacketAtUs + 1000000));
 
 			REQUIRE(report);
 			REQUIRE(report->GetRtpTs() == PacketTs);
@@ -1208,7 +1208,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	SECTION("no Sender Report is generated once the stream has stopped sending")
 	{
 		// Instant reported by the mocked clock, and hence the one at which packets are seen.
-		constexpr uint64_t PacketMs{ 1000 };
+		constexpr int64_t PacketAtUs{ 1000 * 1000 };
 		constexpr uint32_t PacketTs{ 1533790901 };
 
 		TestRtpStreamListener testRtpStreamListener;
@@ -1232,14 +1232,14 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  packet.get());
 
 		// Right at the limit the Sender Report is still generated.
-		const std::unique_ptr<RTC::RTCP::SenderReport> report(
-		  stream.GetRtcpSenderReport(PacketMs + RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs));
+		const std::unique_ptr<RTC::RTCP::SenderReport> report(stream.GetRtcpSenderReport(
+		  PacketAtUs + (RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs * 1000)));
 
 		REQUIRE(report);
 
 		// Past the limit it is not.
 		const std::unique_ptr<RTC::RTCP::SenderReport> staleReport(stream.GetRtcpSenderReport(
-		  PacketMs + RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs + 1));
+		  PacketAtUs + ((RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs + 1) * 1000)));
 
 		REQUIRE_FALSE(staleReport);
 	}

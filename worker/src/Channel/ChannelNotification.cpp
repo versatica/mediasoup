@@ -22,18 +22,17 @@ namespace Channel
 
 	/* Instance methods. */
 
-	ChannelNotification::ChannelNotification(const FBS::Notification::Notification* notification)
+	ChannelNotification::ChannelNotification(
+	  const FBS::Notification::Notification* notification, int64_t receivedAtUs)
+	  : data(notification), receivedAtUs(receivedAtUs)
 	{
 		MS_TRACE();
 
-		this->data  = notification;
-		this->event = notification->event();
-
-		auto eventCStrIt = Event2String.find(this->event);
+		auto eventCStrIt = Event2String.find(this->data->event());
 
 		if (eventCStrIt == Event2String.end())
 		{
-			MS_THROW_ERROR("unknown event '%" PRIu8 "'", static_cast<uint8_t>(this->event));
+			MS_THROW_ERROR("unknown event '%" PRIu8 "'", static_cast<uint8_t>(this->data->event()));
 		}
 
 		this->eventCStr = eventCStrIt->second;

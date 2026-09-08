@@ -363,11 +363,13 @@ namespace RTC
 				.rtxPacketsCount = this->tcb->GetRetransmissionQueue().GetRtxPacketsCount(),
 				.rtxBytesCount   = this->tcb->GetRetransmissionQueue().GetRtxBytesCount(),
 				.cwndBytes       = this->tcb->GetCwnd(),
-				.srttMs          = this->tcb->GetCurrentSrttMs(),
-				.unackDataCount  = this->tcb->GetRetransmissionQueue().GetUnackedItems() +
-				                   ((this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) /
-				                    packetPayloadLength),
-				.peerRwndBytes   = static_cast<uint32_t>(this->tcb->GetRetransmissionQueue().GetRwnd()),
+				// NOTE: The metric mirrors RFC 6458's `spinfo_srtt`, which is in
+				// milliseconds.
+				.srttMs         = static_cast<uint64_t>(this->tcb->GetCurrentSrttUs() / 1000),
+				.unackDataCount = this->tcb->GetRetransmissionQueue().GetUnackedItems() +
+				                  ((this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) /
+				                   packetPayloadLength),
+				.peerRwndBytes  = static_cast<uint32_t>(this->tcb->GetRetransmissionQueue().GetRwnd()),
 				.peerImplementation           = this->privateMetrics.peerImplementation,
 				.negotiatedMaxOutboundStreams = this->privateMetrics.negotiatedMaxOutboundStreams,
 				.negotiatedMaxInboundStreams  = this->privateMetrics.negotiatedMaxInboundStreams,
@@ -477,15 +479,15 @@ namespace RTC
 				return status;
 			}
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			const int64_t nowUs = this->shared->GetTimeUsInt64();
 
 			this->privateMetrics.txMessagesCount++;
 
-			this->sendQueue.AddMessage(nowMs, std::move(message), sendMessageOptions);
+			this->sendQueue.AddMessage(nowUs, std::move(message), sendMessageOptions);
 
 			if (this->tcb)
 			{
-				this->tcb->SendBufferedPackets(nowMs);
+				this->tcb->SendBufferedPackets(nowUs);
 			}
 
 			AssertIsConsistent();
@@ -500,7 +502,7 @@ namespace RTC
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			const int64_t nowUs = this->shared->GetTimeUsInt64();
 
 			std::vector<Types::SendMessageStatus> statuses;
 
@@ -519,12 +521,12 @@ namespace RTC
 
 				this->privateMetrics.txMessagesCount++;
 
-				this->sendQueue.AddMessage(nowMs, std::move(message), sendMessageOptions);
+				this->sendQueue.AddMessage(nowUs, std::move(message), sendMessageOptions);
 			}
 
 			if (this->tcb)
 			{
-				this->tcb->SendBufferedPackets(nowMs);
+				this->tcb->SendBufferedPackets(nowUs);
 			}
 
 			AssertIsConsistent();
@@ -532,7 +534,7 @@ namespace RTC
 			return statuses;
 		}
 
-		void Association::ReceiveSctpData(const uint8_t* data, size_t len)
+		void Association::ReceiveSctpData(const uint8_t* data, size_t len, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -598,7 +600,7 @@ namespace RTC
 			{
 				const auto* receivedChunk = *it;
 
-				if (!HandleReceivedChunk(receivedPacket.get(), receivedChunk))
+				if (!HandleReceivedChunk(receivedPacket.get(), receivedChunk, receivedAtUs))
 				{
 					break;
 				}
@@ -868,7 +870,9 @@ namespace RTC
 
 			this->packetSender.SendPacket(packet.get());
 
-			this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
+			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+			this->t2ShutdownTimer->SetBaseTimeoutMs(
+			  static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000));
 			this->t2ShutdownTimer->Start();
 		}
 
@@ -893,7 +897,9 @@ namespace RTC
 			{
 				SendShutdownChunk();
 
-				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
+				// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+				this->t2ShutdownTimer->SetBaseTimeoutMs(
+				  static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000));
 				this->t2ShutdownTimer->Start();
 
 				SetState(State::SHUTDOWN_SENT, "no more outstanding data");
@@ -944,7 +950,9 @@ namespace RTC
 			{
 				SendShutdownChunk();
 
-				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoMs());
+				// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+				this->t2ShutdownTimer->SetBaseTimeoutMs(
+				  static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000));
 				this->t2ShutdownTimer->Start();
 			}
 		}
@@ -1256,7 +1264,8 @@ namespace RTC
 			}
 		}
 
-		bool Association::HandleReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk)
+		bool Association::HandleReceivedChunk(
+		  const Packet* receivedPacket, const Chunk* receivedChunk, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -1264,14 +1273,16 @@ namespace RTC
 			{
 				case Chunk::ChunkType::INIT:
 				{
-					HandleReceivedInitChunk(receivedPacket, static_cast<const InitChunk*>(receivedChunk));
+					HandleReceivedInitChunk(
+					  receivedPacket, static_cast<const InitChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
 
 				case Chunk::ChunkType::INIT_ACK:
 				{
-					HandleReceivedInitAckChunk(receivedPacket, static_cast<const InitAckChunk*>(receivedChunk));
+					HandleReceivedInitAckChunk(
+					  receivedPacket, static_cast<const InitAckChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1279,7 +1290,7 @@ namespace RTC
 				case Chunk::ChunkType::COOKIE_ECHO:
 				{
 					HandleReceivedCookieEchoChunk(
-					  receivedPacket, static_cast<const CookieEchoChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const CookieEchoChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1287,7 +1298,7 @@ namespace RTC
 				case Chunk::ChunkType::COOKIE_ACK:
 				{
 					HandleReceivedCookieAckChunk(
-					  receivedPacket, static_cast<const CookieAckChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const CookieAckChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1295,7 +1306,7 @@ namespace RTC
 				case Chunk::ChunkType::SHUTDOWN:
 				{
 					HandleReceivedShutdownChunk(
-					  receivedPacket, static_cast<const ShutdownChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const ShutdownChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1303,7 +1314,7 @@ namespace RTC
 				case Chunk::ChunkType::SHUTDOWN_ACK:
 				{
 					HandleReceivedShutdownAckChunk(
-					  receivedPacket, static_cast<const ShutdownAckChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const ShutdownAckChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1311,7 +1322,7 @@ namespace RTC
 				case Chunk::ChunkType::SHUTDOWN_COMPLETE:
 				{
 					HandleReceivedShutdownCompleteChunk(
-					  receivedPacket, static_cast<const ShutdownCompleteChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const ShutdownCompleteChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1319,7 +1330,7 @@ namespace RTC
 				case Chunk::ChunkType::OPERATION_ERROR:
 				{
 					HandleReceivedOperationErrorChunk(
-					  receivedPacket, static_cast<const OperationErrorChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const OperationErrorChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1327,7 +1338,7 @@ namespace RTC
 				case Chunk::ChunkType::ABORT:
 				{
 					HandleReceivedAbortAssociationChunk(
-					  receivedPacket, static_cast<const AbortAssociationChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const AbortAssociationChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1335,7 +1346,7 @@ namespace RTC
 				case Chunk::ChunkType::HEARTBEAT_REQUEST:
 				{
 					HandleReceivedHeartbeatRequestChunk(
-					  receivedPacket, static_cast<const HeartbeatRequestChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const HeartbeatRequestChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1343,7 +1354,7 @@ namespace RTC
 				case Chunk::ChunkType::HEARTBEAT_ACK:
 				{
 					HandleReceivedHeartbeatAckChunk(
-					  receivedPacket, static_cast<const HeartbeatAckChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const HeartbeatAckChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1351,7 +1362,7 @@ namespace RTC
 				case Chunk::ChunkType::RE_CONFIG:
 				{
 					HandleReceivedReConfigChunk(
-					  receivedPacket, static_cast<const ReConfigChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const ReConfigChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1359,7 +1370,7 @@ namespace RTC
 				case Chunk::ChunkType::FORWARD_TSN:
 				{
 					HandleReceivedForwardTsnChunk(
-					  receivedPacket, static_cast<const ForwardTsnChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const ForwardTsnChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1367,28 +1378,31 @@ namespace RTC
 				case Chunk::ChunkType::I_FORWARD_TSN:
 				{
 					HandleReceivedIForwardTsnChunk(
-					  receivedPacket, static_cast<const IForwardTsnChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const IForwardTsnChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
 
 				case Chunk::ChunkType::DATA:
 				{
-					HandleReceivedDataChunk(receivedPacket, static_cast<const DataChunk*>(receivedChunk));
+					HandleReceivedDataChunk(
+					  receivedPacket, static_cast<const DataChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
 
 				case Chunk::ChunkType::I_DATA:
 				{
-					HandleReceivedIDataChunk(receivedPacket, static_cast<const IDataChunk*>(receivedChunk));
+					HandleReceivedIDataChunk(
+					  receivedPacket, static_cast<const IDataChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
 
 				case Chunk::ChunkType::SACK:
 				{
-					HandleReceivedSackChunk(receivedPacket, static_cast<const SackChunk*>(receivedChunk));
+					HandleReceivedSackChunk(
+					  receivedPacket, static_cast<const SackChunk*>(receivedChunk), receivedAtUs);
 
 					break;
 				}
@@ -1396,7 +1410,7 @@ namespace RTC
 				default:
 				{
 					return HandleReceivedUnknownChunk(
-					  receivedPacket, static_cast<const UnknownChunk*>(receivedChunk));
+					  receivedPacket, static_cast<const UnknownChunk*>(receivedChunk), receivedAtUs);
 				}
 			}
 
@@ -1404,7 +1418,7 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedInitChunk(
-		  const Packet* /*receivedPacket*/, const InitChunk* receivedInitChunk)
+		  const Packet* /*receivedPacket*/, const InitChunk* receivedInitChunk, int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -1589,7 +1603,7 @@ namespace RTC
 			  receivedInitChunk->GetAdvertisedReceiverWindowCredit(),
 			  tieTag,
 			  remoteCapabilities,
-			  /*creationTimestampMs*/ authenticateCookie ? this->shared->GetTimeMs() : 0,
+			  /*creationTimestampUs*/ authenticateCookie ? this->shared->GetTimeUsInt64() : 0,
 			  /*macKey*/ authenticateCookie ? this->stateCookieSecret : nullptr,
 			  /*macKeyLength*/ authenticateCookie ? Association::StateCookieSecretLength : 0);
 
@@ -1607,7 +1621,9 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedInitAckChunk(
-		  const Packet* /*receivedPacket*/, const InitAckChunk* receivedInitAckChunk)
+		  const Packet* /*receivedPacket*/,
+		  const InitAckChunk* receivedInitAckChunk,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -1689,16 +1705,14 @@ namespace RTC
 
 			this->tcb->SetRemoteStateCookie(std::move(remoteStateCookie));
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
-
-			this->tcb->SendBufferedPackets(nowMs);
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
 			this->t1CookieTimer->Start();
 
 			this->associationListenerDeferrer.OnAssociationConnecting();
 		}
 
 		void Association::HandleReceivedCookieEchoChunk(
-		  const Packet* receivedPacket, const CookieEchoChunk* receivedCookieEchoChunk)
+		  const Packet* receivedPacket, const CookieEchoChunk* receivedCookieEchoChunk, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -1731,7 +1745,7 @@ namespace RTC
 			// @see RFC 9260 section 5.1.4.
 			if (this->sctpOptions.requireAuthenticatedCookie)
 			{
-				if (!VerifyReceivedStateCookie(cookie.get()))
+				if (!VerifyReceivedStateCookie(cookie.get(), receivedAtUs))
 				{
 					return;
 				}
@@ -1739,7 +1753,7 @@ namespace RTC
 
 			if (this->tcb)
 			{
-				if (!HandleReceivedCookieEchoChunkWithTcb(receivedPacket, cookie.get()))
+				if (!HandleReceivedCookieEchoChunkWithTcb(receivedPacket, cookie.get(), receivedAtUs))
 				{
 					return;
 				}
@@ -1804,13 +1818,11 @@ namespace RTC
 			// "A COOKIE ACK chunk MAY be bundled with any pending DATA chunks (and/or
 			// SACK chunks), but the COOKIE ACK chunk MUST be the first chunk in the
 			// packet."
-			const uint64_t nowMs = this->shared->GetTimeMs();
-
-			this->tcb->SendBufferedPackets(nowMs, /*addCookieAckChunk*/ true);
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64(), /*addCookieAckChunk*/ true);
 		}
 
 		bool Association::HandleReceivedCookieEchoChunkWithTcb(
-		  const Packet* receivedPacket, const StateCookie* cookie)
+		  const Packet* receivedPacket, const StateCookie* cookie, int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -1901,7 +1913,9 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedCookieAckChunk(
-		  const Packet* /*receivedPacket*/, const CookieAckChunk* /*receivedCookieAckChunk*/)
+		  const Packet* /*receivedPacket*/,
+		  const CookieAckChunk* /*receivedCookieAckChunk*/,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -1923,15 +1937,15 @@ namespace RTC
 
 			SetState(State::ESTABLISHED, "COOKIE-ACK received");
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
-
-			this->tcb->SendBufferedPackets(nowMs);
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
 
 			this->associationListenerDeferrer.OnAssociationConnected();
 		}
 
 		void Association::HandleReceivedShutdownChunk(
-		  const Packet* /*receivedPacket*/, const ShutdownChunk* /*receivedShutdownChunk*/)
+		  const Packet* /*receivedPacket*/,
+		  const ShutdownChunk* /*receivedShutdownChunk*/,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -1999,7 +2013,9 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedShutdownAckChunk(
-		  const Packet* receivedPacket, const ShutdownAckChunk* /*receivedShutdownAckChunk*/)
+		  const Packet* receivedPacket,
+		  const ShutdownAckChunk* /*receivedShutdownAckChunk*/,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2058,7 +2074,9 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedShutdownCompleteChunk(
-		  const Packet* /*receivedPacket*/, const ShutdownCompleteChunk* /*receivedShutdownCompleteChunk*/)
+		  const Packet* /*receivedPacket*/,
+		  const ShutdownCompleteChunk* /*receivedShutdownCompleteChunk*/,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2078,7 +2096,9 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedOperationErrorChunk(
-		  const Packet* /*receivedPacket*/, const OperationErrorChunk* receivedOperationErrorChunk)
+		  const Packet* /*receivedPacket*/,
+		  const OperationErrorChunk* receivedOperationErrorChunk,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2117,7 +2137,9 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedAbortAssociationChunk(
-		  const Packet* /*receivedPacket*/, const AbortAssociationChunk* receivedAbortAssociationChunk)
+		  const Packet* /*receivedPacket*/,
+		  const AbortAssociationChunk* receivedAbortAssociationChunk,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2159,7 +2181,9 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedHeartbeatRequestChunk(
-		  const Packet* /*receivedPacket*/, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk)
+		  const Packet* /*receivedPacket*/,
+		  const HeartbeatRequestChunk* receivedHeartbeatRequestChunk,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2173,7 +2197,9 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedHeartbeatAckChunk(
-		  const Packet* /*receivedPacket*/, const HeartbeatAckChunk* receivedHeartbeatAckChunk)
+		  const Packet* /*receivedPacket*/,
+		  const HeartbeatAckChunk* receivedHeartbeatAckChunk,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2186,7 +2212,9 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedReConfigChunk(
-		  const Packet* /*receivedPacket*/, const ReConfigChunk* receivedReConfigChunk)
+		  const Packet* /*receivedPacket*/,
+		  const ReConfigChunk* receivedReConfigChunk,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2205,9 +2233,7 @@ namespace RTC
 
 			// If a response was processed, pending to-be-reset streams may now have
 			// become unpaused. Try to send more DATA/I-DATA chunks.
-			const uint64_t nowMs = this->shared->GetTimeMs();
-
-			this->tcb->SendBufferedPackets(nowMs);
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
 
 			// If it leaves "deferred reset processing", there may be chunks to
 			// deliver that were queued while waiting for the stream to reset.
@@ -2215,23 +2241,27 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedForwardTsnChunk(
-		  const Packet* receivedPacket, const ForwardTsnChunk* receivedForwardTsnChunk)
+		  const Packet* receivedPacket, const ForwardTsnChunk* receivedForwardTsnChunk, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
-			HandleReceivedAnyForwardTsnChunk(receivedPacket, receivedForwardTsnChunk);
+			HandleReceivedAnyForwardTsnChunk(receivedPacket, receivedForwardTsnChunk, receivedAtUs);
 		}
 
 		void Association::HandleReceivedIForwardTsnChunk(
-		  const Packet* receivedPacket, const IForwardTsnChunk* receivedIForwardTsnChunk)
+		  const Packet* receivedPacket,
+		  const IForwardTsnChunk* receivedIForwardTsnChunk,
+		  int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
-			HandleReceivedAnyForwardTsnChunk(receivedPacket, receivedIForwardTsnChunk);
+			HandleReceivedAnyForwardTsnChunk(receivedPacket, receivedIForwardTsnChunk, receivedAtUs);
 		}
 
 		void Association::HandleReceivedAnyForwardTsnChunk(
-		  const Packet* /*receivedPacket*/, const AnyForwardTsnChunk* receivedAnyForwardTsnChunk)
+		  const Packet* /*receivedPacket*/,
+		  const AnyForwardTsnChunk* receivedAnyForwardTsnChunk,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2278,23 +2308,25 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedDataChunk(
-		  const Packet* receivedPacket, const DataChunk* receivedDataChunk)
+		  const Packet* receivedPacket, const DataChunk* receivedDataChunk, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
-			HandleReceivedAnyDataChunk(receivedPacket, receivedDataChunk);
+			HandleReceivedAnyDataChunk(receivedPacket, receivedDataChunk, receivedAtUs);
 		}
 
 		void Association::HandleReceivedIDataChunk(
-		  const Packet* receivedPacket, const IDataChunk* receivedIDataChunk)
+		  const Packet* receivedPacket, const IDataChunk* receivedIDataChunk, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
-			HandleReceivedAnyDataChunk(receivedPacket, receivedIDataChunk);
+			HandleReceivedAnyDataChunk(receivedPacket, receivedIDataChunk, receivedAtUs);
 		}
 
 		void Association::HandleReceivedAnyDataChunk(
-		  const Packet* /*receivedPacket*/, const AnyDataChunk* receivedAnyDataChunk)
+		  const Packet* /*receivedPacket*/,
+		  const AnyDataChunk* receivedAnyDataChunk,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2407,7 +2439,7 @@ namespace RTC
 		}
 
 		void Association::HandleReceivedSackChunk(
-		  const Packet* /*receivedPacket*/, const SackChunk* receivedSackChunk)
+		  const Packet* /*receivedPacket*/, const SackChunk* receivedSackChunk, int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2416,9 +2448,9 @@ namespace RTC
 				return;
 			}
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			const int64_t nowUs = this->shared->GetTimeUsInt64();
 
-			if (this->tcb->GetRetransmissionQueue().HandleReceivedSackChunk(nowMs, receivedSackChunk))
+			if (this->tcb->GetRetransmissionQueue().HandleReceivedSackChunk(nowUs, receivedSackChunk))
 			{
 				MaySendShutdownOrShutdownAckChunk();
 
@@ -2437,7 +2469,7 @@ namespace RTC
 
 				// Receiving an ACK will decrease outstanding bytes (maybe now below
 				// cwnd?) or indicate packet loss that may result in sending FORWARD-TSN.
-				this->tcb->SendBufferedPackets(nowMs);
+				this->tcb->SendBufferedPackets(nowUs);
 			}
 			else
 			{
@@ -2448,7 +2480,9 @@ namespace RTC
 		}
 
 		bool Association::HandleReceivedUnknownChunk(
-		  const Packet* /*receivedPacket*/, const UnknownChunk* receivedUnknownChunk)
+		  const Packet* /*receivedPacket*/,
+		  const UnknownChunk* receivedUnknownChunk,
+		  int64_t /*receivedAtUs*/)
 		{
 			MS_TRACE();
 
@@ -2501,7 +2535,7 @@ namespace RTC
 			return !skipProcessing;
 		}
 
-		bool Association::VerifyReceivedStateCookie(const StateCookie* cookie)
+		bool Association::VerifyReceivedStateCookie(const StateCookie* cookie, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -2539,18 +2573,19 @@ namespace RTC
 			// State Cookie, then the packet, including the COOKIE ECHO and any attached
 			// DATA chunks, SHOULD be discarded, and the endpoint MUST transmit an ERROR
 			// chunk with a 'Stale Cookie' error cause to the peer endpoint."
-			const uint64_t nowMs      = this->shared->GetTimeMs();
-			const uint64_t creationMs = cookie->GetCreationTimestampMs();
+			const int64_t creationUs = cookie->GetCreationTimestampUs();
 
-			if (nowMs > creationMs && nowMs - creationMs > StateCookie::ValidCookieLifeMs)
+			// NOTE: A negative difference makes the comparison false on its own, so no
+			// guard against the subtraction is needed.
+			if (receivedAtUs - creationUs > StateCookie::ValidCookieLifeUs)
 			{
-				const uint64_t stalenessMs = nowMs - creationMs - StateCookie::ValidCookieLifeMs;
+				const int64_t stalenessUs = receivedAtUs - creationUs - StateCookie::ValidCookieLifeUs;
 
 				MS_WARN_TAG(
 				  sctp,
-				  "received COOKIE-ECHO chunk with stale State Cookie, sending Stale Cookie error [staleness:%" PRIu64
-				  "ms]",
-				  stalenessMs);
+				  "received COOKIE-ECHO chunk with stale State Cookie, sending Stale Cookie error [staleness:%" PRIi64
+				  "us]",
+				  stalenessUs);
 
 				// Respond with an ERROR chunk carrying a Stale Cookie error cause. The
 				// packet must use the verification tag the peer expects (the remote
@@ -2561,8 +2596,6 @@ namespace RTC
 				  operationErrorChunk->BuildErrorCauseInPlace<StaleCookieErrorCause>();
 
 				// The Measure of Staleness is expressed in microseconds.
-				const uint64_t stalenessUs = stalenessMs * 1000;
-
 				staleCookieErrorCause->SetMeasureOfStaleness(
 				  stalenessUs > std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max()
 					                                                   : static_cast<uint32_t>(stalenessUs));
@@ -2629,9 +2662,7 @@ namespace RTC
 
 			if (this->t1CookieTimer->IsRunning())
 			{
-				const uint64_t nowMs = this->shared->GetTimeMs();
-
-				this->tcb->SendBufferedPackets(nowMs);
+				this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
 			}
 			else
 			{
@@ -2713,7 +2744,8 @@ namespace RTC
 
 			AssertIsConsistent();
 
-			baseTimeoutMs = this->tcb->GetCurrentRtoMs();
+			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+			baseTimeoutMs = static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000);
 		}
 
 		template<typename... States>

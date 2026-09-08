@@ -839,19 +839,19 @@ namespace RTC
 			}
 
 			/**
-			 * Capture time (in ms) of the packet.
+			 * Capture time (in us) of the packet.
 			 */
-			std::optional<uint64_t> GetCaptureMs() const
+			std::optional<int64_t> GetCaptureAtUs() const
 			{
-				return this->captureMs;
+				return this->captureAtUs;
 			}
 
 			/**
-			 * Set the capture time (in ms) of the packet.
+			 * Set the capture time (in us) of the packet.
 			 */
-			void SetCaptureMs(uint64_t captureMs)
+			void SetCaptureAtUs(int64_t captureAtUs)
 			{
-				this->captureMs = captureMs;
+				this->captureAtUs = captureAtUs;
 			}
 
 		private:
@@ -977,7 +977,7 @@ namespace RTC
 			// Codec related.
 			std::shared_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 			// Capture time of the packet.
-			std::optional<uint64_t> captureMs;
+			std::optional<int64_t> captureAtUs;
 		};
 	} // namespace RTP
 } // namespace RTC

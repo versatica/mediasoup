@@ -43,7 +43,7 @@ namespace RTC
 		}
 
 		void RoundRobinSendQueue::AddMessage(
-		  uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions)
+		  int64_t nowUs, Message message, const SendMessageOptions& sendMessageOptions)
 		{
 			MS_TRACE();
 
@@ -51,18 +51,20 @@ namespace RTC
 
 			// Any limited lifetime should start counting from now - when the message
 			// has been added to the queue.
-			// `expiresAtMs` is the time when it expires. Which is slightly larger
+			// `expiresAtUs` is the time when it expires. Which is slightly larger
 			// than the message's lifetime, as the message is alive during its entire
 			// lifetime (which may be zero).
+			// NOTE: `lifetimeMs` is in milliseconds, being it given by the API.
 			const MessageAttributes attributes = {
 				.isUnordered        = sendMessageOptions.unordered,
 				.maxRetransmissions = sendMessageOptions.maxRetransmissions.has_value()
 				                        ? sendMessageOptions.maxRetransmissions.value()
 				                        : Types::MaxRetransmitsNoLimit,
-				.expiresAtMs        = sendMessageOptions.lifetimeMs.has_value()
-				                        ? nowMs + sendMessageOptions.lifetimeMs.value() + 1
-				                        : Types::ExpiresAtMsInfinite,
-				.lifecycleId        = sendMessageOptions.lifecycleId,
+				.expiresAtUs =
+				  sendMessageOptions.lifetimeMs.has_value()
+				    ? nowUs + static_cast<int64_t>(sendMessageOptions.lifetimeMs.value() * 1000) + 1
+				    : Types::ExpiresAtUsInfinite,
+				.lifecycleId = sendMessageOptions.lifecycleId,
 			};
 
 			const uint16_t streamId = message.GetStreamId();
@@ -98,11 +100,11 @@ namespace RTC
 		}
 
 		std::optional<SendQueueInterface::DataToSend> RoundRobinSendQueue::Produce(
-		  uint64_t nowMs, size_t maxLength)
+		  int64_t nowUs, size_t maxLength)
 		{
 			MS_TRACE();
 
-			return this->scheduler.Produce(nowMs, maxLength);
+			return this->scheduler.Produce(nowUs, maxLength);
 		}
 
 		bool RoundRobinSendQueue::Discard(uint16_t streamId, uint32_t outgoingMessageId)
@@ -418,7 +420,7 @@ namespace RTC
 		}
 
 		std::optional<SendQueueInterface::DataToSend> RoundRobinSendQueue::OutgoingStream::Produce(
-		  uint64_t nowMs, size_t maxLength)
+		  int64_t nowUs, size_t maxLength)
 		{
 			MS_TRACE();
 
@@ -435,7 +437,7 @@ namespace RTC
 				if (!item.mid.has_value())
 				{
 					// This entire message has already expired. Try the next one.
-					if (item.attributes.expiresAtMs != Types::ExpiresAtMsInfinite && item.attributes.expiresAtMs <= nowMs)
+					if (item.attributes.expiresAtUs != Types::ExpiresAtUsInfinite && item.attributes.expiresAtUs <= nowUs)
 					{
 						HandleMessageExpired(item);
 
@@ -495,7 +497,7 @@ namespace RTC
 				    item.attributes.isUnordered));
 
 				dataToSend.maxRetransmissions = item.attributes.maxRetransmissions;
-				dataToSend.expiresAtMs        = item.attributes.expiresAtMs;
+				dataToSend.expiresAtUs        = item.attributes.expiresAtUs;
 				dataToSend.lifecycleId        = isEnd ? item.attributes.lifecycleId : std::nullopt;
 
 				if (isEnd)

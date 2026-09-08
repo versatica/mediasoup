@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "SharedInterface.hpp"
 #include <cstring> // std::memcpy(), std::memmove()
 
 namespace Channel
@@ -134,6 +135,13 @@ namespace Channel
 		this->listener = listener;
 	}
 
+	void ChannelSocket::SetShared(SharedInterface* shared)
+	{
+		MS_TRACE_STD();
+
+		this->shared = shared;
+	}
+
 	void ChannelSocket::Send(const uint8_t* data, uint32_t dataLen)
 	{
 		MS_TRACE_STD();
@@ -204,6 +212,10 @@ namespace Channel
 		// and will need to be freed later.
 		if (free)
 		{
+			// NOTE: Take the arrival time before the message is parsed, so that it
+			// doesn't include the cost of processing it.
+			const int64_t receivedAtUs = this->shared->GetTimeUsInt64();
+
 			const auto* message = FBS::Message::GetMessage(msg);
 
 #if MS_LOG_DEV_LEVEL == 3
@@ -244,7 +256,8 @@ namespace Channel
 
 				try
 				{
-					notification = new ChannelNotification(message->data_as<FBS::Notification::Notification>());
+					notification = new ChannelNotification(
+					  message->data_as<FBS::Notification::Notification>(), receivedAtUs);
 
 					// Notify the listener.
 					this->listener->HandleNotification(notification);
@@ -289,6 +302,10 @@ namespace Channel
 	{
 		MS_TRACE();
 
+		// NOTE: Take the arrival time before the message is parsed, so that it
+		// doesn't include the cost of processing it.
+		const int64_t receivedAtUs = this->shared->GetTimeUsInt64();
+
 		const auto* message = FBS::Message::GetMessage(msg);
 
 #if MS_LOG_DEV_LEVEL == 3
@@ -329,7 +346,8 @@ namespace Channel
 
 			try
 			{
-				notification = new ChannelNotification(message->data_as<FBS::Notification::Notification>());
+				notification =
+				  new ChannelNotification(message->data_as<FBS::Notification::Notification>(), receivedAtUs);
 
 				// Notify the listener.
 				this->listener->HandleNotification(notification);

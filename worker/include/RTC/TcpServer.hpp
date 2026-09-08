@@ -28,12 +28,14 @@ namespace RTC
 		TcpServer(
 		  Listener* listener,
 		  RTC::TcpConnection::Listener* connListener,
+		  SharedInterface* shared,
 		  std::string& ip,
 		  uint16_t port,
 		  RTC::Transport::SocketFlags& flags);
 		TcpServer(
 		  Listener* listener,
 		  RTC::TcpConnection::Listener* connListener,
+		  SharedInterface* shared,
 		  std::string& ip,
 		  uint16_t minPort,
 		  uint16_t maxPort,
@@ -50,6 +52,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		RTC::TcpConnection::Listener* connListener{ nullptr };
+		SharedInterface* shared{ nullptr };
 		bool fixedPort{ false };
 		RTC::PortManager::PortRangeKey portRangeKey{};
 	};

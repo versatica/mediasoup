@@ -47,7 +47,7 @@ namespace RTC
 			{
 				bool isUnordered;
 				uint16_t maxRetransmissions;
-				uint64_t expiresAtMs;
+				int64_t expiresAtUs;
 				std::optional<uint64_t> lifecycleId;
 			};
 
@@ -128,7 +128,7 @@ namespace RTC
 
 				// Implementing `StreamScheduler::StreamProducer`.
 
-				std::optional<SendQueueInterface::DataToSend> Produce(uint64_t nowMs, size_t maxLength) override;
+				std::optional<SendQueueInterface::DataToSend> Produce(int64_t nowUs, size_t maxLength) override;
 
 				size_t GetBytesToSendInNextMessage() const override;
 
@@ -291,12 +291,11 @@ namespace RTC
 
 			/**
 			 * Adds the message to be sent using the `sendMessageOptions` provided.
-			 * The current time should be in `nowMs`. Note that it's the responsibility
+			 * The current time should be in `nowUs`. Note that it's the responsibility
 			 * of the caller to ensure that the buffer is not full (by calling
 			 * `IsFull()`) before adding messages to it.
 			 */
-			void AddMessage(
-			  uint64_t nowMs, Message message, const SendMessageOptions& sendMessageOptions = {});
+			void AddMessage(int64_t nowUs, Message message, const SendMessageOptions& sendMessageOptions = {});
 
 			uint16_t GetStreamPriority(uint16_t streamId) const;
 
@@ -309,7 +308,7 @@ namespace RTC
 				this->scheduler.EnableMessageInterleaving(enabled);
 			}
 
-			std::optional<SendQueueInterface::DataToSend> Produce(uint64_t nowMs, size_t maxLength) override;
+			std::optional<SendQueueInterface::DataToSend> Produce(int64_t nowUs, size_t maxLength) override;
 
 			bool Discard(uint16_t streamId, uint32_t outgoingMessageId) override;
 

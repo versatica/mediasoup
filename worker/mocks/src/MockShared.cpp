@@ -8,13 +8,17 @@
 
 namespace mocks
 {
-	MockShared::MockShared(std::function<uint64_t()> getTimeMs)
-	  : getTimeMs(std::move(getTimeMs)),
+	MockShared::MockShared(std::function<int64_t()> getTimeUsInt64)
+	  : getTimeUsInt64(std::move(getTimeUsInt64)),
 	    channelSocket(new ::Channel::ChannelSocket()),
 	    channelMessageRegistrator(new mocks::Channel::MockChannelMessageRegistrator()),
 	    channelNotifier(new ::Channel::ChannelNotifier(this->channelSocket.get()))
 	{
 		MS_TRACE();
+
+		// Give the Channel the Shared instance, which it needs to take the arrival
+		// time of received notifications.
+		this->channelSocket->SetShared(this);
 	}
 
 	TimerHandleInterface* MockShared::CreateTimer(
@@ -33,7 +37,13 @@ namespace mocks
 		auto* timer = new MockTimerHandle(
 		  listener,
 		  label,
-		  /*getTimeMs*/ this->getTimeMs,
+		  // NOTE: The timer mocks take a milliseconds callback, being that the
+		  // resolution of the libuv handles they mimic.
+		  /*getTimeMs*/
+		  [getTimeUsInt64 = this->getTimeUsInt64]()
+		  {
+			  return static_cast<uint64_t>(getTimeUsInt64() / 1000);
+		  },
 		  /*onDelete*/
 		  [this, label]()
 		  {
@@ -62,7 +72,13 @@ namespace mocks
 
 		auto* backoffTimer = new MockBackoffTimerHandle(
 		  options,
-		  /*getTimeMs*/ this->getTimeMs,
+		  // NOTE: The timer mocks take a milliseconds callback, being that the
+		  // resolution of the libuv handles they mimic.
+		  /*getTimeMs*/
+		  [getTimeUsInt64 = this->getTimeUsInt64]()
+		  {
+			  return static_cast<uint64_t>(getTimeUsInt64() / 1000);
+		  },
 		  /*onDelete*/
 		  [this, label]()
 		  {

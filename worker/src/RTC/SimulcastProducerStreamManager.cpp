@@ -673,13 +673,13 @@ namespace RTC
 				else
 				{
 					// Calculate capture instant and TS stuff.
-					const auto captureMs1 = tsReferenceCaptureMapping.value().captureMs;
-					const auto ts1        = tsReferenceCaptureMapping.value().ts;
-					const auto captureMs2 = captureMapping.value().captureMs;
-					const auto ts2        = captureMapping.value().ts;
-					const int64_t diffMs = static_cast<int64_t>(captureMs2) - static_cast<int64_t>(captureMs1);
-					const int64_t diffTs  = diffMs * clockRate / 1000;
-					const uint32_t newTs2 = ts2 - diffTs;
+					const auto captureAtUs1 = tsReferenceCaptureMapping.value().captureAtUs;
+					const auto ts1          = tsReferenceCaptureMapping.value().ts;
+					const auto captureAtUs2 = captureMapping.value().captureAtUs;
+					const auto ts2          = captureMapping.value().ts;
+					const int64_t diffUs    = captureAtUs2 - captureAtUs1;
+					const int64_t diffTs    = (diffUs * clockRate) / 1000000;
+					const uint32_t newTs2   = ts2 - diffTs;
 
 					// Apply offset. This is the difference that later must be removed from
 					// the sending RTP packet.

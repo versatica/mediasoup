@@ -48,10 +48,22 @@ namespace RTC
 		bool SendData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
-		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
-		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
-		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnSctpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnPacketReceived(
+		  RTC::TransportTuple* tuple,
+		  const uint8_t* data,
+		  size_t len,
+		  size_t bufferLen,
+		  int64_t receivedAtUs);
+		void OnRtpDataReceived(
+		  RTC::TransportTuple* tuple,
+		  const uint8_t* data,
+		  size_t len,
+		  size_t bufferLen,
+		  int64_t receivedAtUs);
+		void OnRtcpDataReceived(
+		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs);
+		void OnSctpDataReceived(
+		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs);
 		void EmitTuple() const;
 		void EmitRtcpTuple() const;
 
@@ -62,7 +74,8 @@ namespace RTC
 		  const uint8_t* data,
 		  size_t len,
 		  size_t bufferLen,
-		  const struct sockaddr* remoteAddr) override;
+		  const struct sockaddr* remoteAddr,
+		  int64_t receivedAtUs) override;
 
 	private:
 		// Allocated by this.

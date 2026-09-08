@@ -37,7 +37,7 @@ namespace RTC
 				virtual ~Listener() = default;
 
 			public:
-				virtual void OnRetransmissionQueueNewRttMs(uint64_t newRttMs)  = 0;
+				virtual void OnRetransmissionQueueNewRttUs(int64_t newRttUs)   = 0;
 				virtual void OnRetransmissionQueueClearRetransmissionCounter() = 0;
 			};
 
@@ -53,7 +53,7 @@ namespace RTC
 			 * Creates a RetransmissionQueue which will send data using
 			 * `localInitialTsn` as the first TSN to use for sent fragments. It will
 			 * poll data from `sendQueue`. When SACKs are received, it will estimate
-			 * the RTT and call `listener->OnRetransmissionQueueNewRttMs()`. When an
+			 * the RTT and call `listener->OnRetransmissionQueueNewRttUs()`. When an
 			 * outstanding chunk has been acked, it will call
 			 * `listener->OnRetransmissionQueueClearRetransmissionCounter() and will
 			 * also use `t3RtxTimer`, which is the SCTP retransmission timer to manage
@@ -77,7 +77,7 @@ namespace RTC
 			 * Handles a received SACK. Returns true if the SACK was processed and
 			 * false if it was discarded due to received out-of-order and not relevant.
 			 */
-			bool HandleReceivedSackChunk(uint64_t nowMs, const SackChunk* receivedSackChunk);
+			bool HandleReceivedSackChunk(int64_t nowUs, const SackChunk* receivedSackChunk);
 
 			/**
 			 * Handles an expired retransmission timer.
@@ -101,8 +101,7 @@ namespace RTC
 			 * Note that `ShouldSendForwardTsn()` must be called prior to this method,
 			 * to abandon expired chunks, as this method will not expire any chunks.
 			 */
-			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToSend(
-			  uint64_t nowMs, size_t maxLength);
+			std::vector<std::pair<uint32_t /*tsn*/, UserData>> GetChunksToSend(int64_t nowUs, size_t maxLength);
 
 #ifdef MS_TEST
 			/**
@@ -182,11 +181,11 @@ namespace RTC
 			}
 
 			/**
-			 * Given the current time `nowMs`, it will evaluate if there are chunks
+			 * Given the current time `nowUs`, it will evaluate if there are chunks
 			 * that have expired and that need to be discarded. It returns true if a
 			 * FORWARD-TSN should be sent.
 			 */
-			bool ShouldSendForwardTsn(uint64_t nowMs);
+			bool ShouldSendForwardTsn(int64_t nowUs);
 
 			/**
 			 * Adds a FORWARD-TSN chunk to the given packet and returns it.
@@ -240,7 +239,7 @@ namespace RTC
 			 * When a SACK chunk is received, this method will be called which may
 			 * call into the `RetransmissionTimeout` to update the RTO.
 			 */
-			void UpdateRttMs(uint64_t nowMs, Types::UnwrappedTsn cumulativeTsnAck);
+			void UpdateRttUs(int64_t nowUs, Types::UnwrappedTsn cumulativeTsnAck);
 
 			/**
 			 * If the congestion control is in "fast recovery mode", this may be

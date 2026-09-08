@@ -25,11 +25,11 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 	constexpr uint32_t InitialTsn{ 11 };
 
 	MockBackoffTimerHandleListener backoffTimerHandleListener;
-	uint64_t nowMs{ 10000 };
-	mocks::MockShared shared(/*getTimeMs*/
-	                         [&nowMs]()
+	int64_t nowUs{ 10000 * 1000 };
+	mocks::MockShared shared(/*getTimeUsInt64*/
+	                         [&nowUs]() -> int64_t
 	                         {
-		                         return nowMs;
+		                         return nowUs;
 	                         });
 
 	const std::unique_ptr<BackoffTimerHandleInterface> delayedAckTimerUniquePtr{ shared.CreateBackoffTimer(
