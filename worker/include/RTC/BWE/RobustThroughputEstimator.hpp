@@ -73,7 +73,7 @@ namespace RTC
 			{
 			}
 
-			void SetAlrEndedTime(int64_t /*alrEndedTimeUs*/) override
+			void SetAlrEndedTimeUs(int64_t /*alrEndedTimeUs*/) override
 			{
 			}
 
