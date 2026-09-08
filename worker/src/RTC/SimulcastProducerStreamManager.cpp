@@ -702,8 +702,9 @@ namespace RTC
 				static constexpr int64_t OffsetMs{ 33 }; // (1 / 30 * 1000).
 
 				const int64_t maxTsExtraOffset = MaxExtraOffsetMs * clockRate / 1000;
+
 				// NOTE: RTP timestamps wrap around, so the sum is truncated on purpose.
-				uint32_t tsExtraOffset = static_cast<uint32_t>(
+				auto tsExtraOffset = static_cast<uint32_t>(
 				  maxPacketTs - packet->GetTimestamp() + tsOffset + (OffsetMs * clockRate / 1000));
 
 				// NOTE: Don't ask for a key frame if already done.
@@ -718,7 +719,7 @@ namespace RTC
 						  "which still too high RTP timestamp extra offset is needed (%" PRIu32 ")",
 						  tsExtraOffset);
 
-						tsExtraOffset = 1u;
+						tsExtraOffset = 1;
 					}
 				}
 				else if (std::cmp_greater(tsExtraOffset, maxTsExtraOffset))
@@ -747,7 +748,7 @@ namespace RTC
 					return result;
 				}
 
-				if (tsExtraOffset > 0u)
+				if (tsExtraOffset > 0)
 				{
 					MS_DEBUG_TAG(
 					  simulcast,
