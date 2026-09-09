@@ -792,7 +792,7 @@ impl PipeTransport {
 
     /// Set maximum incoming bitrate for media streams sent by the remote endpoint over this
     /// transport.
-    pub async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
+    pub async fn set_max_incoming_bitrate(&self, bitrate: u64) -> Result<(), RequestError> {
         debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
 
         self.set_max_incoming_bitrate_impl(bitrate).await
