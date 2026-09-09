@@ -18,7 +18,7 @@ table DumpResponse {
 }
 
 table GetStatsResponse {
-    timestamp: int64;
+    timestamp: uint64;
     label: string (required);
     protocol: string (required);
     messages_received: uint64;

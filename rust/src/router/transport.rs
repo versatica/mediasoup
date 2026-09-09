@@ -50,7 +50,7 @@ pub enum TransportTraceEventData {
     /// RTP probation packet.
     Probation {
         /// Event timestamp.
-        timestamp: i64,
+        timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
         /// RTP packet info.
@@ -59,7 +59,7 @@ pub enum TransportTraceEventData {
     /// Transport bandwidth estimation changed.
     Bwe {
         /// Event timestamp.
-        timestamp: i64,
+        timestamp: u64,
         /// Event direction.
         direction: TraceEventDirection,
         /// BWE info.

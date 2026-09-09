@@ -44,7 +44,7 @@ table Stats {
 }
 
 table BaseStats {
-    timestamp: int64;
+    timestamp: uint64;
     ssrc: uint32;
     kind: FBS.RtpParameters.MediaKind;
     mime_type: string (required);

@@ -1841,7 +1841,7 @@ namespace RTC
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Consumer::TraceEventType::KEYFRAME,
-			  this->shared->GetTimeMs(),
+			  static_cast<uint64_t>(this->shared->GetTimeMs()),
 			  FBS::Common::TraceDirection::DIRECTION_OUT,
 			  FBS::Consumer::TraceInfo::KeyFrameTraceInfo,
 			  traceInfo.Union());
@@ -1857,7 +1857,7 @@ namespace RTC
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Consumer::TraceEventType::RTP,
-			  this->shared->GetTimeMs(),
+			  static_cast<uint64_t>(this->shared->GetTimeMs()),
 			  FBS::Common::TraceDirection::DIRECTION_OUT,
 			  FBS::Consumer::TraceInfo::RtpTraceInfo,
 			  traceInfo.Union());
@@ -1881,7 +1881,7 @@ namespace RTC
 		auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::PLI,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
 		  FBS::Consumer::TraceInfo::PliTraceInfo,
 		  traceInfo.Union());
@@ -1904,7 +1904,7 @@ namespace RTC
 		auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::FIR,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
 		  FBS::Consumer::TraceInfo::FirTraceInfo,
 		  traceInfo.Union());
@@ -1924,7 +1924,7 @@ namespace RTC
 		auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Consumer::TraceEventType::NACK,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_IN);
 
 		EmitTraceEvent(notification);

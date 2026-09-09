@@ -71,7 +71,7 @@ namespace RTC
 
 			auto baseStats = FBS::RtpStream::CreateBaseStatsDirect(
 			  builder,
-			  nowMs,
+			  static_cast<uint64_t>(nowMs),
 			  this->params.ssrc,
 			  mediaKind,
 			  this->params.mimeType.ToString().c_str(),

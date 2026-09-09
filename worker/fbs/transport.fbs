@@ -161,7 +161,7 @@ table Dump {
 
 table Stats {
     transport_id: string (required);
-    timestamp: int64;
+    timestamp: uint64;
     sctp_state: FBS.SctpAssociation.SctpState = null;
     bytes_received: uint64;
     recv_bitrate: uint32;
@@ -256,7 +256,7 @@ table BweTraceInfo {
 
 table TraceNotification {
     type: TraceEventType;
-    timestamp: int64;
+    timestamp: uint64;
     direction: FBS.Common.TraceDirection;
     info: TraceInfo;
 }

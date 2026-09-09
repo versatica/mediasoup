@@ -118,7 +118,7 @@ table RtpTraceInfo {
 
 table TraceNotification {
     type: TraceEventType;
-    timestamp: int64;
+    timestamp: uint64;
     direction: FBS.Common.TraceDirection;
     info: TraceInfo;
 }
