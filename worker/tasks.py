@@ -210,13 +210,15 @@ def clean(ctx):
     # NOTE: Meson keeps the objects of each target in a "<target>.p" directory,
     # and those of the subprojects and the dependencies in their own
     # subdirectories, so this removes just what belongs to mediasoup itself.
+    # NOTE: glob.escape() is needed because the path of the directory may
+    # contain characters that glob would otherwise take as wildcards.
     for build_dir in BUILD_DIRS:
-        for path in glob.glob(f"{build_dir}/*.p"):
+        for path in glob.glob(f"{glob.escape(build_dir)}/*.p"):
             shutil.rmtree(path, ignore_errors=True)
 
     # NOTE: The installed artifacts are files, while the build directories are
     # directories.
-    for path in glob.glob(f"{MEDIASOUP_INSTALL_DIR}/*"):
+    for path in glob.glob(f"{glob.escape(MEDIASOUP_INSTALL_DIR)}/*"):
         if os.path.isfile(path):
             os.remove(path)
 
