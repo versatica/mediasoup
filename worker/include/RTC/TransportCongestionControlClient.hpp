@@ -18,7 +18,7 @@
 
 namespace RTC
 {
-	constexpr uint32_t TransportCongestionControlMinOutgoingBitrate{ 30000u };
+	constexpr int64_t TransportCongestionControlMinOutgoingBitrate{ 30000 };
 
 	class TransportCongestionControlClient : public webrtc::PacketRouter,
 	                                         public webrtc::TargetTransferRateObserver,
@@ -27,13 +27,13 @@ namespace RTC
 	public:
 		struct Bitrates
 		{
-			uint32_t desiredBitrate{ 0u };
-			uint32_t effectiveDesiredBitrate{ 0u };
-			uint32_t minBitrate{ 0u };
-			uint32_t maxBitrate{ 0u };
-			uint32_t startBitrate{ 0u };
-			uint32_t maxPaddingBitrate{ 0u };
-			uint32_t availableBitrate{ 0u };
+			int64_t desiredBitrate{ 0 };
+			int64_t effectiveDesiredBitrate{ 0 };
+			int64_t minBitrate{ 0 };
+			int64_t maxBitrate{ 0 };
+			int64_t startBitrate{ 0 };
+			int64_t maxPaddingBitrate{ 0 };
+			int64_t availableBitrate{ 0 };
 		};
 
 	public:
@@ -57,9 +57,9 @@ namespace RTC
 		  RTC::TransportCongestionControlClient::Listener* listener,
 		  SharedInterface* shared,
 		  RTC::BweType bweType,
-		  uint32_t initialAvailableBitrate,
-		  uint32_t maxOutgoingBitrate,
-		  uint32_t minOutgoingBitrate);
+		  int64_t initialAvailableBitrate,
+		  int64_t maxOutgoingBitrate,
+		  int64_t minOutgoingBitrate);
 		~TransportCongestionControlClient() override;
 
 	public:
@@ -72,23 +72,23 @@ namespace RTC
 		void InsertPacket(webrtc::RtpPacketSendInfo& packetInfo);
 		webrtc::PacedPacketInfo GetPacingInfo();
 		void PacketSent(const webrtc::RtpPacketSendInfo& packetInfo, int64_t nowUs);
-		void ReceiveEstimatedBitrate(uint32_t bitrate);
+		void ReceiveEstimatedBitrate(int64_t bitrate);
 		void ReceiveRtcpReceiverReport(
 		  RTC::RTCP::ReceiverReportPacket* packet, float rttMs, int64_t receivedAtUs);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
-		void SetDesiredBitrate(uint32_t desiredBitrate, bool force);
-		void SetMaxOutgoingBitrate(uint32_t maxBitrate);
-		void SetMinOutgoingBitrate(uint32_t minBitrate);
+		void SetDesiredBitrate(int64_t desiredBitrate, bool force);
+		void SetMaxOutgoingBitrate(int64_t maxBitrate);
+		void SetMinOutgoingBitrate(int64_t minBitrate);
 		const Bitrates& GetBitrates() const
 		{
 			return this->bitrates;
 		}
-		uint32_t GetAvailableBitrate() const;
+		int64_t GetAvailableBitrate() const;
 		double GetPacketLoss() const;
 		void RescheduleNextAvailableBitrateEvent();
 
 	private:
-		void MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate);
+		void MayEmitAvailableBitrateEvent(int64_t previousAvailableBitrate);
 		void UpdatePacketLoss(double packetLoss);
 		void ApplyBitrateUpdates();
 
@@ -122,9 +122,9 @@ namespace RTC
 		TimerHandleInterface* processTimer{ nullptr };
 		// Others.
 		RTC::BweType bweType;
-		uint32_t initialAvailableBitrate{ 0u };
-		uint32_t maxOutgoingBitrate{ 0u };
-		uint32_t minOutgoingBitrate{ 0u };
+		int64_t initialAvailableBitrate{ 0 };
+		int64_t maxOutgoingBitrate{ 0 };
+		int64_t minOutgoingBitrate{ 0 };
 		Bitrates bitrates;
 		bool availableBitrateEventCalled{ false };
 		int64_t lastAvailableBitrateEventAtMs{ 0 };

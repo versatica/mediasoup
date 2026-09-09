@@ -1020,7 +1020,7 @@ namespace RTC
 		return this->priority;
 	}
 
-	uint32_t Consumer::IncreaseLayer(uint32_t bitrate, bool considerLoss)
+	int64_t Consumer::IncreaseLayer(int64_t bitrate, bool considerLoss)
 	{
 		MS_TRACE();
 
@@ -1030,7 +1030,7 @@ namespace RTC
 		// Pipe does not play the BWE game.
 		if (this->pipe)
 		{
-			return 0u;
+			return 0;
 		}
 
 		float lossPercentage{ 0.0f };
@@ -1065,7 +1065,7 @@ namespace RTC
 		this->producerStreamManager->ApplyLayers(rtpStream->GetActiveMs());
 	}
 
-	uint32_t Consumer::GetDesiredBitrate() const
+	int64_t Consumer::GetDesiredBitrate() const
 	{
 		MS_TRACE();
 
@@ -1074,18 +1074,18 @@ namespace RTC
 		// Pipe does not play the BWE game.
 		if (this->pipe)
 		{
-			return 0u;
+			return 0;
 		}
 
 		// Audio does not play the BWE game.
 		if (this->kind != RTC::Media::Kind::VIDEO)
 		{
-			return 0u;
+			return 0;
 		}
 
 		if (!IsActive())
 		{
-			return 0u;
+			return 0;
 		}
 
 		const int64_t nowMs = this->shared->GetTimeMs();
@@ -1535,7 +1535,7 @@ namespace RTC
 		}
 	}
 
-	uint32_t Consumer::GetTransmissionRate(int64_t nowMs)
+	int64_t Consumer::GetTransmissionRate(int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -1544,7 +1544,7 @@ namespace RTC
 			return 0u;
 		}
 
-		uint32_t rate{ 0u };
+		int64_t rate{ 0 };
 
 		for (auto* rtpStream : this->rtpStreams)
 		{

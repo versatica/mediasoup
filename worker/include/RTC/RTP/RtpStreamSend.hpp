@@ -102,16 +102,16 @@ namespace RTC
 
 			void Resume() override;
 
-			uint32_t GetBitrate(int64_t nowMs) override
+			int64_t GetBitrate(int64_t nowMs) override
 			{
 				return this->transmissionCounter.GetBitrate(nowMs);
 			}
 
-			uint32_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
+			int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
-			uint32_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) override;
+			int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) override;
 
-			uint32_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
+			int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 		private:
 			void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);

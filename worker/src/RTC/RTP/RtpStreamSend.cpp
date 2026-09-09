@@ -82,7 +82,7 @@ namespace RTC
 			  baseStats,
 			  this->transmissionCounter.GetPacketCount(),
 			  this->transmissionCounter.GetBytes(),
-			  this->transmissionCounter.GetBitrate(nowMs));
+			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs)));
 
 			return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::SendStats, stats.Union());
 		}
@@ -433,7 +433,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		uint32_t RtpStreamSend::GetBitrate(
+		int64_t RtpStreamSend::GetBitrate(
 		  int64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 		{
 			MS_TRACE();
@@ -441,14 +441,14 @@ namespace RTC
 			MS_ABORT("invalid method call");
 		}
 
-		uint32_t RtpStreamSend::GetSpatialLayerBitrate(int64_t /*nowMs*/, uint8_t /*spatialLayer*/)
+		int64_t RtpStreamSend::GetSpatialLayerBitrate(int64_t /*nowMs*/, uint8_t /*spatialLayer*/)
 		{
 			MS_TRACE();
 
 			MS_ABORT("invalid method call");
 		}
 
-		uint32_t RtpStreamSend::GetLayerBitrate(
+		int64_t RtpStreamSend::GetLayerBitrate(
 		  int64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 		{
 			MS_TRACE();

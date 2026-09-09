@@ -27,7 +27,7 @@ namespace RTC
 
 			for (auto& spatialLayerCounter : this->spatialLayerCounters)
 			{
-				for (uint8_t tIdx{ 0u }; tIdx < temporalLayers; ++tIdx)
+				for (uint8_t tIdx{ 0 }; tIdx < temporalLayers; ++tIdx)
 				{
 					spatialLayerCounter.emplace_back(shared, /*ignorePaddingOnlyPackets*/ true, windowSizeMs);
 				}
@@ -54,11 +54,11 @@ namespace RTC
 			counter.Update(packet);
 		}
 
-		uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(int64_t nowMs)
+		int64_t RtpStreamRecv::TransmissionCounter::GetBitrate(int64_t nowMs)
 		{
 			MS_TRACE();
 
-			uint32_t rate{ 0u };
+			int64_t rate{ 0 };
 
 			for (auto& spatialLayerCounter : this->spatialLayerCounters)
 			{
@@ -71,7 +71,7 @@ namespace RTC
 			return rate;
 		}
 
-		uint32_t RtpStreamRecv::TransmissionCounter::GetBitrate(
+		int64_t RtpStreamRecv::TransmissionCounter::GetBitrate(
 		  int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 		{
 			MS_TRACE();
@@ -83,17 +83,17 @@ namespace RTC
 			// Return 0 if specified layers are not being received.
 			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
-			if (counter.GetBitrate(nowMs) == 0)
+			if (counter.GetBitrate(nowMs) <= 0)
 			{
-				return 0u;
+				return 0;
 			}
 
-			uint32_t rate{ 0u };
+			int64_t rate{ 0 };
 
 			// Iterate all temporal layers of spatial layers previous to the given one.
-			for (uint8_t sIdx{ 0u }; sIdx < spatialLayer; ++sIdx)
+			for (uint8_t sIdx{ 0 }; sIdx < spatialLayer; ++sIdx)
 			{
-				for (size_t tIdx{ 0u }; tIdx < this->spatialLayerCounters[sIdx].size(); ++tIdx)
+				for (size_t tIdx{ 0 }; tIdx < this->spatialLayerCounters[sIdx].size(); ++tIdx)
 				{
 					auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
@@ -102,7 +102,7 @@ namespace RTC
 			}
 
 			// Add the given spatial layer with up to the given temporal layer.
-			for (uint8_t tIdx{ 0u }; tIdx <= temporalLayer; ++tIdx)
+			for (uint8_t tIdx{ 0 }; tIdx <= temporalLayer; ++tIdx)
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
 
@@ -112,15 +112,15 @@ namespace RTC
 			return rate;
 		}
 
-		uint32_t RtpStreamRecv::TransmissionCounter::GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer)
+		int64_t RtpStreamRecv::TransmissionCounter::GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
 
-			uint32_t rate{ 0u };
+			int64_t rate{ 0 };
 
-			for (size_t tIdx{ 0u }; tIdx < this->spatialLayerCounters[spatialLayer].size(); ++tIdx)
+			for (size_t tIdx{ 0 }; tIdx < this->spatialLayerCounters[spatialLayer].size(); ++tIdx)
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
 
@@ -130,7 +130,7 @@ namespace RTC
 			return rate;
 		}
 
-		uint32_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
+		int64_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
 		  int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 		{
 			MS_TRACE();
@@ -148,7 +148,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t packetCount{ 0u };
+			size_t packetCount{ 0 };
 
 			for (const auto& spatialLayerCounter : this->spatialLayerCounters)
 			{
@@ -165,7 +165,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t bytes{ 0u };
+			size_t bytes{ 0 };
 
 			for (const auto& spatialLayerCounter : this->spatialLayerCounters)
 			{
@@ -244,7 +244,7 @@ namespace RTC
 
 						bitrateByLayer.emplace_back(
 						  FBS::RtpStream::CreateBitrateByLayerDirect(
-						    builder, layer.c_str(), GetBitrate(nowMs, sIdx, tIdx)));
+						    builder, layer.c_str(), static_cast<uint64_t>(GetBitrate(nowMs, sIdx, tIdx))));
 					}
 				}
 			}
@@ -254,7 +254,7 @@ namespace RTC
 			  baseStats,
 			  this->transmissionCounter.GetPacketCount(),
 			  this->transmissionCounter.GetBytes(),
-			  this->transmissionCounter.GetBitrate(nowMs),
+			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs)),
 			  &bitrateByLayer);
 
 			return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::RecvStats, stats.Union());
@@ -827,7 +827,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (GetClockRate() == 0u)
+			if (GetClockRate() == 0)
 			{
 				return;
 			}

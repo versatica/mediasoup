@@ -52,7 +52,7 @@ namespace RTC
 			{
 				return this->isCorrect;
 			}
-			void SetBitrate(uint64_t bitrate)
+			void SetBitrate(int64_t bitrate)
 			{
 				this->bitrate = bitrate;
 			}
@@ -60,7 +60,7 @@ namespace RTC
 			{
 				this->ssrcs = ssrcs;
 			}
-			uint64_t GetBitrate() const
+			int64_t GetBitrate() const
 			{
 				return this->bitrate;
 			}
@@ -82,7 +82,7 @@ namespace RTC
 		private:
 			std::vector<uint32_t> ssrcs;
 			// Bitrate represented in bps.
-			uint64_t bitrate{ 0 };
+			int64_t bitrate{ 0 };
 			bool isCorrect{ true };
 		};
 	} // namespace RTCP

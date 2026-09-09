@@ -191,18 +191,18 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	public:
-		uint32_t ssrc{ 0u };
+		uint32_t ssrc{ 0 };
 		std::string rid;
-		uint8_t codecPayloadType{ 0u };
+		uint8_t codecPayloadType{ 0 };
 		bool hasCodecPayloadType{ false };
 		RtpRtxParameters rtx;
 		bool hasRtx{ false };
-		uint32_t maxBitrate{ 0u };
+		int64_t maxBitrate{ 0 };
 		double maxFramerate{ 0 };
 		bool dtx{ false };
 		std::string scalabilityMode{ "S1T1" };
-		uint8_t spatialLayers{ 1u };
-		uint8_t temporalLayers{ 1u };
+		uint8_t spatialLayers{ 1 };
+		uint8_t temporalLayers{ 1 };
 		bool ksvc{ false };
 	};
 

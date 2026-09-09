@@ -117,7 +117,7 @@ pub struct WebRtcTransportOptions {
     pub listen: WebRtcTransportListen,
     /// Initial available outgoing bitrate (in bps).
     /// Default 600000.
-    pub initial_available_outgoing_bitrate: u32,
+    pub initial_available_outgoing_bitrate: u64,
     /// Enable UDP.
     /// Default true.
     pub enable_udp: bool,
@@ -343,26 +343,26 @@ pub struct WebRtcTransportStat {
     pub timestamp: u64,
     pub sctp_state: Option<SctpState>,
     pub bytes_received: u64,
-    pub recv_bitrate: u32,
+    pub recv_bitrate: u64,
     pub bytes_sent: u64,
-    pub send_bitrate: u32,
+    pub send_bitrate: u64,
     pub rtp_bytes_received: u64,
-    pub rtp_recv_bitrate: u32,
+    pub rtp_recv_bitrate: u64,
     pub rtp_bytes_sent: u64,
-    pub rtp_send_bitrate: u32,
+    pub rtp_send_bitrate: u64,
     pub rtx_bytes_received: u64,
-    pub rtx_recv_bitrate: u32,
+    pub rtx_recv_bitrate: u64,
     pub rtx_bytes_sent: u64,
-    pub rtx_send_bitrate: u32,
+    pub rtx_send_bitrate: u64,
     pub probation_bytes_sent: u64,
-    pub probation_send_bitrate: u32,
+    pub probation_send_bitrate: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub available_outgoing_bitrate: Option<u32>,
+    pub available_outgoing_bitrate: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub available_incoming_bitrate: Option<u32>,
-    pub max_incoming_bitrate: Option<u32>,
-    pub max_outgoing_bitrate: Option<u32>,
-    pub min_outgoing_bitrate: Option<u32>,
+    pub available_incoming_bitrate: Option<u64>,
+    pub max_incoming_bitrate: Option<u64>,
+    pub max_outgoing_bitrate: Option<u64>,
+    pub min_outgoing_bitrate: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rtp_packet_loss_received: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -271,7 +271,7 @@ namespace RTC
 		ResetTransportCcFeedback(this->transportCcFeedbackPacketCount);
 	}
 
-	void TransportCongestionControlServer::SetMaxIncomingBitrate(uint32_t bitrate)
+	void TransportCongestionControlServer::SetMaxIncomingBitrate(int64_t bitrate)
 	{
 		MS_TRACE();
 
@@ -279,7 +279,7 @@ namespace RTC
 
 		this->maxIncomingBitrate = bitrate;
 
-		if (previousMaxIncomingBitrate != 0u && this->maxIncomingBitrate == 0u)
+		if (previousMaxIncomingBitrate > 0 && this->maxIncomingBitrate == 0)
 		{
 			// This is to ensure that we send N REMB packets with bitrate 0 (unlimited).
 			this->unlimitedRembCounter = UnlimitedRembNumPackets;
@@ -358,20 +358,20 @@ namespace RTC
 		MS_TRACE();
 
 		// May fix unlimitedRembCounter.
-		if (this->unlimitedRembCounter > 0u && this->maxIncomingBitrate != 0u)
+		if (this->unlimitedRembCounter > 0 && this->maxIncomingBitrate > 0)
 		{
-			this->unlimitedRembCounter = 0u;
+			this->unlimitedRembCounter = 0;
 		}
 
 		// In case this is the first unlimited REMB packet, send it fast.
 		if (
-		  ((this->bweType != RTC::BweType::REMB && this->maxIncomingBitrate != 0u) ||
-			 this->unlimitedRembCounter > 0u) &&
+		  ((this->bweType != RTC::BweType::REMB && this->maxIncomingBitrate > 0) ||
+			 this->unlimitedRembCounter > 0) &&
 		  (nowMs - this->limitationRembSentAtMs > LimitationRembIntervalMs ||
 			 this->unlimitedRembCounter == UnlimitedRembNumPackets))
 		{
 			MS_DEBUG_DEV(
-			  "sending limitation RTCP REMB packet [bitrate:%" PRIu32 "]", this->maxIncomingBitrate);
+			  "sending limitation RTCP REMB packet [bitrate:%" PRIi64 "]", this->maxIncomingBitrate);
 
 			RTC::RTCP::FeedbackPsRembPacket packet(0u, 0u);
 
@@ -433,12 +433,12 @@ namespace RTC
 	void TransportCongestionControlServer::OnRembServerAvailableBitrate(
 	  const webrtc::RemoteBitrateEstimator* /*rembServer*/,
 	  const std::vector<uint32_t>& ssrcs,
-	  uint32_t availableBitrate)
+	  int64_t availableBitrate)
 	{
 		MS_TRACE();
 
 		// Limit announced bitrate if requested via API.
-		if (this->maxIncomingBitrate != 0u)
+		if (this->maxIncomingBitrate > 0)
 		{
 			availableBitrate = std::min(availableBitrate, this->maxIncomingBitrate);
 		}
@@ -453,7 +453,7 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV(
-		  "sending RTCP REMB packet [bitrate:%" PRIu32 ", ssrcs:%s]",
+		  "sending RTCP REMB packet [bitrate:%" PRIi64 ", ssrcs:%s]",
 		  availableBitrate,
 		  ssrcsStream.str().c_str());
 #endif

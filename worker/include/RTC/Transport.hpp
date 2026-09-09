@@ -377,14 +377,14 @@ namespace RTC
 		RTC::RtpDataCounter recvRtxTransmission;
 		RTC::RtpDataCounter sendRtxTransmission;
 		RTC::RtpDataCounter sendProbationTransmission;
-		uint16_t transportWideCcSeq{ 0u };
-		uint32_t initialAvailableOutgoingBitrate{ 600000u };
-		uint32_t maxIncomingBitrate{ 0u };
-		uint32_t maxOutgoingBitrate{ 0u };
-		uint32_t minOutgoingBitrate{ 0u };
+		uint16_t transportWideCcSeq{ 0 };
+		int64_t initialAvailableOutgoingBitrate{ 600000 };
+		int64_t maxIncomingBitrate{ 0 };
+		int64_t maxOutgoingBitrate{ 0 };
+		int64_t minOutgoingBitrate{ 0 };
 		// For SCTP capable transports and for direct transport.
-		size_t maxSendMessageSize{ 0u };
-		size_t maxReceiveMessageSize{ 0u };
+		size_t maxSendMessageSize{ 0 };
+		size_t maxReceiveMessageSize{ 0 };
 		struct TraceEventTypes traceEventTypes;
 	};
 } // namespace RTC

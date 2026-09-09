@@ -420,7 +420,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			/* direct */ undefined,
-			initialAvailableOutgoingBitrate,
+			BigInt(initialAvailableOutgoingBitrate),
 			enableSctp,
 			maxSendMessageSize,
 			maxReceiveMessageSize,

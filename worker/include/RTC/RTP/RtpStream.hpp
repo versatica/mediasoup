@@ -165,13 +165,13 @@ namespace RTC
 
 			virtual void Resume() = 0;
 
-			virtual uint32_t GetBitrate(int64_t nowMs) = 0;
+			virtual int64_t GetBitrate(int64_t nowMs) = 0;
 
-			virtual uint32_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
+			virtual int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 
-			virtual uint32_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) = 0;
+			virtual int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) = 0;
 
-			virtual uint32_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
+			virtual int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 
 			void ResetScore(uint8_t score, bool notify);
 
