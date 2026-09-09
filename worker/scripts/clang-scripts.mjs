@@ -351,7 +351,7 @@ function getBuildDir() {
 	const workerInstallDir =
 		process.env.MEDIASOUP_INSTALL_DIR ??
 		`${workerOutDir}/${mediasoupBuildtype}`;
-	const buildDir = process.envBUILD_DIR ?? `${workerInstallDir}/build`;
+	const buildDir = process.env.BUILD_DIR ?? `${workerInstallDir}/build`;
 
 	return buildDir;
 }

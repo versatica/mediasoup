@@ -8,6 +8,7 @@ Usage:
     invoke --list
 """
 
+import glob
 import inspect
 import os
 import shutil
@@ -26,6 +27,22 @@ MEDIASOUP_INSTALL_DIR = (
     os.getenv("MEDIASOUP_INSTALL_DIR") or f"{MEDIASOUP_OUT_DIR}/{MEDIASOUP_BUILDTYPE}"
 )
 BUILD_DIR = os.getenv("BUILD_DIR") or f"{MEDIASOUP_INSTALL_DIR}/build"
+# NOTE: Each set of Meson options gets its own build directory. Meson keeps the
+# options it's not given again, so sharing a single build directory would leak
+# options such as `ms_build_tests` (which adds MS_TEST and MS_LOG_STD to every
+# compiled file) into the next build, and would also rebuild everything on every
+# switch from a task to another.
+TEST_BUILD_DIR = f"{BUILD_DIR}-test"
+TEST_ASAN_ADDRESS_BUILD_DIR = f"{BUILD_DIR}-test-asan-address"
+TEST_ASAN_UNDEFINED_BUILD_DIR = f"{BUILD_DIR}-test-asan-undefined"
+FUZZER_BUILD_DIR = f"{BUILD_DIR}-fuzzer"
+BUILD_DIRS = [
+    BUILD_DIR,
+    TEST_BUILD_DIR,
+    TEST_ASAN_ADDRESS_BUILD_DIR,
+    TEST_ASAN_UNDEFINED_BUILD_DIR,
+    FUZZER_BUILD_DIR,
+]
 # Custom pip folder for invoke package.
 # NOTE: We invoke `pip install` always with `--no-user` to make it not complain
 # about "can not combine --user and --target".
@@ -43,7 +60,7 @@ NUM_CORES = (
 )
 PYTHON = os.getenv("PYTHON") or sys.executable
 MESON = os.getenv("MESON") or f"{PIP_MESON_NINJA_DIR}/bin/meson"
-MESON_VERSION = os.getenv("MESON_VERSION") or "1.11.2"
+MESON_VERSION = os.getenv("MESON_VERSION") or "1.12.0"
 # MESON_ARGS can be used to provide extra configuration parameters to meson,
 # such as adding defines or changing optimization options. For instance, use
 # `MESON_ARGS="-Dms_log_trace=true -Dms_log_file_line=true" npm i` to compile
@@ -57,10 +74,7 @@ MESON_ARGS = (
     if os.name == "nt"
     else ""
 )
-# Let's use a specific version of ninja to avoid buggy version 1.11.1:
-# https://mediasoup.discourse.group/t/partly-solved-could-not-detect-ninja-v1-8-2-or-newer/
-# https://github.com/ninja-build/ninja/issues/2211
-NINJA_VERSION = os.getenv("NINJA_VERSION") or "1.10.2.4"
+NINJA_VERSION = os.getenv("NINJA_VERSION") or "1.13.2"
 RUFF_VERSION = os.getenv("RUFF_VERSION") or "0.15.15"
 NPM = os.getenv("NPM") or "npm"
 DOCKER = os.getenv("DOCKER") or "docker"
@@ -156,7 +170,7 @@ def meson_ninja(ctx):
 
 
 @task(pre=[meson_ninja])
-def setup(ctx, meson_args=MESON_ARGS):
+def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     """
     Run meson setup
     """
@@ -164,7 +178,7 @@ def setup(ctx, meson_args=MESON_ARGS):
     if MEDIASOUP_BUILDTYPE == "Release":
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {meson_args} "{BUILD_DIR}"',
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -172,7 +186,7 @@ def setup(ctx, meson_args=MESON_ARGS):
     elif MEDIASOUP_BUILDTYPE == "Debug":
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {meson_args} "{BUILD_DIR}"',
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -180,7 +194,7 @@ def setup(ctx, meson_args=MESON_ARGS):
     else:
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {meson_args} "{BUILD_DIR}"',
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -190,19 +204,31 @@ def setup(ctx, meson_args=MESON_ARGS):
 @task
 def clean(ctx):
     """
-    Clean the installation directory
+    Clean the objects and binaries of mediasoup, keeping those of subprojects
     """
 
-    shutil.rmtree(MEDIASOUP_INSTALL_DIR, ignore_errors=True)
+    # NOTE: Meson keeps the objects of each target in a "<target>.p" directory,
+    # and those of the subprojects and the dependencies in their own
+    # subdirectories, so this removes just what belongs to mediasoup itself.
+    for build_dir in BUILD_DIRS:
+        for path in glob.glob(f"{build_dir}/*.p"):
+            shutil.rmtree(path, ignore_errors=True)
+
+    # NOTE: The installed artifacts are files, while the build directories are
+    # directories.
+    for path in glob.glob(f"{MEDIASOUP_INSTALL_DIR}/*"):
+        if os.path.isfile(path):
+            os.remove(path)
 
 
 @task
 def clean_build(ctx):
     """
-    Clean the build directory
+    Clean the build directories
     """
 
-    shutil.rmtree(BUILD_DIR, ignore_errors=True)
+    for build_dir in BUILD_DIRS:
+        shutil.rmtree(build_dir, ignore_errors=True)
 
 
 @task
@@ -274,22 +300,29 @@ def update_wrap_file(ctx, subproject):
         )
 
 
-@task(pre=[setup])
-def flatc(ctx):
+@task(pre=[meson_ninja])
+def flatc(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     """
     Compile FlatBuffers FBS files
     """
 
+    # NOTE: The generated C++ headers are written into the build directory, so
+    # they must be generated in the very same build directory that compiles them
+    # and with the very same Meson options. setup() is called here instead of
+    # being declared as a pre task because a pre task cannot receive the
+    # parameters given to the task it precedes.
+    setup(ctx, meson_args=meson_args, build_dir=build_dir)
+
     with cd_worker():
         ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" flatbuffers-generator',
+            f'"{MESON}" compile -C "{build_dir}" flatbuffers-generator',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
         )
 
 
-@task(pre=[setup, flatc], default=True)
+@task(pre=[flatc], default=True)
 def mediasoup_worker(ctx):
     """
     Compile mediasoup-worker binary
@@ -317,7 +350,7 @@ def mediasoup_worker(ctx):
         )
 
 
-@task(pre=[setup, flatc])
+@task(pre=[flatc])
 def libmediasoup_worker(ctx):
     """
     Compile libmediasoup-worker library
@@ -339,7 +372,7 @@ def libmediasoup_worker(ctx):
         )
 
 
-@task(pre=[setup, flatc])
+@task(pre=[flatc])
 def xcode(ctx):
     """
     Setup Xcode project
@@ -419,7 +452,15 @@ def format(ctx):
         ctx.run(f'"{PYTHON}" -m ruff format', echo=True, pty=PTY_SUPPORTED, shell=SHELL)
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + " -Dms_build_tests=true"), flatc])
+@task(
+    pre=[
+        call(
+            flatc,
+            meson_args=MESON_ARGS + " -Dms_build_tests=true",
+            build_dir=TEST_BUILD_DIR,
+        )
+    ]
+)
 def tidy(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules
@@ -431,10 +472,21 @@ def tidy(ctx):
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
+            # NOTE: Tell the script which build directory holds the
+            # compile_commands.json to use.
+            env={**os.environ, "BUILD_DIR": TEST_BUILD_DIR},
         )
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + " -Dms_build_tests=true"), flatc])
+@task(
+    pre=[
+        call(
+            flatc,
+            meson_args=MESON_ARGS + " -Dms_build_tests=true",
+            build_dir=TEST_BUILD_DIR,
+        )
+    ]
+)
 def tidy_fix(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules and applies
@@ -447,10 +499,21 @@ def tidy_fix(ctx):
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
+            # NOTE: Tell the script which build directory holds the
+            # compile_commands.json to use.
+            env={**os.environ, "BUILD_DIR": TEST_BUILD_DIR},
         )
 
 
-@task(pre=[call(setup, meson_args=MESON_ARGS + " -Dms_build_tests=true"), flatc])
+@task(
+    pre=[
+        call(
+            flatc,
+            meson_args=MESON_ARGS + " -Dms_build_tests=true",
+            build_dir=TEST_BUILD_DIR,
+        )
+    ]
+)
 def test(ctx):
     """
     Run worker tests
@@ -458,14 +521,14 @@ def test(ctx):
 
     with cd_worker():
         ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test',
+            f'"{MESON}" compile -C "{TEST_BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
         )
     with cd_worker():
         ctx.run(
-            f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test',
+            f'"{MESON}" install -C "{TEST_BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
@@ -478,7 +541,7 @@ def test(ctx):
 
     with cd_worker():
         ctx.run(
-            f'"{BUILD_DIR}/{mediasoup_worker_test}" --invisibles --colour-mode=ansi {mediasoup_test_tags}',
+            f'"{TEST_BUILD_DIR}/{mediasoup_worker_test}" --invisibles --colour-mode=ansi {mediasoup_test_tags}',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
@@ -488,11 +551,11 @@ def test(ctx):
 @task(
     pre=[
         call(
-            setup,
+            flatc,
             meson_args=MESON_ARGS
             + " -Dms_build_tests=true -Db_sanitize=address -Db_lundef=false",
-        ),
-        flatc,
+            build_dir=TEST_ASAN_ADDRESS_BUILD_DIR,
+        )
     ]
 )
 def test_asan_address(ctx):
@@ -502,14 +565,14 @@ def test_asan_address(ctx):
 
     with cd_worker():
         ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-address',
+            f'"{MESON}" compile -C "{TEST_ASAN_ADDRESS_BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-address',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
         )
     with cd_worker():
         ctx.run(
-            f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-address',
+            f'"{MESON}" install -C "{TEST_ASAN_ADDRESS_BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-address',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
@@ -519,7 +582,7 @@ def test_asan_address(ctx):
 
     with cd_worker():
         ctx.run(
-            f'"{BUILD_DIR}/mediasoup-worker-test-asan-address" --invisibles {mediasoup_test_tags}',
+            f'"{TEST_ASAN_ADDRESS_BUILD_DIR}/mediasoup-worker-test-asan-address" --invisibles {mediasoup_test_tags}',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
@@ -533,11 +596,11 @@ def test_asan_address(ctx):
 @task(
     pre=[
         call(
-            setup,
+            flatc,
             meson_args=MESON_ARGS
             + " -Dms_build_tests=true -Db_sanitize=undefined -Db_lundef=false",
-        ),
-        flatc,
+            build_dir=TEST_ASAN_UNDEFINED_BUILD_DIR,
+        )
     ]
 )
 def test_asan_undefined(ctx):
@@ -547,14 +610,14 @@ def test_asan_undefined(ctx):
 
     with cd_worker():
         ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-undefined',
+            f'"{MESON}" compile -C "{TEST_ASAN_UNDEFINED_BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-undefined',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
         )
     with cd_worker():
         ctx.run(
-            f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-undefined',
+            f'"{MESON}" install -C "{TEST_ASAN_UNDEFINED_BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-undefined',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
@@ -564,7 +627,7 @@ def test_asan_undefined(ctx):
 
     with cd_worker():
         ctx.run(
-            f'"{BUILD_DIR}/mediasoup-worker-test-asan-undefined" --invisibles {mediasoup_test_tags}',
+            f'"{TEST_ASAN_UNDEFINED_BUILD_DIR}/mediasoup-worker-test-asan-undefined" --invisibles {mediasoup_test_tags}',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
@@ -580,11 +643,11 @@ def test_asan_undefined(ctx):
 @task(
     pre=[
         call(
-            setup,
+            flatc,
             meson_args=MESON_ARGS
             + " -Dms_build_fuzzer=true -Db_sanitize=address -Db_lundef=false",
-        ),
-        flatc,
+            build_dir=FUZZER_BUILD_DIR,
+        )
     ]
 )
 def fuzzer(ctx):
@@ -593,18 +656,18 @@ def fuzzer(ctx):
     """
 
     # NOTE: We need to pass '-Db_sanitize=address' to enable fuzzer in all Meson
-    # subprojects, so we pass it to the setup() task.
+    # subprojects, so we pass it to the setup() task (through the flatc() task).
 
     with cd_worker():
         ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-fuzzer',
+            f'"{MESON}" compile -C "{FUZZER_BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-fuzzer',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
         )
     with cd_worker():
         ctx.run(
-            f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-fuzzer',
+            f'"{MESON}" install -C "{FUZZER_BUILD_DIR}" --no-rebuild --tags mediasoup-worker-fuzzer',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
@@ -619,7 +682,7 @@ def fuzzer_run_all(ctx):
 
     with cd_worker():
         ctx.run(
-            f'LSAN_OPTIONS=verbosity=1:log_threads=1 "{BUILD_DIR}/mediasoup-worker-fuzzer" -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus',
+            f'LSAN_OPTIONS=verbosity=1:log_threads=1 "{FUZZER_BUILD_DIR}/mediasoup-worker-fuzzer" -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL,
