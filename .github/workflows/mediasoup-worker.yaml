@@ -255,12 +255,12 @@ jobs:
         name: invoke -r worker test
         run: invoke -r worker test
 
-      # Let's clean everything before rebuilding worker tests with ASAN.
+      # NOTE: No need to clean anything before, since ASAN tests use their own
+      # build directory.
       - if: ${{ matrix.build.run-test-asan-address }}
         name: invoke -r worker test-asan-address
-        run: invoke -r worker clean-all && invoke -r worker test-asan-address
+        run: invoke -r worker test-asan-address
 
-      # Let's clean everything before rebuilding worker tests with ASAN.
       - if: ${{ matrix.build.run-test-asan-undefined }}
         name: invoke -r worker test-asan-undefined
-        run: invoke -r worker clean-all && invoke -r worker test-asan-undefined
+        run: invoke -r worker test-asan-undefined
