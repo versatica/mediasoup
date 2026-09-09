@@ -30,7 +30,7 @@ table Dump {
 
 table BitrateByLayer {
     layer: string (required);
-    bitrate: uint32;
+    bitrate: uint64;
 }
 
 union StatsData {
@@ -69,7 +69,7 @@ table RecvStats {
     base: Stats (required);
     packet_count: uint64;
     byte_count: uint64;
-    bitrate: uint32;
+    bitrate: uint64;
     bitrate_by_layer: [BitrateByLayer] (required);
 }
 
@@ -77,6 +77,6 @@ table SendStats {
     base: Stats (required);
     packet_count: uint64;
     byte_count: uint64;
-    bitrate: uint32;
+    bitrate: uint64;
 }
 

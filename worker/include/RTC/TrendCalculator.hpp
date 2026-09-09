@@ -23,8 +23,8 @@ namespace RTC
 
 	private:
 		float decreaseFactor{ DecreaseFactor };
-		uint32_t value{ 0u };
-		uint32_t highestValue{ 0u };
+		uint32_t value{ 0 };
+		uint32_t highestValue{ 0 };
 		int64_t highestValueUpdatedAtMs{ 0 };
 	};
 } // namespace RTC

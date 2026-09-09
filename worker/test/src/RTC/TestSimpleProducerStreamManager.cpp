@@ -190,8 +190,8 @@ namespace
 
 		// bitrate (bps) = totalBytes * 8000 / windowSizeMs.
 		// windowSizeMs for RtpStreamRecv is 2500.
-		auto expectedBitrate =
-		  static_cast<uint32_t>(std::trunc((count * packet->GetLength() * 8000.0f / 2500) + 0.5f));
+		const auto expectedBitrate =
+		  static_cast<int64_t>(std::trunc((count * packet->GetLength() * 8000.0f / 2500) + 0.5f));
 
 		REQUIRE(rtpStream->GetBitrate(nowMs) == expectedBitrate);
 	}
@@ -406,12 +406,12 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
-		auto steamBitrate   = rtpStream->GetBitrate(nowMs);
-		auto usedBitrate    = manager->IncreaseLayer(
-		  /*bitrate*/ steamBitrate + 1u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		const int64_t nowMs      = DepLibUV::GetTimeMs();
+		const auto streamBitrate = rtpStream->GetBitrate(nowMs);
+		const auto usedBitrate   = manager->IncreaseLayer(
+		  /*bitrate*/ streamBitrate + 1, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate == steamBitrate);
+		REQUIRE(usedBitrate == streamBitrate);
 	}
 
 	SECTION("IncreaseLayer() returns available bitrate when it is less than producer bitrate")
@@ -427,10 +427,10 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		const int64_t nowMs             = DepLibUV::GetTimeMs();
-		const auto streamBitrate        = rtpStream->GetBitrate(nowMs);
-		const uint32_t availableBitrate = streamBitrate - 1;
-		auto usedBitrate                = manager->IncreaseLayer(
+		const int64_t nowMs            = DepLibUV::GetTimeMs();
+		const auto streamBitrate       = rtpStream->GetBitrate(nowMs);
+		const int64_t availableBitrate = streamBitrate - 1;
+		auto usedBitrate               = manager->IncreaseLayer(
 		  /*bitrate*/ availableBitrate, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate == availableBitrate);
@@ -453,15 +453,15 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 
 		// First call claims bitrate.
 		auto usedBitrate = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate > 0u);
+		REQUIRE(usedBitrate > 0);
 
 		// Second call in same iteration should return 0.
 		auto usedBitrate2 = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate2 == 0u);
+		REQUIRE(usedBitrate2 == 0);
 	}
 
 	SECTION("IncreaseLayer() works again after ApplyLayers()")
@@ -481,14 +481,14 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 
 		// First iteration: claim bitrate and apply.
 		manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 		manager->ApplyLayers(/*rtpStreamActiveMs*/ 0u);
 
 		// After ApplyLayers, IncreaseLayer should work again.
 		auto usedBitrate = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate > 0u);
+		REQUIRE(usedBitrate > 0);
 	}
 
 	SECTION("GetDesiredBitrate() returns producer bitrate for video")
@@ -504,11 +504,11 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
-		auto steamBitrate   = rtpStream->GetBitrate(nowMs);
-		auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
+		const int64_t nowMs       = DepLibUV::GetTimeMs();
+		const auto streamBitrate  = rtpStream->GetBitrate(nowMs);
+		const auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
 
-		REQUIRE(desiredBitrate == steamBitrate);
+		REQUIRE(desiredBitrate == streamBitrate);
 	}
 
 	SECTION("GetDesiredBitrate() returns 0 for audio kind")
@@ -528,6 +528,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		const int64_t nowMs = DepLibUV::GetTimeMs();
 		auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
 
-		REQUIRE(desiredBitrate == 0u);
+		REQUIRE(desiredBitrate == 0);
 	}
 }

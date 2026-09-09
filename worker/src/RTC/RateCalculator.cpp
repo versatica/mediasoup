@@ -48,7 +48,7 @@ namespace RTC
 		this->bytes += size;
 	}
 
-	uint32_t RateCalculator::GetRate(int64_t nowMs)
+	int64_t RateCalculator::GetRate(int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -71,8 +71,8 @@ namespace RTC
 		// NOTE: Must be read after SlideWindow(), which may have expired data.
 		this->lastTotalCount = this->totalCount;
 		this->lastTimeMs     = nowMs;
-		this->lastRate       = static_cast<uint32_t>(
-		  std::min(rate, static_cast<double>(std::numeric_limits<uint32_t>::max())));
+		this->lastRate =
+		  static_cast<int64_t>(std::min(rate, static_cast<double>(std::numeric_limits<int64_t>::max())));
 
 		return this->lastRate;
 	}

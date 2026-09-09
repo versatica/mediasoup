@@ -195,7 +195,10 @@ export function serializeRtpEncodingParameters(
 
 		// Add max bitrate.
 		if (encoding.maxBitrate !== undefined) {
-			FbsRtpEncodingParameters.addMaxBitrate(builder, encoding.maxBitrate);
+			FbsRtpEncodingParameters.addMaxBitrate(
+				builder,
+				BigInt(encoding.maxBitrate)
+			);
 		}
 
 		// End serialization.
@@ -501,7 +504,8 @@ export function parseRtpEncodingParameters(
 		rtx: data.rtx() ? { ssrc: data.rtx()!.ssrc() } : undefined,
 		dtx: data.dtx(),
 		scalabilityMode: data.scalabilityMode() || undefined,
-		maxBitrate: data.maxBitrate() !== null ? data.maxBitrate()! : undefined,
+		maxBitrate:
+			data.maxBitrate() !== null ? Number(data.maxBitrate()) : undefined,
 	};
 }
 

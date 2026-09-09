@@ -113,7 +113,7 @@ namespace RTC
 
 		private:
 			Header* header{ nullptr };
-			uint8_t raw[HeaderSize]{ 0u };
+			uint8_t raw[HeaderSize]{ 0 };
 		};
 
 		class ReceiverReportPacket : public Packet
@@ -193,7 +193,7 @@ namespace RTC
 				// A serialized packet can contain a maximum of 31 reports.
 				// If number of reports exceeds 31 then the required number of packets
 				// will be serialized which will take the size calculated below.
-				size_t size = (Packet::CommonHeaderSize + 4u /* this->ssrc */) *
+				size_t size = (Packet::CommonHeaderSize + 4 /* this->ssrc */) *
 				              ((this->GetCount() / maxReportsPerPacket) + 1);
 				size += ReceiverReport::HeaderSize * this->GetCount();
 
@@ -202,7 +202,7 @@ namespace RTC
 
 		private:
 			// SSRC of packet sender.
-			uint32_t ssrc{ 0u };
+			uint32_t ssrc{ 0 };
 			std::vector<ReceiverReport*> reports;
 		};
 	} // namespace RTCP

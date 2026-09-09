@@ -281,7 +281,7 @@ impl FromFbs for ProducerVideoOrientation {
 #[allow(missing_docs)]
 pub struct BitrateByLayer {
     layer: String,
-    bitrate: u32,
+    bitrate: u64,
 }
 
 /// RTC statistics of the producer.
@@ -310,7 +310,7 @@ pub struct ProducerStat {
     pub fir_count: u64,
     pub packet_count: u64,
     pub byte_count: u64,
-    pub bitrate: u32,
+    pub bitrate: u64,
     pub round_trip_time: Option<f32>,
     pub rtx_packets_discarded: Option<u64>,
     pub score: u8,

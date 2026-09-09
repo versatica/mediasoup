@@ -209,8 +209,8 @@ namespace
 
 		// bitrate (bps) = totalBytes * 8000 / windowSizeMs.
 		// windowSizeMs for RtpStreamRecv is 2500.
-		auto expectedBitrate =
-		  static_cast<uint32_t>(std::trunc((count * packet->GetLength() * 8000.0f / 2500) + 0.5f));
+		const auto expectedBitrate =
+		  static_cast<int64_t>(std::trunc((count * packet->GetLength() * 8000.0f / 2500) + 0.5f));
 
 		REQUIRE(rtpStream->GetBitrate(nowMs) == expectedBitrate);
 	}
@@ -1235,15 +1235,15 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		// First call claims bitrate.
 		auto usedBitrate = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate > 0u);
+		REQUIRE(usedBitrate > 0);
 
 		// Second call in same iteration should return 0 (already at preferred layers).
 		auto usedBitrate2 = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate2 == 0u);
+		REQUIRE(usedBitrate2 == 0);
 	}
 
 	SECTION("IncreaseLayer() works again after ApplyLayers()")
@@ -1266,7 +1266,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		// First iteration: claim layer 0.
 		manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 		manager->ApplyLayers(/*rtpStreamActiveMs*/ 0u);
 
 		// Feed packets to layer 1.
@@ -1275,9 +1275,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		// After ApplyLayers, IncreaseLayer should work again for layer 1.
 		auto usedBitrate = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate > 0u);
+		REQUIRE(usedBitrate > 0);
 	}
 
 	SECTION("GetDesiredBitrate() returns max bitrate across all producer streams")

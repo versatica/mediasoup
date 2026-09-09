@@ -321,7 +321,7 @@ namespace RTC
 			{
 				if (!HasVariableLengthValue())
 				{
-					return 0u;
+					return 0;
 				}
 
 				return GetLengthFieldComputed() - Packet::CommonHeaderLength;

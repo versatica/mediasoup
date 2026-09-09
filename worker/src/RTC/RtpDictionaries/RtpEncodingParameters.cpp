@@ -5,6 +5,7 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <exception>
+#include <limits> // std::numeric_limits
 #include <regex>
 
 namespace RTC
@@ -44,7 +45,9 @@ namespace RTC
 		// maxBitrate is optional.
 		if (auto maxBitrate = data->maxBitrate(); maxBitrate.has_value())
 		{
-			this->maxBitrate = maxBitrate.value();
+			// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+			this->maxBitrate = static_cast<int64_t>(std::min<uint64_t>(
+			  maxBitrate.value(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
 		}
 
 		// dtx is optional, default is false.

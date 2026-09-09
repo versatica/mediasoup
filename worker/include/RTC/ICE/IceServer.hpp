@@ -146,7 +146,7 @@ namespace RTC
 			std::string oldUsernameFragment;
 			std::string oldPassword;
 			IceState state{ IceState::NEW };
-			uint32_t remoteNomination{ 0u };
+			uint32_t remoteNomination{ 0 };
 			std::list<RTC::TransportTuple> tuples;
 			RTC::TransportTuple* selectedTuple{ nullptr };
 			TimerHandleInterface* consentCheckTimer{ nullptr };

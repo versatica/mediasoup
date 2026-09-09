@@ -245,26 +245,26 @@ pub struct PlainTransportStat {
     pub timestamp: u64,
     pub sctp_state: Option<SctpState>,
     pub bytes_received: u64,
-    pub recv_bitrate: u32,
+    pub recv_bitrate: u64,
     pub bytes_sent: u64,
-    pub send_bitrate: u32,
+    pub send_bitrate: u64,
     pub rtp_bytes_received: u64,
-    pub rtp_recv_bitrate: u32,
+    pub rtp_recv_bitrate: u64,
     pub rtp_bytes_sent: u64,
-    pub rtp_send_bitrate: u32,
+    pub rtp_send_bitrate: u64,
     pub rtx_bytes_received: u64,
-    pub rtx_recv_bitrate: u32,
+    pub rtx_recv_bitrate: u64,
     pub rtx_bytes_sent: u64,
-    pub rtx_send_bitrate: u32,
+    pub rtx_send_bitrate: u64,
     pub probation_bytes_sent: u64,
-    pub probation_send_bitrate: u32,
+    pub probation_send_bitrate: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub available_outgoing_bitrate: Option<u32>,
+    pub available_outgoing_bitrate: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub available_incoming_bitrate: Option<u32>,
-    pub max_incoming_bitrate: Option<u32>,
-    pub max_outgoing_bitrate: Option<u32>,
-    pub min_outgoing_bitrate: Option<u32>,
+    pub available_incoming_bitrate: Option<u64>,
+    pub max_incoming_bitrate: Option<u64>,
+    pub max_outgoing_bitrate: Option<u64>,
+    pub min_outgoing_bitrate: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rtp_packet_loss_received: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -983,7 +983,7 @@ impl PlainTransport {
 
     /// Set maximum incoming bitrate for media streams sent by the remote endpoint over this
     /// transport.
-    pub async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
+    pub async fn set_max_incoming_bitrate(&self, bitrate: u64) -> Result<(), RequestError> {
         debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
 
         self.set_max_incoming_bitrate_impl(bitrate).await

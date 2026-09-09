@@ -124,19 +124,19 @@ namespace RTC
 
 		struct PortRange
 		{
-			uint16_t min{ 0u };
-			uint16_t max{ 0u };
+			uint16_t min{ 0 };
+			uint16_t max{ 0 };
 		};
 
 		struct ListenInfo
 		{
 			std::string ip;
 			std::string announcedAddress;
-			uint16_t port{ 0u };
+			uint16_t port{ 0 };
 			PortRange portRange;
 			SocketFlags flags;
-			uint32_t sendBufferSize{ 0u };
-			uint32_t recvBufferSize{ 0u };
+			uint32_t sendBufferSize{ 0 };
+			uint32_t recvBufferSize{ 0 };
 		};
 
 	private:
@@ -377,14 +377,14 @@ namespace RTC
 		RTC::RtpDataCounter recvRtxTransmission;
 		RTC::RtpDataCounter sendRtxTransmission;
 		RTC::RtpDataCounter sendProbationTransmission;
-		uint16_t transportWideCcSeq{ 0u };
-		uint32_t initialAvailableOutgoingBitrate{ 600000u };
-		uint32_t maxIncomingBitrate{ 0u };
-		uint32_t maxOutgoingBitrate{ 0u };
-		uint32_t minOutgoingBitrate{ 0u };
+		uint16_t transportWideCcSeq{ 0 };
+		int64_t initialAvailableOutgoingBitrate{ 600000 };
+		int64_t maxIncomingBitrate{ 0 };
+		int64_t maxOutgoingBitrate{ 0 };
+		int64_t minOutgoingBitrate{ 0 };
 		// For SCTP capable transports and for direct transport.
-		size_t maxSendMessageSize{ 0u };
-		size_t maxReceiveMessageSize{ 0u };
+		size_t maxSendMessageSize{ 0 };
+		size_t maxReceiveMessageSize{ 0 };
 		struct TraceEventTypes traceEventTypes;
 	};
 } // namespace RTC

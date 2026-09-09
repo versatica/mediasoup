@@ -819,7 +819,7 @@ namespace RTC
 			{
 				if (!this->payloadDescriptorHandler)
 				{
-					return 0u;
+					return 0;
 				}
 
 				return this->payloadDescriptorHandler->GetSpatialLayer();
@@ -832,7 +832,7 @@ namespace RTC
 			{
 				if (!this->payloadDescriptorHandler)
 				{
-					return 0u;
+					return 0;
 				}
 
 				return this->payloadDescriptorHandler->GetTemporalLayer();

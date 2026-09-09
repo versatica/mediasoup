@@ -118,7 +118,7 @@ namespace RTC
 			}
 			virtual size_t GetCount() const
 			{
-				return 0u;
+				return 0;
 			}
 			virtual size_t GetSize() const = 0;
 

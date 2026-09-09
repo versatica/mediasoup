@@ -22,7 +22,7 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 	const uint32_t senderSsrc{ 0x00000001 };
 	const uint32_t mediaSsrc{ 0x0330bdee };
 	const uint32_t ssrc{ 0x02d03702 };
-	const uint64_t bitrate{ 365504 };
+	const int64_t bitrate{ 365504 };
 	const uint16_t overhead{ 0 };
 
 	// NOTE: No need to pass const integers to the lambda.

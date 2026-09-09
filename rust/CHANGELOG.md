@@ -6,6 +6,7 @@
 - Worker: Fix transport-cc arrival time precision by working in microseconds ([PR #1914](https://github.com/versatica/mediasoup/pull/1914)).
 - Worker: Use real receive time of packets ([PR #1917](https://github.com/versatica/mediasoup/pull/1917)).
 - Worker: Use `int64_t` for time everywhere ([PR #1918](https://github.com/versatica/mediasoup/pull/1918)).
+- Worker: Use `int64_t` for bitrate everywhere ([PR #1919](https://github.com/versatica/mediasoup/pull/1919)).
 - Improve worker build system ([PR #1920](https://github.com/versatica/mediasoup/pull/1920)).
 
 ### 0.27.0

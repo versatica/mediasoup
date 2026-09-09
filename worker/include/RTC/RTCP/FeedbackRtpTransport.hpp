@@ -138,7 +138,7 @@ namespace RTC
 
 			private:
 				Status status{ Status::None };
-				uint16_t count{ 0u };
+				uint16_t count{ 0 };
 			};
 
 		private:
@@ -331,20 +331,20 @@ namespace RTC
 		private:
 			// Whether baseSequenceNumber has been set.
 			bool baseSet{ false };
-			uint16_t baseSequenceNumber{ 0u };
+			uint16_t baseSequenceNumber{ 0 };
 			// 24 bits signed integer.
 			int32_t referenceTime{ 0 };
 			// Just for locally generated packets.
-			uint16_t latestSequenceNumber{ 0u };
+			uint16_t latestSequenceNumber{ 0 };
 			// Just for locally generated packets.
 			int64_t latestTimestampUs{ 0 };
-			uint16_t packetStatusCount{ 0u };
-			uint8_t feedbackPacketCount{ 0u };
+			uint16_t packetStatusCount{ 0 };
+			uint8_t feedbackPacketCount{ 0 };
 			std::vector<Chunk*> chunks;
 			std::vector<int16_t> deltas;
 			// Just for locally generated packets.
 			Context context;
-			size_t deltasAndChunksSize{ 0u };
+			size_t deltasAndChunksSize{ 0 };
 			size_t size{ 0 };
 			bool isCorrect{ true };
 		};

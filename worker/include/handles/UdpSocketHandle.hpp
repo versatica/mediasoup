@@ -96,15 +96,15 @@ protected:
 protected:
 	struct sockaddr_storage localAddr{};
 	std::string localIp;
-	uint16_t localPort{ 0u };
+	uint16_t localPort{ 0 };
 
 private:
 	// Allocated by this (may be passed by argument).
 	uv_udp_t* uvHandle{ nullptr };
 	// Others.
 	bool closed{ false };
-	size_t recvBytes{ 0u };
-	size_t sentBytes{ 0u };
+	size_t recvBytes{ 0 };
+	size_t sentBytes{ 0 };
 };
 
 #endif

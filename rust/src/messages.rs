@@ -652,7 +652,7 @@ pub(crate) struct RouterCreateWebrtcTransportData {
     transport_id: TransportId,
     #[serde(flatten)]
     listen: RouterCreateWebrtcTransportListen,
-    initial_available_outgoing_bitrate: u32,
+    initial_available_outgoing_bitrate: u64,
     enable_udp: bool,
     enable_tcp: bool,
     prefer_udp: bool,
@@ -1585,7 +1585,7 @@ impl Request for TransportConnectPlainRequest {
 
 #[derive(Debug)]
 pub(crate) struct TransportSetMaxIncomingBitrateRequest {
-    pub(crate) bitrate: u32,
+    pub(crate) bitrate: u64,
 }
 
 impl Request for TransportSetMaxIncomingBitrateRequest {
@@ -1621,7 +1621,7 @@ impl Request for TransportSetMaxIncomingBitrateRequest {
 
 #[derive(Debug)]
 pub(crate) struct TransportSetMaxOutgoingBitrateRequest {
-    pub(crate) bitrate: u32,
+    pub(crate) bitrate: u64,
 }
 
 impl Request for TransportSetMaxOutgoingBitrateRequest {
@@ -1657,7 +1657,7 @@ impl Request for TransportSetMaxOutgoingBitrateRequest {
 
 #[derive(Debug)]
 pub(crate) struct TransportSetMinOutgoingBitrateRequest {
-    pub(crate) bitrate: u32,
+    pub(crate) bitrate: u64,
 }
 
 impl Request for TransportSetMinOutgoingBitrateRequest {

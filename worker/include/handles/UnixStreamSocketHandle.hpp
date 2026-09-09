@@ -71,12 +71,12 @@ private:
 
 protected:
 	// Passed by argument.
-	size_t bufferSize{ 0u };
+	size_t bufferSize{ 0 };
 	UnixStreamSocketHandle::Role role;
 	// Allocated by this.
 	uint8_t* buffer{ nullptr };
 	// Others.
-	size_t bufferDataLen{ 0u };
+	size_t bufferDataLen{ 0 };
 };
 
 #endif

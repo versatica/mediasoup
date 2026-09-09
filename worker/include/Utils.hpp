@@ -197,13 +197,13 @@ namespace Utils
 		template<typename T>
 		typename std::enable_if<std::is_unsigned<T>::value, bool>::type static IsPaddedTo4Bytes(T size)
 		{
-			return (size & 0x03) == 0u;
+			return (size & 0x03) == 0;
 		}
 
 		template<typename T>
 		typename std::enable_if<std::is_unsigned<T>::value, bool>::type static IsPaddedTo8Bytes(T size)
 		{
-			return (size & 0x07) == 0u;
+			return (size & 0x07) == 0;
 		}
 
 		template<typename T>

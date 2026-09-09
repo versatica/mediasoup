@@ -42,10 +42,9 @@ namespace RTC
 		void ProducerRtpStreamScore(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
-		uint32_t IncreaseLayer(
-		  uint32_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) override;
+		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) override;
 		void ApplyLayers(int64_t rtpStreamActiveMs) override;
-		uint32_t GetDesiredBitrate(int64_t nowMs) const override;
+		int64_t GetDesiredBitrate(int64_t nowMs) const override;
 		RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,
 		  bool lastSentPacketHasMarker,

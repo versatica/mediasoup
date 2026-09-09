@@ -35,7 +35,7 @@ namespace RTC
 
 		void Update(size_t size, int64_t nowMs);
 
-		uint32_t GetRate(int64_t nowMs);
+		int64_t GetRate(int64_t nowMs);
 
 		size_t GetBytes() const
 		{
@@ -71,7 +71,7 @@ namespace RTC
 		// path needs no memoization store.
 		// NOTE: No "not calculated yet" mark is needed, since the initial and post
 		// Reset() state is a valid entry on its own: a zero rate for a zero count.
-		uint32_t lastRate{ 0 };
+		int64_t lastRate{ 0 };
 		// Time of the latest GetRate() call. Prevents reusing `lastRate` once time
 		// has moved on and there is data pending expiration.
 		int64_t lastTimeMs{ 0 };
@@ -91,7 +91,7 @@ namespace RTC
 	public:
 		void Update(const RTC::RTP::Packet* packet);
 
-		uint32_t GetBitrate(int64_t nowMs)
+		int64_t GetBitrate(int64_t nowMs)
 		{
 			return this->rate.GetRate(nowMs);
 		}

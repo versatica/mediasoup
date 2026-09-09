@@ -85,9 +85,14 @@ namespace RTC
 			const uint64_t mantissa =
 			  (static_cast<uint32_t>(data[5] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 6);
 
-			this->bitrate = (mantissa << exponent);
+			// NOTE: The exponent is 6 bits wide, so a remote endpoint can craft a shift
+			// that overflows. The checks below reject both an overflowing shift and a
+			// value that does not fit in the signed 64 bits bitrate.
+			const uint64_t rawBitrate = (mantissa << exponent);
 
-			if ((this->bitrate >> exponent) != mantissa)
+			if (
+			  (rawBitrate >> exponent) != mantissa ||
+			  rawBitrate > static_cast<uint64_t>(std::numeric_limits<int64_t>::max()))
 			{
 				MS_WARN_TAG(rtcp, "invalid REMB bitrate value: %" PRIu64 " *2^%u", mantissa, exponent);
 
@@ -95,6 +100,8 @@ namespace RTC
 
 				return;
 			}
+
+			this->bitrate = static_cast<int64_t>(rawBitrate);
 
 			// Make index point to the first SSRC feedback item.
 			size_t index{ 8 };
@@ -113,8 +120,8 @@ namespace RTC
 			MS_TRACE();
 
 			// NOLINTNEXTLINE(bugprone-parent-virtual-call)
-			size_t offset     = FeedbackPsPacket::Serialize(buffer);
-			uint64_t mantissa = this->bitrate;
+			size_t offset = FeedbackPsPacket::Serialize(buffer);
+			auto mantissa = static_cast<uint64_t>(std::max<int64_t>(this->bitrate, 0));
 			uint8_t exponent{ 0u };
 
 			while (mantissa > 0x3FFFF /* max mantissa (18 bits) */)
@@ -151,7 +158,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "<FeedbackPsRembPacket>");
 			// NOLINTNEXTLINE(bugprone-parent-virtual-call)
 			FeedbackPsPacket::Dump();
-			MS_DUMP_CLEAN(indentation, "  bitrate (bps): %" PRIu64, this->bitrate);
+			MS_DUMP_CLEAN(indentation, "  bitrate (bps): %" PRIi64, this->bitrate);
 			for (auto ssrc : this->ssrcs)
 			{
 				MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, ssrc);

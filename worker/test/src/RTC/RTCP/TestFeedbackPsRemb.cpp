@@ -23,7 +23,7 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 	// REMB values.
 	const uint32_t senderSsrc{ 0xfa17fa17 };
 	const uint32_t mediaSsrc{ 0u };
-	const uint64_t bitrate{ 122754u };
+	const int64_t bitrate{ 122754 };
 	const std::vector<uint32_t> ssrcs{ 0x02d03702, 0x04a76747 };
 
 	// NOTE: No need to pass const integers to the lambda.

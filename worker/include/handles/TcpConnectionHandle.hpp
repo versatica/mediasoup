@@ -125,16 +125,16 @@ protected:
 
 protected:
 	// Passed by argument.
-	size_t bufferSize{ 0u };
+	size_t bufferSize{ 0 };
 	// Allocated by this.
 	uint8_t* buffer{ nullptr };
 	// Others.
-	size_t bufferDataLen{ 0u };
+	size_t bufferDataLen{ 0 };
 	std::string localIp;
-	uint16_t localPort{ 0u };
+	uint16_t localPort{ 0 };
 	struct sockaddr_storage peerAddr{};
 	std::string peerIp;
-	uint16_t peerPort{ 0u };
+	uint16_t peerPort{ 0 };
 
 private:
 	// Passed by argument.
@@ -144,8 +144,8 @@ private:
 	// Others.
 	struct sockaddr_storage* localAddr{ nullptr };
 	bool closed{ false };
-	size_t recvBytes{ 0u };
-	size_t sentBytes{ 0u };
+	size_t recvBytes{ 0 };
+	size_t sentBytes{ 0 };
 	bool isClosedByPeer{ false };
 	bool hasError{ false };
 };
