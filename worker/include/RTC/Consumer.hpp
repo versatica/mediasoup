@@ -140,9 +140,9 @@ namespace RTC
 			this->producerStreamManager->SetExternallyManagedBitrate();
 		}
 		uint8_t GetBitratePriority() const;
-		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss);
+		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss);
 		void ApplyLayers();
-		uint32_t GetDesiredBitrate() const;
+		int64_t GetDesiredBitrate() const;
 		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
 		/**
@@ -154,7 +154,7 @@ namespace RTC
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
 		void ReceiveRtcpXrReceiverReferenceTime(
 		  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
-		uint32_t GetTransmissionRate(int64_t nowMs);
+		int64_t GetTransmissionRate(int64_t nowMs);
 		float GetRttMs() const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -215,11 +215,11 @@ namespace RTC
 		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
-		std::bitset<128u> supportedCodecPayloadTypes;
+		std::bitset<128> supportedCodecPayloadTypes;
 		int64_t lastRtcpSentAtUs{ 0 };
 		int64_t maxRtcpIntervalMs{ 0 };
 		bool externallyManagedBitrate{ false };
-		uint8_t priority{ 1u };
+		uint8_t priority{ 1 };
 		struct TraceEventTypes traceEventTypes;
 
 	private:

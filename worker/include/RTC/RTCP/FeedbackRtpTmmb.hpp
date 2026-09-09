@@ -52,11 +52,11 @@ namespace RTC
 			{
 				this->ssrc = ssrc;
 			}
-			uint64_t GetBitrate() const
+			int64_t GetBitrate() const
 			{
 				return this->bitrate;
 			}
-			void SetBitrate(uint64_t bitrate)
+			void SetBitrate(int64_t bitrate)
 			{
 				this->bitrate = bitrate;
 			}
@@ -80,7 +80,7 @@ namespace RTC
 
 		private:
 			uint32_t ssrc{ 0 };
-			uint64_t bitrate{ 0 };
+			int64_t bitrate{ 0 };
 			uint16_t overhead{ 0 };
 		};
 

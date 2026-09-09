@@ -200,18 +200,18 @@ namespace RTC
 		}
 	}
 
-	uint32_t SimulcastProducerStreamManager::IncreaseLayer(
-	  uint32_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
+	int64_t SimulcastProducerStreamManager::IncreaseLayer(
+	  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
 	{
 		MS_TRACE();
 
 		// If already in the preferred layers, do nothing.
 		if (this->provisionalTargetLayers == this->preferredLayers)
 		{
-			return 0u;
+			return 0;
 		}
 
-		uint32_t virtualBitrate;
+		int64_t virtualBitrate;
 
 		if (considerLoss)
 		{
@@ -235,7 +235,7 @@ namespace RTC
 			virtualBitrate = bitrate;
 		}
 
-		uint32_t requiredBitrate{ 0u };
+		int64_t requiredBitrate{ 0 };
 		int16_t spatialLayer{ 0 };
 		int16_t temporalLayer{ 0 };
 		// Whether a usable spatial layer has been found, in which case we must not
@@ -351,7 +351,7 @@ namespace RTC
 				// temporal spatial layer if this is the temporal layer 0 of a higher
 				// spatial layer.
 				if (
-				  requiredBitrate && temporalLayer == 0 && this->provisionalTargetLayers.spatial > -1 &&
+				  requiredBitrate > 0 && temporalLayer == 0 && this->provisionalTargetLayers.spatial > -1 &&
 				  spatialLayer > this->provisionalTargetLayers.spatial)
 				{
 					auto* provisionalProducerRtpStream =
@@ -365,13 +365,13 @@ namespace RTC
 					}
 					else
 					{
-						requiredBitrate = 1u; // Don't set 0 since it would be ignored.
+						requiredBitrate = 1; // Don't set 0 since it would be ignored.
 					}
 				}
 
 				MS_DEBUG_DEV(
-				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
-				  ", required bitrate:%" PRIu32 "]",
+				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIi64
+				  ", required bitrate:%" PRIi64 "]",
 				  spatialLayer,
 				  temporalLayer,
 				  virtualBitrate,
@@ -379,7 +379,7 @@ namespace RTC
 
 				// If active layer, end iterations here. Otherwise move to next spatial
 				// layer.
-				if (requiredBitrate)
+				if (requiredBitrate > 0)
 				{
 					goto done;
 				}
@@ -399,15 +399,15 @@ namespace RTC
 	done:
 
 		// No higher active layers found.
-		if (!requiredBitrate)
+		if (requiredBitrate <= 0)
 		{
-			return 0u;
+			return 0;
 		}
 
 		// No luck.
 		if (requiredBitrate > virtualBitrate)
 		{
-			return 0u;
+			return 0;
 		}
 
 		// Set provisional layers.
@@ -415,8 +415,8 @@ namespace RTC
 		this->provisionalTargetLayers.temporal = temporalLayer;
 
 		MS_DEBUG_DEV(
-		  "setting provisional layers to %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
-		  ", required bitrate:%" PRIu32 "]",
+		  "setting provisional layers to %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIi64
+		  ", required bitrate:%" PRIi64 "]",
 		  this->provisionalTargetLayers.spatial,
 		  this->provisionalTargetLayers.temporal,
 		  virtualBitrate,
@@ -467,11 +467,11 @@ namespace RTC
 		}
 	}
 
-	uint32_t SimulcastProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
+	int64_t SimulcastProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 
-		uint32_t desiredBitrate{ 0u };
+		int64_t desiredBitrate{ 0 };
 
 		// Let's iterate all streams of the Producer (from highest to lowest) and
 		// obtain their bitrate. Choose the highest one.

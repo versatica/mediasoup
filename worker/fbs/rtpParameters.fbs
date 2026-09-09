@@ -94,7 +94,7 @@ table RtpEncodingParameters {
     rtx: Rtx;
     dtx: bool = false;
     scalability_mode: string;
-    max_bitrate: uint32 = null;
+    max_bitrate: uint64 = null;
 }
 
 table RtcpParameters {

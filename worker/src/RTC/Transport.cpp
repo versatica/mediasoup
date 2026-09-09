@@ -26,6 +26,7 @@
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <array>
 #include <iterator> // std::ostream_iterator
+#include <limits>   // std::numeric_limits
 #include <map>      // std::multimap
 
 namespace RTC
@@ -57,7 +58,10 @@ namespace RTC
 		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
 		  initialAvailableOutgoingBitrate.has_value())
 		{
-			this->initialAvailableOutgoingBitrate = initialAvailableOutgoingBitrate.value();
+			// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+			this->initialAvailableOutgoingBitrate = static_cast<int64_t>(std::min<uint64_t>(
+			  initialAvailableOutgoingBitrate.value(),
+			  static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
 		}
 
 		if (options->enableSctp())
@@ -449,46 +453,51 @@ namespace RTC
 		  // bytesReceived.
 		  this->recvTransmission.GetBytes(),
 		  // recvBitrate.
-		  this->recvTransmission.GetRate(nowMs),
+		  static_cast<uint64_t>(this->recvTransmission.GetRate(nowMs)),
 		  // bytesSent.
 		  this->sendTransmission.GetBytes(),
 		  // sendBitrate.
-		  this->sendTransmission.GetRate(nowMs),
+		  static_cast<uint64_t>(this->sendTransmission.GetRate(nowMs)),
 		  // rtpBytesReceived.
 		  this->recvRtpTransmission.GetBytes(),
 		  // rtpRecvBitrate.
-		  this->recvRtpTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->recvRtpTransmission.GetBitrate(nowMs)),
 		  // rtpBytesSent.
 		  this->sendRtpTransmission.GetBytes(),
 		  // rtpSendBitrate.
-		  this->sendRtpTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->sendRtpTransmission.GetBitrate(nowMs)),
 		  // rtxBytesReceived.
 		  this->recvRtxTransmission.GetBytes(),
 		  // rtxRecvBitrate.
-		  this->recvRtxTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->recvRtxTransmission.GetBitrate(nowMs)),
 		  // rtxBytesSent.
 		  this->sendRtxTransmission.GetBytes(),
 		  // rtxSendBitrate.
-		  this->sendRtxTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->sendRtxTransmission.GetBitrate(nowMs)),
 		  // probationBytesSent.
 		  this->sendProbationTransmission.GetBytes(),
 		  // probationSendBitrate.
-		  this->sendProbationTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->sendProbationTransmission.GetBitrate(nowMs)),
 		  // availableOutgoingBitrate.
-		  this->tccClient ? flatbuffers::Optional<uint32_t>(this->tccClient->GetAvailableBitrate())
+		  this->tccClient ? flatbuffers::Optional<uint64_t>(
+		                      static_cast<uint64_t>(this->tccClient->GetAvailableBitrate()))
 			                : flatbuffers::nullopt,
 		  // availableIncomingBitrate.
-		  this->tccServer ? flatbuffers::Optional<uint32_t>(this->tccServer->GetAvailableBitrate())
+		  this->tccServer ? flatbuffers::Optional<uint64_t>(
+		                      static_cast<uint64_t>(this->tccServer->GetAvailableBitrate()))
 			                : flatbuffers::nullopt,
 		  // maxIncomingBitrate.
-		  this->maxIncomingBitrate ? flatbuffers::Optional<uint32_t>(this->maxIncomingBitrate)
-			                         : flatbuffers::nullopt,
+		  this->maxIncomingBitrate > 0
+		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->maxIncomingBitrate))
+				: flatbuffers::nullopt,
 		  // maxOutgoingBitrate.
-		  this->maxOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->maxOutgoingBitrate)
-			                         : flatbuffers::nullopt,
+		  this->maxOutgoingBitrate > 0
+		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->maxOutgoingBitrate))
+				: flatbuffers::nullopt,
 		  // minOutgoingBitrate.
-		  this->minOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->minOutgoingBitrate)
-			                         : flatbuffers::nullopt,
+		  this->minOutgoingBitrate > 0
+		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->minOutgoingBitrate))
+				: flatbuffers::nullopt,
 		  // rtpPacketLossReceived.
 		  this->tccServer ? flatbuffers::Optional<double>(this->tccServer->GetPacketLoss())
 			                : flatbuffers::nullopt,
@@ -507,9 +516,11 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();
 
-				this->maxIncomingBitrate = body->maxIncomingBitrate();
+				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+				this->maxIncomingBitrate = static_cast<int64_t>(std::min<uint64_t>(
+				  body->maxIncomingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
 
-				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
+				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIi64, this->maxIncomingBitrate);
 
 				request->Accept();
 
@@ -524,18 +535,21 @@ namespace RTC
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MAX_OUTGOING_BITRATE:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>();
-				const uint32_t bitrate = body->maxOutgoingBitrate();
 
-				if (bitrate > 0u && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
+				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+				const auto bitrate = static_cast<int64_t>(std::min<uint64_t>(
+				  body->maxOutgoingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+
+				if (bitrate > 0 && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= %" PRIu32 " or 0 (unlimited)",
+					  "bitrate must be >= %" PRIi64 " or 0 (unlimited)",
 					  RTC::TransportCongestionControlMinOutgoingBitrate);
 				}
-				else if (bitrate > 0u && bitrate < this->minOutgoingBitrate)
+				else if (bitrate > 0 && bitrate < this->minOutgoingBitrate)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= current min outgoing bitrate (%" PRIu32 ") or 0 (unlimited)",
+					  "bitrate must be >= current min outgoing bitrate (%" PRIi64 ") or 0 (unlimited)",
 					  this->minOutgoingBitrate);
 				}
 
@@ -546,7 +560,7 @@ namespace RTC
 					this->tccClient->SetMaxOutgoingBitrate(bitrate);
 					this->maxOutgoingBitrate = bitrate;
 
-					MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIu32, this->maxOutgoingBitrate);
+					MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIi64, this->maxOutgoingBitrate);
 
 					ComputeOutgoingDesiredBitrate();
 				}
@@ -563,18 +577,21 @@ namespace RTC
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MIN_OUTGOING_BITRATE:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMinOutgoingBitrateRequest>();
-				const uint32_t bitrate = body->minOutgoingBitrate();
 
-				if (bitrate > 0u && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
+				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+				const auto bitrate = static_cast<int64_t>(std::min<uint64_t>(
+				  body->minOutgoingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+
+				if (bitrate > 0 && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= %" PRIu32 " or 0 (unlimited)",
+					  "bitrate must be >= %" PRIi64 " or 0 (unlimited)",
 					  RTC::TransportCongestionControlMinOutgoingBitrate);
 				}
-				else if (bitrate > 0u && this->maxOutgoingBitrate > 0 && bitrate > this->maxOutgoingBitrate)
+				else if (bitrate > 0 && this->maxOutgoingBitrate > 0 && bitrate > this->maxOutgoingBitrate)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "bitrate must be <= current max outgoing bitrate (%" PRIu32 ") or 0 (unlimited)",
+					  "bitrate must be <= current max outgoing bitrate (%" PRIi64 ") or 0 (unlimited)",
 					  this->maxOutgoingBitrate);
 				}
 
@@ -585,7 +602,7 @@ namespace RTC
 					this->tccClient->SetMinOutgoingBitrate(bitrate);
 					this->minOutgoingBitrate = bitrate;
 
-					MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIu32, this->minOutgoingBitrate);
+					MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIi64, this->minOutgoingBitrate);
 
 					ComputeOutgoingDesiredBitrate();
 				}
@@ -2320,18 +2337,18 @@ namespace RTC
 			return;
 		}
 
-		bool baseAllocation       = true;
-		uint32_t availableBitrate = this->tccClient->GetAvailableBitrate();
+		bool baseAllocation      = true;
+		int64_t availableBitrate = this->tccClient->GetAvailableBitrate();
 
 		this->tccClient->RescheduleNextAvailableBitrateEvent();
 
-		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIi64 "]", availableBitrate);
 
 		// Redistribute the available bitrate by allowing Consumers to increase
 		// layer by layer. Initially try to spread the bitrate across all
 		// consumers. Then allocate the excess bitrate to Consumers starting
 		// with the highest priorty.
-		while (availableBitrate > 0u)
+		while (availableBitrate > 0)
 		{
 			auto previousAvailableBitrate = availableBitrate;
 
@@ -2344,17 +2361,15 @@ namespace RTC
 				// NOLINTNEXTLINE(bugprone-too-small-loop-variable)
 				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
 				{
-					uint32_t usedBitrate{ 0u };
-					const bool considerLoss = (bweType == RTC::BweType::REMB);
-
-					usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
+					const bool considerLoss   = (bweType == RTC::BweType::REMB);
+					const int64_t usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
 
 					MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
 
 					availableBitrate -= usedBitrate;
 
-					// Exit the loop fast if used bitrate is 0.
-					if (usedBitrate == 0u)
+					// Exit the loop fast if no bitrate was used.
+					if (usedBitrate <= 0)
 					{
 						break;
 					}
@@ -2370,7 +2385,7 @@ namespace RTC
 			baseAllocation = false;
 		}
 
-		MS_DEBUG_DEV("after layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV("after layer-by-layer iterations [availableBitrate:%" PRIi64 "]", availableBitrate);
 
 		// Finally instruct Consumers to apply their computed layers.
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
@@ -2387,7 +2402,7 @@ namespace RTC
 
 		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
 
-		uint32_t totalDesiredBitrate{ 0u };
+		int64_t totalDesiredBitrate{ 0 };
 
 		for (auto& kv : this->mapConsumers)
 		{
@@ -2397,7 +2412,7 @@ namespace RTC
 			totalDesiredBitrate += desiredBitrate;
 		}
 
-		MS_DEBUG_DEV("total desired bitrate: %" PRIu32, totalDesiredBitrate);
+		MS_DEBUG_DEV("total desired bitrate: %" PRIi64, totalDesiredBitrate);
 
 		this->tccClient->SetDesiredBitrate(totalDesiredBitrate, forceBitrate);
 	}
@@ -2440,13 +2455,13 @@ namespace RTC
 		  this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC
 		    ? FBS::Transport::BweType::TRANSPORT_CC
 		    : FBS::Transport::BweType::REMB,
-		  bitrates.desiredBitrate,
-		  bitrates.effectiveDesiredBitrate,
-		  bitrates.minBitrate,
-		  bitrates.maxBitrate,
-		  bitrates.startBitrate,
-		  bitrates.maxPaddingBitrate,
-		  bitrates.availableBitrate);
+		  static_cast<uint64_t>(bitrates.desiredBitrate),
+		  static_cast<uint64_t>(bitrates.effectiveDesiredBitrate),
+		  static_cast<uint64_t>(bitrates.minBitrate),
+		  static_cast<uint64_t>(bitrates.maxBitrate),
+		  static_cast<uint64_t>(bitrates.startBitrate),
+		  static_cast<uint64_t>(bitrates.maxPaddingBitrate),
+		  static_cast<uint64_t>(bitrates.availableBitrate));
 
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
@@ -3254,7 +3269,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("outgoing available bitrate:%" PRIu32, bitrates.availableBitrate);
+		MS_DEBUG_DEV("outgoing available bitrate:%" PRIi64, bitrates.availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
@@ -3326,7 +3341,7 @@ namespace RTC
 		this->sendProbationTransmission.Update(packet);
 
 		MS_DEBUG_DEV(
-		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
+		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIi64 "]",
 		  packet->GetSequenceNumber(),
 		  this->transportWideCcSeq,
 		  packet->GetLength(),

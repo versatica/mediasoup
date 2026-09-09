@@ -413,7 +413,7 @@ export abstract class TransportImpl<
 		const requestOffset =
 			FbsTransport.SetMaxIncomingBitrateRequest.createSetMaxIncomingBitrateRequest(
 				this.channel.bufferBuilder,
-				bitrate
+				BigInt(bitrate)
 			);
 
 		await this.channel.request(
@@ -429,7 +429,7 @@ export abstract class TransportImpl<
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
-			bitrate
+			BigInt(bitrate)
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
@@ -445,7 +445,7 @@ export abstract class TransportImpl<
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMinOutgoingBitrateRequestT(
-			bitrate
+			BigInt(bitrate)
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
@@ -1253,23 +1253,23 @@ export function parseBaseTransportStats(
 		probationBytesSent: Number(binary.probationBytesSent()),
 		probationSendBitrate: Number(binary.probationSendBitrate()),
 		availableOutgoingBitrate:
-			typeof binary.availableOutgoingBitrate() === 'number'
+			binary.availableOutgoingBitrate() !== null
 				? Number(binary.availableOutgoingBitrate())
 				: undefined,
 		availableIncomingBitrate:
-			typeof binary.availableIncomingBitrate() === 'number'
+			binary.availableIncomingBitrate() !== null
 				? Number(binary.availableIncomingBitrate())
 				: undefined,
 		maxIncomingBitrate:
-			typeof binary.maxIncomingBitrate() === 'number'
+			binary.maxIncomingBitrate() !== null
 				? Number(binary.maxIncomingBitrate())
 				: undefined,
 		maxOutgoingBitrate:
-			typeof binary.maxOutgoingBitrate() === 'number'
+			binary.maxOutgoingBitrate() !== null
 				? Number(binary.maxOutgoingBitrate())
 				: undefined,
 		minOutgoingBitrate:
-			typeof binary.minOutgoingBitrate() === 'number'
+			binary.minOutgoingBitrate() !== null
 				? Number(binary.minOutgoingBitrate())
 				: undefined,
 		rtpPacketLossReceived:
@@ -1368,13 +1368,13 @@ function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo): {
 	bweType: 'transport-cc' | 'remb';
 } {
 	return {
-		desiredBitrate: binary.desiredBitrate(),
-		effectiveDesiredBitrate: binary.effectiveDesiredBitrate(),
-		minBitrate: binary.minBitrate(),
-		maxBitrate: binary.maxBitrate(),
-		startBitrate: binary.startBitrate(),
-		maxPaddingBitrate: binary.maxPaddingBitrate(),
-		availableBitrate: binary.availableBitrate(),
+		desiredBitrate: Number(binary.desiredBitrate()),
+		effectiveDesiredBitrate: Number(binary.effectiveDesiredBitrate()),
+		minBitrate: Number(binary.minBitrate()),
+		maxBitrate: Number(binary.maxBitrate()),
+		startBitrate: Number(binary.startBitrate()),
+		maxPaddingBitrate: Number(binary.maxPaddingBitrate()),
+		availableBitrate: Number(binary.availableBitrate()),
 		bweType:
 			binary.bweType() === FbsTransport.BweType.TRANSPORT_CC
 				? 'transport-cc'

@@ -42,9 +42,9 @@ namespace RTC
 			Type type{ Type::FORWARD };
 
 			// Valid when type == FORWARD:
-			uint32_t tsOffset{ 0u };
+			uint32_t tsOffset{ 0 };
 			bool isSyncPacket{ false };
-			uint16_t syncSeqValue{ 0u };
+			uint16_t syncSeqValue{ 0 };
 			bool shouldSyncEncodingContext{ false };
 			bool spatialLayerSwitched{ false };
 			bool temporalLayerChanged{ false };
@@ -106,10 +106,10 @@ namespace RTC
 			this->externallyManagedBitrate = true;
 		}
 
-		virtual uint32_t IncreaseLayer(
-		  uint32_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) = 0;
-		virtual void ApplyLayers(int64_t rtpStreamActiveMs)                         = 0;
-		virtual uint32_t GetDesiredBitrate(int64_t nowMs) const                     = 0;
+		virtual int64_t IncreaseLayer(
+		  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) = 0;
+		virtual void ApplyLayers(int64_t rtpStreamActiveMs)                        = 0;
+		virtual int64_t GetDesiredBitrate(int64_t nowMs) const                     = 0;
 
 		virtual RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,

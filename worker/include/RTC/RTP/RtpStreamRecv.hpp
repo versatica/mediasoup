@@ -56,13 +56,13 @@ namespace RTC
 			public:
 				void Update(const RTP::Packet* packet);
 
-				uint32_t GetBitrate(int64_t nowMs);
+				int64_t GetBitrate(int64_t nowMs);
 
-				uint32_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+				int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 
-				uint32_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer);
+				int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer);
 
-				uint32_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+				int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 
 				size_t GetPacketCount() const;
 
@@ -231,22 +231,22 @@ namespace RTC
 
 			void Resume() override;
 
-			uint32_t GetBitrate(int64_t nowMs) override
+			int64_t GetBitrate(int64_t nowMs) override
 			{
 				return this->transmissionCounter.GetBitrate(nowMs);
 			}
 
-			uint32_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+			int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
 			{
 				return this->transmissionCounter.GetBitrate(nowMs, spatialLayer, temporalLayer);
 			}
 
-			uint32_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) override
+			int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) override
 			{
 				return this->transmissionCounter.GetSpatialLayerBitrate(nowMs, spatialLayer);
 			}
 
-			uint32_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+			int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
 			{
 				return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
 			}

@@ -1024,7 +1024,7 @@ pub struct RtpEncodingParameters {
     pub scalability_mode: ScalabilityMode,
     /// Maximum number of bits per second to allow a track encoded with this encoding to use.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_bitrate: Option<u32>,
+    pub max_bitrate: Option<u64>,
 }
 
 /// Defines a RTP header extension within the RTP parameters. The list of RTP

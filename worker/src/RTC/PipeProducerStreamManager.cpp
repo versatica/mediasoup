@@ -73,13 +73,13 @@ namespace RTC
 		// Do nothing.
 	}
 
-	uint32_t PipeProducerStreamManager::IncreaseLayer(
-	  uint32_t /*bitrate*/, bool /*considerLoss*/, float /*lossPercentage*/, int64_t /*nowMs*/)
+	int64_t PipeProducerStreamManager::IncreaseLayer(
+	  int64_t /*bitrate*/, bool /*considerLoss*/, float /*lossPercentage*/, int64_t /*nowMs*/)
 	{
 		MS_TRACE();
 
 		// Pipe does not play the BWE game.
-		return 0u;
+		return 0;
 	}
 
 	void PipeProducerStreamManager::ApplyLayers(int64_t /*rtpStreamActiveMs*/)
@@ -89,12 +89,12 @@ namespace RTC
 		// Pipe does not play the BWE game.
 	}
 
-	uint32_t PipeProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
+	int64_t PipeProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
 	{
 		MS_TRACE();
 
 		// Pipe does not play the BWE game.
-		return 0u;
+		return 0;
 	}
 
 	ProducerStreamManager::RtpPacketProcessResult PipeProducerStreamManager::ProcessRtpPacket(

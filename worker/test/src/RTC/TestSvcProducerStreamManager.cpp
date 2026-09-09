@@ -212,8 +212,8 @@ namespace
 
 		// bitrate (bps) = totalBytes * 8000 / windowSizeMs.
 		// windowSizeMs for RtpStreamRecv is 2500.
-		auto expectedBitrate =
-		  static_cast<uint32_t>(std::trunc((count * packet->GetLength() * 8000.0f / 2500) + 0.5f));
+		const auto expectedBitrate =
+		  static_cast<int64_t>(std::trunc((count * packet->GetLength() * 8000.0f / 2500) + 0.5f));
 
 		REQUIRE(rtpStream->GetBitrate(nowMs) == expectedBitrate);
 	}
@@ -935,9 +935,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 
 		const int64_t nowMs = DepLibUV::GetTimeMs();
 		auto usedBitrate    = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate == 0u);
+		REQUIRE(usedBitrate == 0);
 	}
 
 	SECTION("IncreaseLayer() returns 0 when producer stream has score 0")
@@ -952,9 +952,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		// Score is 0 by default (no RTP received + inactivity check disabled).
 		const int64_t nowMs = DepLibUV::GetTimeMs();
 		auto usedBitrate    = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate == 0u);
+		REQUIRE(usedBitrate == 0);
 	}
 
 	SECTION("IncreaseLayer() returns 0 on second call in same iteration (already at preferred layers)")
@@ -981,15 +981,15 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 
 		// First call claims bitrate.
 		auto usedBitrate = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate > 0u);
+		REQUIRE(usedBitrate > 0);
 
 		// Second call in same iteration should return 0 (already at preferred layers).
 		auto usedBitrate2 = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate2 == 0u);
+		REQUIRE(usedBitrate2 == 0);
 	}
 
 	SECTION("IncreaseLayer() works again after ApplyLayers()")
@@ -1015,14 +1015,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 
 		// First iteration.
 		manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 		manager->ApplyLayers(/*rtpStreamActiveMs*/ 0u);
 
 		// After ApplyLayers, IncreaseLayer should work again.
 		auto usedBitrate = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000u, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
-		REQUIRE(usedBitrate > 0u);
+		REQUIRE(usedBitrate > 0);
 	}
 
 	SECTION("ApplyLayers() records BWE downgrade when spatial layer drops below current")
@@ -1075,7 +1075,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		const int64_t nowMs = DepLibUV::GetTimeMs();
 		auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
 
-		REQUIRE(desiredBitrate == 0u);
+		REQUIRE(desiredBitrate == 0);
 	}
 
 	SECTION("GetDesiredBitrate() (full SVC) returns total stream bitrate")
@@ -1128,7 +1128,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		// K-SVC returns the max per-spatial-layer bitrate. With a plain RtpStreamRecv
 		// and no per-layer packet tagging the returned value may be 0 or > 0.
 		// The contract is just: no crash and type is uint32_t.
-		REQUIRE(desiredBitrate >= 0u);
+		REQUIRE(desiredBitrate >= 0);
 	}
 
 	SECTION("RecalculateTargetLayers() returns false when no producer stream is set")
@@ -1244,7 +1244,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		  availableBitrate, /*considerLoss*/ true, /*lossPercentage*/ 1.0f, nowMs);
 
 		// virtualBitrate = 1.08 * availableBitrate >= streamBitrate, so the layer is taken.
-		REQUIRE(usedBitrate > 0u);
+		REQUIRE(usedBitrate > 0);
 	}
 
 	SECTION("IncreaseLayer() uses reduced virtual bitrate when considerLoss is true and loss > 10%")
@@ -1274,6 +1274,6 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 
 		// virtualBitrate = 0.75 * streamBitrate < streamBitrate (requiredBitrate),
 		// so the layer cannot be taken → 0.
-		REQUIRE(usedBitrate == 0u);
+		REQUIRE(usedBitrate == 0);
 	}
 }

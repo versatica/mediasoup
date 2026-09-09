@@ -10,7 +10,7 @@ namespace RTC
 		/**
 		 * Max MTU size.
 		 */
-		constexpr size_t MtuSize{ 1500u };
+		constexpr size_t MtuSize{ 1500 };
 
 		/**
 		 * Maximum size for a RTCP compound packet.
@@ -21,23 +21,23 @@ namespace RTC
 		 *     be added to an RTCP packet by srtp_protect_rtcp().
 		 *   - srtp.h: SRTP_MAX_TRAILER_LEN (SRTP_MAX_TAG_LEN + SRTP_MAX_MKI_LEN).
 		 */
-		constexpr size_t RtcpPacketMaxSize{ RTC::Consts::MtuSize - 40 - 20 - 148u };
+		constexpr size_t RtcpPacketMaxSize{ RTC::Consts::MtuSize - 40 - 20 - 148 };
 
 		/**
 		 * Max length for a 1 byte RTP header extension.
 		 */
-		constexpr uint8_t OneByteRtpExtensionMaxLength{ 16u };
+		constexpr uint8_t OneByteRtpExtensionMaxLength{ 16 };
 
 		/**
 		 * Max length for a 2 bytes RTP header extension.
 		 */
-		constexpr uint8_t TwoBytesRtpExtensionMaxLength{ 255u };
+		constexpr uint8_t TwoBytesRtpExtensionMaxLength{ 255 };
 
 		/**
 		 * MID RTP header extension max length (just used when setting/updating MID
 		 * extension).
 		 */
-		constexpr uint8_t MidRtpExtensionMaxLength{ 8u };
+		constexpr uint8_t MidRtpExtensionMaxLength{ 8 };
 
 		/**
 		 * Largest safe SCTP packet. Starting from the minimum guaranteed MTU value
@@ -59,7 +59,7 @@ namespace RTC
 		 * @remarks
 		 * Value copied from dcSCTP library.
 		 */
-		constexpr size_t MaxSafeMtuSizeForSctp{ 1191u };
+		constexpr size_t MaxSafeMtuSizeForSctp{ 1191 };
 	} // namespace Consts
 } // namespace RTC
 

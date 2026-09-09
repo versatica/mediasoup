@@ -122,7 +122,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer);
 			size_t GetSize() const
 			{
-				size_t size = 4u /*ssrc*/;
+				size_t size = 4 /*ssrc*/;
 
 				for (auto* item : this->items)
 				{
@@ -158,7 +158,7 @@ namespace RTC
 			}
 
 		private:
-			uint32_t ssrc{ 0u };
+			uint32_t ssrc{ 0 };
 			std::vector<SdesItem*> items;
 		};
 

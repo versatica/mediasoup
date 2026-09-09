@@ -495,13 +495,13 @@ pub(super) trait TransportImpl: TransportGeneric {
             .await
     }
 
-    async fn set_max_incoming_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
+    async fn set_max_incoming_bitrate_impl(&self, bitrate: u64) -> Result<(), RequestError> {
         self.channel()
             .request(self.id(), TransportSetMaxIncomingBitrateRequest { bitrate })
             .await
     }
 
-    async fn set_max_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
+    async fn set_max_outgoing_bitrate_impl(&self, bitrate: u64) -> Result<(), RequestError> {
         self.channel()
             .request(self.id(), TransportSetMaxOutgoingBitrateRequest { bitrate })
             .await
@@ -516,7 +516,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             .await
     }
 
-    async fn set_min_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
+    async fn set_min_outgoing_bitrate_impl(&self, bitrate: u64) -> Result<(), RequestError> {
         self.channel()
             .request(self.id(), TransportSetMinOutgoingBitrateRequest { bitrate })
             .await

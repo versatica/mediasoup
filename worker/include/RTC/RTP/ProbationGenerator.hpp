@@ -22,7 +22,7 @@ namespace RTC
 			/**
 			 * Codec payload type of the probation RTP stream.
 			 */
-			static const uint8_t PayloadType{ 127u };
+			static const uint8_t PayloadType{ 127 };
 
 		public:
 			explicit ProbationGenerator();

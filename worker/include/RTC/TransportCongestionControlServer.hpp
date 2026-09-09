@@ -43,7 +43,7 @@ namespace RTC
 		}
 		void TransportConnected();
 		void TransportDisconnected();
-		uint32_t GetAvailableBitrate() const
+		int64_t GetAvailableBitrate() const
 		{
 			switch (this->bweType)
 			{
@@ -51,12 +51,12 @@ namespace RTC
 					return this->rembServer->GetAvailableBitrate();
 
 				default:
-					return 0u;
+					return 0;
 			}
 		}
 		double GetPacketLoss() const;
 		void IncomingPacket(int64_t nowUs, const RTC::RTP::Packet* packet);
-		void SetMaxIncomingBitrate(uint32_t bitrate);
+		void SetMaxIncomingBitrate(int64_t bitrate);
 		void FillAndSendTransportCcFeedback();
 
 	private:
@@ -72,7 +72,7 @@ namespace RTC
 		void OnRembServerAvailableBitrate(
 		  const webrtc::RemoteBitrateEstimator* remoteBitrateEstimator,
 		  const std::vector<uint32_t>& ssrcs,
-		  uint32_t availableBitrate) override;
+		  int64_t availableBitrate) override;
 
 		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
@@ -92,7 +92,7 @@ namespace RTC
 		uint8_t transportCcFeedbackPacketCount{ 0 };
 		uint32_t transportCcFeedbackSenderSsrc{ 0 };
 		uint32_t transportCcFeedbackMediaSsrc{ 0 };
-		uint32_t maxIncomingBitrate{ 0 };
+		int64_t maxIncomingBitrate{ 0 };
 		int64_t limitationRembSentAtMs{ 0 };
 		uint8_t unlimitedRembCounter{ 0 };
 		std::deque<double> packetLossHistory;

@@ -125,7 +125,7 @@ namespace RTC
 		// Passed by argument.
 		SharedInterface* shared{ nullptr };
 		RTC::DataConsumer::Listener* listener{ nullptr };
-		size_t maxMessageSize{ 0u };
+		size_t maxMessageSize{ 0 };
 		bool pipe{ false };
 		// Others.
 		Type type;
@@ -137,8 +137,8 @@ namespace RTC
 		bool paused{ false };
 		bool dataProducerPaused{ false };
 		bool dataProducerClosed{ false };
-		size_t messagesSent{ 0u };
-		size_t bytesSent{ 0u };
+		size_t messagesSent{ 0 };
+		size_t bytesSent{ 0 };
 	};
 } // namespace RTC
 
