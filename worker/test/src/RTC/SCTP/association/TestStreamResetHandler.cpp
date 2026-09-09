@@ -23,8 +23,8 @@ namespace
 	constexpr uint32_t Arwnd{ 131072 };
 	constexpr uint32_t LocalInitialTsn{ 0 };
 	constexpr uint32_t RemoteInitialTsn{ 0 };
-	constexpr uint64_t InitialNowMs{ 10000 };
-	constexpr uint64_t RtoMs{ 250 };
+	constexpr int64_t InitialNowUs{ 10000 * 1000 };
+	constexpr int64_t RtoMs{ 250 };
 
 	/**
 	 * A RTC::SCTP::StreamResetHandler under test, together with all the (real)
@@ -35,10 +35,10 @@ namespace
 	public:
 		TestStreamResetHandler()
 		  // NOTE: The order in which these members are initialized is **critical**.
-		  : shared(/*getTimeMs*/
-		           [this]()
-		           {
-			           return this->nowMs;
+		  : shared(/*getTimeUs*/
+			         [this]() -> int64_t
+			         {
+			           return this->nowUs;
 		           }),
 		    tcbContext(this->associationListener, this->sctpOptions),
 		    delayedAckTimer(this->shared.CreateBackoffTimer(
@@ -57,6 +57,7 @@ namespace
 		      this->associationListener,
 		      this->sctpOptions.mtu,
 		      this->sctpOptions.defaultStreamPriority,
+		      this->sctpOptions.defaultStreamBufferedAmountLowThreshold,
 		      this->sctpOptions.totalBufferedAmountLowThreshold),
 		    dataTracker(this->delayedAckTimer.get(), RemoteInitialTsn),
 		    reassemblyQueue(this->sctpOptions.maxReceiverWindowBufferSize),
@@ -78,20 +79,24 @@ namespace
 		      std::addressof(this->reassemblyQueue),
 		      std::addressof(this->retransmissionQueue))
 		{
-			this->tcbContext.WillGetCurrentRtoMsOnce(
+			this->tcbContext.WillGetCurrentRtoUsOnce(
 			  []()
 			  {
-				  return RtoMs;
+				  return static_cast<int64_t>(RtoMs * 1000);
 			  });
 		}
 
 	public:
 		/**
 		 * Advances the simulated clock by `incrementMs`.
+		 *
+		 * @remarks
+		 * - The increment is given in milliseconds since it comes from the SCTP
+		 *   options and the timers, which work in milliseconds.
 		 */
-		void AdvanceTimeMs(uint64_t incrementMs)
+		void AdvanceTimeMs(int64_t incrementMs)
 		{
-			this->nowMs += incrementMs;
+			this->nowUs += incrementMs * 1000;
 		}
 
 		/**
@@ -115,7 +120,7 @@ namespace
 		{
 		public:
 			void OnBackoffTimer(
-			  BackoffTimerHandleInterface* /*backoffTimer*/, uint64_t& /*baseTimeoutMs*/, bool& /*stop*/) override
+			  BackoffTimerHandleInterface* /*backoffTimer*/, int64_t& /*baseTimeoutMs*/, bool& /*stop*/) override
 			{
 			}
 		};
@@ -126,7 +131,7 @@ namespace
 		class RetransmissionQueueListener : public RTC::SCTP::RetransmissionQueue::Listener
 		{
 		public:
-			void OnRetransmissionQueueNewRttMs(uint64_t /*rttMs*/) override
+			void OnRetransmissionQueueNewRttUs(int64_t /*rttUs*/) override
 			{
 			}
 
@@ -137,7 +142,7 @@ namespace
 
 		// NOTE: Public members for testing.
 	public:
-		uint64_t nowMs{ InitialNowMs };
+		int64_t nowUs{ InitialNowUs };
 		RTC::SCTP::SctpOptions sctpOptions;
 		BackoffTimerListener backoffTimerListener;
 		RetransmissionQueueListener retransmissionQueueListener;

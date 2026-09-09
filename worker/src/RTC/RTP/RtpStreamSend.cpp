@@ -14,17 +14,12 @@ namespace RTC
 		/* Static. */
 
 		// Limit max number of items in the retransmission buffer.
-		static constexpr size_t RetransmissionBufferMaxItems{ 2500u };
+		static constexpr size_t RetransmissionBufferMaxItems{ 2500 };
 		// 17: 16 bit mask + the initial sequence number.
-		static constexpr size_t MaxRequestedPackets{ 17u };
+		static constexpr size_t MaxRequestedPackets{ 17 };
 		static thread_local std::vector<RTP::RetransmissionBuffer::Item*> RetransmissionContainer(
 		  MaxRequestedPackets + 1);
-		static constexpr uint32_t DefaultRtt{ 100u };
-
-		/* Class Static. */
-
-		const uint32_t RtpStreamSend::MaxRetransmissionDelayForVideoMs{ 2000u };
-		const uint32_t RtpStreamSend::MaxRetransmissionDelayForAudioMs{ 1000u };
+		static constexpr int64_t DefaultRttMs{ 100 };
 
 		/* Instance methods. */
 
@@ -41,7 +36,7 @@ namespace RTC
 
 			if (this->params.useNack)
 			{
-				uint32_t maxRetransmissionDelayMs{ 0 };
+				int64_t maxRetransmissionDelayMs{ 0 };
 
 				switch (params.mimeType.type)
 				{
@@ -79,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			const int64_t nowMs = this->shared->GetTimeMs();
 
 			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
 			auto stats     = FBS::RtpStream::CreateSendStats(
@@ -87,7 +82,7 @@ namespace RTC
 			  baseStats,
 			  this->transmissionCounter.GetPacketCount(),
 			  this->transmissionCounter.GetBytes(),
-			  this->transmissionCounter.GetBitrate(nowMs));
+			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs)));
 
 			return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::SendStats, stats.Union());
 		}
@@ -275,17 +270,17 @@ namespace RTC
 			}
 		}
 
-		void RtpStreamSend::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
+		void RtpStreamSend::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
 			/* Calculate RTT. */
 
-			// Get the NTP representation of the current timestamp.
-			const uint64_t nowMs = this->shared->GetTimeMs();
-			auto ntp             = Utils::Time::TimeMs2Ntp(nowMs);
+			// Get the NTP representation of the time at which the Receiver Report
+			// arrived, which is what the round trip is measured against.
+			auto ntp = Utils::Time::TimeUs2Ntp(receivedAtUs + this->shared->GetNtpOffsetUs());
 
-			// Get the compact NTP representation of the current timestamp.
+			// Get the compact NTP representation of the arrival time.
 			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
 
 			compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
@@ -294,21 +289,20 @@ namespace RTC
 			const uint32_t dlsr   = report->GetDelaySinceLastSenderReport();
 
 			// RTT in 1/2^16 second fractions.
-			uint32_t rtt{ 0 };
+			uint32_t rttCompactNtp{ 0 };
 
 			// If no Sender Report was received by the remote endpoint yet, ignore lastSr
 			// and dlsr values in the Receiver Report.
 			if (lastSr && dlsr && (compactNtp > dlsr + lastSr))
 			{
-				rtt = compactNtp - dlsr - lastSr;
+				rttCompactNtp = compactNtp - dlsr - lastSr;
 			}
 
-			// RTT in milliseconds.
-			this->rtt = static_cast<float>(rtt >> 16) * 1000;
-			this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
+			this->rttMs = static_cast<float>(rttCompactNtp >> 16) * 1000;
+			this->rttMs += (static_cast<float>(rttCompactNtp & 0x0000FFFF) / 65536) * 1000;
 
 			// Avoid negative RTT value since it doesn't make sense.
-			this->rtt = std::max(this->rtt, 0.0f);
+			this->rttMs = std::max(this->rttMs, 0.0f);
 
 			this->packetsLost  = report->GetTotalLost();
 			this->fractionLost = report->GetFractionLost();
@@ -318,16 +312,22 @@ namespace RTC
 			UpdateScore(report);
 		}
 
-		void RtpStreamSend::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+		void RtpStreamSend::ReceiveRtcpXrReceiverReferenceTime(
+		  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
-			this->lastRrReceivedMs = this->shared->GetTimeMs();
-			this->lastRrTimestamp  = report->GetNtpSec() << 16;
-			this->lastRrTimestamp += report->GetNtpFrac() >> 16;
+			uint32_t compactNtp = report->GetNtpSec() << 16;
+
+			compactNtp += report->GetNtpFrac() >> 16;
+
+			this->lastReceiverReferenceTime = ReceiverReferenceTime{
+				.compactNtp   = compactNtp,
+				.receivedAtUs = receivedAtUs,
+			};
 		}
 
-		RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t nowMs)
+		RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -336,48 +336,66 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto ntp     = Utils::Time::TimeMs2Ntp(nowMs);
+			// A stream that stopped sending cannot tell where its RTP timeline is now, and
+			// extrapolating would claim RTP timestamps of packets never sent.
+			if ((nowUs - this->maxPacketAtUs) / 1000 > RtpStreamSend::MaxSenderReportReferenceAgeMs)
+			{
+				return nullptr;
+			}
+
+			auto ntp     = Utils::Time::TimeUs2Ntp(nowUs + this->shared->GetNtpOffsetUs());
 			auto* report = new RTC::RTCP::SenderReport();
 
-			// Calculate TS difference between now and maxPacketMs.
-			auto diffMs = nowMs - this->maxPacketMs;
-			auto diffTs = diffMs * GetClockRate() / 1000;
+			// Calculate TS difference between now and the instant at which the media in the
+			// packet holding the highest RTP timestamp was captured, falling back to the
+			// instant that packet was seen while the capture instant cannot be told.
+			const int64_t referenceUs = this->maxPacketCaptureAtUs.value_or(this->maxPacketAtUs);
+			// NOTE: The capture instant is an estimation, so it may land ahead of now.
+			const int64_t diffUs = nowUs > referenceUs ? nowUs - referenceUs : 0;
+			const int64_t diffTs = (diffUs * GetClockRate()) / 1000000;
+			const auto rtpTs     = static_cast<uint32_t>(this->maxPacketTs + diffTs);
 
 			report->SetSsrc(GetSsrc());
 			report->SetPacketCount(this->transmissionCounter.GetPacketCount());
 			report->SetOctetCount(this->transmissionCounter.GetBytes());
 			report->SetNtpSec(ntp.seconds);
 			report->SetNtpFrac(ntp.fractions);
-			report->SetRtpTs(this->maxPacketTs + diffTs);
+			report->SetRtpTs(rtpTs);
 
 			// Update info about last Sender Report.
-			this->lastSenderReportNtpMs = nowMs;
-			this->lastSenderReportTs    = this->maxPacketTs + diffTs;
+			//
+			// NOTE: It is the very instant announced in the report above, so that the
+			// mapping means the same thing here and in a receive stream.
+			this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
+				.ntpUs = nowUs + this->shared->GetNtpOffsetUs(),
+				.ts    = rtpTs,
+			};
 
 			return report;
 		}
 
-		RTC::RTCP::DelaySinceLastRr::SsrcInfo* RtpStreamSend::GetRtcpXrDelaySinceLastRrSsrcInfo(uint64_t nowMs)
+		RTC::RTCP::DelaySinceLastRr::SsrcInfo* RtpStreamSend::GetRtcpXrDelaySinceLastRrSsrcInfo(int64_t nowUs)
 		{
 			MS_TRACE();
 
-			if (this->lastRrReceivedMs == 0u)
+			if (!this->lastReceiverReferenceTime.has_value())
 			{
 				return nullptr;
 			}
 
-			// Get delay in milliseconds.
-			auto delayMs = static_cast<uint32_t>(nowMs - this->lastRrReceivedMs);
+			const auto& receiverReferenceTime = this->lastReceiverReferenceTime.value();
+			// Get delay in microseconds.
+			const int64_t delayUs = nowUs - receiverReferenceTime.receivedAtUs;
 			// Express delay in units of 1/65536 seconds.
-			uint32_t dlrr = (delayMs / 1000) << 16;
+			auto dlrr = static_cast<uint32_t>((delayUs / 1000000) << 16);
 
-			dlrr |= uint32_t{ (delayMs % 1000) * 65536 / 1000 };
+			dlrr |= static_cast<uint32_t>(((delayUs % 1000000) * 65536) / 1000000);
 
 			auto* ssrcInfo = new RTC::RTCP::DelaySinceLastRr::SsrcInfo();
 
 			ssrcInfo->SetSsrc(GetSsrc());
 			ssrcInfo->SetDelaySinceLastReceiverReport(dlrr);
-			ssrcInfo->SetLastReceiverReport(this->lastRrTimestamp);
+			ssrcInfo->SetLastReceiverReport(receiverReferenceTime.compactNtp);
 
 			return ssrcInfo;
 		}
@@ -415,23 +433,23 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		uint32_t RtpStreamSend::GetBitrate(
-		  uint64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+		int64_t RtpStreamSend::GetBitrate(
+		  int64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 		{
 			MS_TRACE();
 
 			MS_ABORT("invalid method call");
 		}
 
-		uint32_t RtpStreamSend::GetSpatialLayerBitrate(uint64_t /*nowMs*/, uint8_t /*spatialLayer*/)
+		int64_t RtpStreamSend::GetSpatialLayerBitrate(int64_t /*nowMs*/, uint8_t /*spatialLayer*/)
 		{
 			MS_TRACE();
 
 			MS_ABORT("invalid method call");
 		}
 
-		uint32_t RtpStreamSend::GetLayerBitrate(
-		  uint64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+		int64_t RtpStreamSend::GetLayerBitrate(
+		  int64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 		{
 			MS_TRACE();
 
@@ -465,9 +483,9 @@ namespace RTC
 			}
 
 			// Look for each requested packet.
-			const uint64_t nowMs = this->shared->GetTimeMs();
-			const uint16_t rtt   = (this->rtt > 0.0f ? this->rtt : DefaultRtt);
-			uint16_t currentSeq  = seq;
+			const int64_t nowMs = this->shared->GetTimeMs();
+			const int64_t rttMs = (this->rttMs > 0.0f ? this->rttMs : DefaultRttMs);
+			uint16_t currentSeq = seq;
 			bool requested{ true };
 			size_t containerIdx{ 0 };
 
@@ -492,14 +510,14 @@ namespace RTC
 						// Do nothing.
 					}
 					// Don't resent the packet if it was resent in the last RTT ms.
-					else if (item->resentAtMs != 0u && nowMs - item->resentAtMs <= static_cast<uint64_t>(rtt))
+					else if (item->resentAtMs != 0 && nowMs - item->resentAtMs <= rttMs)
 					{
 						MS_DEBUG_TAG(
 						  rtx,
 						  "ignoring retransmission for a packet already resent in the last RTT ms "
-						  "[seq:%" PRIu16 ", rtt:%" PRIu16 "]",
+						  "[seq:%" PRIu16 ", rtt:%" PRIi64 " ms]",
 						  item->sequenceNumber,
-						  rtt);
+						  rttMs);
 					}
 					// Stored packet is valid for retransmission. Resend it.
 					else

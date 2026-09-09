@@ -51,8 +51,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                     let _ = sender.send(());
                 });
 
-                let _ =
-                    direct_data_producer.send(WebRtcMessage::Binary(Cow::from(data)), None, None);
+                let _ = direct_data_producer.send(
+                    WebRtcMessage::Binary(Cow::from(data)),
+                    None,
+                    None,
+                    None,
+                );
 
                 let _ = receiver.recv();
             })

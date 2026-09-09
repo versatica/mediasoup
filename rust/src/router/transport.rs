@@ -495,13 +495,13 @@ pub(super) trait TransportImpl: TransportGeneric {
             .await
     }
 
-    async fn set_max_incoming_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
+    async fn set_max_incoming_bitrate_impl(&self, bitrate: u64) -> Result<(), RequestError> {
         self.channel()
             .request(self.id(), TransportSetMaxIncomingBitrateRequest { bitrate })
             .await
     }
 
-    async fn set_max_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
+    async fn set_max_outgoing_bitrate_impl(&self, bitrate: u64) -> Result<(), RequestError> {
         self.channel()
             .request(self.id(), TransportSetMaxOutgoingBitrateRequest { bitrate })
             .await
@@ -516,7 +516,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             .await
     }
 
-    async fn set_min_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
+    async fn set_min_outgoing_bitrate_impl(&self, bitrate: u64) -> Result<(), RequestError> {
         self.channel()
             .request(self.id(), TransportSetMinOutgoingBitrateRequest { bitrate })
             .await
@@ -570,6 +570,12 @@ pub(super) trait TransportImpl: TransportGeneric {
                 // Override Producer's CNAME.
                 rtp_parameters.rtcp.cname = Some(cname);
             }
+        }
+        // In a PipeTransport, give a random CNAME to a Producer that comes without one. Its own
+        // one, since a CNAME shared with the other Producers without CNAME would tell the worker
+        // that they all come from a same sender and share its clock.
+        else if rtp_parameters.rtcp.cname.is_none() {
+            rtp_parameters.rtcp.cname = Some(Uuid::new_v4().to_string());
         }
 
         let router_rtp_capabilities = self.router().rtp_capabilities();

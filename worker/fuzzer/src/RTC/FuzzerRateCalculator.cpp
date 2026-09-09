@@ -8,7 +8,7 @@ namespace
 {
 	// NOLINTBEGIN(readability-identifier-naming)
 	RTC::RateCalculator rateCalculator;
-	uint64_t nowMs;
+	int64_t nowMs;
 	// NOLINTEND(readability-identifier-naming)
 
 	int init()
@@ -34,9 +34,9 @@ void FuzzerRtcRateCalculator::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	auto size = Utils::Crypto::GetRandomUInt<size_t>(0u, static_cast<uint32_t>(RTC::Consts::MtuSize));
+	auto size = Utils::Crypto::GetRandomUInt<size_t>(0, static_cast<uint32_t>(RTC::Consts::MtuSize));
 
-	nowMs += Utils::Crypto::GetRandomUInt<uint64_t>(0u, 1000u);
+	nowMs += static_cast<int64_t>(Utils::Crypto::GetRandomUInt<uint64_t>(0, 1000));
 
 	rateCalculator.Update(size, nowMs);
 

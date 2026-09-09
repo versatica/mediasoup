@@ -58,6 +58,12 @@ pub struct PipeTransportOptions {
     /// than the largest sized message you want to be able to receive.
     /// Default 5_242_880.
     pub sctp_max_receiver_window_buffer_size: u32,
+    /// SCTP default stream buffered amount low threshold (in bytes). When the
+    /// buffered amount of a DataConsumer stream drops to or below this value, the
+    /// buffered amount low event is emitted. It can be overridden per DataConsumer
+    /// via DataConsumer::set_buffered_amount_low_threshold().
+    /// Default 1024.
+    pub sctp_default_stream_buffered_amount_low_threshold: u32,
     /// Enable RTX and NACK for RTP retransmission. Useful if both Routers are located in different
     /// hosts and there is packet lost in the link. For this to work, both PipeTransports must
     /// enable this setting.
@@ -83,6 +89,7 @@ impl PipeTransportOptions {
             sctp_send_buffer_size: 2_000_000,
             sctp_per_stream_send_queue_limit: 2_000_000,
             sctp_max_receiver_window_buffer_size: 5_242_880,
+            sctp_default_stream_buffered_amount_low_threshold: 1024,
             enable_rtx: false,
             enable_srtp: false,
             app_data: AppData::default(),
@@ -208,26 +215,26 @@ pub struct PipeTransportStat {
     pub timestamp: u64,
     pub sctp_state: Option<SctpState>,
     pub bytes_received: u64,
-    pub recv_bitrate: u32,
+    pub recv_bitrate: u64,
     pub bytes_sent: u64,
-    pub send_bitrate: u32,
+    pub send_bitrate: u64,
     pub rtp_bytes_received: u64,
-    pub rtp_recv_bitrate: u32,
+    pub rtp_recv_bitrate: u64,
     pub rtp_bytes_sent: u64,
-    pub rtp_send_bitrate: u32,
+    pub rtp_send_bitrate: u64,
     pub rtx_bytes_received: u64,
-    pub rtx_recv_bitrate: u32,
+    pub rtx_recv_bitrate: u64,
     pub rtx_bytes_sent: u64,
-    pub rtx_send_bitrate: u32,
+    pub rtx_send_bitrate: u64,
     pub probation_bytes_sent: u64,
-    pub probation_send_bitrate: u32,
+    pub probation_send_bitrate: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub available_outgoing_bitrate: Option<u32>,
+    pub available_outgoing_bitrate: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub available_incoming_bitrate: Option<u32>,
-    pub max_incoming_bitrate: Option<u32>,
-    pub max_outgoing_bitrate: Option<u32>,
-    pub min_outgoing_bitrate: Option<u32>,
+    pub available_incoming_bitrate: Option<u64>,
+    pub max_incoming_bitrate: Option<u64>,
+    pub max_outgoing_bitrate: Option<u64>,
+    pub min_outgoing_bitrate: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rtp_packet_loss_received: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -785,7 +792,7 @@ impl PipeTransport {
 
     /// Set maximum incoming bitrate for media streams sent by the remote endpoint over this
     /// transport.
-    pub async fn set_max_incoming_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
+    pub async fn set_max_incoming_bitrate(&self, bitrate: u64) -> Result<(), RequestError> {
         debug!("set_max_incoming_bitrate() [bitrate:{}]", bitrate);
 
         self.set_max_incoming_bitrate_impl(bitrate).await

@@ -66,8 +66,8 @@ namespace RTC
 		private:
 			Protocol protocol{ Protocol::UDP };
 			sockaddr_storage bindAddr{};
-			uint16_t minPort{ 0u };
-			uint16_t maxPort{ 0u };
+			uint16_t minPort{ 0 };
+			uint16_t maxPort{ 0 };
 		};
 
 		struct PortRangeKeyHash
@@ -92,8 +92,8 @@ namespace RTC
 			}
 
 			std::vector<bool> ports;
-			uint16_t minPort{ 0u };
-			uint16_t numUsedPorts{ 0u };
+			uint16_t minPort{ 0 };
+			uint16_t numUsedPorts{ 0 };
 		};
 
 	public:

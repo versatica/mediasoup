@@ -91,7 +91,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(3);
 	packet->GetExtensionValue(3, extenLen);
 	packet->ReadAbsSendTime(absSendTime);
-	packet->UpdateAbsSendTime(12345678u);
+	packet->UpdateAbsSendTime(12345678);
 
 	packet->HasExtension(4);
 	packet->GetExtensionValue(4, extenLen);
@@ -150,7 +150,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 
 	uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
-		                   0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
+	                     0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
 
 	extensions.emplace_back(
 	  RTC::RtpHeaderExtensionUri::Type::MID, // type
@@ -254,4 +254,48 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->RemoveHeaderExtension();
 	packet->SetPayloadLength(sizeof(payload) - 2);
 	packet->RemovePayload();
+
+	// Regression test for GHSA-jhm4-v227-4375 (CWE-787 OOB write in
+	// UpdateDependencyDescriptor()). Build a fresh packet with a tightly-sized
+	// DEPENDENCY_DESCRIPTOR value and attempt to update it with the raw fuzzer
+	// input as the new descriptor bytes. When the new length exceeds the original
+	// the fixed code must return false without writing out of bounds; when it
+	// fits it must succeed. AddressSanitizer will catch any regression here.
+	{
+		constexpr size_t BufferLenght{ 512 };
+		static thread_local uint8_t buffer[BufferLenght];
+
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(buffer, BufferLenght) };
+
+		if (!packet)
+		{
+			return;
+		}
+
+		// Use the first byte of the fuzzer input to pick the slot size
+		// (1..15 is the valid One-Byte extension range).
+		const uint8_t extenLen = (data[0] % 15u) + 1u;
+
+		static thread_local uint8_t extenValue[15];
+
+		// clang-format off
+		const std::vector<RTC::RTP::Packet::Extension> extensions {
+			{
+				RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+				static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
+				extenLen,
+				extenValue
+			}
+		};
+		// clang-format off
+
+		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+
+		// Call UpdateDependencyDescriptor() with the full fuzzer input as
+		// the replacement bytes. This covers:
+		//   len > slotLen  → no OOB write (was the bug).
+		//   len <= slotLen → in-place update.
+		//   len == 0       → must not crash.
+		packet->UpdateDependencyDescriptor(data, len);
+	}
 }

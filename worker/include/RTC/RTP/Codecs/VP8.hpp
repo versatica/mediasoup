@@ -158,11 +158,11 @@ namespace RTC
 					void Restore(RTP::Packet* packet) override;
 					uint8_t GetSpatialLayer() const override
 					{
-						return 0u;
+						return 0;
 					}
 					uint8_t GetTemporalLayer() const override
 					{
-						return this->payloadDescriptor->hasTlIndex ? this->payloadDescriptor->tlIndex : 0u;
+						return this->payloadDescriptor->hasTlIndex ? this->payloadDescriptor->tlIndex : 0;
 					}
 					bool IsKeyFrame() const override
 					{

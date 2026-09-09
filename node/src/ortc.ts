@@ -29,7 +29,6 @@ export type RtpCodecsEncodingsMapping = {
 	encodings: {
 		ssrc?: number;
 		rid?: string;
-		scalabilityMode?: string;
 		mappedSsrc: number;
 	}[];
 };
@@ -434,7 +433,6 @@ export function getProducerRtpParametersMapping(
 		const mappedEncoding = {
 			ssrc: encoding.ssrc,
 			rid: encoding.rid,
-			scalabilityMode: encoding.scalabilityMode,
 			mappedSsrc: mappedSsrc++,
 		};
 
@@ -510,6 +508,19 @@ export function getConsumableRtpParameters(
 		if (
 			capExt.kind !== kind ||
 			(capExt.direction !== 'sendrecv' && capExt.direction !== 'sendonly')
+		) {
+			continue;
+		}
+
+		// 'abs-capture-time' RTP extension is just proxied from the packets of this
+		// Producer, so don't announce it to Consumers unless this Producer negotiated
+		// it. Otherwise a Producer created out of a pipe Consumer would announce it
+		// and the worker would wait forever for an extension that is never going to
+		// arrive.
+		if (
+			capExt.uri ===
+				'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time' &&
+			!params.headerExtensions!.some(ext => ext.uri === capExt.uri)
 		) {
 			continue;
 		}
@@ -899,7 +910,6 @@ export function serializeRtpMapping(
 				builder,
 				builder.createString(encoding.rid),
 				encoding.ssrc ?? null,
-				builder.createString(encoding.scalabilityMode),
 				encoding.mappedSsrc
 			)
 		);

@@ -3,10 +3,11 @@
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
+#include "mocks/include/MockShared.hpp"
 #include <uv.h>
 #include <catch2/catch_test_macros.hpp>
 
-SCENARIO("TransportTuple", "[transport-tuple]")
+SCENARIO("TransportTuple", "[transporttuple]")
 {
 	class UdpSocketListener : public RTC::UdpSocket::Listener
 	{
@@ -16,18 +17,32 @@ SCENARIO("TransportTuple", "[transport-tuple]")
 		  const uint8_t* /*data*/,
 		  size_t /*len*/,
 		  size_t /*bufferLen*/,
-		  const struct sockaddr* /*remoteAddr*/) override
+		  const struct sockaddr* /*remoteAddr*/,
+		  int64_t /*receivedAtUs*/) override
 		{
 		}
 	};
 
-	auto makeUdpSocket = [](const std::string& ip, uint16_t minPort, uint16_t maxPort)
+	// NOTE: These outlive the sockets created below, which hold pointers to them.
+	UdpSocketListener listener;
+	mocks::MockShared shared(/*getTimeUs*/
+	                         []() -> int64_t
+	                         {
+		                         return 1000 * 1000;
+	                         });
+
+	auto makeUdpSocket = [&listener, &shared](const std::string& ip, uint16_t minPort, uint16_t maxPort)
 	{
-		UdpSocketListener listener;
 		auto flags = RTC::Transport::SocketFlags{ .ipv6Only = false, .udpReusePort = false };
 		RTC::PortManager::PortRangeKey portRangeKey{};
 		auto* udpSocket = new RTC::UdpSocket(
-		  std::addressof(listener), const_cast<std::string&>(ip), minPort, maxPort, flags, portRangeKey);
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  const_cast<std::string&>(ip),
+		  minPort,
+		  maxPort,
+		  flags,
+		  portRangeKey);
 
 		return std::unique_ptr<RTC::UdpSocket>(udpSocket);
 	};

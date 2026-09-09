@@ -274,12 +274,6 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
 		},
 		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
-			encrypt: false,
-			parameters: {},
-		},
-		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
 			id: 11,
 			encrypt: false,
@@ -332,12 +326,6 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 			id: 7,
 			parameters: {},
 			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
-		},
-		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
-			encrypt: false,
-			parameters: {},
 		},
 		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
@@ -413,12 +401,6 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			parameters: {},
 		},
 		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
-			encrypt: false,
-			parameters: {},
-		},
-		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
 			id: 11,
 			encrypt: false,
@@ -479,12 +461,6 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			parameters: {},
 		},
 		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
-			encrypt: false,
-			parameters: {},
-		},
-		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
 			id: 11,
 			encrypt: false,
@@ -498,6 +474,47 @@ test('router.pipeToRouter() succeeds with video', async () => {
 		},
 	]);
 	expect(pipeProducer.paused).toBe(true);
+}, 2000);
+
+test('router.pipeToRouter() gives abs-capture-time to the pipe Consumer if the Producer has it', async () => {
+	const videoProducer2 = await ctx.webRtcTransport1!.produce({
+		kind: 'video',
+		rtpParameters: {
+			mid: 'VIDEO2',
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 112,
+					clockRate: 90000,
+				},
+			],
+			headerExtensions: [
+				{
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
+					id: 12,
+				},
+			],
+			encodings: [{ ssrc: 44444444 }],
+			rtcp: {
+				cname: 'FOOBAR',
+			},
+		},
+	});
+
+	const { pipeConsumer } = (await ctx.router1!.pipeToRouter({
+		producerId: videoProducer2.id,
+		router: ctx.router2!,
+	})) as {
+		pipeConsumer: mediasoup.types.Consumer;
+		pipeProducer: mediasoup.types.Producer;
+	};
+
+	expect(pipeConsumer.rtpParameters.headerExtensions).toContainEqual({
+		uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
+		id: 10,
+		encrypt: false,
+		parameters: {},
+	});
 }, 2000);
 
 test('router.pipeToRouter() with unknown router, producerId or dataProducerId fails', async () => {
@@ -624,12 +641,6 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 		{
 			uri: 'urn:ietf:params:rtp-hdrext:toffset',
 			id: 9,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-			id: 10,
 			encrypt: false,
 			parameters: {},
 		},
@@ -1080,7 +1091,7 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 		protocol: 'bar',
 	});
 
-	await ctx.router1!.pipeToRouter({
+	const { pipeDataConsumer } = await ctx.router1!.pipeToRouter({
 		dataProducerId: directDataProducer.id,
 		router: ctx.router2!,
 	});
@@ -1088,28 +1099,171 @@ test('transport.consumeData() for a pipe DataProducer succeeds with subchannels'
 	const directTransport2 = await ctx.router2!.createDirectTransport();
 	const directDataConsumer = await directTransport2.consumeData({
 		dataProducerId: directDataProducer.id,
-		subchannels: [123, 666],
+		subchannels: [123, 666, 777],
 	});
 
-	await new Promise<void>((resolve, reject) => {
-		directDataConsumer.on('message', (message, ppid) => {
-			try {
-				expect(message.toString('utf8')).toBe('hello');
-				expect(ppid).toBe(51);
+	const receivedMessages: string[] = [];
 
+	directDataConsumer.on('message', message => {
+		const receivedMessage = message.toString('utf8');
+
+		receivedMessages.push(receivedMessage);
+	});
+
+	// The `pipeDataConsumer` is not subscribed to any subchannel, so it must allow
+	// the message to pass through and reach the final `directDataConsumer`.
+	directDataProducer.send(
+		'hello1',
+		/* ppid */ undefined,
+		/* subchannels */ [123, 124],
+		/* requiredSubchannel */ 666
+	);
+
+	// Subscribe `pipeDataConsumer` to subchannels 123, 124 and 666.
+	await pipeDataConsumer!.setSubchannels([123, 124, 666]);
+
+	// The `pipeDataConsumer` is subscribed to subchannels 123 and 666 so it must
+	// allow the message to pass through and reach the final `directDataConsumer`.
+	directDataProducer.send(
+		'hello2',
+		/* ppid */ undefined,
+		/* subchannels */ [123],
+		/* requiredSubchannel */ 666
+	);
+
+	// The `pipeDataConsumer` is subscribed to subchannels 124 and 666 so it must
+	// allow the message to pass through, however the final `directDataConsumer`
+	// is not subscribed to subchannel 124 so the message must not reach it.
+	directDataProducer.send(
+		'hello3',
+		/* ppid */ undefined,
+		/* subchannels */ [124],
+		/* requiredSubchannel */ 666
+	);
+
+	// The `pipeDataConsumer` is not subscribed to subchannel 125 so it must not
+	// allow the message to pass through.
+	directDataProducer.send(
+		'hello4',
+		/* ppid */ undefined,
+		/* subchannels */ [125],
+		/* requiredSubchannel */ 666
+	);
+
+	// The final `directDataConsumer` is subscribed to subchannel 666 so it must
+	// not receive the message.
+	directDataProducer.send(
+		'hello5',
+		/* ppid */ undefined,
+		/* subchannels */ [123],
+		/* requiredSubchannel */ undefined,
+		/* ignoredSubchannel */ 666
+	);
+
+	// The final `directDataConsumer` is subscribed to subchannel 777 so it must
+	// not receive the message.
+	directDataProducer.send(
+		'hello6',
+		/* ppid */ undefined,
+		/* subchannels */ undefined,
+		/* requiredSubchannel */ 123,
+		/* ignoredSubchannel */ 777
+	);
+
+	// Send a message without subchannels so it's guaranteed that it will reach
+	// the final `directDataConsumer`. And wait for reception of this message so
+	// at this time we know that previous ones already reached the final
+	// `directDataConsumer`.
+	await new Promise<void>(resolve => {
+		directDataConsumer.on('message', message => {
+			const receivedMessage = message.toString('utf8');
+
+			// Resolve once the last sent message is received.
+			if (receivedMessage === 'bye') {
 				resolve();
-			} catch (error) {
-				reject(error as Error);
 			}
 		});
 
-		directDataProducer.send(
-			'hello',
-			/* ppid */ undefined,
-			/* subchannels */ [123, 124],
-			/* requiredSubchannel */ 666
-		);
+		directDataProducer.send('bye');
 	});
+
+	expect(receivedMessages).toStrictEqual(['hello1', 'hello2', 'bye']);
+}, 2000);
+
+test('transport.consumeData() for a pipe DataProducer succeeds with ignoredSubchannel', async () => {
+	const directTransport1 = await ctx.router1!.createDirectTransport();
+	const directDataProducer = await directTransport1.produceData({
+		label: 'foo',
+		protocol: 'bar',
+	});
+
+	const { pipeDataConsumer } = await ctx.router1!.pipeToRouter({
+		dataProducerId: directDataProducer.id,
+		router: ctx.router2!,
+	});
+
+	const directTransport2 = await ctx.router2!.createDirectTransport();
+	const directDataConsumer1 = await directTransport2.consumeData({
+		dataProducerId: directDataProducer.id,
+		subchannels: [111],
+	});
+	const directDataConsumer2 = await directTransport2.consumeData({
+		dataProducerId: directDataProducer.id,
+		subchannels: [222],
+	});
+
+	// A pipe DataConsumer must be subscribed to the union of the subchannels of
+	// all the DataConsumers behind it.
+	await pipeDataConsumer!.setSubchannels([111, 222]);
+
+	const receivedMessages1: string[] = [];
+	const receivedMessages2: string[] = [];
+
+	// Resolved once both final DataConsumers have received the last sent message.
+	const allReceived = Promise.all(
+		[
+			[directDataConsumer1, receivedMessages1] as const,
+			[directDataConsumer2, receivedMessages2] as const,
+		].map(
+			([dataConsumer, receivedMessages]) =>
+				new Promise<void>(resolve => {
+					dataConsumer.on('message', message => {
+						const receivedMessage = message.toString('utf8');
+
+						receivedMessages.push(receivedMessage);
+
+						// Resolve once the last sent message is received.
+						if (receivedMessage === 'bye') {
+							resolve();
+						}
+					});
+				})
+		)
+	);
+
+	// The `pipeDataConsumer` is subscribed to subchannel 111, but being a pipe
+	// DataConsumer it must not apply `ignoredSubchannel` itself. Otherwise it
+	// would drop the message for every DataConsumer behind it rather than just
+	// for `directDataConsumer1`. `ignoredSubchannel` travels within the message
+	// and is applied by the final DataConsumers, so `directDataConsumer2` must
+	// still receive it.
+	directDataProducer.send(
+		'hello1',
+		/* ppid */ undefined,
+		/* subchannels */ undefined,
+		/* requiredSubchannel */ undefined,
+		/* ignoredSubchannel */ 111
+	);
+
+	// Send a message without subchannels so it's guaranteed that it will reach
+	// both final DataConsumers. And wait for reception of this message so at
+	// this time we know whether the previous one reached them.
+	directDataProducer.send('bye');
+
+	await allReceived;
+
+	expect(receivedMessages1).toStrictEqual(['bye']);
+	expect(receivedMessages2).toStrictEqual(['hello1', 'bye']);
 }, 2000);
 
 test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {

@@ -14,6 +14,8 @@ static constexpr int ListenBacklog{ 512 };
 
 inline static void onConnection(uv_stream_t* handle, int status)
 {
+	MS_TRACE();
+
 	auto* server = static_cast<TcpServerHandle*>(handle->data);
 
 	if (server)
@@ -24,6 +26,8 @@ inline static void onConnection(uv_stream_t* handle, int status)
 
 inline static void onCloseTcp(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
@@ -71,6 +75,8 @@ TcpServerHandle::~TcpServerHandle()
 
 void TcpServerHandle::Dump(int indentation) const
 {
+	MS_TRACE();
+
 	MS_DUMP_CLEAN(indentation, "<TcpServerHandle>");
 	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
 	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));

@@ -6,10 +6,10 @@
 namespace
 {
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local mocks::MockShared shared(/*getTimeMs*/
-	                                      []()
+	thread_local mocks::MockShared shared(/*getTimeUs*/
+	                                      []() -> int64_t
 	                                      {
-		                                      return 1000;
+		                                      return 1000 * 1000;
 	                                      });
 } // namespace
 

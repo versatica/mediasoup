@@ -56,6 +56,8 @@ namespace RTC
 
 		const std::string& SdesItem::TypeToString(SdesItem::Type type)
 		{
+			MS_TRACE();
+
 			static const std::string Unknown("UNKNOWN");
 
 			auto it = SdesItem::Type2String.find(type);

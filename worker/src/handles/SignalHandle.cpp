@@ -10,11 +10,15 @@
 
 inline static void onSignal(uv_signal_t* handle, int signum)
 {
+	MS_TRACE();
+
 	static_cast<SignalHandle*>(handle->data)->OnUvSignal(signum);
 }
 
 inline static void onCloseSignal(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_signal_t*>(handle);
 }
 

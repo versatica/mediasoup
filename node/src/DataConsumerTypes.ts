@@ -40,8 +40,6 @@ export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 
 		/**
 		 * Subchannels this data consumer initially subscribes to.
-		 * Only used in case this data consumer receives messages from a local data
-		 * producer that specifies subchannel(s) when calling send().
 		 */
 		subchannels?: number[];
 

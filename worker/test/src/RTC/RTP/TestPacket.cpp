@@ -1059,12 +1059,16 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->GetCaptureAtUs() == std::nullopt);
 
 		packet->SetPayloadType(100);
 		packet->SetMarker(true);
 		packet->SetSequenceNumber(12345);
 		packet->SetTimestamp(987654321);
 		packet->SetSsrc(1234567890);
+		packet->SetCaptureAtUs(99998888);
+
+		REQUIRE(packet->GetCaptureAtUs() == 99998888);
 
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 
@@ -1204,6 +1208,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(extensionLen == 3);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->GetCaptureAtUs() == 99998888);
 
 		/* Clone it. */
 
@@ -1252,6 +1257,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(extensionLen == 3);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->GetCaptureAtUs() == 99998888);
 
 		/* Set payload. */
 
@@ -1541,12 +1547,12 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->ReadTransportWideCc01(readWideSeqNumber));
 		REQUIRE(readWideSeqNumber == wideSeqNumber);
 
-		std::string newMid{ "mid-®2" };
-		uint64_t newAbsSendtimeMs{ 999999 };
-		uint16_t newWideSeqNumber{ 5556 };
+		const std::string newMid{ "mid-®2" };
+		const int64_t newAbsSendtimeUs{ 999999250 };
+		const uint16_t newWideSeqNumber{ 5556 };
 
 		REQUIRE(packet->UpdateMid(newMid));
-		REQUIRE(packet->UpdateAbsSendTime(newAbsSendtimeMs));
+		REQUIRE(packet->UpdateAbsSendTime(newAbsSendtimeUs));
 		REQUIRE(packet->UpdateTransportWideCc01(newWideSeqNumber));
 
 		REQUIRE(packet->ReadMid(readMid));
@@ -1554,7 +1560,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->ReadRid(readRid));
 		REQUIRE(readRid == rid);
 		REQUIRE(packet->ReadAbsSendTime(readAbsSendtime));
-		REQUIRE(readAbsSendtime == Utils::Time::TimeMsToAbsSendTime(newAbsSendtimeMs));
+		REQUIRE(readAbsSendtime == Utils::Time::TimeUsToAbsSendTime(newAbsSendtimeUs));
 		REQUIRE(packet->ReadTransportWideCc01(readWideSeqNumber));
 		REQUIRE(readWideSeqNumber == newWideSeqNumber);
 
@@ -1581,7 +1587,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet2->ReadRid(readRid));
 		REQUIRE(readRid == rid);
 		REQUIRE(packet2->ReadAbsSendTime(readAbsSendtime));
-		REQUIRE(readAbsSendtime == Utils::Time::TimeMsToAbsSendTime(newAbsSendtimeMs));
+		REQUIRE(readAbsSendtime == Utils::Time::TimeUsToAbsSendTime(newAbsSendtimeUs));
 		REQUIRE(packet2->ReadTransportWideCc01(readWideSeqNumber));
 		REQUIRE(readWideSeqNumber == newWideSeqNumber);
 	}

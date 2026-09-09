@@ -9,10 +9,10 @@
 namespace
 {
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	thread_local mocks::MockShared shared(/*getTimeMs*/
-	                                      []()
+	thread_local mocks::MockShared shared(/*getTimeUs*/
+	                                      []() -> int64_t
 	                                      {
-		                                      return 1000;
+		                                      return 1000 * 1000;
 	                                      });
 
 	// DtlsTransport instance. It's reset every time DTLS handshake fails or DTLS
@@ -70,7 +70,7 @@ void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
 		dtlsTransportSingleton->SetRemoteFingerprint(dtlsRemoteFingerprint);
 	}
 
-	dtlsTransportSingleton->ProcessDtlsData(data, len);
+	dtlsTransportSingleton->ProcessDtlsData(data, len, shared.GetTimeUs());
 
 	// DTLS may have failed or closed after ProcessDtlsData(). If so, unset it.
 	if (
@@ -125,7 +125,10 @@ void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportSendData(
 }
 
 void FuzzerRtcDtlsTransport::DtlsTransportListener::OnDtlsTransportApplicationDataReceived(
-  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* /*data*/, size_t /*len*/)
+  const RTC::DtlsTransport* /*dtlsTransport*/,
+  const uint8_t* /*data*/,
+  size_t /*len*/,
+  int64_t /*receivedAtUs*/)
 {
 	MS_DEBUG_DEV("DtlsTransport singleton received application data");
 }

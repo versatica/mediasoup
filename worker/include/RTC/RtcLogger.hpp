@@ -42,7 +42,7 @@ namespace RTC
 			void Clear();
 
 		public:
-			uint64_t timestamp{};
+			int64_t timestamp{};
 			std::string recvTransportId;
 			std::string sendTransportId;
 			std::string routerId;

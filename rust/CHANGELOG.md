@@ -2,8 +2,61 @@
 
 ### NEXT
 
+- Worker: New `RateCalculator` ([PR #1899](https://github.com/versatica/mediasoup/pull/1899)).
+- Worker: Fix transport-cc arrival time precision by working in microseconds ([PR #1914](https://github.com/versatica/mediasoup/pull/1914)).
+- Worker: Use real receive time of packets ([PR #1917](https://github.com/versatica/mediasoup/pull/1917)).
+- Worker: Use `int64_t` for time everywhere ([PR #1918](https://github.com/versatica/mediasoup/pull/1918)).
+- Worker: Use `int64_t` for bitrate everywhere ([PR #1919](https://github.com/versatica/mediasoup/pull/1919)).
+- Improve worker build system ([PR #1920](https://github.com/versatica/mediasoup/pull/1920)).
+
+### 0.27.0
+
+- **Breaking change:** Simulcast and SVC: Limit temporal layer to the preferred one ([PR #1892](https://github.com/versatica/mediasoup/pull/1892)).
+
+### 0.26.0
+
+- Worker: Fix undefined behavior in `RtpStreamRecv::UpdateScore()` when no packets were received ([PR #1886](https://github.com/versatica/mediasoup/pull/1886)).
+- SCTP: Fix `SackChunk::GetValidatedGapAckBlocks()` returning a bogus gap-ack-block ([PR #1891](https://github.com/versatica/mediasoup/pull/1891)).
+- Do not make generated RTCP Sender Reports depend on RTP packet arrival time ([issue #1881](https://github.com/versatica/mediasoup/issues/1881)):
+  - `RemoteClockOffsetEstimator` class ([PR #1882](https://github.com/versatica/mediasoup/pull/1882)).
+  - Prepare `RtpStream` classes for capture time based RTCP Sender Reports ([PR #1883](https://github.com/versatica/mediasoup/pull/1883), [PR #1888](https://github.com/versatica/mediasoup/pull/1888)).
+  - `RemoteCaptureTimeEstimator` class ([PR #1884](https://github.com/versatica/mediasoup/pull/1884)).
+  - Estimate the capture instant of each received RTP packet ([PR #1885](https://github.com/versatica/mediasoup/pull/1885)).
+  - Generate RTCP Sender Reports based on the capture instant of the media rather than on the packet arrival time ([PR #1887](https://github.com/versatica/mediasoup/pull/1887)).
+  - `SimulcastProducerStreamManager`: Apply new capture time logic and fix 'abs-capture-time' rewriting ([PR #1889](https://github.com/versatica/mediasoup/pull/1889)).
+
+### 0.25.2
+
+- Worker: Verify `DataConsumer` subchannels before cloning the message ([PR #1880](https://github.com/versatica/mediasoup/pull/1880)).
+
+### 0.25.1
+
+- Worker: Don't check `ignoredSubchannel` in piped `DataConsumers` ([PR #1879](https://github.com/versatica/mediasoup/pull/1879)).
+
+### 0.25.0
+
+- `DirectDataProducer.send()`: Add `ignored_subchannel` optional argument ([PR #1877](https://github.com/versatica/mediasoup/pull/1877)).
+
+### 0.24.3
+
+- `DataProducerOptions`: make `new_pipe_transport()` public ([PR #1876](https://github.com/versatica/mediasoup/pull/1876)).
+
+### 0.24.2
+
+- Handle subchannels in pipe `DataConsumers` ([PR #1875](https://github.com/versatica/mediasoup/pull/1875)).
+
+### 0.24.1
+
+- Worker: Fix, use `thread_local` buffer on `MS_ABORT()` ([PR#1873](https://github.com/versatica/mediasoup/pull/1873)).
+
+### 0.24.0
+
 - Bump up Meson from 1.9.1 to 1.11.2 ([PR #1861](https://github.com/versatica/mediasoup/pull/1861)).
 - Worker: Update libsrtp to 3.0.0-beta-2fc078db ([PR #1860](https://github.com/versatica/mediasoup/pull/1860)).
+- Worker: Use constant-time memory comparison in MAC/credential verification (SCTP State Cookie MAC and STUN "MESSAGE-INTEGRITY") ([PR #1867](https://github.com/versatica/mediasoup/pull/1867), credits to @alanturing881).
+- Worker: Fix OOB write in `RTP::Packet::UpdateDependencyDescriptor()` ([PR #1868](https://github.com/versatica/mediasoup/pull/1868), credits to @alanturing881).
+- Worker: Fix integer overflow in SCTP `MissingMandatoryParameterErrorCause` ([PR #1869](https://github.com/versatica/mediasoup/pull/1869), credits to @alanturing881).
+- SCTP: Add default per stream buffered amount low threshold option ([PR #1871](https://github.com/versatica/mediasoup/pull/1871)).
 
 ### 0.23.0
 

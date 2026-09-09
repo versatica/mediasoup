@@ -150,6 +150,12 @@ pub struct PipeToRouterOptions {
     /// than the largest sized message you want to be able to receive.
     /// Default 5_242_880.
     pub sctp_max_receiver_window_buffer_size: u32,
+    /// SCTP default stream buffered amount low threshold (in bytes). When the
+    /// buffered amount of a DataConsumer stream drops to or below this value, the
+    /// buffered amount low event is emitted. It can be overridden per DataConsumer
+    /// via DataConsumer::set_buffered_amount_low_threshold().
+    /// Default 1024.
+    pub sctp_default_stream_buffered_amount_low_threshold: u32,
     /// Enable RTX and NACK for RTP retransmission.
     ///
     /// Default `false`.
@@ -184,6 +190,7 @@ impl PipeToRouterOptions {
             sctp_send_buffer_size: 2_000_000,
             sctp_per_stream_send_queue_limit: 2_000_000,
             sctp_max_receiver_window_buffer_size: 5_242_880,
+            sctp_default_stream_buffered_amount_low_threshold: 1024,
             enable_rtx: false,
             enable_srtp: false,
         }
@@ -1565,6 +1572,7 @@ impl Router {
             sctp_send_buffer_size,
             sctp_per_stream_send_queue_limit,
             sctp_max_receiver_window_buffer_size,
+            sctp_default_stream_buffered_amount_low_threshold,
             enable_rtx,
             enable_srtp,
         } = pipe_to_router_options;
@@ -1578,6 +1586,7 @@ impl Router {
             sctp_send_buffer_size,
             sctp_per_stream_send_queue_limit,
             sctp_max_receiver_window_buffer_size,
+            sctp_default_stream_buffered_amount_low_threshold,
             enable_rtx,
             enable_srtp,
             app_data: AppData::default(),

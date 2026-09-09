@@ -25,8 +25,8 @@ namespace RTC
 		public:
 			void EvalActivityScores();
 			double GetActivityScore(uint8_t interval) const;
-			void LevelChanged(uint32_t level, uint64_t now);
-			void LevelTimedOut(uint64_t now);
+			void LevelChanged(uint32_t level, int64_t nowMs);
+			void LevelTimedOut(int64_t nowMs);
 
 		private:
 			bool ComputeImmediates();
@@ -42,17 +42,17 @@ namespace RTC
 			double immediateActivityScore{ 0 };
 			double mediumActivityScore{ 0 };
 			double longActivityScore{ 0 };
-			uint64_t lastLevelChangeTime{ 0 };
+			int64_t lastLevelChangeAtMs{ 0 };
 
 		private:
-			uint8_t minLevel{ 0u };
-			uint8_t nextMinLevel{ 0u };
-			uint32_t nextMinLevelWindowLen{ 0u };
+			uint8_t minLevel{ 0 };
+			uint8_t nextMinLevel{ 0 };
+			uint32_t nextMinLevelWindowLen{ 0 };
 			std::vector<uint8_t> immediates;
 			std::vector<uint8_t> mediums;
 			std::vector<uint8_t> longs;
 			std::vector<uint8_t> levels;
-			size_t nextLevelIndex{ 0u };
+			size_t nextLevelIndex{ 0 };
 		};
 
 		class ProducerSpeaker
@@ -67,7 +67,7 @@ namespace RTC
 		};
 
 	private:
-		static const uint8_t RelativeSpeachActivitiesLen{ 3u };
+		static const uint8_t RelativeSpeachActivitiesLen{ 3 };
 
 	public:
 		ActiveSpeakerObserver(
@@ -89,7 +89,7 @@ namespace RTC
 		void Resumed() override;
 		void Update();
 		bool CalculateActiveSpeaker();
-		void TimeoutIdleLevels(uint64_t now);
+		void TimeoutIdleLevels(int64_t nowMs);
 
 		/* Pure virtual methods inherited from TimerHandleInterface. */
 	protected:
@@ -99,10 +99,10 @@ namespace RTC
 		double relativeSpeachActivities[RelativeSpeachActivitiesLen]{};
 		std::string dominantId;
 		TimerHandleInterface* periodicTimer{ nullptr };
-		uint16_t interval{ 300u };
+		int64_t intervalMs{ 300 };
 		// Map of ProducerSpeakers indexed by Producer id.
 		ankerl::unordered_dense::map<std::string, ProducerSpeaker*> mapProducerSpeakers;
-		uint64_t lastLevelIdleTime{ 0u };
+		int64_t lastLevelIdleAtMs{ 0 };
 	};
 } // namespace RTC
 

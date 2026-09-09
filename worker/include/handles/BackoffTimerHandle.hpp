@@ -40,7 +40,7 @@ public:
 	 * Set the base timeout duration. It will be applied after the next timeout
 	 * and effective duration can be larger if backoff algorithm is exponential.
 	 */
-	void SetBaseTimeoutMs(uint64_t baseTimeoutMs) override;
+	void SetBaseTimeoutMs(int64_t baseTimeoutMs) override;
 
 	/**
 	 * Whether the BackoffTimer is running. Useful to check if this BackoffTimer
@@ -77,7 +77,7 @@ public:
 	}
 
 private:
-	uint64_t ComputeNextTimeoutMs() const;
+	int64_t ComputeNextTimeoutMs() const;
 
 	/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 public:
@@ -87,9 +87,9 @@ private:
 	// Passed by argument.
 	BackoffTimerHandleInterface::Listener* listener{ nullptr };
 	const std::string label;
-	uint64_t baseTimeoutMs;
+	int64_t baseTimeoutMs;
 	BackoffAlgorithm backoffAlgorithm;
-	std::optional<uint64_t> maxBackoffTimeoutMs;
+	std::optional<int64_t> maxBackoffTimeoutMs;
 	std::optional<size_t> maxRestarts;
 	// Allocated by this.
 	TimerHandle* timer{ nullptr };

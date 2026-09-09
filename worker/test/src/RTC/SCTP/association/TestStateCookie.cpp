@@ -614,9 +614,9 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 		};
 
-		const uint8_t macKey[]             = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-			                                     0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-		const uint64_t creationTimestampMs = 1234567890;
+		const uint8_t macKey[]            = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+		                                      0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+		const int64_t creationTimestampUs = 1234567890;
 
 		auto* buffer = sctpCommon::FactoryBuffer;
 
@@ -630,7 +630,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		  /*remoteAdvertisedReceiverWindowCredit*/ 999909999,
 		  /*tieTag*/ 1111222233334444,
 		  remoteCapabilities,
-		  /*creationTimestampMs*/ creationTimestampMs,
+		  /*creationTimestampUs*/ creationTimestampUs,
 		  /*macKey*/ macKey,
 		  /*macKeyLength*/ sizeof(macKey));
 
@@ -648,7 +648,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::AuthenticatedStateCookieLength);
 		REQUIRE(stateCookie->IsAuthenticated() == true);
-		REQUIRE(stateCookie->GetCreationTimestampMs() == creationTimestampMs);
+		REQUIRE(stateCookie->GetCreationTimestampUs() == creationTimestampUs);
 		REQUIRE(stateCookie->GetLocalVerificationTag() == 6660666);
 		REQUIRE(stateCookie->GetRemoteVerificationTag() == 9990999);
 
@@ -662,7 +662,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		/* The MAC must NOT verify with a wrong key. */
 
 		const uint8_t wrongMacKey[] = { 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88,
-			                              0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00 };
+		                                0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00 };
 
 		REQUIRE(
 		  RTC::SCTP::StateCookie::VerifyMac(

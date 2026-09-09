@@ -125,10 +125,10 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 		bool keyFrameRequiredTriggered{ false };
 	};
 
-	mocks::MockShared shared(/*getTimeMs*/
-	                         []()
+	mocks::MockShared shared(/*getTimeUs*/
+	                         []() -> int64_t
 	                         {
-		                         return 1000;
+		                         return 1000 * 1000;
 	                         });
 
 	auto validate =

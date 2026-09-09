@@ -48,10 +48,9 @@ namespace RTC
 		void ProducerRtpStreamScore(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
-		uint32_t IncreaseLayer(
-		  uint32_t bitrate, bool considerLoss, float lossPercentage, uint64_t nowMs) override;
-		void ApplyLayers(uint64_t rtpStreamActiveMs) override;
-		uint32_t GetDesiredBitrate(uint64_t nowMs) const override;
+		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) override;
+		void ApplyLayers(int64_t rtpStreamActiveMs) override;
+		int64_t GetDesiredBitrate(int64_t nowMs) const override;
 		RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,
 		  bool lastSentPacketHasMarker,
@@ -80,13 +79,16 @@ namespace RTC
 		int16_t spatialLayerToSync{ -1 };
 		// Timestamp synchronization.
 		int16_t tsReferenceSpatialLayer{ -1 };
-		uint32_t tsOffset{ 0u };
+		// Spatial layer that was the RTP timestamp reference the last time its capture
+		// instant was known upon a received Sender Report.
+		int16_t tsReferenceSpatialLayerWithCaptureMapping{ -1 };
+		uint32_t tsOffset{ 0 };
 		bool keyFrameForTsOffsetRequested{ false };
 		// Old-packet filtering after spatial switch.
-		uint16_t snReferenceSpatialLayer{ 0u };
+		uint16_t snReferenceSpatialLayer{ 0 };
 		bool checkingForOldPacketsInSpatialLayer{ false };
 		// BWE downgrade tracking.
-		uint64_t lastBweDowngradeAtMs{ 0u };
+		int64_t lastBweDowngradeAtMs{ 0 };
 	};
 } // namespace RTC
 

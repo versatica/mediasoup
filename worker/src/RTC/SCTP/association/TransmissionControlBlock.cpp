@@ -125,27 +125,31 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");
 		}
 
-		void TransmissionControlBlock::ObserveRttMs(uint64_t rttMs)
+		void TransmissionControlBlock::ObserveRttUs(int64_t rttUs)
 		{
 			MS_TRACE();
 
 #if MS_LOG_DEV_LEVEL == 3
-			const auto prevRtoMs = this->rto.GetRtoMs();
+			const auto prevRtoUs = this->rto.GetRtoUs();
 #endif
 
-			this->rto.ObserveRttMs(rttMs);
+			this->rto.ObserveRttUs(rttUs);
 
 			MS_DEBUG_DEV(
-			  "new rtt:%" PRIu64 ", previous rto:%" PRIu64 ", new rto:%" PRIu64 ", srtt:%" PRIu64,
-			  rttMs,
-			  prevRtoMs,
-			  this->rto.GetRtoMs(),
-			  this->rto.GetSrttMs());
+			  "new rtt:%" PRIi64 " us, previous rto:%" PRIi64 " us, new rto:%" PRIi64 " us, srtt:%" PRIi64
+			  " us",
+			  rttUs,
+			  prevRtoUs,
+			  this->rto.GetRtoUs(),
+			  this->rto.GetSrttUs());
 
-			this->t3RtxTimer->SetBaseTimeoutMs(this->rto.GetRtoMs());
+			// NOTE: The timers take milliseconds, so the RTO is truncated here. It is
+			// hundreds of milliseconds long, so the sub-millisecond part is noise.
+			this->t3RtxTimer->SetBaseTimeoutMs(this->rto.GetRtoUs() / 1000);
 
-			const uint64_t delayedAckTimeoutMs = std::min(
-			  static_cast<uint64_t>(this->rto.GetRtoMs() * 0.5), this->sctpOptions.delayedAckMaxTimeoutMs);
+			const int64_t delayedAckTimeoutMs = std::min(
+			  static_cast<int64_t>((this->rto.GetRtoUs() * 0.5) / 1000),
+			  this->sctpOptions.delayedAckMaxTimeoutMs);
 
 			this->delayedAckTimer->SetBaseTimeoutMs(delayedAckTimeoutMs);
 		}
@@ -211,11 +215,11 @@ namespace RTC
 			SendPacket(packet.get());
 		}
 
-		void TransmissionControlBlock::MayAddForwardTsnChunk(Packet* packet, uint64_t nowMs)
+		void TransmissionControlBlock::MayAddForwardTsnChunk(Packet* packet, int64_t nowUs)
 		{
 			MS_TRACE();
 
-			if (nowMs >= this->limitForwardTsnUntilMs && this->retransmissionQueue.ShouldSendForwardTsn(nowMs))
+			if (nowUs >= this->limitForwardTsnUntilUs && this->retransmissionQueue.ShouldSendForwardTsn(nowUs))
 			{
 				if (this->negotiatedCapabilities.messageInterleaving)
 				{
@@ -233,7 +237,7 @@ namespace RTC
 				// before sending a duplicate FORWARD TSN."
 				// "Any delay applied to the sending of FORWARD TSN chunk SHOULD NOT
 				// exceed 200ms and MUST NOT exceed 500ms".
-				this->limitForwardTsnUntilMs = nowMs + std::min(uint64_t{ 200 }, this->rto.GetSrttMs());
+				this->limitForwardTsnUntilUs = nowUs + std::min(int64_t{ 200 * 1000 }, this->rto.GetSrttUs());
 			}
 		}
 
@@ -284,7 +288,7 @@ namespace RTC
 			SendPacket(packet.get());
 		}
 
-		void TransmissionControlBlock::SendBufferedPackets(uint64_t nowMs, bool addCookieAckChunk)
+		void TransmissionControlBlock::SendBufferedPackets(int64_t nowUs, bool addCookieAckChunk)
 		{
 			MS_TRACE();
 
@@ -338,9 +342,7 @@ namespace RTC
 						  packet.get(), this->reassemblyQueue.GetRemainingBytes());
 					}
 
-					const uint64_t nowMs = this->shared->GetTimeMs();
-
-					MayAddForwardTsnChunk(packet.get(), nowMs);
+					MayAddForwardTsnChunk(packet.get(), nowUs);
 
 					if (this->streamResetHandler.ShouldSendStreamResetRequest())
 					{
@@ -349,7 +351,7 @@ namespace RTC
 				}
 
 				auto chunksToSend =
-				  this->retransmissionQueue.GetChunksToSend(nowMs, packet->GetAvailableLength());
+				  this->retransmissionQueue.GetChunksToSend(nowUs, packet->GetAvailableLength());
 
 				if (!chunksToSend.empty())
 				{
@@ -409,7 +411,7 @@ namespace RTC
 			}
 		}
 
-		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& stop)
+		void TransmissionControlBlock::OnT3RtxTimer(int64_t& /*baseTimeoutMs*/, bool& stop)
 		{
 			MS_TRACE();
 
@@ -439,9 +441,9 @@ namespace RTC
 				{
 					this->retransmissionQueue.HandleT3RtxTimerExpiry();
 
-					const uint64_t nowMs = this->shared->GetTimeMs();
+					const int64_t nowUs = this->shared->GetTimeUs();
 
-					SendBufferedPackets(nowMs);
+					SendBufferedPackets(nowUs);
 				}
 				else
 				{
@@ -455,7 +457,7 @@ namespace RTC
 			}
 		}
 
-		void TransmissionControlBlock::OnDelayedAckTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void TransmissionControlBlock::OnDelayedAckTimer(int64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -482,7 +484,7 @@ namespace RTC
 		}
 
 		void TransmissionControlBlock::OnBackoffTimer(
-		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 
@@ -496,11 +498,11 @@ namespace RTC
 			}
 		}
 
-		void TransmissionControlBlock::OnRetransmissionQueueNewRttMs(uint64_t newRttMs)
+		void TransmissionControlBlock::OnRetransmissionQueueNewRttUs(int64_t newRttUs)
 		{
 			MS_TRACE();
 
-			ObserveRttMs(newRttMs);
+			ObserveRttUs(newRttUs);
 		}
 
 		void TransmissionControlBlock::OnRetransmissionQueueClearRetransmissionCounter()

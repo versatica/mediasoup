@@ -23,10 +23,10 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 	};
 
 	TestKeyFrameRequestManagerListener listener;
-	mocks::MockShared shared(/*getTimeMs*/
-	                         []()
+	mocks::MockShared shared(/*getTimeUs*/
+	                         []() -> int64_t
 	                         {
-		                         return 1000;
+		                         return 1000 * 1000;
 	                         });
 
 	SECTION("key frame requested once, not received on time")

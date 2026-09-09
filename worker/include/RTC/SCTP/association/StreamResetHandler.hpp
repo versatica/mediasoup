@@ -255,12 +255,12 @@ namespace RTC
 			void HandleReceivedReconfigurationResponseParameter(
 			  const ReconfigurationResponseParameter* receivedReconfigurationResponseParameter);
 
-			void OnReConfigTimer(uint64_t& baseTimeoutMs, bool& stop);
+			void OnReConfigTimer(int64_t& baseTimeoutMs, bool& stop);
 
 			/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 		public:
 			void OnBackoffTimer(
-			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+			  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			AssociationListenerDeferrer& associationListenerDeferrer;

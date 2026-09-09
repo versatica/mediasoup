@@ -19,8 +19,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	TcpConnection::TcpConnection(Listener* listener, size_t bufferSize)
-	  : ::TcpConnectionHandle::TcpConnectionHandle(bufferSize), listener(listener)
+	TcpConnection::TcpConnection(Listener* listener, SharedInterface* shared, size_t bufferSize)
+	  : ::TcpConnectionHandle::TcpConnectionHandle(bufferSize), listener(listener), shared(shared)
 	{
 		MS_TRACE();
 	}
@@ -33,6 +33,11 @@ namespace RTC
 	void TcpConnection::UserOnTcpConnectionRead()
 	{
 		MS_TRACE();
+
+		// NOTE: Take the arrival time before anything else is done with the read
+		// data, so that it doesn't include the cost of processing it. All the frames
+		// found within this read share it, since they all arrived in it.
+		const int64_t receivedAtUs = this->shared->GetTimeUs();
 
 		MS_DEBUG_DEV(
 		  "data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",
@@ -88,7 +93,8 @@ namespace RTC
 					// later.
 					std::memcpy(ReadBuffer, packet, packetLen);
 
-					this->listener->OnTcpConnectionPacketReceived(this, ReadBuffer, packetLen, ReadBufferSize);
+					this->listener->OnTcpConnectionPacketReceived(
+					  this, ReadBuffer, packetLen, ReadBufferSize, receivedAtUs);
 				}
 
 				// If there is no more space available in the buffer and that is because

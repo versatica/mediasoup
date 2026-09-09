@@ -49,13 +49,13 @@ namespace RTC
 			public:
 				/**
 				 * Produces a fragment of data to send. The current wall time is specified
-				 * as `nowMs` and should be used to skip chunks with expired limited
+				 * as `nowUs` and should be used to skip chunks with expired limited
 				 * lifetime. The parameter `maxLength` specifies the maximum amount of
 				 * actual payload that may be returned. If these constraints prevents the
 				 * stream from sending some data, `std::nullopt` should be returned.
 				 */
 				virtual std::optional<SendQueueInterface::DataToSend> Produce(
-				  uint64_t nowMs, size_t maxLength) = 0;
+				  int64_t nowUs, size_t maxLength) = 0;
 
 				/**
 				 * Returns the number of payload bytes that is scheduled to be sent in the
@@ -123,7 +123,7 @@ namespace RTC
 				 * Produces a message from this stream. This will only be called on
 				 * streams that have data.
 				 */
-				std::optional<SendQueueInterface::DataToSend> Produce(uint64_t nowMs, size_t maxLength);
+				std::optional<SendQueueInterface::DataToSend> Produce(int64_t nowUs, size_t maxLength);
 
 				void MakeActive(size_t bytesToSendNext);
 
@@ -203,12 +203,12 @@ namespace RTC
 
 			/**
 			 * Produces a fragment of data to send. The current wall time is specified
-			 * as `nowMs` and will be used to skip chunks with expired limited
+			 * as `nowUs` and will be used to skip chunks with expired limited
 			 * lifetime. The parameter `maxLength` specifies the maximum amount of
 			 * actual payload that may be returned. If no data can be produced,
 			 * `std::nullopt` is returned.
 			 */
-			std::optional<SendQueueInterface::DataToSend> Produce(uint64_t nowMs, size_t maxLength);
+			std::optional<SendQueueInterface::DataToSend> Produce(int64_t nowUs, size_t maxLength);
 
 			std::set<uint16_t> GetActiveStreamsForTesting() const;
 

@@ -190,7 +190,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 		                                  { 1111, 11110 },
 		                                  { 2222, 22220 },
 		                                  { 3333, 33330 },
-    });
+		});
 
 		/* Parse itself and compare. */
 
@@ -219,7 +219,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[serializable][sctp][chunk]")
 		                                        { 1111, 11110 },
 		                                        { 2222, 22220 },
 		                                        { 3333, 33330 },
-    });
+		});
 
 		delete parsedChunk;
 	}

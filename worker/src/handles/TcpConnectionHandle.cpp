@@ -12,6 +12,8 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
+	MS_TRACE();
+
 	auto* connection = static_cast<TcpConnectionHandle*>(handle->data);
 
 	if (connection)
@@ -22,6 +24,8 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
+	MS_TRACE();
+
 	auto* connection = static_cast<TcpConnectionHandle*>(handle->data);
 
 	if (connection)
@@ -32,6 +36,8 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
+	MS_TRACE();
+
 	auto* writeData  = static_cast<TcpConnectionHandle::UvWriteData*>(req->data);
 	auto* handle     = req->handle;
 	auto* connection = static_cast<TcpConnectionHandle*>(handle->data);
@@ -50,11 +56,15 @@ inline static void onWrite(uv_write_t* req, int status)
 // ensuring that we call `delete xxx` with same type as `new xxx` before.
 inline static void onCloseTcp(uv_handle_t* handle)
 {
+	MS_TRACE();
+
 	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
 inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
+	MS_TRACE();
+
 	auto* handle = req->handle;
 
 	delete req;
@@ -104,6 +114,8 @@ void TcpConnectionHandle::TriggerClose()
 
 void TcpConnectionHandle::Dump(int indentation) const
 {
+	MS_TRACE();
+
 	MS_DUMP_CLEAN(indentation, "<TcpConnectionHandle>");
 	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
 	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));

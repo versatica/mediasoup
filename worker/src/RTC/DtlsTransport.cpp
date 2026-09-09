@@ -45,6 +45,8 @@ inline static int onSslCertificateVerify(int /*preverifyOk*/, X509_STORE_CTX* /*
 
 inline static void onSslInfo(const SSL* ssl, int where, int ret)
 {
+	MS_TRACE();
+
 	static_cast<RTC::DtlsTransport*>(SSL_get_ex_data(ssl, 0))->OnSslInfo(where, ret);
 }
 
@@ -66,6 +68,8 @@ inline static long onSslBioOut(
   int ret,
   size_t* /*processed*/)
 {
+	MS_TRACE();
+
 	const long resultOfcallback = (operationType == BIO_CB_RETURN) ? static_cast<long>(ret) : 1;
 
 	// This callback is called twice for write operations:
@@ -84,6 +88,8 @@ inline static long onSslBioOut(
 
 inline static unsigned int onSslDtlsTimer(SSL* /*ssl*/, unsigned int timerUs)
 {
+	MS_TRACE();
+
 	if (timerUs == 0u)
 	{
 		return 100000u;
@@ -112,11 +118,11 @@ namespace RTC
 	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32u };
 	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12u };
 	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength +
-		                                                 SrtpAesGcm256MasterSaltLength };
+	                                                   SrtpAesGcm256MasterSaltLength };
 	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16u };
 	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12u };
 	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength +
-		                                                 SrtpAesGcm128MasterSaltLength };
+	                                                   SrtpAesGcm128MasterSaltLength };
 
 	/* Class variables. */
 
@@ -131,7 +137,7 @@ namespace RTC
 		  { "sha-256", DtlsTransport::FingerprintAlgorithm::SHA256 },
 		  { "sha-384", DtlsTransport::FingerprintAlgorithm::SHA384 },
 		  { "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 }
-  };
+	};
 	const ankerl::unordered_dense::map<DtlsTransport::FingerprintAlgorithm, std::string>
 	  DtlsTransport::FingerprintAlgorithm2String = {
 		  { DtlsTransport::FingerprintAlgorithm::SHA1,   "sha-1"   },
@@ -139,7 +145,7 @@ namespace RTC
 		  { DtlsTransport::FingerprintAlgorithm::SHA256, "sha-256" },
 		  { DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
 		  { DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
-  };
+	};
 	const ankerl::unordered_dense::map<std::string, DtlsTransport::Role> DtlsTransport::String2Role = {
 		{ "auto",   DtlsTransport::Role::AUTO   },
 		{ "client", DtlsTransport::Role::CLIENT },
@@ -200,6 +206,8 @@ namespace RTC
 
 	DtlsTransport::Role DtlsTransport::RoleFromFbs(FBS::WebRtcTransport::DtlsRole role)
 	{
+		MS_TRACE();
+
 		switch (role)
 		{
 			case FBS::WebRtcTransport::DtlsRole::AUTO:
@@ -223,6 +231,8 @@ namespace RTC
 
 	FBS::WebRtcTransport::DtlsRole DtlsTransport::RoleToFbs(DtlsTransport::Role role)
 	{
+		MS_TRACE();
+
 		switch (role)
 		{
 			case DtlsTransport::Role::AUTO:
@@ -246,6 +256,8 @@ namespace RTC
 
 	FBS::WebRtcTransport::DtlsState DtlsTransport::StateToFbs(DtlsTransport::DtlsState state)
 	{
+		MS_TRACE();
+
 		switch (state)
 		{
 			case DtlsTransport::DtlsState::NEW:
@@ -280,6 +292,8 @@ namespace RTC
 	DtlsTransport::FingerprintAlgorithm DtlsTransport::AlgorithmFromFbs(
 	  FBS::WebRtcTransport::FingerprintAlgorithm algorithm)
 	{
+		MS_TRACE();
+
 		switch (algorithm)
 		{
 			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA1:
@@ -314,6 +328,8 @@ namespace RTC
 	FBS::WebRtcTransport::FingerprintAlgorithm DtlsTransport::AlgorithmToFbs(
 	  DtlsTransport::FingerprintAlgorithm algorithm)
 	{
+		MS_TRACE();
+
 		switch (algorithm)
 		{
 			case DtlsTransport::FingerprintAlgorithm::SHA1:
@@ -764,7 +780,7 @@ namespace RTC
 		DTLS_set_timer_cb(this->ssl, onSslDtlsTimer);
 
 		// Set the DTLS timer.
-		this->timer = this->shared->CreateTimer(this);
+		this->timer = this->shared->CreateTimer(this, "dtls-transport");
 
 		return;
 
@@ -962,7 +978,7 @@ namespace RTC
 		return true;
 	}
 
-	void DtlsTransport::ProcessDtlsData(const uint8_t* data, size_t len)
+	void DtlsTransport::ProcessDtlsData(const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1018,7 +1034,10 @@ namespace RTC
 
 			// Notify the listener.
 			this->listener->OnDtlsTransportApplicationDataReceived(
-			  this, static_cast<const uint8_t*>(DtlsTransport::sslReadBuffer), static_cast<size_t>(read));
+			  this,
+			  static_cast<const uint8_t*>(DtlsTransport::sslReadBuffer),
+			  static_cast<size_t>(read),
+			  receivedAtUs);
 		}
 	}
 
@@ -1254,14 +1273,14 @@ namespace RTC
 		  "invalid DTLS state");
 
 		uv_timeval_t dtlsTimeout{ 0, 0 };
-		uint64_t timeoutMs;
+		int64_t timeoutMs;
 
 		// DTLSv1_get_timeout queries the next DTLS handshake timeout. If there is
 		// a timeout in progress, it sets *out to the time remaining and returns
 		// one. Otherwise, it returns zero.
 		DTLSv1_get_timeout(this->ssl, static_cast<void*>(std::addressof(dtlsTimeout)));
 
-		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
+		timeoutMs = (dtlsTimeout.tv_sec * static_cast<int64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
 
 		if (timeoutMs == 0)
 		{
@@ -1273,7 +1292,7 @@ namespace RTC
 		}
 		else if (timeoutMs < 30000)
 		{
-			MS_DEBUG_DEV("DTLS timer set in %" PRIu64 "ms", timeoutMs);
+			MS_DEBUG_DEV("DTLS timer set in %" PRIi64 "ms", timeoutMs);
 
 			this->timer->Start(timeoutMs);
 
@@ -1283,7 +1302,7 @@ namespace RTC
 		// seconds.
 		else
 		{
-			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeoutMs);
+			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIi64 "ms), resetting DLTS", timeoutMs);
 
 			Reset();
 

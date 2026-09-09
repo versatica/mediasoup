@@ -1,6 +1,7 @@
 #define MS_CLASS "RTC::RtpHeaderExtensionUri"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "Logger.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -10,6 +11,8 @@ namespace RTC
 	RtpHeaderExtensionUri::Type RtpHeaderExtensionUri::TypeFromFbs(
 	  FBS::RtpParameters::RtpHeaderExtensionUri uri)
 	{
+		MS_TRACE();
+
 		switch (uri)
 		{
 			case FBS::RtpParameters::RtpHeaderExtensionUri::Mid:
@@ -79,6 +82,8 @@ namespace RTC
 	FBS::RtpParameters::RtpHeaderExtensionUri RtpHeaderExtensionUri::TypeToFbs(
 	  RtpHeaderExtensionUri::Type uri)
 	{
+		MS_TRACE();
+
 		switch (uri)
 		{
 			case RtpHeaderExtensionUri::Type::MID:

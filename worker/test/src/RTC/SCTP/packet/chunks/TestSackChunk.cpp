@@ -72,7 +72,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 		REQUIRE(
 		  chunk->GetValidatedGapAckBlocks() == std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
 		                                         { 1000, 2999 },
-    });
+		});
 
 		/* Serialize it. */
 

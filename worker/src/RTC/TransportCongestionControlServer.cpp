@@ -9,9 +9,9 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t TransportCcFeedbackSendInterval{ 100u }; // In ms.
-	static constexpr uint64_t LimitationRembInterval{ 1500u };         // In ms.
-	static constexpr uint64_t PacketArrivalTimestampWindow{ 500u };    // In ms.
+	static constexpr int64_t TransportCcFeedbackSendIntervalMs{ 100 };
+	static constexpr int64_t LimitationRembIntervalMs{ 1500 };
+	static constexpr int64_t PacketArrivalTimestampWindowUs{ 500 * 1000 };
 	static constexpr uint8_t UnlimitedRembNumPackets{ 4u };
 	static constexpr size_t PacketLossHistogramLength{ 24 };
 
@@ -34,7 +34,8 @@ namespace RTC
 				ResetTransportCcFeedback(0u);
 
 				// Create the feedback send periodic timer.
-				this->transportCcFeedbackSendPeriodicTimer = this->shared->CreateTimer(this);
+				this->transportCcFeedbackSendPeriodicTimer =
+				  this->shared->CreateTimer(this, "transport-congestion-control-server-feedback-send");
 
 				break;
 			}
@@ -69,7 +70,7 @@ namespace RTC
 			case RTC::BweType::TRANSPORT_CC:
 			{
 				this->transportCcFeedbackSendPeriodicTimer->Start(
-				  TransportCcFeedbackSendInterval, TransportCcFeedbackSendInterval);
+				  TransportCcFeedbackSendIntervalMs, TransportCcFeedbackSendIntervalMs);
 
 				break;
 			}
@@ -105,7 +106,7 @@ namespace RTC
 		return this->packetLoss;
 	}
 
-	void TransportCongestionControlServer::IncomingPacket(uint64_t nowMs, const RTC::RTP::Packet* packet)
+	void TransportCongestionControlServer::IncomingPacket(int64_t nowUs, const RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -121,7 +122,7 @@ namespace RTC
 				}
 
 				// Only insert the packet when receiving it for the first time.
-				if (!this->mapPacketArrivalTimes.try_emplace(wideSeqNumber, nowMs).second)
+				if (!this->mapPacketArrivalTimes.try_emplace(wideSeqNumber, nowUs).second)
 				{
 					break;
 				}
@@ -140,13 +141,13 @@ namespace RTC
 
 				this->transportWideSeqNumberReceived = true;
 
-				MayDropOldPacketArrivalTimes(wideSeqNumber, nowMs);
+				MayDropOldPacketArrivalTimes(wideSeqNumber, nowUs);
 
 				// Update the RTCP media SSRC of the ongoing Transport-CC Feedback packet.
 				this->transportCcFeedbackSenderSsrc = 0u;
 				this->transportCcFeedbackMediaSsrc  = packet->GetSsrc();
 
-				MaySendLimitationRembFeedback(nowMs);
+				MaySendLimitationRembFeedback(nowUs / 1000);
 
 				break;
 			}
@@ -160,12 +161,8 @@ namespace RTC
 					break;
 				}
 
-				// NOTE: nowMs is uint64_t but we need to "convert" it to int64_t before
-				// we give it to libwebrtc lib (althought this is implicit in the
-				// conversion so it would be converted within the method call).
-				auto nowMsInt64 = static_cast<int64_t>(nowMs);
-
-				this->rembServer->IncomingPacket(nowMsInt64, packet->GetPayloadLength(), *packet, absSendTime);
+				this->rembServer->IncomingPacket(
+				  nowUs / 1000, packet->GetPayloadLength(), *packet, absSendTime);
 
 				break;
 			}
@@ -191,7 +188,7 @@ namespace RTC
 		for (; it != this->mapPacketArrivalTimes.end(); ++it)
 		{
 			auto sequenceNumber = it->first;
-			auto timestamp      = it->second;
+			auto timestampUs    = it->second;
 
 			// If the base is not set in this packet let's set it.
 			// NOTE: This maybe needed many times during this loop since the current
@@ -200,11 +197,12 @@ namespace RTC
 			if (!this->transportCcFeedbackPacket->IsBaseSet())
 			{
 				// Set base sequence num and reference time.
-				this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackWideSeqNumStart, timestamp);
+				this->transportCcFeedbackPacket->SetBase(
+				  this->transportCcFeedbackWideSeqNumStart, timestampUs);
 			}
 
 			auto result = this->transportCcFeedbackPacket->AddPacket(
-			  sequenceNumber, timestamp, this->maxRtcpPacketLen);
+			  sequenceNumber, timestampUs, this->maxRtcpPacketLen);
 
 			switch (result)
 			{
@@ -273,7 +271,7 @@ namespace RTC
 		ResetTransportCcFeedback(this->transportCcFeedbackPacketCount);
 	}
 
-	void TransportCongestionControlServer::SetMaxIncomingBitrate(uint32_t bitrate)
+	void TransportCongestionControlServer::SetMaxIncomingBitrate(int64_t bitrate)
 	{
 		MS_TRACE();
 
@@ -281,12 +279,12 @@ namespace RTC
 
 		this->maxIncomingBitrate = bitrate;
 
-		if (previousMaxIncomingBitrate != 0u && this->maxIncomingBitrate == 0u)
+		if (previousMaxIncomingBitrate > 0 && this->maxIncomingBitrate == 0)
 		{
 			// This is to ensure that we send N REMB packets with bitrate 0 (unlimited).
 			this->unlimitedRembCounter = UnlimitedRembNumPackets;
 
-			auto nowMs = this->shared->GetTimeMs();
+			const int64_t nowMs = this->shared->GetTimeMs();
 
 			MaySendLimitationRembFeedback(nowMs);
 		}
@@ -315,9 +313,9 @@ namespace RTC
 		const size_t expectedPackets = this->transportCcFeedbackPacket->GetPacketStatusCount();
 		size_t lostPackets           = 0;
 
-		for (const auto& result : this->transportCcFeedbackPacket->GetPacketResults())
+		for (const auto& packetStatus : this->transportCcFeedbackPacket->GetPacketStatuses())
 		{
-			if (!result.received)
+			if (!packetStatus.received)
 			{
 				lostPackets += 1;
 			}
@@ -333,47 +331,47 @@ namespace RTC
 		return true;
 	}
 
-	void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs)
+	void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(uint16_t seqNum, int64_t nowUs)
 	{
 		MS_TRACE();
 
-		// Ignore nowMs value if it's smaller than PacketArrivalTimestampWindow in
+		// Ignore nowUs value if it's smaller than PacketArrivalTimestampWindowUs in
 		// order to avoid negative values (should never happen) and return early if
 		// the condition is met.
-		if (nowMs >= PacketArrivalTimestampWindow)
+		if (nowUs >= PacketArrivalTimestampWindowUs)
 		{
-			const uint64_t expiryTimestamp = nowMs - PacketArrivalTimestampWindow;
-			auto it                        = this->mapPacketArrivalTimes.begin();
+			const int64_t expiryTimestampUs = nowUs - PacketArrivalTimestampWindowUs;
+			auto it                         = this->mapPacketArrivalTimes.begin();
 
 			while (it != this->mapPacketArrivalTimes.end() &&
 			       it->first != this->transportCcFeedbackWideSeqNumStart &&
 			       RTC::SeqManager<uint16_t>::IsSeqLowerThan(it->first, seqNum) &&
-			       it->second <= expiryTimestamp)
+			       it->second <= expiryTimestampUs)
 			{
 				it = this->mapPacketArrivalTimes.erase(it);
 			}
 		}
 	}
 
-	void TransportCongestionControlServer::MaySendLimitationRembFeedback(uint64_t nowMs)
+	void TransportCongestionControlServer::MaySendLimitationRembFeedback(int64_t nowMs)
 	{
 		MS_TRACE();
 
 		// May fix unlimitedRembCounter.
-		if (this->unlimitedRembCounter > 0u && this->maxIncomingBitrate != 0u)
+		if (this->unlimitedRembCounter > 0 && this->maxIncomingBitrate > 0)
 		{
-			this->unlimitedRembCounter = 0u;
+			this->unlimitedRembCounter = 0;
 		}
 
 		// In case this is the first unlimited REMB packet, send it fast.
 		if (
-		  ((this->bweType != RTC::BweType::REMB && this->maxIncomingBitrate != 0u) ||
-		   this->unlimitedRembCounter > 0u) &&
-		  (nowMs - this->limitationRembSentAtMs > LimitationRembInterval ||
-		   this->unlimitedRembCounter == UnlimitedRembNumPackets))
+		  ((this->bweType != RTC::BweType::REMB && this->maxIncomingBitrate > 0) ||
+			 this->unlimitedRembCounter > 0) &&
+		  (nowMs - this->limitationRembSentAtMs > LimitationRembIntervalMs ||
+			 this->unlimitedRembCounter == UnlimitedRembNumPackets))
 		{
 			MS_DEBUG_DEV(
-			  "sending limitation RTCP REMB packet [bitrate:%" PRIu32 "]", this->maxIncomingBitrate);
+			  "sending limitation RTCP REMB packet [bitrate:%" PRIi64 "]", this->maxIncomingBitrate);
 
 			RTC::RTCP::FeedbackPsRembPacket packet(0u, 0u);
 
@@ -394,6 +392,8 @@ namespace RTC
 
 	void TransportCongestionControlServer::UpdatePacketLoss(double packetLoss)
 	{
+		MS_TRACE();
+
 		// Add the lost into the histogram.
 		if (this->packetLossHistory.size() == PacketLossHistogramLength)
 		{
@@ -433,12 +433,12 @@ namespace RTC
 	void TransportCongestionControlServer::OnRembServerAvailableBitrate(
 	  const webrtc::RemoteBitrateEstimator* /*rembServer*/,
 	  const std::vector<uint32_t>& ssrcs,
-	  uint32_t availableBitrate)
+	  int64_t availableBitrate)
 	{
 		MS_TRACE();
 
 		// Limit announced bitrate if requested via API.
-		if (this->maxIncomingBitrate != 0u)
+		if (this->maxIncomingBitrate > 0)
 		{
 			availableBitrate = std::min(availableBitrate, this->maxIncomingBitrate);
 		}
@@ -453,7 +453,7 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV(
-		  "sending RTCP REMB packet [bitrate:%" PRIu32 ", ssrcs:%s]",
+		  "sending RTCP REMB packet [bitrate:%" PRIi64 ", ssrcs:%s]",
 		  availableBitrate,
 		  ssrcsStream.str().c_str());
 #endif

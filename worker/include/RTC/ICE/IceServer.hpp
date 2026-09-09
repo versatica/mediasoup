@@ -121,7 +121,7 @@ namespace RTC
 			void SetSelectedTuple(RTC::TransportTuple* storedTuple);
 			bool IsConsentCheckSupported() const
 			{
-				return this->consentTimeoutMs != 0u;
+				return this->consentTimeoutMs != 0;
 			}
 			bool IsConsentCheckRunning() const
 			{
@@ -141,12 +141,12 @@ namespace RTC
 			SharedInterface* shared{ nullptr };
 			std::string usernameFragment;
 			std::string password;
-			uint16_t consentTimeoutMs{ 30000u };
+			int64_t consentTimeoutMs{ 30000 };
 			// Others.
 			std::string oldUsernameFragment;
 			std::string oldPassword;
 			IceState state{ IceState::NEW };
-			uint32_t remoteNomination{ 0u };
+			uint32_t remoteNomination{ 0 };
 			std::list<RTC::TransportTuple> tuples;
 			RTC::TransportTuple* selectedTuple{ nullptr };
 			TimerHandleInterface* consentCheckTimer{ nullptr };

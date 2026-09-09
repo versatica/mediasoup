@@ -240,8 +240,8 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		    getTsn(3),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		      { /*unordered*/ true,
-           /*streamId*/ 1,
-           /*mid*/ 0 }
+					 /*streamId*/ 1,
+					 /*mid*/ 0 }
     }) == 6);
 	}
 
@@ -278,8 +278,8 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		    getTsn(3),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		      { /*unordered*/ false,
-           /*streamId*/ 1,
-           /*mid*/ 0 }
+					 /*streamId*/ 1,
+					 /*mid*/ 0 }
     }) == 6);
 	}
 
@@ -333,8 +333,8 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		    getTsn(8),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		      { /*unordered*/ false,
-           /*streamId*/ 1,
-           /*mid*/ 2 }
+					 /*streamId*/ 1,
+					 /*mid*/ 2 }
     }) == 8);
 	}
 
@@ -389,8 +389,8 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		    getTsn(4),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		      { /*unordered*/ false,
-           /*streamId*/ 1,
-           /*mid*/ 0 }
+					 /*streamId*/ 1,
+					 /*mid*/ 0 }
     }) == 8);
 	}
 
@@ -406,8 +406,8 @@ SCENARIO("SCTP InterleavedReassemblyStreams", "[sctp][interleavedreassemblystrea
 		    getTsn(1),
 		    std::vector<RTC::SCTP::AnyForwardTsnChunk::SkippedStream>{
 		      { /*unordered*/ false,
-           /*streamId*/ 1,
-           /*mid*/ 0 }
+					 /*streamId*/ 1,
+					 /*mid*/ 0 }
     }) == 0);
 
 		// Receive mid=1 (next after the skipped mid=0): should be delivered immediately.

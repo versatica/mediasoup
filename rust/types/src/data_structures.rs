@@ -930,19 +930,19 @@ pub struct BweTraceInfo {
     /// Bandwidth estimation type.
     pub r#type: BweType,
     /// Desired bitrate
-    pub desired_bitrate: u32,
+    pub desired_bitrate: u64,
     /// Effective desired bitrate.
-    pub effective_desired_bitrate: u32,
+    pub effective_desired_bitrate: u64,
     /// Min bitrate.
-    pub min_bitrate: u32,
+    pub min_bitrate: u64,
     /// Max bitrate.
-    pub max_bitrate: u32,
+    pub max_bitrate: u64,
     /// Start bitrate.
-    pub start_bitrate: u32,
+    pub start_bitrate: u64,
     /// Max padding bitrate.
-    pub max_padding_bitrate: u32,
+    pub max_padding_bitrate: u64,
     /// Available bitrate.
-    pub available_bitrate: u32,
+    pub available_bitrate: u64,
 }
 
 /// RTCP Sender Report info in trace event.

@@ -43,7 +43,7 @@ namespace RTC
 		}
 		void TransportConnected();
 		void TransportDisconnected();
-		uint32_t GetAvailableBitrate() const
+		int64_t GetAvailableBitrate() const
 		{
 			switch (this->bweType)
 			{
@@ -51,19 +51,19 @@ namespace RTC
 					return this->rembServer->GetAvailableBitrate();
 
 				default:
-					return 0u;
+					return 0;
 			}
 		}
 		double GetPacketLoss() const;
-		void IncomingPacket(uint64_t nowMs, const RTC::RTP::Packet* packet);
-		void SetMaxIncomingBitrate(uint32_t bitrate);
+		void IncomingPacket(int64_t nowUs, const RTC::RTP::Packet* packet);
+		void SetMaxIncomingBitrate(int64_t bitrate);
 		void FillAndSendTransportCcFeedback();
 
 	private:
 		// Returns true if a feedback packet was sent.
 		bool SendTransportCcFeedback();
-		void MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs);
-		void MaySendLimitationRembFeedback(uint64_t nowMs);
+		void MayDropOldPacketArrivalTimes(uint16_t seqNum, int64_t nowUs);
+		void MaySendLimitationRembFeedback(int64_t nowMs);
 		void UpdatePacketLoss(double packetLoss);
 		void ResetTransportCcFeedback(uint8_t feedbackPacketCount);
 
@@ -72,7 +72,7 @@ namespace RTC
 		void OnRembServerAvailableBitrate(
 		  const webrtc::RemoteBitrateEstimator* remoteBitrateEstimator,
 		  const std::vector<uint32_t>& ssrcs,
-		  uint32_t availableBitrate) override;
+		  int64_t availableBitrate) override;
 
 		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
@@ -88,20 +88,20 @@ namespace RTC
 		webrtc::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		// Others.
 		RTC::BweType bweType;
-		size_t maxRtcpPacketLen{ 0u };
-		uint8_t transportCcFeedbackPacketCount{ 0u };
-		uint32_t transportCcFeedbackSenderSsrc{ 0u };
-		uint32_t transportCcFeedbackMediaSsrc{ 0u };
-		uint32_t maxIncomingBitrate{ 0u };
-		uint64_t limitationRembSentAtMs{ 0u };
-		uint8_t unlimitedRembCounter{ 0u };
+		size_t maxRtcpPacketLen{ 0 };
+		uint8_t transportCcFeedbackPacketCount{ 0 };
+		uint32_t transportCcFeedbackSenderSsrc{ 0 };
+		uint32_t transportCcFeedbackMediaSsrc{ 0 };
+		int64_t maxIncomingBitrate{ 0 };
+		int64_t limitationRembSentAtMs{ 0 };
+		uint8_t unlimitedRembCounter{ 0 };
 		std::deque<double> packetLossHistory;
 		double packetLoss{ 0 };
 		// Whether any packet with transport wide sequence number was received.
 		bool transportWideSeqNumberReceived{ false };
-		uint16_t transportCcFeedbackWideSeqNumStart{ 0u };
-		// Map of arrival timestamp (ms) indexed by wide seq number.
-		std::map<uint16_t, uint64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
+		uint16_t transportCcFeedbackWideSeqNumStart{ 0 };
+		// Map of arrival timestamp (us) indexed by wide seq number.
+		std::map<uint16_t, int64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
 	};
 } // namespace RTC
 

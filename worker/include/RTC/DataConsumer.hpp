@@ -93,10 +93,23 @@ namespace RTC
 		void SctpBufferedAmountLow(uint32_t bufferedAmount) const;
 		void SctpSendBufferFull() const;
 		void DataProducerClosed();
+		/**
+		 * Verifies if given subchannels would allow a message to be delivered to
+		 * the DataConsumer endpoint or not.
+		 *
+		 * @remarks
+		 * - This method must be called before invoking `SendMessage()` if subchannels
+		 *   are given to `SendMessage()`.
+		 */
+		bool VerifySubchannels(
+		  const std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel,
+		  std::optional<uint16_t> ignoredSubchannel) const;
 		bool SendMessage(
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel,
+		  std::optional<uint16_t> ignoredSubchannel,
 		  const onQueuedCallback* cb = nullptr);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -112,7 +125,7 @@ namespace RTC
 		// Passed by argument.
 		SharedInterface* shared{ nullptr };
 		RTC::DataConsumer::Listener* listener{ nullptr };
-		size_t maxMessageSize{ 0u };
+		size_t maxMessageSize{ 0 };
 		bool pipe{ false };
 		// Others.
 		Type type;
@@ -124,8 +137,8 @@ namespace RTC
 		bool paused{ false };
 		bool dataProducerPaused{ false };
 		bool dataProducerClosed{ false };
-		size_t messagesSent{ 0u };
-		size_t bytesSent{ 0u };
+		size_t messagesSent{ 0 };
+		size_t bytesSent{ 0 };
 	};
 } // namespace RTC
 

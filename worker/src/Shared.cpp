@@ -19,11 +19,11 @@ Shared::~Shared()
 	MS_TRACE();
 }
 
-TimerHandleInterface* Shared::CreateTimer(TimerHandleInterface::Listener* listener)
+TimerHandleInterface* Shared::CreateTimer(TimerHandleInterface::Listener* listener, std::string label)
 {
 	MS_TRACE();
 
-	return new TimerHandle(listener);
+	return new TimerHandle(listener, std::move(label));
 }
 
 BackoffTimerHandleInterface* Shared::CreateBackoffTimer(

@@ -26,34 +26,24 @@ public:
 		return this->channelNotifier.get();
 	}
 
-	TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener) override;
+	TimerHandleInterface* CreateTimer(TimerHandleInterface::Listener* listener, std::string label) override;
 
 	BackoffTimerHandleInterface* CreateBackoffTimer(
 	  const BackoffTimerHandleInterface::BackoffTimerHandleOptions& options) override;
 
-	uint64_t GetTimeMs() override
+	int64_t GetTimeMs() override
 	{
 		return DepLibUV::GetTimeMs();
 	}
 
-	uint64_t GetTimeUs() override
+	int64_t GetTimeUs() override
 	{
 		return DepLibUV::GetTimeUs();
 	}
 
-	uint64_t GetTimeNs() override
+	int64_t GetNtpOffsetUs() override
 	{
-		return DepLibUV::GetTimeNs();
-	}
-
-	int64_t GetTimeMsInt64() override
-	{
-		return DepLibUV::GetTimeMsInt64();
-	}
-
-	int64_t GetTimeUsInt64() override
-	{
-		return DepLibUV::GetTimeUsInt64();
+		return DepLibUV::GetNtpOffsetUs();
 	}
 
 private:

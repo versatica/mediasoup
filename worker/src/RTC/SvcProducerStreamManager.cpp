@@ -8,8 +8,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u };
-	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };
+	static constexpr int64_t BweDowngradeConservativeMs{ 10000 };
+	static constexpr int64_t BweDowngradeMinActiveMs{ 8000 };
 
 	/* Instance methods. */
 
@@ -122,23 +122,23 @@ namespace RTC
 		// Do nothing.
 	}
 
-	uint32_t SvcProducerStreamManager::IncreaseLayer(
-	  uint32_t bitrate, bool considerLoss, float lossPercentage, uint64_t nowMs)
+	int64_t SvcProducerStreamManager::IncreaseLayer(
+	  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
 	{
 		MS_TRACE();
 
-		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0u)
+		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0)
 		{
-			return 0u;
+			return 0;
 		}
 
 		// If already in the preferred layers, do nothing.
 		if (this->provisionalTargetLayers == this->preferredLayers)
 		{
-			return 0u;
+			return 0;
 		}
 
-		uint32_t virtualBitrate;
+		int64_t virtualBitrate;
 
 		if (considerLoss)
 		{
@@ -162,7 +162,7 @@ namespace RTC
 			virtualBitrate = bitrate;
 		}
 
-		uint32_t requiredBitrate{ 0u };
+		int64_t requiredBitrate{ 0 };
 		int16_t spatialLayer{ 0 };
 		int16_t temporalLayer{ 0 };
 
@@ -190,9 +190,14 @@ namespace RTC
 
 			temporalLayer = 0;
 
+			// Don't consider temporal layers above the preferred one, nor above the
+			// ones this stream has.
+			const auto maxTemporalLayer = std::min(
+			  static_cast<int16_t>(this->producerRtpStream->GetTemporalLayers() - 1),
+			  this->preferredLayers.temporal);
+
 			// Check bitrate of every temporal layer.
-			for (; std::cmp_less(temporalLayer, this->producerRtpStream->GetTemporalLayers());
-			     ++temporalLayer)
+			for (; temporalLayer <= maxTemporalLayer; ++temporalLayer)
 			{
 				// Ignore temporal layers lower than the one we already have (taking
 				// into account the spatial layer too).
@@ -210,7 +215,7 @@ namespace RTC
 				// layer if the new layer is the temporal layer 0 of a higher spatial
 				// layer.
 				if (
-				  this->encodingContext->IsKSvc() && requiredBitrate && temporalLayer == 0 &&
+				  this->encodingContext->IsKSvc() && requiredBitrate > 0 && temporalLayer == 0 &&
 				  this->provisionalTargetLayers.spatial > -1 &&
 				  spatialLayer > this->provisionalTargetLayers.spatial)
 				{
@@ -223,13 +228,13 @@ namespace RTC
 					}
 					else
 					{
-						requiredBitrate = 1u; // Don't set 0 since it would be ignored.
+						requiredBitrate = 1; // Don't set 0 since it would be ignored.
 					}
 				}
 
 				MS_DEBUG_DEV(
-				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
-				  ", required bitrate:%" PRIu32 "]",
+				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIi64
+				  ", required bitrate:%" PRIi64 "]",
 				  spatialLayer,
 				  temporalLayer,
 				  virtualBitrate,
@@ -237,7 +242,7 @@ namespace RTC
 
 				// If active layer, end iterations here. Otherwise move to next spatial
 				// layer.
-				if (requiredBitrate)
+				if (requiredBitrate > 0)
 				{
 					goto done;
 				}
@@ -247,8 +252,9 @@ namespace RTC
 				}
 			}
 
-			// If this is the preferred or higher spatial layer, take it and exit.
-			if (spatialLayer >= this->preferredLayers.spatial)
+			// If this is the preferred or higher spatial layer, take it and exit,
+			// unless we have not found any usable spatial layer yet.
+			if (spatialLayer >= this->preferredLayers.spatial && this->provisionalTargetLayers.spatial != -1)
 			{
 				break;
 			}
@@ -257,15 +263,15 @@ namespace RTC
 	done:
 
 		// No higher active layers found.
-		if (!requiredBitrate)
+		if (requiredBitrate <= 0)
 		{
-			return 0u;
+			return 0;
 		}
 
 		// No luck.
 		if (requiredBitrate > virtualBitrate)
 		{
-			return 0u;
+			return 0;
 		}
 
 		// Set provisional layers.
@@ -273,8 +279,8 @@ namespace RTC
 		this->provisionalTargetLayers.temporal = temporalLayer;
 
 		MS_DEBUG_DEV(
-		  "upgrading to layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
-		  ", required bitrate:%" PRIu32 "]",
+		  "upgrading to layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIi64
+		  ", required bitrate:%" PRIi64 "]",
 		  this->provisionalTargetLayers.spatial,
 		  this->provisionalTargetLayers.temporal,
 		  virtualBitrate,
@@ -294,7 +300,7 @@ namespace RTC
 		}
 	}
 
-	void SvcProducerStreamManager::ApplyLayers(uint64_t rtpStreamActiveMs)
+	void SvcProducerStreamManager::ApplyLayers(int64_t rtpStreamActiveMs)
 	{
 		MS_TRACE();
 
@@ -326,16 +332,16 @@ namespace RTC
 		}
 	}
 
-	uint32_t SvcProducerStreamManager::GetDesiredBitrate(uint64_t nowMs) const
+	int64_t SvcProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 
-		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0u)
+		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0)
 		{
-			return 0u;
+			return 0;
 		}
 
-		uint32_t desiredBitrate{ 0u };
+		int64_t desiredBitrate{ 0 };
 
 		// When using K-SVC each spatial layer is independent of the others.
 		if (this->encodingContext->IsKSvc())
@@ -558,7 +564,7 @@ namespace RTC
 		// Start with no layers.
 		newTargetLayers.Reset();
 
-		auto nowMs = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)
@@ -589,6 +595,13 @@ namespace RTC
 				continue;
 			}
 
+			// Don't go above the preferred spatial layer if we already found a usable
+			// lower one.
+			if (spatialLayer > this->preferredLayers.spatial && newTargetLayers.spatial != -1)
+			{
+				break;
+			}
+
 			newTargetLayers.spatial = spatialLayer;
 
 			// If this is the preferred or higher spatial layer and has bitrate,
@@ -601,19 +614,11 @@ namespace RTC
 
 		if (newTargetLayers.spatial != -1)
 		{
-			if (newTargetLayers.spatial == this->preferredLayers.spatial)
-			{
-				newTargetLayers.temporal = this->preferredLayers.temporal;
-			}
-			else if (newTargetLayers.spatial < this->preferredLayers.spatial)
-			{
-				newTargetLayers.temporal =
-				  static_cast<int16_t>(this->encodingContext->GetTemporalLayers() - 1);
-			}
-			else
-			{
-				newTargetLayers.temporal = 0;
-			}
+			// Don't consider temporal layers above the preferred one, nor above the
+			// ones this stream has.
+			newTargetLayers.temporal = std::min(
+			  this->preferredLayers.temporal,
+			  static_cast<int16_t>(this->encodingContext->GetTemporalLayers() - 1));
 		}
 
 	done:

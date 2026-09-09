@@ -175,8 +175,11 @@ namespace RTC
 
 			/**
 			 * Receives SCTP data (hopefully an SCTP packet) from the remote peer.
+			 *
+			 * @param receivedAtUs - Time at which the data arrived from the network,
+			 *   taken as close to the socket read as possible.
 			 */
-			virtual void ReceiveSctpData(const uint8_t* data, size_t len) = 0;
+			virtual void ReceiveSctpData(const uint8_t* data, size_t len, int64_t receivedAtUs) = 0;
 
 			/**
 			 * Get negotiated max outbound streams. Returns 0 if the association is

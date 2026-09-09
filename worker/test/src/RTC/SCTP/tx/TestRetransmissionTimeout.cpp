@@ -5,20 +5,22 @@
 
 SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 {
-	constexpr uint64_t MaxRttMs{ 8000 };
-	constexpr uint64_t InitialRtoMs{ 200 };
-	constexpr uint64_t MaxRtoMs{ 800 };
-	constexpr uint64_t MinRtoMs{ 120 };
-	constexpr uint64_t MinRttVarianceMs{ 220 };
+	// NOTE: The options are in milliseconds, while the class works in
+	// microseconds, so the expectations below are in microseconds.
+	constexpr int64_t MaxRttMs{ 8000 };
+	constexpr int64_t InitialRtoMs{ 200 };
+	constexpr int64_t MaxRtoMs{ 800 };
+	constexpr int64_t MinRtoMs{ 120 };
+	constexpr int64_t MinRttVarianceMs{ 220 };
 
 	// NOTE: No need to pass const integers to the lambda.
 	auto makeSctpOptions = []()
 	{
 		RTC::SCTP::SctpOptions sctpOptions{ .maxRttMs         = MaxRttMs,
-			                                  .initialRtoMs     = InitialRtoMs,
-			                                  .minRtoMs         = MinRtoMs,
-			                                  .maxRtoMs         = MaxRtoMs,
-			                                  .minRttVarianceMs = MinRttVarianceMs };
+		                                    .initialRtoMs     = InitialRtoMs,
+		                                    .minRtoMs         = MinRtoMs,
+		                                    .maxRtoMs         = MaxRtoMs,
+		                                    .minRttVarianceMs = MinRttVarianceMs };
 
 		return sctpOptions;
 	};
@@ -27,24 +29,51 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	{
 		const RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		REQUIRE(rto.GetRtoMs() == InitialRtoMs);
+		REQUIRE(rto.GetRtoUs() == InitialRtoMs * 1000);
 	}
 
 	SECTION("too large values don't affect RTO")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRttMs(MaxRttMs + 100);
+		rto.ObserveRttUs((MaxRttMs + 100) * 1000);
 
-		REQUIRE(rto.GetRtoMs() == InitialRtoMs);
+		REQUIRE(rto.GetRtoUs() == InitialRtoMs * 1000);
 
-		rto.ObserveRttMs(124);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 372);
+		REQUIRE(rto.GetRtoUs() == 372000);
 
-		rto.ObserveRttMs(MaxRttMs + 100);
+		rto.ObserveRttUs((MaxRttMs + 100) * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 372);
+		REQUIRE(rto.GetRtoUs() == 372000);
+	}
+
+	SECTION("sub-millisecond RTT is observed")
+	{
+		// A RTT below a millisecond is a normal measurement over a LAN or over
+		// loopback, and it must take part in the RTO computation.
+		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
+
+		rto.ObserveRttUs(500);
+
+		// First measurement, so srtt is the RTT itself and the RTT variance is half
+		// of it, which the minimum RTT variance floor then dominates.
+		REQUIRE(rto.GetRtoUs() == MinRtoMs * 1000);
+		REQUIRE(rto.GetSrttUs() == 500);
+	}
+
+	SECTION("zero and negative values don't affect RTO")
+	{
+		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
+
+		rto.ObserveRttUs(0);
+
+		REQUIRE(rto.GetRtoUs() == InitialRtoMs * 1000);
+
+		rto.ObserveRttUs(-1);
+
+		REQUIRE(rto.GetRtoUs() == InitialRtoMs * 1000);
 	}
 
 	SECTION("will never go below minimum RTO")
@@ -53,10 +82,10 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRttMs(1);
+			rto.ObserveRttUs(1 * 1000);
 		}
 
-		REQUIRE(rto.GetRtoMs() <= MinRtoMs);
+		REQUIRE(rto.GetRtoUs() <= MinRtoMs * 1000);
 	}
 
 	SECTION("will never go above maximum RTO")
@@ -65,117 +94,111 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRttMs(MaxRttMs - 1);
+			rto.ObserveRttUs((MaxRttMs - 1) * 1000);
 			// Adding jitter, which would make it RTO be well above RTT.
-			rto.ObserveRttMs(MaxRttMs - 100);
+			rto.ObserveRttUs((MaxRttMs - 100) * 1000);
 		}
 
-		REQUIRE(rto.GetRtoMs() >= MaxRtoMs);
+		REQUIRE(rto.GetRtoUs() >= MaxRtoMs * 1000);
 	}
 
 	SECTION("calculates RTO for stable RTT")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRttMs(124);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 372);
+		REQUIRE(rto.GetRtoUs() == 372000);
 
-		rto.ObserveRttMs(128);
+		rto.ObserveRttUs(128 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 315);
+		REQUIRE(rto.GetRtoUs() == 314500);
 
-		rto.ObserveRttMs(123);
+		rto.ObserveRttUs(123 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 268);
+		REQUIRE(rto.GetRtoUs() == 268313);
 
-		rto.ObserveRttMs(125);
+		rto.ObserveRttUs(125 * 1000);
 
-		// NOTE: This should be 234 (as per same test in libwebrtc) but we are not
-		// that precise.
-		// REQUIRE(rto.GetRtoMs() == 234);
-		REQUIRE(rto.GetRtoMs() == 233);
+		REQUIRE(rto.GetRtoUs() == 234398);
 
-		rto.ObserveRttMs(127);
+		rto.ObserveRttUs(127 * 1000);
 
-		// NOTE: This should be 235 (as per same test in libwebrtc) but we are not
-		// that precise.
-		// REQUIRE(rto.GetRtoMs() == 235);
-		REQUIRE(rto.GetRtoMs() == 233);
+		REQUIRE(rto.GetRtoUs() == 234724);
 	}
 
 	SECTION("calculates RTO for unstable RTT")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRttMs(124);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 372);
+		REQUIRE(rto.GetRtoUs() == 372000);
 
-		rto.ObserveRttMs(402);
+		rto.ObserveRttUs(402 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 623);
+		REQUIRE(rto.GetRtoUs() == 622750);
 
-		rto.ObserveRttMs(728);
+		rto.ObserveRttUs(728 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 800);
+		REQUIRE(rto.GetRtoUs() == 800000);
 
-		rto.ObserveRttMs(89);
+		rto.ObserveRttUs(89 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 800);
+		REQUIRE(rto.GetRtoUs() == 800000);
 
-		rto.ObserveRttMs(126);
+		rto.ObserveRttUs(126 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 800);
+		REQUIRE(rto.GetRtoUs() == 800000);
 	}
 
 	SECTION("will stabilize RTO after a while")
 	{
 		RTC::SCTP::RetransmissionTimeout rto(makeSctpOptions());
 
-		rto.ObserveRttMs(124);
-		rto.ObserveRttMs(402);
-		rto.ObserveRttMs(728);
-		rto.ObserveRttMs(89);
-		rto.ObserveRttMs(126);
+		rto.ObserveRttUs(124 * 1000);
+		rto.ObserveRttUs(402 * 1000);
+		rto.ObserveRttUs(728 * 1000);
+		rto.ObserveRttUs(89 * 1000);
+		rto.ObserveRttUs(126 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 800);
+		REQUIRE(rto.GetRtoUs() == 800000);
 
-		rto.ObserveRttMs(124);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 800);
+		REQUIRE(rto.GetRtoUs() == 800000);
 
-		rto.ObserveRttMs(122);
+		rto.ObserveRttUs(122 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 709);
+		REQUIRE(rto.GetRtoUs() == 709247);
 
-		rto.ObserveRttMs(123);
+		rto.ObserveRttUs(123 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 630);
+		REQUIRE(rto.GetRtoUs() == 630287);
 
-		rto.ObserveRttMs(124);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 562);
+		REQUIRE(rto.GetRtoUs() == 561742);
 
-		rto.ObserveRttMs(122);
+		rto.ObserveRttUs(122 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 505);
+		REQUIRE(rto.GetRtoUs() == 504830);
 
-		rto.ObserveRttMs(124);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 454);
+		REQUIRE(rto.GetRtoUs() == 453768);
 
-		rto.ObserveRttMs(124);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 410);
+		REQUIRE(rto.GetRtoUs() == 409954);
 
-		rto.ObserveRttMs(124);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 372);
+		REQUIRE(rto.GetRtoUs() == 372264);
 
-		rto.ObserveRttMs(124);
+		rto.ObserveRttUs(124 * 1000);
 
-		REQUIRE(rto.GetRtoMs() == 340);
+		REQUIRE(rto.GetRtoUs() == 339772);
 	}
 
 	SECTION("will always stay above RTT")
@@ -190,13 +213,10 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRttMs(124);
+			rto.ObserveRttUs(124 * 1000);
 		}
 
-		// NOTE: This should be 234 (as per same test in libwebrtc) but we are not
-		// that precise.
-		// REQUIRE(rto.GetRtoMs() == 234);
-		REQUIRE(rto.GetRtoMs() == 232);
+		REQUIRE(rto.GetRtoUs() == 234000);
 	}
 
 	SECTION("can specify smaller minimum RTT variance")
@@ -209,10 +229,10 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRttMs(124);
+			rto.ObserveRttUs(124 * 1000);
 		}
 
-		REQUIRE(rto.GetRtoMs() == 184);
+		REQUIRE(rto.GetRtoUs() == 184000);
 	}
 
 	SECTION("can specify larger minimum RTT variance")
@@ -225,9 +245,9 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 
 		for (int i{ 0 }; i < 1000; ++i)
 		{
-			rto.ObserveRttMs(124);
+			rto.ObserveRttUs(124 * 1000);
 		}
 
-		REQUIRE(rto.GetRtoMs() == 284);
+		REQUIRE(rto.GetRtoUs() == 284000);
 	}
 }

@@ -308,6 +308,8 @@ namespace RTC
 
 	void RtpParameters::ValidateEncodings()
 	{
+		MS_TRACE();
+
 		uint8_t firstMediaPayloadType{ 0 };
 
 		{

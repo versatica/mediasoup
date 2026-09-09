@@ -18,14 +18,14 @@ namespace RTC
 		{
 			return this->value;
 		}
-		void Update(uint32_t value, uint64_t nowMs);
-		void ForceUpdate(uint32_t value, uint64_t nowMs);
+		void Update(uint32_t value, int64_t nowMs);
+		void ForceUpdate(uint32_t value, int64_t nowMs);
 
 	private:
 		float decreaseFactor{ DecreaseFactor };
-		uint32_t value{ 0u };
-		uint32_t highestValue{ 0u };
-		uint64_t highestValueUpdatedAtMs{ 0u };
+		uint32_t value{ 0 };
+		uint32_t highestValue{ 0 };
+		int64_t highestValueUpdatedAtMs{ 0 };
 	};
 } // namespace RTC
 

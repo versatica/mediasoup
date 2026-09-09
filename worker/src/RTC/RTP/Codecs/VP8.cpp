@@ -264,6 +264,8 @@ namespace RTC
 			void VP8::PayloadDescriptor::Encoder::Encode(
 			  uint8_t* data, const PayloadDescriptor* payloadDescriptor) const
 			{
+				MS_TRACE();
+
 				payloadDescriptor->Encode(
 				  data, this->encodingData.pictureId, this->encodingData.tl0PictureIndex);
 			}
@@ -314,7 +316,7 @@ namespace RTC
 					if (
 					  this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer() ||
 					  (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer() &&
-					   !this->payloadDescriptor->y))
+						 !this->payloadDescriptor->y))
 					{
 						context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
 

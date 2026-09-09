@@ -34,7 +34,7 @@ namespace RTC
 		/* Instance methods. */
 
 		RetransmissionBuffer::RetransmissionBuffer(
-		  uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate)
+		  uint16_t maxItems, int64_t maxRetransmissionDelayMs, uint32_t clockRate)
 		  : maxItems(maxItems), maxRetransmissionDelayMs(maxRetransmissionDelayMs), clockRate(clockRate)
 		{
 			MS_TRACE();
@@ -589,11 +589,11 @@ namespace RTC
 			// would affect all copies of this SharedRtpPacket by removing their stored
 			// packet. We have to replace it entirely.
 			this->sharedPacket   = RTP::SharedPacket();
-			this->ssrc           = 0u;
-			this->sequenceNumber = 0u;
-			this->timestamp      = 0u;
-			this->resentAtMs     = 0u;
-			this->sentTimes      = 0u;
+			this->ssrc           = 0;
+			this->sequenceNumber = 0;
+			this->timestamp      = 0;
+			this->resentAtMs     = 0;
+			this->sentTimes      = 0;
 		}
 	} // namespace RTP
 } // namespace RTC

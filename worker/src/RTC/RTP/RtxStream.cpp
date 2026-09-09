@@ -57,7 +57,6 @@ namespace RTC
 				this->started     = true;
 				this->maxSeq      = seq - 1;
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = this->shared->GetTimeMs();
 			}
 
 			// If not a valid packet ignore it.
@@ -76,7 +75,6 @@ namespace RTC
 			if (Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 			{
 				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = this->shared->GetTimeMs();
 			}
 
 			// Increase packet count.
@@ -138,17 +136,18 @@ namespace RTC
 			// NOTE: Do not calculate any jitter.
 			report->SetJitter(0);
 
-			if (this->lastSrReceived != 0)
+			if (this->lastSenderReportTiming.has_value())
 			{
-				// Get delay in milliseconds.
-				const uint32_t delayMs = this->shared->GetTimeMs() - this->lastSrReceived;
+				const auto& senderReportTiming = this->lastSenderReportTiming.value();
+				// Get delay in microseconds.
+				const int64_t delayUs = this->shared->GetTimeUs() - senderReportTiming.receivedAtUs;
 				// Express delay in units of 1/65536 seconds.
-				uint32_t dlsr = (delayMs / 1000) << 16;
+				auto dlsr = static_cast<uint32_t>((delayUs / 1000000) << 16);
 
-				dlsr |= uint32_t{ (delayMs % 1000) * 65536 / 1000 };
+				dlsr |= static_cast<uint32_t>(((delayUs % 1000000) * 65536) / 1000000);
 
 				report->SetDelaySinceLastSenderReport(dlsr);
-				report->SetLastSenderReport(this->lastSrTimestamp);
+				report->SetLastSenderReport(senderReportTiming.compactNtp);
 			}
 			else
 			{
@@ -159,13 +158,18 @@ namespace RTC
 			return report;
 		}
 
-		void RtxStream::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
+		void RtxStream::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
-			this->lastSrReceived  = this->shared->GetTimeMs();
-			this->lastSrTimestamp = report->GetNtpSec() << 16;
-			this->lastSrTimestamp += report->GetNtpFrac() >> 16;
+			uint32_t compactNtp = report->GetNtpSec() << 16;
+
+			compactNtp += report->GetNtpFrac() >> 16;
+
+			this->lastSenderReportTiming = SenderReportTiming{
+				.compactNtp   = compactNtp,
+				.receivedAtUs = receivedAtUs,
+			};
 		}
 
 		bool RtxStream::UpdateSeq(const RTP::Packet* packet)
@@ -209,7 +213,6 @@ namespace RTC
 					InitSeq(seq);
 
 					this->maxPacketTs = packet->GetTimestamp();
-					this->maxPacketMs = this->shared->GetTimeMs();
 				}
 				else
 				{

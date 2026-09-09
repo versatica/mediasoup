@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
+#include <limits>
 
 namespace mocks
 {
@@ -15,48 +16,49 @@ namespace mocks
 		friend class mocks::MockShared;
 
 	private:
-		explicit MockTimerHandle() = default;
+		explicit MockTimerHandle(
+		  TimerHandleInterface::Listener* listener,
+		  std::string label,
+		  std::function<int64_t()> getTimeMs,
+		  std::function<void()> onDelete);
 
 	public:
 		MockTimerHandle& operator=(const MockTimerHandle&) = delete;
 
 		MockTimerHandle(const MockTimerHandle&) = delete;
 
-		~MockTimerHandle() override = default;
+		~MockTimerHandle() override
+		{
+			this->onDelete();
+		}
 
 	public:
-		void Start(uint64_t timeout, uint64_t repeat = 0) override
-		{
-			this->running = true;
-			this->timeout = timeout;
-			this->repeat  = repeat;
-		}
+		void Dump(int indentation = 0) const;
+
+		void Start(int64_t timeoutMs, int64_t repeatMs = 0) override;
 
 		void Stop() override
 		{
-			this->running = false;
+			this->running     = false;
+			this->expiresAtMs = std::numeric_limits<int64_t>::max();
 		}
 
 		void Restart() override
 		{
-			this->running = true;
+			this->running     = true;
+			this->expiresAtMs = this->getTimeMs() + this->timeoutMs;
 		}
 
-		void Restart(uint64_t timeout, uint64_t repeat = 0) override
+		void Restart(int64_t timeoutMs, int64_t repeatMs = 0) override;
+
+		int64_t GetTimeoutMs() const override
 		{
-			this->running = true;
-			this->timeout = timeout;
-			this->repeat  = repeat;
+			return this->timeoutMs;
 		}
 
-		uint64_t GetTimeout() const override
+		int64_t GetRepeatMs() const override
 		{
-			return this->timeout;
-		}
-
-		uint64_t GetRepeat() const override
-		{
-			return this->repeat;
+			return this->repeatMs;
 		}
 
 		bool IsActive() const override
@@ -64,10 +66,46 @@ namespace mocks
 			return this->running;
 		}
 
+		const std::string GetLabel() const override
+		{
+			return this->label;
+		}
+
+		// Methods for testing.
+	public:
+		int64_t GetExpiresAtMs() const
+		{
+			return this->expiresAtMs;
+		}
+
+		bool EvaluateHasExpired()
+		{
+			if (this->getTimeMs() >= this->expiresAtMs)
+			{
+				TriggerExpire();
+
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 	private:
+		void TriggerExpire();
+
+	private:
+		// Passed by argument.
+		TimerHandleInterface::Listener* listener{ nullptr };
+		const std::string label;
+		std::function<int64_t()> getTimeMs;
+		const std::function<void()> onDelete;
+		// Others.
 		bool running{ false };
-		uint64_t timeout{ 0u };
-		uint64_t repeat{ 0u };
+		int64_t timeoutMs{ 0 };
+		int64_t repeatMs{ 0 };
+		int64_t expiresAtMs{ std::numeric_limits<int64_t>::max() };
 	};
 } // namespace mocks
 

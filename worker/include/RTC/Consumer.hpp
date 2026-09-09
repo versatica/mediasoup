@@ -18,7 +18,6 @@
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SeqManager.hpp"
-#include "Shared.hpp"
 #include "SharedInterface.hpp"
 #include <ankerl/unordered_dense.h>
 #include <bitset>
@@ -141,18 +140,22 @@ namespace RTC
 			this->producerStreamManager->SetExternallyManagedBitrate();
 		}
 		uint8_t GetBitratePriority() const;
-		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss);
+		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss);
 		void ApplyLayers();
-		uint32_t GetDesiredBitrate() const;
+		int64_t GetDesiredBitrate() const;
 		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
-		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
-		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost);
+		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
+		/**
+		 * Worst remote fraction lost among the RTP streams of this Consumer.
+		 */
+		uint8_t GetWorstRemoteFractionLost(uint32_t mappedSsrc) const;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc);
-		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
-		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report);
-		uint32_t GetTransmissionRate(uint64_t nowMs);
-		float GetRtt() const;
+		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
+		void ReceiveRtcpXrReceiverReferenceTime(
+		  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
+		int64_t GetTransmissionRate(int64_t nowMs);
+		float GetRttMs() const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
@@ -212,11 +215,11 @@ namespace RTC
 		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
-		std::bitset<128u> supportedCodecPayloadTypes;
-		uint64_t lastRtcpSentTime{ 0u };
-		uint16_t maxRtcpInterval{ 0u };
+		std::bitset<128> supportedCodecPayloadTypes;
+		int64_t lastRtcpSentAtUs{ 0 };
+		int64_t maxRtcpIntervalMs{ 0 };
 		bool externallyManagedBitrate{ false };
-		uint8_t priority{ 1u };
+		uint8_t priority{ 1 };
 		struct TraceEventTypes traceEventTypes;
 
 	private:

@@ -12,12 +12,13 @@ namespace RTC
 	bool SubchannelsCodec::EncodeSubchannels(
 	  RTC::SCTP::Message& message,
 	  const std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel)
+	  std::optional<uint16_t> requiredSubchannel,
+	  std::optional<uint16_t> ignoredSubchannel)
 	{
 		MS_TRACE();
 
 		// Nothing to encode.
-		if (subchannels.empty() && !requiredSubchannel.has_value())
+		if (subchannels.empty() && !requiredSubchannel.has_value() && !ignoredSubchannel.has_value())
 		{
 			return false;
 		}
@@ -31,12 +32,18 @@ namespace RTC
 
 		const auto subchannelsCount       = static_cast<uint16_t>(subchannels.size());
 		const bool requiredSubchannelFlag = requiredSubchannel.has_value();
+		const bool ignoredSubchannelFlag  = ignoredSubchannel.has_value();
 
 		// Length of the header to prepend.
 		size_t headerLen =
 		  8 /* Magic Token */ + 2 /* subchannelsCount */ + (static_cast<size_t>(subchannelsCount) * 2);
 
 		if (requiredSubchannelFlag)
+		{
+			headerLen += 2;
+		}
+
+		if (ignoredSubchannelFlag)
 		{
 			headerLen += 2;
 		}
@@ -52,6 +59,11 @@ namespace RTC
 		if (requiredSubchannelFlag)
 		{
 			magicToken |= SubchannelsCodec::RequiredSubchannelFlagMask;
+		}
+
+		if (ignoredSubchannelFlag)
+		{
+			magicToken |= SubchannelsCodec::IgnoredSubchannelFlagMask;
 		}
 
 		size_t offset = 0;
@@ -74,6 +86,12 @@ namespace RTC
 			offset += 2;
 		}
 
+		if (ignoredSubchannelFlag)
+		{
+			Utils::Byte::Set2Bytes(newPayload.data(), offset, ignoredSubchannel.value());
+			offset += 2;
+		}
+
 		// Append the original payload right after the encoded header.
 		std::ranges::copy(payload, newPayload.begin() + offset);
 
@@ -85,7 +103,8 @@ namespace RTC
 	bool SubchannelsCodec::DecodeSubchannels(
 	  RTC::SCTP::Message& message,
 	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t>& requiredSubchannel)
+	  std::optional<uint16_t>& requiredSubchannel,
+	  std::optional<uint16_t>& ignoredSubchannel)
 	{
 		MS_TRACE();
 
@@ -102,13 +121,15 @@ namespace RTC
 		const uint64_t magicToken = Utils::Byte::Get8Bytes(payload.data(), 0);
 
 		// The message does not start with the Magic Token, so nothing to decode.
-		if ((magicToken & ~SubchannelsCodec::RequiredSubchannelFlagMask) != SubchannelsCodec::MagicToken)
+		if ((magicToken & ~SubchannelsCodec::FlagsMask) != SubchannelsCodec::MagicToken)
 		{
 			return false;
 		}
 
 		const bool requiredSubchannelFlag =
 		  (magicToken & SubchannelsCodec::RequiredSubchannelFlagMask) != 0;
+		const bool ignoredSubchannelFlag =
+		  (magicToken & SubchannelsCodec::IgnoredSubchannelFlagMask) != 0;
 
 		const uint16_t subchannelsCount = Utils::Byte::Get2Bytes(payload.data(), 8);
 
@@ -116,7 +137,7 @@ namespace RTC
 		size_t offset = 10;
 
 		// Bytes needed to hold all announced subchannels and, if present, the
-		// requiredSubchannel.
+		// requiredSubchannel and the ignoredSubchannel.
 		size_t neededLen = offset + (static_cast<size_t>(subchannelsCount) * 2);
 
 		if (requiredSubchannelFlag)
@@ -124,9 +145,14 @@ namespace RTC
 			neededLen += 2;
 		}
 
+		if (ignoredSubchannelFlag)
+		{
+			neededLen += 2;
+		}
+
 		if (len < neededLen)
 		{
-			MS_WARN_DEV("message too short to hold announced subchannels, ignoring");
+			MS_WARN_DEV("message too short to hold announced fields, ignoring");
 
 			return false;
 		}
@@ -142,6 +168,12 @@ namespace RTC
 		if (requiredSubchannelFlag)
 		{
 			requiredSubchannel = Utils::Byte::Get2Bytes(payload.data(), offset);
+			offset += 2;
+		}
+
+		if (ignoredSubchannelFlag)
+		{
+			ignoredSubchannel = Utils::Byte::Get2Bytes(payload.data(), offset);
 			offset += 2;
 		}
 

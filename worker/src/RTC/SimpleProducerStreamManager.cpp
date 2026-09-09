@@ -90,8 +90,8 @@ namespace RTC
 		// Do nothing.
 	}
 
-	uint32_t SimpleProducerStreamManager::IncreaseLayer(
-	  uint32_t bitrate, bool /*considerLoss*/, float /*lossPercentage*/, uint64_t nowMs)
+	int64_t SimpleProducerStreamManager::IncreaseLayer(
+	  int64_t bitrate, bool /*considerLoss*/, float /*lossPercentage*/, int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -103,7 +103,7 @@ namespace RTC
 		// about this.
 		if (this->managingBitrate)
 		{
-			return 0u;
+			return 0;
 		}
 
 		this->managingBitrate = true;
@@ -112,10 +112,10 @@ namespace RTC
 		// because Consumer::GetBitratePriority() does not account for the producer
 		// stream presence/score, so the Transport may still ask us to increase.
 		if (
-		  !this->producerRtpStream || (this->producerRtpStream->GetScore() == 0u &&
-		                               this->producerRtpStream->HasRtpInactivityCheckEnabled()))
+		  !this->producerRtpStream || (this->producerRtpStream->GetScore() == 0 &&
+			                             this->producerRtpStream->HasRtpInactivityCheckEnabled()))
 		{
-			return 0u;
+			return 0;
 		}
 
 		// Video Simple consumer does not really play the BWE game. However, let's
@@ -132,7 +132,7 @@ namespace RTC
 		}
 	}
 
-	void SimpleProducerStreamManager::ApplyLayers(uint64_t /*rtpStreamActiveMs*/)
+	void SimpleProducerStreamManager::ApplyLayers(int64_t /*rtpStreamActiveMs*/)
 	{
 		MS_TRACE();
 
@@ -144,7 +144,7 @@ namespace RTC
 		// Simple does not play the BWE game (even if video kind).
 	}
 
-	uint32_t SimpleProducerStreamManager::GetDesiredBitrate(uint64_t nowMs) const
+	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 
@@ -153,12 +153,12 @@ namespace RTC
 		// Audio does not play the BWE game.
 		if (this->kind != RTC::Media::Kind::VIDEO)
 		{
-			return 0u;
+			return 0;
 		}
 
 		if (!IsActive())
 		{
-			return 0u;
+			return 0;
 		}
 
 		return this->producerRtpStream->GetBitrate(nowMs);

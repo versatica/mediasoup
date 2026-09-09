@@ -35,7 +35,7 @@ namespace RTC
 			capabilities.partialReliability =
 			  remoteForwardTsnSupportedParameter ||
 			  (remoteSupportedExtensionsParameter &&
-			   remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::FORWARD_TSN));
+				 remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::FORWARD_TSN));
 
 			// Remote announces Message Interleaving support via Supported Extensions
 			// parameter.

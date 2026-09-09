@@ -59,8 +59,6 @@ pub struct DataConsumerOptions {
     /// Whether the DataConsumer must start in paused mode. Default false.
     pub paused: bool,
     /// Subchannels this DataConsumer initially subscribes to.
-    /// Only used in case this DataConsumer receives messages from a local DataProducer
-    /// that specifies subchannel(s) when calling send().
     pub subchannels: Option<Vec<u16>>,
     /// Custom application data.
     pub app_data: AppData,

@@ -35,7 +35,7 @@ namespace RTC
 		    supportsPartialReliability(supportsPartialReliability),
 		    dataChunkHeaderLength(
 		      useMessageInterleaving ? IDataChunk::IDataChunkHeaderLength
-		                             : DataChunk::DataChunkHeaderLength),
+					                       : DataChunk::DataChunkHeaderLength),
 		    t3RtxTimer(t3RtxTimer),
 		    cwnd(sctpOptions.initialCwndMtus * sctpOptions.mtu),
 		    rwnd(remoteAdvertisedReceiverWindowCredit),
@@ -62,7 +62,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		bool RetransmissionQueue::HandleReceivedSackChunk(uint64_t nowMs, const SackChunk* receivedSackChunk)
+		bool RetransmissionQueue::HandleReceivedSackChunk(int64_t nowUs, const SackChunk* receivedSackChunk)
 		{
 			MS_TRACE();
 
@@ -82,7 +82,7 @@ namespace RTC
 
 			if (receivedSackChunk->GetValidatedGapAckBlocks().empty())
 			{
-				UpdateRttMs(nowMs, cumulativeTsnAck);
+				UpdateRttUs(nowUs, cumulativeTsnAck);
 			}
 
 			// Exit fast recovery before continuing processing, in case it needs to go
@@ -301,7 +301,7 @@ namespace RTC
 		}
 
 		std::vector<std::pair<uint32_t /*tsn*/, UserData>> RetransmissionQueue::GetChunksToSend(
-		  uint64_t nowMs, size_t maxLength)
+		  int64_t nowUs, size_t maxLength)
 		{
 			MS_TRACE();
 
@@ -365,7 +365,7 @@ namespace RTC
 				  maxBytes);
 
 				std::optional<SendQueueInterface::DataToSend> dataToSend =
-				  this->sendQueue.Produce(nowMs, maxBytes - this->dataChunkHeaderLength);
+				  this->sendQueue.Produce(nowUs, maxBytes - this->dataChunkHeaderLength);
 
 				if (!dataToSend.has_value())
 				{
@@ -381,10 +381,10 @@ namespace RTC
 				const std::optional<Types::UnwrappedTsn> tsn = this->outstandingData.Insert(
 				  dataToSend->outgoingMessageId,
 				  dataToSend->data,
-				  nowMs,
+				  nowUs,
 				  this->supportsPartialReliability ? dataToSend->maxRetransmissions
-				                                   : Types::MaxRetransmitsNoLimit,
-				  this->supportsPartialReliability ? dataToSend->expiresAtMs : Types::ExpiresAtMsInfinite,
+					                                 : Types::MaxRetransmitsNoLimit,
+				  this->supportsPartialReliability ? dataToSend->expiresAtUs : Types::ExpiresAtUsInfinite,
 				  dataToSend->lifecycleId);
 
 				if (tsn.has_value())
@@ -450,7 +450,7 @@ namespace RTC
 			return toBeSent;
 		}
 
-		bool RetransmissionQueue::ShouldSendForwardTsn(uint64_t nowMs)
+		bool RetransmissionQueue::ShouldSendForwardTsn(int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -459,7 +459,7 @@ namespace RTC
 				return false;
 			}
 
-			this->outstandingData.ExpireOutstandingChunks(nowMs);
+			this->outstandingData.ExpireOutstandingChunks(nowUs);
 
 			return this->outstandingData.ShouldSendForwardTsn();
 		}
@@ -552,11 +552,11 @@ namespace RTC
 			  [&](const auto& block)
 			  {
 				  return Types::UnwrappedTsn::AddTo(cumulativeTsnAck, block.end) <=
-				         this->outstandingData.GetHighestOutstandingTsn();
+					       this->outstandingData.GetHighestOutstandingTsn();
 			  });
 		}
 
-		void RetransmissionQueue::UpdateRttMs(uint64_t nowMs, Types::UnwrappedTsn cumulativeTsnAck)
+		void RetransmissionQueue::UpdateRttUs(int64_t nowUs, Types::UnwrappedTsn cumulativeTsnAck)
 		{
 			MS_TRACE();
 
@@ -571,11 +571,11 @@ namespace RTC
 			// Consider occasionally sending DATA chunks with I-bit set and use only
 			// those packets for measurement.
 
-			const auto rttMs = this->outstandingData.MeasureRtt(nowMs, cumulativeTsnAck);
+			const auto rttUs = this->outstandingData.MeasureRttUs(nowUs, cumulativeTsnAck);
 
-			if (rttMs.has_value())
+			if (rttUs.has_value())
 			{
-				this->listener->OnRetransmissionQueueNewRttMs(rttMs.value());
+				this->listener->OnRetransmissionQueueNewRttUs(rttUs.value());
 			}
 		}
 

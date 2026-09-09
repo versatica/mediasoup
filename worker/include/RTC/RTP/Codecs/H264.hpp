@@ -84,7 +84,7 @@ namespace RTC
 					}
 					uint8_t GetSpatialLayer() const override
 					{
-						return 0u;
+						return 0;
 					}
 					uint8_t GetTemporalLayer() const override
 					{

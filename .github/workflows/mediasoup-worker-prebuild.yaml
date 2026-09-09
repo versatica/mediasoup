@@ -47,10 +47,24 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          # Worker prebuild for Linux with kernel version 6 Ubuntu 22.04.
+          # Worker prebuild for Linux hosts with kernel version 6, built on
+          # Ubuntu 22.04.
+          #
           # Let's use Ubuntu 22.04 instead of 24.04 so that it builds the
-          # mediasoup-worker binary using an old version of GLib that will work
-          # on Linux hosts running more modern GLib versions.
+          # mediasoup-worker binary against an old version of glibc (and
+          # libstdc++) that will also work on Linux hosts running more modern
+          # glibc versions.
+          #
+          # This is needed because glibc uses symbol versioning: the linker
+          # records the newest version tag available on the *build* host for
+          # each symbol used (i.e. `pthread_create@GLIBC_2.34`), and at load
+          # time the dynamic linker requires the host glibc to provide those
+          # version nodes. glibc is backwards compatible (a binary built
+          # against an old glibc runs on newer ones) but not forwards
+          # compatible, so we must build against the oldest glibc we want to
+          # support. Otherwise the binary fails to even start with errors like
+          # "version `GLIBC_2.33' not found".
+          #
           # See https://github.com/versatica/mediasoup/issues/1089.
           - os: ubuntu-22.04
             cc: gcc
@@ -58,7 +72,14 @@ jobs:
           - os: ubuntu-22.04-arm
             cc: gcc
             cxx: g++
-          # Linux with kernel version 7 Ubuntu 26.04.
+          # Worker prebuild for Linux hosts with kernel version 7, built on
+          # Ubuntu 26.04.
+          #
+          # A separate build is needed because prebuilt tarballs are named
+          # after the kernel major version of the build host (see
+          # `getWorkerPrebuildTarName()` in npm-scripts.mjs), so hosts running
+          # a kernel 7 look for a different tarball than those running a
+          # kernel 6.
           - os: ubuntu-26.04
             cc: gcc
             cxx: g++

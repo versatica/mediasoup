@@ -27,7 +27,8 @@ namespace RTC
 			  RTC::DataProducer* dataProducer,
 			  RTC::SCTP::Message message,
 			  std::vector<uint16_t>& subchannels,
-			  std::optional<uint16_t> requiredSubchannel)                       = 0;
+			  std::optional<uint16_t> requiredSubchannel,
+			  std::optional<uint16_t> ignoredSubchannel)                        = 0;
 			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer)  = 0;
 			virtual void OnDataProducerResumed(RTC::DataProducer* dataProducer) = 0;
 		};
@@ -68,7 +69,8 @@ namespace RTC
 		void ReceiveMessage(
 		  RTC::SCTP::Message message,
 		  std::vector<uint16_t>& subchannels,
-		  std::optional<uint16_t> requiredSubchannel);
+		  std::optional<uint16_t> requiredSubchannel,
+		  std::optional<uint16_t> ignoredSubchannel);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
@@ -85,7 +87,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		SharedInterface* shared{ nullptr };
-		size_t maxMessageSize{ 0u };
+		size_t maxMessageSize{ 0 };
 		RTC::DataProducer::Listener* listener{ nullptr };
 		// Others.
 		Type type;
@@ -93,8 +95,8 @@ namespace RTC
 		std::string label;
 		std::string protocol;
 		bool paused{ false };
-		size_t messagesReceived{ 0u };
-		size_t bytesReceived{ 0u };
+		size_t messagesReceived{ 0 };
+		size_t bytesReceived{ 0 };
 	};
 } // namespace RTC
 

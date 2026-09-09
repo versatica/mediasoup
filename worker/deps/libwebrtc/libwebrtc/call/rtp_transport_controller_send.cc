@@ -36,7 +36,7 @@ TargetRateConstraints ConvertConstraints(int min_bitrate_bps,
                                          int max_bitrate_bps,
                                          int start_bitrate_bps) {
   TargetRateConstraints msg;
-  msg.at_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
+  msg.at_time = Timestamp::ms(DepLibUV::GetTimeMs());
   msg.min_data_rate =
       min_bitrate_bps >= 0 ? DataRate::bps(min_bitrate_bps) : DataRate::Zero();
   msg.max_data_rate = max_bitrate_bps > 0 ? DataRate::bps(max_bitrate_bps)
@@ -63,7 +63,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       observer_(nullptr),
       controller_factory_override_(controller_factory),
       process_interval_(controller_factory_override_->GetProcessInterval()),
-      last_report_block_time_(Timestamp::ms(DepLibUV::GetTimeMsInt64())),
+      last_report_block_time_(Timestamp::ms(DepLibUV::GetTimeMs())),
       send_side_bwe_with_overhead_(
           webrtc::field_trial::IsEnabled("WebRTC-SendSideBwe-WithOverhead")),
       transport_overhead_bytes_per_packet_(0),
@@ -147,7 +147,7 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
   MS_DEBUG_DEV("<<<<< network_available:%s", network_available ? "true" : "false");
 
   NetworkAvailability msg;
-  msg.at_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
+  msg.at_time = Timestamp::ms(DepLibUV::GetTimeMs());
   msg.network_available = network_available;
 
   if (network_available_ == msg.network_available)
@@ -200,7 +200,7 @@ void RtpTransportControllerSend::OnReceivedEstimatedBitrate(uint32_t bitrate) {
   MS_DEBUG_DEV("<<<<< bitrate:%zu", bitrate);
 
   RemoteBitrateReport msg;
-  msg.receive_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
+  msg.receive_time = Timestamp::ms(DepLibUV::GetTimeMs());
   msg.bandwidth = DataRate::bps(bitrate);
 
   PostUpdates(controller_->OnRemoteBitrateReport(msg));
@@ -228,7 +228,7 @@ void RtpTransportControllerSend::OnAddPacket(
       packet_info,
       send_side_bwe_with_overhead_ ? transport_overhead_bytes_per_packet_.load()
                                    : 0,
-      Timestamp::ms(DepLibUV::GetTimeMsInt64()));
+      Timestamp::ms(DepLibUV::GetTimeMs()));
 }
 
 void RtpTransportControllerSend::OnTransportFeedback(
@@ -237,7 +237,7 @@ void RtpTransportControllerSend::OnTransportFeedback(
 
   absl::optional<TransportPacketsFeedback> feedback_msg =
       transport_feedback_adapter_.ProcessTransportFeedback(
-          feedback, Timestamp::ms(DepLibUV::GetTimeMsInt64()));
+          feedback, Timestamp::ms(DepLibUV::GetTimeMs()));
   if (feedback_msg)
     PostUpdates(controller_->OnTransportPacketsFeedback(*feedback_msg));
   pacer_.UpdateOutstandingData(
@@ -246,7 +246,7 @@ void RtpTransportControllerSend::OnTransportFeedback(
 
 void RtpTransportControllerSend::OnRemoteNetworkEstimate(
     NetworkStateEstimate estimate) {
-  estimate.update_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
+  estimate.update_time = Timestamp::ms(DepLibUV::GetTimeMs());
   controller_->OnNetworkStateEstimate(estimate);
 }
 
@@ -268,7 +268,7 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
   control_handler_ = absl::make_unique<CongestionControlHandler>();
 
   initial_config_.constraints.at_time =
-      Timestamp::ms(DepLibUV::GetTimeMsInt64());
+      Timestamp::ms(DepLibUV::GetTimeMs());
 
   controller_ = controller_factory_override_->Create(initial_config_);
   process_interval_ = controller_factory_override_->GetProcessInterval();
@@ -283,7 +283,7 @@ void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
   MS_ASSERT(controller_, "controller not set");
 
   ProcessInterval msg;
-  msg.at_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
+  msg.at_time = Timestamp::ms(DepLibUV::GetTimeMs());
 
   PostUpdates(controller_->OnProcessInterval(msg));
 }
@@ -291,7 +291,7 @@ void RtpTransportControllerSend::UpdateControllerWithTimeInterval() {
 void RtpTransportControllerSend::UpdateStreamsConfig() {
   MS_DEBUG_DEV("<<<<<");
 
-  streams_config_.at_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
+  streams_config_.at_time = Timestamp::ms(DepLibUV::GetTimeMs());
   if (controller_)
     PostUpdates(controller_->OnStreamsConfig(streams_config_));
 }

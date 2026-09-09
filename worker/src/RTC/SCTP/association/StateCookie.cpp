@@ -4,7 +4,8 @@
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring> // std::memcpy(), std::memcmp()
+#include <openssl/crypto.h>
+#include <cstring> // std::memcpy()
 #include <string_view>
 
 namespace RTC
@@ -48,7 +49,7 @@ namespace RTC
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const Capabilities& remoteCapabilities,
-		  uint64_t creationTimestampMs,
+		  int64_t creationTimestampUs,
 		  const uint8_t* macKey,
 		  size_t macKeyLength)
 		{
@@ -65,7 +66,7 @@ namespace RTC
 			  remoteAdvertisedReceiverWindowCredit,
 			  tieTag,
 			  remoteCapabilities,
-			  creationTimestampMs,
+			  creationTimestampUs,
 			  macKey,
 			  macKeyLength);
 
@@ -85,7 +86,7 @@ namespace RTC
 		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const Capabilities& remoteCapabilities,
-		  uint64_t creationTimestampMs,
+		  int64_t creationTimestampUs,
 		  const uint8_t* macKey,
 		  size_t macKeyLength)
 		{
@@ -131,7 +132,8 @@ namespace RTC
 			// bytes (including the timestamp).
 			//
 			// @see RFC 9260 section 5.1.3.
-			Utils::Byte::Set8Bytes(buffer, StateCookie::TimestampOffset, creationTimestampMs);
+			Utils::Byte::Set8Bytes(
+			  buffer, StateCookie::TimestampOffset, static_cast<uint64_t>(creationTimestampUs));
 
 			const uint8_t* mac = Utils::Crypto::GetHmacSha1(
 			  reinterpret_cast<const char*>(macKey), macKeyLength, buffer, StateCookie::MacOffset);
@@ -179,7 +181,9 @@ namespace RTC
 			const uint8_t* expectedMac = Utils::Crypto::GetHmacSha1(
 			  reinterpret_cast<const char*>(macKey), macKeyLength, buffer, StateCookie::MacOffset);
 
-			return std::memcmp(buffer + StateCookie::MacOffset, expectedMac, StateCookie::MacLength) == 0;
+			// NOTE: Use `CRYPTO_memcmp()` to have constant time memory comparison.
+			// See https://github.com/versatica/mediasoup/security/advisories/GHSA-xvjj-6cm4-ppgq
+			return CRYPTO_memcmp(buffer + StateCookie::MacOffset, expectedMac, StateCookie::MacLength) == 0;
 		}
 
 		Types::SctpImplementation StateCookie::DetermineSctpImplementation(
@@ -225,7 +229,7 @@ namespace RTC
 			SetLength(
 			  bufferLength == StateCookie::AuthenticatedStateCookieLength
 			    ? StateCookie::AuthenticatedStateCookieLength
-			    : StateCookie::StateCookieLength);
+					: StateCookie::StateCookieLength);
 		}
 
 		StateCookie::~StateCookie()
@@ -255,7 +259,7 @@ namespace RTC
 
 			if (IsAuthenticated())
 			{
-				MS_DUMP_CLEAN(indentation, "  creation timestamp (ms): %" PRIu64, GetCreationTimestampMs());
+				MS_DUMP_CLEAN(indentation, "  creation timestamp (us): %" PRIi64, GetCreationTimestampUs());
 			}
 
 			MS_DUMP_CLEAN(indentation, "  remote capabilities:");

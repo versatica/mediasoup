@@ -77,7 +77,8 @@ namespace RTC
 			  this->retransmissionQueue->GetLastAssignedTsn(),
 			  this->retransmissionQueue->BeginResetStreams());
 
-			this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
+			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+			this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoUs() / 1000);
 			this->reConfigTimer->Start();
 
 			AddReConfigChunk(packet);
@@ -168,21 +169,21 @@ namespace RTC
 
 				if (
 				  (firstParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE &&
-				   secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
+					 secondParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST &&
-				   secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
+					 secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE &&
-				   secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
+					 secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE) ||
 				  (firstParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE &&
-				   secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE))
+					 secondParameter->GetType() == Parameter::ParameterType::RECONFIGURATION_RESPONSE))
 				{
 					return true;
 				}
@@ -435,7 +436,8 @@ namespace RTC
 						// Force this request to be sent again, but with the same `reqSeqNbr`.
 						this->currentRequest->SetDeferred(true);
 
-						this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoMs());
+						// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+						this->reConfigTimer->SetBaseTimeoutMs(this->tcbContext->GetCurrentRtoUs() / 1000);
 						this->reConfigTimer->Start();
 
 						break;
@@ -469,7 +471,7 @@ namespace RTC
 			}
 		}
 
-		void StreamResetHandler::OnReConfigTimer(uint64_t& baseTimeoutMs, bool& stop)
+		void StreamResetHandler::OnReConfigTimer(int64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 
@@ -520,11 +522,12 @@ namespace RTC
 
 			this->tcbContext->SendPacket(packet.get());
 
-			baseTimeoutMs = this->tcbContext->GetCurrentRtoMs();
+			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
+			baseTimeoutMs = this->tcbContext->GetCurrentRtoUs() / 1000;
 		}
 
 		void StreamResetHandler::OnBackoffTimer(
-		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

@@ -1,4 +1,4 @@
-#define MS_CLASS "TEST::HELPERS"
+#define MS_CLASS "test::helpers"
 
 #include "test/include/testHelpers.hpp"
 #include "Logger.hpp"

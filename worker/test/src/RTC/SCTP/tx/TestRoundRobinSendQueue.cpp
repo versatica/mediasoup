@@ -10,11 +10,12 @@
 SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 {
 	constexpr size_t Mtu{ 1100 };
-	constexpr uint64_t NowMs{ 0 };
+	constexpr int64_t NowUs{ 0 };
 	constexpr uint16_t StreamId{ 1 };
 	constexpr uint32_t Ppid{ 53 };
 	constexpr uint16_t DefaultPriority{ 10 };
-	constexpr size_t BufferedAmountLowThreshold{ 500 };
+	constexpr size_t DefaultStreamBufferedAmountLowThreshold{ 0 };
+	constexpr size_t TotalBufferedAmountLowThreshold{ 500 };
 	constexpr size_t OneFragmentPacketLength{ 100 };
 	constexpr size_t TwoFragmentPacketLength{ 101 };
 
@@ -22,23 +23,31 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		REQUIRE(q.IsEmpty());
-		REQUIRE(q.Produce(NowMs, OneFragmentPacketLength).has_value() == false);
+		REQUIRE(q.Produce(NowUs, OneFragmentPacketLength).has_value() == false);
 	}
 
 	SECTION("add and get single chunk")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, { 1, 2, 4, 5, 6 }));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, { 1, 2, 4, 5, 6 }));
 
 		REQUIRE(!q.IsEmpty());
 
-		const auto dataToSend = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSend = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSend.has_value());
 		REQUIRE(dataToSend->data.IsBeginning());
@@ -49,45 +58,53 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(60);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		const auto dataToSendBeg = q.Produce(NowMs, /*maxLength*/ 20);
+		const auto dataToSendBeg = q.Produce(NowUs, /*maxLength*/ 20);
 
 		REQUIRE(dataToSendBeg.has_value());
 		REQUIRE(dataToSendBeg->data.IsBeginning());
 		REQUIRE(!dataToSendBeg->data.IsEnd());
 
-		const auto dataToSendMid = q.Produce(NowMs, /*maxLength*/ 20);
+		const auto dataToSendMid = q.Produce(NowUs, /*maxLength*/ 20);
 
 		REQUIRE(dataToSendMid.has_value());
 		REQUIRE(!dataToSendMid->data.IsBeginning());
 		REQUIRE(!dataToSendMid->data.IsEnd());
 
-		const auto dataToSendEnd = q.Produce(NowMs, /*maxLength*/ 20);
+		const auto dataToSendEnd = q.Produce(NowUs, /*maxLength*/ 20);
 
 		REQUIRE(dataToSendEnd.has_value());
 		REQUIRE(!dataToSendEnd->data.IsBeginning());
 		REQUIRE(dataToSendEnd->data.IsEnd());
 
-		REQUIRE(q.Produce(NowMs, OneFragmentPacketLength).has_value() == false);
+		REQUIRE(q.Produce(NowUs, OneFragmentPacketLength).has_value() == false);
 	}
 
 	SECTION("get chunks from two messages")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(60);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(3, 54, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(3, 54, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
@@ -95,7 +112,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(dataToSendOne->data.IsBeginning());
 		REQUIRE(dataToSendOne->data.IsEnd());
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 3);
@@ -108,25 +125,29 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(600);
 
 		REQUIRE(q.GetTotalBufferedAmount() < 1000);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
 		REQUIRE(q.GetTotalBufferedAmount() < 1000);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(3, 54, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(3, 54, payload));
 
 		REQUIRE(q.GetTotalBufferedAmount() >= 1000);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(5, 55, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(5, 55, payload));
 
 		REQUIRE(q.GetTotalBufferedAmount() >= 1000);
 
-		auto dataToSendOne = q.Produce(NowMs, 1000);
+		auto dataToSendOne = q.Produce(NowUs, 1000);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
@@ -134,7 +155,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		REQUIRE(q.GetTotalBufferedAmount() >= 1000);
 
-		auto dataToSendTwo = q.Produce(NowMs, 1000);
+		auto dataToSendTwo = q.Produce(NowUs, 1000);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 3);
@@ -143,7 +164,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(q.GetTotalBufferedAmount() < 1000);
 		REQUIRE(!q.IsEmpty());
 
-		auto dataToSendThree = q.Produce(NowMs, 1000);
+		auto dataToSendThree = q.Produce(NowUs, 1000);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetStreamId() == 5);
@@ -157,13 +178,17 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(20);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(!dataToSendOne->data.IsUnordered());
@@ -172,9 +197,9 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		options.unordered = true;
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload), options);
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload), options);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.IsUnordered());
@@ -184,65 +209,73 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(20);
 
-		uint64_t now = NowMs;
+		int64_t nowUs = NowUs;
 
-		q.AddMessage(now, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(nowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		now += 1000000;
+		nowUs += 1000000 * 1000;
 
-		REQUIRE(q.Produce(now, OneFragmentPacketLength).has_value());
+		REQUIRE(q.Produce(nowUs, OneFragmentPacketLength).has_value());
 
 		RTC::SCTP::SendMessageOptions expires2s;
 
 		expires2s.lifetimeMs = 2000;
 
-		q.AddMessage(now, RTC::SCTP::Message(StreamId, Ppid, payload), expires2s);
+		q.AddMessage(nowUs, RTC::SCTP::Message(StreamId, Ppid, payload), expires2s);
 
-		now += 2000;
+		nowUs += 2000 * 1000;
 
-		REQUIRE(q.Produce(now, OneFragmentPacketLength).has_value());
+		REQUIRE(q.Produce(nowUs, OneFragmentPacketLength).has_value());
 
-		q.AddMessage(now, RTC::SCTP::Message(StreamId, Ppid, payload), expires2s);
+		q.AddMessage(nowUs, RTC::SCTP::Message(StreamId, Ppid, payload), expires2s);
 
-		now += 2001;
+		nowUs += 2001 * 1000;
 
-		REQUIRE(!q.Produce(now, OneFragmentPacketLength).has_value());
+		REQUIRE(!q.Produce(nowUs, OneFragmentPacketLength).has_value());
 
-		q.AddMessage(now, RTC::SCTP::Message(StreamId, Ppid, payload), expires2s);
+		q.AddMessage(nowUs, RTC::SCTP::Message(StreamId, Ppid, payload), expires2s);
 
-		now += 1000000;
+		nowUs += 1000000 * 1000;
 
-		REQUIRE(!q.Produce(now, OneFragmentPacketLength).has_value());
+		REQUIRE(!q.Produce(nowUs, OneFragmentPacketLength).has_value());
 
 		RTC::SCTP::SendMessageOptions expires4s;
 
 		expires4s.lifetimeMs = 4000;
 
-		q.AddMessage(now, RTC::SCTP::Message(StreamId, Ppid, payload), expires2s);
-		q.AddMessage(now, RTC::SCTP::Message(StreamId, Ppid, payload), expires4s);
+		q.AddMessage(nowUs, RTC::SCTP::Message(StreamId, Ppid, payload), expires2s);
+		q.AddMessage(nowUs, RTC::SCTP::Message(StreamId, Ppid, payload), expires4s);
 
-		now += 2001;
+		nowUs += 2001 * 1000;
 
-		REQUIRE(q.Produce(now, OneFragmentPacketLength).has_value());
-		REQUIRE(!q.Produce(now, OneFragmentPacketLength).has_value());
+		REQUIRE(q.Produce(nowUs, OneFragmentPacketLength).has_value());
+		REQUIRE(!q.Produce(nowUs, OneFragmentPacketLength).has_value());
 	}
 
 	SECTION("discard partial packets")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(120);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, 54, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, 54, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(!dataToSendOne->data.IsEnd());
@@ -250,33 +283,37 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.Discard(dataToSendOne->data.GetStreamId(), dataToSendOne->outgoingMessageId);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(!dataToSendTwo->data.IsEnd());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 2);
 
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.IsEnd());
 		REQUIRE(dataToSendThree->data.GetStreamId() == 2);
 
-		REQUIRE(!q.Produce(NowMs, OneFragmentPacketLength).has_value());
+		REQUIRE(!q.Produce(NowUs, OneFragmentPacketLength).has_value());
 
 		q.Discard(dataToSendOne->data.GetStreamId(), dataToSendOne->outgoingMessageId);
 
-		REQUIRE(!q.Produce(NowMs, OneFragmentPacketLength).has_value());
+		REQUIRE(!q.Produce(NowUs, OneFragmentPacketLength).has_value());
 	}
 
 	SECTION("prepare reset streams discards stream")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, { 1, 2, 3 }));
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, 54, { 1, 2, 3, 4, 5 }));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, { 1, 2, 3 }));
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, 54, { 1, 2, 3, 4, 5 }));
 
 		REQUIRE(q.GetTotalBufferedAmount() == 8);
 
@@ -300,14 +337,18 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(120);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, 50);
+		const auto dataToSendOne = q.Produce(NowUs, 50);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
@@ -323,7 +364,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
@@ -331,11 +376,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		REQUIRE(q.GetTotalBufferedAmount() == 0);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
 		REQUIRE(q.GetTotalBufferedAmount() == payload.size());
 
-		REQUIRE(!q.Produce(NowMs, OneFragmentPacketLength).has_value());
+		REQUIRE(!q.Produce(NowUs, OneFragmentPacketLength).has_value());
 
 		REQUIRE(q.HasStreamsReadyToBeReset());
 
@@ -344,13 +389,13 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(streamsReadyToBeReset.size() == 1);
 		REQUIRE(std::ranges::find(streamsReadyToBeReset, StreamId) != streamsReadyToBeReset.end());
 
-		REQUIRE(!q.Produce(NowMs, OneFragmentPacketLength).has_value());
+		REQUIRE(!q.Produce(NowUs, OneFragmentPacketLength).has_value());
 
 		q.CommitResetStreams();
 
 		REQUIRE(q.GetTotalBufferedAmount() == payload.size());
 
-		const auto dataToSendOne = q.Produce(NowMs, 50);
+		const auto dataToSendOne = q.Produce(NowUs, 50);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
@@ -362,17 +407,21 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const size_t payloadLength  = 100;
 		const size_t fragmentLength = 50;
 
 		const std::vector<uint8_t> payload(payloadLength);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, fragmentLength);
+		const auto dataToSendOne = q.Produce(NowUs, fragmentLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == StreamId);
@@ -383,40 +432,44 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		REQUIRE(q.GetTotalBufferedAmount() == payloadLength - fragmentLength);
 
-		const auto dataToSendTwo = q.Produce(NowMs, fragmentLength);
+		const auto dataToSendTwo = q.Produce(NowUs, fragmentLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == StreamId);
 
 		REQUIRE(q.GetTotalBufferedAmount() == 0);
 
-		REQUIRE(!q.Produce(NowMs, fragmentLength).has_value());
+		REQUIRE(!q.Produce(NowUs, fragmentLength).has_value());
 	}
 
 	SECTION("committing resets SSN")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamSequenceNumber() == 0);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamSequenceNumber() == 1);
 
 		q.PrepareResetStream(StreamId);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
 		REQUIRE(q.HasStreamsReadyToBeReset());
 
@@ -427,7 +480,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.CommitResetStreams();
 
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetStreamSequenceNumber() == 0);
@@ -437,21 +490,25 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamSequenceNumber() == 0);
 		REQUIRE(dataToSendOne->outgoingMessageId == 0);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamSequenceNumber() == 1);
@@ -466,9 +523,9 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.CommitResetStreams();
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetStreamSequenceNumber() == 0);
@@ -479,20 +536,24 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(3, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(3, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
 		REQUIRE(dataToSendOne->data.GetStreamSequenceNumber() == 0);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 3);
@@ -500,8 +561,8 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.PrepareResetStream(3);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(3, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(3, Ppid, payload));
 
 		const auto streamsReadyToBeReset = q.GetStreamsReadyToBeReset();
 
@@ -510,13 +571,13 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.CommitResetStreams();
 
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetStreamId() == 1);
 		REQUIRE(dataToSendThree->data.GetStreamSequenceNumber() == 1);
 
-		const auto dataToSendFour = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFour.has_value());
 		REQUIRE(dataToSendFour->data.GetStreamId() == 3);
@@ -527,26 +588,30 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(50);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamSequenceNumber() == 0);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamSequenceNumber() == 1);
 
 		q.PrepareResetStream(1);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
 		const auto streamsReadyToBeReset = q.GetStreamsReadyToBeReset();
 
@@ -555,7 +620,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		q.RollbackResetStreams();
 
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetStreamSequenceNumber() == 2);
@@ -565,29 +630,33 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(200);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
 
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetStreamId() == 2);
 
-		const auto dataToSendFour = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFour.has_value());
 		REQUIRE(dataToSendFour->data.GetStreamId() == 2);
@@ -597,33 +666,37 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(TwoFragmentPacketLength);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, payload));
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
 		REQUIRE(dataToSendOne->data.GetPayloadLength() == OneFragmentPacketLength);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
 		REQUIRE(
 		  dataToSendTwo->data.GetPayloadLength() == TwoFragmentPacketLength - OneFragmentPacketLength);
 
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetStreamId() == 2);
 		REQUIRE(dataToSendThree->data.GetPayloadLength() == OneFragmentPacketLength);
 
-		const auto dataToSendFour = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFour.has_value());
 		REQUIRE(dataToSendFour->data.GetStreamId() == 2);
@@ -635,60 +708,64 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(2)));
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(3)));
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(4)));
-		q.AddMessage(NowMs, RTC::SCTP::Message(3, Ppid, std::vector<uint8_t>(5)));
-		q.AddMessage(NowMs, RTC::SCTP::Message(3, Ppid, std::vector<uint8_t>(6)));
-		q.AddMessage(NowMs, RTC::SCTP::Message(4, Ppid, std::vector<uint8_t>(7)));
-		q.AddMessage(NowMs, RTC::SCTP::Message(4, Ppid, std::vector<uint8_t>(8)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(2)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(3)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(4)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(3, Ppid, std::vector<uint8_t>(5)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(3, Ppid, std::vector<uint8_t>(6)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(4, Ppid, std::vector<uint8_t>(7)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(4, Ppid, std::vector<uint8_t>(8)));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
 		REQUIRE(dataToSendOne->data.GetPayloadLength() == 1);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 2);
 		REQUIRE(dataToSendTwo->data.GetPayloadLength() == 3);
 
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetStreamId() == 3);
 		REQUIRE(dataToSendThree->data.GetPayloadLength() == 5);
 
-		const auto dataToSendFour = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFour.has_value());
 		REQUIRE(dataToSendFour->data.GetStreamId() == 4);
 		REQUIRE(dataToSendFour->data.GetPayloadLength() == 7);
 
-		const auto dataToSendFive = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendFive = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendFive.has_value());
 		REQUIRE(dataToSendFive->data.GetStreamId() == 1);
 		REQUIRE(dataToSendFive->data.GetPayloadLength() == 2);
 
-		const auto dataToSendSix = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendSix = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendSix.has_value());
 		REQUIRE(dataToSendSix->data.GetStreamId() == 2);
 		REQUIRE(dataToSendSix->data.GetPayloadLength() == 4);
 
-		const auto dataToSendSeven = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendSeven = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendSeven.has_value());
 		REQUIRE(dataToSendSeven->data.GetStreamId() == 3);
 		REQUIRE(dataToSendSeven->data.GetPayloadLength() == 6);
 
-		const auto dataToSendEight = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendEight = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendEight.has_value());
 		REQUIRE(dataToSendEight->data.GetStreamId() == 4);
@@ -699,7 +776,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamBufferedAmountLowThreshold(1, 0);
 
@@ -710,13 +791,17 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
 
 		REQUIRE(q.GetStreamBufferedAmount(1) == 1);
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
@@ -731,22 +816,26 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
 
 		REQUIRE(q.GetStreamBufferedAmount(1) == 1);
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1)));
 
 		REQUIRE(q.GetStreamBufferedAmount(1) == 1);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 2);
@@ -761,16 +850,20 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamBufferedAmountLowThreshold(1, 1000);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(10)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(10)));
 
 		REQUIRE(q.GetStreamBufferedAmount(1) == 10);
 
 		// Shouldn't trigger the event.
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(!associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 
@@ -779,11 +872,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(dataToSendOne->data.GetPayloadLength() == 10);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 0);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(20)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(20)));
 
 		REQUIRE(q.GetStreamBufferedAmount(1) == 20);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(!associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 
@@ -797,29 +890,33 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamBufferedAmountLowThreshold(1, 700);
 
 		const std::vector<uint8_t> payload(1000);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, payload));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
 		REQUIRE(dataToSendOne->data.GetPayloadLength() == OneFragmentPacketLength);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 900);
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetPayloadLength() == OneFragmentPacketLength);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 800);
 
 		// It goes beyond 700 bytes, it should trigger the event.
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
@@ -829,7 +926,7 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(q.GetStreamBufferedAmount(1) == 700);
 
 		// Buffer decreases so it shouldn't emit the event.
-		const auto dataToSendFour = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
 
@@ -842,13 +939,17 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamBufferedAmountLowThreshold(1, 700);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1000)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(1000)));
 
-		const auto dataToSendOne = q.Produce(NowMs, 400);
+		const auto dataToSendOne = q.Produce(NowUs, 400);
 
 		REQUIRE(associationListener.HasOnStreamBufferedAmountLowBeenCalledWithStreamId(1));
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 1);
@@ -858,11 +959,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		REQUIRE(dataToSendOne->data.GetPayloadLength() == 400);
 		REQUIRE(q.GetStreamBufferedAmount(1) == 600);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(200)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(200)));
 
 		REQUIRE(q.GetStreamBufferedAmount(1) == 800);
 
-		const auto dataToSendTwo = q.Produce(NowMs, 200);
+		const auto dataToSendTwo = q.Produce(NowUs, 200);
 
 		REQUIRE(associationListener.CountOnStreamBufferedAmountLowCallsWithStreamId(1) == 2);
 
@@ -876,9 +977,13 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(100)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(100)));
 
 		// Modifying the threshold, still under buffered_amount, should not trigger
 		// event.
@@ -913,17 +1018,21 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		const std::vector<uint8_t> payload(BufferedAmountLowThreshold - 1);
+		const std::vector<uint8_t> payload(TotalBufferedAmountLowThreshold - 1);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
 		REQUIRE(q.GetTotalBufferedAmount() == payload.size());
 
 		// Will not trigger if going above but never below.
 		q.AddMessage(
-		  NowMs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(OneFragmentPacketLength)));
+		  NowUs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(OneFragmentPacketLength)));
 
 		REQUIRE(associationListener.CountOnTotalBufferedAmountLowCalls() == 0);
 		REQUIRE(q.GetTotalBufferedAmount() > payload.size());
@@ -933,46 +1042,54 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
-		const std::vector<uint8_t> payload(BufferedAmountLowThreshold);
+		const std::vector<uint8_t> payload(TotalBufferedAmountLowThreshold);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, payload));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, payload));
 
 		REQUIRE(q.GetTotalBufferedAmount() == payload.size());
 
 		// Reaches it.
-		q.AddMessage(NowMs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(1)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(StreamId, Ppid, std::vector<uint8_t>(1)));
 
 		// Drain it a bit, will trigger.
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(associationListener.CountOnTotalBufferedAmountLowCalls() == 1);
 
 		REQUIRE(dataToSendTwo.has_value());
-		REQUIRE(q.GetTotalBufferedAmount() < BufferedAmountLowThreshold);
+		REQUIRE(q.GetTotalBufferedAmount() < TotalBufferedAmountLowThreshold);
 	}
 
 	SECTION("will stay in a stream as long as that message is sending")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		constexpr size_t OneFragmentPacketSize = OneFragmentPacketLength;
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(5, Ppid, std::vector<uint8_t>(1)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(5, Ppid, std::vector<uint8_t>(1)));
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketSize);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketSize);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 5);
 		REQUIRE(dataToSendOne->data.GetPayloadLength() == 1);
 
 		// Next, it should pick a different stream.
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(OneFragmentPacketSize * 2)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(OneFragmentPacketSize * 2)));
 
-		const auto dataToSendTwo = q.Produce(NowMs, OneFragmentPacketSize);
+		const auto dataToSendTwo = q.Produce(NowUs, OneFragmentPacketSize);
 
 		REQUIRE(dataToSendTwo.has_value());
 		REQUIRE(dataToSendTwo->data.GetStreamId() == 1);
@@ -980,33 +1097,37 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 
 		// It should still stay on the Stream1 now, even if might be tempted to switch
 		// to this stream, as it's the stream following 5.
-		q.AddMessage(NowMs, RTC::SCTP::Message(6, Ppid, std::vector<uint8_t>(1)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(6, Ppid, std::vector<uint8_t>(1)));
 
-		const auto dataToSendThree = q.Produce(NowMs, OneFragmentPacketSize);
+		const auto dataToSendThree = q.Produce(NowUs, OneFragmentPacketSize);
 
 		REQUIRE(dataToSendThree.has_value());
 		REQUIRE(dataToSendThree->data.GetStreamId() == 1);
 		REQUIRE(dataToSendThree->data.GetPayloadLength() == OneFragmentPacketSize);
 
 		// After stream 1 message is complete, it should move to stream 6.
-		const auto dataToSendFour = q.Produce(NowMs, OneFragmentPacketSize);
+		const auto dataToSendFour = q.Produce(NowUs, OneFragmentPacketSize);
 
 		REQUIRE(dataToSendFour.has_value());
 		REQUIRE(dataToSendFour->data.GetStreamId() == 6);
 		REQUIRE(dataToSendFour->data.GetPayloadLength() == 1);
 
-		REQUIRE(q.Produce(NowMs, OneFragmentPacketSize).has_value() == false);
+		REQUIRE(q.Produce(NowUs, OneFragmentPacketSize).has_value() == false);
 	}
 
 	SECTION("streams have initial priority")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		REQUIRE(q.GetStreamPriority(1) == DefaultPriority);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(40)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(40)));
 
 		REQUIRE(q.GetStreamPriority(2) == DefaultPriority);
 	}
@@ -1015,13 +1136,17 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.SetStreamPriority(1, 42);
 
 		REQUIRE(q.GetStreamPriority(1) == 42);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(40)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(40)));
 		q.SetStreamPriority(2, 42);
 
 		REQUIRE(q.GetStreamPriority(2) == 42);
@@ -1031,7 +1156,11 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		q.EnableMessageInterleaving(true);
 
@@ -1039,28 +1168,32 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		q.SetStreamPriority(2, 20);
 		q.SetStreamPriority(3, 30);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(40)));
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(20)));
-		q.AddMessage(NowMs, RTC::SCTP::Message(3, Ppid, std::vector<uint8_t>(10)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, std::vector<uint8_t>(40)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, Ppid, std::vector<uint8_t>(20)));
+		q.AddMessage(NowUs, RTC::SCTP::Message(3, Ppid, std::vector<uint8_t>(10)));
 
 		const std::vector<uint16_t> expectedStreams = { 3, 2, 2, 1, 1, 1, 1 };
 
 		for (const uint16_t streamId : expectedStreams)
 		{
-			const auto dataToSend = q.Produce(NowMs, 10);
+			const auto dataToSend = q.Produce(NowUs, 10);
 
 			REQUIRE(dataToSend.has_value());
 			REQUIRE(dataToSend->data.GetStreamId() == streamId);
 		}
 
-		REQUIRE(q.Produce(NowMs, 1).has_value() == false);
+		REQUIRE(q.Produce(NowUs, 1).has_value() == false);
 	}
 
 	SECTION("will send lifecycle expire when expired in send queue")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(OneFragmentPacketLength);
 
@@ -1069,9 +1202,9 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 		options.lifetimeMs  = 1000;
 		options.lifecycleId = 1;
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(2, Ppid, payload), options);
+		q.AddMessage(NowUs, RTC::SCTP::Message(2, Ppid, payload), options);
 
-		REQUIRE(q.Produce(NowMs + 1001, OneFragmentPacketLength).has_value() == false);
+		REQUIRE(q.Produce(NowUs + (1001 * 1000), OneFragmentPacketLength).has_value() == false);
 
 		REQUIRE(associationListener.HasOnAssociationLifecycleMessageExpiredSentBeenCalledWithLifecycleId(
 		  1, false));
@@ -1082,14 +1215,18 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(120);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, payload), { .lifecycleId = 1 });
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, payload), { .lifecycleId = 2 });
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, payload), { .lifecycleId = 1 });
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, payload), { .lifecycleId = 2 });
 
-		const auto dataToSendOne = q.Produce(NowMs, 50);
+		const auto dataToSendOne = q.Produce(NowUs, 50);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(dataToSendOne->data.GetStreamId() == 1);
@@ -1109,13 +1246,17 @@ SCENARIO("SCTP RoundRobinSendQueue", "[sctp][roundrobinsendqueue]")
 	{
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::RoundRobinSendQueue q(
-		  associationListener, Mtu, DefaultPriority, BufferedAmountLowThreshold);
+		  associationListener,
+		  Mtu,
+		  DefaultPriority,
+		  DefaultStreamBufferedAmountLowThreshold,
+		  TotalBufferedAmountLowThreshold);
 
 		const std::vector<uint8_t> payload(OneFragmentPacketLength + 20);
 
-		q.AddMessage(NowMs, RTC::SCTP::Message(1, Ppid, payload), { .lifecycleId = 1 });
+		q.AddMessage(NowUs, RTC::SCTP::Message(1, Ppid, payload), { .lifecycleId = 1 });
 
-		const auto dataToSendOne = q.Produce(NowMs, OneFragmentPacketLength);
+		const auto dataToSendOne = q.Produce(NowUs, OneFragmentPacketLength);
 
 		REQUIRE(dataToSendOne.has_value());
 		REQUIRE(!dataToSendOne->data.IsEnd());

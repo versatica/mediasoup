@@ -106,9 +106,9 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 			}
 		}
 
-		void OnRtpStreamNeedWorstRemoteFractionLost(
-		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
+		uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
 		{
+			return 0;
 		}
 
 	public:
@@ -118,10 +118,10 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		std::vector<uint16_t> nackedSeqNumbers;
 	};
 
-	mocks::MockShared shared(/*getTimeMs*/
-	                         []()
+	mocks::MockShared shared(/*getTimeUs*/
+	                         []() -> int64_t
 	                         {
-		                         return 1000;
+		                         return 1000 * 1000;
 	                         });
 
 	// clang-format off
@@ -158,25 +158,25 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		packet->SetSequenceNumber(3);
 		listener.shouldTriggerNack = true;
 		listener.shouldTriggerPLI  = false;
 		listener.shouldTriggerFIR  = false;
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		REQUIRE(listener.nackedSeqNumbers.size() == 1);
 		REQUIRE(listener.nackedSeqNumbers[0] == 2);
 		listener.nackedSeqNumbers.clear();
 
 		packet->SetSequenceNumber(2);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		REQUIRE(listener.nackedSeqNumbers.empty());
 
 		packet->SetSequenceNumber(4);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		REQUIRE(listener.nackedSeqNumbers.empty());
 	}
@@ -188,19 +188,19 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		packet->SetSequenceNumber(2);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		packet->SetSequenceNumber(3);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		packet->SetSequenceNumber(4);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		packet->SetSequenceNumber(5);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		// Sequence number 6 arrives via RTX before the original RTP packet.
 
@@ -222,13 +222,13 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(0xfffe);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		packet->SetSequenceNumber(1);
 		listener.shouldTriggerNack = true;
 		listener.shouldTriggerPLI  = false;
 		listener.shouldTriggerFIR  = false;
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		REQUIRE(listener.nackedSeqNumbers.size() == 2);
 		REQUIRE(listener.nackedSeqNumbers[0] == 0xffff);
@@ -243,13 +243,13 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		// Seq different is bigger than MaxNackPackets in NackGenerator, so it
 		// triggers a key frame.
 		packet->SetSequenceNumber(1003);
 		listener.shouldTriggerPLI = true;
 		listener.shouldTriggerFIR = false;
-		rtpStream.ReceivePacket(packet.get());
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 	}
 }

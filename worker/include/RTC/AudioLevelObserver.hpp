@@ -13,8 +13,8 @@ namespace RTC
 	private:
 		struct DBovs
 		{
-			uint16_t totalSum{ 0u }; // Sum of dBvos (positive integer).
-			size_t count{ 0u };      // Number of dBvos entries in totalSum.
+			uint16_t totalSum{ 0 }; // Sum of dBvos (positive integer).
+			size_t count{ 0 };      // Number of dBvos entries in totalSum.
 		};
 
 	public:
@@ -44,9 +44,9 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		uint16_t maxEntries{ 1u };
+		uint16_t maxEntries{ 1 };
 		int8_t threshold{ -80 };
-		uint16_t interval{ 1000u };
+		int64_t intervalMs{ 1000 };
 		// Allocated by this.
 		TimerHandleInterface* periodicTimer{ nullptr };
 		// Others.

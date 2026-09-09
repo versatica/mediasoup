@@ -41,9 +41,9 @@ namespace RTC
 			  data.GetMessageId(),
 			  data.GetFragmentSequenceNumber(),
 			  (data.IsBeginning() && data.IsEnd() ? "complete"
-			   : data.IsBeginning()               ? "first"
-			   : data.IsEnd()                     ? "last"
-			                                      : "middle"));
+				 : data.IsBeginning()               ? "first"
+				 : data.IsEnd()                     ? "last"
+				                                    : "middle"));
 
 			const Types::UnwrappedTsn unwrappedTsn = this->tsnUnwrapper.Unwrap(tsn);
 
@@ -144,8 +144,8 @@ namespace RTC
 
 				this->deferredResetStreams->deferredActions.emplace_back(
 				  [this,
-				   newCumulativeTsn,
-				   skippedStreams2 = std::vector<AnyForwardTsnChunk::SkippedStream>(
+					 newCumulativeTsn,
+					 skippedStreams2 = std::vector<AnyForwardTsnChunk::SkippedStream>(
 				     skippedStreams.begin(), skippedStreams.end())]
 				  {
 					  this->queuedBytes -= ForwardTsnCost(skippedStreams2.size());

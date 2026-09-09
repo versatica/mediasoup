@@ -36,7 +36,7 @@ class RemoteBitrateObserver {
    virtual void OnRembServerAvailableBitrate(
        const RemoteBitrateEstimator* remoteBitrateEstimator,
        const std::vector<uint32_t>& ssrcs,
-       uint32_t availableBitrate) = 0;
+       int64_t availableBitrate) = 0;
 
   virtual ~RemoteBitrateObserver() {}
 };

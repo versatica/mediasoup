@@ -100,6 +100,7 @@ namespace RTC
 
 						udpSocket = new RTC::UdpSocket(
 						  this,
+						  this->shared,
 						  ip,
 						  listenInfo->portRange()->min(),
 						  listenInfo->portRange()->max(),
@@ -108,7 +109,7 @@ namespace RTC
 					}
 					else if (listenInfo->port() != 0)
 					{
-						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), flags);
+						udpSocket = new RTC::UdpSocket(this, this->shared, ip, listenInfo->port(), flags);
 					}
 					// NOTE: This is temporal to allow deprecated usage of worker port range.
 					// In the future this should throw since |port| or |portRange| will be
@@ -119,6 +120,7 @@ namespace RTC
 
 						udpSocket = new RTC::UdpSocket(
 						  this,
+						  this->shared,
 						  ip,
 						  Settings::configuration.rtcMinPort,
 						  Settings::configuration.rtcMaxPort,
@@ -157,6 +159,7 @@ namespace RTC
 						tcpServer = new RTC::TcpServer(
 						  this,
 						  this,
+						  this->shared,
 						  ip,
 						  listenInfo->portRange()->min(),
 						  listenInfo->portRange()->max(),
@@ -165,7 +168,7 @@ namespace RTC
 					}
 					else if (listenInfo->port() != 0)
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), flags);
+						tcpServer = new RTC::TcpServer(this, this, this->shared, ip, listenInfo->port(), flags);
 					}
 					// NOTE: This is temporal to allow deprecated usage of worker port range.
 					// In the future this should throw since |port| or |portRange| will be
@@ -177,6 +180,7 @@ namespace RTC
 						tcpServer = new RTC::TcpServer(
 						  this,
 						  this,
+						  this->shared,
 						  ip,
 						  Settings::configuration.rtcMinPort,
 						  Settings::configuration.rtcMaxPort,
@@ -409,21 +413,22 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnPacketReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		if (RTC::ICE::StunPacket::IsStun(data, len))
 		{
-			OnStunDataReceived(tuple, data, len);
+			OnStunDataReceived(tuple, data, len, receivedAtUs);
 		}
 		else
 		{
-			OnNonStunDataReceived(tuple, data, len, bufferLen);
+			OnNonStunDataReceived(tuple, data, len, bufferLen, receivedAtUs);
 		}
 	}
 
-	inline void WebRtcServer::OnStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void WebRtcServer::OnStunDataReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -443,7 +448,7 @@ namespace RTC
 		{
 			auto* webRtcTransport = it1->second;
 
-			webRtcTransport->ProcessStunPacketFromWebRtcServer(tuple, packet);
+			webRtcTransport->ProcessStunPacketFromWebRtcServer(tuple, packet, receivedAtUs);
 
 			delete packet;
 
@@ -465,13 +470,13 @@ namespace RTC
 
 		auto* webRtcTransport = it2->second;
 
-		webRtcTransport->ProcessStunPacketFromWebRtcServer(tuple, packet);
+		webRtcTransport->ProcessStunPacketFromWebRtcServer(tuple, packet, receivedAtUs);
 
 		delete packet;
 	}
 
 	inline void WebRtcServer::OnNonStunDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -486,7 +491,7 @@ namespace RTC
 
 		auto* webRtcTransport = it->second;
 
-		webRtcTransport->ProcessNonStunPacketFromWebRtcServer(tuple, data, len, bufferLen);
+		webRtcTransport->ProcessNonStunPacketFromWebRtcServer(tuple, data, len, bufferLen, receivedAtUs);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportCreated(RTC::WebRtcTransport* webRtcTransport)
@@ -583,13 +588,14 @@ namespace RTC
 	  const uint8_t* data,
 	  size_t len,
 	  size_t bufferLen,
-	  const struct sockaddr* remoteAddr)
+	  const struct sockaddr* remoteAddr,
+	  int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(std::addressof(tuple), data, len, bufferLen);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen, receivedAtUs);
 	}
 
 	inline void WebRtcServer::OnRtcTcpConnectionClosed(
@@ -616,12 +622,12 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnTcpConnectionPacketReceived(
-	  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen)
+	  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(connection);
 
-		OnPacketReceived(std::addressof(tuple), data, len, bufferLen);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen, receivedAtUs);
 	}
 } // namespace RTC

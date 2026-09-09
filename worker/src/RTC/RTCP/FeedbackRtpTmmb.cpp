@@ -14,11 +14,14 @@ namespace RTC
 		FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(const Header* header)
 		  : FeedbackRtpTmmbItem<T>(reinterpret_cast<const uint8_t*>(header))
 		{
+			MS_TRACE();
 		}
 
 		template<typename T>
 		FeedbackRtpTmmbItem<T>::FeedbackRtpTmmbItem(const uint8_t* data)
 		{
+			MS_TRACE();
+
 			this->ssrc = Utils::Byte::Get4Bytes(data, 0);
 
 			// Read the 4 bytes block.
@@ -29,22 +32,33 @@ namespace RTC
 
 			this->overhead = compact & 0x1ff; // 9 bits.
 			// Get the bitrate out of exponent and mantissa.
-			this->bitrate = (mantissa << exponent);
+			// NOTE: The exponent is 6 bits wide, so a remote endpoint can craft a shift
+			// that overflows. The checks below reject both an overflowing shift and a
+			// value that does not fit in the signed 64 bits bitrate.
+			const uint64_t rawBitrate = (mantissa << exponent);
 
-			if ((this->bitrate >> exponent) != mantissa)
+			if (
+			  (rawBitrate >> exponent) != mantissa ||
+			  rawBitrate > static_cast<uint64_t>(std::numeric_limits<int64_t>::max()))
 			{
 				MS_WARN_TAG(rtcp, "invalid TMMB bitrate value : %" PRIu64 " x 2^%" PRIu8, mantissa, exponent);
 
 				this->isCorrect = false;
+
+				return;
 			}
+
+			this->bitrate = static_cast<int64_t>(rawBitrate);
 		}
 
 		template<typename T>
 		size_t FeedbackRtpTmmbItem<T>::Serialize(uint8_t* buffer)
 		{
+			MS_TRACE();
+
 			static constexpr uint32_t MaxMantissa{ 0x1ffff }; // 17 bits.
 
-			uint64_t mantissa = this->bitrate;
+			auto mantissa = static_cast<uint64_t>(std::max<int64_t>(this->bitrate, 0));
 			uint32_t exponent{ 0 };
 
 			while (mantissa > MaxMantissa)
@@ -69,7 +83,7 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<FeedbackRtpTmmbItem>");
 			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, this->GetSsrc());
-			MS_DUMP_CLEAN(indentation, "  bitrate: %" PRIu64, this->GetBitrate());
+			MS_DUMP_CLEAN(indentation, "  bitrate: %" PRIi64, this->GetBitrate());
 			MS_DUMP_CLEAN(indentation, "  overhead: %" PRIu16, this->GetOverhead());
 			MS_DUMP_CLEAN(indentation, "</FeedbackRtpTmmbItem>");
 		}

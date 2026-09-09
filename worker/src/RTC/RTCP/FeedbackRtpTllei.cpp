@@ -12,6 +12,8 @@ namespace RTC
 		/* Instance methods. */
 		FeedbackRtpTlleiItem::FeedbackRtpTlleiItem(uint16_t packetId, uint16_t lostPacketBitmask)
 		{
+			MS_TRACE();
+
 			this->raw    = new uint8_t[HeaderSize];
 			this->header = reinterpret_cast<Header*>(this->raw);
 

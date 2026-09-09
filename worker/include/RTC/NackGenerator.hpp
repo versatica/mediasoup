@@ -28,17 +28,16 @@ namespace RTC
 	private:
 		struct NackInfo
 		{
-			NackInfo() = default;
-			explicit NackInfo(uint64_t createdAtMs, uint16_t seq, uint16_t sendAtSeq)
+			explicit NackInfo(int64_t createdAtMs, uint16_t seq, uint16_t sendAtSeq)
 			  : createdAtMs(createdAtMs), seq(seq), sendAtSeq(sendAtSeq)
 			{
 			}
 
-			uint64_t createdAtMs{ 0u };
-			uint16_t seq{ 0u };
-			uint16_t sendAtSeq{ 0u };
-			uint64_t sentAtMs{ 0u };
-			uint8_t retries{ 0u };
+			int64_t createdAtMs{ 0 };
+			uint16_t seq{ 0 };
+			uint16_t sendAtSeq{ 0 };
+			int64_t sentAtMs{ 0 };
+			uint8_t retries{ 0 };
 		};
 
 		enum class NackFilter : uint8_t
@@ -48,7 +47,7 @@ namespace RTC
 		};
 
 	public:
-		explicit NackGenerator(Listener* listener, SharedInterface* shared, uint32_t sendNackDelayMs);
+		explicit NackGenerator(Listener* listener, SharedInterface* shared, int64_t sendNackDelayMs);
 		~NackGenerator() override;
 
 		bool ReceivePacket(const RTC::RTP::Packet* packet, bool isRecovered);
@@ -56,9 +55,9 @@ namespace RTC
 		{
 			return this->nackList.size();
 		}
-		void UpdateRtt(uint32_t rtt)
+		void UpdateRttMs(int64_t rttMs)
 		{
-			this->rtt = rtt;
+			this->rttMs = rttMs;
 		}
 		void Reset();
 
@@ -76,7 +75,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		SharedInterface* shared{ nullptr };
-		uint32_t sendNackDelayMs{ 0u };
+		int64_t sendNackDelayMs{ 0 };
 		// Allocated by this.
 		TimerHandleInterface* timer{ nullptr };
 		// Others.
@@ -84,8 +83,8 @@ namespace RTC
 		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> keyFrameList;
 		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
 		bool started{ false };
-		uint16_t lastSeq{ 0u }; // Seq number of last valid packet.
-		uint32_t rtt{ 0u };     // Round trip time (ms).
+		uint16_t lastSeq{ 0 }; // Seq number of last valid packet.
+		int64_t rttMs{ 0 };
 	};
 } // namespace RTC
 

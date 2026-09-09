@@ -89,6 +89,7 @@ namespace RTC
 
 						udpSocket = new RTC::UdpSocket(
 						  this,
+						  this->shared,
 						  ip,
 						  listenInfo->portRange()->min(),
 						  listenInfo->portRange()->max(),
@@ -97,7 +98,7 @@ namespace RTC
 					}
 					else if (listenInfo->port() != 0)
 					{
-						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), flags);
+						udpSocket = new RTC::UdpSocket(this, this->shared, ip, listenInfo->port(), flags);
 					}
 					// NOTE: This is temporal to allow deprecated usage of worker port range.
 					// In the future this should throw since |port| or |portRange| will be
@@ -108,6 +109,7 @@ namespace RTC
 
 						udpSocket = new RTC::UdpSocket(
 						  this,
+						  this->shared,
 						  ip,
 						  Settings::configuration.rtcMinPort,
 						  Settings::configuration.rtcMaxPort,
@@ -160,6 +162,7 @@ namespace RTC
 						tcpServer = new RTC::TcpServer(
 						  this,
 						  this,
+						  this->shared,
 						  ip,
 						  listenInfo->portRange()->min(),
 						  listenInfo->portRange()->max(),
@@ -168,7 +171,7 @@ namespace RTC
 					}
 					else if (listenInfo->port() != 0)
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), flags);
+						tcpServer = new RTC::TcpServer(this, this, this->shared, ip, listenInfo->port(), flags);
 					}
 					// NOTE: This is temporal to allow deprecated usage of worker port range.
 					// In the future this should throw since |port| or |portRange| will be
@@ -180,6 +183,7 @@ namespace RTC
 						tcpServer = new RTC::TcpServer(
 						  this,
 						  this,
+						  this->shared,
 						  ip,
 						  Settings::configuration.rtcMinPort,
 						  Settings::configuration.rtcMaxPort,
@@ -226,7 +230,7 @@ namespace RTC
 				iceLocalPreferenceDecrement += 100;
 			}
 
-			auto iceConsentTimeout = options->iceConsentTimeout();
+			auto iceConsentTimeoutSec = options->iceConsentTimeout();
 
 			// Create a ICE server.
 			this->iceServer = new RTC::ICE::IceServer(
@@ -234,7 +238,7 @@ namespace RTC
 			  this->shared,
 			  Utils::Crypto::GetRandomString(32),
 			  Utils::Crypto::GetRandomString(32),
-			  iceConsentTimeout);
+			  iceConsentTimeoutSec);
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this, this->shared);
@@ -303,7 +307,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("empty iceCandidates");
 			}
 
-			auto iceConsentTimeout = options->iceConsentTimeout();
+			auto iceConsentTimeoutSec = options->iceConsentTimeout();
 
 			// Create a ICE server.
 			this->iceServer = new RTC::ICE::IceServer(
@@ -311,7 +315,7 @@ namespace RTC
 			  this->shared,
 			  Utils::Crypto::GetRandomString(32),
 			  Utils::Crypto::GetRandomString(32),
-			  iceConsentTimeout);
+			  iceConsentTimeoutSec);
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this, this->shared);
@@ -621,7 +625,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::ProcessStunPacketFromWebRtcServer(
-	  RTC::TransportTuple* tuple, const RTC::ICE::StunPacket* packet)
+	  RTC::TransportTuple* tuple, const RTC::ICE::StunPacket* packet, int64_t /*receivedAtUs*/)
 	{
 		MS_TRACE();
 
@@ -630,7 +634,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::ProcessNonStunPacketFromWebRtcServer(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -640,17 +644,17 @@ namespace RTC
 		// Check if it's RTCP.
 		if (RTC::RTCP::Packet::IsRtcp(data, len))
 		{
-			OnRtcpDataReceived(tuple, data, len);
+			OnRtcpDataReceived(tuple, data, len, receivedAtUs);
 		}
 		// Check if it's RTP.
 		else if (RTC::RTP::Packet::IsRtp(data, len))
 		{
-			OnRtpDataReceived(tuple, data, len, bufferLen);
+			OnRtpDataReceived(tuple, data, len, bufferLen, receivedAtUs);
 		}
 		// Check if it's DTLS.
 		else if (RTC::DtlsTransport::IsDtls(data, len))
 		{
-			OnDtlsDataReceived(tuple, data, len);
+			OnDtlsDataReceived(tuple, data, len, receivedAtUs);
 		}
 		else
 		{
@@ -671,7 +675,7 @@ namespace RTC
 
 		return (
 		  (this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
-		   this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED) &&
+			 this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED) &&
 		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
 	}
 
@@ -909,7 +913,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnPacketReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -919,22 +923,22 @@ namespace RTC
 		// Check if it's STUN.
 		if (RTC::ICE::StunPacket::IsStun(data, len))
 		{
-			OnStunDataReceived(tuple, data, len);
+			OnStunDataReceived(tuple, data, len, receivedAtUs);
 		}
 		// Check if it's RTCP.
 		else if (RTC::RTCP::Packet::IsRtcp(data, len))
 		{
-			OnRtcpDataReceived(tuple, data, len);
+			OnRtcpDataReceived(tuple, data, len, receivedAtUs);
 		}
 		// Check if it's RTP.
 		else if (RTC::RTP::Packet::IsRtp(data, len))
 		{
-			OnRtpDataReceived(tuple, data, len, bufferLen);
+			OnRtpDataReceived(tuple, data, len, bufferLen, receivedAtUs);
 		}
 		// Check if it's DTLS.
 		else if (RTC::DtlsTransport::IsDtls(data, len))
 		{
-			OnDtlsDataReceived(tuple, data, len);
+			OnDtlsDataReceived(tuple, data, len, receivedAtUs);
 		}
 		else
 		{
@@ -943,7 +947,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnStunDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t /*receivedAtUs*/)
 	{
 		MS_TRACE();
 
@@ -963,7 +967,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnDtlsDataReceived(
-	  const RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  const RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -985,7 +989,7 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("DTLS data received, passing it to the DTLS transport");
 
-			this->dtlsTransport->ProcessDtlsData(data, len);
+			this->dtlsTransport->ProcessDtlsData(data, len, receivedAtUs);
 		}
 		else
 		{
@@ -996,7 +1000,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnRtpDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1061,11 +1065,11 @@ namespace RTC
 		this->iceServer->MayForceSelectedTuple(tuple);
 
 		// Pass the packet to the parent transport.
-		RTC::Transport::ReceiveRtpPacket(packet);
+		RTC::Transport::ReceiveRtpPacket(packet, receivedAtUs);
 	}
 
 	inline void WebRtcTransport::OnRtcpDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1109,7 +1113,7 @@ namespace RTC
 		}
 
 		// Pass the packet to the parent transport.
-		RTC::Transport::ReceiveRtcpPacket(packet);
+		RTC::Transport::ReceiveRtcpPacket(packet, receivedAtUs);
 	}
 
 	inline void WebRtcTransport::OnUdpSocketPacketReceived(
@@ -1117,13 +1121,14 @@ namespace RTC
 	  const uint8_t* data,
 	  size_t len,
 	  size_t bufferLen,
-	  const struct sockaddr* remoteAddr)
+	  const struct sockaddr* remoteAddr,
+	  int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len, bufferLen);
+		OnPacketReceived(&tuple, data, len, bufferLen, receivedAtUs);
 	}
 
 	inline void WebRtcTransport::OnRtcTcpConnectionClosed(
@@ -1137,13 +1142,13 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnTcpConnectionPacketReceived(
-	  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen)
+	  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(connection);
 
-		OnPacketReceived(&tuple, data, len, bufferLen);
+		OnPacketReceived(&tuple, data, len, bufferLen, receivedAtUs);
 	}
 
 	inline void WebRtcTransport::OnIceServerSendStunPacket(
@@ -1453,11 +1458,11 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportApplicationDataReceived(
-	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
+	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		// Pass it to the parent transport.
-		RTC::Transport::ReceiveSctpData(data, len);
+		RTC::Transport::ReceiveSctpData(data, len, receivedAtUs);
 	}
 } // namespace RTC

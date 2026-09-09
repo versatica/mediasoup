@@ -9,7 +9,7 @@ const PYTHON = getPython();
 const ROOT_DIR = getRootDir();
 const BUILD_DIR = getBuildDir();
 const NUM_CORES = getNumCores();
-const CLANG_FORMAT_VERSION = 22;
+const CLANG_FORMAT_VERSION = 23;
 const CLANG_TIDY_VERSION = 21;
 
 const CLANG_FORMAT_PATHS = [
@@ -351,7 +351,7 @@ function getBuildDir() {
 	const workerInstallDir =
 		process.env.MEDIASOUP_INSTALL_DIR ??
 		`${workerOutDir}/${mediasoupBuildtype}`;
-	const buildDir = process.envBUILD_DIR ?? `${workerInstallDir}/build`;
+	const buildDir = process.env.BUILD_DIR ?? `${workerInstallDir}/build`;
 
 	return buildDir;
 }

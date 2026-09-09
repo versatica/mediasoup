@@ -256,7 +256,8 @@ export class DataProducerImpl<DataProducerAppData extends AppData = AppData>
 		message: string | Buffer,
 		ppid?: number,
 		subchannels?: number[],
-		requiredSubchannel?: number
+		requiredSubchannel?: number,
+		ignoredSubchannel?: number
 	): void {
 		if (typeof message !== 'string' && !Buffer.isBuffer(message)) {
 			throw new TypeError('message must be a string or a Buffer');
@@ -319,7 +320,8 @@ export class DataProducerImpl<DataProducerAppData extends AppData = AppData>
 				ppid,
 				dataOffset,
 				subchannelsOffset,
-				requiredSubchannel ?? null
+				requiredSubchannel ?? null,
+				ignoredSubchannel ?? null
 			);
 
 		this.#channel.notify(

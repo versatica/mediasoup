@@ -139,7 +139,7 @@ Then, depending on the crate:
 - For `mediasoup`: it also sets the top `### NEXT` heading of `rust/CHANGELOG.md` to `### x.y.z`, commits the bump (with a `release rust-x.y.z [no-ci]` message), creates the `rust-x.y.z` tag and pushes the branch and the tag. The tag triggers `mediasoup-crate-publish.yaml`, which creates the GitHub release from `rust/CHANGELOG.md` and publishes the crate.
 - For `mediasoup-sys` / `mediasoup-types`: it commits the bump with a `<crate> x.y.z [crate-publish] [no-ci]` message and pushes the branch (no tag, no CHANGELOG change). The `[crate-publish]` marker is what `mediasoup-crate-publish.yaml` detects on the branch push to publish that crate (without a GitHub release).
 
-Since `mediasoup` depends on `mediasoup-sys` and `mediasoup-types`, when several crates need a new version publish the dependencies first (`mediasoup-types` / `mediasoup-sys`) and `mediasoup` last, so each crate's dependencies are already on crates.io. Requirements for it to work:
+Since `mediasoup` depends on `mediasoup-sys` and `mediasoup-types`, when several crates need a new version publish the dependencies first (`mediasoup-types` / `mediasoup-sys`) and `mediasoup` last, so each crate's dependencies are already on crates.io. The releases can be run back to back without waiting for the dependencies' GitHub Actions runs to complete: `mediasoup-crate-publish.yaml` runs are serialized through a single concurrency queue, so the `mediasoup` one stays queued until the sibling crates are published (see [Rust-crates.md](Rust-crates.md)). Requirements for it to work:
 
 - Must be called with a crate name and a SEMVER version as the two arguments.
 - Must be in the main branch.
@@ -163,6 +163,8 @@ Tasks are defined in `worker/tasks.py`. For development purposes, developers or 
 
 See all the tasks by running `invoke --list` within the `worker` folder.
 
+_NOTE:_ Tasks that require specific Meson options (such as `invoke test`, `invoke tidy`, `invoke test-asan-address`, `invoke test-asan-undefined` and `invoke fuzzer`) use their own Meson build directory within `worker/out/MEDIASOUP_BUILDTYPE`, so switching from a task to another doesn't reconfigure and rebuild everything. All of them install their binaries into `worker/out/MEDIASOUP_BUILDTYPE`.
+
 _NOTE:_ For some of these tasks to work, npm dependencies of `worker/scripts/package.json` must be installed:
 
 ```bash
@@ -179,11 +181,11 @@ Installs `meson` and `ninja` into a local custom path.
 
 ### `invoke clean`
 
-Cleans built objects and binaries.
+Cleans the built objects and binaries of mediasoup, keeping those of the Meson subprojects and the dependencies, so they don't need to be built again.
 
 ### `invoke clean-build`
 
-Cleans built objects and other artifacts, but keeps `mediasoup-worker` binary in place.
+Cleans the Meson build directories entirely (hence also the built objects of the Meson subprojects and the dependencies), but keeps the installed binaries such as `mediasoup-worker` in place.
 
 ### `invoke clean-pip`
 
@@ -269,7 +271,6 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 
 **Requirements:**
 
-- `invoke clean` must have been called first.
 - A specific version of `clang-tidy`is required. See [Install clang-tidy](#install-clang-tidy).
 - `clang-tidy-VERSION` or `clang-tidy` (corresponding to the required version) must be in the `PATH`. If not, add it before running the command. Same for other `clang-tidy` related executables such as `run-clang-tidy` and `clang-apply-replacements`,
 

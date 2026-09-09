@@ -68,7 +68,7 @@ namespace Channel
 		Channel::ChannelSocket* channel{ nullptr };
 		const FBS::Request::Request* data{ nullptr };
 		// Others.
-		uint32_t id{ 0u };
+		uint32_t id{ 0 };
 		Method method;
 		const char* methodCStr;
 		std::string handlerId;

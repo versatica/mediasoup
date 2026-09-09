@@ -81,8 +81,11 @@ namespace RTC
 			  new MissingMandatoryParameterErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// In this chunk we must validate that some fields have correct values.
+			//
+			// NOTE: Must cast result to uint64_t to avoid integer overflow.
+			// See https://github.com/versatica/mediasoup/security/advisories/GHSA-p9cq-fqxc-987w
 			if (
-			  (errorCause->GetNumberOfMissingParameters() * 2) !=
+			  (static_cast<uint64_t>(errorCause->GetNumberOfMissingParameters()) * 2) !=
 			  causeLength -
 			    MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength)
 			{

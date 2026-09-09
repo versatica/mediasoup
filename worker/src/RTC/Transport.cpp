@@ -26,6 +26,7 @@
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <array>
 #include <iterator> // std::ostream_iterator
+#include <limits>   // std::numeric_limits
 #include <map>      // std::multimap
 
 namespace RTC
@@ -49,25 +50,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->direct                = options->direct();
 		this->maxSendMessageSize    = options->maxSendMessageSize();
 		this->maxReceiveMessageSize = options->maxReceiveMessageSize();
-
-		if (options->direct())
-		{
-			this->direct = true;
-		}
-		else
-		{
-			this->sctpSendBufferSize              = options->sctpSendBufferSize();
-			this->sctpPerStreamSendQueueLimit     = options->sctpPerStreamSendQueueLimit();
-			this->sctpMaxReceiverWindowBufferSize = options->sctpMaxReceiverWindowBufferSize();
-		}
 
 		if (
 		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
 		  initialAvailableOutgoingBitrate.has_value())
 		{
-			this->initialAvailableOutgoingBitrate = initialAvailableOutgoingBitrate.value();
+			// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+			this->initialAvailableOutgoingBitrate = static_cast<int64_t>(std::min<uint64_t>(
+			  initialAvailableOutgoingBitrate.value(),
+			  static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
 		}
 
 		if (options->enableSctp())
@@ -80,11 +74,13 @@ namespace RTC
 			const RTC::SCTP::SctpOptions sctpOptions = {
 				.mtu                         = RTC::Consts::MaxSafeMtuSizeForSctp,
 				.maxSendMessageSize          = this->maxSendMessageSize,
-				.maxSendBufferSize           = this->sctpSendBufferSize,
-				.perStreamSendQueueLimit     = this->sctpPerStreamSendQueueLimit,
+				.maxSendBufferSize           = options->sctpSendBufferSize(),
+				.perStreamSendQueueLimit     = options->sctpPerStreamSendQueueLimit(),
 				.maxReceiveMessageSize       = this->maxReceiveMessageSize,
-				.maxReceiverWindowBufferSize = this->sctpMaxReceiverWindowBufferSize,
-				.requireAuthenticatedCookie  = requireSctpStateCookieAuthentication
+				.maxReceiverWindowBufferSize = options->sctpMaxReceiverWindowBufferSize(),
+				.defaultStreamBufferedAmountLowThreshold =
+				  options->sctpDefaultStreamBufferedAmountLowThreshold(),
+				.requireAuthenticatedCookie = requireSctpStateCookieAuthentication
 			};
 
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
@@ -92,7 +88,7 @@ namespace RTC
 		}
 
 		// Create the RTCP timer.
-		this->rtcpTimer = this->shared->CreateTimer(this);
+		this->rtcpTimer = this->shared->CreateTimer(this, "transport-rtcp");
 	}
 
 	Transport::~Transport()
@@ -396,7 +392,7 @@ namespace RTC
 		  this->maxReceiveMessageSize,
 		  sctpParameters,
 		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
-		                        : flatbuffers::nullopt,
+			                      : flatbuffers::nullopt,
 		  sctpNegotiatedCapabilities,
 		  sctpListener,
 		  std::addressof(traceEventTypes));
@@ -407,7 +403,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMs();
 
 		// Add sctpState.
 		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
@@ -450,59 +446,64 @@ namespace RTC
 		  // transportId.
 		  this->id.c_str(),
 		  // timestamp.
-		  nowMs,
+		  static_cast<uint64_t>(nowMs),
 		  // sctpState.
 		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
-		                        : flatbuffers::nullopt,
+			                      : flatbuffers::nullopt,
 		  // bytesReceived.
 		  this->recvTransmission.GetBytes(),
 		  // recvBitrate.
-		  this->recvTransmission.GetRate(nowMs),
+		  static_cast<uint64_t>(this->recvTransmission.GetRate(nowMs)),
 		  // bytesSent.
 		  this->sendTransmission.GetBytes(),
 		  // sendBitrate.
-		  this->sendTransmission.GetRate(nowMs),
+		  static_cast<uint64_t>(this->sendTransmission.GetRate(nowMs)),
 		  // rtpBytesReceived.
 		  this->recvRtpTransmission.GetBytes(),
 		  // rtpRecvBitrate.
-		  this->recvRtpTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->recvRtpTransmission.GetBitrate(nowMs)),
 		  // rtpBytesSent.
 		  this->sendRtpTransmission.GetBytes(),
 		  // rtpSendBitrate.
-		  this->sendRtpTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->sendRtpTransmission.GetBitrate(nowMs)),
 		  // rtxBytesReceived.
 		  this->recvRtxTransmission.GetBytes(),
 		  // rtxRecvBitrate.
-		  this->recvRtxTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->recvRtxTransmission.GetBitrate(nowMs)),
 		  // rtxBytesSent.
 		  this->sendRtxTransmission.GetBytes(),
 		  // rtxSendBitrate.
-		  this->sendRtxTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->sendRtxTransmission.GetBitrate(nowMs)),
 		  // probationBytesSent.
 		  this->sendProbationTransmission.GetBytes(),
 		  // probationSendBitrate.
-		  this->sendProbationTransmission.GetBitrate(nowMs),
+		  static_cast<uint64_t>(this->sendProbationTransmission.GetBitrate(nowMs)),
 		  // availableOutgoingBitrate.
-		  this->tccClient ? flatbuffers::Optional<uint32_t>(this->tccClient->GetAvailableBitrate())
-		                  : flatbuffers::nullopt,
+		  this->tccClient ? flatbuffers::Optional<uint64_t>(
+		                      static_cast<uint64_t>(this->tccClient->GetAvailableBitrate()))
+			                : flatbuffers::nullopt,
 		  // availableIncomingBitrate.
-		  this->tccServer ? flatbuffers::Optional<uint32_t>(this->tccServer->GetAvailableBitrate())
-		                  : flatbuffers::nullopt,
+		  this->tccServer ? flatbuffers::Optional<uint64_t>(
+		                      static_cast<uint64_t>(this->tccServer->GetAvailableBitrate()))
+			                : flatbuffers::nullopt,
 		  // maxIncomingBitrate.
-		  this->maxIncomingBitrate ? flatbuffers::Optional<uint32_t>(this->maxIncomingBitrate)
-		                           : flatbuffers::nullopt,
+		  this->maxIncomingBitrate > 0
+		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->maxIncomingBitrate))
+				: flatbuffers::nullopt,
 		  // maxOutgoingBitrate.
-		  this->maxOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->maxOutgoingBitrate)
-		                           : flatbuffers::nullopt,
+		  this->maxOutgoingBitrate > 0
+		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->maxOutgoingBitrate))
+				: flatbuffers::nullopt,
 		  // minOutgoingBitrate.
-		  this->minOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->minOutgoingBitrate)
-		                           : flatbuffers::nullopt,
+		  this->minOutgoingBitrate > 0
+		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->minOutgoingBitrate))
+				: flatbuffers::nullopt,
 		  // rtpPacketLossReceived.
 		  this->tccServer ? flatbuffers::Optional<double>(this->tccServer->GetPacketLoss())
-		                  : flatbuffers::nullopt,
+			                : flatbuffers::nullopt,
 		  // rtpPacketLossSent.
 		  this->tccClient ? flatbuffers::Optional<double>(this->tccClient->GetPacketLoss())
-		                  : flatbuffers::nullopt);
+			                : flatbuffers::nullopt);
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
@@ -515,9 +516,11 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();
 
-				this->maxIncomingBitrate = body->maxIncomingBitrate();
+				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+				this->maxIncomingBitrate = static_cast<int64_t>(std::min<uint64_t>(
+				  body->maxIncomingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
 
-				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
+				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIi64, this->maxIncomingBitrate);
 
 				request->Accept();
 
@@ -532,18 +535,21 @@ namespace RTC
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MAX_OUTGOING_BITRATE:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>();
-				const uint32_t bitrate = body->maxOutgoingBitrate();
 
-				if (bitrate > 0u && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
+				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+				const auto bitrate = static_cast<int64_t>(std::min<uint64_t>(
+				  body->maxOutgoingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+
+				if (bitrate > 0 && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= %" PRIu32 " or 0 (unlimited)",
+					  "bitrate must be >= %" PRIi64 " or 0 (unlimited)",
 					  RTC::TransportCongestionControlMinOutgoingBitrate);
 				}
-				else if (bitrate > 0u && bitrate < this->minOutgoingBitrate)
+				else if (bitrate > 0 && bitrate < this->minOutgoingBitrate)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= current min outgoing bitrate (%" PRIu32 ") or 0 (unlimited)",
+					  "bitrate must be >= current min outgoing bitrate (%" PRIi64 ") or 0 (unlimited)",
 					  this->minOutgoingBitrate);
 				}
 
@@ -554,7 +560,7 @@ namespace RTC
 					this->tccClient->SetMaxOutgoingBitrate(bitrate);
 					this->maxOutgoingBitrate = bitrate;
 
-					MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIu32, this->maxOutgoingBitrate);
+					MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIi64, this->maxOutgoingBitrate);
 
 					ComputeOutgoingDesiredBitrate();
 				}
@@ -571,18 +577,21 @@ namespace RTC
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MIN_OUTGOING_BITRATE:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMinOutgoingBitrateRequest>();
-				const uint32_t bitrate = body->minOutgoingBitrate();
 
-				if (bitrate > 0u && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
+				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+				const auto bitrate = static_cast<int64_t>(std::min<uint64_t>(
+				  body->minOutgoingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+
+				if (bitrate > 0 && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= %" PRIu32 " or 0 (unlimited)",
+					  "bitrate must be >= %" PRIi64 " or 0 (unlimited)",
 					  RTC::TransportCongestionControlMinOutgoingBitrate);
 				}
-				else if (bitrate > 0u && this->maxOutgoingBitrate > 0 && bitrate > this->maxOutgoingBitrate)
+				else if (bitrate > 0 && this->maxOutgoingBitrate > 0 && bitrate > this->maxOutgoingBitrate)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "bitrate must be <= current max outgoing bitrate (%" PRIu32 ") or 0 (unlimited)",
+					  "bitrate must be <= current max outgoing bitrate (%" PRIi64 ") or 0 (unlimited)",
 					  this->maxOutgoingBitrate);
 				}
 
@@ -593,7 +602,7 @@ namespace RTC
 					this->tccClient->SetMinOutgoingBitrate(bitrate);
 					this->minOutgoingBitrate = bitrate;
 
-					MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIu32, this->minOutgoingBitrate);
+					MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIi64, this->minOutgoingBitrate);
 
 					ComputeOutgoingDesiredBitrate();
 				}
@@ -648,6 +657,15 @@ namespace RTC
 				// Insert into the map.
 				this->mapProducers[producerId] = producer;
 
+				// Take this Producer into account for the capture time estimation of its
+				// sender.
+				{
+					const auto& cname = producer->GetRtpParameters().rtcp.cname;
+
+					this->mapCnameRemoteCaptureTimeEstimator[cname].UpdateSource(
+					  producer->GetRtpHeaderExtensionIds().absCaptureTime != 0);
+				}
+
 				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
 
 				// Take the transport related RTP header extensions of the Producer and
@@ -686,6 +704,14 @@ namespace RTC
 				{
 					this->recvRtpHeaderExtensionIds.dependencyDescriptor =
 					  producerRtpHeaderExtensionIds.dependencyDescriptor;
+				}
+
+				// NOTE: Not transport related, but needed here so that received packets carry
+				// its id and `RtpStreamRecv` can read the extension off them.
+				if (producerRtpHeaderExtensionIds.absCaptureTime != 0)
+				{
+					this->recvRtpHeaderExtensionIds.absCaptureTime =
+					  producerRtpHeaderExtensionIds.absCaptureTime;
 				}
 
 				// Create status response.
@@ -933,57 +959,6 @@ namespace RTC
 				{
 					consumer->SetExternallyManagedBitrate();
 				}
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-				// Create SenderBandwidthEstimator if:
-				// - not already created,
-				// - it's a video Consumer, and
-				// - there is transport-wide-cc-01 RTP header extension, and
-				// - there is "transport-cc" in codecs RTCP feedback.
-				//
-				if (
-				  !this->senderBwe && consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-				  rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-				  std::any_of(
-				    codecs.begin(),
-				    codecs.end(),
-				    [](const RTC::RtpCodecParameters& codec)
-				    {
-					    return std::any_of(
-					      codec.rtcpFeedback.begin(),
-					      codec.rtcpFeedback.end(),
-					      [](const RTC::RtcpFeedback& fb)
-					      {
-						      return fb.type == "transport-cc";
-					      });
-				    }))
-				{
-					MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
-
-					// Tell all the Consumers that we are gonna manage their bitrate.
-					for (auto& kv : this->mapConsumers)
-					{
-						auto* consumer = kv.second;
-
-						consumer->SetExternallyManagedBitrate();
-					};
-
-					this->senderBwe = std::make_shared<RTC::SenderBandwidthEstimator>(
-					  this, this->shared, this->initialAvailableOutgoingBitrate);
-
-					if (IsConnected())
-					{
-						this->senderBwe->TransportConnected();
-					}
-				}
-
-				// If applicable, tell the new Consumer that we are gonna manage its
-				// bitrate.
-				if (this->senderBwe)
-				{
-					consumer->SetExternallyManagedBitrate();
-				}
-#endif
 
 				if (IsConnected())
 				{
@@ -1253,6 +1228,26 @@ namespace RTC
 				// Remove it from the map.
 				this->mapProducers.erase(producer->id);
 
+				// Remove the capture time estimator of its sender once its last Producer
+				// is gone.
+				{
+					const auto& cname = producer->GetRtpParameters().rtcp.cname;
+
+					const bool cnameStillInUse = std::ranges::any_of(
+					  this->mapProducers,
+					  [&cname](const auto& kv)
+					  {
+						  const auto* otherProducer = kv.second;
+
+						  return otherProducer->GetRtpParameters().rtcp.cname == cname;
+					  });
+
+					if (!cnameStillInUse)
+					{
+						this->mapCnameRemoteCaptureTimeEstimator.erase(cname);
+					}
+				}
+
 				// Tell the child class to clear associated SSRCs.
 				for (const auto& kv : producer->GetRtpStreams())
 				{
@@ -1439,7 +1434,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (notification->event)
+		switch (notification->data->event())
 		{
 			default:
 			{
@@ -1483,7 +1478,7 @@ namespace RTC
 		}
 
 		// Start the RTCP timer.
-		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+		this->rtcpTimer->Start(RTC::RTCP::MaxVideoIntervalMs / 2);
 
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
@@ -1496,14 +1491,6 @@ namespace RTC
 		{
 			this->tccServer->TransportConnected();
 		}
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-		// Tell the SenderBandwidthEstimator.
-		if (this->senderBwe)
-		{
-			this->senderBwe->TransportConnected();
-		}
-#endif
 	}
 
 	void Transport::Disconnected()
@@ -1532,17 +1519,9 @@ namespace RTC
 		{
 			this->tccServer->TransportDisconnected();
 		}
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-		// Tell the SenderBandwidthEstimator.
-		if (this->senderBwe)
-		{
-			this->senderBwe->TransportDisconnected();
-		}
-#endif
 	}
 
-	void Transport::ReceiveRtpPacket(RTC::RTP::Packet* packet)
+	void Transport::ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1554,12 +1533,10 @@ namespace RTC
 		// them.
 		packet->AssignExtensionIds(this->recvRtpHeaderExtensionIds);
 
-		auto nowMs = this->shared->GetTimeMs();
-
 		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
 		{
-			this->tccServer->IncomingPacket(nowMs, packet);
+			this->tccServer->IncomingPacket(receivedAtUs, packet);
 		}
 
 		// Get the associated Producer.
@@ -1592,7 +1569,7 @@ namespace RTC
 		//   producer->id.c_str());
 
 		// Pass the RTP packet to the corresponding Producer.
-		auto result = producer->ReceiveRtpPacket(packet);
+		auto result = producer->ReceiveRtpPacket(packet, receivedAtUs);
 
 		switch (result)
 		{
@@ -1621,14 +1598,14 @@ namespace RTC
 		delete packet;
 	}
 
-	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
+	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		// Handle each RTCP packet.
 		while (packet)
 		{
-			HandleRtcpPacket(packet);
+			HandleRtcpPacket(packet, receivedAtUs);
 
 			auto* previousPacket = packet;
 
@@ -1638,7 +1615,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::ReceiveSctpData(const uint8_t* data, size_t len)
+	void Transport::ReceiveSctpData(const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1650,7 +1627,7 @@ namespace RTC
 		}
 
 		// Pass it to the SctpAssociation.
-		this->sctpAssociation->ReceiveSctpData(data, len);
+		this->sctpAssociation->ReceiveSctpData(data, len, receivedAtUs);
 	}
 
 	void Transport::SendSctpMessage(
@@ -1679,7 +1656,7 @@ namespace RTC
 			.unordered          = !sctpStreamParameters.ordered,
 			.lifetimeMs         = sctpStreamParameters.ordered
 			                        ? std::nullopt
-			                        : std::optional<uint64_t>(sctpStreamParameters.maxPacketLifeTime),
+			                        : std::optional<int64_t>(sctpStreamParameters.maxPacketLifeTime),
 			.maxRetransmissions = sctpStreamParameters.ordered
 			                        ? std::nullopt
 			                        : std::optional<uint64_t>(sctpStreamParameters.maxRetransmits),
@@ -1904,7 +1881,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)
+	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -1941,12 +1918,12 @@ namespace RTC
 						continue;
 					}
 
-					consumer->ReceiveRtcpReceiverReport(report);
+					consumer->ReceiveRtcpReceiverReport(report, receivedAtUs);
 				}
 
 				if (this->tccClient && !this->mapConsumers.empty())
 				{
-					float rtt = 0;
+					float rttMs = 0;
 
 					// Retrieve the RTT from the first active consumer.
 					for (auto& kv : this->mapConsumers)
@@ -1955,13 +1932,13 @@ namespace RTC
 
 						if (consumer->IsActive())
 						{
-							rtt = consumer->GetRtt();
+							rttMs = consumer->GetRttMs();
 
 							break;
 						}
 					}
 
-					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, this->shared->GetTimeMsInt64());
+					this->tccClient->ReceiveRtcpReceiverReport(rr, rttMs, receivedAtUs);
 				}
 
 				break;
@@ -2103,7 +2080,7 @@ namespace RTC
 				if (
 				  !consumer && feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC &&
 				  (feedback->GetMediaSsrc() != RTC::RTP::ProbationGenerator::Ssrc ||
-				   !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())))
+					 !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())))
 				{
 					MS_DEBUG_TAG(
 					  rtcp,
@@ -2147,14 +2124,6 @@ namespace RTC
 							this->tccClient->ReceiveRtcpTransportFeedback(feedback);
 						}
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-						// Pass it to the SenderBandwidthEstimator client.
-						if (this->senderBwe)
-						{
-							this->senderBwe->ReceiveRtcpTransportFeedback(feedback);
-						}
-#endif
-
 						break;
 					}
 
@@ -2193,7 +2162,7 @@ namespace RTC
 						continue;
 					}
 
-					producer->ReceiveRtcpSenderReport(report);
+					producer->ReceiveRtcpSenderReport(report, receivedAtUs);
 				}
 
 				break;
@@ -2254,7 +2223,7 @@ namespace RTC
 									continue;
 								}
 
-								producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
+								producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
 							}
 
 							break;
@@ -2268,7 +2237,7 @@ namespace RTC
 							{
 								auto* consumer = kv.second;
 
-								consumer->ReceiveRtcpXrReceiverReferenceTime(rrt);
+								consumer->ReceiveRtcpXrReceiverReferenceTime(rrt, receivedAtUs);
 							}
 
 							break;
@@ -2291,7 +2260,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::SendRtcp(uint64_t nowMs)
+	void Transport::SendRtcp(int64_t nowUs)
 	{
 		MS_TRACE();
 
@@ -2300,7 +2269,7 @@ namespace RTC
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
-			auto rtcpAdded = consumer->GetRtcp(packet.get(), nowMs);
+			auto rtcpAdded = consumer->GetRtcp(packet.get(), nowUs);
 
 			// RTCP data couldn't be added because the Compound packet is full.
 			// Send the RTCP compound packet and request for RTCP again.
@@ -2312,14 +2281,14 @@ namespace RTC
 				packet.reset(new RTC::RTCP::CompoundPacket());
 
 				// Retrieve the RTCP again.
-				consumer->GetRtcp(packet.get(), nowMs);
+				consumer->GetRtcp(packet.get(), nowUs);
 			}
 		}
 
 		for (auto& kv : this->mapProducers)
 		{
 			auto* producer = kv.second;
-			auto rtcpAdded = producer->GetRtcp(packet.get(), nowMs);
+			auto rtcpAdded = producer->GetRtcp(packet.get(), nowUs);
 
 			// RTCP data couldn't be added because the Compound packet is full.
 			// Send the RTCP compound packet and request for RTCP again.
@@ -2331,7 +2300,7 @@ namespace RTC
 				packet.reset(new RTC::RTCP::CompoundPacket());
 
 				// Retrieve the RTCP again.
-				producer->GetRtcp(packet.get(), nowMs);
+				producer->GetRtcp(packet.get(), nowUs);
 			}
 		}
 
@@ -2368,18 +2337,18 @@ namespace RTC
 			return;
 		}
 
-		bool baseAllocation       = true;
-		uint32_t availableBitrate = this->tccClient->GetAvailableBitrate();
+		bool baseAllocation      = true;
+		int64_t availableBitrate = this->tccClient->GetAvailableBitrate();
 
 		this->tccClient->RescheduleNextAvailableBitrateEvent();
 
-		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIi64 "]", availableBitrate);
 
 		// Redistribute the available bitrate by allowing Consumers to increase
 		// layer by layer. Initially try to spread the bitrate across all
 		// consumers. Then allocate the excess bitrate to Consumers starting
 		// with the highest priorty.
-		while (availableBitrate > 0u)
+		while (availableBitrate > 0)
 		{
 			auto previousAvailableBitrate = availableBitrate;
 
@@ -2392,17 +2361,15 @@ namespace RTC
 				// NOLINTNEXTLINE(bugprone-too-small-loop-variable)
 				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
 				{
-					uint32_t usedBitrate{ 0u };
-					const bool considerLoss = (bweType == RTC::BweType::REMB);
-
-					usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
+					const bool considerLoss   = (bweType == RTC::BweType::REMB);
+					const int64_t usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
 
 					MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
 
 					availableBitrate -= usedBitrate;
 
-					// Exit the loop fast if used bitrate is 0.
-					if (usedBitrate == 0u)
+					// Exit the loop fast if no bitrate was used.
+					if (usedBitrate <= 0)
 					{
 						break;
 					}
@@ -2418,7 +2385,7 @@ namespace RTC
 			baseAllocation = false;
 		}
 
-		MS_DEBUG_DEV("after layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV("after layer-by-layer iterations [availableBitrate:%" PRIi64 "]", availableBitrate);
 
 		// Finally instruct Consumers to apply their computed layers.
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
@@ -2435,7 +2402,7 @@ namespace RTC
 
 		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
 
-		uint32_t totalDesiredBitrate{ 0u };
+		int64_t totalDesiredBitrate{ 0 };
 
 		for (auto& kv : this->mapConsumers)
 		{
@@ -2445,7 +2412,7 @@ namespace RTC
 			totalDesiredBitrate += desiredBitrate;
 		}
 
-		MS_DEBUG_DEV("total desired bitrate: %" PRIu32, totalDesiredBitrate);
+		MS_DEBUG_DEV("total desired bitrate: %" PRIi64, totalDesiredBitrate);
 
 		this->tccClient->SetDesiredBitrate(totalDesiredBitrate, forceBitrate);
 	}
@@ -2463,7 +2430,7 @@ namespace RTC
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::PROBATION,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -2488,18 +2455,18 @@ namespace RTC
 		  this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC
 		    ? FBS::Transport::BweType::TRANSPORT_CC
 		    : FBS::Transport::BweType::REMB,
-		  bitrates.desiredBitrate,
-		  bitrates.effectiveDesiredBitrate,
-		  bitrates.minBitrate,
-		  bitrates.maxBitrate,
-		  bitrates.startBitrate,
-		  bitrates.maxPaddingBitrate,
-		  bitrates.availableBitrate);
+		  static_cast<uint64_t>(bitrates.desiredBitrate),
+		  static_cast<uint64_t>(bitrates.effectiveDesiredBitrate),
+		  static_cast<uint64_t>(bitrates.minBitrate),
+		  static_cast<uint64_t>(bitrates.maxBitrate),
+		  static_cast<uint64_t>(bitrates.startBitrate),
+		  static_cast<uint64_t>(bitrates.maxPaddingBitrate),
+		  static_cast<uint64_t>(bitrates.availableBitrate));
 
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::BWE,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Transport::TraceInfo::BweTraceInfo,
 		  traceInfo.Union());
@@ -2546,6 +2513,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Feed the capture time estimator of the sender of this Producer.
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it != this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			auto& remoteCaptureTimeEstimator = it->second;
+
+			remoteCaptureTimeEstimator.SenderReportReceived(rtpStream);
+		}
+
 		this->listener->OnTransportProducerRtcpSenderReport(this, producer, rtpStream, first);
 	}
 
@@ -2563,13 +2541,57 @@ namespace RTC
 		SendRtcpPacket(packet);
 	}
 
-	void Transport::OnProducerNeedWorstRemoteFractionLost(
-	  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost)
+	uint8_t Transport::OnProducerNeedWorstRemoteFractionLost(RTC::Producer* producer, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
-		this->listener->OnTransportNeedWorstRemoteFractionLost(
-		  this, producer, mappedSsrc, worstRemoteFractionLost);
+		return this->listener->OnTransportNeedWorstRemoteFractionLost(this, producer, mappedSsrc);
+	}
+
+	std::optional<int64_t> Transport::OnProducerNeedLocalCaptureAtUs(
+	  RTC::Producer* producer, const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts)
+	{
+		MS_TRACE();
+
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it == this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			return std::nullopt;
+		}
+
+		const auto& remoteCaptureTimeEstimator = it->second;
+
+		return remoteCaptureTimeEstimator.GetLocalCaptureAtUs(rtpStream, ts);
+	}
+
+	std::optional<int64_t> Transport::OnProducerNeedRemoteClockOffsetUs(const RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		const auto it =
+		  this->mapCnameRemoteCaptureTimeEstimator.find(producer->GetRtpParameters().rtcp.cname);
+
+		if (it == this->mapCnameRemoteCaptureTimeEstimator.end())
+		{
+			return std::nullopt;
+		}
+
+		const auto& remoteCaptureTimeEstimator = it->second;
+		const auto clockOffsetUs               = remoteCaptureTimeEstimator.GetClockOffsetUs();
+
+		if (!clockOffsetUs.has_value())
+		{
+			return std::nullopt;
+		}
+
+		// NOTE: The estimator gives the offset against our own monotonic clock, while what
+		// a receiver reconstructs out of the Sender Reports we send is the clock we
+		// announce, so the distance to the NTP epoch has to be taken into account. Both
+		// terms are huge and their sum is small, so they are added as microseconds before
+		// anything scales them up.
+		return clockOffsetUs.value() + this->shared->GetNtpOffsetUs();
 	}
 
 	void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
@@ -2582,7 +2604,7 @@ namespace RTC
 #endif
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeMs());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2612,38 +2634,6 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr(this->senderBwe);
-			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
-
-			sentInfo.wideSeq     = this->transportWideCcSeq;
-			sentInfo.size        = packet->GetLength();
-			sentInfo.sendingAtMs = this->shared->GetTimeMs();
-
-			const auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, shared, packetInfo, senderBweWeakPtr, sentInfo](bool sent) mutable
-			  {
-				  if (sent)
-				  {
-					  auto tccClient = tccClientWeakPtr.lock();
-
-					  if (tccClient)
-					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
-					  }
-
-					  auto senderBwe = senderBweWeakPtr.lock();
-
-					  if (senderBwe)
-					  {
-						  sentInfo.sentAtMs = shared->GetTimeMs();
-						  senderBwe->RtpPacketSent(sentInfo);
-					  }
-				  }
-			  });
-
-			SendRtpPacket(consumer, packet, cb);
-#else
 			const auto* cb = new onSendCallback(
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
@@ -2653,13 +2643,12 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
-#endif
 		}
 		else
 		{
@@ -2674,7 +2663,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeMs());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2699,38 +2688,6 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
-			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
-
-			sentInfo.wideSeq     = this->transportWideCcSeq;
-			sentInfo.size        = packet->GetLength();
-			sentInfo.sendingAtMs = this->shared->GetTimeMs();
-
-			const auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, shared, packetInfo, senderBweWeakPtr, sentInfo](bool sent) mutable
-			  {
-				  if (sent)
-				  {
-					  auto tccClient = tccClientWeakPtr.lock();
-
-					  if (tccClient)
-					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
-					  }
-
-					  auto senderBwe = senderBweWeakPtr.lock();
-
-					  if (senderBwe)
-					  {
-						  sentInfo.sentAtMs = shared->GetTimeMs();
-						  senderBwe->RtpPacketSent(sentInfo);
-					  }
-				  }
-			  });
-
-			SendRtpPacket(consumer, packet, cb);
-#else
 			const auto* cb = new onSendCallback(
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
@@ -2740,13 +2697,12 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
-#endif
 		}
 		else
 		{
@@ -2834,12 +2790,13 @@ namespace RTC
 	  RTC::DataProducer* dataProducer,
 	  RTC::SCTP::Message message,
 	  std::vector<uint16_t>& subchannels,
-	  std::optional<uint16_t> requiredSubchannel)
+	  std::optional<uint16_t> requiredSubchannel,
+	  std::optional<uint16_t> ignoredSubchannel)
 	{
 		MS_TRACE();
 
 		this->listener->OnTransportDataProducerMessageReceived(
-		  this, dataProducer, std::move(message), subchannels, requiredSubchannel);
+		  this, dataProducer, std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 	}
 
 	void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
@@ -2883,6 +2840,8 @@ namespace RTC
 	void Transport::OnDataConsumerNeedBufferedAmountLowThreshold(
 	  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmountLowThreshold) const
 	{
+		MS_TRACE();
+
 		if (this->sctpAssociation)
 		{
 			bufferedAmountLowThreshold =
@@ -3158,15 +3117,18 @@ namespace RTC
 		{
 			std::vector<uint16_t> subchannels;
 			std::optional<uint16_t> requiredSubchannel;
+			std::optional<uint16_t> ignoredSubchannel;
 
-			// When this is a pipe transport, the subchannels and required subchannel
-			// may be encoded at the beginning of the message payload.
+			// When this is a pipe transport, the subchannels, required subchannel and
+			// ignored subchannel may be encoded at the beginning of the message payload.
 			if (this->IsPipe())
 			{
-				RTC::SubchannelsCodec::DecodeSubchannels(message, subchannels, requiredSubchannel);
+				RTC::SubchannelsCodec::DecodeSubchannels(
+				  message, subchannels, requiredSubchannel, ignoredSubchannel);
 			}
 
-			dataProducer->ReceiveMessage(std::move(message), subchannels, requiredSubchannel);
+			dataProducer->ReceiveMessage(
+			  std::move(message), subchannels, requiredSubchannel, ignoredSubchannel);
 		}
 		catch (std::exception& error)
 		{
@@ -3307,7 +3269,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("outgoing available bitrate:%" PRIu32, bitrates.availableBitrate);
+		MS_DEBUG_DEV("outgoing available bitrate:%" PRIi64, bitrates.availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
@@ -3324,7 +3286,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeMs());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -3352,39 +3314,6 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
-			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
-
-			sentInfo.wideSeq     = this->transportWideCcSeq;
-			sentInfo.size        = packet->GetLength();
-			sentInfo.isProbation = true;
-			sentInfo.sendingAtMs = this->shared->GetTimeMs();
-
-			const auto* cb = new onSendCallback(
-			  [tccClientWeakPtr, shared, packetInfo, senderBweWeakPtr, sentInfo](bool sent) mutable
-			  {
-				  if (sent)
-				  {
-					  auto tccClient = tccClientWeakPtr.lock();
-
-					  if (tccClient)
-					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
-					  }
-
-					  auto senderBwe = senderBweWeakPtr.lock();
-
-					  if (senderBwe)
-					  {
-						  sentInfo.sentAtMs = shared->GetTimeMs();
-						  senderBwe->RtpPacketSent(sentInfo);
-					  }
-				  }
-			  });
-
-			SendRtpPacket(nullptr, packet, cb);
-#else
 			const auto* cb = new onSendCallback(
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
@@ -3394,13 +3323,12 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeMsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
 			  });
 
 			SendRtpPacket(nullptr, packet, cb);
-#endif
 		}
 		else
 		{
@@ -3413,7 +3341,7 @@ namespace RTC
 		this->sendProbationTransmission.Update(packet);
 
 		MS_DEBUG_DEV(
-		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIu32 "]",
+		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIu16 ", size:%zu, bitrate:%" PRIi64 "]",
 		  packet->GetSequenceNumber(),
 		  this->transportWideCcSeq,
 		  packet->GetLength(),
@@ -3430,25 +3358,6 @@ namespace RTC
 		SendRtcpPacket(packet);
 	}
 
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-	void Transport::OnSenderBandwidthEstimatorAvailableBitrate(
-	  RTC::SenderBandwidthEstimator* /*senderBwe*/,
-	  uint32_t availableBitrate,
-	  uint32_t previousAvailableBitrate)
-	{
-		MS_TRACE();
-
-		MS_DEBUG_DEV(
-		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
-		  availableBitrate,
-		  previousAvailableBitrate);
-
-		// TODO: Uncomment once just SenderBandwidthEstimator is used.
-		// DistributeAvailableOutgoingBitrate();
-		// ComputeOutgoingDesiredBitrate();
-	}
-#endif
-
 	void Transport::OnTimer(TimerHandleInterface* timer)
 	{
 		MS_TRACE();
@@ -3456,19 +3365,18 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
-			auto interval        = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			auto intervalMs = static_cast<int64_t>(RTC::RTCP::MaxVideoIntervalMs);
 
-			SendRtcp(nowMs);
+			SendRtcp(this->shared->GetTimeUs());
 
 			/*
 			 * The interval between RTCP packets is varied randomly over the range
 			 * [1.0, 1.5] times the calculated interval to avoid unintended
 			 * synchronization of all participants.
 			 */
-			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt<uint16_t>(10, 15)) / 10;
+			intervalMs *= static_cast<float>(Utils::Crypto::GetRandomUInt<uint16_t>(10, 15)) / 10;
 
-			this->rtcpTimer->Start(interval);
+			this->rtcpTimer->Start(intervalMs);
 		}
 	}
 } // namespace RTC
