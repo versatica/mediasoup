@@ -29,7 +29,7 @@ namespace RTC
 
 			class PictureIdList
 			{
-				static constexpr uint16_t MaxCurrentLayerPictureIdNum{ 1000u };
+				static constexpr uint16_t MaxCurrentLayerPictureIdNum{ 1000 };
 
 			public:
 				explicit PictureIdList() = default;
@@ -93,8 +93,8 @@ namespace RTC
 			public:
 				struct Params
 				{
-					uint8_t spatialLayers{ 1u };
-					uint8_t temporalLayers{ 1u };
+					uint8_t spatialLayers{ 1 };
+					uint8_t temporalLayers{ 1 };
 					bool ksvc{ false };
 				};
 

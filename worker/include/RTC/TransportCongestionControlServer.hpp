@@ -51,7 +51,7 @@ namespace RTC
 					return this->rembServer->GetAvailableBitrate();
 
 				default:
-					return 0u;
+					return 0;
 			}
 		}
 		double GetPacketLoss() const;

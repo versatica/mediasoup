@@ -76,7 +76,7 @@ namespace RTC
 			size_t GetSize() const override
 			{
 				// NOLINTNEXTLINE(bugprone-parent-virtual-call)
-				return FeedbackPsPacket::GetSize() + 8 + (4u * this->ssrcs.size());
+				return FeedbackPsPacket::GetSize() + 8 + (4 * this->ssrcs.size());
 			}
 
 		private:

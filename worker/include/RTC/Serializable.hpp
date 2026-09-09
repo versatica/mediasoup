@@ -218,7 +218,7 @@ namespace RTC
 		// take.
 		size_t bufferLength;
 		// Serializable current exact length (includes padding bytes).
-		size_t length{ 0u };
+		size_t length{ 0 };
 		// Event listener invoked when the current buffer is released (no longer
 		// used by this Serializable)-
 		BufferReleasedListener* bufferReleasedListener{ nullptr };

@@ -143,7 +143,7 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				size_t size = Packet::CommonHeaderSize + 4u /*ssrc*/;
+				size_t size = Packet::CommonHeaderSize + 4 /*ssrc*/;
 
 				for (auto* report : this->reports)
 				{
@@ -154,7 +154,7 @@ namespace RTC
 			}
 
 		private:
-			uint32_t ssrc{ 0u };
+			uint32_t ssrc{ 0 };
 			std::vector<ExtendedReportBlock*> reports;
 		};
 	} // namespace RTCP

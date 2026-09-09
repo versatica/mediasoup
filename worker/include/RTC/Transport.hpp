@@ -124,19 +124,19 @@ namespace RTC
 
 		struct PortRange
 		{
-			uint16_t min{ 0u };
-			uint16_t max{ 0u };
+			uint16_t min{ 0 };
+			uint16_t max{ 0 };
 		};
 
 		struct ListenInfo
 		{
 			std::string ip;
 			std::string announcedAddress;
-			uint16_t port{ 0u };
+			uint16_t port{ 0 };
 			PortRange portRange;
 			SocketFlags flags;
-			uint32_t sendBufferSize{ 0u };
-			uint32_t recvBufferSize{ 0u };
+			uint32_t sendBufferSize{ 0 };
+			uint32_t recvBufferSize{ 0 };
 		};
 
 	private:

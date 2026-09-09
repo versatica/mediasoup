@@ -42,9 +42,9 @@ namespace RTC
 			Type type{ Type::FORWARD };
 
 			// Valid when type == FORWARD:
-			uint32_t tsOffset{ 0u };
+			uint32_t tsOffset{ 0 };
 			bool isSyncPacket{ false };
-			uint16_t syncSeqValue{ 0u };
+			uint16_t syncSeqValue{ 0 };
 			bool shouldSyncEncodingContext{ false };
 			bool spatialLayerSwitched{ false };
 			bool temporalLayerChanged{ false };

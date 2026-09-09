@@ -42,22 +42,22 @@ namespace RTC
 				flatbuffers::Offset<FBS::RtpStream::Params> FillBuffer(
 				  flatbuffers::FlatBufferBuilder& builder) const;
 
-				size_t encodingIdx{ 0u };
-				uint32_t ssrc{ 0u };
-				uint8_t payloadType{ 0u };
+				size_t encodingIdx{ 0 };
+				uint32_t ssrc{ 0 };
+				uint8_t payloadType{ 0 };
 				RTC::RtpCodecMimeType mimeType;
-				uint32_t clockRate{ 0u };
+				uint32_t clockRate{ 0 };
 				std::string rid;
 				std::string cname;
-				uint32_t rtxSsrc{ 0u };
-				uint8_t rtxPayloadType{ 0u };
+				uint32_t rtxSsrc{ 0 };
+				uint8_t rtxPayloadType{ 0 };
 				bool useNack{ false };
 				bool usePli{ false };
 				bool useFir{ false };
 				bool useInBandFec{ false };
 				bool useDtx{ false };
-				uint8_t spatialLayers{ 1u };
-				uint8_t temporalLayers{ 1u };
+				uint8_t spatialLayers{ 1 };
+				uint8_t temporalLayers{ 1 };
 			};
 
 		public:
@@ -245,15 +245,15 @@ namespace RTC
 			// Others.
 			//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
 			// Highest seq. number seen.
-			uint16_t maxSeq{ 0u };
+			uint16_t maxSeq{ 0 };
 			// Shifted count of seq. number cycles.
-			uint32_t cycles{ 0u };
+			uint32_t cycles{ 0 };
 			// Base seq number.
-			uint32_t baseSeq{ 0u };
+			uint32_t baseSeq{ 0 };
 			// Last 'bad' seq number + 1.
-			uint32_t badSeq{ 0u };
+			uint32_t badSeq{ 0 };
 			// Highest timestamp seen.
-			uint32_t maxPacketTs{ 0u };
+			uint32_t maxPacketTs{ 0 };
 			// When the packet with highest timestammp was seen.
 			int64_t maxPacketAtUs{ 0 };
 			// When the media in the packet with highest timestamp was captured, in our own
@@ -264,21 +264,21 @@ namespace RTC
 			// RtpStreamRecv::GetCaptureMapping() is what must be used there.
 			std::optional<int64_t> maxPacketCaptureAtUs;
 			int32_t packetsLost{ 0 };
-			uint8_t fractionLost{ 0u };
+			uint8_t fractionLost{ 0 };
 			// Jitter in RTP timestamp units. As per spec it's kept as floating value
 			// although it's exposed as integer in the stats.
 			float jitter{ 0 };
-			size_t packetsDiscarded{ 0u };
-			size_t packetsRetransmitted{ 0u };
-			size_t packetsRepaired{ 0u };
-			size_t nackCount{ 0u };
-			size_t nackPacketCount{ 0u };
-			size_t pliCount{ 0u };
-			size_t firCount{ 0u };
+			size_t packetsDiscarded{ 0 };
+			size_t packetsRetransmitted{ 0 };
+			size_t packetsRepaired{ 0 };
+			size_t nackCount{ 0 };
+			size_t nackPacketCount{ 0 };
+			size_t pliCount{ 0 };
+			size_t firCount{ 0 };
 			// Packets repaired at last interval for score calculation.
-			size_t repairedPriorScore{ 0u };
+			size_t repairedPriorScore{ 0 };
 			// Packets retransmitted at last interval for score calculation.
-			size_t retransmittedPriorScore{ 0u };
+			size_t retransmittedPriorScore{ 0 };
 			// Correspondence between wall clock and RTP timeline given by the last Sender
 			// Report.
 			std::optional<RTP::RtpStream::SenderReportMapping> lastSenderReportMapping;
@@ -288,7 +288,7 @@ namespace RTC
 
 		private:
 			// Score related.
-			uint8_t score{ 0u };
+			uint8_t score{ 0 };
 			std::vector<uint8_t> scores;
 			// Whether at least a RTP packet has been received.
 			bool started{ false };

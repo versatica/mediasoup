@@ -215,11 +215,11 @@ namespace RTC
 		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
-		std::bitset<128u> supportedCodecPayloadTypes;
+		std::bitset<128> supportedCodecPayloadTypes;
 		int64_t lastRtcpSentAtUs{ 0 };
 		int64_t maxRtcpIntervalMs{ 0 };
 		bool externallyManagedBitrate{ false };
-		uint8_t priority{ 1u };
+		uint8_t priority{ 1 };
 		struct TraceEventTypes traceEventTypes;
 
 	private:

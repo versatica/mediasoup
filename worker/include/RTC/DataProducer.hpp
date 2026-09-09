@@ -87,7 +87,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		SharedInterface* shared{ nullptr };
-		size_t maxMessageSize{ 0u };
+		size_t maxMessageSize{ 0 };
 		RTC::DataProducer::Listener* listener{ nullptr };
 		// Others.
 		Type type;
@@ -95,8 +95,8 @@ namespace RTC
 		std::string label;
 		std::string protocol;
 		bool paused{ false };
-		size_t messagesReceived{ 0u };
-		size_t bytesReceived{ 0u };
+		size_t messagesReceived{ 0 };
+		size_t bytesReceived{ 0 };
 	};
 } // namespace RTC
 

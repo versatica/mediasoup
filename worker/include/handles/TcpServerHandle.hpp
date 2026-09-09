@@ -66,7 +66,7 @@ public:
 protected:
 	struct sockaddr_storage localAddr{};
 	std::string localIp;
-	uint16_t localPort{ 0u };
+	uint16_t localPort{ 0 };
 
 private:
 	// Allocated by this (may be passed by argument).

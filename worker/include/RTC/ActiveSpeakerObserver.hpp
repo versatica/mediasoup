@@ -45,14 +45,14 @@ namespace RTC
 			int64_t lastLevelChangeAtMs{ 0 };
 
 		private:
-			uint8_t minLevel{ 0u };
-			uint8_t nextMinLevel{ 0u };
-			uint32_t nextMinLevelWindowLen{ 0u };
+			uint8_t minLevel{ 0 };
+			uint8_t nextMinLevel{ 0 };
+			uint32_t nextMinLevelWindowLen{ 0 };
 			std::vector<uint8_t> immediates;
 			std::vector<uint8_t> mediums;
 			std::vector<uint8_t> longs;
 			std::vector<uint8_t> levels;
-			size_t nextLevelIndex{ 0u };
+			size_t nextLevelIndex{ 0 };
 		};
 
 		class ProducerSpeaker
@@ -67,7 +67,7 @@ namespace RTC
 		};
 
 	private:
-		static const uint8_t RelativeSpeachActivitiesLen{ 3u };
+		static const uint8_t RelativeSpeachActivitiesLen{ 3 };
 
 	public:
 		ActiveSpeakerObserver(

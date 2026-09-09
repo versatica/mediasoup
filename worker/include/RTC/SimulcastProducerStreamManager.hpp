@@ -82,10 +82,10 @@ namespace RTC
 		// Spatial layer that was the RTP timestamp reference the last time its capture
 		// instant was known upon a received Sender Report.
 		int16_t tsReferenceSpatialLayerWithCaptureMapping{ -1 };
-		uint32_t tsOffset{ 0u };
+		uint32_t tsOffset{ 0 };
 		bool keyFrameForTsOffsetRequested{ false };
 		// Old-packet filtering after spatial switch.
-		uint16_t snReferenceSpatialLayer{ 0u };
+		uint16_t snReferenceSpatialLayer{ 0 };
 		bool checkingForOldPacketsInSpatialLayer{ false };
 		// BWE downgrade tracking.
 		int64_t lastBweDowngradeAtMs{ 0 };

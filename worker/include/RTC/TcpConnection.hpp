@@ -40,7 +40,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		SharedInterface* shared{ nullptr };
 		// Others.
-		size_t frameStart{ 0u }; // Where the latest frame starts.
+		size_t frameStart{ 0 }; // Where the latest frame starts.
 	};
 } // namespace RTC
 

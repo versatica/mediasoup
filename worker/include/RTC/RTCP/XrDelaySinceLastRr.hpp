@@ -151,7 +151,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetSize() const override
 			{
-				size_t size{ 4u }; // Common header.
+				size_t size{ 4 }; // Common header.
 
 				for (auto* ssrcInfo : this->ssrcInfos)
 				{

@@ -5,6 +5,7 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "Logger.hpp"
 #include <libwebrtc/api/transport/network_types.h> // webrtc::TargetRateConstraints
+#include <cmath>                                   // std::llround()
 #include <limits>                                  // std::numeric_limits
 
 namespace RTC
@@ -13,9 +14,11 @@ namespace RTC
 
 	// NOTE: TransportCongestionControlMinOutgoingBitrate is defined in
 	// TransportCongestionControlClient.hpp and exposed publicly.
-	static constexpr float MaxBitrateMarginFactor{ 0.1f };
-	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
-	static constexpr float MaxPaddingBitrateFactor{ 0.85f };
+	// NOTE: These are double rather than float because they are applied to bitrates,
+	// and float only holds exact integers up to 2^24 (16.7 Mbps).
+	static constexpr double MaxBitrateMarginFactor{ 0.1 };
+	static constexpr double MaxBitrateIncrementFactor{ 1.35 };
+	static constexpr double MaxPaddingBitrateFactor{ 0.85 };
 	static constexpr int64_t AvailableBitrateEventIntervalMs{ 1000 };
 	static constexpr size_t PacketLossHistogramLength{ 24 };
 
@@ -378,16 +381,17 @@ namespace RTC
 			newMaxBitrate = std::max<int64_t>(
 			  this->initialAvailableBitrate,
 #ifdef USE_TREND_CALCULATOR
-			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
+			  std::llround(this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor));
 #else
-			  this->bitrates.desiredBitrate * MaxBitrateIncrementFactor);
+			  std::llround(this->bitrates.desiredBitrate * MaxBitrateIncrementFactor));
 #endif
 
 			// If max bitrate requested didn't change by more than a small % keep the
 			// previous settings to avoid constant small fluctuations requiring extra
 			// probing and making the estimation less stable (requires constant
 			// redistribution of bitrate accross consumers).
-			auto maxBitrateMargin = newMaxBitrate * MaxBitrateMarginFactor;
+			const int64_t maxBitrateMargin = std::llround(newMaxBitrate * MaxBitrateMarginFactor);
+
 			if (currentMaxBitrate > newMaxBitrate - maxBitrateMargin && currentMaxBitrate < newMaxBitrate + maxBitrateMargin)
 			{
 				newMaxBitrate = currentMaxBitrate;
@@ -405,7 +409,7 @@ namespace RTC
 
 		if (newMaxBitrate != currentMaxBitrate)
 		{
-			this->bitrates.maxPaddingBitrate = newMaxBitrate * MaxPaddingBitrateFactor;
+			this->bitrates.maxPaddingBitrate = std::llround(newMaxBitrate * MaxPaddingBitrateFactor);
 			this->bitrates.maxBitrate        = newMaxBitrate;
 		}
 

@@ -134,7 +134,7 @@ namespace RTC
 			{
 				if (!HasVariableLengthValue())
 				{
-					return 0u;
+					return 0;
 				}
 
 				return GetLengthField() - GetHeaderLength();
