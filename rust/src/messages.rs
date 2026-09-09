@@ -1804,6 +1804,7 @@ pub(crate) struct TransportConsumeRequest {
     pub(crate) paused: bool,
     pub(crate) preferred_layers: Option<ConsumerLayers>,
     pub(crate) ignore_dtx: bool,
+    pub(crate) consumer_rtp_mapping: Option<crate::ortc::ConsumerRtpMapping>,
 }
 
 #[derive(Debug)]
@@ -1831,8 +1832,8 @@ impl Request for TransportConsumeRequest {
             ToFbs::to_fbs(&self.consumable_rtp_encodings),
             self.paused,
             ToFbs::to_fbs(&self.preferred_layers),
-            // self.preferred_layers.map(ConsumerLayers::to_fbs),
             self.ignore_dtx,
+            self.consumer_rtp_mapping.as_ref().map(ToFbs::to_fbs),
         );
         let request_body = request::Body::create_transport_consume_request(&mut builder, data);
         let request = request::Request::create(

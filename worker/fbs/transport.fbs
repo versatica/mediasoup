@@ -66,6 +66,7 @@ table ConsumeRequest {
     paused: bool = false;
     preferred_layers: FBS.Consumer.ConsumerLayers;
     ignore_dtx: bool = false;
+    consumer_rtp_mapping: FBS.RtpParameters.ConsumerRtpMapping;
 }
 
 table ConsumeResponse {
