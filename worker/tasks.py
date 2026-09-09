@@ -210,7 +210,7 @@ def clean(ctx):
     # NOTE: Meson keeps the objects of each target in a "<target>.p" directory,
     # and those of the subprojects and the dependencies in their own
     # subdirectories, so this removes just what belongs to mediasoup itself.
-    # NOTE: glob.escape() is needed because the path of the directory may
+    # glob.escape() is needed because the path of the build directory may
     # contain characters that glob would otherwise take as wildcards.
     for build_dir in BUILD_DIRS:
         for path in glob.glob(f"{glob.escape(build_dir)}/*.p"):
@@ -220,7 +220,10 @@ def clean(ctx):
     # directories.
     for path in glob.glob(f"{glob.escape(MEDIASOUP_INSTALL_DIR)}/*"):
         if os.path.isfile(path):
-            os.remove(path)
+            # NOTE: Be as tolerant as shutil.rmtree() above, since in Windows
+            # removing a binary that is being run fails.
+            with suppress(OSError):
+                os.remove(path)
 
 
 @task
