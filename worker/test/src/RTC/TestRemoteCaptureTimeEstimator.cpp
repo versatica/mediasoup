@@ -38,7 +38,7 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 
 	int64_t nowUs{ LocalBaseUs };
 
-	mocks::MockShared shared(/*getTimeUsInt64*/
+	mocks::MockShared shared(/*getTimeUs*/
 	                         [&nowUs]() -> int64_t
 	                         {
 		                         return nowUs;
@@ -72,7 +72,7 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		report.SetNtpFrac(0);
 		report.SetRtpTs(RemoteBaseTs + (idx * ClockRate));
 
-		rtpStream.ReceiveRtcpSenderReport(std::addressof(report), shared.GetTimeUsInt64());
+		rtpStream.ReceiveRtcpSenderReport(std::addressof(report), shared.GetTimeUs());
 		estimator.SenderReportReceived(std::addressof(rtpStream));
 	};
 

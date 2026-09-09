@@ -20,7 +20,7 @@ namespace RTC
 
 	static constexpr size_t ProducerSendBufferSize{ 65536 };
 	static thread_local uint8_t ProducerSendBuffer[ProducerSendBufferSize];
-	static constexpr uint32_t SendNackDelay{ 10u }; // In ms.
+	static constexpr int64_t SendNackDelayMs{ 10 };
 
 	/* Instance methods. */
 
@@ -205,10 +205,10 @@ namespace RTC
 		// Create a KeyFrameRequestManager.
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
-			auto keyFrameRequestDelay = data->keyFrameRequestDelay();
+			const int64_t keyFrameRequestDelayMs = data->keyFrameRequestDelay();
 
 			this->keyFrameRequestManager =
-			  new RTC::KeyFrameRequestManager(this, this->shared, keyFrameRequestDelay);
+			  new RTC::KeyFrameRequestManager(this, this->shared, keyFrameRequestDelayMs);
 		}
 
 		// NOTE: This may throw.
@@ -748,7 +748,7 @@ namespace RTC
 
 		// NOTE: The interval is in milliseconds, being it given to a timer, so the
 		// elapsed time is truncated here.
-		const auto elapsedMs = static_cast<uint64_t>((nowUs - this->lastRtcpSentAtUs) / 1000);
+		const int64_t elapsedMs = (nowUs - this->lastRtcpSentAtUs) / 1000;
 
 		if (static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
 		{
@@ -1142,8 +1142,8 @@ namespace RTC
 		  this->type == RtpParameters::Type::SIMULCAST && this->rtpMapping.encodings.size() > 1;
 
 		// Create a RtpStreamRecv for receiving a media stream.
-		auto* rtpStream =
-		  new RTC::RTP::RtpStreamRecv(this, this->shared, params, SendNackDelay, useRtpInactivityCheck);
+		auto* rtpStream = new RTC::RTP::RtpStreamRecv(
+		  this, this->shared, params, SendNackDelayMs, useRtpInactivityCheck);
 
 		// Insert into the maps.
 		this->mapSsrcRtpStream[ssrc]              = rtpStream;
@@ -1568,7 +1568,7 @@ namespace RTC
 			auto notification = FBS::Producer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::KEYFRAME,
-			  this->shared->GetTimeMs(),
+			  static_cast<uint64_t>(this->shared->GetTimeMs()),
 			  FBS::Common::TraceDirection::DIRECTION_IN,
 			  FBS::Producer::TraceInfo::KeyFrameTraceInfo,
 			  traceInfo.Union());
@@ -1584,7 +1584,7 @@ namespace RTC
 			auto notification = FBS::Producer::CreateTraceNotification(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::RTP,
-			  this->shared->GetTimeMs(),
+			  static_cast<uint64_t>(this->shared->GetTimeMs()),
 			  FBS::Common::TraceDirection::DIRECTION_IN,
 			  FBS::Producer::TraceInfo::RtpTraceInfo,
 			  traceInfo.Union());
@@ -1608,7 +1608,7 @@ namespace RTC
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::PLI,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Producer::TraceInfo::PliTraceInfo,
 		  traceInfo.Union());
@@ -1631,7 +1631,7 @@ namespace RTC
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::FIR,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Producer::TraceInfo::FirTraceInfo,
 		  traceInfo.Union());
@@ -1651,7 +1651,7 @@ namespace RTC
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::NACK,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
 
 		EmitTraceEvent(notification);
@@ -1678,7 +1678,7 @@ namespace RTC
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::SR,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
 		  FBS::Producer::TraceInfo::SrTraceInfo,
 		  traceInfo.Union());

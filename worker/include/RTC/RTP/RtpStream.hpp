@@ -165,13 +165,13 @@ namespace RTC
 
 			virtual void Resume() = 0;
 
-			virtual uint32_t GetBitrate(uint64_t nowMs) = 0;
+			virtual uint32_t GetBitrate(int64_t nowMs) = 0;
 
-			virtual uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
+			virtual uint32_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 
-			virtual uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer) = 0;
+			virtual uint32_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) = 0;
 
-			virtual uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
+			virtual uint32_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 
 			void ResetScore(uint8_t score, bool notify);
 
@@ -185,9 +185,9 @@ namespace RTC
 				return static_cast<float>(this->fractionLost) * 100 / 256;
 			}
 
-			float GetRtt() const
+			float GetRttMs() const
 			{
-				return this->rtt;
+				return this->rttMs;
 			}
 
 			uint32_t GetMaxPacketTs() const
@@ -211,7 +211,7 @@ namespace RTC
 				return this->score;
 			}
 
-			uint64_t GetActiveMs() const
+			int64_t GetActiveMs() const
 			{
 				return this->shared->GetTimeMs() - this->activeSinceMs;
 			}
@@ -282,7 +282,7 @@ namespace RTC
 			// Correspondence between wall clock and RTP timeline given by the last Sender
 			// Report.
 			std::optional<RTP::RtpStream::SenderReportMapping> lastSenderReportMapping;
-			float rtt{ 0.0f };
+			float rttMs{ 0.0f };
 			// Instance of RtxStream.
 			RTP::RtxStream* rtxStream{ nullptr };
 
@@ -293,7 +293,7 @@ namespace RTC
 			// Whether at least a RTP packet has been received.
 			bool started{ false };
 			// Last time since the stream is active.
-			uint64_t activeSinceMs{ 0u };
+			int64_t activeSinceMs{ 0 };
 		};
 	} // namespace RTP
 } // namespace RTC

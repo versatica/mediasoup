@@ -14,12 +14,12 @@ namespace RTC
 		/* Static. */
 
 		// Limit max number of items in the retransmission buffer.
-		static constexpr size_t RetransmissionBufferMaxItems{ 2500u };
+		static constexpr size_t RetransmissionBufferMaxItems{ 2500 };
 		// 17: 16 bit mask + the initial sequence number.
-		static constexpr size_t MaxRequestedPackets{ 17u };
+		static constexpr size_t MaxRequestedPackets{ 17 };
 		static thread_local std::vector<RTP::RetransmissionBuffer::Item*> RetransmissionContainer(
 		  MaxRequestedPackets + 1);
-		static constexpr uint32_t DefaultRtt{ 100u };
+		static constexpr int64_t DefaultRttMs{ 100 };
 
 		/* Instance methods. */
 
@@ -36,7 +36,7 @@ namespace RTC
 
 			if (this->params.useNack)
 			{
-				uint32_t maxRetransmissionDelayMs{ 0 };
+				int64_t maxRetransmissionDelayMs{ 0 };
 
 				switch (params.mimeType.type)
 				{
@@ -74,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			const int64_t nowMs = this->shared->GetTimeMs();
 
 			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
 			auto stats     = FBS::RtpStream::CreateSendStats(
@@ -289,21 +289,20 @@ namespace RTC
 			const uint32_t dlsr   = report->GetDelaySinceLastSenderReport();
 
 			// RTT in 1/2^16 second fractions.
-			uint32_t rtt{ 0 };
+			uint32_t rttCompactNtp{ 0 };
 
 			// If no Sender Report was received by the remote endpoint yet, ignore lastSr
 			// and dlsr values in the Receiver Report.
 			if (lastSr && dlsr && (compactNtp > dlsr + lastSr))
 			{
-				rtt = compactNtp - dlsr - lastSr;
+				rttCompactNtp = compactNtp - dlsr - lastSr;
 			}
 
-			// RTT in milliseconds.
-			this->rtt = static_cast<float>(rtt >> 16) * 1000;
-			this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
+			this->rttMs = static_cast<float>(rttCompactNtp >> 16) * 1000;
+			this->rttMs += (static_cast<float>(rttCompactNtp & 0x0000FFFF) / 65536) * 1000;
 
 			// Avoid negative RTT value since it doesn't make sense.
-			this->rtt = std::max(this->rtt, 0.0f);
+			this->rttMs = std::max(this->rttMs, 0.0f);
 
 			this->packetsLost  = report->GetTotalLost();
 			this->fractionLost = report->GetFractionLost();
@@ -435,14 +434,14 @@ namespace RTC
 		}
 
 		uint32_t RtpStreamSend::GetBitrate(
-		  uint64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+		  int64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 		{
 			MS_TRACE();
 
 			MS_ABORT("invalid method call");
 		}
 
-		uint32_t RtpStreamSend::GetSpatialLayerBitrate(uint64_t /*nowMs*/, uint8_t /*spatialLayer*/)
+		uint32_t RtpStreamSend::GetSpatialLayerBitrate(int64_t /*nowMs*/, uint8_t /*spatialLayer*/)
 		{
 			MS_TRACE();
 
@@ -450,7 +449,7 @@ namespace RTC
 		}
 
 		uint32_t RtpStreamSend::GetLayerBitrate(
-		  uint64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
+		  int64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
 		{
 			MS_TRACE();
 
@@ -484,9 +483,9 @@ namespace RTC
 			}
 
 			// Look for each requested packet.
-			const uint64_t nowMs = this->shared->GetTimeMs();
-			const uint16_t rtt   = (this->rtt > 0.0f ? this->rtt : DefaultRtt);
-			uint16_t currentSeq  = seq;
+			const int64_t nowMs = this->shared->GetTimeMs();
+			const int64_t rttMs = (this->rttMs > 0.0f ? this->rttMs : DefaultRttMs);
+			uint16_t currentSeq = seq;
 			bool requested{ true };
 			size_t containerIdx{ 0 };
 
@@ -511,14 +510,14 @@ namespace RTC
 						// Do nothing.
 					}
 					// Don't resent the packet if it was resent in the last RTT ms.
-					else if (item->resentAtMs != 0u && nowMs - item->resentAtMs <= static_cast<uint64_t>(rtt))
+					else if (item->resentAtMs != 0 && nowMs - item->resentAtMs <= rttMs)
 					{
 						MS_DEBUG_TAG(
 						  rtx,
 						  "ignoring retransmission for a packet already resent in the last RTT ms "
-						  "[seq:%" PRIu16 ", rtt:%" PRIu16 "]",
+						  "[seq:%" PRIu16 ", rtt:%" PRIi64 " ms]",
 						  item->sequenceNumber,
-						  rtt);
+						  rttMs);
 					}
 					// Stored packet is valid for retransmission. Resend it.
 					else

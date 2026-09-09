@@ -19,12 +19,12 @@
 SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 {
 	constexpr int64_t InitialNowUs{ 1000000 * 1000 };
-	constexpr uint64_t HeartbeatIntervalMs{ 30000 };
+	constexpr int64_t HeartbeatIntervalMs{ 30000 };
 
 	class TestHeartbeatHandler
 	{
 	public:
-		explicit TestHeartbeatHandler(uint64_t heartbeatIntervalMs)
+		explicit TestHeartbeatHandler(int64_t heartbeatIntervalMs)
 		  // NOTE: The order in which these members are initialized is **critical**.
 		  : sctpOptions(
 		      RTC::SCTP::SctpOptions{
@@ -33,7 +33,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		        .zeroChecksumAlternateErrorDetectionMethod =
 		          RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE }),
 		    tcbContext(this->associationListener, this->sctpOptions),
-		    shared(/*getTimeUsInt64*/
+		    shared(/*getTimeUs*/
 				       [this]() -> int64_t
 				       {
 			           return this->nowUs;
@@ -190,7 +190,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		receivedHeartbeatInfoParameter->Consolidate();
 
 		// Respond a while later.
-		const uint64_t rttMs{ 313 };
+		const int64_t rttMs{ 313 };
 
 		test.tcbContext.ExpectObserveRttUsCalledTimes(1).ExpectObserveRttUsCalledWith(
 		  static_cast<int64_t>(rttMs * 1000));
@@ -257,7 +257,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 	{
 		TestHeartbeatHandler test(HeartbeatIntervalMs);
 
-		const uint64_t rtoMs{ 105 };
+		const int64_t rtoMs{ 105 };
 
 		test.tcbContext.WillGetCurrentRtoUsOnce(
 		  []()

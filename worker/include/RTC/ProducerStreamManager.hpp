@@ -107,9 +107,9 @@ namespace RTC
 		}
 
 		virtual uint32_t IncreaseLayer(
-		  uint32_t bitrate, bool considerLoss, float lossPercentage, uint64_t nowMs) = 0;
-		virtual void ApplyLayers(uint64_t rtpStreamActiveMs)                         = 0;
-		virtual uint32_t GetDesiredBitrate(uint64_t nowMs) const                     = 0;
+		  uint32_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) = 0;
+		virtual void ApplyLayers(int64_t rtpStreamActiveMs)                         = 0;
+		virtual uint32_t GetDesiredBitrate(int64_t nowMs) const                     = 0;
 
 		virtual RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,

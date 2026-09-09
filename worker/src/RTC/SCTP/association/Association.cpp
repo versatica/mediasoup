@@ -365,7 +365,7 @@ namespace RTC
 				.cwndBytes       = this->tcb->GetCwnd(),
 				// NOTE: The metric mirrors RFC 6458's `spinfo_srtt`, which is in
 				// milliseconds.
-				.srttMs         = static_cast<uint64_t>(this->tcb->GetCurrentSrttUs() / 1000),
+				.srttMs         = this->tcb->GetCurrentSrttUs() / 1000,
 				.unackDataCount = this->tcb->GetRetransmissionQueue().GetUnackedItems() +
 				                  ((this->sendQueue.GetTotalBufferedAmount() + packetPayloadLength - 1) /
 				                   packetPayloadLength),
@@ -479,7 +479,7 @@ namespace RTC
 				return status;
 			}
 
-			const int64_t nowUs = this->shared->GetTimeUsInt64();
+			const int64_t nowUs = this->shared->GetTimeUs();
 
 			this->privateMetrics.txMessagesCount++;
 
@@ -502,7 +502,7 @@ namespace RTC
 
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
-			const int64_t nowUs = this->shared->GetTimeUsInt64();
+			const int64_t nowUs = this->shared->GetTimeUs();
 
 			std::vector<Types::SendMessageStatus> statuses;
 
@@ -871,8 +871,7 @@ namespace RTC
 			this->packetSender.SendPacket(packet.get());
 
 			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-			this->t2ShutdownTimer->SetBaseTimeoutMs(
-			  static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000));
+			this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
 			this->t2ShutdownTimer->Start();
 		}
 
@@ -898,8 +897,7 @@ namespace RTC
 				SendShutdownChunk();
 
 				// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-				this->t2ShutdownTimer->SetBaseTimeoutMs(
-				  static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000));
+				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
 				this->t2ShutdownTimer->Start();
 
 				SetState(State::SHUTDOWN_SENT, "no more outstanding data");
@@ -951,8 +949,7 @@ namespace RTC
 				SendShutdownChunk();
 
 				// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-				this->t2ShutdownTimer->SetBaseTimeoutMs(
-				  static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000));
+				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
 				this->t2ShutdownTimer->Start();
 			}
 		}
@@ -1603,7 +1600,7 @@ namespace RTC
 			  receivedInitChunk->GetAdvertisedReceiverWindowCredit(),
 			  tieTag,
 			  remoteCapabilities,
-			  /*creationTimestampUs*/ authenticateCookie ? this->shared->GetTimeUsInt64() : 0,
+			  /*creationTimestampUs*/ authenticateCookie ? this->shared->GetTimeUs() : 0,
 			  /*macKey*/ authenticateCookie ? this->stateCookieSecret : nullptr,
 			  /*macKeyLength*/ authenticateCookie ? Association::StateCookieSecretLength : 0);
 
@@ -1705,7 +1702,7 @@ namespace RTC
 
 			this->tcb->SetRemoteStateCookie(std::move(remoteStateCookie));
 
-			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUs());
 			this->t1CookieTimer->Start();
 
 			this->associationListenerDeferrer.OnAssociationConnecting();
@@ -1818,7 +1815,7 @@ namespace RTC
 			// "A COOKIE ACK chunk MAY be bundled with any pending DATA chunks (and/or
 			// SACK chunks), but the COOKIE ACK chunk MUST be the first chunk in the
 			// packet."
-			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64(), /*addCookieAckChunk*/ true);
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUs(), /*addCookieAckChunk*/ true);
 		}
 
 		bool Association::HandleReceivedCookieEchoChunkWithTcb(
@@ -1937,7 +1934,7 @@ namespace RTC
 
 			SetState(State::ESTABLISHED, "COOKIE-ACK received");
 
-			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUs());
 
 			this->associationListenerDeferrer.OnAssociationConnected();
 		}
@@ -2233,7 +2230,7 @@ namespace RTC
 
 			// If a response was processed, pending to-be-reset streams may now have
 			// become unpaused. Try to send more DATA/I-DATA chunks.
-			this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
+			this->tcb->SendBufferedPackets(this->shared->GetTimeUs());
 
 			// If it leaves "deferred reset processing", there may be chunks to
 			// deliver that were queued while waiting for the stream to reset.
@@ -2448,7 +2445,7 @@ namespace RTC
 				return;
 			}
 
-			const int64_t nowUs = this->shared->GetTimeUsInt64();
+			const int64_t nowUs = this->shared->GetTimeUs();
 
 			if (this->tcb->GetRetransmissionQueue().HandleReceivedSackChunk(nowUs, receivedSackChunk))
 			{
@@ -2614,7 +2611,7 @@ namespace RTC
 			return true;
 		}
 
-		void Association::OnT1InitTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void Association::OnT1InitTimer(int64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -2643,7 +2640,7 @@ namespace RTC
 			AssertIsConsistent();
 		}
 
-		void Association::OnT1CookieTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void Association::OnT1CookieTimer(int64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -2662,7 +2659,7 @@ namespace RTC
 
 			if (this->t1CookieTimer->IsRunning())
 			{
-				this->tcb->SendBufferedPackets(this->shared->GetTimeUsInt64());
+				this->tcb->SendBufferedPackets(this->shared->GetTimeUs());
 			}
 			else
 			{
@@ -2672,7 +2669,7 @@ namespace RTC
 			AssertIsConsistent();
 		}
 
-		void Association::OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& /*stop*/)
+		void Association::OnT2ShutdownTimer(int64_t& baseTimeoutMs, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -2745,7 +2742,7 @@ namespace RTC
 			AssertIsConsistent();
 
 			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-			baseTimeoutMs = static_cast<uint64_t>(this->tcb->GetCurrentRtoUs() / 1000);
+			baseTimeoutMs = this->tcb->GetCurrentRtoUs() / 1000;
 		}
 
 		template<typename... States>
@@ -3026,7 +3023,7 @@ namespace RTC
 		}
 
 		void Association::OnBackoffTimer(
-		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

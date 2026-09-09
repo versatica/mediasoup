@@ -16,7 +16,7 @@ namespace RTC
 	static constexpr float MaxBitrateMarginFactor{ 0.1f };
 	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
 	static constexpr float MaxPaddingBitrateFactor{ 0.85f };
-	static constexpr uint64_t AvailableBitrateEventInterval{ 1000u }; // In ms.
+	static constexpr int64_t AvailableBitrateEventIntervalMs{ 1000 };
 	static constexpr size_t PacketLossHistogramLength{ 24 };
 
 	/* Instance methods. */
@@ -120,7 +120,7 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef USE_TREND_CALCULATOR
-		const auto nowMs = this->shared->GetTimeMsInt64();
+		const auto nowMs = this->shared->GetTimeMs();
 #endif
 
 		this->bitrates.desiredBitrate          = 0u;
@@ -189,7 +189,7 @@ namespace RTC
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpReceiverReport(
-	  RTC::RTCP::ReceiverReportPacket* packet, float rtt, int64_t receivedAtUs)
+	  RTC::RTCP::ReceiverReportPacket* packet, float rttMs, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
@@ -218,7 +218,7 @@ namespace RTC
 		// NOTE: The dependency works in milliseconds, so the arrival time is
 		// truncated here.
 		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
-		  reportBlockList, static_cast<int64_t>(rtt), receivedAtUs / 1000);
+		  reportBlockList, static_cast<int64_t>(rttMs), receivedAtUs / 1000);
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpTransportFeedback(
@@ -324,7 +324,7 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef USE_TREND_CALCULATOR
-		const auto nowMs = this->shared->GetTimeMsInt64();
+		const auto nowMs = this->shared->GetTimeMs();
 #endif
 
 		// Manage it via trending and increase it a bit to avoid immediate oscillations.
@@ -461,13 +461,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const uint64_t nowMs = this->shared->GetTimeMsInt64();
+		const int64_t nowMs = this->shared->GetTimeMs();
 		bool notify{ false };
 
 		// Ignore if first event.
 		// NOTE: Otherwise it will make the Transport crash since this event also happens
 		// during the constructor of this class.
-		if (this->lastAvailableBitrateEventAtMs == 0u)
+		if (this->lastAvailableBitrateEventAtMs == 0)
 		{
 			this->lastAvailableBitrateEventAtMs = nowMs;
 
@@ -481,8 +481,8 @@ namespace RTC
 
 			notify = true;
 		}
-		// Emit event if AvailableBitrateEventInterval elapsed.
-		else if (nowMs - this->lastAvailableBitrateEventAtMs >= AvailableBitrateEventInterval)
+		// Emit event if AvailableBitrateEventIntervalMs elapsed.
+		else if (nowMs - this->lastAvailableBitrateEventAtMs >= AvailableBitrateEventIntervalMs)
 		{
 			notify = true;
 		}

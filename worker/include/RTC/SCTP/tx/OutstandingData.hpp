@@ -407,7 +407,7 @@ namespace RTC
 			 * algorithm, so if the chunk has ever been retransmitted, it will return
 			 * `std::nullopt`.
 			 */
-			std::optional<int64_t> MeasureRtt(int64_t nowUs, Types::UnwrappedTsn tsn) const;
+			std::optional<int64_t> MeasureRttUs(int64_t nowUs, Types::UnwrappedTsn tsn) const;
 
 			/**
 			 * Returns true if the next chunk that is not acked by the peer has been

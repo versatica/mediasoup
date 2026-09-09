@@ -27,24 +27,24 @@ namespace RTC
 				// Payload descriptor encoder.
 				std::unique_ptr<RTP::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
 				// Correct SSRC since original packet may not have the same.
-				uint32_t ssrc{ 0u };
+				uint32_t ssrc{ 0 };
 				// Correct sequence number since original packet may not have the same.
-				uint16_t sequenceNumber{ 0u };
+				uint16_t sequenceNumber{ 0 };
 				// Correct timestamp since original packet may not have the same.
-				uint32_t timestamp{ 0u };
+				uint32_t timestamp{ 0 };
 				// Correct marker bit since original packet may not have the same.
 				bool marker{ false };
 				// Last time this packet was resent.
-				uint64_t resentAtMs{ 0u };
+				int64_t resentAtMs{ 0 };
 				// Number of times this packet was resent.
-				uint8_t sentTimes{ 0u };
+				uint8_t sentTimes{ 0 };
 			};
 
 		private:
 			static Item* FillItem(Item* item, RTP::Packet* packet, const RTP::SharedPacket& sharedPacket);
 
 		public:
-			RetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate);
+			RetransmissionBuffer(uint16_t maxItems, int64_t maxRetransmissionDelayMs, uint32_t clockRate);
 			~RetransmissionBuffer();
 
 			void Dump(int indentation = 0) const;
@@ -67,7 +67,7 @@ namespace RTC
 		private:
 			// Given as argument.
 			uint16_t maxItems;
-			uint32_t maxRetransmissionDelayMs;
+			int64_t maxRetransmissionDelayMs;
 			uint32_t clockRate;
 		};
 	} // namespace RTP

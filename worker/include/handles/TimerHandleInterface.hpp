@@ -26,17 +26,17 @@ public:
 	virtual ~TimerHandleInterface() = default;
 
 public:
-	virtual void Start(uint64_t timeout, uint64_t repeat = 0) = 0;
+	virtual void Start(int64_t timeoutMs, int64_t repeatMs = 0) = 0;
 
 	virtual void Stop() = 0;
 
 	virtual void Restart() = 0;
 
-	virtual void Restart(uint64_t timeout, uint64_t repeat = 0) = 0;
+	virtual void Restart(int64_t timeoutMs, int64_t repeatMs = 0) = 0;
 
-	virtual uint64_t GetTimeout() const = 0;
+	virtual int64_t GetTimeoutMs() const = 0;
 
-	virtual uint64_t GetRepeat() const = 0;
+	virtual int64_t GetRepeatMs() const = 0;
 
 	virtual bool IsActive() const = 0;
 

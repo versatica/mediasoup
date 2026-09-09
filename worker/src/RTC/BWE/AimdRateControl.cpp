@@ -128,7 +128,7 @@ namespace RTC
 			this->currentBitrate       = std::max(minBitrate, this->currentBitrate);
 		}
 
-		void AimdRateControl::SetRtt(int64_t rttUs)
+		void AimdRateControl::SetRttUs(int64_t rttUs)
 		{
 			MS_TRACE();
 

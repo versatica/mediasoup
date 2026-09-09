@@ -145,10 +145,10 @@ namespace RTC
 
 			// NOTE: The timers take milliseconds, so the RTO is truncated here. It is
 			// hundreds of milliseconds long, so the sub-millisecond part is noise.
-			this->t3RtxTimer->SetBaseTimeoutMs(static_cast<uint64_t>(this->rto.GetRtoUs() / 1000));
+			this->t3RtxTimer->SetBaseTimeoutMs(this->rto.GetRtoUs() / 1000);
 
-			const uint64_t delayedAckTimeoutMs = std::min(
-			  static_cast<uint64_t>((this->rto.GetRtoUs() * 0.5) / 1000),
+			const int64_t delayedAckTimeoutMs = std::min(
+			  static_cast<int64_t>((this->rto.GetRtoUs() * 0.5) / 1000),
 			  this->sctpOptions.delayedAckMaxTimeoutMs);
 
 			this->delayedAckTimer->SetBaseTimeoutMs(delayedAckTimeoutMs);
@@ -411,7 +411,7 @@ namespace RTC
 			}
 		}
 
-		void TransmissionControlBlock::OnT3RtxTimer(uint64_t& /*baseTimeoutMs*/, bool& stop)
+		void TransmissionControlBlock::OnT3RtxTimer(int64_t& /*baseTimeoutMs*/, bool& stop)
 		{
 			MS_TRACE();
 
@@ -441,7 +441,7 @@ namespace RTC
 				{
 					this->retransmissionQueue.HandleT3RtxTimerExpiry();
 
-					const int64_t nowUs = this->shared->GetTimeUsInt64();
+					const int64_t nowUs = this->shared->GetTimeUs();
 
 					SendBufferedPackets(nowUs);
 				}
@@ -457,7 +457,7 @@ namespace RTC
 			}
 		}
 
-		void TransmissionControlBlock::OnDelayedAckTimer(uint64_t& /*baseTimeoutMs*/, bool& /*stop*/)
+		void TransmissionControlBlock::OnDelayedAckTimer(int64_t& /*baseTimeoutMs*/, bool& /*stop*/)
 		{
 			MS_TRACE();
 
@@ -484,7 +484,7 @@ namespace RTC
 		}
 
 		void TransmissionControlBlock::OnBackoffTimer(
-		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop)
+		  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop)
 		{
 			MS_TRACE();
 

@@ -20,7 +20,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		};
 
 	public:
-		RtpMyRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate)
+		RtpMyRetransmissionBuffer(uint16_t maxItems, int64_t maxRetransmissionDelayMs, uint32_t clockRate)
 		  : RTC::RTP::RetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate)
 		{
 		}
@@ -51,7 +51,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		{
 			REQUIRE(verificationBuffer.size() == this->buffer.size());
 
-			for (size_t idx{ 0u }; idx < verificationBuffer.size(); ++idx)
+			for (size_t idx{ 0 }; idx < verificationBuffer.size(); ++idx)
 			{
 				auto& verificationItem = verificationBuffer.at(idx);
 				auto* item             = this->buffer.at(idx);
@@ -70,7 +70,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	SECTION("proper packets received in order")
 	{
 		const uint16_t maxItems{ 4 };
-		const uint32_t maxRetransmissionDelayMs{ 2000u };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
@@ -95,7 +95,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	SECTION("proper packets received out of order")
 	{
 		const uint16_t maxItems{ 4 };
-		const uint32_t maxRetransmissionDelayMs{ 2000u };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
@@ -120,7 +120,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	SECTION("packet with too new sequence number produces buffer emptying")
 	{
 		const uint16_t maxItems{ 4 };
-		const uint32_t maxRetransmissionDelayMs{ 2000u };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
@@ -142,7 +142,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	SECTION("blank slots are properly created")
 	{
 		const uint16_t maxItems{ 10 };
-		const uint32_t maxRetransmissionDelayMs{ 2000u };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
@@ -180,7 +180,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	SECTION("packet with too old sequence number is discarded")
 	{
 		const uint16_t maxItems{ 4 };
-		const uint32_t maxRetransmissionDelayMs{ 2000u };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
@@ -205,7 +205,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	SECTION("packet with too old timestamp is discarded")
 	{
 		const uint16_t maxItems{ 4 };
-		const uint32_t maxRetransmissionDelayMs{ 2000u };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
@@ -232,7 +232,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	SECTION("packet with very newest timestamp is inserted as newest item despite its seq is old")
 	{
 		const uint16_t maxItems{ 4 };
-		const uint32_t maxRetransmissionDelayMs{ 2000u };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
@@ -256,7 +256,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	  "packet with lower seq than newest packet in the buffer and higher timestamp forces buffer emptying")
 	{
 		const uint16_t maxItems{ 4 };
-		const uint32_t maxRetransmissionDelayMs{ 2000u };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
@@ -276,8 +276,8 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 
 	SECTION("fuzzer generated packets")
 	{
-		const uint16_t maxItems{ 2500u };
-		const uint32_t maxRetransmissionDelayMs{ 2000u };
+		const uint16_t maxItems{ 2500 };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
 		const uint32_t clockRate{ 90000 };
 
 		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);

@@ -47,7 +47,7 @@ namespace RTC
 			 * @param alrEndedTimeUs - Time at which the sender stopped being in an
 			 *   application limited region.
 			 */
-			virtual void SetAlrEndedTime(int64_t alrEndedTimeUs) = 0;
+			virtual void SetAlrEndedTimeUs(int64_t alrEndedTimeUs) = 0;
 		};
 	} // namespace BWE
 } // namespace RTC

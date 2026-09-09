@@ -107,7 +107,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 	};
 
-	mocks::MockShared shared(/*getTimeUsInt64*/
+	mocks::MockShared shared(/*getTimeUs*/
 	                         []() -> int64_t
 	                         {
 		                         return 1000 * 1000;

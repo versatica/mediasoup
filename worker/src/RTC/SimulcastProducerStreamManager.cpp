@@ -8,10 +8,10 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t StreamMinActiveMs{ 2000u };
-	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u };
-	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };
-	static constexpr uint16_t MaxSequenceNumberGap{ 100u };
+	static constexpr int64_t StreamMinActiveMs{ 2000 };
+	static constexpr int64_t BweDowngradeConservativeMs{ 10000 };
+	static constexpr int64_t BweDowngradeMinActiveMs{ 8000 };
+	static constexpr uint16_t MaxSequenceNumberGap{ 100 };
 
 	/* Instance methods. */
 
@@ -201,7 +201,7 @@ namespace RTC
 	}
 
 	uint32_t SimulcastProducerStreamManager::IncreaseLayer(
-	  uint32_t bitrate, bool considerLoss, float lossPercentage, uint64_t nowMs)
+	  uint32_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -436,7 +436,7 @@ namespace RTC
 		}
 	}
 
-	void SimulcastProducerStreamManager::ApplyLayers(uint64_t rtpStreamActiveMs)
+	void SimulcastProducerStreamManager::ApplyLayers(int64_t rtpStreamActiveMs)
 	{
 		MS_TRACE();
 
@@ -467,7 +467,7 @@ namespace RTC
 		}
 	}
 
-	uint32_t SimulcastProducerStreamManager::GetDesiredBitrate(uint64_t nowMs) const
+	uint32_t SimulcastProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 
@@ -695,15 +695,17 @@ namespace RTC
 			{
 				// Max delay in ms we allow for the stream when switching.
 				// https://en.wikipedia.org/wiki/Audio-to-video_synchronization#Recommendations
-				static constexpr uint32_t MaxExtraOffsetMs{ 75 };
+				static constexpr int64_t MaxExtraOffsetMs{ 75 };
 
 				// Outgoing packet matches the highest timestamp seen in the previous
 				// stream. Apply an expected offset for a new frame in a 30fps stream.
-				static constexpr uint8_t MsOffset{ 33 }; // (1 / 30 * 1000).
+				static constexpr int64_t OffsetMs{ 33 }; // (1 / 30 * 1000).
 
 				const int64_t maxTsExtraOffset = MaxExtraOffsetMs * clockRate / 1000;
-				uint32_t tsExtraOffset =
-				  maxPacketTs - packet->GetTimestamp() + tsOffset + (MsOffset * clockRate / 1000);
+
+				// NOTE: RTP timestamps wrap around, so the sum is truncated on purpose.
+				auto tsExtraOffset = static_cast<uint32_t>(
+				  maxPacketTs - packet->GetTimestamp() + tsOffset + (OffsetMs * clockRate / 1000));
 
 				// NOTE: Don't ask for a key frame if already done.
 				if (this->keyFrameForTsOffsetRequested)
@@ -717,7 +719,7 @@ namespace RTC
 						  "which still too high RTP timestamp extra offset is needed (%" PRIu32 ")",
 						  tsExtraOffset);
 
-						tsExtraOffset = 1u;
+						tsExtraOffset = 1;
 					}
 				}
 				else if (std::cmp_greater(tsExtraOffset, maxTsExtraOffset))
@@ -746,7 +748,7 @@ namespace RTC
 					return result;
 				}
 
-				if (tsExtraOffset > 0u)
+				if (tsExtraOffset > 0)
 				{
 					MS_DEBUG_TAG(
 					  simulcast,
@@ -982,7 +984,7 @@ namespace RTC
 		// Start with no layers.
 		newTargetLayers.Reset();
 
-		auto nowMs = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{

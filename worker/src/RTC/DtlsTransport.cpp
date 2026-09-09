@@ -1273,14 +1273,14 @@ namespace RTC
 		  "invalid DTLS state");
 
 		uv_timeval_t dtlsTimeout{ 0, 0 };
-		uint64_t timeoutMs;
+		int64_t timeoutMs;
 
 		// DTLSv1_get_timeout queries the next DTLS handshake timeout. If there is
 		// a timeout in progress, it sets *out to the time remaining and returns
 		// one. Otherwise, it returns zero.
 		DTLSv1_get_timeout(this->ssl, static_cast<void*>(std::addressof(dtlsTimeout)));
 
-		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
+		timeoutMs = (dtlsTimeout.tv_sec * static_cast<int64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
 
 		if (timeoutMs == 0)
 		{
@@ -1292,7 +1292,7 @@ namespace RTC
 		}
 		else if (timeoutMs < 30000)
 		{
-			MS_DEBUG_DEV("DTLS timer set in %" PRIu64 "ms", timeoutMs);
+			MS_DEBUG_DEV("DTLS timer set in %" PRIi64 "ms", timeoutMs);
 
 			this->timer->Start(timeoutMs);
 
@@ -1302,7 +1302,7 @@ namespace RTC
 		// seconds.
 		else
 		{
-			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeoutMs);
+			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIi64 "ms), resetting DLTS", timeoutMs);
 
 			Reset();
 

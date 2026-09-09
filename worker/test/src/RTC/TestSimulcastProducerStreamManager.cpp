@@ -144,10 +144,10 @@ namespace
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
 
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	mocks::MockShared shared(/*getTimeUsInt64*/
+	mocks::MockShared shared(/*getTimeUs*/
 	                         []() -> int64_t
 	                         {
-		                         return DepLibUV::GetTimeUsInt64();
+		                         return DepLibUV::GetTimeUs();
 	                         }); // NOLINT(readability-identifier-naming)
 
 	std::unique_ptr<RTC::SimulcastProducerStreamManager> createManager(
@@ -202,10 +202,10 @@ namespace
 		for (uint16_t seq = firstSeq; Utils::Number::IsLowerThan<uint16_t>(seq, lastSeq); ++seq)
 		{
 			packet->SetSequenceNumber(seq);
-			rtpStream->ReceivePacket(packet, shared.GetTimeUsInt64());
+			rtpStream->ReceivePacket(packet, shared.GetTimeUs());
 		}
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMs();
 
 		// bitrate (bps) = totalBytes * 8000 / windowSizeMs.
 		// windowSizeMs for RtpStreamRecv is 2500.
@@ -783,14 +783,14 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		sr0.SetNtpSec(1000);
 		sr0.SetNtpFrac(0);
 		sr0.SetRtpTs(90000);
-		rtpStream0->ReceiveRtcpSenderReport(std::addressof(sr0), shared.GetTimeUsInt64());
+		rtpStream0->ReceiveRtcpSenderReport(std::addressof(sr0), shared.GetTimeUs());
 
 		RTC::RTCP::SenderReport sr1;
 		sr1.SetSsrc(MappedSsrc1);
 		sr1.SetNtpSec(1000);
 		sr1.SetNtpFrac(0);
 		sr1.SetRtpTs(90000);
-		rtpStream1->ReceiveRtcpSenderReport(std::addressof(sr1), shared.GetTimeUsInt64());
+		rtpStream1->ReceiveRtcpSenderReport(std::addressof(sr1), shared.GetTimeUs());
 
 		// Notify the manager about the first Sender Report for layer 1.
 		// This triggers MayChangeLayers() -> RecalculateTargetLayers().
@@ -860,14 +860,14 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		sr0.SetNtpSec(1000);
 		sr0.SetNtpFrac(0);
 		sr0.SetRtpTs(90000);
-		rtpStream0->ReceiveRtcpSenderReport(std::addressof(sr0), shared.GetTimeUsInt64());
+		rtpStream0->ReceiveRtcpSenderReport(std::addressof(sr0), shared.GetTimeUs());
 
 		RTC::RTCP::SenderReport sr1;
 		sr1.SetSsrc(MappedSsrc1);
 		sr1.SetNtpSec(1000);
 		sr1.SetNtpFrac(0);
 		sr1.SetRtpTs(90000);
-		rtpStream1->ReceiveRtcpSenderReport(std::addressof(sr1), shared.GetTimeUsInt64());
+		rtpStream1->ReceiveRtcpSenderReport(std::addressof(sr1), shared.GetTimeUs());
 
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ true);
 
@@ -981,7 +981,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 			sr.SetNtpSec(1000);
 			sr.SetNtpFrac(0);
 			sr.SetRtpTs(90000);
-			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUsInt64());
+			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
 		}
 
 		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
@@ -1044,7 +1044,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 			sr.SetNtpSec(1000);
 			sr.SetNtpFrac(0);
 			sr.SetRtpTs(90000);
-			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUsInt64());
+			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
 		}
 
 		// Set target layer to 0. This sets tsReferenceSpatialLayer = 0.
@@ -1094,7 +1094,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 			sr.SetNtpSec(1000);
 			sr.SetNtpFrac(0);
 			sr.SetRtpTs(90000);
-			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUsInt64());
+			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
 		}
 
 		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0, which
@@ -1231,7 +1231,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMs();
 
 		// First call claims bitrate.
 		auto usedBitrate = manager->IncreaseLayer(
@@ -1262,7 +1262,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
 
-		auto nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = DepLibUV::GetTimeMs();
 
 		// First iteration: claim layer 0.
 		manager->IncreaseLayer(
@@ -1299,9 +1299,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 100);
 
-		auto nowMs    = DepLibUV::GetTimeMs();
-		auto bitrate0 = rtpStream0->GetBitrate(nowMs);
-		auto bitrate1 = rtpStream1->GetBitrate(nowMs);
+		const int64_t nowMs = DepLibUV::GetTimeMs();
+		auto bitrate0       = rtpStream0->GetBitrate(nowMs);
+		auto bitrate1       = rtpStream1->GetBitrate(nowMs);
 
 		REQUIRE(bitrate1 > bitrate0);
 

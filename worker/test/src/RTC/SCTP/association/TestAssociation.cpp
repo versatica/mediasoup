@@ -78,7 +78,7 @@ namespace
 		  bool mayConnectOnReceivedSctpData  = false)
 		  // NOTE: The order in which these members are initialized is **critical**.
 		  : sctpOptions(sctpOptions),
-		    shared(/*getTimeUsInt64*/
+		    shared(/*getTimeUs*/
 				       [this]() -> int64_t
 				       {
 			           return this->nowUs;
@@ -152,7 +152,7 @@ namespace
 
 		REQUIRE(!buffer.empty());
 
-		to.association.ReceiveSctpData(buffer.data(), buffer.size(), to.shared.GetTimeUsInt64());
+		to.association.ReceiveSctpData(buffer.data(), buffer.size(), to.shared.GetTimeUs());
 	}
 
 	/**
@@ -172,8 +172,7 @@ namespace
 			if (!bufferFromA.empty())
 			{
 				deliveredPacket = true;
-				z.association.ReceiveSctpData(
-				  bufferFromA.data(), bufferFromA.size(), z.shared.GetTimeUsInt64());
+				z.association.ReceiveSctpData(bufferFromA.data(), bufferFromA.size(), z.shared.GetTimeUs());
 			}
 
 			const auto bufferFromZ = z.listener.ConsumeFirstSentPacket();
@@ -181,8 +180,7 @@ namespace
 			if (!bufferFromZ.empty())
 			{
 				deliveredPacket = true;
-				a.association.ReceiveSctpData(
-				  bufferFromZ.data(), bufferFromZ.size(), a.shared.GetTimeUsInt64());
+				a.association.ReceiveSctpData(bufferFromZ.data(), bufferFromZ.size(), a.shared.GetTimeUs());
 			}
 		} while (deliveredPacket);
 	}
@@ -218,7 +216,7 @@ namespace
 	 * Advances the simulated clock of both associations by `durationMs` and fires
 	 * any timer that has expired.
 	 */
-	void advanceTimeMs(AssociationUnderTest& a, AssociationUnderTest& z, uint64_t durationMs)
+	void advanceTimeMs(AssociationUnderTest& a, AssociationUnderTest& z, int64_t durationMs)
 	{
 		a.AdvanceTimeMs(durationMs);
 		z.AdvanceTimeMs(durationMs);
@@ -265,7 +263,7 @@ namespace
 		const uint32_t verificationTag = parsePacket(buffer)->GetVerificationTag();
 
 		// Deliver the COOKIE-ACK so the connection is fully established on A.
-		a.association.ReceiveSctpData(buffer.data(), buffer.size(), a.shared.GetTimeUsInt64());
+		a.association.ReceiveSctpData(buffer.data(), buffer.size(), a.shared.GetTimeUs());
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
 		REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
@@ -298,7 +296,7 @@ namespace
 		packet->WriteCRC32cChecksum();
 
 		target.association.ReceiveSctpData(
-		  packet->GetBuffer(), packet->GetLength(), target.shared.GetTimeUsInt64());
+		  packet->GetBuffer(), packet->GetLength(), target.shared.GetTimeUs());
 	}
 
 	/**
@@ -843,7 +841,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(buffer) == true);
 
 		// Feed it to Z and expect a HEARTBEAT-ACK that is propagated back to A.
-		z.association.ReceiveSctpData(buffer.data(), buffer.size(), z.shared.GetTimeUsInt64());
+		z.association.ReceiveSctpData(buffer.data(), buffer.size(), z.shared.GetTimeUs());
 		deliverFirstSentPacket(z, a);
 	}
 
@@ -1289,7 +1287,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(bufferA) == true);
 
 		// Z receives the heartbeat and sends an ACK that is propagated back to A.
-		z.association.ReceiveSctpData(bufferA.data(), bufferA.size(), z.shared.GetTimeUsInt64());
+		z.association.ReceiveSctpData(bufferA.data(), bufferA.size(), z.shared.GetTimeUs());
 		deliverFirstSentPacket(z, a);
 
 		// A little while later, Z should send heartbeats to A.
@@ -1300,7 +1298,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(bufferZ) == true);
 
 		// A receives the heartbeat and sends an ACK that is propagated back to Z.
-		a.association.ReceiveSctpData(bufferZ.data(), bufferZ.size(), a.shared.GetTimeUsInt64());
+		a.association.ReceiveSctpData(bufferZ.data(), bufferZ.size(), a.shared.GetTimeUs());
 		deliverFirstSentPacket(a, z);
 	}
 
@@ -1320,7 +1318,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto maxRetransmissions = a.sctpOptions.maxRetransmissions.value();
 
-		uint64_t timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs;
+		int64_t timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs;
 
 		for (size_t i = 0; i < maxRetransmissions; ++i)
 		{
@@ -1369,7 +1367,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		const auto maxRetransmissions = a.sctpOptions.maxRetransmissions.value();
 
-		uint64_t timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs;
+		int64_t timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs;
 
 		for (size_t i = 0; i < maxRetransmissions; ++i)
 		{
@@ -1391,7 +1389,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(buffer) == true);
 
-		z.association.ReceiveSctpData(buffer.data(), buffer.size(), z.shared.GetTimeUsInt64());
+		z.association.ReceiveSctpData(buffer.data(), buffer.size(), z.shared.GetTimeUs());
 		// A reads the HEARTBEAT-ACK, which clears the error counter.
 		deliverFirstSentPacket(z, a);
 

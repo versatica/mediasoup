@@ -96,10 +96,10 @@ namespace
 	};
 
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	mocks::MockShared shared(/*getTimeUsInt64*/
+	mocks::MockShared shared(/*getTimeUs*/
 	                         []() -> int64_t
 	                         {
-		                         return DepLibUV::GetTimeUsInt64();
+		                         return DepLibUV::GetTimeUs();
 	                         });
 
 	std::unique_ptr<RTC::PipeProducerStreamManager> createManager(

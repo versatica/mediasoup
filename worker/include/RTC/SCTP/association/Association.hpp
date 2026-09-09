@@ -519,11 +519,11 @@ namespace RTC
 			 */
 			bool VerifyReceivedStateCookie(const StateCookie* cookie, int64_t receivedAtUs);
 
-			void OnT1InitTimer(uint64_t& baseTimeoutMs, bool& stop);
+			void OnT1InitTimer(int64_t& baseTimeoutMs, bool& stop);
 
-			void OnT1CookieTimer(uint64_t& baseTimeoutMs, bool& stop);
+			void OnT1CookieTimer(int64_t& baseTimeoutMs, bool& stop);
 
-			void OnT2ShutdownTimer(uint64_t& baseTimeoutMs, bool& stop);
+			void OnT2ShutdownTimer(int64_t& baseTimeoutMs, bool& stop);
 
 			template<typename... States>
 			void AssertState(States... expectedStates) const;
@@ -548,7 +548,7 @@ namespace RTC
 			/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 		public:
 			void OnBackoffTimer(
-			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+			  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop) override;
 
 			/* Pure virtual methods inherited from TransmissionControlBlockContextInterface::Listener. */
 		public:

@@ -232,7 +232,7 @@ namespace RTC
 		RTC::RTP::Packet* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
 		int64_t lastRtcpSentAtUs{ 0 };
-		uint16_t maxRtcpIntervalMs{ 0u };
+		int64_t maxRtcpIntervalMs{ 0 };
 		// Video orientation.
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;

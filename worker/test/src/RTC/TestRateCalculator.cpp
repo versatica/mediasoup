@@ -14,7 +14,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	};
 
 	auto validate =
-	  [](RTC::RateCalculator& rate, uint64_t timeBaseMs, const std::vector<TestRateCalculatorData>& input)
+	  [](RTC::RateCalculator& rate, int64_t timeBaseMs, const std::vector<TestRateCalculatorData>& input)
 	{
 		for (const auto& item : input)
 		{
@@ -23,28 +23,22 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 			REQUIRE(rate.GetRate(timeBaseMs + item.offset) == item.rate);
 		}
 
-		// Repeat forcing nowMs to be 0.
+		// Repeat asking for the rate at a time older than the whole window, which
+		// must leave it untouched.
 		rate.Reset();
 
 		for (const auto& item : input)
 		{
 			rate.Update(item.size, timeBaseMs + item.offset);
 
-			REQUIRE(rate.GetRate(0 + item.offset) == item.rate);
+			REQUIRE(rate.GetRate(item.offset) == item.rate);
 		}
 
-		// Repeat forcing nowMs to be std::numeric_limits<uint64_t>::max() - 100.
-		rate.Reset();
-
-		for (const auto& item : input)
-		{
-			rate.Update(item.size, timeBaseMs + item.offset);
-
-			REQUIRE(rate.GetRate(std::numeric_limits<uint64_t>::max() - 100 + item.offset) == item.rate);
-		}
+		// Asking for the rate far in the future expires every item.
+		REQUIRE(rate.GetRate(std::numeric_limits<int64_t>::max()) == 0);
 	};
 
-	const uint64_t nowMs = 12345678;
+	const int64_t nowMs = 12345678;
 
 	SECTION("receive single item per 1000 ms")
 	{
@@ -190,7 +184,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate(1000, 8000, 100);
 
 		// 11ms spacing, deliberately not a multiple of the 10ms granularity.
-		for (uint64_t i{ 0 }; i <= 100; ++i)
+		for (int64_t i{ 0 }; i <= 100; ++i)
 		{
 			rate.Update(1, nowMs + (i * 11));
 		}
@@ -232,7 +226,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		RTC::RateCalculator rate(1000, 8000, 3);
 
 		// Feed way past the ring size, so that any extra span accumulates.
-		for (uint64_t i{ 0 }; i < 100; ++i)
+		for (int64_t i{ 0 }; i < 100; ++i)
 		{
 			rate.Update(1, nowMs + (i * 334));
 		}

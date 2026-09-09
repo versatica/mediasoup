@@ -8,8 +8,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u };
-	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };
+	static constexpr int64_t BweDowngradeConservativeMs{ 10000 };
+	static constexpr int64_t BweDowngradeMinActiveMs{ 8000 };
 
 	/* Instance methods. */
 
@@ -123,7 +123,7 @@ namespace RTC
 	}
 
 	uint32_t SvcProducerStreamManager::IncreaseLayer(
-	  uint32_t bitrate, bool considerLoss, float lossPercentage, uint64_t nowMs)
+	  uint32_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -300,7 +300,7 @@ namespace RTC
 		}
 	}
 
-	void SvcProducerStreamManager::ApplyLayers(uint64_t rtpStreamActiveMs)
+	void SvcProducerStreamManager::ApplyLayers(int64_t rtpStreamActiveMs)
 	{
 		MS_TRACE();
 
@@ -332,7 +332,7 @@ namespace RTC
 		}
 	}
 
-	uint32_t SvcProducerStreamManager::GetDesiredBitrate(uint64_t nowMs) const
+	uint32_t SvcProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 
@@ -564,7 +564,7 @@ namespace RTC
 		// Start with no layers.
 		newTargetLayers.Reset();
 
-		auto nowMs = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMs();
 		int16_t spatialLayer{ 0 };
 
 		if (!this->producerRtpStream)

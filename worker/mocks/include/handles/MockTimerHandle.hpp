@@ -19,7 +19,7 @@ namespace mocks
 		explicit MockTimerHandle(
 		  TimerHandleInterface::Listener* listener,
 		  std::string label,
-		  std::function<uint64_t()> getTimeMs,
+		  std::function<int64_t()> getTimeMs,
 		  std::function<void()> onDelete);
 
 	public:
@@ -35,40 +35,30 @@ namespace mocks
 	public:
 		void Dump(int indentation = 0) const;
 
-		void Start(uint64_t timeout, uint64_t repeat = 0) override
-		{
-			this->timeout = timeout;
-			this->repeat  = repeat;
-
-			this->running     = true;
-			this->expiresAtMs = this->getTimeMs() + this->timeout;
-		}
+		void Start(int64_t timeoutMs, int64_t repeatMs = 0) override;
 
 		void Stop() override
 		{
 			this->running     = false;
-			this->expiresAtMs = std::numeric_limits<uint64_t>::max();
+			this->expiresAtMs = std::numeric_limits<int64_t>::max();
 		}
 
 		void Restart() override
 		{
 			this->running     = true;
-			this->expiresAtMs = this->getTimeMs() + this->timeout;
+			this->expiresAtMs = this->getTimeMs() + this->timeoutMs;
 		}
 
-		void Restart(uint64_t timeout, uint64_t repeat = 0) override
+		void Restart(int64_t timeoutMs, int64_t repeatMs = 0) override;
+
+		int64_t GetTimeoutMs() const override
 		{
-			Start(timeout, repeat);
+			return this->timeoutMs;
 		}
 
-		uint64_t GetTimeout() const override
+		int64_t GetRepeatMs() const override
 		{
-			return this->timeout;
-		}
-
-		uint64_t GetRepeat() const override
-		{
-			return this->repeat;
+			return this->repeatMs;
 		}
 
 		bool IsActive() const override
@@ -83,7 +73,7 @@ namespace mocks
 
 		// Methods for testing.
 	public:
-		uint64_t GetExpiresAtMs() const
+		int64_t GetExpiresAtMs() const
 		{
 			return this->expiresAtMs;
 		}
@@ -109,13 +99,13 @@ namespace mocks
 		// Passed by argument.
 		TimerHandleInterface::Listener* listener{ nullptr };
 		const std::string label;
-		std::function<uint64_t()> getTimeMs;
+		std::function<int64_t()> getTimeMs;
 		const std::function<void()> onDelete;
 		// Others.
 		bool running{ false };
-		uint64_t timeout{ 0u };
-		uint64_t repeat{ 0u };
-		uint64_t expiresAtMs{ std::numeric_limits<uint64_t>::max() };
+		int64_t timeoutMs{ 0 };
+		int64_t repeatMs{ 0 };
+		int64_t expiresAtMs{ std::numeric_limits<int64_t>::max() };
 	};
 } // namespace mocks
 

@@ -20,23 +20,20 @@ public:
 		return DepLibUV::loop;
 	}
 
-	static uint64_t GetTimeMs()
+	/**
+	 * Current value of the monotonic clock (ms).
+	 */
+	static int64_t GetTimeMs()
 	{
-		return static_cast<uint64_t>(uv_hrtime() / 1000000u);
-	}
-
-	static uint64_t GetTimeUs()
-	{
-		return static_cast<uint64_t>(uv_hrtime() / 1000);
+		return static_cast<int64_t>(uv_hrtime() / 1000000);
 	}
 
 	/**
-	 * Used within libwebrtc dependency which uses int64_t values for time
-	 * representation.
+	 * Current value of the monotonic clock (us).
 	 */
-	static int64_t GetTimeMsInt64()
+	static int64_t GetTimeUs()
 	{
-		return static_cast<int64_t>(DepLibUV::GetTimeMs());
+		return static_cast<int64_t>(uv_hrtime() / 1000);
 	}
 
 	/**
@@ -50,15 +47,6 @@ public:
 	static int64_t GetNtpOffsetUs()
 	{
 		return DepLibUV::ntpOffsetUs;
-	}
-
-	/**
-	 * Used within libwebrtc dependency which uses int64_t values for time
-	 * representation.
-	 */
-	static int64_t GetTimeUsInt64()
-	{
-		return static_cast<int64_t>(DepLibUV::GetTimeUs());
 	}
 
 private:

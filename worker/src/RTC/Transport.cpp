@@ -399,7 +399,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs = this->shared->GetTimeMs();
+		const int64_t nowMs = this->shared->GetTimeMs();
 
 		// Add sctpState.
 		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
@@ -442,7 +442,7 @@ namespace RTC
 		  // transportId.
 		  this->id.c_str(),
 		  // timestamp.
-		  nowMs,
+		  static_cast<uint64_t>(nowMs),
 		  // sctpState.
 		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
 			                      : flatbuffers::nullopt,
@@ -1461,7 +1461,7 @@ namespace RTC
 		}
 
 		// Start the RTCP timer.
-		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
+		this->rtcpTimer->Start(RTC::RTCP::MaxVideoIntervalMs / 2);
 
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
@@ -1639,7 +1639,7 @@ namespace RTC
 			.unordered          = !sctpStreamParameters.ordered,
 			.lifetimeMs         = sctpStreamParameters.ordered
 			                        ? std::nullopt
-			                        : std::optional<uint64_t>(sctpStreamParameters.maxPacketLifeTime),
+			                        : std::optional<int64_t>(sctpStreamParameters.maxPacketLifeTime),
 			.maxRetransmissions = sctpStreamParameters.ordered
 			                        ? std::nullopt
 			                        : std::optional<uint64_t>(sctpStreamParameters.maxRetransmits),
@@ -1906,7 +1906,7 @@ namespace RTC
 
 				if (this->tccClient && !this->mapConsumers.empty())
 				{
-					float rtt = 0;
+					float rttMs = 0;
 
 					// Retrieve the RTT from the first active consumer.
 					for (auto& kv : this->mapConsumers)
@@ -1915,13 +1915,13 @@ namespace RTC
 
 						if (consumer->IsActive())
 						{
-							rtt = consumer->GetRtt();
+							rttMs = consumer->GetRttMs();
 
 							break;
 						}
 					}
 
-					this->tccClient->ReceiveRtcpReceiverReport(rr, rtt, receivedAtUs);
+					this->tccClient->ReceiveRtcpReceiverReport(rr, rttMs, receivedAtUs);
 				}
 
 				break;
@@ -2415,7 +2415,7 @@ namespace RTC
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::PROBATION,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -2451,7 +2451,7 @@ namespace RTC
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::BWE,
-		  this->shared->GetTimeMs(),
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Transport::TraceInfo::BweTraceInfo,
 		  traceInfo.Union());
@@ -2589,7 +2589,7 @@ namespace RTC
 #endif
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUsInt64());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2628,7 +2628,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeUsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
 			  });
@@ -2648,7 +2648,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUsInt64());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2682,7 +2682,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeUsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
 			  });
@@ -3271,7 +3271,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUsInt64());
+		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
 		// Update transport wide sequence number if present.
 		if (
@@ -3308,7 +3308,7 @@ namespace RTC
 
 					  if (tccClient)
 					  {
-						  tccClient->PacketSent(packetInfo, shared->GetTimeUsInt64());
+						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
 			  });
@@ -3350,9 +3350,9 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
-			auto intervalMs = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
+			auto intervalMs = static_cast<int64_t>(RTC::RTCP::MaxVideoIntervalMs);
 
-			SendRtcp(this->shared->GetTimeUsInt64());
+			SendRtcp(this->shared->GetTimeUs());
 
 			/*
 			 * The interval between RTCP packets is varied randomly over the range

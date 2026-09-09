@@ -11,7 +11,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void TrendCalculator::Update(uint32_t value, uint64_t nowMs)
+	void TrendCalculator::Update(uint32_t value, int64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -34,7 +34,7 @@ namespace RTC
 		// Otherwise decrease current value.
 		else
 		{
-			const uint64_t elapsedMs = nowMs - this->highestValueUpdatedAtMs;
+			const int64_t elapsedMs = nowMs - this->highestValueUpdatedAtMs;
 			auto subtraction =
 			  static_cast<uint32_t>(this->highestValue * this->decreaseFactor * (elapsedMs / 1000.0));
 
@@ -43,7 +43,7 @@ namespace RTC
 		}
 	}
 
-	void TrendCalculator::ForceUpdate(uint32_t value, uint64_t nowMs)
+	void TrendCalculator::ForceUpdate(uint32_t value, int64_t nowMs)
 	{
 		MS_TRACE();
 

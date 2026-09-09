@@ -571,7 +571,7 @@ namespace RTC
 			// Consider occasionally sending DATA chunks with I-bit set and use only
 			// those packets for measurement.
 
-			const auto rttUs = this->outstandingData.MeasureRtt(nowUs, cumulativeTsnAck);
+			const auto rttUs = this->outstandingData.MeasureRttUs(nowUs, cumulativeTsnAck);
 
 			if (rttUs.has_value())
 			{

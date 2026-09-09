@@ -191,17 +191,17 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		constexpr int64_t InitialCapacityBps{ 1000000 };
 		constexpr int64_t ReducedCapacityBps{ 500000 };
 
-		int64_t steadyStateTime{ 0 };
+		int64_t steadyStateSec{ 0 };
 
 		if (numberOfStreams <= 1)
 		{
-			steadyStateTime = 10;
+			steadyStateSec = 10;
 
 			simulatedTransport.AddDefaultStream();
 		}
 		else
 		{
-			steadyStateTime = 10 * numberOfStreams;
+			steadyStateSec = 10 * numberOfStreams;
 
 			int64_t bitrateSum{ 0 };
 			const int64_t bitrateDenom = numberOfStreams * (numberOfStreams - 1);
@@ -230,7 +230,7 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		simulatedTransport.linkSimulator.SetCapacityBps(InitialCapacityBps);
 
 		int64_t bitrateBps = simulatedTransport.SteadyStateRun(
-		  steadyStateTime * Framerate,
+		  steadyStateSec * Framerate,
 		  StartBitrate,
 		  MinExpectedBitrate,
 		  MaxExpectedBitrate,

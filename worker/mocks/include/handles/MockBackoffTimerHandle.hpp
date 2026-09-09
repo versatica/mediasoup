@@ -18,7 +18,7 @@ namespace mocks
 	private:
 		explicit MockBackoffTimerHandle(
 		  BackoffTimerHandleOptions options,
-		  std::function<uint64_t()> getTimeMs,
+		  std::function<int64_t()> getTimeMs,
 		  std::function<void()> onDelete);
 
 	public:
@@ -49,7 +49,7 @@ namespace mocks
 			// NOTE: Reset the expiration count, just like the real BackoffTimerHandle
 			// does.
 			this->expirationCount = 0;
-			this->expiresAtMs     = std::numeric_limits<uint64_t>::max();
+			this->expiresAtMs     = std::numeric_limits<int64_t>::max();
 		}
 
 		/**
@@ -60,7 +60,7 @@ namespace mocks
 		 *   during construction bypasses virtual dispatch
 		 *   [clang-analyzer-optin.cplusplus.VirtualCall]"
 		 */
-		void SetBaseTimeoutMs(uint64_t baseTimeoutMs) override;
+		void SetBaseTimeoutMs(int64_t baseTimeoutMs) override;
 
 		bool IsRunning() const override
 		{
@@ -84,7 +84,7 @@ namespace mocks
 
 		// Methods for testing.
 	public:
-		uint64_t GetExpiresAtMs() const
+		int64_t GetExpiresAtMs() const
 		{
 			return this->expiresAtMs;
 		}
@@ -104,7 +104,7 @@ namespace mocks
 		}
 
 	private:
-		uint64_t ComputeNextTimeoutMs() const
+		int64_t ComputeNextTimeoutMs() const
 		{
 			auto expirationCount = this->expirationCount;
 
@@ -130,7 +130,7 @@ namespace mocks
 						}
 					}
 
-					return std::min<uint64_t>(timeoutMs, BackoffTimerHandleInterface::MaxTimeoutMs);
+					return std::min<int64_t>(timeoutMs, BackoffTimerHandleInterface::MaxTimeoutMs);
 				}
 
 					NO_DEFAULT_GCC();
@@ -143,16 +143,16 @@ namespace mocks
 		// Passed by argument.
 		BackoffTimerHandleInterface::Listener* listener{ nullptr };
 		const std::string label;
-		uint64_t baseTimeoutMs;
+		int64_t baseTimeoutMs;
 		BackoffAlgorithm backoffAlgorithm;
-		std::optional<uint64_t> maxBackoffTimeoutMs;
+		std::optional<int64_t> maxBackoffTimeoutMs;
 		std::optional<size_t> maxRestarts;
-		std::function<uint64_t()> getTimeMs;
+		std::function<int64_t()> getTimeMs;
 		const std::function<void()> onDelete;
 		// Others.
 		bool running{ false };
 		size_t expirationCount{ 0 };
-		uint64_t expiresAtMs{ std::numeric_limits<uint64_t>::max() };
+		int64_t expiresAtMs{ std::numeric_limits<int64_t>::max() };
 	};
 } // namespace mocks
 

@@ -37,7 +37,7 @@ namespace RTC
 		// NOTE: Take the arrival time before anything else is done with the read
 		// data, so that it doesn't include the cost of processing it. All the frames
 		// found within this read share it, since they all arrived in it.
-		const int64_t receivedAtUs = this->shared->GetTimeUsInt64();
+		const int64_t receivedAtUs = this->shared->GetTimeUs();
 
 		MS_DEBUG_DEV(
 		  "data received [local:%s :%" PRIu16 ", remote:%s :%" PRIu16 "]",

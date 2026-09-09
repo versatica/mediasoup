@@ -43,10 +43,10 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 	mocks::RTC::SCTP::MockAssociationListener associationListener;
 	RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer(
 	  std::addressof(associationListener));
-	mocks::MockShared shared(/*getTimeUsInt64*/
+	mocks::MockShared shared(/*getTimeUs*/
 	                         []() -> int64_t
 	                         {
-		                         return DepLibUV::GetTimeUsInt64();
+		                         return DepLibUV::GetTimeUs();
 	                         });
 	mocks::RTC::SCTP::MockSendQueue sendQueue;
 	RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities;

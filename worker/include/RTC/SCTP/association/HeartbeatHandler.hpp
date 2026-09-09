@@ -53,14 +53,14 @@ namespace RTC
 			void HandleReceivedHeartbeatAckChunk(const HeartbeatAckChunk* receivedHeartbeatAckChunk);
 
 		private:
-			void OnIntervalTimer(uint64_t& baseTimeoutMs, bool& stop);
+			void OnIntervalTimer(int64_t& baseTimeoutMs, bool& stop);
 
-			void OnTimeoutTimer(uint64_t& baseTimeoutMs, bool& stop);
+			void OnTimeoutTimer(int64_t& baseTimeoutMs, bool& stop);
 
 			/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 		public:
 			void OnBackoffTimer(
-			  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) override;
+			  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop) override;
 
 		private:
 			AssociationListenerDeferrer& associationListenerDeferrer;
@@ -68,7 +68,7 @@ namespace RTC
 			SharedInterface* shared;
 			TransmissionControlBlockContextInterface* tcbContext;
 			// The time for a connection to be idle before a heartbeat is sent.
-			const uint64_t intervalDurationMs;
+			const int64_t intervalDurationMs;
 			// Adding RTT to the duration will add some jitter, which is good in
 			// production, but less good in unit tests, which is why it can be disabled.
 			const bool intervalDurationShouldIncludeRtt;

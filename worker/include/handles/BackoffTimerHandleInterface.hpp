@@ -23,7 +23,7 @@ public:
 		 *   it must signal it be setting `stop` to true.
 		 */
 		virtual void OnBackoffTimer(
-		  BackoffTimerHandleInterface* backoffTimer, uint64_t& baseTimeoutMs, bool& stop) = 0;
+		  BackoffTimerHandleInterface* backoffTimer, int64_t& baseTimeoutMs, bool& stop) = 0;
 	};
 
 public:
@@ -51,7 +51,7 @@ public:
 		/**
 		 * Base timeout duration (ms).
 		 */
-		uint64_t baseTimeoutMs;
+		int64_t baseTimeoutMs;
 		/**
 		 * Backoff algorithm.
 		 */
@@ -60,7 +60,7 @@ public:
 		 * Maximum duration of the backoff timeout (ms). If no value is given, no
 		 * limit is set.
 		 */
-		std::optional<uint64_t> maxBackoffTimeoutMs;
+		std::optional<int64_t> maxBackoffTimeoutMs;
 		/**
 		 * Maximum number of restarts. If no value is given, it will restart
 		 * forever until stopped.
@@ -69,7 +69,7 @@ public:
 	};
 
 public:
-	static constexpr uint64_t MaxTimeoutMs{ std::numeric_limits<uint64_t>::max() / 2 };
+	static constexpr int64_t MaxTimeoutMs{ std::numeric_limits<int64_t>::max() / 2 };
 
 public:
 	BackoffTimerHandleInterface() = default;
@@ -96,7 +96,7 @@ public:
 	 * Set the base timeout duration. It will be applied after the next timeout
 	 * and effective duration can be larger if backoff algorithm is exponential.
 	 */
-	virtual void SetBaseTimeoutMs(uint64_t baseTimeoutMs) = 0;
+	virtual void SetBaseTimeoutMs(int64_t baseTimeoutMs) = 0;
 
 	/**
 	 * Whether the BackoffTimer is running. Useful to check if this BackoffTimer

@@ -14,7 +14,7 @@ namespace
 {
 	// NOLINTBEGIN(readability-identifier-naming)
 	const uint8_t payloadType = 111;
-	mocks::MockShared shared(/*getTimeUsInt64*/
+	mocks::MockShared shared(/*getTimeUs*/
 	                         []() -> int64_t
 	                         {
 		                         return 1000 * 1000;

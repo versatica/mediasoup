@@ -15,7 +15,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		/* Pure virtual methods inherited from BackoffTimerHandleInterface::Listener. */
 	public:
 		void OnBackoffTimer(
-		  BackoffTimerHandleInterface* /*backoffTimer*/, uint64_t& /*baseTimeoutMs*/, bool& /*stop*/) override
+		  BackoffTimerHandleInterface* /*backoffTimer*/, int64_t& /*baseTimeoutMs*/, bool& /*stop*/) override
 		{
 		}
 	};
@@ -26,7 +26,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 
 	MockBackoffTimerHandleListener backoffTimerHandleListener;
 	int64_t nowUs{ 10000 * 1000 };
-	mocks::MockShared shared(/*getTimeUsInt64*/
+	mocks::MockShared shared(/*getTimeUs*/
 	                         [&nowUs]() -> int64_t
 	                         {
 		                         return nowUs;

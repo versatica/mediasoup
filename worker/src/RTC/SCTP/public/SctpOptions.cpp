@@ -34,23 +34,23 @@ namespace RTC
 			  "  total buffered amount low threshold: %zu",
 			  this->totalBufferedAmountLowThreshold);
 			MS_DUMP_CLEAN(indentation, "  default stream priority: %" PRIu16, this->defaultStreamPriority);
-			MS_DUMP_CLEAN(indentation, "  max rtt (ms): %" PRIu64, this->maxRttMs);
-			MS_DUMP_CLEAN(indentation, "  initial rto (ms): %" PRIu64, this->initialRtoMs);
-			MS_DUMP_CLEAN(indentation, "  min rto (ms): %" PRIu64, this->minRtoMs);
-			MS_DUMP_CLEAN(indentation, "  max rto (ms): %" PRIu64, this->maxRtoMs);
-			MS_DUMP_CLEAN(indentation, "  t1-init timeout (ms): %" PRIu64, this->t1InitTimeoutMs);
-			MS_DUMP_CLEAN(indentation, "  t1-cookie timeout (ms): %" PRIu64, this->t1CookieTimeoutMs);
-			MS_DUMP_CLEAN(indentation, "  t2-shutdown timeout (ms): %" PRIu64, this->t2ShutdownTimeoutMs);
+			MS_DUMP_CLEAN(indentation, "  max rtt (ms): %" PRIi64, this->maxRttMs);
+			MS_DUMP_CLEAN(indentation, "  initial rto (ms): %" PRIi64, this->initialRtoMs);
+			MS_DUMP_CLEAN(indentation, "  min rto (ms): %" PRIi64, this->minRtoMs);
+			MS_DUMP_CLEAN(indentation, "  max rto (ms): %" PRIi64, this->maxRtoMs);
+			MS_DUMP_CLEAN(indentation, "  t1-init timeout (ms): %" PRIi64, this->t1InitTimeoutMs);
+			MS_DUMP_CLEAN(indentation, "  t1-cookie timeout (ms): %" PRIi64, this->t1CookieTimeoutMs);
+			MS_DUMP_CLEAN(indentation, "  t2-shutdown timeout (ms): %" PRIi64, this->t2ShutdownTimeoutMs);
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  timer max backoff timeout (ms): %s",
 			  this->timerMaxBackoffTimeoutMs
 			    ? std::to_string(this->timerMaxBackoffTimeoutMs.value()).c_str()
 					: "Infinite");
-			MS_DUMP_CLEAN(indentation, "  heartbeat interval (ms): %" PRIu64, this->heartbeatIntervalMs);
+			MS_DUMP_CLEAN(indentation, "  heartbeat interval (ms): %" PRIi64, this->heartbeatIntervalMs);
 			MS_DUMP_CLEAN(
-			  indentation, "  delayed ack max timeout (ms): %" PRIu64, this->delayedAckMaxTimeoutMs);
-			MS_DUMP_CLEAN(indentation, "  min rtt variance (ms): %" PRIu64, this->minRttVarianceMs);
+			  indentation, "  delayed ack max timeout (ms): %" PRIi64, this->delayedAckMaxTimeoutMs);
+			MS_DUMP_CLEAN(indentation, "  min rtt variance (ms): %" PRIi64, this->minRttVarianceMs);
 			MS_DUMP_CLEAN(indentation, "  initial cwnd mtus: %zu", this->initialCwndMtus);
 			MS_DUMP_CLEAN(indentation, "  min cwnd mtus: %zu", this->minCwndMtus);
 			MS_DUMP_CLEAN(

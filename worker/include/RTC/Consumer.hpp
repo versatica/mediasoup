@@ -154,8 +154,8 @@ namespace RTC
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
 		void ReceiveRtcpXrReceiverReferenceTime(
 		  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
-		uint32_t GetTransmissionRate(uint64_t nowMs);
-		float GetRtt() const;
+		uint32_t GetTransmissionRate(int64_t nowMs);
+		float GetRttMs() const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
@@ -217,7 +217,7 @@ namespace RTC
 		// Others.
 		std::bitset<128u> supportedCodecPayloadTypes;
 		int64_t lastRtcpSentAtUs{ 0 };
-		uint16_t maxRtcpIntervalMs{ 0u };
+		int64_t maxRtcpIntervalMs{ 0 };
 		bool externallyManagedBitrate{ false };
 		uint8_t priority{ 1u };
 		struct TraceEventTypes traceEventTypes;

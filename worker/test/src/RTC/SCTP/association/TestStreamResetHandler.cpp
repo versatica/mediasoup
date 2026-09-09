@@ -24,7 +24,7 @@ namespace
 	constexpr uint32_t LocalInitialTsn{ 0 };
 	constexpr uint32_t RemoteInitialTsn{ 0 };
 	constexpr int64_t InitialNowUs{ 10000 * 1000 };
-	constexpr uint64_t RtoMs{ 250 };
+	constexpr int64_t RtoMs{ 250 };
 
 	/**
 	 * A RTC::SCTP::StreamResetHandler under test, together with all the (real)
@@ -35,7 +35,7 @@ namespace
 	public:
 		TestStreamResetHandler()
 		  // NOTE: The order in which these members are initialized is **critical**.
-		  : shared(/*getTimeUsInt64*/
+		  : shared(/*getTimeUs*/
 			         [this]() -> int64_t
 			         {
 			           return this->nowUs;
@@ -120,7 +120,7 @@ namespace
 		{
 		public:
 			void OnBackoffTimer(
-			  BackoffTimerHandleInterface* /*backoffTimer*/, uint64_t& /*baseTimeoutMs*/, bool& /*stop*/) override
+			  BackoffTimerHandleInterface* /*backoffTimer*/, int64_t& /*baseTimeoutMs*/, bool& /*stop*/) override
 			{
 			}
 		};

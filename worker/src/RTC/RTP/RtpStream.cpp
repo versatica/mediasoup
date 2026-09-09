@@ -64,14 +64,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const uint64_t nowMs = this->shared->GetTimeMs();
+			const int64_t nowMs  = this->shared->GetTimeMs();
 			const auto mediaKind = this->params.mimeType.type == RTC::RtpCodecMimeType::Type::AUDIO
 			                         ? FBS::RtpParameters::MediaKind::AUDIO
 			                         : FBS::RtpParameters::MediaKind::VIDEO;
 
 			auto baseStats = FBS::RtpStream::CreateBaseStatsDirect(
 			  builder,
-			  nowMs,
+			  static_cast<uint64_t>(nowMs),
 			  this->params.ssrc,
 			  mediaKind,
 			  this->params.mimeType.ToString().c_str(),
@@ -89,7 +89,7 @@ namespace RTC
 			  this->params.rtxSsrc ? flatbuffers::Optional<uint32_t>(this->params.rtxSsrc)
 				                     : flatbuffers::nullopt,
 			  this->rtxStream ? this->rtxStream->GetPacketsDiscarded() : 0,
-			  this->rtt > 0.0f ? this->rtt : 0,
+			  this->rttMs > 0.0f ? this->rttMs : 0,
 			  this->score);
 
 			return FBS::RtpStream::CreateStats(
@@ -140,7 +140,7 @@ namespace RTC
 				this->started              = true;
 				this->maxSeq               = seq - 1;
 				this->maxPacketTs          = packet->GetTimestamp();
-				this->maxPacketAtUs        = this->shared->GetTimeUsInt64();
+				this->maxPacketAtUs        = this->shared->GetTimeUs();
 				this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
 			}
 
@@ -160,7 +160,7 @@ namespace RTC
 			if (Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp(), this->maxPacketTs))
 			{
 				this->maxPacketTs          = packet->GetTimestamp();
-				this->maxPacketAtUs        = this->shared->GetTimeUsInt64();
+				this->maxPacketAtUs        = this->shared->GetTimeUs();
 				this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
 			}
 
@@ -229,7 +229,7 @@ namespace RTC
 					  packet->GetTimestamp());
 
 					this->maxPacketTs          = packet->GetTimestamp();
-					this->maxPacketAtUs        = this->shared->GetTimeUsInt64();
+					this->maxPacketAtUs        = this->shared->GetTimeUs();
 					this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
 				}
 			}
@@ -252,7 +252,7 @@ namespace RTC
 					InitSeq(seq);
 
 					this->maxPacketTs          = packet->GetTimestamp();
-					this->maxPacketAtUs        = this->shared->GetTimeUsInt64();
+					this->maxPacketAtUs        = this->shared->GetTimeUs();
 					this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
 
 					// Notify the subclass about it.

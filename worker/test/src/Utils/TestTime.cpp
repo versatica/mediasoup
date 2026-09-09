@@ -7,7 +7,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 {
 	SECTION("Ntp2TimeUs()")
 	{
-		const auto nowUs  = DepLibUV::GetTimeUsInt64();
+		const auto nowUs  = DepLibUV::GetTimeUs();
 		const auto ntp    = Utils::Time::TimeUs2Ntp(nowUs);
 		const auto nowUs2 = Utils::Time::Ntp2TimeUs(ntp);
 		const auto ntp2   = Utils::Time::TimeUs2Ntp(nowUs2);
