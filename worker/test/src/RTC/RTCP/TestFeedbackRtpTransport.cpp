@@ -174,7 +174,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		}
 	}
 
-	SECTION("create FeedbackRtpTransportPacket, run length chunk (2)")
+	SECTION("create FeedbackRtpTransportPacket, not received run length chunk and large delta")
 	{
 		auto packet = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 
