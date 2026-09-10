@@ -33,9 +33,13 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		// which is the first input.
 		const int64_t baseTimeTicks =
 		  inputs.front().timestampUs / RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTickUs;
-		const int64_t frameOffsetUs = RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriodUs +
-		                              (((baseTimeTicks & 0xFFFFFF) - baseTimeTicks) *
-		                               RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTickUs);
+		const int64_t maskedBaseTimeTicks = baseTimeTicks & 0xFFFFFF;
+		// The reference time is a 24 bits signed integer.
+		const int64_t referenceTime =
+		  maskedBaseTimeTicks >= (1 << 23) ? maskedBaseTimeTicks - (1 << 24) : maskedBaseTimeTicks;
+		const int64_t frameOffsetUs =
+		  RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriodUs +
+		  ((referenceTime - baseTimeTicks) * RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTickUs);
 
 		auto packetStatusesIterator = packetStatuses.begin();
 		auto lastInput              = inputs.front();
@@ -154,6 +158,11 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 				REQUIRE(packet2->GetPacketStatusCount() == 16);
 				REQUIRE(packet2->GetFeedbackPacketCount() == 1);
 				REQUIRE(packet2->GetPacketFractionLost() == 0);
+
+				// The reference time survives the round trip, so a parsed packet tells
+				// the very same arrival times as the one it was serialized from.
+				REQUIRE(packet2->GetReferenceTime() == packet->GetReferenceTime());
+				verify(inputs, packet2->GetPacketStatuses());
 
 				alignas(4) uint8_t buffer2[1024];
 				auto len2 = packet2->Serialize(buffer2);
@@ -797,11 +806,11 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		  MaxBaseTimeUs + RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTickUs +
 		  RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTickUs);
 
-		REQUIRE(packet1->GetReferenceTime() == 16777215);
+		REQUIRE(packet1->GetReferenceTime() == -1);
 		REQUIRE(packet2->GetReferenceTime() == 0);
 		REQUIRE(packet3->GetReferenceTime() == 1);
 
-		REQUIRE(packet1->GetReferenceTimestampUs() == 2147483584000);
+		REQUIRE(packet1->GetReferenceTimestampUs() == 1073741760000);
 		REQUIRE(packet2->GetReferenceTimestampUs() == 1073741824000);
 		REQUIRE(packet3->GetReferenceTimestampUs() == 1073741888000);
 
@@ -824,7 +833,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		packet1->SetBase(1000, LastTickUs);
 		packet2->SetBase(1001, LastTickUs + RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTickUs);
 
-		REQUIRE(packet1->GetReferenceTime() == 16777215);
+		REQUIRE(packet1->GetReferenceTime() == -1);
 		REQUIRE(packet2->GetReferenceTime() == 0);
 
 		// Both packets are a single tick apart, so the wrap around must be

@@ -287,7 +287,7 @@ namespace RTC
 			// NOTE: The reference time is a 24 bits field that wraps around, which is
 			// what GetBaseDeltaUs() compensates for. Keeping fewer bits than that
 			// would make it wrap sooner than the compensation expects.
-			this->referenceTime        = static_cast<int32_t>(baseTimeTicks & 0xFFFFFF);
+			this->referenceTime        = TicksToReferenceTime(baseTimeTicks);
 			this->latestSequenceNumber = sequenceNumber - 1;
 			// IMPORTANT: The reference time only carries whole base time ticks, so
 			// the remainder is lost here and recovered by the delta of the first

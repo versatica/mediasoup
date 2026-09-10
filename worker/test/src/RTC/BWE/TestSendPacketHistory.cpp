@@ -33,13 +33,17 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 		const int64_t sequenceNumber =
 		  sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, true, InitialTimeUs);
 
-		const auto sentPacket = sendPacketHistory.RetrievePacket(sequenceNumber, true);
+		const auto retrievedPacket = sendPacketHistory.RetrievePacket(sequenceNumber, true);
 
-		REQUIRE(sentPacket.has_value());
-		REQUIRE(sentPacket->sequenceNumber == sequenceNumber);
-		REQUIRE(sentPacket->sendTimeUs == InitialTimeUs);
-		REQUIRE(sentPacket->size == PacketSize);
-		REQUIRE(sentPacket->audio == true);
+		REQUIRE(retrievedPacket.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& sentPacket = retrievedPacket.value();
+
+		REQUIRE(sentPacket.sequenceNumber == sequenceNumber);
+		REQUIRE(sentPacket.sendTimeUs == InitialTimeUs);
+		REQUIRE(sentPacket.size == PacketSize);
+		REQUIRE(sentPacket.audio == true);
 	}
 
 	SECTION("a sequence number that was never given out is not resolved")
@@ -91,6 +95,7 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 		const auto sentPacket = sendPacketHistory.RetrievePacket(Ssrc, 100, true);
 
 		REQUIRE(sentPacket.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(sentPacket->sequenceNumber == sequenceNumber);
 
 		// The very same RTP sequence number of another stream is another packet.
@@ -109,6 +114,7 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 		const auto sentPacket = sendPacketHistory.RetrievePacket(Ssrc, 100, true);
 
 		REQUIRE(sentPacket.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(sentPacket->sequenceNumber == retransmissionSequenceNumber);
 	}
 
@@ -127,6 +133,7 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 		const auto sentPacket = sendPacketHistory.RetrievePacket(Ssrc, 100, true);
 
 		REQUIRE(sentPacket.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(sentPacket->sequenceNumber == retransmissionSequenceNumber);
 	}
 
@@ -162,11 +169,13 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 		const auto firstSentPacket = sendPacketHistory.RetrievePacket(0, false);
 
 		REQUIRE(firstSentPacket.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(firstSentPacket->dataInFlight == 200);
 
 		const auto secondSentPacket = sendPacketHistory.RetrievePacket(1, false);
 
 		REQUIRE(secondSentPacket.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(secondSentPacket->dataInFlight == 500);
 	}
 
