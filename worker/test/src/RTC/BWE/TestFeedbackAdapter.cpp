@@ -297,14 +297,20 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 		REQUIRE(secondResult.has_value());
 		REQUIRE(firstResult.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(secondResult->packetFeedbacks.size() == 1);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(firstResult->packetFeedbacks.size() == 1);
 
-		const auto& firstPacketResult  = firstResult->packetFeedbacks[0];
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& firstPacketResult = firstResult->packetFeedbacks[0];
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		const auto& secondPacketResult = secondResult->packetFeedbacks[0];
 
 		REQUIRE(
+		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		  firstPacketResult.receiveTimeUs.value() - firstPacketResult.sentPacket.sendTimeUs ==
+		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		  secondPacketResult.receiveTimeUs.value() - secondPacketResult.sentPacket.sendTimeUs);
 	}
 
@@ -341,14 +347,20 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 		REQUIRE(firstResult.has_value());
 		REQUIRE(secondResult.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(firstResult->packetFeedbacks.size() == 1);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(secondResult->packetFeedbacks.size() == 1);
 
-		const auto& firstPacketResult  = firstResult->packetFeedbacks[0];
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& firstPacketResult = firstResult->packetFeedbacks[0];
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		const auto& secondPacketResult = secondResult->packetFeedbacks[0];
 
 		REQUIRE(
+		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		  firstPacketResult.receiveTimeUs.value() - firstPacketResult.sentPacket.sendTimeUs ==
+		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		  secondPacketResult.receiveTimeUs.value() - secondPacketResult.sentPacket.sendTimeUs);
 	}
 
@@ -376,11 +388,17 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(result.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(result->packetFeedbacks.size() == 3);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(result->packetFeedbacks[0].sentPacket.sequenceNumber == 0);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(result->packetFeedbacks[1].sentPacket.sequenceNumber == 1);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(result->packetFeedbacks[2].sentPacket.sequenceNumber == 2);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(result->packetFeedbacks[0].receiveTimeUs > result->packetFeedbacks[1].receiveTimeUs);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(result->packetFeedbacks[1].receiveTimeUs > result->packetFeedbacks[2].receiveTimeUs);
 	}
 
@@ -406,7 +424,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(result.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(result->packetFeedbacks.size() == 1);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(result->packetFeedbacks[0].sentPacket.sequenceNumber == 2);
 	}
 
@@ -435,6 +455,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  feedbackAdapter.ProcessTransportFeedback(firstFeedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(firstResult.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(firstResult->packetFeedbacks.size() == 2);
 
 		// And now a lot of packets are sent before the next feedback comes.
@@ -456,7 +477,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		  feedbackAdapter.ProcessTransportFeedback(secondFeedback.get(), InitialTimeUs + 60000);
 
 		REQUIRE(secondResult.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(secondResult->packetFeedbacks.size() == 1);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(secondResult->packetFeedbacks[0].sentPacket.sequenceNumber == 2);
 	}
 
