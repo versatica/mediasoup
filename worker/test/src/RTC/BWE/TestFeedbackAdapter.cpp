@@ -483,14 +483,16 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		    { 2, RemoteTimeUs }
     });
 
-		const auto secondResult =
+		const auto secondProcessedFeedback =
 		  feedbackAdapter.ProcessTransportFeedback(secondFeedback.get(), InitialTimeUs + 60000);
 
-		REQUIRE(secondResult.has_value());
+		REQUIRE(secondProcessedFeedback.has_value());
+
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(secondResult->packetFeedbacks.size() == 1);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(secondResult->packetFeedbacks[0].sentPacket.sequenceNumber == 2);
+		const auto& secondResult = secondProcessedFeedback.value();
+
+		REQUIRE(secondResult.packetFeedbacks.size() == 1);
+		REQUIRE(secondResult.packetFeedbacks[0].sentPacket.sequenceNumber == 2);
 	}
 
 	SECTION("a feedback reporting on no packet at all yields no value")
