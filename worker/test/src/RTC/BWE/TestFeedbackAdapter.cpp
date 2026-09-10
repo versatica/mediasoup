@@ -290,28 +290,33 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		// The second feedback is processed first, and the first one arrives late.
-		const auto secondResult =
+		const auto secondProcessedFeedback =
 		  feedbackAdapter.ProcessTransportFeedback(secondFeedback.get(), InitialTimeUs + 150000);
-		const auto firstResult =
+		const auto firstProcessedFeedback =
 		  feedbackAdapter.ProcessTransportFeedback(firstFeedback.get(), InitialTimeUs + 160000);
 
-		REQUIRE(secondResult.has_value());
-		REQUIRE(firstResult.has_value());
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(secondResult->packetFeedbacks.size() == 1);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(firstResult->packetFeedbacks.size() == 1);
+		REQUIRE(secondProcessedFeedback.has_value());
+		REQUIRE(firstProcessedFeedback.has_value());
 
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		const auto& firstPacketResult = firstResult->packetFeedbacks[0];
+		const auto& firstResult = firstProcessedFeedback.value();
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		const auto& secondPacketResult = secondResult->packetFeedbacks[0];
+		const auto& secondResult = secondProcessedFeedback.value();
 
-		REQUIRE(
+		REQUIRE(firstResult.packetFeedbacks.size() == 1);
+		REQUIRE(secondResult.packetFeedbacks.size() == 1);
+
+		const auto& firstPacketResult  = firstResult.packetFeedbacks[0];
+		const auto& secondPacketResult = secondResult.packetFeedbacks[0];
+
+		const int64_t firstDelayUs =
 		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		  firstPacketResult.receiveTimeUs.value() - firstPacketResult.sentPacket.sendTimeUs ==
+		  firstPacketResult.receiveTimeUs.value() - firstPacketResult.sentPacket.sendTimeUs;
+		const int64_t secondDelayUs =
 		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		  secondPacketResult.receiveTimeUs.value() - secondPacketResult.sentPacket.sendTimeUs);
+		  secondPacketResult.receiveTimeUs.value() - secondPacketResult.sentPacket.sendTimeUs;
+
+		REQUIRE(firstDelayUs == secondDelayUs);
 	}
 
 	SECTION("the base time wrapping around does not break the timeline")
@@ -340,28 +345,33 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		    { 1, SecondBaseTimeUs }
     });
 
-		const auto firstResult =
+		const auto firstProcessedFeedback =
 		  feedbackAdapter.ProcessTransportFeedback(firstFeedback.get(), InitialTimeUs + 50000);
-		const auto secondResult = feedbackAdapter.ProcessTransportFeedback(
+		const auto secondProcessedFeedback = feedbackAdapter.ProcessTransportFeedback(
 		  secondFeedback.get(), InitialTimeUs + ElapsedUs + 50000);
 
-		REQUIRE(firstResult.has_value());
-		REQUIRE(secondResult.has_value());
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(firstResult->packetFeedbacks.size() == 1);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(secondResult->packetFeedbacks.size() == 1);
+		REQUIRE(firstProcessedFeedback.has_value());
+		REQUIRE(secondProcessedFeedback.has_value());
 
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		const auto& firstPacketResult = firstResult->packetFeedbacks[0];
+		const auto& firstResult = firstProcessedFeedback.value();
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		const auto& secondPacketResult = secondResult->packetFeedbacks[0];
+		const auto& secondResult = secondProcessedFeedback.value();
 
-		REQUIRE(
+		REQUIRE(firstResult.packetFeedbacks.size() == 1);
+		REQUIRE(secondResult.packetFeedbacks.size() == 1);
+
+		const auto& firstPacketResult  = firstResult.packetFeedbacks[0];
+		const auto& secondPacketResult = secondResult.packetFeedbacks[0];
+
+		const int64_t firstDelayUs =
 		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		  firstPacketResult.receiveTimeUs.value() - firstPacketResult.sentPacket.sendTimeUs ==
+		  firstPacketResult.receiveTimeUs.value() - firstPacketResult.sentPacket.sendTimeUs;
+		const int64_t secondDelayUs =
 		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		  secondPacketResult.receiveTimeUs.value() - secondPacketResult.sentPacket.sendTimeUs);
+		  secondPacketResult.receiveTimeUs.value() - secondPacketResult.sentPacket.sendTimeUs;
+
+		REQUIRE(firstDelayUs == secondDelayUs);
 	}
 
 	SECTION("the packets are reported in the order the feedback reports them")
@@ -384,22 +394,20 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
         { 2, RemoteTimeUs         }
     });
 
-		const auto result =
+		const auto processedFeedback =
 		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000);
 
-		REQUIRE(result.has_value());
+		REQUIRE(processedFeedback.has_value());
+
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(result->packetFeedbacks.size() == 3);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(result->packetFeedbacks[0].sentPacket.sequenceNumber == 0);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(result->packetFeedbacks[1].sentPacket.sequenceNumber == 1);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(result->packetFeedbacks[2].sentPacket.sequenceNumber == 2);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(result->packetFeedbacks[0].receiveTimeUs > result->packetFeedbacks[1].receiveTimeUs);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(result->packetFeedbacks[1].receiveTimeUs > result->packetFeedbacks[2].receiveTimeUs);
+		const auto& result = processedFeedback.value();
+
+		REQUIRE(result.packetFeedbacks.size() == 3);
+		REQUIRE(result.packetFeedbacks[0].sentPacket.sequenceNumber == 0);
+		REQUIRE(result.packetFeedbacks[1].sentPacket.sequenceNumber == 1);
+		REQUIRE(result.packetFeedbacks[2].sentPacket.sequenceNumber == 2);
+		REQUIRE(result.packetFeedbacks[0].receiveTimeUs > result.packetFeedbacks[1].receiveTimeUs);
+		REQUIRE(result.packetFeedbacks[1].receiveTimeUs > result.packetFeedbacks[2].receiveTimeUs);
 	}
 
 	SECTION("the packets a lost feedback reported on are not reported as lost")
@@ -420,14 +428,16 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		    { 2, RemoteTimeUs + 20000 }
     });
 
-		const auto result =
+		const auto processedFeedback =
 		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000);
 
-		REQUIRE(result.has_value());
+		REQUIRE(processedFeedback.has_value());
+
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(result->packetFeedbacks.size() == 1);
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(result->packetFeedbacks[0].sentPacket.sequenceNumber == 2);
+		const auto& result = processedFeedback.value();
+
+		REQUIRE(result.packetFeedbacks.size() == 1);
+		REQUIRE(result.packetFeedbacks[0].sentPacket.sequenceNumber == 2);
 	}
 
 	SECTION("the feedbacks are resolved although the packets being sent run far ahead of them")
