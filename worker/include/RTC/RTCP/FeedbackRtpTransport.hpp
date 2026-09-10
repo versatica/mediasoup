@@ -205,6 +205,17 @@ namespace RTC
 			static FeedbackRtpTransportPacket* Parse(const uint8_t* data, size_t len);
 
 		private:
+			/**
+			 * Turn a number of whole base time ticks elapsed into the reference time
+			 * that stands for it.
+			 *
+			 * @remarks
+			 * - The reference time is a 24 bits signed integer, so it's kept sign
+			 *   extended, which is how parsing it back gives it.
+			 */
+			static int32_t TicksToReferenceTime(int64_t baseTimeTicks);
+
+		private:
 			static const ankerl::unordered_dense::map<Status, std::string> Status2String;
 
 		public:
@@ -255,10 +266,7 @@ namespace RTC
 			 * @remarks
 			 * - Only used for testing purposes.
 			 */
-			void SetReferenceTimeUs(int64_t referenceTimeUs)
-			{
-				this->referenceTime = (referenceTimeUs % TimeWrapPeriodUs) / BaseTimeTickUs;
-			}
+			void SetReferenceTimeUs(int64_t referenceTimeUs);
 			int64_t GetReferenceTimestampUs() const // Reference time in us.
 			{
 				return TimeWrapPeriodUs + (static_cast<int64_t>(this->referenceTime) * BaseTimeTickUs);

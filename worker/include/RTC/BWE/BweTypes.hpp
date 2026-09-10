@@ -126,6 +126,11 @@ namespace RTC
 				 */
 				size_t priorUnackedData{ 0 };
 				/**
+				 * Data that was in flight when the packet was sent, itself included and
+				 * the data that no feedback covers excluded (bytes).
+				 */
+				size_t dataInFlight{ 0 };
+				/**
 				 * Whether it's an audio packet. False for video, padding and RTX.
 				 */
 				bool audio{ false };
@@ -190,6 +195,10 @@ namespace RTC
 				 * Time at which this feedback was received, in our own clock reference.
 				 */
 				int64_t feedbackTimeUs;
+				/**
+				 * Data that was sent and no feedback has reported on yet (bytes).
+				 */
+				size_t dataInFlight{ 0 };
 				/**
 				 * Every packet the feedback reports on, received and lost alike.
 				 */
