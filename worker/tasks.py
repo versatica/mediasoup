@@ -182,7 +182,9 @@ def default_meson_options():
             match = re.match(r"\s*option\('([^']+)'.*value:\s*([^,)]+)", line)
 
             if match:
-                options.append(f"-D{match.group(1)}={match.group(2).strip().strip(chr(39))}")
+                options.append(
+                    f"-D{match.group(1)}={match.group(2).strip().strip(chr(39))}"
+                )
 
     return " ".join(options)
 
