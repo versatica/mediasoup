@@ -11,6 +11,7 @@ Usage:
 import glob
 import inspect
 import os
+import re
 import shutil
 import sys
 from contextlib import contextmanager, suppress
@@ -169,6 +170,25 @@ def meson_ninja(ctx):
     )
 
 
+def default_meson_options():
+    """
+    Return every option in meson_options.txt set to its default value
+    """
+
+    options = []
+
+    with open(f"{WORKER_DIR}/meson_options.txt", encoding="utf-8") as options_file:
+        for line in options_file:
+            match = re.match(r"\s*option\('([^']+)'.*value:\s*([^,)]+)", line)
+
+            if match:
+                options.append(
+                    f"-D{match.group(1)}={match.group(2).strip().strip(chr(39))}"
+                )
+
+    return " ".join(options)
+
+
 @task(pre=[meson_ninja])
 def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     """
@@ -181,10 +201,17 @@ def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     # changing MESON_ARGS would have no effect until the directory is removed.
     reconfigure = "--reconfigure" if os.path.isdir(f"{build_dir}/meson-info") else ""
 
+    # NOTE: Meson also keeps every option of an already configured build
+    # directory that is not given again, so all of them are passed with their
+    # default value before meson_args, which comes later and hence wins. Without
+    # this, removing an option from MESON_ARGS would silently keep the value it
+    # was given the previous time.
+    default_options = default_meson_options()
+
     if MEDIASOUP_BUILDTYPE == "Release":
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {meson_args} "{build_dir}"',
+                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {default_options} {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -192,7 +219,7 @@ def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     elif MEDIASOUP_BUILDTYPE == "Debug":
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {meson_args} "{build_dir}"',
+                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {default_options} {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -200,7 +227,7 @@ def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     else:
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {meson_args} "{build_dir}"',
+                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {default_options} {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,

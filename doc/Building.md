@@ -165,7 +165,7 @@ See all the tasks by running `invoke --list` within the `worker` folder.
 
 _NOTE:_ Tasks that require specific Meson options (such as `invoke test`, `invoke tidy`, `invoke test-asan-address`, `invoke test-asan-undefined` and `invoke fuzzer`) use their own Meson build directory within `worker/out/MEDIASOUP_BUILDTYPE`, so switching from a task to another doesn't reconfigure and rebuild everything. All of them install their binaries into `worker/out/MEDIASOUP_BUILDTYPE`.
 
-_NOTE:_ The "MESON_ARGS" environment variable is applied even if the build directory is already configured, since `invoke setup` passes `--reconfigure` to `meson setup` in that case. However Meson keeps every option that is not given again, so **dropping an option from "MESON_ARGS" does not revert it to its default value**. To go back to the default configuration, either pass the option with its default value or remove the build directory with `invoke clean-build`.
+_NOTE:_ The "MESON_ARGS" environment variable is always honored, even if the build directory is already configured. Meson would otherwise ignore it and keep the options the build directory was configured with, so `invoke setup` passes `--reconfigure` to `meson setup` and gives it every option in `worker/meson_options.txt` set to its default value before "MESON_ARGS", which comes later and hence wins. This means that **dropping an option from "MESON_ARGS" reverts it to its default value**, so "MESON_ARGS" alone decides how the worker is built.
 
 _NOTE:_ For some of these tasks to work, npm dependencies of `worker/scripts/package.json` must be installed:
 
@@ -207,12 +207,12 @@ Check the status of the Meson subprojects. It also prints whether there are upda
 
 ### `invoke update-wrap-file [subproject]`
 
-Updates the wrap file of a Meson subproject (those in `worker/subprojects` folder). After updating it, `invoke setup` must be called by passing `MESON_ARGS="--reconfigure"` environment variable. Usage example:
+Updates the wrap file of a Meson subproject (those in `worker/subprojects` folder). After updating it, `invoke setup` must be called. Usage example:
 
 ```bash
 cd worker
 invoke update-wrap-file openssl
-MESON_ARGS="--reconfigure" invoke setup
+invoke setup
 ```
 
 ### `invoke mediasoup-worker`
