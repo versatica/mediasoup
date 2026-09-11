@@ -3,7 +3,9 @@
 #include "common.hpp"
 #include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
+#ifndef MS_USE_BUILTIN_BWE
 #include "DepLibWebRTC.hpp"
+#endif
 #include "DepOpenSSL.hpp"
 #include "FuzzerUtils.hpp"
 #include "RTC/DtlsTransport.hpp"
@@ -144,7 +146,9 @@ namespace
 		DepLibUV::ClassInit();
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
+#ifndef MS_USE_BUILTIN_BWE
 		DepLibWebRTC::ClassInit();
+#endif
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 

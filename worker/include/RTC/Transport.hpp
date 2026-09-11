@@ -23,8 +23,10 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SctpListener.hpp"
+#ifndef MS_USE_BUILTIN_BWE
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
+#endif
 #include "SharedInterface.hpp"
 #include <ankerl/unordered_dense.h>
 #include <string>
@@ -37,8 +39,10 @@ namespace RTC
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
 	                  public RTC::SCTP::AssociationListenerInterface,
+#ifndef MS_USE_BUILTIN_BWE
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
+#endif
 	                  public Channel::ChannelSocket::RequestHandler,
 	                  public Channel::ChannelSocket::NotificationHandler,
 	                  public TimerHandleInterface::Listener
@@ -232,8 +236,10 @@ namespace RTC
 		virtual void DistributeAvailableOutgoingBitrate() final;
 		virtual void ComputeOutgoingDesiredBitrate(bool forceBitrate = false) final;
 		virtual void EmitTraceEventProbationType(RTC::RTP::Packet* packet) const final;
+#ifndef MS_USE_BUILTIN_BWE
 		virtual void EmitTraceEventBweType(
 		  RTC::TransportCongestionControlClient::Bitrates& bitrates) const final;
+#endif
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
@@ -318,6 +324,7 @@ namespace RTC
 		void OnAssociationTotalBufferedAmountLow() override;
 		bool OnAssociationIsTransportReadyForSctp() override;
 
+#ifndef MS_USE_BUILTIN_BWE
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
 		void OnTransportCongestionControlClientBitrates(
@@ -332,6 +339,7 @@ namespace RTC
 	public:
 		void OnTransportCongestionControlServerSendRtcpPacket(
 		  RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet) override;
+#endif
 
 		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
@@ -362,8 +370,10 @@ namespace RTC
 		TimerHandleInterface* rtcpTimer{ nullptr };
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
+#ifndef MS_USE_BUILTIN_BWE
 		std::shared_ptr<RTC::TransportCongestionControlClient> tccClient{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlServer> tccServer{ nullptr };
+#endif
 		// Others.
 		bool direct{ false }; // Whether this Transport allows direct communication.
 		bool isDestroying{ false };
@@ -377,7 +387,12 @@ namespace RTC
 		RTC::RtpDataCounter recvRtxTransmission;
 		RTC::RtpDataCounter sendRtxTransmission;
 		RTC::RtpDataCounter sendProbationTransmission;
+#ifdef MS_USE_BUILTIN_BWE
+		// TODO: The built-in downlink BWE hands the sequence number out, so this
+		// counter goes away.
+#else
 		uint16_t transportWideCcSeq{ 0 };
+#endif
 		int64_t initialAvailableOutgoingBitrate{ 600000 };
 		int64_t maxIncomingBitrate{ 0 };
 		int64_t maxOutgoingBitrate{ 0 };

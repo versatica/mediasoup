@@ -5,3 +5,4 @@ option('ms_dump_rtp_payload_descriptor', type: 'boolean', value: false, descript
 option('ms_dump_rtp_shared_packet_memory_usage', type: 'boolean', value: false, description: 'prints information about total memory allocated by RTC::RTP::SharedPacket instances')
 option('ms_build_tests', type: 'boolean', value: false, description: 'Must be enabled when building mediasoup worker tests')
 option('ms_build_fuzzer', type: 'boolean', value: false, description: 'Must be enabled when building mediasoup worker fuzzer')
+option('ms_use_builtin_bwe', type: 'boolean', value: false, description: 'Use the new built-in bandwidth estimation module')
