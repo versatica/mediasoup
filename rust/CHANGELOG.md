@@ -8,6 +8,7 @@
 - Worker: Use `int64_t` for time everywhere ([PR #1918](https://github.com/versatica/mediasoup/pull/1918)).
 - Worker: Use `int64_t` for bitrate everywhere ([PR #1919](https://github.com/versatica/mediasoup/pull/1919)).
 - Improve worker build system ([PR #1920](https://github.com/versatica/mediasoup/pull/1920)).
+- Improve worker build system (part 2) ([PR #1923](https://github.com/versatica/mediasoup/pull/1923)).
 
 ### 0.27.0
 
