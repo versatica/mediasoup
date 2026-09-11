@@ -58,9 +58,10 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ .name="rtcMaxPort",           .has_arg=optional_argument, .flag=nullptr, .val='M' },
 		{ .name="dtlsCertificateFile",  .has_arg=optional_argument, .flag=nullptr, .val='c' },
 		{ .name="dtlsPrivateKeyFile",   .has_arg=optional_argument, .flag=nullptr, .val='p' },
-#ifndef MS_USE_BUILTIN_BWE
+		// NOTE: The libwebrtcFieldTrials option is still allowed until we only
+		// support the built-in BWE.
+		// TODO: Remove when we only support the built-in BWE.
 		{ .name="libwebrtcFieldTrials", .has_arg=optional_argument, .flag=nullptr, .val='W' },
-#endif
 		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  }
 	};
 	// clang-format on

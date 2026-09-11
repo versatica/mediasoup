@@ -165,6 +165,8 @@ See all the tasks by running `invoke --list` within the `worker` folder.
 
 _NOTE:_ Tasks that require specific Meson options (such as `invoke test`, `invoke tidy`, `invoke test-asan-address`, `invoke test-asan-undefined` and `invoke fuzzer`) use their own Meson build directory within `worker/out/MEDIASOUP_BUILDTYPE`, so switching from a task to another doesn't reconfigure and rebuild everything. All of them install their binaries into `worker/out/MEDIASOUP_BUILDTYPE`.
 
+_NOTE:_ The "MESON_ARGS" environment variable is applied even if the build directory is already configured, since `invoke setup` passes `--reconfigure` to `meson setup` in that case. However Meson keeps every option that is not given again, so **dropping an option from "MESON_ARGS" does not revert it to its default value**. To go back to the default configuration, either pass the option with its default value or remove the build directory with `invoke clean-build`.
+
 _NOTE:_ For some of these tasks to work, npm dependencies of `worker/scripts/package.json` must be installed:
 
 ```bash
