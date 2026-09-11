@@ -12,8 +12,6 @@ namespace RTC
 {
 	/* Static. */
 
-	// NOTE: TransportCongestionControlMinOutgoingBitrate is defined in
-	// TransportCongestionControlClient.hpp and exposed publicly.
 	// NOTE: These are double rather than float because they are applied to bitrates,
 	// and float only holds exact integers up to 2^24 (16.7 Mbps).
 	static constexpr double MaxBitrateMarginFactor{ 0.1 };
@@ -28,14 +26,15 @@ namespace RTC
 	  RTC::TransportCongestionControlClient::Listener* listener,
 	  SharedInterface* shared,
 	  RTC::BweType bweType,
+	  int64_t absoluteMinOutgoingBitrate,
 	  int64_t initialAvailableBitrate,
 	  int64_t maxOutgoingBitrate,
 	  int64_t minOutgoingBitrate)
 	  : listener(listener),
 	    shared(shared),
 	    bweType(bweType),
-	    initialAvailableBitrate(
-	      std::max<int64_t>(initialAvailableBitrate, RTC::TransportCongestionControlMinOutgoingBitrate)),
+	    absoluteMinOutgoingBitrate(absoluteMinOutgoingBitrate),
+	    initialAvailableBitrate(std::max<int64_t>(initialAvailableBitrate, absoluteMinOutgoingBitrate)),
 	    maxOutgoingBitrate(maxOutgoingBitrate),
 	    minOutgoingBitrate(minOutgoingBitrate)
 	{
@@ -323,7 +322,7 @@ namespace RTC
 		ApplyBitrateUpdates();
 
 		this->bitrates.minBitrate =
-		  std::max<int64_t>(this->minOutgoingBitrate, RTC::TransportCongestionControlMinOutgoingBitrate);
+		  std::max<int64_t>(this->minOutgoingBitrate, this->absoluteMinOutgoingBitrate);
 	}
 
 	void TransportCongestionControlClient::SetDesiredBitrate(int64_t desiredBitrate, bool force)
@@ -355,12 +354,12 @@ namespace RTC
 #endif
 
 		this->bitrates.minBitrate =
-		  std::max<int64_t>(this->minOutgoingBitrate, RTC::TransportCongestionControlMinOutgoingBitrate);
+		  std::max<int64_t>(this->minOutgoingBitrate, this->absoluteMinOutgoingBitrate);
 
 		// NOTE: Setting 'startBitrate' to 'availableBitrate' has proven to generate
 		// more stable values.
-		this->bitrates.startBitrate = std::max<int64_t>(
-		  RTC::TransportCongestionControlMinOutgoingBitrate, this->bitrates.availableBitrate);
+		this->bitrates.startBitrate =
+		  std::max<int64_t>(this->absoluteMinOutgoingBitrate, this->bitrates.availableBitrate);
 
 		ApplyBitrateUpdates();
 	}
@@ -414,7 +413,7 @@ namespace RTC
 		}
 
 		this->bitrates.minBitrate =
-		  std::max<int64_t>(this->minOutgoingBitrate, RTC::TransportCongestionControlMinOutgoingBitrate);
+		  std::max<int64_t>(this->minOutgoingBitrate, this->absoluteMinOutgoingBitrate);
 
 		MS_DEBUG_DEV(
 		  "[desiredBitrate:%" PRIi64 ", desiredBitrateTrend:%" PRIu32 ", startBitrate:%" PRIi64

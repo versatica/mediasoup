@@ -175,10 +175,16 @@ def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     Run meson setup
     """
 
+    # NOTE: Given an already configured build directory, "meson setup" just
+    # prints "Directory already configured" and exits successfully, silently
+    # ignoring the given options. So it must be told to reconfigure it or
+    # changing MESON_ARGS would have no effect until the directory is removed.
+    reconfigure = "--reconfigure" if os.path.isdir(f"{build_dir}/meson-info") else ""
+
     if MEDIASOUP_BUILDTYPE == "Release":
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {meson_args} "{build_dir}"',
+                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -186,7 +192,7 @@ def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     elif MEDIASOUP_BUILDTYPE == "Debug":
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {meson_args} "{build_dir}"',
+                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -194,7 +200,7 @@ def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     else:
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {meson_args} "{build_dir}"',
+                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
