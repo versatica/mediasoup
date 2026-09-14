@@ -1,4 +1,6 @@
 #include "common.hpp"
+#include "RTC/RTCP/FeedbackPs.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"

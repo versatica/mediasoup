@@ -3,6 +3,8 @@
 
 #include "RTC/RTP/RtpStreamSend.hpp"
 #include "Logger.hpp"
+#include "RTC/RTCP/FeedbackPsFir.hpp"
+#include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
 #include <vector>

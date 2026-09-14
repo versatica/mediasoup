@@ -11,6 +11,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
+#include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"

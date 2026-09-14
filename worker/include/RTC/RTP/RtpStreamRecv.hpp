@@ -3,6 +3,9 @@
 
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/NackGenerator.hpp"
+#include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RateCalculator.hpp"

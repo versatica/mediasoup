@@ -1,6 +1,11 @@
 #ifndef MS_RTC_RTP_RTP_STREAM_SEND_HPP
 #define MS_RTC_RTP_RTP_STREAM_SEND_HPP
 
+#include "RTC/RTCP/FeedbackPs.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/Sdes.hpp"
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RTP/RetransmissionBuffer.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/SharedPacket.hpp"

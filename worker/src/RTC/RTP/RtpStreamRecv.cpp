@@ -3,6 +3,9 @@
 
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "Logger.hpp"
+#include "RTC/RTCP/FeedbackPsFir.hpp"
+#include "RTC/RTCP/FeedbackPsPli.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "Utils.hpp"
 
