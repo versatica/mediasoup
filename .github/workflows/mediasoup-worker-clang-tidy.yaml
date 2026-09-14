@@ -31,15 +31,12 @@ jobs:
       - name: Install dependencies
         run: pip3 install --break-system-packages invoke
 
-      - name: Setup Meson build (generates compile_commands.json)
-        working-directory: worker
-        run: invoke tidy-setup
-
       - name: Install NPM worker development tools
         run: npm ci --prefix worker/scripts --foreground-scripts
 
-      - name: Normalize compile_commands.json paths
-        run: npm run normalize-compile-commands --prefix worker/scripts --foreground-scripts
+      - name: Setup Meson build (generates compile_commands.json)
+        working-directory: worker
+        run: invoke tidy-normalize-compile-commands
 
       - uses: ZedThree/clang-tidy-review@v0.23.1
         id: review

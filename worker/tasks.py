@@ -511,6 +511,28 @@ def tidy_setup(ctx):
 
 
 @task(pre=[tidy_setup])
+def tidy_normalize_compile_commands(ctx):
+    """
+    Rewrite the paths of the compile_commands.json that `tidy` uses so that
+    third party clang-tidy runners can resolve them
+
+    NOTE: Just needed by CI, since it doesn't run `tidy` but its own clang-tidy
+    over the files of the pull request.
+    """
+
+    with cd_worker():
+        ctx.run(
+            f'"{NPM}" run normalize-compile-commands --prefix scripts/',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL,
+            # NOTE: Tell the script which build directory holds the
+            # compile_commands.json to use.
+            env={**os.environ, "BUILD_DIR": TEST_BUILD_DIR},
+        )
+
+
+@task(pre=[tidy_setup])
 def tidy(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules
