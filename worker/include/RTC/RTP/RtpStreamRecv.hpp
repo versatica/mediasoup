@@ -47,6 +47,16 @@ namespace RTC
 				 * streams consuming this RtpStreamRecv.
 				 */
 				virtual uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTP::RtpStreamRecv* rtpStream) = 0;
+				/**
+				 * A spatial layer of this stream started or stopped carrying traffic, so
+				 * whoever chose a target layer out of them must choose again.
+				 *
+				 * @remarks
+				 * - Only fired by streams with more than a spatial layer, which are those
+				 *   of a SVC sender.
+				 */
+				virtual void OnRtpStreamSpatialLayerActivityChanged(
+				  RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) = 0;
 			};
 
 		public:
@@ -316,6 +326,10 @@ namespace RTC
 			std::unique_ptr<RTC::NackGenerator> nackGenerator;
 			TimerHandleInterface* inactivityCheckPeriodicTimer{ nullptr };
 			bool inactive{ false };
+			TimerHandleInterface* spatialLayersActivityCheckPeriodicTimer{ nullptr };
+			// Whether each spatial layer was carrying traffic at the latest check.
+			// Empty unless this stream has more than a spatial layer.
+			std::vector<bool> spatialLayersActivity;
 			// Valid media + valid RTX.
 			TransmissionCounter transmissionCounter;
 			// Just valid media.

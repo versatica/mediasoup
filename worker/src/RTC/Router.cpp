@@ -649,6 +649,23 @@ namespace RTC
 		}
 	}
 
+	void Router::OnTransportProducerSpatialLayerActivityChanged(
+	  RTC::Transport* /*transport*/,
+	  RTC::Producer* producer,
+	  RTC::RTP::RtpStreamRecv* rtpStream,
+	  uint8_t spatialLayer,
+	  bool isActive)
+	{
+		MS_TRACE();
+
+		auto& consumers = this->mapProducerConsumers.at(producer);
+
+		for (auto* consumer : consumers)
+		{
+			consumer->ProducerSpatialLayerActivityChanged(rtpStream, spatialLayer, isActive);
+		}
+	}
+
 	void Router::OnTransportProducerRtpPacketReceived(
 	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{

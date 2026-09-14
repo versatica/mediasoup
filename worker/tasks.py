@@ -499,6 +499,40 @@ def format(ctx):
         )
     ]
 )
+def tidy_setup(ctx):
+    """
+    Configure the build directory that `tidy` uses, generating its
+    compile_commands.json
+
+    NOTE: Test files are only given the Catch2 include paths when
+    `ms_build_tests` is enabled, so clang-tidy needs this very build directory to
+    analyze them.
+    """
+
+
+@task(pre=[tidy_setup])
+def tidy_normalize_compile_commands(ctx):
+    """
+    Rewrite the paths of the compile_commands.json that `tidy` uses so that
+    third party clang-tidy runners can resolve them
+
+    NOTE: Just needed by CI, since it doesn't run `tidy` but its own clang-tidy
+    over the files of the pull request.
+    """
+
+    with cd_worker():
+        ctx.run(
+            f'"{NPM}" run normalize-compile-commands --prefix scripts/',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL,
+            # NOTE: Tell the script which build directory holds the
+            # compile_commands.json to use.
+            env={**os.environ, "BUILD_DIR": TEST_BUILD_DIR},
+        )
+
+
+@task(pre=[tidy_setup])
 def tidy(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules
@@ -516,15 +550,7 @@ def tidy(ctx):
         )
 
 
-@task(
-    pre=[
-        call(
-            flatc,
-            meson_args=MESON_ARGS + " -Dms_build_tests=true",
-            build_dir=TEST_BUILD_DIR,
-        )
-    ]
-)
+@task(pre=[tidy_setup])
 def tidy_fix(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules and applies

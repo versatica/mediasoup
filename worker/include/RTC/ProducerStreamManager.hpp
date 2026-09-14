@@ -100,6 +100,12 @@ namespace RTC
 		virtual void ProducerRtpStreamScore(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
 		virtual void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
+		// Only spatial layers within a same RTP stream can start or stop separately,
+		// so just SVC cares about this.
+		virtual void ProducerSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/)
+		{
+		}
 
 		void SetExternallyManagedBitrate()
 		{

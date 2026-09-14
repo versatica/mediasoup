@@ -113,6 +113,11 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 			return 0;
 		}
 
+		void OnRtpStreamSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+		{
+		}
+
 	public:
 		bool shouldTriggerNack = false;
 		bool shouldTriggerPLI  = false;

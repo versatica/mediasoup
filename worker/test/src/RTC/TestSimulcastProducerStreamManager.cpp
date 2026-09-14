@@ -74,6 +74,11 @@ namespace
 		{
 			return 0;
 		}
+
+		void OnRtpStreamSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+		{
+		}
 	};
 
 	class MockEncodingContext : public RTC::RTP::Codecs::EncodingContext
