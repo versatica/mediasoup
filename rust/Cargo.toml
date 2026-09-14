@@ -50,7 +50,7 @@ version = "0.18.0"
 
 [dependencies.mediasoup-types]
 path = "./types"
-version = "0.4.0"
+version = "0.5.0"
 
 [dependencies.parking_lot]
 version = "0.12.1"
