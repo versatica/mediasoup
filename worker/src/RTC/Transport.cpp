@@ -2618,6 +2618,15 @@ namespace RTC
 		this->listener->OnTransportProducerRtcpSenderReport(this, producer, rtpStream, first);
 	}
 
+	void Transport::OnProducerSpatialLayerActivityChanged(
+	  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportProducerSpatialLayerActivityChanged(
+		  this, producer, rtpStream, spatialLayer, isActive);
+	}
+
 	void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();

@@ -34,6 +34,11 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		{
 			return 0;
 		}
+
+		void OnRtpStreamSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+		{
+		}
 	};
 
 	int64_t nowUs{ LocalBaseUs };

@@ -122,6 +122,20 @@ namespace RTC
 		// Do nothing.
 	}
 
+	void SvcProducerStreamManager::ProducerSpatialLayerActivityChanged(
+	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/)
+	{
+		MS_TRACE();
+
+		// All spatial layers share a single RTP stream, so neither its score nor its
+		// inactivity check can tell that just one of them started or stopped. This is
+		// the only chance to reconsider the target layers.
+		if (IsActive())
+		{
+			MayChangeLayers(/*force*/ false);
+		}
+	}
+
 	int64_t SvcProducerStreamManager::IncreaseLayer(
 	  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
 	{

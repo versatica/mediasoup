@@ -133,6 +133,8 @@ namespace RTC
 		void ProducerRtpStreamScores(const std::vector<uint8_t>* scores);
 		void ProducerRtpStreamScore(RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore);
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first);
+		void ProducerSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive);
 		void ProducerClosed();
 		void SetExternallyManagedBitrate()
 		{

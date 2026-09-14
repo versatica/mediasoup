@@ -37,6 +37,11 @@ namespace
 		{
 			return 0;
 		}
+
+		void OnRtpStreamSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+		{
+		}
 	};
 
 	class ConsumerListener : public RTC::Consumer::Listener

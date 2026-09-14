@@ -70,6 +70,11 @@ namespace
 		{
 			return 0;
 		}
+
+		void OnRtpStreamSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+		{
+		}
 	};
 
 	class MockEncodingContext : public RTC::RTP::Codecs::EncodingContext
@@ -876,9 +881,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		MockListener listener;
 		auto manager    = createManager(std::addressof(listener));
 		auto rtpStream0 = createRtpStreamRecv();
-		auto rtpStream1 = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc);
+
+		// MockShared indexes timers by label, so the stream being replaced must be
+		// gone before creating the one replacing it.
+		rtpStream0.reset();
+
+		auto rtpStream1 = createRtpStreamRecv();
 
 		// Replace with a new stream.
 		manager->ProducerNewRtpStream(rtpStream1.get(), MappedSsrc);

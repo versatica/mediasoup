@@ -42,6 +42,8 @@ namespace RTC
 		void ProducerRtpStreamScore(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
+		void ProducerSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) override;
 		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) override;
 		void ApplyLayers(int64_t rtpStreamActiveMs) override;
 		int64_t GetDesiredBitrate(int64_t nowMs) const override;

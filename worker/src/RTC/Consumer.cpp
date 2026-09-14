@@ -984,6 +984,15 @@ namespace RTC
 		this->producerStreamManager->ProducerRtcpSenderReport(rtpStream, first);
 	}
 
+	void Consumer::ProducerSpatialLayerActivityChanged(
+	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
+	{
+		MS_TRACE();
+
+		this->producerStreamManager->ProducerSpatialLayerActivityChanged(
+		  rtpStream, spatialLayer, isActive);
+	}
+
 	// The caller (Router) is supposed to proceed with the deletion of this Consumer
 	// right after calling this method. Otherwise ugly things may happen.
 	void Consumer::ProducerClosed()

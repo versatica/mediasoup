@@ -46,6 +46,11 @@ namespace RTC
 			  uint8_t previousScore) = 0;
 			virtual void OnProducerRtcpSenderReport(
 			  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
+			virtual void OnProducerSpatialLayerActivityChanged(
+			  RTC::Producer* producer,
+			  RTC::RTP::RtpStreamRecv* rtpStream,
+			  uint8_t spatialLayer,
+			  bool isActive) = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 			/**
@@ -200,6 +205,8 @@ namespace RTC
 		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamSendRtcpPacket(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override;
 		uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream) override;
+		void OnRtpStreamSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) override;
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */
 	public:

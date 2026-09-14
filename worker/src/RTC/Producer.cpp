@@ -1782,6 +1782,15 @@ namespace RTC
 		return this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc);
 	}
 
+	inline void Producer::OnRtpStreamSpatialLayerActivityChanged(
+	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
+	{
+		MS_TRACE();
+
+		// Notify the listener.
+		this->listener->OnProducerSpatialLayerActivityChanged(this, rtpStream, spatialLayer, isActive);
+	}
+
 	inline void Producer::OnKeyFrameNeeded(
 	  RTC::KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
 	{

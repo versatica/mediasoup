@@ -9,6 +9,7 @@
 - Worker: Use `int64_t` for bitrate everywhere ([PR #1919](https://github.com/versatica/mediasoup/pull/1919)).
 - Improve worker build system ([PR #1920](https://github.com/versatica/mediasoup/pull/1920)).
 - Improve worker build system (part 2) ([PR #1923](https://github.com/versatica/mediasoup/pull/1923)).
+- Fix SVC target layers not re-evaluated when a spatial layer stops ([PR #1924](https://github.com/versatica/mediasoup/pull/1924)).
 
 ### 0.27.0
 
