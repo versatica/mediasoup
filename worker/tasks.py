@@ -499,6 +499,18 @@ def format(ctx):
         )
     ]
 )
+def tidy_setup(ctx):
+    """
+    Configure the build directory that `tidy` uses, generating its
+    compile_commands.json
+
+    NOTE: Test files are only given the Catch2 include paths when
+    `ms_build_tests` is enabled, so clang-tidy needs this very build directory to
+    analyze them.
+    """
+
+
+@task(pre=[tidy_setup])
 def tidy(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules
@@ -516,15 +528,7 @@ def tidy(ctx):
         )
 
 
-@task(
-    pre=[
-        call(
-            flatc,
-            meson_args=MESON_ARGS + " -Dms_build_tests=true",
-            build_dir=TEST_BUILD_DIR,
-        )
-    ]
-)
+@task(pre=[tidy_setup])
 def tidy_fix(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules and applies

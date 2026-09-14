@@ -33,13 +33,7 @@ jobs:
 
       - name: Setup Meson build (generates compile_commands.json)
         working-directory: worker
-        env:
-          MESON_ARGS: '-Dms_build_tests=true'
-        run: invoke setup
-
-      - name: Compile flatbuffers FBS files
-        working-directory: worker
-        run: invoke flatc
+        run: invoke tidy-setup
 
       - name: Install NPM worker development tools
         run: npm ci --prefix worker/scripts --foreground-scripts
@@ -51,7 +45,7 @@ jobs:
         id: review
         with:
           apt_packages: 'libclang-rt-21-dev'
-          build_dir: 'worker/out/Release/build'
+          build_dir: 'worker/out/Release/build-test'
           config_file: 'worker/.clang-tidy'
           clang_tidy_version: '21'
           lgtm_comment_body: ''
