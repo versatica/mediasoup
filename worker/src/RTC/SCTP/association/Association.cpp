@@ -107,7 +107,7 @@ namespace RTC
 			MS_TRACE();
 
 			const auto stateStringView = Association::StateToString(this->state);
-			const auto associationStateStringView = Types::AssociationStateToString(GetAssociationState());
+			const auto associationStateStringView = Types::associationStateToString(GetAssociationState());
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Association>");
 

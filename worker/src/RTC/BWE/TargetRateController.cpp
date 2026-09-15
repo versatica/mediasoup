@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/TargetRateController.hpp"
 #include "Logger.hpp"
-#include <cmath>
+#include "RTC/BWE/Utils.hpp"
 
 namespace RTC
 {
@@ -219,7 +219,7 @@ namespace RTC
 					this->lastDecreaseAtUs = nowUs;
 
 					const auto bitrate = std::max<int64_t>(
-					  static_cast<int64_t>(this->currentTarget * this->options.rttBackoffDropFraction),
+					  Utils::ApplyBitrateFactor(this->currentTarget, this->options.rttBackoffDropFraction),
 					  this->options.rttBackoffBitrateFloor);
 
 					SetTargetBitrate(bitrate);
@@ -293,12 +293,14 @@ namespace RTC
 					// Increase by 8% of the lowest target of the last second. Growing
 					// from the lowest value instead of from the current one lets a sender
 					// that was throttled ramp up a second faster.
-					auto bitrate =
-					  static_cast<int64_t>(std::lround(this->minBitrateHistory.front().second * 1.08));
+					auto bitrate = Utils::ApplyBitrateFactor(this->minBitrateHistory.front().second, 1.08);
 
 					// Add a bit on top, which is what keeps the target from getting stuck
 					// at low bitrates and is negligible at high ones.
-					bitrate += 1000;
+					if (bitrate < Types::BitrateInfinite - 1000)
+					{
+						bitrate += 1000;
+					}
 
 					SetTargetBitrate(bitrate);
 

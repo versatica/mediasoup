@@ -3,6 +3,7 @@
 
 #include "RTC/BWE/LossBasedController.hpp"
 #include "Logger.hpp"
+#include "RTC/BWE/Utils.hpp"
 #include <cmath>
 #include <limits>
 
@@ -227,7 +228,7 @@ namespace RTC
 					  this->currentBestEstimate.lossLimitedBitrate,
 					  std::min(
 					    bestCandidate.lossLimitedBitrate,
-					    static_cast<int64_t>(rampupFactor * this->acknowledgedBitrate)));
+					    Utils::ApplyBitrateFactor(this->acknowledgedBitrate, rampupFactor)));
 				}
 			}
 
@@ -316,8 +317,8 @@ namespace RTC
 			{
 				this->bitrateLimitInCurrentWindow = std::max<int64_t>(
 				  CongestionControllerMinBitrate,
-				  static_cast<int64_t>(
-				    this->currentBestEstimate.lossLimitedBitrate * this->options.maxIncreaseFactor));
+				  Utils::ApplyBitrateFactor(
+				    this->currentBestEstimate.lossLimitedBitrate, this->options.maxIncreaseFactor));
 
 				this->recoveringAfterLossAtUs = lastSendTimeUs;
 			}
@@ -426,7 +427,7 @@ namespace RTC
 			for (const double candidateFactor : this->options.candidateFactors)
 			{
 				bitrates.push_back(
-				  static_cast<int64_t>(candidateFactor * this->currentBestEstimate.lossLimitedBitrate));
+				  Utils::ApplyBitrateFactor(this->currentBestEstimate.lossLimitedBitrate, candidateFactor));
 			}
 
 			// While not sending enough to fill the link, what it delivers says nothing
@@ -822,8 +823,8 @@ namespace RTC
 			// What the link is known to be delivering is never worth going below.
 			if (this->acknowledgedBitrate != Types::BitrateInfinite)
 			{
-				bitrate =
-				  static_cast<int64_t>(this->options.lowerBoundByAckedRateFactor * this->acknowledgedBitrate);
+				bitrate = Utils::ApplyBitrateFactor(
+				  this->acknowledgedBitrate, this->options.lowerBoundByAckedRateFactor);
 			}
 
 			this->immediateLowerBoundBitrate = std::max(bitrate, this->minBitrate);

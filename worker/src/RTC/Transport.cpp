@@ -1746,7 +1746,7 @@ namespace RTC
 
 			case RTC::SCTP::Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
 			{
-				const auto sendStatusStringView = RTC::SCTP::Types::SendMessageStatusToString(sendStatus);
+				const auto sendStatusStringView = RTC::SCTP::Types::sendMessageStatusToString(sendStatus);
 
 				MS_WARN_TAG(
 				  sctp,
@@ -1766,7 +1766,7 @@ namespace RTC
 
 			default:
 			{
-				const auto sendStatusStringView = RTC::SCTP::Types::SendMessageStatusToString(sendStatus);
+				const auto sendStatusStringView = RTC::SCTP::Types::sendMessageStatusToString(sendStatus);
 
 				MS_WARN_TAG(
 				  sctp,
@@ -3098,7 +3098,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::errorKindToString(errorKind);
 
 		if (errorKind == RTC::SCTP::Types::ErrorKind::SUCCESS || errorKind == RTC::SCTP::Types::ErrorKind::PEER_REPORTED)
 		{
@@ -3148,7 +3148,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::errorKindToString(errorKind);
 
 		if (errorKind == RTC::SCTP::Types::ErrorKind::SUCCESS || errorKind == RTC::SCTP::Types::ErrorKind::PEER_REPORTED)
 		{
@@ -3205,7 +3205,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::errorKindToString(errorKind);
 
 		MS_WARN_TAG(
 		  sctp,
