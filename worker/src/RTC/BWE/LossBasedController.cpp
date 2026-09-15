@@ -273,8 +273,14 @@ namespace RTC
 			else
 			{
 				this->currentBestEstimate = bestCandidate;
-				this->currentBestEstimate.lossLimitedBitrate =
-				  std::max(this->currentBestEstimate.lossLimitedBitrate, GetImmediateLowerBoundBitrate());
+
+				// A link is never worth describing as delivering less than what it is
+				// known to be delivering, unless that bound has been turned off.
+				if (this->options.lowerBoundByAckedRateFactor > 0.0)
+				{
+					this->currentBestEstimate.lossLimitedBitrate =
+					  std::max(this->currentBestEstimate.lossLimitedBitrate, GetImmediateLowerBoundBitrate());
+				}
 			}
 
 			// While holding, the estimate may not grow above the bitrate being held,
@@ -283,8 +289,13 @@ namespace RTC
 			  this->result.state == State::DECREASING && this->lastHoldInfo.atUs > lastSendTimeUs &&
 			  boundedBitrate < this->delayBasedEstimate)
 			{
-				this->lastHoldInfo.bitrate =
-				  std::max(GetImmediateLowerBoundBitrate(), this->lastHoldInfo.bitrate);
+				// A link is never worth holding below what it is known to be
+				// delivering, unless that bound has been turned off.
+				if (this->options.lowerBoundByAckedRateFactor > 0.0)
+				{
+					this->lastHoldInfo.bitrate =
+					  std::max(GetImmediateLowerBoundBitrate(), this->lastHoldInfo.bitrate);
+				}
 
 				this->result.bitrate = std::min(this->lastHoldInfo.bitrate, boundedBitrate);
 
