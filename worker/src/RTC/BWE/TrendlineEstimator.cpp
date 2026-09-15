@@ -38,11 +38,27 @@ namespace RTC
 
 		/* Instance methods. */
 
-		TrendlineEstimator::TrendlineEstimator(size_t windowSize) : windowSize(windowSize)
+		TrendlineEstimator::TrendlineEstimator() : TrendlineEstimator(TrendlineEstimatorOptions{})
+		{
+			MS_TRACE();
+		}
+
+		TrendlineEstimator::TrendlineEstimator(TrendlineEstimatorOptions options) : options(options)
 		{
 			MS_TRACE();
 
-			MS_ASSERT(windowSize >= 2, "window size must be at least 2 [windowSize:%zu]", windowSize);
+			MS_ASSERT(
+			  this->options.windowSize >= 2,
+			  "window size must be at least 2 [windowSize:%zu]",
+			  this->options.windowSize);
+
+			// NOTE: The slope cap looks at both ends of the window without them
+			// overlapping, and each end needs at least one sample.
+			MS_ASSERT(
+			  !this->options.enableCap ||
+			    (this->options.beginningPackets >= 1 && this->options.endPackets >= 1 &&
+					 this->options.beginningPackets + this->options.endPackets <= this->options.windowSize),
+			  "both ends of the slope cap must fit within the window");
 		}
 
 		void TrendlineEstimator::Update(int64_t sendDeltaUs, int64_t arrivalDeltaUs, int64_t arrivalTimeUs)
@@ -67,9 +83,21 @@ namespace RTC
 			// the window did, in which case the regression just gets a negative x.
 			const auto elapsedUs = static_cast<double>(arrivalTimeUs - this->firstArrivalTimeUs.value());
 
-			this->delayHist.push_back({ elapsedUs, this->smoothedDelayUs });
+			this->delayHist.push_back({ elapsedUs, this->smoothedDelayUs, this->accumulatedDelayUs });
 
-			if (this->delayHist.size() > this->windowSize)
+			// Feedback should already give the groups in order, so this is a safety
+			// net against a source that doesn't.
+			if (this->options.enableSort)
+			{
+				for (size_t idx{ this->delayHist.size() - 1 };
+				     idx > 0 && this->delayHist[idx].arrivalTimeUs < this->delayHist[idx - 1].arrivalTimeUs;
+				     --idx)
+				{
+					std::swap(this->delayHist[idx], this->delayHist[idx - 1]);
+				}
+			}
+
+			if (this->delayHist.size() > this->options.windowSize)
 			{
 				this->delayHist.pop_front();
 			}
@@ -81,13 +109,63 @@ namespace RTC
 			//   trend < 0      ->  the delay decreases, queues are being emptied.
 			double trend = this->prevTrend;
 
-			if (this->delayHist.size() == this->windowSize)
+			if (this->delayHist.size() == this->options.windowSize)
 			{
 				// Keep the previous trend if the line cannot be fitted.
 				trend = GetLinearFitSlope().value_or(trend);
+
+				if (this->options.enableCap)
+				{
+					const auto cap = GetSlopeCap();
+
+					// The cap only filters out overuse detections, it doesn't turn a
+					// growing queue into an emptying one.
+					if (trend >= 0 && cap.has_value() && trend > cap.value())
+					{
+						trend = cap.value();
+					}
+				}
 			}
 
 			Detect(trend, static_cast<double>(sendDeltaUs), arrivalTimeUs);
+		}
+
+		std::optional<double> TrendlineEstimator::GetSlopeCap() const
+		{
+			MS_TRACE();
+
+			// The least delayed sample of the beginning of the window.
+			PacketTiming early = this->delayHist[0];
+
+			for (size_t idx{ 1 }; idx < this->options.beginningPackets; ++idx)
+			{
+				if (this->delayHist[idx].rawDelayUs < early.rawDelayUs)
+				{
+					early = this->delayHist[idx];
+				}
+			}
+
+			const size_t lateStart = this->delayHist.size() - this->options.endPackets;
+
+			// The least delayed sample of the end of the window.
+			PacketTiming late = this->delayHist[lateStart];
+
+			for (size_t idx{ lateStart + 1 }; idx < this->delayHist.size(); ++idx)
+			{
+				if (this->delayHist[idx].rawDelayUs < late.rawDelayUs)
+				{
+					late = this->delayHist[idx];
+				}
+			}
+
+			// Too close in time for a slope between them to say anything.
+			if (late.arrivalTimeUs - early.arrivalTimeUs < 1000)
+			{
+				return std::nullopt;
+			}
+
+			return ((late.rawDelayUs - early.rawDelayUs) / (late.arrivalTimeUs - early.arrivalTimeUs)) +
+			       this->options.capUncertainty;
 		}
 
 		std::optional<double> TrendlineEstimator::GetLinearFitSlope() const

@@ -14,7 +14,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto peerImplementationStringView = Types::SctpImplementationToString(this->peerImplementation);
+			auto peerImplementationStringView = Types::sctpImplementationToString(this->peerImplementation);
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::AssociationMetrics>");
 			MS_DUMP_CLEAN(indentation, "  tx packets count: %" PRIu64, this->txPacketsCount);
