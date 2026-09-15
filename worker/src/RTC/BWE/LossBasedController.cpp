@@ -242,6 +242,17 @@ namespace RTC
 					  std::min(
 					    bestCandidate.lossLimitedBitrate,
 					    Utils::ApplyBitrateFactor(this->acknowledgedBitrate, rampupFactor)));
+
+					// Growing by a single bit is what lets the state stop being
+					// decreasing. Without it, a bound that leaves the estimate untouched
+					// keeps it decreasing for good.
+					if (
+					  this->result.state == State::DECREASING &&
+					  bestCandidate.lossLimitedBitrate == this->currentBestEstimate.lossLimitedBitrate)
+					{
+						bestCandidate.lossLimitedBitrate =
+						  Utils::AddBitrates(this->currentBestEstimate.lossLimitedBitrate, 1);
+					}
 				}
 			}
 
