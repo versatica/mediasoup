@@ -45,8 +45,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: Invoke this->lossBasedController.SetBitrateLimits(
-			//   this->minBitrateConfigured, this->maxBitrateConfigured).
+			this->lossBasedController.SetBitrateLimits(
+			  this->minBitrateConfigured, this->maxBitrateConfigured);
 		}
 
 		int64_t TargetRateController::GetTargetBitrate() const
@@ -76,23 +76,28 @@ namespace RTC
 				this->maxBitrateConfigured = DefaultMaxBitrate;
 			}
 
-			// TODO: Invoke this->lossBasedController.SetBitrateLimits(
-			//   this->minBitrateConfigured, this->maxBitrateConfigured).
+			this->lossBasedController.SetBitrateLimits(
+			  this->minBitrateConfigured, this->maxBitrateConfigured);
 		}
 
-		// TODO: A SetAcknowledgedBitrate(std::optional<int64_t> acknowledgedBitrate)
-		// method is missing, whose only job is invoking
-		// this->lossBasedController.SetAcknowledgedBitrate(). It was left out because
-		// the acknowledged bitrate is not used by anything else in this class.
+		void TargetRateController::SetAcknowledgedBitrate(int64_t acknowledgedBitrate)
+		{
+			MS_TRACE();
 
-		// TODO: An UpdateLossBasedController(packetResults, inAlr) method is missing,
-		// which is how the per packet feedback reaches the loss controller. It must
-		// invoke this->lossBasedController.UpdateBandwidthEstimate(packetResults,
-		// this->delayBasedLimit, inAlr) and then Update() with the instant of the
-		// feedback.
+			// NOTE: Nothing else in here looks at it, it's only of use to the loss
+			// controller.
+			this->lossBasedController.SetAcknowledgedBitrate(acknowledgedBitrate);
+		}
 
-		// TODO: A GetLossBasedState() getter is missing, which just exposes the state
-		// of the loss controller.
+		void TargetRateController::UpdateLossBasedController(
+		  const std::vector<Types::PacketResult>& packetResults, bool inAlr, int64_t nowUs)
+		{
+			MS_TRACE();
+
+			this->lossBasedController.UpdateBitrateEstimate(packetResults, this->delayBasedLimit, inAlr);
+
+			Update(nowUs);
+		}
 
 		void TargetRateController::SetSendBitrate(int64_t bitrate)
 		{
@@ -228,9 +233,7 @@ namespace RTC
 
 			// The bounds are trusted during the first seconds as long as no loss has
 			// been reported, so that the initial probing can raise the target.
-			// TODO: This condition gains a third clause,
-			// && !this->lossBasedController.IsReadyToUseInStartPhase().
-			if (this->lastFractionLost == 0 && IsInStartPhase(nowUs))
+			if (this->lastFractionLost == 0 && IsInStartPhase(nowUs) && !this->lossBasedController.IsReady())
 			{
 				int64_t bitrate = this->currentTarget;
 
@@ -259,9 +262,18 @@ namespace RTC
 
 			UpdateMinBitrateHistory(nowUs);
 
-			// TODO: The switch to the loss controller goes here: once it's ready its
-			// estimate replaces the rules below, so this must take its result, set the
-			// target with it and return.
+			// Once the loss controller can tell congestion from the loss the link has
+			// by itself, its estimate replaces the coarse rules below.
+			if (this->lossBasedController.IsReady())
+			{
+				const auto result = this->lossBasedController.GetResult();
+
+				this->lossBasedState = result.state;
+
+				SetTargetBitrate(result.bitrate);
+
+				return;
+			}
 
 			// No loss report has covered enough packets yet.
 			if (!this->lastLossReportAtUs.has_value())

@@ -3,12 +3,42 @@
 #include "RTC/BWE/TargetRateController.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-// TODO: Cases of the switch to the loss controller are missing until that class
-// exists: that the rules below drive the target until it has enough
-// observations, and that its estimate takes over afterwards.
 SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 {
 	constexpr int64_t InitialTimeUs{ 123456 * 1000 };
+	// Shortest span of send times that closes an observation of the loss
+	// controller, and hence the pace at which it can be fed.
+	constexpr int64_t ObservationDurationLowerBoundUs{ 250 * 1000 };
+	constexpr int64_t PacketSizeBytes{ 15000 };
+
+	int64_t sequenceNumber{ 0 };
+
+	// Results of a feedback closing one observation of the loss controller, with
+	// every packet reported as lost or as received.
+	const auto createResults = [&sequenceNumber](
+	                             int64_t firstSendTimeUs,
+	                             bool received) -> std::vector<RTC::BWE::Types::PacketResult>
+	{
+		std::vector<RTC::BWE::Types::PacketResult> packetResults(2);
+
+		for (size_t idx{ 0 }; idx < packetResults.size(); ++idx)
+		{
+			auto& packetResult = packetResults[idx];
+
+			packetResult.sentPacket.sequenceNumber = sequenceNumber++;
+			packetResult.sentPacket.size           = PacketSizeBytes;
+			packetResult.sentPacket.sendTimeUs =
+			  firstSendTimeUs + (static_cast<int64_t>(idx) * ObservationDurationLowerBoundUs);
+
+			if (received)
+			{
+				packetResult.receiveTimeUs =
+				  firstSendTimeUs + (static_cast<int64_t>(idx + 1) * ObservationDurationLowerBoundUs);
+			}
+		}
+
+		return packetResults;
+	};
 
 	// Feed a bound of the given kind and let the controller act on it.
 	const auto feedLimit = [](
@@ -246,5 +276,61 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 
 		REQUIRE(
 		  targetRateController.GetTargetBitrate() == static_cast<int64_t>(increasedBitrate * 1.08) + 1000);
+	}
+
+	SECTION("the loss rules drive the target until the loss controller is ready")
+	{
+		constexpr int64_t InitialBitrate{ 600000 };
+
+		RTC::BWE::TargetRateController targetRateController;
+		int64_t nowUs{ InitialTimeUs };
+
+		targetRateController.SetBitrateLimits(10000, 10000000);
+		targetRateController.SetSendBitrate(InitialBitrate);
+		// NOTE: After SetSendBitrate(), which drops it on purpose, so that the loss
+		// controller has a bitrate to start its estimate from.
+		targetRateController.SetDelayBasedEstimate(InitialBitrate);
+
+		// Two observations, one short of what the loss controller needs.
+		for (int64_t i{ 0 }; i < 2; ++i)
+		{
+			targetRateController.UpdateLossBasedController(
+			  createResults(nowUs, /*received*/ false), /*inAlr*/ false, nowUs);
+
+			nowUs += 2 * ObservationDurationLowerBoundUs;
+		}
+
+		// Losing every packet would have brought the estimate down, so the target
+		// staying put shows that nothing of it is being used yet.
+		REQUIRE(
+		  targetRateController.GetLossBasedState() ==
+		  RTC::BWE::LossBasedController::State::DELAY_BASED_ESTIMATE);
+		REQUIRE(targetRateController.GetTargetBitrate() == InitialBitrate);
+	}
+
+	SECTION("the loss controller takes the target over once it is ready")
+	{
+		constexpr int64_t InitialBitrate{ 600000 };
+
+		RTC::BWE::TargetRateController targetRateController;
+		int64_t nowUs{ InitialTimeUs };
+
+		targetRateController.SetBitrateLimits(10000, 10000000);
+		targetRateController.SetSendBitrate(InitialBitrate);
+		// NOTE: After SetSendBitrate(), which drops it on purpose, so that the loss
+		// controller has a bitrate to start its estimate from.
+		targetRateController.SetDelayBasedEstimate(InitialBitrate);
+
+		for (int64_t i{ 0 }; i < 3; ++i)
+		{
+			targetRateController.UpdateLossBasedController(
+			  createResults(nowUs, /*received*/ false), /*inAlr*/ false, nowUs);
+
+			nowUs += 2 * ObservationDurationLowerBoundUs;
+		}
+
+		REQUIRE(
+		  targetRateController.GetLossBasedState() == RTC::BWE::LossBasedController::State::DECREASING);
+		REQUIRE(targetRateController.GetTargetBitrate() < InitialBitrate);
 	}
 }

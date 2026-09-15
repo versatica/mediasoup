@@ -3,7 +3,9 @@
 
 #include "common.hpp"
 #include "RTC/BWE/BweTypes.hpp"
+#include "RTC/BWE/LossBasedController.hpp"
 #include <deque>
+#include <vector>
 
 namespace RTC
 {
@@ -192,9 +194,28 @@ namespace RTC
 			 */
 			void Update(int64_t nowUs);
 
-			// TODO: Two methods are missing until the loss controller exists, since
-			// they only feed it: SetAcknowledgedBitrate(), and the one taking the per
-			// packet feedback. A GetLossBasedState() getter is missing too.
+			/**
+			 * Bitrate the network is known to be delivering.
+			 */
+			void SetAcknowledgedBitrate(int64_t acknowledgedBitrate);
+
+			/**
+			 * Feed the results of a feedback message to the loss controller, which is
+			 * the only thing in here that looks at packets one by one.
+			 *
+			 * @param inAlr - Whether the sender is not sending enough to fill the link.
+			 */
+			void UpdateLossBasedController(
+			  const std::vector<Types::PacketResult>& packetResults, bool inAlr, int64_t nowUs);
+
+			/**
+			 * What the loss controller is doing with the target, which tells whether
+			 * probing makes sense.
+			 */
+			LossBasedController::State GetLossBasedState() const
+			{
+				return this->lossBasedState;
+			}
 
 		private:
 			/**
@@ -229,9 +250,10 @@ namespace RTC
 			// Passed by argument.
 			const TargetRateControllerOptions options;
 			// Others.
-			// TODO: A LossBasedController member goes here, which is what tells
-			// congestion from the loss the link has by itself and takes over the
-			// target as soon as it has enough observations.
+			// Tells congestion from the loss the link has by itself, and takes over
+			// the target as soon as it has enough observations.
+			LossBasedController lossBasedController;
+			LossBasedController::State lossBasedState{ LossBasedController::State::DELAY_BASED_ESTIMATE };
 			struct RttBackoff rttBackoff;
 			// Lowest target of the last second, as a sliding window minimum of
 			// (instant in us, bitrate in bps) pairs.
