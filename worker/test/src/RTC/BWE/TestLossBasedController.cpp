@@ -332,6 +332,130 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		REQUIRE(lossBasedController.GetResult().bitrate < DelayBasedEstimate);
 	}
 
+	SECTION("a loss below the preference threshold still lets the estimate grow")
+	{
+		// The guard that holds the estimate back while the observed loss is worse
+		// than the inherent one is disabled, so that nothing but the preference
+		// decides.
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.lossThresholdOfHighBitratePreference         = 0.20,
+			.observationWindowSize                        = 2,
+			.minNumObservations                           = 1,
+			.notIncreaseIfInherentLossLessThanAverageLoss = false
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateEstimate(600000);
+
+		for (int64_t i{ 0 }; i < 2; ++i)
+		{
+			lossBasedController.UpdateBitrateEstimate(
+			  createResults(i * ObservationDurationLowerBoundUs, /*numPackets*/ 10, /*numLostPackets*/ 1),
+			  /*delayBasedEstimate*/ 5000000,
+			  /*inAlr*/ false);
+		}
+
+		REQUIRE(lossBasedController.GetResult().bitrate > 600000);
+	}
+
+	SECTION("a feedback that closes no observation changes nothing")
+	{
+		RTC::BWE::LossBasedController lossBasedController(shortObservationOptions);
+
+		lossBasedController.SetBitrateEstimate(600000);
+		lossBasedController.SetAcknowledgedBitrate(300000);
+
+		const auto packetResults =
+		  createResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 2, /*numLostPackets*/ 0);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  packetResults, RTC::BWE::Types::BitrateInfinite, /*inAlr*/ false);
+
+		const int64_t bitrate = lossBasedController.GetResult().bitrate;
+
+		// The very same feedback again covers no new span of send times.
+		lossBasedController.UpdateBitrateEstimate(
+		  packetResults, RTC::BWE::Types::BitrateInfinite, /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().bitrate == bitrate);
+	}
+
+	SECTION("right after a decrease the estimate is bounded for a while")
+	{
+		constexpr int64_t DelayBasedEstimate{ 5000000 };
+		constexpr int64_t DelayedIncreaseWindowUs{ 300 * 1000 };
+
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.observationWindowSize = 15, .minNumObservations = 1
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateEstimate(600000);
+		lossBasedController.SetAcknowledgedBitrate(300000);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  DelayBasedEstimate,
+		  /*inAlr*/ false);
+
+		// Raise what the link is known to deliver, so that it isn't what keeps the
+		// estimate low.
+		lossBasedController.SetAcknowledgedBitrate(5000000);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(DelayedIncreaseWindowUs - (2 * 1000), /*numPackets*/ 2, /*numLostPackets*/ 1),
+		  DelayBasedEstimate,
+		  /*inAlr*/ false);
+
+		const int64_t bitrateAfterDecrease = lossBasedController.GetResult().bitrate;
+
+		// Still within the window that follows the decrease.
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(DelayedIncreaseWindowUs - (1 * 1000), /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  DelayBasedEstimate,
+		  /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().bitrate == bitrateAfterDecrease);
+	}
+
+	SECTION("once that window is over the estimate grows again")
+	{
+		constexpr int64_t DelayBasedEstimate{ 5000000 };
+		constexpr int64_t DelayedIncreaseWindowUs{ 300 * 1000 };
+
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.observationWindowSize = 15, .minNumObservations = 1
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateEstimate(600000);
+		lossBasedController.SetAcknowledgedBitrate(300000);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  DelayBasedEstimate,
+		  /*inAlr*/ false);
+
+		lossBasedController.SetAcknowledgedBitrate(5000000);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(DelayedIncreaseWindowUs - (1 * 1000), /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  DelayBasedEstimate,
+		  /*inAlr*/ false);
+
+		const int64_t bitrateWithinWindow = lossBasedController.GetResult().bitrate;
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(DelayedIncreaseWindowUs + (1 * 1000), /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  DelayBasedEstimate,
+		  /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().bitrate >= bitrateWithinWindow);
+	}
+
 	SECTION("a loss above the preference threshold takes the estimate down")
 	{
 		// With the threshold below the loss that is about to be observed, the bias
@@ -445,6 +569,123 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		  secondResults, /*delayBasedEstimate*/ InitialBitrate, /*inAlr*/ false);
 
 		REQUIRE(lossBasedController.GetResult().bitrate == InitialBitrate);
+	}
+
+	SECTION("the delay based estimate caps this one while the network is fine")
+	{
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.observationWindowSize = 15, .minNumObservations = 1
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateEstimate(600000);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  RTC::BWE::Types::BitrateInfinite,
+		  /*inAlr*/ false);
+
+		// With no bound of the delay based path, nothing holds the estimate back.
+		REQUIRE(lossBasedController.GetResult().bitrate > 600000);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(2 * ObservationDurationLowerBoundUs, /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  /*delayBasedEstimate*/ 500000,
+		  /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().bitrate == 500000);
+	}
+
+	SECTION("a strong signal of overuse backs the estimate off to what the link delivers")
+	{
+		constexpr int64_t AcknowledgedBitrate{ 300000 };
+
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.observationWindowSize = 15, .minNumObservations = 1
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateEstimate(600000);
+		lossBasedController.SetAcknowledgedBitrate(AcknowledgedBitrate);
+
+		// Half of the packets lost, and then every one of them.
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 2, /*numLostPackets*/ 1),
+		  RTC::BWE::Types::BitrateInfinite,
+		  /*inAlr*/ false);
+		lossBasedController.UpdateBitrateEstimate(
+		  createLostResults(2 * ObservationDurationLowerBoundUs, /*numPackets*/ 2),
+		  RTC::BWE::Types::BitrateInfinite,
+		  /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().bitrate <= AcknowledgedBitrate);
+	}
+
+	SECTION("the bound the observed loss puts on the estimate makes it decreasing")
+	{
+		// A single candidate that changes nothing, so that the only thing that can
+		// move the estimate is that bound, brought within reach by the balance.
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.candidateFactors                  = { 1.0 },
+			.observationWindowSize             = 2,
+			.minNumObservations                = 1,
+			.immediateUpperBoundBitrateBalance = 10000
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateLimits(/*minBitrate*/ 10000, /*maxBitrate*/ 1000000000);
+		lossBasedController.SetBitrateEstimate(500000);
+		lossBasedController.SetAcknowledgedBitrate(100000);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 10, /*numLostPackets*/ 1),
+		  RTC::BWE::Types::BitrateInfinite,
+		  /*inAlr*/ false);
+
+		// 10000 / (0.1 - 0.05).
+		REQUIRE(lossBasedController.GetResult().bitrate == 200000);
+		REQUIRE(lossBasedController.GetResult().state == RTC::BWE::LossBasedController::State::DECREASING);
+	}
+
+	SECTION("the bound that what the link delivers puts on the estimate makes it increasing")
+	{
+		constexpr int64_t AcknowledgedBitrate{ 200000 };
+
+		// A single candidate that changes nothing, and a lower bound well above
+		// what the link delivers, so that only that bound can move the estimate.
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.candidateFactors            = { 1.0 },
+			.observationWindowSize       = 2,
+			.minNumObservations          = 1,
+			.lowerBoundByAckedRateFactor = 10.0
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateLimits(/*minBitrate*/ 10000, /*maxBitrate*/ 1000000000);
+		lossBasedController.SetBitrateEstimate(500000);
+		lossBasedController.SetAcknowledgedBitrate(1000);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 2, /*numLostPackets*/ 1),
+		  RTC::BWE::Types::BitrateInfinite,
+		  /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().state == RTC::BWE::LossBasedController::State::DECREASING);
+
+		// The link still loses as much, but delivers a lot more.
+		lossBasedController.SetAcknowledgedBitrate(AcknowledgedBitrate);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(2 * ObservationDurationLowerBoundUs, /*numPackets*/ 2, /*numLostPackets*/ 1),
+		  RTC::BWE::Types::BitrateInfinite,
+		  /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().bitrate == AcknowledgedBitrate * 10);
+		REQUIRE(lossBasedController.GetResult().state == RTC::BWE::LossBasedController::State::INCREASING);
 	}
 
 	SECTION("loss while sending much more than usual is not taken as a spike")

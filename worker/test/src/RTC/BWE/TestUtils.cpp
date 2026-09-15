@@ -37,4 +37,23 @@ SCENARIO("BWE Utils", "[bwe][utils]")
 		REQUIRE(RTC::BWE::Utils::ApplyBitrateFactor(600000, -1.0) == 0);
 		REQUIRE(RTC::BWE::Utils::ApplyBitrateFactor(0, 1.5) == 0);
 	}
+
+	SECTION("AddBitrates() gives the sum")
+	{
+		REQUIRE(RTC::BWE::Utils::AddBitrates(600000, 1000) == 601000);
+		REQUIRE(RTC::BWE::Utils::AddBitrates(600000, 0) == 600000);
+	}
+
+	SECTION("AddBitrates() gives no bitrate at all beyond what the type holds")
+	{
+		REQUIRE(
+		  RTC::BWE::Utils::AddBitrates(RTC::BWE::Types::BitrateInfinite, 1000) ==
+		  RTC::BWE::Types::BitrateInfinite);
+		REQUIRE(
+		  RTC::BWE::Utils::AddBitrates(RTC::BWE::Types::BitrateInfinite - 1000, 1001) ==
+		  RTC::BWE::Types::BitrateInfinite);
+		REQUIRE(
+		  RTC::BWE::Utils::AddBitrates(RTC::BWE::Types::BitrateInfinite - 1000, 1000) ==
+		  RTC::BWE::Types::BitrateInfinite);
+	}
 }

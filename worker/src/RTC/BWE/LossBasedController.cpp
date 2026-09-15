@@ -94,6 +94,13 @@ namespace RTC
 			       this->numObservations >= this->options.minNumObservations;
 		}
 
+		bool LossBasedController::IsReadyToUseInStartPhase() const
+		{
+			MS_TRACE();
+
+			return IsReady() && this->options.useInStartPhase;
+		}
+
 		LossBasedController::Result LossBasedController::GetResult() const
 		{
 			MS_TRACE();
@@ -183,11 +190,17 @@ namespace RTC
 				}
 			}
 
+			if (bestCandidate.lossLimitedBitrate < this->currentBestEstimate.lossLimitedBitrate)
+			{
+				this->lastBitrateReducedAtUs = lastSendTimeUs;
+			}
+
 			// Don't increase the estimate while the loss observed is worse than the
 			// one the chosen candidate says the link has by itself, since then the
 			// excess is ours to fix.
 			if (
 			  this->averageReportedLossRatio > bestCandidate.inherentLoss &&
+			  this->options.notIncreaseIfInherentLossLessThanAverageLoss &&
 			  this->currentBestEstimate.lossLimitedBitrate < bestCandidate.lossLimitedBitrate)
 			{
 				bestCandidate.lossLimitedBitrate = this->currentBestEstimate.lossLimitedBitrate;
@@ -241,7 +254,7 @@ namespace RTC
 
 			// A bitrate that had to be brought down to its bounds is not an estimate
 			// of the link anymore, so the pair of values is not kept as such.
-			if (boundedBitrate < bestCandidate.lossLimitedBitrate)
+			if (this->options.boundBestCandidate && boundedBitrate < bestCandidate.lossLimitedBitrate)
 			{
 				this->currentBestEstimate.lossLimitedBitrate = boundedBitrate;
 				this->currentBestEstimate.inherentLoss       = 0;
@@ -361,6 +374,7 @@ namespace RTC
 					  static_cast<int64_t>(packetResult.sentPacket.size));
 				}
 
+				this->partialObservation.numPackets += 1;
 				this->partialObservation.sizeBytes += static_cast<int64_t>(packetResult.sentPacket.size);
 
 				firstSendTimeUs = std::min(firstSendTimeUs, sendTimeUs);
@@ -399,8 +413,11 @@ namespace RTC
 
 			Observation observation;
 
-			observation.sizeBytes     = this->partialObservation.sizeBytes;
-			observation.lostSizeBytes = lostSizeBytes;
+			observation.numPackets = this->partialObservation.numPackets;
+			observation.numLostPackets = static_cast<int64_t>(this->partialObservation.lostPackets.size());
+			observation.numReceivedPackets = observation.numPackets - observation.numLostPackets;
+			observation.sizeBytes          = this->partialObservation.sizeBytes;
+			observation.lostSizeBytes      = lostSizeBytes;
 			observation.sendingRate =
 			  GetSendingRate((this->partialObservation.sizeBytes * 8 * 1000000) / observationDurationUs);
 			observation.id = this->numObservations++;
@@ -421,8 +438,9 @@ namespace RTC
 
 			std::vector<int64_t> bitrates;
 
-			// The factors plus the acknowledged bitrate and the delay based estimate.
-			bitrates.reserve(this->options.candidateFactors.size() + 2);
+			// The factors plus the acknowledged bitrate, the delay based estimate and
+			// the bound that the observed loss puts on the estimate.
+			bitrates.reserve(this->options.candidateFactors.size() + 3);
 
 			for (const double candidateFactor : this->options.candidateFactors)
 			{
@@ -432,18 +450,32 @@ namespace RTC
 
 			// While not sending enough to fill the link, what it delivers says nothing
 			// about what it could deliver, so it's no candidate.
-			if (this->acknowledgedBitrate != Types::BitrateInfinite && !inAlr)
+			if (
+			  this->acknowledgedBitrate != Types::BitrateInfinite &&
+			  this->options.appendAcknowledgedRateCandidate &&
+			  !(this->options.notUseAckedRateInAlr && inAlr))
 			{
 				bitrates.push_back(
-				  static_cast<int64_t>(
-				    this->acknowledgedBitrate * this->options.bitrateBackoffLowerBoundFactor));
+				  Utils::ApplyBitrateFactor(
+				    this->acknowledgedBitrate, this->options.bitrateBackoffLowerBoundFactor));
 			}
 
 			if (
 			  this->delayBasedEstimate != Types::BitrateInfinite &&
+			  this->options.appendDelayBasedEstimateCandidate &&
 			  this->delayBasedEstimate > this->currentBestEstimate.lossLimitedBitrate)
 			{
 				bitrates.push_back(this->delayBasedEstimate);
+			}
+
+			// Coming all the way down to that bound in one step rather than gradually
+			// only makes sense while not filling the link, since then the loss is not
+			// ours to fix by sending less.
+			if (
+			  inAlr && this->options.appendUpperBoundCandidateInAlr &&
+			  this->currentBestEstimate.lossLimitedBitrate > GetImmediateUpperBoundBitrate())
+			{
+				bitrates.push_back(GetImmediateUpperBoundBitrate());
 			}
 
 			const int64_t candidateBitrateUpperBound = GetCandidateBitrateUpperBound();
@@ -471,12 +503,44 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			int64_t candidateBitrateUpperBound{ this->maxBitrate };
+
 			if (IsInLossLimitedState() && this->bitrateLimitInCurrentWindow != Types::BitrateInfinite)
 			{
-				return this->bitrateLimitInCurrentWindow;
+				candidateBitrateUpperBound = this->bitrateLimitInCurrentWindow;
 			}
 
-			return this->maxBitrate;
+			if (this->acknowledgedBitrate == Types::BitrateInfinite)
+			{
+				return candidateBitrateUpperBound;
+			}
+
+			// The longer it's been since the estimate was last reduced, the more it is
+			// allowed to grow beyond its usual bound.
+			if (this->options.rampupAccelerationMaxFactor > 0.0)
+			{
+				// Never having been reduced counts as the longest time possible, which
+				// is what gives the fullest acceleration.
+				const int64_t sinceBitrateReducedUs =
+				  this->lastBitrateReducedAtUs.has_value() &&
+				      this->lastSendTimeOfLatestObservationUs.has_value()
+				    ? std::min(
+				        this->options.rampupAccelerationMaxoutTimeUs,
+				        std::max<int64_t>(
+				          this->lastSendTimeOfLatestObservationUs.value() -
+				            this->lastBitrateReducedAtUs.value(),
+				          0))
+				    : this->options.rampupAccelerationMaxoutTimeUs;
+				const double rampupAcceleration =
+				  this->options.rampupAccelerationMaxFactor * static_cast<double>(sinceBitrateReducedUs) /
+				  static_cast<double>(this->options.rampupAccelerationMaxoutTimeUs);
+
+				candidateBitrateUpperBound = Utils::AddBitrates(
+				  candidateBitrateUpperBound,
+				  Utils::ApplyBitrateFactor(this->acknowledgedBitrate, rampupAcceleration));
+			}
+
+			return candidateBitrateUpperBound;
 		}
 
 		double LossBasedController::GetObjective(const ChannelParameters& channelParameters) const
@@ -502,11 +566,22 @@ namespace RTC
 				const double temporalWeight =
 				  this->temporalWeights[(this->numObservations - 1) - observation.id];
 
-				objective +=
-				  temporalWeight * ((toKiloBytes(observation.lostSizeBytes) * std::log(lossProbability)) +
-					                  (toKiloBytes(observation.sizeBytes - observation.lostSizeBytes) *
-					                   std::log(1.0 - lossProbability)));
-				objective += temporalWeight * highBitrateBias * toKiloBytes(observation.sizeBytes);
+				if (this->options.useByteLossRate)
+				{
+					objective +=
+					  temporalWeight * ((toKiloBytes(observation.lostSizeBytes) * std::log(lossProbability)) +
+						                  (toKiloBytes(observation.sizeBytes - observation.lostSizeBytes) *
+						                   std::log(1.0 - lossProbability)));
+					objective += temporalWeight * highBitrateBias * toKiloBytes(observation.sizeBytes);
+				}
+				else
+				{
+					objective +=
+					  temporalWeight *
+					  ((static_cast<double>(observation.numLostPackets) * std::log(lossProbability)) +
+						 (static_cast<double>(observation.numReceivedPackets) * std::log(1.0 - lossProbability)));
+					objective += temporalWeight * highBitrateBias * static_cast<double>(observation.numPackets);
+				}
 			}
 
 			return objective;
@@ -534,14 +609,29 @@ namespace RTC
 				const double temporalWeight =
 				  this->temporalWeights[(this->numObservations - 1) - observation.id];
 
-				derivatives.first +=
-				  temporalWeight * ((toKiloBytes(observation.lostSizeBytes) / lossProbability) -
-					                  (toKiloBytes(observation.sizeBytes - observation.lostSizeBytes) /
-					                   (1.0 - lossProbability)));
-				derivatives.second -=
-				  temporalWeight * ((toKiloBytes(observation.lostSizeBytes) / std::pow(lossProbability, 2)) +
-					                  (toKiloBytes(observation.sizeBytes - observation.lostSizeBytes) /
-					                   std::pow(1.0 - lossProbability, 2)));
+				if (this->options.useByteLossRate)
+				{
+					derivatives.first +=
+					  temporalWeight * ((toKiloBytes(observation.lostSizeBytes) / lossProbability) -
+						                  (toKiloBytes(observation.sizeBytes - observation.lostSizeBytes) /
+						                   (1.0 - lossProbability)));
+					derivatives.second -=
+					  temporalWeight * ((toKiloBytes(observation.lostSizeBytes) / std::pow(lossProbability, 2)) +
+						                  (toKiloBytes(observation.sizeBytes - observation.lostSizeBytes) /
+						                   std::pow(1.0 - lossProbability, 2)));
+				}
+				else
+				{
+					derivatives.first +=
+					  temporalWeight *
+					  ((static_cast<double>(observation.numLostPackets) / lossProbability) -
+						 (static_cast<double>(observation.numReceivedPackets) / (1.0 - lossProbability)));
+					derivatives.second -=
+					  temporalWeight *
+					  ((static_cast<double>(observation.numLostPackets) / std::pow(lossProbability, 2)) +
+						 (static_cast<double>(observation.numReceivedPackets) /
+						  std::pow(1.0 - lossProbability, 2)));
+				}
 			}
 
 			// NOTE: The second derivative is negative by construction, so a value of
@@ -652,11 +742,55 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			this->averageReportedLossRatio = this->options.useByteLossRate
+			                                   ? CalculateAverageReportedByteLossRatio()
+			                                   : CalculateAverageReportedPacketLossRatio();
+		}
+
+		double LossBasedController::CalculateAverageReportedPacketLossRatio() const
+		{
+			MS_TRACE();
+
 			if (this->numObservations <= 0)
 			{
-				this->averageReportedLossRatio = 0.0;
+				return 0.0;
+			}
 
-				return;
+			double numPackets{ 0.0 };
+			double numLostPackets{ 0.0 };
+
+			for (const auto& observation : this->observations)
+			{
+				if (!observation.IsInitialized())
+				{
+					continue;
+				}
+
+				const double temporalWeight =
+				  this->immediateUpperBoundTemporalWeights[(this->numObservations - 1) - observation.id];
+
+				numPackets += temporalWeight * static_cast<double>(observation.numPackets);
+				numLostPackets += temporalWeight * static_cast<double>(observation.numLostPackets);
+			}
+
+			// NOTE: Nothing was sent at all, so there is no loss to tell. Without this
+			// the division would give a NaN, which makes every comparison it takes
+			// part in false and silently freezes the estimate for good.
+			if (numPackets == 0.0)
+			{
+				return 0.0;
+			}
+
+			return numLostPackets / numPackets;
+		}
+
+		double LossBasedController::CalculateAverageReportedByteLossRatio() const
+		{
+			MS_TRACE();
+
+			if (this->numObservations <= 0)
+			{
+				return 0.0;
 			}
 
 			double totalBytes{ 0.0 };
@@ -715,30 +849,24 @@ namespace RTC
 			// takes part in false and silently freezes the estimate for good.
 			if (totalBytes == 0.0)
 			{
-				this->averageReportedLossRatio = 0.0;
-
-				return;
+				return 0.0;
 			}
 
 			// A sudden jump of the sending rate explains the loss of that observation
 			// on its own, so it's not a spike to be filtered out.
 			if (GetMedianSendingRate() * this->options.medianSendingRateFactor <= sendingRateOfMaxLossObservation)
 			{
-				this->averageReportedLossRatio = lostBytes / totalBytes;
-
-				return;
+				return lostBytes / totalBytes;
 			}
 
 			// It could happen if the window was of two observations.
 			if (totalBytes == maxBytesReceived + minBytesReceived)
 			{
-				this->averageReportedLossRatio = lostBytes / totalBytes;
-
-				return;
+				return lostBytes / totalBytes;
 			}
 
-			this->averageReportedLossRatio = (lostBytes - minLostBytes - maxLostBytes) /
-			                                 (totalBytes - maxBytesReceived - minBytesReceived);
+			return (lostBytes - minLostBytes - maxLostBytes) /
+			       (totalBytes - maxBytesReceived - minBytesReceived);
 		}
 
 		int64_t LossBasedController::GetMedianSendingRate() const

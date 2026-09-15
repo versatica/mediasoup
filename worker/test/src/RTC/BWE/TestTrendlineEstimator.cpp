@@ -134,4 +134,49 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 
 		REQUIRE(trendlineEstimator.GetState() == RTC::BWE::Types::BandwidthUsage::NORMAL);
 	}
+
+	SECTION("the slope cap doesn't get in the way of a delivery that is really slower")
+	{
+		// The cap is the slope between the least delayed samples of both ends of
+		// the window. Under a steadily slower delivery those are the first sample
+		// of each end, so the cap is the very slope being capped and nothing is
+		// filtered out. It only bites when the middle of the window is more
+		// delayed than both ends, which is not a queue growing.
+		const RTC::BWE::TrendlineEstimator::TrendlineEstimatorOptions options{ .enableCap = true };
+
+		RTC::BWE::TrendlineEstimator trendlineEstimator(options);
+		size_t count{ 1 };
+		int64_t arrivalTimeUs{ InitialArrivalTimeUs };
+
+		runUntilStateChange(
+		  trendlineEstimator, /*deliveryPace*/ 1.1, count, /*packetCount*/ 100, arrivalTimeUs);
+
+		REQUIRE(trendlineEstimator.GetState() == RTC::BWE::Types::BandwidthUsage::OVERUSING);
+	}
+
+	SECTION("a group arriving out of order doesn't throw the estimator off")
+	{
+		// Sorting only decides which sample is dropped when the window is full and
+		// what the ends of the window are for the slope cap, since fitting a line
+		// doesn't depend on the order of the points.
+		const RTC::BWE::TrendlineEstimator::TrendlineEstimatorOptions options{ .enableSort = true,
+		                                                                       .enableCap  = true };
+
+		RTC::BWE::TrendlineEstimator trendlineEstimator(options);
+
+		for (size_t idx{ 0 }; idx < 30; ++idx)
+		{
+			const int64_t arrivalTimeUs = InitialArrivalTimeUs + (static_cast<int64_t>(idx) * SendDeltaUs);
+
+			trendlineEstimator.Update(SendDeltaUs, SendDeltaUs, arrivalTimeUs);
+		}
+
+		REQUIRE(trendlineEstimator.GetState() == RTC::BWE::Types::BandwidthUsage::NORMAL);
+
+		// A group whose arrival time goes backwards, which is what a source giving
+		// them out of order looks like.
+		trendlineEstimator.Update(SendDeltaUs, SendDeltaUs, InitialArrivalTimeUs + (15 * SendDeltaUs));
+
+		REQUIRE(trendlineEstimator.GetState() == RTC::BWE::Types::BandwidthUsage::NORMAL);
+	}
 }

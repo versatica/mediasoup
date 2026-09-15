@@ -63,6 +63,17 @@ namespace RTC
 				 */
 				double bitrateRampupHoldThreshold{ 1.3 };
 				/**
+				 * How much of the acknowledged bitrate the estimate may grow by on top
+				 * of its usual bound, the longer the more time has passed since it was
+				 * last reduced. Zero disables that acceleration.
+				 */
+				double rampupAccelerationMaxFactor{ 0.0 };
+				/**
+				 * Time since the last reduction at which that acceleration is at its
+				 * fullest.
+				 */
+				int64_t rampupAccelerationMaxoutTimeUs{ 60 * 1000 * 1000 };
+				/**
 				 * Weight given to a higher bitrate when choosing among candidates, so
 				 * that observations which cannot tell them apart don't settle low.
 				 */
@@ -108,6 +119,21 @@ namespace RTC
 				 * Fraction of the step that each of those iterations takes.
 				 */
 				double newtonStepSize{ 0.75 };
+				/**
+				 * Whether the acknowledged bitrate is tried as a candidate of its own.
+				 */
+				bool appendAcknowledgedRateCandidate{ true };
+				/**
+				 * Whether the delay based estimate is tried as a candidate of its own
+				 * while it's above the current one.
+				 */
+				bool appendDelayBasedEstimateCandidate{ true };
+				/**
+				 * Whether the bound that the observed loss puts on the estimate is tried
+				 * as a candidate while not filling the link, which lets the estimate
+				 * come down to it in one step instead of gradually.
+				 */
+				bool appendUpperBoundCandidateInAlr{ false };
 				/**
 				 * Shortest span of send times that an observation may cover.
 				 */
@@ -169,10 +195,38 @@ namespace RTC
 				 */
 				int64_t delayedIncreaseWindowUs{ 300 * 1000 };
 				/**
+				 * Whether the estimate is held back while the loss observed is worse
+				 * than the one the chosen candidate says the link has by itself, since
+				 * then the excess is ours to fix.
+				 */
+				bool notIncreaseIfInherentLossLessThanAverageLoss{ true };
+				/**
+				 * Whether the acknowledged bitrate stops being a candidate while not
+				 * filling the link, since then what it delivers says nothing about what
+				 * it could deliver.
+				 */
+				bool notUseAckedRateInAlr{ true };
+				/**
+				 * Whether this controller may take the estimate over while the target is
+				 * still in its start phase.
+				 */
+				bool useInStartPhase{ true };
+				/**
 				 * How much each hold lasts compared to the previous one, which makes
 				 * repeated failures to increase back off for longer.
 				 */
 				double holdDurationFactor{ 2.0 };
+				/**
+				 * Whether loss is measured in bytes rather than in packets, which tells
+				 * a lost packet of a full frame apart from a lost one carrying almost
+				 * nothing.
+				 */
+				bool useByteLossRate{ true };
+				/**
+				 * Whether an estimate that had to be brought down to its bounds stops
+				 * being kept as a description of the link.
+				 */
+				bool boundBestCandidate{ true };
 				/**
 				 * How much the sending rate of an observation has to exceed the median
 				 * of the window for its loss to be taken at face value instead of as a
@@ -244,6 +298,9 @@ namespace RTC
 					return this->id != -1;
 				}
 
+				int64_t numPackets{ 0 };
+				int64_t numLostPackets{ 0 };
+				int64_t numReceivedPackets{ 0 };
 				int64_t sendingRate{ 0 };
 				int64_t sizeBytes{ 0 };
 				int64_t lostSizeBytes{ 0 };
@@ -261,6 +318,7 @@ namespace RTC
 				 * packet reported lost and received later stops counting.
 				 */
 				ankerl::unordered_dense::map<int64_t, int64_t> lostPackets;
+				int64_t numPackets{ 0 };
 				int64_t sizeBytes{ 0 };
 			};
 
@@ -284,6 +342,12 @@ namespace RTC
 			 * Whether enough has been observed for this controller to say anything.
 			 */
 			bool IsReady() const;
+
+			/**
+			 * Whether this controller may take the estimate over while the target is
+			 * still in its start phase.
+			 */
+			bool IsReadyToUseInStartPhase() const;
 
 			/**
 			 * Latest estimate, or the delay based one while this controller cannot say
@@ -368,6 +432,14 @@ namespace RTC
 			 */
 			void UpdateAverageReportedLossRatio();
 
+			double CalculateAverageReportedPacketLossRatio() const;
+
+			/**
+			 * The same by bytes, which tells a lost packet carrying a full frame apart
+			 * from one carrying almost nothing.
+			 */
+			double CalculateAverageReportedByteLossRatio() const;
+
 			int64_t GetMedianSendingRate() const;
 
 			/**
@@ -423,6 +495,9 @@ namespace RTC
 			// decrease is over.
 			int64_t bitrateLimitInCurrentWindow{ Types::BitrateInfinite };
 			std::optional<int64_t> recoveringAfterLossAtUs;
+			// Instant at which the estimate was last brought down, which is what the
+			// rampup acceleration grows from.
+			std::optional<int64_t> lastBitrateReducedAtUs;
 		};
 	} // namespace BWE
 } // namespace RTC

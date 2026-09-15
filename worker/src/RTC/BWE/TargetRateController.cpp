@@ -234,7 +234,7 @@ namespace RTC
 
 			// The bounds are trusted during the first seconds as long as no loss has
 			// been reported, so that the initial probing can raise the target.
-			if (this->lastFractionLost == 0 && IsInStartPhase(nowUs) && !this->lossBasedController.IsReady())
+			if (this->lastFractionLost == 0 && IsInStartPhase(nowUs) && !this->lossBasedController.IsReadyToUseInStartPhase())
 			{
 				int64_t bitrate = this->currentTarget;
 
@@ -293,14 +293,10 @@ namespace RTC
 					// Increase by 8% of the lowest target of the last second. Growing
 					// from the lowest value instead of from the current one lets a sender
 					// that was throttled ramp up a second faster.
-					auto bitrate = Utils::ApplyBitrateFactor(this->minBitrateHistory.front().second, 1.08);
-
-					// Add a bit on top, which is what keeps the target from getting stuck
-					// at low bitrates and is negligible at high ones.
-					if (bitrate < Types::BitrateInfinite - 1000)
-					{
-						bitrate += 1000;
-					}
+					// Add a bit on top of the 8%, which is what keeps the target from
+					// getting stuck at low bitrates and is negligible at high ones.
+					const auto bitrate = Utils::AddBitrates(
+					  Utils::ApplyBitrateFactor(this->minBitrateHistory.front().second, 1.08), 1000);
 
 					SetTargetBitrate(bitrate);
 

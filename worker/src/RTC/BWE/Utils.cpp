@@ -32,5 +32,19 @@ namespace RTC
 
 			return static_cast<int64_t>(result);
 		}
+
+		int64_t Utils::AddBitrates(int64_t bitrate, int64_t otherBitrate)
+		{
+			MS_TRACE();
+
+			// NOTE: Signed overflow is undefined behaviour, and both operands can be
+			// as high as the application allows.
+			if (bitrate > Types::BitrateInfinite - otherBitrate)
+			{
+				return Types::BitrateInfinite;
+			}
+
+			return bitrate + otherBitrate;
+		}
 	} // namespace BWE
 } // namespace RTC

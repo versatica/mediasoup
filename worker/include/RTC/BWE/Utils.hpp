@@ -20,6 +20,15 @@ namespace RTC
 			 *   undefined one that converting it would give.
 			 */
 			static int64_t ApplyBitrateFactor(int64_t bitrate, double factor);
+
+			/**
+			 * Sum of two bitrates (bps).
+			 *
+			 * @remarks
+			 * - A sum beyond what an int64_t can hold becomes `Types::BitrateInfinite`
+			 *   rather than wrapping around into a negative bitrate.
+			 */
+			static int64_t AddBitrates(int64_t bitrate, int64_t otherBitrate);
 		};
 	} // namespace BWE
 } // namespace RTC
