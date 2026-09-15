@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BWE/LossBasedController.hpp"
+#include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -329,6 +330,121 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 
 		REQUIRE(lossBasedController.GetResult().state == RTC::BWE::LossBasedController::State::DECREASING);
 		REQUIRE(lossBasedController.GetResult().bitrate < DelayBasedEstimate);
+	}
+
+	SECTION("a loss above the preference threshold takes the estimate down")
+	{
+		// With the threshold below the loss that is about to be observed, the bias
+		// towards higher bitrates is gone and the lower candidate wins.
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.lossThresholdOfHighBitratePreference = 0.05, .observationWindowSize = 2, .minNumObservations = 1
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateEstimate(600000);
+
+		for (int64_t i{ 0 }; i < 2; ++i)
+		{
+			lossBasedController.UpdateBitrateEstimate(
+			  createResults(i * ObservationDurationLowerBoundUs, /*numPackets*/ 10, /*numLostPackets*/ 1),
+			  /*delayBasedEstimate*/ 5000000,
+			  /*inAlr*/ false);
+		}
+
+		REQUIRE(lossBasedController.GetResult().bitrate < 600000);
+	}
+
+	SECTION("the estimate doesn't grow while the loss observed is worse than the inherent one")
+	{
+		// A single candidate above the current estimate, so that the only thing
+		// that can hold the estimate back is the guard being tested.
+		const RTC::BWE::LossBasedController::LossBasedControllerOptions options{
+			.candidateFactors = { 1.2 }, .observationWindowSize = 2, .minNumObservations = 1
+		};
+
+		RTC::BWE::LossBasedController lossBasedController(options);
+
+		lossBasedController.SetBitrateEstimate(600000);
+
+		for (int64_t i{ 0 }; i < 2; ++i)
+		{
+			lossBasedController.UpdateBitrateEstimate(
+			  createResults(i * ObservationDurationLowerBoundUs, /*numPackets*/ 10, /*numLostPackets*/ 1),
+			  RTC::BWE::Types::BitrateInfinite,
+			  /*inAlr*/ false);
+		}
+
+		REQUIRE(lossBasedController.GetResult().bitrate == 600000);
+	}
+
+	SECTION("of two equally likely candidates the higher one is taken")
+	{
+		constexpr int64_t InitialBitrate{ 1000000 };
+
+		RTC::BWE::LossBasedController lossBasedController(shortObservationOptions);
+
+		lossBasedController.SetBitrateEstimate(InitialBitrate);
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(/*firstSendTimeUs*/ 0, /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  InitialBitrate,
+		  /*inAlr*/ false);
+
+		// Just above the candidate that the factor of 1.02 builds, so that it's the
+		// delay based estimate the one added as a candidate and taken.
+		constexpr int64_t DelayBasedEstimate{ 1020008 };
+
+		lossBasedController.UpdateBitrateEstimate(
+		  createResults(ObservationDurationLowerBoundUs, /*numPackets*/ 2, /*numLostPackets*/ 0),
+		  DelayBasedEstimate,
+		  /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().bitrate == DelayBasedEstimate);
+	}
+
+	SECTION("a packet reported lost and received later doesn't take the estimate down")
+	{
+		constexpr int64_t InitialBitrate{ 2500000 };
+
+		RTC::BWE::LossBasedController lossBasedController(shortObservationOptions);
+
+		lossBasedController.SetBitrateEstimate(InitialBitrate);
+
+		// The second packet is reported as lost, which may just mean that it was
+		// reordered and hasn't arrived yet.
+		std::vector<RTC::BWE::Types::PacketResult> firstResults(3);
+
+		for (size_t idx{ 0 }; idx < firstResults.size(); ++idx)
+		{
+			firstResults[idx].sentPacket.sequenceNumber = static_cast<int64_t>(idx) + 1;
+			firstResults[idx].sentPacket.size           = PacketSizeBytes;
+			firstResults[idx].sentPacket.sendTimeUs     = 0;
+
+			if (idx != 1)
+			{
+				firstResults[idx].receiveTimeUs = 10 * 1000;
+			}
+		}
+
+		// The next feedback reports it as received, and closes the observation.
+		std::vector<RTC::BWE::Types::PacketResult> secondResults(3);
+		const std::array<int64_t, 3> sequenceNumbers{ 2, 4, 5 };
+
+		for (size_t idx{ 0 }; idx < secondResults.size(); ++idx)
+		{
+			secondResults[idx].sentPacket.sequenceNumber = sequenceNumbers.at(idx);
+			secondResults[idx].sentPacket.size           = PacketSizeBytes;
+			secondResults[idx].sentPacket.sendTimeUs     = idx == 1 ? ObservationDurationLowerBoundUs : 0;
+			secondResults[idx].receiveTimeUs = secondResults[idx].sentPacket.sendTimeUs + (10 * 1000);
+		}
+
+		lossBasedController.UpdateBitrateEstimate(
+		  firstResults, /*delayBasedEstimate*/ InitialBitrate, /*inAlr*/ false);
+		lossBasedController.UpdateBitrateEstimate(
+		  secondResults, /*delayBasedEstimate*/ InitialBitrate, /*inAlr*/ false);
+
+		REQUIRE(lossBasedController.GetResult().bitrate == InitialBitrate);
 	}
 
 	SECTION("loss while sending much more than usual is not taken as a spike")

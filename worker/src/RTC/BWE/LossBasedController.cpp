@@ -26,6 +26,8 @@ namespace RTC
 		 */
 		static double getLossProbability(double inherentLoss, int64_t lossLimitedBitrate, int64_t sendingRate)
 		{
+			MS_TRACE();
+
 			// NOTE: Clamped rather than asserted because a candidate refined by
 			// Newton's method can land outside before being brought back.
 			inherentLoss = std::clamp(inherentLoss, 0.0, 1.0);
@@ -50,6 +52,8 @@ namespace RTC
 		 */
 		static double toKiloBytes(int64_t bytes)
 		{
+			MS_TRACE();
+
 			return static_cast<double>(bytes) / 1000.0;
 		}
 
@@ -57,6 +61,7 @@ namespace RTC
 
 		LossBasedController::LossBasedController() : LossBasedController(LossBasedControllerOptions{})
 		{
+			MS_TRACE();
 		}
 
 		LossBasedController::LossBasedController(LossBasedControllerOptions options)
@@ -226,7 +231,7 @@ namespace RTC
 				}
 			}
 
-			int64_t boundedBitrate = std::max(
+			const int64_t boundedBitrate = std::max(
 			  GetImmediateLowerBoundBitrate(),
 			  std::min(
 			    { bestCandidate.lossLimitedBitrate,
@@ -335,8 +340,10 @@ namespace RTC
 			{
 				const auto sendTimeUs = packetResult.sentPacket.sendTimeUs;
 
-				// A packet this history never handed out cannot take part in an
-				// observation.
+				// A packet with no send time belongs to no span of send times, and its
+				// bytes cannot be counted either: the duration of the observation comes
+				// from the instants of the other packets, so adding its size would
+				// inflate the sending rate attributed to them.
 				if (sendTimeUs == Types::TimeUsInfinite)
 				{
 					continue;

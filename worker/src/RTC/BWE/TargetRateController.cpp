@@ -36,6 +36,7 @@ namespace RTC
 		TargetRateController::TargetRateController()
 		  : TargetRateController(TargetRateControllerOptions{})
 		{
+			MS_TRACE();
 		}
 
 		TargetRateController::TargetRateController(TargetRateControllerOptions options)
