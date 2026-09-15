@@ -4,6 +4,7 @@
 #include "RTC/BWE/Utils.hpp"
 #include "Logger.hpp"
 #include "RTC/BWE/BweTypes.hpp"
+#include <cmath> // std::llround()
 
 namespace RTC
 {
@@ -30,7 +31,10 @@ namespace RTC
 				return 0;
 			}
 
-			return static_cast<int64_t>(result);
+			// The result is rounded rather than truncated, since a factor is applied
+			// over and over to a bitrate that keeps being derived from the previous
+			// one and always losing the fraction drifts it downwards.
+			return std::llround(result);
 		}
 
 		int64_t Utils::AddBitrates(int64_t bitrate, int64_t otherBitrate)

@@ -18,6 +18,9 @@ namespace RTC
 			 *   place, and the result has to come back to an int64_t. A value beyond
 			 *   what that type holds becomes `Types::BitrateInfinite` rather than the
 			 *   undefined one that converting it would give.
+			 * - The result is rounded, not truncated, since each bitrate is derived
+			 *   from the previous one and dropping the fraction every time would drift
+			 *   downwards.
 			 */
 			static int64_t ApplyBitrateFactor(int64_t bitrate, double factor);
 

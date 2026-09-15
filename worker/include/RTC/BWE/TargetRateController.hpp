@@ -54,6 +54,12 @@ namespace RTC
 				 */
 				int64_t bitrateThreshold{ 0 };
 				/**
+				 * Whether the bound asked for by the receiver takes part in how the
+				 * target moves, rather than only capping the value this controller
+				 * hands out.
+				 */
+				bool disableReceiverLimitCapsOnly{ false };
+				/**
 				 * Round trip time over which the bitrate is dropped regardless of loss.
 				 * A round trip time this long means the queues of the network are full.
 				 */
@@ -137,6 +143,16 @@ namespace RTC
 			{
 				return this->rttBackoff.GetCorrectedRttUs() > this->options.maxRttUs;
 			}
+
+			/**
+			 * Forget everything learnt about the network, which is what a transport
+			 * that is not going through the same path anymore calls for.
+			 *
+			 * @remarks
+			 * - The bounds set by the application are dropped too, so they have to be
+			 *   set again afterwards.
+			 */
+			void OnRouteChange();
 
 			/**
 			 * Bounds set by the application.

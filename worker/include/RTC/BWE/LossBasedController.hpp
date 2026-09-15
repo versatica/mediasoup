@@ -350,6 +350,21 @@ namespace RTC
 			bool IsReadyToUseInStartPhase() const;
 
 			/**
+			 * Whether this controller is allowed to be used during the start phase at
+			 * all, regardless of whether it has observed enough to say anything.
+			 */
+			bool IsUsedInStartPhase() const
+			{
+				return this->options.useInStartPhase;
+			}
+
+			/**
+			 * Forget everything observed so far, which is what a link that is not the
+			 * same one anymore calls for.
+			 */
+			void Reset();
+
+			/**
 			 * Latest estimate, or the delay based one while this controller cannot say
 			 * anything yet.
 			 */

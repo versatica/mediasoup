@@ -39,6 +39,12 @@ namespace RTC
 	// Bitrate the outgoing target is never taken below (bps), whatever the API
 	// asks for.
 	static constexpr int64_t AbsoluteMinOutgoingBitrate{ 30000 };
+	// Highest bitrate the API may ask for (bps). The highest value an int64_t can
+	// hold is what the bandwidth estimators reserve to mean that there is no
+	// limit at all, so it cannot also mean a limit.
+	static constexpr uint64_t AbsoluteMaxBitrate{
+		static_cast<uint64_t>(std::numeric_limits<int64_t>::max()) - 1
+	};
 
 	/* Instance methods. */
 
@@ -67,10 +73,14 @@ namespace RTC
 		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
 		  initialAvailableOutgoingBitrate.has_value())
 		{
-			// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-			this->initialAvailableOutgoingBitrate = static_cast<int64_t>(std::min<uint64_t>(
-			  initialAvailableOutgoingBitrate.value(),
-			  static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+			if (initialAvailableOutgoingBitrate.value() > AbsoluteMaxBitrate)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "wrong initialAvailableOutgoingBitrate (must be <= %" PRIu64 ")", AbsoluteMaxBitrate);
+			}
+
+			this->initialAvailableOutgoingBitrate =
+			  static_cast<int64_t>(initialAvailableOutgoingBitrate.value());
 		}
 
 		if (options->enableSctp())
@@ -542,9 +552,12 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();
 
-				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-				this->maxIncomingBitrate = static_cast<int64_t>(std::min<uint64_t>(
-				  body->maxIncomingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+				if (body->maxIncomingBitrate() > AbsoluteMaxBitrate)
+				{
+					MS_THROW_TYPE_ERROR("bitrate must be <= %" PRIu64 " or 0 (unlimited)", AbsoluteMaxBitrate);
+				}
+
+				this->maxIncomingBitrate = static_cast<int64_t>(body->maxIncomingBitrate());
 
 				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIi64, this->maxIncomingBitrate);
 
@@ -566,9 +579,12 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>();
 
-				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-				const auto bitrate = static_cast<int64_t>(std::min<uint64_t>(
-				  body->maxOutgoingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+				if (body->maxOutgoingBitrate() > AbsoluteMaxBitrate)
+				{
+					MS_THROW_TYPE_ERROR("bitrate must be <= %" PRIu64 " or 0 (unlimited)", AbsoluteMaxBitrate);
+				}
+
+				const auto bitrate = static_cast<int64_t>(body->maxOutgoingBitrate());
 
 				if (bitrate > 0 && bitrate < AbsoluteMinOutgoingBitrate)
 				{
@@ -612,9 +628,12 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMinOutgoingBitrateRequest>();
 
-				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-				const auto bitrate = static_cast<int64_t>(std::min<uint64_t>(
-				  body->minOutgoingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+				if (body->minOutgoingBitrate() > AbsoluteMaxBitrate)
+				{
+					MS_THROW_TYPE_ERROR("bitrate must be <= %" PRIu64 " or 0 (unlimited)", AbsoluteMaxBitrate);
+				}
+
+				const auto bitrate = static_cast<int64_t>(body->minOutgoingBitrate());
 
 				if (bitrate > 0 && bitrate < AbsoluteMinOutgoingBitrate)
 				{

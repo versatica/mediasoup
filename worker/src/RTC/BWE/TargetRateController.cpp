@@ -54,12 +54,44 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// The bound asked for by the receiver caps what this controller produces
-			// but doesn't take part in how the target moves, so it's applied here and
-			// not in GetUpperLimit().
-			const int64_t target = std::min(this->currentTarget, this->receiverLimit);
+			int64_t target = this->currentTarget;
+
+			// Unless it has been told to drive the target, the bound asked for by the
+			// receiver caps only the value handed out, which is why it's applied here
+			// and not in GetUpperLimit().
+			if (!this->options.disableReceiverLimitCapsOnly)
+			{
+				target = std::min(target, this->receiverLimit);
+			}
 
 			return std::max(this->minBitrateConfigured, target);
+		}
+
+		void TargetRateController::OnRouteChange()
+		{
+			MS_TRACE();
+
+			this->lostPacketsSinceLastLossUpdate     = 0;
+			this->expectedPacketsSinceLastLossUpdate = 0;
+			this->currentTarget                      = 0;
+			this->minBitrateConfigured               = CongestionControllerMinBitrate;
+			this->maxBitrateConfigured               = DefaultMaxBitrate;
+			this->hasDecreasedSinceLastFractionLoss  = false;
+			this->lastFractionLost                   = 0;
+			this->lastRttUs                          = 0;
+			this->receiverLimit                      = Types::BitrateInfinite;
+			this->delayBasedLimit                    = Types::BitrateInfinite;
+			this->firstLossReportAtUs.reset();
+			this->lastLossReportAtUs.reset();
+			this->lastDecreaseAtUs.reset();
+
+			// A loss controller that is allowed to take over during the start phase
+			// would otherwise carry what it learnt about the previous path into the
+			// start phase that is about to begin again.
+			if (this->lossBasedController.IsUsedInStartPhase())
+			{
+				this->lossBasedController.Reset();
+			}
 		}
 
 		void TargetRateController::SetBitrateLimits(int64_t minBitrate, int64_t maxBitrate)
@@ -68,7 +100,9 @@ namespace RTC
 
 			this->minBitrateConfigured = std::max(minBitrate, CongestionControllerMinBitrate);
 
-			if (maxBitrate > 0)
+			// No maximum at all is not a maximum of every bitrate there is, it means
+			// that the one this controller picks for itself applies.
+			if (maxBitrate > 0 && maxBitrate != Types::BitrateInfinite)
 			{
 				this->maxBitrateConfigured = std::max(this->minBitrateConfigured, maxBitrate);
 			}
@@ -84,6 +118,13 @@ namespace RTC
 		void TargetRateController::SetAcknowledgedBitrate(int64_t acknowledgedBitrate)
 		{
 			MS_TRACE();
+
+			// Not knowing what the link delivers is not the same as it delivering
+			// nothing, so the last figure that was known is kept instead.
+			if (acknowledgedBitrate == Types::BitrateInfinite)
+			{
+				return;
+			}
 
 			// NOTE: Nothing else in here looks at it, it's only of use to the loss
 			// controller.
@@ -343,9 +384,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Drop the points that fell out of the window.
+			// Drop the points that fell out of the window. The window is closed a
+			// millisecond early, so that a target which has only just aged out of it
+			// doesn't hold the increase back.
 			while (!this->minBitrateHistory.empty() &&
-			       nowUs - this->minBitrateHistory.front().first > BweIncreaseIntervalUs)
+			       nowUs - this->minBitrateHistory.front().first + 1000 > BweIncreaseIntervalUs)
 			{
 				this->minBitrateHistory.pop_front();
 			}
@@ -365,7 +408,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			return std::min(this->delayBasedLimit, this->maxBitrateConfigured);
+			int64_t upperLimit = this->delayBasedLimit;
+
+			if (this->options.disableReceiverLimitCapsOnly)
+			{
+				upperLimit = std::min(upperLimit, this->receiverLimit);
+			}
+
+			return std::min(upperLimit, this->maxBitrateConfigured);
 		}
 
 		void TargetRateController::SetTargetBitrate(int64_t bitrate)

@@ -101,6 +101,37 @@ namespace RTC
 			return IsReady() && this->options.useInStartPhase;
 		}
 
+		void LossBasedController::Reset()
+		{
+			MS_TRACE();
+
+			// Everything the constructor leaves behind, since what was observed
+			// describes a link that is not the one being used anymore. The temporal
+			// weights are left alone because they only depend on the options.
+			this->observations.assign(this->options.observationWindowSize, Observation{});
+			this->partialObservation = {};
+
+			this->currentBestEstimate              = {};
+			this->currentBestEstimate.inherentLoss = this->options.initialInherentLossEstimate;
+
+			this->lastHoldInfo            = {};
+			this->lastHoldInfo.durationUs = InitHoldDurationUs;
+
+			this->result          = {};
+			this->numObservations = 0;
+			this->lastSendTimeOfLatestObservationUs.reset();
+			this->averageReportedLossRatio = 0.0;
+			this->acknowledgedBitrate      = Types::BitrateInfinite;
+			this->delayBasedEstimate       = Types::BitrateInfinite;
+			this->minBitrate               = 0;
+			this->maxBitrate               = Types::BitrateInfinite;
+			this->immediateUpperBoundBitrate.reset();
+			this->immediateLowerBoundBitrate.reset();
+			this->bitrateLimitInCurrentWindow = Types::BitrateInfinite;
+			this->recoveringAfterLossAtUs.reset();
+			this->lastBitrateReducedAtUs.reset();
+		}
+
 		LossBasedController::Result LossBasedController::GetResult() const
 		{
 			MS_TRACE();
@@ -310,7 +341,9 @@ namespace RTC
 			}
 			else if (boundedBitrate < this->delayBasedEstimate && boundedBitrate < this->maxBitrate)
 			{
-				if (this->result.state != State::DECREASING)
+				// A factor of zero means that no hold is ever entered, since each hold
+				// would last no time at all.
+				if (this->result.state != State::DECREASING && this->options.holdDurationFactor > 0.0)
 				{
 					MS_DEBUG_DEV(
 					  "switching to hold [bitrate:%" PRIi64 ", durationMs:%" PRIi64 ", averageLoss:%f]",
@@ -318,13 +351,13 @@ namespace RTC
 					  this->lastHoldInfo.durationUs / 1000,
 					  this->averageReportedLossRatio);
 
-					this->lastHoldInfo = {
-						.atUs       = lastSendTimeUs + this->lastHoldInfo.durationUs,
-						.durationUs = std::min<int64_t>(
-						  MaxHoldDurationUs,
-						  static_cast<int64_t>(this->lastHoldInfo.durationUs * this->options.holdDurationFactor)),
-						.bitrate = boundedBitrate
-					};
+					this->lastHoldInfo = { .atUs       = lastSendTimeUs + this->lastHoldInfo.durationUs,
+					                       .durationUs = std::min<int64_t>(
+						                       MaxHoldDurationUs,
+						                       std::llround(
+						                         static_cast<double>(this->lastHoldInfo.durationUs) *
+						                         this->options.holdDurationFactor)),
+					                       .bitrate = boundedBitrate };
 				}
 
 				this->result.state = State::DECREASING;
@@ -755,9 +788,11 @@ namespace RTC
 			  (this->numObservations - 1) % this->options.observationWindowSize;
 			const int64_t previousSendingRate = this->observations[latestObservationIdx].sendingRate;
 
-			return static_cast<int64_t>(
-			  (this->options.sendingRateSmoothingFactor * previousSendingRate) +
-			  ((1.0 - this->options.sendingRateSmoothingFactor) * instantSendingRate));
+			// Each share is rounded on its own before they are added, so that the
+			// smoothed rate doesn't depend on how the two of them happen to split.
+			return Utils::AddBitrates(
+			  Utils::ApplyBitrateFactor(previousSendingRate, this->options.sendingRateSmoothingFactor),
+			  Utils::ApplyBitrateFactor(instantSendingRate, 1.0 - this->options.sendingRateSmoothingFactor));
 		}
 
 		void LossBasedController::UpdateAverageReportedLossRatio()
@@ -949,9 +984,8 @@ namespace RTC
 				// NOTE: A loss barely above the offset gives a bound beyond what an
 				// int64_t can hold, and converting such a value is undefined behaviour.
 				// It bounds nothing anyway once it's over the maximum bitrate.
-				bitrate = boundBitrate >= static_cast<double>(this->maxBitrate)
-				            ? this->maxBitrate
-				            : static_cast<int64_t>(boundBitrate);
+				bitrate = boundBitrate >= static_cast<double>(this->maxBitrate) ? this->maxBitrate
+				                                                                : std::llround(boundBitrate);
 			}
 
 			this->immediateUpperBoundBitrate = bitrate;

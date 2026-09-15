@@ -12,9 +12,11 @@ SCENARIO("BWE Utils", "[bwe][utils]")
 		REQUIRE(RTC::BWE::Utils::ApplyBitrateFactor(600000, 1.0) == 600000);
 	}
 
-	SECTION("ApplyBitrateFactor() drops the fractional part")
+	SECTION("ApplyBitrateFactor() rounds to the nearest bitrate, away from zero on a tie")
 	{
-		REQUIRE(RTC::BWE::Utils::ApplyBitrateFactor(3, 0.5) == 1);
+		REQUIRE(RTC::BWE::Utils::ApplyBitrateFactor(3, 0.4) == 1);
+		REQUIRE(RTC::BWE::Utils::ApplyBitrateFactor(3, 0.5) == 2);
+		REQUIRE(RTC::BWE::Utils::ApplyBitrateFactor(7, 0.5) == 4);
 	}
 
 	SECTION("ApplyBitrateFactor() gives no bitrate at all beyond what the type holds")
