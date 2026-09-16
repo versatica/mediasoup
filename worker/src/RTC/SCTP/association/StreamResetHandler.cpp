@@ -341,6 +341,11 @@ namespace RTC
 			  validationResult == ReqSeqNbrValidationResult::RETRANSMISSION &&
 			  this->lastProcessedReqResult != ReconfigurationResponseParameter::Result::IN_PROGRESS)
 			{
+				// The peer is getting the final result of this request, so there is no
+				// longer a need to remember that it may have been performed when leaving
+				// deferred reset processing.
+				this->performedDeferredRequest = std::nullopt;
+
 				auto* reconfigurationResponseParameter =
 				  reConfigChunk->BuildParameterInPlace<ReconfigurationResponseParameter>();
 
