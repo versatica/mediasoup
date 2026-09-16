@@ -853,6 +853,113 @@ namespace RTC
 			this->headerExtensionIds = headerExtensionIds;
 		}
 
+		void Packet::ApplyEgressRewrite(
+		  uint8_t newPayloadType,
+		  const std::array<uint8_t, 15>& extIdRemap,
+		  const RTP::HeaderExtensionIds& newExtIds,
+		  EgressRewriteUndo& undo)
+		{
+			MS_TRACE();
+
+			const auto rewriteId = [&extIdRemap](uint8_t oldId)
+			{
+				const auto newId = extIdRemap[oldId];
+
+				return newId == 0u ? oldId : newId;
+			};
+
+			undo.origPayloadType        = GetFixedHeaderPointer()->payloadType;
+			undo.origOneByteExtensions  = this->oneByteExtensions;
+			undo.origTwoBytesExtensions = this->twoBytesExtensions;
+			undo.origHeaderExtensionIds = this->headerExtensionIds;
+
+			GetFixedHeaderPointer()->payloadType = newPayloadType;
+
+			auto* extensionsStart = GetHeaderExtensionValue();
+
+			if (HasOneByteExtensions())
+			{
+				for (uint8_t oldId = 1u; oldId <= 14u; ++oldId)
+				{
+					const auto off = undo.origOneByteExtensions[oldId - 1];
+
+					if (off == -1)
+					{
+						continue;
+					}
+
+					const auto newId = rewriteId(oldId);
+
+					if (newId == oldId)
+					{
+						continue;
+					}
+
+					auto* idByte = extensionsStart + off;
+					*idByte      = static_cast<uint8_t>((newId << 4) | (*idByte & 0x0F));
+
+					this->oneByteExtensions[newId - 1] = off;
+					this->oneByteExtensions[oldId - 1] = -1;
+				}
+			}
+			else
+			{
+				for (const auto& [oldId, off] : undo.origTwoBytesExtensions)
+				{
+					const auto newId = rewriteId(oldId);
+
+					if (newId == oldId)
+					{
+						continue;
+					}
+
+					auto* idByte = extensionsStart + off;
+					*idByte      = newId;
+
+					this->twoBytesExtensions.erase(oldId);
+					this->twoBytesExtensions[newId] = off;
+				}
+			}
+
+			this->headerExtensionIds = newExtIds;
+		}
+
+		void Packet::RevertEgressRewrite(const EgressRewriteUndo& undo)
+		{
+			MS_TRACE();
+
+			auto* extensionsStart = GetHeaderExtensionValue();
+
+			if (HasOneByteExtensions())
+			{
+				for (uint8_t oldId = 1u; oldId <= 14u; ++oldId)
+				{
+					const auto off = undo.origOneByteExtensions[oldId - 1];
+
+					if (off == -1)
+					{
+						continue;
+					}
+
+					auto* idByte = extensionsStart + off;
+					*idByte      = static_cast<uint8_t>((oldId << 4) | (*idByte & 0x0F));
+				}
+			}
+			else
+			{
+				for (const auto& [oldId, off] : undo.origTwoBytesExtensions)
+				{
+					auto* idByte = extensionsStart + off;
+					*idByte      = oldId;
+				}
+			}
+
+			this->oneByteExtensions              = undo.origOneByteExtensions;
+			this->twoBytesExtensions             = undo.origTwoBytesExtensions;
+			this->headerExtensionIds             = undo.origHeaderExtensionIds;
+			GetFixedHeaderPointer()->payloadType = undo.origPayloadType;
+		}
+
 		bool Packet::ReadMid(std::string& mid) const
 		{
 			MS_TRACE();
