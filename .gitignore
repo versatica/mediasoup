@@ -18,8 +18,6 @@
 
 ## Worker.
 /worker/scripts/node_modules
-# Flatc generated files.
-/worker/include/FBS
 /worker/prebuild
 # Python invoke.
 /worker/pip_invoke

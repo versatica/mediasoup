@@ -29,26 +29,23 @@ flatbuffers_schemas = [
   'worker.fbs',
 ]
 
-# Directory from which worker code will include the header files.
-flatbuffers_cpp_out_dir = 'FBS'
+# The schemas are turned into file objects here because the target that
+# consumes them is declared in the FBS subdirectory, where plain relative names
+# would no longer resolve.
+flatbuffers_schema_files = files(flatbuffers_schemas)
 
-flatc = find_program('flatc')
-flatbuffers_generator = custom_target('flatbuffers-generator',
-  output: flatbuffers_cpp_out_dir,
-  input: flatbuffers_schemas,
-  command : [
-    flatc,
-    '--cpp',
-    '--cpp-field-case-style', 'lower',
-    '--reflect-names',
-    '--scoped-enums',
-    '--filename-suffix', '',
-    '-o', '@OUTPUT@',
-    '@INPUT@'
-  ],
-  build_by_default: true,
-)
+# FBS is the directory from which worker code includes the generated header
+# files. The generator target is declared from within that very subdirectory
+# because Meson does not allow path segments in the outputs of a custom target,
+# and the outputs must be the individual headers rather than the directory that
+# holds them. Declaring the directory as the output makes the target dirty
+# forever: running the generator rewrites the headers in place, which never
+# updates the modification time of the directory containing them, so the target
+# never becomes up to date and every build regenerates the headers and
+# recompiles every source file that includes them.
+subdir('FBS')
 
 flatbuffers_generator_dep = declare_dependency(
   include_directories: '.',
+  sources: flatbuffers_generator,
 )
