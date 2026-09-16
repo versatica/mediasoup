@@ -41,7 +41,7 @@ namespace RTC
 				OVERUSING
 			};
 
-			constexpr std::string_view BandwidthUsageToString(BandwidthUsage bandwidthUsage)
+			constexpr std::string_view bandwidthUsageToString(BandwidthUsage bandwidthUsage)
 			{
 				switch (bandwidthUsage)
 				{

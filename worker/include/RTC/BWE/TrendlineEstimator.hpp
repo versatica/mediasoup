@@ -26,30 +26,61 @@ namespace RTC
 		 */
 		class TrendlineEstimator
 		{
+		public:
+			struct TrendlineEstimatorOptions
+			{
+				/**
+				 * Number of samples of the least squares regression window. A shorter
+				 * window reacts sooner at the cost of being noisier.
+				 *
+				 * @remarks
+				 * - It must be at least 2, since a line cannot be fitted to a single
+				 *   point.
+				 */
+				size_t windowSize{ 20 };
+				/**
+				 * Whether the samples of the window are kept sorted by arrival time.
+				 * Feedback should already give them in order, so this is a safety net
+				 * against a source that doesn't.
+				 */
+				bool enableSort{ false };
+				/**
+				 * Whether the slope is capped by the one that the least delayed packets
+				 * of both ends of the window describe, which keeps a burst of delayed
+				 * packets in the middle from being read as a growing queue.
+				 */
+				bool enableCap{ false };
+				/**
+				 * How many packets of the beginning of the window that cap looks at.
+				 */
+				size_t beginningPackets{ 7 };
+				/**
+				 * How many packets of the end of the window that cap looks at.
+				 */
+				size_t endPackets{ 7 };
+				/**
+				 * Slack added to that cap, so that a slope barely above it is not
+				 * capped.
+				 */
+				double capUncertainty{ 0.0 };
+			};
+
 		private:
 			struct PacketTiming
 			{
 				double arrivalTimeUs;
 				double smoothedDelayUs;
+				/**
+				 * Accumulated delay before it's smoothed, which is what the slope cap
+				 * looks at.
+				 */
+				double rawDelayUs;
 			};
 
 		public:
-			/**
-			 * Number of samples of the least squares regression window used unless
-			 * another one is given.
-			 */
-			static constexpr size_t DefaultWindowSize{ 20 };
+			TrendlineEstimator();
 
-		public:
-			/**
-			 * @param windowSize - Number of samples of the least squares regression
-			 *   window. A shorter window reacts sooner at the cost of being noisier.
-			 *
-			 * @remarks
-			 * - `windowSize` must be at least 2, since a line cannot be fitted to a
-			 *   single point.
-			 */
-			explicit TrendlineEstimator(size_t windowSize = DefaultWindowSize);
+			explicit TrendlineEstimator(TrendlineEstimatorOptions options);
 
 			/**
 			 * Feed the deltas between two consecutive groups of packets.
@@ -77,12 +108,23 @@ namespace RTC
 			 */
 			std::optional<double> GetLinearFitSlope() const;
 
+			/**
+			 * Highest slope that the least delayed samples of both ends of the window
+			 * describe, or no value if they are too close in time to tell.
+			 *
+			 * @remarks
+			 * - A burst of delayed packets in the middle of the window tilts the
+			 *   fitted line even though the queue never grew, and this is what keeps
+			 *   that from being read as overuse.
+			 */
+			std::optional<double> GetSlopeCap() const;
+
 			void Detect(double trend, double sendDeltaUs, int64_t arrivalTimeUs);
 
 			void UpdateThreshold(double modifiedTrend, int64_t arrivalTimeUs);
 
 		private:
-			const size_t windowSize;
+			const TrendlineEstimatorOptions options;
 			int numOfDeltas{ 0 };
 			std::optional<int64_t> firstArrivalTimeUs;
 			double accumulatedDelayUs{ 0 };
