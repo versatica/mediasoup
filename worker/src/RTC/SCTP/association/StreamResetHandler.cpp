@@ -143,13 +143,13 @@ namespace RTC
 			}
 		}
 
-		void StreamResetHandler::MayLeaveDeferredReset()
+		bool StreamResetHandler::MayLeaveDeferredReset()
 		{
 			MS_TRACE();
 
 			if (!this->deferredIncomingRequest.has_value())
 			{
-				return;
+				return false;
 			}
 
 			// https://tools.ietf.org/html/rfc6525#section-5.2.2
@@ -165,7 +165,7 @@ namespace RTC
 			// request, which it may never do.
 			if (this->dataTracker->IsLaterThanCumulativeAckedTsn(this->deferredIncomingRequest->senderLastAssignedTsn))
 			{
-				return;
+				return false;
 			}
 
 			MS_DEBUG_DEV(
@@ -196,6 +196,8 @@ namespace RTC
 			// The request has now been performed, so a retransmission of it must get
 			// the final response rather than "in progress" again.
 			this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
+
+			return true;
 		}
 
 		bool StreamResetHandler::ValidateReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk)
@@ -373,6 +375,11 @@ namespace RTC
 
 			if (alreadyPerformed)
 			{
+				// Set the result again rather than relying on the one stored when the
+				// reset was performed, since a received incoming stream reset request
+				// may have overwritten it in the meantime.
+				this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
+
 				MS_DEBUG_DEV(
 				  "reset outgoing already performed when leaving deferred reset processing, sender last assigned tsn %" PRIu32,
 				  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());

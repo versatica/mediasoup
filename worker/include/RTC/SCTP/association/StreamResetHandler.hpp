@@ -235,8 +235,12 @@ namespace RTC
 			 * association is in "deferred reset processing" and the cumulative ack TSN
 			 * has reached the sender's last assigned TSN, the deferred stream reset is
 			 * performed and deferred reset processing ends.
+			 *
+			 * Returns `true` if deferred reset processing ended, in which case the
+			 * chunks queued while it lasted have been released and there may be
+			 * messages to deliver.
 			 */
-			void MayLeaveDeferredReset();
+			bool MayLeaveDeferredReset();
 
 		private:
 			/**

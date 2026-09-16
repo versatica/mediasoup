@@ -610,9 +610,17 @@ namespace RTC
 			{
 				// The cumulative ack TSN may have advanced while processing the chunks
 				// in this packet, which may be what deferred reset processing (if any)
-				// was waiting for. Do this before sending the SACK chunk below so that
-				// its advertised receiver window credit accounts for the released data.
-				this->tcb->GetStreamResetHandler().MayLeaveDeferredReset();
+				// was waiting for.
+				if (this->tcb->GetStreamResetHandler().MayLeaveDeferredReset())
+				{
+					// There may be chunks to deliver that were queued while waiting for
+					// the streams to reset.
+					//
+					// NOTE: Both this and the above are done before sending the SACK chunk
+					// below so that its advertised receiver window credit accounts for the
+					// released and delivered data.
+					MayDeliverMessages();
+				}
 
 				this->tcb->GetDataTracker().ObservePacketEnd();
 				this->tcb->MaySendSackChunk();
