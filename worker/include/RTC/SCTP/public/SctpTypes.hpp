@@ -48,7 +48,7 @@ namespace RTC
 				SHUTTING_DOWN
 			};
 
-			constexpr std::string_view AssociationStateToString(AssociationState associationState)
+			constexpr std::string_view associationStateToString(AssociationState associationState)
 			{
 				switch (associationState)
 				{
@@ -128,7 +128,7 @@ namespace RTC
 				UNSUPPORTED_OPERATION
 			};
 
-			constexpr std::string_view ErrorKindToString(ErrorKind errorKind)
+			constexpr std::string_view errorKindToString(ErrorKind errorKind)
 			{
 				switch (errorKind)
 				{
@@ -195,7 +195,7 @@ namespace RTC
 				USRSCTP
 			};
 
-			constexpr std::string_view SctpImplementationToString(SctpImplementation sctpImplementation)
+			constexpr std::string_view sctpImplementationToString(SctpImplementation sctpImplementation)
 			{
 				switch (sctpImplementation)
 				{
@@ -246,7 +246,7 @@ namespace RTC
 				NOT_SUPPORTED
 			};
 
-			constexpr std::string_view ResetStreamsStatusToString(ResetStreamsStatus status)
+			constexpr std::string_view resetStreamsStatusToString(ResetStreamsStatus status)
 			{
 				switch (status)
 				{
@@ -303,7 +303,7 @@ namespace RTC
 				ERROR_SHUTTING_DOWN
 			};
 
-			constexpr std::string_view SendMessageStatusToString(SendMessageStatus status)
+			constexpr std::string_view sendMessageStatusToString(SendMessageStatus status)
 			{
 				switch (status)
 				{
