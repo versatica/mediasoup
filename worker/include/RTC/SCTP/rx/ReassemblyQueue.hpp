@@ -141,9 +141,19 @@ namespace RTC
 
 			/**
 			 * The remaining bytes until the queue has reached the watermark limit.
+			 *
+			 * @remarks
+			 * - The queued bytes are allowed to go above the watermark limit (data is
+			 *   only rejected once the queue is full), so this returns 0 rather than
+			 *   wrapping around.
 			 */
 			size_t GetRemainingBytes() const
 			{
+				if (this->queuedBytes >= this->watermarkBytes)
+				{
+					return 0;
+				}
+
 				return this->watermarkBytes - this->queuedBytes;
 			}
 
