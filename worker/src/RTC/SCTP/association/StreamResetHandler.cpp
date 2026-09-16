@@ -143,6 +143,61 @@ namespace RTC
 			}
 		}
 
+		void StreamResetHandler::MayLeaveDeferredReset()
+		{
+			MS_TRACE();
+
+			if (!this->deferredIncomingRequest.has_value())
+			{
+				return;
+			}
+
+			// https://tools.ietf.org/html/rfc6525#section-5.2.2
+			//
+			// "In this mode, any data arriving with a TSN larger than the Sender's
+			// Last Assigned TSN for the affected stream(s) MUST be queued locally and
+			// held until the cumulative acknowledgment point reaches the Sender's Last
+			// Assigned TSN."
+			//
+			// So deferred reset processing must end as soon as the cumulative ack TSN
+			// reaches the sender's last assigned TSN. Otherwise the queued data would
+			// be held (and accounted for) until the peer decides to retransmit its
+			// request, which it may never do.
+			if (this->dataTracker->IsLaterThanCumulativeAckedTsn(this->deferredIncomingRequest->senderLastAssignedTsn))
+			{
+				return;
+			}
+
+			MS_DEBUG_DEV(
+			  "leaving deferred reset processing, sender last assigned tsn %" PRIu32 " reached",
+			  this->deferredIncomingRequest->senderLastAssignedTsn);
+
+			// Remember the request being performed here. The peer was told "in
+			// progress" and will retry it with a new request sequence number, and that
+			// retry must not reset the very same streams a second time.
+			this->performedDeferredRequest = std::move(this->deferredIncomingRequest);
+
+			this->deferredIncomingRequest = std::nullopt;
+
+			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+			const auto& streamIds = this->performedDeferredRequest.value().streamIds;
+
+			// https://tools.ietf.org/html/rfc6525#section-5.2.2
+			//
+			// E3) "If no stream numbers are listed in the parameter, then all incoming
+			// streams MUST be reset to 0 as the next expected SSN. If specific stream
+			// numbers are listed, then only these specific streams MUST be reset to 0,
+			// and all other non-listed SSNs remain unchanged." E4: "Any queued TSNs
+			// (queued at step E2) MUST now be released and processed normally."
+			this->reassemblyQueue->ResetStreamsAndLeaveDeferredReset(streamIds);
+
+			this->associationListenerDeferrer.OnAssociationInboundStreamsReset(streamIds);
+
+			// The request has now been performed, so a retransmission of it must get
+			// the final response rather than "in progress" again.
+			this->lastProcessedReqResult = ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED;
+		}
+
 		bool StreamResetHandler::ValidateReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk)
 		{
 			MS_TRACE();
@@ -301,7 +356,28 @@ namespace RTC
 			// "In Progress" request. In all cases, re-evaluate the state.
 			this->lastProcessedReqSeqNbr = requestSn;
 
-			if (
+			// This very same request may have already been performed when the
+			// cumulative ack TSN reached its sender's last assigned TSN. The peer was
+			// told "in progress" and doesn't know it yet, so it retries it with a new
+			// request sequence number. Resetting those streams again would set their
+			// next expected SSN back to 0 after post reset data may have already been
+			// received, so just reply the final result.
+			const bool alreadyPerformed =
+			  this->performedDeferredRequest.has_value() &&
+			  this->performedDeferredRequest->senderLastAssignedTsn ==
+			    receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn() &&
+			  this->performedDeferredRequest->streamIds ==
+			    receivedOutgoingSsnResetRequestParameter->GetStreamIds();
+
+			this->performedDeferredRequest = std::nullopt;
+
+			if (alreadyPerformed)
+			{
+				MS_DEBUG_DEV(
+				  "reset outgoing already performed when leaving deferred reset processing, sender last assigned tsn %" PRIu32,
+				  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn());
+			}
+			else if (
 			  this->dataTracker->IsLaterThanCumulativeAckedTsn(
 			    receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn()))
 			{
@@ -313,6 +389,21 @@ namespace RTC
 				this->reassemblyQueue->EnterDeferredReset(
 				  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn(),
 				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
+
+				// Remember the request so that deferred reset processing can end as soon
+				// as the cumulative ack TSN reaches the sender's last assigned TSN,
+				// without depending on the peer retransmitting its request.
+				//
+				// NOTE: Just like ReassemblyQueue::EnterDeferredReset() does, a new
+				// request is ignored while already in deferred reset processing.
+				if (!this->deferredIncomingRequest.has_value())
+				{
+					this->deferredIncomingRequest = DeferredIncomingRequest{
+						.senderLastAssignedTsn =
+						  receivedOutgoingSsnResetRequestParameter->GetSenderLastAssignedTsn(),
+						.streamIds = receivedOutgoingSsnResetRequestParameter->GetStreamIds(),
+					};
+				}
 
 				// "If the endpoint enters 'deferred reset processing', it MUST put a
 				// Re-configuration Response Parameter into a RE-CONFIG chunk indicating
@@ -334,6 +425,8 @@ namespace RTC
 				// (queued at step E2) MUST now be released and processed normally.
 				this->reassemblyQueue->ResetStreamsAndLeaveDeferredReset(
 				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
+
+				this->deferredIncomingRequest = std::nullopt;
 
 				this->associationListenerDeferrer.OnAssociationInboundStreamsReset(
 				  receivedOutgoingSsnResetRequestParameter->GetStreamIds());
