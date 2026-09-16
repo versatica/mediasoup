@@ -336,7 +336,6 @@ def clean_all(ctx):
             )
 
         shutil.rmtree(MEDIASOUP_OUT_DIR, ignore_errors=True)
-        shutil.rmtree("include/FBS", ignore_errors=True)
 
 
 @task(pre=[meson_ninja])
