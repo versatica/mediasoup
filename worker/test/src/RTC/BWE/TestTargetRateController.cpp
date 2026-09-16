@@ -235,20 +235,22 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 		targetRateController.UpdatePropagationRtt(/*propagationRttUs*/ 5000 * 1000, nowUs);
 		targetRateController.Update(nowUs);
 
-		REQUIRE(targetRateController.GetTargetBitrate() == InitialBitrate * 0.8);
+		// Four fifths of 300000.
+		REQUIRE(targetRateController.GetTargetBitrate() == 240000);
 
 		// The drop happens at most once per interval.
 		nowUs += 500 * 1000;
 
 		targetRateController.Update(nowUs);
 
-		REQUIRE(targetRateController.GetTargetBitrate() == InitialBitrate * 0.8);
+		REQUIRE(targetRateController.GetTargetBitrate() == 240000);
 
 		nowUs += 500 * 1000;
 
 		targetRateController.Update(nowUs);
 
-		REQUIRE(targetRateController.GetTargetBitrate() == InitialBitrate * 0.8 * 0.8);
+		// And four fifths of that.
+		REQUIRE(targetRateController.GetTargetBitrate() == 192000);
 	}
 
 	SECTION("a report telling no loss increases the target by 8% plus a bit")
@@ -264,9 +266,8 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 		// A report covering enough packets reconsiders the target by itself.
 		targetRateController.UpdatePacketsLost(/*lostPackets*/ 0, /*totalPackets*/ 100, nowUs);
 
-		const int64_t increasedBitrate = static_cast<int64_t>(InitialBitrate * 1.08) + 1000;
-
-		REQUIRE(targetRateController.GetTargetBitrate() == increasedBitrate);
+		// 8% over 300000 is 324000, plus the extra 1000.
+		REQUIRE(targetRateController.GetTargetBitrate() == 325000);
 
 		// Long enough for the value grown from to have left the window, so the next
 		// increase grows from the current target.
@@ -274,8 +275,8 @@ SCENARIO("BWE TargetRateController", "[bwe][targetratecontroller]")
 
 		targetRateController.Update(nowUs);
 
-		REQUIRE(
-		  targetRateController.GetTargetBitrate() == static_cast<int64_t>(increasedBitrate * 1.08) + 1000);
+		// And 8% over 325000 is 351000, plus the extra 1000.
+		REQUIRE(targetRateController.GetTargetBitrate() == 352000);
 	}
 
 	SECTION("the loss rules drive the target until the loss controller is ready")

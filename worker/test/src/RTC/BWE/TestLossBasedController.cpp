@@ -3,6 +3,7 @@
 #include "RTC/BWE/LossBasedController.hpp"
 #include <array>
 #include <catch2/catch_test_macros.hpp>
+#include <cmath> // std::llround()
 #include <vector>
 
 SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
@@ -286,8 +287,12 @@ SCENARIO("BWE LossBasedController", "[bwe][lossbasedcontroller]")
 		}
 
 		// Growing out of a hold is bounded by the more conservative of the two
-		// rampup factors, which is 1.2.
-		REQUIRE(lossBasedController.GetResult().bitrate == static_cast<int64_t>(bitrateAtLoss * 1.2));
+		// rampup factors, which is 1.2. The bitrate backed off to depends on the
+		// whole run, so the factor is applied to it here, rounded as every bitrate
+		// derived from another one is.
+		REQUIRE(
+		  lossBasedController.GetResult().bitrate ==
+		  std::llround(static_cast<double>(bitrateAtLoss) * 1.2));
 	}
 
 	SECTION("a single observation of loss among good ones is taken as a spike")
