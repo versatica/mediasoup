@@ -6,6 +6,7 @@
 #include "FBS/transport.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/Consumer.hpp"
@@ -29,22 +30,21 @@
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #endif
 #include <array>
-#include <limits> // std::numeric_limits
-#include <map>    // std::multimap
+#include <map> // std::multimap
 
 namespace RTC
 {
 	/* Static. */
 
+	// Highest bitrate the API may ask for (bps), which anything higher is brought
+	// down to. `Types::BitrateInfinite` is what the bandwidth estimators reserve
+	// to mean that there is no limit at all, so it cannot also mean a limit.
+	static constexpr uint64_t AbsoluteMaxBitrate{
+		static_cast<uint64_t>(RTC::BWE::Types::BitrateInfinite) - 1
+	};
 	// Bitrate the outgoing target is never taken below (bps), whatever the API
 	// asks for.
 	static constexpr int64_t AbsoluteMinOutgoingBitrate{ 30000 };
-	// Highest bitrate the API may ask for (bps). The highest value an int64_t can
-	// hold is what the bandwidth estimators reserve to mean that there is no
-	// limit at all, so it cannot also mean a limit.
-	static constexpr uint64_t AbsoluteMaxBitrate{
-		static_cast<uint64_t>(std::numeric_limits<int64_t>::max()) - 1
-	};
 
 	/* Instance methods. */
 
@@ -73,14 +73,9 @@ namespace RTC
 		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
 		  initialAvailableOutgoingBitrate.has_value())
 		{
-			if (initialAvailableOutgoingBitrate.value() > AbsoluteMaxBitrate)
-			{
-				MS_THROW_TYPE_ERROR(
-				  "wrong initialAvailableOutgoingBitrate (must be <= %" PRIu64 ")", AbsoluteMaxBitrate);
-			}
-
-			this->initialAvailableOutgoingBitrate =
-			  static_cast<int64_t>(initialAvailableOutgoingBitrate.value());
+			// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+			this->initialAvailableOutgoingBitrate = static_cast<int64_t>(
+			  std::min<uint64_t>(initialAvailableOutgoingBitrate.value(), AbsoluteMaxBitrate));
 		}
 
 		if (options->enableSctp())
@@ -552,12 +547,9 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();
 
-				if (body->maxIncomingBitrate() > AbsoluteMaxBitrate)
-				{
-					MS_THROW_TYPE_ERROR("bitrate must be <= %" PRIu64 " or 0 (unlimited)", AbsoluteMaxBitrate);
-				}
-
-				this->maxIncomingBitrate = static_cast<int64_t>(body->maxIncomingBitrate());
+				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+				this->maxIncomingBitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(body->maxIncomingBitrate(), AbsoluteMaxBitrate));
 
 				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIi64, this->maxIncomingBitrate);
 
@@ -579,12 +571,9 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>();
 
-				if (body->maxOutgoingBitrate() > AbsoluteMaxBitrate)
-				{
-					MS_THROW_TYPE_ERROR("bitrate must be <= %" PRIu64 " or 0 (unlimited)", AbsoluteMaxBitrate);
-				}
-
-				const auto bitrate = static_cast<int64_t>(body->maxOutgoingBitrate());
+				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+				const auto bitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(body->maxOutgoingBitrate(), AbsoluteMaxBitrate));
 
 				if (bitrate > 0 && bitrate < AbsoluteMinOutgoingBitrate)
 				{
@@ -628,12 +617,9 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMinOutgoingBitrateRequest>();
 
-				if (body->minOutgoingBitrate() > AbsoluteMaxBitrate)
-				{
-					MS_THROW_TYPE_ERROR("bitrate must be <= %" PRIu64 " or 0 (unlimited)", AbsoluteMaxBitrate);
-				}
-
-				const auto bitrate = static_cast<int64_t>(body->minOutgoingBitrate());
+				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
+				const auto bitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(body->minOutgoingBitrate(), AbsoluteMaxBitrate));
 
 				if (bitrate > 0 && bitrate < AbsoluteMinOutgoingBitrate)
 				{
