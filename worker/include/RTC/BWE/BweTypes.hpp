@@ -122,6 +122,41 @@ namespace RTC
 			};
 
 			/**
+			 * A burst that has been asked for but not sent yet.
+			 *
+			 * It's what whoever decides to probe hands over to whoever emits the
+			 * packets: at what bitrate, for how long and in how many packets. What
+			 * travels with each of those packets afterwards is a `ProbeCluster`.
+			 */
+			struct ProbeClusterConfig
+			{
+				/**
+				 * Identifies the burst, and is what each of its packets carries.
+				 */
+				int64_t id{ 0 };
+				/**
+				 * Instant at which the burst was asked for.
+				 */
+				int64_t atUs{ 0 };
+				/**
+				 * Bitrate the burst is meant to be sent at (bps).
+				 */
+				int64_t targetBitrate{ 0 };
+				/**
+				 * How long the burst is meant to last.
+				 */
+				int64_t targetDurationUs{ 0 };
+				/**
+				 * Time between two consecutive bursts of packets within the probe.
+				 */
+				int64_t minProbeDeltaUs{ 2 * 1000 };
+				/**
+				 * Packets the burst is meant to be made of.
+				 */
+				int64_t targetProbeCount{ 0 };
+			};
+
+			/**
 			 * A packet that was sent and is being tracked until its feedback arrives.
 			 */
 			struct SentPacket
