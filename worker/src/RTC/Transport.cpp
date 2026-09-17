@@ -1066,7 +1066,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataProducer of type 'sctp', SCTP not enabled in this Transport");
-							;
 						}
 
 						break;
@@ -1080,7 +1079,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataProducer of type 'direct', not a direct Transport");
-							;
 						}
 
 						break;
@@ -1175,7 +1173,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataConsumer of type 'sctp', SCTP not enabled in this Transport");
-							;
 						}
 
 						try
@@ -1202,7 +1199,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataConsumer of type 'direct', not a direct Transport");
-							;
 						}
 
 						break;
