@@ -61,12 +61,10 @@ namespace RTC
 
 			bool first{ true };
 
-			for (size_t packets{ 1 }; packets < this->burstCounts.size(); ++packets)
+			for (const auto& kv : this->bursts)
 			{
-				if (this->burstCounts.at(packets) == 0)
-				{
-					continue;
-				}
+				const auto packets   = kv.first;
+				const auto& counters = kv.second;
 
 				if (!first)
 				{
@@ -76,9 +74,9 @@ namespace RTC
 				first = false;
 
 				ss << "{\"packets\": " << packets;
-				ss << ", \"count\": " << this->burstCounts.at(packets);
-				ss << ", \"retransmissions\": " << this->burstRetransmissions.at(packets);
-				ss << ", \"probations\": " << this->burstProbations.at(packets);
+				ss << ", \"count\": " << counters.count;
+				ss << ", \"retransmissions\": " << counters.retransmissions;
+				ss << ", \"probations\": " << counters.probations;
 				ss << "}";
 			}
 
@@ -98,11 +96,11 @@ namespace RTC
 				return;
 			}
 
-			const auto idx = std::min(this->packets, SendBurst::MaxCountedPackets);
+			auto& counters = this->bursts[this->packets];
 
-			this->burstCounts.at(idx)++;
-			this->burstRetransmissions.at(idx) += this->retransmissions;
-			this->burstProbations.at(idx) += this->probations;
+			counters.count++;
+			counters.retransmissions += this->retransmissions;
+			counters.probations += this->probations;
 
 			this->maxPackets = std::max(this->maxPackets, this->packets);
 			this->maxBytes   = std::max(this->maxBytes, this->bytes);
@@ -117,9 +115,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->burstCounts.fill(0);
-			this->burstRetransmissions.fill(0);
-			this->burstProbations.fill(0);
+			this->bursts.clear();
 
 			this->maxPackets = 0;
 			this->maxBytes   = 0;

@@ -2,7 +2,7 @@
 #define MS_RTC_RTC_LOGGER_SEND_BURST_HPP
 
 #include "common.hpp"
-#include <array>
+#include <map>
 #include <string>
 
 namespace RTC
@@ -22,10 +22,24 @@ namespace RTC
 		{
 		private:
 			/**
-			 * Largest burst the distribution tells apart. Anything above it is counted as
-			 * being of this size.
+			 * What all the bursts of a given size added up to.
 			 */
-			static constexpr size_t MaxCountedPackets{ 32 };
+			struct Counters
+			{
+				/**
+				 * How many of them there were.
+				 */
+				uint64_t count{ 0 };
+				/**
+				 * Retransmissions they carried between all of them, so that the tail of
+				 * the distribution can be attributed.
+				 */
+				uint64_t retransmissions{ 0 };
+				/**
+				 * Probation packets they carried between all of them.
+				 */
+				uint64_t probations{ 0 };
+			};
 
 		public:
 			SendBurst()  = default;
@@ -63,13 +77,8 @@ namespace RTC
 			size_t retransmissions{ 0 };
 			size_t probations{ 0 };
 			size_t bytes{ 0 };
-			// Bursts seen, indexed by how many packets each of them carried.
-			std::array<uint64_t, MaxCountedPackets + 1> burstCounts{};
-			// Retransmissions carried by those bursts, indexed the same way, so that the
-			// tail of the distribution can be attributed.
-			std::array<uint64_t, MaxCountedPackets + 1> burstRetransmissions{};
-			// Probation packets carried by those bursts, indexed the same way.
-			std::array<uint64_t, MaxCountedPackets + 1> burstProbations{};
+			// Bursts seen, keyed by how many packets each of them carried.
+			std::map<size_t /*packets*/, Counters> bursts;
 			size_t maxPackets{ 0 };
 			size_t maxBytes{ 0 };
 		};
