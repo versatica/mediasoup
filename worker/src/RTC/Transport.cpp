@@ -1723,16 +1723,12 @@ namespace RTC
 		// NOTE: The `message` must already have its `streamId` pointing to the same
 		// as in the `dataConsumer` if its type is "sctp", or 0 otherwise.
 
+		// NOTE: The thrown error is the answer here, so `cb` is deliberately not
+		// invoked: whoever built it already replies to the channel request from
+		// within it, and the caught error replies again, which would abort.
 		if (!this->sctpAssociation)
 		{
 			MS_THROW_ERROR("SCTP not enabled");
-
-			if (cb)
-			{
-				cb(false, /*isSendBufferFull*/ false);
-			}
-
-			return;
 		}
 
 		const auto& sctpStreamParameters = dataConsumer->GetSctpStreamParameters();
