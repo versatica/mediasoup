@@ -19,14 +19,14 @@
 	{ \
 		if (ERR_peek_error() == 0) \
 		{ \
-			MS_ERROR("OpenSSL error [desc:'%s']", desc); \
+			MS_WARN_TAG(dtls, "OpenSSL error [desc:'%s']", desc); \
 		} \
 		else \
 		{ \
 			int64_t err; \
 			while ((err = ERR_get_error()) != 0) \
 			{ \
-				MS_ERROR("OpenSSL error [desc:'%s', error:'%s']", desc, ERR_error_string(err, nullptr)); \
+				MS_WARN_TAG(dtls, "OpenSSL error [desc:'%s', error:'%s']", desc, ERR_error_string(err, nullptr)); \
 			} \
 			ERR_clear_error(); \
 		} \
