@@ -6,10 +6,8 @@
 SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 {
 	constexpr int64_t ReferenceTimeUs{ 1000 * 1000 * 1000 };
-	// NOTE: These two are static because a default argument of a lambda may not
-	// name a local variable of the enclosing function.
-	static constexpr int64_t DefaultMinProbes{ 5 };
-	static constexpr int64_t DefaultMinBytes{ 5000 };
+	constexpr int64_t DefaultMinProbes{ 5 };
+	constexpr int64_t DefaultMinBytes{ 5000 };
 	// Fraction of the capacity found that is aimed for once a burst arrives
 	// clearly slower than it was sent.
 	constexpr double TargetUtilizationFraction{ 0.95 };
@@ -17,15 +15,19 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 	RTC::BWE::ProbeBitrateEstimator probeBitrateEstimator;
 	std::optional<int64_t> measuredBitrate;
 
-	// Feed the feedback of one packet of a burst, with times given in
-	// milliseconds from an arbitrary instant.
-	const auto addPacketFeedback = [&probeBitrateEstimator, &measuredBitrate](
-	                                 int64_t clusterId,
-	                                 int64_t sizeBytes,
-	                                 int64_t sendTimeMs,
-	                                 int64_t receiveTimeMs,
-	                                 int64_t minProbes = DefaultMinProbes,
-	                                 int64_t minBytes  = DefaultMinBytes) -> void
+	// Feed the feedback of one packet of a burst that was meant to be made of the
+	// given number of packets and bytes, with times given in milliseconds from an
+	// arbitrary instant.
+	//
+	// NOTE: Split in two instead of taking the two limits by default argument,
+	// since a default argument may not name a variable of the enclosing function.
+	const auto addPacketFeedbackWithLimits = [&probeBitrateEstimator, &measuredBitrate](
+	                                           int64_t clusterId,
+	                                           int64_t sizeBytes,
+	                                           int64_t sendTimeMs,
+	                                           int64_t receiveTimeMs,
+	                                           int64_t minProbes,
+	                                           int64_t minBytes) -> void
 	{
 		RTC::BWE::Types::PacketResult packetResult;
 
@@ -36,6 +38,15 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 		packetResult.receiveTimeUs = ReferenceTimeUs + (receiveTimeMs * 1000);
 
 		measuredBitrate = probeBitrateEstimator.HandleProbeAndEstimateBitrate(packetResult);
+	};
+
+	// The same for a burst of the size that bursts usually are.
+	const auto addPacketFeedback =
+	  [&addPacketFeedbackWithLimits](
+	    int64_t clusterId, int64_t sizeBytes, int64_t sendTimeMs, int64_t receiveTimeMs) -> void
+	{
+		addPacketFeedbackWithLimits(
+		  clusterId, sizeBytes, sendTimeMs, receiveTimeMs, DefaultMinProbes, DefaultMinBytes);
 	};
 
 	SECTION("a burst delivered at the pace it was sent measures that pace")
@@ -63,11 +74,11 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 	{
 		constexpr int64_t MinBytes{ 6000 };
 
-		addPacketFeedback(0, 800, 0, 10, DefaultMinProbes, MinBytes);
-		addPacketFeedback(0, 800, 10, 20, DefaultMinProbes, MinBytes);
-		addPacketFeedback(0, 800, 20, 30, DefaultMinProbes, MinBytes);
-		addPacketFeedback(0, 800, 30, 40, DefaultMinProbes, MinBytes);
-		addPacketFeedback(0, 800, 40, 50, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 800, 0, 10, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 800, 10, 20, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 800, 20, 30, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 800, 30, 40, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 800, 40, 50, DefaultMinProbes, MinBytes);
 
 		REQUIRE(!measuredBitrate.has_value());
 	}
@@ -76,12 +87,12 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 	{
 		constexpr int64_t MinBytes{ 1000 };
 
-		addPacketFeedback(0, 150, 0, 10, DefaultMinProbes, MinBytes);
-		addPacketFeedback(0, 150, 10, 20, DefaultMinProbes, MinBytes);
-		addPacketFeedback(0, 150, 20, 30, DefaultMinProbes, MinBytes);
-		addPacketFeedback(0, 150, 30, 40, DefaultMinProbes, MinBytes);
-		addPacketFeedback(0, 150, 40, 50, DefaultMinProbes, MinBytes);
-		addPacketFeedback(0, 150, 50, 60, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 150, 0, 10, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 150, 10, 20, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 150, 20, 30, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 150, 30, 40, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 150, 40, 50, DefaultMinProbes, MinBytes);
+		addPacketFeedbackWithLimits(0, 150, 50, 60, DefaultMinProbes, MinBytes);
 
 		REQUIRE(measuredBitrate.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -98,7 +109,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 
 		for (int64_t i{ 0 }; i < 25; ++i)
 		{
-			addPacketFeedback(0, 12500, sendTimeMs, receiveTimeMs, MinProbes, MinBytes);
+			addPacketFeedbackWithLimits(0, 12500, sendTimeMs, receiveTimeMs, MinProbes, MinBytes);
 
 			++sendTimeMs;
 			++receiveTimeMs;
