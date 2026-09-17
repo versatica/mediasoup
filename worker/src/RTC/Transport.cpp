@@ -1716,7 +1716,7 @@ namespace RTC
 	}
 
 	void Transport::SendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb)
 	{
 		MS_TRACE();
 
@@ -1729,8 +1729,7 @@ namespace RTC
 
 			if (cb)
 			{
-				(*cb)(false, false);
-				delete cb;
+				cb(false, /*isSendBufferFull*/ false);
 			}
 
 			return;
@@ -1757,7 +1756,7 @@ namespace RTC
 			{
 				if (cb)
 				{
-					(*cb)(true, /*sctpSendBufferFull*/ false);
+					cb(true, /*isSendBufferFull*/ false);
 				}
 
 				break;
@@ -1775,7 +1774,7 @@ namespace RTC
 
 				if (cb)
 				{
-					(*cb)(false, /*sctpSendBufferFull*/ true);
+					cb(false, /*isSendBufferFull*/ true);
 				}
 
 				dataConsumer->SctpSendBufferFull();
@@ -1795,14 +1794,12 @@ namespace RTC
 
 				if (cb)
 				{
-					(*cb)(false, /*sctpSendBufferFull*/ false);
+					cb(false, /*isSendBufferFull*/ false);
 				}
 
 				break;
 			}
 		}
-
-		delete cb;
 	}
 
 	RTC::Producer* Transport::AssertAndGetProducerById(
@@ -2758,7 +2755,9 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-			const auto* cb = new onSendCallback(
+			SendRtpPacket(
+			  consumer,
+			  packet,
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
@@ -2771,8 +2770,6 @@ namespace RTC
 					  }
 				  }
 			  });
-
-			SendRtpPacket(consumer, packet, cb);
 		}
 		else
 		{
@@ -2818,7 +2815,9 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-			const auto* cb = new onSendCallback(
+			SendRtpPacket(
+			  consumer,
+			  packet,
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
@@ -2831,8 +2830,6 @@ namespace RTC
 					  }
 				  }
 			  });
-
-			SendRtpPacket(consumer, packet, cb);
 		}
 		else
 		{
@@ -2953,11 +2950,11 @@ namespace RTC
 	}
 
 	void Transport::OnDataConsumerSendMessage(
-	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb)
 	{
 		MS_TRACE();
 
-		SendMessage(dataConsumer, std::move(message), cb);
+		SendMessage(dataConsumer, std::move(message), std::move(cb));
 	}
 
 	void Transport::OnDataConsumerNeedBufferedAmount(
@@ -3454,7 +3451,9 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-			const auto* cb = new onSendCallback(
+			SendRtpPacket(
+			  nullptr,
+			  packet,
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
@@ -3467,8 +3466,6 @@ namespace RTC
 					  }
 				  }
 			  });
-
-			SendRtpPacket(nullptr, packet, cb);
 		}
 		else
 		{

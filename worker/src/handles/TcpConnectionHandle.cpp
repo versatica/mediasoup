@@ -41,14 +41,13 @@ inline static void onWrite(uv_write_t* req, int status)
 	auto* writeData  = static_cast<TcpConnectionHandle::UvWriteData*>(req->data);
 	auto* handle     = req->handle;
 	auto* connection = static_cast<TcpConnectionHandle*>(handle->data);
-	const auto* cb   = writeData->cb;
 
 	if (connection)
 	{
-		connection->OnUvWrite(status, cb);
+		connection->OnUvWrite(status, writeData->cb);
 	}
 
-	// Delete the UvWriteData struct and the cb.
+	// Delete the UvWriteData struct (it will delete the store too).
 	delete writeData;
 }
 
@@ -182,11 +181,7 @@ bool TcpConnectionHandle::Start() noexcept
 }
 
 void TcpConnectionHandle::Write(
-  const uint8_t* data1,
-  size_t len1,
-  const uint8_t* data2,
-  size_t len2,
-  TcpConnectionHandle::onSendCallback* cb)
+  const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendCallback cb)
 {
 	MS_TRACE();
 
@@ -194,8 +189,7 @@ void TcpConnectionHandle::Write(
 	{
 		if (cb)
 		{
-			(*cb)(false);
-			delete cb;
+			cb(false);
 		}
 
 		return;
@@ -205,8 +199,7 @@ void TcpConnectionHandle::Write(
 	{
 		if (cb)
 		{
-			(*cb)(false);
-			delete cb;
+			cb(false);
 		}
 
 		return;
@@ -232,8 +225,7 @@ void TcpConnectionHandle::Write(
 
 		if (cb)
 		{
-			(*cb)(true);
-			delete cb;
+			cb(true);
 		}
 
 		return;
@@ -274,7 +266,7 @@ void TcpConnectionHandle::Write(
 		  len2 - (static_cast<size_t>(written) - len1));
 	}
 
-	writeData->cb = cb;
+	writeData->cb = std::move(cb);
 
 	const uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
@@ -289,12 +281,12 @@ void TcpConnectionHandle::Write(
 	{
 		MS_WARN_DEV("uv_write() failed: %s", uv_strerror(err));
 
-		if (cb)
+		if (writeData->cb)
 		{
-			(*cb)(false);
+			writeData->cb(false);
 		}
 
-		// Delete the UvWriteData struct (it will delete the store and cb too).
+		// Delete the UvWriteData struct (it will delete the store too).
 		delete writeData;
 	}
 	else
@@ -483,17 +475,15 @@ inline void TcpConnectionHandle::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/
 	}
 }
 
-inline void TcpConnectionHandle::OnUvWrite(int status, TcpConnectionHandle::onSendCallback* cb)
+inline void TcpConnectionHandle::OnUvWrite(int status, const onSendCallback& cb)
 {
 	MS_TRACE();
-
-	// NOTE: Do not delete cb here since it will be delete in onWrite() above.
 
 	if (status == 0)
 	{
 		if (cb)
 		{
-			(*cb)(true);
+			cb(true);
 		}
 	}
 	else
@@ -507,7 +497,7 @@ inline void TcpConnectionHandle::OnUvWrite(int status, TcpConnectionHandle::onSe
 
 		if (cb)
 		{
-			(*cb)(false);
+			cb(false);
 		}
 
 		InternalClose();
