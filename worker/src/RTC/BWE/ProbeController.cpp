@@ -46,6 +46,9 @@ namespace RTC
 		ProbeController::ProbeController(ProbeControllerOptions options) : options(options)
 		{
 			MS_TRACE();
+
+			// Until the application sets one, this is what bounds a burst.
+			this->maxBitrate = DefaultMaxProbingBitrate;
 		}
 
 		std::vector<Types::ProbeClusterConfig> ProbeController::SetBitrates(
@@ -483,7 +486,13 @@ namespace RTC
 
 			for (int64_t bitrate : bitratesToProbe)
 			{
-				MS_ASSERT(bitrate != 0, "cannot probe at no bitrate");
+				// A burst at no bitrate is not a burst. It comes up when what bounds it
+				// is an estimate that doesn't exist yet, and then there is nothing to
+				// look for.
+				if (bitrate == 0)
+				{
+					continue;
+				}
 
 				if (bitrate >= maxProbeBitrate)
 				{
@@ -492,6 +501,12 @@ namespace RTC
 				}
 
 				pendingProbes.push_back(CreateProbeClusterConfig(nowUs, bitrate));
+			}
+
+			// Nothing was asked for, so there is nothing to remember having asked.
+			if (pendingProbes.empty())
+			{
+				return {};
 			}
 
 			this->lastProbingInitiatedAtUs = nowUs;
