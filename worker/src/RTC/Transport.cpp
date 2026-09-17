@@ -24,7 +24,7 @@
 #include "RTC/SubchannelsCodec.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
-#include "RTC/RtcLogger.hpp"
+#include "RTC/RtcLogger/RtpPacket.hpp"
 #endif
 #ifndef MS_USE_BUILTIN_BWE
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
@@ -45,6 +45,10 @@ namespace RTC
 	// Bitrate the outgoing target is never taken below (bps), whatever the API
 	// asks for.
 	static constexpr int64_t AbsoluteMinOutgoingBitrate{ 30000 };
+#ifdef MS_RTC_LOGGER_SEND_BURST
+	// How often the distribution of send bursts is printed.
+	static constexpr int64_t SendBurstLogIntervalMs{ 5000 };
+#endif
 
 	/* Instance methods. */
 
@@ -64,6 +68,13 @@ namespace RTC
 	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100u)
 	{
 		MS_TRACE();
+
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		this->sendBurstLogger.transportId = this->id;
+		this->sendBurstLoggerTimer        = this->shared->CreateTimer(this, "transport-send-burst");
+
+		this->sendBurstLoggerTimer->Start(SendBurstLogIntervalMs, SendBurstLogIntervalMs);
+#endif
 
 		this->direct                = options->direct();
 		this->maxSendMessageSize    = options->maxSendMessageSize();
@@ -161,6 +172,11 @@ namespace RTC
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
 		this->rtcpTimer = nullptr;
+
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		delete this->sendBurstLoggerTimer;
+		this->sendBurstLoggerTimer = nullptr;
+#endif
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -2697,6 +2713,14 @@ namespace RTC
 		packet->logger.Sent();
 #endif
 
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		this->sendBurstLogger.Sent(
+		  this->shared->GetLoopTimeMs(),
+		  packet->GetLength(),
+		  /*isRetransmission*/ false,
+		  /*isProbation*/ false);
+#endif
+
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
@@ -2761,6 +2785,14 @@ namespace RTC
 	void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
+
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		this->sendBurstLogger.Sent(
+		  this->shared->GetLoopTimeMs(),
+		  packet->GetLength(),
+		  /*isRetransmission*/ true,
+		  /*isProbation*/ false);
+#endif
 
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
@@ -3400,6 +3432,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		this->sendBurstLogger.Sent(
+		  this->shared->GetLoopTimeMs(),
+		  packet->GetLength(),
+		  /*isRetransmission*/ false,
+		  /*isProbation*/ true);
+#endif
+
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
 
@@ -3494,5 +3534,11 @@ namespace RTC
 
 			this->rtcpTimer->Start(intervalMs);
 		}
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		else if (timer == this->sendBurstLoggerTimer)
+		{
+			this->sendBurstLogger.Log();
+		}
+#endif
 	}
 } // namespace RTC

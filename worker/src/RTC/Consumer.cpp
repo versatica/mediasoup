@@ -11,7 +11,7 @@
 #include "RTC/SvcProducerStreamManager.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
-#include "RTC/RtcLogger.hpp"
+#include "RTC/RtcLogger/RtpPacket.hpp"
 #endif
 #include <limits> // std::numeric_limits
 

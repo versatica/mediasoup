@@ -1,8 +1,9 @@
-#ifndef MS_RTC_RTC_LOGGER_HPP
-#define MS_RTC_RTC_LOGGER_HPP
+#ifndef MS_RTC_RTC_LOGGER_RTP_PACKET_HPP
+#define MS_RTC_RTC_LOGGER_RTP_PACKET_HPP
 
 #include "common.hpp"
 #include <ankerl/unordered_dense.h>
+#include <string>
 
 namespace RTC
 {
@@ -55,6 +56,7 @@ namespace RTC
 			bool discarded{};
 			DiscardReason discardReason{ DiscardReason::NONE };
 		};
-	}; // namespace RtcLogger
+	} // namespace RtcLogger
 } // namespace RTC
+
 #endif
