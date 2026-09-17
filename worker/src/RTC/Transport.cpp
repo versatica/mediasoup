@@ -1066,7 +1066,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataProducer of type 'sctp', SCTP not enabled in this Transport");
-							;
 						}
 
 						break;
@@ -1080,7 +1079,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataProducer of type 'direct', not a direct Transport");
-							;
 						}
 
 						break;
@@ -1175,7 +1173,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataConsumer of type 'sctp', SCTP not enabled in this Transport");
-							;
 						}
 
 						try
@@ -1202,7 +1199,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataConsumer of type 'direct', not a direct Transport");
-							;
 						}
 
 						break;
@@ -1716,24 +1712,19 @@ namespace RTC
 	}
 
 	void Transport::SendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb)
 	{
 		MS_TRACE();
 
 		// NOTE: The `message` must already have its `streamId` pointing to the same
 		// as in the `dataConsumer` if its type is "sctp", or 0 otherwise.
 
+		// NOTE: The thrown error is the answer here, so `cb` is deliberately not
+		// invoked: whoever built it already replies to the channel request from
+		// within it, and the caught error replies again, which would abort.
 		if (!this->sctpAssociation)
 		{
 			MS_THROW_ERROR("SCTP not enabled");
-
-			if (cb)
-			{
-				(*cb)(false, false);
-				delete cb;
-			}
-
-			return;
 		}
 
 		const auto& sctpStreamParameters = dataConsumer->GetSctpStreamParameters();
@@ -1757,7 +1748,7 @@ namespace RTC
 			{
 				if (cb)
 				{
-					(*cb)(true, /*sctpSendBufferFull*/ false);
+					cb(true, /*isSendBufferFull*/ false);
 				}
 
 				break;
@@ -1775,7 +1766,7 @@ namespace RTC
 
 				if (cb)
 				{
-					(*cb)(false, /*sctpSendBufferFull*/ true);
+					cb(false, /*isSendBufferFull*/ true);
 				}
 
 				dataConsumer->SctpSendBufferFull();
@@ -1795,14 +1786,12 @@ namespace RTC
 
 				if (cb)
 				{
-					(*cb)(false, /*sctpSendBufferFull*/ false);
+					cb(false, /*isSendBufferFull*/ false);
 				}
 
 				break;
 			}
 		}
-
-		delete cb;
 	}
 
 	RTC::Producer* Transport::AssertAndGetProducerById(
@@ -2758,7 +2747,9 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-			const auto* cb = new onSendCallback(
+			SendRtpPacket(
+			  consumer,
+			  packet,
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
@@ -2771,8 +2762,6 @@ namespace RTC
 					  }
 				  }
 			  });
-
-			SendRtpPacket(consumer, packet, cb);
 		}
 		else
 		{
@@ -2818,7 +2807,9 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-			const auto* cb = new onSendCallback(
+			SendRtpPacket(
+			  consumer,
+			  packet,
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
@@ -2831,8 +2822,6 @@ namespace RTC
 					  }
 				  }
 			  });
-
-			SendRtpPacket(consumer, packet, cb);
 		}
 		else
 		{
@@ -2953,11 +2942,11 @@ namespace RTC
 	}
 
 	void Transport::OnDataConsumerSendMessage(
-	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb)
 	{
 		MS_TRACE();
 
-		SendMessage(dataConsumer, std::move(message), cb);
+		SendMessage(dataConsumer, std::move(message), std::move(cb));
 	}
 
 	void Transport::OnDataConsumerNeedBufferedAmount(
@@ -3454,7 +3443,9 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-			const auto* cb = new onSendCallback(
+			SendRtpPacket(
+			  nullptr,
+			  packet,
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
@@ -3467,8 +3458,6 @@ namespace RTC
 					  }
 				  }
 			  });
-
-			SendRtpPacket(nullptr, packet, cb);
 		}
 		else
 		{

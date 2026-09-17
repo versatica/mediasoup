@@ -2,14 +2,12 @@
 #define MS_UDP_SOCKET_HANDLE_HPP
 
 #include "common.hpp"
+#include "handles/SendCallbacks.hpp"
 #include <uv.h>
 #include <string>
 
 class UdpSocketHandle
 {
-protected:
-	using onSendCallback = const std::function<void(bool sent)>;
-
 public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
 	struct UvSendData
@@ -24,12 +22,11 @@ public:
 		~UvSendData()
 		{
 			delete[] this->store;
-			delete this->cb;
 		}
 
 		uv_udp_send_t req{};
 		uint8_t* store{ nullptr };
-		UdpSocketHandle::onSendCallback* cb{ nullptr };
+		onSendCallback cb;
 	};
 
 public:
@@ -47,8 +44,7 @@ public:
 		return this->closed;
 	}
 	void Dump(int indentation = 0) const;
-	void Send(
-	  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandle::onSendCallback* cb);
+	void Send(const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback cb);
 	const struct sockaddr* GetLocalAddress() const
 	{
 		return reinterpret_cast<const struct sockaddr*>(std::addressof(this->localAddr));
@@ -86,7 +82,7 @@ private:
 public:
 	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
-	void OnUvSend(int status, UdpSocketHandle::onSendCallback* cb);
+	void OnUvSend(int status, const onSendCallback& cb);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:

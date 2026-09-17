@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "FBS/transport.h"
+#include "handles/SendCallbacks.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
 #include "Utils.hpp"
@@ -13,9 +14,6 @@ namespace RTC
 {
 	class TransportTuple
 	{
-	protected:
-		using onSendCallback = const std::function<void(bool sent)>;
-
 	public:
 		enum class Protocol : uint8_t
 		{
@@ -139,15 +137,15 @@ namespace RTC
 			this->localAnnouncedAddress = localAnnouncedAddress;
 		}
 
-		void Send(const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback* cb = nullptr)
+		void Send(const uint8_t* data, size_t len, onSendCallback cb = {})
 		{
 			if (this->protocol == Protocol::UDP)
 			{
-				this->udpSocket->Send(data, len, this->udpRemoteAddr, cb);
+				this->udpSocket->Send(data, len, this->udpRemoteAddr, std::move(cb));
 			}
 			else
 			{
-				this->tcpConnection->Send(data, len, cb);
+				this->tcpConnection->Send(data, len, std::move(cb));
 			}
 		}
 

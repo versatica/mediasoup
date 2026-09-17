@@ -1,6 +1,7 @@
 #ifndef MS_RTC_WEBRTC_TRANSPORT_HPP
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
+#include "handles/SendCallbacks.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/IceServer.hpp"
@@ -83,16 +84,13 @@ namespace RTC
 	private:
 		bool IsConnected() const override;
 		void MayRunDtlsTransport();
-		void SendRtpPacket(
-		  RTC::Consumer* consumer,
-		  RTC::RTP::Packet* packet,
-		  RTC::Transport::onSendCallback* cb = nullptr) override;
+		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  RTC::SCTP::Message message,
-		  onQueuedCallback* cb = nullptr) override;
+		  onMessageQueuedCallback cb = {}) override;
 		bool SendData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;

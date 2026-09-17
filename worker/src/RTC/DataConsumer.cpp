@@ -284,8 +284,8 @@ namespace RTC
 				// NOTE: Capturing `this` and `request` (by reference) is safe here because the
 				// callback is always invoked synchronously within this same call stack (never
 				// deferred).
-				const auto* cb = new onQueuedCallback(
-				  [this, &request](bool queued, bool sctpSendBufferFull)
+				onMessageQueuedCallback cb(
+				  [this, &request](bool queued, bool isSendBufferFull)
 				  {
 					  if (queued)
 					  {
@@ -300,7 +300,7 @@ namespace RTC
 					  }
 					  else
 					  {
-						  request->Error(sctpSendBufferFull ? "sctpsendbufferfull" : "message send failed");
+						  request->Error(isSendBufferFull ? "sctpsendbufferfull" : "message send failed");
 					  }
 				  });
 
@@ -313,7 +313,7 @@ namespace RTC
 				// move the message and pass its ownership to the SCTP stack.
 				RTC::SCTP::Message message(streamId, body->ppid(), std::vector<uint8_t>(data, data + len));
 
-				SendMessage(std::move(message), emptySubchannels, std::nullopt, std::nullopt, cb);
+				SendMessage(std::move(message), emptySubchannels, std::nullopt, std::nullopt, std::move(cb));
 
 				break;
 			}
@@ -545,7 +545,7 @@ namespace RTC
 	  std::vector<uint16_t>& subchannels,
 	  std::optional<uint16_t> requiredSubchannel,
 	  std::optional<uint16_t> ignoredSubchannel,
-	  const onQueuedCallback* cb)
+	  onMessageQueuedCallback cb)
 	{
 		MS_TRACE();
 
@@ -553,8 +553,7 @@ namespace RTC
 		{
 			if (cb)
 			{
-				(*cb)(false, false);
-				delete cb;
+				cb(false, /*isSendBufferFull*/ false);
 			}
 
 			return false;
@@ -604,8 +603,7 @@ namespace RTC
 
 			if (cb)
 			{
-				(*cb)(false, false);
-				delete cb;
+				cb(false, /*isSendBufferFull*/ false);
 			}
 
 			return false;
@@ -614,7 +612,7 @@ namespace RTC
 		this->messagesSent++;
 		this->bytesSent += messageLen;
 
-		this->listener->OnDataConsumerSendMessage(this, std::move(message), cb);
+		this->listener->OnDataConsumerSendMessage(this, std::move(message), std::move(cb));
 
 		return true;
 	}

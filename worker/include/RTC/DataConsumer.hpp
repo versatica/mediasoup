@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "handles/SendCallbacks.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "SharedInterface.hpp"
@@ -14,9 +15,6 @@ namespace RTC
 {
 	class DataConsumer : public Channel::ChannelSocket::RequestHandler
 	{
-	protected:
-		using onQueuedCallback = const std::function<void(bool queued, bool sctpSendBufferFull)>;
-
 	public:
 		class Listener
 		{
@@ -25,7 +23,7 @@ namespace RTC
 
 		public:
 			virtual void OnDataConsumerSendMessage(
-			  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb) = 0;
+			  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb) = 0;
 			virtual void OnDataConsumerNeedBufferedAmount(
 			  const RTC::DataConsumer* dataConsumer, uint32_t& bufferedAmount) const = 0;
 			virtual void OnDataConsumerNeedBufferedAmountLowThreshold(
@@ -110,7 +108,7 @@ namespace RTC
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel,
 		  std::optional<uint16_t> ignoredSubchannel,
-		  const onQueuedCallback* cb = nullptr);
+		  onMessageQueuedCallback cb = {});
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:

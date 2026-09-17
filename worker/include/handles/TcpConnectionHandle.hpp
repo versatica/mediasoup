@@ -2,14 +2,12 @@
 #define MS_TCP_CONNECTION_HANDLE_HPP
 
 #include "common.hpp"
+#include "handles/SendCallbacks.hpp"
 #include <uv.h>
 #include <string>
 
 class TcpConnectionHandle
 {
-protected:
-	using onSendCallback = const std::function<void(bool sent)>;
-
 public:
 	class Listener
 	{
@@ -34,12 +32,11 @@ public:
 		~UvWriteData()
 		{
 			delete[] this->store;
-			delete this->cb;
 		}
 
 		uv_write_t req{};
 		uint8_t* store{ nullptr };
-		TcpConnectionHandle::onSendCallback* cb{ nullptr };
+		onSendCallback cb;
 	};
 
 public:
@@ -65,12 +62,7 @@ public:
 		return this->uvHandle;
 	}
 	bool Start() noexcept;
-	void Write(
-	  const uint8_t* data1,
-	  size_t len1,
-	  const uint8_t* data2,
-	  size_t len2,
-	  TcpConnectionHandle::onSendCallback* cb);
+	void Write(const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendCallback cb);
 	void ErrorReceiving();
 	const struct sockaddr* GetLocalAddress() const
 	{
@@ -117,7 +109,7 @@ private:
 public:
 	void OnUvReadAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRead(ssize_t nread, const uv_buf_t* buf);
-	void OnUvWrite(int status, onSendCallback* cb);
+	void OnUvWrite(int status, const onSendCallback& cb);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:

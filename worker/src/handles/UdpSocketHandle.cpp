@@ -50,14 +50,13 @@ inline static void onSend(uv_udp_send_t* req, int status)
 	auto* sendData = static_cast<UdpSocketHandle::UvSendData*>(req->data);
 	auto* handle   = req->handle;
 	auto* socket   = static_cast<UdpSocketHandle*>(handle->data);
-	const auto* cb = sendData->cb;
 
 	if (socket)
 	{
-		socket->OnUvSend(status, cb);
+		socket->OnUvSend(status, sendData->cb);
 	}
 
-	// Delete the UvSendData struct (it will delete the store and cb too).
+	// Delete the UvSendData struct (it will delete the store too).
 	delete sendData;
 }
 
@@ -126,7 +125,7 @@ void UdpSocketHandle::Dump(int indentation) const
 }
 
 void UdpSocketHandle::Send(
-  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandle::onSendCallback* cb)
+  const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback cb)
 {
 	MS_TRACE();
 
@@ -134,8 +133,7 @@ void UdpSocketHandle::Send(
 	{
 		if (cb)
 		{
-			(*cb)(false);
-			delete cb;
+			cb(false);
 		}
 
 		return;
@@ -145,8 +143,7 @@ void UdpSocketHandle::Send(
 	{
 		if (cb)
 		{
-			(*cb)(false);
-			delete cb;
+			cb(false);
 		}
 
 		return;
@@ -166,8 +163,7 @@ void UdpSocketHandle::Send(
 
 		if (cb)
 		{
-			(*cb)(true);
-			delete cb;
+			cb(true);
 		}
 
 		return;
@@ -181,8 +177,7 @@ void UdpSocketHandle::Send(
 
 		if (cb)
 		{
-			(*cb)(false);
-			delete cb;
+			cb(false);
 		}
 
 		return;
@@ -197,7 +192,7 @@ void UdpSocketHandle::Send(
 
 	sendData->req.data = static_cast<void*>(sendData);
 	std::memcpy(sendData->store, data, len);
-	sendData->cb = cb;
+	sendData->cb = std::move(cb);
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(sendData->store), len);
 
@@ -215,12 +210,12 @@ void UdpSocketHandle::Send(
 		// (IPv6 destination on a IPv4 binded socket), so be ready.
 		MS_WARN_DEV("uv_udp_send() failed: %s", uv_strerror(err));
 
-		if (cb)
+		if (sendData->cb)
 		{
-			(*cb)(false);
+			sendData->cb(false);
 		}
 
-		// Delete the UvSendData struct (it will delete the store and cb too).
+		// Delete the UvSendData struct (it will delete the store too).
 		delete sendData;
 	}
 	else
@@ -402,17 +397,15 @@ inline void UdpSocketHandle::OnUvRecv(
 	}
 }
 
-inline void UdpSocketHandle::OnUvSend(int status, UdpSocketHandle::onSendCallback* cb)
+inline void UdpSocketHandle::OnUvSend(int status, const onSendCallback& cb)
 {
 	MS_TRACE();
-
-	// NOTE: Do not delete cb here since it will be delete in onSend() above.
 
 	if (status == 0)
 	{
 		if (cb)
 		{
-			(*cb)(true);
+			cb(true);
 		}
 	}
 	else
@@ -423,7 +416,7 @@ inline void UdpSocketHandle::OnUvSend(int status, UdpSocketHandle::onSendCallbac
 
 		if (cb)
 		{
-			(*cb)(false);
+			cb(false);
 		}
 	}
 }
