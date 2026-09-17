@@ -6,8 +6,10 @@
 SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 {
 	constexpr int64_t ReferenceTimeUs{ 1000 * 1000 * 1000 };
-	constexpr int64_t DefaultMinProbes{ 5 };
-	constexpr int64_t DefaultMinBytes{ 5000 };
+	// NOTE: These two are static because a default argument of a lambda may not
+	// name a local variable of the enclosing function.
+	static constexpr int64_t DefaultMinProbes{ 5 };
+	static constexpr int64_t DefaultMinBytes{ 5000 };
 	// Fraction of the capacity found that is aimed for once a burst arrives
 	// clearly slower than it was sent.
 	constexpr double TargetUtilizationFraction{ 0.95 };
