@@ -44,6 +44,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 		addPacketFeedback(0, 1000, 30, 40);
 
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == 800000);
 	}
 
@@ -81,6 +82,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 		addPacketFeedback(0, 150, 50, 60, DefaultMinProbes, MinBytes);
 
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == 120000);
 	}
 
@@ -101,6 +103,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 		}
 
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == 100000000);
 	}
 
@@ -112,6 +115,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 		addPacketFeedback(0, 1000, 30, 40);
 
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == 800000);
 	}
 
@@ -134,6 +138,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 
 		// It was sent at 800 kbps and arrived at 320 kbps.
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == static_cast<int64_t>(TargetUtilizationFraction * 320000));
 	}
 
@@ -156,12 +161,14 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 
 		// Sent at 600 kbps, arrived at 480 kbps.
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == static_cast<int64_t>(TargetUtilizationFraction * 480000));
 
 		addPacketFeedback(0, 1000, 50, 60);
 
 		// Sent at 640 kbps, arrived at 640 kbps.
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == 640000);
 
 		addPacketFeedback(1, 1000, 60, 70);
@@ -171,6 +178,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 
 		// Sent at 1600 kbps, arrived at 1200 kbps.
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == static_cast<int64_t>(TargetUtilizationFraction * 1200000));
 	}
 
@@ -186,6 +194,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 		addPacketFeedback(1, 1000, 75, 90);
 
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == static_cast<int64_t>(TargetUtilizationFraction * 1200000));
 
 		// The packet that the first burst was missing, arriving six seconds later.
@@ -205,6 +214,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 		// Sent at 800 kbps and arrived at 900 kbps, so the pace it was sent at is
 		// what the bigger last packet doesn't inflate.
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == 800000);
 	}
 
@@ -217,6 +227,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 
 		// Sent at 933 kbps and arrived at 800 kbps.
 		REQUIRE(measuredBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(measuredBitrate.value() == static_cast<int64_t>(TargetUtilizationFraction * 800000));
 	}
 
@@ -235,6 +246,7 @@ SCENARIO("BWE ProbeBitrateEstimator", "[bwe][probebitrateestimator]")
 		const auto estimatedBitrate = probeBitrateEstimator.FetchAndResetLastEstimatedBitrate();
 
 		REQUIRE(estimatedBitrate.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(estimatedBitrate.value() == 800000);
 		REQUIRE(!probeBitrateEstimator.FetchAndResetLastEstimatedBitrate().has_value());
 	}
