@@ -6,7 +6,6 @@
 #include "FBS/transport.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/Consumer.hpp"
@@ -37,11 +36,10 @@ namespace RTC
 	/* Static. */
 
 	// Highest bitrate the API may ask for (bps), which anything higher is brought
-	// down to. `Types::BitrateInfinite` is what the bandwidth estimators reserve
-	// to mean that there is no limit at all, so it cannot also mean a limit.
-	static constexpr uint64_t AbsoluteMaxBitrate{
-		static_cast<uint64_t>(RTC::BWE::Types::BitrateInfinite) - 1
-	};
+	// down to. A limit above what the bandwidth estimation deals in is not a
+	// limit, and it also keeps `Types::BitrateInfinite` out of the estimators,
+	// which reserve it to mean that there is no limit at all.
+	static constexpr uint64_t AbsoluteMaxBitrate{ static_cast<uint64_t>(RTC::Consts::BweMaxBitrate) };
 	// Bitrate the outgoing target is never taken below (bps), whatever the API
 	// asks for.
 	static constexpr int64_t AbsoluteMinOutgoingBitrate{ 30000 };

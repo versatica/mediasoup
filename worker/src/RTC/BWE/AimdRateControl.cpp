@@ -3,6 +3,7 @@
 
 #include "RTC/BWE/AimdRateControl.hpp"
 #include "Logger.hpp"
+#include "RTC/Consts.hpp"
 #include <cmath>
 
 namespace RTC
@@ -21,8 +22,6 @@ namespace RTC
 		// Bounds of how often the bitrate may be reduced, derived from the RTT.
 		static constexpr int64_t MinBitrateReductionIntervalUs{ 10 * 1000 };
 		static constexpr int64_t MaxBitrateReductionIntervalUs{ 200 * 1000 };
-		// Bitrate the target is never taken below unless configured otherwise (bps).
-		static constexpr int64_t CongestionControllerMinBitrate{ 5000 };
 		// Bitrate the target starts from before anything has been measured (bps).
 		static constexpr int64_t MaxConfiguredBitrate{ 30000 * 1000 };
 		// Headroom allowed on top of the measured throughput when increasing (bps).
@@ -64,7 +63,7 @@ namespace RTC
 
 		AimdRateControl::AimdRateControl(AimdRateControlOptions options)
 		  : options(options),
-		    minConfiguredBitrate(CongestionControllerMinBitrate),
+		    minConfiguredBitrate(Consts::BweMinBitrate),
 		    maxConfiguredBitrate(MaxConfiguredBitrate),
 		    currentBitrate(this->maxConfiguredBitrate),
 		    latestEstimatedThroughput(this->currentBitrate),
