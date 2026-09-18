@@ -4,6 +4,7 @@
 #include "RTC/BWE/LossBasedController.hpp"
 #include "Logger.hpp"
 #include "RTC/BWE/Utils.hpp"
+#include "RTC/Consts.hpp"
 #include <cmath>
 #include <limits>
 
@@ -17,8 +18,6 @@ namespace RTC
 		static constexpr int64_t InitHoldDurationUs{ 300 * 1000 };
 		// How long a hold may last no matter how many have piled up.
 		static constexpr int64_t MaxHoldDurationUs{ 60 * 1000 * 1000 };
-		// Lowest bitrate any congestion controller may produce.
-		static constexpr int64_t CongestionControllerMinBitrate{ 5000 };
 
 		/**
 		 * Loss to expect from a link described by the given pair of values while
@@ -384,7 +383,7 @@ namespace RTC
 				   lastSendTimeUs))
 			{
 				this->bitrateLimitInCurrentWindow = std::max<int64_t>(
-				  CongestionControllerMinBitrate,
+				  Consts::BweMinBitrate,
 				  Utils::ApplyBitrateFactor(
 				    this->currentBestEstimate.lossLimitedBitrate, this->options.maxIncreaseFactor));
 

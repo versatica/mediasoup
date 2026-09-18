@@ -40,6 +40,16 @@ namespace RTC
 		constexpr uint8_t MidRtpExtensionMaxLength{ 8 };
 
 		/**
+		 * Lowest bitrate the bandwidth estimation ever produces (bps), so 5 kbps.
+		 */
+		constexpr int64_t BweMinBitrate{ 5000 };
+
+		/**
+		 * Highest bitrate the bandwidth estimation ever deals in (bps), so 1 Gbps.
+		 */
+		constexpr int64_t BweMaxBitrate{ 1000000000 };
+
+		/**
 		 * Largest safe SCTP packet. Starting from the minimum guaranteed MTU value
 		 * of 1280 for IPv6 (which may not support fragmentation), take off 85
 		 * bytes for DTLS/TURN/TCP/IP and ciphertext overhead.

@@ -95,6 +95,10 @@ namespace RTC
 				/**
 				 * Time between two consecutive bursts of packets within one of those
 				 * initial probes.
+				 *
+				 * @remarks
+				 * - It cannot be zero, since it's what the bitrate of a burst is held
+				 *   over to decide how many bytes each of its shots carries.
 				 */
 				int64_t initialMinProbeDeltaUs{ 20 * 1000 };
 				/**
@@ -131,6 +135,10 @@ namespace RTC
 				int64_t networkStateProbeDurationUs{ 15 * 1000 };
 				/**
 				 * Time between two consecutive bursts of packets in that case.
+				 *
+				 * @remarks
+				 * - It cannot be zero, since it's what the bitrate of a burst is held
+				 *   over to decide how many bytes each of its shots carries.
 				 */
 				int64_t networkStateMinProbeDeltaUs{ 20 * 1000 };
 				/**
@@ -166,6 +174,10 @@ namespace RTC
 				int64_t minProbeDurationUs{ 15 * 1000 };
 				/**
 				 * Time between two consecutive bursts of packets within a probe.
+				 *
+				 * @remarks
+				 * - It cannot be zero, since it's what the bitrate of a burst is held
+				 *   over to decide how many bytes each of its shots carries.
 				 */
 				int64_t minProbeDeltaUs{ 2 * 1000 };
 				/**

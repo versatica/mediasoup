@@ -47,6 +47,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// The time between two shots of a burst is what its bitrate is held over to
+			// decide how many bytes each shot carries, so none of them may be zero.
+			MS_ASSERT(this->options.minProbeDeltaUs > 0, "minProbeDeltaUs cannot be zero");
+			MS_ASSERT(this->options.initialMinProbeDeltaUs > 0, "initialMinProbeDeltaUs cannot be zero");
+			MS_ASSERT(
+			  this->options.networkStateMinProbeDeltaUs > 0, "networkStateMinProbeDeltaUs cannot be zero");
+
 			// Until the application sets one, this is what bounds a burst.
 			this->maxBitrate = DefaultMaxProbingBitrate;
 		}
