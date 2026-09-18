@@ -44,6 +44,12 @@ if get_option('ms_rtc_logger_rtp')
   ]
 endif
 
+if get_option('ms_rtc_logger_send_burst')
+  cpp_args += [
+    '-DMS_RTC_LOGGER_SEND_BURST',
+  ]
+endif
+
 if get_option('ms_dump_rtp_payload_descriptor')
   cpp_args += [
     '-DMS_DUMP_RTP_PAYLOAD_DESCRIPTOR',
@@ -132,7 +138,8 @@ common_sources = [
   'src/RTC/RemoteCaptureTimeEstimator.cpp',
   'src/RTC/RemoteClockOffsetEstimator.cpp',
   'src/RTC/Router.cpp',
-  'src/RTC/RtcLogger.cpp',
+  'src/RTC/RtcLogger/RtpPacket.cpp',
+  'src/RTC/RtcLogger/SendBurst.cpp',
   'src/RTC/RtpListener.cpp',
   'src/RTC/RtpObserver.cpp',
   'src/RTC/SctpListener.cpp',

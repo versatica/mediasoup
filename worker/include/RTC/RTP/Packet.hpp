@@ -10,7 +10,7 @@
 #include "RTC/Serializable.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
-#include "RTC/RtcLogger.hpp"
+#include "RTC/RtcLogger/RtpPacket.hpp"
 #endif
 #include <flatbuffers/flatbuffers.h>
 #include <array>

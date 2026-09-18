@@ -41,6 +41,11 @@ public:
 		return DepLibUV::GetTimeUs();
 	}
 
+	uint64_t GetLoopTimeMs() override
+	{
+		return DepLibUV::GetLoopTimeMs();
+	}
+
 	int64_t GetNtpOffsetUs() override
 	{
 		return DepLibUV::GetNtpOffsetUs();

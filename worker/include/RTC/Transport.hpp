@@ -29,6 +29,9 @@
 #include "RTC/TransportCongestionControlServer.hpp"
 #endif
 #include "SharedInterface.hpp"
+#ifdef MS_RTC_LOGGER_SEND_BURST
+#include "RTC/RtcLogger/SendBurst.hpp"
+#endif
 #include <ankerl/unordered_dense.h>
 #include <string>
 #include <vector>
@@ -411,6 +414,13 @@ namespace RTC
 		size_t maxSendMessageSize{ 0 };
 		size_t maxReceiveMessageSize{ 0 };
 		struct TraceEventTypes traceEventTypes;
+
+#ifdef MS_RTC_LOGGER_SEND_BURST
+	private:
+		RTC::RtcLogger::SendBurst sendBurstLogger;
+		// Allocated by this.
+		TimerHandleInterface* sendBurstLoggerTimer{ nullptr };
+#endif
 	};
 } // namespace RTC
 
