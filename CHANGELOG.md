@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Fix MSVC compiler warnings ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Worker: Fix MSVC compiler warnings ([PR #1937](https://github.com/versatica/mediasoup/pull/1937)).
 
 ### 3.27.1
 
