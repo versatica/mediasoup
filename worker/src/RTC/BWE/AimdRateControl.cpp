@@ -357,7 +357,7 @@ namespace RTC
 					break;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 
 			this->currentBitrate = ClampBitrate(newBitrate.value_or(this->currentBitrate));
@@ -397,7 +397,7 @@ namespace RTC
 					break;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 		}
 

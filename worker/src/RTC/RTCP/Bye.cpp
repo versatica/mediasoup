@@ -77,7 +77,7 @@ namespace RTC
 			}
 
 			// 32 bits padding.
-			const size_t padding = (-offset) & 3;
+			const size_t padding = Utils::Byte::PadTo4Bytes(offset) - offset;
 
 			for (size_t i{ 0 }; i < padding; ++i)
 			{

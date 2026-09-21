@@ -23,6 +23,11 @@ if host_machine.system() == 'windows'
     '-D_SCL_SECURE_NO_WARNINGS',
     # Introduced in VS 2017 15.8, allow overaligned types in aligned_storage.
     '-D_ENABLE_EXTENDED_ALIGNED_STORAGE',
+    # Don't warn about flexible array members (a C99 feature that C++ lacks and
+    # every compiler offers as an extension). They are how RTP and RTCP headers
+    # give a name to the bytes that follow them, so their length is part of the
+    # parsing arithmetic and cannot be declared.
+    '/wd4200',
   ]
 endif
 

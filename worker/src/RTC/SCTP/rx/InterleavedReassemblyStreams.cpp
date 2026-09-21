@@ -118,7 +118,7 @@ namespace RTC
 				this->nextMid.Increment();
 
 				// This might unblock assembling more messages.
-				return -TryToAssembleMessages();
+				return -static_cast<int32_t>(TryToAssembleMessages());
 			}
 
 			// Slow path.

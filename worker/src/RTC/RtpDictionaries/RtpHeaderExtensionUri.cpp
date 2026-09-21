@@ -75,7 +75,7 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -146,7 +146,7 @@ namespace RTC
 				return FBS::RtpParameters::RtpHeaderExtensionUri::MediasoupPacketId;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 

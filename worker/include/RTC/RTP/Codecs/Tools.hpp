@@ -186,7 +186,7 @@ namespace RTC
 							return true;
 						}
 
-							NO_DEFAULT_GCC();
+							NO_DEFAULT();
 					}
 				}
 
