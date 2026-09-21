@@ -41,6 +41,11 @@ namespace RTC
 				 * @remarks
 				 * - The packet must be sent before returning, since the next one is
 				 *   built over the very same instance.
+				 * - It carries room for the abs-send-time and for the transport wide
+				 *   sequence number but no value for either, so both have to be written
+				 *   here.
+				 * - Whoever measures the burst has to be told how much of it went out,
+				 *   so the length of the packet is reported from here as well.
 				 */
 				virtual bool OnProbePacketGeneratorSendRtpPacket(
 				  ProbePacketGenerator* probePacketGenerator, RTC::RTP::Packet* packet) = 0;
