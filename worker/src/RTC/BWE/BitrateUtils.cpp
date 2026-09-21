@@ -1,7 +1,7 @@
-#define MS_CLASS "RTC::BWE::Utils"
+#define MS_CLASS "RTC::BWE::BitrateUtils"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/BWE/Utils.hpp"
+#include "RTC/BWE/BitrateUtils.hpp"
 #include "Logger.hpp"
 #include "RTC/BWE/BweTypes.hpp"
 #include <cmath> // std::llround()
@@ -12,7 +12,7 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		int64_t Utils::ApplyBitrateFactor(int64_t bitrate, double factor)
+		int64_t BitrateUtils::ApplyBitrateFactor(int64_t bitrate, double factor)
 		{
 			MS_TRACE();
 
@@ -37,7 +37,7 @@ namespace RTC
 			return std::llround(result);
 		}
 
-		int64_t Utils::AddBitrates(int64_t bitrate, int64_t otherBitrate)
+		int64_t BitrateUtils::AddBitrates(int64_t bitrate, int64_t otherBitrate)
 		{
 			MS_TRACE();
 

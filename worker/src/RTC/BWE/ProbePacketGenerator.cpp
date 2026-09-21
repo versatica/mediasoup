@@ -34,10 +34,8 @@ namespace RTC
 
 			this->packet->SetPayloadType(RTC::Consts::BweProbeRtpPayloadType);
 			this->packet->SetSsrc(RTC::Consts::BweProbeRtpSsrc);
-			// NOTE: The global namespace is spelled out because this one has a class of
-			// its own named `Utils`, which would otherwise be the one found here.
-			this->packet->SetSequenceNumber(::Utils::Crypto::GetRandomUInt<uint16_t>(0, 65535));
-			this->packet->SetTimestamp(::Utils::Crypto::GetRandomUInt<uint32_t>(0, 4294967295));
+			this->packet->SetSequenceNumber(Utils::Crypto::GetRandomUInt<uint16_t>(0, 65535));
+			this->packet->SetTimestamp(Utils::Crypto::GetRandomUInt<uint32_t>(0, 4294967295));
 
 			// The extensions that make the packets reportable, so that the receiver
 			// tells when each of them arrived.
@@ -116,7 +114,7 @@ namespace RTC
 				// A packet cannot be shorter than its own header, so the last one of a
 				// burst overshoots rather than falling short.
 				size_t length = std::clamp(
-				  ::Utils::Byte::PadTo4Bytes(remaining),
+				  Utils::Byte::PadTo4Bytes(remaining),
 				  this->minPacketLength,
 				  ProbePacketGenerator::MaxPacketLength);
 
