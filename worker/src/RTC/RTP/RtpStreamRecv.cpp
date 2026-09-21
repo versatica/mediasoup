@@ -582,7 +582,11 @@ namespace RTC
 			else
 			{
 				// Recalculate packetsLost.
-				const uint32_t newLostInterval = (worstRemoteFractionLost * expectedInterval) >> 8;
+				//
+				// NOTE: The expected interval is not positive when a sequence number
+				// re-sync restarted the count, and then nothing was expected to be lost.
+				const auto newLostInterval = static_cast<uint32_t>(
+				  (worstRemoteFractionLost * std::max<int64_t>(expectedInterval, 0)) >> 8);
 
 				this->reportedPacketsLost += newLostInterval;
 
