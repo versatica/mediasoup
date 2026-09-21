@@ -108,15 +108,17 @@ namespace RTC
 
 			// Calculate fraction lost.
 			//
-			// NOTE: Signed and 64 bits wide because a sequence number re-sync restarts
-			// the count of expected packets, so either interval may go backwards.
-			const int64_t expectedInterval = static_cast<int64_t>(expected) - this->expectedPrior;
+			// NOTE: Both counts wrap, so each difference is taken in the width of its
+			// own counter. Reading the expected one as signed also makes a sequence
+			// number re-sync, which restarts the count, come out negative.
+			const int64_t expectedInterval = static_cast<int32_t>(expected - this->expectedPrior);
 
 			this->expectedPrior = expected;
 
-			const int64_t receivedInterval = static_cast<int64_t>(this->packetsCount) - this->receivedPrior;
+			const int64_t receivedInterval =
+			  static_cast<uint32_t>(this->packetsCount - this->receivedPrior);
 
-			this->receivedPrior = this->packetsCount;
+			this->receivedPrior = static_cast<uint32_t>(this->packetsCount);
 
 			const int64_t lostInterval = expectedInterval - receivedInterval;
 
