@@ -2,6 +2,7 @@
 #include "RTC/BWE/ProbePacketGenerator.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "Utils.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <limits>
 #include <string>
@@ -82,7 +83,7 @@ SCENARIO("BWE ProbePacketGenerator", "[bwe][probepacketgenerator]")
 	};
 
 	TestProbePacketGeneratorListener listener;
-	RTC::BWE::ProbePacketGenerator probePacketGenerator(&listener);
+	RTC::BWE::ProbePacketGenerator probePacketGenerator(std::addressof(listener));
 
 	SECTION("a packet carries what makes it reportable")
 	{
@@ -97,6 +98,45 @@ SCENARIO("BWE ProbePacketGenerator", "[bwe][probepacketgenerator]")
 		REQUIRE(handedPacket.mid == RTC::Consts::BweProbeRtpMid);
 		REQUIRE(handedPacket.hasAbsSendTime);
 		REQUIRE(handedPacket.hasTransportWideCc01);
+	}
+
+	SECTION("and the room it leaves for them is one the sender can write into")
+	{
+		class WritingListener : public RTC::BWE::ProbePacketGenerator::Listener
+		{
+		public:
+			bool OnProbePacketGeneratorSendRtpPacket(
+			  RTC::BWE::ProbePacketGenerator* /*probePacketGenerator*/, RTC::RTP::Packet* packet) override
+			{
+				this->sentAtUs += 1000;
+				this->wideSeqNumber++;
+
+				REQUIRE(packet->UpdateAbsSendTime(this->sentAtUs));
+				REQUIRE(packet->UpdateTransportWideCc01(this->wideSeqNumber));
+
+				uint32_t readAbsSendTime;
+				uint16_t readWideSeqNumber;
+
+				REQUIRE(packet->ReadAbsSendTime(readAbsSendTime));
+				REQUIRE(readAbsSendTime == Utils::Time::TimeUsToAbsSendTime(this->sentAtUs));
+
+				REQUIRE(packet->ReadTransportWideCc01(readWideSeqNumber));
+				REQUIRE(readWideSeqNumber == this->wideSeqNumber);
+
+				return true;
+			}
+
+		public:
+			int64_t sentAtUs{ 100000000 };
+			uint16_t wideSeqNumber{ 0 };
+		};
+
+		WritingListener writingListener;
+		RTC::BWE::ProbePacketGenerator writingProbePacketGenerator(std::addressof(writingListener));
+
+		writingProbePacketGenerator.GeneratePackets(5000);
+
+		REQUIRE(writingListener.wideSeqNumber > 1);
 	}
 
 	SECTION("and is padded to 4 bytes whatever its size")
@@ -199,7 +239,7 @@ SCENARIO("BWE ProbePacketGenerator", "[bwe][probepacketgenerator]")
 	SECTION("and two of them count their own packets rather than each other's")
 	{
 		TestProbePacketGeneratorListener otherListener;
-		RTC::BWE::ProbePacketGenerator otherProbePacketGenerator(&otherListener);
+		RTC::BWE::ProbePacketGenerator otherProbePacketGenerator(std::addressof(otherListener));
 
 		probePacketGenerator.GeneratePackets(1);
 		otherProbePacketGenerator.GeneratePackets(1);
