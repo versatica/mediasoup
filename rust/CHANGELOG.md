@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Fix MSVC compiler warnings ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 0.28.1
 
 - Worker: Fix endless regeneration of FlatBuffers generated headers ([PR #1926](https://github.com/versatica/mediasoup/pull/1926)).

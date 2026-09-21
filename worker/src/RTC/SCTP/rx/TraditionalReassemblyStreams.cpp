@@ -114,7 +114,7 @@ namespace RTC
 			const size_t payloadLength = std::accumulate(
 			  start,
 			  end,
-			  0,
+			  size_t{ 0 },
 			  [](size_t acc, const auto& i)
 			  {
 				  const auto& data = i.second;

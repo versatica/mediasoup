@@ -908,10 +908,10 @@ namespace RTC
 
 				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
 				{
-					const flatbuffers::Optional<int16_t> preferredTemporalLayer{ preferredLayers.temporal };
-
 					preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
-					  request->GetBufferBuilder(), preferredLayers.spatial, preferredTemporalLayer);
+					  request->GetBufferBuilder(),
+					  static_cast<uint8_t>(preferredLayers.spatial),
+					  static_cast<uint8_t>(preferredLayers.temporal));
 				}
 
 				auto scoreOffset    = consumer->FillBufferScore(request->GetBufferBuilder());
@@ -1734,7 +1734,7 @@ namespace RTC
 			                        : std::optional<int64_t>(sctpStreamParameters.maxPacketLifeTime),
 			.maxRetransmissions = sctpStreamParameters.ordered
 			                        ? std::nullopt
-			                        : std::optional<uint64_t>(sctpStreamParameters.maxRetransmits),
+			                        : std::optional<uint16_t>(sctpStreamParameters.maxRetransmits),
 			// NOTE: We don't set `lifecyleId` in production.
 		};
 
@@ -3527,7 +3527,7 @@ namespace RTC
 			 * [1.0, 1.5] times the calculated interval to avoid unintended
 			 * synchronization of all participants.
 			 */
-			intervalMs *= static_cast<float>(Utils::Crypto::GetRandomUInt<uint16_t>(10, 15)) / 10;
+			intervalMs = (intervalMs * Utils::Crypto::GetRandomUInt<uint16_t>(10, 15)) / 10;
 
 			this->rtcpTimer->Start(intervalMs);
 		}

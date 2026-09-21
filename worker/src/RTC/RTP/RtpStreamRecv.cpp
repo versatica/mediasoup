@@ -8,6 +8,7 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "Utils.hpp"
+#include <cmath> // std::round()
 
 namespace RTC
 {
@@ -542,24 +543,31 @@ namespace RTC
 			}
 
 			// Calculate fraction lost.
-			const uint32_t expectedInterval = expected - this->expectedPrior;
+			//
+			// NOTE: Signed and 64 bits wide because a sequence number re-sync restarts
+			// the count of expected packets, so either interval may go backwards.
+			const int64_t expectedInterval = static_cast<int64_t>(expected) - this->expectedPrior;
 
 			this->expectedPrior = expected;
 
-			const uint32_t receivedInterval =
-			  this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior;
+			const int64_t receivedInterval =
+			  static_cast<int64_t>(this->mediaTransmissionCounter.GetPacketCount()) - this->receivedPrior;
 
 			this->receivedPrior = this->mediaTransmissionCounter.GetPacketCount();
 
-			const int32_t lostInterval = expectedInterval - receivedInterval;
+			const int64_t lostInterval = expectedInterval - receivedInterval;
 
-			if (expectedInterval == 0 || lostInterval <= 0)
+			if (expectedInterval <= 0 || lostInterval <= 0)
 			{
 				this->fractionLost = 0;
 			}
 			else
 			{
-				this->fractionLost = std::round((static_cast<double>(lostInterval << 8) / expectedInterval));
+				// A fixed point number with 8 bits of fraction, so a whole interval lost
+				// gives 256, one more than the field can hold.
+				const double fraction = std::round(static_cast<double>(lostInterval << 8) / expectedInterval);
+
+				this->fractionLost = static_cast<uint8_t>(std::min(fraction, 255.0));
 			}
 
 			// Worst remote fraction lost is not worse than local one.
@@ -869,8 +877,10 @@ namespace RTC
 			  static_cast<uint32_t>(((receivedAtUs % 1000000) * GetClockRate()) / 1000000);
 
 			// NOTE: Based on https://github.com/versatica/mediasoup/issues/1018.
-			auto transit = static_cast<int>(arrivalTs - rtpTimestamp);
-			int d        = transit - this->transit;
+			const auto transit = static_cast<int32_t>(arrivalTs - rtpTimestamp);
+			// NOTE: Wider than its operands because the difference of two int32_t does
+			// not fit in an int32_t, and neither would negating its lowest value.
+			int64_t d = static_cast<int64_t>(transit) - this->transit;
 
 			// First transit calculation, save and return.
 			if (this->transit == 0)
@@ -996,7 +1006,7 @@ namespace RTC
 				repairedWeight *= static_cast<float>(repaired) / retransmitted;
 			}
 
-			lost -= repaired * repairedWeight;
+			lost = static_cast<uint32_t>(lost - (repaired * repairedWeight));
 
 			auto deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
 			auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));

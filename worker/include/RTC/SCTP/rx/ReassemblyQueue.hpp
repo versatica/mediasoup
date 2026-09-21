@@ -57,7 +57,7 @@ namespace RTC
 			 * SCTP association should restrict incoming data to avoid filling up the
 			 * queue.
 			 */
-			static constexpr float HighWatermarkLimit{ 0.9f };
+			static constexpr double HighWatermarkLimit{ 0.9 };
 
 		private:
 			struct DeferredResetStreams

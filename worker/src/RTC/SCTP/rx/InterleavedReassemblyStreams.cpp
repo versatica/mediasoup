@@ -159,7 +159,7 @@ namespace RTC
 				removedBytes += std::accumulate(
 				  it->second.begin(),
 				  it->second.end(),
-				  0,
+				  size_t{ 0 },
 				  [](size_t acc, const auto& i)
 				  {
 					  const auto& data = i.second.second;

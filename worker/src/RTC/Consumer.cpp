@@ -717,9 +717,11 @@ namespace RTC
 				  newPreferredLayers.temporal,
 				  this->id.c_str());
 
-				preferredTemporalLayer     = newPreferredLayers.temporal;
+				preferredTemporalLayer     = static_cast<uint8_t>(newPreferredLayers.temporal);
 				auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
-				  request->GetBufferBuilder(), newPreferredLayers.spatial, preferredTemporalLayer);
+				  request->GetBufferBuilder(),
+				  static_cast<uint8_t>(newPreferredLayers.spatial),
+				  preferredTemporalLayer);
 				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(
 				  request->GetBufferBuilder(), preferredLayersOffset);
 
@@ -1823,8 +1825,8 @@ namespace RTC
 		{
 			layersOffset = FBS::Consumer::CreateConsumerLayers(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
-			  this->producerStreamManager->GetCurrentSpatialLayer(),
-			  this->producerStreamManager->GetCurrentTemporalLayer());
+			  static_cast<uint8_t>(this->producerStreamManager->GetCurrentSpatialLayer()),
+			  static_cast<uint8_t>(this->producerStreamManager->GetCurrentTemporalLayer()));
 		}
 
 		auto notificationOffset = FBS::Consumer::CreateLayersChangeNotification(

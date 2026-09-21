@@ -7,7 +7,6 @@
 #include "RTC/WebRtcServer.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include <cmath> // std::pow()
 
 namespace RTC
 {
@@ -23,8 +22,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return (std::pow(2, 24) * IceTypePreference) + (std::pow(2, 8) * localPreference) +
-		       (std::pow(2, 0) * (256 - IceComponent));
+		// Recommended formula in RFC 8445 section 5.1.2.1:
+		//   (2^24) * type preference + (2^8) * local preference + (2^0) * (256 - component ID).
+		return (static_cast<uint32_t>(IceTypePreference) << 24) +
+		       (static_cast<uint32_t>(localPreference) << 8) + (256 - IceComponent);
 	}
 
 	/* Class methods. */
