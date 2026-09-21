@@ -2,6 +2,7 @@
 #define MS_RTC_CONSTS_HPP
 
 #include "common.hpp"
+#include <string_view>
 
 namespace RTC
 {
@@ -38,6 +39,38 @@ namespace RTC
 		 * extension).
 		 */
 		constexpr uint8_t MidRtpExtensionMaxLength{ 8 };
+
+		/**
+		 * SSRC of the RTP stream the probing packets are sent on.
+		 *
+		 * @remarks
+		 * - The receiver negotiates a stream with this very SSRC, so it cannot be
+		 *   changed without changing the client as well.
+		 */
+		constexpr uint32_t BweProbeRtpSsrc{ 1234 };
+
+		/**
+		 * Codec payload type of the RTP stream the probing packets are sent on.
+		 *
+		 * @remarks
+		 * - The receiver negotiates a stream with this very payload type, so it
+		 *   cannot be changed without changing the client as well.
+		 */
+		constexpr uint8_t BweProbeRtpPayloadType{ 127 };
+
+		/**
+		 * MID of the RTP stream the probing packets are sent on, which is how the
+		 * receiver tells it apart.
+		 *
+		 * @remarks
+		 * - The receiver negotiates a stream with this very MID, so it cannot be
+		 *   changed without changing the client as well.
+		 */
+		constexpr std::string_view BweProbeRtpMid{ "probator" };
+
+		static_assert(
+		  BweProbeRtpMid.size() <= MidRtpExtensionMaxLength,
+		  "the MID of the probing stream does not fit in a MID RTP header extension");
 
 		/**
 		 * Lowest bitrate the bandwidth estimation ever produces (bps), so 5 kbps.
