@@ -2,7 +2,6 @@
 #define MS_RTC_BWE_PROBE_PACKET_GENERATOR_HPP
 
 #include "common.hpp"
-#include "RTC/Consts.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include <array>
 
@@ -63,20 +62,18 @@ namespace RTC
 			static constexpr size_t MaxPacketLength{ 1400 };
 
 			/**
-			 * Most bytes a single burst may be asked for, which is the highest bitrate
-			 * the bandwidth estimation deals in held for 20 ms.
+			 * Most bytes a single burst may be asked for (bytes), so 2.5 MB, which is
+			 * 1 Gbps held for 20 ms.
 			 *
 			 * @remarks
 			 * - A burst larger than this is taken as one that cannot be real, and
 			 *   asking for it would have this handing packets over for a very long
 			 *   while, all within a single iteration of the event loop.
-			 * - Those 20 ms are the longest time between two shots of a burst that
-			 *   whoever asks for them is configured with, which this cannot enforce.
-			 *   Raising that configuration beyond them starts cutting bursts that are
-			 *   perfectly real.
+			 * - Those two are the highest bitrate the bandwidth estimation deals in
+			 *   and the longest time whoever asks for a burst leaves between two of
+			 *   its shots, neither of which this can enforce.
 			 */
-			static constexpr size_t MaxGeneratePacketsSize{ (RTC::Consts::BweMaxBitrate * 20 * 1000) /
-			                                                (8 * 1000000) };
+			static constexpr size_t MaxGeneratePacketsSize{ 2500000 };
 
 		public:
 			explicit ProbePacketGenerator(Listener* listener);
