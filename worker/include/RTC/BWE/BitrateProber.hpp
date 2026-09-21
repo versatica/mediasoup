@@ -188,7 +188,6 @@ namespace RTC
 		private:
 			// Passed by argument.
 			BitrateProberOptions options;
-
 			// Others.
 			State state{ State::DISABLED };
 			// The bursts asked for, the first one being the one being emitted.

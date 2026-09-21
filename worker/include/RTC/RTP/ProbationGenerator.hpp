@@ -15,14 +15,6 @@ namespace RTC
 			 * Maximum length of a probation RTP packet.
 			 */
 			static constexpr size_t ProbationPacketMaxLength{ 1400 };
-			/**
-			 * SSRC of the probation RTP stream.
-			 */
-			static const uint32_t Ssrc{ 1234 };
-			/**
-			 * Codec payload type of the probation RTP stream.
-			 */
-			static const uint8_t PayloadType{ 127 };
 
 		public:
 			explicit ProbationGenerator();

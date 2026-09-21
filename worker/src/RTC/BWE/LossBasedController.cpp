@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/LossBasedController.hpp"
 #include "Logger.hpp"
-#include "RTC/BWE/Utils.hpp"
+#include "RTC/BWE/BitrateUtils.hpp"
 #include "RTC/Consts.hpp"
 #include <cmath>
 #include <limits>
@@ -271,7 +271,7 @@ namespace RTC
 					  this->currentBestEstimate.lossLimitedBitrate,
 					  std::min(
 					    bestCandidate.lossLimitedBitrate,
-					    Utils::ApplyBitrateFactor(this->acknowledgedBitrate, rampupFactor)));
+					    BitrateUtils::ApplyBitrateFactor(this->acknowledgedBitrate, rampupFactor)));
 
 					// Growing by a single bit is what lets the state stop being
 					// decreasing. Without it, a bound that leaves the estimate untouched
@@ -281,7 +281,7 @@ namespace RTC
 					  bestCandidate.lossLimitedBitrate == this->currentBestEstimate.lossLimitedBitrate)
 					{
 						bestCandidate.lossLimitedBitrate =
-						  Utils::AddBitrates(this->currentBestEstimate.lossLimitedBitrate, 1);
+						  BitrateUtils::AddBitrates(this->currentBestEstimate.lossLimitedBitrate, 1);
 					}
 				}
 			}
@@ -384,7 +384,7 @@ namespace RTC
 			{
 				this->bitrateLimitInCurrentWindow = std::max<int64_t>(
 				  Consts::BweMinBitrate,
-				  Utils::ApplyBitrateFactor(
+				  BitrateUtils::ApplyBitrateFactor(
 				    this->currentBestEstimate.lossLimitedBitrate, this->options.maxIncreaseFactor));
 
 				this->recoveringAfterLossAtUs = lastSendTimeUs;
@@ -499,7 +499,8 @@ namespace RTC
 			for (const double candidateFactor : this->options.candidateFactors)
 			{
 				bitrates.push_back(
-				  Utils::ApplyBitrateFactor(this->currentBestEstimate.lossLimitedBitrate, candidateFactor));
+				  BitrateUtils::ApplyBitrateFactor(
+				    this->currentBestEstimate.lossLimitedBitrate, candidateFactor));
 			}
 
 			// While not sending enough to fill the link, what it delivers says nothing
@@ -510,7 +511,7 @@ namespace RTC
 			  !(this->options.notUseAckedRateInAlr && inAlr))
 			{
 				bitrates.push_back(
-				  Utils::ApplyBitrateFactor(
+				  BitrateUtils::ApplyBitrateFactor(
 				    this->acknowledgedBitrate, this->options.bitrateBackoffLowerBoundFactor));
 			}
 
@@ -589,9 +590,9 @@ namespace RTC
 				  this->options.rampupAccelerationMaxFactor * static_cast<double>(sinceBitrateReducedUs) /
 				  static_cast<double>(this->options.rampupAccelerationMaxoutTimeUs);
 
-				candidateBitrateUpperBound = Utils::AddBitrates(
+				candidateBitrateUpperBound = BitrateUtils::AddBitrates(
 				  candidateBitrateUpperBound,
-				  Utils::ApplyBitrateFactor(this->acknowledgedBitrate, rampupAcceleration));
+				  BitrateUtils::ApplyBitrateFactor(this->acknowledgedBitrate, rampupAcceleration));
 			}
 
 			return candidateBitrateUpperBound;
@@ -789,9 +790,11 @@ namespace RTC
 
 			// Each share is rounded on its own before they are added, so that the
 			// smoothed rate doesn't depend on how the two of them happen to split.
-			return Utils::AddBitrates(
-			  Utils::ApplyBitrateFactor(previousSendingRate, this->options.sendingRateSmoothingFactor),
-			  Utils::ApplyBitrateFactor(instantSendingRate, 1.0 - this->options.sendingRateSmoothingFactor));
+			return BitrateUtils::AddBitrates(
+			  BitrateUtils::ApplyBitrateFactor(
+			    previousSendingRate, this->options.sendingRateSmoothingFactor),
+			  BitrateUtils::ApplyBitrateFactor(
+			    instantSendingRate, 1.0 - this->options.sendingRateSmoothingFactor));
 		}
 
 		void LossBasedController::UpdateAverageReportedLossRatio()
@@ -1006,7 +1009,7 @@ namespace RTC
 			// What the link is known to be delivering is never worth going below.
 			if (this->acknowledgedBitrate != Types::BitrateInfinite)
 			{
-				bitrate = Utils::ApplyBitrateFactor(
+				bitrate = BitrateUtils::ApplyBitrateFactor(
 				  this->acknowledgedBitrate, this->options.lowerBoundByAckedRateFactor);
 			}
 

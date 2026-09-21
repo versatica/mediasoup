@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/RTP/ProbationGenerator.hpp"
 #include <catch2/catch_test_macros.hpp>
 
@@ -11,8 +12,8 @@ SCENARIO("RTP ProbationGenerator", "[rtp][probation-generator]")
 		const auto* packet = probationGenerator.GetNextPacket(1000);
 		const auto seq     = packet->GetSequenceNumber();
 
-		REQUIRE(packet->GetSsrc() == RTC::RTP::ProbationGenerator::Ssrc);
-		REQUIRE(packet->GetPayloadType() == RTC::RTP::ProbationGenerator::PayloadType);
+		REQUIRE(packet->GetSsrc() == RTC::Consts::BweProbeRtpSsrc);
+		REQUIRE(packet->GetPayloadType() == RTC::Consts::BweProbeRtpPayloadType);
 		REQUIRE(packet->GetLength() == 1000);
 		REQUIRE(packet->IsPaddedTo4Bytes());
 

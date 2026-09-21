@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/AlrDetector.hpp"
 #include "Logger.hpp"
-#include "RTC/BWE/Utils.hpp"
+#include "RTC/BWE/BitrateUtils.hpp"
 
 namespace RTC
 {
@@ -74,7 +74,7 @@ namespace RTC
 			MS_ASSERT(bitrate > 0, "bitrate must be positive [bitrate:%" PRIi64 "]", bitrate);
 
 			this->alrBudget.SetTargetBitrate(
-			  Utils::ApplyBitrateFactor(bitrate, this->options.bandwidthUsageRatio));
+			  BitrateUtils::ApplyBitrateFactor(bitrate, this->options.bandwidthUsageRatio));
 		}
 	} // namespace BWE
 } // namespace RTC

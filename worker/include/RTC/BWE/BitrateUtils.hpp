@@ -1,5 +1,5 @@
-#ifndef MS_RTC_BWE_UTILS_HPP
-#define MS_RTC_BWE_UTILS_HPP
+#ifndef MS_RTC_BWE_BITRATE_UTILS_HPP
+#define MS_RTC_BWE_BITRATE_UTILS_HPP
 
 #include "common.hpp"
 
@@ -7,7 +7,7 @@ namespace RTC
 {
 	namespace BWE
 	{
-		class Utils
+		class BitrateUtils
 		{
 		public:
 			/**

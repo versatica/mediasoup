@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/BitrateProber.hpp"
 #include "Logger.hpp"
-#include "RTC/BWE/Utils.hpp"
+#include "RTC/BWE/BitrateUtils.hpp"
 
 namespace RTC
 {
@@ -89,7 +89,7 @@ namespace RTC
 			cluster.probeCluster.minProbes = clusterConfig.targetProbeCount;
 			// The bytes the burst is meant to carry are its bitrate held for as long as
 			// it is meant to last.
-			cluster.probeCluster.minBytes = Utils::ApplyBitrateFactor(
+			cluster.probeCluster.minBytes = BitrateUtils::ApplyBitrateFactor(
 			  clusterConfig.targetBitrate,
 			  static_cast<double>(clusterConfig.targetDurationUs) / (8 * 1000000));
 			cluster.sendBitrate     = clusterConfig.targetBitrate;
@@ -170,7 +170,7 @@ namespace RTC
 			const auto& cluster = this->clusters.front();
 
 			// What the burst's bitrate carries over the time between two of its shots.
-			return static_cast<size_t>(Utils::ApplyBitrateFactor(
+			return static_cast<size_t>(BitrateUtils::ApplyBitrateFactor(
 			  cluster.sendBitrate, static_cast<double>(cluster.minProbeDeltaUs) / (8 * 1000000)));
 		}
 

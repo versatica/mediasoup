@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/ProbationGenerator.hpp"
 #include "Logger.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
 #include <cstring> // std::memcpy(), std::memset()
@@ -18,8 +19,6 @@ namespace RTC
 		static constexpr size_t ProbationPacketExtensionsBufferLength{ 200 };
 		alignas(4) static thread_local uint8_t
 		  ProbationPacketExtensionsBuffer[ProbationPacketExtensionsBufferLength];
-		// 8 bytes, same as RTC::Consts::MidRtpExtensionMaxLength.
-		static const std::string MidValue{ "probator" };
 
 		/* Instance methods. */
 
@@ -42,10 +41,10 @@ namespace RTC
 			  RTP::Packet::Factory(ProbationPacketBuffer, sizeof(ProbationPacketBuffer)));
 
 			// Sex fixed codec payload type.
-			this->probationPacket->SetPayloadType(ProbationGenerator::PayloadType);
+			this->probationPacket->SetPayloadType(RTC::Consts::BweProbeRtpPayloadType);
 
 			// Set fixed SSRC.
-			this->probationPacket->SetSsrc(ProbationGenerator::Ssrc);
+			this->probationPacket->SetSsrc(RTC::Consts::BweProbeRtpSsrc);
 
 			// Set random initial RTP seq number.
 			this->probationPacket->SetSequenceNumber(Utils::Crypto::GetRandomUInt<uint16_t>(0, 65535));
@@ -60,7 +59,7 @@ namespace RTC
 
 			// Add urn:ietf:params:rtp-hdrext:sdes:mid.
 			{
-				extenLen = MidValue.size();
+				extenLen = RTC::Consts::BweProbeRtpMid.size();
 
 				extensions.emplace_back(
 				  /*type*/ RTC::RtpHeaderExtensionUri::Type::MID,
@@ -68,7 +67,7 @@ namespace RTC
 				  /*len*/ extenLen,
 				  /*value*/ bufferPtr);
 
-				std::memcpy(bufferPtr, MidValue.c_str(), extenLen);
+				std::memcpy(bufferPtr, RTC::Consts::BweProbeRtpMid.data(), extenLen);
 
 				bufferPtr += extenLen;
 			}

@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/ProbeController.hpp"
 #include "Logger.hpp"
-#include "RTC/BWE/Utils.hpp"
+#include "RTC/BWE/BitrateUtils.hpp"
 
 namespace RTC
 {
@@ -136,9 +136,9 @@ namespace RTC
 					return {};
 				}
 
-				int64_t firstProbeBitrate = Utils::ApplyBitrateFactor(
+				int64_t firstProbeBitrate = BitrateUtils::ApplyBitrateFactor(
 				  maxTotalAllocatedBitrate, this->options.firstAllocationProbeScale.value());
-				const int64_t currentBweLimit = Utils::ApplyBitrateFactor(
+				const int64_t currentBweLimit = BitrateUtils::ApplyBitrateFactor(
 				  this->estimatedBitrate, this->options.allocationProbeLimitByCurrentScale);
 
 				bool limitedByCurrentBwe = currentBweLimit < firstProbeBitrate;
@@ -152,7 +152,7 @@ namespace RTC
 
 				if (!limitedByCurrentBwe && this->options.secondAllocationProbeScale.has_value())
 				{
-					int64_t secondProbeBitrate = Utils::ApplyBitrateFactor(
+					int64_t secondProbeBitrate = BitrateUtils::ApplyBitrateFactor(
 					  maxTotalAllocatedBitrate, this->options.secondAllocationProbeScale.value());
 
 					limitedByCurrentBwe = currentBweLimit < secondProbeBitrate;
@@ -211,7 +211,7 @@ namespace RTC
 
 			this->bandwidthLimitedCause = bandwidthLimitedCause;
 
-			if (bitrate < Utils::ApplyBitrateFactor(this->estimatedBitrate, BitrateDropThreshold))
+			if (bitrate < BitrateUtils::ApplyBitrateFactor(this->estimatedBitrate, BitrateDropThreshold))
 			{
 				this->lastLargeDropAtUs          = nowUs;
 				this->bitrateBeforeLastLargeDrop = this->estimatedBitrate;
@@ -226,7 +226,7 @@ namespace RTC
 				  this->options.abortFurtherProbeIfMaxLowerThanCurrent &&
 				  (bitrate > this->maxBitrate ||
 					 (this->maxTotalAllocatedBitrate != 0 &&
-					  bitrate > Utils::ApplyBitrateFactor(this->maxTotalAllocatedBitrate, 2.0))))
+					  bitrate > BitrateUtils::ApplyBitrateFactor(this->maxTotalAllocatedBitrate, 2.0))))
 				{
 					this->minBitrateToProbeFurther = Types::BitrateInfinite;
 				}
@@ -234,7 +234,7 @@ namespace RTC
 				const int64_t networkStateProbeFurtherLimit =
 				  this->options.networkStateEstimateProbingIntervalUs != Types::TimeUsInfinite &&
 				      this->linkCapacityUpperBound.has_value()
-				    ? Utils::ApplyBitrateFactor(
+				    ? BitrateUtils::ApplyBitrateFactor(
 				        this->linkCapacityUpperBound.value(), this->options.furtherProbeThreshold)
 				    : Types::BitrateInfinite;
 
@@ -242,7 +242,7 @@ namespace RTC
 				{
 					return InitiateProbing(
 					  nowUs,
-					  { Utils::ApplyBitrateFactor(bitrate, this->options.furtherExponentialProbeScale) },
+					  { BitrateUtils::ApplyBitrateFactor(bitrate, this->options.furtherExponentialProbeScale) },
 					  /*probeFurther*/ true);
 				}
 			}
@@ -272,9 +272,9 @@ namespace RTC
 			}
 
 			const int64_t suggestedProbe =
-			  Utils::ApplyBitrateFactor(this->bitrateBeforeLastLargeDrop, ProbeFractionAfterDrop);
+			  BitrateUtils::ApplyBitrateFactor(this->bitrateBeforeLastLargeDrop, ProbeFractionAfterDrop);
 			const int64_t minExpectedProbeResult =
-			  Utils::ApplyBitrateFactor(suggestedProbe, 1.0 - ProbeUncertainty);
+			  BitrateUtils::ApplyBitrateFactor(suggestedProbe, 1.0 - ProbeUncertainty);
 
 			// NOTE: Never having dropped nor probed is not a reason to hold the burst
 			// back, so a missing instant counts as long ago.
@@ -338,7 +338,7 @@ namespace RTC
 			{
 				return InitiateProbing(
 				  nowUs,
-				  { Utils::ApplyBitrateFactor(
+				  { BitrateUtils::ApplyBitrateFactor(
 				    this->estimatedBitrate, this->options.firstExponentialProbeScale) },
 				  /*probeFurther*/ true);
 			}
@@ -347,7 +347,7 @@ namespace RTC
 			{
 				return InitiateProbing(
 				  nowUs,
-				  { Utils::ApplyBitrateFactor(this->estimatedBitrate, this->options.alrProbeScale) },
+				  { BitrateUtils::ApplyBitrateFactor(this->estimatedBitrate, this->options.alrProbeScale) },
 				  /*probeFurther*/ true);
 			}
 
@@ -377,7 +377,7 @@ namespace RTC
 			MS_ASSERT(this->state == State::INIT, "probing already started");
 			MS_ASSERT(this->startBitrate > 0, "no bitrate to start from");
 
-			std::vector<int64_t> probes{ Utils::ApplyBitrateFactor(
+			std::vector<int64_t> probes{ BitrateUtils::ApplyBitrateFactor(
 				this->startBitrate, this->options.firstExponentialProbeScale) };
 
 			if (
@@ -385,7 +385,7 @@ namespace RTC
 			  this->options.secondExponentialProbeScale.value() > 0)
 			{
 				probes.push_back(
-				  Utils::ApplyBitrateFactor(
+				  BitrateUtils::ApplyBitrateFactor(
 				    this->startBitrate, this->options.secondExponentialProbeScale.value()));
 			}
 
@@ -413,13 +413,13 @@ namespace RTC
 				  this->maxTotalAllocatedBitrate == 0
 				    ? this->maxBitrate
 				    : std::min(
-				        Utils::ApplyBitrateFactor(
+				        BitrateUtils::ApplyBitrateFactor(
 				          this->maxTotalAllocatedBitrate, this->options.skipProbeMaxAllocatedScale),
 				        this->maxBitrate);
 
 				if (
 				  std::min(linkCapacityUpperBound, this->estimatedBitrate) >
-				  Utils::ApplyBitrateFactor(
+				  BitrateUtils::ApplyBitrateFactor(
 				    maxProbeBitrate, this->options.skipIfEstimateLargerThanFractionOfMax))
 				{
 					UpdateState(State::PROBING_COMPLETE);
@@ -436,8 +436,8 @@ namespace RTC
 			// aimed for.
 			if (this->maxTotalAllocatedBitrate > 0)
 			{
-				maxProbeBitrate =
-				  std::min(maxProbeBitrate, Utils::ApplyBitrateFactor(this->maxTotalAllocatedBitrate, 2.0));
+				maxProbeBitrate = std::min(
+				  maxProbeBitrate, BitrateUtils::ApplyBitrateFactor(this->maxTotalAllocatedBitrate, 2.0));
 			}
 
 			switch (this->bandwidthLimitedCause)
@@ -457,7 +457,8 @@ namespace RTC
 				{
 					maxProbeBitrate = std::min(
 					  maxProbeBitrate,
-					  Utils::ApplyBitrateFactor(this->estimatedBitrate, this->options.lossLimitedProbeScale));
+					  BitrateUtils::ApplyBitrateFactor(
+					    this->estimatedBitrate, this->options.lossLimitedProbeScale));
 
 					break;
 				}
@@ -483,7 +484,7 @@ namespace RTC
 				  maxProbeBitrate,
 				  std::max(
 				    this->estimatedBitrate,
-				    Utils::ApplyBitrateFactor(
+				    BitrateUtils::ApplyBitrateFactor(
 				      this->linkCapacityUpperBound.value(), this->options.networkStateProbeScale)));
 			}
 
@@ -524,7 +525,7 @@ namespace RTC
 
 				// A burst is not expected to be received at the whole bitrate it was
 				// sent at, so what has to be beaten is a fraction of it.
-				this->minBitrateToProbeFurther = Utils::ApplyBitrateFactor(
+				this->minBitrateToProbeFurther = BitrateUtils::ApplyBitrateFactor(
 				  pendingProbes.back().targetBitrate, this->options.furtherProbeThreshold);
 			}
 			else
@@ -564,7 +565,7 @@ namespace RTC
 
 			const bool probeDueToLowEstimate =
 			  this->bandwidthLimitedCause == BandwidthLimitedCause::DELAY_BASED_LIMITED &&
-			  this->estimatedBitrate < Utils::ApplyBitrateFactor(
+			  this->estimatedBitrate < BitrateUtils::ApplyBitrateFactor(
 			                             this->linkCapacityUpperBound.value(),
 			                             this->options.probeIfEstimateLowerThanNetworkStateEstimateRatio);
 

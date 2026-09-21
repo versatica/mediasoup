@@ -3,7 +3,7 @@
 
 #include "RTC/BWE/IntervalBudget.hpp"
 #include "Logger.hpp"
-#include "RTC/BWE/Utils.hpp"
+#include "RTC/BWE/BitrateUtils.hpp"
 
 namespace RTC
 {
@@ -36,7 +36,7 @@ namespace RTC
 
 			this->targetBitrate = targetBitrate;
 			// The factor turns bits over a second into bytes over the window.
-			this->maxBytesInBudget = Utils::ApplyBitrateFactor(
+			this->maxBytesInBudget = BitrateUtils::ApplyBitrateFactor(
 			  this->targetBitrate, static_cast<double>(WindowUs) / (8 * 1000000));
 
 			// What the budget held doesn't survive a window it no longer fits in.
@@ -48,7 +48,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const int64_t bytes = Utils::ApplyBitrateFactor(
+			const int64_t bytes = BitrateUtils::ApplyBitrateFactor(
 			  this->targetBitrate, static_cast<double>(deltaTimeUs) / (8 * 1000000));
 
 			if (this->bytesRemaining < 0 || this->canBuildUpUnderuse)

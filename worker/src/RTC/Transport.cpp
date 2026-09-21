@@ -16,7 +16,6 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
-#include "RTC/RTP/ProbationGenerator.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SCTP/association/Association.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
@@ -1973,7 +1972,7 @@ namespace RTC
 					if (!consumer)
 					{
 						// Special case for the RTP probator.
-						if (report->GetSsrc() == RTC::RTP::ProbationGenerator::Ssrc)
+						if (report->GetSsrc() == RTC::Consts::BweProbeRtpSsrc)
 						{
 							continue;
 						}
@@ -2032,7 +2031,7 @@ namespace RTC
 					{
 						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
-						if (feedback->GetMediaSsrc() == RTC::RTP::ProbationGenerator::Ssrc)
+						if (feedback->GetMediaSsrc() == RTC::Consts::BweProbeRtpSsrc)
 						{
 							break;
 						}
@@ -2071,7 +2070,7 @@ namespace RTC
 							auto& item     = *it;
 							auto* consumer = GetConsumerByMediaSsrc(item->GetSsrc());
 
-							if (item->GetSsrc() == RTC::RTP::ProbationGenerator::Ssrc)
+							if (item->GetSsrc() == RTC::Consts::BweProbeRtpSsrc)
 							{
 								continue;
 							}
@@ -2162,7 +2161,7 @@ namespace RTC
 				// probation SSRC or any Consumer RTX SSRC, ignore it.
 				if (
 				  !consumer && feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC &&
-				  (feedback->GetMediaSsrc() != RTC::RTP::ProbationGenerator::Ssrc ||
+				  (feedback->GetMediaSsrc() != RTC::Consts::BweProbeRtpSsrc ||
 					 !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())))
 				{
 					MS_DEBUG_TAG(
