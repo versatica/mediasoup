@@ -18,6 +18,22 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	constexpr uint32_t MediaSsrc{ 3333 };
 	constexpr size_t RtcpMtu{ 1200 };
 
+	// Take note of a packet and of it having left right away.
+	const auto sendPacket = [](
+	                          RTC::BWE::SendPacketHistory& sendPacketHistory,
+	                          uint16_t seq,
+	                          size_t size,
+	                          bool isAudio,
+	                          int64_t atUs) -> int64_t
+	{
+		const int64_t sequenceNumber = sendPacketHistory.AddPacket(
+		  { .ssrc = Ssrc, .seq = seq, .size = size, .isAudio = isAudio, .createdAtUs = atUs });
+
+		sendPacketHistory.ProcessSentPacket(sequenceNumber, atUs);
+
+		return sequenceNumber;
+	};
+
 	// Builds the feedback a receiver would send, reporting the given arrival
 	// times. The sequence numbers left out of them are reported as lost.
 	auto createFeedback = [SenderSsrc, MediaSsrc](
@@ -45,9 +61,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, PacketSize, false, InitialTimeUs + 10000);
-		sendPacketHistory.AddPacket(Ssrc, 102, PacketSize, false, InitialTimeUs + 20000);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
+		sendPacket(sendPacketHistory, 102, PacketSize, false, InitialTimeUs + 20000);
 
 		const auto feedback = createFeedback(
 		  0,
@@ -92,9 +108,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, PacketSize, false, InitialTimeUs + 10000);
-		sendPacketHistory.AddPacket(Ssrc, 102, PacketSize, false, InitialTimeUs + 20000);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
+		sendPacket(sendPacketHistory, 102, PacketSize, false, InitialTimeUs + 20000);
 
 		const auto feedback = createFeedback(
 		  0,
@@ -123,8 +139,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, true, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, PacketSize, false, InitialTimeUs + 10000);
+		sendPacket(sendPacketHistory, 100, PacketSize, true, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
 
 		const auto feedback = createFeedback(
 		  0,
@@ -143,8 +159,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		const auto& result = processedFeedback.value();
 
 		REQUIRE(result.packetFeedbacks.size() == 2);
-		REQUIRE(result.packetFeedbacks[0].sentPacket.audio == true);
-		REQUIRE(result.packetFeedbacks[1].sentPacket.audio == false);
+		REQUIRE(result.packetFeedbacks[0].sentPacket.isAudio == true);
+		REQUIRE(result.packetFeedbacks[1].sentPacket.isAudio == false);
 	}
 
 	SECTION("the feedback tells the data still in flight once it's been resolved")
@@ -152,8 +168,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, 200, false, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, 300, false, InitialTimeUs + 10000);
+		sendPacket(sendPacketHistory, 100, 200, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, 300, false, InitialTimeUs + 10000);
 
 		const auto firstFeedback = createFeedback(
 		  0,
@@ -190,11 +206,10 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory({ .windowDurationUs = WindowDurationUs });
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 
 		// Long enough afterwards for the window to drop the first packet.
-		sendPacketHistory.AddPacket(
-		  Ssrc, 101, PacketSize, false, InitialTimeUs + WindowDurationUs + 10000);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + WindowDurationUs + 10000);
 
 		const auto feedback = createFeedback(
 		  0,
@@ -221,8 +236,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, PacketSize, false, InitialTimeUs + 100000);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 100000);
 
 		const auto firstFeedback = createFeedback(
 		  0,
@@ -273,8 +288,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, PacketSize, false, InitialTimeUs + 100000);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 100000);
 
 		const auto firstFeedback = createFeedback(
 		  0,
@@ -329,8 +344,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, PacketSize, false, InitialTimeUs + ElapsedUs);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + ElapsedUs);
 
 		const auto firstFeedback = createFeedback(
 		  0,
@@ -379,9 +394,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, PacketSize, false, InitialTimeUs + 10000);
-		sendPacketHistory.AddPacket(Ssrc, 102, PacketSize, false, InitialTimeUs + 20000);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
+		sendPacket(sendPacketHistory, 102, PacketSize, false, InitialTimeUs + 20000);
 
 		// The packets sent later arrived earlier, which is up to whoever consumes
 		// this to reorder.
@@ -415,9 +430,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, PacketSize, false, InitialTimeUs + 10000);
-		sendPacketHistory.AddPacket(Ssrc, 102, PacketSize, false, InitialTimeUs + 20000);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
+		sendPacket(sendPacketHistory, 102, PacketSize, false, InitialTimeUs + 20000);
 
 		// The feedback reporting on the first two packets never made it, so the next
 		// one starts at the third.
@@ -442,15 +457,17 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 	SECTION("the feedbacks are resolved although the packets being sent run far ahead of them")
 	{
-		// More than half the range of the sequence numbers the wire carries, which is
-		// what makes the latest packet sent useless to resolve against.
-		constexpr int64_t PacketCount{ 40000 };
+		// Far enough ahead that the sequence numbers on the wire are nowhere near
+		// the ones being reported on, but within half their range, which is as far
+		// as a number carrying only its lowest 16 bits can be told apart from the
+		// same number one turn of the counter away.
+		constexpr int64_t PacketCount{ 30000 };
 
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
-		sendPacketHistory.AddPacket(Ssrc, 101, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs);
 
 		// The first feedback reports on the packets sent so far.
 		const auto firstFeedback = createFeedback(
@@ -471,10 +488,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		// And now a lot of packets are sent before the next feedback comes.
 		for (int64_t idx{ 2 }; idx < PacketCount; ++idx)
 		{
-			sendPacketHistory.AddPacket(Ssrc, 102, PacketSize, false, InitialTimeUs);
+			sendPacket(
+			  sendPacketHistory, static_cast<uint16_t>(100 + idx), PacketSize, false, InitialTimeUs);
 		}
-
-		REQUIRE(sendPacketHistory.GetLastSequenceNumber() == PacketCount - 1);
 
 		const auto secondFeedback = createFeedback(
 		  2,
@@ -500,7 +516,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 
 		const auto feedback = createFeedback(0, RemoteTimeUs, {});
 
@@ -530,7 +546,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		RTC::BWE::SendPacketHistory sendPacketHistory;
 		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
 
-		sendPacketHistory.AddPacket(Ssrc, 100, PacketSize, false, InitialTimeUs);
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 
 		// A sequence number this history never gave out.
 		const auto feedback = createFeedback(

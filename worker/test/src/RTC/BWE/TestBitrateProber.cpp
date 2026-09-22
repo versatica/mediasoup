@@ -57,7 +57,7 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 
 		REQUIRE(prober.IsProbing());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(prober.GetCurrentCluster(nowUs).value().id == 0);
+		REQUIRE(prober.GetCurrentCluster(nowUs).value().probeCluster.id == 0);
 
 		// The first packet goes out at the first chance there is.
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -71,7 +71,7 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			REQUIRE(nowUs == std::max(nowUs, prober.GetNextProbeTimeUs(nowUs).value()));
 			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			REQUIRE(prober.GetCurrentCluster(nowUs).value().id == 0);
+			REQUIRE(prober.GetCurrentCluster(nowUs).value().probeCluster.id == 0);
 
 			prober.ProbeSent(nowUs, ProbeSize);
 		}
@@ -98,7 +98,7 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			REQUIRE(nowUs == std::max(nowUs, prober.GetNextProbeTimeUs(nowUs).value()));
 			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			REQUIRE(prober.GetCurrentCluster(nowUs).value().id == 1);
+			REQUIRE(prober.GetCurrentCluster(nowUs).value().probeCluster.id == 1);
 
 			prober.ProbeSent(nowUs, ProbeSize);
 		}
@@ -149,7 +149,7 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 
 		REQUIRE(prober.IsProbing());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(prober.GetCurrentCluster(nowUs).value().id == 0);
+		REQUIRE(prober.GetCurrentCluster(nowUs).value().probeCluster.id == 0);
 
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		nowUs = std::max(nowUs, prober.GetNextProbeTimeUs(nowUs).value());
@@ -179,7 +179,7 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 
 		REQUIRE(prober.IsProbing());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(prober.GetCurrentCluster(nowUs).value().id == 0);
+		REQUIRE(prober.GetCurrentCluster(nowUs).value().probeCluster.id == 0);
 
 		for (int64_t i{ 1 }; i < 11; ++i)
 		{
@@ -190,7 +190,7 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 		// Some of them have been dropped.
 		REQUIRE(prober.IsProbing());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(prober.GetCurrentCluster(nowUs).value().id >= 5);
+		REQUIRE(prober.GetCurrentCluster(nowUs).value().probeCluster.id >= 5);
 
 		const int64_t maxExpectedProbeTimeUs = nowUs + (1000 * 1000);
 

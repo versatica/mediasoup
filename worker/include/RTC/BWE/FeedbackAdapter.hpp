@@ -44,17 +44,6 @@ namespace RTC
 			  const RTCP::FeedbackRtpTransportPacket* feedback, int64_t receivedAtUs);
 
 		private:
-			/**
-			 * Recover the sequence number the history gave to a packet out of the
-			 * lowest bits of it that the wire carries.
-			 *
-			 * @param previousSequenceNumber - Sequence number the previous packet the
-			 *   feedback reported on resolved into, which the returned one is the
-			 *   closest to.
-			 */
-			static int64_t UnwrapSequenceNumber(uint16_t wideSequenceNumber, int64_t previousSequenceNumber);
-
-		private:
 			SendPacketHistory* const sendPacketHistory;
 			// Our own time the arrival times of the current feedback are given
 			// against.
@@ -62,9 +51,6 @@ namespace RTC
 			// Base time of the latest feedback processed, in the remote clock, or no
 			// value if no feedback was ever processed.
 			std::optional<int64_t> lastFeedbackBaseTimeUs;
-			// Sequence number the latest packet reported on resolved into, or no
-			// value if no feedback was ever processed.
-			std::optional<int64_t> lastUnwrappedSequenceNumber;
 		};
 	} // namespace BWE
 } // namespace RTC

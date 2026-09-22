@@ -101,6 +101,26 @@ namespace RTC
 				bool allowStartProbingImmediately{ false };
 			};
 
+			/**
+			 * The burst being emitted, together with how much of it has gone out.
+			 */
+			struct CurrentCluster
+			{
+				/**
+				 * What travels with each of its packets.
+				 */
+				Types::ProbeCluster probeCluster;
+				/**
+				 * Bytes of the burst that have already gone out (bytes).
+				 *
+				 * @remarks
+				 * - It doesn't belong in `Types::ProbeCluster` because that one travels
+				 *   attached to every packet until its feedback comes back, and by then
+				 *   this count means nothing.
+				 */
+				int64_t sentBytes{ 0 };
+			};
+
 		public:
 			BitrateProber();
 
@@ -152,7 +172,7 @@ namespace RTC
 			 * - It gives up on the burst, and may leave none being emitted, when the
 			 *   instant it was due at is too far behind.
 			 */
-			[[nodiscard]] std::optional<Types::ProbeCluster> GetCurrentCluster(int64_t nowUs);
+			[[nodiscard]] std::optional<CurrentCluster> GetCurrentCluster(int64_t nowUs);
 
 			/**
 			 * Bytes the next packet of the current burst should carry, or zero if there

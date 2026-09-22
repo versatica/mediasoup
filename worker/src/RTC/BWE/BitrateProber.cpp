@@ -3,7 +3,6 @@
 
 #include "RTC/BWE/BitrateProber.hpp"
 #include "Logger.hpp"
-#include "RTC/BWE/BitrateUtils.hpp"
 
 namespace RTC
 {
@@ -88,10 +87,9 @@ namespace RTC
 			cluster.probeCluster.id        = clusterConfig.id;
 			cluster.probeCluster.minProbes = clusterConfig.targetProbeCount;
 			// The bytes the burst is meant to carry are its bitrate held for as long as
-			// it is meant to last.
-			cluster.probeCluster.minBytes = BitrateUtils::ApplyBitrateFactor(
-			  clusterConfig.targetBitrate,
-			  static_cast<double>(clusterConfig.targetDurationUs) / (8 * 1000000));
+			// it is meant to last, rounded to the nearest byte.
+			cluster.probeCluster.minBytes =
+			  ((clusterConfig.targetBitrate * clusterConfig.targetDurationUs) + 4000000) / (8 * 1000000);
 			cluster.sendBitrate     = clusterConfig.targetBitrate;
 			cluster.minProbeDeltaUs = clusterConfig.minProbeDeltaUs;
 			cluster.requestedAtUs   = clusterConfig.atUs;
@@ -101,6 +99,10 @@ namespace RTC
 			this->clusters.push(cluster);
 
 			MaybeSetActiveState(/*packetSize*/ 0);
+
+			// NOTE: Taking a burst never disables probing, and it was not disabled on
+			// the way in either.
+			MS_ASSERT(this->state == State::ACTIVE || this->state == State::INACTIVE, "probing is disabled");
 
 			MS_DEBUG_DEV(
 			  "probe cluster created [id:%" PRIi64 ", bitrate:%" PRIi64 ", minBytes:%" PRIi64
@@ -126,7 +128,7 @@ namespace RTC
 			return this->nextProbeTimeUs.value_or(nowUs);
 		}
 
-		std::optional<Types::ProbeCluster> BitrateProber::GetCurrentCluster(int64_t nowUs)
+		std::optional<BitrateProber::CurrentCluster> BitrateProber::GetCurrentCluster(int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -155,7 +157,9 @@ namespace RTC
 				}
 			}
 
-			return this->clusters.front().probeCluster;
+			const auto& cluster = this->clusters.front();
+
+			return CurrentCluster{ .probeCluster = cluster.probeCluster, .sentBytes = cluster.sentBytes };
 		}
 
 		size_t BitrateProber::GetRecommendedMinProbeSize() const
@@ -169,9 +173,10 @@ namespace RTC
 
 			const auto& cluster = this->clusters.front();
 
-			// What the burst's bitrate carries over the time between two of its shots.
-			return static_cast<size_t>(BitrateUtils::ApplyBitrateFactor(
-			  cluster.sendBitrate, static_cast<double>(cluster.minProbeDeltaUs) / (8 * 1000000)));
+			// What the burst's bitrate carries over the time between two of its shots,
+			// rounded to the nearest byte.
+			return static_cast<size_t>(
+			  ((cluster.sendBitrate * cluster.minProbeDeltaUs) + 4000000) / (8 * 1000000));
 		}
 
 		void BitrateProber::ProbeSent(int64_t nowUs, size_t size)

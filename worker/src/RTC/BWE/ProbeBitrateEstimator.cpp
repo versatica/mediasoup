@@ -164,6 +164,15 @@ namespace RTC
 			// capacity of the link, so aim slightly below it.
 			if (receiveBitrate < BitrateUtils::ApplyBitrateFactor(sendBitrate, MinRatioForUnsaturatedLink))
 			{
+				// NOTE: Nine tenths of a rate never come out above the rate itself, so
+				// being below that fraction means being below the rate.
+				MS_ASSERT(
+				  sendBitrate > receiveBitrate,
+				  "burst received faster than it was sent [sendBitrate:%" PRIi64 ", receiveBitrate:%" PRIi64
+				  "]",
+				  sendBitrate,
+				  receiveBitrate);
+
 				bitrate = BitrateUtils::ApplyBitrateFactor(receiveBitrate, TargetUtilizationFraction);
 			}
 

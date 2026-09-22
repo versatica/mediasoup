@@ -110,7 +110,7 @@ namespace RTC
 
 			if (this->options.separateAudioPackets)
 			{
-				if (packetResult.sentPacket.audio)
+				if (packetResult.sentPacket.isAudio)
 				{
 					// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 					delayDetectorForPacket = std::addressof(this->audioDelayDetector.value());
@@ -141,7 +141,7 @@ namespace RTC
 			}
 
 			auto& interArrivalForPacket =
-			  (this->options.separateAudioPackets && packetResult.sentPacket.audio)
+			  (this->options.separateAudioPackets && packetResult.sentPacket.isAudio)
 			    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			    ? this->audioInterArrivalDelta.value()
 			    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
