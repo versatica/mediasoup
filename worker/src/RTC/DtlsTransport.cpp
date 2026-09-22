@@ -225,7 +225,7 @@ namespace RTC
 				return DtlsTransport::Role::SERVER;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -250,7 +250,7 @@ namespace RTC
 				return FBS::WebRtcTransport::DtlsRole::SERVER;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -285,7 +285,7 @@ namespace RTC
 				return FBS::WebRtcTransport::DtlsState::CLOSED;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -321,7 +321,7 @@ namespace RTC
 				return DtlsTransport::FingerprintAlgorithm::SHA512;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -357,7 +357,7 @@ namespace RTC
 				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA512;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -1410,7 +1410,7 @@ namespace RTC
 				break;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 
 		// Compare the remote fingerprint with the value given via signaling.

@@ -56,7 +56,7 @@ namespace RTC
 				return FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_32;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -86,7 +86,7 @@ namespace RTC
 				return SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 

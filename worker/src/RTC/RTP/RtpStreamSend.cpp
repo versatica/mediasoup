@@ -486,7 +486,7 @@ namespace RTC
 
 			// Look for each requested packet.
 			const int64_t nowMs = this->shared->GetTimeMs();
-			const int64_t rttMs = (this->rttMs > 0.0f ? this->rttMs : DefaultRttMs);
+			const int64_t rttMs = (this->rttMs > 0.0f ? static_cast<int64_t>(this->rttMs) : DefaultRttMs);
 			uint16_t currentSeq = seq;
 			bool requested{ true };
 			size_t containerIdx{ 0 };
@@ -656,7 +656,7 @@ namespace RTC
 				repairedWeight *= static_cast<float>(repaired) / retransmitted;
 			}
 
-			lost -= repaired * repairedWeight;
+			lost = static_cast<uint32_t>(lost - (repaired * repairedWeight));
 
 			auto deliveredRatio = static_cast<float>(sent - lost) / static_cast<float>(sent);
 			auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));

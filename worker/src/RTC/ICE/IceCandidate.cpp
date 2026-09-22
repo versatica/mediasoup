@@ -22,7 +22,7 @@ namespace RTC
 					return IceCandidate::CandidateType::HOST;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 		}
 
@@ -38,7 +38,7 @@ namespace RTC
 					return FBS::WebRtcTransport::IceCandidateType::HOST;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 		}
 
@@ -54,7 +54,7 @@ namespace RTC
 					return IceCandidate::TcpCandidateType::PASSIVE;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 		}
 
@@ -70,7 +70,7 @@ namespace RTC
 					return FBS::WebRtcTransport::IceCandidateTcpType::PASSIVE;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 		}
 

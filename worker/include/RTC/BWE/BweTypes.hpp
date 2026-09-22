@@ -60,7 +60,7 @@ namespace RTC
 						return "OVERUSING";
 					}
 
-						NO_DEFAULT_GCC();
+						NO_DEFAULT();
 				}
 			}
 

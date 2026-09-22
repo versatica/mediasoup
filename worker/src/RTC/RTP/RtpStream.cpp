@@ -77,7 +77,7 @@ namespace RTC
 			  this->params.mimeType.ToString().c_str(),
 			  this->packetsLost,
 			  this->fractionLost,
-			  this->jitter,
+			  static_cast<uint32_t>(this->jitter),
 			  this->packetsDiscarded,
 			  this->packetsRetransmitted,
 			  this->packetsRepaired,

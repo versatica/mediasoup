@@ -25,7 +25,7 @@ namespace RTC
 				return TransportTuple::Protocol::TCP;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -45,7 +45,7 @@ namespace RTC
 				return FBS::Transport::Protocol::TCP;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -155,7 +155,7 @@ namespace RTC
 				return this->udpSocketOrTcpConnection == other.udpSocketOrTcpConnection;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -227,7 +227,7 @@ namespace RTC
 				return seed;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 } // namespace RTC

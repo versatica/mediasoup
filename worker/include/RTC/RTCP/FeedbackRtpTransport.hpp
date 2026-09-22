@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTCP/Feedback.hpp"
+#include "Utils.hpp"
 #include <vector>
 
 /* RTP extensions for Transport-wide Congestion Control
@@ -324,7 +325,7 @@ namespace RTC
 				size += this->deltasAndChunksSize;
 
 				// 32 bits padding.
-				size += (-size) & 3;
+				size = Utils::Byte::PadTo4Bytes(size);
 
 				return size;
 			}

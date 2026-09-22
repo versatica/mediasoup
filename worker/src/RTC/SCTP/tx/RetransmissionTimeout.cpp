@@ -33,8 +33,8 @@ namespace RTC
 		    maxRttUs(sctpOptions.maxRttMs * 1000),
 		    minRttVarianceUs(
 		      static_cast<int64_t>((sctpOptions.minRttVarianceMs * 1000) / HeuristicVarianceAdjustment)),
-		    srttUs(sctpOptions.initialRtoMs * 1000),
-		    rtoUs(sctpOptions.initialRtoMs * 1000),
+		    srttUs(static_cast<double>(sctpOptions.initialRtoMs * 1000)),
+		    rtoUs(static_cast<double>(sctpOptions.initialRtoMs * 1000)),
 		    firstMeasurement(true)
 		{
 			MS_TRACE();
@@ -76,7 +76,7 @@ namespace RTC
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-6.3.1
 			if (this->firstMeasurement)
 			{
-				this->srttUs           = rttUs;
+				this->srttUs           = static_cast<double>(rttUs);
 				this->rttVarUs         = rttUs / 2.0;
 				this->firstMeasurement = false;
 			}

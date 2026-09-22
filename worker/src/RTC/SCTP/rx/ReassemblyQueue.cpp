@@ -13,7 +13,8 @@ namespace RTC
 	{
 		ReassemblyQueue::ReassemblyQueue(size_t maxLengthBytes, bool useMessageInterleaving)
 		  : maxLengthBytes(maxLengthBytes),
-		    watermarkBytes(this->maxLengthBytes * ReassemblyQueue::HighWatermarkLimit),
+		    watermarkBytes(
+		      static_cast<size_t>(this->maxLengthBytes * ReassemblyQueue::HighWatermarkLimit)),
 		    reassemblyStreams(CreateReassemblyStreams(
 		      [this](std::span<const Types::UnwrappedTsn> tsns, Message message)
 		      {

@@ -160,11 +160,11 @@ namespace RTC
 			// packet lost.
 			if (lossPercentage < 2)
 			{
-				virtualBitrate = 1.08 * bitrate;
+				virtualBitrate = static_cast<int64_t>(1.08 * bitrate);
 			}
 			else if (lossPercentage > 10)
 			{
-				virtualBitrate = (1 - 0.5 * (lossPercentage / 100)) * bitrate;
+				virtualBitrate = static_cast<int64_t>((1 - 0.5 * (lossPercentage / 100)) * bitrate);
 			}
 			else
 			{

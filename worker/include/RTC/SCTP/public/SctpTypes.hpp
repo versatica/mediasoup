@@ -77,7 +77,7 @@ namespace RTC
 						return "SHUTTING_DOWN";
 					}
 
-						NO_DEFAULT_GCC();
+						NO_DEFAULT();
 				}
 			}
 
@@ -179,7 +179,7 @@ namespace RTC
 						return "UNSUPPORTED_OPERATION";
 					}
 
-						NO_DEFAULT_GCC();
+						NO_DEFAULT();
 				}
 			}
 
@@ -219,7 +219,7 @@ namespace RTC
 						return "usrsctp";
 					}
 
-						NO_DEFAULT_GCC();
+						NO_DEFAULT();
 				}
 			}
 
@@ -332,7 +332,7 @@ namespace RTC
 						return "ERROR_SHUTTING_DOWN";
 					}
 
-						NO_DEFAULT_GCC();
+						NO_DEFAULT();
 				}
 			}
 

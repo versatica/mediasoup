@@ -4,6 +4,7 @@
 #include "RTC/RTP/RtxStream.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include <cmath> // std::round()
 
 namespace RTC
 {
@@ -106,23 +107,32 @@ namespace RTC
 			}
 
 			// Calculate fraction lost.
-			const uint32_t expectedInterval = expected - this->expectedPrior;
+			//
+			// NOTE: Both counts wrap, so each difference is taken in the width of its
+			// own counter. Reading the expected one as signed also makes a sequence
+			// number re-sync, which restarts the count, come out negative.
+			const int64_t expectedInterval = static_cast<int32_t>(expected - this->expectedPrior);
 
 			this->expectedPrior = expected;
 
-			const uint32_t receivedInterval = this->packetsCount - this->receivedPrior;
+			const int64_t receivedInterval =
+			  static_cast<uint32_t>(this->packetsCount - this->receivedPrior);
 
-			this->receivedPrior = this->packetsCount;
+			this->receivedPrior = static_cast<uint32_t>(this->packetsCount);
 
-			const int32_t lostInterval = expectedInterval - receivedInterval;
+			const int64_t lostInterval = expectedInterval - receivedInterval;
 
-			if (expectedInterval == 0 || lostInterval <= 0)
+			if (expectedInterval <= 0 || lostInterval <= 0)
 			{
 				this->fractionLost = 0;
 			}
 			else
 			{
-				this->fractionLost = std::round((static_cast<double>(lostInterval << 8) / expectedInterval));
+				// A fixed point number with 8 bits of fraction, so a whole interval lost
+				// gives 256, one more than the field can hold.
+				const double fraction = std::round(static_cast<double>(lostInterval << 8) / expectedInterval);
+
+				this->fractionLost = static_cast<uint8_t>(std::min(fraction, 255.0));
 			}
 
 			this->reportedPacketsLost += (this->packetsLost - prevPacketsLost);
