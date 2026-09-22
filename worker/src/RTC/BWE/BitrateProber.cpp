@@ -128,7 +128,7 @@ namespace RTC
 			return this->nextProbeTimeUs.value_or(nowUs);
 		}
 
-		std::optional<Types::ProbeCluster> BitrateProber::GetCurrentCluster(int64_t nowUs)
+		std::optional<BitrateProber::CurrentCluster> BitrateProber::GetCurrentCluster(int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -157,7 +157,9 @@ namespace RTC
 				}
 			}
 
-			return this->clusters.front().probeCluster;
+			const auto& cluster = this->clusters.front();
+
+			return CurrentCluster{ .probeCluster = cluster.probeCluster, .sentBytes = cluster.sentBytes };
 		}
 
 		size_t BitrateProber::GetRecommendedMinProbeSize() const
