@@ -36,11 +36,10 @@ namespace RTC
 			}
 			else
 			{
-				// NOTE: The delta is taken in microseconds, without the rounding down to
-				// whole milliseconds the original does, since quantizing the arrival
-				// times is what the native chain deliberately avoids.
-				//
-				// TODO: (libwebrtc) We shouldn't need to do rounding here.
+				// NOTE: Taken in microseconds and not quantized any further. The groups
+				// whose arrival times the delay detector compares are only a few
+				// milliseconds apart, so rounding them to whole milliseconds would be
+				// noise of the same order as the slope being measured.
 				const int64_t baseDeltaUs = feedback->GetBaseDeltaUs(this->lastFeedbackBaseTimeUs.value());
 
 				if (baseDeltaUs < -this->currentOffsetUs)
