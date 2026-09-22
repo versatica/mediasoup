@@ -28,17 +28,6 @@ namespace RTC
 				return std::nullopt;
 			}
 
-			const auto lastSequenceNumber = this->sendPacketHistory->GetLastSequenceNumber();
-
-			if (!lastSequenceNumber.has_value())
-			{
-				MS_DEBUG_TAG(bwe, "feedback received before any packet was sent");
-
-				return std::nullopt;
-			}
-
-			const int64_t lastSentSequenceNumber = lastSequenceNumber.value();
-
 			const int64_t baseTimeUs = feedback->GetReferenceTimestampUs();
 
 			if (!this->lastFeedbackBaseTimeUs.has_value())
@@ -76,30 +65,35 @@ namespace RTC
 
 			size_t failedLookups{ 0 };
 
-			// Each packet is resolved against the one reported before it, since the
-			// packets being sent may be far ahead of the ones the feedbacks report on.
-			// The latest packet sent seeds it, and bounds it as well, since no report
-			// can stand for a packet that was never sent.
-			int64_t sequenceNumber = std::min(
-			  this->lastUnwrappedSequenceNumber.value_or(lastSentSequenceNumber), lastSentSequenceNumber);
-
 			for (const auto& packetStatus : packetStatuses)
 			{
-				sequenceNumber = UnwrapSequenceNumber(packetStatus.sequenceNumber, sequenceNumber);
+				// The wire carries the sequence number of the transport truncated to 16
+				// bits, so it's the history, which handed it out, the one that knows
+				// which of its packets it stands for.
+				const int64_t sequenceNumber =
+				  this->sendPacketHistory->UnwrapSequenceNumber(packetStatus.sequenceNumber);
 
-				const auto sentPacket =
+				const auto retrievedEntry =
 				  this->sendPacketHistory->RetrievePacket(sequenceNumber, packetStatus.received);
 
-				if (!sentPacket.has_value())
+				if (!retrievedEntry.has_value())
 				{
 					++failedLookups;
 
 					continue;
 				}
 
+				const auto& entry = retrievedEntry.value();
+
 				Types::PacketResult packetResult;
 
-				packetResult.sentPacket = sentPacket.value();
+				packetResult.sentPacket = entry.sentPacket;
+				packetResult.rtpPacketInfo =
+				  Types::PacketResult::RtpPacketInfo{ .ssrc              = entry.ssrc,
+					                                    .rtpSequenceNumber = entry.seq,
+					                                    .isRetransmission  = entry.isRetransmission };
+				packetResult.ambiguousReceiveTime = entry.ambiguousReceiveTime;
+				packetResult.sentWithEct1         = entry.sentWithEct1;
 
 				if (packetStatus.received)
 				{
@@ -109,8 +103,6 @@ namespace RTC
 
 				transportPacketsFeedback.packetFeedbacks.push_back(packetResult);
 			}
-
-			this->lastUnwrappedSequenceNumber = sequenceNumber;
 
 			if (failedLookups > 0)
 			{
@@ -131,18 +123,5 @@ namespace RTC
 			return transportPacketsFeedback;
 		}
 
-		int64_t FeedbackAdapter::UnwrapSequenceNumber(
-		  uint16_t wideSequenceNumber, int64_t previousSequenceNumber)
-		{
-			MS_TRACE();
-
-			// The wire carries the sequence number of the history truncated to 16 bits,
-			// so the closest value to the previous one ending in those very same bits
-			// is the one it stands for.
-			const auto deltaSequenceNumber = static_cast<int16_t>(
-			  static_cast<uint16_t>(wideSequenceNumber - static_cast<uint16_t>(previousSequenceNumber)));
-
-			return previousSequenceNumber + deltaSequenceNumber;
-		}
 	} // namespace BWE
 } // namespace RTC

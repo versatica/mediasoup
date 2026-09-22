@@ -23,6 +23,32 @@ namespace RTC
 			constexpr int64_t TimeUsInfinite{ std::numeric_limits<int64_t>::max() };
 
 			/**
+			 * The two bits of the IP header with which the network tells that it is
+			 * congested instead of dropping the packet.
+			 *
+			 * @see https://www.rfc-editor.org/rfc/rfc9331.html
+			 */
+			enum class EcnMarking : uint8_t
+			{
+				/**
+				 * Not ECN capable transport.
+				 */
+				NOT_ECT = 0b00,
+				/**
+				 * ECN capable transport, which is the one L4S uses.
+				 */
+				ECT1 = 0b01,
+				/**
+				 * ECN capable transport, not used by L4S.
+				 */
+				ECT0 = 0b10,
+				/**
+				 * Congestion experienced, which is what the network sets on the way.
+				 */
+				CE = 0b11
+			};
+
+			/**
 			 * How the network is behaving according to the delay based detector.
 			 */
 			enum class BandwidthUsage : uint8_t
@@ -194,7 +220,7 @@ namespace RTC
 				/**
 				 * Whether it's an audio packet. False for video, padding and RTX.
 				 */
-				bool audio{ false };
+				bool isAudio{ false };
 				/**
 				 * The probe cluster the packet belongs to, or no value if it isn't a
 				 * probe.
@@ -221,6 +247,16 @@ namespace RTC
 				};
 
 				/**
+				 * What identifies the packet on the wire.
+				 */
+				struct RtpPacketInfo
+				{
+					uint32_t ssrc{ 0 };
+					uint16_t rtpSequenceNumber{ 0 };
+					bool isRetransmission{ false };
+				};
+
+				/**
 				 * Whether the packet reached the receiver at all.
 				 */
 				bool IsReceived() const
@@ -234,6 +270,72 @@ namespace RTC
 				 * value if it was reported as lost.
 				 */
 				std::optional<int64_t> receiveTimeUs;
+				/**
+				 * What identifies the packet on the wire, or no value when the feedback
+				 * doesn't report on an RTP packet.
+				 */
+				std::optional<RtpPacketInfo> rtpPacketInfo;
+				/**
+				 * How long the receiver held the packet before sending the feedback
+				 * that reports it, which is what allows a round trip time per packet.
+				 *
+				 * @remark
+				 * - Only a feedback that carries it per packet has it, which is the one
+				 *   of RFC 8888 and not the transport-cc one.
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc8888
+				 */
+				std::optional<int64_t> arrivalTimeOffsetUs;
+				/**
+				 * The marking the packet carried when it arrived, which is how the
+				 * network reports being congested without dropping it.
+				 *
+				 * @remark
+				 * - Only a feedback that reports it has it, which is the one of RFC
+				 *   8888 and not the transport-cc one.
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc8888
+				 */
+				EcnMarking ecn{ EcnMarking::NOT_ECT };
+				/**
+				 * Whether the arrival time reported for this packet cannot be told from
+				 * that of another one, so it says nothing about the delay.
+				 *
+				 * @remark
+				 * - Nothing in this estimator reads it. It is only of use to SCReAM,
+				 *   another way of estimating the bandwidth.
+				 *
+				 * @link https://datatracker.ietf.org/doc/draft-johansson-ccwg-rfc8298bis-screamv2
+				 */
+				bool ambiguousReceiveTime{ false };
+				/**
+				 * Whether the packet was sent marked as ECT(1), which asks the network
+				 * to report congestion instead of dropping the packet.
+				 *
+				 * @see https://www.rfc-editor.org/rfc/rfc9331.html
+				 */
+				bool sentWithEct1{ false };
+				/**
+				 * Whether this is the first feedback to report the packet as lost.
+				 *
+				 * @remark
+				 * - Only a feedback that reports on a whole range of packets can tell,
+				 *   which is the one of RFC 8888 and not the transport-cc one.
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc8888
+				 */
+				bool reportedLostForTheFirstTime{ false };
+				/**
+				 * Whether this feedback reports as received a packet that an earlier
+				 * one had reported as lost.
+				 *
+				 * @remark
+				 * - Only a feedback that reports on a whole range of packets can tell,
+				 *   which is the one of RFC 8888 and not the transport-cc one.
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc8888
+				 */
+				bool reportedRecoveredForTheFirstTime{ false };
 			};
 
 			/**
