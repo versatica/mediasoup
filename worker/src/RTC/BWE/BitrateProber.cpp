@@ -3,7 +3,6 @@
 
 #include "RTC/BWE/BitrateProber.hpp"
 #include "Logger.hpp"
-#include "RTC/BWE/BitrateUtils.hpp"
 
 namespace RTC
 {
@@ -88,10 +87,9 @@ namespace RTC
 			cluster.probeCluster.id        = clusterConfig.id;
 			cluster.probeCluster.minProbes = clusterConfig.targetProbeCount;
 			// The bytes the burst is meant to carry are its bitrate held for as long as
-			// it is meant to last.
-			cluster.probeCluster.minBytes = BitrateUtils::ApplyBitrateFactor(
-			  clusterConfig.targetBitrate,
-			  static_cast<double>(clusterConfig.targetDurationUs) / (8 * 1000000));
+			// it is meant to last, rounded to the nearest byte.
+			cluster.probeCluster.minBytes =
+			  ((clusterConfig.targetBitrate * clusterConfig.targetDurationUs) + 4000000) / (8 * 1000000);
 			cluster.sendBitrate     = clusterConfig.targetBitrate;
 			cluster.minProbeDeltaUs = clusterConfig.minProbeDeltaUs;
 			cluster.requestedAtUs   = clusterConfig.atUs;
@@ -169,9 +167,10 @@ namespace RTC
 
 			const auto& cluster = this->clusters.front();
 
-			// What the burst's bitrate carries over the time between two of its shots.
-			return static_cast<size_t>(BitrateUtils::ApplyBitrateFactor(
-			  cluster.sendBitrate, static_cast<double>(cluster.minProbeDeltaUs) / (8 * 1000000)));
+			// What the burst's bitrate carries over the time between two of its shots,
+			// rounded to the nearest byte.
+			return static_cast<size_t>(
+			  ((cluster.sendBitrate * cluster.minProbeDeltaUs) + 4000000) / (8 * 1000000));
 		}
 
 		void BitrateProber::ProbeSent(int64_t nowUs, size_t size)

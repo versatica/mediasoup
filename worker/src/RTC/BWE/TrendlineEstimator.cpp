@@ -134,6 +134,25 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: Both counts come from the options this was built with, never from
+			// anything received, so a window they don't fit in is a programming error.
+			MS_ASSERT(
+			  this->options.beginningPackets >= 1 && this->options.beginningPackets < this->delayHist.size(),
+			  "beginning packets don't fit in the window [beginningPackets:%zu, window:%zu]",
+			  this->options.beginningPackets,
+			  this->delayHist.size());
+			MS_ASSERT(
+			  this->options.endPackets >= 1 && this->options.endPackets < this->delayHist.size(),
+			  "end packets don't fit in the window [endPackets:%zu, window:%zu]",
+			  this->options.endPackets,
+			  this->delayHist.size());
+			MS_ASSERT(
+			  this->options.beginningPackets + this->options.endPackets <= this->delayHist.size(),
+			  "beginning and end packets overlap [beginningPackets:%zu, endPackets:%zu, window:%zu]",
+			  this->options.beginningPackets,
+			  this->options.endPackets,
+			  this->delayHist.size());
+
 			// The least delayed sample of the beginning of the window.
 			PacketTiming early = this->delayHist[0];
 
