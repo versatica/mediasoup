@@ -36,6 +36,11 @@ namespace RTC
 			}
 			else
 			{
+				// NOTE: The delta is taken in microseconds, without the rounding down to
+				// whole milliseconds the original does, since quantizing the arrival
+				// times is what the native chain deliberately avoids.
+				//
+				// TODO: (libwebrtc) We shouldn't need to do rounding here.
 				const int64_t baseDeltaUs = feedback->GetBaseDeltaUs(this->lastFeedbackBaseTimeUs.value());
 
 				if (baseDeltaUs < -this->currentOffsetUs)
