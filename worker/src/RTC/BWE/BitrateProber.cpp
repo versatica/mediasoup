@@ -100,6 +100,10 @@ namespace RTC
 
 			MaybeSetActiveState(/*packetSize*/ 0);
 
+			// NOTE: Taking a burst never disables probing, and it was not disabled on
+			// the way in either.
+			MS_ASSERT(this->state == State::ACTIVE || this->state == State::INACTIVE, "probing is disabled");
+
 			MS_DEBUG_DEV(
 			  "probe cluster created [id:%" PRIi64 ", bitrate:%" PRIi64 ", minBytes:%" PRIi64
 			  ", minProbes:%" PRIi64 ", active:%s]",

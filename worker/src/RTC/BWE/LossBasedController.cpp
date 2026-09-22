@@ -69,10 +69,147 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// NOTE: The window is what every observation is indexed modulo, so an
-			// empty one would divide by zero. These options are ours, so this can only
-			// fail out of a programming error.
-			MS_ASSERT(this->options.observationWindowSize > 0, "observation window size must be positive");
+			// NOTE: Every option below is set from C++ alone, never from the network
+			// nor from the API, so a value out of range can only be a programming
+			// error. Ranges that are not checked here are the ones an option may
+			// legitimately take to the extreme, such as a factor that is meant to be
+			// disabled by setting it to zero.
+			MS_ASSERT(
+			  this->options.bitrateRampupUpperBoundFactor > 1.0,
+			  "bitrate rampup upper bound factor must be greater than 1 [value:%f]",
+			  this->options.bitrateRampupUpperBoundFactor);
+			MS_ASSERT(
+			  this->options.bitrateRampupUpperBoundFactorInHold > 1.0,
+			  "bitrate rampup upper bound factor in hold must be greater than 1 [value:%f]",
+			  this->options.bitrateRampupUpperBoundFactorInHold);
+			MS_ASSERT(
+			  this->options.bitrateRampupHoldThreshold >= 0.0,
+			  "bitrate rampup hold threshold must not be negative [value:%f]",
+			  this->options.bitrateRampupHoldThreshold);
+			MS_ASSERT(
+			  this->options.rampupAccelerationMaxFactor >= 0.0,
+			  "rampup acceleration max factor must not be negative [value:%f]",
+			  this->options.rampupAccelerationMaxFactor);
+			MS_ASSERT(
+			  this->options.rampupAccelerationMaxoutTimeUs > 0,
+			  "rampup acceleration maxout time must be positive [value:%" PRIi64 "]",
+			  this->options.rampupAccelerationMaxoutTimeUs);
+
+			for (const auto candidateFactor : this->options.candidateFactors)
+			{
+				MS_ASSERT(
+				  candidateFactor > 0.0, "candidate factors must be positive [value:%f]", candidateFactor);
+			}
+
+			// At least one candidate other than the current estimate must be
+			// reachable, or there is nothing for an update to choose from.
+			MS_ASSERT(
+			  this->options.appendAcknowledgedRateCandidate ||
+			    this->options.appendDelayBasedEstimateCandidate ||
+			    std::ranges::any_of(
+			      this->options.candidateFactors,
+			      [](double candidateFactor) -> bool
+			      {
+				      return candidateFactor != 1.0;
+			      }),
+			  "no candidates can be generated, so give a candidate factor other than 1, or let the "
+			  "acknowledged bitrate or the delay based estimate be candidates");
+
+			MS_ASSERT(
+			  this->options.higherBitrateBiasFactor >= 0.0,
+			  "higher bitrate bias factor must not be negative [value:%f]",
+			  this->options.higherBitrateBiasFactor);
+			MS_ASSERT(
+			  this->options.inherentLossLowerBound >= 0.0 && this->options.inherentLossLowerBound < 1.0,
+			  "inherent loss lower bound must be in [0, 1) [value:%f]",
+			  this->options.inherentLossLowerBound);
+			MS_ASSERT(
+			  this->options.lossThresholdOfHighBitratePreference >= 0.0 &&
+			    this->options.lossThresholdOfHighBitratePreference < 1.0,
+			  "loss threshold of high bitrate preference must be in [0, 1) [value:%f]",
+			  this->options.lossThresholdOfHighBitratePreference);
+			MS_ASSERT(
+			  this->options.bitratePreferenceSmoothingFactor > 0.0 &&
+			    this->options.bitratePreferenceSmoothingFactor <= 1.0,
+			  "bitrate preference smoothing factor must be in (0, 1] [value:%f]",
+			  this->options.bitratePreferenceSmoothingFactor);
+			MS_ASSERT(
+			  this->options.inherentLossUpperBoundBitrateBalance > 0,
+			  "inherent loss upper bound bitrate balance must be positive [value:%" PRIi64 "]",
+			  this->options.inherentLossUpperBoundBitrateBalance);
+			MS_ASSERT(
+			  this->options.inherentLossUpperBoundOffset >= this->options.inherentLossLowerBound &&
+			    this->options.inherentLossUpperBoundOffset < 1.0,
+			  "inherent loss upper bound offset must be in [inherentLossLowerBound, 1) [value:%f, "
+			  "inherentLossLowerBound:%f]",
+			  this->options.inherentLossUpperBoundOffset,
+			  this->options.inherentLossLowerBound);
+			MS_ASSERT(
+			  this->options.initialInherentLossEstimate >= 0.0 &&
+			    this->options.initialInherentLossEstimate < 1.0,
+			  "initial inherent loss estimate must be in [0, 1) [value:%f]",
+			  this->options.initialInherentLossEstimate);
+			MS_ASSERT(
+			  this->options.newtonIterations > 0,
+			  "number of Newton iterations must be positive [value:%" PRIi64 "]",
+			  this->options.newtonIterations);
+			MS_ASSERT(
+			  this->options.newtonStepSize > 0.0,
+			  "Newton step size must be positive [value:%f]",
+			  this->options.newtonStepSize);
+			MS_ASSERT(
+			  this->options.observationDurationLowerBoundUs > 0,
+			  "observation duration lower bound must be positive [value:%" PRIi64 "]",
+			  this->options.observationDurationLowerBoundUs);
+			// NOTE: The window is also what every observation is indexed modulo, so an
+			// empty one would divide by zero.
+			MS_ASSERT(
+			  this->options.observationWindowSize >= 2,
+			  "observation window size must be at least 2 [value:%" PRIi64 "]",
+			  this->options.observationWindowSize);
+			MS_ASSERT(
+			  this->options.sendingRateSmoothingFactor >= 0.0 &&
+			    this->options.sendingRateSmoothingFactor < 1.0,
+			  "sending rate smoothing factor must be in [0, 1) [value:%f]",
+			  this->options.sendingRateSmoothingFactor);
+			MS_ASSERT(
+			  this->options.immediateUpperBoundTemporalWeightFactor > 0.0 &&
+			    this->options.immediateUpperBoundTemporalWeightFactor <= 1.0,
+			  "immediate upper bound temporal weight factor must be in (0, 1] [value:%f]",
+			  this->options.immediateUpperBoundTemporalWeightFactor);
+			MS_ASSERT(
+			  this->options.immediateUpperBoundBitrateBalance > 0,
+			  "immediate upper bound bitrate balance must be positive [value:%" PRIi64 "]",
+			  this->options.immediateUpperBoundBitrateBalance);
+			MS_ASSERT(
+			  this->options.immediateUpperBoundLossOffset >= 0.0 &&
+			    this->options.immediateUpperBoundLossOffset < 1.0,
+			  "immediate upper bound loss offset must be in [0, 1) [value:%f]",
+			  this->options.immediateUpperBoundLossOffset);
+			MS_ASSERT(
+			  this->options.temporalWeightFactor > 0.0 && this->options.temporalWeightFactor <= 1.0,
+			  "temporal weight factor must be in (0, 1] [value:%f]",
+			  this->options.temporalWeightFactor);
+			MS_ASSERT(
+			  this->options.bitrateBackoffLowerBoundFactor <= 1.0,
+			  "bitrate backoff lower bound factor must not be greater than 1 [value:%f]",
+			  this->options.bitrateBackoffLowerBoundFactor);
+			MS_ASSERT(
+			  this->options.maxIncreaseFactor > 0.0,
+			  "max increase factor must be positive [value:%f]",
+			  this->options.maxIncreaseFactor);
+			MS_ASSERT(
+			  this->options.delayedIncreaseWindowUs > 0,
+			  "delayed increase window must be positive [value:%" PRIi64 "]",
+			  this->options.delayedIncreaseWindowUs);
+			MS_ASSERT(
+			  this->options.minNumObservations > 0,
+			  "min number of observations must be positive [value:%" PRIi64 "]",
+			  this->options.minNumObservations);
+			MS_ASSERT(
+			  this->options.lowerBoundByAckedRateFactor >= 0.0,
+			  "lower bound by acknowledged rate factor must not be negative [value:%f]",
+			  this->options.lowerBoundByAckedRateFactor);
 
 			this->currentBestEstimate.inherentLoss = this->options.initialInherentLossEstimate;
 
@@ -262,7 +399,8 @@ namespace RTC
 					if (
 					  this->lastHoldInfo.bitrate != Types::BitrateInfinite &&
 					  this->acknowledgedBitrate <
-					    this->options.bitrateRampupHoldThreshold * this->lastHoldInfo.bitrate)
+					    BitrateUtils::ApplyBitrateFactor(
+					      this->lastHoldInfo.bitrate, this->options.bitrateRampupHoldThreshold))
 					{
 						rampupFactor = this->options.bitrateRampupUpperBoundFactorInHold;
 					}
@@ -766,7 +904,9 @@ namespace RTC
 				return 0.0;
 			}
 
-			const double bitrateKbps = static_cast<double>(bitrate) / 1000.0;
+			// NOTE: The bias is measured over a bitrate expressed with a resolution of
+			// 1 kbps, so that it doesn't move with a fraction of it.
+			const double bitrateKbps = std::round(static_cast<double>(bitrate) / 1000.0);
 
 			return (AdjustBiasFactor(this->averageReportedLossRatio, this->options.higherBitrateBiasFactor) *
 			        bitrateKbps) +
@@ -852,14 +992,16 @@ namespace RTC
 				return 0.0;
 			}
 
-			double totalBytes{ 0.0 };
-			double lostBytes{ 0.0 };
+			// NOTE: The weighted sizes are counted in whole bytes, since a fraction of
+			// a byte is not something that was sent.
+			int64_t totalBytes{ 0 };
+			int64_t lostBytes{ 0 };
 			double minLossRate{ 1.0 };
 			double maxLossRate{ 0.0 };
-			double minLostBytes{ 0.0 };
-			double maxLostBytes{ 0.0 };
-			double minBytesReceived{ 0.0 };
-			double maxBytesReceived{ 0.0 };
+			int64_t minLostBytes{ 0 };
+			int64_t maxLostBytes{ 0 };
+			int64_t minBytesReceived{ 0 };
+			int64_t maxBytesReceived{ 0 };
 			int64_t sendingRateOfMaxLossObservation{ 0 };
 
 			for (const auto& observation : this->observations)
@@ -872,8 +1014,8 @@ namespace RTC
 				const double temporalWeight =
 				  this->immediateUpperBoundTemporalWeights[(this->numObservations - 1) - observation.id];
 
-				totalBytes += temporalWeight * static_cast<double>(observation.sizeBytes);
-				lostBytes += temporalWeight * static_cast<double>(observation.lostSizeBytes);
+				totalBytes += std::llround(temporalWeight * static_cast<double>(observation.sizeBytes));
+				lostBytes += std::llround(temporalWeight * static_cast<double>(observation.lostSizeBytes));
 
 				const double lossRate = observation.sizeBytes != 0
 				                          ? static_cast<double>(observation.lostSizeBytes) /
@@ -889,43 +1031,47 @@ namespace RTC
 
 				if (lossRate > maxLossRate)
 				{
-					maxLossRate      = lossRate;
-					maxLostBytes     = temporalWeight * static_cast<double>(observation.lostSizeBytes);
-					maxBytesReceived = temporalWeight * static_cast<double>(observation.sizeBytes);
+					maxLossRate = lossRate;
+					maxLostBytes =
+					  std::llround(temporalWeight * static_cast<double>(observation.lostSizeBytes));
+					maxBytesReceived =
+					  std::llround(temporalWeight * static_cast<double>(observation.sizeBytes));
 					sendingRateOfMaxLossObservation = observation.sendingRate;
 				}
 
 				if (lossRate < minLossRate)
 				{
-					minLossRate      = lossRate;
-					minLostBytes     = temporalWeight * static_cast<double>(observation.lostSizeBytes);
-					minBytesReceived = temporalWeight * static_cast<double>(observation.sizeBytes);
+					minLossRate = lossRate;
+					minLostBytes =
+					  std::llround(temporalWeight * static_cast<double>(observation.lostSizeBytes));
+					minBytesReceived =
+					  std::llround(temporalWeight * static_cast<double>(observation.sizeBytes));
 				}
 			}
 
 			// NOTE: Nothing was sent at all, so there is no loss to tell. Without this
 			// the division below would give a NaN, which makes every comparison it
 			// takes part in false and silently freezes the estimate for good.
-			if (totalBytes == 0.0)
+			if (totalBytes == 0)
 			{
 				return 0.0;
 			}
 
 			// A sudden jump of the sending rate explains the loss of that observation
 			// on its own, so it's not a spike to be filtered out.
-			if (GetMedianSendingRate() * this->options.medianSendingRateFactor <= sendingRateOfMaxLossObservation)
+			if (BitrateUtils::ApplyBitrateFactor(GetMedianSendingRate(), this->options.medianSendingRateFactor) <= sendingRateOfMaxLossObservation)
 			{
-				return lostBytes / totalBytes;
+				return static_cast<double>(lostBytes) / static_cast<double>(totalBytes);
 			}
 
 			// It could happen if the window was of two observations.
 			if (totalBytes == maxBytesReceived + minBytesReceived)
 			{
-				return lostBytes / totalBytes;
+				return static_cast<double>(lostBytes) / static_cast<double>(totalBytes);
 			}
 
-			return (lostBytes - minLostBytes - maxLostBytes) /
-			       (totalBytes - maxBytesReceived - minBytesReceived);
+			return static_cast<double>(lostBytes - minLostBytes - maxLostBytes) /
+			       static_cast<double>(totalBytes - maxBytesReceived - minBytesReceived);
 		}
 
 		int64_t LossBasedController::GetMedianSendingRate() const

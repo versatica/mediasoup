@@ -511,15 +511,10 @@ namespace RTC
 				pendingProbes.push_back(CreateProbeClusterConfig(nowUs, bitrate));
 			}
 
-			// Nothing was asked for, so there is nothing to remember having asked.
-			if (pendingProbes.empty())
-			{
-				return {};
-			}
-
 			this->lastProbingInitiatedAtUs = nowUs;
 
-			if (probeFurther)
+			// Nothing was asked for, so there is no result to wait for either.
+			if (probeFurther && !pendingProbes.empty())
 			{
 				UpdateState(State::WAITING_FOR_PROBING_RESULT);
 
