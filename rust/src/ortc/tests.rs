@@ -444,13 +444,6 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
-            RtpHeaderExtension {
-                kind: MediaKind::Video,
-                uri: RtpHeaderExtensionUri::TimeOffset,
-                preferred_id: 9,
-                preferred_encrypt: false,
-                direction: RtpHeaderExtensionDirection::SendRecv,
-            },
         ],
     };
 
@@ -531,11 +524,6 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             RtpHeaderExtensionParameters {
                 uri: RtpHeaderExtensionUri::VideoOrientation,
                 id: 8,
-                encrypt: false,
-            },
-            RtpHeaderExtensionParameters {
-                uri: RtpHeaderExtensionUri::TimeOffset,
-                id: 9,
                 encrypt: false,
             },
         ],

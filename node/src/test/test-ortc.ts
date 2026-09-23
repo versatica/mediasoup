@@ -385,13 +385,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				preferredEncrypt: false,
 				direction: 'sendrecv',
 			},
-			{
-				kind: 'video',
-				uri: 'urn:ietf:params:rtp-hdrext:toffset',
-				preferredId: 9,
-				preferredEncrypt: false,
-				direction: 'sendrecv',
-			},
 		],
 	};
 
@@ -445,12 +438,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 8,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'urn:ietf:params:rtp-hdrext:toffset',
-			id: 9,
 			encrypt: false,
 			parameters: {},
 		},

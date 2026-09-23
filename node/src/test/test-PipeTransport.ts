@@ -275,13 +275,13 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 		},
 		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
-			id: 11,
+			id: 10,
 			encrypt: false,
 			parameters: {},
 		},
 		{
 			uri: 'urn:mediasoup:params:rtp-hdrext:packet-id',
-			id: 12,
+			id: 11,
 			encrypt: false,
 			parameters: {},
 		},
@@ -329,13 +329,13 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 		},
 		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
-			id: 11,
+			id: 10,
 			encrypt: false,
 			parameters: {},
 		},
 		{
 			uri: 'urn:mediasoup:params:rtp-hdrext:packet-id',
-			id: 12,
+			id: 11,
 			encrypt: false,
 			parameters: {},
 		},
@@ -395,20 +395,14 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			parameters: {},
 		},
 		{
-			uri: 'urn:ietf:params:rtp-hdrext:toffset',
-			id: 9,
-			encrypt: false,
-			parameters: {},
-		},
-		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
-			id: 11,
+			id: 10,
 			encrypt: false,
 			parameters: {},
 		},
 		{
 			uri: 'urn:mediasoup:params:rtp-hdrext:packet-id',
-			id: 12,
+			id: 11,
 			encrypt: false,
 			parameters: {},
 		},
@@ -455,20 +449,14 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			parameters: {},
 		},
 		{
-			uri: 'urn:ietf:params:rtp-hdrext:toffset',
-			id: 9,
-			encrypt: false,
-			parameters: {},
-		},
-		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
-			id: 11,
+			id: 10,
 			encrypt: false,
 			parameters: {},
 		},
 		{
 			uri: 'urn:mediasoup:params:rtp-hdrext:packet-id',
-			id: 12,
+			id: 11,
 			encrypt: false,
 			parameters: {},
 		},
@@ -511,7 +499,7 @@ test('router.pipeToRouter() gives abs-capture-time to the pipe Consumer if the P
 
 	expect(pipeConsumer.rtpParameters.headerExtensions).toContainEqual({
 		uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
-		id: 10,
+		id: 9,
 		encrypt: false,
 		parameters: {},
 	});
@@ -639,20 +627,14 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 			parameters: {},
 		},
 		{
-			uri: 'urn:ietf:params:rtp-hdrext:toffset',
-			id: 9,
-			encrypt: false,
-			parameters: {},
-		},
-		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
-			id: 11,
+			id: 10,
 			encrypt: false,
 			parameters: {},
 		},
 		{
 			uri: 'urn:mediasoup:params:rtp-hdrext:packet-id',
-			id: 12,
+			id: 11,
 			encrypt: false,
 			parameters: {},
 		},

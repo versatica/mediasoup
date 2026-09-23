@@ -1475,7 +1475,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// Requires Two-Bytes type extensions due to length > 16.
 		extensions.assign(
 		  {
-		    { RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET, 1, 17, rtpCommon::DataBuffer }
+		    { RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME, 1, 17, rtpCommon::DataBuffer }
     });
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());

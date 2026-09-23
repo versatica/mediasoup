@@ -209,7 +209,6 @@ impl FromFbs for RtpHeaderExtensionUri {
             rtp_parameters::RtpHeaderExtensionUri::VideoOrientation => {
                 RtpHeaderExtensionUri::VideoOrientation
             }
-            rtp_parameters::RtpHeaderExtensionUri::TimeOffset => RtpHeaderExtensionUri::TimeOffset,
             rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime => {
                 RtpHeaderExtensionUri::AbsCaptureTime
             }
@@ -250,7 +249,6 @@ impl ToFbs for RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::VideoOrientation => {
                 rtp_parameters::RtpHeaderExtensionUri::VideoOrientation
             }
-            RtpHeaderExtensionUri::TimeOffset => rtp_parameters::RtpHeaderExtensionUri::TimeOffset,
             RtpHeaderExtensionUri::AbsCaptureTime => {
                 rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime
             }

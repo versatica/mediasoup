@@ -324,7 +324,6 @@ export type RtpHeaderExtensionUri =
 	| 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension'
 	| 'urn:3gpp:video-orientation'
 	| 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time'
-	| 'urn:ietf:params:rtp-hdrext:toffset'
 	| 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay'
 	| 'urn:mediasoup:params:rtp-hdrext:packet-id';
 
