@@ -23,29 +23,54 @@ namespace RTC
 		class RobustThroughputEstimator : public AcknowledgedBitrateEstimatorInterface
 		{
 		public:
+			/**
+			 * @remarks
+			 * - Every constraint documented below is checked by the constructor and
+			 *   aborts when it doesn't hold. These options are set from C++ alone,
+			 *   never from the network nor from the API, so breaking one of them is a
+			 *   programming error.
+			 */
 			struct RobustThroughputEstimatorOptions
 			{
 				/**
 				 * Smallest number of packets the window holds.
+				 *
+				 * @remarks
+				 * - It must be between 10 and 1000.
 				 */
 				size_t windowPackets{ 20 };
 				/**
 				 * Largest number of packets the window holds, so that a high bitrate
 				 * doesn't make it grow without bound.
+				 *
+				 * @remarks
+				 * - It must be between 10 and 1000, and never below `windowPackets`.
 				 */
 				size_t maxWindowPackets{ 500 };
 				/**
 				 * Smallest duration the window covers, so that a low bitrate still gets
 				 * enough packets to measure.
+				 *
+				 * @remarks
+				 * - It must be between 100 and 3000 ms, and never above
+				 *   `maxWindowDurationUs`.
 				 */
 				int64_t minWindowDurationUs{ 1000 * 1000 };
 				/**
 				 * Largest duration the window covers, so that very old packets don't
 				 * weigh on the estimate after sending was paused.
+				 *
+				 * @remarks
+				 * - It must be between 1 and 15 s.
 				 */
 				int64_t maxWindowDurationUs{ 5 * 1000 * 1000 };
 				/**
 				 * Number of packets the window needs before it produces an estimate.
+				 *
+				 * @remarks
+				 * - It must be between 10 and 1000, and never above `windowPackets`,
+				 *   since a window that requires more packets than it holds would reach
+				 *   the sending rate with no send time to compute it from.
 				 */
 				size_t requiredPackets{ 10 };
 				/**
@@ -56,6 +81,7 @@ namespace RTC
 				 * - Set it to 0 when audio is not included in the allocation, and to 1
 				 *   when it is included in the allocation but not in the estimation.
 				 *   Its value is irrelevant once every packet is tracked.
+				 * - It must be between 0 and 1.
 				 */
 				double unackedWeight{ 1.0 };
 			};
