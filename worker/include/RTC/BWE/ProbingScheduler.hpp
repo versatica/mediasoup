@@ -8,6 +8,7 @@
 #include "RTC/BWE/ProbePacketGenerator.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "SharedInterface.hpp"
+#include <vector>
 
 namespace RTC
 {
