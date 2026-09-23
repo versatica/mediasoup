@@ -98,7 +98,20 @@ namespace RTC
 
 			this->shotSentBytes = 0;
 
-			this->probePacketGenerator.GeneratePackets(this->bitrateProber.GetRecommendedMinProbeSize());
+			const size_t recommendedSize = this->bitrateProber.GetRecommendedMinProbeSize();
+
+			// The burst opens with the smallest packet there is. What measures it
+			// leaves out the size of the first packet to arrive, so a big one there
+			// throws away much of what the burst carried.
+			if (currentCluster.value().sentBytes == 0)
+			{
+				this->probePacketGenerator.GeneratePackets(this->probePacketGenerator.GetMinPacketLength());
+			}
+
+			if (this->shotSentBytes < recommendedSize)
+			{
+				this->probePacketGenerator.GeneratePackets(recommendedSize - this->shotSentBytes);
+			}
 
 			// Nothing went out, so there is nothing to report and no reason to believe
 			// that trying again would do any better. A burst asked for later starts

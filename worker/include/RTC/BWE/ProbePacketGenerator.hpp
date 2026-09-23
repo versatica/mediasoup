@@ -87,6 +87,15 @@ namespace RTC
 			ProbePacketGenerator& operator=(const ProbePacketGenerator&) = delete;
 
 			/**
+			 * Smallest packet this can make (bytes), which is its header and its
+			 * extensions and no payload at all.
+			 */
+			size_t GetMinPacketLength() const
+			{
+				return this->minPacketLength;
+			}
+
+			/**
 			 * Hand over the packets that carry the given count of bytes.
 			 *
 			 * @remarks
