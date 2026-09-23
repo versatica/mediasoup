@@ -3,6 +3,7 @@
 #include "RTC/BWE/ProbingScheduler.hpp"
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <string_view>
 #include <vector>
 
 SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
