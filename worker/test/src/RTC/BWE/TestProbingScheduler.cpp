@@ -97,7 +97,7 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		REQUIRE(!probingScheduler.IsProbing());
 		REQUIRE(listener.sentLengths.empty());
 
-		probingScheduler.CreateProbeCluster(makeClusterConfig(0, nowUs, 900000, 2 * 1000));
+		probingScheduler.CreateProbeClusters({ makeClusterConfig(0, nowUs, 900000, 2 * 1000) });
 
 		auto* timer = shared.GetTimer(TimerLabel);
 
@@ -126,7 +126,8 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 
 		RTC::BWE::ProbingScheduler probingScheduler(std::addressof(listener), std::addressof(shared));
 
-		probingScheduler.CreateProbeCluster(makeClusterConfig(0, nowUs, TestBitrate, MinProbeDeltaUs));
+		probingScheduler.CreateProbeClusters(
+		  { makeClusterConfig(0, nowUs, TestBitrate, MinProbeDeltaUs) });
 
 		size_t shots{ 0 };
 
@@ -145,6 +146,41 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		REQUIRE(!shared.GetTimer(TimerLabel)->IsActive());
 	}
 
+	SECTION("the shots that piled up while the loop was held up go out together")
+	{
+		constexpr int64_t TestBitrate{ 900000 };
+		constexpr int64_t MinProbeDeltaUs{ 2 * 1000 };
+
+		RTC::BWE::ProbingScheduler probingScheduler(std::addressof(listener), std::addressof(shared));
+
+		probingScheduler.CreateProbeClusters(
+		  { makeClusterConfig(0, nowUs, TestBitrate, MinProbeDeltaUs) });
+
+		REQUIRE(emitNextShot());
+
+		const size_t packetsAfterFirstShot = listener.sentLengths.size();
+
+		REQUIRE(packetsAfterFirstShot > 0);
+
+		// The loop gives no sign of life for the time of several shots.
+		//
+		// NOTE: The span has to sit between two bounds, which is the only window
+		// where piling up happens at all. Below the time between two shots nothing
+		// piles up, and above `BitrateProberOptions::maxProbeDelayUs`, which
+		// defaults to 10 ms, the burst is given up on rather than emitted late, so
+		// there would be nothing left to send. Six milliseconds is inside both.
+		nowUs += 3 * MinProbeDeltaUs;
+
+		auto* timer = shared.GetTimer(TimerLabel);
+
+		REQUIRE(timer->IsActive());
+		REQUIRE(timer->EvaluateHasExpired());
+
+		// All of them went out on that single tick instead of one per turn of the
+		// loop, which would have stretched the burst well below its bitrate.
+		REQUIRE(listener.sentLengths.size() > packetsAfterFirstShot + 1);
+	}
+
 	SECTION("the shots of a burst are spaced by the time it asked for")
 	{
 		constexpr int64_t TestBitrate{ 900000 };
@@ -152,7 +188,8 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 
 		RTC::BWE::ProbingScheduler probingScheduler(std::addressof(listener), std::addressof(shared));
 
-		probingScheduler.CreateProbeCluster(makeClusterConfig(0, nowUs, TestBitrate, MinProbeDeltaUs));
+		probingScheduler.CreateProbeClusters(
+		  { makeClusterConfig(0, nowUs, TestBitrate, MinProbeDeltaUs) });
 
 		REQUIRE(emitNextShot());
 
@@ -180,7 +217,7 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 
 		listener.sendPackets = false;
 
-		probingScheduler.CreateProbeCluster(makeClusterConfig(0, nowUs, 900000, 2 * 1000));
+		probingScheduler.CreateProbeClusters({ makeClusterConfig(0, nowUs, 900000, 2 * 1000) });
 
 		REQUIRE(emitNextShot());
 		REQUIRE(listener.sentLengths.empty());
@@ -196,8 +233,11 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 
 		RTC::BWE::ProbingScheduler probingScheduler(std::addressof(listener), std::addressof(shared));
 
-		probingScheduler.CreateProbeCluster(makeClusterConfig(0, nowUs, TestBitrate, 2 * 1000));
-		probingScheduler.CreateProbeCluster(makeClusterConfig(1, nowUs, TestBitrate, 2 * 1000));
+		// Both at once, which is what the controller does when it asks for the two
+		// bursts the connection opens with.
+		probingScheduler.CreateProbeClusters(
+		  { makeClusterConfig(0, nowUs, TestBitrate, 2 * 1000),
+			  makeClusterConfig(1, nowUs, TestBitrate, 2 * 1000) });
 
 		while (emitNextShot())
 		{

@@ -56,6 +56,9 @@ namespace RTC
 				 * - It carries room for the abs-send-time and for the transport wide
 				 *   sequence number but no value for either, so both have to be written
 				 *   here.
+				 * - This must not destroy the `ProbingScheduler`, not even indirectly.
+				 *   It goes on reading its own members after this returns, so
+				 *   returning false is no way out of it either.
 				 */
 				virtual bool OnProbingSchedulerSendRtpPacket(
 				  ProbingScheduler* probingScheduler,
@@ -94,16 +97,16 @@ namespace RTC
 			ProbingScheduler& operator=(const ProbingScheduler&) = delete;
 
 			/**
-			 * Take a burst that has been asked for.
+			 * Take the bursts that have been asked for.
 			 *
 			 * @remarks
-			 * - Nothing goes out within this call. The burst begins on the turn of
-			 *   the event loop that follows, so that the send path never runs inside
-			 *   a call that may itself come from the send path.
-			 * - The bursts asked for are emitted in the order they were asked for,
-			 *   and one asked for long ago is dropped rather than sent late.
+			 * - Nothing goes out within this call. The first burst begins on the turn
+			 *   of the event loop that follows, so that the send path never runs
+			 *   inside a call that may itself come from the send path.
+			 * - They are emitted in the order they were asked for, and one asked for
+			 *   long ago is dropped rather than sent late.
 			 */
-			void CreateProbeCluster(const Types::ProbeClusterConfig& clusterConfig);
+			void CreateProbeClusters(const std::vector<Types::ProbeClusterConfig>& clusterConfigs);
 
 			/**
 			 * Bytes that every packet carries on top of its own length once it's on
@@ -138,8 +141,14 @@ namespace RTC
 
 		private:
 			/**
-			 * Emit what the current burst owes right now and arm the timer for its
-			 * next shot, or stop it if there is nothing left to emit.
+			 * Emit every shot that is due by now and arm the timer for the next one,
+			 * or stop it if there is nothing left to emit.
+			 *
+			 * @remarks
+			 * - More than one may be due when the event loop was held up for longer
+			 *   than the time between two shots. Leaving them for later turns of the
+			 *   loop would stretch the burst and have it measure a bitrate below the
+			 *   one it was asked for.
 			 */
 			void Process();
 

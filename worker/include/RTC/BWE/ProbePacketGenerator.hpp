@@ -45,6 +45,9 @@ namespace RTC
 				 *   here.
 				 * - Whoever measures the burst has to be told how much of it went out,
 				 *   so the length of the packet is reported from here as well.
+				 * - This must not destroy the `ProbePacketGenerator`, not even
+				 *   indirectly. It goes on reading its own members after this returns,
+				 *   so returning false is no way out of it either.
 				 */
 				virtual bool OnProbePacketGeneratorSendRtpPacket(
 				  ProbePacketGenerator* probePacketGenerator, RTC::RTP::Packet* packet) = 0;

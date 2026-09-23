@@ -56,16 +56,19 @@ namespace RTC
 			delete this->nextProbeTimer;
 		}
 
-		void ProbingScheduler::CreateProbeCluster(const Types::ProbeClusterConfig& clusterConfig)
+		void ProbingScheduler::CreateProbeClusters(const std::vector<Types::ProbeClusterConfig>& clusterConfigs)
 		{
 			MS_TRACE();
 
-			this->bitrateProber.CreateProbeCluster(clusterConfig);
+			for (const auto& clusterConfig : clusterConfigs)
+			{
+				this->bitrateProber.CreateProbeCluster(clusterConfig);
+			}
 
-			// A burst is scheduled as soon as it's asked for, but not in the stack of
-			// whoever asked: the next turn of the loop picks it up. Emitting from
-			// here would put the send path inside a call that may itself come from
-			// the send path.
+			// They are scheduled as soon as they are asked for, but not in the stack
+			// of whoever asked: the next turn of the loop picks them up. Emitting from
+			// here would put the send path inside a call that may itself come from the
+			// send path.
 			this->nextProbeTimer->Restart(0);
 		}
 
@@ -100,79 +103,83 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const int64_t nowUs = this->shared->GetTimeUs();
-
-			// NOTE: This may give up on a burst that is due too far in the past, so
-			// it's what decides whether there is anything to emit at all.
-			const auto currentCluster = this->bitrateProber.GetCurrentCluster(nowUs);
-
-			if (!currentCluster.has_value())
+			// Every shot that is already due goes out before giving the loop back,
+			// since one left for the next turn is a shot emitted late and a burst
+			// stretched below the bitrate it was asked for. It always ends: a shot
+			// that goes out pushes the next one forward by the time its bytes take
+			// at the burst's bitrate, which outruns the clock straight away.
+			while (true)
 			{
-				ScheduleNextProbe(std::nullopt, nowUs);
+				const int64_t nowUs = this->shared->GetTimeUs();
 
-				return;
+				// NOTE: This may give up on a burst that is due too far in the past, so
+				// it's what decides whether there is anything to emit at all.
+				const auto currentCluster = this->bitrateProber.GetCurrentCluster(nowUs);
+
+				if (!currentCluster.has_value())
+				{
+					ScheduleNextProbe(std::nullopt, nowUs);
+
+					return;
+				}
+
+				const int64_t nextProbeTimeUs = this->bitrateProber.GetNextProbeTimeUs(nowUs).value_or(nowUs);
+
+				// A shot that is almost due goes out now rather than waiting for
+				// another tick of a timer that cannot count in microseconds.
+				if (nowUs + MaxEarlyProbeProcessingUs < nextProbeTimeUs)
+				{
+					ScheduleNextProbe(nextProbeTimeUs, nowUs);
+
+					return;
+				}
+
+				const ScopedShot shot(*this, currentCluster.value().probeCluster);
+
+				const size_t recommendedSize = this->bitrateProber.GetRecommendedMinProbeSize();
+
+				// A burst whose bitrate doesn't amount to a single byte over the time
+				// between two of its shots cannot be emitted at all.
+				if (recommendedSize == 0)
+				{
+					MS_DEBUG_DEV("the burst carries no bytes between shots, giving up on it");
+
+					ScheduleNextProbe(std::nullopt, nowUs);
+
+					return;
+				}
+
+				// The burst opens with the smallest packet there is. What measures it
+				// leaves out the size of the first packet to arrive, so a big one there
+				// throws away much of what the burst carried.
+				if (currentCluster.value().sentBytes == 0)
+				{
+					this->probePacketGenerator.GeneratePackets(this->probePacketGenerator.GetMinPacketLength());
+				}
+
+				if (this->shotSentBytes < recommendedSize)
+				{
+					this->probePacketGenerator.GeneratePackets(recommendedSize - this->shotSentBytes);
+				}
+
+				// Nothing went out, so there is nothing to report and no reason to
+				// believe that trying again would do any better. A burst asked for
+				// later starts everything over.
+				if (this->shotSentBytes == 0)
+				{
+					MS_DEBUG_DEV("no packet of the burst could be sent, giving up on it");
+
+					ScheduleNextProbe(std::nullopt, nowUs);
+
+					return;
+				}
+
+				// NOTE: Reported once for the whole shot rather than per packet, since
+				// this is also what counts the shots a burst is made of. The clock is
+				// read again because handing the packets over took time of its own, and
+				// this instant is what the rest of the burst is measured from.
+				this->bitrateProber.ProbeSent(this->shared->GetTimeUs(), this->shotSentBytes);
 			}
-
-			const int64_t nextProbeTimeUs = this->bitrateProber.GetNextProbeTimeUs(nowUs).value_or(nowUs);
-
-			// A shot that is almost due goes out now rather than waiting for another
-			// tick of a timer that cannot count in microseconds.
-			if (nowUs + MaxEarlyProbeProcessingUs < nextProbeTimeUs)
-			{
-				ScheduleNextProbe(nextProbeTimeUs, nowUs);
-
-				return;
-			}
-
-			const ScopedShot shot(*this, currentCluster.value().probeCluster);
-
-			const size_t recommendedSize = this->bitrateProber.GetRecommendedMinProbeSize();
-
-			// A burst whose bitrate doesn't amount to a single byte over the time
-			// between two of its shots cannot be emitted at all.
-			if (recommendedSize == 0)
-			{
-				MS_DEBUG_DEV("the burst carries no bytes between shots, giving up on it");
-
-				ScheduleNextProbe(std::nullopt, nowUs);
-
-				return;
-			}
-
-			// The burst opens with the smallest packet there is. What measures it
-			// leaves out the size of the first packet to arrive, so a big one there
-			// throws away much of what the burst carried.
-			if (currentCluster.value().sentBytes == 0)
-			{
-				this->probePacketGenerator.GeneratePackets(this->probePacketGenerator.GetMinPacketLength());
-			}
-
-			if (this->shotSentBytes < recommendedSize)
-			{
-				this->probePacketGenerator.GeneratePackets(recommendedSize - this->shotSentBytes);
-			}
-
-			// Nothing went out, so there is nothing to report and no reason to believe
-			// that trying again would do any better. A burst asked for later starts
-			// everything over.
-			if (this->shotSentBytes == 0)
-			{
-				MS_DEBUG_DEV("no packet of the burst could be sent, giving up on it");
-
-				ScheduleNextProbe(std::nullopt, nowUs);
-
-				return;
-			}
-
-			// NOTE: Reported once for the whole shot rather than per packet, since
-			// this is also what counts the shots a burst is made of. The clock is
-			// read again because handing the packets over took time of its own, and
-			// this instant is what the rest of the burst is measured from.
-			const int64_t sentAtUs = this->shared->GetTimeUs();
-
-			this->bitrateProber.ProbeSent(sentAtUs, this->shotSentBytes);
-
-			ScheduleNextProbe(this->bitrateProber.GetNextProbeTimeUs(sentAtUs), sentAtUs);
 		}
 
 		void ProbingScheduler::ScheduleNextProbe(std::optional<int64_t> nextProbeTimeUs, int64_t nowUs)
