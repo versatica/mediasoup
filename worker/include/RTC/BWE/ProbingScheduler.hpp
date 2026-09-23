@@ -81,6 +81,20 @@ namespace RTC
 			void CreateProbeCluster(const Types::ProbeClusterConfig& clusterConfig);
 
 			/**
+			 * Bytes that every packet carries on top of its own length once it's on
+			 * the network, so that a burst measures what the link really has to
+			 * carry.
+			 *
+			 * @remarks
+			 * - It depends on the path the packets take, so it has to be set again
+			 *   whenever that changes.
+			 */
+			void SetPacketOverhead(size_t packetOverhead)
+			{
+				this->packetOverhead = packetOverhead;
+			}
+
+			/**
 			 * Whether a burst is being emitted right now.
 			 */
 			bool IsProbing() const
@@ -121,8 +135,11 @@ namespace RTC
 			ProbePacketGenerator probePacketGenerator;
 			// Allocated by this.
 			TimerHandleInterface* nextProbeTimer{ nullptr };
-			// Bytes of the current shot that have gone out, which is only meaningful
-			// while one is being emitted.
+			// Bytes each packet carries on top of its own length once it's on the
+			// network.
+			size_t packetOverhead{ 0 };
+			// Bytes of the current shot that have gone out, overhead included, which
+			// is only meaningful while one is being emitted.
 			size_t shotSentBytes{ 0 };
 		};
 	} // namespace BWE

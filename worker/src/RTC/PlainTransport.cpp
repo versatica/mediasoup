@@ -804,6 +804,13 @@ namespace RTC
 		return this->tuple ? true : false;
 	}
 
+	inline size_t PlainTransport::GetPacketOverhead() const
+	{
+		MS_TRACE();
+
+		return this->tuple ? this->tuple->GetPacketOverhead() : 0;
+	}
+
 	inline bool PlainTransport::HasSrtp() const
 	{
 		MS_TRACE();

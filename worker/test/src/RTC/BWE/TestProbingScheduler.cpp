@@ -141,10 +141,12 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		  startTimeUs + ((static_cast<int64_t>(listener.GetSentBytes()) * 8 * 1000000) / TestBitrate);
 
 		REQUIRE(timer->IsActive());
-		// Rounded up, since a shot emitted early would measure a bitrate nobody
-		// asked for.
-		REQUIRE(timer->GetExpiresAtMs() * 1000 >= expectedNextUs);
-		REQUIRE((timer->GetExpiresAtMs() * 1000) - expectedNextUs < 1000);
+		// The tick lands just before the shot is due rather than just after, since
+		// what is left of the wait by then is under a millisecond and goes out
+		// anyway. A burst whose shots all left late would measure a bitrate below
+		// the one it was asked for.
+		REQUIRE(timer->GetExpiresAtMs() * 1000 <= expectedNextUs);
+		REQUIRE(expectedNextUs - (timer->GetExpiresAtMs() * 1000) < 1000);
 	}
 
 	SECTION("a listener that cannot send stops the burst")

@@ -46,6 +46,7 @@ namespace RTC
 		{
 			return true;
 		}
+		size_t GetPacketOverhead() const override;
 		bool HasSrtp() const;
 		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;

@@ -25,6 +25,7 @@ namespace RTC
 
 	private:
 		bool IsConnected() const override;
+		size_t GetPacketOverhead() const override;
 		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;

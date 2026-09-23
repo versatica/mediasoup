@@ -34,6 +34,7 @@ namespace RTC
 
 	private:
 		bool IsConnected() const override;
+		size_t GetPacketOverhead() const override;
 		bool HasSrtp() const;
 		bool IsSrtpReady() const;
 		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;
