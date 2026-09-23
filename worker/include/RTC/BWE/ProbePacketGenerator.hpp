@@ -45,6 +45,9 @@ namespace RTC
 				 *   here.
 				 * - Whoever measures the burst has to be told how much of it went out,
 				 *   so the length of the packet is reported from here as well.
+				 * - This must not destroy the `ProbePacketGenerator`, not even
+				 *   indirectly. It goes on reading its own members after this returns,
+				 *   so returning false is no way out of it either.
 				 */
 				virtual bool OnProbePacketGeneratorSendRtpPacket(
 				  ProbePacketGenerator* probePacketGenerator, RTC::RTP::Packet* packet) = 0;
@@ -85,6 +88,15 @@ namespace RTC
 			// it came from.
 			ProbePacketGenerator(const ProbePacketGenerator&)            = delete;
 			ProbePacketGenerator& operator=(const ProbePacketGenerator&) = delete;
+
+			/**
+			 * Smallest packet this can make (bytes), which is its header and its
+			 * extensions and no payload at all.
+			 */
+			size_t GetMinPacketLength() const
+			{
+				return this->minPacketLength;
+			}
 
 			/**
 			 * Hand over the packets that carry the given count of bytes.

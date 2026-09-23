@@ -145,6 +145,15 @@ namespace RTC
 		return true;
 	}
 
+	inline size_t DirectTransport::GetPacketOverhead() const
+	{
+		MS_TRACE();
+
+		// Nothing sent through this reaches a socket, so there is no network to
+		// carry anything on top of the packet.
+		return 0;
+	}
+
 	void DirectTransport::SendRtpPacket(
 	  RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb)
 	{

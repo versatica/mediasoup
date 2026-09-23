@@ -9,6 +9,33 @@ namespace RTC
 	namespace Consts
 	{
 		/**
+		 * Bytes an IPv4 header takes, without options.
+		 */
+		constexpr size_t Ipv4HeaderSize{ 20 };
+
+		/**
+		 * Bytes an IPv6 header takes, without extension headers.
+		 */
+		constexpr size_t Ipv6HeaderSize{ 40 };
+
+		/**
+		 * Bytes a UDP header takes.
+		 */
+		constexpr size_t UdpHeaderSize{ 8 };
+
+		/**
+		 * Bytes a TCP header takes, without options.
+		 */
+		constexpr size_t TcpHeaderSize{ 20 };
+
+		/**
+		 * Bytes of the length field that frames every packet sent over TCP.
+		 *
+		 * @see https://datatracker.ietf.org/doc/html/rfc4571
+		 */
+		constexpr size_t TcpFramingSize{ 2 };
+
+		/**
 		 * Max MTU size.
 		 */
 		constexpr size_t MtuSize{ 1500 };

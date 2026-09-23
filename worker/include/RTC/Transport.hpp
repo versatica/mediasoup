@@ -230,6 +230,12 @@ namespace RTC
 		{
 			return false;
 		}
+		/**
+		 * Bytes that every packet sent through this transport carries on top of its
+		 * own length once it's on the network, or zero while no path has been
+		 * chosen yet.
+		 */
+		virtual size_t GetPacketOverhead() const = 0;
 		virtual void SendRtpPacket(
 		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) = 0;
 		virtual void HandleRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs) final;

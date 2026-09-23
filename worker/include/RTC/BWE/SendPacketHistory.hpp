@@ -52,6 +52,12 @@ namespace RTC
 				uint16_t seq{ 0 };
 				/**
 				 * Size of the packet including the overhead up to the IP layer (bytes).
+				 *
+				 * @remarks
+				 * - What the link has to carry is what the estimation is about, so the
+				 *   length of the packet on its own falls short. The overhead of the
+				 *   path it takes is what `RTC::TransportTuple::GetPacketOverhead()`
+				 *   answers.
 				 */
 				size_t size{ 0 };
 				/**

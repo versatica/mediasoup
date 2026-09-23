@@ -680,6 +680,15 @@ namespace RTC
 		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
 	}
 
+	inline size_t WebRtcTransport::GetPacketOverhead() const
+	{
+		MS_TRACE();
+
+		const auto* tuple = this->iceServer->GetSelectedTuple();
+
+		return tuple ? tuple->GetPacketOverhead() : 0;
+	}
+
 	void WebRtcTransport::MayRunDtlsTransport()
 	{
 		MS_TRACE();
