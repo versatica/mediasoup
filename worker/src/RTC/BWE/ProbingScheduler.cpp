@@ -18,6 +18,24 @@ namespace RTC
 
 		/* Instance methods. */
 
+		ProbingScheduler::ScopedShot::ScopedShot(
+		  ProbingScheduler& probingScheduler, const Types::ProbeCluster& probeCluster)
+		  : probingScheduler(probingScheduler)
+		{
+			MS_TRACE();
+
+			this->probingScheduler.shotProbeCluster = probeCluster;
+			this->probingScheduler.shotSentBytes    = 0;
+		}
+
+		ProbingScheduler::ScopedShot::~ScopedShot()
+		{
+			MS_TRACE();
+
+			this->probingScheduler.shotProbeCluster = {};
+			this->probingScheduler.shotSentBytes    = 0;
+		}
+
 		ProbingScheduler::ProbingScheduler(Listener* listener, SharedInterface* shared)
 		  : listener(listener),
 		    shared(shared),
@@ -44,9 +62,11 @@ namespace RTC
 
 			this->bitrateProber.CreateProbeCluster(clusterConfig);
 
-			// The burst may begin right away, so this doesn't wait for a tick that
-			// isn't running yet.
-			Process();
+			// A burst is scheduled as soon as it's asked for, but not in the stack of
+			// whoever asked: the next turn of the loop picks it up. Emitting from
+			// here would put the send path inside a call that may itself come from
+			// the send path.
+			this->nextProbeTimer->Restart(0);
 		}
 
 		bool ProbingScheduler::OnProbePacketGeneratorSendRtpPacket(
@@ -54,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (!this->listener->OnProbingSchedulerSendRtpPacket(this, packet))
+			if (!this->listener->OnProbingSchedulerSendRtpPacket(this, packet, this->shotProbeCluster))
 			{
 				return false;
 			}
@@ -104,7 +124,7 @@ namespace RTC
 				return;
 			}
 
-			this->shotSentBytes = 0;
+			const ScopedShot shot(*this, currentCluster.value().probeCluster);
 
 			const size_t recommendedSize = this->bitrateProber.GetRecommendedMinProbeSize();
 

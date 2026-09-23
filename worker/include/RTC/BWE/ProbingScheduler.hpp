@@ -58,7 +58,29 @@ namespace RTC
 				 *   here.
 				 */
 				virtual bool OnProbingSchedulerSendRtpPacket(
-				  ProbingScheduler* probingScheduler, RTC::RTP::Packet* packet) = 0;
+				  ProbingScheduler* probingScheduler,
+				  RTC::RTP::Packet* packet,
+				  const Types::ProbeCluster& probeCluster) = 0;
+			};
+
+		private:
+			/**
+			 * Holds what a shot needs while it is being emitted. The packets are
+			 * handed over through a callback, so there is no scope of our own to keep
+			 * it in, and this makes sure it doesn't outlive the shot.
+			 */
+			class ScopedShot
+			{
+			public:
+				ScopedShot(ProbingScheduler& probingScheduler, const Types::ProbeCluster& probeCluster);
+
+				~ScopedShot();
+
+				ScopedShot(const ScopedShot&)            = delete;
+				ScopedShot& operator=(const ScopedShot&) = delete;
+
+			private:
+				ProbingScheduler& probingScheduler;
 			};
 
 		public:
@@ -138,6 +160,10 @@ namespace RTC
 			// Bytes each packet carries on top of its own length once it's on the
 			// network.
 			size_t packetOverhead{ 0 };
+			// The burst the current shot belongs to, which travels with each of its
+			// packets. Only meaningful while a shot is being emitted, since it's the
+			// generator that calls back and it knows nothing about bursts.
+			Types::ProbeCluster shotProbeCluster;
 			// Bytes of the current shot that have gone out, overhead included, which
 			// is only meaningful while one is being emitted.
 			size_t shotSentBytes{ 0 };
