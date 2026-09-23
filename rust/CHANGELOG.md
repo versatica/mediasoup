@@ -3,7 +3,7 @@
 ### NEXT
 
 - Worker: Fix MSVC compiler warnings ([PR #1937](https://github.com/versatica/mediasoup/pull/1937)).
-- Remove support for the `urn:ietf:params:rtp-hdrext:toffset` RTP extension ([PR #1941](https://github.com/versatica/mediasoup/pull/1941)).
+- Remove support for the `urn:ietf:params:rtp-hdrext:toffset` RTP extension ([PR #1942](https://github.com/versatica/mediasoup/pull/1942)).
 
 ### 0.28.1
 
