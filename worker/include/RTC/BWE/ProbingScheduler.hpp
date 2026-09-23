@@ -94,9 +94,12 @@ namespace RTC
 			ProbingScheduler& operator=(const ProbingScheduler&) = delete;
 
 			/**
-			 * Take a burst that has been asked for and begin emitting it.
+			 * Take a burst that has been asked for.
 			 *
 			 * @remarks
+			 * - Nothing goes out within this call. The burst begins on the turn of
+			 *   the event loop that follows, so that the send path never runs inside
+			 *   a call that may itself come from the send path.
 			 * - The bursts asked for are emitted in the order they were asked for,
 			 *   and one asked for long ago is dropped rather than sent late.
 			 */
