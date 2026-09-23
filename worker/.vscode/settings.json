@@ -1,0 +1,36 @@
+{
+    "editor.formatOnSave": true,
+    "C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild",
+    "mesonbuild.configureOnOpen": false,
+
+    "clangd.path": "/opt/homebrew/opt/llvm/bin/clangd",
+    "clangd.arguments": [
+        "-log=verbose",
+        "-pretty",
+        "--background-index",
+        "--compile-commands-dir=${workspaceFolder}/worker/out/Release/build",
+        "--clang-tidy",
+        // 启用全项目索引（跨文件引用查找更准）
+        "--all-scopes-completion",
+        // 补充头文件（当某些头文件找不到时自动插入）
+        "--header-insertion=iwyu",
+        // 开启代码补全时显示参数提示
+        "--completion-style=detailed",
+        // 利用多核优化
+        "-j=4",
+        // 兜底风格，虽然有 .clang-format 时会被忽略，但写上是个好习惯
+        "--fallback-style=LLVM"
+    ],
+
+    "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true
+    },
+    "[c]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true
+    },
+    "C_Cpp.formatting": "disabled",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.errorSquiggles": "disabled"
+}
