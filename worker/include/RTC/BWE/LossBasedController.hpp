@@ -40,42 +40,75 @@ namespace RTC
 		class LossBasedController
 		{
 		public:
+			/**
+			 * @remarks
+			 * - Every constraint documented below is checked by the constructor and
+			 *   aborts when it doesn't hold. These options are set from C++ alone,
+			 *   never from the network nor from the API, so breaking one of them is a
+			 *   programming error.
+			 */
 			struct LossBasedControllerOptions
 			{
 				/**
 				 * Factors applied to the current estimate to build the candidates that
 				 * are tried on every update.
+				 *
+				 * @remarks
+				 * - Every factor must be positive.
+				 * - At least one candidate other than the current estimate has to be
+				 *   reachable, so unless `appendAcknowledgedRateCandidate` or
+				 *   `appendDelayBasedEstimateCandidate` is set, one of these factors
+				 *   must differ from 1.
 				 */
 				std::vector<double> candidateFactors{ 1.02, 1.0, 0.95 };
 				/**
 				 * How much the estimate may grow over the acknowledged bitrate while
 				 * the link is loss limited.
+				 *
+				 * @remarks
+				 * - It must be greater than 1, since it's a bound above that bitrate.
 				 */
 				double bitrateRampupUpperBoundFactor{ 1.5 };
 				/**
 				 * The same while the estimate is being held, which is more conservative
 				 * because holding means that a higher bitrate already caused loss.
+				 *
+				 * @remarks
+				 * - It must be greater than 1, for the same reason.
 				 */
 				double bitrateRampupUpperBoundFactorInHold{ 1.2 };
 				/**
 				 * How far below the held bitrate the acknowledged one has to be for the
 				 * factor above to be the one applied.
+				 *
+				 * @remarks
+				 * - It must not be negative.
 				 */
 				double bitrateRampupHoldThreshold{ 1.3 };
 				/**
 				 * How much of the acknowledged bitrate the estimate may grow by on top
 				 * of its usual bound, the longer the more time has passed since it was
 				 * last reduced. Zero disables that acceleration.
+				 *
+				 * @remarks
+				 * - It must not be negative.
 				 */
 				double rampupAccelerationMaxFactor{ 0.0 };
 				/**
 				 * Time since the last reduction at which that acceleration is at its
 				 * fullest.
+				 *
+				 * @remarks
+				 * - It must be positive, since it's what the elapsed time is measured
+				 *   against.
 				 */
 				int64_t rampupAccelerationMaxoutTimeUs{ 60 * 1000 * 1000 };
 				/**
 				 * Weight given to a higher bitrate when choosing among candidates, so
 				 * that observations which cannot tell them apart don't settle low.
+				 *
+				 * @remarks
+				 * - It must not be negative.
 				 */
 				double higherBitrateBiasFactor{ 0.0002 };
 				/**
@@ -86,46 +119,78 @@ namespace RTC
 				/**
 				 * Observed loss at which the bias above is gone, since at that much loss
 				 * preferring a higher bitrate is not defensible anymore.
+				 *
+				 * @remarks
+				 * - Being a loss rate, it must be in [0, 1).
 				 */
 				double lossThresholdOfHighBitratePreference{ 0.2 };
 				/**
 				 * How abruptly that bias fades as the observed loss approaches the
 				 * threshold above.
+				 *
+				 * @remarks
+				 * - It must be in (0, 1]. Zero is excluded because it divides.
 				 */
 				double bitratePreferenceSmoothingFactor{ 0.002 };
 				/**
 				 * Lowest inherent loss that may be estimated for a link.
+				 *
+				 * @remarks
+				 * - Being a loss rate, it must be in [0, 1).
 				 */
 				double inherentLossLowerBound{ 1.0e-3 };
 				/**
 				 * Inherent loss that may be estimated at an unbounded bitrate, which
 				 * grows as the bitrate gets lower by the balance below.
+				 *
+				 * @remarks
+				 * - It must be below 1 and never below `inherentLossLowerBound`, since
+				 *   the two of them are the ends of the same range.
 				 */
 				double inherentLossUpperBoundOffset{ 0.05 };
 				/**
 				 * Bitrate at which the inherent loss upper bound grows by one, so that a
 				 * low bitrate is allowed to be explained by a lossy link.
+				 *
+				 * @remarks
+				 * - It must be positive, since it divides.
 				 */
 				int64_t inherentLossUpperBoundBitrateBalance{ 100000 };
 				/**
 				 * Inherent loss assumed before anything has been observed.
+				 *
+				 * @remarks
+				 * - Being a loss rate, it must be in [0, 1).
 				 */
 				double initialInherentLossEstimate{ 0.01 };
 				/**
 				 * Steps of Newton's method applied to each candidate.
+				 *
+				 * @remarks
+				 * - It must be positive, or no candidate would ever be refined.
 				 */
 				int64_t newtonIterations{ 1 };
 				/**
 				 * Fraction of the step that each of those iterations takes.
+				 *
+				 * @remarks
+				 * - It must be positive, or each iteration would stand still.
 				 */
 				double newtonStepSize{ 0.75 };
 				/**
 				 * Whether the acknowledged bitrate is tried as a candidate of its own.
+				 *
+				 * @remarks
+				 * - See the constraint on `candidateFactors` about there always being a
+				 *   candidate to choose from.
 				 */
 				bool appendAcknowledgedRateCandidate{ true };
 				/**
 				 * Whether the delay based estimate is tried as a candidate of its own
 				 * while it's above the current one.
+				 *
+				 * @remarks
+				 * - The same constraint as `appendAcknowledgedRateCandidate`.
 				 */
 				bool appendDelayBasedEstimateCandidate{ true };
 				/**
@@ -136,14 +201,25 @@ namespace RTC
 				bool appendUpperBoundCandidateInAlr{ false };
 				/**
 				 * Shortest span of send times that an observation may cover.
+				 *
+				 * @remarks
+				 * - It must be positive, or every packet would close an observation.
 				 */
 				int64_t observationDurationLowerBoundUs{ 250 * 1000 };
 				/**
 				 * Observations kept, which is how far back the estimate looks.
+				 *
+				 * @remarks
+				 * - It must be at least 2. It's also what every observation is indexed
+				 *   modulo, so an empty window would divide by zero.
 				 */
 				int64_t observationWindowSize{ 15 };
 				/**
 				 * Observations needed before this controller may be used at all.
+				 *
+				 * @remarks
+				 * - It must be positive, or the controller would take the estimate over
+				 *   having observed nothing.
 				 */
 				int64_t minNumObservations{ 3 };
 				/**
@@ -151,6 +227,7 @@ namespace RTC
 				 * of the previous observation.
 				 *
 				 * @remarks
+				 * - It must be in [0, 1).
 				 * - Zero means no smoothing at all, which is what libwebrtc does. A
 				 *   sender of a couple of streams has a sending rate that only changes
 				 *   when it decides so, while ours is the sum of many streams whose
@@ -160,38 +237,66 @@ namespace RTC
 				/**
 				 * How much weight each observation loses per observation of age when
 				 * looking for the most likely pair of values.
+				 *
+				 * @remarks
+				 * - It must be in (0, 1]. One means that age doesn't weigh at all, and
+				 *   zero is excluded because it would leave every observation but the
+				 *   latest one weightless.
 				 */
 				double temporalWeightFactor{ 0.9 };
 				/**
 				 * The same, for the average observed loss that bounds the estimate right
 				 * away.
+				 *
+				 * @remarks
+				 * - It must be in (0, 1], for the same reason.
 				 */
 				double immediateUpperBoundTemporalWeightFactor{ 0.9 };
 				/**
 				 * Observed loss under which no immediate upper bound is applied.
+				 *
+				 * @remarks
+				 * - Being a loss rate, it must be in [0, 1).
 				 */
 				double immediateUpperBoundLossOffset{ 0.05 };
 				/**
 				 * Bitrate the immediate upper bound allows per unit of observed loss
 				 * over the offset above.
+				 *
+				 * @remarks
+				 * - It must be positive, since it multiplies a bound that would
+				 *   otherwise collapse to nothing.
 				 */
 				int64_t immediateUpperBoundBitrateBalance{ 100000 };
 				/**
 				 * How much of the acknowledged bitrate the estimate may never go below.
+				 *
+				 * @remarks
+				 * - It must not be negative.
 				 */
 				double lowerBoundByAckedRateFactor{ 1.0 };
 				/**
 				 * Fraction of the acknowledged bitrate taken as a candidate when backing
 				 * off.
+				 *
+				 * @remarks
+				 * - It must not be greater than 1, since backing off to more than what
+				 *   is acknowledged is not backing off.
 				 */
 				double bitrateBackoffLowerBoundFactor{ 1.0 };
 				/**
 				 * How much the estimate may grow within the window that follows a
 				 * decrease.
+				 *
+				 * @remarks
+				 * - It must be positive.
 				 */
 				double maxIncreaseFactor{ 1.3 };
 				/**
 				 * How long that window lasts.
+				 *
+				 * @remarks
+				 * - It must be positive.
 				 */
 				int64_t delayedIncreaseWindowUs{ 300 * 1000 };
 				/**

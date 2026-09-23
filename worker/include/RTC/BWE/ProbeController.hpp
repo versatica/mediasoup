@@ -56,6 +56,13 @@ namespace RTC
 				RTT_BASED_BACK_OFF_HIGH_RTT
 			};
 
+			/**
+			 * @remarks
+			 * - Every constraint documented below is checked by the constructor and
+			 *   aborts when it doesn't hold. These options are set from C++ alone,
+			 *   never from the network nor from the API, so breaking one of them is a
+			 *   programming error.
+			 */
 			struct ProbeControllerOptions
 			{
 				/**

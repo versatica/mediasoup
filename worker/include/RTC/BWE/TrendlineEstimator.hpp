@@ -27,6 +27,13 @@ namespace RTC
 		class TrendlineEstimator
 		{
 		public:
+			/**
+			 * @remarks
+			 * - Every constraint documented below is checked by the constructor and
+			 *   aborts when it doesn't hold. These options are set from C++ alone,
+			 *   never from the network nor from the API, so breaking one of them is a
+			 *   programming error.
+			 */
 			struct TrendlineEstimatorOptions
 			{
 				/**
@@ -52,10 +59,18 @@ namespace RTC
 				bool enableCap{ false };
 				/**
 				 * How many packets of the beginning of the window that cap looks at.
+				 *
+				 * @remarks
+				 * - While `enableCap` is set it must be at least 1, and the two ends
+				 *   together must fit in `windowSize`, since the cap looks at both of
+				 *   them without them overlapping.
 				 */
 				size_t beginningPackets{ 7 };
 				/**
 				 * How many packets of the end of the window that cap looks at.
+				 *
+				 * @remarks
+				 * - The same constraints as `beginningPackets`.
 				 */
 				size_t endPackets{ 7 };
 				/**
