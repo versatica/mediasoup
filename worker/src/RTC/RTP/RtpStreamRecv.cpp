@@ -73,7 +73,7 @@ namespace RTC
 			{
 				for (auto& temporalLayerCounter : spatialLayerCounter)
 				{
-					rate += temporalLayerCounter.GetBitrate(nowMs);
+					rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
 				}
 			}
 
@@ -92,7 +92,7 @@ namespace RTC
 			// Return 0 if specified layers are not being received.
 			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
-			if (counter.GetBitrate(nowMs) <= 0)
+			if (counter.GetBitrate(nowMs).value_or(0) <= 0)
 			{
 				return 0;
 			}
@@ -106,7 +106,7 @@ namespace RTC
 				{
 					auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
-					rate += temporalLayerCounter.GetBitrate(nowMs);
+					rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
 				}
 			}
 
@@ -115,7 +115,7 @@ namespace RTC
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
 
-				rate += temporalLayerCounter.GetBitrate(nowMs);
+				rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
 			}
 
 			return rate;
@@ -133,7 +133,7 @@ namespace RTC
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
 
-				rate += temporalLayerCounter.GetBitrate(nowMs);
+				rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
 			}
 
 			return rate;
@@ -150,7 +150,7 @@ namespace RTC
 
 			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
-			return counter.GetBitrate(nowMs);
+			return counter.GetBitrate(nowMs).value_or(0);
 		}
 
 		size_t RtpStreamRecv::TransmissionCounter::GetPacketCount() const
@@ -282,7 +282,7 @@ namespace RTC
 			  this->transmissionCounter.GetPacketCount(),
 			  this->transmissionCounter.GetBytes(),
 			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs)),
-			  &bitrateByLayer);
+			  std::addressof(bitrateByLayer));
 
 			return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::RecvStats, stats.Union());
 		}
@@ -811,7 +811,7 @@ namespace RTC
 
 				// Notify the listener.
 				static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
-				  ->OnRtpStreamSendRtcpPacket(this, &packet);
+				  ->OnRtpStreamSendRtcpPacket(this, std::addressof(packet));
 			}
 			else if (this->params.useFir)
 			{
@@ -829,7 +829,7 @@ namespace RTC
 
 				// Notify the listener.
 				static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
-				  ->OnRtpStreamSendRtcpPacket(this, &packet);
+				  ->OnRtpStreamSendRtcpPacket(this, std::addressof(packet));
 			}
 		}
 

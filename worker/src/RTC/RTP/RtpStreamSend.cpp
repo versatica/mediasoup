@@ -84,7 +84,7 @@ namespace RTC
 			  baseStats,
 			  this->transmissionCounter.GetPacketCount(),
 			  this->transmissionCounter.GetBytes(),
-			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs)));
+			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs).value_or(0)));
 
 			return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::SendStats, stats.Union());
 		}

@@ -4,6 +4,7 @@
 
 - Worker: Fix MSVC compiler warnings ([PR #1937](https://github.com/versatica/mediasoup/pull/1937)).
 - Remove support for the `urn:ietf:params:rtp-hdrext:toffset` RTP extension ([PR #1942](https://github.com/versatica/mediasoup/pull/1942)).
+- Worker: Compute bitrate over the active window in `RateCalculator` ([PR #1944](https://github.com/versatica/mediasoup/pull/1944)).
 
 ### 3.27.1
 

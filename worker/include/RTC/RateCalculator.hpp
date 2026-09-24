@@ -22,6 +22,19 @@ namespace RTC
 	 */
 	class RateCalculator
 	{
+	private:
+		struct Item
+		{
+			/**
+			 * Sum of the sizes given to Update() within this item.
+			 */
+			size_t count{ 0 };
+			/**
+			 * Number of Update() calls accounted for within this item.
+			 */
+			size_t samples{ 0 };
+		};
+
 	public:
 		static constexpr int64_t DefaultWindowSizeMs{ 1000 };
 		static constexpr float DefaultBpsScale{ 8000.0f };
@@ -35,7 +48,25 @@ namespace RTC
 
 		void Update(size_t size, int64_t nowMs);
 
-		int64_t GetRate(int64_t nowMs);
+		/**
+		 * Rate of the data within the window ending at `nowMs`, computed over the
+		 * period the data actually spans rather than over the whole window, so that
+		 * a window which has not filled yet is not reported as a fraction of the
+		 * rate it is measuring.
+		 *
+		 * Returns no value when there is nothing to measure, which is any of:
+		 *
+		 * - Not a single sample within the window.
+		 * - A period of a single millisecond, which gives no duration to divide by.
+		 * - A single sample while the window has not filled, since one sample says
+		 *   how much data arrived at an instant but nothing about how fast it is
+		 *   arriving.
+		 *
+		 * Returns zero when there are enough samples to measure but the data they
+		 * add up to rounds down to zero at the configured scale, which takes
+		 * Update() calls of size zero.
+		 */
+		std::optional<int64_t> GetRate(int64_t nowMs);
 
 		size_t GetBytes() const
 		{
@@ -52,31 +83,40 @@ namespace RTC
 		int64_t windowSizeMs{ DefaultWindowSizeMs };
 		// Item size (in milliseconds). Always >= 1.
 		int64_t itemSizeMs{ 1 };
-		// Precomputed `scale / windowSizeMs`.
-		double rateScale{ 0.0 };
-		// Ring of items, each one holding the count of the data within it. Never
-		// empty, and always long enough to cover the whole window.
-		std::vector<size_t> buffer;
+		// Factor the in-window count is multiplied by before being divided by the
+		// period it spans.
+		double scale{ 0.0 };
+		// Ring of items. Never empty, and always long enough to cover the whole
+		// window.
+		std::vector<Item> buffer;
 		// Index of the newest item. Always < buffer.size().
 		size_t newestItemIndex{ 0 };
 		// Time (in milliseconds) at which the newest item starts.
 		int64_t newestItemStartTimeMs{ 0 };
+		// Time (in milliseconds) of the oldest sample still within the window, which
+		// is where the measured period starts. Unset exactly while the ring holds no
+		// sample at all.
+		std::optional<int64_t> firstSampleTimeMs;
 		// Sum of the count of every item.
 		size_t totalCount{ 0 };
+		// Sum of the samples of every item.
+		size_t totalSamples{ 0 };
 		// Total bytes accounted for. Not affected by Reset().
 		size_t bytes{ 0 };
-		// Rate memoized by GetRate(), only valid while both `lastTimeMs` and
-		// `lastTotalCount` below still match. `lastTotalCount` is the one that makes
-		// any Update() changing the rate invalidate this implicitly, so that the hot
-		// path needs no memoization store.
+		// Rate memoized by GetRate(), only valid while `lastTimeMs`,
+		// `lastTotalCount` and `lastTotalSamples` below all still match.
+		// `lastTotalSamples` is the one that makes any Update() invalidate this
+		// implicitly, so that the hot path needs no memoization store.
 		// NOTE: No "not calculated yet" mark is needed, since the initial and post
-		// Reset() state is a valid entry on its own: a zero rate for a zero count.
-		int64_t lastRate{ 0 };
+		// Reset() state is a valid entry on its own: no rate for no samples.
+		std::optional<int64_t> lastRate;
 		// Time of the latest GetRate() call. Prevents reusing `lastRate` once time
 		// has moved on and there is data pending expiration.
 		int64_t lastTimeMs{ 0 };
 		// Total count at the latest GetRate() call.
 		size_t lastTotalCount{ 0 };
+		// Total samples at the latest GetRate() call.
+		size_t lastTotalSamples{ 0 };
 	};
 
 	class RtpDataCounter
@@ -91,7 +131,7 @@ namespace RTC
 	public:
 		void Update(const RTC::RTP::Packet* packet);
 
-		int64_t GetBitrate(int64_t nowMs)
+		std::optional<int64_t> GetBitrate(int64_t nowMs)
 		{
 			return this->rate.GetRate(nowMs);
 		}

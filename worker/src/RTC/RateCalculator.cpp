@@ -28,7 +28,7 @@ namespace RTC
 		this->buffer.resize(
 		  static_cast<size_t>((this->windowSizeMs + this->itemSizeMs - 1) / this->itemSizeMs));
 
-		this->rateScale = static_cast<double>(scale) / static_cast<double>(this->windowSizeMs);
+		this->scale = static_cast<double>(scale);
 	}
 
 	void RateCalculator::Update(size_t size, int64_t nowMs)
@@ -43,21 +43,35 @@ namespace RTC
 			return;
 		}
 
-		this->buffer[this->newestItemIndex] += size;
+		// First sample of a window that holds none, so the measured period starts
+		// here.
+		if (!this->firstSampleTimeMs.has_value())
+		{
+			this->firstSampleTimeMs = nowMs;
+		}
+
+		Item& item = this->buffer[this->newestItemIndex];
+
+		item.count += size;
+		item.samples++;
+
 		this->totalCount += size;
+		this->totalSamples++;
 		this->bytes += size;
 	}
 
-	int64_t RateCalculator::GetRate(int64_t nowMs)
+	std::optional<int64_t> RateCalculator::GetRate(int64_t nowMs)
 	{
 		MS_TRACE();
 
-		// If both keys match, the memoized rate is still exact. `lastRate` is a pure
-		// function of `totalCount`, so the value is right, and no expiration can be
-		// pending: SlideWindow() already ran for this very `nowMs` and
-		// `newestItemStartTimeMs` only moves forward afterwards, while the initial and
-		// post Reset() state has an empty ring anyway.
-		if (nowMs == this->lastTimeMs && this->totalCount == this->lastTotalCount)
+		// If every key matches, the memoized rate is still exact. `lastRate` is a
+		// pure function of the state the keys cover, so the value is right, and no
+		// expiration can be pending: SlideWindow() already ran for this very `nowMs`
+		// and `newestItemStartTimeMs` only moves forward afterwards, while the
+		// initial and post Reset() state has an empty ring anyway.
+		if (
+		  nowMs == this->lastTimeMs && this->totalCount == this->lastTotalCount &&
+		  this->totalSamples == this->lastTotalSamples)
 		{
 			MS_DEBUG_DEV("nothing changed since the latest call, early return");
 
@@ -66,11 +80,36 @@ namespace RTC
 
 		SlideWindow(nowMs);
 
-		const double rate = std::trunc((static_cast<double>(this->totalCount) * this->rateScale) + 0.5);
-
 		// NOTE: Must be read after SlideWindow(), which may have expired data.
-		this->lastTotalCount = this->totalCount;
-		this->lastTimeMs     = nowMs;
+		this->lastTotalCount   = this->totalCount;
+		this->lastTotalSamples = this->totalSamples;
+		this->lastTimeMs       = nowMs;
+		this->lastRate         = std::nullopt;
+
+		// Not a single sample within the window.
+		if (!this->firstSampleTimeMs.has_value())
+		{
+			return this->lastRate;
+		}
+
+		// Period the data within the window actually spans. The instant the first
+		// sample was taken at already counts as a millisecond, hence the increment,
+		// which is also what keeps this from ever being zero. And once the data
+		// reaches back beyond the window, the period is the window itself.
+		const int64_t periodMs =
+		  std::clamp<int64_t>(nowMs - this->firstSampleTimeMs.value() + 1, 1, this->windowSizeMs);
+
+		// A single millisecond gives no duration to divide by, and a single sample
+		// says how much data was taken at an instant but nothing about how fast it
+		// is flowing, so neither is a measurement until the window has filled.
+		if (periodMs <= 1 || (this->totalSamples <= 1 && periodMs < this->windowSizeMs))
+		{
+			return this->lastRate;
+		}
+
+		const double rate = std::trunc(
+		  ((static_cast<double>(this->totalCount) * this->scale) / static_cast<double>(periodMs)) + 0.5);
+
 		this->lastRate =
 		  static_cast<int64_t>(std::min(rate, static_cast<double>(std::numeric_limits<int64_t>::max())));
 
@@ -81,14 +120,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::ranges::fill(this->buffer, 0);
+		std::ranges::fill(this->buffer, Item{});
 
+		this->firstSampleTimeMs.reset();
 		this->newestItemIndex       = 0;
 		this->newestItemStartTimeMs = 0;
 		this->totalCount            = 0;
-		this->lastRate              = 0;
+		this->totalSamples          = 0;
+		this->lastRate              = std::nullopt;
 		this->lastTimeMs            = 0;
 		this->lastTotalCount        = 0;
+		this->lastTotalSamples      = 0;
 	}
 
 	/**
@@ -127,15 +169,17 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("a whole window elapsed, resetting every item");
 
-			// NOTE: totalCount is the sum of every item, so a zero total means that
-			// the ring is already zeroed.
-			if (this->totalCount != 0)
+			// NOTE: totalSamples is the sum of the samples of every item, so a zero
+			// total means that the ring is already empty.
+			if (this->totalSamples != 0)
 			{
-				std::ranges::fill(this->buffer, 0);
+				std::ranges::fill(this->buffer, Item{});
 
-				this->totalCount = 0;
+				this->totalCount   = 0;
+				this->totalSamples = 0;
 			}
 
+			this->firstSampleTimeMs.reset();
 			this->newestItemIndex       = 0;
 			this->newestItemStartTimeMs = nowMs;
 
@@ -151,9 +195,18 @@ namespace RTC
 				this->newestItemIndex = 0;
 			}
 
-			this->totalCount -= this->buffer[this->newestItemIndex];
+			Item& item = this->buffer[this->newestItemIndex];
 
-			this->buffer[this->newestItemIndex] = 0;
+			this->totalCount -= item.count;
+			this->totalSamples -= item.samples;
+
+			item = Item{};
+		}
+
+		// Every sample expired, so the next one starts a new measured period.
+		if (this->totalSamples == 0)
+		{
+			this->firstSampleTimeMs.reset();
 		}
 
 		// Advance by whole items rather than jumping to `nowMs`. The window is

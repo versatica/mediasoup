@@ -109,7 +109,7 @@ namespace RTC
 
 			int64_t GetBitrate(int64_t nowMs) override
 			{
-				return this->transmissionCounter.GetBitrate(nowMs);
+				return this->transmissionCounter.GetBitrate(nowMs).value_or(0);
 			}
 
 			int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;

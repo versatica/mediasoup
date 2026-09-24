@@ -10,7 +10,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	{
 		int64_t offset;
 		uint32_t size;
-		uint32_t rate;
+		std::optional<int64_t> rate;
 	};
 
 	auto validate =
@@ -23,22 +23,65 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 			REQUIRE(rate.GetRate(timeBaseMs + item.offset) == item.rate);
 		}
 
-		// Repeat asking for the rate at a time older than the whole window, which
-		// must leave it untouched.
+		// Repeat asking for the rate at a time older than the whole window. There is
+		// no period between the samples and a time that precedes all of them, so
+		// there is nothing to measure.
 		rate.Reset();
 
 		for (const auto& item : input)
 		{
 			rate.Update(item.size, timeBaseMs + item.offset);
 
-			REQUIRE(rate.GetRate(item.offset) == item.rate);
+			REQUIRE(rate.GetRate(item.offset) == std::nullopt);
 		}
 
+		// The reads above left the data untouched, so the rate at the time of the
+		// latest sample is still the one that was reported for it.
+		REQUIRE(rate.GetRate(timeBaseMs + input.back().offset) == input.back().rate);
+
 		// Asking for the rate far in the future expires every item.
-		REQUIRE(rate.GetRate(std::numeric_limits<int64_t>::max()) == 0);
+		REQUIRE(rate.GetRate(std::numeric_limits<int64_t>::max()) == std::nullopt);
 	};
 
 	const int64_t nowMs = 12345678;
+
+	// NOTE: This pins the three states in which there is nothing to measure, and
+	// that a lone sample does become a measurement once the window has filled
+	// around it.
+	SECTION("no rate until there is something to measure")
+	{
+		RTC::RateCalculator rate(1000, 8000, 100);
+
+		// Not a single sample.
+		REQUIRE(rate.GetRate(nowMs) == std::nullopt);
+
+		rate.Update(5, nowMs);
+
+		// A single sample taken at an instant says how much data there was, not how
+		// fast it is flowing.
+		REQUIRE(rate.GetRate(nowMs) == std::nullopt);
+		REQUIRE(rate.GetRate(nowMs + 500) == std::nullopt);
+
+		// Once the window has filled, that lone sample is all the data there was
+		// during a whole window, which is a rate.
+		REQUIRE(rate.GetRate(nowMs + 999) == 40);
+
+		// And one more item later it has expired, leaving nothing again.
+		REQUIRE(rate.GetRate(nowMs + 1000) == std::nullopt);
+	}
+
+	// NOTE: This pins the headline of the whole thing: the divisor is the period
+	// the samples span, not the window they sit in. Dividing by the window here
+	// would report 32 bps for a link carrying 16 kbps.
+	SECTION("rate is measured over the period the samples span")
+	{
+		RTC::RateCalculator rate(1000, 8000, 100);
+
+		rate.Update(1000, nowMs);
+		rate.Update(1000, nowMs + 999);
+
+		REQUIRE(rate.GetRate(nowMs + 999) == 16000);
+	}
 
 	SECTION("receive single item per 1000 ms")
 	{
@@ -47,7 +90,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
-			{ .offset=0, .size=5, .rate=40 }
+			{ .offset=0, .size=5, .rate=std::nullopt }
 		};
 		// clang-format on
 
@@ -61,10 +104,10 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
-			{ .offset=0,   .size=5, .rate=40  },
-			{ .offset=100, .size=2, .rate=56  },
-			{ .offset=300, .size=2, .rate=72  },
-			{ .offset=999, .size=4, .rate=104 }
+			{ .offset=0,   .size=5, .rate=std::nullopt },
+			{ .offset=100, .size=2, .rate=554          },
+			{ .offset=300, .size=2, .rate=239          },
+			{ .offset=999, .size=4, .rate=104          }
 		};
 		// clang-format on
 
@@ -75,12 +118,14 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	{
 		RTC::RateCalculator rate(1000, 8000, 100);
 
+		// Each sample expires the previous one, so there is never more than a lone
+		// sample within a window that has just been emptied.
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
-			{ .offset=0,    .size=5, .rate=40 },
-			{ .offset=1000, .size=5, .rate=40 },
-			{ .offset=2000, .size=5, .rate=40 }
+			{ .offset=0,    .size=5, .rate=std::nullopt },
+			{ .offset=1000, .size=5, .rate=std::nullopt },
+			{ .offset=2000, .size=5, .rate=std::nullopt }
 		};
 		// clang-format on
 
@@ -94,17 +139,17 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
-			{ .offset=0,    .size=5, .rate=40 },
-			{ .offset=999,  .size=2, .rate=56 },
-			{ .offset=1001, .size=1, .rate=24 },
-			{ .offset=1001, .size=1, .rate=32 },
-			{ .offset=2000, .size=1, .rate=24 }
+			{ .offset=0,    .size=5, .rate=std::nullopt },
+			{ .offset=999,  .size=2, .rate=56           },
+			{ .offset=1001, .size=1, .rate=24           },
+			{ .offset=1001, .size=1, .rate=32           },
+			{ .offset=2000, .size=1, .rate=24           }
 		};
 		// clang-format on
 
 		validate(rate, nowMs, input);
 
-		REQUIRE(rate.GetRate(nowMs + 3001) == 0);
+		REQUIRE(rate.GetRate(nowMs + 3001) == std::nullopt);
 	}
 
 	SECTION("slide with 100 items")
@@ -114,19 +159,20 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
-			{ .offset=0,    .size=5, .rate=40 },
-			{ .offset=999,  .size=2, .rate=56 },
-			{ .offset=1001, .size=1, .rate=24 }, // merged inside 999
-			{ .offset=1001, .size=1, .rate=32 }, // merged inside 999
-			{ .offset=2000, .size=1, .rate=8  }  // it will erase the item with
-			                // timestamp=999, removing also the next two samples. The
-			                // end estimation will include only the last sample.
+			{ .offset=0,    .size=5, .rate=std::nullopt },
+			{ .offset=999,  .size=2, .rate=56           },
+			{ .offset=1001, .size=1, .rate=24           }, // merged inside 999
+			{ .offset=1001, .size=1, .rate=32           }, // merged inside 999
+			{ .offset=2000, .size=1, .rate=std::nullopt }  // it will erase the item
+			                // with timestamp=999, removing also the next two samples.
+			                // Only the last sample is left, and its period is a single
+			                // millisecond.
 		};
 		// clang-format on
 
 		validate(rate, nowMs, input);
 
-		REQUIRE(rate.GetRate(nowMs + 3001) == 0);
+		REQUIRE(rate.GetRate(nowMs + 3001) == std::nullopt);
 	}
 
 	SECTION("wrap")
@@ -134,19 +180,21 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// window: 1000ms, items: 5 (granularity: 200ms)
 		RTC::RateCalculator rate(1000, 8000, 5);
 
+		// The first five samples are measured over the period they span, which is
+		// still shorter than the window, so they do not add up in steps of 8.
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
-			{ .offset=1000, .size=1, .rate=1*8 },
-			{ .offset=1200, .size=1, .rate=(1*8) + (1*8) },
-			{ .offset=1400, .size=1, .rate=(1*8) + (2*8) },
-			{ .offset=1600, .size=1, .rate=(1*8) + (3*8) },
-			{ .offset=1800, .size=1, .rate=(1*8) + (4*8) },
-			{ .offset=2000, .size=1, .rate=(1*8) + ((5-1)*8) }, // starts wrap here
-			{ .offset=2200, .size=1, .rate=(1*8) + ((6-2)*8) },
-			{ .offset=2400, .size=1, .rate=(1*8) + ((7-3)*8) },
-			{ .offset=2600, .size=1, .rate=(1*8) + ((8-4)*8) },
-			{ .offset=2800, .size=1, .rate=(1*8) + ((9-5)*8) },
+			{ .offset=1000, .size=1, .rate=std::nullopt         },
+			{ .offset=1200, .size=1, .rate=80                   },
+			{ .offset=1400, .size=1, .rate=60                   },
+			{ .offset=1600, .size=1, .rate=53                   },
+			{ .offset=1800, .size=1, .rate=50                   },
+			{ .offset=2000, .size=1, .rate=(1*8) + ((5-1)*8)    }, // starts wrap here
+			{ .offset=2200, .size=1, .rate=(1*8) + ((6-2)*8)    },
+			{ .offset=2400, .size=1, .rate=(1*8) + ((7-3)*8)    },
+			{ .offset=2600, .size=1, .rate=(1*8) + ((8-4)*8)    },
+			{ .offset=2800, .size=1, .rate=(1*8) + ((9-5)*8)    },
 		};
 		// clang-format on
 
@@ -163,10 +211,10 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
-			{ .offset=0,   .size=1, .rate=8  },
-			{ .offset=333, .size=1, .rate=16 },
-			{ .offset=666, .size=1, .rate=24 },
-			{ .offset=999, .size=1, .rate=32 },
+			{ .offset=0,   .size=1, .rate=std::nullopt },
+			{ .offset=333, .size=1, .rate=48           },
+			{ .offset=666, .size=1, .rate=36           },
+			{ .offset=999, .size=1, .rate=32           },
   	};
 		// clang-format on
 
@@ -194,27 +242,30 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		REQUIRE(rate.GetRate(nowMs + 1100) == 91 * 8);
 	}
 
-	// NOTE: This pins the GetRate() memoization key, which is both nowMs and the
-	// total count. Keying it on nowMs alone would return a stale rate.
+	// NOTE: This pins the GetRate() memoization key, which is the time plus both
+	// totals. Keying it on the time alone would return a stale rate.
 	SECTION("rate is recalculated after Update() with the same now")
 	{
 		RTC::RateCalculator rate(1000, 8000, 100);
 
+		// Two samples apart in time, so that there is a period to measure over and
+		// the reads below are not rejected for lack of one.
 		rate.Update(5, nowMs);
+		rate.Update(5, nowMs + 500);
 
-		REQUIRE(rate.GetRate(nowMs) == 40);
+		REQUIRE(rate.GetRate(nowMs + 500) == 160);
 
-		rate.Update(5, nowMs);
+		rate.Update(5, nowMs + 500);
 
-		REQUIRE(rate.GetRate(nowMs) == 80);
+		REQUIRE(rate.GetRate(nowMs + 500) == 240);
 
-		rate.Update(5, nowMs);
+		rate.Update(5, nowMs + 500);
 
-		REQUIRE(rate.GetRate(nowMs) == 120);
+		REQUIRE(rate.GetRate(nowMs + 500) == 319);
 
 		// Repeated reads with no Update() in between must be stable.
-		REQUIRE(rate.GetRate(nowMs) == 120);
-		REQUIRE(rate.GetRate(nowMs) == 120);
+		REQUIRE(rate.GetRate(nowMs + 500) == 319);
+		REQUIRE(rate.GetRate(nowMs + 500) == 319);
 	}
 
 	// NOTE: This pins the item size rounding for a window size which is not a
@@ -237,24 +288,26 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 
 	// NOTE: This pins that the GetRate() memoization needs no "not calculated yet"
 	// mark. Its zeroed initial state is a valid entry, so a read at time 0 must be
-	// neither a stale hit nor a miss returning something else than 0.
+	// neither a stale hit nor a miss returning something else than no rate at all.
 	SECTION("rate at time 0 on a fresh and on a reset calculator")
 	{
 		RTC::RateCalculator rate(1000, 8000, 100);
 
-		REQUIRE(rate.GetRate(0) == 0);
+		REQUIRE(rate.GetRate(0) == std::nullopt);
 
 		rate.Update(5, 0);
+		rate.Update(5, 500);
 
-		REQUIRE(rate.GetRate(0) == 40);
+		REQUIRE(rate.GetRate(500) == 160);
 
 		rate.Reset();
 
-		REQUIRE(rate.GetRate(0) == 0);
+		REQUIRE(rate.GetRate(0) == std::nullopt);
 
 		rate.Update(5, 0);
+		rate.Update(5, 500);
 
-		REQUIRE(rate.GetRate(0) == 40);
+		REQUIRE(rate.GetRate(500) == 160);
 	}
 
 	// NOTE: This pins the constructor clamping. A zero number of items used to
@@ -269,9 +322,14 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		oneItem.Update(5, nowMs);
 		noWindow.Update(5, nowMs);
 
-		REQUIRE(noItems.GetRate(nowMs) == 40);
-		REQUIRE(oneItem.GetRate(nowMs) == 40);
-		// The window size is clamped to 1ms.
-		REQUIRE(noWindow.GetRate(nowMs) == 40000);
+		noItems.Update(5, nowMs + 500);
+		oneItem.Update(5, nowMs + 500);
+		noWindow.Update(5, nowMs + 500);
+
+		REQUIRE(noItems.GetRate(nowMs + 500) == 160);
+		REQUIRE(oneItem.GetRate(nowMs + 500) == 160);
+		// The window size is clamped to 1ms, which leaves every sample alone in a
+		// period of a single millisecond, so such a window can never measure a rate.
+		REQUIRE(noWindow.GetRate(nowMs + 500) == std::nullopt);
 	}
 }
