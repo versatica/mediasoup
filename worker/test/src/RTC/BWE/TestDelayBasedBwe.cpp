@@ -354,9 +354,9 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		SimulatedTransport simulatedTransport;
 
 		// The very same scenario as the first capacity drop, expected against a
-		// margin shifted by 33 ms. Upstream keeps both because the measured value
-		// falls inside the two, and the parameter that used to tell them apart is
-		// no longer read by anything.
+		// margin shifted by 33 ms. Both are kept because the measured value falls
+		// inside the two, and the parameter that used to tell them apart is no longer
+		// read by anything.
 		capacityDropTestHelper(
 		  simulatedTransport,
 		  /*numberOfStreams*/ 1,

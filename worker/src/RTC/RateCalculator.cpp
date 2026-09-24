@@ -134,8 +134,17 @@ namespace RTC
 		const double rate = std::trunc(
 		  ((static_cast<double>(this->totalCount) * this->scale) / static_cast<double>(periodMs)) + 0.5);
 
-		this->lastRate =
-		  static_cast<int64_t>(std::min(rate, static_cast<double>(std::numeric_limits<int64_t>::max())));
+		// A rate that does not fit is no rate at all, which is better than the
+		// garbage that converting it would give.
+		// NOTE: The comparison is not a strict one because converting the maximum of
+		// int64_t to double rounds it up, so a rate equal to that value is already
+		// out of range.
+		if (rate >= static_cast<double>(std::numeric_limits<int64_t>::max()))
+		{
+			return this->lastRate;
+		}
+
+		this->lastRate = static_cast<int64_t>(rate);
 
 		return this->lastRate;
 	}

@@ -84,13 +84,10 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		REQUIRE(rate.GetRate(nowMs + 999) == 16000);
 	}
 
-	// NOTE: The five sections below reproduce the cases of `RateStatisticsTest` in
-	// `rtc_base/rate_statistics_unittest.cc` of libwebrtc, whose rate meter is the
-	// one this one takes its semantics from. Their window of 500 ms is kept, and
-	// so is the item count that gives the one millisecond granularity their
-	// buckets have, so that the expected values are theirs and not ours.
+	// NOTE: The five sections below use a window of 500 ms split into items of a
+	// single millisecond, so that expiration happens sample by sample and every
+	// expected value can be worked out by hand.
 
-	// Upstream `RespectsWindowSizeEdges`.
 	SECTION("a lone sample is measured once the window has filled around it")
 	{
 		// window: 500ms, items: 500 (granularity: 1ms)
@@ -116,7 +113,6 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		REQUIRE(rate.GetRate(nowMs + 500) == 1000 * 8);
 	}
 
-	// Upstream `HandlesZeroCounts`.
 	SECTION("samples of size zero are measured as no data rather than no rate")
 	{
 		// window: 500ms, items: 500 (granularity: 1ms)
@@ -137,7 +133,6 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		REQUIRE(rate.GetRate(nowMs + 1000) == std::nullopt);
 	}
 
-	// Upstream `HandlesQuietPeriods`.
 	SECTION("a quiet period is measured as no data until it empties the window")
 	{
 		// window: 500ms, items: 500 (granularity: 1ms)
@@ -163,7 +158,6 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		REQUIRE(rate.GetRate(nowMs + 1501) == 0);
 	}
 
-	// Upstream `ResetAfterSilence`.
 	SECTION("silence longer than the window starts a new period")
 	{
 		// window: 500ms, items: 500 (granularity: 1ms)
@@ -212,9 +206,9 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		REQUIRE(rate.GetRate(nowMs + 10502) == 8000000);
 	}
 
-	// Upstream `HandlesLowFps`, which is what the margin exists for: the samples
-	// come a whole window apart, so without it each of them would find the window
-	// empty, restart the measured period and never be measured at all.
+	// NOTE: This is what the margin exists for: the samples come a whole window
+	// apart, so without it each of them would find the window empty, restart the
+	// measured period and never be measured at all.
 	SECTION("a stream sending as often as the window is still measured")
 	{
 		// window: 1000ms, items: 1000 (granularity: 1ms), counting frames
@@ -232,6 +226,20 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 				REQUIRE(rate.GetRate(nowMs + i) == 1);
 			}
 		}
+	}
+
+	// NOTE: The overflow is provoked through the scale rather than through the size
+	// of the samples, since Update() takes a size_t and on a 32 bit build no amount
+	// of samples of that size makes the result overflow.
+	SECTION("a rate that does not fit is no rate at all")
+	{
+		// window: 1000ms, items: 1000 (granularity: 1ms)
+		RTC::RateCalculator rate(1000, 1e30F, 1000);
+
+		rate.Update(1000, nowMs);
+		rate.Update(1000, nowMs + 1);
+
+		REQUIRE(rate.GetRate(nowMs + 1) == std::nullopt);
 	}
 
 	SECTION("receive single item per 1000 ms")
