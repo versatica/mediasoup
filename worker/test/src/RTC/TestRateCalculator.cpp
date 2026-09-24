@@ -83,6 +83,46 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		REQUIRE(rate.GetRate(nowMs + 999) == 16000);
 	}
 
+	// NOTE: This pins the margin that tells a stream sending less often than the
+	// window apart from one that stopped. Without it every sample of such a stream
+	// would find the window empty and restart the measured period, leaving it at a
+	// single millisecond, so the stream would report no rate at all for as long as
+	// it kept sending.
+	SECTION("a stream sending less often than the window is still measured")
+	{
+		// window: 1000ms, items: 100 (granularity: 10ms)
+		RTC::RateCalculator rate(1000, 8000, 100);
+
+		// 1200ms apart, which is longer than the window and within the margin.
+		rate.Update(1200, nowMs);
+
+		REQUIRE(rate.GetRate(nowMs) == std::nullopt);
+
+		rate.Update(1200, nowMs + 1200);
+
+		REQUIRE(rate.GetRate(nowMs + 1200) == 9600);
+
+		rate.Update(1200, nowMs + 2400);
+
+		REQUIRE(rate.GetRate(nowMs + 2400) == 9600);
+	}
+
+	// NOTE: And this pins the other side of it: beyond the margin the next sample
+	// is the start of a new measured period rather than the continuation of the
+	// one before the silence.
+	SECTION("a sample beyond the margin starts a new period")
+	{
+		// window: 1000ms, items: 100 (granularity: 10ms)
+		RTC::RateCalculator rate(1000, 8000, 100);
+
+		rate.Update(1200, nowMs);
+
+		// 2000ms later, which is beyond the 1500ms margin of this window.
+		rate.Update(1200, nowMs + 2000);
+
+		REQUIRE(rate.GetRate(nowMs + 2000) == std::nullopt);
+	}
+
 	SECTION("receive single item per 1000 ms")
 	{
 		RTC::RateCalculator rate;
@@ -118,14 +158,15 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	{
 		RTC::RateCalculator rate(1000, 8000, 100);
 
-		// Each sample expires the previous one, so there is never more than a lone
-		// sample within a window that has just been emptied.
+		// Each sample expires the previous one, but they come close enough together
+		// for the measured period to be kept, so each of them is measured over the
+		// window instead of over the instant it was taken in.
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
 			{ .offset=0,    .size=5, .rate=std::nullopt },
-			{ .offset=1000, .size=5, .rate=std::nullopt },
-			{ .offset=2000, .size=5, .rate=std::nullopt }
+			{ .offset=1000, .size=5, .rate=40           },
+			{ .offset=2000, .size=5, .rate=40           }
 		};
 		// clang-format on
 
@@ -163,10 +204,11 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 			{ .offset=999,  .size=2, .rate=56           },
 			{ .offset=1001, .size=1, .rate=24           }, // merged inside 999
 			{ .offset=1001, .size=1, .rate=32           }, // merged inside 999
-			{ .offset=2000, .size=1, .rate=std::nullopt }  // it will erase the item
+			{ .offset=2000, .size=1, .rate=8            }  // it will erase the item
 			                // with timestamp=999, removing also the next two samples.
-			                // Only the last sample is left, and its period is a single
-			                // millisecond.
+			                // Only the last sample is left, and it comes close enough
+			                // to the previous one to keep being measured over the
+			                // window.
 		};
 		// clang-format on
 

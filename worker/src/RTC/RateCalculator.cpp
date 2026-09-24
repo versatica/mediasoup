@@ -8,6 +8,14 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	// Factor of the window size within which the latest sample still counts as
+	// recent.
+	static constexpr double RecentSampleMarginFactor{ 1.5 };
+
+	/* Instance methods. */
+
 	RateCalculator::RateCalculator(int64_t windowSizeMs, float scale, uint16_t windowItems)
 	{
 		MS_TRACE();
@@ -35,6 +43,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOTE: Must be told before sliding the window, since sliding it is what
+		// empties it.
+		const bool lastSampleIsRecent =
+		  this->lastSampleTimeMs.has_value() &&
+		  this->lastSampleTimeMs.value() >
+		    nowMs -
+		      static_cast<int64_t>(RecentSampleMarginFactor * static_cast<double>(this->windowSizeMs));
+
 		// Ignore data older than the window. Should never happen.
 		if (!SlideWindow(nowMs))
 		{
@@ -43,9 +59,12 @@ namespace RTC
 			return;
 		}
 
-		// First sample of a window that holds none, so the measured period starts
-		// here.
-		if (!this->firstSampleTimeMs.has_value())
+		// The very first sample starts the measured period, and so does one that
+		// finds the window empty after long enough without traffic. A stream that
+		// just sends less often than the window keeps the period it had, so that it
+		// is measured over the window instead of restarting at every sample and
+		// hence never being measured at all.
+		if (!this->firstSampleTimeMs.has_value() || (this->totalSamples == 0 && !lastSampleIsRecent))
 		{
 			this->firstSampleTimeMs = nowMs;
 		}
@@ -58,6 +77,7 @@ namespace RTC
 		this->totalCount += size;
 		this->totalSamples++;
 		this->bytes += size;
+		this->lastSampleTimeMs = nowMs;
 	}
 
 	std::optional<int64_t> RateCalculator::GetRate(int64_t nowMs)
@@ -86,8 +106,9 @@ namespace RTC
 		this->lastTimeMs       = nowMs;
 		this->lastRate         = std::nullopt;
 
-		// Not a single sample within the window.
-		if (!this->firstSampleTimeMs.has_value())
+		// Either no sample has ever been taken, or none of them is still within the
+		// window.
+		if (!this->firstSampleTimeMs.has_value() || this->totalSamples == 0)
 		{
 			return this->lastRate;
 		}
@@ -123,6 +144,7 @@ namespace RTC
 		std::ranges::fill(this->buffer, Item{});
 
 		this->firstSampleTimeMs.reset();
+		this->lastSampleTimeMs.reset();
 		this->newestItemIndex       = 0;
 		this->newestItemStartTimeMs = 0;
 		this->totalCount            = 0;
@@ -179,7 +201,6 @@ namespace RTC
 				this->totalSamples = 0;
 			}
 
-			this->firstSampleTimeMs.reset();
 			this->newestItemIndex       = 0;
 			this->newestItemStartTimeMs = nowMs;
 
@@ -201,12 +222,6 @@ namespace RTC
 			this->totalSamples -= item.samples;
 
 			item = Item{};
-		}
-
-		// Every sample expired, so the next one starts a new measured period.
-		if (this->totalSamples == 0)
-		{
-			this->firstSampleTimeMs.reset();
 		}
 
 		// Advance by whole items rather than jumping to `nowMs`. The window is

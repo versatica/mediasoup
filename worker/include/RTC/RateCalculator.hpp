@@ -93,10 +93,17 @@ namespace RTC
 		size_t newestItemIndex{ 0 };
 		// Time (in milliseconds) at which the newest item starts.
 		int64_t newestItemStartTimeMs{ 0 };
-		// Time (in milliseconds) of the oldest sample still within the window, which
-		// is where the measured period starts. Unset exactly while the ring holds no
-		// sample at all.
+		// Time (in milliseconds) at which the measured period starts. Unset until the
+		// very first sample, and from then on only ever moved forward by a sample
+		// that finds the window empty after long enough without traffic.
+		// NOTE: Expiration does not move it, so once the data reaches back beyond the
+		// window it names a sample that is already gone. That is on purpose: from
+		// that point on the period is the window itself, which is what the reader
+		// clamps it to.
 		std::optional<int64_t> firstSampleTimeMs;
+		// Time (in milliseconds) of the latest sample, which is what tells a stream
+		// that simply sends less often than the window apart from one that stopped.
+		std::optional<int64_t> lastSampleTimeMs;
 		// Sum of the count of every item.
 		size_t totalCount{ 0 };
 		// Sum of the samples of every item.
