@@ -182,15 +182,15 @@ namespace RTC
 			  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			  arrivalTimeUs - this->currentGroup.completeTimeUs.value();
 			const uint32_t timestampDiff = timestamp - this->currentGroup.timestamp;
-			const double sendDeltaUs     = this->timestampToUsCoeff * timestampDiff;
+			const auto sendDeltaUs       = std::llround(this->timestampToUsCoeff * timestampDiff);
 
 			// Packets sent at the very same time always belong to the same burst.
 			//
-			// NOTE: Sameness is decided with a resolution of a millisecond, which is
-			// the one every threshold of this path is expressed in. A finer one would
-			// leave packets that left together out of the burst just because the
-			// timestamps they carry can tell them apart.
-			if (std::llround(sendDeltaUs / 1000.0) == 0)
+			// NOTE: Sameness is told apart with a resolution of a millisecond, which
+			// is the one every threshold of this path is expressed in. A finer one
+			// would leave packets that left together out of the burst just because
+			// the timestamps they carry can tell them apart.
+			if (std::llround(static_cast<double>(sendDeltaUs) / 1000.0) == 0)
 			{
 				return true;
 			}
