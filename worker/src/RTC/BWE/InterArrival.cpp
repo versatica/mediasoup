@@ -99,6 +99,10 @@ namespace RTC
 
 					this->numConsecutiveReorderedGroups = 0;
 
+					// NOTE: Guaranteed by the branch right above, which returns for every
+					// negative one.
+					MS_ASSERT(arrivalDeltaUs >= 0, "arrival delta is negative");
+
 					deltas = Deltas{ .timestampDelta = timestampDelta,
 					                 .arrivalDeltaUs = arrivalDeltaUs,
 					                 .sizeDelta      = static_cast<int64_t>(this->currentGroup.size) -

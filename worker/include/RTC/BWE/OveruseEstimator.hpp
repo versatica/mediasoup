@@ -89,7 +89,7 @@ namespace RTC
 			 */
 			double UpdateMinFramePeriod(double sendDeltaMs);
 
-			void UpdateNoiseEstimate(double residual, double sendDeltaMs, bool stableState);
+			void UpdateNoiseEstimate(double residual, double minFramePeriodMs, bool stableState);
 
 		private:
 			int64_t numOfDeltas{ 0 };

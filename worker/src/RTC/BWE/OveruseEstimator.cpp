@@ -138,7 +138,7 @@ namespace RTC
 			return minFramePeriodMs;
 		}
 
-		void OveruseEstimator::UpdateNoiseEstimate(double residual, double sendDeltaMs, bool stableState)
+		void OveruseEstimator::UpdateNoiseEstimate(double residual, double minFramePeriodMs, bool stableState)
 		{
 			MS_TRACE();
 
@@ -154,7 +154,7 @@ namespace RTC
 			const double alpha = this->numOfDeltas > SettledNumOfDeltas ? SettledNoiseAlpha : NoiseAlpha;
 			// The weight above is expressed per frame at a given rate, so it's scaled
 			// by how far apart these samples actually came.
-			const double beta = std::pow(1 - alpha, sendDeltaMs * NoiseAlphaFrameRate / 1000.0);
+			const double beta = std::pow(1 - alpha, minFramePeriodMs * NoiseAlphaFrameRate / 1000.0);
 
 			this->avgNoiseMs  = (beta * this->avgNoiseMs) + ((1 - beta) * residual);
 			this->varNoiseMs2 = (beta * this->varNoiseMs2) + ((1 - beta) * (this->avgNoiseMs - residual) *

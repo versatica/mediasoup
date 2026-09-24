@@ -125,10 +125,15 @@ SCENARIO("BWE OveruseDetector", "[bwe][overusedetector]")
 
 			rtpTimestamp += meanMs * 90;
 			nowMs += meanMs;
-			receiveTimeMs = std::max<int64_t>(
-			  receiveTimeMs,
-			  nowMs +
-			    static_cast<int64_t>(random.Gaussian(0, static_cast<double>(standardDeviationMs)) + 0.5));
+			const double jitter = random.Gaussian(0, static_cast<double>(standardDeviationMs));
+			// NOTE: Truncated towards zero rather than rounded with std::llround(),
+			// which rounds away from it. Half of these samples are negative, so the
+			// two disagree on them and the counts asserted below would no longer
+			// hold.
+			// NOLINTNEXTLINE(bugprone-incorrect-roundings)
+			const auto jitterMs = static_cast<int64_t>(jitter + 0.5);
+
+			receiveTimeMs = std::max<int64_t>(receiveTimeMs, nowMs + jitterMs);
 
 			if (overuseDetector.GetState() == RTC::BWE::Types::BandwidthUsage::OVERUSING)
 			{
@@ -163,10 +168,15 @@ SCENARIO("BWE OveruseDetector", "[bwe][overusedetector]")
 
 			rtpTimestamp += meanMs * 90;
 			nowMs += meanMs + driftPerFrameMs;
-			receiveTimeMs = std::max<int64_t>(
-			  receiveTimeMs,
-			  nowMs +
-			    static_cast<int64_t>(random.Gaussian(0, static_cast<double>(standardDeviationMs)) + 0.5));
+			const double jitter = random.Gaussian(0, static_cast<double>(standardDeviationMs));
+			// NOTE: Truncated towards zero rather than rounded with std::llround(),
+			// which rounds away from it. Half of these samples are negative, so the
+			// two disagree on them and the counts asserted below would no longer
+			// hold.
+			// NOLINTNEXTLINE(bugprone-incorrect-roundings)
+			const auto jitterMs = static_cast<int64_t>(jitter + 0.5);
+
+			receiveTimeMs = std::max<int64_t>(receiveTimeMs, nowMs + jitterMs);
 
 			if (overuseDetector.GetState() == RTC::BWE::Types::BandwidthUsage::OVERUSING)
 			{
