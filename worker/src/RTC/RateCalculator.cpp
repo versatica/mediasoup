@@ -21,7 +21,10 @@ namespace RTC
 		MS_TRACE();
 
 		// Clamp the given values so every derived value is safe to use.
-		this->windowSizeMs = std::max<int64_t>(windowSizeMs, 1);
+		// NOTE: The upper bound is what keeps one window and a half, which is the
+		// margin computed at the end, within an int64_t.
+		this->windowSizeMs =
+		  std::clamp<int64_t>(windowSizeMs, 1, std::numeric_limits<int64_t>::max() / 2);
 
 		const int64_t items = std::max<int64_t>(windowItems, 1);
 
@@ -36,7 +39,12 @@ namespace RTC
 		this->buffer.resize(
 		  static_cast<size_t>((this->windowSizeMs + this->itemSizeMs - 1) / this->itemSizeMs));
 
-		this->scale = static_cast<double>(scale);
+		// NOTE: A negative scale would give negative rates, which whoever reads them
+		// takes as a count of bits.
+		this->scale = std::max(static_cast<double>(scale), 0.0);
+
+		this->recentSampleMarginMs =
+		  static_cast<int64_t>(RecentSampleMarginFactor * static_cast<double>(this->windowSizeMs));
 	}
 
 	void RateCalculator::Update(size_t size, int64_t nowMs)
@@ -50,9 +58,7 @@ namespace RTC
 		// expires that data.
 		const bool lastSampleIsRecent =
 		  this->totalSamples != 0 && this->lastSampleTimeMs.has_value() &&
-		  this->lastSampleTimeMs.value() >
-		    nowMs -
-		      static_cast<int64_t>(RecentSampleMarginFactor * static_cast<double>(this->windowSizeMs));
+		  this->lastSampleTimeMs.value() > nowMs - this->recentSampleMarginMs;
 
 		// Ignore data older than the window. Should never happen.
 		if (!SlideWindow(nowMs))

@@ -534,9 +534,10 @@ namespace RTC
 			auto expected = GetExpectedPackets();
 
 			// NOTE: The expected count is the extended sequence number arithmetic of RFC
-			// 3550, so it wraps at 32 bits. The received one is taken in that same width
-			// for this subtraction, so that both wrap together and the difference stays
-			// right once more than 2^32 packets have gone by.
+			// 3550, so it wraps at 32 bits, whereas the received one does not wrap at
+			// all. Each subtraction below is therefore made in the width that keeps it
+			// right: this one truncates the received count so that both wrap together,
+			// and the interval further down is taken in full width, where it is exact.
 			const auto received = static_cast<uint32_t>(this->mediaTransmissionCounter.GetPacketCount());
 
 			if (expected > received)
@@ -550,10 +551,8 @@ namespace RTC
 
 			// Calculate fraction lost.
 			//
-			// NOTE: The expected count wraps, so its difference is taken in its own
-			// width. Reading it as signed also makes a sequence number re-sync, which
-			// restarts the count, come out negative. The received count does not wrap,
-			// so its difference is exact.
+			// NOTE: Reading the difference of the expected count as signed makes a
+			// sequence number re-sync, which restarts the count, come out negative.
 			const int64_t expectedInterval = static_cast<int32_t>(expected - this->expectedPrior);
 
 			this->expectedPrior = expected;

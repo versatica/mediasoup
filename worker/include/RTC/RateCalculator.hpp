@@ -96,6 +96,9 @@ namespace RTC
 		// Factor the in-window count is multiplied by before being divided by the
 		// period it spans.
 		double scale{ 0.0 };
+		// How long after a sample the next one still counts as the same stretch of
+		// traffic (in milliseconds). Derived from the window size.
+		int64_t recentSampleMarginMs{ 0 };
 		// Ring of items. Never empty, and always long enough to cover the whole
 		// window.
 		std::vector<Item> buffer;
