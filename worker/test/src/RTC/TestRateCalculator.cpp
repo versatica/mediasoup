@@ -1,7 +1,8 @@
 #include "common.hpp"
 #include "RTC/RateCalculator.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <limits> // std::numeric_limits
+#include <cstdlib> // std::abs()
+#include <limits>  // std::numeric_limits
 #include <vector>
 
 SCENARIO("RateCalculator", "[rate-calculator]")
@@ -168,13 +169,28 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// window: 500ms, items: 500 (granularity: 1ms)
 		RTC::RateCalculator rate(500, 8000, 500);
 
-		// 1000 bytes per millisecond until the window has filled.
+		// 1000 bytes per millisecond until the window has filled, which must not make
+		// the estimation error grow as the measured period is extended.
+		int64_t prevError{ 8000000 };
+		std::optional<int64_t> bitrate;
+
 		for (int64_t i{ 1 }; i < 10000; ++i)
 		{
 			rate.Update(1000, nowMs + i);
+
+			bitrate = rate.GetRate(nowMs + i);
+
+			if (bitrate.has_value())
+			{
+				const int64_t error = std::abs(8000000 - bitrate.value());
+
+				REQUIRE(error <= prevError + 1);
+
+				prevError = error;
+			}
 		}
 
-		REQUIRE(rate.GetRate(nowMs + 9999) == 8000000);
+		REQUIRE(bitrate == 8000000);
 
 		// Silence over the window size, read during the silence.
 		REQUIRE(rate.GetRate(nowMs + 10500) == std::nullopt);
