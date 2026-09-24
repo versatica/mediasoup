@@ -144,7 +144,7 @@ namespace
 	// Current time, which the helpers below move so that traffic spans a period
 	// instead of happening all at once.
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	int64_t nowUs{ 1000000 };
+	int64_t nowUs{ 1000000000000 };
 
 	// NOLINTNEXTLINE(readability-identifier-naming)
 	mocks::MockShared shared(/*getTimeUs*/

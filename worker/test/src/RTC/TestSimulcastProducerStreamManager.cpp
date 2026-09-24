@@ -147,7 +147,6 @@ namespace
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
 
-	// NOLINTNEXTLINE(readability-identifier-naming)
 	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
 	constexpr int64_t PacketSpacingMs{ 1 };
 

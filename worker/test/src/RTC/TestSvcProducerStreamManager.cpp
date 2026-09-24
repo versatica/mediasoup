@@ -153,14 +153,13 @@ namespace
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
 
-	// NOLINTNEXTLINE(readability-identifier-naming)
 	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
 	constexpr int64_t PacketSpacingMs{ 1 };
 
 	// Current time, which the helpers below move so that traffic spans a period
 	// instead of happening all at once.
 	// NOLINTNEXTLINE(readability-identifier-naming)
-	int64_t nowUs{ 1000000 };
+	int64_t nowUs{ 1000000000000 };
 
 	// NOLINTNEXTLINE(readability-identifier-naming)
 	mocks::MockShared shared(/*getTimeUs*/
