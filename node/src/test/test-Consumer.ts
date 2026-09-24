@@ -223,12 +223,6 @@ const ctx: TestContext = {
 					preferredId: 8,
 					preferredEncrypt: false,
 				},
-				{
-					kind: 'video',
-					uri: 'urn:ietf:params:rtp-hdrext:toffset',
-					preferredId: 9,
-					preferredEncrypt: false,
-				},
 			],
 		}
 	),
@@ -823,7 +817,7 @@ test('consumer.dump() succeeds', async () => {
 		{ type: 'goog-remb' },
 	]);
 	expect(Array.isArray(dump2.rtpParameters.headerExtensions)).toBe(true);
-	expect(dump2.rtpParameters.headerExtensions!.length).toBe(4);
+	expect(dump2.rtpParameters.headerExtensions!.length).toBe(3);
 	expect(dump2.rtpParameters.headerExtensions).toEqual([
 		{
 			uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
@@ -840,12 +834,6 @@ test('consumer.dump() succeeds', async () => {
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 8,
-			parameters: {},
-			encrypt: false,
-		},
-		{
-			uri: 'urn:ietf:params:rtp-hdrext:toffset',
-			id: 9,
 			parameters: {},
 			encrypt: false,
 		},

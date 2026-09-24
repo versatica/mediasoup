@@ -818,12 +818,6 @@ namespace RTC
 						break;
 					}
 
-					case RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET:
-					{
-						this->headerExtensionIds.timeOffset = extension.id;
-						break;
-					}
-
 					case RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME:
 					{
 						this->headerExtensionIds.absCaptureTime = extension.id;

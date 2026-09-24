@@ -406,10 +406,6 @@ export function rtpHeaderExtensionUriFromFbs(
 			return 'urn:3gpp:video-orientation';
 		}
 
-		case FbsRtpHeaderExtensionUri.TimeOffset: {
-			return 'urn:ietf:params:rtp-hdrext:toffset';
-		}
-
 		case FbsRtpHeaderExtensionUri.AbsCaptureTime: {
 			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time';
 		}
@@ -458,10 +454,6 @@ export function rtpHeaderExtensionUriToFbs(
 
 		case 'urn:3gpp:video-orientation': {
 			return FbsRtpHeaderExtensionUri.VideoOrientation;
-		}
-
-		case 'urn:ietf:params:rtp-hdrext:toffset': {
-			return FbsRtpHeaderExtensionUri.TimeOffset;
 		}
 
 		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time': {

@@ -50,11 +50,6 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION;
 			}
 
-			case FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset:
-			{
-				return RtpHeaderExtensionUri::Type::TIME_OFFSET;
-			}
-
 			case FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay:
 			{
 				return RtpHeaderExtensionUri::Type::PLAYOUT_DELAY;
@@ -124,11 +119,6 @@ namespace RTC
 			case RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION:
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::VideoOrientation;
-			}
-
-			case RtpHeaderExtensionUri::Type::TIME_OFFSET:
-			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset;
 			}
 
 			case RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME:

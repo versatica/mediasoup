@@ -426,13 +426,6 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
-            RtpHeaderExtension {
-                kind: MediaKind::Video,
-                uri: RtpHeaderExtensionUri::TimeOffset,
-                preferred_id: 9,
-                preferred_encrypt: false,
-                direction: RtpHeaderExtensionDirection::default(),
-            },
         ],
     }
 }
@@ -1273,11 +1266,6 @@ fn dump_succeeds() {
                     RtpHeaderExtensionParameters {
                         uri: RtpHeaderExtensionUri::VideoOrientation,
                         id: 8,
-                        encrypt: false,
-                    },
-                    RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::TimeOffset,
-                        id: 9,
                         encrypt: false,
                     },
                 ],

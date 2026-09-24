@@ -171,11 +171,6 @@ namespace RTC
 				this->rtpHeaderExtensionIds.videoOrientation = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.timeOffset == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET)
-			{
-				this->rtpHeaderExtensionIds.timeOffset = exten.id;
-			}
-
 			if (this->rtpHeaderExtensionIds.absCaptureTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
 			{
 				this->rtpHeaderExtensionIds.absCaptureTime = exten.id;
@@ -1397,22 +1392,6 @@ namespace RTC
 					extensions.emplace_back(
 					  /*type*/ RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION,
 					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION),
-					  /*len*/ extenLen,
-					  /*value*/ bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
-				// Proxy urn:ietf:params:rtp-hdrext:toffset.
-				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.timeOffset, extenLen);
-
-				if (extenValue)
-				{
-					std::memcpy(bufferPtr, extenValue, extenLen);
-
-					extensions.emplace_back(
-					  /*type*/ RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET,
-					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET),
 					  /*len*/ extenLen,
 					  /*value*/ bufferPtr);
 
