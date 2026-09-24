@@ -153,11 +153,11 @@ namespace RTC
 			return counter.GetBitrate(nowMs).value_or(0);
 		}
 
-		size_t RtpStreamRecv::TransmissionCounter::GetPacketCount() const
+		uint64_t RtpStreamRecv::TransmissionCounter::GetPacketCount() const
 		{
 			MS_TRACE();
 
-			size_t packetCount{ 0 };
+			uint64_t packetCount{ 0 };
 
 			for (const auto& spatialLayerCounter : this->spatialLayerCounters)
 			{
@@ -170,11 +170,11 @@ namespace RTC
 			return packetCount;
 		}
 
-		size_t RtpStreamRecv::TransmissionCounter::GetBytes() const
+		uint64_t RtpStreamRecv::TransmissionCounter::GetBytes() const
 		{
 			MS_TRACE();
 
-			size_t bytes{ 0 };
+			uint64_t bytes{ 0 };
 
 			for (const auto& spatialLayerCounter : this->spatialLayerCounters)
 			{
@@ -535,7 +535,8 @@ namespace RTC
 
 			if (expected > this->mediaTransmissionCounter.GetPacketCount())
 			{
-				this->packetsLost = expected - this->mediaTransmissionCounter.GetPacketCount();
+				this->packetsLost =
+				  static_cast<int32_t>(expected - this->mediaTransmissionCounter.GetPacketCount());
 			}
 			else
 			{
@@ -544,17 +545,18 @@ namespace RTC
 
 			// Calculate fraction lost.
 			//
-			// NOTE: Both counts wrap, so each difference is taken in the width of its
-			// own counter. Reading the expected one as signed also makes a sequence
-			// number re-sync, which restarts the count, come out negative.
+			// NOTE: The expected count wraps, so its difference is taken in its own
+			// width. Reading it as signed also makes a sequence number re-sync, which
+			// restarts the count, come out negative. The received count does not wrap,
+			// so its difference is exact.
 			const int64_t expectedInterval = static_cast<int32_t>(expected - this->expectedPrior);
 
 			this->expectedPrior = expected;
 
-			const int64_t receivedInterval =
-			  static_cast<uint32_t>(this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior);
+			const auto receivedInterval =
+			  static_cast<int64_t>(this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior);
 
-			this->receivedPrior = static_cast<uint32_t>(this->mediaTransmissionCounter.GetPacketCount());
+			this->receivedPrior = this->mediaTransmissionCounter.GetPacketCount();
 
 			const int64_t lostInterval = expectedInterval - receivedInterval;
 
@@ -917,12 +919,12 @@ namespace RTC
 
 			// Calculate number of packets received in this interval.
 			const auto totalReceived = this->mediaTransmissionCounter.GetPacketCount();
-			const uint32_t received  = totalReceived - this->receivedPriorScore;
+			const auto received      = totalReceived - this->receivedPriorScore;
 
 			this->receivedPriorScore = totalReceived;
 
 			// Calculate number of packets lost in this interval.
-			uint32_t lost;
+			uint64_t lost;
 
 			if (expected < received)
 			{
@@ -935,13 +937,15 @@ namespace RTC
 
 			// Calculate number of packets repaired in this interval.
 			const auto totalRepaired = this->packetsRepaired;
-			uint32_t repaired        = totalRepaired - this->repairedPriorScore;
+
+			auto repaired = totalRepaired - this->repairedPriorScore;
 
 			this->repairedPriorScore = totalRepaired;
 
 			// Calculate number of packets retransmitted in this interval.
 			const auto totatRetransmitted = this->packetsRetransmitted;
-			uint32_t retransmitted        = totatRetransmitted - this->retransmittedPriorScore;
+
+			auto retransmitted = totatRetransmitted - this->retransmittedPriorScore;
 
 			this->retransmittedPriorScore = totatRetransmitted;
 
@@ -973,8 +977,10 @@ namespace RTC
 			{
 				if (HasRtx())
 				{
-					repaired = lost;
+					// NOTE: The excess has to be discounted before clamping, since once
+					// `repaired` has been clamped there is no excess left to tell.
 					retransmitted -= repaired - lost;
+					repaired = lost;
 				}
 				else
 				{
@@ -985,15 +991,15 @@ namespace RTC
 #if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
 			  score,
-			  "[totalExpected:%" PRIu32 ", totalReceived:%zu, totalRepaired:%zu",
+			  "[totalExpected:%" PRIu32 ", totalReceived:%" PRIu64 ", totalRepaired:%" PRIu64,
 			  totalExpected,
 			  totalReceived,
 			  totalRepaired);
 
 			MS_DEBUG_TAG(
 			  score,
-			  "fixed values [expected:%" PRIu32 ", received:%" PRIu32 ", lost:%" PRIu32
-			  ", repaired:%" PRIu32 ", retransmitted:%" PRIu32,
+			  "fixed values [expected:%" PRIu32 ", received:%" PRIu64 ", lost:%" PRIu64
+			  ", repaired:%" PRIu64 ", retransmitted:%" PRIu64,
 			  expected,
 			  received,
 			  lost,
@@ -1011,7 +1017,7 @@ namespace RTC
 				repairedWeight *= static_cast<float>(repaired) / retransmitted;
 			}
 
-			lost = static_cast<uint32_t>(lost - (repaired * repairedWeight));
+			lost = static_cast<uint64_t>(static_cast<float>(lost) - (static_cast<float>(repaired) * repairedWeight));
 
 			auto deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
 			auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
@@ -1019,7 +1025,7 @@ namespace RTC
 #if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
 			  score,
-			  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32
+			  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu64
 			  ", score:%" PRIu8 "]",
 			  deliveredRatio,
 			  repairedRatio,

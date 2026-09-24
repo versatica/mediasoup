@@ -99,7 +99,7 @@ namespace RTC
 
 			if (expected > this->packetsCount)
 			{
-				this->packetsLost = expected - this->packetsCount;
+				this->packetsLost = static_cast<int32_t>(expected - this->packetsCount);
 			}
 			else
 			{
@@ -108,17 +108,17 @@ namespace RTC
 
 			// Calculate fraction lost.
 			//
-			// NOTE: Both counts wrap, so each difference is taken in the width of its
-			// own counter. Reading the expected one as signed also makes a sequence
-			// number re-sync, which restarts the count, come out negative.
+			// NOTE: The expected count wraps, so its difference is taken in its own
+			// width. Reading it as signed also makes a sequence number re-sync, which
+			// restarts the count, come out negative. The received count does not wrap,
+			// so its difference is exact.
 			const int64_t expectedInterval = static_cast<int32_t>(expected - this->expectedPrior);
 
 			this->expectedPrior = expected;
 
-			const int64_t receivedInterval =
-			  static_cast<uint32_t>(this->packetsCount - this->receivedPrior);
+			const auto receivedInterval = static_cast<int64_t>(this->packetsCount - this->receivedPrior);
 
-			this->receivedPrior = static_cast<uint32_t>(this->packetsCount);
+			this->receivedPrior = this->packetsCount;
 
 			const int64_t lostInterval = expectedInterval - receivedInterval;
 

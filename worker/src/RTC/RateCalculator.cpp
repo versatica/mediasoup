@@ -43,10 +43,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Whether the window still held data when this sample arrived, and the sample
+		// before it is recent enough for both to be taken as the same stretch of
+		// traffic.
 		// NOTE: Must be told before sliding the window, since sliding it is what
-		// empties it.
+		// expires that data.
 		const bool lastSampleIsRecent =
-		  this->lastSampleTimeMs.has_value() &&
+		  this->totalSamples != 0 && this->lastSampleTimeMs.has_value() &&
 		  this->lastSampleTimeMs.value() >
 		    nowMs -
 		      static_cast<int64_t>(RecentSampleMarginFactor * static_cast<double>(this->windowSizeMs));

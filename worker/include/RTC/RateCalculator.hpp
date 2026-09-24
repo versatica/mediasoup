@@ -28,11 +28,11 @@ namespace RTC
 			/**
 			 * Sum of the sizes given to Update() within this item.
 			 */
-			size_t count{ 0 };
+			uint64_t count{ 0 };
 			/**
 			 * Number of Update() calls accounted for within this item.
 			 */
-			size_t samples{ 0 };
+			uint64_t samples{ 0 };
 		};
 
 	public:
@@ -68,7 +68,7 @@ namespace RTC
 		 */
 		std::optional<int64_t> GetRate(int64_t nowMs);
 
-		size_t GetBytes() const
+		uint64_t GetBytes() const
 		{
 			return this->bytes;
 		}
@@ -101,15 +101,18 @@ namespace RTC
 		// that point on the period is the window itself, which is what the reader
 		// clamps it to.
 		std::optional<int64_t> firstSampleTimeMs;
-		// Time (in milliseconds) of the latest sample, which is what tells a stream
-		// that simply sends less often than the window apart from one that stopped.
+		// Time (in milliseconds) of the latest sample, which together with the window
+		// still holding it is what tells a stream that simply sends less often than
+		// the window apart from one that stopped.
 		std::optional<int64_t> lastSampleTimeMs;
 		// Sum of the count of every item.
-		size_t totalCount{ 0 };
+		uint64_t totalCount{ 0 };
 		// Sum of the samples of every item.
-		size_t totalSamples{ 0 };
+		uint64_t totalSamples{ 0 };
 		// Total bytes accounted for. Not affected by Reset().
-		size_t bytes{ 0 };
+		// NOTE: Nothing bounds this one, unlike the in-window total above, so it is
+		// as wide as the stats field it ends up in.
+		uint64_t bytes{ 0 };
 		// Rate memoized by GetRate(), only valid while `lastTimeMs`,
 		// `lastTotalCount` and `lastTotalSamples` below all still match.
 		// `lastTotalSamples` is the one that makes any Update() invalidate this
@@ -121,9 +124,9 @@ namespace RTC
 		// has moved on and there is data pending expiration.
 		int64_t lastTimeMs{ 0 };
 		// Total count at the latest GetRate() call.
-		size_t lastTotalCount{ 0 };
+		uint64_t lastTotalCount{ 0 };
 		// Total samples at the latest GetRate() call.
-		size_t lastTotalSamples{ 0 };
+		uint64_t lastTotalSamples{ 0 };
 	};
 
 	class RtpDataCounter
@@ -138,17 +141,25 @@ namespace RTC
 	public:
 		void Update(const RTC::RTP::Packet* packet);
 
+		/**
+		 * Bitrate (bps) of the RTP traffic within the window ending at `nowMs`,
+		 * measured over the period that traffic actually spans.
+		 *
+		 * @returns No value while there is nothing to measure, which is any of: no
+		 *   packet within the window, a period of a single millisecond, and a single
+		 *   packet while the window has not filled.
+		 */
 		std::optional<int64_t> GetBitrate(int64_t nowMs)
 		{
 			return this->rate.GetRate(nowMs);
 		}
 
-		size_t GetPacketCount() const
+		uint64_t GetPacketCount() const
 		{
 			return this->packets;
 		}
 
-		size_t GetBytes() const
+		uint64_t GetBytes() const
 		{
 			return this->rate.GetBytes();
 		}
@@ -159,7 +170,8 @@ namespace RTC
 		// account.
 		bool ignorePaddingOnlyPackets{ false };
 		RateCalculator rate;
-		size_t packets{ 0 };
+		// Total packets accounted for, which nothing bounds either.
+		uint64_t packets{ 0 };
 	};
 } // namespace RTC
 
