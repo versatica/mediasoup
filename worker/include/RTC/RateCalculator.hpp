@@ -46,6 +46,16 @@ namespace RTC
 		  float scale          = DefaultBpsScale,
 		  uint16_t windowItems = DefaultWindowItems);
 
+		/**
+		 * Accounts for `size` units of data taken at `nowMs`.
+		 *
+		 * @remarks
+		 * - A sample that arrives when the window holds none starts a new measured
+		 *   period, unless the previous sample is recent enough for both to be taken
+		 *   as the same stretch of traffic. That is what keeps a stream which sends
+		 *   less often than the window from restarting its period at every sample and
+		 *   hence never being measured at all.
+		 */
 		void Update(size_t size, int64_t nowMs);
 
 		/**
