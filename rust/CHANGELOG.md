@@ -5,6 +5,8 @@
 - Worker: Fix MSVC compiler warnings ([PR #1937](https://github.com/versatica/mediasoup/pull/1937)).
 - Remove support for the `urn:ietf:params:rtp-hdrext:toffset` RTP extension ([PR #1942](https://github.com/versatica/mediasoup/pull/1942)).
 - Worker: Compute bitrate over the active window in `RateCalculator` ([PR #1944](https://github.com/versatica/mediasoup/pull/1944)).
+  - Make `RateCalculator::GetRate()` and `RtpDataCounter::GetBitrate()` return no value while there is nothing to measure.
+  - Widen the lifetime packet and byte counters of RTP streams to `uint64_t`.
 
 ### 0.28.1
 
