@@ -654,7 +654,51 @@ test('producer.dump() succeeds', async () => {
 		{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },
 		{ codecPayloadType: 112, ssrc: 22222228, rtx: { ssrc: 22222229 } },
 	]);
+	// These encodings have no rid, so it must be absent (null) in rtpMapping.
+	expect(dump2.rtpMapping).toMatchObject({
+		encodings: [
+			{ rid: null, ssrc: 22222222 },
+			{ rid: null, ssrc: 22222224 },
+			{ rid: null, ssrc: 22222226 },
+			{ rid: null, ssrc: 22222228 },
+		],
+	});
 	expect(dump2.type).toBe('simulcast');
+}, 2000);
+
+test('producer.dump() exposes rid in rtpMapping.encodings', async () => {
+	const videoProducer = await ctx.webRtcTransport1!.produce({
+		kind: 'video',
+		rtpParameters: {
+			mid: 'VIDEO',
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 96,
+					clockRate: 90000,
+				},
+			],
+			headerExtensions: [
+				{
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
+					id: 11,
+				},
+			],
+			encodings: [{ rid: 'r0' }, { rid: 'r1' }, { rid: 'r2' }],
+			rtcp: { cname: 'video-rid' },
+		},
+	});
+
+	const dump = await videoProducer.dump();
+
+	expect(dump.type).toBe('simulcast');
+	expect(dump.rtpMapping).toMatchObject({
+		encodings: [
+			{ rid: 'r0', ssrc: null },
+			{ rid: 'r1', ssrc: null },
+			{ rid: 'r2', ssrc: null },
+		],
+	});
 }, 2000);
 
 test('producer.getStats() succeeds', async () => {
