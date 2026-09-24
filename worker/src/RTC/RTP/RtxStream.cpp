@@ -97,9 +97,15 @@ namespace RTC
 			// Calculate packets xxpected and lost.
 			auto expected = GetExpectedPackets();
 
-			if (expected > this->packetsCount)
+			// NOTE: The expected count is the extended sequence number arithmetic of RFC
+			// 3550, so it wraps at 32 bits. The received one is taken in that same width
+			// for this subtraction, so that both wrap together and the difference stays
+			// right once more than 2^32 packets have gone by.
+			const auto received = static_cast<uint32_t>(this->packetsCount);
+
+			if (expected > received)
 			{
-				this->packetsLost = static_cast<int32_t>(expected - this->packetsCount);
+				this->packetsLost = static_cast<int32_t>(expected - received);
 			}
 			else
 			{

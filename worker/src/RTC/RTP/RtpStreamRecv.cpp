@@ -533,10 +533,15 @@ namespace RTC
 			// Calculate packets expected and lost.
 			auto expected = GetExpectedPackets();
 
-			if (expected > this->mediaTransmissionCounter.GetPacketCount())
+			// NOTE: The expected count is the extended sequence number arithmetic of RFC
+			// 3550, so it wraps at 32 bits. The received one is taken in that same width
+			// for this subtraction, so that both wrap together and the difference stays
+			// right once more than 2^32 packets have gone by.
+			const auto received = static_cast<uint32_t>(this->mediaTransmissionCounter.GetPacketCount());
+
+			if (expected > received)
 			{
-				this->packetsLost =
-				  static_cast<int32_t>(expected - this->mediaTransmissionCounter.GetPacketCount());
+				this->packetsLost = static_cast<int32_t>(expected - received);
 			}
 			else
 			{
@@ -1017,7 +1022,7 @@ namespace RTC
 				repairedWeight *= static_cast<float>(repaired) / retransmitted;
 			}
 
-			lost = static_cast<uint64_t>(static_cast<float>(lost) - (static_cast<float>(repaired) * repairedWeight));
+			lost = static_cast<uint64_t>(lost - (repaired * repairedWeight));
 
 			auto deliveredRatio = static_cast<float>(received - lost) / static_cast<float>(received);
 			auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));

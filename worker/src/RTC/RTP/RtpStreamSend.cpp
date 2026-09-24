@@ -661,7 +661,7 @@ namespace RTC
 				repairedWeight *= static_cast<float>(repaired) / retransmitted;
 			}
 
-			lost = static_cast<uint64_t>(static_cast<float>(lost) - (static_cast<float>(repaired) * repairedWeight));
+			lost = static_cast<uint64_t>(lost - (repaired * repairedWeight));
 
 			auto deliveredRatio = static_cast<float>(sent - lost) / static_cast<float>(sent);
 			auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
