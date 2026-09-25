@@ -708,8 +708,11 @@ test('producer.dump() exposes rid in rtpMapping.encodings', async () => {
 test('producer.dump() exposes rtpStreams once RTP is received', async () => {
 	// RTP packet without extensions or payload.
 	// payloadType: 1, seqNumber: 8, timestamp: 4, ssrc: 5.
+	// prettier-ignore
 	const rtpPacket = Buffer.from([
-		0x80, 0x01, 0x00, 0x08, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x05,
+		0x80, 0x01, 0x00, 0x08,
+		0x00, 0x00, 0x00, 0x04,
+		0x00, 0x00, 0x00, 0x05,
 	]);
 
 	// A DirectTransport is needed since it's the only one that allows injecting
