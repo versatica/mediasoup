@@ -96,7 +96,7 @@ namespace RTC
 				return static_cast<float>(this->fractionLost) * 100 / 256;
 			}
 
-			size_t GetPacketsDiscarded() const
+			uint64_t GetPacketsDiscarded() const
 			{
 				return this->packetsDiscarded;
 			}
@@ -131,15 +131,21 @@ namespace RTC
 			uint32_t maxPacketTs{ 0 }; // Highest timestamp seen.
 			int32_t packetsLost{ 0 };
 			uint8_t fractionLost{ 0 };
-			size_t packetsDiscarded{ 0 };
-			size_t packetsCount{ 0 };
+			// NOTE: These counters are never reset and nothing bounds them, so they are
+			// as wide as the stats fields they end up in rather than as wide as a
+			// pointer.
+			uint64_t packetsDiscarded{ 0 };
+			uint64_t packetsCount{ 0 };
 
 		private:
 			// Whether at least a RTP packet has been received.
 			bool started{ false };
 			// Fields for generating Receiver Reports.
+			// NOTE: Each one is as wide as the counter it snapshots, so that the
+			// expected one follows the wrap of the sequence number while the received
+			// one, which does not wrap, stays exact however long the stream runs.
 			uint32_t expectedPrior{ 0 };
-			uint32_t receivedPrior{ 0 };
+			uint64_t receivedPrior{ 0 };
 			// Timing data of the most recent Sender Report received.
 			std::optional<SenderReportTiming> lastSenderReportTiming;
 			int32_t reportedPacketsLost{ 0 };

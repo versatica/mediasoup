@@ -97,9 +97,16 @@ namespace RTC
 			// Calculate packets xxpected and lost.
 			auto expected = GetExpectedPackets();
 
-			if (expected > this->packetsCount)
+			// NOTE: The expected count is the extended sequence number arithmetic of RFC
+			// 3550, so it wraps at 32 bits, whereas the received one does not wrap at
+			// all. Each subtraction below is therefore made in the width that keeps it
+			// right: this one truncates the received count so that both wrap together,
+			// and the interval further down is taken in full width, where it is exact.
+			const auto received = static_cast<uint32_t>(this->packetsCount);
+
+			if (expected > received)
 			{
-				this->packetsLost = expected - this->packetsCount;
+				this->packetsLost = static_cast<int32_t>(expected - received);
 			}
 			else
 			{
@@ -108,17 +115,15 @@ namespace RTC
 
 			// Calculate fraction lost.
 			//
-			// NOTE: Both counts wrap, so each difference is taken in the width of its
-			// own counter. Reading the expected one as signed also makes a sequence
-			// number re-sync, which restarts the count, come out negative.
+			// NOTE: Reading the difference of the expected count as signed makes a
+			// sequence number re-sync, which restarts the count, come out negative.
 			const int64_t expectedInterval = static_cast<int32_t>(expected - this->expectedPrior);
 
 			this->expectedPrior = expected;
 
-			const int64_t receivedInterval =
-			  static_cast<uint32_t>(this->packetsCount - this->receivedPrior);
+			const auto receivedInterval = static_cast<int64_t>(this->packetsCount - this->receivedPrior);
 
-			this->receivedPrior = static_cast<uint32_t>(this->packetsCount);
+			this->receivedPrior = this->packetsCount;
 
 			const int64_t lostInterval = expectedInterval - receivedInterval;
 

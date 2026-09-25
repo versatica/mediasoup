@@ -1,4 +1,3 @@
-#include "DepLibUV.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -148,12 +147,20 @@ namespace
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
 
+	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
+	constexpr int64_t PacketSpacingMs{ 1 };
+
+	// Current time, which the helpers below move so that traffic spans a period
+	// instead of happening all at once.
+	// NOLINTNEXTLINE(readability-identifier-naming)
+	int64_t nowUs{ 1000000000000 };
+
 	// NOLINTNEXTLINE(readability-identifier-naming)
 	mocks::MockShared shared(/*getTimeUs*/
 	                         []() -> int64_t
 	                         {
-		                         return DepLibUV::GetTimeUs();
-	                         }); // NOLINT(readability-identifier-naming)
+		                         return nowUs;
+	                         });
 
 	std::unique_ptr<RTC::SimulcastProducerStreamManager> createManager(
 	  MockListener* listener,
@@ -198,7 +205,9 @@ namespace
 		  std::addressof(streamRecvListener), std::addressof(shared), params, 0u, false);
 	}
 
-	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero.
+	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero. They
+	// are spread in time because a bitrate is measured over the period its samples
+	// span, and samples taken all at once span none.
 	void feedRtpStreamRecv(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTP::Packet* packet, uint16_t count)
 	{
 		auto firstSeq = static_cast<uint16_t>(packet->GetSequenceNumber() + 1);
@@ -206,18 +215,27 @@ namespace
 
 		for (uint16_t seq = firstSeq; Utils::Number::IsLowerThan<uint16_t>(seq, lastSeq); ++seq)
 		{
+			if (seq != firstSeq)
+			{
+				nowUs += PacketSpacingMs * 1000;
+			}
+
 			packet->SetSequenceNumber(seq);
 			rtpStream->ReceivePacket(packet, shared.GetTimeUs());
 		}
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		// The packets span the gaps between them plus the millisecond the first one
+		// was taken in.
+		const auto periodMs = static_cast<double>(((count - 1) * PacketSpacingMs) + 1);
 
-		// bitrate (bps) = totalBytes * 8000 / windowSizeMs.
-		// windowSizeMs for RtpStreamRecv is 2500.
-		const auto expectedBitrate =
-		  static_cast<int64_t>(std::trunc((count * packet->GetLength() * 8000.0f / 2500) + 0.5f));
+		// bitrate (bps) = bytes * 8000 / periodMs, where the packet that starts the
+		// period is left out of the bytes because the period does not cover the time
+		// it took to arrive.
+		const auto expectedBitrate = static_cast<int64_t>(std::trunc(
+		  ((static_cast<double>(count - 1) * static_cast<double>(packet->GetLength()) * 8000.0) / periodMs) +
+		  0.5));
 
-		REQUIRE(rtpStream->GetBitrate(nowMs) == expectedBitrate);
+		REQUIRE(rtpStream->GetBitrate(shared.GetTimeMs()) == expectedBitrate);
 	}
 } // namespace
 
@@ -1236,7 +1254,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 
 		// First call claims bitrate.
 		auto usedBitrate = manager->IncreaseLayer(
@@ -1267,7 +1285,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 
 		// First iteration: claim layer 0.
 		manager->IncreaseLayer(
@@ -1304,7 +1322,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 		auto bitrate0       = rtpStream0->GetBitrate(nowMs);
 		auto bitrate1       = rtpStream1->GetBitrate(nowMs);
 

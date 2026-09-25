@@ -503,31 +503,31 @@ namespace RTC
 		  // bytesReceived.
 		  this->recvTransmission.GetBytes(),
 		  // recvBitrate.
-		  static_cast<uint64_t>(this->recvTransmission.GetRate(nowMs)),
+		  static_cast<uint64_t>(this->recvTransmission.GetRate(nowMs).value_or(0)),
 		  // bytesSent.
 		  this->sendTransmission.GetBytes(),
 		  // sendBitrate.
-		  static_cast<uint64_t>(this->sendTransmission.GetRate(nowMs)),
+		  static_cast<uint64_t>(this->sendTransmission.GetRate(nowMs).value_or(0)),
 		  // rtpBytesReceived.
 		  this->recvRtpTransmission.GetBytes(),
 		  // rtpRecvBitrate.
-		  static_cast<uint64_t>(this->recvRtpTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->recvRtpTransmission.GetBitrate(nowMs).value_or(0)),
 		  // rtpBytesSent.
 		  this->sendRtpTransmission.GetBytes(),
 		  // rtpSendBitrate.
-		  static_cast<uint64_t>(this->sendRtpTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->sendRtpTransmission.GetBitrate(nowMs).value_or(0)),
 		  // rtxBytesReceived.
 		  this->recvRtxTransmission.GetBytes(),
 		  // rtxRecvBitrate.
-		  static_cast<uint64_t>(this->recvRtxTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->recvRtxTransmission.GetBitrate(nowMs).value_or(0)),
 		  // rtxBytesSent.
 		  this->sendRtxTransmission.GetBytes(),
 		  // rtxSendBitrate.
-		  static_cast<uint64_t>(this->sendRtxTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->sendRtxTransmission.GetBitrate(nowMs).value_or(0)),
 		  // probationBytesSent.
 		  this->sendProbationTransmission.GetBytes(),
 		  // probationSendBitrate.
-		  static_cast<uint64_t>(this->sendProbationTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->sendProbationTransmission.GetBitrate(nowMs).value_or(0)),
 		  // availableOutgoingBitrate.
 		  availableOutgoingBitrate,
 		  // availableIncomingBitrate.
@@ -3497,7 +3497,7 @@ namespace RTC
 		  packet->GetSequenceNumber(),
 		  this->transportWideCcSeq,
 		  packet->GetLength(),
-		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()));
+		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()).value_or(0));
 	}
 
 	void Transport::OnTransportCongestionControlServerSendRtcpPacket(

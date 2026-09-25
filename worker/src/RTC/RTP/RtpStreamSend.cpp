@@ -84,7 +84,7 @@ namespace RTC
 			  baseStats,
 			  this->transmissionCounter.GetPacketCount(),
 			  this->transmissionCounter.GetBytes(),
-			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs)));
+			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs).value_or(0)));
 
 			return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::SendStats, stats.Union());
 		}
@@ -358,8 +358,10 @@ namespace RTC
 			const auto rtpTs     = static_cast<uint32_t>(this->maxPacketTs + diffTs);
 
 			report->SetSsrc(GetSsrc());
-			report->SetPacketCount(this->transmissionCounter.GetPacketCount());
-			report->SetOctetCount(this->transmissionCounter.GetBytes());
+			// NOTE: Both fields are 32 bits wide and are meant to wrap, so the counters
+			// are truncated into them on purpose.
+			report->SetPacketCount(static_cast<uint32_t>(this->transmissionCounter.GetPacketCount()));
+			report->SetOctetCount(static_cast<uint32_t>(this->transmissionCounter.GetBytes()));
 			report->SetNtpSec(ntp.seconds);
 			report->SetNtpFrac(ntp.fractions);
 			report->SetRtpTs(rtpTs);
@@ -586,14 +588,15 @@ namespace RTC
 			MS_TRACE();
 
 			// Calculate number of packets sent in this interval.
-			auto totalSent = this->transmissionCounter.GetPacketCount();
-			auto sent      = totalSent - this->sentPriorScore;
+			const auto totalSent = this->transmissionCounter.GetPacketCount();
+			const auto sent      = totalSent - this->sentPriorScore;
 
 			this->sentPriorScore = totalSent;
 
 			// Calculate number of packets lost in this interval.
 			const int32_t totalLost = report->GetTotalLost() > 0 ? report->GetTotalLost() : 0;
-			uint32_t lost;
+
+			uint64_t lost;
 
 			if (totalLost < this->lostPriorScore)
 			{
@@ -607,14 +610,15 @@ namespace RTC
 			this->lostPriorScore = totalLost;
 
 			// Calculate number of packets repaired in this interval.
-			auto totalRepaired = this->packetsRepaired;
-			uint32_t repaired  = totalRepaired - this->repairedPriorScore;
+			const auto totalRepaired = this->packetsRepaired;
+
+			auto repaired = totalRepaired - this->repairedPriorScore;
 
 			this->repairedPriorScore = totalRepaired;
 
 			// Calculate number of packets retransmitted in this interval.
-			auto totatRetransmitted      = this->packetsRetransmitted;
-			const uint32_t retransmitted = totatRetransmitted - this->retransmittedPriorScore;
+			const auto totatRetransmitted = this->packetsRetransmitted;
+			const auto retransmitted      = totatRetransmitted - this->retransmittedPriorScore;
 
 			this->retransmittedPriorScore = totatRetransmitted;
 
@@ -626,20 +630,21 @@ namespace RTC
 				return;
 			}
 
-			lost     = std::min<size_t>(lost, sent);
+			lost     = std::min(lost, sent);
 			repaired = std::min(repaired, lost);
 
 #if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
 			  score,
-			  "[totalSent:%zu, totalLost:%" PRIi32 ", totalRepaired:%zu",
+			  "[totalSent:%" PRIu64 ", totalLost:%" PRIi32 ", totalRepaired:%" PRIu64,
 			  totalSent,
 			  totalLost,
 			  totalRepaired);
 
 			MS_DEBUG_TAG(
 			  score,
-			  "fixed values [sent:%zu, lost:%" PRIu32 ", repaired:%" PRIu32 ", retransmitted:%" PRIu32,
+			  "fixed values [sent:%" PRIu64 ", lost:%" PRIu64 ", repaired:%" PRIu64
+			  ", retransmitted:%" PRIu64,
 			  sent,
 			  lost,
 			  repaired,
@@ -656,7 +661,7 @@ namespace RTC
 				repairedWeight *= static_cast<float>(repaired) / retransmitted;
 			}
 
-			lost = static_cast<uint32_t>(lost - (repaired * repairedWeight));
+			lost = static_cast<uint64_t>(lost - (repaired * repairedWeight));
 
 			auto deliveredRatio = static_cast<float>(sent - lost) / static_cast<float>(sent);
 			auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
@@ -664,7 +669,7 @@ namespace RTC
 #if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
 			  score,
-			  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu32
+			  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu64
 			  ", score:%" PRIu8 "]",
 			  deliveredRatio,
 			  repairedRatio,
