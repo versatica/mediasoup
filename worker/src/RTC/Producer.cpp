@@ -83,18 +83,22 @@ namespace RTC
 			}
 
 			// rid is optional.
+			const bool hasRid =
+			  flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID);
+
+			if (hasRid)
+			{
+				encodingMapping.rid = encoding->rid()->str();
+			}
+
 			// However ssrc or rid must be present (if more than 1 encoding).
-			if (
-			  encodings->size() > 1 && !encoding->ssrc().has_value() &&
-			  !flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID))
+			if (encodings->size() > 1 && !encoding->ssrc().has_value() && !hasRid)
 			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings (missing ssrc or rid)");
 			}
 
 			// If there is no mid and a single encoding, ssrc or rid must be present.
-			if (
-			  this->rtpParameters.mid.empty() && encodings->size() == 1 && !encoding->ssrc().has_value() &&
-			  !flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID))
+			if (this->rtpParameters.mid.empty() && encodings->size() == 1 && !encoding->ssrc().has_value() && !hasRid)
 			{
 				MS_THROW_TYPE_ERROR(
 				  "wrong entry in rtpMapping.encodings (missing ssrc or rid, or rtpParameters.mid)");
@@ -263,7 +267,7 @@ namespace RTC
 			encodings.emplace_back(
 			  FBS::RtpParameters::CreateEncodingMappingDirect(
 			    builder,
-			    encodingMapping.rid.c_str(),
+			    encodingMapping.rid.empty() ? nullptr : encodingMapping.rid.c_str(),
 			    encodingMapping.ssrc != 0u ? flatbuffers::Optional<uint32_t>(encodingMapping.ssrc)
 					                           : flatbuffers::nullopt,
 			    encodingMapping.mappedSsrc));
