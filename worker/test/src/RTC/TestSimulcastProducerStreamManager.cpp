@@ -228,9 +228,12 @@ namespace
 		// was taken in.
 		const auto periodMs = static_cast<double>(((count - 1) * PacketSpacingMs) + 1);
 
-		// bitrate (bps) = totalBytes * 8000 / periodMs.
+		// bitrate (bps) = bytes * 8000 / periodMs, where the packet that starts the
+		// period is left out of the bytes because the period does not cover the time
+		// it took to arrive.
 		const auto expectedBitrate = static_cast<int64_t>(std::trunc(
-		  ((static_cast<double>(count) * static_cast<double>(packet->GetLength()) * 8000.0) / periodMs) +
+		  ((static_cast<double>(count - 1) * static_cast<double>(packet->GetLength()) * 8000.0) /
+		   periodMs) +
 		  0.5));
 
 		REQUIRE(rtpStream->GetBitrate(shared.GetTimeMs()) == expectedBitrate);

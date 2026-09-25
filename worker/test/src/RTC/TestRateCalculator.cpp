@@ -81,6 +81,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		rate.Update(1000, nowMs);
 		rate.Update(1000, nowMs + 999);
 
+		// The period is the whole window, so both samples count: 2000 * 8000 / 1000.
 		REQUIRE(rate.GetRate(nowMs + 999) == 16000);
 	}
 
@@ -189,11 +190,12 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// Silence over the window size, read during the silence.
 		REQUIRE(rate.GetRate(nowMs + 10500) == std::nullopt);
 
-		// So the samples that come next are measured over their own period.
+		// So the samples that come next are measured over their own period, which is
+		// the 2ms they span, leaving out the one that starts it: 1000 * 8000 / 2.
 		rate.Update(1000, nowMs + 10500);
 		rate.Update(1000, nowMs + 10501);
 
-		REQUIRE(rate.GetRate(nowMs + 10501) == 8000000);
+		REQUIRE(rate.GetRate(nowMs + 10501) == 4000000);
 
 		// A manual reset does the same.
 		rate.Reset();
@@ -203,7 +205,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		rate.Update(1000, nowMs + 10501);
 		rate.Update(1000, nowMs + 10502);
 
-		REQUIRE(rate.GetRate(nowMs + 10502) == 8000000);
+		REQUIRE(rate.GetRate(nowMs + 10502) == 4000000);
 	}
 
 	// NOTE: This is what the margin exists for: the samples come a whole window
@@ -263,9 +265,14 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
+			// A lone sample with the window unfilled.
 			{ .offset=0,   .size=5, .rate=std::nullopt },
-			{ .offset=100, .size=2, .rate=554          },
-			{ .offset=300, .size=2, .rate=239          },
+			// 2 * 8000 / 101, the first sample being the one that starts the period.
+			{ .offset=100, .size=2, .rate=158          },
+			// (2 + 2) * 8000 / 301.
+			{ .offset=300, .size=2, .rate=106          },
+			// The period is the whole window now, so every sample counts:
+			// (5 + 2 + 2 + 4) * 8000 / 1000.
 			{ .offset=999, .size=4, .rate=104          }
 		};
 		// clang-format on
@@ -296,6 +303,8 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	{
 		RTC::RateCalculator rate(1000, 8000, 1000);
 
+		// From the second sample on the period is already the whole window, so every
+		// rate below is the bytes left within it times 8.
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
@@ -341,16 +350,17 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		// window: 1000ms, items: 5 (granularity: 200ms)
 		RTC::RateCalculator rate(1000, 8000, 5);
 
-		// The first five samples are measured over the period they span, which is
-		// still shorter than the window, so they do not add up in steps of 8.
+		// A byte every 200ms is 40 bps, and that is what comes out from the second
+		// sample on: leaving out the one that starts the period is what makes the
+		// samples and the gaps between them match while the window fills.
 		// clang-format off
 		const std::vector<TestRateCalculatorData> input =
 		{
 			{ .offset=1000, .size=1, .rate=std::nullopt         },
-			{ .offset=1200, .size=1, .rate=80                   },
-			{ .offset=1400, .size=1, .rate=60                   },
-			{ .offset=1600, .size=1, .rate=53                   },
-			{ .offset=1800, .size=1, .rate=50                   },
+			{ .offset=1200, .size=1, .rate=40                   },
+			{ .offset=1400, .size=1, .rate=40                   },
+			{ .offset=1600, .size=1, .rate=40                   },
+			{ .offset=1800, .size=1, .rate=40                   },
 			{ .offset=2000, .size=1, .rate=(1*8) + ((5-1)*8)    }, // starts wrap here
 			{ .offset=2200, .size=1, .rate=(1*8) + ((6-2)*8)    },
 			{ .offset=2400, .size=1, .rate=(1*8) + ((7-3)*8)    },
@@ -373,8 +383,11 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		const std::vector<TestRateCalculatorData> input =
 		{
 			{ .offset=0,   .size=1, .rate=std::nullopt },
-			{ .offset=333, .size=1, .rate=48           },
-			{ .offset=666, .size=1, .rate=36           },
+			// 1 * 8000 / 334, without the sample that starts the period.
+			{ .offset=333, .size=1, .rate=24           },
+			// 2 * 8000 / 667.
+			{ .offset=666, .size=1, .rate=24           },
+			// The period is the whole window now: 4 * 8000 / 1000.
 			{ .offset=999, .size=1, .rate=32           },
   	};
 		// clang-format on
@@ -414,19 +427,22 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		rate.Update(5, nowMs);
 		rate.Update(5, nowMs + 500);
 
+		// 5 * 8000 / 501, without the sample that starts the period.
+		REQUIRE(rate.GetRate(nowMs + 500) == 80);
+
+		rate.Update(5, nowMs + 500);
+
+		// 10 * 8000 / 501.
 		REQUIRE(rate.GetRate(nowMs + 500) == 160);
 
 		rate.Update(5, nowMs + 500);
 
+		// 15 * 8000 / 501.
 		REQUIRE(rate.GetRate(nowMs + 500) == 240);
 
-		rate.Update(5, nowMs + 500);
-
-		REQUIRE(rate.GetRate(nowMs + 500) == 319);
-
 		// Repeated reads with no Update() in between must be stable.
-		REQUIRE(rate.GetRate(nowMs + 500) == 319);
-		REQUIRE(rate.GetRate(nowMs + 500) == 319);
+		REQUIRE(rate.GetRate(nowMs + 500) == 240);
+		REQUIRE(rate.GetRate(nowMs + 500) == 240);
 	}
 
 	// NOTE: This pins the item size rounding for a window size which is not a
@@ -459,7 +475,8 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		rate.Update(5, 0);
 		rate.Update(5, 500);
 
-		REQUIRE(rate.GetRate(500) == 160);
+		// 5 * 8000 / 501, without the sample that starts the period.
+		REQUIRE(rate.GetRate(500) == 80);
 
 		rate.Reset();
 
@@ -468,7 +485,8 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		rate.Update(5, 0);
 		rate.Update(5, 500);
 
-		REQUIRE(rate.GetRate(500) == 160);
+		// The same as before the reset.
+		REQUIRE(rate.GetRate(500) == 80);
 	}
 
 	// NOTE: This pins the constructor clamping. A zero number of items used to
@@ -487,8 +505,10 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		oneItem.Update(5, nowMs + 500);
 		noWindow.Update(5, nowMs + 500);
 
-		REQUIRE(noItems.GetRate(nowMs + 500) == 160);
-		REQUIRE(oneItem.GetRate(nowMs + 500) == 160);
+		// Two samples 500ms apart, of which the one that starts the period is left
+		// out: 5 * 8000 / 501.
+		REQUIRE(noItems.GetRate(nowMs + 500) == 80);
+		REQUIRE(oneItem.GetRate(nowMs + 500) == 80);
 		// The window size is clamped to 1ms, which leaves every sample alone in a
 		// period of a single millisecond, so such a window can never measure a rate.
 		REQUIRE(noWindow.GetRate(nowMs + 500) == std::nullopt);

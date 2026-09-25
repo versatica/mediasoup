@@ -76,6 +76,7 @@ namespace RTC
 		if (!this->firstSampleTimeMs.has_value() || (this->totalSamples == 0 && !lastSampleIsRecent))
 		{
 			this->firstSampleTimeMs = nowMs;
+			this->firstSampleCount  = size;
 		}
 
 		Item& item = this->buffer[this->newestItemIndex];
@@ -137,8 +138,22 @@ namespace RTC
 			return this->lastRate;
 		}
 
+		// While the period is anchored to a sample, that sample sits at its very
+		// start, so the period does not cover the time that sample took to arrive and
+		// its data is not part of what flowed during it. Counting it would report a
+		// rate too high by as much as the ratio of samples to gaps between them,
+		// which is double with two samples and a tenth with eleven.
+		//
+		// NOTE: Once the period is the whole window it is no longer anchored to any
+		// sample, all of them fall inside it, and every one of them counts. And that
+		// is also the point at which the anchoring sample has left the window, so
+		// there is nothing of it left to leave out.
+		const uint64_t count = periodMs < this->windowSizeMs
+		                         ? this->totalCount - this->firstSampleCount
+		                         : this->totalCount;
+
 		const double rate = std::trunc(
-		  ((static_cast<double>(this->totalCount) * this->scale) / static_cast<double>(periodMs)) + 0.5);
+		  ((static_cast<double>(count) * this->scale) / static_cast<double>(periodMs)) + 0.5);
 
 		// A rate that does not fit is no rate at all, which is better than the
 		// garbage that converting it would give.
@@ -162,6 +177,7 @@ namespace RTC
 		std::ranges::fill(this->buffer, Item{});
 
 		this->firstSampleTimeMs.reset();
+		this->firstSampleCount = 0;
 		this->lastSampleTimeMs.reset();
 		this->newestItemIndex       = 0;
 		this->newestItemStartTimeMs = 0;

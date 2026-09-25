@@ -64,6 +64,10 @@ namespace RTC
 		 * a window which has not filled yet is not reported as a fraction of the
 		 * rate it is measuring.
 		 *
+		 * While that period starts at a sample rather than at the edge of the window,
+		 * the data of that sample is left out, since the period does not cover the
+		 * time it took to arrive.
+		 *
 		 * Returns no value when there is nothing to measure, which is any of:
 		 *
 		 * - Not a single sample within the window.
@@ -114,6 +118,9 @@ namespace RTC
 		// that point on the period is the window itself, which is what the reader
 		// clamps it to.
 		std::optional<int64_t> firstSampleTimeMs;
+		// Count of the sample that starts the measured period, which is left out of
+		// the rate for as long as the period is anchored to it.
+		uint64_t firstSampleCount{ 0 };
 		// Time (in milliseconds) of the latest sample, which together with the window
 		// still holding it is what tells a stream that simply sends less often than
 		// the window apart from one that stopped.
