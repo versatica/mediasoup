@@ -1,6 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
-import { RtpPacket } from 'rtp.js/packets';
-import { dataViewToNodeBuffer, numericArrayToDataView } from 'rtp.js/utils';
+
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, ProducerEvents } from '../types';
@@ -707,6 +706,12 @@ test('producer.dump() exposes rid in rtpMapping.encodings', async () => {
 }, 2000);
 
 test('producer.dump() exposes rtpStreams once RTP is received', async () => {
+	// RTP packet without extensions or payload.
+	// payloadType: 1, seqNumber: 8, timestamp: 4, ssrc: 5.
+	const rtpPacket = Buffer.from([
+		0x80, 0x01, 0x00, 0x08, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x05,
+	]);
+
 	// A DirectTransport is needed since it's the only one that allows injecting
 	// RTP packets via producer.send().
 	const directTransport = await ctx.router!.createDirectTransport();
@@ -717,12 +722,12 @@ test('producer.dump() exposes rtpStreams once RTP is received', async () => {
 			codecs: [
 				{
 					mimeType: 'audio/opus',
-					payloadType: 100,
+					payloadType: 1,
 					clockRate: 48000,
 					channels: 2,
 				},
 			],
-			encodings: [{ ssrc: 11111111 }],
+			encodings: [{ ssrc: 5 }],
 			rtcp: { cname: 'audio-rtp' },
 		},
 	});
@@ -732,19 +737,11 @@ test('producer.dump() exposes rtpStreams once RTP is received', async () => {
 		rtpStreams: [],
 	});
 
-	const rtpPacket = new RtpPacket();
-
-	rtpPacket.setPayloadType(100);
-	rtpPacket.setSsrc(11111111);
-	rtpPacket.setSequenceNumber(1);
-	rtpPacket.setTimestamp(1000);
-	rtpPacket.setPayload(numericArrayToDataView([1, 2, 3, 4]));
-
 	// The worker emits a first 'score' event as soon as it creates the
 	// RtpStreamRecv, which happens upon reception of the first RTP packet.
 	const onScore = enhancedOnce<ProducerEvents>(audioProducer, 'score');
 
-	audioProducer.send(dataViewToNodeBuffer(rtpPacket.getView()));
+	audioProducer.send(rtpPacket);
 
 	await onScore;
 
@@ -755,8 +752,8 @@ test('producer.dump() exposes rtpStreams once RTP is received', async () => {
 	expect(dump.rtpStreams[0]!.rtxStream).toBeUndefined();
 	expect(dump.rtpStreams[0]!.params).toMatchObject({
 		encodingIdx: 0,
-		ssrc: 11111111,
-		payloadType: 100,
+		ssrc: 5,
+		payloadType: 1,
 		mimeType: 'audio/opus',
 		clockRate: 48000,
 		cname: 'audio-rtp',
