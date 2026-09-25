@@ -148,12 +148,11 @@ namespace RTC
 		// sample, all of them fall inside it, and every one of them counts. And that
 		// is also the point at which the anchoring sample has left the window, so
 		// there is nothing of it left to leave out.
-		const uint64_t count = periodMs < this->windowSizeMs
-		                         ? this->totalCount - this->firstSampleCount
-		                         : this->totalCount;
+		const uint64_t count =
+		  periodMs < this->windowSizeMs ? this->totalCount - this->firstSampleCount : this->totalCount;
 
-		const double rate = std::trunc(
-		  ((static_cast<double>(count) * this->scale) / static_cast<double>(periodMs)) + 0.5);
+		const double rate =
+		  std::trunc(((static_cast<double>(count) * this->scale) / static_cast<double>(periodMs)) + 0.5);
 
 		// A rate that does not fit is no rate at all, which is better than the
 		// garbage that converting it would give.
