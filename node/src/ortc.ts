@@ -1,5 +1,4 @@
 import * as h264 from 'h264-profile-level-id';
-import type * as flatbuffers from 'flatbuffers';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { parseScalabilityMode } from './scalabilityModesUtils';
 import type {
@@ -19,7 +18,6 @@ import type {
 import type { SctpStreamParameters } from './sctpParametersTypes';
 import * as utils from './utils';
 import { UnsupportedError } from './errors';
-import * as FbsRtpParameters from './fbs/rtp-parameters';
 
 export type RtpCodecsEncodingsMapping = {
 	codecs: {
@@ -880,51 +878,6 @@ export function getPipeConsumerRtpParameters({
 	}
 
 	return consumerParams;
-}
-
-export function serializeRtpMapping(
-	builder: flatbuffers.Builder,
-	rtpMapping: RtpCodecsEncodingsMapping
-): number {
-	const codecs: number[] = [];
-
-	for (const codec of rtpMapping.codecs) {
-		codecs.push(
-			FbsRtpParameters.CodecMapping.createCodecMapping(
-				builder,
-				codec.payloadType,
-				codec.mappedPayloadType
-			)
-		);
-	}
-	const codecsOffset = FbsRtpParameters.RtpMapping.createCodecsVector(
-		builder,
-		codecs
-	);
-
-	const encodings: number[] = [];
-
-	for (const encoding of rtpMapping.encodings) {
-		encodings.push(
-			FbsRtpParameters.EncodingMapping.createEncodingMapping(
-				builder,
-				builder.createString(encoding.rid),
-				encoding.ssrc ?? null,
-				encoding.mappedSsrc
-			)
-		);
-	}
-
-	const encodingsOffset = FbsRtpParameters.RtpMapping.createEncodingsVector(
-		builder,
-		encodings
-	);
-
-	return FbsRtpParameters.RtpMapping.createRtpMapping(
-		builder,
-		codecsOffset,
-		encodingsOffset
-	);
 }
 
 function isRtxCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {

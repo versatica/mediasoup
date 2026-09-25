@@ -1,4 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
+import { RtpPacket } from 'rtp.js/packets';
+import { dataViewToNodeBuffer, numericArrayToDataView } from 'rtp.js/utils';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents, ProducerEvents } from '../types';
@@ -593,6 +595,8 @@ test('producer.dump() succeeds', async () => {
 			codecPayloadType: 0,
 		})
 	);
+	// No RTP has been received yet, so there are no RTP streams.
+	expect(dump1.rtpStreams).toEqual([]);
 	expect(dump1.type).toBe('simple');
 
 	const videoProducer = await ctx.webRtcTransport2!.produce(
@@ -654,15 +658,16 @@ test('producer.dump() succeeds', async () => {
 		{ codecPayloadType: 112, ssrc: 22222226, rtx: { ssrc: 22222227 } },
 		{ codecPayloadType: 112, ssrc: 22222228, rtx: { ssrc: 22222229 } },
 	]);
-	// These encodings have no rid, so it must be absent (null) in rtpMapping.
+	// These encodings have no rid, so it must be undefined in rtpMapping.
 	expect(dump2.rtpMapping).toMatchObject({
 		encodings: [
-			{ rid: null, ssrc: 22222222 },
-			{ rid: null, ssrc: 22222224 },
-			{ rid: null, ssrc: 22222226 },
-			{ rid: null, ssrc: 22222228 },
+			{ rid: undefined, ssrc: 22222222 },
+			{ rid: undefined, ssrc: 22222224 },
+			{ rid: undefined, ssrc: 22222226 },
+			{ rid: undefined, ssrc: 22222228 },
 		],
 	});
+	expect(dump2.rtpStreams).toEqual([]);
 	expect(dump2.type).toBe('simulcast');
 }, 2000);
 
@@ -694,10 +699,70 @@ test('producer.dump() exposes rid in rtpMapping.encodings', async () => {
 	expect(dump.type).toBe('simulcast');
 	expect(dump.rtpMapping).toMatchObject({
 		encodings: [
-			{ rid: 'r0', ssrc: null },
-			{ rid: 'r1', ssrc: null },
-			{ rid: 'r2', ssrc: null },
+			{ rid: 'r0', ssrc: undefined },
+			{ rid: 'r1', ssrc: undefined },
+			{ rid: 'r2', ssrc: undefined },
 		],
+	});
+}, 2000);
+
+test('producer.dump() exposes rtpStreams once RTP is received', async () => {
+	// A DirectTransport is needed since it's the only one that allows injecting
+	// RTP packets via producer.send().
+	const directTransport = await ctx.router!.createDirectTransport();
+	const audioProducer = await directTransport.produce({
+		kind: 'audio',
+		rtpParameters: {
+			mid: 'AUDIO',
+			codecs: [
+				{
+					mimeType: 'audio/opus',
+					payloadType: 100,
+					clockRate: 48000,
+					channels: 2,
+				},
+			],
+			encodings: [{ ssrc: 11111111 }],
+			rtcp: { cname: 'audio-rtp' },
+		},
+	});
+
+	// No RTP has been received yet, so there are no RTP streams.
+	await expect(audioProducer.dump()).resolves.toMatchObject({
+		rtpStreams: [],
+	});
+
+	const rtpPacket = new RtpPacket();
+
+	rtpPacket.setPayloadType(100);
+	rtpPacket.setSsrc(11111111);
+	rtpPacket.setSequenceNumber(1);
+	rtpPacket.setTimestamp(1000);
+	rtpPacket.setPayload(numericArrayToDataView([1, 2, 3, 4]));
+
+	// The worker emits a first 'score' event as soon as it creates the
+	// RtpStreamRecv, which happens upon reception of the first RTP packet.
+	const onScore = enhancedOnce<ProducerEvents>(audioProducer, 'score');
+
+	audioProducer.send(dataViewToNodeBuffer(rtpPacket.getView()));
+
+	await onScore;
+
+	const dump = await audioProducer.dump();
+
+	expect(dump.rtpStreams.length).toBe(1);
+	expect(typeof dump.rtpStreams[0]!.score).toBe('number');
+	expect(dump.rtpStreams[0]!.rtxStream).toBeUndefined();
+	expect(dump.rtpStreams[0]!.params).toMatchObject({
+		encodingIdx: 0,
+		ssrc: 11111111,
+		payloadType: 100,
+		mimeType: 'audio/opus',
+		clockRate: 48000,
+		cname: 'audio-rtp',
+		rid: undefined,
+		rtxSsrc: undefined,
+		rtxPayloadType: undefined,
 	});
 }, 2000);
 
