@@ -17,8 +17,8 @@ namespace RTC
 	namespace BWE
 	{
 		/**
-		 * Estimates the bandwidth of the incoming link out of the `abs-send-time` RTP
-		 * header extension, for senders that do not negotiate transport-cc.
+		 * Estimates the bandwidth of the incoming link out of the 'abs-send-time' RTP
+		 * extension, for senders that do not negotiate transport-cc.
 		 *
 		 * There is no feedback to work with here: all the information available is
 		 * the instant each packet says it left the sender and the instant it arrived,
@@ -139,7 +139,7 @@ namespace RTC
 			 * Feed a received RTP packet.
 			 *
 			 * @param packet - Received packet, which is ignored unless it carries the
-			 *   `abs-send-time` extension.
+			 *   'abs-send-time' extension.
 			 * @param arrivalTimeUs - Instant the packet arrived.
 			 * @param nowUs - Current instant, which is not the one above when packets
 			 *   are processed in batches.

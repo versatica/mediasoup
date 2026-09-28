@@ -21,7 +21,7 @@ namespace RTC
 		// Every packet whose send timestamp is within this many milliseconds of the
 		// first one of a group belongs to that group.
 		static constexpr int64_t TimestampGroupLengthMs{ 5 };
-		// The `abs-send-time` extension carries 24 bits with 18 of fraction, and it
+		// The 'abs-send-time' extension carries 24 bits with 18 of fraction, and it
 		// is shifted up so that it fills the 32 bits the inter arrival works with and
 		// wraps the way they do.
 		static constexpr uint32_t AbsSendTimeFraction{ 18 };
