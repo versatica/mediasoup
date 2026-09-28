@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "Utils.hpp"
+#include <cstdlib> // std::abs()
 #include <vector>
 
 /* RTP extensions for Transport-wide Congestion Control

@@ -4,7 +4,7 @@
 #include "RTC/BWE/RobustThroughputEstimator.hpp"
 #include "test/include/RTC/BWE/helpers/LinkSimulator.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cmath>
+#include <cstdlib> // std::abs()
 
 SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 {
