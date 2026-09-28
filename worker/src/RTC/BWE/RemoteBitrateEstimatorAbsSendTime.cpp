@@ -79,13 +79,12 @@ namespace RTC
 			// with, so that wrapping works properly.
 			const uint32_t timestamp = sendTime24bits << AbsSendTimeInterArrivalUpshift;
 
-			// NOTE: Rounded to a millisecond, which is the resolution every threshold
-			// of the burst detection below is expressed in. Keeping it finer would
-			// leave a burst whose packets left a millisecond apart out of its own
-			// cluster, because a tick of this field is 3.8 us and the deltas would
-			// then land just under the millisecond they are compared against.
-			const auto sendTimeUs =
-			  std::llround((static_cast<double>(timestamp) * TimestampToUs) / 1000.0) * 1000;
+			// NOTE: Truncated rather than rounded, which is not a slip. A tick of this
+			// field is 3.8 us, so a burst whose packets left exactly a millisecond
+			// apart gives deltas that land a hair under or over it. Truncating leaves
+			// enough of them at or above the millisecond for the burst to be taken as
+			// one, and rounding does not.
+			const auto sendTimeUs = static_cast<int64_t>(static_cast<double>(timestamp) * TimestampToUs);
 
 			// Tell whether the meter of incoming data still has something to say, and
 			// start it over when it doesn't.
