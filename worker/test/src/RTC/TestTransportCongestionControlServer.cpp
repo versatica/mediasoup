@@ -186,10 +186,10 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs
 		{
-			{  1u, 1000000 },
-			{  3u, 1050000 },
-			{  5u, 1100000 },
-			{  6u, 1150000 },
+			{ 1u, 1000000 },
+			{ 3u, 1050000 },
+			{ 5u, 1100000 },
+			{ 6u, 1150000 },
 		};
 
 		TestResults results
@@ -215,12 +215,12 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs
 		{
-			{  1u, 1000000 },
-			{  1u, 1050000 },
-			{  2u, 1100000 },
-			{  3u, 1150000 },
-			{  3u, 1200000 },
-			{  4u, 1250000 },
+			{ 1u, 1000000 },
+			{ 1u, 1050000 },
+			{ 2u, 1100000 },
+			{ 3u, 1150000 },
+			{ 3u, 1200000 },
+			{ 4u, 1250000 },
 		};
 
 		TestResults results
