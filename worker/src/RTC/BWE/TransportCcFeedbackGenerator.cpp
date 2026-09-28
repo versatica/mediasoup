@@ -56,6 +56,10 @@ namespace RTC
 				return;
 			}
 
+			// NOTE: Done before taking note of this packet, so that what is still
+			// waiting to be reported is told apart from this very arrival.
+			MayDropOldPacketArrivalTimes(wideSeqNumber, arrivalTimeUs);
+
 			// Only take note of the packet the first time it's received.
 			if (!this->mapPacketArrivalTimes.try_emplace(wideSeqNumber, arrivalTimeUs).second)
 			{
@@ -73,7 +77,15 @@ namespace RTC
 				this->feedbackWideSeqNumStart = wideSeqNumber;
 			}
 
-			MayDropOldPacketArrivalTimes(wideSeqNumber, arrivalTimeUs);
+			// Sequences below the oldest arrival still kept cannot be reported on any
+			// more, so the next feedback starts no earlier than that one. Without this
+			// they would go out as lost when they have only been forgotten.
+			const uint16_t oldestSequenceNumber = this->mapPacketArrivalTimes.begin()->first;
+
+			if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(this->feedbackWideSeqNumStart.value(), oldestSequenceNumber))
+			{
+				this->feedbackWideSeqNumStart = oldestSequenceNumber;
+			}
 
 			// The feedback reports on whoever sent last.
 			this->feedbackMediaSsrc = packet->GetSsrc();
@@ -114,6 +126,9 @@ namespace RTC
 				// full (so already sent) or failed to be built.
 				if (feedbackPacketIsEmpty)
 				{
+					const uint16_t oldestReportableSequenceNumber =
+					  sequenceNumber - RTC::RTCP::FeedbackRtpTransportPacket::maxMissingPackets;
+
 					// The base is where the report starts counting from, and every
 					// sequence between it and the first one actually received is reported
 					// as lost. Too long a run of those cannot be encoded, so the base is
@@ -124,8 +139,6 @@ namespace RTC
 					// one.
 					// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 					uint16_t baseSequenceNumber = this->feedbackWideSeqNumStart.value();
-					const uint16_t oldestReportableSequenceNumber =
-					  sequenceNumber - RTC::RTCP::FeedbackRtpTransportPacket::maxMissingPackets;
 
 					if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(baseSequenceNumber, oldestReportableSequenceNumber))
 					{
@@ -254,14 +267,25 @@ namespace RTC
 				return;
 			}
 
-			if (!this->feedbackWideSeqNumStart.has_value())
+			if (!this->feedbackWideSeqNumStart.has_value() || this->mapPacketArrivalTimes.empty())
 			{
 				return;
 			}
 
 			const uint16_t feedbackWideSeqNumStart = this->feedbackWideSeqNumStart.value();
-			const int64_t expiryTimestampUs        = arrivalTimeUs - PacketArrivalTimestampWindowUs;
-			auto it                                = this->mapPacketArrivalTimes.begin();
+			// Where a feedback that had reported everything known would start from.
+			const uint16_t endSequenceNumber = this->mapPacketArrivalTimes.rbegin()->first + 1;
+
+			// Nothing is forgotten while something already known is still waiting to
+			// be reported, since forgetting it would turn it into a loss.
+			if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(feedbackWideSeqNumStart, endSequenceNumber))
+			{
+				return;
+			}
+
+			const int64_t expiryTimestampUs = arrivalTimeUs - PacketArrivalTimestampWindowUs;
+
+			auto it = this->mapPacketArrivalTimes.begin();
 
 			while (it != this->mapPacketArrivalTimes.end() && it->first != feedbackWideSeqNumStart &&
 			       RTC::SeqManager<uint16_t>::IsSeqLowerThan(it->first, seqNum) &&

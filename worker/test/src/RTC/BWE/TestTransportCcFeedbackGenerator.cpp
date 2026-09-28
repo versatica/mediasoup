@@ -347,6 +347,88 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 		REQUIRE(listener.baseSequenceNumbers.at(2) == 10);
 	}
 
+	SECTION("what was forgotten is not reported as lost")
+	{
+		TestTransportCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
+
+		feedPacket(transportCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
+		feedPacket(transportCcFeedbackGenerator, 2, 1000000, DefaultPayloadSize);
+
+		transportCcFeedbackGenerator.FillAndSendFeedback();
+
+		feedPacket(transportCcFeedbackGenerator, 5, 1000000, DefaultPayloadSize);
+
+		// Everything known is reported here, so the next feedback would start at 6.
+		transportCcFeedbackGenerator.FillAndSendFeedback();
+
+		// Past the window, so 1, 2 and 5 are forgotten.
+		feedPacket(transportCcFeedbackGenerator, 10, 1600000, DefaultPayloadSize);
+
+		transportCcFeedbackGenerator.FillAndSendFeedback();
+
+		const TestResults expectedResults{
+			{
+			 { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
+			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1000000 },
+			 },
+			{
+			 { .wideSeqNumber = 3, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 4, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1000000 },
+			 },
+			// Only the one still known. Without moving the start up to it, 6 to 9
+			// would go out as lost having merely been forgotten.
+			{
+			 { .wideSeqNumber = 10, .received = true, .timestampUs = 1600000 },
+			 },
+		};
+
+		checkFeedbacks(listener, expectedResults);
+
+		REQUIRE(listener.baseSequenceNumbers.at(2) == 10);
+	}
+
+	SECTION("what has not been reported yet is not forgotten")
+	{
+		TestTransportCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
+
+		feedPacket(transportCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
+		feedPacket(transportCcFeedbackGenerator, 2, 1000000, DefaultPayloadSize);
+
+		transportCcFeedbackGenerator.FillAndSendFeedback();
+
+		// Not reported, so the next feedback still has to carry it.
+		feedPacket(transportCcFeedbackGenerator, 5, 1000000, DefaultPayloadSize);
+
+		// Past the window, but nothing may be forgotten while 5 is still pending.
+		feedPacket(transportCcFeedbackGenerator, 10, 1600000, DefaultPayloadSize);
+
+		transportCcFeedbackGenerator.FillAndSendFeedback();
+
+		const TestResults expectedResults{
+			{
+			 { .wideSeqNumber = 1, .received = true, .timestampUs = 1000000 },
+			 { .wideSeqNumber = 2, .received = true, .timestampUs = 1000000 },
+			 },
+			{
+			 { .wideSeqNumber = 3, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 4, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 5, .received = true, .timestampUs = 1000000 },
+			 { .wideSeqNumber = 6, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 7, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 8, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 9, .received = false, .timestampUs = 0 },
+			 { .wideSeqNumber = 10, .received = true, .timestampUs = 1600000 },
+			 },
+		};
+
+		checkFeedbacks(listener, expectedResults);
+	}
+
 	SECTION("a sequence number that wrapped backwards is reported first")
 	{
 		TestTransportCcFeedbackGeneratorListener listener;
