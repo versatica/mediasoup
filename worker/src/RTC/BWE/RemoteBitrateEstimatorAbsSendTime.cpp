@@ -77,7 +77,14 @@ namespace RTC
 			// Shift up the send time to use the full 32 bits the inter arrival works
 			// with, so that wrapping works properly.
 			const uint32_t timestamp = sendTime24bits << AbsSendTimeInterArrivalUpshift;
-			const auto sendTimeUs    = std::llround(static_cast<double>(timestamp) * TimestampToUs);
+
+			// NOTE: Told apart with a resolution of a millisecond, which is the one
+			// every threshold of the burst detection below is expressed in. A finer
+			// one would leave a burst whose packets left a millisecond apart out of
+			// its own cluster, because a tick of this field is 3.8 us and the deltas
+			// then land just under the millisecond they are compared against.
+			const auto sendTimeUs =
+			  std::llround((static_cast<double>(timestamp) * TimestampToUs) / 1000.0) * 1000;
 
 			// Tell whether the meter of incoming data still has something to say, and
 			// start it over when it doesn't.
