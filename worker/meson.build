@@ -193,6 +193,7 @@ common_sources = [
   'src/RTC/BWE/ProbeController.cpp',
   'src/RTC/BWE/ProbePacketGenerator.cpp',
   'src/RTC/BWE/ProbingScheduler.cpp',
+  'src/RTC/BWE/RemoteBitrateEstimatorAbsSendTime.cpp',
   'src/RTC/BWE/RobustThroughputEstimator.cpp',
   'src/RTC/BWE/SendPacketHistory.cpp',
   'src/RTC/BWE/TargetRateController.cpp',
