@@ -284,9 +284,9 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		REQUIRE(std::abs(listener.latestBitrate - 800000) <= 10000);
 	}
 
-	// NOTE: This is the case that upstream writes around `Process()`, which is not
-	// ported: what it pins is that the timeout of every stream and whatever comes
-	// after it do not reach a null inter arrival or overuse estimator.
+	// NOTE: What this pins is that a packet arriving after every stream has timed
+	// out, and every packet after that one, never reach a null inter arrival or
+	// overuse estimator.
 	SECTION("a packet after every stream timed out is handled")
 	{
 		TestRemoteBitrateEstimatorAbsSendTimeListener listener;
