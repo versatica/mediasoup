@@ -1,5 +1,5 @@
-#ifndef MS_RTC_BWE_TRANSPORT_CC_FEEDBACK_GENERATOR_HPP
-#define MS_RTC_BWE_TRANSPORT_CC_FEEDBACK_GENERATOR_HPP
+#ifndef MS_RTC_BWE_TRANSPORT_WIDE_CC_FEEDBACK_GENERATOR_HPP
+#define MS_RTC_BWE_TRANSPORT_WIDE_CC_FEEDBACK_GENERATOR_HPP
 
 #include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
@@ -26,7 +26,7 @@ namespace RTC
 		 * How often the feedback is emitted follows the bitrate coming in, so that
 		 * what reporting costs stays a small share of what is being reported on.
 		 */
-		class TransportCcFeedbackGenerator : public TimerHandleInterface::Listener
+		class TransportWideCcFeedbackGenerator : public TimerHandleInterface::Listener
 		{
 		public:
 			class Listener
@@ -41,17 +41,18 @@ namespace RTC
 				 * @param packet - Packet to send, only valid for the duration of this
 				 *   call.
 				 */
-				virtual void OnTransportCcFeedbackGeneratorSendRtcpPacket(
-				  TransportCcFeedbackGenerator* transportCcFeedbackGenerator,
+				virtual void OnTransportWideCcFeedbackGeneratorSendRtcpPacket(
+				  TransportWideCcFeedbackGenerator* transportWideCcFeedbackGenerator,
 				  RTC::RTCP::FeedbackRtpTransportPacket* packet) = 0;
 			};
 
 		public:
-			TransportCcFeedbackGenerator(Listener* listener, SharedInterface* shared, size_t maxRtcpPacketLen);
-			~TransportCcFeedbackGenerator() override = default;
+			TransportWideCcFeedbackGenerator(
+			  Listener* listener, SharedInterface* shared, size_t maxRtcpPacketLen);
+			~TransportWideCcFeedbackGenerator() override = default;
 
-			TransportCcFeedbackGenerator(const TransportCcFeedbackGenerator&)            = delete;
-			TransportCcFeedbackGenerator& operator=(const TransportCcFeedbackGenerator&) = delete;
+			TransportWideCcFeedbackGenerator(const TransportWideCcFeedbackGenerator&)            = delete;
+			TransportWideCcFeedbackGenerator& operator=(const TransportWideCcFeedbackGenerator&) = delete;
 
 			/**
 			 * Feed a received RTP packet, which is ignored unless it carries the

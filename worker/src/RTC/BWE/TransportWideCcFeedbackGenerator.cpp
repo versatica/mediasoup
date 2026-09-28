@@ -1,7 +1,7 @@
-#define MS_CLASS "RTC::BWE::TransportCcFeedbackGenerator"
+#define MS_CLASS "RTC::BWE::TransportWideCcFeedbackGenerator"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/BWE/TransportCcFeedbackGenerator.hpp"
+#include "RTC/BWE/TransportWideCcFeedbackGenerator.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -29,12 +29,12 @@ namespace RTC
 
 		/* Instance methods. */
 
-		TransportCcFeedbackGenerator::TransportCcFeedbackGenerator(
+		TransportWideCcFeedbackGenerator::TransportWideCcFeedbackGenerator(
 		  Listener* listener, SharedInterface* shared, size_t maxRtcpPacketLen)
 		  : maxRtcpPacketLen(maxRtcpPacketLen),
 		    listener(listener),
 		    shared(shared),
-		    sendPeriodicTimer(shared->CreateTimer(this, "transport-cc-feedback-generator-send")),
+		    sendPeriodicTimer(shared->CreateTimer(this, "transport-wide-cc-feedback-generator-send")),
 		    incomingDataCounter(shared, /*ignorePaddingOnlyPackets*/ false, IncomingBitrateWindowMs),
 		    sendIntervalMs(DefaultSendIntervalMs)
 		{
@@ -45,7 +45,8 @@ namespace RTC
 			this->sendPeriodicTimer->Start(this->sendIntervalMs, this->sendIntervalMs);
 		}
 
-		void TransportCcFeedbackGenerator::IncomingPacket(int64_t arrivalTimeUs, const RTC::RTP::Packet* packet)
+		void TransportWideCcFeedbackGenerator::IncomingPacket(
+		  int64_t arrivalTimeUs, const RTC::RTP::Packet* packet)
 		{
 			MS_TRACE();
 
@@ -93,7 +94,7 @@ namespace RTC
 			this->incomingDataCounter.Update(packet);
 		}
 
-		void TransportCcFeedbackGenerator::FillAndSendFeedback()
+		void TransportWideCcFeedbackGenerator::FillAndSendFeedback()
 		{
 			MS_TRACE();
 
@@ -228,7 +229,7 @@ namespace RTC
 			ResetFeedbackPacket(this->feedbackPacketCount);
 		}
 
-		bool TransportCcFeedbackGenerator::SendFeedback()
+		bool TransportWideCcFeedbackGenerator::SendFeedback()
 		{
 			MS_TRACE();
 
@@ -236,8 +237,6 @@ namespace RTC
 
 			if (!this->feedbackPacket->IsSerializable())
 			{
-				MS_WARN_TAG(rtcp, "couldn't send feedback-cc packet because it is not serializable");
-
 				return false;
 			}
 
@@ -248,14 +247,16 @@ namespace RTC
 
 			const auto latestWideSeqNumber = this->feedbackPacket->GetLatestSequenceNumber();
 
-			this->listener->OnTransportCcFeedbackGeneratorSendRtcpPacket(this, this->feedbackPacket.get());
+			this->listener->OnTransportWideCcFeedbackGeneratorSendRtcpPacket(
+			  this, this->feedbackPacket.get());
 
 			this->feedbackWideSeqNumStart = latestWideSeqNumber + 1;
 
 			return true;
 		}
 
-		void TransportCcFeedbackGenerator::MayDropOldPacketArrivalTimes(uint16_t seqNum, int64_t arrivalTimeUs)
+		void TransportWideCcFeedbackGenerator::MayDropOldPacketArrivalTimes(
+		  uint16_t seqNum, int64_t arrivalTimeUs)
 		{
 			MS_TRACE();
 
@@ -295,7 +296,7 @@ namespace RTC
 			}
 		}
 
-		void TransportCcFeedbackGenerator::ResetFeedbackPacket(uint8_t feedbackPacketCount)
+		void TransportWideCcFeedbackGenerator::ResetFeedbackPacket(uint8_t feedbackPacketCount)
 		{
 			MS_TRACE();
 
@@ -308,7 +309,7 @@ namespace RTC
 			this->feedbackPacket->SetFeedbackPacketCount(feedbackPacketCount);
 		}
 
-		int64_t TransportCcFeedbackGenerator::ComputeSendIntervalMs(int64_t incomingBitrate)
+		int64_t TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(int64_t incomingBitrate)
 		{
 			MS_TRACE();
 
@@ -331,7 +332,7 @@ namespace RTC
 			return std::max(intervalMs, MinSendIntervalMs);
 		}
 
-		void TransportCcFeedbackGenerator::MayUpdateSendInterval(int64_t nowMs)
+		void TransportWideCcFeedbackGenerator::MayUpdateSendInterval(int64_t nowMs)
 		{
 			MS_TRACE();
 
@@ -361,7 +362,7 @@ namespace RTC
 			this->sendPeriodicTimer->Restart(this->sendIntervalMs, this->sendIntervalMs);
 		}
 
-		void TransportCcFeedbackGenerator::OnTimer(TimerHandleInterface* timer)
+		void TransportWideCcFeedbackGenerator::OnTimer(TimerHandleInterface* timer)
 		{
 			MS_TRACE();
 

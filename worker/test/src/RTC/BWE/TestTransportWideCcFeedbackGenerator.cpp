@@ -1,6 +1,7 @@
 #include "common.hpp"
-#include "RTC/BWE/TransportCcFeedbackGenerator.hpp"
+#include "RTC/BWE/TransportWideCcFeedbackGenerator.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -11,7 +12,7 @@
 #include <string_view>
 #include <vector>
 
-SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator]")
+SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackgenerator]")
 {
 	struct TestInput
 	{
@@ -28,12 +29,12 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 
 	using TestResults = std::deque<std::vector<TestPacketStatus>>;
 
-	class TestTransportCcFeedbackGeneratorListener
-	  : public RTC::BWE::TransportCcFeedbackGenerator::Listener
+	class TestTransportWideCcFeedbackGeneratorListener
+	  : public RTC::BWE::TransportWideCcFeedbackGenerator::Listener
 	{
 	public:
-		void OnTransportCcFeedbackGeneratorSendRtcpPacket(
-		  RTC::BWE::TransportCcFeedbackGenerator* /*transportCcFeedbackGenerator*/,
+		void OnTransportWideCcFeedbackGeneratorSendRtcpPacket(
+		  RTC::BWE::TransportWideCcFeedbackGenerator* /*transportWideCcFeedbackGenerator*/,
 		  RTC::RTCP::FeedbackRtpTransportPacket* packet) override
 		{
 			std::vector<TestPacketStatus> statuses;
@@ -68,7 +69,7 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 	constexpr int64_t BaseTimeUs{ 1000 * 1000 };
 	// Size used by the scenarios that don't care about it.
 	constexpr size_t DefaultPayloadSize{ 1000 };
-	constexpr std::string_view TimerLabel{ "transport-cc-feedback-generator-send" };
+	constexpr std::string_view TimerLabel{ "transport-wide-cc-feedback-generator-send" };
 
 	int64_t nowUs{ BaseTimeUs };
 
@@ -116,7 +117,7 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 	// Feeds a packet that arrived at the given instant, which is also taken as
 	// the current one since the meter of incoming data reads the clock itself.
 	auto feedPacket = [&buildPacket, &nowUs](
-	                    RTC::BWE::TransportCcFeedbackGenerator& transportCcFeedbackGenerator,
+	                    RTC::BWE::TransportWideCcFeedbackGenerator& transportWideCcFeedbackGenerator,
 	                    uint16_t wideSeqNumber,
 	                    int64_t arrivalTimeUs,
 	                    size_t payloadSize) -> void
@@ -125,13 +126,13 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 
 		const auto packet = buildPacket(payloadSize, wideSeqNumber);
 
-		transportCcFeedbackGenerator.IncomingPacket(arrivalTimeUs, packet.get());
+		transportWideCcFeedbackGenerator.IncomingPacket(arrivalTimeUs, packet.get());
 	};
 
 	// Checks that the feedback packets the listener got are the expected ones,
 	// status by status.
 	auto checkFeedbacks = [](
-	                        const TestTransportCcFeedbackGeneratorListener& listener,
+	                        const TestTransportWideCcFeedbackGeneratorListener& listener,
 	                        const TestResults& expectedResults) -> void
 	{
 		REQUIRE(listener.feedbacks.size() == expectedResults.size());
@@ -164,8 +165,8 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 	auto validate = [&shared, &feedPacket, &checkFeedbacks](
 	                  const std::vector<TestInput>& inputs, const TestResults& expectedResults) -> void
 	{
-		TestTransportCcFeedbackGeneratorListener listener;
-		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
 		static constexpr int64_t FeedbackSendIntervalUs{ 100 * 1000 };
@@ -176,16 +177,16 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 		{
 			if (input.arrivalTimeUs - startTsUs >= FeedbackSendIntervalUs)
 			{
-				transportCcFeedbackGenerator.FillAndSendFeedback();
+				transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 				startTsUs = input.arrivalTimeUs;
 			}
 
 			feedPacket(
-			  transportCcFeedbackGenerator, input.wideSeqNumber, input.arrivalTimeUs, DefaultPayloadSize);
+			  transportWideCcFeedbackGenerator, input.wideSeqNumber, input.arrivalTimeUs, DefaultPayloadSize);
 		}
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		checkFeedbacks(listener, expectedResults);
 	};
@@ -304,25 +305,25 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 
 	SECTION("arrival times older than the window are forgotten")
 	{
-		TestTransportCcFeedbackGeneratorListener listener;
-		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
-		feedPacket(transportCcFeedbackGenerator, 12, 1000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 12, 1000000, DefaultPayloadSize);
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		// Exactly the 500 ms of the window later, so packet 12 is forgotten here.
-		feedPacket(transportCcFeedbackGenerator, 13, 1500000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 13, 1500000, DefaultPayloadSize);
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		// Below the sequence the next feedback starts at, so that they are reported
 		// along with whatever is still known.
-		feedPacket(transportCcFeedbackGenerator, 10, 1499000, DefaultPayloadSize);
-		feedPacket(transportCcFeedbackGenerator, 11, 1499500, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 10, 1499000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 11, 1499500, DefaultPayloadSize);
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		const TestResults expectedResults{
 			{
@@ -349,24 +350,24 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 
 	SECTION("what was forgotten is not reported as lost")
 	{
-		TestTransportCcFeedbackGeneratorListener listener;
-		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
-		feedPacket(transportCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
-		feedPacket(transportCcFeedbackGenerator, 2, 1000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 2, 1000000, DefaultPayloadSize);
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
-		feedPacket(transportCcFeedbackGenerator, 5, 1000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 5, 1000000, DefaultPayloadSize);
 
 		// Everything known is reported here, so the next feedback would start at 6.
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		// Past the window, so 1, 2 and 5 are forgotten.
-		feedPacket(transportCcFeedbackGenerator, 10, 1600000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 10, 1600000, DefaultPayloadSize);
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		const TestResults expectedResults{
 			{
@@ -392,22 +393,22 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 
 	SECTION("what has not been reported yet is not forgotten")
 	{
-		TestTransportCcFeedbackGeneratorListener listener;
-		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
-		feedPacket(transportCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
-		feedPacket(transportCcFeedbackGenerator, 2, 1000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 2, 1000000, DefaultPayloadSize);
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		// Not reported, so the next feedback still has to carry it.
-		feedPacket(transportCcFeedbackGenerator, 5, 1000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 5, 1000000, DefaultPayloadSize);
 
 		// Past the window, but nothing may be forgotten while 5 is still pending.
-		feedPacket(transportCcFeedbackGenerator, 10, 1600000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 10, 1600000, DefaultPayloadSize);
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		const TestResults expectedResults{
 			{
@@ -431,16 +432,16 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 
 	SECTION("a sequence number that wrapped backwards is reported first")
 	{
-		TestTransportCcFeedbackGeneratorListener listener;
-		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
-		feedPacket(transportCcFeedbackGenerator, 10, 1000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 10, 1000000, DefaultPayloadSize);
 		// Ahead of the one above by more than half the sequence space, so it goes
 		// before it rather than after.
-		feedPacket(transportCcFeedbackGenerator, 62762, 1001000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 62762, 1001000, DefaultPayloadSize);
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		REQUIRE(listener.baseSequenceNumbers.at(0) == 62762);
 
@@ -468,15 +469,15 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 
 	SECTION("a delta too large to encode splits the report in two")
 	{
-		TestTransportCcFeedbackGeneratorListener listener;
-		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
-		feedPacket(transportCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 1, 1000000, DefaultPayloadSize);
 		// Nine seconds later, which no delta of a feedback packet can express.
-		feedPacket(transportCcFeedbackGenerator, 2, 10000000, DefaultPayloadSize);
+		feedPacket(transportWideCcFeedbackGenerator, 2, 10000000, DefaultPayloadSize);
 
-		transportCcFeedbackGenerator.FillAndSendFeedback();
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
 
 		const TestResults expectedResults{
 			{
@@ -496,22 +497,22 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 	SECTION("the send interval follows the bitrate it reports on")
 	{
 		// 80000 * 0.05 = 68 bytes * 8 bits * 1000 ms / 136 ms.
-		REQUIRE(RTC::BWE::TransportCcFeedbackGenerator::ComputeSendIntervalMs(80000) == 136);
+		REQUIRE(RTC::BWE::TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(80000) == 136);
 		// Reporting on this much would fit in less than the shortest interval, so
 		// the shortest one stands.
-		REQUIRE(RTC::BWE::TransportCcFeedbackGenerator::ComputeSendIntervalMs(300000) == 50);
+		REQUIRE(RTC::BWE::TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(300000) == 50);
 		// Too little coming in for the reporting to be spread any thinner than the
 		// longest interval.
-		REQUIRE(RTC::BWE::TransportCcFeedbackGenerator::ComputeSendIntervalMs(20000) == 250);
+		REQUIRE(RTC::BWE::TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(20000) == 250);
 		// Nothing at all, which is what the guard against dividing by the bitrate
 		// is there for.
-		REQUIRE(RTC::BWE::TransportCcFeedbackGenerator::ComputeSendIntervalMs(0) == 250);
+		REQUIRE(RTC::BWE::TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(0) == 250);
 	}
 
 	SECTION("with nothing coming in the send interval stays at its default")
 	{
-		TestTransportCcFeedbackGeneratorListener listener;
-		const RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		const RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
 		auto* timer = shared.GetTimer(TimerLabel);
@@ -523,14 +524,14 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 
 		REQUIRE(timer->EvaluateHasExpired());
 
-		REQUIRE(transportCcFeedbackGenerator.GetSendIntervalMs() == 100);
+		REQUIRE(transportWideCcFeedbackGenerator.GetSendIntervalMs() == 100);
 		REQUIRE(timer->GetRepeatMs() == 100);
 	}
 
 	SECTION("plenty coming in brings the send interval down to its shortest")
 	{
-		TestTransportCcFeedbackGeneratorListener listener;
-		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
 		// A thousand bytes every 20 ms is around 400 kbps, well past what the
@@ -538,7 +539,7 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 		for (uint16_t wideSeqNumber{ 1 }; wideSeqNumber <= 50; ++wideSeqNumber)
 		{
 			feedPacket(
-			  transportCcFeedbackGenerator, wideSeqNumber, BaseTimeUs + (wideSeqNumber * 20 * 1000), 1000);
+			  transportWideCcFeedbackGenerator, wideSeqNumber, BaseTimeUs + (wideSeqNumber * 20 * 1000), 1000);
 		}
 
 		auto* timer = shared.GetTimer(TimerLabel);
@@ -546,15 +547,15 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 		REQUIRE(timer);
 		REQUIRE(timer->EvaluateHasExpired());
 
-		REQUIRE(transportCcFeedbackGenerator.GetSendIntervalMs() == 50);
+		REQUIRE(transportWideCcFeedbackGenerator.GetSendIntervalMs() == 50);
 		REQUIRE(timer->GetTimeoutMs() == 50);
 		REQUIRE(timer->GetRepeatMs() == 50);
 	}
 
 	SECTION("little coming in pushes the send interval up to its longest")
 	{
-		TestTransportCcFeedbackGeneratorListener listener;
-		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
 		// Two hundred and fifty bytes every 100 ms is around 20 kbps, well below
@@ -562,7 +563,7 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 		for (uint16_t wideSeqNumber{ 1 }; wideSeqNumber <= 50; ++wideSeqNumber)
 		{
 			feedPacket(
-			  transportCcFeedbackGenerator, wideSeqNumber, BaseTimeUs + (wideSeqNumber * 100 * 1000), 250);
+			  transportWideCcFeedbackGenerator, wideSeqNumber, BaseTimeUs + (wideSeqNumber * 100 * 1000), 250);
 		}
 
 		auto* timer = shared.GetTimer(TimerLabel);
@@ -570,7 +571,7 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 		REQUIRE(timer);
 		REQUIRE(timer->EvaluateHasExpired());
 
-		REQUIRE(transportCcFeedbackGenerator.GetSendIntervalMs() == 250);
+		REQUIRE(transportWideCcFeedbackGenerator.GetSendIntervalMs() == 250);
 		REQUIRE(timer->GetTimeoutMs() == 250);
 		REQUIRE(timer->GetRepeatMs() == 250);
 	}
