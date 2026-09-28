@@ -92,6 +92,13 @@ namespace RTC
 
 			auto it = this->mapPacketArrivalTimes.lower_bound(this->feedbackWideSeqNumStart.value());
 
+			// Everything known has already been reported, so there is nothing to
+			// build a feedback packet out of.
+			if (it == this->mapPacketArrivalTimes.end())
+			{
+				return;
+			}
+
 			while (it != this->mapPacketArrivalTimes.end())
 			{
 				const uint16_t sequenceNumber = it->first;
@@ -111,6 +118,11 @@ namespace RTC
 					// sequence between it and the first one actually received is reported
 					// as lost. Too long a run of those cannot be encoded, so the base is
 					// moved up rather than letting the packet fail to be built.
+					// NOTE: clang-tidy doesn't understand that this is guaranteed to have
+					// a value: the method returns above when it has none, and nothing
+					// takes it away afterwards, since SendFeedback() only ever assigns
+					// one.
+					// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 					uint16_t baseSequenceNumber = this->feedbackWideSeqNumStart.value();
 					const uint16_t oldestReportableSequenceNumber =
 					  sequenceNumber - RTC::RTCP::FeedbackRtpTransportPacket::maxMissingPackets;
@@ -216,6 +228,11 @@ namespace RTC
 				return false;
 			}
 
+			// The report is about whoever has sent last, which this packet could not
+			// be built with: it was started at the end of the previous round, when
+			// that may not have been known yet.
+			this->feedbackPacket->SetMediaSsrc(this->feedbackMediaSsrc);
+
 			const auto latestWideSeqNumber = this->feedbackPacket->GetLatestSequenceNumber();
 
 			this->listener->OnTransportCcFeedbackGeneratorSendRtcpPacket(this, this->feedbackPacket.get());
@@ -258,8 +275,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: The media SSRC is left at zero here and filled in when the packet
+			// is about to go out, since who has sent last may still change while this
+			// one is being filled.
 			this->feedbackPacket = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(
-			  /*senderSsrc*/ 0, this->feedbackMediaSsrc);
+			  /*senderSsrc*/ 0, /*mediaSsrc*/ 0);
 
 			this->feedbackPacket->SetFeedbackPacketCount(feedbackPacketCount);
 		}

@@ -429,7 +429,7 @@ SCENARIO("BWE TransportCcFeedbackGenerator", "[bwe][transportccfeedbackgenerator
 	SECTION("with nothing coming in the send interval stays at its default")
 	{
 		TestTransportCcFeedbackGeneratorListener listener;
-		RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
+		const RTC::BWE::TransportCcFeedbackGenerator transportCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
 		auto* timer = shared.GetTimer(TimerLabel);
