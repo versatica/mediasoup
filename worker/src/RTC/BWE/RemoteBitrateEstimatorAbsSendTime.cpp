@@ -3,7 +3,6 @@
 
 #include "RTC/BWE/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "Logger.hpp"
-#include <cmath>   // std::llround()
 #include <cstdlib> // std::abs()
 
 namespace RTC
