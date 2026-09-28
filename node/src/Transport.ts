@@ -68,6 +68,7 @@ import {
 	serializeRtpEncodingParameters,
 	serializeRtpParameters,
 } from './rtpParametersFbsUtils';
+import { serializeRtpMapping } from './rtpMappingFbsUtils';
 import type {
 	SctpParameters,
 	SctpNegotiatedCapabilities,
@@ -1487,7 +1488,7 @@ function createProduceRequest({
 }): number {
 	const producerIdOffset = builder.createString(producerId);
 	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
-	const rtpMappingOffset = ortc.serializeRtpMapping(builder, rtpMapping);
+	const rtpMappingOffset = serializeRtpMapping(builder, rtpMapping);
 
 	FbsTransport.ProduceRequest.startProduceRequest(builder);
 	FbsTransport.ProduceRequest.addProducerId(builder, producerIdOffset);
