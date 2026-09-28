@@ -144,7 +144,7 @@ namespace RTC
 			 * @param nowUs - Current instant, which is not the one above when packets
 			 *   are processed in batches.
 			 */
-			void IncomingPacket(RTC::RTP::Packet* packet, int64_t arrivalTimeUs, int64_t nowUs);
+			void IncomingPacket(const RTC::RTP::Packet* packet, int64_t arrivalTimeUs, int64_t nowUs);
 
 			/**
 			 * Feed the round trip time towards the senders, which bounds how often the
