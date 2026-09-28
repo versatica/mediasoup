@@ -6,7 +6,6 @@
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstdlib> // std::abs()
-#include <memory>
 #include <vector>
 
 SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatorabssendtime]")
