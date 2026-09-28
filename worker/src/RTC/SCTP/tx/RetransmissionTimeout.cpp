@@ -3,7 +3,7 @@
 
 #include "RTC/SCTP/tx/RetransmissionTimeout.hpp"
 #include "Logger.hpp"
-#include <cmath> // std::abs(), std::max(), std::round()
+#include <cmath> // std::abs(), std::round()
 
 namespace RTC
 {

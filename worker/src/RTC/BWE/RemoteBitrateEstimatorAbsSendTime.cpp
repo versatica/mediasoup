@@ -3,7 +3,8 @@
 
 #include "RTC/BWE/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "Logger.hpp"
-#include <cmath> // std::llround()
+#include <cmath>   // std::llround()
+#include <cstdlib> // std::abs()
 
 namespace RTC
 {
@@ -116,8 +117,10 @@ namespace RTC
 
 			TimeoutStreams(nowUs);
 
-			// NOTE: Guaranteed by TimeoutStreams(), which creates both whenever there
-			// is no stream left, and by the constructor of this class otherwise.
+			// NOTE: Guaranteed by the call right above, which creates both whenever no
+			// stream is left. The very first call always finds none, since the only
+			// place a stream is put into the map is below this point, and no path ever
+			// gives either of them up afterwards.
 			MS_ASSERT(this->interArrival, "no inter arrival");
 			MS_ASSERT(this->overuseEstimator, "no overuse estimator");
 
@@ -129,13 +132,14 @@ namespace RTC
 			if (
 			  payloadSize > MinProbePacketSize &&
 			  (!this->remoteRateControl.IsValidEstimate() ||
+				 // NOTE: It was given a value right above if it had none, which the
+			   // checker cannot tell.
+				 // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 				 nowUs - this->firstPacketTimeUs.value() < InitialProbingIntervalUs))
 			{
 				this->probes.push_back(
 				  Probe{
 				    .sendTimeUs = sendTimeUs, .receiveTimeUs = arrivalTimeUs, .payloadSize = payloadSize });
-
-				this->totalProbesReceived++;
 
 				// Make sure that a burst which updated the estimation right away has an
 				// effect, by telling the listener about it.
@@ -284,15 +288,17 @@ namespace RTC
 
 			std::list<Cluster> clusters;
 			Cluster clusterAggregate;
-			std::optional<int64_t> prevSendTimeUs;
-			std::optional<int64_t> prevReceiveTimeUs;
+			// NOTE: The two instants a delta is taken against always come from the
+			// very same probe, so they are held as one rather than as two values that
+			// could tell a different story from each other.
+			const Probe* prevProbe{ nullptr };
 
 			for (const auto& probe : this->probes)
 			{
-				if (prevSendTimeUs.has_value())
+				if (prevProbe)
 				{
-					const int64_t sendDeltaUs    = probe.sendTimeUs - prevSendTimeUs.value();
-					const int64_t receiveDeltaUs = probe.receiveTimeUs - prevReceiveTimeUs.value();
+					const int64_t sendDeltaUs    = probe.sendTimeUs - prevProbe->sendTimeUs;
+					const int64_t receiveDeltaUs = probe.receiveTimeUs - prevProbe->receiveTimeUs;
 
 					if (sendDeltaUs >= MinClusterDeltaUs && receiveDeltaUs >= MinClusterDeltaUs)
 					{
@@ -312,8 +318,7 @@ namespace RTC
 					clusterAggregate.count++;
 				}
 
-				prevSendTimeUs    = probe.sendTimeUs;
-				prevReceiveTimeUs = probe.receiveTimeUs;
+				prevProbe = std::addressof(probe);
 			}
 
 			MaybeAddCluster(clusterAggregate, clusters);
@@ -331,6 +336,11 @@ namespace RTC
 
 			for (const auto& cluster : clusters)
 			{
+				// NOTE: This is not redundant with the check MaybeAddCluster() does.
+				// That one requires the sums to be positive, but what is stored is
+				// their integer division by the number of probes, and a small enough
+				// sum over four probes or more gives a mean of zero. This is what keeps
+				// the rates below from dividing by it.
 				if (cluster.sendMeanUs == 0 || cluster.receiveMeanUs == 0)
 				{
 					continue;

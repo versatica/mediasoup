@@ -222,7 +222,6 @@ namespace RTC
 			// Packets big enough to have been paced by the sender, kept while a burst
 			// is still being looked for.
 			std::list<Probe> probes;
-			size_t totalProbesReceived{ 0 };
 			// Instant of the first packet ever fed, which bounds how long bursts are
 			// looked for.
 			std::optional<int64_t> firstPacketTimeUs;
