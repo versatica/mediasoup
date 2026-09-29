@@ -41,16 +41,18 @@ namespace RTC
 			this->maxRetransmits = maxRetransmits.value();
 		}
 
-		if (this->maxPacketLifeTime && this->maxRetransmits)
+		if (this->maxPacketLifeTime.has_value() && this->maxRetransmits.has_value())
 		{
 			MS_THROW_TYPE_ERROR("cannot provide both maxPacketLifeTime and maxRetransmits");
 		}
 
-		if (orderedGiven && this->ordered && (this->maxPacketLifeTime || this->maxRetransmits))
+		if (
+		  orderedGiven && this->ordered &&
+		  (this->maxPacketLifeTime.has_value() || this->maxRetransmits.has_value()))
 		{
 			MS_THROW_TYPE_ERROR("cannot be ordered with maxPacketLifeTime or maxRetransmits");
 		}
-		else if (!orderedGiven && (this->maxPacketLifeTime || this->maxRetransmits))
+		else if (!orderedGiven && (this->maxPacketLifeTime.has_value() || this->maxRetransmits.has_value()))
 		{
 			this->ordered = false;
 		}
@@ -65,9 +67,10 @@ namespace RTC
 		  builder,
 		  this->streamId,
 		  this->ordered,
-		  this->maxPacketLifeTime ? flatbuffers::Optional<uint16_t>(this->maxPacketLifeTime)
-			                        : flatbuffers::nullopt,
-		  this->maxRetransmits ? flatbuffers::Optional<uint16_t>(this->maxRetransmits)
-			                     : flatbuffers::nullopt);
+		  this->maxPacketLifeTime.has_value()
+		    ? flatbuffers::Optional<uint16_t>(this->maxPacketLifeTime.value())
+				: flatbuffers::nullopt,
+		  this->maxRetransmits.has_value() ? flatbuffers::Optional<uint16_t>(this->maxRetransmits.value())
+			                                 : flatbuffers::nullopt);
 	}
 } // namespace RTC

@@ -8,6 +8,7 @@
   - Make `RateCalculator::GetRate()` and `RtpDataCounter::GetBitrate()` return no value while there is nothing to measure.
   - Widen the lifetime packet and byte counters of RTP streams to `uint64_t`.
 - Rust: Fix `ScalabilityMode::ksvc()` returning `false` for `L2T1_KEY`.
+- Treat `maxRetransmits: 0` and `maxPacketLifeTime: 0` as given in SCTP stream parameters ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 0.28.1
 
