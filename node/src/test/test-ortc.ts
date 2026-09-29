@@ -537,3 +537,42 @@ test('getProducerRtpParametersMapping() with incompatible params throws Unsuppor
 		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities)
 	).toThrow(UnsupportedError);
 });
+
+test('getProducerRtpParametersMapping() with RTX apt pointing to a non media codec throws', () => {
+	const mediaCodecs: mediasoup.types.RouterRtpCodecCapability[] = [
+		{
+			kind: 'video',
+			mimeType: 'video/VP8',
+			clockRate: 90000,
+		},
+	];
+
+	const routerRtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
+
+	// The apt parameter of the RTX codec is its own payload type, which is not a
+	// media codec.
+	const rtpParameters = {
+		codecs: [
+			{
+				mimeType: 'video/VP8',
+				payloadType: 111,
+				clockRate: 90000,
+			},
+			{
+				mimeType: 'video/rtx',
+				payloadType: 112,
+				clockRate: 90000,
+				parameters: { apt: 112 },
+			},
+		],
+		headerExtensions: [],
+		encodings: [{ ssrc: 11111111 }],
+		rtcp: {
+			cname: 'qwerty1234',
+		},
+	};
+
+	expect(() =>
+		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities)
+	).toThrow('missing media codec found for RTX PT 112');
+});

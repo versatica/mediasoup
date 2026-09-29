@@ -395,7 +395,9 @@ export function getProducerRtpParametersMapping(
 
 		// Search for the associated media codec.
 		const associatedMediaCodec = params.codecs.find(
-			mediaCodec => mediaCodec.payloadType === codec.parameters!['apt']
+			mediaCodec =>
+				!isRtxCodec(mediaCodec) &&
+				mediaCodec.payloadType === codec.parameters!['apt']
 		);
 
 		if (!associatedMediaCodec) {

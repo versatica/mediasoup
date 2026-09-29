@@ -467,6 +467,10 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
 
         // Search for the associated media codec.
         let associated_media_codec = rtp_parameters.codecs.iter().find(|media_codec| {
+            if media_codec.is_rtx() {
+                return false;
+            }
+
             let media_codec_payload_type = media_codec.payload_type();
             let codec_parameters_apt = codec.parameters().get("apt");
 
