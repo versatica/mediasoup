@@ -61,8 +61,8 @@ namespace RTC
 			void SetMaxIncomingBitrate(int64_t nowMs, std::optional<int64_t> bitrate);
 
 			/**
-			 * Announce the cap again, which is what keeps it in force when there is no
-			 * estimation driving anything.
+			 * Announce the cap again, or that it is gone, which is what gets either
+			 * across when there is no estimation driving anything.
 			 *
 			 * @param nowMs - Current instant.
 			 */

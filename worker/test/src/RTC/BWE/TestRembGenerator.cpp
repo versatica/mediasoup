@@ -149,6 +149,27 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 		REQUIRE(listener.rembs.at(1).bitrate == 4567);
 	}
 
+	SECTION("a cap that needs no telling is not told at the next packet either")
+	{
+		TestRembGeneratorListener listener;
+		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+
+		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs, ssrcs, 1234);
+
+		REQUIRE(listener.rembs.size() == 1);
+
+		// Nothing to tell, since what was just announced is already below the cap.
+		rembGenerator.SetMaxIncomingBitrate(BaseTimeMs + 1, 4567);
+
+		REQUIRE(listener.rembs.size() == 1);
+
+		// And nothing right behind that REMB either, which would undo the wait
+		// between one REMB and the next.
+		rembGenerator.MaySendLimitationRembFeedback(BaseTimeMs + 2);
+
+		REQUIRE(listener.rembs.size() == 1);
+	}
+
 	SECTION("removing the cap is announced four times")
 	{
 		TestRembGeneratorListener listener;

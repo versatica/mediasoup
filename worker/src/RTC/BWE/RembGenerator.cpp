@@ -92,6 +92,11 @@ namespace RTC
 
 			// Nothing to tell if a REMB went out recently carrying a bitrate that the
 			// new cap already allows.
+			// NOTE: The instant is taken down either way, since what is already on the
+			// wire honours the cap just as well, and otherwise the next incoming
+			// packet would announce it again right behind that REMB.
+			this->limitationRembSentAtMs = nowMs;
+
 			if (
 			  this->lastRembSentAtMs.has_value() &&
 			  nowMs - this->lastRembSentAtMs.value() < RembSendIntervalMs &&
@@ -100,8 +105,6 @@ namespace RTC
 			{
 				return;
 			}
-
-			this->limitationRembSentAtMs = nowMs;
 
 			SendRemb(this->maxIncomingBitrate.value(), {});
 		}
