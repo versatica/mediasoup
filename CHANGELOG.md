@@ -7,7 +7,8 @@
 - Worker: Compute bitrate over the active window in `RateCalculator` ([PR #1944](https://github.com/versatica/mediasoup/pull/1944)).
   - Make `RateCalculator::GetRate()` and `RtpDataCounter::GetBitrate()` return no value while there is nothing to measure.
   - Widen the lifetime packet and byte counters of RTP streams to `uint64_t`.
-- Treat `maxRetransmits: 0` and `maxPacketLifeTime: 0` as given in SCTP stream parameters ([PR #1956](https://github.com/versatica/mediasoup/pull/1956)).
+- Node: Fix `router.pipeToRouter()` failing forever after a failed PipeTransport pair creation ([PR #1952](https://github.com/versatica/mediasoup/pull/1952)).
+- SCTP: Treat `maxRetransmits: 0` and `maxPacketLifeTime: 0` as given in SCTP stream parameters ([PR #1956](https://github.com/versatica/mediasoup/pull/1956)).
 
 ### 3.27.1
 
