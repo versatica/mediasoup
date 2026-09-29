@@ -115,6 +115,24 @@ namespace RTC
 			}
 		}
 
+		void FeedbackPsRembPacket::SetSsrcs(const std::vector<uint32_t>& ssrcs)
+		{
+			MS_TRACE();
+
+			this->ssrcs = ssrcs;
+
+			if (this->ssrcs.size() > FeedbackPsRembPacket::MaxNumberOfSsrcs)
+			{
+				MS_WARN_TAG(
+				  rtcp,
+				  "resizing ssrcs because they don't fit in a REMB [ssrcs:%zu, max:%zu]",
+				  this->ssrcs.size(),
+				  FeedbackPsRembPacket::MaxNumberOfSsrcs);
+
+				this->ssrcs.resize(FeedbackPsRembPacket::MaxNumberOfSsrcs);
+			}
+		}
+
 		size_t FeedbackPsRembPacket::Serialize(uint8_t* buffer)
 		{
 			MS_TRACE();

@@ -8,8 +8,8 @@
 #include "RTC/BWE/OveruseEstimator.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RateCalculator.hpp"
+#include <ankerl/unordered_dense.h>
 #include <list>
-#include <map>
 #include <vector>
 
 namespace RTC
@@ -228,7 +228,7 @@ namespace RTC
 			// Instant the listener was told about the estimation for the last time.
 			std::optional<int64_t> lastUpdateUs;
 			// Instant each stream was last seen at.
-			std::map<uint32_t, int64_t> ssrcs;
+			ankerl::unordered_dense::map<uint32_t, int64_t> ssrcs;
 			AimdRateControl remoteRateControl;
 		};
 	} // namespace BWE
