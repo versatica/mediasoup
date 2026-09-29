@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Fix `ScalabilityMode::ksvc()` returning `false` for `L2T1_KEY`.
+
 ### 0.4.0
 
 - New built-in SCTP stack (PR #1806):
