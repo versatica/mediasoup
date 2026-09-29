@@ -10,7 +10,7 @@
 - Rust: Fix `ScalabilityMode::ksvc()` returning `false` for `L2T1_KEY`.
 - SCTP: Treat `max_retransmits: 0` and `max_packet_life_time: 0` as given in SCTP stream parameters ([PR #1956](https://github.com/versatica/mediasoup/pull/1956)).
 - Worker: Fix `RTP::Packet::RtxEncode()` writing 2 bytes beyond the end of the packet ([PR #1955](https://github.com/versatica/mediasoup/pull/1955)).
-- Reject Producer RTP parameters whose RTX codec `apt` does not point to a media codec: Rust no longer panics and Node no longer throws an opaque `TypeError` ([PR #1953](https://github.com/versatica/mediasoup/pull/1953)).
+- Rust: Reject Producer RTP parameters whose RTX codec `apt` does not point to a media codec instead of panicking ([PR #1953](https://github.com/versatica/mediasoup/pull/1953)).
 
 ### 0.28.1
 
