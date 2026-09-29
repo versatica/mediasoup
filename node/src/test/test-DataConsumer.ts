@@ -119,6 +119,17 @@ test('transport.consumeData() with unknown dataProducerId fails', async () => {
 	).rejects.toThrow(NotFoundError);
 }, 2000);
 
+test('transport.consumeData() with maxRetransmits replaces DataProducer maxPacketLifeTime', async () => {
+	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
+		dataProducerId: ctx.sctpDataProducer!.id,
+		maxRetransmits: 2,
+	});
+
+	expect(dataConsumer.sctpStreamParameters!.ordered).toBe(false);
+	expect(dataConsumer.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
+	expect(dataConsumer.sctpStreamParameters!.maxRetransmits).toBe(2);
+}, 2000);
+
 test('dataConsumer.dump() succeeds', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
 		dataProducerId: ctx.sctpDataProducer!.id,

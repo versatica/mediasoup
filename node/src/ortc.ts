@@ -173,18 +173,24 @@ export function validateAndNormalizeSctpStreamParameters(
 
 	// maxPacketLifeTime is optional.
 	if (
-		params.maxPacketLifeTime &&
+		params.maxPacketLifeTime !== undefined &&
 		typeof params.maxPacketLifeTime !== 'number'
 	) {
 		throw new TypeError('invalid params.maxPacketLifeTime');
 	}
 
 	// maxRetransmits is optional.
-	if (params.maxRetransmits && typeof params.maxRetransmits !== 'number') {
+	if (
+		params.maxRetransmits !== undefined &&
+		typeof params.maxRetransmits !== 'number'
+	) {
 		throw new TypeError('invalid params.maxRetransmits');
 	}
 
-	if (params.maxPacketLifeTime && params.maxRetransmits) {
+	if (
+		params.maxPacketLifeTime !== undefined &&
+		params.maxRetransmits !== undefined
+	) {
 		throw new TypeError(
 			'cannot provide both maxPacketLifeTime and maxRetransmits'
 		);
@@ -193,14 +199,16 @@ export function validateAndNormalizeSctpStreamParameters(
 	if (
 		orderedGiven &&
 		params.ordered &&
-		(params.maxPacketLifeTime || params.maxRetransmits)
+		(params.maxPacketLifeTime !== undefined ||
+			params.maxRetransmits !== undefined)
 	) {
 		throw new TypeError(
 			'cannot be ordered with maxPacketLifeTime or maxRetransmits'
 		);
 	} else if (
 		!orderedGiven &&
-		(params.maxPacketLifeTime || params.maxRetransmits)
+		(params.maxPacketLifeTime !== undefined ||
+			params.maxRetransmits !== undefined)
 	) {
 		params.ordered = false;
 	}
