@@ -212,7 +212,9 @@ namespace RTC
 
 				for (const auto& kv : this->ssrcs)
 				{
-					ssrcs.push_back(kv.first);
+					const uint32_t ssrc = kv.first;
+
+					ssrcs.push_back(ssrc);
 				}
 
 				this->listener->OnRemoteBitrateEstimatorAbsSendTimeBitrateChanged(this, ssrcs, targetBitrate);
