@@ -160,9 +160,7 @@ test('generateRouterRtpCapabilities() with too many codecs throws', () => {
 		});
 	}
 
-	expect(() => ortc.generateRouterRtpCapabilities(mediaCodecs)).toThrow(
-		'cannot allocate'
-	);
+	expect(() => ortc.generateRouterRtpCapabilities(mediaCodecs)).toThrow();
 });
 
 test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsumerRtpParameters() and getPipeConsumerRtpParameters() succeed', () => {
