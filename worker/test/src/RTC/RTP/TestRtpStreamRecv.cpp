@@ -271,11 +271,11 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 		REQUIRE(rtpStream.GetRttMs() == 500.0f);
 
-		// No Receiver Reference Time was received by the remote endpoint yet, so there
-		// is no RTT anymore.
+		// No Receiver Reference Time was received by the remote endpoint yet, so the
+		// last RTT is kept.
 		receiveDelaySinceLastRr(WrapUs, 0, 0);
 
-		REQUIRE(rtpStream.GetRttMs() == 0.0f);
+		REQUIRE(rtpStream.GetRttMs() == 500.0f);
 
 		// The remote endpoint answers the Receiver Reference Time right away.
 		receiveDelaySinceLastRr((10 * 1000000) + 500000, 0x000A0000, 0);

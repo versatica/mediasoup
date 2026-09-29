@@ -702,11 +702,9 @@ namespace RTC
 			const uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
 
 			// If no Receiver Extended Report was received by the remote endpoint yet,
-			// there is no RTT anymore, but the NackGenerator keeps the last one.
+			// the Sender Extended Report carries no RTT, so the last one is kept.
 			if (lastRr == 0)
 			{
-				this->rttMs = 0.0f;
-
 				return;
 			}
 
