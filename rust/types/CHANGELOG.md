@@ -2,7 +2,12 @@
 
 ### NEXT
 
+- Remove support for the "urn:ietf:params:rtp-hdrext:toffset" RTP extension (PR #1942).
 - Fix `ScalabilityMode::ksvc()` returning `false` for `L2T1_KEY`.
+
+### 0.5.0
+
+- Worker: Use `int64_t` for bitrate everywhere (PR #1919).
 
 ### 0.4.0
 
