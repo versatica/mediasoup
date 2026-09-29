@@ -90,7 +90,7 @@ namespace RTC
 		public:
 			ProbingScheduler(Listener* listener, SharedInterface* shared);
 
-			~ProbingScheduler() override;
+			~ProbingScheduler() override = default;
 
 			// NOTE: It hands itself over as the listener of what it owns, so a copy
 			// would leave those pointing at the instance it came from.
@@ -169,7 +169,7 @@ namespace RTC
 			// Makes the packets that carry the bytes of a burst.
 			ProbePacketGenerator probePacketGenerator;
 			// Allocated by this.
-			TimerHandleInterface* nextProbeTimer{ nullptr };
+			const std::unique_ptr<TimerHandleInterface> nextProbeTimer;
 			// Bytes each packet carries on top of its own length once it's on the
 			// network.
 			size_t packetOverhead{ 0 };

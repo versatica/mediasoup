@@ -42,18 +42,10 @@ namespace RTC
 		    // A burst is made of packets this fabricates, so there is no traffic of
 		    // somebody else's to wait for before one may begin.
 		    bitrateProber(BitrateProber::BitrateProberOptions{ .allowStartProbingImmediately = true }),
-		    probePacketGenerator(this)
+		    probePacketGenerator(this),
+		    nextProbeTimer(shared->CreateTimer(this, "probing-scheduler-next-probe"))
 		{
 			MS_TRACE();
-
-			this->nextProbeTimer = this->shared->CreateTimer(this, "probing-scheduler-next-probe");
-		}
-
-		ProbingScheduler::~ProbingScheduler()
-		{
-			MS_TRACE();
-
-			delete this->nextProbeTimer;
 		}
 
 		void ProbingScheduler::CreateProbeClusters(const std::vector<Types::ProbeClusterConfig>& clusterConfigs)
@@ -93,7 +85,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (timer == this->nextProbeTimer)
+			if (timer == this->nextProbeTimer.get())
 			{
 				Process();
 			}
