@@ -2168,6 +2168,42 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == false);
 	}
 
+	SECTION("Packet::RtxEncode() does not write beyond the new packet length")
+	{
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
+
+		// clang-format off
+		uint8_t payload[] =
+		{
+			0x11, 0x22, 0x33, 0x44,
+			0x55, 0x66, 0x77, 0x88,
+			0x99, 0xAA
+		};
+		// clang-format on
+
+		packet->SetPayload(payload, 10);
+
+		const auto length = packet->GetLength();
+
+		REQUIRE(length == RTC::RTP::Packet::FixedHeaderMinLength + 10);
+
+		// Bytes that will belong to the packet once RTX encoded, and canary bytes
+		// right after them.
+		rtpCommon::FactoryBuffer[length]     = 0x55;
+		rtpCommon::FactoryBuffer[length + 1] = 0x55;
+		rtpCommon::FactoryBuffer[length + 2] = 0xEE;
+		rtpCommon::FactoryBuffer[length + 3] = 0xEE;
+
+		packet->RtxEncode(/*payloadType*/ 111, /*ssrc*/ 999999, /*seq*/ 666);
+
+		REQUIRE(packet->GetLength() == length + 2);
+		REQUIRE(packet->GetPayloadLength() == 12);
+		REQUIRE(rtpCommon::FactoryBuffer[length + 2] == 0xEE);
+		REQUIRE(rtpCommon::FactoryBuffer[length + 3] == 0xEE);
+		REQUIRE(std::memcmp(packet->GetPayload() + 2, payload, 10) == 0);
+	}
+
 	SECTION("Packet::SetBufferReleasedListener() when Packet is destroyed succeeds")
 	{
 		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(

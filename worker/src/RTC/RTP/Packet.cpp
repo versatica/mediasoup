@@ -1407,6 +1407,11 @@ namespace RTC
 				SetPaddingLength(0);
 			}
 
+			// NOTE: Get the payload length before increasing the packet length,
+			// otherwise the 2 bytes of the original sequence number would be
+			// counted as payload and moved beyond the new end of the packet.
+			const auto payloadLength = GetPayloadLength();
+
 			// Update packet length.
 			// NOTE: This throws if given length is higher than buffer length.
 			SetLength(GetLength() + 2);
@@ -1417,8 +1422,7 @@ namespace RTC
 			// Rewrite the SSRC.
 			SetSsrc(ssrc);
 
-			auto* payload            = GetPayloadPointer();
-			const auto payloadLength = GetPayloadLength();
+			auto* payload = GetPayloadPointer();
 
 			// Write the original sequence number at the begining of the payload.
 			std::memmove(payload + 2, payload, payloadLength);
