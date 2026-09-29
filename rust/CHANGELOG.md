@@ -8,6 +8,7 @@
   - Make `RateCalculator::GetRate()` and `RtpDataCounter::GetBitrate()` return no value while there is nothing to measure.
   - Widen the lifetime packet and byte counters of RTP streams to `uint64_t`.
 - Rust: Fix `ScalabilityMode::ksvc()` returning `false` for `L2T1_KEY`.
+- Rust: Use the first encoding that has a scalability mode, as the Node layer does, to compute the Consumer scalability mode.
 
 ### 0.28.1
 

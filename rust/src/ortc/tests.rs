@@ -696,3 +696,65 @@ fn get_producer_rtp_parameters_mapping_unsupported() {
         Err(RtpParametersMappingError::UnsupportedCodec { .. }),
     ));
 }
+
+#[test]
+fn get_consumer_rtp_parameters_scalability_mode_from_any_encoding() {
+    let consumable_rtp_parameters = RtpParameters {
+        mid: None,
+        codecs: vec![RtpCodecParameters::Video {
+            mime_type: MimeTypeVideo::Vp8,
+            payload_type: 101,
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![],
+        }],
+        header_extensions: vec![],
+        // Only the last encoding has scalability mode.
+        encodings: vec![
+            RtpEncodingParameters {
+                ssrc: Some(11111111),
+                ..RtpEncodingParameters::default()
+            },
+            RtpEncodingParameters {
+                ssrc: Some(11111112),
+                ..RtpEncodingParameters::default()
+            },
+            RtpEncodingParameters {
+                ssrc: Some(11111113),
+                scalability_mode: ScalabilityMode::L1T3,
+                ..RtpEncodingParameters::default()
+            },
+        ],
+        rtcp: RtcpParameters::default(),
+        msid: None,
+    };
+
+    let remote_rtp_capabilities = RtpCapabilities {
+        codecs: vec![RtpCodecCapability::Video {
+            mime_type: MimeTypeVideo::Vp8,
+            preferred_payload_type: Some(101),
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![],
+        }],
+        header_extensions: vec![],
+    };
+
+    let consumer_rtp_parameters = get_consumer_rtp_parameters(
+        &consumable_rtp_parameters,
+        &remote_rtp_capabilities,
+        false,
+        false,
+    )
+    .expect("Failed to get consumer RTP parameters");
+
+    assert_eq!(consumer_rtp_parameters.encodings.len(), 1);
+    assert_eq!(
+        consumer_rtp_parameters
+            .encodings
+            .first()
+            .unwrap()
+            .scalability_mode,
+        ScalabilityMode::L3T3,
+    );
+}

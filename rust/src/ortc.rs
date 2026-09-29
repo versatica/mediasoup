@@ -893,7 +893,8 @@ pub(crate) fn get_consumer_rtp_parameters(
         // (assume all encodings have the same value).
         let mut scalability_mode = consumable_rtp_parameters
             .encodings
-            .first()
+            .iter()
+            .find(|encoding| !encoding.scalability_mode.is_none())
             .map(|encoding| encoding.scalability_mode.clone())
             .unwrap_or_default();
 
