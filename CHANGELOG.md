@@ -7,7 +7,7 @@
 - Worker: Compute bitrate over the active window in `RateCalculator` ([PR #1944](https://github.com/versatica/mediasoup/pull/1944)).
   - Make `RateCalculator::GetRate()` and `RtpDataCounter::GetBitrate()` return no value while there is nothing to measure.
   - Widen the lifetime packet and byte counters of RTP streams to `uint64_t`.
-- Worker: Fix RTT calculation when the compact NTP timestamp wraps around between the Sender Report and the Receiver Report.
+- Worker: Fix RTT calculation when the compact NTP timestamp wraps around between the Sender Report and the Receiver Report ([PR #1957](https://github.com/versatica/mediasoup/pull/1957)).
 
 ### 3.27.1
 
