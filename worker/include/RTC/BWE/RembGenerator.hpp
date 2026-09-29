@@ -31,7 +31,7 @@ namespace RTC
 				 *   call.
 				 */
 				virtual void OnRembGeneratorSendRemb(
-				  RembGenerator* rembGenerator, const RTC::RTCP::FeedbackPsRembPacket* packet) = 0;
+				  RembGenerator* rembGenerator, RTC::RTCP::FeedbackPsRembPacket* packet) = 0;
 			};
 
 		public:

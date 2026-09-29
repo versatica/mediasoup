@@ -22,8 +22,6 @@ namespace RTC
 		// only one would leave the remote sender limited forever.
 		static constexpr uint8_t UnlimitedRembNumPackets{ 4 };
 
-		alignas(4) static thread_local uint8_t RembSerializationBuffer[65536];
-
 		/* Instance methods. */
 
 		RembGenerator::RembGenerator(Listener* listener) : listener(listener)
@@ -163,8 +161,6 @@ namespace RTC
 			{
 				packet.SetSsrcs(ssrcs);
 			}
-
-			packet.Serialize(RembSerializationBuffer);
 
 			this->listener->OnRembGeneratorSendRemb(this, std::addressof(packet));
 		}
