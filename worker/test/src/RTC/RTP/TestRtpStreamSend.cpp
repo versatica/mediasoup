@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
@@ -10,6 +11,7 @@
 #include "RTC/RTP/RtpStreamSend.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "mocks/include/MockShared.hpp"
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcpy()
 #include <memory>
@@ -1203,6 +1205,58 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			REQUIRE(report);
 			REQUIRE(report->GetRtpTs() == PacketTs);
 		}
+	}
+
+	SECTION("RTT is computed across the wraparound of the compact NTP timestamp")
+	{
+		TestRtpStreamListener testRtpStreamListener;
+
+		RTC::RTP::RtpStream::Params params;
+
+		params.ssrc          = 1111;
+		params.clockRate     = 90000;
+		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+
+		RTC::RTP::RtpStreamSend stream(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+
+		// The compact NTP timestamp has 16 bits of seconds, so it wraps every 65536
+		// seconds.
+		constexpr int64_t WrapUs{ 65536 * 1000000LL };
+
+		// Compact NTP timestamp of 65535 seconds (the Sender Report was sent just before
+		// the wrap) and delay of half a second (0x8000 in units of 1/65536 seconds).
+		constexpr uint32_t LastSr{ 0xFFFF0000 };
+		constexpr uint32_t Dlsr{ 0x8000 };
+
+		auto receiveReport = [&](int64_t receivedAtUs, uint32_t lastSr, uint32_t dlsr)
+		{
+			RTC::RTCP::ReceiverReport report;
+
+			report.SetSsrc(params.ssrc);
+			report.SetLastSenderReport(lastSr);
+			report.SetDelaySinceLastSenderReport(dlsr);
+
+			stream.ReceiveRtcpReceiverReport(std::addressof(report), receivedAtUs);
+		};
+
+		// The Receiver Report arrives after the wrap: 0.5 seconds of delay plus 600 ms of
+		// RTT after the Sender Report.
+		receiveReport(WrapUs + 100000, LastSr, Dlsr);
+
+		REQUIRE(stream.GetRttMs() == Catch::Approx(600).margin(1));
+
+		// Same but the sum of `lastSr` and `dlsr` also wraps.
+		receiveReport(WrapUs + 1100000, LastSr, Dlsr + 0x10000);
+
+		REQUIRE(stream.GetRttMs() == Catch::Approx(600).margin(1));
+
+		// No wraparound involved.
+		receiveReport(WrapUs - 1000000 + 100000, 0xFFFE0000, Dlsr);
+
+		REQUIRE(stream.GetRttMs() == Catch::Approx(600).margin(1));
 	}
 
 	SECTION("no Sender Report is generated once the stream has stopped sending")

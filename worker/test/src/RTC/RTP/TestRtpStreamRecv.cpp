@@ -1,10 +1,12 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "mocks/include/MockShared.hpp"
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -241,6 +243,32 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(listener.nackedSeqNumbers[0] == 0xffff);
 		REQUIRE(listener.nackedSeqNumbers[1] == 0);
 		listener.nackedSeqNumbers.clear();
+	}
+
+	SECTION("RTT is computed across the wraparound of the compact NTP timestamp")
+	{
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		// The compact NTP timestamp has 16 bits of seconds, so it wraps every 65536
+		// seconds.
+		constexpr int64_t WrapUs{ 65536 * 1000000LL };
+
+		// Compact NTP timestamp of 65535 seconds (the Receiver Extended Report was sent
+		// just before the wrap) and delay of half a second (0x8000 in units of 1/65536
+		// seconds).
+		RTC::RTCP::DelaySinceLastRr::SsrcInfo ssrcInfo;
+
+		ssrcInfo.SetSsrc(params.ssrc);
+		ssrcInfo.SetLastReceiverReport(0xFFFF0000);
+		ssrcInfo.SetDelaySinceLastReceiverReport(0x8000);
+
+		// The Sender Extended Report arrives after the wrap: 0.5 seconds of delay plus 600
+		// ms of RTT after the Receiver Extended Report.
+		rtpStream.ReceiveRtcpXrDelaySinceLastRr(std::addressof(ssrcInfo), WrapUs + 100000);
+
+		REQUIRE(rtpStream.GetRttMs() == Catch::Approx(600).margin(1));
 	}
 
 	SECTION("require key frame")

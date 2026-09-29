@@ -706,9 +706,20 @@ namespace RTC
 
 			// If no Receiver Extended Report was received by the remote endpoint yet,
 			// ignore lastRr and dlrr values in the Sender Extended Report.
-			if (lastRr && dlrr && (compactNtp > dlrr + lastRr))
+			//
+			// NOTE: The compact NTP representation has 16 bits of seconds, so it wraps
+			// every 65536 seconds. Subtract using modular arithmetic and read the result
+			// as signed, so the RTT is right when the wrap happens between the moment
+			// the Receiver Extended Report was sent and the moment the Sender Extended
+			// Report arrives.
+			if (lastRr && dlrr)
 			{
-				rttCompactNtp = compactNtp - dlrr - lastRr;
+				const auto diffCompactNtp = static_cast<int32_t>(compactNtp - dlrr - lastRr);
+
+				if (diffCompactNtp > 0)
+				{
+					rttCompactNtp = static_cast<uint32_t>(diffCompactNtp);
+				}
 			}
 
 			this->rttMs = static_cast<float>(rttCompactNtp >> 16) * 1000;
