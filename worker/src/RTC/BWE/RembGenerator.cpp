@@ -16,7 +16,8 @@ namespace RTC
 		// How much lower than the latest one an estimation has to be for its REMB to
 		// go out without waiting, as a percentage.
 		static constexpr int64_t SendThresholdPercent{ 103 };
-		// How often the cap is announced again while it's in force.
+		// How long the cap may go without being stated, either by a REMB of its own
+		// or by one carrying an estimation that already honours it.
 		static constexpr int64_t LimitationRembIntervalMs{ 1500 };
 		// How many REMBs are sent to announce that the cap is gone, since losing the
 		// only one would leave the remote sender limited forever.

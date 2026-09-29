@@ -33,10 +33,10 @@ namespace RTC
 		{
 		public:
 			// 'R' 'E' 'M' 'B'.
-			static const uint32_t UniqueIdentifier{ 0x52454D42 };
-			static const size_t UniqueIdentifierSize{ 4 };
+			static constexpr uint32_t UniqueIdentifier{ 0x52454D42 };
+			static constexpr size_t UniqueIdentifierSize{ 4 };
 			// Most SSRCs that fit, since the field that counts them is a single byte.
-			static const size_t MaxNumberOfSsrcs{ 0xFF };
+			static constexpr size_t MaxNumberOfSsrcs{ 0xFF };
 
 		public:
 			static FeedbackPsRembPacket* Parse(const uint8_t* data, size_t len);
