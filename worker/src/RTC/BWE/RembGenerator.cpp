@@ -110,12 +110,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// The cap came back while its removal was still being announced.
-			if (this->unlimitedRembCounter > 0 && this->maxIncomingBitrate.has_value())
-			{
-				this->unlimitedRembCounter = 0;
-			}
-
 			const bool announceCap = this->maxIncomingBitrate.has_value() || this->unlimitedRembCounter > 0;
 
 			if (!announceCap)
