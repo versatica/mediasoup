@@ -64,13 +64,6 @@ namespace RTC
 		MS_TRACE();
 
 		return FBS::SctpParameters::CreateSctpStreamParameters(
-		  builder,
-		  this->streamId,
-		  this->ordered,
-		  this->maxPacketLifeTime.has_value()
-		    ? flatbuffers::Optional<uint16_t>(this->maxPacketLifeTime.value())
-				: flatbuffers::nullopt,
-		  this->maxRetransmits.has_value() ? flatbuffers::Optional<uint16_t>(this->maxRetransmits.value())
-			                                 : flatbuffers::nullopt);
+		  builder, this->streamId, this->ordered, this->maxPacketLifeTime, this->maxRetransmits);
 	}
 } // namespace RTC
