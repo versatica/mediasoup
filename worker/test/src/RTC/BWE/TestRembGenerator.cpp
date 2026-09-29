@@ -170,7 +170,7 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 		REQUIRE(listener.rembs.size() == 1);
 	}
 
-	SECTION("a cap is not announced while the estimation keeps being")
+	SECTION("a cap is not announced while the estimation keeps going out")
 	{
 		TestRembGeneratorListener listener;
 		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
@@ -275,8 +275,11 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 		REQUIRE(listener.rembs.size() == 3);
 		REQUIRE(listener.rembs.at(2).bitrate == 2000);
 
-		rembGenerator.MaySendLimitationRembFeedback(BaseTimeMs + 3);
+		// What comes out once the interval is up is the cap, not one of the zeros
+		// that were owed.
+		rembGenerator.MaySendLimitationRembFeedback(BaseTimeMs + 2000);
 
-		REQUIRE(listener.rembs.size() == 3);
+		REQUIRE(listener.rembs.size() == 4);
+		REQUIRE(listener.rembs.at(3).bitrate == 2000);
 	}
 }
