@@ -10,7 +10,7 @@
 - Rust: Fix `ScalabilityMode::ksvc()` returning `false` for `L2T1_KEY`.
 - SCTP: Treat `max_retransmits: 0` and `max_packet_life_time: 0` as given in SCTP stream parameters ([PR #1956](https://github.com/versatica/mediasoup/pull/1956)).
 - Worker: Fix `RTP::Packet::RtxEncode()` writing 2 bytes beyond the end of the packet ([PR #1955](https://github.com/versatica/mediasoup/pull/1955)).
-- Worker: Fix RTT computed from RTCP reports when the compact NTP timestamp wraps around ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Worker: Fix RTT computed from RTCP reports when the compact NTP timestamp wraps around ([PR #1958](https://github.com/versatica/mediasoup/pull/1958)).
 
 ### 0.28.1
 
