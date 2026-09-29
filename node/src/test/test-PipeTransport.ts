@@ -534,6 +534,27 @@ test('router.pipeToRouter() with unknown router, producerId or dataProducerId fa
 	).rejects.toThrow(NotFoundError);
 }, 2000);
 
+test('router.pipeToRouter() can be retried after failing to create the PipeTransport pair', async () => {
+	// Fails because the IP is not assigned to any local network interface.
+	await expect(
+		ctx.router1!.pipeToRouter({
+			router: ctx.router2!,
+			producerId: ctx.videoProducer!.id,
+			listenInfo: { protocol: 'udp', ip: '203.0.113.1' },
+		})
+	).rejects.toThrow();
+
+	const { pipeConsumer, pipeProducer } = await ctx.router1!.pipeToRouter({
+		router: ctx.router2!,
+		producerId: ctx.videoProducer!.id,
+		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+	});
+
+	expect(pipeConsumer).toBeDefined();
+	expect(pipeProducer).toBeDefined();
+	expect(pipeProducer!.id).toBe(ctx.videoProducer!.id);
+}, 5000);
+
 test('router.createPipeTransport() with wrong arguments rejects with TypeError', async () => {
 	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.router1!.createPipeTransport({})).rejects.toThrow(TypeError);

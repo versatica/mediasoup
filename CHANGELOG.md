@@ -7,6 +7,7 @@
 - Worker: Compute bitrate over the active window in `RateCalculator` ([PR #1944](https://github.com/versatica/mediasoup/pull/1944)).
   - Make `RateCalculator::GetRate()` and `RtpDataCounter::GetBitrate()` return no value while there is nothing to measure.
   - Widen the lifetime packet and byte counters of RTP streams to `uint64_t`.
+- Node: Fix `router.pipeToRouter()` failing forever after a failed PipeTransport pair creation ([PR #1952](https://github.com/versatica/mediasoup/pull/1952)).
 
 ### 3.27.1
 

@@ -1070,6 +1070,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 							error
 						);
 
+						// Do not keep the rejected promise, otherwise any later call to
+						// pipeToRouter() for this pair of Routers would fail with the same
+						// error.
+						this.#mapRouterPairPipeTransportPairPromise.delete(
+							pipeTransportPairKey
+						);
+
 						if (localPipeTransport) {
 							localPipeTransport.close();
 						}
