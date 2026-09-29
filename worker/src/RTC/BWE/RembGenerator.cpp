@@ -113,9 +113,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const bool announceCap = this->maxIncomingBitrate.has_value() || this->unlimitedRembCounter > 0;
+			const bool announcingRemoval = this->unlimitedRembCounter > 0;
 
-			if (!announceCap)
+			if (!announcingRemoval && !this->maxIncomingBitrate.has_value())
+			{
+				return;
+			}
+
+			// A REMB carrying the estimation is already no higher than the cap, so
+			// while those keep flowing the cap needs no announcement of its own.
+			if (!announcingRemoval && this->lastRembSentAtMs.has_value() && nowMs - this->lastRembSentAtMs.value() <= LimitationRembIntervalMs)
 			{
 				return;
 			}

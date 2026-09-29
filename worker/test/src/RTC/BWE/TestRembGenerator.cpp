@@ -170,6 +170,33 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 		REQUIRE(listener.rembs.size() == 1);
 	}
 
+	SECTION("a cap is not announced while the estimation keeps being")
+	{
+		TestRembGeneratorListener listener;
+		RTC::BWE::RembGenerator rembGenerator(std::addressof(listener));
+
+		rembGenerator.SetMaxIncomingBitrate(BaseTimeMs, 1000);
+
+		REQUIRE(listener.rembs.size() == 1);
+
+		// Well past the interval the cap would be announced again at, but the
+		// estimation went out in between and that one is no higher than the cap.
+		rembGenerator.OnReceiveBitrateChanged(BaseTimeMs + 1400, ssrcs, 5000);
+
+		REQUIRE(listener.rembs.size() == 2);
+		REQUIRE(listener.rembs.at(1).bitrate == 1000);
+
+		rembGenerator.MaySendLimitationRembFeedback(BaseTimeMs + 1501);
+
+		REQUIRE(listener.rembs.size() == 2);
+
+		// Once the estimation stops, the cap has to be told again.
+		rembGenerator.MaySendLimitationRembFeedback(BaseTimeMs + 2902);
+
+		REQUIRE(listener.rembs.size() == 3);
+		REQUIRE(listener.rembs.at(2).bitrate == 1000);
+	}
+
 	SECTION("removing the cap is announced four times")
 	{
 		TestRembGeneratorListener listener;
