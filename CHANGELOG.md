@@ -9,6 +9,7 @@
   - Widen the lifetime packet and byte counters of RTP streams to `uint64_t`.
 - Node: Fix `router.pipeToRouter()` failing forever after a failed PipeTransport pair creation ([PR #1952](https://github.com/versatica/mediasoup/pull/1952)).
 - SCTP: Treat `maxRetransmits: 0` and `maxPacketLifeTime: 0` as given in SCTP stream parameters ([PR #1956](https://github.com/versatica/mediasoup/pull/1956)).
+- Worker: Fix `RTP::Packet::RtxEncode()` writing 2 bytes beyond the end of the packet ([PR #1955](https://github.com/versatica/mediasoup/pull/1955)).
 
 ### 3.27.1
 
