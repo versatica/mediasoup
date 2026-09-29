@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.6.0
+
 - Remove support for the "urn:ietf:params:rtp-hdrext:toffset" RTP extension (PR #1942).
 - Fix `ScalabilityMode::ksvc()` returning `false` for `L2T1_KEY`.
 
