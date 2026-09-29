@@ -1728,13 +1728,13 @@ namespace RTC
 
 		const auto& sctpStreamParameters = dataConsumer->GetSctpStreamParameters();
 		const RTC::SCTP::SendMessageOptions sendMessageOptions{
-			.unordered          = !sctpStreamParameters.ordered,
-			.lifetimeMs         = sctpStreamParameters.ordered
-			                        ? std::nullopt
-			                        : std::optional<int64_t>(sctpStreamParameters.maxPacketLifeTime),
-			.maxRetransmissions = sctpStreamParameters.ordered
-			                        ? std::nullopt
-			                        : std::optional<uint16_t>(sctpStreamParameters.maxRetransmits),
+			.unordered = !sctpStreamParameters.ordered,
+			.lifetimeMs =
+			  sctpStreamParameters.ordered || !sctpStreamParameters.maxPacketLifeTime.has_value()
+			    ? std::nullopt
+			    : std::optional<int64_t>(sctpStreamParameters.maxPacketLifeTime.value()),
+			.maxRetransmissions =
+			  sctpStreamParameters.ordered ? std::nullopt : sctpStreamParameters.maxRetransmits,
 			// NOTE: We don't set `lifecyleId` in production.
 		};
 

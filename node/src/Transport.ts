@@ -893,16 +893,13 @@ export abstract class TransportImpl<
 				}
 			}
 
-			if (!ordered) {
-				if (maxPacketLifeTime !== undefined) {
-					sctpStreamParameters.ordered = false;
-					sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
-				}
-
-				if (maxRetransmits !== undefined) {
-					sctpStreamParameters.ordered = false;
-					sctpStreamParameters.maxRetransmits = maxRetransmits;
-				}
+			if (
+				!ordered &&
+				(maxPacketLifeTime !== undefined || maxRetransmits !== undefined)
+			) {
+				sctpStreamParameters.ordered = false;
+				sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
+				sctpStreamParameters.maxRetransmits = maxRetransmits;
 			}
 		}
 

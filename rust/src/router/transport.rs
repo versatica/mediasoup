@@ -852,15 +852,12 @@ pub(super) trait TransportImpl: TransportGeneric {
                         sctp_stream_parameters.max_retransmits = None;
                     }
                 }
-                if ordered != Some(true) {
-                    if let Some(max_packet_life_time) = max_packet_life_time {
-                        sctp_stream_parameters.ordered = false;
-                        sctp_stream_parameters.max_packet_life_time = Some(max_packet_life_time);
-                    }
-                    if let Some(max_retransmits) = max_retransmits {
-                        sctp_stream_parameters.ordered = false;
-                        sctp_stream_parameters.max_retransmits = Some(max_retransmits);
-                    }
+                if ordered != Some(true)
+                    && (max_packet_life_time.is_some() || max_retransmits.is_some())
+                {
+                    sctp_stream_parameters.ordered = false;
+                    sctp_stream_parameters.max_packet_life_time = max_packet_life_time;
+                    sctp_stream_parameters.max_retransmits = max_retransmits;
                 }
 
                 Some(sctp_stream_parameters)
