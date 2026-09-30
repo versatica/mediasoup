@@ -696,3 +696,53 @@ fn get_producer_rtp_parameters_mapping_unsupported() {
         Err(RtpParametersMappingError::UnsupportedCodec { .. }),
     ));
 }
+
+#[test]
+fn get_producer_rtp_parameters_mapping_rtx_apt_is_not_media_codec() {
+    let media_codecs = vec![RtpCodecCapability::Video {
+        mime_type: MimeTypeVideo::Vp8,
+        preferred_payload_type: None,
+        clock_rate: NonZeroU32::new(90000).unwrap(),
+        parameters: RtpCodecParametersParameters::default(),
+        rtcp_feedback: vec![],
+    }];
+
+    let router_rtp_capabilities = generate_router_rtp_capabilities(media_codecs)
+        .expect("Failed to generate router RTP capabilities");
+
+    // The `apt` parameter of the RTX codec is its own payload type, which is not a media codec.
+    let rtp_parameters = RtpParameters {
+        mid: None,
+        codecs: vec![
+            RtpCodecParameters::Video {
+                mime_type: MimeTypeVideo::Vp8,
+                payload_type: 111,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
+                parameters: RtpCodecParametersParameters::default(),
+                rtcp_feedback: vec![],
+            },
+            RtpCodecParameters::Video {
+                mime_type: MimeTypeVideo::Rtx,
+                payload_type: 112,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
+                parameters: RtpCodecParametersParameters::from([("apt", 112_u32.into())]),
+                rtcp_feedback: vec![],
+            },
+        ],
+        header_extensions: vec![],
+        encodings: vec![RtpEncodingParameters {
+            ssrc: Some(11111111),
+            ..RtpEncodingParameters::default()
+        }],
+        rtcp: RtcpParameters {
+            cname: Some("qwerty1234".to_string()),
+            ..RtcpParameters::default()
+        },
+        msid: None,
+    };
+
+    assert!(matches!(
+        get_producer_rtp_parameters_mapping(&rtp_parameters, &router_rtp_capabilities),
+        Err(RtpParametersMappingError::MissingMediaCodecForRtx { payload_type: 112 }),
+    ));
+}
