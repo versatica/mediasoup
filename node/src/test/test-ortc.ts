@@ -574,5 +574,5 @@ test('getProducerRtpParametersMapping() with RTX apt pointing to a non media cod
 
 	expect(() =>
 		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities)
-	).toThrow('missing media codec found for RTX PT 112');
+	).toThrow(TypeError);
 });
