@@ -196,6 +196,7 @@ namespace bweHelpers
 		MS_TRACE();
 
 		MS_ASSERT(packetResults.empty(), "the given vector is not empty");
+		MS_ASSERT(!this->streams.empty(), "no stream to generate a frame of");
 		MS_ASSERT(
 		  this->capacityBps >= MinCapacityBps,
 		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",
@@ -231,6 +232,7 @@ namespace bweHelpers
 		MS_TRACE();
 
 		MS_ASSERT(packets.empty(), "the given vector is not empty");
+		MS_ASSERT(!this->streams.empty(), "no stream to generate a frame of");
 		MS_ASSERT(
 		  this->capacityBps >= MinCapacityBps,
 		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",

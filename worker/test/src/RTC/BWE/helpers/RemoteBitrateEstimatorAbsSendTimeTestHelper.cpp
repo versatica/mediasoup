@@ -75,9 +75,9 @@ namespace bweHelpers
 		REQUIRE(packet);
 
 		packet->SetSsrc(ssrc);
-		// NOTE: Nothing in the estimator reads this, since the RTP timestamp is what
-		// the estimator that works without 'abs-send-time' uses. It is set because
-		// the scenarios below move it around on purpose.
+		// NOTE: The estimator never reads the RTP timestamp, it works off the
+		// 'abs-send-time' extension alone. It is set because the scenarios below
+		// move it around on purpose, wrapping it included.
 		packet->SetTimestamp(rtpTimestamp);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
