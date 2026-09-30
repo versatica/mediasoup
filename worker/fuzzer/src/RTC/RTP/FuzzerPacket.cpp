@@ -2,6 +2,7 @@
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "Utils.hpp"
 #include <string>
 #include <vector>
 
@@ -91,7 +92,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(3);
 	packet->GetExtensionValue(3, extenLen);
 	packet->ReadAbsSendTime(absSendTime);
-	packet->UpdateAbsSendTime(12345678);
+	packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(12345678));
 
 	packet->HasExtension(4);
 	packet->GetExtensionValue(4, extenLen);
@@ -189,7 +190,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(13);
 	packet->GetExtensionValue(13, extenLen);
 	packet->ReadAbsSendTime(absSendTime);
-	packet->UpdateAbsSendTime(12345678);
+	packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(12345678));
 
 	packet->HasExtension(14);
 	packet->GetExtensionValue(14, extenLen);

@@ -3,6 +3,7 @@
 
 #include "RTC/BWE/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 #include <cstdlib> // std::abs()
 
 namespace RTC
@@ -42,6 +43,12 @@ namespace RTC
 		static constexpr int64_t StreamTimeOutUs{ 2 * 1000 * 1000 };
 		// Window of the meter of incoming data.
 		static constexpr int64_t IncomingBitrateWindowMs{ 1000 };
+		// Number of items that meter splits its window into, one per millisecond of
+		// it. The rate it reports is what the estimation drops to on an overuse, so
+		// a coarser item makes the edge of the window take in or let go of a whole
+		// frame of the measured stream several milliseconds off, which moves the
+		// estimation by as much as that frame is worth.
+		static constexpr uint16_t IncomingBitrateWindowItems{ 1000 };
 		// Widest gap between a send delta and the mean of the run it is compared
 		// against for both to be taken as the same burst.
 		static constexpr int64_t MaxClusterDeviationUs{ 2500 };
@@ -53,7 +60,9 @@ namespace RTC
 		/* Instance methods. */
 
 		RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(Listener* listener)
-		  : listener(listener), incomingRateCalculator(IncomingBitrateWindowMs)
+		  : listener(listener),
+		    incomingRateCalculator(
+		      IncomingBitrateWindowMs, RTC::RateCalculator::DefaultBpsScale, IncomingBitrateWindowItems)
 		{
 			MS_TRACE();
 		}
@@ -170,9 +179,16 @@ namespace RTC
 			{
 				// Tell whether it's time for a periodic update, or whether there is an
 				// overuse to react to right away.
+				//
+				// NOTE: The wait is measured in whole milliseconds, which is the
+				// resolution the interval is expressed in. Microseconds would not be
+				// more precise here but a different rule: this is a threshold being
+				// crossed, and packets do not arrive on whole milliseconds, so moving
+				// the boundary within a millisecond changes which packet crosses it.
 				if (
 				  !this->lastUpdateUs.has_value() ||
-				  nowUs - this->lastUpdateUs.value() > this->remoteRateControl.GetFeedbackIntervalUs())
+				  Utils::Time::TimeUsToMs(nowUs) - Utils::Time::TimeUsToMs(this->lastUpdateUs.value()) >
+				    Utils::Time::TimeUsToMs(this->remoteRateControl.GetFeedbackIntervalUs()))
 				{
 					updateEstimate = true;
 				}

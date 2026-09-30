@@ -956,7 +956,7 @@ namespace RTC
 			return true;
 		}
 
-		bool Packet::UpdateAbsSendTime(int64_t sentAtUs) const
+		bool Packet::UpdateAbsSendTime(uint32_t absSendTime) const
 		{
 			MS_TRACE();
 
@@ -967,8 +967,6 @@ namespace RTC
 			{
 				return false;
 			}
-
-			auto absSendTime = Utils::Time::TimeUsToAbsSendTime(sentAtUs);
 
 			Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
 
