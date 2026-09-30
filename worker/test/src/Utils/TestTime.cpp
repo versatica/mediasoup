@@ -2,39 +2,113 @@
 #include "DepLibUV.hpp"
 #include "Utils.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <cstdlib> // std::abs()
 
 SCENARIO("Utils::Time", "[utils][time]")
 {
-	SECTION("Ntp2TimeUs()")
+	SECTION("NtpToTimeUs()")
 	{
 		const auto nowUs  = DepLibUV::GetTimeUs();
-		const auto ntp    = Utils::Time::TimeUs2Ntp(nowUs);
-		const auto nowUs2 = Utils::Time::Ntp2TimeUs(ntp);
-		const auto ntp2   = Utils::Time::TimeUs2Ntp(nowUs2);
+		const auto ntp    = Utils::Time::TimeUsToNtp(nowUs);
+		const auto nowUs2 = Utils::Time::NtpToTimeUs(ntp);
+		const auto ntp2   = Utils::Time::TimeUsToNtp(nowUs2);
 
 		REQUIRE(nowUs2 == nowUs);
 		REQUIRE(ntp2.seconds == ntp.seconds);
 		REQUIRE(ntp2.fractions == ntp.fractions);
 	}
 
-	SECTION("TimeUs2Ntp()")
+	SECTION("TimeUsToNtp()")
 	{
-		auto ntp = Utils::Time::TimeUs2Ntp(1500000);
+		auto ntp = Utils::Time::TimeUsToNtp(1500000);
 
 		REQUIRE(ntp.seconds == 1);
 		// Half a second in NTP fractional units.
 		REQUIRE(ntp.fractions == 2147483648);
 
 		// A real NTP instant, seconds since Jan 1, 1900, which still fits in 32 bits.
-		ntp = Utils::Time::TimeUs2Ntp(3990000000750000);
+		ntp = Utils::Time::TimeUsToNtp(3990000000750000);
 
 		REQUIRE(ntp.seconds == 3990000000);
-		REQUIRE(Utils::Time::Ntp2TimeUs(ntp) == 3990000000750000);
+		REQUIRE(Utils::Time::NtpToTimeUs(ntp) == 3990000000750000);
 
 		// Sub-millisecond times are kept.
-		REQUIRE(Utils::Time::TimeUs2Ntp(1000500).fractions > Utils::Time::TimeUs2Ntp(1000000).fractions);
-		REQUIRE(Utils::Time::TimeUs2Ntp(1000500).fractions < Utils::Time::TimeUs2Ntp(1001000).fractions);
-		REQUIRE(Utils::Time::Ntp2TimeUs(Utils::Time::TimeUs2Ntp(1000500)) == 1000500);
+		REQUIRE(Utils::Time::TimeUsToNtp(1000500).fractions > Utils::Time::TimeUsToNtp(1000000).fractions);
+		REQUIRE(Utils::Time::TimeUsToNtp(1000500).fractions < Utils::Time::TimeUsToNtp(1001000).fractions);
+		REQUIRE(Utils::Time::NtpToTimeUs(Utils::Time::TimeUsToNtp(1000500)) == 1000500);
+	}
+
+	// Middle 32 bits of the given NTP timestamp.
+	auto toCompactNtp = [](uint32_t seconds, uint32_t fractions) -> uint32_t
+	{
+		return (seconds << 16) | (fractions >> 16);
+	};
+
+	auto toTimeUs = [](uint32_t seconds, uint32_t fractions) -> int64_t
+	{
+		return Utils::Time::NtpToTimeUs(Utils::Time::Ntp{ .seconds = seconds, .fractions = fractions });
+	};
+
+	SECTION("CompactNtpIntervalToTimeUs()")
+	{
+		{
+			const int64_t diffUs = toTimeUs(0x12654, 0x64335) - toTimeUs(0x12345, 0x23456);
+			const uint32_t compactNtpDiff = toCompactNtp(0x12654, 0x64335) - toCompactNtp(0x12345, 0x23456);
+
+			REQUIRE(std::abs(Utils::Time::CompactNtpIntervalToTimeUs(compactNtpDiff) - diffUs) <= 1000);
+		}
+
+		// The later timestamp has the lower compact NTP representation, which is fine as
+		// long as the difference is computed with unsigned arithmetic.
+		{
+			const int64_t diffUs = toTimeUs(0x20000, 0x64335) - toTimeUs(0x1ffff, 0x23456);
+
+			REQUIRE(diffUs > 0);
+			REQUIRE(toCompactNtp(0x20000, 0x64335) < toCompactNtp(0x1ffff, 0x23456));
+
+			const uint32_t compactNtpDiff = toCompactNtp(0x20000, 0x64335) - toCompactNtp(0x1ffff, 0x23456);
+
+			REQUIRE(std::abs(Utils::Time::CompactNtpIntervalToTimeUs(compactNtpDiff) - diffUs) <= 1000);
+		}
+
+		// A difference close to 2^16 seconds is a negative one.
+		{
+			const int64_t diffUs = toTimeUs(0x1ffff, 0x64335) - toTimeUs(0x20000, 0x23456);
+
+			REQUIRE(diffUs < 0);
+
+			const uint32_t compactNtpDiff = toCompactNtp(0x1ffff, 0x64335) - toCompactNtp(0x20000, 0x23456);
+
+			REQUIRE(std::abs(Utils::Time::CompactNtpIntervalToTimeUs(compactNtpDiff) - diffUs) <= 1000);
+		}
+
+		// Right in the middle, both +2^15 and -2^15 seconds are valid results.
+		REQUIRE(std::abs(Utils::Time::CompactNtpIntervalToTimeUs(0x80000000)) == 0x8000 * 1000000LL);
+	}
+
+	SECTION("CompactNtpRttToTimeUs()")
+	{
+		// A difference close to 2^15 seconds is still a positive one.
+		{
+			const int64_t diffUs = toTimeUs(0x17fff, 0xffff5) - toTimeUs(0x10000, 0x00006);
+
+			REQUIRE(std::abs(diffUs - (((1 << 15) - 1) * 1000000LL)) <= 1000);
+
+			const uint32_t compactNtpDiff = toCompactNtp(0x17fff, 0xffff5) - toCompactNtp(0x10000, 0x00006);
+
+			REQUIRE(std::abs(Utils::Time::CompactNtpRttToTimeUs(compactNtpDiff) - diffUs) <= 1000);
+		}
+
+		// A negative round trip time yields 1 millisecond.
+		{
+			const int64_t diffUs = toTimeUs(0x1ffff, 0x64335) - toTimeUs(0x20000, 0x23456);
+
+			REQUIRE(diffUs < 0);
+
+			const uint32_t compactNtpDiff = toCompactNtp(0x1ffff, 0x64335) - toCompactNtp(0x20000, 0x23456);
+
+			REQUIRE(Utils::Time::CompactNtpRttToTimeUs(compactNtpDiff) == 1000);
+		}
 	}
 
 	SECTION("TimeUsToAbsSendTime()")
@@ -63,25 +137,25 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(Utils::Time::TimeUsToAbsSendTime(-WrapPeriodUs) == 0);
 	}
 
-	SECTION("TimeUs2Q32x32()")
+	SECTION("TimeUsToQ32x32()")
 	{
 		// A whole second is the fractional unit itself.
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(Utils::Time::TimeUs2Q32x32(1000000).value() == 4294967296);
+		REQUIRE(Utils::Time::TimeUsToQ32x32(1000000).value() == 4294967296);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(Utils::Time::TimeUs2Q32x32(-1000000).value() == -4294967296);
+		REQUIRE(Utils::Time::TimeUsToQ32x32(-1000000).value() == -4294967296);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(Utils::Time::TimeUs2Q32x32(0).value() == 0);
+		REQUIRE(Utils::Time::TimeUsToQ32x32(0).value() == 0);
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		REQUIRE(Utils::Time::TimeUs2Q32x32(1000).value() == 4294967);
+		REQUIRE(Utils::Time::TimeUsToQ32x32(1000).value() == 4294967);
 
 		// Seconds are 32 bits wide in the format, so 2^31 seconds no longer fit.
 		constexpr int64_t OutOfRangeUs{ (1LL << 31) * 1000000 };
 
-		REQUIRE(Utils::Time::TimeUs2Q32x32(OutOfRangeUs) == std::nullopt);
-		REQUIRE(Utils::Time::TimeUs2Q32x32(-OutOfRangeUs) == std::nullopt);
-		REQUIRE(Utils::Time::TimeUs2Q32x32(OutOfRangeUs - 1).has_value());
-		REQUIRE(Utils::Time::TimeUs2Q32x32(-OutOfRangeUs + 1).has_value());
+		REQUIRE(Utils::Time::TimeUsToQ32x32(OutOfRangeUs) == std::nullopt);
+		REQUIRE(Utils::Time::TimeUsToQ32x32(-OutOfRangeUs) == std::nullopt);
+		REQUIRE(Utils::Time::TimeUsToQ32x32(OutOfRangeUs - 1).has_value());
+		REQUIRE(Utils::Time::TimeUsToQ32x32(-OutOfRangeUs + 1).has_value());
 	}
 
 	SECTION("Q32x32ToTimeUs()")
@@ -93,7 +167,7 @@ SCENARIO("Utils::Time", "[utils][time]")
 		for (const int64_t us : { 1, -1, 1000, -1000, 1000000, -1000000, 123456789, -123456789 })
 		{
 			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-			REQUIRE(Utils::Time::Q32x32ToTimeUs(Utils::Time::TimeUs2Q32x32(us).value()) == us);
+			REQUIRE(Utils::Time::Q32x32ToTimeUs(Utils::Time::TimeUsToQ32x32(us).value()) == us);
 		}
 	}
 }

@@ -280,7 +280,7 @@ namespace RTC
 
 			// Get the NTP representation of the time at which the Receiver Report
 			// arrived, which is what the round trip is measured against.
-			auto ntp = Utils::Time::TimeUs2Ntp(receivedAtUs + this->shared->GetNtpOffsetUs());
+			auto ntp = Utils::Time::TimeUsToNtp(receivedAtUs + this->shared->GetNtpOffsetUs());
 
 			// Get the compact NTP representation of the arrival time.
 			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
@@ -290,21 +290,16 @@ namespace RTC
 			const uint32_t lastSr = report->GetLastSenderReport();
 			const uint32_t dlsr   = report->GetDelaySinceLastSenderReport();
 
-			// RTT in 1/2^16 second fractions.
-			uint32_t rttCompactNtp{ 0 };
-
-			// If no Sender Report was received by the remote endpoint yet, ignore lastSr
-			// and dlsr values in the Receiver Report.
-			if (lastSr && dlsr && (compactNtp > dlsr + lastSr))
+			// If no Sender Report was received by the remote endpoint yet, the Receiver
+			// Report carries no RTT, so the last one is kept.
+			//
+			// NOTE: The subtraction wraps around along with the compact NTP
+			// representation, which is what the conversion expects.
+			if (lastSr != 0)
 			{
-				rttCompactNtp = compactNtp - dlsr - lastSr;
+				this->rttMs =
+				  static_cast<float>(Utils::Time::CompactNtpRttToTimeUs(compactNtp - dlsr - lastSr)) / 1000;
 			}
-
-			this->rttMs = static_cast<float>(rttCompactNtp >> 16) * 1000;
-			this->rttMs += (static_cast<float>(rttCompactNtp & 0x0000FFFF) / 65536) * 1000;
-
-			// Avoid negative RTT value since it doesn't make sense.
-			this->rttMs = std::max(this->rttMs, 0.0f);
 
 			this->packetsLost  = report->GetTotalLost();
 			this->fractionLost = report->GetFractionLost();
@@ -345,7 +340,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto ntp     = Utils::Time::TimeUs2Ntp(nowUs + this->shared->GetNtpOffsetUs());
+			auto ntp     = Utils::Time::TimeUsToNtp(nowUs + this->shared->GetNtpOffsetUs());
 			auto* report = new RTC::RTCP::SenderReport();
 
 			// Calculate TS difference between now and the instant at which the media in the

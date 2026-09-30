@@ -346,7 +346,7 @@ namespace RTC
 					//
 					//   capture NTP clock = sender NTP clock + capture clock offset
 					const auto captureAtUs =
-					  Utils::Time::Ntp2TimeUs(ntp) - Utils::Time::Q32x32ToTimeUs(estimatedCaptureClockOffset);
+					  Utils::Time::NtpToTimeUs(ntp) - Utils::Time::Q32x32ToTimeUs(estimatedCaptureClockOffset);
 
 					// NOTE: A capture instant that is not positive means a capture clock offset
 					// that cannot be true, so there is nothing to store.
@@ -663,7 +663,7 @@ namespace RTC
 				ntp.fractions = report->GetNtpFrac();
 
 				this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
-					.ntpUs = Utils::Time::Ntp2TimeUs(ntp),
+					.ntpUs = Utils::Time::NtpToTimeUs(ntp),
 					.ts    = report->GetRtpTs(),
 				};
 			}
@@ -691,7 +691,7 @@ namespace RTC
 
 			// Get the NTP representation of the time at which the report arrived, which
 			// is what the round trip is measured against.
-			auto ntp = Utils::Time::TimeUs2Ntp(receivedAtUs + this->shared->GetNtpOffsetUs());
+			auto ntp = Utils::Time::TimeUsToNtp(receivedAtUs + this->shared->GetNtpOffsetUs());
 
 			// Get the compact NTP representation of the arrival time.
 			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
@@ -701,21 +701,17 @@ namespace RTC
 			const uint32_t lastRr = ssrcInfo->GetLastReceiverReport();
 			const uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
 
-			// RTT in 1/2^16 second fractions.
-			uint32_t rttCompactNtp{ 0 };
-
 			// If no Receiver Extended Report was received by the remote endpoint yet,
-			// ignore lastRr and dlrr values in the Sender Extended Report.
-			if (lastRr && dlrr && (compactNtp > dlrr + lastRr))
+			// the Sender Extended Report carries no RTT, so the last one is kept.
+			if (lastRr == 0)
 			{
-				rttCompactNtp = compactNtp - dlrr - lastRr;
+				return;
 			}
 
-			this->rttMs = static_cast<float>(rttCompactNtp >> 16) * 1000;
-			this->rttMs += (static_cast<float>(rttCompactNtp & 0x0000FFFF) / 65536) * 1000;
-
-			// Avoid negative RTT value since it doesn't make sense.
-			this->rttMs = std::max(this->rttMs, 0.0f);
+			// NOTE: The subtraction wraps around along with the compact NTP
+			// representation, which is what the conversion expects.
+			this->rttMs =
+			  static_cast<float>(Utils::Time::CompactNtpRttToTimeUs(compactNtp - dlrr - lastRr)) / 1000;
 
 			// Tell it to the NackGenerator.
 			if (this->params.useNack)

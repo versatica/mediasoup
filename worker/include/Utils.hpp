@@ -518,7 +518,7 @@ namespace Utils
 		/**
 		 * Convert microseconds into an NTP timestamp.
 		 */
-		static Time::Ntp TimeUs2Ntp(int64_t timeUs)
+		static Time::Ntp TimeUsToNtp(int64_t timeUs)
 		{
 			Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
@@ -536,12 +536,51 @@ namespace Utils
 		/**
 		 * Convert an NTP timestamp into microseconds.
 		 */
-		static int64_t Ntp2TimeUs(Time::Ntp ntp)
+		static int64_t NtpToTimeUs(Time::Ntp ntp)
 		{
 			return (
 			  (static_cast<int64_t>(ntp.seconds) * 1000000) +
 			  static_cast<int64_t>(
 			    std::round((static_cast<double>(ntp.fractions) * 1000000) / NtpFractionalUnit)));
+		}
+
+		/**
+		 * Convert an interval in compact NTP representation (the middle 32 bits of an
+		 * NTP timestamp, so 1/65536 seconds units) into microseconds.
+		 *
+		 * @remarks
+		 * - The interval is usually the difference between two compact NTP timestamps,
+		 *   which wraps around every 65536 seconds. Values above 0x80000000 are hence
+		 *   taken as negative intervals rather than as intervals of more than 32768
+		 *   seconds.
+		 * - The result is rounded to the nearest microsecond, halves upwards.
+		 */
+		static int64_t CompactNtpIntervalToTimeUs(uint32_t compactNtpInterval)
+		{
+			auto value = static_cast<int64_t>(compactNtpInterval);
+
+			if (compactNtpInterval > 0x80000000)
+			{
+				value -= (int64_t{ 1 } << 32);
+			}
+
+			// NOTE: Right shifting a negative value rounds towards negative infinity,
+			// so adding half the divisor first rounds to the nearest value.
+			return ((value * 1000000) + (1 << 15)) >> 16;
+		}
+
+		/**
+		 * Convert a round trip time in compact NTP representation into microseconds.
+		 *
+		 * @remarks
+		 * - A non-monotonic clock can make the round trip time negative, so a negative
+		 *   value, as well as one too small to be true, yields 1 millisecond.
+		 */
+		static int64_t CompactNtpRttToTimeUs(uint32_t compactNtpRtt)
+		{
+			static constexpr int64_t MinRttUs{ 1000 };
+
+			return std::max(CompactNtpIntervalToTimeUs(compactNtpRtt), MinRttUs);
 		}
 
 		/**
@@ -572,7 +611,7 @@ namespace Utils
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 		 */
-		static std::optional<int64_t> TimeUs2Q32x32(int64_t timeUs)
+		static std::optional<int64_t> TimeUsToQ32x32(int64_t timeUs)
 		{
 			// The seconds of the format are 32 bits wide, so from here on it does not fit.
 			static constexpr int64_t OutOfRangeUs{ (1LL << 31) * 1000000 };
