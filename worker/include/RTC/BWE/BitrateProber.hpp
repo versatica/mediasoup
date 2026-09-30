@@ -33,10 +33,6 @@ namespace RTC
 			enum class State : uint8_t
 			{
 				/**
-				 * Nothing is going to be emitted at all.
-				 */
-				DISABLED,
-				/**
 				 * There may be bursts waiting, but none of them has started.
 				 */
 				INACTIVE,
@@ -136,19 +132,6 @@ namespace RTC
 				return this->state == State::ACTIVE;
 			}
 
-			void SetEnabled(bool enabled);
-
-			/**
-			 * Whether a burst may start without waiting for a packet big enough.
-			 */
-			void SetAllowProbeWithoutMediaPacket(bool allow);
-
-			/**
-			 * Feed a packet that somebody else is sending, which is what may start a
-			 * burst that is waiting for one.
-			 */
-			void OnIncomingPacket(size_t packetSize);
-
 			/**
 			 * Take a burst that has been asked for.
 			 */
@@ -190,6 +173,18 @@ namespace RTC
 			 */
 			void ProbeSent(int64_t nowUs, size_t size);
 
+			/**
+			 * Feed a packet that somebody else is sending, which is what may start a
+			 * burst that is waiting for one.
+			 *
+			 * @remarks
+			 * - Only the tests call it today, because the bursts are made of packets
+			 *   fabricated for them and there is no traffic of somebody else's to wait
+			 *   for. This is the way in for the day a burst rides on real traffic
+			 *   instead, and with it `minPacketSize` starts meaning something.
+			 */
+			void OnIncomingPacket(size_t packetSize);
+
 		private:
 			/**
 			 * Start emitting if there is a burst waiting and the given packet is enough
@@ -209,7 +204,7 @@ namespace RTC
 			// Passed by argument.
 			BitrateProberOptions options;
 			// Others.
-			State state{ State::DISABLED };
+			State state{ State::INACTIVE };
 			// The bursts asked for, the first one being the one being emitted.
 			std::queue<Cluster> clusters;
 			// Instant at which the next packet is due, or no value while it is due

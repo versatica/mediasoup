@@ -25,52 +25,15 @@ namespace RTC
 		BitrateProber::BitrateProber(BitrateProberOptions options) : options(options)
 		{
 			MS_TRACE();
-
-			SetEnabled(true);
-		}
-
-		void BitrateProber::SetEnabled(bool enabled)
-		{
-			MS_TRACE();
-
-			if (enabled)
-			{
-				if (this->state == State::DISABLED)
-				{
-					this->state = State::INACTIVE;
-
-					MS_DEBUG_DEV("probing enabled");
-				}
-			}
-			else
-			{
-				this->state = State::DISABLED;
-
-				MS_DEBUG_DEV("probing disabled");
-			}
-		}
-
-		void BitrateProber::SetAllowProbeWithoutMediaPacket(bool allow)
-		{
-			MS_TRACE();
-
-			this->options.allowStartProbingImmediately = allow;
-
-			MaybeSetActiveState(/*packetSize*/ 0);
-		}
-
-		void BitrateProber::OnIncomingPacket(size_t packetSize)
-		{
-			MS_TRACE();
-
-			MaybeSetActiveState(packetSize);
 		}
 
 		void BitrateProber::CreateProbeCluster(const Types::ProbeClusterConfig& clusterConfig)
 		{
 			MS_TRACE();
 
-			MS_ASSERT(this->state != State::DISABLED, "probing is disabled");
+			// NOTE: Whoever puts a burst configuration together already refuses a zero
+			// there, since it is what the bitrate of the burst is held over to decide
+			// how many bytes each of its shots carries.
 			MS_ASSERT(clusterConfig.minProbeDeltaUs > 0, "no time between packets of the burst");
 
 			// Whatever was asked for long ago is not worth sending anymore, and only so
@@ -99,10 +62,6 @@ namespace RTC
 			this->clusters.push(cluster);
 
 			MaybeSetActiveState(/*packetSize*/ 0);
-
-			// NOTE: Taking a burst never disables probing, and it was not disabled on
-			// the way in either.
-			MS_ASSERT(this->state == State::ACTIVE || this->state == State::INACTIVE, "probing is disabled");
 
 			MS_DEBUG_DEV(
 			  "probe cluster created [id:%" PRIi64 ", bitrate:%" PRIi64 ", minBytes:%" PRIi64
@@ -183,7 +142,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: Reporting a shot means one was asked for with GetCurrentCluster(),
+			// which only answers while a burst is being emitted, and that state is
+			// only left from within this class.
 			MS_ASSERT(this->state == State::ACTIVE, "no burst is being emitted");
+			// NOTE: A shot out of which no byte left is not reported at all, since
+			// there would be nothing to measure the burst with.
 			MS_ASSERT(size != 0, "a packet of no bytes was sent");
 
 			if (this->clusters.empty())
@@ -220,6 +184,13 @@ namespace RTC
 			}
 		}
 
+		void BitrateProber::OnIncomingPacket(size_t packetSize)
+		{
+			MS_TRACE();
+
+			MaybeSetActiveState(packetSize);
+		}
+
 		void BitrateProber::MaybeSetActiveState(size_t packetSize)
 		{
 			MS_TRACE();
@@ -237,16 +208,13 @@ namespace RTC
 
 			if (this->clusters.empty())
 			{
-				MS_ASSERT(
-				  this->state == State::DISABLED || this->state == State::INACTIVE,
-				  "emitting a burst with none to emit");
+				MS_ASSERT(this->state == State::INACTIVE, "emitting a burst with none to emit");
 
 				return false;
 			}
 
 			switch (this->state)
 			{
-				case State::DISABLED:
 				case State::ACTIVE:
 				{
 					return false;
