@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Codecs/AV1.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
@@ -1242,6 +1243,64 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  PacketAtUs + ((RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs + 1) * 1000)));
 
 		REQUIRE_FALSE(staleReport);
+	}
+
+	SECTION("RTT is computed from Receiver Reports")
+	{
+		TestRtpStreamListener testRtpStreamListener;
+
+		RTC::RTP::RtpStream::Params params;
+
+		params.ssrc          = 1111;
+		params.clockRate     = 90000;
+		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+
+		RTC::RTP::RtpStreamSend stream(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+
+		auto receiveReceiverReport = [&](int64_t receivedAtUs, uint32_t lastSr, uint32_t dlsr)
+		{
+			RTC::RTCP::ReceiverReport report;
+
+			report.SetSsrc(params.ssrc);
+			report.SetLastSenderReport(lastSr);
+			report.SetDelaySinceLastSenderReport(dlsr);
+
+			stream.ReceiveRtcpReceiverReport(std::addressof(report), receivedAtUs);
+		};
+
+		// The compact NTP representation has 16 bits of seconds, so it wraps around
+		// every 65536 seconds.
+		constexpr int64_t WrapUs{ 65536 * 1000000LL };
+
+		// The Sender Report is sent 1 second before the wrap, the remote endpoint holds
+		// it for half a second, and the Receiver Report arrives right at the wrap.
+		receiveReceiverReport(WrapUs, 0xFFFF0000, 0x8000);
+
+		REQUIRE(stream.GetRttMs() == 500.0f);
+
+		// No Sender Report was received by the remote endpoint yet, so the last RTT is
+		// kept.
+		receiveReceiverReport(WrapUs, 0, 0);
+
+		REQUIRE(stream.GetRttMs() == 500.0f);
+
+		// The remote endpoint answers the Sender Report right away.
+		receiveReceiverReport((10 * 1000000) + 500000, 0x000A0000, 0);
+
+		REQUIRE(stream.GetRttMs() == 500.0f);
+
+		// A negative RTT yields 1 millisecond.
+		receiveReceiverReport(20 * 1000000, 0x00140000, 0x8000);
+
+		REQUIRE(stream.GetRttMs() == 1.0f);
+
+		// So does a RTT too small to be true.
+		receiveReceiverReport(20 * 1000000, 0x0013FFFF, 0);
+
+		REQUIRE(stream.GetRttMs() == 1.0f);
 	}
 
 #ifdef PERFORMANCE_TEST

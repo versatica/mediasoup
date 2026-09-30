@@ -92,10 +92,12 @@ void FuzzerUtils::Fuzz(const uint8_t* data, size_t len)
 
 	/* Time class. */
 
-	auto ntp = Utils::Time::TimeUs2Ntp(static_cast<int64_t>(len));
+	auto ntp = Utils::Time::TimeUsToNtp(static_cast<int64_t>(len));
 
-	Utils::Time::Ntp2TimeUs(ntp);
+	Utils::Time::NtpToTimeUs(ntp);
+	Utils::Time::CompactNtpIntervalToTimeUs(static_cast<uint32_t>(len));
+	Utils::Time::CompactNtpRttToTimeUs(static_cast<uint32_t>(len));
 	Utils::Time::TimeUsToAbsSendTime(static_cast<int64_t>(len));
 	Utils::Time::Q32x32ToTimeUs(static_cast<int64_t>(len));
-	Utils::Time::TimeUs2Q32x32(static_cast<int64_t>(len));
+	Utils::Time::TimeUsToQ32x32(static_cast<int64_t>(len));
 }

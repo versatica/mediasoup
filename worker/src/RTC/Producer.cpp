@@ -775,7 +775,7 @@ namespace RTC
 		// Add a receiver reference time report if no present in the packet.
 		if (!packet->HasReceiverReferenceTime())
 		{
-			auto ntp = Utils::Time::TimeUs2Ntp(nowUs + this->shared->GetNtpOffsetUs());
+			auto ntp = Utils::Time::TimeUsToNtp(nowUs + this->shared->GetNtpOffsetUs());
 
 			receiverReferenceTimeReport = new RTC::RTCP::ReceiverReferenceTime();
 
@@ -1258,7 +1258,7 @@ namespace RTC
 				// the most likely case rather than a wild guess.
 				const auto remoteClockOffsetUs = this->listener->OnProducerNeedRemoteClockOffsetUs(this);
 				const auto remoteClockOffsetQ32x32 =
-				  Utils::Time::TimeUs2Q32x32(remoteClockOffsetUs.value_or(0));
+				  Utils::Time::TimeUsToQ32x32(remoteClockOffsetUs.value_or(0));
 
 				// NOTE: An offset that does not fit in the extension means a sender whose clock
 				// is decades away from ours, and there is no value to write that would not be a
