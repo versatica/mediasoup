@@ -498,6 +498,7 @@ test_sources = [
   'test/src/RTC/TestTransportTuple.cpp',
   'test/src/RTC/TestTrendCalculator.cpp',
   'test/src/RTC/BWE/helpers/LinkSimulator.cpp',
+  'test/src/RTC/BWE/helpers/RemoteBitrateEstimatorAbsSendTimeTestHelper.cpp',
   'test/src/RTC/BWE/TestAimdRateControl.cpp',
   'test/src/RTC/BWE/TestAlrDetector.cpp',
   'test/src/RTC/BWE/TestBitrateProber.cpp',

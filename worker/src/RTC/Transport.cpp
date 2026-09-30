@@ -2719,7 +2719,7 @@ namespace RTC
 #endif
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
+		packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(this->shared->GetTimeUs()));
 
 #ifdef MS_USE_BUILTIN_BWE
 		// TODO: Write the transport wide sequence number the built-in downlink BWE
@@ -2792,7 +2792,7 @@ namespace RTC
 #endif
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
+		packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(this->shared->GetTimeUs()));
 
 #ifdef MS_USE_BUILTIN_BWE
 		// TODO: Write the transport wide sequence number the built-in downlink BWE
@@ -3438,7 +3438,7 @@ namespace RTC
 #endif
 
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
+		packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(this->shared->GetTimeUs()));
 
 		// Update transport wide sequence number if present.
 		if (

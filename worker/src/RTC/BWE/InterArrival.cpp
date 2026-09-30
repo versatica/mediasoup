@@ -122,7 +122,7 @@ namespace RTC
 				// NOTE: Not std::max() because these timestamps wrap around, so the
 				// later one is not necessarily the greater one.
 				this->currentGroup.timestamp =
-				  ::Utils::Number::IsHigherThan<uint32_t>(timestamp, this->currentGroup.timestamp)
+				  Utils::Number::IsHigherThan<uint32_t>(timestamp, this->currentGroup.timestamp)
 				    ? timestamp
 				    : this->currentGroup.timestamp;
 			}
@@ -146,7 +146,7 @@ namespace RTC
 
 			// A packet of the very same timestamp as the first one of the group is in
 			// order, so this is not a strict comparison.
-			return ::Utils::Number::IsHigherOrEqualThan<uint32_t>(
+			return Utils::Number::IsHigherOrEqualThan<uint32_t>(
 			  timestamp, this->currentGroup.firstTimestamp);
 		}
 

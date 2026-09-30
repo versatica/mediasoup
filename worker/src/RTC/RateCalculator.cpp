@@ -60,12 +60,16 @@ namespace RTC
 		  this->totalSamples != 0 && this->lastSampleTimeMs.has_value() &&
 		  this->lastSampleTimeMs.value() > nowMs - this->recentSampleMarginMs;
 
-		// Ignore data older than the window. Should never happen.
+		// A sample whose instant lies before the whole window is still data that
+		// went through, so it is taken as if it had been given at the instant the
+		// newest item starts at. Dropping it would leave the meter reporting less
+		// than what flowed with nobody able to tell, while placing it at the wrong
+		// instant is an error bounded by the window.
 		if (!SlideWindow(nowMs))
 		{
-			MS_WARN_DEV("given nowMs is older than the current window, ignoring data");
+			MS_WARN_DEV("given nowMs is older than the current window, taking the data as newer");
 
-			return;
+			nowMs = this->newestItemStartTimeMs;
 		}
 
 		// The very first sample starts the measured period, and so does one that

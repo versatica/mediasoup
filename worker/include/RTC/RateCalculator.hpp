@@ -16,9 +16,9 @@ namespace RTC
 	 * and GetRate() are O(1) amortized.
 	 *
 	 * It is considered that the time source increases monotonically. Timestamps
-	 * going backwards are however tolerated (time comparisons are wrap safe):
-	 * data still within the window is added to the newest item, older data is
-	 * ignored, and nothing is ever expired ahead of time.
+	 * going backwards are however tolerated (time comparisons are wrap safe): no
+	 * data is ever lost nor expired ahead of time, and whatever is given with an
+	 * instant that is not newer than the newest item is added to that item.
 	 */
 	class RateCalculator
 	{

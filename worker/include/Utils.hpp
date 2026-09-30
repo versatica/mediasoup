@@ -516,6 +516,36 @@ namespace Utils
 		};
 
 		/**
+		 * Convert microseconds into milliseconds.
+		 *
+		 * @remarks
+		 * - The result is rounded to the nearest millisecond, halves upwards.
+		 */
+		static int64_t TimeUsToMs(int64_t timeUs)
+		{
+			// NOTE: The remainder decides the rounding instead of adding half the
+			// divisor first, which would overflow for a time close to the maximum.
+			// Integer division truncates towards zero, so a negative remainder is
+			// walked down to the next whole millisecond for halves to go upwards
+			// there too.
+			const int64_t quotient  = timeUs / 1000;
+			const int64_t remainder = timeUs % 1000;
+
+			if (remainder >= 500)
+			{
+				return quotient + 1;
+			}
+			else if (remainder < -500)
+			{
+				return quotient - 1;
+			}
+			else
+			{
+				return quotient;
+			}
+		}
+
+		/**
 		 * Convert microseconds into an NTP timestamp.
 		 */
 		static Time::Ntp TimeUsToNtp(int64_t timeUs)

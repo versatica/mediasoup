@@ -111,7 +111,7 @@ SCENARIO("BWE ProbePacketGenerator", "[bwe][probepacketgenerator]")
 				this->sentAtUs += 1000;
 				this->wideSeqNumber++;
 
-				REQUIRE(packet->UpdateAbsSendTime(this->sentAtUs));
+				REQUIRE(packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(this->sentAtUs)));
 				REQUIRE(packet->UpdateTransportWideCc01(this->wideSeqNumber));
 
 				uint32_t readAbsSendTime;

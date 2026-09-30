@@ -527,10 +527,11 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - `sentAtUs` is converted internally to the 3 bytes ABS Send Time format,
-			 *   unlike `ReadAbsSendTime()`, which exposes the raw extension value.
+			 * - `absSendTime` is the raw 3 bytes unsigned integer the extension
+			 *   carries, the same one `ReadAbsSendTime()` gives back. An instant is
+			 *   turned into it with `Utils::Time::TimeUsToAbsSendTime()`.
 			 */
-			bool UpdateAbsSendTime(int64_t sentAtUs) const;
+			bool UpdateAbsSendTime(uint32_t absSendTime) const;
 
 			bool ReadTransportWideCc01(uint16_t& wideSeqNumber) const;
 

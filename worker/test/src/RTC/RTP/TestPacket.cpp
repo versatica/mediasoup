@@ -1552,7 +1552,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		const uint16_t newWideSeqNumber{ 5556 };
 
 		REQUIRE(packet->UpdateMid(newMid));
-		REQUIRE(packet->UpdateAbsSendTime(newAbsSendtimeUs));
+		REQUIRE(packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(newAbsSendtimeUs)));
 		REQUIRE(packet->UpdateTransportWideCc01(newWideSeqNumber));
 
 		REQUIRE(packet->ReadMid(readMid));

@@ -3,9 +3,34 @@
 #include "Utils.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstdlib> // std::abs()
+#include <limits>
 
 SCENARIO("Utils::Time", "[utils][time]")
 {
+	SECTION("TimeUsToMs()")
+	{
+		REQUIRE(Utils::Time::TimeUsToMs(0) == 0);
+		REQUIRE(Utils::Time::TimeUsToMs(1000) == 1);
+		REQUIRE(Utils::Time::TimeUsToMs(1499) == 1);
+		// Halves upwards.
+		REQUIRE(Utils::Time::TimeUsToMs(1500) == 2);
+		REQUIRE(Utils::Time::TimeUsToMs(1501) == 2);
+		REQUIRE(Utils::Time::TimeUsToMs(3990000000750000) == 3990000000750);
+
+		// A negative instant rounds the same way, so halves still go upwards rather
+		// than towards zero.
+		REQUIRE(Utils::Time::TimeUsToMs(-1000) == -1);
+		REQUIRE(Utils::Time::TimeUsToMs(-1499) == -1);
+		REQUIRE(Utils::Time::TimeUsToMs(-1500) == -1);
+		REQUIRE(Utils::Time::TimeUsToMs(-1501) == -2);
+		REQUIRE(Utils::Time::TimeUsToMs(-500) == 0);
+		REQUIRE(Utils::Time::TimeUsToMs(-501) == -1);
+
+		// The extremes are rounded rather than overflowing.
+		REQUIRE(Utils::Time::TimeUsToMs(std::numeric_limits<int64_t>::max()) == 9223372036854776LL);
+		REQUIRE(Utils::Time::TimeUsToMs(std::numeric_limits<int64_t>::min()) == -9223372036854776LL);
+	}
+
 	SECTION("NtpToTimeUs()")
 	{
 		const auto nowUs  = DepLibUV::GetTimeUs();
