@@ -209,8 +209,6 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 	{
 		RTC::BWE::BitrateProber prober;
 
-		prober.SetEnabled(true);
-
 		REQUIRE(!prober.IsProbing());
 
 		prober.CreateProbeCluster(makeClusterConfig(0, nowUs, 1000000, 2 * 1000));
@@ -224,8 +222,6 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 		const RTC::BWE::BitrateProber::BitrateProberOptions options{ .minPacketSize = 0 };
 
 		RTC::BWE::BitrateProber prober(options);
-
-		prober.SetEnabled(true);
 
 		REQUIRE(!prober.IsProbing());
 
@@ -251,8 +247,6 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 		constexpr int64_t HighBitrate{ 10000000 };
 
 		RTC::BWE::BitrateProber prober;
-
-		prober.SetEnabled(true);
 
 		prober.CreateProbeCluster(makeClusterConfig(0, nowUs, HighBitrate, 20 * 1000));
 
