@@ -57,6 +57,10 @@ namespace RTC
 		static constexpr int64_t MaxReceiveDeltaExcessUs{ 2000 };
 		static constexpr int64_t MaxSendDeltaExcessUs{ 5000 };
 
+		static_assert(
+		  IncomingBitrateWindowItems == IncomingBitrateWindowMs,
+		  "the meter of incoming data needs one item per millisecond of its window");
+
 		/* Instance methods. */
 
 		RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(Listener* listener)

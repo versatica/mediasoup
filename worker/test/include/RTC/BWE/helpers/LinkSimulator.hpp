@@ -7,6 +7,9 @@
 
 namespace bweHelpers
 {
+	// Largest packet a frame is split into (bytes).
+	static constexpr size_t Mtu{ 1200 };
+
 	/**
 	 * A packet as it left a stream and as it arrived, for whoever needs to know
 	 * which stream it belongs to rather than just its feedback.

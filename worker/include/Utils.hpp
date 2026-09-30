@@ -523,12 +523,26 @@ namespace Utils
 		 */
 		static int64_t TimeUsToMs(int64_t timeUs)
 		{
-			// NOTE: Adding half the divisor puts the value on the nearest millisecond,
-			// but integer division truncates towards zero, so a negative one is walked
-			// down to the next whole millisecond for halves to go upwards there too.
-			const int64_t shiftedUs = timeUs + 500;
+			// NOTE: The remainder decides the rounding instead of adding half the
+			// divisor first, which would overflow for a time close to the maximum.
+			// Integer division truncates towards zero, so a negative remainder is
+			// walked down to the next whole millisecond for halves to go upwards
+			// there too.
+			const int64_t quotient  = timeUs / 1000;
+			const int64_t remainder = timeUs % 1000;
 
-			return shiftedUs >= 0 ? shiftedUs / 1000 : (shiftedUs - 999) / 1000;
+			if (remainder >= 500)
+			{
+				return quotient + 1;
+			}
+			else if (remainder < -500)
+			{
+				return quotient - 1;
+			}
+			else
+			{
+				return quotient;
+			}
 		}
 
 		/**

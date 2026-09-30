@@ -8,8 +8,9 @@ namespace bweHelpers
 {
 	/* Static. */
 
-	// Largest packet a frame is split into (bytes).
-	static constexpr size_t Mtu{ 1200 };
+	// Lowest capacity the link can be given, which is what keeps the transmission
+	// time below from dividing by a capacity of zero bits per millisecond.
+	static constexpr int64_t MinCapacityBps{ 1000 };
 	// Offset added to the send times so that they don't share the origin with the
 	// arrival ones, which would hide a mistake mixing both references.
 	static constexpr int64_t SendSideOffsetUs{ 1000 * 1000 };
@@ -106,6 +107,11 @@ namespace bweHelpers
 	  : capacityBps(capacityBps), prevArrivalTimeUs(timeNowUs)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(
+		  capacityBps >= MinCapacityBps,
+		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",
+		  capacityBps);
 	}
 
 	void LinkSimulator::AddStream(std::unique_ptr<RtpStream> stream)
@@ -120,7 +126,9 @@ namespace bweHelpers
 		MS_TRACE();
 
 		MS_ASSERT(
-		  capacityBps > 0, "capacity must be greater than zero [capacity:%" PRIi64 "]", capacityBps);
+		  capacityBps >= MinCapacityBps,
+		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",
+		  capacityBps);
 
 		this->capacityBps = capacityBps;
 	}
@@ -189,8 +197,8 @@ namespace bweHelpers
 
 		MS_ASSERT(packetResults.empty(), "the given vector is not empty");
 		MS_ASSERT(
-		  this->capacityBps > 0,
-		  "capacity must be greater than zero [capacity:%" PRIi64 "]",
+		  this->capacityBps >= MinCapacityBps,
+		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",
 		  this->capacityBps);
 
 		auto it = std::ranges::min_element(this->streams, RtpStream::Compare);
@@ -224,8 +232,8 @@ namespace bweHelpers
 
 		MS_ASSERT(packets.empty(), "the given vector is not empty");
 		MS_ASSERT(
-		  this->capacityBps > 0,
-		  "capacity must be greater than zero [capacity:%" PRIi64 "]",
+		  this->capacityBps >= MinCapacityBps,
+		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",
 		  this->capacityBps);
 
 		auto it = std::ranges::min_element(this->streams, RtpStream::Compare);

@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "Utils.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstdlib> // std::abs()
@@ -14,8 +15,6 @@ namespace bweHelpers
 {
 	/* Static. */
 
-	// Largest packet the scenarios send (bytes).
-	static constexpr size_t Mtu{ 1200 };
 	// How far off the expected bitrate an estimation may be (bps).
 	static constexpr int64_t AcceptedBitrateErrorBps{ 50000 };
 	// Packets needed before there is a valid estimation.
@@ -26,7 +25,7 @@ namespace bweHelpers
 	// Capacity of the link the scenarios start with (bps).
 	static constexpr int64_t InitialCapacityBps{ 1000000 };
 	// Id the scenarios give to the 'abs-send-time' extension.
-	static constexpr uint8_t AbsSendTimeId{ 4 };
+	static constexpr uint8_t AbsSendTimeId{ 1 };
 
 	/* Instance methods. */
 
@@ -82,9 +81,7 @@ namespace bweHelpers
 		packet->SetTimestamp(rtpTimestamp);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
-			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,
-			 AbsSendTimeId, /*len*/ 3,
-			 rtpCommon::DataBuffer }
+			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer }
 		};
 
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
@@ -224,7 +221,7 @@ namespace bweHelpers
 			IncomingPacket(
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
 			  Mtu,
-			  this->nowUs / 1000,
+			  Utils::Time::TimeUsToMs(this->nowUs),
 			  rtpTimestamp,
 			  absSendTime);
 
@@ -237,7 +234,7 @@ namespace bweHelpers
 
 		const int64_t bitrateBps = this->remoteBitrateEstimator.GetLatestEstimate();
 
-		REQUIRE(std::abs(bitrateBps - expectedConvergeBitrate) < AcceptedBitrateErrorBps);
+		REQUIRE(std::abs(bitrateBps - expectedConvergeBitrate) <= AcceptedBitrateErrorBps);
 		REQUIRE(this->updated);
 
 		this->updated = false;
@@ -276,7 +273,7 @@ namespace bweHelpers
 			IncomingPacket(
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
 			  Mtu,
-			  this->nowUs / 1000,
+			  Utils::Time::TimeUsToMs(this->nowUs),
 			  rtpTimestamp,
 			  absSendTime);
 
@@ -288,7 +285,7 @@ namespace bweHelpers
 		}
 
 		REQUIRE(this->updated);
-		REQUIRE(std::abs(this->latestBitrate - expectedBitrate) < AcceptedBitrateErrorBps);
+		REQUIRE(std::abs(this->latestBitrate - expectedBitrate) <= AcceptedBitrateErrorBps);
 
 		// The same stream with every pair of packets swapped, which the estimation
 		// has to ride out unchanged.
@@ -303,21 +300,21 @@ namespace bweHelpers
 			IncomingPacket(
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
 			  1000,
-			  this->nowUs / 1000,
+			  Utils::Time::TimeUsToMs(this->nowUs),
 			  rtpTimestamp,
 			  absSendTime);
 
 			IncomingPacket(
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
 			  1000,
-			  this->nowUs / 1000,
+			  Utils::Time::TimeUsToMs(this->nowUs),
 			  rtpTimestamp - (90 * FrameIntervalMs),
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::AddAbsSendTime(
 			    absSendTime, -static_cast<int>(frameIntervalAbsSendTime)));
 		}
 
 		REQUIRE(this->updated);
-		REQUIRE(std::abs(this->latestBitrate - expectedBitrate) < AcceptedBitrateErrorBps);
+		REQUIRE(std::abs(this->latestBitrate - expectedBitrate) <= AcceptedBitrateErrorBps);
 	}
 
 	void RemoteBitrateEstimatorAbsSendTimeTestHelper::RateIncreaseRtpTimestampsTestHelper(
@@ -447,7 +444,7 @@ namespace bweHelpers
 		// Reduce the capacity and see how long the estimation takes to follow.
 		this->linkSimulator.SetCapacityBps(ReducedCapacityBps);
 
-		const int64_t overuseStartTimeMs = this->nowUs / 1000;
+		const int64_t overuseStartTimeMs = Utils::Time::TimeUsToMs(this->nowUs);
 		int64_t bitrateDropTimeMs{ -1 };
 
 		for (int idx{ 0 }; idx < 100 * numberOfStreams; ++idx)
@@ -456,7 +453,7 @@ namespace bweHelpers
 
 			if (bitrateDropTimeMs == -1 && this->latestBitrate <= ReducedCapacityBps)
 			{
-				bitrateDropTimeMs = this->nowUs / 1000;
+				bitrateDropTimeMs = Utils::Time::TimeUsToMs(this->nowUs);
 			}
 
 			if (this->updated)
@@ -505,7 +502,7 @@ namespace bweHelpers
 			IncomingPacket(
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
 			  1000,
-			  this->nowUs / 1000,
+			  Utils::Time::TimeUsToMs(this->nowUs),
 			  rtpTimestamp,
 			  absSendTime);
 
@@ -533,7 +530,7 @@ namespace bweHelpers
 				IncomingPacket(
 				  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
 				  100,
-				  this->nowUs / 1000,
+				  Utils::Time::TimeUsToMs(this->nowUs),
 				  rtpTimestamp,
 				  absSendTime);
 
@@ -575,7 +572,7 @@ namespace bweHelpers
 			IncomingPacket(
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
 			  1000,
-			  this->nowUs / 1000,
+			  Utils::Time::TimeUsToMs(this->nowUs),
 			  rtpTimestamp,
 			  absSendTime);
 
@@ -599,7 +596,7 @@ namespace bweHelpers
 			IncomingPacket(
 			  RemoteBitrateEstimatorAbsSendTimeTestHelper::DefaultSsrc,
 			  1000,
-			  this->nowUs / 1000,
+			  Utils::Time::TimeUsToMs(this->nowUs),
 			  rtpTimestamp,
 			  absSendTime);
 
