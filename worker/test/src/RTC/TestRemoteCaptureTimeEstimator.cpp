@@ -172,8 +172,8 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
 		REQUIRE(estimator.GetSource() == RTC::RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME);
 
-		// Still within the wait, since the extension travels with the first packet of
-		// every frame and may simply not have arrived yet.
+		// Still within the wait, since the extension travels on some packets rather
+		// than on every one and may simply not have arrived yet.
 		nowUs += 4 * 1000000;
 
 		REQUIRE_FALSE(

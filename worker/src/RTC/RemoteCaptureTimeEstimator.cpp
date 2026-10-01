@@ -3,6 +3,7 @@
 
 #include "RTC/RemoteCaptureTimeEstimator.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -11,8 +12,8 @@ namespace RTC
 	// How long a sender that negotiated 'abs-capture-time' may go without sending it
 	// before the capture instant is read from its Sender Reports instead. It only has
 	// to outlast the first packets of a sender that does send it, since the extension
-	// travels with the first packet of every frame.
-	static constexpr int64_t AbsCaptureTimeTimeoutUs{ 5 * 1000 * 1000 };
+	// travels on some of them rather than on every one.
+	static constexpr int64_t AbsCaptureTimeTimeoutMs{ 5 * 1000 };
 
 	/* Instance methods. */
 
@@ -73,7 +74,7 @@ namespace RTC
 			return;
 		}
 
-		if (nowUs - this->firstPacketAtUs.value() < AbsCaptureTimeTimeoutUs)
+		if (Utils::Time::TimeUsToMs(nowUs - this->firstPacketAtUs.value()) < AbsCaptureTimeTimeoutMs)
 		{
 			return;
 		}
