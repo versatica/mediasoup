@@ -3,9 +3,18 @@
 
 #include "RTC/RemoteCaptureTimeEstimator.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
+	/* Static. */
+
+	// How long a sender that negotiated 'abs-capture-time' may go without sending it
+	// before the capture instant is read from its Sender Reports instead. It only has
+	// to outlast the first packets of a sender that does send it, since the extension
+	// travels on some of them rather than on every one.
+	static constexpr int64_t AbsCaptureTimeTimeoutMs{ 5 * 1000 };
+
 	/* Instance methods. */
 
 	void RemoteCaptureTimeEstimator::UpdateSource(bool absCaptureTimeNegotiated)
@@ -34,6 +43,50 @@ namespace RTC
 			                                                                     : "Sender Report");
 	}
 
+	void RemoteCaptureTimeEstimator::MayFallBackToSenderReport(
+	  const RTC::RTP::RtpStreamRecv* rtpStream, int64_t nowUs)
+	{
+		MS_TRACE();
+
+		if (this->source != RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME)
+		{
+			return;
+		}
+
+		// Some stream of this sender has carried the extension at some point, so it is
+		// being sent and whatever stream has none of it is just early.
+		if (this->absCaptureTimeReceived)
+		{
+			return;
+		}
+
+		if (rtpStream->HasAbsCaptureTime())
+		{
+			this->absCaptureTimeReceived = true;
+
+			return;
+		}
+
+		if (!this->firstPacketAtUs.has_value())
+		{
+			this->firstPacketAtUs = nowUs;
+
+			return;
+		}
+
+		if (Utils::Time::TimeUsToMs(nowUs - this->firstPacketAtUs.value()) < AbsCaptureTimeTimeoutMs)
+		{
+			return;
+		}
+
+		MS_WARN_2TAGS(
+		  rtp,
+		  rtcp,
+		  "abs-capture-time negotiated but never received, reading the capture instant from Sender Reports instead");
+
+		this->source = RemoteCaptureTimeEstimator::Source::SENDER_REPORT;
+	}
+
 	void RemoteCaptureTimeEstimator::SenderReportReceived(const RTC::RTP::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
@@ -54,7 +107,7 @@ namespace RTC
 	}
 
 	std::optional<int64_t> RemoteCaptureTimeEstimator::GetLocalCaptureAtUs(
-	  const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts) const
+	  const RTC::RTP::RtpStreamRecv* rtpStream, uint32_t ts, int64_t nowUs)
 	{
 		MS_TRACE();
 
@@ -62,6 +115,8 @@ namespace RTC
 		{
 			return std::nullopt;
 		}
+
+		MayFallBackToSenderReport(rtpStream, nowUs);
 
 		const auto remoteCaptureAtUs = this->source == RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME
 		                                 ? rtpStream->GetRemoteCaptureAtUsFromAbsCaptureTime(ts)

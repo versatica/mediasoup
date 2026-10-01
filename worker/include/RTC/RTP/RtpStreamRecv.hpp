@@ -228,6 +228,20 @@ namespace RTC
 			std::optional<int64_t> GetRemoteCaptureAtUsFromAbsCaptureTime(uint32_t ts) const;
 
 			/**
+			 * Whether the 'abs-capture-time' RTP header extension has ever been received
+			 * on this stream.
+			 *
+			 * @remarks
+			 * - It is not the same as being able to tell a capture instant from it, which
+			 *   also depends on how far the wanted RTP timestamp falls from the one it
+			 *   referred to.
+			 */
+			bool HasAbsCaptureTime() const
+			{
+				return this->lastAbsCaptureTime.has_value();
+			}
+
+			/**
 			 * Capture instant of the given RTP timestamp, expressed in the remote sender's
 			 * wall clock, interpolated from the last received RTCP Sender Report.
 			 *

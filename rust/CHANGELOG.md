@@ -11,6 +11,7 @@
 - SCTP: Treat `max_retransmits: 0` and `max_packet_life_time: 0` as given in SCTP stream parameters ([PR #1956](https://github.com/versatica/mediasoup/pull/1956)).
 - Worker: Fix `RTP::Packet::RtxEncode()` writing 2 bytes beyond the end of the packet ([PR #1955](https://github.com/versatica/mediasoup/pull/1955)).
 - Worker: Fix RTT computed from RTCP reports when the compact NTP timestamp wraps around ([PR #1958](https://github.com/versatica/mediasoup/pull/1958)).
+- Worker: Fall back to Sender Reports when a negotiated 'abs-capture-time' never arrives ([PR #1964](https://github.com/versatica/mediasoup/pull/1964)).
 
 ### 0.28.1
 

@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.28.0
+
 - Worker: Fix MSVC compiler warnings ([PR #1937](https://github.com/versatica/mediasoup/pull/1937)).
 - Remove support for the `urn:ietf:params:rtp-hdrext:toffset` RTP extension ([PR #1942](https://github.com/versatica/mediasoup/pull/1942)).
 - Worker: Compute bitrate over the active window in `RateCalculator` ([PR #1944](https://github.com/versatica/mediasoup/pull/1944)).
@@ -11,6 +13,7 @@
 - SCTP: Treat `maxRetransmits: 0` and `maxPacketLifeTime: 0` as given in SCTP stream parameters ([PR #1956](https://github.com/versatica/mediasoup/pull/1956)).
 - Worker: Fix `RTP::Packet::RtxEncode()` writing 2 bytes beyond the end of the packet ([PR #1955](https://github.com/versatica/mediasoup/pull/1955)).
 - Worker: Fix RTT computed from RTCP reports when the compact NTP timestamp wraps around ([PR #1958](https://github.com/versatica/mediasoup/pull/1958)).
+- Worker: Fall back to Sender Reports when a negotiated 'abs-capture-time' never arrives ([PR #1964](https://github.com/versatica/mediasoup/pull/1964)).
 
 ### 3.27.1
 
