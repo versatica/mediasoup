@@ -550,6 +550,17 @@ namespace RTC
 
 			bool ReadAbsCaptureTime(uint64_t& absCaptureTimestamp, int64_t& estimatedCaptureClockOffset) const;
 
+			/**
+			 * @remarks
+			 * - `absCaptureTimestamp` is the raw 8 bytes unsigned integer the extension
+			 *   carries, the same one `ReadAbsCaptureTime()` gives back, which is a
+			 *   capture instant in NTP format. An instant is turned into it with
+			 *   `Utils::Time::TimeUsToNtp()`.
+			 * - The estimated capture clock offset the extension carries when it is 16
+			 *   bytes long is left untouched.
+			 */
+			bool UpdateAbsCaptureTime(uint64_t absCaptureTimestamp) const;
+
 			bool ReadPlayoutDelay(uint16_t& minDelay, uint16_t& maxDelay) const;
 
 			bool ReadMediasoupPacketId(uint32_t& mediasoupPacketId) const;
