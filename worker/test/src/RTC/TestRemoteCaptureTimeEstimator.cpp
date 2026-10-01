@@ -2,6 +2,9 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RemoteCaptureTimeEstimator.hpp"
+#include "RTC/RtpDictionaries.hpp"
+#include "Utils.hpp"
+#include "test/include/RTC/RTP/rtpCommon.hpp"
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 
@@ -81,10 +84,49 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		estimator.SenderReportReceived(std::addressof(rtpStream));
 	};
 
+	// Makes a packet carrying the 'abs-capture-time' extension reach the stream, which
+	// is what tells a sender that does send it from one that only announced it.
+	auto receiveAbsCaptureTimePacket = [&nowUs, &rtpStream]() -> void
+	{
+		// Id the extension is given, which only has to match between what is written
+		// and what is read back.
+		constexpr uint8_t AbsCaptureTimeId{ 1 };
+
+		std::unique_ptr<RTC::RTP::Packet> packet(
+		  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
+
+		REQUIRE(packet);
+
+		packet->SetSsrc(Ssrc);
+		packet->SetTimestamp(RemoteBaseTs);
+
+		const std::vector<RTC::RTP::Packet::Extension> extensions{
+			{ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
+			 AbsCaptureTimeId, /*len*/ 8,
+			 rtpCommon::DataBuffer }
+		};
+
+		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+
+		RTC::RTP::HeaderExtensionIds headerExtensionIds;
+
+		headerExtensionIds.absCaptureTime = AbsCaptureTimeId;
+
+		packet->AssignExtensionIds(headerExtensionIds);
+
+		const auto ntp = Utils::Time::TimeUsToNtp(static_cast<int64_t>(RemoteBaseNtpSec) * 1000000);
+
+		REQUIRE(packet->UpdateAbsCaptureTime(
+		  (static_cast<uint64_t>(ntp.seconds) << 32) | static_cast<uint64_t>(ntp.fractions)));
+
+		rtpStream.ReceivePacket(packet.get(), nowUs);
+	};
+
 	SECTION("no source until the first Producer has been taken into account")
 	{
 		REQUIRE_FALSE(estimator.GetSource().has_value());
-		REQUIRE_FALSE(estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs).has_value());
+		REQUIRE_FALSE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
 	}
 
 	SECTION("the first Producer chooses abs-capture-time when it negotiated it")
@@ -118,6 +160,50 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		REQUIRE(estimator.GetSource() == RTC::RemoteCaptureTimeEstimator::Source::SENDER_REPORT);
 	}
 
+	SECTION("abs-capture-time negotiated but never received moves the source to Sender Report")
+	{
+		estimator.UpdateSource(/*absCaptureTimeNegotiated*/ true);
+
+		// The first packet is what the wait is measured against, so nothing happens on
+		// it however long this sender has been around.
+		nowUs += 60 * 1000000;
+
+		REQUIRE_FALSE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
+		REQUIRE(estimator.GetSource() == RTC::RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME);
+
+		// Still within the wait, since the extension travels on some packets rather
+		// than on every one and may simply not have arrived yet.
+		nowUs += 4 * 1000000;
+
+		REQUIRE_FALSE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
+		REQUIRE(estimator.GetSource() == RTC::RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME);
+
+		// Long enough without a single packet carrying it.
+		nowUs += 1 * 1000000;
+
+		REQUIRE_FALSE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
+		REQUIRE(estimator.GetSource() == RTC::RemoteCaptureTimeEstimator::Source::SENDER_REPORT);
+	}
+
+	SECTION("abs-capture-time received keeps the source whatever the sender does later")
+	{
+		estimator.UpdateSource(/*absCaptureTimeNegotiated*/ true);
+
+		receiveAbsCaptureTimePacket();
+
+		REQUIRE(rtpStream.HasAbsCaptureTime());
+
+		// Way past the wait, which is not armed at all once the extension has been seen.
+		nowUs += 60 * 1000000;
+
+		estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs);
+
+		REQUIRE(estimator.GetSource() == RTC::RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME);
+	}
+
 	SECTION("the capture instant is translated into our clock")
 	{
 		estimator.UpdateSource(/*absCaptureTimeNegotiated*/ false);
@@ -125,7 +211,8 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		// A single Sender Report is not enough for the clock offset to be estimated.
 		receiveSenderReport(0);
 
-		REQUIRE_FALSE(estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs).has_value());
+		REQUIRE_FALSE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
 
 		for (uint32_t idx{ 1 }; idx < RTC::RemoteClockOffsetEstimator::MinSampleCount; ++idx)
 		{
@@ -137,19 +224,19 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		const auto lastIdx = RTC::RemoteClockOffsetEstimator::MinSampleCount - 1;
 		const auto lastTs  = static_cast<uint32_t>(RemoteBaseTs + (lastIdx * ClockRate));
 
-		REQUIRE(estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), lastTs).has_value());
+		REQUIRE(estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), lastTs, nowUs).has_value());
 		REQUIRE(
 		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), lastTs).value() ==
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), lastTs, nowUs).value() ==
 		  LocalBaseUs + (lastIdx * 1000000));
 
 		// One second of media later maps one second later in our clock too.
 		const auto nextTs = static_cast<uint32_t>(RemoteBaseTs + ((lastIdx + 1) * ClockRate));
 
-		REQUIRE(estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), nextTs).has_value());
+		REQUIRE(estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), nextTs, nowUs).has_value());
 		REQUIRE(
 		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), nextTs).value() ==
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), nextTs, nowUs).value() ==
 		  LocalBaseUs + ((lastIdx + 1) * 1000000));
 	}
 
@@ -164,6 +251,7 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 
 		// Sender Reports have been received, but the source in use is not allowed to
 		// fall back to them.
-		REQUIRE_FALSE(estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs).has_value());
+		REQUIRE_FALSE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
 	}
 }

@@ -36,6 +36,8 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	bool flip;
 	uint16_t rotation;
 	uint32_t absSendTime;
+	uint64_t absCaptureTimestamp;
+	int64_t estimatedCaptureClockOffset;
 	uint16_t playoutDelayMinDelay;
 	uint16_t playoutDelayMaxDelay;
 	uint16_t wideSeqNumber;
@@ -77,6 +79,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	headerExtensionIds.ssrcAudioLevel    = 1;
 	headerExtensionIds.videoOrientation  = 2;
 	headerExtensionIds.playoutDelay      = 8;
+	headerExtensionIds.absCaptureTime    = 9;
 
 	packet->AssignExtensionIds(headerExtensionIds);
 
@@ -110,6 +113,11 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(8);
 	packet->GetExtensionValue(8, extenLen);
 	packet->ReadPlayoutDelay(playoutDelayMinDelay, playoutDelayMaxDelay);
+
+	packet->HasExtension(9);
+	packet->GetExtensionValue(9, extenLen);
+	packet->ReadAbsCaptureTime(absCaptureTimestamp, estimatedCaptureClockOffset);
+	packet->UpdateAbsCaptureTime(12345678);
 
 	packet->HasExtension(6);
 	packet->HasExtension(7);
@@ -208,6 +216,11 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(15);
 	packet->GetExtensionValue(15, extenLen);
 	packet->ReadPlayoutDelay(playoutDelayMinDelay, playoutDelayMaxDelay);
+
+	packet->HasExtension(16);
+	packet->GetExtensionValue(16, extenLen);
+	packet->ReadAbsCaptureTime(absCaptureTimestamp, estimatedCaptureClockOffset);
+	packet->UpdateAbsCaptureTime(12345678);
 
 	packet->HasPayload();
 	packet->GetPayload();

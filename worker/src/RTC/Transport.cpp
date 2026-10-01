@@ -2668,9 +2668,9 @@ namespace RTC
 			return std::nullopt;
 		}
 
-		const auto& remoteCaptureTimeEstimator = it->second;
+		auto& remoteCaptureTimeEstimator = it->second;
 
-		return remoteCaptureTimeEstimator.GetLocalCaptureAtUs(rtpStream, ts);
+		return remoteCaptureTimeEstimator.GetLocalCaptureAtUs(rtpStream, ts, this->shared->GetTimeUs());
 	}
 
 	std::optional<int64_t> Transport::OnProducerNeedRemoteClockOffsetUs(const RTC::Producer* producer)
