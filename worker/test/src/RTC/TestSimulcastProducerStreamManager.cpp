@@ -759,6 +759,130 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(result.tsOffset == 0u);
 	}
 
+	SECTION(
+	  "RecalculateTargetLayers() falls back to a lower spatial layer when the RTP timestamp "
+	  "reference one dies")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ ThreeSsrcs,
+		  /*preferredLayers*/ { 2, 2 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+		auto rtpStream2 = createRtpStreamRecv(MappedSsrc2);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+		manager->ProducerRtpStream(rtpStream2.get(), MappedSsrc2);
+
+		// Feed packets and a Sender Report to every stream so that they all get a score
+		// and RecalculateTargetLayers() takes them into account.
+		for (auto* rtpStream : { rtpStream0.get(), rtpStream1.get(), rtpStream2.get() })
+		{
+			packet->SetSsrc(rtpStream->GetSsrc());
+			feedRtpStreamRecv(rtpStream, packet.get(), 10);
+
+			RTC::RTCP::SenderReport sr;
+			sr.SetSsrc(rtpStream->GetSsrc());
+			sr.SetNtpSec(1000);
+			sr.SetNtpFrac(0);
+			sr.SetRtpTs(90000);
+			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
+		}
+
+		REQUIRE(rtpStream0->GetScore() > 0u);
+		REQUIRE(rtpStream1->GetScore() > 0u);
+		REQUIRE(rtpStream2->GetScore() > 0u);
+
+		// Only the highest layer, which is the preferred one, can tell its capture instant,
+		// so it becomes the RTP timestamp reference one.
+		rtpStream2->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
+
+		manager->UpdateTargetLayers(2, 2);
+
+		REQUIRE(manager->GetTargetLayers().spatial == 2);
+
+		// The sender stops the highest layer, so RTP inactivity drops its score to 0 while
+		// the lower ones stay healthy.
+		rtpStream2->ResetScore(/*score*/ 0, /*notify*/ false);
+
+		manager->ProducerRtpStreamScore(rtpStream2.get(), /*score*/ 0, /*previousScore*/ 10);
+
+		// The dead layer must not keep being the RTP timestamp reference one, otherwise no
+		// other layer can be switched to and the Consumer is left with no layers at all.
+		REQUIRE(manager->GetTargetLayers().spatial == 1);
+	}
+
+	SECTION(
+	  "RecalculateTargetLayers() keeps a dead RTP timestamp reference spatial layer while others "
+	  "can be aligned to it")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Both layers hold RTP timestamp 1000, but the one of layer 0 was captured 500 ms
+		// before the one of layer 1, so its RTP timeline runs 45000 ticks behind.
+		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 500 * 1000, /*ts*/ 1000);
+		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
+
+		// Feed packets and a Sender Report to both streams so that they get a score and
+		// RecalculateTargetLayers() takes them into account.
+		for (auto* rtpStream : { rtpStream0.get(), rtpStream1.get() })
+		{
+			packet->SetSsrc(rtpStream->GetSsrc());
+			feedRtpStreamRecv(rtpStream, packet.get(), 10);
+
+			RTC::RTCP::SenderReport sr;
+			sr.SetSsrc(rtpStream->GetSsrc());
+			sr.SetNtpSec(1000);
+			sr.SetNtpFrac(0);
+			sr.SetRtpTs(90000);
+			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
+		}
+
+		// Set target layer to 1 and sync. This sets tsReferenceSpatialLayer = 1.
+		manager->UpdateTargetLayers(1, 0);
+
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(1);
+		manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
+
+		// Layer 1 stops sending media.
+		rtpStream1->ResetScore(/*score*/ 0, /*notify*/ false);
+
+		manager->ProducerRtpStreamScore(rtpStream1.get(), /*score*/ 0, /*previousScore*/ 10);
+
+		REQUIRE(manager->GetTargetLayers().spatial == 0);
+
+		// The capture instant of the dead layer 1 still tells where the RTP timeline being
+		// sent sits, so it remains the RTP timestamp reference one and layer 0 is aligned to
+		// it instead of re-basing the timeline onto its own RTP timestamps.
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(result.tsOffset == 45000u);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
+	}
+
 	SECTION("RecalculateTargetLayers() switches to preferred layer once its capture instant is known")
 	{
 		MockListener listener;

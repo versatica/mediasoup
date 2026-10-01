@@ -67,7 +67,59 @@ namespace RTC
 		void OnResumed() override;
 
 	private:
+		/**
+		 * Whether the given spatial layer may be chosen as the target one.
+		 *
+		 * @remarks
+		 * - The endpoint is sent a single RTP timeline, the one of the RTP timestamp
+		 *   reference spatial layer, so forwarding packets of any other spatial layer
+		 *   requires knowing the RTP timestamp offset between both, which is what their
+		 *   capture instants tell.
+		 * - A spatial layer whose offset cannot be told is still chosen when the RTP
+		 *   timestamp reference one is not sending media anymore, since it then takes over
+		 *   as reference and its own RTP timestamps become the ones sent.
+		 *
+		 * @param spatialLayer - Spatial layer being considered.
+		 */
 		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
+		/**
+		 * Whether the capture instant of the given spatial layer is known, which is what
+		 * tells the offset between its RTP timestamps and the ones of the RTP timestamp
+		 * reference spatial layer.
+		 *
+		 * @param spatialLayer - Spatial layer being considered.
+		 *
+		 * @returns False if there is no Producer RtpStream for it yet.
+		 */
+		bool HasSpatialLayerCaptureMapping(int16_t spatialLayer) const;
+		/**
+		 * Whether the RTP timestamp reference spatial layer is still sending media, so it
+		 * may become the current spatial layer again.
+		 *
+		 * @remarks
+		 * - Same criteria RecalculateTargetLayers() applies to candidate spatial layers,
+		 *   so a spatial layer is not chosen as the target one while it is not alive.
+		 *
+		 * @returns False if there is no RTP timestamp reference spatial layer yet.
+		 */
+		bool IsTsReferenceSpatialLayerAlive() const;
+		/**
+		 * Whether the given spatial layer, which is about to become the target one, must
+		 * take over as RTP timestamp reference.
+		 *
+		 * @remarks
+		 * - Replacing the reference re-bases the RTP timeline sent to the endpoint onto the
+		 *   RTP timestamps of the given spatial layer, which the endpoint sees as a
+		 *   discontinuity, so it is only done when the current reference is of no use:
+		 *   there is none yet, its capture instant cannot be told or it stopped sending
+		 *   media and the given spatial layer cannot be aligned to it.
+		 * - A reference that stopped sending media is kept while other spatial layers can
+		 *   still be aligned to it, since its capture instant does not expire.
+		 *
+		 * @param spatialLayer - Spatial layer about to become the target one, so it has
+		 * already passed CanSwitchToSpatialLayer(). Never -1.
+		 */
+		bool ShouldReplaceTsReferenceSpatialLayer(int16_t spatialLayer) const;
 		RTC::RTP::RtpStreamRecv* GetProducerTsReferenceRtpStream() const;
 
 	private:

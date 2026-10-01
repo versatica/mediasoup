@@ -916,11 +916,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// If we don't have yet a RTP timestamp reference, set it now.
-		if (
-		  newTargetSpatialLayer != -1 &&
-		  (this->tsReferenceSpatialLayer == -1 ||
-			 !GetProducerTsReferenceRtpStream()->GetCaptureMapping().has_value()))
+		if (newTargetSpatialLayer != -1 && ShouldReplaceTsReferenceSpatialLayer(newTargetSpatialLayer))
 		{
 			MS_DEBUG_TAG(
 			  simulcast, "using spatial layer %" PRIi16 " as RTP timestamp reference", newTargetSpatialLayer);
@@ -1109,9 +1105,78 @@ namespace RTC
 		  "no Producer RtpStream for the given spatialLayer:%" PRIi16,
 		  spatialLayer);
 
+		// There is no RTP timestamp reference spatial layer yet, so this one will become it,
+		// or this one is it already. Either way its RTP timestamps are the ones being sent to
+		// the endpoint.
+		if (this->tsReferenceSpatialLayer == -1 || spatialLayer == this->tsReferenceSpatialLayer)
+		{
+			return true;
+		}
+
+		// Its capture instant tells the offset between its RTP timestamps and the ones being
+		// sent to the endpoint.
+		if (HasSpatialLayerCaptureMapping(spatialLayer))
+		{
+			return true;
+		}
+
+		// It cannot be placed on the RTP timestamps being sent, but the RTP timestamp
+		// reference spatial layer is not sending media anymore, so let this one take over as
+		// such. Otherwise a dead reference would block every single spatial layer, leaving
+		// the Consumer with no layers at all.
+		return !IsTsReferenceSpatialLayerAlive();
+	}
+
+	bool SimulcastProducerStreamManager::HasSpatialLayerCaptureMapping(int16_t spatialLayer) const
+	{
+		MS_TRACE();
+
+		// This can be null.
+		const auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
+
+		return (producerRtpStream != nullptr && producerRtpStream->GetCaptureMapping().has_value());
+	}
+
+	bool SimulcastProducerStreamManager::IsTsReferenceSpatialLayerAlive() const
+	{
+		MS_TRACE();
+
+		const auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
+
+		return (producerTsReferenceRtpStream != nullptr && producerTsReferenceRtpStream->GetScore() > 0u);
+	}
+
+	bool SimulcastProducerStreamManager::ShouldReplaceTsReferenceSpatialLayer(int16_t spatialLayer) const
+	{
+		MS_TRACE();
+
+		const auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
+
+		// There is no RTP timestamp reference spatial layer yet.
+		if (!producerTsReferenceRtpStream)
+		{
+			return true;
+		}
+
+		// Its capture instant cannot be told, so no other spatial layer can be aligned to it
+		// and it is of no use as reference.
+		if (!producerTsReferenceRtpStream->GetCaptureMapping().has_value())
+		{
+			return true;
+		}
+
+		// It is still sending media, so it may become the current spatial layer again and is
+		// worth keeping even if the given spatial layer cannot be aligned to it.
+		if (IsTsReferenceSpatialLayerAlive())
+		{
+			return false;
+		}
+
+		// It is not sending media anymore, but its capture instant does not expire, so it
+		// still aligns the spatial layers that have one. Only give it up when holding on to
+		// it would block the switch to the given spatial layer.
 		return (
-		  this->tsReferenceSpatialLayer == -1 || spatialLayer == this->tsReferenceSpatialLayer ||
-		  this->producerRtpStreams.at(spatialLayer)->GetCaptureMapping().has_value());
+		  spatialLayer != this->tsReferenceSpatialLayer && !HasSpatialLayerCaptureMapping(spatialLayer));
 	}
 
 	RTC::RTP::RtpStreamRecv* SimulcastProducerStreamManager::GetProducerTsReferenceRtpStream() const
