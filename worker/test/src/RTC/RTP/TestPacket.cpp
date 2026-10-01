@@ -1488,11 +1488,12 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 
+		const uint32_t absSendtime{ 12345678 };
+		const uint16_t wideSeqNumber{ 5555 };
+		const uint64_t absCaptureTimestamp{ 0x83AA7E8000000000 };
+
 		std::string mid{ "mid-€1" };
 		std::string rid{ "r1-ß" };
-		uint32_t absSendtime{ 12345678 };
-		uint16_t wideSeqNumber{ 5555 };
-		uint64_t absCaptureTimestamp{ 0x83AA7E8000000000 };
 		uint8_t absSendtimeValue[100]{};
 		uint8_t wideSeqNumberValue[100]{};
 		uint8_t absCaptureTimeValue[100]{};
