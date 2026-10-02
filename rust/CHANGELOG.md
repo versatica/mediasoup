@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Space NACK retransmissions in time instead of sending them in a burst ([PR #1965](https://github.com/versatica/mediasoup/pull/1965)).
+- Worker: Space in time the RTP retransmissions triggered by received NACKs ([PR #1965](https://github.com/versatica/mediasoup/pull/1965)).
 
 ### 0.29.0
 
