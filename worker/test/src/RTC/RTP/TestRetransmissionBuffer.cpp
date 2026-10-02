@@ -26,7 +26,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		}
 
 	public:
-		void Insert(uint16_t seq, uint32_t timestamp)
+		void Insert(uint16_t seq, uint32_t timestamp, int64_t nowMs = 0)
 		{
 			// clang-format off
 		uint8_t rtpBuffer[] =
@@ -44,7 +44,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 
 			const RTC::RTP::SharedPacket sharedPacket;
 
-			RTC::RTP::RetransmissionBuffer::Insert(packet.get(), sharedPacket);
+			RTC::RTP::RetransmissionBuffer::Insert(packet.get(), sharedPacket, nowMs);
 		}
 
 		void AssertBuffer(std::vector<VerificationItem> verificationBuffer)
@@ -272,6 +272,37 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 			}
 		);
 		// clang-format on
+	}
+
+	SECTION("stored packet is too old once maxRetransmissionDelayMs elapsed since it was stored")
+	{
+		const uint16_t maxItems{ 4 };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
+		const uint32_t clockRate{ 90000 };
+		const int64_t firstStoredAtMs{ 5000 };
+
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+
+		// Both packets have the same timestamp so the age measured by timestamp
+		// doesn't play any role here.
+		myRetransmissionBuffer.Insert(10001, 1000000000, firstStoredAtMs);
+		myRetransmissionBuffer.Insert(10002, 1000000000, firstStoredAtMs + 1);
+
+		const auto* const item1 = myRetransmissionBuffer.Get(10001);
+		const auto* const item2 = myRetransmissionBuffer.Get(10002);
+
+		REQUIRE(item1);
+		REQUIRE(item2);
+
+		// Right at the limit the packet is not too old yet.
+		REQUIRE_FALSE(myRetransmissionBuffer.IsTooOld(item1, firstStoredAtMs + maxRetransmissionDelayMs));
+
+		// Past the limit it is, even if no newer packet has been stored.
+		REQUIRE(myRetransmissionBuffer.IsTooOld(item1, firstStoredAtMs + maxRetransmissionDelayMs + 1));
+
+		// Each packet counts from the instant it was stored.
+		REQUIRE_FALSE(
+		  myRetransmissionBuffer.IsTooOld(item2, firstStoredAtMs + maxRetransmissionDelayMs + 1));
 	}
 
 	SECTION("fuzzer generated packets")

@@ -7,7 +7,6 @@
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
-#include <vector>
 
 namespace RTC
 {
@@ -16,12 +15,12 @@ namespace RTC
 		/* Static. */
 
 		// Limit max number of items in the retransmission buffer.
-		static constexpr size_t RetransmissionBufferMaxItems{ 2500 };
-		// 17: 16 bit mask + the initial sequence number.
-		static constexpr size_t MaxRequestedPackets{ 17 };
-		static thread_local std::vector<RTP::RetransmissionBuffer::Item*> RetransmissionContainer(
-		  MaxRequestedPackets + 1);
+		static constexpr size_t RetransmissionBufferMaxItems{ 3000 };
 		static constexpr int64_t DefaultRttMs{ 100 };
+		// Interval between consecutive iterations of pending retransmissions.
+		static constexpr int64_t RetransmissionIntervalMs{ 10 };
+		// Maximum number of packets retransmitted in each iteration.
+		static constexpr size_t MaxRetransmittedPacketsPerIteration{ 1 };
 
 		/* Instance methods. */
 
@@ -32,7 +31,9 @@ namespace RTC
 		  std::string& mid)
 		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
 		    mid(mid),
-		    transmissionCounter(shared, /*ignorePaddingOnlyPackets*/ true)
+		    transmissionCounter(shared, /*ignorePaddingOnlyPackets*/ true),
+		    retransmissionTimer(
+		      params.useNack ? shared->CreateTimer(this, "rtp-stream-send-retransmissions") : nullptr)
 		{
 			MS_TRACE();
 
@@ -132,7 +133,7 @@ namespace RTC
 					return ReceivePacketResult::DISCARDED;
 				}
 
-				stored = this->retransmissionBuffer->Insert(packet, sharedPacket);
+				stored = this->retransmissionBuffer->Insert(packet, sharedPacket, this->shared->GetTimeMs());
 			}
 
 			// Increase transmission counter.
@@ -154,97 +155,57 @@ namespace RTC
 
 				this->nackPacketCount += item->CountRequestedPackets();
 
-				FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
-
-				for (auto* item : RetransmissionContainer)
+				if (!this->retransmissionBuffer)
 				{
-					if (!item)
-					{
-						break;
-					}
-
-					MS_ASSERT(
-					  item->sharedPacket.HasPacket(),
-					  "item in retransmission container doesn't contain a packet [ssrc:%" PRIu32
-					  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
-					  item->ssrc,
-					  item->sequenceNumber,
-					  item->timestamp);
-
-					auto* packet = item->sharedPacket.GetPacket();
-
-					// Keep the values of the original packet received by the Consumer.
-					auto origSsrc      = packet->GetSsrc();
-					auto origSeq       = packet->GetSequenceNumber();
-					auto origTimestamp = packet->GetTimestamp();
-					auto origMarker    = packet->HasMarker();
-					std::string origMid;
-
-					// Put correct info into the packet.
-					packet->SetSsrc(item->ssrc);
-					packet->SetSequenceNumber(item->sequenceNumber);
-					packet->SetTimestamp(item->timestamp);
-					packet->SetMarker(item->marker);
-
-					if (item->encoder != nullptr)
-					{
-						packet->EncodePayload(item->encoder.get());
-					}
-
-					// Update MID RTP extension value.
-					if (!this->mid.empty())
-					{
-						packet->ReadMid(origMid);
-						packet->UpdateMid(this->mid);
-					}
-
-					// If we use RTX, encode it.
-					if (HasRtx())
-					{
-						// Increment RTX seq.
-						this->rtxSeq++;
-
-						packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
-					}
-
-					// Retransmit the packet.
-					static_cast<RTP::RtpStreamSend::Listener*>(this->listener)
-					  ->OnRtpStreamRetransmitRtpPacket(this, packet);
-
-					// Mark the packet as retransmitted.
-					RTP::RtpStream::PacketRetransmitted(packet);
-
-					// Mark the packet as repaired (only if this is the first retransmission).
-					if (item->sentTimes == 1)
-					{
-						RTP::RtpStream::PacketRepaired(packet);
-					}
-
-					// If we use RTX, restore it.
-					if (HasRtx())
-					{
-						// Restore the packet.
-						packet->RtxDecode(RtpStream::GetPayloadType(), item->ssrc);
-					}
-
-					// Restore MID.
-					if (!this->mid.empty())
-					{
-						packet->UpdateMid(origMid);
-					}
-
-					// Restore payload.
-					if (item->encoder != nullptr)
-					{
-						packet->RestorePayload();
-					}
-
-					// Restore RTP header fields.
-					packet->SetSsrc(origSsrc);
-					packet->SetSequenceNumber(origSeq);
-					packet->SetTimestamp(origTimestamp);
-					packet->SetMarker(origMarker);
+					continue;
 				}
+
+				// Queue the requested packets in the order they are requested: first the
+				// one in the packet id and then those in the bitmask. A packet already
+				// pending is not queued again since it will be retransmitted anyway.
+				uint16_t currentSeq = item->GetPacketId();
+				uint16_t bitmask    = item->GetLostPacketBitmask();
+				bool requested{ true };
+
+				while (requested || bitmask != 0)
+				{
+					if (requested)
+					{
+						const bool inserted = this->pendingRetransmissionsSet.insert(currentSeq).second;
+
+						if (inserted)
+						{
+							this->pendingRetransmissionsQueue.push_back(currentSeq);
+						}
+					}
+
+					requested = (bitmask & 1) != 0;
+					bitmask >>= 1;
+					currentSeq++;
+				}
+			}
+
+			// If NACK is not supported, exit.
+			if (!this->retransmissionBuffer)
+			{
+				MS_WARN_TAG(rtx, "NACK not supported");
+
+				return;
+			}
+
+			// If a retransmission iteration is already scheduled, nothing else to do.
+			if (this->retransmissionTimer->IsActive())
+			{
+				return;
+			}
+
+			// Otherwise retransmit the first pending packets right away and schedule
+			// the next iteration if there are retransmissions left.
+			RetransmitPendingPackets();
+
+			if (!this->pendingRetransmissionsQueue.empty())
+			{
+				this->retransmissionTimer->Start(RetransmissionIntervalMs);
 			}
 		}
 
@@ -423,6 +384,15 @@ namespace RTC
 				this->retransmissionBuffer->Clear();
 			}
 
+			// Discard pending retransmissions.
+			this->pendingRetransmissionsQueue.clear();
+			this->pendingRetransmissionsSet.clear();
+
+			if (this->retransmissionTimer)
+			{
+				this->retransmissionTimer->Stop();
+			}
+
 			// Reset jitter.
 			this->jitter = 0;
 		}
@@ -455,127 +425,152 @@ namespace RTC
 			MS_ABORT("invalid method call");
 		}
 
-		// This method looks for the requested RTP packets and inserts them into the
-		// RetransmissionContainer vector (and sets to null the next position).
+		// This method takes pending retransmissions from the front of the queue and
+		// retransmits their packets until MaxRetransmittedPacketsPerIteration packets
+		// have been retransmitted or the queue is empty. Pending retransmissions whose
+		// packet is not retransmitted don't count.
 		//
-		// If RTX is used the stored packet will be RTX encoded now (if not already
-		// encoded in a previous resend).
-		//
-		// NOTE: This method doesn't verify whether requested stored packet is too
-		// old, why? Because, if we verified it, we would do it by comparing its
-		// timestamp with the newest one in the retransmission buffer. However we
-		// already clean old packets upon receipt of any new packet (see Insert()
-		// method in RetransmissionBuffer class).
-		void RtpStreamSend::FillRetransmissionContainer(uint16_t seq, uint16_t bitmask)
+		// If RTX is used the stored packet will be RTX encoded now.
+		void RtpStreamSend::RetransmitPendingPackets()
 		{
 			MS_TRACE();
 
-			// Ensure the container's first element is 0.
-			RetransmissionContainer[0] = nullptr;
-
-			// If NACK is not supported, exit.
-			if (!this->retransmissionBuffer)
-			{
-				MS_WARN_TAG(rtx, "NACK not supported");
-
-				return;
-			}
-
-			// Look for each requested packet.
 			const int64_t nowMs = this->shared->GetTimeMs();
 			const int64_t rttMs = (this->rttMs > 0.0f ? static_cast<int64_t>(this->rttMs) : DefaultRttMs);
-			uint16_t currentSeq = seq;
-			bool requested{ true };
-			size_t containerIdx{ 0 };
 
-			// Variables for debugging.
-			const uint16_t origBitmask = bitmask;
-			uint16_t sentBitmask{ 0b0000000000000000 };
-			bool isFirstPacket{ true };
-			bool firstPacketSent{ false };
-			uint8_t bitmaskCounter{ 0 };
+			size_t numRetransmittedPackets{ 0 };
 
-			while (requested || bitmask != 0)
+			while (!this->pendingRetransmissionsQueue.empty() &&
+			       numRetransmittedPackets < MaxRetransmittedPacketsPerIteration)
 			{
-				bool sent = false;
+				const uint16_t seq = this->pendingRetransmissionsQueue.front();
 
-				if (requested)
+				this->pendingRetransmissionsQueue.pop_front();
+				this->pendingRetransmissionsSet.erase(seq);
+
+				auto* const item = this->retransmissionBuffer->Get(seq);
+
+				// Packet not found.
+				if (!item)
 				{
-					auto* item = this->retransmissionBuffer->Get(currentSeq);
+					MS_DEBUG_DEV("ignoring retransmission for a packet not stored [seq:%" PRIu16 "]", seq);
 
-					// Packet not found.
-					if (!item)
-					{
-						// Do nothing.
-					}
-					// Don't resent the packet if it was resent in the last RTT ms.
-					else if (item->resentAtMs != 0 && nowMs - item->resentAtMs <= rttMs)
-					{
-						MS_DEBUG_TAG(
-						  rtx,
-						  "ignoring retransmission for a packet already resent in the last RTT ms "
-						  "[seq:%" PRIu16 ", rtt:%" PRIi64 " ms]",
-						  item->sequenceNumber,
-						  rttMs);
-					}
-					// Stored packet is valid for retransmission. Resend it.
-					else
-					{
-						// Save when this packet was resent.
-						item->resentAtMs = nowMs;
+					continue;
+				}
+				// Don't resend the packet if it was stored too long ago.
+				else if (this->retransmissionBuffer->IsTooOld(item, nowMs))
+				{
+					MS_DEBUG_DEV(
+					  "ignoring retransmission for a packet stored too long ago [seq:%" PRIu16
+					  ", stored:%" PRIi64 " ms ago]",
+					  seq,
+					  nowMs - item->storedAtMs);
 
-						// Increase the number of times this packet was sent.
-						item->sentTimes++;
+					continue;
+				}
+				// Don't resend the packet if it was resent in the last RTT ms.
+				else if (item->resentAtMs != 0 && nowMs - item->resentAtMs <= rttMs)
+				{
+					MS_DEBUG_TAG(
+					  rtx,
+					  "ignoring retransmission for a packet already resent in the last RTT ms "
+					  "[seq:%" PRIu16 ", rtt:%" PRIi64 " ms]",
+					  item->sequenceNumber,
+					  rttMs);
 
-						// Store the item in the container and then increment its index.
-						RetransmissionContainer[containerIdx++] = item;
-
-						sent = true;
-
-						if (isFirstPacket)
-						{
-							firstPacketSent = true;
-						}
-					}
+					continue;
 				}
 
-				requested = (bitmask & 1) != 0;
-				bitmask >>= 1;
-				currentSeq++;
+				// Save when this packet was resent.
+				item->resentAtMs = nowMs;
 
-				if (!isFirstPacket)
+				// Increase the number of times this packet was sent.
+				item->sentTimes++;
+
+				MS_ASSERT(
+				  item->sharedPacket.HasPacket(),
+				  "stored item doesn't contain a packet [ssrc:%" PRIu32 ", seq:%" PRIu16
+				  ", timestamp:%" PRIu32 "]",
+				  item->ssrc,
+				  item->sequenceNumber,
+				  item->timestamp);
+
+				auto* const packet = item->sharedPacket.GetPacket();
+
+				// Keep the values of the original packet received by the Consumer.
+				const auto origSsrc      = packet->GetSsrc();
+				const auto origSeq       = packet->GetSequenceNumber();
+				const auto origTimestamp = packet->GetTimestamp();
+				const auto origMarker    = packet->HasMarker();
+				std::string origMid;
+
+				// Put correct info into the packet.
+				packet->SetSsrc(item->ssrc);
+				packet->SetSequenceNumber(item->sequenceNumber);
+				packet->SetTimestamp(item->timestamp);
+				packet->SetMarker(item->marker);
+
+				if (item->encoder != nullptr)
 				{
-					sentBitmask |= (sent ? 1 : 0) << bitmaskCounter;
-					bitmaskCounter++;
+					packet->EncodePayload(item->encoder.get());
 				}
-				else
+
+				// Update MID RTP extension value.
+				if (!this->mid.empty())
 				{
-					isFirstPacket = false;
+					packet->ReadMid(origMid);
+					packet->UpdateMid(this->mid);
 				}
-			}
 
-			// If not all the requested packets was sent, log it.
-			if (!firstPacketSent || origBitmask != sentBitmask)
-			{
-				MS_WARN_DEV(
-				  "could not resend all packets [seq:%" PRIu16
-				  ", first:%s, "
-				  "bitmask:" MS_UINT16_TO_BINARY_PATTERN ", sent bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-				  seq,
-				  firstPacketSent ? "yes" : "no",
-				  MS_UINT16_TO_BINARY(origBitmask),
-				  MS_UINT16_TO_BINARY(sentBitmask));
-			}
-			else
-			{
-				MS_DEBUG_DEV(
-				  "all packets resent [seq:%" PRIu16 ", bitmask:" MS_UINT16_TO_BINARY_PATTERN "]",
-				  seq,
-				  MS_UINT16_TO_BINARY(origBitmask));
-			}
+				// If we use RTX, encode it.
+				if (HasRtx())
+				{
+					// Increment RTX seq.
+					this->rtxSeq++;
 
-			// Set the next container element to null.
-			RetransmissionContainer[containerIdx] = nullptr;
+					packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
+				}
+
+				// Retransmit the packet.
+				static_cast<RTP::RtpStreamSend::Listener*>(this->listener)
+				  ->OnRtpStreamRetransmitRtpPacket(this, packet);
+
+				// Mark the packet as retransmitted.
+				RTP::RtpStream::PacketRetransmitted(packet);
+
+				// Mark the packet as repaired (only if this is the first retransmission).
+				if (item->sentTimes == 1)
+				{
+					RTP::RtpStream::PacketRepaired(packet);
+				}
+
+				// If we use RTX, restore it.
+				if (HasRtx())
+				{
+					// Restore the packet.
+					packet->RtxDecode(RtpStream::GetPayloadType(), item->ssrc);
+				}
+
+				// Restore MID.
+				if (!this->mid.empty())
+				{
+					packet->UpdateMid(origMid);
+				}
+
+				// Restore payload.
+				if (item->encoder != nullptr)
+				{
+					packet->RestorePayload();
+				}
+
+				// Restore RTP header fields.
+				packet->SetSsrc(origSsrc);
+				packet->SetSequenceNumber(origSeq);
+				packet->SetTimestamp(origTimestamp);
+				packet->SetMarker(origMarker);
+
+				numRetransmittedPackets++;
+			}
 		}
 
 		void RtpStreamSend::UpdateScore(RTC::RTCP::ReceiverReport* report)
@@ -685,6 +680,32 @@ namespace RTC
 			if (this->retransmissionBuffer)
 			{
 				this->retransmissionBuffer->Clear();
+			}
+
+			// Discard pending retransmissions, since their sequence numbers belong to
+			// the previous numbering.
+			this->pendingRetransmissionsQueue.clear();
+			this->pendingRetransmissionsSet.clear();
+
+			if (this->retransmissionTimer)
+			{
+				this->retransmissionTimer->Stop();
+			}
+		}
+
+		void RtpStreamSend::OnTimer(TimerHandleInterface* timer)
+		{
+			MS_TRACE();
+
+			if (timer == this->retransmissionTimer.get())
+			{
+				RetransmitPendingPackets();
+
+				// Schedule the next iteration if there are retransmissions left.
+				if (!this->pendingRetransmissionsQueue.empty())
+				{
+					this->retransmissionTimer->Start(RetransmissionIntervalMs);
+				}
 			}
 		}
 	} // namespace RTP

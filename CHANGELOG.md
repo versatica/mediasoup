@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Space NACK retransmissions in time instead of sending them in a burst ([PR #1965](https://github.com/versatica/mediasoup/pull/1965)).
+
 ### 3.28.0
 
 - Worker: Fix MSVC compiler warnings ([PR #1937](https://github.com/versatica/mediasoup/pull/1937)).
