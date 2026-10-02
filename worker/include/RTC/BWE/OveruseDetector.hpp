@@ -40,12 +40,13 @@ namespace RTC
 			 * @param sendDeltaMs - Time between the send times of both groups, which
 			 *   is how long this sample is worth.
 			 * @param numOfDeltas - Number of samples that offset is based on.
-			 * @param nowUs - Current time.
+			 * @param arrivalTimeUs - Instant the packet that produced this sample
+			 *   arrived.
 			 *
 			 * @returns What the network is taken to be doing after this sample.
 			 */
 			Types::BandwidthUsage Detect(
-			  double offsetMs, double sendDeltaMs, int64_t numOfDeltas, int64_t nowUs);
+			  double offsetMs, double sendDeltaMs, int64_t numOfDeltas, int64_t arrivalTimeUs);
 
 			Types::BandwidthUsage GetState() const
 			{
@@ -53,11 +54,11 @@ namespace RTC
 			}
 
 		private:
-			void UpdateThreshold(double modifiedOffsetMs, int64_t nowUs);
+			void UpdateThreshold(double modifiedOffsetMs, int64_t arrivalTimeUs);
 
 		private:
 			double threshold{ 12.5 };
-			std::optional<int64_t> lastThresholdUpdateAtUs;
+			std::optional<int64_t> lastSampleArrivalTimeUs;
 			double prevOffsetMs{ 0.0 };
 			// How long the trend has been above the threshold, or no value while it
 			// isn't.

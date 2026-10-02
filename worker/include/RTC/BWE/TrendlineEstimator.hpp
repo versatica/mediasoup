@@ -149,7 +149,7 @@ namespace RTC
 			double prevTrend{ 0 };
 			std::optional<double> timeOverUsingUs;
 			int overuseCounter{ 0 };
-			std::optional<int64_t> lastThresholdUpdateAtUs;
+			std::optional<int64_t> lastSampleArrivalTimeUs;
 			Types::BandwidthUsage state{ Types::BandwidthUsage::NORMAL };
 		};
 	} // namespace BWE

@@ -297,16 +297,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (!this->lastThresholdUpdateAtUs.has_value())
+			if (!this->lastSampleArrivalTimeUs.has_value())
 			{
-				this->lastThresholdUpdateAtUs = arrivalTimeUs;
+				this->lastSampleArrivalTimeUs = arrivalTimeUs;
 			}
 
 			// Avoid adapting the threshold to big latency spikes, caused for instance
 			// by a sudden capacity drop.
 			if (std::fabs(modifiedTrend) > this->threshold + MaxAdaptOffset)
 			{
-				this->lastThresholdUpdateAtUs = arrivalTimeUs;
+				this->lastSampleArrivalTimeUs = arrivalTimeUs;
 
 				return;
 			}
@@ -318,13 +318,13 @@ namespace RTC
 			// NOTE: The coefficients above are rates per millisecond, so the step is
 			// expressed in those units no matter that the instants are microseconds.
 			const double elapsedMs = std::min(
-			  static_cast<double>(arrivalTimeUs - this->lastThresholdUpdateAtUs.value()) / 1000.0,
+			  static_cast<double>(arrivalTimeUs - this->lastSampleArrivalTimeUs.value()) / 1000.0,
 			  static_cast<double>(MaxThresholdUpdateDeltaMs));
 
 			this->threshold += coef * (std::fabs(modifiedTrend) - this->threshold) * elapsedMs;
 			this->threshold = std::clamp(this->threshold, ThresholdMin, ThresholdMax);
 
-			this->lastThresholdUpdateAtUs = arrivalTimeUs;
+			this->lastSampleArrivalTimeUs = arrivalTimeUs;
 		}
 	} // namespace BWE
 } // namespace RTC
