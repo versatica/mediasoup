@@ -162,25 +162,25 @@ namespace RTC
 				// Queue the requested packets in the order they are requested: first the
 				// one in the packet id and then those in the bitmask. A packet already
 				// pending is not queued again since it will be retransmitted anyway.
-				uint16_t currentSeq = nackItem->GetPacketId();
-				uint16_t bitmask    = nackItem->GetLostPacketBitmask();
+				uint16_t seq     = nackItem->GetPacketId();
+				uint16_t bitmask = nackItem->GetLostPacketBitmask();
 				bool requested{ true };
 
 				while (requested || bitmask != 0)
 				{
 					if (requested)
 					{
-						const bool inserted = this->pendingRetransmissionsSet.insert(currentSeq).second;
+						const bool inserted = this->pendingRetransmissionsSet.insert(seq).second;
 
 						if (inserted)
 						{
-							this->pendingRetransmissionsQueue.push_back(currentSeq);
+							this->pendingRetransmissionsQueue.push_back(seq);
 						}
 					}
 
 					requested = (bitmask & 1) != 0;
 					bitmask >>= 1;
-					currentSeq++;
+					seq++;
 				}
 			}
 
