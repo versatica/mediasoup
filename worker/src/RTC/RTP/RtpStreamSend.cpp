@@ -19,7 +19,7 @@ namespace RTC
 		// Interval between consecutive iterations of pending retransmissions.
 		static constexpr int64_t RetransmissionIntervalMs{ 10 };
 		// Maximum number of packets retransmitted in each iteration.
-		static constexpr size_t MaxRetransmittedPacketsPerIteration{ 1 };
+		static constexpr size_t MaxRetransmittedPacketsPerIteration{ 2 };
 
 		/* Instance methods. */
 
