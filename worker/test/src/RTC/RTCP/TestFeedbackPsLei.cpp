@@ -23,7 +23,7 @@ SCENARIO("RTCP Feedback PS LEI", "[rtcp][feedback-ps][lei]")
 	const uint32_t ssrc{ 0x02d03702 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::FeedbackPsLeiPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackPsLeiPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

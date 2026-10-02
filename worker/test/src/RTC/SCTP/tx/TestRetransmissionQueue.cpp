@@ -81,7 +81,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 	auto* t3RtxTimer = t3RtxTimerUniquePtr.get();
 
-	auto createRetransmissionQueue =
+	const auto createRetransmissionQueue =
 	  [&retransmissionQueueListener, &associationListener, &sendQueue, &t3RtxTimer, &sctpOptions](
 	    bool supportsPartialReliability = true, bool useMessageInterleaving = false)
 	{
@@ -97,9 +97,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  useMessageInterleaving);
 	};
 
-	auto createDataToSend = [](
-	                          uint32_t outgoingMessageId,
-	                          uint16_t maxRetransmissions = RTC::SCTP::Types::MaxRetransmitsNoLimit)
+	const auto createDataToSend =
+	  [](uint32_t outgoingMessageId, uint16_t maxRetransmissions = RTC::SCTP::Types::MaxRetransmitsNoLimit)
 	{
 		return [outgoingMessageId, maxRetransmissions](int64_t /*nowUs*/, size_t /*maxLength*/)
 		{
@@ -122,10 +121,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		};
 	};
 
-	auto createSackChunk = [sctpOptions](
-	                         uint32_t tsn,
-	                         uint32_t arwnd,
-	                         const std::vector<RTC::SCTP::SackChunk::GapAckBlock>&& gapAckBlocks = {})
+	const auto createSackChunk =
+	  [sctpOptions](
+	    uint32_t tsn,
+	    uint32_t arwnd,
+	    const std::vector<RTC::SCTP::SackChunk::GapAckBlock>&& gapAckBlocks = {})
 	{
 		std::unique_ptr<RTC::SCTP::SackChunk> chunk{ RTC::SCTP::SackChunk::Factory(
 			sctpCommon::FactoryBuffer, sctpOptions.mtu) };
@@ -141,7 +141,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		return chunk;
 	};
 
-	auto getTSNsForFastRetransmit = [](RTC::SCTP::RetransmissionQueue& queue)
+	const auto getTSNsForFastRetransmit = [](RTC::SCTP::RetransmissionQueue& queue)
 	{
 		std::vector<uint32_t> tsns;
 
@@ -153,7 +153,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		return tsns;
 	};
 
-	auto getSentPacketTSNs = [&nowUs](RTC::SCTP::RetransmissionQueue& queue, size_t maxLength = 10000)
+	const auto getSentPacketTSNs =
+	  [&nowUs](RTC::SCTP::RetransmissionQueue& queue, size_t maxLength = 10000)
 	{
 		std::vector<uint32_t> tsns;
 

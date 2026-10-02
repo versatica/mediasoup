@@ -54,7 +54,7 @@ SCENARIO("SCTP TransmissionControlBlock", "[sctp][transmissioncontrolblock]")
 	RTC::SCTP::PacketSender packetSender(std::addressof(packetSenderListener), associationListener);
 	MockTcbContextListener tcbContextListener;
 
-	auto isAssociationEstablished = []()
+	const auto isAssociationEstablished = []()
 	{
 		return true;
 	};

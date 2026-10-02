@@ -28,7 +28,7 @@ SCENARIO("RTCP BYE", "[rtcp][bye]")
 	// NOTE: No need to pass const integers to the lambda.
 	// NOTE: If we pass const integers then clang-tidy complains with
 	// 'clang-diagnostic-unused-lambda-capture'.
-	auto verify = [&reason](RTC::RTCP::ByePacket* packet)
+	const auto verify = [&reason](RTC::RTCP::ByePacket* packet)
 	{
 		REQUIRE(packet->GetReason() == reason);
 

@@ -38,7 +38,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		std::vector<RTC::RTP::Packet*> retransmittedPackets;
 	};
 
-	auto createRtpPacket = [](uint8_t* buffer, size_t len, uint16_t seq, uint32_t timestamp)
+	const auto createRtpPacket = [](uint8_t* buffer, size_t len, uint16_t seq, uint32_t timestamp)
 	{
 		auto* packet = RTC::RTP::Packet::Parse(buffer, len);
 
@@ -51,12 +51,13 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		return std::unique_ptr<RTC::RTP::Packet>(packet);
 	};
 
-	auto sendRtpPacket = [](
-	                       // NOTE: clang-tidy suggests passing `streams` by reference but that's
-	                       // wrong because we create `streams` in place when calling this function.
-	                       // NOLINTNEXTLINE(performance-unnecessary-value-param)
-	                       std::vector<std::pair<RTC::RTP::RtpStreamSend*, uint32_t>> streams,
-	                       RTC::RTP::Packet* packet)
+	const auto sendRtpPacket =
+	  [](
+	    // NOTE: clang-tidy suggests passing `streams` by reference but that's
+	    // wrong because we create `streams` in place when calling this function.
+	    // NOLINTNEXTLINE(performance-unnecessary-value-param)
+	    std::vector<std::pair<RTC::RTP::RtpStreamSend*, uint32_t>> streams,
+	    RTC::RTP::Packet* packet)
 	{
 		RTC::RTP::SharedPacket sharedPacket;
 
@@ -84,7 +85,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		}
 	};
 
-	auto checkRtxPacket = [](RTC::RTP::Packet* rtxPacket, RTC::RTP::Packet* origPacket)
+	const auto checkRtxPacket = [](RTC::RTP::Packet* rtxPacket, RTC::RTP::Packet* origPacket)
 	{
 		REQUIRE(rtxPacket);
 		REQUIRE(rtxPacket->GetSequenceNumber() == origPacket->GetSequenceNumber());
@@ -92,7 +93,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(rtxPacket->HasMarker() == origPacket->HasMarker());
 	};
 
-	auto parseAV1RtpPacket =
+	const auto parseAV1RtpPacket =
 	  [](
 	    RTC::RTP::Packet* packet,
 	    std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
@@ -1260,7 +1261,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-		auto receiveReceiverReport = [&](int64_t receivedAtUs, uint32_t lastSr, uint32_t dlsr)
+		const auto receiveReceiverReport = [&](int64_t receivedAtUs, uint32_t lastSr, uint32_t dlsr)
 		{
 			RTC::RTCP::ReceiverReport report;
 

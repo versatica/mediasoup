@@ -33,7 +33,7 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	  : public RTC::BWE::TransportWideCcFeedbackGenerator::Listener
 	{
 	public:
-		void OnTransportWideCcFeedbackGeneratorSendRtcpPacket(
+		void OnTransportWideCcFeedbackGeneratorSendPacket(
 		  RTC::BWE::TransportWideCcFeedbackGenerator* /*transportWideCcFeedbackGenerator*/,
 		  RTC::RTCP::FeedbackRtpTransportPacket* packet) override
 		{
@@ -84,7 +84,8 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	//
 	// NOTE: Every scenario reuses `rtpCommon::FactoryBuffer`, so the returned
 	// packet is only valid until the next call.
-	auto buildPacket = [](size_t payloadSize, uint16_t wideSeqNumber) -> std::unique_ptr<RTC::RTP::Packet>
+	const auto buildPacket =
+	  [](size_t payloadSize, uint16_t wideSeqNumber) -> std::unique_ptr<RTC::RTP::Packet>
 	{
 		std::unique_ptr<RTC::RTP::Packet> packet(
 		  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
@@ -106,7 +107,6 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		headerExtensionIds.transportWideCc01 = TransportWideCc01Id;
 
 		packet->AssignExtensionIds(headerExtensionIds);
-
 		packet->SetPayloadLength(payloadSize);
 
 		REQUIRE(packet->UpdateTransportWideCc01(wideSeqNumber));
@@ -116,24 +116,25 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 
 	// Feeds a packet that arrived at the given instant, which is also taken as
 	// the current one since the meter of incoming data reads the clock itself.
-	auto feedPacket = [&buildPacket, &nowUs](
-	                    RTC::BWE::TransportWideCcFeedbackGenerator& transportWideCcFeedbackGenerator,
-	                    uint16_t wideSeqNumber,
-	                    int64_t arrivalTimeUs,
-	                    size_t payloadSize) -> void
+	const auto feedPacket =
+	  [&buildPacket, &nowUs](
+	    RTC::BWE::TransportWideCcFeedbackGenerator& transportWideCcFeedbackGenerator,
+	    uint16_t wideSeqNumber,
+	    int64_t arrivalTimeUs,
+	    size_t payloadSize) -> void
 	{
 		nowUs = arrivalTimeUs;
 
 		const auto packet = buildPacket(payloadSize, wideSeqNumber);
 
-		transportWideCcFeedbackGenerator.IncomingPacket(arrivalTimeUs, packet.get());
+		transportWideCcFeedbackGenerator.ReceiveRtpPacket(arrivalTimeUs, packet.get());
 	};
 
 	// Checks that the feedback packets the listener got are the expected ones,
 	// status by status.
-	auto checkFeedbacks = [](
-	                        const TestTransportWideCcFeedbackGeneratorListener& listener,
-	                        const TestResults& expectedResults) -> void
+	const auto checkFeedbacks = [](
+	                              const TestTransportWideCcFeedbackGeneratorListener& listener,
+	                              const TestResults& expectedResults) -> void
 	{
 		REQUIRE(listener.feedbacks.size() == expectedResults.size());
 
@@ -162,8 +163,9 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 
 	// Feeds the given packets, emitting a feedback every time 100 ms have gone by
 	// since the previous one, and checks what came out.
-	auto validate = [&shared, &feedPacket, &checkFeedbacks](
-	                  const std::vector<TestInput>& inputs, const TestResults& expectedResults) -> void
+	const auto validate = [&shared, &feedPacket, &checkFeedbacks](
+	                        const std::vector<TestInput>& inputs,
+	                        const TestResults& expectedResults) -> void
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
 		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(

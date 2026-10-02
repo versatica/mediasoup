@@ -30,7 +30,7 @@ namespace RTC
 		/* Instance methods. */
 
 		Types::BandwidthUsage OveruseDetector::Detect(
-		  double offsetMs, double sendDeltaMs, int64_t numOfDeltas, int64_t nowUs)
+		  double offsetMs, double sendDeltaMs, int64_t numOfDeltas, int64_t arrivalTimeUs)
 		{
 			MS_TRACE();
 
@@ -86,25 +86,25 @@ namespace RTC
 
 			this->prevOffsetMs = offsetMs;
 
-			UpdateThreshold(modifiedOffsetMs, nowUs);
+			UpdateThreshold(modifiedOffsetMs, arrivalTimeUs);
 
 			return this->state;
 		}
 
-		void OveruseDetector::UpdateThreshold(double modifiedOffsetMs, int64_t nowUs)
+		void OveruseDetector::UpdateThreshold(double modifiedOffsetMs, int64_t arrivalTimeUs)
 		{
 			MS_TRACE();
 
-			if (!this->lastThresholdUpdateAtUs.has_value())
+			if (!this->lastSampleArrivalTimeUs.has_value())
 			{
-				this->lastThresholdUpdateAtUs = nowUs;
+				this->lastSampleArrivalTimeUs = arrivalTimeUs;
 			}
 
 			// Avoid adapting the threshold to big latency spikes, caused for instance
 			// by a sudden capacity drop.
 			if (std::fabs(modifiedOffsetMs) > this->threshold + MaxAdaptOffsetMs)
 			{
-				this->lastThresholdUpdateAtUs = nowUs;
+				this->lastSampleArrivalTimeUs = arrivalTimeUs;
 
 				return;
 			}
@@ -116,13 +116,13 @@ namespace RTC
 			// NOTE: The coefficients above are rates per millisecond, so the step is
 			// expressed in those units no matter that the instants are microseconds.
 			const double elapsedMs = std::min(
-			  static_cast<double>(nowUs - this->lastThresholdUpdateAtUs.value()) / 1000.0,
+			  static_cast<double>(arrivalTimeUs - this->lastSampleArrivalTimeUs.value()) / 1000.0,
 			  MaxThresholdUpdateDeltaMs);
 
 			this->threshold += coef * (std::fabs(modifiedOffsetMs) - this->threshold) * elapsedMs;
 			this->threshold = std::clamp(this->threshold, ThresholdMin, ThresholdMax);
 
-			this->lastThresholdUpdateAtUs = nowUs;
+			this->lastSampleArrivalTimeUs = arrivalTimeUs;
 		}
 	} // namespace BWE
 } // namespace RTC

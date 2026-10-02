@@ -435,25 +435,25 @@ SCENARIO("BWE OveruseDetector", "[bwe][overusedetector]")
 		constexpr double TsDeltaMs{ 3000.0 };
 		constexpr int64_t BatchLength{ 10 };
 
-		int64_t nowUs{ 0 };
+		int64_t arrivalTimeUs{ 0 };
 		int64_t numDeltas{ 60 };
 
 		// Whether congestion was declared at any point of the batch, which is what
 		// every step below looks at.
-		const auto runBatch = [&overuseDetector, &nowUs, &numDeltas](
+		const auto runBatch = [&overuseDetector, &arrivalTimeUs, &numDeltas](
 		                        int64_t batchLength, double offsetMs) -> bool
 		{
 			bool overuseDetected{ false };
 
 			for (int64_t i{ 0 }; i < batchLength; ++i)
 			{
-				if (overuseDetector.Detect(offsetMs, TsDeltaMs, numDeltas, nowUs) == RTC::BWE::Types::BandwidthUsage::OVERUSING)
+				if (overuseDetector.Detect(offsetMs, TsDeltaMs, numDeltas, arrivalTimeUs) == RTC::BWE::Types::BandwidthUsage::OVERUSING)
 				{
 					overuseDetected = true;
 				}
 
 				++numDeltas;
-				nowUs += 5 * 1000;
+				arrivalTimeUs += 5 * 1000;
 			}
 
 			return overuseDetected;

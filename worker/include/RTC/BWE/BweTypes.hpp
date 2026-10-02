@@ -23,30 +23,41 @@ namespace RTC
 			constexpr int64_t TimeUsInfinite{ std::numeric_limits<int64_t>::max() };
 
 			/**
-			 * The two bits of the IP header with which the network tells that it is
-			 * congested instead of dropping the packet.
-			 *
-			 * @see https://www.rfc-editor.org/rfc/rfc9331.html
+			 * Which RTCP mechanism the two endpoints negotiated to deal with
+			 * congestion, which is what decides on which of them the estimation is
+			 * computed.
 			 */
-			enum class EcnMarking : uint8_t
+			enum class CongestionControlType : uint8_t
 			{
 				/**
-				 * Not ECN capable transport.
+				 * The receiving endpoint reports when each packet arrived and the
+				 * sending one estimates from that.
 				 */
-				NOT_ECT = 0b00,
+				TRANSPORT_CC = 1,
 				/**
-				 * ECN capable transport, which is the one L4S uses.
+				 * The receiving endpoint estimates and tells the sending one how much
+				 * it may send.
 				 */
-				ECT1 = 0b01,
-				/**
-				 * ECN capable transport, not used by L4S.
-				 */
-				ECT0 = 0b10,
-				/**
-				 * Congestion experienced, which is what the network sets on the way.
-				 */
-				CE = 0b11
+				REMB = 2
 			};
+
+			constexpr std::string_view congestionControlTypeToString(CongestionControlType congestionControlType)
+			{
+				switch (congestionControlType)
+				{
+					case CongestionControlType::TRANSPORT_CC:
+					{
+						return "TRANSPORT_CC";
+					}
+
+					case CongestionControlType::REMB:
+					{
+						return "REMB";
+					}
+
+						NO_DEFAULT();
+				}
+			}
 
 			/**
 			 * How the network is behaving according to the delay based detector.
@@ -89,6 +100,32 @@ namespace RTC
 						NO_DEFAULT();
 				}
 			}
+
+			/**
+			 * The two bits of the IP header with which the network tells that it is
+			 * congested instead of dropping the packet.
+			 *
+			 * @see https://www.rfc-editor.org/rfc/rfc9331.html
+			 */
+			enum class EcnMarking : uint8_t
+			{
+				/**
+				 * Not ECN capable transport.
+				 */
+				NOT_ECT = 0b00,
+				/**
+				 * ECN capable transport, which is the one L4S uses.
+				 */
+				ECT1 = 0b01,
+				/**
+				 * ECN capable transport, not used by L4S.
+				 */
+				ECT0 = 0b10,
+				/**
+				 * Congestion experienced, which is what the network sets on the way.
+				 */
+				CE = 0b11
+			};
 
 			/**
 			 * Estimate of the capacity of the link, used to bound the rate control.

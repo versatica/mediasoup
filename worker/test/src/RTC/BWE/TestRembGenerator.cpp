@@ -15,7 +15,7 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 	class TestRembGeneratorListener : public RTC::BWE::RembGenerator::Listener
 	{
 	public:
-		void OnRembGeneratorSendRemb(
+		void OnRembGeneratorSendPacket(
 		  RTC::BWE::RembGenerator* /*rembGenerator*/, RTC::RTCP::FeedbackPsRembPacket* packet) override
 		{
 			this->rembs.push_back(TestRemb{ .bitrate = packet->GetBitrate(), .ssrcs = packet->GetSsrcs() });

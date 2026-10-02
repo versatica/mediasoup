@@ -6,7 +6,7 @@
 
 SCENARIO("RTP SharedPacket", "[rtp][sharedpacket]")
 {
-	auto compareRtpPackets = [](const RTC::RTP::Packet* packet1, const RTC::RTP::Packet* packet2)
+	const auto compareRtpPackets = [](const RTC::RTP::Packet* packet1, const RTC::RTP::Packet* packet2)
 	{
 		REQUIRE(packet1->GetSsrc() == packet2->GetSsrc());
 		REQUIRE(packet1->GetSequenceNumber() == packet2->GetSequenceNumber());

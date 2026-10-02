@@ -77,7 +77,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	RTC::SCTP::Types::UnwrappedTsn::Unwrapper unwrapper;
 	DiscardFromSendQueueTester discardFromSendQueueTester;
 
-	auto discardFromSendQueue =
+	const auto discardFromSendQueue =
 	  [&discardFromSendQueueTester](uint16_t streamId, uint32_t outgoingMessageId)
 	{
 		return discardFromSendQueueTester.Called(streamId, outgoingMessageId);

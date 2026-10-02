@@ -250,7 +250,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		RTC::RTP::RtpStreamRecv rtpStream(
 		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
-		auto receiveDelaySinceLastRr = [&](int64_t receivedAtUs, uint32_t lastRr, uint32_t dlrr)
+		const auto receiveDelaySinceLastRr = [&](int64_t receivedAtUs, uint32_t lastRr, uint32_t dlrr)
 		{
 			RTC::RTCP::DelaySinceLastRr::SsrcInfo ssrcInfo;
 

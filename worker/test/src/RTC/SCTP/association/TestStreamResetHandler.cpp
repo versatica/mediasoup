@@ -381,7 +381,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		// Makes the peer request an outgoing stream reset with the given sender's
 		// last assigned TSN.
-		auto handleReceivedOutgoingSsnResetRequest =
+		const auto handleReceivedOutgoingSsnResetRequest =
 		  [&test](uint32_t reqSeqNbr, uint32_t senderLastAssignedTsn) -> void
 		{
 			std::vector<uint8_t> buffer(test.sctpOptions.mtu);
@@ -403,7 +403,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 		};
 
 		// Returns the result of the RE-CONFIG response sent back to the peer.
-		auto consumeSentReConfigResponseResult =
+		const auto consumeSentReConfigResponseResult =
 		  [&test]() -> RTC::SCTP::ReconfigurationResponseParameter::Result
 		{
 			const auto sentBuffer = test.associationListener.ConsumeFirstSentPacket();
@@ -427,7 +427,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 		// Feeds a received packet carrying a single FORWARD-TSN chunk to the receive
 		// side, doing exactly what RTC::SCTP::Association::HandleReceivedAnyForwardTsnChunk()
 		// and then RTC::SCTP::Association::ReceiveSctpData() do.
-		auto handleReceivedForwardTsn =
+		const auto handleReceivedForwardTsn =
 		  [&test](
 		    uint32_t newCumulativeTsn,
 		    std::span<const RTC::SCTP::AnyForwardTsnChunk::SkippedStream> skippedStreams) -> void

@@ -103,8 +103,8 @@ namespace RTC
 			 * @param sendDeltaUs - Time elapsed between the send times of both groups.
 			 * @param arrivalDeltaUs - Time elapsed between the arrival times of both
 			 *   groups.
-			 * @param arrivalTimeUs - Arrival time of the latest group, in the remote
-			 *   clock reference.
+			 * @param arrivalTimeUs - Instant the latest group arrived at the remote
+			 *   endpoint, anchored to our own clock by the feedback adapter.
 			 */
 			void Update(int64_t sendDeltaUs, int64_t arrivalDeltaUs, int64_t arrivalTimeUs);
 
@@ -149,7 +149,7 @@ namespace RTC
 			double prevTrend{ 0 };
 			std::optional<double> timeOverUsingUs;
 			int overuseCounter{ 0 };
-			std::optional<int64_t> lastThresholdUpdateAtUs;
+			std::optional<int64_t> lastSampleArrivalTimeUs;
 			Types::BandwidthUsage state{ Types::BandwidthUsage::NORMAL };
 		};
 	} // namespace BWE

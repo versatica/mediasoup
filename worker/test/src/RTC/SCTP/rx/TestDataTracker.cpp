@@ -45,13 +45,13 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 
 	RTC::SCTP::DataTracker dataTracker(delayedAckTimer, InitialTsn);
 
-	auto createPacket = []()
+	const auto createPacket = []()
 	{
 		return std::unique_ptr<RTC::SCTP::Packet>{ RTC::SCTP::Packet::Factory(
 			sctpCommon::FactoryBuffer, Mtu) };
 	};
 
-	auto addSackChunk = [&dataTracker](RTC::SCTP::Packet* packet, size_t aRwnd)
+	const auto addSackChunk = [&dataTracker](RTC::SCTP::Packet* packet, size_t aRwnd)
 	{
 		dataTracker.AddSackSelectiveAck(packet, aRwnd);
 
@@ -60,7 +60,8 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		return sackChunk;
 	};
 
-	auto observe = [&dataTracker](std::initializer_list<uint32_t> tsns, bool expectAsDuplicate = false)
+	const auto observe =
+	  [&dataTracker](std::initializer_list<uint32_t> tsns, bool expectAsDuplicate = false)
 	{
 		for (const uint32_t tsn : tsns)
 		{
@@ -746,7 +747,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 
 	SECTION("gap-ack-block merges many blocks into one")
 	{
-		auto getGapAckBlocks = [&]()
+		const auto getGapAckBlocks = [&]()
 		{
 			const auto packet     = createPacket();
 			const auto* sackChunk = addSackChunk(packet.get(), Arwnd);

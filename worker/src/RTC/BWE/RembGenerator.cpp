@@ -163,7 +163,7 @@ namespace RTC
 				packet.SetSsrcs(ssrcs);
 			}
 
-			this->listener->OnRembGeneratorSendRemb(this, std::addressof(packet));
+			this->listener->OnRembGeneratorSendPacket(this, std::addressof(packet));
 		}
 	} // namespace BWE
 } // namespace RTC

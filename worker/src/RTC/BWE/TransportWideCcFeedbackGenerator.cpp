@@ -45,7 +45,7 @@ namespace RTC
 			this->sendPeriodicTimer->Start(this->sendIntervalMs, this->sendIntervalMs);
 		}
 
-		void TransportWideCcFeedbackGenerator::IncomingPacket(
+		void TransportWideCcFeedbackGenerator::ReceiveRtpPacket(
 		  int64_t arrivalTimeUs, const RTC::RTP::Packet* packet)
 		{
 			MS_TRACE();
@@ -247,8 +247,7 @@ namespace RTC
 
 			const auto latestWideSeqNumber = this->feedbackPacket->GetLatestSequenceNumber();
 
-			this->listener->OnTransportWideCcFeedbackGeneratorSendRtcpPacket(
-			  this, this->feedbackPacket.get());
+			this->listener->OnTransportWideCcFeedbackGeneratorSendPacket(this, this->feedbackPacket.get());
 
 			this->feedbackWideSeqNumStart = latestWideSeqNumber + 1;
 

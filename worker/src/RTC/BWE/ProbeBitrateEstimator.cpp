@@ -200,7 +200,7 @@ namespace RTC
 			return estimatedBitrate;
 		}
 
-		void ProbeBitrateEstimator::EraseOldClusters(int64_t nowUs)
+		void ProbeBitrateEstimator::EraseOldClusters(int64_t arrivalTimeUs)
 		{
 			MS_TRACE();
 
@@ -208,7 +208,7 @@ namespace RTC
 			{
 				const auto& cluster = it->second;
 
-				if (cluster.lastReceiveTimeUs.has_value() && cluster.lastReceiveTimeUs.value() + MaxClusterHistoryUs < nowUs)
+				if (cluster.lastReceiveTimeUs.has_value() && cluster.lastReceiveTimeUs.value() + MaxClusterHistoryUs < arrivalTimeUs)
 				{
 					it = this->clusters.erase(it);
 				}

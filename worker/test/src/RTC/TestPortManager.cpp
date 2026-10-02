@@ -13,7 +13,7 @@
 SCENARIO("PortManager", "[portmanager]")
 {
 	// Helper: build an IPv4 `sockaddr_storage` from a dotted-quad string + port=0.
-	auto makeV4 = [](const char* dottedQuad)
+	const auto makeV4 = [](const char* dottedQuad)
 	{
 		sockaddr_storage ss{};
 		auto* in = reinterpret_cast<sockaddr_in*>(std::addressof(ss));
@@ -27,7 +27,7 @@ SCENARIO("PortManager", "[portmanager]")
 	};
 
 	// Helper: build an IPv6 `sockaddr_storage` from a textual address + port=0.
-	auto makeV6 = [](const char* literal)
+	const auto makeV6 = [](const char* literal)
 	{
 		sockaddr_storage ss{};
 		auto* in6 = reinterpret_cast<sockaddr_in6*>(std::addressof(ss));

@@ -71,7 +71,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(
+		void RemoteBitrateEstimatorAbsSendTime::ReceiveRtpPacket(
 		  const RTC::RTP::Packet* packet, int64_t arrivalTimeUs, int64_t nowUs)
 		{
 			MS_TRACE();

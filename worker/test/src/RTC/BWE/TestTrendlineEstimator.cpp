@@ -16,12 +16,12 @@ SCENARIO("BWE TrendlineEstimator", "[bwe][trendlineestimator]")
 	// Both `count` and `arrivalTimeUs` are shared by every run within a test, so
 	// that consecutive runs consume a single budget of packets and carry on from
 	// the network conditions left by the previous one.
-	auto runUntilStateChange = [](
-	                             RTC::BWE::TrendlineEstimator& trendlineEstimator,
-	                             double deliveryPace,
-	                             size_t& count,
-	                             size_t packetCount,
-	                             int64_t& arrivalTimeUs) -> void
+	const auto runUntilStateChange = [](
+	                                   RTC::BWE::TrendlineEstimator& trendlineEstimator,
+	                                   double deliveryPace,
+	                                   size_t& count,
+	                                   size_t packetCount,
+	                                   int64_t& arrivalTimeUs) -> void
 	{
 		const auto initialState   = trendlineEstimator.GetState();
 		const auto arrivalDeltaUs = static_cast<int64_t>(SendDeltaUs * deliveryPace);

@@ -22,7 +22,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 	const uint32_t senderSsrc{ 1111u };
 	const uint32_t mediaSsrc{ 2222u };
 
-	auto verify =
+	const auto verify =
 	  [](
 	    const std::vector<struct TestFeedbackRtpTransportInput>& inputs,
 	    const std::vector<struct RTC::RTCP::FeedbackRtpTransportPacket::PacketStatus>& packetStatuses)

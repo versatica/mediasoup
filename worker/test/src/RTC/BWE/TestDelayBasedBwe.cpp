@@ -178,11 +178,11 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 
 	// Runs the capacity drop scenario: converge at the initial capacity, halve
 	// it, and measure how long the estimate takes to follow.
-	auto capacityDropTestHelper = [](
-	                                SimulatedTransport& simulatedTransport,
-	                                int64_t numberOfStreams,
-	                                int64_t expectedBitrateDropDeltaUs,
-	                                int64_t receiverClockOffsetChangeUs)
+	const auto capacityDropTestHelper = [](
+	                                      SimulatedTransport& simulatedTransport,
+	                                      int64_t numberOfStreams,
+	                                      int64_t expectedBitrateDropDeltaUs,
+	                                      int64_t receiverClockOffsetChangeUs)
 	{
 		constexpr int Framerate{ 30 };
 		constexpr int64_t StartBitrate{ 900000 };

@@ -32,7 +32,7 @@ SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 	const uint8_t valueMask{ 1 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::FeedbackPsVbcmPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackPsVbcmPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
