@@ -149,23 +149,32 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (!this->remoteBitrateEstimator)
+			switch (this->options.congestionControlType)
 			{
-				return std::nullopt;
+				case Types::CongestionControlType::TRANSPORT_CC:
+				{
+					// The estimating is the remote sender's job in this mode.
+					return std::nullopt;
+				}
+
+				case Types::CongestionControlType::REMB:
+				{
+					const int64_t bitrate = this->remoteBitrateEstimator->GetLatestEstimate();
+
+					// NOTE: Zero is how the estimator says that it has nothing, either because
+					// no estimation is valid yet or because no stream is active. A measured
+					// bitrate never comes out as zero, since the rate control clamps it to the
+					// lowest it is configured with.
+					if (bitrate == 0)
+					{
+						return std::nullopt;
+					}
+
+					return bitrate;
+				}
+
+					NO_DEFAULT();
 			}
-
-			const int64_t bitrate = this->remoteBitrateEstimator->GetLatestEstimate();
-
-			// NOTE: Zero is how the estimator says that it has nothing, either because
-			// no estimation is valid yet or because no stream is active. A measured
-			// bitrate never comes out as zero, since the rate control clamps it to the
-			// lowest it is configured with.
-			if (bitrate == 0)
-			{
-				return std::nullopt;
-			}
-
-			return bitrate;
 		}
 
 		void ReceiverTransportCongestionControl::OnTransportWideCcFeedbackGeneratorSendPacket(

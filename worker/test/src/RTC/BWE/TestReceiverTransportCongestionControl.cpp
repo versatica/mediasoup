@@ -25,17 +25,21 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 
 			if (packet->GetType() == RTC::RTCP::Type::PSFB)
 			{
-				this->rembBitrates.push_back(
-				  static_cast<RTC::RTCP::FeedbackPsRembPacket*>(packet)->GetBitrate());
+				const auto* rembPacket = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(packet);
+
+				this->rembBitrates.push_back(rembPacket->GetBitrate());
+				this->rembSsrcs.push_back(rembPacket->GetSsrcs());
 			}
 		}
 
 	public:
 		std::vector<RTC::RTCP::Type> rtcpTypes;
 		std::vector<int64_t> rembBitrates;
+		std::vector<std::vector<uint32_t>> rembSsrcs;
 	};
 
 	constexpr uint32_t Ssrc{ 1111 };
+	constexpr uint32_t Ssrc2{ 2222 };
 	constexpr uint8_t TransportWideCc01Id{ 5 };
 	constexpr uint8_t AbsSendTimeId{ 4 };
 	// Instant the scenarios below start at, which is irrelevant other than for
@@ -91,14 +95,15 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 
 	// Builds a packet carrying 'abs-send-time', which is what a sender that
 	// negotiated REMB emits.
-	const auto buildRembPacket = [](int64_t sendTimeUs) -> std::unique_ptr<RTC::RTP::Packet>
+	const auto buildRembPacket =
+	  [](int64_t sendTimeUs, uint32_t ssrc = Ssrc) -> std::unique_ptr<RTC::RTP::Packet>
 	{
 		std::unique_ptr<RTC::RTP::Packet> packet(
 		  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
 
 		REQUIRE(packet);
 
-		packet->SetSsrc(Ssrc);
+		packet->SetSsrc(ssrc);
 
 		const std::vector<RTC::RTP::Packet::Extension> extensions{
 			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer }
@@ -184,6 +189,43 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 
 		// What went out is what is reported as available.
 		REQUIRE(receiverTransportCongestionControl.GetAvailableBitrate() == listener.rembBitrates.at(0));
+	}
+
+	SECTION("a stream that is removed stops being announced")
+	{
+		TestReceiverTransportCongestionControlListener listener;
+
+		RTC::BWE::ReceiverTransportCongestionControl receiverTransportCongestionControl(
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::REMB });
+
+		// A burst where two streams alternate, so that the estimation applies to both.
+		for (int idx{ 0 }; idx < Probes; ++idx)
+		{
+			nowUs += 10 * 1000;
+
+			const auto packet = buildRembPacket(nowUs, idx % 2 == 0 ? Ssrc : Ssrc2);
+
+			receiverTransportCongestionControl.ReceiveRtpPacket(
+			  nowUs, packet.get(), RTC::Media::Kind::VIDEO);
+		}
+
+		REQUIRE(listener.rembSsrcs.size() == 1);
+		REQUIRE(listener.rembSsrcs.at(0).size() == 2);
+
+		receiverTransportCongestionControl.RemoveStream(Ssrc2);
+
+		// Long enough for the next packet to bring another estimation out, and far
+		// shorter than what it takes for a silent stream to be forgotten on its own.
+		nowUs += 250 * 1000;
+
+		const auto packet = buildRembPacket(nowUs);
+
+		receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get(), RTC::Media::Kind::VIDEO);
+
+		REQUIRE(listener.rembSsrcs.size() == 2);
+		REQUIRE(listener.rembSsrcs.at(1) == std::vector<uint32_t>{ Ssrc });
 	}
 
 	SECTION("with REMB audio takes no part in the estimation")
@@ -278,6 +320,11 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::TRANSPORT_CC });
 
 		receiverTransportCongestionControl.SetMaxIncomingBitrate(MaxIncomingBitrate);
+
+		// The cap went out as soon as it was set.
+		REQUIRE(listener.rembBitrates.size() == 1);
+		REQUIRE(listener.rembBitrates.at(0) == MaxIncomingBitrate);
+
 		receiverTransportCongestionControl.SetMaxIncomingBitrate(0);
 
 		nowUs += 10 * 1000;
@@ -287,8 +334,8 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 		receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get(), RTC::Media::Kind::VIDEO);
 
 		// A REMB of zero is how the remote sender is told that it may send whatever it
-		// wants again.
-		REQUIRE_FALSE(listener.rembBitrates.empty());
+		// wants again, and it is a REMB of its own rather than the one above.
+		REQUIRE(listener.rembBitrates.size() > 1);
 		REQUIRE(listener.rembBitrates.back() == 0);
 	}
 }
