@@ -42,7 +42,8 @@ void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 		// Let some 'random' time pass and check whether the packet is too old.
 		nowMs += static_cast<int64_t>(Utils::Crypto::GetRandomUInt<uint64_t>(0, 1000));
 
-		const auto* const item = retransmissionBuffer.Get(packet->GetSequenceNumber());
+		const RTC::RTP::RetransmissionBuffer::Item* const item =
+		  retransmissionBuffer.Get(packet->GetSequenceNumber());
 
 		if (item)
 		{

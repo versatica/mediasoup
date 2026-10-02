@@ -1,6 +1,7 @@
 #ifndef MS_RTC_RTP_RTP_STREAM_RECV_HPP
 #define MS_RTC_RTP_RTP_STREAM_RECV_HPP
 
+#include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/NackGenerator.hpp"
 #include "RTC/RTCP/Packet.hpp"

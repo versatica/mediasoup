@@ -3,10 +3,9 @@
 
 #include "RTC/RTP/RtpStreamSend.hpp"
 #include "Logger.hpp"
-#include "RTC/RTCP/FeedbackPsFir.hpp"
-#include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
+#include <cmath> // std::pow(), std::round()
 
 namespace RTC
 {
@@ -448,7 +447,7 @@ namespace RTC
 				this->pendingRetransmissionsQueue.pop_front();
 				this->pendingRetransmissionsSet.erase(seq);
 
-				auto* const item = this->retransmissionBuffer->Get(seq);
+				RTP::RetransmissionBuffer::Item* const item = this->retransmissionBuffer->Get(seq);
 
 				// Packet not found.
 				if (!item)
