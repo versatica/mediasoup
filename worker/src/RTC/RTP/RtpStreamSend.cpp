@@ -151,9 +151,9 @@ namespace RTC
 
 			for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 			{
-				const RTC::RTCP::FeedbackRtpNackItem* item = *it;
+				const RTC::RTCP::FeedbackRtpNackItem* nackItem = *it;
 
-				this->nackPacketCount += item->CountRequestedPackets();
+				this->nackPacketCount += nackItem->CountRequestedPackets();
 
 				if (!this->retransmissionBuffer)
 				{
@@ -163,8 +163,8 @@ namespace RTC
 				// Queue the requested packets in the order they are requested: first the
 				// one in the packet id and then those in the bitmask. A packet already
 				// pending is not queued again since it will be retransmitted anyway.
-				uint16_t currentSeq = item->GetPacketId();
-				uint16_t bitmask    = item->GetLostPacketBitmask();
+				uint16_t currentSeq = nackItem->GetPacketId();
+				uint16_t bitmask    = nackItem->GetLostPacketBitmask();
 				bool requested{ true };
 
 				while (requested || bitmask != 0)
@@ -502,6 +502,7 @@ namespace RTC
 				const auto origSeq       = packet->GetSequenceNumber();
 				const auto origTimestamp = packet->GetTimestamp();
 				const auto origMarker    = packet->HasMarker();
+
 				std::string origMid;
 
 				// Put correct info into the packet.
