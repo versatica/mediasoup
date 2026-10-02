@@ -96,7 +96,7 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 	// Builds a packet carrying 'abs-send-time', which is what a sender that
 	// negotiated REMB emits.
 	const auto buildRembPacket =
-	  [](int64_t sendTimeUs, uint32_t ssrc = Ssrc) -> std::unique_ptr<RTC::RTP::Packet>
+	  [](int64_t sendTimeUs, uint32_t ssrc) -> std::unique_ptr<RTC::RTP::Packet>
 	{
 		std::unique_ptr<RTC::RTP::Packet> packet(
 		  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
@@ -177,7 +177,7 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 		{
 			nowUs += 10 * 1000;
 
-			const auto packet = buildRembPacket(nowUs);
+			const auto packet = buildRembPacket(nowUs, Ssrc);
 
 			receiverTransportCongestionControl.ReceiveRtpPacket(
 			  nowUs, packet.get(), RTC::Media::Kind::VIDEO);
@@ -220,7 +220,7 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 		// shorter than what it takes for a silent stream to be forgotten on its own.
 		nowUs += 250 * 1000;
 
-		const auto packet = buildRembPacket(nowUs);
+		const auto packet = buildRembPacket(nowUs, Ssrc);
 
 		receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get(), RTC::Media::Kind::VIDEO);
 
@@ -242,7 +242,7 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 		{
 			nowUs += 10 * 1000;
 
-			const auto packet = buildRembPacket(nowUs);
+			const auto packet = buildRembPacket(nowUs, Ssrc);
 
 			receiverTransportCongestionControl.ReceiveRtpPacket(
 			  nowUs, packet.get(), RTC::Media::Kind::AUDIO);
