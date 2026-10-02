@@ -327,15 +327,20 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 
 		receiverTransportCongestionControl.SetMaxIncomingBitrate(0);
 
-		nowUs += 10 * 1000;
+		// A REMB of zero is how the remote sender is told that it may send whatever it
+		// wants again, and the first of them goes out without waiting.
+		REQUIRE(listener.rembBitrates.size() == 2);
+		REQUIRE(listener.rembBitrates.at(1) == 0);
+
+		// Losing that single REMB would leave the remote sender limited forever, so the
+		// rest of them ride on the incoming packets once the announcing interval is past.
+		nowUs += (1500 + 1) * 1000;
 
 		const auto packet = buildTransportCcPacket(/*wideSeqNumber*/ 0);
 
 		receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get(), RTC::Media::Kind::VIDEO);
 
-		// A REMB of zero is how the remote sender is told that it may send whatever it
-		// wants again, and it is a REMB of its own rather than the one above.
-		REQUIRE(listener.rembBitrates.size() > 1);
+		REQUIRE(listener.rembBitrates.size() == 3);
 		REQUIRE(listener.rembBitrates.back() == 0);
 	}
 }
