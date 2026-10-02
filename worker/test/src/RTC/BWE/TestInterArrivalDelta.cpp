@@ -14,11 +14,11 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	// Feed a packet with explicit arrival and feedback times. Times are given in
 	// ms for readability and converted into us, which is what the class takes.
-	auto feedAt = [](
-	                RTC::BWE::InterArrivalDelta& interArrivalDelta,
-	                int64_t sendTimeMs,
-	                int64_t arrivalTimeMs,
-	                int64_t feedbackAtMs) -> std::optional<RTC::BWE::InterArrivalDelta::Deltas>
+	const auto feedAt = [](
+	                      RTC::BWE::InterArrivalDelta& interArrivalDelta,
+	                      int64_t sendTimeMs,
+	                      int64_t arrivalTimeMs,
+	                      int64_t feedbackAtMs) -> std::optional<RTC::BWE::InterArrivalDelta::Deltas>
 	{
 		return interArrivalDelta.ComputeDeltas(
 		  sendTimeMs * 1000, arrivalTimeMs * 1000, feedbackAtMs * 1000, PacketSize);
@@ -26,9 +26,9 @@ SCENARIO("BWE InterArrivalDelta", "[bwe][interarrivaldelta]")
 
 	// Feed a packet whose arrival time is its send time plus the base network
 	// delay, which is the well behaved case.
-	auto feed = [&feedAt](
-	              RTC::BWE::InterArrivalDelta& interArrivalDelta,
-	              int64_t sendTimeMs) -> std::optional<RTC::BWE::InterArrivalDelta::Deltas>
+	const auto feed = [&feedAt](
+	                    RTC::BWE::InterArrivalDelta& interArrivalDelta,
+	                    int64_t sendTimeMs) -> std::optional<RTC::BWE::InterArrivalDelta::Deltas>
 	{
 		const int64_t arrivalTimeMs = sendTimeMs + BaseDelayMs;
 

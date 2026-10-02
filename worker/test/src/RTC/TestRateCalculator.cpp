@@ -14,7 +14,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 		std::optional<int64_t> rate;
 	};
 
-	auto validate =
+	const auto validate =
 	  [](RTC::RateCalculator& rate, int64_t timeBaseMs, const std::vector<TestRateCalculatorData>& input)
 	{
 		for (const auto& item : input)

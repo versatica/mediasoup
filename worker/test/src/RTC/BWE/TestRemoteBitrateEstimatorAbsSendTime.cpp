@@ -44,7 +44,8 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 	//
 	// NOTE: Every scenario reuses `rtpCommon::FactoryBuffer`, so the returned
 	// packet is only valid until the next call.
-	auto buildPacket = [](size_t payloadSize, int64_t sendTimeUs) -> std::unique_ptr<RTC::RTP::Packet>
+	const auto buildPacket =
+	  [](size_t payloadSize, int64_t sendTimeUs) -> std::unique_ptr<RTC::RTP::Packet>
 	{
 		std::unique_ptr<RTC::RTP::Packet> packet(
 		  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
@@ -66,7 +67,6 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 		headerExtensionIds.absSendTime = absSendTimeId;
 
 		packet->AssignExtensionIds(headerExtensionIds);
-
 		packet->SetPayloadLength(payloadSize);
 
 		REQUIRE(packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(sendTimeUs)));
@@ -76,16 +76,16 @@ SCENARIO("BWE RemoteBitrateEstimatorAbsSendTime", "[bwe][remotebitrateestimatora
 
 	// Feeds a packet that says it left at `sendTimeUs` and arrived at
 	// `arrivalTimeUs`, which is also taken as the current instant.
-	auto feedPacket = [&buildPacket](
-	                    RTC::BWE::RemoteBitrateEstimatorAbsSendTime& remoteBitrateEstimator,
-	                    size_t payloadSize,
-	                    int64_t sendTimeUs,
-	                    int64_t arrivalTimeUs,
-	                    int64_t nowUs) -> void
+	const auto feedPacket = [&buildPacket](
+	                          RTC::BWE::RemoteBitrateEstimatorAbsSendTime& remoteBitrateEstimator,
+	                          size_t payloadSize,
+	                          int64_t sendTimeUs,
+	                          int64_t arrivalTimeUs,
+	                          int64_t nowUs) -> void
 	{
 		const auto packet = buildPacket(payloadSize, sendTimeUs);
 
-		remoteBitrateEstimator.IncomingPacket(packet.get(), arrivalTimeUs, nowUs);
+		remoteBitrateEstimator.ReceiveRtpPacket(packet.get(), arrivalTimeUs, nowUs);
 	};
 
 	SECTION("a burst faster than the one before it raises the estimation")

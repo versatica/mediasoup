@@ -21,7 +21,7 @@ SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 	const uint32_t mediaSsrc{ 0x0330bdee };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::FeedbackRtpSrReqPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackRtpSrReqPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

@@ -36,10 +36,10 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 	// Builds the feedback a receiver would send, reporting the given arrival
 	// times. The sequence numbers left out of them are reported as lost.
-	auto createFeedback = [SenderSsrc, MediaSsrc](
-	                        uint16_t baseSequenceNumber,
-	                        int64_t baseTimeUs,
-	                        const std::vector<std::pair<uint16_t, int64_t>>& receivedPackets)
+	const auto createFeedback = [SenderSsrc, MediaSsrc](
+	                              uint16_t baseSequenceNumber,
+	                              int64_t baseTimeUs,
+	                              const std::vector<std::pair<uint16_t, int64_t>>& receivedPackets)
 	  -> std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket>
 	{
 		auto feedback = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(SenderSsrc, MediaSsrc);

@@ -516,6 +516,7 @@ test_sources = [
   'test/src/RTC/BWE/TestProbeController.cpp',
   'test/src/RTC/BWE/TestProbePacketGenerator.cpp',
   'test/src/RTC/BWE/TestProbingScheduler.cpp',
+  'test/src/RTC/BWE/TestReceiverTransportCongestionControl.cpp',
   'test/src/RTC/BWE/TestRembGenerator.cpp',
   'test/src/RTC/BWE/TestRemoteBitrateEstimatorAbsSendTime.cpp',
   'test/src/RTC/BWE/TestRobustThroughputEstimator.cpp',

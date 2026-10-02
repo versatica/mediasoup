@@ -101,7 +101,7 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 	};
 	// clang-format on
 
-	auto validate =
+	const auto validate =
 	  [&buffer,
 		 &shared](std::vector<TestTransportCongestionControlServerInput>& inputs, TestResults& results)
 	{

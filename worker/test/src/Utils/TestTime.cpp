@@ -64,12 +64,12 @@ SCENARIO("Utils::Time", "[utils][time]")
 	}
 
 	// Middle 32 bits of the given NTP timestamp.
-	auto toCompactNtp = [](uint32_t seconds, uint32_t fractions) -> uint32_t
+	const auto toCompactNtp = [](uint32_t seconds, uint32_t fractions) -> uint32_t
 	{
 		return (seconds << 16) | (fractions >> 16);
 	};
 
-	auto toTimeUs = [](uint32_t seconds, uint32_t fractions) -> int64_t
+	const auto toTimeUs = [](uint32_t seconds, uint32_t fractions) -> int64_t
 	{
 		return Utils::Time::NtpToTimeUs(Utils::Time::Ntp{ .seconds = seconds, .fractions = fractions });
 	};

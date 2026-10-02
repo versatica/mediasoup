@@ -27,7 +27,7 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 	const std::vector<uint32_t> ssrcs{ 0x02d03702, 0x04a76747 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [&ssrcs](RTC::RTCP::FeedbackPsRembPacket* packet)
+	const auto verify = [&ssrcs](RTC::RTCP::FeedbackPsRembPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

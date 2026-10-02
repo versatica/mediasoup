@@ -33,7 +33,7 @@ SCENARIO("RTCP Feedback RTP ECN", "[rtcp][feedback-rtp][ecn]")
 	const uint16_t duplicatedPackets{ 1 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::FeedbackRtpEcnPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackRtpEcnPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

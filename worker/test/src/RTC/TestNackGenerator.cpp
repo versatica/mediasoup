@@ -131,7 +131,7 @@ SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 		                         return 1000 * 1000;
 	                         });
 
-	auto validate =
+	const auto validate =
 	  [&shared](std::unique_ptr<RTC::RTP::Packet>& packet, std::vector<TestNackGeneratorInput>& inputs)
 	{
 		TestNackGeneratorListener listener;

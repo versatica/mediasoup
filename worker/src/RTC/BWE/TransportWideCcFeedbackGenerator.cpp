@@ -247,8 +247,7 @@ namespace RTC
 
 			const auto latestWideSeqNumber = this->feedbackPacket->GetLatestSequenceNumber();
 
-			this->listener->OnTransportWideCcFeedbackGeneratorSendRtcpPacket(
-			  this, this->feedbackPacket.get());
+			this->listener->OnTransportWideCcFeedbackGeneratorSendPacket(this, this->feedbackPacket.get());
 
 			this->feedbackWideSeqNumStart = latestWideSeqNumber + 1;
 

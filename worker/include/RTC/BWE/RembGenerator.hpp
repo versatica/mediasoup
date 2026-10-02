@@ -31,7 +31,7 @@ namespace RTC
 				 *   destroys it once this call returns, so it must be neither kept nor
 				 *   deleted here.
 				 */
-				virtual void OnRembGeneratorSendRemb(
+				virtual void OnRembGeneratorSendPacket(
 				  RembGenerator* rembGenerator, RTC::RTCP::FeedbackPsRembPacket* packet) = 0;
 			};
 

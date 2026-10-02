@@ -42,7 +42,7 @@ namespace RTC
 				 *   destroys it once this call returns, so it must be neither kept nor
 				 *   deleted here.
 				 */
-				virtual void OnTransportWideCcFeedbackGeneratorSendRtcpPacket(
+				virtual void OnTransportWideCcFeedbackGeneratorSendPacket(
 				  TransportWideCcFeedbackGenerator* transportWideCcFeedbackGenerator,
 				  RTC::RTCP::FeedbackRtpTransportPacket* packet) = 0;
 			};

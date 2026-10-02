@@ -3,7 +3,6 @@
 
 #include "RTC/BWE/ReceiverTransportCongestionControl.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 
 namespace RTC
 {
@@ -43,22 +42,30 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->transportWideCcFeedbackGenerator)
+			switch (this->options.congestionControlType)
 			{
-				this->transportWideCcFeedbackGenerator->IncomingPacket(receivedAtUs, packet);
-			}
+				case Types::CongestionControlType::TRANSPORT_CC:
+				{
+					this->transportWideCcFeedbackGenerator->IncomingPacket(receivedAtUs, packet);
 
-			if (this->remoteBitrateEstimator)
-			{
-				// NOTE: The packet is being fed as it arrives, so the instant it arrived
-				// at is also the current one.
-				this->remoteBitrateEstimator->IncomingPacket(packet, receivedAtUs, receivedAtUs);
+					break;
+				}
+
+				case Types::CongestionControlType::REMB:
+				{
+					this->remoteBitrateEstimator->ReceiveRtpPacket(
+					  packet, receivedAtUs, this->shared->GetTimeUs());
+
+					break;
+				}
+
+					NO_DEFAULT();
 			}
 
 			// The cap has to keep being announced whatever was negotiated, since a
 			// remote sender that only reports arrival times is never told anything
 			// else.
-			this->rembGenerator.MaySendLimitationRembFeedback(Utils::Time::TimeUsToMs(receivedAtUs));
+			this->rembGenerator.MaySendLimitationRembFeedback(this->shared->GetTimeMs());
 		}
 
 		void ReceiverTransportCongestionControl::SetMaxIncomingBitrate(int64_t bitrate)
@@ -100,7 +107,7 @@ namespace RTC
 			return bitrate;
 		}
 
-		void ReceiverTransportCongestionControl::OnTransportWideCcFeedbackGeneratorSendRtcpPacket(
+		void ReceiverTransportCongestionControl::OnTransportWideCcFeedbackGeneratorSendPacket(
 		  TransportWideCcFeedbackGenerator* /*transportWideCcFeedbackGenerator*/,
 		  RTC::RTCP::FeedbackRtpTransportPacket* packet)
 		{
@@ -119,7 +126,7 @@ namespace RTC
 			this->rembGenerator.OnReceiveBitrateChanged(this->shared->GetTimeMs(), ssrcs, bitrate);
 		}
 
-		void ReceiverTransportCongestionControl::OnRembGeneratorSendRemb(
+		void ReceiverTransportCongestionControl::OnRembGeneratorSendPacket(
 		  RembGenerator* /*rembGenerator*/, RTC::RTCP::FeedbackPsRembPacket* packet)
 		{
 			MS_TRACE();

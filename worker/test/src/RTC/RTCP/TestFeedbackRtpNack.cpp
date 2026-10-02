@@ -24,7 +24,7 @@ SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 	const uint16_t lostPacketBitmask{ 0x0003 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::FeedbackRtpNackPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackRtpNackPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

@@ -32,7 +32,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 	const uint32_t octetCount{ 577280 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::SenderReport* report)
+	const auto verify = [](RTC::RTCP::SenderReport* report)
 	{
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetNtpSec() == ntpSec);

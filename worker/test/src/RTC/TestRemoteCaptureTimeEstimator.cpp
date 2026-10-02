@@ -69,7 +69,7 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 
 	// Makes the Sender Report about `RemoteBaseTs` plus `idx` seconds of media reach
 	// us with no delay at all, and feeds it to the estimator.
-	auto receiveSenderReport = [&nowUs, &shared, &rtpStream, &estimator](uint32_t idx) -> void
+	const auto receiveSenderReport = [&nowUs, &shared, &rtpStream, &estimator](uint32_t idx) -> void
 	{
 		nowUs = LocalBaseUs + (idx * 1000000);
 
@@ -86,7 +86,7 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 
 	// Makes a packet carrying the 'abs-capture-time' extension reach the stream, which
 	// is what tells a sender that does send it from one that only announced it.
-	auto receiveAbsCaptureTimePacket = [&nowUs, &rtpStream]() -> void
+	const auto receiveAbsCaptureTimePacket = [&nowUs, &rtpStream]() -> void
 	{
 		// Id the extension is given, which only has to match between what is written
 		// and what is read back.

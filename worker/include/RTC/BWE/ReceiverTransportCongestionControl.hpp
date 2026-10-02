@@ -94,7 +94,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from TransportWideCcFeedbackGenerator::Listener. */
 		public:
-			void OnTransportWideCcFeedbackGeneratorSendRtcpPacket(
+			void OnTransportWideCcFeedbackGeneratorSendPacket(
 			  TransportWideCcFeedbackGenerator* transportWideCcFeedbackGenerator,
 			  RTC::RTCP::FeedbackRtpTransportPacket* packet) override;
 
@@ -107,7 +107,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from RembGenerator::Listener. */
 		public:
-			void OnRembGeneratorSendRemb(
+			void OnRembGeneratorSendPacket(
 			  RembGenerator* rembGenerator, RTC::RTCP::FeedbackPsRembPacket* packet) override;
 
 		private:

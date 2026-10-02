@@ -91,14 +91,13 @@ namespace bweHelpers
 		headerExtensionIds.absSendTime = AbsSendTimeId;
 
 		packet->AssignExtensionIds(headerExtensionIds);
-
 		packet->SetPayloadLength(payloadSize);
 
 		REQUIRE(packet->UpdateAbsSendTime(absSendTime));
 
 		const int64_t arrivalTimeUs = (arrivalTimeMs + this->arrivalTimeOffsetMs) * 1000;
 
-		this->remoteBitrateEstimator.IncomingPacket(packet.get(), arrivalTimeUs, this->nowUs);
+		this->remoteBitrateEstimator.ReceiveRtpPacket(packet.get(), arrivalTimeUs, this->nowUs);
 	}
 
 	bool RemoteBitrateEstimatorAbsSendTimeTestHelper::GenerateAndProcessFrame(
