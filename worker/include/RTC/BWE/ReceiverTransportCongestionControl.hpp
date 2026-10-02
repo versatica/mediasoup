@@ -9,6 +9,7 @@
 #include "RTC/Consts.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include "SharedInterface.hpp"
 #include <vector>
 
@@ -42,9 +43,9 @@ namespace RTC
 				/**
 				 * An RTCP packet is ready for the remote sender.
 				 *
-				 * @param packet - Packet to send. It belongs to the caller, which
-				 *   destroys it once this call returns, so it must be neither kept nor
-				 *   deleted here.
+				 * @param packet - Packet to send. It belongs to the caller, so the
+				 *   listener must neither destroy it nor keep it around after this call
+				 *   returns.
 				 */
 				virtual void OnReceiverTransportCongestionControlSendRtcpPacket(
 				  ReceiverTransportCongestionControl* receiverTransportCongestionControl,
@@ -77,8 +78,21 @@ namespace RTC
 			 * Feed a received RTP packet.
 			 *
 			 * @param receivedAtUs - Instant the packet arrived.
+			 * @param kind - Media the stream the packet belongs to carries.
 			 */
-			void ReceiveRtpPacket(int64_t receivedAtUs, const RTC::RTP::Packet* packet);
+			void ReceiveRtpPacket(int64_t receivedAtUs, const RTC::RTP::Packet* packet, RTC::Media::Kind kind);
+
+			/**
+			 * Feed the round trip time towards the remote senders, which bounds how
+			 * often the estimation of the incoming link may be reduced.
+			 */
+			void OnRttUpdate(int64_t avgRttUs);
+
+			/**
+			 * Forget a stream, so that it no longer takes part in the estimation of
+			 * the incoming link nor in the streams the remote sender is told about.
+			 */
+			void RemoveStream(uint32_t ssrc);
 
 			/**
 			 * Cap what the remote sender is told it may send (bps), or zero to let it

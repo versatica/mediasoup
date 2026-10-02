@@ -27,9 +27,9 @@ namespace RTC
 				/**
 				 * A REMB packet is ready for the remote sender.
 				 *
-				 * @param packet - Packet to send. It belongs to the caller, which
-				 *   destroys it once this call returns, so it must be neither kept nor
-				 *   deleted here.
+				 * @param packet - Packet to send. It belongs to the caller, so the
+				 *   listener must neither destroy it nor keep it around after this call
+				 *   returns.
 				 */
 				virtual void OnRembGeneratorSendPacket(
 				  RembGenerator* rembGenerator, RTC::RTCP::FeedbackPsRembPacket* packet) = 0;

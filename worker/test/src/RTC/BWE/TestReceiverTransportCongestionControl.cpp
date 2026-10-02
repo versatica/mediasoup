@@ -133,7 +133,8 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 
 			const auto packet = buildTransportCcPacket(wideSeqNumber);
 
-			receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get());
+			receiverTransportCongestionControl.ReceiveRtpPacket(
+			  nowUs, packet.get(), RTC::Media::Kind::VIDEO);
 		}
 
 		// Nothing goes out until the periodic timer of the feedback generator fires.
@@ -173,7 +174,8 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 
 			const auto packet = buildRembPacket(nowUs);
 
-			receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get());
+			receiverTransportCongestionControl.ReceiveRtpPacket(
+			  nowUs, packet.get(), RTC::Media::Kind::VIDEO);
 		}
 
 		REQUIRE(listener.rtcpTypes.size() == 1);
@@ -182,6 +184,61 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 
 		// What went out is what is reported as available.
 		REQUIRE(receiverTransportCongestionControl.GetAvailableBitrate() == listener.rembBitrates.at(0));
+	}
+
+	SECTION("with REMB audio takes no part in the estimation")
+	{
+		TestReceiverTransportCongestionControlListener listener;
+
+		RTC::BWE::ReceiverTransportCongestionControl receiverTransportCongestionControl(
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::REMB });
+
+		// The very same burst that gives an estimation when it carries video.
+		for (int idx{ 0 }; idx < Probes; ++idx)
+		{
+			nowUs += 10 * 1000;
+
+			const auto packet = buildRembPacket(nowUs);
+
+			receiverTransportCongestionControl.ReceiveRtpPacket(
+			  nowUs, packet.get(), RTC::Media::Kind::AUDIO);
+		}
+
+		REQUIRE(listener.rtcpTypes.empty());
+		REQUIRE_FALSE(receiverTransportCongestionControl.GetAvailableBitrate().has_value());
+	}
+
+	SECTION("with transport-cc audio is reported like video")
+	{
+		TestReceiverTransportCongestionControlListener listener;
+
+		RTC::BWE::ReceiverTransportCongestionControl receiverTransportCongestionControl(
+		  std::addressof(listener),
+		  std::addressof(shared),
+		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::TRANSPORT_CC });
+
+		for (uint16_t wideSeqNumber{ 0 }; wideSeqNumber < 10; ++wideSeqNumber)
+		{
+			nowUs += 10 * 1000;
+
+			const auto packet = buildTransportCcPacket(wideSeqNumber);
+
+			receiverTransportCongestionControl.ReceiveRtpPacket(
+			  nowUs, packet.get(), RTC::Media::Kind::AUDIO);
+		}
+
+		auto* timer = shared.GetTimer(FeedbackTimerLabel);
+
+		REQUIRE(timer);
+
+		nowUs += timer->GetRepeatMs() * 1000;
+
+		REQUIRE(timer->EvaluateHasExpired());
+
+		REQUIRE(listener.rtcpTypes.size() == 1);
+		REQUIRE(listener.rtcpTypes.at(0) == RTC::RTCP::Type::RTPFB);
 	}
 
 	SECTION("the cap is announced even when transport-cc was negotiated")
@@ -201,7 +258,7 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 
 		const auto packet = buildTransportCcPacket(/*wideSeqNumber*/ 0);
 
-		receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get());
+		receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get(), RTC::Media::Kind::VIDEO);
 
 		// Nothing else can tell the remote sender to hold back, since in this mode it
 		// is the one estimating.
@@ -227,7 +284,7 @@ SCENARIO("BWE ReceiverTransportCongestionControl", "[bwe][receivertransportconge
 
 		const auto packet = buildTransportCcPacket(/*wideSeqNumber*/ 0);
 
-		receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get());
+		receiverTransportCongestionControl.ReceiveRtpPacket(nowUs, packet.get(), RTC::Media::Kind::VIDEO);
 
 		// A REMB of zero is how the remote sender is told that it may send whatever it
 		// wants again.

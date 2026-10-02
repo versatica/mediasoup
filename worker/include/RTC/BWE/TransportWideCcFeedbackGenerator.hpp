@@ -38,9 +38,9 @@ namespace RTC
 				/**
 				 * A feedback packet is ready for the remote sender.
 				 *
-				 * @param packet - Packet to send. It belongs to the caller, which
-				 *   destroys it once this call returns, so it must be neither kept nor
-				 *   deleted here.
+				 * @param packet - Packet to send. It belongs to the caller, so the
+				 *   listener must neither destroy it nor keep it around after this call
+				 *   returns.
 				 */
 				virtual void OnTransportWideCcFeedbackGeneratorSendPacket(
 				  TransportWideCcFeedbackGenerator* transportWideCcFeedbackGenerator,
@@ -61,7 +61,7 @@ namespace RTC
 			 *
 			 * @param arrivalTimeUs - Instant the packet arrived.
 			 */
-			void IncomingPacket(int64_t arrivalTimeUs, const RTC::RTP::Packet* packet);
+			void ReceiveRtpPacket(int64_t arrivalTimeUs, const RTC::RTP::Packet* packet);
 
 #ifdef MS_TEST
 		public:

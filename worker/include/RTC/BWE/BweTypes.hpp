@@ -33,12 +33,12 @@ namespace RTC
 				 * The receiving endpoint reports when each packet arrived and the
 				 * sending one estimates from that.
 				 */
-				TRANSPORT_CC,
+				TRANSPORT_CC = 1,
 				/**
 				 * The receiving endpoint estimates and tells the sending one how much
 				 * it may send.
 				 */
-				REMB
+				REMB = 2
 			};
 
 			constexpr std::string_view congestionControlTypeToString(CongestionControlType congestionControlType)

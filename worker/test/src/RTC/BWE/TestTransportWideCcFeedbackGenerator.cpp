@@ -127,7 +127,7 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 
 		const auto packet = buildPacket(payloadSize, wideSeqNumber);
 
-		transportWideCcFeedbackGenerator.IncomingPacket(arrivalTimeUs, packet.get());
+		transportWideCcFeedbackGenerator.ReceiveRtpPacket(arrivalTimeUs, packet.get());
 	};
 
 	// Checks that the feedback packets the listener got are the expected ones,

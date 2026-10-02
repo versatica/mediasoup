@@ -16,6 +16,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			MS_ASSERT(
+			  this->options.congestionControlType == Types::CongestionControlType::TRANSPORT_CC ||
+			    this->options.congestionControlType == Types::CongestionControlType::REMB,
+			  "no congestion control type given");
+
 			switch (this->options.congestionControlType)
 			{
 				case Types::CongestionControlType::TRANSPORT_CC:
@@ -38,7 +43,7 @@ namespace RTC
 		}
 
 		void ReceiverTransportCongestionControl::ReceiveRtpPacket(
-		  int64_t receivedAtUs, const RTC::RTP::Packet* packet)
+		  int64_t receivedAtUs, const RTC::RTP::Packet* packet, RTC::Media::Kind kind)
 		{
 			MS_TRACE();
 
@@ -46,13 +51,20 @@ namespace RTC
 			{
 				case Types::CongestionControlType::TRANSPORT_CC:
 				{
-					this->transportWideCcFeedbackGenerator->IncomingPacket(receivedAtUs, packet);
+					this->transportWideCcFeedbackGenerator->ReceiveRtpPacket(receivedAtUs, packet);
 
 					break;
 				}
 
 				case Types::CongestionControlType::REMB:
 				{
+					// Audio packets take no part in the estimation of the incoming link,
+					// so their streams are not announced in the REMB either.
+					if (kind == RTC::Media::Kind::AUDIO)
+					{
+						break;
+					}
+
 					this->remoteBitrateEstimator->ReceiveRtpPacket(
 					  packet, receivedAtUs, this->shared->GetTimeUs());
 
@@ -66,6 +78,55 @@ namespace RTC
 			// remote sender that only reports arrival times is never told anything
 			// else.
 			this->rembGenerator.MaySendLimitationRembFeedback(this->shared->GetTimeMs());
+		}
+
+		void ReceiverTransportCongestionControl::OnRttUpdate(int64_t avgRttUs)
+		{
+			MS_TRACE();
+
+			switch (this->options.congestionControlType)
+			{
+				case Types::CongestionControlType::TRANSPORT_CC:
+				{
+					// Nothing is estimated here in this mode, so there is nothing the
+					// round trip time bounds.
+
+					break;
+				}
+
+				case Types::CongestionControlType::REMB:
+				{
+					this->remoteBitrateEstimator->OnRttUpdate(avgRttUs);
+
+					break;
+				}
+
+					NO_DEFAULT();
+			}
+		}
+
+		void ReceiverTransportCongestionControl::RemoveStream(uint32_t ssrc)
+		{
+			MS_TRACE();
+
+			switch (this->options.congestionControlType)
+			{
+				case Types::CongestionControlType::TRANSPORT_CC:
+				{
+					// No stream is kept track of in this mode.
+
+					break;
+				}
+
+				case Types::CongestionControlType::REMB:
+				{
+					this->remoteBitrateEstimator->RemoveStream(ssrc);
+
+					break;
+				}
+
+					NO_DEFAULT();
+			}
 		}
 
 		void ReceiverTransportCongestionControl::SetMaxIncomingBitrate(int64_t bitrate)

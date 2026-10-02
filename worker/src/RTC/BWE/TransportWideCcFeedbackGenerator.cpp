@@ -45,7 +45,7 @@ namespace RTC
 			this->sendPeriodicTimer->Start(this->sendIntervalMs, this->sendIntervalMs);
 		}
 
-		void TransportWideCcFeedbackGenerator::IncomingPacket(
+		void TransportWideCcFeedbackGenerator::ReceiveRtpPacket(
 		  int64_t arrivalTimeUs, const RTC::RTP::Packet* packet)
 		{
 			MS_TRACE();
