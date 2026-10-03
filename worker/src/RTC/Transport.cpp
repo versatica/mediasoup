@@ -472,8 +472,6 @@ namespace RTC
 		// TODO: Take these from the built-in downlink and uplink BWE.
 		const flatbuffers::Optional<uint64_t> availableOutgoingBitrate{ flatbuffers::nullopt };
 		const flatbuffers::Optional<uint64_t> availableIncomingBitrate{ flatbuffers::nullopt };
-		const flatbuffers::Optional<double> rtpPacketLossReceived{ flatbuffers::nullopt };
-		const flatbuffers::Optional<double> rtpPacketLossSent{ flatbuffers::nullopt };
 #else
 		const auto availableOutgoingBitrate =
 		  this->tccClient ? flatbuffers::Optional<uint64_t>(
@@ -482,12 +480,6 @@ namespace RTC
 		const auto availableIncomingBitrate =
 		  this->tccServer ? flatbuffers::Optional<uint64_t>(
 		                      static_cast<uint64_t>(this->tccServer->GetAvailableBitrate()))
-			                : flatbuffers::nullopt;
-		const auto rtpPacketLossReceived =
-		  this->tccServer ? flatbuffers::Optional<double>(this->tccServer->GetPacketLoss())
-			                : flatbuffers::nullopt;
-		const auto rtpPacketLossSent =
-		  this->tccClient ? flatbuffers::Optional<double>(this->tccClient->GetPacketLoss())
 			                : flatbuffers::nullopt;
 #endif
 
@@ -543,11 +535,7 @@ namespace RTC
 		  // minOutgoingBitrate.
 		  this->minOutgoingBitrate > 0
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->minOutgoingBitrate))
-				: flatbuffers::nullopt,
-		  // rtpPacketLossReceived.
-		  rtpPacketLossReceived,
-		  // rtpPacketLossSent.
-		  rtpPacketLossSent);
+				: flatbuffers::nullopt);
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)

@@ -13,7 +13,6 @@ namespace RTC
 	static constexpr int64_t LimitationRembIntervalMs{ 1500 };
 	static constexpr int64_t PacketArrivalTimestampWindowUs{ 500 * 1000 };
 	static constexpr uint8_t UnlimitedRembNumPackets{ 4u };
-	static constexpr size_t PacketLossHistogramLength{ 24 };
 
 	/* Instance methods. */
 
@@ -97,13 +96,6 @@ namespace RTC
 
 			default:;
 		}
-	}
-
-	double TransportCongestionControlServer::GetPacketLoss() const
-	{
-		MS_TRACE();
-
-		return this->packetLoss;
 	}
 
 	void TransportCongestionControlServer::IncomingPacket(int64_t nowUs, const RTC::RTP::Packet* packet)
@@ -309,23 +301,6 @@ namespace RTC
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(
 		  this, this->transportCcFeedbackPacket.get());
 
-		// Update packet loss history.
-		const size_t expectedPackets = this->transportCcFeedbackPacket->GetPacketStatusCount();
-		size_t lostPackets           = 0;
-
-		for (const auto& packetStatus : this->transportCcFeedbackPacket->GetPacketStatuses())
-		{
-			if (!packetStatus.received)
-			{
-				lostPackets += 1;
-			}
-		}
-
-		if (expectedPackets > 0)
-		{
-			this->UpdatePacketLoss(static_cast<double>(lostPackets) / expectedPackets);
-		}
-
 		this->transportCcFeedbackWideSeqNumStart = latestWideSeqNumber + 1;
 
 		return true;
@@ -388,36 +363,6 @@ namespace RTC
 				this->unlimitedRembCounter--;
 			}
 		}
-	}
-
-	void TransportCongestionControlServer::UpdatePacketLoss(double packetLoss)
-	{
-		MS_TRACE();
-
-		// Add the lost into the histogram.
-		if (this->packetLossHistory.size() == PacketLossHistogramLength)
-		{
-			this->packetLossHistory.pop_front();
-		}
-
-		this->packetLossHistory.push_back(packetLoss);
-
-		// Calculate a weighted average
-		size_t weight{ 0 };
-		size_t samples{ 0 };
-		double totalPacketLoss{ 0 };
-
-		for (auto packetLossEntry : this->packetLossHistory)
-		{
-			weight++;
-			samples += weight;
-			totalPacketLoss += weight * packetLossEntry;
-		}
-
-		// clang-tidy "thinks" that this can lead to division by zero but we are
-		// smarter.
-		// NOLINTNEXTLINE(clang-analyzer-core.DivideZero)
-		this->packetLoss = totalPacketLoss / samples;
 	}
 
 	void TransportCongestionControlServer::ResetTransportCcFeedback(uint8_t feedbackPacketCount)
