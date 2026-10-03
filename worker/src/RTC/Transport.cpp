@@ -1757,8 +1757,9 @@ namespace RTC
 			{
 				const auto sendStatusStringView = RTC::SCTP::Types::sendMessageStatusToString(sendStatus);
 
-				MS_WARN_TAG(
+				MS_WARN_2TAGS(
 				  sctp,
+				  message,
 				  "failed to send SCTP message [sendStatus:%.*s]",
 				  static_cast<int>(sendStatusStringView.size()),
 				  sendStatusStringView.data());
@@ -1777,8 +1778,9 @@ namespace RTC
 			{
 				const auto sendStatusStringView = RTC::SCTP::Types::sendMessageStatusToString(sendStatus);
 
-				MS_WARN_TAG(
+				MS_WARN_2TAGS(
 				  sctp,
+				  message,
 				  "failed to send SCTP message [sendStatus:%.*s]",
 				  static_cast<int>(sendStatusStringView.size()),
 				  sendStatusStringView.data());
@@ -3247,8 +3249,9 @@ namespace RTC
 
 		if (!dataProducer)
 		{
-			MS_WARN_TAG(
+			MS_WARN_2TAGS(
 			  sctp,
+			  message,
 			  "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]",
 			  message.GetStreamId());
 
@@ -3275,8 +3278,9 @@ namespace RTC
 		}
 		catch (std::exception& error)
 		{
-			MS_WARN_TAG(
+			MS_WARN_2TAGS(
 			  sctp,
+			  message,
 			  "DataProducer::ReceiveMessage() failed for received SCTP message [streamId:%" PRIu16 "]: %s",
 			  message.GetStreamId(),
 			  error.what());
