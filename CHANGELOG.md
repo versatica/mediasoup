@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Add more logs with "message" log tag ([PR #1966](https://github.com/versatica/mediasoup/pull/1966)).
+
 ### 3.28.0
 
 - Worker: Fix MSVC compiler warnings ([PR #1937](https://github.com/versatica/mediasoup/pull/1937)).
