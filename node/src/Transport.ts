@@ -1270,14 +1270,6 @@ export function parseBaseTransportStats(
 			binary.minOutgoingBitrate() !== null
 				? Number(binary.minOutgoingBitrate())
 				: undefined,
-		rtpPacketLossReceived:
-			typeof binary.rtpPacketLossReceived() === 'number'
-				? Number(binary.rtpPacketLossReceived())
-				: undefined,
-		rtpPacketLossSent:
-			typeof binary.rtpPacketLossSent() === 'number'
-				? Number(binary.rtpPacketLossSent())
-				: undefined,
 	};
 }
 

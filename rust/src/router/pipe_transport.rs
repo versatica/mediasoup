@@ -235,10 +235,6 @@ pub struct PipeTransportStat {
     pub max_incoming_bitrate: Option<u64>,
     pub max_outgoing_bitrate: Option<u64>,
     pub min_outgoing_bitrate: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rtp_packet_loss_received: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rtp_packet_loss_sent: Option<f64>,
     // PipeTransport specific.
     pub tuple: TransportTuple,
 }
@@ -271,8 +267,6 @@ impl<'a> TryFromFbs<'a> for PipeTransportStat {
             max_incoming_bitrate: stats.base.max_incoming_bitrate,
             max_outgoing_bitrate: stats.base.max_outgoing_bitrate,
             min_outgoing_bitrate: stats.base.min_outgoing_bitrate,
-            rtp_packet_loss_received: stats.base.rtp_packet_loss_received,
-            rtp_packet_loss_sent: stats.base.rtp_packet_loss_sent,
             // PlainTransport specific.
             tuple: TransportTuple::from_fbs(stats.tuple.as_ref()),
         })

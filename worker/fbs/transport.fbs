@@ -182,8 +182,6 @@ table Stats {
     max_incoming_bitrate: uint64 = null;
     max_outgoing_bitrate: uint64 = null;
     min_outgoing_bitrate: uint64 = null;
-    rtp_packet_loss_received: float64 = null;
-    rtp_packet_loss_sent: float64 = null;
 }
 
 table SetMaxIncomingBitrateRequest {

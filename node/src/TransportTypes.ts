@@ -196,8 +196,6 @@ export type BaseTransportStats = {
 	maxIncomingBitrate?: number;
 	maxOutgoingBitrate?: number;
 	minOutgoingBitrate?: number;
-	rtpPacketLossReceived?: number;
-	rtpPacketLossSent?: number;
 };
 
 /**
