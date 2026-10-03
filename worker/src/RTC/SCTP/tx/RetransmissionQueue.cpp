@@ -95,8 +95,9 @@ namespace RTC
 			// Add lifecycle events for delivered messages.
 			for (const uint64_t lifecycleId : ackInfo.ackedLifecycleIds)
 			{
-				MS_DEBUG_TAG(
+				MS_DEBUG_2TAGS(
 				  sctp,
+				  message,
 				  "triggering OnAssociationLifecycleMessageDelivered() [lifecycleId:%" PRIu64 "]",
 				  lifecycleId);
 
@@ -107,8 +108,9 @@ namespace RTC
 			// Add lifecycle events for abandoned messages.
 			for (const uint64_t lifecycleId : ackInfo.abandonedLifecycleIds)
 			{
-				MS_DEBUG_TAG(
+				MS_DEBUG_2TAGS(
 				  sctp,
+				  message,
 				  "triggering OnLifecycleMessageExpired() [lifecycleId:%" PRIu64 ", maybeDelivered:true]",
 				  lifecycleId);
 

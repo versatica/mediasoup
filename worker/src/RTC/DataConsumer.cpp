@@ -598,8 +598,8 @@ namespace RTC
 			MS_WARN_TAG(
 			  message,
 			  "message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-			  messageLen,
-			  this->maxMessageSize);
+			  this->maxMessageSize,
+			  messageLen);
 
 			if (cb)
 			{
