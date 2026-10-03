@@ -3,6 +3,7 @@
 #include "RTC/SCTP/association/AssociationListenerDeferrer.hpp"
 #include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
+#include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
 #include "RTC/SCTP/packet/parameters/IncomingSsnResetRequestParameter.hpp"
@@ -27,6 +28,7 @@ namespace
 	constexpr uint32_t RemoteInitialTsn{ 0 };
 	constexpr int64_t InitialNowUs{ 10000 * 1000 };
 	constexpr int64_t RtoMs{ 250 };
+	const std::vector<uint8_t> ShortPayload{ 1, 2, 3, 4 };
 
 	/**
 	 * A RTC::SCTP::StreamResetHandler under test, together with all the (real)
@@ -372,6 +374,411 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 		REQUIRE(
 		  response->GetResult() ==
 		  RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_NOTHING_TO_DO);
+	}
+
+	SECTION("a reset request with no stream ids defers all streams")
+	{
+		// https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
+		//
+		// E3) "If no stream numbers are listed in the parameter, then all incoming
+		// streams MUST be reset to 0 as the next expected SSN."
+		//
+		// So a request with an empty stream id list must defer incoming data of
+		// every stream, not of none.
+
+		TestStreamResetHandler test;
+
+		// Makes the peer request an outgoing stream reset of all streams (no stream
+		// ids listed) with the given sender's last assigned TSN.
+		const auto handleReceivedOutgoingSsnResetRequestForAllStreams =
+		  [&test](uint32_t reqSeqNbr, uint32_t senderLastAssignedTsn) -> void
+		{
+			std::vector<uint8_t> buffer(test.sctpOptions.mtu);
+
+			const std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{
+				RTC::SCTP::ReConfigChunk::Factory(buffer.data(), buffer.size())
+			};
+
+			auto* parameter =
+			  reConfigChunk->BuildParameterInPlace<RTC::SCTP::OutgoingSsnResetRequestParameter>();
+
+			parameter->SetReconfigurationRequestSequenceNumber(reqSeqNbr);
+			parameter->SetReconfigurationResponseSequenceNumber(0);
+			parameter->SetSenderLastAssignedTsn(senderLastAssignedTsn);
+
+			// NOTE: No AddStreamId() call here, which is what means "all streams".
+			parameter->Consolidate();
+
+			test.HandleReceivedReConfigChunk(reConfigChunk.get());
+		};
+
+		// Returns the result of the RE-CONFIG response sent back to the peer.
+		const auto consumeSentReConfigResponseResult =
+		  [&test]() -> RTC::SCTP::ReconfigurationResponseParameter::Result
+		{
+			const auto sentBuffer = test.associationListener.ConsumeFirstSentPacket();
+
+			REQUIRE(!sentBuffer.empty());
+
+			const std::unique_ptr<RTC::SCTP::Packet> sentPacket{ RTC::SCTP::Packet::Parse(
+				sentBuffer.data(), sentBuffer.size()) };
+
+			REQUIRE(sentPacket);
+
+			const auto* response =
+			  sentPacket->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>()
+			    ->GetFirstParameterOfType<RTC::SCTP::ReconfigurationResponseParameter>();
+
+			REQUIRE(response);
+
+			return response->GetResult();
+		};
+
+		// Feeds a received ordered chunk, complete in itself, to the receive side.
+		const auto handleReceivedOrderedData = [&test](uint32_t tsn, uint16_t ssn, uint32_t ppid) -> void
+		{
+			test.dataTracker.Observe(tsn);
+
+			test.reassemblyQueue.AddData(
+			  tsn,
+			  RTC::SCTP::UserData(
+			    /*streamId*/ 1,
+			    /*ssn*/ ssn,
+			    /*mid*/ 0,
+			    /*fsn*/ 0,
+			    /*ppid*/ ppid,
+			    /*payload*/ ShortPayload,
+			    /*isBeginning*/ true,
+			    /*isEnd*/ true,
+			    /*isUnordered*/ false));
+		};
+
+		// Takes the next reassembled message and requires it to be the expected one.
+		const auto requireNextMessageIs = [&test](uint16_t streamId, uint32_t ppid) -> void
+		{
+			const auto message = test.reassemblyQueue.GetNextMessage();
+
+			REQUIRE(message.has_value());
+			REQUIRE(message->GetStreamId() == streamId);
+			REQUIRE(message->GetPayloadProtocolId() == ppid);
+
+			const auto payload = message->GetPayload();
+
+			REQUIRE(std::vector<uint8_t>(payload.begin(), payload.end()) == ShortPayload);
+		};
+
+		// A first message is received and delivered, so stream 1 now expects SSN 1.
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn, /*ssn*/ 0, /*ppid*/ 1001);
+
+		requireNextMessageIs(/*streamId*/ 1, /*ppid*/ 1001);
+
+		// The peer requests a reset of all streams with a sender's last assigned TSN
+		// that has not been reached yet, so the receive side enters deferred reset
+		// processing and replies "in progress".
+		handleReceivedOutgoingSsnResetRequestForAllStreams(
+		  /*reqSeqNbr*/ RemoteInitialTsn, /*senderLastAssignedTsn*/ RemoteInitialTsn + 1);
+
+		REQUIRE(
+		  consumeSentReConfigResponseResult() ==
+		  RTC::SCTP::ReconfigurationResponseParameter::Result::IN_PROGRESS);
+
+		// A post-reset message arrives before the pre-reset one. Its TSN is beyond
+		// the sender's last assigned TSN, so it must be deferred even though the
+		// request listed no stream ids.
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn + 2, /*ssn*/ 0, /*ppid*/ 1003);
+
+		REQUIRE(test.reassemblyQueue.HasMessages() == false);
+
+		// The delayed pre-reset message arrives and is delivered.
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn + 1, /*ssn*/ 1, /*ppid*/ 1002);
+
+		requireNextMessageIs(/*streamId*/ 1, /*ppid*/ 1002);
+
+		// The peer retransmits the reset request now that its sender's last assigned
+		// TSN has been reached, so the reset is performed.
+		handleReceivedOutgoingSsnResetRequestForAllStreams(
+		  /*reqSeqNbr*/ RemoteInitialTsn, /*senderLastAssignedTsn*/ RemoteInitialTsn + 1);
+
+		REQUIRE(
+		  consumeSentReConfigResponseResult() ==
+		  RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED);
+
+		// The inbound streams reset is reported with an empty stream id list, which
+		// is what tells the application that all of them were reset.
+		REQUIRE(test.associationListener.CountOnInboundStreamsResetCalls() == 1);
+		REQUIRE(test.associationListener.HasInboundStreamsResetForStreamId(1) == false);
+
+		// And the deferred post-reset message is now reassembled and delivered.
+		requireNextMessageIs(/*streamId*/ 1, /*ppid*/ 1003);
+
+		REQUIRE(test.reassemblyQueue.HasMessages() == false);
+	}
+
+	SECTION("a reset request with stream ids defers only those streams")
+	{
+		// https://datatracker.ietf.org/doc/html/rfc6525#section-5.2.2
+		//
+		// E3) "If specific stream numbers are listed, then only these specific
+		// streams MUST be reset to 0, and all other non-listed SSNs remain
+		// unchanged."
+
+		TestStreamResetHandler test;
+
+		// Makes the peer request an outgoing stream reset of the given streams with
+		// the given sender's last assigned TSN.
+		const auto handleReceivedOutgoingSsnResetRequest = [&test](
+		                                                     uint32_t reqSeqNbr,
+		                                                     uint32_t senderLastAssignedTsn,
+		                                                     std::span<const uint16_t> streamIds) -> void
+		{
+			std::vector<uint8_t> buffer(test.sctpOptions.mtu);
+
+			const std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{
+				RTC::SCTP::ReConfigChunk::Factory(buffer.data(), buffer.size())
+			};
+
+			auto* parameter =
+			  reConfigChunk->BuildParameterInPlace<RTC::SCTP::OutgoingSsnResetRequestParameter>();
+
+			parameter->SetReconfigurationRequestSequenceNumber(reqSeqNbr);
+			parameter->SetReconfigurationResponseSequenceNumber(0);
+			parameter->SetSenderLastAssignedTsn(senderLastAssignedTsn);
+
+			for (const auto streamId : streamIds)
+			{
+				parameter->AddStreamId(streamId);
+			}
+
+			parameter->Consolidate();
+
+			test.HandleReceivedReConfigChunk(reConfigChunk.get());
+		};
+
+		// Returns the result of the RE-CONFIG response sent back to the peer.
+		const auto consumeSentReConfigResponseResult =
+		  [&test]() -> RTC::SCTP::ReconfigurationResponseParameter::Result
+		{
+			const auto sentBuffer = test.associationListener.ConsumeFirstSentPacket();
+
+			REQUIRE(!sentBuffer.empty());
+
+			const std::unique_ptr<RTC::SCTP::Packet> sentPacket{ RTC::SCTP::Packet::Parse(
+				sentBuffer.data(), sentBuffer.size()) };
+
+			REQUIRE(sentPacket);
+
+			const auto* response =
+			  sentPacket->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>()
+			    ->GetFirstParameterOfType<RTC::SCTP::ReconfigurationResponseParameter>();
+
+			REQUIRE(response);
+
+			return response->GetResult();
+		};
+
+		// Feeds a received ordered chunk, complete in itself, to the receive side.
+		const auto handleReceivedOrderedData =
+		  [&test](uint32_t tsn, uint16_t streamId, uint16_t ssn, uint32_t ppid) -> void
+		{
+			test.dataTracker.Observe(tsn);
+
+			test.reassemblyQueue.AddData(
+			  tsn,
+			  RTC::SCTP::UserData(
+			    /*streamId*/ streamId,
+			    /*ssn*/ ssn,
+			    /*mid*/ 0,
+			    /*fsn*/ 0,
+			    /*ppid*/ ppid,
+			    /*payload*/ ShortPayload,
+			    /*isBeginning*/ true,
+			    /*isEnd*/ true,
+			    /*isUnordered*/ false));
+		};
+
+		// Takes the next reassembled message and requires it to be the expected one.
+		const auto requireNextMessageIs = [&test](uint16_t streamId, uint32_t ppid) -> void
+		{
+			const auto message = test.reassemblyQueue.GetNextMessage();
+
+			REQUIRE(message.has_value());
+			REQUIRE(message->GetStreamId() == streamId);
+			REQUIRE(message->GetPayloadProtocolId() == ppid);
+
+			const auto payload = message->GetPayload();
+
+			REQUIRE(std::vector<uint8_t>(payload.begin(), payload.end()) == ShortPayload);
+		};
+
+		const std::vector<uint16_t> resetStreamIds{ 1, 2 };
+
+		// The peer requests a reset of streams 1 and 2 only, with a sender's last
+		// assigned TSN that has not been reached yet.
+		handleReceivedOutgoingSsnResetRequest(
+		  /*reqSeqNbr*/ 0, /*senderLastAssignedTsn*/ RemoteInitialTsn + 2, resetStreamIds);
+
+		REQUIRE(
+		  consumeSentReConfigResponseResult() ==
+		  RTC::SCTP::ReconfigurationResponseParameter::Result::IN_PROGRESS);
+
+		// Before the sender's last assigned TSN, so all of them are delivered.
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn, /*streamId*/ 1, /*ssn*/ 0, /*ppid*/ 1001);
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn + 1, /*streamId*/ 2, /*ssn*/ 0, /*ppid*/ 1002);
+
+		// At the sender's last assigned TSN, not beyond it, so delivered too.
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn + 2, /*streamId*/ 3, /*ssn*/ 0, /*ppid*/ 1003);
+
+		// Beyond the sender's last assigned TSN and on a listed stream, so deferred.
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn + 3, /*streamId*/ 1, /*ssn*/ 0, /*ppid*/ 1004);
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn + 4, /*streamId*/ 2, /*ssn*/ 0, /*ppid*/ 1005);
+
+		// Beyond it as well, but stream 3 is not listed, so it is delivered.
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn + 5, /*streamId*/ 3, /*ssn*/ 1, /*ppid*/ 1006);
+
+		requireNextMessageIs(/*streamId*/ 1, /*ppid*/ 1001);
+		requireNextMessageIs(/*streamId*/ 2, /*ppid*/ 1002);
+		requireNextMessageIs(/*streamId*/ 3, /*ppid*/ 1003);
+		requireNextMessageIs(/*streamId*/ 3, /*ppid*/ 1006);
+
+		REQUIRE(test.reassemblyQueue.HasMessages() == false);
+
+		// The peer requests the reset again now that its sender's last assigned TSN
+		// has been reached, so the reset is performed.
+		handleReceivedOutgoingSsnResetRequest(
+		  /*reqSeqNbr*/ 1, /*senderLastAssignedTsn*/ RemoteInitialTsn + 3, resetStreamIds);
+
+		REQUIRE(
+		  consumeSentReConfigResponseResult() ==
+		  RTC::SCTP::ReconfigurationResponseParameter::Result::SUCCESS_PERFORMED);
+
+		// Only the listed streams are reported as reset.
+		REQUIRE(test.associationListener.CountOnInboundStreamsResetCalls() == 1);
+		REQUIRE(test.associationListener.HasInboundStreamsResetForStreamId(1) == true);
+		REQUIRE(test.associationListener.HasInboundStreamsResetForStreamId(2) == true);
+		REQUIRE(test.associationListener.HasInboundStreamsResetForStreamId(3) == false);
+
+		// And the deferred messages of the listed streams are now delivered.
+		requireNextMessageIs(/*streamId*/ 1, /*ppid*/ 1004);
+		requireNextMessageIs(/*streamId*/ 2, /*ppid*/ 1005);
+
+		REQUIRE(test.reassemblyQueue.HasMessages() == false);
+	}
+
+	// @see https://github.com/versatica/mediasoup/security/advisories/GHSA-rq7g-r9qr-rwpq
+	SECTION("deferred reset processing with no stream ids ends on the cumulative ack")
+	{
+		// Same as the section above that bounds received Forward-TSN chunks, but
+		// with a request that lists no stream ids, so that leaving deferred reset
+		// processing on the cumulative ack condition is also covered for the "all
+		// streams" case.
+
+		TestStreamResetHandler test;
+
+		// Makes the peer request an outgoing stream reset of all streams (no stream
+		// ids listed) with the given sender's last assigned TSN.
+		const auto handleReceivedOutgoingSsnResetRequestForAllStreams =
+		  [&test](uint32_t reqSeqNbr, uint32_t senderLastAssignedTsn) -> void
+		{
+			std::vector<uint8_t> buffer(test.sctpOptions.mtu);
+
+			const std::unique_ptr<RTC::SCTP::ReConfigChunk> reConfigChunk{
+				RTC::SCTP::ReConfigChunk::Factory(buffer.data(), buffer.size())
+			};
+
+			auto* parameter =
+			  reConfigChunk->BuildParameterInPlace<RTC::SCTP::OutgoingSsnResetRequestParameter>();
+
+			parameter->SetReconfigurationRequestSequenceNumber(reqSeqNbr);
+			parameter->SetReconfigurationResponseSequenceNumber(0);
+			parameter->SetSenderLastAssignedTsn(senderLastAssignedTsn);
+
+			// NOTE: No AddStreamId() call here, which is what means "all streams".
+			parameter->Consolidate();
+
+			test.HandleReceivedReConfigChunk(reConfigChunk.get());
+		};
+
+		// Feeds a received ordered chunk, complete in itself, to the receive side.
+		const auto handleReceivedOrderedData = [&test](uint32_t tsn, uint16_t ssn, uint32_t ppid) -> void
+		{
+			test.dataTracker.Observe(tsn);
+
+			test.reassemblyQueue.AddData(
+			  tsn,
+			  RTC::SCTP::UserData(
+			    /*streamId*/ 1,
+			    /*ssn*/ ssn,
+			    /*mid*/ 0,
+			    /*fsn*/ 0,
+			    /*ppid*/ ppid,
+			    /*payload*/ ShortPayload,
+			    /*isBeginning*/ true,
+			    /*isEnd*/ true,
+			    /*isUnordered*/ false));
+		};
+
+		// Takes the next reassembled message and requires it to be the expected one.
+		const auto requireNextMessageIs = [&test](uint16_t streamId, uint32_t ppid) -> void
+		{
+			const auto message = test.reassemblyQueue.GetNextMessage();
+
+			REQUIRE(message.has_value());
+			REQUIRE(message->GetStreamId() == streamId);
+			REQUIRE(message->GetPayloadProtocolId() == ppid);
+
+			const auto payload = message->GetPayload();
+
+			REQUIRE(std::vector<uint8_t>(payload.begin(), payload.end()) == ShortPayload);
+		};
+
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn, /*ssn*/ 0, /*ppid*/ 1001);
+
+		requireNextMessageIs(/*streamId*/ 1, /*ppid*/ 1001);
+
+		// The peer enters deferred reset processing and then never retransmits its
+		// request.
+		handleReceivedOutgoingSsnResetRequestForAllStreams(
+		  /*reqSeqNbr*/ RemoteInitialTsn, /*senderLastAssignedTsn*/ RemoteInitialTsn + 1);
+
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn + 2, /*ssn*/ 0, /*ppid*/ 1003);
+
+		REQUIRE(test.reassemblyQueue.HasMessages() == false);
+		REQUIRE(test.reassemblyQueue.GetQueuedBytes() > 0);
+
+		// The cumulative ack TSN now reaches the sender's last assigned TSN, which
+		// is what must end deferred reset processing.
+		handleReceivedOrderedData(
+		  /*tsn*/ RemoteInitialTsn + 1, /*ssn*/ 1, /*ppid*/ 1002);
+
+		requireNextMessageIs(/*streamId*/ 1, /*ppid*/ 1002);
+
+		{
+			const RTC::SCTP::AssociationListenerDeferrer::ScopedDeferrer deferrer(
+			  test.associationListenerDeferrer);
+
+			REQUIRE(test.streamResetHandler.MayLeaveDeferredReset() == true);
+		}
+
+		// All streams are reset, so the reported stream id list is empty.
+		REQUIRE(test.associationListener.CountOnInboundStreamsResetCalls() == 1);
+		REQUIRE(test.associationListener.HasInboundStreamsResetForStreamId(1) == false);
+
+		// And the deferred message is released rather than held forever.
+		requireNextMessageIs(/*streamId*/ 1, /*ppid*/ 1003);
+
+		REQUIRE(test.reassemblyQueue.HasMessages() == false);
+		REQUIRE(test.reassemblyQueue.GetQueuedBytes() == 0);
 	}
 
 	// @see https://github.com/versatica/mediasoup/security/advisories/GHSA-rq7g-r9qr-rwpq

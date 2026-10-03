@@ -54,7 +54,8 @@ namespace RTC
 			if (
 			  this->deferredResetStreams.has_value() &&
 			  unwrappedTsn > this->deferredResetStreams->senderLastAssignedTsn &&
-			  this->deferredResetStreams->streamIds.contains(data.GetStreamId()))
+			  (this->deferredResetStreams->streamIds.empty() ||
+				 this->deferredResetStreams->streamIds.contains(data.GetStreamId())))
 			{
 				MS_DEBUG_DEV(
 				  "deferrink chunk [tsn:%" PRIu32 ", streamId:%" PRIu16 "] until tsn %" PRIu32,
