@@ -469,7 +469,7 @@ namespace RTC
 		}
 
 #ifdef MS_USE_BUILTIN_BWE
-		// TODO: Take these from the built-in downlink and uplink BWE.
+		// TODO: Take these from the built-in sender and receiver congestion control.
 		const flatbuffers::Optional<uint64_t> availableOutgoingBitrate{ flatbuffers::nullopt };
 		const flatbuffers::Optional<uint64_t> availableIncomingBitrate{ flatbuffers::nullopt };
 #else
