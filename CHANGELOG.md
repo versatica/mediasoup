@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: Add more logs with "message" log tag ([PR #1966](https://github.com/versatica/mediasoup/pull/1966)).
+- SCTP: Fix deferred stream reset with an empty stream list not deferring incoming data ([PR #1967](https://github.com/versatica/mediasoup/pull/1967)).
 
 ### 3.28.0
 
