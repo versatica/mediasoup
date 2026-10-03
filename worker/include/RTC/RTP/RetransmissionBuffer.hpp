@@ -22,26 +22,47 @@ namespace RTC
 			{
 				void Reset();
 
-				// Original packet.
+				/**
+				 * Original packet.
+				 */
 				RTP::SharedPacket sharedPacket{ nullptr };
-				// Payload descriptor encoder.
+				/**
+				 * Payload descriptor encoder.
+				 */
 				std::unique_ptr<RTP::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
-				// Correct SSRC since original packet may not have the same.
+				/**
+				 * Correct SSRC since original packet may not have the same.
+				 */
 				uint32_t ssrc{ 0 };
-				// Correct sequence number since original packet may not have the same.
+				/**
+				 * Correct sequence number since original packet may not have the same.
+				 */
 				uint16_t sequenceNumber{ 0 };
-				// Correct timestamp since original packet may not have the same.
+				/**
+				 * Correct timestamp since original packet may not have the same.
+				 */
 				uint32_t timestamp{ 0 };
-				// Correct marker bit since original packet may not have the same.
+				/**
+				 * Correct marker bit since original packet may not have the same.
+				 */
 				bool marker{ false };
-				// Last time this packet was resent.
+				/**
+				 * Time at which this packet was stored.
+				 */
+				int64_t storedAtMs{ 0 };
+				/**
+				 * Last time this packet was resent.
+				 */
 				int64_t resentAtMs{ 0 };
-				// Number of times this packet was resent.
+				/**
+				 * Number of times this packet was resent.
+				 */
 				uint8_t sentTimes{ 0 };
 			};
 
 		private:
-			static Item* FillItem(Item* item, RTP::Packet* packet, const RTP::SharedPacket& sharedPacket);
+			static Item* FillItem(
+			  Item* item, RTP::Packet* packet, const RTP::SharedPacket& sharedPacket, int64_t nowMs);
 
 		public:
 			RetransmissionBuffer(uint16_t maxItems, int64_t maxRetransmissionDelayMs, uint32_t clockRate);
@@ -49,8 +70,13 @@ namespace RTC
 
 			void Dump(int indentation = 0) const;
 			Item* Get(uint16_t seq) const;
-			bool Insert(RTP::Packet* packet, const RTP::SharedPacket& sharedPacket);
+			bool Insert(RTP::Packet* packet, const RTP::SharedPacket& sharedPacket, int64_t nowMs);
 			void Clear();
+			/**
+			 * Whether the given stored item was stored longer than the maximum
+			 * retransmission delay ago.
+			 */
+			bool IsTooOld(const Item* item, int64_t nowMs) const;
 
 		private:
 			Item* GetOldest() const;

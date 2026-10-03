@@ -1,31 +1,42 @@
 #ifndef MS_RTC_RTP_RTP_STREAM_SEND_HPP
 #define MS_RTC_RTP_RTP_STREAM_SEND_HPP
 
-#include "RTC/RTCP/FeedbackPs.hpp"
+#include "common.hpp"
+#include "FBS/rtpStream.h"
+#include "handles/TimerHandleInterface.hpp"
+#include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
+#include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RetransmissionBuffer.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RateCalculator.hpp"
+#include "SharedInterface.hpp"
+#include <flatbuffers/flatbuffer_builder.h>
+#include <ankerl/unordered_dense.h>
+#include <deque>
+#include <string>
 
 namespace RTC
 {
 	namespace RTP
 	{
-		class RtpStreamSend : public RTP::RtpStream
+		class RtpStreamSend : public RTP::RtpStream, public TimerHandleInterface::Listener
 		{
 		public:
 			/**
 			 * Maximum retransmission buffer size for video (ms).
 			 */
-			static constexpr int64_t MaxRetransmissionDelayForVideoMs{ 2000 };
+			static constexpr int64_t MaxRetransmissionDelayForVideoMs{ 4000 };
 			/**
 			 * Maximum retransmission buffer size for audio (ms).
 			 */
-			static constexpr int64_t MaxRetransmissionDelayForAudioMs{ 1000 };
+			static constexpr int64_t MaxRetransmissionDelayForAudioMs{ 2000 };
 			/**
 			 * How old the last packet sent may be for a Sender Report to still be generated
 			 * (ms).
@@ -119,13 +130,17 @@ namespace RTC
 			int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 		private:
-			void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
+			void RetransmitPendingPackets();
 
 			void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
 			/* Pure virtual methods inherited from RTP::RtpStream. */
 		public:
 			void UserOnSequenceNumberReset() override;
+
+			/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
+		public:
+			void OnTimer(TimerHandleInterface* timer) override;
 
 		private:
 			// Packets lost at last interval for score calculation.
@@ -138,6 +153,15 @@ namespace RTC
 			uint16_t rtxSeq{ 0 };
 			RTC::RtpDataCounter transmissionCounter;
 			RTP::RetransmissionBuffer* retransmissionBuffer{ nullptr };
+			// Sequence numbers requested by received NACKs and not retransmitted yet,
+			// in the order they were requested.
+			std::deque<uint16_t> pendingRetransmissionsQueue;
+			// Same sequence numbers as in pendingRetransmissionsQueue, to tell whether
+			// a requested one is already pending.
+			ankerl::unordered_dense::set<uint16_t> pendingRetransmissionsSet;
+			// Timer to retransmit the pending retransmissions spaced in time. Only
+			// created if NACK is enabled.
+			const std::unique_ptr<TimerHandleInterface> retransmissionTimer;
 			// Timing data of the most recent Receiver Reference Time received.
 			std::optional<ReceiverReferenceTime> lastReceiverReferenceTime;
 		};

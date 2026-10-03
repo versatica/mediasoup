@@ -13,7 +13,10 @@ namespace RTC
 		/* Class methods. */
 
 		RetransmissionBuffer::Item* RetransmissionBuffer::FillItem(
-		  RetransmissionBuffer::Item* item, RTP::Packet* packet, const RTP::SharedPacket& sharedPacket)
+		  RetransmissionBuffer::Item* item,
+		  RTP::Packet* packet,
+		  const RTP::SharedPacket& sharedPacket,
+		  int64_t nowMs)
 		{
 			MS_TRACE();
 
@@ -27,6 +30,7 @@ namespace RTC
 			item->sequenceNumber = packet->GetSequenceNumber();
 			item->timestamp      = packet->GetTimestamp();
 			item->marker         = packet->HasMarker();
+			item->storedAtMs     = nowMs;
 
 			return item;
 		}
@@ -113,7 +117,8 @@ namespace RTC
 		 * not properly fit (by ensuring that elements in the buffer are not only
 		 * ordered by increasing seq but also that their timestamp are incremental).
 		 */
-		bool RetransmissionBuffer::Insert(RTP::Packet* packet, const RTP::SharedPacket& sharedPacket)
+		bool RetransmissionBuffer::Insert(
+		  RTP::Packet* packet, const RTP::SharedPacket& sharedPacket, int64_t nowMs)
 		{
 			MS_TRACE();
 
@@ -130,7 +135,7 @@ namespace RTC
 
 				auto* item = new Item();
 
-				this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket));
+				this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
 
 				return true;
 			}
@@ -156,7 +161,7 @@ namespace RTC
 
 				auto* item = new Item();
 
-				this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket));
+				this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
 
 				return true;
 			}
@@ -185,7 +190,7 @@ namespace RTC
 
 					auto* item = new Item();
 
-					this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket));
+					this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
 
 					return true;
 				}
@@ -267,7 +272,7 @@ namespace RTC
 				// Push the packet, which becomes the newest one in the buffer.
 				auto* item = new Item();
 
-				this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket));
+				this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
 			}
 			// Packet arrived out order and its seq is less than seq of the oldest
 			// stored packet, so will become the oldest one in the buffer.
@@ -333,7 +338,7 @@ namespace RTC
 				// Insert the packet, which becomes the oldest one in the buffer.
 				auto* item = new Item();
 
-				this->buffer.push_front(RetransmissionBuffer::FillItem(item, packet, sharedPacket));
+				this->buffer.push_front(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
 			}
 			// Otherwise packet must be inserted between oldest and newest stored items
 			// so there is already an allocated slot for it.
@@ -427,7 +432,7 @@ namespace RTC
 				// Store the packet.
 				item = new Item();
 
-				this->buffer[idx] = RetransmissionBuffer::FillItem(item, packet, sharedPacket);
+				this->buffer[idx] = RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs);
 			}
 
 			MS_ASSERT(
@@ -457,6 +462,13 @@ namespace RTC
 			}
 
 			this->buffer.clear();
+		}
+
+		bool RetransmissionBuffer::IsTooOld(const Item* item, int64_t nowMs) const
+		{
+			MS_TRACE();
+
+			return nowMs - item->storedAtMs > this->maxRetransmissionDelayMs;
 		}
 
 		RetransmissionBuffer::Item* RetransmissionBuffer::GetOldest() const
@@ -592,6 +604,7 @@ namespace RTC
 			this->ssrc           = 0;
 			this->sequenceNumber = 0;
 			this->timestamp      = 0;
+			this->storedAtMs     = 0;
 			this->resentAtMs     = 0;
 			this->sentTimes      = 0;
 		}

@@ -26,7 +26,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		}
 
 	public:
-		void Insert(uint16_t seq, uint32_t timestamp)
+		void Insert(uint16_t seq, uint32_t timestamp, int64_t nowMs = 0)
 		{
 			// clang-format off
 		uint8_t rtpBuffer[] =
@@ -44,7 +44,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 
 			const RTC::RTP::SharedPacket sharedPacket;
 
-			RTC::RTP::RetransmissionBuffer::Insert(packet.get(), sharedPacket);
+			RTC::RTP::RetransmissionBuffer::Insert(packet.get(), sharedPacket, nowMs);
 		}
 
 		void AssertBuffer(std::vector<VerificationItem> verificationBuffer)
@@ -83,10 +83,10 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ true, 10001, 1000000000 },
-				{ true, 10002, 1000000000 },
-				{ true, 10003, 1000000200 },
-				{ true, 10004, 1000000200 }
+				{ .isPresent = true, .sequenceNumber = 10001, .timestamp = 1000000000 },
+				{ .isPresent = true, .sequenceNumber = 10002, .timestamp = 1000000000 },
+				{ .isPresent = true, .sequenceNumber = 10003, .timestamp = 1000000200 },
+				{ .isPresent = true, .sequenceNumber = 10004, .timestamp = 1000000200 }
 			}
 		);
 		// clang-format on
@@ -108,10 +108,10 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ true, 20001, 2000000000 },
-				{ true, 20002, 2000000000 },
-				{ true, 20003, 2000000200 },
-				{ true, 20004, 2000000200 }
+				{ .isPresent = true, .sequenceNumber = 20001, .timestamp = 2000000000 },
+				{ .isPresent = true, .sequenceNumber = 20002, .timestamp = 2000000000 },
+				{ .isPresent = true, .sequenceNumber = 20003, .timestamp = 2000000200 },
+				{ .isPresent = true, .sequenceNumber = 20004, .timestamp = 2000000200 }
 			}
 		);
 		// clang-format on
@@ -133,7 +133,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ true, 40000, 3000003000 }
+				{ .isPresent = true, .sequenceNumber = 40000, .timestamp = 3000003000 }
 			}
 		);
 		// clang-format on
@@ -163,15 +163,15 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ true, 40000, 4000000000 },
-				{ false, 0, 0 },
-				{ true, 40002, 4000000002 },
-				{ false, 0, 0 },
-				{ true, 40004, 4000000004 },
-				{ false, 0, 0 },
-				{ true, 40006, 4000000006 },
-				{ false, 0, 0 },
-				{ true, 40008, 4000000008 }
+				{ .isPresent = true, .sequenceNumber = 40000, .timestamp = 4000000000 },
+				{ .isPresent = false, .sequenceNumber = 0, .timestamp = 0 },
+				{ .isPresent = true, .sequenceNumber = 40002, .timestamp = 4000000002 },
+				{ .isPresent = false, .sequenceNumber = 0, .timestamp = 0 },
+				{ .isPresent = true, .sequenceNumber = 40004, .timestamp = 4000000004 },
+				{ .isPresent = false, .sequenceNumber = 0, .timestamp = 0 },
+				{ .isPresent = true, .sequenceNumber = 40006, .timestamp = 4000000006 },
+				{ .isPresent = false, .sequenceNumber = 0, .timestamp = 0 },
+				{ .isPresent = true, .sequenceNumber = 40008, .timestamp = 4000000008 }
 			}
 		);
 		// clang-format on
@@ -194,9 +194,9 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ true, 10001, 1000000001 },
-				{ true, 10002, 1000000002 },
-				{ true, 10003, 1000000003 }
+				{ .isPresent = true, .sequenceNumber = 10001, .timestamp = 1000000001 },
+				{ .isPresent = true, .sequenceNumber = 10002, .timestamp = 1000000002 },
+				{ .isPresent = true, .sequenceNumber = 10003, .timestamp = 1000000003 }
 			}
 		);
 		// clang-format on
@@ -221,9 +221,9 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ true, 10001, 1000000001 },
-				{ true, 10002, 1000000002 },
-				{ true, 10003, 1000000003 }
+				{ .isPresent = true, .sequenceNumber = 10001, .timestamp = 1000000001 },
+				{ .isPresent = true, .sequenceNumber = 10002, .timestamp = 1000000002 },
+				{ .isPresent = true, .sequenceNumber = 10003, .timestamp = 1000000003 }
 			}
 		);
 		// clang-format on
@@ -246,7 +246,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ true, 18365, 1026593387 }
+				{ .isPresent = true, .sequenceNumber = 18365, .timestamp = 1026593387 }
 			}
 		);
 		// clang-format on
@@ -268,10 +268,41 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
-				{ true, 33330, 1000000003 }
+				{ .isPresent = true, .sequenceNumber = 33330, .timestamp = 1000000003 }
 			}
 		);
 		// clang-format on
+	}
+
+	SECTION("stored packet is too old once maxRetransmissionDelayMs elapsed since it was stored")
+	{
+		const uint16_t maxItems{ 4 };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
+		const uint32_t clockRate{ 90000 };
+		const int64_t firstStoredAtMs{ 5000 };
+
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+
+		// Both packets have the same timestamp so the age measured by timestamp
+		// doesn't play any role here.
+		myRetransmissionBuffer.Insert(10001, 1000000000, firstStoredAtMs);
+		myRetransmissionBuffer.Insert(10002, 1000000000, firstStoredAtMs + 1);
+
+		const RTC::RTP::RetransmissionBuffer::Item* const item1 = myRetransmissionBuffer.Get(10001);
+		const RTC::RTP::RetransmissionBuffer::Item* const item2 = myRetransmissionBuffer.Get(10002);
+
+		REQUIRE(item1);
+		REQUIRE(item2);
+
+		// Right at the limit the packet is not too old yet.
+		REQUIRE_FALSE(myRetransmissionBuffer.IsTooOld(item1, firstStoredAtMs + maxRetransmissionDelayMs));
+
+		// Past the limit it is, even if no newer packet has been stored.
+		REQUIRE(myRetransmissionBuffer.IsTooOld(item1, firstStoredAtMs + maxRetransmissionDelayMs + 1));
+
+		// Each packet counts from the instant it was stored.
+		REQUIRE_FALSE(
+		  myRetransmissionBuffer.IsTooOld(item2, firstStoredAtMs + maxRetransmissionDelayMs + 1));
 	}
 
 	SECTION("fuzzer generated packets")
