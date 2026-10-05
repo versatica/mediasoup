@@ -1,7 +1,7 @@
-#define MS_CLASS "RTC::BWE::ReceiverTransportCongestionControl"
+#define MS_CLASS "RTC::BWE::ReceiverTransportCongestionController"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/BWE/ReceiverTransportCongestionControl.hpp"
+#include "RTC/BWE/ReceiverTransportCongestionController.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -10,8 +10,8 @@ namespace RTC
 	{
 		/* Instance methods. */
 
-		ReceiverTransportCongestionControl::ReceiverTransportCongestionControl(
-		  Listener* listener, SharedInterface* shared, ReceiverTransportCongestionControlOptions options)
+		ReceiverTransportCongestionController::ReceiverTransportCongestionController(
+		  Listener* listener, SharedInterface* shared, ReceiverTransportCongestionControllerOptions options)
 		  : options(options), listener(listener), shared(shared), rembGenerator(this)
 		{
 			MS_TRACE();
@@ -42,7 +42,7 @@ namespace RTC
 			}
 		}
 
-		void ReceiverTransportCongestionControl::ReceiveRtpPacket(
+		void ReceiverTransportCongestionController::ReceiveRtpPacket(
 		  int64_t receivedAtUs, const RTC::RTP::Packet* packet, RTC::Media::Kind kind)
 		{
 			MS_TRACE();
@@ -80,7 +80,7 @@ namespace RTC
 			this->rembGenerator.MaySendLimitationRembFeedback(this->shared->GetTimeMs());
 		}
 
-		void ReceiverTransportCongestionControl::OnRttUpdate(int64_t avgRttUs)
+		void ReceiverTransportCongestionController::OnRttUpdate(int64_t avgRttUs)
 		{
 			MS_TRACE();
 
@@ -105,7 +105,7 @@ namespace RTC
 			}
 		}
 
-		void ReceiverTransportCongestionControl::RemoveStream(uint32_t ssrc)
+		void ReceiverTransportCongestionController::RemoveStream(uint32_t ssrc)
 		{
 			MS_TRACE();
 
@@ -129,7 +129,7 @@ namespace RTC
 			}
 		}
 
-		void ReceiverTransportCongestionControl::SetMaxIncomingBitrate(int64_t bitrate)
+		void ReceiverTransportCongestionController::SetMaxIncomingBitrate(int64_t bitrate)
 		{
 			MS_TRACE();
 
@@ -145,7 +145,7 @@ namespace RTC
 			this->rembGenerator.SetMaxIncomingBitrate(this->shared->GetTimeMs(), maxIncomingBitrate);
 		}
 
-		std::optional<int64_t> ReceiverTransportCongestionControl::GetAvailableBitrate() const
+		std::optional<int64_t> ReceiverTransportCongestionController::GetAvailableBitrate() const
 		{
 			MS_TRACE();
 
@@ -177,16 +177,16 @@ namespace RTC
 			}
 		}
 
-		void ReceiverTransportCongestionControl::OnTransportWideCcFeedbackGeneratorSendPacket(
+		void ReceiverTransportCongestionController::OnTransportWideCcFeedbackGeneratorSendPacket(
 		  TransportWideCcFeedbackGenerator* /*transportWideCcFeedbackGenerator*/,
 		  RTC::RTCP::FeedbackRtpTransportPacket* packet)
 		{
 			MS_TRACE();
 
-			this->listener->OnReceiverTransportCongestionControlSendRtcpPacket(this, packet);
+			this->listener->OnReceiverTransportCongestionControllerSendRtcpPacket(this, packet);
 		}
 
-		void ReceiverTransportCongestionControl::OnRemoteBitrateEstimatorAbsSendTimeBitrateChanged(
+		void ReceiverTransportCongestionController::OnRemoteBitrateEstimatorAbsSendTimeBitrateChanged(
 		  RemoteBitrateEstimatorAbsSendTime* /*remoteBitrateEstimator*/,
 		  const std::vector<uint32_t>& ssrcs,
 		  int64_t bitrate)
@@ -196,12 +196,12 @@ namespace RTC
 			this->rembGenerator.OnReceiveBitrateChanged(this->shared->GetTimeMs(), ssrcs, bitrate);
 		}
 
-		void ReceiverTransportCongestionControl::OnRembGeneratorSendPacket(
+		void ReceiverTransportCongestionController::OnRembGeneratorSendPacket(
 		  RembGenerator* /*rembGenerator*/, RTC::RTCP::FeedbackPsRembPacket* packet)
 		{
 			MS_TRACE();
 
-			this->listener->OnReceiverTransportCongestionControlSendRtcpPacket(this, packet);
+			this->listener->OnReceiverTransportCongestionControllerSendRtcpPacket(this, packet);
 		}
 	} // namespace BWE
 } // namespace RTC

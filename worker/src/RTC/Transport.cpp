@@ -1985,7 +1985,7 @@ namespace RTC
 				}
 
 #ifdef MS_USE_BUILTIN_BWE
-				// TODO: Feed the Receiver Report to the built-in downlink BWE.
+				// TODO: Feed the Receiver Report to the built-in sender congestion controller.
 #else
 				if (this->tccClient && !this->mapConsumers.empty())
 				{
