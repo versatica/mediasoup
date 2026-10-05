@@ -36,15 +36,13 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 			this->targetBitrates.push_back(targetBitrate);
 		}
 
-		bool OnSenderTransportCongestionControllerSendRtpPacket(
+		void OnSenderTransportCongestionControllerSendRtpProbePacket(
 		  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
 		  RTC::RTP::Packet* packet,
 		  int64_t sequenceNumber) override
 		{
 			this->sentLengths.push_back(packet->GetLength());
 			this->sentSequenceNumbers.push_back(sequenceNumber);
-
-			return true;
 		}
 
 	public:

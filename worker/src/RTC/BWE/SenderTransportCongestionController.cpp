@@ -394,7 +394,7 @@ namespace RTC
 			return this->targetRateController.GetTargetBitrate();
 		}
 
-		bool SenderTransportCongestionController::OnProbingSchedulerSendRtpPacket(
+		void SenderTransportCongestionController::OnProbingSchedulerSendRtpPacket(
 		  ProbingScheduler* /*probingScheduler*/,
 		  RTC::RTP::Packet* packet,
 		  const Types::ProbeCluster& probeCluster)
@@ -410,7 +410,7 @@ namespace RTC
 			// there is always a sequence number to hand over.
 			MS_ASSERT(sequenceNumber.has_value(), "probe packet has no transport wide sequence number");
 
-			return this->listener->OnSenderTransportCongestionControllerSendRtpPacket(
+			this->listener->OnSenderTransportCongestionControllerSendRtpProbePacket(
 			  this, packet, sequenceNumber.value());
 		}
 

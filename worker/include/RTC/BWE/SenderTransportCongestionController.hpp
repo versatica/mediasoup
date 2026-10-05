@@ -61,14 +61,11 @@ namespace RTC
 				 *   given back through `OnRtpPacketSent()` once the packet has actually
 				 *   left, just like for a packet of media.
 				 *
-				 * @returns Whether the rest of the probe is still wanted, so that a
-				 *   packet that couldn't be sent stops the ones behind it.
-				 *
 				 * @remarks
 				 * - The packet must be sent before returning, since the next one is
 				 *   built over the very same instance.
 				 */
-				virtual bool OnSenderTransportCongestionControllerSendRtpPacket(
+				virtual void OnSenderTransportCongestionControllerSendRtpProbePacket(
 				  SenderTransportCongestionController* senderTransportCongestionController,
 				  RTC::RTP::Packet* packet,
 				  int64_t sequenceNumber) = 0;
@@ -236,7 +233,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from ProbingScheduler::Listener. */
 		public:
-			bool OnProbingSchedulerSendRtpPacket(
+			void OnProbingSchedulerSendRtpPacket(
 			  ProbingScheduler* probingScheduler,
 			  RTC::RTP::Packet* packet,
 			  const Types::ProbeCluster& probeCluster) override;
