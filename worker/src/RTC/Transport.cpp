@@ -1343,6 +1343,8 @@ namespace RTC
 
 					// Tell the child class to clear associated SSRCs.
 					SendStreamClosed(ssrc);
+
+					// TODO: Tell the built-in sender congestion controller to forget this SSRC.
 				}
 
 				for (auto ssrc : consumer->GetRtxSsrcs())
@@ -1351,6 +1353,8 @@ namespace RTC
 
 					// Tell the child class to clear associated SSRCs.
 					SendStreamClosed(ssrc);
+
+					// TODO: Tell the built-in sender congestion controller to forget this SSRC.
 				}
 
 				// Notify the listener.
@@ -1985,7 +1989,7 @@ namespace RTC
 				}
 
 #ifdef MS_USE_BUILTIN_BWE
-				// TODO: Feed the Receiver Report to the built-in downlink BWE.
+				// TODO: Feed the Receiver Report to the built-in sender congestion controller.
 #else
 				if (this->tccClient && !this->mapConsumers.empty())
 				{
@@ -2890,6 +2894,8 @@ namespace RTC
 
 			// Tell the child class to clear associated SSRCs.
 			SendStreamClosed(ssrc);
+
+			// TODO: Tell the built-in sender congestion controller to forget this SSRC.
 		}
 
 		for (auto ssrc : consumer->GetRtxSsrcs())
@@ -2898,6 +2904,8 @@ namespace RTC
 
 			// Tell the child class to clear associated SSRCs.
 			SendStreamClosed(ssrc);
+
+			// TODO: Tell the built-in sender congestion controller to forget this SSRC.
 		}
 
 		// Notify the listener.

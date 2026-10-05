@@ -1,5 +1,5 @@
-#ifndef MS_RTC_BWE_RECEIVER_TRANSPORT_CONGESTION_CONTROL_HPP
-#define MS_RTC_BWE_RECEIVER_TRANSPORT_CONGESTION_CONTROL_HPP
+#ifndef MS_RTC_BWE_RECEIVER_TRANSPORT_CONGESTION_CONTROLLER_HPP
+#define MS_RTC_BWE_RECEIVER_TRANSPORT_CONGESTION_CONTROLLER_HPP
 
 #include "common.hpp"
 #include "RTC/BWE/BweTypes.hpp"
@@ -29,9 +29,9 @@ namespace RTC
 		 * The cap the application sets is announced as a REMB either way, since that
 		 * is the only way to tell a remote sender to hold back.
 		 */
-		class ReceiverTransportCongestionControl : public TransportWideCcFeedbackGenerator::Listener,
-		                                           public RemoteBitrateEstimatorAbsSendTime::Listener,
-		                                           public RembGenerator::Listener
+		class ReceiverTransportCongestionController : public TransportWideCcFeedbackGenerator::Listener,
+		                                              public RemoteBitrateEstimatorAbsSendTime::Listener,
+		                                              public RembGenerator::Listener
 		{
 		public:
 			class Listener
@@ -47,12 +47,12 @@ namespace RTC
 				 *   listener must neither destroy it nor keep it around after this call
 				 *   returns.
 				 */
-				virtual void OnReceiverTransportCongestionControlSendRtcpPacket(
-				  ReceiverTransportCongestionControl* receiverTransportCongestionControl,
+				virtual void OnReceiverTransportCongestionControllerSendRtcpPacket(
+				  ReceiverTransportCongestionController* receiverTransportCongestionControl,
 				  RTC::RTCP::Packet* packet) = 0;
 			};
 
-			struct ReceiverTransportCongestionControlOptions
+			struct ReceiverTransportCongestionControllerOptions
 			{
 				/**
 				 * Mechanism both endpoints negotiated, which decides what is done with
@@ -66,13 +66,16 @@ namespace RTC
 			};
 
 		public:
-			ReceiverTransportCongestionControl(
-			  Listener* listener, SharedInterface* shared, ReceiverTransportCongestionControlOptions options);
+			ReceiverTransportCongestionController(
+			  Listener* listener,
+			  SharedInterface* shared,
+			  ReceiverTransportCongestionControllerOptions options);
 
-			~ReceiverTransportCongestionControl() override = default;
+			~ReceiverTransportCongestionController() override = default;
 
-			ReceiverTransportCongestionControl(const ReceiverTransportCongestionControl&) = delete;
-			ReceiverTransportCongestionControl& operator=(const ReceiverTransportCongestionControl&) = delete;
+			ReceiverTransportCongestionController(const ReceiverTransportCongestionController&) = delete;
+			ReceiverTransportCongestionController& operator=(
+			  const ReceiverTransportCongestionController&) = delete;
 
 			/**
 			 * Feed a received RTP packet.
@@ -125,7 +128,7 @@ namespace RTC
 			  RembGenerator* rembGenerator, RTC::RTCP::FeedbackPsRembPacket* packet) override;
 
 		private:
-			const ReceiverTransportCongestionControlOptions options;
+			const ReceiverTransportCongestionControllerOptions options;
 
 			// Passed by argument.
 			Listener* listener{ nullptr };
