@@ -89,10 +89,13 @@ namespace RTC
 			this->minBitrate = options.minBitrate;
 			this->maxBitrate = options.maxBitrate;
 
-			// NOTE: What this leaves pending is not applied here, since a constructor
-			// cannot call the listener. Nothing is lost: no burst is asked for while
-			// there is no network, which is what the probe controller starts with.
 			ResetConstraints(this->shared->GetTimeUs(), /*applyStartBitrate*/ true);
+
+			// NOTE: Safe to apply from a constructor, where the listener must not be
+			// called: the only thing that can be pending at this point is a burst,
+			// which goes to a member of this class, since `MayNotifyTargetBitrate()`
+			// is not called from here and so there is no target to announce.
+			ApplyPendingUpdate();
 
 			this->processTimer->Start(ProcessIntervalMs, ProcessIntervalMs);
 		}
