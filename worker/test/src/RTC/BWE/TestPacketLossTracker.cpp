@@ -162,6 +162,42 @@ SCENARIO("BWE PacketLossTracker", "[bwe][packetlosstracker]")
 		REQUIRE(lossValue.lostPackets == -2);
 	}
 
+	SECTION("a report that arrives after a newer one of the same stream gives no value")
+	{
+		receiveReceiverReport(
+		  {
+		    { .ssrc = Ssrc1, .lastSeq = 1000, .totalLost = 5 }
+    });
+
+		receiveReceiverReport(
+		  {
+		    { .ssrc = Ssrc1, .lastSeq = 1100, .totalLost = 15 }
+    });
+
+		// RTCP packets may be reordered on the way, so a report built before the
+		// previous one may still arrive after it. Its totals go backwards.
+		const auto staleLoss = receiveReceiverReport(
+		  {
+		    { .ssrc = Ssrc1, .lastSeq = 1050, .totalLost = 10 }
+    });
+
+		REQUIRE_FALSE(staleLoss.has_value());
+
+		// And what it said is kept, so the next report is measured from there.
+		const auto loss = receiveReceiverReport(
+		  {
+		    { .ssrc = Ssrc1, .lastSeq = 1150, .totalLost = 12 }
+    });
+
+		REQUIRE(loss.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& lossValue = loss.value();
+
+		REQUIRE(lossValue.expectedPackets == 100);
+		REQUIRE(lossValue.lostPackets == 2);
+	}
+
 	SECTION("a report that moves nothing gives no value")
 	{
 		receiveReceiverReport(

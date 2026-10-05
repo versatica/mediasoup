@@ -1343,6 +1343,8 @@ namespace RTC
 
 					// Tell the child class to clear associated SSRCs.
 					SendStreamClosed(ssrc);
+
+					// TODO: Tell the built-in sender congestion controller to forget this SSRC.
 				}
 
 				for (auto ssrc : consumer->GetRtxSsrcs())
@@ -1351,6 +1353,8 @@ namespace RTC
 
 					// Tell the child class to clear associated SSRCs.
 					SendStreamClosed(ssrc);
+
+					// TODO: Tell the built-in sender congestion controller to forget this SSRC.
 				}
 
 				// Notify the listener.
@@ -2890,6 +2894,8 @@ namespace RTC
 
 			// Tell the child class to clear associated SSRCs.
 			SendStreamClosed(ssrc);
+
+			// TODO: Tell the built-in sender congestion controller to forget this SSRC.
 		}
 
 		for (auto ssrc : consumer->GetRtxSsrcs())
@@ -2898,6 +2904,8 @@ namespace RTC
 
 			// Tell the child class to clear associated SSRCs.
 			SendStreamClosed(ssrc);
+
+			// TODO: Tell the built-in sender congestion controller to forget this SSRC.
 		}
 
 		// Notify the listener.
