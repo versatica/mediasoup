@@ -33,14 +33,14 @@ namespace RTC
 			explicit FeedbackAdapter(SendPacketHistory* sendPacketHistory);
 
 			/**
-			 * Process a transport-cc feedback.
+			 * Process a transport wide cc feedback.
 			 *
 			 * @param receivedAtUs - Time at which the feedback was received.
 			 * @returns What the feedback reports about the packets that were sent, in
 			 *   the order it reports them, or no value if it reports on no packet the
 			 *   history still holds.
 			 */
-			std::optional<Types::TransportPacketsFeedback> ProcessTransportFeedback(
+			std::optional<Types::TransportPacketsFeedback> ProcessTransportWideCcFeedback(
 			  const RTCP::FeedbackRtpTransportPacket* feedback, int64_t receivedAtUs);
 
 		private:
