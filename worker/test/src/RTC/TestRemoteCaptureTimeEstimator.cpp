@@ -124,9 +124,10 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 
 	SECTION("no source until the first Producer has been taken into account")
 	{
-		REQUIRE_FALSE(estimator.GetSource().has_value());
-		REQUIRE_FALSE(
-		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
+		REQUIRE(estimator.GetSource().has_value() == false);
+		REQUIRE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value() ==
+		  false);
 	}
 
 	SECTION("the first Producer chooses abs-capture-time when it negotiated it")
@@ -168,23 +169,26 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		// it however long this sender has been around.
 		nowUs += 60 * 1000000;
 
-		REQUIRE_FALSE(
-		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
+		REQUIRE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value() ==
+		  false);
 		REQUIRE(estimator.GetSource() == RTC::RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME);
 
 		// Still within the wait, since the extension travels on some packets rather
 		// than on every one and may simply not have arrived yet.
 		nowUs += 4 * 1000000;
 
-		REQUIRE_FALSE(
-		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
+		REQUIRE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value() ==
+		  false);
 		REQUIRE(estimator.GetSource() == RTC::RemoteCaptureTimeEstimator::Source::ABS_CAPTURE_TIME);
 
 		// Long enough without a single packet carrying it.
 		nowUs += 1 * 1000000;
 
-		REQUIRE_FALSE(
-		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
+		REQUIRE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value() ==
+		  false);
 		REQUIRE(estimator.GetSource() == RTC::RemoteCaptureTimeEstimator::Source::SENDER_REPORT);
 	}
 
@@ -211,8 +215,9 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		// A single Sender Report is not enough for the clock offset to be estimated.
 		receiveSenderReport(0);
 
-		REQUIRE_FALSE(
-		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
+		REQUIRE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value() ==
+		  false);
 
 		for (uint32_t idx{ 1 }; idx < RTC::RemoteClockOffsetEstimator::MinSampleCount; ++idx)
 		{
@@ -251,7 +256,8 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 
 		// Sender Reports have been received, but the source in use is not allowed to
 		// fall back to them.
-		REQUIRE_FALSE(
-		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value());
+		REQUIRE(
+		  estimator.GetLocalCaptureAtUs(std::addressof(rtpStream), RemoteBaseTs, nowUs).has_value() ==
+		  false);
 	}
 }

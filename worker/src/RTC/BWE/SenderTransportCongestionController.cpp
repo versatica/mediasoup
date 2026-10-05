@@ -279,7 +279,7 @@ namespace RTC
 		}
 
 		void SenderTransportCongestionController::ReceiveRtcpReceiverReport(
-		  RTC::RTCP::ReceiverReportPacket* packet)
+		  RTC::RTCP::ReceiverReportPacket* packet, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 

@@ -295,14 +295,15 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		REQUIRE(item2);
 
 		// Right at the limit the packet is not too old yet.
-		REQUIRE_FALSE(myRetransmissionBuffer.IsTooOld(item1, firstStoredAtMs + maxRetransmissionDelayMs));
+		REQUIRE(
+		  myRetransmissionBuffer.IsTooOld(item1, firstStoredAtMs + maxRetransmissionDelayMs) == false);
 
 		// Past the limit it is, even if no newer packet has been stored.
 		REQUIRE(myRetransmissionBuffer.IsTooOld(item1, firstStoredAtMs + maxRetransmissionDelayMs + 1));
 
 		// Each packet counts from the instant it was stored.
-		REQUIRE_FALSE(
-		  myRetransmissionBuffer.IsTooOld(item2, firstStoredAtMs + maxRetransmissionDelayMs + 1));
+		REQUIRE(
+		  myRetransmissionBuffer.IsTooOld(item2, firstStoredAtMs + maxRetransmissionDelayMs + 1) == false);
 	}
 
 	SECTION("fuzzer generated packets")

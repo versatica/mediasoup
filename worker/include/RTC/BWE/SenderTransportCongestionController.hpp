@@ -155,8 +155,12 @@ namespace RTC
 			/**
 			 * Feed a received RTCP Receiver Report, which is where the loss of what we
 			 * send is measured.
+			 *
+			 * @remarks
+			 * - It arrives in the same compound RTCP packet as the transport wide cc
+			 *   feedback, so both are given the very same instant.
 			 */
-			void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReportPacket* packet);
+			void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReportPacket* packet, int64_t receivedAtUs);
 
 			/**
 			 * Feed a received REMB, which is what the remote endpoint says it is

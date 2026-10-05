@@ -46,7 +46,7 @@ SCENARIO("BWE PacketLossTracker", "[bwe][packetlosstracker]")
 		    { .ssrc = Ssrc1, .lastSeq = 1000, .totalLost = 5 }
     });
 
-		REQUIRE_FALSE(loss.has_value());
+		REQUIRE(loss.has_value() == false);
 	}
 
 	SECTION("two reports of a stream give what was lost and expected in between")
@@ -181,7 +181,7 @@ SCENARIO("BWE PacketLossTracker", "[bwe][packetlosstracker]")
 		    { .ssrc = Ssrc1, .lastSeq = 1050, .totalLost = 10 }
     });
 
-		REQUIRE_FALSE(staleLoss.has_value());
+		REQUIRE(staleLoss.has_value() == false);
 
 		// And what it said is kept, so the next report is measured from there.
 		const auto loss = receiveReceiverReport(
@@ -210,7 +210,7 @@ SCENARIO("BWE PacketLossTracker", "[bwe][packetlosstracker]")
 		    { .ssrc = Ssrc1, .lastSeq = 1000, .totalLost = 5 }
     });
 
-		REQUIRE_FALSE(loss.has_value());
+		REQUIRE(loss.has_value() == false);
 	}
 
 	SECTION("a report where nothing got through gives no value")
@@ -225,7 +225,7 @@ SCENARIO("BWE PacketLossTracker", "[bwe][packetlosstracker]")
 		    { .ssrc = Ssrc1, .lastSeq = 1100, .totalLost = 105 }
     });
 
-		REQUIRE_FALSE(loss.has_value());
+		REQUIRE(loss.has_value() == false);
 	}
 
 	SECTION("a removed stream is measured from scratch again")
@@ -243,7 +243,7 @@ SCENARIO("BWE PacketLossTracker", "[bwe][packetlosstracker]")
 		    { .ssrc = Ssrc1, .lastSeq = 1100, .totalLost = 15 }
     });
 
-		REQUIRE_FALSE(firstLoss.has_value());
+		REQUIRE(firstLoss.has_value() == false);
 
 		const auto loss = receiveReceiverReport(
 		  {

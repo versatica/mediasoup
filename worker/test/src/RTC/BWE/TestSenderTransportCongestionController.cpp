@@ -242,7 +242,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		auto* timer = shared.GetTimer("probing-scheduler-next-probe");
 
 		REQUIRE(timer);
-		REQUIRE_FALSE(timer->IsActive());
+		REQUIRE(timer->IsActive() == false);
 
 		senderTransportCongestionController.SetNetworkAvailable(true);
 
