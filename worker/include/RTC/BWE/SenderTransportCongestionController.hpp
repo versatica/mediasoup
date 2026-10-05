@@ -277,8 +277,8 @@ namespace RTC
 			 * reasons about actually changed.
 			 *
 			 * @remarks
-			 * - It is the last thing every entry point does, and the only place where
-			 *   anything leaves this class.
+			 * - It is the last thing done by every entry point that may leave something
+			 *   pending, and the only place where anything of this leaves the class.
 			 */
 			void ApplyPendingUpdate();
 
