@@ -109,6 +109,12 @@ namespace RTC
 				 */
 				int64_t initialMinProbeDeltaUs{ 20 * 1000 };
 				/**
+				 * Whether bursts keep being sent while the sender is not filling the
+				 * link, which is the only way the estimate grows when the traffic
+				 * itself is not enough to measure with.
+				 */
+				bool enablePeriodicAlrProbing{ false };
+				/**
 				 * How often to probe while the sender is not filling the link.
 				 */
 				int64_t alrProbingIntervalUs{ 5 * 1000 * 1000 };
@@ -258,11 +264,6 @@ namespace RTC
 			[[nodiscard]] std::vector<Types::ProbeClusterConfig> SetEstimatedBitrate(
 			  int64_t bitrate, BandwidthLimitedCause bandwidthLimitedCause, int64_t nowUs);
 
-			void EnablePeriodicAlrProbing(bool enable)
-			{
-				this->enablePeriodicAlrProbing = enable;
-			}
-
 			/**
 			 * Whether the initial bursts keep being repeated for a while, which only
 			 * makes sense until there is traffic of its own to measure.
@@ -347,7 +348,6 @@ namespace RTC
 			State state{ State::INIT };
 			bool networkAvailable{ false };
 			bool repeatedInitialProbingEnabled{ false };
-			bool enablePeriodicAlrProbing{ false };
 			BandwidthLimitedCause bandwidthLimitedCause{ BandwidthLimitedCause::DELAY_BASED_LIMITED };
 			// Instant until which the initial bursts keep being repeated.
 			std::optional<int64_t> lastAllowedRepeatedInitialProbeAtUs;

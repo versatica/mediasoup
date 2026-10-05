@@ -75,6 +75,12 @@ namespace RTC
 		    processTimer(shared->CreateTimer(this, "sender-transport-congestion-controller-process")),
 		    feedbackAdapter(std::addressof(this->sendPacketHistory)),
 		    alrDetector(shared),
+		    // An SFU forwards what others produce and cannot make more of it, so it
+		    // spends most of its time not filling the link. Without probing there, the
+		    // target would only grow when the traffic being forwarded happens to fill
+		    // it, and after a quiet spell the first stream admitted would be measured
+		    // against a figure from long ago.
+		    probeController({ .enablePeriodicAlrProbing = true }),
 		    probingScheduler(this, shared),
 		    startBitrate(options.startBitrate)
 		{
@@ -97,7 +103,7 @@ namespace RTC
 			CreateProbeClusters(this->probeController.OnNetworkAvailability(networkAvailable, nowUs));
 		}
 
-		int64_t SenderTransportCongestionController::OnRtpPacketToBeSent(
+		std::optional<int64_t> SenderTransportCongestionController::OnRtpPacketToBeSent(
 		  RTC::RTP::Packet* packet, const RtpPacketToBeSentOptions& options)
 		{
 			MS_TRACE();
@@ -105,11 +111,22 @@ namespace RTC
 			return AddRtpPacket(packet, options, /*probeCluster*/ std::nullopt);
 		}
 
-		void SenderTransportCongestionController::OnRtpPacketSent(int64_t sequenceNumber, int64_t sentAtUs)
+		void SenderTransportCongestionController::OnRtpPacketSent(
+		  std::optional<int64_t> sequenceNumber, size_t size, int64_t sentAtUs)
 		{
 			MS_TRACE();
 
-			const auto sentPacket = this->sendPacketHistory.ProcessSentPacket(sequenceNumber, sentAtUs);
+			// A packet that was never taken note of still took room in the link, so its
+			// bytes are attributed to the next one that does carry a sequence number.
+			if (!sequenceNumber.has_value())
+			{
+				this->sendPacketHistory.ProcessSentUntrackedPacket(size + this->packetOverhead, sentAtUs);
+
+				return;
+			}
+
+			const auto sentPacket =
+			  this->sendPacketHistory.ProcessSentPacket(sequenceNumber.value(), sentAtUs);
 
 			// Nothing is known about a packet the history does not hold, so there is
 			// nothing to tell anybody about it either.
@@ -118,7 +135,6 @@ namespace RTC
 				return;
 			}
 
-			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			const auto& sentPacketValue = sentPacket.value();
 
 			this->alrDetector.OnBytesSent(static_cast<int64_t>(sentPacketValue.size), sentAtUs);
@@ -151,7 +167,6 @@ namespace RTC
 				return;
 			}
 
-			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			const auto& transportPacketsFeedback = processedFeedback.value();
 
 			if (transportPacketsFeedback.packetFeedbacks.empty())
@@ -170,6 +185,9 @@ namespace RTC
 			// it reports on left, minus how long the rest of them waited at the remote
 			// endpoint before it decided to report. Taking the smallest of those is
 			// what leaves the propagation alone, without the wait.
+			//
+			// NOTE: Every packet below has an arrival time, since only the ones that
+			// were received are in `ReceivedWithSendInfo()`.
 			int64_t minPropagationRttUs{ Types::TimeUsInfinite };
 			int64_t maxReceiveTimeUs{ 0 };
 
@@ -231,12 +249,8 @@ namespace RTC
 			{
 				const int64_t limit = std::min(
 				  this->delayBasedBwe.GetLastEstimate(),
-				  BitrateUtils::ApplyBitrateFactor(
-				    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-				    acknowledgedBitrate.value(),
-				    ProbeDropThroughputFraction));
+				  BitrateUtils::ApplyBitrateFactor(acknowledgedBitrate.value(), ProbeDropThroughputFraction));
 
-				// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 				probeBitrate = std::max(probeBitrate.value(), limit);
 			}
 
@@ -279,7 +293,7 @@ namespace RTC
 		}
 
 		void SenderTransportCongestionController::ReceiveRtcpReceiverReport(
-		  RTC::RTCP::ReceiverReportPacket* packet, int64_t receivedAtUs)
+		  RTC::RTCP::ReceiverReportPacket* packet)
 		{
 			MS_TRACE();
 
@@ -290,7 +304,6 @@ namespace RTC
 				return;
 			}
 
-			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 			const auto& lossValue = loss.value();
 
 			this->targetRateController.UpdatePacketsLost(
@@ -376,9 +389,14 @@ namespace RTC
 			// The generator leaves room for both extensions but writes neither, and
 			// since it reuses a single packet what is left unwritten is whatever the
 			// previous one carried.
-			AddRtpPacket(packet, RtpPacketToBeSentOptions{}, probeCluster);
+			const auto sequenceNumber = AddRtpPacket(packet, RtpPacketToBeSentOptions{}, probeCluster);
 
-			return this->listener->OnSenderTransportCongestionControllerSendRtpPacket(this, packet);
+			// The generator builds every packet with room for both extensions, so
+			// there is always a sequence number to hand over.
+			MS_ASSERT(sequenceNumber.has_value(), "probe packet has no transport wide sequence number");
+
+			return this->listener->OnSenderTransportCongestionControllerSendRtpPacket(
+			  this, packet, sequenceNumber.value());
 		}
 
 		void SenderTransportCongestionController::OnTimer(TimerHandleInterface* timer)
@@ -391,12 +409,23 @@ namespace RTC
 			}
 		}
 
-		int64_t SenderTransportCongestionController::AddRtpPacket(
+		std::optional<int64_t> SenderTransportCongestionController::AddRtpPacket(
 		  RTC::RTP::Packet* packet,
 		  const RtpPacketToBeSentOptions& options,
 		  std::optional<Types::ProbeCluster> probeCluster)
 		{
 			MS_TRACE();
+
+			// Whatever the packet carries there now, which is only read to find out
+			// whether it has room for the sequence number at all. Without it the
+			// remote endpoint cannot report on this packet, so taking note of it
+			// would only fill the history with entries no feedback can ever name.
+			uint16_t previousWideSeqNumber{ 0 };
+
+			if (!packet->ReadTransportWideCc01(previousWideSeqNumber))
+			{
+				return std::nullopt;
+			}
 
 			const int64_t nowUs = this->shared->GetTimeUs();
 

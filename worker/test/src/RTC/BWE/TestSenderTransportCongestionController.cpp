@@ -38,9 +38,11 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 
 		bool OnSenderTransportCongestionControllerSendRtpPacket(
 		  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
-		  RTC::RTP::Packet* packet) override
+		  RTC::RTP::Packet* packet,
+		  int64_t sequenceNumber) override
 		{
 			this->sentLengths.push_back(packet->GetLength());
+			this->sentSequenceNumbers.push_back(sequenceNumber);
 
 			return true;
 		}
@@ -48,6 +50,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 	public:
 		std::vector<int64_t> targetBitrates;
 		std::vector<size_t> sentLengths;
+		std::vector<int64_t> sentSequenceNumbers;
 	};
 
 	int64_t nowUs{ InitialTimeUs };
@@ -198,13 +201,16 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 	{
 		const auto packet = buildPacket();
 
-		const int64_t sequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
+		const auto sequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
 		  packet.get(), RTC::BWE::SenderTransportCongestionController::RtpPacketToBeSentOptions{});
+
+		REQUIRE(sequenceNumber.has_value());
 
 		uint16_t wideSeqNumber{ 0 };
 
 		REQUIRE(packet->ReadTransportWideCc01(wideSeqNumber));
-		REQUIRE(wideSeqNumber == static_cast<uint16_t>(sequenceNumber));
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		REQUIRE(wideSeqNumber == static_cast<uint16_t>(sequenceNumber.value()));
 
 		uint32_t absSendTime{ 0 };
 
@@ -216,20 +222,69 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 	{
 		const auto firstPacket = buildPacket();
 
-		const int64_t firstSequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
+		const auto firstSequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
 		  firstPacket.get(), RTC::BWE::SenderTransportCongestionController::RtpPacketToBeSentOptions{});
 
 		const auto secondPacket = buildPacket();
 
-		const int64_t secondSequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
+		const auto secondSequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
 		  secondPacket.get(), RTC::BWE::SenderTransportCongestionController::RtpPacketToBeSentOptions{});
 
-		REQUIRE(secondSequenceNumber == firstSequenceNumber + 1);
+		REQUIRE(firstSequenceNumber.has_value());
+		REQUIRE(secondSequenceNumber.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		REQUIRE(secondSequenceNumber.value() == firstSequenceNumber.value() + 1);
+	}
+
+	SECTION("a packet with no room for the sequence number is not taken note of")
+	{
+		const auto firstVideoPacket = buildPacket();
+
+		const auto firstVideoSequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
+		  firstVideoPacket.get(),
+		  RTC::BWE::SenderTransportCongestionController::RtpPacketToBeSentOptions{});
+
+		// Which is what every audio packet looks like, since the extension is only
+		// written into video ones.
+		std::unique_ptr<RTC::RTP::Packet> audioPacket(
+		  RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)));
+
+		REQUIRE(audioPacket);
+
+		audioPacket->SetSsrc(Ssrc);
+
+		RTC::RTP::HeaderExtensionIds headerExtensionIds;
+
+		headerExtensionIds.transportWideCc01 = TransportWideCc01Id;
+		headerExtensionIds.absSendTime       = AbsSendTimeId;
+
+		audioPacket->AssignExtensionIds(headerExtensionIds);
+		audioPacket->SetPayloadLength(PayloadSize);
+
+		const auto audioSequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
+		  audioPacket.get(), RTC::BWE::SenderTransportCongestionController::RtpPacketToBeSentOptions{});
+
+		REQUIRE(audioSequenceNumber.has_value() == false);
+
+		// And no sequence number was spent on it either, which would leave a hole in
+		// the sequence space that the remote endpoint would report as a lost packet
+		// that never existed.
+		const auto secondVideoPacket = buildPacket();
+
+		const auto secondVideoSequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
+		  secondVideoPacket.get(),
+		  RTC::BWE::SenderTransportCongestionController::RtpPacketToBeSentOptions{});
+
+		REQUIRE(firstVideoSequenceNumber.has_value());
+		REQUIRE(secondVideoSequenceNumber.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		REQUIRE(secondVideoSequenceNumber.value() == firstVideoSequenceNumber.value() + 1);
 	}
 
 	SECTION("a confirmation for a packet that was never taken note of does nothing")
 	{
-		senderTransportCongestionController.OnRtpPacketSent(/*sequenceNumber*/ 12345, nowUs);
+		senderTransportCongestionController.OnRtpPacketSent(
+		  /*sequenceNumber*/ 12345, PayloadSize, nowUs);
 
 		runProcessTimer();
 

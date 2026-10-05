@@ -56,6 +56,10 @@ namespace RTC
 				/**
 				 * A packet of a probe is ready to go out.
 				 *
+				 * @param sequenceNumber - The one given to the packet, which has to be
+				 *   given back through `OnRtpPacketSent()` once the packet has actually
+				 *   left, just like for a packet of media.
+				 *
 				 * @returns Whether the rest of the probe is still wanted, so that a
 				 *   packet that couldn't be sent stops the ones behind it.
 				 *
@@ -65,7 +69,8 @@ namespace RTC
 				 */
 				virtual bool OnSenderTransportCongestionControllerSendRtpPacket(
 				  SenderTransportCongestionController* senderTransportCongestionController,
-				  RTC::RTP::Packet* packet) = 0;
+				  RTC::RTP::Packet* packet,
+				  int64_t sequenceNumber) = 0;
 			};
 
 			/**
@@ -134,16 +139,21 @@ namespace RTC
 			 * wire with it.
 			 *
 			 * @returns The sequence number given to the packet, which has to be given
-			 *   back once the packet has actually left.
+			 *   back once the packet has actually left, or no value when the packet
+			 *   carries no room for it. A packet without that extension cannot be
+			 *   reported on, so nothing is taken note of and only its bytes count.
 			 */
-			int64_t OnRtpPacketToBeSent(RTC::RTP::Packet* packet, const RtpPacketToBeSentOptions& options);
+			std::optional<int64_t> OnRtpPacketToBeSent(
+			  RTC::RTP::Packet* packet, const RtpPacketToBeSentOptions& options);
 
 			/**
 			 * Feed the confirmation that a packet left through the socket.
 			 *
 			 * @param sequenceNumber - What `OnRtpPacketToBeSent()` returned for it.
+			 * @param size - Length of the packet (bytes), which is what is counted when
+			 *   there is no sequence number to look it up by.
 			 */
-			void OnRtpPacketSent(int64_t sequenceNumber, int64_t sentAtUs);
+			void OnRtpPacketSent(std::optional<int64_t> sequenceNumber, size_t size, int64_t sentAtUs);
 
 			/**
 			 * Feed a received transport wide cc feedback, which is what the delay
@@ -155,12 +165,8 @@ namespace RTC
 			/**
 			 * Feed a received RTCP Receiver Report, which is where the loss of what we
 			 * send is measured.
-			 *
-			 * @remarks
-			 * - It arrives in the same compound RTCP packet as the transport wide cc
-			 *   feedback, so both are given the very same instant.
 			 */
-			void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReportPacket* packet, int64_t receivedAtUs);
+			void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReportPacket* packet);
 
 			/**
 			 * Feed a received REMB, which is what the remote endpoint says it is
@@ -217,8 +223,11 @@ namespace RTC
 			/**
 			 * Take note of a packet about to be sent and write its two extensions,
 			 * which is the same work for a packet of media and for one of a probe.
+			 *
+			 * @returns No value when the packet has no room for the transport wide
+			 *   sequence number, in which case nothing is taken note of.
 			 */
-			int64_t AddRtpPacket(
+			std::optional<int64_t> AddRtpPacket(
 			  RTC::RTP::Packet* packet,
 			  const RtpPacketToBeSentOptions& options,
 			  std::optional<Types::ProbeCluster> probeCluster);

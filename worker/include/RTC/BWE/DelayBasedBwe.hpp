@@ -138,20 +138,20 @@ namespace RTC
 			}
 
 		private:
-			void IncomingPacketFeedback(const Types::PacketResult& packetResult, int64_t atTimeUs);
+			void IncomingPacketFeedback(const Types::PacketResult& packetResult, int64_t nowUs);
 
 			Result MaybeUpdateEstimate(
 			  std::optional<int64_t> ackedBitrate,
 			  std::optional<int64_t> probeBitrate,
 			  bool recoveredFromOveruse,
-			  int64_t atTimeUs);
+			  int64_t nowUs);
 
 			/**
 			 * Recompute the target bitrate.
 			 *
 			 * @returns Whether there is a valid estimate.
 			 */
-			bool UpdateEstimate(int64_t atTimeUs, std::optional<int64_t> ackedBitrate, int64_t& targetBitrate);
+			bool UpdateEstimate(int64_t nowUs, std::optional<int64_t> ackedBitrate, int64_t& targetBitrate);
 
 		private:
 			const DelayBasedBweOptions options;
