@@ -37,7 +37,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		}
 
 		void OnRtpStreamRetransmitRtpPacket(
-		  RTC::RTP::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet) override
+		  RTC::RTP::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet, uint16_t /*mediaSeq*/) override
 		{
 			this->retransmittedPackets.push_back(packet);
 		}

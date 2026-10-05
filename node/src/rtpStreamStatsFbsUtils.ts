@@ -55,6 +55,7 @@ export function parseSendStreamStats(
 		byteCount: Number(sendStats.byteCount()),
 		packetCount: Number(sendStats.packetCount()),
 		bitrate: Number(sendStats.bitrate()),
+		sendFractionLost: Number(sendStats.sendFractionLost()),
 	};
 }
 

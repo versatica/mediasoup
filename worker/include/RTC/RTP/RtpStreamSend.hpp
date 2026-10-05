@@ -19,7 +19,10 @@
 #include "SharedInterface.hpp"
 #include <flatbuffers/flatbuffer_builder.h>
 #include <ankerl/unordered_dense.h>
+#include <bitset>
 #include <deque>
+#include <memory>
+#include <optional>
 #include <string>
 
 namespace RTC
@@ -47,6 +50,77 @@ namespace RTC
 			 *   a stream that has really stopped sending.
 			 */
 			static constexpr int64_t MaxSenderReportReferenceAgeMs{ 2000 };
+			/**
+			 * Loss state of the single send hop
+			 */
+			struct SendLossState
+			{
+			public:
+				void Reset();
+
+				/**
+				 * Register a packet whose send was confirmed by the transport. It is idempotent,
+				 * and it is ignored if the packet was sent in another epoch.
+				 *
+				 * @param epoch - Epoch the packet was sent in, read with GetEpoch() before handing
+				 *   the packet over for sending. NOTE: It goes first only as a convention to make
+				 *   the order explicit, since both parameters are numbers.
+				 * @param extSeq - Send extended sequence number of the packet, also resolved
+				 *   before handing the packet over for sending.
+				 */
+				void RegisterSent(uint32_t epoch, uint32_t extSeq);
+
+				/**
+				 * Update the fraction loss with a Receiver Report.
+				 */
+				void Update(RTC::RTCP::ReceiverReport* report);
+
+				uint32_t GetEpoch() const
+				{
+					return this->epoch;
+				}
+
+				uint8_t GetFractionLost() const
+				{
+					return this->fractionLost;
+				}
+
+			private:
+				/**
+				 * Number of rtp sequence numbers the sent bitmap can track, that is, the rtp
+				 * sequence number space between two consecutive Receiver Reports in which it is
+				 * told which sequence numbers were really sent.
+				 *
+				 * @remarks
+				 * - At 1 KB of payload per RTP packet it covers 8 seconds of an 8 Mbps stream,
+				 *   well above the interval between two Receiver Reports.
+				 */
+				static constexpr size_t BitmapSize{ 8192 };
+
+				/**
+				 * Reference of the previous Receiver Report, used to compute the deltas of the
+				 * current interval.
+				 */
+				struct RrAnchor
+				{
+					uint32_t extSeq{ 0 };
+					int32_t totalLost{ 0 };
+				};
+
+				std::optional<uint32_t> MapReportedExtSeq(uint32_t rrHighestExtSeq) const;
+
+			private:
+				// Window of send sequence numbers whose send status is tracked.
+				std::bitset<BitmapSize> bitmap;
+				bool initialized{ false };
+				// Advanced whenever the sequence number space is re-initialized, so that the send
+				// callbacks of the previous one are ignored.
+				uint32_t epoch{ 0 };
+				uint32_t lowestExtSeq{ 0 };
+				uint32_t highestExtSeq{ 0 };
+				std::optional<RrAnchor> rrAnchor;
+				uint8_t fractionLost{ 0 };
+			};
 
 		public:
 			enum class ReceivePacketResult : uint8_t
@@ -61,7 +135,7 @@ namespace RTC
 			{
 			public:
 				virtual void OnRtpStreamRetransmitRtpPacket(
-				  RTP::RtpStreamSend* rtpStream, RTP::Packet* packet) = 0;
+				  RTP::RtpStreamSend* rtpStream, RTP::Packet* packet, uint16_t mediaSeq) = 0;
 			};
 
 		private:
@@ -99,6 +173,23 @@ namespace RTC
 
 			ReceivePacketResult ReceivePacket(RTP::Packet* packet, const RTP::SharedPacket& sharedPacket);
 
+			std::shared_ptr<SendLossState> GetSendLossState() const
+			{
+				return this->sendLossState;
+			}
+
+			uint32_t GetExtendedSequenceNumber(uint16_t seq) const
+			{
+				uint32_t extSeq = this->cycles + seq;
+
+				if (seq > this->maxSeq)
+				{
+					extSeq -= 1u << 16;
+				}
+
+				return extSeq;
+			}
+
 			void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 
 			void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
@@ -134,6 +225,8 @@ namespace RTC
 
 			void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
+			void ResetSendLossState();
+
 			/* Pure virtual methods inherited from RTP::RtpStream. */
 		public:
 			void UserOnSequenceNumberReset() override;
@@ -164,6 +257,7 @@ namespace RTC
 			const std::unique_ptr<TimerHandleInterface> retransmissionTimer;
 			// Timing data of the most recent Receiver Reference Time received.
 			std::optional<ReceiverReferenceTime> lastReceiverReferenceTime;
+			std::shared_ptr<SendLossState> sendLossState{ std::make_shared<SendLossState>() };
 		};
 	} // namespace RTP
 } // namespace RTC

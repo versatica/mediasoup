@@ -11,6 +11,7 @@ export type RtpStreamSendStats = BaseRtpStreamStats & {
 	packetCount: number;
 	byteCount: number;
 	bitrate: number;
+	sendFractionLost: number;
 };
 
 export type BaseRtpStreamStats = {

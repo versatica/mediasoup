@@ -46,12 +46,25 @@ namespace
 
 	class ConsumerListener : public RTC::Consumer::Listener
 	{
-		void OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet) final
+		void OnConsumerSendRtpPacket(
+		  RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet, onSendCallback cb) final
 		{
 			this->sent.push_back(packet->GetSequenceNumber());
+
+			// The test transport always confirms the send.
+			if (cb)
+			{
+				cb(true);
+			}
 		};
-		void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) final
+		void OnConsumerRetransmitRtpPacket(
+		  RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet, onSendCallback cb) final
 		{
+			// The test transport always confirms the send.
+			if (cb)
+			{
+				cb(true);
+			}
 		}
 		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) final {};
 		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) final {};

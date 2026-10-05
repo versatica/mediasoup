@@ -291,8 +291,10 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
-		void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) override;
-		void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) override;
+		void OnConsumerSendRtpPacket(
+		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb) override;
+		void OnConsumerRetransmitRtpPacket(
+		  RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb) override;
 		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override;
 		void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) override;

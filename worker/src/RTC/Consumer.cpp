@@ -1279,8 +1279,28 @@ namespace RTC
 				this->lastSentPacketHasMarker = packet->HasMarker();
 			}
 
+			// NOTE: The extended sequence number and the epoch must be resolved now.
+			const uint32_t extSeq = rtpStream->GetExtendedSequenceNumber(packet->GetSequenceNumber());
+			const uint32_t epoch  = rtpStream->GetSendLossState()->GetEpoch();
+			const std::weak_ptr<RTC::RTP::RtpStreamSend::SendLossState> sendLossStateWeakPtr(
+			  rtpStream->GetSendLossState());
+
 			// Send the packet.
-			this->listener->OnConsumerSendRtpPacket(this, packet);
+			this->listener->OnConsumerSendRtpPacket(
+			  this,
+			  packet,
+			  [sendLossStateWeakPtr, epoch, extSeq](bool sent)
+			  {
+				  if (sent)
+				  {
+					  auto sendLossState = sendLossStateWeakPtr.lock();
+
+					  if (sendLossState)
+					  {
+						  sendLossState->RegisterSent(epoch, extSeq);
+					  }
+				  }
+			  });
 
 			// May emit 'trace' event.
 			EmitTraceEventRtpAndKeyFrameTypes(packet);
@@ -1973,11 +1993,31 @@ namespace RTC
 	}
 
 	void Consumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RTP::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet)
+	  RTC::RTP::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet, uint16_t mediaSeq)
 	{
 		MS_TRACE();
 
-		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
+		// NOTE: The extended sequence number and the epoch must be resolved now.
+		const uint32_t extSeq = rtpStream->GetExtendedSequenceNumber(mediaSeq);
+		const uint32_t epoch  = rtpStream->GetSendLossState()->GetEpoch();
+		const std::weak_ptr<RTC::RTP::RtpStreamSend::SendLossState> sendLossStateWeakPtr(
+		  rtpStream->GetSendLossState());
+
+		this->listener->OnConsumerRetransmitRtpPacket(
+		  this,
+		  packet,
+		  [sendLossStateWeakPtr, epoch, extSeq](bool sent)
+		  {
+			  if (sent)
+			  {
+				  auto sendLossState = sendLossStateWeakPtr.lock();
+
+				  if (sendLossState)
+				  {
+					  sendLossState->RegisterSent(epoch, extSeq);
+				  }
+			  }
+		  });
 
 		// May emit 'trace' event.
 		EmitTraceEventRtpAndKeyFrameTypes(packet, rtpStream->HasRtx());

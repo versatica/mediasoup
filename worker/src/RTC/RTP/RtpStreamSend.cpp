@@ -84,7 +84,8 @@ namespace RTC
 			  baseStats,
 			  this->transmissionCounter.GetPacketCount(),
 			  this->transmissionCounter.GetBytes(),
-			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs).value_or(0)));
+			  static_cast<uint64_t>(this->transmissionCounter.GetBitrate(nowMs).value_or(0)),
+			  this->sendLossState->GetFractionLost());
 
 			return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::SendStats, stats.Union());
 		}
@@ -267,6 +268,9 @@ namespace RTC
 
 			// Update the score with the received RR.
 			UpdateScore(report);
+
+			// Update the send fraction loss with the received RR.
+			this->sendLossState->Update(report);
 		}
 
 		void RtpStreamSend::ReceiveRtcpXrReceiverReferenceTime(
@@ -391,6 +395,9 @@ namespace RTC
 			{
 				this->retransmissionTimer->Stop();
 			}
+
+			// Reset the send loss state.
+			this->ResetSendLossState();
 
 			// Reset jitter.
 			this->jitter = 0;
@@ -533,7 +540,7 @@ namespace RTC
 
 				// Retransmit the packet.
 				static_cast<RTP::RtpStreamSend::Listener*>(this->listener)
-				  ->OnRtpStreamRetransmitRtpPacket(this, packet);
+				  ->OnRtpStreamRetransmitRtpPacket(this, packet, item->sequenceNumber);
 
 				// Mark the packet as retransmitted.
 				RTP::RtpStream::PacketRetransmitted(packet);
@@ -691,6 +698,9 @@ namespace RTC
 			{
 				this->retransmissionTimer->Stop();
 			}
+
+			// Reset the send loss state.
+			this->ResetSendLossState();
 		}
 
 		void RtpStreamSend::OnTimer(TimerHandleInterface* timer)
@@ -708,5 +718,204 @@ namespace RTC
 				}
 			}
 		}
+
+		void RtpStreamSend::ResetSendLossState()
+		{
+			MS_TRACE();
+
+			this->sendLossState->Reset();
+		}
+
+		/* SendLossState */
+
+		void RtpStreamSend::SendLossState::Reset()
+		{
+			MS_TRACE();
+
+			this->initialized = false;
+			this->rrAnchor.reset();
+			this->epoch++;
+		}
+
+		void RtpStreamSend::SendLossState::RegisterSent(uint32_t epoch, uint32_t extSeq)
+		{
+			MS_TRACE();
+
+			// The packet was sent in a previous epoch.
+			if (epoch != this->epoch)
+			{
+				return;
+			}
+
+			if (!this->initialized)
+			{
+				this->initialized   = true;
+				this->lowestExtSeq  = extSeq - static_cast<uint32_t>(BitmapSize) / 2;
+				this->highestExtSeq = extSeq;
+				this->bitmap.reset();
+				this->bitmap.set(static_cast<size_t>(extSeq) % BitmapSize);
+
+				return;
+			}
+
+			// Older than the interval being tracked.
+			if (static_cast<int32_t>(extSeq - this->lowestExtSeq) < 0)
+			{
+				return;
+			}
+
+			// Slide the window right so that the sequence number fits in it.
+			if (static_cast<size_t>(extSeq - this->lowestExtSeq) >= BitmapSize)
+			{
+				const uint32_t newLowestExtSeq = extSeq - static_cast<uint32_t>(BitmapSize) + 1;
+				const size_t slide             = newLowestExtSeq - this->lowestExtSeq;
+
+				if (slide >= BitmapSize)
+				{
+					this->bitmap.reset();
+				}
+				else
+				{
+					// Clear the slots of the sequence numbers that leave the window, since they
+					// are taken over by the ones that enter it.
+					for (uint32_t seq = this->lowestExtSeq; seq != newLowestExtSeq; ++seq)
+					{
+						this->bitmap.reset(static_cast<size_t>(seq) % BitmapSize);
+					}
+				}
+
+				this->lowestExtSeq = newLowestExtSeq;
+			}
+
+			this->bitmap.set(static_cast<size_t>(extSeq) % BitmapSize);
+
+			if (static_cast<int32_t>(extSeq - this->highestExtSeq) > 0)
+			{
+				this->highestExtSeq = extSeq;
+			}
+		}
+
+		std::optional<uint32_t> RtpStreamSend::SendLossState::MapReportedExtSeq(uint32_t rrHighestExtSeq) const
+		{
+			MS_TRACE();
+
+			uint32_t extHighest =
+			  (this->highestExtSeq & 0xFFFF0000u) | static_cast<uint16_t>(rrHighestExtSeq);
+
+			// Roll back to the previous cycle if rrHighestExtSeq is ahead of the highest sequence
+			// number sent.
+			if (static_cast<int32_t>(extHighest - this->highestExtSeq) > 0)
+			{
+				extHighest -= 0x10000;
+			}
+
+			if (static_cast<int32_t>(extHighest - this->lowestExtSeq) < 0)
+			{
+				return std::nullopt;
+			}
+
+			return extHighest;
+		}
+
+		void RtpStreamSend::SendLossState::Update(RTC::RTCP::ReceiverReport* report)
+		{
+			MS_TRACE();
+
+			const uint32_t rrHighestExtSeq = report->GetLastSeq();
+			const int32_t totalLost        = report->GetTotalLost();
+
+			if (!this->initialized)
+			{
+				return;
+			}
+
+			const auto extHighest = this->MapReportedExtSeq(rrHighestExtSeq);
+
+			if (!extHighest.has_value())
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "Receiver Report does not resolve to a sent sequence number, ignoring it "
+				  "[rrHighestExtSeq:%" PRIu32 ", lowestExtSeq:%" PRIu32 ", highestExtSeq:%" PRIu32 "]",
+				  rrHighestExtSeq,
+				  this->lowestExtSeq,
+				  this->highestExtSeq);
+
+				return;
+			}
+
+			const int32_t offset = static_cast<int32_t>(*extHighest - this->lowestExtSeq);
+
+			if (offset < 0 || static_cast<size_t>(offset) >= BitmapSize)
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "Receiver Report extHighestSeq out of the window, ignoring it "
+				  "[rrHighestExtSeq:%" PRIu32 ", lowestExtSeq:%" PRIu32 ", highestExtSeq:%" PRIu32 "]",
+				  rrHighestExtSeq,
+				  this->lowestExtSeq,
+				  this->highestExtSeq);
+
+				return;
+			}
+
+			if (!this->rrAnchor.has_value())
+			{
+				this->rrAnchor = RrAnchor{ .extSeq = *extHighest, .totalLost = totalLost };
+
+				return;
+			}
+
+			const auto priorRRAnchor = this->rrAnchor;
+			this->rrAnchor           = RrAnchor{ .extSeq = *extHighest, .totalLost = totalLost };
+
+			if (static_cast<int32_t>(priorRRAnchor->extSeq - this->lowestExtSeq) < 0)
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "Receiver Report seq interval out of the window, "
+				  "[anchorExtSeq:%" PRIu32 ", lowestExtSeq:%" PRIu32 "]",
+				  priorRRAnchor->extSeq,
+				  this->lowestExtSeq);
+
+				return;
+			}
+
+			const uint32_t intervalExpected = *extHighest - priorRRAnchor->extSeq;
+
+			// No new packet in the interval.
+			if (intervalExpected == 0)
+			{
+				return;
+			}
+
+			uint32_t sent = 0;
+
+			for (uint32_t seq = priorRRAnchor->extSeq + 1; seq != *extHighest + 1; ++seq)
+			{
+				const size_t idx = static_cast<size_t>(seq) % BitmapSize;
+
+				if (this->bitmap.test(idx))
+				{
+					sent++;
+					this->bitmap.reset(idx);
+				}
+			}
+
+			// The interval was accounted, but nothing of it was sent, so every loss the endpoint
+			// reported in it belongs to a hole.
+			if (sent == 0)
+			{
+				this->fractionLost = 0;
+
+				return;
+			}
+
+			const uint32_t unsent  = intervalExpected - sent;
+			const int32_t sendLost = totalLost - priorRRAnchor->totalLost - static_cast<int32_t>(unsent);
+			const int32_t lost     = std::clamp(sendLost, 0, static_cast<int32_t>(sent));
+			this->fractionLost     = static_cast<uint8_t>(255 * lost / sent);
+		}
+
 	} // namespace RTP
 } // namespace RTC

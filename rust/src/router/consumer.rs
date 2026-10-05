@@ -412,6 +412,7 @@ pub struct ConsumerStat {
     pub round_trip_time: Option<f32>,
     pub rtx_packets_discarded: Option<u64>,
     pub score: u8,
+    pub send_fraction_lost: u8,
 }
 
 impl FromFbs for ConsumerStat {
@@ -448,6 +449,7 @@ impl FromFbs for ConsumerStat {
             round_trip_time: Some(base.round_trip_time),
             rtx_packets_discarded: Some(base.rtx_packets_discarded),
             score: base.score,
+            send_fraction_lost: stats.send_fraction_lost,
         }
     }
 }

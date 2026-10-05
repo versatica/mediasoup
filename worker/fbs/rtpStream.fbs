@@ -78,5 +78,6 @@ table SendStats {
     packet_count: uint64;
     byte_count: uint64;
     bitrate: uint64;
+    send_fraction_lost: uint8;
 }
 

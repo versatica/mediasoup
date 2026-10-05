@@ -2695,7 +2695,8 @@ namespace RTC
 		return clockOffsetUs.value() + this->shared->GetNtpOffsetUs();
 	}
 
-	void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
+	void Transport::OnConsumerSendRtpPacket(
+	  RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb)
 	{
 		MS_TRACE();
 
@@ -2718,7 +2719,7 @@ namespace RTC
 #ifdef MS_USE_BUILTIN_BWE
 		// TODO: Write the transport wide sequence number the built-in downlink BWE
 		// hands out and register the send in it.
-		SendRtpPacket(consumer, packet);
+		SendRtpPacket(consumer, packet, std::move(cb));
 #else
 		// Update transport wide sequence number if present.
 		if (
@@ -2751,7 +2752,7 @@ namespace RTC
 			SendRtpPacket(
 			  consumer,
 			  packet,
-			  [tccClientWeakPtr, shared, packetInfo](bool sent)
+			  [tccClientWeakPtr, shared, packetInfo, cb = std::move(cb)](bool sent)
 			  {
 				  if (sent)
 				  {
@@ -2762,18 +2763,24 @@ namespace RTC
 						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
+
+				  if (cb)
+				  {
+					  cb(sent);
+				  }
 			  });
 		}
 		else
 		{
-			SendRtpPacket(consumer, packet);
+			SendRtpPacket(consumer, packet, std::move(cb));
 		}
 #endif
 
 		this->sendRtpTransmission.Update(packet);
 	}
 
-	void Transport::OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet)
+	void Transport::OnConsumerRetransmitRtpPacket(
+	  RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb)
 	{
 		MS_TRACE();
 
@@ -2791,7 +2798,7 @@ namespace RTC
 #ifdef MS_USE_BUILTIN_BWE
 		// TODO: Write the transport wide sequence number the built-in downlink BWE
 		// hands out and register the send in it.
-		SendRtpPacket(consumer, packet);
+		SendRtpPacket(consumer, packet, std::move(cb));
 #else
 		// Update transport wide sequence number if present.
 		if (
@@ -2819,7 +2826,7 @@ namespace RTC
 			SendRtpPacket(
 			  consumer,
 			  packet,
-			  [tccClientWeakPtr, shared, packetInfo](bool sent)
+			  [tccClientWeakPtr, shared, packetInfo, cb = std::move(cb)](bool sent)
 			  {
 				  if (sent)
 				  {
@@ -2830,11 +2837,16 @@ namespace RTC
 						  tccClient->PacketSent(packetInfo, shared->GetTimeUs());
 					  }
 				  }
+
+				  if (cb)
+				  {
+					  cb(sent);
+				  }
 			  });
 		}
 		else
 		{
-			SendRtpPacket(consumer, packet);
+			SendRtpPacket(consumer, packet, std::move(cb));
 		}
 #endif
 

@@ -6,6 +6,7 @@
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/consumer.h"
 #include "FBS/transport.h"
+#include "handles/SendCallbacks.hpp"
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/ProducerStreamManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -42,8 +43,10 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) = 0;
-			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) = 0;
+			virtual void OnConsumerSendRtpPacket(
+			  RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb) = 0;
+			virtual void OnConsumerRetransmitRtpPacket(
+			  RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb)                = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
 			virtual void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer)                        = 0;
@@ -192,7 +195,7 @@ namespace RTC
 	public:
 		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(
-		  RTC::RTP::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet) override;
+		  RTC::RTP::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet, uint16_t mediaSeq) override;
 
 		/* Pure virtual methods inherited from ProducerStreamManager::Listener. */
 	public:
