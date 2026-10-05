@@ -36,7 +36,9 @@ namespace RTC
 				 */
 				int64_t lostPackets;
 				/**
-				 * Packets expected, which is what the sequence numbers covered.
+				 * Packets expected, which is what the sequence numbers covered. It may
+				 * also be negative, when a report built before the previous one still
+				 * arrives after it and its sequence numbers go backwards.
 				 */
 				int64_t expectedPackets;
 			};
