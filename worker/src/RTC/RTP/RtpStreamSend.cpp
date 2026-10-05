@@ -750,7 +750,7 @@ namespace RTC
 			if (!this->initialized)
 			{
 				this->initialized   = true;
-				this->lowestExtSeq  = extSeq - static_cast<uint32_t>(BitmapSize) / 2;
+				this->lowestExtSeq  = extSeq - (static_cast<uint32_t>(BitmapSize) / 2);
 				this->highestExtSeq = extSeq;
 				this->bitmap.reset();
 				this->bitmap.set(static_cast<size_t>(extSeq) % BitmapSize);
@@ -844,9 +844,9 @@ namespace RTC
 				return;
 			}
 
-			const int32_t offset = static_cast<int32_t>(*extHighest - this->lowestExtSeq);
+			const auto offset = static_cast<int32_t>(*extHighest - this->lowestExtSeq);
 
-			if (offset < 0 || static_cast<size_t>(offset) >= BitmapSize)
+			if (offset < 0 || std::cmp_greater_equal(offset, BitmapSize))
 			{
 				MS_WARN_TAG(
 				  rtp,
@@ -869,19 +869,40 @@ namespace RTC
 			const auto priorRRAnchor = this->rrAnchor;
 			this->rrAnchor           = RrAnchor{ .extSeq = *extHighest, .totalLost = totalLost };
 
-			if (static_cast<int32_t>(priorRRAnchor->extSeq - this->lowestExtSeq) < 0)
+			if (static_cast<int32_t>(*extHighest - priorRRAnchor->extSeq) < 0)
 			{
 				MS_WARN_TAG(
 				  rtp,
-				  "Receiver Report seq interval out of the window, "
-				  "[anchorExtSeq:%" PRIu32 ", lowestExtSeq:%" PRIu32 "]",
+				  "Receiver Report lastSeq rollback, ignoring it "
+				  "[rrHighestExtSeq:%" PRIu32 ", extHighestSeq:%" PRIu32 ", anchorExtSeq:%" PRIu32
+				  ", highestExtSeq:%" PRIu32 "]",
+				  rrHighestExtSeq,
+				  *extHighest,
 				  priorRRAnchor->extSeq,
-				  this->lowestExtSeq);
+				  this->highestExtSeq);
 
 				return;
 			}
 
 			const uint32_t intervalExpected = *extHighest - priorRRAnchor->extSeq;
+
+			if (
+			  static_cast<int32_t>(priorRRAnchor->extSeq - this->lowestExtSeq) < 0 ||
+			  std::cmp_greater_equal(intervalExpected, BitmapSize))
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "Receiver Report seq interval out of the window, ignoring it "
+				  "[rrHighestExtSeq:%" PRIu32 ", extHighestSeq:%" PRIu32 ", anchorExtSeq:%" PRIu32
+				  ", lowestExtSeq:%" PRIu32 ", intervalExpected:%" PRIu32 "]",
+				  rrHighestExtSeq,
+				  *extHighest,
+				  priorRRAnchor->extSeq,
+				  this->lowestExtSeq,
+				  intervalExpected);
+
+				return;
+			}
 
 			// No new packet in the interval.
 			if (intervalExpected == 0)

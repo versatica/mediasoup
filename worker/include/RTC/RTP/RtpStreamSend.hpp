@@ -21,8 +21,6 @@
 #include <ankerl/unordered_dense.h>
 #include <bitset>
 #include <deque>
-#include <memory>
-#include <optional>
 #include <string>
 
 namespace RTC

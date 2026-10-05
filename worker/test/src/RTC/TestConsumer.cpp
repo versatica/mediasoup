@@ -58,7 +58,7 @@ namespace
 			}
 		};
 		void OnConsumerRetransmitRtpPacket(
-		  RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet, onSendCallback cb) final
+		  RTC::Consumer* /*consumer*/, RTC::RTP::Packet* /*packet*/, onSendCallback cb) final
 		{
 			// The test transport always confirms the send.
 			if (cb)
