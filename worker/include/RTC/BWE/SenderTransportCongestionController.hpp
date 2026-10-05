@@ -19,6 +19,7 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "SharedInterface.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -113,6 +114,31 @@ namespace RTC
 				 * let the link decide.
 				 */
 				int64_t maxBitrate{ Types::BitrateInfinite };
+			};
+
+		private:
+			/**
+			 * What a call leaves to be done once it is over, so that nothing of this
+			 * class is half way through anything by the time the listener is told and
+			 * calls back in.
+			 */
+			struct PendingUpdate
+			{
+				/**
+				 * Bursts that were asked for, which are handed to the scheduler all at
+				 * once.
+				 */
+				std::vector<Types::ProbeClusterConfig> probeClusterConfigs;
+				/**
+				 * Target the listener is to be told about, when something it reasons
+				 * about turned out to have changed.
+				 *
+				 * @remarks
+				 * - It is worked out where the call would have announced it, and only
+				 *   handed over at the end, since what is reconsidered along the way
+				 *   depends on the order the original does things in.
+				 */
+				std::optional<int64_t> targetBitrateToNotify;
 			};
 
 		public:
@@ -240,14 +266,25 @@ namespace RTC
 			void Process();
 
 			/**
-			 * Hand the probe configurations to the scheduler, which is what makes a
-			 * probe actually go out.
+			 * Take note of the bursts that were asked for, which go out once the call
+			 * that asked for them is over.
 			 */
-			void CreateProbeClusters(const std::vector<Types::ProbeClusterConfig>& clusterConfigs);
+			void AddProbeClusters(const std::vector<Types::ProbeClusterConfig>& clusterConfigs);
 
 			/**
-			 * Tell the listener about the target, but only when something it reasons
-			 * about actually changed.
+			 * Do everything the call leaves pending: hand the bursts to the scheduler
+			 * and tell the listener about the target, but only when something it
+			 * reasons about actually changed.
+			 *
+			 * @remarks
+			 * - It is the last thing every entry point does, and the only place where
+			 *   anything leaves this class.
+			 */
+			void ApplyPendingUpdate();
+
+			/**
+			 * Reconsider the target and take note of it when the listener has to be
+			 * told, which is what every path that may have moved it ends with.
 			 */
 			void MayNotifyTargetBitrate(int64_t nowUs);
 
@@ -304,6 +341,8 @@ namespace RTC
 			int64_t lastRttUs{ 0 };
 			LossBasedController::State lastLossBasedState{ LossBasedController::State::DELAY_BASED_ESTIMATE };
 			bool lastIsBandwidthLimited{ true };
+			// What the call being served leaves to be done once it is over.
+			PendingUpdate pendingUpdate;
 		};
 	} // namespace BWE
 } // namespace RTC

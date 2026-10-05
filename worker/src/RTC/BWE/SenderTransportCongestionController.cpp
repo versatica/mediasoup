@@ -89,6 +89,9 @@ namespace RTC
 			this->minBitrate = options.minBitrate;
 			this->maxBitrate = options.maxBitrate;
 
+			// NOTE: What this leaves pending is not applied here, since a constructor
+			// cannot call the listener. Nothing is lost: no burst is asked for while
+			// there is no network, which is what the probe controller starts with.
 			ResetConstraints(this->shared->GetTimeUs(), /*applyStartBitrate*/ true);
 
 			this->processTimer->Start(ProcessIntervalMs, ProcessIntervalMs);
@@ -100,7 +103,9 @@ namespace RTC
 
 			const int64_t nowUs = this->shared->GetTimeUs();
 
-			CreateProbeClusters(this->probeController.OnNetworkAvailability(networkAvailable, nowUs));
+			AddProbeClusters(this->probeController.OnNetworkAvailability(networkAvailable, nowUs));
+
+			ApplyPendingUpdate();
 		}
 
 		std::optional<int64_t> SenderTransportCongestionController::OnRtpPacketToBeSent(
@@ -288,8 +293,10 @@ namespace RTC
 			{
 				this->probeController.SetAlrStartTimeUs(alrStartTimeUs);
 
-				CreateProbeClusters(this->probeController.RequestProbe(feedbackTimeUs));
+				AddProbeClusters(this->probeController.RequestProbe(feedbackTimeUs));
 			}
+
+			ApplyPendingUpdate();
 		}
 
 		void SenderTransportCongestionController::ReceiveRtcpReceiverReport(
@@ -353,14 +360,19 @@ namespace RTC
 			ResetConstraints(nowUs, /*applyStartBitrate*/ false);
 
 			MayNotifyTargetBitrate(nowUs);
+
+			ApplyPendingUpdate();
 		}
 
 		void SenderTransportCongestionController::SetDesiredBitrate(int64_t desiredBitrate)
 		{
 			MS_TRACE();
 
-			CreateProbeClusters(this->probeController.OnMaxTotalAllocatedBitrate(
-			  desiredBitrate, this->shared->GetTimeUs()));
+			const int64_t nowUs = this->shared->GetTimeUs();
+
+			AddProbeClusters(this->probeController.OnMaxTotalAllocatedBitrate(desiredBitrate, nowUs));
+
+			ApplyPendingUpdate();
 		}
 
 		void SenderTransportCongestionController::SetPacketOverhead(size_t packetOverhead)
@@ -461,22 +473,44 @@ namespace RTC
 			this->probeController.SetAlrStartTimeUs(
 			  this->firstTransportFeedbackReceived ? this->alrDetector.GetAlrStartTimeUs() : std::nullopt);
 
-			CreateProbeClusters(this->probeController.Process(nowUs));
+			AddProbeClusters(this->probeController.Process(nowUs));
 
 			MayNotifyTargetBitrate(nowUs);
+
+			ApplyPendingUpdate();
 		}
 
-		void SenderTransportCongestionController::CreateProbeClusters(
+		void SenderTransportCongestionController::AddProbeClusters(
 		  const std::vector<Types::ProbeClusterConfig>& clusterConfigs)
 		{
 			MS_TRACE();
 
-			if (clusterConfigs.empty())
+			this->pendingUpdate.probeClusterConfigs.insert(
+			  this->pendingUpdate.probeClusterConfigs.end(), clusterConfigs.begin(), clusterConfigs.end());
+		}
+
+		void SenderTransportCongestionController::ApplyPendingUpdate()
+		{
+			MS_TRACE();
+
+			// Taken out before anything leaves this class, so that a listener calling
+			// back in starts a cycle of its own instead of finding this one half
+			// applied.
+			const auto probeClusterConfigs   = std::move(this->pendingUpdate.probeClusterConfigs);
+			const auto targetBitrateToNotify = this->pendingUpdate.targetBitrateToNotify;
+
+			this->pendingUpdate = {};
+
+			if (!probeClusterConfigs.empty())
 			{
-				return;
+				this->probingScheduler.CreateProbeClusters(probeClusterConfigs);
 			}
 
-			this->probingScheduler.CreateProbeClusters(clusterConfigs);
+			if (targetBitrateToNotify.has_value())
+			{
+				this->listener->OnSenderTransportCongestionControllerTargetBitrate(
+				  this, targetBitrateToNotify.value());
+			}
 		}
 
 		void SenderTransportCongestionController::MayNotifyTargetBitrate(int64_t nowUs)
@@ -511,7 +545,7 @@ namespace RTC
 
 			this->alrDetector.SetEstimatedBitrate(targetBitrate);
 
-			CreateProbeClusters(this->probeController.SetEstimatedBitrate(
+			AddProbeClusters(this->probeController.SetEstimatedBitrate(
 			  targetBitrate,
 			  getBandwidthLimitedCause(
 			    lossBasedState,
@@ -519,7 +553,7 @@ namespace RTC
 			    this->delayBasedBwe.GetLastState()),
 			  nowUs));
 
-			this->listener->OnSenderTransportCongestionControllerTargetBitrate(this, targetBitrate);
+			this->pendingUpdate.targetBitrateToNotify = targetBitrate;
 		}
 
 		void SenderTransportCongestionController::ResetConstraints(int64_t nowUs, bool applyStartBitrate)
@@ -556,7 +590,7 @@ namespace RTC
 				this->delayBasedBwe.SetStartBitrate(startBitrate);
 			}
 
-			CreateProbeClusters(
+			AddProbeClusters(
 			  this->probeController.SetBitrates(this->minBitrate, startBitrate, this->maxBitrate, nowUs));
 		}
 	} // namespace BWE
