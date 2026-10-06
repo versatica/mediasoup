@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "FBS/rtpStream.h"
+#include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
@@ -20,6 +21,7 @@
 #include <flatbuffers/flatbuffer_builder.h>
 #include <ankerl/unordered_dense.h>
 #include <deque>
+#include <set>
 #include <string>
 
 namespace RTC
@@ -47,6 +49,16 @@ namespace RTC
 			 *   a stream that has really stopped sending.
 			 */
 			static constexpr int64_t MaxSenderReportReferenceAgeMs{ 2000 };
+			/**
+			 * How many sequence numbers that were never sent are remembered.
+			 *
+			 * @remarks
+			 * - Only a Receiver Report drains them and a remote endpoint may stop
+			 *   reporting, so this bounds what a stream whose reports never arrive can
+			 *   hold on to.
+			 * - Above any plausible run of loss in the uplink of the Producer.
+			 */
+			static constexpr size_t MaxUnsentSeqNumbers{ 2000 };
 
 		public:
 			enum class ReceivePacketResult : uint8_t
@@ -132,7 +144,31 @@ namespace RTC
 		private:
 			void RetransmitPendingPackets();
 
-			void UpdateScore(RTC::RTCP::ReceiverReport* report);
+			/**
+			 * @param lostDelta Packets this link really lost since the previous
+			 *   Receiver Report.
+			 */
+			void UpdateScore(int64_t lostDelta);
+
+			/**
+			 * Take note of the sequence numbers that the packet just accepted leaves
+			 * behind for good, or forget one that it fills in late.
+			 */
+			void UpdateUnsentSeqNumbers(uint16_t seq);
+
+			/**
+			 * Work out how much of what the Receiver Report reports as lost really was
+			 * lost on the way to the remote endpoint, and take note of it.
+			 *
+			 * @returns Packets this link really lost since the previous Receiver
+			 *   Report, or no value if the report measures no interval at all.
+			 */
+			std::optional<int64_t> UpdateSendLoss(RTC::RTCP::ReceiverReport* report);
+
+			/**
+			 * Forget everything measured over a numbering that is not in use anymore.
+			 */
+			void ResetSendLoss();
 
 			/* Pure virtual methods inherited from RTP::RtpStream. */
 		public:
@@ -143,8 +179,6 @@ namespace RTC
 			void OnTimer(TimerHandleInterface* timer) override;
 
 		private:
-			// Packets lost at last interval for score calculation.
-			int32_t lostPriorScore{ 0 };
 			// Packets sent at last interval for score calculation.
 			// NOTE: As wide as the counter it snapshots, which does not wrap, so that
 			// the difference against it stays exact however long the stream runs.
@@ -164,6 +198,21 @@ namespace RTC
 			const std::unique_ptr<TimerHandleInterface> retransmissionTimer;
 			// Timing data of the most recent Receiver Reference Time received.
 			std::optional<ReceiverReferenceTime> lastReceiverReferenceTime;
+			// Unwraps the sequence numbers of what is sent, so that comparing them
+			// against the ones a Receiver Report names needs no wrapping arithmetic.
+			Utils::UnwrappedSequenceNumber<uint16_t>::Unwrapper seqUnwrapper;
+			// Sequence numbers that were skipped and will never be sent, which is what
+			// the uplink of the Producer lost, unwrapped.
+			std::set<int64_t> unsentSeqs;
+			// Highest sequence number sent so far, unwrapped.
+			std::optional<int64_t> highestSentSeq;
+			// Highest sequence number the previous Receiver Report had seen, unwrapped
+			// into our own numbering, which is where the interval of the next one
+			// starts. Seeded one below the first sequence number sent, so that the
+			// first report measures from that one onwards.
+			std::optional<int64_t> lastRrSeq;
+			// What the previous Receiver Report reported as lost in total.
+			int32_t lastRrTotalLost{ 0 };
 		};
 	} // namespace RTP
 } // namespace RTC

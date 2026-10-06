@@ -1815,6 +1815,123 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(stream.GetRttMs() == 1.0f);
 	}
 
+	SECTION("the loss of the uplink of the Producer is not counted as loss of this link")
+	{
+		TestRtpStreamListener testRtpStreamListener;
+
+		RTC::RTP::RtpStream::Params params;
+
+		params.ssrc          = 1111;
+		params.clockRate     = 90000;
+		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+
+		RTC::RTP::RtpStreamSend stream(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+
+		// Forward a run of packets leaving out the given sequence numbers, which is
+		// what a packet lost on the way from the Producer looks like: nothing is ever
+		// sent for it, so the number is skipped.
+		const auto sendPackets =
+		  [&](uint16_t firstSeq, uint16_t lastSeq, const std::vector<uint16_t>& unsentSeqs)
+		{
+			for (uint16_t seq{ firstSeq }; seq <= lastSeq; ++seq)
+			{
+				if (std::ranges::find(unsentSeqs, seq) != unsentSeqs.end())
+				{
+					continue;
+				}
+
+				auto packet(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), seq, 1000));
+
+				sendRtpPacket(
+				  {
+				    { std::addressof(stream), params.ssrc }
+        },
+				  packet.get());
+			}
+		};
+
+		const auto receiveReceiverReport = [&](uint32_t lastSeq, int32_t totalLost)
+		{
+			RTC::RTCP::ReceiverReport report;
+
+			report.SetSsrc(params.ssrc);
+			report.SetLastSeq(lastSeq);
+			report.SetTotalLost(totalLost);
+
+			stream.ReceiveRtcpReceiverReport(std::addressof(report), nowUs);
+		};
+
+		sendPackets(1, 10, {});
+
+		// The first report measures from the first packet sent, and this one says
+		// that everything arrived.
+		receiveReceiverReport(10, 0);
+
+		REQUIRE(stream.GetFractionLost() == 0);
+		REQUIRE(stream.GetScore() == 10);
+
+		// Ten more of which two never went out, and the remote endpoint reports
+		// exactly those two as lost. Nothing was lost on the way to it, so neither
+		// the reported loss nor the score may budge.
+		sendPackets(11, 20, { 15, 16 });
+
+		receiveReceiverReport(20, 2);
+
+		REQUIRE(stream.GetFractionLost() == 0);
+		REQUIRE(stream.GetScore() == 10);
+
+		// And now one that never went out plus two that really were lost on the way:
+		// of the ten sequence numbers of the interval nine were sent, and two of
+		// those did not make it.
+		sendPackets(21, 30, { 25 });
+
+		receiveReceiverReport(30, 5);
+
+		REQUIRE(stream.GetFractionLost() == (2 << 8) / 9);
+		REQUIRE(stream.GetScore() < 10);
+
+		// A packet that arrives late fills the hole it had left, so what the remote
+		// endpoint reports for it is loss of this link after all.
+		sendPackets(31, 40, { 35 });
+		sendPackets(35, 35, {});
+
+		receiveReceiverReport(40, 6);
+
+		REQUIRE(stream.GetFractionLost() == (1 << 8) / 10);
+
+		// A report that got reordered names a stretch of the stream that is already
+		// settled, so it is left alone rather than counted a second time.
+		receiveReceiverReport(35, 100);
+
+		REQUIRE(stream.GetFractionLost() == (1 << 8) / 10);
+
+		// More sequence numbers skipped at once than can be remembered: only the most
+		// recent MaxUnsentSeqNumbers of them are, and the rest are answered for as if
+		// this link had lost them.
+		constexpr int32_t ForgottenSeqNumbers{ 499 };
+
+		const auto farSeq = static_cast<uint16_t>(
+		  42 + static_cast<int32_t>(RTC::RTP::RtpStreamSend::MaxUnsentSeqNumbers) + ForgottenSeqNumbers);
+
+		sendPackets(41, 41, {});
+		sendPackets(farSeq, farSeq, {});
+
+		// The remote endpoint misses every single one of the skipped ones.
+		receiveReceiverReport(farSeq, 6 + (farSeq - 42));
+
+		// The interval is what was forgotten plus the two packets that did go out.
+		REQUIRE(stream.GetFractionLost() == (ForgottenSeqNumbers << 8) / (ForgottenSeqNumbers + 2));
+
+		// And a pause forgets all of it, since whatever comes next belongs to a
+		// numbering that has nothing to do with this one.
+		stream.Pause();
+
+		REQUIRE(stream.GetFractionLost() == 0);
+	}
+
 #ifdef PERFORMANCE_TEST
 	SECTION("performance")
 	{

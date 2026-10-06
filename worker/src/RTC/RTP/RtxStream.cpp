@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/RtxStream.hpp"
 #include "Logger.hpp"
+#include "RTC/RTP/RtpStream.hpp"
 #include "Utils.hpp"
 #include <cmath> // std::round()
 
@@ -10,12 +11,6 @@ namespace RTC
 {
 	namespace RTP
 	{
-		/* Static. */
-
-		static constexpr uint16_t MaxDropout{ 3000 };
-		static constexpr uint16_t MaxMisorder{ 1500 };
-		static constexpr uint32_t RtpSeqMod{ 1 << 16 };
-
 		/* Instance methods. */
 
 		RtxStream::RtxStream(SharedInterface* shared, RTP::RtxStream::Params& params)
@@ -198,20 +193,20 @@ namespace RTC
 			// "so much bigger", accept it.
 			// NOTE: udelta also handles the case of a new cycle, this is:
 			//    maxSeq:65536, seq:0 => udelta:1
-			if (udelta < MaxDropout)
+			if (udelta < RTP::RtpStream::MaxDropout)
 			{
 				// In order, with permissible gap.
 				if (seq < this->maxSeq)
 				{
 					// Sequence number wrapped: count another 64K cycle.
-					this->cycles += RtpSeqMod;
+					this->cycles += RTP::RtpStream::RtpSeqMod;
 				}
 
 				this->maxSeq = seq;
 			}
 			// Too old packet received (older than the allowed misorder).
 			// Or to new packet (more than acceptable dropout).
-			else if (udelta <= RtpSeqMod - MaxMisorder)
+			else if (udelta <= RTP::RtpStream::RtpSeqMod - RTP::RtpStream::MaxMisorder)
 			{
 				// The sequence number made a very large jump. If two sequential packets
 				// arrive, accept the latter.
@@ -237,7 +232,7 @@ namespace RTC
 					  packet->GetSsrc(),
 					  packet->GetSequenceNumber());
 
-					this->badSeq = (seq + 1) & (RtpSeqMod - 1);
+					this->badSeq = (seq + 1) & (RTP::RtpStream::RtpSeqMod - 1);
 
 					// Packet discarded due to late or early arriving.
 					this->packetsDiscarded++;
@@ -261,7 +256,7 @@ namespace RTC
 			// Initialize/reset RTP counters.
 			this->baseSeq = seq;
 			this->maxSeq  = seq;
-			this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
+			this->badSeq  = RTP::RtpStream::RtpSeqMod + 1; // So seq == badSeq is false.
 		}
 
 		flatbuffers::Offset<FBS::RtxStream::Params> RtxStream::Params::FillBuffer(

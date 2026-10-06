@@ -20,7 +20,6 @@ namespace RTC
 		static constexpr int64_t RetransmissionIntervalMs{ 10 };
 		// Maximum number of packets retransmitted in each iteration.
 		static constexpr size_t MaxRetransmittedPacketsPerIteration{ 2 };
-
 		/* Instance methods. */
 
 		RtpStreamSend::RtpStreamSend(
@@ -111,6 +110,8 @@ namespace RTC
 			{
 				return ReceivePacketResult::DISCARDED;
 			}
+
+			UpdateUnsentSeqNumbers(packet->GetSequenceNumber());
 
 			bool stored{ false };
 
@@ -261,12 +262,73 @@ namespace RTC
 				  static_cast<float>(Utils::Time::CompactNtpRttToTimeUs(compactNtp - dlsr - lastSr)) / 1000;
 			}
 
-			this->packetsLost  = report->GetTotalLost();
-			this->fractionLost = report->GetFractionLost();
-			this->jitter       = static_cast<float>(report->GetJitter());
+			this->jitter = static_cast<float>(report->GetJitter());
+
+			// Work out how much of what it reports as lost really was lost on the way
+			// to it, which is the only part this link is answerable for.
+			const auto lostDelta = UpdateSendLoss(report);
 
 			// Update the score with the received RR.
-			UpdateScore(report);
+			//
+			// NOTE: A report that measures no interval counts as having lost nothing,
+			// since there is no stretch of the stream to blame it for.
+			UpdateScore(lostDelta.value_or(0));
+		}
+
+		std::optional<int64_t> RtpStreamSend::UpdateSendLoss(RTC::RTCP::ReceiverReport* report)
+		{
+			MS_TRACE();
+
+			// Not a single packet has been sent, so there is no stretch of the stream
+			// this report can be measuring.
+			if (!this->lastRrSeq.has_value())
+			{
+				return std::nullopt;
+			}
+
+			// The remote endpoint counts its cycles from the first packet it saw, so
+			// the extended value it reports is not in our numbering. Only the 16 bits
+			// that travelled on the wire are, and this places them where they belong
+			// without disturbing what the unwrapper knows.
+			const int64_t rrSeq =
+			  this->seqUnwrapper.PeekUnwrap(static_cast<uint16_t>(report->GetLastSeq())).GetValue();
+			// NOTE: It is signed and may go down, since a duplicate counts as a packet
+			// received twice.
+			const int32_t totalLost = std::max<int32_t>(report->GetTotalLost(), 0);
+
+			// A report that goes backwards is one that got reordered. Taking it would
+			// move the mark back and count a stretch of the stream twice.
+			if (rrSeq <= this->lastRrSeq.value())
+			{
+				return std::nullopt;
+			}
+
+			// What was never sent within the interval is what the remote endpoint
+			// counts as lost without this link having lost it.
+			const auto begin  = this->unsentSeqs.upper_bound(this->lastRrSeq.value());
+			const auto end    = this->unsentSeqs.upper_bound(rrSeq);
+			const auto unsent = static_cast<int64_t>(std::distance(begin, end));
+
+			// Everything up to what this report has seen is settled.
+			this->unsentSeqs.erase(this->unsentSeqs.begin(), end);
+
+			const int64_t expected = (rrSeq - this->lastRrSeq.value()) - unsent;
+			// A hole already counted by a previous report and filled in since makes
+			// the remote endpoint report fewer lost packets than before, so the
+			// difference may well come out negative.
+			const int64_t lostDelta =
+			  std::clamp<int64_t>(int64_t{ totalLost } - this->lastRrTotalLost - unsent, 0, expected);
+
+			this->lastRrSeq       = rrSeq;
+			this->lastRrTotalLost = totalLost;
+
+			this->packetsLost += static_cast<int32_t>(lostDelta);
+			// NOTE: The fraction is in 1/256 units, hence the shift, which is the
+			// scale a Receiver Report uses for its own.
+			this->fractionLost =
+			  expected > 0 ? static_cast<uint8_t>(std::min<int64_t>((lostDelta << 8) / expected, 255)) : 0;
+
+			return lostDelta;
 		}
 
 		void RtpStreamSend::ReceiveRtcpXrReceiverReferenceTime(
@@ -394,11 +456,65 @@ namespace RTC
 
 			// Reset jitter.
 			this->jitter = 0;
+
+			ResetSendLoss();
 		}
 
 		void RtpStreamSend::Resume()
 		{
 			MS_TRACE();
+		}
+
+		void RtpStreamSend::UpdateUnsentSeqNumbers(uint16_t seq)
+		{
+			MS_TRACE();
+
+			const int64_t unwrappedSeq = this->seqUnwrapper.Unwrap(seq).GetValue();
+
+			// Nothing was sent before this one, so it leaves nothing behind. It is also
+			// where the interval of the first Receiver Report starts, so that the first
+			// one measures from here rather than from nowhere.
+			if (!this->highestSentSeq.has_value())
+			{
+				this->highestSentSeq = unwrappedSeq;
+				this->lastRrSeq      = unwrappedSeq - 1;
+
+				return;
+			}
+
+			// It arrived late and fills in one that was taken for never sent.
+			if (unwrappedSeq <= this->highestSentSeq.value())
+			{
+				this->unsentSeqs.erase(unwrappedSeq);
+
+				return;
+			}
+
+			// Whatever it skipped was never handed to this stream and never will be:
+			// it is what the uplink of the Producer lost and nobody could forward.
+			//
+			// NOTE: Only the most recent ones are taken, since anything older than that
+			// is what the bound below would drop right away anyway, and a numbering
+			// that jumps far ahead must not cost a walk over half the sequence number
+			// space.
+			const int64_t firstUnsentSeq = std::max<int64_t>(
+			  this->highestSentSeq.value() + 1,
+			  unwrappedSeq - static_cast<int64_t>(RtpStreamSend::MaxUnsentSeqNumbers));
+
+			for (int64_t unsentSeq{ firstUnsentSeq }; unsentSeq < unwrappedSeq; ++unsentSeq)
+			{
+				this->unsentSeqs.insert(unsentSeq);
+			}
+
+			this->highestSentSeq = unwrappedSeq;
+
+			// Only a Receiver Report drains this, so a remote endpoint that stops
+			// reporting must not make it grow without end. The oldest ones go, which
+			// are the ones the next report is least likely to name.
+			while (this->unsentSeqs.size() > RtpStreamSend::MaxUnsentSeqNumbers)
+			{
+				this->unsentSeqs.erase(this->unsentSeqs.begin());
+			}
 		}
 
 		int64_t RtpStreamSend::GetBitrate(
@@ -573,7 +689,7 @@ namespace RTC
 			}
 		}
 
-		void RtpStreamSend::UpdateScore(RTC::RTCP::ReceiverReport* report)
+		void RtpStreamSend::UpdateScore(int64_t lostDelta)
 		{
 			MS_TRACE();
 
@@ -583,21 +699,10 @@ namespace RTC
 
 			this->sentPriorScore = totalSent;
 
-			// Calculate number of packets lost in this interval.
-			const int32_t totalLost = report->GetTotalLost() > 0 ? report->GetTotalLost() : 0;
-
-			uint64_t lost;
-
-			if (totalLost < this->lostPriorScore)
-			{
-				lost = 0;
-			}
-			else
-			{
-				lost = totalLost - this->lostPriorScore;
-			}
-
-			this->lostPriorScore = totalLost;
+			// Number of packets lost in this interval, which is what this link really
+			// lost and not what the remote endpoint reported, since that one also
+			// counts the sequence numbers that were never sent.
+			auto lost = static_cast<uint64_t>(lostDelta);
 
 			// Calculate number of packets repaired in this interval.
 			const auto totalRepaired = this->packetsRepaired;
@@ -628,7 +733,7 @@ namespace RTC
 			  score,
 			  "[totalSent:%" PRIu64 ", totalLost:%" PRIi32 ", totalRepaired:%" PRIu64,
 			  totalSent,
-			  totalLost,
+			  this->packetsLost,
 			  totalRepaired);
 
 			MS_DEBUG_TAG(
@@ -691,6 +796,28 @@ namespace RTC
 			{
 				this->retransmissionTimer->Stop();
 			}
+
+			ResetSendLoss();
+		}
+
+		void RtpStreamSend::ResetSendLoss()
+		{
+			MS_TRACE();
+
+			// What was never sent belongs to a numbering that is not in use anymore,
+			// and so does the mark the next Receiver Report would be measured against.
+			this->seqUnwrapper.Reset();
+			this->unsentSeqs.clear();
+			this->highestSentSeq.reset();
+			this->lastRrSeq.reset();
+			this->lastRrTotalLost = 0;
+			// Nothing has been measured over this numbering, and holding on to what
+			// was measured over the previous one would keep reporting it for as long
+			// as the stream stays quiet.
+			//
+			// NOTE: The total of lost packets is not cleared, being a count over the
+			// whole life of the stream rather than a measure of its current state.
+			this->fractionLost = 0;
 		}
 
 		void RtpStreamSend::OnTimer(TimerHandleInterface* timer)
