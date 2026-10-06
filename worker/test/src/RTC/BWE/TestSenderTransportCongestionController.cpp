@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "RTC/BWE/SenderTransportCongestionController.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -16,6 +17,9 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 	// The clock starts well away from zero so that a mistake taking a time for a
 	// duration doesn't go unnoticed.
 	constexpr int64_t InitialTimeUs{ 100000000 };
+	// The remote clock has nothing to do with ours, and is a whole number of base
+	// time ticks so that the arrival times survive the feedback untouched.
+	constexpr int64_t RemoteTimeUs{ 1000000000000 };
 	constexpr int64_t StartBitrate{ 300000 };
 	constexpr int64_t MinBitrate{ 30000 };
 	constexpr int64_t MaxBitrate{ 5000000 };
@@ -43,12 +47,22 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		{
 			this->sentLengths.push_back(packet->GetLength());
 			this->sentSequenceNumbers.push_back(sequenceNumber);
+
+			// What goes on the wire has to be what we were handed, since that is what
+			// the remote endpoint will report back about.
+			uint16_t wideSeqNumber{ 0 };
+			uint32_t absSendTime{ 0 };
+
+			this->sentWithExtensions.push_back(
+			  packet->ReadTransportWideCc01(wideSeqNumber) && packet->ReadAbsSendTime(absSendTime) &&
+			  wideSeqNumber == static_cast<uint16_t>(sequenceNumber));
 		}
 
 	public:
 		std::vector<int64_t> targetBitrates;
 		std::vector<size_t> sentLengths;
 		std::vector<int64_t> sentSequenceNumbers;
+		std::vector<bool> sentWithExtensions;
 	};
 
 	int64_t nowUs{ InitialTimeUs };
@@ -110,6 +124,86 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		nowUs += timer->GetRepeatMs() * 1000;
 
 		REQUIRE(timer->EvaluateHasExpired());
+	};
+
+	// Builds the feedback a receiver would send, reporting the given arrival
+	// times. The sequence numbers left out of them are reported as lost.
+	const auto createFeedback = [](
+	                              uint16_t baseSequenceNumber,
+	                              int64_t baseTimeUs,
+	                              const std::vector<std::pair<uint16_t, int64_t>>& receivedPackets)
+	  -> std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket>
+	{
+		constexpr uint32_t SenderSsrc{ 2222 };
+		constexpr uint32_t MediaSsrc{ 3333 };
+		constexpr size_t RtcpMtu{ 1200 };
+
+		auto feedback = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(SenderSsrc, MediaSsrc);
+
+		feedback->SetBase(baseSequenceNumber, baseTimeUs);
+
+		for (const auto& [sequenceNumber, receivedAtUs] : receivedPackets)
+		{
+			feedback->AddPacket(sequenceNumber, receivedAtUs, RtcpMtu);
+		}
+
+		feedback->Finish();
+
+		return feedback;
+	};
+
+	// Sends a packet every 50 ms for the given span and feeds back the arrival of
+	// each one, with an arrival that falls further and further behind by
+	// `delayPerPacketUs` on every packet, which is what a queue filling up looks
+	// like. Answers the target the loop is left at.
+	uint16_t nextRtpSequenceNumber{ 0 };
+
+	const auto transmitAndFeedBack = [&nowUs,
+	                                  &shared,
+	                                  &ProcessTimerLabel,
+	                                  &senderTransportCongestionController,
+	                                  &buildPacket,
+	                                  &createFeedback,
+	                                  &nextRtpSequenceNumber](
+	                                   int64_t runtimeMs, int64_t delayPerPacketUs) -> int64_t
+	{
+		const int64_t startUs = nowUs;
+		int64_t delayBuildupUs{ 0 };
+
+		while (nowUs - startUs < runtimeMs * 1000)
+		{
+			const auto packet = buildPacket();
+
+			packet->SetSequenceNumber(nextRtpSequenceNumber++);
+
+			const auto sequenceNumber = senderTransportCongestionController.OnRtpPacketToBeSent(
+			  packet.get(), RTC::BWE::SenderTransportCongestionController::RtpPacketToBeSentOptions{});
+
+			REQUIRE(sequenceNumber.has_value());
+
+			senderTransportCongestionController.OnRtpPacketSent(sequenceNumber, PayloadSize, nowUs);
+
+			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+			const auto wideSeqNumber = static_cast<uint16_t>(sequenceNumber.value());
+			const int64_t arrivalUs  = RemoteTimeUs + (nowUs - InitialTimeUs) + delayBuildupUs;
+
+			const auto feedback = createFeedback(
+			  wideSeqNumber,
+			  arrivalUs,
+			  {
+			    { wideSeqNumber, arrivalUs }
+      });
+
+			delayBuildupUs += delayPerPacketUs;
+
+			senderTransportCongestionController.ReceiveTransportWideCcFeedback(feedback.get(), nowUs);
+
+			nowUs += 50000;
+
+			shared.GetTimer(ProcessTimerLabel)->EvaluateHasExpired();
+		}
+
+		return senderTransportCongestionController.GetAvailableBitrate();
 	};
 
 	SECTION("the target starts at the bitrate it was given")
@@ -279,6 +373,43 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		REQUIRE(secondVideoSequenceNumber.value() == firstVideoSequenceNumber.value() + 1);
 	}
 
+	SECTION("a growing delay brings the target below what a clean link leaves it at")
+	{
+		constexpr int64_t RunTimeMs{ 6000 };
+
+		senderTransportCongestionController.SetNetworkAvailable(true);
+
+		// Long enough for the delay based path to have something to say, over a link
+		// that delays nothing and therefore builds no queue.
+		const int64_t targetBeforeDelay = transmitAndFeedBack(RunTimeMs, /*delayPerPacketUs*/ 0);
+
+		// And again, with every packet arriving later than the one before it.
+		const int64_t targetAfterDelay = transmitAndFeedBack(RunTimeMs, /*delayPerPacketUs*/ 50000);
+
+		REQUIRE(targetAfterDelay < targetBeforeDelay);
+	}
+
+	SECTION("a feedback about packets that were never sent does nothing")
+	{
+		senderTransportCongestionController.SetNetworkAvailable(true);
+
+		runProcessTimer();
+
+		const int64_t targetBefore = senderTransportCongestionController.GetAvailableBitrate();
+
+		const auto feedback = createFeedback(
+		  1000,
+		  RemoteTimeUs,
+		  {
+		    { 1000, RemoteTimeUs         },
+        { 1001, RemoteTimeUs + 10000 }
+    });
+
+		senderTransportCongestionController.ReceiveTransportWideCcFeedback(feedback.get(), nowUs);
+
+		REQUIRE(senderTransportCongestionController.GetAvailableBitrate() == targetBefore);
+	}
+
 	SECTION("a confirmation for a packet that was never taken note of does nothing")
 	{
 		senderTransportCongestionController.OnRtpPacketSent(
@@ -300,5 +431,40 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		senderTransportCongestionController.SetNetworkAvailable(true);
 
 		REQUIRE(timer->IsActive());
+	}
+
+	SECTION("every packet of a burst goes out numbered and with both extensions written")
+	{
+		senderTransportCongestionController.SetNetworkAvailable(true);
+
+		auto* timer = shared.GetTimer("probing-scheduler-next-probe");
+
+		REQUIRE(timer);
+
+		// Let the whole burst out, shot by shot.
+		while (timer->IsActive())
+		{
+			nowUs = std::max(nowUs, timer->GetExpiresAtMs() * 1000);
+
+			REQUIRE(timer->EvaluateHasExpired());
+		}
+
+		REQUIRE(!listener.sentLengths.empty());
+		REQUIRE(listener.sentSequenceNumbers.size() == listener.sentLengths.size());
+		REQUIRE(listener.sentWithExtensions.size() == listener.sentLengths.size());
+
+		for (size_t idx{ 0 }; idx < listener.sentSequenceNumbers.size(); ++idx)
+		{
+			// Each packet carries the very number it was handed over with, and the
+			// room for the arrival time the remote endpoint fills in.
+			REQUIRE(listener.sentWithExtensions.at(idx));
+
+			// And they are handed out one after another, so that the feedback can
+			// name every one of them.
+			if (idx > 0)
+			{
+				REQUIRE(listener.sentSequenceNumbers.at(idx) == listener.sentSequenceNumbers.at(idx - 1) + 1);
+			}
+		}
 	}
 }
