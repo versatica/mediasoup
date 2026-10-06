@@ -535,7 +535,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (!this->enablePeriodicAlrProbing || !this->alrStartTimeUs.has_value())
+			if (!this->options.enablePeriodicAlrProbing || !this->alrStartTimeUs.has_value())
 			{
 				return false;
 			}

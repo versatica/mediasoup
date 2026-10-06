@@ -128,12 +128,7 @@ namespace RTC
 
 				remaining -= std::min(remaining, length);
 
-				if (!this->listener->OnProbePacketGeneratorSendRtpPacket(this, this->packet.get()))
-				{
-					MS_DEBUG_DEV("burst given up on, %zu bytes were left", remaining);
-
-					break;
-				}
+				this->listener->OnProbePacketGeneratorSendRtpPacket(this, this->packet.get());
 			}
 		}
 	} // namespace BWE

@@ -263,7 +263,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 5);
 
 		// Nothing is left so the timer is not running anymore.
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 
 		auto* rtxPacket1 = testRtpStreamListener.retransmittedPackets[0];
 		auto* rtxPacket2 = testRtpStreamListener.retransmittedPackets[1];
@@ -502,7 +502,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		stream1->ReceiveNack(&nackPacket);
 
 		REQUIRE(testRtpStreamListener1.retransmittedPackets.size() == 2);
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 
 		auto* rtxPacket1 = testRtpStreamListener1.retransmittedPackets[0];
 		auto* rtxPacket2 = testRtpStreamListener1.retransmittedPackets[1];
@@ -516,7 +516,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		stream2->ReceiveNack(&nackPacket);
 
 		REQUIRE(testRtpStreamListener2.retransmittedPackets.size() == 2);
-		REQUIRE_FALSE(expireRetransmissionTimer(shared2));
+		REQUIRE(expireRetransmissionTimer(shared2) == false);
 
 		rtxPacket1 = testRtpStreamListener2.retransmittedPackets[0];
 		rtxPacket2 = testRtpStreamListener2.retransmittedPackets[1];
@@ -1019,7 +1019,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		stream->ReceiveNack(&nackPacket);
 
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 2);
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 
 		auto* rtxPacket1 = testRtpStreamListener.retransmittedPackets[0];
 		auto* rtxPacket2 = testRtpStreamListener.retransmittedPackets[1];
@@ -1091,7 +1091,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// The first requested packet is not stored anymore, which doesn't prevent
 		// the second one from being retransmitted right away, so nothing is left.
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 1);
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 
 		auto* rtxPacket2 = testRtpStreamListener.retransmittedPackets[0];
 
@@ -1209,7 +1209,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// Only the second packet is retransmitted.
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 1);
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 
 		checkRtxPacket(testRtpStreamListener.retransmittedPackets[0], packet2.get());
 	}
@@ -1267,7 +1267,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(expireRetransmissionTimer(shared));
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 3);
 
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 
 		checkRtxPacket(testRtpStreamListener.retransmittedPackets[0], packet1.get());
 		checkRtxPacket(testRtpStreamListener.retransmittedPackets[1], packet3.get());
@@ -1346,7 +1346,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// The second request of the third packet was not queued, so nothing is
 		// left and the timer is not running anymore.
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 4);
 
 		checkRtxPacket(testRtpStreamListener.retransmittedPackets[0], packet1.get());
@@ -1406,7 +1406,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// The timer is not running anymore and the third packet is never
 		// retransmitted.
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 2);
 	}
 
@@ -1477,7 +1477,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// The timer is not running anymore and the pending packet is never
 		// retransmitted.
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 2);
 	}
 
@@ -1547,7 +1547,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 4);
 
 		// Packet 4 was requested twice but queued once, so nothing is left.
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 
 		checkRtxPacket(testRtpStreamListener.retransmittedPackets[0], packet3.get());
 		checkRtxPacket(testRtpStreamListener.retransmittedPackets[1], packet4.get());
@@ -1599,7 +1599,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		stream->ReceiveNack(&nackPacket);
 
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 1);
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 
 		// Past the RTT it is.
 		nowUs += 1000;
@@ -1607,7 +1607,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		stream->ReceiveNack(&nackPacket);
 
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 2);
-		REQUIRE_FALSE(expireRetransmissionTimer(shared));
+		REQUIRE(expireRetransmissionTimer(shared) == false);
 	}
 
 	SECTION("duplicated packets are discarded")
@@ -1754,7 +1754,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const std::unique_ptr<RTC::RTCP::SenderReport> staleReport(stream.GetRtcpSenderReport(
 		  PacketAtUs + ((RTC::RTP::RtpStreamSend::MaxSenderReportReferenceAgeMs + 1) * 1000)));
 
-		REQUIRE_FALSE(staleReport);
+		REQUIRE(!staleReport);
 	}
 
 	SECTION("RTT is computed from Receiver Reports")

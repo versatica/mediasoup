@@ -16,7 +16,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		std::optional<Types::TransportPacketsFeedback> FeedbackAdapter::ProcessTransportFeedback(
+		std::optional<Types::TransportPacketsFeedback> FeedbackAdapter::ProcessTransportWideCcFeedback(
 		  const RTCP::FeedbackRtpTransportPacket* feedback, int64_t receivedAtUs)
 		{
 			MS_TRACE();

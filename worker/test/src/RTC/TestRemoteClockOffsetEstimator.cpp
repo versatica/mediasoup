@@ -41,7 +41,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	{
 		feed(estimator, RemoteBaseUs, LocalBaseUs, minSampleCount - 1, 0, 0);
 
-		REQUIRE_FALSE(estimator.GetOffsetUs().has_value());
+		REQUIRE(estimator.GetOffsetUs().has_value() == false);
 
 		// One more Sender Report reaches the minimum.
 		const int64_t elapsedUs = static_cast<int64_t>(minSampleCount - 1) * 1000000;
@@ -181,7 +181,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 		estimator.AddSenderReport(RemoteBaseUs + 1000, LocalBaseUs, 0);
 		estimator.AddSenderReport(RemoteBaseUs + 2000, LocalBaseUs, 0);
 
-		REQUIRE_FALSE(estimator.GetOffsetUs().has_value());
+		REQUIRE(estimator.GetOffsetUs().has_value() == false);
 
 		// Two more compound packets reach the minimum.
 		estimator.AddSenderReport(RemoteBaseUs + 1000000, LocalBaseUs + 1000000, 0);
@@ -200,14 +200,14 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 		estimator.AddSenderReport(0, LocalBaseUs + 1000000, 0);
 		estimator.AddSenderReport(0, LocalBaseUs + 2000000, 0);
 
-		REQUIRE_FALSE(estimator.GetOffsetUs().has_value());
+		REQUIRE(estimator.GetOffsetUs().has_value() == false);
 	}
 
 	SECTION("remote times are translated into our clock")
 	{
 		const RTC::RemoteClockOffsetEstimator untrainedEstimator;
 
-		REQUIRE_FALSE(untrainedEstimator.RemoteUsToLocalUs(RemoteBaseUs).has_value());
+		REQUIRE(untrainedEstimator.RemoteUsToLocalUs(RemoteBaseUs).has_value() == false);
 
 		feed(estimator, RemoteBaseUs, LocalBaseUs, minSampleCount, 0, 0);
 
@@ -219,7 +219,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 		REQUIRE(estimator.RemoteUsToLocalUs(RemoteBaseUs + 500000).value() == LocalBaseUs + 500000);
 
 		// A remote time older than the origin of our clock cannot be translated.
-		REQUIRE_FALSE(estimator.RemoteUsToLocalUs(0).has_value());
+		REQUIRE(estimator.RemoteUsToLocalUs(0).has_value() == false);
 	}
 
 	SECTION("Reset() clears the estimation")
@@ -230,7 +230,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 
 		estimator.Reset();
 
-		REQUIRE_FALSE(estimator.GetOffsetUs().has_value());
+		REQUIRE(estimator.GetOffsetUs().has_value() == false);
 
 		// The last arrival time is forgotten as well, so Sender Reports arriving at
 		// the very same times as before the reset are not taken as duplicates.

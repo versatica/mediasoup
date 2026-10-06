@@ -64,21 +64,16 @@ namespace RTC
 			this->nextProbeTimer->Restart(0);
 		}
 
-		bool ProbingScheduler::OnProbePacketGeneratorSendRtpPacket(
+		void ProbingScheduler::OnProbePacketGeneratorSendRtpPacket(
 		  ProbePacketGenerator* /*probePacketGenerator*/, RTC::RTP::Packet* packet)
 		{
 			MS_TRACE();
 
-			if (!this->listener->OnProbingSchedulerSendRtpPacket(this, packet, this->shotProbeCluster))
-			{
-				return false;
-			}
+			this->listener->OnProbingSchedulerSendRtpPacket(this, packet, this->shotProbeCluster);
 
 			// What the burst is measured against is what the link has to carry, which
 			// is more than what the packet itself is worth.
 			this->shotSentBytes += packet->GetLength() + this->packetOverhead;
-
-			return true;
 		}
 
 		void ProbingScheduler::OnTimer(TimerHandleInterface* timer)

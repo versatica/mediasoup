@@ -75,7 +75,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto processedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(processedFeedback.has_value());
 
@@ -121,7 +121,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto processedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(processedFeedback.has_value());
 
@@ -151,7 +151,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto processedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(processedFeedback.has_value());
 
@@ -185,14 +185,14 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto firstResult =
-		  feedbackAdapter.ProcessTransportFeedback(firstFeedback.get(), InitialTimeUs + 50000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(firstFeedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(firstResult.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		REQUIRE(firstResult->dataInFlight == 300);
 
 		const auto secondResult =
-		  feedbackAdapter.ProcessTransportFeedback(secondFeedback.get(), InitialTimeUs + 60000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(secondFeedback.get(), InitialTimeUs + 60000);
 
 		REQUIRE(secondResult.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -219,7 +219,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
         { 1, RemoteTimeUs + 10000 }
     });
 
-		const auto processedFeedback = feedbackAdapter.ProcessTransportFeedback(
+		const auto processedFeedback = feedbackAdapter.ProcessTransportWideCcFeedback(
 		  feedback.get(), InitialTimeUs + WindowDurationUs + 50000);
 
 		REQUIRE(processedFeedback.has_value());
@@ -253,9 +253,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto firstProcessedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(firstFeedback.get(), InitialTimeUs + 50000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(firstFeedback.get(), InitialTimeUs + 50000);
 		const auto secondProcessedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(secondFeedback.get(), InitialTimeUs + 150000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(secondFeedback.get(), InitialTimeUs + 150000);
 
 		REQUIRE(firstProcessedFeedback.has_value());
 		REQUIRE(secondProcessedFeedback.has_value());
@@ -306,9 +306,9 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 		// The second feedback is processed first, and the first one arrives late.
 		const auto secondProcessedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(secondFeedback.get(), InitialTimeUs + 150000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(secondFeedback.get(), InitialTimeUs + 150000);
 		const auto firstProcessedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(firstFeedback.get(), InitialTimeUs + 160000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(firstFeedback.get(), InitialTimeUs + 160000);
 
 		REQUIRE(secondProcessedFeedback.has_value());
 		REQUIRE(firstProcessedFeedback.has_value());
@@ -361,8 +361,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto firstProcessedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(firstFeedback.get(), InitialTimeUs + 50000);
-		const auto secondProcessedFeedback = feedbackAdapter.ProcessTransportFeedback(
+		  feedbackAdapter.ProcessTransportWideCcFeedback(firstFeedback.get(), InitialTimeUs + 50000);
+		const auto secondProcessedFeedback = feedbackAdapter.ProcessTransportWideCcFeedback(
 		  secondFeedback.get(), InitialTimeUs + ElapsedUs + 50000);
 
 		REQUIRE(firstProcessedFeedback.has_value());
@@ -410,7 +410,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto processedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(processedFeedback.has_value());
 
@@ -444,7 +444,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto processedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(processedFeedback.has_value());
 
@@ -479,7 +479,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto firstResult =
-		  feedbackAdapter.ProcessTransportFeedback(firstFeedback.get(), InitialTimeUs + 50000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(firstFeedback.get(), InitialTimeUs + 50000);
 
 		REQUIRE(firstResult.has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -500,7 +500,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		const auto secondProcessedFeedback =
-		  feedbackAdapter.ProcessTransportFeedback(secondFeedback.get(), InitialTimeUs + 60000);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(secondFeedback.get(), InitialTimeUs + 60000);
 
 		REQUIRE(secondProcessedFeedback.has_value());
 
@@ -522,7 +522,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 		REQUIRE(feedback->GetPacketStatusCount() == 0);
 		REQUIRE(
-		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000) == std::nullopt);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000) ==
+		  std::nullopt);
 	}
 
 	SECTION("a feedback received before any packet was sent yields no value")
@@ -538,7 +539,8 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		REQUIRE(
-		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000) == std::nullopt);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000) ==
+		  std::nullopt);
 	}
 
 	SECTION("a feedback reporting on no packet the history holds yields no value")
@@ -557,6 +559,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
     });
 
 		REQUIRE(
-		  feedbackAdapter.ProcessTransportFeedback(feedback.get(), InitialTimeUs + 50000) == std::nullopt);
+		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000) ==
+		  std::nullopt);
 	}
 }

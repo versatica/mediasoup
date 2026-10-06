@@ -34,9 +34,6 @@ namespace RTC
 				/**
 				 * A packet of the burst is ready.
 				 *
-				 * @returns Whether the rest of the burst is still wanted, so that a
-				 * packet that couldn't be sent stops the ones behind it.
-				 *
 				 * @remarks
 				 * - The packet must be sent before returning, since the next one is
 				 *   built over the very same instance.
@@ -46,10 +43,9 @@ namespace RTC
 				 * - Whoever measures the burst has to be told how much of it went out,
 				 *   so the length of the packet is reported from here as well.
 				 * - This must not destroy the `ProbePacketGenerator`, not even
-				 *   indirectly. It goes on reading its own members after this returns,
-				 *   so returning false is no way out of it either.
+				 *   indirectly. It goes on reading its own members after this returns.
 				 */
-				virtual bool OnProbePacketGeneratorSendRtpPacket(
+				virtual void OnProbePacketGeneratorSendRtpPacket(
 				  ProbePacketGenerator* probePacketGenerator, RTC::RTP::Packet* packet) = 0;
 			};
 

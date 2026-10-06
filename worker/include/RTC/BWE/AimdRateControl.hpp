@@ -90,11 +90,11 @@ namespace RTC
 			 * Feed what the delay based detector says about the network.
 			 *
 			 * @param input - State of the network plus the acknowledged bitrate.
-			 * @param atTimeUs - Time at which the input was produced.
+			 * @param nowUs - Current time.
 			 *
 			 * @returns The new target bitrate (bps).
 			 */
-			int64_t Update(const Types::RateControlInput& input, int64_t atTimeUs);
+			int64_t Update(const Types::RateControlInput& input, int64_t nowUs);
 
 			/**
 			 * Set the target bitrate from outside the rate control, for instance out of
@@ -102,7 +102,7 @@ namespace RTC
 			 *
 			 * @param bitrate - New target bitrate (bps).
 			 */
-			void SetEstimate(int64_t bitrate, int64_t atTimeUs);
+			void SetEstimate(int64_t bitrate, int64_t nowUs);
 
 			/**
 			 * @param startBitrate - Bitrate to start from (bps).
@@ -126,13 +126,13 @@ namespace RTC
 			 * below the current target. It's what keeps a single overuse from
 			 * collapsing the bitrate in a few milliseconds.
 			 */
-			bool IsTimeToReduceFurther(int64_t atTimeUs, int64_t estimatedThroughput) const;
+			bool IsTimeToReduceFurther(int64_t nowUs, int64_t estimatedThroughput) const;
 
 			/**
 			 * As above, to be used when overusing before any throughput has been
 			 * measured.
 			 */
-			bool IsInitialTimeToReduceFurther(int64_t atTimeUs) const;
+			bool IsInitialTimeToReduceFurther(int64_t nowUs) const;
 
 			/**
 			 * Rate at which the bitrate is increased once it's close to the capacity of
@@ -147,9 +147,9 @@ namespace RTC
 			int64_t GetFeedbackIntervalUs() const;
 
 		private:
-			void ChangeBitrate(const Types::RateControlInput& input, int64_t atTimeUs);
+			void ChangeBitrate(const Types::RateControlInput& input, int64_t nowUs);
 
-			void ChangeState(const Types::RateControlInput& input, int64_t atTimeUs);
+			void ChangeState(const Types::RateControlInput& input, int64_t nowUs);
 
 			/**
 			 * Apply the configured bounds to a candidate bitrate.
@@ -161,13 +161,13 @@ namespace RTC
 			 * fast to discover it.
 			 */
 			int64_t MultiplicativeRateIncrease(
-			  int64_t atTimeUs, std::optional<int64_t> lastTimeUs, int64_t currentBitrate) const;
+			  int64_t nowUs, std::optional<int64_t> lastTimeUs, int64_t currentBitrate) const;
 
 			/**
 			 * Increase used once the capacity of the link has been estimated, which
 			 * approaches it in small steps.
 			 */
-			int64_t AdditiveRateIncrease(int64_t atTimeUs, int64_t lastTimeUs) const;
+			int64_t AdditiveRateIncrease(int64_t nowUs, int64_t lastTimeUs) const;
 
 		private:
 			const AimdRateControlOptions options;

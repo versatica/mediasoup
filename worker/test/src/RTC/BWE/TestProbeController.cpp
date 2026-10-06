@@ -637,11 +637,12 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("while not filling the link a burst goes out every five seconds")
 	{
-		RTC::BWE::ProbeController probeController;
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
+
+		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
-
-		probeController.EnablePeriodicAlrProbing(true);
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
@@ -691,12 +692,14 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("and starting over leaves nothing to probe until there are bitrates again")
 	{
-		RTC::BWE::ProbeController probeController;
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
+
+		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
 
 		probeController.SetAlrStartTimeUs(nowUs);
-		probeController.EnablePeriodicAlrProbing(true);
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
@@ -724,9 +727,10 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("nothing is probed while nothing can be sent")
 	{
-		RTC::BWE::ProbeController probeController;
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
 
-		probeController.EnablePeriodicAlrProbing(true);
+		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ false, nowUs).empty());
 		REQUIRE(probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs).empty());
@@ -771,13 +775,15 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("nor above twice what the application wants to send")
 	{
-		RTC::BWE::ProbeController probeController;
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
+
+		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
 
 		auto probes = probeController.SetBitrates(MinBitrate, 10000000, 100000000, nowUs);
 
-		probeController.EnablePeriodicAlrProbing(true);
 		probeController.SetAlrStartTimeUs(nowUs);
 
 		probes = probeController.SetEstimatedBitrate(
@@ -858,11 +864,12 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("while loss is what holds the estimate back a burst barely goes above it")
 	{
-		RTC::BWE::ProbeController probeController;
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
+
+		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
-
-		probeController.EnablePeriodicAlrProbing(true);
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
@@ -969,14 +976,12 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("and it bounds the periodic bursts as soon as there is one")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000
+			.enablePeriodicAlrProbing = true, .networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000
 		};
 
 		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
-
-		probeController.EnablePeriodicAlrProbing(true);
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
@@ -1034,13 +1039,14 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("loss growing back while not filling the link is worth a burst")
 	{
-		RTC::BWE::ProbeController probeController;
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
+
+		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
-
-		probeController.EnablePeriodicAlrProbing(true);
 
 		probes = probeController.SetEstimatedBitrate(
 		  StartBitrate,
@@ -1065,13 +1071,14 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("but loss that isn't growing back is not")
 	{
-		RTC::BWE::ProbeController probeController;
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
+
+		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
-
-		probeController.EnablePeriodicAlrProbing(true);
 
 		probes = probeController.SetEstimatedBitrate(
 		  StartBitrate, RTC::BWE::ProbeController::BandwidthLimitedCause::LOSS_LIMITED_BWE, nowUs);
@@ -1093,13 +1100,14 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 
 	SECTION("nor is it worth one while the link is being filled")
 	{
-		RTC::BWE::ProbeController probeController;
+		const RTC::BWE::ProbeController::ProbeControllerOptions options{ .enablePeriodicAlrProbing =
+		                                                                   true };
+
+		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
-
-		probeController.EnablePeriodicAlrProbing(true);
 
 		probes = probeController.SetEstimatedBitrate(
 		  StartBitrate,
@@ -1429,14 +1437,12 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("an estimate already close to the maximum is not worth a burst")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.skipIfEstimateLargerThanFractionOfMax = 0.9
+			.enablePeriodicAlrProbing = true, .skipIfEstimateLargerThanFractionOfMax = 0.9
 		};
 
 		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
-
-		probeController.EnablePeriodicAlrProbing(true);
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
@@ -1464,14 +1470,12 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("and neither is one already close to what the application wants to send")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
-			.skipIfEstimateLargerThanFractionOfMax = 1.0
+			.enablePeriodicAlrProbing = true, .skipIfEstimateLargerThanFractionOfMax = 1.0
 		};
 
 		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
-
-		probeController.EnablePeriodicAlrProbing(true);
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 
@@ -1574,6 +1578,7 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 	SECTION("a measured link capacity below the estimate doesn't bring the burst down")
 	{
 		const RTC::BWE::ProbeController::ProbeControllerOptions options{
+			.enablePeriodicAlrProbing              = true,
 			.networkStateEstimateProbingIntervalUs = 5 * 1000 * 1000,
 			.networkStateProbeDurationUs           = 100 * 1000,
 			.networkStateMinProbeDeltaUs           = 20 * 1000
@@ -1582,8 +1587,6 @@ SCENARIO("BWE ProbeController", "[bwe][probecontroller]")
 		RTC::BWE::ProbeController probeController(options);
 
 		REQUIRE(probeController.OnNetworkAvailability(/*networkAvailable*/ true, nowUs).empty());
-
-		probeController.EnablePeriodicAlrProbing(true);
 
 		auto probes = probeController.SetBitrates(MinBitrate, StartBitrate, MaxBitrate, nowUs);
 

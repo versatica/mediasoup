@@ -48,9 +48,6 @@ namespace RTC
 				/**
 				 * A packet of the burst is ready to go out.
 				 *
-				 * @returns Whether the rest of the burst is still wanted, so that a
-				 * packet that couldn't be sent stops the ones behind it.
-				 *
 				 * @remarks
 				 * - The packet must be sent before returning, since the next one is
 				 *   built over the very same instance.
@@ -58,10 +55,9 @@ namespace RTC
 				 *   sequence number but no value for either, so both have to be written
 				 *   here.
 				 * - This must not destroy the `ProbingScheduler`, not even indirectly.
-				 *   It goes on reading its own members after this returns, so
-				 *   returning false is no way out of it either.
+				 *   It goes on reading its own members after this returns.
 				 */
-				virtual bool OnProbingSchedulerSendRtpPacket(
+				virtual void OnProbingSchedulerSendRtpPacket(
 				  ProbingScheduler* probingScheduler,
 				  RTC::RTP::Packet* packet,
 				  const Types::ProbeCluster& probeCluster) = 0;
@@ -133,7 +129,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from RTC::BWE::ProbePacketGenerator::Listener. */
 		public:
-			bool OnProbePacketGeneratorSendRtpPacket(
+			void OnProbePacketGeneratorSendRtpPacket(
 			  ProbePacketGenerator* probePacketGenerator, RTC::RTP::Packet* packet) override;
 
 			/* Pure virtual methods inherited from TimerHandleInterface::Listener. */

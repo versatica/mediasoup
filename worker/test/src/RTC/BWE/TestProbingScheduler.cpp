@@ -24,20 +24,13 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 	class TestProbingSchedulerListener : public RTC::BWE::ProbingScheduler::Listener
 	{
 	public:
-		bool OnProbingSchedulerSendRtpPacket(
+		void OnProbingSchedulerSendRtpPacket(
 		  RTC::BWE::ProbingScheduler* /*probingScheduler*/,
 		  RTC::RTP::Packet* packet,
 		  const RTC::BWE::Types::ProbeCluster& probeCluster) override
 		{
-			if (!this->sendPackets)
-			{
-				return false;
-			}
-
 			this->sentLengths.push_back(packet->GetLength());
 			this->sentClusterIds.push_back(probeCluster.id);
-
-			return true;
 		}
 
 		size_t GetSentBytes() const
@@ -56,7 +49,6 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		std::vector<size_t> sentLengths;
 		// The burst each of those packets was handed over as part of.
 		std::vector<int64_t> sentClusterIds;
-		bool sendPackets{ true };
 	};
 
 	TestProbingSchedulerListener listener;
@@ -210,22 +202,6 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		// the one it was asked for.
 		REQUIRE(timer->GetExpiresAtMs() * 1000 <= expectedNextUs);
 		REQUIRE(expectedNextUs - (timer->GetExpiresAtMs() * 1000) < 1000);
-	}
-
-	SECTION("a listener that cannot send stops the burst")
-	{
-		RTC::BWE::ProbingScheduler probingScheduler(std::addressof(listener), std::addressof(shared));
-
-		listener.sendPackets = false;
-
-		probingScheduler.CreateProbeClusters({ makeClusterConfig(0, nowUs, 900000, 2 * 1000) });
-
-		REQUIRE(emitNextShot());
-		REQUIRE(listener.sentLengths.empty());
-
-		// Nothing went out, so there is no reason to believe that trying again
-		// would do any better.
-		REQUIRE(!shared.GetTimer(TimerLabel)->IsActive());
 	}
 
 	SECTION("a burst asked for while another one is being emitted waits for it")

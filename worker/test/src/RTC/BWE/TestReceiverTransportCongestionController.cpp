@@ -157,7 +157,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		REQUIRE(listener.rtcpTypes.at(0) == RTC::RTCP::Type::RTPFB);
 
 		// The estimating is the remote sender's job in this mode.
-		REQUIRE_FALSE(receiverTransportCongestionControl.GetAvailableBitrate().has_value());
+		REQUIRE(receiverTransportCongestionControl.GetAvailableBitrate().has_value() == false);
 	}
 
 	SECTION("with REMB the estimation of the incoming link reaches the listener")
@@ -169,7 +169,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		  std::addressof(shared),
 		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::REMB });
 
-		REQUIRE_FALSE(receiverTransportCongestionControl.GetAvailableBitrate().has_value());
+		REQUIRE(receiverTransportCongestionControl.GetAvailableBitrate().has_value() == false);
 
 		// A burst of packets spaced evenly, which is what the estimation is drawn
 		// from at the beginning of a call.
@@ -249,7 +249,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		}
 
 		REQUIRE(listener.rtcpTypes.empty());
-		REQUIRE_FALSE(receiverTransportCongestionControl.GetAvailableBitrate().has_value());
+		REQUIRE(receiverTransportCongestionControl.GetAvailableBitrate().has_value() == false);
 	}
 
 	SECTION("with transport-cc audio is reported like video")

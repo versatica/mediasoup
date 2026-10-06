@@ -78,7 +78,7 @@ namespace RTC
 			  ackedBitrate, probeBitrate, recoveredFromOveruse, feedback.feedbackTimeUs);
 		}
 
-		void DelayBasedBwe::IncomingPacketFeedback(const Types::PacketResult& packetResult, int64_t atTimeUs)
+		void DelayBasedBwe::IncomingPacketFeedback(const Types::PacketResult& packetResult, int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -91,7 +91,7 @@ namespace RTC
 
 			// Reset if the stream has timed out, since nothing measured before such a
 			// silence still describes this link.
-			if (!this->lastSeenPacketUs.has_value() || atTimeUs - this->lastSeenPacketUs.value() > StreamTimeOutUs)
+			if (!this->lastSeenPacketUs.has_value() || nowUs - this->lastSeenPacketUs.value() > StreamTimeOutUs)
 			{
 				this->videoInterArrivalDelta.emplace(SendTimeGroupLengthUs);
 				this->audioInterArrivalDelta.emplace(SendTimeGroupLengthUs);
@@ -101,7 +101,7 @@ namespace RTC
 				this->activeDelayDetector = std::addressof(this->videoDelayDetector.value());
 			}
 
-			this->lastSeenPacketUs = atTimeUs;
+			this->lastSeenPacketUs = nowUs;
 
 			// As an alternative to ignoring small packets, audio and video can be given
 			// a delay detector of their own.
@@ -148,16 +148,14 @@ namespace RTC
 			    : this->videoInterArrivalDelta.value();
 
 			const auto deltas = interArrivalForPacket.ComputeDeltas(
-			  packetResult.sentPacket.sendTimeUs, receiveTimeUs, atTimeUs, packetResult.sentPacket.size);
+			  packetResult.sentPacket.sendTimeUs, receiveTimeUs, nowUs, packetResult.sentPacket.size);
 
 			if (deltas.has_value())
 			{
+				const auto& deltasValue = deltas.value();
+
 				delayDetectorForPacket->Update(
-				  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-				  deltas.value().sendDeltaUs,
-				  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-				  deltas.value().arrivalDeltaUs,
-				  receiveTimeUs);
+				  deltasValue.sendDeltaUs, deltasValue.arrivalDeltaUs, receiveTimeUs);
 			}
 		}
 
@@ -165,7 +163,7 @@ namespace RTC
 		  std::optional<int64_t> ackedBitrate,
 		  std::optional<int64_t> probeBitrate,
 		  bool recoveredFromOveruse,
-		  int64_t atTimeUs)
+		  int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -173,19 +171,17 @@ namespace RTC
 
 			if (this->activeDelayDetector->GetState() == Types::BandwidthUsage::OVERUSING)
 			{
-				if (
-				  ackedBitrate.has_value() &&
-				  this->rateControl.IsTimeToReduceFurther(atTimeUs, ackedBitrate.value()))
+				if (ackedBitrate.has_value() && this->rateControl.IsTimeToReduceFurther(nowUs, ackedBitrate.value()))
 				{
-					result.updated = UpdateEstimate(atTimeUs, ackedBitrate, result.targetBitrate);
+					result.updated = UpdateEstimate(nowUs, ackedBitrate, result.targetBitrate);
 				}
 				else if (
 				  !ackedBitrate.has_value() && this->rateControl.IsValidEstimate() &&
-				  this->rateControl.IsInitialTimeToReduceFurther(atTimeUs))
+				  this->rateControl.IsInitialTimeToReduceFurther(nowUs))
 				{
 					// Overusing before any throughput has been measured, so halve the
 					// bitrate instead of aiming at a measurement we don't have.
-					this->rateControl.SetEstimate(this->rateControl.GetLatestEstimate() / 2, atTimeUs);
+					this->rateControl.SetEstimate(this->rateControl.GetLatestEstimate() / 2, nowUs);
 
 					result.updated       = true;
 					result.probe         = false;
@@ -199,13 +195,13 @@ namespace RTC
 					result.probe   = true;
 					result.updated = true;
 
-					this->rateControl.SetEstimate(probeBitrate.value(), atTimeUs);
+					this->rateControl.SetEstimate(probeBitrate.value(), nowUs);
 
 					result.targetBitrate = this->rateControl.GetLatestEstimate();
 				}
 				else
 				{
-					result.updated = UpdateEstimate(atTimeUs, ackedBitrate, result.targetBitrate);
+					result.updated              = UpdateEstimate(nowUs, ackedBitrate, result.targetBitrate);
 					result.recoveredFromOveruse = recoveredFromOveruse;
 				}
 			}
@@ -224,14 +220,14 @@ namespace RTC
 		}
 
 		bool DelayBasedBwe::UpdateEstimate(
-		  int64_t atTimeUs, std::optional<int64_t> ackedBitrate, int64_t& targetBitrate)
+		  int64_t nowUs, std::optional<int64_t> ackedBitrate, int64_t& targetBitrate)
 		{
 			MS_TRACE();
 
 			const Types::RateControlInput input{ .bandwidthUsage = this->activeDelayDetector->GetState(),
 			                                     .estimatedThroughput = ackedBitrate };
 
-			targetBitrate = this->rateControl.Update(input, atTimeUs);
+			targetBitrate = this->rateControl.Update(input, nowUs);
 
 			return this->rateControl.IsValidEstimate();
 		}

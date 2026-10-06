@@ -28,7 +28,7 @@ SCENARIO("BWE ProbePacketGenerator", "[bwe][probepacketgenerator]")
 	class TestProbePacketGeneratorListener : public RTC::BWE::ProbePacketGenerator::Listener
 	{
 	public:
-		bool OnProbePacketGeneratorSendRtpPacket(
+		void OnProbePacketGeneratorSendRtpPacket(
 		  RTC::BWE::ProbePacketGenerator* /*probePacketGenerator*/, RTC::RTP::Packet* packet) override
 		{
 			HandedPacket handedPacket;
@@ -49,14 +49,10 @@ SCENARIO("BWE ProbePacketGenerator", "[bwe][probepacketgenerator]")
 			handedPacket.isPaddedTo4Bytes     = packet->IsPaddedTo4Bytes();
 
 			this->handedPackets.push_back(handedPacket);
-
-			return this->handedPackets.size() < this->stopAfter;
 		}
 
 	public:
 		std::vector<HandedPacket> handedPackets;
-		// Packets after which the burst is given up on.
-		size_t stopAfter{ std::numeric_limits<size_t>::max() };
 	};
 
 	// How far the sequence number moved between two packets.
@@ -105,7 +101,7 @@ SCENARIO("BWE ProbePacketGenerator", "[bwe][probepacketgenerator]")
 		class WritingListener : public RTC::BWE::ProbePacketGenerator::Listener
 		{
 		public:
-			bool OnProbePacketGeneratorSendRtpPacket(
+			void OnProbePacketGeneratorSendRtpPacket(
 			  RTC::BWE::ProbePacketGenerator* /*probePacketGenerator*/, RTC::RTP::Packet* packet) override
 			{
 				this->sentAtUs += 1000;
@@ -122,8 +118,6 @@ SCENARIO("BWE ProbePacketGenerator", "[bwe][probepacketgenerator]")
 
 				REQUIRE(packet->ReadTransportWideCc01(readWideSeqNumber));
 				REQUIRE(readWideSeqNumber == this->wideSeqNumber);
-
-				return true;
 			}
 
 		public:
@@ -252,14 +246,5 @@ SCENARIO("BWE ProbePacketGenerator", "[bwe][probepacketgenerator]")
 		REQUIRE(sequenceNumberDelta(listener.handedPackets.at(0), listener.handedPackets.at(1)) == 1);
 		REQUIRE(
 		  sequenceNumberDelta(otherListener.handedPackets.at(0), otherListener.handedPackets.at(1)) == 1);
-	}
-
-	SECTION("a packet that cannot be sent stops the ones behind it")
-	{
-		listener.stopAfter = 2;
-
-		probePacketGenerator.GeneratePackets(50000);
-
-		REQUIRE(listener.handedPackets.size() == 2);
 	}
 }
