@@ -64,6 +64,27 @@ namespace RTC
 			static constexpr size_t MaxUnsentSeqNumbers{ 2000 };
 
 		public:
+			/**
+			 * How many packets the remote endpoint missed and how many it should have
+			 * got, over the time between the previous Receiver Report and this one,
+			 * counting only what this link is answerable for.
+			 */
+			struct Loss
+			{
+				/**
+				 * Packets lost. It may be negative, since a hole that a previous report
+				 * already counted and that a late packet has filled in since gives back
+				 * what that report was charged for.
+				 */
+				int64_t lostPackets;
+				/**
+				 * Packets expected, which is what the sequence numbers of the interval
+				 * covered once the ones that were never sent are taken out of it.
+				 */
+				int64_t expectedPackets;
+			};
+
+		public:
 			enum class ReceivePacketResult : uint8_t
 			{
 				DISCARDED,
@@ -118,7 +139,13 @@ namespace RTC
 
 			void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 
-			void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
+			/**
+			 * @returns What this link lost and what it was expected to deliver since
+			 *   the previous Receiver Report, or no value if this one measures no
+			 *   interval at all.
+			 */
+			std::optional<Loss> ReceiveRtcpReceiverReport(
+			  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
 
 			void ReceiveRtcpXrReceiverReferenceTime(
 			  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
@@ -148,10 +175,10 @@ namespace RTC
 			void RetransmitPendingPackets();
 
 			/**
-			 * @param lostDelta Packets this link really lost since the previous
-			 *   Receiver Report.
+			 * @param loss What the latest Receiver Report measured, or no value if it
+			 *   measured nothing.
 			 */
-			void UpdateScore(int64_t lostDelta);
+			void UpdateScore(const std::optional<Loss>& loss);
 
 			/**
 			 * Take note of the sequence numbers that the packet just accepted leaves
@@ -163,10 +190,17 @@ namespace RTC
 			 * Work out how much of what the Receiver Report reports as lost really was
 			 * lost on the way to the remote endpoint, and take note of it.
 			 *
-			 * @returns Packets this link really lost since the previous Receiver
-			 *   Report, or no value if the report measures no interval at all.
+			 * @returns What this link lost and what it was expected to deliver since
+			 *   the previous Receiver Report, or no value if this one measures no
+			 *   interval at all.
+			 *
+			 * @remarks
+			 * - What it takes note of in `fractionLost` and `packetsLost` is held at
+			 *   zero and at the packets expected, since neither may go backwards. What
+			 *   it returns is not, so that whoever adds up several of them gets the
+			 *   negative ones back.
 			 */
-			std::optional<int64_t> UpdateSendLoss(RTC::RTCP::ReceiverReport* report);
+			std::optional<Loss> UpdateSendLoss(RTC::RTCP::ReceiverReport* report);
 
 			/**
 			 * Forget everything measured over a numbering that is not in use anymore.

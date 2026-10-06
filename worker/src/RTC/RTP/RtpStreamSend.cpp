@@ -235,7 +235,8 @@ namespace RTC
 			}
 		}
 
-		void RtpStreamSend::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
+		std::optional<RtpStreamSend::Loss> RtpStreamSend::ReceiveRtcpReceiverReport(
+		  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
@@ -268,16 +269,15 @@ namespace RTC
 
 			// Work out how much of what it reports as lost really was lost on the way
 			// to it, which is the only part this link is answerable for.
-			const auto lostDelta = UpdateSendLoss(report);
+			const auto loss = UpdateSendLoss(report);
 
 			// Update the score with the received RR.
-			//
-			// NOTE: A report that measures no interval counts as having lost nothing,
-			// since there is no stretch of the stream to blame it for.
-			UpdateScore(lostDelta.value_or(0));
+			UpdateScore(loss);
+
+			return loss;
 		}
 
-		std::optional<int64_t> RtpStreamSend::UpdateSendLoss(RTC::RTCP::ReceiverReport* report)
+		std::optional<RtpStreamSend::Loss> RtpStreamSend::UpdateSendLoss(RTC::RTCP::ReceiverReport* report)
 		{
 			MS_TRACE();
 
@@ -325,12 +325,15 @@ namespace RTC
 				return std::nullopt;
 			}
 
-			const int64_t expected = (rrSeq - this->lastRrSeq.value()) - unsentSeqCount;
+			const int64_t expectedPackets = (rrSeq - this->lastRrSeq.value()) - unsentSeqCount;
 			// A hole already counted by a previous report and filled in since makes
 			// the remote endpoint report fewer lost packets than before, so the
 			// difference may well come out negative.
-			const int64_t lostDelta = std::clamp<int64_t>(
-			  int64_t{ totalLost } - this->lastRrTotalLost.value() - unsentSeqCount, 0, expected);
+			const int64_t lostPackets =
+			  int64_t{ totalLost } - this->lastRrTotalLost.value() - unsentSeqCount;
+			// What is reported cannot go backwards, so it takes the count held between
+			// nothing lost and everything expected lost.
+			const int64_t reportedLostPackets = std::clamp<int64_t>(lostPackets, 0, expectedPackets);
 
 			this->lastRrSeq       = rrSeq;
 			this->lastRrTotalLost = totalLost;
@@ -338,13 +341,15 @@ namespace RTC
 			// NOTE: It is a count over the whole life of the stream, so it is held below
 			// the maximum of its type rather than let overflow.
 			this->packetsLost = static_cast<int32_t>(std::min<int64_t>(
-			  int64_t{ this->packetsLost } + lostDelta, std::numeric_limits<int32_t>::max()));
+			  int64_t{ this->packetsLost } + reportedLostPackets, std::numeric_limits<int32_t>::max()));
 			// NOTE: The fraction is in 1/256 units, hence the shift, which is the
 			// scale a Receiver Report uses for its own.
 			this->fractionLost =
-			  expected > 0 ? static_cast<uint8_t>(std::min<int64_t>((lostDelta << 8) / expected, 255)) : 0;
+			  expectedPackets > 0
+			    ? static_cast<uint8_t>(std::min<int64_t>((reportedLostPackets << 8) / expectedPackets, 255))
+			    : 0;
 
-			return lostDelta;
+			return Loss{ .lostPackets = lostPackets, .expectedPackets = expectedPackets };
 		}
 
 		void RtpStreamSend::ReceiveRtcpXrReceiverReferenceTime(
@@ -708,7 +713,7 @@ namespace RTC
 			}
 		}
 
-		void RtpStreamSend::UpdateScore(int64_t lostDelta)
+		void RtpStreamSend::UpdateScore(const std::optional<Loss>& loss)
 		{
 			MS_TRACE();
 
@@ -721,7 +726,11 @@ namespace RTC
 			// Number of packets lost in this interval, which is what this link really
 			// lost and not what the remote endpoint reported, since that one also
 			// counts the sequence numbers that were never sent.
-			auto lost = static_cast<uint64_t>(lostDelta);
+			//
+			// NOTE: A report that measured no interval, and one that gives back what a
+			// previous one was overcharged, both leave this interval with nothing lost.
+			auto lost =
+			  static_cast<uint64_t>(loss.has_value() ? std::max<int64_t>(loss.value().lostPackets, 0) : 0);
 
 			// Calculate number of packets repaired in this interval.
 			const auto totalRepaired = this->packetsRepaired;

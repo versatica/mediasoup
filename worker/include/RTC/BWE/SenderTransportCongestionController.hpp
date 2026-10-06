@@ -7,7 +7,6 @@
 #include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BWE/DelayBasedBwe.hpp"
 #include "RTC/BWE/FeedbackAdapter.hpp"
-#include "RTC/BWE/PacketLossTracker.hpp"
 #include "RTC/BWE/ProbeBitrateEstimator.hpp"
 #include "RTC/BWE/ProbeController.hpp"
 #include "RTC/BWE/ProbingScheduler.hpp"
@@ -16,7 +15,6 @@
 #include "RTC/BWE/TargetRateController.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "SharedInterface.hpp"
 #include <vector>
@@ -186,10 +184,15 @@ namespace RTC
 			  const RTC::RTCP::FeedbackRtpTransportPacket* feedback, int64_t receivedAtUs);
 
 			/**
-			 * Feed a received RTCP Receiver Report, which is where the loss of what we
-			 * send is measured.
+			 * Feed what the RTCP Receiver Reports of a received RTCP packet measured,
+			 * added up over all the streams they report on, which is where the loss of
+			 * what we send is taken from.
+			 *
+			 * @remarks
+			 * - The loss may be negative, since a report gives back what a previous one
+			 *   was overcharged for.
 			 */
-			void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReportPacket* packet);
+			void ReceiveRtcpReceiverReport(int64_t lostPackets, int64_t expectedPackets);
 
 			/**
 			 * Feed a received REMB, which is what the remote endpoint says it is
@@ -201,12 +204,6 @@ namespace RTC
 			 * Feed the round trip time towards the remote endpoint.
 			 */
 			void OnRttUpdate(int64_t rttUs);
-
-			/**
-			 * Forget a stream, which is what the closing of whatever was sending it
-			 * calls for.
-			 */
-			void RemoveStream(uint32_t ssrc);
 
 			/**
 			 * Bound what may be estimated (bps). The bitrate to start from is not
@@ -305,7 +302,6 @@ namespace RTC
 			// Others.
 			SendPacketHistory sendPacketHistory;
 			FeedbackAdapter feedbackAdapter;
-			PacketLossTracker packetLossTracker;
 			DelayBasedBwe delayBasedBwe;
 			RobustThroughputEstimator acknowledgedBitrateEstimator;
 			TargetRateController targetRateController;

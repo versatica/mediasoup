@@ -303,21 +303,20 @@ namespace RTC
 		}
 
 		void SenderTransportCongestionController::ReceiveRtcpReceiverReport(
-		  RTC::RTCP::ReceiverReportPacket* packet)
+		  int64_t lostPackets, int64_t expectedPackets)
 		{
 			MS_TRACE();
 
-			const auto loss = this->packetLossTracker.ReceiveReceiverReport(packet);
-
-			if (!loss.has_value())
+			// Not a single packet got through. That is not a loss ratio of one but a
+			// stretch the remote endpoint could not report on, so it is left out rather
+			// than fed as the worst possible measurement.
+			if (expectedPackets - lostPackets < 1)
 			{
 				return;
 			}
 
-			const auto& lossValue = loss.value();
-
 			this->targetRateController.UpdatePacketsLost(
-			  lossValue.lostPackets, lossValue.expectedPackets, this->shared->GetTimeUs());
+			  lostPackets, expectedPackets, this->shared->GetTimeUs());
 		}
 
 		void SenderTransportCongestionController::ReceiveEstimatedBitrate(int64_t bitrate)
@@ -342,13 +341,6 @@ namespace RTC
 
 			this->delayBasedBwe.OnRttUpdate(roundedRttUs);
 			this->targetRateController.UpdateRtt(roundedRttUs);
-		}
-
-		void SenderTransportCongestionController::RemoveStream(uint32_t ssrc)
-		{
-			MS_TRACE();
-
-			this->packetLossTracker.RemoveStream(ssrc);
 		}
 
 		void SenderTransportCongestionController::SetBitrateLimits(int64_t minBitrate, int64_t maxBitrate)

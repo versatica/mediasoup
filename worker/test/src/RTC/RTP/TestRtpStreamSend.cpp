@@ -1853,7 +1853,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			}
 		};
 
-		const auto receiveReceiverReport = [&](uint32_t lastSeq, int32_t totalLost)
+		const auto receiveReceiverReport =
+		  [&](uint32_t lastSeq, int32_t totalLost) -> std::optional<RTC::RTP::RtpStreamSend::Loss>
 		{
 			RTC::RTCP::ReceiverReport report;
 
@@ -1861,7 +1862,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			report.SetLastSeq(lastSeq);
 			report.SetTotalLost(totalLost);
 
-			stream.ReceiveRtcpReceiverReport(std::addressof(report), nowUs);
+			return stream.ReceiveRtcpReceiverReport(std::addressof(report), nowUs);
 		};
 
 		sendPackets(1, 10, {});
@@ -1879,11 +1880,19 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// the reported loss nor the score may budge.
 		sendPackets(11, 20, { 15, 16 });
 
-		receiveReceiverReport(20, 2);
+		const auto unsentLoss = receiveReceiverReport(20, 2);
 
 		REQUIRE(stream.GetFractionLost() == 0);
 		REQUIRE(stream.GetPacketsLost() == 0);
 		REQUIRE(stream.GetScore() == 10);
+		REQUIRE(unsentLoss.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& unsentLossValue = unsentLoss.value();
+
+		// What is handed out leaves the two that never went out of both counts.
+		REQUIRE(unsentLossValue.lostPackets == 0);
+		REQUIRE(unsentLossValue.expectedPackets == 8);
 
 		// And now one that never went out plus two that really were lost on the way:
 		// of the ten sequence numbers of the interval nine were sent, and two of
@@ -1973,6 +1982,24 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(stream.GetFractionLost() == (1 << 8) / 10);
 		REQUIRE(stream.GetPacketsLost() == 6 + ForgottenSeqNumbers);
+
+		// A report whose count of lost packets goes down is one that got duplicates,
+		// and it gives back what a previous one was charged for. What is reported
+		// cannot go backwards, but what is handed out carries the negative so that
+		// whoever adds several of them up gets it.
+		sendPackets(3030, 3039, {});
+
+		const auto duplicatesLoss = receiveReceiverReport(3039, 10001);
+
+		REQUIRE(stream.GetFractionLost() == 0);
+		REQUIRE(stream.GetPacketsLost() == 6 + ForgottenSeqNumbers);
+		REQUIRE(duplicatesLoss.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& duplicatesLossValue = duplicatesLoss.value();
+
+		REQUIRE(duplicatesLossValue.lostPackets == -2);
+		REQUIRE(duplicatesLossValue.expectedPackets == 10);
 	}
 
 #ifdef PERFORMANCE_TEST
