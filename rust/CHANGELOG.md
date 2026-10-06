@@ -7,6 +7,7 @@
 - Worker: Space in time RTP retransmissions triggered by NACKs ([PR #1965](https://github.com/versatica/mediasoup/pull/1965)).
 - Remove `rtpPacketLossReceived` and `rtpPacketLossSent` transport custom stats ([PR #1968](https://github.com/versatica/mediasoup/pull/1968)).
 - `RtpStreamSend`: Don't count the sender's uplink loss as loss of the consumer link ([PR #1974](https://github.com/versatica/mediasoup/pull/1974)).
+  - **Breaking change:** `consumer.getStats()` now reports `fractionLost` and `packetsLost` of its send streams counting only the loss of the downlink to the consuming peer.
 
 ### 0.29.0
 
