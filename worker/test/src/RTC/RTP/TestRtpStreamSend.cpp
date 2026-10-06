@@ -1871,6 +1871,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		receiveReceiverReport(10, 0);
 
 		REQUIRE(stream.GetFractionLost() == 0);
+		REQUIRE(stream.GetPacketsLost() == 0);
 		REQUIRE(stream.GetScore() == 10);
 
 		// Ten more of which two never went out, and the remote endpoint reports
@@ -1881,6 +1882,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		receiveReceiverReport(20, 2);
 
 		REQUIRE(stream.GetFractionLost() == 0);
+		REQUIRE(stream.GetPacketsLost() == 0);
 		REQUIRE(stream.GetScore() == 10);
 
 		// And now one that never went out plus two that really were lost on the way:
@@ -1891,6 +1893,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		receiveReceiverReport(30, 5);
 
 		REQUIRE(stream.GetFractionLost() == (2 << 8) / 9);
+		REQUIRE(stream.GetPacketsLost() == 2);
 		REQUIRE(stream.GetScore() < 10);
 
 		// A packet that arrives late fills the hole it had left, so what the remote
@@ -1901,12 +1904,14 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		receiveReceiverReport(40, 6);
 
 		REQUIRE(stream.GetFractionLost() == (1 << 8) / 10);
+		REQUIRE(stream.GetPacketsLost() == 3);
 
 		// A report that got reordered names a stretch of the stream that is already
 		// settled, so it is left alone rather than counted a second time.
 		receiveReceiverReport(35, 100);
 
 		REQUIRE(stream.GetFractionLost() == (1 << 8) / 10);
+		REQUIRE(stream.GetPacketsLost() == 3);
 
 		// More sequence numbers skipped at once than can be remembered: only the most
 		// recent MaxUnsentSeqNumbers of them are, and the rest are answered for as if
@@ -1924,12 +1929,15 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// The interval is what was forgotten plus the two packets that did go out.
 		REQUIRE(stream.GetFractionLost() == (ForgottenSeqNumbers << 8) / (ForgottenSeqNumbers + 2));
+		REQUIRE(stream.GetPacketsLost() == 3 + ForgottenSeqNumbers);
 
 		// A sequence number reset leaves the remote endpoint counting over a numbering
 		// that is not ours anymore, so the next report can only become the new mark.
+		// What was lost before it is still lost, though.
 		stream.UserOnSequenceNumberReset();
 
 		REQUIRE(stream.GetFractionLost() == 0);
+		REQUIRE(stream.GetPacketsLost() == 3 + ForgottenSeqNumbers);
 
 		sendPackets(3000, 3009, {});
 
@@ -1937,6 +1945,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		receiveReceiverReport(3009, 10000);
 
 		REQUIRE(stream.GetFractionLost() == 0);
+		REQUIRE(stream.GetPacketsLost() == 3 + ForgottenSeqNumbers);
 
 		// And from that mark onwards it is measured again.
 		sendPackets(3010, 3019, {});
@@ -1944,12 +1953,14 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		receiveReceiverReport(3019, 10002);
 
 		REQUIRE(stream.GetFractionLost() == (2 << 8) / 10);
+		REQUIRE(stream.GetPacketsLost() == 5 + ForgottenSeqNumbers);
 
 		// A pause stops measuring, since nothing is being sent, but the numbering goes
 		// on where it was, so nothing else is forgotten.
 		stream.Pause();
 
 		REQUIRE(stream.GetFractionLost() == 0);
+		REQUIRE(stream.GetPacketsLost() == 5 + ForgottenSeqNumbers);
 
 		// Which is why what the remote endpoint reports once the stream resumes is a
 		// difference against what it reported before the pause, and not its whole
@@ -1961,6 +1972,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		receiveReceiverReport(3029, 10003);
 
 		REQUIRE(stream.GetFractionLost() == (1 << 8) / 10);
+		REQUIRE(stream.GetPacketsLost() == 6 + ForgottenSeqNumbers);
 	}
 
 #ifdef PERFORMANCE_TEST

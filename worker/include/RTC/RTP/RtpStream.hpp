@@ -187,6 +187,11 @@ namespace RTC
 				return this->fractionLost;
 			}
 
+			int32_t GetPacketsLost() const
+			{
+				return this->packetsLost;
+			}
+
 			float GetLossPercentage() const
 			{
 				return static_cast<float>(this->fractionLost) * 100 / 256;

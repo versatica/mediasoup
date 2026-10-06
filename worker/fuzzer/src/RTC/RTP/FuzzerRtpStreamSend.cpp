@@ -1,4 +1,5 @@
 #include "RTC/RTP/FuzzerRtpStreamSend.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "Utils.hpp"
 #include "mocks/include/MockShared.hpp"
@@ -45,18 +46,30 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 	size_t offset{ 0u };
 
-	while (len >= 4u)
+	while (len >= 12u)
 	{
 		const RTC::RTP::SharedPacket sharedPacket;
 
 		// Set 'random' sequence number and timestamp.
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));
-		packet->SetTimestamp(Utils::Byte::Get4Bytes(data, offset));
+		packet->SetTimestamp(Utils::Byte::Get4Bytes(data, offset + 2));
 
 		stream->ReceivePacket(packet, sharedPacket);
 
-		len -= 4u;
-		offset += 4;
+		// Feed a 'random' Receiver Report, which is what the loss of the stream is
+		// worked out from.
+		RTC::RTCP::ReceiverReport report;
+
+		report.SetSsrc(params.ssrc);
+		report.SetLastSeq(Utils::Byte::Get4Bytes(data, offset + 6));
+		// NOTE: Signed on purpose, since a duplicate makes a remote endpoint report
+		// fewer packets lost than it reported before.
+		report.SetTotalLost(static_cast<int16_t>(Utils::Byte::Get2Bytes(data, offset + 10)));
+
+		stream->ReceiveRtcpReceiverReport(std::addressof(report), shared.GetTimeUs());
+
+		len -= 12u;
+		offset += 12;
 	}
 
 	delete stream;
