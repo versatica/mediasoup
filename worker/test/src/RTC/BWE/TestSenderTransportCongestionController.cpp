@@ -383,6 +383,10 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		// that delays nothing and therefore builds no queue.
 		const int64_t targetBeforeDelay = transmitAndFeedBack(RunTimeMs, /*delayPerPacketUs*/ 0);
 
+		// A link that never delays anything gives the estimator no reason to back
+		// off, so whatever it was given to start from still stands.
+		REQUIRE(targetBeforeDelay >= StartBitrate);
+
 		// And again, with every packet arriving later than the one before it.
 		const int64_t targetAfterDelay = transmitAndFeedBack(RunTimeMs, /*delayPerPacketUs*/ 50000);
 
