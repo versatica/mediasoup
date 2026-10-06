@@ -717,23 +717,18 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Calculate number of packets sent in this interval.
-			const auto totalSentPackets = this->transmissionCounter.GetPacketCount();
-			const auto sentPackets      = totalSentPackets - this->sentPriorScore;
-
-			this->sentPriorScore = totalSentPackets;
-
-			// Calculate number of packets repaired in this interval.
-			const auto totalRepairedPackets = this->packetsRepaired;
+			// Calculate the packets of this interval, which is what each counter has
+			// grown by since the previous score update.
+			const auto totalSentPackets          = this->transmissionCounter.GetPacketCount();
+			const auto totalRepairedPackets      = this->packetsRepaired;
+			const auto totalRetransmittedPackets = this->packetsRetransmitted;
+			const auto sentPackets               = totalSentPackets - this->sentPriorScore;
+			const auto retransmittedPackets = totalRetransmittedPackets - this->retransmittedPriorScore;
 
 			auto repairedPackets = totalRepairedPackets - this->repairedPriorScore;
 
-			this->repairedPriorScore = totalRepairedPackets;
-
-			// Calculate number of packets retransmitted in this interval.
-			const auto totalRetransmittedPackets = this->packetsRetransmitted;
-			const auto retransmittedPackets = totalRetransmittedPackets - this->retransmittedPriorScore;
-
+			this->sentPriorScore          = totalSentPackets;
+			this->repairedPriorScore      = totalRepairedPackets;
 			this->retransmittedPriorScore = totalRetransmittedPackets;
 
 			// The Receiver Report measured no stretch of the stream, so there is nothing

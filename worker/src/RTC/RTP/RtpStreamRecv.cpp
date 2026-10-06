@@ -912,42 +912,23 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Calculate number of packets expected in this interval.
-			const auto totalExpectedPackets = GetExpectedPackets();
-			const uint32_t expectedPackets  = totalExpectedPackets - this->expectedPriorScore;
-
-			this->expectedPriorScore = totalExpectedPackets;
-
-			// Calculate number of packets received in this interval.
-			const auto totalReceivedPackets = this->mediaTransmissionCounter.GetPacketCount();
-			const auto receivedPackets      = totalReceivedPackets - this->receivedPriorScore;
-
-			this->receivedPriorScore = totalReceivedPackets;
-
-			// Calculate number of packets lost in this interval.
-			uint64_t lostPackets;
-
-			if (expectedPackets < receivedPackets)
-			{
-				lostPackets = 0;
-			}
-			else
-			{
-				lostPackets = expectedPackets - receivedPackets;
-			}
-
-			// Calculate number of packets repaired in this interval.
-			const auto totalRepairedPackets = this->packetsRepaired;
-
-			auto repairedPackets = totalRepairedPackets - this->repairedPriorScore;
-
-			this->repairedPriorScore = totalRepairedPackets;
-
-			// Calculate number of packets retransmitted in this interval.
+			// Calculate the packets of this interval, which is what each counter has
+			// grown by since the previous score update.
+			const auto totalExpectedPackets      = GetExpectedPackets();
+			const auto totalReceivedPackets      = this->mediaTransmissionCounter.GetPacketCount();
+			const auto totalRepairedPackets      = this->packetsRepaired;
 			const auto totalRetransmittedPackets = this->packetsRetransmitted;
+			const uint32_t expectedPackets       = totalExpectedPackets - this->expectedPriorScore;
+			const auto receivedPackets           = totalReceivedPackets - this->receivedPriorScore;
 
+			uint64_t lostPackets =
+			  expectedPackets < receivedPackets ? 0 : expectedPackets - receivedPackets;
+			auto repairedPackets      = totalRepairedPackets - this->repairedPriorScore;
 			auto retransmittedPackets = totalRetransmittedPackets - this->retransmittedPriorScore;
 
+			this->expectedPriorScore      = totalExpectedPackets;
+			this->receivedPriorScore      = totalReceivedPackets;
+			this->repairedPriorScore      = totalRepairedPackets;
 			this->retransmittedPriorScore = totalRetransmittedPackets;
 
 			if (this->inactive)
