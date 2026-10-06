@@ -1925,11 +1925,42 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// The interval is what was forgotten plus the two packets that did go out.
 		REQUIRE(stream.GetFractionLost() == (ForgottenSeqNumbers << 8) / (ForgottenSeqNumbers + 2));
 
-		// And a pause forgets all of it, since whatever comes next belongs to a
-		// numbering that has nothing to do with this one.
+		// A sequence number reset leaves the remote endpoint counting over a numbering
+		// that is not ours anymore, so the next report can only become the new mark.
+		stream.UserOnSequenceNumberReset();
+
+		REQUIRE(stream.GetFractionLost() == 0);
+
+		sendPackets(3000, 3009, {});
+
+		// Whatever it has counted as lost so far says nothing about this numbering.
+		receiveReceiverReport(3009, 10000);
+
+		REQUIRE(stream.GetFractionLost() == 0);
+
+		// And from that mark onwards it is measured again.
+		sendPackets(3010, 3019, {});
+
+		receiveReceiverReport(3019, 10002);
+
+		REQUIRE(stream.GetFractionLost() == (2 << 8) / 10);
+
+		// A pause stops measuring, since nothing is being sent, but the numbering goes
+		// on where it was, so nothing else is forgotten.
 		stream.Pause();
 
 		REQUIRE(stream.GetFractionLost() == 0);
+
+		// Which is why what the remote endpoint reports once the stream resumes is a
+		// difference against what it reported before the pause, and not its whole
+		// count all over again.
+		stream.Resume();
+
+		sendPackets(3020, 3029, {});
+
+		receiveReceiverReport(3029, 10003);
+
+		REQUIRE(stream.GetFractionLost() == (1 << 8) / 10);
 	}
 
 #ifdef PERFORMANCE_TEST

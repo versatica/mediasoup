@@ -56,7 +56,10 @@ namespace RTC
 			 * - Only a Receiver Report drains them and a remote endpoint may stop
 			 *   reporting, so this bounds what a stream whose reports never arrive can
 			 *   hold on to.
-			 * - Above any plausible run of loss in the uplink of the Producer.
+			 * - What it has to cover is the sequence numbers skipped between two
+			 *   Receiver Reports. Taking the 5 seconds that RFC 3550 gives as a report
+			 *   interval and the 520 packets per second of a 5 Mbps video stream, this
+			 *   is close to four seconds of such a stream skipped whole.
 			 */
 			static constexpr size_t MaxUnsentSeqNumbers{ 2000 };
 
@@ -211,8 +214,11 @@ namespace RTC
 			// starts. Seeded one below the first sequence number sent, so that the
 			// first report measures from that one onwards.
 			std::optional<int64_t> lastRrSeq;
-			// What the previous Receiver Report reported as lost in total.
-			int32_t lastRrTotalLost{ 0 };
+			// What the previous Receiver Report reported as lost in total. Left without
+			// a value when the numbering is reset, since the remote endpoint counts
+			// over the whole session and does not reset along with us, so the next
+			// report can only be taken as a new mark.
+			std::optional<int32_t> lastRrTotalLost{ 0 };
 		};
 	} // namespace RTP
 } // namespace RTC

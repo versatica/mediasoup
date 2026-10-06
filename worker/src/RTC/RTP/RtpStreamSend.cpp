@@ -6,6 +6,7 @@
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
 #include <cmath> // std::pow(), std::round()
+#include <limits>
 
 namespace RTC
 {
@@ -20,6 +21,7 @@ namespace RTC
 		static constexpr int64_t RetransmissionIntervalMs{ 10 };
 		// Maximum number of packets retransmitted in each iteration.
 		static constexpr size_t MaxRetransmittedPacketsPerIteration{ 2 };
+
 		/* Instance methods. */
 
 		RtpStreamSend::RtpStreamSend(
@@ -312,17 +314,31 @@ namespace RTC
 			// Everything up to what this report has seen is settled.
 			this->unsentSeqs.erase(this->unsentSeqs.begin(), endSeq);
 
+			// The numbering was reset and the remote endpoint went on counting over the
+			// whole session, so there is nothing this report can be compared against. It
+			// only leaves the marks for the next one.
+			if (!this->lastRrTotalLost.has_value())
+			{
+				this->lastRrSeq       = rrSeq;
+				this->lastRrTotalLost = totalLost;
+
+				return std::nullopt;
+			}
+
 			const int64_t expected = (rrSeq - this->lastRrSeq.value()) - unsentSeqCount;
 			// A hole already counted by a previous report and filled in since makes
 			// the remote endpoint report fewer lost packets than before, so the
 			// difference may well come out negative.
 			const int64_t lostDelta = std::clamp<int64_t>(
-			  int64_t{ totalLost } - this->lastRrTotalLost - unsentSeqCount, 0, expected);
+			  int64_t{ totalLost } - this->lastRrTotalLost.value() - unsentSeqCount, 0, expected);
 
 			this->lastRrSeq       = rrSeq;
 			this->lastRrTotalLost = totalLost;
 
-			this->packetsLost += static_cast<int32_t>(lostDelta);
+			// NOTE: It is a count over the whole life of the stream, so it is held below
+			// the maximum of its type rather than let overflow.
+			this->packetsLost = static_cast<int32_t>(std::min<int64_t>(
+			  int64_t{ this->packetsLost } + lostDelta, std::numeric_limits<int32_t>::max()));
 			// NOTE: The fraction is in 1/256 units, hence the shift, which is the
 			// scale a Receiver Report uses for its own.
 			this->fractionLost =
@@ -457,7 +473,10 @@ namespace RTC
 			// Reset jitter.
 			this->jitter = 0;
 
-			ResetSendLoss();
+			// Nothing is being measured while the stream is paused, and the numbering
+			// goes on where it was once it resumes, so the marks the next Receiver
+			// Report is measured against are left alone.
+			this->fractionLost = 0;
 		}
 
 		void RtpStreamSend::Resume()
@@ -810,7 +829,10 @@ namespace RTC
 			this->unsentSeqs.clear();
 			this->highestSentSeq.reset();
 			this->lastRrSeq.reset();
-			this->lastRrTotalLost = 0;
+			// The remote endpoint counts what it has lost over the whole session and
+			// does not reset along with us, so the next Receiver Report cannot be a
+			// difference against anything and can only become the new mark.
+			this->lastRrTotalLost.reset();
 			// Nothing has been measured over this numbering, and holding on to what
 			// was measured over the previous one would keep reporting it for as long
 			// as the stream stays quiet.
