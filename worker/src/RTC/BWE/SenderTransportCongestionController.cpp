@@ -307,6 +307,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// Nothing moved since the previous report, so there is no stretch of the
+			// stream to work a loss ratio out of.
+			if (expectedPackets < 1)
+			{
+				return;
+			}
+
 			// Not a single packet got through. That is not a loss ratio of one but a
 			// stretch the remote endpoint could not report on, so it is left out rather
 			// than fed as the worst possible measurement.

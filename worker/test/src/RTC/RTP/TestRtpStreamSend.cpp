@@ -1869,11 +1869,20 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// The first report measures from the first packet sent, and this one says
 		// that everything arrived.
-		receiveReceiverReport(10, 0);
+		const auto firstLoss = receiveReceiverReport(10, 0);
 
 		REQUIRE(stream.GetFractionLost() == 0);
 		REQUIRE(stream.GetPacketsLost() == 0);
 		REQUIRE(stream.GetScore() == 10);
+		REQUIRE(firstLoss.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& firstLossValue = firstLoss.value();
+
+		// The interval it covers is the whole run of packets sent so far, rather
+		// than nothing at all.
+		REQUIRE(firstLossValue.lostPackets == 0);
+		REQUIRE(firstLossValue.expectedPackets == 10);
 
 		// Ten more of which two never went out, and the remote endpoint reports
 		// exactly those two as lost. Nothing was lost on the way to it, so neither
@@ -1916,11 +1925,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(stream.GetPacketsLost() == 3);
 
 		// A report that got reordered names a stretch of the stream that is already
-		// settled, so it is left alone rather than counted a second time.
-		receiveReceiverReport(35, 100);
+		// settled, so it is left alone rather than counted a second time. Measuring
+		// nothing is not the same as measuring a flawless interval, so the score is
+		// left where it was instead of being handed a perfect one.
+		const auto scoreBeforeReordered = stream.GetScore();
+
+		REQUIRE(receiveReceiverReport(35, 100).has_value() == false);
 
 		REQUIRE(stream.GetFractionLost() == (1 << 8) / 10);
 		REQUIRE(stream.GetPacketsLost() == 3);
+		REQUIRE(stream.GetScore() == scoreBeforeReordered);
 
 		// More sequence numbers skipped at once than can be remembered: only the most
 		// recent MaxUnsentSeqNumbers of them are, and the rest are answered for as if
@@ -1950,11 +1964,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		sendPackets(3000, 3009, {});
 
-		// Whatever it has counted as lost so far says nothing about this numbering.
-		receiveReceiverReport(3009, 10000);
+		const auto scoreBeforeReseed = stream.GetScore();
+
+		// Whatever it has counted as lost so far says nothing about this numbering,
+		// so it measures nothing and the score is not handed a flawless interval
+		// either.
+		REQUIRE(receiveReceiverReport(3009, 10000).has_value() == false);
 
 		REQUIRE(stream.GetFractionLost() == 0);
 		REQUIRE(stream.GetPacketsLost() == 3 + ForgottenSeqNumbers);
+		REQUIRE(stream.GetScore() == scoreBeforeReseed);
 
 		// And from that mark onwards it is measured again.
 		sendPackets(3010, 3019, {});

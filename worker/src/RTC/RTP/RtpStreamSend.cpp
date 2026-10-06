@@ -718,86 +718,96 @@ namespace RTC
 			MS_TRACE();
 
 			// Calculate number of packets sent in this interval.
-			const auto totalSent = this->transmissionCounter.GetPacketCount();
-			const auto sent      = totalSent - this->sentPriorScore;
+			const auto totalSentPackets = this->transmissionCounter.GetPacketCount();
+			const auto sentPackets      = totalSentPackets - this->sentPriorScore;
 
-			this->sentPriorScore = totalSent;
-
-			// Number of packets lost in this interval, which is what this link really
-			// lost and not what the remote endpoint reported, since that one also
-			// counts the sequence numbers that were never sent.
-			//
-			// NOTE: A report that measured no interval, and one that gives back what a
-			// previous one was overcharged, both leave this interval with nothing lost.
-			auto lost =
-			  static_cast<uint64_t>(loss.has_value() ? std::max<int64_t>(loss.value().lostPackets, 0) : 0);
+			this->sentPriorScore = totalSentPackets;
 
 			// Calculate number of packets repaired in this interval.
-			const auto totalRepaired = this->packetsRepaired;
+			const auto totalRepairedPackets = this->packetsRepaired;
 
-			auto repaired = totalRepaired - this->repairedPriorScore;
+			auto repairedPackets = totalRepairedPackets - this->repairedPriorScore;
 
-			this->repairedPriorScore = totalRepaired;
+			this->repairedPriorScore = totalRepairedPackets;
 
 			// Calculate number of packets retransmitted in this interval.
-			const auto totatRetransmitted = this->packetsRetransmitted;
-			const auto retransmitted      = totatRetransmitted - this->retransmittedPriorScore;
+			const auto totalRetransmittedPackets = this->packetsRetransmitted;
+			const auto retransmittedPackets = totalRetransmittedPackets - this->retransmittedPriorScore;
 
-			this->retransmittedPriorScore = totatRetransmitted;
+			this->retransmittedPriorScore = totalRetransmittedPackets;
+
+			// The Receiver Report measured no stretch of the stream, so there is nothing
+			// to say about this interval. The counters above have been taken anyway, so
+			// that the next one is measured over what it really covers.
+			if (!loss.has_value())
+			{
+				return;
+			}
 
 			// We didn't send any packet.
-			if (sent == 0)
+			if (sentPackets == 0)
 			{
 				RTP::RtpStream::UpdateScore(10);
 
 				return;
 			}
 
-			lost     = std::min(lost, sent);
-			repaired = std::min(repaired, lost);
+			// Number of packets lost in this interval, which is what this link really
+			// lost and not what the remote endpoint reported, since that one also
+			// counts the sequence numbers that were never sent.
+			//
+			// NOTE: A report that gives back what a previous one was overcharged leaves
+			// this interval with nothing lost.
+			auto lostPackets = static_cast<uint64_t>(std::max<int64_t>(loss.value().lostPackets, 0));
+
+			lostPackets     = std::min(lostPackets, sentPackets);
+			repairedPackets = std::min(repairedPackets, lostPackets);
 
 #if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
 			  score,
-			  "[totalSent:%" PRIu64 ", totalLost:%" PRIi32 ", totalRepaired:%" PRIu64,
-			  totalSent,
+			  "[totalSentPackets:%" PRIu64 ", totalLostPackets:%" PRIi32 ", totalRepairedPackets:%" PRIu64,
+			  totalSentPackets,
 			  this->packetsLost,
-			  totalRepaired);
+			  totalRepairedPackets);
 
 			MS_DEBUG_TAG(
 			  score,
-			  "fixed values [sent:%" PRIu64 ", lost:%" PRIu64 ", repaired:%" PRIu64
-			  ", retransmitted:%" PRIu64,
-			  sent,
-			  lost,
-			  repaired,
-			  retransmitted);
+			  "fixed values [sentPackets:%" PRIu64 ", lostPackets:%" PRIu64 ", repairedPackets:%" PRIu64
+			  ", retransmittedPackets:%" PRIu64,
+			  sentPackets,
+			  lostPackets,
+			  repairedPackets,
+			  retransmittedPackets);
 #endif
 
-			auto repairedRatio  = static_cast<float>(repaired) / static_cast<float>(sent);
+			auto repairedRatio  = static_cast<float>(repairedPackets) / static_cast<float>(sentPackets);
 			auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
 
-			MS_ASSERT(retransmitted >= repaired, "repaired packets cannot be more than retransmitted ones");
+			MS_ASSERT(
+			  retransmittedPackets >= repairedPackets,
+			  "repaired packets cannot be more than retransmitted ones");
 
-			if (retransmitted > 0)
+			if (retransmittedPackets > 0)
 			{
-				repairedWeight *= static_cast<float>(repaired) / retransmitted;
+				repairedWeight *= static_cast<float>(repairedPackets) / retransmittedPackets;
 			}
 
-			lost = static_cast<uint64_t>(lost - (repaired * repairedWeight));
+			lostPackets = static_cast<uint64_t>(lostPackets - (repairedPackets * repairedWeight));
 
-			auto deliveredRatio = static_cast<float>(sent - lost) / static_cast<float>(sent);
-			auto score          = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
+			auto deliveredRatio =
+			  static_cast<float>(sentPackets - lostPackets) / static_cast<float>(sentPackets);
+			auto score = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
 
 #if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
 			  score,
-			  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lost:%" PRIu64
+			  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lostPackets:%" PRIu64
 			  ", score:%" PRIu8 "]",
 			  deliveredRatio,
 			  repairedRatio,
 			  repairedWeight,
-			  lost,
+			  lostPackets,
 			  score);
 #endif
 
