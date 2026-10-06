@@ -46,7 +46,7 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 	size_t offset{ 0u };
 
-	while (len >= 12u)
+	while (len >= 12)
 	{
 		const RTC::RTP::SharedPacket sharedPacket;
 
@@ -68,7 +68,7 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 
 		stream->ReceiveRtcpReceiverReport(std::addressof(report), shared.GetTimeUs());
 
-		len -= 12u;
+		len -= 12;
 		offset += 12;
 	}
 
