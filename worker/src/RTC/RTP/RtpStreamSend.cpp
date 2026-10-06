@@ -305,19 +305,19 @@ namespace RTC
 
 			// What was never sent within the interval is what the remote endpoint
 			// counts as lost without this link having lost it.
-			const auto begin  = this->unsentSeqs.upper_bound(this->lastRrSeq.value());
-			const auto end    = this->unsentSeqs.upper_bound(rrSeq);
-			const auto unsent = static_cast<int64_t>(std::distance(begin, end));
+			const auto beginSeq       = this->unsentSeqs.upper_bound(this->lastRrSeq.value());
+			const auto endSeq         = this->unsentSeqs.upper_bound(rrSeq);
+			const auto unsentSeqCount = static_cast<int64_t>(std::distance(beginSeq, endSeq));
 
 			// Everything up to what this report has seen is settled.
-			this->unsentSeqs.erase(this->unsentSeqs.begin(), end);
+			this->unsentSeqs.erase(this->unsentSeqs.begin(), endSeq);
 
-			const int64_t expected = (rrSeq - this->lastRrSeq.value()) - unsent;
+			const int64_t expected = (rrSeq - this->lastRrSeq.value()) - unsentSeqCount;
 			// A hole already counted by a previous report and filled in since makes
 			// the remote endpoint report fewer lost packets than before, so the
 			// difference may well come out negative.
-			const int64_t lostDelta =
-			  std::clamp<int64_t>(int64_t{ totalLost } - this->lastRrTotalLost - unsent, 0, expected);
+			const int64_t lostDelta = std::clamp<int64_t>(
+			  int64_t{ totalLost } - this->lastRrTotalLost - unsentSeqCount, 0, expected);
 
 			this->lastRrSeq       = rrSeq;
 			this->lastRrTotalLost = totalLost;
