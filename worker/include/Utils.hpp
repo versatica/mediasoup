@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/Consts.hpp"
 #include <openssl/evp.h>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
@@ -269,6 +270,18 @@ namespace Utils
 			// The implementation is the same as boost::hash_combine().
 			seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		};
+
+	private:
+		// Number of input bytes consumed per iteration of the slice-by-8 loop.
+		static constexpr size_t CrcSlices{ 8u };
+
+		using CrcTables = std::array<std::array<uint32_t, 256>, CrcSlices>;
+
+		static constexpr CrcTables generateCrcTables(uint32_t polynomial);
+
+		static uint32_t ReadLe32(const uint8_t* data);
+
+		static uint32_t ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size);
 
 	private:
 		static thread_local std::mt19937_64 rng;

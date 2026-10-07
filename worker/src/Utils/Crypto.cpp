@@ -5,10 +5,20 @@
 #include "Utils.hpp"
 #include <openssl/rand.h>
 #include <openssl/sha.h>
-#include <array>
 
 namespace Utils
 {
+	/* Static. */
+
+	// Reflected CRC-32 (IEEE 802.3) generator polynomial, i.e. 0x04C11DB7 reflected. Used by the
+	// STUN FINGERPRINT attribute.
+	static constexpr uint32_t Crc32Polynomial{ 0xEDB88320 };
+
+	// Reflected CRC-32C (Castagnoli) generator polynomial. RFC 9260 Appendix A defines it as
+	// CRC32C_POLY 0x1EDC6F41; 0x82F63B78 is that same value reflected, which is what the reflected
+	// tables emitted by the RFC's own build_crc_table() are built from.
+	static constexpr uint32_t Crc32cPolynomial{ 0x82F63B78 };
+
 	/* Class variables. */
 
 	thread_local std::mt19937_64 Crypto::rng;
@@ -16,125 +26,87 @@ namespace Utils
 	thread_local EVP_MAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
 	thread_local uint8_t Crypto::hmacSha1Buffer[SHA_DIGEST_LENGTH];
 
-	namespace
-	{
-		// Reflected CRC-32 (IEEE 802.3) generator polynomial, i.e. 0x04C11DB7 reflected. Used by
-		// the STUN FINGERPRINT attribute.
-		constexpr uint32_t Crc32Polynomial{ 0xEDB88320 };
-
-		// Reflected CRC-32C (Castagnoli) generator polynomial. RFC 9260 Appendix A defines it as
-		// CRC32C_POLY 0x1EDC6F41; 0x82F63B78 is that same value reflected, which is what the
-		// reflected tables emitted by the RFC's own build_crc_table() are built from.
-		constexpr uint32_t Crc32cPolynomial{ 0x82F63B78 };
-
-		// Number of input bytes consumed per iteration of the slice-by-8 loop.
-		constexpr size_t CrcSlices{ 8 };
-
-		using CrcTables = std::array<std::array<uint32_t, 256>, CrcSlices>;
-
-		/**
-		 * Builds the slice-by-8 lookup tables from the polynomial at compile time, in the same
-		 * way as the table generator program listed in RFC 9260 Appendix A.
-		 *
-		 * Table 0 is the classic byte at a time table and is identical to the crc_c[256] table
-		 * listed in that appendix. Each subsequent table holds the result of advancing the
-		 * previous one by one further zero byte, which is what allows 8 input bytes to be folded
-		 * in per iteration. The RFC only lists table 0, since its sample code is byte at a time.
-		 */
-		constexpr CrcTables generateCrcTables(uint32_t polynomial)
-		{
-			CrcTables tables{};
-
-			for (uint32_t i{ 0u }; i < 256u; ++i)
-			{
-				uint32_t crc{ i };
-
-				for (size_t bit{ 0u }; bit < 8u; ++bit)
-				{
-					crc = (crc >> 1) ^ (polynomial & (0u - (crc & 1u)));
-				}
-
-				tables[0][i] = crc;
-			}
-
-			for (uint32_t i{ 0u }; i < 256u; ++i)
-			{
-				uint32_t crc{ tables[0][i] };
-
-				for (size_t slice{ 1u }; slice < CrcSlices; ++slice)
-				{
-					crc              = tables[0][crc & 0xFF] ^ (crc >> 8);
-					tables[slice][i] = crc;
-				}
-			}
-
-			return tables;
-		}
-
-		constexpr CrcTables Crc32Tables{ generateCrcTables(Crc32Polynomial) };
-		constexpr CrcTables Crc32cTables{ generateCrcTables(Crc32cPolynomial) };
-
-		// Pin table 0 against entries of the CRC-32 table this file used to carry literally.
-		static_assert(Crc32Tables[0][0] == 0x00000000, "CRC-32 table entry 0");
-		static_assert(Crc32Tables[0][1] == 0x77073096, "CRC-32 table entry 1");
-		static_assert(Crc32Tables[0][2] == 0xee0e612c, "CRC-32 table entry 2");
-		static_assert(Crc32Tables[0][3] == 0x990951ba, "CRC-32 table entry 3");
-		static_assert(Crc32Tables[0][254] == 0x5a05df1b, "CRC-32 table entry 254");
-		static_assert(Crc32Tables[0][255] == 0x2d02ef8d, "CRC-32 table entry 255");
-
-		// Pin table 0 against entries of the crc_c[256] table listed in RFC 9260 Appendix A.
-		static_assert(Crc32cTables[0][0] == 0x00000000, "RFC 9260 Appendix A crc_c[0]");
-		static_assert(Crc32cTables[0][1] == 0xF26B8303, "RFC 9260 Appendix A crc_c[1]");
-		static_assert(Crc32cTables[0][2] == 0xE13B70F7, "RFC 9260 Appendix A crc_c[2]");
-		static_assert(Crc32cTables[0][3] == 0x1350F3F4, "RFC 9260 Appendix A crc_c[3]");
-		static_assert(Crc32cTables[0][128] == 0x82F63B78, "RFC 9260 Appendix A crc_c[128]");
-		static_assert(Crc32cTables[0][254] == 0x5F16D052, "RFC 9260 Appendix A crc_c[254]");
-		static_assert(Crc32cTables[0][255] == 0xAD7D5351, "RFC 9260 Appendix A crc_c[255]");
-
-		/**
-		 * Reads a 32 bit little endian word. The slice-by-8 formulation consumes input as
-		 * little endian words regardless of host endianness. Written byte wise so that it
-		 * is both endian agnostic and safe on unaligned input; compilers fold it into a
-		 * single load.
-		 */
-		inline uint32_t readLe32(const uint8_t* data)
-		{
-			return static_cast<uint32_t>(data[0]) | (static_cast<uint32_t>(data[1]) << 8) |
-			       (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[3]) << 24);
-		}
-
-		/**
-		 * Runs the slice-by-8 loop, returning the raw remainder. Callers apply the final
-		 * transform, which differs between CRC-32 and CRC-32C.
-		 */
-		inline uint32_t computeCrc(const CrcTables& tables, const uint8_t* data, size_t size)
-		{
-			uint32_t crc{ 0xFFFFFFFF };
-
-			while (size >= CrcSlices)
-			{
-				crc ^= readLe32(data);
-
-				const uint32_t next{ readLe32(data + 4) };
-
-				crc = tables[7][crc & 0xFF] ^ tables[6][(crc >> 8) & 0xFF] ^ tables[5][(crc >> 16) & 0xFF] ^
-				      tables[4][(crc >> 24) & 0xFF] ^ tables[3][next & 0xFF] ^ tables[2][(next >> 8) & 0xFF] ^
-				      tables[1][(next >> 16) & 0xFF] ^ tables[0][(next >> 24) & 0xFF];
-
-				data += CrcSlices;
-				size -= CrcSlices;
-			}
-
-			while (size-- > 0)
-			{
-				crc = (crc >> 8) ^ tables[0][(crc ^ *data++) & 0xFF];
-			}
-
-			return crc;
-		}
-	} // namespace
-
 	/* Static methods. */
+
+	/**
+	 * Builds the slice-by-8 lookup tables from the polynomial at compile time, in the same way as
+	 * the table generator program listed in RFC 9260 Appendix A.
+	 *
+	 * Table 0 is the classic byte at a time table and is identical to the crc_c[256] table listed
+	 * in that appendix. Each subsequent table holds the result of advancing the previous one by
+	 * one further zero byte, which is what allows 8 input bytes to be folded in per iteration. The
+	 * RFC only lists table 0, since its sample code is byte at a time.
+	 */
+	constexpr Crypto::CrcTables Crypto::generateCrcTables(uint32_t polynomial)
+	{
+		CrcTables tables{};
+
+		for (uint32_t i{ 0u }; i < 256u; ++i)
+		{
+			uint32_t crc{ i };
+
+			for (size_t bit{ 0u }; bit < 8u; ++bit)
+			{
+				crc = (crc >> 1) ^ (polynomial & (0u - (crc & 1u)));
+			}
+
+			tables[0][i] = crc;
+		}
+
+		for (uint32_t i{ 0u }; i < 256u; ++i)
+		{
+			uint32_t crc{ tables[0][i] };
+
+			for (size_t slice{ 1u }; slice < CrcSlices; ++slice)
+			{
+				crc              = tables[0][crc & 0xFF] ^ (crc >> 8);
+				tables[slice][i] = crc;
+			}
+		}
+
+		return tables;
+	}
+
+	/**
+	 * Reads a 32 bit little endian word. The slice-by-8 formulation consumes input as little
+	 * endian words regardless of host endianness. Written byte wise so that it is both endian
+	 * agnostic and safe on unaligned input; compilers fold it into a single load.
+	 */
+	uint32_t Crypto::ReadLe32(const uint8_t* data)
+	{
+		return static_cast<uint32_t>(data[0]) | (static_cast<uint32_t>(data[1]) << 8) |
+		       (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[3]) << 24);
+	}
+
+	/**
+	 * Runs the slice-by-8 loop, returning the raw remainder. Callers apply the final transform,
+	 * which differs between CRC-32 and CRC-32C.
+	 */
+	uint32_t Crypto::ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size)
+	{
+		uint32_t crc{ 0xFFFFFFFF };
+
+		while (size >= CrcSlices)
+		{
+			crc ^= Crypto::ReadLe32(data);
+
+			const uint32_t next{ Crypto::ReadLe32(data + 4) };
+
+			crc = tables[7][crc & 0xFF] ^ tables[6][(crc >> 8) & 0xFF] ^ tables[5][(crc >> 16) & 0xFF] ^
+			      tables[4][(crc >> 24) & 0xFF] ^ tables[3][next & 0xFF] ^ tables[2][(next >> 8) & 0xFF] ^
+			      tables[1][(next >> 16) & 0xFF] ^ tables[0][(next >> 24) & 0xFF];
+
+			data += CrcSlices;
+			size -= CrcSlices;
+		}
+
+		while (size-- > 0)
+		{
+			crc = (crc >> 8) ^ tables[0][(crc ^ *data++) & 0xFF];
+		}
+
+		return crc;
+	}
 
 	void Crypto::ClassInit()
 	{
@@ -191,7 +163,17 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		return ~computeCrc(Crc32Tables, data, size);
+		static constexpr CrcTables Tables{ Crypto::generateCrcTables(Crc32Polynomial) };
+
+		// Pin table 0 against entries of the CRC-32 table this file used to carry literally.
+		static_assert(Tables[0][0] == 0x00000000, "CRC-32 table entry 0");
+		static_assert(Tables[0][1] == 0x77073096, "CRC-32 table entry 1");
+		static_assert(Tables[0][2] == 0xee0e612c, "CRC-32 table entry 2");
+		static_assert(Tables[0][3] == 0x990951ba, "CRC-32 table entry 3");
+		static_assert(Tables[0][254] == 0x5a05df1b, "CRC-32 table entry 254");
+		static_assert(Tables[0][255] == 0x2d02ef8d, "CRC-32 table entry 255");
+
+		return ~Crypto::ComputeCrc(Tables, data, size);
 	}
 
 	/**
@@ -204,6 +186,17 @@ namespace Utils
 	uint32_t Crypto::GetCRC32c(const uint8_t* data, size_t size)
 	{
 		MS_TRACE();
+
+		static constexpr CrcTables Tables{ Crypto::generateCrcTables(Crc32cPolynomial) };
+
+		// Pin table 0 against entries of the crc_c[256] table listed in RFC 9260 Appendix A.
+		static_assert(Tables[0][0] == 0x00000000, "RFC 9260 Appendix A crc_c[0]");
+		static_assert(Tables[0][1] == 0xF26B8303, "RFC 9260 Appendix A crc_c[1]");
+		static_assert(Tables[0][2] == 0xE13B70F7, "RFC 9260 Appendix A crc_c[2]");
+		static_assert(Tables[0][3] == 0x1350F3F4, "RFC 9260 Appendix A crc_c[3]");
+		static_assert(Tables[0][128] == 0x82F63B78, "RFC 9260 Appendix A crc_c[128]");
+		static_assert(Tables[0][254] == 0x5F16D052, "RFC 9260 Appendix A crc_c[254]");
+		static_assert(Tables[0][255] == 0xAD7D5351, "RFC 9260 Appendix A crc_c[255]");
 
 		// NOTE: As in the RFC sample code, the result is returned byte swapped.
 		const uint32_t result{ ~computeCrc(Crc32cTables, data, size) };
