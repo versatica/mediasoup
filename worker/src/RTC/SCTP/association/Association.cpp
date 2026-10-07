@@ -119,7 +119,7 @@ namespace RTC
 			  static_cast<int>(stateStringView.size()),
 			  stateStringView.data());
 
-			this->sctpOptions.Dump();
+			this->sctpOptions.Dump(indentation + 1);
 
 			if (this->tcb)
 			{

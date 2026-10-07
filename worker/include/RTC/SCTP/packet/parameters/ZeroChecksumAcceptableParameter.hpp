@@ -37,12 +37,20 @@ namespace RTC
 		public:
 			/**
 			 * Zero Checksum Alternate Error Detection Method.
+			 *
+			 * @remarks
+			 * - `TRUSTED_NETWORK` is not assigned by IANA. It's a mediasoup specific
+			 *   method meant to be used between mediasoup endpoints only, when the
+			 *   network path between them is trusted (such as localhost). Its value
+			 *   is taken from the top of the range to minimize the chances of
+			 *   colliding with a method assigned by IANA in the future.
 			 */
 			// NOLINTNEXTLINE(performance-enum-size)
 			enum class AlternateErrorDetectionMethod : uint32_t
 			{
-				NONE           = 0x0000,
-				SCTP_OVER_DTLS = 0x0001,
+				NONE            = 0x00000000,
+				SCTP_OVER_DTLS  = 0x00000001,
+				TRUSTED_NETWORK = 0xFFFFFFFE,
 			};
 
 		public:
@@ -100,7 +108,8 @@ namespace RTC
 
 				if (
 				  method == static_cast<uint32_t>(AlternateErrorDetectionMethod::NONE) ||
-				  method == static_cast<uint32_t>(AlternateErrorDetectionMethod::SCTP_OVER_DTLS))
+				  method == static_cast<uint32_t>(AlternateErrorDetectionMethod::SCTP_OVER_DTLS) ||
+				  method == static_cast<uint32_t>(AlternateErrorDetectionMethod::TRUSTED_NETWORK))
 				{
 					return static_cast<AlternateErrorDetectionMethod>(method);
 				}

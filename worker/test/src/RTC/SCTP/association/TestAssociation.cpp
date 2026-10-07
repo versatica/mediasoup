@@ -1263,6 +1263,48 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(parsePacket(buffer)->GetChecksum() == 0);
 	}
 
+	SECTION("both sides send DATA with zero checksum with TRUSTED_NETWORK")
+	{
+		auto sctpOptions = makeSctpOptions();
+
+		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK;
+
+		AssociationUnderTest a(sctpOptions);
+		AssociationUnderTest z(sctpOptions);
+
+		connectAssociations(a, z);
+
+		const auto metricsA = a.association.MakeMetrics();
+		const auto metricsZ = z.association.MakeMetrics();
+
+		REQUIRE(metricsA.has_value());
+		REQUIRE(metricsZ.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsAValue = metricsA.value();
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsZValue = metricsZ.value();
+
+		REQUIRE(metricsAValue.usesZeroChecksum == true);
+		// Z negotiated it from the State Cookie it generated.
+		REQUIRE(metricsZValue.usesZeroChecksum == true);
+
+		sendMessage(a, 1, 53, std::vector<uint8_t>(a.sctpOptions.mtu - 100));
+
+		const auto bufferA = a.listener.ConsumeFirstSentPacket();
+
+		REQUIRE(packetHasDataChunk(bufferA) == true);
+		REQUIRE(parsePacket(bufferA)->GetChecksum() == 0);
+
+		sendMessage(z, 1, 53, std::vector<uint8_t>(z.sctpOptions.mtu - 100));
+
+		const auto bufferZ = z.listener.ConsumeFirstSentPacket();
+
+		REQUIRE(packetHasDataChunk(bufferZ) == true);
+		REQUIRE(parsePacket(bufferZ)->GetChecksum() == 0);
+	}
+
 	SECTION("both sides send heartbeats")
 	{
 		// Make them have slightly different heartbeat intervals, to validate that

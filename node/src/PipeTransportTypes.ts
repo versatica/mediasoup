@@ -5,6 +5,7 @@ import type {
 	TransportListenIp,
 	TransportTuple,
 	SctpState,
+	SctpZeroChecksum,
 	BaseTransportDump,
 	BaseTransportStats,
 	TransportEvents,
@@ -66,6 +67,12 @@ export type PipeTransportOptions<
 	 * Default 1024.
 	 */
 	sctpDefaultStreamBufferedAmountLowThreshold?: number;
+
+	/**
+	 * SCTP Zero Checksum (RFC 9653) alternate error detection method to
+	 * announce. Default 'none'.
+	 */
+	sctpZeroChecksum?: SctpZeroChecksum;
 
 	/**
 	 * Enable RTX and NACK for RTP retransmission. Useful if both Routers are

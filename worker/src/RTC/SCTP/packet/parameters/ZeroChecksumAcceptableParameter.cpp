@@ -14,8 +14,9 @@ namespace RTC
 		// clang-format off
 		const ankerl::unordered_dense::map<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod, std::string> ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String =
 		{
-			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE,           "NONE"           },
-			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS, "SCTP_OVER_DTLS" },
+			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE,            "NONE"            },
+			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS,  "SCTP_OVER_DTLS"  },
+			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK, "TRUSTED_NETWORK" },
 		};
 		// clang-format on
 
@@ -132,7 +133,7 @@ namespace RTC
 			DumpCommon(indentation);
 			MS_DUMP_CLEAN(
 			  indentation,
-			  "  alternate error detection method: %" PRIu32 " (%s)",
+			  "  alternate error detection method: 0x%08" PRIX32 " (%s)",
 			  static_cast<uint32_t>(GetAlternateErrorDetectionMethod()),
 			  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethodToString(
 			    GetAlternateErrorDetectionMethod())
