@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.7.0
+
 - SCTP: Add `sctpZeroChecksum` option to enable SCTP Zero Checksum (RFC 9653) ([PR #1977](https://github.com/versatica/mediasoup/pull/1977)).
 
 ### 0.6.0
