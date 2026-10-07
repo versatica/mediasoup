@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- SCTP: Add `sctpZeroChecksum` option to enable SCTP Zero Checksum (RFC 9653) ([PR #1977](https://github.com/versatica/mediasoup/pull/1977)).
+
 ### 0.6.0
 
 - Remove support for the "urn:ietf:params:rtp-hdrext:toffset" RTP extension (PR #1942).
