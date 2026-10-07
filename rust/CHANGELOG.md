@@ -9,6 +9,7 @@
 - Store used SCTP stream ids in a Vec instead of an IntMap ([PR #1975](https://github.com/versatica/mediasoup/pull/1975)).
 - `RtpStreamSend`: Don't count the sender's uplink loss as loss of the consumer link ([PR #1974](https://github.com/versatica/mediasoup/pull/1974)).
   - **Breaking change:** `consumer.getStats()` now reports `fractionLost` and `packetsLost` of its send streams counting only the loss of the downlink to the consuming peer.
+- SCTP: Add `sctpZeroChecksum` option to enable SCTP Zero Checksum (RFC 9653) ([PR #1977](https://github.com/versatica/mediasoup/pull/1977)).
 
 ### 0.29.0
 

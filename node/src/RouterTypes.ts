@@ -3,6 +3,7 @@ import type {
 	Transport,
 	TransportListenInfo,
 	TransportListenIp,
+	SctpZeroChecksum,
 } from './TransportTypes';
 import type {
 	WebRtcTransport,
@@ -119,6 +120,13 @@ export type PipeToRouterOptions = {
 	 * Default 1024.
 	 */
 	sctpDefaultStreamBufferedAmountLowThreshold?: number;
+
+	/**
+	 * SCTP Zero Checksum (RFC 9653) alternate error detection method to
+	 * announce. Default 'trusted-network' (the PipeTransports listen on
+	 * localhost by default).
+	 */
+	sctpZeroChecksum?: SctpZeroChecksum;
 
 	/**
 	 * Enable RTX and NACK for RTP retransmission.

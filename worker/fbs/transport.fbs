@@ -121,6 +121,14 @@ table RecvRtpHeaderExtensions {
     transport_wide_cc01: uint8 = null;
 }
 
+// Values match the SCTP Zero Checksum Alternate Error Detection Method
+// Identifiers (EDMID).
+enum SctpZeroChecksum: uint32 {
+    NONE = 0,
+    SCTP_OVER_DTLS = 1,
+    TRUSTED_NETWORK = 4294967294
+}
+
 table Options {
     direct: bool = false;
     initial_available_outgoing_bitrate: uint64 = null;
@@ -131,6 +139,7 @@ table Options {
     sctp_per_stream_send_queue_limit: uint32;
     sctp_max_receiver_window_buffer_size: uint32;
     sctp_default_stream_buffered_amount_low_threshold: uint32;
+    sctp_zero_checksum: SctpZeroChecksum = NONE;
     is_data_channel: bool = false;
 }
 
