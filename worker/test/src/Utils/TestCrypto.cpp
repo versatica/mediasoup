@@ -83,7 +83,8 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		// Guards the slice-by-8 implementations against regressions at the 8 byte block
 		// boundary and on unaligned input. Deliberately table free so that it shares
 		// nothing with the implementations under test.
-		auto reference = [](uint32_t polynomial, bool byteSwap, const uint8_t* data, size_t size)
+		const auto reference =
+		  [](uint32_t polynomial, bool byteSwap, const uint8_t* data, size_t size) -> uint32_t
 		{
 			uint32_t crc{ 0xFFFFFFFF };
 
@@ -152,7 +153,7 @@ SCENARIO("Utils::Crypto::GetRandomUInt()", "[utils][crypto]")
 
 	for (size_t i = 0; i < 200; ++i)
 	{
-		auto randomNumber =
+		const auto randomNumber =
 		  Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max());
 
 		REQUIRE(randomUint32Numbers.find(randomNumber) == randomUint32Numbers.end());
@@ -162,7 +163,7 @@ SCENARIO("Utils::Crypto::GetRandomUInt()", "[utils][crypto]")
 
 	for (size_t i = 0; i < 200; ++i)
 	{
-		auto randomNumber =
+		const auto randomNumber =
 		  Utils::Crypto::GetRandomUInt<uint64_t>(0, std::numeric_limits<uint64_t>::max());
 
 		REQUIRE(randomUint64Numbers.find(randomNumber) == randomUint64Numbers.end());

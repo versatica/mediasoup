@@ -199,7 +199,7 @@ namespace Utils
 		static_assert(Tables[0][255] == 0xAD7D5351, "RFC 9260 Appendix A crc_c[255]");
 
 		// NOTE: As in the RFC sample code, the result is returned byte swapped.
-		const uint32_t result{ ~computeCrc(Crc32cTables, data, size) };
+		const uint32_t result{ ~Crypto::ComputeCrc(Tables, data, size) };
 		const uint32_t byte0{ result & 0xff };
 		const uint32_t byte1{ (result >> 8) & 0xff };
 		const uint32_t byte2{ (result >> 16) & 0xff };
