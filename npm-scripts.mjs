@@ -566,18 +566,6 @@ function publishDryRun() {
 async function checkRelease() {
 	logInfo('checkRelease()');
 
-	// Verify that CHANGELOG.md has an entry for the new version (and grab its
-	// changes, used as the GitHub release body) before the slow build steps.
-	let versionChanges;
-
-	try {
-		versionChanges = await getVersionChanges();
-	} catch (error) {
-		logError(`checkRelease() | ${error.message}`);
-
-		exitWithError();
-	}
-
 	installNodeDeps();
 	await flatcNode({ force: true });
 	buildTypescript({ force: true });
@@ -589,8 +577,6 @@ async function checkRelease() {
 	// Validate packaging (the `files` list in package.json) before the
 	// irreversible release steps (git push, GitHub release, npm publish).
 	publishDryRun();
-
-	return { versionChanges };
 }
 
 async function release({ args = '' } = {}) {
@@ -622,8 +608,17 @@ async function release({ args = '' } = {}) {
 	// Clean working tree required before bumping the version.
 	checkGitClean();
 
-	// Lint, test, build, publish dry-run, and verify the CHANGELOG entry (of the
-	// previous version still in package.json, which is harmless).
+	// CHANGELOG.md must have unreleased changes in its "### NEXT" section.
+	// Checked before the slow build steps.
+	try {
+		await checkChangelog();
+	} catch (error) {
+		logError(`release() | ${error.message}`);
+
+		exitWithError();
+	}
+
+	// Lint, test, build and publish dry-run.
 	await checkRelease();
 
 	// Bump the version in package.json + package-lock.json and in CHANGELOG.md.
@@ -834,46 +829,42 @@ function checkGitClean() {
 	}
 }
 
-async function getVersionChanges() {
-	logInfo('getVersionChanges()');
+/**
+ * Verifies that the first section of CHANGELOG.md is "### NEXT" and that it is
+ * not empty.
+ */
+async function checkChangelog() {
+	logInfo('checkChangelog()');
 
 	// NOTE: Load dep on demand since it's a devDependency.
 	const marked = await import('marked');
 
 	const changelog = fs.readFileSync('./CHANGELOG.md', { encoding: 'utf-8' });
-	const entries = marked.lexer(changelog);
+	const tokens = marked.lexer(changelog);
+	const idx = tokens.findIndex(
+		token => token.type === 'heading' && token.depth === 3
+	);
 
-	for (let idx = 0; idx < entries.length; ++idx) {
-		const entry = entries[idx];
-
-		if (entry.type === 'heading' && entry.text === pkg.version) {
-			// Collect every token after the matching heading until the next heading.
-			// NOTE: We cannot just use `entries[idx + 1].raw` because `marked`
-			// inserts a `space` token between the heading and its content.
-			let changes = '';
-
-			for (let next = idx + 1; next < entries.length; ++next) {
-				if (entries[next].type === 'heading') {
-					break;
-				}
-
-				changes += entries[next].raw;
-			}
-
-			changes = changes.trim();
-
-			if (changes) {
-				return changes;
-			}
-
-			break;
-		}
+	if (idx === -1 || tokens[idx].text !== 'NEXT') {
+		throw new Error("first section in CHANGELOG.md is not '### NEXT'");
 	}
 
-	// This should not happen (unless author forgot to update CHANGELOG).
-	throw new Error(
-		`no entry found in CHANGELOG.md for version '${pkg.version}'`
-	);
+	// Collect every token after the "### NEXT" heading until the next heading.
+	// NOTE: We cannot just use `tokens[idx + 1].raw` because `marked` inserts a
+	// `space` token between the heading and its content.
+	let changes = '';
+
+	for (let next = idx + 1; next < tokens.length; ++next) {
+		if (tokens[next].type === 'heading') {
+			break;
+		}
+
+		changes += tokens[next].raw;
+	}
+
+	if (!changes.trim()) {
+		throw new Error("'### NEXT' section in CHANGELOG.md is empty");
+	}
 }
 
 async function updateChangelog(version) {

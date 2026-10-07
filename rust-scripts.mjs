@@ -10,15 +10,20 @@ const GH_REPO = 'mediasoup';
 // "version" field in package.json.
 const MAIN_BRANCH = `v${pkg.version.split('.')[0]}`;
 // The three publishable mediasoup Rust crates. For each one: `manifest` is the
-// Cargo.toml that holds its `[package].version`, and `dependents` lists the
-// workspace manifests that declare it as a dependency (whose `version`
-// requirement is bumped to the released version too). The `mediasoup` crate is
-// special: releasing it creates a `rust-X.Y.Z` Git tag and a GitHub release
-// built from its CHANGELOG; the other two are published without a tag or a
-// GitHub release (the `mediasoup-crate-publish.yaml` workflow detects them from
-// the commit message).
+// Cargo.toml that holds its `[package].version`, `changelog` (if any) is the
+// CHANGELOG whose "### NEXT" section becomes the released version, and
+// `dependents` lists the workspace manifests that declare it as a dependency
+// (whose `version` requirement is bumped to the released version too). The
+// 'mediasoup' crate is special: releasing it creates a 'rust-X.Y.Z' Git tag and
+// a GitHub release built from its CHANGELOG; the other two are published
+// without a tag or a GitHub release (the 'mediasoup-crate-publish.yaml'
+// workflow detects them from the commit message).
 const CRATES = [
-	{ name: 'mediasoup', manifest: 'rust/Cargo.toml' },
+	{
+		name: 'mediasoup',
+		manifest: 'rust/Cargo.toml',
+		changelog: 'rust/CHANGELOG.md',
+	},
 	{
 		name: 'mediasoup-sys',
 		manifest: 'worker/Cargo.toml',
@@ -27,12 +32,12 @@ const CRATES = [
 	{
 		name: 'mediasoup-types',
 		manifest: 'rust/types/Cargo.toml',
+		changelog: 'rust/types/CHANGELOG.md',
 		dependents: ['rust/Cargo.toml'],
 	},
 ];
-// The `mediasoup` crate, whose rust/CHANGELOG.md drives the GitHub release body.
+// The 'mediasoup' crate.
 const MEDIASOUP_CRATE = CRATES[0];
-const MEDIASOUP_CRATE_CHANGELOG = 'rust/CHANGELOG.md';
 
 const task = process.argv[2];
 const taskArgs = process.argv.slice(3).join(' ');
@@ -108,21 +113,6 @@ async function checkRelease(crate = MEDIASOUP_CRATE) {
 
 	const { version } = readCrate(crate.manifest);
 
-	// rust/CHANGELOG.md tracks only the `mediasoup` crate, so the CHANGELOG entry
-	// is verified (and grabbed) only when releasing that crate, before the slow
-	// build steps.
-	let versionChanges;
-
-	if (crate.name === 'mediasoup') {
-		try {
-			versionChanges = await getVersionChanges(version);
-		} catch (error) {
-			logError(`checkRelease() | ${error.message}`);
-
-			exitWithError();
-		}
-	}
-
 	// Ensure Cargo.lock is in sync before running any cargo command that could
 	// silently regenerate it.
 	checkCargoLock();
@@ -136,7 +126,7 @@ async function checkRelease(crate = MEDIASOUP_CRATE) {
 	// the dependencies among the three crates against the already-published copies
 	// on crates.io and any schema/API change made since the last release fails
 	// verification spuriously even though nothing is being published (same gating
-	// as in `mediasoup-rust.yaml`).
+	// as in 'mediasoup-rust.yaml').
 	let published;
 
 	try {
@@ -154,8 +144,6 @@ async function checkRelease(crate = MEDIASOUP_CRATE) {
 	} else {
 		publishDryRun();
 	}
-
-	return { versionChanges };
 }
 
 async function release({ args = '' } = {}) {
@@ -198,9 +186,19 @@ async function release({ args = '' } = {}) {
 	// Clean working tree required before bumping the version.
 	checkGitClean();
 
-	// Lint, test, doc, publish dry-run, and (for the `mediasoup` crate) verify the
-	// CHANGELOG entry. Runs before the bump (the checked version is the previous
-	// one still in the manifest, which is harmless).
+	// The crate's CHANGELOG (if any) must have unreleased changes in its
+	// "### NEXT" section. Checked before the slow build steps.
+	if (crate.changelog) {
+		try {
+			await checkChangelog(crate.changelog);
+		} catch (error) {
+			logError(`release() | ${error.message}`);
+
+			exitWithError();
+		}
+	}
+
+	// Lint, test, doc and publish dry-run.
 	await checkRelease(crate);
 
 	// Bump the crate version in its Cargo.toml and reflect it in the (workspace)
@@ -208,12 +206,12 @@ async function release({ args = '' } = {}) {
 	bumpCargoVersion(crate.manifest, version);
 
 	// Keep every workspace manifest that depends on this crate pointing at the
-	// just-released version (the `mediasoup` crate's `version` requirement on
-	// `mediasoup-sys` / `mediasoup-types` in rust/Cargo.toml). These are
+	// just-released version (the 'mediasoup' crate's `version` requirement on
+	// 'mediasoup-sys' / 'mediasoup-types' in rust/Cargo.toml). These are
 	// `path` + `version` dependencies, so the requirement must keep accepting the
 	// sibling's actual version (otherwise a breaking bump would fail the
 	// `cargo metadata` in syncCargoLock()); bumping it here also makes the next
-	// `mediasoup` release depend on the new version, and it is committed together
+	// 'mediasoup' release depend on the new version, and it is committed together
 	// with this release commit.
 	for (const dependent of crate.dependents ?? []) {
 		updateDependencyVersion(dependent, crate.name, version);
@@ -221,13 +219,17 @@ async function release({ args = '' } = {}) {
 
 	syncCargoLock();
 
-	if (crate.name === 'mediasoup') {
-		// The `mediasoup` crate also bumps rust/CHANGELOG.md and is released via a
-		// `rust-X.Y.Z` Git tag, whose push triggers `mediasoup-crate-publish.yaml`
-		// to create the GitHub release and publish the crate to crates.io. On its
-		// success `mediasoup-website-update.yaml updates the website.
-		await updateChangelog(version);
+	// Turn the "### NEXT" section of the crate's CHANGELOG (if any) into the
+	// released version.
+	if (crate.changelog) {
+		await updateChangelog(crate.changelog, version);
+	}
 
+	if (crate.name === 'mediasoup') {
+		// The 'mediasoup' crate is released via a 'rust-X.Y.Z' Git tag, whose push
+		// triggers 'mediasoup-crate-publish.yaml' to create the GitHub release and
+		// publish the crate to crates.io. On its success
+		// 'mediasoup-website-update.yaml' updates the website.
 		const tag = `rust-${version}`;
 
 		// Commit the bump, tag it, and push both.
@@ -245,10 +247,10 @@ async function release({ args = '' } = {}) {
 		executeCmd(`git push origin ${MAIN_BRANCH}`);
 		executeCmd(`git push origin '${tag}'`);
 	} else {
-		// The `mediasoup-sys` / `mediasoup-types` crates are released without a Git
+		// The 'mediasoup-sys' / 'mediasoup-types' crates are released without a Git
 		// tag or GitHub release. The commit message
-		// `<crate> <version> [crate-publish] [no-ci]` is the signal that
-		// `mediasoup-crate-publish.yaml` parses on the branch push: the
+		// '<crate> <version> [crate-publish] [no-ci]' is the signal that
+		// 'mediasoup-crate-publish.yaml' parses on the branch push: the
 		// "[crate-publish]" marker opts the commit into the workflow, and the crate
 		// name and version are read from the start of the message.
 		//
@@ -315,59 +317,51 @@ function syncCargoLock() {
 	}
 }
 
-async function getVersionChanges(version) {
-	logInfo(`getVersionChanges() [version:${version}]`);
+/**
+ * Verifies that the first section of the given CHANGELOG is "### NEXT" and that
+ * it is not empty.
+ */
+async function checkChangelog(changelogPath) {
+	logInfo(`checkChangelog() [changelog:${changelogPath}]`);
 
 	// NOTE: Load dep on demand since it's a devDependency.
 	const marked = await import('marked');
 
-	const changelog = fs.readFileSync(MEDIASOUP_CRATE_CHANGELOG, {
-		encoding: 'utf-8',
-	});
-	const entries = marked.lexer(changelog);
+	const changelog = fs.readFileSync(changelogPath, { encoding: 'utf-8' });
+	const tokens = marked.lexer(changelog);
+	const idx = tokens.findIndex(
+		token => token.type === 'heading' && token.depth === 3
+	);
 
-	for (let idx = 0; idx < entries.length; ++idx) {
-		const entry = entries[idx];
-
-		if (entry.type === 'heading' && entry.text === version) {
-			// Collect every token after the matching heading until the next heading.
-			// NOTE: We cannot just use `entries[idx + 1].raw` because `marked`
-			// inserts a `space` token between the heading and its content.
-			let changes = '';
-
-			for (let next = idx + 1; next < entries.length; ++next) {
-				if (entries[next].type === 'heading') {
-					break;
-				}
-
-				changes += entries[next].raw;
-			}
-
-			changes = changes.trim();
-
-			if (changes) {
-				return changes;
-			}
-
-			break;
-		}
+	if (idx === -1 || tokens[idx].text !== 'NEXT') {
+		throw new Error(`first section in ${changelogPath} is not '### NEXT'`);
 	}
 
-	// This should not happen (unless author forgot to update the CHANGELOG).
-	throw new Error(
-		`no entry found in ${MEDIASOUP_CRATE_CHANGELOG} for version '${version}'`
-	);
+	// Collect every token after the "### NEXT" heading until the next heading.
+	// NOTE: We cannot just use `tokens[idx + 1].raw` because `marked` inserts a
+	// `space` token between the heading and its content.
+	let changes = '';
+
+	for (let next = idx + 1; next < tokens.length; ++next) {
+		if (tokens[next].type === 'heading') {
+			break;
+		}
+
+		changes += tokens[next].raw;
+	}
+
+	if (!changes.trim()) {
+		throw new Error(`'### NEXT' section in ${changelogPath} is empty`);
+	}
 }
 
-async function updateChangelog(version) {
-	logInfo(`updateChangelog() [version:${version}]`);
+async function updateChangelog(changelogPath, version) {
+	logInfo(`updateChangelog() [changelog:${changelogPath}, version:${version}]`);
 
 	// NOTE: Load dep on demand since it's a devDependency.
 	const marked = await import('marked');
 
-	const changelog = fs.readFileSync(MEDIASOUP_CRATE_CHANGELOG, {
-		encoding: 'utf-8',
-	});
+	const changelog = fs.readFileSync(changelogPath, { encoding: 'utf-8' });
 	const tokens = marked.lexer(changelog);
 
 	// Locate the top "### NEXT" heading.
@@ -377,9 +371,7 @@ async function updateChangelog(version) {
 	);
 
 	if (!nextHeading) {
-		throw new Error(
-			`no '### NEXT' heading found in ${MEDIASOUP_CRATE_CHANGELOG}`
-		);
+		throw new Error(`no '### NEXT' heading found in ${changelogPath}`);
 	}
 
 	// Insert "### <version>" right below "### NEXT" (keeping the empty "### NEXT"
@@ -389,7 +381,7 @@ async function updateChangelog(version) {
 		`### NEXT\n\n### ${version}${nextHeading.raw.slice('### NEXT'.length)}`
 	);
 
-	fs.writeFileSync(MEDIASOUP_CRATE_CHANGELOG, updatedChangelog);
+	fs.writeFileSync(changelogPath, updatedChangelog);
 }
 
 /**
