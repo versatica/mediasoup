@@ -124,7 +124,7 @@ Requirements for it to work:
 
 ### `npm run release:rust:check`
 
-Runs linters and tests in Rust code (`cargo fmt`, `cargo clippy`, `cargo test` and `cargo doc`). Finally, when that version is not yet published on crates.io (i.e. it has been bumped and is about to be released), it also runs the publish dry-run (`cargo publish --dry-run` for the three crates as a group).
+Runs linters and tests in Rust code (`cargo fmt`, `cargo clippy`, `cargo test` and `cargo doc`). Finally, when the `mediasoup` crate version in `rust/Cargo.toml` is not yet published on crates.io (i.e. it has been bumped and is about to be released), it also runs the publish dry-run (`cargo publish --dry-run` for the three crates as a group).
 
 The publish dry-run is skipped when the `mediasoup` crate version is already published, because Cargo would then resolve the dependencies among the three crates against the already-published copies on crates.io and any schema/API change made since the last release would fail verification spuriously even though nothing is being published.
 
