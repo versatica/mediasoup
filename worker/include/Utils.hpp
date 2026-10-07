@@ -272,22 +272,16 @@ namespace Utils
 		};
 
 	private:
-		// Number of input bytes consumed per iteration of the slice-by-8 loop.
-		static constexpr size_t CrcSlices{ 8u };
-
-		using CrcTables = std::array<std::array<uint32_t, 256>, CrcSlices>;
-
-		static constexpr CrcTables generateCrcTables(uint32_t polynomial);
-
-		static uint32_t ReadLe32(const uint8_t* data);
-
-		static uint32_t ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size);
-
-	private:
 		static thread_local std::mt19937_64 rng;
 		static thread_local EVP_MAC* mac;
 		static thread_local EVP_MAC_CTX* hmacSha1Ctx;
 		static thread_local uint8_t hmacSha1Buffer[];
+		// Number of input bytes consumed per iteration of the slice-by-8 loop.
+		static constexpr size_t CrcSlices{ 8u };
+		using CrcTables = std::array<std::array<uint32_t, 256>, CrcSlices>;
+		static constexpr CrcTables generateCrcTables(uint32_t polynomial);
+		static uint32_t ReadLe32(const uint8_t* data);
+		static uint32_t ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size);
 	};
 
 	class String
