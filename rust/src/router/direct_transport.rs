@@ -24,7 +24,6 @@ use log::{debug, error};
 use mediasoup_sys::fbs::{direct_transport, notification, response, transport};
 use mediasoup_types::data_structures::{AppData, SctpState};
 use mediasoup_types::sctp_parameters::SctpParameters;
-use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -32,8 +31,9 @@ use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, LazyLock, Weak};
 
-static USED_SCTP_STREAM_IDS: LazyLock<Mutex<IntMap<u16, bool>>> =
-    LazyLock::new(|| Mutex::new(IntMap::default()));
+// NOTE: A DirectTransport never consumes data over SCTP, so no stream id is ever allocated and
+// this pool is intentionally left empty.
+static USED_SCTP_STREAM_IDS: LazyLock<Mutex<Vec<bool>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
 static NEXT_SCTP_STREAM_ID: LazyLock<Mutex<u16>> = LazyLock::new(|| Mutex::new(0));
 
@@ -562,7 +562,7 @@ impl TransportImpl for DirectTransport {
         None
     }
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
+    fn used_sctp_stream_ids(&self) -> &Mutex<Vec<bool>> {
         &USED_SCTP_STREAM_IDS
     }
 
