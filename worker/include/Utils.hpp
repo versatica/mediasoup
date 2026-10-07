@@ -279,7 +279,9 @@ namespace Utils
 		// Number of input bytes consumed per iteration of the slice-by-8 loop.
 		static constexpr size_t CrcSlices{ 8u };
 		using CrcTables = std::array<std::array<uint32_t, 256>, CrcSlices>;
-		static constexpr CrcTables generateCrcTables(uint32_t polynomial);
+		static const CrcTables crc32Tables;
+		static const CrcTables crc32cTables;
+		static constexpr CrcTables generateCrcTables(uint32_t polynomial) noexcept;
 		static uint32_t ReadLe32(const uint8_t* data);
 		static uint32_t ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size);
 	};
