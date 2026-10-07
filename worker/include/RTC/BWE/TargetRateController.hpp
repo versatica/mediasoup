@@ -62,6 +62,9 @@ namespace RTC
 				/**
 				 * Round trip time over which the bitrate is dropped regardless of loss.
 				 * A round trip time this long means the queues of the network are full.
+				 *
+				 * @remarks
+				 * - `Types::TimeUsInfinite` turns the backoff off.
 				 */
 				int64_t maxRttUs{ 3 * 1000 * 1000 };
 				/**
@@ -270,7 +273,7 @@ namespace RTC
 			// the target as soon as it has enough observations.
 			LossBasedController lossBasedController;
 			LossBasedController::State lossBasedState{ LossBasedController::State::DELAY_BASED_ESTIMATE };
-			struct RttBackoff rttBackoff;
+			RttBackoff rttBackoff;
 			// Lowest target of the last second, as a sliding window minimum of
 			// (instant in us, bitrate in bps) pairs.
 			std::deque<std::pair<int64_t, int64_t>> minBitrateHistory;

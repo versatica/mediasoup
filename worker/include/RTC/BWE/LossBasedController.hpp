@@ -594,10 +594,10 @@ namespace RTC
 			std::vector<double> temporalWeights;
 			// The same, for the average observed loss.
 			std::vector<double> immediateUpperBoundTemporalWeights;
-			struct PartialObservation partialObservation;
-			struct ChannelParameters currentBestEstimate;
-			struct HoldInfo lastHoldInfo;
-			struct Result result;
+			PartialObservation partialObservation;
+			ChannelParameters currentBestEstimate;
+			HoldInfo lastHoldInfo;
+			Result result;
 			// Observations closed so far, which never decreases and hence also gives
 			// the id of the next one.
 			int64_t numObservations{ 0 };
