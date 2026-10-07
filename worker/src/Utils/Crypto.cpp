@@ -41,7 +41,7 @@ namespace Utils
 		 * previous one by one further zero byte, which is what allows 8 input bytes to be folded
 		 * in per iteration. The RFC only lists table 0, since its sample code is byte at a time.
 		 */
-		constexpr CrcTables GenerateCrcTables(uint32_t polynomial)
+		constexpr CrcTables generateCrcTables(uint32_t polynomial)
 		{
 			CrcTables tables{};
 
@@ -71,8 +71,8 @@ namespace Utils
 			return tables;
 		}
 
-		constexpr CrcTables Crc32Tables{ GenerateCrcTables(Crc32Polynomial) };
-		constexpr CrcTables Crc32cTables{ GenerateCrcTables(Crc32cPolynomial) };
+		constexpr CrcTables Crc32Tables{ generateCrcTables(Crc32Polynomial) };
+		constexpr CrcTables Crc32cTables{ generateCrcTables(Crc32cPolynomial) };
 
 		// Pin table 0 against entries of the CRC-32 table this file used to carry literally.
 		static_assert(Crc32Tables[0][0] == 0x00000000, "CRC-32 table entry 0");
@@ -97,7 +97,7 @@ namespace Utils
 		 * is both endian agnostic and safe on unaligned input; compilers fold it into a
 		 * single load.
 		 */
-		inline uint32_t ReadLe32(const uint8_t* data)
+		inline uint32_t readLe32(const uint8_t* data)
 		{
 			return static_cast<uint32_t>(data[0]) | (static_cast<uint32_t>(data[1]) << 8) |
 			       (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[3]) << 24);
@@ -107,15 +107,15 @@ namespace Utils
 		 * Runs the slice-by-8 loop, returning the raw remainder. Callers apply the final
 		 * transform, which differs between CRC-32 and CRC-32C.
 		 */
-		inline uint32_t ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size)
+		inline uint32_t computeCrc(const CrcTables& tables, const uint8_t* data, size_t size)
 		{
 			uint32_t crc{ 0xFFFFFFFF };
 
 			while (size >= CrcSlices)
 			{
-				crc ^= ReadLe32(data);
+				crc ^= readLe32(data);
 
-				const uint32_t next{ ReadLe32(data + 4) };
+				const uint32_t next{ readLe32(data + 4) };
 
 				crc = tables[7][crc & 0xFF] ^ tables[6][(crc >> 8) & 0xFF] ^ tables[5][(crc >> 16) & 0xFF] ^
 				      tables[4][(crc >> 24) & 0xFF] ^ tables[3][next & 0xFF] ^ tables[2][(next >> 8) & 0xFF] ^
@@ -191,7 +191,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		return ~ComputeCrc(Crc32Tables, data, size);
+		return ~computeCrc(Crc32Tables, data, size);
 	}
 
 	/**
@@ -206,7 +206,7 @@ namespace Utils
 		MS_TRACE();
 
 		// NOTE: As in the RFC sample code, the result is returned byte swapped.
-		const uint32_t result{ ~ComputeCrc(Crc32cTables, data, size) };
+		const uint32_t result{ ~computeCrc(Crc32cTables, data, size) };
 		const uint32_t byte0{ result & 0xff };
 		const uint32_t byte1{ (result >> 8) & 0xff };
 		const uint32_t byte2{ (result >> 16) & 0xff };
