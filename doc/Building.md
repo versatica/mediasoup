@@ -104,13 +104,14 @@ Same as `test:node` task but it also opens a browser window with TypeScript cove
 
 ### `npm run release:check`
 
-Runs linters and tests in Node and C++ code. Also verifies that `CHANGELOG.md` has an entry matching the mediasoup version in `package.json`.
+Runs linters and tests in Node and C++ code.
 
 ### `npm run release x.y.z`
 
 Prepares and triggers the release of a new version "x.y.z" of the `mediasoup` NPM package. The actual GitHub release and NPM publish are done by GitHub Actions (`mediasoup-npm-publish.yaml`) once the pushed tag arrives. It:
 
-- Performs checks (lint + test + build + publish dry-run + `CHANGELOG.md` entry check). It runs before the version bump, so the CHANGELOG check validates the previous version's entry (still in package.json), which is harmless.
+- Verifies that the first section of `CHANGELOG.md` is `### NEXT` and that it is not empty.
+- Performs checks (lint + test + build + publish dry-run).
 - Bumps the version to "x.y.z" in `package.json` and `package-lock.json` with `npm version x.y.z --no-git-tag-version`, and sets the top `### NEXT` heading of `CHANGELOG.md` to `### x.y.z`.
 - Commits the bump (with a "release x.y.z [no-ci]" message), creates the "x.y.z" tag, and pushes the branch and the tag.
 
@@ -123,7 +124,7 @@ Requirements for it to work:
 
 ### `npm run release:rust:check`
 
-Runs linters and tests in Rust code (`cargo fmt`, `cargo clippy`, `cargo test` and `cargo doc`). Also verifies that `rust/CHANGELOG.md` has an entry matching the `mediasoup` crate version in `rust/Cargo.toml`. Finally, when that version is not yet published on crates.io (i.e. it has been bumped and is about to be released), it also runs the publish dry-run (`cargo publish --dry-run` for the three crates as a group).
+Runs linters and tests in Rust code (`cargo fmt`, `cargo clippy`, `cargo test` and `cargo doc`). Finally, when the `mediasoup` crate version in `rust/Cargo.toml` is not yet published on crates.io (i.e. it has been bumped and is about to be released), it also runs the publish dry-run (`cargo publish --dry-run` for the three crates as a group).
 
 The publish dry-run is skipped when the `mediasoup` crate version is already published, because Cargo would then resolve the dependencies among the three crates against the already-published copies on crates.io and any schema/API change made since the last release would fail verification spuriously even though nothing is being published.
 
@@ -131,13 +132,15 @@ The publish dry-run is skipped when the `mediasoup` crate version is already pub
 
 Prepares and triggers the release of a new version "x.y.z" of a mediasoup Rust crate (`mediasoup`, `mediasoup-sys` or `mediasoup-types`). The actual GitHub release (if any) and crates.io publish are done by GitHub Actions (`mediasoup-crate-publish.yaml`) once the pushed commit/tag arrives. It:
 
-- Performs checks (lint + test + build + publish dry-run, plus the `rust/CHANGELOG.md` entry check when releasing the `mediasoup` crate). They run before the version bump, so the CHANGELOG check validates the previous version's entry (still in the manifest), which is harmless.
+- For `mediasoup` / `mediasoup-types`: verifies that the first section of the crate's CHANGELOG (`rust/CHANGELOG.md` or `rust/types/CHANGELOG.md`) is `### NEXT` and that it is not empty.
+- Performs checks (lint + test + build + publish dry-run).
 - Bumps the crate version to "x.y.z" in its `Cargo.toml` (`rust/Cargo.toml`, `worker/Cargo.toml` or `rust/types/Cargo.toml`) and reflects it in the (workspace root) `Cargo.lock`. When releasing `mediasoup-sys` / `mediasoup-types`, it also bumps the matching `version` requirement of that dependency in the `mediasoup` crate's `rust/Cargo.toml` (committed together with the release), so the `mediasoup` crate keeps depending on the just-released version.
+- For `mediasoup` / `mediasoup-types`: sets the top `### NEXT` heading of the crate's CHANGELOG to `### x.y.z`.
 
 Then, depending on the crate:
 
-- For `mediasoup`: it also sets the top `### NEXT` heading of `rust/CHANGELOG.md` to `### x.y.z`, commits the bump (with a `release rust-x.y.z [no-ci]` message), creates the `rust-x.y.z` tag and pushes the branch and the tag. The tag triggers `mediasoup-crate-publish.yaml`, which creates the GitHub release from `rust/CHANGELOG.md` and publishes the crate.
-- For `mediasoup-sys` / `mediasoup-types`: it commits the bump with a `<crate> x.y.z [crate-publish] [no-ci]` message and pushes the branch (no tag, no CHANGELOG change). The `[crate-publish]` marker is what `mediasoup-crate-publish.yaml` detects on the branch push to publish that crate (without a GitHub release).
+- For `mediasoup`: it commits the bump (with a `release rust-x.y.z [no-ci]` message), creates the `rust-x.y.z` tag and pushes the branch and the tag. The tag triggers `mediasoup-crate-publish.yaml`, which creates the GitHub release from `rust/CHANGELOG.md` and publishes the crate.
+- For `mediasoup-sys` / `mediasoup-types`: it commits the bump with a `<crate> x.y.z [crate-publish] [no-ci]` message and pushes the branch (no tag). The `[crate-publish]` marker is what `mediasoup-crate-publish.yaml` detects on the branch push to publish that crate (without a GitHub release).
 
 Since `mediasoup` depends on `mediasoup-sys` and `mediasoup-types`, when several crates need a new version publish the dependencies first (`mediasoup-types` / `mediasoup-sys`) and `mediasoup` last, so each crate's dependencies are already on crates.io. The releases can be run back to back without waiting for the dependencies' GitHub Actions runs to complete: `mediasoup-crate-publish.yaml` runs are serialized through a single concurrency queue, so the `mediasoup` one stays queued until the sibling crates are published (see [Rust-crates.md](Rust-crates.md)). Requirements for it to work:
 
@@ -145,7 +148,7 @@ Since `mediasoup` depends on `mediasoup-sys` and `mediasoup-types`, when several
 - Must be in the main branch.
 - Work tree must be clean.
 - `Cargo.lock` must be in sync (run `cargo build` and commit it if needed), otherwise the release aborts before doing anything irreversible.
-- When releasing the `mediasoup` crate, the changes for the new version must be under the `### NEXT` heading in `rust/CHANGELOG.md`.
+- When releasing the `mediasoup` / `mediasoup-types` crate, the changes for the new version must be under the `### NEXT` heading in `rust/CHANGELOG.md` / `rust/types/CHANGELOG.md`.
 
 ## Rust
 
