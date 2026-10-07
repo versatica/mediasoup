@@ -369,7 +369,7 @@ impl<'a> TryFromFbs<'a> for Notification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
-    used_sctp_stream_ids: Mutex<IntMap<u16, bool>>,
+    used_sctp_stream_ids: Mutex<Vec<bool>>,
     next_sctp_stream_id: Mutex<u16>,
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
@@ -654,7 +654,7 @@ impl TransportImpl for PipeTransport {
             .map(|caps| caps.negotiated_max_outbound_streams)
     }
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
+    fn used_sctp_stream_ids(&self) -> &Mutex<Vec<bool>> {
         &self.inner.used_sctp_stream_ids
     }
 
@@ -712,15 +712,8 @@ impl PipeTransport {
         };
 
         let next_mid_for_consumers = AtomicUsize::default();
-        let used_sctp_stream_ids = Mutex::new({
-            let mut used_sctp_stream_ids = IntMap::default();
-
-            for i in 0..=65535 {
-                used_sctp_stream_ids.insert(i, false);
-            }
-
-            used_sctp_stream_ids
-        });
+        // NOTE: 65535 is the maximum number of streams in a SCTP association.
+        let used_sctp_stream_ids = Mutex::new(vec![false; 65535]);
         let next_sctp_stream_id = Mutex::new(0);
         let cname_for_producers = Mutex::new(None);
         let sctp_negotiated_capabilities = Mutex::new(None);

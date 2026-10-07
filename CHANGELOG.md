@@ -6,6 +6,7 @@
 - SCTP: Fix deferred stream reset with an empty stream list not deferring incoming data ([PR #1967](https://github.com/versatica/mediasoup/pull/1967)).
 - Worker: Space in time RTP retransmissions triggered by NACKs ([PR #1965](https://github.com/versatica/mediasoup/pull/1965)).
 - Remove `rtpPacketLossReceived` and `rtpPacketLossSent` transport custom stats ([PR #1968](https://github.com/versatica/mediasoup/pull/1968)).
+- Store used SCTP stream ids in a Vec instead of an IntMap ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 3.28.0
 
