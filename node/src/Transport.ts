@@ -10,6 +10,7 @@ import type {
 	TransportSocketFlags,
 	TransportTuple,
 	SctpState,
+	SctpZeroChecksum,
 	RtpListenerDump,
 	SctpListenerDump,
 	RecvRtpHeaderExtensions,
@@ -1123,6 +1124,28 @@ export function serializeProtocol(
 
 		case 'tcp': {
 			return FbsTransport.Protocol.TCP;
+		}
+	}
+}
+
+export function serializeSctpZeroChecksum(
+	sctpZeroChecksum: SctpZeroChecksum
+): FbsTransport.SctpZeroChecksum {
+	switch (sctpZeroChecksum) {
+		case 'sctp-over-dtls': {
+			return FbsTransport.SctpZeroChecksum.SCTP_OVER_DTLS;
+		}
+
+		case 'trusted-network': {
+			return FbsTransport.SctpZeroChecksum.TRUSTED_NETWORK;
+		}
+
+		case 'none': {
+			return FbsTransport.SctpZeroChecksum.NONE;
+		}
+
+		default: {
+			throw new TypeError(`invalid sctpZeroChecksum: ${sctpZeroChecksum}`);
 		}
 	}
 }

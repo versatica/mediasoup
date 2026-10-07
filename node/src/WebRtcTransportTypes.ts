@@ -6,6 +6,7 @@ import type {
 	TransportProtocol,
 	TransportTuple,
 	SctpState,
+	SctpZeroChecksum,
 	BaseTransportDump,
 	BaseTransportStats,
 	TransportEvents,
@@ -98,6 +99,12 @@ type WebRtcTransportOptionsBase<WebRtcTransportAppData> = {
 	 * Default 1024.
 	 */
 	sctpDefaultStreamBufferedAmountLowThreshold?: number;
+
+	/**
+	 * SCTP Zero Checksum (RFC 9653) alternate error detection method to
+	 * announce. Default 'sctp-over-dtls'.
+	 */
+	sctpZeroChecksum?: SctpZeroChecksum;
 
 	/**
 	 * Custom application data.

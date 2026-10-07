@@ -34,7 +34,7 @@ use mediasoup_types::data_structures::{
     ListenInfo, SctpState, TransportTuple,
 };
 use mediasoup_types::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
-use mediasoup_types::sctp_parameters::{SctpParameters, SctpStreamParameters};
+use mediasoup_types::sctp_parameters::{SctpParameters, SctpStreamParameters, SctpZeroChecksum};
 use mediasoup_types::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use parking_lot::Mutex;
 use planus::Builder;
@@ -566,6 +566,7 @@ impl ToFbs for RouterCreateDirectTransportData {
                 sctp_per_stream_send_queue_limit: 0,
                 sctp_max_receiver_window_buffer_size: 0,
                 sctp_default_stream_buffered_amount_low_threshold: 0,
+                sctp_zero_checksum: transport::SctpZeroChecksum::None,
                 enable_sctp: false,
                 is_data_channel: false,
             }),
@@ -665,6 +666,7 @@ pub(crate) struct RouterCreateWebrtcTransportData {
     sctp_per_stream_send_queue_limit: u32,
     sctp_max_receiver_window_buffer_size: u32,
     sctp_default_stream_buffered_amount_low_threshold: u32,
+    sctp_zero_checksum: SctpZeroChecksum,
     is_data_channel: bool,
 }
 
@@ -704,6 +706,7 @@ impl RouterCreateWebrtcTransportData {
                 .sctp_max_receiver_window_buffer_size,
             sctp_default_stream_buffered_amount_low_threshold: webrtc_transport_options
                 .sctp_default_stream_buffered_amount_low_threshold,
+            sctp_zero_checksum: webrtc_transport_options.sctp_zero_checksum,
             is_data_channel: true,
         }
     }
@@ -725,6 +728,7 @@ impl ToFbs for RouterCreateWebrtcTransportData {
                 sctp_max_receiver_window_buffer_size: self.sctp_max_receiver_window_buffer_size,
                 sctp_default_stream_buffered_amount_low_threshold: self
                     .sctp_default_stream_buffered_amount_low_threshold,
+                sctp_zero_checksum: self.sctp_zero_checksum.to_fbs(),
                 is_data_channel: true,
             }),
             listen: self.listen.to_fbs(),
@@ -903,6 +907,7 @@ pub(crate) struct RouterCreatePlainTransportData {
     sctp_per_stream_send_queue_limit: u32,
     sctp_max_receiver_window_buffer_size: u32,
     sctp_default_stream_buffered_amount_low_threshold: u32,
+    sctp_zero_checksum: SctpZeroChecksum,
     is_data_channel: bool,
     enable_srtp: bool,
     srtp_crypto_suite: SrtpCryptoSuite,
@@ -929,6 +934,7 @@ impl RouterCreatePlainTransportData {
                 .sctp_max_receiver_window_buffer_size,
             sctp_default_stream_buffered_amount_low_threshold: plain_transport_options
                 .sctp_default_stream_buffered_amount_low_threshold,
+            sctp_zero_checksum: plain_transport_options.sctp_zero_checksum,
             is_data_channel: false,
             enable_srtp: plain_transport_options.enable_srtp,
             srtp_crypto_suite: plain_transport_options.srtp_crypto_suite,
@@ -952,6 +958,7 @@ impl ToFbs for RouterCreatePlainTransportData {
                 sctp_max_receiver_window_buffer_size: self.sctp_max_receiver_window_buffer_size,
                 sctp_default_stream_buffered_amount_low_threshold: self
                     .sctp_default_stream_buffered_amount_low_threshold,
+                sctp_zero_checksum: self.sctp_zero_checksum.to_fbs(),
                 is_data_channel: self.is_data_channel,
             }),
             listen_info: Box::new(self.listen_info.clone().to_fbs()),
@@ -1050,6 +1057,7 @@ pub(crate) struct RouterCreatePipeTransportData {
     sctp_per_stream_send_queue_limit: u32,
     sctp_max_receiver_window_buffer_size: u32,
     sctp_default_stream_buffered_amount_low_threshold: u32,
+    sctp_zero_checksum: SctpZeroChecksum,
     is_data_channel: bool,
     enable_rtx: bool,
     enable_srtp: bool,
@@ -1073,6 +1081,7 @@ impl RouterCreatePipeTransportData {
                 .sctp_max_receiver_window_buffer_size,
             sctp_default_stream_buffered_amount_low_threshold: pipe_transport_options
                 .sctp_default_stream_buffered_amount_low_threshold,
+            sctp_zero_checksum: pipe_transport_options.sctp_zero_checksum,
             is_data_channel: false,
             enable_rtx: pipe_transport_options.enable_rtx,
             enable_srtp: pipe_transport_options.enable_srtp,
@@ -1096,6 +1105,7 @@ impl ToFbs for RouterCreatePipeTransportData {
                 sctp_max_receiver_window_buffer_size: self.sctp_max_receiver_window_buffer_size,
                 sctp_default_stream_buffered_amount_low_threshold: self
                     .sctp_default_stream_buffered_amount_low_threshold,
+                sctp_zero_checksum: self.sctp_zero_checksum.to_fbs(),
                 is_data_channel: self.is_data_channel,
             }),
             listen_info: Box::new(self.listen_info.clone().to_fbs()),

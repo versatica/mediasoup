@@ -21,7 +21,9 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{notification, pipe_transport, response, sctp_association, transport};
 use mediasoup_types::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
-use mediasoup_types::sctp_parameters::{SctpNegotiatedCapabilities, SctpParameters};
+use mediasoup_types::sctp_parameters::{
+    SctpNegotiatedCapabilities, SctpParameters, SctpZeroChecksum,
+};
 use mediasoup_types::srtp_parameters::SrtpParameters;
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
@@ -64,6 +66,9 @@ pub struct PipeTransportOptions {
     /// via DataConsumer::set_buffered_amount_low_threshold().
     /// Default 1024.
     pub sctp_default_stream_buffered_amount_low_threshold: u32,
+    /// SCTP Zero Checksum (RFC 9653) alternate error detection method to announce.
+    /// Default `SctpZeroChecksum::None`.
+    pub sctp_zero_checksum: SctpZeroChecksum,
     /// Enable RTX and NACK for RTP retransmission. Useful if both Routers are located in different
     /// hosts and there is packet lost in the link. For this to work, both PipeTransports must
     /// enable this setting.
@@ -90,6 +95,7 @@ impl PipeTransportOptions {
             sctp_per_stream_send_queue_limit: 2_000_000,
             sctp_max_receiver_window_buffer_size: 5_242_880,
             sctp_default_stream_buffered_amount_low_threshold: 1024,
+            sctp_zero_checksum: SctpZeroChecksum::None,
             enable_rtx: false,
             enable_srtp: false,
             app_data: AppData::default(),

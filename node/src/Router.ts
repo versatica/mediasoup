@@ -17,7 +17,11 @@ import type {
 	TransportListenIp,
 	TransportProtocol,
 } from './TransportTypes';
-import { portRangeToFbs, socketFlagsToFbs } from './Transport';
+import {
+	portRangeToFbs,
+	socketFlagsToFbs,
+	serializeSctpZeroChecksum,
+} from './Transport';
 import type {
 	WebRtcTransport,
 	WebRtcTransportOptions,
@@ -307,6 +311,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
 		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
+		sctpZeroChecksum = 'sctp-over-dtls',
 		iceConsentTimeout = 30,
 		appData,
 	}: WebRtcTransportOptions<WebRtcTransportAppData>): Promise<
@@ -428,6 +433,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			sctpPerStreamSendQueueLimit,
 			sctpMaxReceiverWindowBufferSize,
 			sctpDefaultStreamBufferedAmountLowThreshold,
+			serializeSctpZeroChecksum(sctpZeroChecksum),
 			/* isDataChannel */ true
 		);
 
@@ -528,6 +534,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
 		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
+		sctpZeroChecksum = 'none',
 		enableSrtp = false,
 		srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 		appData,
@@ -583,6 +590,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			sctpPerStreamSendQueueLimit,
 			sctpMaxReceiverWindowBufferSize,
 			sctpDefaultStreamBufferedAmountLowThreshold,
+			serializeSctpZeroChecksum(sctpZeroChecksum),
 			/* isDataChannel */ false
 		);
 
@@ -694,6 +702,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
 		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
+		sctpZeroChecksum = 'none',
 		enableRtx = false,
 		enableSrtp = false,
 		appData,
@@ -740,6 +749,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			sctpPerStreamSendQueueLimit,
 			sctpMaxReceiverWindowBufferSize,
 			sctpDefaultStreamBufferedAmountLowThreshold,
+			serializeSctpZeroChecksum(sctpZeroChecksum),
 			/* isDataChannel */ false
 		);
 
@@ -851,6 +861,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			/* sctpPerStreamSendQueueLimit */ undefined,
 			/* sctpMaxReceiverWindowBufferSize */ undefined,
 			/* sctpDefaultStreamBufferedAmountLowThreshold */ undefined,
+			/* sctpZeroChecksum */ undefined,
 			/* isDataChannel */ undefined
 		);
 
@@ -932,6 +943,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
 		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
+		sctpZeroChecksum = 'trusted-network',
 		enableRtx = false,
 		enableSrtp = false,
 	}: PipeToRouterOptions): Promise<PipeToRouterResult> {
@@ -1010,6 +1022,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 						sctpPerStreamSendQueueLimit,
 						sctpMaxReceiverWindowBufferSize,
 						sctpDefaultStreamBufferedAmountLowThreshold,
+						sctpZeroChecksum,
 						enableRtx,
 						enableSrtp,
 					}),
@@ -1022,6 +1035,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 						sctpPerStreamSendQueueLimit,
 						sctpMaxReceiverWindowBufferSize,
 						sctpDefaultStreamBufferedAmountLowThreshold,
+						sctpZeroChecksum,
 						enableRtx,
 						enableSrtp,
 					}),
