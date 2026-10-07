@@ -275,8 +275,6 @@ namespace Utils
 		static thread_local EVP_MAC* mac;
 		static thread_local EVP_MAC_CTX* hmacSha1Ctx;
 		static thread_local uint8_t hmacSha1Buffer[];
-		static const uint32_t Crc32Table[256];
-		static const uint32_t Crc32cTable[256];
 	};
 
 	class String
