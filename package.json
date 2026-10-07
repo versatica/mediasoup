@@ -129,14 +129,14 @@
 		"globals": "^17.13.0",
 		"ini": "^7.0.0",
 		"jest": "^30.5.2",
-		"knip": "^6.39.0",
-		"marked": "^18.0.14",
+		"knip": "^6.40.0",
+		"marked": "^18.1.0",
 		"open-cli": "^9.0.0",
 		"pick-port": "^2.2.1",
 		"prettier": "^3.9.9",
 		"ts-jest": "^29.4.14",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.71.0",
+		"typescript-eslint": "^8.71.1",
 		"werift-sctp": "^0.0.11"
 	},
 	"allowScripts": {

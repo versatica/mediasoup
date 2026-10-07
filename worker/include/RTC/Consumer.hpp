@@ -154,7 +154,13 @@ namespace RTC
 		uint8_t GetWorstRemoteFractionLost(uint32_t mappedSsrc) const;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc);
-		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
+		/**
+		 * @returns What the link to the remote endpoint lost and what it was expected
+		 *   to deliver since the previous Receiver Report, or no value if this one
+		 *   measures no interval at all.
+		 */
+		std::optional<RTC::RTP::RtpStreamSend::Loss> ReceiveRtcpReceiverReport(
+		  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
 		void ReceiveRtcpXrReceiverReferenceTime(
 		  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
 		int64_t GetTransmissionRate(int64_t nowMs);

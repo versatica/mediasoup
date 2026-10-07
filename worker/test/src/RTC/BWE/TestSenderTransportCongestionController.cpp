@@ -263,6 +263,42 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		REQUIRE(listener.targetBitrates.back() == StartBitrate);
 	}
 
+	SECTION("the loss the Receiver Reports measure brings the target down")
+	{
+		runProcessTimer();
+
+		const int64_t targetBeforeLoss = listener.targetBitrates.back();
+
+		// Well above the tenth of the packets where the loss rules start cutting.
+		for (size_t idx{ 0 }; idx < 10; ++idx)
+		{
+			senderTransportCongestionController.ReceiveRtcpReceiverReport(30, 100);
+
+			runProcessTimer();
+		}
+
+		REQUIRE(listener.targetBitrates.back() < targetBeforeLoss);
+	}
+
+	SECTION("a stretch where nothing got through at all is not a measurement")
+	{
+		runProcessTimer();
+
+		REQUIRE(listener.targetBitrates.size() == 1);
+
+		// Not a single packet arriving is a stretch the remote endpoint could not
+		// report on rather than a loss of everything, so it is left out instead of
+		// being fed as the worst measurement there is.
+		for (size_t idx{ 0 }; idx < 10; ++idx)
+		{
+			senderTransportCongestionController.ReceiveRtcpReceiverReport(100, 100);
+
+			runProcessTimer();
+		}
+
+		REQUIRE(listener.targetBitrates.size() == 1);
+	}
+
 	SECTION("changing the bounds does not send the target back to where it started")
 	{
 		runProcessTimer();

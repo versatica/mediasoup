@@ -16,6 +16,22 @@ namespace RTC
 	{
 		class RtpStream
 		{
+		public:
+			/**
+			 * Largest jump forward in sequence number taken as a gap within the stream
+			 * rather than as a restart of it.
+			 */
+			static constexpr uint16_t MaxDropout{ 3000 };
+			/**
+			 * How far back a sequence number may land for its packet to be taken as
+			 * reordered rather than as a restart of the stream.
+			 */
+			static constexpr uint16_t MaxMisorder{ 1500 };
+			/**
+			 * Size of the RTP sequence number space, which is where it wraps around.
+			 */
+			static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+
 		protected:
 			class Listener
 			{
@@ -169,6 +185,11 @@ namespace RTC
 			uint8_t GetFractionLost() const
 			{
 				return this->fractionLost;
+			}
+
+			int32_t GetPacketsLost() const
+			{
+				return this->packetsLost;
 			}
 
 			float GetLossPercentage() const

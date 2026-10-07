@@ -11,9 +11,6 @@ namespace RTC
 	{
 		/* Static. */
 
-		static constexpr uint16_t MaxDropout{ 3000 };
-		static constexpr uint16_t MaxMisorder{ 1500 };
-		static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 		static constexpr size_t ScoreHistogramLength{ 24 };
 
 		/* Instance methods. */

@@ -1526,13 +1526,14 @@ namespace RTC
 		}
 	}
 
-	void Consumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
+	std::optional<RTC::RTP::RtpStreamSend::Loss> Consumer::ReceiveRtcpReceiverReport(
+	  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		auto* rtpStream = this->mapSsrcRtpStream.at(report->GetSsrc());
 
-		rtpStream->ReceiveRtcpReceiverReport(report, receivedAtUs);
+		return rtpStream->ReceiveRtcpReceiverReport(report, receivedAtUs);
 	}
 
 	void Consumer::ReceiveRtcpXrReceiverReferenceTime(
