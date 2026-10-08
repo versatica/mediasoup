@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.8.0
+
 - Remove `RtpHeaderExtensionUri::Unsupported` variant ([PR #1980](https://github.com/versatica/mediasoup/pull/1980)).
 
 ### 0.7.0
