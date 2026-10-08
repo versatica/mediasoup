@@ -541,9 +541,9 @@ pub enum RtpHeaderExtensionDirection {
 /// Error that caused [`RtpHeaderExtensionUri`] parsing error.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RtpHeaderExtensionUriParseError {
-    /// Unsupported
-    #[error("Unsupported")]
-    Unsupported,
+    /// Unsupported URI.
+    #[error("Unsupported RTP header extension URI: {0}")]
+    Unsupported(String),
 }
 
 /// URI for supported RTP header extension
@@ -606,7 +606,7 @@ impl FromStr for RtpHeaderExtensionUri {
             }
             "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay" => Ok(Self::PlayoutDelay),
             "urn:mediasoup:params:rtp-hdrext:packet-id" => Ok(Self::MediasoupPacketId),
-            _ => Err(RtpHeaderExtensionUriParseError::Unsupported),
+            _ => Err(RtpHeaderExtensionUriParseError::Unsupported(s.to_string())),
         }
     }
 }

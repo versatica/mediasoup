@@ -56,7 +56,9 @@ fn rtp_header_extension_uri_serde() {
 
         assert_eq!(
             RtpHeaderExtensionUri::from_str("urn:ietf:params:rtp-hdrext:chicken"),
-            Err(RtpHeaderExtensionUriParseError::Unsupported)
+            Err(RtpHeaderExtensionUriParseError::Unsupported(
+                "urn:ietf:params:rtp-hdrext:chicken".to_string()
+            ))
         );
     }
 }
