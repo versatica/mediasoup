@@ -18,6 +18,7 @@
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SCTP/association/Association.hpp"
+#include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SubchannelsCodec.hpp"
 #include "Utils.hpp"
@@ -93,6 +94,32 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
 			}
 
+			RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod
+			  zeroChecksumAlternateErrorDetectionMethod{
+				  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
+			  };
+
+			switch (options->sctpZeroChecksum())
+			{
+				case FBS::Transport::SctpZeroChecksum::SCTP_OVER_DTLS:
+				{
+					zeroChecksumAlternateErrorDetectionMethod =
+					  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
+
+					break;
+				}
+
+				case FBS::Transport::SctpZeroChecksum::TRUSTED_NETWORK:
+				{
+					zeroChecksumAlternateErrorDetectionMethod =
+					  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK;
+
+					break;
+				}
+
+				default:;
+			}
+
 			const RTC::SCTP::SctpOptions sctpOptions = {
 				.mtu                         = RTC::Consts::MaxSafeMtuSizeForSctp,
 				.maxSendMessageSize          = this->maxSendMessageSize,
@@ -102,7 +129,8 @@ namespace RTC
 				.maxReceiverWindowBufferSize = options->sctpMaxReceiverWindowBufferSize(),
 				.defaultStreamBufferedAmountLowThreshold =
 				  options->sctpDefaultStreamBufferedAmountLowThreshold(),
-				.requireAuthenticatedCookie = requireSctpStateCookieAuthentication
+				.zeroChecksumAlternateErrorDetectionMethod = zeroChecksumAlternateErrorDetectionMethod,
+				.requireAuthenticatedCookie                = requireSctpStateCookieAuthentication
 			};
 
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(

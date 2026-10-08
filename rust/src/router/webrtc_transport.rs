@@ -28,7 +28,9 @@ use mediasoup_types::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
     SctpState, TransportTuple,
 };
-use mediasoup_types::sctp_parameters::{SctpNegotiatedCapabilities, SctpParameters};
+use mediasoup_types::sctp_parameters::{
+    SctpNegotiatedCapabilities, SctpParameters, SctpZeroChecksum,
+};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -159,6 +161,9 @@ pub struct WebRtcTransportOptions {
     /// via DataConsumer::set_buffered_amount_low_threshold().
     /// Default 1024.
     pub sctp_default_stream_buffered_amount_low_threshold: u32,
+    /// SCTP Zero Checksum (RFC 9653) alternate error detection method to announce.
+    /// Default `SctpZeroChecksum::SctpOverDtls`.
+    pub sctp_zero_checksum: SctpZeroChecksum,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -182,6 +187,7 @@ impl WebRtcTransportOptions {
             sctp_per_stream_send_queue_limit: 2_000_000,
             sctp_max_receiver_window_buffer_size: 5_242_880,
             sctp_default_stream_buffered_amount_low_threshold: 1024,
+            sctp_zero_checksum: SctpZeroChecksum::SctpOverDtls,
             app_data: AppData::default(),
         }
     }
@@ -203,6 +209,7 @@ impl WebRtcTransportOptions {
             sctp_per_stream_send_queue_limit: 2_000_000,
             sctp_max_receiver_window_buffer_size: 5_242_880,
             sctp_default_stream_buffered_amount_low_threshold: 1024,
+            sctp_zero_checksum: SctpZeroChecksum::SctpOverDtls,
             app_data: AppData::default(),
         }
     }

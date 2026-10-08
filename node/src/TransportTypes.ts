@@ -136,6 +136,19 @@ export type TransportTuple = {
 export type SctpState =
 	'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 
+/**
+ * SCTP Zero Checksum (RFC 9653) alternate error detection method announced
+ * to the remote SCTP endpoint. The CRC32c checksum is only skipped if the
+ * remote endpoint announces the same method.
+ *
+ * - 'sctp-over-dtls': SCTP over DTLS, as defined in RFC 9653.
+ * - 'trusted-network': mediasoup specific method (not assigned by IANA), only
+ *   meant to be used between mediasoup endpoints over a trusted network path
+ *   (such as localhost).
+ * - 'none': Zero Checksum is not announced.
+ */
+export type SctpZeroChecksum = 'sctp-over-dtls' | 'trusted-network' | 'none';
+
 export type RtpListenerDump = {
 	ssrcTable: { key: number; value: string }[];
 	midTable: { key: number; value: string }[];

@@ -38,7 +38,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// - re-config: 1
 			// Magic 2: 0xAD81
 			0x00, 0b00000101, 0xAD, 0x81,
-			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (1)
+			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (0x00000001)
 			0x00, 0x00, 0x00, 0x01,
 			// Max Outbound Streams: 15000, Max Inbound Streams: 2500
 			0x3A, 0x98, 0x09, 0xC4
@@ -50,7 +50,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		  RTC::SCTP::StateCookie::DetermineSctpImplementation(buffer, sizeof(buffer)) ==
 		  RTC::SCTP::Types::SctpImplementation::MEDIASOUP);
 
-		auto* stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
+		auto* const stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == buffer);
@@ -118,7 +118,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Clone it. */
 
-		auto* clonedStateCookie =
+		auto* const clonedStateCookie =
 		  stateCookie->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
@@ -185,7 +185,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// - re-config: 1
 			// Magic 2: 0xAD81
 			0x00, 0b00000101, 0xAD, 0x81,
-			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (1)
+			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (0x00000001)
 			0x00, 0x00, 0x00, 0x01,
 			// Max Outbound Streams: 15000, Max Inbound Streams: 2500
 			0x3A, 0x98, 0x09, 0xC4
@@ -224,7 +224,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// - re-config: 1
 			// Magic 2: 0xAD82 (instead of 0xAD81)
 			0x00, 0b00000101, 0xAD, 0x82,
-			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (1)
+			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (0x00000001)
 			0x00, 0x00, 0x00, 0x01,
 			// Max Outbound Streams: 15000, Max Inbound Streams: 2500
 			0x3A, 0x98, 0x09, 0xC4
@@ -263,7 +263,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// - re-config: 1
 			// Magic 2: 0xAD81
 			0x00, 0b00000101, 0xAD, 0x81,
-			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (1)
+			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (0x00000001)
 			0x00, 0x00, 0x00, 0x01,
 			// Max Outbound Streams: 15000, Max Inbound Streams: 2500
 			0x3A, 0x98, 0x09, 0xC4,
@@ -304,7 +304,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// Remote Capabilities
 			// Magic 2: 0xAD81
 			0x00, 0b00000101, 0xAD, 0x81,
-			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (1)
+			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (0x00000001)
 			0x00, 0x00, 0x00, 0x01,
 			// Max Outbound Streams: 15000, Max Inbound Streams: 2500
 			0x3A, 0x98, 0x09, 0xC4
@@ -339,7 +339,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			// Remote Capabilities
 			// Magic 2: 0xAD81
 			0x00, 0b00000101, 0xAD, 0x81,
-			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (1)
+			// Zero Checksum Alternate Error Detection Method: SCTP_OVER_DTLS (0x00000001)
 			0x00, 0x00, 0x00, 0x01,
 			// Max Outbound Streams: 15000, Max Inbound Streams: 2500
 			0x3A, 0x98, 0x09, 0xC4
@@ -362,7 +362,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 		};
 
-		auto* stateCookie = RTC::SCTP::StateCookie::Factory(
+		auto* const stateCookie = RTC::SCTP::StateCookie::Factory(
 		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*localVerificationTag*/ 6660666,
@@ -409,7 +409,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedStateCookie =
+		auto* const parsedStateCookie =
 		  RTC::SCTP::StateCookie::Parse(stateCookie->GetBuffer(), stateCookie->GetLength());
 
 		delete stateCookie;
@@ -458,7 +458,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 		};
 
-		auto* buffer = sctpCommon::FactoryBuffer;
+		auto* const buffer = sctpCommon::FactoryBuffer;
 
 		RTC::SCTP::StateCookie::Write(
 		  /*buffer*/ buffer,
@@ -478,7 +478,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Parse the buffer. */
 
-		auto* stateCookie =
+		auto* const stateCookie =
 		  RTC::SCTP::StateCookie::Parse(buffer, RTC::SCTP::StateCookie::StateCookieLength);
 
 		REQUIRE(stateCookie);
@@ -508,6 +508,71 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(retrievedRemoteCapabilities.reConfig == true);
 		REQUIRE(
 		  retrievedRemoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
+
+		delete stateCookie;
+	}
+
+	SECTION("StateCookie keeps known Zero Checksum Alternate Error Detection Methods only")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// Magic 1: 0x6D73776F726B6572
+			0x6D, 0x73, 0x77, 0x6F,
+			0x72, 0x6B, 0x65, 0x72,
+			// Local Verification Tag: 11223344
+			0x00, 0xAB, 0x41, 0x30,
+			// Remote Verification Tag: 55667788
+			0x03, 0x51, 0x6C, 0x4C,
+			// Local Initial TSN: 12345678
+			0x00, 0xBC, 0x61, 0x4E,
+			// Remote Initial TSN: 87654321
+			0x05, 0x39, 0x7F, 0xB1,
+			// Remote Advertised Receiver Window Credit (a_rwnd): 66666666
+			0x03, 0xF9, 0x40, 0xAA,
+			// Tie-Tag: 0xABCDEF0011223344
+			0xAB, 0xCD, 0xEF, 0x00,
+			0x11, 0x22, 0x33, 0x44,
+			// Remote Capabilities
+			// - partialReliability: 1
+			// - messageInterleaving: 0
+			// - re-config: 1
+			// Magic 2: 0xAD81
+			0x00, 0b00000101, 0xAD, 0x81,
+			// Zero Checksum Alternate Error Detection Method: TRUSTED_NETWORK (0xFFFFFFFE)
+			0xFF, 0xFF, 0xFF, 0xFE,
+			// Max Outbound Streams: 15000, Max Inbound Streams: 2500
+			0x3A, 0x98, 0x09, 0xC4
+		};
+		// clang-format on
+
+		auto* stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(stateCookie);
+
+		auto remoteCapabilities = stateCookie->GetRemoteCapabilities();
+
+		REQUIRE(
+		  remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK);
+
+		delete stateCookie;
+
+		// Unknown Zero Checksum Alternate Error Detection Method (0x00000002).
+		buffer[40] = 0x00;
+		buffer[41] = 0x00;
+		buffer[42] = 0x00;
+		buffer[43] = 0x02;
+
+		stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(stateCookie);
+
+		remoteCapabilities = stateCookie->GetRemoteCapabilities();
+
+		REQUIRE(
+		  remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod ==
 		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
 
 		delete stateCookie;
@@ -618,7 +683,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		                                      0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
 		const int64_t creationTimestampUs = 1234567890;
 
-		auto* buffer = sctpCommon::FactoryBuffer;
+		auto* const buffer = sctpCommon::FactoryBuffer;
 
 		RTC::SCTP::StateCookie::Write(
 		  /*buffer*/ buffer,
@@ -642,7 +707,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Parse it. */
 
-		auto* stateCookie =
+		auto* const stateCookie =
 		  RTC::SCTP::StateCookie::Parse(buffer, RTC::SCTP::StateCookie::AuthenticatedStateCookieLength);
 
 		REQUIRE(stateCookie);
@@ -706,7 +771,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		const uint8_t macKey[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77 };
 
-		auto* buffer = sctpCommon::FactoryBuffer;
+		auto* const buffer = sctpCommon::FactoryBuffer;
 
 		// Write a plain (48 bytes) cookie.
 		RTC::SCTP::StateCookie::Write(

@@ -17,7 +17,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 		{
 			// Type:32769 (ZERO-CHECKSUM-ACCEPTABLE), Length: 8
 			0x80, 0x01, 0x00, 0x08,
-			// Alternate Error Detection Method (EDMID) : 0x0001
+			// Alternate Error Detection Method (EDMID) : 0x00000001
 			0x00, 0x00, 0x00, 0x01,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
@@ -25,7 +25,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 		};
 		// clang-format on
 
-		auto* parameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Parse(buffer, sizeof(buffer));
+		auto* const parameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
@@ -61,7 +61,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 
 		/* Clone it. */
 
-		auto* clonedParameter =
+		auto* const clonedParameter =
 		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
 		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
@@ -84,9 +84,41 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 		delete clonedParameter;
 	}
 
+	SECTION("ZeroChecksumAcceptableParameter::GetAlternateErrorDetectionMethod() succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// Type:32769 (ZERO-CHECKSUM-ACCEPTABLE), Length: 8
+			0x80, 0x01, 0x00, 0x08,
+			// Alternate Error Detection Method (EDMID) : 0xFFFFFFFE
+			0xFF, 0xFF, 0xFF, 0xFE
+		};
+		// clang-format on
+
+		auto* const parameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(parameter);
+		REQUIRE(
+		  parameter->GetAlternateErrorDetectionMethod() ==
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK);
+
+		// Unknown Alternate Error Detection Method (0x00000002).
+		parameter->SetAlternateErrorDetectionMethod(
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		  static_cast<RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(
+		    0x00000002));
+
+		REQUIRE(
+		  parameter->GetAlternateErrorDetectionMethod() ==
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
+
+		delete parameter;
+	}
+
 	SECTION("ZeroChecksumAcceptableParameter::Factory() succeeds")
 	{
-		auto* parameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Factory(
+		auto* const parameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Factory(
 		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_PARAMETER(
@@ -122,7 +154,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[serializable][sctp][par
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Parse(
+		auto* const parsedParameter = RTC::SCTP::ZeroChecksumAcceptableParameter::Parse(
 		  parameter->GetBuffer(), parameter->GetLength());
 
 		delete parameter;
