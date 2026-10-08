@@ -12,6 +12,7 @@
 - SCTP: Add `sctpZeroChecksum` option to enable SCTP Zero Checksum (RFC 9653) ([PR #1977](https://github.com/versatica/mediasoup/pull/1977)).
 - Worker: Compute CRC32 and CRC32c with the slice-by-8 algorithm ([PR #1976](https://github.com/versatica/mediasoup/pull/1976)).
 - Fix: Do not panic when JSON `RtpParameters` include an unsupported RTP header extension URI ([PR #1980](https://github.com/versatica/mediasoup/pull/1980)).
+- Worker: Update Meson subprojects ([PR #1981](https://github.com/versatica/mediasoup/pull/1981)).
 
 ### 0.29.0
 
