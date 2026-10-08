@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/Consts.hpp"
 #include <openssl/evp.h>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
@@ -275,8 +276,14 @@ namespace Utils
 		static thread_local EVP_MAC* mac;
 		static thread_local EVP_MAC_CTX* hmacSha1Ctx;
 		static thread_local uint8_t hmacSha1Buffer[];
-		static const uint32_t Crc32Table[256];
-		static const uint32_t Crc32cTable[256];
+		// Number of input bytes consumed per iteration of the slice-by-8 loop.
+		static constexpr size_t CrcSlices{ 8u };
+		using CrcTables = std::array<std::array<uint32_t, 256>, CrcSlices>;
+		static const CrcTables crc32Tables;
+		static const CrcTables crc32cTables;
+		static constexpr CrcTables generateCrcTables(uint32_t polynomial) noexcept;
+		static uint32_t ReadLe32(const uint8_t* data);
+		static uint32_t ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size);
 	};
 
 	class String
