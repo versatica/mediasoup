@@ -82,7 +82,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		REQUIRE(packet);
 
 		/* clang-format off */
-		std::vector<struct TestFeedbackRtpTransportInput> inputs =
+		std::vector<TestFeedbackRtpTransportInput> inputs =
 		{
 			{ 999, 1000000000000, RtcpMtu },  // Pre base.
 			{ 1000, 1000000000000, RtcpMtu }, // Base.

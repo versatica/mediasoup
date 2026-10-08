@@ -444,7 +444,7 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Producer::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
-				struct TraceEventTypes newTraceEventTypes;
+				TraceEventTypes newTraceEventTypes;
 
 				for (const auto& type : *body->events())
 				{
@@ -547,6 +547,32 @@ namespace RTC
 				MS_ERROR("unknown event '%s'", notification->eventCStr);
 			}
 		}
+	}
+
+	bool Producer::SupportsTransportCc() const
+	{
+		MS_TRACE();
+
+		return this->rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+		       std::ranges::any_of(
+		         this->rtpParameters.codecs,
+		         [](const RTC::RtpCodecParameters& codec)
+		         {
+			         return codec.HasRtcpFeedbackType("transport-cc");
+		         });
+	}
+
+	bool Producer::SupportsRemb() const
+	{
+		MS_TRACE();
+
+		return this->rtpHeaderExtensionIds.absSendTime != 0u &&
+		       std::ranges::any_of(
+		         this->rtpParameters.codecs,
+		         [](const RTC::RtpCodecParameters& codec)
+		         {
+			         return codec.HasRtcpFeedbackType("goog-remb");
+		         });
 	}
 
 	Producer::ReceiveRtpPacketResult Producer::ReceiveRtpPacket(

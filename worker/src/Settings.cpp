@@ -231,7 +231,7 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 	MS_TRACE();
 
 	// Reset logTags.
-	struct LogTags logTags;
+	LogTags logTags;
 
 	for (const auto& tag : tags)
 	{

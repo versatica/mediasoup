@@ -20,6 +20,8 @@ namespace Utils
 	{
 		MS_TRACE();
 
+		// NOTE: The `struct` keyword is required since the POSIX function of the
+		// same name hides the type.
 		struct stat fileStat{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		int err;
 

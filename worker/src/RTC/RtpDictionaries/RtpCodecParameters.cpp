@@ -75,6 +75,18 @@ namespace RTC
 		  &rtcpFeedback);
 	}
 
+	bool RtpCodecParameters::HasRtcpFeedbackType(std::string_view type) const
+	{
+		MS_TRACE();
+
+		return std::ranges::any_of(
+		  this->rtcpFeedback,
+		  [type](const RTC::RtcpFeedback& fb)
+		  {
+			  return fb.type == type;
+		  });
+	}
+
 	inline void RtpCodecParameters::CheckCodec() const
 	{
 		MS_TRACE();

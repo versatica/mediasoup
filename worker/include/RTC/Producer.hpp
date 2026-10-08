@@ -139,7 +139,7 @@ namespace RTC
 		{
 			return this->rtpParameters;
 		}
-		const struct RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
+		const RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
 		{
 			return this->rtpHeaderExtensionIds;
 		}
@@ -147,6 +147,16 @@ namespace RTC
 		{
 			return this->type;
 		}
+		/**
+		 * Whether this Producer was negotiated with transport-cc, which takes both
+		 * the RTP header extension and the RTCP feedback.
+		 */
+		bool SupportsTransportCc() const;
+		/**
+		 * Whether this Producer was negotiated with REMB, whose RTP header extension
+		 * is abs-send-time.
+		 */
+		bool SupportsRemb() const;
 		bool IsPaused() const
 		{
 			return this->paused;
@@ -227,13 +237,13 @@ namespace RTC
 		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
-		struct RtpMapping rtpMapping;
+		RtpMapping rtpMapping;
 		std::vector<RTC::RTP::RtpStreamRecv*> rtpStreamByEncodingIdx;
 		std::vector<uint8_t> rtpStreamScores;
 		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		ankerl::unordered_dense::map<RTC::RTP::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
+		RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
 		bool enableMediasoupPacketIdHeaderExtension{ false };
 		RTC::RTP::Packet* currentRtpPacket{ nullptr };
@@ -242,8 +252,8 @@ namespace RTC
 		int64_t maxRtcpIntervalMs{ 0 };
 		// Video orientation.
 		bool videoOrientationDetected{ false };
-		struct VideoOrientation videoOrientation;
-		struct TraceEventTypes traceEventTypes;
+		VideoOrientation videoOrientation;
+		TraceEventTypes traceEventTypes;
 	};
 } // namespace RTC
 

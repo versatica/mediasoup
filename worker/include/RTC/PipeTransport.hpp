@@ -93,7 +93,7 @@ namespace RTC
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
 		ListenInfo listenInfo;
-		struct sockaddr_storage remoteAddrStorage{};
+		sockaddr_storage remoteAddrStorage{};
 		bool rtx{ false };
 		std::string srtpKey;
 		std::string srtpKeyBase64;

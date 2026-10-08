@@ -816,7 +816,7 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Consumer::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
-				struct TraceEventTypes newTraceEventTypes;
+				TraceEventTypes newTraceEventTypes;
 
 				for (const auto& type : *body->events())
 				{
@@ -867,6 +867,32 @@ namespace RTC
 				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 			}
 		}
+	}
+
+	bool Consumer::SupportsTransportCc() const
+	{
+		MS_TRACE();
+
+		return this->rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+		       std::ranges::any_of(
+		         this->rtpParameters.codecs,
+		         [](const RTC::RtpCodecParameters& codec)
+		         {
+			         return codec.HasRtcpFeedbackType("transport-cc");
+		         });
+	}
+
+	bool Consumer::SupportsRemb() const
+	{
+		MS_TRACE();
+
+		return this->rtpHeaderExtensionIds.absSendTime != 0u &&
+		       std::ranges::any_of(
+		         this->rtpParameters.codecs,
+		         [](const RTC::RtpCodecParameters& codec)
+		         {
+			         return codec.HasRtcpFeedbackType("goog-remb");
+		         });
 	}
 
 	void Consumer::TransportConnected()

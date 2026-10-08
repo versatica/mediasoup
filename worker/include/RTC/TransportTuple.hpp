@@ -271,7 +271,7 @@ namespace RTC
 		RTC::TcpConnection* tcpConnection{ nullptr };
 		std::string localAnnouncedAddress;
 		// Others.
-		struct sockaddr_storage udpRemoteAddrStorage{};
+		sockaddr_storage udpRemoteAddrStorage{};
 		Protocol protocol;
 		TupleKey tupleKey;
 	};

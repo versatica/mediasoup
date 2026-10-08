@@ -6,6 +6,7 @@
 #include "RTC/Parameters.hpp"
 #include <ankerl/unordered_dense.h>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace RTC
@@ -155,6 +156,12 @@ namespace RTC
 
 		flatbuffers::Offset<FBS::RtpParameters::RtpCodecParameters> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
+
+		/**
+		 * Whether this codec was negotiated with the given RTCP feedback type, such
+		 * as "transport-cc" or "goog-remb".
+		 */
+		bool HasRtcpFeedbackType(std::string_view type) const;
 
 	private:
 		void CheckCodec() const;

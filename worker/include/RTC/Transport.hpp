@@ -396,7 +396,7 @@ namespace RTC
 		// Others.
 		bool direct{ false }; // Whether this Transport allows direct communication.
 		bool isDestroying{ false };
-		struct RTC::RTP::HeaderExtensionIds recvRtpHeaderExtensionIds;
+		RTC::RTP::HeaderExtensionIds recvRtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;
 		RTC::SctpListener sctpListener;
 		RTC::RateCalculator recvTransmission;
@@ -412,6 +412,10 @@ namespace RTC
 #else
 		uint16_t transportWideCcSeq{ 0 };
 #endif
+		bool sendSupportsTransportCc{ false };
+		bool sendSupportsRemb{ false };
+		bool recvSupportsTransportCc{ false };
+		bool recvSupportsRemb{ false };
 		int64_t initialAvailableOutgoingBitrate{ 600000 };
 		int64_t maxIncomingBitrate{ 0 };
 		int64_t maxOutgoingBitrate{ 0 };
@@ -419,7 +423,7 @@ namespace RTC
 		// For SCTP capable transports and for direct transport.
 		size_t maxSendMessageSize{ 0 };
 		size_t maxReceiveMessageSize{ 0 };
-		struct TraceEventTypes traceEventTypes;
+		TraceEventTypes traceEventTypes;
 
 #ifdef MS_RTC_LOGGER_SEND_BURST
 	private:
