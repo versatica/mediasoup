@@ -258,7 +258,6 @@ impl ToFbs for RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::MediasoupPacketId => {
                 rtp_parameters::RtpHeaderExtensionUri::MediasoupPacketId
             }
-            RtpHeaderExtensionUri::Unsupported => panic!("Invalid RTP extension header URI"),
         }
     }
 }

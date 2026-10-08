@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Remove `RtpHeaderExtensionUri::Unsupported` variant ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 0.6.0
 
 - Remove support for the "urn:ietf:params:rtp-hdrext:toffset" RTP extension (PR #1942).

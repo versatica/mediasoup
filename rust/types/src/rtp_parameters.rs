@@ -584,10 +584,6 @@ pub enum RtpHeaderExtensionUri {
     /// urn:mediasoup:params:rtp-hdrext:packet-id
     #[serde(rename = "urn:mediasoup:params:rtp-hdrext:packet-id")]
     MediasoupPacketId,
-
-    #[doc(hidden)]
-    #[serde(other, rename = "unsupported")]
-    Unsupported,
 }
 
 impl FromStr for RtpHeaderExtensionUri {
@@ -643,7 +639,6 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::MediasoupPacketId => {
                 "urn:mediasoup:params:rtp-hdrext:packet-id"
             }
-            RtpHeaderExtensionUri::Unsupported => "unsupported",
         }
     }
 }
