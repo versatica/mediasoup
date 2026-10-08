@@ -203,6 +203,8 @@ static void ignoreSignals()
 	MS_TRACE();
 
 	int err;
+	// NOTE: The `struct` keyword is required since the POSIX function of the same
+	// name hides the type.
 	struct sigaction act{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	// clang-format off

@@ -17,7 +17,7 @@ SCENARIO("parseScalabilityMode()")
 
 	const auto parseScalabilityMode = [](const std::string& scalabilityMode)
 	{
-		struct ScalabilityMode result;
+		ScalabilityMode result;
 		std::smatch match;
 
 		std::regex_match(scalabilityMode, match, ScalabilityModeRegex);

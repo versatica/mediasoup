@@ -86,7 +86,7 @@ namespace RTC
 		{
 			return this->rtpParameters;
 		}
-		const struct RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
+		const RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
 		{
 			return this->rtpHeaderExtensionIds;
 		}
@@ -94,6 +94,16 @@ namespace RTC
 		{
 			return this->type;
 		}
+		/**
+		 * Whether this Consumer was negotiated with transport-cc, which takes both
+		 * the RTP header extension and the RTCP feedback.
+		 */
+		bool SupportsTransportCc() const;
+		/**
+		 * Whether this Consumer was negotiated with REMB, whose RTP header extension
+		 * is abs-send-time.
+		 */
+		bool SupportsRemb() const;
 		RTC::ConsumerTypes::VideoLayers GetPreferredLayers() const
 		{
 			return this->producerStreamManager->GetPreferredLayers();
@@ -221,7 +231,7 @@ namespace RTC
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
-		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
+		RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
 		std::bitset<128> supportedCodecPayloadTypes;
@@ -229,7 +239,7 @@ namespace RTC
 		int64_t maxRtcpIntervalMs{ 0 };
 		bool externallyManagedBitrate{ false };
 		uint8_t priority{ 1 };
-		struct TraceEventTypes traceEventTypes;
+		TraceEventTypes traceEventTypes;
 
 	private:
 		bool pipe{ false };

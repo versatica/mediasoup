@@ -414,7 +414,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::vector<struct PacketStatus> packetStatuses;
+			std::vector<PacketStatus> packetStatuses;
 
 			uint16_t currentSequenceNumber = this->baseSequenceNumber - 1;
 
