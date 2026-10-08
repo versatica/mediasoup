@@ -61,9 +61,9 @@ namespace RTC
 	    listener(listener),
 	    recvRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
 	    sendRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
-	    recvRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000u),
-	    sendRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000u),
-	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100u)
+	    recvRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
+	    sendRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
+	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100)
 	{
 		MS_TRACE();
 
@@ -346,19 +346,19 @@ namespace RTC
 		// Add headerExtensionIds.
 		auto recvRtpHeaderExtensions = FBS::Transport::CreateRecvRtpHeaderExtensions(
 		  builder,
-		  this->recvRtpHeaderExtensionIds.mid != 0u
+		  this->recvRtpHeaderExtensionIds.mid != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.mid)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.rid != 0u
+		  this->recvRtpHeaderExtensionIds.rid != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.rid)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.rrid != 0u
+		  this->recvRtpHeaderExtensionIds.rrid != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.rrid)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.absSendTime != 0u
+		  this->recvRtpHeaderExtensionIds.absSendTime != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.absSendTime)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.transportWideCc01 != 0u
+		  this->recvRtpHeaderExtensionIds.transportWideCc01 != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.transportWideCc01)
 		    : flatbuffers::nullopt);
 
@@ -598,7 +598,7 @@ namespace RTC
 					{
 						this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
 					}
-					else if (this->maxIncomingBitrate != 0u)
+					else if (this->maxIncomingBitrate != 0)
 					{
 						MS_WARN_TAG(
 						  bwe, "cannot apply maximum incoming bitrate since remote peer does not support REMB");
@@ -759,33 +759,33 @@ namespace RTC
 				// header extension ids of the Producer (and not their mapped values).
 				const auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 
-				if (producerRtpHeaderExtensionIds.mid != 0u)
+				if (producerRtpHeaderExtensionIds.mid != 0)
 				{
 					this->recvRtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
 				}
 
-				if (producerRtpHeaderExtensionIds.rid != 0u)
+				if (producerRtpHeaderExtensionIds.rid != 0)
 				{
 					this->recvRtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
 				}
 
-				if (producerRtpHeaderExtensionIds.rrid != 0u)
+				if (producerRtpHeaderExtensionIds.rrid != 0)
 				{
 					this->recvRtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
 				}
 
-				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+				if (producerRtpHeaderExtensionIds.absSendTime != 0)
 				{
 					this->recvRtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
 				}
 
-				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0u)
+				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0)
 				{
 					this->recvRtpHeaderExtensionIds.transportWideCc01 =
 					  producerRtpHeaderExtensionIds.transportWideCc01;
 				}
 
-				if (producerRtpHeaderExtensionIds.dependencyDescriptor != 0u)
+				if (producerRtpHeaderExtensionIds.dependencyDescriptor != 0)
 				{
 					this->recvRtpHeaderExtensionIds.dependencyDescriptor =
 					  producerRtpHeaderExtensionIds.dependencyDescriptor;
@@ -845,7 +845,7 @@ namespace RTC
 						this->tccServer = std::make_shared<RTC::TransportCongestionControlServer>(
 						  this, this->shared, bweType, RTC::Consts::RtcpPacketMaxSize);
 
-						if (this->maxIncomingBitrate != 0u)
+						if (this->maxIncomingBitrate != 0)
 						{
 							// The cap travels to the remote peer in a REMB, so a peer that did
 							// not negotiate REMB cannot be told about it by any means.
@@ -870,7 +870,7 @@ namespace RTC
 
 				// A Producer that brings REMB once the server is already there makes the
 				// incoming cap applicable, which it was not when it was set.
-				if (this->tccServer && this->recvSupportsRemb && this->maxIncomingBitrate != 0u)
+				if (this->tccServer && this->recvSupportsRemb && this->maxIncomingBitrate != 0)
 				{
 					this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
 				}
@@ -2384,7 +2384,7 @@ namespace RTC
 		}
 
 		// Send the RTCP compound packet if there is any sender or receiver report.
-		if (packet->GetReceiverReportCount() > 0u || packet->GetSenderReportCount() > 0u)
+		if (packet->GetReceiverReportCount() > 0 || packet->GetSenderReportCount() > 0)
 		{
 			SendRtcpCompoundPacket(packet.get());
 		}
@@ -2407,7 +2407,7 @@ namespace RTC
 			auto* consumer = kv.second;
 			auto priority  = consumer->GetBitratePriority();
 
-			if (priority > 0u)
+			if (priority > 0)
 			{
 				multimapPriorityConsumer.emplace(priority, consumer);
 			}
@@ -2441,7 +2441,7 @@ namespace RTC
 				auto bweType   = this->tccClient->GetBweType();
 
 				// NOLINTNEXTLINE(bugprone-too-small-loop-variable)
-				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
+				for (uint8_t i{ 1 }; i <= (baseAllocation ? 1 : priority); ++i)
 				{
 					const bool considerLoss   = (bweType == RTC::BweType::REMB);
 					const int64_t usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
