@@ -43,7 +43,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Add params.
-			auto params = this->params.FillBuffer(builder);
+			const auto params = this->params.FillBuffer(builder);
 
 			// Add rtxStream.
 			flatbuffers::Offset<FBS::RtxStream::RtxDump> rtxStream;
@@ -66,7 +66,7 @@ namespace RTC
 			                         ? FBS::RtpParameters::MediaKind::AUDIO
 			                         : FBS::RtpParameters::MediaKind::VIDEO;
 
-			auto baseStats = FBS::RtpStream::CreateBaseStatsDirect(
+			const auto baseStats = FBS::RtpStream::CreateBaseStatsDirect(
 			  builder,
 			  static_cast<uint64_t>(nowMs),
 			  this->params.ssrc,
@@ -172,12 +172,12 @@ namespace RTC
 
 			if (this->score != score)
 			{
-				auto previousScore = this->score;
+				const auto previousScore = this->score;
 
 				this->score = score;
 
 				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
-				if (previousScore == 0u)
+				if (previousScore == 0)
 				{
 					this->activeSinceMs = this->shared->GetTimeMs();
 				}
@@ -290,7 +290,7 @@ namespace RTC
 				this->scores.erase(this->scores.begin());
 			}
 
-			auto previousScore = this->score;
+			const auto previousScore = this->score;
 
 			// Compute new effective score taking into accout entries in the histogram.
 			this->scores.push_back(score);
@@ -311,7 +311,7 @@ namespace RTC
 			size_t samples{ 0 };
 			size_t totalScore{ 0 };
 
-			for (auto score : this->scores)
+			for (const auto score : this->scores)
 			{
 				weight++;
 				samples += weight;
@@ -335,7 +335,7 @@ namespace RTC
 				  this->score);
 
 				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
-				if (previousScore == 0u)
+				if (previousScore == 0)
 				{
 					this->activeSinceMs = this->shared->GetTimeMs();
 				}
