@@ -196,31 +196,31 @@ namespace Utils
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, bool>::type static IsPaddedTo4Bytes(T size)
+		bool static IsPaddedTo4Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return (size & 0x03) == 0;
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, bool>::type static IsPaddedTo8Bytes(T size)
+		bool static IsPaddedTo8Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return (size & 0x07) == 0;
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadTo4Bytes(T size)
+		T static PadTo4Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return (size + 3) & ~static_cast<T>(0x03);
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadDownTo4Bytes(T size)
+		T static PadDownTo4Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return size & ~static_cast<T>(0x03);
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadTo8Bytes(T size)
+		T static PadTo8Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return (size + 7) & ~static_cast<T>(0x07);
 		}
