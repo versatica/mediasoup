@@ -4,7 +4,7 @@
 
 - Update `ankerl/unordered_dense` Meson subproject to 5.3.2 ([PR #1985](https://github.com/versatica/mediasoup/pull/1985)).
 - `RtpStreamSend`: Don't discount repaired packets twice in the score when RTX is not used ([PR #1987](https://github.com/versatica/mediasoup/pull/1987)).
-- SCTP: Don't emit association errors in `Association::ResetStreams()` ([PR #1988](https://github.com/versatica/mediasoup/pull/1988)).
+- SCTP: Don't emit association errors in `Association::ResetStreams()` ([PR #1990](https://github.com/versatica/mediasoup/pull/1990)).
 
 ### 3.29.0
 
