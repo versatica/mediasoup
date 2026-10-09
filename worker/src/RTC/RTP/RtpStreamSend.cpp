@@ -79,8 +79,8 @@ namespace RTC
 
 			const int64_t nowMs = this->shared->GetTimeMs();
 
-			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
-			auto stats     = FBS::RtpStream::CreateSendStats(
+			const auto baseStats = RTP::RtpStream::FillBufferStats(builder);
+			const auto stats     = FBS::RtpStream::CreateSendStats(
 			  builder,
 			  baseStats,
 			  this->transmissionCounter.GetPacketCount(),
@@ -96,7 +96,7 @@ namespace RTC
 
 			RTP::RtpStream::SetRtx(payloadType, ssrc);
 
-			this->rtxSeq = Utils::Crypto::GetRandomUInt<uint16_t>(0u, 0xFFFF);
+			this->rtxSeq = Utils::Crypto::GetRandomUInt<uint16_t>(0, 0xFFFF);
 		}
 
 		RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(
@@ -244,7 +244,7 @@ namespace RTC
 
 			// Get the NTP representation of the time at which the Receiver Report
 			// arrived, which is what the round trip is measured against.
-			auto ntp = Utils::Time::TimeUsToNtp(receivedAtUs + this->shared->GetNtpOffsetUs());
+			const auto ntp = Utils::Time::TimeUsToNtp(receivedAtUs + this->shared->GetNtpOffsetUs());
 
 			// Get the compact NTP representation of the arrival time.
 			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
@@ -371,7 +371,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->transmissionCounter.GetPacketCount() == 0u)
+			if (this->transmissionCounter.GetPacketCount() == 0)
 			{
 				return nullptr;
 			}
@@ -383,8 +383,8 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto ntp     = Utils::Time::TimeUsToNtp(nowUs + this->shared->GetNtpOffsetUs());
-			auto* report = new RTC::RTCP::SenderReport();
+			const auto ntp     = Utils::Time::TimeUsToNtp(nowUs + this->shared->GetNtpOffsetUs());
+			auto* const report = new RTC::RTCP::SenderReport();
 
 			// Calculate TS difference between now and the instant at which the media in the
 			// packet holding the highest RTP timestamp was captured, falling back to the
@@ -433,7 +433,7 @@ namespace RTC
 
 			dlrr |= static_cast<uint32_t>(((delayUs % 1000000) * 65536) / 1000000);
 
-			auto* ssrcInfo = new RTC::RTCP::DelaySinceLastRr::SsrcInfo();
+			auto* const ssrcInfo = new RTC::RTCP::DelaySinceLastRr::SsrcInfo();
 
 			ssrcInfo->SetSsrc(GetSsrc());
 			ssrcInfo->SetDelaySinceLastReceiverReport(dlrr);
@@ -446,9 +446,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto& cname = GetCname();
-			auto* sdesChunk   = new RTC::RTCP::SdesChunk(GetSsrc());
-			auto* sdesItem =
+			const auto& cname     = GetCname();
+			auto* const sdesChunk = new RTC::RTCP::SdesChunk(GetSsrc());
+			auto* const sdesItem =
 			  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, cname.size(), cname.c_str());
 
 			sdesChunk->AddItem(sdesItem);
@@ -776,32 +776,48 @@ namespace RTC
 			  retransmittedPackets);
 #endif
 
-			auto repairedRatio  = static_cast<float>(repairedPackets) / static_cast<float>(sentPackets);
-			auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
-
 			MS_ASSERT(
 			  retransmittedPackets >= repairedPackets,
 			  "repaired packets cannot be more than retransmitted ones");
 
-			if (retransmittedPackets > 0)
+			// With RTX the retransmissions go in a stream of their own, so the remote
+			// endpoint keeps counting the packets they repair as lost and the repair
+			// has to be discounted here. Without RTX a retransmission is the very packet
+			// it repairs, so the remote endpoint counts it as received and has already
+			// left it out of what it reports as lost.
+			if (HasRtx())
 			{
-				repairedWeight *= static_cast<float>(repairedPackets) / retransmittedPackets;
+				const auto repairedRatio =
+				  static_cast<float>(repairedPackets) / static_cast<float>(sentPackets);
+
+				auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
+
+				if (retransmittedPackets > 0)
+				{
+					repairedWeight *= static_cast<float>(repairedPackets) / retransmittedPackets;
+				}
+
+				lostPackets = static_cast<uint64_t>(lostPackets - (repairedPackets * repairedWeight));
+
+#if MS_LOG_DEV_LEVEL == 3
+				MS_DEBUG_TAG(
+				  score,
+				  "[repairedRatio:%f, repairedWeight:%f, new lostPackets:%" PRIu64 "]",
+				  repairedRatio,
+				  repairedWeight,
+				  lostPackets);
+#endif
 			}
 
-			lostPackets = static_cast<uint64_t>(lostPackets - (repairedPackets * repairedWeight));
-
-			auto deliveredRatio =
+			const auto deliveredRatio =
 			  static_cast<float>(sentPackets - lostPackets) / static_cast<float>(sentPackets);
-			auto score = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
+			const auto score = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
 
 #if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
 			  score,
-			  "[deliveredRatio:%f, repairedRatio:%f, repairedWeight:%f, new lostPackets:%" PRIu64
-			  ", score:%" PRIu8 "]",
+			  "[deliveredRatio:%f, lostPackets:%" PRIu64 ", score:%" PRIu8 "]",
 			  deliveredRatio,
-			  repairedRatio,
-			  repairedWeight,
 			  lostPackets,
 			  score);
 #endif

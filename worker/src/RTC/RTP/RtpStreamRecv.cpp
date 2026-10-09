@@ -257,7 +257,7 @@ namespace RTC
 
 			const int64_t nowMs = this->shared->GetTimeMs();
 
-			auto baseStats = RTP::RtpStream::FillBufferStats(builder);
+			const auto baseStats = RTP::RtpStream::FillBufferStats(builder);
 
 			std::vector<flatbuffers::Offset<FBS::RtpStream::BitrateByLayer>> bitrateByLayer;
 
@@ -267,7 +267,7 @@ namespace RTC
 				{
 					for (uint8_t tIdx = 0; tIdx < GetTemporalLayers(); ++tIdx)
 					{
-						auto layer = std::to_string(sIdx) + "." + std::to_string(tIdx);
+						const auto layer = std::to_string(sIdx) + "." + std::to_string(tIdx);
 
 						bitrateByLayer.emplace_back(
 						  FBS::RtpStream::CreateBitrateByLayerDirect(
@@ -276,7 +276,7 @@ namespace RTC
 				}
 			}
 
-			auto stats = FBS::RtpStream::CreateRecvStatsDirect(
+			const auto stats = FBS::RtpStream::CreateRecvStatsDirect(
 			  builder,
 			  baseStats,
 			  this->transmissionCounter.GetPacketCount(),
@@ -428,7 +428,7 @@ namespace RTC
 
 #if MS_LOG_DEV_LEVEL == 3
 			// Get the RTX packet sequence number for logging purposes.
-			auto rtxSeq = packet->GetSequenceNumber();
+			const auto rtxSeq = packet->GetSequenceNumber();
 #endif
 
 			// Get the original RTP packet.
@@ -524,14 +524,14 @@ namespace RTC
 				MS_DEBUG_TAG(rtcp, "using worst remote fraction lost:%" PRIu8, worstRemoteFractionLost);
 			}
 
-			auto* report = new RTC::RTCP::ReceiverReport();
+			auto* const report = new RTC::RTCP::ReceiverReport();
 
 			report->SetSsrc(GetSsrc());
 
 			const int32_t prevPacketsLost = this->packetsLost;
 
 			// Calculate packets expected and lost.
-			auto expectedPackets = GetExpectedPackets();
+			const auto expectedPackets = GetExpectedPackets();
 
 			// NOTE: The expected count is the extended sequence number arithmetic of RFC
 			// 3550, so it wraps at 32 bits, whereas the received one does not wrap at
@@ -692,7 +692,7 @@ namespace RTC
 
 			// Get the NTP representation of the time at which the report arrived, which
 			// is what the round trip is measured against.
-			auto ntp = Utils::Time::TimeUsToNtp(receivedAtUs + this->shared->GetNtpOffsetUs());
+			const auto ntp = Utils::Time::TimeUsToNtp(receivedAtUs + this->shared->GetNtpOffsetUs());
 
 			// Get the compact NTP representation of the arrival time.
 			uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
@@ -823,7 +823,7 @@ namespace RTC
 				// Sender SSRC should be 0 since there is no media sender involved, but
 				// some implementations like gstreamer will fail to process it otherwise.
 				RTC::RTCP::FeedbackPsFirPacket packet(GetSsrc(), GetSsrc());
-				auto* item = new RTC::RTCP::FeedbackPsFirItem(GetSsrc(), ++this->firSeqNumber);
+				auto* const item = new RTC::RTCP::FeedbackPsFirItem(GetSsrc(), ++this->firSeqNumber);
 
 				packet.AddItem(item);
 				packet.Serialize(RTC::RTCP::SerializationBuffer);
@@ -990,7 +990,9 @@ namespace RTC
 			  retransmittedPackets);
 #endif
 
-			auto repairedRatio = static_cast<float>(repairedPackets) / static_cast<float>(receivedPackets);
+			const auto repairedRatio =
+			  static_cast<float>(repairedPackets) / static_cast<float>(receivedPackets);
+
 			auto repairedWeight = std::pow(1 / (repairedRatio + 1), 4);
 
 			MS_ASSERT(
@@ -1004,9 +1006,9 @@ namespace RTC
 
 			lostPackets = static_cast<uint64_t>(lostPackets - (repairedPackets * repairedWeight));
 
-			auto deliveredRatio =
+			const auto deliveredRatio =
 			  static_cast<float>(receivedPackets - lostPackets) / static_cast<float>(receivedPackets);
-			auto score = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
+			const auto score = static_cast<uint8_t>(std::round(std::pow(deliveredRatio, 4) * 10));
 
 #if MS_LOG_DEV_LEVEL == 3
 			MS_DEBUG_TAG(
@@ -1117,7 +1119,7 @@ namespace RTC
 					++it;
 				}
 
-				auto* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
+				auto* const nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
 
 				packet.AddItem(nackItem);
 
