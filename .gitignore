@@ -2,7 +2,6 @@
 /worker/out
 /worker/subprojects/*
 !/worker/subprojects/*.wrap
-!/worker/subprojects/packagefiles
 !/worker/subprojects/.clang-tidy
 
 ## Node.
