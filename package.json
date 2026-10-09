@@ -61,7 +61,6 @@
 		"worker/scripts/*.py",
 		"worker/scripts/*.sh",
 		"worker/subprojects/*.wrap",
-		"worker/subprojects/packagefiles",
 		"worker/test/include",
 		"worker/test/src",
 		"worker/meson.build",

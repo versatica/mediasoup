@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Update `ankerl/unordered_dense` Meson subproject to 5.3.2 ([PR #1985](https://github.com/versatica/mediasoup/pull/1985)).
+
 ### 0.30.0
 
 - Worker: Add more logs with "message" log tag ([PR #1966](https://github.com/versatica/mediasoup/pull/1966)).
