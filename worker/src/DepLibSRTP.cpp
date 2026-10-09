@@ -47,7 +47,7 @@ const ankerl::unordered_dense::map<srtp_err_status_t, std::string> DepLibSRTP::E
 	{ srtp_err_status_pkt_idx_old,   "packet index is too old to consider" },
 	{ srtp_err_status_pkt_idx_adv,   "packet index advanced, reset needed" },
 	{ srtp_err_status_buffer_small,  "out buffer is too small" },
-	{ srtp_err_status_cryptex_err,   "unsupported cryptex operation" }
+	{ srtp_err_status_cryptex_err,   "unsupported cryptex operation" },
 };
 // clang-format on
 
