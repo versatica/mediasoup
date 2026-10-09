@@ -470,6 +470,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	{
 		// packet1 [seq:21006, timestamp:1533790901]
 		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+
 		// packet2 [seq:21007, timestamp:1533790901]
 		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
 
@@ -1167,9 +1168,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// number" scenarios in RtpStream::UpdateSeq().
 		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 50001, 1000001));
 		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 50002, 1000002));
+
 		// Third packet has bad sequence number (its seq is more than MaxDropout=3000
 		// older than current max seq) and will be dropped.
 		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 40003, 1000003));
+
 		// Forth packet has seq=badSeq+1 so will be accepted and will trigger a
 		// stream reset.
 		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 40004, 1000004));
@@ -1482,9 +1485,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto packet1(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 50001, 1000001));
 		const auto packet2(createRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 50002, 1000002));
 		const auto packet3(createRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 50003, 1000003));
+
 		// Fourth packet has bad sequence number (its seq is more than MaxDropout=3000
 		// older than current max seq) and will be dropped.
 		const auto packet4(createRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 40004, 1000004));
+
 		// Fifth packet has seq=badSeq+1 so will be accepted and will trigger a
 		// stream reset.
 		const auto packet5(createRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 40005, 1000005));
