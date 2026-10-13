@@ -11,7 +11,6 @@
 #include <limits>  // std::numeric_limits
 #include <random>  // std::mt19937_64, std::uniform_int_distribution, std::random_device
 #include <string>
-#include <type_traits> // std::enable_if, std::is_same_v, std::is_unsigned
 #ifdef _WIN32
 #include <ws2ipdef.h>
 // https://stackoverflow.com/a/24550632/2085408
