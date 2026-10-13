@@ -71,6 +71,10 @@ namespace RTC
 				 *
 				 * @returns Zero if it wants nothing, in which case it is left out of
 				 *   the round.
+				 *
+				 * @remarks
+				 * - Only asked of an adaptable candidate, so one that is not may
+				 *   assert instead of answering.
 				 */
 				virtual uint8_t GetBitrateWeight() const = 0;
 

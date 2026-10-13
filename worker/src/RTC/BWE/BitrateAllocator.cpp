@@ -21,6 +21,8 @@ namespace RTC
 
 			wantingCandidates.reserve(candidates.size());
 
+			int64_t totalWeight{ 0 };
+
 			for (auto* candidate : candidates)
 			{
 				// What a candidate that cannot change its bitrate puts out is not up
@@ -32,9 +34,13 @@ namespace RTC
 					continue;
 				}
 
-				if (candidate->GetBitrateWeight() > 0)
+				const uint8_t weight = candidate->GetBitrateWeight();
+
+				if (weight > 0)
 				{
 					wantingCandidates.push_back(candidate);
+
+					totalWeight += weight;
 				}
 			}
 
@@ -76,13 +82,6 @@ namespace RTC
 			while (availableBitrate > 0)
 			{
 				const int64_t bitrateBeforeRound = availableBitrate;
-
-				int64_t totalWeight{ 0 };
-
-				for (const auto* candidate : wantingCandidates)
-				{
-					totalWeight += candidate->GetBitrateWeight();
-				}
 
 				for (auto* candidate : wantingCandidates)
 				{

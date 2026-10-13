@@ -1073,6 +1073,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+		MS_ASSERT(IsBitrateAdaptable(), "not an adaptable bitrate");
 
 		if (!IsActive())
 		{

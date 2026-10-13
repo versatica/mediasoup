@@ -121,6 +121,8 @@ SCENARIO("BWE BitrateAllocator", "[bwe][bitrateallocator]")
 
 		uint8_t GetBitrateWeight() const override
 		{
+			FAIL("a candidate that cannot adapt must not be asked for its weight");
+
 			return 0;
 		}
 
