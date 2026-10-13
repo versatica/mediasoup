@@ -1,7 +1,9 @@
 #ifndef MS_RTC_SIMPLE_CONSUMER_STREAM_HPP
 #define MS_RTC_SIMPLE_CONSUMER_STREAM_HPP
 
+#include "common.hpp"
 #include "RTC/ProducerStreamManager.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -30,6 +32,7 @@ namespace RTC
 		{
 			return 0;
 		}
+		std::vector<RTC::RTP::RtpStreamRecv*> GetProducerRtpStreams() const override;
 		RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const override;
 		RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const override;
 		bool IsPacketForCurrentStream(const RTC::RTP::Packet* /*packet*/) const override
@@ -42,8 +45,19 @@ namespace RTC
 		void ProducerRtpStreamScore(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
+#ifdef MS_USE_BUILTIN_BWE
+		bool IsBitrateAdaptable() const override
+		{
+			// A single stream with no layers has nowhere to go.
+			return false;
+		}
+		int64_t GetOutputBitrate(int64_t nowMs) override;
+		int64_t TakeBitrate(int64_t bitrate, int64_t nowMs) override;
+		void ApplyBitrateAllocation(int64_t rtpStreamActiveMs) override;
+#else
 		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) override;
 		void ApplyLayers(int64_t rtpStreamActiveMs) override;
+#endif
 		int64_t GetDesiredBitrate(int64_t nowMs) const override;
 		RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,
@@ -63,8 +77,10 @@ namespace RTC
 	private:
 		// Producer RTP stream (single stream for Simple).
 		RTC::RTP::RtpStreamRecv* producerRtpStream{ nullptr };
+#ifndef MS_USE_BUILTIN_BWE
 		// Prevents double IncreaseLayer in one BWE round.
 		bool managingBitrate{ false };
+#endif
 	};
 } // namespace RTC
 

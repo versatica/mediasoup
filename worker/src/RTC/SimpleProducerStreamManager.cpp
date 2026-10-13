@@ -28,6 +28,20 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	std::vector<RTC::RTP::RtpStreamRecv*> SimpleProducerStreamManager::GetProducerRtpStreams() const
+	{
+		MS_TRACE();
+
+		auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
+
+		if (!producerCurrentRtpStream)
+		{
+			return {};
+		}
+
+		return { producerCurrentRtpStream };
+	}
+
 	RTC::RTP::RtpStreamRecv* SimpleProducerStreamManager::GetProducerCurrentRtpStream() const
 	{
 		MS_TRACE();
@@ -90,6 +104,33 @@ namespace RTC
 		// Do nothing.
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t SimpleProducerStreamManager::GetOutputBitrate(int64_t nowMs)
+	{
+		MS_TRACE();
+
+		if (!this->producerRtpStream)
+		{
+			return 0;
+		}
+
+		return this->producerRtpStream->GetBitrate(nowMs);
+	}
+
+	int64_t SimpleProducerStreamManager::TakeBitrate(int64_t /*bitrate*/, int64_t /*nowMs*/)
+	{
+		MS_TRACE();
+
+		MS_ABORT("not an adaptable bitrate");
+	}
+
+	void SimpleProducerStreamManager::ApplyBitrateAllocation(int64_t /*rtpStreamActiveMs*/)
+	{
+		MS_TRACE();
+
+		MS_ABORT("not an adaptable bitrate");
+	}
+#else
 	int64_t SimpleProducerStreamManager::IncreaseLayer(
 	  int64_t bitrate, bool /*considerLoss*/, float /*lossPercentage*/, int64_t nowMs)
 	{
@@ -143,6 +184,7 @@ namespace RTC
 
 		// Simple does not play the BWE game (even if video kind).
 	}
+#endif
 
 	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{

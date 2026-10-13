@@ -73,11 +73,13 @@ namespace RTC
 		virtual ~ProducerStreamManager() = default;
 
 	public:
-		virtual RTC::ConsumerTypes::VideoLayers GetTargetLayers() const      = 0;
-		virtual int16_t GetCurrentSpatialLayer() const                       = 0;
-		virtual int16_t GetCurrentTemporalLayer() const                      = 0;
-		virtual RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const = 0;
-		virtual RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const  = 0;
+		virtual RTC::ConsumerTypes::VideoLayers GetTargetLayers() const = 0;
+		virtual int16_t GetCurrentSpatialLayer() const                  = 0;
+		virtual int16_t GetCurrentTemporalLayer() const                 = 0;
+		// RTP streams of the Producer that the Consumer is forwarding.
+		virtual std::vector<RTC::RTP::RtpStreamRecv*> GetProducerRtpStreams() const = 0;
+		virtual RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const        = 0;
+		virtual RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const         = 0;
 		// Returns true if the given packet belongs to the stream currently being
 		// forwarded to the consumer. Used by Consumer to decide whether to account
 		// a discarded packet in the RTP sequence manager.
@@ -112,10 +114,20 @@ namespace RTC
 			this->externallyManagedBitrate = true;
 		}
 
+#ifdef MS_USE_BUILTIN_BWE
+		// Whether the bitrate being put out can be moved at all, which is what lets
+		// the Consumer take part in the bitrate allocation.
+		virtual bool IsBitrateAdaptable() const = 0;
+		// What is being put out right now, only asked when it cannot be moved.
+		virtual int64_t GetOutputBitrate(int64_t nowMs)                = 0;
+		virtual int64_t TakeBitrate(int64_t bitrate, int64_t nowMs)    = 0;
+		virtual void ApplyBitrateAllocation(int64_t rtpStreamActiveMs) = 0;
+#else
 		virtual int64_t IncreaseLayer(
 		  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) = 0;
 		virtual void ApplyLayers(int64_t rtpStreamActiveMs)                        = 0;
-		virtual int64_t GetDesiredBitrate(int64_t nowMs) const                     = 0;
+#endif
+		virtual int64_t GetDesiredBitrate(int64_t nowMs) const = 0;
 
 		virtual RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,

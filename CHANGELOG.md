@@ -5,6 +5,7 @@
 - Update `ankerl/unordered_dense` Meson subproject to 5.3.2 ([PR #1985](https://github.com/versatica/mediasoup/pull/1985)).
 - `RtpStreamSend`: Don't discount repaired packets twice in the score when RTX is not used ([PR #1987](https://github.com/versatica/mediasoup/pull/1987)).
 - SCTP: Don't emit association errors in `Association::ResetStreams()` ([PR #1990](https://github.com/versatica/mediasoup/pull/1990)).
+- `consumer.getStats()` now also returns "inbound-rtp" entries for pipe Consumers, one per forwarded `Producer` stream ([PR #1991](https://github.com/versatica/mediasoup/pull/1991)).
 
 ### 3.29.0
 

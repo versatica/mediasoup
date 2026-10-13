@@ -45,6 +45,20 @@ namespace RTC
 		this->producerRtpStreams.resize(this->consumableRtpEncodings.size(), nullptr);
 	}
 
+	std::vector<RTC::RTP::RtpStreamRecv*> SimulcastProducerStreamManager::GetProducerRtpStreams() const
+	{
+		MS_TRACE();
+
+		auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
+
+		if (!producerCurrentRtpStream)
+		{
+			return {};
+		}
+
+		return { producerCurrentRtpStream };
+	}
+
 	RTC::RTP::RtpStreamRecv* SimulcastProducerStreamManager::GetProducerCurrentRtpStream() const
 	{
 		MS_TRACE();
@@ -200,6 +214,245 @@ namespace RTC
 		}
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t SimulcastProducerStreamManager::GetOutputBitrate(int64_t /*nowMs*/)
+	{
+		MS_TRACE();
+
+		MS_ABORT("adaptable bitrate, it must be bid for instead");
+	}
+
+	int64_t SimulcastProducerStreamManager::TakeBitrate(int64_t bitrate, int64_t nowMs)
+	{
+		MS_TRACE();
+
+		// If already in the preferred layers, do nothing.
+		if (this->provisionalTargetLayers == this->preferredLayers)
+		{
+			return 0;
+		}
+
+		int64_t requiredBitrate{ 0 };
+		int16_t spatialLayer{ 0 };
+		int16_t temporalLayer{ 0 };
+		// Whether a usable spatial layer has been found, in which case we must not
+		// go above the preferred spatial layer. Same criteria as in
+		// RecalculateTargetLayers(), so both take the same decision no matter the
+		// bitrate of the layer.
+		bool usableSpatialLayerFound{ this->provisionalTargetLayers.spatial != -1 };
+
+		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		{
+			spatialLayer = static_cast<int16_t>(sIdx);
+
+			// If this is higher than current spatial layer and we moved to current
+			// spatial layer due to BWE limitations, check how much it has elapsed
+			// since then.
+			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
+			{
+				if (this->provisionalTargetLayers.spatial > -1 && spatialLayer > this->currentSpatialLayer)
+				{
+					MS_DEBUG_DEV(
+					  "avoid upgrading to spatial layer %" PRIi16 " due to recent BWE downgrade", spatialLayer);
+
+					goto done;
+				}
+			}
+
+			// Ignore spatial layers lower than the one we already have.
+			if (spatialLayer < this->provisionalTargetLayers.spatial)
+			{
+				continue;
+			}
+			// If this is higher than preferred spatial layer, abort unless no lower
+			// spatial layer is usable or this is the provisional one (so we may still
+			// increase its temporal layer).
+			else if (
+			  spatialLayer > this->preferredLayers.spatial && usableSpatialLayerFound &&
+			  spatialLayer != this->provisionalTargetLayers.spatial)
+			{
+				MS_DEBUG_DEV(
+				  "avoid upgrading to spatial layer %" PRIi16
+				  " since it's higher than preferred spatial layer %" PRIi16,
+				  spatialLayer,
+				  this->preferredLayers.spatial);
+
+				goto done;
+			}
+
+			// This can be null.
+			auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
+
+			// Producer stream does not exist. Ignore.
+			if (!producerRtpStream)
+			{
+				continue;
+			}
+
+			// Ignore spatial layers (streams) with score 0.
+			if (producerRtpStream->GetScore() == 0)
+			{
+				continue;
+			}
+
+			// If the stream has not been active time enough and we have an active one
+			// already, move to the next spatial layer.
+			if (
+			  spatialLayer != this->provisionalTargetLayers.spatial &&
+			  this->provisionalTargetLayers.spatial != -1 &&
+			  producerRtpStream->GetActiveMs() < StreamMinActiveMs)
+			{
+				const auto* provisionalProducerRtpStream =
+				  this->producerRtpStreams.at(this->provisionalTargetLayers.spatial);
+
+				// The stream for the current provisional spatial layer has been active
+				// for enough time, move to the next spatial layer.
+				if (provisionalProducerRtpStream->GetActiveMs() >= StreamMinActiveMs)
+				{
+					continue;
+				}
+			}
+
+			// We may not yet switch to this spatial layer.
+			if (!CanSwitchToSpatialLayer(spatialLayer))
+			{
+				continue;
+			}
+
+			// This spatial layer is usable even if it has no bitrate at all.
+			usableSpatialLayerFound = true;
+
+			temporalLayer = 0;
+
+			// Don't consider temporal layers above the preferred one, nor above the
+			// ones this stream has.
+			const auto maxTemporalLayer = std::min(
+			  static_cast<int16_t>(producerRtpStream->GetTemporalLayers() - 1),
+			  this->preferredLayers.temporal);
+
+			// Check bitrate of every temporal layer.
+			for (; temporalLayer <= maxTemporalLayer; ++temporalLayer)
+			{
+				// Ignore temporal layers lower than the one we already have (taking
+				// into account the spatial layer too).
+				if (
+				  spatialLayer == this->provisionalTargetLayers.spatial &&
+				  temporalLayer <= this->provisionalTargetLayers.temporal)
+				{
+					continue;
+				}
+
+				requiredBitrate = producerRtpStream->GetLayerBitrate(nowMs, 0, temporalLayer);
+
+				// This is simulcast so we must subtract the bitrate of the current
+				// temporal spatial layer if this is the temporal layer 0 of a higher
+				// spatial layer.
+				if (
+				  requiredBitrate > 0 && temporalLayer == 0 && this->provisionalTargetLayers.spatial > -1 &&
+				  spatialLayer > this->provisionalTargetLayers.spatial)
+				{
+					auto* provisionalProducerRtpStream =
+					  this->producerRtpStreams.at(this->provisionalTargetLayers.spatial);
+					auto provisionalRequiredBitrate = provisionalProducerRtpStream->GetBitrate(
+					  nowMs, 0, this->provisionalTargetLayers.temporal);
+
+					if (requiredBitrate > provisionalRequiredBitrate)
+					{
+						requiredBitrate -= provisionalRequiredBitrate;
+					}
+					else
+					{
+						requiredBitrate = 1; // Don't set 0 since it would be ignored.
+					}
+				}
+
+				MS_DEBUG_DEV(
+				  "testing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIi64 ", required bitrate:%" PRIi64
+				  "]",
+				  spatialLayer,
+				  temporalLayer,
+				  bitrate,
+				  requiredBitrate);
+
+				// If active layer, end iterations here. Otherwise move to next spatial
+				// layer.
+				if (requiredBitrate > 0)
+				{
+					goto done;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			// If this is the preferred spatial layer or higher, take it and exit.
+			if (spatialLayer >= this->preferredLayers.spatial)
+			{
+				break;
+			}
+		}
+
+	done:
+
+		// No higher active layers found.
+		if (requiredBitrate <= 0)
+		{
+			return 0;
+		}
+
+		// No luck.
+		if (requiredBitrate > bitrate)
+		{
+			return 0;
+		}
+
+		// Set provisional layers.
+		this->provisionalTargetLayers.spatial  = spatialLayer;
+		this->provisionalTargetLayers.temporal = temporalLayer;
+
+		MS_DEBUG_DEV(
+		  "setting provisional layers to %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIi64
+		  ", required bitrate:%" PRIi64 "]",
+		  this->provisionalTargetLayers.spatial,
+		  this->provisionalTargetLayers.temporal,
+		  bitrate,
+		  requiredBitrate);
+
+		return requiredBitrate;
+	}
+
+	void SimulcastProducerStreamManager::ApplyBitrateAllocation(int64_t rtpStreamActiveMs)
+	{
+		MS_TRACE();
+
+		auto provisionalTargetLayers = this->provisionalTargetLayers;
+
+		// Reset provisional target layers.
+		this->provisionalTargetLayers.Reset();
+
+		if (provisionalTargetLayers != this->targetLayers)
+		{
+			UpdateTargetLayers(provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
+
+			// If this looks like a spatial layer downgrade due to BWE limitations, set
+			// member.
+			if (
+			  rtpStreamActiveMs > BweDowngradeMinActiveMs &&
+			  this->targetLayers.spatial < this->currentSpatialLayer &&
+			  this->currentSpatialLayer <= this->preferredLayers.spatial)
+			{
+				MS_DEBUG_DEV(
+				  "possible target spatial layer downgrade (from %" PRIi16 " to %" PRIi16
+				  ") due to BWE limitation",
+				  this->currentSpatialLayer,
+				  this->targetLayers.spatial);
+
+				this->lastBweDowngradeAtMs = this->shared->GetTimeMs();
+			}
+		}
+	}
+#else
 	int64_t SimulcastProducerStreamManager::IncreaseLayer(
 	  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
 	{
@@ -466,6 +719,7 @@ namespace RTC
 			}
 		}
 	}
+#endif
 
 	int64_t SimulcastProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
