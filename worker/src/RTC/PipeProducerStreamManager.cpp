@@ -41,20 +41,19 @@ namespace RTC
 		return this->listener->IsActive();
 	}
 
-	void PipeProducerStreamManager::ProducerRtpStream(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint32_t /*mappedSsrc*/)
+	void PipeProducerStreamManager::ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
-		// Do nothing.
+		this->mapMappedSsrcProducerRtpStream[mappedSsrc] = rtpStream;
 	}
 
 	void PipeProducerStreamManager::ProducerNewRtpStream(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint32_t /*mappedSsrc*/)
+	  RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
-		// Do nothing.
+		this->mapMappedSsrcProducerRtpStream[mappedSsrc] = rtpStream;
 	}
 
 	void PipeProducerStreamManager::ProducerRtpStreamScore(
@@ -73,6 +72,37 @@ namespace RTC
 		// Do nothing.
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t PipeProducerStreamManager::GetOutputBitrate(int64_t nowMs)
+	{
+		MS_TRACE();
+
+		int64_t outputBitrate{ 0 };
+
+		for (const auto& kv : this->mapMappedSsrcProducerRtpStream)
+		{
+			auto* const producerRtpStream = kv.second;
+
+			outputBitrate += producerRtpStream->GetBitrate(nowMs);
+		}
+
+		return outputBitrate;
+	}
+
+	int64_t PipeProducerStreamManager::TakeBitrate(int64_t /*bitrate*/, int64_t /*nowMs*/)
+	{
+		MS_TRACE();
+
+		MS_ABORT("not an adaptable bitrate");
+	}
+
+	void PipeProducerStreamManager::ApplyBitrateAllocation(int64_t /*rtpStreamActiveMs*/)
+	{
+		MS_TRACE();
+
+		MS_ABORT("not an adaptable bitrate");
+	}
+#else
 	int64_t PipeProducerStreamManager::IncreaseLayer(
 	  int64_t /*bitrate*/, bool /*considerLoss*/, float /*lossPercentage*/, int64_t /*nowMs*/)
 	{
@@ -88,6 +118,7 @@ namespace RTC
 
 		// Pipe does not play the BWE game.
 	}
+#endif
 
 	int64_t PipeProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
 	{

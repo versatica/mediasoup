@@ -6,6 +6,9 @@
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/consumer.h"
 #include "FBS/transport.h"
+#ifdef MS_USE_BUILTIN_BWE
+#include "RTC/BWE/BitrateAllocator.hpp"
+#endif
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/ProducerStreamManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -30,6 +33,9 @@ namespace RTC
 {
 	class Consumer : public Channel::ChannelSocket::RequestHandler,
 	                 public RTC::RTP::RtpStreamSend::Listener,
+#ifdef MS_USE_BUILTIN_BWE
+	                 public RTC::BWE::BitrateAllocator::Candidate,
+#endif
 	                 public RTC::ProducerStreamManager::Listener
 	{
 		using RetransmissionBuffer =
@@ -152,9 +158,18 @@ namespace RTC
 			this->externallyManagedBitrate = true;
 			this->producerStreamManager->SetExternallyManagedBitrate();
 		}
+#ifdef MS_USE_BUILTIN_BWE
+		const std::string& GetBitrateAllocationId() const override;
+		bool IsBitrateAdaptable() const override;
+		int64_t GetOutputBitrate() override;
+		uint8_t GetBitrateWeight() const override;
+		int64_t TakeBitrate(int64_t bitrate) override;
+		void ApplyBitrateAllocation() override;
+#else
 		uint8_t GetBitratePriority() const;
 		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss);
 		void ApplyLayers();
+#endif
 		int64_t GetDesiredBitrate() const;
 		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);

@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/PipeProducerStreamManager.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
@@ -120,7 +121,13 @@ namespace
 		const RTC::ConsumerTypes::VideoLayers preferredLayers;
 
 		return std::make_unique<RTC::PipeProducerStreamManager>(
-		  consumableRtpEncodings, preferredLayers, nullptr, kind, keyFrameSupported, listener, &shared);
+		  consumableRtpEncodings,
+		  preferredLayers,
+		  nullptr,
+		  kind,
+		  keyFrameSupported,
+		  listener,
+		  std::addressof(shared));
 	}
 } // namespace
 
@@ -136,7 +143,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("IsActive() returns listener state")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener);
+		auto manager = createManager(std::addressof(listener));
 
 		REQUIRE(manager->IsActive() == true);
 
@@ -148,7 +155,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("ProcessRtpPacket() returns FORWARD with isSyncPacket on first packet after connect")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { MappedSsrc0 }, /*keyFrameSupported*/ false);
+		auto manager =
+		  createManager(std::addressof(listener), { MappedSsrc0 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 
@@ -176,7 +184,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("ProcessRtpPacket() returns BUFFER when sync required and packet is not a key frame")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener);
+		auto manager = createManager(std::addressof(listener));
 
 		manager->OnTransportConnected();
 
@@ -192,8 +200,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("ProcessRtpPacket() syncs independently per stream")
 	{
 		MockListener listener;
-		auto manager =
-		  createManager(&listener, { MappedSsrc0, MappedSsrc1 }, /*keyFrameSupported*/ false);
+		auto manager = createManager(
+		  std::addressof(listener), { MappedSsrc0, MappedSsrc1 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 
@@ -230,7 +238,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("ProcessRtpPacket() returns FORWARD with sendBufferedPackets on key frame sync")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener);
+		auto manager = createManager(std::addressof(listener));
 
 		manager->OnTransportConnected();
 
@@ -252,7 +260,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("ProcessRtpPacket() returns DROP for empty payload packets")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { MappedSsrc0 }, /*keyFrameSupported*/ false);
+		auto manager =
+		  createManager(std::addressof(listener), { MappedSsrc0 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 
@@ -273,7 +282,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("ProcessRtpPacket() preserves original marker bit")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { MappedSsrc0 }, /*keyFrameSupported*/ false);
+		auto manager =
+		  createManager(std::addressof(listener), { MappedSsrc0 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 
@@ -297,7 +307,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("OnTransportConnected() sets sync required for all streams and requests key frames")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
+		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		manager->OnTransportConnected();
 
@@ -332,7 +342,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	{
 		MockListener listener;
 		listener.isActive = false;
-		auto manager      = createManager(&listener);
+		auto manager      = createManager(std::addressof(listener));
 
 		manager->OnTransportConnected();
 
@@ -343,7 +353,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener, { MappedSsrc0 }, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
+		  std::addressof(listener), { MappedSsrc0 }, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
 
 		manager->OnTransportConnected();
 
@@ -353,8 +363,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("OnTransportDisconnected() clears sync required for all streams")
 	{
 		MockListener listener;
-		auto manager =
-		  createManager(&listener, { MappedSsrc0, MappedSsrc1 }, /*keyFrameSupported*/ false);
+		auto manager = createManager(
+		  std::addressof(listener), { MappedSsrc0, MappedSsrc1 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 		manager->OnTransportDisconnected();
@@ -376,7 +386,8 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("OnPaused() clears sync required for all streams")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { MappedSsrc0 }, /*keyFrameSupported*/ false);
+		auto manager =
+		  createManager(std::addressof(listener), { MappedSsrc0 }, /*keyFrameSupported*/ false);
 
 		manager->OnTransportConnected();
 		manager->OnPaused();
@@ -393,7 +404,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("OnResumed() sets sync required and requests key frames for all streams")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { MappedSsrc0, MappedSsrc1 });
+		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1 });
 
 		manager->OnTransportConnected();
 
@@ -419,7 +430,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("RequestKeyFrame() requests for all video streams")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener, { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
+		auto manager = createManager(std::addressof(listener), { MappedSsrc0, MappedSsrc1, MappedSsrc2 });
 
 		manager->RequestKeyFrame();
 
@@ -430,7 +441,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener, { MappedSsrc0 }, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
+		  std::addressof(listener), { MappedSsrc0 }, /*keyFrameSupported*/ false, RTC::Media::Kind::AUDIO);
 
 		manager->RequestKeyFrame();
 
@@ -440,17 +451,38 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	SECTION("RecalculateTargetLayers() always returns false")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener);
+		auto manager = createManager(std::addressof(listener));
 
 		RTC::ConsumerTypes::VideoLayers newTargetLayers;
 
 		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == false);
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	SECTION("IsBitrateAdaptable() returns false")
+	{
+		MockListener listener;
+		auto manager = createManager(std::addressof(listener));
+
+		manager->SetExternallyManagedBitrate();
+
+		REQUIRE(manager->IsBitrateAdaptable() == false);
+	}
+
+	SECTION("GetOutputBitrate() returns 0 while no Producer stream has arrived")
+	{
+		MockListener listener;
+		auto manager = createManager(std::addressof(listener));
+
+		manager->SetExternallyManagedBitrate();
+
+		REQUIRE(manager->GetOutputBitrate(DepLibUV::GetTimeMs()) == 0);
+	}
+#else
 	SECTION("IncreaseLayer() returns 0 (no BWE)")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener);
+		auto manager = createManager(std::addressof(listener));
 
 		manager->SetExternallyManagedBitrate();
 
@@ -458,11 +490,12 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		REQUIRE(used == 0u);
 	}
+#endif
 
 	SECTION("GetDesiredBitrate() returns 0 (no BWE)")
 	{
 		MockListener listener;
-		auto manager = createManager(&listener);
+		auto manager = createManager(std::addressof(listener));
 
 		manager->SetExternallyManagedBitrate();
 

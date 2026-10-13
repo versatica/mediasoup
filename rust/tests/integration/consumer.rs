@@ -2,7 +2,9 @@ use async_executor::Executor;
 use async_io::Timer;
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
-use mediasoup::consumer::{ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType};
+use mediasoup::consumer::{
+    ConsumerLayers, ConsumerOptions, ConsumerRtpStreamStat, ConsumerScore, ConsumerType,
+};
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
@@ -1344,7 +1346,13 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Audio consumer get_stats failed");
 
-            let consumer_stat = stats.consumer_stats();
+            let consumer_stat = stats
+                .iter()
+                .find_map(|stat| match stat {
+                    ConsumerRtpStreamStat::Outbound(consumer_stat) => Some(consumer_stat),
+                    ConsumerRtpStreamStat::Inbound(_) => None,
+                })
+                .expect("Audio consumer stats without outbound entry");
 
             assert_eq!(consumer_stat.kind, MediaKind::Audio);
             assert_eq!(
@@ -1393,7 +1401,13 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Video consumer get_stats failed");
 
-            let consumer_stat = stats.consumer_stats();
+            let consumer_stat = stats
+                .iter()
+                .find_map(|stat| match stat {
+                    ConsumerRtpStreamStat::Outbound(consumer_stat) => Some(consumer_stat),
+                    ConsumerRtpStreamStat::Inbound(_) => None,
+                })
+                .expect("Video consumer stats without outbound entry");
 
             assert_eq!(consumer_stat.kind, MediaKind::Video);
             assert_eq!(

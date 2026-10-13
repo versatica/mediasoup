@@ -33,6 +33,20 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	std::vector<RTC::RTP::RtpStreamRecv*> SvcProducerStreamManager::GetProducerRtpStreams() const
+	{
+		MS_TRACE();
+
+		auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
+
+		if (!producerCurrentRtpStream)
+		{
+			return {};
+		}
+
+		return { producerCurrentRtpStream };
+	}
+
 	RTC::RTP::RtpStreamRecv* SvcProducerStreamManager::GetProducerCurrentRtpStream() const
 	{
 		MS_TRACE();
@@ -136,6 +150,188 @@ namespace RTC
 		}
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t SvcProducerStreamManager::GetOutputBitrate(int64_t /*nowMs*/)
+	{
+		MS_TRACE();
+
+		MS_ABORT("adaptable bitrate, it must be bid for instead");
+	}
+
+	int64_t SvcProducerStreamManager::TakeBitrate(int64_t bitrate, int64_t nowMs)
+	{
+		MS_TRACE();
+
+		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0)
+		{
+			return 0;
+		}
+
+		// If already in the preferred layers, do nothing.
+		if (this->provisionalTargetLayers == this->preferredLayers)
+		{
+			return 0;
+		}
+
+		int64_t requiredBitrate{ 0 };
+		int16_t spatialLayer{ 0 };
+		int16_t temporalLayer{ 0 };
+
+		for (; std::cmp_less(spatialLayer, this->producerRtpStream->GetSpatialLayers()); ++spatialLayer)
+		{
+			// If this is higher than current spatial layer and we moved to current
+			// spatial layer due to BWE limitations, check how much it has elapsed
+			// since then.
+			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
+			{
+				if (this->provisionalTargetLayers.spatial > -1 && spatialLayer > this->encodingContext->GetCurrentSpatialLayer())
+				{
+					MS_DEBUG_DEV(
+					  "avoid upgrading to spatial layer %" PRIi16 " due to recent BWE downgrade", spatialLayer);
+
+					goto done;
+				}
+			}
+
+			// Ignore spatial layers lower than the one we already have.
+			if (spatialLayer < this->provisionalTargetLayers.spatial)
+			{
+				continue;
+			}
+
+			temporalLayer = 0;
+
+			// Don't consider temporal layers above the preferred one, nor above the
+			// ones this stream has.
+			const auto maxTemporalLayer = std::min(
+			  static_cast<int16_t>(this->producerRtpStream->GetTemporalLayers() - 1),
+			  this->preferredLayers.temporal);
+
+			// Check bitrate of every temporal layer.
+			for (; temporalLayer <= maxTemporalLayer; ++temporalLayer)
+			{
+				// Ignore temporal layers lower than the one we already have (taking
+				// into account the spatial layer too).
+				if (
+				  spatialLayer == this->provisionalTargetLayers.spatial &&
+				  temporalLayer <= this->provisionalTargetLayers.temporal)
+				{
+					continue;
+				}
+
+				requiredBitrate =
+				  this->producerRtpStream->GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
+
+				// When using K-SVC we must subtract the bitrate of the current used
+				// layer if the new layer is the temporal layer 0 of a higher spatial
+				// layer.
+				if (
+				  this->encodingContext->IsKSvc() && requiredBitrate > 0 && temporalLayer == 0 &&
+				  this->provisionalTargetLayers.spatial > -1 &&
+				  spatialLayer > this->provisionalTargetLayers.spatial)
+				{
+					auto provisionalRequiredBitrate = this->producerRtpStream->GetSpatialLayerBitrate(
+					  nowMs, this->provisionalTargetLayers.spatial);
+
+					if (requiredBitrate > provisionalRequiredBitrate)
+					{
+						requiredBitrate -= provisionalRequiredBitrate;
+					}
+					else
+					{
+						requiredBitrate = 1; // Don't set 0 since it would be ignored.
+					}
+				}
+
+				MS_DEBUG_DEV(
+				  "testing layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIi64 ", required bitrate:%" PRIi64
+				  "]",
+				  spatialLayer,
+				  temporalLayer,
+				  bitrate,
+				  requiredBitrate);
+
+				// If active layer, end iterations here. Otherwise move to next spatial
+				// layer.
+				if (requiredBitrate > 0)
+				{
+					goto done;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			// If this is the preferred or higher spatial layer, take it and exit,
+			// unless we have not found any usable spatial layer yet.
+			if (spatialLayer >= this->preferredLayers.spatial && this->provisionalTargetLayers.spatial != -1)
+			{
+				break;
+			}
+		}
+
+	done:
+
+		// No higher active layers found.
+		if (requiredBitrate <= 0)
+		{
+			return 0;
+		}
+
+		// No luck.
+		if (requiredBitrate > bitrate)
+		{
+			return 0;
+		}
+
+		// Set provisional layers.
+		this->provisionalTargetLayers.spatial  = spatialLayer;
+		this->provisionalTargetLayers.temporal = temporalLayer;
+
+		MS_DEBUG_DEV(
+		  "upgrading to layers %" PRIi16 ":%" PRIi16 " [bitrate:%" PRIi64 ", required bitrate:%" PRIi64
+		  "]",
+		  this->provisionalTargetLayers.spatial,
+		  this->provisionalTargetLayers.temporal,
+		  bitrate,
+		  requiredBitrate);
+
+		return requiredBitrate;
+	}
+
+	void SvcProducerStreamManager::ApplyBitrateAllocation(int64_t rtpStreamActiveMs)
+	{
+		MS_TRACE();
+
+		auto provisionalTargetLayers = this->provisionalTargetLayers;
+
+		// Reset provisional target layers.
+		this->provisionalTargetLayers.Reset();
+
+		if (provisionalTargetLayers != this->encodingContext->GetTargetLayers())
+		{
+			UpdateTargetLayers(provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
+
+			// If this looks like a spatial layer downgrade due to BWE limitations,
+			// set member.
+			if (
+			  rtpStreamActiveMs > BweDowngradeMinActiveMs &&
+			  this->encodingContext->GetTargetSpatialLayer() <
+			    this->encodingContext->GetCurrentSpatialLayer() &&
+			  this->encodingContext->GetCurrentSpatialLayer() <= this->preferredLayers.spatial)
+			{
+				MS_DEBUG_DEV(
+				  "possible target spatial layer downgrade (from %" PRIi16 " to %" PRIi16
+				  ") due to BWE limitation",
+				  this->encodingContext->GetCurrentSpatialLayer(),
+				  this->encodingContext->GetTargetSpatialLayer());
+
+				this->lastBweDowngradeAtMs = this->shared->GetTimeMs();
+			}
+		}
+	}
+#else
 	int64_t SvcProducerStreamManager::IncreaseLayer(
 	  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
 	{
@@ -345,6 +541,7 @@ namespace RTC
 			}
 		}
 	}
+#endif
 
 	int64_t SvcProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{

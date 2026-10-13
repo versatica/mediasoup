@@ -1,7 +1,9 @@
 #ifndef MS_RTC_SVC_CONSUMER_STREAM_HPP
 #define MS_RTC_SVC_CONSUMER_STREAM_HPP
 
+#include "common.hpp"
 #include "RTC/ProducerStreamManager.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -30,6 +32,7 @@ namespace RTC
 		{
 			return this->encodingContext->GetCurrentTemporalLayer();
 		}
+		std::vector<RTC::RTP::RtpStreamRecv*> GetProducerRtpStreams() const override;
 		RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const override;
 		RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const override;
 		bool IsPacketForCurrentStream(const RTC::RTP::Packet* /*packet*/) const override
@@ -44,8 +47,18 @@ namespace RTC
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
 		void ProducerSpatialLayerActivityChanged(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) override;
+#ifdef MS_USE_BUILTIN_BWE
+		bool IsBitrateAdaptable() const override
+		{
+			return true;
+		}
+		int64_t GetOutputBitrate(int64_t nowMs) override;
+		int64_t TakeBitrate(int64_t bitrate, int64_t nowMs) override;
+		void ApplyBitrateAllocation(int64_t rtpStreamActiveMs) override;
+#else
 		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) override;
 		void ApplyLayers(int64_t rtpStreamActiveMs) override;
+#endif
 		int64_t GetDesiredBitrate(int64_t nowMs) const override;
 		RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,

@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -248,6 +249,28 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	packet->SetSsrc(MappedSsrc0);
 	packet->SetTimestamp(1000);
 	packet->SetPayloadLength(40);
+
+	// The bidding protocol is named differently in each BWE, so these drive
+	// whichever one is built and every SECTION below asserts the same thing.
+	const auto takeBitrate =
+	  [](RTC::SimulcastProducerStreamManager* manager, int64_t bitrate, int64_t nowMs) -> int64_t
+	{
+#ifdef MS_USE_BUILTIN_BWE
+		return manager->TakeBitrate(bitrate, nowMs);
+#else
+		return manager->IncreaseLayer(bitrate, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+#endif
+	};
+
+	const auto applyBitrateAllocation =
+	  [](RTC::SimulcastProducerStreamManager* manager, int64_t rtpStreamActiveMs) -> void
+	{
+#ifdef MS_USE_BUILTIN_BWE
+		manager->ApplyBitrateAllocation(rtpStreamActiveMs);
+#else
+		manager->ApplyLayers(rtpStreamActiveMs);
+#endif
+	};
 
 	SECTION("ProcessRtpPacket() returns DROP when target temporal layer is -1")
 	{
@@ -1240,7 +1263,19 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(targetLayers.temporal == -1);
 	}
 
-	SECTION("IncreaseLayer() returns 0 on second call in same iteration")
+#ifdef MS_USE_BUILTIN_BWE
+	SECTION("IsBitrateAdaptable() returns true")
+	{
+		MockListener listener;
+		auto manager = createManager(std::addressof(listener));
+
+		manager->SetExternallyManagedBitrate();
+
+		REQUIRE(manager->IsBitrateAdaptable() == true);
+	}
+#endif
+
+	SECTION("TakeBitrate() returns 0 on second call in same iteration")
 	{
 		MockListener listener;
 		auto manager =
@@ -1257,19 +1292,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		const int64_t nowMs = shared.GetTimeMs();
 
 		// First call claims bitrate.
-		auto usedBitrate = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		const auto usedBitrate = takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
 
 		REQUIRE(usedBitrate > 0);
 
 		// Second call in same iteration should return 0 (already at preferred layers).
-		auto usedBitrate2 = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		const auto usedBitrate2 = takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
 
 		REQUIRE(usedBitrate2 == 0);
 	}
 
-	SECTION("IncreaseLayer() works again after ApplyLayers()")
+	SECTION("TakeBitrate() works again after ApplyBitrateAllocation()")
 	{
 		MockListener listener;
 		auto manager =
@@ -1288,17 +1321,15 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		const int64_t nowMs = shared.GetTimeMs();
 
 		// First iteration: claim layer 0.
-		manager->IncreaseLayer(
-		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
-		manager->ApplyLayers(/*rtpStreamActiveMs*/ 0u);
+		takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
+		applyBitrateAllocation(manager.get(), /*rtpStreamActiveMs*/ 0);
 
 		// Feed packets to layer 1.
 		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 100);
 
-		// After ApplyLayers, IncreaseLayer should work again for layer 1.
-		auto usedBitrate = manager->IncreaseLayer(
-		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		// Once the round is committed it should work again for layer 1.
+		const auto usedBitrate = takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
 
 		REQUIRE(usedBitrate > 0);
 	}

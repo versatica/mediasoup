@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/SimpleProducerStreamManager.hpp"
@@ -292,7 +293,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>();
 		auto manager         = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*keyFrameSupported*/ false,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
@@ -416,6 +417,47 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::BUFFER);
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	SECTION("IsBitrateAdaptable() returns false")
+	{
+		MockListener listener;
+		auto manager = createManager(std::addressof(listener));
+
+		manager->SetExternallyManagedBitrate();
+
+		REQUIRE(manager->IsBitrateAdaptable() == false);
+	}
+
+	SECTION("GetOutputBitrate() returns the bitrate of the Producer stream")
+	{
+		MockListener listener;
+		auto manager   = createManager(std::addressof(listener));
+		auto rtpStream = createRtpStreamRecv();
+
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+		manager->SetExternallyManagedBitrate();
+		manager->OnTransportConnected();
+
+		// Feed packets so the stream has non-zero bitrate.
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
+
+		const int64_t nowMs      = shared.GetTimeMs();
+		const auto streamBitrate = rtpStream->GetBitrate(nowMs);
+
+		REQUIRE(streamBitrate > 0);
+		REQUIRE(manager->GetOutputBitrate(nowMs) == streamBitrate);
+	}
+
+	SECTION("GetOutputBitrate() returns 0 while no Producer stream has arrived")
+	{
+		MockListener listener;
+		auto manager = createManager(std::addressof(listener));
+
+		manager->SetExternallyManagedBitrate();
+
+		REQUIRE(manager->GetOutputBitrate(shared.GetTimeMs()) == 0);
+	}
+#else
 	SECTION("IncreaseLayer() returns producer bitrate when it is less than available bitrate")
 	{
 		MockListener listener;
@@ -513,6 +555,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 
 		REQUIRE(usedBitrate > 0);
 	}
+#endif
 
 	SECTION("GetDesiredBitrate() returns producer bitrate for video")
 	{

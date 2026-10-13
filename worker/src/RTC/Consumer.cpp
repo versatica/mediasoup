@@ -487,7 +487,7 @@ namespace RTC
 		auto dump = FBS::Consumer::CreateConsumerDumpDirect(
 		  builder,
 		  base,
-		  &rtpStreams,
+		  std::addressof(rtpStreams),
 		  this->producerStreamManager->GetPreferredLayers().spatial,
 		  targetLayers.spatial,
 		  this->producerStreamManager->GetCurrentSpatialLayer(),
@@ -558,9 +558,9 @@ namespace RTC
 		  this->kind == RTC::Media::Kind::AUDIO ? FBS::RtpParameters::MediaKind::AUDIO
 			                                      : FBS::RtpParameters::MediaKind::VIDEO,
 		  rtpParameters,
-		  &consumableRtpEncodings,
-		  &supportedCodecPayloadTypes,
-		  &traceEventTypes,
+		  std::addressof(consumableRtpEncodings),
+		  std::addressof(supportedCodecPayloadTypes),
+		  std::addressof(traceEventTypes),
 		  this->paused,
 		  this->producerPaused,
 		  this->priority);
@@ -580,15 +580,15 @@ namespace RTC
 			rtpStreams.emplace_back(rtpStream->FillBufferStats(builder));
 		}
 
-		// Add stats of the current recv stream.
-		auto* producerCurrentRtpStream = this->producerStreamManager->GetProducerCurrentRtpStream();
+		// Add stats of the recv streams being forwarded.
+		const auto producerRtpStreams = this->producerStreamManager->GetProducerRtpStreams();
 
-		if (producerCurrentRtpStream)
+		for (auto* producerRtpStream : producerRtpStreams)
 		{
-			rtpStreams.emplace_back(producerCurrentRtpStream->FillBufferStats(builder));
+			rtpStreams.emplace_back(producerRtpStream->FillBufferStats(builder));
 		}
 
-		return FBS::Consumer::CreateGetStatsResponseDirect(builder, &rtpStreams);
+		return FBS::Consumer::CreateGetStatsResponseDirect(builder, std::addressof(rtpStreams));
 	}
 
 	flatbuffers::Offset<FBS::Consumer::ConsumerScore> Consumer::FillBufferScore(
@@ -1037,6 +1037,76 @@ namespace RTC
 		this->listener->OnConsumerProducerClosed(this);
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	const std::string& Consumer::GetBitrateAllocationId() const
+	{
+		MS_TRACE();
+
+		return this->id;
+	}
+
+	bool Consumer::IsBitrateAdaptable() const
+	{
+		MS_TRACE();
+
+		return this->producerStreamManager->IsBitrateAdaptable();
+	}
+
+	int64_t Consumer::GetOutputBitrate()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+
+		if (!IsActive())
+		{
+			return 0;
+		}
+
+		const int64_t nowMs = this->shared->GetTimeMs();
+
+		return this->producerStreamManager->GetOutputBitrate(nowMs);
+	}
+
+	uint8_t Consumer::GetBitrateWeight() const
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+		MS_ASSERT(IsBitrateAdaptable(), "not an adaptable bitrate");
+
+		if (!IsActive())
+		{
+			return 0;
+		}
+
+		return this->priority;
+	}
+
+	int64_t Consumer::TakeBitrate(int64_t bitrate)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+		MS_ASSERT(IsActive(), "should be active");
+
+		const int64_t nowMs = this->shared->GetTimeMs();
+
+		return this->producerStreamManager->TakeBitrate(bitrate, nowMs);
+	}
+
+	void Consumer::ApplyBitrateAllocation()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+		MS_ASSERT(IsActive(), "should be active");
+
+		auto* rtpStream = this->mapSsrcRtpStream.begin()->second;
+
+		this->producerStreamManager->ApplyBitrateAllocation(rtpStream->GetActiveMs());
+	}
+#else
 	uint8_t Consumer::GetBitratePriority() const
 	{
 		MS_TRACE();
@@ -1101,6 +1171,7 @@ namespace RTC
 
 		this->producerStreamManager->ApplyLayers(rtpStream->GetActiveMs());
 	}
+#endif
 
 	int64_t Consumer::GetDesiredBitrate() const
 	{
@@ -1155,16 +1226,16 @@ namespace RTC
 		{
 			auto ssrc     = this->mapMappedSsrcSsrc.at(packet->GetSsrc());
 			rtpStream     = this->mapSsrcRtpStream.at(ssrc);
-			rtpSeqManager = &this->mapRtpStreamRtpSeqManager.at(rtpStream);
+			rtpSeqManager = std::addressof(this->mapRtpStreamRtpSeqManager.at(rtpStream));
 			targetLayerRetransmissionBuffer =
-			  &this->mapRtpStreamTargetLayerRetransmissionBuffer.at(rtpStream);
+			  std::addressof(this->mapRtpStreamTargetLayerRetransmissionBuffer.at(rtpStream));
 		}
 		else
 		{
 			rtpStream     = this->mapSsrcRtpStream.begin()->second;
-			rtpSeqManager = &this->mapRtpStreamRtpSeqManager.at(rtpStream);
+			rtpSeqManager = std::addressof(this->mapRtpStreamRtpSeqManager.at(rtpStream));
 			targetLayerRetransmissionBuffer =
-			  &this->mapRtpStreamTargetLayerRetransmissionBuffer.at(rtpStream);
+			  std::addressof(this->mapRtpStreamTargetLayerRetransmissionBuffer.at(rtpStream));
 		}
 
 		if (!IsActive())
