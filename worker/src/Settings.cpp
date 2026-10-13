@@ -28,14 +28,14 @@ const ankerl::unordered_dense::map<std::string, LogLevel> Settings::String2LogLe
 	{ "debug", LogLevel::LOG_DEBUG },
 	{ "warn",  LogLevel::LOG_WARN  },
 	{ "error", LogLevel::LOG_ERROR },
-	{ "none",  LogLevel::LOG_NONE  }
+	{ "none",  LogLevel::LOG_NONE  },
 };
 const ankerl::unordered_dense::map<LogLevel, std::string> Settings::LogLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
 	{ LogLevel::LOG_WARN,  "warn"  },
 	{ LogLevel::LOG_ERROR, "error" },
-	{ LogLevel::LOG_NONE,  "none"  }
+	{ LogLevel::LOG_NONE,  "none"  },
 };
 // clang-format on
 
@@ -62,7 +62,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		// support the built-in BWE.
 		// TODO: Remove when we only support the built-in BWE.
 		{ .name="libwebrtcFieldTrials", .has_arg=optional_argument, .flag=nullptr, .val='W' },
-		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  }
+		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  },
 	};
 	// clang-format on
 	std::string stringValue;
@@ -218,7 +218,7 @@ void Settings::SetLogLevel(std::string& level)
 	// Lowcase given level.
 	Utils::String::ToLowerCase(level);
 
-	if (Settings::String2LogLevel.find(level) == Settings::String2LogLevel.end())
+	if (!Settings::String2LogLevel.contains(level))
 	{
 		MS_THROW_TYPE_ERROR("invalid value '%s' for logLevel", level.c_str());
 	}
