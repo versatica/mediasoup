@@ -76,10 +76,17 @@ namespace RTC
 			/**
 			 * Feed a received RTP packet.
 			 *
+			 * @param kind - Media the stream the packet belongs to carries, or no
+			 *   value if the packet belongs to no stream of ours, which happens to
+			 *   the packets still in flight when a Producer is closed.
 			 * @param receivedAtUs - Instant the packet arrived.
-			 * @param kind - Media the stream the packet belongs to carries.
+			 *
+			 * @remarks
+			 * - Such a packet still has to be fed, since leaving a hole in the
+			 *   transport-cc feedback tells the remote sender that the link lost it.
 			 */
-			void ReceiveRtpPacket(int64_t receivedAtUs, const RTC::RTP::Packet* packet, RTC::Media::Kind kind);
+			void ReceiveRtpPacket(
+			  const RTC::RTP::Packet* packet, std::optional<RTC::Media::Kind> kind, int64_t receivedAtUs);
 
 			/**
 			 * Feed the round trip time towards the remote senders, which bounds how

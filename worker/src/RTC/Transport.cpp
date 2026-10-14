@@ -1680,6 +1680,21 @@ namespace RTC
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
 
+#ifdef MS_USE_BUILTIN_BWE
+		// NOTE: Done before giving up on a packet with no Producer, since its
+		// arrival still has to be reported back. A remote peer may well close a
+		// Producer over a path of its own while its packets are still in flight,
+		// and a hole in the transport-cc feedback would tell it that the link lost
+		// them.
+		if (this->receiverTransportCongestionController)
+		{
+			this->receiverTransportCongestionController->ReceiveRtpPacket(
+			  packet,
+			  producer ? std::optional<RTC::Media::Kind>(producer->GetKind()) : std::nullopt,
+			  receivedAtUs);
+		}
+#endif
+
 		if (!producer)
 		{
 #ifdef MS_RTC_LOGGER_RTP
@@ -1705,14 +1720,6 @@ namespace RTC
 		//   packet->GetSsrc(),
 		//   packet->GetPayloadType(),
 		//   producer->id.c_str());
-
-#ifdef MS_USE_BUILTIN_BWE
-		if (this->receiverTransportCongestionController)
-		{
-			this->receiverTransportCongestionController->ReceiveRtpPacket(
-			  receivedAtUs, packet, producer->GetKind());
-		}
-#endif
 
 		// Pass the RTP packet to the corresponding Producer.
 		auto result = producer->ReceiveRtpPacket(packet, receivedAtUs);

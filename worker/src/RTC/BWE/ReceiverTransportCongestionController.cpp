@@ -22,19 +22,23 @@ namespace RTC
 		}
 
 		void ReceiverTransportCongestionController::ReceiveRtpPacket(
-		  int64_t receivedAtUs, const RTC::RTP::Packet* packet, RTC::Media::Kind kind)
+		  const RTC::RTP::Packet* packet, std::optional<RTC::Media::Kind> kind, int64_t receivedAtUs)
 		{
 			MS_TRACE();
 
 			uint16_t wideSeqNumber{ 0 };
 
+			// This path reports when the packet arrived and nothing else, so what the
+			// packet carries does not matter and neither does whether it still belongs
+			// to a stream of ours.
 			if (packet->ReadTransportWideCc01(wideSeqNumber))
 			{
 				this->transportWideCcFeedbackGenerator.ReceiveRtpPacket(receivedAtUs, packet);
 			}
 			// Audio packets take no part in the estimation of the incoming link, so
-			// their streams are not announced in the REMB either.
-			else if (kind != RTC::Media::Kind::AUDIO)
+			// their streams are not announced in the REMB either, and a packet whose
+			// stream is gone cannot be told apart from an audio one.
+			else if (kind.has_value() && kind.value() != RTC::Media::Kind::AUDIO)
 			{
 				this->remoteBitrateEstimator.ReceiveRtpPacket(packet, receivedAtUs, this->shared->GetTimeUs());
 			}

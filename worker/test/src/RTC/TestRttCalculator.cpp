@@ -5,7 +5,7 @@
 #include <string_view>
 #include <vector>
 
-SCENARIO("BWE RttCalculator", "[bwe][rttcalculator]")
+SCENARIO("RttCalculator", "[rttcalculator]")
 {
 	constexpr std::string_view TimerLabel{ "rtt-calculator-update" };
 	constexpr int64_t BaseTimeUs{ 1000000000 };
@@ -116,6 +116,17 @@ SCENARIO("BWE RttCalculator", "[bwe][rttcalculator]")
 		REQUIRE(timer->EvaluateHasExpired());
 
 		REQUIRE(listener.avgRttsMs == std::vector<int64_t>{ 100, 100 });
+
+		// Both are within the window: 100 * 0.7 + ((100 + 80) / 2) * 0.3.
+		rttCalculator.AddRtt(80, shared.GetTimeMs());
+
+		advanceNowMs(1000);
+
+		// The first one has now been in the window for 2000 ms and goes, leaving
+		// only the 80: 97 * 0.7 + 80 * 0.3.
+		REQUIRE(timer->EvaluateHasExpired());
+
+		REQUIRE(listener.avgRttsMs == std::vector<int64_t>{ 100, 100, 97, 91 });
 	}
 
 	SECTION("two measurements taken at the same instant both count")

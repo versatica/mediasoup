@@ -511,22 +511,26 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 		REQUIRE(RTC::BWE::TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(0) == 250);
 	}
 
-	SECTION("with nothing coming in the send interval stays at its default")
+	SECTION("nothing is sent periodically until a packet carrying the extension arrives")
 	{
 		TestTransportWideCcFeedbackGeneratorListener listener;
-		const RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
 		  std::addressof(listener), std::addressof(shared), RTC::Consts::MtuSize);
 
 		auto* timer = shared.GetTimer(TimerLabel);
 
 		REQUIRE(timer);
-		REQUIRE(timer->GetRepeatMs() == 100);
 
-		nowUs = BaseTimeUs + (100 * 1000);
-
-		REQUIRE(timer->EvaluateHasExpired());
+		// A transport whose streams all negotiated REMB instead never gets a packet
+		// here, and then there is nothing to wake up for.
+		REQUIRE(!timer->IsActive());
 
 		REQUIRE(transportWideCcFeedbackGenerator.GetSendIntervalMs() == 100);
+
+		feedPacket(transportWideCcFeedbackGenerator, 1, BaseTimeUs, 1000);
+
+		REQUIRE(timer->IsActive());
+		REQUIRE(timer->GetTimeoutMs() == 100);
 		REQUIRE(timer->GetRepeatMs() == 100);
 	}
 
