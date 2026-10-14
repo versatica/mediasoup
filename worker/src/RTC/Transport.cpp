@@ -577,7 +577,7 @@ namespace RTC
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->minOutgoingBitrate))
 				: flatbuffers::nullopt,
 		  // roundTripTime.
-		  this->rttCalculator.GetAvgRttMs());
+		  this->rttCalculator.GetLastRttMs());
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)

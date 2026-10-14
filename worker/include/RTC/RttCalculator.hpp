@@ -80,6 +80,20 @@ namespace RTC
 			return this->avgRttMs;
 		}
 
+		/**
+		 * Latest round trip time worked out (ms), however long ago it was, or no
+		 * value while nothing has ever been measured.
+		 *
+		 * @remarks
+		 * - This is what a reader asking at any instant wants, since the round trip
+		 *   time is only measured when RTCP arrives and that may be seconds apart,
+		 *   leaving `GetAvgRttMs()` empty most of the time.
+		 */
+		std::optional<int64_t> GetLastRttMs() const
+		{
+			return this->lastRttMs;
+		}
+
 		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:
 		void OnTimer(TimerHandleInterface* timer) override;
@@ -101,6 +115,7 @@ namespace RTC
 		// Measurements still within the window, oldest first.
 		std::vector<Measurement> measurements;
 		std::optional<int64_t> avgRttMs;
+		std::optional<int64_t> lastRttMs;
 	};
 } // namespace RTC
 

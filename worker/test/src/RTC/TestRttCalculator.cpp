@@ -35,23 +35,25 @@ SCENARIO("RttCalculator", "[rttcalculator]")
 		nowUs += incrementMs * 1000;
 	};
 
-	SECTION("nothing is said until something is measured")
+	SECTION("nothing is said and nothing wakes up until something is measured")
 	{
 		TestRttCalculatorListener listener;
 
-		const RTC::RttCalculator rttCalculator(std::addressof(listener), std::addressof(shared));
+		RTC::RttCalculator rttCalculator(std::addressof(listener), std::addressof(shared));
 
 		auto* timer = shared.GetTimer(TimerLabel);
 
 		REQUIRE(timer);
-		REQUIRE(timer->GetRepeatMs() == 1000);
-
-		advanceNowMs(1000);
-
-		REQUIRE(timer->EvaluateHasExpired());
+		REQUIRE(!timer->IsActive());
 
 		REQUIRE(listener.avgRttsMs.empty());
 		REQUIRE(!rttCalculator.GetAvgRttMs().has_value());
+		REQUIRE(!rttCalculator.GetLastRttMs().has_value());
+
+		rttCalculator.AddRtt(100, shared.GetTimeMs());
+
+		REQUIRE(timer->IsActive());
+		REQUIRE(timer->GetRepeatMs() == 1000);
 	}
 
 	SECTION("the first measurement is taken as it is")
@@ -169,10 +171,20 @@ SCENARIO("RttCalculator", "[rttcalculator]")
 		REQUIRE(listener.avgRttsMs == std::vector<int64_t>{ 100 });
 		REQUIRE(!rttCalculator.GetAvgRttMs().has_value());
 
+		// With nothing left to work out an average from there is nothing to wake up
+		// for either, until a new measurement arrives.
+		REQUIRE(!timer->IsActive());
+
+		// But whoever asks at any instant still gets the latest round trip time
+		// worked out, which is the whole point of keeping it apart.
+		REQUIRE(rttCalculator.GetLastRttMs() == 100);
+
 		// And with the average forgotten, the next measurement is taken as it is
 		// rather than weighed against a stale one.
 		rttCalculator.AddRtt(40, shared.GetTimeMs());
 
 		REQUIRE(listener.avgRttsMs == std::vector<int64_t>{ 100, 40 });
+		REQUIRE(rttCalculator.GetLastRttMs() == 40);
+		REQUIRE(timer->IsActive());
 	}
 }

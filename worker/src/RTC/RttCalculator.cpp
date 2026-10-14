@@ -25,13 +25,16 @@ namespace RTC
 	    updateTimer(shared->CreateTimer(this, "rtt-calculator-update"))
 	{
 		MS_TRACE();
-
-		this->updateTimer->Start(UpdateIntervalMs, UpdateIntervalMs);
 	}
 
 	void RttCalculator::AddRtt(int64_t rttMs, int64_t nowMs)
 	{
 		MS_TRACE();
+
+		if (!this->updateTimer->IsActive())
+		{
+			this->updateTimer->Start(UpdateIntervalMs, UpdateIntervalMs);
+		}
 
 		this->measurements.push_back({ .rttMs = rttMs, .atMs = nowMs });
 
@@ -55,6 +58,8 @@ namespace RTC
 		{
 			this->avgRttMs.reset();
 
+			this->updateTimer->Stop();
+
 			return;
 		}
 
@@ -77,6 +82,8 @@ namespace RTC
 			  (static_cast<float>(this->avgRttMs.value()) * (1.0f - WeightFactor)) +
 			  (static_cast<float>(windowRttMs) * WeightFactor));
 		}
+
+		this->lastRttMs = this->avgRttMs;
 
 		this->listener->OnRttCalculatorRttUpdated(this, this->avgRttMs.value());
 	}
