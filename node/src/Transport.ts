@@ -1293,6 +1293,7 @@ export function parseBaseTransportStats(
 			binary.minOutgoingBitrate() !== null
 				? Number(binary.minOutgoingBitrate())
 				: undefined,
+		roundTripTime: binary.roundTripTime() ?? undefined,
 	};
 }
 

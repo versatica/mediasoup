@@ -128,9 +128,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		TestReceiverTransportCongestionControllerListener listener;
 
 		RTC::BWE::ReceiverTransportCongestionController receiverTransportCongestionControl(
-		  std::addressof(listener),
-		  std::addressof(shared),
-		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::TRANSPORT_CC });
+		  std::addressof(listener), std::addressof(shared), {});
 
 		for (uint16_t wideSeqNumber{ 0 }; wideSeqNumber < 10; ++wideSeqNumber)
 		{
@@ -165,9 +163,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		TestReceiverTransportCongestionControllerListener listener;
 
 		RTC::BWE::ReceiverTransportCongestionController receiverTransportCongestionControl(
-		  std::addressof(listener),
-		  std::addressof(shared),
-		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::REMB });
+		  std::addressof(listener), std::addressof(shared), {});
 
 		REQUIRE(receiverTransportCongestionControl.GetAvailableBitrate().has_value() == false);
 
@@ -196,9 +192,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		TestReceiverTransportCongestionControllerListener listener;
 
 		RTC::BWE::ReceiverTransportCongestionController receiverTransportCongestionControl(
-		  std::addressof(listener),
-		  std::addressof(shared),
-		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::REMB });
+		  std::addressof(listener), std::addressof(shared), {});
 
 		// A burst where two streams alternate, so that the estimation applies to both.
 		for (int idx{ 0 }; idx < Probes; ++idx)
@@ -233,9 +227,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		TestReceiverTransportCongestionControllerListener listener;
 
 		RTC::BWE::ReceiverTransportCongestionController receiverTransportCongestionControl(
-		  std::addressof(listener),
-		  std::addressof(shared),
-		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::REMB });
+		  std::addressof(listener), std::addressof(shared), {});
 
 		// The very same burst that gives an estimation when it carries video.
 		for (int idx{ 0 }; idx < Probes; ++idx)
@@ -257,9 +249,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		TestReceiverTransportCongestionControllerListener listener;
 
 		RTC::BWE::ReceiverTransportCongestionController receiverTransportCongestionControl(
-		  std::addressof(listener),
-		  std::addressof(shared),
-		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::TRANSPORT_CC });
+		  std::addressof(listener), std::addressof(shared), {});
 
 		for (uint16_t wideSeqNumber{ 0 }; wideSeqNumber < 10; ++wideSeqNumber)
 		{
@@ -290,9 +280,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		TestReceiverTransportCongestionControllerListener listener;
 
 		RTC::BWE::ReceiverTransportCongestionController receiverTransportCongestionControl(
-		  std::addressof(listener),
-		  std::addressof(shared),
-		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::TRANSPORT_CC });
+		  std::addressof(listener), std::addressof(shared), {});
 
 		receiverTransportCongestionControl.SetMaxIncomingBitrate(MaxIncomingBitrate);
 
@@ -315,9 +303,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		TestReceiverTransportCongestionControllerListener listener;
 
 		RTC::BWE::ReceiverTransportCongestionController receiverTransportCongestionControl(
-		  std::addressof(listener),
-		  std::addressof(shared),
-		  { .congestionControlType = RTC::BWE::Types::CongestionControlType::TRANSPORT_CC });
+		  std::addressof(listener), std::addressof(shared), {});
 
 		receiverTransportCongestionControl.SetMaxIncomingBitrate(MaxIncomingBitrate);
 

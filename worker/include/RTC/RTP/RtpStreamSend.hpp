@@ -85,6 +85,25 @@ namespace RTC
 			};
 
 		public:
+			/**
+			 * What a Receiver Report says about the link, each part missing when the
+			 * report carries nothing to work it out with.
+			 */
+			struct ReceiverReportResult
+			{
+				/**
+				 * How many packets the remote endpoint missed and how many it should
+				 * have got, or no value if this report measures no interval at all.
+				 */
+				std::optional<Loss> loss;
+				/**
+				 * Round trip time just measured (ms), or no value if this report refers
+				 * to no Sender Report to measure it against.
+				 */
+				std::optional<float> rttMs;
+			};
+
+		public:
 			enum class ReceivePacketResult : uint8_t
 			{
 				DISCARDED,
@@ -140,11 +159,9 @@ namespace RTC
 			void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 
 			/**
-			 * @returns What this link lost and what it was expected to deliver since
-			 *   the previous Receiver Report, or no value if this one measures no
-			 *   interval at all.
+			 * @returns What this Receiver Report says about the link.
 			 */
-			std::optional<Loss> ReceiveRtcpReceiverReport(
+			ReceiverReportResult ReceiveRtcpReceiverReport(
 			  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
 
 			void ReceiveRtcpXrReceiverReferenceTime(

@@ -445,7 +445,7 @@ impl FromFbs for ConsumerStat {
             packet_count: stats.packet_count,
             byte_count: stats.byte_count,
             bitrate: stats.bitrate,
-            round_trip_time: Some(base.round_trip_time),
+            round_trip_time: base.round_trip_time,
             rtx_packets_discarded: Some(base.rtx_packets_discarded),
             score: base.score,
         }

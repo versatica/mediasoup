@@ -191,6 +191,7 @@ table Stats {
     max_incoming_bitrate: uint64 = null;
     max_outgoing_bitrate: uint64 = null;
     min_outgoing_bitrate: uint64 = null;
+    round_trip_time: float = null;
 }
 
 table SetMaxIncomingBitrateRequest {

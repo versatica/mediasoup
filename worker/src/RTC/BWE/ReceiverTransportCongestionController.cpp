@@ -12,34 +12,13 @@ namespace RTC
 
 		ReceiverTransportCongestionController::ReceiverTransportCongestionController(
 		  Listener* listener, SharedInterface* shared, ReceiverTransportCongestionControllerOptions options)
-		  : options(options), listener(listener), shared(shared), rembGenerator(this)
+		  : listener(listener),
+		    shared(shared),
+		    transportWideCcFeedbackGenerator(this, shared, options.maxRtcpPacketLen),
+		    remoteBitrateEstimator(this),
+		    rembGenerator(this)
 		{
 			MS_TRACE();
-
-			MS_ASSERT(
-			  this->options.congestionControlType == Types::CongestionControlType::TRANSPORT_CC ||
-			    this->options.congestionControlType == Types::CongestionControlType::REMB,
-			  "no congestion control type given");
-
-			switch (this->options.congestionControlType)
-			{
-				case Types::CongestionControlType::TRANSPORT_CC:
-				{
-					this->transportWideCcFeedbackGenerator = std::make_unique<TransportWideCcFeedbackGenerator>(
-					  this, this->shared, this->options.maxRtcpPacketLen);
-
-					break;
-				}
-
-				case Types::CongestionControlType::REMB:
-				{
-					this->remoteBitrateEstimator = std::make_unique<RemoteBitrateEstimatorAbsSendTime>(this);
-
-					break;
-				}
-
-					NO_DEFAULT();
-			}
 		}
 
 		void ReceiverTransportCongestionController::ReceiveRtpPacket(
@@ -47,31 +26,17 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			switch (this->options.congestionControlType)
+			uint16_t wideSeqNumber{ 0 };
+
+			if (packet->ReadTransportWideCc01(wideSeqNumber))
 			{
-				case Types::CongestionControlType::TRANSPORT_CC:
-				{
-					this->transportWideCcFeedbackGenerator->ReceiveRtpPacket(receivedAtUs, packet);
-
-					break;
-				}
-
-				case Types::CongestionControlType::REMB:
-				{
-					// Audio packets take no part in the estimation of the incoming link,
-					// so their streams are not announced in the REMB either.
-					if (kind == RTC::Media::Kind::AUDIO)
-					{
-						break;
-					}
-
-					this->remoteBitrateEstimator->ReceiveRtpPacket(
-					  packet, receivedAtUs, this->shared->GetTimeUs());
-
-					break;
-				}
-
-					NO_DEFAULT();
+				this->transportWideCcFeedbackGenerator.ReceiveRtpPacket(receivedAtUs, packet);
+			}
+			// Audio packets take no part in the estimation of the incoming link, so
+			// their streams are not announced in the REMB either.
+			else if (kind != RTC::Media::Kind::AUDIO)
+			{
+				this->remoteBitrateEstimator.ReceiveRtpPacket(packet, receivedAtUs, this->shared->GetTimeUs());
 			}
 
 			// The cap has to keep being announced whatever was negotiated, since a
@@ -84,49 +49,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			switch (this->options.congestionControlType)
-			{
-				case Types::CongestionControlType::TRANSPORT_CC:
-				{
-					// Nothing is estimated here in this mode, so there is nothing the
-					// round trip time bounds.
-
-					break;
-				}
-
-				case Types::CongestionControlType::REMB:
-				{
-					this->remoteBitrateEstimator->OnRttUpdate(avgRttUs);
-
-					break;
-				}
-
-					NO_DEFAULT();
-			}
+			this->remoteBitrateEstimator.OnRttUpdate(avgRttUs);
 		}
 
 		void ReceiverTransportCongestionController::RemoveStream(uint32_t ssrc)
 		{
 			MS_TRACE();
 
-			switch (this->options.congestionControlType)
-			{
-				case Types::CongestionControlType::TRANSPORT_CC:
-				{
-					// No stream is kept track of in this mode.
-
-					break;
-				}
-
-				case Types::CongestionControlType::REMB:
-				{
-					this->remoteBitrateEstimator->RemoveStream(ssrc);
-
-					break;
-				}
-
-					NO_DEFAULT();
-			}
+			this->remoteBitrateEstimator.RemoveStream(ssrc);
 		}
 
 		void ReceiverTransportCongestionController::SetMaxIncomingBitrate(int64_t bitrate)
@@ -149,32 +79,18 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			switch (this->options.congestionControlType)
+			const int64_t bitrate = this->remoteBitrateEstimator.GetLatestEstimate();
+
+			// NOTE: Zero is how the estimator says that it has nothing, either because
+			// no estimation is valid yet or because no stream is active. A measured
+			// bitrate never comes out as zero, since the rate control clamps it to the
+			// lowest it is configured with.
+			if (bitrate == 0)
 			{
-				case Types::CongestionControlType::TRANSPORT_CC:
-				{
-					// The estimating is the remote sender's job in this mode.
-					return std::nullopt;
-				}
-
-				case Types::CongestionControlType::REMB:
-				{
-					const int64_t bitrate = this->remoteBitrateEstimator->GetLatestEstimate();
-
-					// NOTE: Zero is how the estimator says that it has nothing, either because
-					// no estimation is valid yet or because no stream is active. A measured
-					// bitrate never comes out as zero, since the rate control clamps it to the
-					// lowest it is configured with.
-					if (bitrate == 0)
-					{
-						return std::nullopt;
-					}
-
-					return bitrate;
-				}
-
-					NO_DEFAULT();
+				return std::nullopt;
 			}
+
+			return bitrate;
 		}
 
 		void ReceiverTransportCongestionController::OnTransportWideCcFeedbackGeneratorSendPacket(

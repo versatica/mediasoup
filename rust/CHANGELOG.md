@@ -6,6 +6,8 @@
 - `RtpStreamSend`: Don't discount repaired packets twice in the score when RTX is not used ([PR #1987](https://github.com/versatica/mediasoup/pull/1987)).
 - SCTP: Don't emit association errors in `Association::ResetStreams()` ([PR #1990](https://github.com/versatica/mediasoup/pull/1990)).
 - **Breaking change:** `Consumer::get_stats()` now returns `Vec<ConsumerRtpStreamStat>`, an entry per RTP stream being either `Outbound(ConsumerStat)` or `Inbound(ProducerStat)`, replacing the `ConsumerStats` enum and its `consumer_stats()` method ([PR #1991](https://github.com/versatica/mediasoup/pull/1991)).
+- `TransportStats`: Add `roundTripTime` (ms) which is optional ([PR #1992](https://github.com/versatica/mediasoup/pull/1992)).
+  - `RtpStreamStats.roundTripTime` (optional) now has no value (instead of 0) when the RTT is unknown.
 
 ### 0.30.0
 

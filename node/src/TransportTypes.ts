@@ -209,6 +209,7 @@ export type BaseTransportStats = {
 	maxIncomingBitrate?: number;
 	maxOutgoingBitrate?: number;
 	minOutgoingBitrate?: number;
+	roundTripTime?: number;
 };
 
 /**

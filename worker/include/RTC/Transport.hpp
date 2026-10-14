@@ -19,12 +19,15 @@
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RemoteCaptureTimeEstimator.hpp"
 #include "RTC/RtpListener.hpp"
+#include "RTC/RttCalculator.hpp"
 #include "RTC/SCTP/public/AssociationInterface.hpp"
 #include "RTC/SCTP/public/AssociationListenerInterface.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SctpListener.hpp"
-#ifndef MS_USE_BUILTIN_BWE
+#ifdef MS_USE_BUILTIN_BWE
+#include "RTC/BWE/ReceiverTransportCongestionController.hpp"
+#else
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #endif
@@ -43,7 +46,10 @@ namespace RTC
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
 	                  public RTC::SCTP::AssociationListenerInterface,
-#ifndef MS_USE_BUILTIN_BWE
+	                  public RTC::RttCalculator::Listener,
+#ifdef MS_USE_BUILTIN_BWE
+	                  public RTC::BWE::ReceiverTransportCongestionController::Listener,
+#else
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 #endif
@@ -343,7 +349,17 @@ namespace RTC
 		void OnAssociationTotalBufferedAmountLow() override;
 		bool OnAssociationIsTransportReadyForSctp() override;
 
-#ifndef MS_USE_BUILTIN_BWE
+		/* Pure virtual methods inherited from RTC::RttCalculator::Listener. */
+	public:
+		void OnRttCalculatorRttUpdated(RTC::RttCalculator* rttCalculator, int64_t avgRttMs) override;
+
+#ifdef MS_USE_BUILTIN_BWE
+		/* Pure virtual methods inherited from RTC::BWE::ReceiverTransportCongestionController::Listener. */
+	public:
+		void OnReceiverTransportCongestionControllerSendRtcpPacket(
+		  RTC::BWE::ReceiverTransportCongestionController* receiverTransportCongestionController,
+		  RTC::RTCP::Packet* packet) override;
+#else
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlClient::Listener. */
 	public:
 		void OnTransportCongestionControlClientBitrates(
@@ -389,7 +405,10 @@ namespace RTC
 		TimerHandleInterface* rtcpTimer{ nullptr };
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
-#ifndef MS_USE_BUILTIN_BWE
+#ifdef MS_USE_BUILTIN_BWE
+		std::unique_ptr<RTC::BWE::ReceiverTransportCongestionController>
+		  receiverTransportCongestionController{ nullptr };
+#else
 		std::shared_ptr<RTC::TransportCongestionControlClient> tccClient{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlServer> tccServer{ nullptr };
 #endif
@@ -406,6 +425,8 @@ namespace RTC
 		RTC::RtpDataCounter recvRtxTransmission;
 		RTC::RtpDataCounter sendRtxTransmission;
 		RTC::RtpDataCounter sendProbationTransmission;
+		// Round trip time of this Transport, out of what its RTP streams measure.
+		RTC::RttCalculator rttCalculator;
 #ifdef MS_USE_BUILTIN_BWE
 		// TODO: The built-in downlink BWE hands the sequence number out, so this
 		// counter goes away.

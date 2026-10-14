@@ -250,7 +250,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		RTC::RTP::RtpStreamRecv rtpStream(
 		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
 
-		const auto receiveDelaySinceLastRr = [&](int64_t receivedAtUs, uint32_t lastRr, uint32_t dlrr)
+		const auto receiveDelaySinceLastRr =
+		  [&](int64_t receivedAtUs, uint32_t lastRr, uint32_t dlrr) -> std::optional<float>
 		{
 			RTC::RTCP::DelaySinceLastRr::SsrcInfo ssrcInfo;
 
@@ -258,37 +259,40 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 			ssrcInfo.SetLastReceiverReport(lastRr);
 			ssrcInfo.SetDelaySinceLastReceiverReport(dlrr);
 
-			rtpStream.ReceiveRtcpXrDelaySinceLastRr(std::addressof(ssrcInfo), receivedAtUs);
+			return rtpStream.ReceiveRtcpXrDelaySinceLastRr(std::addressof(ssrcInfo), receivedAtUs);
 		};
 
 		// The compact NTP representation has 16 bits of seconds, so it wraps around
 		// every 65536 seconds.
 		constexpr int64_t WrapUs{ 65536 * 1000000LL };
 
+		// Nothing has been measured yet.
+		REQUIRE(!rtpStream.GetRttMs().has_value());
+
 		// The Receiver Reference Time is sent 1 second before the wrap, the remote
 		// endpoint holds it for half a second, and its answer arrives right at the wrap.
-		receiveDelaySinceLastRr(WrapUs, 0xFFFF0000, 0x8000);
+		REQUIRE(receiveDelaySinceLastRr(WrapUs, 0xFFFF0000, 0x8000) == 500.0f);
 
 		REQUIRE(rtpStream.GetRttMs() == 500.0f);
 
-		// No Receiver Reference Time was received by the remote endpoint yet, so the
-		// last RTT is kept.
-		receiveDelaySinceLastRr(WrapUs, 0, 0);
+		// No Receiver Reference Time was received by the remote endpoint yet, so
+		// nothing is measured and the last RTT is kept.
+		REQUIRE(receiveDelaySinceLastRr(WrapUs, 0, 0) == std::nullopt);
 
 		REQUIRE(rtpStream.GetRttMs() == 500.0f);
 
 		// The remote endpoint answers the Receiver Reference Time right away.
-		receiveDelaySinceLastRr((10 * 1000000) + 500000, 0x000A0000, 0);
+		REQUIRE(receiveDelaySinceLastRr((10 * 1000000) + 500000, 0x000A0000, 0) == 500.0f);
 
 		REQUIRE(rtpStream.GetRttMs() == 500.0f);
 
 		// A negative RTT yields 1 millisecond.
-		receiveDelaySinceLastRr(20 * 1000000, 0x00140000, 0x8000);
+		REQUIRE(receiveDelaySinceLastRr(20 * 1000000, 0x00140000, 0x8000) == 1.0f);
 
 		REQUIRE(rtpStream.GetRttMs() == 1.0f);
 
 		// So does a RTT too small to be true.
-		receiveDelaySinceLastRr(20 * 1000000, 0x0013FFFF, 0);
+		REQUIRE(receiveDelaySinceLastRr(20 * 1000000, 0x0013FFFF, 0) == 1.0f);
 
 		REQUIRE(rtpStream.GetRttMs() == 1.0f);
 	}

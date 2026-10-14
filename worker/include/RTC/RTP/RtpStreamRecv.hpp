@@ -163,7 +163,11 @@ namespace RTC
 
 			void ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
 
-			void ReceiveRtcpXrDelaySinceLastRr(
+			/**
+			 * @returns Round trip time just measured (ms), or no value if this report
+			 *   refers to no Receiver Reference Time to measure it against.
+			 */
+			std::optional<float> ReceiveRtcpXrDelaySinceLastRr(
 			  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
 
 			/**

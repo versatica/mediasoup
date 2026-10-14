@@ -683,7 +683,7 @@ namespace RTC
 			}
 		}
 
-		void RtpStreamRecv::ReceiveRtcpXrDelaySinceLastRr(
+		std::optional<float> RtpStreamRecv::ReceiveRtcpXrDelaySinceLastRr(
 		  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs)
 		{
 			MS_TRACE();
@@ -703,22 +703,27 @@ namespace RTC
 			const uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
 
 			// If no Receiver Extended Report was received by the remote endpoint yet,
-			// the Sender Extended Report carries no RTT, so the last one is kept.
+			// the Sender Extended Report carries no RTT, so the last one is kept and
+			// nothing new is reported.
 			if (lastRr == 0)
 			{
-				return;
+				return std::nullopt;
 			}
 
 			// NOTE: The subtraction wraps around along with the compact NTP
 			// representation, which is what the conversion expects.
-			this->rttMs =
+			const float measuredRttMs =
 			  static_cast<float>(Utils::Time::CompactNtpRttToTimeUs(compactNtp - dlrr - lastRr)) / 1000;
+
+			this->rttMs = measuredRttMs;
 
 			// Tell it to the NackGenerator.
 			if (this->params.useNack)
 			{
-				this->nackGenerator->UpdateRttMs(static_cast<int64_t>(this->rttMs));
+				this->nackGenerator->UpdateRttMs(static_cast<int64_t>(measuredRttMs));
 			}
+
+			return measuredRttMs;
 		}
 
 		std::optional<int64_t> RtpStreamRecv::GetRemoteCaptureAtUsFromAbsCaptureTime(uint32_t ts) const

@@ -63,7 +63,8 @@ namespace RTC
 	    sendRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
 	    recvRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
 	    sendRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
-	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100)
+	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100),
+	    rttCalculator(this, shared)
 	{
 		MS_TRACE();
 
@@ -497,9 +498,20 @@ namespace RTC
 		}
 
 #ifdef MS_USE_BUILTIN_BWE
-		// TODO: Take these from the built-in sender and receiver congestion control.
+		// TODO: Take this from the built-in sender congestion control.
 		const flatbuffers::Optional<uint64_t> availableOutgoingBitrate{ flatbuffers::nullopt };
-		const flatbuffers::Optional<uint64_t> availableIncomingBitrate{ flatbuffers::nullopt };
+
+		flatbuffers::Optional<uint64_t> availableIncomingBitrate{ flatbuffers::nullopt };
+
+		if (this->receiverTransportCongestionController)
+		{
+			const auto bitrate = this->receiverTransportCongestionController->GetAvailableBitrate();
+
+			if (bitrate.has_value())
+			{
+				availableIncomingBitrate = static_cast<uint64_t>(bitrate.value());
+			}
+		}
 #else
 		const auto availableOutgoingBitrate =
 		  this->tccClient ? flatbuffers::Optional<uint64_t>(
@@ -563,7 +575,9 @@ namespace RTC
 		  // minOutgoingBitrate.
 		  this->minOutgoingBitrate > 0
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->minOutgoingBitrate))
-				: flatbuffers::nullopt);
+				: flatbuffers::nullopt,
+		  // roundTripTime.
+		  this->rttCalculator.GetAvgRttMs());
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
@@ -585,7 +599,24 @@ namespace RTC
 				request->Accept();
 
 #ifdef MS_USE_BUILTIN_BWE
-				// TODO: Pass maxIncomingBitrate to the built-in uplink BWE.
+				if (this->receiverTransportCongestionController)
+				{
+					// The cap travels to the remote peer in a REMB, so a peer that did not
+					// negotiate REMB cannot be told about it by any means.
+					//
+					// NOTE: A zero lifts the cap rather than setting one, and there is
+					// nothing to lift if it was never applied.
+					if (this->recvSupportsRemb)
+					{
+						this->receiverTransportCongestionController->SetMaxIncomingBitrate(
+						  this->maxIncomingBitrate);
+					}
+					else if (this->maxIncomingBitrate != 0)
+					{
+						MS_WARN_TAG(
+						  bwe, "cannot apply maximum incoming bitrate since remote peer does not support REMB");
+					}
+				}
 #else
 				if (this->tccServer)
 				{
@@ -816,8 +847,34 @@ namespace RTC
 				}
 
 #ifdef MS_USE_BUILTIN_BWE
-				// TODO: Create the built-in uplink BWE here, choosing transport-cc or
-				// REMB out of the Producer RTP header extensions and RTCP feedback.
+				// A peer that negotiated neither mechanism cannot be told anything about
+				// the incoming link, so there is nothing to run.
+				if (!this->receiverTransportCongestionController && (this->recvSupportsTransportCc || this->recvSupportsRemb))
+				{
+					MS_DEBUG_TAG(bwe, "enabling ReceiverTransportCongestionController");
+
+					this->receiverTransportCongestionController =
+					  std::make_unique<RTC::BWE::ReceiverTransportCongestionController>(
+					    this,
+					    this->shared,
+					    RTC::BWE::ReceiverTransportCongestionController::ReceiverTransportCongestionControllerOptions{});
+				}
+
+				// The cap travels to the remote peer in a REMB, so it only becomes
+				// applicable once a Producer brings REMB, which may well be this one.
+				if (this->receiverTransportCongestionController && this->maxIncomingBitrate != 0)
+				{
+					if (this->recvSupportsRemb)
+					{
+						this->receiverTransportCongestionController->SetMaxIncomingBitrate(
+						  this->maxIncomingBitrate);
+					}
+					else
+					{
+						MS_WARN_TAG(
+						  bwe, "cannot apply maximum incoming bitrate since remote peer does not support REMB");
+					}
+				}
 #else
 				// Set TransportCongestionControlServer.
 				if (!this->tccServer)
@@ -1304,9 +1361,23 @@ namespace RTC
 
 					RecvStreamClosed(rtpStream->GetSsrc());
 
+#ifdef MS_USE_BUILTIN_BWE
+					if (this->receiverTransportCongestionController)
+					{
+						this->receiverTransportCongestionController->RemoveStream(rtpStream->GetSsrc());
+					}
+#endif
+
 					if (rtpStream->HasRtx())
 					{
 						RecvStreamClosed(rtpStream->GetRtxSsrc());
+
+#ifdef MS_USE_BUILTIN_BWE
+						if (this->receiverTransportCongestionController)
+						{
+							this->receiverTransportCongestionController->RemoveStream(rtpStream->GetRtxSsrc());
+						}
+#endif
 					}
 				}
 
@@ -1598,9 +1669,7 @@ namespace RTC
 		// them.
 		packet->AssignExtensionIds(this->recvRtpHeaderExtensionIds);
 
-#ifdef MS_USE_BUILTIN_BWE
-		// TODO: Feed the built-in uplink BWE.
-#else
+#ifndef MS_USE_BUILTIN_BWE
 		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
 		{
@@ -1637,6 +1706,14 @@ namespace RTC
 		//   packet->GetPayloadType(),
 		//   producer->id.c_str());
 
+#ifdef MS_USE_BUILTIN_BWE
+		if (this->receiverTransportCongestionController)
+		{
+			this->receiverTransportCongestionController->ReceiveRtpPacket(
+			  receivedAtUs, packet, producer->GetKind());
+		}
+#endif
+
 		// Pass the RTP packet to the corresponding Producer.
 		auto result = producer->ReceiveRtpPacket(packet, receivedAtUs);
 
@@ -1645,19 +1722,22 @@ namespace RTC
 			case RTC::Producer::ReceiveRtpPacketResult::MEDIA:
 			{
 				this->recvRtpTransmission.Update(packet);
+
 				break;
 			}
 
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 			{
 				this->recvRtxTransmission.Update(packet);
+
 				break;
 			}
 
-			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
+			case RTC::Producer::ReceiveRtpPacketResult::STREAM_NOT_FOUND:
 			{
 				// Tell the child class to remove this SSRC.
 				RecvStreamClosed(packet->GetSsrc());
+
 				break;
 			}
 
@@ -1982,7 +2062,14 @@ namespace RTC
 						continue;
 					}
 
-					consumer->ReceiveRtcpReceiverReport(report, receivedAtUs);
+					const auto receiverReportResult = consumer->ReceiveRtcpReceiverReport(report, receivedAtUs);
+
+					if (receiverReportResult.rttMs.has_value())
+					{
+						this->rttCalculator.AddRtt(
+						  static_cast<int64_t>(receiverReportResult.rttMs.value()),
+						  Utils::Time::TimeUsToMs(receivedAtUs));
+					}
 				}
 
 #ifdef MS_USE_BUILTIN_BWE
@@ -2000,7 +2087,7 @@ namespace RTC
 
 						if (consumer->IsActive())
 						{
-							rttMs = consumer->GetRttMs();
+							rttMs = consumer->GetRttMs().value_or(0);
 
 							break;
 						}
@@ -2302,7 +2389,13 @@ namespace RTC
 									continue;
 								}
 
-								producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
+								const auto rttMs = producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
+
+								if (rttMs.has_value())
+								{
+									this->rttCalculator.AddRtt(
+									  static_cast<int64_t>(rttMs.value()), Utils::Time::TimeUsToMs(receivedAtUs));
+								}
 							}
 
 							break;
@@ -3404,7 +3497,35 @@ namespace RTC
 		return IsConnected() && (!this->mapDataProducers.empty() || !this->mapDataConsumers.empty());
 	}
 
-#ifndef MS_USE_BUILTIN_BWE
+#ifdef MS_USE_BUILTIN_BWE
+	void Transport::OnRttCalculatorRttUpdated(RTC::RttCalculator* /*rttCalculator*/, int64_t avgRttMs)
+	{
+		MS_TRACE();
+
+		if (this->receiverTransportCongestionController)
+		{
+			this->receiverTransportCongestionController->OnRttUpdate(avgRttMs * 1000);
+		}
+	}
+#else
+	void Transport::OnRttCalculatorRttUpdated(RTC::RttCalculator* /*rttCalculator*/, int64_t /*avgRttMs*/)
+	{
+		MS_TRACE();
+	}
+#endif
+
+#ifdef MS_USE_BUILTIN_BWE
+	void Transport::OnReceiverTransportCongestionControllerSendRtcpPacket(
+	  RTC::BWE::ReceiverTransportCongestionController* /*receiverTransportCongestionController*/,
+	  RTC::RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		packet->Serialize(RTC::RTCP::SerializationBuffer);
+
+		SendRtcpPacket(packet);
+	}
+#else
 	void Transport::OnTransportCongestionControlClientBitrates(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,
 	  RTC::TransportCongestionControlClient::Bitrates& bitrates)

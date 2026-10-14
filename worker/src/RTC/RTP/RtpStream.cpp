@@ -86,7 +86,7 @@ namespace RTC
 			  this->params.rtxSsrc ? flatbuffers::Optional<uint32_t>(this->params.rtxSsrc)
 				                     : flatbuffers::nullopt,
 			  this->rtxStream ? this->rtxStream->GetPacketsDiscarded() : 0,
-			  this->rttMs > 0.0f ? this->rttMs : 0,
+			  this->rttMs,
 			  this->score);
 
 			return FBS::RtpStream::CreateStats(

@@ -2,7 +2,6 @@
 #define MS_RTC_BWE_RECEIVER_TRANSPORT_CONGESTION_CONTROLLER_HPP
 
 #include "common.hpp"
-#include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BWE/RembGenerator.hpp"
 #include "RTC/BWE/RemoteBitrateEstimatorAbsSendTime.hpp"
 #include "RTC/BWE/TransportWideCcFeedbackGenerator.hpp"
@@ -21,10 +20,12 @@ namespace RTC
 		 * Everything the receiving side of a transport does about congestion, which
 		 * amounts to telling the remote sender how much it may send towards us.
 		 *
-		 * How that is said depends on what both endpoints negotiated. With
-		 * transport-cc nothing is estimated here: the instant each packet arrived is
-		 * reported back and the remote sender does the estimating. With REMB it is
-		 * the other way round, and a bitrate is computed here and announced.
+		 * How that is said is decided packet by packet, by what each one carries,
+		 * since a transport may well have one stream negotiated with transport-cc
+		 * and another with only abs-send-time. A packet with a transport wide
+		 * sequence number has its arrival time reported back and the remote sender
+		 * does the estimating; one with abs-send-time instead is estimated here and
+		 * the result announced as a REMB; one with neither says nothing to anybody.
 		 *
 		 * The cap the application sets is announced as a REMB either way, since that
 		 * is the only way to tell a remote sender to hold back.
@@ -54,11 +55,6 @@ namespace RTC
 
 			struct ReceiverTransportCongestionControllerOptions
 			{
-				/**
-				 * Mechanism both endpoints negotiated, which decides what is done with
-				 * every packet that comes in.
-				 */
-				Types::CongestionControlType congestionControlType;
 				/**
 				 * Largest an RTCP packet may be on this transport (bytes).
 				 */
@@ -105,7 +101,7 @@ namespace RTC
 
 			/**
 			 * Latest estimation of the incoming link (bps), or no value while there is
-			 * none and whenever the estimating is the remote sender's job.
+			 * none.
 			 */
 			std::optional<int64_t> GetAvailableBitrate() const;
 
@@ -128,18 +124,11 @@ namespace RTC
 			  RembGenerator* rembGenerator, RTC::RTCP::FeedbackPsRembPacket* packet) override;
 
 		private:
-			const ReceiverTransportCongestionControllerOptions options;
-
 			// Passed by argument.
 			Listener* listener{ nullptr };
 			SharedInterface* shared{ nullptr };
-			// Allocated by this, the first one only in transport-cc mode and the
-			// second one only in REMB mode.
-			std::unique_ptr<TransportWideCcFeedbackGenerator> transportWideCcFeedbackGenerator;
-			std::unique_ptr<RemoteBitrateEstimatorAbsSendTime> remoteBitrateEstimator;
-			// Others.
-			// It lives in both modes, since the cap is announced as a REMB whatever
-			// was negotiated.
+			TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator;
+			RemoteBitrateEstimatorAbsSendTime remoteBitrateEstimator;
 			RembGenerator rembGenerator;
 		};
 	} // namespace BWE
