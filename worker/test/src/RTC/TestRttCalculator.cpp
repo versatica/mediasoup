@@ -38,7 +38,8 @@ SCENARIO("BWE RttCalculator", "[bwe][rttcalculator]")
 	SECTION("nothing is said until something is measured")
 	{
 		TestRttCalculatorListener listener;
-		RTC::RttCalculator rttCalculator(std::addressof(listener), std::addressof(shared));
+
+		const RTC::RttCalculator rttCalculator(std::addressof(listener), std::addressof(shared));
 
 		auto* timer = shared.GetTimer(TimerLabel);
 
