@@ -12,7 +12,7 @@ namespace RTC
 	constexpr int64_t MeasurementWindowMs{ 1500 };
 	// How often the average is worked out again even if nothing was measured,
 	// since a measurement ageing out moves it just as much (ms).
-	constexpr uint64_t UpdateIntervalMs{ 1000 };
+	constexpr int64_t UpdateIntervalMs{ 1000 };
 	// How much of the average the measurements of the window make up, the rest
 	// being the previous average.
 	constexpr float WeightFactor{ 0.3f };
