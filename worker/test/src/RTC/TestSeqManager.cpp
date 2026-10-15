@@ -2,7 +2,6 @@
 #include "RTC/SeqManager.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <limits> // std::numeric_limits
-#include <optional>
 #include <vector>
 
 namespace
