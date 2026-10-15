@@ -107,8 +107,7 @@ namespace RTC
 			 */
 			DISCARDED,
 			/**
-			 * There is no stream for the SSRC the packet came on, so nothing of ours
-			 * will ever read that SSRC again.
+			 * No stream exists for this SSRC.
 			 */
 			STREAM_NOT_FOUND,
 			MEDIA,
