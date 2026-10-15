@@ -41,8 +41,6 @@ namespace RTC
 			MS_TRACE();
 
 			ResetFeedbackPacket(0);
-
-			this->sendPeriodicTimer->Start(this->sendIntervalMs, this->sendIntervalMs);
 		}
 
 		void TransportWideCcFeedbackGenerator::ReceiveRtpPacket(
@@ -55,6 +53,14 @@ namespace RTC
 			if (!packet->ReadTransportWideCc01(wideSeqNumber))
 			{
 				return;
+			}
+
+			// From this first packet on there is feedback owed periodically. Until it
+			// arrives there is nothing to report, and a transport whose streams all
+			// negotiated REMB instead never gets here.
+			if (!this->sendPeriodicTimer->IsActive())
+			{
+				this->sendPeriodicTimer->Start(this->sendIntervalMs, this->sendIntervalMs);
 			}
 
 			// NOTE: Done before taking note of this packet, so that what is still

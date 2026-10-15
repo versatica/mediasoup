@@ -23,43 +23,6 @@ namespace RTC
 			constexpr int64_t TimeUsInfinite{ std::numeric_limits<int64_t>::max() };
 
 			/**
-			 * Which RTCP mechanism the two endpoints negotiated to deal with
-			 * congestion, which is what decides on which of them the estimation is
-			 * computed.
-			 */
-			enum class CongestionControlType : uint8_t
-			{
-				/**
-				 * The receiving endpoint reports when each packet arrived and the
-				 * sending one estimates from that.
-				 */
-				TRANSPORT_CC = 1,
-				/**
-				 * The receiving endpoint estimates and tells the sending one how much
-				 * it may send.
-				 */
-				REMB = 2
-			};
-
-			constexpr std::string_view congestionControlTypeToString(CongestionControlType congestionControlType)
-			{
-				switch (congestionControlType)
-				{
-					case CongestionControlType::TRANSPORT_CC:
-					{
-						return "TRANSPORT_CC";
-					}
-
-					case CongestionControlType::REMB:
-					{
-						return "REMB";
-					}
-
-						NO_DEFAULT();
-				}
-			}
-
-			/**
 			 * How the network is behaving according to the delay based detector.
 			 */
 			enum class BandwidthUsage : uint8_t

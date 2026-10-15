@@ -197,7 +197,11 @@ namespace RTC
 				return static_cast<float>(this->fractionLost) * 100 / 256;
 			}
 
-			float GetRttMs() const
+			/**
+			 * Round trip time of this stream (ms), or no value while nothing has been
+			 * measured.
+			 */
+			std::optional<float> GetRttMs() const
 			{
 				return this->rttMs;
 			}
@@ -297,7 +301,8 @@ namespace RTC
 			// Correspondence between wall clock and RTP timeline given by the last Sender
 			// Report.
 			std::optional<RTP::RtpStream::SenderReportMapping> lastSenderReportMapping;
-			float rttMs{ 0.0f };
+			// Round trip time measured on this stream (ms).
+			std::optional<float> rttMs;
 			// Instance of RtxStream.
 			RTP::RtxStream* rtxStream{ nullptr };
 

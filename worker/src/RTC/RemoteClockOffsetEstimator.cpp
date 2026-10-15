@@ -16,7 +16,7 @@ namespace RTC
 	}
 
 	void RemoteClockOffsetEstimator::AddSenderReport(
-	  int64_t remoteNtpUs, int64_t localArrivalAtUs, int64_t rttMs)
+	  int64_t remoteNtpUs, int64_t localArrivalAtUs, std::optional<float> rttMs)
 	{
 		MS_TRACE();
 
@@ -39,10 +39,14 @@ namespace RTC
 		this->lastLocalArrivalAtUs = localArrivalAtUs;
 
 		// The sample holds the clock offset plus the one way delay of this Sender
-		// Report. Assume a symmetric path and remove half of the RTT.
+		// Report. Assume a symmetric path and remove half of the RTT. With no round
+		// trip time measured yet there is nothing to remove, so the one way delay
+		// stays in and biases every sample of this sender by the same amount.
 		//
 		// NOTE: The RTT is given in milliseconds, hence the conversion.
-		const int64_t sample = localArrivalAtUs - remoteNtpUs - ((rttMs * 1000) / 2);
+		const auto halfRttUs = static_cast<int64_t>(rttMs.value_or(0) * 1000) / 2;
+
+		const int64_t sample = localArrivalAtUs - remoteNtpUs - halfRttUs;
 
 		if (this->samples.size() == RemoteClockOffsetEstimator::WindowSize)
 		{

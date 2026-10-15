@@ -199,8 +199,7 @@ namespace RTC
 	public:
 		uint32_t ssrc{ 0 };
 		std::string rid;
-		uint8_t codecPayloadType{ 0 };
-		bool hasCodecPayloadType{ false };
+		std::optional<uint8_t> codecPayloadType;
 		RtpRtxParameters rtx;
 		bool hasRtx{ false };
 		int64_t maxBitrate{ 0 };

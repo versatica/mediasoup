@@ -80,7 +80,7 @@ namespace RTC
 		struct RtpEncodingMapping
 		{
 			std::string rid;
-			uint32_t ssrc{ 0 };
+			std::optional<uint32_t> ssrc;
 			uint32_t mappedSsrc{ 0 };
 		};
 
@@ -102,7 +102,14 @@ namespace RTC
 	public:
 		enum class ReceiveRtpPacketResult : uint8_t
 		{
+			/**
+			 * The packet is not wanted, but the stream it came on is alive.
+			 */
 			DISCARDED,
+			/**
+			 * No stream exists for this SSRC.
+			 */
+			STREAM_NOT_FOUND,
 			MEDIA,
 			RETRANSMISSION
 		};
@@ -171,7 +178,11 @@ namespace RTC
 		}
 		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
-		void ReceiveRtcpXrDelaySinceLastRr(
+		/**
+		 * @returns Round trip time just measured (ms), or no value if this report
+		 *   refers to no Receiver Reference Time to measure it against.
+		 */
+		std::optional<float> ReceiveRtcpXrDelaySinceLastRr(
 		  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
 		void RequestKeyFrame(uint32_t mappedSsrc);

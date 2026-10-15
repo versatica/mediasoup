@@ -77,7 +77,7 @@ namespace RTC
 			// Verify that it has ssrc field.
 			auto& encoding = this->consumableRtpEncodings[i];
 
-			if (encoding.ssrc == 0u)
+			if (encoding.ssrc == 0)
 			{
 				MS_THROW_TYPE_ERROR("wrong encoding in consumableRtpEncodings (missing ssrc)");
 			}
@@ -93,64 +93,64 @@ namespace RTC
 		// This may throw.
 		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
-			if (exten.id == 0u)
+			if (exten.id == 0)
 			{
 				MS_THROW_TYPE_ERROR("RTP extension id cannot be 0");
 			}
 
-			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
+			if (this->rtpHeaderExtensionIds.mid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
 			{
 				this->rtpHeaderExtensionIds.mid = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.rid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
+			if (this->rtpHeaderExtensionIds.rid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
 			{
 				this->rtpHeaderExtensionIds.rid = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.rrid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID)
+			if (this->rtpHeaderExtensionIds.rrid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID)
 			{
 				this->rtpHeaderExtensionIds.rrid = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.absSendTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			if (this->rtpHeaderExtensionIds.absSendTime == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
 			{
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
+			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
 			{
 				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
+			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
 				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
 			}
 
 			if (
-			  this->rtpHeaderExtensionIds.dependencyDescriptor == 0u &&
+			  this->rtpHeaderExtensionIds.dependencyDescriptor == 0 &&
 			  exten.type == RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR)
 			{
 				this->rtpHeaderExtensionIds.dependencyDescriptor = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.videoOrientation == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION)
+			if (this->rtpHeaderExtensionIds.videoOrientation == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION)
 			{
 				this->rtpHeaderExtensionIds.videoOrientation = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.absCaptureTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
+			if (this->rtpHeaderExtensionIds.absCaptureTime == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
 			{
 				this->rtpHeaderExtensionIds.absCaptureTime = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.playoutDelay == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
+			if (this->rtpHeaderExtensionIds.playoutDelay == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
 			{
 				this->rtpHeaderExtensionIds.playoutDelay = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.mediasoupPacketId == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID)
+			if (this->rtpHeaderExtensionIds.mediasoupPacketId == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID)
 			{
 				this->rtpHeaderExtensionIds.mediasoupPacketId = exten.id;
 			}
@@ -207,11 +207,11 @@ namespace RTC
 		{
 			this->type = RTC::RtpParameters::Type::PIPE;
 		}
-		else if (this->consumableRtpEncodings.size() > 1u)
+		else if (this->consumableRtpEncodings.size() > 1)
 		{
 			this->type = RTC::RtpParameters::Type::SIMULCAST;
 		}
-		else if (this->consumableRtpEncodings[0].spatialLayers > 1u || this->consumableRtpEncodings[0].temporalLayers > 1u)
+		else if (this->consumableRtpEncodings[0].spatialLayers > 1 || this->consumableRtpEncodings[0].temporalLayers > 1)
 		{
 			// Single encoding with multiple layers is always SVC.
 			this->type = RTC::RtpParameters::Type::SVC;
@@ -227,7 +227,7 @@ namespace RTC
 			case RTC::RtpParameters::Type::SIMPLE:
 			{
 				// Ensure there is a single encoding.
-				if (this->consumableRtpEncodings.size() != 1u)
+				if (this->consumableRtpEncodings.size() != 1)
 				{
 					MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 				}
@@ -341,13 +341,13 @@ namespace RTC
 			case RTC::RtpParameters::Type::SVC:
 			{
 				// Ensure there is a single encoding.
-				if (this->consumableRtpEncodings.size() != 1u)
+				if (this->consumableRtpEncodings.size() != 1)
 				{
 					MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 				}
 
 				// Ensure there are multiple spatial or temporal layers.
-				if (encoding.spatialLayers < 2u && encoding.temporalLayers < 2u)
+				if (encoding.spatialLayers < 2 && encoding.temporalLayers < 2)
 				{
 					MS_THROW_TYPE_ERROR("invalid number of layers");
 				}
@@ -796,7 +796,7 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Consumer::SetPriorityRequest>();
 
-				if (body->priority() < 1u)
+				if (body->priority() < 1)
 				{
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
 				}
@@ -873,7 +873,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return this->rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+		return this->rtpHeaderExtensionIds.transportWideCc01 != 0 &&
 		       std::ranges::any_of(
 		         this->rtpParameters.codecs,
 		         [](const RTC::RtpCodecParameters& codec)
@@ -886,7 +886,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return this->rtpHeaderExtensionIds.absSendTime != 0u &&
+		return this->rtpHeaderExtensionIds.absSendTime != 0 &&
 		       std::ranges::any_of(
 		         this->rtpParameters.codecs,
 		         [](const RTC::RtpCodecParameters& codec)
@@ -1116,12 +1116,12 @@ namespace RTC
 		// Audio does not play the BWE game.
 		if (this->kind != RTC::Media::Kind::VIDEO)
 		{
-			return 0u;
+			return 0;
 		}
 
 		if (!IsActive())
 		{
-			return 0u;
+			return 0;
 		}
 
 		return this->priority;
@@ -1623,7 +1623,7 @@ namespace RTC
 		}
 	}
 
-	std::optional<RTC::RTP::RtpStreamSend::Loss> Consumer::ReceiveRtcpReceiverReport(
+	RTC::RTP::RtpStreamSend::ReceiverReportResult Consumer::ReceiveRtcpReceiverReport(
 	  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -1650,7 +1650,7 @@ namespace RTC
 
 		if (!IsActive())
 		{
-			return 0u;
+			return 0;
 		}
 
 		int64_t rate{ 0 };
@@ -1663,15 +1663,20 @@ namespace RTC
 		return rate;
 	}
 
-	float Consumer::GetRttMs() const
+	std::optional<float> Consumer::GetRttMs() const
 	{
 		MS_TRACE();
 
-		float rttMs{ 0 };
+		std::optional<float> rttMs;
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			rttMs = std::max(rtpStream->GetRttMs(), rttMs);
+			const std::optional<float> streamRttMs = rtpStream->GetRttMs();
+
+			if (streamRttMs.has_value() && (!rttMs.has_value() || streamRttMs.value() > rttMs.value()))
+			{
+				rttMs = streamRttMs;
+			}
 		}
 
 		return rttMs;
@@ -1748,9 +1753,9 @@ namespace RTC
 		// a single RtpStreamSend (encodings[0]). Pipe consumers need one stream per
 		// encoding. Here we know that SSRCs in Consumer's rtpParameters must be the
 		// same as in the given consumableRtpEncodings.
-		const size_t numStreams = this->pipe ? this->rtpParameters.encodings.size() : 1u;
+		const size_t numStreams = this->pipe ? this->rtpParameters.encodings.size() : 1;
 
-		for (size_t idx{ 0u }; idx < numStreams; ++idx)
+		for (size_t idx{ 0 }; idx < numStreams; ++idx)
 		{
 			auto& encoding           = this->rtpParameters.encodings[idx];
 			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);

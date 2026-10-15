@@ -180,16 +180,19 @@ namespace RTC
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc);
 		/**
-		 * @returns What the link to the remote endpoint lost and what it was expected
-		 *   to deliver since the previous Receiver Report, or no value if this one
-		 *   measures no interval at all.
+		 * @returns What this Receiver Report says about the link to the remote
+		 *   endpoint.
 		 */
-		std::optional<RTC::RTP::RtpStreamSend::Loss> ReceiveRtcpReceiverReport(
+		RTC::RTP::RtpStreamSend::ReceiverReportResult ReceiveRtcpReceiverReport(
 		  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
 		void ReceiveRtcpXrReceiverReferenceTime(
 		  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
 		int64_t GetTransmissionRate(int64_t nowMs);
-		float GetRttMs() const;
+		/**
+		 * Longest round trip time measured on the RTP streams of this Consumer, or
+		 * no value while none of them has measured any.
+		 */
+		std::optional<float> GetRttMs() const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
