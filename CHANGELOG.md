@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.30.0
+
 - Update `ankerl/unordered_dense` Meson subproject to 5.3.2 ([PR #1985](https://github.com/versatica/mediasoup/pull/1985)).
 - `RtpStreamSend`: Don't discount repaired packets twice in the score when RTX is not used ([PR #1987](https://github.com/versatica/mediasoup/pull/1987)).
 - SCTP: Don't emit association errors in `Association::ResetStreams()` ([PR #1990](https://github.com/versatica/mediasoup/pull/1990)).
@@ -9,6 +11,7 @@
 - `TransportStats`: Add `roundTripTime` (ms) which is optional ([PR #1992](https://github.com/versatica/mediasoup/pull/1992)).
   - `RtpStreamStats.roundTripTime` (optional) now has no value (instead of 0) when the RTT is unknown.
 - SCTP: Limit when chunks are retransmitted ([PR #1993](https://github.com/versatica/mediasoup/pull/1993)).
+- `SeqManager`: Fix uncleared previous cycle drops and optimize ([PR #1994](https://github.com/versatica/mediasoup/pull/1994)).
 
 ### 3.29.0
 
