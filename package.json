@@ -133,7 +133,7 @@
 		"open-cli": "^9.0.0",
 		"pick-port": "^2.2.1",
 		"prettier": "^3.9.10",
-		"ts-jest": "^29.4.14",
+		"ts-jest": "^29.4.15",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.71.2",
 		"werift-sctp": "^0.0.11"
