@@ -246,6 +246,12 @@ namespace
 
 			const int64_t timeToTimeoutMs = timer->GetExpiresAtMs() - s.shared.GetTimeMs();
 
+			// A timer whose expiry is already in the past is not a pending timeout.
+			if (timeToTimeoutMs < 0)
+			{
+				continue;
+			}
+
 			if (!timeToNextTimeoutMs.has_value() || timeToTimeoutMs < *timeToNextTimeoutMs)
 			{
 				timeToNextTimeoutMs = timeToTimeoutMs;
@@ -293,7 +299,7 @@ namespace
 				timeToNextTimeoutMs = std::min(*timeToNextTimeoutMsA, *timeToNextTimeoutMsZ);
 			}
 
-			advanceNowMs(a, z, std::max<int64_t>(timeToNextTimeoutMs, 0));
+			advanceNowMs(a, z, timeToNextTimeoutMs);
 		}
 	}
 
