@@ -42,7 +42,10 @@ namespace RTC
 		T GetMaxOutput() const;
 
 	private:
+		void AddDropped(T input);
 		void ClearDropped();
+		// Number of dropped inputs held, excluding the already consumed prefix.
+		size_t DroppedSize() const;
 
 	private:
 		// Whether at least a sequence number has been inserted.
@@ -53,7 +56,11 @@ namespace RTC
 		T maxInput{ 0 };
 		T maxDropped{ 0 };
 		T maxForwarded{ 0 };
+		// Dropped inputs, sorted with 'SeqLowerThan'.
 		std::vector<T> dropped;
+		// Entries before this index are only waiting to be physically erased.
+		// See 'ClearDropped()'.
+		size_t droppedStart{ 0 };
 	};
 } // namespace RTC
 
