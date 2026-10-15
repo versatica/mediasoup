@@ -22,6 +22,7 @@ namespace RTC
 		/* Instance methods. */
 
 		OutstandingData::Item::Item(
+		  Types::UnwrappedTsn tsn,
 		  uint32_t outgoingMessageId,
 		  UserData data,
 		  int64_t timeSentUs,
@@ -33,7 +34,8 @@ namespace RTC
 		    timeSentUs(timeSentUs),
 		    maxRetransmissions(maxRetransmissions),
 		    expiresAtUs(expiresAtUs),
-		    lifecycleId(lifecycleId)
+		    lifecycleId(lifecycleId),
+		    retransmissionBoundaryTsn(tsn.GetNextValue())
 		{
 			MS_TRACE();
 		}
@@ -75,7 +77,7 @@ namespace RTC
 			return NackAction::NOTHING;
 		}
 
-		void OutstandingData::Item::MarkAsRetransmitted()
+		void OutstandingData::Item::MarkAsRetransmitted(Types::UnwrappedTsn nextTsn)
 		{
 			MS_TRACE();
 
@@ -83,6 +85,7 @@ namespace RTC
 			this->ackState  = AckState::UNACKED;
 			this->nackCount = 0;
 			++this->numRetransmissions;
+			this->retransmissionBoundaryTsn = nextTsn;
 		}
 
 		void OutstandingData::Item::Abandon()
@@ -248,7 +251,7 @@ namespace RTC
 
 			const Types::UnwrappedTsn tsn = GetNextTsn();
 			const Item& item              = this->outstandingData.emplace_back(
-			  outgoingMessageId, data.Clone(), timeSentUs, maxRetransmissions, expiresAtUs, lifecycleId);
+			  tsn, outgoingMessageId, data.Clone(), timeSentUs, maxRetransmissions, expiresAtUs, lifecycleId);
 
 			if (item.HasExpired(timeSentUs))
 			{
@@ -636,6 +639,21 @@ namespace RTC
 				     tsn < curBlockFirstAcked && tsn <= maxTsnToNack && tsn < GetNextTsn();
 				     tsn = tsn.GetNextValue())
 				{
+					// https://datatracker.ietf.org/doc/html/rfc9260#section-7.2.4
+					//
+					// "Mark the DATA chunk(s) as being fast retransmitted and thus
+					// ineligible for a subsequent Fast Retransmit."
+					//
+					// A chunk that has been retransmitted may be reported as missing by
+					// SACKs that the peer generated before the retransmission reached it.
+					// Those are not miss indications for the retransmitted chunk.
+					const Item& item = GetItem(tsn);
+
+					if (!item.IsMissIndication(ackInfo.highestTsnAcked))
+					{
+						continue;
+					}
+
 					ackInfo.hasPacketLoss |= NackItem(
 					  tsn,
 					  /*retransmitNow*/ false,
@@ -770,6 +788,7 @@ namespace RTC
 				const Types::UnwrappedTsn tsn = GetNextTsn();
 
 				Item& addedItem = this->outstandingData.emplace_back(
+				  tsn,
 				  item.GetOutgoingMessageId(),
 				  std::move(messageEnd),
 				  /*timeSentUs*/ 0,
@@ -838,7 +857,7 @@ namespace RTC
 
 				if (serializedLength <= maxLength)
 				{
-					item.MarkAsRetransmitted();
+					item.MarkAsRetransmitted(GetNextTsn());
 					result.emplace_back(tsn.Wrap(), item.GetData().Clone());
 					maxLength -= serializedLength;
 

@@ -732,13 +732,25 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(fastRetransmit[0].first == 10);
 		REQUIRE(buffer.GetChunksToBeRetransmitted(1000).empty() == true);
 
+		// SACKs that only newly ack chunks sent before the retransmission don't
+		// count as miss indications, see the section about SACKs predating a
+		// retransmission. So send more data after the retransmission (TSN 21..23).
+		for (int i{ 0 }; i < 3; ++i)
+		{
+			buffer.Insert(
+			  OutgoingMessageId,
+			  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, false, false, false),
+			  NowUs + 1000,
+			  /*maxRetransmits*/ 1);
+		}
+
 		// TSN 10 is now lost again. It gets nacked and eventually abandoned.
 		REQUIRE(
 		  buffer
 		    .HandleSack(
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		        { 2, 8 }
+		        { 2, 12 }
     },
 		      false)
 		    .hasPacketLoss == false);
@@ -749,7 +761,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		    .HandleSack(
 		      unwrapper.Unwrap(9),
 		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		        { 2, 9 }
+		        { 2, 13 }
     },
 		      false)
 		    .hasPacketLoss == false);
@@ -758,12 +770,112 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		const auto ackInfo3 = buffer.HandleSack(
 		  unwrapper.Unwrap(9),
 		  std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
-		    { 2, 10 }
+		    { 2, 14 }
     },
 		  false);
 
 		REQUIRE(ackInfo3.hasPacketLoss == true);
 		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
+	}
+
+	SECTION("sacks predating a retransmission are not miss indications")
+	{
+		// TSN 10..30 are sent in a burst, and TSN 10 is lost.
+		for (int i{ 0 }; i < 21; ++i)
+		{
+			buffer.Insert(
+			  OutgoingMessageId, RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false), NowUs);
+		}
+
+		// The SACKs for TSN 11, 12 and 13 result in TSN 10 being fast
+		// retransmitted.
+		for (uint16_t end{ 2 }; end <= 3; ++end)
+		{
+			REQUIRE(
+			  buffer
+			    .HandleSack(
+			      unwrapper.Unwrap(9),
+			      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+			        { 2, end }
+      },
+			      false)
+			    .hasPacketLoss == false);
+		}
+
+		REQUIRE(
+		  buffer
+		    .HandleSack(
+		      unwrapper.Unwrap(9),
+		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		        { 2, 4 }
+    },
+		      false)
+		    .hasPacketLoss == true);
+
+		const auto fastRetransmit = buffer.GetChunksToBeFastRetransmitted(1000);
+
+		REQUIRE(fastRetransmit.size() == 1);
+		REQUIRE(fastRetransmit[0].first == 10);
+		REQUIRE(buffer.HasDataToBeRetransmitted() == false);
+
+		// The receiver will continue to receive TSN 14..30, which were all sent
+		// before the retransmission of TSN 10 could have reached it. The SACKs for
+		// those still report TSN 10 as missing, but they can't be used as evidence
+		// that the retransmission was lost.
+		for (uint16_t end{ 5 }; end <= 21; ++end)
+		{
+			INFO("gap ack block end=" << end);
+
+			REQUIRE(
+			  buffer
+			    .HandleSack(
+			      unwrapper.Unwrap(9),
+			      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+			        { 2, end }
+      },
+			      true)
+			    .hasPacketLoss == false);
+			REQUIRE(buffer.HasDataToBeRetransmitted() == false);
+		}
+
+		// New data (TSN 31..33) is sent after the retransmission. SACKs for these
+		// are valid miss indications for the retransmitted TSN 10.
+		for (int i{ 0 }; i < 3; ++i)
+		{
+			buffer.Insert(
+			  OutgoingMessageId,
+			  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false),
+			  NowUs + 100000);
+		}
+
+		for (uint16_t end{ 22 }; end <= 23; ++end)
+		{
+			REQUIRE(
+			  buffer
+			    .HandleSack(
+			      unwrapper.Unwrap(9),
+			      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+			        { 2, end }
+      },
+			      true)
+			    .hasPacketLoss == false);
+			REQUIRE(buffer.HasDataToBeRetransmitted() == false);
+		}
+
+		REQUIRE(
+		  buffer
+		    .HandleSack(
+		      unwrapper.Unwrap(9),
+		      std::vector<RTC::SCTP::SackChunk::GapAckBlock>{
+		        { 2, 24 }
+    },
+		      true)
+		    .hasPacketLoss == true);
+
+		const auto retransmit = buffer.GetChunksToBeRetransmitted(1000);
+
+		REQUIRE(retransmit.size() == 1);
+		REQUIRE(retransmit[0].first == 10);
 	}
 
 	SECTION("lifecyle returns acked items in ack-info")
