@@ -2,7 +2,7 @@
 #include "RTC/SeqManager.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <limits> // std::numeric_limits
-#include <string>
+#include <optional>
 #include <vector>
 
 namespace
@@ -10,13 +10,15 @@ namespace
 	template<typename T>
 	struct TestSeqManagerInput
 	{
-		TestSeqManagerInput(T input, T output, bool sync = false, bool drop = false, int64_t maxInput = -1)
+		TestSeqManagerInput(
+		  T input, std::optional<T> output, bool sync = false, bool drop = false, int64_t maxInput = -1)
 		  : input(input), output(output), sync(sync), drop(drop), maxInput(maxInput)
 		{
 		}
 
 		T input{ 0 };
-		T output{ 0 };
+		// No value means 'Input()' is expected to return false.
+		std::optional<T> output;
 		bool sync{ false };
 		bool drop{ false };
 		int64_t maxInput{ -1 };
@@ -38,13 +40,19 @@ namespace
 			}
 			else
 			{
-				T output;
+				T output{ 0 };
+				const bool forwarded = seqManager.Input(element.input, output);
 
-				seqManager.Input(element.input, output);
-
-				if (output != element.output)
+				if (forwarded != element.output.has_value())
 				{
-					return std::make_pair(output, element.output);
+					return std::make_pair(static_cast<T>(forwarded), static_cast<T>(element.output.has_value()));
+				}
+
+				// 'Input()' only writes 'output' when it returns true, so there is nothing
+				// to compare otherwise.
+				if (forwarded && output != element.output.value())
+				{
+					return std::make_pair(output, element.output.value());
 				}
 
 				if (element.maxInput != -1)
@@ -730,21 +738,21 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  4806,     0, false, true  }, // Drop.
 			{ 30738, 30738, false, false },
 			{ 50886,     0, false, true  }, // Drop.
-			{  4806,  4805, false, false }, // Previously dropped.
+			{  4806,  4805, false, false },
 			{ 50774,     0, false, true  }, // Drop.
-			{ 50886,  4805, false, false }, // Previously dropped.
+			{ 50886, std::nullopt, false, false }, // Previously dropped.
 			{ 22136,     0, false, true  }, // Drop.
-			{ 50774, 50773, false, false },
+			{ 50774, 50772, false, false },
 			{ 30910,     0, false, true  }, // Drop.
-			{ 22136, 50773, false, false }, // Previously dropped.
+			{ 22136, std::nullopt, false, false }, // Previously dropped.
 			{ 48862,     0, false, true  }, // Drop.
-			{ 30910, 30909, false, false },
+			{ 30910, 30908, false, false },
 			{ 56832,     0, false, true  }, // Drop.
-			{ 48862, 48861, false, false },
+			{ 48862, 48860, false, false },
 			{     2,     0, false, true  }, // Drop.
-			{ 56832, 48861, false, false }, // Previously dropped.
+			{ 56832, std::nullopt, false, false }, // Previously dropped.
 			{   530,     0, false, true  }, // Drop.
-			{     2, 48861, false, false }, // Previously dropped.
+			{     2, std::nullopt, false, false }, // Previously dropped.
 		};
 		// clang-format on
 
@@ -762,7 +770,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  3328,     0, false, true  }, // Drop.
 			{ 24589, 24588, false, false },
 			{   120,     0, false, true  }, // Drop.
-			{  3328, 24588, false, false }, // Previously dropped.
+			{  3328, std::nullopt, false, false }, // Previously dropped.
 			{ 30848,     0, false, true  }, // Drop.
 			{   120,   120, false, false },
 		};
@@ -781,6 +789,58 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{ 36964, 36964, false, false },
 			{ 65396 ,    0, false, true  }, // Drop.
 			{ 25855, 25854, false, false },
+		};
+		// clang-format on
+
+		const auto result = validate(RTC::SeqManager<uint16_t>{}, inputs);
+
+		REQUIRE(result.first == result.second);
+	}
+
+	// 'ClearDropped()' stops at the first entry that is not from the previous
+	// cycle. A newer drop can sort before such entries, leaving them behind
+	// forever, which is why 'Drop()' must clear before inserting.
+	//
+	// The stream below is strictly increasing once unwrapped:
+	//
+	//   190, 200, 296, 342, 454
+	//
+	// 200 and 342 are dropped, so 454 must be shifted down by 2, giving
+	// 454 - 2 = 452, that is 196 once wrapped.
+	SECTION("a newer drop does not prevent clearing a previous cycle drop (using uint8_t)")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint8_t>> inputs =
+		{
+			{ 190, 190, false, false },
+			{ 200,   0, false, true  }, // Drop.
+			{  40,  39, false, false }, // 296 unwrapped, one drop below it.
+			{  86,   0, false, true  }, // Drop. 200 belongs to the previous cycle now.
+			{ 198, 196, false, false }  // 454 unwrapped, two drops below it.
+		};
+		// clang-format on
+
+		const auto result = validate(RTC::SeqManager<uint8_t>{}, inputs);
+
+		REQUIRE(result.first == result.second);
+	}
+
+	// Same scenario using RTP sequence numbers. Unwrapped the stream is:
+	//
+	//   48640, 51200, 75776, 87552, 116224
+	//
+	// 51200 and 87552 are dropped, so 116224 must be shifted down by 2, giving
+	// 116222, that is 50686 once wrapped.
+	SECTION("a newer drop does not prevent clearing a previous cycle drop (using uint16_t)")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 48640, 48640, false, false },
+			{ 51200,     0, false, true  }, // Drop.
+			{ 10240, 10239, false, false }, // 75776 unwrapped, one drop below it.
+			{ 22016,     0, false, true  }, // Drop. 51200 belongs to the previous cycle now.
+			{ 50688, 50686, false, false }  // 116224 unwrapped, two drops below it.
 		};
 		// clang-format on
 
@@ -1462,21 +1522,21 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  4806, 10000, false, true  }, // Drop.
 			{ 30738, 40738, false, false },
 			{ 50886, 10000, false, true  }, // Drop.
-			{  4806, 14805, false, false }, // Previously dropped.
+			{  4806, 14805, false, false },
 			{ 50774, 10000, false, true  }, // Drop.
-			{ 50886, 14805, false, false }, // Previously dropped.
+			{ 50886, std::nullopt, false, false }, // Previously dropped.
 			{ 22136, 10000, false, true  }, // Drop.
-			{ 50774, 60773, false, false },
+			{ 50774, 60772, false, false },
 			{ 30910, 10000, false, true  }, // Drop.
-			{ 22136, 60773, false, false }, // Previously dropped.
+			{ 22136, std::nullopt, false, false }, // Previously dropped.
 			{ 48862, 10000, false, true  }, // Drop.
-			{ 30910, 40909, false, false },
+			{ 30910, 40908, false, false },
 			{ 56832, 10000, false, true  }, // Drop.
-			{ 48862, 58861, false, false },
+			{ 48862, 58860, false, false },
 			{     2, 10000, false, true  }, // Drop.
-			{ 56832, 58861, false, false }, // Previously dropped.
+			{ 56832, std::nullopt, false, false }, // Previously dropped.
 			{   530, 10000, false, true  }, // Drop.
-			{     2, 58861, false, false }, // Previously dropped.
+			{     2, std::nullopt, false, false }, // Previously dropped.
 		};
 		// clang-format on
 
@@ -1494,7 +1554,7 @@ SCENARIO("SeqManager", "[seqmanager]")
 			{  3328,   100, false, true  }, // Drop.
 			{ 24589, 24688, false, false },
 			{   120,   100, false, true  }, // Drop.
-			{  3328, 24688, false, false }, // Previously dropped.
+			{  3328, std::nullopt, false, false }, // Previously dropped.
 			{ 30848,   100, false, true  }, // Drop.
 			{   120,   220, false, false },
 		};

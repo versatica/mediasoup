@@ -6,6 +6,8 @@
 - `RtpStreamSend`: Don't discount repaired packets twice in the score when RTX is not used ([PR #1987](https://github.com/versatica/mediasoup/pull/1987)).
 - SCTP: Don't emit association errors in `Association::ResetStreams()` ([PR #1990](https://github.com/versatica/mediasoup/pull/1990)).
 - **Breaking change:** `Consumer::get_stats()` now returns `Vec<ConsumerRtpStreamStat>`, an entry per RTP stream being either `Outbound(ConsumerStat)` or `Inbound(ProducerStat)`, replacing the `ConsumerStats` enum and its `consumer_stats()` method ([PR #1991](https://github.com/versatica/mediasoup/pull/1991)).
+- `SeqManager`: Fix dropped inputs of a previous cycle never being removed, which shifted subsequent output sequence numbers ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- `SeqManager`: Make `ClearDropped()` O(1) amortized instead of shifting the whole dropped container on every input ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 0.30.0
 
