@@ -23,6 +23,7 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "Utils.hpp"
 #include "mocks/include/MockShared.hpp"
 #include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
 #include <array>
@@ -35,6 +36,7 @@ namespace
 {
 	// Initial value of the simulated clock (us).
 	constexpr int64_t InitialNowUs{ 1000000 * 1000 };
+	constexpr size_t SmallMessageSize{ 10 };
 
 	// All backoff timer labels an SCTP association may create. Used by `runTimers()`
 	// to fire whichever timers have expired after advancing time.
@@ -223,6 +225,82 @@ namespace
 
 		runTimers(a);
 		runTimers(z);
+	}
+
+	/**
+	 * Returns the milliseconds left until the next running backoff timer of `s`
+	 * expires, or `std::nullopt` if `s` has no running timer.
+	 */
+	std::optional<int64_t> getTimeToNextTimeoutMs(AssociationUnderTest& s)
+	{
+		std::optional<int64_t> timeToNextTimeoutMs;
+
+		for (const auto label : SctpTimerLabels)
+		{
+			auto* timer = s.shared.GetBackoffTimer(label);
+
+			if (!timer || !timer->IsRunning())
+			{
+				continue;
+			}
+
+			const int64_t timeToTimeoutMs = timer->GetExpiresAtMs() - s.shared.GetTimeMs();
+
+			// A timer whose expiry is already in the past is not a pending timeout.
+			if (timeToTimeoutMs < 0)
+			{
+				continue;
+			}
+
+			if (!timeToNextTimeoutMs.has_value() || timeToTimeoutMs < *timeToNextTimeoutMs)
+			{
+				timeToNextTimeoutMs = timeToTimeoutMs;
+			}
+		}
+
+		return timeToNextTimeoutMs;
+	}
+
+	/**
+	 * Delivers all queued packets between `a` and `z`, then advances the simulated
+	 * clock to the next timer expiry, and repeats. Returns once neither has a
+	 * running timer or once `maxTimeoutMs` of simulated time has elapsed.
+	 */
+	void exchangeMessagesAndAdvanceTime(
+	  AssociationUnderTest& a, AssociationUnderTest& z, int64_t maxTimeoutMs = 10000)
+	{
+		const int64_t startedAtMs = a.shared.GetTimeMs();
+
+		while (a.shared.GetTimeMs() - startedAtMs < maxTimeoutMs)
+		{
+			exchangeMessages(a, z);
+
+			const auto timeToNextTimeoutMsA = getTimeToNextTimeoutMs(a);
+			const auto timeToNextTimeoutMsZ = getTimeToNextTimeoutMs(z);
+
+			if (!timeToNextTimeoutMsA.has_value() && !timeToNextTimeoutMsZ.has_value())
+			{
+				// No more pending timer.
+				return;
+			}
+
+			int64_t timeToNextTimeoutMs{ 0 };
+
+			if (!timeToNextTimeoutMsA.has_value())
+			{
+				timeToNextTimeoutMs = *timeToNextTimeoutMsZ;
+			}
+			else if (!timeToNextTimeoutMsZ.has_value())
+			{
+				timeToNextTimeoutMs = *timeToNextTimeoutMsA;
+			}
+			else
+			{
+				timeToNextTimeoutMs = std::min(*timeToNextTimeoutMsA, *timeToNextTimeoutMsZ);
+			}
+
+			advanceNowMs(a, z, timeToNextTimeoutMs);
+		}
 	}
 
 	/**
@@ -822,6 +900,116 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(message.has_value() == true);
 		REQUIRE(message->GetStreamId() == 1);
 		REQUIRE(message->GetPayloadLength() == payload.size());
+	}
+
+	SECTION("retransmission metrics are set for fast retransmit")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		// Enough to trigger fast retransmit of the missing second packet.
+		const std::vector<uint8_t> payload(a.sctpOptions.mtu * 5);
+
+		sendMessage(a, 1, 53, payload);
+
+		// Z reads the first DATA.
+		deliverFirstSentPacket(a, z);
+		// Second DATA is lost.
+		a.listener.ConsumeFirstSentPacket();
+
+		// Receive and retransmit the remaining.
+		exchangeMessages(a, z);
+
+		const auto metrics = a.association.MakeMetrics();
+
+		REQUIRE(metrics.has_value() == true);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsValue = metrics.value();
+
+		REQUIRE(metricsValue.rtxPacketsCount == 1);
+		REQUIRE(
+		  metricsValue.rtxBytesCount ==
+		  Utils::Byte::PadDownTo4Bytes(a.sctpOptions.mtu - RTC::SCTP::Packet::CommonHeaderLength));
+	}
+
+	SECTION("retransmission metrics are set for normal retransmit")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		const std::vector<uint8_t> payload(SmallMessageSize);
+
+		sendMessage(a, 1, 53, payload);
+
+		// Drop the first DATA packet.
+		a.listener.ConsumeFirstSentPacket();
+
+		// Advance time so that the T3-RTX timer expires and the DATA is resent.
+		advanceNowMs(a, z, a.sctpOptions.initialRtoMs);
+
+		exchangeMessages(a, z);
+
+		const auto metrics = a.association.MakeMetrics();
+
+		REQUIRE(metrics.has_value() == true);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsValue = metrics.value();
+
+		REQUIRE(metricsValue.rtxPacketsCount == 1);
+
+		// NOTE: `SctpOptions::enableMessageInterleaving` defaults to true, so the
+		// association negotiates I-DATA and the retransmitted chunk carries an
+		// I-DATA header.
+		REQUIRE(
+		  metricsValue.rtxBytesCount ==
+		  Utils::Byte::PadTo4Bytes(SmallMessageSize + RTC::SCTP::IDataChunk::IDataChunkHeaderLength));
+	}
+
+	SECTION("retransmits a lost packet only once in a large burst")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		// A message large enough that many packets are still in flight when the
+		// second packet is detected as lost and fast retransmitted. The SACKs for
+		// those in-flight packets reach A before the retransmission reaches Z, and
+		// they must not cause the lost packet to be retransmitted again.
+		const std::vector<uint8_t> payload(a.sctpOptions.mtu * 20);
+
+		sendMessage(a, 1, 53, payload);
+
+		// Z reads the first DATA.
+		deliverFirstSentPacket(a, z);
+		// Second DATA is lost.
+		a.listener.ConsumeFirstSentPacket();
+
+		// Retransmit and handle the rest.
+		exchangeMessagesAndAdvanceTime(a, z);
+
+		const auto message = z.listener.ConsumeFirstReceivedMessage();
+
+		REQUIRE(message.has_value() == true);
+		REQUIRE(message->GetPayloadLength() == payload.size());
+
+		const auto metrics = a.association.MakeMetrics();
+
+		REQUIRE(metrics.has_value() == true);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsValue = metrics.value();
+
+		REQUIRE(metricsValue.rtxPacketsCount == 1);
+		REQUIRE(
+		  metricsValue.rtxBytesCount ==
+		  Utils::Byte::PadDownTo4Bytes(a.sctpOptions.mtu - RTC::SCTP::Packet::CommonHeaderLength));
 	}
 
 	SECTION("sends a heartbeat on idle connection")

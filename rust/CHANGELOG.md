@@ -8,6 +8,7 @@
 - **Breaking change:** `Consumer::get_stats()` now returns `Vec<ConsumerRtpStreamStat>`, an entry per RTP stream being either `Outbound(ConsumerStat)` or `Inbound(ProducerStat)`, replacing the `ConsumerStats` enum and its `consumer_stats()` method ([PR #1991](https://github.com/versatica/mediasoup/pull/1991)).
 - `TransportStats`: Add `roundTripTime` (ms) which is optional ([PR #1992](https://github.com/versatica/mediasoup/pull/1992)).
   - `RtpStreamStats.roundTripTime` (optional) now has no value (instead of 0) when the RTT is unknown.
+- SCTP: Limit when chunks are retransmitted ([PR #1993](https://github.com/versatica/mediasoup/pull/1993)).
 
 ### 0.30.0
 

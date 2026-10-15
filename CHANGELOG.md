@@ -8,6 +8,7 @@
 - `consumer.getStats()` now also returns "inbound-rtp" entries for pipe Consumers, one per forwarded `Producer` stream ([PR #1991](https://github.com/versatica/mediasoup/pull/1991)).
 - `TransportStats`: Add `roundTripTime` (ms) which is optional ([PR #1992](https://github.com/versatica/mediasoup/pull/1992)).
   - `RtpStreamStats.roundTripTime` (optional) now has no value (instead of 0) when the RTT is unknown.
+- SCTP: Limit when chunks are retransmitted ([PR #1993](https://github.com/versatica/mediasoup/pull/1993)).
 
 ### 3.29.0
 
