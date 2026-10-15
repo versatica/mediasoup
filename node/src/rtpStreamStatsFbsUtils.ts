@@ -79,7 +79,7 @@ function parseBaseStreamStats(
 		nackPacketCount: Number(binary.nackPacketCount()),
 		pliCount: Number(binary.pliCount()),
 		firCount: Number(binary.firCount()),
-		roundTripTime: binary.roundTripTime(),
+		roundTripTime: binary.roundTripTime() ?? undefined,
 		rtxPacketsDiscarded: binary.rtxPacketsDiscarded()
 			? Number(binary.rtxPacketsDiscarded())
 			: undefined,

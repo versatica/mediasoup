@@ -77,10 +77,7 @@ namespace RTC
 
 			auto& encodingMapping = this->rtpMapping.encodings.back();
 
-			if (auto ssrc = encoding->ssrc(); ssrc.has_value())
-			{
-				encodingMapping.ssrc = ssrc.value();
-			}
+			encodingMapping.ssrc = encoding->ssrc();
 
 			// rid is optional.
 			const bool hasRid =
@@ -268,8 +265,7 @@ namespace RTC
 			  FBS::RtpParameters::CreateEncodingMappingDirect(
 			    builder,
 			    encodingMapping.rid.empty() ? nullptr : encodingMapping.rid.c_str(),
-			    encodingMapping.ssrc != 0 ? flatbuffers::Optional<uint32_t>(encodingMapping.ssrc)
-					                          : flatbuffers::nullopt,
+			    encodingMapping.ssrc,
 			    encodingMapping.mappedSsrc));
 		}
 
@@ -601,7 +597,7 @@ namespace RTC
 			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_NOT_FOUND);
 #endif
 
-			return ReceiveRtpPacketResult::DISCARDED;
+			return ReceiveRtpPacketResult::STREAM_NOT_FOUND;
 		}
 
 		ReceiveRtpPacketResult result;
@@ -749,7 +745,7 @@ namespace RTC
 		MS_DEBUG_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", report->GetSsrc());
 	}
 
-	void Producer::ReceiveRtcpXrDelaySinceLastRr(
+	std::optional<float> Producer::ReceiveRtcpXrDelaySinceLastRr(
 	  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -760,12 +756,12 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", ssrcInfo->GetSsrc());
 
-			return;
+			return std::nullopt;
 		}
 
 		auto* rtpStream = it->second;
 
-		rtpStream->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
+		return rtpStream->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
 	}
 
 	bool Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs)

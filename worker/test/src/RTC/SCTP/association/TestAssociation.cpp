@@ -23,6 +23,7 @@
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
+#include "Utils.hpp"
 #include "mocks/include/MockShared.hpp"
 #include "mocks/include/RTC/SCTP/association/MockAssociationListener.hpp"
 #include <array>
@@ -35,6 +36,7 @@ namespace
 {
 	// Initial value of the simulated clock (us).
 	constexpr int64_t InitialNowUs{ 1000000 * 1000 };
+	constexpr size_t SmallMessageSize{ 10 };
 
 	// All backoff timer labels an SCTP association may create. Used by `runTimers()`
 	// to fire whichever timers have expired after advancing time.
@@ -99,7 +101,7 @@ namespace
 		 * - The increment is given in milliseconds since it comes from the SCTP
 		 *   options and the timers, which work in milliseconds.
 		 */
-		void AdvanceTimeMs(int64_t incrementMs)
+		void AdvanceNowMs(int64_t incrementMs)
 		{
 			this->nowUs += incrementMs * 1000;
 		}
@@ -216,13 +218,89 @@ namespace
 	 * Advances the simulated clock of both associations by `durationMs` and fires
 	 * any timer that has expired.
 	 */
-	void advanceTimeMs(AssociationUnderTest& a, AssociationUnderTest& z, int64_t durationMs)
+	void advanceNowMs(AssociationUnderTest& a, AssociationUnderTest& z, int64_t incrementMs)
 	{
-		a.AdvanceTimeMs(durationMs);
-		z.AdvanceTimeMs(durationMs);
+		a.AdvanceNowMs(incrementMs);
+		z.AdvanceNowMs(incrementMs);
 
 		runTimers(a);
 		runTimers(z);
+	}
+
+	/**
+	 * Returns the milliseconds left until the next running backoff timer of `s`
+	 * expires, or `std::nullopt` if `s` has no running timer.
+	 */
+	std::optional<int64_t> getTimeToNextTimeoutMs(AssociationUnderTest& s)
+	{
+		std::optional<int64_t> timeToNextTimeoutMs;
+
+		for (const auto label : SctpTimerLabels)
+		{
+			auto* timer = s.shared.GetBackoffTimer(label);
+
+			if (!timer || !timer->IsRunning())
+			{
+				continue;
+			}
+
+			const int64_t timeToTimeoutMs = timer->GetExpiresAtMs() - s.shared.GetTimeMs();
+
+			// A timer whose expiry is already in the past is not a pending timeout.
+			if (timeToTimeoutMs < 0)
+			{
+				continue;
+			}
+
+			if (!timeToNextTimeoutMs.has_value() || timeToTimeoutMs < *timeToNextTimeoutMs)
+			{
+				timeToNextTimeoutMs = timeToTimeoutMs;
+			}
+		}
+
+		return timeToNextTimeoutMs;
+	}
+
+	/**
+	 * Delivers all queued packets between `a` and `z`, then advances the simulated
+	 * clock to the next timer expiry, and repeats. Returns once neither has a
+	 * running timer or once `maxTimeoutMs` of simulated time has elapsed.
+	 */
+	void exchangeMessagesAndAdvanceTime(
+	  AssociationUnderTest& a, AssociationUnderTest& z, int64_t maxTimeoutMs = 10000)
+	{
+		const int64_t startedAtMs = a.shared.GetTimeMs();
+
+		while (a.shared.GetTimeMs() - startedAtMs < maxTimeoutMs)
+		{
+			exchangeMessages(a, z);
+
+			const auto timeToNextTimeoutMsA = getTimeToNextTimeoutMs(a);
+			const auto timeToNextTimeoutMsZ = getTimeToNextTimeoutMs(z);
+
+			if (!timeToNextTimeoutMsA.has_value() && !timeToNextTimeoutMsZ.has_value())
+			{
+				// No more pending timer.
+				return;
+			}
+
+			int64_t timeToNextTimeoutMs{ 0 };
+
+			if (!timeToNextTimeoutMsA.has_value())
+			{
+				timeToNextTimeoutMs = *timeToNextTimeoutMsZ;
+			}
+			else if (!timeToNextTimeoutMsZ.has_value())
+			{
+				timeToNextTimeoutMs = *timeToNextTimeoutMsA;
+			}
+			else
+			{
+				timeToNextTimeoutMs = std::min(*timeToNextTimeoutMsA, *timeToNextTimeoutMsZ);
+			}
+
+			advanceNowMs(a, z, timeToNextTimeoutMs);
+		}
 	}
 
 	/**
@@ -427,7 +505,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
 
 		// This will make A re-send the COOKIE-ECHO.
-		advanceTimeMs(a, z, a.sctpOptions.t1CookieTimeoutMs);
+		advanceNowMs(a, z, a.sctpOptions.t1CookieTimeoutMs);
 
 		// Z reads COOKIE-ECHO, produces COOKIE-ACK.
 		deliverFirstSentPacket(a, z);
@@ -449,7 +527,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(
 		  packetHasSingleChunkOfType<RTC::SCTP::InitChunk>(a.listener.ConsumeFirstSentPacket()) == true);
 
-		advanceTimeMs(a, z, a.sctpOptions.t1InitTimeoutMs);
+		advanceNowMs(a, z, a.sctpOptions.t1InitTimeoutMs);
 
 		// Z reads INIT, produces INIT-ACK.
 		deliverFirstSentPacket(a, z);
@@ -479,7 +557,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		for (size_t i = 0; i < maxInitRetransmissions; ++i)
 		{
-			advanceTimeMs(a, z, a.sctpOptions.t1InitTimeoutMs * (1u << i));
+			advanceNowMs(a, z, a.sctpOptions.t1InitTimeoutMs * (1u << i));
 
 			// INIT is resent.
 			REQUIRE(
@@ -487,7 +565,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		}
 
 		// Another timeout, after the max init retransmits.
-		advanceTimeMs(a, z, a.sctpOptions.t1InitTimeoutMs * (1u << maxInitRetransmissions));
+		advanceNowMs(a, z, a.sctpOptions.t1InitTimeoutMs * (1u << maxInitRetransmissions));
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 		REQUIRE(a.listener.HasFailed() == true);
@@ -511,7 +589,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		  packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(a.listener.ConsumeFirstSentPacket()) ==
 		  true);
 
-		advanceTimeMs(a, z, a.sctpOptions.t1CookieTimeoutMs);
+		advanceNowMs(a, z, a.sctpOptions.t1CookieTimeoutMs);
 
 		// Z reads COOKIE-ECHO, produces COOKIE-ACK.
 		deliverFirstSentPacket(a, z);
@@ -543,7 +621,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		for (size_t i = 0; i < maxInitRetransmissions; ++i)
 		{
-			advanceTimeMs(a, z, a.sctpOptions.t1CookieTimeoutMs * (1u << i));
+			advanceNowMs(a, z, a.sctpOptions.t1CookieTimeoutMs * (1u << i));
 
 			// COOKIE-ECHO is resent.
 			REQUIRE(
@@ -552,7 +630,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		}
 
 		// Another timeout, after the max init retransmits.
-		advanceTimeMs(a, z, a.sctpOptions.t1CookieTimeoutMs * (1u << maxInitRetransmissions));
+		advanceNowMs(a, z, a.sctpOptions.t1CookieTimeoutMs * (1u << maxInitRetransmissions));
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 		REQUIRE(a.listener.HasFailed() == true);
@@ -636,7 +714,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		for (size_t i = 0; i < maxRetransmissions; ++i)
 		{
-			advanceTimeMs(a, z, a.sctpOptions.initialRtoMs * (1u << i));
+			advanceNowMs(a, z, a.sctpOptions.initialRtoMs * (1u << i));
 
 			// SHUTDOWN is resent (and dropped).
 			REQUIRE(
@@ -645,7 +723,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		}
 
 		// The last expiry makes it abort the connection.
-		advanceTimeMs(a, z, a.sctpOptions.initialRtoMs * (1u << maxRetransmissions));
+		advanceNowMs(a, z, a.sctpOptions.initialRtoMs * (1u << maxRetransmissions));
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 		REQUIRE(a.listener.IsClosed() == true);
@@ -678,7 +756,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
 
 		// Advance time to trigger timer expiry, which makes A resend SHUTDOWN-ACK.
-		advanceTimeMs(a, z, a.sctpOptions.initialRtoMs);
+		advanceNowMs(a, z, a.sctpOptions.initialRtoMs);
 
 		REQUIRE(
 		  packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(a.listener.ConsumeFirstSentPacket()) ==
@@ -787,7 +865,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		a.listener.ConsumeFirstSentPacket();
 
 		// Advance time so that the T3-RTX timer expires and the DATA is resent.
-		advanceTimeMs(a, z, a.sctpOptions.initialRtoMs);
+		advanceNowMs(a, z, a.sctpOptions.initialRtoMs);
 
 		// Z reads the retransmitted DATA chunk.
 		deliverFirstSentPacket(a, z);
@@ -824,6 +902,116 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(message->GetPayloadLength() == payload.size());
 	}
 
+	SECTION("retransmission metrics are set for fast retransmit")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		// Enough to trigger fast retransmit of the missing second packet.
+		const std::vector<uint8_t> payload(a.sctpOptions.mtu * 5);
+
+		sendMessage(a, 1, 53, payload);
+
+		// Z reads the first DATA.
+		deliverFirstSentPacket(a, z);
+		// Second DATA is lost.
+		a.listener.ConsumeFirstSentPacket();
+
+		// Receive and retransmit the remaining.
+		exchangeMessages(a, z);
+
+		const auto metrics = a.association.MakeMetrics();
+
+		REQUIRE(metrics.has_value() == true);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsValue = metrics.value();
+
+		REQUIRE(metricsValue.rtxPacketsCount == 1);
+		REQUIRE(
+		  metricsValue.rtxBytesCount ==
+		  Utils::Byte::PadDownTo4Bytes(a.sctpOptions.mtu - RTC::SCTP::Packet::CommonHeaderLength));
+	}
+
+	SECTION("retransmission metrics are set for normal retransmit")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		const std::vector<uint8_t> payload(SmallMessageSize);
+
+		sendMessage(a, 1, 53, payload);
+
+		// Drop the first DATA packet.
+		a.listener.ConsumeFirstSentPacket();
+
+		// Advance time so that the T3-RTX timer expires and the DATA is resent.
+		advanceNowMs(a, z, a.sctpOptions.initialRtoMs);
+
+		exchangeMessages(a, z);
+
+		const auto metrics = a.association.MakeMetrics();
+
+		REQUIRE(metrics.has_value() == true);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsValue = metrics.value();
+
+		REQUIRE(metricsValue.rtxPacketsCount == 1);
+
+		// NOTE: `SctpOptions::enableMessageInterleaving` defaults to true, so the
+		// association negotiates I-DATA and the retransmitted chunk carries an
+		// I-DATA header.
+		REQUIRE(
+		  metricsValue.rtxBytesCount ==
+		  Utils::Byte::PadTo4Bytes(SmallMessageSize + RTC::SCTP::IDataChunk::IDataChunkHeaderLength));
+	}
+
+	SECTION("retransmits a lost packet only once in a large burst")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		// A message large enough that many packets are still in flight when the
+		// second packet is detected as lost and fast retransmitted. The SACKs for
+		// those in-flight packets reach A before the retransmission reaches Z, and
+		// they must not cause the lost packet to be retransmitted again.
+		const std::vector<uint8_t> payload(a.sctpOptions.mtu * 20);
+
+		sendMessage(a, 1, 53, payload);
+
+		// Z reads the first DATA.
+		deliverFirstSentPacket(a, z);
+		// Second DATA is lost.
+		a.listener.ConsumeFirstSentPacket();
+
+		// Retransmit and handle the rest.
+		exchangeMessagesAndAdvanceTime(a, z);
+
+		const auto message = z.listener.ConsumeFirstReceivedMessage();
+
+		REQUIRE(message.has_value() == true);
+		REQUIRE(message->GetPayloadLength() == payload.size());
+
+		const auto metrics = a.association.MakeMetrics();
+
+		REQUIRE(metrics.has_value() == true);
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& metricsValue = metrics.value();
+
+		REQUIRE(metricsValue.rtxPacketsCount == 1);
+		REQUIRE(
+		  metricsValue.rtxBytesCount ==
+		  Utils::Byte::PadDownTo4Bytes(a.sctpOptions.mtu - RTC::SCTP::Packet::CommonHeaderLength));
+	}
+
 	SECTION("sends a heartbeat on idle connection")
 	{
 		AssociationUnderTest a;
@@ -834,7 +1022,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.listener.ConsumeFirstSentPacket().empty() == true);
 
 		// Let the heartbeat interval timer expire.
-		advanceTimeMs(a, z, a.sctpOptions.heartbeatIntervalMs);
+		advanceNowMs(a, z, a.sctpOptions.heartbeatIntervalMs);
 
 		const auto buffer = a.listener.ConsumeFirstSentPacket();
 
@@ -1322,7 +1510,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		connectAssociations(a, z);
 
-		advanceTimeMs(a, z, 1000);
+		advanceNowMs(a, z, 1000);
 
 		const auto bufferA = a.listener.ConsumeFirstSentPacket();
 
@@ -1333,7 +1521,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		deliverFirstSentPacket(z, a);
 
 		// A little while later, Z should send heartbeats to A.
-		advanceTimeMs(a, z, 100);
+		advanceNowMs(a, z, 100);
 
 		const auto bufferZ = z.listener.ConsumeFirstSentPacket();
 
@@ -1365,7 +1553,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		for (size_t i = 0; i < maxRetransmissions; ++i)
 		{
 			// Let the heartbeat interval timer expire, sending a heartbeat.
-			advanceTimeMs(a, z, timeToNextHeartbeatMs);
+			advanceNowMs(a, z, timeToNextHeartbeatMs);
 
 			// Drop every heartbeat.
 			REQUIRE(
@@ -1373,20 +1561,20 @@ SCENARIO("SCTP Association", "[sctp][association]")
 			    a.listener.ConsumeFirstSentPacket()) == true);
 
 			// Let the heartbeat timeout expire.
-			advanceTimeMs(a, z, 1000);
+			advanceNowMs(a, z, 1000);
 
 			timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs - 1000;
 		}
 
 		// The last heartbeat.
-		advanceTimeMs(a, z, timeToNextHeartbeatMs);
+		advanceNowMs(a, z, timeToNextHeartbeatMs);
 
 		REQUIRE(a.listener.HasSentPackets() == true);
 
 		a.listener.ConsumeFirstSentPacket();
 
 		// Should suffice as exceeding RTO, which aborts the connection.
-		advanceTimeMs(a, z, 1000);
+		advanceNowMs(a, z, 1000);
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 		REQUIRE(a.listener.IsClosed() == true);
@@ -1413,19 +1601,19 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		for (size_t i = 0; i < maxRetransmissions; ++i)
 		{
-			advanceTimeMs(a, z, timeToNextHeartbeatMs);
+			advanceNowMs(a, z, timeToNextHeartbeatMs);
 
 			// Drop every heartbeat.
 			a.listener.ConsumeFirstSentPacket();
 
 			// Let the heartbeat timeout expire.
-			advanceTimeMs(a, z, 1000);
+			advanceNowMs(a, z, 1000);
 
 			timeToNextHeartbeatMs = a.sctpOptions.heartbeatIntervalMs - 1000;
 		}
 
 		// Get the last heartbeat and ack it (round trip through Z).
-		advanceTimeMs(a, z, timeToNextHeartbeatMs);
+		advanceNowMs(a, z, timeToNextHeartbeatMs);
 
 		const auto buffer = a.listener.ConsumeFirstSentPacket();
 
@@ -1437,13 +1625,13 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// Should suffice as exceeding RTO, but the timer will not fire as it was
 		// stopped by the ack.
-		advanceTimeMs(a, z, 1000);
+		advanceNowMs(a, z, 1000);
 
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTED);
 		REQUIRE(a.listener.IsClosed() == false);
 
 		// Verify that we get new heartbeats again.
-		advanceTimeMs(a, z, timeToNextHeartbeatMs);
+		advanceNowMs(a, z, timeToNextHeartbeatMs);
 
 		REQUIRE(
 		  packetHasSingleChunkOfType<RTC::SCTP::HeartbeatRequestChunk>(
@@ -1569,7 +1757,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		exchangeMessages(a, z);
 		// In case of delayed ack.
-		advanceTimeMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
+		advanceNowMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
 		exchangeMessages(a, z);
 
 		REQUIRE(a.listener.HasOnAssociationLifecycleMessageDeliveredBeenCalledWithLifecycleId(41) == true);
@@ -1590,7 +1778,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		// attempting to send it in full.
 		sendMessage(a, 1, 51, std::vector<uint8_t>(10), { .lifetimeMs = 100, .lifecycleId = 1 });
 
-		advanceTimeMs(a, z, 200);
+		advanceNowMs(a, z, 200);
 
 		connectAssociations(a, z);
 		exchangeMessages(a, z);
@@ -1745,11 +1933,11 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		// We exchange packets and advance timers (delayed ack and RTO) until there's
 		// nothing more to do, instead of asserting the exact intermediate sequence.
 		exchangeMessages(a, z);
-		advanceTimeMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
+		advanceNowMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
 		exchangeMessages(a, z);
-		advanceTimeMs(a, z, a.sctpOptions.initialRtoMs);
+		advanceNowMs(a, z, a.sctpOptions.initialRtoMs);
 		exchangeMessages(a, z);
-		advanceTimeMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
+		advanceNowMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
 		exchangeMessages(a, z);
 
 		// The first and third messages are delivered; the second one is abandoned.
@@ -1781,15 +1969,15 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		exchangeMessages(a, z);
 
 		// Handle the delayed SACK.
-		advanceTimeMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
+		advanceNowMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
 		exchangeMessages(a, z);
 
 		// The chunk is now nacked. Let the RTO expire to discard the message.
-		advanceTimeMs(a, z, a.sctpOptions.initialRtoMs);
+		advanceNowMs(a, z, a.sctpOptions.initialRtoMs);
 		exchangeMessages(a, z);
 
 		// Handle the delayed SACK.
-		advanceTimeMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
+		advanceNowMs(a, z, a.sctpOptions.delayedAckMaxTimeoutMs);
 		exchangeMessages(a, z);
 
 		REQUIRE(a.listener.HasOnAssociationLifecycleMessageDeliveredBeenCalledWithLifecycleId(1) == true);
@@ -1937,7 +2125,7 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		// Make the cookie stale on Z's side by advancing its clock beyond the cookie
 		// lifespan before the COOKIE-ECHO is delivered.
-		z.AdvanceTimeMs((RTC::SCTP::StateCookie::ValidCookieLifeUs / 1000) + 1000);
+		z.AdvanceNowMs((RTC::SCTP::StateCookie::ValidCookieLifeUs / 1000) + 1000);
 
 		// Z reads the now stale COOKIE-ECHO.
 		deliverFirstSentPacket(a, z);

@@ -235,7 +235,7 @@ namespace RTC
 			}
 		}
 
-		std::optional<RtpStreamSend::Loss> RtpStreamSend::ReceiveRtcpReceiverReport(
+		RtpStreamSend::ReceiverReportResult RtpStreamSend::ReceiveRtcpReceiverReport(
 		  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
 		{
 			MS_TRACE();
@@ -254,15 +254,20 @@ namespace RTC
 			const uint32_t lastSr = report->GetLastSenderReport();
 			const uint32_t dlsr   = report->GetDelaySinceLastSenderReport();
 
+			std::optional<float> measuredRttMs;
+
 			// If no Sender Report was received by the remote endpoint yet, the Receiver
-			// Report carries no RTT, so the last one is kept.
+			// Report carries no RTT, so the last one is kept and nothing new is
+			// reported.
 			//
 			// NOTE: The subtraction wraps around along with the compact NTP
 			// representation, which is what the conversion expects.
 			if (lastSr != 0)
 			{
-				this->rttMs =
+				measuredRttMs =
 				  static_cast<float>(Utils::Time::CompactNtpRttToTimeUs(compactNtp - dlsr - lastSr)) / 1000;
+
+				this->rttMs = measuredRttMs;
 			}
 
 			this->jitter = static_cast<float>(report->GetJitter());
@@ -274,7 +279,7 @@ namespace RTC
 			// Update the score with the received RR.
 			UpdateScore(loss);
 
-			return loss;
+			return { .loss = loss, .rttMs = measuredRttMs };
 		}
 
 		std::optional<RtpStreamSend::Loss> RtpStreamSend::UpdateSendLoss(RTC::RTCP::ReceiverReport* report)
@@ -575,7 +580,7 @@ namespace RTC
 			MS_TRACE();
 
 			const int64_t nowMs = this->shared->GetTimeMs();
-			const int64_t rttMs = (this->rttMs > 0.0f ? static_cast<int64_t>(this->rttMs) : DefaultRttMs);
+			const auto rttMs    = static_cast<int64_t>(this->rttMs.value_or(DefaultRttMs));
 
 			size_t numRetransmittedPackets{ 0 };
 

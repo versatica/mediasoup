@@ -461,12 +461,11 @@ namespace RTC
 			ReadRid(rrid);
 
 			// Add wideSequenceNumber.
-			uint16_t wideSequenceNumber{ 0 };
-			bool wideSequenceNumberSet{ false };
+			std::optional<uint16_t> wideSequenceNumber;
 
-			if (ReadTransportWideCc01(wideSequenceNumber))
+			if (uint16_t value; ReadTransportWideCc01(value))
 			{
-				wideSequenceNumberSet = true;
+				wideSequenceNumber = value;
 			}
 
 			return FBS::RtpPacket::CreateDumpDirect(
@@ -484,8 +483,7 @@ namespace RTC
 			  mid.empty() ? nullptr : mid.c_str(),
 			  rid.empty() ? nullptr : rid.c_str(),
 			  rrid.empty() ? nullptr : rrid.c_str(),
-			  wideSequenceNumberSet ? flatbuffers::Optional<uint16_t>(wideSequenceNumber)
-				                      : flatbuffers::nullopt);
+			  wideSequenceNumber);
 		}
 
 		void Packet::SetPayloadType(uint8_t payloadType)

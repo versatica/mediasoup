@@ -241,6 +241,7 @@ pub struct PipeTransportStat {
     pub max_incoming_bitrate: Option<u64>,
     pub max_outgoing_bitrate: Option<u64>,
     pub min_outgoing_bitrate: Option<u64>,
+    pub round_trip_time: Option<f32>,
     // PipeTransport specific.
     pub tuple: TransportTuple,
 }
@@ -273,6 +274,7 @@ impl<'a> TryFromFbs<'a> for PipeTransportStat {
             max_incoming_bitrate: stats.base.max_incoming_bitrate,
             max_outgoing_bitrate: stats.base.max_outgoing_bitrate,
             min_outgoing_bitrate: stats.base.min_outgoing_bitrate,
+            round_trip_time: stats.base.round_trip_time,
             // PlainTransport specific.
             tuple: TransportTuple::from_fbs(stats.tuple.as_ref()),
         })

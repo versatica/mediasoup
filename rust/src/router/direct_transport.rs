@@ -181,6 +181,7 @@ pub struct DirectTransportStat {
     pub max_incoming_bitrate: Option<u64>,
     pub max_outgoing_bitrate: Option<u64>,
     pub min_outgoing_bitrate: Option<u64>,
+    pub round_trip_time: Option<f32>,
 }
 
 impl<'a> TryFromFbs<'a> for DirectTransportStat {
@@ -211,6 +212,7 @@ impl<'a> TryFromFbs<'a> for DirectTransportStat {
             max_incoming_bitrate: stats.base.max_incoming_bitrate,
             max_outgoing_bitrate: stats.base.max_outgoing_bitrate,
             min_outgoing_bitrate: stats.base.min_outgoing_bitrate,
+            round_trip_time: stats.base.round_trip_time,
         })
     }
 }

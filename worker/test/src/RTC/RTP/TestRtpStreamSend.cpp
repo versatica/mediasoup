@@ -1852,7 +1852,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-		const auto receiveReceiverReport = [&](int64_t receivedAtUs, uint32_t lastSr, uint32_t dlsr) -> void
+		const auto receiveReceiverReport =
+		  [&](int64_t receivedAtUs, uint32_t lastSr, uint32_t dlsr) -> std::optional<float>
 		{
 			RTC::RTCP::ReceiverReport report;
 
@@ -1860,37 +1861,42 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			report.SetLastSenderReport(lastSr);
 			report.SetDelaySinceLastSenderReport(dlsr);
 
-			stream.ReceiveRtcpReceiverReport(std::addressof(report), receivedAtUs);
+			const auto result = stream.ReceiveRtcpReceiverReport(std::addressof(report), receivedAtUs);
+
+			return result.rttMs;
 		};
 
 		// The compact NTP representation has 16 bits of seconds, so it wraps around
 		// every 65536 seconds.
 		constexpr int64_t WrapUs{ 65536 * 1000000LL };
 
+		// Nothing has been measured yet.
+		REQUIRE(!stream.GetRttMs().has_value());
+
 		// The Sender Report is sent 1 second before the wrap, the remote endpoint holds
 		// it for half a second, and the Receiver Report arrives right at the wrap.
-		receiveReceiverReport(WrapUs, 0xFFFF0000, 0x8000);
+		REQUIRE(receiveReceiverReport(WrapUs, 0xFFFF0000, 0x8000) == 500.0f);
 
 		REQUIRE(stream.GetRttMs() == 500.0f);
 
-		// No Sender Report was received by the remote endpoint yet, so the last RTT is
-		// kept.
-		receiveReceiverReport(WrapUs, 0, 0);
+		// No Sender Report was received by the remote endpoint yet, so nothing is
+		// measured and the last RTT is kept.
+		REQUIRE(receiveReceiverReport(WrapUs, 0, 0) == std::nullopt);
 
 		REQUIRE(stream.GetRttMs() == 500.0f);
 
 		// The remote endpoint answers the Sender Report right away.
-		receiveReceiverReport((10 * 1000000) + 500000, 0x000A0000, 0);
+		REQUIRE(receiveReceiverReport((10 * 1000000) + 500000, 0x000A0000, 0) == 500.0f);
 
 		REQUIRE(stream.GetRttMs() == 500.0f);
 
 		// A negative RTT yields 1 millisecond.
-		receiveReceiverReport(20 * 1000000, 0x00140000, 0x8000);
+		REQUIRE(receiveReceiverReport(20 * 1000000, 0x00140000, 0x8000) == 1.0f);
 
 		REQUIRE(stream.GetRttMs() == 1.0f);
 
 		// So does a RTT too small to be true.
-		receiveReceiverReport(20 * 1000000, 0x0013FFFF, 0);
+		REQUIRE(receiveReceiverReport(20 * 1000000, 0x0013FFFF, 0) == 1.0f);
 
 		REQUIRE(stream.GetRttMs() == 1.0f);
 	}
@@ -1942,7 +1948,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			report.SetLastSeq(lastSeq);
 			report.SetTotalLost(totalLost);
 
-			return stream.ReceiveRtcpReceiverReport(std::addressof(report), nowUs);
+			const auto result = stream.ReceiveRtcpReceiverReport(std::addressof(report), nowUs);
+
+			return result.loss;
 		};
 
 		sendPackets(1, 10, {});

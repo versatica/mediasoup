@@ -98,7 +98,7 @@ namespace
 		 * - The increment is given in milliseconds since it comes from the SCTP
 		 *   options and the timers, which work in milliseconds.
 		 */
-		void AdvanceTimeMs(int64_t incrementMs)
+		void AdvanceNowMs(int64_t incrementMs)
 		{
 			this->nowUs += incrementMs * 1000;
 		}

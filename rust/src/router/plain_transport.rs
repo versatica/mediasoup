@@ -271,6 +271,7 @@ pub struct PlainTransportStat {
     pub max_incoming_bitrate: Option<u64>,
     pub max_outgoing_bitrate: Option<u64>,
     pub min_outgoing_bitrate: Option<u64>,
+    pub round_trip_time: Option<f32>,
     // PlainTransport specific.
     pub rtcp_mux: bool,
     pub comedia: bool,
@@ -306,6 +307,7 @@ impl<'a> TryFromFbs<'a> for PlainTransportStat {
             max_incoming_bitrate: stats.base.max_incoming_bitrate,
             max_outgoing_bitrate: stats.base.max_outgoing_bitrate,
             min_outgoing_bitrate: stats.base.min_outgoing_bitrate,
+            round_trip_time: stats.base.round_trip_time,
             // PlainTransport specific.
             rtcp_mux: stats.rtcp_mux,
             comedia: stats.comedia,

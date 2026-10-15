@@ -101,9 +101,7 @@ namespace RTC
 		}
 
 		this->clockOffsetEstimator.AddSenderReport(
-		  senderReportMapping.value().ntpUs,
-		  senderReportReceivedAtUs.value(),
-		  static_cast<int64_t>(rtpStream->GetRttMs()));
+		  senderReportMapping.value().ntpUs, senderReportReceivedAtUs.value(), rtpStream->GetRttMs());
 	}
 
 	std::optional<int64_t> RemoteCaptureTimeEstimator::GetLocalCaptureAtUs(
