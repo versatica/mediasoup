@@ -24,6 +24,14 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:
+		bool IsCongestionControlSupported() const override
+		{
+			return true;
+		}
+		bool IsPipe() const override
+		{
+			return false;
+		}
 		bool IsConnected() const override;
 		size_t GetPacketOverhead() const override;
 		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;

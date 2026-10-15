@@ -744,19 +744,13 @@ test('consumer.dump() succeeds', async () => {
 	});
 	expect(dump1.rtpParameters.codecs[0]!.rtcpFeedback).toEqual([]);
 	expect(Array.isArray(dump1.rtpParameters.headerExtensions)).toBe(true);
-	expect(dump1.rtpParameters.headerExtensions!.length).toBe(3);
+	expect(dump1.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(dump1.rtpParameters.headerExtensions).toEqual([
 		{
 			uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
 			id: 1,
 			encrypt: false,
 			parameters: {},
-		},
-		{
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-			id: 4,
-			parameters: {},
-			encrypt: false,
 		},
 		{
 			uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',

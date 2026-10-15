@@ -41,11 +41,15 @@ namespace RTC
 		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	private:
-		bool IsConnected() const override;
+		bool IsCongestionControlSupported() const override
+		{
+			return false;
+		}
 		bool IsPipe() const override
 		{
 			return true;
 		}
+		bool IsConnected() const override;
 		size_t GetPacketOverhead() const override;
 		bool HasSrtp() const;
 		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;

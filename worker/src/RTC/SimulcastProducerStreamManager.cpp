@@ -164,12 +164,20 @@ namespace RTC
 			{
 				UpdateTargetLayers(-1, -1);
 			}
+#ifdef MS_USE_BUILTIN_BWE
+			// Just check target layers if the stream has died or reborned.
+			else if (score == 0 || previousScore == 0)
+			{
+				MayChangeLayers(/*force*/ false);
+			}
+#else
 			// Just check target layers if the stream has died or reborned or if
 			// bitrate is not externally managed.
 			else if (!this->externallyManagedBitrate || (score == 0u || previousScore == 0u))
 			{
 				MayChangeLayers(/*force*/ false);
 			}
+#endif
 		}
 	}
 
@@ -215,7 +223,7 @@ namespace RTC
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	int64_t SimulcastProducerStreamManager::GetOutputBitrate(int64_t /*nowMs*/)
+	int64_t SimulcastProducerStreamManager::GetOutputBitrate(int64_t /*nowMs*/) const
 	{
 		MS_TRACE();
 
@@ -1266,11 +1274,18 @@ namespace RTC
 
 			// If the stream has not been active time enough and we have an active one
 			// already, move to the next spatial layer.
+#ifdef MS_USE_BUILTIN_BWE
+			if (newTargetLayers.spatial != -1 && producerRtpStream->GetActiveMs() < StreamMinActiveMs)
+			{
+				continue;
+			}
+#else
 			// NOTE: Require bitrate externally managed for this.
 			if (this->externallyManagedBitrate && newTargetLayers.spatial != -1 && producerRtpStream->GetActiveMs() < StreamMinActiveMs)
 			{
 				continue;
 			}
+#endif
 
 			// We may not yet switch to this spatial layer.
 			if (!CanSwitchToSpatialLayer(spatialLayer))

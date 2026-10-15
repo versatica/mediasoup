@@ -105,7 +105,7 @@ namespace RTC
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	int64_t SimpleProducerStreamManager::GetOutputBitrate(int64_t nowMs)
+	int64_t SimpleProducerStreamManager::GetOutputBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 
@@ -186,6 +186,14 @@ namespace RTC
 	}
 #endif
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
+	{
+		MS_TRACE();
+
+		MS_ABORT("not an adaptable bitrate");
+	}
+#else
 	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
@@ -205,6 +213,7 @@ namespace RTC
 
 		return this->producerRtpStream->GetBitrate(nowMs);
 	}
+#endif
 
 	ProducerStreamManager::RtpPacketProcessResult SimpleProducerStreamManager::ProcessRtpPacket(
 	  RTC::RTP::Packet* packet,

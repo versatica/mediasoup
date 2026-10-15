@@ -73,7 +73,7 @@ namespace RTC
 			// Pipe forwards every stream it is given, always.
 			return false;
 		}
-		int64_t GetOutputBitrate(int64_t nowMs) override;
+		int64_t GetOutputBitrate(int64_t nowMs) const override;
 		int64_t TakeBitrate(int64_t bitrate, int64_t nowMs) override;
 		void ApplyBitrateAllocation(int64_t rtpStreamActiveMs) override;
 #else

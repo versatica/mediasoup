@@ -119,12 +119,20 @@ namespace RTC
 
 		if (this->listener->IsActive())
 		{
+#ifdef MS_USE_BUILTIN_BWE
+			// Just check target layers if the stream has died or reborned.
+			if (score == 0 || previousScore == 0)
+			{
+				MayChangeLayers(/*force*/ false);
+			}
+#else
 			// Just check target layers if the stream has died or reborned or if
 			// bitrate is not externally managed.
 			if (!this->externallyManagedBitrate || (score == 0u || previousScore == 0u))
 			{
 				MayChangeLayers(/*force*/ false);
 			}
+#endif
 		}
 	}
 
@@ -151,7 +159,7 @@ namespace RTC
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	int64_t SvcProducerStreamManager::GetOutputBitrate(int64_t /*nowMs*/)
+	int64_t SvcProducerStreamManager::GetOutputBitrate(int64_t /*nowMs*/) const
 	{
 		MS_TRACE();
 

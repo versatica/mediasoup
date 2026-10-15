@@ -241,8 +241,14 @@ namespace RTC
 
 		private:
 			/**
-			 * Take note of a packet about to be sent and write its two extensions,
-			 * which is the same work for a packet of media and for one of a probe.
+			 * Take note of a packet about to be sent and write its extensions, which
+			 * is the same work for a packet of media and for one of a probe.
+			 *
+			 * @remarks
+			 * - The two extensions are written apart from each other, since they
+			 *   answer to different estimations.
+			 * - 'abs-send-time' goes on every packet that has room for it and is not
+			 *   audio.
 			 *
 			 * @returns No value when the packet has no room for the transport wide
 			 *   sequence number, in which case nothing is taken note of.

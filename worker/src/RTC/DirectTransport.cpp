@@ -27,6 +27,11 @@ namespace RTC
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*channelNotificationHandler*/ this);
+
+		// NOTE: A DirectTransport is connected from the moment it exists, and this is
+		// the earliest point at which it can be told, since the parent constructor
+		// cannot reach the methods of this class.
+		RTC::Transport::Connected();
 	}
 
 	DirectTransport::~DirectTransport()

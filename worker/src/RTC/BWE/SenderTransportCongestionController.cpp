@@ -430,6 +430,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const int64_t nowUs = this->shared->GetTimeUs();
+
+			// NOTE: Audio packets are left without it on purpose, since the REMB
+			// estimators out there, libwebrtc's included, ignore an audio packet that
+			// only carries abs-send-time.
+			if (!options.isAudio)
+			{
+				packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(nowUs));
+			}
+
 			// Whatever the packet carries there now, which is only read to find out
 			// whether it has room for the sequence number at all. Without it the
 			// remote endpoint cannot report on this packet, so taking note of it
@@ -440,8 +450,6 @@ namespace RTC
 			{
 				return std::nullopt;
 			}
-
-			const int64_t nowUs = this->shared->GetTimeUs();
 
 			const int64_t sequenceNumber = this->sendPacketHistory.AddPacket(
 			  SendPacketHistory::AddPacketOptions{
@@ -457,7 +465,6 @@ namespace RTC
 			    .createdAtUs      = nowUs });
 
 			packet->UpdateTransportWideCc01(static_cast<uint16_t>(sequenceNumber));
-			packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(nowUs));
 
 			return sequenceNumber;
 		}

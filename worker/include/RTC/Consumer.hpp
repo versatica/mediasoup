@@ -52,8 +52,10 @@ namespace RTC
 			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
-			virtual void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer)                        = 0;
-			virtual void OnConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
+#ifndef MS_USE_BUILTIN_BWE
+			virtual void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) = 0;
+#endif
+			virtual void OnConsumerProducerClosed(RTC::Consumer* consumer) = 0;
 		};
 
 	private:
@@ -153,15 +155,17 @@ namespace RTC
 		void ProducerSpatialLayerActivityChanged(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive);
 		void ProducerClosed();
+#ifndef MS_USE_BUILTIN_BWE
 		void SetExternallyManagedBitrate()
 		{
 			this->externallyManagedBitrate = true;
 			this->producerStreamManager->SetExternallyManagedBitrate();
 		}
+#endif
 #ifdef MS_USE_BUILTIN_BWE
 		const std::string& GetBitrateAllocationId() const override;
 		bool IsBitrateAdaptable() const override;
-		int64_t GetOutputBitrate() override;
+		int64_t GetOutputBitrate() const override;
 		uint8_t GetBitrateWeight() const override;
 		int64_t TakeBitrate(int64_t bitrate) override;
 		void ApplyBitrateAllocation() override;
@@ -198,14 +202,12 @@ namespace RTC
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
-	protected:
+	private:
 		void EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;
 		void EmitTraceEvent(flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const;
-
-	private:
 		void EmitScore() const;
 		void EmitLayersChange() const;
 
@@ -241,7 +243,7 @@ namespace RTC
 		std::string id;
 		std::string producerId;
 
-	protected:
+	private:
 		// Passed by argument.
 		SharedInterface* shared{ nullptr };
 		RTC::Consumer::Listener* listener{ nullptr };
@@ -255,11 +257,11 @@ namespace RTC
 		std::bitset<128> supportedCodecPayloadTypes;
 		int64_t lastRtcpSentAtUs{ 0 };
 		int64_t maxRtcpIntervalMs{ 0 };
+#ifndef MS_USE_BUILTIN_BWE
 		bool externallyManagedBitrate{ false };
+#endif
 		uint8_t priority{ 1 };
 		TraceEventTypes traceEventTypes;
-
-	private:
 		bool pipe{ false };
 		// Others.
 		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;

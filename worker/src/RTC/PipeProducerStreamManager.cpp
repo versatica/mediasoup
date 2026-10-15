@@ -73,7 +73,7 @@ namespace RTC
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	int64_t PipeProducerStreamManager::GetOutputBitrate(int64_t nowMs)
+	int64_t PipeProducerStreamManager::GetOutputBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 
@@ -120,6 +120,14 @@ namespace RTC
 	}
 #endif
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t PipeProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
+	{
+		MS_TRACE();
+
+		MS_ABORT("not an adaptable bitrate");
+	}
+#else
 	int64_t PipeProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
 	{
 		MS_TRACE();
@@ -127,6 +135,7 @@ namespace RTC
 		// Pipe does not play the BWE game.
 		return 0;
 	}
+#endif
 
 	ProducerStreamManager::RtpPacketProcessResult PipeProducerStreamManager::ProcessRtpPacket(
 	  RTC::RTP::Packet* packet,

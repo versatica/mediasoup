@@ -82,6 +82,14 @@ namespace RTC
 		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	private:
+		bool IsCongestionControlSupported() const override
+		{
+			return true;
+		}
+		bool IsPipe() const override
+		{
+			return false;
+		}
 		bool IsConnected() const override;
 		size_t GetPacketOverhead() const override;
 		void MayRunDtlsTransport();

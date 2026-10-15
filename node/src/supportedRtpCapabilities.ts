@@ -233,26 +233,18 @@ const supportedRtpCapabilities: RouterRtpCapabilities = {
 			direction: 'recvonly',
 		},
 		{
-			kind: 'audio',
-			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-			preferredId: 4,
-			preferredEncrypt: false,
-			direction: 'sendrecv',
-		},
-		{
 			kind: 'video',
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
 			preferredId: 4,
 			preferredEncrypt: false,
 			direction: 'sendrecv',
 		},
-		// NOTE: For audio we just enable transport-wide-cc-01 when receiving media.
 		{
 			kind: 'audio',
 			uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
 			preferredId: 5,
 			preferredEncrypt: false,
-			direction: 'recvonly',
+			direction: 'sendrecv',
 		},
 		{
 			kind: 'video',

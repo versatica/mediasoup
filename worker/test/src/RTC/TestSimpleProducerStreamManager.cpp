@@ -423,8 +423,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
 
-		manager->SetExternallyManagedBitrate();
-
 		REQUIRE(manager->IsBitrateAdaptable() == false);
 	}
 
@@ -435,7 +433,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
-		manager->SetExternallyManagedBitrate();
 		manager->OnTransportConnected();
 
 		// Feed packets so the stream has non-zero bitrate.
@@ -452,8 +449,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
-
-		manager->SetExternallyManagedBitrate();
 
 		REQUIRE(manager->GetOutputBitrate(shared.GetTimeMs()) == 0);
 	}
@@ -555,7 +550,6 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 
 		REQUIRE(usedBitrate > 0);
 	}
-#endif
 
 	SECTION("GetDesiredBitrate() returns producer bitrate for video")
 	{
@@ -596,4 +590,5 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 
 		REQUIRE(desiredBitrate == 0);
 	}
+#endif
 }

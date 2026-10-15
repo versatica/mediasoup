@@ -1154,11 +1154,6 @@ fn dump_succeeds() {
                         encrypt: false,
                     },
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::AbsSendTime,
-                        id: 4,
-                        encrypt: false,
-                    },
-                    RtpHeaderExtensionParameters {
                         uri: RtpHeaderExtensionUri::SsrcAudioLevel,
                         id: 6,
                         encrypt: false,

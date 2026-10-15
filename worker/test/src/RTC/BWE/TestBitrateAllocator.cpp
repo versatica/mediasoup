@@ -27,7 +27,7 @@ SCENARIO("BWE BitrateAllocator", "[bwe][bitrateallocator]")
 			return true;
 		}
 
-		int64_t GetOutputBitrate() override
+		int64_t GetOutputBitrate() const override
 		{
 			FAIL("an adaptable candidate must not be asked what it puts out");
 
@@ -114,7 +114,7 @@ SCENARIO("BWE BitrateAllocator", "[bwe][bitrateallocator]")
 			return false;
 		}
 
-		int64_t GetOutputBitrate() override
+		int64_t GetOutputBitrate() const override
 		{
 			return this->outputBitrate;
 		}

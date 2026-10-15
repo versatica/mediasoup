@@ -788,6 +788,17 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		// UpdateTargetLayers -> newTarget(0) > current(-1) -> keyframe requested.
 		manager->OnTransportConnected();
 
+#ifdef MS_USE_BUILTIN_BWE
+		// The target layers are not moved here but once bitrate is handed out, so
+		// all this call does is ask for a new round.
+		REQUIRE(listener.needBitrateChangeCount > 0);
+
+		const int64_t nowMs = shared.GetTimeMs();
+
+		takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
+		applyBitrateAllocation(manager.get(), /*rtpStreamActiveMs*/ 0);
+#endif
+
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
@@ -865,6 +876,15 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		// returns {0,0} which differs from {-1,-1} -> UpdateTargetLayers(0,0) ->
 		// newTarget(0) > current(-1) -> keyframe requested.
 		manager->OnResumed();
+
+#ifdef MS_USE_BUILTIN_BWE
+		// The target layers are not moved here but once bitrate is handed out, so
+		// all this call does is ask for a new round.
+		const int64_t nowMs = shared.GetTimeMs();
+
+		takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
+		applyBitrateAllocation(manager.get(), /*rtpStreamActiveMs*/ 0);
+#endif
 
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
@@ -955,6 +975,17 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		// returns -1,-1 (no active stream), UpdateTargetLayers fires layersChanged.
 		manager->ProducerRtpStreamScore(rtpStream.get(), /*score*/ 0, /*previousScore*/ 7);
 
+#ifdef MS_USE_BUILTIN_BWE
+		// The target layers are not moved here but once bitrate is handed out, and
+		// a dead stream can be given none.
+		REQUIRE(listener.needBitrateChangeCount > 0);
+
+		const int64_t nowMs = shared.GetTimeMs();
+
+		takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
+		applyBitrateAllocation(manager.get(), /*rtpStreamActiveMs*/ 0);
+#endif
+
 		REQUIRE(listener.layersChangedCount > layersChangedBefore);
 		REQUIRE(manager->GetTargetLayers().spatial == -1);
 	}
@@ -983,8 +1014,6 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
 
-		manager->SetExternallyManagedBitrate();
-
 		REQUIRE(manager->IsBitrateAdaptable() == true);
 	}
 #endif
@@ -994,7 +1023,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
 
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		const int64_t nowMs    = shared.GetTimeMs();
 		const auto usedBitrate = takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
@@ -1009,7 +1040,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		auto rtpStream = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		// Score is 0 by default (no RTP received + inactivity check disabled).
 		const int64_t nowMs    = shared.GetTimeMs();
@@ -1033,7 +1066,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
@@ -1065,7 +1100,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
@@ -1096,7 +1133,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 3u, /*temporalLayers*/ 3u);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		// Manually set current to layer 2 via ProcessRtpPacket() sync.
 		manager->UpdateTargetLayers(2, 2);
@@ -1149,7 +1188,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		auto rtpStream = createRtpStreamRecv(MappedSsrc, 3u, 3u);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
@@ -1174,7 +1215,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		auto rtpStream = createRtpStreamRecv(MappedSsrc, 3u, 3u);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		// Feed packets so total stream bitrate > 0.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);

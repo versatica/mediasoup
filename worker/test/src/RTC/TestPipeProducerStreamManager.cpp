@@ -464,8 +464,6 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
 
-		manager->SetExternallyManagedBitrate();
-
 		REQUIRE(manager->IsBitrateAdaptable() == false);
 	}
 
@@ -473,8 +471,6 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
-
-		manager->SetExternallyManagedBitrate();
 
 		REQUIRE(manager->GetOutputBitrate(DepLibUV::GetTimeMs()) == 0);
 	}
@@ -490,7 +486,6 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		REQUIRE(used == 0u);
 	}
-#endif
 
 	SECTION("GetDesiredBitrate() returns 0 (no BWE)")
 	{
@@ -501,4 +496,5 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		REQUIRE(manager->GetDesiredBitrate(DepLibUV::GetTimeMs()) == 0);
 	}
+#endif
 }

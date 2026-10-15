@@ -19,7 +19,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr size_t TargetLayerRetransmissionBufferSize{ 30u };
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 30 };
 
 	/* Instance methods. */
 
@@ -1052,11 +1052,9 @@ namespace RTC
 		return this->producerStreamManager->IsBitrateAdaptable();
 	}
 
-	int64_t Consumer::GetOutputBitrate()
+	int64_t Consumer::GetOutputBitrate() const
 	{
 		MS_TRACE();
-
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
 		if (!IsActive())
 		{
@@ -1072,7 +1070,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 		MS_ASSERT(IsBitrateAdaptable(), "not an adaptable bitrate");
 
 		if (!IsActive())
@@ -1087,7 +1084,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 		MS_ASSERT(IsActive(), "should be active");
 
 		const int64_t nowMs = this->shared->GetTimeMs();
@@ -1099,7 +1095,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 		MS_ASSERT(IsActive(), "should be active");
 
 		auto* rtpStream = this->mapSsrcRtpStream.begin()->second;
@@ -1173,6 +1168,36 @@ namespace RTC
 	}
 #endif
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t Consumer::GetDesiredBitrate() const
+	{
+		MS_TRACE();
+
+		if (!IsActive())
+		{
+			return 0;
+		}
+
+		// What a Consumer that cannot adapt puts out is what it wants, since it has
+		// no way of wanting anything else. Leaving it out would ask the estimator
+		// for less than what is going to be sent, while the allocation takes its
+		// bitrate off the top all the same.
+		if (!IsBitrateAdaptable())
+		{
+			return GetOutputBitrate();
+		}
+
+		const int64_t nowMs = this->shared->GetTimeMs();
+
+		const auto desiredBitrate = this->producerStreamManager->GetDesiredBitrate(nowMs);
+
+		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
+		// greater than computed one, then use it.
+		const auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
+
+		return std::max(maxBitrate, desiredBitrate);
+	}
+#else
 	int64_t Consumer::GetDesiredBitrate() const
 	{
 		MS_TRACE();
@@ -1208,6 +1233,7 @@ namespace RTC
 
 		return desiredBitrate;
 	}
+#endif
 
 	// NOLINTNEXTLINE(misc-no-recursion)
 	void Consumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
@@ -1313,7 +1339,7 @@ namespace RTC
 		if (action.spatialLayerSwitched)
 		{
 			// Reset the score of our RtpStream to 10.
-			rtpStream->ResetScore(10u, /*notify*/ false);
+			rtpStream->ResetScore(10, /*notify*/ false);
 
 			// Emit the layersChange event.
 			EmitLayersChange();
@@ -1726,6 +1752,11 @@ namespace RTC
 
 		this->producerStreamManager->OnPaused();
 
+#ifdef MS_USE_BUILTIN_BWE
+		// Whatever it was putting in the link it is not putting any more, and that
+		// goes to whoever can use it.
+		this->listener->OnConsumerNeedBitrateChange(this);
+#else
 		if (this->externallyManagedBitrate)
 		{
 			// Audio does not play the BWE game.
@@ -1736,6 +1767,7 @@ namespace RTC
 
 			this->listener->OnConsumerNeedZeroBitrate(this);
 		}
+#endif
 	}
 
 	void Consumer::UserOnResumed()
@@ -1846,7 +1878,7 @@ namespace RTC
 			// libsrtp bug:
 			// https://github.com/versatica/mediasoup/issues/1437
 			const auto initialOutputSeq =
-			  Utils::Crypto::GetRandomUInt<uint16_t>(1000u, std::numeric_limits<uint16_t>::max() / 2);
+			  Utils::Crypto::GetRandomUInt<uint16_t>(1000, std::numeric_limits<uint16_t>::max() / 2);
 
 			this->mapRtpStreamRtpSeqManager[rtpStream] = RTC::SeqManager<uint16_t>(initialOutputSeq);
 
@@ -2063,8 +2095,9 @@ namespace RTC
 		// Emit the score event.
 		EmitScore();
 
-		// NOTE @jmillan: Previously present in Simulcast and SVC. Does it make sense to move it here?
-		// Previously present in Simulcast and SVC. Does it make sense to move it here?
+#ifndef MS_USE_BUILTIN_BWE
+		// TODO: @jmillan: Previously present in Simulcast and SVC. Does it make sense
+		// to move it here?
 		if (IsActive())
 		{
 			// Just check target layers if our bitrate is not externally managed.
@@ -2073,6 +2106,7 @@ namespace RTC
 				this->producerStreamManager->MayChangeLayers(/*force*/ false);
 			}
 		}
+#endif
 	}
 
 	void Consumer::OnRtpStreamRetransmitRtpPacket(

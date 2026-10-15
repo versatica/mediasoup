@@ -109,17 +109,19 @@ namespace RTC
 		{
 		}
 
+#ifndef MS_USE_BUILTIN_BWE
 		void SetExternallyManagedBitrate()
 		{
 			this->externallyManagedBitrate = true;
 		}
+#endif
 
 #ifdef MS_USE_BUILTIN_BWE
 		// Whether the bitrate being put out can be moved at all, which is what lets
 		// the Consumer take part in the bitrate allocation.
 		virtual bool IsBitrateAdaptable() const = 0;
 		// What is being put out right now, only asked when it cannot be moved.
-		virtual int64_t GetOutputBitrate(int64_t nowMs)                = 0;
+		virtual int64_t GetOutputBitrate(int64_t nowMs) const          = 0;
 		virtual int64_t TakeBitrate(int64_t bitrate, int64_t nowMs)    = 0;
 		virtual void ApplyBitrateAllocation(int64_t rtpStreamActiveMs) = 0;
 #else
@@ -148,6 +150,16 @@ namespace RTC
 
 			if (RecalculateTargetLayers(newTargetLayers))
 			{
+#ifdef MS_USE_BUILTIN_BWE
+				// Don't bother the transport unless the newTargetSpatialLayer has
+				// changed (or force is true). This is because the target temporal layer
+				// is managed by the available given bitrate so the transport will let
+				// us change it when it considers.
+				if (newTargetLayers.spatial != GetTargetLayers().spatial || force)
+				{
+					this->listener->OnProducerStreamManagerNeedBitrateChange();
+				}
+#else
 				// If bitrate externally managed, don't bother the transport unless
 				// the newTargetSpatialLayer has changed (or force is true).
 				// This is because, if bitrate is externally managed, the target temporal
@@ -164,6 +176,7 @@ namespace RTC
 				{
 					UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
 				}
+#endif
 			}
 		}
 		virtual void OnTransportConnected()    = 0;
@@ -184,8 +197,10 @@ namespace RTC
 		// Encoding context.
 		std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext;
 
+#ifndef MS_USE_BUILTIN_BWE
 		// Externally managed bitrate.
 		bool externallyManagedBitrate{ false };
+#endif
 
 		// Layer preferences.
 		RTC::ConsumerTypes::VideoLayers preferredLayers;
