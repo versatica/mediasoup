@@ -9,8 +9,8 @@
 - `TransportStats`: Add `roundTripTime` (ms) which is optional ([PR #1992](https://github.com/versatica/mediasoup/pull/1992)).
   - `RtpStreamStats.roundTripTime` (optional) now has no value (instead of 0) when the RTT is unknown.
 - SCTP: Limit when chunks are retransmitted ([PR #1993](https://github.com/versatica/mediasoup/pull/1993)).
-- `SeqManager`: Fix dropped inputs of a previous cycle never being removed, which shifted subsequent output sequence numbers ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
-- `SeqManager`: Make `ClearDropped()` O(1) amortized instead of shifting the whole dropped container on every input ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- `SeqManager`: Fix dropped inputs of a previous cycle never being removed, which shifted subsequent output sequence numbers ([PR #1994](https://github.com/versatica/mediasoup/pull/1994)).
+- `SeqManager`: Make `ClearDropped()` O(1) amortized instead of shifting the whole dropped container on every input ([PR #1994](https://github.com/versatica/mediasoup/pull/1994)).
 
 ### 3.29.0
 
