@@ -12,11 +12,8 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		RetransmissionBuffer::Item* RetransmissionBuffer::FillItem(
-		  RetransmissionBuffer::Item* item,
-		  RTP::Packet* packet,
-		  const RTP::SharedPacket& sharedPacket,
-		  int64_t nowMs)
+		RetransmissionBuffer::Item* RetransmissionBuffer::CreateItem(
+		  RTP::Packet* packet, const RTP::SharedPacket& sharedPacket, int64_t nowMs)
 		{
 			MS_TRACE();
 
@@ -24,15 +21,21 @@ namespace RTC
 			//
 			// NOTE: sharedPacket could be empty at this point but it's ok since the
 			// Consumer will fill it.
-			item->sharedPacket   = sharedPacket;
-			item->encoder        = packet->GetPayloadEncoder();
-			item->ssrc           = packet->GetSsrc();
-			item->sequenceNumber = packet->GetSequenceNumber();
-			item->timestamp      = packet->GetTimestamp();
-			item->marker         = packet->HasMarker();
-			item->storedAtMs     = nowMs;
-
-			return item;
+			//
+			// NOTE: Members are initialized here (rather than assigned after default
+			// constructing the item) so that `sharedPacket` is copy constructed and
+			// hence just shares the already existing shared state. Default
+			// constructing it would allocate a new shared state that would be
+			// immediately released by the assignment.
+			return new Item{
+				.sharedPacket   = sharedPacket,
+				.encoder        = packet->GetPayloadEncoder(),
+				.ssrc           = packet->GetSsrc(),
+				.sequenceNumber = packet->GetSequenceNumber(),
+				.timestamp      = packet->GetTimestamp(),
+				.marker         = packet->HasMarker(),
+				.storedAtMs     = nowMs,
+			};
 		}
 
 		/* Instance methods. */
@@ -133,9 +136,7 @@ namespace RTC
 			{
 				MS_DEBUG_DEV("buffer empty [seq:%" PRIu16 ", timestamp:%" PRIu32 "]", seq, timestamp);
 
-				auto* item = new Item();
-
-				this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
+				this->buffer.push_back(RetransmissionBuffer::CreateItem(packet, sharedPacket, nowMs));
 
 				return true;
 			}
@@ -159,9 +160,7 @@ namespace RTC
 
 				Clear();
 
-				auto* item = new Item();
-
-				this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
+				this->buffer.push_back(RetransmissionBuffer::CreateItem(packet, sharedPacket, nowMs));
 
 				return true;
 			}
@@ -188,9 +187,7 @@ namespace RTC
 					  seq,
 					  timestamp);
 
-					auto* item = new Item();
-
-					this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
+					this->buffer.push_back(RetransmissionBuffer::CreateItem(packet, sharedPacket, nowMs));
 
 					return true;
 				}
@@ -270,9 +267,7 @@ namespace RTC
 				}
 
 				// Push the packet, which becomes the newest one in the buffer.
-				auto* item = new Item();
-
-				this->buffer.push_back(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
+				this->buffer.push_back(RetransmissionBuffer::CreateItem(packet, sharedPacket, nowMs));
 			}
 			// Packet arrived out order and its seq is less than seq of the oldest
 			// stored packet, so will become the oldest one in the buffer.
@@ -336,9 +331,7 @@ namespace RTC
 				}
 
 				// Insert the packet, which becomes the oldest one in the buffer.
-				auto* item = new Item();
-
-				this->buffer.push_front(RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs));
+				this->buffer.push_front(RetransmissionBuffer::CreateItem(packet, sharedPacket, nowMs));
 			}
 			// Otherwise packet must be inserted between oldest and newest stored items
 			// so there is already an allocated slot for it.
@@ -352,7 +345,7 @@ namespace RTC
 
 				// Let's check if an item already exist in same position. If so, assume
 				// it's duplicated.
-				auto* item = Get(seq);
+				const auto* item = Get(seq);
 
 				if (item)
 				{
@@ -430,9 +423,7 @@ namespace RTC
 				}
 
 				// Store the packet.
-				item = new Item();
-
-				this->buffer[idx] = RetransmissionBuffer::FillItem(item, packet, sharedPacket, nowMs);
+				this->buffer[idx] = RetransmissionBuffer::CreateItem(packet, sharedPacket, nowMs);
 			}
 
 			MS_ASSERT(
@@ -455,9 +446,9 @@ namespace RTC
 					continue;
 				}
 
-				// Reset the stored item (decrease RTP packet shared pointer counter).
-				item->Reset();
-
+				// NOTE: No need to reset the item here since deleting it destroys its
+				// `sharedPacket` member, which already decreases the RTP packet shared
+				// pointer counter.
 				delete item;
 			}
 
@@ -506,9 +497,9 @@ namespace RTC
 
 			auto* item = this->buffer.front();
 
-			// Reset the stored item (decrease RTP packet shared pointer counter).
-			item->Reset();
-
+			// NOTE: No need to reset the item here since deleting it destroys its
+			// `sharedPacket` member, which already decreases the RTP packet shared
+			// pointer counter.
 			delete item;
 
 			this->buffer.pop_front();
@@ -591,22 +582,6 @@ namespace RTC
 			const int64_t diffTs = newestTimestamp - timestamp;
 
 			return static_cast<uint32_t>(diffTs * 1000 / this->clockRate) > this->maxRetransmissionDelayMs;
-		}
-
-		void RetransmissionBuffer::Item::Reset()
-		{
-			MS_TRACE();
-
-			// NOTE: Here we MUST NOT call this->sharedPacket.Reset() because that
-			// would affect all copies of this SharedRtpPacket by removing their stored
-			// packet. We have to replace it entirely.
-			this->sharedPacket   = RTP::SharedPacket();
-			this->ssrc           = 0;
-			this->sequenceNumber = 0;
-			this->timestamp      = 0;
-			this->storedAtMs     = 0;
-			this->resentAtMs     = 0;
-			this->sentTimes      = 0;
 		}
 	} // namespace RTP
 } // namespace RTC

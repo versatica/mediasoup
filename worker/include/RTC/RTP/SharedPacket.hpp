@@ -71,6 +71,7 @@ namespace RTC
 			 */
 			void Assign(RTP::Packet* packet);
 
+#ifdef MS_TEST
 			/**
 			 * Resets the internal packet to nullptr.
 			 *
@@ -78,6 +79,7 @@ namespace RTC
 			 * This affects to ALL copies of this SharedPacket object.
 			 */
 			void Reset();
+#endif
 
 			/**
 			 * Assert that RTP packet contained in this SharedPacket is a clone of the
