@@ -37,6 +37,10 @@ const DynamicPayloadTypes = [
 	99,
 ];
 
+// Biggest value that fits in an uint64, which is what the worker expects for
+// bitrate related fields.
+const MaxUint64 = 2n ** 64n - 1n;
+
 // TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
 // extension.
 //
@@ -1309,6 +1313,29 @@ function validateAndNormalizeRtpEncodingParameters(
 		typeof encoding.scalabilityMode !== 'string'
 	) {
 		throw new TypeError('invalid encoding.scalabilityMode');
+	}
+
+	// maxBitrate is optional, it can be a number or a bigint.
+	const maxBitrate: number | bigint | undefined = encoding.maxBitrate;
+
+	if (!maxBitrate) {
+		delete encoding.maxBitrate;
+	} else if (typeof maxBitrate === 'bigint') {
+		if (maxBitrate < 0n || maxBitrate > MaxUint64) {
+			throw new TypeError('invalid encoding.maxBitrate');
+		}
+	} else if (typeof maxBitrate === 'number') {
+		// NOTE: Compare as bigint. MaxUint64 rounds up to 2^64 if converted to a
+		// number, so an out of range 2^64 would wrongly be accepted.
+		if (
+			!Number.isInteger(maxBitrate) ||
+			maxBitrate < 0 ||
+			BigInt(maxBitrate) > MaxUint64
+		) {
+			throw new TypeError('invalid encoding.maxBitrate');
+		}
+	} else {
+		throw new TypeError('invalid encoding.maxBitrate');
 	}
 }
 

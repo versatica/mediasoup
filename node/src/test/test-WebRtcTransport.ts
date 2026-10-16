@@ -688,6 +688,36 @@ test('transport.enableTraceEvent() with wrong arguments rejects with TypeError',
 	).rejects.toThrow(TypeError);
 }, 2000);
 
+// Regression test. A message body serialization that threw in the middle used
+// to leave the Channel buffer builder in a nested state, making every
+// subsequent request and notification in the Worker fail forever.
+test('Channel recovers if a message serialization fails in the middle', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
+	});
+
+	// API not exposed in the interface.
+	const channel = (webRtcTransport as WebRtcTransportImpl).channelForTesting;
+
+	// Simulate a message body serialization that throws in the middle by starting
+	// an object and never ending it.
+	channel.bufferBuilder.startObject(1);
+
+	// A request without body must still succeed.
+	await expect(webRtcTransport.dump()).resolves.toBeDefined();
+
+	channel.bufferBuilder.startObject(1);
+
+	// A request with body must still succeed.
+	await expect(
+		webRtcTransport.setMaxIncomingBitrate(100000)
+	).resolves.toBeUndefined();
+
+	webRtcTransport.close();
+}, 2000);
+
 test('WebRtcTransport events succeed', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenInfos: [

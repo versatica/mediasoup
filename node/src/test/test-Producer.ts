@@ -361,6 +361,141 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 			},
 		})
 	).rejects.toThrow(TypeError);
+
+	// Invalid maxBitrate.
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				codecs: [],
+				headerExtensions: [],
+				// @ts-expect-error --- Testing purposes.
+				encodings: [{ ssrc: 1111, maxBitrate: '2000000' }],
+				rtcp: { cname: 'qwerty' },
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// Non integer maxBitrate.
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				codecs: [],
+				headerExtensions: [],
+				encodings: [{ ssrc: 1111, maxBitrate: 2000000.5 }],
+				rtcp: { cname: 'qwerty' },
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// Negative bigint maxBitrate.
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				codecs: [],
+				headerExtensions: [],
+				// @ts-expect-error --- Testing purposes.
+				encodings: [{ ssrc: 1111, maxBitrate: -2000000n }],
+				rtcp: { cname: 'qwerty' },
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// Too big bigint maxBitrate (2^64, so it doesn't fit in an uint64).
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				codecs: [],
+				headerExtensions: [],
+				// @ts-expect-error --- Testing purposes.
+				encodings: [{ ssrc: 1111, maxBitrate: 2n ** 64n }],
+				rtcp: { cname: 'qwerty' },
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// Too big number maxBitrate (it doesn't fit in an uint64).
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				codecs: [],
+				headerExtensions: [],
+				encodings: [{ ssrc: 1111, maxBitrate: 1e30 }],
+				rtcp: { cname: 'qwerty' },
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// 2^64 as a number maxBitrate (it doesn't fit in an uint64 either, and it
+	// must not pass due to Number(MaxUint64) rounding up to 2^64).
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				codecs: [],
+				headerExtensions: [],
+				encodings: [{ ssrc: 1111, maxBitrate: 18446744073709551616 }],
+				rtcp: { cname: 'qwerty' },
+			},
+		})
+	).rejects.toThrow(TypeError);
+}, 2000);
+
+test('webRtcTransport1.produce() with bigint encoding.maxBitrate succeeds', async () => {
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'video',
+			rtpParameters: {
+				mid: 'VIDEO',
+				codecs: [
+					{
+						mimeType: 'video/VP8',
+						payloadType: 112,
+						clockRate: 90000,
+					},
+				],
+				headerExtensions: [],
+				// @ts-expect-error --- Testing purposes.
+				encodings: [{ ssrc: 22222222, maxBitrate: 2n ** 64n - 1n }],
+				rtcp: { cname: 'video-1' },
+			},
+		})
+	).resolves.toBeDefined();
+}, 2000);
+
+// Regression test. A non TypeScript client may send null in optional fields.
+// null in encoding.maxBitrate used to throw "Cannot convert null to a BigInt"
+// in the middle of the Channel buffer builder serialization, leaving it in a
+// nested state and hence breaking every subsequent request in the Worker.
+test('webRtcTransport1.produce() with null encoding.maxBitrate succeeds and does not break the Channel', async () => {
+	const videoProducer = await ctx.webRtcTransport1!.produce({
+		kind: 'video',
+		rtpParameters: {
+			mid: 'VIDEO',
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 112,
+					clockRate: 90000,
+				},
+			],
+			headerExtensions: [],
+			// @ts-expect-error --- Testing purposes.
+			encodings: [{ ssrc: 22222222, maxBitrate: null }],
+			rtcp: { cname: 'video-1' },
+		},
+	});
+
+	expect(videoProducer.rtpParameters.encodings![0]!.maxBitrate).toBeUndefined();
+
+	// The Channel buffer builder must still be usable.
+	await expect(ctx.router!.dump()).resolves.toBeDefined();
+
+	videoProducer.close();
 }, 2000);
 
 test('webRtcTransport1.produce() with unsupported codecs rejects with UnsupportedError', async () => {

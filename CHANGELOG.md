@@ -2,6 +2,10 @@
 
 ### NEXT
 
+- Node: Fix the `Channel` buffer builder being left unusable when a message serialization fails ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+  - Which made every subsequent request and notification in the worker fail.
+  - Also validate `encoding.maxBitrate` in `transport.produce()`. It must be a non negative integer that fits in an `uint64`, and a `bigint` is now also accepted.
+
 ### 3.30.0
 
 - Update `ankerl/unordered_dense` Meson subproject to 5.3.2 ([PR #1985](https://github.com/versatica/mediasoup/pull/1985)).
