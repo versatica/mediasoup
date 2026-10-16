@@ -770,6 +770,9 @@ namespace RTC
 		consumers.insert(consumer);
 		this->mapConsumerProducer[consumer] = producer;
 
+		// Provide the Consumer with the payload type of RED packets (if any).
+		consumer->ProducerRedPayloadType(producer->GetMappedRedPayloadType());
+
 		// Get all streams in the Producer and provide the Consumer with them.
 		for (const auto& kv : producer->GetRtpStreams())
 		{

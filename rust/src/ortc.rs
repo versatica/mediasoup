@@ -577,7 +577,7 @@ pub(crate) fn get_consumable_rtp_parameters(
                 preferred_payload_type,
                 clock_rate,
                 channels,
-                parameters: _,
+                parameters,
                 rtcp_feedback,
             } => {
                 RtpCodecParameters::Audio {
@@ -585,8 +585,13 @@ pub(crate) fn get_consumable_rtp_parameters(
                     payload_type: *preferred_payload_type,
                     clock_rate: *clock_rate,
                     channels: *channels,
-                    // Keep the Producer codec parameters.
-                    parameters: codec.parameters().clone(),
+                    // Keep the Producer codec parameters, but not in RED codec since
+                    // its parameters (if any) reference payload types of the Producer.
+                    parameters: if codec.is_red() {
+                        parameters.clone()
+                    } else {
+                        codec.parameters().clone()
+                    },
                     rtcp_feedback: rtcp_feedback.clone(),
                 }
             }
@@ -743,10 +748,7 @@ pub(crate) fn can_consume(
     }
 
     // Ensure there is at least one media codec.
-    Ok(matching_codecs
-        .first()
-        .map(|codec| !codec.is_rtx())
-        .unwrap_or_default())
+    Ok(matching_codecs.iter().any(|codec| codec.is_media()))
 }
 
 /// Generate RTP parameters for a specific Consumer.
@@ -819,7 +821,11 @@ pub(crate) fn get_consumer_rtp_parameters(
     }
 
     // Ensure there is at least one media codec.
-    if consumer_params.codecs.is_empty() || consumer_params.codecs[0].is_rtx() {
+    if !consumer_params
+        .codecs
+        .iter()
+        .any(RtpCodecParameters::is_media)
+    {
         return Err(ConsumerRtpParametersError::NoCompatibleMediaCodecs);
     }
 

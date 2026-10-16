@@ -4,7 +4,9 @@
 #include "RTC/Consumer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/PipeProducerStreamManager.hpp"
+#include "RTC/RTP/Codecs/RED.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/SimpleProducerStreamManager.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
@@ -159,10 +161,11 @@ namespace RTC
 		// paused is set to false by default.
 		this->paused = data->paused();
 
-		// Fill supported codec payload types.
+		// Fill supported codec payload types (RED packets are also forwarded as
+		// they are if the Consumer supports RED).
 		for (auto& codec : this->rtpParameters.codecs)
 		{
-			if (codec.mimeType.IsMediaCodec())
+			if (codec.mimeType.IsMediaCodec() || codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::RED)
 			{
 				this->supportedCodecPayloadTypes[codec.payloadType] = true;
 			}
@@ -987,6 +990,13 @@ namespace RTC
 		this->producerStreamManager->ProducerNewRtpStream(rtpStream, mappedSsrc);
 	}
 
+	void Consumer::ProducerRedPayloadType(uint8_t payloadType)
+	{
+		MS_TRACE();
+
+		this->producerRedPayloadType = payloadType;
+	}
+
 	void Consumer::ProducerRtpStreamScores(const std::vector<uint8_t>* scores)
 	{
 		MS_TRACE();
@@ -1252,6 +1262,20 @@ namespace RTC
 		}
 
 		auto payloadType = packet->GetPayloadType();
+
+		// If this is a RED packet and this Consumer doesn't support RED, send just
+		// the primary block of it as a regular RTP packet.
+		if (
+		  this->producerRedPayloadType != 0 && payloadType == this->producerRedPayloadType &&
+		  !this->supportedCodecPayloadTypes[payloadType])
+		{
+			if (SendRedPacketPrimaryBlock(packet))
+			{
+				return;
+			}
+
+			// Otherwise the RED packet is invalid so let it be discarded below.
+		}
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
 		// in the corresponding Producer.
@@ -1852,6 +1876,57 @@ namespace RTC
 
 			this->mapRtpStreamTargetLayerRetransmissionBuffer[rtpStream];
 		}
+	}
+
+	// NOLINTNEXTLINE(misc-no-recursion)
+	bool Consumer::SendRedPacketPrimaryBlock(RTC::RTP::Packet* packet)
+	{
+		MS_TRACE();
+
+		// NOTE: Buffer must be 4-byte aligned since RTP packet parsing casts it to
+		// structs.
+		alignas(4) static thread_local uint8_t buffer[RTC::Consts::MtuSize + 100];
+
+		if (packet->GetLength() > sizeof(buffer))
+		{
+			MS_WARN_TAG(rtp, "RED packet too big [length:%zu]", packet->GetLength());
+
+			return false;
+		}
+
+		// Don't modify the original packet since it's also sent to other Consumers
+		// (some of them may support RED) and may be stored for retransmission.
+		std::unique_ptr<RTC::RTP::Packet> primaryPacket(packet->Clone(buffer, sizeof(buffer)));
+
+		if (!RTC::RTP::Codecs::RED::Unwrap(primaryPacket.get()))
+		{
+			MS_WARN_TAG(rtp, "invalid RED packet");
+
+			return false;
+		}
+
+		// Process the resulting packet at codec level (i.e. Opus DTX detection).
+		for (const auto& codec : this->rtpParameters.codecs)
+		{
+			if (codec.payloadType == primaryPacket->GetPayloadType())
+			{
+				std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+				  templateDependencyStructure;
+
+				RTC::RTP::Codecs::Tools::ProcessRtpPacket(
+				  primaryPacket.get(), codec.mimeType, templateDependencyStructure);
+
+				break;
+			}
+		}
+
+		// The resulting packet is specific for this Consumer, so it cannot share
+		// the stored packet with other Consumers.
+		RTC::RTP::SharedPacket sharedPacket;
+
+		SendRtpPacket(primaryPacket.get(), sharedPacket);
+
+		return true;
 	}
 
 	void Consumer::StorePacketInTargetLayerRetransmissionBuffer(
