@@ -12,7 +12,7 @@
   - `RtpStreamStats.roundTripTime` (optional) now has no value (instead of 0) when the RTT is unknown.
 - SCTP: Limit when chunks are retransmitted ([PR #1993](https://github.com/versatica/mediasoup/pull/1993)).
 - `SeqManager`: Fix uncleared previous cycle drops and optimize ([PR #1994](https://github.com/versatica/mediasoup/pull/1994)).
-- `RetransmissionBuffer`: Avoid needless allocations when storing and removing items ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- `RetransmissionBuffer`: Avoid needless allocations when storing and removing items ([PR #1997](https://github.com/versatica/mediasoup/pull/1997)).
 
 ### 0.30.0
 
