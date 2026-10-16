@@ -176,6 +176,14 @@ namespace RTC
 		{
 			return std::addressof(this->rtpStreamScores);
 		}
+		/**
+		 * Mapped payload type of the RED codec (as seen by Consumers), or 0 if this
+		 * Producer doesn't have a RED codec.
+		 */
+		uint8_t GetMappedRedPayloadType() const
+		{
+			return this->mappedRedPayloadType;
+		}
 		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
 		/**
@@ -200,6 +208,7 @@ namespace RTC
 		RTC::RTP::RtpStreamRecv* CreateRtpStream(
 		  const RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
 		void NotifyNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream);
+		bool IsMediaPayloadType(const RTC::RtpCodecParameters& mediaCodec, uint8_t payloadType) const;
 		bool MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const;
 		/**
 		 * @param maxPacketTsChanged - Whether this packet became the one holding the
@@ -249,6 +258,9 @@ namespace RTC
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
 		RtpMapping rtpMapping;
+		// Payload type of the RED codec (if any) and its mapped value.
+		uint8_t redPayloadType{ 0 };
+		uint8_t mappedRedPayloadType{ 0 };
 		std::vector<RTC::RTP::RtpStreamRecv*> rtpStreamByEncodingIdx;
 		std::vector<uint8_t> rtpStreamScores;
 		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapRtxSsrcRtpStream;

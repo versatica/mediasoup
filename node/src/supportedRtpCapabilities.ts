@@ -11,6 +11,13 @@ const supportedRtpCapabilities: RouterRtpCapabilities = {
 		},
 		{
 			kind: 'audio',
+			mimeType: 'audio/red',
+			clockRate: 48000,
+			channels: 2,
+			rtcpFeedback: [{ type: 'nack' }, { type: 'transport-cc' }],
+		},
+		{
+			kind: 'audio',
 			mimeType: 'audio/multiopus',
 			clockRate: 48000,
 			channels: 4,

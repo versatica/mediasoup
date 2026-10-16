@@ -486,7 +486,11 @@ export function getConsumableRtpParameters(
 			payloadType: matchedCapCodec.preferredPayloadType,
 			clockRate: matchedCapCodec.clockRate,
 			channels: matchedCapCodec.channels,
-			parameters: codec.parameters, // Keep the Producer codec parameters.
+			// Keep the Producer codec parameters, but not in RED codec since its
+			// parameters (if any) reference payload types of the Producer.
+			parameters: isRedCodec(codec)
+				? matchedCapCodec.parameters
+				: codec.parameters,
 			rtcpFeedback: matchedCapCodec.rtcpFeedback,
 		};
 
@@ -510,6 +514,12 @@ export function getConsumableRtpParameters(
 			consumableParams.codecs.push(consumableRtxCodec);
 		}
 	}
+
+	// Put RED codecs at the end so the first codec is always a media codec, no
+	// matter the order of codecs in the Producer.
+	consumableParams.codecs.sort(
+		(a, b) => Number(isRedCodec(a)) - Number(isRedCodec(b))
+	);
 
 	for (const capExt of caps.headerExtensions!) {
 		// Just take RTP header extension that can be used in Consumers.
@@ -597,7 +607,7 @@ export function canConsume(
 	}
 
 	// Ensure there is at least one media codec.
-	if (matchingCodecs.length === 0 || isRtxCodec(matchingCodecs[0]!)) {
+	if (!matchingCodecs.some(codec => isMediaCodec(codec))) {
 		return false;
 	}
 
@@ -680,10 +690,7 @@ export function getConsumerRtpParameters({
 	}
 
 	// Ensure there is at least one media codec.
-	if (
-		consumerParams.codecs.length === 0 ||
-		isRtxCodec(consumerParams.codecs[0]!)
-	) {
+	if (!consumerParams.codecs.some(codec => isMediaCodec(codec))) {
 		throw new UnsupportedError('no compatible media codecs');
 	}
 
@@ -892,6 +899,14 @@ export function getPipeConsumerRtpParameters({
 
 function isRtxCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {
 	return /.+\/rtx$/i.test(codec.mimeType);
+}
+
+function isRedCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {
+	return /^audio\/red$/i.test(codec.mimeType);
+}
+
+function isMediaCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {
+	return !isRtxCodec(codec) && !isRedCodec(codec);
 }
 
 function matchCodecs(

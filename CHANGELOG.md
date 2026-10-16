@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Support RED (RFC 2198) for Opus: `audio/red` codec can be added to Router media codecs, RED packets are forwarded to Consumers supporting RED and converted into regular Opus packets (primary block) for Consumers that don't support it ([Issue #481](https://github.com/versatica/mediasoup/issues/481)).
+
 ### 3.30.0
 
 - Update `ankerl/unordered_dense` Meson subproject to 5.3.2 ([PR #1985](https://github.com/versatica/mediasoup/pull/1985)).

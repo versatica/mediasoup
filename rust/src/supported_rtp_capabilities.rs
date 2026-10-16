@@ -29,6 +29,14 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 rtcp_feedback: vec![RtcpFeedback::Nack, RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
+                mime_type: MimeTypeAudio::Red,
+                preferred_payload_type: None,
+                clock_rate: NonZeroU32::new(48000).unwrap(),
+                channels: NonZeroU8::new(2).unwrap(),
+                parameters: RtpCodecParametersParameters::default(),
+                rtcp_feedback: vec![RtcpFeedback::Nack, RtcpFeedback::TransportCc],
+            },
+            RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::MultiChannelOpus,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(48000).unwrap(),

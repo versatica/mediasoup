@@ -229,7 +229,9 @@ namespace RTC
 
 		for (const auto& codec : this->codecs)
 		{
-			if (codec.mimeType.IsFeatureCodec() && codec.parameters.GetInteger(AptString) == payloadType)
+			// NOTE: RtpCodecParameters already asserted that RTX codecs have apt
+			// parameter. Other feature codecs (such as RED) don't have it.
+			if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::RTX && codec.parameters.GetInteger(AptString) == payloadType)
 			{
 				return std::addressof(codec);
 			}

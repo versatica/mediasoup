@@ -7,6 +7,7 @@
 #include "RTC/Consts.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
+#include "RTC/RTP/Codecs/RED.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
@@ -119,6 +120,27 @@ namespace RTC
 		if (this->rtpParameters.encodings.size() != this->rtpMapping.encodings.size())
 		{
 			MS_THROW_TYPE_ERROR("rtpParameters.encodings size does not match rtpMapping.encodings size");
+		}
+
+		// Look for a RED codec.
+		for (const auto& codec : this->rtpParameters.codecs)
+		{
+			if (codec.mimeType.subtype != RTC::RtpCodecMimeType::Subtype::RED)
+			{
+				continue;
+			}
+
+			auto it = this->rtpMapping.codecs.find(codec.payloadType);
+
+			if (it == this->rtpMapping.codecs.end())
+			{
+				MS_THROW_TYPE_ERROR("RED codec payload type not present in rtpMapping.codecs");
+			}
+
+			this->redPayloadType       = codec.payloadType;
+			this->mappedRedPayloadType = it->second;
+
+			break;
 		}
 
 		// Fill RTP header extension ids.
@@ -892,7 +914,7 @@ namespace RTC
 			auto& encoding           = this->rtpParameters.encodings[i];
 			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
 			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			const bool isMediaPacket = (mediaCodec->payloadType == payloadType);
+			const bool isMediaPacket = IsMediaPayloadType(*mediaCodec, payloadType);
 			const bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 			if (isMediaPacket && encoding.ssrc == ssrc)
@@ -949,7 +971,7 @@ namespace RTC
 
 				const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
 				const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-				const bool isMediaPacket = (mediaCodec->payloadType == payloadType);
+				const bool isMediaPacket = IsMediaPayloadType(*mediaCodec, payloadType);
 				const bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 				if (isMediaPacket)
@@ -1019,7 +1041,7 @@ namespace RTC
 			auto& encoding           = this->rtpParameters.encodings[0];
 			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
 			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			const bool isMediaPacket = (mediaCodec->payloadType == payloadType);
+			const bool isMediaPacket = IsMediaPayloadType(*mediaCodec, payloadType);
 			const bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 			if (isMediaPacket)
@@ -1198,6 +1220,17 @@ namespace RTC
 		this->listener->OnProducerNewRtpStream(this, rtpStream, mappedSsrc);
 	}
 
+	inline bool Producer::IsMediaPayloadType(
+	  const RTC::RtpCodecParameters& mediaCodec, uint8_t payloadType) const
+	{
+		MS_TRACE();
+
+		// NOTE: RED packets carry media so they must also create RTP streams. Note
+		// that endpoints may send all their packets as RED.
+		return payloadType == mediaCodec.payloadType ||
+		       (this->redPayloadType != 0 && payloadType == this->redPayloadType);
+	}
+
 	inline bool Producer::MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
@@ -1215,6 +1248,33 @@ namespace RTC
 			}
 
 			const uint8_t mappedPayloadType = it->second;
+
+			// If this is a RED packet, also mangle the payload type of its blocks.
+			// NOTE: Ignore padding-only packets (endpoints send them with the RED
+			// payload type for bandwidth probing).
+			const bool isRedPacket = this->redPayloadType != 0 && payloadType == this->redPayloadType &&
+			                         packet->GetPayloadLength() > 0;
+
+			if (
+			  isRedPacket && !RTC::RTP::Codecs::RED::MapPayloadTypes(
+			                   packet->GetPayload(), packet->GetPayloadLength(), this->rtpMapping.codecs))
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "invalid RED packet or unknown block payload type [payloadLength:%zu, paddingLength:%" PRIu8
+				  "]",
+				  packet->GetPayloadLength(),
+				  packet->GetPaddingLength());
+
+				return false;
+			}
+
+			// Process the RED packet at codec level (i.e. Opus DTX detection in its
+			// primary block) so Consumers supporting RED can honor ignoreDtx.
+			if (isRedPacket)
+			{
+				RTC::RTP::Codecs::RED::ProcessRtpPacket(packet, rtpStream->GetMimeType());
+			}
 
 			packet->SetPayloadType(mappedPayloadType);
 		}

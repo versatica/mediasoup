@@ -819,6 +819,18 @@ impl RtpCodecParameters {
         }
     }
 
+    pub fn is_red(&self) -> bool {
+        match self {
+            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::Red,
+            Self::Video { .. } => false,
+        }
+    }
+
+    /// Whether this is a media codec (neither RTX nor RED).
+    pub fn is_media(&self) -> bool {
+        !self.is_rtx() && !self.is_red()
+    }
+
     pub fn mime_type(&self) -> MimeType {
         match self {
             Self::Audio { mime_type, .. } => MimeType::Audio(*mime_type),

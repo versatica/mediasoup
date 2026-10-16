@@ -88,6 +88,10 @@ namespace RTC
 		{
 			return this->kind;
 		}
+		bool SupportsPayloadType(uint8_t payloadType) const
+		{
+			return this->supportedCodecPayloadTypes[payloadType & 0x7F];
+		}
 		const RTC::RtpParameters& GetRtpParameters() const
 		{
 			return this->rtpParameters;

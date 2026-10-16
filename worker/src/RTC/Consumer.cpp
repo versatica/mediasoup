@@ -159,10 +159,11 @@ namespace RTC
 		// paused is set to false by default.
 		this->paused = data->paused();
 
-		// Fill supported codec payload types.
+		// Fill supported codec payload types (RED packets are also forwarded as
+		// they are if the Consumer supports RED).
 		for (auto& codec : this->rtpParameters.codecs)
 		{
-			if (codec.mimeType.IsMediaCodec())
+			if (codec.mimeType.IsMediaCodec() || codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::RED)
 			{
 				this->supportedCodecPayloadTypes[codec.payloadType] = true;
 			}

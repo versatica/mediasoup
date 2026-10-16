@@ -746,3 +746,175 @@ fn get_producer_rtp_parameters_mapping_rtx_apt_is_not_media_codec() {
         Err(RtpParametersMappingError::MissingMediaCodecForRtx { payload_type: 112 }),
     ));
 }
+
+#[test]
+fn red_codec_succeeds() {
+    let media_codecs = vec![
+        RtpCodecCapability::Audio {
+            mime_type: MimeTypeAudio::Opus,
+            preferred_payload_type: None,
+            clock_rate: NonZeroU32::new(48000).unwrap(),
+            channels: NonZeroU8::new(2).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![],
+        },
+        RtpCodecCapability::Audio {
+            mime_type: MimeTypeAudio::Red,
+            preferred_payload_type: None,
+            clock_rate: NonZeroU32::new(48000).unwrap(),
+            channels: NonZeroU8::new(2).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![],
+        },
+    ];
+
+    let router_rtp_capabilities = generate_router_rtp_capabilities(media_codecs)
+        .expect("Failed to generate router RTP capabilities");
+
+    let rtp_parameters = RtpParameters {
+        codecs: vec![
+            RtpCodecParameters::Audio {
+                mime_type: MimeTypeAudio::Red,
+                payload_type: 63,
+                clock_rate: NonZeroU32::new(48000).unwrap(),
+                channels: NonZeroU8::new(2).unwrap(),
+                // RED parameters reference Producer payload types.
+                parameters: RtpCodecParametersParameters::from([("111/111", "".into())]),
+                rtcp_feedback: vec![],
+            },
+            RtpCodecParameters::Audio {
+                mime_type: MimeTypeAudio::Opus,
+                payload_type: 111,
+                clock_rate: NonZeroU32::new(48000).unwrap(),
+                channels: NonZeroU8::new(2).unwrap(),
+                parameters: RtpCodecParametersParameters::from([("useinbandfec", 1_u32.into())]),
+                rtcp_feedback: vec![],
+            },
+        ],
+        encodings: vec![RtpEncodingParameters {
+            ssrc: Some(11111111),
+            ..RtpEncodingParameters::default()
+        }],
+        rtcp: RtcpParameters {
+            cname: Some("qwerty1234".to_string()),
+            ..RtcpParameters::default()
+        },
+        ..RtpParameters::default()
+    };
+
+    let rtp_mapping =
+        get_producer_rtp_parameters_mapping(&rtp_parameters, &router_rtp_capabilities)
+            .expect("Failed to get producer RTP parameters mapping");
+
+    assert_eq!(rtp_mapping.codecs.len(), 2);
+    assert!(rtp_mapping.codecs.contains(&RtpMappingCodec {
+        payload_type: 63,
+        mapped_payload_type: 101
+    }));
+    assert!(rtp_mapping.codecs.contains(&RtpMappingCodec {
+        payload_type: 111,
+        mapped_payload_type: 100
+    }));
+
+    let consumable_rtp_parameters = get_consumable_rtp_parameters(
+        MediaKind::Audio,
+        &rtp_parameters,
+        &router_rtp_capabilities,
+        &rtp_mapping,
+    );
+
+    // RED codec is moved after the media codec even if the Producer lists it first.
+    // RED parameters are not kept but Opus parameters are.
+    assert_eq!(consumable_rtp_parameters.codecs[0].payload_type(), 100);
+    assert!(consumable_rtp_parameters.codecs[0].is_media());
+    assert_eq!(
+        consumable_rtp_parameters.codecs[0].parameters(),
+        &RtpCodecParametersParameters::from([("useinbandfec", 1_u32.into())])
+    );
+    assert_eq!(consumable_rtp_parameters.codecs[1].payload_type(), 101);
+    assert!(consumable_rtp_parameters.codecs[1].is_red());
+    assert_eq!(
+        consumable_rtp_parameters.codecs[1].parameters(),
+        &RtpCodecParametersParameters::default()
+    );
+
+    let opus_capability = RtpCodecCapability::Audio {
+        mime_type: MimeTypeAudio::Opus,
+        preferred_payload_type: Some(100),
+        clock_rate: NonZeroU32::new(48000).unwrap(),
+        channels: NonZeroU8::new(2).unwrap(),
+        parameters: RtpCodecParametersParameters::default(),
+        rtcp_feedback: vec![],
+    };
+    let red_capability = RtpCodecCapability::Audio {
+        mime_type: MimeTypeAudio::Red,
+        preferred_payload_type: Some(101),
+        clock_rate: NonZeroU32::new(48000).unwrap(),
+        channels: NonZeroU8::new(2).unwrap(),
+        parameters: RtpCodecParametersParameters::default(),
+        rtcp_feedback: vec![],
+    };
+
+    // Remote endpoint supporting RED.
+    {
+        let remote_rtp_capabilities = RtpCapabilities {
+            codecs: vec![opus_capability.clone(), red_capability.clone()],
+            header_extensions: vec![],
+        };
+
+        assert!(can_consume(&consumable_rtp_parameters, &remote_rtp_capabilities).unwrap());
+
+        let consumer_rtp_parameters = get_consumer_rtp_parameters(
+            &consumable_rtp_parameters,
+            &remote_rtp_capabilities,
+            false,
+            true,
+        )
+        .expect("Failed to get consumer RTP parameters");
+
+        assert_eq!(consumer_rtp_parameters.codecs.len(), 2);
+        assert!(consumer_rtp_parameters.codecs[0].is_media());
+        assert!(consumer_rtp_parameters.codecs[1].is_red());
+    }
+
+    // Remote endpoint not supporting RED.
+    {
+        let remote_rtp_capabilities = RtpCapabilities {
+            codecs: vec![opus_capability],
+            header_extensions: vec![],
+        };
+
+        assert!(can_consume(&consumable_rtp_parameters, &remote_rtp_capabilities).unwrap());
+
+        let consumer_rtp_parameters = get_consumer_rtp_parameters(
+            &consumable_rtp_parameters,
+            &remote_rtp_capabilities,
+            false,
+            true,
+        )
+        .expect("Failed to get consumer RTP parameters");
+
+        assert_eq!(consumer_rtp_parameters.codecs.len(), 1);
+        assert_eq!(consumer_rtp_parameters.codecs[0].payload_type(), 100);
+    }
+
+    // Remote endpoint supporting just RED.
+    {
+        let remote_rtp_capabilities = RtpCapabilities {
+            codecs: vec![red_capability],
+            header_extensions: vec![],
+        };
+
+        assert!(!can_consume(&consumable_rtp_parameters, &remote_rtp_capabilities).unwrap());
+
+        assert!(matches!(
+            get_consumer_rtp_parameters(
+                &consumable_rtp_parameters,
+                &remote_rtp_capabilities,
+                false,
+                true,
+            ),
+            Err(ConsumerRtpParametersError::NoCompatibleMediaCodecs)
+        ));
+    }
+}

@@ -684,7 +684,8 @@ namespace RTC
 			// Clone only happens if needed and only once.
 			RTC::RTP::SharedPacket sharedPacket;
 
-			for (auto* consumer : consumers)
+			auto sendRtpPacket =
+			  [packet](RTC::Consumer* consumer, RTC::RTP::SharedPacket& consumerSharedPacket)
 			{
 				// Update MID RTP extension value.
 				const auto& mid = consumer->GetRtpParameters().mid;
@@ -694,13 +695,57 @@ namespace RTC
 					packet->UpdateMid(mid);
 				}
 
-				consumer->SendRtpPacket(packet, sharedPacket);
+				consumer->SendRtpPacket(packet, consumerSharedPacket);
 
-				// Assert that, if this Consumer filled sharedPacket or it was already
-				// filled, both packet and sharedPacket are the very same RTP packet.
-				if (sharedPacket.HasPacket())
+				// Assert that, if this Consumer filled consumerSharedPacket or it was
+				// already filled, both packet and consumerSharedPacket are the very
+				// same RTP packet.
+				if (consumerSharedPacket.HasPacket())
 				{
-					sharedPacket.AssertSamePacket(packet);
+					consumerSharedPacket.AssertSamePacket(packet);
+				}
+			};
+
+			const uint8_t redPayloadType = producer->GetMappedRedPayloadType();
+			const bool isRedPacket = redPayloadType != 0 && packet->GetPayloadType() == redPayloadType;
+			bool hasConsumersNotSupportingRed{ false };
+
+			for (auto* consumer : consumers)
+			{
+				// Consumers that don't support RED are handled below.
+				if (isRedPacket && !consumer->SupportsPayloadType(redPayloadType))
+				{
+					hasConsumersNotSupportingRed = true;
+
+					continue;
+				}
+
+				sendRtpPacket(consumer, sharedPacket);
+			}
+
+			// Send the primary block of the RED packet as a regular RTP packet to
+			// Consumers that don't support RED. The packet is converted in place and
+			// restored afterwards, so it's not cloned unless needed (and just once).
+			if (hasConsumersNotSupportingRed)
+			{
+				const bool unwrapped =
+				  RTC::RTP::Codecs::RED::Unwrap(packet, std::addressof(this->redRemovedData));
+				RTC::RTP::SharedPacket primarySharedPacket;
+
+				for (auto* consumer : consumers)
+				{
+					if (consumer->SupportsPayloadType(redPayloadType))
+					{
+						continue;
+					}
+
+					// NOTE: If the RED packet is invalid the Consumer will discard it.
+					sendRtpPacket(consumer, unwrapped ? primarySharedPacket : sharedPacket);
+				}
+
+				if (unwrapped)
+				{
+					RTC::RTP::Codecs::RED::Restore(packet, this->redRemovedData);
 				}
 			}
 		}
