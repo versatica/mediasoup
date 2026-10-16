@@ -7,6 +7,7 @@
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
 #include "RTC/Producer.hpp"
+#include "RTC/RTP/Codecs/RED.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RtpObserver.hpp"
@@ -54,8 +55,6 @@ namespace RTC
 		  const std::string& rtpObserverId, const std::string& method) const;
 		void CheckNoTransport(const std::string& transportId, const std::string& method) const;
 		void CheckNoRtpObserver(const std::string& rtpObserverId, const std::string& method) const;
-		static RTC::RTP::Packet* CreateRedPrimaryPacket(
-		  const RTC::RTP::Packet* packet, const RTC::Consumer* consumer);
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
@@ -144,6 +143,9 @@ namespace RTC
 		  mapDataProducerDataConsumers;
 		ankerl::unordered_dense::map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
 		ankerl::unordered_dense::map<std::string, RTC::DataProducer*> mapDataProducers;
+		// Data removed from RED packets while they are sent to Consumers that
+		// don't support RED. Reused to avoid allocations.
+		RTC::RTP::Codecs::RED::RemovedData redRemovedData;
 	};
 } // namespace RTC
 

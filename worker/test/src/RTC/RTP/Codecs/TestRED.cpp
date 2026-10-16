@@ -146,6 +146,42 @@ SCENARIO("RED payload", "[rtp][codecs][red]")
 		REQUIRE(packet->GetLength() == 12 + sizeof(expectedPayload));
 	}
 
+	SECTION("Unwrap() and Restore() succeed")
+	{
+		alignas(4) uint8_t buffer[256];
+
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(buffer, sizeof(buffer)) };
+
+		packet->SetPayloadType(63);
+		packet->SetSequenceNumber(1234);
+		packet->SetPayload(redPayload, sizeof(redPayload));
+		packet->SetPaddingLength(3);
+
+		const size_t originalLength = packet->GetLength();
+		RTC::RTP::Codecs::RED::RemovedData removedData;
+
+		REQUIRE(RTC::RTP::Codecs::RED::Unwrap(packet.get(), std::addressof(removedData)));
+
+		const uint8_t expectedPayload[] = { 0x31, 0x32, 0x33, 0x34 };
+
+		REQUIRE(packet->GetPayloadType() == 111);
+		REQUIRE(packet->GetPayloadLength() == sizeof(expectedPayload));
+		REQUIRE(std::memcmp(packet->GetPayload(), expectedPayload, sizeof(expectedPayload)) == 0);
+		REQUIRE(packet->GetPaddingLength() == 0);
+		REQUIRE(removedData.payloadType == 63);
+		REQUIRE(removedData.paddingLength == 3);
+		REQUIRE(removedData.data.size() == 14);
+
+		RTC::RTP::Codecs::RED::Restore(packet.get(), removedData);
+
+		REQUIRE(packet->GetPayloadType() == 63);
+		REQUIRE(packet->GetSequenceNumber() == 1234);
+		REQUIRE(packet->GetPayloadLength() == sizeof(redPayload));
+		REQUIRE(std::memcmp(packet->GetPayload(), redPayload, sizeof(redPayload)) == 0);
+		REQUIRE(packet->GetPaddingLength() == 3);
+		REQUIRE(packet->GetLength() == originalLength);
+	}
+
 	SECTION("Unwrap() fails and doesn't modify the packet if the RED payload is invalid")
 	{
 		alignas(4) uint8_t buffer[256];

@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "RTC/RTP/Codecs/Opus.hpp"
 #include <array>
+#include <cstring> // std::memcpy(), std::memmove()
 #include <utility> // std::pair
 
 namespace RTC
@@ -165,7 +166,7 @@ namespace RTC
 				return true;
 			}
 
-			bool RED::Unwrap(RTP::Packet* packet)
+			bool RED::Unwrap(RTP::Packet* packet, RemovedData* removedData)
 			{
 				MS_TRACE();
 
@@ -179,11 +180,41 @@ namespace RTC
 					return false;
 				}
 
+				if (removedData)
+				{
+					removedData->payloadType   = packet->GetPayloadType();
+					removedData->paddingLength = packet->GetPaddingLength();
+					removedData->data.assign(data, data + offset);
+				}
+
 				// NOTE: SetPayload() uses memmove() so the source can overlap.
 				packet->SetPayload(data + offset, len - offset);
 				packet->SetPayloadType(payloadType);
 
 				return true;
+			}
+
+			void RED::Restore(RTP::Packet* packet, const RemovedData& removedData)
+			{
+				MS_TRACE();
+
+				const size_t primaryBlockLength = packet->GetPayloadLength();
+				const size_t removedLength      = removedData.data.size();
+
+				// NOTE: The original packet fitted in its buffer so this cannot throw.
+				packet->SetPayloadLength(removedLength + primaryBlockLength);
+
+				auto* data = packet->GetPayload();
+
+				std::memmove(data + removedLength, data, primaryBlockLength);
+				std::memcpy(data, removedData.data.data(), removedLength);
+
+				packet->SetPayloadType(removedData.payloadType);
+
+				if (removedData.paddingLength > 0)
+				{
+					packet->SetPaddingLength(removedData.paddingLength);
+				}
 			}
 
 			void RED::ProcessRtpPacket(RTP::Packet* packet, const RTC::RtpCodecMimeType& mimeType)

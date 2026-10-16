@@ -5,6 +5,7 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <ankerl/unordered_dense.h>
+#include <vector>
 
 namespace RTC
 {
@@ -39,6 +40,19 @@ namespace RTC
 			{
 			public:
 				/**
+				 * Data removed from a RED packet by Unwrap() so the packet can be
+				 * restored later by Restore().
+				 */
+				struct RemovedData
+				{
+					uint8_t payloadType{ 0 };
+					uint8_t paddingLength{ 0 };
+					// RED block headers and redundant blocks data.
+					std::vector<uint8_t> data;
+				};
+
+			public:
+				/**
 				 * Parse the given RED payload and get the payload type of the primary
 				 * block and the offset at which its data begins.
 				 *
@@ -59,13 +73,20 @@ namespace RTC
 				  uint8_t* data, size_t len, const ankerl::unordered_dense::map<uint8_t, uint8_t>& mapping);
 
 				/**
-				 * Convert the given RED packet into a regular RTP packet containing just
-				 * the data of the primary block.
+				 * Convert the given RED packet (in place) into a regular RTP packet
+				 * containing just the data of the primary block. If `removedData` is
+				 * given, the removed data is stored into it so the packet can be
+				 * restored later by Restore().
 				 *
 				 * @return `false` if the RED payload is invalid, in which case the packet
 				 *   is not modified.
 				 */
-				static bool Unwrap(RTP::Packet* packet);
+				static bool Unwrap(RTP::Packet* packet, RemovedData* removedData = nullptr);
+
+				/**
+				 * Restore a RED packet previously converted by Unwrap().
+				 */
+				static void Restore(RTP::Packet* packet, const RemovedData& removedData);
 
 				/**
 				 * Process the given RED packet at codec level by inspecting its primary
