@@ -636,6 +636,10 @@ export abstract class TransportImpl<
 			remoteRtpCapabilities: clonedRtpCapabilities,
 			pipe,
 			enableRtx,
+			// A DirectTransport doesn't run bandwidth estimation, so it must not
+			// negotiate it whatever the given RTP capabilities say. A PipeTransport
+			// doesn't need this since its consume() overrides this method.
+			disableBwe: this.type === 'direct',
 		});
 
 		// Set MID.

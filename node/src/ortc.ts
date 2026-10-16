@@ -616,11 +616,13 @@ export function getConsumerRtpParameters({
 	remoteRtpCapabilities,
 	pipe,
 	enableRtx,
+	disableBwe = false,
 }: {
 	consumableRtpParameters: RtpParameters;
 	remoteRtpCapabilities: RtpCapabilities;
 	pipe: boolean;
 	enableRtx: boolean;
+	disableBwe?: boolean;
 }): RtpParameters {
 	const consumerParams: RtpParameters = {
 		codecs: [],
@@ -693,6 +695,19 @@ export function getConsumerRtpParameters({
 				capExt => capExt.preferredId === ext.id && capExt.uri === ext.uri
 			)
 		);
+
+	// A transport that doesn't run bandwidth estimation must not negotiate it.
+	// Dropping its header extensions is enough, since the RTCP feedback below is
+	// reduced out of them.
+	if (disableBwe) {
+		consumerParams.headerExtensions = consumerParams.headerExtensions.filter(
+			ext =>
+				ext.uri !==
+					'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' &&
+				ext.uri !==
+					'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
+		);
+	}
 
 	// Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
 	if (
@@ -831,11 +846,13 @@ export function getPipeConsumerRtpParameters({
 			continue;
 		}
 
+		// Drop the bandwidth estimation feedback, which a PipeTransport doesn't run,
+		// and the generic NACK when there is no RTX to retransmit with.
 		codec.rtcpFeedback = codec.rtcpFeedback!.filter(
 			fb =>
-				(fb.type === 'nack' && fb.parameter === 'pli') ||
-				(fb.type === 'ccm' && fb.parameter === 'fir') ||
-				(enableRtx && fb.type === 'nack' && !fb.parameter)
+				fb.type !== 'goog-remb' &&
+				fb.type !== 'transport-cc' &&
+				(enableRtx || fb.type !== 'nack' || Boolean(fb.parameter))
 		);
 
 		consumerParams.codecs.push(codec);
@@ -888,6 +905,29 @@ export function getPipeConsumerRtpParameters({
 	}
 
 	return consumerParams;
+}
+
+/**
+ * Remove from the given RTP parameters everything related to bandwidth
+ * estimation, which a transport that doesn't run it must not negotiate.
+ *
+ * It mutates the given RTP parameters, so the caller must not pass the ones the
+ * application gave.
+ */
+export function disableBweInRtpParameters(rtpParameters: RtpParameters): void {
+	rtpParameters.headerExtensions = rtpParameters.headerExtensions?.filter(
+		ext =>
+			ext.uri !==
+				'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' &&
+			ext.uri !==
+				'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
+	);
+
+	for (const codec of rtpParameters.codecs) {
+		codec.rtcpFeedback = codec.rtcpFeedback?.filter(
+			fb => fb.type !== 'transport-cc' && fb.type !== 'goog-remb'
+		);
+	}
 }
 
 function isRtxCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {

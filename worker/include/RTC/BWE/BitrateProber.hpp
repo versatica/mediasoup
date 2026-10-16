@@ -138,6 +138,15 @@ namespace RTC
 			void CreateProbeCluster(const Types::ProbeClusterConfig& clusterConfig);
 
 			/**
+			 * Drop the bursts that are waiting.
+			 *
+			 * @remarks
+			 * - One that has already begun is left to finish, since its feedback
+			 *   would otherwise measure a burst that never went out whole.
+			 */
+			void StopProbing();
+
+			/**
 			 * Instant at which the next packet of the current burst may go out, or no
 			 * value if there is nothing to send.
 			 *

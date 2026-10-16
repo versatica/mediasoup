@@ -461,8 +461,57 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		REQUIRE(listener.targetBitrates.at(0) == StartBitrate);
 	}
 
+	SECTION("nothing is probed while the probing is not allowed")
+	{
+		auto* timer = shared.GetTimer("probing-scheduler-next-probe");
+
+		REQUIRE(timer);
+
+		senderTransportCongestionController.SetNetworkAvailable(true);
+
+		// The estimator asked for the bursts the connection opens with, and none of
+		// them reached the scheduler.
+		REQUIRE(timer->IsActive() == false);
+
+		senderTransportCongestionController.SetEnableProbing(true);
+
+		// What was asked for while it was not allowed is not kept waiting, so the
+		// next burst the estimator asks for is what gets this going.
+		REQUIRE(timer->IsActive() == false);
+	}
+
+	SECTION("taking the probing back stops the bursts that were waiting")
+	{
+		senderTransportCongestionController.SetEnableProbing(true);
+		senderTransportCongestionController.SetNetworkAvailable(true);
+
+		auto* timer = shared.GetTimer("probing-scheduler-next-probe");
+
+		REQUIRE(timer);
+		REQUIRE(timer->IsActive());
+
+		senderTransportCongestionController.SetEnableProbing(false);
+
+		// Let out whatever was already going out, shot by shot.
+		while (timer->IsActive())
+		{
+			nowUs = std::max(nowUs, timer->GetExpiresAtMs() * 1000);
+
+			REQUIRE(timer->EvaluateHasExpired());
+		}
+
+		const auto sentShots = listener.sentLengths.size();
+
+		// And the estimator keeps running without anything else going out.
+		runProcessTimer();
+
+		REQUIRE(listener.sentLengths.size() == sentShots);
+	}
+
 	SECTION("nothing is probed until there is a network to probe")
 	{
+		senderTransportCongestionController.SetEnableProbing(true);
+
 		auto* timer = shared.GetTimer("probing-scheduler-next-probe");
 
 		REQUIRE(timer);
@@ -475,6 +524,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 
 	SECTION("every packet of a burst goes out numbered and with both extensions written")
 	{
+		senderTransportCongestionController.SetEnableProbing(true);
 		senderTransportCongestionController.SetNetworkAvailable(true);
 
 		auto* timer = shared.GetTimer("probing-scheduler-next-probe");

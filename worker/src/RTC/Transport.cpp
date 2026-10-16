@@ -854,18 +854,9 @@ namespace RTC
 				}
 
 #ifdef MS_USE_BUILTIN_BWE
-				// A peer that negotiated neither mechanism cannot be told anything about
-				// the incoming link, so there is nothing to run.
-				if (!this->receiverTransportCongestionController && (this->recvSupportsTransportCc || this->recvSupportsRemb))
-				{
-					MS_DEBUG_TAG(bwe, "enabling ReceiverTransportCongestionController");
-
-					this->receiverTransportCongestionController =
-					  std::make_unique<RTC::BWE::ReceiverTransportCongestionController>(
-					    this,
-					    this->shared,
-					    RTC::BWE::ReceiverTransportCongestionController::ReceiverTransportCongestionControllerOptions{});
-				}
+				// NOTE: A Transport that gets its first Producer while not yet connected
+				// builds it in Transport::Connected() instead.
+				MayCreateReceiverTransportCongestionController();
 
 				// The cap travels to the remote peer in a REMB, so it only becomes
 				// applicable once a Producer brings REMB, which may well be this one.
@@ -1015,7 +1006,11 @@ namespace RTC
 					this->sendSupportsRemb = consumer->SupportsRemb();
 				}
 
-#ifndef MS_USE_BUILTIN_BWE
+#ifdef MS_USE_BUILTIN_BWE
+				// NOTE: A Transport that gets its first Consumer while not yet connected
+				// builds it in Transport::Connected() instead.
+				MayCreateOrUpdateSenderTransportCongestionController();
+#else
 				// Set TransportCongestionControlClient.
 				if (!this->tccClient)
 				{
@@ -1434,14 +1429,16 @@ namespace RTC
 
 				request->Accept();
 
-				// This may be the latest active Consumer with BWE. If so we have to stop
-				// probation.
 #ifdef MS_USE_BUILTIN_BWE
+				// What the remaining Consumers want is now less, and that is an input of
+				// the probing.
 				if (this->senderTransportCongestionController)
 				{
 					ComputeOutgoingDesiredBitrate();
 				}
 #else
+				// This may be the latest active Consumer with BWE. If so we have to stop
+				// probation.
 				if (this->tccClient)
 				{
 					ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
@@ -1594,32 +1591,10 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef MS_USE_BUILTIN_BWE
-		// NOTE: Unlike the receiving side, this one does not wait for a Consumer that
-		// negotiated anything in particular, since a peer that negotiated neither
-		// mechanism still has its loss reported in the Receiver Reports and can still
-		// be given a target out of it.
 		// NOTE: This goes before telling the Consumers, since being told leads them to
 		// ask for a bitrate round and there must be someone to answer it.
-		if (!this->senderTransportCongestionController && IsCongestionControlSupported())
-		{
-			MS_DEBUG_TAG(bwe, "enabling SenderTransportCongestionController");
-
-			this->senderTransportCongestionController =
-			  std::make_shared<RTC::BWE::SenderTransportCongestionController>(
-			    this,
-			    this->shared,
-			    RTC::BWE::SenderTransportCongestionController::SenderTransportCongestionControllerOptions{
-			      .startBitrate = this->initialAvailableOutgoingBitrate });
-		}
-
-		if (this->senderTransportCongestionController)
-		{
-			// NOTE: Now that the Transport is connected we know the packet overhead when
-			// in the wire. We must pass it to the sender congestion controller before it
-			// starts the RTP probing.
-			this->senderTransportCongestionController->SetPacketOverhead(GetPacketOverhead());
-			this->senderTransportCongestionController->SetNetworkAvailable(true);
-		}
+		MayCreateOrUpdateSenderTransportCongestionController();
+		MayCreateReceiverTransportCongestionController();
 #endif
 
 		// Tell all Consumers.
@@ -1672,6 +1647,9 @@ namespace RTC
 #ifdef MS_USE_BUILTIN_BWE
 		if (this->senderTransportCongestionController)
 		{
+			// NOTE: Telling it that the network is gone does not stop the probing by
+			// itself, since the estimator keeps deciding whether a burst is due.
+			this->senderTransportCongestionController->SetEnableProbing(false);
 			this->senderTransportCongestionController->SetNetworkAvailable(false);
 		}
 #else
@@ -2548,6 +2526,74 @@ namespace RTC
 		}
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	void Transport::MayCreateOrUpdateSenderTransportCongestionController()
+	{
+		MS_TRACE();
+
+		if (!IsCongestionControlSupported() || !IsConnected() || this->mapConsumers.empty())
+		{
+			return;
+		}
+
+		// NOTE: Unlike the receiving side, this one does not wait for a Consumer that
+		// negotiated anything in particular, since a peer that negotiated neither
+		// mechanism still has its loss reported in the Receiver Reports and can still
+		// be given a target out of it.
+		if (!this->senderTransportCongestionController)
+		{
+			MS_DEBUG_TAG(bwe, "enabling SenderTransportCongestionController");
+
+			this->senderTransportCongestionController =
+			  std::make_shared<RTC::BWE::SenderTransportCongestionController>(
+			    this,
+			    this->shared,
+			    RTC::BWE::SenderTransportCongestionController::SenderTransportCongestionControllerOptions{
+			      .startBitrate = this->initialAvailableOutgoingBitrate });
+		}
+
+		// NOTE: The path may be another one than the last time, so the packet
+		// overhead is taken again.
+		this->senderTransportCongestionController->SetPacketOverhead(GetPacketOverhead());
+
+		// Probing only makes sense towards a peer that can measure a burst and report
+		// back on it.
+		// NOTE: This goes before telling it that the network is available, which is
+		// what starts the RTP probing.
+		this->senderTransportCongestionController->SetEnableProbing(
+		  this->sendSupportsTransportCc || this->sendSupportsRemb);
+
+		this->senderTransportCongestionController->SetNetworkAvailable(true);
+	}
+
+	void Transport::MayCreateReceiverTransportCongestionController()
+	{
+		MS_TRACE();
+
+		if (
+		  this->receiverTransportCongestionController || !IsCongestionControlSupported() ||
+		  !IsConnected() || (!this->recvSupportsTransportCc && !this->recvSupportsRemb))
+		{
+			return;
+		}
+
+		MS_DEBUG_TAG(bwe, "enabling ReceiverTransportCongestionController");
+
+		this->receiverTransportCongestionController =
+		  std::make_unique<RTC::BWE::ReceiverTransportCongestionController>(
+		    this,
+		    this->shared,
+		    RTC::BWE::ReceiverTransportCongestionController::ReceiverTransportCongestionControllerOptions{});
+
+		// The cap travels to the remote peer in a REMB, so it could not be applied
+		// before this.
+		if (this->maxIncomingBitrate != 0 && this->recvSupportsRemb)
+		{
+			this->receiverTransportCongestionController->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+		}
+	}
+#endif
+
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{
 		MS_TRACE();
@@ -3177,13 +3223,15 @@ namespace RTC
 		// Delete it.
 		delete consumer;
 
-		// This may be the latest active Consumer with BWE. If so we have to stop probation.
 #ifdef MS_USE_BUILTIN_BWE
+		// What the remaining Consumers want is now less, and that is an input of the
+		// probing.
 		if (this->senderTransportCongestionController)
 		{
 			ComputeOutgoingDesiredBitrate();
 		}
 #else
+		// This may be the latest active Consumer with BWE. If so we have to stop probation.
 		if (this->tccClient)
 		{
 			ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);

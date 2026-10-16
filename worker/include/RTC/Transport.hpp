@@ -254,6 +254,29 @@ namespace RTC
 		virtual bool SendData(const uint8_t* data, size_t len) = 0;
 		virtual void RecvStreamClosed(uint32_t ssrc)           = 0;
 		virtual void SendStreamClosed(uint32_t ssrc)           = 0;
+#ifdef MS_USE_BUILTIN_BWE
+		/**
+		 * Build the sender congestion controller if this Transport may run one, is
+		 * connected and has something to send, and tell it what depends on the
+		 * Consumers and on the path, which both change over time.
+		 *
+		 * @remarks
+		 * - A Transport with no Consumer must not run it, since telling it that the
+		 *   network is available is what starts the RTP probing.
+		 * - It is called again whenever a Consumer is added and whenever the
+		 *   Transport connects, so it must be safe to call with it already built.
+		 */
+		virtual void MayCreateOrUpdateSenderTransportCongestionController() final;
+		/**
+		 * Build the receiver congestion controller if this Transport may run one, is
+		 * connected and receives a stream whose sender can be told about the link.
+		 *
+		 * @remarks
+		 * - A peer that negotiated neither transport-cc nor REMB cannot be told
+		 *   anything, so there is nothing to run.
+		 */
+		virtual void MayCreateReceiverTransportCongestionController() final;
+#endif
 		virtual void DistributeAvailableOutgoingBitrate() final;
 #ifdef MS_USE_BUILTIN_BWE
 		virtual void ComputeOutgoingDesiredBitrate() final;

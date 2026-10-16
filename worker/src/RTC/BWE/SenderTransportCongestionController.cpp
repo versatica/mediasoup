@@ -111,6 +111,26 @@ namespace RTC
 			ApplyPendingUpdate();
 		}
 
+		void SenderTransportCongestionController::SetEnableProbing(bool enableProbing)
+		{
+			MS_TRACE();
+
+			if (enableProbing == this->enableProbing)
+			{
+				return;
+			}
+
+			this->enableProbing = enableProbing;
+
+			// Nothing is taken back from the estimator, which keeps deciding whether a
+			// burst is due and gives up on its own when the result of one never comes.
+			// What stops is the sending, and what it decides meanwhile is dropped.
+			if (!this->enableProbing)
+			{
+				this->probingScheduler.StopProbing();
+			}
+		}
+
 		std::optional<int64_t> SenderTransportCongestionController::OnRtpPacketToBeSent(
 		  RTC::RTP::Packet* packet, const RtpPacketToBeSentOptions& options)
 		{
@@ -493,6 +513,13 @@ namespace RTC
 		  const std::vector<Types::ProbeClusterConfig>& clusterConfigs)
 		{
 			MS_TRACE();
+
+			// A burst that must not go out is dropped here rather than kept waiting,
+			// since by the time probing is allowed again it would be stale.
+			if (!this->enableProbing)
+			{
+				return;
+			}
 
 			this->pendingUpdate.probeClusterConfigs.insert(
 			  this->pendingUpdate.probeClusterConfigs.end(), clusterConfigs.begin(), clusterConfigs.end());

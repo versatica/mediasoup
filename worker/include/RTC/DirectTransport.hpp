@@ -26,7 +26,7 @@ namespace RTC
 	private:
 		bool IsCongestionControlSupported() const override
 		{
-			return true;
+			return false;
 		}
 		bool IsPipe() const override
 		{

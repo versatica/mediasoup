@@ -233,4 +233,66 @@ SCENARIO("BWE ProbingScheduler", "[bwe][probingscheduler]")
 		REQUIRE(listener.sentClusterIds.back() == 1);
 		REQUIRE(std::ranges::is_sorted(listener.sentClusterIds));
 	}
+
+	SECTION("StopProbing() lets the burst going out finish and drops the one behind it")
+	{
+		constexpr int64_t TestBitrate{ 900000 };
+
+		RTC::BWE::ProbingScheduler probingScheduler(std::addressof(listener), std::addressof(shared));
+
+		probingScheduler.CreateProbeClusters(
+		  { makeClusterConfig(0, nowUs, TestBitrate, 2 * 1000),
+			  makeClusterConfig(1, nowUs, TestBitrate, 2 * 1000) });
+
+		// Let the first shot out so that the first burst is under way.
+		REQUIRE(emitNextShot());
+		REQUIRE(probingScheduler.IsProbing());
+
+		probingScheduler.StopProbing();
+
+		while (emitNextShot())
+		{
+			// Nothing to do, the shots go out on their own.
+		}
+
+		REQUIRE(!probingScheduler.IsProbing());
+
+		// Only the burst that had begun went out.
+		REQUIRE(!listener.sentClusterIds.empty());
+		REQUIRE(listener.sentClusterIds.back() == 0);
+	}
+
+	SECTION("a burst asked for after StopProbing() goes out as usual")
+	{
+		constexpr int64_t TestBitrate{ 900000 };
+
+		RTC::BWE::ProbingScheduler probingScheduler(std::addressof(listener), std::addressof(shared));
+
+		probingScheduler.CreateProbeClusters({ makeClusterConfig(0, nowUs, TestBitrate, 2 * 1000) });
+		probingScheduler.StopProbing();
+
+		while (emitNextShot())
+		{
+			// Nothing to do, the shots go out on their own.
+		}
+
+		auto* timer = shared.GetTimer(TimerLabel);
+
+		REQUIRE(!timer->IsActive());
+
+		const auto sentShotsBefore = listener.sentLengths.size();
+
+		probingScheduler.CreateProbeClusters({ makeClusterConfig(1, nowUs, TestBitrate, 2 * 1000) });
+
+		// The timer runs again, so nothing of the stop was left behind.
+		REQUIRE(timer->IsActive());
+
+		while (emitNextShot())
+		{
+			// Nothing to do, the shots go out on their own.
+		}
+
+		REQUIRE(listener.sentLengths.size() > sentShotsBefore);
+		REQUIRE(listener.sentClusterIds.back() == 1);
+	}
 }
