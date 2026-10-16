@@ -20,8 +20,6 @@ namespace RTC
 		public:
 			struct Item
 			{
-				void Reset();
-
 				/**
 				 * Original packet.
 				 */
@@ -61,8 +59,7 @@ namespace RTC
 			};
 
 		private:
-			static Item* FillItem(
-			  Item* item, RTP::Packet* packet, const RTP::SharedPacket& sharedPacket, int64_t nowMs);
+			static Item* CreateItem(RTP::Packet* packet, const RTP::SharedPacket& sharedPacket, int64_t nowMs);
 
 		public:
 			RetransmissionBuffer(uint16_t maxItems, int64_t maxRetransmissionDelayMs, uint32_t clockRate);

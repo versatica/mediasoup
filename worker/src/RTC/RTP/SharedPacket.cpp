@@ -92,12 +92,14 @@ namespace RTC
 			}
 		}
 
+#ifdef MS_TEST
 		void SharedPacket::Reset()
 		{
 			MS_TRACE();
 
 			this->sharedPtr->reset(nullptr);
 		}
+#endif
 
 		void SharedPacket::AssertSamePacket(const RTP::Packet* otherPacket) const
 		{
