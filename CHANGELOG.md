@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Node: Fix the `Channel` buffer builder being left unusable when a message serialization fails ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Node: Fix the `Channel` buffer builder being left unusable when a message serialization fails ([PR #1999](https://github.com/versatica/mediasoup/pull/1999)).
   - Which made every subsequent request and notification in the worker fail.
   - Also validate `encoding.maxBitrate` in `transport.produce()`. It must be a non negative integer that fits in an `uint64`, and a `bigint` is now also accepted.
 
