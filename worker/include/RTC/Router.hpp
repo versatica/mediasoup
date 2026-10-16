@@ -54,6 +54,8 @@ namespace RTC
 		  const std::string& rtpObserverId, const std::string& method) const;
 		void CheckNoTransport(const std::string& transportId, const std::string& method) const;
 		void CheckNoRtpObserver(const std::string& rtpObserverId, const std::string& method) const;
+		static RTC::RTP::Packet* CreateRedPrimaryPacket(
+		  const RTC::RTP::Packet* packet, const RTC::Consumer* consumer);
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:

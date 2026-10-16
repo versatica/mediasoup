@@ -646,6 +646,8 @@ namespace RTC
 				const auto origSeq       = packet->GetSequenceNumber();
 				const auto origTimestamp = packet->GetTimestamp();
 				const auto origMarker    = packet->HasMarker();
+				// NOTE: Not necessarily the media payload type of this stream (i.e. RED).
+				const auto origPayloadType = packet->GetPayloadType();
 
 				std::string origMid;
 
@@ -693,7 +695,7 @@ namespace RTC
 				if (HasRtx())
 				{
 					// Restore the packet.
-					packet->RtxDecode(RtpStream::GetPayloadType(), item->ssrc);
+					packet->RtxDecode(origPayloadType, item->ssrc);
 				}
 
 				// Restore MID.

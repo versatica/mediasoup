@@ -515,6 +515,12 @@ export function getConsumableRtpParameters(
 		}
 	}
 
+	// Put RED codecs at the end so the first codec is always a media codec, no
+	// matter the order of codecs in the Producer.
+	consumableParams.codecs.sort(
+		(a, b) => Number(isRedCodec(a)) - Number(isRedCodec(b))
+	);
+
 	for (const capExt of caps.headerExtensions!) {
 		// Just take RTP header extension that can be used in Consumers.
 		if (
@@ -896,7 +902,7 @@ function isRtxCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {
 }
 
 function isRedCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {
-	return /.+\/red$/i.test(codec.mimeType);
+	return /^audio\/red$/i.test(codec.mimeType);
 }
 
 function isMediaCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {

@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <ankerl/unordered_dense.h>
 
 namespace RTC
@@ -65,6 +66,12 @@ namespace RTC
 				 *   is not modified.
 				 */
 				static bool Unwrap(RTP::Packet* packet);
+
+				/**
+				 * Process the given RED packet at codec level by inspecting its primary
+				 * block, whose codec is given (i.e. Opus DTX detection).
+				 */
+				static void ProcessRtpPacket(RTP::Packet* packet, const RTC::RtpCodecMimeType& mimeType);
 			};
 		} // namespace Codecs
 	} // namespace RTP

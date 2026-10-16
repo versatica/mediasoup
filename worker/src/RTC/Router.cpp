@@ -6,9 +6,12 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/ActiveSpeakerObserver.hpp"
 #include "RTC/AudioLevelObserver.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/DirectTransport.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
+#include "RTC/RTP/Codecs/RED.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
@@ -683,24 +686,52 @@ namespace RTC
 			// avoiding multiple allocations unless absolutely necessary.
 			// Clone only happens if needed and only once.
 			RTC::RTP::SharedPacket sharedPacket;
+			// If this is a RED packet, Consumers that don't support RED get a
+			// regular RTP packet with its primary block instead. It's created only
+			// if needed and only once, and it's shared by all those Consumers.
+			const bool isRedPacket = producer->GetMappedRedPayloadType() != 0 &&
+			                         packet->GetPayloadType() == producer->GetMappedRedPayloadType();
+			std::unique_ptr<RTC::RTP::Packet> primaryPacket;
+			RTC::RTP::SharedPacket primarySharedPacket;
+			bool primaryPacketCreated{ false };
 
 			for (auto* consumer : consumers)
 			{
+				auto* consumerPacket       = packet;
+				auto* consumerSharedPacket = std::addressof(sharedPacket);
+
+				if (isRedPacket && !consumer->SupportsPayloadType(packet->GetPayloadType()))
+				{
+					if (!primaryPacketCreated)
+					{
+						primaryPacketCreated = true;
+
+						primaryPacket.reset(CreateRedPrimaryPacket(packet, consumer));
+					}
+
+					// If the RED packet is invalid just let the Consumer discard it.
+					if (primaryPacket)
+					{
+						consumerPacket       = primaryPacket.get();
+						consumerSharedPacket = std::addressof(primarySharedPacket);
+					}
+				}
+
 				// Update MID RTP extension value.
 				const auto& mid = consumer->GetRtpParameters().mid;
 
 				if (!mid.empty())
 				{
-					packet->UpdateMid(mid);
+					consumerPacket->UpdateMid(mid);
 				}
 
-				consumer->SendRtpPacket(packet, sharedPacket);
+				consumer->SendRtpPacket(consumerPacket, *consumerSharedPacket);
 
 				// Assert that, if this Consumer filled sharedPacket or it was already
 				// filled, both packet and sharedPacket are the very same RTP packet.
-				if (sharedPacket.HasPacket())
+				if (consumerSharedPacket->HasPacket())
 				{
-					sharedPacket.AssertSamePacket(packet);
+					consumerSharedPacket->AssertSamePacket(consumerPacket);
 				}
 			}
 		}
@@ -716,6 +747,56 @@ namespace RTC
 				rtpObserver->ReceiveRtpPacket(producer, packet);
 			}
 		}
+	}
+
+	RTC::RTP::Packet* Router::CreateRedPrimaryPacket(
+	  const RTC::RTP::Packet* packet, const RTC::Consumer* consumer)
+	{
+		MS_TRACE();
+
+		// NOTE: Buffer must be 4-byte aligned since RTP packet parsing casts it to
+		// structs.
+		alignas(4) static thread_local uint8_t buffer[RTC::Consts::MtuSize + 100];
+
+		if (packet->GetLength() > sizeof(buffer))
+		{
+			MS_WARN_TAG(rtp, "RED packet too big [length:%zu]", packet->GetLength());
+
+			return nullptr;
+		}
+
+		// Don't modify the original packet since it's also sent to Consumers that
+		// support RED and may be stored for retransmission.
+		std::unique_ptr<RTC::RTP::Packet> primaryPacket(packet->Clone(buffer, sizeof(buffer)));
+
+		if (!RTC::RTP::Codecs::RED::Unwrap(primaryPacket.get()))
+		{
+			MS_WARN_TAG(rtp, "invalid RED packet");
+
+			return nullptr;
+		}
+
+#ifdef MS_RTC_LOGGER_RTP
+		primaryPacket->logger = packet->logger;
+#endif
+
+		// Process the resulting packet at codec level (i.e. Opus DTX detection).
+		// NOTE: All Consumers use the same payload types (those of the Router).
+		for (const auto& codec : consumer->GetRtpParameters().codecs)
+		{
+			if (codec.payloadType == primaryPacket->GetPayloadType())
+			{
+				std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+				  templateDependencyStructure;
+
+				RTC::RTP::Codecs::Tools::ProcessRtpPacket(
+				  primaryPacket.get(), codec.mimeType, templateDependencyStructure);
+
+				break;
+			}
+		}
+
+		return primaryPacket.release();
 	}
 
 	uint8_t Router::OnTransportNeedWorstRemoteFractionLost(
@@ -769,9 +850,6 @@ namespace RTC
 
 		consumers.insert(consumer);
 		this->mapConsumerProducer[consumer] = producer;
-
-		// Provide the Consumer with the payload type of RED packets (if any).
-		consumer->ProducerRedPayloadType(producer->GetMappedRedPayloadType());
 
 		// Get all streams in the Producer and provide the Consumer with them.
 		for (const auto& kv : producer->GetRtpStreams())

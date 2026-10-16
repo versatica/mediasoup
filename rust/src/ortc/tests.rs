@@ -823,17 +823,19 @@ fn red_codec_succeeds() {
         &rtp_mapping,
     );
 
+    // RED codec is moved after the media codec even if the Producer lists it first.
     // RED parameters are not kept but Opus parameters are.
-    assert_eq!(consumable_rtp_parameters.codecs[0].payload_type(), 101);
-    assert!(consumable_rtp_parameters.codecs[0].is_red());
+    assert_eq!(consumable_rtp_parameters.codecs[0].payload_type(), 100);
+    assert!(consumable_rtp_parameters.codecs[0].is_media());
     assert_eq!(
         consumable_rtp_parameters.codecs[0].parameters(),
-        &RtpCodecParametersParameters::default()
+        &RtpCodecParametersParameters::from([("useinbandfec", 1_u32.into())])
     );
-    assert_eq!(consumable_rtp_parameters.codecs[1].payload_type(), 100);
+    assert_eq!(consumable_rtp_parameters.codecs[1].payload_type(), 101);
+    assert!(consumable_rtp_parameters.codecs[1].is_red());
     assert_eq!(
         consumable_rtp_parameters.codecs[1].parameters(),
-        &RtpCodecParametersParameters::from([("useinbandfec", 1_u32.into())])
+        &RtpCodecParametersParameters::default()
     );
 
     let opus_capability = RtpCodecCapability::Audio {
@@ -871,8 +873,8 @@ fn red_codec_succeeds() {
         .expect("Failed to get consumer RTP parameters");
 
         assert_eq!(consumer_rtp_parameters.codecs.len(), 2);
-        assert!(consumer_rtp_parameters.codecs[0].is_red());
-        assert!(consumer_rtp_parameters.codecs[1].is_media());
+        assert!(consumer_rtp_parameters.codecs[0].is_media());
+        assert!(consumer_rtp_parameters.codecs[1].is_red());
     }
 
     // Remote endpoint not supporting RED.

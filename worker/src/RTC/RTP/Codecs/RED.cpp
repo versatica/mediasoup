@@ -3,6 +3,9 @@
 
 #include "RTC/RTP/Codecs/RED.hpp"
 #include "Logger.hpp"
+#include "RTC/RTP/Codecs/Opus.hpp"
+#include <array>
+#include <utility> // std::pair
 
 namespace RTC
 {
@@ -14,6 +17,8 @@ namespace RTC
 
 			static constexpr size_t NonFinalBlockHeaderLength{ 4 };
 			static constexpr size_t FinalBlockHeaderLength{ 1 };
+			// Maximum number of blocks (redundant ones plus the primary one).
+			static constexpr size_t MaxBlocks{ 32 };
 
 			/* Static helpers. */
 
@@ -105,40 +110,57 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				bool allMapped{ true };
+				// Offset and mapped payload type of each block header, so the payload is
+				// just modified once it has been entirely validated.
+				std::array<std::pair<size_t, uint8_t>, MaxBlocks> mappedBlocks;
+				size_t numBlocks{ 0 };
+				bool valid{ true };
 
-				// First validate the whole payload without modifying it.
 				auto primaryBlockOffset = IterateBlockHeaders(
 				  data,
 				  len,
-				  [data, &mapping, &allMapped](size_t offset)
+				  [data, &mapping, &mappedBlocks, &numBlocks, &valid](size_t offset)
 				  {
-					  const uint8_t payloadType = data[offset] & 0x7F;
+					  if (!valid)
+					  {
+						  return;
+					  }
 
-					  if (mapping.find(payloadType) == mapping.end())
+					  if (numBlocks == MaxBlocks)
+					  {
+						  MS_WARN_DEV("too many blocks");
+
+						  valid = false;
+
+						  return;
+					  }
+
+					  const uint8_t payloadType = data[offset] & 0x7F;
+					  auto it                   = mapping.find(payloadType);
+
+					  if (it == mapping.end())
 					  {
 						  MS_WARN_DEV("unknown block payload type [payloadType:%" PRIu8 "]", payloadType);
 
-						  allMapped = false;
+						  valid = false;
+
+						  return;
 					  }
+
+					  mappedBlocks[numBlocks++] = { offset, it->second };
 				  });
 
-				if (!primaryBlockOffset.has_value() || !allMapped)
+				if (!primaryBlockOffset.has_value() || !valid)
 				{
 					return false;
 				}
 
-				// Then rewrite block payload types.
-				IterateBlockHeaders(
-				  data,
-				  len,
-				  [data, &mapping](size_t offset)
-				  {
-					  const uint8_t payloadType       = data[offset] & 0x7F;
-					  const uint8_t mappedPayloadType = mapping.at(payloadType);
+				for (size_t i{ 0 }; i < numBlocks; ++i)
+				{
+					const auto [offset, mappedPayloadType] = mappedBlocks[i];
 
-					  data[offset] = (data[offset] & 0x80) | (mappedPayloadType & 0x7F);
-				  });
+					data[offset] = (data[offset] & 0x80) | (mappedPayloadType & 0x7F);
+				}
 
 				return true;
 			}
@@ -162,6 +184,41 @@ namespace RTC
 				packet->SetPayloadType(payloadType);
 
 				return true;
+			}
+
+			void RED::ProcessRtpPacket(RTP::Packet* packet, const RTC::RtpCodecMimeType& mimeType)
+			{
+				MS_TRACE();
+
+				switch (mimeType.subtype)
+				{
+					case RTC::RtpCodecMimeType::Subtype::OPUS:
+					case RTC::RtpCodecMimeType::Subtype::MULTIOPUS:
+					{
+						auto* data = packet->GetPayload();
+						auto len   = packet->GetPayloadLength();
+						uint8_t payloadType;
+						size_t offset;
+
+						if (!RED::GetPrimaryBlock(data, len, payloadType, offset))
+						{
+							return;
+						}
+
+						auto* payloadDescriptor = Opus::Parse(data + offset, len - offset);
+
+						if (!payloadDescriptor)
+						{
+							return;
+						}
+
+						packet->SetPayloadDescriptorHandler(new Opus::PayloadDescriptorHandler(payloadDescriptor));
+
+						break;
+					}
+
+					default:;
+				}
 			}
 		} // namespace Codecs
 	} // namespace RTP

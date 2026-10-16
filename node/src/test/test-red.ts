@@ -82,22 +82,46 @@ function buildRtpPacket({
 	timestamp,
 	ssrc,
 	payload,
+	extensions = [],
 }: {
 	payloadType: number;
 	seq: number;
 	timestamp: number;
 	ssrc: number;
 	payload: Buffer;
+	// One-Byte header extensions.
+	extensions?: { id: number; value: Buffer }[];
 }): Buffer {
 	const header = Buffer.alloc(12);
 
-	header.writeUInt8(0x80, 0);
+	header.writeUInt8(extensions.length > 0 ? 0x90 : 0x80, 0);
 	header.writeUInt8(payloadType & 0x7f, 1);
 	header.writeUInt16BE(seq, 2);
 	header.writeUInt32BE(timestamp, 4);
 	header.writeUInt32BE(ssrc, 8);
 
-	return Buffer.concat([header, payload]);
+	if (extensions.length === 0) {
+		return Buffer.concat([header, payload]);
+	}
+
+	let extensionsData = Buffer.concat(
+		extensions.map(({ id, value }) =>
+			Buffer.concat([Buffer.from([(id << 4) | (value.length - 1)]), value])
+		)
+	);
+
+	// Pad to 4 bytes.
+	extensionsData = Buffer.concat([
+		extensionsData,
+		Buffer.alloc((4 - (extensionsData.length % 4)) % 4),
+	]);
+
+	const extensionHeader = Buffer.alloc(4);
+
+	extensionHeader.writeUInt16BE(0xbede, 0);
+	extensionHeader.writeUInt16BE(extensionsData.length / 4, 2);
+
+	return Buffer.concat([header, extensionHeader, extensionsData, payload]);
 }
 
 function getPayloadType(rtpPacket: Buffer): number {
@@ -321,4 +345,219 @@ test('RED packets are forwarded to Consumers supporting RED and unwrapped for ot
 			packets[1]!.readUInt16BE(2)
 		);
 	}
+}, 4000);
+
+test('consumer.rtpParameters.codecs[0] is the media codec even if the Producer lists RED first', async () => {
+	const audioProducer = await ctx.directTransport!.produce({
+		kind: 'audio',
+		rtpParameters: {
+			codecs: [...ctx.audioProducerOptions.rtpParameters.codecs].reverse(),
+			encodings: [{ ssrc: 22222222 }],
+		},
+	});
+
+	const consumer = await ctx.directTransport!.consume({
+		producerId: audioProducer.id,
+		rtpCapabilities: ctx.router!.rtpCapabilities,
+	});
+
+	expect(consumer.rtpParameters.codecs.map(codec => codec.mimeType)).toEqual([
+		'audio/opus',
+		'audio/red',
+	]);
+}, 2000);
+
+test('RED packets create the Producer RTP stream when there is no signaled SSRC', async () => {
+	for (const { mid, encoding, extensions } of [
+		// Single encoding without SSRC nor RID.
+		{
+			mid: 'AUDIO1',
+			encoding: {},
+			extensions: [{ id: 1, value: Buffer.from('AUDIO1') }],
+		},
+		// Single encoding with RID.
+		{
+			mid: 'AUDIO2',
+			encoding: { rid: 'r0' },
+			extensions: [
+				{ id: 1, value: Buffer.from('AUDIO2') },
+				{ id: 2, value: Buffer.from('r0') },
+			],
+		},
+	]) {
+		const audioProducer = await ctx.directTransport!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				mid,
+				codecs: ctx.audioProducerOptions.rtpParameters.codecs,
+				headerExtensions: [
+					{ uri: 'urn:ietf:params:rtp-hdrext:sdes:mid', id: 1 },
+					{ uri: 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id', id: 2 },
+				],
+				encodings: [encoding],
+			},
+		});
+
+		const consumer = await ctx.directTransport!.consume({
+			producerId: audioProducer.id,
+			rtpCapabilities: ctx.router!.rtpCapabilities,
+		});
+
+		const packetPromise: Promise<Buffer> = new Promise(resolve =>
+			consumer.once('rtp', resolve)
+		);
+
+		// Just send RED packets, as endpoints may do.
+		audioProducer.send(
+			buildRtpPacket({
+				payloadType: RED_PAYLOAD_TYPE,
+				seq: 1000,
+				timestamp: 960000,
+				ssrc: 33333333,
+				payload: buildRedPayload(OPUS_PAYLOAD_TYPE),
+				extensions,
+			})
+		);
+
+		const packet = await packetPromise;
+		const routerRedPayloadType = ctx.router!.rtpCapabilities.codecs!.find(
+			codec => codec.mimeType.toLowerCase() === 'audio/red'
+		)!.preferredPayloadType!;
+
+		expect(getPayloadType(packet)).toBe(routerRedPayloadType);
+
+		audioProducer.close();
+	}
+}, 4000);
+
+test('invalid RED packets are discarded', async () => {
+	const audioProducer = await ctx.directTransport!.produce(
+		ctx.audioProducerOptions
+	);
+
+	const routerOpusPayloadType = ctx.router!.rtpCapabilities.codecs!.find(
+		codec => codec.mimeType.toLowerCase() === 'audio/opus'
+	)!.preferredPayloadType!;
+
+	const consumer = await ctx.directTransport!.consume({
+		producerId: audioProducer.id,
+		rtpCapabilities: ctx.router!.rtpCapabilities,
+	});
+
+	const packetPromise: Promise<Buffer> = new Promise(resolve =>
+		consumer.once('rtp', resolve)
+	);
+
+	const ssrc = ctx.audioProducerOptions.rtpParameters.encodings![0]!.ssrc!;
+
+	// RED packet with a block payload type unknown to the Producer.
+	audioProducer.send(
+		buildRtpPacket({
+			payloadType: RED_PAYLOAD_TYPE,
+			seq: 1000,
+			timestamp: 960000,
+			ssrc,
+			payload: buildRedPayload(5),
+		})
+	);
+
+	// RED packet with a truncated block header.
+	audioProducer.send(
+		buildRtpPacket({
+			payloadType: RED_PAYLOAD_TYPE,
+			seq: 1001,
+			timestamp: 960960,
+			ssrc,
+			payload: Buffer.from([0x80 | OPUS_PAYLOAD_TYPE, 0x0f]),
+		})
+	);
+
+	// Valid Opus packet.
+	audioProducer.send(
+		buildRtpPacket({
+			payloadType: OPUS_PAYLOAD_TYPE,
+			seq: 1002,
+			timestamp: 961920,
+			ssrc,
+			payload: primaryBlockData,
+		})
+	);
+
+	// The first packet received by the Consumer must be the Opus one.
+	const packet = await packetPromise;
+
+	expect(getPayloadType(packet)).toBe(routerOpusPayloadType);
+	expect(getPayload(packet)).toEqual(primaryBlockData);
+}, 4000);
+
+test('RED packets whose primary block is DTX are discarded if ignoreDtx is set', async () => {
+	const audioProducer = await ctx.directTransport!.produce(
+		ctx.audioProducerOptions
+	);
+
+	const routerRtpCapabilities = ctx.router!.rtpCapabilities;
+	const redConsumer = await ctx.directTransport!.consume({
+		producerId: audioProducer.id,
+		rtpCapabilities: routerRtpCapabilities,
+		ignoreDtx: true,
+	});
+	const nonRedConsumer = await ctx.directTransport!.consume({
+		producerId: audioProducer.id,
+		rtpCapabilities: {
+			codecs: routerRtpCapabilities.codecs!.filter(
+				codec => codec.mimeType.toLowerCase() !== 'audio/red'
+			),
+			headerExtensions: routerRtpCapabilities.headerExtensions,
+		},
+		ignoreDtx: true,
+	});
+
+	const redConsumerPacketPromise: Promise<Buffer> = new Promise(resolve =>
+		redConsumer.once('rtp', resolve)
+	);
+	const nonRedConsumerPacketPromise: Promise<Buffer> = new Promise(resolve =>
+		nonRedConsumer.once('rtp', resolve)
+	);
+
+	const ssrc = ctx.audioProducerOptions.rtpParameters.encodings![0]!.ssrc!;
+	// Opus code 0 TOC byte only, which means DTX.
+	const dtxPrimaryBlockData = Buffer.from([0x78]);
+
+	// RED packet whose primary block is DTX.
+	audioProducer.send(
+		buildRtpPacket({
+			payloadType: RED_PAYLOAD_TYPE,
+			seq: 1000,
+			timestamp: 960000,
+			ssrc,
+			payload: Buffer.concat([
+				Buffer.from([0x80 | OPUS_PAYLOAD_TYPE, 0x0f, 0x00, 0x04]),
+				Buffer.from([OPUS_PAYLOAD_TYPE]),
+				primaryBlockData,
+				dtxPrimaryBlockData,
+			]),
+		})
+	);
+
+	// Regular RED packet.
+	audioProducer.send(
+		buildRtpPacket({
+			payloadType: RED_PAYLOAD_TYPE,
+			seq: 1001,
+			timestamp: 960960,
+			ssrc,
+			payload: buildRedPayload(OPUS_PAYLOAD_TYPE),
+		})
+	);
+
+	const [redConsumerPacket, nonRedConsumerPacket] = await Promise.all([
+		redConsumerPacketPromise,
+		nonRedConsumerPacketPromise,
+	]);
+
+	// The first packet received by both Consumers must be the regular one.
+	expect(getPayload(redConsumerPacket).length).toBe(
+		buildRedPayload(OPUS_PAYLOAD_TYPE).length
+	);
+	expect(getPayload(nonRedConsumerPacket)).toEqual(primaryBlockData);
 }, 4000);

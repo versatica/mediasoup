@@ -1260,6 +1260,13 @@ namespace RTC
 				return false;
 			}
 
+			// Process the RED packet at codec level (i.e. Opus DTX detection in its
+			// primary block) so Consumers supporting RED can honor ignoreDtx.
+			if (this->redPayloadType != 0 && payloadType == this->redPayloadType)
+			{
+				RTC::RTP::Codecs::RED::ProcessRtpPacket(packet, rtpStream->GetMimeType());
+			}
+
 			packet->SetPayloadType(mappedPayloadType);
 		}
 

@@ -666,6 +666,12 @@ pub(crate) fn get_consumable_rtp_parameters(
         }
     }
 
+    // Put RED codecs at the end so the first codec is always a media codec, no matter the order of
+    // codecs in the Producer.
+    consumable_params
+        .codecs
+        .sort_by_key(RtpCodecParameters::is_red);
+
     for cap_ext in &caps.header_extensions {
         // Just take RTP header extension that can be used in Consumers.
         if cap_ext.kind != kind {

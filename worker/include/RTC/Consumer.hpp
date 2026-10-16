@@ -88,6 +88,10 @@ namespace RTC
 		{
 			return this->kind;
 		}
+		bool SupportsPayloadType(uint8_t payloadType) const
+		{
+			return this->supportedCodecPayloadTypes[payloadType & 0x7F];
+		}
 		const RTC::RtpParameters& GetRtpParameters() const
 		{
 			return this->rtpParameters;
@@ -148,7 +152,6 @@ namespace RTC
 		void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc);
 		void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc);
 		void ProducerRtpStreamScores(const std::vector<uint8_t>* scores);
-		void ProducerRedPayloadType(uint8_t payloadType);
 		void ProducerRtpStreamScore(RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore);
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first);
 		void ProducerSpatialLayerActivityChanged(
@@ -218,7 +221,6 @@ namespace RTC
 
 	private:
 		void CreateRtpStreams();
-		bool SendRedPacketPrimaryBlock(RTC::RTP::Packet* packet);
 		static void StorePacketInTargetLayerRetransmissionBuffer(
 		  RetransmissionBuffer& targetLayerRetransmissionBuffer,
 		  RTC::RTP::Packet* packet,
@@ -255,8 +257,6 @@ namespace RTC
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
 		std::bitset<128> supportedCodecPayloadTypes;
-		// Payload type of RED packets sent by the Producer (0 if none).
-		uint8_t producerRedPayloadType{ 0 };
 		int64_t lastRtcpSentAtUs{ 0 };
 		int64_t maxRtcpIntervalMs{ 0 };
 		bool externallyManagedBitrate{ false };

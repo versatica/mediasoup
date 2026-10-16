@@ -151,18 +151,6 @@ impl RtpCodecCapabilityFinalized {
         }
     }
 
-    pub fn is_red(&self) -> bool {
-        match self {
-            Self::Audio { mime_type, .. } => mime_type == &MimeTypeAudio::Red,
-            Self::Video { .. } => false,
-        }
-    }
-
-    /// Whether this is a media codec (neither RTX nor RED).
-    pub fn is_media(&self) -> bool {
-        !self.is_rtx() && !self.is_red()
-    }
-
     pub fn clock_rate(&self) -> NonZeroU32 {
         let (Self::Audio { clock_rate, .. } | Self::Video { clock_rate, .. }) = self;
         *clock_rate
