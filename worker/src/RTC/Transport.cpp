@@ -1593,6 +1593,35 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_USE_BUILTIN_BWE
+		// NOTE: Unlike the receiving side, this one does not wait for a Consumer that
+		// negotiated anything in particular, since a peer that negotiated neither
+		// mechanism still has its loss reported in the Receiver Reports and can still
+		// be given a target out of it.
+		// NOTE: This goes before telling the Consumers, since being told leads them to
+		// ask for a bitrate round and there must be someone to answer it.
+		if (!this->senderTransportCongestionController && IsCongestionControlSupported())
+		{
+			MS_DEBUG_TAG(bwe, "enabling SenderTransportCongestionController");
+
+			this->senderTransportCongestionController =
+			  std::make_shared<RTC::BWE::SenderTransportCongestionController>(
+			    this,
+			    this->shared,
+			    RTC::BWE::SenderTransportCongestionController::SenderTransportCongestionControllerOptions{
+			      .startBitrate = this->initialAvailableOutgoingBitrate });
+		}
+
+		if (this->senderTransportCongestionController)
+		{
+			// NOTE: Now that the Transport is connected we know the packet overhead when
+			// in the wire. We must pass it to the sender congestion controller before it
+			// starts the RTP probing.
+			this->senderTransportCongestionController->SetPacketOverhead(GetPacketOverhead());
+			this->senderTransportCongestionController->SetNetworkAvailable(true);
+		}
+#endif
+
 		// Tell all Consumers.
 		for (auto& kv : this->mapConsumers)
 		{
@@ -1610,32 +1639,7 @@ namespace RTC
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(RTC::RTCP::MaxVideoIntervalMs / 2);
 
-#ifdef MS_USE_BUILTIN_BWE
-		// NOTE: Unlike the receiving side, this one does not wait for a Consumer that
-		// negotiated anything in particular, since a peer that negotiated neither
-		// mechanism still has its loss reported in the Receiver Reports and can still
-		// be given a target out of it.
-		if (!this->senderTransportCongestionController && IsCongestionControlSupported())
-		{
-			MS_DEBUG_TAG(bwe, "enabling SenderTransportCongestionController");
-
-			this->senderTransportCongestionController =
-			  std::make_unique<RTC::BWE::SenderTransportCongestionController>(
-			    this,
-			    this->shared,
-			    RTC::BWE::SenderTransportCongestionController::SenderTransportCongestionControllerOptions{
-			      .startBitrate = this->initialAvailableOutgoingBitrate });
-		}
-
-		if (this->senderTransportCongestionController)
-		{
-			// NOTE: Now that the Transport is connected we know the packet overhead when
-			// in the wire. We must pass it to the sender congestion controller before it
-			// starts the RTP probing.
-			this->senderTransportCongestionController->SetPacketOverhead(GetPacketOverhead());
-			this->senderTransportCongestionController->SetNetworkAvailable(true);
-		}
-#else
+#ifndef MS_USE_BUILTIN_BWE
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
 		{
@@ -2906,15 +2910,29 @@ namespace RTC
 
 			const size_t size = packet->GetLength();
 
+			// NOTE: The socket written to may not belong to this Transport and may
+			// outlive it, in which case the send callback runs once this Transport is
+			// gone, so it must hold nothing of it. Same in every other send callback.
+			const std::weak_ptr<RTC::BWE::SenderTransportCongestionController>
+			  senderTransportCongestionControllerWeakPtr(this->senderTransportCongestionController);
+
+			auto* shared = this->shared;
+
 			SendRtpPacket(
 			  consumer,
 			  packet,
-			  [this, sequenceNumber, size](bool sent) -> void
+			  [senderTransportCongestionControllerWeakPtr, shared, sequenceNumber, size](bool sent) -> void
 			  {
 				  if (sent)
 				  {
-					  this->senderTransportCongestionController->OnRtpPacketSent(
-					    sequenceNumber, size, this->shared->GetTimeUs());
+					  auto senderTransportCongestionController =
+					    senderTransportCongestionControllerWeakPtr.lock();
+
+					  if (senderTransportCongestionController)
+					  {
+						  senderTransportCongestionController->OnRtpPacketSent(
+						    sequenceNumber, size, shared->GetTimeUs());
+					  }
 				  }
 			  });
 		}
@@ -3003,15 +3021,26 @@ namespace RTC
 
 			const size_t size = packet->GetLength();
 
+			const std::weak_ptr<RTC::BWE::SenderTransportCongestionController>
+			  senderTransportCongestionControllerWeakPtr(this->senderTransportCongestionController);
+
+			auto* shared = this->shared;
+
 			SendRtpPacket(
 			  consumer,
 			  packet,
-			  [this, sequenceNumber, size](bool sent) -> void
+			  [senderTransportCongestionControllerWeakPtr, shared, sequenceNumber, size](bool sent) -> void
 			  {
 				  if (sent)
 				  {
-					  this->senderTransportCongestionController->OnRtpPacketSent(
-					    sequenceNumber, size, this->shared->GetTimeUs());
+					  auto senderTransportCongestionController =
+					    senderTransportCongestionControllerWeakPtr.lock();
+
+					  if (senderTransportCongestionController)
+					  {
+						  senderTransportCongestionController->OnRtpPacketSent(
+						    sequenceNumber, size, shared->GetTimeUs());
+					  }
 				  }
 			  });
 		}
@@ -3709,15 +3738,26 @@ namespace RTC
 
 		const size_t size = packet->GetLength();
 
+		const std::weak_ptr<RTC::BWE::SenderTransportCongestionController>
+		  senderTransportCongestionControllerWeakPtr(this->senderTransportCongestionController);
+
+		auto* shared = this->shared;
+
 		SendRtpPacket(
 		  nullptr,
 		  packet,
-		  [this, sequenceNumber, size](bool sent) -> void
+		  [senderTransportCongestionControllerWeakPtr, shared, sequenceNumber, size](bool sent) -> void
 		  {
 			  if (sent)
 			  {
-				  this->senderTransportCongestionController->OnRtpPacketSent(
-				    sequenceNumber, size, this->shared->GetTimeUs());
+				  auto senderTransportCongestionController =
+				    senderTransportCongestionControllerWeakPtr.lock();
+
+				  if (senderTransportCongestionController)
+				  {
+					  senderTransportCongestionController->OnRtpPacketSent(
+					    sequenceNumber, size, shared->GetTimeUs());
+				  }
 			  }
 		  });
 	}

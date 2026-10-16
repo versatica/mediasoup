@@ -1178,18 +1178,22 @@ namespace RTC
 			return 0;
 		}
 
+		int64_t desiredBitrate{ 0 };
+
 		// What a Consumer that cannot adapt puts out is what it wants, since it has
 		// no way of wanting anything else. Leaving it out would ask the estimator
 		// for less than what is going to be sent, while the allocation takes its
 		// bitrate off the top all the same.
 		if (!IsBitrateAdaptable())
 		{
-			return GetOutputBitrate();
+			desiredBitrate = GetOutputBitrate();
 		}
+		else
+		{
+			const int64_t nowMs = this->shared->GetTimeMs();
 
-		const int64_t nowMs = this->shared->GetTimeMs();
-
-		const auto desiredBitrate = this->producerStreamManager->GetDesiredBitrate(nowMs);
+			desiredBitrate = this->producerStreamManager->GetDesiredBitrate(nowMs);
+		}
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
 		// greater than computed one, then use it.

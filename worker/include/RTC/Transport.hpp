@@ -423,7 +423,10 @@ namespace RTC
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
 #ifdef MS_USE_BUILTIN_BWE
-		std::unique_ptr<RTC::BWE::SenderTransportCongestionController> senderTransportCongestionController{
+		// NOTE: Shared pointer rather than unique because the send callbacks hold a
+		// weak reference to it, since they may be invoked after this Transport is
+		// gone.
+		std::shared_ptr<RTC::BWE::SenderTransportCongestionController> senderTransportCongestionController{
 			nullptr
 		};
 		std::unique_ptr<RTC::BWE::ReceiverTransportCongestionController>

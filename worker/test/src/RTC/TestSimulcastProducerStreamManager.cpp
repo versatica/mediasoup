@@ -1159,8 +1159,13 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 #ifdef MS_USE_BUILTIN_BWE
 		// Checking the layers now means asking the transport for a new round rather
-		// than moving the target.
+		// than moving the target, so the layer picked is asked for separately.
 		REQUIRE(listener.needBitrateChangeCount > needBitrateChangeCountBefore);
+
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == true);
+		REQUIRE(newTargetLayers.spatial == 1);
 #else
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
 #endif
