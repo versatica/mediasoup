@@ -583,21 +583,5 @@ namespace RTC
 
 			return static_cast<uint32_t>(diffTs * 1000 / this->clockRate) > this->maxRetransmissionDelayMs;
 		}
-
-		void RetransmissionBuffer::Item::Reset()
-		{
-			MS_TRACE();
-
-			// NOTE: Here we MUST NOT call this->sharedPacket.Reset() because that
-			// would affect all copies of this SharedRtpPacket by removing their stored
-			// packet. We have to replace it entirely.
-			this->sharedPacket   = RTP::SharedPacket();
-			this->ssrc           = 0;
-			this->sequenceNumber = 0;
-			this->timestamp      = 0;
-			this->storedAtMs     = 0;
-			this->resentAtMs     = 0;
-			this->sentTimes      = 0;
-		}
 	} // namespace RTP
 } // namespace RTC

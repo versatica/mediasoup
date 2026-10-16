@@ -20,8 +20,6 @@ namespace RTC
 		public:
 			struct Item
 			{
-				void Reset();
-
 				/**
 				 * Original packet.
 				 */
