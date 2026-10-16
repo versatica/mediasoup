@@ -561,3 +561,97 @@ test('RED packets whose primary block is DTX are discarded if ignoreDtx is set',
 	);
 	expect(getPayload(nonRedConsumerPacket)).toEqual(primaryBlockData);
 }, 4000);
+
+test('padding-only RED packets are not treated as invalid RED packets', async () => {
+	const audioProducer = await ctx.directTransport!.produce(
+		ctx.audioProducerOptions
+	);
+
+	const routerRtpCapabilities = ctx.router!.rtpCapabilities;
+	const redConsumer = await ctx.directTransport!.consume({
+		producerId: audioProducer.id,
+		rtpCapabilities: routerRtpCapabilities,
+	});
+	const nonRedConsumer = await ctx.directTransport!.consume({
+		producerId: audioProducer.id,
+		rtpCapabilities: {
+			codecs: routerRtpCapabilities.codecs!.filter(
+				codec => codec.mimeType.toLowerCase() !== 'audio/red'
+			),
+			headerExtensions: routerRtpCapabilities.headerExtensions,
+		},
+	});
+
+	// Collect all packets until two packets with payload are received.
+	const collect = (consumer: mediasoup.types.Consumer): Promise<Buffer[]> =>
+		new Promise<Buffer[]>(resolve => {
+			const packets: Buffer[] = [];
+
+			consumer.on('rtp', (packet: Buffer) => {
+				packets.push(packet);
+
+				if (packets.filter(p => getPayload(p).length > 0).length === 2) {
+					resolve(packets);
+				}
+			});
+		});
+
+	const redConsumerPacketsPromise = collect(redConsumer);
+	const nonRedConsumerPacketsPromise = collect(nonRedConsumer);
+
+	const ssrc = ctx.audioProducerOptions.rtpParameters.encodings![0]!.ssrc!;
+
+	audioProducer.send(
+		buildRtpPacket({
+			payloadType: RED_PAYLOAD_TYPE,
+			seq: 1000,
+			timestamp: 960000,
+			ssrc,
+			payload: buildRedPayload(OPUS_PAYLOAD_TYPE),
+		})
+	);
+
+	// Padding-only packet with RED payload type (as sent by Chrome for BWE).
+	const paddingOnlyPacket = buildRtpPacket({
+		payloadType: RED_PAYLOAD_TYPE,
+		seq: 1001,
+		timestamp: 960000,
+		ssrc,
+		payload: Buffer.concat([Buffer.alloc(49), Buffer.from([50])]),
+	});
+
+	// Set the padding bit.
+	paddingOnlyPacket.writeUInt8(paddingOnlyPacket.readUInt8(0) | 0x20, 0);
+
+	audioProducer.send(paddingOnlyPacket);
+
+	audioProducer.send(
+		buildRtpPacket({
+			payloadType: RED_PAYLOAD_TYPE,
+			seq: 1002,
+			timestamp: 960960,
+			ssrc,
+			payload: buildRedPayload(OPUS_PAYLOAD_TYPE),
+		})
+	);
+
+	const [redConsumerPackets, nonRedConsumerPackets] = await Promise.all([
+		redConsumerPacketsPromise,
+		nonRedConsumerPacketsPromise,
+	]);
+
+	// No sequence number gap must be seen by receivers (the padding-only packet
+	// may be discarded or forwarded, but never leave a hole).
+	for (const packets of [redConsumerPackets, nonRedConsumerPackets]) {
+		const seqs = packets.map(p => p.readUInt16BE(2));
+
+		for (let idx = 1; idx < seqs.length; ++idx) {
+			expect((seqs[idx]! - seqs[idx - 1]! + 65536) % 65536).toBe(1);
+		}
+	}
+
+	// The Producer must not discard the padding-only packet as invalid.
+	const producerStats = await audioProducer.getStats();
+
+	expect(producerStats[0]!.packetsDiscarded).toBe(0);
+}, 4000);

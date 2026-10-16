@@ -1250,19 +1250,28 @@ namespace RTC
 			const uint8_t mappedPayloadType = it->second;
 
 			// If this is a RED packet, also mangle the payload type of its blocks.
+			// NOTE: Ignore padding-only packets (endpoints send them with the RED
+			// payload type for bandwidth probing).
+			const bool isRedPacket = this->redPayloadType != 0 && payloadType == this->redPayloadType &&
+			                         packet->GetPayloadLength() > 0;
+
 			if (
-			  this->redPayloadType != 0 && payloadType == this->redPayloadType &&
-			  !RTC::RTP::Codecs::RED::MapPayloadTypes(
-			    packet->GetPayload(), packet->GetPayloadLength(), this->rtpMapping.codecs))
+			  isRedPacket && !RTC::RTP::Codecs::RED::MapPayloadTypes(
+			                   packet->GetPayload(), packet->GetPayloadLength(), this->rtpMapping.codecs))
 			{
-				MS_WARN_TAG(rtp, "invalid RED packet or unknown block payload type");
+				MS_WARN_TAG(
+				  rtp,
+				  "invalid RED packet or unknown block payload type [payloadLength:%zu, paddingLength:%" PRIu8
+				  "]",
+				  packet->GetPayloadLength(),
+				  packet->GetPaddingLength());
 
 				return false;
 			}
 
 			// Process the RED packet at codec level (i.e. Opus DTX detection in its
 			// primary block) so Consumers supporting RED can honor ignoreDtx.
-			if (this->redPayloadType != 0 && payloadType == this->redPayloadType)
+			if (isRedPacket)
 			{
 				RTC::RTP::Codecs::RED::ProcessRtpPacket(packet, rtpStream->GetMimeType());
 			}
