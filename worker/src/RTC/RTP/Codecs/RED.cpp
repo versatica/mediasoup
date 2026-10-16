@@ -31,7 +31,7 @@ namespace RTC
 			 *   std::nullopt if the RED payload is invalid.
 			 */
 			template<typename F>
-			static std::optional<size_t> IterateBlockHeaders(const uint8_t* data, size_t len, F&& fn)
+			static std::optional<size_t> iterateBlockHeaders(const uint8_t* data, size_t len, const F& fn)
 			{
 				size_t offset{ 0 };
 				size_t blocksLength{ 0 };
@@ -86,7 +86,7 @@ namespace RTC
 
 				size_t lastBlockHeaderOffset{ 0 };
 
-				auto primaryBlockOffset = IterateBlockHeaders(
+				auto primaryBlockOffset = iterateBlockHeaders(
 				  data,
 				  len,
 				  [&lastBlockHeaderOffset](size_t offset)
@@ -116,7 +116,7 @@ namespace RTC
 				size_t numBlocks{ 0 };
 				bool valid{ true };
 
-				auto primaryBlockOffset = IterateBlockHeaders(
+				auto primaryBlockOffset = iterateBlockHeaders(
 				  data,
 				  len,
 				  [data, &mapping, &mappedBlocks, &numBlocks, &valid](size_t offset)
