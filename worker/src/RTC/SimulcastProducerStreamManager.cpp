@@ -43,6 +43,7 @@ namespace RTC
 		}
 
 		this->producerRtpStreams.resize(this->consumableRtpEncodings.size(), nullptr);
+		this->switchableSpatialLayers.resize(this->consumableRtpEncodings.size(), true);
 	}
 
 	std::vector<RTC::RTP::RtpStreamRecv*> SimulcastProducerStreamManager::GetProducerRtpStreams() const
@@ -153,15 +154,39 @@ namespace RTC
 	}
 
 	void SimulcastProducerStreamManager::ProducerRtpStreamScore(
-	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t score, uint8_t previousScore)
+	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
+
+		// If the RTP timestamp reference stream dies while another spatial layer is
+		// being sent, take the latter as reference with the offset it is being sent
+		// with, so nothing depends on the dead stream anymore.
+		if (
+		  score == 0 && rtpStream == GetProducerTsReferenceRtpStream() &&
+		  this->currentSpatialLayer != -1 && this->currentSpatialLayer != this->tsReferenceSpatialLayer)
+		{
+			MS_DEBUG_TAG(
+			  simulcast,
+			  "TS reference spatial layer %" PRIi16 " is dead, using current spatial layer %" PRIi16
+			  " as RTP timestamp reference",
+			  this->tsReferenceSpatialLayer,
+			  this->currentSpatialLayer);
+
+			this->tsReferenceSpatialLayer = this->currentSpatialLayer;
+			this->tsReferenceOffset       = this->tsOffset;
+		}
 
 		if (this->listener->IsActive())
 		{
 			// All Producer streams are dead.
 			if (!IsActive())
 			{
+				MS_DEBUG_TAG(
+				  simulcast,
+				  "Producer stream is dead and there is no other alive one, unsetting target layers [ssrc:%" PRIu32
+				  "]",
+				  rtpStream->GetSsrc());
+
 				UpdateTargetLayers(-1, -1);
 			}
 			// Just check target layers if the stream has died or reborned or if
@@ -178,17 +203,41 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Check whether any spatial layer can be switched to again, which may happen
+		// after this Sender Report if the capture instants told before were too far
+		// from the RTP timestamps of the streams to be aligned upon.
+		// NOTE: A capture instant carried by 'abs-capture-time' may also make it
+		// happen, but that is only noticed upon the next Sender Report.
+		bool spatialLayerBecameSwitchable{ false };
+
+		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		{
+			const bool switchable =
+			  this->producerRtpStreams.at(sIdx) && CanSwitchToSpatialLayer(static_cast<int16_t>(sIdx));
+
+			if (switchable && !this->switchableSpatialLayers.at(sIdx))
+			{
+				spatialLayerBecameSwitchable = true;
+			}
+
+			this->switchableSpatialLayers.at(sIdx) = switchable;
+		}
+
 		// The first Sender Report of a stream is the one that lets it be aligned to
-		// other streams, so it is the only one worth checking layers upon.
+		// other streams, so it is worth checking layers upon, and so is any other one
+		// after which a spatial layer can be switched to again.
 		// NOTE: Doing it on every single Sender Report would ask the Transport to
 		// redistribute its outgoing bitrate at the pace of the RTCP of the sender and we
 		// don't want that.
-		if (!first)
+		if (!first && !spatialLayerBecameSwitchable)
 		{
 			return;
 		}
 
-		MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		if (first)
+		{
+			MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		}
 
 		if (IsActive())
 		{
@@ -872,30 +921,39 @@ namespace RTC
 					// the sending RTP packet.
 					tsOffset = alignedTsOffset.value() + this->tsReferenceOffset;
 				}
-				// Nothing will ever let this stream be aligned to the TS reference one, so
-				// take this spatial layer as the new TS reference and make its RTP timeline
-				// go on right after the highest RTP timestamp sent so far.
+				// The TS reference stream is dead, so it cannot be relied on to align this
+				// one. Take this spatial layer as the new TS reference and make its RTP
+				// timeline go on after the highest RTP timestamp sent so far as much time
+				// as elapsed since the last packet was forwarded, which is the best guess
+				// of how far this packet was captured from it.
 				else if (CanGiveUpTsReferenceSpatialLayer())
 				{
 					MS_DEBUG_TAG(
 					  simulcast,
-					  "TS reference spatial layer %" PRIi16
-					  " is dead and cannot tell its capture instant, using spatial layer %" PRIi16
+					  "TS reference spatial layer %" PRIi16 " is dead and spatial layer %" PRIi16
+					  " cannot be aligned to it, using the latter"
 					  " as RTP timestamp reference",
 					  this->tsReferenceSpatialLayer,
 					  spatialLayer);
 
+					// NOTE: Capped below 2^31 ticks, beyond which RTP timestamps that wrap
+					// around would take the jump forward as a jump backwards.
+					static constexpr int64_t MaxElapsedTs{ (int64_t{ 1 } << 31) - 1 };
+
+					const int64_t nowMs     = this->shared->GetTimeMs();
+					const int64_t elapsedMs = nowMs - this->lastPacketForwardedAtMs.value_or(nowMs);
+					const auto elapsedTs =
+					  static_cast<uint32_t>(std::clamp<int64_t>(elapsedMs * clockRate / 1000, 1, MaxElapsedTs));
+
 					this->tsReferenceSpatialLayer = spatialLayer;
-					this->tsReferenceOffset =
-					  packet->GetTimestamp() - maxPacketTs - this->frameDurationTs.value_or(1);
+					this->tsReferenceOffset       = packet->GetTimestamp() - maxPacketTs - elapsedTs;
 
 					tsOffset = this->tsReferenceOffset;
 				}
 				// The capture instant of this stream or the one of the TS reference stream
 				// cannot be told yet, so there is no way to align it. The TS reference stream
-				// cannot be given up either, since it is alive or it already told its
-				// capture instant. Discard the packet and wait, since the Sender Report that
-				// is missing is on its way.
+				// cannot be given up either, since it is alive. Discard the packet and wait,
+				// since the Sender Report that is missing is on its way.
 				else
 				{
 					MS_DEBUG_TAG(
@@ -922,12 +980,12 @@ namespace RTC
 
 			// When switching to a new stream it may happen that the timestamp of this
 			// key frame is not higher than the highest timestamp sent to the remote
-			// endpoint. If so, apply an extra offset that places it one frame after it
+			// endpoint. If so, apply the minimum extra offset that places it after it
 			// for the whole life of this selected Producer stream.
 			// NOTE: Nothing has been sent while no packet has been forwarded, so the
 			// highest timestamp sent means nothing then.
 			if (
-			  shouldSwitchCurrentSpatialLayer && this->anyPacketForwarded &&
+			  shouldSwitchCurrentSpatialLayer && this->lastPacketForwardedAtMs.has_value() &&
 			  !Utils::Number::IsHigherThan<uint32_t>(packet->GetTimestamp() - tsOffset, maxPacketTs))
 			{
 				// Max delay in ms we allow for the stream when switching.
@@ -937,8 +995,8 @@ namespace RTC
 				const int64_t maxTsExtraOffset = MaxExtraOffsetMs * clockRate / 1000;
 
 				// NOTE: RTP timestamps wrap around, so the sum is truncated on purpose.
-				auto tsExtraOffset = static_cast<uint32_t>(
-				  maxPacketTs - (packet->GetTimestamp() - tsOffset) + this->frameDurationTs.value_or(1));
+				auto tsExtraOffset =
+				  static_cast<uint32_t>(maxPacketTs - (packet->GetTimestamp() - tsOffset) + 1);
 
 				// NOTE: Don't ask for a key frame if already done.
 				if (this->keyFrameForTsOffsetRequested)
@@ -1047,6 +1105,22 @@ namespace RTC
 			// Update current spatial layer.
 			this->currentSpatialLayer = this->targetLayers.spatial;
 
+			// If the RTP timestamp reference stream is dead, take the new current
+			// spatial layer as reference with the offset it is being sent with, so
+			// nothing depends on the dead stream anymore.
+			if (this->currentSpatialLayer != this->tsReferenceSpatialLayer && CanGiveUpTsReferenceSpatialLayer())
+			{
+				MS_DEBUG_TAG(
+				  simulcast,
+				  "TS reference spatial layer %" PRIi16 " is dead, using current spatial layer %" PRIi16
+				  " as RTP timestamp reference",
+				  this->tsReferenceSpatialLayer,
+				  this->currentSpatialLayer);
+
+				this->tsReferenceSpatialLayer = this->currentSpatialLayer;
+				this->tsReferenceOffset       = this->tsOffset;
+			}
+
 			this->snReferenceSpatialLayer             = packet->GetSequenceNumber();
 			this->checkingForOldPacketsInSpatialLayer = true;
 
@@ -1086,17 +1160,7 @@ namespace RTC
 		result.tsOffset = this->tsOffset;
 		result.marker   = marker;
 
-		// Measure the duration of a frame in the RTP timeline of our stream. A sync
-		// packet is left out since its distance to the highest timestamp sent is the
-		// one this very method chose.
-		const uint32_t outgoingTs = packet->GetTimestamp() - this->tsOffset;
-
-		if (this->anyPacketForwarded && !isSyncPacket && Utils::Number::IsHigherThan<uint32_t>(outgoingTs, maxPacketTs))
-		{
-			this->frameDurationTs = outgoingTs - maxPacketTs;
-		}
-
-		this->anyPacketForwarded = true;
+		this->lastPacketForwardedAtMs = this->shared->GetTimeMs();
 
 		return result;
 	}
@@ -1162,7 +1226,7 @@ namespace RTC
 
 		// While no packet has been forwarded there is no RTP timeline of our stream to
 		// keep, so the new target spatial layer becomes the RTP timestamp reference.
-		if (newTargetSpatialLayer != -1 && !this->anyPacketForwarded)
+		if (newTargetSpatialLayer != -1 && !this->lastPacketForwardedAtMs.has_value())
 		{
 			MS_DEBUG_TAG(
 			  simulcast, "using spatial layer %" PRIi16 " as RTP timestamp reference", newTargetSpatialLayer);
@@ -1354,7 +1418,7 @@ namespace RTC
 
 		// While no packet has been forwarded this spatial layer would become the TS
 		// reference one, so there is nothing to align it to.
-		if (!this->anyPacketForwarded || spatialLayer == this->tsReferenceSpatialLayer)
+		if (!this->lastPacketForwardedAtMs.has_value() || spatialLayer == this->tsReferenceSpatialLayer)
 		{
 			return true;
 		}
@@ -1390,10 +1454,7 @@ namespace RTC
 			return true;
 		}
 
-		return (
-		  producerTsReferenceRtpStream->GetScore() == 0 &&
-		  !producerTsReferenceRtpStream->GetSenderReportMapping().has_value() &&
-		  !producerTsReferenceRtpStream->HasAbsCaptureTime());
+		return producerTsReferenceRtpStream->GetScore() == 0;
 	}
 
 	std::optional<uint32_t> SimulcastProducerStreamManager::GetTimestampOffset(

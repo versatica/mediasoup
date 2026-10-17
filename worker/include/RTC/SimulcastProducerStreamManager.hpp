@@ -84,8 +84,8 @@ namespace RTC
 		RTC::RTP::RtpStreamRecv* GetProducerTsReferenceRtpStream() const;
 		/**
 		 * Whether the RTP timestamp reference stream can be given up without aligning
-		 * other streams to it, which is when it is dead and it never told its capture
-		 * instant, so nothing will ever let other streams be aligned to it.
+		 * other streams to it, which is when it is dead, since the capture instants it
+		 * told cannot be relied on anymore.
 		 */
 		bool CanGiveUpTsReferenceSpatialLayer() const;
 		/**
@@ -119,14 +119,15 @@ namespace RTC
 		// of our stream. Not zero once the reference has been given up after packets
 		// had been forwarded.
 		uint32_t tsReferenceOffset{ 0 };
+		// Whether each spatial layer could be switched to as of the last received
+		// Sender Report, so a later one after which it can be again is noticed.
+		std::vector<bool> switchableSpatialLayers;
 		uint32_t tsOffset{ 0 };
-		// RTP timestamp distance between the last two frames sent, or no value if it
-		// could not be measured yet.
-		std::optional<uint32_t> frameDurationTs;
 		bool keyFrameForTsOffsetRequested{ false };
-		// Whether any packet has been forwarded, after which the RTP timeline of our
-		// stream is tied to the one of the RTP timestamp reference stream.
-		bool anyPacketForwarded{ false };
+		// When the last packet was forwarded, or no value if none has been. Once any
+		// has been, the RTP timeline of our stream is tied to the one of the RTP
+		// timestamp reference stream.
+		std::optional<int64_t> lastPacketForwardedAtMs;
 		// Old-packet filtering after spatial switch.
 		uint16_t snReferenceSpatialLayer{ 0 };
 		bool checkingForOldPacketsInSpatialLayer{ false };
