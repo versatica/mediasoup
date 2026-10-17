@@ -209,6 +209,26 @@ namespace RTC
 				// timestamp of the newest stored packet.
 				if (Utils::Number::IsLowerThan<uint32_t>(timestamp, newestItem->timestamp))
 				{
+					// Special case: The timestamp went back further than the max
+					// retransmission delay, so the stored packets belong to a timeline
+					// that is over. If so, clear the whole buffer.
+					if (IsTooOldTimestamp(timestamp, newestItem->timestamp))
+					{
+						MS_WARN_TAG(
+						  rtp,
+						  "packet has higher seq but too old timestamp than newest packet in the buffer, emptying the buffer [ssrc:%" PRIu32
+						  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+						  ssrc,
+						  seq,
+						  timestamp);
+
+						Clear();
+
+						this->buffer.push_back(RetransmissionBuffer::CreateItem(packet, sharedPacket, nowMs));
+
+						return true;
+					}
+
 					MS_WARN_TAG(
 					  rtp,
 					  "packet has higher seq but lower timestamp than newest packet in the buffer, discarding it [ssrc:%" PRIu32

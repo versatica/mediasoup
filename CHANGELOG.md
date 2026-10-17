@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Fix simulcast RTP timestamp jumps on layer switch and frozen retransmission buffer ([PR #2002](https://github.com/versatica/mediasoup/pull/2002)).
+
 ### 3.30.1
 
 - Node: Validate bitrate inputs and keep the Channel buffer builder usable ([PR #2001](https://github.com/versatica/mediasoup/pull/2001)).

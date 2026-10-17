@@ -203,7 +203,7 @@ namespace
 		params.clockRate = 90000;
 
 		return std::make_unique<RTC::RTP::RtpStreamRecv>(
-		  std::addressof(streamRecvListener), std::addressof(shared), params, 0u, false);
+		  std::addressof(streamRecvListener), std::addressof(shared), params, 0, false);
 	}
 
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero. They
@@ -272,6 +272,23 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 #endif
 	};
 
+	// Make the stream receive a Sender Report telling that the given RTP timestamp
+	// was captured at the given instant of the clock of the remote sender.
+	const auto receiveSenderReport =
+	  [](RTC::RTP::RtpStreamRecv* rtpStream, int64_t captureAtUs, uint32_t rtpTs) -> void
+	{
+		const auto ntp = Utils::Time::TimeUsToNtp(captureAtUs);
+
+		RTC::RTCP::SenderReport sr;
+
+		sr.SetSsrc(rtpStream->GetSsrc());
+		sr.SetNtpSec(ntp.seconds);
+		sr.SetNtpFrac(ntp.fractions);
+		sr.SetRtpTs(rtpTs);
+
+		rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
+	};
+
 	SECTION("ProcessRtpPacket() returns DROP when target temporal layer is -1")
 	{
 		MockListener listener;
@@ -334,6 +351,11 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Both layers get a Sender Report, so layer 1 can be aligned to the TS reference
+		// layer 0.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 1000);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 1000);
 
 		// Set target layer to 0 and complete sync.
 		manager->UpdateTargetLayers(0, 0);
@@ -489,7 +511,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.isSyncPacket == true);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 	}
 
 	SECTION("ProcessRtpPacket() returns DROP for empty payload packets on current spatial layer")
@@ -577,7 +599,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.isSyncPacket == false);
 		REQUIRE(result.sendBufferedPackets == false);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 	}
 
 	SECTION("ProcessRtpPacket() forwards packets from current layer after spatial switch")
@@ -593,6 +615,11 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Both layers get a Sender Report, so layer 1 can be aligned to the TS reference
+		// layer 0.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 1000);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 1000);
 
 		// Set target layer to 0 and sync.
 		manager->UpdateTargetLayers(0, 0);
@@ -779,7 +806,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
 
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 	}
 
 	SECTION("RecalculateTargetLayers() switches to preferred layer once its capture instant is known")
@@ -810,11 +837,6 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// Target stays at 0 because the capture instant of layer 1 cannot be told.
 		REQUIRE(manager->GetTargetLayers().spatial == 0);
 
-		// Both layers hold RTP timestamp 1000 and both were captured at the same instant,
-		// which is what makes them alignable to each other.
-		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
-		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
-
 		// Feed packets to both streams so ReceiveRtcpSenderReport's UpdateScore
 		// doesn't drop the score to 0.
 		packet->SetSsrc(MappedSsrc0);
@@ -823,7 +845,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 10);
 
-		// Provide Sender Reports for both streams so that they get a score.
+		// Provide Sender Reports for both streams so that they get a score. Both tell
+		// that RTP timestamp 90000 was captured at the same instant, which is what makes
+		// them alignable to each other.
 		RTC::RTCP::SenderReport sr0;
 		sr0.SetSsrc(MappedSsrc0);
 		sr0.SetNtpSec(1000);
@@ -860,7 +884,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(result.isSyncPacket == true);
 		REQUIRE(result.spatialLayerSwitched == true);
 		// Both streams have the same capture instant and RTP timestamp, so tsOffset is 0.
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
 	}
 
@@ -889,31 +913,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
 
-		// Both layers hold RTP timestamp 1000, but the one of layer 1 was captured 500 ms
-		// before the one of layer 0, so its RTP timeline runs 45000 ticks ahead.
-		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
-		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 500 * 1000, /*ts*/ 1000);
-
 		packet->SetSsrc(MappedSsrc0);
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
 
 		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 10);
 
-		// Provide Sender Reports for both streams so that they get a score.
-		RTC::RTCP::SenderReport sr0;
-		sr0.SetSsrc(MappedSsrc0);
-		sr0.SetNtpSec(1000);
-		sr0.SetNtpFrac(0);
-		sr0.SetRtpTs(90000);
-		rtpStream0->ReceiveRtcpSenderReport(std::addressof(sr0), shared.GetTimeUs());
-
-		RTC::RTCP::SenderReport sr1;
-		sr1.SetSsrc(MappedSsrc1);
-		sr1.SetNtpSec(1000);
-		sr1.SetNtpFrac(0);
-		sr1.SetRtpTs(90000);
-		rtpStream1->ReceiveRtcpSenderReport(std::addressof(sr1), shared.GetTimeUs());
+		// Provide Sender Reports for both streams so that they get a score. Both layers
+		// hold RTP timestamp 1000, but the one of layer 1 was captured 500 ms before the
+		// one of layer 0, so its RTP timeline runs 45000 ticks ahead.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 1000);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 500 * 1000, /*rtpTs*/ 1000);
 
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ true);
 
@@ -933,7 +943,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.spatialLayerSwitched == true);
-		REQUIRE(result.tsOffset == 45000u);
+		REQUIRE(result.tsOffset == 45000);
 		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
 	}
 
@@ -952,15 +962,16 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
-		// Only layer 0 can tell its capture instant, so it remains the TS reference one and
-		// layer 1 cannot be aligned to it yet.
-		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
+		// Only layer 0 gets a Sender Report, so it remains the TS reference one and layer 1
+		// cannot be aligned to it yet.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 1000);
 
 		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
 		manager->UpdateTargetLayers(0, 0);
 
 		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(1);
+		rtpStream0->ReceivePacket(packet.get(), shared.GetTimeUs());
 		manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
 
@@ -971,35 +982,35 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		const auto keyFrameRequestCountBefore = listener.keyFrameRequestCount;
 
+		// A packet of layer 1 captured 100 ms after the forwarded one of layer 0.
 		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(1000 + 45000 + 9000);
 
 		auto result = manager->ProcessRtpPacket(
-		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 1000);
 
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::SILENT_DROP);
 		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
 		// The discarded packet is not a key frame, so no key frame is requested for it.
 		REQUIRE(listener.keyFrameRequestCount == keyFrameRequestCountBefore);
 
-		// Once layer 1 can tell its capture instant the switch completes with the proper
-		// offset.
-		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 500 * 1000, /*ts*/ 1000);
+		// Once layer 1 gets a Sender Report the switch completes with the proper offset.
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 500 * 1000, /*rtpTs*/ 1000);
 
 		packet->SetSequenceNumber(2);
 
 		result = manager->ProcessRtpPacket(
-		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 1000);
 
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.spatialLayerSwitched == true);
-		REQUIRE(result.tsOffset == 45000u);
+		REQUIRE(result.tsOffset == 45000);
 		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
 	}
 
 	SECTION(
-	  "ProcessRtpPacket() takes the spatial layer as TS reference when the TS reference one "
-	  "cannot tell its capture instant")
+	  "ProcessRtpPacket() discards the packet while the TS reference spatial layer cannot tell its capture instant")
 	{
 		MockListener listener;
 		auto manager = createManager(
@@ -1013,22 +1024,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 
-		// No stream can tell its capture instant in this SECTION.
-
-		// Feed packets and a Sender Report to both streams so that they get a score and
-		// RecalculateTargetLayers() takes them into account.
-		for (auto* rtpStream : { rtpStream0.get(), rtpStream1.get() })
-		{
-			packet->SetSsrc(rtpStream->GetSsrc());
-			feedRtpStreamRecv(rtpStream, packet.get(), 10);
-
-			RTC::RTCP::SenderReport sr;
-			sr.SetSsrc(rtpStream->GetSsrc());
-			sr.SetNtpSec(1000);
-			sr.SetNtpFrac(0);
-			sr.SetRtpTs(90000);
-			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
-		}
+		// Only layer 1 gets a Sender Report.
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 500 * 1000, /*rtpTs*/ 1000);
 
 		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
 		manager->UpdateTargetLayers(0, 0);
@@ -1040,31 +1037,511 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
 
-		// Aim at layer 1. Since layer 0 cannot tell its capture instant, layer 1 takes over
-		// as TS reference. A transport reconnection then asks for a resync of whatever
-		// layer arrives first.
+		// Aim at layer 1. Packets of layer 0 have been forwarded, so it remains the TS
+		// reference one although it cannot tell its capture instant.
 		manager->UpdateTargetLayers(1, 0);
-		manager->OnTransportConnected();
 
-		REQUIRE(manager->GetTargetLayers().spatial == 1);
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(1);
 
-		// A packet of the current layer 0 arrives. It is not the TS reference one and there
-		// is no way to align it to layer 1, so layer 0 takes over as TS reference and its
-		// RTP timestamps go untouched.
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::SILENT_DROP);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
+
+		// Packets of the current layer 0 are still forwarded with their RTP timestamps
+		// untouched.
 		packet->SetSsrc(MappedSsrc0);
 		packet->SetSequenceNumber(2);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.tsOffset == 0);
+	}
+
+	SECTION(
+	  "RecalculateTargetLayers() does not switch away from the TS reference spatial layer while it cannot tell its capture instant and its packets have been forwarded")
+	{
+		// Scenario based on https://github.com/versatica/mediasoup/issues/2000.
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Only layer 1 gets a Sender Report.
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 500 * 1000, /*rtpTs*/ 1000);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(1000);
+
+		// Layer 0 receives packets, so its highest RTP timestamp is 1000.
+		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
 
 		auto result = manager->ProcessRtpPacket(
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
 
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
-		REQUIRE(result.isSyncPacket == true);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
+
+		// Both layers get a score, so RecalculateTargetLayers() takes them into account.
+		rtpStream0->ResetScore(/*score*/ 10, /*notify*/ false);
+		rtpStream1->ResetScore(/*score*/ 10, /*notify*/ false);
+		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 10, /*previousScore*/ 0);
+		manager->ProducerRtpStreamScore(rtpStream1.get(), /*score*/ 10, /*previousScore*/ 0);
+
+		// Packets of layer 0 have been forwarded and its capture instant cannot be told,
+		// so layer 1 cannot be aligned to it and the target stays at layer 0.
+		REQUIRE(manager->GetTargetLayers().spatial == 0);
+
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(91000);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 1000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::SILENT_DROP);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
+
+		// Layer 0 gets its first Sender Report. Both layers hold RTP timestamp 1000, but
+		// the one of layer 1 was captured 500 ms before the one of layer 0, so its RTP
+		// timeline runs 45000 ticks ahead.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 1000);
+
+		manager->ProducerRtcpSenderReport(rtpStream0.get(), /*first*/ true);
+
+		REQUIRE(manager->GetTargetLayers().spatial == 1);
+
+		packet->SetSequenceNumber(2);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 1000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(result.tsOffset == 45000);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
 	}
 
 	SECTION(
-	  "ProducerRtcpSenderReport() checks layers upon a Sender Report that is not the first "
-	  "one of its stream")
+	  "ProducerRtcpSenderReport() switches to a spatial layer as soon as it and the TS reference one got a Sender Report")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(90000);
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
+
+		// Layer 0 gets packets and its first Sender Report. Layer 1 has no score yet, so
+		// the target stays at layer 0.
+		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
+
+		RTC::RTCP::SenderReport sr0;
+		sr0.SetSsrc(MappedSsrc0);
+		sr0.SetNtpSec(1000);
+		sr0.SetNtpFrac(0);
+		sr0.SetRtpTs(90000);
+		rtpStream0->ReceiveRtcpSenderReport(std::addressof(sr0), shared.GetTimeUs());
+
+		manager->ProducerRtcpSenderReport(rtpStream0.get(), /*first*/ true);
+
+		REQUIRE(manager->GetTargetLayers().spatial == 0);
+
+		// Layer 1 gets packets and its first Sender Report, which tells that its RTP
+		// timeline runs 45000 ticks ahead of the one of layer 0. No other Sender Report
+		// is needed to align both layers.
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetTimestamp(135000);
+
+		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 10);
+
+		RTC::RTCP::SenderReport sr1;
+		sr1.SetSsrc(MappedSsrc1);
+		sr1.SetNtpSec(1000);
+		sr1.SetNtpFrac(0);
+		sr1.SetRtpTs(135000);
+		rtpStream1->ReceiveRtcpSenderReport(std::addressof(sr1), shared.GetTimeUs());
+
+		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ true);
+
+		REQUIRE(manager->GetTargetLayers().spatial == 1);
+
+		// A packet of layer 1 captured 100 ms after the last forwarded one of layer 0.
+		packet->SetSequenceNumber(100);
+		packet->SetTimestamp(144000);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 90000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(result.tsOffset == 45000);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
+	}
+
+	SECTION(
+	  "RecalculateTargetLayers() switches away from a dead TS reference spatial layer that never got a Sender Report keeping the RTP timeline")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Layer 1 gets packets and a Sender Report. Layer 0 gets packets but no Sender
+		// Report.
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetTimestamp(135000);
+
+		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 10);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 135000);
+
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetTimestamp(90000);
+
+		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
+
+		rtpStream0->ResetScore(/*score*/ 10, /*notify*/ false);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		packet->SetSequenceNumber(1);
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
+
+		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 10, /*previousScore*/ 0);
+
+		// Layer 1 cannot be aligned to layer 0, so the target stays at layer 0.
+		REQUIRE(manager->GetTargetLayers().spatial == 0);
+
+		// Layer 0 dies without having ever got a Sender Report, so there is nothing to
+		// wait for and layer 1 is picked.
+		rtpStream0->ResetScore(/*score*/ 0, /*notify*/ false);
+		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 0, /*previousScore*/ 10);
+
+		REQUIRE(manager->GetTargetLayers().spatial == 1);
+
+		// The RTP timeline of our stream goes on right after the highest RTP timestamp
+		// sent so far.
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(100);
+		packet->SetTimestamp(144000);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 90000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
+		REQUIRE(packet->GetTimestamp() - result.tsOffset == 90001);
+
+		// Following packets of layer 1 keep the same offset.
+		packet->SetSequenceNumber(101);
+		packet->SetTimestamp(147000);
+
+		const auto tsOffset = result.tsOffset;
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 90001);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.tsOffset == tsOffset);
+	}
+
+	SECTION(
+	  "ProcessRtpPacket() places the first packet of the new spatial layer one measured frame after the highest RTP timestamp sent if it was captured at the same instant")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// The RTP timeline of layer 1 runs 45000 ticks ahead of the one of layer 0.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 90000);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 135000);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		// Layer 0 is forwarded at 25 fps, so a frame lasts 3600 ticks.
+		uint32_t maxPacketTs{ 0 };
+
+		packet->SetSsrc(MappedSsrc0);
+
+		for (uint16_t seq{ 1 }; seq <= 3; ++seq)
+		{
+			packet->SetSequenceNumber(seq);
+			packet->SetTimestamp(90000 + ((seq - 1) * 3600));
+			rtpStream0->ReceivePacket(packet.get(), shared.GetTimeUs());
+
+			const auto result = manager->ProcessRtpPacket(
+			  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, maxPacketTs);
+
+			REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+
+			maxPacketTs = packet->GetTimestamp() - result.tsOffset;
+		}
+
+		REQUIRE(maxPacketTs == 97200);
+
+		manager->UpdateTargetLayers(1, 0);
+
+		// A packet of layer 1 captured at the same instant as the last forwarded one of
+		// layer 0.
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(100);
+		packet->SetTimestamp(97200 + 45000);
+
+		const auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, maxPacketTs);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(packet->GetTimestamp() - result.tsOffset == 97200 + 3600);
+	}
+
+	SECTION(
+	  "ProcessRtpPacket() places the first packet of the new spatial layer right after the highest RTP timestamp sent if it was captured at the same instant and no frame could be measured")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// The RTP timeline of layer 1 runs 45000 ticks ahead of the one of layer 0.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 90000);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 135000);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		// A single frame of layer 0 is forwarded, so no frame can be measured.
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(90000);
+		rtpStream0->ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+
+		manager->UpdateTargetLayers(1, 0);
+
+		// A packet of layer 1 captured at the same instant as the forwarded one of
+		// layer 0.
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(100);
+		packet->SetTimestamp(135000);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 90000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(packet->GetTimestamp() - result.tsOffset == 90001);
+	}
+
+	SECTION(
+	  "ProcessRtpPacket() places the first packet of the new spatial layer after the highest RTP timestamp sent when they are across the wrap around")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// The RTP timeline of layer 1 runs 45000 ticks ahead of the one of layer 0.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 100);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 45100);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(100);
+		rtpStream0->ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+
+		manager->UpdateTargetLayers(1, 0);
+
+		// A packet of layer 1 captured 10 ms before the forwarded one of layer 0, so once
+		// aligned its RTP timestamp falls 900 ticks before 100, across the wrap around.
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(100);
+		packet->SetTimestamp(45100 - 900);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 100);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(packet->GetTimestamp() - result.tsOffset == 101);
+	}
+
+	SECTION(
+	  "ProcessRtpPacket() places the first packet of the new spatial layer after the highest RTP timestamp sent when giving up on proper stream switching")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// The RTP timeline of layer 1 runs 45000 ticks ahead of the one of layer 0.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 90000);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 135000);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(90000);
+		rtpStream0->ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+
+		manager->UpdateTargetLayers(1, 0);
+
+		const auto keyFrameRequestCountBefore = listener.keyFrameRequestCount;
+
+		// A packet of layer 1 captured 100 ms before the forwarded one of layer 0, which
+		// needs more extra offset than allowed, so it is discarded and a key frame is
+		// requested.
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(100);
+		packet->SetTimestamp(135000 - 9000);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 90000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::SILENT_DROP);
+		REQUIRE(listener.keyFrameRequestCount == keyFrameRequestCountBefore + 1);
+
+		// The requested key frame needs the same extra offset, so switching gives up on
+		// keeping the capture instant but not on the RTP timeline.
+		packet->SetSequenceNumber(101);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 90000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(packet->GetTimestamp() - result.tsOffset == 90001);
+	}
+
+	SECTION("ProcessRtpPacket() does not apply any extra offset to the first packet ever forwarded")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		// Nothing has been sent yet, so the RTP timestamp of the packet goes untouched
+		// even if it is beyond 2^31 ticks ahead of zero.
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(3000000000);
+
+		const auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(result.tsOffset == 0);
+	}
+
+	SECTION("ProducerRtcpSenderReport() ignores a Sender Report that is not the first one of its stream")
 	{
 		MockListener listener;
 		auto manager =
@@ -1074,9 +1551,6 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
-
-		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
-		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
 
 		// Feed packets and a Sender Report to both streams so that they get a score and
 		// RecalculateTargetLayers() takes them into account.
@@ -1098,12 +1572,12 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		REQUIRE(manager->GetTargetLayers().spatial == 0);
 
-		// A Sender Report that is not the first one of its stream may be the one that made
-		// the capture instant of the TS reference stream known, so layers are checked and
-		// the preferred layer 1 is picked.
+		// A Sender Report that is not the first one of its stream cannot make any layer
+		// alignable, so layers are not checked and the target stays at layer 0 although
+		// the preferred layer 1 could be picked.
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ false);
 
-		REQUIRE(manager->GetTargetLayers().spatial == 1);
+		REQUIRE(manager->GetTargetLayers().spatial == 0);
 	}
 
 	SECTION("ProcessRtpPacket() calculates tsOffset of the spatial layer of the packet")
@@ -1122,29 +1596,22 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
 		manager->ProducerRtpStream(rtpStream2.get(), MappedSsrc2);
 
-		// All layers hold RTP timestamp 1000. Layer 1 was captured 500 ms before layer 0
-		// and layer 2 a whole second before it, so their offsets differ.
-		rtpStream0->SetCaptureMapping(/*captureAtUs*/ 1000 * 1000, /*ts*/ 1000);
-		rtpStream1->SetCaptureMapping(/*captureAtUs*/ 500 * 1000, /*ts*/ 1000);
-		rtpStream2->SetCaptureMapping(/*captureAtUs*/ 0, /*ts*/ 1000);
-
-		// Feed packets and a Sender Report to every stream so that they all get a score
+		// Feed packets to every stream so that the Sender Reports below give them a score
 		// and RecalculateTargetLayers() takes them into account.
 		for (auto* rtpStream : { rtpStream0.get(), rtpStream1.get(), rtpStream2.get() })
 		{
 			packet->SetSsrc(rtpStream->GetSsrc());
 			feedRtpStreamRecv(rtpStream, packet.get(), 10);
-
-			RTC::RTCP::SenderReport sr;
-			sr.SetSsrc(rtpStream->GetSsrc());
-			sr.SetNtpSec(1000);
-			sr.SetNtpFrac(0);
-			sr.SetRtpTs(90000);
-			rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
 		}
 
+		// All layers hold RTP timestamp 1000. Layer 1 was captured 500 ms before layer 0
+		// and layer 2 a whole second before it, so their offsets differ.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 2000 * 1000, /*rtpTs*/ 1000);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1500 * 1000, /*rtpTs*/ 1000);
+		receiveSenderReport(rtpStream2.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 1000);
+
 		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0, which
-		// stays there for the rest of the SECTION since it has a capture mapping.
+		// stays there for the rest of the SECTION since packets of it are forwarded.
 		manager->UpdateTargetLayers(0, 0);
 
 		packet->SetSsrc(MappedSsrc0);
@@ -1154,17 +1621,19 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
 
-		// Switch to layer 1.
+		// Switch to layer 1 with a packet captured 100 ms after the forwarded one of
+		// layer 0.
 		manager->UpdateTargetLayers(1, 0);
 
 		packet->SetSsrc(MappedSsrc1);
 		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(1000 + 45000 + 9000);
 
 		auto result = manager->ProcessRtpPacket(
-		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 1000);
 
 		REQUIRE(result.spatialLayerSwitched == true);
-		REQUIRE(result.tsOffset == 45000u);
+		REQUIRE(result.tsOffset == 45000);
 		REQUIRE(manager->GetCurrentSpatialLayer() == 1);
 
 		// A transport reconnection asks for a resync of whatever layer arrives first, and
@@ -1183,7 +1652,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.isSyncPacket == true);
-		REQUIRE(result.tsOffset == 45000u);
+		REQUIRE(result.tsOffset == 45000);
 	}
 
 	SECTION("OnResumed() sets syncRequired")

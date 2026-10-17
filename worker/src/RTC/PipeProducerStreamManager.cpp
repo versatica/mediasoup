@@ -193,7 +193,7 @@ namespace RTC
 
 		// Pipe passes timestamp and marker through unchanged.
 		result.type     = RtpPacketProcessResult::Type::FORWARD;
-		result.tsOffset = 0u;
+		result.tsOffset = 0;
 		result.marker   = packet->HasMarker();
 
 		return result;
