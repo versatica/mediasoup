@@ -893,9 +893,9 @@ namespace RTC
 				}
 				// The capture instant of this stream or the one of the TS reference stream
 				// cannot be told yet, so there is no way to align it. The TS reference stream
-				// cannot be given up either, since packets aligned to it have already been
-				// forwarded. Discard the packet and wait, since the Sender Report that is
-				// missing is on its way.
+				// cannot be given up either, since it is alive or it already told its
+				// capture instant. Discard the packet and wait, since the Sender Report that
+				// is missing is on its way.
 				else
 				{
 					MS_DEBUG_TAG(

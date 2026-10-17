@@ -216,7 +216,7 @@ namespace RTC
 					{
 						MS_WARN_TAG(
 						  rtp,
-						  "packet has higher seq but too old timestamp than newest packet in the buffer, emptying the buffer [ssrc:%" PRIu32
+						  "packet has higher seq but much lower timestamp than newest packet in the buffer, emptying the buffer [ssrc:%" PRIu32
 						  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
 						  ssrc,
 						  seq,

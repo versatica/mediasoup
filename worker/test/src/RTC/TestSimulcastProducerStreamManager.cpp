@@ -1146,8 +1146,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(result.tsOffset == 0);
 		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
 
-		// Both layers get a score, so RecalculateTargetLayers() takes them into account.
-		rtpStream0->ResetScore(/*score*/ 10, /*notify*/ false);
+		// Layer 1 got its Sender Report before any packet, which left it with score 0,
+		// so give it a score. Then notify the score of both layers, which makes the
+		// manager check layers.
 		rtpStream1->ResetScore(/*score*/ 10, /*notify*/ false);
 		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 10, /*previousScore*/ 0);
 		manager->ProducerRtpStreamScore(rtpStream1.get(), /*score*/ 10, /*previousScore*/ 0);
@@ -1214,8 +1215,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
 
-		// Layer 0 gets packets and its first Sender Report. Layer 1 has no score yet, so
-		// the target stays at layer 0.
+		// Layer 0 gets packets and its first Sender Report. Layer 1 has no Sender Report
+		// yet, so it cannot be aligned to layer 0 and the target stays at layer 0.
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
 
 		RTC::RTCP::SenderReport sr0;
@@ -1288,8 +1289,6 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		packet->SetTimestamp(90000);
 
 		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 10);
-
-		rtpStream0->ResetScore(/*score*/ 10, /*notify*/ false);
 
 		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
 		manager->UpdateTargetLayers(0, 0);
