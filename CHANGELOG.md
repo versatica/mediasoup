@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.30.1
+
 - Node: Validate bitrate inputs and keep the Channel buffer builder usable ([PR #2001](https://github.com/versatica/mediasoup/pull/2001)).
 
 ### 3.30.0
