@@ -193,10 +193,11 @@ export class Channel extends EnhancedEventEmitter {
 	 * flatbuffer builder.
 	 *
 	 * NOTE: It must be retrieved once per message, right before building
-	 * its body.
+	 * its body. Retrieving it again while building the same message silently
+	 * wipes what was built so far.
 	 * It's reset here so a new message always starts with a clean builder,
 	 * which also recovers it if a previous build threw in the middle of the
-	 *  serialization (which would otherwise break every future message).
+	 * serialization (which would otherwise break every future message).
 	 */
 	get bufferBuilder(): flatbuffers.Builder {
 		this.#bufferBuilder.clear();

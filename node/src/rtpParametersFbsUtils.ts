@@ -194,7 +194,7 @@ export function serializeRtpEncodingParameters(
 		}
 
 		// Add max bitrate.
-		if (encoding.maxBitrate) {
+		if (encoding.maxBitrate !== undefined) {
 			FbsRtpEncodingParameters.addMaxBitrate(
 				builder,
 				BigInt(encoding.maxBitrate)

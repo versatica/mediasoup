@@ -80,9 +80,7 @@ function parseBaseStreamStats(
 		pliCount: Number(binary.pliCount()),
 		firCount: Number(binary.firCount()),
 		roundTripTime: binary.roundTripTime() ?? undefined,
-		rtxPacketsDiscarded: binary.rtxPacketsDiscarded()
-			? Number(binary.rtxPacketsDiscarded())
-			: undefined,
+		rtxPacketsDiscarded: Number(binary.rtxPacketsDiscarded()),
 		score: binary.score(),
 	};
 }

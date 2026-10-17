@@ -355,6 +355,36 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 			appData: 'NOT-AN-OBJECT',
 		})
 	).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+			initialAvailableOutgoingBitrate: -1,
+		})
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+			initialAvailableOutgoingBitrate: 1000000.5,
+		})
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+			// @ts-expect-error --- Testing purposes.
+			initialAvailableOutgoingBitrate: '1000000',
+		})
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+			// @ts-expect-error --- Testing purposes.
+			initialAvailableOutgoingBitrate: 1000000n,
+		})
+	).rejects.toThrow(TypeError);
 }, 2000);
 
 test('router.createWebRtcTransport() with non bindable IP rejects with Error', async () => {
@@ -566,6 +596,68 @@ test('webRtcTransport.setMinOutgoingBitrate() succeeds', async () => {
 	await expect(
 		webRtcTransport.setMinOutgoingBitrate(0)
 	).resolves.toBeUndefined();
+}, 2000);
+
+test('webRtcTransport.setMaxIncomingBitrate(), setMaxOutgoingBitrate() and setMinOutgoingBitrate() with wrong arguments reject with TypeError', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
+	});
+
+	await expect(webRtcTransport.setMaxIncomingBitrate(-1)).rejects.toThrow(
+		TypeError
+	);
+
+	await expect(
+		webRtcTransport.setMaxIncomingBitrate(1000000.5)
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMaxIncomingBitrate('1000000')
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMaxIncomingBitrate(1000000n)
+	).rejects.toThrow(TypeError);
+
+	await expect(webRtcTransport.setMaxOutgoingBitrate(-1)).rejects.toThrow(
+		TypeError
+	);
+
+	await expect(
+		webRtcTransport.setMaxOutgoingBitrate(1000000.5)
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMaxOutgoingBitrate('1000000')
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMaxOutgoingBitrate(1000000n)
+	).rejects.toThrow(TypeError);
+
+	await expect(webRtcTransport.setMinOutgoingBitrate(-1)).rejects.toThrow(
+		TypeError
+	);
+
+	await expect(
+		webRtcTransport.setMinOutgoingBitrate(1000000.5)
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMinOutgoingBitrate('1000000')
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMinOutgoingBitrate(1000000n)
+	).rejects.toThrow(TypeError);
 }, 2000);
 
 test('webRtcTransport.setMaxOutgoingBitrate() fails if value is lower than current min limit', async () => {

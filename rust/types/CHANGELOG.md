@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Make `size` and `payload_size` in `RtpPacketTraceInfo` `u32` ([PR #2000](https://github.com/versatica/mediasoup/pull/2000)).
+
 ### 0.8.0
 
 - Remove `RtpHeaderExtensionUri::Unsupported` variant ([PR #1980](https://github.com/versatica/mediasoup/pull/1980)).
