@@ -106,6 +106,15 @@ namespace RTC
 			void CreateProbeClusters(const std::vector<Types::ProbeClusterConfig>& clusterConfigs);
 
 			/**
+			 * Drop the bursts that are waiting.
+			 *
+			 * @remarks
+			 * - One that has already begun is left to finish, so a caller that needs
+			 *   to know when nothing is going out anymore polls `IsProbing()`.
+			 */
+			void StopProbing();
+
+			/**
 			 * Bytes that every packet carries on top of its own length once it's on
 			 * the network, so that a burst measures what the link really has to
 			 * carry.

@@ -56,7 +56,7 @@ namespace RTC
 		{
 			return true;
 		}
-		int64_t GetOutputBitrate(int64_t nowMs) override;
+		int64_t GetOutputBitrate(int64_t nowMs) const override;
 		int64_t TakeBitrate(int64_t bitrate, int64_t nowMs) override;
 		void ApplyBitrateAllocation(int64_t rtpStreamActiveMs) override;
 #else

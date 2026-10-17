@@ -62,7 +62,7 @@ namespace RTC
 				 * - Only asked of a candidate that is not adaptable, so an adaptable
 				 *   one may assert instead of answering.
 				 */
-				virtual int64_t GetOutputBitrate() = 0;
+				virtual int64_t GetOutputBitrate() const = 0;
 
 				/**
 				 * How much of what is left over this one gets relative to the others.

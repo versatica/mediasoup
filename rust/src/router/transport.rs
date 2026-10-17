@@ -554,6 +554,12 @@ pub(super) trait TransportImpl: TransportGeneric {
                 .push(RtpEncodingParameters::default());
         }
 
+        // Neither a DirectTransport nor a PipeTransport runs bandwidth estimation, so whatever was
+        // negotiated for them is dropped rather than honoured.
+        if matches!(transport_type, TransportType::Direct | TransportType::Pipe) {
+            ortc::disable_bwe_in_rtp_parameters(&mut rtp_parameters);
+        }
+
         // Don't do this in PipeTransports since there we must keep CNAME value in each Producer.
         if transport_type != TransportType::Pipe {
             let mut cname_for_producers = self.cname_for_producers().lock();
@@ -668,6 +674,10 @@ pub(super) trait TransportImpl: TransportGeneric {
                 &rtp_capabilities,
                 pipe,
                 enable_rtx,
+                // A DirectTransport doesn't run bandwidth estimation, so it must not negotiate it
+                // whatever the given RTP capabilities say. A PipeTransport doesn't need this since
+                // it takes the branch above.
+                transport_type == TransportType::Direct,
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 

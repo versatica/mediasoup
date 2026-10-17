@@ -148,11 +148,21 @@ namespace RTC
 			SenderTransportCongestionController& operator=(const SenderTransportCongestionController&) = delete;
 
 			/**
-			 * Tell whether the transport can carry anything at all. Nothing is probed
-			 * until it can, so forgetting this leaves the initial probing waiting
-			 * forever.
+			 * Tell whether the transport can carry anything at all.
+			 *
+			 * @remarks
+			 * - The initial probing waits for it, so forgetting it leaves it undone.
 			 */
 			void SetNetworkAvailable(bool networkAvailable);
+
+			/**
+			 * Tell whether the probing may run, which only makes sense once the remote
+			 * peer can measure a burst and report back on it.
+			 *
+			 * @remarks
+			 * - While it is off no burst goes out, whatever the estimator decides.
+			 */
+			void SetEnableProbing(bool enableProbing);
 
 			/**
 			 * Take note of a packet that is about to be sent, and write into it the
@@ -241,8 +251,14 @@ namespace RTC
 
 		private:
 			/**
-			 * Take note of a packet about to be sent and write its two extensions,
-			 * which is the same work for a packet of media and for one of a probe.
+			 * Take note of a packet about to be sent and write its extensions, which
+			 * is the same work for a packet of media and for one of a probe.
+			 *
+			 * @remarks
+			 * - The two extensions are written apart from each other, since they
+			 *   answer to different estimations.
+			 * - 'abs-send-time' goes on every packet that has room for it and is not
+			 *   audio.
 			 *
 			 * @returns No value when the packet has no room for the transport wide
 			 *   sequence number, in which case nothing is taken note of.
@@ -319,6 +335,9 @@ namespace RTC
 			int64_t minBitrate{ 0 };
 			const int64_t startBitrate;
 			int64_t maxBitrate{ Types::BitrateInfinite };
+			// Whether the probing may run, which the transport tells out of what its
+			// remote endpoint can measure.
+			bool enableProbing{ false };
 			// Whether anything has been sent and whether any transport-cc feedback has
 			// arrived, which tell apart a transport that is not being used from one
 			// whose remote endpoint does not report.

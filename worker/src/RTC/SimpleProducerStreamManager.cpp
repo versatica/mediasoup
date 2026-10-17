@@ -66,7 +66,7 @@ namespace RTC
 		  this->producerRtpStream &&
 		  // If there is no RTP inactivity check do not consider the stream
 		  // inactive despite it has score 0.
-		  (this->producerRtpStream->GetScore() > 0u || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
+		  (this->producerRtpStream->GetScore() > 0 || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
 		);
 		// clang-format on
 	}
@@ -105,7 +105,7 @@ namespace RTC
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	int64_t SimpleProducerStreamManager::GetOutputBitrate(int64_t nowMs)
+	int64_t SimpleProducerStreamManager::GetOutputBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 
@@ -186,6 +186,14 @@ namespace RTC
 	}
 #endif
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
+	{
+		MS_TRACE();
+
+		MS_ABORT("not an adaptable bitrate");
+	}
+#else
 	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
@@ -205,6 +213,7 @@ namespace RTC
 
 		return this->producerRtpStream->GetBitrate(nowMs);
 	}
+#endif
 
 	ProducerStreamManager::RtpPacketProcessResult SimpleProducerStreamManager::ProcessRtpPacket(
 	  RTC::RTP::Packet* packet,
@@ -298,7 +307,7 @@ namespace RTC
 
 		// Set forward action.
 		result.type                = RtpPacketProcessResult::Type::FORWARD;
-		result.tsOffset            = 0u;
+		result.tsOffset            = 0;
 		result.marker              = marker;
 		result.sendBufferedPackets = sendBufferedPackets;
 

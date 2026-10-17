@@ -444,15 +444,15 @@ namespace RTC
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 		// Add dtlsParameters.
-		auto dtlsParameters =
-		  FBS::WebRtcTransport::CreateDtlsParametersDirect(builder, &fingerprints, dtlsRole);
+		auto dtlsParameters = FBS::WebRtcTransport::CreateDtlsParametersDirect(
+		  builder, std::addressof(fingerprints), dtlsRole);
 
 		return FBS::WebRtcTransport::CreateDumpResponseDirect(
 		  builder,
 		  base,
 		  FBS::WebRtcTransport::IceRole::CONTROLLED,
 		  iceParameters,
-		  &iceCandidates,
+		  std::addressof(iceCandidates),
 		  iceState,
 		  iceSelectedTuple,
 		  dtlsParameters,
@@ -797,7 +797,7 @@ namespace RTC
 		const uint8_t* data = packet->GetBuffer();
 		auto len            = packet->GetLength();
 
-		if (!this->srtpSendSession->EncryptRtp(&data, std::addressof(len)))
+		if (!this->srtpSendSession->EncryptRtp(std::addressof(data), std::addressof(len)))
 		{
 			if (cb)
 			{
@@ -833,7 +833,7 @@ namespace RTC
 			return;
 		}
 
-		if (!this->srtpSendSession->EncryptRtcp(&data, std::addressof(len)))
+		if (!this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
 		{
 			return;
 		}
@@ -866,7 +866,7 @@ namespace RTC
 			return;
 		}
 
-		if (!this->srtpSendSession->EncryptRtcp(&data, std::addressof(len)))
+		if (!this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
 		{
 			return;
 		}
@@ -1135,7 +1135,7 @@ namespace RTC
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len, bufferLen, receivedAtUs);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen, receivedAtUs);
 	}
 
 	inline void WebRtcTransport::OnRtcTcpConnectionClosed(
@@ -1145,7 +1145,7 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
-		this->iceServer->RemoveTuple(&tuple);
+		this->iceServer->RemoveTuple(std::addressof(tuple));
 	}
 
 	inline void WebRtcTransport::OnTcpConnectionPacketReceived(
@@ -1155,7 +1155,7 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
-		OnPacketReceived(&tuple, data, len, bufferLen, receivedAtUs);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen, receivedAtUs);
 	}
 
 	inline void WebRtcTransport::OnIceServerSendStunPacket(

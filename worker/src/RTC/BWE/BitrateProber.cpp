@@ -73,6 +73,28 @@ namespace RTC
 			  this->state == State::ACTIVE ? "true" : "false");
 		}
 
+		void BitrateProber::StopProbing()
+		{
+			MS_TRACE();
+
+			// A burst that has already begun is left to finish, since a feedback that
+			// covered only a part of it would measure a burst that never went out.
+			if (IsProbing())
+			{
+				const Cluster cluster = this->clusters.front();
+
+				this->clusters = {};
+
+				this->clusters.push(cluster);
+
+				return;
+			}
+
+			this->clusters = {};
+
+			this->nextProbeTimeUs.reset();
+		}
+
 		std::optional<int64_t> BitrateProber::GetNextProbeTimeUs(int64_t nowUs) const
 		{
 			MS_TRACE();

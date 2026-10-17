@@ -406,7 +406,7 @@ namespace RTC
 							err = uv_ip4_addr(
 							  ip.c_str(),
 							  static_cast<int>(port),
-							  reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
+							  reinterpret_cast<struct sockaddr_in*>(std::addressof(this->remoteAddrStorage)));
 
 							if (err != 0)
 							{
@@ -421,7 +421,7 @@ namespace RTC
 							err = uv_ip6_addr(
 							  ip.c_str(),
 							  static_cast<int>(port),
-							  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
+							  reinterpret_cast<struct sockaddr_in6*>(std::addressof(this->remoteAddrStorage)));
 
 							if (err != 0)
 							{
@@ -439,7 +439,8 @@ namespace RTC
 
 					// Create the tuple.
 					this->tuple = new RTC::TransportTuple(
-					  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
+					  this->udpSocket,
+					  reinterpret_cast<struct sockaddr*>(std::addressof(this->remoteAddrStorage)));
 
 					if (!this->listenInfo.announcedAddress.empty())
 					{
@@ -529,7 +530,7 @@ namespace RTC
 		const uint8_t* data = packet->GetBuffer();
 		auto len            = packet->GetLength();
 
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(&data, std::addressof(len)))
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtp(std::addressof(data), std::addressof(len)))
 		{
 			if (cb)
 			{
@@ -557,7 +558,7 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		auto len            = packet->GetSize();
 
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, std::addressof(len)))
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
 		{
 			return;
 		}
@@ -582,7 +583,7 @@ namespace RTC
 		const uint8_t* data = packet->GetData();
 		auto len            = packet->GetSize();
 
-		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, std::addressof(len)))
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
 		{
 			return;
 		}
@@ -798,6 +799,6 @@ namespace RTC
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len, bufferLen, receivedAtUs);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen, receivedAtUs);
 	}
 } // namespace RTC

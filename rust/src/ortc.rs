@@ -759,6 +759,7 @@ pub(crate) fn get_consumer_rtp_parameters(
     remote_rtp_capabilities: &RtpCapabilities,
     pipe: bool,
     enable_rtx: bool,
+    disable_bwe: bool,
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
     let mut consumer_params = RtpParameters {
         rtcp: consumable_rtp_parameters.rtcp.clone(),
@@ -834,6 +835,17 @@ pub(crate) fn get_consumer_rtp_parameters(
         })
         .cloned()
         .collect();
+
+    // A transport that doesn't run bandwidth estimation must not negotiate it. Dropping its header
+    // extensions is enough, since the RTCP feedback below is reduced out of them.
+    if disable_bwe {
+        consumer_params.header_extensions.retain(|ext| {
+            !matches!(
+                ext.uri,
+                RtpHeaderExtensionUri::AbsSendTime | RtpHeaderExtensionUri::TransportWideCcDraft01
+            )
+        });
+    }
 
     // Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
     if consumer_params
@@ -953,9 +965,11 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
 
         let mut codec = codec.clone();
 
+        // Drop the bandwidth estimation feedback, which a PipeTransport doesn't run, and the
+        // generic NACK when there is no RTX to retransmit with.
         codec.rtcp_feedback_mut().retain(|fb| {
-            matches!(fb, RtcpFeedback::NackPli | RtcpFeedback::CcmFir)
-                || (enable_rtx && fb == &RtcpFeedback::Nack)
+            !matches!(fb, RtcpFeedback::GoogRemb | RtcpFeedback::TransportCc)
+                && (enable_rtx || fb != &RtcpFeedback::Nack)
         });
 
         consumer_params.codecs.push(codec);
@@ -1011,6 +1025,23 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
     }
 
     consumer_params
+}
+
+/// Removes from the given RTP parameters everything related to bandwidth estimation, which a
+/// transport that doesn't run it must not negotiate.
+pub(crate) fn disable_bwe_in_rtp_parameters(rtp_parameters: &mut RtpParameters) {
+    rtp_parameters.header_extensions.retain(|ext| {
+        !matches!(
+            ext.uri,
+            RtpHeaderExtensionUri::AbsSendTime | RtpHeaderExtensionUri::TransportWideCcDraft01
+        )
+    });
+
+    for codec in &mut rtp_parameters.codecs {
+        codec
+            .rtcp_feedback_mut()
+            .retain(|fb| !matches!(fb, RtcpFeedback::GoogRemb | RtcpFeedback::TransportCc));
+    }
 }
 
 struct CodecToMatch<'a> {

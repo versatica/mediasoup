@@ -452,6 +452,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
         &remote_rtp_capabilities,
         false,
         true,
+        false,
     )
     .expect("Failed to get consumer RTP parameters");
 

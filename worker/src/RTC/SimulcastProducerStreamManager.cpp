@@ -35,7 +35,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Build mapMappedSsrcSpatialLayer and reserve producerRtpStreams.
-		for (size_t idx{ 0u }; idx < this->consumableRtpEncodings.size(); ++idx)
+		for (size_t idx{ 0 }; idx < this->consumableRtpEncodings.size(); ++idx)
 		{
 			auto& encoding = this->consumableRtpEncodings[idx];
 
@@ -98,7 +98,7 @@ namespace RTC
 				{
 					return (
 						rtpStream != nullptr &&
-						(rtpStream->GetScore() > 0u || !rtpStream->HasRtpInactivityCheckEnabled())
+						(rtpStream->GetScore() > 0 || !rtpStream->HasRtpInactivityCheckEnabled())
 					);
 				}
 			)
@@ -164,12 +164,20 @@ namespace RTC
 			{
 				UpdateTargetLayers(-1, -1);
 			}
-			// Just check target layers if the stream has died or reborned or if
-			// bitrate is not externally managed.
-			else if (!this->externallyManagedBitrate || (score == 0u || previousScore == 0u))
+#ifdef MS_USE_BUILTIN_BWE
+			// Just check target layers if the stream has died or reborned.
+			else if (score == 0 || previousScore == 0)
 			{
 				MayChangeLayers(/*force*/ false);
 			}
+#else
+			// Just check target layers if the stream has died or reborned or if
+			// bitrate is not externally managed.
+			else if (!this->externallyManagedBitrate || (score == 0 || previousScore == 0))
+			{
+				MayChangeLayers(/*force*/ false);
+			}
+#endif
 		}
 	}
 
@@ -215,7 +223,7 @@ namespace RTC
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	int64_t SimulcastProducerStreamManager::GetOutputBitrate(int64_t /*nowMs*/)
+	int64_t SimulcastProducerStreamManager::GetOutputBitrate(int64_t /*nowMs*/) const
 	{
 		MS_TRACE();
 
@@ -241,7 +249,7 @@ namespace RTC
 		// bitrate of the layer.
 		bool usableSpatialLayerFound{ this->provisionalTargetLayers.spatial != -1 };
 
-		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
 			spatialLayer = static_cast<int16_t>(sIdx);
 
@@ -497,7 +505,7 @@ namespace RTC
 		// bitrate of the layer.
 		bool usableSpatialLayerFound{ this->provisionalTargetLayers.spatial != -1 };
 
-		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
 			spatialLayer = static_cast<int16_t>(sIdx);
 
@@ -867,12 +875,12 @@ namespace RTC
 				result.sendBufferedPackets = true;
 			}
 
-			uint32_t tsOffset{ 0u };
+			uint32_t tsOffset{ 0 };
 
 			// Sync our RTP stream's RTP timestamp.
 			if (spatialLayer == this->tsReferenceSpatialLayer)
 			{
-				tsOffset = 0u;
+				tsOffset = 0;
 			}
 			// If this is not the RTP stream we use as TS reference, synchronize its RTP
 			// timestamps based on the capture instant of the media.
@@ -1240,11 +1248,11 @@ namespace RTC
 
 		const int64_t nowMs = this->shared->GetTimeMs();
 
-		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
+		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
 			auto spatialLayer       = static_cast<int16_t>(sIdx);
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
-			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0u;
+			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0;
 
 			// If this is higher than current spatial layer and we moved to current
 			// spatial layer due to BWE limitations, check how much it has elapsed
@@ -1259,18 +1267,25 @@ namespace RTC
 
 			// Ignore spatial layers for non existing Producer streams or for those
 			// with score 0.
-			if (producerScore == 0u)
+			if (producerScore == 0)
 			{
 				continue;
 			}
 
 			// If the stream has not been active time enough and we have an active one
 			// already, move to the next spatial layer.
+#ifdef MS_USE_BUILTIN_BWE
+			if (newTargetLayers.spatial != -1 && producerRtpStream->GetActiveMs() < StreamMinActiveMs)
+			{
+				continue;
+			}
+#else
 			// NOTE: Require bitrate externally managed for this.
 			if (this->externallyManagedBitrate && newTargetLayers.spatial != -1 && producerRtpStream->GetActiveMs() < StreamMinActiveMs)
 			{
 				continue;
 			}
+#endif
 
 			// We may not yet switch to this spatial layer.
 			if (!CanSwitchToSpatialLayer(spatialLayer))
@@ -1325,7 +1340,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastBweDowngradeAtMs = 0u;
+		this->lastBweDowngradeAtMs = 0;
 
 		UpdateTargetLayers(-1, -1);
 	}
@@ -1334,7 +1349,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastBweDowngradeAtMs = 0u;
+		this->lastBweDowngradeAtMs = 0;
 
 		UpdateTargetLayers(-1, -1);
 	}

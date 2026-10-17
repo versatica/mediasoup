@@ -26,7 +26,9 @@
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "RTC/SctpListener.hpp"
 #ifdef MS_USE_BUILTIN_BWE
+#include "RTC/BWE/BitrateAllocator.hpp"
 #include "RTC/BWE/ReceiverTransportCongestionController.hpp"
+#include "RTC/BWE/SenderTransportCongestionController.hpp"
 #else
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
@@ -48,6 +50,7 @@ namespace RTC
 	                  public RTC::SCTP::AssociationListenerInterface,
 	                  public RTC::RttCalculator::Listener,
 #ifdef MS_USE_BUILTIN_BWE
+	                  public RTC::BWE::SenderTransportCongestionController::Listener,
 	                  public RTC::BWE::ReceiverTransportCongestionController::Listener,
 #else
 	                  public RTC::TransportCongestionControlClient::Listener,
@@ -213,6 +216,8 @@ namespace RTC
 		  onMessageQueuedCallback cb = {}) final;
 
 	private:
+		virtual bool IsCongestionControlSupported() const = 0;
+		virtual bool IsPipe() const                       = 0;
 		virtual RTC::Producer* AssertAndGetProducerById(
 		  const std::string& producerId, const std::string& method) const final;
 		virtual RTC::Consumer* AssertAndGetConsumerById(
@@ -232,10 +237,6 @@ namespace RTC
 		  const std::string& dataConsumerId, const std::string& method) const final;
 		virtual void CheckNoSctpDataConsumer(uint16_t streamId, const std::string& method) const final;
 		virtual bool IsConnected() const = 0;
-		virtual bool IsPipe() const
-		{
-			return false;
-		}
 		/**
 		 * Bytes that every packet sent through this transport carries on top of its
 		 * own length once it's on the network, or zero while no path has been
@@ -253,8 +254,35 @@ namespace RTC
 		virtual bool SendData(const uint8_t* data, size_t len) = 0;
 		virtual void RecvStreamClosed(uint32_t ssrc)           = 0;
 		virtual void SendStreamClosed(uint32_t ssrc)           = 0;
+#ifdef MS_USE_BUILTIN_BWE
+		/**
+		 * Build the sender congestion controller if this Transport may run one, is
+		 * connected and has something to send, and tell it what depends on the
+		 * Consumers and on the path, which both change over time.
+		 *
+		 * @remarks
+		 * - A Transport with no Consumer must not run it, since telling it that the
+		 *   network is available is what starts the RTP probing.
+		 * - It is called again whenever a Consumer is added and whenever the
+		 *   Transport connects, so it must be safe to call with it already built.
+		 */
+		virtual void MayCreateOrUpdateSenderTransportCongestionController() final;
+		/**
+		 * Build the receiver congestion controller if this Transport may run one, is
+		 * connected and receives a stream whose sender can be told about the link.
+		 *
+		 * @remarks
+		 * - A peer that negotiated neither transport-cc nor REMB cannot be told
+		 *   anything, so there is nothing to run.
+		 */
+		virtual void MayCreateReceiverTransportCongestionController() final;
+#endif
 		virtual void DistributeAvailableOutgoingBitrate() final;
+#ifdef MS_USE_BUILTIN_BWE
+		virtual void ComputeOutgoingDesiredBitrate() final;
+#else
 		virtual void ComputeOutgoingDesiredBitrate(bool forceBitrate = false) final;
+#endif
 		virtual void EmitTraceEventProbationType(RTC::RTP::Packet* packet) const final;
 #ifndef MS_USE_BUILTIN_BWE
 		virtual void EmitTraceEventBweType(
@@ -301,7 +329,9 @@ namespace RTC
 		void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) override;
 		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override;
+#ifndef MS_USE_BUILTIN_BWE
 		void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) override;
+#endif
 		void OnConsumerProducerClosed(RTC::Consumer* consumer) override;
 
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
@@ -354,6 +384,16 @@ namespace RTC
 		void OnRttCalculatorRttUpdated(RTC::RttCalculator* rttCalculator, int64_t avgRttMs) override;
 
 #ifdef MS_USE_BUILTIN_BWE
+		/* Pure virtual methods inherited from RTC::BWE::SenderTransportCongestionController::Listener. */
+	public:
+		void OnSenderTransportCongestionControllerTargetBitrate(
+		  RTC::BWE::SenderTransportCongestionController* senderTransportCongestionController,
+		  int64_t targetBitrate) override;
+		void OnSenderTransportCongestionControllerSendRtpProbePacket(
+		  RTC::BWE::SenderTransportCongestionController* senderTransportCongestionController,
+		  RTC::RTP::Packet* packet,
+		  int64_t sequenceNumber) override;
+
 		/* Pure virtual methods inherited from RTC::BWE::ReceiverTransportCongestionController::Listener. */
 	public:
 		void OnReceiverTransportCongestionControllerSendRtcpPacket(
@@ -406,6 +446,12 @@ namespace RTC
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
 #ifdef MS_USE_BUILTIN_BWE
+		// NOTE: Shared pointer rather than unique because the send callbacks hold a
+		// weak reference to it, since they may be invoked after this Transport is
+		// gone.
+		std::shared_ptr<RTC::BWE::SenderTransportCongestionController> senderTransportCongestionController{
+			nullptr
+		};
 		std::unique_ptr<RTC::BWE::ReceiverTransportCongestionController>
 		  receiverTransportCongestionController{ nullptr };
 #else
@@ -425,12 +471,14 @@ namespace RTC
 		RTC::RtpDataCounter recvRtxTransmission;
 		RTC::RtpDataCounter sendRtxTransmission;
 		RTC::RtpDataCounter sendProbationTransmission;
+#ifdef MS_USE_BUILTIN_BWE
+		// Shares the available outgoing bitrate out among the Consumers.
+		RTC::BWE::BitrateAllocator bitrateAllocator;
+#endif
+
 		// Round trip time of this Transport, out of what its RTP streams measure.
 		RTC::RttCalculator rttCalculator;
-#ifdef MS_USE_BUILTIN_BWE
-		// TODO: The built-in downlink BWE hands the sequence number out, so this
-		// counter goes away.
-#else
+#ifndef MS_USE_BUILTIN_BWE
 		uint16_t transportWideCcSeq{ 0 };
 #endif
 		bool sendSupportsTransportCc{ false };

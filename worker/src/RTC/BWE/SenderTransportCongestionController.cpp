@@ -111,6 +111,26 @@ namespace RTC
 			ApplyPendingUpdate();
 		}
 
+		void SenderTransportCongestionController::SetEnableProbing(bool enableProbing)
+		{
+			MS_TRACE();
+
+			if (enableProbing == this->enableProbing)
+			{
+				return;
+			}
+
+			this->enableProbing = enableProbing;
+
+			// Nothing is taken back from the estimator, which keeps deciding whether a
+			// burst is due and gives up on its own when the result of one never comes.
+			// What stops is the sending, and what it decides meanwhile is dropped.
+			if (!this->enableProbing)
+			{
+				this->probingScheduler.StopProbing();
+			}
+		}
+
 		std::optional<int64_t> SenderTransportCongestionController::OnRtpPacketToBeSent(
 		  RTC::RTP::Packet* packet, const RtpPacketToBeSentOptions& options)
 		{
@@ -430,6 +450,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const int64_t nowUs = this->shared->GetTimeUs();
+
+			// NOTE: Audio packets are left without it on purpose, since the REMB
+			// estimators out there, libwebrtc's included, ignore an audio packet that
+			// only carries abs-send-time.
+			if (!options.isAudio)
+			{
+				packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(nowUs));
+			}
+
 			// Whatever the packet carries there now, which is only read to find out
 			// whether it has room for the sequence number at all. Without it the
 			// remote endpoint cannot report on this packet, so taking note of it
@@ -440,8 +470,6 @@ namespace RTC
 			{
 				return std::nullopt;
 			}
-
-			const int64_t nowUs = this->shared->GetTimeUs();
 
 			const int64_t sequenceNumber = this->sendPacketHistory.AddPacket(
 			  SendPacketHistory::AddPacketOptions{
@@ -457,7 +485,6 @@ namespace RTC
 			    .createdAtUs      = nowUs });
 
 			packet->UpdateTransportWideCc01(static_cast<uint16_t>(sequenceNumber));
-			packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(nowUs));
 
 			return sequenceNumber;
 		}
@@ -486,6 +513,13 @@ namespace RTC
 		  const std::vector<Types::ProbeClusterConfig>& clusterConfigs)
 		{
 			MS_TRACE();
+
+			// A burst that must not go out is dropped here rather than kept waiting,
+			// since by the time probing is allowed again it would be stale.
+			if (!this->enableProbing)
+			{
+				return;
+			}
 
 			this->pendingUpdate.probeClusterConfigs.insert(
 			  this->pendingUpdate.probeClusterConfigs.end(), clusterConfigs.begin(), clusterConfigs.end());
