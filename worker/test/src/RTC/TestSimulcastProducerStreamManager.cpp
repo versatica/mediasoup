@@ -1,7 +1,9 @@
 #include "common.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
+#include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "Utils.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
@@ -287,6 +289,52 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		sr.SetRtpTs(rtpTs);
 
 		rtpStream->ReceiveRtcpSenderReport(std::addressof(sr), shared.GetTimeUs());
+	};
+
+	// Make the stream receive a packet carrying the 'abs-capture-time' extension,
+	// which tells that the given RTP timestamp was captured at the given instant of
+	// the clock of the remote sender.
+	const auto receiveAbsCaptureTimePacket =
+	  [](RTC::RTP::RtpStreamRecv* rtpStream, uint16_t seq, int64_t captureAtUs, uint32_t rtpTs) -> void
+	{
+		// Id the extension is given, which only has to match between what is written
+		// and what is read back.
+		constexpr uint8_t AbsCaptureTimeId{ 1 };
+
+		// NOTE: Not built on `FactoryBuffer` since the packet of the SCENARIO lives
+		// there.
+		std::unique_ptr<RTC::RTP::Packet> absCaptureTimePacket(
+		  RTC::RTP::Packet::Factory(rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)));
+
+		REQUIRE(absCaptureTimePacket);
+
+		absCaptureTimePacket->SetPayloadType(1);
+		absCaptureTimePacket->SetSsrc(rtpStream->GetSsrc());
+		absCaptureTimePacket->SetSequenceNumber(seq);
+		absCaptureTimePacket->SetTimestamp(rtpTs);
+
+		const std::vector<RTC::RTP::Packet::Extension> extensions{
+			{ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
+			 AbsCaptureTimeId, /*len*/ 8,
+			 rtpCommon::DataBuffer }
+		};
+
+		absCaptureTimePacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+
+		RTC::RTP::HeaderExtensionIds headerExtensionIds;
+
+		headerExtensionIds.absCaptureTime = AbsCaptureTimeId;
+
+		absCaptureTimePacket->AssignExtensionIds(headerExtensionIds);
+
+		const auto ntp = Utils::Time::TimeUsToNtp(captureAtUs);
+
+		REQUIRE(absCaptureTimePacket->UpdateAbsCaptureTime(
+		  (static_cast<uint64_t>(ntp.seconds) << 32) | static_cast<uint64_t>(ntp.fractions)));
+
+		rtpStream->ReceivePacket(absCaptureTimePacket.get(), shared.GetTimeUs());
+
+		REQUIRE(rtpStream->HasAbsCaptureTime());
 	};
 
 	SECTION("ProcessRtpPacket() returns DROP when target temporal layer is -1")
@@ -1539,6 +1587,112 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.spatialLayerSwitched == true);
 		REQUIRE(result.tsOffset == 0);
+	}
+
+	SECTION("ProcessRtpPacket() aligns spatial layers upon 'abs-capture-time' when both of them carry it")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Sender Reports tell that the RTP timeline of layer 1 runs 45000 ticks ahead of
+		// the one of layer 0.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 90000);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 135000);
+
+		// 'abs-capture-time' tells that it runs 18000 ticks ahead instead, and it is the
+		// one to take since both layers carry it.
+		receiveAbsCaptureTimePacket(
+		  rtpStream0.get(), /*seq*/ 1, /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 90000);
+		receiveAbsCaptureTimePacket(
+		  rtpStream1.get(), /*seq*/ 1, /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 108000);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(90000);
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+
+		manager->UpdateTargetLayers(1, 0);
+
+		// A packet of layer 1 captured 100 ms after the forwarded one of layer 0.
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(100);
+		packet->SetTimestamp(108000 + 9000);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 90000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(result.tsOffset == 18000);
+	}
+
+	SECTION(
+	  "ProcessRtpPacket() aligns spatial layers upon Sender Reports when only one of them carries 'abs-capture-time'")
+	{
+		MockListener listener;
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*ssrcs*/ TwoSsrcs,
+		  /*preferredLayers*/ { 1, 0 },
+		  /*keyFrameSupported*/ false);
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Sender Reports tell that the RTP timeline of layer 1 runs 45000 ticks ahead of
+		// the one of layer 0.
+		receiveSenderReport(rtpStream0.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 90000);
+		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 135000);
+
+		// Only layer 1 carries 'abs-capture-time', which tells otherwise, so it cannot be
+		// used and Sender Reports are taken instead.
+		receiveAbsCaptureTimePacket(
+		  rtpStream1.get(), /*seq*/ 1, /*captureAtUs*/ 1000 * 1000, /*rtpTs*/ 108000);
+
+		// Set target layer to 0 and sync. This sets tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+		packet->SetTimestamp(90000);
+		rtpStream0->ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+
+		manager->UpdateTargetLayers(1, 0);
+
+		// A packet of layer 1 captured 100 ms after the forwarded one of layer 0.
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(100);
+		packet->SetTimestamp(135000 + 9000);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 90000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.spatialLayerSwitched == true);
+		REQUIRE(result.tsOffset == 45000);
 	}
 
 	SECTION("ProducerRtcpSenderReport() ignores a Sender Report that is not the first one of its stream")
