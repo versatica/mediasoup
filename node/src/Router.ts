@@ -331,6 +331,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			throw new TypeError(
 				'only one of webRtcServer, listenInfos and listenIps must be given'
 			);
+		} else if (
+			initialAvailableOutgoingBitrate !== undefined &&
+			!utils.isUnsignedSafeInteger(initialAvailableOutgoingBitrate)
+		) {
+			throw new TypeError(
+				'if given, initialAvailableOutgoingBitrate must be an unsigned integer'
+			);
 		} else if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
 		}

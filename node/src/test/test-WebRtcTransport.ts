@@ -355,6 +355,36 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 			appData: 'NOT-AN-OBJECT',
 		})
 	).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+			initialAvailableOutgoingBitrate: -1,
+		})
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+			initialAvailableOutgoingBitrate: 1000000.5,
+		})
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+			// @ts-expect-error --- Testing purposes.
+			initialAvailableOutgoingBitrate: '1000000',
+		})
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+			// @ts-expect-error --- Testing purposes.
+			initialAvailableOutgoingBitrate: 1000000n,
+		})
+	).rejects.toThrow(TypeError);
 }, 2000);
 
 test('router.createWebRtcTransport() with non bindable IP rejects with Error', async () => {
@@ -568,6 +598,68 @@ test('webRtcTransport.setMinOutgoingBitrate() succeeds', async () => {
 	).resolves.toBeUndefined();
 }, 2000);
 
+test('webRtcTransport.setMaxIncomingBitrate(), setMaxOutgoingBitrate() and setMinOutgoingBitrate() with wrong arguments reject with TypeError', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
+	});
+
+	await expect(webRtcTransport.setMaxIncomingBitrate(-1)).rejects.toThrow(
+		TypeError
+	);
+
+	await expect(
+		webRtcTransport.setMaxIncomingBitrate(1000000.5)
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMaxIncomingBitrate('1000000')
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMaxIncomingBitrate(1000000n)
+	).rejects.toThrow(TypeError);
+
+	await expect(webRtcTransport.setMaxOutgoingBitrate(-1)).rejects.toThrow(
+		TypeError
+	);
+
+	await expect(
+		webRtcTransport.setMaxOutgoingBitrate(1000000.5)
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMaxOutgoingBitrate('1000000')
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMaxOutgoingBitrate(1000000n)
+	).rejects.toThrow(TypeError);
+
+	await expect(webRtcTransport.setMinOutgoingBitrate(-1)).rejects.toThrow(
+		TypeError
+	);
+
+	await expect(
+		webRtcTransport.setMinOutgoingBitrate(1000000.5)
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMinOutgoingBitrate('1000000')
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
+		webRtcTransport.setMinOutgoingBitrate(1000000n)
+	).rejects.toThrow(TypeError);
+}, 2000);
+
 test('webRtcTransport.setMaxOutgoingBitrate() fails if value is lower than current min limit', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenInfos: [
@@ -686,6 +778,36 @@ test('transport.enableTraceEvent() with wrong arguments rejects with TypeError',
 		// @ts-expect-error --- Testing purposes.
 		webRtcTransport.enableTraceEvent(['probation', 123.123])
 	).rejects.toThrow(TypeError);
+}, 2000);
+
+// Regression test. A message body serialization that threw in the middle used
+// to leave the Channel buffer builder in a nested state, making every
+// subsequent request and notification in the Worker fail forever.
+test('Channel recovers if a message serialization fails in the middle', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
+	});
+
+	// API not exposed in the interface.
+	const channel = (webRtcTransport as WebRtcTransportImpl).channelForTesting;
+
+	// Simulate a message body serialization that throws in the middle by starting
+	// an object and never ending it.
+	channel.bufferBuilder.startObject(1);
+
+	// A request without body must still succeed.
+	await expect(webRtcTransport.dump()).resolves.toBeDefined();
+
+	channel.bufferBuilder.startObject(1);
+
+	// A request with body must still succeed.
+	await expect(
+		webRtcTransport.setMaxIncomingBitrate(100000)
+	).resolves.toBeUndefined();
+
+	webRtcTransport.close();
 }, 2000);
 
 test('WebRtcTransport events succeed', async () => {
