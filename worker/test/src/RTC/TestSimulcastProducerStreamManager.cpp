@@ -1115,6 +1115,67 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	}
 
 	SECTION(
+	  "ProcessRtpPacket() keeps forwarding the current spatial layer while waiting to be able to align the key frame of the target one")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Set target layer to 0 and sync with a key frame. This sets
+		// tsReferenceSpatialLayer = 0.
+		manager->UpdateTargetLayers(0, 0);
+
+		auto* handler0       = new MockPayloadDescriptorHandler();
+		handler0->isKeyFrame = true;
+		packet->SetPayloadDescriptorHandler(handler0);
+
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(1);
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
+
+		// Aim at layer 1, which cannot be aligned to the alive layer 0 since none of
+		// them can tell its capture instant, so its key frame is discarded.
+		manager->UpdateTargetLayers(1, 0);
+
+		auto* handler1       = new MockPayloadDescriptorHandler();
+		handler1->isKeyFrame = true;
+		packet->SetPayloadDescriptorHandler(handler1);
+
+		packet->SetSsrc(MappedSsrc1);
+		packet->SetSequenceNumber(100);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 1000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::SILENT_DROP);
+		REQUIRE(manager->GetCurrentSpatialLayer() == 0);
+
+		// Packets of the current layer 0 that are not key frames are still forwarded.
+		auto* handler2       = new MockPayloadDescriptorHandler();
+		handler2->isKeyFrame = false;
+		packet->SetPayloadDescriptorHandler(handler2);
+
+		packet->SetSsrc(MappedSsrc0);
+		packet->SetSequenceNumber(2);
+
+		result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ true, /*clockRate*/ 90000, /*maxPacketTs*/ 1000);
+
+		REQUIRE(result.type == RTC::ProducerStreamManager::RtpPacketProcessResult::Type::FORWARD);
+		REQUIRE(result.isSyncPacket == false);
+	}
+
+	SECTION(
 	  "RecalculateTargetLayers() does not switch away from the TS reference spatial layer while it cannot tell its capture instant and its packets have been forwarded")
 	{
 		// Scenario based on https://github.com/versatica/mediasoup/issues/2000.

@@ -972,6 +972,16 @@ namespace RTC
 						RequestKeyFrame();
 					}
 
+					// Reset flags since we are discarding the key frame of the target spatial
+					// layer, so packets of the current one go on being forwarded meanwhile.
+					// NOTE: Not when resyncing the current spatial layer, whose packets must
+					// not be forwarded until it is synced.
+					if (shouldSwitchCurrentSpatialLayer)
+					{
+						this->syncRequired       = false;
+						this->spatialLayerToSync = -1;
+					}
+
 					result.type = RtpPacketProcessResult::Type::SILENT_DROP;
 
 					return result;
