@@ -158,11 +158,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		const auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
+
 		// If the RTP timestamp reference stream dies while another spatial layer is
 		// being sent, take the latter as reference with the offset it is being sent
 		// with, so nothing depends on the dead stream anymore.
 		if (
-		  score == 0 && rtpStream == GetProducerTsReferenceRtpStream() &&
+		  score == 0 && producerTsReferenceRtpStream && rtpStream == producerTsReferenceRtpStream &&
 		  this->currentSpatialLayer != -1 && this->currentSpatialLayer != this->tsReferenceSpatialLayer)
 		{
 			MS_DEBUG_TAG(
