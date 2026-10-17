@@ -1310,6 +1310,14 @@ function validateAndNormalizeRtpEncodingParameters(
 	) {
 		throw new TypeError('invalid encoding.scalabilityMode');
 	}
+
+	// maxBitrate is optional.
+	if (
+		encoding.maxBitrate !== undefined &&
+		!utils.isUnsignedSafeInteger(encoding.maxBitrate)
+	) {
+		throw new TypeError('invalid encoding.maxBitrate');
+	}
 }
 
 /**

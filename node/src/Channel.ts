@@ -191,8 +191,17 @@ export class Channel extends EnhancedEventEmitter {
 
 	/**
 	 * flatbuffer builder.
+	 *
+	 * NOTE: It must be retrieved once per message, right before building
+	 * its body. Retrieving it again while building the same message silently
+	 * wipes what was built so far.
+	 * It's reset here so a new message always starts with a clean builder,
+	 * which also recovers it if a previous build threw in the middle of the
+	 * serialization (which would otherwise break every future message).
 	 */
 	get bufferBuilder(): flatbuffers.Builder {
+		this.#bufferBuilder.clear();
+
 		return this.#bufferBuilder;
 	}
 
@@ -243,6 +252,12 @@ export class Channel extends EnhancedEventEmitter {
 			);
 		}
 
+		// If there is no body then the buffer builder holds nothing we need, so
+		// reset it in case a previous message left content in it.
+		if (!bodyType || !bodyOffset) {
+			this.#bufferBuilder.clear();
+		}
+
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId ?? '');
 
 		let notificationOffset: number;
@@ -277,9 +292,6 @@ export class Channel extends EnhancedEventEmitter {
 		// Create a new buffer with this data so multiple contiguous flatbuffers
 		// do not point to the builder buffer overriding others info.
 		const buffer = new Uint8Array(this.#bufferBuilder.asUint8Array());
-
-		// Clear the buffer builder so it's reused for the next request.
-		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN) {
 			logger.error(`notify() | notification too big [event:${Event[event]}]`);
@@ -318,6 +330,13 @@ export class Channel extends EnhancedEventEmitter {
 		}
 
 		const id = this.#nextId;
+
+		// If there is no body then the buffer builder holds nothing we need, so
+		// reset it in case a previous message left content in it.
+		if (!bodyType || !bodyOffset) {
+			this.#bufferBuilder.clear();
+		}
+
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId ?? '');
 
 		let requestOffset: number;
@@ -354,9 +373,6 @@ export class Channel extends EnhancedEventEmitter {
 		// Create a new buffer with this data so multiple contiguous flatbuffers
 		// do not point to the builder buffer overriding others info.
 		const buffer = new Uint8Array(this.#bufferBuilder.asUint8Array());
-
-		// Clear the buffer builder so it's reused for the next request.
-		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN) {
 			throw new Error(`request too big [method:${Method[method]}]`);

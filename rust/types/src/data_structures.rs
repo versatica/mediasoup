@@ -885,9 +885,9 @@ pub struct RtpPacketTraceInfo {
     /// Whether packet contains a key frame.
     pub is_key_frame: bool,
     /// Packet size.
-    pub size: u64,
+    pub size: u32,
     /// Payload size.
-    pub payload_size: u64,
+    pub payload_size: u32,
     /// The spatial layer index (from 0 to N).
     pub spatial_layer: u8,
     /// The temporal layer index (from 0 to N).

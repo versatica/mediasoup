@@ -85,6 +85,7 @@ import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import { TraceDirection as FbsTraceDirection } from './fbs/common';
 import * as FbsRequest from './fbs/request';
+import type { Response as FbsResponse } from './fbs/response';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
 import * as FbsConsumer from './fbs/consumer';
 import * as FbsDataConsumer from './fbs/data-consumer';
@@ -411,6 +412,10 @@ export abstract class TransportImpl<
 	async setMaxIncomingBitrate(bitrate: number): Promise<void> {
 		logger.debug(`setMaxIncomingBitrate() [bitrate:${bitrate}]`);
 
+		if (!utils.isUnsignedSafeInteger(bitrate)) {
+			throw new TypeError('bitrate must be an unsigned integer');
+		}
+
 		/* Build Request. */
 		const requestOffset =
 			FbsTransport.SetMaxIncomingBitrateRequest.createSetMaxIncomingBitrateRequest(
@@ -429,6 +434,10 @@ export abstract class TransportImpl<
 	async setMaxOutgoingBitrate(bitrate: number): Promise<void> {
 		logger.debug(`setMaxOutgoingBitrate() [bitrate:${bitrate}]`);
 
+		if (!utils.isUnsignedSafeInteger(bitrate)) {
+			throw new TypeError('bitrate must be an unsigned integer');
+		}
+
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
 			BigInt(bitrate)
@@ -444,6 +453,10 @@ export abstract class TransportImpl<
 
 	async setMinOutgoingBitrate(bitrate: number): Promise<void> {
 		logger.debug(`setMinOutgoingBitrate() [bitrate:${bitrate}]`);
+
+		if (!utils.isUnsignedSafeInteger(bitrate)) {
+			throw new TypeError('bitrate must be an unsigned integer');
+		}
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMinOutgoingBitrateRequestT(
@@ -850,7 +863,7 @@ export abstract class TransportImpl<
 
 		let type: DataConsumerType;
 		let sctpStreamParameters: SctpStreamParameters | undefined;
-		let sctpStreamId: number;
+		let sctpStreamId: number | undefined;
 
 		// If this is a DirectTransport, sctpStreamParameters must not be used.
 		if (this.type === 'direct') {
@@ -907,24 +920,35 @@ export abstract class TransportImpl<
 		const { label, protocol } = dataProducer;
 		const dataConsumerId = utils.generateUUIDv4();
 
-		const requestOffset = createConsumeDataRequest({
-			builder: this.channel.bufferBuilder,
-			dataConsumerId,
-			dataProducerId,
-			type,
-			sctpStreamParameters,
-			label,
-			protocol,
-			paused,
-			subchannels,
-		});
+		let response: FbsResponse;
 
-		const response = await this.channel.request(
-			FbsRequest.Method.TRANSPORT_CONSUME_DATA,
-			FbsRequest.Body.Transport_ConsumeDataRequest,
-			requestOffset,
-			this.internal.transportId
-		);
+		try {
+			const requestOffset = createConsumeDataRequest({
+				builder: this.channel.bufferBuilder,
+				dataConsumerId,
+				dataProducerId,
+				type,
+				sctpStreamParameters,
+				label,
+				protocol,
+				paused,
+				subchannels,
+			});
+
+			response = await this.channel.request(
+				FbsRequest.Method.TRANSPORT_CONSUME_DATA,
+				FbsRequest.Body.Transport_ConsumeDataRequest,
+				requestOffset,
+				this.internal.transportId
+			);
+		} catch (error) {
+			// No DataConsumer will use the allocated SCTP stream id, so release it.
+			if (this.#sctpStreamIds && sctpStreamId !== undefined) {
+				this.#sctpStreamIds[sctpStreamId] = 0;
+			}
+
+			throw error;
+		}
 
 		/* Decode Response. */
 		const consumeDataResponse = new FbsDataConsumer.DumpResponse();
@@ -958,14 +982,14 @@ export abstract class TransportImpl<
 		dataConsumer.on('@close', () => {
 			this.dataConsumers.delete(dataConsumer.id);
 
-			if (this.#sctpStreamIds) {
+			if (this.#sctpStreamIds && sctpStreamId !== undefined) {
 				this.#sctpStreamIds[sctpStreamId] = 0;
 			}
 		});
 		dataConsumer.on('@dataproducerclose', () => {
 			this.dataConsumers.delete(dataConsumer.id);
 
-			if (this.#sctpStreamIds) {
+			if (this.#sctpStreamIds && sctpStreamId !== undefined) {
 				this.#sctpStreamIds[sctpStreamId] = 0;
 			}
 		});

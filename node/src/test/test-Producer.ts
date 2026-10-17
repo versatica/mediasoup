@@ -361,6 +361,89 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 			},
 		})
 	).rejects.toThrow(TypeError);
+
+	// String maxBitrate.
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				...ctx.audioProducerOptions.rtpParameters,
+				// @ts-expect-error --- Testing purposes.
+				encodings: [{ ssrc: 1111, maxBitrate: '2000000' }],
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// Non integer maxBitrate.
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				...ctx.audioProducerOptions.rtpParameters,
+				encodings: [{ ssrc: 1111, maxBitrate: 2000000.5 }],
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// NaN maxBitrate.
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				...ctx.audioProducerOptions.rtpParameters,
+				encodings: [{ ssrc: 1111, maxBitrate: NaN }],
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// Negative maxBitrate.
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				...ctx.audioProducerOptions.rtpParameters,
+				encodings: [{ ssrc: 1111, maxBitrate: -2000000 }],
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// Too big maxBitrate (bigger than Number.MAX_SAFE_INTEGER).
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				...ctx.audioProducerOptions.rtpParameters,
+				encodings: [{ ssrc: 1111, maxBitrate: 1e30 }],
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// bigint maxBitrate.
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				...ctx.audioProducerOptions.rtpParameters,
+				// @ts-expect-error --- Testing purposes.
+				encodings: [{ ssrc: 1111, maxBitrate: 2000000n }],
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	// null maxBitrate. It used to throw "Cannot convert null to a BigInt" in the
+	// middle of the Channel buffer builder serialization.
+	// NOTE: Check the error message since BigInt(null) would also throw
+	// TypeError if the validation didn't catch it.
+	await expect(
+		ctx.webRtcTransport1!.produce({
+			kind: 'audio',
+			rtpParameters: {
+				...ctx.audioProducerOptions.rtpParameters,
+				// @ts-expect-error --- Testing purposes.
+				encodings: [{ ssrc: 1111, maxBitrate: null }],
+			},
+		})
+	).rejects.toThrow('invalid encoding.maxBitrate');
 }, 2000);
 
 test('webRtcTransport1.produce() with unsupported codecs rejects with UnsupportedError', async () => {
