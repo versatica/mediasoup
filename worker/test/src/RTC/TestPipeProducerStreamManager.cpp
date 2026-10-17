@@ -169,7 +169,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.isSyncPacket == true);
 		REQUIRE(result.syncSeqValue == 9);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 
 		// Second packet forwards normally, no sync.
 		packet->SetSequenceNumber(11);
@@ -488,7 +488,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		const auto used = manager->IncreaseLayer(1000000, false, 0.0f, DepLibUV::GetTimeMs());
 
-		REQUIRE(used == 0u);
+		REQUIRE(used == 0);
 	}
 #endif
 

@@ -274,6 +274,32 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		// clang-format on
 	}
 
+	SECTION(
+	  "packet with higher seq than newest packet in the buffer and too old timestamp forces buffer emptying")
+	{
+		const uint16_t maxItems{ 4 };
+		const int64_t maxRetransmissionDelayMs{ 2000 };
+		const uint32_t clockRate{ 90000 };
+		const auto maxDiffTs = static_cast<uint32_t>(maxRetransmissionDelayMs * clockRate / 1000);
+
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+
+		myRetransmissionBuffer.Insert(10001, 1000000001);
+		myRetransmissionBuffer.Insert(10002, 1000000002);
+		myRetransmissionBuffer.Insert(10003, 1000000003);
+		// Timestamp goes back further than maxRetransmissionDelayMs (subtract 100 to
+		// avoid math issues).
+		myRetransmissionBuffer.Insert(10004, 1000000003 - maxDiffTs - 100);
+
+		// clang-format off
+		myRetransmissionBuffer.AssertBuffer(
+			{
+				{ .isPresent = true, .sequenceNumber = 10004, .timestamp = 1000000003 - maxDiffTs - 100 }
+			}
+		);
+		// clang-format on
+	}
+
 	SECTION("stored packet is too old once maxRetransmissionDelayMs elapsed since it was stored")
 	{
 		const uint16_t maxItems{ 4 };
