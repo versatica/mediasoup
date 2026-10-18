@@ -177,16 +177,13 @@ namespace RTC
 
 			void Resume() override;
 
+			/**
+			 * Bitrate of everything that has been sent.
+			 */
 			int64_t GetBitrate(int64_t nowMs) override
 			{
 				return this->transmissionCounter.GetBitrate(nowMs).value_or(0);
 			}
-
-			int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
-
-			int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) override;
-
-			int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 		private:
 			void RetransmitPendingPackets();

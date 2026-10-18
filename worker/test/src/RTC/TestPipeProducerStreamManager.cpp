@@ -169,7 +169,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.isSyncPacket == true);
 		REQUIRE(result.syncSeqValue == 9);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 
 		// Second packet forwards normally, no sync.
 		packet->SetSequenceNumber(11);
@@ -459,20 +459,16 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	SECTION("IsBitrateAdaptable() returns false")
+	SECTION("GetBitrateOptions() offers a single point of 0 while no Producer stream has arrived")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
 
-		REQUIRE(manager->IsBitrateAdaptable() == false);
-	}
+		const auto bitrateOptions = manager->GetBitrateOptions(DepLibUV::GetTimeMs());
 
-	SECTION("GetOutputBitrate() returns 0 while no Producer stream has arrived")
-	{
-		MockListener listener;
-		auto manager = createManager(std::addressof(listener));
-
-		REQUIRE(manager->GetOutputBitrate(DepLibUV::GetTimeMs()) == 0);
+		REQUIRE(bitrateOptions.options.size() == 1);
+		REQUIRE(bitrateOptions.options.at(0).bitrate == 0);
+		REQUIRE(bitrateOptions.currentOption == 0);
 	}
 #else
 	SECTION("IncreaseLayer() returns 0 (no BWE)")
@@ -484,7 +480,7 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		const auto used = manager->IncreaseLayer(1000000, false, 0.0f, DepLibUV::GetTimeMs());
 
-		REQUIRE(used == 0u);
+		REQUIRE(used == 0);
 	}
 
 	SECTION("GetDesiredBitrate() returns 0 (no BWE)")

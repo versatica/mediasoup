@@ -172,13 +172,10 @@ namespace RTC
 
 			virtual void Resume() = 0;
 
+			/**
+			 * Bitrate of every spatial layer and every temporal layer.
+			 */
 			virtual int64_t GetBitrate(int64_t nowMs) = 0;
-
-			virtual int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
-
-			virtual int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) = 0;
-
-			virtual int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 
 			void ResetScore(uint8_t score, bool notify);
 
@@ -227,11 +224,6 @@ namespace RTC
 				return this->score;
 			}
 
-			int64_t GetActiveMs() const
-			{
-				return this->shared->GetTimeMs() - this->activeSinceMs;
-			}
-
 		protected:
 			bool UpdateSeq(const RTP::Packet* packet);
 
@@ -276,8 +268,7 @@ namespace RTC
 			// monotonic clock.
 			// NOTE: Only meaningful in a send stream, whose packets arrive already carrying
 			// their capture instant. In a receive stream it is the Producer that tells it,
-			// once this class has already seen the packet, so
-			// RtpStreamRecv::GetCaptureMapping() is what must be used there.
+			// once this class has already seen the packet, so it stays empty there.
 			std::optional<int64_t> maxPacketCaptureAtUs;
 			int32_t packetsLost{ 0 };
 			uint8_t fractionLost{ 0 };
@@ -312,8 +303,6 @@ namespace RTC
 			std::vector<uint8_t> scores;
 			// Whether at least a RTP packet has been received.
 			bool started{ false };
-			// Last time since the stream is active.
-			int64_t activeSinceMs{ 0 };
 		};
 	} // namespace RTP
 } // namespace RTC

@@ -46,17 +46,11 @@ namespace RTC
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
 #ifdef MS_USE_BUILTIN_BWE
-		bool IsBitrateAdaptable() const override
-		{
-			// A single stream with no layers has nowhere to go.
-			return false;
-		}
-		int64_t GetOutputBitrate(int64_t nowMs) const override;
-		int64_t TakeBitrate(int64_t bitrate, int64_t nowMs) override;
-		void ApplyBitrateAllocation(int64_t rtpStreamActiveMs) override;
+		RTC::BWE::BitrateAllocator::Candidate::BitrateOptions GetBitrateOptions(int64_t nowMs) const override;
+		void SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option) override;
 #else
 		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) override;
-		void ApplyLayers(int64_t rtpStreamActiveMs) override;
+		void ApplyLayers() override;
 #endif
 		int64_t GetDesiredBitrate(int64_t nowMs) const override;
 		RtpPacketProcessResult ProcessRtpPacket(

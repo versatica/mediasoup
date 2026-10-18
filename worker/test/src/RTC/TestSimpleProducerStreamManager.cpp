@@ -184,7 +184,7 @@ namespace
 		params.clockRate = 90000;
 
 		return std::make_unique<RTC::RTP::RtpStreamRecv>(
-		  std::addressof(streamRecvListener), std::addressof(shared), params, 0u, false);
+		  std::addressof(streamRecvListener), std::addressof(shared), params, 0, false);
 	}
 
 	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero. They
@@ -335,7 +335,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		REQUIRE(result.isSyncPacket == true);
 		REQUIRE(result.syncSeqValue == seq - 1);
 		REQUIRE(result.sendBufferedPackets == false);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 	}
 
 	SECTION("returns FORWARD for normal packets after sync")
@@ -361,7 +361,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.isSyncPacket == false);
 		REQUIRE(result.sendBufferedPackets == false);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 	}
 
 	SECTION("OnTransportConnected() requests keyframe when active")
@@ -418,15 +418,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	SECTION("IsBitrateAdaptable() returns false")
-	{
-		MockListener listener;
-		auto manager = createManager(std::addressof(listener));
-
-		REQUIRE(manager->IsBitrateAdaptable() == false);
-	}
-
-	SECTION("GetOutputBitrate() returns the bitrate of the Producer stream")
+	SECTION("GetBitrateOptions() offers the single point of the Producer stream bitrate")
 	{
 		MockListener listener;
 		auto manager   = createManager(std::addressof(listener));
@@ -442,15 +434,23 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		const auto streamBitrate = rtpStream->GetBitrate(nowMs);
 
 		REQUIRE(streamBitrate > 0);
-		REQUIRE(manager->GetOutputBitrate(nowMs) == streamBitrate);
+
+		const auto bitrateOptions = manager->GetBitrateOptions(nowMs);
+
+		REQUIRE(bitrateOptions.options.size() == 1);
+		REQUIRE(bitrateOptions.options.at(0).bitrate == streamBitrate);
+		REQUIRE(bitrateOptions.currentOption == 0);
 	}
 
-	SECTION("GetOutputBitrate() returns 0 while no Producer stream has arrived")
+	SECTION("GetBitrateOptions() offers a point of 0 while no Producer stream has arrived")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
 
-		REQUIRE(manager->GetOutputBitrate(shared.GetTimeMs()) == 0);
+		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		REQUIRE(bitrateOptions.options.size() == 1);
+		REQUIRE(bitrateOptions.options.at(0).bitrate == 0);
 	}
 #else
 	SECTION("IncreaseLayer() returns producer bitrate when it is less than available bitrate")
@@ -542,7 +542,7 @@ SCENARIO("SimpleProducerStreamManager", "[rtp][producerstreammanager][simple]")
 		// First iteration: claim bitrate and apply.
 		manager->IncreaseLayer(
 		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
-		manager->ApplyLayers(/*rtpStreamActiveMs*/ 0u);
+		manager->ApplyLayers();
 
 		// After ApplyLayers, IncreaseLayer should work again.
 		auto usedBitrate = manager->IncreaseLayer(

@@ -105,30 +105,25 @@ namespace RTC
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	int64_t SimpleProducerStreamManager::GetOutputBitrate(int64_t nowMs) const
+	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions SimpleProducerStreamManager::GetBitrateOptions(
+	  int64_t nowMs) const
 	{
 		MS_TRACE();
 
-		if (!this->producerRtpStream)
-		{
-			return 0;
-		}
+		// A single stream with no layers has nowhere to go, so it offers the single
+		// point it is putting out.
+		const int64_t outputBitrate =
+		  this->producerRtpStream ? this->producerRtpStream->GetBitrate(nowMs) : 0;
 
-		return this->producerRtpStream->GetBitrate(nowMs);
+		return { .options = { { .bitrate = outputBitrate, .layers = {} } }, .currentOption = 0 };
 	}
 
-	int64_t SimpleProducerStreamManager::TakeBitrate(int64_t /*bitrate*/, int64_t /*nowMs*/)
+	void SimpleProducerStreamManager::SetBitrateOption(
+	  const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& /*option*/)
 	{
 		MS_TRACE();
 
-		MS_ABORT("not an adaptable bitrate");
-	}
-
-	void SimpleProducerStreamManager::ApplyBitrateAllocation(int64_t /*rtpStreamActiveMs*/)
-	{
-		MS_TRACE();
-
-		MS_ABORT("not an adaptable bitrate");
+		MS_ABORT("a single point to run at, so it is never given any");
 	}
 #else
 	int64_t SimpleProducerStreamManager::IncreaseLayer(
@@ -173,7 +168,7 @@ namespace RTC
 		}
 	}
 
-	void SimpleProducerStreamManager::ApplyLayers(int64_t /*rtpStreamActiveMs*/)
+	void SimpleProducerStreamManager::ApplyLayers()
 	{
 		MS_TRACE();
 
@@ -187,11 +182,20 @@ namespace RTC
 #endif
 
 #ifdef MS_USE_BUILTIN_BWE
-	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
+	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
 
-		MS_ABORT("not an adaptable bitrate");
+		// What it is putting out is what it wants, since it has no way of wanting
+		// anything else. Leaving it out would ask the estimator for less than what
+		// is going to be sent, while the allocation takes its bitrate off the top
+		// all the same.
+		if (!this->producerRtpStream)
+		{
+			return 0;
+		}
+
+		return this->producerRtpStream->GetBitrate(nowMs);
 	}
 #else
 	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const

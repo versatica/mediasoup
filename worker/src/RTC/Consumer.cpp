@@ -1045,32 +1045,9 @@ namespace RTC
 		return this->id;
 	}
 
-	bool Consumer::IsBitrateAdaptable() const
-	{
-		MS_TRACE();
-
-		return this->producerStreamManager->IsBitrateAdaptable();
-	}
-
-	int64_t Consumer::GetOutputBitrate() const
-	{
-		MS_TRACE();
-
-		if (!IsActive())
-		{
-			return 0;
-		}
-
-		const int64_t nowMs = this->shared->GetTimeMs();
-
-		return this->producerStreamManager->GetOutputBitrate(nowMs);
-	}
-
 	uint8_t Consumer::GetBitrateWeight() const
 	{
 		MS_TRACE();
-
-		MS_ASSERT(IsBitrateAdaptable(), "not an adaptable bitrate");
 
 		if (!IsActive())
 		{
@@ -1080,26 +1057,29 @@ namespace RTC
 		return this->priority;
 	}
 
-	int64_t Consumer::TakeBitrate(int64_t bitrate)
+	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions Consumer::GetBitrateOptions() const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(IsActive(), "should be active");
+		// An inactive Consumer puts nothing out and has nowhere to go, so it takes
+		// no bitrate and is left where it is.
+		if (!IsActive())
+		{
+			return { .options = { { .bitrate = 0, .layers = {} } }, .currentOption = 0 };
+		}
 
 		const int64_t nowMs = this->shared->GetTimeMs();
 
-		return this->producerStreamManager->TakeBitrate(bitrate, nowMs);
+		return this->producerStreamManager->GetBitrateOptions(nowMs);
 	}
 
-	void Consumer::ApplyBitrateAllocation()
+	void Consumer::SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(IsActive(), "should be active");
 
-		auto* rtpStream = this->mapSsrcRtpStream.begin()->second;
-
-		this->producerStreamManager->ApplyBitrateAllocation(rtpStream->GetActiveMs());
+		this->producerStreamManager->SetBitrateOption(option);
 	}
 #else
 	uint8_t Consumer::GetBitratePriority() const
@@ -1162,9 +1142,7 @@ namespace RTC
 			return;
 		}
 
-		auto* rtpStream = this->mapSsrcRtpStream.begin()->second;
-
-		this->producerStreamManager->ApplyLayers(rtpStream->GetActiveMs());
+		this->producerStreamManager->ApplyLayers();
 	}
 #endif
 
@@ -1178,22 +1156,9 @@ namespace RTC
 			return 0;
 		}
 
-		int64_t desiredBitrate{ 0 };
+		const int64_t nowMs = this->shared->GetTimeMs();
 
-		// What a Consumer that cannot adapt puts out is what it wants, since it has
-		// no way of wanting anything else. Leaving it out would ask the estimator
-		// for less than what is going to be sent, while the allocation takes its
-		// bitrate off the top all the same.
-		if (!IsBitrateAdaptable())
-		{
-			desiredBitrate = GetOutputBitrate();
-		}
-		else
-		{
-			const int64_t nowMs = this->shared->GetTimeMs();
-
-			desiredBitrate = this->producerStreamManager->GetDesiredBitrate(nowMs);
-		}
+		const int64_t desiredBitrate = this->producerStreamManager->GetDesiredBitrate(nowMs);
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
 		// greater than computed one, then use it.

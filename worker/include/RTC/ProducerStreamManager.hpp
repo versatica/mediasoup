@@ -2,6 +2,9 @@
 #define MS_RTC_PRODUCER_STREAM_MANAGER_HPP
 
 #include "common.hpp"
+#ifdef MS_USE_BUILTIN_BWE
+#include "RTC/BWE/BitrateAllocator.hpp"
+#endif
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Packet.hpp"
@@ -117,17 +120,25 @@ namespace RTC
 #endif
 
 #ifdef MS_USE_BUILTIN_BWE
-		// Whether the bitrate being put out can be moved at all, which is what lets
-		// the Consumer take part in the bitrate allocation.
-		virtual bool IsBitrateAdaptable() const = 0;
-		// What is being put out right now, only asked when it cannot be moved.
-		virtual int64_t GetOutputBitrate(int64_t nowMs) const          = 0;
-		virtual int64_t TakeBitrate(int64_t bitrate, int64_t nowMs)    = 0;
-		virtual void ApplyBitrateAllocation(int64_t rtpStreamActiveMs) = 0;
+		/**
+		 * The points this one may run at right now and which of them it is
+		 * running at.
+		 *
+		 * @remarks
+		 * - A manager with nothing to choose offers the single point it is
+		 *   putting out, which the bitrate allocation takes off the top instead
+		 *   of bidding for.
+		 */
+		virtual RTC::BWE::BitrateAllocator::Candidate::BitrateOptions GetBitrateOptions(
+		  int64_t nowMs) const = 0;
+		/**
+		 * Run at the given point from now on.
+		 */
+		virtual void SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option) = 0;
 #else
 		virtual int64_t IncreaseLayer(
 		  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) = 0;
-		virtual void ApplyLayers(int64_t rtpStreamActiveMs)                        = 0;
+		virtual void ApplyLayers()                                                 = 0;
 #endif
 		virtual int64_t GetDesiredBitrate(int64_t nowMs) const = 0;
 
@@ -187,6 +198,37 @@ namespace RTC
 	protected:
 		virtual bool IsActive() const = 0;
 
+#ifdef MS_USE_BUILTIN_BWE
+		/**
+		 * Which of the given points is the one the bitrate allocation last
+		 * settled on.
+		 *
+		 * @returns No value if it has settled on none yet or if the point it
+		 *   settled on is not on offer anymore, which is what tells the
+		 *   allocation that this one is not climbing back to anything.
+		 */
+		std::optional<size_t> GetCurrentBitrateOption(
+		  const std::vector<RTC::BWE::BitrateAllocator::Candidate::BitrateOption>& options) const
+		{
+			if (!this->bitrateAllocated)
+			{
+				return std::nullopt;
+			}
+
+			const auto targetLayers = GetTargetLayers();
+
+			for (size_t idx{ 0 }; idx < options.size(); ++idx)
+			{
+				if (options.at(idx).layers == targetLayers)
+				{
+					return idx;
+				}
+			}
+
+			return std::nullopt;
+		}
+#endif
+
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		SharedInterface* shared{ nullptr };
@@ -204,7 +246,15 @@ namespace RTC
 
 		// Layer preferences.
 		RTC::ConsumerTypes::VideoLayers preferredLayers;
+#ifdef MS_USE_BUILTIN_BWE
+		// Whether the bitrate allocation has ever given this one a point to run at.
+		// Telling that from "it was left sending nothing" is what makes the latter
+		// pay the margin to climb back and the former not, since one that has never
+		// been given anything is not climbing back to anything.
+		bool bitrateAllocated{ false };
+#else
 		RTC::ConsumerTypes::VideoLayers provisionalTargetLayers;
+#endif
 
 		// Sync state.
 		bool syncRequired{ false };

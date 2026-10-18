@@ -546,29 +546,6 @@ namespace RTC
 			}
 		}
 
-		int64_t RtpStreamSend::GetBitrate(
-		  int64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
-		{
-			MS_TRACE();
-
-			MS_ABORT("invalid method call");
-		}
-
-		int64_t RtpStreamSend::GetSpatialLayerBitrate(int64_t /*nowMs*/, uint8_t /*spatialLayer*/)
-		{
-			MS_TRACE();
-
-			MS_ABORT("invalid method call");
-		}
-
-		int64_t RtpStreamSend::GetLayerBitrate(
-		  int64_t /*nowMs*/, uint8_t /*spatialLayer*/, uint8_t /*temporalLayer*/)
-		{
-			MS_TRACE();
-
-			MS_ABORT("invalid method call");
-		}
-
 		// This method takes pending retransmissions from the front of the queue and
 		// retransmits their packets until MaxRetransmittedPacketsPerIteration packets
 		// have been retransmitted or the queue is empty. Pending retransmissions whose

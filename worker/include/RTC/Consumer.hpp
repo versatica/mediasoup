@@ -164,11 +164,9 @@ namespace RTC
 #endif
 #ifdef MS_USE_BUILTIN_BWE
 		const std::string& GetBitrateAllocationId() const override;
-		bool IsBitrateAdaptable() const override;
-		int64_t GetOutputBitrate() const override;
 		uint8_t GetBitrateWeight() const override;
-		int64_t TakeBitrate(int64_t bitrate) override;
-		void ApplyBitrateAllocation() override;
+		RTC::BWE::BitrateAllocator::Candidate::BitrateOptions GetBitrateOptions() const override;
+		void SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option) override;
 #else
 		uint8_t GetBitratePriority() const;
 		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss);
