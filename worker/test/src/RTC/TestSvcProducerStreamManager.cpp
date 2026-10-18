@@ -252,13 +252,12 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	packet->SetTimestamp(1000);
 	packet->SetPayloadLength(40);
 
-	// Each BWE picks the layers in its own way, so this drives whichever one is
-	// built: it hands the manager that much bitrate and leaves it settled on the
-	// layers that it pays for.
+#ifdef MS_USE_BUILTIN_BWE
+	// Hands the manager that much bitrate and leaves it settled on the layers that
+	// it pays for, which is what the bitrate allocation does to it.
 	const auto allocateBitrate =
 	  [](RTC::SvcProducerStreamManager* manager, int64_t bitrate, int64_t nowMs) -> void
 	{
-#ifdef MS_USE_BUILTIN_BWE
 		const auto bitrateOptions = manager->GetBitrateOptions(nowMs);
 
 		// The dearest point that fits, which is where the allocation leaves a
@@ -274,11 +273,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		}
 
 		manager->SetBitrateOption(bitrateOptions.options.at(option));
-#else
-		manager->IncreaseLayer(bitrate, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
-		manager->ApplyLayers();
-#endif
 	};
+#endif
 
 	SECTION("ProcessRtpPacket() returns DROP when target spatial layer is -1")
 	{
