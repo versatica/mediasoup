@@ -282,8 +282,14 @@ function getPython() {
 function getWorkerPrebuildTarName() {
 	let workerPrebuildTarName = `mediasoup-worker-${pkg.version}-${os.platform()}-${os.arch()}`;
 
-	// In Linux we want to know about kernel version.
 	if (os.platform() === 'linux') {
+		// A binary linked against musl (Alpine Linux) does not run on glibc
+		// hosts and vice versa, so musl prebuilt binaries get their own name.
+		if (isMusl()) {
+			workerPrebuildTarName += '-musl';
+		}
+
+		// In Linux we want to know about kernel version.
 		const kernelMajorVersion = Number(os.release().split('.')[0]);
 
 		workerPrebuildTarName += `-kernel${kernelMajorVersion}`;
@@ -296,6 +302,20 @@ function getWorkerPrebuildTarName() {
 	);
 
 	return workerPrebuildTarName;
+}
+
+// Node.js reports the glibc version it runs against in its diagnostic report;
+// on musl based systems (such as Alpine Linux) the field is absent.
+function isMusl() {
+	if (os.platform() !== 'linux') {
+		return false;
+	}
+
+	try {
+		return !process.report?.getReport()?.header?.glibcVersionRuntime;
+	} catch (error) {
+		return false;
+	}
 }
 
 function installInvoke() {

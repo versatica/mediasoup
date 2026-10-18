@@ -4,6 +4,7 @@
 
 - Fix simulcast RTP timestamp jumps on layer switch and frozen retransmission buffer ([PR #2002](https://github.com/versatica/mediasoup/pull/2002)).
 - `RTP::Packet`: Fix `int16_t` truncation of the header extension shift in `SetExtensions()` ([PR #2004](https://github.com/versatica/mediasoup/pull/2004) by @satoren).
+- Node: Publish mediasoup-worker prebuilt binaries for musl based Linux hosts (Alpine Linux); the tarball name carries a `-musl` suffix on such hosts so they no longer compile the worker during `npm install` ([PR #2006](https://github.com/versatica/mediasoup/pull/2006)).
 
 ### 3.30.1
 

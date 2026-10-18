@@ -86,6 +86,32 @@ jobs:
           - os: ubuntu-26.04-arm
             cc: gcc
             cxx: g++
+          # Worker prebuild for musl based Linux hosts (Alpine Linux), kernel
+          # version 6 and 7, for x64 and arm64.
+          #
+          # A binary linked against glibc does not run on musl, so these are
+          # separate builds whose tarball name carries a `-musl` suffix (see
+          # `getWorkerPrebuildTarName()` in npm-scripts.mjs). They are compiled
+          # inside the official node:22-alpine Docker image: the runner's own
+          # Node.js (glibc) cannot execute inside an Alpine job container, so a
+          # plain `docker run` is used instead of `container:`. The kernel
+          # major version in the name is the runner's, as for the glibc builds.
+          - os: ubuntu-24.04
+            cc: gcc
+            cxx: g++
+            musl: true
+          - os: ubuntu-24.04-arm
+            cc: gcc
+            cxx: g++
+            musl: true
+          - os: ubuntu-26.04
+            cc: gcc
+            cxx: g++
+            musl: true
+          - os: ubuntu-26.04-arm
+            cc: gcc
+            cxx: g++
+            musl: true
           - os: macos-15
             cc: clang
             cxx: clang++
@@ -111,22 +137,45 @@ jobs:
           ref: ${{ inputs.release_tag || github.event.workflow_run.head_branch }}
 
       - name: Node.js
+        if: ${{ !matrix.build.musl }}
         uses: actions/setup-node@v6
         with:
           node-version: 26
 
       # We need to install some NPM production deps for npm-scripts.mjs to work.
       - name: npm ci --ignore-scripts --omit=dev --foreground-scripts
+        if: ${{ !matrix.build.musl }}
         run: npm ci --ignore-scripts --omit=dev --foreground-scripts
 
       - name: npm run worker:prebuild-name
+        if: ${{ !matrix.build.musl }}
         run: npm run worker:prebuild-name
 
       - name: npm run worker:build
+        if: ${{ !matrix.build.musl }}
         run: npm run worker:build
 
       - name: npm run worker:prebuild
+        if: ${{ !matrix.build.musl }}
         run: npm run worker:prebuild
+
+      # musl: same steps, run inside the Alpine based Node.js image so the
+      # worker links against musl. The resulting tarball is owned by root, so
+      # give it back to the runner user for the upload step.
+      - name: Build mediasoup-worker inside node:22-alpine (musl)
+        if: ${{ matrix.build.musl }}
+        run: |
+          docker run --rm -v "$PWD:/mediasoup" -w /mediasoup \
+            -e CC -e CXX \
+            -e MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD -e MEDIASOUP_LOCAL_DEV -e MEDIASOUP_BUILDTYPE \
+            node:22-alpine sh -euc '
+              apk add --no-cache python3 py3-pip make g++ linux-headers
+              npm ci --ignore-scripts --omit=dev --foreground-scripts
+              npm run worker:prebuild-name
+              npm run worker:build
+              npm run worker:prebuild
+              chown -R "$(stat -c %u:%g package.json)" worker/prebuild
+            '
 
       - name: Upload mediasoup-worker prebuilt binary
         uses: softprops/action-gh-release@v2
