@@ -1512,10 +1512,6 @@ namespace RTC
 			if (captureAtUs.has_value())
 			{
 				packet->SetCaptureAtUs(captureAtUs.value());
-
-				// Also let the stream remember it, since this is the only place where the
-				// capture instant of a received packet can be told.
-				rtpStream->SetCaptureMapping(captureAtUs.value(), packet->GetTimestamp());
 			}
 		}
 

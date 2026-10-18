@@ -83,7 +83,7 @@ namespace RTC
 			this->producerRtpStream &&
 			// If there is no RTP inactivity check do not consider the stream
 			// inactive despite it has score 0.
-			(this->producerRtpStream->GetScore() > 0u || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
+			(this->producerRtpStream->GetScore() > 0 || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
 		);
 		// clang-format on
 	}
@@ -121,7 +121,7 @@ namespace RTC
 		{
 			// Just check target layers if the stream has died or reborned or if
 			// bitrate is not externally managed.
-			if (!this->externallyManagedBitrate || (score == 0u || previousScore == 0u))
+			if (!this->externallyManagedBitrate || (score == 0 || previousScore == 0))
 			{
 				MayChangeLayers(/*force*/ false);
 			}
@@ -687,7 +687,7 @@ namespace RTC
 
 		// Set forward action.
 		result.type                = RtpPacketProcessResult::Type::FORWARD;
-		result.tsOffset            = 0u;
+		result.tsOffset            = 0;
 		result.marker              = marker;
 		result.sendBufferedPackets = sendBufferedPackets;
 
@@ -783,7 +783,7 @@ namespace RTC
 			goto done;
 		}
 
-		if (this->producerRtpStream->GetScore() == 0u)
+		if (this->producerRtpStream->GetScore() == 0)
 		{
 			goto done;
 		}
@@ -854,7 +854,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastBweDowngradeAtMs = 0u;
+		this->lastBweDowngradeAtMs = 0;
 
 		UpdateTargetLayers(-1, -1);
 	}
@@ -863,7 +863,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastBweDowngradeAtMs = 0u;
+		this->lastBweDowngradeAtMs = 0;
 
 		UpdateTargetLayers(-1, -1);
 	}

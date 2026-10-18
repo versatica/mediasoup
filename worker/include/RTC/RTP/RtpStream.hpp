@@ -276,8 +276,7 @@ namespace RTC
 			// monotonic clock.
 			// NOTE: Only meaningful in a send stream, whose packets arrive already carrying
 			// their capture instant. In a receive stream it is the Producer that tells it,
-			// once this class has already seen the packet, so
-			// RtpStreamRecv::GetCaptureMapping() is what must be used there.
+			// once this class has already seen the packet, so it stays empty there.
 			std::optional<int64_t> maxPacketCaptureAtUs;
 			int32_t packetsLost{ 0 };
 			uint8_t fractionLost{ 0 };

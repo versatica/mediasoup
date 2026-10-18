@@ -1715,6 +1715,60 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED);
 	}
 
+	SECTION("packets are not discarded a seq cycle after the timestamp goes back")
+	{
+		// Scenario based on https://github.com/versatica/mediasoup/issues/2000.
+		const auto packet(createRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 1000, 1000000000));
+
+		// Create a RtpStreamSend instance.
+		TestRtpStreamListener testRtpStreamListener;
+
+		RTC::RTP::RtpStream::Params params;
+
+		params.ssrc          = packet->GetSsrc();
+		params.clockRate     = 90000;
+		params.useNack       = true;
+		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+
+		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
+		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
+
+		const RTC::RTP::SharedPacket sharedPacket;
+
+		// Packets stored before the timestamp goes back.
+		for (uint16_t seq{ 1000 }; seq < 1010; ++seq)
+		{
+			packet->SetSequenceNumber(seq);
+			packet->SetTimestamp(1000000000 + seq);
+
+			const auto result = stream->ReceivePacket(packet.get(), sharedPacket);
+
+			REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+		}
+
+		// The timestamp goes back much further than MaxRetransmissionDelayForVideoMs
+		// and then keeps growing while the seq wraps around until it gets back to
+		// the seq of the first packet.
+		uint32_t timestamp{ 100000000 };
+
+		for (uint16_t seq{ 1010 }; seq != 1000; ++seq)
+		{
+			packet->SetSequenceNumber(seq);
+			packet->SetTimestamp(timestamp++);
+
+			stream->ReceivePacket(packet.get(), sharedPacket);
+		}
+
+		packet->SetSequenceNumber(1000);
+		packet->SetTimestamp(timestamp);
+
+		const auto result = stream->ReceivePacket(packet.get(), sharedPacket);
+
+		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+	}
+
 	SECTION("Sender Report RTP timestamp is based on the capture instant when known")
 	{
 		// Instant reported by the mocked clock, and hence the one at which packets are seen.
