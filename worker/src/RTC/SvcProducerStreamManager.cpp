@@ -706,10 +706,14 @@ namespace RTC
 		if (newTargetLayers.spatial != -1)
 		{
 			// Don't consider temporal layers above the preferred one, nor above the
-			// ones this stream has.
-			newTargetLayers.temporal = std::min(
-			  this->preferredLayers.temporal,
-			  static_cast<int16_t>(this->encodingContext->GetTemporalLayers() - 1));
+			// ones this stream has. The Producer stream and the encoding context are
+			// told apart because they come from different RTP parameters, the
+			// Producer ones and the Consumer ones, and nothing here makes them agree.
+			const auto temporalLayers = std::min(
+			  this->producerRtpStream->GetTemporalLayers(), this->encodingContext->GetTemporalLayers());
+
+			newTargetLayers.temporal =
+			  std::min(this->preferredLayers.temporal, static_cast<int16_t>(temporalLayers - 1));
 		}
 
 	done:

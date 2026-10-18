@@ -65,6 +65,7 @@ namespace RTC
 				bool useDtx{ false };
 				uint8_t spatialLayers{ 1 };
 				uint8_t temporalLayers{ 1 };
+				bool ksvc{ false };
 			};
 
 		public:
@@ -164,6 +165,15 @@ namespace RTC
 			uint8_t GetTemporalLayers() const
 			{
 				return this->params.temporalLayers;
+			}
+
+			/**
+			 * Whether the spatial layers only predict from each other on key frames,
+			 * so each of them can be decoded without the ones below it.
+			 */
+			bool IsKSvc() const
+			{
+				return this->params.ksvc;
 			}
 
 			virtual bool ReceiveStreamPacket(const RTP::Packet* packet);

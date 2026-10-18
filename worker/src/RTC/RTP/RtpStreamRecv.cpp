@@ -283,11 +283,15 @@ namespace RTC
 					{
 						const auto layer = std::to_string(sIdx) + "." + std::to_string(tIdx);
 
+						// In K-SVC a spatial layer is decoded on its own, so what running
+						// at these layers costs is that layer alone up to this temporal
+						// one. Everywhere else the layers below go along with it.
+						const int64_t bitrate = IsKSvc() ? GetCumulativeTemporalLayerBitrate(nowMs, sIdx, tIdx)
+						                                 : GetCumulativeBitrate(nowMs, sIdx, tIdx);
+
 						bitrateByLayer.emplace_back(
 						  FBS::RtpStream::CreateBitrateByLayerDirect(
-						    builder,
-						    layer.c_str(),
-						    static_cast<uint64_t>(GetCumulativeBitrate(nowMs, sIdx, tIdx))));
+						    builder, layer.c_str(), static_cast<uint64_t>(bitrate)));
 					}
 				}
 			}

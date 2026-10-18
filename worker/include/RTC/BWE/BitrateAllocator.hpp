@@ -166,6 +166,12 @@ namespace RTC
 			 * What a candidate has to be given to climb from the point it holds to
 			 * the one above it, including the margin that keeps it from climbing
 			 * back the instant it is dropped.
+			 *
+			 * @returns Zero or less when the point above is no dearer than the one
+			 *   being held, which happens because the prices are measured bitrates
+			 *   and a layer may well be sending less than the one below it. Climbing
+			 *   to it then gives bitrate back instead of taking any, so it happens
+			 *   even with nothing left to give out.
 			 */
 			static int64_t GetClimbBitrate(const Entry& entry);
 

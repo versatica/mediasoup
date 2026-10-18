@@ -91,11 +91,6 @@ namespace RTC
 			// hand whoever goes first everything there is.
 			for (auto& entry : entries)
 			{
-				if (entry.option + 1 == entry.options.size())
-				{
-					continue;
-				}
-
 				const int64_t climbBitrate = GetClimbBitrate(entry);
 
 				if (climbBitrate <= availableBitrate)
@@ -167,8 +162,8 @@ namespace RTC
 
 			int64_t takenBitrate{ 0 };
 
-			// A candidate may climb more than one point with what it is offered, since
-			// the points it skips are cheaper than the one it lands on.
+			// A candidate may climb more than one point with what it is offered, and
+			// may climb one that costs nothing or gives bitrate back.
 			while (entry.option + 1 < entry.options.size())
 			{
 				const int64_t climbBitrate = GetClimbBitrate(entry);
