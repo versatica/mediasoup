@@ -190,7 +190,7 @@ namespace RTC
 		// anything else. Leaving it out would ask the estimator for less than what
 		// is going to be sent, while the allocation takes its bitrate off the top
 		// all the same.
-		if (!this->producerRtpStream || !IsActive())
+		if (!this->producerRtpStream)
 		{
 			return 0;
 		}

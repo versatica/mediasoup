@@ -196,7 +196,7 @@ namespace RTC
 				break;
 			}
 
-			usableSpatialLayerFound = true;
+			const size_t numOptions = bitrateOptions.options.size();
 
 			// Don't consider temporal layers above the preferred one, nor above the
 			// ones this stream has.
@@ -228,6 +228,16 @@ namespace RTC
 				    .bitrate = bitrate, .layers = { spatialLayer, temporalLayer }
         });
 			}
+
+			// A spatial layer whose lowest temporal layer is not being received
+			// cannot be run at, since every point of it is cumulative from that one,
+			// so it does not count as found and the walk goes on.
+			if (bitrateOptions.options.size() == numOptions)
+			{
+				continue;
+			}
+
+			usableSpatialLayerFound = true;
 
 			// If this is the preferred or higher spatial layer, take it and exit.
 			if (spatialLayer >= this->preferredLayers.spatial)

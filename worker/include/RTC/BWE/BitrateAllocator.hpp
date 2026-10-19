@@ -46,7 +46,7 @@ namespace RTC
 					/**
 					 * What running at it costs (bps).
 					 */
-					int64_t bitrate;
+					int64_t bitrate{ 0 };
 					/**
 					 * Layers the candidate runs at in it, both -1 for none at all.
 					 *

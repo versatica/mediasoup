@@ -246,14 +246,16 @@ namespace RTC
 
 		// Layer preferences.
 		RTC::ConsumerTypes::VideoLayers preferredLayers;
+#ifndef MS_USE_BUILTIN_BWE
+		RTC::ConsumerTypes::VideoLayers provisionalTargetLayers;
+#endif
+
 #ifdef MS_USE_BUILTIN_BWE
 		// Whether the bitrate allocation has ever given this one a point to run at.
 		// Telling that from "it was left sending nothing" is what makes the latter
 		// pay the margin to climb back and the former not, since one that has never
 		// been given anything is not climbing back to anything.
 		bool bitrateAllocated{ false };
-#else
-		RTC::ConsumerTypes::VideoLayers provisionalTargetLayers;
 #endif
 
 		// Sync state.
