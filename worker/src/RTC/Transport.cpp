@@ -3869,6 +3869,15 @@ namespace RTC
 				  }
 			  }
 		  });
+
+		this->sendProbationTransmission.Update(packet);
+
+		MS_DEBUG_DEV(
+		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIi64 ", size:%zu, bitrate:%" PRIi64 "]",
+		  packet->GetSequenceNumber(),
+		  sequenceNumber,
+		  packet->GetLength(),
+		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()).value_or(0));
 	}
 
 	void Transport::OnReceiverTransportCongestionControllerSendRtcpPacket(
