@@ -528,6 +528,7 @@ pub(super) trait TransportImpl: TransportGeneric {
         &self,
         producer_options: ProducerOptions,
         transport_type: TransportType,
+        enable_bwe: bool,
     ) -> Result<Producer, ProduceError> {
         if let Some(id) = &producer_options.id {
             if self.router().has_producer(id) {
@@ -554,9 +555,9 @@ pub(super) trait TransportImpl: TransportGeneric {
                 .push(RtpEncodingParameters::default());
         }
 
-        // Neither a DirectTransport nor a PipeTransport runs bandwidth estimation, so whatever was
-        // negotiated for them is dropped rather than honoured.
-        if matches!(transport_type, TransportType::Direct | TransportType::Pipe) {
+        // A transport that doesn't run bandwidth estimation must not negotiate it, so whatever was
+        // given for it is dropped rather than honoured.
+        if !enable_bwe {
             ortc::disable_bwe_in_rtp_parameters(&mut rtp_parameters);
         }
 
@@ -642,6 +643,7 @@ pub(super) trait TransportImpl: TransportGeneric {
         consumer_options: ConsumerOptions,
         transport_type: TransportType,
         rtx: bool,
+        enable_bwe: bool,
     ) -> Result<Consumer, ConsumeError> {
         let ConsumerOptions {
             producer_id,
@@ -674,10 +676,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                 &rtp_capabilities,
                 pipe,
                 enable_rtx,
-                // A DirectTransport doesn't run bandwidth estimation, so it must not negotiate it
-                // whatever the given RTP capabilities say. A PipeTransport doesn't need this since
-                // it takes the branch above.
-                transport_type == TransportType::Direct,
+                enable_bwe,
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 

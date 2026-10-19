@@ -384,7 +384,11 @@ impl Transport for DirectTransport {
         debug!("produce()");
 
         let producer = self
-            .produce_impl(producer_options, TransportType::Direct)
+            .produce_impl(
+                producer_options,
+                TransportType::Direct,
+                /* enable_bwe */ false,
+            )
             .await?;
 
         self.inner.handlers.new_producer.call_simple(&producer);
@@ -396,7 +400,12 @@ impl Transport for DirectTransport {
         debug!("consume()");
 
         let consumer = self
-            .consume_impl(consumer_options, TransportType::Direct, false)
+            .consume_impl(
+                consumer_options,
+                TransportType::Direct,
+                false,
+                /* enable_bwe */ false,
+            )
             .await?;
 
         self.inner.handlers.new_consumer.call_simple(&consumer);

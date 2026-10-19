@@ -63,20 +63,11 @@ namespace RTC
 			this->remoteBitrateEstimator.RemoveStream(ssrc);
 		}
 
-		void ReceiverTransportCongestionController::SetMaxIncomingBitrate(int64_t bitrate)
+		void ReceiverTransportCongestionController::SetMaxIncomingBitrate(std::optional<int64_t> bitrate)
 		{
 			MS_TRACE();
 
-			// NOTE: Zero is how the application asks for no cap at all, while the
-			// generator expresses that as no value.
-			std::optional<int64_t> maxIncomingBitrate;
-
-			if (bitrate != 0)
-			{
-				maxIncomingBitrate = bitrate;
-			}
-
-			this->rembGenerator.SetMaxIncomingBitrate(this->shared->GetTimeMs(), maxIncomingBitrate);
+			this->rembGenerator.SetMaxIncomingBitrate(this->shared->GetTimeMs(), bitrate);
 		}
 
 		std::optional<int64_t> ReceiverTransportCongestionController::GetAvailableBitrate() const

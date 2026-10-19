@@ -277,6 +277,10 @@ namespace RTC
 		 */
 		virtual void MayCreateReceiverTransportCongestionController() final;
 #endif
+		/**
+		 * Adapt the bitrate bounds so they make sense.
+		 */
+		virtual void AdaptBitrateLimits() final;
 		virtual void DistributeAvailableOutgoingBitrate() final;
 #ifdef MS_USE_BUILTIN_BWE
 		virtual void ComputeOutgoingDesiredBitrate() final;
@@ -445,6 +449,7 @@ namespace RTC
 		TimerHandleInterface* rtcpTimer{ nullptr };
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
+		bool enableBwe{ false };
 #ifdef MS_USE_BUILTIN_BWE
 		// NOTE: Shared pointer rather than unique because the send callbacks hold a
 		// weak reference to it, since they may be invoked after this Transport is
@@ -485,7 +490,7 @@ namespace RTC
 		bool sendSupportsRemb{ false };
 		bool recvSupportsTransportCc{ false };
 		bool recvSupportsRemb{ false };
-		int64_t initialAvailableOutgoingBitrate{ 600000 };
+		int64_t initialAvailableOutgoingBitrate{ 0 };
 		int64_t maxIncomingBitrate{ 0 };
 		int64_t maxOutgoingBitrate{ 0 };
 		int64_t minOutgoingBitrate{ 0 };

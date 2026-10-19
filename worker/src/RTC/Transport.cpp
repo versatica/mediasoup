@@ -41,10 +41,12 @@ namespace RTC
 	// down to. A limit above what the bandwidth estimation deals in is not a
 	// limit, and it also keeps `Types::BitrateInfinite` out of the estimators,
 	// which reserve it to mean that there is no limit at all.
-	static constexpr uint64_t AbsoluteMaxBitrate{ static_cast<uint64_t>(RTC::Consts::BweMaxBitrate) };
-	// Bitrate the outgoing target is never taken below (bps), whatever the API
-	// asks for.
-	static constexpr int64_t AbsoluteMinOutgoingBitrate{ 30000 };
+	static constexpr int64_t AbsoluteMaxBitrate{ RTC::Consts::BweMaxBitrate };
+	// Lowest bitrate the API may ask for (bps). A limit below it is not a limit,
+	// it is a way of sending nothing at all.
+	static constexpr int64_t AbsoluteMinBitrate{ 30000 };
+	// Bitrate the outgoing target starts at when the API does not say (bps).
+	static constexpr int64_t DefaultInitialAvailableOutgoingBitrate{ 600000 };
 #ifdef MS_RTC_LOGGER_SEND_BURST
 	// How often the distribution of send bursts is printed.
 	static constexpr int64_t SendBurstLogIntervalMs{ 5000 };
@@ -78,16 +80,49 @@ namespace RTC
 #endif
 
 		this->direct                = options->direct();
+		this->enableBwe             = options->enableBwe();
 		this->maxSendMessageSize    = options->maxSendMessageSize();
 		this->maxReceiveMessageSize = options->maxReceiveMessageSize();
 
-		if (
-		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
-		  initialAvailableOutgoingBitrate.has_value())
+		// NOTE: The API gives unsigned 64 bits bitrates, so they are clamped here.
+		if (this->enableBwe)
 		{
-			// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-			this->initialAvailableOutgoingBitrate = static_cast<int64_t>(
-			  std::min<uint64_t>(initialAvailableOutgoingBitrate.value(), AbsoluteMaxBitrate));
+			this->maxIncomingBitrate = AbsoluteMaxBitrate;
+			this->minOutgoingBitrate = AbsoluteMinBitrate;
+			this->maxOutgoingBitrate = AbsoluteMaxBitrate;
+
+			if (auto maxIncomingBitrate = options->maxIncomingBitrate(); maxIncomingBitrate.has_value())
+			{
+				this->maxIncomingBitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(maxIncomingBitrate.value(), AbsoluteMaxBitrate));
+			}
+
+			if (auto minOutgoingBitrate = options->minOutgoingBitrate(); minOutgoingBitrate.has_value())
+			{
+				this->minOutgoingBitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(minOutgoingBitrate.value(), AbsoluteMaxBitrate));
+			}
+
+			if (auto maxOutgoingBitrate = options->maxOutgoingBitrate(); maxOutgoingBitrate.has_value())
+			{
+				this->maxOutgoingBitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(maxOutgoingBitrate.value(), AbsoluteMaxBitrate));
+			}
+
+			AdaptBitrateLimits();
+
+			this->initialAvailableOutgoingBitrate = DefaultInitialAvailableOutgoingBitrate;
+
+			if (
+			  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
+			  initialAvailableOutgoingBitrate.has_value())
+			{
+				this->initialAvailableOutgoingBitrate = static_cast<int64_t>(
+				  std::min<uint64_t>(initialAvailableOutgoingBitrate.value(), AbsoluteMaxBitrate));
+			}
+
+			this->initialAvailableOutgoingBitrate = std::clamp(
+			  this->initialAvailableOutgoingBitrate, this->minOutgoingBitrate, this->maxOutgoingBitrate);
 		}
 
 		if (options->enableSctp())
@@ -530,6 +565,17 @@ namespace RTC
 			                : flatbuffers::nullopt;
 #endif
 
+		// The bitrate bounds only mean something while there is something applying
+		// them, so they are told apart by whether it is there rather than by their
+		// value.
+#ifdef MS_USE_BUILTIN_BWE
+		const bool outgoingBitratesApply = this->senderTransportCongestionController != nullptr;
+		const bool incomingBitratesApply = this->receiverTransportCongestionController != nullptr;
+#else
+		const bool outgoingBitratesApply = this->tccClient != nullptr;
+		const bool incomingBitratesApply = this->tccServer != nullptr;
+#endif
+
 		return FBS::Transport::CreateStatsDirect(
 		  builder,
 		  // transportId.
@@ -572,15 +618,15 @@ namespace RTC
 		  // availableIncomingBitrate.
 		  availableIncomingBitrate,
 		  // maxIncomingBitrate.
-		  this->maxIncomingBitrate > 0
+		  incomingBitratesApply
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->maxIncomingBitrate))
 				: flatbuffers::nullopt,
 		  // maxOutgoingBitrate.
-		  this->maxOutgoingBitrate > 0
+		  outgoingBitratesApply
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->maxOutgoingBitrate))
 				: flatbuffers::nullopt,
 		  // minOutgoingBitrate.
-		  this->minOutgoingBitrate > 0
+		  outgoingBitratesApply
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->minOutgoingBitrate))
 				: flatbuffers::nullopt,
 		  // roundTripTime.
@@ -598,8 +644,13 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();
 
 				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-				this->maxIncomingBitrate =
+				const auto maxIncomingBitrate =
 				  static_cast<int64_t>(std::min<uint64_t>(body->maxIncomingBitrate(), AbsoluteMaxBitrate));
+
+				// NOTE: A zero lifts the cap rather than setting one.
+				this->maxIncomingBitrate = maxIncomingBitrate != 0 ? maxIncomingBitrate : AbsoluteMaxBitrate;
+
+				AdaptBitrateLimits();
 
 				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIi64, this->maxIncomingBitrate);
 
@@ -611,14 +662,15 @@ namespace RTC
 					// The cap travels to the remote peer in a REMB, so a peer that did not
 					// negotiate REMB cannot be told about it by any means.
 					//
-					// NOTE: A zero lifts the cap rather than setting one, and there is
-					// nothing to lift if it was never applied.
+					// NOTE: There is nothing to lift if it was never applied.
 					if (this->recvSupportsRemb)
 					{
 						this->receiverTransportCongestionController->SetMaxIncomingBitrate(
-						  this->maxIncomingBitrate);
+						  this->maxIncomingBitrate != AbsoluteMaxBitrate
+						    ? std::optional<int64_t>(this->maxIncomingBitrate)
+								: std::nullopt);
 					}
-					else if (this->maxIncomingBitrate != 0)
+					else if (this->maxIncomingBitrate != AbsoluteMaxBitrate)
 					{
 						MS_WARN_TAG(
 						  bwe, "cannot apply maximum incoming bitrate since remote peer does not support REMB");
@@ -634,9 +686,10 @@ namespace RTC
 					// nothing to lift if it was never applied.
 					if (this->recvSupportsRemb)
 					{
-						this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+						this->tccServer->SetMaxIncomingBitrate(
+						  this->maxIncomingBitrate != AbsoluteMaxBitrate ? this->maxIncomingBitrate : 0);
 					}
-					else if (this->maxIncomingBitrate != 0)
+					else if (this->maxIncomingBitrate != AbsoluteMaxBitrate)
 					{
 						MS_WARN_TAG(
 						  bwe, "cannot apply maximum incoming bitrate since remote peer does not support REMB");
@@ -655,36 +708,27 @@ namespace RTC
 				const auto bitrate =
 				  static_cast<int64_t>(std::min<uint64_t>(body->maxOutgoingBitrate(), AbsoluteMaxBitrate));
 
-				if (bitrate > 0 && bitrate < AbsoluteMinOutgoingBitrate)
-				{
-					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= %" PRIi64 " or 0 (unlimited)", AbsoluteMinOutgoingBitrate);
-				}
-				else if (bitrate > 0 && bitrate < this->minOutgoingBitrate)
-				{
-					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= current min outgoing bitrate (%" PRIi64 ") or 0 (unlimited)",
-					  this->minOutgoingBitrate);
-				}
+				// NOTE: A zero lifts the cap rather than setting one.
+				this->maxOutgoingBitrate = bitrate != 0 ? bitrate : AbsoluteMaxBitrate;
+
+				AdaptBitrateLimits();
+
+				MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIi64, this->maxOutgoingBitrate);
 
 #ifdef MS_USE_BUILTIN_BWE
-				// TODO: Pass maxOutgoingBitrate to the built-in downlink BWE.
-				this->maxOutgoingBitrate = bitrate;
-#else
-				if (this->tccClient)
+				if (this->senderTransportCongestionController)
 				{
-					// NOTE: This may throw so don't update things before calling this
-					// method.
-					this->tccClient->SetMaxOutgoingBitrate(bitrate);
-					this->maxOutgoingBitrate = bitrate;
-
-					MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIi64, this->maxOutgoingBitrate);
+					this->senderTransportCongestionController->SetBitrateLimits(
+					  this->minOutgoingBitrate, this->maxOutgoingBitrate);
 
 					ComputeOutgoingDesiredBitrate();
 				}
-				else
+#else
+				if (this->tccClient)
 				{
-					this->maxOutgoingBitrate = bitrate;
+					this->tccClient->SetMaxOutgoingBitrate(this->maxOutgoingBitrate);
+
+					ComputeOutgoingDesiredBitrate();
 				}
 #endif
 
@@ -701,36 +745,27 @@ namespace RTC
 				const auto bitrate =
 				  static_cast<int64_t>(std::min<uint64_t>(body->minOutgoingBitrate(), AbsoluteMaxBitrate));
 
-				if (bitrate > 0 && bitrate < AbsoluteMinOutgoingBitrate)
-				{
-					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= %" PRIi64 " or 0 (unlimited)", AbsoluteMinOutgoingBitrate);
-				}
-				else if (bitrate > 0 && this->maxOutgoingBitrate > 0 && bitrate > this->maxOutgoingBitrate)
-				{
-					MS_THROW_TYPE_ERROR(
-					  "bitrate must be <= current max outgoing bitrate (%" PRIi64 ") or 0 (unlimited)",
-					  this->maxOutgoingBitrate);
-				}
+				// NOTE: A zero lifts the floor rather than setting one.
+				this->minOutgoingBitrate = bitrate != 0 ? bitrate : AbsoluteMinBitrate;
+
+				AdaptBitrateLimits();
+
+				MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIi64, this->minOutgoingBitrate);
 
 #ifdef MS_USE_BUILTIN_BWE
-				// TODO: Pass minOutgoingBitrate to the built-in downlink BWE.
-				this->minOutgoingBitrate = bitrate;
-#else
-				if (this->tccClient)
+				if (this->senderTransportCongestionController)
 				{
-					// NOTE: This may throw so don't update things before calling this
-					// method.
-					this->tccClient->SetMinOutgoingBitrate(bitrate);
-					this->minOutgoingBitrate = bitrate;
-
-					MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIi64, this->minOutgoingBitrate);
+					this->senderTransportCongestionController->SetBitrateLimits(
+					  this->minOutgoingBitrate, this->maxOutgoingBitrate);
 
 					ComputeOutgoingDesiredBitrate();
 				}
-				else
+#else
+				if (this->tccClient)
 				{
-					this->minOutgoingBitrate = bitrate;
+					this->tccClient->SetMinOutgoingBitrate(this->minOutgoingBitrate);
+
+					ComputeOutgoingDesiredBitrate();
 				}
 #endif
 
@@ -860,7 +895,7 @@ namespace RTC
 
 				// The cap travels to the remote peer in a REMB, so it only becomes
 				// applicable once a Producer brings REMB, which may well be this one.
-				if (this->receiverTransportCongestionController && this->maxIncomingBitrate != 0)
+				if (this->receiverTransportCongestionController && this->maxIncomingBitrate != AbsoluteMaxBitrate)
 				{
 					if (this->recvSupportsRemb)
 					{
@@ -875,7 +910,7 @@ namespace RTC
 				}
 #else
 				// Set TransportCongestionControlServer.
-				if (!this->tccServer)
+				if (this->enableBwe && !this->tccServer)
 				{
 					bool createTccServer{ false };
 					RTC::BweType bweType;
@@ -900,7 +935,7 @@ namespace RTC
 						this->tccServer = std::make_shared<RTC::TransportCongestionControlServer>(
 						  this, this->shared, bweType, RTC::Consts::RtcpPacketMaxSize);
 
-						if (this->maxIncomingBitrate != 0)
+						if (this->maxIncomingBitrate != AbsoluteMaxBitrate)
 						{
 							// The cap travels to the remote peer in a REMB, so a peer that did
 							// not negotiate REMB cannot be told about it by any means.
@@ -925,7 +960,7 @@ namespace RTC
 
 				// A Producer that brings REMB once the server is already there makes the
 				// incoming cap applicable, which it was not when it was set.
-				if (this->tccServer && this->recvSupportsRemb && this->maxIncomingBitrate != 0)
+				if (this->tccServer && this->recvSupportsRemb && this->maxIncomingBitrate != AbsoluteMaxBitrate)
 				{
 					this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
 				}
@@ -1012,7 +1047,7 @@ namespace RTC
 				MayCreateOrUpdateSenderTransportCongestionController();
 #else
 				// Set TransportCongestionControlClient.
-				if (!this->tccClient)
+				if (this->enableBwe && !this->tccClient)
 				{
 					bool createTccClient{ false };
 					RTC::BweType bweType;
@@ -1048,7 +1083,7 @@ namespace RTC
 						  this,
 						  this->shared,
 						  bweType,
-						  AbsoluteMinOutgoingBitrate,
+						  AbsoluteMinBitrate,
 						  this->initialAvailableOutgoingBitrate,
 						  this->maxOutgoingBitrate,
 						  this->minOutgoingBitrate);
@@ -2531,7 +2566,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsCongestionControlSupported() || !IsConnected() || this->mapConsumers.empty())
+		if (!this->enableBwe || !IsCongestionControlSupported() || !IsConnected() || this->mapConsumers.empty())
 		{
 			return;
 		}
@@ -2549,7 +2584,9 @@ namespace RTC
 			    this,
 			    this->shared,
 			    RTC::BWE::SenderTransportCongestionController::SenderTransportCongestionControllerOptions{
-			      .startBitrate = this->initialAvailableOutgoingBitrate });
+			      .startBitrate = this->initialAvailableOutgoingBitrate,
+			      .minBitrate   = this->minOutgoingBitrate,
+			      .maxBitrate   = this->maxOutgoingBitrate });
 		}
 
 		// NOTE: The path may be another one than the last time, so the packet
@@ -2571,8 +2608,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (
-		  this->receiverTransportCongestionController || !IsCongestionControlSupported() ||
-		  !IsConnected() || (!this->recvSupportsTransportCc && !this->recvSupportsRemb))
+		  !this->enableBwe || this->receiverTransportCongestionController ||
+		  !IsCongestionControlSupported() || !IsConnected() ||
+		  (!this->recvSupportsTransportCc && !this->recvSupportsRemb))
 		{
 			return;
 		}
@@ -2587,12 +2625,35 @@ namespace RTC
 
 		// The cap travels to the remote peer in a REMB, so it could not be applied
 		// before this.
-		if (this->maxIncomingBitrate != 0 && this->recvSupportsRemb)
+		if (this->maxIncomingBitrate != AbsoluteMaxBitrate && this->recvSupportsRemb)
 		{
 			this->receiverTransportCongestionController->SetMaxIncomingBitrate(this->maxIncomingBitrate);
 		}
 	}
 #endif
+
+	void Transport::AdaptBitrateLimits()
+	{
+		MS_TRACE();
+
+		this->maxIncomingBitrate =
+		  std::clamp(this->maxIncomingBitrate, AbsoluteMinBitrate, AbsoluteMaxBitrate);
+		this->minOutgoingBitrate =
+		  std::clamp(this->minOutgoingBitrate, AbsoluteMinBitrate, AbsoluteMaxBitrate);
+		this->maxOutgoingBitrate =
+		  std::clamp(this->maxOutgoingBitrate, AbsoluteMinBitrate, AbsoluteMaxBitrate);
+
+		if (this->maxOutgoingBitrate < this->minOutgoingBitrate)
+		{
+			MS_DEBUG_TAG(
+			  bwe,
+			  "raising maxOutgoingBitrate %" PRIi64 " to minOutgoingBitrate %" PRIi64,
+			  this->maxOutgoingBitrate,
+			  this->minOutgoingBitrate);
+
+			this->maxOutgoingBitrate = this->minOutgoingBitrate;
+		}
+	}
 
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{

@@ -131,7 +131,11 @@ enum SctpZeroChecksum: uint32 {
 
 table Options {
     direct: bool = false;
+    enable_bwe: bool = true;
     initial_available_outgoing_bitrate: uint64 = null;
+    max_incoming_bitrate: uint64 = null;
+    max_outgoing_bitrate: uint64 = null;
+    min_outgoing_bitrate: uint64 = null;
     enable_sctp: bool = false;
     max_send_message_size: uint32;
     max_receive_message_size: uint32;

@@ -391,6 +391,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		remoteRtpCapabilities,
 		pipe: false,
 		enableRtx: true,
+		enableBwe: true,
 	});
 
 	expect(consumerRtpParameters.codecs.length).toEqual(2);

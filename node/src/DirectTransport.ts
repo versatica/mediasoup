@@ -17,11 +17,7 @@ import {
 	parseTransportTraceEventData,
 } from './Transport';
 import type { SctpParameters } from './sctpParametersTypes';
-import type { RtpParameters } from './rtpParametersTypes';
-import type { Producer, ProducerOptions } from './ProducerTypes';
 import type { AppData } from './types';
-import * as ortc from './ortc';
-import * as utils from './utils';
 import { UnsupportedError } from './errors';
 import { Event, Notification } from './fbs/notification';
 import * as FbsDirectTransport from './fbs/direct-transport';
@@ -156,22 +152,6 @@ export class DirectTransportImpl<
 		throw new UnsupportedError(
 			'setMinOutgoingBitrate() not implemented in DirectTransport'
 		);
-	}
-
-	override async produce<ProducerAppData extends AppData = AppData>(
-		options: ProducerOptions<ProducerAppData>
-	): Promise<Producer<ProducerAppData>> {
-		logger.debug('produce()');
-
-		// Clone given RTP parameters since bandwidth estimation stuff is removed
-		// from them below and they belong to the application.
-		const rtpParameters = utils.clone<RtpParameters>(options.rtpParameters);
-
-		// A DirectTransport doesn't run bandwidth estimation, so whatever was
-		// negotiated for it is dropped rather than honoured.
-		ortc.disableBweInRtpParameters(rtpParameters);
-
-		return super.produce({ ...options, rtpParameters });
 	}
 
 	sendRtcp(rtcpPacket: Buffer): void {

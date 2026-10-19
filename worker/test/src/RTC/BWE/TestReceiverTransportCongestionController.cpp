@@ -375,7 +375,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		REQUIRE(listener.rembBitrates.at(0) == MaxIncomingBitrate);
 	}
 
-	SECTION("a cap of zero is no cap at all")
+	SECTION("no cap given is no cap at all")
 	{
 		constexpr int64_t MaxIncomingBitrate{ 500000 };
 
@@ -390,7 +390,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		REQUIRE(listener.rembBitrates.size() == 1);
 		REQUIRE(listener.rembBitrates.at(0) == MaxIncomingBitrate);
 
-		receiverTransportCongestionControl.SetMaxIncomingBitrate(0);
+		receiverTransportCongestionControl.SetMaxIncomingBitrate(std::nullopt);
 
 		// A REMB of zero is how the remote sender is told that it may send whatever it
 		// wants again, and the first of them goes out without waiting.

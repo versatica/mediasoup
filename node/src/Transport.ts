@@ -101,6 +101,7 @@ export type TransportConstructorOptions<TransportAppData> = {
 	data: TransportData;
 	channel: Channel;
 	appData?: TransportAppData;
+	enableBwe: boolean;
 	getRouterRtpCapabilities: () => RtpCapabilities;
 	getProducerById: (producerId: string) => Producer | undefined;
 	getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
@@ -141,6 +142,10 @@ export abstract class TransportImpl<
 
 	// Custom app data.
 	#appData: TransportAppData;
+
+	// Whether bandwidth estimation runs on this transport, which is what tells
+	// whether Producers and Consumers created on it negotiate it at all.
+	protected readonly enableBwe: boolean;
 
 	// Method to retrieve Router RTP capabilities.
 	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
@@ -191,6 +196,7 @@ export abstract class TransportImpl<
 			data,
 			channel,
 			appData,
+			enableBwe,
 			getRouterRtpCapabilities,
 			getProducerById,
 			getDataProducerById,
@@ -205,6 +211,7 @@ export abstract class TransportImpl<
 		this.#data = data;
 		this.channel = channel;
 		this.#appData = appData ?? ({} as TransportAppData);
+		this.enableBwe = enableBwe;
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
@@ -496,6 +503,12 @@ export abstract class TransportImpl<
 		// This may throw.
 		ortc.validateAndNormalizeRtpParameters(clonedRtpParameters);
 
+		// A transport that doesn't run bandwidth estimation must not negotiate it,
+		// so whatever was given for it is dropped rather than honoured.
+		if (!this.enableBwe) {
+			ortc.disableBweInRtpParameters(clonedRtpParameters);
+		}
+
 		// If missing or empty encodings, add one.
 		if (
 			!clonedRtpParameters.encodings ||
@@ -649,10 +662,7 @@ export abstract class TransportImpl<
 			remoteRtpCapabilities: clonedRtpCapabilities,
 			pipe,
 			enableRtx,
-			// A DirectTransport doesn't run bandwidth estimation, so it must not
-			// negotiate it whatever the given RTP capabilities say. A PipeTransport
-			// doesn't need this since its consume() overrides this method.
-			disableBwe: this.type === 'direct',
+			enableBwe: this.enableBwe,
 		});
 
 		// Set MID.

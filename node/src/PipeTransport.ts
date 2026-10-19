@@ -21,7 +21,7 @@ import {
 	parseTuple,
 	parseTransportTraceEventData,
 } from './Transport';
-import type { Producer, ProducerOptions } from './ProducerTypes';
+import type { Producer } from './ProducerTypes';
 import type { Consumer, ConsumerType } from './ConsumerTypes';
 import { ConsumerImpl } from './Consumer';
 import type { RtpParameters } from './rtpParametersTypes';
@@ -221,22 +221,6 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 		if (data.tuple()) {
 			this.#data.tuple = parseTuple(data.tuple()!);
 		}
-	}
-
-	override async produce<ProducerAppData extends AppData = AppData>(
-		options: ProducerOptions<ProducerAppData>
-	): Promise<Producer<ProducerAppData>> {
-		logger.debug('produce()');
-
-		// Clone given RTP parameters since bandwidth estimation stuff is removed
-		// from them below and they belong to the application.
-		const rtpParameters = utils.clone<RtpParameters>(options.rtpParameters);
-
-		// A PipeTransport doesn't run bandwidth estimation, so whatever was
-		// negotiated for it is dropped rather than honoured.
-		ortc.disableBweInRtpParameters(rtpParameters);
-
-		return super.produce({ ...options, rtpParameters });
 	}
 
 	override async consume<ConsumerAppData extends AppData = AppData>({

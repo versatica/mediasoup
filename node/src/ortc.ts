@@ -616,13 +616,13 @@ export function getConsumerRtpParameters({
 	remoteRtpCapabilities,
 	pipe,
 	enableRtx,
-	disableBwe = false,
+	enableBwe,
 }: {
 	consumableRtpParameters: RtpParameters;
 	remoteRtpCapabilities: RtpCapabilities;
 	pipe: boolean;
 	enableRtx: boolean;
-	disableBwe?: boolean;
+	enableBwe: boolean;
 }): RtpParameters {
 	const consumerParams: RtpParameters = {
 		codecs: [],
@@ -699,7 +699,7 @@ export function getConsumerRtpParameters({
 	// A transport that doesn't run bandwidth estimation must not negotiate it.
 	// Dropping its header extensions is enough, since the RTCP feedback below is
 	// reduced out of them.
-	if (disableBwe) {
+	if (!enableBwe) {
 		consumerParams.headerExtensions = consumerParams.headerExtensions.filter(
 			ext =>
 				ext.uri !==

@@ -727,6 +727,7 @@ impl Router {
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
             data,
+            webrtc_transport_options.enable_bwe,
             webrtc_transport_options.app_data,
             self.clone(),
             match webrtc_transport_options.listen {
@@ -867,6 +868,7 @@ impl Router {
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
             data,
+            plain_transport_options.enable_bwe,
             plain_transport_options.app_data,
             self.clone(),
         );

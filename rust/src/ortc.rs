@@ -759,7 +759,7 @@ pub(crate) fn get_consumer_rtp_parameters(
     remote_rtp_capabilities: &RtpCapabilities,
     pipe: bool,
     enable_rtx: bool,
-    disable_bwe: bool,
+    enable_bwe: bool,
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
     let mut consumer_params = RtpParameters {
         rtcp: consumable_rtp_parameters.rtcp.clone(),
@@ -838,7 +838,7 @@ pub(crate) fn get_consumer_rtp_parameters(
 
     // A transport that doesn't run bandwidth estimation must not negotiate it. Dropping its header
     // extensions is enough, since the RTCP feedback below is reduced out of them.
-    if disable_bwe {
+    if !enable_bwe {
         consumer_params.header_extensions.retain(|ext| {
             !matches!(
                 ext.uri,

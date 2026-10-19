@@ -35,6 +35,32 @@ export type PlainTransportOptions<
 	comedia?: boolean;
 
 	/**
+	 * Estimate the bandwidth of the transport link, as far as the negotiated RTP
+	 * parameters allow it. Default true.
+	 */
+	enableBwe?: boolean;
+
+	/**
+	 * Initial available outgoing bitrate (in bps). Default 600000.
+	 */
+	initialAvailableOutgoingBitrate?: number;
+
+	/**
+	 * Maximum incoming bitrate (in bps). Unset by default, meaning no limit.
+	 */
+	maxIncomingBitrate?: number;
+
+	/**
+	 * Maximum outgoing bitrate (in bps). Unset by default, meaning no limit.
+	 */
+	maxOutgoingBitrate?: number;
+
+	/**
+	 * Minimum outgoing bitrate (in bps). Unset by default, meaning no limit.
+	 */
+	minOutgoingBitrate?: number;
+
+	/**
 	 * Create a SCTP association. Default false.
 	 */
 	enableSctp?: boolean;
