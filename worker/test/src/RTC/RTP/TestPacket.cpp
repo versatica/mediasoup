@@ -1741,6 +1741,54 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
+	SECTION("Packet::SetExtensions() does not truncate the payload shift")
+	{
+		// A received packet whose header extension is larger than 32 KB, re-written
+		// with a small extension set (as Producer::MangleRtpPacket() does on every
+		// inbound packet), must shrink correctly. Storing the shift in an int16_t
+		// wraps the (large negative) size delta to a large positive value, so
+		// SetLength() exceeds the buffer and throws, which, uncaught on the inbound
+		// RTP path, aborts the worker.
+		constexpr size_t ExtensionValueLength{ 40000 };
+		constexpr size_t PayloadLength{ 8 };
+		constexpr size_t PacketLength{ 12 + 4 + ExtensionValueLength + PayloadLength };
+
+		auto* buffer = rtpCommon::FactoryBuffer;
+
+		buffer[0] = 0b10010000; // Version 2, extension flag set.
+		buffer[1] = 0b00000000; // Payload type 0, no marker.
+		buffer[2] = 0x00;
+		buffer[3] = 0x01;                                       // Sequence number.
+		buffer[8] = buffer[9] = buffer[10] = buffer[11] = 0x01; // SSRC.
+
+		// One-Byte header extension profile (0xBEDE) and its length in 32-bit words,
+		// with an all-padding (zeroed) value.
+		Utils::Byte::Set2Bytes(buffer, 12, 0xBEDE);
+		Utils::Byte::Set2Bytes(buffer, 14, static_cast<uint16_t>(ExtensionValueLength / 4));
+		std::memset(buffer + 16, 0, ExtensionValueLength);
+
+		RTC::RTP::Packet* parsedPacket =
+		  RTC::RTP::Packet::Parse(buffer, PacketLength, sizeof(rtpCommon::FactoryBuffer));
+
+		std::unique_ptr<RTC::RTP::Packet> packet{ parsedPacket };
+
+		REQUIRE(packet);
+		REQUIRE(packet->HasOneByteExtensions());
+
+		std::vector<RTC::RTP::Packet::Extension> extensions;
+
+		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::MID, 1, 4, rtpCommon::DataBuffer);
+		extensions.emplace_back(
+		  RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 2, 4, rtpCommon::DataBuffer + 4);
+
+		// Must shrink the packet, not throw.
+		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
+
+		// New length: 12 (fixed header) + 4 (ext header) + 12 (two 5-byte One-Byte
+		// elements padded to 4) + 8 (payload) = 36.
+		REQUIRE((packet->GetLength() == 36));
+	}
+
 	SECTION("Packet::SetPayload(), SetPayloadLength() and packet::RemovePayload() succeed")
 	{
 		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
