@@ -801,7 +801,9 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
 				}
 
+#ifdef MS_USE_BUILTIN_BWE
 				const uint8_t previousPriority = this->priority;
+#endif
 
 				this->priority = body->priority();
 
