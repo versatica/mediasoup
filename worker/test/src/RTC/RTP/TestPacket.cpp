@@ -1775,11 +1775,11 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet);
 		REQUIRE(packet->HasOneByteExtensions());
 
-		uint8_t value[4] = {};
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 
-		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::MID, 1, 4, value);
-		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 2, 4, value);
+		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::MID, 1, 4, rtpCommon::DataBuffer);
+		extensions.emplace_back(
+		  RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 2, 4, rtpCommon::DataBuffer + 4);
 
 		// Must shrink the packet, not throw.
 		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
