@@ -3,6 +3,7 @@
 ### NEXT
 
 - Fix simulcast RTP timestamp jumps on layer switch and frozen retransmission buffer ([PR #2002](https://github.com/versatica/mediasoup/pull/2002)).
+- RTP: Fix `int16_t` truncation of the header extension shift in `Packet::SetExtensions()` ([PR #2004](https://github.com/versatica/mediasoup/pull/2004)).
 
 ### 3.30.1
 

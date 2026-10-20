@@ -666,15 +666,20 @@ namespace RTC
 
 			// Calculate the number of bytes to shift (may be negative if the packet
 			// already had header extension).
-			int16_t shift{ 0 };
+			// NOTE: Must be signed (the shift is negative when the packet shrinks)
+			// and wide enough for any header extension size. With int16_t a size
+			// delta outside [-32768, 32767] (e.g. a received packet with a header
+			// extension larger than 32 KB) wraps around and SetLength() below throws.
+			int64_t shift{ 0 };
 
 			if (hadHeaderExtension)
 			{
-				shift = static_cast<int16_t>(paddedExtensionsLength - previousHeaderExtensionValueLength);
+				shift = static_cast<int64_t>(paddedExtensionsLength) -
+				        static_cast<int64_t>(previousHeaderExtensionValueLength);
 			}
 			else
 			{
-				shift = 4 + static_cast<int16_t>(paddedExtensionsLength);
+				shift = 4 + static_cast<int64_t>(paddedExtensionsLength);
 			}
 
 			auto* payload            = GetPayloadPointer();
