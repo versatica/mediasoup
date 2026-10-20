@@ -38,11 +38,17 @@ namespace RTC
 				MS_ASSERT(!bitrateOptions.options.empty(), "candidate offers no point at all");
 
 				// Everyone takes at least its cheapest point, which is the least it may
-				// send and so is not up for discussion.
+				// send and so is not up for discussion. For one that can move that is
+				// the point of sending nothing, priced at zero, while one that cannot
+				// takes what it is putting out off the top.
 				availableBitrate -= bitrateOptions.options.front().bitrate;
 
 				// A candidate with a single point has nothing to bid for, so it does
-				// not take part in the round beyond the price just subtracted.
+				// not take part in the round beyond the price just subtracted. That is
+				// a simple sender, of audio or of video, and a pipe one, since both
+				// forward whole streams and have no layers to pick. And also one that
+				// is paused or inactive for any other reason, whose one point is
+				// priced at zero.
 				if (bitrateOptions.options.size() == 1)
 				{
 					continue;
