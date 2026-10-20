@@ -296,6 +296,13 @@ namespace RTC
 		{
 			kv.second = false;
 		}
+
+#ifdef MS_USE_BUILTIN_BWE
+		// This one never adapts, so the bitrate allocation takes what it puts out off
+		// the top instead of bidding for it. Now that it puts out nothing, that whole
+		// amount is there for the others.
+		this->listener->OnProducerStreamManagerNeedBitrateChange();
+#endif
 	}
 
 	void PipeProducerStreamManager::OnResumed()
@@ -310,6 +317,12 @@ namespace RTC
 		if (IsActive())
 		{
 			RequestKeyFrame();
+
+#ifdef MS_USE_BUILTIN_BWE
+			// It is taking that amount off the top again, so what the others were given
+			// while it was quiet no longer fits.
+			this->listener->OnProducerStreamManagerNeedBitrateChange();
+#endif
 		}
 	}
 

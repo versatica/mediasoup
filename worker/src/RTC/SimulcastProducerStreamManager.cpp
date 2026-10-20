@@ -136,7 +136,7 @@ namespace RTC
 
 		if (IsActive())
 		{
-			MayChangeLayers(/*force*/ false);
+			MayChangeLayers();
 
 			// If this stream is the target spatial layer and we are still waiting
 			// for a key frame (i.e. the previous RequestKeyFrameForTargetSpatialLayer
@@ -192,14 +192,14 @@ namespace RTC
 			// Just check target layers if the stream has died or reborned.
 			else if (score == 0 || previousScore == 0)
 			{
-				MayChangeLayers(/*force*/ false);
+				MayChangeLayers();
 			}
 #else
 			// Just check target layers if the stream has died or reborned or if
 			// bitrate is not externally managed.
 			else if (!this->externallyManagedBitrate || (score == 0 || previousScore == 0))
 			{
-				MayChangeLayers(/*force*/ false);
+				MayChangeLayers();
 			}
 #endif
 		}
@@ -248,7 +248,7 @@ namespace RTC
 
 		if (IsActive())
 		{
-			MayChangeLayers(/*force*/ false);
+			MayChangeLayers();
 		}
 	}
 
@@ -1191,10 +1191,12 @@ namespace RTC
 		this->spatialLayerToSync           = -1;
 		this->keyFrameForTsOffsetRequested = false;
 
+#ifndef MS_USE_BUILTIN_BWE
 		if (IsActive())
 		{
-			MayChangeLayers(/*force*/ false);
+			MayChangeLayers();
 		}
+#endif
 	}
 
 	void SimulcastProducerStreamManager::OnTransportDisconnected()
@@ -1209,6 +1211,13 @@ namespace RTC
 		MS_TRACE();
 
 		UpdateTargetLayers(-1, -1);
+
+#ifdef MS_USE_BUILTIN_BWE
+		// What this one was putting in the link it is not putting any more, and that
+		// goes to whoever can use it. There is nothing to recalculate first, since a
+		// paused Consumer offers nothing whatever its streams can do.
+		this->listener->OnProducerStreamManagerNeedBitrateChange();
+#endif
 	}
 
 	void SimulcastProducerStreamManager::OnResumed()
@@ -1222,7 +1231,13 @@ namespace RTC
 
 		if (IsActive())
 		{
-			MayChangeLayers(/*force*/ false);
+#ifdef MS_USE_BUILTIN_BWE
+			// Whatever this one may put out again has to be bid for, and the target
+			// layers it was left with say nothing about that.
+			this->listener->OnProducerStreamManagerNeedBitrateChange();
+#else
+			MayChangeLayers();
+#endif
 		}
 	}
 

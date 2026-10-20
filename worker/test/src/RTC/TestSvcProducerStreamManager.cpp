@@ -769,6 +769,10 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.isSyncPacket == true);
 	}
 
+	// NOTE: Only for the old BWE. With the new one OnTransportConnected() does not
+	// move the target layers, since the transport distributes once after telling
+	// every Consumer.
+#ifndef MS_USE_BUILTIN_BWE
 	SECTION("OnTransportConnected() requests keyframe when active and target changes")
 	{
 		MockListener listener;
@@ -789,19 +793,10 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		// UpdateTargetLayers -> newTarget(0) > current(-1) -> keyframe requested.
 		manager->OnTransportConnected();
 
-#ifdef MS_USE_BUILTIN_BWE
-		// The target layers are not moved here but once bitrate is handed out, so
-		// all this call does is ask for a new round.
-		REQUIRE(listener.needBitrateChangeCount > 0);
-
-		const int64_t nowMs = shared.GetTimeMs();
-
-		allocateBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
-#endif
-
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
+#endif
 
 	SECTION("OnTransportConnected() does not request keyframe when not active")
 	{

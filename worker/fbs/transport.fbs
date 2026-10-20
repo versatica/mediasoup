@@ -2,6 +2,7 @@ include "common.fbs";
 include "consumer.fbs";
 include "dataProducer.fbs";
 include "dataConsumer.fbs";
+include "rtpPacket.fbs";
 include "rtpParameters.fbs";
 include "sctpAssociation.fbs";
 include "sctpParameters.fbs";
@@ -248,6 +249,7 @@ table SctpNegotiatedCapabilitiesNotification {
 
 union TraceInfo {
     BweTraceInfo,
+    ProbationTraceInfo,
 }
 
 enum BweType: uint8 {
@@ -264,6 +266,10 @@ table BweTraceInfo {
     start_bitrate: uint64;
     max_padding_bitrate: uint64;
     available_bitrate: uint64;
+}
+
+table ProbationTraceInfo {
+    rtp_packet: FBS.RtpPacket.Dump (required);
 }
 
 table TraceNotification {

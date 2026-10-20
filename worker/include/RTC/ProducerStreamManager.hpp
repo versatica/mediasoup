@@ -63,16 +63,7 @@ namespace RTC
 		  RTC::Media::Kind kind,
 		  bool keyFrameSupported,
 		  Listener* listener,
-		  SharedInterface* shared)
-		  : listener(listener),
-		    shared(shared),
-		    keyFrameSupported(keyFrameSupported),
-		    kind(kind),
-		    consumableRtpEncodings(consumableRtpEncodings),
-		    encodingContext(std::move(encodingContext)),
-		    preferredLayers(preferredLayers)
-		{
-		}
+		  SharedInterface* shared);
 		virtual ~ProducerStreamManager() = default;
 
 	public:
@@ -108,9 +99,7 @@ namespace RTC
 		// Only spatial layers within a same RTP stream can start or stop separately,
 		// so just SVC cares about this.
 		virtual void ProducerSpatialLayerActivityChanged(
-		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/)
-		{
-		}
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive);
 
 #ifndef MS_USE_BUILTIN_BWE
 		void SetExternallyManagedBitrate()
@@ -155,41 +144,7 @@ namespace RTC
 		virtual void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer) = 0;
 		virtual bool RecalculateTargetLayers(RTC::ConsumerTypes::VideoLayers& newTargetLayers) const = 0;
 
-		void MayChangeLayers(bool force)
-		{
-			RTC::ConsumerTypes::VideoLayers newTargetLayers;
-
-			if (RecalculateTargetLayers(newTargetLayers))
-			{
-#ifdef MS_USE_BUILTIN_BWE
-				// Don't bother the transport unless the newTargetSpatialLayer has
-				// changed (or force is true). This is because the target temporal layer
-				// is managed by the available given bitrate so the transport will let
-				// us change it when it considers.
-				if (newTargetLayers.spatial != GetTargetLayers().spatial || force)
-				{
-					this->listener->OnProducerStreamManagerNeedBitrateChange();
-				}
-#else
-				// If bitrate externally managed, don't bother the transport unless
-				// the newTargetSpatialLayer has changed (or force is true).
-				// This is because, if bitrate is externally managed, the target temporal
-				// layer is managed by the available given bitrate so the transport
-				// will let us change it when it considers.
-				if (this->externallyManagedBitrate)
-				{
-					if (newTargetLayers.spatial != GetTargetLayers().spatial || force)
-					{
-						this->listener->OnProducerStreamManagerNeedBitrateChange();
-					}
-				}
-				else
-				{
-					UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
-				}
-#endif
-			}
-		}
+		void MayChangeLayers();
 		virtual void OnTransportConnected()    = 0;
 		virtual void OnTransportDisconnected() = 0;
 		virtual void OnPaused()                = 0;
@@ -208,25 +163,7 @@ namespace RTC
 		 *   allocation that this one is not climbing back to anything.
 		 */
 		std::optional<size_t> GetCurrentBitrateOption(
-		  const std::vector<RTC::BWE::BitrateAllocator::Candidate::BitrateOption>& options) const
-		{
-			if (!this->bitrateAllocated)
-			{
-				return std::nullopt;
-			}
-
-			const auto targetLayers = GetTargetLayers();
-
-			for (size_t idx{ 0 }; idx < options.size(); ++idx)
-			{
-				if (options.at(idx).layers == targetLayers)
-				{
-					return idx;
-				}
-			}
-
-			return std::nullopt;
-		}
+		  const std::vector<RTC::BWE::BitrateAllocator::Candidate::BitrateOption>& options) const;
 #endif
 
 		// Passed by argument.

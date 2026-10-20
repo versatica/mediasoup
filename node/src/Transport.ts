@@ -1354,12 +1354,16 @@ export function parseTransportTraceEventData(
 		}
 
 		case FbsTransport.TraceEventType.PROBATION: {
+			const info = new FbsTransport.ProbationTraceInfo();
+
+			trace.info(info);
+
 			return {
 				type: 'probation',
 				timestamp: Number(trace.timestamp()),
 				direction:
 					trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-				info: {},
+				info: info.rtpPacket()!.unpack(),
 			};
 		}
 	}

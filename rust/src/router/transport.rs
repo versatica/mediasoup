@@ -70,7 +70,17 @@ impl FromFbs for TransportTraceEventData {
     type FbsType = transport::TraceNotification;
     fn from_fbs(data: &Self::FbsType) -> Self {
         match data.type_ {
-            transport::TraceEventType::Probation => unimplemented!(),
+            transport::TraceEventType::Probation => TransportTraceEventData::Probation {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(&data.direction),
+                info: {
+                    let Some(transport::TraceInfo::ProbationTraceInfo(info)) = &data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    RtpPacketTraceInfo::from_fbs(info.rtp_packet.as_ref())
+                },
+            },
             transport::TraceEventType::Bwe => TransportTraceEventData::Bwe {
                 timestamp: data.timestamp,
                 direction: TraceEventDirection::from_fbs(&data.direction),

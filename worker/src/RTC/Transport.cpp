@@ -1626,8 +1626,8 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef MS_USE_BUILTIN_BWE
-		// NOTE: This goes before telling the Consumers, since being told leads them to
-		// ask for a bitrate round and there must be someone to answer it.
+		// NOTE: This goes before telling the Consumers, since the round below needs
+		// someone to say how much there is to give out.
 		MayCreateOrUpdateSenderTransportCongestionController();
 		MayCreateReceiverTransportCongestionController();
 #endif
@@ -1639,6 +1639,22 @@ namespace RTC
 
 			consumer->TransportConnected();
 		}
+
+#ifdef MS_USE_BUILTIN_BWE
+		// A Consumer offers nothing until its transport is connected, so this is the
+		// first instant there is anything to give out. It goes here, once they have all
+		// been told, rather than in each Consumer as it is told: that would hand the
+		// whole bitrate to the first one and take most of it back on the next round,
+		// with a key frame requested on each turn.
+		//
+		// NOTE: There may be no controller, since a Transport that connects before its
+		// first Consumer gets one in HandleRequest() instead.
+		if (this->senderTransportCongestionController)
+		{
+			DistributeAvailableOutgoingBitrate();
+			ComputeOutgoingDesiredBitrate();
+		}
+#endif
 
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
@@ -1946,7 +1962,7 @@ namespace RTC
 		return it->second;
 	}
 
-	inline RTC::Consumer* Transport::GetConsumerByMediaSsrc(uint32_t ssrc) const
+	RTC::Consumer* Transport::GetConsumerByMediaSsrc(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1962,7 +1978,7 @@ namespace RTC
 		return consumer;
 	}
 
-	inline RTC::Consumer* Transport::GetConsumerByRtxSsrc(uint32_t ssrc) const
+	RTC::Consumer* Transport::GetConsumerByRtxSsrc(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -2804,7 +2820,7 @@ namespace RTC
 	}
 #endif
 
-	inline void Transport::EmitTraceEventProbationType(RTC::RTP::Packet* /*packet*/) const
+	void Transport::EmitTraceEventProbationType(RTC::RTP::Packet* packet) const
 	{
 		MS_TRACE();
 
@@ -2813,12 +2829,19 @@ namespace RTC
 			return;
 		}
 
-		// TODO: Missing trace info (RTP packet dump).
+		const auto rtpPacketDump =
+		  packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+
+		const auto traceInfo = FBS::Transport::CreateProbationTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump);
+
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::PROBATION,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
-		  FBS::Common::TraceDirection::DIRECTION_OUT);
+		  FBS::Common::TraceDirection::DIRECTION_OUT,
+		  FBS::Transport::TraceInfo::ProbationTraceInfo,
+		  traceInfo.Union());
 
 		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
@@ -2828,8 +2851,7 @@ namespace RTC
 	}
 
 #ifndef MS_USE_BUILTIN_BWE
-	inline void Transport::EmitTraceEventBweType(
-	  RTC::TransportCongestionControlClient::Bitrates& bitrates) const
+	void Transport::EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const
 	{
 		MS_TRACE();
 

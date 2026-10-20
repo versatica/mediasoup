@@ -729,6 +729,10 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(result.isSyncPacket == true);
 	}
 
+	// NOTE: Only for the old BWE. With the new one OnTransportConnected() does not
+	// move the target layers, since the transport distributes once after telling
+	// every Consumer.
+#ifndef MS_USE_BUILTIN_BWE
 	SECTION("OnTransportConnected() requests keyframe when active and target changes")
 	{
 		MockListener listener;
@@ -762,28 +766,13 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		auto keyFrameCountBefore = listener.keyFrameRequestCount;
 
-#ifdef MS_USE_BUILTIN_BWE
-		const auto needBitrateChangeCountBefore = listener.needBitrateChangeCount;
-
-		// Reconnecting no longer moves the target layers by itself: it asks the
-		// transport for a new bitrate round, which is what may move them.
-		manager->OnTransportConnected();
-
-		REQUIRE(listener.needBitrateChangeCount > needBitrateChangeCountBefore);
-
-		// And once they are moved a keyframe is requested, since the new spatial
-		// layer differs from the current one (-1).
-		manager->UpdateTargetLayers(1, 0);
-
-		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
-#else
 		// Reconnect: RecalculateTargetLayers() picks preferred layer 1,
 		// which differs from current (-1), so a keyframe is requested.
 		manager->OnTransportConnected();
 
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
-#endif
 	}
+#endif
 
 	SECTION("OnTransportConnected() does not request keyframe when not active")
 	{
@@ -910,8 +899,8 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ true);
 
 #ifdef MS_USE_BUILTIN_BWE
-		// MayChangeLayers() no longer applies what it works out, it asks the
-		// transport for a new round, so the target is moved here instead.
+		// MayChangeLayers() asks the transport for a new round rather than applying
+		// what it works out, so the target is moved here instead.
 		RTC::ConsumerTypes::VideoLayers newTargetLayers;
 
 		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == true);
@@ -981,8 +970,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ true);
 
 #ifdef MS_USE_BUILTIN_BWE
-		// MayChangeLayers() no longer applies what it works out, so the target is
-		// moved here, which is what this SECTION needs to measure its tsOffset.
+		// MayChangeLayers() asks the transport for a new round rather than applying
+		// what it works out, so the target is moved here, which is what this SECTION
+		// needs to measure its tsOffset.
 		manager->UpdateTargetLayers(1, 0);
 #endif
 
@@ -2302,8 +2292,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		manager->OnTransportConnected();
 
 #ifdef MS_USE_BUILTIN_BWE
-		// MayChangeLayers() no longer applies what it works out, so the target is
-		// moved here, which is what this SECTION needs to measure its tsOffset.
+		// MayChangeLayers() asks the transport for a new round rather than applying
+		// what it works out, so the target is moved here, which is what this SECTION
+		// needs to measure its tsOffset.
 		manager->UpdateTargetLayers(2, 0);
 #endif
 
@@ -2353,8 +2344,10 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// Call OnResumed — should set syncRequired.
 		manager->OnResumed();
 
-		// Reset target since OnResumed may have reset it via MayChangeLayers().
+#ifndef MS_USE_BUILTIN_BWE
+		// Reset target since OnResumed() moved it through MayChangeLayers().
 		manager->UpdateTargetLayers(0, 0);
+#endif
 
 		// Prove syncRequired was set: next packet is a sync packet.
 		packet->SetSequenceNumber(3);

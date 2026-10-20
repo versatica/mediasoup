@@ -729,7 +729,7 @@ namespace RTC
 
 				if (IsActive() && newPreferredLayers != previousPreferredLayers)
 				{
-					this->producerStreamManager->MayChangeLayers(/*force*/ true);
+					this->producerStreamManager->MayChangeLayers();
 				}
 
 				break;
@@ -1721,11 +1721,7 @@ namespace RTC
 
 		this->producerStreamManager->OnPaused();
 
-#ifdef MS_USE_BUILTIN_BWE
-		// Whatever it was putting in the link it is not putting any more, and that
-		// goes to whoever can use it.
-		this->listener->OnConsumerNeedBitrateChange(this);
-#else
+#ifndef MS_USE_BUILTIN_BWE
 		if (this->externallyManagedBitrate)
 		{
 			// Audio does not play the BWE game.
@@ -1901,7 +1897,7 @@ namespace RTC
 			return;
 		}
 
-		auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
+		const auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
 
 		auto notificationOffset = FBS::Consumer::CreateScoreNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), scoreOffset);
@@ -1949,8 +1945,10 @@ namespace RTC
 
 		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-			auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
+			const auto rtpPacketDump =
+			  packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+
+			const auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
@@ -1965,8 +1963,10 @@ namespace RTC
 		}
 		else if (this->traceEventTypes.rtp)
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-			auto traceInfo = FBS::Consumer::CreateRtpTraceInfo(
+			const auto rtpPacketDump =
+			  packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+
+			const auto traceInfo = FBS::Consumer::CreateRtpTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
@@ -2072,7 +2072,7 @@ namespace RTC
 			// Just check target layers if our bitrate is not externally managed.
 			if (!this->externallyManagedBitrate)
 			{
-				this->producerStreamManager->MayChangeLayers(/*force*/ false);
+				this->producerStreamManager->MayChangeLayers();
 			}
 		}
 #endif
