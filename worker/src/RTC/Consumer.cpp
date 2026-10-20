@@ -801,12 +801,24 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
 				}
 
+				const uint8_t previousPriority = this->priority;
+
 				this->priority = body->priority();
 
 				auto responseOffset =
 				  FBS::Consumer::CreateSetPriorityResponse(request->GetBufferBuilder(), this->priority);
 
 				request->Accept(FBS::Response::Body::Consumer_SetPriorityResponse, responseOffset);
+
+#ifdef MS_USE_BUILTIN_BWE
+				// The priority is the weight the bitrate allocation gives this one
+				// against the others, so a new one is only worth anything once they are
+				// weighed again.
+				if (IsActive() && this->priority != previousPriority)
+				{
+					this->listener->OnConsumerNeedBitrateChange(this);
+				}
+#endif
 
 				break;
 			}

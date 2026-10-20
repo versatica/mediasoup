@@ -1108,6 +1108,17 @@ namespace RTC
 					consumer->TransportConnected();
 				}
 
+#ifdef MS_USE_BUILTIN_BWE
+				// A Consumer that is already putting something out changes what there is
+				// to give out. One created paused offers nothing yet, and asks on its own
+				// when it is resumed.
+				if (this->senderTransportCongestionController && consumer->IsActive())
+				{
+					DistributeAvailableOutgoingBitrate();
+					ComputeOutgoingDesiredBitrate();
+				}
+#endif
+
 				break;
 			}
 
@@ -1465,10 +1476,12 @@ namespace RTC
 				request->Accept();
 
 #ifdef MS_USE_BUILTIN_BWE
-				// What the remaining Consumers want is now less, and that is an input of
-				// the probing.
+				// What this one was putting in the link goes to whoever can use it, and
+				// what the remaining Consumers want is now less, which is an input of the
+				// probing.
 				if (this->senderTransportCongestionController)
 				{
+					DistributeAvailableOutgoingBitrate();
 					ComputeOutgoingDesiredBitrate();
 				}
 #else
@@ -3307,10 +3320,11 @@ namespace RTC
 		delete consumer;
 
 #ifdef MS_USE_BUILTIN_BWE
-		// What the remaining Consumers want is now less, and that is an input of the
-		// probing.
+		// What this one was putting in the link goes to whoever can use it, and what
+		// the remaining Consumers want is now less, which is an input of the probing.
 		if (this->senderTransportCongestionController)
 		{
+			DistributeAvailableOutgoingBitrate();
 			ComputeOutgoingDesiredBitrate();
 		}
 #else
