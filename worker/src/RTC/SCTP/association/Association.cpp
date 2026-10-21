@@ -887,10 +887,6 @@ namespace RTC
 			shutdownAckChunk->Consolidate();
 
 			this->packetSender.SendPacket(packet.get());
-
-			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-			this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
-			this->t2ShutdownTimer->Start();
 		}
 
 		void Association::MaySendShutdownOrShutdownAckChunk()
@@ -930,6 +926,10 @@ namespace RTC
 			else if (this->state == State::SHUTDOWN_RECEIVED)
 			{
 				SendShutdownAckChunk();
+
+				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
+				this->t2ShutdownTimer->Start();
+
 				SetState(State::SHUTDOWN_ACK_SENT, "no more outstanding data");
 			}
 		}
@@ -1992,6 +1992,10 @@ namespace RTC
 				case State::SHUTDOWN_SENT:
 				{
 					SendShutdownAckChunk();
+
+					this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
+					this->t2ShutdownTimer->Start();
+
 					SetState(State::SHUTDOWN_ACK_SENT, "SHUTDOWN received");
 
 					break;
@@ -2000,6 +2004,9 @@ namespace RTC
 				case State::SHUTDOWN_ACK_SENT:
 				{
 					SendShutdownAckChunk();
+
+					this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
+					this->t2ShutdownTimer->Start();
 
 					break;
 				}

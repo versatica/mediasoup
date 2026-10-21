@@ -304,7 +304,8 @@ namespace RTC
 			AssertIsConsistent();
 		}
 
-		const ForwardTsnChunk* OutstandingData::AddForwardTsn(Packet* packet) const
+		const ForwardTsnChunk* OutstandingData::AddForwardTsn(
+		  Packet* packet, std::optional<uint32_t> rateLimitedTsn) const
 		{
 			MS_TRACE();
 
@@ -334,6 +335,13 @@ namespace RTC
 				}
 			}
 
+			// A FORWARD-TSN that does not advance the cumulative TSN is a duplicate,
+			// and the caller may be rate limiting it.
+			if (rateLimitedTsn == newCumulativeAck.Wrap())
+			{
+				return nullptr;
+			}
+
 			auto* forwardTsnChunk = packet->BuildChunkInPlace<ForwardTsnChunk>();
 
 			forwardTsnChunk->SetNewCumulativeTsn(newCumulativeAck.Wrap());
@@ -348,7 +356,8 @@ namespace RTC
 			return forwardTsnChunk;
 		}
 
-		const IForwardTsnChunk* OutstandingData::AddIForwardTsn(Packet* packet) const
+		const IForwardTsnChunk* OutstandingData::AddIForwardTsn(
+		  Packet* packet, std::optional<uint32_t> rateLimitedTsn) const
 		{
 			MS_TRACE();
 
@@ -373,6 +382,13 @@ namespace RTC
 				  std::make_pair(item.GetData().IsUnordered(), item.GetData().GetStreamId());
 
 				skippedPerStream[stream] = std::max(item.GetData().GetMessageId(), skippedPerStream[stream]);
+			}
+
+			// An I-FORWARD-TSN that does not advance the cumulative TSN is a
+			// duplicate, and the caller may be rate limiting it.
+			if (rateLimitedTsn == newCumulativeAck.Wrap())
+			{
+				return nullptr;
 			}
 
 			auto* iForwardTsnChunk = packet->BuildChunkInPlace<IForwardTsnChunk>();
@@ -654,10 +670,23 @@ namespace RTC
 						continue;
 					}
 
+					// https://datatracker.ietf.org/doc/html/rfc9260#section-7.2.4
+					//
+					// "3) Determine how many of the earliest (i.e., lowest TSN) DATA
+					// chunks marked for retransmission will fit into a single packet
+					// [...] Retransmit those K DATA chunks in a single packet. When a
+					// Fast Retransmit is being performed, the sender SHOULD ignore the
+					// value of cwnd and SHOULD NOT delay retransmission for this single
+					// packet."
+					//
+					// This applies to every chunk that reaches the miss indication
+					// threshold, regardless of if the endpoint is already in fast
+					// recovery or not. Only the cwnd/ssthresh adjustment (step 2) is
+					// skipped while in fast recovery.
 					ackInfo.hasPacketLoss |= NackItem(
 					  tsn,
 					  /*retransmitNow*/ false,
-					  /*doFastRetransmit*/ !isInFastRecovery);
+					  /*doFastRetransmit*/ true);
 				}
 
 				prevBlockLastAcked = Types::UnwrappedTsn::AddTo(cumulativeTsnAck, block.end);

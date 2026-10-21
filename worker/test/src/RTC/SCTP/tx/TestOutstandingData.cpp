@@ -872,7 +872,8 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		      true)
 		    .hasPacketLoss == true);
 
-		const auto retransmit = buffer.GetChunksToBeRetransmitted(1000);
+		// It is fast retransmitted again, even though in fast recovery.
+		const auto retransmit = buffer.GetChunksToBeFastRetransmitted(1000);
 
 		REQUIRE(retransmit.size() == 1);
 		REQUIRE(retransmit[0].first == 10);
