@@ -4,6 +4,7 @@
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
 #include "RTC/SCTP/packet/chunks/CookieAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/CookieEchoChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
@@ -219,24 +220,45 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (nowUs >= this->limitForwardTsnUntilUs && this->retransmissionQueue.ShouldSendForwardTsn(nowUs))
+			if (!this->retransmissionQueue.ShouldSendForwardTsn(nowUs))
 			{
-				if (this->negotiatedCapabilities.messageInterleaving)
-				{
-					this->retransmissionQueue.AddIForwardTsn(packet);
-				}
-				else
-				{
-					this->retransmissionQueue.AddForwardTsn(packet);
-				}
+				return;
+			}
 
-				// https://datatracker.ietf.org/doc/html/rfc3758
-				//
-				// "IMPLEMENTATION NOTE: An implementation may wish to limit the number
-				// of duplicate FORWARD TSN chunks it sends by ... waiting a full RTT
-				// before sending a duplicate FORWARD TSN."
-				// "Any delay applied to the sending of FORWARD TSN chunk SHOULD NOT
-				// exceed 200ms and MUST NOT exceed 500ms".
+			// https://datatracker.ietf.org/doc/html/rfc3758#section-3.5
+			//
+			// C3) "If, after step C1 and C2, the "Advanced.Peer.Ack.Point" is greater
+			// than the Cumulative TSN Ack Point, the data sender MUST send the data
+			// receiver a FORWARD TSN chunk containing the latest value of the
+			// "Advanced.Peer.Ack.Point"."
+			//
+			// "IMPLEMENTATION NOTE: An implementation may wish to limit the number of
+			// duplicate FORWARD TSN chunks it sends by ... waiting a full RTT before
+			// sending a duplicate FORWARD TSN."
+			// "Any delay applied to the sending of FORWARD TSN chunk SHOULD NOT exceed
+			// 200ms and MUST NOT exceed 500ms".
+			//
+			// Only duplicates are rate limited. A FORWARD-TSN that advances the
+			// cumulative TSN is sent immediately, as delaying it would block the
+			// receiver from delivering messages on ordered streams.
+			const std::optional<uint32_t> rateLimitedTsn = nowUs < this->limitForwardTsnUntilUs
+			                                                 ? std::make_optional(this->lastSentForwardTsn)
+			                                                 : std::nullopt;
+
+			const AnyForwardTsnChunk* chunk;
+
+			if (this->negotiatedCapabilities.messageInterleaving)
+			{
+				chunk = this->retransmissionQueue.AddIForwardTsn(packet, rateLimitedTsn);
+			}
+			else
+			{
+				chunk = this->retransmissionQueue.AddForwardTsn(packet, rateLimitedTsn);
+			}
+
+			if (chunk)
+			{
+				this->lastSentForwardTsn = chunk->GetNewCumulativeTsn();
 				this->limitForwardTsnUntilUs = nowUs + std::min(int64_t{ 200 * 1000 }, this->rto.GetSrttUs());
 			}
 		}

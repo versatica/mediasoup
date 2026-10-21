@@ -755,12 +755,31 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
 		REQUIRE(z.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::SHUTTING_DOWN);
 
-		// Advance time to trigger timer expiry, which makes A resend SHUTDOWN-ACK.
-		advanceNowMs(a, z, a.sctpOptions.initialRtoMs);
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const uint16_t maxRetransmissions = a.sctpOptions.maxRetransmissions.value();
+
+		for (uint16_t i{ 0 }; i < maxRetransmissions; ++i)
+		{
+			// Advance time to trigger timer expiry, which makes A resend SHUTDOWN-ACK.
+			advanceNowMs(a, z, a.sctpOptions.initialRtoMs * (1 << i));
+
+			REQUIRE(
+			  packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(a.listener.ConsumeFirstSentPacket()) ==
+			  true);
+			REQUIRE(a.listener.ConsumeFirstSentPacket().empty() == true);
+		}
+
+		// The last expiry makes it abort the association.
+		advanceNowMs(a, z, a.sctpOptions.initialRtoMs * (1 << maxRetransmissions));
+
+		REQUIRE(a.listener.IsClosed() == true);
+		REQUIRE(a.listener.GetClosedErrorKind() == RTC::SCTP::Types::ErrorKind::TOO_MANY_RETRIES);
+		REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
 
 		REQUIRE(
-		  packetHasSingleChunkOfType<RTC::SCTP::ShutdownAckChunk>(a.listener.ConsumeFirstSentPacket()) ==
-		  true);
+		  packetHasSingleChunkOfType<RTC::SCTP::AbortAssociationChunk>(
+		    a.listener.ConsumeFirstSentPacket()) == true);
+		REQUIRE(a.listener.ConsumeFirstSentPacket().empty() == true);
 	}
 
 	SECTION("shutdown is ignored in SHUTDOWN-RECEIVED state")
@@ -1010,6 +1029,116 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(
 		  metricsValue.rtxBytesCount ==
 		  Utils::Byte::PadDownTo4Bytes(a.sctpOptions.mtu - RTC::SCTP::Packet::CommonHeaderLength));
+	}
+
+	SECTION("only rate limits duplicate FORWARD-TSN")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		connectAssociations(a, z);
+
+		const std::vector<uint8_t> payload(SmallMessageSize);
+
+		// Sends an unreliable message and returns the packet carrying it.
+		const auto sendUnreliable = [&a, &payload](uint32_t ppid)
+		{
+			sendMessage(a, 1, ppid, payload, { .maxRetransmissions = 0 });
+
+			return a.listener.ConsumeFirstSentPacket();
+		};
+
+		// Delivers `buffer` to `z`, and the resulting SACK back to `a`.
+		const auto deliverAndSack = [&a, &z](const std::vector<uint8_t>& buffer)
+		{
+			z.association.ReceiveSctpData(buffer.data(), buffer.size(), z.shared.GetTimeUs());
+
+			const auto sackBuffer = z.listener.ConsumeFirstSentPacket();
+
+			REQUIRE(!sackBuffer.empty());
+
+			a.association.ReceiveSctpData(sackBuffer.data(), sackBuffer.size(), a.shared.GetTimeUs());
+		};
+
+		// Returns the TSN of the I-DATA chunk carried by `buffer`.
+		const auto getIDataChunkTsn = [](const std::vector<uint8_t>& buffer)
+		{
+			const auto packet = parsePacket(buffer);
+
+			REQUIRE(packet);
+
+			const auto* iDataChunk = packet->GetFirstChunkOfType<RTC::SCTP::IDataChunk>();
+
+			REQUIRE(iDataChunk);
+
+			return iDataChunk->GetTsn();
+		};
+
+		// Returns the new cumulative TSN of the I-FORWARD-TSN chunk carried by
+		// `buffer`, or `std::nullopt` if it carries no such chunk.
+		const auto getIForwardTsn = [](const std::vector<uint8_t>& buffer) -> std::optional<uint32_t>
+		{
+			const auto packet = parsePacket(buffer);
+
+			if (!packet)
+			{
+				return std::nullopt;
+			}
+
+			const auto* iForwardTsnChunk = packet->GetFirstChunkOfType<RTC::SCTP::IForwardTsnChunk>();
+
+			if (!iForwardTsnChunk)
+			{
+				return std::nullopt;
+			}
+
+			return iForwardTsnChunk->GetNewCumulativeTsn();
+		};
+
+		// The first message is lost. Three following messages are delivered, and
+		// the SACKs generated for them will mark the first one as lost and
+		// abandoned.
+		const uint32_t lostTsn1 = getIDataChunkTsn(sendUnreliable(51));
+		const auto packet52     = sendUnreliable(52);
+		const auto packet53     = sendUnreliable(53);
+		const auto packet54     = sendUnreliable(54);
+
+		// Let some time pass, so that a non-zero RTT is measured.
+		advanceNowMs(a, z, 50);
+
+		deliverAndSack(packet52);
+		deliverAndSack(packet53);
+		deliverAndSack(packet54);
+
+		const auto forwardTsn1 = a.listener.ConsumeFirstSentPacket();
+
+		REQUIRE(getIForwardTsn(forwardTsn1) == lostTsn1);
+
+		z.association.ReceiveSctpData(forwardTsn1.data(), forwardTsn1.size(), z.shared.GetTimeUs());
+		exchangeMessages(a, z);
+
+		// Without advancing time (i.e. within the FORWARD-TSN rate limiting
+		// interval), lose another message. The FORWARD-TSN for it advances the
+		// cumulative TSN, so it must be sent immediately.
+		const uint32_t lostTsn2 = getIDataChunkTsn(sendUnreliable(55));
+
+		deliverAndSack(sendUnreliable(56));
+		deliverAndSack(sendUnreliable(57));
+		deliverAndSack(sendUnreliable(58));
+
+		REQUIRE(getIForwardTsn(a.listener.ConsumeFirstSentPacket()) == lostTsn2);
+
+		// That FORWARD-TSN was lost. A duplicate is not sent until the rate
+		// limiting interval has passed.
+		deliverAndSack(sendUnreliable(59));
+
+		REQUIRE(a.listener.ConsumeFirstSentPacket().empty() == true);
+
+		advanceNowMs(a, z, 200);
+
+		sendMessage(a, 1, 60, payload, { .maxRetransmissions = 0 });
+
+		REQUIRE(getIForwardTsn(a.listener.ConsumeFirstSentPacket()) == lostTsn2);
 	}
 
 	SECTION("sends a heartbeat on idle connection")
