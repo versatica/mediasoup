@@ -816,7 +816,7 @@ namespace RTC
 				// The priority is the weight the bitrate allocation gives this one
 				// against the others, so a new one is only worth anything once they are
 				// weighed again.
-				if (IsActive() && this->priority != previousPriority)
+				if (this->bweManaged && IsActive() && this->priority != previousPriority)
 				{
 					this->listener->OnConsumerNeedBitrateChange(this);
 				}

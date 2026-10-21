@@ -184,7 +184,7 @@ namespace
 			encodingContext = std::make_unique<MockEncodingContext>();
 		}
 
-		return std::make_unique<RTC::SvcProducerStreamManager>(
+		auto manager = std::make_unique<RTC::SvcProducerStreamManager>(
 		  consumableRtpEncodings,
 		  preferredLayers,
 		  std::move(encodingContext),
@@ -192,6 +192,13 @@ namespace
 		  keyFrameSupported,
 		  listener,
 		  std::addressof(shared));
+
+#ifdef MS_USE_BUILTIN_BWE
+		// Every case below is written for a Transport that answers a bitrate round.
+		manager->SetBweManaged(true);
+#endif
+
+		return manager;
 	}
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(

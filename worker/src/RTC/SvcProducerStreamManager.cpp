@@ -764,7 +764,10 @@ namespace RTC
 		// What this one was putting in the link it is not putting any more, and that
 		// goes to whoever can use it. There is nothing to recalculate first, since a
 		// paused Consumer offers nothing whatever its streams can do.
-		this->listener->OnProducerStreamManagerNeedBitrateChange();
+		if (this->bweManaged)
+		{
+			this->listener->OnProducerStreamManagerNeedBitrateChange();
+		}
 #endif
 	}
 
@@ -778,8 +781,16 @@ namespace RTC
 		{
 #ifdef MS_USE_BUILTIN_BWE
 			// Whatever this one may put out again has to be bid for, and the target
-			// layers it was left with say nothing about that.
-			this->listener->OnProducerStreamManagerNeedBitrateChange();
+			// layers it was left with say nothing about that. With no allocation
+			// running there is nothing to bid for, so the layers are worked out here.
+			if (this->bweManaged)
+			{
+				this->listener->OnProducerStreamManagerNeedBitrateChange();
+			}
+			else
+			{
+				MayChangeLayers();
+			}
 #else
 			MayChangeLayers();
 #endif

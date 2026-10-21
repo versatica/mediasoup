@@ -42,9 +42,17 @@ namespace RTC
 		if (RecalculateTargetLayers(newTargetLayers))
 		{
 #ifdef MS_USE_BUILTIN_BWE
-			// Which layers are actually run at is the bitrate allocation's to decide, so
-			// all this asks for is a round.
-			this->listener->OnProducerStreamManagerNeedBitrateChange();
+			// With an allocation running, which layers are actually run at is its
+			// decision, so all this asks for is a round. Without one there is nobody to
+			// ask, so what was worked out is applied here.
+			if (this->bweManaged)
+			{
+				this->listener->OnProducerStreamManagerNeedBitrateChange();
+			}
+			else
+			{
+				UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
+			}
 #else
 			// If bitrate externally managed, don't bother the transport unless
 			// the newTargetSpatialLayer has changed.

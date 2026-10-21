@@ -187,7 +187,7 @@ namespace
 			encodingContext = std::make_unique<MockEncodingContext>();
 		}
 
-		return std::make_unique<RTC::SimulcastProducerStreamManager>(
+		auto manager = std::make_unique<RTC::SimulcastProducerStreamManager>(
 		  consumableRtpEncodings,
 		  preferredLayers,
 		  std::move(encodingContext),
@@ -195,6 +195,13 @@ namespace
 		  keyFrameSupported,
 		  listener,
 		  std::addressof(shared));
+
+#ifdef MS_USE_BUILTIN_BWE
+		// Every case below is written for a Transport that answers a bitrate round.
+		manager->SetBweManaged(true);
+#endif
+
+		return manager;
 	}
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(uint32_t ssrc)
@@ -2629,4 +2636,79 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		REQUIRE(listener.keyFrameRequestCount == 2);
 	}
+
+#ifdef MS_USE_BUILTIN_BWE
+	SECTION(
+	  "with no bitrate allocation running, a Producer stream score applies the layers instead of asking for a round")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+
+		manager->SetBweManaged(false);
+
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+
+		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 7, /*previousScore*/ 0);
+		manager->ProducerRtpStreamScore(rtpStream1.get(), /*score*/ 7, /*previousScore*/ 0);
+
+		REQUIRE(listener.needBitrateChangeCount == 0);
+		REQUIRE(manager->GetTargetLayers().spatial == 1);
+
+		// Nothing is left to change, since what was worked out was applied already.
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == false);
+	}
+
+	SECTION("with no bitrate allocation running, OnPaused() asks for no round")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+
+		manager->SetBweManaged(false);
+
+		manager->UpdateTargetLayers(1, 0);
+
+		manager->OnPaused();
+
+		REQUIRE(listener.needBitrateChangeCount == 0);
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+	}
+
+	SECTION(
+	  "with no bitrate allocation running, OnResumed() applies the layers instead of asking for a round")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+
+		manager->SetBweManaged(false);
+
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 7, /*previousScore*/ 0);
+		manager->ProducerRtpStreamScore(rtpStream1.get(), /*score*/ 7, /*previousScore*/ 0);
+
+		manager->OnPaused();
+
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+
+		manager->OnResumed();
+
+		REQUIRE(listener.needBitrateChangeCount == 0);
+		REQUIRE(manager->GetTargetLayers().spatial == 1);
+	}
+#endif
 }

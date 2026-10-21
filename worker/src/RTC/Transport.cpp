@@ -1047,6 +1047,13 @@ namespace RTC
 				// NOTE: A Transport that gets its first Consumer while not yet connected
 				// builds it in Transport::Connected() instead.
 				MayCreateOrUpdateSenderTransportCongestionController();
+
+				// NOTE: When this very call is the one that built it, the loop inside it
+				// has already told this Consumer, since it is in the map by now.
+				if (this->senderTransportCongestionController)
+				{
+					consumer->SetBweManaged(true);
+				}
 #else
 				// Set TransportCongestionControlClient.
 				if (this->enableBwe && !this->tccClient)
@@ -2622,6 +2629,14 @@ namespace RTC
 			      .maxBitrate   = this->maxOutgoingBitrate });
 
 			created = true;
+
+			// From now on the Consumers ask for bitrate instead of helping themselves.
+			for (auto& kv : this->mapConsumers)
+			{
+				auto* consumer = kv.second;
+
+				consumer->SetBweManaged(true);
+			}
 		}
 
 		// NOTE: The path may be another one than the last time, so the packet

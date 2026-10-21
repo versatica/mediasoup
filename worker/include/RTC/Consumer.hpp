@@ -163,6 +163,19 @@ namespace RTC
 		}
 #endif
 #ifdef MS_USE_BUILTIN_BWE
+		/**
+		 * Tell whether a bitrate allocation is running for this Transport, which is
+		 * what decides whether this one asks for bitrate or helps itself.
+		 *
+		 * @remarks
+		 * - While it is false there is nobody to answer a round, so nothing about
+		 *   bitrate or layers is told to the Transport.
+		 */
+		void SetBweManaged(bool bweManaged)
+		{
+			this->bweManaged = bweManaged;
+			this->producerStreamManager->SetBweManaged(bweManaged);
+		}
 		const std::string& GetBitrateAllocationId() const override;
 		uint8_t GetBitrateWeight() const override;
 		RTC::BWE::BitrateAllocator::Candidate::BitrateOptions GetBitrateOptions() const override;
@@ -257,6 +270,12 @@ namespace RTC
 		int64_t maxRtcpIntervalMs{ 0 };
 #ifndef MS_USE_BUILTIN_BWE
 		bool externallyManagedBitrate{ false };
+#endif
+#ifdef MS_USE_BUILTIN_BWE
+		// Whether a bitrate allocation is running for this Transport. While it is
+		// false nobody would answer a round, so this one is told nothing about
+		// bitrate and its manager applies the layers it works out.
+		bool bweManaged{ false };
 #endif
 		uint8_t priority{ 1 };
 		TraceEventTypes traceEventTypes;

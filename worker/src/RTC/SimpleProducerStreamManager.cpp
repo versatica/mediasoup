@@ -386,7 +386,10 @@ namespace RTC
 #ifdef MS_USE_BUILTIN_BWE
 		// There are no layers to drop here, but what this one was putting in the link
 		// it is not putting any more, and that goes to whoever can use it.
-		this->listener->OnProducerStreamManagerNeedBitrateChange();
+		if (this->bweManaged)
+		{
+			this->listener->OnProducerStreamManagerNeedBitrateChange();
+		}
 #endif
 	}
 
@@ -403,7 +406,10 @@ namespace RTC
 #ifdef MS_USE_BUILTIN_BWE
 			// It is putting something in the link again, so what the others were given
 			// while it was quiet has to be worked out afresh.
-			this->listener->OnProducerStreamManagerNeedBitrateChange();
+			if (this->bweManaged)
+			{
+				this->listener->OnProducerStreamManagerNeedBitrateChange();
+			}
 #endif
 		}
 	}
