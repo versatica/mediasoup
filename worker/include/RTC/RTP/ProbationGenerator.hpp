@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include <array>
 
 namespace RTC
 {
@@ -29,11 +30,12 @@ namespace RTC
 			}
 
 		private:
-			// Allocated by this.
-			std::unique_ptr<RTP::Packet> probationPacket;
 			// Others.
+			alignas(4) std::array<uint8_t, ProbationPacketMaxLength> probationPacketBuffer{};
 			// The length of the probation RTP packet without payload or padding.
 			size_t probationPacketMinLength{ 0 };
+			// Allocated by this.
+			std::unique_ptr<RTP::Packet> probationPacket;
 		};
 	} // namespace RTP
 } // namespace RTC

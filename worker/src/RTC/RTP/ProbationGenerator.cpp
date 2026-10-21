@@ -6,7 +6,7 @@
 #include "RTC/Consts.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "Utils.hpp"
-#include <cstring> // std::memcpy(), std::memset()
+#include <cstring> // std::memcpy()
 #include <vector>
 
 namespace RTC
@@ -15,7 +15,6 @@ namespace RTC
 	{
 		/* Static. */
 
-		static thread_local uint8_t ProbationPacketBuffer[ProbationGenerator::ProbationPacketMaxLength];
 		static constexpr size_t ProbationPacketExtensionsBufferLength{ 200 };
 		alignas(4) static thread_local uint8_t
 		  ProbationPacketExtensionsBuffer[ProbationPacketExtensionsBufferLength];
@@ -26,19 +25,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Trick to only fill the padding with zeroes once.
-			static thread_local bool mustInitializePayload{ true };
-
-			if (mustInitializePayload)
-			{
-				std::memset(ProbationPacketBuffer, 0x00, sizeof(ProbationPacketBuffer));
-
-				mustInitializePayload = false;
-			}
-
 			// Create the probation RTP packet.
 			this->probationPacket.reset(
-			  RTP::Packet::Factory(ProbationPacketBuffer, sizeof(ProbationPacketBuffer)));
+			  RTP::Packet::Factory(this->probationPacketBuffer.data(), this->probationPacketBuffer.size()));
 
 			// Sex fixed codec payload type.
 			this->probationPacket->SetPayloadType(RTC::Consts::BweProbeRtpPayloadType);
