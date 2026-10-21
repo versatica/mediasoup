@@ -4,6 +4,7 @@
 
 - Fix simulcast RTP timestamp jumps on layer switch and frozen retransmission buffer ([PR #2002](https://github.com/versatica/mediasoup/pull/2002)).
 - `RTP::Packet`: Fix `int16_t` truncation of the header extension shift in `SetExtensions()` ([PR #2004](https://github.com/versatica/mediasoup/pull/2004) by @satoren).
+- Worker: Fix SRTP "replay check failed (index too old)" error in RTP probation packets ([PR #2008](https://github.com/versatica/mediasoup/pull/2008)).
 
 ### 3.30.1
 

@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include <array>
 
 namespace RTC
 {
@@ -29,6 +30,8 @@ namespace RTC
 			}
 
 		private:
+			// Others.
+			std::array<uint8_t, ProbationPacketMaxLength> probationPacketBuffer{};
 			// Allocated by this.
 			std::unique_ptr<RTP::Packet> probationPacket;
 			// Others.
