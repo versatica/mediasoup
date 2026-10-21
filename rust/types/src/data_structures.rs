@@ -927,6 +927,20 @@ pub enum BweType {
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BweTraceInfo {
+    /// Desired bitrate.
+    pub desired_bitrate: u64,
+    /// Min bitrate.
+    pub min_bitrate: u64,
+    /// Max bitrate.
+    pub max_bitrate: u64,
+    /// Available bitrate.
+    pub available_bitrate: u64,
+}
+
+/// BWE info in trace event, as the old BWE reports it.
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OldBweTraceInfo {
     /// Bandwidth estimation type.
     pub r#type: BweType,
     /// Desired bitrate

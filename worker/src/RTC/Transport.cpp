@@ -2833,6 +2833,8 @@ namespace RTC
 
 		MS_DEBUG_DEV("total desired bitrate: %" PRIi64, totalDesiredBitrate);
 
+		this->outgoingDesiredBitrate = totalDesiredBitrate;
+
 		this->senderTransportCongestionController->SetDesiredBitrate(totalDesiredBitrate);
 	}
 #else
@@ -2888,6 +2890,41 @@ namespace RTC
 		  notification);
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	void Transport::EmitTraceEventBweType() const
+	{
+		MS_TRACE();
+
+		if (!this->traceEventTypes.bwe)
+		{
+			return;
+		}
+
+		MS_ASSERT(this->senderTransportCongestionController, "no SenderTransportCongestionController");
+
+		const auto traceInfo = FBS::Transport::CreateBweTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+		  static_cast<uint64_t>(this->outgoingDesiredBitrate),
+		  static_cast<uint64_t>(this->minOutgoingBitrate),
+		  static_cast<uint64_t>(this->maxOutgoingBitrate),
+		  static_cast<uint64_t>(this->senderTransportCongestionController->GetAvailableBitrate()));
+
+		auto notification = FBS::Transport::CreateTraceNotification(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+		  FBS::Transport::TraceEventType::BWE,
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
+		  FBS::Common::TraceDirection::DIRECTION_OUT,
+		  FBS::Transport::TraceInfo::BweTraceInfo,
+		  traceInfo.Union());
+
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_TRACE,
+		  FBS::Notification::Body::Transport_TraceNotification,
+		  notification);
+	}
+#endif
+
 #ifndef MS_USE_BUILTIN_BWE
 	void Transport::EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const
 	{
@@ -2898,7 +2935,7 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo = FBS::Transport::CreateBweTraceInfo(
+		auto traceInfo = FBS::Transport::CreateOldBweTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC
 		    ? FBS::Transport::BweType::TRANSPORT_CC
@@ -2916,7 +2953,7 @@ namespace RTC
 		  FBS::Transport::TraceEventType::BWE,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
-		  FBS::Transport::TraceInfo::BweTraceInfo,
+		  FBS::Transport::TraceInfo::OldBweTraceInfo,
 		  traceInfo.Union());
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -3874,8 +3911,8 @@ namespace RTC
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
 
-		// TODO: Emit the 'trace' event of type BWE, whose fields have to be decided
-		// first since the built-in BWE cannot give the ones the old one gave.
+		// May emit 'trace' event.
+		EmitTraceEventBweType();
 	}
 
 	void Transport::OnSenderTransportCongestionControllerSendRtpProbePacket(

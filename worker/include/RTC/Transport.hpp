@@ -294,7 +294,9 @@ namespace RTC
 		virtual void ComputeOutgoingDesiredBitrate(bool forceBitrate = false) final;
 #endif
 		virtual void EmitTraceEventProbationType(RTC::RTP::Packet* packet) const final;
-#ifndef MS_USE_BUILTIN_BWE
+#ifdef MS_USE_BUILTIN_BWE
+		virtual void EmitTraceEventBweType() const final;
+#else
 		virtual void EmitTraceEventBweType(
 		  RTC::TransportCongestionControlClient::Bitrates& bitrates) const final;
 #endif
@@ -500,6 +502,9 @@ namespace RTC
 		int64_t maxIncomingBitrate{ 0 };
 		int64_t maxOutgoingBitrate{ 0 };
 		int64_t minOutgoingBitrate{ 0 };
+#ifdef MS_USE_BUILTIN_BWE
+		int64_t outgoingDesiredBitrate{ 0 };
+#endif
 		// For SCTP capable transports and for direct transport.
 		size_t maxSendMessageSize{ 0 };
 		size_t maxReceiveMessageSize{ 0 };

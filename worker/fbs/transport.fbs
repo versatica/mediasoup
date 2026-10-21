@@ -248,8 +248,9 @@ table SctpNegotiatedCapabilitiesNotification {
 }
 
 union TraceInfo {
-    BweTraceInfo,
+    OldBweTraceInfo,
     ProbationTraceInfo,
+    BweTraceInfo,
 }
 
 enum BweType: uint8 {
@@ -257,7 +258,7 @@ enum BweType: uint8 {
     REMB
 }
 
-table BweTraceInfo {
+table OldBweTraceInfo {
     bwe_type: BweType;
     desired_bitrate: uint64;
     effective_desired_bitrate: uint64;
@@ -265,6 +266,13 @@ table BweTraceInfo {
     max_bitrate: uint64;
     start_bitrate: uint64;
     max_padding_bitrate: uint64;
+    available_bitrate: uint64;
+}
+
+table BweTraceInfo {
+    desired_bitrate: uint64;
+    min_bitrate: uint64;
+    max_bitrate: uint64;
     available_bitrate: uint64;
 }
 

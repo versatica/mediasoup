@@ -372,6 +372,19 @@ impl FromFbs for BweTraceInfo {
 
     fn from_fbs(info: &Self::FbsType) -> Self {
         Self {
+            desired_bitrate: info.desired_bitrate,
+            min_bitrate: info.min_bitrate,
+            max_bitrate: info.max_bitrate,
+            available_bitrate: info.available_bitrate,
+        }
+    }
+}
+
+impl FromFbs for OldBweTraceInfo {
+    type FbsType = transport::OldBweTraceInfo;
+
+    fn from_fbs(info: &Self::FbsType) -> Self {
+        Self {
             r#type: BweType::from_fbs(&info.bwe_type),
             desired_bitrate: info.desired_bitrate,
             effective_desired_bitrate: info.effective_desired_bitrate,

@@ -1340,6 +1340,22 @@ export function parseTransportTraceEventData(
 ): TransportTraceEventData {
 	switch (trace.type()) {
 		case FbsTransport.TraceEventType.BWE: {
+			const direction =
+				trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out';
+
+			if (trace.infoType() === FbsTransport.TraceInfo.OldBweTraceInfo) {
+				const info = new FbsTransport.OldBweTraceInfo();
+
+				trace.info(info);
+
+				return {
+					type: 'bwe',
+					timestamp: Number(trace.timestamp()),
+					direction,
+					info: parseOldBweTraceInfo(info),
+				};
+			}
+
 			const info = new FbsTransport.BweTraceInfo();
 
 			trace.info(info);
@@ -1347,8 +1363,7 @@ export function parseTransportTraceEventData(
 			return {
 				type: 'bwe',
 				timestamp: Number(trace.timestamp()),
-				direction:
-					trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
+				direction,
 				info: parseBweTraceInfo(info),
 			};
 		}
@@ -1414,6 +1429,20 @@ function transportTraceEventTypeFromFbs(
 }
 
 function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo): {
+	desiredBitrate: number;
+	minBitrate: number;
+	maxBitrate: number;
+	availableBitrate: number;
+} {
+	return {
+		desiredBitrate: Number(binary.desiredBitrate()),
+		minBitrate: Number(binary.minBitrate()),
+		maxBitrate: Number(binary.maxBitrate()),
+		availableBitrate: Number(binary.availableBitrate()),
+	};
+}
+
+function parseOldBweTraceInfo(binary: FbsTransport.OldBweTraceInfo): {
 	desiredBitrate: number;
 	effectiveDesiredBitrate: number;
 	minBitrate: number;
