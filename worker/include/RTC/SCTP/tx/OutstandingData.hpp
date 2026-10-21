@@ -424,14 +424,26 @@ namespace RTC
 			void NackAll();
 
 			/**
-			 * Adds a FORWARD-TSN chunk to the given packet and returns it.
+			 * Adds a FORWARD-TSN chunk to the given packet and returns it, or returns
+			 * `nullptr` without adding anything if it would be a rate limited
+			 * duplicate.
+			 *
+			 * @param rateLimitedTsn The new cumulative TSN that must not be sent again
+			 *   yet, or `std::nullopt` if no such TSN is being rate limited.
 			 */
-			const ForwardTsnChunk* AddForwardTsn(Packet* packet) const;
+			const ForwardTsnChunk* AddForwardTsn(
+			  Packet* packet, std::optional<uint32_t> rateLimitedTsn = std::nullopt) const;
 
 			/**
-			 * Adds an I-FORWARD-TSN chunk to the given packet and returns it.
+			 * Adds an I-FORWARD-TSN chunk to the given packet and returns it, or
+			 * returns `nullptr` without adding anything if it would be a rate limited
+			 * duplicate.
+			 *
+			 * @param rateLimitedTsn The new cumulative TSN that must not be sent again
+			 *   yet, or `std::nullopt` if no such TSN is being rate limited.
 			 */
-			const IForwardTsnChunk* AddIForwardTsn(Packet* packet) const;
+			const IForwardTsnChunk* AddIForwardTsn(
+			  Packet* packet, std::optional<uint32_t> rateLimitedTsn = std::nullopt) const;
 
 			/**
 			 * Given the current time and a TSN, it returns the measured RTT between
@@ -516,8 +528,9 @@ namespace RTC
 			 * action was performed, meaning that packet loss was detected and acted
 			 * upon. If `doFastRetransmit` is set and if the item has been nacked
 			 * sufficiently many times so that it should be retransmitted, this will
-			 * schedule it to be "fast retransmitted". This is only done just before
-			 * going into fast recovery.
+			 * schedule it to be "fast retransmitted", i.e. retransmitted without
+			 * regard to cwnd. This is done for losses detected by SACKs, but not for
+			 * those detected by T3-rtx expiry.
 			 *
 			 * @remarks
 			 * - Note that since nacking an item may result in it becoming abandoned,

@@ -227,7 +227,8 @@ namespace RTC
 
 			/**
 			 * May add a FORWARD-TSN or I-FORWARD-TSN chunk to the given packet if it
-			 * is needed and allowed (rate-limited).
+			 * is needed. One that advances the cumulative TSN is always added, while a
+			 * duplicate of the last one sent is rate limited.
 			 */
 			void MayAddForwardTsnChunk(Packet* packet, int64_t nowUs);
 
@@ -330,9 +331,11 @@ namespace RTC
 			RetransmissionQueue retransmissionQueue;
 			StreamResetHandler streamResetHandler;
 			HeartbeatHandler heartbeatHandler;
-			// Rate limiting of FORWARD-TSN. Next can be sent at or after this
+			// Rate limiting of duplicate FORWARD-TSN. A FORWARD-TSN with the same
+			// cumulative TSN as `lastSentForwardTsn` can be sent at or after this
 			// timestamp.
 			int64_t limitForwardTsnUntilUs{ 0 };
+			uint32_t lastSentForwardTsn{ this->localInitialTsn - 1 };
 			// Only valid when state is State::COOKIE_ECHOED. In this state, the
 			// association must wait for COOKIE-ACK to continue sending any packets (not
 			// including a COOKIE-ECHO). So if this state cookie is present, the

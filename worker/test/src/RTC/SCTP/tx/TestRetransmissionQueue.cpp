@@ -1930,8 +1930,10 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 16, RTC::SCTP::OutstandingData::State::ACKED               },
 		});
 
-		// Regular retransmit #2, sent together with new data (TSN 17 to 19).
-		REQUIRE(getSentPacketTSNs(retransmissionQueue, 1000) == std::vector<uint32_t>{ 10, 17, 18, 19 });
+		// The second retransmission is also a fast retransmission, even though the
+		// endpoint is in fast recovery. New data (TSN 17 to 19) is sent after it.
+		REQUIRE(getTSNsForFastRetransmit(retransmissionQueue) == std::vector<uint32_t>{ 10 });
+		REQUIRE(getSentPacketTSNs(retransmissionQueue, 1000) == std::vector<uint32_t>{ 17, 18, 19 });
 
 		// Ack TSN 17-18 — two more nacks (TSN 10 is now in-flight again after retransmit).
 		for (uint32_t tsn{ 17 }; tsn <= 18; ++tsn)
@@ -2155,6 +2157,71 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, mtu) == std::vector<uint32_t>{ 13 });
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, mtu) == std::vector<uint32_t>{ 14 });
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, mtu).empty());
+	}
+
+	SECTION("fast retransmits loss detected while in fast recovery")
+	{
+		auto retransmissionQueue = createRetransmissionQueue();
+
+		// Send TSN 10 to 17. TSN 10 and TSN 14 are lost.
+		for (uint32_t outgoingMessageId{ 0 }; outgoingMessageId < 8; ++outgoingMessageId)
+		{
+			sendQueue.WillProduceOnce(createDataToSend(outgoingMessageId));
+		}
+
+		sendQueue.WillProduceRepeatedly(
+		  [](int64_t, size_t)
+		  {
+			  return std::nullopt;
+		  });
+
+		REQUIRE(getSentPacketTSNs(retransmissionQueue).size() == 8);
+
+		const size_t initialCwnd = retransmissionQueue.GetCwnd();
+
+		// SACKs for TSN 11 to 13 give TSN 10 three miss indications. It's fast
+		// retransmitted and the endpoint enters fast recovery, with exit point 17.
+		for (uint32_t tsn{ 11 }; tsn <= 13; ++tsn)
+		{
+			retransmissionQueue.HandleReceivedSackChunk(
+			  nowUs,
+			  createSackChunk(
+			    9,
+			    Arwnd,
+			    {
+			      { 2, static_cast<uint16_t>(tsn - 9) }
+      })
+			    .get());
+		}
+
+		REQUIRE(getTSNsForFastRetransmit(retransmissionQueue) == std::vector<uint32_t>{ 10 });
+		REQUIRE(retransmissionQueue.IsInFastRecovery() == true);
+
+		const size_t cwndInFastRecovery = retransmissionQueue.GetCwnd();
+
+		REQUIRE(cwndInFastRecovery < initialCwnd);
+
+		// SACKs for TSN 15 to 17 give TSN 14 three miss indications, while still in
+		// fast recovery. It must also be fast retransmitted, i.e. without waiting
+		// for cwnd to allow it, but without reducing cwnd again.
+		for (uint32_t tsn{ 15 }; tsn <= 17; ++tsn)
+		{
+			retransmissionQueue.HandleReceivedSackChunk(
+			  nowUs,
+			  createSackChunk(
+			    9,
+			    Arwnd,
+			    {
+			      { 2, 4                              },
+            { 6, static_cast<uint16_t>(tsn - 9) }
+      })
+			    .get());
+		}
+
+		REQUIRE(retransmissionQueue.IsInFastRecovery() == true);
+		REQUIRE(retransmissionQueue.HasDataToBeFastRetransmitted() == true);
+		REQUIRE(getTSNsForFastRetransmit(retransmissionQueue) == std::vector<uint32_t>{ 14 });
+		REQUIRE(retransmissionQueue.GetCwnd() == cwndInFastRecovery);
 	}
 
 	SECTION("updates rwnd from SACK and unacked payload bytes")
