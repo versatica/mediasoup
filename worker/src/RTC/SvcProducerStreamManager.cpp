@@ -543,8 +543,9 @@ namespace RTC
 		{
 			if (packet->IsKeyFrame())
 			{
-				MS_DEBUG_TAG(
+				MS_DEBUG_2TAGS(
 				  rtp,
+				  svc,
 				  "sync key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber(),

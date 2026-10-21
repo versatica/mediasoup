@@ -891,7 +891,7 @@ namespace RTC
 #ifdef MS_USE_BUILTIN_BWE
 				// NOTE: A Transport that gets its first Producer while not yet connected
 				// builds it in Transport::Connected() instead.
-				MayCreateReceiverTransportCongestionController();
+				const bool receiverControllerCreated = MayCreateReceiverTransportCongestionController();
 
 				// The cap travels to the remote peer in a REMB, so it only becomes
 				// applicable once a Producer brings REMB, which may well be this one.
@@ -902,7 +902,9 @@ namespace RTC
 						this->receiverTransportCongestionController->SetMaxIncomingBitrate(
 						  this->maxIncomingBitrate);
 					}
-					else
+					// NOTE: Only on the Producer that builds it, since every later one
+					// would say the same thing again.
+					else if (receiverControllerCreated)
 					{
 						MS_WARN_TAG(
 						  bwe, "cannot apply maximum incoming bitrate since remote peer does not support REMB");
@@ -2591,14 +2593,16 @@ namespace RTC
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	void Transport::MayCreateOrUpdateSenderTransportCongestionController()
+	bool Transport::MayCreateOrUpdateSenderTransportCongestionController()
 	{
 		MS_TRACE();
 
 		if (!this->enableBwe || !IsCongestionControlSupported() || !IsConnected() || this->mapConsumers.empty())
 		{
-			return;
+			return false;
 		}
+
+		bool created{ false };
 
 		// NOTE: Unlike the receiving side, this one does not wait for a Consumer that
 		// negotiated anything in particular, since a peer that negotiated neither
@@ -2616,6 +2620,8 @@ namespace RTC
 			      .startBitrate = this->initialAvailableOutgoingBitrate,
 			      .minBitrate   = this->minOutgoingBitrate,
 			      .maxBitrate   = this->maxOutgoingBitrate });
+
+			created = true;
 		}
 
 		// NOTE: The path may be another one than the last time, so the packet
@@ -2630,9 +2636,11 @@ namespace RTC
 		  this->sendSupportsTransportCc || this->sendSupportsRemb);
 
 		this->senderTransportCongestionController->SetNetworkAvailable(true);
+
+		return created;
 	}
 
-	void Transport::MayCreateReceiverTransportCongestionController()
+	bool Transport::MayCreateReceiverTransportCongestionController()
 	{
 		MS_TRACE();
 
@@ -2641,7 +2649,7 @@ namespace RTC
 		  !IsCongestionControlSupported() || !IsConnected() ||
 		  (!this->recvSupportsTransportCc && !this->recvSupportsRemb))
 		{
-			return;
+			return false;
 		}
 
 		MS_DEBUG_TAG(bwe, "enabling ReceiverTransportCongestionController");
@@ -2658,6 +2666,8 @@ namespace RTC
 		{
 			this->receiverTransportCongestionController->SetMaxIncomingBitrate(this->maxIncomingBitrate);
 		}
+
+		return true;
 	}
 #endif
 
@@ -3838,19 +3848,13 @@ namespace RTC
 #endif
 
 #ifdef MS_USE_BUILTIN_BWE
-#if MS_LOG_DEV_LEVEL == 3
 	void Transport::OnSenderTransportCongestionControllerTargetBitrate(
 	  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
 	  int64_t targetBitrate)
-#else
-	void Transport::OnSenderTransportCongestionControllerTargetBitrate(
-	  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
-	  int64_t /*targetBitrate*/)
-#endif
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("outgoing available bitrate:%" PRIi64, targetBitrate);
+		MS_DEBUG_TAG(bwe, "outgoing available bitrate [targetBitrate:%" PRIi64 "]", targetBitrate);
 
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();

@@ -265,8 +265,11 @@ namespace RTC
 		 *   network is available is what starts the RTP probing.
 		 * - It is called again whenever a Consumer is added and whenever the
 		 *   Transport connects, so it must be safe to call with it already built.
+		 *
+		 * @returns Whether this call is the one that built it, which is what tells
+		 *   the caller that whatever only applies once has to be done now.
 		 */
-		virtual void MayCreateOrUpdateSenderTransportCongestionController() final;
+		virtual bool MayCreateOrUpdateSenderTransportCongestionController() final;
 		/**
 		 * Build the receiver congestion controller if this Transport may run one, is
 		 * connected and receives a stream whose sender can be told about the link.
@@ -274,8 +277,11 @@ namespace RTC
 		 * @remarks
 		 * - A peer that negotiated neither transport-cc nor REMB cannot be told
 		 *   anything, so there is nothing to run.
+		 *
+		 * @returns Whether this call is the one that built it, which is what tells
+		 *   the caller that whatever only applies once has to be done now.
 		 */
-		virtual void MayCreateReceiverTransportCongestionController() final;
+		virtual bool MayCreateReceiverTransportCongestionController() final;
 #endif
 		/**
 		 * Adapt the bitrate bounds so they make sense.
