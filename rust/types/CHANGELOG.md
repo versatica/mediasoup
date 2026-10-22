@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.9.0
+
 - Make `size` and `payload_size` in `RtpPacketTraceInfo` `u32` ([PR #2001](https://github.com/versatica/mediasoup/pull/2001)).
 
 ### 0.8.0
