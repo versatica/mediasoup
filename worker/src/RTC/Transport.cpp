@@ -6,7 +6,9 @@
 #include "FBS/transport.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#ifndef MS_USE_BUILTIN_BWE
 #include "RTC/BweType.hpp"
+#endif
 #include "RTC/Consts.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -109,8 +111,6 @@ namespace RTC
 				  static_cast<int64_t>(std::min<uint64_t>(maxOutgoingBitrate.value(), AbsoluteMaxBitrate));
 			}
 
-			AdaptBitrateLimits();
-
 			this->initialAvailableOutgoingBitrate = DefaultInitialAvailableOutgoingBitrate;
 
 			if (
@@ -121,8 +121,7 @@ namespace RTC
 				  std::min<uint64_t>(initialAvailableOutgoingBitrate.value(), AbsoluteMaxBitrate));
 			}
 
-			this->initialAvailableOutgoingBitrate = std::clamp(
-			  this->initialAvailableOutgoingBitrate, this->minOutgoingBitrate, this->maxOutgoingBitrate);
+			MayFixBweBitrateLimits();
 		}
 
 		if (options->enableSctp())
@@ -650,7 +649,7 @@ namespace RTC
 				// NOTE: A zero lifts the cap rather than setting one.
 				this->maxIncomingBitrate = maxIncomingBitrate != 0 ? maxIncomingBitrate : AbsoluteMaxBitrate;
 
-				AdaptBitrateLimits();
+				MayFixBweBitrateLimits();
 
 				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIi64, this->maxIncomingBitrate);
 
@@ -711,7 +710,7 @@ namespace RTC
 				// NOTE: A zero lifts the cap rather than setting one.
 				this->maxOutgoingBitrate = bitrate != 0 ? bitrate : AbsoluteMaxBitrate;
 
-				AdaptBitrateLimits();
+				MayFixBweBitrateLimits();
 
 				MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIi64, this->maxOutgoingBitrate);
 
@@ -748,7 +747,7 @@ namespace RTC
 				// NOTE: A zero lifts the floor rather than setting one.
 				this->minOutgoingBitrate = bitrate != 0 ? bitrate : AbsoluteMinBitrate;
 
-				AdaptBitrateLimits();
+				MayFixBweBitrateLimits();
 
 				MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIi64, this->minOutgoingBitrate);
 
@@ -2686,7 +2685,7 @@ namespace RTC
 	}
 #endif
 
-	void Transport::AdaptBitrateLimits()
+	void Transport::MayFixBweBitrateLimits()
 	{
 		MS_TRACE();
 
@@ -2706,6 +2705,20 @@ namespace RTC
 			  this->minOutgoingBitrate);
 
 			this->maxOutgoingBitrate = this->minOutgoingBitrate;
+		}
+
+		const int64_t initialAvailableOutgoingBitrate = std::clamp(
+		  this->initialAvailableOutgoingBitrate, this->minOutgoingBitrate, this->maxOutgoingBitrate);
+
+		if (initialAvailableOutgoingBitrate != this->initialAvailableOutgoingBitrate)
+		{
+			MS_DEBUG_TAG(
+			  bwe,
+			  "moving initialAvailableOutgoingBitrate %" PRIi64 " to %" PRIi64,
+			  this->initialAvailableOutgoingBitrate,
+			  initialAvailableOutgoingBitrate);
+
+			this->initialAvailableOutgoingBitrate = initialAvailableOutgoingBitrate;
 		}
 	}
 

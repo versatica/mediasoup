@@ -284,9 +284,14 @@ namespace RTC
 		virtual bool MayCreateReceiverTransportCongestionController() final;
 #endif
 		/**
-		 * Adapt the bitrate bounds so they make sense.
+		 * Bring the bitrate bounds and the initial available outgoing bitrate into
+		 * a set of values that make sense together.
+		 *
+		 * @remarks
+		 * - Called after every change of any of them, so that whoever reads them
+		 *   never has to wonder.
 		 */
-		virtual void AdaptBitrateLimits() final;
+		virtual void MayFixBweBitrateLimits() final;
 		virtual void DistributeAvailableOutgoingBitrate() final;
 #ifdef MS_USE_BUILTIN_BWE
 		virtual void ComputeOutgoingDesiredBitrate() final;
