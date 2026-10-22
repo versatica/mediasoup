@@ -6,11 +6,6 @@
 - `RTP::Packet`: Fix `int16_t` truncation of the header extension shift in `SetExtensions()` ([PR #2004](https://github.com/versatica/mediasoup/pull/2004) by @satoren).
 - Worker: Fix SRTP "replay check failed (index too old)" error in RTP probation packets ([PR #2008](https://github.com/versatica/mediasoup/pull/2008)).
 - SCTP: Updates/fixes ([PR #2009](https://github.com/versatica/mediasoup/pull/2009)).
-- New built-in BWE stack ([PR #2010](https://github.com/versatica/mediasoup/pull/2010)):
-  - Add `enableBwe`, `initialAvailableOutgoingBitrate`, `minOutgoingBitrate`, `maxOutgoingBitrate` and `maxIncomingBitrate` in `WebRtcTransportOptions` and `PlainTransportOptions`.
-  - **Breaking change:** Sender BWE estimator is now created even if the peer supports neither transport-cc nor REMB. In this case it works only with Receiver Reports and its estimation can only increase 8% more than `initialAvailableOutgoingBitrate` (which by default is 600000 bps = 600 kbps).
-  - **Breaking change:** The transport `bwe` trace event now reports `desiredBitrate`, `minBitrate`, `maxBitrate` and `availableBitrate`.
-  - **Breaking change:** `WorkerSettings` no longer takes `libwebrtcFieldTrials`.
 
 ### 0.31.0
 
