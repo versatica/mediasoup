@@ -926,7 +926,6 @@ pub struct BweTraceInfo {
     pub available_bitrate: u64,
 }
 
-
 /// RTCP Sender Report info in trace event.
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
