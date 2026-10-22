@@ -719,8 +719,6 @@ namespace RTC
 				{
 					this->senderTransportCongestionController->SetBitrateLimits(
 					  this->minOutgoingBitrate, this->maxOutgoingBitrate);
-
-					ComputeOutgoingDesiredBitrate();
 				}
 #else
 				if (this->tccClient)
@@ -756,8 +754,6 @@ namespace RTC
 				{
 					this->senderTransportCongestionController->SetBitrateLimits(
 					  this->minOutgoingBitrate, this->maxOutgoingBitrate);
-
-					ComputeOutgoingDesiredBitrate();
 				}
 #else
 				if (this->tccClient)

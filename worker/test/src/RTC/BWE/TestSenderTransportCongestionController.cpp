@@ -206,6 +206,65 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		return senderTransportCongestionController.GetAvailableBitrate();
 	};
 
+	// Lets a whole burst out of a controller of its own, so that two runs can be
+	// compared, and answers the length of every packet that went out.
+	//
+	// NOTE: It brings its own clock and its own timers, since the ones of the
+	// scenario are already taken by the controller above.
+	const auto runBurst = [](size_t packetOverhead, int64_t desiredBitrate) -> std::vector<size_t>
+	{
+		int64_t burstNowUs{ InitialTimeUs };
+
+		mocks::MockShared burstShared(/*getTimeUs*/
+		                              [&burstNowUs]() -> int64_t
+		                              {
+			                              return burstNowUs;
+		                              });
+
+		TestSenderTransportCongestionControllerListener burstListener;
+
+		RTC::BWE::SenderTransportCongestionController burstController(
+		  std::addressof(burstListener),
+		  std::addressof(burstShared),
+		  { .startBitrate = StartBitrate, .minBitrate = MinBitrate, .maxBitrate = MaxBitrate });
+
+		burstController.SetPacketOverhead(packetOverhead);
+
+		if (desiredBitrate != 0)
+		{
+			burstController.SetDesiredBitrate(desiredBitrate);
+		}
+
+		burstController.SetEnableProbing(true);
+		burstController.SetNetworkAvailable(true);
+
+		auto* timer = burstShared.GetTimer("probing-scheduler-next-probe");
+
+		REQUIRE(timer);
+
+		while (timer->IsActive())
+		{
+			burstNowUs = std::max(burstNowUs, timer->GetExpiresAtMs() * 1000);
+
+			REQUIRE(timer->EvaluateHasExpired());
+		}
+
+		return burstListener.sentLengths;
+	};
+
+	// What the burst put on the wire altogether.
+	const auto totalBytes = [](const std::vector<size_t>& lengths) -> size_t
+	{
+		size_t total{ 0 };
+
+		for (const auto length : lengths)
+		{
+			total += length;
+		}
+
+		return total;
+	};
+
 	SECTION("the target starts at the bitrate it was given")
 	{
 		runProcessTimer();
@@ -556,5 +615,63 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 				REQUIRE(listener.sentSequenceNumbers.at(idx) == listener.sentSequenceNumbers.at(idx - 1) + 1);
 			}
 		}
+	}
+
+	SECTION("a round trip time of less than a millisecond says nothing")
+	{
+		runProcessTimer();
+
+		REQUIRE(listener.targetBitrates.size() == 1);
+
+		// It is taken in whole milliseconds, which is the resolution of the
+		// thresholds it is compared against, so this one rounds to nothing.
+		senderTransportCongestionController.OnRttUpdate(400);
+
+		runProcessTimer();
+
+		REQUIRE(listener.targetBitrates.size() == 1);
+	}
+
+	SECTION("a round trip time that moved is told to the listener")
+	{
+		runProcessTimer();
+
+		REQUIRE(listener.targetBitrates.size() == 1);
+
+		senderTransportCongestionController.OnRttUpdate(50000);
+
+		runProcessTimer();
+
+		// The round trip time is part of what the listener reasons about, so it
+		// hears about it even though the target did not move.
+		REQUIRE(listener.targetBitrates.size() == 2);
+		REQUIRE(listener.targetBitrates.back() == listener.targetBitrates.front());
+	}
+
+	SECTION("the overhead of each packet counts towards the bytes of a burst")
+	{
+		const auto withoutOverhead = runBurst(/*packetOverhead*/ 0, /*desiredBitrate*/ 0);
+		const auto withOverhead    = runBurst(/*packetOverhead*/ 500, /*desiredBitrate*/ 0);
+
+		REQUIRE(!withoutOverhead.empty());
+		REQUIRE(!withOverhead.empty());
+
+		// What the link carries is the packet plus everything below RTP, so a burst
+		// that accounts for it needs fewer packets of its own to carry the bytes it
+		// was meant to carry.
+		REQUIRE(withOverhead.size() < withoutOverhead.size());
+	}
+
+	SECTION("what the Consumers want caps the bitrate of a burst")
+	{
+		const auto unbounded = runBurst(/*packetOverhead*/ 0, /*desiredBitrate*/ 0);
+		const auto bounded   = runBurst(/*packetOverhead*/ 0, /*desiredBitrate*/ MinBitrate);
+
+		REQUIRE(!unbounded.empty());
+		REQUIRE(!bounded.empty());
+
+		// Aiming far above what the application could ever send would measure room
+		// that nothing is going to use, so the burst is held to what is wanted.
+		REQUIRE(totalBytes(bounded) < totalBytes(unbounded));
 	}
 }
