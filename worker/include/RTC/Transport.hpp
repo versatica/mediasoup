@@ -265,6 +265,10 @@ namespace RTC
 		 *   network is available is what starts the RTP probing.
 		 * - It is called again whenever a Consumer is added and whenever the
 		 *   Transport connects, so it must be safe to call with it already built.
+		 * - It must also be called whenever the path to the remote endpoint
+		 *   changes, since the overhead of every packet is read again here and a
+		 *   path of another kind carries a different one, which moves what the rate
+		 *   control believes it sent.
 		 *
 		 * @returns Whether this call is the one that built it, which is what tells
 		 *   the caller that whatever only applies once has to be done now.
