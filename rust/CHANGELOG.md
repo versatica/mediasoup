@@ -2,6 +2,11 @@
 
 ### NEXT
 
+- New built-in BWE stack ([PR #2010](https://github.com/versatica/mediasoup/pull/2010)):
+  - `WebRtcTransportOptions` and `PlainTransportOptions`: Add `enableBwe`, `initialAvailableOutgoingBitrate`, `minOutgoingBitrate`, `maxOutgoingBitrate` and `maxIncomingBitrate`.
+  - **Breaking change:** `WorkerSettings` no longer takes `libwebrtcFieldTrials`.
+  - **Breaking change:** The transport "bwe" trace event now reports `desiredBitrate`, `minBitrate`, `maxBitrate` and `availableBitrate`.
+
 ### 0.32.0
 
 - Fix simulcast RTP timestamp jumps on layer switch and frozen retransmission buffer ([PR #2002](https://github.com/versatica/mediasoup/pull/2002)).
