@@ -188,20 +188,11 @@ namespace RTC
 
 				UpdateTargetLayers(-1, -1);
 			}
-#ifdef MS_USE_BUILTIN_BWE
 			// Just check target layers if the stream has died or reborned.
 			else if (score == 0 || previousScore == 0)
 			{
 				MayChangeLayers();
 			}
-#else
-			// Just check target layers if the stream has died or reborned or if
-			// bitrate is not externally managed.
-			else if (!this->externallyManagedBitrate || (score == 0 || previousScore == 0))
-			{
-				MayChangeLayers();
-			}
-#endif
 		}
 	}
 
@@ -252,7 +243,6 @@ namespace RTC
 		}
 	}
 
-#ifdef MS_USE_BUILTIN_BWE
 	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions SimulcastProducerStreamManager::GetBitrateOptions(
 	  int64_t nowMs) const
 	{
@@ -358,228 +348,6 @@ namespace RTC
 			UpdateTargetLayers(option.layers.spatial, option.layers.temporal);
 		}
 	}
-#else
-	int64_t SimulcastProducerStreamManager::IncreaseLayer(
-	  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
-	{
-		MS_TRACE();
-
-		// If already in the preferred layers, do nothing.
-		if (this->provisionalTargetLayers == this->preferredLayers)
-		{
-			return 0;
-		}
-
-		int64_t virtualBitrate;
-
-		if (considerLoss)
-		{
-			// Calculate virtual available bitrate based on given bitrate and our
-			// packet lost.
-			if (lossPercentage < 2)
-			{
-				virtualBitrate = static_cast<int64_t>(1.08 * bitrate);
-			}
-			else if (lossPercentage > 10)
-			{
-				virtualBitrate = static_cast<int64_t>((1 - 0.5 * (lossPercentage / 100)) * bitrate);
-			}
-			else
-			{
-				virtualBitrate = bitrate;
-			}
-		}
-		else
-		{
-			virtualBitrate = bitrate;
-		}
-
-		int64_t requiredBitrate{ 0 };
-		int16_t spatialLayer{ 0 };
-		int16_t temporalLayer{ 0 };
-		// Whether a usable spatial layer has been found, in which case we must not
-		// go above the preferred spatial layer. Same criteria as in
-		// RecalculateTargetLayers(), so both take the same decision no matter the
-		// bitrate of the layer.
-		bool usableSpatialLayerFound{ this->provisionalTargetLayers.spatial != -1 };
-
-		for (size_t sIdx{ 0 }; sIdx < this->producerRtpStreams.size(); ++sIdx)
-		{
-			spatialLayer = static_cast<int16_t>(sIdx);
-
-			// Ignore spatial layers lower than the one we already have.
-			if (spatialLayer < this->provisionalTargetLayers.spatial)
-			{
-				continue;
-			}
-			// If this is higher than preferred spatial layer, abort unless no lower
-			// spatial layer is usable or this is the provisional one (so we may still
-			// increase its temporal layer).
-			else if (
-			  spatialLayer > this->preferredLayers.spatial && usableSpatialLayerFound &&
-			  spatialLayer != this->provisionalTargetLayers.spatial)
-			{
-				MS_DEBUG_DEV(
-				  "avoid upgrading to spatial layer %" PRIi16
-				  " since it's higher than preferred spatial layer %" PRIi16,
-				  spatialLayer,
-				  this->preferredLayers.spatial);
-
-				goto done;
-			}
-
-			// This can be null.
-			auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
-
-			// Producer stream does not exist. Ignore.
-			if (!producerRtpStream)
-			{
-				continue;
-			}
-
-			// Ignore spatial layers (streams) with score 0.
-			if (producerRtpStream->GetScore() == 0)
-			{
-				continue;
-			}
-
-			// We may not yet switch to this spatial layer.
-			if (!CanSwitchToSpatialLayer(spatialLayer))
-			{
-				continue;
-			}
-
-			// This spatial layer is usable even if it has no bitrate at all.
-			usableSpatialLayerFound = true;
-
-			temporalLayer = 0;
-
-			// Don't consider temporal layers above the preferred one, nor above the
-			// ones this stream has.
-			const auto maxTemporalLayer = std::min(
-			  static_cast<int16_t>(producerRtpStream->GetTemporalLayers() - 1),
-			  this->preferredLayers.temporal);
-
-			// Check bitrate of every temporal layer.
-			for (; temporalLayer <= maxTemporalLayer; ++temporalLayer)
-			{
-				// Ignore temporal layers lower than the one we already have (taking
-				// into account the spatial layer too).
-				if (
-				  spatialLayer == this->provisionalTargetLayers.spatial &&
-				  temporalLayer <= this->provisionalTargetLayers.temporal)
-				{
-					continue;
-				}
-
-				requiredBitrate = producerRtpStream->GetTemporalLayerBitrate(nowMs, 0, temporalLayer);
-
-				// This is simulcast so we must subtract the bitrate of the current
-				// temporal spatial layer if this is the temporal layer 0 of a higher
-				// spatial layer.
-				if (
-				  requiredBitrate > 0 && temporalLayer == 0 && this->provisionalTargetLayers.spatial > -1 &&
-				  spatialLayer > this->provisionalTargetLayers.spatial)
-				{
-					auto* provisionalProducerRtpStream =
-					  this->producerRtpStreams.at(this->provisionalTargetLayers.spatial);
-					const int64_t provisionalRequiredBitrate =
-					  provisionalProducerRtpStream->GetCumulativeTemporalLayerBitrate(
-					    nowMs, 0, this->provisionalTargetLayers.temporal);
-
-					if (requiredBitrate > provisionalRequiredBitrate)
-					{
-						requiredBitrate -= provisionalRequiredBitrate;
-					}
-					else
-					{
-						requiredBitrate = 1; // Don't set 0 since it would be ignored.
-					}
-				}
-
-				MS_DEBUG_DEV(
-				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIi64
-				  ", required bitrate:%" PRIi64 "]",
-				  spatialLayer,
-				  temporalLayer,
-				  virtualBitrate,
-				  requiredBitrate);
-
-				// If active layer, end iterations here. Otherwise move to next spatial
-				// layer.
-				if (requiredBitrate > 0)
-				{
-					goto done;
-				}
-				else
-				{
-					break;
-				}
-			}
-
-			// If this is the preferred spatial layer or higher, take it and exit.
-			if (spatialLayer >= this->preferredLayers.spatial)
-			{
-				break;
-			}
-		}
-
-	done:
-
-		// No higher active layers found.
-		if (requiredBitrate <= 0)
-		{
-			return 0;
-		}
-
-		// No luck.
-		if (requiredBitrate > virtualBitrate)
-		{
-			return 0;
-		}
-
-		// Set provisional layers.
-		this->provisionalTargetLayers.spatial  = spatialLayer;
-		this->provisionalTargetLayers.temporal = temporalLayer;
-
-		MS_DEBUG_DEV(
-		  "setting provisional layers to %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIi64
-		  ", required bitrate:%" PRIi64 "]",
-		  this->provisionalTargetLayers.spatial,
-		  this->provisionalTargetLayers.temporal,
-		  virtualBitrate,
-		  requiredBitrate);
-
-		if (requiredBitrate <= bitrate)
-		{
-			return requiredBitrate;
-		}
-		else if (requiredBitrate <= virtualBitrate)
-		{
-			return bitrate;
-		}
-		else
-		{
-			return requiredBitrate; // NOTE: This cannot happen.
-		}
-	}
-
-	void SimulcastProducerStreamManager::ApplyLayers()
-	{
-		MS_TRACE();
-
-		auto provisionalTargetLayers = this->provisionalTargetLayers;
-
-		// Reset provisional target layers.
-		this->provisionalTargetLayers.Reset();
-
-		if (provisionalTargetLayers != this->targetLayers)
-		{
-			UpdateTargetLayers(provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
-		}
-	}
-#endif
-
 	int64_t SimulcastProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
@@ -1191,13 +959,6 @@ namespace RTC
 		this->syncRequired                 = true;
 		this->spatialLayerToSync           = -1;
 		this->keyFrameForTsOffsetRequested = false;
-
-#ifndef MS_USE_BUILTIN_BWE
-		if (IsActive())
-		{
-			MayChangeLayers();
-		}
-#endif
 	}
 
 	void SimulcastProducerStreamManager::OnTransportDisconnected()
@@ -1213,7 +974,6 @@ namespace RTC
 
 		UpdateTargetLayers(-1, -1);
 
-#ifdef MS_USE_BUILTIN_BWE
 		// What this one was putting in the link it is not putting any more, and that
 		// goes to whoever can use it. There is nothing to recalculate first, since a
 		// paused Consumer offers nothing whatever its streams can do.
@@ -1221,7 +981,6 @@ namespace RTC
 		{
 			this->listener->OnProducerStreamManagerNeedBitrateChange();
 		}
-#endif
 	}
 
 	void SimulcastProducerStreamManager::OnResumed()
@@ -1235,7 +994,6 @@ namespace RTC
 
 		if (IsActive())
 		{
-#ifdef MS_USE_BUILTIN_BWE
 			// Whatever this one may put out again has to be bid for, and the target
 			// layers it was left with say nothing about that. With no allocation
 			// running there is nothing to bid for, so the layers are worked out here.
@@ -1247,9 +1005,6 @@ namespace RTC
 			{
 				MayChangeLayers();
 			}
-#else
-			MayChangeLayers();
-#endif
 		}
 	}
 

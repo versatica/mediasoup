@@ -68,14 +68,6 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 	workerBin?: string;
 
 	/**
-	 * Field trials for libwebrtc.
-	 *
-	 * @remarks For advanced users only. An invalid value will make the worker
-	 * crash. Default value is "WebRTC-Bwe-AlrLimitedBackoff/Enabled/".
-	 */
-	libwebrtcFieldTrials?: string;
-
-	/**
 	 * Custom application data.
 	 */
 	appData?: WorkerAppData;

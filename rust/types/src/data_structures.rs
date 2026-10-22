@@ -912,17 +912,6 @@ pub struct SsrcTraceInfo {
     pub ssrc: u32,
 }
 
-/// Bandwidth estimation type.
-#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
-pub enum BweType {
-    /// Transport-wide Congestion Control.
-    #[serde(rename = "transport-cc")]
-    TransportCc,
-    /// Receiver Estimated Maximum Bitrate.
-    #[serde(rename = "remb")]
-    Remb,
-}
-
 /// BWE info in trace event.
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -937,27 +926,6 @@ pub struct BweTraceInfo {
     pub available_bitrate: u64,
 }
 
-/// BWE info in trace event, as the old BWE reports it.
-#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OldBweTraceInfo {
-    /// Bandwidth estimation type.
-    pub r#type: BweType,
-    /// Desired bitrate
-    pub desired_bitrate: u64,
-    /// Effective desired bitrate.
-    pub effective_desired_bitrate: u64,
-    /// Min bitrate.
-    pub min_bitrate: u64,
-    /// Max bitrate.
-    pub max_bitrate: u64,
-    /// Start bitrate.
-    pub start_bitrate: u64,
-    /// Max padding bitrate.
-    pub max_padding_bitrate: u64,
-    /// Available bitrate.
-    pub available_bitrate: u64,
-}
 
 /// RTCP Sender Report info in trace event.
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]

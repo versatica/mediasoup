@@ -8,9 +8,6 @@
 #include "Channel/ChannelSocket.hpp"
 #include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
-#ifndef MS_USE_BUILTIN_BWE
-#include "DepLibWebRTC.hpp"
-#endif
 #include "DepOpenSSL.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -152,9 +149,6 @@ extern "C" int mediasoup_worker_run(
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
-#ifndef MS_USE_BUILTIN_BWE
-		DepLibWebRTC::ClassInit();
-#endif
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
@@ -172,9 +166,6 @@ extern "C" int mediasoup_worker_run(
 		// Free static stuff.
 		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
-#ifndef MS_USE_BUILTIN_BWE
-		DepLibWebRTC::ClassDestroy();
-#endif
 		RTC::DtlsTransport::ClassDestroy();
 		DepLibUV::ClassDestroy();
 

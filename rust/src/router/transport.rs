@@ -21,7 +21,7 @@ use event_listener_primitives::HandlerId;
 use log::warn;
 use mediasoup_sys::fbs::{response, transport};
 use mediasoup_types::data_structures::{
-    AppData, BweTraceInfo, OldBweTraceInfo, RtpPacketTraceInfo, TraceEventDirection,
+    AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection,
 };
 use mediasoup_types::rtp_parameters::{MediaKind, RtpEncodingParameters};
 use mediasoup_types::sctp_parameters::SctpStreamParameters;
@@ -64,15 +64,6 @@ pub enum TransportTraceEventData {
         /// BWE info.
         info: BweTraceInfo,
     },
-    /// Transport bandwidth estimation changed, as the old BWE reports it.
-    OldBwe {
-        /// Event timestamp.
-        timestamp: u64,
-        /// Event direction.
-        direction: TraceEventDirection,
-        /// BWE info.
-        info: OldBweTraceInfo,
-    },
 }
 
 impl FromFbs for TransportTraceEventData {
@@ -91,13 +82,6 @@ impl FromFbs for TransportTraceEventData {
                 },
             },
             transport::TraceEventType::Bwe => match &data.info {
-                Some(transport::TraceInfo::OldBweTraceInfo(info)) => {
-                    TransportTraceEventData::OldBwe {
-                        timestamp: data.timestamp,
-                        direction: TraceEventDirection::from_fbs(&data.direction),
-                        info: OldBweTraceInfo::from_fbs(info.as_ref()),
-                    }
-                }
                 Some(transport::TraceInfo::BweTraceInfo(info)) => TransportTraceEventData::Bwe {
                     timestamp: data.timestamp,
                     direction: TraceEventDirection::from_fbs(&data.direction),

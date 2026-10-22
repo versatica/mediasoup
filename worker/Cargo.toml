@@ -12,7 +12,6 @@ license = "ISC"
 documentation = "https://docs.rs/mediasoup-sys"
 repository = "https://github.com/versatica/mediasoup"
 include = [
-    "/deps/libwebrtc",
     "/fbs",
     "/fuzzer/include",
     "/fuzzer/src",
