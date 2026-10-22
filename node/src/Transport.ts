@@ -101,6 +101,7 @@ export type TransportConstructorOptions<TransportAppData> = {
 	data: TransportData;
 	channel: Channel;
 	appData?: TransportAppData;
+	enableBwe: boolean;
 	getRouterRtpCapabilities: () => RtpCapabilities;
 	getProducerById: (producerId: string) => Producer | undefined;
 	getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
@@ -141,6 +142,10 @@ export abstract class TransportImpl<
 
 	// Custom app data.
 	#appData: TransportAppData;
+
+	// Whether bandwidth estimation runs on this transport, which is what tells
+	// whether Producers and Consumers created on it negotiate it at all.
+	protected readonly enableBwe: boolean;
 
 	// Method to retrieve Router RTP capabilities.
 	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
@@ -191,6 +196,7 @@ export abstract class TransportImpl<
 			data,
 			channel,
 			appData,
+			enableBwe,
 			getRouterRtpCapabilities,
 			getProducerById,
 			getDataProducerById,
@@ -205,6 +211,7 @@ export abstract class TransportImpl<
 		this.#data = data;
 		this.channel = channel;
 		this.#appData = appData ?? ({} as TransportAppData);
+		this.enableBwe = enableBwe;
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
@@ -496,6 +503,12 @@ export abstract class TransportImpl<
 		// This may throw.
 		ortc.validateAndNormalizeRtpParameters(clonedRtpParameters);
 
+		// A transport that doesn't run bandwidth estimation must not negotiate it,
+		// so whatever was given for it is dropped rather than honoured.
+		if (!this.enableBwe) {
+			ortc.disableBweInRtpParameters(clonedRtpParameters);
+		}
+
 		// If missing or empty encodings, add one.
 		if (
 			!clonedRtpParameters.encodings ||
@@ -649,6 +662,7 @@ export abstract class TransportImpl<
 			remoteRtpCapabilities: clonedRtpCapabilities,
 			pipe,
 			enableRtx,
+			enableBwe: this.enableBwe,
 		});
 
 		// Set MID.
@@ -1326,6 +1340,22 @@ export function parseTransportTraceEventData(
 ): TransportTraceEventData {
 	switch (trace.type()) {
 		case FbsTransport.TraceEventType.BWE: {
+			const direction =
+				trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out';
+
+			if (trace.infoType() === FbsTransport.TraceInfo.OldBweTraceInfo) {
+				const info = new FbsTransport.OldBweTraceInfo();
+
+				trace.info(info);
+
+				return {
+					type: 'bwe',
+					timestamp: Number(trace.timestamp()),
+					direction,
+					info: parseOldBweTraceInfo(info),
+				};
+			}
+
 			const info = new FbsTransport.BweTraceInfo();
 
 			trace.info(info);
@@ -1333,19 +1363,22 @@ export function parseTransportTraceEventData(
 			return {
 				type: 'bwe',
 				timestamp: Number(trace.timestamp()),
-				direction:
-					trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
+				direction,
 				info: parseBweTraceInfo(info),
 			};
 		}
 
 		case FbsTransport.TraceEventType.PROBATION: {
+			const info = new FbsTransport.ProbationTraceInfo();
+
+			trace.info(info);
+
 			return {
 				type: 'probation',
 				timestamp: Number(trace.timestamp()),
 				direction:
 					trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-				info: {},
+				info: info.rtpPacket()!.unpack(),
 			};
 		}
 	}
@@ -1396,6 +1429,20 @@ function transportTraceEventTypeFromFbs(
 }
 
 function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo): {
+	desiredBitrate: number;
+	minBitrate: number;
+	maxBitrate: number;
+	availableBitrate: number;
+} {
+	return {
+		desiredBitrate: Number(binary.desiredBitrate()),
+		minBitrate: Number(binary.minBitrate()),
+		maxBitrate: Number(binary.maxBitrate()),
+		availableBitrate: Number(binary.availableBitrate()),
+	};
+}
+
+function parseOldBweTraceInfo(binary: FbsTransport.OldBweTraceInfo): {
 	desiredBitrate: number;
 	effectiveDesiredBitrate: number;
 	minBitrate: number;

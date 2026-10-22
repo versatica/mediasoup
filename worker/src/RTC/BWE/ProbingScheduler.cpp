@@ -64,6 +64,20 @@ namespace RTC
 			this->nextProbeTimer->Restart(0);
 		}
 
+		void ProbingScheduler::StopProbing()
+		{
+			MS_TRACE();
+
+			this->bitrateProber.StopProbing();
+
+			// The burst left to finish needs its shots, so the timer only stops when
+			// there is none.
+			if (!this->bitrateProber.IsProbing())
+			{
+				this->nextProbeTimer->Stop();
+			}
+		}
+
 		void ProbingScheduler::OnProbePacketGeneratorSendRtpPacket(
 		  ProbePacketGenerator* /*probePacketGenerator*/, RTC::RTP::Packet* packet)
 		{

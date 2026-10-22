@@ -55,7 +55,9 @@ namespace
 		}
 		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) final {};
 		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) final {};
+#ifndef MS_USE_BUILTIN_BWE
 		void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) final {};
+#endif
 		void OnConsumerProducerClosed(RTC::Consumer* consumer) final {};
 
 	public:

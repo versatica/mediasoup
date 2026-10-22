@@ -289,26 +289,18 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 direction: RtpHeaderExtensionDirection::RecvOnly,
             },
             RtpHeaderExtension {
-                kind: MediaKind::Audio,
-                uri: RtpHeaderExtensionUri::AbsSendTime,
-                preferred_id: 4,
-                preferred_encrypt: false,
-                direction: RtpHeaderExtensionDirection::SendRecv,
-            },
-            RtpHeaderExtension {
                 kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::AbsSendTime,
                 preferred_id: 4,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
-            // NOTE: For audio we just enable transport-wide-cc-01 when receiving media.
             RtpHeaderExtension {
                 kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
                 preferred_id: 5,
                 preferred_encrypt: false,
-                direction: RtpHeaderExtensionDirection::RecvOnly,
+                direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
                 kind: MediaKind::Video,

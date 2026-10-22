@@ -484,7 +484,11 @@ impl Transport for PipeTransport {
         debug!("produce()");
 
         let producer = self
-            .produce_impl(producer_options, TransportType::Pipe)
+            .produce_impl(
+                producer_options,
+                TransportType::Pipe,
+                /* enable_bwe */ false,
+            )
             .await?;
 
         self.inner.handlers.new_producer.call_simple(&producer);
@@ -496,7 +500,12 @@ impl Transport for PipeTransport {
         debug!("consume()");
 
         let consumer = self
-            .consume_impl(consumer_options, TransportType::Pipe, self.inner.data.rtx)
+            .consume_impl(
+                consumer_options,
+                TransportType::Pipe,
+                self.inner.data.rtx,
+                /* enable_bwe */ false,
+            )
             .await?;
 
         self.inner.handlers.new_consumer.call_simple(&consumer);

@@ -1398,6 +1398,83 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	expect(pipeTransportsB.size).toBe(0);
 }, 2000);
 
+test('pipeTransport removes BWE stuff from RTP parameters', async () => {
+	const pipeTransport = await ctx.router1!.createPipeTransport({
+		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+	});
+
+	const producer = await pipeTransport.produce({
+		kind: 'video',
+		rtpParameters: {
+			mid: 'VIDEO',
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 112,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: 'pli' },
+						{ type: 'goog-remb' },
+						{ type: 'transport-cc' },
+					],
+				},
+			],
+			headerExtensions: [
+				{
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+					id: 4,
+				},
+				{
+					uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+					id: 5,
+				},
+				{
+					uri: 'urn:3gpp:video-orientation',
+					id: 13,
+				},
+			],
+			encodings: [{ ssrc: 22222222 }],
+			rtcp: { cname: 'video-1' },
+		},
+	});
+
+	expect(producer.rtpParameters.headerExtensions).toEqual([
+		{
+			uri: 'urn:3gpp:video-orientation',
+			id: 13,
+			encrypt: false,
+			parameters: {},
+		},
+	]);
+	expect(producer.rtpParameters.codecs[0]!.rtcpFeedback).toEqual([
+		{ type: 'nack', parameter: 'pli' },
+	]);
+
+	// Consume with the full Router RTP capabilities, which do include the BWE
+	// header extensions and RTCP feedback.
+	const consumer = await pipeTransport.consume({
+		producerId: producer.id,
+	});
+
+	expect(
+		consumer.rtpParameters.headerExtensions!.map(ext => ext.uri)
+	).not.toContain('http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time');
+	expect(
+		consumer.rtpParameters.headerExtensions!.map(ext => ext.uri)
+	).not.toContain(
+		'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
+	);
+
+	for (const codec of consumer.rtpParameters.codecs) {
+		expect(codec.rtcpFeedback!.map(fb => fb.type)).not.toContain('goog-remb');
+		expect(codec.rtcpFeedback!.map(fb => fb.type)).not.toContain(
+			'transport-cc'
+		);
+	}
+
+	pipeTransport.close();
+}, 2000);
+
 test('router.pipeToRouter() with neither producerId nor dataProducerId fails', async () => {
 	const router1bis = await ctx.worker1!.createRouter({
 		mediaCodecs: ctx.mediaCodecs,

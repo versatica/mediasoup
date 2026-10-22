@@ -70,13 +70,45 @@ namespace RTC
 			public:
 				void Update(const RTP::Packet* packet);
 
+				/**
+				 * Bitrate of every spatial layer and every temporal layer.
+				 */
 				int64_t GetBitrate(int64_t nowMs);
 
-				int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+				/**
+				 * Bitrate of the given spatial layer and of all the ones below it, in
+				 * all of them up to the given temporal layer.
+				 *
+				 * @remarks
+				 * - This is what a receiver gets when told to decode the given layers in
+				 *   full SVC, where a frame of a lower spatial layer is dropped along
+				 *   with the rest of its picture if its temporal layer is above the
+				 *   given one.
+				 *
+				 * @returns Zero if the given layers are not being received.
+				 */
+				int64_t GetCumulativeBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 
+				/**
+				 * Bitrate of every temporal layer of the given spatial layer.
+				 */
 				int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer);
 
-				int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+				/**
+				 * Bitrate of the given temporal layer of the given spatial layer and of
+				 * all the temporal layers below it.
+				 *
+				 * @remarks
+				 * - This is what a receiver gets when told to decode the given layers in
+				 *   K-SVC or in Simulcast, where a single spatial layer is forwarded.
+				 */
+				int64_t GetCumulativeTemporalLayerBitrate(
+				  int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+
+				/**
+				 * Bitrate of the given temporal layer of the given spatial layer alone.
+				 */
+				int64_t GetTemporalLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 
 				uint64_t GetPacketCount() const;
 
@@ -215,19 +247,50 @@ namespace RTC
 				return this->transmissionCounter.GetBitrate(nowMs);
 			}
 
-			int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+			/**
+			 * Bitrate of the given spatial layer and of all the ones below it, in all
+			 * of them up to the given temporal layer.
+			 *
+			 * @remarks
+			 * - This is what a receiver gets when told to decode the given layers in
+			 *   full SVC, where a frame of a lower spatial layer is dropped along with
+			 *   the rest of its picture if its temporal layer is above the given one.
+			 *
+			 * @returns Zero if the given layers are not being received.
+			 */
+			int64_t GetCumulativeBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 			{
-				return this->transmissionCounter.GetBitrate(nowMs, spatialLayer, temporalLayer);
+				return this->transmissionCounter.GetCumulativeBitrate(nowMs, spatialLayer, temporalLayer);
 			}
 
-			int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) override
+			/**
+			 * Bitrate of every temporal layer of the given spatial layer.
+			 */
+			int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer)
 			{
 				return this->transmissionCounter.GetSpatialLayerBitrate(nowMs, spatialLayer);
 			}
 
-			int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+			/**
+			 * Bitrate of the given temporal layer of the given spatial layer and of all
+			 * the temporal layers below it.
+			 *
+			 * @remarks
+			 * - This is what a receiver gets when told to decode the given layers in
+			 *   K-SVC or in Simulcast, where a single spatial layer is forwarded.
+			 */
+			int64_t GetCumulativeTemporalLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 			{
-				return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
+				return this->transmissionCounter.GetCumulativeTemporalLayerBitrate(
+				  nowMs, spatialLayer, temporalLayer);
+			}
+
+			/**
+			 * Bitrate of the given temporal layer of the given spatial layer alone.
+			 */
+			int64_t GetTemporalLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
+			{
+				return this->transmissionCounter.GetTemporalLayerBitrate(nowMs, spatialLayer, temporalLayer);
 			}
 
 			bool HasRtpInactivityCheckEnabled() const

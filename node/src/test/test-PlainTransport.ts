@@ -543,6 +543,95 @@ test('plainTransport.connect() with wrong arguments rejects with TypeError', asy
 	).rejects.toThrow(TypeError);
 }, 2000);
 
+test('plainTransport with enableBwe false removes BWE stuff from RTP parameters', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: [
+			{
+				kind: 'video',
+				mimeType: 'video/VP8',
+				clockRate: 90000,
+			},
+		],
+	});
+
+	const plainTransport = await router.createPlainTransport({
+		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+		enableBwe: false,
+	});
+
+	const producer = await plainTransport.produce({
+		kind: 'video',
+		rtpParameters: {
+			mid: 'VIDEO',
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 112,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: 'pli' },
+						{ type: 'goog-remb' },
+						{ type: 'transport-cc' },
+					],
+				},
+			],
+			headerExtensions: [
+				{
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+					id: 4,
+				},
+				{
+					uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+					id: 5,
+				},
+				{
+					uri: 'urn:3gpp:video-orientation',
+					id: 13,
+				},
+			],
+			encodings: [{ ssrc: 22222222 }],
+			rtcp: { cname: 'video-1' },
+		},
+	});
+
+	expect(producer.rtpParameters.headerExtensions).toEqual([
+		{
+			uri: 'urn:3gpp:video-orientation',
+			id: 13,
+			encrypt: false,
+			parameters: {},
+		},
+	]);
+	expect(producer.rtpParameters.codecs[0]!.rtcpFeedback).toEqual([
+		{ type: 'nack', parameter: 'pli' },
+	]);
+
+	// Consume with the full Router RTP capabilities, which do include the BWE
+	// header extensions and RTCP feedback.
+	const consumer = await plainTransport.consume({
+		producerId: producer.id,
+		rtpCapabilities: router.rtpCapabilities,
+	});
+
+	expect(
+		consumer.rtpParameters.headerExtensions!.map(ext => ext.uri)
+	).not.toContain('http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time');
+	expect(
+		consumer.rtpParameters.headerExtensions!.map(ext => ext.uri)
+	).not.toContain(
+		'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
+	);
+
+	for (const codec of consumer.rtpParameters.codecs) {
+		expect(codec.rtcpFeedback!.map(fb => fb.type)).not.toContain('goog-remb');
+		expect(codec.rtcpFeedback!.map(fb => fb.type)).not.toContain(
+			'transport-cc'
+		);
+	}
+
+	router.close();
+}, 2000);
+
 test('PlainTransport methods reject if closed', async () => {
 	const plainTransport = await ctx.router!.createPlainTransport({
 		listenIp: '127.0.0.1',

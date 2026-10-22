@@ -559,7 +559,11 @@ impl ToFbs for RouterCreateDirectTransportData {
         direct_transport::DirectTransportOptions {
             base: Box::new(transport::Options {
                 direct: true,
+                enable_bwe: false,
                 initial_available_outgoing_bitrate: None,
+                max_incoming_bitrate: None,
+                max_outgoing_bitrate: None,
+                min_outgoing_bitrate: None,
                 max_send_message_size: self.max_send_message_size,
                 max_receive_message_size: self.max_receive_message_size,
                 sctp_send_buffer_size: 0,
@@ -653,7 +657,11 @@ pub(crate) struct RouterCreateWebrtcTransportData {
     transport_id: TransportId,
     #[serde(flatten)]
     listen: RouterCreateWebrtcTransportListen,
+    enable_bwe: bool,
     initial_available_outgoing_bitrate: u64,
+    max_incoming_bitrate: Option<u64>,
+    max_outgoing_bitrate: Option<u64>,
+    min_outgoing_bitrate: Option<u64>,
     enable_udp: bool,
     enable_tcp: bool,
     prefer_udp: bool,
@@ -689,8 +697,12 @@ impl RouterCreateWebrtcTransportData {
                     }
                 }
             },
+            enable_bwe: webrtc_transport_options.enable_bwe,
             initial_available_outgoing_bitrate: webrtc_transport_options
                 .initial_available_outgoing_bitrate,
+            max_incoming_bitrate: webrtc_transport_options.max_incoming_bitrate,
+            max_outgoing_bitrate: webrtc_transport_options.max_outgoing_bitrate,
+            min_outgoing_bitrate: webrtc_transport_options.min_outgoing_bitrate,
             enable_udp: webrtc_transport_options.enable_udp,
             enable_tcp: webrtc_transport_options.enable_tcp,
             prefer_udp: webrtc_transport_options.prefer_udp,
@@ -719,7 +731,11 @@ impl ToFbs for RouterCreateWebrtcTransportData {
         web_rtc_transport::WebRtcTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
+                enable_bwe: self.enable_bwe,
                 initial_available_outgoing_bitrate: Some(self.initial_available_outgoing_bitrate),
+                max_incoming_bitrate: self.max_incoming_bitrate,
+                max_outgoing_bitrate: self.max_outgoing_bitrate,
+                min_outgoing_bitrate: self.min_outgoing_bitrate,
                 enable_sctp: self.enable_sctp,
                 max_send_message_size: self.max_send_message_size,
                 max_receive_message_size: self.max_receive_message_size,
@@ -900,6 +916,11 @@ pub(crate) struct RouterCreatePlainTransportData {
     rtcp_listen_info: Option<ListenInfo>,
     rtcp_mux: bool,
     comedia: bool,
+    enable_bwe: bool,
+    initial_available_outgoing_bitrate: u64,
+    max_incoming_bitrate: Option<u64>,
+    max_outgoing_bitrate: Option<u64>,
+    min_outgoing_bitrate: Option<u64>,
     enable_sctp: bool,
     max_send_message_size: u32,
     max_receive_message_size: u32,
@@ -924,6 +945,12 @@ impl RouterCreatePlainTransportData {
             rtcp_listen_info: plain_transport_options.rtcp_listen_info.clone(),
             rtcp_mux: plain_transport_options.rtcp_mux,
             comedia: plain_transport_options.comedia,
+            enable_bwe: plain_transport_options.enable_bwe,
+            initial_available_outgoing_bitrate: plain_transport_options
+                .initial_available_outgoing_bitrate,
+            max_incoming_bitrate: plain_transport_options.max_incoming_bitrate,
+            max_outgoing_bitrate: plain_transport_options.max_outgoing_bitrate,
+            min_outgoing_bitrate: plain_transport_options.min_outgoing_bitrate,
             enable_sctp: plain_transport_options.enable_sctp,
             max_send_message_size: plain_transport_options.max_send_message_size,
             max_receive_message_size: plain_transport_options.max_receive_message_size,
@@ -949,7 +976,11 @@ impl ToFbs for RouterCreatePlainTransportData {
         plain_transport::PlainTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
-                initial_available_outgoing_bitrate: None,
+                enable_bwe: self.enable_bwe,
+                initial_available_outgoing_bitrate: Some(self.initial_available_outgoing_bitrate),
+                max_incoming_bitrate: self.max_incoming_bitrate,
+                max_outgoing_bitrate: self.max_outgoing_bitrate,
+                min_outgoing_bitrate: self.min_outgoing_bitrate,
                 enable_sctp: self.enable_sctp,
                 max_send_message_size: self.max_send_message_size,
                 max_receive_message_size: self.max_receive_message_size,
@@ -1096,7 +1127,11 @@ impl ToFbs for RouterCreatePipeTransportData {
         pipe_transport::PipeTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
+                enable_bwe: false,
                 initial_available_outgoing_bitrate: None,
+                max_incoming_bitrate: None,
+                max_outgoing_bitrate: None,
+                min_outgoing_bitrate: None,
                 enable_sctp: self.enable_sctp,
                 max_send_message_size: self.max_send_message_size,
                 max_receive_message_size: self.max_receive_message_size,

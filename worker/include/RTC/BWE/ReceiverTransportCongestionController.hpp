@@ -101,10 +101,10 @@ namespace RTC
 			void RemoveStream(uint32_t ssrc);
 
 			/**
-			 * Cap what the remote sender is told it may send (bps), or zero to let it
-			 * send whatever the incoming link is estimated to bear.
+			 * Cap what the remote sender is told it may send (bps), or no value to
+			 * let it send whatever the incoming link is estimated to bear.
 			 */
-			void SetMaxIncomingBitrate(int64_t bitrate);
+			void SetMaxIncomingBitrate(std::optional<int64_t> bitrate);
 
 			/**
 			 * Latest estimation of the incoming link (bps), or no value while there is

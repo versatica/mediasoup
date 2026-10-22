@@ -660,46 +660,95 @@ test('webRtcTransport.setMaxIncomingBitrate(), setMaxOutgoingBitrate() and setMi
 	).rejects.toThrow(TypeError);
 }, 2000);
 
-test('webRtcTransport.setMaxOutgoingBitrate() fails if value is lower than current min limit', async () => {
-	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [
-			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+test('webRtcTransport with enableBwe false removes BWE stuff from RTP parameters', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: [
+			{
+				kind: 'video',
+				mimeType: 'video/VP8',
+				clockRate: 90000,
+			},
 		],
 	});
 
-	await expect(
-		webRtcTransport.setMinOutgoingBitrate(3000000)
-	).resolves.toBeUndefined();
-
-	await expect(webRtcTransport.setMaxOutgoingBitrate(2000000)).rejects.toThrow(
-		Error
-	);
-
-	// Remove limit.
-	await expect(
-		webRtcTransport.setMinOutgoingBitrate(0)
-	).resolves.toBeUndefined();
-}, 2000);
-
-test('webRtcTransport.setMinOutgoingBitrate() fails if value is higher than current max limit', async () => {
-	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+	const webRtcTransport = await router.createWebRtcTransport({
 		listenInfos: [
 			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
 		],
+		enableBwe: false,
 	});
 
-	await expect(
-		webRtcTransport.setMaxOutgoingBitrate(2000000)
-	).resolves.toBeUndefined();
+	const producer = await webRtcTransport.produce({
+		kind: 'video',
+		rtpParameters: {
+			mid: 'VIDEO',
+			codecs: [
+				{
+					mimeType: 'video/VP8',
+					payloadType: 112,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack', parameter: 'pli' },
+						{ type: 'goog-remb' },
+						{ type: 'transport-cc' },
+					],
+				},
+			],
+			headerExtensions: [
+				{
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+					id: 4,
+				},
+				{
+					uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+					id: 5,
+				},
+				{
+					uri: 'urn:3gpp:video-orientation',
+					id: 13,
+				},
+			],
+			encodings: [{ ssrc: 22222222 }],
+			rtcp: { cname: 'video-1' },
+		},
+	});
 
-	await expect(webRtcTransport.setMinOutgoingBitrate(3000000)).rejects.toThrow(
-		Error
+	expect(producer.rtpParameters.headerExtensions).toEqual([
+		{
+			uri: 'urn:3gpp:video-orientation',
+			id: 13,
+			encrypt: false,
+			parameters: {},
+		},
+	]);
+	expect(producer.rtpParameters.codecs[0]!.rtcpFeedback).toEqual([
+		{ type: 'nack', parameter: 'pli' },
+	]);
+
+	// Consume with the full Router RTP capabilities, which do include the BWE
+	// header extensions and RTCP feedback.
+	const consumer = await webRtcTransport.consume({
+		producerId: producer.id,
+		rtpCapabilities: router.rtpCapabilities,
+	});
+
+	expect(
+		consumer.rtpParameters.headerExtensions!.map(ext => ext.uri)
+	).not.toContain('http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time');
+	expect(
+		consumer.rtpParameters.headerExtensions!.map(ext => ext.uri)
+	).not.toContain(
+		'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 	);
 
-	// Remove limit.
-	await expect(
-		webRtcTransport.setMaxOutgoingBitrate(0)
-	).resolves.toBeUndefined();
+	for (const codec of consumer.rtpParameters.codecs) {
+		expect(codec.rtcpFeedback!.map(fb => fb.type)).not.toContain('goog-remb');
+		expect(codec.rtcpFeedback!.map(fb => fb.type)).not.toContain(
+			'transport-cc'
+		);
+	}
+
+	router.close();
 }, 2000);
 
 test('webRtcTransport.restartIce() succeeds', async () => {

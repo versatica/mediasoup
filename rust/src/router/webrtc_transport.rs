@@ -117,9 +117,19 @@ pub enum WebRtcTransportListen {
 pub struct WebRtcTransportOptions {
     /// How [`WebRtcTransport`] should listen on interfaces.
     pub listen: WebRtcTransportListen,
+    /// Estimate the bandwidth of the transport link, as far as the negotiated RTP parameters allow
+    /// it.
+    /// Default true.
+    pub enable_bwe: bool,
     /// Initial available outgoing bitrate (in bps).
     /// Default 600000.
     pub initial_available_outgoing_bitrate: u64,
+    /// Maximum incoming bitrate (in bps). Unset by default, meaning no limit.
+    pub max_incoming_bitrate: Option<u64>,
+    /// Maximum outgoing bitrate (in bps). Unset by default, meaning no limit.
+    pub max_outgoing_bitrate: Option<u64>,
+    /// Minimum outgoing bitrate (in bps). Unset by default, meaning no limit.
+    pub min_outgoing_bitrate: Option<u64>,
     /// Enable UDP.
     /// Default true.
     pub enable_udp: bool,
@@ -174,7 +184,11 @@ impl WebRtcTransportOptions {
     pub fn new(listen_infos: WebRtcTransportListenInfos) -> Self {
         Self {
             listen: WebRtcTransportListen::Individual { listen_infos },
+            enable_bwe: true,
             initial_available_outgoing_bitrate: 600_000,
+            max_incoming_bitrate: None,
+            max_outgoing_bitrate: None,
+            min_outgoing_bitrate: None,
             enable_udp: true,
             enable_tcp: false,
             prefer_udp: false,
@@ -196,7 +210,11 @@ impl WebRtcTransportOptions {
     pub fn new_with_server(webrtc_server: WebRtcServer) -> Self {
         Self {
             listen: WebRtcTransportListen::Server { webrtc_server },
+            enable_bwe: true,
             initial_available_outgoing_bitrate: 600_000,
+            max_incoming_bitrate: None,
+            max_outgoing_bitrate: None,
+            min_outgoing_bitrate: None,
             enable_udp: true,
             enable_tcp: true,
             prefer_udp: false,
@@ -574,6 +592,7 @@ struct Inner {
     channel: Channel,
     handlers: Arc<Handlers>,
     data: Arc<WebRtcTransportData>,
+    enable_bwe: bool,
     app_data: AppData,
     // Make sure WebRTC server is not dropped until this transport is not dropped
     webrtc_server: Option<WebRtcServer>,
@@ -678,7 +697,11 @@ impl Transport for WebRtcTransport {
         debug!("produce()");
 
         let producer = self
-            .produce_impl(producer_options, TransportType::WebRtc)
+            .produce_impl(
+                producer_options,
+                TransportType::WebRtc,
+                self.inner.enable_bwe,
+            )
             .await?;
 
         self.inner.handlers.new_producer.call_simple(&producer);
@@ -690,7 +713,12 @@ impl Transport for WebRtcTransport {
         debug!("consume()");
 
         let consumer = self
-            .consume_impl(consumer_options, TransportType::WebRtc, false)
+            .consume_impl(
+                consumer_options,
+                TransportType::WebRtc,
+                false,
+                self.inner.enable_bwe,
+            )
             .await?;
 
         self.inner.handlers.new_consumer.call_simple(&consumer);
@@ -874,6 +902,7 @@ impl WebRtcTransport {
         executor: Arc<Executor<'static>>,
         channel: Channel,
         data: WebRtcTransportData,
+        enable_bwe: bool,
         app_data: AppData,
         router: Router,
         webrtc_server: Option<WebRtcServer>,
@@ -986,6 +1015,7 @@ impl WebRtcTransport {
             channel,
             handlers,
             data,
+            enable_bwe,
             app_data,
             webrtc_server,
             router,

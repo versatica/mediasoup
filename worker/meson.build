@@ -139,6 +139,7 @@ common_sources = [
   'src/RTC/PlainTransport.cpp',
   'src/RTC/PortManager.cpp',
   'src/RTC/Producer.cpp',
+  'src/RTC/ProducerStreamManager.cpp',
   'src/RTC/RateCalculator.cpp',
   'src/RTC/RemoteCaptureTimeEstimator.cpp',
   'src/RTC/RemoteClockOffsetEstimator.cpp',

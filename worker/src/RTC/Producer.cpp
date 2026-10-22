@@ -1111,6 +1111,7 @@ namespace RTC
 		params.cname          = this->rtpParameters.rtcp.cname;
 		params.spatialLayers  = encoding.spatialLayers;
 		params.temporalLayers = encoding.temporalLayers;
+		params.ksvc           = encoding.ksvc;
 
 		// Check in band FEC in codec parameters.
 		if (mediaCodec.parameters.HasInteger("useinbandfec") && mediaCodec.parameters.GetInteger("useinbandfec") == 1)

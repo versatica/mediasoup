@@ -73,10 +73,13 @@ namespace RTC
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	int64_t PipeProducerStreamManager::GetOutputBitrate(int64_t nowMs)
+	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions PipeProducerStreamManager::GetBitrateOptions(
+	  int64_t nowMs) const
 	{
 		MS_TRACE();
 
+		// Pipe forwards every stream it is given, always, so it offers the single
+		// point it is putting out.
 		int64_t outputBitrate{ 0 };
 
 		for (const auto& kv : this->mapMappedSsrcProducerRtpStream)
@@ -86,21 +89,15 @@ namespace RTC
 			outputBitrate += producerRtpStream->GetBitrate(nowMs);
 		}
 
-		return outputBitrate;
+		return { .options = { { .bitrate = outputBitrate, .layers = {} } }, .currentOption = 0 };
 	}
 
-	int64_t PipeProducerStreamManager::TakeBitrate(int64_t /*bitrate*/, int64_t /*nowMs*/)
+	void PipeProducerStreamManager::SetBitrateOption(
+	  const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& /*option*/)
 	{
 		MS_TRACE();
 
-		MS_ABORT("not an adaptable bitrate");
-	}
-
-	void PipeProducerStreamManager::ApplyBitrateAllocation(int64_t /*rtpStreamActiveMs*/)
-	{
-		MS_TRACE();
-
-		MS_ABORT("not an adaptable bitrate");
+		MS_ABORT("a single point to run at, so it is never given any");
 	}
 #else
 	int64_t PipeProducerStreamManager::IncreaseLayer(
@@ -112,7 +109,7 @@ namespace RTC
 		return 0;
 	}
 
-	void PipeProducerStreamManager::ApplyLayers(int64_t /*rtpStreamActiveMs*/)
+	void PipeProducerStreamManager::ApplyLayers()
 	{
 		MS_TRACE();
 
@@ -120,6 +117,27 @@ namespace RTC
 	}
 #endif
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t PipeProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
+	{
+		MS_TRACE();
+
+		// What it is putting out is what it wants, since it has no way of wanting
+		// anything else. Leaving it out would ask the estimator for less than what
+		// is going to be sent, while the allocation takes its bitrate off the top
+		// all the same.
+		int64_t desiredBitrate{ 0 };
+
+		for (const auto& kv : this->mapMappedSsrcProducerRtpStream)
+		{
+			auto* const producerRtpStream = kv.second;
+
+			desiredBitrate += producerRtpStream->GetBitrate(nowMs);
+		}
+
+		return desiredBitrate;
+	}
+#else
 	int64_t PipeProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
 	{
 		MS_TRACE();
@@ -127,6 +145,7 @@ namespace RTC
 		// Pipe does not play the BWE game.
 		return 0;
 	}
+#endif
 
 	ProducerStreamManager::RtpPacketProcessResult PipeProducerStreamManager::ProcessRtpPacket(
 	  RTC::RTP::Packet* packet,
@@ -277,6 +296,16 @@ namespace RTC
 		{
 			kv.second = false;
 		}
+
+#ifdef MS_USE_BUILTIN_BWE
+		// This one never adapts, so the bitrate allocation takes what it puts out off
+		// the top instead of bidding for it. Now that it puts out nothing, that whole
+		// amount is there for the others.
+		if (this->bweManaged)
+		{
+			this->listener->OnProducerStreamManagerNeedBitrateChange();
+		}
+#endif
 	}
 
 	void PipeProducerStreamManager::OnResumed()
@@ -291,6 +320,15 @@ namespace RTC
 		if (IsActive())
 		{
 			RequestKeyFrame();
+
+#ifdef MS_USE_BUILTIN_BWE
+			// It is taking that amount off the top again, so what the others were given
+			// while it was quiet no longer fits.
+			if (this->bweManaged)
+			{
+				this->listener->OnProducerStreamManagerNeedBitrateChange();
+			}
+#endif
 		}
 	}
 

@@ -113,12 +113,12 @@ namespace RTC
 			// sequence number of the next packet is read back from there. The empty
 			// braces zero it, so the payload never carries whatever was in that
 			// memory before.
-			std::array<uint8_t, MaxPacketLength> packetBuffer{};
-			// Allocated by this.
-			std::unique_ptr<RTC::RTP::Packet> packet;
+			alignas(4) std::array<uint8_t, MaxPacketLength> packetBuffer{};
 			// Length of the packet with no payload at all, so its header and its
 			// extensions.
 			size_t minPacketLength{ 0 };
+			// Allocated by this.
+			std::unique_ptr<RTC::RTP::Packet> packet;
 		};
 	} // namespace BWE
 } // namespace RTC

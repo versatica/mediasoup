@@ -19,7 +19,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr size_t TargetLayerRetransmissionBufferSize{ 30u };
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 30 };
 
 	/* Instance methods. */
 
@@ -729,7 +729,7 @@ namespace RTC
 
 				if (IsActive() && newPreferredLayers != previousPreferredLayers)
 				{
-					this->producerStreamManager->MayChangeLayers(/*force*/ true);
+					this->producerStreamManager->MayChangeLayers();
 				}
 
 				break;
@@ -801,12 +801,26 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
 				}
 
+#ifdef MS_USE_BUILTIN_BWE
+				const uint8_t previousPriority = this->priority;
+#endif
+
 				this->priority = body->priority();
 
 				auto responseOffset =
 				  FBS::Consumer::CreateSetPriorityResponse(request->GetBufferBuilder(), this->priority);
 
 				request->Accept(FBS::Response::Body::Consumer_SetPriorityResponse, responseOffset);
+
+#ifdef MS_USE_BUILTIN_BWE
+				// The priority is the weight the bitrate allocation gives this one
+				// against the others, so a new one is only worth anything once they are
+				// weighed again.
+				if (this->bweManaged && IsActive() && this->priority != previousPriority)
+				{
+					this->listener->OnConsumerNeedBitrateChange(this);
+				}
+#endif
 
 				break;
 			}
@@ -1045,35 +1059,9 @@ namespace RTC
 		return this->id;
 	}
 
-	bool Consumer::IsBitrateAdaptable() const
-	{
-		MS_TRACE();
-
-		return this->producerStreamManager->IsBitrateAdaptable();
-	}
-
-	int64_t Consumer::GetOutputBitrate()
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-
-		if (!IsActive())
-		{
-			return 0;
-		}
-
-		const int64_t nowMs = this->shared->GetTimeMs();
-
-		return this->producerStreamManager->GetOutputBitrate(nowMs);
-	}
-
 	uint8_t Consumer::GetBitrateWeight() const
 	{
 		MS_TRACE();
-
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-		MS_ASSERT(IsBitrateAdaptable(), "not an adaptable bitrate");
 
 		if (!IsActive())
 		{
@@ -1083,28 +1071,29 @@ namespace RTC
 		return this->priority;
 	}
 
-	int64_t Consumer::TakeBitrate(int64_t bitrate)
+	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions Consumer::GetBitrateOptions() const
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-		MS_ASSERT(IsActive(), "should be active");
+		// An inactive Consumer puts nothing out and has nowhere to go, so it takes
+		// no bitrate and is left where it is.
+		if (!IsActive())
+		{
+			return { .options = { { .bitrate = 0, .layers = {} } }, .currentOption = 0 };
+		}
 
 		const int64_t nowMs = this->shared->GetTimeMs();
 
-		return this->producerStreamManager->TakeBitrate(bitrate, nowMs);
+		return this->producerStreamManager->GetBitrateOptions(nowMs);
 	}
 
-	void Consumer::ApplyBitrateAllocation()
+	void Consumer::SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 		MS_ASSERT(IsActive(), "should be active");
 
-		auto* rtpStream = this->mapSsrcRtpStream.begin()->second;
-
-		this->producerStreamManager->ApplyBitrateAllocation(rtpStream->GetActiveMs());
+		this->producerStreamManager->SetBitrateOption(option);
 	}
 #else
 	uint8_t Consumer::GetBitratePriority() const
@@ -1167,12 +1156,31 @@ namespace RTC
 			return;
 		}
 
-		auto* rtpStream = this->mapSsrcRtpStream.begin()->second;
-
-		this->producerStreamManager->ApplyLayers(rtpStream->GetActiveMs());
+		this->producerStreamManager->ApplyLayers();
 	}
 #endif
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t Consumer::GetDesiredBitrate() const
+	{
+		MS_TRACE();
+
+		if (!IsActive())
+		{
+			return 0;
+		}
+
+		const int64_t nowMs = this->shared->GetTimeMs();
+
+		const int64_t desiredBitrate = this->producerStreamManager->GetDesiredBitrate(nowMs);
+
+		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
+		// greater than computed one, then use it.
+		const auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
+
+		return std::max(maxBitrate, desiredBitrate);
+	}
+#else
 	int64_t Consumer::GetDesiredBitrate() const
 	{
 		MS_TRACE();
@@ -1208,6 +1216,7 @@ namespace RTC
 
 		return desiredBitrate;
 	}
+#endif
 
 	// NOLINTNEXTLINE(misc-no-recursion)
 	void Consumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
@@ -1313,7 +1322,7 @@ namespace RTC
 		if (action.spatialLayerSwitched)
 		{
 			// Reset the score of our RtpStream to 10.
-			rtpStream->ResetScore(10u, /*notify*/ false);
+			rtpStream->ResetScore(10, /*notify*/ false);
 
 			// Emit the layersChange event.
 			EmitLayersChange();
@@ -1726,6 +1735,7 @@ namespace RTC
 
 		this->producerStreamManager->OnPaused();
 
+#ifndef MS_USE_BUILTIN_BWE
 		if (this->externallyManagedBitrate)
 		{
 			// Audio does not play the BWE game.
@@ -1736,6 +1746,7 @@ namespace RTC
 
 			this->listener->OnConsumerNeedZeroBitrate(this);
 		}
+#endif
 	}
 
 	void Consumer::UserOnResumed()
@@ -1846,7 +1857,7 @@ namespace RTC
 			// libsrtp bug:
 			// https://github.com/versatica/mediasoup/issues/1437
 			const auto initialOutputSeq =
-			  Utils::Crypto::GetRandomUInt<uint16_t>(1000u, std::numeric_limits<uint16_t>::max() / 2);
+			  Utils::Crypto::GetRandomUInt<uint16_t>(1000, std::numeric_limits<uint16_t>::max() / 2);
 
 			this->mapRtpStreamRtpSeqManager[rtpStream] = RTC::SeqManager<uint16_t>(initialOutputSeq);
 
@@ -1900,7 +1911,7 @@ namespace RTC
 			return;
 		}
 
-		auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
+		const auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
 
 		auto notificationOffset = FBS::Consumer::CreateScoreNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), scoreOffset);
@@ -1948,8 +1959,10 @@ namespace RTC
 
 		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-			auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
+			const auto rtpPacketDump =
+			  packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+
+			const auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
@@ -1964,8 +1977,10 @@ namespace RTC
 		}
 		else if (this->traceEventTypes.rtp)
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-			auto traceInfo = FBS::Consumer::CreateRtpTraceInfo(
+			const auto rtpPacketDump =
+			  packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+
+			const auto traceInfo = FBS::Consumer::CreateRtpTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
@@ -2063,16 +2078,18 @@ namespace RTC
 		// Emit the score event.
 		EmitScore();
 
-		// NOTE @jmillan: Previously present in Simulcast and SVC. Does it make sense to move it here?
-		// Previously present in Simulcast and SVC. Does it make sense to move it here?
+#ifndef MS_USE_BUILTIN_BWE
+		// TODO: @jmillan: Previously present in Simulcast and SVC. Does it make sense
+		// to move it here?
 		if (IsActive())
 		{
 			// Just check target layers if our bitrate is not externally managed.
 			if (!this->externallyManagedBitrate)
 			{
-				this->producerStreamManager->MayChangeLayers(/*force*/ false);
+				this->producerStreamManager->MayChangeLayers();
 			}
 		}
+#endif
 	}
 
 	void Consumer::OnRtpStreamRetransmitRtpPacket(

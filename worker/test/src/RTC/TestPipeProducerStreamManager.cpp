@@ -459,24 +459,16 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	SECTION("IsBitrateAdaptable() returns false")
+	SECTION("GetBitrateOptions() offers a single point of 0 while no Producer stream has arrived")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
 
-		manager->SetExternallyManagedBitrate();
+		const auto bitrateOptions = manager->GetBitrateOptions(DepLibUV::GetTimeMs());
 
-		REQUIRE(manager->IsBitrateAdaptable() == false);
-	}
-
-	SECTION("GetOutputBitrate() returns 0 while no Producer stream has arrived")
-	{
-		MockListener listener;
-		auto manager = createManager(std::addressof(listener));
-
-		manager->SetExternallyManagedBitrate();
-
-		REQUIRE(manager->GetOutputBitrate(DepLibUV::GetTimeMs()) == 0);
+		REQUIRE(bitrateOptions.options.size() == 1);
+		REQUIRE(bitrateOptions.options.at(0).bitrate == 0);
+		REQUIRE(bitrateOptions.currentOption == 0);
 	}
 #else
 	SECTION("IncreaseLayer() returns 0 (no BWE)")
@@ -490,7 +482,6 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		REQUIRE(used == 0);
 	}
-#endif
 
 	SECTION("GetDesiredBitrate() returns 0 (no BWE)")
 	{
@@ -501,4 +492,5 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		REQUIRE(manager->GetDesiredBitrate(DepLibUV::GetTimeMs()) == 0);
 	}
+#endif
 }

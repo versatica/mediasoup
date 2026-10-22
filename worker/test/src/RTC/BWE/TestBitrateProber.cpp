@@ -415,4 +415,51 @@ SCENARIO("BWE BitrateProber", "[bwe][bitrateprober]")
 
 		REQUIRE(prober.IsProbing());
 	}
+
+	SECTION("StopProbing() drops the bursts that are waiting and lets the one going out finish")
+	{
+		constexpr int64_t Bitrate{ 300000 };
+
+		const RTC::BWE::BitrateProber::BitrateProberOptions options{ .minPacketSize = 0 };
+
+		RTC::BWE::BitrateProber prober(options);
+
+		prober.CreateProbeCluster(makeClusterConfig(0, nowUs, Bitrate, 2 * 1000));
+		prober.CreateProbeCluster(makeClusterConfig(1, nowUs, Bitrate, 2 * 1000));
+
+		REQUIRE(prober.IsProbing());
+
+		prober.StopProbing();
+
+		// The one that had begun is still going out.
+		REQUIRE(prober.IsProbing());
+
+		for (size_t idx{ 0 }; idx < 20 && prober.IsProbing(); ++idx)
+		{
+			prober.ProbeSent(nowUs, ProbeSize);
+		}
+
+		// And once it is done the one behind it does not take over, which is what
+		// would have happened without the stop.
+		REQUIRE(!prober.IsProbing());
+	}
+
+	SECTION("StopProbing() drops a burst that had not begun")
+	{
+		constexpr int64_t Bitrate{ 300000 };
+		constexpr size_t SmallPacketSize{ 20 };
+
+		RTC::BWE::BitrateProber prober;
+
+		prober.CreateProbeCluster(makeClusterConfig(0, nowUs, Bitrate, 2 * 1000));
+
+		REQUIRE(!prober.IsProbing());
+
+		prober.StopProbing();
+
+		// Whatever the traffic does afterwards, there is nothing left to begin.
+		prober.OnIncomingPacket(SmallPacketSize);
+
+		REQUIRE(!prober.IsProbing());
+	}
 }

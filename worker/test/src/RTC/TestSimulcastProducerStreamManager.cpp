@@ -187,7 +187,7 @@ namespace
 			encodingContext = std::make_unique<MockEncodingContext>();
 		}
 
-		return std::make_unique<RTC::SimulcastProducerStreamManager>(
+		auto manager = std::make_unique<RTC::SimulcastProducerStreamManager>(
 		  consumableRtpEncodings,
 		  preferredLayers,
 		  std::move(encodingContext),
@@ -195,6 +195,13 @@ namespace
 		  keyFrameSupported,
 		  listener,
 		  std::addressof(shared));
+
+#ifdef MS_USE_BUILTIN_BWE
+		// Every case below is written for a Transport that answers a bitrate round.
+		manager->SetBweManaged(true);
+#endif
+
+		return manager;
 	}
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(uint32_t ssrc)
@@ -251,28 +258,6 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	packet->SetSsrc(MappedSsrc0);
 	packet->SetTimestamp(1000);
 	packet->SetPayloadLength(40);
-
-	// The bidding protocol is named differently in each BWE, so these drive
-	// whichever one is built and every SECTION below asserts the same thing.
-	const auto takeBitrate =
-	  [](RTC::SimulcastProducerStreamManager* manager, int64_t bitrate, int64_t nowMs) -> int64_t
-	{
-#ifdef MS_USE_BUILTIN_BWE
-		return manager->TakeBitrate(bitrate, nowMs);
-#else
-		return manager->IncreaseLayer(bitrate, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
-#endif
-	};
-
-	const auto applyBitrateAllocation =
-	  [](RTC::SimulcastProducerStreamManager* manager, int64_t rtpStreamActiveMs) -> void
-	{
-#ifdef MS_USE_BUILTIN_BWE
-		manager->ApplyBitrateAllocation(rtpStreamActiveMs);
-#else
-		manager->ApplyLayers(rtpStreamActiveMs);
-#endif
-	};
 
 	// Make the stream receive a Sender Report telling that the given RTP timestamp
 	// was captured at the given instant of the clock of the remote sender.
@@ -751,6 +736,10 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(result.isSyncPacket == true);
 	}
 
+	// NOTE: Only for the old BWE. With the new one OnTransportConnected() does not
+	// move the target layers, since the transport distributes once after telling
+	// every Consumer.
+#ifndef MS_USE_BUILTIN_BWE
 	SECTION("OnTransportConnected() requests keyframe when active and target changes")
 	{
 		MockListener listener;
@@ -790,6 +779,7 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
 	}
+#endif
 
 	SECTION("OnTransportConnected() does not request keyframe when not active")
 	{
@@ -915,6 +905,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// Now CanSwitchToSpatialLayer(1) returns true, so preferred layer 1 is picked.
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ true);
 
+#ifdef MS_USE_BUILTIN_BWE
+		// MayChangeLayers() asks the transport for a new round rather than applying
+		// what it works out, so the target is moved here instead.
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == true);
+		REQUIRE(newTargetLayers.spatial == 1);
+
+		manager->UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
+#endif
+
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
 
 		// Send a keyframe from layer 1 to complete the spatial switch.
@@ -974,6 +975,13 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 500 * 1000, /*rtpTs*/ 1000);
 
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ true);
+
+#ifdef MS_USE_BUILTIN_BWE
+		// MayChangeLayers() asks the transport for a new round rather than applying
+		// what it works out, so the target is moved here, which is what this SECTION
+		// needs to measure its tsOffset.
+		manager->UpdateTargetLayers(1, 0);
+#endif
 
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
 
@@ -1239,6 +1247,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		manager->ProducerRtcpSenderReport(rtpStream0.get(), /*first*/ true);
 
+#ifdef MS_USE_BUILTIN_BWE
+		// TODO: Remove this once MayChangeLayers() applies what it works out even
+		// when there is no sender congestion controller to ask.
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == true);
+		REQUIRE(newTargetLayers.spatial == 1);
+
+		manager->UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
+#endif
+
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
 
 		packet->SetSequenceNumber(2);
@@ -1312,6 +1331,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ true);
 
+#ifdef MS_USE_BUILTIN_BWE
+		// TODO: Remove this once MayChangeLayers() applies what it works out even
+		// when there is no sender congestion controller to ask.
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == true);
+		REQUIRE(newTargetLayers.spatial == 1);
+
+		manager->UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
+#endif
+
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
 
 		// A packet of layer 1 captured 100 ms after the last forwarded one of layer 0.
@@ -1375,6 +1405,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// it cannot be aligned to it.
 		rtpStream0->ResetScore(/*score*/ 0, /*notify*/ false);
 		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 0, /*previousScore*/ 10);
+
+#ifdef MS_USE_BUILTIN_BWE
+		// TODO: Remove this once MayChangeLayers() applies what it works out even
+		// when there is no sender congestion controller to ask.
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == true);
+		REQUIRE(newTargetLayers.spatial == 1);
+
+		manager->UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
+#endif
 
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
 
@@ -1825,6 +1866,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		rtpStream0->ResetScore(/*score*/ 0, /*notify*/ false);
 		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 0, /*previousScore*/ 10);
 
+#ifdef MS_USE_BUILTIN_BWE
+		// TODO: Remove this once MayChangeLayers() applies what it works out even
+		// when there is no sender congestion controller to ask.
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == true);
+		REQUIRE(newTargetLayers.spatial == 1);
+
+		manager->UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
+#endif
+
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
 
 		// The RTP timeline of our stream goes on right after the highest RTP timestamp
@@ -1891,6 +1943,17 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// still be aligned to it.
 		rtpStream0->ResetScore(/*score*/ 0, /*notify*/ false);
 		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 0, /*previousScore*/ 10);
+
+#ifdef MS_USE_BUILTIN_BWE
+		// TODO: Remove this once MayChangeLayers() applies what it works out even
+		// when there is no sender congestion controller to ask.
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == true);
+		REQUIRE(newTargetLayers.spatial == 1);
+
+		manager->UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
+#endif
 
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
 
@@ -2155,9 +2218,24 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// checked and the preferred layer 1 is picked.
 		receiveSenderReport(rtpStream1.get(), /*captureAtUs*/ 20000 * 1000, /*rtpTs*/ 135000);
 
+#ifdef MS_USE_BUILTIN_BWE
+		const auto needBitrateChangeCountBefore = listener.needBitrateChangeCount;
+#endif
+
 		manager->ProducerRtcpSenderReport(rtpStream1.get(), /*first*/ false);
 
+#ifdef MS_USE_BUILTIN_BWE
+		// Checking the layers now means asking the transport for a new round rather
+		// than moving the target, so the layer picked is asked for separately.
+		REQUIRE(listener.needBitrateChangeCount > needBitrateChangeCountBefore);
+
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == true);
+		REQUIRE(newTargetLayers.spatial == 1);
+#else
 		REQUIRE(manager->GetTargetLayers().spatial == 1);
+#endif
 	}
 
 	SECTION("ProcessRtpPacket() calculates tsOffset of the spatial layer of the packet")
@@ -2220,6 +2298,13 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// moves the target to the preferred layer 2.
 		manager->OnTransportConnected();
 
+#ifdef MS_USE_BUILTIN_BWE
+		// MayChangeLayers() asks the transport for a new round rather than applying
+		// what it works out, so the target is moved here, which is what this SECTION
+		// needs to measure its tsOffset.
+		manager->UpdateTargetLayers(2, 0);
+#endif
+
 		REQUIRE(manager->GetTargetLayers().spatial == 2);
 
 		// A packet of the current layer 1 arrives while layer 2 is the target one, so the
@@ -2266,8 +2351,10 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		// Call OnResumed — should set syncRequired.
 		manager->OnResumed();
 
-		// Reset target since OnResumed may have reset it via MayChangeLayers().
+#ifndef MS_USE_BUILTIN_BWE
+		// Reset target since OnResumed() moved it through MayChangeLayers().
 		manager->UpdateTargetLayers(0, 0);
+#endif
 
 		// Prove syncRequired was set: next packet is a sync packet.
 		packet->SetSequenceNumber(3);
@@ -2313,18 +2400,86 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 	}
 
 #ifdef MS_USE_BUILTIN_BWE
-	SECTION("IsBitrateAdaptable() returns true")
+	SECTION("GetBitrateOptions() offers only sending nothing while no layer brings bitrate")
 	{
 		MockListener listener;
-		auto manager = createManager(std::addressof(listener));
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ OneSsrc, /*preferredLayers*/ { 0, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
 
-		manager->SetExternallyManagedBitrate();
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 
-		REQUIRE(manager->IsBitrateAdaptable() == true);
+		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		REQUIRE(bitrateOptions.options.size() == 1);
+		REQUIRE(bitrateOptions.options.at(0).bitrate == 0);
+		REQUIRE(bitrateOptions.options.at(0).layers.spatial == -1);
+		REQUIRE(bitrateOptions.options.at(0).layers.temporal == -1);
 	}
-#endif
 
-	SECTION("TakeBitrate() returns 0 on second call in same iteration")
+	SECTION("GetBitrateOptions() offers a point per spatial layer that brings bitrate")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		// Feed packets to spatial layer 0 only.
+		packet->SetSsrc(MappedSsrc0);
+		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
+
+		const int64_t nowMs = shared.GetTimeMs();
+
+		const auto bitrateOptions = manager->GetBitrateOptions(nowMs);
+
+		REQUIRE(bitrateOptions.options.size() == 2);
+		REQUIRE(bitrateOptions.options.at(1).layers.spatial == 0);
+		REQUIRE(bitrateOptions.options.at(1).layers.temporal == 0);
+
+		// Once the other one brings bitrate too it is a point of its own.
+		packet->SetSsrc(MappedSsrc1);
+		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 100);
+
+		const auto newBitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		REQUIRE(newBitrateOptions.options.size() == 3);
+		REQUIRE(newBitrateOptions.options.at(2).layers.spatial == 1);
+		REQUIRE(newBitrateOptions.options.at(2).layers.temporal == 0);
+	}
+
+	SECTION("SetBitrateOption() moves the target layers to the given point")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ OneSsrc, /*preferredLayers*/ { 0, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+
+		// Feed packets so the stream has non-zero bitrate.
+		packet->SetSsrc(MappedSsrc0);
+		feedRtpStreamRecv(rtpStream0.get(), packet.get(), 100);
+
+		const int64_t nowMs = shared.GetTimeMs();
+
+		const auto bitrateOptions = manager->GetBitrateOptions(nowMs);
+
+		REQUIRE(bitrateOptions.currentOption.has_value() == false);
+
+		manager->SetBitrateOption(bitrateOptions.options.at(1));
+
+		REQUIRE(manager->GetTargetLayers().spatial == 0);
+		REQUIRE(manager->GetTargetLayers().temporal == 0);
+
+		// And from there on it reports the point it is running at.
+		REQUIRE(manager->GetBitrateOptions(nowMs).currentOption == 1);
+	}
+#else
+	SECTION("IncreaseLayer() returns 0 on second call in same iteration")
 	{
 		MockListener listener;
 		auto manager =
@@ -2341,17 +2496,19 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		const int64_t nowMs = shared.GetTimeMs();
 
 		// First call claims bitrate.
-		const auto usedBitrate = takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
+		const auto usedBitrate = manager->IncreaseLayer(
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate > 0);
 
 		// Second call in same iteration should return 0 (already at preferred layers).
-		const auto usedBitrate2 = takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
+		const auto usedBitrate2 = manager->IncreaseLayer(
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate2 == 0);
 	}
 
-	SECTION("TakeBitrate() works again after ApplyBitrateAllocation()")
+	SECTION("IncreaseLayer() works again after ApplyLayers()")
 	{
 		MockListener listener;
 		auto manager =
@@ -2370,18 +2527,21 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		const int64_t nowMs = shared.GetTimeMs();
 
 		// First iteration: claim layer 0.
-		takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
-		applyBitrateAllocation(manager.get(), /*rtpStreamActiveMs*/ 0);
+		manager->IncreaseLayer(
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
+		manager->ApplyLayers();
 
 		// Feed packets to layer 1.
 		packet->SetSsrc(MappedSsrc1);
 		feedRtpStreamRecv(rtpStream1.get(), packet.get(), 100);
 
 		// Once the round is committed it should work again for layer 1.
-		const auto usedBitrate = takeBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
+		const auto usedBitrate = manager->IncreaseLayer(
+		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate > 0);
 	}
+#endif
 
 	SECTION("GetDesiredBitrate() returns max bitrate across all producer streams")
 	{
@@ -2393,7 +2553,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
 		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		// Feed packets to both streams with different counts to get different bitrates.
 		packet->SetSsrc(MappedSsrc0);
@@ -2474,4 +2636,79 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 
 		REQUIRE(listener.keyFrameRequestCount == 2);
 	}
+
+#ifdef MS_USE_BUILTIN_BWE
+	SECTION(
+	  "with no bitrate allocation running, a Producer stream score applies the layers instead of asking for a round")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+
+		manager->SetBweManaged(false);
+
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+
+		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 7, /*previousScore*/ 0);
+		manager->ProducerRtpStreamScore(rtpStream1.get(), /*score*/ 7, /*previousScore*/ 0);
+
+		REQUIRE(listener.needBitrateChangeCount == 0);
+		REQUIRE(manager->GetTargetLayers().spatial == 1);
+
+		// Nothing is left to change, since what was worked out was applied already.
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
+
+		REQUIRE(manager->RecalculateTargetLayers(newTargetLayers) == false);
+	}
+
+	SECTION("with no bitrate allocation running, OnPaused() asks for no round")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+
+		manager->SetBweManaged(false);
+
+		manager->UpdateTargetLayers(1, 0);
+
+		manager->OnPaused();
+
+		REQUIRE(listener.needBitrateChangeCount == 0);
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+	}
+
+	SECTION(
+	  "with no bitrate allocation running, OnResumed() applies the layers instead of asking for a round")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ TwoSsrcs, /*preferredLayers*/ { 1, 0 });
+
+		manager->SetBweManaged(false);
+
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+
+		manager->ProducerRtpStreamScore(rtpStream0.get(), /*score*/ 7, /*previousScore*/ 0);
+		manager->ProducerRtpStreamScore(rtpStream1.get(), /*score*/ 7, /*previousScore*/ 0);
+
+		manager->OnPaused();
+
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+
+		manager->OnResumed();
+
+		REQUIRE(listener.needBitrateChangeCount == 0);
+		REQUIRE(manager->GetTargetLayers().spatial == 1);
+	}
+#endif
 }

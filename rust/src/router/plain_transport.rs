@@ -59,6 +59,19 @@ pub struct PlainTransportOptions {
     /// SRTP is enabled. If so, it must be called with just remote SRTP parameters.
     /// Default false.
     pub comedia: bool,
+    /// Estimate the bandwidth of the transport link, as far as the negotiated RTP parameters allow
+    /// it.
+    /// Default true.
+    pub enable_bwe: bool,
+    /// Initial available outgoing bitrate (in bps).
+    /// Default 600000.
+    pub initial_available_outgoing_bitrate: u64,
+    /// Maximum incoming bitrate (in bps). Unset by default, meaning no limit.
+    pub max_incoming_bitrate: Option<u64>,
+    /// Maximum outgoing bitrate (in bps). Unset by default, meaning no limit.
+    pub max_outgoing_bitrate: Option<u64>,
+    /// Minimum outgoing bitrate (in bps). Unset by default, meaning no limit.
+    pub min_outgoing_bitrate: Option<u64>,
     /// Create a SCTP association.
     /// Default false.
     pub enable_sctp: bool,
@@ -107,6 +120,11 @@ impl PlainTransportOptions {
             rtcp_listen_info: None,
             rtcp_mux: true,
             comedia: false,
+            enable_bwe: true,
+            initial_available_outgoing_bitrate: 600_000,
+            max_incoming_bitrate: None,
+            max_outgoing_bitrate: None,
+            min_outgoing_bitrate: None,
             enable_sctp: false,
             max_send_message_size: 262_144,
             max_receive_message_size: 262_144,
@@ -462,6 +480,7 @@ struct Inner {
     channel: Channel,
     handlers: Arc<Handlers>,
     data: Arc<PlainTransportData>,
+    enable_bwe: bool,
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
     router: Router,
@@ -555,7 +574,11 @@ impl Transport for PlainTransport {
         debug!("produce()");
 
         let producer = self
-            .produce_impl(producer_options, TransportType::Plain)
+            .produce_impl(
+                producer_options,
+                TransportType::Plain,
+                self.inner.enable_bwe,
+            )
             .await?;
 
         self.inner.handlers.new_producer.call_simple(&producer);
@@ -567,7 +590,12 @@ impl Transport for PlainTransport {
         debug!("consume()");
 
         let consumer = self
-            .consume_impl(consumer_options, TransportType::Plain, false)
+            .consume_impl(
+                consumer_options,
+                TransportType::Plain,
+                false,
+                self.inner.enable_bwe,
+            )
             .await?;
 
         self.inner.handlers.new_consumer.call_simple(&consumer);
@@ -748,6 +776,7 @@ impl PlainTransport {
         executor: Arc<Executor<'static>>,
         channel: Channel,
         data: PlainTransportData,
+        enable_bwe: bool,
         app_data: AppData,
         router: Router,
     ) -> Self {
@@ -828,6 +857,7 @@ impl PlainTransport {
             channel,
             handlers,
             data,
+            enable_bwe,
             app_data,
             router,
             sctp_negotiated_capabilities,

@@ -65,6 +65,7 @@ namespace RTC
 				bool useDtx{ false };
 				uint8_t spatialLayers{ 1 };
 				uint8_t temporalLayers{ 1 };
+				bool ksvc{ false };
 			};
 
 		public:
@@ -166,19 +167,25 @@ namespace RTC
 				return this->params.temporalLayers;
 			}
 
+			/**
+			 * Whether the spatial layers only predict from each other on key frames,
+			 * so each of them can be decoded without the ones below it.
+			 */
+			bool IsKSvc() const
+			{
+				return this->params.ksvc;
+			}
+
 			virtual bool ReceiveStreamPacket(const RTP::Packet* packet);
 
 			virtual void Pause() = 0;
 
 			virtual void Resume() = 0;
 
+			/**
+			 * Bitrate of every spatial layer and every temporal layer.
+			 */
 			virtual int64_t GetBitrate(int64_t nowMs) = 0;
-
-			virtual int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
-
-			virtual int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) = 0;
-
-			virtual int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 
 			void ResetScore(uint8_t score, bool notify);
 
@@ -225,11 +232,6 @@ namespace RTC
 			uint8_t GetScore() const
 			{
 				return this->score;
-			}
-
-			int64_t GetActiveMs() const
-			{
-				return this->shared->GetTimeMs() - this->activeSinceMs;
 			}
 
 		protected:
@@ -311,8 +313,6 @@ namespace RTC
 			std::vector<uint8_t> scores;
 			// Whether at least a RTP packet has been received.
 			bool started{ false };
-			// Last time since the stream is active.
-			int64_t activeSinceMs{ 0 };
 		};
 	} // namespace RTP
 } // namespace RTC

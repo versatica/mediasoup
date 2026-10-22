@@ -20,11 +20,7 @@ namespace RTC
 		  SharedInterface* shared,
 		  RTP::RtpStream::Params& params,
 		  uint8_t initialScore)
-		  : listener(listener),
-		    shared(shared),
-		    params(params),
-		    score(initialScore),
-		    activeSinceMs(this->shared->GetTimeMs())
+		  : listener(listener), shared(shared), params(params), score(initialScore)
 		{
 			MS_TRACE();
 		}
@@ -175,12 +171,6 @@ namespace RTC
 				const auto previousScore = this->score;
 
 				this->score = score;
-
-				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
-				if (previousScore == 0)
-				{
-					this->activeSinceMs = this->shared->GetTimeMs();
-				}
 
 				// Notify the listener.
 				if (notify)
@@ -333,12 +323,6 @@ namespace RTC
 				  score,
 				  previousScore,
 				  this->score);
-
-				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
-				if (previousScore == 0)
-				{
-					this->activeSinceMs = this->shared->GetTimeMs();
-				}
 
 				this->listener->OnRtpStreamScore(this, this->score, previousScore);
 			}

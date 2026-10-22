@@ -21,7 +21,7 @@ use event_listener_primitives::HandlerId;
 use log::warn;
 use mediasoup_sys::fbs::{response, transport};
 use mediasoup_types::data_structures::{
-    AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection,
+    AppData, BweTraceInfo, OldBweTraceInfo, RtpPacketTraceInfo, TraceEventDirection,
 };
 use mediasoup_types::rtp_parameters::{MediaKind, RtpEncodingParameters};
 use mediasoup_types::sctp_parameters::SctpStreamParameters;
@@ -64,23 +64,46 @@ pub enum TransportTraceEventData {
         /// BWE info.
         info: BweTraceInfo,
     },
+    /// Transport bandwidth estimation changed, as the old BWE reports it.
+    OldBwe {
+        /// Event timestamp.
+        timestamp: u64,
+        /// Event direction.
+        direction: TraceEventDirection,
+        /// BWE info.
+        info: OldBweTraceInfo,
+    },
 }
 
 impl FromFbs for TransportTraceEventData {
     type FbsType = transport::TraceNotification;
     fn from_fbs(data: &Self::FbsType) -> Self {
         match data.type_ {
-            transport::TraceEventType::Probation => unimplemented!(),
-            transport::TraceEventType::Bwe => TransportTraceEventData::Bwe {
+            transport::TraceEventType::Probation => TransportTraceEventData::Probation {
                 timestamp: data.timestamp,
                 direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
-                    let Some(transport::TraceInfo::BweTraceInfo(info)) = &data.info else {
+                    let Some(transport::TraceInfo::ProbationTraceInfo(info)) = &data.info else {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    BweTraceInfo::from_fbs(info.as_ref())
+                    RtpPacketTraceInfo::from_fbs(info.rtp_packet.as_ref())
                 },
+            },
+            transport::TraceEventType::Bwe => match &data.info {
+                Some(transport::TraceInfo::OldBweTraceInfo(info)) => {
+                    TransportTraceEventData::OldBwe {
+                        timestamp: data.timestamp,
+                        direction: TraceEventDirection::from_fbs(&data.direction),
+                        info: OldBweTraceInfo::from_fbs(info.as_ref()),
+                    }
+                }
+                Some(transport::TraceInfo::BweTraceInfo(info)) => TransportTraceEventData::Bwe {
+                    timestamp: data.timestamp,
+                    direction: TraceEventDirection::from_fbs(&data.direction),
+                    info: BweTraceInfo::from_fbs(info.as_ref()),
+                },
+                _ => panic!("Wrong message from worker: {data:?}"),
             },
         }
     }
@@ -528,6 +551,7 @@ pub(super) trait TransportImpl: TransportGeneric {
         &self,
         producer_options: ProducerOptions,
         transport_type: TransportType,
+        enable_bwe: bool,
     ) -> Result<Producer, ProduceError> {
         if let Some(id) = &producer_options.id {
             if self.router().has_producer(id) {
@@ -552,6 +576,12 @@ pub(super) trait TransportImpl: TransportGeneric {
             rtp_parameters
                 .encodings
                 .push(RtpEncodingParameters::default());
+        }
+
+        // A transport that doesn't run bandwidth estimation must not negotiate it, so whatever was
+        // given for it is dropped rather than honoured.
+        if !enable_bwe {
+            ortc::disable_bwe_in_rtp_parameters(&mut rtp_parameters);
         }
 
         // Don't do this in PipeTransports since there we must keep CNAME value in each Producer.
@@ -636,6 +666,7 @@ pub(super) trait TransportImpl: TransportGeneric {
         consumer_options: ConsumerOptions,
         transport_type: TransportType,
         rtx: bool,
+        enable_bwe: bool,
     ) -> Result<Consumer, ConsumeError> {
         let ConsumerOptions {
             producer_id,
@@ -668,6 +699,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                 &rtp_capabilities,
                 pipe,
                 enable_rtx,
+                enable_bwe,
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 

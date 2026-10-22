@@ -58,9 +58,9 @@ namespace RTC
 			temporalLayer =
 			  std::min(static_cast<size_t>(temporalLayer), this->spatialLayerCounters[0].size() - 1);
 
-			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
+			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
-			counter.Update(packet);
+			temporalLayerCounter.Update(packet);
 		}
 
 		int64_t RtpStreamRecv::TransmissionCounter::GetBitrate(int64_t nowMs)
@@ -80,7 +80,7 @@ namespace RTC
 			return rate;
 		}
 
-		int64_t RtpStreamRecv::TransmissionCounter::GetBitrate(
+		int64_t RtpStreamRecv::TransmissionCounter::GetCumulativeBitrate(
 		  int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 		{
 			MS_TRACE();
@@ -90,32 +90,25 @@ namespace RTC
 			  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
 
 			// Return 0 if specified layers are not being received.
-			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
-
-			if (counter.GetBitrate(nowMs).value_or(0) <= 0)
+			if (GetTemporalLayerBitrate(nowMs, spatialLayer, temporalLayer) <= 0)
 			{
 				return 0;
 			}
 
 			int64_t rate{ 0 };
 
-			// Iterate all temporal layers of spatial layers previous to the given one.
-			for (uint8_t sIdx{ 0 }; sIdx < spatialLayer; ++sIdx)
+			// Iterate the given spatial layer and all the ones below it, in all of them
+			// up to the given temporal layer. A temporal layer above the given one is
+			// left out of the lower spatial layers too, since all the frames of a
+			// picture share its temporal layer and hence are dropped together.
+			for (uint8_t sIdx{ 0 }; sIdx <= spatialLayer; ++sIdx)
 			{
-				for (size_t tIdx{ 0 }; tIdx < this->spatialLayerCounters[sIdx].size(); ++tIdx)
+				for (uint8_t tIdx{ 0 }; tIdx <= temporalLayer; ++tIdx)
 				{
 					auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
 					rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
 				}
-			}
-
-			// Add the given spatial layer with up to the given temporal layer.
-			for (uint8_t tIdx{ 0 }; tIdx <= temporalLayer; ++tIdx)
-			{
-				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
-
-				rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
 			}
 
 			return rate;
@@ -139,7 +132,7 @@ namespace RTC
 			return rate;
 		}
 
-		int64_t RtpStreamRecv::TransmissionCounter::GetLayerBitrate(
+		int64_t RtpStreamRecv::TransmissionCounter::GetCumulativeTemporalLayerBitrate(
 		  int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 		{
 			MS_TRACE();
@@ -148,9 +141,30 @@ namespace RTC
 			MS_ASSERT(
 			  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
 
-			auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
+			int64_t rate{ 0 };
 
-			return counter.GetBitrate(nowMs).value_or(0);
+			for (uint8_t tIdx{ 0 }; tIdx <= temporalLayer; ++tIdx)
+			{
+				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
+
+				rate += temporalLayerCounter.GetBitrate(nowMs).value_or(0);
+			}
+
+			return rate;
+		}
+
+		int64_t RtpStreamRecv::TransmissionCounter::GetTemporalLayerBitrate(
+		  int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
+		{
+			MS_TRACE();
+
+			MS_ASSERT(spatialLayer < this->spatialLayerCounters.size(), "spatialLayer too high");
+			MS_ASSERT(
+			  temporalLayer < this->spatialLayerCounters[spatialLayer].size(), "temporalLayer too high");
+
+			auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][temporalLayer];
+
+			return temporalLayerCounter.GetBitrate(nowMs).value_or(0);
 		}
 
 		uint64_t RtpStreamRecv::TransmissionCounter::GetPacketCount() const
@@ -269,9 +283,15 @@ namespace RTC
 					{
 						const auto layer = std::to_string(sIdx) + "." + std::to_string(tIdx);
 
+						// In K-SVC a spatial layer is decoded on its own, so what running
+						// at these layers costs is that layer alone up to this temporal
+						// one. Everywhere else the layers below go along with it.
+						const int64_t bitrate = IsKSvc() ? GetCumulativeTemporalLayerBitrate(nowMs, sIdx, tIdx)
+						                                 : GetCumulativeBitrate(nowMs, sIdx, tIdx);
+
 						bitrateByLayer.emplace_back(
 						  FBS::RtpStream::CreateBitrateByLayerDirect(
-						    builder, layer.c_str(), static_cast<uint64_t>(GetBitrate(nowMs, sIdx, tIdx))));
+						    builder, layer.c_str(), static_cast<uint64_t>(bitrate)));
 					}
 				}
 			}
