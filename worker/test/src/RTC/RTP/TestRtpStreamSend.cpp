@@ -84,14 +84,14 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			// NOTE: Here we must replicate the behaviour of Consumer::sendRtpPacket()
 			// in which, if the packet has been stored, we hand a cloned packet (cloned
 			// just once and shared by all streams) over to the stream.
-			if (result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+			if (result.retransmissionBufferItem)
 			{
 				if (!sharedPacket)
 				{
 					sharedPacket = RTC::RTP::ClonePacket(packet);
 				}
 
-				stream->StoreSharedPacket(packet->GetSequenceNumber(), sharedPacket);
+				result.retransmissionBufferItem->sharedPacket = sharedPacket;
 			}
 		}
 	};
@@ -968,11 +968,12 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// 00000001 (S0_T1) active decode target bitmas.
 		const auto result = stream1->ReceivePacket(packet3.get());
 
-		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+		REQUIRE(result.accepted);
+		REQUIRE(result.retransmissionBufferItem);
 
 		const RTC::RTP::SharedPacket sharedPacket = RTC::RTP::ClonePacket(packet3.get());
 
-		stream1->StoreSharedPacket(packet3->GetSequenceNumber(), sharedPacket);
+		result.retransmissionBufferItem->sharedPacket = sharedPacket;
 
 		// Process the third packet with context2 and verify current spatial layers.
 		forwarded = packet3->ProcessPayload(std::addressof(context2), marker);
@@ -985,9 +986,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// Whenever packet3 is Nacked on stream2, it must always be set a
 		// 00000011 (S0_T1) active decode target bitmas.
-		if (stream2->ReceivePacket(packet3.get()) == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		const auto result2 = stream2->ReceivePacket(packet3.get());
+
+		if (result2.retransmissionBufferItem)
 		{
-			stream2->StoreSharedPacket(packet3->GetSequenceNumber(), sharedPacket);
+			result2.retransmissionBufferItem->sharedPacket = sharedPacket;
 		}
 
 		// Create a NACK item that requests the third packet.
@@ -1712,11 +1715,13 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		auto result = stream->ReceivePacket(packet.get());
 
-		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+		REQUIRE(result.accepted);
+		REQUIRE(result.retransmissionBufferItem);
 
 		result = stream->ReceivePacket(packet.get());
 
-		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED);
+		REQUIRE(!result.accepted);
+		REQUIRE(!result.retransmissionBufferItem);
 	}
 
 	SECTION("packets are not discarded a seq cycle after the timestamp goes back")
@@ -1747,7 +1752,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			const auto result = stream->ReceivePacket(packet.get());
 
-			REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+			REQUIRE(result.accepted);
+			REQUIRE(result.retransmissionBufferItem);
 		}
 
 		// The timestamp goes back much further than MaxRetransmissionDelayForVideoMs
@@ -1768,7 +1774,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		const auto result = stream->ReceivePacket(packet.get());
 
-		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+		REQUIRE(result.accepted);
+		REQUIRE(result.retransmissionBufferItem);
 	}
 
 	SECTION("Sender Report RTP timestamp is based on the capture instant when known")

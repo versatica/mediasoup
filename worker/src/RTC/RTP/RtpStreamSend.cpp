@@ -109,12 +109,12 @@ namespace RTC
 			// Call the parent method.
 			if (!RtpStream::ReceiveStreamPacket(packet))
 			{
-				return ReceivePacketResult::DISCARDED;
+				return { .accepted = false };
 			}
 
 			UpdateUnsentSeqNumbers(packet->GetSequenceNumber());
 
-			bool stored{ false };
+			RTP::RetransmissionBuffer::Item* retransmissionBufferItem{ nullptr };
 
 			// If NACK is enabled, store the packet into the buffer.
 			if (this->retransmissionBuffer)
@@ -131,26 +131,17 @@ namespace RTC
 					  packet->GetSsrc(),
 					  packet->GetSequenceNumber());
 
-					return ReceivePacketResult::DISCARDED;
+					return { .accepted = false };
 				}
 
-				stored = this->retransmissionBuffer->Insert(packet, this->shared->GetTimeMs());
+				retransmissionBufferItem =
+				  this->retransmissionBuffer->Insert(packet, this->shared->GetTimeMs());
 			}
 
 			// Increase transmission counter.
 			this->transmissionCounter.Update(packet);
 
-			return stored ? ReceivePacketResult::ACCEPTED_AND_STORED
-			              : ReceivePacketResult::ACCEPTED_AND_NOT_STORED;
-		}
-
-		void RtpStreamSend::StoreSharedPacket(uint16_t seq, const RTP::SharedPacket& sharedPacket)
-		{
-			MS_TRACE();
-
-			MS_ASSERT(this->retransmissionBuffer, "no retransmission buffer");
-
-			this->retransmissionBuffer->StorePacket(seq, sharedPacket);
+			return { .accepted = true, .retransmissionBufferItem = retransmissionBufferItem };
 		}
 
 		void RtpStreamSend::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)

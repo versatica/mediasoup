@@ -1377,7 +1377,7 @@ namespace RTC
 
 		const auto result = rtpStream->ReceivePacket(packet);
 
-		if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
+		if (result.accepted)
 		{
 			if (rtpSeqManager->GetMaxOutput() == packet->GetSequenceNumber())
 			{
@@ -1425,17 +1425,19 @@ namespace RTC
 		// that the clone holds the original packet and not the one rewritten for
 		// this Consumer (the stream reapplies its own values and payload encoding on
 		// every retransmission).
-		if (result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		if (result.retransmissionBufferItem)
 		{
 			if (!sharedPacket)
 			{
 				sharedPacket = RTC::RTP::ClonePacket(packet);
 			}
 
-			// NOTE: We must give `seq` (the sequence number this stream stored the
-			// packet with) and not the packet sequence number, already restored to
-			// its original value above.
-			rtpStream->StoreSharedPacket(seq, sharedPacket);
+			MS_ASSERT(
+			  !result.retransmissionBufferItem->sharedPacket,
+			  "retransmission buffer item already holds a packet [seq:%" PRIu16 "]",
+			  result.retransmissionBufferItem->sequenceNumber);
+
+			result.retransmissionBufferItem->sharedPacket = sharedPacket;
 		}
 
 		// If sent packet was the first packet of a key frame, let's send buffered
@@ -1445,7 +1447,7 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the
 			// key frame was sent.
-			if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
+			if (result.accepted)
 			{
 				for (auto& kv : *targetLayerRetransmissionBuffer)
 				{

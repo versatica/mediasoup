@@ -42,9 +42,11 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 			packet->SetSequenceNumber(seq);
 			packet->SetTimestamp(timestamp);
 
-			if (RTC::RTP::RetransmissionBuffer::Insert(packet.get(), nowMs))
+			auto* item = RTC::RTP::RetransmissionBuffer::Insert(packet.get(), nowMs);
+
+			if (item)
 			{
-				RTC::RTP::RetransmissionBuffer::StorePacket(seq, RTC::RTP::ClonePacket(packet.get()));
+				item->sharedPacket = RTC::RTP::ClonePacket(packet.get());
 			}
 		}
 

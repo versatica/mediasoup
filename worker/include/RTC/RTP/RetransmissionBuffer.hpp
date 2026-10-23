@@ -22,6 +22,10 @@ namespace RTC
 			{
 				/**
 				 * Original packet.
+				 *
+				 * @remarks
+				 * - Insert() leaves it empty and returns the item so that the caller
+				 *   fills it once the packet has been restored to its original state.
 				 */
 				RTP::SharedPacket sharedPacket{ nullptr };
 				/**
@@ -67,8 +71,18 @@ namespace RTC
 
 			void Dump(int indentation = 0) const;
 			Item* Get(uint16_t seq) const;
-			bool Insert(RTP::Packet* packet, int64_t nowMs);
-			void StorePacket(uint16_t seq, const RTP::SharedPacket& sharedPacket) const;
+			/**
+			 * Insert the given packet into the buffer.
+			 *
+			 * @returns The inserted item, whose `sharedPacket` is still empty, or
+			 *   nullptr if the packet was not inserted.
+			 *
+			 * @remarks
+			 * - The returned item is owned by the buffer and is only valid until the
+			 *   next call that may evict items (Insert(), Clear() or the buffer
+			 *   destruction), so the caller must fill it right away.
+			 */
+			Item* Insert(RTP::Packet* packet, int64_t nowMs);
 			void Clear();
 			/**
 			 * Whether the given stored item was stored longer than the maximum
