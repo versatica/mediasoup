@@ -97,7 +97,9 @@ This information is ignored (and not even implemented in any RTP/WebRTC endpoint
 
 ### Transport-wide Congestion Control (TCC)
 
-Planned for v3.
+This information is locally consumed by the bandwidth estimation that computes how much mediasoup may send to the remote endpoint.
+
+Also it is locally generated for the RTP streams that mediasoup receives, so that the remote sender can estimate how much it may send to mediasoup.
 
 ## PS Feedback
 

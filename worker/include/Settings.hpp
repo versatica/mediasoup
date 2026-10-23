@@ -38,16 +38,17 @@ public:
 		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
-#ifndef MS_USE_BUILTIN_BWE
-		std::string libwebrtcFieldTrials{ "WebRTC-Bwe-AlrLimitedBackoff/Enabled/" };
-#endif
 	};
 
 public:
 	static void SetConfiguration(int argc, char* argv[]);
+
 	static void SetLogLevel(std::string& level);
+
 	static void SetLogTags(const std::vector<std::string>& tags);
+
 	static void PrintConfiguration();
+
 	static void HandleRequest(Channel::ChannelRequest* request);
 
 private:

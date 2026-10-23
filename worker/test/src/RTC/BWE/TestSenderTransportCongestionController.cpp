@@ -43,10 +43,15 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		void OnSenderTransportCongestionControllerSendRtpProbePacket(
 		  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
 		  RTC::RTP::Packet* packet,
-		  int64_t sequenceNumber) override
+		  std::optional<int64_t> sequenceNumber) override
 		{
+			REQUIRE(sequenceNumber.has_value());
+
+			// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+			const int64_t sequenceNumberValue = sequenceNumber.value();
+
 			this->sentLengths.push_back(packet->GetLength());
-			this->sentSequenceNumbers.push_back(sequenceNumber);
+			this->sentSequenceNumbers.push_back(sequenceNumberValue);
 
 			// What goes on the wire has to be what we were handed, since that is what
 			// the remote endpoint will report back about.
@@ -55,7 +60,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 
 			this->sentWithExtensions.push_back(
 			  packet->ReadTransportWideCc01(wideSeqNumber) && packet->ReadAbsSendTime(absSendTime) &&
-			  wideSeqNumber == static_cast<uint16_t>(sequenceNumber));
+			  wideSeqNumber == static_cast<uint16_t>(sequenceNumberValue));
 		}
 
 	public:
@@ -79,6 +84,10 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 	  std::addressof(listener),
 	  std::addressof(shared),
 	  { .startBitrate = StartBitrate, .minBitrate = MinBitrate, .maxBitrate = MaxBitrate });
+
+	// Every scenario below is written for a peer that negotiated transport-cc,
+	// which is what makes its packets worth taking note of.
+	senderTransportCongestionController.SetTransportCcFeedbackSupported(true);
 
 	// Builds a packet carrying both extensions with no value in either, which is
 	// what the sending side hands over.
@@ -228,6 +237,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 		  std::addressof(burstShared),
 		  { .startBitrate = StartBitrate, .minBitrate = MinBitrate, .maxBitrate = MaxBitrate });
 
+		burstController.SetTransportCcFeedbackSupported(true);
 		burstController.SetPacketOverhead(packetOverhead);
 
 		if (desiredBitrate != 0)

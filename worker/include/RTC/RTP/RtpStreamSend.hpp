@@ -72,9 +72,11 @@ namespace RTC
 			struct Loss
 			{
 				/**
-				 * Packets lost. It may be negative, since a hole that a previous report
-				 * already counted and that a late packet has filled in since gives back
-				 * what that report was charged for.
+				 * Packets lost, held at zero and at the packets expected. A hole that a
+				 * previous report already counted and that a late packet has filled in
+				 * since may well be one the uplink of the sender lost and that was never
+				 * charged to this link, so giving it back would tell about a path other
+				 * than this one.
 				 */
 				int64_t lostPackets;
 				/**
@@ -209,10 +211,9 @@ namespace RTC
 			 *   interval at all.
 			 *
 			 * @remarks
-			 * - What it takes note of in `fractionLost` and `packetsLost` is held at
-			 *   zero and at the packets expected, since neither may go backwards. What
-			 *   it returns is not, so that whoever adds up several of them gets the
-			 *   negative ones back.
+			 * - What it returns, and what it takes note of in `fractionLost` and
+			 *   `packetsLost`, is held at zero and at the packets expected, since none
+			 *   of them may go backwards.
 			 */
 			std::optional<Loss> UpdateSendLoss(RTC::RTCP::ReceiverReport* report);
 

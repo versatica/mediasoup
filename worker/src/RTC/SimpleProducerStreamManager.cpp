@@ -104,7 +104,6 @@ namespace RTC
 		// Do nothing.
 	}
 
-#ifdef MS_USE_BUILTIN_BWE
 	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions SimpleProducerStreamManager::GetBitrateOptions(
 	  int64_t nowMs) const
 	{
@@ -125,63 +124,7 @@ namespace RTC
 
 		MS_ABORT("a single point to run at, so it is never given any");
 	}
-#else
-	int64_t SimpleProducerStreamManager::IncreaseLayer(
-	  int64_t bitrate, bool /*considerLoss*/, float /*lossPercentage*/, int64_t nowMs)
-	{
-		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-		MS_ASSERT(this->kind == RTC::Media::Kind::VIDEO, "should be video");
-
-		// If this is not the first time this method is called within the same
-		// iteration, return 0 since a video Simple consumer does not keep state
-		// about this.
-		if (this->managingBitrate)
-		{
-			return 0;
-		}
-
-		this->managingBitrate = true;
-
-		// Do nothing if the producer stream is not active. NOTE: This may happen
-		// because Consumer::GetBitratePriority() does not account for the producer
-		// stream presence/score, so the Transport may still ask us to increase.
-		if (
-		  !this->producerRtpStream || (this->producerRtpStream->GetScore() == 0 &&
-			                             this->producerRtpStream->HasRtpInactivityCheckEnabled()))
-		{
-			return 0;
-		}
-
-		// Video Simple consumer does not really play the BWE game. However, let's
-		// be honest and try to be nice.
-		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
-
-		if (desiredBitrate < bitrate)
-		{
-			return desiredBitrate;
-		}
-		else
-		{
-			return bitrate;
-		}
-	}
-
-	void SimpleProducerStreamManager::ApplyLayers()
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-		MS_ASSERT(this->kind == RTC::Media::Kind::VIDEO, "should be video");
-
-		this->managingBitrate = false;
-
-		// Simple does not play the BWE game (even if video kind).
-	}
-#endif
-
-#ifdef MS_USE_BUILTIN_BWE
 	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
@@ -197,27 +140,6 @@ namespace RTC
 
 		return this->producerRtpStream->GetBitrate(nowMs);
 	}
-#else
-	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-
-		// Audio does not play the BWE game.
-		if (this->kind != RTC::Media::Kind::VIDEO)
-		{
-			return 0;
-		}
-
-		if (!IsActive())
-		{
-			return 0;
-		}
-
-		return this->producerRtpStream->GetBitrate(nowMs);
-	}
-#endif
 
 	ProducerStreamManager::RtpPacketProcessResult SimpleProducerStreamManager::ProcessRtpPacket(
 	  RTC::RTP::Packet* packet,
@@ -383,14 +305,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-#ifdef MS_USE_BUILTIN_BWE
 		// There are no layers to drop here, but what this one was putting in the link
 		// it is not putting any more, and that goes to whoever can use it.
 		if (this->bweManaged)
 		{
 			this->listener->OnProducerStreamManagerNeedBitrateChange();
 		}
-#endif
 	}
 
 	void SimpleProducerStreamManager::OnResumed()
@@ -403,14 +323,12 @@ namespace RTC
 		{
 			RequestKeyFrame();
 
-#ifdef MS_USE_BUILTIN_BWE
 			// It is putting something in the link again, so what the others were given
 			// while it was quiet has to be worked out afresh.
 			if (this->bweManaged)
 			{
 				this->listener->OnProducerStreamManagerNeedBitrateChange();
 			}
-#endif
 		}
 	}
 

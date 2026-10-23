@@ -180,13 +180,6 @@ pub struct WorkerSettings {
     ///
     /// If `None`, a certificate is dynamically created.
     pub dtls_files: Option<WorkerDtlsFiles>,
-    /// Field trials for libwebrtc.
-    ///
-    /// NOTE: For advanced users only. An invalid value will make the worker crash.
-    /// Default value is
-    /// "WebRTC-Bwe-AlrLimitedBackoff/Enabled/".
-    #[doc(hidden)]
-    pub libwebrtc_field_trials: Option<String>,
     /// Function that will be called under worker thread before worker starts, can be used for
     /// pinning worker threads to CPU cores.
     pub thread_initializer: Option<Arc<dyn Fn() + Send + Sync>>,
@@ -215,7 +208,6 @@ impl Default for WorkerSettings {
             ],
             rtc_port_range: 10000..=59999,
             dtls_files: None,
-            libwebrtc_field_trials: None,
             thread_initializer: None,
             app_data: AppData::default(),
         }
@@ -229,7 +221,6 @@ impl fmt::Debug for WorkerSettings {
             log_tags,
             rtc_port_range,
             dtls_files,
-            libwebrtc_field_trials,
             thread_initializer,
             app_data,
         } = self;
@@ -239,7 +230,6 @@ impl fmt::Debug for WorkerSettings {
             .field("log_tags", &log_tags)
             .field("rtc_port_range", &rtc_port_range)
             .field("dtls_files", &dtls_files)
-            .field("libwebrtc_field_trials", &libwebrtc_field_trials)
             .field(
                 "thread_initializer",
                 &thread_initializer.as_ref().map(|_| "ThreadInitializer"),
@@ -341,7 +331,6 @@ impl Inner {
             log_tags,
             rtc_port_range,
             dtls_files,
-            libwebrtc_field_trials,
             thread_initializer,
             app_data,
         }: WorkerSettings,
@@ -380,13 +369,6 @@ impl Inner {
                     .private_key
                     .to_str()
                     .expect("Paths are only expected to be utf8")
-            ));
-        }
-
-        if let Some(libwebrtc_field_trials) = libwebrtc_field_trials {
-            spawn_args.push(format!(
-                "--libwebrtcFieldTrials={}",
-                libwebrtc_field_trials.as_str()
             ));
         }
 

@@ -81,12 +81,6 @@ if get_option('ms_build_fuzzer')
   ]
 endif
 
-if get_option('ms_use_builtin_bwe')
-  cpp_args += [
-    '-DMS_USE_BUILTIN_BWE',
-  ]
-endif
-
 cpp = meson.get_compiler('cpp')
 
 # This is a workaround to define FLATBUFFERS_LOCALE_INDEPENDENT=0 outside
@@ -162,7 +156,6 @@ common_sources = [
   'src/RTC/TcpServer.cpp',
   'src/RTC/Transport.cpp',
   'src/RTC/TransportTuple.cpp',
-  'src/RTC/TrendCalculator.cpp',
   'src/RTC/UdpSocket.cpp',
   'src/RTC/WebRtcServer.cpp',
   'src/RTC/WebRtcTransport.cpp',
@@ -209,7 +202,6 @@ common_sources = [
   'src/RTC/ICE/IceServer.cpp',
   'src/RTC/ICE/StunPacket.cpp',
   'src/RTC/RTP/Packet.cpp',
-  'src/RTC/RTP/ProbationGenerator.cpp',
   'src/RTC/RTP/RetransmissionBuffer.cpp',
   'src/RTC/RTP/RtpStream.cpp',
   'src/RTC/RTP/RtpStreamRecv.cpp',
@@ -331,16 +323,6 @@ common_sources = [
   'src/RTC/SCTP/public/Message.cpp',
 ]
 
-# The deps/libwebrtc bandwidth estimation is only built when the built-in one is
-# not used.
-if not get_option('ms_use_builtin_bwe')
-  common_sources += [
-    'src/DepLibWebRTC.cpp',
-    'src/RTC/TransportCongestionControlClient.cpp',
-    'src/RTC/TransportCongestionControlServer.cpp',
-  ]
-endif
-
 libuv_proj = subproject(
   'libuv',
   default_options: [
@@ -395,31 +377,6 @@ link_whole = [
   libsrtp3_proj.get_variable('libsrtp3'),
   flatbuffers_proj.get_variable('flatbuffers_lib'),
 ]
-
-if not get_option('ms_use_builtin_bwe')
-  # NOTE: abseil-cpp is in the tree only because deps/libwebrtc needs it.
-  abseil_cpp_proj = subproject(
-    'abseil-cpp',
-    default_options: [
-      'warning_level=0',
-      'cpp_std=c++17',
-    ],
-  )
-
-  # Add current build directory so libwebrtc has access to FBS folder.
-  libwebrtc_include_directories = include_directories('include', 'fbs')
-
-  subdir('deps/libwebrtc')
-
-  dependencies += [
-    abseil_cpp_proj.get_variable('absl_container_dep'),
-    libwebrtc_dep,
-  ]
-  link_whole += [
-    abseil_cpp_proj.get_variable('absl_container_lib'),
-    libwebrtc,
-  ]
-endif
 
 if host_machine.system() == 'windows'
   wingetopt_proj = subproject(
@@ -502,7 +459,6 @@ test_sources = [
   'test/src/RTC/TestSeqManager.cpp',
   'test/src/RTC/TestSubchannelsCodec.cpp',
   'test/src/RTC/TestTransportTuple.cpp',
-  'test/src/RTC/TestTrendCalculator.cpp',
   'test/src/RTC/BWE/helpers/LinkSimulator.cpp',
   'test/src/RTC/BWE/helpers/RemoteBitrateEstimatorAbsSendTimeTestHelper.cpp',
   'test/src/RTC/BWE/TestAimdRateControl.cpp',
@@ -535,7 +491,6 @@ test_sources = [
   'test/src/RTC/ICE/TestStunPacket.cpp',
   'test/src/RTC/RTP/rtpCommon.cpp',
   'test/src/RTC/RTP/TestPacket.cpp',
-  'test/src/RTC/RTP/TestProbationGenerator.cpp',
   'test/src/RTC/RTP/TestRetransmissionBuffer.cpp',
   'test/src/RTC/RTP/TestRtpStreamSend.cpp',
   'test/src/RTC/RTP/TestRtpStreamRecv.cpp',
@@ -650,12 +605,6 @@ test_sources = [
   'test/src/Utils/TestUnwrappedSequenceNumber.cpp',
 ]
 
-if not get_option('ms_use_builtin_bwe')
-  test_sources += [
-    'test/src/RTC/TestTransportCongestionControlServer.cpp',
-  ]
-endif
-
 mediasoup_worker_test = executable(
   'mediasoup-worker-test',
   build_by_default: false,
@@ -735,10 +684,8 @@ fuzzer_sources = [
   'fuzzer/src/RTC/FuzzerDtlsTransport.cpp',
   'fuzzer/src/RTC/FuzzerRateCalculator.cpp',
   'fuzzer/src/RTC/FuzzerSeqManager.cpp',
-  'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
   'fuzzer/src/RTC/ICE/FuzzerStunPacket.cpp',
   'fuzzer/src/RTC/RTP/FuzzerPacket.cpp',
-  'fuzzer/src/RTC/RTP/FuzzerProbationGenerator.cpp',
   'fuzzer/src/RTC/RTP/FuzzerRetransmissionBuffer.cpp',
   'fuzzer/src/RTC/RTP/FuzzerRtpStreamSend.cpp',
   'fuzzer/src/RTC/RTP/Codecs/FuzzerOpus.cpp',

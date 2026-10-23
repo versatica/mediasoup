@@ -83,7 +83,6 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
 		workerBin,
-		libwebrtcFieldTrials,
 		appData,
 	}: WorkerSettings<WorkerAppData>) {
 		super();
@@ -131,10 +130,6 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 
 		if (typeof dtlsPrivateKeyFile === 'string' && dtlsPrivateKeyFile) {
 			spawnArgs.push(`--dtlsPrivateKeyFile=${dtlsPrivateKeyFile}`);
-		}
-
-		if (typeof libwebrtcFieldTrials === 'string' && libwebrtcFieldTrials) {
-			spawnArgs.push(`--libwebrtcFieldTrials=${libwebrtcFieldTrials}`);
 		}
 
 		logger.debug(`spawning worker process: ${spawnBin} ${spawnArgs.join(' ')}`);

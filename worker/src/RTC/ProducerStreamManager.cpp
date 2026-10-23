@@ -41,7 +41,6 @@ namespace RTC
 
 		if (RecalculateTargetLayers(newTargetLayers))
 		{
-#ifdef MS_USE_BUILTIN_BWE
 			// With an allocation running, which layers are actually run at is its
 			// decision, so all this asks for is a round. Without one there is nobody to
 			// ask, so what was worked out is applied here.
@@ -53,28 +52,9 @@ namespace RTC
 			{
 				UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
 			}
-#else
-			// If bitrate externally managed, don't bother the transport unless
-			// the newTargetSpatialLayer has changed.
-			// This is because, if bitrate is externally managed, the target temporal
-			// layer is managed by the available given bitrate so the transport
-			// will let us change it when it considers.
-			if (this->externallyManagedBitrate)
-			{
-				if (newTargetLayers.spatial != GetTargetLayers().spatial)
-				{
-					this->listener->OnProducerStreamManagerNeedBitrateChange();
-				}
-			}
-			else
-			{
-				UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
-			}
-#endif
 		}
 	}
 
-#ifdef MS_USE_BUILTIN_BWE
 	std::optional<size_t> ProducerStreamManager::GetCurrentBitrateOption(
 	  const std::vector<RTC::BWE::BitrateAllocator::Candidate::BitrateOption>& options) const
 	{
@@ -97,5 +77,4 @@ namespace RTC
 
 		return std::nullopt;
 	}
-#endif
 } // namespace RTC

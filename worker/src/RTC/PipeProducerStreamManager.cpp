@@ -72,7 +72,6 @@ namespace RTC
 		// Do nothing.
 	}
 
-#ifdef MS_USE_BUILTIN_BWE
 	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions PipeProducerStreamManager::GetBitrateOptions(
 	  int64_t nowMs) const
 	{
@@ -99,25 +98,7 @@ namespace RTC
 
 		MS_ABORT("a single point to run at, so it is never given any");
 	}
-#else
-	int64_t PipeProducerStreamManager::IncreaseLayer(
-	  int64_t /*bitrate*/, bool /*considerLoss*/, float /*lossPercentage*/, int64_t /*nowMs*/)
-	{
-		MS_TRACE();
 
-		// Pipe does not play the BWE game.
-		return 0;
-	}
-
-	void PipeProducerStreamManager::ApplyLayers()
-	{
-		MS_TRACE();
-
-		// Pipe does not play the BWE game.
-	}
-#endif
-
-#ifdef MS_USE_BUILTIN_BWE
 	int64_t PipeProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
@@ -137,15 +118,6 @@ namespace RTC
 
 		return desiredBitrate;
 	}
-#else
-	int64_t PipeProducerStreamManager::GetDesiredBitrate(int64_t /*nowMs*/) const
-	{
-		MS_TRACE();
-
-		// Pipe does not play the BWE game.
-		return 0;
-	}
-#endif
 
 	ProducerStreamManager::RtpPacketProcessResult PipeProducerStreamManager::ProcessRtpPacket(
 	  RTC::RTP::Packet* packet,
@@ -297,7 +269,6 @@ namespace RTC
 			kv.second = false;
 		}
 
-#ifdef MS_USE_BUILTIN_BWE
 		// This one never adapts, so the bitrate allocation takes what it puts out off
 		// the top instead of bidding for it. Now that it puts out nothing, that whole
 		// amount is there for the others.
@@ -305,7 +276,6 @@ namespace RTC
 		{
 			this->listener->OnProducerStreamManagerNeedBitrateChange();
 		}
-#endif
 	}
 
 	void PipeProducerStreamManager::OnResumed()
@@ -321,14 +291,12 @@ namespace RTC
 		{
 			RequestKeyFrame();
 
-#ifdef MS_USE_BUILTIN_BWE
 			// It is taking that amount off the top again, so what the others were given
 			// while it was quiet no longer fits.
 			if (this->bweManaged)
 			{
 				this->listener->OnProducerStreamManagerNeedBitrateChange();
 			}
-#endif
 		}
 	}
 

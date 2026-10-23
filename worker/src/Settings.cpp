@@ -58,10 +58,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ .name="rtcMaxPort",           .has_arg=optional_argument, .flag=nullptr, .val='M' },
 		{ .name="dtlsCertificateFile",  .has_arg=optional_argument, .flag=nullptr, .val='c' },
 		{ .name="dtlsPrivateKeyFile",   .has_arg=optional_argument, .flag=nullptr, .val='p' },
-		// NOTE: The libwebrtcFieldTrials option is still allowed until we only
-		// support the built-in BWE.
-		// TODO: Remove when we only support the built-in BWE.
-		{ .name="libwebrtcFieldTrials", .has_arg=optional_argument, .flag=nullptr, .val='W' },
 		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  },
 	};
 	// clang-format on
@@ -141,27 +137,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 			{
 				stringValue                                = std::string(optarg);
 				Settings::configuration.dtlsPrivateKeyFile = stringValue;
-
-				break;
-			}
-
-			case 'W':
-			{
-#ifdef MS_USE_BUILTIN_BWE
-				// TODO: Remove when we only support the built-in BWE.
-				MS_WARN_TAG(info, "ignoring libwebrtcFieldTrials since this worker uses the built-in BWE");
-#else
-				stringValue = std::string(optarg);
-
-				if (stringValue != Settings::configuration.libwebrtcFieldTrials)
-				{
-					MS_WARN_TAG(
-					  info,
-					  "overriding default value of libwebrtcFieldTrials may generate crashes in mediasoup-worker");
-
-					Settings::configuration.libwebrtcFieldTrials = stringValue;
-				}
-#endif
 
 				break;
 			}
@@ -372,13 +347,6 @@ void Settings::PrintConfiguration()
 		  info, "  dtlsCertificateFile: %s", Settings::configuration.dtlsCertificateFile.c_str());
 		MS_DEBUG_TAG(info, "  dtlsPrivateKeyFile: %s", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
-#ifndef MS_USE_BUILTIN_BWE
-	if (!Settings::configuration.libwebrtcFieldTrials.empty())
-	{
-		MS_DEBUG_TAG(
-		  info, "  libwebrtcFieldTrials: %s", Settings::configuration.libwebrtcFieldTrials.c_str());
-	}
-#endif
 
 	MS_DEBUG_TAG(info, "</configuration>");
 }

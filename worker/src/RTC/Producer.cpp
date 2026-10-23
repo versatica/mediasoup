@@ -1257,6 +1257,27 @@ namespace RTC
 				bufferPtr += extenLen;
 			}
 
+			// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
+			//
+			// NOTE: Audio carries it too, since the BWE measures the downlink with
+			// everything it sends.
+			{
+				extenLen = 2;
+
+				// NOTE: Add value 0. The sending Transport will update it.
+				const uint16_t wideSeqNumber{ 0 };
+
+				Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
+
+				extensions.emplace_back(
+				  /*type*/ RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
+				  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
+				  /*len*/ extenLen,
+				  /*value*/ bufferPtr);
+
+				bufferPtr += extenLen;
+			}
+
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time.
 			//
 			// The capture timestamp is left untouched since it belongs to the clock of the
@@ -1267,184 +1288,70 @@ namespace RTC
 			//   capture NTP clock = sender NTP clock + capture clock offset
 			//
 			// @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
-			extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
-
-			// NOTE: The extension value is 8 or 16 bytes long depending on whether it holds
-			// the capture clock offset or not.
-			if (extenValue && (extenLen == 8 || extenLen == 16))
 			{
-				// Offset between our own clock and the clock of the sender of this stream, in
-				// the format the extension uses.
-				//
-				// NOTE: While it cannot be told yet, and it never can if the sender sends no
-				// RTCP at all, both clocks are taken to be the same. Our own clock is real NTP
-				// and so is the one of any sender that fills this extension, so no offset is
-				// the most likely case rather than a wild guess.
-				const auto remoteClockOffsetUs = this->listener->OnProducerNeedRemoteClockOffsetUs(this);
-				const auto remoteClockOffsetQ32x32 =
-				  Utils::Time::TimeUsToQ32x32(remoteClockOffsetUs.value_or(0));
+				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
 
-				// NOTE: An offset that does not fit in the extension means a sender whose clock
-				// is decades away from ours, and there is no value to write that would not be a
-				// lie, so the extension is not forwarded.
-				if (remoteClockOffsetQ32x32.has_value())
+				// NOTE: The extension value is 8 or 16 bytes long depending on whether it holds
+				// the capture clock offset or not.
+				if (extenValue && (extenLen == 8 || extenLen == 16))
 				{
-					const auto absCaptureTimestamp = Utils::Byte::Get8Bytes(extenValue, 0);
-					// Offset between the clock of the capture system and the clock of the sender
-					// of this stream, as told by that sender. There is none when the extension
-					// comes in its shortened form, which is what a sender that captures its own
-					// media sends.
-					const int64_t incomingCaptureClockOffset =
-					  extenLen == 16 ? static_cast<int64_t>(Utils::Byte::Get8Bytes(extenValue, 8)) : 0;
-					// NOTE: The estimator gives our own clock minus the one of the sender, so
-					// subtracting it adds the offset of the sender against ours.
-					const int64_t captureClockOffset =
-					  incomingCaptureClockOffset - remoteClockOffsetQ32x32.value();
+					// Offset between our own clock and the clock of the sender of this stream, in
+					// the format the extension uses.
+					//
+					// NOTE: While it cannot be told yet, and it never can if the sender sends no
+					// RTCP at all, both clocks are taken to be the same. Our own clock is real NTP
+					// and so is the one of any sender that fills this extension, so no offset is
+					// the most likely case rather than a wild guess.
+					const auto remoteClockOffsetUs = this->listener->OnProducerNeedRemoteClockOffsetUs(this);
+					const auto remoteClockOffsetQ32x32 =
+					  Utils::Time::TimeUsToQ32x32(remoteClockOffsetUs.value_or(0));
 
-					// The extension is always forwarded in its extended form, since the capture
-					// clock offset is always written.
-					extenLen = 16;
+					// NOTE: An offset that does not fit in the extension means a sender whose clock
+					// is decades away from ours, and there is no value to write that would not be a
+					// lie, so the extension is not forwarded.
+					if (remoteClockOffsetQ32x32.has_value())
+					{
+						const auto absCaptureTimestamp = Utils::Byte::Get8Bytes(extenValue, 0);
+						// Offset between the clock of the capture system and the clock of the sender
+						// of this stream, as told by that sender. There is none when the extension
+						// comes in its shortened form, which is what a sender that captures its own
+						// media sends.
+						const int64_t incomingCaptureClockOffset =
+						  extenLen == 16 ? static_cast<int64_t>(Utils::Byte::Get8Bytes(extenValue, 8)) : 0;
+						// NOTE: The estimator gives our own clock minus the one of the sender, so
+						// subtracting it adds the offset of the sender against ours.
+						const int64_t captureClockOffset =
+						  incomingCaptureClockOffset - remoteClockOffsetQ32x32.value();
 
-					Utils::Byte::Set8Bytes(bufferPtr, 0, absCaptureTimestamp);
-					Utils::Byte::Set8Bytes(bufferPtr, 8, static_cast<uint64_t>(captureClockOffset));
+						// The extension is always forwarded in its extended form, since the capture
+						// clock offset is always written.
+						extenLen = 16;
 
-					extensions.emplace_back(
-					  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
-					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
-					  /*len*/ extenLen,
-					  /*value*/ bufferPtr);
+						Utils::Byte::Set8Bytes(bufferPtr, 0, absCaptureTimestamp);
+						Utils::Byte::Set8Bytes(bufferPtr, 8, static_cast<uint64_t>(captureClockOffset));
 
-					bufferPtr += extenLen;
+						extensions.emplace_back(
+						  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME,
+						  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
+						  /*len*/ extenLen,
+						  /*value*/ bufferPtr);
+
+						bufferPtr += extenLen;
+					}
 				}
 			}
 
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
-			extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.playoutDelay, extenLen);
-
-			if (extenValue)
 			{
-				std::memcpy(bufferPtr, extenValue, extenLen);
-
-				extensions.emplace_back(
-				  /*type*/ RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY,
-				  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY),
-				  /*len*/ extenLen,
-				  /*value*/ bufferPtr);
-
-				bufferPtr += extenLen;
-			}
-
-			if (this->kind == RTC::Media::Kind::AUDIO)
-			{
-				// Proxy urn:ietf:params:rtp-hdrext:ssrc-audio-level.
-				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.ssrcAudioLevel, extenLen);
+				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.playoutDelay, extenLen);
 
 				if (extenValue)
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
 					extensions.emplace_back(
-					  /*type*/ RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,
-					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL),
-					  /*len*/ extenLen,
-					  /*value*/ bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
-#ifdef MS_USE_BUILTIN_BWE
-				// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
-				//
-				// NOTE: The built-in BWE measures the downlink with everything it sends,
-				// including audio packets. Not reporting it would charge what it takes
-				// to the video.
-				{
-					extenLen = 2;
-
-					// NOTE: Add value 0. The sending Transport will update it.
-					const uint16_t wideSeqNumber{ 0 };
-
-					Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
-
-					extensions.emplace_back(
-					  /*type*/ RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
-					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
-					  /*len*/ extenLen,
-					  /*value*/ bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-#endif
-			}
-			else if (this->kind == RTC::Media::Kind::VIDEO)
-			{
-				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
-				// NOTE: This is for REMB.
-				{
-					extenLen = 3;
-
-					// NOTE: Add value 0. The sending Transport will update it.
-					const uint32_t absSendTime{ 0 };
-
-					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
-
-					extensions.emplace_back(
-					  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,
-					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME),
-					  /*len*/ extenLen,
-					  /*value*/ bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
-				// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
-				//
-				// NOTE: Outbound audio packets only carry it with the new built-in BWE.
-				{
-					extenLen = 2;
-
-					// NOTE: Add value 0. The sending Transport will update it.
-					const uint16_t wideSeqNumber{ 0 };
-
-					Utils::Byte::Set2Bytes(bufferPtr, 0, wideSeqNumber);
-
-					extensions.emplace_back(
-					  /*type*/ RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
-					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01),
-					  /*len*/ extenLen,
-					  /*value*/ bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
-				// Proxy https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension.
-				extenValue =
-				  packet->GetExtensionValue(this->rtpHeaderExtensionIds.dependencyDescriptor, extenLen);
-
-				if (extenValue)
-				{
-					std::memcpy(bufferPtr, extenValue, extenLen);
-
-					extensions.emplace_back(
-					  /*type*/ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
-					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
-					  /*len*/ extenLen,
-					  /*value*/ bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
-				// Proxy urn:3gpp:video-orientation.
-				extenValue =
-				  packet->GetExtensionValue(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
-
-				if (extenValue)
-				{
-					std::memcpy(bufferPtr, extenValue, extenLen);
-
-					extensions.emplace_back(
-					  /*type*/ RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION,
-					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION),
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY),
 					  /*len*/ extenLen,
 					  /*value*/ bufferPtr);
 
@@ -1472,8 +1379,7 @@ namespace RTC
 					  /*len*/ extenLen,
 					  /*value*/ bufferPtr);
 
-					// Not needed since this is the latest added extension.
-					// bufferPtr += extenLen;
+					bufferPtr += extenLen;
 				}
 				else if (this->enableMediasoupPacketIdHeaderExtension)
 				{
@@ -1487,8 +1393,90 @@ namespace RTC
 					  /*len*/ extenLen,
 					  /*value*/ bufferPtr);
 
-					// Not needed since this is the latest added extension.
-					// bufferPtr += extenLen;
+					bufferPtr += extenLen;
+				}
+			}
+
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				// Proxy urn:ietf:params:rtp-hdrext:ssrc-audio-level.
+				{
+					extenValue =
+					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.ssrcAudioLevel, extenLen);
+
+					if (extenValue)
+					{
+						std::memcpy(bufferPtr, extenValue, extenLen);
+
+						extensions.emplace_back(
+						  /*type*/ RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL,
+						  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL),
+						  /*len*/ extenLen,
+						  /*value*/ bufferPtr);
+
+						// Not needed since this is the latest added extension.
+						// bufferPtr += extenLen;
+					}
+				}
+			}
+			else if (this->kind == RTC::Media::Kind::VIDEO)
+			{
+				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+				// NOTE: This is for REMB.
+				{
+					extenLen = 3;
+
+					// NOTE: Add value 0. The sending Transport will update it.
+					const uint32_t absSendTime{ 0 };
+
+					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
+
+					extensions.emplace_back(
+					  /*type*/ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,
+					  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME),
+					  /*len*/ extenLen,
+					  /*value*/ bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
+				// Proxy https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension.
+				{
+					extenValue =
+					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.dependencyDescriptor, extenLen);
+
+					if (extenValue)
+					{
+						std::memcpy(bufferPtr, extenValue, extenLen);
+
+						extensions.emplace_back(
+						  /*type*/ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+						  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
+						  /*len*/ extenLen,
+						  /*value*/ bufferPtr);
+
+						bufferPtr += extenLen;
+					}
+				}
+
+				// Proxy urn:3gpp:video-orientation.
+				{
+					extenValue =
+					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
+
+					if (extenValue)
+					{
+						std::memcpy(bufferPtr, extenValue, extenLen);
+
+						extensions.emplace_back(
+						  /*type*/ RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION,
+						  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION),
+						  /*len*/ extenLen,
+						  /*value*/ bufferPtr);
+
+						// Not needed since this is the latest added extension.
+						// bufferPtr += extenLen;
+					}
 				}
 			}
 
