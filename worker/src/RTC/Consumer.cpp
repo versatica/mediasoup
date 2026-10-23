@@ -2001,7 +2001,9 @@ namespace RTC
 
 		for (auto& kv : this->mapRtpStreamTargetLayerRetransmissionBuffer)
 		{
-			kv.second.clear();
+			auto& targetLayerRetransmissionBuffer = kv.second;
+
+			targetLayerRetransmissionBuffer.clear();
 		}
 	}
 
