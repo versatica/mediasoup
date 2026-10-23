@@ -42,9 +42,12 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 			packet->SetSequenceNumber(seq);
 			packet->SetTimestamp(timestamp);
 
-			const RTC::RTP::SharedPacket sharedPacket;
+			auto* item = RTC::RTP::RetransmissionBuffer::Insert(packet.get(), nowMs);
 
-			RTC::RTP::RetransmissionBuffer::Insert(packet.get(), sharedPacket, nowMs);
+			if (item)
+			{
+				item->sharedPacket = RTC::RTP::ClonePacket(packet.get());
+			}
 		}
 
 		void AssertBuffer(std::vector<VerificationItem> verificationBuffer)

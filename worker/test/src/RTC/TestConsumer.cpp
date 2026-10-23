@@ -248,7 +248,7 @@ SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 	{
 		Fixture fixture;
 		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
-		RTC::RTP::SharedPacket sharedPacket(packet);
+		RTC::RTP::SharedPacket sharedPacket{ nullptr };
 
 		packet->SetPayloadType(payloadType);
 
@@ -267,7 +267,7 @@ SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
 		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
-		RTC::RTP::SharedPacket sharedPacket(packet);
+		RTC::RTP::SharedPacket sharedPacket{ nullptr };
 
 		packet->SetPayloadType(payloadType + 1);
 
@@ -285,7 +285,7 @@ SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
 		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 0);
-		RTC::RTP::SharedPacket sharedPacket(packet);
+		RTC::RTP::SharedPacket sharedPacket{ nullptr };
 
 		packet->SetPayloadType(payloadType + 1);
 
@@ -303,30 +303,32 @@ SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
 		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
-		RTC::RTP::SharedPacket sharedPacket(packet);
+		RTC::RTP::SharedPacket sharedPacket{ nullptr };
 
 		uint16_t seq{ 1 };
 
+		// NOTE: The Router creates a new shared packet for every packet received
+		// from the Producer, so we must reset it before every send (the Consumer
+		// fills it with a clone of the packet if it stores it).
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadType(payloadType);
-		sharedPacket.Assign(packet);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
-		sharedPacket.Assign(packet);
+		sharedPacket.reset();
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
-		sharedPacket.Assign(packet);
+		sharedPacket.reset();
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		// Remove the payload so it won't be sent.
 		packet->RemovePayload();
-		sharedPacket.Assign(packet);
+		sharedPacket.reset();
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 

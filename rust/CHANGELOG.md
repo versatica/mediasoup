@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Get rid of `RTC::RTP::SharedPacket` class ([PR #2012](https://github.com/versatica/mediasoup/pull/2012)).
+
 ### 0.32.0
 
 - Fix simulcast RTP timestamp jumps on layer switch and frozen retransmission buffer ([PR #2002](https://github.com/versatica/mediasoup/pull/2002)).

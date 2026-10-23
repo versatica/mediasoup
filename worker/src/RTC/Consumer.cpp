@@ -1375,10 +1375,9 @@ namespace RTC
 			  origTimestamp);
 		}
 
-		const RTC::RTP::RtpStreamSend::ReceivePacketResult result =
-		  rtpStream->ReceivePacket(packet, sharedPacket);
+		const auto result = rtpStream->ReceivePacket(packet);
 
-		if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
+		if (result.accepted)
 		{
 			if (rtpSeqManager->GetMaxOutput() == packet->GetSequenceNumber())
 			{
@@ -1418,11 +1417,27 @@ namespace RTC
 		// Restore the original payload if needed.
 		packet->RestorePayload();
 
-		// If sharedPacket doesn't have a packet inside and it has been stored we
-		// need to clone the packet into it.
-		if (!sharedPacket.HasPacket() && result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		// If the packet was accepted and the info has been stored into
+		// the retransmission buffer then we must hand a clone of it over to the
+		// stream. Clone it only once only if needed.
+		//
+		// NOTE: This must happen here, once the packet has been restored above, so
+		// that the clone holds the original packet and not the one rewritten for
+		// this Consumer (the stream reapplies its own values and payload encoding on
+		// every retransmission).
+		if (result.retransmissionBufferItem)
 		{
-			sharedPacket.Assign(packet);
+			if (!sharedPacket)
+			{
+				sharedPacket = RTC::RTP::ClonePacket(packet);
+			}
+
+			MS_ASSERT(
+			  !result.retransmissionBufferItem->sharedPacket,
+			  "retransmission buffer item already holds a packet [seq:%" PRIu16 "]",
+			  result.retransmissionBufferItem->sequenceNumber);
+
+			result.retransmissionBufferItem->sharedPacket = sharedPacket;
 		}
 
 		// If sent packet was the first packet of a key frame, let's send buffered
@@ -1432,12 +1447,12 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the
 			// key frame was sent.
-			if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
+			if (result.accepted)
 			{
 				for (auto& kv : *targetLayerRetransmissionBuffer)
 				{
 					auto& bufferedSharedPacket = kv.second;
-					auto* bufferedPacket       = bufferedSharedPacket.GetPacket();
+					auto* bufferedPacket       = bufferedSharedPacket.get();
 
 					if (bufferedPacket->GetSequenceNumber() > origSeq)
 					{
@@ -1882,15 +1897,15 @@ namespace RTC
 
 		// Store original packet into the buffer. Only clone once and only if
 		// necessary.
-		if (!sharedPacket.HasPacket())
+		if (!sharedPacket)
 		{
-			sharedPacket.Assign(packet);
+			sharedPacket = RTC::RTP::ClonePacket(packet);
 		}
-		// Assert that, if sharedPacket was already filled, both packet and
-		// sharedPacket are the very same RTP packet.
+		// Assert that the clone already made by another Consumer of the same
+		// Producer is a clone of this very same packet.
 		else
 		{
-			sharedPacket.AssertSamePacket(packet);
+			RTC::RTP::AssertSamePacket(sharedPacket, packet);
 		}
 
 		targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;

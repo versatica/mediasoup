@@ -48,13 +48,16 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 
 	while (len >= 12)
 	{
-		const RTC::RTP::SharedPacket sharedPacket;
-
 		// Set 'random' sequence number and timestamp.
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));
 		packet->SetTimestamp(Utils::Byte::Get4Bytes(data, offset + 2));
 
-		stream->ReceivePacket(packet, sharedPacket);
+		const auto result = stream->ReceivePacket(packet);
+
+		if (result.retransmissionBufferItem)
+		{
+			result.retransmissionBufferItem->sharedPacket = RTC::RTP::ClonePacket(packet);
+		}
 
 		// Feed a 'random' Receiver Report, which is what the loss of the stream is
 		// worked out from.

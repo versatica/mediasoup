@@ -8,96 +8,31 @@ namespace RTC
 {
 	namespace RTP
 	{
-		class SharedPacket
-		{
-		public:
-#ifdef MS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE
-			static thread_local uint64_t allocatedMemory;
-#endif
+		/**
+		 * Shared ownership of a cloned RTP packet.
+		 */
+		using SharedPacket = std::shared_ptr<RTP::Packet>;
 
-		public:
-			/**
-			 * Empty constructor.
-			 */
-			SharedPacket();
+		/**
+		 * Clone the given RTP packet into a newly allocated buffer and return shared
+		 * ownership of the clone.
+		 *
+		 * @remarks
+		 * The buffer allocated for the clone is deallocated by the clone itself
+		 * (via its buffer released listener) once it's destroyed, so the caller just
+		 * needs to drop every reference to the returned SharedPacket.
+		 */
+		SharedPacket ClonePacket(const RTP::Packet* packet);
 
-			/**
-			 * Constructor with RTP packet pointer. If a packet is given it's internally
-			 * cloned.
-			 */
-			explicit SharedPacket(RTP::Packet* packet);
-
-			/**
-			 * Copy constructor.
-			 *
-			 * @remarks
-			 * No need to declare it but let's be explicit.
-			 */
-			SharedPacket(const SharedPacket&) = default;
-
-			/**
-			 * Copy assignment operator.
-			 *
-			 * @remarks
-			 * - No need to declare it but let's be explicit.
-			 *
-			 * @throws MediasoupError if the packet is too big.
-			 */
-			SharedPacket& operator=(const SharedPacket&) = default;
-
-			/**
-			 * Destructor.
-			 */
-			~SharedPacket() = default;
-
-		public:
-			void Dump(int indentation = 0) const;
-
-			bool HasPacket() const
-			{
-				return this->sharedPtr->get() != nullptr;
-			}
-
-			RTP::Packet* GetPacket() const
-			{
-				return this->sharedPtr->get();
-			}
-
-			/**
-			 * Assign given packet (could be nullptr). If packet is given it's internally
-			 * cloned.
-			 *
-			 * @throws MediasoupError if the packet is too big.
-			 */
-			void Assign(RTP::Packet* packet);
-
-#ifdef MS_TEST
-			/**
-			 * Resets the internal packet to nullptr.
-			 *
-			 * @remarks
-			 * This affects to ALL copies of this SharedPacket object.
-			 */
-			void Reset();
-#endif
-
-			/**
-			 * Assert that RTP packet contained in this SharedPacket is a clone of the
-			 * given other packet (or there is no packet inside and no other packet has
-			 * been given).
-			 */
-			void AssertSamePacket(const RTP::Packet* otherPacket) const;
-
-		private:
-			void StorePacket(RTP::Packet* packet);
-
-		private:
-			// NOTE: This needs to be a shared pointer that holds an unique pointer.
-			// Otherwise, when copying/storing the shared pointer in other locations
-			// (buffers, etc), reseting its internal value wouldn't affect other copies
-			// of the shared pointer.
-			std::shared_ptr<std::unique_ptr<RTP::Packet>> sharedPtr;
-		};
+		/**
+		 * Assert that the given SharedPacket holds a clone of the given RTP packet.
+		 *
+		 * @remarks
+		 * A SharedPacket corresponds to a single packet received by a Producer, so
+		 * this must be asserted wherever an already existing clone (made by another
+		 * Consumer of the same Producer) is reused rather than a new one made.
+		 */
+		void AssertSamePacket(const SharedPacket& sharedPacket, const RTP::Packet* otherPacket);
 	} // namespace RTP
 } // namespace RTC
 
