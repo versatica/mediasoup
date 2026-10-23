@@ -2017,13 +2017,12 @@ namespace RTC
 					{
 						auto* afb = static_cast<RTC::RTCP::FeedbackPsAfbPacket*>(feedback);
 
-						// Store REMB info.
 						if (afb->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::REMB)
 						{
-							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
-
-							if (this->senderTransportCongestionController)
+							if (this->sendSupportsRemb && this->senderTransportCongestionController)
 							{
+								const auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
+
 								this->senderTransportCongestionController->ReceiveEstimatedBitrate(remb->GetBitrate());
 							}
 
@@ -2107,7 +2106,7 @@ namespace RTC
 					{
 						auto* feedback = static_cast<RTC::RTCP::FeedbackRtpTransportPacket*>(packet);
 
-						if (this->senderTransportCongestionController)
+						if (this->sendSupportsTransportCc && this->senderTransportCongestionController)
 						{
 							this->senderTransportCongestionController->ReceiveTransportWideCcFeedback(
 							  feedback, receivedAtUs);
@@ -2349,8 +2348,18 @@ namespace RTC
 		// overhead is taken again.
 		this->senderTransportCongestionController->SetPacketOverhead(GetPacketOverhead());
 
-		// Probing only makes sense towards a peer that can measure a burst and report
-		// back on it.
+		// Only a peer that negotiated transport-cc reports on each packet, and every
+		// packet carries room for the sequence number whatever was negotiated, so
+		// this is the only thing that tells both cases apart.
+		this->senderTransportCongestionController->SetTransportCcFeedbackSupported(
+		  this->sendSupportsTransportCc);
+
+		// Probing only makes sense towards a peer that measures what reaches it. One
+		// that negotiated transport-cc reports on each packet of the burst, which is
+		// what closes the cluster the burst was sent as. One that only negotiated
+		// REMB works out a bitrate of its own out of the packets arriving, and that
+		// bitrate is what the burst raises: without it the peer only ever measures
+		// the media being sent, so its estimate can never say that more would fit.
 		// NOTE: This goes before telling it that the network is available, which is
 		// what starts the RTP probing.
 		this->senderTransportCongestionController->SetEnableProbing(
@@ -3351,12 +3360,12 @@ namespace RTC
 	void Transport::OnSenderTransportCongestionControllerSendRtpProbePacket(
 	  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
 	  RTC::RTP::Packet* packet,
-	  int64_t sequenceNumber)
+	  std::optional<int64_t> sequenceNumber)
 	{
 		MS_TRACE();
 
 		// NOTE: The probe packet already carries both extensions written and comes
-		// with the sequence number it was given, so it must not be handed to
+		// with the sequence number it was given, if any, so it must not be handed to
 		// OnRtpPacketToBeSent() again.
 
 #ifdef MS_RTC_LOGGER_SEND_BURST
@@ -3400,7 +3409,7 @@ namespace RTC
 		MS_DEBUG_DEV(
 		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIi64 ", size:%zu, bitrate:%" PRIi64 "]",
 		  packet->GetSequenceNumber(),
-		  sequenceNumber,
+		  sequenceNumber.value_or(-1),
 		  packet->GetLength(),
 		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()).value_or(0));
 	}

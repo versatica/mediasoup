@@ -388,7 +388,7 @@ namespace RTC
 		void OnSenderTransportCongestionControllerSendRtpProbePacket(
 		  RTC::BWE::SenderTransportCongestionController* senderTransportCongestionController,
 		  RTC::RTP::Packet* packet,
-		  int64_t sequenceNumber) override;
+		  std::optional<int64_t> sequenceNumber) override;
 
 		/* Pure virtual methods inherited from RTC::BWE::ReceiverTransportCongestionController::Listener. */
 	public:

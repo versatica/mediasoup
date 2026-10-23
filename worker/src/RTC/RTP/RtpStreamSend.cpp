@@ -354,7 +354,7 @@ namespace RTC
 			    ? static_cast<uint8_t>(std::min<int64_t>((reportedLostPackets << 8) / expectedPackets, 255))
 			    : 0;
 
-			return Loss{ .lostPackets = lostPackets, .expectedPackets = expectedPackets };
+			return Loss{ .lostPackets = reportedLostPackets, .expectedPackets = expectedPackets };
 		}
 
 		void RtpStreamSend::ReceiveRtcpXrReceiverReferenceTime(
@@ -732,10 +732,7 @@ namespace RTC
 			// Number of packets lost in this interval, which is what this link really
 			// lost and not what the remote endpoint reported, since that one also
 			// counts the sequence numbers that were never sent.
-			//
-			// NOTE: A report that gives back what a previous one was overcharged leaves
-			// this interval with nothing lost.
-			auto lostPackets = static_cast<uint64_t>(std::max<int64_t>(loss.value().lostPackets, 0));
+			auto lostPackets = static_cast<uint64_t>(loss.value().lostPackets);
 
 			lostPackets     = std::min(lostPackets, sentPackets);
 			repairedPackets = std::min(repairedPackets, lostPackets);
