@@ -78,49 +78,49 @@ namespace RTC
 			return SharedPacket{ clonedPacket };
 		}
 
-		void AssertSamePacket(const SharedPacket& sharedPacket, const RTP::Packet* packet)
+		void AssertSamePacket(const SharedPacket& sharedPacket, const RTP::Packet* otherPacket)
 		{
 			MS_TRACE();
 
-			const auto* clonedPacket = sharedPacket.get();
+			const auto* packet = sharedPacket.get();
 
-			if (!clonedPacket && !packet)
+			if (!packet && !otherPacket)
 			{
 				return;
 			}
-			else if (clonedPacket && !packet)
+			else if (packet && !otherPacket)
 			{
-				MS_ABORT("there is a packet in sharedPacket but given packet doesn't have value");
+				MS_ABORT("there is a packet in sharedPacket but given otherPacket doesn't have value");
 			}
-			else if (!clonedPacket && packet)
+			else if (!packet && otherPacket)
 			{
-				MS_ABORT("there is no packet in sharedPacket but given packet has value");
+				MS_ABORT("there is no packet in sharedPacket but given otherPacket has value");
 			}
 			else
 			{
 				MS_ASSERT(
-				  clonedPacket->GetSsrc() == packet->GetSsrc(),
-				  "SSRC %" PRIu32 " in packet in sharedPacket != SSRC %" PRIu32 " in given packet",
-				  clonedPacket->GetSsrc(),
-				  packet->GetSsrc());
+				  packet->GetSsrc() == otherPacket->GetSsrc(),
+				  "SSRC %" PRIu32 " in packet in sharedPacket != SSRC %" PRIu32 " in otherPacket",
+				  packet->GetSsrc(),
+				  otherPacket->GetSsrc());
 
 				MS_ASSERT(
-				  clonedPacket->GetSequenceNumber() == packet->GetSequenceNumber(),
-				  "seq %" PRIu16 " in packet in sharedPacket != seq %" PRIu16 " in given packet",
-				  clonedPacket->GetSequenceNumber(),
-				  packet->GetSequenceNumber());
+				  packet->GetSequenceNumber() == otherPacket->GetSequenceNumber(),
+				  "seq %" PRIu16 " in packet in sharedPacket != seq %" PRIu16 " in otherPacket",
+				  packet->GetSequenceNumber(),
+				  otherPacket->GetSequenceNumber());
 
 				MS_ASSERT(
-				  clonedPacket->GetTimestamp() == packet->GetTimestamp(),
-				  "timestamp %" PRIu32 " in packet in sharedPacket != timestamp %" PRIu32 " in given packet",
-				  clonedPacket->GetTimestamp(),
-				  packet->GetTimestamp());
+				  packet->GetTimestamp() == otherPacket->GetTimestamp(),
+				  "timestamp %" PRIu32 " in packet in sharedPacket != timestamp %" PRIu32 " in otherPacket",
+				  packet->GetTimestamp(),
+				  otherPacket->GetTimestamp());
 
 				MS_ASSERT(
-				  clonedPacket->GetLength() == packet->GetLength(),
-				  "length %zu of packet in sharedPacket != length %zu of given packet",
-				  clonedPacket->GetLength(),
-				  packet->GetLength());
+				  packet->GetLength() == otherPacket->GetLength(),
+				  "length %zu of packet in sharedPacket != length %zu of otherPacket",
+				  packet->GetLength(),
+				  otherPacket->GetLength());
 			}
 		}
 	} // namespace RTP

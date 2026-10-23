@@ -32,7 +32,7 @@ namespace RTC
 		 * this must be asserted wherever an already existing clone (made by another
 		 * Consumer of the same Producer) is reused rather than a new one made.
 		 */
-		void AssertSamePacket(const SharedPacket& sharedPacket, const RTP::Packet* packet);
+		void AssertSamePacket(const SharedPacket& sharedPacket, const RTP::Packet* otherPacket);
 	} // namespace RTP
 } // namespace RTC
 
