@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Get rid of Worker: Get rid of RTC::RTP::SharedPacket class ([PR #2012](https://github.com/versatica/mediasoup/pull/2012)).
+- Worker: Get rid of `RTC::RTP::SharedPacket` class ([PR #2012](https://github.com/versatica/mediasoup/pull/2012)).
 
 ### 3.31.0
 
