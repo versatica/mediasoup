@@ -35,11 +35,9 @@ void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));
 		packet->SetTimestamp(Utils::Byte::Get4Bytes(data, offset));
 
-		auto* retransmissionBufferItem = retransmissionBuffer.Insert(packet, nowMs);
-
-		if (retransmissionBufferItem)
+		if (auto* item = retransmissionBuffer.Insert(packet, nowMs))
 		{
-			retransmissionBufferItem->sharedPacket = RTC::RTP::ClonePacket(packet);
+			item->sharedPacket = RTC::RTP::ClonePacket(packet);
 		}
 
 		// Let some 'random' time pass and check whether the packet is too old.
