@@ -679,10 +679,10 @@ namespace RTC
 
 		if (!consumers.empty())
 		{
-			// Cloned ref-counted packet that will be filled for as long as needed
-			// avoiding multiple allocations unless absolutely necessary.
-			// Clone only happens if needed and only once.
-			RTC::RTP::SharedPacket sharedPacket;
+			// Cloned ref-counted packet shared by all Consumers that need to store
+			// this packet, avoiding multiple allocations. Clone only happens if
+			// needed and only once.
+			RTC::RTP::SharedPacket sharedPacket{ nullptr };
 
 			for (auto* consumer : consumers)
 			{
@@ -698,9 +698,9 @@ namespace RTC
 
 				// Assert that, if this Consumer filled sharedPacket or it was already
 				// filled, both packet and sharedPacket are the very same RTP packet.
-				if (sharedPacket.HasPacket())
+				if (sharedPacket)
 				{
-					sharedPacket.AssertSamePacket(packet);
+					RTC::RTP::AssertSamePacket(sharedPacket, packet);
 				}
 			}
 		}

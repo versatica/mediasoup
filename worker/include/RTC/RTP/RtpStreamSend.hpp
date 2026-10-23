@@ -152,7 +152,18 @@ namespace RTC
 
 			void SetRtx(uint8_t payloadType, uint32_t ssrc) override;
 
-			ReceivePacketResult ReceivePacket(RTP::Packet* packet, const RTP::SharedPacket& sharedPacket);
+			ReceivePacketResult ReceivePacket(RTP::Packet* packet);
+			/**
+			 * Store the given cloned packet into the retransmission buffer item with
+			 * the given sequence number.
+			 *
+			 * @remarks
+			 * Must be called right after ReceivePacket() returned
+			 * ACCEPTED_AND_STORED, once the packet has been restored to its original
+			 * state, giving the sequence number that the packet had when it was
+			 * passed to ReceivePacket().
+			 */
+			void StoreSharedPacket(uint16_t seq, const RTP::SharedPacket& sharedPacket);
 
 			void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 

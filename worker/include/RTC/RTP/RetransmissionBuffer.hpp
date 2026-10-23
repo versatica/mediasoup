@@ -59,7 +59,7 @@ namespace RTC
 			};
 
 		private:
-			static Item* CreateItem(RTP::Packet* packet, const RTP::SharedPacket& sharedPacket, int64_t nowMs);
+			static Item* CreateItem(RTP::Packet* packet, int64_t nowMs);
 
 		public:
 			RetransmissionBuffer(uint16_t maxItems, int64_t maxRetransmissionDelayMs, uint32_t clockRate);
@@ -67,7 +67,8 @@ namespace RTC
 
 			void Dump(int indentation = 0) const;
 			Item* Get(uint16_t seq) const;
-			bool Insert(RTP::Packet* packet, const RTP::SharedPacket& sharedPacket, int64_t nowMs);
+			bool Insert(RTP::Packet* packet, int64_t nowMs);
+			void StorePacket(uint16_t seq, const RTP::SharedPacket& sharedPacket);
 			void Clear();
 			/**
 			 * Whether the given stored item was stored longer than the maximum

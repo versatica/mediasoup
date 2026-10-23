@@ -15,8 +15,12 @@ namespace RTC
 		// When cloning a RTP packet, a buffer is allocated for it and its length is
 		// the length of the packet plus this value (in bytes).
 		static constexpr size_t PacketBufferLengthIncrement{ 100 };
-		// Callback to pass to every cloned RTP packet to deallocate its buffer once
-		// the packet releases its buffer (for example when the packet is destroyed).
+#ifdef MS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE
+		// Total memory currently allocated by cloned RTP packets.
+		static thread_local uint64_t allocatedMemory{ 0 };
+#endif
+		// Callback given to every cloned RTP packet to deallocate the buffer we
+		// allocated for it.
 		static thread_local Serializable::BufferReleasedListener PacketBufferReleasedListener =
 		  // NOLINTNEXTLINE(misc-unused-parameters, readability-non-const-parameter)
 		  [](const Serializable* packet, uint8_t* buffer)
@@ -25,7 +29,7 @@ namespace RTC
 			::operator delete[](buffer, std::align_val_t{ 4 });
 
 #ifdef MS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE
-			SharedPacket::allocatedMemory -= packet->GetBufferLength();
+			allocatedMemory -= packet->GetBufferLength();
 
 			MS_DUMP_CLEAN(
 			  0,
@@ -34,120 +38,13 @@ namespace RTC
 			  "]",
 			  Logger::Pid,
 			  packet->GetBufferLength(),
-			  SharedPacket::allocatedMemory);
+			  allocatedMemory);
 #endif
 		};
 
-		/* Class variables. */
+		/* Namespace methods. */
 
-#ifdef MS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE
-		thread_local uint64_t SharedPacket::allocatedMemory{ 0 };
-#endif
-
-		/* Instance methods. */
-
-		SharedPacket::SharedPacket()
-		  : sharedPtr(std::make_shared<std::unique_ptr<RTP::Packet>>(nullptr))
-		{
-			MS_TRACE();
-		}
-
-		SharedPacket::SharedPacket(RTP::Packet* packet)
-		  : sharedPtr(std::make_shared<std::unique_ptr<RTP::Packet>>(nullptr))
-		{
-			MS_TRACE();
-
-			if (packet)
-			{
-				StorePacket(packet);
-			}
-		}
-
-		void SharedPacket::Dump(int indentation) const
-		{
-			MS_TRACE();
-
-			MS_DUMP_CLEAN(indentation, "<SharedPacket>");
-			MS_DUMP_CLEAN(indentation, "  has packet: %s", HasPacket() ? "yes" : "no");
-			if (HasPacket())
-			{
-				const auto* packet = GetPacket();
-
-				packet->Dump(indentation + 1);
-			}
-			MS_DUMP_CLEAN(indentation, "</SharedPacket>");
-		}
-
-		void SharedPacket::Assign(RTP::Packet* packet)
-		{
-			MS_TRACE();
-
-			if (packet)
-			{
-				StorePacket(packet);
-			}
-			else
-			{
-				this->sharedPtr->reset(nullptr);
-			}
-		}
-
-#ifdef MS_TEST
-		void SharedPacket::Reset()
-		{
-			MS_TRACE();
-
-			this->sharedPtr->reset(nullptr);
-		}
-#endif
-
-		void SharedPacket::AssertSamePacket(const RTP::Packet* otherPacket) const
-		{
-			MS_TRACE();
-
-			const auto* packet = GetPacket();
-
-			if (!packet && !otherPacket)
-			{
-				return;
-			}
-			else if (packet && !otherPacket)
-			{
-				MS_ABORT("there is a packet in sharedPacket but given otherPacket doesn't have value");
-			}
-			else if (!packet && otherPacket)
-			{
-				MS_ABORT("there is no packet in sharedPacket but given otherPacket has value");
-			}
-			else
-			{
-				MS_ASSERT(
-				  packet->GetSsrc() == otherPacket->GetSsrc(),
-				  "SSRC %" PRIu32 " in packet in sharedPacket != SSRC %" PRIu32 " in otherPacket",
-				  packet->GetSsrc(),
-				  otherPacket->GetSsrc());
-
-				MS_ASSERT(
-				  packet->GetSequenceNumber() == otherPacket->GetSequenceNumber(),
-				  "seq %" PRIu16 " in packet in sharedPacket != seq %" PRIu16 " in otherPacket",
-				  packet->GetSequenceNumber(),
-				  otherPacket->GetSequenceNumber());
-
-				MS_ASSERT(
-				  packet->GetTimestamp() == otherPacket->GetTimestamp(),
-				  "timestamp %" PRIu16 " in packet in sharedPacket != timestamp %" PRIu16 " in otherPacket",
-				  packet->GetTimestamp(),
-				  otherPacket->GetTimestamp());
-
-				MS_ASSERT(
-				  packet->GetLength() == otherPacket->GetLength(),
-				  "length %zu of packet in sharedPacket != length %zu of otherPacket",
-				  packet->GetLength(),
-				  otherPacket->GetLength());
-			}
-		}
-
-		void SharedPacket::StorePacket(RTP::Packet* packet)
+		SharedPacket ClonePacket(const RTP::Packet* packet)
 		{
 			MS_TRACE();
 
@@ -158,14 +55,12 @@ namespace RTC
 			auto* buffer = static_cast<uint8_t*>(::operator new[](bufferLength, std::align_val_t{ 4 }));
 			auto* clonedPacket = packet->Clone(buffer, bufferLength);
 
-			// Set a listener in the packet to deallocate its buffer once the packet
-			// is destroyed or releases its internal buffer.
+			// Set a listener in the packet to deallocate the buffer above once the
+			// packet releases it.
 			clonedPacket->SetBufferReleasedListener(std::addressof(PacketBufferReleasedListener));
 
-			this->sharedPtr->reset(clonedPacket);
-
 #ifdef MS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE
-			SharedPacket::allocatedMemory += bufferLength;
+			allocatedMemory += bufferLength;
 
 			MS_DUMP_CLEAN(
 			  0,
@@ -174,8 +69,59 @@ namespace RTC
 			  "]",
 			  Logger::Pid,
 			  clonedPacket->GetBufferLength(),
-			  SharedPacket::allocatedMemory);
+			  allocatedMemory);
 #endif
+
+			// NOTE: The buffer is freed by PacketBufferReleasedListener above and not
+			// by a custom deleter of the shared pointer. Deleting the cloned packet is
+			// hence all this shared pointer must do, so the default deleter is used.
+			return SharedPacket{ clonedPacket };
+		}
+
+		void AssertSamePacket(const SharedPacket& sharedPacket, const RTP::Packet* packet)
+		{
+			MS_TRACE();
+
+			const auto* clonedPacket = sharedPacket.get();
+
+			if (!clonedPacket && !packet)
+			{
+				return;
+			}
+			else if (clonedPacket && !packet)
+			{
+				MS_ABORT("there is a packet in sharedPacket but given packet doesn't have value");
+			}
+			else if (!clonedPacket && packet)
+			{
+				MS_ABORT("there is no packet in sharedPacket but given packet has value");
+			}
+			else
+			{
+				MS_ASSERT(
+				  clonedPacket->GetSsrc() == packet->GetSsrc(),
+				  "SSRC %" PRIu32 " in packet in sharedPacket != SSRC %" PRIu32 " in given packet",
+				  clonedPacket->GetSsrc(),
+				  packet->GetSsrc());
+
+				MS_ASSERT(
+				  clonedPacket->GetSequenceNumber() == packet->GetSequenceNumber(),
+				  "seq %" PRIu16 " in packet in sharedPacket != seq %" PRIu16 " in given packet",
+				  clonedPacket->GetSequenceNumber(),
+				  packet->GetSequenceNumber());
+
+				MS_ASSERT(
+				  clonedPacket->GetTimestamp() == packet->GetTimestamp(),
+				  "timestamp %" PRIu32 " in packet in sharedPacket != timestamp %" PRIu32 " in given packet",
+				  clonedPacket->GetTimestamp(),
+				  packet->GetTimestamp());
+
+				MS_ASSERT(
+				  clonedPacket->GetLength() == packet->GetLength(),
+				  "length %zu of packet in sharedPacket != length %zu of given packet",
+				  clonedPacket->GetLength(),
+				  packet->GetLength());
+			}
 		}
 	} // namespace RTP
 } // namespace RTC
