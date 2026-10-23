@@ -447,7 +447,7 @@ namespace RTC
 			return true;
 		}
 
-		void RetransmissionBuffer::StorePacket(uint16_t seq, const RTP::SharedPacket& sharedPacket)
+		void RetransmissionBuffer::StorePacket(uint16_t seq, const RTP::SharedPacket& sharedPacket) const
 		{
 			MS_TRACE();
 
