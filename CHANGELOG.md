@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- New built-in BWE stack ([PR #2010](https://github.com/versatica/mediasoup/pull/2010)):
+- New built-in BWE stack ([task #1895](https://github.com/versatica/mediasoup/pull/1895)):
   - `WebRtcTransportOptions` and `PlainTransportOptions`: Add `enableBwe`, `initialAvailableOutgoingBitrate`, `minOutgoingBitrate`, `maxOutgoingBitrate` and `maxIncomingBitrate`.
   - **Breaking change:** `WorkerSettings` no longer takes `libwebrtcFieldTrials`.
   - **Breaking change:** The transport "bwe" trace event now reports `desiredBitrate`, `minBitrate`, `maxBitrate` and `availableBitrate`.
