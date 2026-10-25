@@ -189,6 +189,7 @@ namespace RTC
 		virtual void SetDestroying() final;
 		virtual void Connected() final;
 		virtual void Disconnected() final;
+		virtual void RouteChanged() final;
 		virtual void DataReceived(size_t len) final
 		{
 			this->recvTransmission.Update(len, this->shared->GetTimeMs());

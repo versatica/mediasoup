@@ -1498,6 +1498,20 @@ namespace RTC
 		}
 	}
 
+	void Transport::RouteChanged()
+	{
+		MS_TRACE();
+
+		// NOTE: Before being connected there is no controller yet, and the one
+		// created later takes the overhead of the path in use at that moment.
+		if (this->senderTransportCongestionController)
+		{
+			// The new path may differ in IP version or in UDP vs TCP, and so in the
+			// bytes each packet carries on top of its own length.
+			this->senderTransportCongestionController->SetPacketOverhead(GetPacketOverhead());
+		}
+	}
+
 	void Transport::ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs)
 	{
 		MS_TRACE();
