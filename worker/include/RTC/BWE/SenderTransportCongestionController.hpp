@@ -85,7 +85,8 @@ namespace RTC
 				 */
 				bool isRetransmission{ false };
 				/**
-				 * SSRC of the stream it retransmits, when it goes out over RTX.
+				 * SSRC of the media stream it retransmits, whether it goes out over RTX
+				 * or not. It has no value unless it is a retransmission.
 				 */
 				std::optional<uint32_t> originalSsrc;
 			};

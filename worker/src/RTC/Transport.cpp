@@ -2757,12 +2757,13 @@ namespace RTC
 
 		if (this->senderTransportCongestionController)
 		{
-			// TODO: There is no way yet to tell a retransmission that went over RTX
-			// from one that went without it, which is what `originalSsrc` says.
-			// Nothing reads it today, but SCReAM would.
+			// NOTE: The media SSRC is the packet one unless it goes out over RTX,
+			// which is how a retransmission without RTX is told apart.
 			const auto sequenceNumber = this->senderTransportCongestionController->OnRtpPacketToBeSent(
 			  packet,
-			  { .isAudio = consumer->GetKind() == RTC::Media::Kind::AUDIO, .isRetransmission = true });
+			  { .isAudio          = consumer->GetKind() == RTC::Media::Kind::AUDIO,
+				  .isRetransmission = true,
+				  .originalSsrc     = packet->GetMediaSsrc() });
 
 			const size_t size = packet->GetLength();
 
