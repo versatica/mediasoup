@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.33.0
+
 - Worker: Get rid of `RTC::RTP::SharedPacket` class ([PR #2012](https://github.com/versatica/mediasoup/pull/2012)).
 - New built-in BWE stack ([task #1895](https://github.com/versatica/mediasoup/pull/1895)):
   - `WebRtcTransportOptions` and `PlainTransportOptions`: Add `enableBwe`, `initialAvailableOutgoingBitrate`, `minOutgoingBitrate`, `maxOutgoingBitrate` and `maxIncomingBitrate`.
