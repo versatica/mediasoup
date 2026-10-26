@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- AV1: Fix SVC not being decodable ([PR #2015](https://github.com/versatica/mediasoup/pull/2015)).
+
 ### 0.33.0
 
 - Worker: Get rid of `RTC::RTP::SharedPacket` class ([PR #2012](https://github.com/versatica/mediasoup/pull/2012)).

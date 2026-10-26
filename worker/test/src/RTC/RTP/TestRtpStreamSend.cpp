@@ -947,11 +947,15 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(!forwarded);
 
 		// Process the second packet with context2.
+		//
+		// NOTE: Not forwarded even though context2 targets temporal layer 1, since
+		// this frame is not a switch point for it (its decode target indications are
+		// "-D"). The upgrade happens in packet3 below, whose indications are "SS".
 		forwarded = packet2->ProcessPayload(std::addressof(context2), marker);
 
-		REQUIRE(forwarded);
+		REQUIRE(!forwarded);
 		REQUIRE(context2.GetCurrentSpatialLayer() == 0);
-		REQUIRE(context2.GetCurrentTemporalLayer() == 1);
+		REQUIRE(context2.GetCurrentTemporalLayer() == 0);
 
 		// Parse the third packet
 		parseAV1RtpPacket(packet3.get(), templateDependencyStructure);

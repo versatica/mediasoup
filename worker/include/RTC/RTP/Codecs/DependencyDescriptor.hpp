@@ -95,6 +95,7 @@ namespace RTC
 				void UpdateListener(DependencyDescriptor::Listener* listener);
 				const uint8_t* Serialize(uint8_t& len);
 				bool UpdateActiveDecodeTargets(uint32_t maxSpatialLayer, uint32_t maxTemporalLayer);
+				bool IsSwitchPointForTemporalLayer(uint8_t temporalLayer) const;
 
 			private:
 				uint8_t GetSpatialLayer() const;

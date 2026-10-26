@@ -192,17 +192,28 @@ namespace RTC
 				// Upgrade current temporal layer if needed.
 				if (context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
 				{
-					if (packetTemporalLayer > context->GetCurrentTemporalLayer())
+					// NOTE: Only switch up in a frame that the Dependency Descriptor marks as
+					// a switch point for the decode target we move into. Otherwise we'd
+					// forward frames that depend on frames we already dropped, which the
+					// endpoint cannot decode.
+					//
+					// NOTE: It must also be the lowest spatial layer of its picture. The
+					// current temporal layer is common to all spatial layers, so switching up
+					// in the middle of a picture would enable the new temporal layer for the
+					// spatial layers of that same picture that were already dropped.
+					if (
+					  packetSpatialLayer == 0 && this->payloadDescriptor->IsSwitchPointForTemporalLayer(
+					                               static_cast<uint8_t>(context->GetTargetTemporalLayer())))
 					{
 						MS_DEBUG_DEV(
-						  "upgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu8 " (packet:%" PRIu8 ":%" PRIu8
-						  ")",
+						  "upgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+						  ":%" PRIu8 ")",
 						  context->GetCurrentTemporalLayer(),
-						  packetTemporalLayer,
+						  context->GetTargetTemporalLayer(),
 						  packetSpatialLayer,
 						  packetTemporalLayer);
 
-						tmpTemporalLayer = packetTemporalLayer;
+						tmpTemporalLayer = context->GetTargetTemporalLayer();
 					}
 				}
 				// Downgrade current temporal layer if needed.

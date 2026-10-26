@@ -449,8 +449,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 	const pipeConsumerRtpParameters = ortc.getPipeConsumerRtpParameters({
 		consumableRtpParameters,
-		routerRtpCapabilities,
-		kind: 'video',
 		enableRtx: false,
 	});
 
@@ -523,23 +521,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		cname: rtpParameters.rtcp?.cname,
 		reducedSize: true,
 	});
-
-	// But not for audio, which has no Dependency-Descriptor header extension in
-	// the Router RTP capabilities.
-	const audioPipeConsumerRtpParameters = ortc.getPipeConsumerRtpParameters({
-		consumableRtpParameters,
-		routerRtpCapabilities,
-		kind: 'audio',
-		enableRtx: false,
-	});
-
-	expect(
-		audioPipeConsumerRtpParameters.headerExtensions!.some(
-			ext =>
-				ext.uri ===
-				'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension'
-		)
-	).toBe(false);
 });
 
 test('getProducerRtpParametersMapping() with incompatible params throws UnsupportedError', () => {

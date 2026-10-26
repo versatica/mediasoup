@@ -47,6 +47,11 @@ namespace RTC
 					}
 					void Encode();
 					void Restore() const;
+					bool IsSwitchPointForTemporalLayer(uint8_t temporalLayer) const
+					{
+						return this->dependencyDescriptor &&
+						       this->dependencyDescriptor->IsSwitchPointForTemporalLayer(temporalLayer);
+					}
 					void UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer);
 					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
 					{

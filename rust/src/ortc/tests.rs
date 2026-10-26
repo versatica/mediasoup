@@ -538,15 +538,11 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
         },
     );
 
-    let pipe_consumer_rtp_parameters = get_pipe_consumer_rtp_parameters(
-        &consumable_rtp_parameters,
-        &router_rtp_capabilities,
-        MediaKind::Video,
-        false,
-    );
+    let pipe_consumer_rtp_parameters =
+        get_pipe_consumer_rtp_parameters(&consumable_rtp_parameters, false);
 
-    // The Dependency-Descriptor header extension is added since a pipe Consumer forwards all the
-    // layers.
+    // A pipe Consumer forwards all the layers of the Producer, so the receiving Router needs the
+    // Dependency-Descriptor header extension to tell them apart.
     assert!(pipe_consumer_rtp_parameters.header_extensions.contains(
         &RtpHeaderExtensionParameters {
             uri: RtpHeaderExtensionUri::DependencyDescriptor,
@@ -554,20 +550,6 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             encrypt: false,
         }
     ));
-
-    // But not for audio, which has no Dependency-Descriptor header extension in the Router RTP
-    // capabilities.
-    let audio_pipe_consumer_rtp_parameters = get_pipe_consumer_rtp_parameters(
-        &consumable_rtp_parameters,
-        &router_rtp_capabilities,
-        MediaKind::Audio,
-        false,
-    );
-
-    assert!(!audio_pipe_consumer_rtp_parameters
-        .header_extensions
-        .iter()
-        .any(|ext| ext.uri == RtpHeaderExtensionUri::DependencyDescriptor));
 
     assert_eq!(
         pipe_consumer_rtp_parameters.codecs,

@@ -907,8 +907,6 @@ pub(crate) fn get_consumer_rtp_parameters(
 /// enableRtx is false, it also removes RTX and NACK support.
 pub(crate) fn get_pipe_consumer_rtp_parameters(
     consumable_rtp_parameters: &RtpParameters,
-    router_rtp_capabilities: &RtpCapabilitiesFinalized,
-    kind: MediaKind,
     enable_rtx: bool,
 ) -> RtpParameters {
     let mut consumer_params = RtpParameters {
@@ -951,40 +949,6 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         })
         .cloned()
         .collect();
-
-    // TODO: Remove this once the Dependency-Descriptor header extension has direction 'sendrecv'
-    // in supported RTP capabilities.
-    //
-    // A pipe Consumer forwards all the layers of the Producer, so the receiving Router needs the
-    // Dependency-Descriptor header extension to tell them apart. It must be added here since,
-    // being 'recvonly' in the Router RTP capabilities, it's not present in
-    // `consumable_rtp_parameters`.
-    let dependency_descriptor_ext =
-        router_rtp_capabilities
-            .header_extensions
-            .iter()
-            .find(|cap_ext| {
-                cap_ext.kind == kind
-                    && cap_ext.uri == RtpHeaderExtensionUri::DependencyDescriptor
-                    && !matches!(
-                        cap_ext.direction,
-                        RtpHeaderExtensionDirection::SendRecv
-                            | RtpHeaderExtensionDirection::SendOnly
-                    )
-            });
-
-    if let Some(dependency_descriptor_ext) = dependency_descriptor_ext {
-        consumer_params
-            .header_extensions
-            .push(RtpHeaderExtensionParameters {
-                uri: dependency_descriptor_ext.uri,
-                id: dependency_descriptor_ext.preferred_id,
-                encrypt: dependency_descriptor_ext.preferred_encrypt,
-            });
-
-        // Sort header extensions by ID.
-        consumer_params.header_extensions.sort_by_key(|ext| ext.id);
-    }
 
     for ((encoding, ssrc), rtx_ssrc) in consumable_rtp_parameters
         .encodings
