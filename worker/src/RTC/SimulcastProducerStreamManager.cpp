@@ -307,11 +307,21 @@ namespace RTC
 
 				// Each spatial layer is a stream of its own, so running at this point
 				// costs its temporal layers up to this one and nothing else.
-				bitrateOptions.options.push_back(
-				  {
-				    .bitrate = producerRtpStream->GetCumulativeTemporalLayerBitrate(nowMs, 0, temporalLayer),
-				    .layers = { spatialLayer, temporalLayer }
-        });
+				const RTC::BWE::BitrateAllocator::Candidate::BitrateOption option{
+					.bitrate = producerRtpStream->GetCumulativeTemporalLayerBitrate(nowMs, 0, temporalLayer),
+					.layers  = { spatialLayer, temporalLayer }
+				};
+
+				// Lowering the frame rate is only on offer within the lowest usable
+				// spatial layer, so a higher one keeps just its highest temporal layer.
+				if (usableSpatialLayerFound && bitrateOptions.options.size() > numOptions)
+				{
+					bitrateOptions.options.back() = option;
+				}
+				else
+				{
+					bitrateOptions.options.push_back(option);
+				}
 			}
 
 			// A spatial layer whose lowest temporal layer is not being received

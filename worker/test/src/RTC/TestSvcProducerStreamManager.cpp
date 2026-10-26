@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/SvcProducerStreamManager.hpp"
@@ -134,11 +135,11 @@ namespace
 		}
 		uint8_t GetSpatialLayer() const override
 		{
-			return 0;
+			return this->spatialLayer;
 		}
 		uint8_t GetTemporalLayer() const override
 		{
-			return 0;
+			return this->temporalLayer;
 		}
 		bool IsKeyFrame() const override
 		{
@@ -146,6 +147,8 @@ namespace
 		}
 
 	public:
+		uint8_t spatialLayer{ 0 };
+		uint8_t temporalLayer{ 0 };
 		bool isKeyFrame{ false };
 		bool processResult{ true };
 	};
@@ -277,6 +280,30 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		}
 
 		manager->SetBitrateOption(bitrateOptions.options.at(option));
+	};
+
+	// Make the stream receive packets of the given layers in turn, so each of
+	// them brings bitrate.
+	const auto feedLayers = [&packet](
+	                          RTC::RTP::RtpStreamRecv* rtpStream,
+	                          const std::vector<RTC::ConsumerTypes::VideoLayers>& layers) -> void
+	{
+		auto* handler = new MockPayloadDescriptorHandler();
+
+		packet->SetPayloadDescriptorHandler(handler);
+
+		for (size_t idx{ 0 }; idx < 300; ++idx)
+		{
+			const auto& packetLayers = layers.at(idx % layers.size());
+
+			handler->spatialLayer  = static_cast<uint8_t>(packetLayers.spatial);
+			handler->temporalLayer = static_cast<uint8_t>(packetLayers.temporal);
+
+			packet->SetSequenceNumber(static_cast<uint16_t>(packet->GetSequenceNumber() + 1));
+			rtpStream->ReceivePacket(packet.get(), shared.GetTimeUs());
+
+			nowUs += PacketSpacingMs * 1000;
+		}
 	};
 
 	SECTION("ProcessRtpPacket() returns DROP when target spatial layer is -1")
@@ -1118,6 +1145,96 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(bitrateOptions.options.at(1).layers.spatial == 0);
 		REQUIRE(bitrateOptions.options.at(1).layers.temporal == 0);
 		REQUIRE(bitrateOptions.options.at(1).bitrate > 0);
+	}
+
+	SECTION("GetBitrateOptions() lowers the temporal layer only within the lowest spatial layer")
+	{
+		MockListener listener;
+		auto manager   = createManager(std::addressof(listener), /*preferredLayers*/ { 2, 2 });
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 3, /*temporalLayers*/ 3);
+
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+
+		feedLayers(
+		  rtpStream.get(),
+		  {
+		    { 0, 0 },
+        { 0, 1 },
+        { 0, 2 },
+        { 1, 0 },
+        { 1, 1 },
+        { 1, 2 },
+        { 2, 0 },
+        { 2, 1 },
+        { 2, 2 }
+    });
+
+		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		// Beyond sending nothing, the temporal layers of the lowest spatial layer
+		// and then the preferred temporal layer of each spatial layer above it.
+		const std::vector<RTC::ConsumerTypes::VideoLayers> expectedLayers{
+			{ 0, 0 },
+      { 0, 1 },
+      { 0, 2 },
+      { 1, 2 },
+      { 2, 2 }
+		};
+
+		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);
+
+		for (size_t idx{ 0 }; idx < expectedLayers.size(); ++idx)
+		{
+			const auto& layers = bitrateOptions.options.at(idx + 1).layers;
+
+			REQUIRE(layers.spatial == expectedLayers.at(idx).spatial);
+			REQUIRE(layers.temporal == expectedLayers.at(idx).temporal);
+		}
+	}
+
+	SECTION(
+	  "GetBitrateOptions() offers the highest arriving temporal layer of a spatial layer above the lowest one")
+	{
+		MockListener listener;
+		auto manager   = createManager(std::addressof(listener), /*preferredLayers*/ { 2, 2 });
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 3, /*temporalLayers*/ 3);
+
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+
+		// Spatial layer 1 announces three temporal layers but the highest one does
+		// not arrive.
+		feedLayers(
+		  rtpStream.get(),
+		  {
+		    { 0, 0 },
+        { 0, 1 },
+        { 0, 2 },
+        { 1, 0 },
+        { 1, 1 },
+        { 2, 0 },
+        { 2, 1 },
+        { 2, 2 }
+    });
+
+		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		const std::vector<RTC::ConsumerTypes::VideoLayers> expectedLayers{
+			{ 0, 0 },
+      { 0, 1 },
+      { 0, 2 },
+      { 1, 1 },
+      { 2, 2 }
+		};
+
+		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);
+
+		for (size_t idx{ 0 }; idx < expectedLayers.size(); ++idx)
+		{
+			const auto& layers = bitrateOptions.options.at(idx + 1).layers;
+
+			REQUIRE(layers.spatial == expectedLayers.at(idx).spatial);
+			REQUIRE(layers.temporal == expectedLayers.at(idx).temporal);
+		}
 	}
 
 	SECTION("GetDesiredBitrate() returns 0 when no producer stream is set")

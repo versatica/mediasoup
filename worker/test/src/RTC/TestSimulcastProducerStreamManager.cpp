@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
@@ -131,11 +132,11 @@ namespace
 		}
 		uint8_t GetSpatialLayer() const override
 		{
-			return 0;
+			return this->spatialLayer;
 		}
 		uint8_t GetTemporalLayer() const override
 		{
-			return 0;
+			return this->temporalLayer;
 		}
 		bool IsKeyFrame() const override
 		{
@@ -143,6 +144,8 @@ namespace
 		}
 
 	public:
+		uint8_t spatialLayer{ 0 };
+		uint8_t temporalLayer{ 0 };
 		bool isKeyFrame{ false };
 		bool processResult{ true };
 	};
@@ -202,12 +205,13 @@ namespace
 		return manager;
 	}
 
-	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(uint32_t ssrc)
+	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(uint32_t ssrc, uint8_t temporalLayers = 1)
 	{
 		RTC::RTP::RtpStream::Params params;
 
-		params.ssrc      = ssrc;
-		params.clockRate = 90000;
+		params.ssrc           = ssrc;
+		params.clockRate      = 90000;
+		params.temporalLayers = temporalLayers;
 
 		return std::make_unique<RTC::RTP::RtpStreamRecv>(
 		  std::addressof(streamRecvListener), std::addressof(shared), params, 0, false);
@@ -318,6 +322,27 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		rtpStream->ReceivePacket(absCaptureTimePacket.get(), shared.GetTimeUs());
 
 		REQUIRE(rtpStream->HasAbsCaptureTime());
+	};
+
+	// Make the stream receive packets of the given temporal layers in turn, so
+	// each of them brings bitrate.
+	const auto feedTemporalLayers =
+	  [&packet](RTC::RTP::RtpStreamRecv* rtpStream, const std::vector<uint8_t>& temporalLayers) -> void
+	{
+		auto* handler = new MockPayloadDescriptorHandler();
+
+		packet->SetSsrc(rtpStream->GetSsrc());
+		packet->SetPayloadDescriptorHandler(handler);
+
+		for (size_t idx{ 0 }; idx < 100; ++idx)
+		{
+			handler->temporalLayer = temporalLayers.at(idx % temporalLayers.size());
+
+			packet->SetSequenceNumber(static_cast<uint16_t>(packet->GetSequenceNumber() + 1));
+			rtpStream->ReceivePacket(packet.get(), shared.GetTimeUs());
+
+			nowUs += PacketSpacingMs * 1000;
+		}
 	};
 
 	SECTION("ProcessRtpPacket() returns DROP when target temporal layer is -1")
@@ -2398,6 +2423,87 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(newBitrateOptions.options.size() == 3);
 		REQUIRE(newBitrateOptions.options.at(2).layers.spatial == 1);
 		REQUIRE(newBitrateOptions.options.at(2).layers.temporal == 0);
+	}
+
+	SECTION("GetBitrateOptions() lowers the temporal layer only within the lowest spatial layer")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ ThreeSsrcs, /*preferredLayers*/ { 2, 2 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0, /*temporalLayers*/ 3);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1, /*temporalLayers*/ 3);
+		auto rtpStream2 = createRtpStreamRecv(MappedSsrc2, /*temporalLayers*/ 3);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+		manager->ProducerRtpStream(rtpStream2.get(), MappedSsrc2);
+
+		feedTemporalLayers(rtpStream0.get(), { 0, 1, 2 });
+		feedTemporalLayers(rtpStream1.get(), { 0, 1, 2 });
+		feedTemporalLayers(rtpStream2.get(), { 0, 1, 2 });
+
+		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		// Beyond sending nothing, the temporal layers of the lowest spatial layer
+		// and then the preferred temporal layer of each spatial layer above it.
+		const std::vector<RTC::ConsumerTypes::VideoLayers> expectedLayers{
+			{ 0, 0 },
+      { 0, 1 },
+      { 0, 2 },
+      { 1, 2 },
+      { 2, 2 }
+		};
+
+		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);
+
+		for (size_t idx{ 0 }; idx < expectedLayers.size(); ++idx)
+		{
+			const auto& layers = bitrateOptions.options.at(idx + 1).layers;
+
+			REQUIRE(layers.spatial == expectedLayers.at(idx).spatial);
+			REQUIRE(layers.temporal == expectedLayers.at(idx).temporal);
+		}
+	}
+
+	SECTION(
+	  "GetBitrateOptions() offers the highest arriving temporal layer of a spatial layer above the lowest one")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ ThreeSsrcs, /*preferredLayers*/ { 2, 2 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0, /*temporalLayers*/ 3);
+		auto rtpStream1 = createRtpStreamRecv(MappedSsrc1, /*temporalLayers*/ 3);
+		auto rtpStream2 = createRtpStreamRecv(MappedSsrc2, /*temporalLayers*/ 3);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+		manager->ProducerRtpStream(rtpStream1.get(), MappedSsrc1);
+		manager->ProducerRtpStream(rtpStream2.get(), MappedSsrc2);
+
+		// Spatial layer 1 announces three temporal layers but the highest one does
+		// not arrive.
+		feedTemporalLayers(rtpStream0.get(), { 0, 1, 2 });
+		feedTemporalLayers(rtpStream1.get(), { 0, 1 });
+		feedTemporalLayers(rtpStream2.get(), { 0, 1, 2 });
+
+		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		const std::vector<RTC::ConsumerTypes::VideoLayers> expectedLayers{
+			{ 0, 0 },
+      { 0, 1 },
+      { 0, 2 },
+      { 1, 1 },
+      { 2, 2 }
+		};
+
+		REQUIRE(bitrateOptions.options.size() == expectedLayers.size() + 1);
+
+		for (size_t idx{ 0 }; idx < expectedLayers.size(); ++idx)
+		{
+			const auto& layers = bitrateOptions.options.at(idx + 1).layers;
+
+			REQUIRE(layers.spatial == expectedLayers.at(idx).spatial);
+			REQUIRE(layers.temporal == expectedLayers.at(idx).temporal);
+		}
 	}
 
 	SECTION("SetBitrateOption() moves the target layers to the given point")
