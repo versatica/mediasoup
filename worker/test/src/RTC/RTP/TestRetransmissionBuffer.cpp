@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/RTP/RetransmissionBuffer.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -46,7 +46,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 
 			if (item)
 			{
-				item->sharedPacket = RTC::RTP::ClonePacket(packet.get());
+				item->sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet.get());
 			}
 		}
 

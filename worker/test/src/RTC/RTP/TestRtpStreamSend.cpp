@@ -7,9 +7,9 @@
 #include "RTC/RTP/Codecs/VP8.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamSend.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcpy()
@@ -88,7 +88,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			{
 				if (!sharedPacket)
 				{
-					sharedPacket = RTC::RTP::ClonePacket(packet);
+					sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
 				}
 
 				result.retransmissionBufferItem->sharedPacket = sharedPacket;
@@ -971,7 +971,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(result.accepted);
 		REQUIRE(result.retransmissionBufferItem);
 
-		const std::shared_ptr<RTC::RTP::Packet> sharedPacket = RTC::RTP::ClonePacket(packet3.get());
+		const std::shared_ptr<RTC::RTP::Packet> sharedPacket =
+		  RTC::RTP::PacketUtils::ClonePacket(packet3.get());
 
 		result.retransmissionBufferItem->sharedPacket = sharedPacket;
 
@@ -2306,7 +2307,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			packet->SetSsrc(1111);
 
-			const std::shared_ptr<RTC::RTP::Packet> sharedPacket = RTC::RTP::ClonePacket(packet.get());
+			const std::shared_ptr<RTC::RTP::Packet> sharedPacket =
+			  RTC::RTP::PacketUtils::ClonePacket(packet.get());
 
 			stream1->ReceivePacket(packet.get());
 		}

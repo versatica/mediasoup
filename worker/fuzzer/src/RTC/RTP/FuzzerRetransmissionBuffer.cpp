@@ -1,8 +1,8 @@
 #include "RTC/RTP/FuzzerRetransmissionBuffer.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/RTP/RetransmissionBuffer.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include "Utils.hpp"
 
 void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
@@ -37,7 +37,7 @@ void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 
 		if (auto* item = retransmissionBuffer.Insert(packet, nowMs))
 		{
-			item->sharedPacket = RTC::RTP::ClonePacket(packet);
+			item->sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
 		}
 
 		// Let some 'random' time pass and check whether the packet is too old.

@@ -4,7 +4,6 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "flatbuffers/buffer.h"
 #include "mocks/include/MockShared.hpp"

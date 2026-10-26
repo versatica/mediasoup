@@ -6,7 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/PipeProducerStreamManager.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
+#include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/SimpleProducerStreamManager.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "RTC/SvcProducerStreamManager.hpp"
@@ -1430,7 +1430,7 @@ namespace RTC
 		{
 			if (!sharedPacket)
 			{
-				sharedPacket = RTC::RTP::ClonePacket(packet);
+				sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
 			}
 
 			MS_ASSERT(
@@ -1900,13 +1900,13 @@ namespace RTC
 		// necessary.
 		if (!sharedPacket)
 		{
-			sharedPacket = RTC::RTP::ClonePacket(packet);
+			sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
 		}
 		// Assert that the clone already made by another Consumer of the same
 		// Producer is a clone of this very same packet.
 		else
 		{
-			RTC::RTP::AssertSamePacket(sharedPacket, packet);
+			RTC::RTP::PacketUtils::AssertSamePacket(sharedPacket, packet);
 		}
 
 		targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;

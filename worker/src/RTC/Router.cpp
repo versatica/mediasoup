@@ -9,7 +9,7 @@
 #include "RTC/DirectTransport.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
+#include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -700,7 +700,7 @@ namespace RTC
 				// filled, both packet and sharedPacket are the very same RTP packet.
 				if (sharedPacket)
 				{
-					RTC::RTP::AssertSamePacket(sharedPacket, packet);
+					RTC::RTP::PacketUtils::AssertSamePacket(sharedPacket, packet);
 				}
 			}
 		}
