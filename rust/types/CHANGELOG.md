@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 0.10.0
+
 - New built-in BWE related types ([task #1895](https://github.com/versatica/mediasoup/pull/1895)).
 
 ### 0.9.0
