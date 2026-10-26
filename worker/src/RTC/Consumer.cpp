@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/PipeProducerStreamManager.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/SimpleProducerStreamManager.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "RTC/SvcProducerStreamManager.hpp"
@@ -1219,7 +1220,7 @@ namespace RTC
 #endif
 
 	// NOLINTNEXTLINE(misc-no-recursion)
-	void Consumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
+	void Consumer::SendRtpPacket(RTC::RTP::Packet* packet, std::shared_ptr<RTC::RTP::Packet>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -1881,10 +1882,10 @@ namespace RTC
 	}
 
 	void Consumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>&
+	  std::map<uint16_t, std::shared_ptr<RTC::RTP::Packet>, RTC::SeqManager<uint16_t>::SeqLowerThan>&
 	    targetLayerRetransmissionBuffer,
 	  RTC::RTP::Packet* packet,
-	  RTC::RTP::SharedPacket& sharedPacket)
+	  std::shared_ptr<RTC::RTP::Packet>& sharedPacket)
 	{
 		MS_TRACE();
 

@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Packet.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include <deque>
 
 namespace RTC
@@ -27,7 +26,7 @@ namespace RTC
 				 * - Insert() leaves it empty and returns the item so that the caller
 				 *   fills it once the packet has been restored to its original state.
 				 */
-				RTP::SharedPacket sharedPacket{ nullptr };
+				std::shared_ptr<RTP::Packet> sharedPacket{ nullptr };
 				/**
 				 * Payload descriptor encoder.
 				 */

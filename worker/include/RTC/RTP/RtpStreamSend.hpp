@@ -15,7 +15,6 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RetransmissionBuffer.hpp"
 #include "RTC/RTP/RtpStream.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "SharedInterface.hpp"
 #include <flatbuffers/flatbuffer_builder.h>

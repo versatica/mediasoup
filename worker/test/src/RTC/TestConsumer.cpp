@@ -248,7 +248,7 @@ SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 	{
 		Fixture fixture;
 		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
-		RTC::RTP::SharedPacket sharedPacket{ nullptr };
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 		packet->SetPayloadType(payloadType);
 
@@ -267,7 +267,7 @@ SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
 		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
-		RTC::RTP::SharedPacket sharedPacket{ nullptr };
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 		packet->SetPayloadType(payloadType + 1);
 
@@ -285,7 +285,7 @@ SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
 		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 0);
-		RTC::RTP::SharedPacket sharedPacket{ nullptr };
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 		packet->SetPayloadType(payloadType + 1);
 
@@ -303,7 +303,7 @@ SCENARIO("Consumer with SimpleProducerStreamManager", "[rtp][consumer]")
 		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
 		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
-		RTC::RTP::SharedPacket sharedPacket{ nullptr };
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 		uint16_t seq{ 1 };
 

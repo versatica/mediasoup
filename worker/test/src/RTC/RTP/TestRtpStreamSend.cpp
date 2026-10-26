@@ -67,7 +67,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	    std::vector<std::pair<RTC::RTP::RtpStreamSend*, uint32_t>> streams,
 	    RTC::RTP::Packet* packet) -> void
 	{
-		RTC::RTP::SharedPacket sharedPacket{ nullptr };
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 		for (const auto& kv : streams)
 		{
@@ -971,7 +971,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(result.accepted);
 		REQUIRE(result.retransmissionBufferItem);
 
-		const RTC::RTP::SharedPacket sharedPacket = RTC::RTP::ClonePacket(packet3.get());
+		const std::shared_ptr<RTC::RTP::Packet> sharedPacket = RTC::RTP::ClonePacket(packet3.get());
 
 		result.retransmissionBufferItem->sharedPacket = sharedPacket;
 
@@ -2306,7 +2306,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			packet->SetSsrc(1111);
 
-			const RTC::RTP::SharedPacket sharedPacket = RTC::RTP::ClonePacket(packet.get());
+			const std::shared_ptr<RTC::RTP::Packet> sharedPacket = RTC::RTP::ClonePacket(packet.get());
 
 			stream1->ReceivePacket(packet.get());
 		}
@@ -2322,7 +2322,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		for (size_t i = 0; i < iterations; i++)
 		{
-			const RTC::RTP::SharedPacket sharedPacket{ nullptr };
+			const std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 			// Create packet.
 			const std::unique_ptr<RTC::RTP::Packet> packet(

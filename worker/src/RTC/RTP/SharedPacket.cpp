@@ -44,7 +44,7 @@ namespace RTC
 
 		/* Namespace methods. */
 
-		SharedPacket ClonePacket(const RTP::Packet* packet)
+		std::shared_ptr<RTP::Packet> ClonePacket(const RTP::Packet* packet)
 		{
 			MS_TRACE();
 
@@ -75,10 +75,10 @@ namespace RTC
 			// NOTE: The buffer is freed by PacketBufferReleasedListener above and not
 			// by a custom deleter of the shared pointer. Deleting the cloned packet is
 			// hence all this shared pointer must do, so the default deleter is used.
-			return SharedPacket{ clonedPacket };
+			return std::shared_ptr<RTP::Packet>{ clonedPacket };
 		}
 
-		void AssertSamePacket(const SharedPacket& sharedPacket, const RTP::Packet* otherPacket)
+		void AssertSamePacket(const std::shared_ptr<RTP::Packet>& sharedPacket, const RTP::Packet* otherPacket)
 		{
 			MS_TRACE();
 

@@ -28,7 +28,7 @@ SCENARIO("RTP SharedPacket", "[rtp][sharedpacket]")
 
 	SECTION("default constructor and assign later")
 	{
-		RTC::RTP::SharedPacket sharedPacket;
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket;
 
 		REQUIRE(!sharedPacket);
 		REQUIRE(sharedPacket.get() == nullptr);
@@ -50,13 +50,13 @@ SCENARIO("RTP SharedPacket", "[rtp][sharedpacket]")
 	SECTION("clone packet and copy constructor")
 	{
 		// Create sharedPacket1 holding a clone of packetA.
-		RTC::RTP::SharedPacket sharedPacket1 = RTC::RTP::ClonePacket(packetA);
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket1 = RTC::RTP::ClonePacket(packetA);
 
 		REQUIRE(sharedPacket1);
 		compareRtpPackets(sharedPacket1.get(), packetA);
 
 		// Create sharedPacket2 using copy constructor.
-		RTC::RTP::SharedPacket sharedPacket2(sharedPacket1);
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket2(sharedPacket1);
 
 		REQUIRE(sharedPacket2);
 		compareRtpPackets(sharedPacket2.get(), packetA);
@@ -78,12 +78,12 @@ SCENARIO("RTP SharedPacket", "[rtp][sharedpacket]")
 
 	SECTION("copy assignment operator")
 	{
-		RTC::RTP::SharedPacket sharedPacket1 = RTC::RTP::ClonePacket(packetA);
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket1 = RTC::RTP::ClonePacket(packetA);
 
 		REQUIRE(sharedPacket1);
 		compareRtpPackets(sharedPacket1.get(), packetA);
 
-		RTC::RTP::SharedPacket sharedPacket2;
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket2;
 
 		// Fill sharedPacket2 using copy assignment operator.
 		sharedPacket2 = sharedPacket1;
@@ -108,7 +108,7 @@ SCENARIO("RTP SharedPacket", "[rtp][sharedpacket]")
 
 	SECTION("assign nullptr")
 	{
-		RTC::RTP::SharedPacket sharedPacket = RTC::RTP::ClonePacket(packetA);
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket = RTC::RTP::ClonePacket(packetA);
 
 		REQUIRE(sharedPacket);
 		compareRtpPackets(sharedPacket.get(), packetA);
