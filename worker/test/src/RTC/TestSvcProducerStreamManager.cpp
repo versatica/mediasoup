@@ -971,6 +971,62 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		manager->ProducerRtpStreamScore(rtpStream.get(), /*score*/ 7, /*previousScore*/ 0);
 	}
 
+	SECTION("OnTransportConnected() computes target layers when not managed by BWE")
+	{
+		MockListener listener;
+		auto encodingContext =
+		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 1, /*temporalLayers*/ 1);
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*preferredLayers*/ { 0, 0 },
+		  /*keyFrameSupported*/ true,
+		  RTC::Media::Kind::VIDEO,
+		  std::move(encodingContext));
+
+		manager->SetBweManaged(false);
+
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1, /*temporalLayers*/ 1);
+
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+
+		// Feed packets so the stream has score and bitrate, without telling the
+		// manager, which would make it compute target layers by itself.
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
+
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+		REQUIRE(manager->GetTargetLayers().temporal == -1);
+
+		manager->OnTransportConnected();
+
+		REQUIRE(manager->GetTargetLayers().spatial == 0);
+		REQUIRE(manager->GetTargetLayers().temporal == 0);
+		REQUIRE(listener.needBitrateChangeCount == 0);
+	}
+
+	SECTION("OnTransportConnected() leaves target layers to BWE when managed by it")
+	{
+		MockListener listener;
+		auto encodingContext =
+		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 1, /*temporalLayers*/ 1);
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*preferredLayers*/ { 0, 0 },
+		  /*keyFrameSupported*/ true,
+		  RTC::Media::Kind::VIDEO,
+		  std::move(encodingContext));
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1, /*temporalLayers*/ 1);
+
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
+
+		manager->OnTransportConnected();
+
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+		REQUIRE(manager->GetTargetLayers().temporal == -1);
+		REQUIRE(listener.needBitrateChangeCount == 0);
+	}
+
 	SECTION("GetBitrateOptions() offers only sending nothing when no producer stream is set")
 	{
 		MockListener listener;

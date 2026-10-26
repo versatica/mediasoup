@@ -747,6 +747,50 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 		REQUIRE(listener.keyFrameRequestCount == 0);
 	}
 
+	SECTION("OnTransportConnected() computes target layers when not managed by BWE")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ OneSsrc, /*preferredLayers*/ { 0, 0 });
+
+		manager->SetBweManaged(false);
+
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+
+		// Give the stream a score without telling the manager, which would make it
+		// compute target layers by itself.
+		rtpStream0->ResetScore(/*score*/ 10, /*notify*/ false);
+
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+		REQUIRE(manager->GetTargetLayers().temporal == -1);
+
+		manager->OnTransportConnected();
+
+		REQUIRE(manager->GetTargetLayers().spatial == 0);
+		REQUIRE(manager->GetTargetLayers().temporal == 0);
+		REQUIRE(listener.needBitrateChangeCount == 0);
+	}
+
+	SECTION("OnTransportConnected() leaves target layers to BWE when managed by it")
+	{
+		MockListener listener;
+		auto manager =
+		  createManager(std::addressof(listener), /*ssrcs*/ OneSsrc, /*preferredLayers*/ { 0, 0 });
+		auto rtpStream0 = createRtpStreamRecv(MappedSsrc0);
+
+		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc0);
+
+		rtpStream0->ResetScore(/*score*/ 10, /*notify*/ false);
+
+		manager->OnTransportConnected();
+
+		REQUIRE(manager->GetTargetLayers().spatial == -1);
+		REQUIRE(manager->GetTargetLayers().temporal == -1);
+		REQUIRE(listener.needBitrateChangeCount == 0);
+	}
+
 	SECTION("RecalculateTargetLayers() skips spatial layer without capture instant")
 	{
 		MockListener listener;
