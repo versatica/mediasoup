@@ -244,6 +244,8 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 		// This may throw.
 		const rtpParameters = ortc.getPipeConsumerRtpParameters({
 			consumableRtpParameters: producer.consumableRtpParameters,
+			routerRtpCapabilities: this.getRouterRtpCapabilities(),
+			kind: producer.kind,
 			enableRtx: this.#data.rtx,
 		});
 

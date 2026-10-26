@@ -148,7 +148,7 @@ export abstract class TransportImpl<
 	protected readonly enableBwe: boolean;
 
 	// Method to retrieve Router RTP capabilities.
-	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
+	protected readonly getRouterRtpCapabilities: () => RtpCapabilities;
 
 	// Method to retrieve a Producer.
 	protected readonly getProducerById: (
@@ -212,7 +212,7 @@ export abstract class TransportImpl<
 		this.channel = channel;
 		this.#appData = appData ?? ({} as TransportAppData);
 		this.enableBwe = enableBwe;
-		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
+		this.getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
 		this.#observer = observer;
@@ -544,7 +544,7 @@ export abstract class TransportImpl<
 			clonedRtpParameters.rtcp.cname = utils.generateUUIDv4().substr(0, 8);
 		}
 
-		const routerRtpCapabilities = this.#getRouterRtpCapabilities();
+		const routerRtpCapabilities = this.getRouterRtpCapabilities();
 
 		// This may throw.
 		const rtpMapping = ortc.getProducerRtpParametersMapping(

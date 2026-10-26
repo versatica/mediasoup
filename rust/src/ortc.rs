@@ -8,8 +8,6 @@ use mediasoup_types::rtp_parameters::{
     RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionDirection,
     RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
 };
-use once_cell::sync::Lazy;
-use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -27,21 +25,6 @@ const DYNAMIC_PAYLOAD_TYPES: &[u8] = &[
     100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118,
     119, 120, 121, 122, 123, 124, 125, 126, 127, 96, 97, 98, 99,
 ];
-
-// TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
-// extension.
-//
-// This is an object where we store some objects we may later need.
-struct Cache {
-    pub dependency_descriptor_header_extension_parameters_for_pipe_consumer:
-        Option<RtpHeaderExtensionParameters>,
-}
-
-static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| {
-    Mutex::new(Cache {
-        dependency_descriptor_header_extension_parameters_for_pipe_consumer: None,
-    })
-});
 
 #[doc(hidden)]
 #[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
@@ -385,29 +368,6 @@ pub(crate) fn generate_router_rtp_capabilities(
         } else {
             // Append to the codec list.
             caps.codecs.push(codec_finalized);
-        }
-    }
-
-    // TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
-    // extension.
-    //
-    // We need to create and store this Dependency-Descriptor header extension to
-    // leter be used by `getPipeConsumerRtpParameters()` function.
-    let dependency_descriptor_header_extension_for_pipe_consumer =
-        caps.header_extensions.iter().find(|ext| {
-            ext.uri == RtpHeaderExtensionUri::DependencyDescriptor
-                && ext.direction != RtpHeaderExtensionDirection::SendRecv
-        });
-
-    if let Some(dependency_descriptor) = dependency_descriptor_header_extension_for_pipe_consumer {
-        if dependency_descriptor.direction != RtpHeaderExtensionDirection::SendRecv {
-            let mut cache = CACHE.lock();
-            cache.dependency_descriptor_header_extension_parameters_for_pipe_consumer =
-                Some(RtpHeaderExtensionParameters {
-                    uri: dependency_descriptor.uri,
-                    id: dependency_descriptor.preferred_id,
-                    encrypt: dependency_descriptor.preferred_encrypt,
-                });
         }
     }
 
@@ -947,6 +907,8 @@ pub(crate) fn get_consumer_rtp_parameters(
 /// enableRtx is false, it also removes RTX and NACK support.
 pub(crate) fn get_pipe_consumer_rtp_parameters(
     consumable_rtp_parameters: &RtpParameters,
+    router_rtp_capabilities: &RtpCapabilitiesFinalized,
+    kind: MediaKind,
     enable_rtx: bool,
 ) -> RtpParameters {
     let mut consumer_params = RtpParameters {
@@ -990,18 +952,32 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         .cloned()
         .collect();
 
-    // TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
-    // extension.
-    //
-    // We need to add Dependency-Descriptor header extension manually since it's
-    // 'recvonly' so it's not present in received `consumableRtpParameters`.
-    let cache = CACHE.lock();
-    if let Some(dependency_descriptor) =
-        &cache.dependency_descriptor_header_extension_parameters_for_pipe_consumer
-    {
+    // A pipe Consumer forwards all the layers of the Producer, so the receiving Router needs the
+    // Dependency-Descriptor header extension to tell them apart. It must be added here since,
+    // being 'recvonly' in the Router RTP capabilities, it's not present in
+    // `consumable_rtp_parameters`.
+    let dependency_descriptor_ext =
+        router_rtp_capabilities
+            .header_extensions
+            .iter()
+            .find(|cap_ext| {
+                cap_ext.kind == kind
+                    && cap_ext.uri == RtpHeaderExtensionUri::DependencyDescriptor
+                    && !matches!(
+                        cap_ext.direction,
+                        RtpHeaderExtensionDirection::SendRecv
+                            | RtpHeaderExtensionDirection::SendOnly
+                    )
+            });
+
+    if let Some(dependency_descriptor_ext) = dependency_descriptor_ext {
         consumer_params
             .header_extensions
-            .push(dependency_descriptor.clone());
+            .push(RtpHeaderExtensionParameters {
+                uri: dependency_descriptor_ext.uri,
+                id: dependency_descriptor_ext.preferred_id,
+                encrypt: dependency_descriptor_ext.preferred_encrypt,
+            });
 
         // Sort header extensions by ID.
         consumer_params.header_extensions.sort_by_key(|ext| ext.id);
