@@ -1069,6 +1069,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		packet->SetCaptureAtUs(99998888);
 
 		REQUIRE(packet->GetCaptureAtUs() == 99998888);
+		REQUIRE(packet->IsRtx() == false);
+		REQUIRE(packet->GetMediaSsrc() == 1234567890);
 
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 
@@ -2203,6 +2205,16 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+		REQUIRE(packet->IsRtx() == true);
+		REQUIRE(packet->GetMediaSsrc() == 1234567890);
+
+		// A clone taken while RTX encoded keeps the media SSRC.
+		std::unique_ptr<RTC::RTP::Packet> clonedPacket{ packet->Clone(
+			rtpCommon::CloneBuffer, sizeof(rtpCommon::CloneBuffer)) };
+
+		REQUIRE(clonedPacket->GetSsrc() == 999999);
+		REQUIRE(clonedPacket->IsRtx() == true);
+		REQUIRE(clonedPacket->GetMediaSsrc() == 1234567890);
 
 		/* RTX decode. */
 
@@ -2232,6 +2244,41 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->IsPaddedTo4Bytes() == false);
+		REQUIRE(packet->IsRtx() == false);
+		REQUIRE(packet->GetMediaSsrc() == 1234567890);
+	}
+
+	SECTION("Packet::RtxDecode() of a packet received as RTX leaves it as not RTX")
+	{
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
+
+		// What arrives over RTX: the RTX payload type and SSRC, and the original
+		// sequence number at the beginning of the payload.
+		packet->SetPayloadType(111);
+		packet->SetSequenceNumber(666);
+		packet->SetSsrc(999999);
+
+		// clang-format off
+		uint8_t payload[] =
+		{
+			0x30, 0x39,
+			0x11, 0x22, 0x33, 0x44
+		};
+		// clang-format on
+
+		packet->SetPayload(payload, 6);
+
+		// Nothing in the packet itself says that it is RTX.
+		REQUIRE(packet->IsRtx() == false);
+		REQUIRE(packet->GetMediaSsrc() == 999999);
+
+		REQUIRE(packet->RtxDecode(/*payloadType*/ 100, /*ssrc*/ 1234567890) == true);
+
+		REQUIRE(packet->GetSsrc() == 1234567890);
+		REQUIRE(packet->GetSequenceNumber() == 12345);
+		REQUIRE(packet->IsRtx() == false);
+		REQUIRE(packet->GetMediaSsrc() == 1234567890);
 	}
 
 	SECTION("Packet::RtxEncode() does not write beyond the new packet length")

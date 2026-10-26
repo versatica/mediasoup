@@ -1,9 +1,6 @@
 #include "common.hpp"
 #include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
-#ifndef MS_USE_BUILTIN_BWE
-#include "DepLibWebRTC.hpp"
-#endif
 #include "DepOpenSSL.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -48,9 +45,6 @@ int main(int argc, char* argv[])
 	DepLibUV::ClassInit();
 	DepOpenSSL::ClassInit();
 	DepLibSRTP::ClassInit();
-#ifndef MS_USE_BUILTIN_BWE
-	DepLibWebRTC::ClassInit();
-#endif
 	Utils::Crypto::ClassInit();
 
 	Catch::Session session;
@@ -60,9 +54,6 @@ int main(int argc, char* argv[])
 	// Free static stuff.
 	DepLibSRTP::ClassDestroy();
 	Utils::Crypto::ClassDestroy();
-#ifndef MS_USE_BUILTIN_BWE
-	DepLibWebRTC::ClassDestroy();
-#endif
 	DepLibUV::ClassDestroy();
 
 	return status;

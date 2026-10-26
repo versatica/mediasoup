@@ -64,7 +64,6 @@ test('mediasoup.createWorker() succeeds', async () => {
 		rtcMaxPort: 9999,
 		dtlsCertificateFile: path.join(__dirname, 'data', 'dtls-cert.pem'),
 		dtlsPrivateKeyFile: path.join(__dirname, 'data', 'dtls-key.pem'),
-		libwebrtcFieldTrials: 'WebRTC-Bwe-AlrLimitedBackoff/Disabled/',
 		appData: { foo: 456 },
 	});
 

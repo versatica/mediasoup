@@ -395,6 +395,11 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "  capture time (us): %" PRIi64, GetCaptureAtUs().value());
 			}
 
+			if (IsRtx())
+			{
+				MS_DUMP_CLEAN(indentation, "  RTX media ssrc: %" PRIu32, GetMediaSsrc());
+			}
+
 			if (this->payloadDescriptorHandler)
 			{
 				MS_DUMP_CLEAN(indentation + 1, "<PayloadDescriptorHandler>");
@@ -428,6 +433,9 @@ namespace RTC
 
 			// Clone capture time.
 			clonedPacket->captureAtUs = this->captureAtUs;
+
+			// Clone media SSRC.
+			clonedPacket->mediaSsrc = this->mediaSsrc;
 
 			// Assign the payload descriptor handler.
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
@@ -1439,6 +1447,9 @@ namespace RTC
 			// Rewrite the payload type.
 			SetPayloadType(payloadType);
 
+			// Keep the SSRC of the media stream before overwriting it.
+			this->mediaSsrc = GetSsrc();
+
 			// Rewrite the SSRC.
 			SetSsrc(ssrc);
 
@@ -1474,6 +1485,9 @@ namespace RTC
 
 			// Rewrite the SSRC.
 			SetSsrc(ssrc);
+
+			// It's not RTX encoded anymore.
+			this->mediaSsrc.reset();
 
 			// Shift the payload to its original place.
 			std::memmove(payload, payload + 2, payloadLength - 2);

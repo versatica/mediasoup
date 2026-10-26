@@ -356,17 +356,6 @@ impl FromFbs for SrTraceInfo {
     }
 }
 
-impl FromFbs for BweType {
-    type FbsType = transport::BweType;
-
-    fn from_fbs(info: &Self::FbsType) -> Self {
-        match info {
-            transport::BweType::TransportCc => BweType::TransportCc,
-            transport::BweType::Remb => BweType::Remb,
-        }
-    }
-}
-
 impl FromFbs for BweTraceInfo {
     type FbsType = transport::BweTraceInfo;
 
@@ -375,23 +364,6 @@ impl FromFbs for BweTraceInfo {
             desired_bitrate: info.desired_bitrate,
             min_bitrate: info.min_bitrate,
             max_bitrate: info.max_bitrate,
-            available_bitrate: info.available_bitrate,
-        }
-    }
-}
-
-impl FromFbs for OldBweTraceInfo {
-    type FbsType = transport::OldBweTraceInfo;
-
-    fn from_fbs(info: &Self::FbsType) -> Self {
-        Self {
-            r#type: BweType::from_fbs(&info.bwe_type),
-            desired_bitrate: info.desired_bitrate,
-            effective_desired_bitrate: info.effective_desired_bitrate,
-            min_bitrate: info.min_bitrate,
-            max_bitrate: info.max_bitrate,
-            start_bitrate: info.start_bitrate,
-            max_padding_bitrate: info.max_padding_bitrate,
             available_bitrate: info.available_bitrate,
         }
     }

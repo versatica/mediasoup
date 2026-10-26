@@ -105,7 +105,6 @@ export async function createWorker<WorkerAppData extends AppData = AppData>({
 	dtlsPrivateKeyFile,
 	// eslint-disable-next-line no-shadow
 	workerBin,
-	libwebrtcFieldTrials,
 	appData,
 }: WorkerSettings<WorkerAppData> = {}): Promise<Worker<WorkerAppData>> {
 	logger.debug('createWorker()');
@@ -122,7 +121,6 @@ export async function createWorker<WorkerAppData extends AppData = AppData>({
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
 		workerBin,
-		libwebrtcFieldTrials,
 		appData,
 	});
 

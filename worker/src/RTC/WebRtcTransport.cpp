@@ -1250,6 +1250,10 @@ namespace RTC
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
 		  FBS::Notification::Body::WebRtcTransport_IceSelectedTupleChangeNotification,
 		  notification);
+
+		// The selected tuple may change while connected, without going through
+		// ICE disconnected, so the parent class must be told here.
+		RTC::Transport::RouteChanged();
 	}
 
 	inline void WebRtcTransport::OnIceServerConnected(const RTC::ICE::IceServer* /*iceServer*/)
