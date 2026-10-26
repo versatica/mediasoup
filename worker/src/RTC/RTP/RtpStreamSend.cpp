@@ -99,8 +99,7 @@ namespace RTC
 			this->rtxSeq = Utils::Crypto::GetRandomUInt<uint16_t>(0, 0xFFFF);
 		}
 
-		RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(
-		  RTP::Packet* packet, const RTP::SharedPacket& sharedPacket)
+		RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(RTP::Packet* packet)
 		{
 			MS_TRACE();
 
@@ -110,12 +109,12 @@ namespace RTC
 			// Call the parent method.
 			if (!RtpStream::ReceiveStreamPacket(packet))
 			{
-				return ReceivePacketResult::DISCARDED;
+				return { .accepted = false };
 			}
 
 			UpdateUnsentSeqNumbers(packet->GetSequenceNumber());
 
-			bool stored{ false };
+			RTP::RetransmissionBuffer::Item* retransmissionBufferItem{ nullptr };
 
 			// If NACK is enabled, store the packet into the buffer.
 			if (this->retransmissionBuffer)
@@ -132,17 +131,17 @@ namespace RTC
 					  packet->GetSsrc(),
 					  packet->GetSequenceNumber());
 
-					return ReceivePacketResult::DISCARDED;
+					return { .accepted = false };
 				}
 
-				stored = this->retransmissionBuffer->Insert(packet, sharedPacket, this->shared->GetTimeMs());
+				retransmissionBufferItem =
+				  this->retransmissionBuffer->Insert(packet, this->shared->GetTimeMs());
 			}
 
 			// Increase transmission counter.
 			this->transmissionCounter.Update(packet);
 
-			return stored ? ReceivePacketResult::ACCEPTED_AND_STORED
-			              : ReceivePacketResult::ACCEPTED_AND_NOT_STORED;
+			return { .accepted = true, .retransmissionBufferItem = retransmissionBufferItem };
 		}
 
 		void RtpStreamSend::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
@@ -609,14 +608,14 @@ namespace RTC
 				item->sentTimes++;
 
 				MS_ASSERT(
-				  item->sharedPacket.HasPacket(),
+				  item->sharedPacket,
 				  "stored item doesn't contain a packet [ssrc:%" PRIu32 ", seq:%" PRIu16
 				  ", timestamp:%" PRIu32 "]",
 				  item->ssrc,
 				  item->sequenceNumber,
 				  item->timestamp);
 
-				auto* const packet = item->sharedPacket.GetPacket();
+				auto* const packet = item->sharedPacket.get();
 
 				// Keep the values of the original packet received by the Consumer.
 				const auto origSsrc      = packet->GetSsrc();

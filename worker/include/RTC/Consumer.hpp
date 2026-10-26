@@ -19,7 +19,6 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RTP/RtpStreamSend.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SeqManager.hpp"
 #include "SharedInterface.hpp"
@@ -39,7 +38,7 @@ namespace RTC
 	                 public RTC::ProducerStreamManager::Listener
 	{
 		using RetransmissionBuffer =
-		  std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>;
+		  std::map<uint16_t, std::shared_ptr<RTC::RTP::Packet>, RTC::SeqManager<uint16_t>::SeqLowerThan>;
 
 	public:
 		class Listener
@@ -186,7 +185,7 @@ namespace RTC
 		void ApplyLayers();
 #endif
 		int64_t GetDesiredBitrate() const;
-		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
+		void SendRtpPacket(RTC::RTP::Packet* packet, std::shared_ptr<RTC::RTP::Packet>& sharedPacket);
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
 		/**
 		 * Worst remote fraction lost among the RTP streams of this Consumer.
@@ -233,7 +232,7 @@ namespace RTC
 		static void StorePacketInTargetLayerRetransmissionBuffer(
 		  RetransmissionBuffer& targetLayerRetransmissionBuffer,
 		  RTC::RTP::Packet* packet,
-		  RTC::RTP::SharedPacket& sharedPacket);
+		  std::shared_ptr<RTC::RTP::Packet>& sharedPacket);
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:

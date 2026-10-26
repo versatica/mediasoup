@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/RTP/RetransmissionBuffer.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -42,9 +42,12 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 			packet->SetSequenceNumber(seq);
 			packet->SetTimestamp(timestamp);
 
-			const RTC::RTP::SharedPacket sharedPacket;
+			auto* item = RTC::RTP::RetransmissionBuffer::Insert(packet.get(), nowMs);
 
-			RTC::RTP::RetransmissionBuffer::Insert(packet.get(), sharedPacket, nowMs);
+			if (item)
+			{
+				item->sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet.get());
+			}
 		}
 
 		void AssertBuffer(std::vector<VerificationItem> verificationBuffer)

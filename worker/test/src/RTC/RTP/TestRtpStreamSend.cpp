@@ -7,9 +7,9 @@
 #include "RTC/RTP/Codecs/VP8.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamSend.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include "mocks/include/MockShared.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcpy()
@@ -67,7 +67,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	    std::vector<std::pair<RTC::RTP::RtpStreamSend*, uint32_t>> streams,
 	    RTC::RTP::Packet* packet) -> void
 	{
-		RTC::RTP::SharedPacket sharedPacket;
+		std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 		for (const auto& kv : streams)
 		{
@@ -77,18 +77,21 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			packet->SetSsrc(ssrc);
 
-			const auto result = stream->ReceivePacket(packet, sharedPacket);
+			const auto result = stream->ReceivePacket(packet);
 
 			packet->SetSsrc(origSsrc);
 
 			// NOTE: Here we must replicate the behaviour of Consumer::sendRtpPacket()
-			// in which, if the shared packet has been stored and it didn't contain the
-			// packet yet, we fill it with a cloned packet.
-			if (
-			  result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED &&
-			  !sharedPacket.HasPacket())
+			// in which, if the packet has been stored, we hand a cloned packet (cloned
+			// just once and shared by all streams) over to the stream.
+			if (result.retransmissionBufferItem)
 			{
-				sharedPacket.Assign(packet);
+				if (!sharedPacket)
+				{
+					sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
+				}
+
+				result.retransmissionBufferItem->sharedPacket = sharedPacket;
 			}
 		}
 	};
@@ -960,16 +963,18 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(context1.GetCurrentSpatialLayer() == 0);
 		REQUIRE(context1.GetCurrentTemporalLayer() == 0);
 
-		RTC::RTP::SharedPacket sharedPacket;
-
 		packet3->SetSsrc(params1.ssrc);
 		// Whenever packet3 is Nacked on stream1, it must always be set a
 		// 00000001 (S0_T1) active decode target bitmas.
-		const auto result = stream1->ReceivePacket(packet3.get(), sharedPacket);
+		const auto result = stream1->ReceivePacket(packet3.get());
 
-		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+		REQUIRE(result.accepted);
+		REQUIRE(result.retransmissionBufferItem);
 
-		sharedPacket.Assign(packet3.get());
+		const std::shared_ptr<RTC::RTP::Packet> sharedPacket =
+		  RTC::RTP::PacketUtils::ClonePacket(packet3.get());
+
+		result.retransmissionBufferItem->sharedPacket = sharedPacket;
 
 		// Process the third packet with context2 and verify current spatial layers.
 		forwarded = packet3->ProcessPayload(std::addressof(context2), marker);
@@ -982,7 +987,12 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		// Whenever packet3 is Nacked on stream2, it must always be set a
 		// 00000011 (S0_T1) active decode target bitmas.
-		stream2->ReceivePacket(packet3.get(), sharedPacket);
+		const auto result2 = stream2->ReceivePacket(packet3.get());
+
+		if (result2.retransmissionBufferItem)
+		{
+			result2.retransmissionBufferItem->sharedPacket = sharedPacket;
+		}
 
 		// Create a NACK item that requests the third packet.
 		RTC::RTCP::FeedbackRtpNackPacket nackPacket(0, params1.ssrc);
@@ -1704,15 +1714,15 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-		const RTC::RTP::SharedPacket sharedPacket;
+		auto result = stream->ReceivePacket(packet.get());
 
-		auto result = stream->ReceivePacket(packet.get(), sharedPacket);
+		REQUIRE(result.accepted);
+		REQUIRE(result.retransmissionBufferItem);
 
-		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+		result = stream->ReceivePacket(packet.get());
 
-		result = stream->ReceivePacket(packet.get(), sharedPacket);
-
-		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED);
+		REQUIRE(!result.accepted);
+		REQUIRE(!result.retransmissionBufferItem);
 	}
 
 	SECTION("packets are not discarded a seq cycle after the timestamp goes back")
@@ -1735,17 +1745,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		const auto stream = std::make_unique<RTC::RTP::RtpStreamSend>(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
-		const RTC::RTP::SharedPacket sharedPacket;
-
 		// Packets stored before the timestamp goes back.
 		for (uint16_t seq{ 1000 }; seq < 1010; ++seq)
 		{
 			packet->SetSequenceNumber(seq);
 			packet->SetTimestamp(1000000000 + seq);
 
-			const auto result = stream->ReceivePacket(packet.get(), sharedPacket);
+			const auto result = stream->ReceivePacket(packet.get());
 
-			REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+			REQUIRE(result.accepted);
+			REQUIRE(result.retransmissionBufferItem);
 		}
 
 		// The timestamp goes back much further than MaxRetransmissionDelayForVideoMs
@@ -1758,15 +1767,16 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			packet->SetSequenceNumber(seq);
 			packet->SetTimestamp(timestamp++);
 
-			stream->ReceivePacket(packet.get(), sharedPacket);
+			stream->ReceivePacket(packet.get());
 		}
 
 		packet->SetSequenceNumber(1000);
 		packet->SetTimestamp(timestamp);
 
-		const auto result = stream->ReceivePacket(packet.get(), sharedPacket);
+		const auto result = stream->ReceivePacket(packet.get());
 
-		REQUIRE(result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+		REQUIRE(result.accepted);
+		REQUIRE(result.retransmissionBufferItem);
 	}
 
 	SECTION("Sender Report RTP timestamp is based on the capture instant when known")
@@ -2297,9 +2307,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			packet->SetSsrc(1111);
 
-			const RTC::RTP::SharedPacket sharedPacket(packet.get());
+			const std::shared_ptr<RTC::RTP::Packet> sharedPacket =
+			  RTC::RTP::PacketUtils::ClonePacket(packet.get());
 
-			stream1->ReceivePacket(packet.get(), sharedPacket);
+			stream1->ReceivePacket(packet.get());
 		}
 
 		std::chrono::duration<double> dur = std::chrono::system_clock::now() - start;
@@ -2313,7 +2324,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		for (size_t i = 0; i < iterations; i++)
 		{
-			const RTC::RTP::SharedPacket sharedPacket;
+			const std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 			// Create packet.
 			const std::unique_ptr<RTC::RTP::Packet> packet(
@@ -2321,7 +2332,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 			packet->SetSsrc(1111);
 
-			stream2->ReceivePacket(packet.get(), sharedPacket);
+			stream2->ReceivePacket(packet.get());
 		}
 
 		dur = std::chrono::system_clock::now() - start;
