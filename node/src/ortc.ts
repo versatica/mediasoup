@@ -837,6 +837,9 @@ export function getPipeConsumerRtpParameters({
 					'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 		);
 
+	// TODO: Remove this once the Dependency-Descriptor header extension has
+	// direction 'sendrecv' in supported RTP capabilities.
+	//
 	// A pipe Consumer forwards all the layers of the Producer, so the receiving
 	// Router needs the Dependency-Descriptor header extension to tell them apart.
 	// It must be added here since, being 'recvonly' in the Router RTP
