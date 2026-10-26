@@ -53,6 +53,6 @@ jobs:
       - uses: ZedThree/clang-tidy-review/upload@v0.23.1
         id: upload-review
 
-      # If there are any comments, fail the check.
+      # If there are any comments, something went wrong so fail the check.
       - if: steps.review.outputs.total_comments > 0
         run: exit 1
