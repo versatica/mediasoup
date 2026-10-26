@@ -2,6 +2,7 @@
 #define MS_RTC_BWE_SENDER_TRANSPORT_CONGESTION_CONTROLLER_HPP
 
 #include "common.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include "RTC/BWE/AlrDetector.hpp"
 #include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BWE/DelayBasedBwe.hpp"
