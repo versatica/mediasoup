@@ -550,6 +550,8 @@ namespace RTC
 		const bool outgoingBitratesApply = this->senderTransportCongestionController != nullptr;
 		const bool incomingBitratesApply = this->receiverTransportCongestionController != nullptr;
 
+		const std::optional<int64_t> rttMs = this->rttCalculator.GetLastRttMs();
+
 		return FBS::Transport::CreateStatsDirect(
 		  builder,
 		  // transportId.
@@ -604,7 +606,8 @@ namespace RTC
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->minOutgoingBitrate))
 				: flatbuffers::nullopt,
 		  // roundTripTime.
-		  this->rttCalculator.GetLastRttMs());
+		  rttMs.has_value() ? flatbuffers::Optional<float>(static_cast<float>(rttMs.value()))
+			                  : flatbuffers::nullopt);
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
