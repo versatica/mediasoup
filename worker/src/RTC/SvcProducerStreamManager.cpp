@@ -547,6 +547,12 @@ namespace RTC
 		MS_TRACE();
 
 		this->syncRequired = true;
+
+		// Not managed by BWE, so nobody else will compute target layers.
+		if (IsActive() && !this->bweManaged)
+		{
+			MayChangeLayers();
+		}
 	}
 
 	void SvcProducerStreamManager::OnTransportDisconnected()

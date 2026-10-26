@@ -959,6 +959,12 @@ namespace RTC
 		this->syncRequired                 = true;
 		this->spatialLayerToSync           = -1;
 		this->keyFrameForTsOffsetRequested = false;
+
+		// Not managed by BWE, so nobody else will compute target layers.
+		if (IsActive() && !this->bweManaged)
+		{
+			MayChangeLayers();
+		}
 	}
 
 	void SimulcastProducerStreamManager::OnTransportDisconnected()
