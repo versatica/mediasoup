@@ -15,7 +15,6 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RetransmissionBuffer.hpp"
 #include "RTC/RTP/RtpStream.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "SharedInterface.hpp"
 #include <flatbuffers/flatbuffer_builder.h>
@@ -106,11 +105,25 @@ namespace RTC
 			};
 
 		public:
-			enum class ReceivePacketResult : uint8_t
+			struct ReceivePacketResult
 			{
-				DISCARDED,
-				ACCEPTED_AND_NOT_STORED,
-				ACCEPTED_AND_STORED
+				/**
+				 * Whether the packet was accepted by the stream.
+				 */
+				bool accepted{ false };
+				/**
+				 * The retransmission buffer item the packet info was stored into, or
+				 * nullptr if it was not stored (because the packet was discarded or
+				 * because NACK is not enabled in this stream).
+				 *
+				 * @remarks
+				 * - Its `sharedPacket` is still empty and must be filled by the caller
+				 *   once the packet has been restored to its original state.
+				 * - The item is owned by the retransmission buffer and is only valid
+				 *   until the next call that may evict items from it, so the caller
+				 *   must fill it right away.
+				 */
+				RTP::RetransmissionBuffer::Item* retransmissionBufferItem{ nullptr };
 			};
 
 		public:
@@ -154,7 +167,7 @@ namespace RTC
 
 			void SetRtx(uint8_t payloadType, uint32_t ssrc) override;
 
-			ReceivePacketResult ReceivePacket(RTP::Packet* packet, const RTP::SharedPacket& sharedPacket);
+			ReceivePacketResult ReceivePacket(RTP::Packet* packet);
 
 			void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 
