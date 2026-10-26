@@ -11,10 +11,6 @@ import type {
 	SvcConsumerDump,
 	PipeConsumerDump,
 	BaseConsumerDump,
-	RtpStreamDump,
-	RtpStreamParametersDump,
-	RtxStreamDump,
-	RtxStreamParameters,
 	ConsumerStat,
 	ConsumerTraceEventType,
 	ConsumerTraceEventData,
@@ -31,6 +27,7 @@ import {
 	parseRtpParameters,
 } from './rtpParametersFbsUtils';
 import { parseRtpStreamStats } from './rtpStreamStatsFbsUtils';
+import { parseRtpStream } from './rtpStreamFbsUtils';
 import type { AppData } from './types';
 import * as fbsUtils from './fbsUtils';
 import * as utils from './utils';
@@ -40,8 +37,7 @@ import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsConsumer from './fbs/consumer';
 import * as FbsConsumerTraceInfo from './fbs/consumer/trace-info';
-import * as FbsRtpStream from './fbs/rtp-stream';
-import * as FbsRtxStream from './fbs/rtx-stream';
+
 import { Type as FbsRtpParametersType } from './fbs/rtp-parameters';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 
@@ -702,67 +698,6 @@ function parseConsumerLayers(data: FbsConsumer.ConsumerLayers): ConsumerLayers {
 	return {
 		spatialLayer,
 		temporalLayer,
-	};
-}
-
-function parseRtpStream(data: FbsRtpStream.Dump): RtpStreamDump {
-	const params = parseRtpStreamParameters(data.params()!);
-
-	let rtxStream: RtxStreamDump | undefined;
-
-	if (data.rtxStream()) {
-		rtxStream = parseRtxStream(data.rtxStream()!);
-	}
-
-	return {
-		params,
-		score: data.score(),
-		rtxStream,
-	};
-}
-
-function parseRtpStreamParameters(
-	data: FbsRtpStream.Params
-): RtpStreamParametersDump {
-	return {
-		encodingIdx: data.encodingIdx(),
-		ssrc: data.ssrc(),
-		payloadType: data.payloadType(),
-		mimeType: data.mimeType()!,
-		clockRate: data.clockRate(),
-		rid: data.rid()!.length > 0 ? data.rid()! : undefined,
-		cname: data.cname()!,
-		rtxSsrc: data.rtxSsrc() !== null ? data.rtxSsrc()! : undefined,
-		rtxPayloadType:
-			data.rtxPayloadType() !== null ? data.rtxPayloadType()! : undefined,
-		useNack: data.useNack(),
-		usePli: data.usePli(),
-		useFir: data.useFir(),
-		useInBandFec: data.useInBandFec(),
-		useDtx: data.useDtx(),
-		spatialLayers: data.spatialLayers(),
-		temporalLayers: data.temporalLayers(),
-	};
-}
-
-function parseRtxStream(data: FbsRtxStream.RtxDump): RtxStreamDump {
-	const params = parseRtxStreamParameters(data.params()!);
-
-	return {
-		params,
-	};
-}
-
-function parseRtxStreamParameters(
-	data: FbsRtxStream.Params
-): RtxStreamParameters {
-	return {
-		ssrc: data.ssrc(),
-		payloadType: data.payloadType(),
-		mimeType: data.mimeType()!,
-		clockRate: data.clockRate(),
-		rrid: data.rrid()!.length > 0 ? data.rrid()! : undefined,
-		cname: data.cname()!,
 	};
 }
 

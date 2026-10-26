@@ -107,7 +107,7 @@ namespace RTC
 			MS_TRACE();
 
 			const auto stateStringView = Association::StateToString(this->state);
-			const auto associationStateStringView = Types::AssociationStateToString(GetAssociationState());
+			const auto associationStateStringView = Types::associationStateToString(GetAssociationState());
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Association>");
 
@@ -119,7 +119,7 @@ namespace RTC
 			  static_cast<int>(stateStringView.size()),
 			  stateStringView.data());
 
-			this->sctpOptions.Dump();
+			this->sctpOptions.Dump(indentation + 1);
 
 			if (this->tcb)
 			{
@@ -187,7 +187,7 @@ namespace RTC
 					return Types::AssociationState::SHUTTING_DOWN;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 		}
 
@@ -436,22 +436,26 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOTE: Needed because resetting a stream discards its queued messages,
+			// which may trigger buffered amount low and message lifecycle callbacks.
 			const AssociationListenerDeferrer::ScopedDeferrer deferrer(this->associationListenerDeferrer);
 
+			// NOTE: The caller (Transport) doesn't know whether the Transmission
+			// Control Block (TCB) has been created or not as it depends on multiple
+			// factors. So do not generate any association error.
 			if (!this->tcb)
 			{
-				this->associationListenerDeferrer.OnAssociationError(
-				  Types::ErrorKind::WRONG_SEQUENCE,
-				  "cannot reset outbound streams as the association is not connected");
+				MS_DEBUG_DEV("cannot reset outbound streams as the association is not connected");
 
 				return Types::ResetStreamsStatus::NOT_CONNECTED;
 			}
 
+			// NOTE: The caller (Transport) doesn't know whether RECONFIG has been
+			// negotiated with the remote SCTP peer, so do not generate any association
+			// error.
 			if (!this->tcb->GetNegotiatedCapabilities().reConfig)
 			{
-				this->associationListenerDeferrer.OnAssociationError(
-				  Types::ErrorKind::UNSUPPORTED_OPERATION,
-				  "cannot reset outbound streams as the remote doesn't support it");
+				MS_DEBUG_DEV("cannot reset outbound streams as the remote doesn't support it");
 
 				return Types::ResetStreamsStatus::NOT_SUPPORTED;
 			}
@@ -608,6 +612,20 @@ namespace RTC
 
 			if (this->tcb)
 			{
+				// The cumulative ack TSN may have advanced while processing the chunks
+				// in this packet, which may be what deferred reset processing (if any)
+				// was waiting for.
+				if (this->tcb->GetStreamResetHandler().MayLeaveDeferredReset())
+				{
+					// There may be chunks to deliver that were queued while waiting for
+					// the streams to reset.
+					//
+					// NOTE: Both this and the above are done before sending the SACK chunk
+					// below so that its advertised receiver window credit accounts for the
+					// released and delivered data.
+					MayDeliverMessages();
+				}
+
 				this->tcb->GetDataTracker().ObservePacketEnd();
 				this->tcb->MaySendSackChunk();
 			}
@@ -869,10 +887,6 @@ namespace RTC
 			shutdownAckChunk->Consolidate();
 
 			this->packetSender.SendPacket(packet.get());
-
-			// NOTE: The timer takes milliseconds, so the RTO is truncated here.
-			this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
-			this->t2ShutdownTimer->Start();
 		}
 
 		void Association::MaySendShutdownOrShutdownAckChunk()
@@ -912,6 +926,10 @@ namespace RTC
 			else if (this->state == State::SHUTDOWN_RECEIVED)
 			{
 				SendShutdownAckChunk();
+
+				this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
+				this->t2ShutdownTimer->Start();
+
 				SetState(State::SHUTDOWN_ACK_SENT, "no more outstanding data");
 			}
 		}
@@ -981,8 +999,9 @@ namespace RTC
 
 				if (message->GetPayloadLength() > this->sctpOptions.maxReceiveMessageSize)
 				{
-					MS_WARN_TAG(
+					MS_WARN_2TAGS(
 					  sctp,
+					  message,
 					  "dropping too large received message [messageByteLength:%zu, maxReceiveMessageSize:%zu]",
 					  message->GetPayloadLength(),
 					  this->sctpOptions.maxReceiveMessageSize);
@@ -1973,6 +1992,10 @@ namespace RTC
 				case State::SHUTDOWN_SENT:
 				{
 					SendShutdownAckChunk();
+
+					this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
+					this->t2ShutdownTimer->Start();
+
 					SetState(State::SHUTDOWN_ACK_SENT, "SHUTDOWN received");
 
 					break;
@@ -1981,6 +2004,9 @@ namespace RTC
 				case State::SHUTDOWN_ACK_SENT:
 				{
 					SendShutdownAckChunk();
+
+					this->t2ShutdownTimer->SetBaseTimeoutMs(this->tcb->GetCurrentRtoUs() / 1000);
+					this->t2ShutdownTimer->Start();
 
 					break;
 				}

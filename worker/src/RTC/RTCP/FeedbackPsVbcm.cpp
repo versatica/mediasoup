@@ -3,6 +3,7 @@
 
 #include "RTC/RTCP/FeedbackPsVbcm.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 #include <cstring> // std::memcpy
 
 namespace RTC
@@ -38,7 +39,7 @@ namespace RTC
 
 			const size_t offset = 8 + GetLength();
 			// 32 bits padding.
-			const size_t padding = (-offset) & 3;
+			const size_t padding = Utils::Byte::PadTo4Bytes(offset) - offset;
 
 			for (size_t i{ 0 }; i < padding; ++i)
 			{

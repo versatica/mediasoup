@@ -2,7 +2,6 @@
 /worker/out
 /worker/subprojects/*
 !/worker/subprojects/*.wrap
-!/worker/subprojects/packagefiles
 !/worker/subprojects/.clang-tidy
 
 ## Node.
@@ -18,8 +17,6 @@
 
 ## Worker.
 /worker/scripts/node_modules
-# Flatc generated files.
-/worker/include/FBS
 /worker/prebuild
 # Python invoke.
 /worker/pip_invoke

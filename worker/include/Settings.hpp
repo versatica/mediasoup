@@ -33,12 +33,14 @@ public:
 	struct Configuration
 	{
 		LogLevel logLevel{ LogLevel::LOG_ERROR };
-		struct LogTags logTags;
+		LogTags logTags;
 		uint16_t rtcMinPort{ 10000 };
 		uint16_t rtcMaxPort{ 59999 };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
+#ifndef MS_USE_BUILTIN_BWE
 		std::string libwebrtcFieldTrials{ "WebRTC-Bwe-AlrLimitedBackoff/Enabled/" };
+#endif
 	};
 
 public:
@@ -52,7 +54,7 @@ private:
 	static void SetDtlsCertificateAndPrivateKeyFiles();
 
 public:
-	static thread_local struct Configuration configuration;
+	static thread_local Configuration configuration;
 
 private:
 	static const ankerl::unordered_dense::map<std::string, LogLevel> String2LogLevel;

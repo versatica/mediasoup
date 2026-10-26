@@ -188,19 +188,21 @@ namespace RTC
 			bool ShouldSendForwardTsn(int64_t nowUs);
 
 			/**
-			 * Adds a FORWARD-TSN chunk to the given packet and returns it.
+			 * @see OutstandingData::AddForwardTsn().
 			 */
-			const ForwardTsnChunk* AddForwardTsn(Packet* packet) const
+			const ForwardTsnChunk* AddForwardTsn(
+			  Packet* packet, std::optional<uint32_t> rateLimitedTsn = std::nullopt) const
 			{
-				return this->outstandingData.AddForwardTsn(packet);
+				return this->outstandingData.AddForwardTsn(packet, rateLimitedTsn);
 			}
 
 			/**
-			 * Adds an I-FORWARD-TSN chunk to the given packet and returns it.
+			 * @see OutstandingData::AddIForwardTsn().
 			 */
-			const IForwardTsnChunk* AddIForwardTsn(Packet* packet) const
+			const IForwardTsnChunk* AddIForwardTsn(
+			  Packet* packet, std::optional<uint32_t> rateLimitedTsn = std::nullopt) const
 			{
-				return this->outstandingData.AddIForwardTsn(packet);
+				return this->outstandingData.AddIForwardTsn(packet, rateLimitedTsn);
 			}
 
 			/**
@@ -213,12 +215,11 @@ namespace RTC
 			void CommitResetStreams();
 			void RollbackResetStreams();
 
+#ifdef MS_TEST
+		public:
+#else
 		private:
-			/**
-			 * Returns how large a chunk will be, serialized, carrying the data.
-			 */
-			size_t GetSerializedChunkLength(const UserData& data) const;
-
+#endif
 			/**
 			 * Indicates if the congestion control algorithm is in "fast recovery".
 			 */
@@ -226,6 +227,12 @@ namespace RTC
 			{
 				return this->fastRecoveryExitTsn.has_value();
 			}
+
+		private:
+			/**
+			 * Returns how large a chunk will be, serialized, carrying the data.
+			 */
+			size_t GetSerializedChunkLength(const UserData& data) const;
 
 			/**
 			 * Indicates if the provided SACK chunk is valid given what has previously

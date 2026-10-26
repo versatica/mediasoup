@@ -118,7 +118,7 @@ namespace RTC
 				this->nextMid.Increment();
 
 				// This might unblock assembling more messages.
-				return -TryToAssembleMessages();
+				return -static_cast<int32_t>(TryToAssembleMessages());
 			}
 
 			// Slow path.
@@ -159,7 +159,7 @@ namespace RTC
 				removedBytes += std::accumulate(
 				  it->second.begin(),
 				  it->second.end(),
-				  0,
+				  size_t{ 0 },
 				  [](size_t acc, const auto& i)
 				  {
 					  const auto& data = i.second.second;
@@ -295,7 +295,7 @@ namespace RTC
 			const size_t payloadLength = std::accumulate(
 			  tsnChunks.begin(),
 			  tsnChunks.end(),
-			  0,
+			  size_t{ 0 },
 			  [](size_t acc, const auto& i)
 			  {
 				  const auto& data = i.second.second;

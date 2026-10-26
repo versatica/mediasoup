@@ -31,6 +31,15 @@ export function generateRandomNumber(): number {
 }
 
 /**
+ * Whether the given value is a number that can be safely given to an uint64
+ * field in FlatBuffers: an integer, not negative and not bigger than
+ * Number.MAX_SAFE_INTEGER (which always fits in an uint64).
+ */
+export function isUnsignedSafeInteger(value: unknown): value is number {
+	return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
+
+/**
  * Make an object or array recursively immutable.
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze.
  */

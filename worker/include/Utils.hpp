@@ -4,13 +4,13 @@
 #include "common.hpp"
 #include "RTC/Consts.hpp"
 #include <openssl/evp.h>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <limits>  // std::numeric_limits
 #include <random>  // std::mt19937_64, std::uniform_int_distribution, std::random_device
 #include <string>
-#include <type_traits> // std::enable_if, std::is_same_v, std::is_unsigned
 #ifdef _WIN32
 #include <ws2ipdef.h>
 // https://stackoverflow.com/a/24550632/2085408
@@ -76,7 +76,7 @@ namespace Utils
 
 		static struct sockaddr_storage CopyAddress(const struct sockaddr* addr)
 		{
-			struct sockaddr_storage copiedAddr{};
+			sockaddr_storage copiedAddr{};
 
 			switch (addr->sa_family)
 			{
@@ -195,31 +195,31 @@ namespace Utils
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, bool>::type static IsPaddedTo4Bytes(T size)
+		bool static IsPaddedTo4Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return (size & 0x03) == 0;
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, bool>::type static IsPaddedTo8Bytes(T size)
+		bool static IsPaddedTo8Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return (size & 0x07) == 0;
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadTo4Bytes(T size)
+		T static PadTo4Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return (size + 3) & ~static_cast<T>(0x03);
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadDownTo4Bytes(T size)
+		T static PadDownTo4Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return size & ~static_cast<T>(0x03);
 		}
 
 		template<typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, T>::type static PadTo8Bytes(T size)
+		T static PadTo8Bytes(T size) requires std::is_unsigned_v<T>
 		{
 			return (size + 7) & ~static_cast<T>(0x07);
 		}
@@ -275,8 +275,14 @@ namespace Utils
 		static thread_local EVP_MAC* mac;
 		static thread_local EVP_MAC_CTX* hmacSha1Ctx;
 		static thread_local uint8_t hmacSha1Buffer[];
-		static const uint32_t Crc32Table[256];
-		static const uint32_t Crc32cTable[256];
+		// Number of input bytes consumed per iteration of the slice-by-8 loop.
+		static constexpr size_t CrcSlices{ 8u };
+		using CrcTables = std::array<std::array<uint32_t, 256>, CrcSlices>;
+		static const CrcTables crc32Tables;
+		static const CrcTables crc32cTables;
+		static constexpr CrcTables generateCrcTables(uint32_t polynomial) noexcept;
+		static uint32_t ReadLe32(const uint8_t* data);
+		static uint32_t ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size);
 	};
 
 	class String
@@ -516,9 +522,39 @@ namespace Utils
 		};
 
 		/**
+		 * Convert microseconds into milliseconds.
+		 *
+		 * @remarks
+		 * - The result is rounded to the nearest millisecond, halves upwards.
+		 */
+		static int64_t TimeUsToMs(int64_t timeUs)
+		{
+			// NOTE: The remainder decides the rounding instead of adding half the
+			// divisor first, which would overflow for a time close to the maximum.
+			// Integer division truncates towards zero, so a negative remainder is
+			// walked down to the next whole millisecond for halves to go upwards
+			// there too.
+			const int64_t quotient  = timeUs / 1000;
+			const int64_t remainder = timeUs % 1000;
+
+			if (remainder >= 500)
+			{
+				return quotient + 1;
+			}
+			else if (remainder < -500)
+			{
+				return quotient - 1;
+			}
+			else
+			{
+				return quotient;
+			}
+		}
+
+		/**
 		 * Convert microseconds into an NTP timestamp.
 		 */
-		static Time::Ntp TimeUs2Ntp(int64_t timeUs)
+		static Time::Ntp TimeUsToNtp(int64_t timeUs)
 		{
 			Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
@@ -536,12 +572,51 @@ namespace Utils
 		/**
 		 * Convert an NTP timestamp into microseconds.
 		 */
-		static int64_t Ntp2TimeUs(Time::Ntp ntp)
+		static int64_t NtpToTimeUs(Time::Ntp ntp)
 		{
 			return (
 			  (static_cast<int64_t>(ntp.seconds) * 1000000) +
 			  static_cast<int64_t>(
 			    std::round((static_cast<double>(ntp.fractions) * 1000000) / NtpFractionalUnit)));
+		}
+
+		/**
+		 * Convert an interval in compact NTP representation (the middle 32 bits of an
+		 * NTP timestamp, so 1/65536 seconds units) into microseconds.
+		 *
+		 * @remarks
+		 * - The interval is usually the difference between two compact NTP timestamps,
+		 *   which wraps around every 65536 seconds. Values above 0x80000000 are hence
+		 *   taken as negative intervals rather than as intervals of more than 32768
+		 *   seconds.
+		 * - The result is rounded to the nearest microsecond, halves upwards.
+		 */
+		static int64_t CompactNtpIntervalToTimeUs(uint32_t compactNtpInterval)
+		{
+			auto value = static_cast<int64_t>(compactNtpInterval);
+
+			if (compactNtpInterval > 0x80000000)
+			{
+				value -= (int64_t{ 1 } << 32);
+			}
+
+			// NOTE: Right shifting a negative value rounds towards negative infinity,
+			// so adding half the divisor first rounds to the nearest value.
+			return ((value * 1000000) + (1 << 15)) >> 16;
+		}
+
+		/**
+		 * Convert a round trip time in compact NTP representation into microseconds.
+		 *
+		 * @remarks
+		 * - A non-monotonic clock can make the round trip time negative, so a negative
+		 *   value, as well as one too small to be true, yields 1 millisecond.
+		 */
+		static int64_t CompactNtpRttToTimeUs(uint32_t compactNtpRtt)
+		{
+			static constexpr int64_t MinRttUs{ 1000 };
+
+			return std::max(CompactNtpIntervalToTimeUs(compactNtpRtt), MinRttUs);
 		}
 
 		/**
@@ -572,7 +647,7 @@ namespace Utils
 		 *
 		 * @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
 		 */
-		static std::optional<int64_t> TimeUs2Q32x32(int64_t timeUs)
+		static std::optional<int64_t> TimeUsToQ32x32(int64_t timeUs)
 		{
 			// The seconds of the format are 32 bits wide, so from here on it does not fit.
 			static constexpr int64_t OutOfRangeUs{ (1LL << 31) * 1000000 };

@@ -1,5 +1,4 @@
 import * as h264 from 'h264-profile-level-id';
-import type * as flatbuffers from 'flatbuffers';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { parseScalabilityMode } from './scalabilityModesUtils';
 import type {
@@ -19,7 +18,6 @@ import type {
 import type { SctpStreamParameters } from './sctpParametersTypes';
 import * as utils from './utils';
 import { UnsupportedError } from './errors';
-import * as FbsRtpParameters from './fbs/rtp-parameters';
 
 export type RtpCodecsEncodingsMapping = {
 	codecs: {
@@ -175,18 +173,24 @@ export function validateAndNormalizeSctpStreamParameters(
 
 	// maxPacketLifeTime is optional.
 	if (
-		params.maxPacketLifeTime &&
+		params.maxPacketLifeTime !== undefined &&
 		typeof params.maxPacketLifeTime !== 'number'
 	) {
 		throw new TypeError('invalid params.maxPacketLifeTime');
 	}
 
 	// maxRetransmits is optional.
-	if (params.maxRetransmits && typeof params.maxRetransmits !== 'number') {
+	if (
+		params.maxRetransmits !== undefined &&
+		typeof params.maxRetransmits !== 'number'
+	) {
 		throw new TypeError('invalid params.maxRetransmits');
 	}
 
-	if (params.maxPacketLifeTime && params.maxRetransmits) {
+	if (
+		params.maxPacketLifeTime !== undefined &&
+		params.maxRetransmits !== undefined
+	) {
 		throw new TypeError(
 			'cannot provide both maxPacketLifeTime and maxRetransmits'
 		);
@@ -195,14 +199,16 @@ export function validateAndNormalizeSctpStreamParameters(
 	if (
 		orderedGiven &&
 		params.ordered &&
-		(params.maxPacketLifeTime || params.maxRetransmits)
+		(params.maxPacketLifeTime !== undefined ||
+			params.maxRetransmits !== undefined)
 	) {
 		throw new TypeError(
 			'cannot be ordered with maxPacketLifeTime or maxRetransmits'
 		);
 	} else if (
 		!orderedGiven &&
-		(params.maxPacketLifeTime || params.maxRetransmits)
+		(params.maxPacketLifeTime !== undefined ||
+			params.maxRetransmits !== undefined)
 	) {
 		params.ordered = false;
 	}
@@ -389,7 +395,9 @@ export function getProducerRtpParametersMapping(
 
 		// Search for the associated media codec.
 		const associatedMediaCodec = params.codecs.find(
-			mediaCodec => mediaCodec.payloadType === codec.parameters!['apt']
+			mediaCodec =>
+				!isRtxCodec(mediaCodec) &&
+				mediaCodec.payloadType === codec.parameters!['apt']
 		);
 
 		if (!associatedMediaCodec) {
@@ -608,11 +616,13 @@ export function getConsumerRtpParameters({
 	remoteRtpCapabilities,
 	pipe,
 	enableRtx,
+	enableBwe,
 }: {
 	consumableRtpParameters: RtpParameters;
 	remoteRtpCapabilities: RtpCapabilities;
 	pipe: boolean;
 	enableRtx: boolean;
+	enableBwe: boolean;
 }): RtpParameters {
 	const consumerParams: RtpParameters = {
 		codecs: [],
@@ -685,6 +695,19 @@ export function getConsumerRtpParameters({
 				capExt => capExt.preferredId === ext.id && capExt.uri === ext.uri
 			)
 		);
+
+	// A transport that doesn't run bandwidth estimation must not negotiate it.
+	// Dropping its header extensions is enough, since the RTCP feedback below is
+	// reduced out of them.
+	if (!enableBwe) {
+		consumerParams.headerExtensions = consumerParams.headerExtensions.filter(
+			ext =>
+				ext.uri !==
+					'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' &&
+				ext.uri !==
+					'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
+		);
+	}
 
 	// Reduce codecs' RTCP feedback. Use Transport-CC if available, REMB otherwise.
 	if (
@@ -823,11 +846,13 @@ export function getPipeConsumerRtpParameters({
 			continue;
 		}
 
+		// Drop the bandwidth estimation feedback, which a PipeTransport doesn't run,
+		// and the generic NACK when there is no RTX to retransmit with.
 		codec.rtcpFeedback = codec.rtcpFeedback!.filter(
 			fb =>
-				(fb.type === 'nack' && fb.parameter === 'pli') ||
-				(fb.type === 'ccm' && fb.parameter === 'fir') ||
-				(enableRtx && fb.type === 'nack' && !fb.parameter)
+				fb.type !== 'goog-remb' &&
+				fb.type !== 'transport-cc' &&
+				(enableRtx || fb.type !== 'nack' || Boolean(fb.parameter))
 		);
 
 		consumerParams.codecs.push(codec);
@@ -882,49 +907,27 @@ export function getPipeConsumerRtpParameters({
 	return consumerParams;
 }
 
-export function serializeRtpMapping(
-	builder: flatbuffers.Builder,
-	rtpMapping: RtpCodecsEncodingsMapping
-): number {
-	const codecs: number[] = [];
+/**
+ * Remove from the given RTP parameters everything related to bandwidth
+ * estimation, which a transport that doesn't run it must not negotiate.
+ *
+ * It mutates the given RTP parameters, so the caller must not pass the ones the
+ * application gave.
+ */
+export function disableBweInRtpParameters(rtpParameters: RtpParameters): void {
+	rtpParameters.headerExtensions = rtpParameters.headerExtensions?.filter(
+		ext =>
+			ext.uri !==
+				'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' &&
+			ext.uri !==
+				'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
+	);
 
-	for (const codec of rtpMapping.codecs) {
-		codecs.push(
-			FbsRtpParameters.CodecMapping.createCodecMapping(
-				builder,
-				codec.payloadType,
-				codec.mappedPayloadType
-			)
+	for (const codec of rtpParameters.codecs) {
+		codec.rtcpFeedback = codec.rtcpFeedback?.filter(
+			fb => fb.type !== 'transport-cc' && fb.type !== 'goog-remb'
 		);
 	}
-	const codecsOffset = FbsRtpParameters.RtpMapping.createCodecsVector(
-		builder,
-		codecs
-	);
-
-	const encodings: number[] = [];
-
-	for (const encoding of rtpMapping.encodings) {
-		encodings.push(
-			FbsRtpParameters.EncodingMapping.createEncodingMapping(
-				builder,
-				builder.createString(encoding.rid),
-				encoding.ssrc ?? null,
-				encoding.mappedSsrc
-			)
-		);
-	}
-
-	const encodingsOffset = FbsRtpParameters.RtpMapping.createEncodingsVector(
-		builder,
-		encodings
-	);
-
-	return FbsRtpParameters.RtpMapping.createRtpMapping(
-		builder,
-		codecsOffset,
-		encodingsOffset
-	);
 }
 
 function isRtxCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {
@@ -1346,6 +1349,14 @@ function validateAndNormalizeRtpEncodingParameters(
 		typeof encoding.scalabilityMode !== 'string'
 	) {
 		throw new TypeError('invalid encoding.scalabilityMode');
+	}
+
+	// maxBitrate is optional.
+	if (
+		encoding.maxBitrate !== undefined &&
+		!utils.isUnsignedSafeInteger(encoding.maxBitrate)
+	) {
+		throw new TypeError('invalid encoding.maxBitrate');
 	}
 }
 

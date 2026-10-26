@@ -41,7 +41,7 @@ namespace RTC
 				OVERUSING
 			};
 
-			constexpr std::string_view BandwidthUsageToString(BandwidthUsage bandwidthUsage)
+			constexpr std::string_view bandwidthUsageToString(BandwidthUsage bandwidthUsage)
 			{
 				switch (bandwidthUsage)
 				{
@@ -60,9 +60,35 @@ namespace RTC
 						return "OVERUSING";
 					}
 
-						NO_DEFAULT_GCC();
+						NO_DEFAULT();
 				}
 			}
+
+			/**
+			 * The two bits of the IP header with which the network tells that it is
+			 * congested instead of dropping the packet.
+			 *
+			 * @see https://www.rfc-editor.org/rfc/rfc9331.html
+			 */
+			enum class EcnMarking : uint8_t
+			{
+				/**
+				 * Not ECN capable transport.
+				 */
+				NOT_ECT = 0b00,
+				/**
+				 * ECN capable transport, which is the one L4S uses.
+				 */
+				ECT1 = 0b01,
+				/**
+				 * ECN capable transport, not used by L4S.
+				 */
+				ECT0 = 0b10,
+				/**
+				 * Congestion experienced, which is what the network sets on the way.
+				 */
+				CE = 0b11
+			};
 
 			/**
 			 * Estimate of the capacity of the link, used to bound the rate control.
@@ -96,6 +122,67 @@ namespace RTC
 			};
 
 			/**
+			 * The burst of packets a probe is sent as, and what makes its result
+			 * trustworthy.
+			 *
+			 * A probe is only worth believing once enough of what was sent has come
+			 * back, so the burst carries how many packets and how many bytes it was
+			 * meant to be. Whoever measures it compares those against what actually
+			 * arrived, and discards the cluster if too little of it did.
+			 */
+			struct ProbeCluster
+			{
+				/**
+				 * Identifies the burst, so that the packets of one probe are not mixed
+				 * with those of another.
+				 */
+				int64_t id{ 0 };
+				/**
+				 * Packets the burst was meant to be made of.
+				 */
+				int64_t minProbes{ 0 };
+				/**
+				 * Bytes the burst was meant to carry.
+				 */
+				int64_t minBytes{ 0 };
+			};
+
+			/**
+			 * A burst that has been asked for but not sent yet.
+			 *
+			 * It's what whoever decides to probe hands over to whoever emits the
+			 * packets: at what bitrate, for how long and in how many packets. What
+			 * travels with each of those packets afterwards is a `ProbeCluster`.
+			 */
+			struct ProbeClusterConfig
+			{
+				/**
+				 * Identifies the burst, and is what each of its packets carries.
+				 */
+				int64_t id{ 0 };
+				/**
+				 * Instant at which the burst was asked for.
+				 */
+				int64_t atUs{ 0 };
+				/**
+				 * Bitrate the burst is meant to be sent at (bps).
+				 */
+				int64_t targetBitrate{ 0 };
+				/**
+				 * How long the burst is meant to last.
+				 */
+				int64_t targetDurationUs{ 0 };
+				/**
+				 * Time between two consecutive bursts of packets within the probe.
+				 */
+				int64_t minProbeDeltaUs{ 2 * 1000 };
+				/**
+				 * Packets the burst is meant to be made of.
+				 */
+				int64_t targetProbeCount{ 0 };
+			};
+
+			/**
 			 * A packet that was sent and is being tracked until its feedback arrives.
 			 */
 			struct SentPacket
@@ -126,9 +213,19 @@ namespace RTC
 				 */
 				size_t priorUnackedData{ 0 };
 				/**
+				 * Data that was in flight when the packet was sent, itself included and
+				 * the data that no feedback covers excluded (bytes).
+				 */
+				size_t dataInFlight{ 0 };
+				/**
 				 * Whether it's an audio packet. False for video, padding and RTX.
 				 */
-				bool audio{ false };
+				bool isAudio{ false };
+				/**
+				 * The probe cluster the packet belongs to, or no value if it isn't a
+				 * probe.
+				 */
+				std::optional<ProbeCluster> probeCluster;
 			};
 
 			/**
@@ -150,6 +247,16 @@ namespace RTC
 				};
 
 				/**
+				 * What identifies the packet on the wire.
+				 */
+				struct RtpPacketInfo
+				{
+					uint32_t ssrc{ 0 };
+					uint16_t rtpSequenceNumber{ 0 };
+					bool isRetransmission{ false };
+				};
+
+				/**
 				 * Whether the packet reached the receiver at all.
 				 */
 				bool IsReceived() const
@@ -163,6 +270,72 @@ namespace RTC
 				 * value if it was reported as lost.
 				 */
 				std::optional<int64_t> receiveTimeUs;
+				/**
+				 * What identifies the packet on the wire, or no value when the feedback
+				 * doesn't report on an RTP packet.
+				 */
+				std::optional<RtpPacketInfo> rtpPacketInfo;
+				/**
+				 * How long the receiver held the packet before sending the feedback
+				 * that reports it, which is what allows a round trip time per packet.
+				 *
+				 * @remark
+				 * - Only a feedback that carries it per packet has it, which is the one
+				 *   of RFC 8888 and not the transport-cc one.
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc8888
+				 */
+				std::optional<int64_t> arrivalTimeOffsetUs;
+				/**
+				 * The marking the packet carried when it arrived, which is how the
+				 * network reports being congested without dropping it.
+				 *
+				 * @remark
+				 * - Only a feedback that reports it has it, which is the one of RFC
+				 *   8888 and not the transport-cc one.
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc8888
+				 */
+				EcnMarking ecn{ EcnMarking::NOT_ECT };
+				/**
+				 * Whether the arrival time reported for this packet cannot be told from
+				 * that of another one, so it says nothing about the delay.
+				 *
+				 * @remark
+				 * - Nothing in this estimator reads it. It is only of use to SCReAM,
+				 *   another way of estimating the bandwidth.
+				 *
+				 * @link https://datatracker.ietf.org/doc/draft-johansson-ccwg-rfc8298bis-screamv2
+				 */
+				bool ambiguousReceiveTime{ false };
+				/**
+				 * Whether the packet was sent marked as ECT(1), which asks the network
+				 * to report congestion instead of dropping the packet.
+				 *
+				 * @see https://www.rfc-editor.org/rfc/rfc9331.html
+				 */
+				bool sentWithEct1{ false };
+				/**
+				 * Whether this is the first feedback to report the packet as lost.
+				 *
+				 * @remark
+				 * - Only a feedback that reports on a whole range of packets can tell,
+				 *   which is the one of RFC 8888 and not the transport-cc one.
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc8888
+				 */
+				bool reportedLostForTheFirstTime{ false };
+				/**
+				 * Whether this feedback reports as received a packet that an earlier
+				 * one had reported as lost.
+				 *
+				 * @remark
+				 * - Only a feedback that reports on a whole range of packets can tell,
+				 *   which is the one of RFC 8888 and not the transport-cc one.
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc8888
+				 */
+				bool reportedRecoveredForTheFirstTime{ false };
 			};
 
 			/**
@@ -190,6 +363,10 @@ namespace RTC
 				 * Time at which this feedback was received, in our own clock reference.
 				 */
 				int64_t feedbackTimeUs;
+				/**
+				 * Data that was sent and no feedback has reported on yet (bytes).
+				 */
+				size_t dataInFlight{ 0 };
 				/**
 				 * Every packet the feedback reports on, received and lost alike.
 				 */

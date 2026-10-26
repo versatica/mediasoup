@@ -27,7 +27,7 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 	const std::vector<uint32_t> ssrcs{ 0x02d03702, 0x04a76747 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [&ssrcs](RTC::RTCP::FeedbackPsRembPacket* packet)
+	const auto verify = [&ssrcs](RTC::RTCP::FeedbackPsRembPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -65,5 +65,24 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 		packet.SetBitrate(bitrate);
 
 		verify(&packet);
+	}
+
+	SECTION("more ssrcs than the packet can count are dropped")
+	{
+		RTC::RTCP::FeedbackPsRembPacket packet(senderSsrc, mediaSsrc);
+
+		// One more than fits, since the field that counts them is a single byte.
+		std::vector<uint32_t> manySsrcs;
+
+		manySsrcs.reserve(RTC::RTCP::FeedbackPsRembPacket::MaxNumberOfSsrcs + 1);
+
+		for (uint32_t ssrc{ 1 }; ssrc <= RTC::RTCP::FeedbackPsRembPacket::MaxNumberOfSsrcs + 1; ++ssrc)
+		{
+			manySsrcs.push_back(ssrc);
+		}
+
+		packet.SetSsrcs(manySsrcs);
+
+		REQUIRE(packet.GetSsrcs().size() == RTC::RTCP::FeedbackPsRembPacket::MaxNumberOfSsrcs);
 	}
 }

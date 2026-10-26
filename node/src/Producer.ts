@@ -17,7 +17,9 @@ import { Channel } from './Channel';
 import type { TransportInternal } from './Transport';
 import type { MediaKind, RtpParameters } from './rtpParametersTypes';
 import { parseRtpParameters } from './rtpParametersFbsUtils';
+import { parseRtpMapping } from './rtpMappingFbsUtils';
 import { parseRtpStreamRecvStats } from './rtpStreamStatsFbsUtils';
+import { parseRtpStream } from './rtpStreamFbsUtils';
 import type { AppData } from './types';
 import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
@@ -520,17 +522,8 @@ function parseProducerDump(data: FbsProducer.DumpResponse): ProducerDump {
 		kind: data.kind() === FbsRtpParameters.MediaKind.AUDIO ? 'audio' : 'video',
 		type: producerTypeFromFbs(data.type()),
 		rtpParameters: parseRtpParameters(data.rtpParameters()!),
-		// NOTE: optional values are represented with null instead of undefined.
-		// TODO: Make flatbuffers TS return undefined instead of null.
-		rtpMapping: data.rtpMapping()?.unpack(),
-		// NOTE: optional values are represented with null instead of undefined.
-		// TODO: Make flatbuffers TS return undefined instead of null.
-		rtpStreams:
-			data.rtpStreamsLength() > 0
-				? fbsUtils.parseVector(data, 'rtpStreams', rtpStream =>
-						rtpStream.unpack()
-					)
-				: undefined,
+		rtpMapping: parseRtpMapping(data.rtpMapping()!),
+		rtpStreams: fbsUtils.parseVector(data, 'rtpStreams', parseRtpStream),
 		traceEventTypes: fbsUtils.parseVector<ProducerTraceEventType>(
 			data,
 			'traceEventTypes',

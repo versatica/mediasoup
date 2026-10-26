@@ -14,6 +14,7 @@ use mediasoup_types::data_structures::{
 };
 use mediasoup_types::rtp_parameters::{
     MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
+    RtpHeaderExtension, RtpHeaderExtensionDirection,
 };
 use mediasoup_types::sctp_parameters::{SctpNegotiatedCapabilities, SctpParameters};
 use portpicker::pick_unused_port;
@@ -61,6 +62,156 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
             rtcp_feedback: vec![],
         },
     ]
+}
+
+fn video_rtp_parameters(rtcp_feedback: Vec<RtcpFeedback>) -> RtpParameters {
+    RtpParameters {
+        mid: Some("VIDEO".to_string()),
+        codecs: vec![RtpCodecParameters::Video {
+            mime_type: MimeTypeVideo::Vp8,
+            payload_type: 112,
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback,
+        }],
+        header_extensions: vec![
+            RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::AbsSendTime,
+                id: 4,
+                encrypt: false,
+            },
+            RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
+                id: 5,
+                encrypt: false,
+            },
+            RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::VideoOrientation,
+                id: 13,
+                encrypt: false,
+            },
+        ],
+        encodings: vec![RtpEncodingParameters {
+            ssrc: Some(22222222),
+            ..RtpEncodingParameters::default()
+        }],
+        rtcp: RtcpParameters {
+            cname: Some("video-1".to_string()),
+            ..RtcpParameters::default()
+        },
+        msid: None,
+    }
+}
+
+fn consumer_device_capabilities() -> RtpCapabilities {
+    RtpCapabilities {
+        codecs: vec![RtpCodecCapability::Video {
+            mime_type: MimeTypeVideo::Vp8,
+            preferred_payload_type: Some(101),
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![
+                RtcpFeedback::NackPli,
+                RtcpFeedback::GoogRemb,
+                RtcpFeedback::TransportCc,
+            ],
+        }],
+        header_extensions: vec![
+            RtpHeaderExtension {
+                kind: MediaKind::Video,
+                uri: RtpHeaderExtensionUri::AbsSendTime,
+                preferred_id: 4,
+                preferred_encrypt: false,
+                direction: RtpHeaderExtensionDirection::SendRecv,
+            },
+            RtpHeaderExtension {
+                kind: MediaKind::Video,
+                uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
+                preferred_id: 5,
+                preferred_encrypt: false,
+                direction: RtpHeaderExtensionDirection::SendRecv,
+            },
+        ],
+    }
+}
+
+#[test]
+fn enable_bwe_false_removes_bwe_stuff() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let mut transport_options =
+            WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
+                protocol: Protocol::Udp,
+                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                announced_address: None,
+                expose_internal_ip: false,
+                port: None,
+                port_range: None,
+                flags: None,
+                send_buffer_size: None,
+                recv_buffer_size: None,
+            }));
+
+        transport_options.enable_bwe = false;
+
+        let transport = router
+            .create_webrtc_transport(transport_options)
+            .await
+            .expect("Failed to create WebRTC transport");
+
+        let producer = transport
+            .produce(ProducerOptions::new(
+                MediaKind::Video,
+                video_rtp_parameters(vec![
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::GoogRemb,
+                    RtcpFeedback::TransportCc,
+                ]),
+            ))
+            .await
+            .expect("Failed to produce video");
+
+        assert_eq!(
+            producer
+                .rtp_parameters()
+                .header_extensions
+                .iter()
+                .map(|ext| ext.uri)
+                .collect::<Vec<_>>(),
+            vec![RtpHeaderExtensionUri::VideoOrientation],
+        );
+
+        assert_eq!(
+            producer.rtp_parameters().codecs[0].rtcp_feedback(),
+            &vec![RtcpFeedback::NackPli],
+        );
+
+        // Consume with capabilities that do include the BWE header extensions and RTCP feedback.
+        let consumer = transport
+            .consume(ConsumerOptions::new(
+                producer.id(),
+                consumer_device_capabilities(),
+            ))
+            .await
+            .expect("Failed to consume video");
+
+        for header_extension in &consumer.rtp_parameters().header_extensions {
+            assert!(!matches!(
+                header_extension.uri,
+                RtpHeaderExtensionUri::AbsSendTime | RtpHeaderExtensionUri::TransportWideCcDraft01
+            ));
+        }
+
+        for codec in &consumer.rtp_parameters().codecs {
+            for fb in codec.rtcp_feedback() {
+                assert!(!matches!(
+                    fb,
+                    RtcpFeedback::GoogRemb | RtcpFeedback::TransportCc
+                ));
+            }
+        }
+    });
 }
 
 async fn init() -> (Worker, Router) {
@@ -484,8 +635,6 @@ fn get_stats_succeeds() {
         assert_eq!(stats[0].probation_send_bitrate, 0);
         assert_eq!(stats[0].ice_selected_tuple, None);
         assert_eq!(stats[0].max_incoming_bitrate, None);
-        assert_eq!(stats[0].rtp_packet_loss_received, None);
-        assert_eq!(stats[0].rtp_packet_loss_sent, None);
     });
 }
 
@@ -643,86 +792,6 @@ fn set_min_outgoing_bitrate_succeeds() {
             .set_min_outgoing_bitrate(0)
             .await
             .expect("Failed to remove limit in min outgoing bitrate on WebRTC transport");
-    });
-}
-
-#[test]
-fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
-    future::block_on(async move {
-        let (_worker, router) = init().await;
-
-        let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(
-                WebRtcTransportListenInfos::new(ListenInfo {
-                    protocol: Protocol::Udp,
-                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_address: Some("9.9.9.1".to_string()),
-                    expose_internal_ip: false,
-                    port: None,
-                    port_range: None,
-                    flags: None,
-                    send_buffer_size: None,
-                    recv_buffer_size: None,
-                }),
-            ))
-            .await
-            .expect("Failed to create WebRTC transport");
-
-        transport
-            .set_min_outgoing_bitrate(3000000)
-            .await
-            .expect("Failed to set min outgoing bitrate on WebRTC transport");
-
-        assert!(matches!(
-            transport.set_max_outgoing_bitrate(2000000).await,
-            Err(RequestError::Response { .. }),
-        ));
-
-        // Remove limit.
-        transport
-            .set_min_outgoing_bitrate(0)
-            .await
-            .expect("Failed to remove limit in min outgoing bitrate on WebRTC transport");
-    });
-}
-
-#[test]
-fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
-    future::block_on(async move {
-        let (_worker, router) = init().await;
-
-        let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(
-                WebRtcTransportListenInfos::new(ListenInfo {
-                    protocol: Protocol::Udp,
-                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_address: Some("9.9.9.1".to_string()),
-                    expose_internal_ip: false,
-                    port: None,
-                    port_range: None,
-                    flags: None,
-                    send_buffer_size: None,
-                    recv_buffer_size: None,
-                }),
-            ))
-            .await
-            .expect("Failed to create WebRTC transport");
-
-        transport
-            .set_max_outgoing_bitrate(2000000)
-            .await
-            .expect("Failed to set max outgoing bitrate on WebRTC transport");
-
-        assert!(matches!(
-            transport.set_min_outgoing_bitrate(3000000).await,
-            Err(RequestError::Response { .. }),
-        ));
-
-        // Remove limit.
-        transport
-            .set_max_outgoing_bitrate(0)
-            .await
-            .expect("Failed to remove limit in max outgoing bitrate on WebRTC transport");
     });
 }
 

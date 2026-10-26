@@ -29,14 +29,22 @@ typedef SSIZE_T ssize_t;
 #endif
 // IWYU pragma: end_exports
 
-// This is a macro to silence false warnings in GCC in switch() blocks with FBS
-// types.
+// This is a macro to silence false warnings in switch() blocks that already
+// cover every value of their enum and hence need no default label.
+//
+// GCC warns that the enum is not fully handled (typically with FBS types) and
+// MSVC warns that the function may fall off its end without returning a value,
+// so each of them is told that reaching the default label is impossible.
 #if defined(__GNUC__) && !defined(__clang__)
-#define NO_DEFAULT_GCC()                                                                           \
+#define NO_DEFAULT()                                                                               \
 	default:                                                                                         \
 		__builtin_unreachable()
+#elif defined(_MSC_VER)
+#define NO_DEFAULT()                                                                               \
+	default:                                                                                         \
+		__assume(0)
 #else
-#define NO_DEFAULT_GCC()
+#define NO_DEFAULT()
 #endif
 
 using ChannelReadCtx    = void*;

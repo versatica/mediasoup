@@ -1,8 +1,12 @@
 #ifndef MS_RTC_RTP_RTP_STREAM_RECV_HPP
 #define MS_RTC_RTP_RTP_STREAM_RECV_HPP
 
+#include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/NackGenerator.hpp"
+#include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RateCalculator.hpp"
@@ -44,6 +48,16 @@ namespace RTC
 				 * streams consuming this RtpStreamRecv.
 				 */
 				virtual uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTP::RtpStreamRecv* rtpStream) = 0;
+				/**
+				 * A spatial layer of this stream started or stopped carrying traffic, so
+				 * whoever chose a target layer out of them must choose again.
+				 *
+				 * @remarks
+				 * - Only fired by streams with more than a spatial layer, which are those
+				 *   of a SVC sender.
+				 */
+				virtual void OnRtpStreamSpatialLayerActivityChanged(
+				  RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) = 0;
 			};
 
 		public:
@@ -56,38 +70,52 @@ namespace RTC
 			public:
 				void Update(const RTP::Packet* packet);
 
+				/**
+				 * Bitrate of every spatial layer and every temporal layer.
+				 */
 				int64_t GetBitrate(int64_t nowMs);
 
-				int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+				/**
+				 * Bitrate of the given spatial layer and of all the ones below it, in
+				 * all of them up to the given temporal layer.
+				 *
+				 * @remarks
+				 * - This is what a receiver gets when told to decode the given layers in
+				 *   full SVC, where a frame of a lower spatial layer is dropped along
+				 *   with the rest of its picture if its temporal layer is above the
+				 *   given one.
+				 *
+				 * @returns Zero if the given layers are not being received.
+				 */
+				int64_t GetCumulativeBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 
+				/**
+				 * Bitrate of every temporal layer of the given spatial layer.
+				 */
 				int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer);
 
-				int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
+				/**
+				 * Bitrate of the given temporal layer of the given spatial layer and of
+				 * all the temporal layers below it.
+				 *
+				 * @remarks
+				 * - This is what a receiver gets when told to decode the given layers in
+				 *   K-SVC or in Simulcast, where a single spatial layer is forwarded.
+				 */
+				int64_t GetCumulativeTemporalLayerBitrate(
+				  int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 
-				size_t GetPacketCount() const;
+				/**
+				 * Bitrate of the given temporal layer of the given spatial layer alone.
+				 */
+				int64_t GetTemporalLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 
-				size_t GetBytes() const;
+				uint64_t GetPacketCount() const;
+
+				uint64_t GetBytes() const;
 
 			private:
 				std::vector<std::vector<RTC::RtpDataCounter>> spatialLayerCounters;
-			};
-
-		public:
-			/**
-			 * Correspondence between the RTP timeline of this stream and our own monotonic
-			 * clock.
-			 */
-			struct CaptureMapping
-			{
-				/**
-				 * Capture instant of the media carried by the RTP timestamp below, in our own
-				 * monotonic clock (us).
-				 */
-				int64_t captureAtUs;
-				/**
-				 * RTP timestamp the capture instant above refers to.
-				 */
-				uint32_t ts;
 			};
 
 		private:
@@ -149,7 +177,11 @@ namespace RTC
 
 			void ReceiveRtxRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
 
-			void ReceiveRtcpXrDelaySinceLastRr(
+			/**
+			 * @returns Round trip time just measured (ms), or no value if this report
+			 *   refers to no Receiver Reference Time to measure it against.
+			 */
+			std::optional<float> ReceiveRtcpXrDelaySinceLastRr(
 			  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
 
 			/**
@@ -168,41 +200,6 @@ namespace RTC
 			}
 
 			/**
-			 * Store the correspondence between the RTP timeline of this stream and our own
-			 * monotonic clock.
-			 *
-			 * @remarks
-			 * - Only the Producer can tell it, since translating the capture instant of the
-			 *   remote sender into our own clock needs the whole set of streams of that
-			 *   sender.
-			 *
-			 * @param captureAtUs - Capture instant of `ts` in our own monotonic clock.
-			 * @param ts - RTP timestamp the capture instant refers to.
-			 */
-			void SetCaptureMapping(int64_t captureAtUs, uint32_t ts)
-			{
-				this->lastCaptureMapping = RTP::RtpStreamRecv::CaptureMapping{
-					.captureAtUs = captureAtUs,
-					.ts          = ts,
-				};
-			}
-
-			/**
-			 * Correspondence between the RTP timeline of this stream and our own monotonic
-			 * clock, as of the last RTP timestamp whose capture instant could be told.
-			 *
-			 * @remarks
-			 * - Once set it is never unset, so any two streams of a same sender that have it
-			 *   can always be aligned to each other.
-			 *
-			 * @returns No value if no capture instant could be told yet.
-			 */
-			std::optional<RTP::RtpStreamRecv::CaptureMapping> GetCaptureMapping() const
-			{
-				return this->lastCaptureMapping;
-			}
-
-			/**
 			 * Capture instant of the given RTP timestamp, expressed in the remote sender's
 			 * wall clock, interpolated from the last received `abs-capture-time` RTP header
 			 * extension.
@@ -213,6 +210,20 @@ namespace RTC
 			 * timestamp is too far away from the one it referred to.
 			 */
 			std::optional<int64_t> GetRemoteCaptureAtUsFromAbsCaptureTime(uint32_t ts) const;
+
+			/**
+			 * Whether the 'abs-capture-time' RTP header extension has ever been received
+			 * on this stream.
+			 *
+			 * @remarks
+			 * - It is not the same as being able to tell a capture instant from it, which
+			 *   also depends on how far the wanted RTP timestamp falls from the one it
+			 *   referred to.
+			 */
+			bool HasAbsCaptureTime() const
+			{
+				return this->lastAbsCaptureTime.has_value();
+			}
 
 			/**
 			 * Capture instant of the given RTP timestamp, expressed in the remote sender's
@@ -236,19 +247,50 @@ namespace RTC
 				return this->transmissionCounter.GetBitrate(nowMs);
 			}
 
-			int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+			/**
+			 * Bitrate of the given spatial layer and of all the ones below it, in all
+			 * of them up to the given temporal layer.
+			 *
+			 * @remarks
+			 * - This is what a receiver gets when told to decode the given layers in
+			 *   full SVC, where a frame of a lower spatial layer is dropped along with
+			 *   the rest of its picture if its temporal layer is above the given one.
+			 *
+			 * @returns Zero if the given layers are not being received.
+			 */
+			int64_t GetCumulativeBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 			{
-				return this->transmissionCounter.GetBitrate(nowMs, spatialLayer, temporalLayer);
+				return this->transmissionCounter.GetCumulativeBitrate(nowMs, spatialLayer, temporalLayer);
 			}
 
-			int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) override
+			/**
+			 * Bitrate of every temporal layer of the given spatial layer.
+			 */
+			int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer)
 			{
 				return this->transmissionCounter.GetSpatialLayerBitrate(nowMs, spatialLayer);
 			}
 
-			int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override
+			/**
+			 * Bitrate of the given temporal layer of the given spatial layer and of all
+			 * the temporal layers below it.
+			 *
+			 * @remarks
+			 * - This is what a receiver gets when told to decode the given layers in
+			 *   K-SVC or in Simulcast, where a single spatial layer is forwarded.
+			 */
+			int64_t GetCumulativeTemporalLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
 			{
-				return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
+				return this->transmissionCounter.GetCumulativeTemporalLayerBitrate(
+				  nowMs, spatialLayer, temporalLayer);
+			}
+
+			/**
+			 * Bitrate of the given temporal layer of the given spatial layer alone.
+			 */
+			int64_t GetTemporalLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer)
+			{
+				return this->transmissionCounter.GetTemporalLayerBitrate(nowMs, spatialLayer, temporalLayer);
 			}
 
 			bool HasRtpInactivityCheckEnabled() const
@@ -293,19 +335,21 @@ namespace RTC
 			bool useRtpInactivityCheck{ false };
 			// Others.
 			// Packets expected at last interval.
+			// NOTE: As wide as GetExpectedPackets(), which wraps with the sequence
+			// number, so that the difference against it is taken in its own width.
 			uint32_t expectedPrior{ 0 };
 			// Packets expected at last interval for score calculation.
 			uint32_t expectedPriorScore{ 0 };
 			// Packets received at last interval.
-			uint32_t receivedPrior{ 0 };
+			// NOTE: As wide as the counter it snapshots, which does not wrap, so that
+			// the difference against it stays exact however long the stream runs.
+			uint64_t receivedPrior{ 0 };
 			// Packets received at last interval for score calculation.
-			uint32_t receivedPriorScore{ 0 };
+			uint64_t receivedPriorScore{ 0 };
 			// Timing data of the most recent Sender Report received.
 			std::optional<SenderReportTiming> lastSenderReportTiming;
 			// Most recent `abs-capture-time` RTP header extension received.
 			std::optional<AbsCaptureTime> lastAbsCaptureTime;
-			// Most recent RTP timestamp whose capture instant could be told, along with it.
-			std::optional<CaptureMapping> lastCaptureMapping;
 			// Relative transit time for prev packet.
 			int32_t transit{ 0 };
 			uint8_t firSeqNumber{ 0 };
@@ -313,6 +357,10 @@ namespace RTC
 			std::unique_ptr<RTC::NackGenerator> nackGenerator;
 			TimerHandleInterface* inactivityCheckPeriodicTimer{ nullptr };
 			bool inactive{ false };
+			TimerHandleInterface* spatialLayersActivityCheckPeriodicTimer{ nullptr };
+			// Whether each spatial layer was carrying traffic at the latest check.
+			// Empty unless this stream has more than a spatial layer.
+			std::vector<bool> spatialLayersActivity;
 			// Valid media + valid RTX.
 			TransmissionCounter transmissionCounter;
 			// Just valid media.

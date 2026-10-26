@@ -268,7 +268,7 @@ namespace RTC
 
 			if (HasAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS))
 			{
-				struct sockaddr_storage xorMappedAddressStorage{};
+				sockaddr_storage xorMappedAddressStorage{};
 
 				if (GetXorMappedAddress(std::addressof(xorMappedAddressStorage)))
 				{

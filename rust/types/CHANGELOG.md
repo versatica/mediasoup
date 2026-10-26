@@ -2,6 +2,27 @@
 
 ### NEXT
 
+### 0.9.0
+
+- Make `size` and `payload_size` in `RtpPacketTraceInfo` `u32` ([PR #2001](https://github.com/versatica/mediasoup/pull/2001)).
+
+### 0.8.0
+
+- Remove `RtpHeaderExtensionUri::Unsupported` variant ([PR #1980](https://github.com/versatica/mediasoup/pull/1980)).
+
+### 0.7.0
+
+- SCTP: Add `sctpZeroChecksum` option to enable SCTP Zero Checksum (RFC 9653) ([PR #1977](https://github.com/versatica/mediasoup/pull/1977)).
+
+### 0.6.0
+
+- Remove support for the "urn:ietf:params:rtp-hdrext:toffset" RTP extension (PR #1942).
+- Fix `ScalabilityMode::ksvc()` returning `false` for `L2T1_KEY`.
+
+### 0.5.0
+
+- Worker: Use `int64_t` for bitrate everywhere (PR #1919).
+
 ### 0.4.0
 
 - New built-in SCTP stack (PR #1806):

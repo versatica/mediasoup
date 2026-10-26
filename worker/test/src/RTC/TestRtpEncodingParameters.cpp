@@ -15,9 +15,9 @@ SCENARIO("parseScalabilityMode()")
 		bool ksvc              = false;
 	};
 
-	auto parseScalabilityMode = [](const std::string& scalabilityMode)
+	const auto parseScalabilityMode = [](const std::string& scalabilityMode)
 	{
-		struct ScalabilityMode result;
+		ScalabilityMode result;
 		std::smatch match;
 
 		std::regex_match(scalabilityMode, match, ScalabilityModeRegex);

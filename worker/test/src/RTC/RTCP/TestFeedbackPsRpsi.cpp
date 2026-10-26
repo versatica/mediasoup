@@ -28,7 +28,7 @@ SCENARIO("RTCP Feedback PS RPSI", "[rtcp][feedback-ps][rpsi]")
 	const size_t length{ 5 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::FeedbackPsRpsiPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackPsRpsiPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

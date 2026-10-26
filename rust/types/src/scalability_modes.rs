@@ -286,7 +286,8 @@ impl ScalabilityMode {
     /// K-SVC mode.
     pub fn ksvc(&self) -> bool {
         match self {
-            Self::L2T2Key
+            Self::L2T1Key
+            | Self::L2T2Key
             | Self::L2T2KeyShift
             | Self::L2T3Key
             | Self::L2T3KeyShift

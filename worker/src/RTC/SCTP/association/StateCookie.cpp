@@ -299,12 +299,32 @@ namespace RTC
 			const uint32_t zeroChecksumAlternateErrorDetectionMethod =
 			  ntohl(remoteCapabilitiesField->zeroChecksumAlternateErrorDetectionMethod);
 
-			remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod =
-			  zeroChecksumAlternateErrorDetectionMethod ==
-			      static_cast<uint32_t>(
-			        ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS)
-			    ? ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS
-			    : ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE;
+			switch (zeroChecksumAlternateErrorDetectionMethod)
+			{
+				case static_cast<uint32_t>(
+				  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS):
+				{
+					remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod =
+					  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
+
+					break;
+				}
+
+				case static_cast<uint32_t>(
+				  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK):
+				{
+					remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod =
+					  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK;
+
+					break;
+				}
+
+				default:
+				{
+					remoteCapabilities.zeroChecksumAlternateErrorDetectionMethod =
+					  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE;
+				}
+			}
 
 			// NOTE: No need to std::move(). Copy elision (RVO) is used for free in GCC
 			// and clang in C++17 or higher.

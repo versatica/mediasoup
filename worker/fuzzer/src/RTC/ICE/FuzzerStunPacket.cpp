@@ -26,7 +26,7 @@ void FuzzerRtcIceStunPacket::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	struct sockaddr_storage xorMappedAddressStorage{};
+	sockaddr_storage xorMappedAddressStorage{};
 	std::string_view errorReasonPhrase;
 
 	// packet->Dump();

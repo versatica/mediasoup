@@ -10,7 +10,7 @@
 #include "RTC/Serializable.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
-#include "RTC/RtcLogger.hpp"
+#include "RTC/RtcLogger/RtpPacket.hpp"
 #endif
 #include <flatbuffers/flatbuffers.h>
 #include <array>
@@ -527,10 +527,11 @@ namespace RTC
 
 			/**
 			 * @remarks
-			 * - `sentAtUs` is converted internally to the 3 bytes ABS Send Time format,
-			 *   unlike `ReadAbsSendTime()`, which exposes the raw extension value.
+			 * - `absSendTime` is the raw 3 bytes unsigned integer the extension
+			 *   carries, the same one `ReadAbsSendTime()` gives back. An instant is
+			 *   turned into it with `Utils::Time::TimeUsToAbsSendTime()`.
 			 */
-			bool UpdateAbsSendTime(int64_t sentAtUs) const;
+			bool UpdateAbsSendTime(uint32_t absSendTime) const;
 
 			bool ReadTransportWideCc01(uint16_t& wideSeqNumber) const;
 
@@ -548,6 +549,17 @@ namespace RTC
 			bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const;
 
 			bool ReadAbsCaptureTime(uint64_t& absCaptureTimestamp, int64_t& estimatedCaptureClockOffset) const;
+
+			/**
+			 * @remarks
+			 * - `absCaptureTimestamp` is the raw 8 bytes unsigned integer the extension
+			 *   carries, the same one `ReadAbsCaptureTime()` gives back, which is a
+			 *   capture instant in NTP format. An instant is turned into it with
+			 *   `Utils::Time::TimeUsToNtp()`.
+			 * - The estimated capture clock offset the extension carries when it is 16
+			 *   bytes long is left untouched.
+			 */
+			bool UpdateAbsCaptureTime(uint64_t absCaptureTimestamp) const;
 
 			bool ReadPlayoutDelay(uint16_t& minDelay, uint16_t& maxDelay) const;
 

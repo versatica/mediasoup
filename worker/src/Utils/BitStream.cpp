@@ -11,6 +11,15 @@ namespace Utils
 	{
 		MS_TRACE();
 
+		// NOTE: Whatever comes from the network is the value of an RTP header
+		// extension, whose length field is a single byte, so it always fits. This
+		// only catches a caller handing over a longer buffer.
+		MS_ASSERT(
+		  len <= sizeof(this->data),
+		  "given length exceeds the buffer [len:%zu, buffer:%zu]",
+		  len,
+		  sizeof(this->data));
+
 		std::memcpy(this->data, data, len);
 	}
 
@@ -48,6 +57,15 @@ namespace Utils
 	uint8_t BitStream::GetBit()
 	{
 		MS_TRACE();
+
+		// There is nothing left to read, so stay where the data ended rather than
+		// read past it. Callers are expected to check GetLeftBits() themselves, and
+		// a zero cannot be told apart from a real one, so this is the last resort
+		// and not the way to know that the data is over.
+		if (GetLeftBits() == 0)
+		{
+			return 0;
+		}
 
 		auto bit = ((*(data + (this->offset >> 0x3))) >> (0x7 - (this->offset & 0x7))) & 0x1;
 
@@ -177,6 +195,12 @@ namespace Utils
 
 		// Retrieve the current byte position.
 		const size_t byteOffset = offset >> 0x3;
+
+		MS_ASSERT(
+		  byteOffset < sizeof(this->data),
+		  "given offset is past the buffer [offset:%" PRIu32 ", buffer:%zu]",
+		  offset,
+		  sizeof(this->data));
 
 		// Calculate the bitmask for the target bit within the current byte.
 		const auto bitmask = (1u << (0x7 - (offset & 0x7)));

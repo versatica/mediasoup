@@ -81,7 +81,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 	auto* t3RtxTimer = t3RtxTimerUniquePtr.get();
 
-	auto createRetransmissionQueue =
+	const auto createRetransmissionQueue =
 	  [&retransmissionQueueListener, &associationListener, &sendQueue, &t3RtxTimer, &sctpOptions](
 	    bool supportsPartialReliability = true, bool useMessageInterleaving = false)
 	{
@@ -97,9 +97,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		  useMessageInterleaving);
 	};
 
-	auto createDataToSend = [](
-	                          uint32_t outgoingMessageId,
-	                          uint16_t maxRetransmissions = RTC::SCTP::Types::MaxRetransmitsNoLimit)
+	const auto createDataToSend =
+	  [](uint32_t outgoingMessageId, uint16_t maxRetransmissions = RTC::SCTP::Types::MaxRetransmitsNoLimit)
 	{
 		return [outgoingMessageId, maxRetransmissions](int64_t /*nowUs*/, size_t /*maxLength*/)
 		{
@@ -122,10 +121,11 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		};
 	};
 
-	auto createSackChunk = [sctpOptions](
-	                         uint32_t tsn,
-	                         uint32_t arwnd,
-	                         const std::vector<RTC::SCTP::SackChunk::GapAckBlock>&& gapAckBlocks = {})
+	const auto createSackChunk =
+	  [sctpOptions](
+	    uint32_t tsn,
+	    uint32_t arwnd,
+	    const std::vector<RTC::SCTP::SackChunk::GapAckBlock>&& gapAckBlocks = {})
 	{
 		std::unique_ptr<RTC::SCTP::SackChunk> chunk{ RTC::SCTP::SackChunk::Factory(
 			sctpCommon::FactoryBuffer, sctpOptions.mtu) };
@@ -141,7 +141,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		return chunk;
 	};
 
-	auto getTSNsForFastRetransmit = [](RTC::SCTP::RetransmissionQueue& queue)
+	const auto getTSNsForFastRetransmit = [](RTC::SCTP::RetransmissionQueue& queue)
 	{
 		std::vector<uint32_t> tsns;
 
@@ -153,7 +153,8 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		return tsns;
 	};
 
-	auto getSentPacketTSNs = [&nowUs](RTC::SCTP::RetransmissionQueue& queue, size_t maxLength = 10000)
+	const auto getSentPacketTSNs =
+	  [&nowUs](RTC::SCTP::RetransmissionQueue& queue, size_t maxLength = 10000)
 	{
 		std::vector<uint32_t> tsns;
 
@@ -1824,33 +1825,41 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 
 	SECTION("abandons rtx limit 2 when nacked nine times")
 	{
-		// maxRetransmits=2 for TSN 10: first 3 nacks -> fast-retransmit #1;
-		// next 3 nacks -> regular retransmit #2; next 3 nacks -> abandoned.
+		// TSN 10 is sent with maxRetransmissions=2 and is lost on every
+		// transmission. Nine chunks (TSN 11..19) are sent in three batches of three
+		// (one batch after each transmission of TSN 10) so that their SACKs produce
+		// 3 miss indications per transmission (9 NACKs in total), triggering two
+		// retransmissions before abandoning TSN 10 on the 9th NACK.
 
 		auto retransmissionQueue = createRetransmissionQueue();
 
+		const auto produceNothing = [](int64_t, size_t)
+		{
+			return std::nullopt;
+		};
+
 		// TSN 10: maxRetransmissions=2.
-		sendQueue.WillProduceOnce(createDataToSend(42, /*maxRetransmissions*/ 2))
+		sendQueue
+		  .WillProduceOnce(createDataToSend(42, /*maxRetransmissions*/ 2))
+		  // Batch 1 (TSN 11..13), sent with the initial transmission of TSN 10.
 		  .WillProduceOnce(createDataToSend(0)) // TSN 11.
 		  .WillProduceOnce(createDataToSend(1)) // TSN 12.
 		  .WillProduceOnce(createDataToSend(2)) // TSN 13.
+		  .WillProduceOnce(produceNothing)
+		  // Batch 2 (TSN 14..16), sent after the 1st retransmission of TSN 10.
 		  .WillProduceOnce(createDataToSend(3)) // TSN 14.
 		  .WillProduceOnce(createDataToSend(4)) // TSN 15.
 		  .WillProduceOnce(createDataToSend(5)) // TSN 16.
+		  .WillProduceOnce(produceNothing)
+		  // Batch 3 (TSN 17..19), sent with the 2nd retransmission of TSN 10.
 		  .WillProduceOnce(createDataToSend(6)) // TSN 17.
 		  .WillProduceOnce(createDataToSend(7)) // TSN 18.
 		  .WillProduceOnce(createDataToSend(8)) // TSN 19.
-		  .WillProduceRepeatedly(
-		    [](int64_t, size_t)
-		    {
-			    return std::nullopt;
-		    });
+		  .WillProduceRepeatedly(produceNothing);
 
 		REQUIRE(retransmissionQueue.ShouldSendForwardTsn(nowUs) == false);
 
-		REQUIRE(
-		  getSentPacketTSNs(retransmissionQueue) ==
-		  std::vector<uint32_t>{ 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 });
+		REQUIRE(getSentPacketTSNs(retransmissionQueue) == std::vector<uint32_t>{ 10, 11, 12, 13 });
 		REQUIRE(
 		  retransmissionQueue.GetChunkStatesForTesting() ==
 		  std::vector<std::pair<uint32_t /*tsn*/, RTC::SCTP::OutstandingData::State>>{
@@ -1859,12 +1868,6 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 11, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		    { 12, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		    { 13, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-		    { 14, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-		    { 15, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-		    { 16, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-		    { 17, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-		    { 18, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
-		    { 19, RTC::SCTP::OutstandingData::State::IN_FLIGHT },
 		});
 
 		// No `Discard()` calls during nack rounds 1 and 2.
@@ -1892,16 +1895,13 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 11, RTC::SCTP::OutstandingData::State::ACKED               },
 		    { 12, RTC::SCTP::OutstandingData::State::ACKED               },
 		    { 13, RTC::SCTP::OutstandingData::State::ACKED               },
-		    { 14, RTC::SCTP::OutstandingData::State::IN_FLIGHT           },
-		    { 15, RTC::SCTP::OutstandingData::State::IN_FLIGHT           },
-		    { 16, RTC::SCTP::OutstandingData::State::IN_FLIGHT           },
-		    { 17, RTC::SCTP::OutstandingData::State::IN_FLIGHT           },
-		    { 18, RTC::SCTP::OutstandingData::State::IN_FLIGHT           },
-		    { 19, RTC::SCTP::OutstandingData::State::IN_FLIGHT           },
 		});
 
 		// Fast retransmit #1.
 		REQUIRE(getTSNsForFastRetransmit(retransmissionQueue) == std::vector<uint32_t>{ 10 });
+
+		// Send new data (TSN 14 to 16) after the first retransmission.
+		REQUIRE(getSentPacketTSNs(retransmissionQueue, 1000) == std::vector<uint32_t>{ 14, 15, 16 });
 
 		// Ack TSN 14-16 — three more nacks -> retransmit #2 (TO_BE_RETRANSMITTED).
 		for (uint32_t tsn{ 14 }; tsn <= 16; ++tsn)
@@ -1928,13 +1928,12 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		    { 14, RTC::SCTP::OutstandingData::State::ACKED               },
 		    { 15, RTC::SCTP::OutstandingData::State::ACKED               },
 		    { 16, RTC::SCTP::OutstandingData::State::ACKED               },
-		    { 17, RTC::SCTP::OutstandingData::State::IN_FLIGHT           },
-		    { 18, RTC::SCTP::OutstandingData::State::IN_FLIGHT           },
-		    { 19, RTC::SCTP::OutstandingData::State::IN_FLIGHT           },
 		});
 
-		// Regular retransmit #2.
-		REQUIRE(getSentPacketTSNs(retransmissionQueue, 1000) == std::vector<uint32_t>{ 10 });
+		// The second retransmission is also a fast retransmission, even though the
+		// endpoint is in fast recovery. New data (TSN 17 to 19) is sent after it.
+		REQUIRE(getTSNsForFastRetransmit(retransmissionQueue) == std::vector<uint32_t>{ 10 });
+		REQUIRE(getSentPacketTSNs(retransmissionQueue, 1000) == std::vector<uint32_t>{ 17, 18, 19 });
 
 		// Ack TSN 17-18 — two more nacks (TSN 10 is now in-flight again after retransmit).
 		for (uint32_t tsn{ 17 }; tsn <= 18; ++tsn)
@@ -2158,6 +2157,71 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, mtu) == std::vector<uint32_t>{ 13 });
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, mtu) == std::vector<uint32_t>{ 14 });
 		REQUIRE(getSentPacketTSNs(retransmissionQueue, mtu).empty());
+	}
+
+	SECTION("fast retransmits loss detected while in fast recovery")
+	{
+		auto retransmissionQueue = createRetransmissionQueue();
+
+		// Send TSN 10 to 17. TSN 10 and TSN 14 are lost.
+		for (uint32_t outgoingMessageId{ 0 }; outgoingMessageId < 8; ++outgoingMessageId)
+		{
+			sendQueue.WillProduceOnce(createDataToSend(outgoingMessageId));
+		}
+
+		sendQueue.WillProduceRepeatedly(
+		  [](int64_t, size_t)
+		  {
+			  return std::nullopt;
+		  });
+
+		REQUIRE(getSentPacketTSNs(retransmissionQueue).size() == 8);
+
+		const size_t initialCwnd = retransmissionQueue.GetCwnd();
+
+		// SACKs for TSN 11 to 13 give TSN 10 three miss indications. It's fast
+		// retransmitted and the endpoint enters fast recovery, with exit point 17.
+		for (uint32_t tsn{ 11 }; tsn <= 13; ++tsn)
+		{
+			retransmissionQueue.HandleReceivedSackChunk(
+			  nowUs,
+			  createSackChunk(
+			    9,
+			    Arwnd,
+			    {
+			      { 2, static_cast<uint16_t>(tsn - 9) }
+      })
+			    .get());
+		}
+
+		REQUIRE(getTSNsForFastRetransmit(retransmissionQueue) == std::vector<uint32_t>{ 10 });
+		REQUIRE(retransmissionQueue.IsInFastRecovery() == true);
+
+		const size_t cwndInFastRecovery = retransmissionQueue.GetCwnd();
+
+		REQUIRE(cwndInFastRecovery < initialCwnd);
+
+		// SACKs for TSN 15 to 17 give TSN 14 three miss indications, while still in
+		// fast recovery. It must also be fast retransmitted, i.e. without waiting
+		// for cwnd to allow it, but without reducing cwnd again.
+		for (uint32_t tsn{ 15 }; tsn <= 17; ++tsn)
+		{
+			retransmissionQueue.HandleReceivedSackChunk(
+			  nowUs,
+			  createSackChunk(
+			    9,
+			    Arwnd,
+			    {
+			      { 2, 4                              },
+            { 6, static_cast<uint16_t>(tsn - 9) }
+      })
+			    .get());
+		}
+
+		REQUIRE(retransmissionQueue.IsInFastRecovery() == true);
+		REQUIRE(retransmissionQueue.HasDataToBeFastRetransmitted() == true);
+		REQUIRE(getTSNsForFastRetransmit(retransmissionQueue) == std::vector<uint32_t>{ 14 });
+		REQUIRE(retransmissionQueue.GetCwnd() == cwndInFastRecovery);
 	}
 
 	SECTION("updates rwnd from SACK and unacked payload bytes")

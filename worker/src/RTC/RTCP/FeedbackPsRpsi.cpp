@@ -3,6 +3,7 @@
 
 #include "RTC/RTCP/FeedbackPsRpsi.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 #include <cstring>
 
 namespace RTC
@@ -48,9 +49,8 @@ namespace RTC
 
 			this->header = reinterpret_cast<Header*>(this->raw);
 
-			// TODO: We should use Utils::Byte::PadTo4Bytes().
 			// 32 bits padding.
-			const uint8_t padding = (-length) & 3;
+			const auto padding = static_cast<uint8_t>(Utils::Byte::PadTo4Bytes(length) - length);
 
 			this->header->paddingBits = padding * 8;
 			this->header->zero        = 0;

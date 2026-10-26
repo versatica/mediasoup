@@ -26,7 +26,7 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 	const uint16_t overhead{ 0 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::FeedbackRtpTmmbrPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackRtpTmmbrPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

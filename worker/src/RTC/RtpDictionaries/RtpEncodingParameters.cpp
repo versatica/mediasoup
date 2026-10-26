@@ -29,11 +29,7 @@ namespace RTC
 		}
 
 		// codecPayloadType is optional.
-		if (auto codecPayloadType = data->codecPayloadType(); codecPayloadType.has_value())
-		{
-			this->codecPayloadType    = codecPayloadType.value();
-			this->hasCodecPayloadType = true;
-		}
+		this->codecPayloadType = data->codecPayloadType();
 
 		// rtx is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_RTX))
@@ -90,11 +86,10 @@ namespace RTC
 
 		return FBS::RtpParameters::CreateRtpEncodingParametersDirect(
 		  builder,
-		  this->ssrc != 0u ? flatbuffers::Optional<uint32_t>(this->ssrc) : flatbuffers::nullopt,
+		  this->ssrc != 0 ? flatbuffers::Optional<uint32_t>(this->ssrc) : flatbuffers::nullopt,
 		  !this->rid.empty() ? this->rid.c_str() : nullptr,
-		  this->hasCodecPayloadType ? flatbuffers::Optional<uint8_t>(this->codecPayloadType)
-			                          : flatbuffers::nullopt,
-		  this->hasRtx ? this->rtx.FillBuffer(builder) : 0u,
+		  this->codecPayloadType,
+		  this->hasRtx ? this->rtx.FillBuffer(builder) : 0,
 		  this->dtx,
 		  this->scalabilityMode.c_str());
 	}

@@ -25,7 +25,7 @@ SCENARIO("RTCP Feedback PS SLI", "[rtcp][feedback-ps][sli]")
 	const uint8_t pictureId{ 1 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::FeedbackPsSliPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackPsSliPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

@@ -31,7 +31,8 @@ SCENARIO("TransportTuple", "[transporttuple]")
 		                         return 1000 * 1000;
 	                         });
 
-	auto makeUdpSocket = [&listener, &shared](const std::string& ip, uint16_t minPort, uint16_t maxPort)
+	const auto makeUdpSocket =
+	  [&listener, &shared](const std::string& ip, uint16_t minPort, uint16_t maxPort)
 	{
 		auto flags = RTC::Transport::SocketFlags{ .ipv6Only = false, .udpReusePort = false };
 		RTC::PortManager::PortRangeKey portRangeKey{};
@@ -47,7 +48,7 @@ SCENARIO("TransportTuple", "[transporttuple]")
 		return std::unique_ptr<RTC::UdpSocket>(udpSocket);
 	};
 
-	auto makeUdpSockAddr = [](int family, const std::string& ip, uint16_t port)
+	const auto makeUdpSockAddr = [](int family, const std::string& ip, uint16_t port)
 	{
 		if (family == AF_INET)
 		{

@@ -28,7 +28,9 @@ use mediasoup_types::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
     SctpState, TransportTuple,
 };
-use mediasoup_types::sctp_parameters::{SctpNegotiatedCapabilities, SctpParameters};
+use mediasoup_types::sctp_parameters::{
+    SctpNegotiatedCapabilities, SctpParameters, SctpZeroChecksum,
+};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -115,9 +117,19 @@ pub enum WebRtcTransportListen {
 pub struct WebRtcTransportOptions {
     /// How [`WebRtcTransport`] should listen on interfaces.
     pub listen: WebRtcTransportListen,
+    /// Estimate the bandwidth of the transport link, as far as the negotiated RTP parameters allow
+    /// it.
+    /// Default true.
+    pub enable_bwe: bool,
     /// Initial available outgoing bitrate (in bps).
     /// Default 600000.
     pub initial_available_outgoing_bitrate: u64,
+    /// Maximum incoming bitrate (in bps). Unset by default, meaning no limit.
+    pub max_incoming_bitrate: Option<u64>,
+    /// Maximum outgoing bitrate (in bps). Unset by default, meaning no limit.
+    pub max_outgoing_bitrate: Option<u64>,
+    /// Minimum outgoing bitrate (in bps). Unset by default, meaning no limit.
+    pub min_outgoing_bitrate: Option<u64>,
     /// Enable UDP.
     /// Default true.
     pub enable_udp: bool,
@@ -159,6 +171,9 @@ pub struct WebRtcTransportOptions {
     /// via DataConsumer::set_buffered_amount_low_threshold().
     /// Default 1024.
     pub sctp_default_stream_buffered_amount_low_threshold: u32,
+    /// SCTP Zero Checksum (RFC 9653) alternate error detection method to announce.
+    /// Default `SctpZeroChecksum::SctpOverDtls`.
+    pub sctp_zero_checksum: SctpZeroChecksum,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -169,7 +184,11 @@ impl WebRtcTransportOptions {
     pub fn new(listen_infos: WebRtcTransportListenInfos) -> Self {
         Self {
             listen: WebRtcTransportListen::Individual { listen_infos },
+            enable_bwe: true,
             initial_available_outgoing_bitrate: 600_000,
+            max_incoming_bitrate: None,
+            max_outgoing_bitrate: None,
+            min_outgoing_bitrate: None,
             enable_udp: true,
             enable_tcp: false,
             prefer_udp: false,
@@ -182,6 +201,7 @@ impl WebRtcTransportOptions {
             sctp_per_stream_send_queue_limit: 2_000_000,
             sctp_max_receiver_window_buffer_size: 5_242_880,
             sctp_default_stream_buffered_amount_low_threshold: 1024,
+            sctp_zero_checksum: SctpZeroChecksum::SctpOverDtls,
             app_data: AppData::default(),
         }
     }
@@ -190,7 +210,11 @@ impl WebRtcTransportOptions {
     pub fn new_with_server(webrtc_server: WebRtcServer) -> Self {
         Self {
             listen: WebRtcTransportListen::Server { webrtc_server },
+            enable_bwe: true,
             initial_available_outgoing_bitrate: 600_000,
+            max_incoming_bitrate: None,
+            max_outgoing_bitrate: None,
+            min_outgoing_bitrate: None,
             enable_udp: true,
             enable_tcp: true,
             prefer_udp: false,
@@ -203,6 +227,7 @@ impl WebRtcTransportOptions {
             sctp_per_stream_send_queue_limit: 2_000_000,
             sctp_max_receiver_window_buffer_size: 5_242_880,
             sctp_default_stream_buffered_amount_low_threshold: 1024,
+            sctp_zero_checksum: SctpZeroChecksum::SctpOverDtls,
             app_data: AppData::default(),
         }
     }
@@ -363,10 +388,7 @@ pub struct WebRtcTransportStat {
     pub max_incoming_bitrate: Option<u64>,
     pub max_outgoing_bitrate: Option<u64>,
     pub min_outgoing_bitrate: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rtp_packet_loss_received: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rtp_packet_loss_sent: Option<f64>,
+    pub round_trip_time: Option<f32>,
     // WebRtcTransport specific.
     pub ice_role: IceRole,
     pub ice_state: IceState,
@@ -403,8 +425,7 @@ impl<'a> TryFromFbs<'a> for WebRtcTransportStat {
             max_incoming_bitrate: stats.base.max_incoming_bitrate,
             max_outgoing_bitrate: stats.base.max_outgoing_bitrate,
             min_outgoing_bitrate: stats.base.min_outgoing_bitrate,
-            rtp_packet_loss_received: stats.base.rtp_packet_loss_received,
-            rtp_packet_loss_sent: stats.base.rtp_packet_loss_sent,
+            round_trip_time: stats.base.round_trip_time,
             // WebRtcTransport specific.
             ice_role: IceRole::from_fbs(&stats.ice_role),
             ice_state: IceState::from_fbs(&stats.ice_state),
@@ -564,13 +585,14 @@ impl<'a> TryFromFbs<'a> for Notification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
-    used_sctp_stream_ids: Mutex<IntMap<u16, bool>>,
+    used_sctp_stream_ids: Mutex<Vec<bool>>,
     next_sctp_stream_id: Mutex<u16>,
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     handlers: Arc<Handlers>,
     data: Arc<WebRtcTransportData>,
+    enable_bwe: bool,
     app_data: AppData,
     // Make sure WebRTC server is not dropped until this transport is not dropped
     webrtc_server: Option<WebRtcServer>,
@@ -675,7 +697,11 @@ impl Transport for WebRtcTransport {
         debug!("produce()");
 
         let producer = self
-            .produce_impl(producer_options, TransportType::WebRtc)
+            .produce_impl(
+                producer_options,
+                TransportType::WebRtc,
+                self.inner.enable_bwe,
+            )
             .await?;
 
         self.inner.handlers.new_producer.call_simple(&producer);
@@ -687,7 +713,12 @@ impl Transport for WebRtcTransport {
         debug!("consume()");
 
         let consumer = self
-            .consume_impl(consumer_options, TransportType::WebRtc, false)
+            .consume_impl(
+                consumer_options,
+                TransportType::WebRtc,
+                false,
+                self.inner.enable_bwe,
+            )
             .await?;
 
         self.inner.handlers.new_consumer.call_simple(&consumer);
@@ -855,7 +886,7 @@ impl TransportImpl for WebRtcTransport {
             .map(|caps| caps.negotiated_max_outbound_streams)
     }
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
+    fn used_sctp_stream_ids(&self) -> &Mutex<Vec<bool>> {
         &self.inner.used_sctp_stream_ids
     }
 
@@ -871,6 +902,7 @@ impl WebRtcTransport {
         executor: Arc<Executor<'static>>,
         channel: Channel,
         data: WebRtcTransportData,
+        enable_bwe: bool,
         app_data: AppData,
         router: Router,
         webrtc_server: Option<WebRtcServer>,
@@ -943,15 +975,8 @@ impl WebRtcTransport {
         };
 
         let next_mid_for_consumers = AtomicUsize::default();
-        let used_sctp_stream_ids = Mutex::new({
-            let mut used_sctp_stream_ids = IntMap::default();
-
-            for i in 0..=65535 {
-                used_sctp_stream_ids.insert(i, false);
-            }
-
-            used_sctp_stream_ids
-        });
+        // NOTE: 65535 is the maximum number of streams in a SCTP association.
+        let used_sctp_stream_ids = Mutex::new(vec![false; 65535]);
         let next_sctp_stream_id = Mutex::new(0);
         let cname_for_producers = Mutex::new(None);
         let sctp_negotiated_capabilities = Mutex::new(None);
@@ -990,6 +1015,7 @@ impl WebRtcTransport {
             channel,
             handlers,
             data,
+            enable_bwe,
             app_data,
             webrtc_server,
             router,

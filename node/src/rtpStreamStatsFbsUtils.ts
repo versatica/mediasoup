@@ -79,10 +79,8 @@ function parseBaseStreamStats(
 		nackPacketCount: Number(binary.nackPacketCount()),
 		pliCount: Number(binary.pliCount()),
 		firCount: Number(binary.firCount()),
-		roundTripTime: binary.roundTripTime(),
-		rtxPacketsDiscarded: binary.rtxPacketsDiscarded()
-			? Number(binary.rtxPacketsDiscarded())
-			: undefined,
+		roundTripTime: binary.roundTripTime() ?? undefined,
+		rtxPacketsDiscarded: Number(binary.rtxPacketsDiscarded()),
 		score: binary.score(),
 	};
 }

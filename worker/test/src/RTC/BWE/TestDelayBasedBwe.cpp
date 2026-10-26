@@ -4,7 +4,7 @@
 #include "RTC/BWE/RobustThroughputEstimator.hpp"
 #include "test/include/RTC/BWE/helpers/LinkSimulator.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cmath>
+#include <cstdlib> // std::abs()
 
 SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 {
@@ -178,11 +178,11 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 
 	// Runs the capacity drop scenario: converge at the initial capacity, halve
 	// it, and measure how long the estimate takes to follow.
-	auto capacityDropTestHelper = [](
-	                                SimulatedTransport& simulatedTransport,
-	                                int64_t numberOfStreams,
-	                                int64_t expectedBitrateDropDeltaUs,
-	                                int64_t receiverClockOffsetChangeUs)
+	const auto capacityDropTestHelper = [](
+	                                      SimulatedTransport& simulatedTransport,
+	                                      int64_t numberOfStreams,
+	                                      int64_t expectedBitrateDropDeltaUs,
+	                                      int64_t receiverClockOffsetChangeUs)
 	{
 		constexpr int Framerate{ 30 };
 		constexpr int64_t StartBitrate{ 900000 };
@@ -354,9 +354,9 @@ SCENARIO("BWE DelayBasedBwe", "[bwe][delaybasedbwe]")
 		SimulatedTransport simulatedTransport;
 
 		// The very same scenario as the first capacity drop, expected against a
-		// margin shifted by 33 ms. Upstream keeps both because the measured value
-		// falls inside the two, and the parameter that used to tell them apart is
-		// no longer read by anything.
+		// margin shifted by 33 ms. Both are kept because the measured value falls
+		// inside the two, and the parameter that used to tell them apart is no longer
+		// read by anything.
 		capacityDropTestHelper(
 		  simulatedTransport,
 		  /*numberOfStreams*/ 1,

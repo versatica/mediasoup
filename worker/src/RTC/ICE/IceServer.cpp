@@ -64,7 +64,7 @@ namespace RTC
 					return FBS::WebRtcTransport::IceState::DISCONNECTED;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 		}
 

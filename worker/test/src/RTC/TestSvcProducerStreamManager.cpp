@@ -1,4 +1,4 @@
-#include "DepLibUV.hpp"
+#include "common.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/SvcProducerStreamManager.hpp"
@@ -70,13 +70,17 @@ namespace
 		{
 			return 0;
 		}
+
+		void OnRtpStreamSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+		{
+		}
 	};
 
 	class MockEncodingContext : public RTC::RTP::Codecs::EncodingContext
 	{
 	public:
-		explicit MockEncodingContext(
-		  uint8_t spatialLayers = 3u, uint8_t temporalLayers = 3u, bool ksvc = false)
+		explicit MockEncodingContext(uint8_t spatialLayers = 3, uint8_t temporalLayers = 3, bool ksvc = false)
 		  : RTC::RTP::Codecs::EncodingContext(
 		      MockEncodingContext::BuildParams(spatialLayers, temporalLayers, ksvc))
 		{
@@ -149,12 +153,20 @@ namespace
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
 	RtpStreamRecvListener streamRecvListener; // NOLINT(readability-identifier-naming)
 
+	// Milliseconds between the packets fed by feedRtpStreamRecv() below.
+	constexpr int64_t PacketSpacingMs{ 1 };
+
+	// Current time, which the helpers below move so that traffic spans a period
+	// instead of happening all at once.
+	// NOLINTNEXTLINE(readability-identifier-naming)
+	int64_t nowUs{ 1000000000000 };
+
 	// NOLINTNEXTLINE(readability-identifier-naming)
 	mocks::MockShared shared(/*getTimeUs*/
 	                         []() -> int64_t
 	                         {
-		                         return DepLibUV::GetTimeUs();
-	                         }); // NOLINT(readability-identifier-naming)
+		                         return nowUs;
+	                         });
 
 	std::unique_ptr<RTC::SvcProducerStreamManager> createManager(
 	  MockListener* listener,
@@ -172,7 +184,7 @@ namespace
 			encodingContext = std::make_unique<MockEncodingContext>();
 		}
 
-		return std::make_unique<RTC::SvcProducerStreamManager>(
+		auto manager = std::make_unique<RTC::SvcProducerStreamManager>(
 		  consumableRtpEncodings,
 		  preferredLayers,
 		  std::move(encodingContext),
@@ -180,10 +192,17 @@ namespace
 		  keyFrameSupported,
 		  listener,
 		  std::addressof(shared));
+
+#ifdef MS_USE_BUILTIN_BWE
+		// Every case below is written for a Transport that answers a bitrate round.
+		manager->SetBweManaged(true);
+#endif
+
+		return manager;
 	}
 
 	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv(
-	  uint32_t ssrc = MappedSsrc, uint8_t spatialLayers = 3u, uint8_t temporalLayers = 3u)
+	  uint32_t ssrc = MappedSsrc, uint8_t spatialLayers = 3, uint8_t temporalLayers = 3)
 	{
 		RTC::RTP::RtpStream::Params params;
 
@@ -193,10 +212,12 @@ namespace
 		params.temporalLayers = temporalLayers;
 
 		return std::make_unique<RTC::RTP::RtpStreamRecv>(
-		  std::addressof(streamRecvListener), std::addressof(shared), params, 0u, false);
+		  std::addressof(streamRecvListener), std::addressof(shared), params, 0, false);
 	}
 
-	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero.
+	// Feed packets into the RtpStreamRecv so GetBitrate() returns non-zero. They
+	// are spread in time because a bitrate is measured over the period its samples
+	// span, and samples taken all at once span none.
 	void feedRtpStreamRecv(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTP::Packet* packet, uint16_t count)
 	{
 		auto firstSeq = static_cast<uint16_t>(packet->GetSequenceNumber() + 1);
@@ -204,18 +225,27 @@ namespace
 
 		for (uint16_t seq = firstSeq; Utils::Number::IsLowerThan<uint16_t>(seq, lastSeq); ++seq)
 		{
+			if (seq != firstSeq)
+			{
+				nowUs += PacketSpacingMs * 1000;
+			}
+
 			packet->SetSequenceNumber(seq);
 			rtpStream->ReceivePacket(packet, shared.GetTimeUs());
 		}
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		// The packets span the gaps between them plus the millisecond the first one
+		// was taken in.
+		const auto periodMs = static_cast<double>(((count - 1) * PacketSpacingMs) + 1);
 
-		// bitrate (bps) = totalBytes * 8000 / windowSizeMs.
-		// windowSizeMs for RtpStreamRecv is 2500.
-		const auto expectedBitrate =
-		  static_cast<int64_t>(std::trunc((count * packet->GetLength() * 8000.0f / 2500) + 0.5f));
+		// bitrate (bps) = bytes * 8000 / periodMs, where the packet that starts the
+		// period is left out of the bytes because the period does not cover the time
+		// it took to arrive.
+		const auto expectedBitrate = static_cast<int64_t>(std::trunc(
+		  ((static_cast<double>(count - 1) * static_cast<double>(packet->GetLength()) * 8000.0) / periodMs) +
+		  0.5));
 
-		REQUIRE(rtpStream->GetBitrate(nowMs) == expectedBitrate);
+		REQUIRE(rtpStream->GetBitrate(shared.GetTimeMs()) == expectedBitrate);
 	}
 } // namespace
 
@@ -228,6 +258,30 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	packet->SetSsrc(MappedSsrc);
 	packet->SetTimestamp(1000);
 	packet->SetPayloadLength(40);
+
+#ifdef MS_USE_BUILTIN_BWE
+	// Hands the manager that much bitrate and leaves it settled on the layers that
+	// it pays for, which is what the bitrate allocation does to it.
+	const auto allocateBitrate =
+	  [](RTC::SvcProducerStreamManager* manager, int64_t bitrate, int64_t nowMs) -> void
+	{
+		const auto bitrateOptions = manager->GetBitrateOptions(nowMs);
+
+		// The dearest point that fits, which is where the allocation leaves a
+		// candidate that is the only one asking.
+		size_t option{ 0 };
+
+		for (size_t idx{ 0 }; idx < bitrateOptions.options.size(); ++idx)
+		{
+			if (bitrateOptions.options.at(idx).bitrate <= bitrate)
+			{
+				option = idx;
+			}
+		}
+
+		manager->SetBitrateOption(bitrateOptions.options.at(option));
+	};
+#endif
 
 	SECTION("ProcessRtpPacket() returns DROP when target spatial layer is -1")
 	{
@@ -326,7 +380,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		MockListener listener;
 		// keyFrameSupported=false has no effect in SVC: sync always needs a keyframe.
 		auto manager = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
@@ -361,7 +415,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.isSyncPacket == true);
 		REQUIRE(result.syncSeqValue == seq - 1);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 		REQUIRE(result.sendBufferedPackets == true);
 	}
 
@@ -369,7 +423,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
@@ -403,7 +457,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		MockListener listener;
 		auto encodingContext = std::make_unique<MockEncodingContext>();
 		auto manager         = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false,
 		  RTC::Media::Kind::VIDEO,
@@ -441,7 +495,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
@@ -469,14 +523,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::FORWARD);
 		REQUIRE(result.isSyncPacket == false);
 		REQUIRE(result.sendBufferedPackets == false);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 	}
 
 	SECTION("ProcessRtpPacket() always sets tsOffset to 0 (SVC uses single stream)")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
@@ -497,7 +551,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
 
 		REQUIRE(result.type == RtpPacketProcessResult::Type::FORWARD);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 
 		// Subsequent normal packets also have tsOffset == 0.
 		packet->SetSequenceNumber(2);
@@ -505,7 +559,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
 
 		REQUIRE(result.type == RtpPacketProcessResult::Type::FORWARD);
-		REQUIRE(result.tsOffset == 0u);
+		REQUIRE(result.tsOffset == 0);
 	}
 
 	SECTION("UpdateTargetLayers() to -1 resets current and target layers")
@@ -658,7 +712,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
@@ -682,7 +736,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
@@ -722,12 +776,16 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.isSyncPacket == true);
 	}
 
+	// NOTE: Only for the old BWE. With the new one OnTransportConnected() does not
+	// move the target layers, since the transport distributes once after telling
+	// every Consumer.
+#ifndef MS_USE_BUILTIN_BWE
 	SECTION("OnTransportConnected() requests keyframe when active and target changes")
 	{
 		MockListener listener;
 		// Use preferred layer 0 so RecalculateTargetLayers can find it with spatial-layer-0 bitrate.
 		auto manager   = createManager(std::addressof(listener), /*preferredLayers*/ { 0, 0 });
-		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1, /*temporalLayers*/ 1);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
@@ -737,14 +795,15 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 
 		auto keyFrameCountBefore = listener.keyFrameRequestCount;
 
-		// OnTransportConnected calls MayChangeLayers → RecalculateTargetLayers picks
-		// layer {0,0} (bitrate > 0), which differs from the initial {-1,-1} →
-		// UpdateTargetLayers → newTarget(0) > current(-1) → keyframe requested.
+		// OnTransportConnected calls MayChangeLayers -> RecalculateTargetLayers picks
+		// layer {0,0} (bitrate > 0), which differs from the initial {-1,-1} ->
+		// UpdateTargetLayers -> newTarget(0) > current(-1) -> keyframe requested.
 		manager->OnTransportConnected();
 
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
 	}
+#endif
 
 	SECTION("OnTransportConnected() does not request keyframe when not active")
 	{
@@ -800,7 +859,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		MockListener listener;
 		// Use preferred layer 0 so RecalculateTargetLayers can find it with spatial-layer-0 bitrate.
 		auto manager   = createManager(std::addressof(listener), /*preferredLayers*/ { 0, 0 });
-		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1, /*temporalLayers*/ 1);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 
@@ -815,10 +874,18 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 
 		const auto keyFrameCountBefore = listener.keyFrameRequestCount;
 
-		// OnResumed sets syncRequired and calls MayChangeLayers → RecalculateTargetLayers
-		// returns {0,0} which differs from {-1,-1} → UpdateTargetLayers(0,0) →
-		// newTarget(0) > current(-1) → keyframe requested.
+		// OnResumed sets syncRequired and calls MayChangeLayers -> RecalculateTargetLayers
+		// returns {0,0} which differs from {-1,-1} -> UpdateTargetLayers(0,0) ->
+		// newTarget(0) > current(-1) -> keyframe requested.
 		manager->OnResumed();
+
+#ifdef MS_USE_BUILTIN_BWE
+		// The target layers are not moved here but once bitrate is handed out, so
+		// all this call does is ask for a new round.
+		const int64_t nowMs = shared.GetTimeMs();
+
+		allocateBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
+#endif
 
 		REQUIRE(listener.keyFrameRequestCount > keyFrameCountBefore);
 		REQUIRE(listener.lastKeyFrameRequestedMappedSsrc == MappedSsrc);
@@ -828,7 +895,7 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	{
 		MockListener listener;
 		auto manager = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ false);
 		auto rtpStream = createRtpStreamRecv();
@@ -876,9 +943,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		MockListener listener;
 		auto manager    = createManager(std::addressof(listener));
 		auto rtpStream0 = createRtpStreamRecv();
-		auto rtpStream1 = createRtpStreamRecv();
 
 		manager->ProducerRtpStream(rtpStream0.get(), MappedSsrc);
+
+		// MockShared indexes timers by label, so the stream being replaced must be
+		// gone before creating the one replacing it.
+		rtpStream0.reset();
+
+		auto rtpStream1 = createRtpStreamRecv();
 
 		// Replace with a new stream.
 		manager->ProducerNewRtpStream(rtpStream1.get(), MappedSsrc);
@@ -904,6 +976,16 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		// returns -1,-1 (no active stream), UpdateTargetLayers fires layersChanged.
 		manager->ProducerRtpStreamScore(rtpStream.get(), /*score*/ 0, /*previousScore*/ 7);
 
+#ifdef MS_USE_BUILTIN_BWE
+		// The target layers are not moved here but once bitrate is handed out, and
+		// a dead stream can be given none.
+		REQUIRE(listener.needBitrateChangeCount > 0);
+
+		const int64_t nowMs = shared.GetTimeMs();
+
+		allocateBitrate(manager.get(), /*bitrate*/ 1000000, nowMs);
+#endif
+
 		REQUIRE(listener.layersChangedCount > layersChangedBefore);
 		REQUIRE(manager->GetTargetLayers().spatial == -1);
 	}
@@ -926,6 +1008,102 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		manager->ProducerRtpStreamScore(rtpStream.get(), /*score*/ 7, /*previousScore*/ 0);
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	SECTION("GetBitrateOptions() offers only sending nothing when no producer stream is set")
+	{
+		MockListener listener;
+		auto manager = createManager(std::addressof(listener));
+
+		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		REQUIRE(bitrateOptions.options.size() == 1);
+		REQUIRE(bitrateOptions.options.at(0).bitrate == 0);
+		REQUIRE(bitrateOptions.options.at(0).layers.spatial == -1);
+		REQUIRE(bitrateOptions.options.at(0).layers.temporal == -1);
+	}
+
+	SECTION("GetBitrateOptions() offers only sending nothing when producer stream has score 0")
+	{
+		MockListener listener;
+		auto manager   = createManager(std::addressof(listener));
+		auto rtpStream = createRtpStreamRecv();
+
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+
+		// Score is 0 by default (no RTP received + inactivity check disabled).
+		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		REQUIRE(bitrateOptions.options.size() == 1);
+		REQUIRE(bitrateOptions.options.at(0).bitrate == 0);
+	}
+
+	SECTION("GetBitrateOptions() reports no current option until a point has been given")
+	{
+		MockListener listener;
+		auto encodingContext =
+		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 1, /*temporalLayers*/ 1);
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*preferredLayers*/ { 0, 0 },
+		  /*keyFrameSupported*/ true,
+		  RTC::Media::Kind::VIDEO,
+		  std::move(encodingContext));
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1, /*temporalLayers*/ 1);
+
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+
+		// Feed packets so the stream has non-zero bitrate.
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
+
+		const int64_t nowMs = shared.GetTimeMs();
+
+		// Nothing has been given to it yet, so it is not climbing back to anything.
+		const auto bitrateOptions = manager->GetBitrateOptions(nowMs);
+
+		REQUIRE(bitrateOptions.options.size() == 2);
+		REQUIRE(bitrateOptions.currentOption.has_value() == false);
+
+		manager->SetBitrateOption(bitrateOptions.options.at(1));
+
+		// Once given, it reports the point it was given.
+		const auto newBitrateOptions = manager->GetBitrateOptions(nowMs);
+
+		REQUIRE(newBitrateOptions.currentOption == 1);
+		REQUIRE(manager->GetTargetLayers().spatial == 0);
+		REQUIRE(manager->GetTargetLayers().temporal == 0);
+	}
+
+	SECTION("GetBitrateOptions() offers a point per layer up to the preferred ones")
+	{
+		MockListener listener;
+		auto encodingContext =
+		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 3, /*temporalLayers*/ 3);
+		auto manager = createManager(
+		  std::addressof(listener),
+		  /*preferredLayers*/ { 1, 1 },
+		  /*keyFrameSupported*/ true,
+		  RTC::Media::Kind::VIDEO,
+		  std::move(encodingContext));
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 3, /*temporalLayers*/ 3);
+
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+
+		// Packets without a PayloadDescriptorHandler default to layers 0:0.
+		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
+
+		// Only the layers 0:0 are arriving, so beyond sending nothing there is the
+		// single point of running at them. Neither the temporal layers above the
+		// preferred one nor the spatial layers that bring no bitrate are offered.
+		const auto bitrateOptions = manager->GetBitrateOptions(shared.GetTimeMs());
+
+		REQUIRE(bitrateOptions.options.size() == 2);
+		REQUIRE(bitrateOptions.options.at(1).layers.spatial == 0);
+		REQUIRE(bitrateOptions.options.at(1).layers.temporal == 0);
+		REQUIRE(bitrateOptions.options.at(1).bitrate > 0);
+	}
+#endif
+
+#ifndef MS_USE_BUILTIN_BWE
 	SECTION("IncreaseLayer() returns 0 when no producer stream is set")
 	{
 		MockListener listener;
@@ -933,8 +1111,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 
 		manager->SetExternallyManagedBitrate();
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
-		auto usedBitrate    = manager->IncreaseLayer(
+		const int64_t nowMs    = shared.GetTimeMs();
+		const auto usedBitrate = manager->IncreaseLayer(
 		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate == 0);
@@ -950,8 +1128,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		manager->SetExternallyManagedBitrate();
 
 		// Score is 0 by default (no RTP received + inactivity check disabled).
-		const int64_t nowMs = DepLibUV::GetTimeMs();
-		auto usedBitrate    = manager->IncreaseLayer(
+		const int64_t nowMs    = shared.GetTimeMs();
+		const auto usedBitrate = manager->IncreaseLayer(
 		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate == 0);
@@ -962,14 +1140,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		MockListener listener;
 		// Single spatial/temporal layer so preferred == available immediately.
 		auto encodingContext =
-		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 1, /*temporalLayers*/ 1);
 		auto manager = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 0, 0 },
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1, /*temporalLayers*/ 1);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
@@ -977,16 +1155,16 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 
 		// First call claims bitrate.
-		auto usedBitrate = manager->IncreaseLayer(
+		const auto usedBitrate = manager->IncreaseLayer(
 		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate > 0);
 
 		// Second call in same iteration should return 0 (already at preferred layers).
-		auto usedBitrate2 = manager->IncreaseLayer(
+		const auto usedBitrate2 = manager->IncreaseLayer(
 		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate2 == 0);
@@ -996,14 +1174,14 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	{
 		MockListener listener;
 		auto encodingContext =
-		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 1, /*temporalLayers*/ 1);
 		auto manager = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 0, 0 },
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1u, /*temporalLayers*/ 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 1, /*temporalLayers*/ 1);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
@@ -1011,68 +1189,27 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		// Feed packets so the stream has non-zero bitrate.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 
 		// First iteration.
 		manager->IncreaseLayer(
 		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
-		manager->ApplyLayers(/*rtpStreamActiveMs*/ 0u);
+		manager->ApplyLayers();
 
-		// After ApplyLayers, IncreaseLayer should work again.
-		auto usedBitrate = manager->IncreaseLayer(
+		// Once the round is committed it should work again.
+		const auto usedBitrate = manager->IncreaseLayer(
 		  /*bitrate*/ 1000000, /*considerLoss*/ false, /*lossPercentage*/ 0.0f, nowMs);
 
 		REQUIRE(usedBitrate > 0);
 	}
-
-	SECTION("ApplyLayers() records BWE downgrade when spatial layer drops below current")
-	{
-		MockListener listener;
-		auto encodingContext =
-		  std::make_unique<MockEncodingContext>(/*spatialLayers*/ 3u, /*temporalLayers*/ 3u);
-		auto manager = createManager(
-		  &listener,
-		  /*preferredLayers*/ { 2, 2 },
-		  /*keyFrameSupported*/ false,
-		  RTC::Media::Kind::VIDEO,
-		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(MappedSsrc, /*spatialLayers*/ 3u, /*temporalLayers*/ 3u);
-
-		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
-		manager->SetExternallyManagedBitrate();
-
-		// Manually set current to layer 2 via ProcessRtpPacket() sync.
-		manager->UpdateTargetLayers(2, 2);
-
-		packet->SetSequenceNumber(1);
-		auto* handler       = new MockPayloadDescriptorHandler();
-		handler->isKeyFrame = true;
-		packet->SetPayloadDescriptorHandler(handler);
-		manager->ProcessRtpPacket(
-		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
-
-		// Simulate a BWE downgrade: IncreaseLayer returns layer 0, then ApplyLayers
-		// detects current(2) > target(0) and rtpStreamActiveMs > BweDowngradeMinActiveMs.
-		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
-
-		// Force provisional target to spatial 0 by only offering very little bitrate.
-		// With very low bitrate IncreaseLayer may return 0; skip that and call
-		// ApplyLayers directly with a high rtpStreamActiveMs.
-		// The important check is that no crash happens and target can be updated.
-		manager->ApplyLayers(/*rtpStreamActiveMs*/ 9000u);
-
-		// After ApplyLayers the target may have changed; just assert no crash and
-		// that layers are either set or -1.
-		auto targetLayers = manager->GetTargetLayers();
-		REQUIRE((targetLayers.spatial >= -1 && targetLayers.spatial <= 2));
-	}
+#endif
 
 	SECTION("GetDesiredBitrate() returns 0 when no producer stream is set")
 	{
 		MockListener listener;
 		auto manager = createManager(std::addressof(listener));
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 		auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
 
 		REQUIRE(desiredBitrate == 0);
@@ -1082,21 +1219,23 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	{
 		MockListener listener;
 		// Full SVC (ksvc=false).
-		auto encodingContext = std::make_unique<MockEncodingContext>(3u, 3u, /*ksvc*/ false);
+		auto encodingContext = std::make_unique<MockEncodingContext>(3, 3, /*ksvc*/ false);
 		auto manager         = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(MappedSsrc, 3u, 3u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, 3, 3);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 		auto streamBitrate  = rtpStream->GetBitrate(nowMs);
 		auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
 
@@ -1107,22 +1246,24 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	{
 		MockListener listener;
 		// K-SVC (ksvc=true): GetDesiredBitrate iterates per-layer bitrates.
-		auto encodingContext = std::make_unique<MockEncodingContext>(3u, 3u, /*ksvc*/ true);
+		auto encodingContext = std::make_unique<MockEncodingContext>(3, 3, /*ksvc*/ true);
 		auto manager         = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(MappedSsrc, 3u, 3u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, 3, 3);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+#ifndef MS_USE_BUILTIN_BWE
 		manager->SetExternallyManagedBitrate();
+#endif
 
 		// Feed packets so total stream bitrate > 0.
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 		auto desiredBitrate = manager->GetDesiredBitrate(nowMs);
 
 		// K-SVC returns the max per-spatial-layer bitrate. With a plain RtpStreamRecv
@@ -1164,9 +1305,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	SECTION("K-SVC: UpdateTargetLayers() requests keyframe on any spatial layer change")
 	{
 		MockListener listener;
-		auto encodingContext = std::make_unique<MockEncodingContext>(3u, 3u, /*ksvc*/ true);
+		auto encodingContext = std::make_unique<MockEncodingContext>(3, 3, /*ksvc*/ true);
 		auto manager         = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
@@ -1190,9 +1331,9 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	SECTION("Full SVC: UpdateTargetLayers() does NOT request keyframe on spatial downgrade")
 	{
 		MockListener listener;
-		auto encodingContext = std::make_unique<MockEncodingContext>(3u, 3u, /*ksvc*/ false);
+		auto encodingContext = std::make_unique<MockEncodingContext>(3, 3, /*ksvc*/ false);
 		auto manager         = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 2, 2 },
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
@@ -1216,24 +1357,25 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(listener.keyFrameRequestCount == 0);
 	}
 
+#ifndef MS_USE_BUILTIN_BWE
 	SECTION("IncreaseLayer() uses virtual bitrate when considerLoss is true and loss < 2%")
 	{
 		MockListener listener;
-		auto encodingContext = std::make_unique<MockEncodingContext>(1u, 1u, /*ksvc*/ false);
+		auto encodingContext = std::make_unique<MockEncodingContext>(1, 1, /*ksvc*/ false);
 		auto manager         = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 0, 0 },
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(MappedSsrc, 1u, 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, 1, 1);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 		auto streamBitrate  = rtpStream->GetBitrate(nowMs);
 
 		// With 1% loss virtualBitrate = 1.08 * bitrate, so we can afford the stream
@@ -1250,21 +1392,21 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 	SECTION("IncreaseLayer() uses reduced virtual bitrate when considerLoss is true and loss > 10%")
 	{
 		MockListener listener;
-		auto encodingContext = std::make_unique<MockEncodingContext>(1u, 1u, /*ksvc*/ false);
+		auto encodingContext = std::make_unique<MockEncodingContext>(1, 1, /*ksvc*/ false);
 		auto manager         = createManager(
-		  &listener,
+		  std::addressof(listener),
 		  /*preferredLayers*/ { 0, 0 },
 		  /*keyFrameSupported*/ true,
 		  RTC::Media::Kind::VIDEO,
 		  std::move(encodingContext));
-		auto rtpStream = createRtpStreamRecv(MappedSsrc, 1u, 1u);
+		auto rtpStream = createRtpStreamRecv(MappedSsrc, 1, 1);
 
 		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
 		manager->SetExternallyManagedBitrate();
 
 		feedRtpStreamRecv(rtpStream.get(), packet.get(), 100);
 
-		const int64_t nowMs = DepLibUV::GetTimeMs();
+		const int64_t nowMs = shared.GetTimeMs();
 		auto streamBitrate  = rtpStream->GetBitrate(nowMs);
 
 		// With 50% loss virtualBitrate = (1 - 0.5*0.5) * bitrate = 0.75 * bitrate.
@@ -1273,7 +1415,8 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		  manager->IncreaseLayer(streamBitrate, /*considerLoss*/ true, /*lossPercentage*/ 50.0f, nowMs);
 
 		// virtualBitrate = 0.75 * streamBitrate < streamBitrate (requiredBitrate),
-		// so the layer cannot be taken → 0.
+		// so the layer cannot be taken -> 0.
 		REQUIRE(usedBitrate == 0);
 	}
+#endif
 }

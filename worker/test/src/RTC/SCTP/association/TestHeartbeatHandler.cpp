@@ -54,7 +54,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		 * - The increment is given in milliseconds since it comes from the SCTP
 		 *   options and the timers, which work in milliseconds.
 		 */
-		void AdvanceTimeMs(int64_t incrementMs)
+		void AdvanceNowMs(int64_t incrementMs)
 		{
 			this->nowUs += incrementMs * 1000;
 		}
@@ -77,7 +77,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 	{
 		TestHeartbeatHandler test(HeartbeatIntervalMs);
 
-		test.AdvanceTimeMs(test.sctpOptions.heartbeatIntervalMs);
+		test.AdvanceNowMs(test.sctpOptions.heartbeatIntervalMs);
 
 		auto* heartbeatIntervalTimer = test.shared.GetBackoffTimer("sctp-heartbeat-interval");
 
@@ -151,7 +151,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 	{
 		TestHeartbeatHandler test(HeartbeatIntervalMs);
 
-		test.AdvanceTimeMs(test.sctpOptions.heartbeatIntervalMs);
+		test.AdvanceNowMs(test.sctpOptions.heartbeatIntervalMs);
 
 		auto* heartbeatIntervalTimer = test.shared.GetBackoffTimer("sctp-heartbeat-interval");
 
@@ -195,7 +195,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		test.tcbContext.ExpectObserveRttUsCalledTimes(1).ExpectObserveRttUsCalledWith(
 		  static_cast<int64_t>(rttMs * 1000));
 
-		test.AdvanceTimeMs(rttMs);
+		test.AdvanceNowMs(rttMs);
 		test.heartbeatHandler.HandleReceivedHeartbeatAckChunk(receivedHeartbeatAckChunk.get());
 
 		REQUIRE_VERIFICATION_RESULT(test.tcbContext.VerifyExpectations());
@@ -205,7 +205,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 	{
 		TestHeartbeatHandler test(HeartbeatIntervalMs);
 
-		test.AdvanceTimeMs(test.sctpOptions.heartbeatIntervalMs);
+		test.AdvanceNowMs(test.sctpOptions.heartbeatIntervalMs);
 
 		auto* heartbeatIntervalTimer = test.shared.GetBackoffTimer("sctp-heartbeat-interval");
 
@@ -247,7 +247,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 
 		// Go backwards in time to make the HEARTBEAT-ACK have an invalid timestamp
 		// in it, as it will be in the future.
-		test.AdvanceTimeMs(-100);
+		test.AdvanceNowMs(-100);
 		test.heartbeatHandler.HandleReceivedHeartbeatAckChunk(receivedHeartbeatAckChunk.get());
 
 		REQUIRE_VERIFICATION_RESULT(test.tcbContext.VerifyExpectations());
@@ -265,7 +265,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 			  return static_cast<int64_t>(rtoMs * 1000);
 		  });
 
-		test.AdvanceTimeMs(test.sctpOptions.heartbeatIntervalMs);
+		test.AdvanceNowMs(test.sctpOptions.heartbeatIntervalMs);
 
 		auto* heartbeatIntervalTimer = test.shared.GetBackoffTimer("sctp-heartbeat-interval");
 
@@ -277,7 +277,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 
 		test.tcbContext.ExpectIncrementTxErrorCounterCalledTimes(1);
 
-		test.AdvanceTimeMs(rtoMs);
+		test.AdvanceNowMs(rtoMs);
 
 		auto* heartbeatTimeoutTimer = test.shared.GetBackoffTimer("sctp-heartbeat-timeout");
 
@@ -290,7 +290,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 	{
 		TestHeartbeatHandler test(0);
 
-		test.AdvanceTimeMs(test.sctpOptions.heartbeatIntervalMs);
+		test.AdvanceNowMs(test.sctpOptions.heartbeatIntervalMs);
 
 		auto* heartbeatIntervalTimer = test.shared.GetBackoffTimer("sctp-heartbeat-interval");
 

@@ -13,7 +13,8 @@ namespace RTC
 	{
 		ReassemblyQueue::ReassemblyQueue(size_t maxLengthBytes, bool useMessageInterleaving)
 		  : maxLengthBytes(maxLengthBytes),
-		    watermarkBytes(this->maxLengthBytes * ReassemblyQueue::HighWatermarkLimit),
+		    watermarkBytes(
+		      static_cast<size_t>(this->maxLengthBytes * ReassemblyQueue::HighWatermarkLimit)),
 		    reassemblyStreams(CreateReassemblyStreams(
 		      [this](std::span<const Types::UnwrappedTsn> tsns, Message message)
 		      {
@@ -53,7 +54,8 @@ namespace RTC
 			if (
 			  this->deferredResetStreams.has_value() &&
 			  unwrappedTsn > this->deferredResetStreams->senderLastAssignedTsn &&
-			  this->deferredResetStreams->streamIds.contains(data.GetStreamId()))
+			  (this->deferredResetStreams->streamIds.empty() ||
+				 this->deferredResetStreams->streamIds.contains(data.GetStreamId())))
 			{
 				MS_DEBUG_DEV(
 				  "deferrink chunk [tsn:%" PRIu32 ", streamId:%" PRIu16 "] until tsn %" PRIu32,

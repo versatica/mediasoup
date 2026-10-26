@@ -6,31 +6,54 @@
 #include "FBS/transport.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#ifndef MS_USE_BUILTIN_BWE
 #include "RTC/BweType.hpp"
+#endif
 #include "RTC/Consts.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
+#include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SCTP/association/Association.hpp"
+#include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SubchannelsCodec.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
-#include "RTC/RtcLogger.hpp"
+#include "RTC/RtcLogger/RtpPacket.hpp"
 #endif
+#ifndef MS_USE_BUILTIN_BWE
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
+#endif
 #include <array>
-#include <iterator> // std::ostream_iterator
-#include <limits>   // std::numeric_limits
-#include <map>      // std::multimap
+#ifndef MS_USE_BUILTIN_BWE
+#include <map> // std::multimap
+#endif
 
 namespace RTC
 {
+	/* Static. */
+
+	// Highest bitrate the API may ask for (bps), which anything higher is brought
+	// down to. A limit above what the bandwidth estimation deals in is not a
+	// limit, and it also keeps `Types::BitrateInfinite` out of the estimators,
+	// which reserve it to mean that there is no limit at all.
+	static constexpr int64_t AbsoluteMaxBitrate{ RTC::Consts::BweMaxBitrate };
+	// Lowest bitrate the API may ask for (bps). A limit below it is not a limit,
+	// it is a way of sending nothing at all.
+	static constexpr int64_t AbsoluteMinBitrate{ 30000 };
+	// Bitrate the outgoing target starts at when the API does not say (bps).
+	static constexpr int64_t DefaultInitialAvailableOutgoingBitrate{ 600000 };
+#ifdef MS_RTC_LOGGER_SEND_BURST
+	// How often the distribution of send bursts is printed.
+	static constexpr int64_t SendBurstLogIntervalMs{ 5000 };
+#endif
+
 	/* Instance methods. */
 
 	Transport::Transport(
@@ -44,24 +67,61 @@ namespace RTC
 	    listener(listener),
 	    recvRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
 	    sendRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
-	    recvRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000u),
-	    sendRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000u),
-	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100u)
+	    recvRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
+	    sendRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
+	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100),
+	    rttCalculator(this, shared)
 	{
 		MS_TRACE();
 
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		this->sendBurstLogger.transportId = this->id;
+		this->sendBurstLoggerTimer        = this->shared->CreateTimer(this, "transport-send-burst");
+
+		this->sendBurstLoggerTimer->Start(SendBurstLogIntervalMs, SendBurstLogIntervalMs);
+#endif
+
 		this->direct                = options->direct();
+		this->enableBwe             = options->enableBwe();
 		this->maxSendMessageSize    = options->maxSendMessageSize();
 		this->maxReceiveMessageSize = options->maxReceiveMessageSize();
 
-		if (
-		  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
-		  initialAvailableOutgoingBitrate.has_value())
+		// NOTE: The API gives unsigned 64 bits bitrates, so they are clamped here.
+		if (this->enableBwe)
 		{
-			// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-			this->initialAvailableOutgoingBitrate = static_cast<int64_t>(std::min<uint64_t>(
-			  initialAvailableOutgoingBitrate.value(),
-			  static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+			this->maxIncomingBitrate = AbsoluteMaxBitrate;
+			this->minOutgoingBitrate = AbsoluteMinBitrate;
+			this->maxOutgoingBitrate = AbsoluteMaxBitrate;
+
+			if (auto maxIncomingBitrate = options->maxIncomingBitrate(); maxIncomingBitrate.has_value())
+			{
+				this->maxIncomingBitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(maxIncomingBitrate.value(), AbsoluteMaxBitrate));
+			}
+
+			if (auto minOutgoingBitrate = options->minOutgoingBitrate(); minOutgoingBitrate.has_value())
+			{
+				this->minOutgoingBitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(minOutgoingBitrate.value(), AbsoluteMaxBitrate));
+			}
+
+			if (auto maxOutgoingBitrate = options->maxOutgoingBitrate(); maxOutgoingBitrate.has_value())
+			{
+				this->maxOutgoingBitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(maxOutgoingBitrate.value(), AbsoluteMaxBitrate));
+			}
+
+			this->initialAvailableOutgoingBitrate = DefaultInitialAvailableOutgoingBitrate;
+
+			if (
+			  auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
+			  initialAvailableOutgoingBitrate.has_value())
+			{
+				this->initialAvailableOutgoingBitrate = static_cast<int64_t>(
+				  std::min<uint64_t>(initialAvailableOutgoingBitrate.value(), AbsoluteMaxBitrate));
+			}
+
+			MayFixBweBitrateLimits();
 		}
 
 		if (options->enableSctp())
@@ -69,6 +129,32 @@ namespace RTC
 			if (this->direct)
 			{
 				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
+			}
+
+			RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod
+			  zeroChecksumAlternateErrorDetectionMethod{
+				  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
+			  };
+
+			switch (options->sctpZeroChecksum())
+			{
+				case FBS::Transport::SctpZeroChecksum::SCTP_OVER_DTLS:
+				{
+					zeroChecksumAlternateErrorDetectionMethod =
+					  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
+
+					break;
+				}
+
+				case FBS::Transport::SctpZeroChecksum::TRUSTED_NETWORK:
+				{
+					zeroChecksumAlternateErrorDetectionMethod =
+					  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK;
+
+					break;
+				}
+
+				default:;
 			}
 
 			const RTC::SCTP::SctpOptions sctpOptions = {
@@ -80,7 +166,8 @@ namespace RTC
 				.maxReceiverWindowBufferSize = options->sctpMaxReceiverWindowBufferSize(),
 				.defaultStreamBufferedAmountLowThreshold =
 				  options->sctpDefaultStreamBufferedAmountLowThreshold(),
-				.requireAuthenticatedCookie = requireSctpStateCookieAuthentication
+				.zeroChecksumAlternateErrorDetectionMethod = zeroChecksumAlternateErrorDetectionMethod,
+				.requireAuthenticatedCookie                = requireSctpStateCookieAuthentication
 			};
 
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
@@ -147,6 +234,11 @@ namespace RTC
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
 		this->rtcpTimer = nullptr;
+
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		delete this->sendBurstLoggerTimer;
+		this->sendBurstLoggerTimer = nullptr;
+#endif
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -291,19 +383,19 @@ namespace RTC
 		// Add headerExtensionIds.
 		auto recvRtpHeaderExtensions = FBS::Transport::CreateRecvRtpHeaderExtensions(
 		  builder,
-		  this->recvRtpHeaderExtensionIds.mid != 0u
+		  this->recvRtpHeaderExtensionIds.mid != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.mid)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.rid != 0u
+		  this->recvRtpHeaderExtensionIds.rid != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.rid)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.rrid != 0u
+		  this->recvRtpHeaderExtensionIds.rrid != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.rrid)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.absSendTime != 0u
+		  this->recvRtpHeaderExtensionIds.absSendTime != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.absSendTime)
 		    : flatbuffers::nullopt,
-		  this->recvRtpHeaderExtensionIds.transportWideCc01 != 0u
+		  this->recvRtpHeaderExtensionIds.transportWideCc01 != 0
 		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.transportWideCc01)
 		    : flatbuffers::nullopt);
 
@@ -441,6 +533,48 @@ namespace RTC
 			}
 		}
 
+#ifdef MS_USE_BUILTIN_BWE
+		flatbuffers::Optional<uint64_t> availableOutgoingBitrate{ flatbuffers::nullopt };
+
+		if (this->senderTransportCongestionController)
+		{
+			availableOutgoingBitrate =
+			  static_cast<uint64_t>(this->senderTransportCongestionController->GetAvailableBitrate());
+		}
+
+		flatbuffers::Optional<uint64_t> availableIncomingBitrate{ flatbuffers::nullopt };
+
+		if (this->receiverTransportCongestionController)
+		{
+			const auto bitrate = this->receiverTransportCongestionController->GetAvailableBitrate();
+
+			if (bitrate.has_value())
+			{
+				availableIncomingBitrate = static_cast<uint64_t>(bitrate.value());
+			}
+		}
+#else
+		const auto availableOutgoingBitrate =
+		  this->tccClient ? flatbuffers::Optional<uint64_t>(
+		                      static_cast<uint64_t>(this->tccClient->GetAvailableBitrate()))
+			                : flatbuffers::nullopt;
+		const auto availableIncomingBitrate =
+		  this->tccServer ? flatbuffers::Optional<uint64_t>(
+		                      static_cast<uint64_t>(this->tccServer->GetAvailableBitrate()))
+			                : flatbuffers::nullopt;
+#endif
+
+		// The bitrate bounds only mean something while there is something applying
+		// them, so they are told apart by whether it is there rather than by their
+		// value.
+#ifdef MS_USE_BUILTIN_BWE
+		const bool outgoingBitratesApply = this->senderTransportCongestionController != nullptr;
+		const bool incomingBitratesApply = this->receiverTransportCongestionController != nullptr;
+#else
+		const bool outgoingBitratesApply = this->tccClient != nullptr;
+		const bool incomingBitratesApply = this->tccServer != nullptr;
+#endif
+
 		return FBS::Transport::CreateStatsDirect(
 		  builder,
 		  // transportId.
@@ -453,57 +587,49 @@ namespace RTC
 		  // bytesReceived.
 		  this->recvTransmission.GetBytes(),
 		  // recvBitrate.
-		  static_cast<uint64_t>(this->recvTransmission.GetRate(nowMs)),
+		  static_cast<uint64_t>(this->recvTransmission.GetRate(nowMs).value_or(0)),
 		  // bytesSent.
 		  this->sendTransmission.GetBytes(),
 		  // sendBitrate.
-		  static_cast<uint64_t>(this->sendTransmission.GetRate(nowMs)),
+		  static_cast<uint64_t>(this->sendTransmission.GetRate(nowMs).value_or(0)),
 		  // rtpBytesReceived.
 		  this->recvRtpTransmission.GetBytes(),
 		  // rtpRecvBitrate.
-		  static_cast<uint64_t>(this->recvRtpTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->recvRtpTransmission.GetBitrate(nowMs).value_or(0)),
 		  // rtpBytesSent.
 		  this->sendRtpTransmission.GetBytes(),
 		  // rtpSendBitrate.
-		  static_cast<uint64_t>(this->sendRtpTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->sendRtpTransmission.GetBitrate(nowMs).value_or(0)),
 		  // rtxBytesReceived.
 		  this->recvRtxTransmission.GetBytes(),
 		  // rtxRecvBitrate.
-		  static_cast<uint64_t>(this->recvRtxTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->recvRtxTransmission.GetBitrate(nowMs).value_or(0)),
 		  // rtxBytesSent.
 		  this->sendRtxTransmission.GetBytes(),
 		  // rtxSendBitrate.
-		  static_cast<uint64_t>(this->sendRtxTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->sendRtxTransmission.GetBitrate(nowMs).value_or(0)),
 		  // probationBytesSent.
 		  this->sendProbationTransmission.GetBytes(),
 		  // probationSendBitrate.
-		  static_cast<uint64_t>(this->sendProbationTransmission.GetBitrate(nowMs)),
+		  static_cast<uint64_t>(this->sendProbationTransmission.GetBitrate(nowMs).value_or(0)),
 		  // availableOutgoingBitrate.
-		  this->tccClient ? flatbuffers::Optional<uint64_t>(
-		                      static_cast<uint64_t>(this->tccClient->GetAvailableBitrate()))
-			                : flatbuffers::nullopt,
+		  availableOutgoingBitrate,
 		  // availableIncomingBitrate.
-		  this->tccServer ? flatbuffers::Optional<uint64_t>(
-		                      static_cast<uint64_t>(this->tccServer->GetAvailableBitrate()))
-			                : flatbuffers::nullopt,
+		  availableIncomingBitrate,
 		  // maxIncomingBitrate.
-		  this->maxIncomingBitrate > 0
+		  incomingBitratesApply
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->maxIncomingBitrate))
 				: flatbuffers::nullopt,
 		  // maxOutgoingBitrate.
-		  this->maxOutgoingBitrate > 0
+		  outgoingBitratesApply
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->maxOutgoingBitrate))
 				: flatbuffers::nullopt,
 		  // minOutgoingBitrate.
-		  this->minOutgoingBitrate > 0
+		  outgoingBitratesApply
 		    ? flatbuffers::Optional<uint64_t>(static_cast<uint64_t>(this->minOutgoingBitrate))
 				: flatbuffers::nullopt,
-		  // rtpPacketLossReceived.
-		  this->tccServer ? flatbuffers::Optional<double>(this->tccServer->GetPacketLoss())
-			                : flatbuffers::nullopt,
-		  // rtpPacketLossSent.
-		  this->tccClient ? flatbuffers::Optional<double>(this->tccClient->GetPacketLoss())
-			                : flatbuffers::nullopt);
+		  // roundTripTime.
+		  this->rttCalculator.GetLastRttMs());
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
@@ -517,17 +643,58 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();
 
 				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-				this->maxIncomingBitrate = static_cast<int64_t>(std::min<uint64_t>(
-				  body->maxIncomingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+				const auto maxIncomingBitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(body->maxIncomingBitrate(), AbsoluteMaxBitrate));
+
+				// NOTE: A zero lifts the cap rather than setting one.
+				this->maxIncomingBitrate = maxIncomingBitrate != 0 ? maxIncomingBitrate : AbsoluteMaxBitrate;
+
+				MayFixBweBitrateLimits();
 
 				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIi64, this->maxIncomingBitrate);
 
 				request->Accept();
 
+#ifdef MS_USE_BUILTIN_BWE
+				if (this->receiverTransportCongestionController)
+				{
+					// The cap travels to the remote peer in a REMB, so a peer that did not
+					// negotiate REMB cannot be told about it by any means.
+					//
+					// NOTE: There is nothing to lift if it was never applied.
+					if (this->recvSupportsRemb)
+					{
+						this->receiverTransportCongestionController->SetMaxIncomingBitrate(
+						  this->maxIncomingBitrate != AbsoluteMaxBitrate
+						    ? std::optional<int64_t>(this->maxIncomingBitrate)
+								: std::nullopt);
+					}
+					else if (this->maxIncomingBitrate != AbsoluteMaxBitrate)
+					{
+						MS_WARN_TAG(
+						  bwe, "cannot apply maximum incoming bitrate since remote peer does not support REMB");
+					}
+				}
+#else
 				if (this->tccServer)
 				{
-					this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+					// The cap travels to the remote peer in a REMB, so a peer that did not
+					// negotiate REMB cannot be told about it by any means.
+					//
+					// NOTE: A zero lifts the cap rather than setting one, and there is
+					// nothing to lift if it was never applied.
+					if (this->recvSupportsRemb)
+					{
+						this->tccServer->SetMaxIncomingBitrate(
+						  this->maxIncomingBitrate != AbsoluteMaxBitrate ? this->maxIncomingBitrate : 0);
+					}
+					else if (this->maxIncomingBitrate != AbsoluteMaxBitrate)
+					{
+						MS_WARN_TAG(
+						  bwe, "cannot apply maximum incoming bitrate since remote peer does not support REMB");
+					}
 				}
+#endif
 
 				break;
 			}
@@ -537,37 +704,30 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>();
 
 				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-				const auto bitrate = static_cast<int64_t>(std::min<uint64_t>(
-				  body->maxOutgoingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+				const auto bitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(body->maxOutgoingBitrate(), AbsoluteMaxBitrate));
 
-				if (bitrate > 0 && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
-				{
-					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= %" PRIi64 " or 0 (unlimited)",
-					  RTC::TransportCongestionControlMinOutgoingBitrate);
-				}
-				else if (bitrate > 0 && bitrate < this->minOutgoingBitrate)
-				{
-					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= current min outgoing bitrate (%" PRIi64 ") or 0 (unlimited)",
-					  this->minOutgoingBitrate);
-				}
+				// NOTE: A zero lifts the cap rather than setting one.
+				this->maxOutgoingBitrate = bitrate != 0 ? bitrate : AbsoluteMaxBitrate;
 
+				MayFixBweBitrateLimits();
+
+				MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIi64, this->maxOutgoingBitrate);
+
+#ifdef MS_USE_BUILTIN_BWE
+				if (this->senderTransportCongestionController)
+				{
+					this->senderTransportCongestionController->SetBitrateLimits(
+					  this->minOutgoingBitrate, this->maxOutgoingBitrate);
+				}
+#else
 				if (this->tccClient)
 				{
-					// NOTE: This may throw so don't update things before calling this
-					// method.
-					this->tccClient->SetMaxOutgoingBitrate(bitrate);
-					this->maxOutgoingBitrate = bitrate;
-
-					MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIi64, this->maxOutgoingBitrate);
+					this->tccClient->SetMaxOutgoingBitrate(this->maxOutgoingBitrate);
 
 					ComputeOutgoingDesiredBitrate();
 				}
-				else
-				{
-					this->maxOutgoingBitrate = bitrate;
-				}
+#endif
 
 				request->Accept();
 
@@ -579,37 +739,30 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::SetMinOutgoingBitrateRequest>();
 
 				// NOTE: The API gives an unsigned 64 bits bitrate, so it is clamped here.
-				const auto bitrate = static_cast<int64_t>(std::min<uint64_t>(
-				  body->minOutgoingBitrate(), static_cast<uint64_t>(std::numeric_limits<int64_t>::max())));
+				const auto bitrate =
+				  static_cast<int64_t>(std::min<uint64_t>(body->minOutgoingBitrate(), AbsoluteMaxBitrate));
 
-				if (bitrate > 0 && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
-				{
-					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= %" PRIi64 " or 0 (unlimited)",
-					  RTC::TransportCongestionControlMinOutgoingBitrate);
-				}
-				else if (bitrate > 0 && this->maxOutgoingBitrate > 0 && bitrate > this->maxOutgoingBitrate)
-				{
-					MS_THROW_TYPE_ERROR(
-					  "bitrate must be <= current max outgoing bitrate (%" PRIi64 ") or 0 (unlimited)",
-					  this->maxOutgoingBitrate);
-				}
+				// NOTE: A zero lifts the floor rather than setting one.
+				this->minOutgoingBitrate = bitrate != 0 ? bitrate : AbsoluteMinBitrate;
 
+				MayFixBweBitrateLimits();
+
+				MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIi64, this->minOutgoingBitrate);
+
+#ifdef MS_USE_BUILTIN_BWE
+				if (this->senderTransportCongestionController)
+				{
+					this->senderTransportCongestionController->SetBitrateLimits(
+					  this->minOutgoingBitrate, this->maxOutgoingBitrate);
+				}
+#else
 				if (this->tccClient)
 				{
-					// NOTE: This may throw so don't update things before calling this
-					// method.
-					this->tccClient->SetMinOutgoingBitrate(bitrate);
-					this->minOutgoingBitrate = bitrate;
-
-					MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIi64, this->minOutgoingBitrate);
+					this->tccClient->SetMinOutgoingBitrate(this->minOutgoingBitrate);
 
 					ComputeOutgoingDesiredBitrate();
 				}
-				else
-				{
-					this->minOutgoingBitrate = bitrate;
-				}
+#endif
 
 				request->Accept();
 
@@ -674,33 +827,33 @@ namespace RTC
 				// header extension ids of the Producer (and not their mapped values).
 				const auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
 
-				if (producerRtpHeaderExtensionIds.mid != 0u)
+				if (producerRtpHeaderExtensionIds.mid != 0)
 				{
 					this->recvRtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
 				}
 
-				if (producerRtpHeaderExtensionIds.rid != 0u)
+				if (producerRtpHeaderExtensionIds.rid != 0)
 				{
 					this->recvRtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
 				}
 
-				if (producerRtpHeaderExtensionIds.rrid != 0u)
+				if (producerRtpHeaderExtensionIds.rrid != 0)
 				{
 					this->recvRtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
 				}
 
-				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+				if (producerRtpHeaderExtensionIds.absSendTime != 0)
 				{
 					this->recvRtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
 				}
 
-				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0u)
+				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0)
 				{
 					this->recvRtpHeaderExtensionIds.transportWideCc01 =
 					  producerRtpHeaderExtensionIds.transportWideCc01;
 				}
 
-				if (producerRtpHeaderExtensionIds.dependencyDescriptor != 0u)
+				if (producerRtpHeaderExtensionIds.dependencyDescriptor != 0)
 				{
 					this->recvRtpHeaderExtensionIds.dependencyDescriptor =
 					  producerRtpHeaderExtensionIds.dependencyDescriptor;
@@ -720,60 +873,53 @@ namespace RTC
 
 				request->Accept(FBS::Response::Body::Transport_ProduceResponse, responseOffset);
 
-				// Check if TransportCongestionControlServer or REMB server must be
-				// created.
-				const auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
-				const auto& codecs                = producer->GetRtpParameters().codecs;
+				if (!this->recvSupportsTransportCc)
+				{
+					this->recvSupportsTransportCc = producer->SupportsTransportCc();
+				}
 
+				if (!this->recvSupportsRemb)
+				{
+					this->recvSupportsRemb = producer->SupportsRemb();
+				}
+
+#ifdef MS_USE_BUILTIN_BWE
+				// NOTE: A Transport that gets its first Producer while not yet connected
+				// builds it in Transport::Connected() instead.
+				const bool receiverControllerCreated = MayCreateReceiverTransportCongestionController();
+
+				// The cap travels to the remote peer in a REMB, so it only becomes
+				// applicable once a Producer brings REMB, which may well be this one.
+				if (this->receiverTransportCongestionController && this->maxIncomingBitrate != AbsoluteMaxBitrate)
+				{
+					if (this->recvSupportsRemb)
+					{
+						this->receiverTransportCongestionController->SetMaxIncomingBitrate(
+						  this->maxIncomingBitrate);
+					}
+					// NOTE: Only on the Producer that builds it, since every later one
+					// would say the same thing again.
+					else if (receiverControllerCreated)
+					{
+						MS_WARN_TAG(
+						  bwe, "cannot apply maximum incoming bitrate since remote peer does not support REMB");
+					}
+				}
+#else
 				// Set TransportCongestionControlServer.
-				if (!this->tccServer)
+				if (this->enableBwe && !this->tccServer)
 				{
 					bool createTccServer{ false };
 					RTC::BweType bweType;
 
-					// Use transport-cc if:
-					// - there is transport-wide-cc-01 RTP header extension, and
-					// - there is "transport-cc" in codecs RTCP feedback.
-					//
-					if (
-					  rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-					  std::any_of(
-					    codecs.begin(),
-					    codecs.end(),
-					    [](const RTC::RtpCodecParameters& codec)
-					    {
-						    return std::any_of(
-						      codec.rtcpFeedback.begin(),
-						      codec.rtcpFeedback.end(),
-						      [](const RTC::RtcpFeedback& fb)
-						      {
-							      return fb.type == "transport-cc";
-						      });
-					    }))
+					if (producer->SupportsTransportCc())
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
 
 						createTccServer = true;
 						bweType         = RTC::BweType::TRANSPORT_CC;
 					}
-					// Use REMB if:
-					// - there is abs-send-time RTP header extension, and
-					// - there is "remb" in codecs RTCP feedback.
-					//
-					else if (
-					  rtpHeaderExtensionIds.absSendTime != 0u && std::any_of(
-					                                               codecs.begin(),
-					                                               codecs.end(),
-					                                               [](const RTC::RtpCodecParameters& codec)
-					                                               {
-						                                               return std::any_of(
-						                                                 codec.rtcpFeedback.begin(),
-						                                                 codec.rtcpFeedback.end(),
-						                                                 [](const RTC::RtcpFeedback& fb)
-						                                                 {
-							                                                 return fb.type == "goog-remb";
-						                                                 });
-					                                               }))
+					else if (producer->SupportsRemb())
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
 
@@ -786,9 +932,20 @@ namespace RTC
 						this->tccServer = std::make_shared<RTC::TransportCongestionControlServer>(
 						  this, this->shared, bweType, RTC::Consts::RtcpPacketMaxSize);
 
-						if (this->maxIncomingBitrate != 0u)
+						if (this->maxIncomingBitrate != AbsoluteMaxBitrate)
 						{
-							this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+							// The cap travels to the remote peer in a REMB, so a peer that did
+							// not negotiate REMB cannot be told about it by any means.
+							if (this->recvSupportsRemb)
+							{
+								this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+							}
+							else
+							{
+								MS_WARN_TAG(
+								  bwe,
+								  "cannot apply maximum incoming bitrate since remote peer does not support REMB");
+							}
 						}
 
 						if (IsConnected())
@@ -797,6 +954,14 @@ namespace RTC
 						}
 					}
 				}
+
+				// A Producer that brings REMB once the server is already there makes the
+				// incoming cap applicable, which it was not when it was set.
+				if (this->tccServer && this->recvSupportsRemb && this->maxIncomingBitrate != AbsoluteMaxBitrate)
+				{
+					this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+				}
+#endif
 
 				break;
 			}
@@ -847,10 +1012,10 @@ namespace RTC
 
 				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
 				{
-					const flatbuffers::Optional<int16_t> preferredTemporalLayer{ preferredLayers.temporal };
-
 					preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
-					  request->GetBufferBuilder(), preferredLayers.spatial, preferredTemporalLayer);
+					  request->GetBufferBuilder(),
+					  static_cast<uint8_t>(preferredLayers.spatial),
+					  static_cast<uint8_t>(preferredLayers.temporal));
 				}
 
 				auto scoreOffset    = consumer->FillBufferScore(request->GetBufferBuilder());
@@ -863,64 +1028,44 @@ namespace RTC
 
 				request->Accept(FBS::Response::Body::Transport_ConsumeResponse, responseOffset);
 
-				// Check if Transport Congestion Control client must be created.
-				const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
-				const auto& codecs                = consumer->GetRtpParameters().codecs;
+				if (!this->sendSupportsTransportCc)
+				{
+					this->sendSupportsTransportCc = consumer->SupportsTransportCc();
+				}
 
+				if (!this->sendSupportsRemb)
+				{
+					this->sendSupportsRemb = consumer->SupportsRemb();
+				}
+
+#ifdef MS_USE_BUILTIN_BWE
+				// NOTE: A Transport that gets its first Consumer while not yet connected
+				// builds it in Transport::Connected() instead.
+				MayCreateOrUpdateSenderTransportCongestionController();
+
+				// NOTE: When this very call is the one that built it, the loop inside it
+				// has already told this Consumer, since it is in the map by now.
+				if (this->senderTransportCongestionController)
+				{
+					consumer->SetBweManaged(true);
+				}
+#else
 				// Set TransportCongestionControlClient.
-				if (!this->tccClient)
+				if (this->enableBwe && !this->tccClient)
 				{
 					bool createTccClient{ false };
 					RTC::BweType bweType;
 
-					// Use transport-cc if:
-					// - it's a video Consumer, and
-					// - there is transport-wide-cc-01 RTP header extension, and
-					// - there is "transport-cc" in codecs RTCP feedback.
-					//
-					if (
-					  consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-					  rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-					  std::any_of(
-					    codecs.begin(),
-					    codecs.end(),
-					    [](const RTC::RtpCodecParameters& codec)
-					    {
-						    return std::any_of(
-						      codec.rtcpFeedback.begin(),
-						      codec.rtcpFeedback.end(),
-						      [](const RTC::RtcpFeedback& fb)
-						      {
-							      return fb.type == "transport-cc";
-						      });
-					    }))
+					// NOTE: Only a video Consumer brings the estimation up, so an audio
+					// only Transport runs without it.
+					if (consumer->GetKind() == RTC::Media::Kind::VIDEO && consumer->SupportsTransportCc())
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
 
 						createTccClient = true;
 						bweType         = RTC::BweType::TRANSPORT_CC;
 					}
-					// Use REMB if:
-					// - it's a video Consumer, and
-					// - there is abs-send-time RTP header extension, and
-					// - there is "remb" in codecs RTCP feedback.
-					//
-					else if (
-					  consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-					  rtpHeaderExtensionIds.absSendTime != 0u &&
-					  std::any_of(
-					    codecs.begin(),
-					    codecs.end(),
-					    [](const RTC::RtpCodecParameters& codec)
-					    {
-						    return std::any_of(
-						      codec.rtcpFeedback.begin(),
-						      codec.rtcpFeedback.end(),
-						      [](const RTC::RtcpFeedback& fb)
-						      {
-							      return fb.type == "goog-remb";
-						      });
-					    }))
+					else if (consumer->GetKind() == RTC::Media::Kind::VIDEO && consumer->SupportsRemb())
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
 
@@ -942,6 +1087,7 @@ namespace RTC
 						  this,
 						  this->shared,
 						  bweType,
+						  AbsoluteMinBitrate,
 						  this->initialAvailableOutgoingBitrate,
 						  this->maxOutgoingBitrate,
 						  this->minOutgoingBitrate);
@@ -959,11 +1105,23 @@ namespace RTC
 				{
 					consumer->SetExternallyManagedBitrate();
 				}
+#endif
 
 				if (IsConnected())
 				{
 					consumer->TransportConnected();
 				}
+
+#ifdef MS_USE_BUILTIN_BWE
+				// A Consumer that is already putting something out changes what there is
+				// to give out. One created paused offers nothing yet, and asks on its own
+				// when it is resumed.
+				if (this->senderTransportCongestionController && consumer->IsActive())
+				{
+					DistributeAvailableOutgoingBitrate();
+					ComputeOutgoingDesiredBitrate();
+				}
+#endif
 
 				break;
 			}
@@ -997,7 +1155,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataProducer of type 'sctp', SCTP not enabled in this Transport");
-							;
 						}
 
 						break;
@@ -1011,7 +1168,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataProducer of type 'direct', not a direct Transport");
-							;
 						}
 
 						break;
@@ -1106,7 +1262,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataConsumer of type 'sctp', SCTP not enabled in this Transport");
-							;
 						}
 
 						try
@@ -1133,7 +1288,6 @@ namespace RTC
 
 							MS_THROW_TYPE_ERROR(
 							  "cannot create a DataConsumer of type 'direct', not a direct Transport");
-							;
 						}
 
 						break;
@@ -1185,7 +1339,7 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
-				struct TraceEventTypes newTraceEventTypes;
+				TraceEventTypes newTraceEventTypes;
 
 				for (const auto& type : *body->events())
 				{
@@ -1255,9 +1409,23 @@ namespace RTC
 
 					RecvStreamClosed(rtpStream->GetSsrc());
 
+#ifdef MS_USE_BUILTIN_BWE
+					if (this->receiverTransportCongestionController)
+					{
+						this->receiverTransportCongestionController->RemoveStream(rtpStream->GetSsrc());
+					}
+#endif
+
 					if (rtpStream->HasRtx())
 					{
 						RecvStreamClosed(rtpStream->GetRtxSsrc());
+
+#ifdef MS_USE_BUILTIN_BWE
+						if (this->receiverTransportCongestionController)
+						{
+							this->receiverTransportCongestionController->RemoveStream(rtpStream->GetRtxSsrc());
+						}
+#endif
 					}
 				}
 
@@ -1311,12 +1479,23 @@ namespace RTC
 
 				request->Accept();
 
+#ifdef MS_USE_BUILTIN_BWE
+				// What this one was putting in the link goes to whoever can use it, and
+				// what the remaining Consumers want is now less, which is an input of the
+				// probing.
+				if (this->senderTransportCongestionController)
+				{
+					DistributeAvailableOutgoingBitrate();
+					ComputeOutgoingDesiredBitrate();
+				}
+#else
 				// This may be the latest active Consumer with BWE. If so we have to stop
 				// probation.
 				if (this->tccClient)
 				{
 					ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
 				}
+#endif
 
 				break;
 			}
@@ -1463,6 +1642,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_USE_BUILTIN_BWE
+		// NOTE: This goes before telling the Consumers, since the round below needs
+		// someone to say how much there is to give out.
+		MayCreateOrUpdateSenderTransportCongestionController();
+		MayCreateReceiverTransportCongestionController();
+#endif
+
 		// Tell all Consumers.
 		for (auto& kv : this->mapConsumers)
 		{
@@ -1470,6 +1656,22 @@ namespace RTC
 
 			consumer->TransportConnected();
 		}
+
+#ifdef MS_USE_BUILTIN_BWE
+		// A Consumer offers nothing until its transport is connected, so this is the
+		// first instant there is anything to give out. It goes here, once they have all
+		// been told, rather than in each Consumer as it is told: that would hand the
+		// whole bitrate to the first one and take most of it back on the next round,
+		// with a key frame requested on each turn.
+		//
+		// NOTE: There may be no controller, since a Transport that connects before its
+		// first Consumer gets one in HandleRequest() instead.
+		if (this->senderTransportCongestionController)
+		{
+			DistributeAvailableOutgoingBitrate();
+			ComputeOutgoingDesiredBitrate();
+		}
+#endif
 
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
@@ -1480,6 +1682,7 @@ namespace RTC
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(RTC::RTCP::MaxVideoIntervalMs / 2);
 
+#ifndef MS_USE_BUILTIN_BWE
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
 		{
@@ -1491,6 +1694,7 @@ namespace RTC
 		{
 			this->tccServer->TransportConnected();
 		}
+#endif
 	}
 
 	void Transport::Disconnected()
@@ -1508,6 +1712,15 @@ namespace RTC
 		// Stop the RTCP timer.
 		this->rtcpTimer->Stop();
 
+#ifdef MS_USE_BUILTIN_BWE
+		if (this->senderTransportCongestionController)
+		{
+			// NOTE: Telling it that the network is gone does not stop the probing by
+			// itself, since the estimator keeps deciding whether a burst is due.
+			this->senderTransportCongestionController->SetEnableProbing(false);
+			this->senderTransportCongestionController->SetNetworkAvailable(false);
+		}
+#else
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
 		{
@@ -1519,6 +1732,7 @@ namespace RTC
 		{
 			this->tccServer->TransportDisconnected();
 		}
+#endif
 	}
 
 	void Transport::ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs)
@@ -1533,14 +1747,31 @@ namespace RTC
 		// them.
 		packet->AssignExtensionIds(this->recvRtpHeaderExtensionIds);
 
+#ifndef MS_USE_BUILTIN_BWE
 		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
 		{
 			this->tccServer->IncomingPacket(receivedAtUs, packet);
 		}
+#endif
 
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
+
+#ifdef MS_USE_BUILTIN_BWE
+		// NOTE: Done before giving up on a packet with no Producer, since its
+		// arrival still has to be reported back. A remote peer may well close a
+		// Producer over a path of its own while its packets are still in flight,
+		// and a hole in the transport-cc feedback would tell it that the link lost
+		// them.
+		if (this->receiverTransportCongestionController)
+		{
+			this->receiverTransportCongestionController->ReceiveRtpPacket(
+			  packet,
+			  producer ? std::optional<RTC::Media::Kind>(producer->GetKind()) : std::nullopt,
+			  receivedAtUs);
+		}
+#endif
 
 		if (!producer)
 		{
@@ -1576,19 +1807,22 @@ namespace RTC
 			case RTC::Producer::ReceiveRtpPacketResult::MEDIA:
 			{
 				this->recvRtpTransmission.Update(packet);
+
 				break;
 			}
 
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 			{
 				this->recvRtxTransmission.Update(packet);
+
 				break;
 			}
 
-			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
+			case RTC::Producer::ReceiveRtpPacketResult::STREAM_NOT_FOUND:
 			{
 				// Tell the child class to remove this SSRC.
 				RecvStreamClosed(packet->GetSsrc());
+
 				break;
 			}
 
@@ -1631,35 +1865,30 @@ namespace RTC
 	}
 
 	void Transport::SendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb)
 	{
 		MS_TRACE();
 
 		// NOTE: The `message` must already have its `streamId` pointing to the same
 		// as in the `dataConsumer` if its type is "sctp", or 0 otherwise.
 
+		// NOTE: The thrown error is the answer here, so `cb` is deliberately not
+		// invoked: whoever built it already replies to the channel request from
+		// within it, and the caught error replies again, which would abort.
 		if (!this->sctpAssociation)
 		{
 			MS_THROW_ERROR("SCTP not enabled");
-
-			if (cb)
-			{
-				(*cb)(false, false);
-				delete cb;
-			}
-
-			return;
 		}
 
 		const auto& sctpStreamParameters = dataConsumer->GetSctpStreamParameters();
 		const RTC::SCTP::SendMessageOptions sendMessageOptions{
-			.unordered          = !sctpStreamParameters.ordered,
-			.lifetimeMs         = sctpStreamParameters.ordered
-			                        ? std::nullopt
-			                        : std::optional<int64_t>(sctpStreamParameters.maxPacketLifeTime),
-			.maxRetransmissions = sctpStreamParameters.ordered
-			                        ? std::nullopt
-			                        : std::optional<uint64_t>(sctpStreamParameters.maxRetransmits),
+			.unordered = !sctpStreamParameters.ordered,
+			.lifetimeMs =
+			  sctpStreamParameters.ordered || !sctpStreamParameters.maxPacketLifeTime.has_value()
+			    ? std::nullopt
+			    : std::optional<int64_t>(sctpStreamParameters.maxPacketLifeTime.value()),
+			.maxRetransmissions =
+			  sctpStreamParameters.ordered ? std::nullopt : sctpStreamParameters.maxRetransmits,
 			// NOTE: We don't set `lifecyleId` in production.
 		};
 
@@ -1672,7 +1901,7 @@ namespace RTC
 			{
 				if (cb)
 				{
-					(*cb)(true, /*sctpSendBufferFull*/ false);
+					cb(true, /*isSendBufferFull*/ false);
 				}
 
 				break;
@@ -1680,17 +1909,18 @@ namespace RTC
 
 			case RTC::SCTP::Types::SendMessageStatus::ERROR_RESOURCE_EXHAUSTION:
 			{
-				const auto sendStatusStringView = RTC::SCTP::Types::SendMessageStatusToString(sendStatus);
+				const auto sendStatusStringView = RTC::SCTP::Types::sendMessageStatusToString(sendStatus);
 
-				MS_WARN_TAG(
+				MS_WARN_2TAGS(
 				  sctp,
+				  message,
 				  "failed to send SCTP message [sendStatus:%.*s]",
 				  static_cast<int>(sendStatusStringView.size()),
 				  sendStatusStringView.data());
 
 				if (cb)
 				{
-					(*cb)(false, /*sctpSendBufferFull*/ true);
+					cb(false, /*isSendBufferFull*/ true);
 				}
 
 				dataConsumer->SctpSendBufferFull();
@@ -1700,24 +1930,23 @@ namespace RTC
 
 			default:
 			{
-				const auto sendStatusStringView = RTC::SCTP::Types::SendMessageStatusToString(sendStatus);
+				const auto sendStatusStringView = RTC::SCTP::Types::sendMessageStatusToString(sendStatus);
 
-				MS_WARN_TAG(
+				MS_WARN_2TAGS(
 				  sctp,
+				  message,
 				  "failed to send SCTP message [sendStatus:%.*s]",
 				  static_cast<int>(sendStatusStringView.size()),
 				  sendStatusStringView.data());
 
 				if (cb)
 				{
-					(*cb)(false, /*sctpSendBufferFull*/ false);
+					cb(false, /*isSendBufferFull*/ false);
 				}
 
 				break;
 			}
 		}
-
-		delete cb;
 	}
 
 	RTC::Producer* Transport::AssertAndGetProducerById(
@@ -1750,7 +1979,7 @@ namespace RTC
 		return it->second;
 	}
 
-	inline RTC::Consumer* Transport::GetConsumerByMediaSsrc(uint32_t ssrc) const
+	RTC::Consumer* Transport::GetConsumerByMediaSsrc(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1766,7 +1995,7 @@ namespace RTC
 		return consumer;
 	}
 
-	inline RTC::Consumer* Transport::GetConsumerByRtxSsrc(uint32_t ssrc) const
+	RTC::Consumer* Transport::GetConsumerByRtxSsrc(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1891,6 +2120,14 @@ namespace RTC
 			{
 				auto* rr = static_cast<RTC::RTCP::ReceiverReportPacket*>(packet);
 
+#ifdef MS_USE_BUILTIN_BWE
+				// What all the streams this packet reports on lost between the previous
+				// report and this one, which is what the loss based estimation of the
+				// sending side is drawn from.
+				int64_t lostPackets{ 0 };
+				int64_t expectedPackets{ 0 };
+#endif
+
 				for (auto it = rr->Begin(); it != rr->End(); ++it)
 				{
 					auto& report   = *it;
@@ -1899,7 +2136,7 @@ namespace RTC
 					if (!consumer)
 					{
 						// Special case for the RTP probator.
-						if (report->GetSsrc() == RTC::RTP::ProbationGenerator::Ssrc)
+						if (report->GetSsrc() == RTC::Consts::BweProbeRtpSsrc)
 						{
 							continue;
 						}
@@ -1918,9 +2155,33 @@ namespace RTC
 						continue;
 					}
 
-					consumer->ReceiveRtcpReceiverReport(report, receivedAtUs);
+					const auto receiverReportResult = consumer->ReceiveRtcpReceiverReport(report, receivedAtUs);
+
+					if (receiverReportResult.rttMs.has_value())
+					{
+						this->rttCalculator.AddRtt(
+						  static_cast<int64_t>(receiverReportResult.rttMs.value()),
+						  Utils::Time::TimeUsToMs(receivedAtUs));
+					}
+
+#ifdef MS_USE_BUILTIN_BWE
+					if (receiverReportResult.loss.has_value())
+					{
+						const auto& lossValue = receiverReportResult.loss.value();
+
+						lostPackets += lossValue.lostPackets;
+						expectedPackets += lossValue.expectedPackets;
+					}
+#endif
 				}
 
+#ifdef MS_USE_BUILTIN_BWE
+				if (this->senderTransportCongestionController)
+				{
+					this->senderTransportCongestionController->ReceiveRtcpReceiverReport(
+					  lostPackets, expectedPackets);
+				}
+#else
 				if (this->tccClient && !this->mapConsumers.empty())
 				{
 					float rttMs = 0;
@@ -1932,7 +2193,7 @@ namespace RTC
 
 						if (consumer->IsActive())
 						{
-							rttMs = consumer->GetRttMs();
+							rttMs = consumer->GetRttMs().value_or(0);
 
 							break;
 						}
@@ -1940,6 +2201,7 @@ namespace RTC
 
 					this->tccClient->ReceiveRtcpReceiverReport(rr, rttMs, receivedAtUs);
 				}
+#endif
 
 				break;
 			}
@@ -1954,7 +2216,7 @@ namespace RTC
 					{
 						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
-						if (feedback->GetMediaSsrc() == RTC::RTP::ProbationGenerator::Ssrc)
+						if (feedback->GetMediaSsrc() == RTC::Consts::BweProbeRtpSsrc)
 						{
 							break;
 						}
@@ -1993,7 +2255,7 @@ namespace RTC
 							auto& item     = *it;
 							auto* consumer = GetConsumerByMediaSsrc(item->GetSsrc());
 
-							if (item->GetSsrc() == RTC::RTP::ProbationGenerator::Ssrc)
+							if (item->GetSsrc() == RTC::Consts::BweProbeRtpSsrc)
 							{
 								continue;
 							}
@@ -2033,11 +2295,18 @@ namespace RTC
 						{
 							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
 
+#ifdef MS_USE_BUILTIN_BWE
+							if (this->senderTransportCongestionController)
+							{
+								this->senderTransportCongestionController->ReceiveEstimatedBitrate(remb->GetBitrate());
+							}
+#else
 							// Pass it to the TCC client.
 							if (this->tccClient && this->tccClient->GetBweType() == RTC::BweType::REMB)
 							{
 								this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
 							}
+#endif
 
 							break;
 						}
@@ -2079,7 +2348,7 @@ namespace RTC
 				// probation SSRC or any Consumer RTX SSRC, ignore it.
 				if (
 				  !consumer && feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC &&
-				  (feedback->GetMediaSsrc() != RTC::RTP::ProbationGenerator::Ssrc ||
+				  (feedback->GetMediaSsrc() != RTC::Consts::BweProbeRtpSsrc ||
 					 !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())))
 				{
 					MS_DEBUG_TAG(
@@ -2119,10 +2388,18 @@ namespace RTC
 					{
 						auto* feedback = static_cast<RTC::RTCP::FeedbackRtpTransportPacket*>(packet);
 
+#ifdef MS_USE_BUILTIN_BWE
+						if (this->senderTransportCongestionController)
+						{
+							this->senderTransportCongestionController->ReceiveTransportWideCcFeedback(
+							  feedback, receivedAtUs);
+						}
+#else
 						if (this->tccClient)
 						{
 							this->tccClient->ReceiveRtcpTransportFeedback(feedback);
 						}
+#endif
 
 						break;
 					}
@@ -2223,7 +2500,13 @@ namespace RTC
 									continue;
 								}
 
-								producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
+								const auto rttMs = producer->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
+
+								if (rttMs.has_value())
+								{
+									this->rttCalculator.AddRtt(
+									  static_cast<int64_t>(rttMs.value()), Utils::Time::TimeUsToMs(receivedAtUs));
+								}
 							}
 
 							break;
@@ -2305,9 +2588,133 @@ namespace RTC
 		}
 
 		// Send the RTCP compound packet if there is any sender or receiver report.
-		if (packet->GetReceiverReportCount() > 0u || packet->GetSenderReportCount() > 0u)
+		if (packet->GetReceiverReportCount() > 0 || packet->GetSenderReportCount() > 0)
 		{
 			SendRtcpCompoundPacket(packet.get());
+		}
+	}
+
+#ifdef MS_USE_BUILTIN_BWE
+	bool Transport::MayCreateOrUpdateSenderTransportCongestionController()
+	{
+		MS_TRACE();
+
+		if (!this->enableBwe || !IsCongestionControlSupported() || !IsConnected() || this->mapConsumers.empty())
+		{
+			return false;
+		}
+
+		bool created{ false };
+
+		// NOTE: Unlike the receiving side, this one does not wait for a Consumer that
+		// negotiated anything in particular, since a peer that negotiated neither
+		// mechanism still has its loss reported in the Receiver Reports and can still
+		// be given a target out of it.
+		if (!this->senderTransportCongestionController)
+		{
+			MS_DEBUG_TAG(bwe, "enabling SenderTransportCongestionController");
+
+			this->senderTransportCongestionController =
+			  std::make_shared<RTC::BWE::SenderTransportCongestionController>(
+			    this,
+			    this->shared,
+			    RTC::BWE::SenderTransportCongestionController::SenderTransportCongestionControllerOptions{
+			      .startBitrate = this->initialAvailableOutgoingBitrate,
+			      .minBitrate   = this->minOutgoingBitrate,
+			      .maxBitrate   = this->maxOutgoingBitrate });
+
+			created = true;
+
+			// From now on the Consumers ask for bitrate instead of helping themselves.
+			for (auto& kv : this->mapConsumers)
+			{
+				auto* consumer = kv.second;
+
+				consumer->SetBweManaged(true);
+			}
+		}
+
+		// NOTE: The path may be another one than the last time, so the packet
+		// overhead is taken again.
+		this->senderTransportCongestionController->SetPacketOverhead(GetPacketOverhead());
+
+		// Probing only makes sense towards a peer that can measure a burst and report
+		// back on it.
+		// NOTE: This goes before telling it that the network is available, which is
+		// what starts the RTP probing.
+		this->senderTransportCongestionController->SetEnableProbing(
+		  this->sendSupportsTransportCc || this->sendSupportsRemb);
+
+		this->senderTransportCongestionController->SetNetworkAvailable(true);
+
+		return created;
+	}
+
+	bool Transport::MayCreateReceiverTransportCongestionController()
+	{
+		MS_TRACE();
+
+		if (
+		  !this->enableBwe || this->receiverTransportCongestionController ||
+		  !IsCongestionControlSupported() || !IsConnected() ||
+		  (!this->recvSupportsTransportCc && !this->recvSupportsRemb))
+		{
+			return false;
+		}
+
+		MS_DEBUG_TAG(bwe, "enabling ReceiverTransportCongestionController");
+
+		this->receiverTransportCongestionController =
+		  std::make_unique<RTC::BWE::ReceiverTransportCongestionController>(
+		    this,
+		    this->shared,
+		    RTC::BWE::ReceiverTransportCongestionController::ReceiverTransportCongestionControllerOptions{});
+
+		// The cap travels to the remote peer in a REMB, so it could not be applied
+		// before this.
+		if (this->maxIncomingBitrate != AbsoluteMaxBitrate && this->recvSupportsRemb)
+		{
+			this->receiverTransportCongestionController->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+		}
+
+		return true;
+	}
+#endif
+
+	void Transport::MayFixBweBitrateLimits()
+	{
+		MS_TRACE();
+
+		this->maxIncomingBitrate =
+		  std::clamp(this->maxIncomingBitrate, AbsoluteMinBitrate, AbsoluteMaxBitrate);
+		this->minOutgoingBitrate =
+		  std::clamp(this->minOutgoingBitrate, AbsoluteMinBitrate, AbsoluteMaxBitrate);
+		this->maxOutgoingBitrate =
+		  std::clamp(this->maxOutgoingBitrate, AbsoluteMinBitrate, AbsoluteMaxBitrate);
+
+		if (this->maxOutgoingBitrate < this->minOutgoingBitrate)
+		{
+			MS_DEBUG_TAG(
+			  bwe,
+			  "raising maxOutgoingBitrate %" PRIi64 " to minOutgoingBitrate %" PRIi64,
+			  this->maxOutgoingBitrate,
+			  this->minOutgoingBitrate);
+
+			this->maxOutgoingBitrate = this->minOutgoingBitrate;
+		}
+
+		const int64_t initialAvailableOutgoingBitrate = std::clamp(
+		  this->initialAvailableOutgoingBitrate, this->minOutgoingBitrate, this->maxOutgoingBitrate);
+
+		if (initialAvailableOutgoingBitrate != this->initialAvailableOutgoingBitrate)
+		{
+			MS_DEBUG_TAG(
+			  bwe,
+			  "moving initialAvailableOutgoingBitrate %" PRIi64 " to %" PRIi64,
+			  this->initialAvailableOutgoingBitrate,
+			  initialAvailableOutgoingBitrate);
+
+			this->initialAvailableOutgoingBitrate = initialAvailableOutgoingBitrate;
 		}
 	}
 
@@ -2315,6 +2722,26 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_USE_BUILTIN_BWE
+		MS_ASSERT(this->senderTransportCongestionController, "no SenderTransportCongestionController");
+
+		std::vector<RTC::BWE::BitrateAllocator::Candidate*> candidates;
+
+		candidates.reserve(this->mapConsumers.size());
+
+		for (auto& kv : this->mapConsumers)
+		{
+			auto* const consumer = kv.second;
+
+			candidates.push_back(consumer);
+		}
+
+		const int64_t availableBitrate = this->senderTransportCongestionController->GetAvailableBitrate();
+
+		MS_DEBUG_DEV("distributing available bitrate [availableBitrate:%" PRIi64 "]", availableBitrate);
+
+		this->bitrateAllocator.Distribute(availableBitrate, candidates);
+#else
 		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
 
 		std::multimap<uint8_t, RTC::Consumer*> multimapPriorityConsumer;
@@ -2325,7 +2752,7 @@ namespace RTC
 			auto* consumer = kv.second;
 			auto priority  = consumer->GetBitratePriority();
 
-			if (priority > 0u)
+			if (priority > 0)
 			{
 				multimapPriorityConsumer.emplace(priority, consumer);
 			}
@@ -2359,7 +2786,7 @@ namespace RTC
 				auto bweType   = this->tccClient->GetBweType();
 
 				// NOLINTNEXTLINE(bugprone-too-small-loop-variable)
-				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
+				for (uint8_t i{ 1 }; i <= (baseAllocation ? 1 : priority); ++i)
 				{
 					const bool considerLoss   = (bweType == RTC::BweType::REMB);
 					const int64_t usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
@@ -2394,8 +2821,32 @@ namespace RTC
 
 			consumer->ApplyLayers();
 		}
+#endif
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	void Transport::ComputeOutgoingDesiredBitrate()
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->senderTransportCongestionController, "no SenderTransportCongestionController");
+
+		int64_t totalDesiredBitrate{ 0 };
+
+		for (const auto& kv : this->mapConsumers)
+		{
+			const auto* const consumer = kv.second;
+
+			totalDesiredBitrate += consumer->GetDesiredBitrate();
+		}
+
+		MS_DEBUG_DEV("total desired bitrate: %" PRIi64, totalDesiredBitrate);
+
+		this->outgoingDesiredBitrate = totalDesiredBitrate;
+
+		this->senderTransportCongestionController->SetDesiredBitrate(totalDesiredBitrate);
+	}
+#else
 	void Transport::ComputeOutgoingDesiredBitrate(bool forceBitrate)
 	{
 		MS_TRACE();
@@ -2416,8 +2867,9 @@ namespace RTC
 
 		this->tccClient->SetDesiredBitrate(totalDesiredBitrate, forceBitrate);
 	}
+#endif
 
-	inline void Transport::EmitTraceEventProbationType(RTC::RTP::Packet* /*packet*/) const
+	void Transport::EmitTraceEventProbationType(RTC::RTP::Packet* packet) const
 	{
 		MS_TRACE();
 
@@ -2426,12 +2878,19 @@ namespace RTC
 			return;
 		}
 
-		// TODO: Missing trace info (RTP packet dump).
+		const auto rtpPacketDump =
+		  packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+
+		const auto traceInfo = FBS::Transport::CreateProbationTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump);
+
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::PROBATION,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
-		  FBS::Common::TraceDirection::DIRECTION_OUT);
+		  FBS::Common::TraceDirection::DIRECTION_OUT,
+		  FBS::Transport::TraceInfo::ProbationTraceInfo,
+		  traceInfo.Union());
 
 		this->shared->GetChannelNotifier()->Emit(
 		  this->id,
@@ -2440,8 +2899,8 @@ namespace RTC
 		  notification);
 	}
 
-	inline void Transport::EmitTraceEventBweType(
-	  RTC::TransportCongestionControlClient::Bitrates& bitrates) const
+#ifdef MS_USE_BUILTIN_BWE
+	void Transport::EmitTraceEventBweType() const
 	{
 		MS_TRACE();
 
@@ -2450,7 +2909,42 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo = FBS::Transport::CreateBweTraceInfo(
+		MS_ASSERT(this->senderTransportCongestionController, "no SenderTransportCongestionController");
+
+		const auto traceInfo = FBS::Transport::CreateBweTraceInfo(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+		  static_cast<uint64_t>(this->outgoingDesiredBitrate),
+		  static_cast<uint64_t>(this->minOutgoingBitrate),
+		  static_cast<uint64_t>(this->maxOutgoingBitrate),
+		  static_cast<uint64_t>(this->senderTransportCongestionController->GetAvailableBitrate()));
+
+		auto notification = FBS::Transport::CreateTraceNotification(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
+		  FBS::Transport::TraceEventType::BWE,
+		  static_cast<uint64_t>(this->shared->GetTimeMs()),
+		  FBS::Common::TraceDirection::DIRECTION_OUT,
+		  FBS::Transport::TraceInfo::BweTraceInfo,
+		  traceInfo.Union());
+
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_TRACE,
+		  FBS::Notification::Body::Transport_TraceNotification,
+		  notification);
+	}
+#endif
+
+#ifndef MS_USE_BUILTIN_BWE
+	void Transport::EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const
+	{
+		MS_TRACE();
+
+		if (!this->traceEventTypes.bwe)
+		{
+			return;
+		}
+
+		auto traceInfo = FBS::Transport::CreateOldBweTraceInfo(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(),
 		  this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC
 		    ? FBS::Transport::BweType::TRANSPORT_CC
@@ -2468,7 +2962,7 @@ namespace RTC
 		  FBS::Transport::TraceEventType::BWE,
 		  static_cast<uint64_t>(this->shared->GetTimeMs()),
 		  FBS::Common::TraceDirection::DIRECTION_OUT,
-		  FBS::Transport::TraceInfo::BweTraceInfo,
+		  FBS::Transport::TraceInfo::OldBweTraceInfo,
 		  traceInfo.Union());
 
 		this->shared->GetChannelNotifier()->Emit(
@@ -2477,6 +2971,7 @@ namespace RTC
 		  FBS::Notification::Body::Transport_TraceNotification,
 		  notification);
 	}
+#endif
 
 	void Transport::OnProducerPaused(RTC::Producer* producer)
 	{
@@ -2527,6 +3022,15 @@ namespace RTC
 		this->listener->OnTransportProducerRtcpSenderReport(this, producer, rtpStream, first);
 	}
 
+	void Transport::OnProducerSpatialLayerActivityChanged(
+	  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportProducerSpatialLayerActivityChanged(
+		  this, producer, rtpStream, spatialLayer, isActive);
+	}
+
 	void Transport::OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
@@ -2561,9 +3065,9 @@ namespace RTC
 			return std::nullopt;
 		}
 
-		const auto& remoteCaptureTimeEstimator = it->second;
+		auto& remoteCaptureTimeEstimator = it->second;
 
-		return remoteCaptureTimeEstimator.GetLocalCaptureAtUs(rtpStream, ts);
+		return remoteCaptureTimeEstimator.GetLocalCaptureAtUs(rtpStream, ts, this->shared->GetTimeUs());
 	}
 
 	std::optional<int64_t> Transport::OnProducerNeedRemoteClockOffsetUs(const RTC::Producer* producer)
@@ -2603,8 +3107,55 @@ namespace RTC
 		packet->logger.Sent();
 #endif
 
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		this->sendBurstLogger.Sent(
+		  this->shared->GetLoopTimeMs(),
+		  packet->GetLength(),
+		  /*isRetransmission*/ false,
+		  /*isProbation*/ false);
+#endif
+
+#ifdef MS_USE_BUILTIN_BWE
+		if (this->senderTransportCongestionController)
+		{
+			const auto sequenceNumber = this->senderTransportCongestionController->OnRtpPacketToBeSent(
+			  packet, { .isAudio = consumer->GetKind() == RTC::Media::Kind::AUDIO });
+
+			const size_t size = packet->GetLength();
+
+			// NOTE: The socket written to may not belong to this Transport and may
+			// outlive it, in which case the send callback runs once this Transport is
+			// gone, so it must hold nothing of it. Same in every other send callback.
+			const std::weak_ptr<RTC::BWE::SenderTransportCongestionController>
+			  senderTransportCongestionControllerWeakPtr(this->senderTransportCongestionController);
+
+			auto* shared = this->shared;
+
+			SendRtpPacket(
+			  consumer,
+			  packet,
+			  [senderTransportCongestionControllerWeakPtr, shared, sequenceNumber, size](bool sent) -> void
+			  {
+				  if (sent)
+				  {
+					  auto senderTransportCongestionController =
+					    senderTransportCongestionControllerWeakPtr.lock();
+
+					  if (senderTransportCongestionController)
+					  {
+						  senderTransportCongestionController->OnRtpPacketSent(
+						    sequenceNumber, size, shared->GetTimeUs());
+					  }
+				  }
+			  });
+		}
+		else
+		{
+			SendRtpPacket(consumer, packet);
+		}
+#else
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
+		packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(this->shared->GetTimeUs()));
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2634,7 +3185,9 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-			const auto* cb = new onSendCallback(
+			SendRtpPacket(
+			  consumer,
+			  packet,
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
@@ -2647,13 +3200,12 @@ namespace RTC
 					  }
 				  }
 			  });
-
-			SendRtpPacket(consumer, packet, cb);
 		}
 		else
 		{
 			SendRtpPacket(consumer, packet);
 		}
+#endif
 
 		this->sendRtpTransmission.Update(packet);
 	}
@@ -2662,8 +3214,56 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		this->sendBurstLogger.Sent(
+		  this->shared->GetLoopTimeMs(),
+		  packet->GetLength(),
+		  /*isRetransmission*/ true,
+		  /*isProbation*/ false);
+#endif
+
+#ifdef MS_USE_BUILTIN_BWE
+		if (this->senderTransportCongestionController)
+		{
+			// TODO: There is no way yet to tell a retransmission that went over RTX
+			// from one that went without it, which is what `originalSsrc` says.
+			// Nothing reads it today, but SCReAM would.
+			const auto sequenceNumber = this->senderTransportCongestionController->OnRtpPacketToBeSent(
+			  packet,
+			  { .isAudio = consumer->GetKind() == RTC::Media::Kind::AUDIO, .isRetransmission = true });
+
+			const size_t size = packet->GetLength();
+
+			const std::weak_ptr<RTC::BWE::SenderTransportCongestionController>
+			  senderTransportCongestionControllerWeakPtr(this->senderTransportCongestionController);
+
+			auto* shared = this->shared;
+
+			SendRtpPacket(
+			  consumer,
+			  packet,
+			  [senderTransportCongestionControllerWeakPtr, shared, sequenceNumber, size](bool sent) -> void
+			  {
+				  if (sent)
+				  {
+					  auto senderTransportCongestionController =
+					    senderTransportCongestionControllerWeakPtr.lock();
+
+					  if (senderTransportCongestionController)
+					  {
+						  senderTransportCongestionController->OnRtpPacketSent(
+						    sequenceNumber, size, shared->GetTimeUs());
+					  }
+				  }
+			  });
+		}
+		else
+		{
+			SendRtpPacket(consumer, packet);
+		}
+#else
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
+		packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(this->shared->GetTimeUs()));
 
 		// Update transport wide sequence number if present.
 		if (
@@ -2688,7 +3288,9 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-			const auto* cb = new onSendCallback(
+			SendRtpPacket(
+			  consumer,
+			  packet,
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
@@ -2701,13 +3303,12 @@ namespace RTC
 					  }
 				  }
 			  });
-
-			SendRtpPacket(consumer, packet, cb);
 		}
 		else
 		{
 			SendRtpPacket(consumer, packet);
 		}
+#endif
 
 		this->sendRtxTransmission.Update(packet);
 	}
@@ -2730,12 +3331,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_USE_BUILTIN_BWE
+		if (this->senderTransportCongestionController)
+		{
+			DistributeAvailableOutgoingBitrate();
+			ComputeOutgoingDesiredBitrate();
+		}
+#else
 		MS_ASSERT(this->tccClient, "no TransportCongestionClient");
 
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
+#endif
 	}
 
+#ifndef MS_USE_BUILTIN_BWE
 	void Transport::OnConsumerNeedZeroBitrate(RTC::Consumer* /*consumer*/)
 	{
 		MS_TRACE();
@@ -2747,6 +3357,7 @@ namespace RTC
 		// This may be the latest active Consumer with BWE. If so we have to stop probation.
 		ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
 	}
+#endif
 
 	void Transport::OnConsumerProducerClosed(RTC::Consumer* consumer)
 	{
@@ -2779,11 +3390,21 @@ namespace RTC
 		// Delete it.
 		delete consumer;
 
+#ifdef MS_USE_BUILTIN_BWE
+		// What this one was putting in the link goes to whoever can use it, and what
+		// the remaining Consumers want is now less, which is an input of the probing.
+		if (this->senderTransportCongestionController)
+		{
+			DistributeAvailableOutgoingBitrate();
+			ComputeOutgoingDesiredBitrate();
+		}
+#else
 		// This may be the latest active Consumer with BWE. If so we have to stop probation.
 		if (this->tccClient)
 		{
 			ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
 		}
+#endif
 	}
 
 	void Transport::OnDataProducerMessageReceived(
@@ -2814,11 +3435,11 @@ namespace RTC
 	}
 
 	void Transport::OnDataConsumerSendMessage(
-	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb)
 	{
 		MS_TRACE();
 
-		SendMessage(dataConsumer, std::move(message), cb);
+		SendMessage(dataConsumer, std::move(message), std::move(cb));
 	}
 
 	void Transport::OnDataConsumerNeedBufferedAmount(
@@ -2978,7 +3599,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::errorKindToString(errorKind);
 
 		if (errorKind == RTC::SCTP::Types::ErrorKind::SUCCESS || errorKind == RTC::SCTP::Types::ErrorKind::PEER_REPORTED)
 		{
@@ -3028,7 +3649,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::errorKindToString(errorKind);
 
 		if (errorKind == RTC::SCTP::Types::ErrorKind::SUCCESS || errorKind == RTC::SCTP::Types::ErrorKind::PEER_REPORTED)
 		{
@@ -3085,7 +3706,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto errorKindStringView = RTC::SCTP::Types::ErrorKindToString(errorKind);
+		const auto errorKindStringView = RTC::SCTP::Types::errorKindToString(errorKind);
 
 		MS_WARN_TAG(
 		  sctp,
@@ -3104,8 +3725,9 @@ namespace RTC
 
 		if (!dataProducer)
 		{
-			MS_WARN_TAG(
+			MS_WARN_2TAGS(
 			  sctp,
+			  message,
 			  "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]",
 			  message.GetStreamId());
 
@@ -3132,8 +3754,9 @@ namespace RTC
 		}
 		catch (std::exception& error)
 		{
-			MS_WARN_TAG(
+			MS_WARN_2TAGS(
 			  sctp,
+			  message,
 			  "DataProducer::ReceiveMessage() failed for received SCTP message [streamId:%" PRIu16 "]: %s",
 			  message.GetStreamId(),
 			  error.what());
@@ -3263,6 +3886,112 @@ namespace RTC
 		return IsConnected() && (!this->mapDataProducers.empty() || !this->mapDataConsumers.empty());
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	void Transport::OnRttCalculatorRttUpdated(RTC::RttCalculator* /*rttCalculator*/, int64_t avgRttMs)
+	{
+		MS_TRACE();
+
+		if (this->senderTransportCongestionController)
+		{
+			this->senderTransportCongestionController->OnRttUpdate(avgRttMs * 1000);
+		}
+
+		if (this->receiverTransportCongestionController)
+		{
+			this->receiverTransportCongestionController->OnRttUpdate(avgRttMs * 1000);
+		}
+	}
+#else
+	void Transport::OnRttCalculatorRttUpdated(RTC::RttCalculator* /*rttCalculator*/, int64_t /*avgRttMs*/)
+	{
+		MS_TRACE();
+	}
+#endif
+
+#ifdef MS_USE_BUILTIN_BWE
+	void Transport::OnSenderTransportCongestionControllerTargetBitrate(
+	  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
+	  int64_t targetBitrate)
+	{
+		MS_TRACE();
+
+		MS_DEBUG_TAG(bwe, "outgoing available bitrate [targetBitrate:%" PRIi64 "]", targetBitrate);
+
+		DistributeAvailableOutgoingBitrate();
+		ComputeOutgoingDesiredBitrate();
+
+		// May emit 'trace' event.
+		EmitTraceEventBweType();
+	}
+
+	void Transport::OnSenderTransportCongestionControllerSendRtpProbePacket(
+	  RTC::BWE::SenderTransportCongestionController* /*senderTransportCongestionController*/,
+	  RTC::RTP::Packet* packet,
+	  int64_t sequenceNumber)
+	{
+		MS_TRACE();
+
+		// NOTE: The probe packet already carries both extensions written and comes
+		// with the sequence number it was given, so it must not be handed to
+		// OnRtpPacketToBeSent() again.
+
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		this->sendBurstLogger.Sent(
+		  this->shared->GetLoopTimeMs(),
+		  packet->GetLength(),
+		  /*isRetransmission*/ false,
+		  /*isProbation*/ true);
+#endif
+
+		// May emit 'trace' event.
+		EmitTraceEventProbationType(packet);
+
+		const size_t size = packet->GetLength();
+
+		const std::weak_ptr<RTC::BWE::SenderTransportCongestionController>
+		  senderTransportCongestionControllerWeakPtr(this->senderTransportCongestionController);
+
+		auto* shared = this->shared;
+
+		SendRtpPacket(
+		  nullptr,
+		  packet,
+		  [senderTransportCongestionControllerWeakPtr, shared, sequenceNumber, size](bool sent) -> void
+		  {
+			  if (sent)
+			  {
+				  auto senderTransportCongestionController =
+				    senderTransportCongestionControllerWeakPtr.lock();
+
+				  if (senderTransportCongestionController)
+				  {
+					  senderTransportCongestionController->OnRtpPacketSent(
+					    sequenceNumber, size, shared->GetTimeUs());
+				  }
+			  }
+		  });
+
+		this->sendProbationTransmission.Update(packet);
+
+		MS_DEBUG_DEV(
+		  "probation sent [seq:%" PRIu16 ", wideSeq:%" PRIi64 ", size:%zu, bitrate:%" PRIi64 "]",
+		  packet->GetSequenceNumber(),
+		  sequenceNumber,
+		  packet->GetLength(),
+		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()).value_or(0));
+	}
+
+	void Transport::OnReceiverTransportCongestionControllerSendRtcpPacket(
+	  RTC::BWE::ReceiverTransportCongestionController* /*receiverTransportCongestionController*/,
+	  RTC::RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		packet->Serialize(RTC::RTCP::SerializationBuffer);
+
+		SendRtcpPacket(packet);
+	}
+#else
 	void Transport::OnTransportCongestionControlClientBitrates(
 	  RTC::TransportCongestionControlClient* /*tccClient*/,
 	  RTC::TransportCongestionControlClient::Bitrates& bitrates)
@@ -3285,8 +4014,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		this->sendBurstLogger.Sent(
+		  this->shared->GetLoopTimeMs(),
+		  packet->GetLength(),
+		  /*isRetransmission*/ false,
+		  /*isProbation*/ true);
+#endif
+
 		// Update abs-send-time if present.
-		packet->UpdateAbsSendTime(this->shared->GetTimeUs());
+		packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(this->shared->GetTimeUs()));
 
 		// Update transport wide sequence number if present.
 		if (
@@ -3314,7 +4051,9 @@ namespace RTC
 
 			auto* shared = this->shared;
 
-			const auto* cb = new onSendCallback(
+			SendRtpPacket(
+			  nullptr,
+			  packet,
 			  [tccClientWeakPtr, shared, packetInfo](bool sent)
 			  {
 				  if (sent)
@@ -3327,8 +4066,6 @@ namespace RTC
 					  }
 				  }
 			  });
-
-			SendRtpPacket(nullptr, packet, cb);
 		}
 		else
 		{
@@ -3345,7 +4082,7 @@ namespace RTC
 		  packet->GetSequenceNumber(),
 		  this->transportWideCcSeq,
 		  packet->GetLength(),
-		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()));
+		  this->sendProbationTransmission.GetBitrate(this->shared->GetTimeMs()).value_or(0));
 	}
 
 	void Transport::OnTransportCongestionControlServerSendRtcpPacket(
@@ -3357,6 +4094,7 @@ namespace RTC
 
 		SendRtcpPacket(packet);
 	}
+#endif
 
 	void Transport::OnTimer(TimerHandleInterface* timer)
 	{
@@ -3374,9 +4112,15 @@ namespace RTC
 			 * [1.0, 1.5] times the calculated interval to avoid unintended
 			 * synchronization of all participants.
 			 */
-			intervalMs *= static_cast<float>(Utils::Crypto::GetRandomUInt<uint16_t>(10, 15)) / 10;
+			intervalMs = (intervalMs * Utils::Crypto::GetRandomUInt<uint16_t>(10, 15)) / 10;
 
 			this->rtcpTimer->Start(intervalMs);
 		}
+#ifdef MS_RTC_LOGGER_SEND_BURST
+		else if (timer == this->sendBurstLoggerTimer)
+		{
+			this->sendBurstLogger.Log();
+		}
+#endif
 	}
 } // namespace RTC

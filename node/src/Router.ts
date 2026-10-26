@@ -17,7 +17,11 @@ import type {
 	TransportListenIp,
 	TransportProtocol,
 } from './TransportTypes';
-import { portRangeToFbs, socketFlagsToFbs } from './Transport';
+import {
+	portRangeToFbs,
+	socketFlagsToFbs,
+	serializeSctpZeroChecksum,
+} from './Transport';
 import type {
 	WebRtcTransport,
 	WebRtcTransportOptions,
@@ -299,7 +303,11 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		enableTcp,
 		preferUdp = false,
 		preferTcp = false,
-		initialAvailableOutgoingBitrate = 600000,
+		enableBwe = true,
+		initialAvailableOutgoingBitrate,
+		maxIncomingBitrate,
+		maxOutgoingBitrate,
+		minOutgoingBitrate,
 		enableSctp = false,
 		maxSendMessageSize = 262144,
 		maxReceiveMessageSize = 262144,
@@ -307,6 +315,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
 		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
+		sctpZeroChecksum = 'sctp-over-dtls',
 		iceConsentTimeout = 30,
 		appData,
 	}: WebRtcTransportOptions<WebRtcTransportAppData>): Promise<
@@ -325,6 +334,34 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		} else if (webRtcServer && listenInfos && listenIps) {
 			throw new TypeError(
 				'only one of webRtcServer, listenInfos and listenIps must be given'
+			);
+		} else if (
+			initialAvailableOutgoingBitrate !== undefined &&
+			!utils.isUnsignedSafeInteger(initialAvailableOutgoingBitrate)
+		) {
+			throw new TypeError(
+				'if given, initialAvailableOutgoingBitrate must be an unsigned integer'
+			);
+		} else if (
+			maxIncomingBitrate !== undefined &&
+			!utils.isUnsignedSafeInteger(maxIncomingBitrate)
+		) {
+			throw new TypeError(
+				'if given, maxIncomingBitrate must be an unsigned integer'
+			);
+		} else if (
+			maxOutgoingBitrate !== undefined &&
+			!utils.isUnsignedSafeInteger(maxOutgoingBitrate)
+		) {
+			throw new TypeError(
+				'if given, maxOutgoingBitrate must be an unsigned integer'
+			);
+		} else if (
+			minOutgoingBitrate !== undefined &&
+			!utils.isUnsignedSafeInteger(minOutgoingBitrate)
+		) {
+			throw new TypeError(
+				'if given, minOutgoingBitrate must be an unsigned integer'
 			);
 		} else if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
@@ -420,7 +457,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			/* direct */ undefined,
-			BigInt(initialAvailableOutgoingBitrate),
+			enableBwe,
+			initialAvailableOutgoingBitrate !== undefined
+				? BigInt(initialAvailableOutgoingBitrate)
+				: undefined,
+			maxIncomingBitrate !== undefined ? BigInt(maxIncomingBitrate) : undefined,
+			maxOutgoingBitrate !== undefined ? BigInt(maxOutgoingBitrate) : undefined,
+			minOutgoingBitrate !== undefined ? BigInt(minOutgoingBitrate) : undefined,
 			enableSctp,
 			maxSendMessageSize,
 			maxReceiveMessageSize,
@@ -428,6 +471,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			sctpPerStreamSendQueueLimit,
 			sctpMaxReceiverWindowBufferSize,
 			sctpDefaultStreamBufferedAmountLowThreshold,
+			serializeSctpZeroChecksum(sctpZeroChecksum),
 			/* isDataChannel */ true
 		);
 
@@ -477,6 +521,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				data: webRtcTransportData,
 				channel: this.#channel,
 				appData,
+				enableBwe,
 				getRouterRtpCapabilities: (): RtpCapabilities =>
 					this.#data.rtpCapabilities,
 				getProducerById: (producerId: string): Producer | undefined =>
@@ -521,6 +566,11 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		port,
 		rtcpMux = true,
 		comedia = false,
+		enableBwe = true,
+		initialAvailableOutgoingBitrate,
+		maxIncomingBitrate,
+		maxOutgoingBitrate,
+		minOutgoingBitrate,
 		enableSctp = false,
 		maxSendMessageSize = 262144,
 		maxReceiveMessageSize = 262144,
@@ -528,6 +578,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
 		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
+		sctpZeroChecksum = 'none',
 		enableSrtp = false,
 		srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 		appData,
@@ -542,6 +593,34 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			);
 		} else if (listenInfo && listenIp) {
 			throw new TypeError('only one of listenInfo and listenIp must be given');
+		} else if (
+			initialAvailableOutgoingBitrate !== undefined &&
+			!utils.isUnsignedSafeInteger(initialAvailableOutgoingBitrate)
+		) {
+			throw new TypeError(
+				'if given, initialAvailableOutgoingBitrate must be an unsigned integer'
+			);
+		} else if (
+			maxIncomingBitrate !== undefined &&
+			!utils.isUnsignedSafeInteger(maxIncomingBitrate)
+		) {
+			throw new TypeError(
+				'if given, maxIncomingBitrate must be an unsigned integer'
+			);
+		} else if (
+			maxOutgoingBitrate !== undefined &&
+			!utils.isUnsignedSafeInteger(maxOutgoingBitrate)
+		) {
+			throw new TypeError(
+				'if given, maxOutgoingBitrate must be an unsigned integer'
+			);
+		} else if (
+			minOutgoingBitrate !== undefined &&
+			!utils.isUnsignedSafeInteger(minOutgoingBitrate)
+		) {
+			throw new TypeError(
+				'if given, minOutgoingBitrate must be an unsigned integer'
+			);
 		} else if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
 		}
@@ -575,7 +654,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		/* Build Request. */
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			/* direct */ undefined,
-			/* initialAvailableOutgoingBitrate */ undefined,
+			enableBwe,
+			initialAvailableOutgoingBitrate !== undefined
+				? BigInt(initialAvailableOutgoingBitrate)
+				: undefined,
+			maxIncomingBitrate !== undefined ? BigInt(maxIncomingBitrate) : undefined,
+			maxOutgoingBitrate !== undefined ? BigInt(maxOutgoingBitrate) : undefined,
+			minOutgoingBitrate !== undefined ? BigInt(minOutgoingBitrate) : undefined,
 			enableSctp,
 			maxSendMessageSize,
 			maxReceiveMessageSize,
@@ -583,6 +668,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			sctpPerStreamSendQueueLimit,
 			sctpMaxReceiverWindowBufferSize,
 			sctpDefaultStreamBufferedAmountLowThreshold,
+			serializeSctpZeroChecksum(sctpZeroChecksum),
 			/* isDataChannel */ false
 		);
 
@@ -650,6 +736,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				data: plainTransportData,
 				channel: this.#channel,
 				appData,
+				enableBwe,
 				getRouterRtpCapabilities: (): RtpCapabilities =>
 					this.#data.rtpCapabilities,
 				getProducerById: (producerId: string): Producer | undefined =>
@@ -694,6 +781,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
 		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
+		sctpZeroChecksum = 'none',
 		enableRtx = false,
 		enableSrtp = false,
 		appData,
@@ -732,7 +820,11 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		/* Build Request. */
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			/* direct */ undefined,
+			/* enableBwe */ false,
 			/* initialAvailableOutgoingBitrate */ undefined,
+			/* maxIncomingBitrate */ undefined,
+			/* maxOutgoingBitrate */ undefined,
+			/* minOutgoingBitrate */ undefined,
 			enableSctp,
 			maxSendMessageSize,
 			maxReceiveMessageSize,
@@ -740,6 +832,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			sctpPerStreamSendQueueLimit,
 			sctpMaxReceiverWindowBufferSize,
 			sctpDefaultStreamBufferedAmountLowThreshold,
+			serializeSctpZeroChecksum(sctpZeroChecksum),
 			/* isDataChannel */ false
 		);
 
@@ -790,6 +883,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				data: pipeTransportData,
 				channel: this.#channel,
 				appData,
+				enableBwe: false,
 				getRouterRtpCapabilities: (): RtpCapabilities =>
 					this.#data.rtpCapabilities,
 				getProducerById: (producerId: string): Producer | undefined =>
@@ -843,7 +937,11 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		/* Build Request. */
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			/* direct */ true,
+			/* enableBwe */ false,
 			/* initialAvailableOutgoingBitrate */ undefined,
+			/* maxIncomingBitrate */ undefined,
+			/* maxOutgoingBitrate */ undefined,
+			/* minOutgoingBitrate */ undefined,
 			/* enableSctp */ undefined,
 			maxSendMessageSize,
 			maxReceiveMessageSize,
@@ -851,6 +949,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			/* sctpPerStreamSendQueueLimit */ undefined,
 			/* sctpMaxReceiverWindowBufferSize */ undefined,
 			/* sctpDefaultStreamBufferedAmountLowThreshold */ undefined,
+			/* sctpZeroChecksum */ undefined,
 			/* isDataChannel */ undefined
 		);
 
@@ -885,6 +984,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				data: directTransportData,
 				channel: this.#channel,
 				appData,
+				enableBwe: false,
 				getRouterRtpCapabilities: (): RtpCapabilities =>
 					this.#data.rtpCapabilities,
 				getProducerById: (producerId: string): Producer | undefined =>
@@ -932,6 +1032,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		sctpPerStreamSendQueueLimit = 2000000,
 		sctpMaxReceiverWindowBufferSize = 5242880,
 		sctpDefaultStreamBufferedAmountLowThreshold = 1024,
+		sctpZeroChecksum = 'trusted-network',
 		enableRtx = false,
 		enableSrtp = false,
 	}: PipeToRouterOptions): Promise<PipeToRouterResult> {
@@ -1010,6 +1111,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 						sctpPerStreamSendQueueLimit,
 						sctpMaxReceiverWindowBufferSize,
 						sctpDefaultStreamBufferedAmountLowThreshold,
+						sctpZeroChecksum,
 						enableRtx,
 						enableSrtp,
 					}),
@@ -1022,6 +1124,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 						sctpPerStreamSendQueueLimit,
 						sctpMaxReceiverWindowBufferSize,
 						sctpDefaultStreamBufferedAmountLowThreshold,
+						sctpZeroChecksum,
 						enableRtx,
 						enableSrtp,
 					}),
@@ -1068,6 +1171,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 						logger.error(
 							'pipeToRouter() | error creating PipeTransport pair:',
 							error
+						);
+
+						// Do not keep the rejected promise, otherwise any later call to
+						// pipeToRouter() for this pair of Routers would fail with the same
+						// error.
+						this.#mapRouterPairPipeTransportPairPromise.delete(
+							pipeTransportPairKey
 						);
 
 						if (localPipeTransport) {

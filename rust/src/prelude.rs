@@ -68,5 +68,5 @@ pub use mediasoup_types::rtp_parameters::{
     RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionParameters,
     RtpHeaderExtensionUri, RtpParameters,
 };
-pub use mediasoup_types::sctp_parameters::SctpStreamParameters;
+pub use mediasoup_types::sctp_parameters::{SctpStreamParameters, SctpZeroChecksum};
 pub use mediasoup_types::srtp_parameters::SrtpCryptoSuite;

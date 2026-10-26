@@ -59,6 +59,7 @@ namespace RTC
 
 		// Clear dropped set.
 		this->dropped.clear();
+		this->droppedStart = 0;
 	}
 
 	template<typename T, uint8_t N>
@@ -71,34 +72,19 @@ namespace RTC
 		{
 			this->maxInput   = input;
 			this->maxDropped = input;
-			// Insert input in sorted order, if not present.
-			const SeqLowerThan seqLowerThan;
-			const auto it =
-			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
 
-			if (it == this->dropped.end() || *it != input)
-			{
-				this->dropped.insert(it, input);
-			}
-
+			// NOTE: Must clear before inserting, see 'ClearDropped()'.
 			ClearDropped();
+			AddDropped(input);
 		}
 		// Mark as dropped if no input was forwarded after the last dropped one and
 		// 'input' is higher than the last forwarded input 'this->maxForwarded'.
 		// Allows for properly accounting for out of order drops until an input is forwarded.
 		else if (this->maxInput == this->maxDropped && SeqManager<T, N>::IsSeqHigherThan(input, this->maxForwarded))
 		{
-			// Insert input in sorted order, if not present.
-			const SeqLowerThan seqLowerThan;
-			const auto it =
-			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
-
-			if (it == this->dropped.end() || *it != input)
-			{
-				this->dropped.insert(it, input);
-			}
-
+			// NOTE: Must clear before inserting, see 'ClearDropped()'.
 			ClearDropped();
+			AddDropped(input);
 		}
 	}
 
@@ -110,7 +96,7 @@ namespace RTC
 		auto base = this->base;
 
 		// No dropped inputs to consider.
-		if (this->dropped.empty())
+		if (DroppedSize() == 0)
 		{
 			goto done;
 		}
@@ -130,15 +116,15 @@ namespace RTC
 		}
 
 		// No dropped inputs to consider after cleanup.
-		if (this->dropped.empty())
+		if (DroppedSize() == 0)
 		{
 			goto done;
 		}
 		else
 		{
 			const SeqLowerThan seqLowerThan;
-			const auto it =
-			  std::lower_bound(this->dropped.begin(), this->dropped.end(), input, seqLowerThan);
+			const auto droppedBegin = this->dropped.begin() + this->droppedStart;
+			const auto it = std::lower_bound(droppedBegin, this->dropped.end(), input, seqLowerThan);
 
 			if (it != this->dropped.end() && *it == input)
 			{
@@ -148,7 +134,7 @@ namespace RTC
 			}
 
 			// There are dropped inputs, calculate 'base' for this input.
-			auto droppedCount = std::distance(this->dropped.begin(), it);
+			auto droppedCount = std::distance(droppedBegin, it);
 
 			base = (this->base - droppedCount) & SeqManager::MaxValue;
 		}
@@ -203,36 +189,74 @@ namespace RTC
 		return (this->maxOutput + this->initialOutput) & SeqManager::MaxValue;
 	}
 
+	template<typename T, uint8_t N>
+	size_t SeqManager<T, N>::DroppedSize() const
+	{
+		MS_TRACE();
+
+		return this->dropped.size() - this->droppedStart;
+	}
+
 	/*
-	 * Delete droped inputs greater than maxInput, which belong to a previous
-	 * cycle.
+	 * Insert 'input' into 'dropped', in sorted order, if not present yet.
+	 */
+	template<typename T, uint8_t N>
+	void SeqManager<T, N>::AddDropped(T input)
+	{
+		MS_TRACE();
+
+		const SeqLowerThan seqLowerThan;
+		const auto it = std::lower_bound(
+		  this->dropped.begin() + this->droppedStart, this->dropped.end(), input, seqLowerThan);
+
+		if (it == this->dropped.end() || *it != input)
+		{
+			this->dropped.insert(it, input);
+		}
+	}
+
+	/*
+	 * Consume dropped inputs higher than 'maxInput', which belong to a previous
+	 * cycle, accounting them in 'base'.
+	 *
+	 * They are not erased as they expire. Erasing from the front of a vector
+	 * shifts every remaining entry, and 'dropped' holds up to half a sequence
+	 * cycle, so that would mean a full window memmove per input. They are consumed
+	 * by advancing 'droppedStart' instead, and the consumed prefix is erased in one
+	 * go once it is at least as large as the pending range, which makes removal
+	 * O(1) amortized.
+	 *
+	 * This must always be called before AddDropped().
 	 */
 	template<typename T, uint8_t N>
 	void SeqManager<T, N>::ClearDropped()
 	{
 		MS_TRACE();
 
-		// Cleanup dropped values.
-		if (this->dropped.empty())
+		size_t removed{ 0 };
+
+		// Consume entries belonging to a previous cycle.
+		while (this->droppedStart < this->dropped.size() &&
+		       SeqManager<T, N>::IsSeqHigherThan(this->dropped[this->droppedStart], this->maxInput))
 		{
-			return;
+			++this->droppedStart;
+			++removed;
 		}
 
-		const size_t previousDroppedSize = this->dropped.size();
+		if (removed != 0)
+		{
+			// Adapt base.
+			this->base = (this->base - removed) & SeqManager::MaxValue;
+		}
 
-		// Cleanup dropped values.
-		this->dropped.erase(
-		  this->dropped.begin(),
-		  std::find_if(
-		    this->dropped.begin(),
-		    this->dropped.end(),
-		    [this](T value)
-		    {
-			    return !SeqManager<T, N>::IsSeqHigherThan(value, this->maxInput);
-		    }));
+		// Erase the consumed prefix once it is at least as large as the pending
+		// range, hence at most half a sequence cycle.
+		if (this->droppedStart != 0 && this->droppedStart >= DroppedSize())
+		{
+			this->dropped.erase(this->dropped.begin(), this->dropped.begin() + this->droppedStart);
 
-		// Adapt base.
-		this->base = (this->base - (previousDroppedSize - this->dropped.size())) & SeqManager::MaxValue;
+			this->droppedStart = 0;
+		}
 	}
 
 	// Explicit instantiation to have all SeqManager definitions in this file.

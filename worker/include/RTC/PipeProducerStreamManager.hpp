@@ -1,8 +1,10 @@
 #ifndef MS_RTC_PIPE_PRODUCER_STREAM_MANAGER_HPP
 #define MS_RTC_PIPE_PRODUCER_STREAM_MANAGER_HPP
 
+#include "common.hpp"
 #include "RTC/ProducerStreamManager.hpp"
 #include <ankerl/unordered_dense.h>
+#include <vector>
 
 namespace RTC
 {
@@ -31,6 +33,21 @@ namespace RTC
 		{
 			return -1;
 		}
+		std::vector<RTC::RTP::RtpStreamRecv*> GetProducerRtpStreams() const override
+		{
+			std::vector<RTC::RTP::RtpStreamRecv*> producerRtpStreams;
+
+			producerRtpStreams.reserve(this->mapMappedSsrcProducerRtpStream.size());
+
+			for (const auto& kv : this->mapMappedSsrcProducerRtpStream)
+			{
+				auto* const producerRtpStream = kv.second;
+
+				producerRtpStreams.push_back(producerRtpStream);
+			}
+
+			return producerRtpStreams;
+		}
 		RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const override
 		{
 			return nullptr;
@@ -50,8 +67,13 @@ namespace RTC
 		void ProducerRtpStreamScore(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
+#ifdef MS_USE_BUILTIN_BWE
+		RTC::BWE::BitrateAllocator::Candidate::BitrateOptions GetBitrateOptions(int64_t nowMs) const override;
+		void SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option) override;
+#else
 		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) override;
-		void ApplyLayers(int64_t rtpStreamActiveMs) override;
+		void ApplyLayers() override;
+#endif
 		int64_t GetDesiredBitrate(int64_t nowMs) const override;
 		RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,
@@ -69,6 +91,9 @@ namespace RTC
 		void OnResumed() override;
 
 	private:
+		// RTP streams of the Producer, keyed by mapped SSRC. Pipe forwards all of
+		// them at once, so there is no "current" one.
+		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapMappedSsrcProducerRtpStream;
 		// Per-stream sync state, keyed by mapped SSRC.
 		ankerl::unordered_dense::map<uint32_t, bool> mapMappedSsrcSyncRequired;
 	};

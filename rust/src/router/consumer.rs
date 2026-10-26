@@ -445,35 +445,28 @@ impl FromFbs for ConsumerStat {
             packet_count: stats.packet_count,
             byte_count: stats.byte_count,
             bitrate: stats.bitrate,
-            round_trip_time: Some(base.round_trip_time),
+            round_trip_time: base.round_trip_time,
             rtx_packets_discarded: Some(base.rtx_packets_discarded),
             score: base.score,
         }
     }
 }
 
-/// RTC statistics of the consumer, may or may not include producer statistics.
+/// RTC statistics of a single RTP stream of the consumer.
+//
+// NOTE: `Inbound` must come first because serde tries untagged variants in
+// order and the fields of `ConsumerStat` are a subset of those of
+// `ProducerStat`, so `Outbound` would also match an inbound entry. The other
+// way around cannot happen since `bitrateByLayer` is mandatory and only
+// `ProducerStat` has it.
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(untagged)]
-pub enum ConsumerStats {
-    /// RTC statistics without producer
-    JustConsumer((ConsumerStat,)),
-    /// RTC statistics with producer
-    WithProducer((ConsumerStat, ProducerStat)),
-    /// RTC statistics with multiple consumers (pipe).
-    MultipleConsumers(Vec<ConsumerStat>),
-}
-
-impl ConsumerStats {
-    /// RTC statistics of the consumer
-    pub fn consumer_stats(&self) -> &ConsumerStat {
-        match self {
-            ConsumerStats::JustConsumer((consumer_stat,)) => consumer_stat,
-            ConsumerStats::WithProducer((consumer_stat, _)) => consumer_stat,
-            ConsumerStats::MultipleConsumers(consumer_stats) => &consumer_stats[0],
-        }
-    }
+pub enum ConsumerRtpStreamStat {
+    /// RTP stream received by mediasoup from the producing endpoint.
+    Inbound(ProducerStat),
+    /// RTP stream sent by mediasoup to the consuming endpoint.
+    Outbound(ConsumerStat),
 }
 
 /// 'trace' event data.
@@ -1082,7 +1075,7 @@ impl Consumer {
     ///
     /// Check the [RTC Statistics](https://mediasoup.org/documentation/v3/mediasoup/rtc-statistics/)
     /// section for more details (TypeScript-oriented, but concepts apply here as well).
-    pub async fn get_stats(&self) -> Result<ConsumerStats, RequestError> {
+    pub async fn get_stats(&self) -> Result<Vec<ConsumerRtpStreamStat>, RequestError> {
         debug!("get_stats()");
 
         let response = self
@@ -1092,33 +1085,23 @@ impl Consumer {
             .await?;
 
         if let response::Body::ConsumerGetStatsResponse(data) = response {
-            match self.r#type() {
-                ConsumerType::Simple | ConsumerType::Simulcast | ConsumerType::Svc => {
-                    match data.stats.len() {
-                        0 => panic!("Empty stats response from worker"),
-                        1 => {
-                            let consumer_stat = ConsumerStat::from_fbs(&data.stats[0]);
+            let mut stats = Vec::<ConsumerRtpStreamStat>::with_capacity(data.stats.len());
 
-                            Ok(ConsumerStats::JustConsumer((consumer_stat,)))
-                        }
-                        2 => {
-                            let consumer_stat = ConsumerStat::from_fbs(&data.stats[0]);
-                            let producer_stat = ProducerStat::from_fbs(&data.stats[1]);
-
-                            Ok(ConsumerStats::WithProducer((consumer_stat, producer_stat)))
-                        }
-                        _ => panic!("More than two stats response from worker"),
+            for stat in &data.stats {
+                match stat.data {
+                    rtp_stream::StatsData::SendStats(_) => {
+                        stats.push(ConsumerRtpStreamStat::Outbound(ConsumerStat::from_fbs(
+                            stat,
+                        )));
                     }
-                }
-                ConsumerType::Pipe => {
-                    let mut stats = Vec::<ConsumerStat>::with_capacity(data.stats.len());
-                    for stat in data.stats {
-                        stats.push(ConsumerStat::from_fbs(&stat));
+                    rtp_stream::StatsData::RecvStats(_) => {
+                        stats.push(ConsumerRtpStreamStat::Inbound(ProducerStat::from_fbs(stat)));
                     }
-
-                    Ok(ConsumerStats::MultipleConsumers(stats))
+                    _ => panic!("Wrong message from worker: {stat:?}"),
                 }
             }
+
+            Ok(stats)
         } else {
             panic!("Wrong message from worker: {response:?}");
         }

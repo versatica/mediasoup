@@ -160,9 +160,7 @@ test('generateRouterRtpCapabilities() with too many codecs throws', () => {
 		});
 	}
 
-	expect(() => ortc.generateRouterRtpCapabilities(mediaCodecs)).toThrow(
-		'cannot allocate'
-	);
+	expect(() => ortc.generateRouterRtpCapabilities(mediaCodecs)).toThrow();
 });
 
 test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsumerRtpParameters() and getPipeConsumerRtpParameters() succeed', () => {
@@ -385,13 +383,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 				preferredEncrypt: false,
 				direction: 'sendrecv',
 			},
-			{
-				kind: 'video',
-				uri: 'urn:ietf:params:rtp-hdrext:toffset',
-				preferredId: 9,
-				preferredEncrypt: false,
-				direction: 'sendrecv',
-			},
 		],
 	};
 
@@ -400,6 +391,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		remoteRtpCapabilities,
 		pipe: false,
 		enableRtx: true,
+		enableBwe: true,
 	});
 
 	expect(consumerRtpParameters.codecs.length).toEqual(2);
@@ -445,12 +437,6 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 8,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'urn:ietf:params:rtp-hdrext:toffset',
-			id: 9,
 			encrypt: false,
 			parameters: {},
 		},
@@ -551,4 +537,43 @@ test('getProducerRtpParametersMapping() with incompatible params throws Unsuppor
 	expect(() =>
 		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities)
 	).toThrow(UnsupportedError);
+});
+
+test('getProducerRtpParametersMapping() with RTX apt pointing to a non media codec throws', () => {
+	const mediaCodecs: mediasoup.types.RouterRtpCodecCapability[] = [
+		{
+			kind: 'video',
+			mimeType: 'video/VP8',
+			clockRate: 90000,
+		},
+	];
+
+	const routerRtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
+
+	// The apt parameter of the RTX codec is its own payload type, which is not a
+	// media codec.
+	const rtpParameters = {
+		codecs: [
+			{
+				mimeType: 'video/VP8',
+				payloadType: 111,
+				clockRate: 90000,
+			},
+			{
+				mimeType: 'video/rtx',
+				payloadType: 112,
+				clockRate: 90000,
+				parameters: { apt: 112 },
+			},
+		],
+		headerExtensions: [],
+		encodings: [{ ssrc: 11111111 }],
+		rtcp: {
+			cname: 'qwerty1234',
+		},
+	};
+
+	expect(() =>
+		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities)
+	).toThrow(TypeError);
 });

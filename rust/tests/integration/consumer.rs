@@ -2,7 +2,9 @@ use async_executor::Executor;
 use async_io::Timer;
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
-use mediasoup::consumer::{ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType};
+use mediasoup::consumer::{
+    ConsumerLayers, ConsumerOptions, ConsumerRtpStreamStat, ConsumerScore, ConsumerType,
+};
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
@@ -423,13 +425,6 @@ fn consumer_device_capabilities() -> RtpCapabilities {
                 kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::VideoOrientation,
                 preferred_id: 8,
-                preferred_encrypt: false,
-                direction: RtpHeaderExtensionDirection::default(),
-            },
-            RtpHeaderExtension {
-                kind: MediaKind::Video,
-                uri: RtpHeaderExtensionUri::TimeOffset,
-                preferred_id: 9,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
@@ -1159,11 +1154,6 @@ fn dump_succeeds() {
                         encrypt: false,
                     },
                     RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::AbsSendTime,
-                        id: 4,
-                        encrypt: false,
-                    },
-                    RtpHeaderExtensionParameters {
                         uri: RtpHeaderExtensionUri::SsrcAudioLevel,
                         id: 6,
                         encrypt: false,
@@ -1275,11 +1265,6 @@ fn dump_succeeds() {
                         id: 8,
                         encrypt: false,
                     },
-                    RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::TimeOffset,
-                        id: 9,
-                        encrypt: false,
-                    },
                 ],
             );
             assert_eq!(
@@ -1356,7 +1341,13 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Audio consumer get_stats failed");
 
-            let consumer_stat = stats.consumer_stats();
+            let consumer_stat = stats
+                .iter()
+                .find_map(|stat| match stat {
+                    ConsumerRtpStreamStat::Outbound(consumer_stat) => Some(consumer_stat),
+                    ConsumerRtpStreamStat::Inbound(_) => None,
+                })
+                .expect("Audio consumer stats without outbound entry");
 
             assert_eq!(consumer_stat.kind, MediaKind::Audio);
             assert_eq!(
@@ -1405,7 +1396,13 @@ fn get_stats_succeeds() {
                 .await
                 .expect("Video consumer get_stats failed");
 
-            let consumer_stat = stats.consumer_stats();
+            let consumer_stat = stats
+                .iter()
+                .find_map(|stat| match stat {
+                    ConsumerRtpStreamStat::Outbound(consumer_stat) => Some(consumer_stat),
+                    ConsumerRtpStreamStat::Inbound(_) => None,
+                })
+                .expect("Video consumer stats without outbound entry");
 
             assert_eq!(consumer_stat.kind, MediaKind::Video);
             assert_eq!(

@@ -6,16 +6,19 @@
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/consumer.h"
 #include "FBS/transport.h"
+#ifdef MS_USE_BUILTIN_BWE
+#include "RTC/BWE/BitrateAllocator.hpp"
+#endif
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/ProducerStreamManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
+#include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RTP/RtpStreamSend.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SeqManager.hpp"
 #include "SharedInterface.hpp"
@@ -29,10 +32,13 @@ namespace RTC
 {
 	class Consumer : public Channel::ChannelSocket::RequestHandler,
 	                 public RTC::RTP::RtpStreamSend::Listener,
+#ifdef MS_USE_BUILTIN_BWE
+	                 public RTC::BWE::BitrateAllocator::Candidate,
+#endif
 	                 public RTC::ProducerStreamManager::Listener
 	{
 		using RetransmissionBuffer =
-		  std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>;
+		  std::map<uint16_t, std::shared_ptr<RTC::RTP::Packet>, RTC::SeqManager<uint16_t>::SeqLowerThan>;
 
 	public:
 		class Listener
@@ -45,8 +51,10 @@ namespace RTC
 			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
-			virtual void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer)                        = 0;
-			virtual void OnConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
+#ifndef MS_USE_BUILTIN_BWE
+			virtual void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) = 0;
+#endif
+			virtual void OnConsumerProducerClosed(RTC::Consumer* consumer) = 0;
 		};
 
 	private:
@@ -85,7 +93,7 @@ namespace RTC
 		{
 			return this->rtpParameters;
 		}
-		const struct RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
+		const RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
 		{
 			return this->rtpHeaderExtensionIds;
 		}
@@ -93,6 +101,16 @@ namespace RTC
 		{
 			return this->type;
 		}
+		/**
+		 * Whether this Consumer was negotiated with transport-cc, which takes both
+		 * the RTP header extension and the RTCP feedback.
+		 */
+		bool SupportsTransportCc() const;
+		/**
+		 * Whether this Consumer was negotiated with REMB, whose RTP header extension
+		 * is abs-send-time.
+		 */
+		bool SupportsRemb() const;
 		RTC::ConsumerTypes::VideoLayers GetPreferredLayers() const
 		{
 			return this->producerStreamManager->GetPreferredLayers();
@@ -133,17 +151,41 @@ namespace RTC
 		void ProducerRtpStreamScores(const std::vector<uint8_t>* scores);
 		void ProducerRtpStreamScore(RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore);
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first);
+		void ProducerSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive);
 		void ProducerClosed();
+#ifndef MS_USE_BUILTIN_BWE
 		void SetExternallyManagedBitrate()
 		{
 			this->externallyManagedBitrate = true;
 			this->producerStreamManager->SetExternallyManagedBitrate();
 		}
+#endif
+#ifdef MS_USE_BUILTIN_BWE
+		/**
+		 * Tell whether a bitrate allocation is running for this Transport, which is
+		 * what decides whether this one asks for bitrate or helps itself.
+		 *
+		 * @remarks
+		 * - While it is false there is nobody to answer a round, so nothing about
+		 *   bitrate or layers is told to the Transport.
+		 */
+		void SetBweManaged(bool bweManaged)
+		{
+			this->bweManaged = bweManaged;
+			this->producerStreamManager->SetBweManaged(bweManaged);
+		}
+		const std::string& GetBitrateAllocationId() const override;
+		uint8_t GetBitrateWeight() const override;
+		RTC::BWE::BitrateAllocator::Candidate::BitrateOptions GetBitrateOptions() const override;
+		void SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option) override;
+#else
 		uint8_t GetBitratePriority() const;
 		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss);
 		void ApplyLayers();
+#endif
 		int64_t GetDesiredBitrate() const;
-		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
+		void SendRtpPacket(RTC::RTP::Packet* packet, std::shared_ptr<RTC::RTP::Packet>& sharedPacket);
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
 		/**
 		 * Worst remote fraction lost among the RTP streams of this Consumer.
@@ -151,24 +193,31 @@ namespace RTC
 		uint8_t GetWorstRemoteFractionLost(uint32_t mappedSsrc) const;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc);
-		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
+		/**
+		 * @returns What this Receiver Report says about the link to the remote
+		 *   endpoint.
+		 */
+		RTC::RTP::RtpStreamSend::ReceiverReportResult ReceiveRtcpReceiverReport(
+		  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs);
 		void ReceiveRtcpXrReceiverReferenceTime(
 		  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
 		int64_t GetTransmissionRate(int64_t nowMs);
-		float GetRttMs() const;
+		/**
+		 * Longest round trip time measured on the RTP streams of this Consumer, or
+		 * no value while none of them has measured any.
+		 */
+		std::optional<float> GetRttMs() const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
-	protected:
+	private:
 		void EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;
 		void EmitTraceEvent(flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const;
-
-	private:
 		void EmitScore() const;
 		void EmitLayersChange() const;
 
@@ -183,7 +232,7 @@ namespace RTC
 		static void StorePacketInTargetLayerRetransmissionBuffer(
 		  RetransmissionBuffer& targetLayerRetransmissionBuffer,
 		  RTC::RTP::Packet* packet,
-		  RTC::RTP::SharedPacket& sharedPacket);
+		  std::shared_ptr<RTC::RTP::Packet>& sharedPacket);
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -204,7 +253,7 @@ namespace RTC
 		std::string id;
 		std::string producerId;
 
-	protected:
+	private:
 		// Passed by argument.
 		SharedInterface* shared{ nullptr };
 		RTC::Consumer::Listener* listener{ nullptr };
@@ -212,17 +261,23 @@ namespace RTC
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
-		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
+		RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
 		std::bitset<128> supportedCodecPayloadTypes;
 		int64_t lastRtcpSentAtUs{ 0 };
 		int64_t maxRtcpIntervalMs{ 0 };
+#ifndef MS_USE_BUILTIN_BWE
 		bool externallyManagedBitrate{ false };
+#endif
+#ifdef MS_USE_BUILTIN_BWE
+		// Whether a bitrate allocation is running for this Transport. While it is
+		// false nobody would answer a round, so this one is told nothing about
+		// bitrate and its manager applies the layers it works out.
+		bool bweManaged{ false };
+#endif
 		uint8_t priority{ 1 };
-		struct TraceEventTypes traceEventTypes;
-
-	private:
+		TraceEventTypes traceEventTypes;
 		bool pipe{ false };
 		// Others.
 		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;

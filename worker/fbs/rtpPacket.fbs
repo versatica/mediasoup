@@ -9,8 +9,8 @@ table Dump {
     marker: bool;
     ssrc: uint32;
     is_key_frame: bool;
-    size: uint64;
-    payload_size: uint64;
+    size: uint32;
+    payload_size: uint32;
     spatial_layer: uint8;
     temporal_layer: uint8;
     mid: string;

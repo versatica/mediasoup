@@ -885,9 +885,9 @@ pub struct RtpPacketTraceInfo {
     /// Whether packet contains a key frame.
     pub is_key_frame: bool,
     /// Packet size.
-    pub size: u64,
+    pub size: u32,
     /// Payload size.
-    pub payload_size: u64,
+    pub payload_size: u32,
     /// The spatial layer index (from 0 to N).
     pub spatial_layer: u8,
     /// The temporal layer index (from 0 to N).
@@ -927,6 +927,20 @@ pub enum BweType {
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BweTraceInfo {
+    /// Desired bitrate.
+    pub desired_bitrate: u64,
+    /// Min bitrate.
+    pub min_bitrate: u64,
+    /// Max bitrate.
+    pub max_bitrate: u64,
+    /// Available bitrate.
+    pub available_bitrate: u64,
+}
+
+/// BWE info in trace event, as the old BWE reports it.
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OldBweTraceInfo {
     /// Bandwidth estimation type.
     pub r#type: BweType,
     /// Desired bitrate

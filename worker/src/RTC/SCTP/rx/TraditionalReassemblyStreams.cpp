@@ -114,7 +114,7 @@ namespace RTC
 			const size_t payloadLength = std::accumulate(
 			  start,
 			  end,
-			  0,
+			  size_t{ 0 },
 			  [](size_t acc, const auto& i)
 			  {
 				  const auto& data = i.second;
@@ -200,13 +200,13 @@ namespace RTC
 			size_t removedBytes = std::accumulate(
 			  this->chunksBySsn.begin(),
 			  endIt,
-			  0,
+			  size_t{ 0 },
 			  [](size_t acc1, const auto& i1)
 			  {
 				  return acc1 + std::accumulate(
 				                  i1.second.begin(),
 				                  i1.second.end(),
-				                  0,
+				                  size_t{ 0 },
 				                  [](size_t acc2, const auto& i2)
 				                  {
 					                  const auto& data = i2.second;
@@ -349,7 +349,7 @@ namespace RTC
 			const size_t removedBytes = std::accumulate(
 			  this->chunks.begin(),
 			  endIt,
-			  0,
+			  size_t{ 0 },
 			  [](size_t acc, const auto& i)
 			  {
 				  const auto& data = i.second;

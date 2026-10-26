@@ -8,13 +8,13 @@
 SCENARIO("SubchannelsCodec", "[subchannels]")
 {
 	// Build a message with the given payload.
-	auto makeMessage = [](const std::vector<uint8_t>& payload)
+	const auto makeMessage = [](const std::vector<uint8_t>& payload)
 	{
 		return RTC::SCTP::Message(/*streamId*/ 1, /*ppid*/ 51, payload);
 	};
 
 	// Copy the current payload of a message into a std::vector.
-	auto payloadToVector = [](const RTC::SCTP::Message& message)
+	const auto payloadToVector = [](const RTC::SCTP::Message& message)
 	{
 		const auto payload = message.GetPayload();
 

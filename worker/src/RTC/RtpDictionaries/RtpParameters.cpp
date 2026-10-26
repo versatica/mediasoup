@@ -92,7 +92,7 @@ namespace RTC
 				return FBS::RtpParameters::Type::PIPE;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -201,13 +201,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const uint8_t payloadType = encoding.codecPayloadType;
-		auto it                   = this->codecs.begin();
+		// NOTE: ValidateEncodings() has already given every encoding a payload type.
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const uint8_t payloadType = encoding.codecPayloadType.value();
 
-		for (; it != this->codecs.end(); ++it)
+		for (const auto& codec : this->codecs)
 		{
-			const auto& codec = *it;
-
 			if (codec.payloadType == payloadType)
 			{
 				return std::addressof(codec);
@@ -215,12 +214,7 @@ namespace RTC
 		}
 
 		// This should never happen.
-		if (it == this->codecs.end())
-		{
-			MS_ABORT("no valid codec payload type for the given encoding");
-		}
-
-		return nullptr;
+		MS_ABORT("no valid codec payload type for the given encoding");
 	}
 
 	const RTC::RtpCodecParameters* RtpParameters::GetRtxCodecForEncoding(RtpEncodingParameters& encoding) const
@@ -229,7 +223,9 @@ namespace RTC
 
 		static const std::string AptString{ "apt" };
 
-		const uint8_t payloadType = encoding.codecPayloadType;
+		// NOTE: ValidateEncodings() has already given every encoding a payload type.
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const uint8_t payloadType = encoding.codecPayloadType.value();
 
 		for (const auto& codec : this->codecs)
 		{
@@ -347,10 +343,9 @@ namespace RTC
 				  "cannot use both simulcast and encodings with multiple SVC spatial layers");
 			}
 
-			if (!encoding.hasCodecPayloadType)
+			if (!encoding.codecPayloadType.has_value())
 			{
-				encoding.codecPayloadType    = firstMediaPayloadType;
-				encoding.hasCodecPayloadType = true;
+				encoding.codecPayloadType = firstMediaPayloadType;
 			}
 			else
 			{

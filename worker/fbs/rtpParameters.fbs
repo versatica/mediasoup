@@ -70,7 +70,6 @@ enum RtpHeaderExtensionUri: uint8 {
     SsrcAudioLevel,
     DependencyDescriptor,
     VideoOrientation,
-    TimeOffset,
     AbsCaptureTime,
     PlayoutDelay,
     MediasoupPacketId,

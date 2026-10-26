@@ -1,5 +1,7 @@
 import type { EnhancedEventEmitter } from './enhancedEvents';
 import type { MediaKind, RtpParameters } from './rtpParametersTypes';
+import type { RtpCodecsEncodingsMapping } from './ortc';
+import type { RtpStreamDump } from './ConsumerTypes';
 import type { RtpStreamRecvStats } from './rtpStreamStatsTypes';
 import type { AppData } from './types';
 
@@ -91,8 +93,8 @@ export type ProducerDump = {
 	kind: string;
 	type: ProducerType;
 	rtpParameters: RtpParameters;
-	rtpMapping: unknown;
-	rtpStreams: unknown;
+	rtpMapping: RtpCodecsEncodingsMapping;
+	rtpStreams: RtpStreamDump[];
 	traceEventTypes: string[];
 	paused: boolean;
 };

@@ -12,15 +12,12 @@ namespace RTC
 {
 	/* Static. */
 
-	// NOTE: TransportCongestionControlMinOutgoingBitrate is defined in
-	// TransportCongestionControlClient.hpp and exposed publicly.
 	// NOTE: These are double rather than float because they are applied to bitrates,
 	// and float only holds exact integers up to 2^24 (16.7 Mbps).
 	static constexpr double MaxBitrateMarginFactor{ 0.1 };
 	static constexpr double MaxBitrateIncrementFactor{ 1.35 };
 	static constexpr double MaxPaddingBitrateFactor{ 0.85 };
 	static constexpr int64_t AvailableBitrateEventIntervalMs{ 1000 };
-	static constexpr size_t PacketLossHistogramLength{ 24 };
 
 	/* Instance methods. */
 
@@ -28,14 +25,15 @@ namespace RTC
 	  RTC::TransportCongestionControlClient::Listener* listener,
 	  SharedInterface* shared,
 	  RTC::BweType bweType,
+	  int64_t absoluteMinOutgoingBitrate,
 	  int64_t initialAvailableBitrate,
 	  int64_t maxOutgoingBitrate,
 	  int64_t minOutgoingBitrate)
 	  : listener(listener),
 	    shared(shared),
 	    bweType(bweType),
-	    initialAvailableBitrate(
-	      std::max<int64_t>(initialAvailableBitrate, RTC::TransportCongestionControlMinOutgoingBitrate)),
+	    absoluteMinOutgoingBitrate(absoluteMinOutgoingBitrate),
+	    initialAvailableBitrate(std::max<int64_t>(initialAvailableBitrate, absoluteMinOutgoingBitrate)),
 	    maxOutgoingBitrate(maxOutgoingBitrate),
 	    minOutgoingBitrate(minOutgoingBitrate)
 	{
@@ -233,70 +231,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Update packet loss history.
-		const size_t expectedPackets = feedback->GetPacketStatusCount();
-		size_t lostPackets           = 0;
-
-		for (const auto& packetStatus : feedback->GetPacketStatuses())
-		{
-			if (!packetStatus.received)
-			{
-				lostPackets += 1;
-			}
-		}
-
-		if (expectedPackets > 0)
-		{
-			this->UpdatePacketLoss(static_cast<double>(lostPackets) / expectedPackets);
-		}
-
 		if (this->rtpTransportControllerSend == nullptr)
 		{
 			return;
 		}
 
 		this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
-	}
-
-	void TransportCongestionControlClient::UpdatePacketLoss(double packetLoss)
-	{
-		MS_TRACE();
-
-		// Add the lost into the histogram.
-		if (this->packetLossHistory.size() == PacketLossHistogramLength)
-		{
-			this->packetLossHistory.pop_front();
-		}
-
-		this->packetLossHistory.push_back(packetLoss);
-
-		/*
-		 * Scoring mechanism is a weighted average.
-		 *
-		 * The more recent the score is, the more weight it has.
-		 * The oldest score has a weight of 1 and subsequent scores weight is
-		 * increased by one sequentially.
-		 *
-		 * Ie:
-		 * - scores: [1,2,3,4]
-		 * - this->scores = ((1) + (2+2) + (3+3+3) + (4+4+4+4)) / 10 = 2.8 => 3
-		 */
-
-		size_t weight{ 0 };
-		size_t samples{ 0 };
-		double totalPacketLoss{ 0 };
-
-		for (auto packetLossEntry : this->packetLossHistory)
-		{
-			weight++;
-			samples += weight;
-			totalPacketLoss += weight * packetLossEntry;
-		}
-
-		// clang-tidy "thinks" that this can lead to division by zero but we are
-		// smarter.
-		// NOLINTNEXTLINE(clang-analyzer-core.DivideZero)
-		this->packetLoss = totalPacketLoss / samples;
 	}
 
 	void TransportCongestionControlClient::SetMaxOutgoingBitrate(int64_t maxBitrate)
@@ -323,7 +263,7 @@ namespace RTC
 		ApplyBitrateUpdates();
 
 		this->bitrates.minBitrate =
-		  std::max<int64_t>(this->minOutgoingBitrate, RTC::TransportCongestionControlMinOutgoingBitrate);
+		  std::max<int64_t>(this->minOutgoingBitrate, this->absoluteMinOutgoingBitrate);
 	}
 
 	void TransportCongestionControlClient::SetDesiredBitrate(int64_t desiredBitrate, bool force)
@@ -355,12 +295,12 @@ namespace RTC
 #endif
 
 		this->bitrates.minBitrate =
-		  std::max<int64_t>(this->minOutgoingBitrate, RTC::TransportCongestionControlMinOutgoingBitrate);
+		  std::max<int64_t>(this->minOutgoingBitrate, this->absoluteMinOutgoingBitrate);
 
 		// NOTE: Setting 'startBitrate' to 'availableBitrate' has proven to generate
 		// more stable values.
-		this->bitrates.startBitrate = std::max<int64_t>(
-		  RTC::TransportCongestionControlMinOutgoingBitrate, this->bitrates.availableBitrate);
+		this->bitrates.startBitrate =
+		  std::max<int64_t>(this->absoluteMinOutgoingBitrate, this->bitrates.availableBitrate);
 
 		ApplyBitrateUpdates();
 	}
@@ -414,7 +354,7 @@ namespace RTC
 		}
 
 		this->bitrates.minBitrate =
-		  std::max<int64_t>(this->minOutgoingBitrate, RTC::TransportCongestionControlMinOutgoingBitrate);
+		  std::max<int64_t>(this->minOutgoingBitrate, this->absoluteMinOutgoingBitrate);
 
 		MS_DEBUG_DEV(
 		  "[desiredBitrate:%" PRIi64 ", desiredBitrateTrend:%" PRIu32 ", startBitrate:%" PRIi64
@@ -449,13 +389,6 @@ namespace RTC
 		MS_TRACE();
 
 		return this->bitrates.availableBitrate;
-	}
-
-	double TransportCongestionControlClient::GetPacketLoss() const
-	{
-		MS_TRACE();
-
-		return this->packetLoss;
 	}
 
 	void TransportCongestionControlClient::RescheduleNextAvailableBitrateEvent()

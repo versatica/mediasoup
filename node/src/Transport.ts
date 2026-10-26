@@ -10,6 +10,7 @@ import type {
 	TransportSocketFlags,
 	TransportTuple,
 	SctpState,
+	SctpZeroChecksum,
 	RtpListenerDump,
 	SctpListenerDump,
 	RecvRtpHeaderExtensions,
@@ -68,6 +69,7 @@ import {
 	serializeRtpEncodingParameters,
 	serializeRtpParameters,
 } from './rtpParametersFbsUtils';
+import { serializeRtpMapping } from './rtpMappingFbsUtils';
 import type {
 	SctpParameters,
 	SctpNegotiatedCapabilities,
@@ -83,6 +85,7 @@ import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import { TraceDirection as FbsTraceDirection } from './fbs/common';
 import * as FbsRequest from './fbs/request';
+import type { Response as FbsResponse } from './fbs/response';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
 import * as FbsConsumer from './fbs/consumer';
 import * as FbsDataConsumer from './fbs/data-consumer';
@@ -98,6 +101,7 @@ export type TransportConstructorOptions<TransportAppData> = {
 	data: TransportData;
 	channel: Channel;
 	appData?: TransportAppData;
+	enableBwe: boolean;
 	getRouterRtpCapabilities: () => RtpCapabilities;
 	getProducerById: (producerId: string) => Producer | undefined;
 	getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
@@ -138,6 +142,10 @@ export abstract class TransportImpl<
 
 	// Custom app data.
 	#appData: TransportAppData;
+
+	// Whether bandwidth estimation runs on this transport, which is what tells
+	// whether Producers and Consumers created on it negotiate it at all.
+	protected readonly enableBwe: boolean;
 
 	// Method to retrieve Router RTP capabilities.
 	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
@@ -188,6 +196,7 @@ export abstract class TransportImpl<
 			data,
 			channel,
 			appData,
+			enableBwe,
 			getRouterRtpCapabilities,
 			getProducerById,
 			getDataProducerById,
@@ -202,6 +211,7 @@ export abstract class TransportImpl<
 		this.#data = data;
 		this.channel = channel;
 		this.#appData = appData ?? ({} as TransportAppData);
+		this.enableBwe = enableBwe;
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
@@ -409,6 +419,10 @@ export abstract class TransportImpl<
 	async setMaxIncomingBitrate(bitrate: number): Promise<void> {
 		logger.debug(`setMaxIncomingBitrate() [bitrate:${bitrate}]`);
 
+		if (!utils.isUnsignedSafeInteger(bitrate)) {
+			throw new TypeError('bitrate must be an unsigned integer');
+		}
+
 		/* Build Request. */
 		const requestOffset =
 			FbsTransport.SetMaxIncomingBitrateRequest.createSetMaxIncomingBitrateRequest(
@@ -427,6 +441,10 @@ export abstract class TransportImpl<
 	async setMaxOutgoingBitrate(bitrate: number): Promise<void> {
 		logger.debug(`setMaxOutgoingBitrate() [bitrate:${bitrate}]`);
 
+		if (!utils.isUnsignedSafeInteger(bitrate)) {
+			throw new TypeError('bitrate must be an unsigned integer');
+		}
+
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
 			BigInt(bitrate)
@@ -442,6 +460,10 @@ export abstract class TransportImpl<
 
 	async setMinOutgoingBitrate(bitrate: number): Promise<void> {
 		logger.debug(`setMinOutgoingBitrate() [bitrate:${bitrate}]`);
+
+		if (!utils.isUnsignedSafeInteger(bitrate)) {
+			throw new TypeError('bitrate must be an unsigned integer');
+		}
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMinOutgoingBitrateRequestT(
@@ -480,6 +502,12 @@ export abstract class TransportImpl<
 
 		// This may throw.
 		ortc.validateAndNormalizeRtpParameters(clonedRtpParameters);
+
+		// A transport that doesn't run bandwidth estimation must not negotiate it,
+		// so whatever was given for it is dropped rather than honoured.
+		if (!this.enableBwe) {
+			ortc.disableBweInRtpParameters(clonedRtpParameters);
+		}
 
 		// If missing or empty encodings, add one.
 		if (
@@ -634,6 +662,7 @@ export abstract class TransportImpl<
 			remoteRtpCapabilities: clonedRtpCapabilities,
 			pipe,
 			enableRtx,
+			enableBwe: this.enableBwe,
 		});
 
 		// Set MID.
@@ -848,7 +877,7 @@ export abstract class TransportImpl<
 
 		let type: DataConsumerType;
 		let sctpStreamParameters: SctpStreamParameters | undefined;
-		let sctpStreamId: number;
+		let sctpStreamId: number | undefined;
 
 		// If this is a DirectTransport, sctpStreamParameters must not be used.
 		if (this.type === 'direct') {
@@ -892,40 +921,48 @@ export abstract class TransportImpl<
 				}
 			}
 
-			if (!ordered) {
-				if (maxPacketLifeTime !== undefined) {
-					sctpStreamParameters.ordered = false;
-					sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
-				}
-
-				if (maxRetransmits !== undefined) {
-					sctpStreamParameters.ordered = false;
-					sctpStreamParameters.maxRetransmits = maxRetransmits;
-				}
+			if (
+				!ordered &&
+				(maxPacketLifeTime !== undefined || maxRetransmits !== undefined)
+			) {
+				sctpStreamParameters.ordered = false;
+				sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
+				sctpStreamParameters.maxRetransmits = maxRetransmits;
 			}
 		}
 
 		const { label, protocol } = dataProducer;
 		const dataConsumerId = utils.generateUUIDv4();
 
-		const requestOffset = createConsumeDataRequest({
-			builder: this.channel.bufferBuilder,
-			dataConsumerId,
-			dataProducerId,
-			type,
-			sctpStreamParameters,
-			label,
-			protocol,
-			paused,
-			subchannels,
-		});
+		let response: FbsResponse;
 
-		const response = await this.channel.request(
-			FbsRequest.Method.TRANSPORT_CONSUME_DATA,
-			FbsRequest.Body.Transport_ConsumeDataRequest,
-			requestOffset,
-			this.internal.transportId
-		);
+		try {
+			const requestOffset = createConsumeDataRequest({
+				builder: this.channel.bufferBuilder,
+				dataConsumerId,
+				dataProducerId,
+				type,
+				sctpStreamParameters,
+				label,
+				protocol,
+				paused,
+				subchannels,
+			});
+
+			response = await this.channel.request(
+				FbsRequest.Method.TRANSPORT_CONSUME_DATA,
+				FbsRequest.Body.Transport_ConsumeDataRequest,
+				requestOffset,
+				this.internal.transportId
+			);
+		} catch (error) {
+			// No DataConsumer will use the allocated SCTP stream id, so release it.
+			if (this.#sctpStreamIds && sctpStreamId !== undefined) {
+				this.#sctpStreamIds[sctpStreamId] = 0;
+			}
+
+			throw error;
+		}
 
 		/* Decode Response. */
 		const consumeDataResponse = new FbsDataConsumer.DumpResponse();
@@ -959,14 +996,14 @@ export abstract class TransportImpl<
 		dataConsumer.on('@close', () => {
 			this.dataConsumers.delete(dataConsumer.id);
 
-			if (this.#sctpStreamIds) {
+			if (this.#sctpStreamIds && sctpStreamId !== undefined) {
 				this.#sctpStreamIds[sctpStreamId] = 0;
 			}
 		});
 		dataConsumer.on('@dataproducerclose', () => {
 			this.dataConsumers.delete(dataConsumer.id);
 
-			if (this.#sctpStreamIds) {
+			if (this.#sctpStreamIds && sctpStreamId !== undefined) {
 				this.#sctpStreamIds[sctpStreamId] = 0;
 			}
 		});
@@ -1129,6 +1166,28 @@ export function serializeProtocol(
 	}
 }
 
+export function serializeSctpZeroChecksum(
+	sctpZeroChecksum: SctpZeroChecksum
+): FbsTransport.SctpZeroChecksum {
+	switch (sctpZeroChecksum) {
+		case 'sctp-over-dtls': {
+			return FbsTransport.SctpZeroChecksum.SCTP_OVER_DTLS;
+		}
+
+		case 'trusted-network': {
+			return FbsTransport.SctpZeroChecksum.TRUSTED_NETWORK;
+		}
+
+		case 'none': {
+			return FbsTransport.SctpZeroChecksum.NONE;
+		}
+
+		default: {
+			throw new TypeError(`invalid sctpZeroChecksum: ${sctpZeroChecksum}`);
+		}
+	}
+}
+
 export function parseTuple(binary: FbsTransport.Tuple): TransportTuple {
 	return {
 		// @deprecated Use localAddress instead.
@@ -1272,14 +1331,7 @@ export function parseBaseTransportStats(
 			binary.minOutgoingBitrate() !== null
 				? Number(binary.minOutgoingBitrate())
 				: undefined,
-		rtpPacketLossReceived:
-			typeof binary.rtpPacketLossReceived() === 'number'
-				? Number(binary.rtpPacketLossReceived())
-				: undefined,
-		rtpPacketLossSent:
-			typeof binary.rtpPacketLossSent() === 'number'
-				? Number(binary.rtpPacketLossSent())
-				: undefined,
+		roundTripTime: binary.roundTripTime() ?? undefined,
 	};
 }
 
@@ -1288,6 +1340,22 @@ export function parseTransportTraceEventData(
 ): TransportTraceEventData {
 	switch (trace.type()) {
 		case FbsTransport.TraceEventType.BWE: {
+			const direction =
+				trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out';
+
+			if (trace.infoType() === FbsTransport.TraceInfo.OldBweTraceInfo) {
+				const info = new FbsTransport.OldBweTraceInfo();
+
+				trace.info(info);
+
+				return {
+					type: 'bwe',
+					timestamp: Number(trace.timestamp()),
+					direction,
+					info: parseOldBweTraceInfo(info),
+				};
+			}
+
 			const info = new FbsTransport.BweTraceInfo();
 
 			trace.info(info);
@@ -1295,19 +1363,22 @@ export function parseTransportTraceEventData(
 			return {
 				type: 'bwe',
 				timestamp: Number(trace.timestamp()),
-				direction:
-					trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
+				direction,
 				info: parseBweTraceInfo(info),
 			};
 		}
 
 		case FbsTransport.TraceEventType.PROBATION: {
+			const info = new FbsTransport.ProbationTraceInfo();
+
+			trace.info(info);
+
 			return {
 				type: 'probation',
 				timestamp: Number(trace.timestamp()),
 				direction:
 					trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-				info: {},
+				info: info.rtpPacket()!.unpack(),
 			};
 		}
 	}
@@ -1358,6 +1429,20 @@ function transportTraceEventTypeFromFbs(
 }
 
 function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo): {
+	desiredBitrate: number;
+	minBitrate: number;
+	maxBitrate: number;
+	availableBitrate: number;
+} {
+	return {
+		desiredBitrate: Number(binary.desiredBitrate()),
+		minBitrate: Number(binary.minBitrate()),
+		maxBitrate: Number(binary.maxBitrate()),
+		availableBitrate: Number(binary.availableBitrate()),
+	};
+}
+
+function parseOldBweTraceInfo(binary: FbsTransport.OldBweTraceInfo): {
 	desiredBitrate: number;
 	effectiveDesiredBitrate: number;
 	minBitrate: number;
@@ -1487,7 +1572,7 @@ function createProduceRequest({
 }): number {
 	const producerIdOffset = builder.createString(producerId);
 	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
-	const rtpMappingOffset = ortc.serializeRtpMapping(builder, rtpMapping);
+	const rtpMappingOffset = serializeRtpMapping(builder, rtpMapping);
 
 	FbsTransport.ProduceRequest.startProduceRequest(builder);
 	FbsTransport.ProduceRequest.addProducerId(builder, producerIdOffset);

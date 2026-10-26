@@ -28,14 +28,14 @@ const ankerl::unordered_dense::map<std::string, LogLevel> Settings::String2LogLe
 	{ "debug", LogLevel::LOG_DEBUG },
 	{ "warn",  LogLevel::LOG_WARN  },
 	{ "error", LogLevel::LOG_ERROR },
-	{ "none",  LogLevel::LOG_NONE  }
+	{ "none",  LogLevel::LOG_NONE  },
 };
 const ankerl::unordered_dense::map<LogLevel, std::string> Settings::LogLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
 	{ LogLevel::LOG_WARN,  "warn"  },
 	{ LogLevel::LOG_ERROR, "error" },
-	{ LogLevel::LOG_NONE,  "none"  }
+	{ LogLevel::LOG_NONE,  "none"  },
 };
 // clang-format on
 
@@ -58,8 +58,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ .name="rtcMaxPort",           .has_arg=optional_argument, .flag=nullptr, .val='M' },
 		{ .name="dtlsCertificateFile",  .has_arg=optional_argument, .flag=nullptr, .val='c' },
 		{ .name="dtlsPrivateKeyFile",   .has_arg=optional_argument, .flag=nullptr, .val='p' },
+		// NOTE: The libwebrtcFieldTrials option is still allowed until we only
+		// support the built-in BWE.
+		// TODO: Remove when we only support the built-in BWE.
 		{ .name="libwebrtcFieldTrials", .has_arg=optional_argument, .flag=nullptr, .val='W' },
-		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  }
+		{ .name=nullptr,                .has_arg=0,                 .flag=nullptr,  .val=0  },
 	};
 	// clang-format on
 	std::string stringValue;
@@ -144,6 +147,10 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'W':
 			{
+#ifdef MS_USE_BUILTIN_BWE
+				// TODO: Remove when we only support the built-in BWE.
+				MS_WARN_TAG(info, "ignoring libwebrtcFieldTrials since this worker uses the built-in BWE");
+#else
 				stringValue = std::string(optarg);
 
 				if (stringValue != Settings::configuration.libwebrtcFieldTrials)
@@ -154,6 +161,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 					Settings::configuration.libwebrtcFieldTrials = stringValue;
 				}
+#endif
 
 				break;
 			}
@@ -210,7 +218,7 @@ void Settings::SetLogLevel(std::string& level)
 	// Lowcase given level.
 	Utils::String::ToLowerCase(level);
 
-	if (Settings::String2LogLevel.find(level) == Settings::String2LogLevel.end())
+	if (!Settings::String2LogLevel.contains(level))
 	{
 		MS_THROW_TYPE_ERROR("invalid value '%s' for logLevel", level.c_str());
 	}
@@ -223,7 +231,7 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 	MS_TRACE();
 
 	// Reset logTags.
-	struct LogTags logTags;
+	LogTags logTags;
 
 	for (const auto& tag : tags)
 	{
@@ -364,11 +372,13 @@ void Settings::PrintConfiguration()
 		  info, "  dtlsCertificateFile: %s", Settings::configuration.dtlsCertificateFile.c_str());
 		MS_DEBUG_TAG(info, "  dtlsPrivateKeyFile: %s", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
+#ifndef MS_USE_BUILTIN_BWE
 	if (!Settings::configuration.libwebrtcFieldTrials.empty())
 	{
 		MS_DEBUG_TAG(
 		  info, "  libwebrtcFieldTrials: %s", Settings::configuration.libwebrtcFieldTrials.c_str());
 	}
+#endif
 
 	MS_DEBUG_TAG(info, "</configuration>");
 }

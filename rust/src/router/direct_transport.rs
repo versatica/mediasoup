@@ -24,7 +24,6 @@ use log::{debug, error};
 use mediasoup_sys::fbs::{direct_transport, notification, response, transport};
 use mediasoup_types::data_structures::{AppData, SctpState};
 use mediasoup_types::sctp_parameters::SctpParameters;
-use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -32,8 +31,9 @@ use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, LazyLock, Weak};
 
-static USED_SCTP_STREAM_IDS: LazyLock<Mutex<IntMap<u16, bool>>> =
-    LazyLock::new(|| Mutex::new(IntMap::default()));
+// NOTE: A DirectTransport never consumes data over SCTP, so no stream id is ever allocated and
+// this pool is intentionally left empty.
+static USED_SCTP_STREAM_IDS: LazyLock<Mutex<Vec<bool>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
 static NEXT_SCTP_STREAM_ID: LazyLock<Mutex<u16>> = LazyLock::new(|| Mutex::new(0));
 
@@ -181,10 +181,7 @@ pub struct DirectTransportStat {
     pub max_incoming_bitrate: Option<u64>,
     pub max_outgoing_bitrate: Option<u64>,
     pub min_outgoing_bitrate: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rtp_packet_loss_received: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rtp_packet_loss_sent: Option<f64>,
+    pub round_trip_time: Option<f32>,
 }
 
 impl<'a> TryFromFbs<'a> for DirectTransportStat {
@@ -215,8 +212,7 @@ impl<'a> TryFromFbs<'a> for DirectTransportStat {
             max_incoming_bitrate: stats.base.max_incoming_bitrate,
             max_outgoing_bitrate: stats.base.max_outgoing_bitrate,
             min_outgoing_bitrate: stats.base.min_outgoing_bitrate,
-            rtp_packet_loss_received: stats.base.rtp_packet_loss_received,
-            rtp_packet_loss_sent: stats.base.rtp_packet_loss_sent,
+            round_trip_time: stats.base.round_trip_time,
         })
     }
 }
@@ -388,7 +384,11 @@ impl Transport for DirectTransport {
         debug!("produce()");
 
         let producer = self
-            .produce_impl(producer_options, TransportType::Direct)
+            .produce_impl(
+                producer_options,
+                TransportType::Direct,
+                /* enable_bwe */ false,
+            )
             .await?;
 
         self.inner.handlers.new_producer.call_simple(&producer);
@@ -400,7 +400,12 @@ impl Transport for DirectTransport {
         debug!("consume()");
 
         let consumer = self
-            .consume_impl(consumer_options, TransportType::Direct, false)
+            .consume_impl(
+                consumer_options,
+                TransportType::Direct,
+                false,
+                /* enable_bwe */ false,
+            )
             .await?;
 
         self.inner.handlers.new_consumer.call_simple(&consumer);
@@ -568,7 +573,7 @@ impl TransportImpl for DirectTransport {
         None
     }
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
+    fn used_sctp_stream_ids(&self) -> &Mutex<Vec<bool>> {
         &USED_SCTP_STREAM_IDS
     }
 

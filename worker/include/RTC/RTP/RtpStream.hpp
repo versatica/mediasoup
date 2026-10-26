@@ -3,15 +3,6 @@
 
 #include "common.hpp"
 #include "FBS/rtpStream.h"
-#include "RTC/RTCP/FeedbackPsFir.hpp"
-#include "RTC/RTCP/FeedbackPsPli.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/Packet.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/Sdes.hpp"
-#include "RTC/RTCP/SenderReport.hpp"
-#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
-#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtxStream.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -25,6 +16,22 @@ namespace RTC
 	{
 		class RtpStream
 		{
+		public:
+			/**
+			 * Largest jump forward in sequence number taken as a gap within the stream
+			 * rather than as a restart of it.
+			 */
+			static constexpr uint16_t MaxDropout{ 3000 };
+			/**
+			 * How far back a sequence number may land for its packet to be taken as
+			 * reordered rather than as a restart of the stream.
+			 */
+			static constexpr uint16_t MaxMisorder{ 1500 };
+			/**
+			 * Size of the RTP sequence number space, which is where it wraps around.
+			 */
+			static constexpr uint32_t RtpSeqMod{ 1 << 16 };
+
 		protected:
 			class Listener
 			{
@@ -58,6 +65,7 @@ namespace RTC
 				bool useDtx{ false };
 				uint8_t spatialLayers{ 1 };
 				uint8_t temporalLayers{ 1 };
+				bool ksvc{ false };
 			};
 
 		public:
@@ -159,19 +167,25 @@ namespace RTC
 				return this->params.temporalLayers;
 			}
 
+			/**
+			 * Whether the spatial layers only predict from each other on key frames,
+			 * so each of them can be decoded without the ones below it.
+			 */
+			bool IsKSvc() const
+			{
+				return this->params.ksvc;
+			}
+
 			virtual bool ReceiveStreamPacket(const RTP::Packet* packet);
 
 			virtual void Pause() = 0;
 
 			virtual void Resume() = 0;
 
+			/**
+			 * Bitrate of every spatial layer and every temporal layer.
+			 */
 			virtual int64_t GetBitrate(int64_t nowMs) = 0;
-
-			virtual int64_t GetBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
-
-			virtual int64_t GetSpatialLayerBitrate(int64_t nowMs, uint8_t spatialLayer) = 0;
-
-			virtual int64_t GetLayerBitrate(int64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) = 0;
 
 			void ResetScore(uint8_t score, bool notify);
 
@@ -180,12 +194,21 @@ namespace RTC
 				return this->fractionLost;
 			}
 
+			int32_t GetPacketsLost() const
+			{
+				return this->packetsLost;
+			}
+
 			float GetLossPercentage() const
 			{
 				return static_cast<float>(this->fractionLost) * 100 / 256;
 			}
 
-			float GetRttMs() const
+			/**
+			 * Round trip time of this stream (ms), or no value while nothing has been
+			 * measured.
+			 */
+			std::optional<float> GetRttMs() const
 			{
 				return this->rttMs;
 			}
@@ -209,11 +232,6 @@ namespace RTC
 			uint8_t GetScore() const
 			{
 				return this->score;
-			}
-
-			int64_t GetActiveMs() const
-			{
-				return this->shared->GetTimeMs() - this->activeSinceMs;
 			}
 
 		protected:
@@ -260,29 +278,32 @@ namespace RTC
 			// monotonic clock.
 			// NOTE: Only meaningful in a send stream, whose packets arrive already carrying
 			// their capture instant. In a receive stream it is the Producer that tells it,
-			// once this class has already seen the packet, so
-			// RtpStreamRecv::GetCaptureMapping() is what must be used there.
+			// once this class has already seen the packet, so it stays empty there.
 			std::optional<int64_t> maxPacketCaptureAtUs;
 			int32_t packetsLost{ 0 };
 			uint8_t fractionLost{ 0 };
 			// Jitter in RTP timestamp units. As per spec it's kept as floating value
 			// although it's exposed as integer in the stats.
 			float jitter{ 0 };
-			size_t packetsDiscarded{ 0 };
-			size_t packetsRetransmitted{ 0 };
-			size_t packetsRepaired{ 0 };
-			size_t nackCount{ 0 };
-			size_t nackPacketCount{ 0 };
-			size_t pliCount{ 0 };
-			size_t firCount{ 0 };
+			// NOTE: These counters are never reset and nothing bounds them, so they are
+			// as wide as the stats fields they end up in rather than as wide as a
+			// pointer.
+			uint64_t packetsDiscarded{ 0 };
+			uint64_t packetsRetransmitted{ 0 };
+			uint64_t packetsRepaired{ 0 };
+			uint64_t nackCount{ 0 };
+			uint64_t nackPacketCount{ 0 };
+			uint64_t pliCount{ 0 };
+			uint64_t firCount{ 0 };
 			// Packets repaired at last interval for score calculation.
-			size_t repairedPriorScore{ 0 };
+			uint64_t repairedPriorScore{ 0 };
 			// Packets retransmitted at last interval for score calculation.
-			size_t retransmittedPriorScore{ 0 };
+			uint64_t retransmittedPriorScore{ 0 };
 			// Correspondence between wall clock and RTP timeline given by the last Sender
 			// Report.
 			std::optional<RTP::RtpStream::SenderReportMapping> lastSenderReportMapping;
-			float rttMs{ 0.0f };
+			// Round trip time measured on this stream (ms).
+			std::optional<float> rttMs;
 			// Instance of RtxStream.
 			RTP::RtxStream* rtxStream{ nullptr };
 
@@ -292,8 +313,6 @@ namespace RTC
 			std::vector<uint8_t> scores;
 			// Whether at least a RTP packet has been received.
 			bool started{ false };
-			// Last time since the stream is active.
-			int64_t activeSinceMs{ 0 };
 		};
 	} // namespace RTP
 } // namespace RTC

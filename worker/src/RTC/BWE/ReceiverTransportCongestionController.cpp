@@ -1,0 +1,118 @@
+#define MS_CLASS "RTC::BWE::ReceiverTransportCongestionController"
+// #define MS_LOG_DEV_LEVEL 3
+
+#include "RTC/BWE/ReceiverTransportCongestionController.hpp"
+#include "Logger.hpp"
+
+namespace RTC
+{
+	namespace BWE
+	{
+		/* Instance methods. */
+
+		ReceiverTransportCongestionController::ReceiverTransportCongestionController(
+		  Listener* listener, SharedInterface* shared, ReceiverTransportCongestionControllerOptions options)
+		  : listener(listener),
+		    shared(shared),
+		    transportWideCcFeedbackGenerator(this, shared, options.maxRtcpPacketLen),
+		    remoteBitrateEstimator(this),
+		    rembGenerator(this)
+		{
+			MS_TRACE();
+		}
+
+		void ReceiverTransportCongestionController::ReceiveRtpPacket(
+		  const RTC::RTP::Packet* packet, std::optional<RTC::Media::Kind> kind, int64_t receivedAtUs)
+		{
+			MS_TRACE();
+
+			uint16_t wideSeqNumber{ 0 };
+
+			// This path reports when the packet arrived and nothing else, so what the
+			// packet carries does not matter and neither does whether it still belongs
+			// to a stream of ours.
+			if (packet->ReadTransportWideCc01(wideSeqNumber))
+			{
+				this->transportWideCcFeedbackGenerator.ReceiveRtpPacket(receivedAtUs, packet);
+			}
+			// Audio packets take no part in the estimation of the incoming link, so
+			// their streams are not announced in the REMB either, and a packet whose
+			// stream is gone cannot be told apart from an audio one.
+			else if (kind.has_value() && kind.value() != RTC::Media::Kind::AUDIO)
+			{
+				this->remoteBitrateEstimator.ReceiveRtpPacket(packet, receivedAtUs, this->shared->GetTimeUs());
+			}
+
+			// The cap has to keep being announced whatever was negotiated, since a
+			// remote sender that only reports arrival times is never told anything
+			// else.
+			this->rembGenerator.MaySendLimitationRembFeedback(this->shared->GetTimeMs());
+		}
+
+		void ReceiverTransportCongestionController::OnRttUpdate(int64_t avgRttUs)
+		{
+			MS_TRACE();
+
+			this->remoteBitrateEstimator.OnRttUpdate(avgRttUs);
+		}
+
+		void ReceiverTransportCongestionController::RemoveStream(uint32_t ssrc)
+		{
+			MS_TRACE();
+
+			this->remoteBitrateEstimator.RemoveStream(ssrc);
+		}
+
+		void ReceiverTransportCongestionController::SetMaxIncomingBitrate(std::optional<int64_t> bitrate)
+		{
+			MS_TRACE();
+
+			this->rembGenerator.SetMaxIncomingBitrate(this->shared->GetTimeMs(), bitrate);
+		}
+
+		std::optional<int64_t> ReceiverTransportCongestionController::GetAvailableBitrate() const
+		{
+			MS_TRACE();
+
+			const int64_t bitrate = this->remoteBitrateEstimator.GetLatestEstimate();
+
+			// NOTE: Zero is how the estimator says that it has nothing, either because
+			// no estimation is valid yet or because no stream is active. A measured
+			// bitrate never comes out as zero, since the rate control clamps it to the
+			// lowest it is configured with.
+			if (bitrate == 0)
+			{
+				return std::nullopt;
+			}
+
+			return bitrate;
+		}
+
+		void ReceiverTransportCongestionController::OnTransportWideCcFeedbackGeneratorSendPacket(
+		  TransportWideCcFeedbackGenerator* /*transportWideCcFeedbackGenerator*/,
+		  RTC::RTCP::FeedbackRtpTransportPacket* packet)
+		{
+			MS_TRACE();
+
+			this->listener->OnReceiverTransportCongestionControllerSendRtcpPacket(this, packet);
+		}
+
+		void ReceiverTransportCongestionController::OnRemoteBitrateEstimatorAbsSendTimeBitrateChanged(
+		  RemoteBitrateEstimatorAbsSendTime* /*remoteBitrateEstimator*/,
+		  const std::vector<uint32_t>& ssrcs,
+		  int64_t bitrate)
+		{
+			MS_TRACE();
+
+			this->rembGenerator.OnReceiveBitrateChanged(this->shared->GetTimeMs(), ssrcs, bitrate);
+		}
+
+		void ReceiverTransportCongestionController::OnRembGeneratorSendPacket(
+		  RembGenerator* /*rembGenerator*/, RTC::RTCP::FeedbackPsRembPacket* packet)
+		{
+			MS_TRACE();
+
+			this->listener->OnReceiverTransportCongestionControllerSendRtcpPacket(this, packet);
+		}
+	} // namespace BWE
+} // namespace RTC

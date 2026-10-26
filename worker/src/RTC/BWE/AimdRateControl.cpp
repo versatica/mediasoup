@@ -3,6 +3,7 @@
 
 #include "RTC/BWE/AimdRateControl.hpp"
 #include "Logger.hpp"
+#include "RTC/Consts.hpp"
 #include <cmath>
 
 namespace RTC
@@ -21,8 +22,6 @@ namespace RTC
 		// Bounds of how often the bitrate may be reduced, derived from the RTT.
 		static constexpr int64_t MinBitrateReductionIntervalUs{ 10 * 1000 };
 		static constexpr int64_t MaxBitrateReductionIntervalUs{ 200 * 1000 };
-		// Bitrate the target is never taken below unless configured otherwise (bps).
-		static constexpr int64_t CongestionControllerMinBitrate{ 5000 };
 		// Bitrate the target starts from before anything has been measured (bps).
 		static constexpr int64_t MaxConfiguredBitrate{ 30000 * 1000 };
 		// Headroom allowed on top of the measured throughput when increasing (bps).
@@ -64,7 +63,7 @@ namespace RTC
 
 		AimdRateControl::AimdRateControl(AimdRateControlOptions options)
 		  : options(options),
-		    minConfiguredBitrate(CongestionControllerMinBitrate),
+		    minConfiguredBitrate(Consts::BweMinBitrate),
 		    maxConfiguredBitrate(MaxConfiguredBitrate),
 		    currentBitrate(this->maxConfiguredBitrate),
 		    latestEstimatedThroughput(this->currentBitrate),
@@ -73,7 +72,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		int64_t AimdRateControl::Update(const Types::RateControlInput& input, int64_t atTimeUs)
+		int64_t AimdRateControl::Update(const Types::RateControlInput& input, int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -85,11 +84,11 @@ namespace RTC
 				{
 					if (input.estimatedThroughput.has_value())
 					{
-						this->timeFirstThroughputEstimateUs = atTimeUs;
+						this->timeFirstThroughputEstimateUs = nowUs;
 					}
 				}
 				else if (
-				  atTimeUs - this->timeFirstThroughputEstimateUs.value() > InitializationTimeUs &&
+				  nowUs - this->timeFirstThroughputEstimateUs.value() > InitializationTimeUs &&
 				  input.estimatedThroughput.has_value())
 				{
 					this->currentBitrate       = input.estimatedThroughput.value();
@@ -97,18 +96,18 @@ namespace RTC
 				}
 			}
 
-			ChangeBitrate(input, atTimeUs);
+			ChangeBitrate(input, nowUs);
 
 			return this->currentBitrate;
 		}
 
-		void AimdRateControl::SetEstimate(int64_t bitrate, int64_t atTimeUs)
+		void AimdRateControl::SetEstimate(int64_t bitrate, int64_t nowUs)
 		{
 			MS_TRACE();
 
 			this->bitrateIsInitialized    = true;
 			this->currentBitrate          = ClampBitrate(bitrate);
-			this->timeLastBitrateChangeUs = atTimeUs;
+			this->timeLastBitrateChangeUs = nowUs;
 		}
 
 		void AimdRateControl::SetStartBitrate(int64_t startBitrate)
@@ -150,7 +149,7 @@ namespace RTC
 			this->networkEstimate = estimate;
 		}
 
-		bool AimdRateControl::IsTimeToReduceFurther(int64_t atTimeUs, int64_t estimatedThroughput) const
+		bool AimdRateControl::IsTimeToReduceFurther(int64_t nowUs, int64_t estimatedThroughput) const
 		{
 			MS_TRACE();
 
@@ -163,7 +162,7 @@ namespace RTC
 				return true;
 			}
 
-			if (atTimeUs - this->timeLastBitrateChangeUs.value() >= bitrateReductionIntervalUs)
+			if (nowUs - this->timeLastBitrateChangeUs.value() >= bitrateReductionIntervalUs)
 			{
 				return true;
 			}
@@ -178,11 +177,11 @@ namespace RTC
 			return false;
 		}
 
-		bool AimdRateControl::IsInitialTimeToReduceFurther(int64_t atTimeUs) const
+		bool AimdRateControl::IsInitialTimeToReduceFurther(int64_t nowUs) const
 		{
 			MS_TRACE();
 
-			return IsValidEstimate() && IsTimeToReduceFurther(atTimeUs, (GetLatestEstimate() / 2) - 1);
+			return IsValidEstimate() && IsTimeToReduceFurther(nowUs, (GetLatestEstimate() / 2) - 1);
 		}
 
 		double AimdRateControl::GetNearMaxIncreaseRateBpsPerSecond() const
@@ -218,7 +217,7 @@ namespace RTC
 			return std::clamp(intervalUs, MinFeedbackIntervalUs, MaxFeedbackIntervalUs);
 		}
 
-		void AimdRateControl::ChangeBitrate(const Types::RateControlInput& input, int64_t atTimeUs)
+		void AimdRateControl::ChangeBitrate(const Types::RateControlInput& input, int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -239,7 +238,7 @@ namespace RTC
 				return;
 			}
 
-			ChangeState(input, atTimeUs);
+			ChangeState(input, nowUs);
 
 			switch (this->rateControlState)
 			{
@@ -289,7 +288,7 @@ namespace RTC
 							  "there is a link capacity estimate but the bitrate was never changed");
 
 							const int64_t additiveIncrease =
-							  AdditiveRateIncrease(atTimeUs, this->timeLastBitrateChangeUs.value());
+							  AdditiveRateIncrease(nowUs, this->timeLastBitrateChangeUs.value());
 
 							increasedBitrate = this->currentBitrate + additiveIncrease;
 						}
@@ -298,7 +297,7 @@ namespace RTC
 							// Without an estimate of the link capacity, ramp up faster to
 							// discover it.
 							const int64_t multiplicativeIncrease = MultiplicativeRateIncrease(
-							  atTimeUs, this->timeLastBitrateChangeUs, this->currentBitrate);
+							  nowUs, this->timeLastBitrateChangeUs, this->currentBitrate);
 
 							increasedBitrate = this->currentBitrate + multiplicativeIncrease;
 						}
@@ -306,7 +305,7 @@ namespace RTC
 						newBitrate = std::min(increasedBitrate, increaseLimit);
 					}
 
-					this->timeLastBitrateChangeUs = atTimeUs;
+					this->timeLastBitrateChangeUs = nowUs;
 
 					break;
 				}
@@ -353,18 +352,18 @@ namespace RTC
 
 					// Stay on hold until the queues of the network are drained.
 					this->rateControlState        = RateControlState::HOLD;
-					this->timeLastBitrateChangeUs = atTimeUs;
+					this->timeLastBitrateChangeUs = nowUs;
 
 					break;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 
 			this->currentBitrate = ClampBitrate(newBitrate.value_or(this->currentBitrate));
 		}
 
-		void AimdRateControl::ChangeState(const Types::RateControlInput& input, int64_t atTimeUs)
+		void AimdRateControl::ChangeState(const Types::RateControlInput& input, int64_t nowUs)
 		{
 			MS_TRACE();
 
@@ -374,7 +373,7 @@ namespace RTC
 				{
 					if (this->rateControlState == RateControlState::HOLD)
 					{
-						this->timeLastBitrateChangeUs = atTimeUs;
+						this->timeLastBitrateChangeUs = nowUs;
 						this->rateControlState        = RateControlState::INCREASE;
 					}
 
@@ -398,7 +397,7 @@ namespace RTC
 					break;
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 		}
 
@@ -437,7 +436,7 @@ namespace RTC
 		}
 
 		int64_t AimdRateControl::MultiplicativeRateIncrease(
-		  int64_t atTimeUs, std::optional<int64_t> lastTimeUs, int64_t currentBitrate) const
+		  int64_t nowUs, std::optional<int64_t> lastTimeUs, int64_t currentBitrate) const
 		{
 			MS_TRACE();
 
@@ -446,7 +445,7 @@ namespace RTC
 			if (lastTimeUs.has_value())
 			{
 				const double timeSinceLastUpdateSeconds =
-				  static_cast<double>(atTimeUs - lastTimeUs.value()) / 1000000.0;
+				  static_cast<double>(nowUs - lastTimeUs.value()) / 1000000.0;
 
 				alpha = std::pow(alpha, std::min(timeSinceLastUpdateSeconds, 1.0));
 			}
@@ -456,11 +455,11 @@ namespace RTC
 			  MinMultiplicativeIncrease);
 		}
 
-		int64_t AimdRateControl::AdditiveRateIncrease(int64_t atTimeUs, int64_t lastTimeUs) const
+		int64_t AimdRateControl::AdditiveRateIncrease(int64_t nowUs, int64_t lastTimeUs) const
 		{
 			MS_TRACE();
 
-			const double timePeriodSeconds = static_cast<double>(atTimeUs - lastTimeUs) / 1000000.0;
+			const double timePeriodSeconds = static_cast<double>(nowUs - lastTimeUs) / 1000000.0;
 
 			return static_cast<int64_t>(GetNearMaxIncreaseRateBpsPerSecond() * timePeriodSeconds);
 		}

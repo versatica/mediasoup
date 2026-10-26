@@ -2,6 +2,9 @@
 #define MS_RTC_PRODUCER_STREAM_MANAGER_HPP
 
 #include "common.hpp"
+#ifdef MS_USE_BUILTIN_BWE
+#include "RTC/BWE/BitrateAllocator.hpp"
+#endif
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Packet.hpp"
@@ -60,56 +63,108 @@ namespace RTC
 		  RTC::Media::Kind kind,
 		  bool keyFrameSupported,
 		  Listener* listener,
-		  SharedInterface* shared)
-		  : listener(listener),
-		    shared(shared),
-		    keyFrameSupported(keyFrameSupported),
-		    kind(kind),
-		    consumableRtpEncodings(consumableRtpEncodings),
-		    encodingContext(std::move(encodingContext)),
-		    preferredLayers(preferredLayers)
-		{
-		}
+		  SharedInterface* shared);
+
 		virtual ~ProducerStreamManager() = default;
 
 	public:
-		virtual RTC::ConsumerTypes::VideoLayers GetTargetLayers() const      = 0;
-		virtual int16_t GetCurrentSpatialLayer() const                       = 0;
-		virtual int16_t GetCurrentTemporalLayer() const                      = 0;
+		virtual RTC::ConsumerTypes::VideoLayers GetTargetLayers() const = 0;
+
+		virtual int16_t GetCurrentSpatialLayer() const = 0;
+
+		virtual int16_t GetCurrentTemporalLayer() const = 0;
+
+		/**
+		 * RTP streams of the Producer that the Consumer is forwarding.
+		 */
+		virtual std::vector<RTC::RTP::RtpStreamRecv*> GetProducerRtpStreams() const = 0;
+
 		virtual RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const = 0;
-		virtual RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const  = 0;
-		// Returns true if the given packet belongs to the stream currently being
-		// forwarded to the consumer. Used by Consumer to decide whether to account
-		// a discarded packet in the RTP sequence manager.
+
+		virtual RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const = 0;
+
+		/**
+		 * Returns true if the given packet belongs to the stream currently being
+		 * forwarded to the consumer. Used by Consumer to decide whether to account
+		 * a discarded packet in the RTP sequence manager.
+		 */
 		virtual bool IsPacketForCurrentStream(const RTC::RTP::Packet* packet) const = 0;
+
 		RTC::RTP::Codecs::EncodingContext* GetEncodingContext() const
 		{
 			return this->encodingContext.get();
 		}
+
 		const RTC::ConsumerTypes::VideoLayers& GetPreferredLayers() const
 		{
 			return this->preferredLayers;
 		}
+
 		void SetPreferredLayers(const RTC::ConsumerTypes::VideoLayers& layers)
 		{
 			this->preferredLayers = layers;
 		}
 
-		virtual void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)    = 0;
+		virtual void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
+
 		virtual void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
+
 		virtual void ProducerRtpStreamScore(
-		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) = 0;
+
 		virtual void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
 
+		/**
+		 * Only spatial layers within a same RTP stream can start or stop separately,
+		 * so just SVC cares about this.
+		 */
+		virtual void ProducerSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive);
+
+#ifndef MS_USE_BUILTIN_BWE
 		void SetExternallyManagedBitrate()
 		{
 			this->externallyManagedBitrate = true;
 		}
+#endif
 
+#ifdef MS_USE_BUILTIN_BWE
+		/**
+		 * Tell whether a bitrate allocation is running for this Transport, which is
+		 * what decides who applies the layers worked out here.
+		 *
+		 * @remarks
+		 * - While it is false there is nobody to ask for bitrate, so this one
+		 *   applies what it works out and tells the Transport nothing.
+		 */
+		void SetBweManaged(bool bweManaged)
+		{
+			this->bweManaged = bweManaged;
+		}
+
+		/**
+		 * The points this one may run at right now and which of them it is
+		 * running at.
+		 *
+		 * @remarks
+		 * - A manager with nothing to choose offers the single point it is
+		 *   putting out, which the bitrate allocation takes off the top instead
+		 *   of bidding for.
+		 */
+		virtual RTC::BWE::BitrateAllocator::Candidate::BitrateOptions GetBitrateOptions(
+		  int64_t nowMs) const = 0;
+
+		/**
+		 * Run at the given point from now on.
+		 */
+		virtual void SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option) = 0;
+#else
 		virtual int64_t IncreaseLayer(
 		  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) = 0;
-		virtual void ApplyLayers(int64_t rtpStreamActiveMs)                        = 0;
-		virtual int64_t GetDesiredBitrate(int64_t nowMs) const                     = 0;
+
+		virtual void ApplyLayers() = 0;
+#endif
+		virtual int64_t GetDesiredBitrate(int64_t nowMs) const = 0;
 
 		virtual RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,
@@ -117,45 +172,42 @@ namespace RTC
 		  uint32_t clockRate,
 		  uint32_t maxPacketTs) = 0;
 
-		virtual void RequestKeyFrame()                       = 0;
-		virtual void RequestKeyFrameForTargetSpatialLayer()  = 0;
+		virtual void RequestKeyFrame() = 0;
+
+		virtual void RequestKeyFrameForTargetSpatialLayer() = 0;
+
 		virtual void RequestKeyFrameForCurrentSpatialLayer() = 0;
 
 		virtual void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer) = 0;
 		virtual bool RecalculateTargetLayers(RTC::ConsumerTypes::VideoLayers& newTargetLayers) const = 0;
 
-		void MayChangeLayers(bool force)
-		{
-			RTC::ConsumerTypes::VideoLayers newTargetLayers;
+		void MayChangeLayers();
 
-			if (RecalculateTargetLayers(newTargetLayers))
-			{
-				// If bitrate externally managed, don't bother the transport unless
-				// the newTargetSpatialLayer has changed (or force is true).
-				// This is because, if bitrate is externally managed, the target temporal
-				// layer is managed by the available given bitrate so the transport
-				// will let us change it when it considers.
-				if (this->externallyManagedBitrate)
-				{
-					if (newTargetLayers.spatial != GetTargetLayers().spatial || force)
-					{
-						this->listener->OnProducerStreamManagerNeedBitrateChange();
-					}
-				}
-				else
-				{
-					UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
-				}
-			}
-		}
-		virtual void OnTransportConnected()    = 0;
+		virtual void OnTransportConnected() = 0;
+
 		virtual void OnTransportDisconnected() = 0;
-		virtual void OnPaused()                = 0;
-		virtual void OnResumed()               = 0;
+
+		virtual void OnPaused() = 0;
+
+		virtual void OnResumed() = 0;
 
 	protected:
 		virtual bool IsActive() const = 0;
 
+#ifdef MS_USE_BUILTIN_BWE
+		/**
+		 * Which of the given points is the one the bitrate allocation last
+		 * settled on.
+		 *
+		 * @returns No value if it has settled on none yet or if the point it
+		 *   settled on is not on offer anymore, which is what tells the
+		 *   allocation that this one is not climbing back to anything.
+		 */
+		std::optional<size_t> GetCurrentBitrateOption(
+		  const std::vector<RTC::BWE::BitrateAllocator::Candidate::BitrateOption>& options) const;
+#endif
+
+	protected:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		SharedInterface* shared{ nullptr };
@@ -166,12 +218,28 @@ namespace RTC
 		// Encoding context.
 		std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext;
 
+#ifndef MS_USE_BUILTIN_BWE
 		// Externally managed bitrate.
 		bool externallyManagedBitrate{ false };
+#endif
 
 		// Layer preferences.
 		RTC::ConsumerTypes::VideoLayers preferredLayers;
+#ifndef MS_USE_BUILTIN_BWE
 		RTC::ConsumerTypes::VideoLayers provisionalTargetLayers;
+#endif
+
+#ifdef MS_USE_BUILTIN_BWE
+		// Whether a bitrate allocation is running for this Transport. While it is
+		// false nobody would answer a round, so this one applies the layers it works
+		// out instead of asking.
+		bool bweManaged{ false };
+		// Whether the bitrate allocation has ever given this one a point to run at.
+		// Telling that from "it was left sending nothing" is what makes the latter
+		// pay the margin to climb back and the former not, since one that has never
+		// been given anything is not climbing back to anything.
+		bool bitrateAllocated{ false };
+#endif
 
 		// Sync state.
 		bool syncRequired{ false };

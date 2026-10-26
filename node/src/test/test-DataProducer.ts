@@ -177,6 +177,54 @@ test('transport.produceData() with ordered and maxPacketLifeTime rejects with Ty
 	).rejects.toThrow(TypeError);
 }, 2000);
 
+test('transport.produceData() with maxRetransmits 0 or maxPacketLifeTime 0 creates an unordered DataProducer', async () => {
+	const dataProducer1 = await ctx.webRtcTransport1!.produceData({
+		sctpStreamParameters: {
+			streamId: 888,
+			maxRetransmits: 0,
+		},
+	});
+
+	expect(dataProducer1.sctpStreamParameters?.ordered).toBe(false);
+	expect(dataProducer1.sctpStreamParameters?.maxPacketLifeTime).toBeUndefined();
+	expect(dataProducer1.sctpStreamParameters?.maxRetransmits).toBe(0);
+
+	const dataProducer2 = await ctx.webRtcTransport1!.produceData({
+		sctpStreamParameters: {
+			streamId: 999,
+			maxPacketLifeTime: 0,
+		},
+	});
+
+	expect(dataProducer2.sctpStreamParameters?.ordered).toBe(false);
+	expect(dataProducer2.sctpStreamParameters?.maxPacketLifeTime).toBe(0);
+	expect(dataProducer2.sctpStreamParameters?.maxRetransmits).toBeUndefined();
+}, 2000);
+
+test('transport.produceData() with ordered and maxRetransmits 0 rejects with TypeError', async () => {
+	await expect(
+		ctx.webRtcTransport1!.produceData({
+			sctpStreamParameters: {
+				streamId: 999,
+				ordered: true,
+				maxRetransmits: 0,
+			},
+		})
+	).rejects.toThrow(TypeError);
+}, 2000);
+
+test('transport.produceData() with maxPacketLifeTime 0 and maxRetransmits rejects with TypeError', async () => {
+	await expect(
+		ctx.webRtcTransport1!.produceData({
+			sctpStreamParameters: {
+				streamId: 999,
+				maxPacketLifeTime: 0,
+				maxRetransmits: 5,
+			},
+		})
+	).rejects.toThrow(TypeError);
+}, 2000);
+
 test('dataProducer.dump() succeeds', async () => {
 	const dataProducer1 = await ctx.webRtcTransport1!.produceData(
 		ctx.dataProducerOptions1

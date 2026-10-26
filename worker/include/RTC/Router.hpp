@@ -77,6 +77,12 @@ namespace RTC
 		  RTC::Producer* producer,
 		  RTC::RTP::RtpStreamRecv* rtpStream,
 		  bool first) override;
+		void OnTransportProducerSpatialLayerActivityChanged(
+		  RTC::Transport* transport,
+		  RTC::Producer* producer,
+		  RTC::RTP::RtpStreamRecv* rtpStream,
+		  uint8_t spatialLayer,
+		  bool isActive) override;
 		void OnTransportProducerRtpPacketReceived(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RTP::Packet* packet) override;
 		uint8_t OnTransportNeedWorstRemoteFractionLost(

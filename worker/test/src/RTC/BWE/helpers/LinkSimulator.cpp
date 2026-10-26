@@ -8,22 +8,63 @@ namespace bweHelpers
 {
 	/* Static. */
 
-	// Largest packet a frame is split into (bytes).
-	static constexpr size_t Mtu{ 1200 };
+	// Lowest capacity the link can be given, which is what keeps the transmission
+	// time below from dividing by a capacity of zero bits per millisecond.
+	static constexpr int64_t MinCapacityBps{ 1000 };
+	// Offset added to the send times so that they don't share the origin with the
+	// arrival ones, which would hide a mistake mixing both references.
+	static constexpr int64_t SendSideOffsetUs{ 1000 * 1000 };
 
 	/* Instance methods. */
 
-	RtpStream::RtpStream(int fps, int64_t bitrateBps) : fps(fps), bitrateBps(bitrateBps)
+	RtpStream::RtpStream(
+	  int fps, int64_t bitrateBps, uint32_t ssrc, uint32_t frequency, uint32_t rtpTimestampOffset)
+	  : fps(fps),
+	    ssrc(ssrc),
+	    frequency(frequency),
+	    rtpTimestampOffset(rtpTimestampOffset),
+	    bitrateBps(bitrateBps)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(fps > 0, "fps must be greater than zero [fps:%d]", fps);
 	}
 
+	void RtpStream::SetBitrateBps(int64_t bitrateBps)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(bitrateBps >= 0, "bitrate must not be negative [bitrate:%" PRIi64 "]", bitrateBps);
+
+		this->bitrateBps = bitrateBps;
+	}
+
 	int64_t RtpStream::GenerateFrame(
 	  int64_t timeNowUs,
 	  int64_t& nextSequenceNumber,
 	  std::vector<RTC::BWE::Types::PacketResult>& packetResults)
+	{
+		MS_TRACE();
+
+		std::vector<Packet> packets;
+
+		const int64_t nextRtpTimeUs = GenerateFrame(timeNowUs, packets);
+
+		for (const auto& packet : packets)
+		{
+			RTC::BWE::Types::PacketResult packetResult;
+
+			packetResult.sentPacket.sendTimeUs     = packet.sendTimeUs;
+			packetResult.sentPacket.size           = packet.size;
+			packetResult.sentPacket.sequenceNumber = nextSequenceNumber++;
+
+			packetResults.push_back(packetResult);
+		}
+
+		return nextRtpTimeUs;
+	}
+
+	int64_t RtpStream::GenerateFrame(int64_t timeNowUs, std::vector<Packet>& packets)
 	{
 		MS_TRACE();
 
@@ -35,30 +76,24 @@ namespace bweHelpers
 		const size_t bitsPerFrame = (this->bitrateBps + (this->fps / 2)) / this->fps;
 		const size_t numPackets   = std::max<size_t>((bitsPerFrame + (4 * Mtu)) / (8 * Mtu), 1);
 		const size_t payloadSize  = (bitsPerFrame + (4 * numPackets)) / (8 * numPackets);
+		const int64_t sendTimeUs  = timeNowUs + SendSideOffsetUs;
+		const auto rtpTimestamp =
+		  this->rtpTimestampOffset +
+		  static_cast<uint32_t>((((this->frequency / 1000) * sendTimeUs) + 500) / 1000);
 
 		for (size_t idx{ 0 }; idx < numPackets; ++idx)
 		{
-			RTC::BWE::Types::PacketResult packetResult;
-
-			packetResult.sentPacket.sendTimeUs     = timeNowUs + SendSideOffsetUs;
-			packetResult.sentPacket.size           = payloadSize;
-			packetResult.sentPacket.sequenceNumber = nextSequenceNumber++;
-
-			packetResults.push_back(packetResult);
+			packets.push_back(
+			  Packet{ .ssrc          = this->ssrc,
+				        .rtpTimestamp  = rtpTimestamp,
+				        .sendTimeUs    = sendTimeUs,
+				        .arrivalTimeUs = 0,
+				        .size          = payloadSize });
 		}
 
 		this->nextRtpTimeUs = timeNowUs + ((1000000 + (this->fps / 2)) / this->fps);
 
 		return this->nextRtpTimeUs;
-	}
-
-	void RtpStream::SetBitrateBps(int64_t bitrateBps)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(bitrateBps >= 0, "bitrate must not be negative [bitrate:%" PRIi64 "]", bitrateBps);
-
-		this->bitrateBps = bitrateBps;
 	}
 
 	bool RtpStream::Compare(const std::unique_ptr<RtpStream>& lhs, const std::unique_ptr<RtpStream>& rhs)
@@ -72,6 +107,11 @@ namespace bweHelpers
 	  : capacityBps(capacityBps), prevArrivalTimeUs(timeNowUs)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(
+		  capacityBps >= MinCapacityBps,
+		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",
+		  capacityBps);
 	}
 
 	void LinkSimulator::AddStream(std::unique_ptr<RtpStream> stream)
@@ -86,9 +126,26 @@ namespace bweHelpers
 		MS_TRACE();
 
 		MS_ASSERT(
-		  capacityBps > 0, "capacity must be greater than zero [capacity:%" PRIi64 "]", capacityBps);
+		  capacityBps >= MinCapacityBps,
+		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",
+		  capacityBps);
 
 		this->capacityBps = capacityBps;
+	}
+
+	void LinkSimulator::SetRtpTimestampOffset(uint32_t ssrc, uint32_t rtpTimestampOffset)
+	{
+		MS_TRACE();
+
+		for (auto& stream : this->streams)
+		{
+			if (stream->GetSsrc() == ssrc)
+			{
+				stream->SetRtpTimestampOffset(rtpTimestampOffset);
+
+				break;
+			}
+		}
 	}
 
 	void LinkSimulator::SetBitrateBps(int64_t bitrateBps)
@@ -139,22 +196,21 @@ namespace bweHelpers
 		MS_TRACE();
 
 		MS_ASSERT(packetResults.empty(), "the given vector is not empty");
+		MS_ASSERT(!this->streams.empty(), "no stream to generate a frame of");
 		MS_ASSERT(
-		  this->capacityBps > 0,
-		  "capacity must be greater than zero [capacity:%" PRIi64 "]",
+		  this->capacityBps >= MinCapacityBps,
+		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",
 		  this->capacityBps);
 
 		auto it = std::ranges::min_element(this->streams, RtpStream::Compare);
 
-		(*it)->GenerateFrame(timeNowUs, nextSequenceNumber, packetResults);
+		auto& dueStream = *it;
+
+		dueStream->GenerateFrame(timeNowUs, nextSequenceNumber, packetResults);
 
 		for (auto& packetResult : packetResults)
 		{
-			// Time the link needs to put the packet on the wire.
-			const int64_t capacityBpUs = this->capacityBps / 1000;
-			const int64_t requiredNetworkTimeUs =
-			  ((8 * 1000 * static_cast<int64_t>(packetResult.sentPacket.size)) + (capacityBpUs / 2)) /
-			  capacityBpUs;
+			const int64_t requiredNetworkTimeUs = GetRequiredNetworkTimeUs(packetResult.sentPacket.size);
 
 			// A packet arrives once the link is free again, so it queues behind the
 			// previous one whenever the stream is sending above the capacity.
@@ -166,6 +222,54 @@ namespace bweHelpers
 
 		it = std::ranges::min_element(this->streams, RtpStream::Compare);
 
-		return std::max((*it)->GetNextRtpTimeUs(), timeNowUs);
+		auto& nextDueStream = *it;
+
+		return std::max(nextDueStream->GetNextRtpTimeUs(), timeNowUs);
+	}
+
+	int64_t LinkSimulator::GenerateFrame(int64_t timeNowUs, std::vector<Packet>& packets)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(packets.empty(), "the given vector is not empty");
+		MS_ASSERT(!this->streams.empty(), "no stream to generate a frame of");
+		MS_ASSERT(
+		  this->capacityBps >= MinCapacityBps,
+		  "capacity must be at least one bit per millisecond [capacity:%" PRIi64 "]",
+		  this->capacityBps);
+
+		auto it = std::ranges::min_element(this->streams, RtpStream::Compare);
+
+		auto& dueStream = *it;
+
+		dueStream->GenerateFrame(timeNowUs, packets);
+
+		for (auto& packet : packets)
+		{
+			const int64_t requiredNetworkTimeUs = GetRequiredNetworkTimeUs(packet.size);
+
+			// A packet arrives once the link is free again, so it queues behind the
+			// previous one whenever the stream is sending above the capacity.
+			this->prevArrivalTimeUs =
+			  std::max(timeNowUs + requiredNetworkTimeUs, this->prevArrivalTimeUs + requiredNetworkTimeUs);
+
+			packet.arrivalTimeUs = this->prevArrivalTimeUs;
+		}
+
+		it = std::ranges::min_element(this->streams, RtpStream::Compare);
+
+		auto& nextDueStream = *it;
+
+		return std::max(nextDueStream->GetNextRtpTimeUs(), timeNowUs);
+	}
+
+	int64_t LinkSimulator::GetRequiredNetworkTimeUs(size_t size) const
+	{
+		MS_TRACE();
+
+		// Time the link needs to put a packet of that size on the wire.
+		const int64_t capacityBpUs = this->capacityBps / 1000;
+
+		return ((8 * 1000 * static_cast<int64_t>(size)) + (capacityBpUs / 2)) / capacityBpUs;
 	}
 } // namespace bweHelpers

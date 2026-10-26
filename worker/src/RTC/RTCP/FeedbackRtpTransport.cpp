@@ -54,6 +54,16 @@ namespace RTC
 			return packet.release();
 		}
 
+		int32_t FeedbackRtpTransportPacket::TicksToReferenceTime(int64_t baseTimeTicks)
+		{
+			MS_TRACE();
+
+			const int64_t maskedBaseTimeTicks = baseTimeTicks & 0xFFFFFF;
+
+			return static_cast<int32_t>(
+			  maskedBaseTimeTicks >= (1 << 23) ? maskedBaseTimeTicks - (1 << 24) : maskedBaseTimeTicks);
+		}
+
 		/* Instance methods. */
 
 		FeedbackRtpTransportPacket::FeedbackRtpTransportPacket(CommonHeader* commonHeader, size_t availableLen)
@@ -261,7 +271,7 @@ namespace RTC
 			}
 
 			// 32 bits padding.
-			const size_t padding = (-offset) & 3;
+			const size_t padding = Utils::Byte::PadTo4Bytes(offset) - offset;
 
 			for (size_t i{ 0u }; i < padding; ++i)
 			{
@@ -287,12 +297,20 @@ namespace RTC
 			// NOTE: The reference time is a 24 bits field that wraps around, which is
 			// what GetBaseDeltaUs() compensates for. Keeping fewer bits than that
 			// would make it wrap sooner than the compensation expects.
-			this->referenceTime        = static_cast<int32_t>(baseTimeTicks & 0xFFFFFF);
+			this->referenceTime        = TicksToReferenceTime(baseTimeTicks);
 			this->latestSequenceNumber = sequenceNumber - 1;
 			// IMPORTANT: The reference time only carries whole base time ticks, so
 			// the remainder is lost here and recovered by the delta of the first
 			// added packet.
 			this->latestTimestampUs = baseTimeTicks * BaseTimeTickUs;
+		}
+
+		void FeedbackRtpTransportPacket::SetReferenceTimeUs(int64_t referenceTimeUs)
+		{
+			MS_TRACE();
+
+			this->referenceTime =
+			  TicksToReferenceTime((referenceTimeUs % TimeWrapPeriodUs) / BaseTimeTickUs);
 		}
 
 		FeedbackRtpTransportPacket::AddPacketResult FeedbackRtpTransportPacket::AddPacket(
@@ -362,7 +380,7 @@ namespace RTC
 				size += 2u;
 
 				// 32 bits padding.
-				size += (-size) & 3;
+				size = Utils::Byte::PadTo4Bytes(size);
 
 				if (size > maxRtcpPacketLen)
 				{
@@ -396,7 +414,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::vector<struct PacketStatus> packetStatuses;
+			std::vector<PacketStatus> packetStatuses;
 
 			uint16_t currentSequenceNumber = this->baseSequenceNumber - 1;
 

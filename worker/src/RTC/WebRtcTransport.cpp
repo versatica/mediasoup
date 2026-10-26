@@ -8,7 +8,6 @@
 #include "RTC/PortManager.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include <cmath> // std::pow()
 
 namespace RTC
 {
@@ -24,8 +23,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return (std::pow(2, 24) * IceTypePreference) + (std::pow(2, 8) * localPreference) +
-		       (std::pow(2, 0) * (256 - IceComponent));
+		// Recommended formula in RFC 8445 section 5.1.2.1:
+		//   (2^24) * type preference + (2^8) * local preference + (2^0) * (256 - component ID).
+		return (static_cast<uint32_t>(IceTypePreference) << 24) +
+		       (static_cast<uint32_t>(localPreference) << 8) + (256 - IceComponent);
 	}
 
 	/* Instance methods. */
@@ -443,15 +444,15 @@ namespace RTC
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 		// Add dtlsParameters.
-		auto dtlsParameters =
-		  FBS::WebRtcTransport::CreateDtlsParametersDirect(builder, &fingerprints, dtlsRole);
+		auto dtlsParameters = FBS::WebRtcTransport::CreateDtlsParametersDirect(
+		  builder, std::addressof(fingerprints), dtlsRole);
 
 		return FBS::WebRtcTransport::CreateDumpResponseDirect(
 		  builder,
 		  base,
 		  FBS::WebRtcTransport::IceRole::CONTROLLED,
 		  iceParameters,
-		  &iceCandidates,
+		  std::addressof(iceCandidates),
 		  iceState,
 		  iceSelectedTuple,
 		  dtlsParameters,
@@ -679,6 +680,15 @@ namespace RTC
 		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
 	}
 
+	inline size_t WebRtcTransport::GetPacketOverhead() const
+	{
+		MS_TRACE();
+
+		const auto* tuple = this->iceServer->GetSelectedTuple();
+
+		return tuple ? tuple->GetPacketOverhead() : 0;
+	}
+
 	void WebRtcTransport::MayRunDtlsTransport()
 	{
 		MS_TRACE();
@@ -757,7 +767,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::SendRtpPacket(
-	  RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet, const RTC::Transport::onSendCallback* cb)
+	  RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet, onSendCallback cb)
 	{
 		MS_TRACE();
 
@@ -765,8 +775,7 @@ namespace RTC
 		{
 			if (cb)
 			{
-				(*cb)(false);
-				delete cb;
+				cb(false);
 			}
 
 			return;
@@ -779,8 +788,7 @@ namespace RTC
 
 			if (cb)
 			{
-				(*cb)(false);
-				delete cb;
+				cb(false);
 			}
 
 			return;
@@ -789,18 +797,17 @@ namespace RTC
 		const uint8_t* data = packet->GetBuffer();
 		auto len            = packet->GetLength();
 
-		if (!this->srtpSendSession->EncryptRtp(&data, std::addressof(len)))
+		if (!this->srtpSendSession->EncryptRtp(std::addressof(data), std::addressof(len)))
 		{
 			if (cb)
 			{
-				(*cb)(false);
-				delete cb;
+				cb(false);
 			}
 
 			return;
 		}
 
-		this->iceServer->GetSelectedTuple()->Send(data, len, cb);
+		this->iceServer->GetSelectedTuple()->Send(data, len, std::move(cb));
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -826,7 +833,7 @@ namespace RTC
 			return;
 		}
 
-		if (!this->srtpSendSession->EncryptRtcp(&data, std::addressof(len)))
+		if (!this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
 		{
 			return;
 		}
@@ -859,7 +866,7 @@ namespace RTC
 			return;
 		}
 
-		if (!this->srtpSendSession->EncryptRtcp(&data, std::addressof(len)))
+		if (!this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
 		{
 			return;
 		}
@@ -871,11 +878,11 @@ namespace RTC
 	}
 
 	void WebRtcTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb)
 	{
 		MS_TRACE();
 
-		SendSctpMessage(dataConsumer, std::move(message), cb);
+		SendSctpMessage(dataConsumer, std::move(message), std::move(cb));
 	}
 
 	bool WebRtcTransport::SendData(const uint8_t* data, size_t len)
@@ -1128,7 +1135,7 @@ namespace RTC
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len, bufferLen, receivedAtUs);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen, receivedAtUs);
 	}
 
 	inline void WebRtcTransport::OnRtcTcpConnectionClosed(
@@ -1138,7 +1145,7 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
-		this->iceServer->RemoveTuple(&tuple);
+		this->iceServer->RemoveTuple(std::addressof(tuple));
 	}
 
 	inline void WebRtcTransport::OnTcpConnectionPacketReceived(
@@ -1148,7 +1155,7 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
-		OnPacketReceived(&tuple, data, len, bufferLen, receivedAtUs);
+		OnPacketReceived(std::addressof(tuple), data, len, bufferLen, receivedAtUs);
 	}
 
 	inline void WebRtcTransport::OnIceServerSendStunPacket(

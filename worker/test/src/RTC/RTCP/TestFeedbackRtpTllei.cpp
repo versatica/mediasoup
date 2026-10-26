@@ -24,7 +24,7 @@ SCENARIO("RTCP Feedback RTP TLLEI", "[rtcp][feedback-rtp][tllei]")
 	const uint16_t lostPacketBitmask{ 0b1010101001010101 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::FeedbackRtpTlleiPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackRtpTlleiPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

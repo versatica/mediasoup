@@ -75,7 +75,7 @@ SCENARIO("SCTP TraditionalReassemblyStreams", "[sctp][traditionalreassemblystrea
 
 	RTC::SCTP::Types::UnwrappedTsn::Unwrapper tsn;
 
-	auto getTsn = [&tsn](uint32_t value)
+	const auto getTsn = [&tsn](uint32_t value)
 	{
 		return tsn.Unwrap(value);
 	};

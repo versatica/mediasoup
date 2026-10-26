@@ -6,12 +6,13 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/PipeProducerStreamManager.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
+#include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/SimpleProducerStreamManager.hpp"
 #include "RTC/SimulcastProducerStreamManager.hpp"
 #include "RTC/SvcProducerStreamManager.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
-#include "RTC/RtcLogger.hpp"
+#include "RTC/RtcLogger/RtpPacket.hpp"
 #endif
 #include <limits> // std::numeric_limits
 
@@ -19,7 +20,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr size_t TargetLayerRetransmissionBufferSize{ 30u };
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 30 };
 
 	/* Instance methods. */
 
@@ -77,7 +78,7 @@ namespace RTC
 			// Verify that it has ssrc field.
 			auto& encoding = this->consumableRtpEncodings[i];
 
-			if (encoding.ssrc == 0u)
+			if (encoding.ssrc == 0)
 			{
 				MS_THROW_TYPE_ERROR("wrong encoding in consumableRtpEncodings (missing ssrc)");
 			}
@@ -93,64 +94,64 @@ namespace RTC
 		// This may throw.
 		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
-			if (exten.id == 0u)
+			if (exten.id == 0)
 			{
 				MS_THROW_TYPE_ERROR("RTP extension id cannot be 0");
 			}
 
-			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
+			if (this->rtpHeaderExtensionIds.mid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
 			{
 				this->rtpHeaderExtensionIds.mid = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.rid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
+			if (this->rtpHeaderExtensionIds.rid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
 			{
 				this->rtpHeaderExtensionIds.rid = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.rrid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID)
+			if (this->rtpHeaderExtensionIds.rrid == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID)
 			{
 				this->rtpHeaderExtensionIds.rrid = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.absSendTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			if (this->rtpHeaderExtensionIds.absSendTime == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
 			{
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
+			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
 			{
 				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
+			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
 				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
 			}
 
 			if (
-			  this->rtpHeaderExtensionIds.dependencyDescriptor == 0u &&
+			  this->rtpHeaderExtensionIds.dependencyDescriptor == 0 &&
 			  exten.type == RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR)
 			{
 				this->rtpHeaderExtensionIds.dependencyDescriptor = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.videoOrientation == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION)
+			if (this->rtpHeaderExtensionIds.videoOrientation == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION)
 			{
 				this->rtpHeaderExtensionIds.videoOrientation = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.absCaptureTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
+			if (this->rtpHeaderExtensionIds.absCaptureTime == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
 			{
 				this->rtpHeaderExtensionIds.absCaptureTime = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.playoutDelay == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
+			if (this->rtpHeaderExtensionIds.playoutDelay == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
 			{
 				this->rtpHeaderExtensionIds.playoutDelay = exten.id;
 			}
 
-			if (this->rtpHeaderExtensionIds.mediasoupPacketId == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID)
+			if (this->rtpHeaderExtensionIds.mediasoupPacketId == 0 && exten.type == RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID)
 			{
 				this->rtpHeaderExtensionIds.mediasoupPacketId = exten.id;
 			}
@@ -207,11 +208,11 @@ namespace RTC
 		{
 			this->type = RTC::RtpParameters::Type::PIPE;
 		}
-		else if (this->consumableRtpEncodings.size() > 1u)
+		else if (this->consumableRtpEncodings.size() > 1)
 		{
 			this->type = RTC::RtpParameters::Type::SIMULCAST;
 		}
-		else if (this->consumableRtpEncodings[0].spatialLayers > 1u || this->consumableRtpEncodings[0].temporalLayers > 1u)
+		else if (this->consumableRtpEncodings[0].spatialLayers > 1 || this->consumableRtpEncodings[0].temporalLayers > 1)
 		{
 			// Single encoding with multiple layers is always SVC.
 			this->type = RTC::RtpParameters::Type::SVC;
@@ -227,7 +228,7 @@ namespace RTC
 			case RTC::RtpParameters::Type::SIMPLE:
 			{
 				// Ensure there is a single encoding.
-				if (this->consumableRtpEncodings.size() != 1u)
+				if (this->consumableRtpEncodings.size() != 1)
 				{
 					MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 				}
@@ -341,13 +342,13 @@ namespace RTC
 			case RTC::RtpParameters::Type::SVC:
 			{
 				// Ensure there is a single encoding.
-				if (this->consumableRtpEncodings.size() != 1u)
+				if (this->consumableRtpEncodings.size() != 1)
 				{
 					MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
 				}
 
 				// Ensure there are multiple spatial or temporal layers.
-				if (encoding.spatialLayers < 2u && encoding.temporalLayers < 2u)
+				if (encoding.spatialLayers < 2 && encoding.temporalLayers < 2)
 				{
 					MS_THROW_TYPE_ERROR("invalid number of layers");
 				}
@@ -487,7 +488,7 @@ namespace RTC
 		auto dump = FBS::Consumer::CreateConsumerDumpDirect(
 		  builder,
 		  base,
-		  &rtpStreams,
+		  std::addressof(rtpStreams),
 		  this->producerStreamManager->GetPreferredLayers().spatial,
 		  targetLayers.spatial,
 		  this->producerStreamManager->GetCurrentSpatialLayer(),
@@ -558,9 +559,9 @@ namespace RTC
 		  this->kind == RTC::Media::Kind::AUDIO ? FBS::RtpParameters::MediaKind::AUDIO
 			                                      : FBS::RtpParameters::MediaKind::VIDEO,
 		  rtpParameters,
-		  &consumableRtpEncodings,
-		  &supportedCodecPayloadTypes,
-		  &traceEventTypes,
+		  std::addressof(consumableRtpEncodings),
+		  std::addressof(supportedCodecPayloadTypes),
+		  std::addressof(traceEventTypes),
 		  this->paused,
 		  this->producerPaused,
 		  this->priority);
@@ -580,15 +581,15 @@ namespace RTC
 			rtpStreams.emplace_back(rtpStream->FillBufferStats(builder));
 		}
 
-		// Add stats of the current recv stream.
-		auto* producerCurrentRtpStream = this->producerStreamManager->GetProducerCurrentRtpStream();
+		// Add stats of the recv streams being forwarded.
+		const auto producerRtpStreams = this->producerStreamManager->GetProducerRtpStreams();
 
-		if (producerCurrentRtpStream)
+		for (auto* producerRtpStream : producerRtpStreams)
 		{
-			rtpStreams.emplace_back(producerCurrentRtpStream->FillBufferStats(builder));
+			rtpStreams.emplace_back(producerRtpStream->FillBufferStats(builder));
 		}
 
-		return FBS::Consumer::CreateGetStatsResponseDirect(builder, &rtpStreams);
+		return FBS::Consumer::CreateGetStatsResponseDirect(builder, std::addressof(rtpStreams));
 	}
 
 	flatbuffers::Offset<FBS::Consumer::ConsumerScore> Consumer::FillBufferScore(
@@ -717,9 +718,11 @@ namespace RTC
 				  newPreferredLayers.temporal,
 				  this->id.c_str());
 
-				preferredTemporalLayer     = newPreferredLayers.temporal;
+				preferredTemporalLayer     = static_cast<uint8_t>(newPreferredLayers.temporal);
 				auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
-				  request->GetBufferBuilder(), newPreferredLayers.spatial, preferredTemporalLayer);
+				  request->GetBufferBuilder(),
+				  static_cast<uint8_t>(newPreferredLayers.spatial),
+				  preferredTemporalLayer);
 				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(
 				  request->GetBufferBuilder(), preferredLayersOffset);
 
@@ -727,7 +730,7 @@ namespace RTC
 
 				if (IsActive() && newPreferredLayers != previousPreferredLayers)
 				{
-					this->producerStreamManager->MayChangeLayers(/*force*/ true);
+					this->producerStreamManager->MayChangeLayers();
 				}
 
 				break;
@@ -794,10 +797,14 @@ namespace RTC
 			{
 				const auto* body = request->data->body_as<FBS::Consumer::SetPriorityRequest>();
 
-				if (body->priority() < 1u)
+				if (body->priority() < 1)
 				{
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
 				}
+
+#ifdef MS_USE_BUILTIN_BWE
+				const uint8_t previousPriority = this->priority;
+#endif
 
 				this->priority = body->priority();
 
@@ -805,6 +812,16 @@ namespace RTC
 				  FBS::Consumer::CreateSetPriorityResponse(request->GetBufferBuilder(), this->priority);
 
 				request->Accept(FBS::Response::Body::Consumer_SetPriorityResponse, responseOffset);
+
+#ifdef MS_USE_BUILTIN_BWE
+				// The priority is the weight the bitrate allocation gives this one
+				// against the others, so a new one is only worth anything once they are
+				// weighed again.
+				if (this->bweManaged && IsActive() && this->priority != previousPriority)
+				{
+					this->listener->OnConsumerNeedBitrateChange(this);
+				}
+#endif
 
 				break;
 			}
@@ -814,7 +831,7 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Consumer::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
-				struct TraceEventTypes newTraceEventTypes;
+				TraceEventTypes newTraceEventTypes;
 
 				for (const auto& type : *body->events())
 				{
@@ -865,6 +882,32 @@ namespace RTC
 				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 			}
 		}
+	}
+
+	bool Consumer::SupportsTransportCc() const
+	{
+		MS_TRACE();
+
+		return this->rtpHeaderExtensionIds.transportWideCc01 != 0 &&
+		       std::ranges::any_of(
+		         this->rtpParameters.codecs,
+		         [](const RTC::RtpCodecParameters& codec)
+		         {
+			         return codec.HasRtcpFeedbackType("transport-cc");
+		         });
+	}
+
+	bool Consumer::SupportsRemb() const
+	{
+		MS_TRACE();
+
+		return this->rtpHeaderExtensionIds.absSendTime != 0 &&
+		       std::ranges::any_of(
+		         this->rtpParameters.codecs,
+		         [](const RTC::RtpCodecParameters& codec)
+		         {
+			         return codec.HasRtcpFeedbackType("goog-remb");
+		         });
 	}
 
 	void Consumer::TransportConnected()
@@ -984,6 +1027,15 @@ namespace RTC
 		this->producerStreamManager->ProducerRtcpSenderReport(rtpStream, first);
 	}
 
+	void Consumer::ProducerSpatialLayerActivityChanged(
+	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
+	{
+		MS_TRACE();
+
+		this->producerStreamManager->ProducerSpatialLayerActivityChanged(
+		  rtpStream, spatialLayer, isActive);
+	}
+
 	// The caller (Router) is supposed to proceed with the deletion of this Consumer
 	// right after calling this method. Otherwise ugly things may happen.
 	void Consumer::ProducerClosed()
@@ -1000,6 +1052,51 @@ namespace RTC
 		this->listener->OnConsumerProducerClosed(this);
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	const std::string& Consumer::GetBitrateAllocationId() const
+	{
+		MS_TRACE();
+
+		return this->id;
+	}
+
+	uint8_t Consumer::GetBitrateWeight() const
+	{
+		MS_TRACE();
+
+		if (!IsActive())
+		{
+			return 0;
+		}
+
+		return this->priority;
+	}
+
+	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions Consumer::GetBitrateOptions() const
+	{
+		MS_TRACE();
+
+		// An inactive Consumer puts nothing out and has nowhere to go, so it takes
+		// no bitrate and is left where it is.
+		if (!IsActive())
+		{
+			return { .options = { { .bitrate = 0, .layers = {} } }, .currentOption = 0 };
+		}
+
+		const int64_t nowMs = this->shared->GetTimeMs();
+
+		return this->producerStreamManager->GetBitrateOptions(nowMs);
+	}
+
+	void Consumer::SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(IsActive(), "should be active");
+
+		this->producerStreamManager->SetBitrateOption(option);
+	}
+#else
 	uint8_t Consumer::GetBitratePriority() const
 	{
 		MS_TRACE();
@@ -1009,12 +1106,12 @@ namespace RTC
 		// Audio does not play the BWE game.
 		if (this->kind != RTC::Media::Kind::VIDEO)
 		{
-			return 0u;
+			return 0;
 		}
 
 		if (!IsActive())
 		{
-			return 0u;
+			return 0;
 		}
 
 		return this->priority;
@@ -1060,11 +1157,31 @@ namespace RTC
 			return;
 		}
 
-		auto* rtpStream = this->mapSsrcRtpStream.begin()->second;
-
-		this->producerStreamManager->ApplyLayers(rtpStream->GetActiveMs());
+		this->producerStreamManager->ApplyLayers();
 	}
+#endif
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t Consumer::GetDesiredBitrate() const
+	{
+		MS_TRACE();
+
+		if (!IsActive())
+		{
+			return 0;
+		}
+
+		const int64_t nowMs = this->shared->GetTimeMs();
+
+		const int64_t desiredBitrate = this->producerStreamManager->GetDesiredBitrate(nowMs);
+
+		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
+		// greater than computed one, then use it.
+		const auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
+
+		return std::max(maxBitrate, desiredBitrate);
+	}
+#else
 	int64_t Consumer::GetDesiredBitrate() const
 	{
 		MS_TRACE();
@@ -1100,9 +1217,10 @@ namespace RTC
 
 		return desiredBitrate;
 	}
+#endif
 
 	// NOLINTNEXTLINE(misc-no-recursion)
-	void Consumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
+	void Consumer::SendRtpPacket(RTC::RTP::Packet* packet, std::shared_ptr<RTC::RTP::Packet>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -1118,16 +1236,16 @@ namespace RTC
 		{
 			auto ssrc     = this->mapMappedSsrcSsrc.at(packet->GetSsrc());
 			rtpStream     = this->mapSsrcRtpStream.at(ssrc);
-			rtpSeqManager = &this->mapRtpStreamRtpSeqManager.at(rtpStream);
+			rtpSeqManager = std::addressof(this->mapRtpStreamRtpSeqManager.at(rtpStream));
 			targetLayerRetransmissionBuffer =
-			  &this->mapRtpStreamTargetLayerRetransmissionBuffer.at(rtpStream);
+			  std::addressof(this->mapRtpStreamTargetLayerRetransmissionBuffer.at(rtpStream));
 		}
 		else
 		{
 			rtpStream     = this->mapSsrcRtpStream.begin()->second;
-			rtpSeqManager = &this->mapRtpStreamRtpSeqManager.at(rtpStream);
+			rtpSeqManager = std::addressof(this->mapRtpStreamRtpSeqManager.at(rtpStream));
 			targetLayerRetransmissionBuffer =
-			  &this->mapRtpStreamTargetLayerRetransmissionBuffer.at(rtpStream);
+			  std::addressof(this->mapRtpStreamTargetLayerRetransmissionBuffer.at(rtpStream));
 		}
 
 		if (!IsActive())
@@ -1205,7 +1323,7 @@ namespace RTC
 		if (action.spatialLayerSwitched)
 		{
 			// Reset the score of our RtpStream to 10.
-			rtpStream->ResetScore(10u, /*notify*/ false);
+			rtpStream->ResetScore(10, /*notify*/ false);
 
 			// Emit the layersChange event.
 			EmitLayersChange();
@@ -1258,10 +1376,9 @@ namespace RTC
 			  origTimestamp);
 		}
 
-		const RTC::RTP::RtpStreamSend::ReceivePacketResult result =
-		  rtpStream->ReceivePacket(packet, sharedPacket);
+		const auto result = rtpStream->ReceivePacket(packet);
 
-		if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
+		if (result.accepted)
 		{
 			if (rtpSeqManager->GetMaxOutput() == packet->GetSequenceNumber())
 			{
@@ -1301,11 +1418,27 @@ namespace RTC
 		// Restore the original payload if needed.
 		packet->RestorePayload();
 
-		// If sharedPacket doesn't have a packet inside and it has been stored we
-		// need to clone the packet into it.
-		if (!sharedPacket.HasPacket() && result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		// If the packet was accepted and the info has been stored into
+		// the retransmission buffer then we must hand a clone of it over to the
+		// stream. Clone it only once only if needed.
+		//
+		// NOTE: This must happen here, once the packet has been restored above, so
+		// that the clone holds the original packet and not the one rewritten for
+		// this Consumer (the stream reapplies its own values and payload encoding on
+		// every retransmission).
+		if (result.retransmissionBufferItem)
 		{
-			sharedPacket.Assign(packet);
+			if (!sharedPacket)
+			{
+				sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
+			}
+
+			MS_ASSERT(
+			  !result.retransmissionBufferItem->sharedPacket,
+			  "retransmission buffer item already holds a packet [seq:%" PRIu16 "]",
+			  result.retransmissionBufferItem->sequenceNumber);
+
+			result.retransmissionBufferItem->sharedPacket = sharedPacket;
 		}
 
 		// If sent packet was the first packet of a key frame, let's send buffered
@@ -1315,12 +1448,12 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the
 			// key frame was sent.
-			if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
+			if (result.accepted)
 			{
 				for (auto& kv : *targetLayerRetransmissionBuffer)
 				{
 					auto& bufferedSharedPacket = kv.second;
-					auto* bufferedPacket       = bufferedSharedPacket.GetPacket();
+					auto* bufferedPacket       = bufferedSharedPacket.get();
 
 					if (bufferedPacket->GetSequenceNumber() > origSeq)
 					{
@@ -1515,13 +1648,14 @@ namespace RTC
 		}
 	}
 
-	void Consumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
+	RTC::RTP::RtpStreamSend::ReceiverReportResult Consumer::ReceiveRtcpReceiverReport(
+	  RTC::RTCP::ReceiverReport* report, int64_t receivedAtUs)
 	{
 		MS_TRACE();
 
 		auto* rtpStream = this->mapSsrcRtpStream.at(report->GetSsrc());
 
-		rtpStream->ReceiveRtcpReceiverReport(report, receivedAtUs);
+		return rtpStream->ReceiveRtcpReceiverReport(report, receivedAtUs);
 	}
 
 	void Consumer::ReceiveRtcpXrReceiverReferenceTime(
@@ -1541,7 +1675,7 @@ namespace RTC
 
 		if (!IsActive())
 		{
-			return 0u;
+			return 0;
 		}
 
 		int64_t rate{ 0 };
@@ -1554,15 +1688,20 @@ namespace RTC
 		return rate;
 	}
 
-	float Consumer::GetRttMs() const
+	std::optional<float> Consumer::GetRttMs() const
 	{
 		MS_TRACE();
 
-		float rttMs{ 0 };
+		std::optional<float> rttMs;
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			rttMs = std::max(rtpStream->GetRttMs(), rttMs);
+			const std::optional<float> streamRttMs = rtpStream->GetRttMs();
+
+			if (streamRttMs.has_value() && (!rttMs.has_value() || streamRttMs.value() > rttMs.value()))
+			{
+				rttMs = streamRttMs;
+			}
 		}
 
 		return rttMs;
@@ -1612,6 +1751,7 @@ namespace RTC
 
 		this->producerStreamManager->OnPaused();
 
+#ifndef MS_USE_BUILTIN_BWE
 		if (this->externallyManagedBitrate)
 		{
 			// Audio does not play the BWE game.
@@ -1622,6 +1762,7 @@ namespace RTC
 
 			this->listener->OnConsumerNeedZeroBitrate(this);
 		}
+#endif
 	}
 
 	void Consumer::UserOnResumed()
@@ -1639,9 +1780,9 @@ namespace RTC
 		// a single RtpStreamSend (encodings[0]). Pipe consumers need one stream per
 		// encoding. Here we know that SSRCs in Consumer's rtpParameters must be the
 		// same as in the given consumableRtpEncodings.
-		const size_t numStreams = this->pipe ? this->rtpParameters.encodings.size() : 1u;
+		const size_t numStreams = this->pipe ? this->rtpParameters.encodings.size() : 1;
 
-		for (size_t idx{ 0u }; idx < numStreams; ++idx)
+		for (size_t idx{ 0 }; idx < numStreams; ++idx)
 		{
 			auto& encoding           = this->rtpParameters.encodings[idx];
 			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -1732,7 +1873,7 @@ namespace RTC
 			// libsrtp bug:
 			// https://github.com/versatica/mediasoup/issues/1437
 			const auto initialOutputSeq =
-			  Utils::Crypto::GetRandomUInt<uint16_t>(1000u, std::numeric_limits<uint16_t>::max() / 2);
+			  Utils::Crypto::GetRandomUInt<uint16_t>(1000, std::numeric_limits<uint16_t>::max() / 2);
 
 			this->mapRtpStreamRtpSeqManager[rtpStream] = RTC::SeqManager<uint16_t>(initialOutputSeq);
 
@@ -1741,10 +1882,10 @@ namespace RTC
 	}
 
 	void Consumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>&
+	  std::map<uint16_t, std::shared_ptr<RTC::RTP::Packet>, RTC::SeqManager<uint16_t>::SeqLowerThan>&
 	    targetLayerRetransmissionBuffer,
 	  RTC::RTP::Packet* packet,
-	  RTC::RTP::SharedPacket& sharedPacket)
+	  std::shared_ptr<RTC::RTP::Packet>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -1757,15 +1898,15 @@ namespace RTC
 
 		// Store original packet into the buffer. Only clone once and only if
 		// necessary.
-		if (!sharedPacket.HasPacket())
+		if (!sharedPacket)
 		{
-			sharedPacket.Assign(packet);
+			sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
 		}
-		// Assert that, if sharedPacket was already filled, both packet and
-		// sharedPacket are the very same RTP packet.
+		// Assert that the clone already made by another Consumer of the same
+		// Producer is a clone of this very same packet.
 		else
 		{
-			sharedPacket.AssertSamePacket(packet);
+			RTC::RTP::PacketUtils::AssertSamePacket(sharedPacket, packet);
 		}
 
 		targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;
@@ -1786,7 +1927,7 @@ namespace RTC
 			return;
 		}
 
-		auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
+		const auto scoreOffset = FillBufferScore(this->shared->GetChannelNotifier()->GetBufferBuilder());
 
 		auto notificationOffset = FBS::Consumer::CreateScoreNotification(
 		  this->shared->GetChannelNotifier()->GetBufferBuilder(), scoreOffset);
@@ -1814,8 +1955,8 @@ namespace RTC
 		{
 			layersOffset = FBS::Consumer::CreateConsumerLayers(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(),
-			  this->producerStreamManager->GetCurrentSpatialLayer(),
-			  this->producerStreamManager->GetCurrentTemporalLayer());
+			  static_cast<uint8_t>(this->producerStreamManager->GetCurrentSpatialLayer()),
+			  static_cast<uint8_t>(this->producerStreamManager->GetCurrentTemporalLayer()));
 		}
 
 		auto notificationOffset = FBS::Consumer::CreateLayersChangeNotification(
@@ -1834,8 +1975,10 @@ namespace RTC
 
 		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-			auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
+			const auto rtpPacketDump =
+			  packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+
+			const auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
@@ -1850,8 +1993,10 @@ namespace RTC
 		}
 		else if (this->traceEventTypes.rtp)
 		{
-			auto rtpPacketDump = packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
-			auto traceInfo = FBS::Consumer::CreateRtpTraceInfo(
+			const auto rtpPacketDump =
+			  packet->FillBuffer(this->shared->GetChannelNotifier()->GetBufferBuilder());
+
+			const auto traceInfo = FBS::Consumer::CreateRtpTraceInfo(
 			  this->shared->GetChannelNotifier()->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
@@ -1949,16 +2094,18 @@ namespace RTC
 		// Emit the score event.
 		EmitScore();
 
-		// NOTE @jmillan: Previously present in Simulcast and SVC. Does it make sense to move it here?
-		// Previously present in Simulcast and SVC. Does it make sense to move it here?
+#ifndef MS_USE_BUILTIN_BWE
+		// TODO: @jmillan: Previously present in Simulcast and SVC. Does it make sense
+		// to move it here?
 		if (IsActive())
 		{
 			// Just check target layers if our bitrate is not externally managed.
 			if (!this->externallyManagedBitrate)
 			{
-				this->producerStreamManager->MayChangeLayers(/*force*/ false);
+				this->producerStreamManager->MayChangeLayers();
 			}
 		}
+#endif
 	}
 
 	void Consumer::OnRtpStreamRetransmitRtpPacket(

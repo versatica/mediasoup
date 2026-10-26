@@ -28,6 +28,20 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	std::vector<RTC::RTP::RtpStreamRecv*> SimpleProducerStreamManager::GetProducerRtpStreams() const
+	{
+		MS_TRACE();
+
+		auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
+
+		if (!producerCurrentRtpStream)
+		{
+			return {};
+		}
+
+		return { producerCurrentRtpStream };
+	}
+
 	RTC::RTP::RtpStreamRecv* SimpleProducerStreamManager::GetProducerCurrentRtpStream() const
 	{
 		MS_TRACE();
@@ -52,7 +66,7 @@ namespace RTC
 		  this->producerRtpStream &&
 		  // If there is no RTP inactivity check do not consider the stream
 		  // inactive despite it has score 0.
-		  (this->producerRtpStream->GetScore() > 0u || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
+		  (this->producerRtpStream->GetScore() > 0 || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
 		);
 		// clang-format on
 	}
@@ -90,6 +104,28 @@ namespace RTC
 		// Do nothing.
 	}
 
+#ifdef MS_USE_BUILTIN_BWE
+	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions SimpleProducerStreamManager::GetBitrateOptions(
+	  int64_t nowMs) const
+	{
+		MS_TRACE();
+
+		// A single stream with no layers has nowhere to go, so it offers the single
+		// point it is putting out.
+		const int64_t outputBitrate =
+		  this->producerRtpStream ? this->producerRtpStream->GetBitrate(nowMs) : 0;
+
+		return { .options = { { .bitrate = outputBitrate, .layers = {} } }, .currentOption = 0 };
+	}
+
+	void SimpleProducerStreamManager::SetBitrateOption(
+	  const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& /*option*/)
+	{
+		MS_TRACE();
+
+		MS_ABORT("a single point to run at, so it is never given any");
+	}
+#else
 	int64_t SimpleProducerStreamManager::IncreaseLayer(
 	  int64_t bitrate, bool /*considerLoss*/, float /*lossPercentage*/, int64_t nowMs)
 	{
@@ -132,7 +168,7 @@ namespace RTC
 		}
 	}
 
-	void SimpleProducerStreamManager::ApplyLayers(int64_t /*rtpStreamActiveMs*/)
+	void SimpleProducerStreamManager::ApplyLayers()
 	{
 		MS_TRACE();
 
@@ -143,7 +179,25 @@ namespace RTC
 
 		// Simple does not play the BWE game (even if video kind).
 	}
+#endif
 
+#ifdef MS_USE_BUILTIN_BWE
+	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
+	{
+		MS_TRACE();
+
+		// What it is putting out is what it wants, since it has no way of wanting
+		// anything else. Leaving it out would ask the estimator for less than what
+		// is going to be sent, while the allocation takes its bitrate off the top
+		// all the same.
+		if (!this->producerRtpStream)
+		{
+			return 0;
+		}
+
+		return this->producerRtpStream->GetBitrate(nowMs);
+	}
+#else
 	int64_t SimpleProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
 		MS_TRACE();
@@ -163,6 +217,7 @@ namespace RTC
 
 		return this->producerRtpStream->GetBitrate(nowMs);
 	}
+#endif
 
 	ProducerStreamManager::RtpPacketProcessResult SimpleProducerStreamManager::ProcessRtpPacket(
 	  RTC::RTP::Packet* packet,
@@ -256,7 +311,7 @@ namespace RTC
 
 		// Set forward action.
 		result.type                = RtpPacketProcessResult::Type::FORWARD;
-		result.tsOffset            = 0u;
+		result.tsOffset            = 0;
 		result.marker              = marker;
 		result.sendBufferedPackets = sendBufferedPackets;
 
@@ -328,7 +383,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Nothing specific for Simple.
+#ifdef MS_USE_BUILTIN_BWE
+		// There are no layers to drop here, but what this one was putting in the link
+		// it is not putting any more, and that goes to whoever can use it.
+		if (this->bweManaged)
+		{
+			this->listener->OnProducerStreamManagerNeedBitrateChange();
+		}
+#endif
 	}
 
 	void SimpleProducerStreamManager::OnResumed()
@@ -340,6 +402,15 @@ namespace RTC
 		if (IsActive())
 		{
 			RequestKeyFrame();
+
+#ifdef MS_USE_BUILTIN_BWE
+			// It is putting something in the link again, so what the others were given
+			// while it was quiet has to be worked out afresh.
+			if (this->bweManaged)
+			{
+				this->listener->OnProducerStreamManagerNeedBitrateChange();
+			}
+#endif
 		}
 	}
 

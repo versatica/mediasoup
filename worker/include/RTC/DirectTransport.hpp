@@ -1,6 +1,7 @@
 #ifndef MS_RTC_DIRECT_TRANSPORT_HPP
 #define MS_RTC_DIRECT_TRANSPORT_HPP
 
+#include "handles/SendCallbacks.hpp"
 #include "RTC/Transport.hpp"
 #include "SharedInterface.hpp"
 
@@ -23,17 +24,23 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:
+		bool IsCongestionControlSupported() const override
+		{
+			return false;
+		}
+		bool IsPipe() const override
+		{
+			return false;
+		}
 		bool IsConnected() const override;
-		void SendRtpPacket(
-		  RTC::Consumer* consumer,
-		  RTC::RTP::Packet* packet,
-		  RTC::Transport::onSendCallback* cb = nullptr) override;
+		size_t GetPacketOverhead() const override;
+		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  RTC::SCTP::Message message,
-		  onQueuedCallback* cb = nullptr) override;
+		  onMessageQueuedCallback cb = {}) override;
 		bool SendData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;

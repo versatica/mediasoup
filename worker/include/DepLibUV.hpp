@@ -37,6 +37,19 @@ public:
 	}
 
 	/**
+	 * Time at which the current iteration of the event loop began (ms).
+	 *
+	 * @remarks
+	 * - It is taken once per iteration and cached, so every caller within the same one
+	 *   gets the very same value no matter how long the iteration takes. That is what
+	 *   tells two iterations apart, which the clocks above cannot do.
+	 */
+	static uint64_t GetLoopTimeMs()
+	{
+		return uv_now(DepLibUV::GetLoop());
+	}
+
+	/**
 	 * Offset between our own monotonic clock and the NTP epoch (us).
 	 *
 	 * @remarks

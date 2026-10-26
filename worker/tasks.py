@@ -10,7 +10,9 @@ Usage:
 
 import glob
 import inspect
+import json
 import os
+import re
 import shutil
 import sys
 from contextlib import contextmanager, suppress
@@ -169,16 +171,73 @@ def meson_ninja(ctx):
     )
 
 
+def default_meson_options():
+    """
+    Return every option in meson_options.txt mapped to its default value
+    """
+
+    options = {}
+
+    with open(f"{WORKER_DIR}/meson_options.txt", encoding="utf-8") as options_file:
+        for line in options_file:
+            match = re.match(r"\s*option\('([^']+)'.*value:\s*([^,)]+)", line)
+
+            if match:
+                options[match.group(1)] = match.group(2).strip().strip(chr(39))
+
+    return options
+
+
+def configured_meson_options(build_dir):
+    """
+    Return the name of every option the given build directory is configured with
+    """
+
+    try:
+        with open(
+            f"{build_dir}/meson-info/intro-buildoptions.json", encoding="utf-8"
+        ) as options_file:
+            return {option["name"] for option in json.load(options_file)}
+    except (OSError, ValueError):
+        return set()
+
+
 @task(pre=[meson_ninja])
 def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     """
     Run meson setup
     """
 
+    # NOTE: Meson keeps every option of an already configured build directory
+    # that is not given again, so all of them are passed with their default
+    # value before meson_args, which comes later and hence wins. Without this,
+    # removing an option from MESON_ARGS would silently keep the value it was
+    # given the previous time.
+    default_options = default_meson_options()
+    default_options_args = " ".join(
+        f"-D{name}={value}" for name, value in default_options.items()
+    )
+
+    # NOTE: Given an already configured build directory, "meson setup" just
+    # prints "Directory already configured" and exits successfully, silently
+    # ignoring the given options. So it must be told to reconfigure it or
+    # changing MESON_ARGS would have no effect until the directory is removed.
+    reconfigure = ""
+
+    if os.path.isdir(f"{build_dir}/meson-info"):
+        # NOTE: Meson validates the given options against the ones it has cached
+        # before reading meson_options.txt again, so a build directory configured
+        # back when an option didn't exist yet cannot be reconfigured with it.
+        # There is nothing to preserve in that case, so it's built from scratch.
+        if default_options.keys() <= configured_meson_options(build_dir):
+            reconfigure = "--reconfigure"
+        else:
+            shutil.rmtree(build_dir, ignore_errors=True)
+
     if MEDIASOUP_BUILDTYPE == "Release":
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {meson_args} "{build_dir}"',
+                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {default_options_args} {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -186,7 +245,7 @@ def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     elif MEDIASOUP_BUILDTYPE == "Debug":
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {meson_args} "{build_dir}"',
+                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {default_options_args} {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -194,7 +253,7 @@ def setup(ctx, meson_args=MESON_ARGS, build_dir=BUILD_DIR):
     else:
         with cd_worker():
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {meson_args} "{build_dir}"',
+                f'"{MESON}" setup {reconfigure} --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {default_options_args} {meson_args} "{build_dir}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL,
@@ -277,7 +336,6 @@ def clean_all(ctx):
             )
 
         shutil.rmtree(MEDIASOUP_OUT_DIR, ignore_errors=True)
-        shutil.rmtree("include/FBS", ignore_errors=True)
 
 
 @task(pre=[meson_ninja])
@@ -466,6 +524,40 @@ def format(ctx):
         )
     ]
 )
+def tidy_setup(ctx):
+    """
+    Configure the build directory that `tidy` uses, generating its
+    compile_commands.json
+
+    NOTE: Test files are only given the Catch2 include paths when
+    `ms_build_tests` is enabled, so clang-tidy needs this very build directory to
+    analyze them.
+    """
+
+
+@task(pre=[tidy_setup])
+def tidy_normalize_compile_commands(ctx):
+    """
+    Rewrite the paths of the compile_commands.json that `tidy` uses so that
+    third party clang-tidy runners can resolve them
+
+    NOTE: Just needed by CI, since it doesn't run `tidy` but its own clang-tidy
+    over the files of the pull request.
+    """
+
+    with cd_worker():
+        ctx.run(
+            f'"{NPM}" run normalize-compile-commands --prefix scripts/',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL,
+            # NOTE: Tell the script which build directory holds the
+            # compile_commands.json to use.
+            env={**os.environ, "BUILD_DIR": TEST_BUILD_DIR},
+        )
+
+
+@task(pre=[tidy_setup])
 def tidy(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules
@@ -483,15 +575,7 @@ def tidy(ctx):
         )
 
 
-@task(
-    pre=[
-        call(
-            flatc,
-            meson_args=MESON_ARGS + " -Dms_build_tests=true",
-            build_dir=TEST_BUILD_DIR,
-        )
-    ]
-)
+@task(pre=[tidy_setup])
 def tidy_fix(ctx):
     """
     Performs C++ code checks according to `worker/.clang-tidy` rules and applies

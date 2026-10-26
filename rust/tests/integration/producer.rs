@@ -908,8 +908,89 @@ fn dump_succeeds() {
                     },
                 ],
             );
+            // These encodings have no rid, so it must be absent in rtp_mapping.
+            assert_eq!(
+                dump.rtp_mapping
+                    .encodings
+                    .iter()
+                    .map(|encoding| (encoding.rid.clone(), encoding.ssrc))
+                    .collect::<Vec<_>>(),
+                vec![
+                    (None, Some(22222222)),
+                    (None, Some(22222224)),
+                    (None, Some(22222226)),
+                    (None, Some(22222228)),
+                ],
+            );
             assert_eq!(dump.r#type, ProducerType::Simulcast);
         }
+    });
+}
+
+#[test]
+fn dump_exposes_rid_in_rtp_mapping_encodings() {
+    future::block_on(async move {
+        let (_worker, _router, transport_1, _transport_2) = init().await;
+
+        let video_producer = transport_1
+            .produce(ProducerOptions::new(
+                MediaKind::Video,
+                RtpParameters {
+                    mid: Some("VIDEO".to_string()),
+                    codecs: vec![RtpCodecParameters::Video {
+                        mime_type: MimeTypeVideo::Vp8,
+                        payload_type: 96,
+                        clock_rate: NonZeroU32::new(90000).unwrap(),
+                        parameters: RtpCodecParametersParameters::default(),
+                        rtcp_feedback: vec![],
+                    }],
+                    header_extensions: vec![RtpHeaderExtensionParameters {
+                        uri: RtpHeaderExtensionUri::RtpStreamId,
+                        id: 11,
+                        encrypt: false,
+                    }],
+                    encodings: vec![
+                        RtpEncodingParameters {
+                            rid: Some("r0".to_string()),
+                            ..RtpEncodingParameters::default()
+                        },
+                        RtpEncodingParameters {
+                            rid: Some("r1".to_string()),
+                            ..RtpEncodingParameters::default()
+                        },
+                        RtpEncodingParameters {
+                            rid: Some("r2".to_string()),
+                            ..RtpEncodingParameters::default()
+                        },
+                    ],
+                    rtcp: RtcpParameters {
+                        cname: Some("video-rid".to_string()),
+                        ..RtcpParameters::default()
+                    },
+                    msid: None,
+                },
+            ))
+            .await
+            .expect("Failed to produce video");
+
+        let dump = video_producer
+            .dump()
+            .await
+            .expect("Failed to dump video producer");
+
+        assert_eq!(dump.r#type, ProducerType::Simulcast);
+        assert_eq!(
+            dump.rtp_mapping
+                .encodings
+                .iter()
+                .map(|encoding| (encoding.rid.clone(), encoding.ssrc))
+                .collect::<Vec<_>>(),
+            vec![
+                (Some("r0".to_string()), None),
+                (Some("r1".to_string()), None),
+                (Some("r2".to_string()), None),
+            ],
+        );
     });
 }
 

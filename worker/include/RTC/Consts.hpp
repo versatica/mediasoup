@@ -2,11 +2,39 @@
 #define MS_RTC_CONSTS_HPP
 
 #include "common.hpp"
+#include <string_view>
 
 namespace RTC
 {
 	namespace Consts
 	{
+		/**
+		 * Bytes an IPv4 header takes, without options.
+		 */
+		constexpr size_t Ipv4HeaderSize{ 20 };
+
+		/**
+		 * Bytes an IPv6 header takes, without extension headers.
+		 */
+		constexpr size_t Ipv6HeaderSize{ 40 };
+
+		/**
+		 * Bytes a UDP header takes.
+		 */
+		constexpr size_t UdpHeaderSize{ 8 };
+
+		/**
+		 * Bytes a TCP header takes, without options.
+		 */
+		constexpr size_t TcpHeaderSize{ 20 };
+
+		/**
+		 * Bytes of the length field that frames every packet sent over TCP.
+		 *
+		 * @see https://datatracker.ietf.org/doc/html/rfc4571
+		 */
+		constexpr size_t TcpFramingSize{ 2 };
+
 		/**
 		 * Max MTU size.
 		 */
@@ -38,6 +66,48 @@ namespace RTC
 		 * extension).
 		 */
 		constexpr uint8_t MidRtpExtensionMaxLength{ 8 };
+
+		/**
+		 * SSRC of the RTP stream the probing packets are sent on.
+		 *
+		 * @remarks
+		 * - The receiver negotiates a stream with this very SSRC, so it cannot be
+		 *   changed without changing the client as well.
+		 */
+		constexpr uint32_t BweProbeRtpSsrc{ 1234 };
+
+		/**
+		 * Codec payload type of the RTP stream the probing packets are sent on.
+		 *
+		 * @remarks
+		 * - The receiver negotiates a stream with this very payload type, so it
+		 *   cannot be changed without changing the client as well.
+		 */
+		constexpr uint8_t BweProbeRtpPayloadType{ 127 };
+
+		/**
+		 * MID of the RTP stream the probing packets are sent on, which is how the
+		 * receiver tells it apart.
+		 *
+		 * @remarks
+		 * - The receiver negotiates a stream with this very MID, so it cannot be
+		 *   changed without changing the client as well.
+		 */
+		constexpr std::string_view BweProbeRtpMid{ "probator" };
+
+		static_assert(
+		  BweProbeRtpMid.size() <= MidRtpExtensionMaxLength,
+		  "the MID of the probing stream does not fit in a MID RTP header extension");
+
+		/**
+		 * Lowest bitrate the bandwidth estimation ever produces (bps), so 5 kbps.
+		 */
+		constexpr int64_t BweMinBitrate{ 5000 };
+
+		/**
+		 * Highest bitrate the bandwidth estimation ever deals in (bps), so 1 Gbps.
+		 */
+		constexpr int64_t BweMaxBitrate{ 1000000000 };
 
 		/**
 		 * Largest safe SCTP packet. Starting from the minimum guaranteed MTU value

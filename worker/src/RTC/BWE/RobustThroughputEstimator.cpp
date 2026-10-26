@@ -30,6 +30,53 @@ namespace RTC
 		  : options(options)
 		{
 			MS_TRACE();
+
+			// NOTE: Every option below is set from C++ alone, never from the network
+			// nor from the API, so a value out of range can only be a programming
+			// error. Without them a window that requires no packets would reach the
+			// send rate with no send time to compute it from.
+			MS_ASSERT(
+			  this->options.windowPackets >= 10 && this->options.windowPackets <= 1000,
+			  "window size must be between 10 and 1000 packets [value:%zu]",
+			  this->options.windowPackets);
+			MS_ASSERT(
+			  this->options.maxWindowPackets >= 10 && this->options.maxWindowPackets <= 1000,
+			  "max window size must be between 10 and 1000 packets [value:%zu]",
+			  this->options.maxWindowPackets);
+			MS_ASSERT(
+			  this->options.maxWindowPackets >= this->options.windowPackets,
+			  "max window size is below the window size [maxWindowPackets:%zu, windowPackets:%zu]",
+			  this->options.maxWindowPackets,
+			  this->options.windowPackets);
+			MS_ASSERT(
+			  this->options.requiredPackets >= 10 && this->options.requiredPackets <= 1000,
+			  "required number of packets must be between 10 and 1000 [value:%zu]",
+			  this->options.requiredPackets);
+			MS_ASSERT(
+			  this->options.requiredPackets <= this->options.windowPackets,
+			  "more packets are required than the window holds [requiredPackets:%zu, windowPackets:%zu]",
+			  this->options.requiredPackets,
+			  this->options.windowPackets);
+			MS_ASSERT(
+			  this->options.minWindowDurationUs >= 100 * 1000 &&
+			    this->options.minWindowDurationUs <= 3000 * 1000,
+			  "window duration must be between 100 and 3000 ms [value:%" PRIi64 "]",
+			  this->options.minWindowDurationUs);
+			MS_ASSERT(
+			  this->options.maxWindowDurationUs >= 1000 * 1000 &&
+			    this->options.maxWindowDurationUs <= 15 * 1000 * 1000,
+			  "max window duration must be between 1 and 15 s [value:%" PRIi64 "]",
+			  this->options.maxWindowDurationUs);
+			MS_ASSERT(
+			  this->options.maxWindowDurationUs >= this->options.minWindowDurationUs,
+			  "max window duration is below the window duration [maxWindowDurationUs:%" PRIi64
+			  ", minWindowDurationUs:%" PRIi64 "]",
+			  this->options.maxWindowDurationUs,
+			  this->options.minWindowDurationUs);
+			MS_ASSERT(
+			  this->options.unackedWeight >= 0.0 && this->options.unackedWeight <= 1.0,
+			  "weight for the prior unacked size must be in [0, 1] [value:%f]",
+			  this->options.unackedWeight);
 		}
 
 		void RobustThroughputEstimator::IncomingPacketFeedbackVector(

@@ -1,7 +1,7 @@
 //! SCTP parameters.
 
 use crate::fbs::{FromFbs, ToFbs};
-use mediasoup_sys::fbs::{sctp_association, sctp_parameters};
+use mediasoup_sys::fbs::{sctp_association, sctp_parameters, transport};
 use mediasoup_types::sctp_parameters::*;
 
 impl FromFbs for SctpParameters {
@@ -33,6 +33,18 @@ impl FromFbs for SctpNegotiatedCapabilities {
             negotiated_max_outbound_streams: negotiated_capabilities
                 .negotiated_max_outbound_streams,
             negotiated_max_inbound_streams: negotiated_capabilities.negotiated_max_inbound_streams,
+        }
+    }
+}
+
+impl ToFbs for SctpZeroChecksum {
+    type FbsType = transport::SctpZeroChecksum;
+
+    fn to_fbs(&self) -> Self::FbsType {
+        match self {
+            Self::SctpOverDtls => transport::SctpZeroChecksum::SctpOverDtls,
+            Self::TrustedNetwork => transport::SctpZeroChecksum::TrustedNetwork,
+            Self::None => transport::SctpZeroChecksum::None,
         }
     }
 }

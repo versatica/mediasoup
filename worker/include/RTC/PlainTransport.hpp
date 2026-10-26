@@ -2,6 +2,7 @@
 #define MS_RTC_PLAIN_TRANSPORT_HPP
 
 #include "FBS/plainTransport.h"
+#include "handles/SendCallbacks.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -32,19 +33,25 @@ namespace RTC
 		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	private:
+		bool IsCongestionControlSupported() const override
+		{
+			return true;
+		}
+		bool IsPipe() const override
+		{
+			return false;
+		}
 		bool IsConnected() const override;
+		size_t GetPacketOverhead() const override;
 		bool HasSrtp() const;
 		bool IsSrtpReady() const;
-		void SendRtpPacket(
-		  RTC::Consumer* consumer,
-		  RTC::RTP::Packet* packet,
-		  RTC::Transport::onSendCallback* cb = nullptr) override;
+		void SendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet, onSendCallback cb = {}) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  RTC::SCTP::Message message,
-		  onQueuedCallback* cb = nullptr) override;
+		  onMessageQueuedCallback cb = {}) override;
 		bool SendData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
@@ -90,8 +97,8 @@ namespace RTC
 		ListenInfo rtcpListenInfo;
 		bool rtcpMux{ true };
 		bool comedia{ false };
-		struct sockaddr_storage remoteAddrStorage{};
-		struct sockaddr_storage rtcpRemoteAddrStorage{};
+		sockaddr_storage remoteAddrStorage{};
+		sockaddr_storage rtcpRemoteAddrStorage{};
 		RTC::SrtpSession::CryptoSuite srtpCryptoSuite{
 			RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80
 		};

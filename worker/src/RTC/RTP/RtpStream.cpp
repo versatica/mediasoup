@@ -11,9 +11,6 @@ namespace RTC
 	{
 		/* Static. */
 
-		static constexpr uint16_t MaxDropout{ 3000 };
-		static constexpr uint16_t MaxMisorder{ 1500 };
-		static constexpr uint32_t RtpSeqMod{ 1 << 16 };
 		static constexpr size_t ScoreHistogramLength{ 24 };
 
 		/* Instance methods. */
@@ -23,11 +20,7 @@ namespace RTC
 		  SharedInterface* shared,
 		  RTP::RtpStream::Params& params,
 		  uint8_t initialScore)
-		  : listener(listener),
-		    shared(shared),
-		    params(params),
-		    score(initialScore),
-		    activeSinceMs(this->shared->GetTimeMs())
+		  : listener(listener), shared(shared), params(params), score(initialScore)
 		{
 			MS_TRACE();
 		}
@@ -46,7 +39,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Add params.
-			auto params = this->params.FillBuffer(builder);
+			const auto params = this->params.FillBuffer(builder);
 
 			// Add rtxStream.
 			flatbuffers::Offset<FBS::RtxStream::RtxDump> rtxStream;
@@ -69,7 +62,7 @@ namespace RTC
 			                         ? FBS::RtpParameters::MediaKind::AUDIO
 			                         : FBS::RtpParameters::MediaKind::VIDEO;
 
-			auto baseStats = FBS::RtpStream::CreateBaseStatsDirect(
+			const auto baseStats = FBS::RtpStream::CreateBaseStatsDirect(
 			  builder,
 			  static_cast<uint64_t>(nowMs),
 			  this->params.ssrc,
@@ -77,7 +70,7 @@ namespace RTC
 			  this->params.mimeType.ToString().c_str(),
 			  this->packetsLost,
 			  this->fractionLost,
-			  this->jitter,
+			  static_cast<uint32_t>(this->jitter),
 			  this->packetsDiscarded,
 			  this->packetsRetransmitted,
 			  this->packetsRepaired,
@@ -89,7 +82,7 @@ namespace RTC
 			  this->params.rtxSsrc ? flatbuffers::Optional<uint32_t>(this->params.rtxSsrc)
 				                     : flatbuffers::nullopt,
 			  this->rtxStream ? this->rtxStream->GetPacketsDiscarded() : 0,
-			  this->rttMs > 0.0f ? this->rttMs : 0,
+			  this->rttMs,
 			  this->score);
 
 			return FBS::RtpStream::CreateStats(
@@ -175,15 +168,9 @@ namespace RTC
 
 			if (this->score != score)
 			{
-				auto previousScore = this->score;
+				const auto previousScore = this->score;
 
 				this->score = score;
-
-				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
-				if (previousScore == 0u)
-				{
-					this->activeSinceMs = this->shared->GetTimeMs();
-				}
 
 				// Notify the listener.
 				if (notify)
@@ -293,7 +280,7 @@ namespace RTC
 				this->scores.erase(this->scores.begin());
 			}
 
-			auto previousScore = this->score;
+			const auto previousScore = this->score;
 
 			// Compute new effective score taking into accout entries in the histogram.
 			this->scores.push_back(score);
@@ -314,7 +301,7 @@ namespace RTC
 			size_t samples{ 0 };
 			size_t totalScore{ 0 };
 
-			for (auto score : this->scores)
+			for (const auto score : this->scores)
 			{
 				weight++;
 				samples += weight;
@@ -336,12 +323,6 @@ namespace RTC
 				  score,
 				  previousScore,
 				  this->score);
-
-				// If previous score was 0 (and new one is not 0) then update activeSinceMs.
-				if (previousScore == 0u)
-				{
-					this->activeSinceMs = this->shared->GetTimeMs();
-				}
 
 				this->listener->OnRtpStreamScore(this, this->score, previousScore);
 			}

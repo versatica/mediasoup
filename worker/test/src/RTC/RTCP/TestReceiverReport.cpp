@@ -34,7 +34,7 @@ SCENARIO("RTCP ReceiverReport", "[rtcp][receiver-report]")
 	const uint32_t delaySinceLastSenderReport{ 5 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](RTC::RTCP::ReceiverReport* report)
+	const auto verify = [](RTC::RTCP::ReceiverReport* report)
 	{
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetFractionLost() == fractionLost);

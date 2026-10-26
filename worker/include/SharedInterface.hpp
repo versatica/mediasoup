@@ -52,6 +52,16 @@ public:
 	virtual int64_t GetTimeUs() = 0;
 
 	/**
+	 * Get the time at which the current iteration of the event loop began (ms).
+	 *
+	 * @remarks
+	 * - It stays the same throughout an iteration no matter how long it takes, so it is
+	 *   what tells two iterations apart. The clocks above cannot, since they move while
+	 *   the iteration runs.
+	 */
+	virtual uint64_t GetLoopTimeMs() = 0;
+
+	/**
 	 * Distance from the clock above to the NTP epoch (us), which is what has to be added
 	 * to it to obtain the NTP timestamps of the RTCP we generate.
 	 */

@@ -46,6 +46,11 @@ namespace RTC
 			  uint8_t previousScore) = 0;
 			virtual void OnProducerRtcpSenderReport(
 			  RTC::Producer* producer, RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
+			virtual void OnProducerSpatialLayerActivityChanged(
+			  RTC::Producer* producer,
+			  RTC::RTP::RtpStreamRecv* rtpStream,
+			  uint8_t spatialLayer,
+			  bool isActive) = 0;
 			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 			/**
@@ -75,7 +80,7 @@ namespace RTC
 		struct RtpEncodingMapping
 		{
 			std::string rid;
-			uint32_t ssrc{ 0 };
+			std::optional<uint32_t> ssrc;
 			uint32_t mappedSsrc{ 0 };
 		};
 
@@ -97,7 +102,14 @@ namespace RTC
 	public:
 		enum class ReceiveRtpPacketResult : uint8_t
 		{
+			/**
+			 * The packet is not wanted, but the stream it came on is alive.
+			 */
 			DISCARDED,
+			/**
+			 * No stream exists for this SSRC.
+			 */
+			STREAM_NOT_FOUND,
 			MEDIA,
 			RETRANSMISSION
 		};
@@ -134,7 +146,7 @@ namespace RTC
 		{
 			return this->rtpParameters;
 		}
-		const struct RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
+		const RTC::RTP::HeaderExtensionIds& GetRtpHeaderExtensionIds() const
 		{
 			return this->rtpHeaderExtensionIds;
 		}
@@ -142,6 +154,16 @@ namespace RTC
 		{
 			return this->type;
 		}
+		/**
+		 * Whether this Producer was negotiated with transport-cc, which takes both
+		 * the RTP header extension and the RTCP feedback.
+		 */
+		bool SupportsTransportCc() const;
+		/**
+		 * Whether this Producer was negotiated with REMB, whose RTP header extension
+		 * is abs-send-time.
+		 */
+		bool SupportsRemb() const;
 		bool IsPaused() const
 		{
 			return this->paused;
@@ -156,7 +178,11 @@ namespace RTC
 		}
 		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RTP::Packet* packet, int64_t receivedAtUs);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report, int64_t receivedAtUs);
-		void ReceiveRtcpXrDelaySinceLastRr(
+		/**
+		 * @returns Round trip time just measured (ms), or no value if this report
+		 *   refers to no Receiver Reference Time to measure it against.
+		 */
+		std::optional<float> ReceiveRtcpXrDelaySinceLastRr(
 		  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
 		void RequestKeyFrame(uint32_t mappedSsrc);
@@ -200,6 +226,8 @@ namespace RTC
 		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamSendRtcpPacket(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override;
 		uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream) override;
+		void OnRtpStreamSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) override;
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */
 	public:
@@ -220,13 +248,13 @@ namespace RTC
 		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
-		struct RtpMapping rtpMapping;
+		RtpMapping rtpMapping;
 		std::vector<RTC::RTP::RtpStreamRecv*> rtpStreamByEncodingIdx;
 		std::vector<uint8_t> rtpStreamScores;
 		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		ankerl::unordered_dense::map<RTC::RTP::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		struct RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
+		RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
 		bool enableMediasoupPacketIdHeaderExtension{ false };
 		RTC::RTP::Packet* currentRtpPacket{ nullptr };
@@ -235,8 +263,8 @@ namespace RTC
 		int64_t maxRtcpIntervalMs{ 0 };
 		// Video orientation.
 		bool videoOrientationDetected{ false };
-		struct VideoOrientation videoOrientation;
-		struct TraceEventTypes traceEventTypes;
+		VideoOrientation videoOrientation;
+		TraceEventTypes traceEventTypes;
 	};
 } // namespace RTC
 

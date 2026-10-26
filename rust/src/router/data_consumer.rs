@@ -85,7 +85,7 @@ impl DataConsumerOptions {
     pub fn new_direct(data_producer_id: DataProducerId, subchannels: Option<Vec<u16>>) -> Self {
         Self {
             data_producer_id,
-            ordered: Some(true),
+            ordered: None,
             max_packet_life_time: None,
             max_retransmits: None,
             paused: false,

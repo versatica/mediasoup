@@ -461,12 +461,11 @@ namespace RTC
 			ReadRid(rrid);
 
 			// Add wideSequenceNumber.
-			uint16_t wideSequenceNumber{ 0 };
-			bool wideSequenceNumberSet{ false };
+			std::optional<uint16_t> wideSequenceNumber;
 
-			if (ReadTransportWideCc01(wideSequenceNumber))
+			if (uint16_t value; ReadTransportWideCc01(value))
 			{
-				wideSequenceNumberSet = true;
+				wideSequenceNumber = value;
 			}
 
 			return FBS::RtpPacket::CreateDumpDirect(
@@ -477,15 +476,14 @@ namespace RTC
 			  this->HasMarker(),
 			  this->GetSsrc(),
 			  this->IsKeyFrame(),
-			  this->GetLength(),
-			  this->GetPayloadLength(),
+			  static_cast<uint32_t>(this->GetLength()),
+			  static_cast<uint32_t>(this->GetPayloadLength()),
 			  this->GetSpatialLayer(),
 			  this->GetTemporalLayer(),
 			  mid.empty() ? nullptr : mid.c_str(),
 			  rid.empty() ? nullptr : rid.c_str(),
 			  rrid.empty() ? nullptr : rrid.c_str(),
-			  wideSequenceNumberSet ? flatbuffers::Optional<uint16_t>(wideSequenceNumber)
-				                      : flatbuffers::nullopt);
+			  wideSequenceNumber);
 		}
 
 		void Packet::SetPayloadType(uint8_t payloadType)
@@ -668,15 +666,20 @@ namespace RTC
 
 			// Calculate the number of bytes to shift (may be negative if the packet
 			// already had header extension).
-			int16_t shift{ 0 };
+			// NOTE: Must be signed (the shift is negative when the packet shrinks)
+			// and wide enough for any header extension size. With int16_t a size
+			// delta outside [-32768, 32767] (e.g. a received packet with a header
+			// extension larger than 32 KB) wraps around and SetLength() below throws.
+			int64_t shift{ 0 };
 
 			if (hadHeaderExtension)
 			{
-				shift = static_cast<int16_t>(paddedExtensionsLength - previousHeaderExtensionValueLength);
+				shift = static_cast<int64_t>(paddedExtensionsLength) -
+				        static_cast<int64_t>(previousHeaderExtensionValueLength);
 			}
 			else
 			{
-				shift = 4 + static_cast<int16_t>(paddedExtensionsLength);
+				shift = 4 + static_cast<int64_t>(paddedExtensionsLength);
 			}
 
 			auto* payload            = GetPayloadPointer();
@@ -818,12 +821,6 @@ namespace RTC
 						break;
 					}
 
-					case RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET:
-					{
-						this->headerExtensionIds.timeOffset = extension.id;
-						break;
-					}
-
 					case RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME:
 					{
 						this->headerExtensionIds.absCaptureTime = extension.id;
@@ -962,7 +959,7 @@ namespace RTC
 			return true;
 		}
 
-		bool Packet::UpdateAbsSendTime(int64_t sentAtUs) const
+		bool Packet::UpdateAbsSendTime(uint32_t absSendTime) const
 		{
 			MS_TRACE();
 
@@ -973,8 +970,6 @@ namespace RTC
 			{
 				return false;
 			}
-
-			auto absSendTime = Utils::Time::TimeUsToAbsSendTime(sentAtUs);
 
 			Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
 
@@ -1201,6 +1196,25 @@ namespace RTC
 			return true;
 		}
 
+		bool Packet::UpdateAbsCaptureTime(uint64_t absCaptureTimestamp) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
+
+			// Extension value can be 8 or 16 bytes depending on whether it contains
+			// estimated capture clock offset or not.
+			if (!extenValue || (extenLen != 8u && extenLen != 16u))
+			{
+				return false;
+			}
+
+			Utils::Byte::Set8Bytes(extenValue, 0, absCaptureTimestamp);
+
+			return true;
+		}
+
 		bool Packet::ReadPlayoutDelay(uint16_t& minDelay, uint16_t& maxDelay) const
 		{
 			MS_TRACE();
@@ -1413,6 +1427,11 @@ namespace RTC
 				SetPaddingLength(0);
 			}
 
+			// NOTE: Get the payload length before increasing the packet length,
+			// otherwise the 2 bytes of the original sequence number would be
+			// counted as payload and moved beyond the new end of the packet.
+			const auto payloadLength = GetPayloadLength();
+
 			// Update packet length.
 			// NOTE: This throws if given length is higher than buffer length.
 			SetLength(GetLength() + 2);
@@ -1423,8 +1442,7 @@ namespace RTC
 			// Rewrite the SSRC.
 			SetSsrc(ssrc);
 
-			auto* payload            = GetPayloadPointer();
-			const auto payloadLength = GetPayloadLength();
+			auto* payload = GetPayloadPointer();
 
 			// Write the original sequence number at the begining of the payload.
 			std::memmove(payload + 2, payload, payloadLength);

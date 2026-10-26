@@ -1,4 +1,7 @@
 #include "common.hpp"
+#include "RTC/RTCP/FeedbackPs.hpp"
+#include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -109,6 +112,11 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
 		{
 			return 0;
+		}
+
+		void OnRtpStreamSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+		{
 		}
 
 	public:
@@ -234,6 +242,59 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(listener.nackedSeqNumbers[0] == 0xffff);
 		REQUIRE(listener.nackedSeqNumbers[1] == 0);
 		listener.nackedSeqNumbers.clear();
+	}
+
+	SECTION("RTT is computed from Extended Reports")
+	{
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		const auto receiveDelaySinceLastRr =
+		  [&](int64_t receivedAtUs, uint32_t lastRr, uint32_t dlrr) -> std::optional<float>
+		{
+			RTC::RTCP::DelaySinceLastRr::SsrcInfo ssrcInfo;
+
+			ssrcInfo.SetSsrc(params.ssrc);
+			ssrcInfo.SetLastReceiverReport(lastRr);
+			ssrcInfo.SetDelaySinceLastReceiverReport(dlrr);
+
+			return rtpStream.ReceiveRtcpXrDelaySinceLastRr(std::addressof(ssrcInfo), receivedAtUs);
+		};
+
+		// The compact NTP representation has 16 bits of seconds, so it wraps around
+		// every 65536 seconds.
+		constexpr int64_t WrapUs{ 65536 * 1000000LL };
+
+		// Nothing has been measured yet.
+		REQUIRE(!rtpStream.GetRttMs().has_value());
+
+		// The Receiver Reference Time is sent 1 second before the wrap, the remote
+		// endpoint holds it for half a second, and its answer arrives right at the wrap.
+		REQUIRE(receiveDelaySinceLastRr(WrapUs, 0xFFFF0000, 0x8000) == 500.0f);
+
+		REQUIRE(rtpStream.GetRttMs() == 500.0f);
+
+		// No Receiver Reference Time was received by the remote endpoint yet, so
+		// nothing is measured and the last RTT is kept.
+		REQUIRE(receiveDelaySinceLastRr(WrapUs, 0, 0) == std::nullopt);
+
+		REQUIRE(rtpStream.GetRttMs() == 500.0f);
+
+		// The remote endpoint answers the Receiver Reference Time right away.
+		REQUIRE(receiveDelaySinceLastRr((10 * 1000000) + 500000, 0x000A0000, 0) == 500.0f);
+
+		REQUIRE(rtpStream.GetRttMs() == 500.0f);
+
+		// A negative RTT yields 1 millisecond.
+		REQUIRE(receiveDelaySinceLastRr(20 * 1000000, 0x00140000, 0x8000) == 1.0f);
+
+		REQUIRE(rtpStream.GetRttMs() == 1.0f);
+
+		// So does a RTT too small to be true.
+		REQUIRE(receiveDelaySinceLastRr(20 * 1000000, 0x0013FFFF, 0) == 1.0f);
+
+		REQUIRE(rtpStream.GetRttMs() == 1.0f);
 	}
 
 	SECTION("require key frame")

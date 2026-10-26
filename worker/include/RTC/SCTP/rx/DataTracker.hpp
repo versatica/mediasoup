@@ -105,7 +105,7 @@ namespace RTC
 						return "IMMEDIATE";
 					}
 
-						NO_DEFAULT_GCC();
+						NO_DEFAULT();
 				}
 			}
 

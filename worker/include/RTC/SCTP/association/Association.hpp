@@ -128,7 +128,7 @@ namespace RTC
 						return "SHUTDOWN_ACK_SENT";
 					}
 
-						NO_DEFAULT_GCC();
+						NO_DEFAULT();
 				}
 			}
 

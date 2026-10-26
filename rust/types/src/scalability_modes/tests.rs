@@ -154,3 +154,30 @@ fn parse_json_scalability_modes() {
     );
     assert!(scalability_mode.ksvc());
 }
+
+#[test]
+fn ksvc_is_true_for_every_key_mode() {
+    for mode in [
+        "L2T1_KEY",
+        "L2T2_KEY",
+        "L2T2_KEY_SHIFT",
+        "L2T3_KEY",
+        "L2T3_KEY_SHIFT",
+        "L3T1_KEY",
+        "L3T2_KEY",
+        "L3T2_KEY_SHIFT",
+        "L3T3_KEY",
+        "L3T3_KEY_SHIFT",
+    ] {
+        let scalability_mode: ScalabilityMode = mode.parse().unwrap();
+
+        assert!(scalability_mode.ksvc(), "{mode} must be K-SVC");
+        assert_eq!(scalability_mode.as_str(), mode);
+    }
+
+    for mode in ["S1T1", "L1T3", "L2T1", "L3T3", "S3T3h"] {
+        let scalability_mode: ScalabilityMode = mode.parse().unwrap();
+
+        assert!(!scalability_mode.ksvc(), "{mode} must not be K-SVC");
+    }
+}

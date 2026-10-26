@@ -50,11 +50,6 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION;
 			}
 
-			case FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset:
-			{
-				return RtpHeaderExtensionUri::Type::TIME_OFFSET;
-			}
-
 			case FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay:
 			{
 				return RtpHeaderExtensionUri::Type::PLAYOUT_DELAY;
@@ -75,7 +70,7 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 
@@ -126,11 +121,6 @@ namespace RTC
 				return FBS::RtpParameters::RtpHeaderExtensionUri::VideoOrientation;
 			}
 
-			case RtpHeaderExtensionUri::Type::TIME_OFFSET:
-			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset;
-			}
-
 			case RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME:
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::AbsCaptureTime;
@@ -146,7 +136,7 @@ namespace RTC
 				return FBS::RtpParameters::RtpHeaderExtensionUri::MediasoupPacketId;
 			}
 
-				NO_DEFAULT_GCC();
+				NO_DEFAULT();
 		}
 	}
 

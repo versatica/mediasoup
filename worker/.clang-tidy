@@ -16,6 +16,7 @@ Checks: "*,\
   -clang-analyzer-osx.*,\
   -concurrency-mt-unsafe,\
   -cppcoreguidelines-avoid-c-arrays,\
+  -cppcoreguidelines-avoid-const-or-ref-data-members,\
   -cppcoreguidelines-avoid-do-while,\
   -cppcoreguidelines-avoid-goto,\
   -cppcoreguidelines-avoid-non-const-global-variables,\
@@ -59,6 +60,7 @@ Checks: "*,\
   -llvm-header-guard,\
   -llvm-else-after-return,\
   -llvm-prefer-static-over-anonymous-namespace,\
+  -llvm-use-ranges,\
   -llvmlibc-*,\
   -misc-confusable-identifiers,\
   -misc-include-cleaner,\

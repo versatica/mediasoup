@@ -8,9 +8,6 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr int64_t BweDowngradeConservativeMs{ 10000 };
-	static constexpr int64_t BweDowngradeMinActiveMs{ 8000 };
-
 	/* Instance methods. */
 
 	SvcProducerStreamManager::SvcProducerStreamManager(
@@ -31,6 +28,20 @@ namespace RTC
 	      shared)
 	{
 		MS_TRACE();
+	}
+
+	std::vector<RTC::RTP::RtpStreamRecv*> SvcProducerStreamManager::GetProducerRtpStreams() const
+	{
+		MS_TRACE();
+
+		auto* const producerCurrentRtpStream = GetProducerCurrentRtpStream();
+
+		if (!producerCurrentRtpStream)
+		{
+			return {};
+		}
+
+		return { producerCurrentRtpStream };
 	}
 
 	RTC::RTP::RtpStreamRecv* SvcProducerStreamManager::GetProducerCurrentRtpStream() const
@@ -69,7 +80,7 @@ namespace RTC
 			this->producerRtpStream &&
 			// If there is no RTP inactivity check do not consider the stream
 			// inactive despite it has score 0.
-			(this->producerRtpStream->GetScore() > 0u || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
+			(this->producerRtpStream->GetScore() > 0 || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
 		);
 		// clang-format on
 	}
@@ -94,7 +105,7 @@ namespace RTC
 
 		if (IsActive())
 		{
-			MayChangeLayers(/*force*/ false);
+			MayChangeLayers();
 		}
 	}
 
@@ -105,12 +116,20 @@ namespace RTC
 
 		if (this->listener->IsActive())
 		{
+#ifdef MS_USE_BUILTIN_BWE
+			// Just check target layers if the stream has died or reborned.
+			if (score == 0 || previousScore == 0)
+			{
+				MayChangeLayers();
+			}
+#else
 			// Just check target layers if the stream has died or reborned or if
 			// bitrate is not externally managed.
-			if (!this->externallyManagedBitrate || (score == 0u || previousScore == 0u))
+			if (!this->externallyManagedBitrate || (score == 0 || previousScore == 0))
 			{
-				MayChangeLayers(/*force*/ false);
+				MayChangeLayers();
 			}
+#endif
 		}
 	}
 
@@ -122,6 +141,129 @@ namespace RTC
 		// Do nothing.
 	}
 
+	void SvcProducerStreamManager::ProducerSpatialLayerActivityChanged(
+	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/)
+	{
+		MS_TRACE();
+
+		// All spatial layers share a single RTP stream, so neither its score nor its
+		// inactivity check can tell that just one of them started or stopped. This is
+		// the only chance to reconsider the target layers.
+		if (IsActive())
+		{
+			MayChangeLayers();
+		}
+	}
+
+#ifdef MS_USE_BUILTIN_BWE
+	RTC::BWE::BitrateAllocator::Candidate::BitrateOptions SvcProducerStreamManager::GetBitrateOptions(
+	  int64_t nowMs) const
+	{
+		MS_TRACE();
+
+		RTC::BWE::BitrateAllocator::Candidate::BitrateOptions bitrateOptions;
+
+		// Sending nothing is always on offer, priced at zero, since there may be no
+		// usable spatial layer at all.
+		bitrateOptions.options.push_back({ .bitrate = 0, .layers = {} });
+
+		if (!this->producerRtpStream || this->producerRtpStream->GetScore() == 0)
+		{
+			bitrateOptions.currentOption = GetCurrentBitrateOption(bitrateOptions.options);
+
+			return bitrateOptions;
+		}
+
+		// Whether a usable spatial layer has been found, in which case we must not
+		// go above the preferred spatial layer. Same criteria as in
+		// RecalculateTargetLayers(), so both take the same decision.
+		bool usableSpatialLayerFound{ false };
+
+		for (int16_t spatialLayer{ 0 };
+		     std::cmp_less(spatialLayer, this->producerRtpStream->GetSpatialLayers());
+		     ++spatialLayer)
+		{
+			// A spatial layer with no bitrate at all is not being received.
+			if (this->producerRtpStream->GetSpatialLayerBitrate(nowMs, spatialLayer) == 0)
+			{
+				continue;
+			}
+
+			// Don't go above the preferred spatial layer if we already found a usable
+			// lower one.
+			if (spatialLayer > this->preferredLayers.spatial && usableSpatialLayerFound)
+			{
+				break;
+			}
+
+			const size_t numOptions = bitrateOptions.options.size();
+
+			// Don't consider temporal layers above the preferred one, nor above the
+			// ones this stream has.
+			const auto maxTemporalLayer = std::min(
+			  static_cast<int16_t>(this->producerRtpStream->GetTemporalLayers() - 1),
+			  this->preferredLayers.temporal);
+
+			for (int16_t temporalLayer{ 0 }; temporalLayer <= maxTemporalLayer; ++temporalLayer)
+			{
+				// A temporal layer with no bitrate is not being received, so running at
+				// it would mean sending nothing. Neither is any above it, since a
+				// temporal layer cannot arrive while a lower one does not.
+				if (this->producerRtpStream->GetTemporalLayerBitrate(nowMs, spatialLayer, temporalLayer) == 0)
+				{
+					break;
+				}
+
+				// In K-SVC only the chosen spatial layer is forwarded, so running at
+				// this point costs that layer alone up to this temporal layer. In full
+				// SVC the lower spatial layers go along with it.
+				const int64_t bitrate =
+				  this->encodingContext->IsKSvc()
+				    ? this->producerRtpStream->GetCumulativeTemporalLayerBitrate(
+				        nowMs, spatialLayer, temporalLayer)
+				    : this->producerRtpStream->GetCumulativeBitrate(nowMs, spatialLayer, temporalLayer);
+
+				bitrateOptions.options.push_back(
+				  {
+				    .bitrate = bitrate, .layers = { spatialLayer, temporalLayer }
+        });
+			}
+
+			// A spatial layer whose lowest temporal layer is not being received
+			// cannot be run at, since every point of it is cumulative from that one,
+			// so it does not count as found and the walk goes on.
+			if (bitrateOptions.options.size() == numOptions)
+			{
+				continue;
+			}
+
+			usableSpatialLayerFound = true;
+
+			// If this is the preferred or higher spatial layer, take it and exit.
+			if (spatialLayer >= this->preferredLayers.spatial)
+			{
+				break;
+			}
+		}
+
+		bitrateOptions.currentOption = GetCurrentBitrateOption(bitrateOptions.options);
+
+		return bitrateOptions;
+	}
+
+	void SvcProducerStreamManager::SetBitrateOption(
+	  const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option)
+	{
+		MS_TRACE();
+
+		this->bitrateAllocated = true;
+
+		if (option.layers != this->encodingContext->GetTargetLayers())
+		{
+			UpdateTargetLayers(option.layers.spatial, option.layers.temporal);
+		}
+	}
+#else
 	int64_t SvcProducerStreamManager::IncreaseLayer(
 	  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs)
 	{
@@ -146,11 +288,11 @@ namespace RTC
 			// packet lost.
 			if (lossPercentage < 2)
 			{
-				virtualBitrate = 1.08 * bitrate;
+				virtualBitrate = static_cast<int64_t>(1.08 * bitrate);
 			}
 			else if (lossPercentage > 10)
 			{
-				virtualBitrate = (1 - 0.5 * (lossPercentage / 100)) * bitrate;
+				virtualBitrate = static_cast<int64_t>((1 - 0.5 * (lossPercentage / 100)) * bitrate);
 			}
 			else
 			{
@@ -168,20 +310,6 @@ namespace RTC
 
 		for (; std::cmp_less(spatialLayer, this->producerRtpStream->GetSpatialLayers()); ++spatialLayer)
 		{
-			// If this is higher than current spatial layer and we moved to current
-			// spatial layer due to BWE limitations, check how much it has elapsed
-			// since then.
-			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
-			{
-				if (this->provisionalTargetLayers.spatial > -1 && spatialLayer > this->encodingContext->GetCurrentSpatialLayer())
-				{
-					MS_DEBUG_DEV(
-					  "avoid upgrading to spatial layer %" PRIi16 " due to recent BWE downgrade", spatialLayer);
-
-					goto done;
-				}
-			}
-
 			// Ignore spatial layers lower than the one we already have.
 			if (spatialLayer < this->provisionalTargetLayers.spatial)
 			{
@@ -209,7 +337,7 @@ namespace RTC
 				}
 
 				requiredBitrate =
-				  this->producerRtpStream->GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
+				  this->producerRtpStream->GetTemporalLayerBitrate(nowMs, spatialLayer, temporalLayer);
 
 				// When using K-SVC we must subtract the bitrate of the current used
 				// layer if the new layer is the temporal layer 0 of a higher spatial
@@ -219,7 +347,7 @@ namespace RTC
 				  this->provisionalTargetLayers.spatial > -1 &&
 				  spatialLayer > this->provisionalTargetLayers.spatial)
 				{
-					auto provisionalRequiredBitrate = this->producerRtpStream->GetSpatialLayerBitrate(
+					const int64_t provisionalRequiredBitrate = this->producerRtpStream->GetSpatialLayerBitrate(
 					  nowMs, this->provisionalTargetLayers.spatial);
 
 					if (requiredBitrate > provisionalRequiredBitrate)
@@ -300,7 +428,7 @@ namespace RTC
 		}
 	}
 
-	void SvcProducerStreamManager::ApplyLayers(int64_t rtpStreamActiveMs)
+	void SvcProducerStreamManager::ApplyLayers()
 	{
 		MS_TRACE();
 
@@ -312,25 +440,9 @@ namespace RTC
 		if (provisionalTargetLayers != this->encodingContext->GetTargetLayers())
 		{
 			UpdateTargetLayers(provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
-
-			// If this looks like a spatial layer downgrade due to BWE limitations,
-			// set member.
-			if (
-			  rtpStreamActiveMs > BweDowngradeMinActiveMs &&
-			  this->encodingContext->GetTargetSpatialLayer() <
-			    this->encodingContext->GetCurrentSpatialLayer() &&
-			  this->encodingContext->GetCurrentSpatialLayer() <= this->preferredLayers.spatial)
-			{
-				MS_DEBUG_DEV(
-				  "possible target spatial layer downgrade (from %" PRIi16 " to %" PRIi16
-				  ") due to BWE limitation",
-				  this->encodingContext->GetCurrentSpatialLayer(),
-				  this->encodingContext->GetTargetSpatialLayer());
-
-				this->lastBweDowngradeAtMs = this->shared->GetTimeMs();
-			}
 		}
 	}
+#endif
 
 	int64_t SvcProducerStreamManager::GetDesiredBitrate(int64_t nowMs) const
 	{
@@ -431,8 +543,9 @@ namespace RTC
 		{
 			if (packet->IsKeyFrame())
 			{
-				MS_DEBUG_TAG(
+				MS_DEBUG_2TAGS(
 				  rtp,
+				  svc,
 				  "sync key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber(),
@@ -476,7 +589,7 @@ namespace RTC
 
 		// Set forward action.
 		result.type                = RtpPacketProcessResult::Type::FORWARD;
-		result.tsOffset            = 0u;
+		result.tsOffset            = 0;
 		result.marker              = marker;
 		result.sendBufferedPackets = sendBufferedPackets;
 
@@ -572,24 +685,13 @@ namespace RTC
 			goto done;
 		}
 
-		if (this->producerRtpStream->GetScore() == 0u)
+		if (this->producerRtpStream->GetScore() == 0)
 		{
 			goto done;
 		}
 
 		for (; std::cmp_less(spatialLayer, this->producerRtpStream->GetSpatialLayers()); ++spatialLayer)
 		{
-			// If this is higher than current spatial layer and we moved to current
-			// spatial layer due to BWE limitations, check how much it has elapsed
-			// since then.
-			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
-			{
-				if (newTargetLayers.spatial > -1 && spatialLayer > this->encodingContext->GetCurrentSpatialLayer())
-				{
-					continue;
-				}
-			}
-
 			if (!this->producerRtpStream->GetSpatialLayerBitrate(nowMs, spatialLayer))
 			{
 				continue;
@@ -615,10 +717,14 @@ namespace RTC
 		if (newTargetLayers.spatial != -1)
 		{
 			// Don't consider temporal layers above the preferred one, nor above the
-			// ones this stream has.
-			newTargetLayers.temporal = std::min(
-			  this->preferredLayers.temporal,
-			  static_cast<int16_t>(this->encodingContext->GetTemporalLayers() - 1));
+			// ones this stream has. The Producer stream and the encoding context are
+			// told apart because they come from different RTP parameters, the
+			// Producer ones and the Consumer ones, and nothing here makes them agree.
+			const auto temporalLayers = std::min(
+			  this->producerRtpStream->GetTemporalLayers(), this->encodingContext->GetTemporalLayers());
+
+			newTargetLayers.temporal =
+			  std::min(this->preferredLayers.temporal, static_cast<int16_t>(temporalLayers - 1));
 		}
 
 	done:
@@ -633,17 +739,17 @@ namespace RTC
 
 		this->syncRequired = true;
 
+#ifndef MS_USE_BUILTIN_BWE
 		if (IsActive())
 		{
-			MayChangeLayers(/*force*/ false);
+			MayChangeLayers();
 		}
+#endif
 	}
 
 	void SvcProducerStreamManager::OnTransportDisconnected()
 	{
 		MS_TRACE();
-
-		this->lastBweDowngradeAtMs = 0u;
 
 		UpdateTargetLayers(-1, -1);
 	}
@@ -652,9 +758,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->lastBweDowngradeAtMs = 0u;
-
 		UpdateTargetLayers(-1, -1);
+
+#ifdef MS_USE_BUILTIN_BWE
+		// What this one was putting in the link it is not putting any more, and that
+		// goes to whoever can use it. There is nothing to recalculate first, since a
+		// paused Consumer offers nothing whatever its streams can do.
+		if (this->bweManaged)
+		{
+			this->listener->OnProducerStreamManagerNeedBitrateChange();
+		}
+#endif
 	}
 
 	void SvcProducerStreamManager::OnResumed()
@@ -665,7 +779,21 @@ namespace RTC
 
 		if (IsActive())
 		{
-			MayChangeLayers(/*force*/ false);
+#ifdef MS_USE_BUILTIN_BWE
+			// Whatever this one may put out again has to be bid for, and the target
+			// layers it was left with say nothing about that. With no allocation
+			// running there is nothing to bid for, so the layers are worked out here.
+			if (this->bweManaged)
+			{
+				this->listener->OnProducerStreamManagerNeedBitrateChange();
+			}
+			else
+			{
+				MayChangeLayers();
+			}
+#else
+			MayChangeLayers();
+#endif
 		}
 	}
 

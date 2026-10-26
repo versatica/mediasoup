@@ -301,6 +301,84 @@ fn produce_data_used_stream_id_rejects() {
 }
 
 #[test]
+fn produce_data_with_max_retransmits_0_or_max_packet_life_time_0_succeeds() {
+    future::block_on(async move {
+        let (_worker, _router, transport1, _transport2) = init().await;
+
+        let data_producer1 = transport1
+            .produce_data(DataProducerOptions::new_sctp(
+                SctpStreamParameters::new_unordered_with_retransmits(888, 0),
+            ))
+            .await
+            .expect("Failed to produce data");
+
+        {
+            let sctp_stream_parameters = data_producer1.sctp_stream_parameters();
+            assert!(sctp_stream_parameters.is_some());
+            assert!(!sctp_stream_parameters.unwrap().ordered());
+            assert_eq!(sctp_stream_parameters.unwrap().max_packet_life_time(), None);
+            assert_eq!(sctp_stream_parameters.unwrap().max_retransmits(), Some(0));
+        }
+
+        let data_producer2 = transport1
+            .produce_data(DataProducerOptions::new_sctp(
+                SctpStreamParameters::new_unordered_with_life_time(999, 0),
+            ))
+            .await
+            .expect("Failed to produce data");
+
+        {
+            let sctp_stream_parameters = data_producer2.sctp_stream_parameters();
+            assert!(sctp_stream_parameters.is_some());
+            assert!(!sctp_stream_parameters.unwrap().ordered());
+            assert_eq!(
+                sctp_stream_parameters.unwrap().max_packet_life_time(),
+                Some(0)
+            );
+            assert_eq!(sctp_stream_parameters.unwrap().max_retransmits(), None);
+        }
+    });
+}
+
+#[test]
+fn produce_data_with_ordered_and_max_retransmits_0_rejects() {
+    future::block_on(async move {
+        let (_worker, _router, transport1, _transport2) = init().await;
+
+        assert!(matches!(
+            transport1
+                .produce_data(DataProducerOptions::new_sctp(SctpStreamParameters {
+                    stream_id: 999,
+                    ordered: true,
+                    max_packet_life_time: None,
+                    max_retransmits: Some(0),
+                }))
+                .await,
+            Err(ProduceDataError::Request(RequestError::Response { .. })),
+        ));
+    });
+}
+
+#[test]
+fn produce_data_with_max_packet_life_time_0_and_max_retransmits_rejects() {
+    future::block_on(async move {
+        let (_worker, _router, transport1, _transport2) = init().await;
+
+        assert!(matches!(
+            transport1
+                .produce_data(DataProducerOptions::new_sctp(SctpStreamParameters {
+                    stream_id: 999,
+                    ordered: false,
+                    max_packet_life_time: Some(0),
+                    max_retransmits: Some(5),
+                }))
+                .await,
+            Err(ProduceDataError::Request(RequestError::Response { .. })),
+        ));
+    });
+}
+
+#[test]
 fn dump_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport1, transport2) = init().await;

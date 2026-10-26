@@ -167,7 +167,7 @@ fn video_producer_options_with_abs_capture_time() -> ProducerOptions {
             }],
             header_extensions: vec![RtpHeaderExtensionParameters {
                 uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                id: 12,
+                id: 11,
                 encrypt: false,
             }],
             encodings: vec![RtpEncodingParameters {
@@ -248,6 +248,114 @@ fn consumer_device_capabilities() -> RtpCapabilities {
             },
         ],
     }
+}
+
+#[test]
+fn pipe_transport_removes_bwe_stuff() {
+    future::block_on(async move {
+        let (_worker1, _worker2, router1, _router2, _transport1, _transport2) = init().await;
+
+        let transport = router1
+            .create_pipe_transport(PipeTransportOptions::new(ListenInfo {
+                protocol: Protocol::Udp,
+                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                announced_address: None,
+                expose_internal_ip: false,
+                port: None,
+                port_range: None,
+                flags: None,
+                send_buffer_size: None,
+                recv_buffer_size: None,
+            }))
+            .await
+            .expect("Failed to create pipe transport");
+
+        let producer = transport
+            .produce(ProducerOptions::new(
+                MediaKind::Video,
+                RtpParameters {
+                    mid: Some("VIDEO".to_string()),
+                    codecs: vec![RtpCodecParameters::Video {
+                        mime_type: MimeTypeVideo::Vp8,
+                        payload_type: 112,
+                        clock_rate: NonZeroU32::new(90000).unwrap(),
+                        parameters: RtpCodecParametersParameters::default(),
+                        rtcp_feedback: vec![
+                            RtcpFeedback::NackPli,
+                            RtcpFeedback::GoogRemb,
+                            RtcpFeedback::TransportCc,
+                        ],
+                    }],
+                    header_extensions: vec![
+                        RtpHeaderExtensionParameters {
+                            uri: RtpHeaderExtensionUri::AbsSendTime,
+                            id: 4,
+                            encrypt: false,
+                        },
+                        RtpHeaderExtensionParameters {
+                            uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
+                            id: 5,
+                            encrypt: false,
+                        },
+                        RtpHeaderExtensionParameters {
+                            uri: RtpHeaderExtensionUri::VideoOrientation,
+                            id: 13,
+                            encrypt: false,
+                        },
+                    ],
+                    encodings: vec![RtpEncodingParameters {
+                        ssrc: Some(22222222),
+                        ..RtpEncodingParameters::default()
+                    }],
+                    rtcp: RtcpParameters {
+                        cname: Some("video-1".to_string()),
+                        ..RtcpParameters::default()
+                    },
+                    msid: None,
+                },
+            ))
+            .await
+            .expect("Failed to produce video");
+
+        assert_eq!(
+            producer
+                .rtp_parameters()
+                .header_extensions
+                .iter()
+                .map(|ext| ext.uri)
+                .collect::<Vec<_>>(),
+            vec![RtpHeaderExtensionUri::VideoOrientation],
+        );
+
+        assert_eq!(
+            producer.rtp_parameters().codecs[0].rtcp_feedback(),
+            &vec![RtcpFeedback::NackPli],
+        );
+
+        let consumer = transport
+            .consume(ConsumerOptions::new(
+                producer.id(),
+                RtpCapabilities::default(),
+            ))
+            .await
+            .expect("Failed to consume video");
+
+        for header_extension in &consumer.rtp_parameters().header_extensions {
+            assert!(!matches!(
+                header_extension.uri,
+                RtpHeaderExtensionUri::AbsSendTime | RtpHeaderExtensionUri::TransportWideCcDraft01
+            ));
+        }
+
+        for codec in &consumer.rtp_parameters().codecs {
+            for fb in codec.rtcp_feedback() {
+                assert!(!matches!(
+                    fb,
+                    RtcpFeedback::GoogRemb | RtcpFeedback::TransportCc
+                ));
+            }
+        }
+    });
 }
 
 async fn init() -> (
@@ -387,12 +495,12 @@ fn pipe_to_router_succeeds_with_audio() {
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 11,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::MediasoupPacketId,
-                    id: 12,
+                    id: 11,
                     encrypt: false,
                 },
             ],
@@ -442,12 +550,12 @@ fn pipe_to_router_succeeds_with_audio() {
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 11,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::MediasoupPacketId,
-                    id: 12,
+                    id: 11,
                     encrypt: false,
                 },
             ],
@@ -538,18 +646,13 @@ fn pipe_to_router_succeeds_with_video() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::TimeOffset,
-                    id: 9,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 11,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::MediasoupPacketId,
-                    id: 12,
+                    id: 11,
                     encrypt: false,
                 },
             ],
@@ -594,18 +697,13 @@ fn pipe_to_router_succeeds_with_video() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::TimeOffset,
-                    id: 9,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 11,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::MediasoupPacketId,
-                    id: 12,
+                    id: 11,
                     encrypt: false,
                 },
             ],
@@ -635,7 +733,7 @@ fn pipe_to_router_gives_abs_capture_time_to_pipe_consumer_if_producer_has_it() {
         assert!(pipe_consumer.rtp_parameters().header_extensions.contains(
             &RtpHeaderExtensionParameters {
                 uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                id: 10,
+                id: 9,
                 encrypt: false,
             }
         ));
@@ -891,18 +989,13 @@ fn create_with_enable_rtx_succeeds() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::TimeOffset,
-                    id: 9,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 11,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::MediasoupPacketId,
-                    id: 12,
+                    id: 11,
                     encrypt: false,
                 },
             ],

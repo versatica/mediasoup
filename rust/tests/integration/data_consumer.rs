@@ -219,6 +219,29 @@ fn consume_data_with_unknown_data_producer_id_fails() {
 }
 
 #[test]
+fn consume_data_with_max_retransmits_replaces_data_producer_max_packet_life_time() {
+    future::block_on(async move {
+        let (_worker, _router, webrtc_transport, sctp_data_producer) = init().await;
+
+        let data_consumer = webrtc_transport
+            .consume_data(DataConsumerOptions::new_sctp_unordered_with_retransmits(
+                sctp_data_producer.id(),
+                2,
+            ))
+            .await
+            .expect("Failed to consume data");
+
+        {
+            let sctp_stream_parameters = data_consumer.sctp_stream_parameters();
+            assert!(sctp_stream_parameters.is_some());
+            assert!(!sctp_stream_parameters.unwrap().ordered());
+            assert_eq!(sctp_stream_parameters.unwrap().max_packet_life_time(), None);
+            assert_eq!(sctp_stream_parameters.unwrap().max_retransmits(), Some(2));
+        }
+    });
+}
+
+#[test]
 fn weak() {
     future::block_on(async move {
         let (_worker, router, _webrtc_transport, sctp_data_producer) = init().await;

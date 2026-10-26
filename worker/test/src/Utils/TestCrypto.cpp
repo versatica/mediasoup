@@ -1,8 +1,10 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include <ankerl/unordered_dense.h>
+#include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <limits> // std::numeric_limits()
+#include <random> // std::mt19937
 
 SCENARIO("Utils::Crypto", "[utils][crypto]")
 {
@@ -75,6 +77,73 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		REQUIRE(Utils::Crypto::GetCRC32c(data32Decrementing, sizeof(data32Decrementing)) == 0x5CDB3F11);
 		REQUIRE(Utils::Crypto::GetCRC32c(dataSCSICommandPDU, sizeof(dataSCSICommandPDU)) == 0x563A96D9);
 	}
+
+	SECTION("GetCRC32() and GetCRC32c() match a byte at a time reference")
+	{
+		// Guards the slice-by-8 implementations against regressions at the 8 byte block
+		// boundary and on unaligned input. Deliberately table free so that it shares
+		// nothing with the implementations under test.
+		const auto reference =
+		  [](uint32_t polynomial, bool byteSwap, const uint8_t* data, size_t size) -> uint32_t
+		{
+			uint32_t crc{ 0xFFFFFFFF };
+
+			for (size_t i{ 0u }; i < size; ++i)
+			{
+				uint32_t byte{ static_cast<uint32_t>((crc ^ data[i]) & 0xFF) };
+
+				for (size_t bit{ 0u }; bit < 8u; ++bit)
+				{
+					byte = (byte & 1u) ? (byte >> 1) ^ polynomial : (byte >> 1);
+				}
+
+				crc = (crc >> 8) ^ byte;
+			}
+
+			const uint32_t result{ ~crc };
+
+			if (!byteSwap)
+			{
+				return result;
+			}
+
+			return ((result & 0xff) << 24) | (((result >> 8) & 0xff) << 16) |
+			       (((result >> 16) & 0xff) << 8) | ((result >> 24) & 0xff);
+		};
+
+		std::mt19937 rng{ 20240101 };
+		std::array<uint8_t, 1024 + 8> buffer{};
+
+		for (auto& byte : buffer)
+		{
+			byte = static_cast<uint8_t>(rng());
+		}
+
+		size_t mismatches{ 0u };
+
+		// Every length up to 1024 bytes at every misalignment within an 8 byte word.
+		for (size_t offset{ 0u }; offset < 8u; ++offset)
+		{
+			for (size_t size{ 0u }; size <= 1024u; ++size)
+			{
+				const uint8_t* data = buffer.data() + offset;
+
+				// CRC-32 (IEEE 802.3), no byte swap.
+				if (Utils::Crypto::GetCRC32(data, size) != reference(0xEDB88320u, false, data, size))
+				{
+					++mismatches;
+				}
+
+				// CRC-32C (Castagnoli), byte swapped.
+				if (Utils::Crypto::GetCRC32c(data, size) != reference(0x82F63B78u, true, data, size))
+				{
+					++mismatches;
+				}
+			}
+		}
+
+		REQUIRE(mismatches == 0u);
+	}
 }
 
 SCENARIO("Utils::Crypto::GetRandomUInt()", "[utils][crypto]")
@@ -84,7 +153,7 @@ SCENARIO("Utils::Crypto::GetRandomUInt()", "[utils][crypto]")
 
 	for (size_t i = 0; i < 200; ++i)
 	{
-		auto randomNumber =
+		const auto randomNumber =
 		  Utils::Crypto::GetRandomUInt<uint32_t>(0, std::numeric_limits<uint32_t>::max());
 
 		REQUIRE(randomUint32Numbers.find(randomNumber) == randomUint32Numbers.end());
@@ -94,7 +163,7 @@ SCENARIO("Utils::Crypto::GetRandomUInt()", "[utils][crypto]")
 
 	for (size_t i = 0; i < 200; ++i)
 	{
-		auto randomNumber =
+		const auto randomNumber =
 		  Utils::Crypto::GetRandomUInt<uint64_t>(0, std::numeric_limits<uint64_t>::max());
 
 		REQUIRE(randomUint64Numbers.find(randomNumber) == randomUint64Numbers.end());

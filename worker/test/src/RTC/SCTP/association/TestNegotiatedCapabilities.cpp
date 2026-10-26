@@ -30,7 +30,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		remoteChunk->SetNumberOfOutboundStreams(4096);
 		remoteChunk->SetNumberOfInboundStreams(1024);
 
-		auto* remoteSupportedExtensionsParameter =
+		auto* const remoteSupportedExtensionsParameter =
 		  remoteChunk->BuildParameterInPlace<RTC::SCTP::SupportedExtensionsParameter>();
 
 		remoteSupportedExtensionsParameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::FORWARD_TSN);
@@ -39,7 +39,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		remoteSupportedExtensionsParameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::I_FORWARD_TSN);
 		remoteSupportedExtensionsParameter->Consolidate();
 
-		auto* remoteZeroChecksumAcceptableParameter =
+		auto* const remoteZeroChecksumAcceptableParameter =
 		  remoteChunk->BuildParameterInPlace<RTC::SCTP::ZeroChecksumAcceptableParameter>();
 
 		remoteZeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
@@ -75,7 +75,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		remoteChunk->SetNumberOfOutboundStreams(4000);
 		remoteChunk->SetNumberOfInboundStreams(3000);
 
-		auto* remoteSupportedExtensionsParameter =
+		auto* const remoteSupportedExtensionsParameter =
 		  remoteChunk->BuildParameterInPlace<RTC::SCTP::SupportedExtensionsParameter>();
 
 		// NOTE: Missing FORWARD-TSN, but peer announced support for it via
@@ -86,12 +86,12 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		remoteSupportedExtensionsParameter->AddChunkType(RTC::SCTP::Chunk::ChunkType::I_DATA);
 		remoteSupportedExtensionsParameter->Consolidate();
 
-		auto* remoteForwardTsnSupportedParameter =
+		auto* const remoteForwardTsnSupportedParameter =
 		  remoteChunk->BuildParameterInPlace<RTC::SCTP::ForwardTsnSupportedParameter>();
 
 		remoteForwardTsnSupportedParameter->Consolidate();
 
-		auto* remoteZeroChecksumAcceptableParameter =
+		auto* const remoteZeroChecksumAcceptableParameter =
 		  remoteChunk->BuildParameterInPlace<RTC::SCTP::ZeroChecksumAcceptableParameter>();
 
 		remoteZeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
@@ -108,6 +108,55 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp][negotiatedcapabilities]")
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
 		REQUIRE(negotiatedCapabilities.reConfig == false);
+		REQUIRE(negotiatedCapabilities.zeroChecksum == false);
+	}
+
+	SECTION("NegotiatedCapabilities::Factory() succeeds (3)")
+	{
+		RTC::SCTP::SctpOptions sctpOptions{};
+
+		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK;
+
+		const std::unique_ptr<RTC::SCTP::InitChunk> remoteChunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
+
+		auto* const remoteZeroChecksumAcceptableParameter =
+		  remoteChunk->BuildParameterInPlace<RTC::SCTP::ZeroChecksumAcceptableParameter>();
+
+		remoteZeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK);
+		remoteZeroChecksumAcceptableParameter->Consolidate();
+
+		const auto remoteCapabilities = RTC::SCTP::Capabilities::Factory(remoteChunk.get());
+		const auto negotiatedCapabilities =
+		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteCapabilities);
+
+		REQUIRE(negotiatedCapabilities.zeroChecksum == true);
+	}
+
+	SECTION("NegotiatedCapabilities::Factory() succeeds (4)")
+	{
+		RTC::SCTP::SctpOptions sctpOptions{};
+
+		sctpOptions.zeroChecksumAlternateErrorDetectionMethod =
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
+
+		const std::unique_ptr<RTC::SCTP::InitChunk> remoteChunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
+
+		// NOTE: Peer announces a different method than ours.
+		auto* const remoteZeroChecksumAcceptableParameter =
+		  remoteChunk->BuildParameterInPlace<RTC::SCTP::ZeroChecksumAcceptableParameter>();
+
+		remoteZeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
+		  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::TRUSTED_NETWORK);
+		remoteZeroChecksumAcceptableParameter->Consolidate();
+
+		const auto remoteCapabilities = RTC::SCTP::Capabilities::Factory(remoteChunk.get());
+		const auto negotiatedCapabilities =
+		  RTC::SCTP::NegotiatedCapabilities::Factory(sctpOptions, remoteCapabilities);
+
 		REQUIRE(negotiatedCapabilities.zeroChecksum == false);
 	}
 }

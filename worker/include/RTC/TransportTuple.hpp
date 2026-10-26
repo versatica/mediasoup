@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "FBS/transport.h"
+#include "handles/SendCallbacks.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
 #include "Utils.hpp"
@@ -13,9 +15,6 @@ namespace RTC
 {
 	class TransportTuple
 	{
-	protected:
-		using onSendCallback = const std::function<void(bool sent)>;
-
 	public:
 		enum class Protocol : uint8_t
 		{
@@ -139,21 +138,77 @@ namespace RTC
 			this->localAnnouncedAddress = localAnnouncedAddress;
 		}
 
-		void Send(const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback* cb = nullptr)
+		void Send(const uint8_t* data, size_t len, onSendCallback cb = {})
 		{
 			if (this->protocol == Protocol::UDP)
 			{
-				this->udpSocket->Send(data, len, this->udpRemoteAddr, cb);
+				this->udpSocket->Send(data, len, this->udpRemoteAddr, std::move(cb));
 			}
 			else
 			{
-				this->tcpConnection->Send(data, len, cb);
+				this->tcpConnection->Send(data, len, std::move(cb));
 			}
 		}
 
 		Protocol GetProtocol() const
 		{
 			return this->protocol;
+		}
+
+		/**
+		 * Bytes that every packet sent through this tuple carries on top of its own
+		 * length, which is what the network sees but nothing in here counts.
+		 *
+		 * @remarks
+		 * - It only contemplates IPv4 and IPv6 for the network layer and UDP and
+		 *   TCP for the transport one, both without options, plus the length field
+		 *   that frames a packet sent over TCP. Anything below that, such as the
+		 *   Ethernet frame or a tunnel, is not counted.
+		 */
+		size_t GetPacketOverhead() const
+		{
+			size_t overhead{ 0 };
+
+			switch (GetLocalAddress()->sa_family)
+			{
+				case AF_INET:
+				{
+					overhead += RTC::Consts::Ipv4HeaderSize;
+
+					break;
+				}
+
+				case AF_INET6:
+				{
+					overhead += RTC::Consts::Ipv6HeaderSize;
+
+					break;
+				}
+
+				default:
+				{
+					break;
+				}
+			}
+
+			switch (this->protocol)
+			{
+				case Protocol::UDP:
+				{
+					overhead += RTC::Consts::UdpHeaderSize;
+
+					break;
+				}
+
+				case Protocol::TCP:
+				{
+					overhead += RTC::Consts::TcpHeaderSize + RTC::Consts::TcpFramingSize;
+
+					break;
+				}
+			}
+
+			return overhead;
 		}
 
 		const struct sockaddr* GetLocalAddress() const
@@ -216,7 +271,7 @@ namespace RTC
 		RTC::TcpConnection* tcpConnection{ nullptr };
 		std::string localAnnouncedAddress;
 		// Others.
-		struct sockaddr_storage udpRemoteAddrStorage{};
+		sockaddr_storage udpRemoteAddrStorage{};
 		Protocol protocol;
 		TupleKey tupleKey;
 	};

@@ -133,7 +133,7 @@ namespace mocks
 					return std::min<int64_t>(timeoutMs, BackoffTimerHandleInterface::MaxTimeoutMs);
 				}
 
-					NO_DEFAULT_GCC();
+					NO_DEFAULT();
 			}
 		}
 

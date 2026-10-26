@@ -541,9 +541,9 @@ pub enum RtpHeaderExtensionDirection {
 /// Error that caused [`RtpHeaderExtensionUri`] parsing error.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RtpHeaderExtensionUriParseError {
-    /// Unsupported
-    #[error("Unsupported")]
-    Unsupported,
+    /// Unsupported URI.
+    #[error("Unsupported RTP header extension URI: {0}")]
+    Unsupported(String),
 }
 
 /// URI for supported RTP header extension
@@ -575,9 +575,6 @@ pub enum RtpHeaderExtensionUri {
     /// urn:3gpp:video-orientation
     #[serde(rename = "urn:3gpp:video-orientation")]
     VideoOrientation,
-    /// urn:ietf:params:rtp-hdrext:toffset
-    #[serde(rename = "urn:ietf:params:rtp-hdrext:toffset")]
-    TimeOffset,
     /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time")]
     AbsCaptureTime,
@@ -587,10 +584,6 @@ pub enum RtpHeaderExtensionUri {
     /// urn:mediasoup:params:rtp-hdrext:packet-id
     #[serde(rename = "urn:mediasoup:params:rtp-hdrext:packet-id")]
     MediasoupPacketId,
-
-    #[doc(hidden)]
-    #[serde(other, rename = "unsupported")]
-    Unsupported,
 }
 
 impl FromStr for RtpHeaderExtensionUri {
@@ -608,13 +601,12 @@ impl FromStr for RtpHeaderExtensionUri {
             "urn:ietf:params:rtp-hdrext:ssrc-audio-level" => Ok(Self::SsrcAudioLevel),
             "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension" => Ok(Self::DependencyDescriptor),
             "urn:3gpp:video-orientation" => Ok(Self::VideoOrientation),
-            "urn:ietf:params:rtp-hdrext:toffset" => Ok(Self::TimeOffset),
             "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time" => {
                 Ok(Self::AbsCaptureTime)
             }
             "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay" => Ok(Self::PlayoutDelay),
             "urn:mediasoup:params:rtp-hdrext:packet-id" => Ok(Self::MediasoupPacketId),
-            _ => Err(RtpHeaderExtensionUriParseError::Unsupported),
+            _ => Err(RtpHeaderExtensionUriParseError::Unsupported(s.to_string())),
         }
     }
 }
@@ -638,7 +630,6 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::SsrcAudioLevel => "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
             RtpHeaderExtensionUri::DependencyDescriptor => "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension",
             RtpHeaderExtensionUri::VideoOrientation => "urn:3gpp:video-orientation",
-            RtpHeaderExtensionUri::TimeOffset => "urn:ietf:params:rtp-hdrext:toffset",
             RtpHeaderExtensionUri::AbsCaptureTime => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time"
             }
@@ -648,7 +639,6 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::MediasoupPacketId => {
                 "urn:mediasoup:params:rtp-hdrext:packet-id"
             }
-            RtpHeaderExtensionUri::Unsupported => "unsupported",
         }
     }
 }

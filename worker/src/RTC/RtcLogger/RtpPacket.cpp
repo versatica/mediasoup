@@ -1,7 +1,7 @@
-#define MS_CLASS "RTC::RtcLogger"
+#define MS_CLASS "RTC::RtcLogger::RtpPacket"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/RtcLogger.hpp"
+#include "RTC/RtcLogger/RtpPacket.hpp"
 #include "Logger.hpp"
 #include <sstream>
 

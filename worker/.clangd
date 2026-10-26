@@ -3,3 +3,12 @@ CompileFlags:
 
 CompletionOptions:
   HeaderInsertion: Never
+
+---
+# Test files are only given the Catch2 include paths and the MS_TEST define when
+# `ms_build_tests` is enabled, which happens in its own build directory.
+If:
+  PathMatch: test/.*
+
+CompileFlags:
+  CompilationDatabase: "out/Release/build-test"

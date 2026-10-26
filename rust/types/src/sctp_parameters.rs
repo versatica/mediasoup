@@ -36,6 +36,21 @@ pub struct SctpNegotiatedCapabilities {
     pub negotiated_max_inbound_streams: u16,
 }
 
+/// SCTP Zero Checksum (RFC 9653) alternate error detection method announced to the remote SCTP
+/// endpoint. The CRC32c checksum is only skipped if the remote endpoint announces the same
+/// method.
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum SctpZeroChecksum {
+    /// SCTP over DTLS, as defined in RFC 9653.
+    SctpOverDtls,
+    /// mediasoup specific method (not assigned by IANA), only meant to be used between mediasoup
+    /// endpoints over a trusted network path (such as localhost).
+    TrustedNetwork,
+    /// Zero Checksum is not announced.
+    None,
+}
+
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.
 ///
 /// If ordered is true then `max_packet_life_time` and `max_retransmits` must be `false`.

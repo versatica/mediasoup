@@ -237,7 +237,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		struct sockaddr_storage obtainedXorMappedAddressStorage{};
+		sockaddr_storage obtainedXorMappedAddressStorage{};
 
 		REQUIRE(successResponse->GetXorMappedAddress(std::addressof(obtainedXorMappedAddressStorage)));
 
@@ -726,7 +726,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		struct sockaddr_storage xorMappedAddressStorage{};
+		sockaddr_storage xorMappedAddressStorage{};
 
 		// Byte length: 8.
 		auto* xorMappedAddressIn =
@@ -767,7 +767,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		struct sockaddr_storage obtainedXorMappedAddressStorage{};
+		sockaddr_storage obtainedXorMappedAddressStorage{};
 
 		REQUIRE(successResponse->GetXorMappedAddress(std::addressof(obtainedXorMappedAddressStorage)));
 

@@ -4,13 +4,21 @@ use mediasoup::data_consumer::DataConsumerOptions;
 use mediasoup::data_producer::{DataProducer, DataProducerOptions};
 use mediasoup::direct_transport::{DirectTransport, DirectTransportOptions};
 use mediasoup::prelude::*;
+use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use mediasoup_types::data_structures::{AppData, WebRtcMessage};
+use mediasoup_types::rtp_parameters::{
+    MediaKind, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities, RtpCodecCapability,
+    RtpCodecParameters, RtpCodecParametersParameters, RtpEncodingParameters, RtpHeaderExtension,
+    RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
+    RtpParameters,
+};
 use parking_lot::Mutex;
 use std::borrow::Cow;
 use std::env;
+use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
@@ -152,8 +160,6 @@ fn get_stats_succeeds() {
         assert_eq!(stats[0].rtx_send_bitrate, 0);
         assert_eq!(stats[0].probation_bytes_sent, 0);
         assert_eq!(stats[0].probation_send_bitrate, 0);
-        assert_eq!(stats[0].rtp_packet_loss_received, None);
-        assert_eq!(stats[0].rtp_packet_loss_sent, None);
     });
 }
 
@@ -568,6 +574,186 @@ fn send_with_subchannels_succeeds() {
         assert!(received_messages_2.contains(&both.to_string()));
         assert!(!received_messages_2.contains(&dc1.to_string()));
         assert!(received_messages_2.contains(&dc2.to_string()));
+    });
+}
+
+async fn init_with_media_codecs() -> (Worker, Router, DirectTransport) {
+    {
+        let mut builder = env_logger::builder();
+        if env::var(env_logger::DEFAULT_FILTER_ENV).is_err() {
+            builder.filter_level(log::LevelFilter::Off);
+        }
+        let _ = builder.is_test(true).try_init();
+    }
+
+    let worker_manager = WorkerManager::new();
+
+    let worker = worker_manager
+        .create_worker(WorkerSettings::default())
+        .await
+        .expect("Failed to create worker");
+
+    let router = worker
+        .create_router(RouterOptions::new(vec![RtpCodecCapability::Video {
+            mime_type: MimeTypeVideo::Vp8,
+            preferred_payload_type: None,
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![],
+        }]))
+        .await
+        .expect("Failed to create router");
+
+    let transport = router
+        .create_direct_transport(DirectTransportOptions::default())
+        .await
+        .expect("Failed to create transport");
+
+    (worker, router, transport)
+}
+
+fn video_rtp_parameters(rtcp_feedback: Vec<RtcpFeedback>) -> RtpParameters {
+    RtpParameters {
+        mid: Some("VIDEO".to_string()),
+        codecs: vec![RtpCodecParameters::Video {
+            mime_type: MimeTypeVideo::Vp8,
+            payload_type: 112,
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback,
+        }],
+        header_extensions: vec![
+            RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::AbsSendTime,
+                id: 4,
+                encrypt: false,
+            },
+            RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
+                id: 5,
+                encrypt: false,
+            },
+            RtpHeaderExtensionParameters {
+                uri: RtpHeaderExtensionUri::VideoOrientation,
+                id: 13,
+                encrypt: false,
+            },
+        ],
+        encodings: vec![RtpEncodingParameters {
+            ssrc: Some(22222222),
+            ..RtpEncodingParameters::default()
+        }],
+        rtcp: RtcpParameters {
+            cname: Some("video-1".to_string()),
+            ..RtcpParameters::default()
+        },
+        msid: None,
+    }
+}
+
+fn consumer_device_capabilities() -> RtpCapabilities {
+    RtpCapabilities {
+        codecs: vec![RtpCodecCapability::Video {
+            mime_type: MimeTypeVideo::Vp8,
+            preferred_payload_type: Some(101),
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![
+                RtcpFeedback::NackPli,
+                RtcpFeedback::GoogRemb,
+                RtcpFeedback::TransportCc,
+            ],
+        }],
+        header_extensions: vec![
+            RtpHeaderExtension {
+                kind: MediaKind::Video,
+                uri: RtpHeaderExtensionUri::AbsSendTime,
+                preferred_id: 4,
+                preferred_encrypt: false,
+                direction: RtpHeaderExtensionDirection::SendRecv,
+            },
+            RtpHeaderExtension {
+                kind: MediaKind::Video,
+                uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
+                preferred_id: 5,
+                preferred_encrypt: false,
+                direction: RtpHeaderExtensionDirection::SendRecv,
+            },
+        ],
+    }
+}
+
+#[test]
+fn produce_removes_bwe_stuff() {
+    future::block_on(async move {
+        let (_worker, _router, transport) = init_with_media_codecs().await;
+
+        let producer = transport
+            .produce(ProducerOptions::new(
+                MediaKind::Video,
+                video_rtp_parameters(vec![
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::GoogRemb,
+                    RtcpFeedback::TransportCc,
+                ]),
+            ))
+            .await
+            .expect("Failed to produce video");
+
+        assert_eq!(
+            producer
+                .rtp_parameters()
+                .header_extensions
+                .iter()
+                .map(|ext| ext.uri)
+                .collect::<Vec<_>>(),
+            vec![RtpHeaderExtensionUri::VideoOrientation],
+        );
+
+        assert_eq!(
+            producer.rtp_parameters().codecs[0].rtcp_feedback(),
+            &vec![RtcpFeedback::NackPli],
+        );
+    });
+}
+
+#[test]
+fn consume_removes_bwe_stuff() {
+    future::block_on(async move {
+        let (_worker, _router, transport) = init_with_media_codecs().await;
+
+        let producer = transport
+            .produce(ProducerOptions::new(
+                MediaKind::Video,
+                video_rtp_parameters(vec![RtcpFeedback::NackPli]),
+            ))
+            .await
+            .expect("Failed to produce video");
+
+        // Consume with capabilities that do include the BWE header extensions and RTCP feedback.
+        let consumer = transport
+            .consume(ConsumerOptions::new(
+                producer.id(),
+                consumer_device_capabilities(),
+            ))
+            .await
+            .expect("Failed to consume video");
+
+        for header_extension in &consumer.rtp_parameters().header_extensions {
+            assert!(!matches!(
+                header_extension.uri,
+                RtpHeaderExtensionUri::AbsSendTime | RtpHeaderExtensionUri::TransportWideCcDraft01
+            ));
+        }
+
+        for codec in &consumer.rtp_parameters().codecs {
+            for fb in codec.rtcp_feedback() {
+                assert!(!matches!(
+                    fb,
+                    RtcpFeedback::GoogRemb | RtcpFeedback::TransportCc
+                ));
+            }
+        }
     });
 }
 

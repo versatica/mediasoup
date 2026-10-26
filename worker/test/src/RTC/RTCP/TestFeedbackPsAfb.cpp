@@ -21,7 +21,7 @@ SCENARIO("RTCP Feedback PS AFB", "[rtcp][feedback-ps][afb]")
 	const uint32_t senderSsrc{ 0xfa17fa17 };
 	const uint32_t mediaSsrc{ 0 };
 
-	auto verify = [](RTC::RTCP::FeedbackPsAfbPacket* packet)
+	const auto verify = [](RTC::RTCP::FeedbackPsAfbPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);

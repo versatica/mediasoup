@@ -9,7 +9,7 @@
 #include "RTC/DirectTransport.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
-#include "RTC/RTP/SharedPacket.hpp"
+#include "RTC/RTP/PacketUtils.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -649,6 +649,23 @@ namespace RTC
 		}
 	}
 
+	void Router::OnTransportProducerSpatialLayerActivityChanged(
+	  RTC::Transport* /*transport*/,
+	  RTC::Producer* producer,
+	  RTC::RTP::RtpStreamRecv* rtpStream,
+	  uint8_t spatialLayer,
+	  bool isActive)
+	{
+		MS_TRACE();
+
+		auto& consumers = this->mapProducerConsumers.at(producer);
+
+		for (auto* consumer : consumers)
+		{
+			consumer->ProducerSpatialLayerActivityChanged(rtpStream, spatialLayer, isActive);
+		}
+	}
+
 	void Router::OnTransportProducerRtpPacketReceived(
 	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
@@ -662,10 +679,10 @@ namespace RTC
 
 		if (!consumers.empty())
 		{
-			// Cloned ref-counted packet that will be filled for as long as needed
-			// avoiding multiple allocations unless absolutely necessary.
-			// Clone only happens if needed and only once.
-			RTC::RTP::SharedPacket sharedPacket;
+			// Cloned ref-counted packet shared by all Consumers that need to store
+			// this packet, avoiding multiple allocations. Clone only happens if
+			// needed and only once.
+			std::shared_ptr<RTC::RTP::Packet> sharedPacket{ nullptr };
 
 			for (auto* consumer : consumers)
 			{
@@ -681,9 +698,9 @@ namespace RTC
 
 				// Assert that, if this Consumer filled sharedPacket or it was already
 				// filled, both packet and sharedPacket are the very same RTP packet.
-				if (sharedPacket.HasPacket())
+				if (sharedPacket)
 				{
-					sharedPacket.AssertSamePacket(packet);
+					RTC::RTP::PacketUtils::AssertSamePacket(sharedPacket, packet);
 				}
 			}
 		}

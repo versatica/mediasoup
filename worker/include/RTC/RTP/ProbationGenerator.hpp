@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include <array>
 
 namespace RTC
 {
@@ -15,14 +16,6 @@ namespace RTC
 			 * Maximum length of a probation RTP packet.
 			 */
 			static constexpr size_t ProbationPacketMaxLength{ 1400 };
-			/**
-			 * SSRC of the probation RTP stream.
-			 */
-			static const uint32_t Ssrc{ 1234 };
-			/**
-			 * Codec payload type of the probation RTP stream.
-			 */
-			static const uint8_t PayloadType{ 127 };
 
 		public:
 			explicit ProbationGenerator();
@@ -37,11 +30,12 @@ namespace RTC
 			}
 
 		private:
-			// Allocated by this.
-			std::unique_ptr<RTP::Packet> probationPacket;
 			// Others.
+			alignas(4) std::array<uint8_t, ProbationPacketMaxLength> probationPacketBuffer{};
 			// The length of the probation RTP packet without payload or padding.
 			size_t probationPacketMinLength{ 0 };
+			// Allocated by this.
+			std::unique_ptr<RTP::Packet> probationPacket;
 		};
 	} // namespace RTP
 } // namespace RTC

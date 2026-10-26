@@ -1,7 +1,9 @@
 #ifndef MS_RTC_SVC_CONSUMER_STREAM_HPP
 #define MS_RTC_SVC_CONSUMER_STREAM_HPP
 
+#include "common.hpp"
 #include "RTC/ProducerStreamManager.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -30,6 +32,7 @@ namespace RTC
 		{
 			return this->encodingContext->GetCurrentTemporalLayer();
 		}
+		std::vector<RTC::RTP::RtpStreamRecv*> GetProducerRtpStreams() const override;
 		RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const override;
 		RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const override;
 		bool IsPacketForCurrentStream(const RTC::RTP::Packet* /*packet*/) const override
@@ -42,8 +45,15 @@ namespace RTC
 		void ProducerRtpStreamScore(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
+		void ProducerSpatialLayerActivityChanged(
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) override;
+#ifdef MS_USE_BUILTIN_BWE
+		RTC::BWE::BitrateAllocator::Candidate::BitrateOptions GetBitrateOptions(int64_t nowMs) const override;
+		void SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option) override;
+#else
 		int64_t IncreaseLayer(int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) override;
-		void ApplyLayers(int64_t rtpStreamActiveMs) override;
+		void ApplyLayers() override;
+#endif
 		int64_t GetDesiredBitrate(int64_t nowMs) const override;
 		RtpPacketProcessResult ProcessRtpPacket(
 		  RTC::RTP::Packet* packet,
@@ -63,8 +73,6 @@ namespace RTC
 	private:
 		// Producer RTP stream (single stream for SVC).
 		RTC::RTP::RtpStreamRecv* producerRtpStream{ nullptr };
-		// BWE downgrade tracking.
-		int64_t lastBweDowngradeAtMs{ 0 };
 	};
 } // namespace RTC
 

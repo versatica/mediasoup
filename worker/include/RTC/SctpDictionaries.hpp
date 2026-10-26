@@ -18,8 +18,8 @@ namespace RTC
 	public:
 		uint16_t streamId{ 0 };
 		bool ordered{ true };
-		uint16_t maxPacketLifeTime{ 0 };
-		uint16_t maxRetransmits{ 0 };
+		std::optional<uint16_t> maxPacketLifeTime;
+		std::optional<uint16_t> maxRetransmits;
 	};
 } // namespace RTC
 

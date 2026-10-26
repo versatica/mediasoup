@@ -475,7 +475,8 @@ namespace RTC
 				WriteMandatoryDescriptorFields();
 				WriteExtendedDescriptorFields();
 
-				len = std::ceil((this->bitStream.GetOffset() + 7) >> 3);
+				// The written bits rounded up to whole bytes.
+				len = static_cast<uint8_t>((this->bitStream.GetOffset() + 7) >> 3);
 
 				return this->bitStream.GetData();
 			}

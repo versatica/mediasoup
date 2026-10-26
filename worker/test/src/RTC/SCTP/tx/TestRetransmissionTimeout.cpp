@@ -14,7 +14,7 @@ SCENARIO("SCTP RetransmissionTimeout", "[sctp][retransmissiontimeout]")
 	constexpr int64_t MinRttVarianceMs{ 220 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto makeSctpOptions = []()
+	const auto makeSctpOptions = []()
 	{
 		RTC::SCTP::SctpOptions sctpOptions{ .maxRttMs         = MaxRttMs,
 		                                    .initialRtoMs     = InitialRtoMs,

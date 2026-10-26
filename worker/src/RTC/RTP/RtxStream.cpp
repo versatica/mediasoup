@@ -3,18 +3,14 @@
 
 #include "RTC/RTP/RtxStream.hpp"
 #include "Logger.hpp"
+#include "RTC/RTP/RtpStream.hpp"
 #include "Utils.hpp"
+#include <cmath> // std::round()
 
 namespace RTC
 {
 	namespace RTP
 	{
-		/* Static. */
-
-		static constexpr uint16_t MaxDropout{ 3000 };
-		static constexpr uint16_t MaxMisorder{ 1500 };
-		static constexpr uint32_t RtpSeqMod{ 1 << 16 };
-
 		/* Instance methods. */
 
 		RtxStream::RtxStream(SharedInterface* shared, RTP::RtxStream::Params& params)
@@ -93,36 +89,50 @@ namespace RTC
 
 			const int32_t prevPacketsLost = this->packetsLost;
 
-			// Calculate packets xxpected and lost.
-			auto expected = GetExpectedPackets();
+			// Calculate packets expected and lost.
+			auto expectedPackets = GetExpectedPackets();
 
-			if (expected > this->packetsCount)
+			// NOTE: The expected count is the extended sequence number arithmetic of RFC
+			// 3550, so it wraps at 32 bits, whereas the received one does not wrap at
+			// all. Each subtraction below is therefore made in the width that keeps it
+			// right: this one truncates the received count so that both wrap together,
+			// and the interval further down is taken in full width, where it is exact.
+			const auto receivedPackets = static_cast<uint32_t>(this->packetsCount);
+
+			if (expectedPackets > receivedPackets)
 			{
-				this->packetsLost = expected - this->packetsCount;
+				this->packetsLost = static_cast<int32_t>(expectedPackets - receivedPackets);
 			}
 			else
 			{
-				this->packetsLost = 0u;
+				this->packetsLost = 0;
 			}
 
 			// Calculate fraction lost.
-			const uint32_t expectedInterval = expected - this->expectedPrior;
+			//
+			// NOTE: Reading the difference of the expected count as signed makes a
+			// sequence number re-sync, which restarts the count, come out negative.
+			const int64_t expectedInterval = static_cast<int32_t>(expectedPackets - this->expectedPrior);
 
-			this->expectedPrior = expected;
+			this->expectedPrior = expectedPackets;
 
-			const uint32_t receivedInterval = this->packetsCount - this->receivedPrior;
+			const auto receivedInterval = static_cast<int64_t>(this->packetsCount - this->receivedPrior);
 
 			this->receivedPrior = this->packetsCount;
 
-			const int32_t lostInterval = expectedInterval - receivedInterval;
+			const int64_t lostInterval = expectedInterval - receivedInterval;
 
-			if (expectedInterval == 0 || lostInterval <= 0)
+			if (expectedInterval <= 0 || lostInterval <= 0)
 			{
 				this->fractionLost = 0;
 			}
 			else
 			{
-				this->fractionLost = std::round((static_cast<double>(lostInterval << 8) / expectedInterval));
+				// A fixed point number with 8 bits of fraction, so a whole interval lost
+				// gives 256, one more than the field can hold.
+				const double fraction = std::round(static_cast<double>(lostInterval << 8) / expectedInterval);
+
+				this->fractionLost = static_cast<uint8_t>(std::min(fraction, 255.0));
 			}
 
 			this->reportedPacketsLost += (this->packetsLost - prevPacketsLost);
@@ -183,20 +193,20 @@ namespace RTC
 			// "so much bigger", accept it.
 			// NOTE: udelta also handles the case of a new cycle, this is:
 			//    maxSeq:65536, seq:0 => udelta:1
-			if (udelta < MaxDropout)
+			if (udelta < RTP::RtpStream::MaxDropout)
 			{
 				// In order, with permissible gap.
 				if (seq < this->maxSeq)
 				{
 					// Sequence number wrapped: count another 64K cycle.
-					this->cycles += RtpSeqMod;
+					this->cycles += RTP::RtpStream::RtpSeqMod;
 				}
 
 				this->maxSeq = seq;
 			}
 			// Too old packet received (older than the allowed misorder).
 			// Or to new packet (more than acceptable dropout).
-			else if (udelta <= RtpSeqMod - MaxMisorder)
+			else if (udelta <= RTP::RtpStream::RtpSeqMod - RTP::RtpStream::MaxMisorder)
 			{
 				// The sequence number made a very large jump. If two sequential packets
 				// arrive, accept the latter.
@@ -222,7 +232,7 @@ namespace RTC
 					  packet->GetSsrc(),
 					  packet->GetSequenceNumber());
 
-					this->badSeq = (seq + 1) & (RtpSeqMod - 1);
+					this->badSeq = (seq + 1) & (RTP::RtpStream::RtpSeqMod - 1);
 
 					// Packet discarded due to late or early arriving.
 					this->packetsDiscarded++;
@@ -246,7 +256,7 @@ namespace RTC
 			// Initialize/reset RTP counters.
 			this->baseSeq = seq;
 			this->maxSeq  = seq;
-			this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
+			this->badSeq  = RTP::RtpStream::RtpSeqMod + 1; // So seq == badSeq is false.
 		}
 
 		flatbuffers::Offset<FBS::RtxStream::Params> RtxStream::Params::FillBuffer(

@@ -46,8 +46,22 @@ namespace mocks
 			return this->getTimeUs();
 		}
 
-		// NOTE: The NTP epoch is made to be the very clock given by argument, so that tests
-		// can reason about a single set of values.
+		/**
+		 * @remarks
+		 * - There is no event loop here, and the clock given by argument only moves when the
+		 *   test moves it, which is the very semantics of a time that stays put for the whole
+		 *   iteration.
+		 */
+		uint64_t GetLoopTimeMs() override
+		{
+			return static_cast<uint64_t>(GetTimeMs());
+		}
+
+		/**
+		 * @remarks
+		 * - The NTP epoch is made to be the very clock given by argument, so that tests can
+		 *   reason about a single set of values.
+		 */
 		int64_t GetNtpOffsetUs() override
 		{
 			return 0;
