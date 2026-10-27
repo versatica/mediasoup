@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "Logger.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include <algorithm> // std::max()
 #include <bitset>
 #include <cstring> // std::memset()
@@ -38,7 +39,6 @@ namespace RTC
 			DependencyDescriptor* DependencyDescriptor::Parse(
 			  const uint8_t* data,
 			  size_t len,
-			  DependencyDescriptor::Listener* listener,
 			  std::shared_ptr<TemplateDependencyStructure>& templateDependencyStructure)
 			{
 				MS_TRACE();
@@ -63,7 +63,7 @@ namespace RTC
 				}
 
 				std::unique_ptr<DependencyDescriptor> dependencyDescriptor(
-				  new DependencyDescriptor(data, len, listener, templateDependencyStructure));
+				  new DependencyDescriptor(data, len, templateDependencyStructure));
 
 				if (!dependencyDescriptor->ReadMandatoryDescriptorFields())
 				{
@@ -104,10 +104,8 @@ namespace RTC
 			DependencyDescriptor::DependencyDescriptor(
 			  const uint8_t* data,
 			  size_t len,
-			  DependencyDescriptor::Listener* listener,
 			  std::shared_ptr<TemplateDependencyStructure> templateDependencyStructure)
 			  : templateDependencyStructure(std::move(templateDependencyStructure)),
-			    listener(listener),
 			    bitStream(const_cast<uint8_t*>(data), len),
 			    length(static_cast<uint8_t>(len))
 			{
@@ -204,13 +202,6 @@ namespace RTC
 					  std::bitset<32>(this->activeDecodeTargetsBitmask.value()).to_string().c_str());
 				}
 				MS_DUMP_CLEAN(indentation, "</DependencyDescriptor>");
-			}
-
-			void DependencyDescriptor::UpdateListener(DependencyDescriptor::Listener* listener)
-			{
-				MS_TRACE();
-
-				this->listener = listener;
 			}
 
 			bool DependencyDescriptor::ReadMandatoryDescriptorFields()
@@ -750,7 +741,7 @@ namespace RTC
 				return len;
 			}
 
-			void DependencyDescriptor::Restore()
+			void DependencyDescriptor::Restore(RTP::Packet* packet)
 			{
 				MS_TRACE();
 
@@ -781,7 +772,7 @@ namespace RTC
 
 				// NOTE: It stays marked as rewritten if it could not be written back,
 				// since that's what the packet still carries.
-				if (!this->listener->OnDependencyDescriptorUpdated(buffer, len))
+				if (!packet->UpdateDependencyDescriptor(buffer, len))
 				{
 					return;
 				}
@@ -839,7 +830,7 @@ namespace RTC
 			}
 
 			bool DependencyDescriptor::UpdateActiveDecodeTargets(
-			  uint32_t maxSpatialLayer, uint32_t maxTemporalLayer)
+			  uint32_t maxSpatialLayer, uint32_t maxTemporalLayer, RTP::Packet* packet)
 			{
 				MS_TRACE();
 
@@ -861,9 +852,9 @@ namespace RTC
 					return false;
 				}
 
-				// NOTE: Only once it's written, since the listener refuses a descriptor
-				// that doesn't fit and the packet then keeps the one it had.
-				if (!this->listener->OnDependencyDescriptorUpdated(buffer, len))
+				// NOTE: Only once it's written, since the packet refuses a descriptor
+				// that doesn't fit and then keeps the one it had.
+				if (!packet->UpdateDependencyDescriptor(buffer, len))
 				{
 					return false;
 				}

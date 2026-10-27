@@ -27,7 +27,7 @@ namespace RTC
 		 *
 		 * @see RFC 3550.
 		 */
-		class Packet : public Serializable, public Codecs::DependencyDescriptor::Listener
+		class Packet : public Serializable
 		{
 		public:
 			/**
@@ -996,10 +996,6 @@ namespace RTC
 			 *   the process.
 			 */
 			void SetExtensionLength(uint8_t id, uint8_t len);
-
-			/* Pure virtual methods inherited from Codecs::DependencyDescriptor::Listener. */
-		public:
-			bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override;
 
 #ifdef MS_RTC_LOGGER_RTP
 		public:

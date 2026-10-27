@@ -5,10 +5,8 @@ void FuzzerRtcRtpCodecsDependencyDescriptor::Fuzz(const uint8_t* data, size_t le
 	std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 	  templateDependencyStructure;
 
-	DependencyDescriptorListener listener;
-
-	auto* descriptor = RTC::RTP::Codecs::DependencyDescriptor::Parse(
-	  data, len, std::addressof(listener), templateDependencyStructure);
+	auto* descriptor =
+	  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, templateDependencyStructure);
 
 	if (!descriptor)
 	{

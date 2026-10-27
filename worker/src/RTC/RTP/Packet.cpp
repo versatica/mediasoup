@@ -1066,8 +1066,8 @@ namespace RTC
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
 
-			auto* value = Codecs::DependencyDescriptor::Parse(
-			  extenValue, extenLen, const_cast<Packet*>(this), templateDependencyStructure);
+			auto* value =
+			  Codecs::DependencyDescriptor::Parse(extenValue, extenLen, templateDependencyStructure);
 
 			if (!value)
 			{
@@ -1822,11 +1822,5 @@ namespace RTC
 			}
 		}
 
-		bool Packet::OnDependencyDescriptorUpdated(const uint8_t* data, size_t len)
-		{
-			MS_TRACE();
-
-			return UpdateDependencyDescriptor(data, len);
-		}
 	} // namespace RTP
 } // namespace RTC

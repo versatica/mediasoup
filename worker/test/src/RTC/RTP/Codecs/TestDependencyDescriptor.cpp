@@ -1,18 +1,55 @@
 #include "common.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <cstring> // std::memcpy(), std::memset()
+#include <vector>
+
+namespace
+{
+	constexpr uint8_t DependencyDescriptorId{ static_cast<uint8_t>(
+		RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR) };
+
+	/**
+	 * Creates a packet carrying the given descriptor in a Dependency Descriptor
+	 * RTP header extension `reservedLen` bytes long, which is the room the
+	 * Producer makes in it for the Consumers to rewrite the descriptor.
+	 */
+	std::unique_ptr<RTC::RTP::Packet> createPacket(const uint8_t* data, uint8_t len, uint8_t reservedLen)
+	{
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
+
+		REQUIRE(packet);
+
+		uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+
+		std::memcpy(value, data, len);
+
+		const std::vector<RTC::RTP::Packet::Extension> extensions{
+			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
+		};
+
+		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+
+		return packet;
+	}
+
+	// The Dependency Descriptor the packet currently carries.
+	std::vector<uint8_t> getDependencyDescriptor(const RTC::RTP::Packet* packet)
+	{
+		uint8_t len;
+		const uint8_t* value = packet->GetExtensionValue(DependencyDescriptorId, len);
+
+		REQUIRE(value);
+
+		return { value, value + len };
+	}
+} // namespace
 
 SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 {
-	class Listener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
-	{
-	public:
-		bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
-		{
-			return true;
-		}
-	};
-
 	SECTION("parse")
 	{
 		/**
@@ -80,14 +117,11 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 			0x60, 0x41, 0x4D, 0x14, 0x10, 0x20, 0x84, 0x26
 		};
 
-		Listener listener;
-
-		// clang-format on
 		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 		  templateDependencyStructure;
 		auto dependencyDescriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    data, sizeof(data), std::addressof(listener), templateDependencyStructure));
+		    data, sizeof(data), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->startOfFrame == true);
@@ -219,13 +253,11 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		Listener listener;
-
 		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 		  templateDependencyStructure;
 		auto dependencyDescriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    data1, sizeof(data1), std::addressof(listener), templateDependencyStructure));
+		    data1, sizeof(data1), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -240,7 +272,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		// clang-format on
 		dependencyDescriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    data2, sizeof(data2), std::addressof(listener), templateDependencyStructure));
+		    data2, sizeof(data2), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -261,8 +293,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
 
 		dependencyDescriptor = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
-		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    buffer, len, std::addressof(listener), templateDependencyStructure));
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(buffer, len, templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -278,35 +309,6 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 	 */
 	SECTION("restoring a rewritten descriptor leaves room for the next Consumer")
 	{
-		/**
-		 * Models the Dependency Descriptor RTP header extension, which only
-		 * accepts a descriptor that fits in its current length, just like
-		 * `Packet::UpdateDependencyDescriptor()` does.
-		 */
-		class ExtensionListener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
-		{
-		public:
-			bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
-			{
-				if (len > this->length)
-				{
-					this->rejected = true;
-
-					return false;
-				}
-
-				std::memcpy(this->value, data, len);
-
-				this->length = len;
-
-				return true;
-			}
-
-			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
-			uint8_t length{ 0 };
-			bool rejected{ false };
-		};
-
 		// Key frame carrying the template dependency structure of an L1T2 stream.
 		// clang-format off
 		uint8_t keyFrameData[] =
@@ -324,8 +326,6 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		ExtensionListener listener;
-
 		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 		  templateDependencyStructure;
 
@@ -333,13 +333,13 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		// template dependency structure the delta frame below needs.
 		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), std::addressof(listener), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
 
 		REQUIRE(keyFrame);
 
 		auto deltaFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    deltaFrameData, sizeof(deltaFrameData), std::addressof(listener), templateDependencyStructure));
+		    deltaFrameData, sizeof(deltaFrameData), templateDependencyStructure));
 
 		REQUIRE(deltaFrame);
 
@@ -349,29 +349,32 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		REQUIRE(reservedLength > sizeof(deltaFrameData));
 
-		listener.length = reservedLength;
+		const auto packet = createPacket(deltaFrameData, sizeof(deltaFrameData), reservedLength);
 
 		// First Consumer, which just wants decode target 0.
-		REQUIRE(deltaFrame->UpdateActiveDecodeTargets(0, 0));
-		REQUIRE(listener.length == reservedLength);
+		REQUIRE(deltaFrame->UpdateActiveDecodeTargets(0, 0, packet.get()));
+		REQUIRE(getDependencyDescriptor(packet.get()).size() == reservedLength);
 
 		// Once it's sent the packet is restored for the next Consumer.
-		deltaFrame->Restore();
+		deltaFrame->Restore(packet.get());
+
+		auto restored = getDependencyDescriptor(packet.get());
 
 		// The descriptor is the received one again.
-		REQUIRE(std::memcmp(listener.value, deltaFrameData, sizeof(deltaFrameData)) == 0);
+		REQUIRE(std::memcmp(restored.data(), deltaFrameData, sizeof(deltaFrameData)) == 0);
 
 		// But the extension keeps its length, so the next Consumer still fits in it.
-		REQUIRE(listener.length == reservedLength);
+		REQUIRE(restored.size() == reservedLength);
 
 		// Second Consumer, which wants every decode target.
-		REQUIRE(deltaFrame->UpdateActiveDecodeTargets(0, 1));
-		REQUIRE(!listener.rejected);
+		REQUIRE(deltaFrame->UpdateActiveDecodeTargets(0, 1, packet.get()));
+
+		const auto value = getDependencyDescriptor(packet.get());
 
 		// And it's told so rather than being given the descriptor of the first one.
 		auto rewritten = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    listener.value, listener.length, std::addressof(listener), templateDependencyStructure));
+		    value.data(), value.size(), templateDependencyStructure));
 
 		REQUIRE(rewritten);
 		REQUIRE(rewritten->activeDecodeTargetsBitmask == 0b11);
@@ -383,30 +386,6 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 	 */
 	SECTION("a descriptor with no room for the bitmask is forwarded as received")
 	{
-		class ExtensionListener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
-		{
-		public:
-			bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
-			{
-				if (len > this->length)
-				{
-					this->rejected = true;
-
-					return false;
-				}
-
-				std::memcpy(this->value, data, len);
-
-				this->length = len;
-
-				return true;
-			}
-
-			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
-			uint8_t length{ 0 };
-			bool rejected{ false };
-		};
-
 		// clang-format off
 		uint8_t keyFrameData[] =
 		{
@@ -422,40 +401,37 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		ExtensionListener listener;
-
 		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 		  templateDependencyStructure;
 
 		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), std::addressof(listener), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
 
 		REQUIRE(keyFrame);
 
 		auto deltaFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    deltaFrameData, sizeof(deltaFrameData), std::addressof(listener), templateDependencyStructure));
+		    deltaFrameData, sizeof(deltaFrameData), templateDependencyStructure));
 
 		REQUIRE(deltaFrame);
 
-		// No room was made, so the extension is just as long as it came.
-		listener.length = sizeof(deltaFrameData);
-
 		REQUIRE(deltaFrame->GetMaxLength() > sizeof(deltaFrameData));
 
+		// No room was made, so the extension is just as long as it came.
+		const auto packet = createPacket(deltaFrameData, sizeof(deltaFrameData), sizeof(deltaFrameData));
+
 		// So the rewritten descriptor doesn't fit and the received one is kept.
-		REQUIRE(!deltaFrame->UpdateActiveDecodeTargets(0, 0));
-		REQUIRE(listener.rejected);
-		REQUIRE(listener.length == sizeof(deltaFrameData));
+		REQUIRE(!deltaFrame->UpdateActiveDecodeTargets(0, 0, packet.get()));
+		REQUIRE(getDependencyDescriptor(packet.get()).size() == sizeof(deltaFrameData));
 
 		// And since nothing was written there is nothing to undo either.
-		listener.rejected = false;
+		deltaFrame->Restore(packet.get());
 
-		deltaFrame->Restore();
+		const auto value = getDependencyDescriptor(packet.get());
 
-		REQUIRE(!listener.rejected);
-		REQUIRE(listener.length == sizeof(deltaFrameData));
+		REQUIRE(value.size() == sizeof(deltaFrameData));
+		REQUIRE(std::memcmp(value.data(), deltaFrameData, sizeof(deltaFrameData)) == 0);
 	}
 
 	/**
@@ -476,14 +452,12 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		};
 		// clang-format on
 
-		Listener listener;
-
 		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 		  templateDependencyStructure;
 
 		auto first = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), std::addressof(listener), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
 
 		REQUIRE(first);
 
@@ -494,7 +468,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		// A second key frame comes with its own structure.
 		auto second = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    keyFrameData, sizeof(keyFrameData), std::addressof(listener), templateDependencyStructure));
+		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
 
 		REQUIRE(second);
 

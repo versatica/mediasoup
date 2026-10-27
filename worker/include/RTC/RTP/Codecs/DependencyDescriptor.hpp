@@ -9,23 +9,12 @@ namespace RTC
 {
 	namespace RTP
 	{
+		class Packet;
+
 		namespace Codecs
 		{
 			struct DependencyDescriptor
 			{
-				class Listener
-				{
-				public:
-					virtual ~Listener() = default;
-
-				public:
-					/**
-					 * @returns Whether the descriptor was written, which it is not if it
-					 * doesn't fit where it has to go.
-					 */
-					virtual bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) = 0;
-				};
-
 			public:
 				enum class DecodeTargetIndication : uint8_t
 				{
@@ -96,27 +85,30 @@ namespace RTC
 				// Whether the frame is a key frame. Set to true if the descriptor contains template layers.
 				bool isKeyFrame{ false };
 
-			private:
-				DependencyDescriptor::Listener* listener{ nullptr };
-
 			public:
 				static DependencyDescriptor* Parse(
 				  const uint8_t* data,
 				  size_t len,
-				  DependencyDescriptor::Listener* listener,
 				  std::shared_ptr<TemplateDependencyStructure>& templateDependencyStructure);
 
 				DependencyDescriptor(
 				  const uint8_t* data,
 				  size_t len,
-				  DependencyDescriptor::Listener* listener,
 				  std::shared_ptr<TemplateDependencyStructure> templateDependencyStructure);
 
 				void Dump(int indentation = 0) const;
-				void UpdateListener(DependencyDescriptor::Listener* listener);
-				bool UpdateActiveDecodeTargets(uint32_t maxSpatialLayer, uint32_t maxTemporalLayer);
+				/*
+				 * Rewrites the descriptor of the given packet with the decode targets
+				 * that the given maximum layers leave active.
+				 *
+				 * NOTE: The packet is given on every call rather than remembered, since
+				 * a packet shares its payload descriptor handler with its clones and
+				 * every Consumer of its Producer.
+				 */
+				bool UpdateActiveDecodeTargets(
+				  uint32_t maxSpatialLayer, uint32_t maxTemporalLayer, RTP::Packet* packet);
 				// Writes the descriptor back as it was received, undoing any rewrite.
-				void Restore();
+				void Restore(RTP::Packet* packet);
 				/*
 				 * Bitmask of the decode targets given the maximum spatial and temporal layers.
 				 *

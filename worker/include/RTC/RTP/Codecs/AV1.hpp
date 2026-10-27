@@ -28,7 +28,7 @@ namespace RTC
 						explicit Encoder(EncodingData encodingData) : encodingData(encodingData)
 						{
 						}
-						void Encode(AV1::PayloadDescriptor* payloadDescriptor) const;
+						void Encode(AV1::PayloadDescriptor* payloadDescriptor, RTP::Packet* packet) const;
 
 						EncodingData encodingData;
 					};
@@ -38,15 +38,8 @@ namespace RTC
 					~PayloadDescriptor() override = default;
 
 					void Dump(int indentation = 0) const override;
-					void UpdateListener(Codecs::DependencyDescriptor::Listener* listener) const
-					{
-						if (this->dependencyDescriptor)
-						{
-							this->dependencyDescriptor->UpdateListener(listener);
-						}
-					}
-					void Encode();
-					void Restore() const;
+					void Encode(RTP::Packet* packet);
+					void Restore(RTP::Packet* packet) const;
 					uint8_t GetDependencyDescriptorMaxLength() const
 					{
 						return this->dependencyDescriptor ? this->dependencyDescriptor->GetMaxLength() : 0;
@@ -56,7 +49,8 @@ namespace RTC
 						return this->dependencyDescriptor &&
 						       this->dependencyDescriptor->IsSwitchPointForTemporalLayer(temporalLayer);
 					}
-					void UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer);
+					void UpdateActiveDecodeTargets(
+					  uint16_t spatialLayer, uint16_t temporalLayer, RTP::Packet* packet);
 					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
 					{
 						if (this->encoder.has_value())

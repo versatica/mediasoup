@@ -77,7 +77,7 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "</AV1::PayloadDescriptor>");
 			}
 
-			void AV1::PayloadDescriptor::Encode()
+			void AV1::PayloadDescriptor::Encode(RTP::Packet* packet)
 			{
 				MS_TRACE();
 
@@ -89,30 +89,34 @@ namespace RTC
 				}
 
 				UpdateActiveDecodeTargets(
-				  this->encoder->encodingData.maxSpatialLayer, this->encoder->encodingData.maxTemporalLayer);
+				  this->encoder->encodingData.maxSpatialLayer,
+				  this->encoder->encodingData.maxTemporalLayer,
+				  packet);
 			}
 
-			void AV1::PayloadDescriptor::Restore() const
+			void AV1::PayloadDescriptor::Restore(RTP::Packet* packet) const
 			{
 				MS_TRACE();
 
-				this->dependencyDescriptor->Restore();
+				this->dependencyDescriptor->Restore(packet);
 			}
 
 			// NOLINTNEXTLINE(readability-make-member-function-const)
-			void AV1::PayloadDescriptor::UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer)
+			void AV1::PayloadDescriptor::UpdateActiveDecodeTargets(
+			  uint16_t spatialLayer, uint16_t temporalLayer, RTP::Packet* packet)
 			{
 				MS_TRACE();
 
-				this->dependencyDescriptor->UpdateActiveDecodeTargets(spatialLayer, temporalLayer);
+				this->dependencyDescriptor->UpdateActiveDecodeTargets(spatialLayer, temporalLayer, packet);
 			}
 
-			void AV1::PayloadDescriptor::Encoder::Encode(PayloadDescriptor* payloadDescriptor) const
+			void AV1::PayloadDescriptor::Encoder::Encode(
+			  PayloadDescriptor* payloadDescriptor, RTP::Packet* packet) const
 			{
 				MS_TRACE();
 
 				payloadDescriptor->UpdateActiveDecodeTargets(
-				  this->encodingData.maxSpatialLayer, this->encodingData.maxTemporalLayer);
+				  this->encodingData.maxSpatialLayer, this->encodingData.maxTemporalLayer, packet);
 			}
 
 			AV1::PayloadDescriptorHandler::PayloadDescriptorHandler(AV1::PayloadDescriptor* payloadDescriptor)
@@ -126,11 +130,6 @@ namespace RTC
 			  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker)
 			{
 				MS_TRACE();
-
-				// NOTE: This handler is shared with the clones of the packet it was
-				// created for, so the descriptor must be told which of them it has to
-				// write the rewritten Dependency Descriptor into.
-				this->payloadDescriptor->UpdateListener(packet);
 
 				auto* context = static_cast<Codecs::AV1::EncodingContext*>(encodingContext);
 
@@ -273,7 +272,7 @@ namespace RTC
 				  .maxTemporalLayer=static_cast<uint32_t>(context->GetCurrentTemporalLayer())
 				});
 				// clang-format on
-				this->payloadDescriptor->Encode();
+				this->payloadDescriptor->Encode(packet);
 
 				return true;
 			}
@@ -283,22 +282,16 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				// See the note in Process().
-				this->payloadDescriptor->UpdateListener(packet);
-
 				auto* av1Encoder = static_cast<AV1::PayloadDescriptor::Encoder*>(encoder);
 
-				av1Encoder->Encode(this->payloadDescriptor.get());
+				av1Encoder->Encode(this->payloadDescriptor.get(), packet);
 			}
 
 			void AV1::PayloadDescriptorHandler::Restore(RTP::Packet* packet)
 			{
 				MS_TRACE();
 
-				// See the note in Process().
-				this->payloadDescriptor->UpdateListener(packet);
-
-				this->payloadDescriptor->Restore();
+				this->payloadDescriptor->Restore(packet);
 			}
 		} // namespace Codecs
 	} // namespace RTP

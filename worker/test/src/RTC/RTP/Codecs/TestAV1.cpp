@@ -92,15 +92,6 @@ namespace
 	constexpr size_t FrameS0T0Index{ 9 };
 	constexpr size_t FrameS1T0Index{ 10 };
 
-	class Listener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
-	{
-	public:
-		bool OnDependencyDescriptorUpdated(const uint8_t* /*data*/, size_t /*len*/) override
-		{
-			return true;
-		}
-	};
-
 	struct ProcessResult
 	{
 		bool forwarded{ false };
@@ -112,7 +103,6 @@ namespace
 
 SCENARIO("process AV1 payload descriptor", "[rtp][codecs][av1]")
 {
-	Listener listener;
 	std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 	  templateDependencyStructure;
 
@@ -132,8 +122,7 @@ SCENARIO("process AV1 payload descriptor", "[rtp][codecs][av1]")
 		ProcessResult result;
 
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
-		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    data, len, std::addressof(listener), templateDependencyStructure));
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 

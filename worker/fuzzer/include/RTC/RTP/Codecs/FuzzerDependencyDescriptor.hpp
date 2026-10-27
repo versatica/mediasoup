@@ -6,15 +6,6 @@
 
 namespace FuzzerRtcRtpCodecsDependencyDescriptor
 {
-	class DependencyDescriptorListener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
-	{
-	public:
-		bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
-		{
-			return true;
-		}
-	};
-
 	void Fuzz(const uint8_t* data, size_t len);
 } // namespace FuzzerRtcRtpCodecsDependencyDescriptor
 
