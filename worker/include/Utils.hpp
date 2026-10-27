@@ -276,7 +276,7 @@ namespace Utils
 		static thread_local EVP_MAC_CTX* hmacSha1Ctx;
 		static thread_local uint8_t hmacSha1Buffer[];
 		// Number of input bytes consumed per iteration of the slice-by-8 loop.
-		static constexpr size_t CrcSlices{ 8u };
+		static constexpr size_t CrcSlices{ 8 };
 		using CrcTables = std::array<std::array<uint32_t, 256>, CrcSlices>;
 		static const CrcTables crc32Tables;
 		static const CrcTables crc32cTables;

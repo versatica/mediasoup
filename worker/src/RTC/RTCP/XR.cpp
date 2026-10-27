@@ -62,7 +62,7 @@ namespace RTC
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			// Ensure there is space for the common header and the SSRC of packet sender.
-			if (len < Packet::CommonHeaderSize + 4u)
+			if (len < Packet::CommonHeaderSize + 4)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for a extended report packet, packet discarded");
 
@@ -76,7 +76,7 @@ namespace RTC
 
 			packet->SetSsrc(ssrc);
 
-			auto offset = Packet::CommonHeaderSize + 4u /* ssrc */;
+			auto offset = Packet::CommonHeaderSize + 4 /* ssrc */;
 
 			while (len > offset)
 			{
@@ -106,7 +106,7 @@ namespace RTC
 
 			// Copy the SSRC.
 			Utils::Byte::Set4Bytes(buffer, Packet::CommonHeaderSize, this->ssrc);
-			offset += 4u /*ssrc*/;
+			offset += 4 /*ssrc*/;
 
 			// Serialize reports.
 			for (auto* report : this->reports)

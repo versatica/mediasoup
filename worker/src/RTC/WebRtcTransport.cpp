@@ -50,7 +50,7 @@ namespace RTC
 		{
 			const auto* listenIndividual = options->listen_as<FBS::WebRtcTransport::ListenIndividual>();
 			const auto* listenInfos      = listenIndividual->listenInfos();
-			uint16_t iceLocalPreferenceDecrement{ 0u };
+			uint16_t iceLocalPreferenceDecrement{ 0 };
 
 			// Multiply by 2 to preallocate space in case |exposeInternalIp| is set.
 			this->iceCandidates.reserve(listenInfos->size() * 2);

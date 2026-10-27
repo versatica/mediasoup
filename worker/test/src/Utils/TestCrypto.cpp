@@ -20,7 +20,7 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		};
 		// clang-format on
 
-		REQUIRE(Utils::Crypto::GetCRC32(dataEmpty, sizeof(dataEmpty)) == 0U);
+		REQUIRE(Utils::Crypto::GetCRC32(dataEmpty, sizeof(dataEmpty)) == 0);
 		REQUIRE(Utils::Crypto::GetCRC32(dataZero, sizeof(dataZero)) == 0xD202EF8D);
 		REQUIRE(Utils::Crypto::GetCRC32(dataRandom, sizeof(dataRandom)) == 0xEEE31378);
 	}
@@ -88,13 +88,13 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		{
 			uint32_t crc{ 0xFFFFFFFF };
 
-			for (size_t i{ 0u }; i < size; ++i)
+			for (size_t i{ 0 }; i < size; ++i)
 			{
 				uint32_t byte{ static_cast<uint32_t>((crc ^ data[i]) & 0xFF) };
 
-				for (size_t bit{ 0u }; bit < 8u; ++bit)
+				for (size_t bit{ 0 }; bit < 8; ++bit)
 				{
-					byte = (byte & 1u) ? (byte >> 1) ^ polynomial : (byte >> 1);
+					byte = (byte & 1) ? (byte >> 1) ^ polynomial : (byte >> 1);
 				}
 
 				crc = (crc >> 8) ^ byte;
@@ -119,30 +119,30 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 			byte = static_cast<uint8_t>(rng());
 		}
 
-		size_t mismatches{ 0u };
+		size_t mismatches{ 0 };
 
 		// Every length up to 1024 bytes at every misalignment within an 8 byte word.
-		for (size_t offset{ 0u }; offset < 8u; ++offset)
+		for (size_t offset{ 0 }; offset < 8; ++offset)
 		{
-			for (size_t size{ 0u }; size <= 1024u; ++size)
+			for (size_t size{ 0 }; size <= 1024; ++size)
 			{
 				const uint8_t* data = buffer.data() + offset;
 
 				// CRC-32 (IEEE 802.3), no byte swap.
-				if (Utils::Crypto::GetCRC32(data, size) != reference(0xEDB88320u, false, data, size))
+				if (Utils::Crypto::GetCRC32(data, size) != reference(0xEDB88320, false, data, size))
 				{
 					++mismatches;
 				}
 
 				// CRC-32C (Castagnoli), byte swapped.
-				if (Utils::Crypto::GetCRC32c(data, size) != reference(0x82F63B78u, true, data, size))
+				if (Utils::Crypto::GetCRC32c(data, size) != reference(0x82F63B78, true, data, size))
 				{
 					++mismatches;
 				}
 			}
 		}
 
-		REQUIRE(mismatches == 0u);
+		REQUIRE(mismatches == 0);
 	}
 }
 

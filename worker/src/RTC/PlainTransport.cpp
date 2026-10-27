@@ -472,8 +472,8 @@ namespace RTC
 				try
 				{
 					std::string ip;
-					uint16_t port{ 0u };
-					uint16_t rtcpPort{ 0u };
+					uint16_t port{ 0 };
+					uint16_t rtcpPort{ 0 };
 					std::string srtpKeyBase64;
 
 					const auto* body = request->data->body_as<FBS::PlainTransport::ConnectRequest>();

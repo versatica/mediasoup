@@ -158,7 +158,7 @@ namespace
 		RTC::RTP::RtpStream::Params params;
 
 		return std::make_unique<RTC::RTP::RtpStreamRecv>(
-		  &streamRecvListener, std::addressof(shared), params, 0u, false);
+		  &streamRecvListener, std::addressof(shared), params, 0, false);
 	}
 
 	/**

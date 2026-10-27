@@ -41,23 +41,23 @@ namespace Utils
 	{
 		CrcTables tables{};
 
-		for (uint32_t i{ 0u }; i < 256u; ++i)
+		for (uint32_t i{ 0 }; i < 256; ++i)
 		{
 			uint32_t crc{ i };
 
-			for (size_t bit{ 0u }; bit < 8u; ++bit)
+			for (size_t bit{ 0 }; bit < 8; ++bit)
 			{
-				crc = (crc >> 1) ^ (polynomial & (0u - (crc & 1u)));
+				crc = (crc >> 1) ^ (polynomial & (0 - (crc & 1)));
 			}
 
 			tables[0][i] = crc;
 		}
 
-		for (uint32_t i{ 0u }; i < 256u; ++i)
+		for (uint32_t i{ 0 }; i < 256; ++i)
 		{
 			uint32_t crc{ tables[0][i] };
 
-			for (size_t slice{ 1u }; slice < CrcSlices; ++slice)
+			for (size_t slice{ 1 }; slice < CrcSlices; ++slice)
 			{
 				crc              = tables[0][crc & 0xFF] ^ (crc >> 8);
 				tables[slice][i] = crc;

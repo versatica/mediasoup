@@ -504,14 +504,14 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		std::string username          = "œæ€å∫∂:¢∞¬÷12";
 		std::string usernameFragment1 = "œæ€å∫∂";
 		// Byte length: 4.
-		uint32_t priority = 999888777u;
+		uint32_t priority = 999888777;
 		// Byte length: 8.
 		uint64_t iceControlling = 15697499370457501716u;
 		// Byte length of USE_CANDIDATE: 0.
 		// NOTE: `AddNomination()` adds the "NOMINATION" attribute with both the old
 		// and the new value, so it will insert 2 attributes instead of one.
 		// Byte length: 4 x 2.
-		uint32_t nomination = 12345678u;
+		uint32_t nomination = 12345678;
 		// Byte length: 18 (2 byte of padding needed).
 		std::string software = "mediasoup x.y.z :)";
 		// Byte length: 4 + 23 (1 byte of padding needed).
