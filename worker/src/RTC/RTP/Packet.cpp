@@ -1822,11 +1822,11 @@ namespace RTC
 			}
 		}
 
-		void Packet::OnDependencyDescriptorUpdated(const uint8_t* data, size_t len)
+		bool Packet::OnDependencyDescriptorUpdated(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
-			UpdateDependencyDescriptor(data, len);
+			return UpdateDependencyDescriptor(data, len);
 		}
 	} // namespace RTP
 } // namespace RTC

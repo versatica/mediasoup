@@ -760,8 +760,6 @@ namespace RTC
 					return;
 				}
 
-				this->rewritten = false;
-
 				/*
 				 * The descriptor is restored as the Producer left it rather than as it was
 				 * received, this is, followed by the zero padding that makes room for the
@@ -781,7 +779,14 @@ namespace RTC
 				std::memcpy(buffer, this->bitStream.GetData(), this->length);
 				std::memset(buffer + this->length, 0, len - this->length);
 
-				this->listener->OnDependencyDescriptorUpdated(buffer, len);
+				// NOTE: It stays marked as rewritten if it could not be written back,
+				// since that's what the packet still carries.
+				if (!this->listener->OnDependencyDescriptorUpdated(buffer, len))
+				{
+					return;
+				}
+
+				this->rewritten = false;
 			}
 
 			uint32_t DependencyDescriptor::GetDecodeTargetsBitmask(
@@ -856,9 +861,14 @@ namespace RTC
 					return false;
 				}
 
-				this->rewritten = true;
+				// NOTE: Only once it's written, since the listener refuses a descriptor
+				// that doesn't fit and the packet then keeps the one it had.
+				if (!this->listener->OnDependencyDescriptorUpdated(buffer, len))
+				{
+					return false;
+				}
 
-				this->listener->OnDependencyDescriptorUpdated(buffer, len);
+				this->rewritten = true;
 
 				return true;
 			}

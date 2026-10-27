@@ -95,8 +95,9 @@ namespace
 	class Listener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
 	{
 	public:
-		void OnDependencyDescriptorUpdated(const uint8_t* /*data*/, size_t /*len*/) override
+		bool OnDependencyDescriptorUpdated(const uint8_t* /*data*/, size_t /*len*/) override
 		{
+			return true;
 		}
 	};
 

@@ -19,7 +19,11 @@ namespace RTC
 					virtual ~Listener() = default;
 
 				public:
-					virtual void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) = 0;
+					/**
+					 * @returns Whether the descriptor was written, which it is not if it
+					 * doesn't fit where it has to go.
+					 */
+					virtual bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) = 0;
 				};
 
 			public:

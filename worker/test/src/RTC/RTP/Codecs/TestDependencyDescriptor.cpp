@@ -7,8 +7,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 	class Listener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
 	{
 	public:
-		void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
+		bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
 		{
+			return true;
 		}
 	};
 
@@ -285,18 +286,20 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		class ExtensionListener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
 		{
 		public:
-			void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
+			bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
 			{
 				if (len > this->length)
 				{
 					this->rejected = true;
 
-					return;
+					return false;
 				}
 
 				std::memcpy(this->value, data, len);
 
 				this->length = len;
+
+				return true;
 			}
 
 			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength];
@@ -383,18 +386,20 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		class ExtensionListener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
 		{
 		public:
-			void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
+			bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
 			{
 				if (len > this->length)
 				{
 					this->rejected = true;
 
-					return;
+					return false;
 				}
 
 				std::memcpy(this->value, data, len);
 
 				this->length = len;
+
+				return true;
 			}
 
 			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength];
@@ -439,10 +444,17 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		REQUIRE(deltaFrame->GetMaxLength() > sizeof(deltaFrameData));
 
-		deltaFrame->UpdateActiveDecodeTargets(0, 0);
-
 		// So the rewritten descriptor doesn't fit and the received one is kept.
+		REQUIRE(!deltaFrame->UpdateActiveDecodeTargets(0, 0));
 		REQUIRE(listener.rejected);
+		REQUIRE(listener.length == sizeof(deltaFrameData));
+
+		// And since nothing was written there is nothing to undo either.
+		listener.rejected = false;
+
+		deltaFrame->Restore();
+
+		REQUIRE(!listener.rejected);
 		REQUIRE(listener.length == sizeof(deltaFrameData));
 	}
 

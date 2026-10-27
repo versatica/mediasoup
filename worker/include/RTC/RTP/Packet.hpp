@@ -999,7 +999,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Codecs::DependencyDescriptor::Listener. */
 		public:
-			void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override;
+			bool OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override;
 
 #ifdef MS_RTC_LOGGER_RTP
 		public:
