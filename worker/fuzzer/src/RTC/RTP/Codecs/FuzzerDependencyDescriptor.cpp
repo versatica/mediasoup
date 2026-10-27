@@ -2,7 +2,7 @@
 
 void FuzzerRtcRtpCodecsDependencyDescriptor::Fuzz(const uint8_t* data, size_t len)
 {
-	std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+	std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 	  templateDependencyStructure;
 
 	DependencyDescriptorListener listener;

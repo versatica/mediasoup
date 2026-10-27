@@ -541,7 +541,7 @@ namespace RTC
 
 			bool ReadDependencyDescriptor(
 			  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor,
-			  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 			    templateDependencyStructure) const;
 
 			bool UpdateDependencyDescriptor(const uint8_t* data, size_t len);
@@ -848,6 +848,20 @@ namespace RTC
 				}
 
 				return this->payloadDescriptorHandler->GetTemporalLayer();
+			}
+
+			/**
+			 * Bytes that the Dependency Descriptor of this packet may take once a
+			 * Consumer filtering layers rewrites it, or 0 if it's never rewritten.
+			 */
+			uint8_t GetDependencyDescriptorMaxLength() const
+			{
+				if (!this->payloadDescriptorHandler)
+				{
+					return 0;
+				}
+
+				return this->payloadDescriptorHandler->GetDependencyDescriptorMaxLength();
 			}
 
 			/**

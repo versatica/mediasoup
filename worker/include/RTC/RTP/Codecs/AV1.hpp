@@ -47,6 +47,10 @@ namespace RTC
 					}
 					void Encode();
 					void Restore() const;
+					uint8_t GetDependencyDescriptorMaxLength() const
+					{
+						return this->dependencyDescriptor ? this->dependencyDescriptor->GetMaxLength() : 0;
+					}
 					bool IsSwitchPointForTemporalLayer(uint8_t temporalLayer) const
 					{
 						return this->dependencyDescriptor &&
@@ -87,7 +91,7 @@ namespace RTC
 				  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor);
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
-				  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 				    templateDependencyStructure);
 
 			public:
@@ -145,6 +149,10 @@ namespace RTC
 					bool IsKeyFrame() const override
 					{
 						return this->payloadDescriptor->isKeyFrame;
+					}
+					uint8_t GetDependencyDescriptorMaxLength() const override
+					{
+						return this->payloadDescriptor->GetDependencyDescriptorMaxLength();
 					}
 
 				private:

@@ -96,6 +96,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		}
 	};
 
+	constexpr uint8_t DependencyDescriptorId{ 12 };
+
 	const auto checkRtxPacket = [](RTC::RTP::Packet* rtxPacket, RTC::RTP::Packet* origPacket) -> void
 	{
 		REQUIRE(rtxPacket);
@@ -104,12 +106,43 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(rtxPacket->HasMarker() == origPacket->HasMarker());
 	};
 
+	/**
+	 * Gives the Dependency Descriptor extension `room` spare bytes, as
+	 * `Producer::MangleRtpPacket()` does, so that Consumers filtering layers can
+	 * write the active decode targets bitmask into it.
+	 *
+	 * NOTE: Done before parsing since the descriptor keeps a pointer into the
+	 * extension, which `SetExtensions()` moves.
+	 */
 	const auto parseAV1RtpPacket =
 	  [](
 	    RTC::RTP::Packet* packet,
-	    std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-	      templateDependencyStructure) -> void
+	    std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+	      templateDependencyStructure,
+	    uint8_t room = 8) -> void
 	{
+		uint8_t extenLen;
+		const auto* const extenValue = packet->GetExtensionValue(DependencyDescriptorId, extenLen);
+
+		REQUIRE(extenValue);
+
+		if (room > 0)
+		{
+			// NOTE: Zero initialized, so the spare bytes are just zero padding for
+			// Dependency Descriptor parsers.
+			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+
+			std::memcpy(value, extenValue, extenLen);
+
+			const std::vector<RTC::RTP::Packet::Extension> extensions{
+				{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
+				 DependencyDescriptorId, static_cast<uint8_t>(extenLen + room),
+				 value }
+			};
+
+			packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+		}
+
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor;
 
 		packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
@@ -930,7 +963,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		context2.SetTargetSpatialLayer(0);
 		context2.SetTargetTemporalLayer(1);
 
-		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 		  templateDependencyStructure;
 
 		// Parse the first packet for the shake of having the template dependency structure.
@@ -1021,8 +1054,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet->ReadDependencyDescriptor(dependencyDescriptor4, templateDependencyStructure);
 
 		REQUIRE(dependencyDescriptor4);
-		// TODO: Enable once we write DD.
-		// REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000001);
+		REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000001);
 
 		// Process the NACK packet on stream2.
 		stream2->ReceiveNack(std::addressof(nackPacket));
@@ -1037,8 +1069,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		packet->ReadDependencyDescriptor(dependencyDescriptor5, templateDependencyStructure);
 
 		REQUIRE(dependencyDescriptor5);
-		// TODO: Enable once we write DD.
-		// REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000011);
+		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000011);
 	}
 
 	SECTION("packets get retransmitted as long as they don't exceed MaxRetransmissionDelayForVideoMs")

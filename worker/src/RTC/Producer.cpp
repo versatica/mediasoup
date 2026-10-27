@@ -1449,6 +1449,18 @@ namespace RTC
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
+						// Make room for the active decode targets bitmask that Consumers
+						// filtering layers write into the descriptor, which may make it
+						// longer than it came.
+						const auto maxExtenLen = packet->GetDependencyDescriptorMaxLength();
+
+						if (maxExtenLen > extenLen)
+						{
+							std::memset(bufferPtr + extenLen, 0, maxExtenLen - extenLen);
+
+							extenLen = maxExtenLen;
+						}
+
 						extensions.emplace_back(
 						  /*type*/ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR,
 						  /*id*/ static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),

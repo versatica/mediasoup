@@ -3,7 +3,9 @@
 
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "Logger.hpp"
+#include <algorithm> // std::max()
 #include <bitset>
+#include <cstring> // std::memset()
 #include <string>
 #include <vector>
 
@@ -13,6 +15,12 @@ namespace RTC
 	{
 		namespace Codecs
 		{
+			/* Static. */
+
+			// Bit offset of the template dependency structure, this is, right after the
+			// mandatory descriptor fields and the extended descriptor field flags.
+			static constexpr uint32_t TemplateDependencyStructureOffset{ 29 };
+
 			/* Static members. */
 
 			// clang-format off
@@ -31,7 +39,7 @@ namespace RTC
 			  const uint8_t* data,
 			  size_t len,
 			  DependencyDescriptor::Listener* listener,
-			  std::unique_ptr<TemplateDependencyStructure>& templateDependencyStructure)
+			  std::shared_ptr<TemplateDependencyStructure>& templateDependencyStructure)
 			{
 				MS_TRACE();
 
@@ -51,11 +59,11 @@ namespace RTC
 
 				if (templateDependencyStructure == nullptr)
 				{
-					templateDependencyStructure = std::make_unique<TemplateDependencyStructure>();
+					templateDependencyStructure = std::make_shared<TemplateDependencyStructure>();
 				}
 
 				std::unique_ptr<DependencyDescriptor> dependencyDescriptor(
-				  new DependencyDescriptor(data, len, listener, templateDependencyStructure.get()));
+				  new DependencyDescriptor(data, len, listener, templateDependencyStructure));
 
 				if (!dependencyDescriptor->ReadMandatoryDescriptorFields())
 				{
@@ -81,6 +89,13 @@ namespace RTC
 					return nullptr;
 				}
 
+				// Hand over the structure this descriptor carried, if any, so that the
+				// following ones are parsed with it.
+				//
+				// NOTE: Not done when parsing fails, so that a truncated structure never
+				// replaces the one in use.
+				templateDependencyStructure = dependencyDescriptor->templateDependencyStructure;
+
 				return dependencyDescriptor.release();
 			}
 
@@ -90,10 +105,11 @@ namespace RTC
 			  const uint8_t* data,
 			  size_t len,
 			  DependencyDescriptor::Listener* listener,
-			  TemplateDependencyStructure* templateDependencyStructure)
-			  : templateDependencyStructure(templateDependencyStructure),
+			  std::shared_ptr<TemplateDependencyStructure> templateDependencyStructure)
+			  : templateDependencyStructure(std::move(templateDependencyStructure)),
 			    listener(listener),
-			    bitStream(const_cast<uint8_t*>(data), len)
+			    bitStream(const_cast<uint8_t*>(data), len),
+			    length(static_cast<uint8_t>(len))
 			{
 				MS_TRACE();
 			}
@@ -223,24 +239,40 @@ namespace RTC
 					return false;
 				}
 
-				auto templateDependencyStructurePresentFlag = this->bitStream.GetBit();
-				auto activeDecodeTargetLayersPresentFlag    = this->bitStream.GetBit();
+				this->extendedDescriptorFieldsPresent = true;
 
-				// Advance 3 positios due to non interesting fields.
-				bitStream.SkipBits(3);
+				const bool templateDependencyStructurePresentFlag = this->bitStream.GetBit();
+
+				this->activeDecodeTargetsPresent           = this->bitStream.GetBit();
+				this->customDecodeTargetIndicationsPresent = this->bitStream.GetBit();
+				this->customFrameDiffsPresent              = this->bitStream.GetBit();
+				this->customChainsPresent                  = this->bitStream.GetBit();
+				this->templateDependencyStructureEndOffset = this->bitStream.GetOffset();
 
 				if (templateDependencyStructurePresentFlag)
 				{
+					/*
+					 * Take a brand new structure rather than overwriting the one in use,
+					 * which descriptors already parsed with it keep referencing.
+					 *
+					 * Those may still be rewritten long after this point, for instance when
+					 * retransmitted, and the number of decode targets they write depends on
+					 * the structure they were parsed with.
+					 */
+					this->templateDependencyStructure = std::make_shared<TemplateDependencyStructure>();
+
 					if (!ReadTemplateDependencyStructure())
 					{
 						return false;
 					}
 
+					this->templateDependencyStructureEndOffset = this->bitStream.GetOffset();
+
 					this->activeDecodeTargetsBitmask =
 					  (1 << this->templateDependencyStructure->decodeTargetCount) - 1;
 				}
 
-				if (activeDecodeTargetLayersPresentFlag)
+				if (this->activeDecodeTargetsPresent)
 				{
 					if (this->bitStream.GetLeftBits() < this->templateDependencyStructure->decodeTargetCount)
 					{
@@ -286,7 +318,79 @@ namespace RTC
 					return false;
 				}
 
+				ComputeDecodeTargetLayers();
+
+				if (!ReadRenderResolutions())
+				{
+					return false;
+				}
+
 				return true;
+			}
+
+			/*
+			 * The render resolutions are not used, but they must be consumed so that
+			 * whatever follows the template dependency structure is read at the right
+			 * bit offset.
+			 */
+			bool DependencyDescriptor::ReadRenderResolutions()
+			{
+				MS_TRACE();
+
+				if (this->bitStream.GetLeftBits() < 1)
+				{
+					return false;
+				}
+
+				if (!this->bitStream.GetBit())
+				{
+					return true;
+				}
+
+				// Render width and height, 16 bits each, of every spatial layer.
+				const uint32_t bits = (this->templateDependencyStructure->spatialLayers + 1) * 32;
+
+				if (this->bitStream.GetLeftBits() < bits)
+				{
+					return false;
+				}
+
+				this->bitStream.SkipBits(bits);
+
+				return true;
+			}
+
+			/*
+			 * Tells the spatial and temporal layer of every decode target, this is, the
+			 * highest ones among the templates that are part of it.
+			 */
+			void DependencyDescriptor::ComputeDecodeTargetLayers() const
+			{
+				MS_TRACE();
+
+				auto& decodeTargetLayers   = this->templateDependencyStructure->decodeTargetLayers;
+				const auto& templateLayers = this->templateDependencyStructure->templateLayers;
+
+				decodeTargetLayers.clear();
+
+				for (uint8_t dtIndex{ 0 }; dtIndex < this->templateDependencyStructure->decodeTargetCount;
+				     ++dtIndex)
+				{
+					DecodeTargetLayer decodeTargetLayer;
+
+					for (const auto& templateLayer : templateLayers)
+					{
+						if (templateLayer.decodeTargetIndications[dtIndex] != DecodeTargetIndication::NOT_PRESENT)
+						{
+							decodeTargetLayer.spatialLayer = std::max<uint8_t>(
+							  decodeTargetLayer.spatialLayer, static_cast<uint8_t>(templateLayer.spatialLayer));
+							decodeTargetLayer.temporalLayer = std::max<uint8_t>(
+							  decodeTargetLayer.temporalLayer, static_cast<uint8_t>(templateLayer.temporalLayer));
+						}
+					}
+
+					decodeTargetLayers.push_back(decodeTargetLayer);
+				}
 			}
 
 			bool DependencyDescriptor::ReadTemplateLayers()
@@ -402,6 +506,8 @@ namespace RTC
 					return false;
 				}
 
+				this->templateDependencyStructure->chainCount = chainCount.value();
+
 				if (chainCount == 0)
 				{
 					return true;
@@ -462,64 +568,241 @@ namespace RTC
 				this->temporalLayer =
 				  this->templateDependencyStructure->templateLayers[this->templateId].temporalLayer;
 
-				return true;
-			}
+				// The custom frame dependency fields are not used, but they must be
+				// delimited so that they can be copied over verbatim when rewriting.
+				this->frameDependencyDefinitionOffset = this->bitStream.GetOffset();
 
-			const uint8_t* DependencyDescriptor::Serialize(uint8_t& len)
-			{
-				MS_TRACE();
-
-				MS_ASSERT(!this->isKeyFrame, "serialization of key frames is not supported");
-
-				this->bitStream.Reset();
-				WriteMandatoryDescriptorFields();
-				WriteExtendedDescriptorFields();
-
-				// The written bits rounded up to whole bytes.
-				len = static_cast<uint8_t>((this->bitStream.GetOffset() + 7) >> 3);
-
-				return this->bitStream.GetData();
-			}
-
-			bool DependencyDescriptor::WriteMandatoryDescriptorFields()
-			{
-				MS_TRACE();
-
-				this->bitStream.PutBit(this->startOfFrame ? 1 : 0);
-				this->bitStream.PutBit(this->endOfFrame ? 1 : 0);
-				this->bitStream.PutBits(6, this->frameDependencyTemplateId);
-				this->bitStream.PutBits(16, this->frameNumber);
-
-				return true;
-			}
-
-			bool DependencyDescriptor::WriteExtendedDescriptorFields()
-			{
-				MS_TRACE();
-
-				// Template dependency structure present flag.
-				this->bitStream.PutBit(0);
-				// Active decode targets present flag.
-				this->bitStream.PutBit(this->activeDecodeTargetsBitmask.has_value() ? 1 : 0);
-
-				// Custom dtis flag.
-				this->bitStream.PutBit(0);
-				// Custom fdiffs flag.
-				this->bitStream.PutBit(0);
-				// Custom chains flag.
-				this->bitStream.PutBit(0);
-
-				// NOTE: Write template dependency structure if ever needed.
-
-				// Active Decode Targets
-				if (this->activeDecodeTargetsBitmask.has_value())
+				if (this->customDecodeTargetIndicationsPresent && !ReadFrameDecodeTargetIndications())
 				{
-					this->bitStream.PutBits(
-					  this->templateDependencyStructure->decodeTargetCount,
-					  this->activeDecodeTargetsBitmask.value());
+					return false;
 				}
 
+				if (this->customFrameDiffsPresent && !ReadFrameDiffs())
+				{
+					return false;
+				}
+
+				if (this->customChainsPresent && !ReadFrameDiffChains())
+				{
+					return false;
+				}
+
+				this->frameDependencyDefinitionEndOffset = this->bitStream.GetOffset();
+
 				return true;
+			}
+
+			bool DependencyDescriptor::ReadFrameDecodeTargetIndications()
+			{
+				MS_TRACE();
+
+				const uint32_t bits = this->templateDependencyStructure->decodeTargetCount * 2;
+
+				if (this->bitStream.GetLeftBits() < bits)
+				{
+					return false;
+				}
+
+				this->bitStream.SkipBits(bits);
+
+				return true;
+			}
+
+			bool DependencyDescriptor::ReadFrameDiffs()
+			{
+				MS_TRACE();
+
+				while (true)
+				{
+					if (this->bitStream.GetLeftBits() < 2)
+					{
+						return false;
+					}
+
+					const uint32_t nextFrameDiffSize = this->bitStream.GetBits(2);
+
+					if (nextFrameDiffSize == 0)
+					{
+						return true;
+					}
+
+					if (this->bitStream.GetLeftBits() < 4 * nextFrameDiffSize)
+					{
+						return false;
+					}
+
+					this->bitStream.SkipBits(4 * nextFrameDiffSize);
+				}
+			}
+
+			bool DependencyDescriptor::ReadFrameDiffChains()
+			{
+				MS_TRACE();
+
+				const uint32_t bits = this->templateDependencyStructure->chainCount * 8;
+
+				if (this->bitStream.GetLeftBits() < bits)
+				{
+					return false;
+				}
+
+				this->bitStream.SkipBits(bits);
+
+				return true;
+			}
+
+			uint32_t DependencyDescriptor::GetRewrittenBits() const
+			{
+				MS_TRACE();
+
+				// Mandatory descriptor fields.
+				uint32_t bits{ 24 };
+
+				// Extended descriptor field flags.
+				bits += 5;
+
+				if (this->isKeyFrame)
+				{
+					bits += this->templateDependencyStructureEndOffset - TemplateDependencyStructureOffset;
+				}
+
+				// Active decode targets bitmask, which we always write.
+				bits += this->templateDependencyStructure->decodeTargetCount;
+
+				// Custom frame dependency fields.
+				bits += this->frameDependencyDefinitionEndOffset - this->frameDependencyDefinitionOffset;
+
+				return bits;
+			}
+
+			uint8_t DependencyDescriptor::GetMaxLength() const
+			{
+				MS_TRACE();
+
+				const auto bits = GetRewrittenBits();
+
+				// The rewritten descriptor would not fit in the RTP header extension, so
+				// `Write()` will refuse to produce it and the descriptor will be forwarded
+				// just as it was received, telling the endpoint that decode targets being
+				// filtered out are active.
+				if (bits > Consts::TwoBytesRtpExtensionMaxLength * 8)
+				{
+					MS_WARN_TAG(
+					  rtp,
+					  "rewritten descriptor does not fit so it will be forwarded as received [bits:%" PRIu32
+					  "]",
+					  bits);
+
+					return this->length;
+				}
+
+				// NOTE: The descriptor is bit packed and zero padded up to the next byte
+				// boundary, hence the rounding up.
+				return static_cast<uint8_t>((bits + 7) / 8);
+			}
+
+			uint8_t DependencyDescriptor::Write(uint32_t activeDecodeTargetsBitmask, uint8_t* buffer) const
+			{
+				MS_TRACE();
+
+				const auto* data    = this->bitStream.GetData();
+				const uint32_t bits = GetRewrittenBits();
+
+				if (bits > Consts::TwoBytesRtpExtensionMaxLength * 8)
+				{
+					MS_WARN_DEV("rewritten descriptor does not fit [bits:%" PRIu32 "]", bits);
+
+					return 0;
+				}
+
+				const auto len = static_cast<uint8_t>((bits + 7) / 8);
+
+				std::memset(buffer, 0, len);
+
+				Utils::BitWriter writer(buffer);
+
+				// Mandatory descriptor fields, unchanged.
+				writer.CopyBits(data, 0, 24);
+
+				// Extended descriptor field flags, with the active decode targets one set.
+				writer.PutBit(this->isKeyFrame ? 1 : 0);
+				writer.PutBit(1);
+				writer.PutBit(this->customDecodeTargetIndicationsPresent ? 1 : 0);
+				writer.PutBit(this->customFrameDiffsPresent ? 1 : 0);
+				writer.PutBit(this->customChainsPresent ? 1 : 0);
+
+				// Template dependency structure, unchanged.
+				if (this->isKeyFrame)
+				{
+					writer.CopyBits(
+					  data, TemplateDependencyStructureOffset, this->templateDependencyStructureEndOffset);
+				}
+
+				writer.PutBits(
+				  this->templateDependencyStructure->decodeTargetCount, activeDecodeTargetsBitmask);
+
+				// Custom frame dependency fields, unchanged.
+				writer.CopyBits(
+				  data, this->frameDependencyDefinitionOffset, this->frameDependencyDefinitionEndOffset);
+
+				MS_ASSERT(writer.GetOffset() == bits, "wrong number of written bits");
+
+				return len;
+			}
+
+			void DependencyDescriptor::Restore()
+			{
+				MS_TRACE();
+
+				// Never rewritten, so there is nothing to undo.
+				if (!this->rewritten)
+				{
+					return;
+				}
+
+				this->rewritten = false;
+
+				/*
+				 * The descriptor is restored as the Producer left it rather than as it was
+				 * received, this is, followed by the zero padding that makes room for the
+				 * active decode targets bitmask.
+				 *
+				 * Otherwise the RTP header extension would be shrunk to the received
+				 * length and the next Consumer sharing this packet could no longer write
+				 * its own longer descriptor into it.
+				 *
+				 * NOTE: Trailing zeroes are just zero padding for Dependency Descriptor
+				 * parsers.
+				 */
+				const auto len = std::max<uint8_t>(GetMaxLength(), this->length);
+
+				uint8_t buffer[Consts::TwoBytesRtpExtensionMaxLength];
+
+				std::memcpy(buffer, this->bitStream.GetData(), this->length);
+				std::memset(buffer + this->length, 0, len - this->length);
+
+				this->listener->OnDependencyDescriptorUpdated(buffer, len);
+			}
+
+			uint32_t DependencyDescriptor::GetDecodeTargetsBitmask(
+			  uint8_t maxSpatialLayer, uint8_t maxTemporalLayer) const
+			{
+				MS_TRACE();
+
+				const auto& decodeTargetLayers = this->templateDependencyStructure->decodeTargetLayers;
+				uint32_t bitmask{ 0 };
+
+				for (size_t decodeTarget{ 0 }; decodeTarget < decodeTargetLayers.size(); ++decodeTarget)
+				{
+					const auto& decodeTargetLayer = decodeTargetLayers[decodeTarget];
+
+					if (decodeTargetLayer.spatialLayer <= maxSpatialLayer && decodeTargetLayer.temporalLayer <= maxTemporalLayer)
+					{
+						bitmask |= (uint32_t{ 1 } << decodeTarget);
+					}
+				}
+
+				return bitmask;
 			}
 
 			/*
@@ -555,53 +838,27 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				// We don't update active decode targets for key frames,
-				// as by definition they enable all decode targets.
-				if (this->isKeyFrame)
-				{
-					this->listener->OnDependencyDescriptorUpdated(
-					  this->bitStream.GetData(), this->bitStream.GetLength());
+				const auto activeDecodeTargetsBitmask = GetDecodeTargetsBitmask(
+				  static_cast<uint8_t>(maxSpatialLayer), static_cast<uint8_t>(maxTemporalLayer));
 
+				// Nothing to do if the endpoint is already told exactly this.
+				if (!this->rewritten && this->activeDecodeTargetsPresent && this->activeDecodeTargetsBitmask == activeDecodeTargetsBitmask)
+				{
 					return true;
 				}
 
-				auto availableSpatialLayers  = this->templateDependencyStructure->spatialLayers;
-				auto availableTemporalLayers = this->templateDependencyStructure->temporalLayers;
+				uint8_t buffer[Consts::TwoBytesRtpExtensionMaxLength];
 
-				MS_ASSERT(
-				  maxSpatialLayer <= availableSpatialLayers,
-				  "maxSpatialLayer must be less than or equal to availableSpatialLayers");
-				MS_ASSERT(
-				  maxTemporalLayer <= availableTemporalLayers,
-				  "maxTemporalLayer must be less than or equal to availableTemporalLayers");
+				const auto len = Write(activeDecodeTargetsBitmask, buffer);
 
-				uint32_t activeDecodeTargetsBitmask = 0;
-				size_t bitIndex                     = 0;
-
-				for (uint32_t spatialLayer = 0; spatialLayer <= maxSpatialLayer; ++spatialLayer)
+				if (len == 0)
 				{
-					for (uint32_t temporalLayer = 0; temporalLayer <= availableTemporalLayers; ++temporalLayer)
-					{
-						if (temporalLayer <= maxTemporalLayer)
-						{
-							// Set a 1.
-							activeDecodeTargetsBitmask |= (1 << bitIndex);
-						}
-						else
-						{
-							// Set a 0.
-							activeDecodeTargetsBitmask &= ~(1 << bitIndex);
-						}
-
-						bitIndex += 1;
-					}
+					return false;
 				}
 
-				this->activeDecodeTargetsBitmask = activeDecodeTargetsBitmask;
+				this->rewritten = true;
 
-				uint8_t len;
-				const auto* data = this->Serialize(len);
-				this->listener->OnDependencyDescriptorUpdated(data, len);
+				this->listener->OnDependencyDescriptorUpdated(buffer, len);
 
 				return true;
 			}

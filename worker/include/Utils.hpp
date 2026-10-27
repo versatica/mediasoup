@@ -232,6 +232,15 @@ namespace Utils
 		{
 			return static_cast<size_t>(__builtin_popcount(mask));
 		}
+
+		/**
+		 * Value of the bit at the given offset, counting from the most significant
+		 * bit of the first byte.
+		 */
+		static uint8_t GetBitAt(const uint8_t* data, uint32_t offset)
+		{
+			return (data[offset >> 3] >> (7 - (offset & 0x7))) & 0x1;
+		}
 	};
 
 	class Crypto
@@ -700,6 +709,33 @@ namespace Utils
 	private:
 		uint8_t data[RTC::Consts::TwoBytesRtpExtensionMaxLength];
 		uint32_t len{ 0 };
+		uint32_t offset{ 0 };
+	};
+
+	/**
+	 * Appends bits into a buffer that the caller has zeroed.
+	 *
+	 * NOTE: Unlike BitStream, this doesn't read, doesn't own the buffer and
+	 * cannot reset it, so whatever is being rewritten can never be its own
+	 * destination. That's what makes it possible to copy over bits that are not
+	 * parsed, via CopyBits().
+	 */
+	class BitWriter
+	{
+	public:
+		explicit BitWriter(uint8_t* data);
+		~BitWriter() = default;
+
+		uint32_t GetOffset() const;
+		void PutBit(uint8_t bit);
+		void PutBits(uint32_t count, uint32_t bits);
+		/**
+		 * Appends the bits of `src` in the range [from, to).
+		 */
+		void CopyBits(const uint8_t* src, uint32_t from, uint32_t to);
+
+	private:
+		uint8_t* data;
 		uint32_t offset{ 0 };
 	};
 

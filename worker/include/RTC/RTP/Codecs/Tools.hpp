@@ -52,7 +52,7 @@ namespace RTC
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
 				  const RTC::RtpCodecMimeType& mimeType,
-				  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 				    templateDependencyStructure)
 				{
 					switch (mimeType.type)

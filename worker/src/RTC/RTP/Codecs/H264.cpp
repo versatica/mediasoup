@@ -116,7 +116,7 @@ namespace RTC
 
 			void H264::ProcessRtpPacket(
 			  RTP::Packet* packet,
-			  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
+			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
 			{
 				MS_TRACE();
 

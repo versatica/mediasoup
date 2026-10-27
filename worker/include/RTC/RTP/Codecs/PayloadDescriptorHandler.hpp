@@ -236,6 +236,14 @@ namespace RTC
 				virtual uint8_t GetSpatialLayer() const                                           = 0;
 				virtual uint8_t GetTemporalLayer() const                                          = 0;
 				virtual bool IsKeyFrame() const                                                   = 0;
+				/*
+				 * Bytes the Dependency Descriptor of this packet may take once rewritten,
+				 * or 0 if this codec never rewrites it.
+				 */
+				virtual uint8_t GetDependencyDescriptorMaxLength() const
+				{
+					return 0;
+				}
 			};
 		} // namespace Codecs
 	} // namespace RTP

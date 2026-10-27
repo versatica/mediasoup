@@ -112,7 +112,7 @@ namespace
 SCENARIO("process AV1 payload descriptor", "[rtp][codecs][av1]")
 {
 	Listener listener;
-	std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+	std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 	  templateDependencyStructure;
 
 	RTC::RTP::Codecs::EncodingContext::Params params;

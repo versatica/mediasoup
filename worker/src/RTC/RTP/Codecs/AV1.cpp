@@ -29,7 +29,7 @@ namespace RTC
 
 			void AV1::ProcessRtpPacket(
 			  RTP::Packet* packet,
-			  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
+			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
 			{
 				MS_TRACE();
 
@@ -96,8 +96,7 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				// Nothing to do as next time this packet is sent will rewrite
-				// the active decode targets mask.
+				this->dependencyDescriptor->Restore();
 			}
 
 			// NOLINTNEXTLINE(readability-make-member-function-const)
@@ -257,13 +256,19 @@ namespace RTC
 					context->SetCurrentTemporalLayer(tmpTemporalLayer);
 				}
 
-				// TODO: Enable once we rewrite the Dependency Descriptor header extension.
-				// // Store the encoding data for retransmissions.
-				// this->payloadDescriptor->CreateEncoder({
-				//   static_cast<uint32_t>(context->GetCurrentSpatialLayer()),
-				//   static_cast<uint32_t>(context->GetCurrentTemporalLayer())
-				// });
-				// this->payloadDescriptor->Encode();
+				// Tell the endpoint which decode targets it must expect, since the ones
+				// above the current layers are filtered out on purpose and it would
+				// otherwise take their absence for loss.
+				//
+				// NOTE: The encoding data is stored so that retransmissions of this packet
+				// carry the same bitmask.
+				// clang-format off
+				this->payloadDescriptor->CreateEncoder({
+				  .maxSpatialLayer=static_cast<uint32_t>(context->GetCurrentSpatialLayer()),
+				  .maxTemporalLayer=static_cast<uint32_t>(context->GetCurrentTemporalLayer())
+				});
+				// clang-format on
+				this->payloadDescriptor->Encode();
 
 				return true;
 			}

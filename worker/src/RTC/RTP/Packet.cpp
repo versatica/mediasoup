@@ -1051,7 +1051,7 @@ namespace RTC
 
 		bool Packet::ReadDependencyDescriptor(
 		  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor,
-		  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+		  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 		    templateDependencyStructure) const
 		{
 			MS_TRACE();

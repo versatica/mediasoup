@@ -37,7 +37,7 @@ namespace RTC
 				static bool IsKeyFrame(const uint8_t* data, size_t len);
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
-				  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 				    templateDependencyStructure);
 
 			public:
