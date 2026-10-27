@@ -1089,25 +1089,50 @@ namespace RTC
 
 			if (!extenValue)
 			{
-				MS_WARN_TAG(rtp, "dependency description not found");
+				MS_WARN_TAG(rtp, "dependency descriptor not found");
 
 				return false;
 			}
 
-			if (len > extenLen)
+			if (len == 0)
 			{
-				MS_WARN_TAG(
-				  rtp,
-				  "no enough space for updated dependency descriptor [needed:%zu, available:%" PRIu8 "]",
-				  len,
-				  extenLen);
+				MS_WARN_TAG(rtp, "empty dependency descriptor");
 
 				return false;
+			}
+
+			/*
+			 * A longer descriptor can only take the padding bytes that follow the
+			 * current one, if any, since the first byte of any other extension holds
+			 * its id and is therefore never 0.
+			 */
+			if (len > extenLen)
+			{
+				const auto offset = static_cast<size_t>(extenValue - GetHeaderExtensionValue());
+				// In One-Byte extensions the length field holds 1..16.
+				const size_t maxLen = HasOneByteExtensions() ? 16 : Consts::TwoBytesRtpExtensionMaxLength;
+				bool fits           = len <= maxLen && offset + len <= GetHeaderExtensionValueLength();
+
+				for (size_t idx{ extenLen }; fits && idx < len; ++idx)
+				{
+					fits = extenValue[idx] == 0;
+				}
+
+				if (!fits)
+				{
+					MS_WARN_TAG(
+					  rtp,
+					  "no enough space for updated dependency descriptor [needed:%zu, available:%" PRIu8 "]",
+					  len,
+					  extenLen);
+
+					return false;
+				}
 			}
 
 			std::memcpy(extenValue, data, len);
 
-			SetExtensionLength(this->headerExtensionIds.dependencyDescriptor, len);
+			SetExtensionLength(this->headerExtensionIds.dependencyDescriptor, static_cast<uint8_t>(len));
 
 			return true;
 		}

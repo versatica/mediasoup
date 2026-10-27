@@ -26,6 +26,8 @@
 SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 {
 	constexpr std::string_view RetransmissionTimerLabel{ "rtp-stream-send-retransmissions" };
+	// Id the AV1 section below gives to the Dependency Descriptor extension.
+	constexpr uint8_t DependencyDescriptorId{ 12 };
 
 	class TestRtpStreamListener : public RTC::RTP::RtpStreamSend::Listener
 	{
@@ -39,10 +41,28 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		  RTC::RTP::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet) override
 		{
 			this->retransmittedPackets.push_back(packet);
+
+			/*
+			 * The packet is restored once it has been retransmitted, so whatever it
+			 * carries must be taken now rather than from the pointer above.
+			 */
+			uint8_t extenLen;
+			const auto* extenValue = packet->GetExtensionValue(DependencyDescriptorId, extenLen);
+
+			if (extenValue)
+			{
+				this->retransmittedDependencyDescriptors.emplace_back(extenValue, extenValue + extenLen);
+			}
+			else
+			{
+				this->retransmittedDependencyDescriptors.emplace_back();
+			}
 		}
 
 	public:
 		std::vector<RTC::RTP::Packet*> retransmittedPackets;
+		// Dependency Descriptor each retransmitted packet carried when it was sent.
+		std::vector<std::vector<uint8_t>> retransmittedDependencyDescriptors;
 	};
 
 	const auto createRtpPacket = [](uint8_t* buffer, size_t len, uint16_t seq, uint32_t timestamp)
@@ -95,8 +115,6 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 			}
 		}
 	};
-
-	constexpr uint8_t DependencyDescriptorId{ 12 };
 
 	const auto checkRtxPacket = [](RTC::RTP::Packet* rtxPacket, RTC::RTP::Packet* origPacket) -> void
 	{
@@ -1064,12 +1082,12 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(testRtpStreamListener1.retransmittedPackets.size() == 1);
 
-		auto* packet = testRtpStreamListener1.retransmittedPackets[0];
+		// Parse the DD it was retransmitted with and check the bitmask.
+		auto sent = testRtpStreamListener1.retransmittedDependencyDescriptors[0];
 
-		// Parse DD and check bitmask.
-		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor4;
-
-		packet->ReadDependencyDescriptor(dependencyDescriptor4, templateDependencyStructure);
+		auto dependencyDescriptor4 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    sent.data(), sent.size(), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor4);
 		REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000001);
@@ -1079,15 +1097,24 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(testRtpStreamListener2.retransmittedPackets.size() == 1);
 
-		packet = testRtpStreamListener2.retransmittedPackets[0];
+		// Parse the DD it was retransmitted with and check the bitmask.
+		sent = testRtpStreamListener2.retransmittedDependencyDescriptors[0];
 
-		// Parse DD and check bitmask.
-		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor5;
-
-		packet->ReadDependencyDescriptor(dependencyDescriptor5, templateDependencyStructure);
+		auto dependencyDescriptor5 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    sent.data(), sent.size(), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor5);
 		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000011);
+
+		/*
+		 * And the clone is left with the descriptor as it was received, which is
+		 * 11 bytes long, rather than with the 4 bytes the rewritten one takes.
+		 */
+		uint8_t restoredLen;
+
+		REQUIRE(sharedPacket->GetExtensionValue(DependencyDescriptorId, restoredLen));
+		REQUIRE(restoredLen == 11);
 	}
 
 	SECTION("packets get retransmitted as long as they don't exceed MaxRetransmissionDelayForVideoMs")

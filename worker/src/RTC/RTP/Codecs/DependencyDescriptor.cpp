@@ -752,27 +752,15 @@ namespace RTC
 				}
 
 				/*
-				 * The descriptor is restored as the Producer left it rather than as it was
-				 * received, this is, followed by the zero padding that makes room for the
-				 * active decode targets bitmask.
-				 *
-				 * Otherwise the RTP header extension would be shrunk to the received
-				 * length and the next Consumer sharing this packet could no longer write
-				 * its own longer descriptor into it.
-				 *
-				 * NOTE: Trailing zeroes are just zero padding for Dependency Descriptor
-				 * parsers.
+				 * The RTP header extension is shrunk back to the received length, which
+				 * leaves the room the Producer made for the rewrite as padding behind
+				 * it. The next Consumer sharing this packet grows into that padding
+				 * again when it writes its own, possibly longer, descriptor.
 				 */
-				const auto len = std::max<uint8_t>(GetMaxLength(), this->length);
-
-				uint8_t buffer[Consts::TwoBytesRtpExtensionMaxLength];
-
-				std::memcpy(buffer, this->bitStream.GetData(), this->length);
-				std::memset(buffer + this->length, 0, len - this->length);
 
 				// NOTE: It stays marked as rewritten if it could not be written back,
 				// since that's what the packet still carries.
-				if (!packet->UpdateDependencyDescriptor(buffer, len))
+				if (!packet->UpdateDependencyDescriptor(this->bitStream.GetData(), this->length))
 				{
 					return;
 				}

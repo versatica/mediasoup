@@ -33,6 +33,10 @@ namespace
 
 		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 
+		// As the Producer does, tell the length the descriptor really has and
+		// leave the room made for it as padding behind it.
+		REQUIRE(packet->UpdateDependencyDescriptor(data, len));
+
 		return packet;
 	}
 
@@ -351,7 +355,10 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		const auto packet = createPacket(deltaFrameData, sizeof(deltaFrameData), reservedLength);
 
-		// First Consumer, which just wants decode target 0.
+		// The packet tells the length the descriptor really has.
+		REQUIRE(getDependencyDescriptor(packet.get()).size() == sizeof(deltaFrameData));
+
+		// First Consumer, which just wants decode target 0, grows into the room.
 		REQUIRE(deltaFrame->UpdateActiveDecodeTargets(0, 0, packet.get()));
 		REQUIRE(getDependencyDescriptor(packet.get()).size() == reservedLength);
 
@@ -360,14 +367,13 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		auto restored = getDependencyDescriptor(packet.get());
 
-		// The descriptor is the received one again.
+		// The descriptor is the received one again, at the length it really has.
+		REQUIRE(restored.size() == sizeof(deltaFrameData));
 		REQUIRE(std::memcmp(restored.data(), deltaFrameData, sizeof(deltaFrameData)) == 0);
 
-		// But the extension keeps its length, so the next Consumer still fits in it.
-		REQUIRE(restored.size() == reservedLength);
-
-		// Second Consumer, which wants every decode target.
+		// And the next Consumer still grows into the room left behind it.
 		REQUIRE(deltaFrame->UpdateActiveDecodeTargets(0, 1, packet.get()));
+		REQUIRE(getDependencyDescriptor(packet.get()).size() == reservedLength);
 
 		const auto value = getDependencyDescriptor(packet.get());
 

@@ -1243,6 +1243,9 @@ namespace RTC
 			uint8_t* extenValue;
 			uint8_t extenLen;
 			uint8_t* bufferPtr{ buffer };
+			// Proxied Dependency Descriptor, without the room made for it.
+			const uint8_t* dependencyDescriptorValue{ nullptr };
+			uint8_t dependencyDescriptorLen{ 0 };
 
 			// Add urn:ietf:params:rtp-hdrext:sdes:mid.
 			{
@@ -1449,10 +1452,21 @@ namespace RTC
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
-						// Make room for the active decode targets bitmask that Consumers
-						// filtering layers write into the descriptor, which may make it
-						// longer than it came.
+						/*
+						 * Make room for the active decode targets bitmask that Consumers
+						 * filtering layers write into the descriptor, which may make it
+						 * longer than it came.
+						 *
+						 * NOTE: The extension is sized to hold the longest descriptor a
+						 * Consumer may write, but shrunk back to the received one below so
+						 * that the packet tells the length it really carries. The room
+						 * stays behind it as padding for `UpdateDependencyDescriptor()` to
+						 * grow into.
+						 */
 						const auto maxExtenLen = packet->GetDependencyDescriptorMaxLength();
+
+						dependencyDescriptorValue = bufferPtr;
+						dependencyDescriptorLen   = extenLen;
 
 						if (maxExtenLen > extenLen)
 						{
@@ -1493,6 +1507,12 @@ namespace RTC
 			}
 
 			packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+
+			// Leave the room made for the Dependency Descriptor as padding.
+			if (dependencyDescriptorValue)
+			{
+				packet->UpdateDependencyDescriptor(dependencyDescriptorValue, dependencyDescriptorLen);
+			}
 		}
 
 		return true;
