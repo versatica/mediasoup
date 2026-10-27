@@ -1020,6 +1020,24 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(context2.GetCurrentSpatialLayer() == 0);
 		REQUIRE(context2.GetCurrentTemporalLayer() == 1);
 
+		// The Dependency Descriptor rewritten for context2 must land in packet3
+		// itself, even though the clone handed over to stream1 above shares its
+		// payload descriptor handler.
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor2;
+
+		packet3->ReadDependencyDescriptor(dependencyDescriptor2, templateDependencyStructure);
+
+		REQUIRE(dependencyDescriptor2);
+		REQUIRE(dependencyDescriptor2->activeDecodeTargetsBitmask == 0b0000000000000011);
+
+		// And the clone must keep the one that was written for context1.
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor3;
+
+		sharedPacket->ReadDependencyDescriptor(dependencyDescriptor3, templateDependencyStructure);
+
+		REQUIRE(dependencyDescriptor3);
+		REQUIRE(dependencyDescriptor3->activeDecodeTargetsBitmask == 0b0000000000000001);
+
 		packet3->SetSsrc(params2.ssrc);
 
 		// Whenever packet3 is Nacked on stream2, it must always be set a

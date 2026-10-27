@@ -145,7 +145,7 @@ SCENARIO("process AV1 payload descriptor", "[rtp][codecs][av1]")
 
 		RTC::RTP::Codecs::AV1::PayloadDescriptorHandler payloadDescriptorHandler(payloadDescriptor);
 
-		std::unique_ptr<RTC::RTP::Packet> const packet{ RTC::RTP::Packet::Factory(
+		const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
 			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
 
 		result.forwarded = payloadDescriptorHandler.Process(&context, packet.get(), result.marker);

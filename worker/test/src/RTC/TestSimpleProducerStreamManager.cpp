@@ -104,9 +104,6 @@ namespace
 		{
 			return this->processResult;
 		}
-		void RtpPacketChanged(RTC::RTP::Packet* /*packet*/) override
-		{
-		}
 		std::unique_ptr<RTC::RTP::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
 		{
 			return nullptr;

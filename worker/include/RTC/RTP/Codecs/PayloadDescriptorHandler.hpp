@@ -229,7 +229,6 @@ namespace RTC
 			public:
 				virtual void Dump(int indentation = 0) const                                      = 0;
 				virtual bool Process(EncodingContext* context, RTP::Packet* packet, bool& marker) = 0;
-				virtual void RtpPacketChanged(RTP::Packet* packet)                                = 0;
 				virtual std::unique_ptr<PayloadDescriptor::Encoder> GetEncoder() const            = 0;
 				virtual void Encode(RTP::Packet* packet, PayloadDescriptor::Encoder* encoder)     = 0;
 				virtual void Restore(RTP::Packet* packet)                                         = 0;

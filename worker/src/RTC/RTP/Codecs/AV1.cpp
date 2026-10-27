@@ -123,9 +123,14 @@ namespace RTC
 			}
 
 			bool AV1::PayloadDescriptorHandler::Process(
-			  Codecs::EncodingContext* encodingContext, RTP::Packet* /*packet*/, bool& marker)
+			  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker)
 			{
 				MS_TRACE();
+
+				// NOTE: This handler is shared with the clones of the packet it was
+				// created for, so the descriptor must be told which of them it has to
+				// write the rewritten Dependency Descriptor into.
+				this->payloadDescriptor->UpdateListener(packet);
 
 				auto* context = static_cast<Codecs::AV1::EncodingContext*>(encodingContext);
 
@@ -274,18 +279,24 @@ namespace RTC
 			}
 
 			void AV1::PayloadDescriptorHandler::Encode(
-			  RTP::Packet* /*packet*/, Codecs::PayloadDescriptor::Encoder* encoder)
+			  RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder)
 			{
 				MS_TRACE();
+
+				// See the note in Process().
+				this->payloadDescriptor->UpdateListener(packet);
 
 				auto* av1Encoder = static_cast<AV1::PayloadDescriptor::Encoder*>(encoder);
 
 				av1Encoder->Encode(this->payloadDescriptor.get());
 			}
 
-			void AV1::PayloadDescriptorHandler::Restore(RTP::Packet* /*packet*/)
+			void AV1::PayloadDescriptorHandler::Restore(RTP::Packet* packet)
 			{
 				MS_TRACE();
+
+				// See the note in Process().
+				this->payloadDescriptor->UpdateListener(packet);
 
 				this->payloadDescriptor->Restore();
 			}

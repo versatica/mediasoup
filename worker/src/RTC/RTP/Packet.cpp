@@ -437,13 +437,14 @@ namespace RTC
 			// Clone media SSRC.
 			clonedPacket->mediaSsrc = this->mediaSsrc;
 
-			// Assign the payload descriptor handler.
+			/*
+			 * Share the payload descriptor handler.
+			 *
+			 * NOTE: The handler holds no reference to the packet it was created for,
+			 * so it can be shared. ProcessPayload(), EncodePayload() and
+			 * RestorePayload() tell it which packet to act on.
+			 */
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
-
-			if (this->payloadDescriptorHandler)
-			{
-				clonedPacket->payloadDescriptorHandler->RtpPacketChanged(clonedPacket);
-			}
 
 			return clonedPacket;
 		}
