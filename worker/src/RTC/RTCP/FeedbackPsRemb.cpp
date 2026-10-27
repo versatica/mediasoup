@@ -19,7 +19,7 @@ namespace RTC
 			// Check that there is space for the REMB unique identifier and basic fields.
 			// NOTE: Feedback.cpp already checked that there is space for CommonHeader and
 			// feedback header.
-			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 8u)
+			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 8)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for feedback packet, discarded");
 
@@ -61,7 +61,7 @@ namespace RTC
 			const size_t numSsrcs = data[4];
 
 			// Ensure there is space for the the announced number of SSRC feedbacks.
-			if (len != Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 8u + (numSsrcs * 4u))
+			if (len != Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 8 + (numSsrcs * 4))
 			{
 				MS_WARN_TAG(
 				  rtcp, "invalid payload size (%zu bytes) for the given number of ssrcs (%zu)", len, numSsrcs);
@@ -111,7 +111,7 @@ namespace RTC
 			for (size_t n{ 0 }; n < numSsrcs; ++n)
 			{
 				this->ssrcs.push_back(Utils::Byte::Get4Bytes(data, index));
-				index += 4u;
+				index += 4;
 			}
 		}
 
@@ -140,7 +140,7 @@ namespace RTC
 			// NOLINTNEXTLINE(bugprone-parent-virtual-call)
 			size_t offset = FeedbackPsPacket::Serialize(buffer);
 			auto mantissa = static_cast<uint64_t>(std::max<int64_t>(this->bitrate, 0));
-			uint8_t exponent{ 0u };
+			uint8_t exponent{ 0 };
 
 			while (mantissa > 0x3FFFF /* max mantissa (18 bits) */)
 			{
@@ -163,7 +163,7 @@ namespace RTC
 			for (auto ssrc : this->ssrcs)
 			{
 				Utils::Byte::Set4Bytes(buffer, offset, ssrc);
-				offset += 4u;
+				offset += 4;
 			}
 
 			return offset;

@@ -12,15 +12,15 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		{
 		}
 
-		uint16_t sequenceNumber{ 0u };
+		uint16_t sequenceNumber{ 0 };
 		int64_t timestampUs{ 0 };
-		size_t maxPacketSize{ 0u };
+		size_t maxPacketSize{ 0 };
 	};
 
-	static constexpr size_t RtcpMtu{ 1200u };
+	static constexpr size_t RtcpMtu{ 1200 };
 
-	const uint32_t senderSsrc{ 1111u };
-	const uint32_t mediaSsrc{ 2222u };
+	const uint32_t senderSsrc{ 1111 };
+	const uint32_t mediaSsrc{ 2222 };
 
 	const auto verify =
 	  [](
@@ -50,7 +50,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 			const uint16_t missingPackets = input.sequenceNumber - lastInput.sequenceNumber - 1;
 
 			// All missing packets must be represented in packetStatuses.
-			for (uint16_t i{ 0u }; i < missingPackets; ++i)
+			for (uint16_t i{ 0 }; i < missingPackets; ++i)
 			{
 				REQUIRE(packetStatusesIterator != packetStatuses.end());
 				REQUIRE(packetStatusesIterator->sequenceNumber == lastInput.sequenceNumber + i + 1);

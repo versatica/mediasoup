@@ -44,7 +44,7 @@ void FuzzerRtcRtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	std::string mid;
 	auto* stream = new RTC::RTP::RtpStreamSend(
 	  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
-	size_t offset{ 0u };
+	size_t offset{ 0 };
 
 	while (len >= 12)
 	{

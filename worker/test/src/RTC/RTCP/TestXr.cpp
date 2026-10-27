@@ -44,7 +44,7 @@ SCENARIO("RTCP XR", "[rtcp][xr]")
 		REQUIRE(packet->GetCount() == 0);
 		REQUIRE(packet->GetSsrc() == 0x5d931534);
 
-		size_t blockIdx{ 0u };
+		size_t blockIdx{ 0 };
 
 		for (auto it = packet->Begin(); it != packet->End(); ++it, ++blockIdx)
 		{
@@ -57,7 +57,7 @@ SCENARIO("RTCP XR", "[rtcp][xr]")
 				{
 					REQUIRE(block->GetSize() == 28);
 
-					size_t ssrcInfoIdx{ 0u };
+					size_t ssrcInfoIdx{ 0 };
 					auto* dlrrBlock = reinterpret_cast<RTC::RTCP::DelaySinceLastRr*>(block);
 
 					for (auto it2 = dlrrBlock->Begin(); it2 != dlrrBlock->End(); ++it2, ++ssrcInfoIdx)
