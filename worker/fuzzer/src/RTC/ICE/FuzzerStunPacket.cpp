@@ -63,7 +63,7 @@ void FuzzerRtcIceStunPacket::Fuzz(const uint8_t* data, size_t len)
 
 	try
 	{
-		packet->AddIceControlling(98989232u);
+		packet->AddIceControlling(98989232);
 	}
 	catch (...) // NOLINT(bugprone-empty-catch)
 	{
@@ -71,7 +71,7 @@ void FuzzerRtcIceStunPacket::Fuzz(const uint8_t* data, size_t len)
 
 	try
 	{
-		packet->AddIceControlled(87823823u);
+		packet->AddIceControlled(87823823);
 	}
 	catch (...) // NOLINT(bugprone-empty-catch)
 	{
@@ -87,7 +87,7 @@ void FuzzerRtcIceStunPacket::Fuzz(const uint8_t* data, size_t len)
 
 	try
 	{
-		packet->AddNomination(7623547u);
+		packet->AddNomination(7623547);
 	}
 	catch (...) // NOLINT(bugprone-empty-catch)
 	{

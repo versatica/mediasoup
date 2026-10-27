@@ -261,10 +261,10 @@ namespace RTC
 			auto* packet = new Packet(buffer, bufferLength);
 
 			// Must initialize extra fields in the header.
-			packet->SetSourcePort(0u);
-			packet->SetDestinationPort(0u);
-			packet->SetVerificationTag(0u);
-			packet->SetChecksum(0u);
+			packet->SetSourcePort(0);
+			packet->SetDestinationPort(0);
+			packet->SetVerificationTag(0);
+			packet->SetChecksum(0);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum packet length.
@@ -408,7 +408,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetChecksum(0u);
+			SetChecksum(0);
 
 			auto crc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());
 

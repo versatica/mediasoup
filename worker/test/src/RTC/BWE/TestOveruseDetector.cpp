@@ -62,7 +62,7 @@ SCENARIO("BWE OveruseDetector", "[bwe][overusedetector]")
 			this->state ^= this->state << 25;
 			this->state ^= this->state >> 27;
 
-			return this->state * 2685821657736338717ULL;
+			return this->state * 2685821657736338717;
 		}
 
 	private:

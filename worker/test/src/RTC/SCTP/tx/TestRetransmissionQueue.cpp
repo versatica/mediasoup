@@ -50,7 +50,7 @@ SCENARIO("SCTP RetransmissionQueue", "[sctp][retransmissionqueue]")
 	};
 
 	constexpr uint32_t Arwnd{ 100000 };
-	constexpr uint64_t Mtu{ 1191 };
+	constexpr size_t Mtu{ 1191 };
 	// InitialTsn is the first TSN that will be assigned. The TSN before it
 	// (InitialTsn - 1) starts as ACKED in OutstandingData, matching dcsctp's
 	// invariant that the initial state has the previous TSN already

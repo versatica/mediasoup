@@ -71,7 +71,7 @@ namespace RTC
 		if (SeqManager<uint16_t>::IsSeqLowerThan(seq, this->lastSeq))
 		{
 			// It was a nacked packet.
-			if (this->nackList.erase(seq) != 0u)
+			if (this->nackList.erase(seq) != 0)
 			{
 				MS_DEBUG_DEV(
 				  "NACKed packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", recovered:%s]",
@@ -350,7 +350,7 @@ namespace RTC
 		this->keyFrameList.clear();
 		this->recoveredList.clear();
 		this->started = false;
-		this->lastSeq = 0u;
+		this->lastSeq = 0;
 	}
 
 	inline void NackGenerator::MayRunTimer() const

@@ -100,7 +100,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(4);
 	packet->GetExtensionValue(4, extenLen);
 	packet->ReadTransportWideCc01(wideSeqNumber);
-	packet->UpdateTransportWideCc01(12345u);
+	packet->UpdateTransportWideCc01(12345);
 
 	packet->HasExtension(1);
 	packet->GetExtensionValue(1, extenLen);
@@ -288,7 +288,7 @@ void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 
 		// Use the first byte of the fuzzer input to pick the slot size
 		// (1..15 is the valid One-Byte extension range).
-		const uint8_t extenLen = (data[0] % 15u) + 1u;
+		const uint8_t extenLen = (data[0] % 15) + 1;
 
 		static thread_local uint8_t extenValue[15];
 

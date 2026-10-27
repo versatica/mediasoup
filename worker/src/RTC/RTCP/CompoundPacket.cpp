@@ -17,17 +17,17 @@ namespace RTC
 
 			size_t size{ 0 };
 
-			if (this->senderReportPacket.GetCount() > 0u)
+			if (this->senderReportPacket.GetCount() > 0)
 			{
 				size += this->senderReportPacket.GetSize();
 			}
 
-			if (this->receiverReportPacket.GetCount() > 0u)
+			if (this->receiverReportPacket.GetCount() > 0)
 			{
 				size += this->receiverReportPacket.GetSize();
 			}
 
-			if (this->sdesPacket.GetCount() > 0u)
+			if (this->sdesPacket.GetCount() > 0)
 			{
 				size += this->sdesPacket.GetSize();
 			}
@@ -50,20 +50,20 @@ namespace RTC
 			size_t offset{ 0 };
 
 			MS_ASSERT(
-			  this->senderReportPacket.GetCount() > 0u || this->receiverReportPacket.GetCount() > 0u,
+			  this->senderReportPacket.GetCount() > 0 || this->receiverReportPacket.GetCount() > 0,
 			  "no Sender or Receiver report present");
 
-			if (this->senderReportPacket.GetCount() > 0u)
+			if (this->senderReportPacket.GetCount() > 0)
 			{
 				offset += this->senderReportPacket.Serialize(this->header);
 			}
 
-			if (this->receiverReportPacket.GetCount() > 0u)
+			if (this->receiverReportPacket.GetCount() > 0)
 			{
 				offset += this->receiverReportPacket.Serialize(this->header + offset);
 			}
 
-			if (this->sdesPacket.GetCount() > 0u)
+			if (this->sdesPacket.GetCount() > 0)
 			{
 				offset += this->sdesPacket.Serialize(this->header + offset);
 			}
@@ -248,7 +248,7 @@ namespace RTC
 			{
 				this->senderReportPacket.Dump(indentation + 1);
 
-				if (this->receiverReportPacket.GetCount() != 0u)
+				if (this->receiverReportPacket.GetCount() != 0)
 				{
 					this->receiverReportPacket.Dump(indentation + 1);
 				}
@@ -258,7 +258,7 @@ namespace RTC
 				this->receiverReportPacket.Dump(indentation + 1);
 			}
 
-			if (this->sdesPacket.GetCount() != 0u)
+			if (this->sdesPacket.GetCount() != 0)
 			{
 				this->sdesPacket.Dump(indentation + 1);
 			}

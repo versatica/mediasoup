@@ -28,7 +28,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 	// First item (item 1).
 	const RTC::RTCP::SdesItem::Type item1Type{ RTC::RTCP::SdesItem::Type::CNAME };
 	const std::string item1Value{ "t7mkYnCm46OcINy/" };
-	const size_t item1Length{ 16u };
+	const size_t item1Length{ 16 };
 
 	// clang-format off
 	alignas(4) uint8_t buffer2[] =
@@ -57,18 +57,18 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 	// First item (item 2).
 	const RTC::RTCP::SdesItem::Type item2Type{ RTC::RTCP::SdesItem::Type::CNAME };
 	const std::string item2Value{ "qwerty" };
-	const size_t item2Length{ 6u };
+	const size_t item2Length{ 6 };
 	// First item (item 3).
 	const RTC::RTCP::SdesItem::Type item3Type{ RTC::RTCP::SdesItem::Type::TOOL };
 	const std::string item3Value{ "iñaki" };
-	const size_t item3Length{ 6u };
+	const size_t item3Length{ 6 };
 
 	// Second chunk (chunk 3).
 	const uint32_t ssrc3{ 5678 };
 	// First item (item 4).
 	const RTC::RTCP::SdesItem::Type item4Type{ RTC::RTCP::SdesItem::Type::LOC };
 	const std::string item4Value{ "somewhere œæ€" };
-	const size_t item4Length{ 17u };
+	const size_t item4Length{ 17 };
 
 	// clang-format off
 	alignas(4) uint8_t buffer3[] =
@@ -86,7 +86,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 	// First item (item 5).
 	const RTC::RTCP::SdesItem::Type item5Type{ RTC::RTCP::SdesItem::Type::LOC };
 	const std::string item5Value{ "ab" };
-	const size_t item5Length{ 2u };
+	const size_t item5Length{ 2 };
 
 	SECTION("alignof() RTCP structs")
 	{
@@ -104,7 +104,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 		REQUIRE(packet->GetSize() == 28);
 		REQUIRE(packet->GetCount() == 1);
 
-		size_t chunkIdx{ 0u };
+		size_t chunkIdx{ 0 };
 
 		for (auto it = packet->Begin(); it != packet->End(); ++it, ++chunkIdx)
 		{
@@ -120,7 +120,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 					REQUIRE(chunk->GetSize() == 24);
 					REQUIRE(chunk->GetSsrc() == ssrc1);
 
-					size_t itemIdx{ 0u };
+					size_t itemIdx{ 0 };
 
 					for (auto it2 = chunk->Begin(); it2 != chunk->End(); ++it2, ++itemIdx)
 					{
@@ -184,7 +184,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 		REQUIRE(packet->GetSize() == 52);
 		REQUIRE(packet->GetCount() == 2);
 
-		size_t chunkIdx{ 0u };
+		size_t chunkIdx{ 0 };
 
 		for (auto it = packet->Begin(); it != packet->End(); ++it, ++chunkIdx)
 		{
@@ -199,7 +199,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 					REQUIRE(chunk->GetSize() == 24);
 					REQUIRE(chunk->GetSsrc() == ssrc2);
 
-					size_t itemIdx{ 0u };
+					size_t itemIdx{ 0 };
 
 					for (auto it2 = chunk->Begin(); it2 != chunk->End(); ++it2, ++itemIdx)
 					{
@@ -244,7 +244,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 					REQUIRE(chunk->GetSize() == 24);
 					REQUIRE(chunk->GetSsrc() == ssrc3);
 
-					size_t itemIdx{ 0u };
+					size_t itemIdx{ 0 };
 
 					for (auto it2 = chunk->Begin(); it2 != chunk->End(); ++it2, ++itemIdx)
 					{
@@ -316,7 +316,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 		REQUIRE(packet->GetSize() == 16);
 		REQUIRE(packet->GetCount() == 1);
 
-		size_t chunkIdx{ 0u };
+		size_t chunkIdx{ 0 };
 
 		for (auto it = packet->Begin(); it != packet->End(); ++it, ++chunkIdx)
 		{
@@ -331,7 +331,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 					REQUIRE(chunk->GetSize() == 12);
 					REQUIRE(chunk->GetSsrc() == ssrc4);
 
-					size_t itemIdx{ 0u };
+					size_t itemIdx{ 0 };
 
 					for (auto it2 = chunk->Begin(); it2 != chunk->End(); ++it2, ++itemIdx)
 					{

@@ -9,7 +9,7 @@
 
 SCENARIO("NackGenerator generator", "[rtp][rtcp][nack]")
 {
-	constexpr uint32_t SendNackDelay{ 0u }; // In ms.
+	constexpr uint32_t SendNackDelay{ 0 }; // In ms.
 
 	struct TestNackGeneratorInput
 	{

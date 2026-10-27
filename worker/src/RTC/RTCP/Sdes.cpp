@@ -120,7 +120,7 @@ namespace RTC
 			MS_TRACE();
 
 			// data size must be > SSRC field.
-			if (len < 4u /* ssrc */)
+			if (len < 4 /* ssrc */)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for SDES chunk, discarded");
 
@@ -131,8 +131,8 @@ namespace RTC
 
 			std::unique_ptr<SdesChunk> chunk(new SdesChunk(ssrc));
 
-			size_t offset{ 4u }; /* ssrc */
-			size_t chunkLength{ 4u };
+			size_t offset{ 4 }; /* ssrc */
+			size_t chunkLength{ 4 };
 
 			while (len > offset)
 			{
@@ -153,7 +153,7 @@ namespace RTC
 			// items", and the others maybe needed for padding the chunk to 4 bytes.
 
 			// First ensure that there is at least one null octet.
-			if (offset == len || (offset < len && Utils::Byte::Get1Byte(data, offset) != 0u))
+			if (offset == len || (offset < len && Utils::Byte::Get1Byte(data, offset) != 0))
 			{
 				MS_WARN_TAG(rtcp, "invalid SDES chunk (missing mandatory null octet), discarded");
 
@@ -166,13 +166,15 @@ namespace RTC
 
 			// Then check that there are 0, 1, 2 or 3 (no more) null octets that pad
 			// the chunk to 4 bytes.
-			auto neededAdditionalNullOctets = Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)) -
-			                                  static_cast<uint16_t>(chunkLength);
-			uint16_t foundAdditionalNullOctets{ 0u };
+			const uint16_t neededAdditionalNullOctets =
+			  Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)) -
+			  static_cast<uint16_t>(chunkLength);
 
-			for (uint16_t i{ 0u }; len > offset && i < neededAdditionalNullOctets; ++i)
+			uint16_t foundAdditionalNullOctets{ 0 };
+
+			for (uint16_t i{ 0 }; len > offset && i < neededAdditionalNullOctets; ++i)
 			{
-				if (Utils::Byte::Get1Byte(data, offset) != 0u)
+				if (Utils::Byte::Get1Byte(data, offset) != 0)
 				{
 					MS_WARN_TAG(
 					  rtcp,
@@ -213,7 +215,7 @@ namespace RTC
 			// Copy the SSRC.
 			Utils::Byte::Set4Bytes(buffer, 0, this->ssrc);
 
-			size_t offset{ 4u }; // ssrc.
+			size_t offset{ 4 }; // ssrc.
 
 			for (auto* item : this->items)
 			{
@@ -228,7 +230,7 @@ namespace RTC
 			// 32 bits padding.
 			const size_t padding = Utils::Byte::PadTo4Bytes(offset) - offset;
 
-			for (size_t i{ 0u }; i < padding; ++i)
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
 				buffer[offset + i] = 0;
 			}
@@ -300,7 +302,7 @@ namespace RTC
 			size_t length   = 0;
 			uint8_t* header = { nullptr };
 
-			for (size_t i{ 0u }; i < this->GetCount(); ++i)
+			for (size_t i{ 0 }; i < this->GetCount(); ++i)
 			{
 				// Create a new SDES packet header for each 31 chunks.
 				if (i % SdesPacket::maxChunksPerPacket == 0)

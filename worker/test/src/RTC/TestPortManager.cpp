@@ -44,8 +44,8 @@ SCENARIO("PortManager", "[portmanager]")
 	{
 		const auto addr = makeV4("192.168.1.10");
 
-		const RTC::PortManager::PortRangeKey ka(RTC::PortManager::Protocol::UDP, addr, 40000u, 40099u);
-		const RTC::PortManager::PortRangeKey kb(RTC::PortManager::Protocol::UDP, addr, 40000u, 40099u);
+		const RTC::PortManager::PortRangeKey ka(RTC::PortManager::Protocol::UDP, addr, 40000, 40099);
+		const RTC::PortManager::PortRangeKey kb(RTC::PortManager::Protocol::UDP, addr, 40000, 40099);
 
 		REQUIRE(ka == kb);
 		REQUIRE(RTC::PortManager::PortRangeKeyHash{}(ka) == RTC::PortManager::PortRangeKeyHash{}(kb));
@@ -61,10 +61,10 @@ SCENARIO("PortManager", "[portmanager]")
 		const auto a2 = makeV4("192.168.1.2");
 		const auto a3 = makeV4("192.168.1.3");
 
-		const RTC::PortManager::PortRangeKey k0(RTC::PortManager::Protocol::UDP, a0, 40000u, 40099u);
-		const RTC::PortManager::PortRangeKey k1(RTC::PortManager::Protocol::UDP, a1, 40000u, 40099u);
-		const RTC::PortManager::PortRangeKey k2(RTC::PortManager::Protocol::UDP, a2, 40000u, 40099u);
-		const RTC::PortManager::PortRangeKey k3(RTC::PortManager::Protocol::UDP, a3, 40000u, 40099u);
+		const RTC::PortManager::PortRangeKey k0(RTC::PortManager::Protocol::UDP, a0, 40000, 40099);
+		const RTC::PortManager::PortRangeKey k1(RTC::PortManager::Protocol::UDP, a1, 40000, 40099);
+		const RTC::PortManager::PortRangeKey k2(RTC::PortManager::Protocol::UDP, a2, 40000, 40099);
+		const RTC::PortManager::PortRangeKey k3(RTC::PortManager::Protocol::UDP, a3, 40000, 40099);
 
 		REQUIRE(k0 != k1);
 		REQUIRE(k0 != k2);
@@ -84,8 +84,8 @@ SCENARIO("PortManager", "[portmanager]")
 		const auto a = makeV6("::1");
 		const auto b = makeV6("1::1:0:0:0");
 
-		const RTC::PortManager::PortRangeKey ka(RTC::PortManager::Protocol::UDP, a, 40000u, 40099u);
-		const RTC::PortManager::PortRangeKey kb(RTC::PortManager::Protocol::UDP, b, 40000u, 40099u);
+		const RTC::PortManager::PortRangeKey ka(RTC::PortManager::Protocol::UDP, a, 40000, 40099);
+		const RTC::PortManager::PortRangeKey kb(RTC::PortManager::Protocol::UDP, b, 40000, 40099);
 
 		REQUIRE(ka != kb);
 	}
@@ -94,8 +94,8 @@ SCENARIO("PortManager", "[portmanager]")
 	{
 		const auto addr = makeV4("10.0.0.1");
 
-		const RTC::PortManager::PortRangeKey udp(RTC::PortManager::Protocol::UDP, addr, 40000u, 40099u);
-		const RTC::PortManager::PortRangeKey tcp(RTC::PortManager::Protocol::TCP, addr, 40000u, 40099u);
+		const RTC::PortManager::PortRangeKey udp(RTC::PortManager::Protocol::UDP, addr, 40000, 40099);
+		const RTC::PortManager::PortRangeKey tcp(RTC::PortManager::Protocol::TCP, addr, 40000, 40099);
 
 		REQUIRE(udp != tcp);
 	}
@@ -104,9 +104,9 @@ SCENARIO("PortManager", "[portmanager]")
 	{
 		const auto addr = makeV4("10.0.0.1");
 
-		const RTC::PortManager::PortRangeKey ka(RTC::PortManager::Protocol::UDP, addr, 40000u, 40099u);
-		const RTC::PortManager::PortRangeKey kb(RTC::PortManager::Protocol::UDP, addr, 40000u, 40100u);
-		const RTC::PortManager::PortRangeKey kc(RTC::PortManager::Protocol::UDP, addr, 40001u, 40099u);
+		const RTC::PortManager::PortRangeKey ka(RTC::PortManager::Protocol::UDP, addr, 40000, 40099);
+		const RTC::PortManager::PortRangeKey kb(RTC::PortManager::Protocol::UDP, addr, 40000, 40100);
+		const RTC::PortManager::PortRangeKey kc(RTC::PortManager::Protocol::UDP, addr, 40001, 40099);
 
 		REQUIRE(ka != kb);
 		REQUIRE(ka != kc);
@@ -118,8 +118,8 @@ SCENARIO("PortManager", "[portmanager]")
 		const auto v4 = makeV4("0.0.0.0");
 		const auto v6 = makeV6("::");
 
-		const RTC::PortManager::PortRangeKey k4(RTC::PortManager::Protocol::UDP, v4, 40000u, 40099u);
-		const RTC::PortManager::PortRangeKey k6(RTC::PortManager::Protocol::UDP, v6, 40000u, 40099u);
+		const RTC::PortManager::PortRangeKey k4(RTC::PortManager::Protocol::UDP, v4, 40000, 40099);
+		const RTC::PortManager::PortRangeKey k6(RTC::PortManager::Protocol::UDP, v6, 40000, 40099);
 
 		REQUIRE(k4 != k6);
 	}

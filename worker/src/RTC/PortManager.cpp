@@ -335,7 +335,7 @@ namespace RTC
 		auto& portRange          = PortManager::GetOrCreatePortRange(key, minPort, maxPort);
 		const size_t numPorts    = portRange.ports.size();
 		const size_t numAttempts = numPorts;
-		size_t attempt{ 0u };
+		size_t attempt{ 0 };
 		size_t portIdx;
 		uint16_t port;
 		uv_handle_t* uvHandle{ nullptr };
@@ -630,7 +630,7 @@ namespace RTC
 
 		// This should not happen.
 		MS_ASSERT(portRange.ports.at(portIdx) == true, "port %" PRIu16 " is not used", port);
-		MS_ASSERT(portRange.numUsedPorts > 0u, "number of used ports is 0");
+		MS_ASSERT(portRange.numUsedPorts > 0, "number of used ports is 0");
 
 		// Mark the port as available.
 		portRange.ports[portIdx] = false;
@@ -639,7 +639,7 @@ namespace RTC
 		portRange.numUsedPorts--;
 
 		// Remove vector if there are no used ports.
-		if (portRange.numUsedPorts == 0u)
+		if (portRange.numUsedPorts == 0)
 		{
 			PortManager::mapPortRanges.erase(it);
 		}

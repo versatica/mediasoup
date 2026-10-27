@@ -13,7 +13,7 @@ namespace RTC
 	{
 		/* Static members. */
 
-		size_t FeedbackRtpTransportPacket::fixedHeaderSize{ 8u };
+		size_t FeedbackRtpTransportPacket::fixedHeaderSize{ 8 };
 		uint16_t FeedbackRtpTransportPacket::maxMissingPackets{ (1 << 13) - 1 };
 		uint16_t FeedbackRtpTransportPacket::maxPacketStatusCount{ (1 << 16) - 1 };
 		int16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFF };
@@ -97,13 +97,13 @@ namespace RTC
 			// Make contentLen be the available length for chunks.
 			const size_t contentLen = len - Packet::CommonHeaderSize - FeedbackPacket::HeaderSize -
 			                          FeedbackRtpTransportPacket::fixedHeaderSize;
-			size_t offset{ 0u };
-			uint16_t count{ 0u };
-			uint16_t receivedPacketStatusCount{ 0u };
+			size_t offset{ 0 };
+			uint16_t count{ 0 };
+			uint16_t receivedPacketStatusCount{ 0 };
 
 			while (count < this->packetStatusCount && contentLen > offset)
 			{
-				if (contentLen - offset < 2u)
+				if (contentLen - offset < 2)
 				{
 					MS_WARN_TAG(rtcp, "not enough space for chunk");
 
@@ -125,9 +125,9 @@ namespace RTC
 				}
 
 				this->chunks.push_back(chunk);
-				this->deltasAndChunksSize += 2u;
+				this->deltasAndChunksSize += 2;
 
-				offset += 2u;
+				offset += 2;
 				count += chunk->GetCount();
 				receivedPacketStatusCount += chunk->GetReceivedStatusCount();
 			}
@@ -145,7 +145,7 @@ namespace RTC
 
 			while (chunksIt != this->chunks.end() && contentLen > offset)
 			{
-				size_t deltasOffset{ 0u };
+				size_t deltasOffset{ 0 };
 				auto* chunk = *chunksIt;
 
 				if (!chunk->AddDeltas(contentData + offset, contentLen - offset, this->deltas, deltasOffset))
@@ -261,21 +261,21 @@ namespace RTC
 				if (delta >= 0 && delta <= 255)
 				{
 					Utils::Byte::Set1Byte(buffer, offset, delta);
-					offset += 1u;
+					offset += 1;
 				}
 				else
 				{
 					Utils::Byte::Set2Bytes(buffer, offset, delta);
-					offset += 2u;
+					offset += 2;
 				}
 			}
 
 			// 32 bits padding.
 			const size_t padding = Utils::Byte::PadTo4Bytes(offset) - offset;
 
-			for (size_t i{ 0u }; i < padding; ++i)
+			for (size_t i{ 0 }; i < padding; ++i)
 			{
-				buffer[offset + i] = 0u;
+				buffer[offset + i] = 0;
 			}
 
 			offset += padding;
@@ -376,8 +376,8 @@ namespace RTC
 				size += this->deltasAndChunksSize;
 
 				// Maximum size needed for another chunk and its delta infos.
-				size += 2u;
-				size += 2u;
+				size += 2;
+				size += 2;
 
 				// 32 bits padding.
 				size = Utils::Byte::PadTo4Bytes(size);
@@ -423,10 +423,10 @@ namespace RTC
 				chunk->FillStatuses(packetStatuses, currentSequenceNumber);
 			}
 
-			size_t deltaIdx{ 0u };
+			size_t deltaIdx{ 0 };
 			auto currentReceivedAtUs = GetReferenceTimestampUs();
 
-			for (size_t idx{ 0u }; idx < packetStatuses.size(); ++idx)
+			for (size_t idx{ 0 }; idx < packetStatuses.size(); ++idx)
 			{
 				auto& packetStatus = packetStatuses[idx];
 
@@ -449,11 +449,11 @@ namespace RTC
 			MS_TRACE();
 
 			const uint16_t expected = this->packetStatusCount;
-			uint16_t lost{ 0u };
+			uint16_t lost{ 0 };
 
-			if (expected == 0u)
+			if (expected == 0)
 			{
-				return 0u;
+				return 0;
 			}
 
 			for (auto* chunk : this->chunks)
@@ -465,7 +465,7 @@ namespace RTC
 			// becomes 0 in uint8_t.
 			if (lost == expected)
 			{
-				return 255u;
+				return 255;
 			}
 
 			return (lost << 8) / expected;
@@ -490,10 +490,10 @@ namespace RTC
 				}
 
 				this->context.currentStatus = Status::NotReceived;
-				size_t representedPackets{ 0u };
+				size_t representedPackets{ 0 };
 
 				// Fill statuses vector.
-				for (uint16_t i{ 0u }; i < missingPackets && this->context.statuses.size() < 7; ++i)
+				for (uint16_t i{ 0 }; i < missingPackets && this->context.statuses.size() < 7; ++i)
 				{
 					this->context.statuses.emplace_back(Status::NotReceived);
 					representedPackets++;
@@ -545,7 +545,7 @@ namespace RTC
 
 			this->context.statuses.emplace_back(status);
 			this->deltas.push_back(delta);
-			this->deltasAndChunksSize += (status == Status::SmallDelta) ? 1u : 2u;
+			this->deltasAndChunksSize += (status == Status::SmallDelta) ? 1 : 2;
 
 			// Update context info.
 
@@ -588,7 +588,7 @@ namespace RTC
 
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += count;
-			this->deltasAndChunksSize += 2u;
+			this->deltasAndChunksSize += 2;
 		}
 
 		void FeedbackRtpTransportPacket::CreateOneBitVectorChunk(std::vector<Status>& statuses)
@@ -599,7 +599,7 @@ namespace RTC
 
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += static_cast<uint16_t>(statuses.size());
-			this->deltasAndChunksSize += 2u;
+			this->deltasAndChunksSize += 2;
 		}
 
 		void FeedbackRtpTransportPacket::CreateTwoBitVectorChunk(std::vector<Status>& statuses)
@@ -610,7 +610,7 @@ namespace RTC
 
 			this->chunks.push_back(chunk);
 			this->packetStatusCount += static_cast<uint16_t>(statuses.size());
-			this->deltasAndChunksSize += 2u;
+			this->deltasAndChunksSize += 2;
 		}
 
 		void FeedbackRtpTransportPacket::AddPendingChunks()
@@ -642,7 +642,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (len < 2u)
+			if (len < 2)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for FeedbackRtpTransportPacket chunk, discarded");
 
@@ -727,7 +727,7 @@ namespace RTC
 					auto delta = static_cast<int16_t>(Utils::Byte::Get1Byte(data, offset));
 
 					deltas.push_back(delta);
-					offset += 1u;
+					offset += 1;
 				}
 			}
 			else if (this->status == Status::LargeDelta)
@@ -744,7 +744,7 @@ namespace RTC
 					auto delta = static_cast<int16_t>(Utils::Byte::Get2Bytes(data, offset));
 
 					deltas.push_back(delta);
-					offset += 2u;
+					offset += 2;
 				}
 			}
 
@@ -774,7 +774,7 @@ namespace RTC
 			}
 			else
 			{
-				return 0u;
+				return 0;
 			}
 		}
 
@@ -787,7 +787,7 @@ namespace RTC
 			const bool received =
 			  (this->status == Status::SmallDelta || this->status == Status::LargeDelta);
 
-			for (uint16_t count{ 1u }; count <= this->count; ++count)
+			for (uint16_t count{ 1 }; count <= this->count; ++count)
 			{
 				packetStatuses.emplace_back(++currentSequenceNumber, received);
 			}
@@ -804,7 +804,7 @@ namespace RTC
 
 			Utils::Byte::Set2Bytes(buffer, 0, bytes);
 
-			return 2u;
+			return 2;
 		}
 
 		FeedbackRtpTransportPacket::OneBitVectorChunk::OneBitVectorChunk(uint16_t buffer, uint16_t count)
@@ -813,7 +813,7 @@ namespace RTC
 
 			MS_ASSERT(buffer & 0x8000, "invalid one bit vector chunk");
 
-			for (uint8_t i{ 0u }; i < 14 && count > 0; ++i, --count)
+			for (uint8_t i{ 0 }; i < 14 && count > 0; ++i, --count)
 			{
 				auto status = static_cast<Status>((buffer >> (14 - 1 - i)) & 0x01);
 
@@ -834,7 +834,7 @@ namespace RTC
 				}
 				else if (status == Status::SmallDelta)
 				{
-					if (len < 1u)
+					if (len < 1)
 					{
 						MS_WARN_TAG(rtcp, "not enough space for small delta");
 
@@ -844,8 +844,8 @@ namespace RTC
 					auto delta = static_cast<int16_t>(Utils::Byte::Get1Byte(data, offset));
 
 					deltas.push_back(delta);
-					offset += 1u;
-					len -= 1u;
+					offset += 1;
+					len -= 1;
 
 					continue;
 				}
@@ -889,7 +889,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint16_t count{ 0u };
+			uint16_t count{ 0 };
 
 			for (auto status : this->statuses)
 			{
@@ -923,7 +923,7 @@ namespace RTC
 			MS_ASSERT(this->statuses.size() <= 14, "packet info size must be 14 or less");
 
 			uint16_t bytes{ 0x8000 };
-			uint8_t i{ 13u };
+			uint8_t i{ 13 };
 
 			for (auto status : this->statuses)
 			{
@@ -933,7 +933,7 @@ namespace RTC
 
 			Utils::Byte::Set2Bytes(buffer, 0, bytes);
 
-			return 2u;
+			return 2;
 		}
 
 		FeedbackRtpTransportPacket::TwoBitVectorChunk::TwoBitVectorChunk(uint16_t buffer, uint16_t count)
@@ -942,7 +942,7 @@ namespace RTC
 
 			MS_ASSERT(buffer & 0xC000, "invalid two bit vector chunk");
 
-			for (uint8_t i{ 0u }; i < 7 && count > 0; ++i, --count)
+			for (uint8_t i{ 0 }; i < 7 && count > 0; ++i, --count)
 			{
 				auto status = static_cast<Status>((buffer >> 2 * (7 - 1 - i)) & 0x03);
 
@@ -963,7 +963,7 @@ namespace RTC
 				}
 				else if (status == Status::SmallDelta)
 				{
-					if (len < 1u)
+					if (len < 1)
 					{
 						MS_WARN_TAG(rtcp, "not enough space for small delta");
 
@@ -973,14 +973,14 @@ namespace RTC
 					auto delta = static_cast<int16_t>(Utils::Byte::Get1Byte(data, offset));
 
 					deltas.push_back(delta);
-					offset += 1u;
-					len -= 1u;
+					offset += 1;
+					len -= 1;
 
 					continue;
 				}
 				else if (status == Status::LargeDelta)
 				{
-					if (len < 2u)
+					if (len < 2)
 					{
 						MS_WARN_TAG(rtcp, "not enough space for large delta");
 
@@ -990,8 +990,8 @@ namespace RTC
 					auto delta = static_cast<int16_t>(Utils::Byte::Get2Bytes(data, offset));
 
 					deltas.push_back(delta);
-					offset += 2u;
-					len -= 2u;
+					offset += 2;
+					len -= 2;
 
 					continue;
 				}
@@ -1029,7 +1029,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint16_t count{ 0u };
+			uint16_t count{ 0 };
 
 			for (auto status : this->statuses)
 			{
@@ -1063,7 +1063,7 @@ namespace RTC
 			MS_ASSERT(this->statuses.size() <= 7, "packet info size must be 7 or less");
 
 			uint16_t bytes{ 0x8000 };
-			uint8_t i{ 12u };
+			uint8_t i{ 12 };
 
 			bytes |= 0x01 << 14;
 
@@ -1075,7 +1075,7 @@ namespace RTC
 
 			Utils::Byte::Set2Bytes(buffer, 0, bytes);
 
-			return 2u;
+			return 2;
 		}
 	} // namespace RTCP
 } // namespace RTC
