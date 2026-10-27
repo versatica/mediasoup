@@ -480,4 +480,102 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(first->templateDependencyStructure.get() == firstStructure);
 		REQUIRE(first->templateDependencyStructure->decodeTargetCount == 2);
 	}
+
+	/**
+	 * The custom frame dependency fields are not parsed into any member of the
+	 * descriptor, just delimited, so rewriting it must copy them over verbatim.
+	 */
+	SECTION("custom decode target indications, frame diffs and chains are preserved")
+	{
+		// Key frame carrying the template dependency structure of an L1T2 stream,
+		// which has 2 decode targets and 1 chain.
+		// clang-format off
+		uint8_t keyFrameData[] =
+		{
+			0x80, 0x00, 0xE8, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C,
+		};
+		// clang-format on
+
+		/**
+		 * Delta frame of that stream carrying every custom frame dependency field,
+		 * which no capture at hand has:
+		 *
+		 *   start_of_frame:                1
+		 *   end_of_frame:                  1
+		 *   frame_dependency_template_id:  0
+		 *   frame_number:                  232
+		 *   extended field flags:          structure:0 bitmask:1 dtis:1 fdiffs:1 chains:1
+		 *   active_decode_targets_bitmask: 0b11
+		 *   custom dtis:                   switch, required
+		 *   custom frame diffs:            a single 4 bit one, 5
+		 *   custom chains:                 0xA5
+		 *
+		 * Which takes 51 bits, so the last 5 are zero padding.
+		 */
+		// clang-format off
+		uint8_t deltaFrameData[] =
+		{
+			0xC0, 0x00, 0xE8, 0x7F,
+			0x6A, 0x94, 0xA0,
+		};
+		// clang-format on
+
+		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+		  templateDependencyStructure;
+
+		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+
+		REQUIRE(keyFrame);
+		REQUIRE(templateDependencyStructure->decodeTargetCount == 2);
+		REQUIRE(templateDependencyStructure->chainCount == 1);
+
+		auto deltaFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    deltaFrameData, sizeof(deltaFrameData), templateDependencyStructure));
+
+		REQUIRE(deltaFrame);
+		REQUIRE(deltaFrame->frameNumber == 232);
+		REQUIRE(deltaFrame->activeDecodeTargetsBitmask == 0b11);
+
+		// Nothing grows, since the bitmask is already in there.
+		REQUIRE(deltaFrame->GetMaxLength() == sizeof(deltaFrameData));
+
+		uint8_t buffer[RTC::Consts::TwoBytesRtpExtensionMaxLength];
+
+		// Writing the very bitmask it came with must give the very same descriptor.
+		auto len = deltaFrame->Write(0b11, buffer);
+
+		REQUIRE(len == sizeof(deltaFrameData));
+		REQUIRE(std::memcmp(buffer, deltaFrameData, len) == 0);
+
+		/*
+		 * And dropping a decode target must only change the bitmask, which lives
+		 * in the two bits that tell both descriptors apart.
+		 */
+		// clang-format off
+		uint8_t rewrittenData[] =
+		{
+			0xC0, 0x00, 0xE8, 0x7B,
+			0x6A, 0x94, 0xA0,
+		};
+		// clang-format on
+
+		len = deltaFrame->Write(0b01, buffer);
+
+		REQUIRE(len == sizeof(rewrittenData));
+		REQUIRE(std::memcmp(buffer, rewrittenData, len) == 0);
+
+		// The rewritten descriptor is still a valid one.
+		auto rewritten = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(buffer, len, templateDependencyStructure));
+
+		REQUIRE(rewritten);
+		REQUIRE(rewritten->frameNumber == 232);
+		REQUIRE(rewritten->activeDecodeTargetsBitmask == 0b01);
+	}
 }
