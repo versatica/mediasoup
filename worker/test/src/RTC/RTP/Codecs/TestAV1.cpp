@@ -4,7 +4,6 @@
 #include "RTC/RTP/Packet.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <memory>
 #include <vector>
 
 /**
