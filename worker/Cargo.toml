@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup-sys"
-version = "0.22.0"
+version = "0.23.0"
 description = "FFI bindings to C++ libmediasoup-worker"
 authors = [
     "Nazar Mokrynskyi <nazar@mokrynskyi.com>",
@@ -12,7 +12,6 @@ license = "ISC"
 documentation = "https://docs.rs/mediasoup-sys"
 repository = "https://github.com/versatica/mediasoup"
 include = [
-    "/deps/libwebrtc",
     "/fbs",
     "/fuzzer/include",
     "/fuzzer/src",

@@ -90,13 +90,13 @@ inline static unsigned int onSslDtlsTimer(SSL* /*ssl*/, unsigned int timerUs)
 {
 	MS_TRACE();
 
-	if (timerUs == 0u)
+	if (timerUs == 0)
 	{
-		return 100000u;
+		return 100000;
 	}
-	else if (timerUs >= 4000000u)
+	else if (timerUs >= 4000000)
 	{
-		return 4000000u;
+		return 4000000;
 	}
 	else
 	{
@@ -111,16 +111,16 @@ namespace RTC
 	static constexpr int DtlsMtu{ 1350 };
 	static constexpr int SslReadBufferSize{ 65536 };
 	// AES-HMAC: http://tools.ietf.org/html/rfc3711
-	static constexpr size_t SrtpMasterKeyLength{ 16u };
-	static constexpr size_t SrtpMasterSaltLength{ 14u };
+	static constexpr size_t SrtpMasterKeyLength{ 16 };
+	static constexpr size_t SrtpMasterSaltLength{ 14 };
 	static constexpr size_t SrtpMasterLength{ SrtpMasterKeyLength + SrtpMasterSaltLength };
 	// AES-GCM: http://tools.ietf.org/html/rfc7714
-	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32u };
-	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12u };
+	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32 };
+	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12 };
 	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength +
 	                                                   SrtpAesGcm256MasterSaltLength };
-	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16u };
-	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12u };
+	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16 };
+	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12 };
 	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength +
 	                                                   SrtpAesGcm128MasterSaltLength };
 
@@ -1472,7 +1472,7 @@ namespace RTC
 
 		BIO_get_mem_ptr(bio, std::addressof(mem));
 
-		if (!mem || !mem->data || mem->length == 0u)
+		if (!mem || !mem->data || mem->length == 0)
 		{
 			LOG_OPENSSL_ERROR("BIO_get_mem_ptr() failed");
 

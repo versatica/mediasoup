@@ -395,6 +395,11 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "  capture time (us): %" PRIi64, GetCaptureAtUs().value());
 			}
 
+			if (IsRtx())
+			{
+				MS_DUMP_CLEAN(indentation, "  RTX media ssrc: %" PRIu32, GetMediaSsrc());
+			}
+
 			if (this->payloadDescriptorHandler)
 			{
 				MS_DUMP_CLEAN(indentation + 1, "<PayloadDescriptorHandler>");
@@ -428,6 +433,9 @@ namespace RTC
 
 			// Clone capture time.
 			clonedPacket->captureAtUs = this->captureAtUs;
+
+			// Clone media SSRC.
+			clonedPacket->mediaSsrc = this->mediaSsrc;
 
 			// Assign the payload descriptor handler.
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
@@ -949,7 +957,7 @@ namespace RTC
 			uint8_t extenLen;
 			const uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
 
-			if (!extenValue || extenLen != 3u)
+			if (!extenValue || extenLen != 3)
 			{
 				return false;
 			}
@@ -966,7 +974,7 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
 
-			if (!extenValue || extenLen != 3u)
+			if (!extenValue || extenLen != 3)
 			{
 				return false;
 			}
@@ -989,7 +997,7 @@ namespace RTC
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
 
-			if (!extenValue || extenLen != 2u)
+			if (!extenValue || extenLen != 2)
 			{
 				return false;
 			}
@@ -1006,7 +1014,7 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
 
-			if (!extenValue || extenLen != 2u)
+			if (!extenValue || extenLen != 2)
 			{
 				return false;
 			}
@@ -1029,7 +1037,7 @@ namespace RTC
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.ssrcAudioLevel, extenLen);
 
-			if (!extenValue || extenLen != 1u)
+			if (!extenValue || extenLen != 1)
 			{
 				return false;
 			}
@@ -1116,7 +1124,7 @@ namespace RTC
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.videoOrientation, extenLen);
 
-			if (!extenValue || extenLen != 1u)
+			if (!extenValue || extenLen != 1)
 			{
 				return false;
 			}
@@ -1177,7 +1185,7 @@ namespace RTC
 			// estimated capture clock offset or not.
 			//
 			// @see https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-abs-capture-time-00
-			if (!extenValue || (extenLen != 8u && extenLen != 16u))
+			if (!extenValue || (extenLen != 8 && extenLen != 16))
 			{
 				return false;
 			}
@@ -1205,7 +1213,7 @@ namespace RTC
 
 			// Extension value can be 8 or 16 bytes depending on whether it contains
 			// estimated capture clock offset or not.
-			if (!extenValue || (extenLen != 8u && extenLen != 16u))
+			if (!extenValue || (extenLen != 8 && extenLen != 16))
 			{
 				return false;
 			}
@@ -1233,8 +1241,8 @@ namespace RTC
 			}
 
 			const uint32_t v = Utils::Byte::Get3Bytes(extenValue, 0);
-			minDelay         = v >> 12u;
-			maxDelay         = v & 0xFFFu;
+			minDelay         = v >> 12;
+			maxDelay         = v & 0xFFF;
 
 			return true;
 		}
@@ -1252,7 +1260,7 @@ namespace RTC
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.mediasoupPacketId, extenLen);
 
-			if (extenLen != 4u)
+			if (extenLen != 4)
 			{
 				return false;
 			}
@@ -1439,6 +1447,9 @@ namespace RTC
 			// Rewrite the payload type.
 			SetPayloadType(payloadType);
 
+			// Keep the SSRC of the media stream before overwriting it.
+			this->mediaSsrc = GetSsrc();
+
 			// Rewrite the SSRC.
 			SetSsrc(ssrc);
 
@@ -1474,6 +1485,9 @@ namespace RTC
 
 			// Rewrite the SSRC.
 			SetSsrc(ssrc);
+
+			// It's not RTX encoded anymore.
+			this->mediaSsrc.reset();
 
 			// Shift the payload to its original place.
 			std::memmove(payload, payload + 2, payloadLength - 2);

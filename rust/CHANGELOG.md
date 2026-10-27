@@ -2,7 +2,15 @@
 
 ### NEXT
 
+- BWE: Reduce CPU usage in `RTC::BWE::SendPacketHistory` ([PR #2018](https://github.com/versatica/mediasoup/pull/2018)).
+
+### 0.33.0
+
 - Worker: Get rid of `RTC::RTP::SharedPacket` class ([PR #2012](https://github.com/versatica/mediasoup/pull/2012)).
+- New built-in BWE stack ([task #1895](https://github.com/versatica/mediasoup/issues/1895)):
+  - `WebRtcTransportOptions` and `PlainTransportOptions`: Add `enableBwe`, `initialAvailableOutgoingBitrate`, `minOutgoingBitrate`, `maxOutgoingBitrate` and `maxIncomingBitrate`.
+  - **Breaking change:** `WorkerSettings` no longer takes `libwebrtcFieldTrials`.
+  - **Breaking change:** The transport "bwe" trace event now reports `desiredBitrate`, `minBitrate`, `maxBitrate` and `availableBitrate`.
 
 ### 0.32.0
 

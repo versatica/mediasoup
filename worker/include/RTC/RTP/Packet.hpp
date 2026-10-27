@@ -866,6 +866,24 @@ namespace RTC
 				this->captureAtUs = captureAtUs;
 			}
 
+			/**
+			 * Whether the packet is currently RTX encoded.
+			 */
+			bool IsRtx() const
+			{
+				return this->mediaSsrc.has_value();
+			}
+
+			/**
+			 * SSRC of the media stream the packet belongs to. Same as `GetSsrc()`
+			 * unless the packet is RTX encoded, in which case it is the SSRC that
+			 * `RtxEncode()` overwrote.
+			 */
+			uint32_t GetMediaSsrc() const
+			{
+				return this->mediaSsrc.value_or(GetSsrc());
+			}
+
 		private:
 			/**
 			 * @remarks
@@ -990,6 +1008,8 @@ namespace RTC
 			std::shared_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 			// Capture time of the packet.
 			std::optional<int64_t> captureAtUs;
+			// SSRC of the media stream while the packet is RTX encoded.
+			std::optional<uint32_t> mediaSsrc;
 		};
 	} // namespace RTP
 } // namespace RTC

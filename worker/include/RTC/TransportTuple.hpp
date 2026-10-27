@@ -30,12 +30,14 @@ namespace RTC
 
 		public:
 			TupleKey() = default;
+
 			TupleKey(Protocol protocol, const void* udpSocketOrTcpConnection, const struct sockaddr* udpRemoteAddr)
 			  : protocol(protocol),
 			    udpSocketOrTcpConnection(udpSocketOrTcpConnection),
 			    udpRemoteAddr(udpRemoteAddr) {};
 
 			bool operator==(const TupleKey& other) const noexcept;
+
 			bool operator!=(const TupleKey& other) const noexcept
 			{
 				return !(*this == other);
@@ -56,6 +58,7 @@ namespace RTC
 		};
 
 		static Protocol ProtocolFromFbs(FBS::Transport::Protocol protocol);
+
 		static FBS::Transport::Protocol ProtocolToFbs(Protocol protocol);
 
 	public:

@@ -148,7 +148,7 @@ export abstract class TransportImpl<
 	protected readonly enableBwe: boolean;
 
 	// Method to retrieve Router RTP capabilities.
-	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
+	protected readonly getRouterRtpCapabilities: () => RtpCapabilities;
 
 	// Method to retrieve a Producer.
 	protected readonly getProducerById: (
@@ -212,7 +212,7 @@ export abstract class TransportImpl<
 		this.channel = channel;
 		this.#appData = appData ?? ({} as TransportAppData);
 		this.enableBwe = enableBwe;
-		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
+		this.getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
 		this.#observer = observer;
@@ -544,7 +544,7 @@ export abstract class TransportImpl<
 			clonedRtpParameters.rtcp.cname = utils.generateUUIDv4().substr(0, 8);
 		}
 
-		const routerRtpCapabilities = this.#getRouterRtpCapabilities();
+		const routerRtpCapabilities = this.getRouterRtpCapabilities();
 
 		// This may throw.
 		const rtpMapping = ortc.getProducerRtpParametersMapping(
@@ -1343,19 +1343,6 @@ export function parseTransportTraceEventData(
 			const direction =
 				trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out';
 
-			if (trace.infoType() === FbsTransport.TraceInfo.OldBweTraceInfo) {
-				const info = new FbsTransport.OldBweTraceInfo();
-
-				trace.info(info);
-
-				return {
-					type: 'bwe',
-					timestamp: Number(trace.timestamp()),
-					direction,
-					info: parseOldBweTraceInfo(info),
-				};
-			}
-
 			const info = new FbsTransport.BweTraceInfo();
 
 			trace.info(info);
@@ -1439,31 +1426,6 @@ function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo): {
 		minBitrate: Number(binary.minBitrate()),
 		maxBitrate: Number(binary.maxBitrate()),
 		availableBitrate: Number(binary.availableBitrate()),
-	};
-}
-
-function parseOldBweTraceInfo(binary: FbsTransport.OldBweTraceInfo): {
-	desiredBitrate: number;
-	effectiveDesiredBitrate: number;
-	minBitrate: number;
-	maxBitrate: number;
-	startBitrate: number;
-	maxPaddingBitrate: number;
-	availableBitrate: number;
-	bweType: 'transport-cc' | 'remb';
-} {
-	return {
-		desiredBitrate: Number(binary.desiredBitrate()),
-		effectiveDesiredBitrate: Number(binary.effectiveDesiredBitrate()),
-		minBitrate: Number(binary.minBitrate()),
-		maxBitrate: Number(binary.maxBitrate()),
-		startBitrate: Number(binary.startBitrate()),
-		maxPaddingBitrate: Number(binary.maxPaddingBitrate()),
-		availableBitrate: Number(binary.availableBitrate()),
-		bweType:
-			binary.bweType() === FbsTransport.BweType.TRANSPORT_CC
-				? 'transport-cc'
-				: 'remb',
 	};
 }
 

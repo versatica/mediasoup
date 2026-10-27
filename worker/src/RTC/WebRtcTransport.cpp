@@ -50,7 +50,7 @@ namespace RTC
 		{
 			const auto* listenIndividual = options->listen_as<FBS::WebRtcTransport::ListenIndividual>();
 			const auto* listenInfos      = listenIndividual->listenInfos();
-			uint16_t iceLocalPreferenceDecrement{ 0u };
+			uint16_t iceLocalPreferenceDecrement{ 0 };
 
 			// Multiply by 2 to preallocate space in case |exposeInternalIp| is set.
 			this->iceCandidates.reserve(listenInfos->size() * 2);
@@ -1250,6 +1250,10 @@ namespace RTC
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
 		  FBS::Notification::Body::WebRtcTransport_IceSelectedTupleChangeNotification,
 		  notification);
+
+		// The selected tuple may change while connected, without going through
+		// ICE disconnected, so the parent class must be told here.
+		RTC::Transport::RouteChanged();
 	}
 
 	inline void WebRtcTransport::OnIceServerConnected(const RTC::ICE::IceServer* /*iceServer*/)

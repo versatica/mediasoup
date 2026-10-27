@@ -501,25 +501,25 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		// Byte length: 27 (1 byte of padding needed).
-		std::string username          = "œæ€å∫∂:¢∞¬÷12";
-		std::string usernameFragment1 = "œæ€å∫∂";
+		const std::string username          = "œæ€å∫∂:¢∞¬÷12";
+		const std::string usernameFragment1 = "œæ€å∫∂";
 		// Byte length: 4.
-		uint32_t priority = 999888777u;
+		const uint32_t priority = 999888777;
 		// Byte length: 8.
-		uint64_t iceControlling = 15697499370457501716u;
+		const uint64_t iceControlling = 15697499370457501716u;
 		// Byte length of USE_CANDIDATE: 0.
 		// NOTE: `AddNomination()` adds the "NOMINATION" attribute with both the old
 		// and the new value, so it will insert 2 attributes instead of one.
 		// Byte length: 4 x 2.
-		uint32_t nomination = 12345678u;
+		const uint32_t nomination = 12345678;
 		// Byte length: 18 (2 byte of padding needed).
-		std::string software = "mediasoup x.y.z :)";
+		const std::string software = "mediasoup x.y.z :)";
 		// Byte length: 4 + 23 (1 byte of padding needed).
-		uint16_t errorCode            = 666;
-		std::string errorReasonPhrase = "UPPS UNKNOWN ERROR 😊";
+		const uint16_t errorCode            = 666;
+		const std::string errorReasonPhrase = "UPPS UNKNOWN ERROR 😊";
 
 		// Total length of the attributes.
-		size_t attributesLen =
+		const size_t attributesLen =
 		  (4 + 27 + 1) + (4 + 4) + (4 + 8) + (4) + ((4 + 4) * 2) + (4 + 18 + 2) + (4 + 4 + 23 + 1);
 
 		request->AddUsername(username);
@@ -652,7 +652,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		/* Protect the STUN packet. */
 
-		std::string password = "asjhdkjhkasd";
+		const std::string password = "asjhdkjhkasd";
 
 		request->Protect(password);
 
@@ -729,8 +729,9 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		sockaddr_storage xorMappedAddressStorage{};
 
 		// Byte length: 8.
-		auto* xorMappedAddressIn =
+		auto* const xorMappedAddressIn =
 		  reinterpret_cast<struct sockaddr_in*>(std::addressof(xorMappedAddressStorage));
+
 		auto* xorMappedAddress =
 		  reinterpret_cast<struct sockaddr*>(std::addressof(xorMappedAddressStorage));
 
@@ -795,7 +796,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		    RTC::ICE::StunPacket::Method::BINDING));
 
 		// Byte length: 20.
-		auto* xorMappedAddressIn6 =
+		auto* const xorMappedAddressIn6 =
 		  reinterpret_cast<struct sockaddr_in6*>(std::addressof(xorMappedAddressStorage));
 		xorMappedAddress = reinterpret_cast<struct sockaddr*>(std::addressof(xorMappedAddressStorage));
 
@@ -844,7 +845,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		/* Protect the STUN packet. */
 
-		std::string password = "asjhdkjhkasd";
+		const std::string password = "asjhdkjhkasd";
 
 		successResponse->Protect(password);
 
@@ -955,7 +956,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		/* Protect the STUN packet. */
 
-		std::string password = "23786asdas123";
+		const std::string password = "23786asdas123";
 
 		errorResponse->Protect(password);
 
@@ -1080,13 +1081,13 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 	SECTION("StunPacket::CreateSuccessResponse() succeeds")
 	{
-		std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Factory(
+		const std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Factory(
 			iceCommon::FactoryBuffer,
 			sizeof(iceCommon::FactoryBuffer),
 			RTC::ICE::StunPacket::Class::REQUEST,
 			RTC::ICE::StunPacket::Method::BINDING) };
 
-		std::unique_ptr<RTC::ICE::StunPacket> successResponse{ request->CreateSuccessResponse(
+		const std::unique_ptr<RTC::ICE::StunPacket> successResponse{ request->CreateSuccessResponse(
 			iceCommon::ResponseFactoryBuffer, sizeof(iceCommon::ResponseFactoryBuffer)) };
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
@@ -1162,13 +1163,13 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 	SECTION("StunPacket::CreateErrorResponse() succeeds")
 	{
-		std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Factory(
+		const std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Factory(
 			iceCommon::FactoryBuffer,
 			sizeof(iceCommon::FactoryBuffer),
 			RTC::ICE::StunPacket::Class::REQUEST,
 			RTC::ICE::StunPacket::Method::BINDING) };
 
-		std::unique_ptr<RTC::ICE::StunPacket> errorResponse{ request->CreateErrorResponse(
+		const std::unique_ptr<RTC::ICE::StunPacket> errorResponse{ request->CreateErrorResponse(
 			iceCommon::ResponseFactoryBuffer, sizeof(iceCommon::ResponseFactoryBuffer), 666, "BAD STUFF") };
 
 		// Total length of the attributes (ERROR-CODE).

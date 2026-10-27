@@ -3,16 +3,12 @@
 #include "common.hpp"
 #include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
-#ifndef MS_USE_BUILTIN_BWE
-#include "DepLibWebRTC.hpp"
-#endif
 #include "DepOpenSSL.hpp"
 #include "FuzzerUtils.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/FuzzerDtlsTransport.hpp"
 #include "RTC/FuzzerRateCalculator.hpp"
 #include "RTC/FuzzerSeqManager.hpp"
-#include "RTC/FuzzerTrendCalculator.hpp"
 #include "RTC/ICE/FuzzerStunPacket.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
 #include "RTC/RTP/Codecs/FuzzerAV1.hpp"
@@ -22,7 +18,6 @@
 #include "RTC/RTP/Codecs/FuzzerVP8.hpp"
 #include "RTC/RTP/Codecs/FuzzerVP9.hpp"
 #include "RTC/RTP/FuzzerPacket.hpp"
-#include "RTC/RTP/FuzzerProbationGenerator.hpp"
 #include "RTC/RTP/FuzzerRetransmissionBuffer.hpp"
 #include "RTC/RTP/FuzzerRtpStreamSend.hpp"
 #include "RTC/SCTP/FuzzerStateCookie.hpp"
@@ -146,9 +141,6 @@ namespace
 		DepLibUV::ClassInit();
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
-#ifndef MS_USE_BUILTIN_BWE
-		DepLibWebRTC::ClassInit();
-#endif
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 
@@ -186,7 +178,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 		FuzzerRtcRtcPacket::Fuzz(data, len);
 		FuzzerRtcRtpStreamSend::Fuzz(data, len);
 		FuzzerRtcRtpRetransmissionBuffer::Fuzz(data, len);
-		FuzzerRtcRtpProbationGenerator::Fuzz(data, len);
 		FuzzerRtcSeqManager::Fuzz(data, len);
 		FuzzerRtcRateCalculator::Fuzz(data, len);
 	}
@@ -209,7 +200,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	if (fuzzUtils)
 	{
 		FuzzerUtils::Fuzz(data, len);
-		FuzzerRtcTrendCalculator::Fuzz(data, len);
 	}
 
 	return 0;

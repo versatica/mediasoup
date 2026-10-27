@@ -2,7 +2,7 @@
 #define MS_RTC_BWE_SENDER_TRANSPORT_CONGESTION_CONTROLLER_HPP
 
 #include "common.hpp"
-#include "handles/TimerHandle.hpp"
+#include "handles/TimerHandleInterface.hpp"
 #include "RTC/BWE/AlrDetector.hpp"
 #include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BWE/DelayBasedBwe.hpp"
@@ -57,7 +57,9 @@ namespace RTC
 				 *
 				 * @param sequenceNumber - The one given to the packet, which has to be
 				 *   given back through `OnRtpPacketSent()` once the packet has actually
-				 *   left, just like for a packet of media.
+				 *   left, just like for a packet of media. There is none when the remote
+				 *   peer does not report on each packet, in which case nothing was taken
+				 *   note of and only the bytes of the packet count.
 				 *
 				 * @remarks
 				 * - The packet must be sent before returning, since the next one is
@@ -66,7 +68,7 @@ namespace RTC
 				virtual void OnSenderTransportCongestionControllerSendRtpProbePacket(
 				  SenderTransportCongestionController* senderTransportCongestionController,
 				  RTC::RTP::Packet* packet,
-				  int64_t sequenceNumber) = 0;
+				  std::optional<int64_t> sequenceNumber) = 0;
 			};
 
 			/**
@@ -83,7 +85,8 @@ namespace RTC
 				 */
 				bool isRetransmission{ false };
 				/**
-				 * SSRC of the stream it retransmits, when it goes out over RTX.
+				 * SSRC of the media stream it retransmits, whether it goes out over RTX
+				 * or not. It has no value unless it is a retransmission.
 				 */
 				std::optional<uint32_t> originalSsrc;
 			};
@@ -165,14 +168,24 @@ namespace RTC
 			void SetEnableProbing(bool enableProbing);
 
 			/**
+			 * Tell whether the remote peer negotiated transport-cc, which is what
+			 * decides whether a packet can be reported on at all.
+			 *
+			 * @remarks
+			 * - The room for the sequence number travels in every packet whatever the
+			 *   peer negotiated, so the packet itself does not tell this apart.
+			 */
+			void SetTransportCcFeedbackSupported(bool transportCcFeedbackSupported);
+
+			/**
 			 * Take note of a packet that is about to be sent, and write into it the
 			 * transport wide sequence number and the abs-send-time that go on the
 			 * wire with it.
 			 *
 			 * @returns The sequence number given to the packet, which has to be given
 			 *   back once the packet has actually left, or no value when the packet
-			 *   carries no room for it. A packet without that extension cannot be
-			 *   reported on, so nothing is taken note of and only its bytes count.
+			 *   carries no room for it or the remote peer cannot report on it. Such a
+			 *   packet is not taken note of and only its bytes count.
 			 */
 			std::optional<int64_t> OnRtpPacketToBeSent(
 			  RTC::RTP::Packet* packet, const RtpPacketToBeSentOptions& options);
@@ -199,8 +212,9 @@ namespace RTC
 			 * what we send is taken from.
 			 *
 			 * @remarks
-			 * - The loss may be negative, since a report gives back what a previous one
-			 *   was overcharged for.
+			 * - The loss is never negative nor above the packets expected, since it only
+			 *   counts what was lost on the way from us to the remote endpoint and not
+			 *   on the uplink of the sender of each stream.
 			 */
 			void ReceiveRtcpReceiverReport(int64_t lostPackets, int64_t expectedPackets);
 
@@ -338,6 +352,9 @@ namespace RTC
 			// Whether the probing may run, which the transport tells out of what its
 			// remote endpoint can measure.
 			bool enableProbing{ false };
+			// Whether the remote peer negotiated transport-cc. While it did not, no
+			// packet is taken note of, since none of them can ever be reported on.
+			bool transportCcFeedbackSupported{ false };
 			// Whether anything has been sent and whether any transport-cc feedback has
 			// arrived, which tell apart a transport that is not being used from one
 			// whose remote endpoint does not report.

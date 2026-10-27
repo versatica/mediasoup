@@ -39,7 +39,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(maxItems > 0u, "maxItems must be greater than 0");
+			MS_ASSERT(maxItems > 0, "maxItems must be greater than 0");
 		}
 
 		RetransmissionBuffer::~RetransmissionBuffer()
@@ -267,7 +267,7 @@ namespace RTC
 						  seq,
 						  timestamp);
 
-						numBlankSlots = 0u;
+						numBlankSlots = 0;
 
 						Clear();
 					}
@@ -286,7 +286,7 @@ namespace RTC
 				}
 
 				// Push blank slots to the back.
-				for (uint16_t i{ 0u }; i < numBlankSlots; ++i)
+				for (uint16_t i{ 0 }; i < numBlankSlots; ++i)
 				{
 					this->buffer.push_back(nullptr);
 				}
@@ -352,7 +352,7 @@ namespace RTC
 				}
 
 				// Push blank slots to the front.
-				for (uint16_t i{ 0u }; i < numBlankSlots; ++i)
+				for (uint16_t i{ 0 }; i < numBlankSlots; ++i)
 				{
 					this->buffer.push_front(nullptr);
 				}
@@ -538,7 +538,7 @@ namespace RTC
 
 			// Remove all nullptr elements from the beginning of the buffer.
 			// NOTE: Calling front on an empty container is undefined.
-			size_t numItemsRemoved{ 0u };
+			size_t numItemsRemoved{ 0 };
 
 			while (!this->buffer.empty() && this->buffer.front() == nullptr)
 			{

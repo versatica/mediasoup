@@ -2,9 +2,7 @@
 #define MS_RTC_PRODUCER_STREAM_MANAGER_HPP
 
 #include "common.hpp"
-#ifdef MS_USE_BUILTIN_BWE
 #include "RTC/BWE/BitrateAllocator.hpp"
-#endif
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/Packet.hpp"
@@ -24,12 +22,17 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			virtual bool IsActive() const                                              = 0;
+			virtual bool IsActive() const = 0;
+
 			virtual void OnProducerStreamManagerKeyFrameRequested(uint32_t mappedSsrc) = 0;
-			virtual void OnProducerStreamManagerNeedBitrateChange()                    = 0;
-			virtual void OnProducerStreamManagerLayersChanged()                        = 0;
-			virtual void OnProducerStreamManagerClearRetransmissionBuffer()            = 0;
-			virtual void OnProducerStreamManagerScore()                                = 0;
+
+			virtual void OnProducerStreamManagerNeedBitrateChange() = 0;
+
+			virtual void OnProducerStreamManagerLayersChanged() = 0;
+
+			virtual void OnProducerStreamManagerClearRetransmissionBuffer() = 0;
+
+			virtual void OnProducerStreamManagerScore() = 0;
 		};
 
 		struct RtpPacketProcessResult
@@ -121,14 +124,6 @@ namespace RTC
 		virtual void ProducerSpatialLayerActivityChanged(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive);
 
-#ifndef MS_USE_BUILTIN_BWE
-		void SetExternallyManagedBitrate()
-		{
-			this->externallyManagedBitrate = true;
-		}
-#endif
-
-#ifdef MS_USE_BUILTIN_BWE
 		/**
 		 * Tell whether a bitrate allocation is running for this Transport, which is
 		 * what decides who applies the layers worked out here.
@@ -158,12 +153,7 @@ namespace RTC
 		 * Run at the given point from now on.
 		 */
 		virtual void SetBitrateOption(const RTC::BWE::BitrateAllocator::Candidate::BitrateOption& option) = 0;
-#else
-		virtual int64_t IncreaseLayer(
-		  int64_t bitrate, bool considerLoss, float lossPercentage, int64_t nowMs) = 0;
 
-		virtual void ApplyLayers() = 0;
-#endif
 		virtual int64_t GetDesiredBitrate(int64_t nowMs) const = 0;
 
 		virtual RtpPacketProcessResult ProcessRtpPacket(
@@ -194,7 +184,6 @@ namespace RTC
 	protected:
 		virtual bool IsActive() const = 0;
 
-#ifdef MS_USE_BUILTIN_BWE
 		/**
 		 * Which of the given points is the one the bitrate allocation last
 		 * settled on.
@@ -205,7 +194,6 @@ namespace RTC
 		 */
 		std::optional<size_t> GetCurrentBitrateOption(
 		  const std::vector<RTC::BWE::BitrateAllocator::Candidate::BitrateOption>& options) const;
-#endif
 
 	protected:
 		// Passed by argument.
@@ -214,22 +202,10 @@ namespace RTC
 		bool keyFrameSupported{ false };
 		RTC::Media::Kind kind{};
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
-
 		// Encoding context.
 		std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext;
-
-#ifndef MS_USE_BUILTIN_BWE
-		// Externally managed bitrate.
-		bool externallyManagedBitrate{ false };
-#endif
-
 		// Layer preferences.
 		RTC::ConsumerTypes::VideoLayers preferredLayers;
-#ifndef MS_USE_BUILTIN_BWE
-		RTC::ConsumerTypes::VideoLayers provisionalTargetLayers;
-#endif
-
-#ifdef MS_USE_BUILTIN_BWE
 		// Whether a bitrate allocation is running for this Transport. While it is
 		// false nobody would answer a round, so this one applies the layers it works
 		// out instead of asking.
@@ -239,8 +215,6 @@ namespace RTC
 		// pay the margin to climb back and the former not, since one that has never
 		// been given anything is not climbing back to anything.
 		bool bitrateAllocated{ false };
-#endif
-
 		// Sync state.
 		bool syncRequired{ false };
 	};

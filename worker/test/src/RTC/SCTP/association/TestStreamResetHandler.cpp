@@ -192,7 +192,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 			buffer.data(), buffer.size()) };
 
 		// Two RTC::SCTP::OutgoingSsnResetRequestParameter in a RE-CONFIG is not valid.
-		for (const uint32_t reqSeqNbr : { 1u, 2u })
+		for (const uint32_t reqSeqNbr : { 1, 2 })
 		{
 			auto* parameter =
 			  reConfigChunk->BuildParameterInPlace<RTC::SCTP::OutgoingSsnResetRequestParameter>();

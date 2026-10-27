@@ -20,7 +20,7 @@ namespace RTC
 		this->id = data->id();
 
 		// Don't allow id 0.
-		if (this->id == 0u)
+		if (this->id == 0)
 		{
 			MS_THROW_TYPE_ERROR("invalid id 0");
 		}

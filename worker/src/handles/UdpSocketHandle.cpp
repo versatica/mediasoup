@@ -374,7 +374,7 @@ inline void UdpSocketHandle::OnUvRecv(
 	}
 
 	// Check flags.
-	if ((flags & UV_UDP_PARTIAL) != 0u)
+	if ((flags & UV_UDP_PARTIAL) != 0)
 	{
 		MS_ERROR("received datagram was truncated due to insufficient buffer, ignoring it");
 

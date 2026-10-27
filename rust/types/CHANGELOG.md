@@ -2,6 +2,10 @@
 
 ### NEXT
 
+### 0.10.0
+
+- New built-in BWE related types ([task #1895](https://github.com/versatica/mediasoup/issues/1895)).
+
 ### 0.9.0
 
 - Make `size` and `payload_size` in `RtpPacketTraceInfo` `u32` ([PR #2001](https://github.com/versatica/mediasoup/pull/2001)).

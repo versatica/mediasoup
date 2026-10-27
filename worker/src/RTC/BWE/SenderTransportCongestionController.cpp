@@ -131,6 +131,14 @@ namespace RTC
 			}
 		}
 
+		void SenderTransportCongestionController::SetTransportCcFeedbackSupported(
+		  bool transportCcFeedbackSupported)
+		{
+			MS_TRACE();
+
+			this->transportCcFeedbackSupported = transportCcFeedbackSupported;
+		}
+
 		std::optional<int64_t> SenderTransportCongestionController::OnRtpPacketToBeSent(
 		  RTC::RTP::Packet* packet, const RtpPacketToBeSentOptions& options)
 		{
@@ -425,12 +433,11 @@ namespace RTC
 			// previous one carried.
 			const auto sequenceNumber = AddRtpPacket(packet, RtpPacketToBeSentOptions{}, probeCluster);
 
-			// The generator builds every packet with room for both extensions, so
-			// there is always a sequence number to hand over.
-			MS_ASSERT(sequenceNumber.has_value(), "probe packet has no transport wide sequence number");
-
+			// A packet without a sequence number was not taken note of, so there is
+			// nothing to be reported back about it and only its bytes count. Whether
+			// a burst is worth emitting at all is not decided here.
 			this->listener->OnSenderTransportCongestionControllerSendRtpProbePacket(
-			  this, packet, sequenceNumber.value());
+			  this, packet, sequenceNumber);
 		}
 
 		void SenderTransportCongestionController::OnTimer(TimerHandleInterface* timer)
@@ -458,6 +465,15 @@ namespace RTC
 			if (!options.isAudio)
 			{
 				packet->UpdateAbsSendTime(Utils::Time::TimeUsToAbsSendTime(nowUs));
+			}
+
+			// A peer that did not negotiate transport-cc reports on no packet at all,
+			// so taking note of one would only fill the history with entries no
+			// feedback can ever name. The room for the sequence number travels in the
+			// packet all the same, with the zero the Producer wrote in it.
+			if (!this->transportCcFeedbackSupported)
+			{
+				return std::nullopt;
 			}
 
 			// Whatever the packet carries there now, which is only read to find out

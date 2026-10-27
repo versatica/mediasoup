@@ -1,7 +1,7 @@
 ---
 name: 🚀 Feature Request
 about: Suggest an idea or improvement for mediasoup
-labels: feature
+type: Feature
 ---
 
 # Feature Request

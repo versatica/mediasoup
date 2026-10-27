@@ -68,7 +68,7 @@ namespace RTC
 			// Check encoding.ssrc.
 			ssrc = encoding.ssrc;
 
-			if (ssrc != 0u)
+			if (ssrc != 0)
 			{
 				if (this->ssrcTable.find(ssrc) == this->ssrcTable.end())
 				{
@@ -85,7 +85,7 @@ namespace RTC
 			// Check encoding.rtx.ssrc.
 			ssrc = encoding.rtx.ssrc;
 
-			if (ssrc != 0u)
+			if (ssrc != 0)
 			{
 				if (this->ssrcTable.find(ssrc) == this->ssrcTable.end())
 				{

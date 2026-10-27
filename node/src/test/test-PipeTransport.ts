@@ -268,12 +268,6 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 			parameters: {},
 		},
 		{
-			encrypt: false,
-			id: 7,
-			parameters: {},
-			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
-		},
-		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
 			id: 10,
 			encrypt: false,
@@ -320,12 +314,6 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 			id: 6,
 			encrypt: false,
 			parameters: {},
-		},
-		{
-			encrypt: false,
-			id: 7,
-			parameters: {},
-			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
 		},
 		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',

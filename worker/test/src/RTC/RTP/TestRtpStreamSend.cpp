@@ -2154,10 +2154,11 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(stream.GetFractionLost() == (1 << 8) / 10);
 		REQUIRE(stream.GetPacketsLost() == 6 + ForgottenSeqNumbers);
 
-		// A report whose count of lost packets goes down is one that got duplicates,
-		// and it gives back what a previous one was charged for. What is reported
-		// cannot go backwards, but what is handed out carries the negative so that
-		// whoever adds several of them up gets it.
+		// A report whose count of lost packets goes down is one where holes counted
+		// before got filled in, which may well be packets the sender's uplink lost
+		// and that were never charged to this link. So neither what is reported nor
+		// what is handed out goes backwards, since otherwise the BWE would be told
+		// about a path other than the one from us to the remote endpoint.
 		sendPackets(3030, 3039, {});
 
 		const auto duplicatesLoss = receiveReceiverReport(3039, 10001);
@@ -2169,7 +2170,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		const auto& duplicatesLossValue = duplicatesLoss.value();
 
-		REQUIRE(duplicatesLossValue.lostPackets == -2);
+		REQUIRE(duplicatesLossValue.lostPackets == 0);
 		REQUIRE(duplicatesLossValue.expectedPackets == 10);
 	}
 
