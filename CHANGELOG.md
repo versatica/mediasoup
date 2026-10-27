@@ -2,8 +2,8 @@
 
 ### NEXT
 
-- AV1: Fix SVC not being decodable ([PR #2015](https://github.com/versatica/mediasoup/pull/2015)).
 - BWE: Reduce CPU usage in `RTC::BWE::SendPacketHistory` ([PR #2018](https://github.com/versatica/mediasoup/pull/2018)).
+- AV1: Fix SVC not being decodable ([PR #2015](https://github.com/versatica/mediasoup/pull/2015)).
 
 ### 3.32.0
 
