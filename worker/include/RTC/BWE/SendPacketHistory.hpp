@@ -4,8 +4,8 @@
 #include "common.hpp"
 #include "Utils/UnwrappedSequenceNumber.hpp"
 #include "RTC/BWE/BweTypes.hpp"
+#include <ankerl/unordered_dense.h>
 #include <map>
-#include <tuple>
 
 namespace RTC
 {
@@ -147,13 +147,25 @@ namespace RTC
 		private:
 			struct SsrcAndSeq
 			{
-				bool operator<(const SsrcAndSeq& other) const
+				bool operator==(const SsrcAndSeq& other) const
 				{
-					return std::tie(this->ssrc, this->seq) < std::tie(other.ssrc, other.seq);
+					return this->ssrc == other.ssrc && this->seq == other.seq;
 				}
 
 				uint32_t ssrc{ 0 };
 				uint16_t seq{ 0 };
+			};
+
+			struct SsrcAndSeqHash
+			{
+				using is_avalanching = void;
+
+				uint64_t operator()(const SsrcAndSeq& key) const noexcept
+				{
+					// Both fit in a single 64 bit word, which is hashed as a whole.
+					return ankerl::unordered_dense::hash<uint64_t>{}(
+					  (static_cast<uint64_t>(key.ssrc) << 16) | key.seq);
+				}
 			};
 
 		public:
@@ -241,15 +253,19 @@ namespace RTC
 			void RemoveOutstandingBytes(const SentPacketEntry& entry);
 
 			/**
-			 * Drop the mapping of a packet, unless the same SSRC and RTP sequence
-			 * number were sent again afterwards and hence took it over.
+			 * Drop the mapping of the SSRC and RTP sequence number of a packet.
+			 *
+			 * @remarks
+			 * - If they were sent more than once, the mapping points to the first of
+			 *   those packets and is dropped anyway, so whichever of them is still in
+			 *   the history cannot be resolved by them anymore.
 			 */
 			void RemoveSsrcAndSeq(const SentPacketEntry& entry);
 
 		private:
 			const SendPacketHistoryOptions options;
 			std::map<int64_t, SentPacketEntry> history;
-			std::map<SsrcAndSeq, int64_t> ssrcAndSeqToSequenceNumber;
+			ankerl::unordered_dense::map<SsrcAndSeq, int64_t, SsrcAndSeqHash> ssrcAndSeqToSequenceNumber;
 			// Hands out the sequence numbers and recovers them out of the lowest bits
 			// the wire carries, which keeps both to a single count.
 			Utils::UnwrappedSequenceNumber<uint16_t>::Unwrapper sequenceNumberUnwrapper;

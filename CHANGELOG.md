@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- BWE: Reduce CPU usage in `RTC::BWE::SendPacketHistory` ([PR #2018](https://github.com/versatica/mediasoup/pull/2018)).
+
 ### 3.32.0
 
 - Worker: Get rid of `RTC::RTP::SharedPacket` class ([PR #2012](https://github.com/versatica/mediasoup/pull/2012)).

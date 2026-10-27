@@ -173,6 +173,65 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 		REQUIRE(sendPacketHistory.RetrievePacket(Ssrc + 1, 101, true) == std::nullopt);
 	}
 
+	SECTION("the same RTP sequence number of two streams held at once resolves to each packet")
+	{
+		RTC::BWE::SendPacketHistory sendPacketHistory;
+
+		const int64_t firstSequenceNumber = sendPacketHistory.AddPacket(
+		  { .ssrc = Ssrc, .seq = 100, .size = PacketSize, .createdAtUs = InitialTimeUs });
+
+		sendPacketHistory.ProcessSentPacket(firstSequenceNumber, InitialTimeUs);
+
+		const int64_t secondSequenceNumber = sendPacketHistory.AddPacket(
+		  { .ssrc = Ssrc + 1, .seq = 100, .size = PacketSize, .createdAtUs = InitialTimeUs + 10000 });
+
+		sendPacketHistory.ProcessSentPacket(secondSequenceNumber, InitialTimeUs + 10000);
+
+		const auto secondRetrievedEntry = sendPacketHistory.RetrievePacket(Ssrc + 1, 100, true);
+
+		REQUIRE(secondRetrievedEntry.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& secondEntry = secondRetrievedEntry.value();
+
+		REQUIRE(secondEntry.sentPacket.sequenceNumber == secondSequenceNumber);
+		REQUIRE(secondEntry.ambiguousReceiveTime == false);
+
+		const auto firstRetrievedEntry = sendPacketHistory.RetrievePacket(Ssrc, 100, true);
+
+		REQUIRE(firstRetrievedEntry.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& firstEntry = firstRetrievedEntry.value();
+
+		REQUIRE(firstEntry.sentPacket.sequenceNumber == firstSequenceNumber);
+		REQUIRE(firstEntry.ambiguousReceiveTime == false);
+	}
+
+	SECTION("a packet reported as received frees its SSRC and RTP sequence number")
+	{
+		RTC::BWE::SendPacketHistory sendPacketHistory;
+
+		sendPacket(sendPacketHistory, 100, PacketSize, InitialTimeUs);
+
+		REQUIRE(sendPacketHistory.RetrievePacket(0, true).has_value());
+
+		// Sent again under the very same SSRC and RTP sequence number, but not as a
+		// retransmission, so nothing makes it ambiguous once the first one is gone.
+		const int64_t sequenceNumber =
+		  sendPacket(sendPacketHistory, 100, PacketSize, InitialTimeUs + 10000);
+
+		const auto retrievedEntry = sendPacketHistory.RetrievePacket(Ssrc, 100, true);
+
+		REQUIRE(retrievedEntry.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto& entry = retrievedEntry.value();
+
+		REQUIRE(entry.sentPacket.sequenceNumber == sequenceNumber);
+		REQUIRE(entry.ambiguousReceiveTime == false);
+	}
+
 	SECTION("the first send of a repeated SSRC and RTP sequence number keeps the mapping")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
@@ -400,6 +459,25 @@ SCENARIO("BWE SendPacketHistory", "[bwe][sendpackethistory]")
 		sendPacketHistory.RetrievePacket(1, true);
 
 		REQUIRE(sendPacketHistory.GetOutstandingBytes() == 0);
+	}
+
+	SECTION("a packet no longer held is not resolved while an earlier one still is")
+	{
+		RTC::BWE::SendPacketHistory sendPacketHistory;
+
+		sendPacket(sendPacketHistory, 100, PacketSize, InitialTimeUs);
+		sendPacket(sendPacketHistory, 101, PacketSize, InitialTimeUs + 10000);
+		sendPacket(sendPacketHistory, 102, PacketSize, InitialTimeUs + 20000);
+
+		REQUIRE(sendPacketHistory.RetrievePacket(1, true).has_value());
+		REQUIRE(sendPacketHistory.GetOutstandingBytes() == PacketSize);
+
+		// Reported as received already, so it's gone although the one before it is
+		// still held.
+		REQUIRE(sendPacketHistory.RetrievePacket(1, true) == std::nullopt);
+		REQUIRE(sendPacketHistory.GetOutstandingBytes() == PacketSize);
+
+		REQUIRE(sendPacketHistory.RetrievePacket(0, true).has_value());
 	}
 
 	SECTION("packets held for longer than the window are dropped")

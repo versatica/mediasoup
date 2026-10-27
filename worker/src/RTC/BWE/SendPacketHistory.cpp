@@ -3,6 +3,7 @@
 
 #include "RTC/BWE/SendPacketHistory.hpp"
 #include "Logger.hpp"
+#include <iterator> // std::prev()
 
 namespace RTC
 {
@@ -198,13 +199,15 @@ namespace RTC
 				return std::nullopt;
 			}
 
+			// First packet after the reported one. The packet right before it is the
+			// reported one, unless the history doesn't have it anymore.
+			const auto endIt = this->history.upper_bound(sequenceNumber);
+
 			// The feedback settles whether every packet up to the reported one arrived
 			// or not, so none of them is in flight anymore.
 			if (sequenceNumber > this->lastAckSequenceNumber)
 			{
-				for (auto it = this->history.upper_bound(this->lastAckSequenceNumber);
-				     it != this->history.upper_bound(sequenceNumber);
-				     ++it)
+				for (auto it = this->history.upper_bound(this->lastAckSequenceNumber); it != endIt; ++it)
 				{
 					const auto& entry = it->second;
 
@@ -214,9 +217,7 @@ namespace RTC
 				this->lastAckSequenceNumber = sequenceNumber;
 			}
 
-			const auto it = this->history.find(sequenceNumber);
-
-			if (it == this->history.end())
+			if (endIt == this->history.begin() || std::prev(endIt)->first != sequenceNumber)
 			{
 				// Either the window already dropped it or a previous feedback reported it
 				// as received.
@@ -224,6 +225,8 @@ namespace RTC
 
 				return std::nullopt;
 			}
+
+			const auto it = std::prev(endIt);
 
 			auto& storedEntry = it->second;
 
