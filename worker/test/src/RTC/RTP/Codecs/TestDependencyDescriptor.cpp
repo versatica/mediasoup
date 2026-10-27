@@ -584,4 +584,73 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(rewritten->frameNumber == 232);
 		REQUIRE(rewritten->activeDecodeTargetsBitmask == 0b01);
 	}
+
+	SECTION("rewriting a key frame keeps the template dependency structure")
+	{
+		// Key frame carrying the template dependency structure of an L1T2 stream.
+		// clang-format off
+		uint8_t keyFrameData[] =
+		{
+			0x80, 0x00, 0xE8, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C,
+		};
+		// clang-format on
+
+		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+		  templateDependencyStructure;
+
+		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+
+		REQUIRE(keyFrame);
+		REQUIRE(keyFrame->isKeyFrame);
+
+		const auto structure = keyFrame->templateDependencyStructure;
+
+		uint8_t buffer[RTC::Consts::TwoBytesRtpExtensionMaxLength];
+
+		// Only decode target 0 is kept.
+		const auto len = keyFrame->Write(0b01, buffer);
+
+		REQUIRE(len != 0);
+		REQUIRE(len == keyFrame->GetMaxLength());
+
+		/*
+		 * The rewritten key frame must carry the very same structure, so that the
+		 * endpoint goes on resolving the templates of the frames that follow.
+		 */
+		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure> rewrittenStructure;
+
+		auto rewritten = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(buffer, len, rewrittenStructure));
+
+		REQUIRE(rewritten);
+		REQUIRE(rewritten->isKeyFrame);
+		REQUIRE(rewritten->frameNumber == keyFrame->frameNumber);
+		REQUIRE(rewritten->frameDependencyTemplateId == keyFrame->frameDependencyTemplateId);
+		REQUIRE(rewritten->activeDecodeTargetsBitmask == 0b01);
+		REQUIRE(rewritten->decodeTargetProtectedBy == keyFrame->decodeTargetProtectedBy);
+
+		REQUIRE(rewrittenStructure->spatialLayers == structure->spatialLayers);
+		REQUIRE(rewrittenStructure->temporalLayers == structure->temporalLayers);
+		REQUIRE(rewrittenStructure->templateIdOffset == structure->templateIdOffset);
+		REQUIRE(rewrittenStructure->decodeTargetCount == structure->decodeTargetCount);
+		REQUIRE(rewrittenStructure->chainCount == structure->chainCount);
+		REQUIRE(rewrittenStructure->templateLayers.size() == structure->templateLayers.size());
+
+		for (size_t idx{ 0 }; idx < structure->templateLayers.size(); ++idx)
+		{
+			const auto& templateLayer          = structure->templateLayers[idx];
+			const auto& rewrittenTemplateLayer = rewrittenStructure->templateLayers[idx];
+
+			REQUIRE(rewrittenTemplateLayer.spatialLayer == templateLayer.spatialLayer);
+			REQUIRE(rewrittenTemplateLayer.temporalLayer == templateLayer.temporalLayer);
+			REQUIRE(rewrittenTemplateLayer.decodeTargetIndications == templateLayer.decodeTargetIndications);
+			REQUIRE(rewrittenTemplateLayer.frameDiffs == templateLayer.frameDiffs);
+			REQUIRE(rewrittenTemplateLayer.frameDiffChains == templateLayer.frameDiffChains);
+		}
+	}
 }
