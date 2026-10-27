@@ -302,7 +302,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 				return true;
 			}
 
-			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength];
+			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
 			uint8_t length{ 0 };
 			bool rejected{ false };
 		};
@@ -402,7 +402,7 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 				return true;
 			}
 
-			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength];
+			uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
 			uint8_t length{ 0 };
 			bool rejected{ false };
 		};
