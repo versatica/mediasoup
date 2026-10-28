@@ -1,4 +1,6 @@
 #include "common.hpp"
+#include "RTC/Consts.hpp"
+#include "RTC/NackGenerator.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
@@ -187,6 +189,69 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		REQUIRE(listener.nackedSeqNumbers.empty());
+	}
+
+	SECTION("NACK that doesn't fit in a RTCP packet is split into several")
+	{
+		class NackItemsListener : public RTC::RTP::RtpStreamRecv::Listener
+		{
+		public:
+			void OnRtpStreamScore(
+			  RTC::RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
+			{
+			}
+
+			void OnRtpStreamSendRtcpPacket(
+			  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet) override
+			{
+				auto* const nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
+
+				REQUIRE(nackPacket);
+				REQUIRE(nackPacket->GetSize() <= RTC::Consts::OutgoingRtcpPacketMaxSize);
+
+				size_t itemCount{ 0 };
+
+				for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
+				{
+					++itemCount;
+				}
+
+				this->nackPacketItemCounts.push_back(itemCount);
+			}
+
+			uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
+			{
+				return 0;
+			}
+
+			void OnRtpStreamSpatialLayerActivityChanged(
+			  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+			{
+			}
+
+		public:
+			std::vector<size_t> nackPacketItemCounts;
+		};
+
+		NackItemsListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		// Sequence numbers 17 apart, so each one takes a NACK item of its own.
+		std::vector<uint16_t> seqNumbers;
+
+		for (uint16_t i{ 0 }; i < 400; ++i)
+		{
+			seqNumbers.push_back(static_cast<uint16_t>(i * 17));
+		}
+
+		static_cast<RTC::NackGenerator::Listener&>(rtpStream).OnNackGeneratorNackRequired(seqNumbers);
+
+		// A NACK packet takes 12 bytes of headers plus 4 bytes per item, so at most
+		// 297 items fit in 1200 bytes.
+		REQUIRE(listener.nackPacketItemCounts.size() == 2);
+		REQUIRE(listener.nackPacketItemCounts[0] == 297);
+		REQUIRE(listener.nackPacketItemCounts[1] == 103);
 	}
 
 	SECTION("receive RTX before corresponding RTP")

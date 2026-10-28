@@ -147,6 +147,48 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 		    receivedHeartbeatInfoParameter->GetLength()) == true);
 	}
 
+	SECTION("doesn't reply to heartbeat requests too large to be echoed")
+	{
+		TestHeartbeatHandler test(HeartbeatIntervalMs);
+
+		const auto buildHeartbeatRequestChunk =
+		  [](uint16_t infoLength) -> std::unique_ptr<RTC::SCTP::HeartbeatRequestChunk>
+		{
+			std::unique_ptr<RTC::SCTP::HeartbeatRequestChunk> heartbeatRequestChunk{
+				RTC::SCTP::HeartbeatRequestChunk::Factory(
+				  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer))
+			};
+
+			auto* const heartbeatInfoParameter =
+			  heartbeatRequestChunk->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
+
+			heartbeatInfoParameter->SetInfo(sctpCommon::DataBuffer, infoLength);
+			heartbeatInfoParameter->Consolidate();
+
+			return heartbeatRequestChunk;
+		};
+
+		// The reply takes 12 bytes of common header, 4 of chunk header and the
+		// echoed Heartbeat Info parameter, which is its 4 bytes header plus the
+		// info padded to 4 bytes. With 1168 bytes of info that is 1188 bytes,
+		// which fit in the 1191 bytes a packet can take.
+		const auto fittingHeartbeatRequestChunk = buildHeartbeatRequestChunk(1168);
+
+		test.heartbeatHandler.HandleReceivedHeartbeatRequestChunk(fittingHeartbeatRequestChunk.get());
+
+		const std::vector<uint8_t> sentBuffer = test.associationListener.ConsumeFirstSentPacket();
+
+		REQUIRE(sentBuffer.size() == 1188);
+
+		// With 1169 bytes of info the padded parameter grows by 4 bytes and the
+		// reply would take 1192 bytes, which do not fit.
+		const auto tooLargeHeartbeatRequestChunk = buildHeartbeatRequestChunk(1169);
+
+		test.heartbeatHandler.HandleReceivedHeartbeatRequestChunk(tooLargeHeartbeatRequestChunk.get());
+
+		REQUIRE(test.associationListener.HasSentPackets() == false);
+	}
+
 	SECTION("sends heartbeat requests on idle connections")
 	{
 		TestHeartbeatHandler test(HeartbeatIntervalMs);

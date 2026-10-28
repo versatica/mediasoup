@@ -461,6 +461,28 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 
 	}
 
+	SECTION("GetSize() matches the serialized size")
+	{
+		for (const size_t count : { 1, 31, 32, 62, 63 })
+		{
+			RTC::RTCP::SdesPacket packet;
+
+			for (size_t i{ 1 }; i <= count; ++i)
+			{
+				auto* const chunk = new RTC::RTCP::SdesChunk(/*ssrc*/ i);
+				auto* const item1 =
+				  new RTC::RTCP::SdesItem(RTC::RTCP::SdesItem::Type::CNAME, item1Value.size(), item1Value.c_str());
+
+				chunk->AddItem(item1);
+				packet.AddChunk(chunk);
+			}
+
+			alignas(4) uint8_t buffer1[4096] = { 0 };
+
+			REQUIRE(packet.Serialize(buffer1) == packet.GetSize());
+		}
+	}
+
 	SECTION("create SDES packet with more than 31 chunks")
 	{
 		const size_t count = 33;

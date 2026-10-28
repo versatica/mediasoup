@@ -74,24 +74,23 @@ namespace RTC
 			}
 		}
 
-		bool CompoundPacket::Add(
-		  SenderReport* senderReport,
-		  SdesChunk* sdesChunk,
-		  DelaySinceLastRr::SsrcInfo* delaySinceLastRrSsrcInfo)
+		bool CompoundPacket::AddSenderReportItems(SenderReportItems& items)
 		{
 			MS_TRACE();
 
+			MS_ASSERT(items.senderReport, "no Sender Report given");
+			MS_ASSERT(items.sdesChunk, "no SDES chunk given");
+
+			auto* const senderReport             = items.senderReport.release();
+			auto* const sdesChunk                = items.sdesChunk.release();
+			auto* const delaySinceLastRrSsrcInfo = items.delaySinceLastRrSsrcInfo.release();
+
+			bool delaySinceLastRrCreated{ false };
+
 			// Add the items into the packet.
 
-			if (senderReport)
-			{
-				this->senderReportPacket.AddReport(senderReport);
-			}
-
-			if (sdesChunk)
-			{
-				this->sdesPacket.AddChunk(sdesChunk);
-			}
+			this->senderReportPacket.AddReport(senderReport);
+			this->sdesPacket.AddChunk(sdesChunk);
 
 			if (delaySinceLastRrSsrcInfo)
 			{
@@ -100,140 +99,92 @@ namespace RTC
 				{
 					this->delaySinceLastRr = new RTC::RTCP::DelaySinceLastRr();
 					this->xrPacket.AddReport(this->delaySinceLastRr);
+
+					delaySinceLastRrCreated = true;
 				}
 
 				this->delaySinceLastRr->AddSsrcInfo(delaySinceLastRrSsrcInfo);
 			}
 
-			// New items can hold in the packet, report it.
-			if (GetSize() <= RTC::Consts::RtcpPacketMaxSize)
+			// The items fit in the packet, so it keeps them.
+			if (GetSize() <= RTC::Consts::OutgoingRtcpPacketMaxSize)
 			{
 				return true;
 			}
 
-			// New items can not hold in the packet, remove them,
-			// delete and report it.
+			// The items do not fit in the packet, so take them out of it and give
+			// them back to the caller.
 
-			if (senderReport)
-			{
-				this->senderReportPacket.RemoveReport(senderReport);
-				delete senderReport;
-			}
-
-			if (sdesChunk)
-			{
-				this->sdesPacket.RemoveChunk(sdesChunk);
-				delete sdesChunk;
-			}
+			this->senderReportPacket.RemoveReport(senderReport);
+			this->sdesPacket.RemoveChunk(sdesChunk);
 
 			if (delaySinceLastRrSsrcInfo)
 			{
-				// NOTE: This method deletes the removed instances in place.
-				this->delaySinceLastRr->RemoveLastSsrcInfos(1);
+				this->delaySinceLastRr->RemoveSsrcInfo(delaySinceLastRrSsrcInfo);
+
+				// Also remove the DLRR block if it was created for them.
+				if (delaySinceLastRrCreated)
+				{
+					this->xrPacket.RemoveReport(this->delaySinceLastRr);
+
+					delete this->delaySinceLastRr;
+
+					this->delaySinceLastRr = nullptr;
+				}
 			}
+
+			items.senderReport.reset(senderReport);
+			items.sdesChunk.reset(sdesChunk);
+			items.delaySinceLastRrSsrcInfo.reset(delaySinceLastRrSsrcInfo);
 
 			return false;
 		}
 
-		bool CompoundPacket::Add(
-		  std::vector<SenderReport*>& senderReports,
-		  std::vector<SdesChunk*>& sdesChunks,
-		  std::vector<DelaySinceLastRr::SsrcInfo*>& delaySinceLastRrSsrcInfos)
+		bool CompoundPacket::AddReceiverReport(
+		  std::unique_ptr<ReceiverReport>& report, const Utils::Time::Ntp& ntp)
 		{
 			MS_TRACE();
 
+			MS_ASSERT(report, "no Receiver Report given");
+
+			auto* const receiverReport = report.release();
+
+			ReceiverReferenceTime* receiverReferenceTime{ nullptr };
+
 			// Add the items into the packet.
 
-			for (auto* report : senderReports)
+			this->receiverReportPacket.AddReport(receiverReport);
+
+			// Add a Receiver Reference Time report if not present.
+			if (!HasReceiverReferenceTime())
 			{
-				this->senderReportPacket.AddReport(report);
+				receiverReferenceTime = new ReceiverReferenceTime();
+
+				receiverReferenceTime->SetNtpSec(ntp.seconds);
+				receiverReferenceTime->SetNtpFrac(ntp.fractions);
+
+				this->xrPacket.AddReport(receiverReferenceTime);
 			}
 
-			for (auto* chunk : sdesChunks)
-			{
-				this->sdesPacket.AddChunk(chunk);
-			}
-
-			// Add a DLRR block into the XR packet if no present.
-			if (!delaySinceLastRrSsrcInfos.empty() && !this->delaySinceLastRr)
-			{
-				this->delaySinceLastRr = new RTC::RTCP::DelaySinceLastRr();
-				this->xrPacket.AddReport(this->delaySinceLastRr);
-			}
-
-			for (auto* ssrcInfo : delaySinceLastRrSsrcInfos)
-			{
-				this->delaySinceLastRr->AddSsrcInfo(ssrcInfo);
-			}
-
-			// New items can hold in the packet, report it.
-			if (GetSize() <= RTC::Consts::RtcpPacketMaxSize)
+			// The items fit in the packet, so it keeps them.
+			if (GetSize() <= RTC::Consts::OutgoingRtcpPacketMaxSize)
 			{
 				return true;
 			}
 
-			// New items can not hold in the packet, remove them,
-			// delete and report it.
+			// The items do not fit in the packet, so take them out of it and give
+			// the report back to the caller.
 
-			for (auto* report : senderReports)
+			this->receiverReportPacket.RemoveReport(receiverReport);
+
+			if (receiverReferenceTime)
 			{
-				this->senderReportPacket.RemoveReport(report);
-				delete report;
+				this->xrPacket.RemoveReport(receiverReferenceTime);
+
+				delete receiverReferenceTime;
 			}
 
-			for (auto* chunk : sdesChunks)
-			{
-				this->sdesPacket.RemoveChunk(chunk);
-				delete chunk;
-			}
-
-			if (!delaySinceLastRrSsrcInfos.empty())
-			{
-				// NOTE: This method deletes the instances in place.
-				this->delaySinceLastRr->RemoveLastSsrcInfos(delaySinceLastRrSsrcInfos.size());
-			}
-
-			return false;
-		}
-
-		bool CompoundPacket::Add(
-		  std::vector<ReceiverReport*>& receiverReports,
-		  ReceiverReferenceTime* receiverReferenceTimeReport)
-		{
-			MS_TRACE();
-
-			// Add the items into the packet.
-
-			for (auto* report : receiverReports)
-			{
-				this->receiverReportPacket.AddReport(report);
-			}
-
-			if (receiverReferenceTimeReport)
-			{
-				this->xrPacket.AddReport(receiverReferenceTimeReport);
-			}
-
-			// New items can hold in the packet, report it.
-			if (GetSize() <= RTC::Consts::RtcpPacketMaxSize)
-			{
-				return true;
-			}
-
-			// New items can not hold in the packet, remove them,
-			// delete and report it.
-
-			for (auto* report : receiverReports)
-			{
-				this->receiverReportPacket.RemoveReport(report);
-				delete report;
-			}
-
-			if (receiverReferenceTimeReport)
-			{
-				this->xrPacket.RemoveReport(receiverReferenceTimeReport);
-				delete receiverReferenceTimeReport;
-			}
+			report.reset(receiverReport);
 
 			return false;
 		}
@@ -269,27 +220,6 @@ namespace RTC
 			}
 
 			MS_DUMP_CLEAN(indentation, "</CompoundPacket>");
-		}
-
-		void CompoundPacket::AddSenderReport(SenderReport* report)
-		{
-			MS_TRACE();
-
-			this->senderReportPacket.AddReport(report);
-		}
-
-		void CompoundPacket::AddReceiverReport(ReceiverReport* report)
-		{
-			MS_TRACE();
-
-			this->receiverReportPacket.AddReport(report);
-		}
-
-		void CompoundPacket::AddSdesChunk(SdesChunk* chunk)
-		{
-			MS_TRACE();
-
-			this->sdesPacket.AddChunk(chunk);
 		}
 	} // namespace RTCP
 } // namespace RTC

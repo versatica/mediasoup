@@ -3,6 +3,7 @@
 
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "Logger.hpp"
+#include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "Utils.hpp"
@@ -94,7 +95,32 @@ namespace RTC
 			// HEARTBEAT ACK chunk that contains the Heartbeat Information TLV,
 			// together with any other received TLVs, copied unchanged from the
 			// received HEARTBEAT chunk."
-			auto packet             = this->tcbContext->CreatePacket();
+			const auto packet = this->tcbContext->CreatePacket();
+
+			// The parameters are echoed back, so they must fit in a packet we can
+			// send.
+			size_t heartbeatAckPacketLength = packet->GetLength() + Chunk::ChunkHeaderLength;
+
+			for (auto it = receivedHeartbeatRequestChunk->ParametersBegin();
+			     it != receivedHeartbeatRequestChunk->ParametersEnd();
+			     ++it)
+			{
+				const auto* parameter = *it;
+
+				heartbeatAckPacketLength += parameter->GetLength();
+			}
+
+			if (heartbeatAckPacketLength > packet->GetBufferLength())
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "not replying to HEARTBEAT chunk too large to be echoed [len:%zu, max len:%zu]",
+				  heartbeatAckPacketLength,
+				  packet->GetBufferLength());
+
+				return;
+			}
+
 			auto* heartbeatAckChunk = packet->BuildChunkInPlace<HeartbeatAckChunk>();
 
 			// Here we have to extract all parameters from receivedHeartbeatRequestChunk

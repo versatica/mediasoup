@@ -44,7 +44,7 @@ namespace RTC
 			 * Maximum size of an SCTP packet. It doesn't include any overhead of
 			 * DTLS, TURN, UDP or IP headers.
 			 */
-			size_t mtu{ RTC::Consts::MaxSafeMtuSizeForSctp };
+			size_t mtu{ RTC::Consts::OutgoingSctpPacketMaxSize };
 
 			/**
 			 * The largest allowed message payload to be sent. Messages will be rejected

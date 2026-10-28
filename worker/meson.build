@@ -515,6 +515,7 @@ test_sources = [
   'test/src/RTC/RTCP/TestFeedbackRtpTmmb.cpp',
   'test/src/RTC/RTCP/TestFeedbackRtpTransport.cpp',
   'test/src/RTC/RTCP/TestBye.cpp',
+  'test/src/RTC/RTCP/TestCompoundPacket.cpp',
   'test/src/RTC/RTCP/TestReceiverReport.cpp',
   'test/src/RTC/RTCP/TestSdes.cpp',
   'test/src/RTC/RTCP/TestSenderReport.cpp',

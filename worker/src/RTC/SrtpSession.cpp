@@ -5,10 +5,15 @@
 #include "DepLibSRTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Consts.hpp"
 
 namespace RTC
 {
 	/* Static. */
+
+	static_assert(
+	  RTC::Consts::SrtpMaxOverhead == SRTP_MAX_TAG_LEN,
+	  "SrtpMaxOverhead must match the longest SRTP authentication tag");
 
 	static constexpr size_t EncryptBufferSize{ 65536 };
 	alignas(4) static thread_local uint8_t EncryptBuffer[EncryptBufferSize];

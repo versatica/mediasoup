@@ -58,7 +58,7 @@ namespace RTC
 				/**
 				 * Largest an RTCP packet may be on this transport (bytes).
 				 */
-				size_t maxRtcpPacketLen{ RTC::Consts::RtcpPacketMaxSize };
+				size_t maxRtcpPacketLen{ RTC::Consts::OutgoingRtcpPacketMaxSize };
 			};
 
 		public:

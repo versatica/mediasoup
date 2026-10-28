@@ -125,6 +125,13 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
 			}
 
+			if (options->sctpMaxReceiverWindowBufferSize() < RTC::Consts::SctpReceiverWindowBufferMinSize)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "sctpMaxReceiverWindowBufferSize must be at least %zu",
+				  RTC::Consts::SctpReceiverWindowBufferMinSize);
+			}
+
 			RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod
 			  zeroChecksumAlternateErrorDetectionMethod{
 				  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
@@ -152,7 +159,7 @@ namespace RTC
 			}
 
 			const RTC::SCTP::SctpOptions sctpOptions = {
-				.mtu                         = RTC::Consts::MaxSafeMtuSizeForSctp,
+				.mtu                         = RTC::Consts::OutgoingSctpPacketMaxSize,
 				.maxSendMessageSize          = this->maxSendMessageSize,
 				.maxSendBufferSize           = options->sctpSendBufferSize(),
 				.perStreamSendQueueLimit     = options->sctpPerStreamSendQueueLimit(),
@@ -2269,43 +2276,49 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ new RTC::RTCP::CompoundPacket() };
+		const auto ntp = Utils::Time::TimeUsToNtp(nowUs + this->shared->GetNtpOffsetUs());
+
+		auto packet = std::make_unique<RTC::RTCP::CompoundPacket>();
 
 		for (auto& kv : this->mapConsumers)
 		{
-			auto* consumer = kv.second;
-			auto rtcpAdded = consumer->GetRtcp(packet.get(), nowUs);
+			auto* const consumer = kv.second;
 
-			// RTCP data couldn't be added because the Compound packet is full.
-			// Send the RTCP compound packet and request for RTCP again.
-			if (!rtcpAdded)
+			for (auto& senderReportItems : consumer->GetRtcp(nowUs))
 			{
-				SendRtcpCompoundPacket(packet.get());
+				// If the items do not fit in the compound packet, send it and add them
+				// to a new one.
+				if (!packet->AddSenderReportItems(senderReportItems))
+				{
+					SendRtcpCompoundPacket(packet.get());
 
-				// Create a new compount packet.
-				packet.reset(new RTC::RTCP::CompoundPacket());
+					packet = std::make_unique<RTC::RTCP::CompoundPacket>();
 
-				// Retrieve the RTCP again.
-				consumer->GetRtcp(packet.get(), nowUs);
+					const bool added = packet->AddSenderReportItems(senderReportItems);
+
+					MS_ASSERT(added, "Sender Report items do not fit in an empty RTCP compound packet");
+				}
 			}
 		}
 
 		for (auto& kv : this->mapProducers)
 		{
-			auto* producer = kv.second;
-			auto rtcpAdded = producer->GetRtcp(packet.get(), nowUs);
+			auto* const producer = kv.second;
 
-			// RTCP data couldn't be added because the Compound packet is full.
-			// Send the RTCP compound packet and request for RTCP again.
-			if (!rtcpAdded)
+			for (auto& receiverReport : producer->GetRtcp(nowUs))
 			{
-				SendRtcpCompoundPacket(packet.get());
+				// If the report does not fit in the compound packet, send it and add the
+				// report to a new one.
+				if (!packet->AddReceiverReport(receiverReport, ntp))
+				{
+					SendRtcpCompoundPacket(packet.get());
 
-				// Create a new compount packet.
-				packet.reset(new RTC::RTCP::CompoundPacket());
+					packet = std::make_unique<RTC::RTCP::CompoundPacket>();
 
-				// Retrieve the RTCP again.
-				producer->GetRtcp(packet.get(), nowUs);
+					const bool added = packet->AddReceiverReport(receiverReport, ntp);
+
+					MS_ASSERT(added, "Receiver Report does not fit in an empty RTCP compound packet");
+				}
 			}
 		}
 

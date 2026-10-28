@@ -4,6 +4,7 @@
 #include "RTC/PlainTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/PortManager.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "Settings.hpp"
@@ -992,6 +993,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (len > RTC::Consts::IncomingRtpPacketMaxSize)
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "ignoring RTP packet exceeding maximum size [len:%zu, max len:%zu]",
+			  len,
+			  RTC::Consts::IncomingRtpPacketMaxSize);
+
+			return;
+		}
+
 		if (HasSrtp() && !IsSrtpReady())
 		{
 			return;
@@ -1087,6 +1099,17 @@ namespace RTC
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
+
+		if (len > RTC::Consts::IncomingRtcpPacketMaxSize)
+		{
+			MS_WARN_TAG(
+			  rtcp,
+			  "ignoring RTCP packet exceeding maximum size [len:%zu, max len:%zu]",
+			  len,
+			  RTC::Consts::IncomingRtcpPacketMaxSize);
+
+			return;
+		}
 
 		if (HasSrtp() && !IsSrtpReady())
 		{

@@ -4,6 +4,7 @@
 #include "RTC/DtlsTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Consts.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include <openssl/err.h>
@@ -55,8 +56,8 @@ inline static void onSslInfo(const SSL* ssl, int where, int ret)
  * endpoint. Such a data could be a full DTLS message, various DTLS messages,
  * a DTLS message fragment, various DTLS message fragments or a combination of
  * these. It's guaranteed (by observation) that |len| argument corresponds to
- * the entire content of our BIO mem buffer |this->sslBioToNetwork| and it
- * never exceeds our |DtlsMtu| limit.
+ * the entire content of our BIO mem buffer |this->sslBioToNetwork| and, for
+ * handshake data, it never exceeds `RTC::Consts::OutgoingDtlsPacketMaxSize`.
  */
 inline static long onSslBioOut(
   BIO* bio,
@@ -108,7 +109,6 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr int DtlsMtu{ 1350 };
 	static constexpr int SslReadBufferSize{ 65536 };
 	// AES-HMAC: http://tools.ietf.org/html/rfc3711
 	static constexpr size_t SrtpMasterKeyLength{ 16 };
@@ -767,8 +767,8 @@ namespace RTC
 
 		// Set the MTU so that we don't send packets that are too large with no
 		// fragmentation.
-		SSL_set_mtu(this->ssl, DtlsMtu);
-		DTLS_set_link_mtu(this->ssl, DtlsMtu);
+		SSL_set_mtu(this->ssl, static_cast<long>(RTC::Consts::OutgoingDtlsPacketMaxSize));
+		DTLS_set_link_mtu(this->ssl, static_cast<long>(RTC::Consts::OutgoingDtlsPacketMaxSize));
 
 		// We want to monitor OpenSSL write operations into our |sslBioToNetwork|
 		// buffer so we can immediately send those DTLS bytes (containing full DTLS

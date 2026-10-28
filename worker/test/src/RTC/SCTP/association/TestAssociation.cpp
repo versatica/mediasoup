@@ -20,6 +20,7 @@
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
+#include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "RTC/SCTP/public/Message.hpp"
 #include "RTC/SCTP/public/SctpOptions.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
@@ -1957,6 +1958,126 @@ SCENARIO("SCTP Association", "[sctp][association]")
 
 		REQUIRE(errorCause);
 		REQUIRE(errorCause->GetCode() == RTC::SCTP::ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE);
+	}
+
+	SECTION("doesn't report an unknown chunk too large to be echoed")
+	{
+		AssociationUnderTest a;
+		AssociationUnderTest z;
+
+		const uint32_t verificationTag = connectAndGetVerificationTag(a, z);
+
+		// Injects into A a chunk of unknown type (0x49), whose top two bits (01)
+		// request the receiver to skip it and report an error. It is built as a
+		// HEARTBEAT-REQUEST chunk carrying a Heartbeat Info parameter with given
+		// info length, and then its type is patched.
+		const auto injectUnknownChunk = [&a, verificationTag](uint16_t infoLength) -> void
+		{
+			std::vector<uint8_t> buffer(a.sctpOptions.mtu);
+
+			const auto packet = buildPacket(buffer, verificationTag);
+			auto* const heartbeatRequestChunk =
+			  packet->BuildChunkInPlace<RTC::SCTP::HeartbeatRequestChunk>();
+			auto* const heartbeatInfoParameter =
+			  heartbeatRequestChunk->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
+			const std::vector<uint8_t> info(infoLength, 0xAA);
+
+			heartbeatInfoParameter->SetInfo(info.data(), infoLength);
+			heartbeatInfoParameter->Consolidate();
+			heartbeatRequestChunk->Consolidate();
+
+			const_cast<uint8_t*>(packet->GetBuffer())[12] = 0x49;
+
+			injectPacket(a, packet.get());
+		};
+
+		// The OPERATION-ERROR reply takes 12 bytes of common header, 4 of chunk
+		// header, 4 of error cause header and the unknown chunk, which is 8 bytes
+		// of headers plus the info padded to 4 bytes. With 1160 bytes of info that
+		// is 1188 bytes, the most A sends (its 1191 bytes MTU padded down to 4
+		// bytes).
+		injectUnknownChunk(1160);
+
+		const auto buffer = a.listener.ConsumeFirstSentPacket();
+
+		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::OperationErrorChunk>(buffer) == true);
+		REQUIRE(buffer.size() == 1188);
+
+		// With 1161 bytes of info the reply would take 1192 bytes, so it is not
+		// sent.
+		injectUnknownChunk(1161);
+
+		REQUIRE(a.listener.HasSentPackets() == false);
+	}
+
+	SECTION("aborts on an INIT-ACK whose cookie is too large to be echoed")
+	{
+		// Has A connect and replies to its INIT with an INIT-ACK carrying a cookie
+		// of given length.
+		const auto replyToInit = [](AssociationUnderTest& a, uint16_t cookieLength) -> void
+		{
+			a.association.Connect();
+
+			const auto initBuffer = a.listener.ConsumeFirstSentPacket();
+			const auto initPacket = parsePacket(initBuffer);
+
+			REQUIRE(initPacket);
+
+			const auto* initChunk = initPacket->GetFirstChunkOfType<RTC::SCTP::InitChunk>();
+
+			REQUIRE(initChunk);
+
+			std::vector<uint8_t> buffer(2048);
+
+			const auto packet        = buildPacket(buffer, initChunk->GetInitiateTag());
+			auto* const initAckChunk = packet->BuildChunkInPlace<RTC::SCTP::InitAckChunk>();
+			const std::vector<uint8_t> cookie(cookieLength, 0xAA);
+
+			initAckChunk->SetInitiateTag(12345678);
+			initAckChunk->SetAdvertisedReceiverWindowCredit(1000000);
+			initAckChunk->SetNumberOfOutboundStreams(1);
+			initAckChunk->SetNumberOfInboundStreams(1);
+			initAckChunk->SetInitialTsn(1);
+
+			auto* const stateCookieParameter =
+			  initAckChunk->BuildParameterInPlace<RTC::SCTP::StateCookieParameter>();
+
+			stateCookieParameter->SetCookie(cookie.data(), cookieLength);
+			stateCookieParameter->Consolidate();
+			initAckChunk->Consolidate();
+
+			injectPacket(a, packet.get());
+		};
+
+		// The COOKIE-ECHO takes 12 bytes of common header, 4 of chunk header and
+		// the cookie padded to 4 bytes. With a 1172 bytes cookie that is 1188
+		// bytes, the most A sends (its 1191 bytes MTU padded down to 4 bytes).
+		{
+			AssociationUnderTest a;
+
+			replyToInit(a, 1172);
+
+			const auto buffer = a.listener.ConsumeFirstSentPacket();
+
+			REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(buffer) == true);
+			REQUIRE(buffer.size() == 1188);
+			REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CONNECTING);
+		}
+
+		// With a 1173 bytes cookie the COOKIE-ECHO would take 1192 bytes, so A
+		// aborts.
+		{
+			AssociationUnderTest a;
+
+			replyToInit(a, 1173);
+
+			const auto buffer = a.listener.ConsumeFirstSentPacket();
+
+			REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::AbortAssociationChunk>(buffer) == true);
+			REQUIRE(a.association.GetAssociationState() == RTC::SCTP::Types::AssociationState::CLOSED);
+			REQUIRE(a.listener.HasFailed() == true);
+			REQUIRE(a.listener.GetFailedErrorKind() == RTC::SCTP::Types::ErrorKind::PROTOCOL_VIOLATION);
+		}
 	}
 
 	SECTION("reports a received error chunk as a callback")

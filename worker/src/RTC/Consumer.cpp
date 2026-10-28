@@ -1418,7 +1418,7 @@ namespace RTC
 		}
 	}
 
-	bool Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs)
+	std::vector<RTC::RTCP::CompoundPacket::SenderReportItems> Consumer::GetRtcp(int64_t nowUs)
 	{
 		MS_TRACE();
 
@@ -1432,50 +1432,42 @@ namespace RTC
 		{
 			if (nowUs != this->lastRtcpSentAtUs && static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
 			{
-				return true;
+				return {};
 			}
 		}
 		else if (static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
 		{
-			return true;
+			return {};
 		}
 
-		std::vector<RTCP::SenderReport*> senderReports;
-		std::vector<RTCP::SdesChunk*> sdesChunks;
-		std::vector<RTCP::DelaySinceLastRr::SsrcInfo*> delaySinceLastRrSsrcInfos;
+		std::vector<RTC::RTCP::CompoundPacket::SenderReportItems> senderReportItems;
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto* report = rtpStream->GetRtcpSenderReport(nowUs);
+			auto* const report = rtpStream->GetRtcpSenderReport(nowUs);
 
 			if (!report)
 			{
 				continue;
 			}
 
-			senderReports.push_back(report);
-
 			// Build SDES chunk for this sender.
-			auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
-			sdesChunks.push_back(sdesChunk);
+			auto* const sdesChunk = rtpStream->GetRtcpSdesChunk();
 
-			auto* delaySinceLastRrSsrcInfo = rtpStream->GetRtcpXrDelaySinceLastRrSsrcInfo(nowUs);
+			auto* const delaySinceLastRrSsrcInfo = rtpStream->GetRtcpXrDelaySinceLastRrSsrcInfo(nowUs);
 
-			if (delaySinceLastRrSsrcInfo)
-			{
-				delaySinceLastRrSsrcInfos.push_back(delaySinceLastRrSsrcInfo);
-			}
-		}
-
-		// RTCP Compound packet buffer cannot hold the data.
-		if (!packet->Add(senderReports, sdesChunks, delaySinceLastRrSsrcInfos))
-		{
-			return false;
+			senderReportItems.push_back(
+			  {
+			    .senderReport = std::unique_ptr<RTC::RTCP::SenderReport>(report),
+			    .sdesChunk    = std::unique_ptr<RTC::RTCP::SdesChunk>(sdesChunk),
+			    .delaySinceLastRrSsrcInfo =
+			      std::unique_ptr<RTC::RTCP::DelaySinceLastRr::SsrcInfo>(delaySinceLastRrSsrcInfo),
+			  });
 		}
 
 		this->lastRtcpSentAtUs = nowUs;
 
-		return true;
+		return senderReportItems;
 	}
 
 	uint8_t Consumer::GetWorstRemoteFractionLost(uint32_t /*mappedSsrc*/) const

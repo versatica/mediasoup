@@ -209,7 +209,11 @@ namespace RTC
 
 		void SendRtpPacket(RTC::RTP::Packet* packet, std::shared_ptr<RTC::RTP::Packet>& sharedPacket);
 
-		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
+		/**
+		 * What each RTP stream of this Consumer reports in a RTCP compound packet,
+		 * if it is time to report.
+		 */
+		std::vector<RTC::RTCP::CompoundPacket::SenderReportItems> GetRtcp(int64_t nowUs);
 
 		/**
 		 * Worst remote fraction lost among the RTP streams of this Consumer.

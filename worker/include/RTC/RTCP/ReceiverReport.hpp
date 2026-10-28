@@ -193,8 +193,9 @@ namespace RTC
 				// A serialized packet can contain a maximum of 31 reports.
 				// If number of reports exceeds 31 then the required number of packets
 				// will be serialized which will take the size calculated below.
+				// NOTE: A packet with no reports still takes a header.
 				size_t size = (Packet::CommonHeaderSize + 4 /* this->ssrc */) *
-				              ((this->GetCount() / maxReportsPerPacket) + 1);
+				              (((std::max<size_t>(this->GetCount(), 1) - 1) / maxReportsPerPacket) + 1);
 				size += ReceiverReport::HeaderSize * this->GetCount();
 
 				return size;

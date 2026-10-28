@@ -500,10 +500,12 @@ namespace RTC
 			 *
 			 * @see RFC 8285.
 			 *
-			 * @throw MediaSoupTypeError - If there is no space available for given
-			 *   extensions or if given extensions are invalid/wrong.
+			 * @return `false` if the packet buffer has no room for given extensions,
+			 *   in which case the packet is not modified.
+			 *
+			 * @throw MediaSoupTypeError - If given extensions are invalid/wrong.
 			 */
-			void SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions);
+			bool SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions);
 
 			/**
 			 * Assign extension ids.

@@ -5,8 +5,8 @@
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
-#include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
@@ -184,7 +184,11 @@ namespace RTC
 		 */
 		std::optional<float> ReceiveRtcpXrDelaySinceLastRr(
 		  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
-		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
+		/**
+		 * Receiver Reports of the RTP streams of this Producer, if it is time to
+		 * report.
+		 */
+		std::vector<std::unique_ptr<RTC::RTCP::ReceiverReport>> GetRtcp(int64_t nowUs);
 		void RequestKeyFrame(uint32_t mappedSsrc);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */

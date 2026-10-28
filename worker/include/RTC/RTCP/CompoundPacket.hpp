@@ -7,7 +7,7 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
-#include <vector>
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -15,6 +15,27 @@ namespace RTC
 	{
 		class CompoundPacket
 		{
+		public:
+			/**
+			 * What a stream being sent reports in a compound packet. They must go
+			 * together in the same compound packet.
+			 */
+			struct SenderReportItems
+			{
+				/**
+				 * Never null.
+				 */
+				std::unique_ptr<SenderReport> senderReport;
+				/**
+				 * Never null.
+				 */
+				std::unique_ptr<SdesChunk> sdesChunk;
+				/**
+				 * May be null.
+				 */
+				std::unique_ptr<DelaySinceLastRr::SsrcInfo> delaySinceLastRrSsrcInfo;
+			};
+
 		public:
 			CompoundPacket() = default;
 
@@ -33,27 +54,23 @@ namespace RTC
 				return this->receiverReportPacket.GetCount();
 			}
 			void Dump(int indentation = 0);
-			// RTCP additions per Consumer (non pipe).
-			// Adds the given data and returns true if there is enough space to hold it,
-			// false otherwise.
-			bool Add(
-			  SenderReport* senderReport,
-			  SdesChunk* sdesChunk,
-			  DelaySinceLastRr::SsrcInfo* delaySinceLastRrSsrcInfo);
-			// RTCP additions per Consumer (pipe).
-			// Adds the given data and returns true if there is enough space to hold it,
-			// false otherwise.
-			bool Add(
-			  std::vector<SenderReport*>& senderReports,
-			  std::vector<SdesChunk*>& sdesChunks,
-			  std::vector<DelaySinceLastRr::SsrcInfo*>& delaySinceLastRrSsrcInfos);
-			// RTCP additions per Producer.
-			// Adds the given data and returns true if there is enough space to hold it,
-			// false otherwise.
-			bool Add(std::vector<ReceiverReport*>&, ReceiverReferenceTime*);
-			void AddSenderReport(SenderReport* report);
-			void AddReceiverReport(ReceiverReport* report);
-			void AddSdesChunk(SdesChunk* chunk);
+			/**
+			 * Add what a stream being sent reports.
+			 *
+			 * @return `true` if they fit in the packet, in which case the packet takes
+			 *   them and `items` is left empty. `false` otherwise, in which case
+			 *   neither the packet nor `items` are modified.
+			 */
+			bool AddSenderReportItems(SenderReportItems& items);
+			/**
+			 * Add the report of a stream being received, along with a Receiver
+			 * Reference Time report with given NTP time if the packet has none yet.
+			 *
+			 * @return `true` if they fit in the packet, in which case the packet takes
+			 *   the report and `report` is left empty. `false` otherwise, in which case
+			 *   neither the packet nor `report` are modified.
+			 */
+			bool AddReceiverReport(std::unique_ptr<ReceiverReport>& report, const Utils::Time::Ntp& ntp);
 			bool HasSenderReport()
 			{
 				return this->senderReportPacket.Begin() != this->senderReportPacket.End();
