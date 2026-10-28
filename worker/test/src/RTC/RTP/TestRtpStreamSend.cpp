@@ -167,9 +167,10 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		REQUIRE(dependencyDescriptor);
 
-		auto* const payloadDescriptor = RTC::RTP::Codecs::AV1::Parse(dependencyDescriptor);
+		auto* const payloadDescriptor =
+		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(dependencyDescriptor);
 		auto* const payloadDescriptorHandler =
-		  new RTC::RTP::Codecs::AV1::PayloadDescriptorHandler(payloadDescriptor);
+		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler(payloadDescriptor);
 
 		packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 	};

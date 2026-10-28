@@ -21,19 +21,12 @@ namespace RTC
 
 					void Dump(int indentation = 0) const override;
 
-					// Fields in Dependency Descriptor extension.
-					bool startOfFrame{ false };
-					bool endOfFrame{ false };
-					uint8_t spatialLayer{ 0 };
-					uint8_t temporalLayer{ 0 };
-
 					// Parsed values.
 					bool isKeyFrame{ false };
 				};
 
 			public:
-				static H264::PayloadDescriptor* Parse(
-				  const uint8_t* data, size_t len, Codecs::DependencyDescriptor* dependencyDescriptor);
+				static H264::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 				static bool IsKeyFrame(const uint8_t* data, size_t len);
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
@@ -87,7 +80,12 @@ namespace RTC
 					}
 					uint8_t GetTemporalLayer() const override
 					{
-						return this->payloadDescriptor->temporalLayer;
+						/*
+						 * The temporal layer is not parsed out of H264 packets, and a packet
+						 * carrying a Dependency Descriptor, which does tell it, is given its
+						 * payload descriptor handler instead of this one.
+						 */
+						return 0;
 					}
 					bool IsKeyFrame() const override
 					{

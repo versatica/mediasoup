@@ -216,6 +216,7 @@ common_sources = [
   'src/RTC/RTP/Codecs/VP8.cpp',
   'src/RTC/RTP/Codecs/VP9.cpp',
   'src/RTC/RTP/Codecs/DependencyDescriptor.cpp',
+  'src/RTC/RTP/Codecs/DependencyDescriptorPayloadDescriptor.cpp',
   'src/RTC/RTCP/Packet.cpp',
   'src/RTC/RTCP/CompoundPacket.cpp',
   'src/RTC/RTCP/SenderReport.cpp',
@@ -692,7 +693,7 @@ fuzzer_sources = [
   'fuzzer/src/RTC/RTP/FuzzerRetransmissionBuffer.cpp',
   'fuzzer/src/RTC/RTP/FuzzerRtpStreamSend.cpp',
   'fuzzer/src/RTC/RTP/Codecs/FuzzerOpus.cpp',
-  'fuzzer/src/RTC/RTP/Codecs/FuzzerAV1.cpp',
+
   'fuzzer/src/RTC/RTP/Codecs/FuzzerH264.cpp',
   'fuzzer/src/RTC/RTP/Codecs/FuzzerVP8.cpp',
   'fuzzer/src/RTC/RTP/Codecs/FuzzerVP9.cpp',

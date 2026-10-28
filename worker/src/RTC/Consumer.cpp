@@ -359,6 +359,7 @@ namespace RTC
 
 				params.spatialLayers  = encoding.spatialLayers;
 				params.temporalLayers = encoding.temporalLayers;
+				params.simulcast      = true;
 
 				std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext(
 				  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));

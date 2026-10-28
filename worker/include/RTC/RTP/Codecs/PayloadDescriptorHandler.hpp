@@ -96,6 +96,12 @@ namespace RTC
 					uint8_t spatialLayers{ 1 };
 					uint8_t temporalLayers{ 1 };
 					bool ksvc{ false };
+					/*
+					 * Whether the Consumer is given one of several streams rather than
+					 * layers of a single one, so that choosing the spatial layer means
+					 * choosing the stream and is not up to the payload descriptor.
+					 */
+					bool simulcast{ false };
 				};
 
 			public:
@@ -116,6 +122,15 @@ namespace RTC
 				bool IsKSvc() const
 				{
 					return this->params.ksvc;
+				}
+				/*
+				 * Whether the spatial layer is chosen by picking the stream to forward,
+				 * in which case the target spatial layer of this context is never set
+				 * and the payload descriptor must not filter on it.
+				 */
+				bool IsSimulcast() const
+				{
+					return this->params.simulcast;
 				}
 				int16_t GetTargetSpatialLayer() const
 				{

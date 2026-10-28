@@ -128,11 +128,11 @@ SCENARIO("process AV1 payload descriptor", "[rtp][codecs][av1]")
 		result.spatialLayer  = dependencyDescriptor->spatialLayer;
 		result.temporalLayer = dependencyDescriptor->temporalLayer;
 
-		auto* payloadDescriptor = RTC::RTP::Codecs::AV1::Parse(dependencyDescriptor);
+		auto* payloadDescriptor =
+		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(dependencyDescriptor);
 
-		REQUIRE(payloadDescriptor);
-
-		RTC::RTP::Codecs::AV1::PayloadDescriptorHandler payloadDescriptorHandler(payloadDescriptor);
+		RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler payloadDescriptorHandler(
+		  payloadDescriptor);
 
 		const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
 			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
