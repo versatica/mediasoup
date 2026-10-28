@@ -6,6 +6,13 @@
 
 namespace Utils
 {
+	size_t Bits::CountSetBits(uint16_t mask)
+	{
+		MS_TRACE();
+
+		return static_cast<size_t>(__builtin_popcount(mask));
+	}
+
 	uint8_t Bits::GetBitAt(const uint8_t* data, size_t len, uint32_t offset)
 	{
 		MS_TRACE();

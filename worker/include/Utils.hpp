@@ -228,10 +228,7 @@ namespace Utils
 	class Bits
 	{
 	public:
-		static size_t CountSetBits(const uint16_t mask)
-		{
-			return static_cast<size_t>(__builtin_popcount(mask));
-		}
+		static size_t CountSetBits(uint16_t mask);
 
 		/**
 		 * Value of the bit at the given offset, counting from the most significant
