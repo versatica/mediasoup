@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_CODECS_DEPENDENCY_DESCRIPTOR_HPP
 
 #include "common.hpp"
-#include "Utils.hpp" // BitStream.
+#include "Utils.hpp" // BitReader.
 #include <ankerl/unordered_dense.h>
 
 namespace RTC
@@ -157,7 +157,7 @@ namespace RTC
 				uint32_t GetRewrittenBits() const;
 
 			private:
-				Utils::BitStream bitStream;
+				Utils::BitReader bitReader;
 				// Length of the descriptor as received.
 				uint8_t length{ 0 };
 				// Whether the descriptor in the packet no longer is the one received.

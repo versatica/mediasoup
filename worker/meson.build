@@ -103,7 +103,7 @@ common_sources = [
   'src/Settings.cpp',
   'src/Shared.cpp',
   'src/Worker.cpp',
-  'src/Utils/BitStream.cpp',
+  'src/Utils/BitReader.cpp',
   'src/Utils/BitWriter.cpp',
   'src/Utils/Bits.cpp',
   'src/Utils/Crypto.cpp',

@@ -108,7 +108,7 @@ namespace RTC
 			  size_t len,
 			  std::shared_ptr<TemplateDependencyStructure> templateDependencyStructure)
 			  : templateDependencyStructure(std::move(templateDependencyStructure)),
-			    bitStream(const_cast<uint8_t*>(data), len),
+			    bitReader(data, len),
 			    length(static_cast<uint8_t>(len))
 			{
 				MS_TRACE();
@@ -210,15 +210,15 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				if (this->bitStream.GetLeftBits() < 24)
+				if (this->bitReader.GetLeftBits() < 24)
 				{
 					return false;
 				}
 
-				this->startOfFrame              = this->bitStream.GetBit();
-				this->endOfFrame                = this->bitStream.GetBit();
-				this->frameDependencyTemplateId = this->bitStream.GetBits(6);
-				this->frameNumber               = this->bitStream.GetBits(16);
+				this->startOfFrame              = this->bitReader.GetBit();
+				this->endOfFrame                = this->bitReader.GetBit();
+				this->frameDependencyTemplateId = this->bitReader.GetBits(6);
+				this->frameNumber               = this->bitReader.GetBits(16);
 
 				return true;
 			}
@@ -227,20 +227,20 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				if (this->bitStream.GetLeftBits() < 5)
+				if (this->bitReader.GetLeftBits() < 5)
 				{
 					return false;
 				}
 
 				this->extendedDescriptorFieldsPresent = true;
 
-				const bool templateDependencyStructurePresentFlag = this->bitStream.GetBit();
+				const bool templateDependencyStructurePresentFlag = this->bitReader.GetBit();
 
-				this->activeDecodeTargetsPresent           = this->bitStream.GetBit();
-				this->customDecodeTargetIndicationsPresent = this->bitStream.GetBit();
-				this->customFrameDiffsPresent              = this->bitStream.GetBit();
-				this->customChainsPresent                  = this->bitStream.GetBit();
-				this->templateDependencyStructureEndOffset = this->bitStream.GetOffset();
+				this->activeDecodeTargetsPresent           = this->bitReader.GetBit();
+				this->customDecodeTargetIndicationsPresent = this->bitReader.GetBit();
+				this->customFrameDiffsPresent              = this->bitReader.GetBit();
+				this->customChainsPresent                  = this->bitReader.GetBit();
+				this->templateDependencyStructureEndOffset = this->bitReader.GetOffset();
 
 				if (templateDependencyStructurePresentFlag)
 				{
@@ -259,7 +259,7 @@ namespace RTC
 						return false;
 					}
 
-					this->templateDependencyStructureEndOffset = this->bitStream.GetOffset();
+					this->templateDependencyStructureEndOffset = this->bitReader.GetOffset();
 
 					this->activeDecodeTargetsBitmask =
 					  (1 << this->templateDependencyStructure->decodeTargetCount) - 1;
@@ -267,13 +267,13 @@ namespace RTC
 
 				if (this->activeDecodeTargetsPresent)
 				{
-					if (this->bitStream.GetLeftBits() < this->templateDependencyStructure->decodeTargetCount)
+					if (this->bitReader.GetLeftBits() < this->templateDependencyStructure->decodeTargetCount)
 					{
 						return false;
 					}
 
 					this->activeDecodeTargetsBitmask =
-					  this->bitStream.GetBits(this->templateDependencyStructure->decodeTargetCount);
+					  this->bitReader.GetBits(this->templateDependencyStructure->decodeTargetCount);
 				}
 
 				return true;
@@ -283,13 +283,13 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				if (this->bitStream.GetLeftBits() < 11)
+				if (this->bitReader.GetLeftBits() < 11)
 				{
 					return false;
 				}
 
-				this->templateDependencyStructure->templateIdOffset  = this->bitStream.GetBits(6);
-				this->templateDependencyStructure->decodeTargetCount = this->bitStream.GetBits(5) + 1;
+				this->templateDependencyStructure->templateIdOffset  = this->bitReader.GetBits(6);
+				this->templateDependencyStructure->decodeTargetCount = this->bitReader.GetBits(5) + 1;
 
 				if (!ReadTemplateLayers())
 				{
@@ -330,12 +330,12 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				if (this->bitStream.GetLeftBits() < 1)
+				if (this->bitReader.GetLeftBits() < 1)
 				{
 					return false;
 				}
 
-				if (!this->bitStream.GetBit())
+				if (!this->bitReader.GetBit())
 				{
 					return true;
 				}
@@ -343,12 +343,12 @@ namespace RTC
 				// Render width and height, 16 bits each, of every spatial layer.
 				const uint32_t bits = (this->templateDependencyStructure->spatialLayers + 1) * 32;
 
-				if (this->bitStream.GetLeftBits() < bits)
+				if (this->bitReader.GetLeftBits() < bits)
 				{
 					return false;
 				}
 
-				this->bitStream.SkipBits(bits);
+				this->bitReader.SkipBits(bits);
 
 				return true;
 			}
@@ -404,12 +404,12 @@ namespace RTC
 				{
 					this->templateDependencyStructure->templateLayers.emplace_back(spatialId, temporalId);
 
-					if (this->bitStream.GetLeftBits() < 2)
+					if (this->bitReader.GetLeftBits() < 2)
 					{
 						return false;
 					}
 
-					nextLayerIdc = this->bitStream.GetBits(2);
+					nextLayerIdc = this->bitReader.GetBits(2);
 
 					// nextLayerIdc == 0, same spatialId and temporalId.
 					if (nextLayerIdc == 1)
@@ -440,14 +440,14 @@ namespace RTC
 					for (uint8_t dtIndex = 0; dtIndex < this->templateDependencyStructure->decodeTargetCount;
 					     ++dtIndex)
 					{
-						if (this->bitStream.GetLeftBits() < 2)
+						if (this->bitReader.GetLeftBits() < 2)
 						{
 							return false;
 						}
 
 						this->templateDependencyStructure->templateLayers[templateIndex]
 						  .decodeTargetIndications.push_back(
-						    static_cast<DecodeTargetIndication>(this->bitStream.GetBits(2)));
+						    static_cast<DecodeTargetIndication>(this->bitReader.GetBits(2)));
 					}
 				}
 
@@ -462,26 +462,26 @@ namespace RTC
 
 				for (size_t templateIndex = 0; templateIndex < templateCount; ++templateIndex)
 				{
-					if (this->bitStream.GetLeftBits() < 1)
+					if (this->bitReader.GetLeftBits() < 1)
 					{
 						return false;
 					}
 
-					bool followsFlag = this->bitStream.GetBit();
+					bool followsFlag = this->bitReader.GetBit();
 
 					while (followsFlag)
 					{
-						if (this->bitStream.GetLeftBits() < 5)
+						if (this->bitReader.GetLeftBits() < 5)
 						{
 							return false;
 						}
 
-						const uint8_t fdiff = this->bitStream.GetBits(4) + 1;
+						const uint8_t fdiff = this->bitReader.GetBits(4) + 1;
 
 						this->templateDependencyStructure->templateLayers[templateIndex].frameDiffs.push_back(
 						  fdiff);
 
-						followsFlag = this->bitStream.GetBit();
+						followsFlag = this->bitReader.GetBit();
 					}
 				}
 
@@ -493,7 +493,7 @@ namespace RTC
 				MS_TRACE();
 
 				auto chainCount =
-				  this->bitStream.ReadNs(this->templateDependencyStructure->decodeTargetCount + 1);
+				  this->bitReader.ReadNs(this->templateDependencyStructure->decodeTargetCount + 1);
 
 				if (!chainCount.has_value())
 				{
@@ -510,7 +510,7 @@ namespace RTC
 				for (uint8_t dtIndex = 0; dtIndex < this->templateDependencyStructure->decodeTargetCount;
 				     ++dtIndex)
 				{
-					auto chain = this->bitStream.ReadNs(chainCount.value());
+					auto chain = this->bitReader.ReadNs(chainCount.value());
 
 					if (!chain.has_value())
 					{
@@ -526,13 +526,13 @@ namespace RTC
 				{
 					for (uint32_t chainIndex = 0; chainIndex < chainCount; ++chainIndex)
 					{
-						if (this->bitStream.GetLeftBits() < 4)
+						if (this->bitReader.GetLeftBits() < 4)
 						{
 							return false;
 						}
 
 						this->templateDependencyStructure->templateLayers[templateIndex].frameDiffChains.push_back(
-						  this->bitStream.GetBits(4));
+						  this->bitReader.GetBits(4));
 					}
 				}
 
@@ -564,7 +564,7 @@ namespace RTC
 
 				// The custom frame dependency fields are not used, but they must be
 				// delimited so that they can be copied over verbatim when rewriting.
-				this->frameDependencyDefinitionOffset = this->bitStream.GetOffset();
+				this->frameDependencyDefinitionOffset = this->bitReader.GetOffset();
 
 				if (this->customDecodeTargetIndicationsPresent && !ReadFrameDecodeTargetIndications())
 				{
@@ -581,7 +581,7 @@ namespace RTC
 					return false;
 				}
 
-				this->frameDependencyDefinitionEndOffset = this->bitStream.GetOffset();
+				this->frameDependencyDefinitionEndOffset = this->bitReader.GetOffset();
 
 				return true;
 			}
@@ -592,12 +592,12 @@ namespace RTC
 
 				const uint32_t bits = this->templateDependencyStructure->decodeTargetCount * 2;
 
-				if (this->bitStream.GetLeftBits() < bits)
+				if (this->bitReader.GetLeftBits() < bits)
 				{
 					return false;
 				}
 
-				this->bitStream.SkipBits(bits);
+				this->bitReader.SkipBits(bits);
 
 				return true;
 			}
@@ -608,24 +608,24 @@ namespace RTC
 
 				while (true)
 				{
-					if (this->bitStream.GetLeftBits() < 2)
+					if (this->bitReader.GetLeftBits() < 2)
 					{
 						return false;
 					}
 
-					const uint32_t nextFrameDiffSize = this->bitStream.GetBits(2);
+					const uint32_t nextFrameDiffSize = this->bitReader.GetBits(2);
 
 					if (nextFrameDiffSize == 0)
 					{
 						return true;
 					}
 
-					if (this->bitStream.GetLeftBits() < 4 * nextFrameDiffSize)
+					if (this->bitReader.GetLeftBits() < 4 * nextFrameDiffSize)
 					{
 						return false;
 					}
 
-					this->bitStream.SkipBits(4 * nextFrameDiffSize);
+					this->bitReader.SkipBits(4 * nextFrameDiffSize);
 				}
 			}
 
@@ -635,12 +635,12 @@ namespace RTC
 
 				const uint32_t bits = this->templateDependencyStructure->chainCount * 8;
 
-				if (this->bitStream.GetLeftBits() < bits)
+				if (this->bitReader.GetLeftBits() < bits)
 				{
 					return false;
 				}
 
-				this->bitStream.SkipBits(bits);
+				this->bitReader.SkipBits(bits);
 
 				return true;
 			}
@@ -699,7 +699,7 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				const auto* data    = this->bitStream.GetData();
+				const auto* data    = this->bitReader.GetData();
 				const uint32_t bits = GetRewrittenBits();
 
 				if (bits > Consts::TwoBytesRtpExtensionMaxLength * 8)
@@ -769,7 +769,7 @@ namespace RTC
 
 				// NOTE: It stays marked as rewritten if it could not be written back,
 				// since that's what the packet still carries.
-				if (!packet->UpdateDependencyDescriptor(this->bitStream.GetData(), this->length))
+				if (!packet->UpdateDependencyDescriptor(this->bitReader.GetData(), this->length))
 				{
 					return;
 				}
@@ -854,7 +854,7 @@ namespace RTC
 
 				// NOTE: Only once it's written, since the packet refuses a descriptor
 				// that doesn't fit and then keeps the one it had.
-				if (!packet->UpdateDependencyDescriptor(buffer, len))
+				if (!packet->UpdateDependencyDescriptor(RewriteBuffer, len))
 				{
 					return false;
 				}
