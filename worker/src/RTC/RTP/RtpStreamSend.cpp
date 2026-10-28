@@ -15,7 +15,7 @@ namespace RTC
 		/* Static. */
 
 		// Limit max number of items in the retransmission buffer.
-		static constexpr size_t RetransmissionBufferMaxItems{ 3000 };
+		static constexpr uint16_t RetransmissionBufferMaxItems{ 3000 };
 		static constexpr int64_t DefaultRttMs{ 100 };
 		// Interval between consecutive iterations of pending retransmissions.
 		static constexpr int64_t RetransmissionIntervalMs{ 10 };
