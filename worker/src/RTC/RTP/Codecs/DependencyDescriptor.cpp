@@ -710,10 +710,10 @@ namespace RTC
 
 				std::memset(buffer, 0, len);
 
-				Utils::BitWriter writer(buffer);
+				Utils::BitWriter writer(buffer, len);
 
 				// Mandatory descriptor fields, unchanged.
-				writer.CopyBits(data, 0, 24);
+				writer.PutBitRange(data, this->length, 0, 24);
 
 				// Extended descriptor field flags, with the active decode targets one set.
 				writer.PutBit(this->isKeyFrame ? 1 : 0);
@@ -725,16 +725,22 @@ namespace RTC
 				// Template dependency structure, unchanged.
 				if (this->isKeyFrame)
 				{
-					writer.CopyBits(
-					  data, TemplateDependencyStructureOffset, this->templateDependencyStructureEndOffset);
+					writer.PutBitRange(
+					  data,
+					  this->length,
+					  TemplateDependencyStructureOffset,
+					  this->templateDependencyStructureEndOffset);
 				}
 
 				writer.PutBits(
 				  this->templateDependencyStructure->decodeTargetCount, activeDecodeTargetsBitmask);
 
 				// Custom frame dependency fields, unchanged.
-				writer.CopyBits(
-				  data, this->frameDependencyDefinitionOffset, this->frameDependencyDefinitionEndOffset);
+				writer.PutBitRange(
+				  data,
+				  this->length,
+				  this->frameDependencyDefinitionOffset,
+				  this->frameDependencyDefinitionEndOffset);
 
 				MS_ASSERT(writer.GetOffset() == bits, "wrong number of written bits");
 

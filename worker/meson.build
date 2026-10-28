@@ -105,6 +105,7 @@ common_sources = [
   'src/Worker.cpp',
   'src/Utils/BitStream.cpp',
   'src/Utils/BitWriter.cpp',
+  'src/Utils/Bits.cpp',
   'src/Utils/Crypto.cpp',
   'src/Utils/File.cpp',
   'src/Utils/IP.cpp',
