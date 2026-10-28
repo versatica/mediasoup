@@ -359,8 +359,9 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				auto& decodeTargetLayers   = this->templateDependencyStructure->decodeTargetLayers;
 				const auto& templateLayers = this->templateDependencyStructure->templateLayers;
+
+				auto& decodeTargetLayers = this->templateDependencyStructure->decodeTargetLayers;
 
 				decodeTargetLayers.clear();
 
