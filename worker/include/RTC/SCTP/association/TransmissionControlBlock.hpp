@@ -306,19 +306,19 @@ namespace RTC
 			TransmissionControlBlockContextInterface::Listener* listener;
 			AssociationListenerDeferrer& associationListenerDeferrer;
 			const SctpOptions sctpOptions;
-			SharedInterface* shared;
+			SharedInterface* const shared;
 			PacketSender& packetSender;
-			uint32_t localVerificationTag;
-			uint32_t remoteVerificationTag;
-			uint32_t localInitialTsn;
-			uint32_t remoteInitialTsn;
-			uint32_t remoteAdvertisedReceiverWindowCredit;
+			const uint32_t localVerificationTag;
+			const uint32_t remoteVerificationTag;
+			const uint32_t localInitialTsn;
+			const uint32_t remoteInitialTsn;
+			const uint32_t remoteAdvertisedReceiverWindowCredit;
 			// Nonce, used to detect reconnections.
-			uint64_t tieTag;
-			NegotiatedCapabilities negotiatedCapabilities;
+			const uint64_t tieTag;
+			const NegotiatedCapabilities negotiatedCapabilities;
 			// Max SCTP packet length.
 			const size_t maxPacketLength;
-			std::function<bool()> isAssociationEstablished;
+			const std::function<bool()> isAssociationEstablished;
 			// The data retransmission timer.
 			const std::unique_ptr<BackoffTimerHandleInterface> t3RtxTimer;
 			// Delayed ack timer, which triggers when acks should be sent (when

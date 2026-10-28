@@ -108,7 +108,7 @@ namespace
 
 	public:
 		int64_t nowUs{ InitialNowUs };
-		RTC::SCTP::SctpOptions sctpOptions;
+		const RTC::SCTP::SctpOptions sctpOptions;
 		mocks::RTC::SCTP::MockAssociationListener listener;
 		mocks::MockShared shared;
 		RTC::SCTP::Association association;

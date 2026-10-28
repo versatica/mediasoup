@@ -1,6 +1,7 @@
 #ifndef MS_RTC_WEBRTC_SERVER_HPP
 #define MS_RTC_WEBRTC_SERVER_HPP
 
+#include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/StunPacket.hpp"
@@ -125,9 +126,9 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		std::string id;
+		const std::string id;
 		// Passed by argument.
-		SharedInterface* shared{ nullptr };
+		SharedInterface* const shared;
 		// Vector of UdpSockets and TcpServers in the user given order.
 		std::vector<UdpSocketOrTcpServer> udpSocketOrTcpServers;
 		// Set of WebRtcTransports.

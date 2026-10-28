@@ -38,8 +38,8 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener{ nullptr };
-		SharedInterface* shared{ nullptr };
+		Listener* const listener;
+		SharedInterface* const shared;
 		// Others.
 		size_t frameStart{ 0 }; // Where the latest frame starts.
 	};

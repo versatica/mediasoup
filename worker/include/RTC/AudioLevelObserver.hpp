@@ -1,6 +1,7 @@
 #ifndef MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 #define MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 
+#include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "SharedInterface.hpp"
@@ -48,7 +49,7 @@ namespace RTC
 		int8_t threshold{ -80 };
 		int64_t intervalMs{ 1000 };
 		// Allocated by this.
-		TimerHandleInterface* periodicTimer{ nullptr };
+		const std::unique_ptr<TimerHandleInterface> periodicTimer;
 		// Others.
 		ankerl::unordered_dense::map<RTC::Producer*, DBovs> mapProducerDBovs;
 		bool silence{ true };

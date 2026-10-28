@@ -42,7 +42,7 @@ namespace RTC
 			bool SendPacket(Packet* packet, bool writeChecksum = true);
 
 		private:
-			Listener* listener;
+			Listener* const listener;
 			AssociationListenerInterface& associationListener;
 		};
 	} // namespace SCTP

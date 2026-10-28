@@ -23,7 +23,7 @@ public:
 		}
 
 		uv_write_t req{};
-		uint8_t* store{ nullptr };
+		uint8_t* const store;
 	};
 
 	enum class Role : uint8_t
@@ -63,7 +63,7 @@ protected:
 
 private:
 	// Allocated by this.
-	uv_pipe_t* uvHandle{ nullptr };
+	uv_pipe_t* uvHandle;
 	// Others.
 	bool closed{ false };
 	bool isClosedByPeer{ false };
@@ -71,8 +71,8 @@ private:
 
 protected:
 	// Passed by argument.
-	size_t bufferSize{ 0 };
-	UnixStreamSocketHandle::Role role;
+	const size_t bufferSize;
+	const UnixStreamSocketHandle::Role role;
 	// Allocated by this.
 	uint8_t* buffer{ nullptr };
 	// Others.

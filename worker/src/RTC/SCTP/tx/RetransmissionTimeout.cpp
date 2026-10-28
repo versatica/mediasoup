@@ -34,8 +34,7 @@ namespace RTC
 		    minRttVarianceUs(
 		      static_cast<int64_t>((sctpOptions.minRttVarianceMs * 1000) / HeuristicVarianceAdjustment)),
 		    srttUs(static_cast<double>(sctpOptions.initialRtoMs * 1000)),
-		    rtoUs(static_cast<double>(sctpOptions.initialRtoMs * 1000)),
-		    firstMeasurement(true)
+		    rtoUs(static_cast<double>(sctpOptions.initialRtoMs * 1000))
 		{
 			MS_TRACE();
 		}

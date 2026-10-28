@@ -33,9 +33,9 @@ namespace RTC
 			{
 			}
 
-			int64_t createdAtMs{ 0 };
-			uint16_t seq{ 0 };
-			uint16_t sendAtSeq{ 0 };
+			const int64_t createdAtMs;
+			const uint16_t seq;
+			const uint16_t sendAtSeq;
 			int64_t sentAtMs{ 0 };
 			uint8_t retries{ 0 };
 		};
@@ -45,6 +45,9 @@ namespace RTC
 			SEQ,
 			TIME
 		};
+
+	private:
+		static constexpr int64_t DefaultRttMs{ 100 };
 
 	public:
 		explicit NackGenerator(Listener* listener, SharedInterface* shared, int64_t sendNackDelayMs);
@@ -73,18 +76,18 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener{ nullptr };
-		SharedInterface* shared{ nullptr };
-		int64_t sendNackDelayMs{ 0 };
+		Listener* const listener;
+		SharedInterface* const shared;
+		const int64_t sendNackDelayMs;
 		// Allocated by this.
-		TimerHandleInterface* timer{ nullptr };
+		const std::unique_ptr<TimerHandleInterface> timer;
 		// Others.
 		std::map<uint16_t, NackInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> nackList;
 		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> keyFrameList;
 		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
 		bool started{ false };
 		uint16_t lastSeq{ 0 }; // Seq number of last valid packet.
-		int64_t rttMs{ 0 };
+		int64_t rttMs{ DefaultRttMs };
 	};
 } // namespace RTC
 

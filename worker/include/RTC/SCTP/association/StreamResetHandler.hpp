@@ -295,11 +295,11 @@ namespace RTC
 
 		private:
 			AssociationListenerDeferrer& associationListenerDeferrer;
-			SharedInterface* shared;
-			TransmissionControlBlockContextInterface* tcbContext;
-			DataTracker* dataTracker;
-			ReassemblyQueue* reassemblyQueue;
-			RetransmissionQueue* retransmissionQueue;
+			SharedInterface* const shared;
+			TransmissionControlBlockContextInterface* const tcbContext;
+			DataTracker* const dataTracker;
+			ReassemblyQueue* const reassemblyQueue;
+			RetransmissionQueue* const retransmissionQueue;
 			UnwrappedReConfigRequestSn::Unwrapper incomingReConfigRequestSnUnwrapper;
 			const std::unique_ptr<BackoffTimerHandleInterface> reConfigTimer;
 			// The next sequence number for outgoing stream requests.

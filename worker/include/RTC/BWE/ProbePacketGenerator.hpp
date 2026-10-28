@@ -106,7 +106,7 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Listener* listener{ nullptr };
+			Listener* const listener;
 			// Others.
 			// Bytes the packet is written over. It belongs to this instance rather
 			// than being shared, since the packet's header lives in it and the

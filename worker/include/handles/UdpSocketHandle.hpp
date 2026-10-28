@@ -25,7 +25,7 @@ public:
 		}
 
 		uv_udp_send_t req{};
-		uint8_t* store{ nullptr };
+		uint8_t* const store;
 		onSendCallback cb;
 	};
 
@@ -96,7 +96,7 @@ protected:
 
 private:
 	// Allocated by this (may be passed by argument).
-	uv_udp_t* uvHandle{ nullptr };
+	uv_udp_t* const uvHandle;
 	// Others.
 	bool closed{ false };
 	size_t recvBytes{ 0 };

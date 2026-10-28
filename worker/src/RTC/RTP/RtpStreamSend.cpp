@@ -58,7 +58,7 @@ namespace RTC
 					}
 				}
 
-				this->retransmissionBuffer = new RTC::RTP::RetransmissionBuffer(
+				this->retransmissionBuffer = std::make_unique<RTC::RTP::RetransmissionBuffer>(
 				  RetransmissionBufferMaxItems, maxRetransmissionDelayMs, params.clockRate);
 			}
 		}
@@ -66,10 +66,6 @@ namespace RTC
 		RtpStreamSend::~RtpStreamSend()
 		{
 			MS_TRACE();
-
-			// Delete retransmission buffer.
-			delete this->retransmissionBuffer;
-			this->retransmissionBuffer = nullptr;
 		}
 
 		flatbuffers::Offset<FBS::RtpStream::Stats> RtpStreamSend::FillBufferStats(

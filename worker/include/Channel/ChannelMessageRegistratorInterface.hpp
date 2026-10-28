@@ -1,6 +1,7 @@
 #ifndef MS_CHANNEL_MESSAGE_REGISTRATOR_INTERFACE_HPP
 #define MS_CHANNEL_MESSAGE_REGISTRATOR_INTERFACE_HPP
 
+#include "common.hpp"
 // TODO: We should have a ChannelSocketInterface class instead.
 #include "Channel/ChannelSocket.hpp"
 #include <string>

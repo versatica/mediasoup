@@ -96,7 +96,7 @@ namespace RTC
 			void OnAssociationLifecycleMessageEnd(uint64_t lifecycleId) override;
 
 		private:
-			AssociationListenerInterface* innerListener;
+			AssociationListenerInterface* const innerListener;
 			bool ready{ false };
 			std::vector<std::pair<Callback, CallbackData>> deferredCallbacks;
 		};

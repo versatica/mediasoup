@@ -1,6 +1,7 @@
 #ifndef MS_KEY_FRAME_REQUEST_MANAGER_HPP
 #define MS_KEY_FRAME_REQUEST_MANAGER_HPP
 
+#include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include "SharedInterface.hpp"
 #include <ankerl/unordered_dense.h>
@@ -45,9 +46,9 @@ namespace RTC
 		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
-		Listener* listener{ nullptr };
-		uint32_t ssrc;
-		TimerHandleInterface* timer{ nullptr };
+		Listener* const listener;
+		const uint32_t ssrc;
+		const std::unique_ptr<TimerHandleInterface> timer;
 		bool retryOnTimeout{ true };
 	};
 
@@ -85,9 +86,9 @@ namespace RTC
 		void OnTimer(TimerHandleInterface* timer) override;
 
 	private:
-		Listener* listener{ nullptr };
-		uint32_t ssrc;
-		TimerHandleInterface* timer{ nullptr };
+		Listener* const listener;
+		const uint32_t ssrc;
+		const std::unique_ptr<TimerHandleInterface> timer;
 		bool keyFrameRequested{ false };
 	};
 
@@ -122,9 +123,9 @@ namespace RTC
 		void OnKeyFrameDelayTimeout(KeyFrameRequestDelayer* keyFrameRequestDelayer) override;
 
 	private:
-		Listener* listener{ nullptr };
-		SharedInterface* shared{ nullptr };
-		int64_t keyFrameRequestDelayMs{ 0 }; // 0 means disabled.
+		Listener* const listener;
+		SharedInterface* const shared;
+		const int64_t keyFrameRequestDelayMs; // 0 means disabled.
 		ankerl::unordered_dense::map<uint32_t, PendingKeyFrameInfo*> mapSsrcPendingKeyFrameInfo;
 		ankerl::unordered_dense::map<uint32_t, KeyFrameRequestDelayer*> mapSsrcKeyFrameRequestDelayer;
 	};

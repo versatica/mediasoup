@@ -560,7 +560,7 @@ namespace RTC
 			// Listener. It's a `AssociationListenerDeferrer` which implements
 			// `AssociationListenerInterface`.
 			AssociationListenerDeferrer associationListenerDeferrer;
-			SharedInterface* shared;
+			SharedInterface* const shared;
 			// SCTP association internal state.
 			State state{ State::NEW };
 			// Packet sender.
@@ -585,10 +585,10 @@ namespace RTC
 			// Max SCTP packet length.
 			const size_t maxPacketLength;
 			// Whether this is DataChannel based SCTP.
-			bool isDataChannel;
+			const bool isDataChannel;
 			// Whether `MayConnect()` should be called when SCTP data is received.
 			// See the constructor for details.
-			bool mayConnectOnReceivedSctpData;
+			const bool mayConnectOnReceivedSctpData;
 			// Per-association random secret key used to authenticate the State Cookies
 			// we generate when `SctpOptions::requireAuthenticatedCookie` is enabled.
 			uint8_t stateCookieSecret[Association::StateCookieSecretLength]{};

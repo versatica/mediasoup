@@ -205,13 +205,12 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener{ nullptr };
-		SharedInterface* shared{ nullptr };
+		Listener* const listener;
 		// Allocated by this.
-		SSL* ssl{ nullptr };
+		SSL* ssl;
 		BIO* sslBioFromNetwork{ nullptr }; // The BIO from which ssl reads.
 		BIO* sslBioToNetwork{ nullptr };   // The BIO in which ssl writes.
-		TimerHandleInterface* timer{ nullptr };
+		const std::unique_ptr<TimerHandleInterface> timer;
 		// Others.
 		DtlsState state{ DtlsState::NEW };
 		std::optional<Role> localRole;

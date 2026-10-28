@@ -257,8 +257,8 @@ namespace RTC
 
 		protected:
 			// Given as argument.
-			RTP::RtpStream::Listener* listener{ nullptr };
-			SharedInterface* shared{ nullptr };
+			RTP::RtpStream::Listener* const listener;
+			SharedInterface* const shared;
 			Params params;
 			// Others.
 			//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
@@ -305,11 +305,11 @@ namespace RTC
 			// Round trip time measured on this stream (ms).
 			std::optional<float> rttMs;
 			// Instance of RtxStream.
-			RTP::RtxStream* rtxStream{ nullptr };
+			std::unique_ptr<RTP::RtxStream> rtxStream;
 
 		private:
 			// Score related.
-			uint8_t score{ 0 };
+			uint8_t score;
 			std::vector<uint8_t> scores;
 			// Whether at least a RTP packet has been received.
 			bool started{ false };

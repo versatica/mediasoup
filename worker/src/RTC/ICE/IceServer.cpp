@@ -143,10 +143,6 @@ namespace RTC
 
 			// Unset selected tuple.
 			this->selectedTuple = nullptr;
-
-			// Delete the ICE consent check timer.
-			delete this->consentCheckTimer;
-			this->consentCheckTimer = nullptr;
 		}
 
 		void IceServer::Dump(int indentation) const
@@ -937,7 +933,7 @@ namespace RTC
 			// Create the ICE consent check timer if it doesn't exist.
 			if (!this->consentCheckTimer)
 			{
-				this->consentCheckTimer = this->shared->CreateTimer(this, "ice-server-consent-check");
+				this->consentCheckTimer.reset(this->shared->CreateTimer(this, "ice-server-consent-check"));
 			}
 
 			this->consentCheckTimer->Start(this->consentTimeoutMs);
@@ -968,7 +964,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (timer == this->consentCheckTimer)
+			if (timer == this->consentCheckTimer.get())
 			{
 				MS_ASSERT(IsConsentCheckSupported(), "ICE consent check not supported");
 

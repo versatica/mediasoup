@@ -65,8 +65,8 @@ namespace RTC
 		private:
 			AssociationListenerDeferrer& associationListenerDeferrer;
 			const SctpOptions sctpOptions;
-			SharedInterface* shared;
-			TransmissionControlBlockContextInterface* tcbContext;
+			SharedInterface* const shared;
+			TransmissionControlBlockContextInterface* const tcbContext;
 			// The time for a connection to be idle before a heartbeat is sent.
 			const int64_t intervalDurationMs;
 			// Adding RTT to the duration will add some jitter, which is good in

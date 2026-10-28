@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/BWE/BweTypes.hpp"
 #include "RTC/BWE/LossBasedController.hpp"
+#include "RTC/Consts.hpp"
 #include <deque>
 #include <vector>
 
@@ -282,8 +283,8 @@ namespace RTC
 			int64_t lostPacketsSinceLastLossUpdate{ 0 };
 			int64_t expectedPacketsSinceLastLossUpdate{ 0 };
 			int64_t currentTarget{ 0 };
-			int64_t minBitrateConfigured{ 0 };
-			int64_t maxBitrateConfigured{ 0 };
+			int64_t minBitrateConfigured{ Consts::BweMinBitrate };
+			int64_t maxBitrateConfigured{ Consts::BweMaxBitrate };
 			// Instant of the first loss report ever received, which is when the start
 			// phase begins.
 			std::optional<int64_t> firstLossReportAtUs;

@@ -79,6 +79,7 @@ namespace RTC
 			  const std::string& usernameFragment,
 			  const std::string& password,
 			  uint8_t consentTimeoutSec);
+
 			~IceServer() override;
 
 		public:
@@ -166,8 +167,8 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Listener* listener{ nullptr };
-			SharedInterface* shared{ nullptr };
+			Listener* const listener;
+			SharedInterface* const shared;
 			std::string usernameFragment;
 			std::string password;
 			int64_t consentTimeoutMs{ 30000 };
@@ -178,7 +179,7 @@ namespace RTC
 			uint32_t remoteNomination{ 0 };
 			std::list<RTC::TransportTuple> tuples;
 			RTC::TransportTuple* selectedTuple{ nullptr };
-			TimerHandleInterface* consentCheckTimer{ nullptr };
+			std::unique_ptr<TimerHandleInterface> consentCheckTimer;
 			bool isRemovingTuples{ false };
 		};
 	} // namespace ICE

@@ -13,18 +13,14 @@ BackoffTimerHandle::BackoffTimerHandle(BackoffTimerHandleOptions options)
     baseTimeoutMs(options.baseTimeoutMs),
     backoffAlgorithm(options.backoffAlgorithm),
     maxBackoffTimeoutMs(options.maxBackoffTimeoutMs),
-    maxRestarts(options.maxRestarts)
+    maxRestarts(options.maxRestarts),
+    timer(new TimerHandle(this, this->label))
 {
 	MS_TRACE();
 
 	if (!this->listener)
 	{
 		MS_THROW_TYPE_ERROR("[%s] options.listener must be given", this->label.c_str());
-	}
-
-	if (this->label.empty())
-	{
-		MS_THROW_TYPE_ERROR("options.label must be given");
 	}
 
 	if (this->baseTimeoutMs < 0)
@@ -43,16 +39,11 @@ BackoffTimerHandle::BackoffTimerHandle(BackoffTimerHandleOptions options)
 		  this->baseTimeoutMs,
 		  BackoffTimerHandleInterface::MaxTimeoutMs);
 	}
-
-	this->timer = new TimerHandle(this, this->label);
 }
 
 BackoffTimerHandle::~BackoffTimerHandle()
 {
 	MS_TRACE();
-
-	delete this->timer;
-	this->timer = nullptr;
 }
 
 void BackoffTimerHandle::Start()

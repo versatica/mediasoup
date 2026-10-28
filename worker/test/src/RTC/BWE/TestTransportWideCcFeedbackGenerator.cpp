@@ -16,15 +16,15 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 {
 	struct TestInput
 	{
-		uint16_t wideSeqNumber;
-		int64_t arrivalTimeUs;
+		const uint16_t wideSeqNumber;
+		const int64_t arrivalTimeUs;
 	};
 
 	struct TestPacketStatus
 	{
-		uint16_t wideSeqNumber;
-		bool received;
-		int64_t timestampUs;
+		const uint16_t wideSeqNumber;
+		const bool received;
+		const int64_t timestampUs;
 	};
 
 	using TestResults = std::deque<std::vector<TestPacketStatus>>;

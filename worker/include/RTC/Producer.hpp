@@ -235,17 +235,17 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id;
+		const std::string id;
 
 	private:
 		// Passed by argument.
-		SharedInterface* shared{ nullptr };
-		RTC::Producer::Listener* listener{ nullptr };
+		SharedInterface* const shared;
+		RTC::Producer::Listener* const listener;
 		// Allocated by this.
 		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapSsrcRtpStream;
-		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
+		const std::unique_ptr<RTC::KeyFrameRequestManager> keyFrameRequestManager;
 		// Others.
-		RTC::Media::Kind kind;
+		const RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
 		RtpMapping rtpMapping;
@@ -255,8 +255,8 @@ namespace RTC
 		ankerl::unordered_dense::map<RTC::RTP::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
-		bool paused{ false };
-		bool enableMediasoupPacketIdHeaderExtension{ false };
+		bool paused;
+		const bool enableMediasoupPacketIdHeaderExtension;
 		RTC::RTP::Packet* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
 		int64_t lastRtcpSentAtUs{ 0 };

@@ -116,15 +116,15 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id;
-		std::string dataProducerId;
+		const std::string id;
+		const std::string dataProducerId;
 
 	private:
 		// Passed by argument.
-		SharedInterface* shared{ nullptr };
-		RTC::DataConsumer::Listener* listener{ nullptr };
-		size_t maxMessageSize{ 0 };
-		bool pipe{ false };
+		SharedInterface* const shared;
+		RTC::DataConsumer::Listener* const listener;
+		const size_t maxMessageSize;
+		const bool pipe;
 		// Others.
 		Type type;
 		RTC::SctpStreamParameters sctpStreamParameters;
@@ -132,7 +132,7 @@ namespace RTC
 		std::string protocol;
 		ankerl::unordered_dense::set<uint16_t> subchannels;
 		bool sctpAssociationClosed{ false };
-		bool paused{ false };
+		bool paused;
 		bool dataProducerPaused{ false };
 		bool dataProducerClosed{ false };
 		size_t messagesSent{ 0 };
