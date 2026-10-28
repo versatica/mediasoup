@@ -263,6 +263,28 @@ namespace RTC
 					context->SetCurrentTemporalLayer(tmpTemporalLayer);
 				}
 
+				/*
+				 * Filter frames that the decode target being forwarded does not contain,
+				 * which the layer comparisons above cannot tell since they only know that
+				 * a frame is not above the wanted layers.
+				 *
+				 * NOTE: This comes after the current layers are updated because the layer
+				 * switching above watches every frame of the stream, including those that
+				 * are not forwarded. In K-SVC the switch points of a decode target may
+				 * well be frames that the endpoint is never sent.
+				 */
+				const bool dtiFilterApplies =
+				  filterSpatialLayers && tmpSpatialLayer >= 0 && tmpTemporalLayer >= 0;
+				const bool presentInDecodeTarget =
+				  !dtiFilterApplies ||
+				  this->payloadDescriptor->IsPresentInDecodeTarget(
+				    static_cast<uint8_t>(tmpSpatialLayer), static_cast<uint8_t>(tmpTemporalLayer));
+
+				if (!presentInDecodeTarget)
+				{
+					return false;
+				}
+
 				// Tell the endpoint which decode targets it must expect, since the ones
 				// above the current layers are filtered out on purpose and it would
 				// otherwise take their absence for loss.

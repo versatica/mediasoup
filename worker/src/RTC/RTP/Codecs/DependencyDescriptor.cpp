@@ -781,20 +781,120 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				const auto& decodeTargetLayers = this->templateDependencyStructure->decodeTargetLayers;
+				const auto& decodeTargetLayers   = this->templateDependencyStructure->decodeTargetLayers;
+				const auto forwardedDecodeTarget = GetDecodeTarget(maxSpatialLayer, maxTemporalLayer);
+
 				uint32_t bitmask{ 0 };
 
 				for (size_t decodeTarget{ 0 }; decodeTarget < decodeTargetLayers.size(); ++decodeTarget)
 				{
 					const auto& decodeTargetLayer = decodeTargetLayers[decodeTarget];
 
-					if (decodeTargetLayer.spatialLayer <= maxSpatialLayer && decodeTargetLayer.temporalLayer <= maxTemporalLayer)
+					if (decodeTargetLayer.spatialLayer > maxSpatialLayer || decodeTargetLayer.temporalLayer > maxTemporalLayer)
 					{
-						bitmask |= (uint32_t{ 1 } << decodeTarget);
+						continue;
 					}
+
+					/*
+					 * NOTE: In full SVC every lower decode target needs a subset of the
+					 * frames of the higher ones, so all of them stay active. In K-SVC the
+					 * lower spatial layers are not needed and hence not sent, so their
+					 * decode targets are dropped from the bitmask.
+					 */
+					if (!IsDecodeTargetActive(decodeTarget, forwardedDecodeTarget))
+					{
+						continue;
+					}
+
+					bitmask |= (uint32_t{ 1 } << decodeTarget);
 				}
 
 				return bitmask;
+			}
+
+			/*
+			 * Index of the decode target formed by the given spatial and temporal
+			 * layer, or the decode target count if the stream has no such one.
+			 */
+			size_t DependencyDescriptor::GetDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const
+			{
+				MS_TRACE();
+
+				const auto& decodeTargetLayers = this->templateDependencyStructure->decodeTargetLayers;
+
+				for (size_t decodeTarget{ 0 }; decodeTarget < decodeTargetLayers.size(); ++decodeTarget)
+				{
+					const auto& decodeTargetLayer = decodeTargetLayers[decodeTarget];
+
+					if (decodeTargetLayer.spatialLayer == spatialLayer && decodeTargetLayer.temporalLayer == temporalLayer)
+					{
+						return decodeTarget;
+					}
+				}
+
+				return decodeTargetLayers.size();
+			}
+
+			/*
+			 * Whether the given decode target is still being sent when only the frames
+			 * of the forwarded one are, this is, whether every frame it needs is also
+			 * needed by that one.
+			 */
+			bool DependencyDescriptor::IsDecodeTargetActive(
+			  size_t decodeTarget, size_t forwardedDecodeTarget) const
+			{
+				MS_TRACE();
+
+				const auto& templateLayers = this->templateDependencyStructure->templateLayers;
+
+				// Nothing is known about a decode target the stream does not have, so no
+				// decode target is dropped from the bitmask.
+				if (forwardedDecodeTarget >= this->templateDependencyStructure->decodeTargetCount)
+				{
+					return true;
+				}
+
+				for (const auto& templateLayer : templateLayers)
+				{
+					const auto& decodeTargetIndications = templateLayer.decodeTargetIndications;
+
+					if (
+					  decodeTarget >= decodeTargetIndications.size() ||
+					  forwardedDecodeTarget >= decodeTargetIndications.size())
+					{
+						continue;
+					}
+
+					const bool needed =
+					  decodeTargetIndications[decodeTarget] != DecodeTargetIndication::NOT_PRESENT;
+					const bool sent =
+					  decodeTargetIndications[forwardedDecodeTarget] != DecodeTargetIndication::NOT_PRESENT;
+
+					if (needed && !sent)
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			bool DependencyDescriptor::IsPresentInDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const
+			{
+				MS_TRACE();
+
+				const auto decodeTarget = GetDecodeTarget(spatialLayer, temporalLayer);
+				const auto& decodeTargetIndications =
+				  this->templateDependencyStructure->templateLayers[this->templateId].decodeTargetIndications;
+
+				// The stream has no such decode target, so nothing can be told about this
+				// frame and it is kept.
+				if (decodeTarget >= decodeTargetIndications.size())
+				{
+					return true;
+				}
+
+				return decodeTargetIndications[decodeTarget] != DecodeTargetIndication::NOT_PRESENT;
 			}
 
 			/*

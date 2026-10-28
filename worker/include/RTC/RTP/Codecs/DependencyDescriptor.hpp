@@ -136,8 +136,23 @@ namespace RTC
 				 */
 				uint8_t Write(uint32_t activeDecodeTargetsBitmask, uint8_t* buffer) const;
 				bool IsSwitchPointForTemporalLayer(uint8_t temporalLayer) const;
+				/**
+				 * Whether this frame belongs to the decode target formed by the given
+				 * spatial and temporal layer, this is, whether an endpoint decoding just
+				 * that decode target needs it.
+				 *
+				 * NOTE: A frame whose decode target indication for it is "not present" is
+				 * not part of it. That is how K-SVC differs from full SVC: there the
+				 * lower spatial layers of a delta picture are not referenced by the higher
+				 * ones, so an endpoint on a higher layer does not need them. Key frames,
+				 * which is where inter layer prediction happens, are present in every
+				 * decode target and hence always kept.
+				 */
+				bool IsPresentInDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const;
 
 			private:
+				size_t GetDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const;
+				bool IsDecodeTargetActive(size_t decodeTarget, size_t forwardedDecodeTarget) const;
 				uint8_t GetSpatialLayer() const;
 				uint8_t GetTemporalLayer() const;
 
