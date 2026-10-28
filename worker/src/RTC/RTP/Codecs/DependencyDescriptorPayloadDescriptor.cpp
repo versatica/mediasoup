@@ -171,7 +171,9 @@ namespace RTC
 				// Downgrade current spatial layer if needed.
 				else if (filterSpatialLayers && context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 				{
-					if (packetSpatialLayer == context->GetTargetSpatialLayer() && this->payloadDescriptor->endOfFrame)
+					if (
+					  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
+					  this->payloadDescriptor->endOfFrame)
 					{
 						MS_DEBUG_DEV(
 						  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
@@ -187,7 +189,7 @@ namespace RTC
 				}
 
 				// Filter spatial layers higher than current one.
-				if (filterSpatialLayers && packetSpatialLayer > tmpSpatialLayer)
+				if (filterSpatialLayers && std::cmp_greater(packetSpatialLayer, tmpSpatialLayer))
 				{
 					return false;
 				}
@@ -222,7 +224,9 @@ namespace RTC
 				// Downgrade current temporal layer if needed.
 				else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
 				{
-					if (packetTemporalLayer == context->GetTargetTemporalLayer() && this->payloadDescriptor->endOfFrame)
+					if (
+					  std::cmp_equal(packetTemporalLayer, context->GetTargetTemporalLayer()) &&
+					  this->payloadDescriptor->endOfFrame)
 					{
 						MS_DEBUG_DEV(
 						  "downgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
@@ -237,14 +241,14 @@ namespace RTC
 				}
 
 				// Filter temporal layers higher than current one.
-				if (packetTemporalLayer > tmpTemporalLayer)
+				if (std::cmp_greater(packetTemporalLayer, tmpTemporalLayer))
 				{
 					return false;
 				}
 
 				// Set marker bit if needed.
 				if (
-				  (!filterSpatialLayers || packetSpatialLayer == tmpSpatialLayer) &&
+				  (!filterSpatialLayers || std::cmp_equal(packetSpatialLayer, tmpSpatialLayer)) &&
 				  this->payloadDescriptor->endOfFrame)
 				{
 					marker = true;
