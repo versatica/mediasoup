@@ -136,18 +136,18 @@ namespace RTC
 				 * a simulcast Consumer. There a stream switch brings frame numbers of a
 				 * different encoder, so they do not order against the ones seen so far.
 				 */
-				const bool isOldPacket = filterSpatialLayers && context->IsOldFrameNumber(frameNumber);
+				const bool isOldPacket = filterSpatialLayers && context->IsOldFrameId(frameNumber);
 
 				auto packetSpatialLayer  = GetSpatialLayer();
 				auto packetTemporalLayer = GetTemporalLayer();
-				auto tmpSpatialLayer     = isOldPacket ? context->GetSpatialLayerForPictureId(frameNumber)
+				auto tmpSpatialLayer     = isOldPacket ? context->GetSpatialLayerForFrameId(frameNumber)
 				                                       : context->GetCurrentSpatialLayer();
-				auto tmpTemporalLayer    = isOldPacket ? context->GetTemporalLayerForPictureId(frameNumber)
+				auto tmpTemporalLayer    = isOldPacket ? context->GetTemporalLayerForFrameId(frameNumber)
 				                                       : context->GetCurrentTemporalLayer();
 
 				if (!isOldPacket)
 				{
-					context->UpdateMaxFrameNumber(frameNumber);
+					context->UpdateMaxFrameId(frameNumber);
 				}
 
 				// If packet temporal layer is higher than the maximum announced one, drop

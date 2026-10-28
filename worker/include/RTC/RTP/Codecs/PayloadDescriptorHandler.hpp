@@ -27,29 +27,29 @@ namespace RTC
 				virtual void Dump(int indentation = 0) const = 0;
 			};
 
-			class PictureIdList
+			class FrameIdList
 			{
-				static constexpr uint16_t MaxCurrentLayerPictureIdNum{ 1000 };
+				static constexpr uint16_t MaxCurrentLayerFrameIdNum{ 1000 };
 
 			public:
-				explicit PictureIdList() = default;
+				explicit FrameIdList() = default;
 
-				~PictureIdList()
+				~FrameIdList()
 				{
 					this->layerChanges.clear();
 				}
 
-				void Push(uint16_t pictureId, int16_t layer)
+				void Push(uint16_t frameId, int16_t layer)
 				{
 					for (const auto& it : this->layerChanges)
 					{
-						// Layers can be changed only with ordered pictureId values.
-						// If pictureId is lower than the previous one, then it has rolled over the max value.
-						uint16_t diff = pictureId > it.first
-						                  ? pictureId - it.first
-						                  : pictureId + RTC::SeqManager<uint16_t, 15>::MaxValue - it.first;
+						// Layers can be changed only with ordered frameId values.
+						// If frameId is lower than the previous one, then it has rolled over the max value.
+						uint16_t diff = frameId > it.first
+						                  ? frameId - it.first
+						                  : frameId + RTC::SeqManager<uint16_t, 15>::MaxValue - it.first;
 
-						if (diff > MaxCurrentLayerPictureIdNum)
+						if (diff > MaxCurrentLayerFrameIdNum)
 						{
 							this->layerChanges.pop_front();
 						}
@@ -59,10 +59,10 @@ namespace RTC
 						}
 					}
 
-					this->layerChanges.emplace_back(pictureId, layer);
+					this->layerChanges.emplace_back(frameId, layer);
 				}
 
-				int16_t GetLayer(uint16_t pictureId) const
+				int16_t GetLayer(uint16_t frameId) const
 				{
 					if (this->layerChanges.size() <= 1)
 					{
@@ -71,7 +71,7 @@ namespace RTC
 
 					for (auto it = std::next(this->layerChanges.begin()); it != this->layerChanges.end(); ++it)
 					{
-						if (RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(it->first, pictureId))
+						if (RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(it->first, frameId))
 						{
 							return std::prev(it)->second;
 						}
@@ -82,7 +82,7 @@ namespace RTC
 
 			private:
 				// List populated with the spatial/temporal layer changes
-				// indexed by the corresponding pictureId.
+				// indexed by the corresponding frameId.
 				std::deque<std::pair<uint16_t, int16_t>> layerChanges;
 			};
 
@@ -181,29 +181,29 @@ namespace RTC
 					this->ignoreDtx = ignoreDtx;
 				}
 				virtual void SyncRequired() = 0;
-				void SetCurrentSpatialLayer(int16_t spatialLayer, uint16_t pictureId)
+				void SetCurrentSpatialLayer(int16_t spatialLayer, uint16_t frameId)
 				{
 					if (this->currentLayers.spatial == spatialLayer)
 					{
 						return;
 					}
 
-					this->spatialLayerPictureIdList.Push(pictureId, spatialLayer);
+					this->spatialLayerFrameIdList.Push(frameId, spatialLayer);
 					this->currentLayers.spatial = spatialLayer;
 				}
-				void SetCurrentTemporalLayer(int16_t temporalLayer, uint16_t pictureId)
+				void SetCurrentTemporalLayer(int16_t temporalLayer, uint16_t frameId)
 				{
 					if (this->currentLayers.temporal == temporalLayer)
 					{
 						return;
 					}
 
-					this->temporalLayerPictureIdList.Push(pictureId, temporalLayer);
+					this->temporalLayerFrameIdList.Push(frameId, temporalLayer);
 					this->currentLayers.temporal = temporalLayer;
 				}
-				int16_t GetSpatialLayerForPictureId(uint16_t pictureId) const
+				int16_t GetSpatialLayerForFrameId(uint16_t frameId) const
 				{
-					int16_t layer = this->spatialLayerPictureIdList.GetLayer(pictureId);
+					int16_t layer = this->spatialLayerFrameIdList.GetLayer(frameId);
 
 					if (layer > -1)
 					{
@@ -212,9 +212,9 @@ namespace RTC
 
 					return this->currentLayers.spatial;
 				}
-				int16_t GetTemporalLayerForPictureId(uint16_t pictureId) const
+				int16_t GetTemporalLayerForFrameId(uint16_t frameId) const
 				{
-					int16_t layer = this->temporalLayerPictureIdList.GetLayer(pictureId);
+					int16_t layer = this->temporalLayerFrameIdList.GetLayer(frameId);
 
 					if (layer > -1)
 					{
@@ -224,26 +224,26 @@ namespace RTC
 					return this->currentLayers.temporal;
 				}
 				/**
-				 * Whether the given frame number is older than the newest one seen, this
-				 * is, whether the packet carrying it was reordered and the current layers
-				 * are no longer the ones its frame was judged against.
+				 * Whether the given frame id is older than the newest one seen, this is,
+				 * whether the packet carrying it was reordered and the current layers are
+				 * no longer the ones its frame was judged against.
 				 *
-				 * NOTE: Frame numbers come from the Dependency Descriptor. Codecs that
-				 * tell their pictures apart by other means use the `PictureIdList` above
-				 * with whatever identifier they have.
+				 * NOTE: Each codec gives the frame id it has. The Dependency Descriptor
+				 * numbers every frame, so in SVC the spatial layers of a picture get one
+				 * each, while VP8 and VP9 number the whole picture.
 				 */
-				bool IsOldFrameNumber(uint16_t frameNumber) const
+				bool IsOldFrameId(uint16_t frameId) const
 				{
-					return this->maxFrameNumber.has_value() && RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
-					                                             frameNumber, this->maxFrameNumber.value());
+					return this->maxFrameId.has_value() &&
+					       RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(frameId, this->maxFrameId.value());
 				}
-				void UpdateMaxFrameNumber(uint16_t frameNumber)
+				void UpdateMaxFrameId(uint16_t frameId)
 				{
 					if (
-					  !this->maxFrameNumber.has_value() || RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(
-					                                         frameNumber, this->maxFrameNumber.value()))
+					  !this->maxFrameId.has_value() ||
+					  RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(frameId, this->maxFrameId.value()))
 					{
-						this->maxFrameNumber = frameNumber;
+						this->maxFrameId = frameId;
 					}
 				}
 
@@ -253,12 +253,12 @@ namespace RTC
 				RTC::ConsumerTypes::VideoLayers currentLayers;
 				bool ignoreDtx{ false };
 				// Newest frame number seen, to tell reordered packets apart.
-				std::optional<uint16_t> maxFrameNumber{ std::nullopt };
+				std::optional<uint16_t> maxFrameId{ std::nullopt };
 
 			private:
-				// List of spatial/temporal layer changes indexed by the corresponding pictureId.
-				PictureIdList spatialLayerPictureIdList;
-				PictureIdList temporalLayerPictureIdList;
+				// List of spatial/temporal layer changes indexed by the corresponding frameId.
+				FrameIdList spatialLayerFrameIdList;
+				FrameIdList temporalLayerFrameIdList;
 			};
 
 			class PayloadDescriptorHandler

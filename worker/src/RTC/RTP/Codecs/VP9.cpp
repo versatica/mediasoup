@@ -304,14 +304,14 @@ namespace RTC
 				// * higher than current one
 				// * different than the current one when KSVC is enabled and this is not a keyframe
 				// (interframe p bit = 1)
-				const uint16_t spatialLayerForPictureId =
-				  isOldPacket ? context->GetSpatialLayerForPictureId(this->payloadDescriptor->pictureId)
+				const uint16_t spatialLayerForFrameId =
+				  isOldPacket ? context->GetSpatialLayerForFrameId(this->payloadDescriptor->pictureId)
 					            : tmpSpatialLayer;
 
 				if (
-				  packetSpatialLayer > spatialLayerForPictureId ||
+				  packetSpatialLayer > spatialLayerForFrameId ||
 				  (context->IsKSvc() && this->payloadDescriptor->p &&
-					 packetSpatialLayer != spatialLayerForPictureId))
+					 packetSpatialLayer != spatialLayerForFrameId))
 				{
 					return false;
 				}
@@ -357,11 +357,11 @@ namespace RTC
 				}
 
 				// Filter temporal layers higher than current one.
-				const uint16_t temporalLayerForPictureId =
-				  isOldPacket ? context->GetTemporalLayerForPictureId(this->payloadDescriptor->pictureId)
+				const uint16_t temporalLayerForFrameId =
+				  isOldPacket ? context->GetTemporalLayerForFrameId(this->payloadDescriptor->pictureId)
 					            : tmpTemporalLayer;
 
-				if (packetTemporalLayer > temporalLayerForPictureId)
+				if (packetTemporalLayer > temporalLayerForFrameId)
 				{
 					return false;
 				}
