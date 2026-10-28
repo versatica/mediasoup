@@ -180,7 +180,19 @@ namespace RTC
 				{
 					this->ignoreDtx = ignoreDtx;
 				}
-				virtual void SyncRequired() = 0;
+				/**
+				 * Tells that the packet flow of the Consumer restarts here, this is, that
+				 * it begins, resumes or is given another stream, so that what is known
+				 * about the packets seen so far no longer holds.
+				 */
+				void SyncRequired()
+				{
+					// The frames seen so far say nothing about the ones to come, which may
+					// even be numbered by another encoder.
+					this->maxFrameId.reset();
+
+					this->syncRequired = true;
+				}
 				void SetCurrentSpatialLayer(int16_t spatialLayer, uint16_t frameId)
 				{
 					if (this->currentLayers.spatial == spatialLayer)
@@ -246,6 +258,10 @@ namespace RTC
 						this->maxFrameId = frameId;
 					}
 				}
+
+			public:
+				// Whether the codec has yet to catch up with the restart above.
+				bool syncRequired{ false };
 
 			private:
 				const Params params;

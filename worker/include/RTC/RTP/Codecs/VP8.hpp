@@ -121,18 +121,9 @@ namespace RTC
 					{
 					}
 					~EncodingContext() override = default;
-
-					/* Pure virtual methods inherited from Codecs::EncodingContext. */
-				public:
-					void SyncRequired() override
-					{
-						this->syncRequired = true;
-					}
-
 				public:
 					RTC::SeqManager<uint16_t, 15> pictureIdManager;
 					RTC::SeqManager<uint8_t> tl0PictureIndexManager;
-					bool syncRequired{ false };
 				};
 
 			public:

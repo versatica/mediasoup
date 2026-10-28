@@ -78,10 +78,6 @@ namespace
 		MockEncodingContext() : RTC::RTP::Codecs::EncodingContext(MockEncodingContext::params)
 		{
 		}
-		void SyncRequired() override
-		{
-		}
-
 	private:
 		static RTC::RTP::Codecs::EncodingContext::Params params;
 	};

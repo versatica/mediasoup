@@ -110,30 +110,6 @@ namespace
 		uint8_t spatialLayer{ 0 };
 		uint8_t temporalLayer{ 0 };
 	};
-
-	/**
-	 * The payload descriptor only reads the layers of the Consumer from its
-	 * encoding context, so no codec has to be brought in just to have one.
-	 */
-	class EncodingContext : public RTC::RTP::Codecs::EncodingContext
-	{
-	public:
-		explicit EncodingContext(RTC::RTP::Codecs::EncodingContext::Params& params)
-		  : RTC::RTP::Codecs::EncodingContext(params)
-		{
-		}
-		~EncodingContext() override = default;
-
-		/* Pure virtual methods inherited from RTC::RTP::Codecs::EncodingContext. */
-	public:
-		void SyncRequired() override
-		{
-			this->syncRequired = true;
-		}
-
-	public:
-		bool syncRequired{ false };
-	};
 } // namespace
 
 SCENARIO(
@@ -148,7 +124,7 @@ SCENARIO(
 	params.spatialLayers  = 3;
 	params.temporalLayers = 3;
 
-	EncodingContext context(params);
+	RTC::RTP::Codecs::EncodingContext context(params);
 
 	/**
 	 * Runs a frame through `DependencyDescriptorPayloadDescriptorHandler::Process()`,
@@ -409,7 +385,7 @@ SCENARIO(
 	params.spatialLayers  = 3;
 	params.temporalLayers = 3;
 
-	EncodingContext context(params);
+	RTC::RTP::Codecs::EncodingContext context(params);
 
 	auto process = [&](const uint8_t* data, size_t len)
 	{
@@ -501,5 +477,37 @@ SCENARIO(
 		// layer would let it through, but the one its frame was given would not and
 		// the frames it depends on were dropped.
 		REQUIRE(!processDeltaFrame(FullSvcFrameS0T2Index).forwarded);
+	}
+
+	/*
+	 * The packet flow of a Consumer restarts at a sync point, so the frames seen
+	 * before it say nothing about the ones that follow and must not make them
+	 * look reordered.
+	 */
+	SECTION("a sync point forgets the frames seen so far")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(0);
+
+		REQUIRE(processKeyFrame().forwarded);
+
+		// Run the whole pattern, frames 4 to 15, so that 15 is the newest frame
+		// seen.
+		for (size_t i{ 0 }; i < FullSvcDeltaFrames.size(); ++i)
+		{
+			processDeltaFrame(i);
+		}
+
+		context.SetTargetTemporalLayer(2);
+		context.SyncRequired();
+
+		/*
+		 * The 0:0 frame is frame 13, below the 15 just seen, so on its own it
+		 * would be taken for reordered and could not upgrade anything. The sync
+		 * point says the frames before it no longer count, so it is treated as the
+		 * fresh frame it is and the upgrade happens there.
+		 */
+		REQUIRE(processDeltaFrame(FullSvcFrameS0T0Index).forwarded); // frame 13
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
 	}
 }

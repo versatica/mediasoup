@@ -42,12 +42,6 @@ namespace RTC
 					{
 					}
 					~EncodingContext() override = default;
-
-					/* Pure virtual methods inherited from Codecs::EncodingContext. */
-				public:
-					void SyncRequired() override
-					{
-					}
 				};
 
 			public:
