@@ -223,12 +223,37 @@ namespace RTC
 
 					return this->currentLayers.temporal;
 				}
+				/**
+				 * Whether the given frame number is older than the newest one seen, this
+				 * is, whether the packet carrying it was reordered and the current layers
+				 * are no longer the ones its frame was judged against.
+				 *
+				 * NOTE: Frame numbers come from the Dependency Descriptor. Codecs that
+				 * tell their pictures apart by other means use the `PictureIdList` above
+				 * with whatever identifier they have.
+				 */
+				bool IsOldFrameNumber(uint16_t frameNumber) const
+				{
+					return this->maxFrameNumber.has_value() && RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+					                                             frameNumber, this->maxFrameNumber.value());
+				}
+				void UpdateMaxFrameNumber(uint16_t frameNumber)
+				{
+					if (
+					  !this->maxFrameNumber.has_value() || RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(
+					                                         frameNumber, this->maxFrameNumber.value()))
+					{
+						this->maxFrameNumber = frameNumber;
+					}
+				}
 
 			private:
 				const Params params;
 				RTC::ConsumerTypes::VideoLayers targetLayers;
 				RTC::ConsumerTypes::VideoLayers currentLayers;
 				bool ignoreDtx{ false };
+				// Newest frame number seen, to tell reordered packets apart.
+				std::optional<uint16_t> maxFrameNumber{ std::nullopt };
 
 			private:
 				// List of spatial/temporal layer changes indexed by the corresponding pictureId.

@@ -4,6 +4,7 @@
 #include "RTC/RTP/Packet.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <cstring> // std::memcpy()
 #include <vector>
 
 /**
@@ -179,9 +180,25 @@ SCENARIO(
 		return result;
 	};
 
-	auto processKeyFrame = [&]()
+	/*
+	 * Runs the captured key frame, optionally renumbered.
+	 *
+	 * NOTE: A key frame that follows other frames carries a later frame number,
+	 * so replaying the captured one as is would look like a reordered packet.
+	 */
+	auto processKeyFrame = [&](uint16_t frameNumber = 0) -> ProcessResult
 	{
-		return process(KeyFrameData, sizeof(KeyFrameData));
+		uint8_t data[sizeof(KeyFrameData)];
+
+		std::memcpy(data, KeyFrameData, sizeof(KeyFrameData));
+
+		if (frameNumber != 0)
+		{
+			data[1] = static_cast<uint8_t>(frameNumber >> 8);
+			data[2] = static_cast<uint8_t>(frameNumber & 0xff);
+		}
+
+		return process(data, sizeof(data));
 	};
 
 	auto processDeltaFrame = [&](size_t index)
@@ -275,7 +292,7 @@ SCENARIO(
 		REQUIRE(context.GetCurrentSpatialLayer() == 0);
 
 		// A key frame does upgrade it.
-		REQUIRE(processKeyFrame().forwarded);
+		REQUIRE(processKeyFrame(/*frameNumber*/ 200).forwarded);
 		REQUIRE(context.GetCurrentSpatialLayer() == 2);
 	}
 
@@ -374,6 +391,10 @@ namespace
 		{ 0x4a, 0x00, 0x0f }, // frame 15, template 10, S2T0
 	};
 	// clang-format on
+
+	// Indexes into `FullSvcDeltaFrames` of the frames some tests act upon.
+	constexpr size_t FullSvcFrameS0T2Index{ 6 };
+	constexpr size_t FullSvcFrameS0T0Index{ 9 };
 } // namespace
 
 SCENARIO(
@@ -447,5 +468,38 @@ SCENARIO(
 
 			REQUIRE(processDeltaFrame(i).forwarded);
 		}
+	}
+
+	/*
+	 * A packet reordered across a layer change must be judged by the layers its
+	 * own frame was given rather than by the current ones. Letting it through on
+	 * the new ones would forward a frame whose references were dropped.
+	 *
+	 * NOTE: The current layers are left as they come so that the first change is
+	 * recorded against its frame number, which is what the Consumer does.
+	 */
+	SECTION("a packet reordered across a temporal upgrade is judged by its own layers")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(0);
+
+		REQUIRE(processKeyFrame().forwarded);
+		REQUIRE(context.GetCurrentTemporalLayer() == 0);
+
+		// Only temporal layer 0 is wanted, so this 0:2 frame is dropped and so are
+		// the frames depending on it.
+		REQUIRE(!processDeltaFrame(FullSvcFrameS0T2Index).forwarded);
+
+		// Now ask for every temporal layer. The 0:0 frame is a switch point for the
+		// decode target, so the upgrade happens there.
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processDeltaFrame(FullSvcFrameS0T0Index).forwarded);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+
+		// The 0:2 frame from before the upgrade arrives late. The current temporal
+		// layer would let it through, but the one its frame was given would not and
+		// the frames it depends on were dropped.
+		REQUIRE(!processDeltaFrame(FullSvcFrameS0T2Index).forwarded);
 	}
 }

@@ -125,10 +125,30 @@ namespace RTC
 				  "target spatial layer cannot be -1");
 				MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
+				const auto frameNumber = this->payloadDescriptor->frameNumber;
+				/*
+				 * A reordered packet must be judged by the layers its frame was given
+				 * rather than by the current ones, which may have changed since. Letting
+				 * it through on the new layers would forward a frame whose references
+				 * were dropped.
+				 *
+				 * NOTE: Only where the spatial layers are filtered here, this is, not for
+				 * a simulcast Consumer. There a stream switch brings frame numbers of a
+				 * different encoder, so they do not order against the ones seen so far.
+				 */
+				const bool isOldPacket = filterSpatialLayers && context->IsOldFrameNumber(frameNumber);
+
 				auto packetSpatialLayer  = GetSpatialLayer();
 				auto packetTemporalLayer = GetTemporalLayer();
-				auto tmpSpatialLayer     = context->GetCurrentSpatialLayer();
-				auto tmpTemporalLayer    = context->GetCurrentTemporalLayer();
+				auto tmpSpatialLayer     = isOldPacket ? context->GetSpatialLayerForPictureId(frameNumber)
+				                                       : context->GetCurrentSpatialLayer();
+				auto tmpTemporalLayer    = isOldPacket ? context->GetTemporalLayerForPictureId(frameNumber)
+				                                       : context->GetCurrentTemporalLayer();
+
+				if (!isOldPacket)
+				{
+					context->UpdateMaxFrameNumber(frameNumber);
+				}
 
 				// If packet temporal layer is higher than the maximum announced one, drop
 				// the packet.
@@ -149,7 +169,7 @@ namespace RTC
 				}
 
 				// Upgrade current spatial layer if needed.
-				if (filterSpatialLayers && context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
+				if (!isOldPacket && filterSpatialLayers && context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
 				{
 					if (this->payloadDescriptor->isKeyFrame)
 					{
@@ -166,7 +186,7 @@ namespace RTC
 					}
 				}
 				// Downgrade current spatial layer if needed.
-				else if (filterSpatialLayers && context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
+				else if (!isOldPacket && filterSpatialLayers && context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 				{
 					if (
 					  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
@@ -192,7 +212,7 @@ namespace RTC
 				}
 
 				// Upgrade current temporal layer if needed.
-				if (context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
+				if (!isOldPacket && context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
 				{
 					// NOTE: Only switch up in a frame that the Dependency Descriptor marks as
 					// a switch point for the decode target we move into. Otherwise we'd
@@ -219,7 +239,7 @@ namespace RTC
 					}
 				}
 				// Downgrade current temporal layer if needed.
-				else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
+				else if (!isOldPacket && context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
 				{
 					if (
 					  std::cmp_equal(packetTemporalLayer, context->GetTargetTemporalLayer()) &&
@@ -251,16 +271,22 @@ namespace RTC
 					marker = true;
 				}
 
-				// Update current spatial layer if needed.
-				if (filterSpatialLayers && tmpSpatialLayer != context->GetCurrentSpatialLayer())
+				/*
+				 * Update the current layers if needed, recording the frame number they
+				 * change at so that packets reordered across the change are judged by
+				 * the layers their own frame was given.
+				 *
+				 * NOTE: A reordered packet never moves them, since it says nothing about
+				 * what the Consumer is being given now.
+				 */
+				if (!isOldPacket && filterSpatialLayers && tmpSpatialLayer != context->GetCurrentSpatialLayer())
 				{
-					context->SetCurrentSpatialLayer(tmpSpatialLayer);
+					context->SetCurrentSpatialLayer(tmpSpatialLayer, frameNumber);
 				}
 
-				// Update current temporal layer if needed.
-				if (tmpTemporalLayer != context->GetCurrentTemporalLayer())
+				if (!isOldPacket && tmpTemporalLayer != context->GetCurrentTemporalLayer())
 				{
-					context->SetCurrentTemporalLayer(tmpTemporalLayer);
+					context->SetCurrentTemporalLayer(tmpTemporalLayer, frameNumber);
 				}
 
 				/*
