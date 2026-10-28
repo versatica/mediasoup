@@ -94,13 +94,9 @@ namespace Channel
 	 * msg contains the request flatbuffer.
 	 */
 	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request)
-	  : channel(channel)
+	  : channel(channel), data(request), id(request->id()), method(request->method())
 	{
 		MS_TRACE();
-
-		this->data   = request;
-		this->id     = request->id();
-		this->method = request->method();
 
 		const auto methodCStrIt = Method2String.find(this->method);
 

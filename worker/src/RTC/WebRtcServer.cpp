@@ -1,10 +1,9 @@
-#include "SharedInterface.hpp"
 #define MS_CLASS "RTC::WebRtcServer"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/WebRtcServer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/WebRtcServer.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
 

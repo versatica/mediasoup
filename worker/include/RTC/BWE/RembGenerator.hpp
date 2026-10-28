@@ -77,7 +77,7 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Listener* listener{ nullptr };
+			Listener* const listener;
 			// Others.
 			// Instant the latest REMB was sent at, or no value until one is.
 			std::optional<int64_t> lastRembSentAtMs;

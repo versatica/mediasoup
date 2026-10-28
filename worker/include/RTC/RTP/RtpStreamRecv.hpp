@@ -331,8 +331,8 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			int64_t sendNackDelayMs{ 0 };
-			bool useRtpInactivityCheck{ false };
+			const int64_t sendNackDelayMs;
+			const bool useRtpInactivityCheck;
 			// Others.
 			// Packets expected at last interval.
 			// NOTE: As wide as GetExpectedPackets(), which wraps with the sequence
@@ -355,9 +355,9 @@ namespace RTC
 			uint8_t firSeqNumber{ 0 };
 			int32_t reportedPacketsLost{ 0 };
 			std::unique_ptr<RTC::NackGenerator> nackGenerator;
-			TimerHandleInterface* inactivityCheckPeriodicTimer{ nullptr };
+			const std::unique_ptr<TimerHandleInterface> inactivityCheckPeriodicTimer;
 			bool inactive{ false };
-			TimerHandleInterface* spatialLayersActivityCheckPeriodicTimer{ nullptr };
+			const std::unique_ptr<TimerHandleInterface> spatialLayersActivityCheckPeriodicTimer;
 			// Whether each spatial layer was carrying traffic at the latest check.
 			// Empty unless this stream has more than a spatial layer.
 			std::vector<bool> spatialLayersActivity;

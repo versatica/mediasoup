@@ -1,6 +1,7 @@
 #ifndef MS_CATCH2_MACROS_HPP
 #define MS_CATCH2_MACROS_HPP
 
+#include "common.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 /**

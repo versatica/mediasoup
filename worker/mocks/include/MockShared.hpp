@@ -1,6 +1,7 @@
 #ifndef MS_MOCKS_MOCK_SHARED_HPP
 #define MS_MOCKS_MOCK_SHARED_HPP
 
+#include "common.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "SharedInterface.hpp"
@@ -101,9 +102,9 @@ namespace mocks
 		// Given by argument.
 		const std::function<int64_t()> getTimeUs;
 		// Others.
-		std::unique_ptr<::Channel::ChannelSocket> channelSocket;
-		std::unique_ptr<mocks::Channel::MockChannelMessageRegistrator> channelMessageRegistrator;
-		std::unique_ptr<::Channel::ChannelNotifier> channelNotifier;
+		const std::unique_ptr<::Channel::ChannelSocket> channelSocket;
+		const std::unique_ptr<mocks::Channel::MockChannelMessageRegistrator> channelMessageRegistrator;
+		const std::unique_ptr<::Channel::ChannelNotifier> channelNotifier;
 		std::map<std::string /*label*/, MockTimerHandle* /*timer*/> timers;
 		std::map<std::string /*label*/, MockBackoffTimerHandle* /*backoffTimer*/> backoffTimers;
 	};

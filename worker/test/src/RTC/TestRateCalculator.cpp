@@ -9,9 +9,9 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 {
 	struct TestRateCalculatorData
 	{
-		int64_t offset;
-		uint32_t size;
-		std::optional<int64_t> rate;
+		const int64_t offset;
+		const uint32_t size;
+		const std::optional<int64_t> rate;
 	};
 
 	const auto validate =

@@ -70,7 +70,7 @@ protected:
 
 private:
 	// Allocated by this (may be passed by argument).
-	uv_tcp_t* uvHandle{ nullptr };
+	uv_tcp_t* const uvHandle;
 	// Others.
 	ankerl::unordered_dense::set<TcpConnectionHandle*> connections;
 	bool closed{ false };

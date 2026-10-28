@@ -1,6 +1,7 @@
 #ifndef MS_RTC_RTP_OBSERVER_HPP
 #define MS_RTC_RTP_OBSERVER_HPP
 
+#include "common.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "SharedInterface.hpp"
@@ -51,15 +52,15 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id;
+		const std::string id;
 
 	protected:
 		// Passed by argument.
-		SharedInterface* shared{ nullptr };
+		SharedInterface* const shared;
 
 	private:
 		// Passed by argument.
-		RTC::RtpObserver::Listener* listener{ nullptr };
+		RTC::RtpObserver::Listener* const listener;
 		// Others.
 		bool paused{ false };
 	};

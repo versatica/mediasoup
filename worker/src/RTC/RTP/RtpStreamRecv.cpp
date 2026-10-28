@@ -212,6 +212,13 @@ namespace RTC
 		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
 		    sendNackDelayMs(sendNackDelayMs),
 		    useRtpInactivityCheck(useRtpInactivityCheck),
+		    inactivityCheckPeriodicTimer(
+		      useRtpInactivityCheck ? shared->CreateTimer(this, "rtp-stream-recv-inactivity-check")
+					                      : nullptr),
+		    spatialLayersActivityCheckPeriodicTimer(
+		      GetSpatialLayers() > 1
+		        ? shared->CreateTimer(this, "rtp-stream-recv-spatial-layers-activity-check")
+						: nullptr),
 		    transmissionCounter(
 		      shared, params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500),
 		    mediaTransmissionCounter(shared, /*ignorePaddingOnlyPackets*/ true)
@@ -229,9 +236,6 @@ namespace RTC
 			{
 				// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 				// enabled).
-				this->inactivityCheckPeriodicTimer =
-				  this->shared->CreateTimer(this, "rtp-stream-recv-inactivity-check");
-
 				this->inactivityCheckPeriodicTimer->Start(
 				  this->params.useDtx ? InactivityCheckIntervalWithDtxMs : InactivityCheckIntervalMs);
 			}
@@ -243,9 +247,6 @@ namespace RTC
 			{
 				this->spatialLayersActivity.assign(GetSpatialLayers(), false);
 
-				this->spatialLayersActivityCheckPeriodicTimer =
-				  this->shared->CreateTimer(this, "rtp-stream-recv-spatial-layers-activity-check");
-
 				this->spatialLayersActivityCheckPeriodicTimer->Start(
 				  SpatialLayersActivityCheckIntervalMs, SpatialLayersActivityCheckIntervalMs);
 			}
@@ -254,14 +255,6 @@ namespace RTC
 		RtpStreamRecv::~RtpStreamRecv()
 		{
 			MS_TRACE();
-
-			// Close the RTP inactivity check periodic timer.
-			delete this->inactivityCheckPeriodicTimer;
-			this->inactivityCheckPeriodicTimer = nullptr;
-
-			// Close the spatial layers activity check periodic timer.
-			delete this->spatialLayersActivityCheckPeriodicTimer;
-			this->spatialLayersActivityCheckPeriodicTimer = nullptr;
 		}
 
 		flatbuffers::Offset<FBS::RtpStream::Stats> RtpStreamRecv::FillBufferStats(
@@ -1062,7 +1055,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (timer == this->inactivityCheckPeriodicTimer)
+			if (timer == this->inactivityCheckPeriodicTimer.get())
 			{
 				this->inactive = true;
 
@@ -1074,7 +1067,7 @@ namespace RTC
 
 				ResetScore(0, /*notify*/ true);
 			}
-			else if (timer == this->spatialLayersActivityCheckPeriodicTimer)
+			else if (timer == this->spatialLayersActivityCheckPeriodicTimer.get())
 			{
 				const int64_t nowMs = this->shared->GetTimeMs();
 

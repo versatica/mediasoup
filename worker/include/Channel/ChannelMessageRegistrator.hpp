@@ -1,6 +1,7 @@
 #ifndef MS_CHANNEL_MESSAGE_REGISTRATOR_HPP
 #define MS_CHANNEL_MESSAGE_REGISTRATOR_HPP
 
+#include "common.hpp"
 #include "Channel/ChannelMessageRegistratorInterface.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include <ankerl/unordered_dense.h>

@@ -1,6 +1,7 @@
 #ifndef MS_MOCKS_MOCK_CHANNEL_MESSAGE_REGISTRATOR_HPP
 #define MS_MOCKS_MOCK_CHANNEL_MESSAGE_REGISTRATOR_HPP
 
+#include "common.hpp"
 #include "Channel/ChannelMessageRegistratorInterface.hpp"
 // TODO: We should have a ChannelSocketInterface class instead.
 #include "Channel/ChannelSocket.hpp"

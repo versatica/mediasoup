@@ -132,8 +132,8 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Listener* listener{ nullptr };
-			SharedInterface* shared{ nullptr };
+			Listener* const listener;
+			SharedInterface* const shared;
 			TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator;
 			RemoteBitrateEstimatorAbsSendTime remoteBitrateEstimator;
 			RembGenerator rembGenerator;

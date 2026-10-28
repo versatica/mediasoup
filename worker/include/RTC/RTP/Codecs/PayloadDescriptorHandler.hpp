@@ -225,7 +225,7 @@ namespace RTC
 				}
 
 			private:
-				Params params;
+				const Params params;
 				RTC::ConsumerTypes::VideoLayers targetLayers;
 				RTC::ConsumerTypes::VideoLayers currentLayers;
 				bool ignoreDtx{ false };

@@ -325,8 +325,8 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Listener* listener{ nullptr };
-			SharedInterface* shared{ nullptr };
+			Listener* const listener;
+			SharedInterface* const shared;
 			// Allocated by this.
 			const std::unique_ptr<TimerHandleInterface> processTimer;
 			// Others.

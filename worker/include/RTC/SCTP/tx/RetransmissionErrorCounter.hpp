@@ -53,7 +53,7 @@ namespace RTC
 			}
 
 		private:
-			std::optional<uint16_t> limit;
+			const std::optional<uint16_t> limit;
 			size_t counter{ 0 };
 		};
 	} // namespace SCTP

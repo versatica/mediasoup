@@ -99,7 +99,9 @@ namespace RTC
 	  const std::string& id,
 	  RTC::RtpObserver::Listener* listener,
 	  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options)
-	  : RTC::RtpObserver(shared, id, listener), intervalMs(options->interval())
+	  : RTC::RtpObserver(shared, id, listener),
+	    periodicTimer(shared->CreateTimer(this, "active-speaker-observer")),
+	    intervalMs(options->interval())
 	{
 		MS_TRACE();
 
@@ -111,8 +113,6 @@ namespace RTC
 		{
 			this->intervalMs = 5000;
 		}
-
-		this->periodicTimer = this->shared->CreateTimer(this, "active-speaker-observer");
 
 		this->periodicTimer->Start(this->intervalMs, this->intervalMs);
 
@@ -128,8 +128,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
-
-		delete this->periodicTimer;
 
 		// Must clear all entries in this->mapProducerSpeakers since RemoveProducer()
 		// won't be called for each existing Producer if the ActiveSpeakerObserver or
@@ -313,14 +311,14 @@ namespace RTC
 		{
 			Speaker* dominantSpeaker = (this->dominantId.empty())
 			                             ? nullptr
-			                             : this->mapProducerSpeakers.at(this->dominantId)->speaker;
+			                             : this->mapProducerSpeakers.at(this->dominantId)->speaker.get();
 
 			if (dominantSpeaker == nullptr)
 			{
 				auto it               = this->mapProducerSpeakers.begin();
 				newDominantId         = it->first;
 				auto* producerSpeaker = it->second;
-				dominantSpeaker       = producerSpeaker->speaker;
+				dominantSpeaker       = producerSpeaker->speaker.get();
 			}
 			else
 			{
@@ -333,7 +331,7 @@ namespace RTC
 			for (auto& kv : this->mapProducerSpeakers)
 			{
 				auto* producerSpeaker = kv.second;
-				auto* speaker         = producerSpeaker->speaker;
+				auto* speaker         = producerSpeaker->speaker.get();
 				const auto& id        = producerSpeaker->producer->id;
 
 				if (id == this->dominantId || speaker->paused)
@@ -379,7 +377,7 @@ namespace RTC
 		for (auto& kv : this->mapProducerSpeakers)
 		{
 			auto* producerSpeaker = kv.second;
-			auto* speaker         = producerSpeaker->speaker;
+			auto* speaker         = producerSpeaker->speaker.get();
 			const auto& id        = producerSpeaker->producer->id;
 			const int64_t idleMs  = nowMs - speaker->lastLevelChangeAtMs;
 
@@ -395,7 +393,7 @@ namespace RTC
 	}
 
 	ActiveSpeakerObserver::ProducerSpeaker::ProducerSpeaker(SharedInterface* shared, RTC::Producer* producer)
-	  : producer(producer), speaker(new Speaker(shared))
+	  : producer(producer), speaker(std::make_unique<Speaker>(shared))
 	{
 		MS_TRACE();
 
@@ -405,8 +403,6 @@ namespace RTC
 	ActiveSpeakerObserver::ProducerSpeaker::~ProducerSpeaker()
 	{
 		MS_TRACE();
-
-		delete this->speaker;
 	}
 
 	ActiveSpeakerObserver::Speaker::Speaker(SharedInterface* shared)

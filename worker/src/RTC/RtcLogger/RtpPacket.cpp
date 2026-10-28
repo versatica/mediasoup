@@ -57,7 +57,7 @@ namespace RTC
 			std::stringstream ss;
 
 			ss << "{";
-			ss << "\"timestamp\": " << this->timestamp;
+			ss << "\"timeMs\": " << this->timeMs;
 
 			if (!this->recvTransportId.empty())
 			{
@@ -85,8 +85,8 @@ namespace RTC
 			ss << ", \"recvSeqNumber\": " << this->recvSeqNumber;
 			ss << ", \"sendSeqNumber\": " << this->sendSeqNumber;
 			ss << ", \"discarded\": " << (this->discarded ? "true" : "false");
-			ss << ", \"discardReason\": '" << RtpPacket::DiscardReason2String.at(this->discardReason)
-			   << "'";
+			ss << R"(, "discardReason": ")" << RtpPacket::DiscardReason2String.at(this->discardReason)
+			   << "\"";
 			ss << "}";
 
 			MS_DUMP_CLEAN(0, "%s", ss.str().c_str());
@@ -96,12 +96,17 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->sendTransportId = {};
-			this->routerId        = {};
-			this->producerId      = {};
-			this->sendSeqNumber   = { 0 };
-			this->discarded       = { false };
-			this->discardReason   = { DiscardReason::NONE };
+			// The same received packet is logged once per Consumer it is handed to, and
+			// timeMs, recvTransportId, routerId, producerId, recvRtpTimestamp and
+			// recvSeqNumber are filled only once, before it is handed to any of them.
+			// Resetting them here would leave them empty for every Consumer but the
+			// first.
+			this->sendTransportId  = {};
+			this->consumerId       = {};
+			this->sendRtpTimestamp = 0;
+			this->sendSeqNumber    = 0;
+			this->discarded        = false;
+			this->discardReason    = DiscardReason::NONE;
 		}
 	} // namespace RtcLogger
 } // namespace RTC

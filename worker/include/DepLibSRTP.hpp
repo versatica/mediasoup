@@ -1,6 +1,7 @@
 #ifndef MS_DEP_LIBSRTP_HPP
 #define MS_DEP_LIBSRTP_HPP
 
+#include "common.hpp"
 #include <srtp.h>
 #include <ankerl/unordered_dense.h>
 #include <string>

@@ -120,8 +120,8 @@ namespace RTC
 
 		protected:
 			// Given as argument.
-			SharedInterface* shared{ nullptr };
-			Params params;
+			SharedInterface* const shared;
+			const Params params;
 			// Others.
 			//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
 			uint16_t maxSeq{ 0 };      // Highest seq. number seen.

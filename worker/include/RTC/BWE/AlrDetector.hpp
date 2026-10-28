@@ -80,7 +80,7 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			SharedInterface* shared{ nullptr };
+			SharedInterface* const shared;
 			const AlrDetectorOptions options;
 			// Others.
 			// Budget of what the sender was expected to use, whose level is the whole

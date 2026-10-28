@@ -1,6 +1,7 @@
 #ifndef MS_SHARED_HPP
 #define MS_SHARED_HPP
 
+#include "common.hpp"
 #include "Channel/ChannelMessageRegistrator.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "DepLibUV.hpp"
@@ -52,8 +53,8 @@ public:
 	}
 
 private:
-	std::unique_ptr<Channel::ChannelMessageRegistrator> channelMessageRegistrator;
-	std::unique_ptr<Channel::ChannelNotifier> channelNotifier;
+	const std::unique_ptr<Channel::ChannelMessageRegistrator> channelMessageRegistrator;
+	const std::unique_ptr<Channel::ChannelNotifier> channelNotifier;
 };
 
 #endif

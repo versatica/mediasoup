@@ -165,8 +165,8 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Listener* listener{ nullptr };
-			SharedInterface* shared{ nullptr };
+			Listener* const listener;
+			SharedInterface* const shared;
 			// Others.
 			// Decides which burst is being emitted and at what instant each of its
 			// packets is due.

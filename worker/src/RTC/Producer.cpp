@@ -29,7 +29,16 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Producer::Listener* listener,
 	  const FBS::Transport::ProduceRequest* data)
-	  : id(id), shared(shared), listener(listener), kind(RTC::Media::Kind(data->kind()))
+	  : id(id),
+	    shared(shared),
+	    listener(listener),
+	    keyFrameRequestManager(
+	      RTC::Media::Kind(data->kind()) == RTC::Media::Kind::VIDEO
+	        ? std::make_unique<RTC::KeyFrameRequestManager>(this, shared, data->keyFrameRequestDelay())
+					: nullptr),
+	    kind(RTC::Media::Kind(data->kind())),
+	    paused(data->paused()),
+	    enableMediasoupPacketIdHeaderExtension(data->enableMediasoupPacketIdHeaderExtension())
 	{
 		MS_TRACE();
 
@@ -109,10 +118,6 @@ namespace RTC
 
 			encodingMapping.mappedSsrc = encoding->mappedSsrc();
 		}
-
-		this->paused = data->paused();
-
-		this->enableMediasoupPacketIdHeaderExtension = data->enableMediasoupPacketIdHeaderExtension();
 
 		// The number of encodings in rtpParameters must match the number of encodings
 		// in rtpMapping.
@@ -198,15 +203,6 @@ namespace RTC
 			this->maxRtcpIntervalMs = RTC::RTCP::MaxVideoIntervalMs;
 		}
 
-		// Create a KeyFrameRequestManager.
-		if (this->kind == RTC::Media::Kind::VIDEO)
-		{
-			const int64_t keyFrameRequestDelayMs = data->keyFrameRequestDelay();
-
-			this->keyFrameRequestManager =
-			  new RTC::KeyFrameRequestManager(this, this->shared, keyFrameRequestDelayMs);
-		}
-
 		// NOTE: This may throw.
 		this->shared->GetChannelMessageRegistrator()->RegisterHandler(
 		  this->id,
@@ -234,9 +230,6 @@ namespace RTC
 		this->mapRtxSsrcRtpStream.clear();
 		this->mapRtpStreamMappedSsrc.clear();
 		this->mapMappedSsrcSsrc.clear();
-
-		// Delete the KeyFrameRequestManager.
-		delete this->keyFrameRequestManager;
 	}
 
 	flatbuffers::Offset<FBS::Producer::DumpResponse> Producer::FillBuffer(

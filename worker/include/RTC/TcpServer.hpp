@@ -50,9 +50,9 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Listener* listener{ nullptr };
-		RTC::TcpConnection::Listener* connListener{ nullptr };
-		SharedInterface* shared{ nullptr };
+		Listener* const listener;
+		RTC::TcpConnection::Listener* const connListener;
+		SharedInterface* const shared;
 		bool fixedPort{ false };
 		RTC::PortManager::PortRangeKey portRangeKey{};
 	};

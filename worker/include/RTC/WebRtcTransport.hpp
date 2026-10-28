@@ -1,6 +1,7 @@
 #ifndef MS_RTC_WEBRTC_TRANSPORT_HPP
 #define MS_RTC_WEBRTC_TRANSPORT_HPP
 
+#include "common.hpp"
 #include "handles/SendCallbacks.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
@@ -188,13 +189,13 @@ namespace RTC
 		// Passed by argument.
 		WebRtcTransportListener* webRtcTransportListener{ nullptr };
 		// Allocated by this.
-		RTC::ICE::IceServer* iceServer{ nullptr };
+		std::unique_ptr<RTC::ICE::IceServer> iceServer;
 		// Map of UdpSocket/TcpServer and local announced address (if any).
 		ankerl::unordered_dense::map<RTC::UdpSocket*, std::string> udpSockets;
 		ankerl::unordered_dense::map<RTC::TcpServer*, std::string> tcpServers;
-		RTC::DtlsTransport* dtlsTransport{ nullptr };
-		RTC::SrtpSession* srtpRecvSession{ nullptr };
-		RTC::SrtpSession* srtpSendSession{ nullptr };
+		std::unique_ptr<RTC::DtlsTransport> dtlsTransport;
+		std::unique_ptr<RTC::SrtpSession> srtpRecvSession;
+		std::unique_ptr<RTC::SrtpSession> srtpSendSession;
 		// Others.
 		// Whether connect() was succesfully called.
 		bool connectCalled{ false };

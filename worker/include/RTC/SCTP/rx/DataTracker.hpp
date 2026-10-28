@@ -261,7 +261,7 @@ namespace RTC
 
 		private:
 			// If a packet has ever been seen.
-			BackoffTimerHandleInterface* delayedAckTimer;
+			BackoffTimerHandleInterface* const delayedAckTimer;
 			bool packetSeen{ false };
 			AckState ackState{ AckState::IDLE };
 			Types::UnwrappedTsn::Unwrapper tsnUnwrapper;

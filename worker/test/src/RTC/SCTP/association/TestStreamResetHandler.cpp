@@ -147,7 +147,7 @@ namespace
 		// NOTE: Public members for testing.
 	public:
 		int64_t nowUs{ InitialNowUs };
-		RTC::SCTP::SctpOptions sctpOptions;
+		const RTC::SCTP::SctpOptions sctpOptions;
 		BackoffTimerListener backoffTimerListener;
 		RetransmissionQueueListener retransmissionQueueListener;
 		mocks::RTC::SCTP::MockAssociationListener associationListener;

@@ -17,7 +17,8 @@ namespace RTC
 	  const std::string& id,
 	  RTC::RtpObserver::Listener* listener,
 	  const FBS::AudioLevelObserver::AudioLevelObserverOptions* options)
-	  : RTC::RtpObserver(shared, id, listener)
+	  : RTC::RtpObserver(shared, id, listener),
+	    periodicTimer(shared->CreateTimer(this, "audio-level-observer"))
 	{
 		MS_TRACE();
 
@@ -39,8 +40,6 @@ namespace RTC
 			this->intervalMs = 5000;
 		}
 
-		this->periodicTimer = this->shared->CreateTimer(this, "audio-level-observer");
-
 		this->periodicTimer->Start(this->intervalMs, this->intervalMs);
 
 		// NOTE: This may throw.
@@ -55,8 +54,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
-
-		delete this->periodicTimer;
 	}
 
 	void AudioLevelObserver::AddProducer(RTC::Producer* producer)

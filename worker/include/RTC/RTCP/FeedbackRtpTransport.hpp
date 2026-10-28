@@ -61,7 +61,7 @@ namespace RTC
 
 				uint16_t sequenceNumber;   // Wide sequence number.
 				int16_t delta{ 0 };        // Delta in DeltaTickUs units.
-				bool received{ false };    // Packet received or not.
+				bool received;             // Packet received or not.
 				int64_t receivedAtUs{ 0 }; // Received time (us) in remote timestamp reference.
 			};
 

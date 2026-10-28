@@ -290,14 +290,14 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id;
-		std::string producerId;
+		const std::string id;
+		const std::string producerId;
 
 	private:
 		// Passed by argument.
-		SharedInterface* shared{ nullptr };
-		RTC::Consumer::Listener* listener{ nullptr };
-		RTC::Media::Kind kind;
+		SharedInterface* const shared;
+		RTC::Consumer::Listener* const listener;
+		const RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
@@ -313,7 +313,7 @@ namespace RTC
 		bool bweManaged{ false };
 		uint8_t priority{ 1 };
 		TraceEventTypes traceEventTypes;
-		bool pipe{ false };
+		const bool pipe;
 		// Others.
 		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
 		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
@@ -326,7 +326,7 @@ namespace RTC
 		std::vector<uint32_t> mediaSsrcs;
 		std::vector<uint32_t> rtxSsrcs;
 		bool transportConnected{ false };
-		bool paused{ false };
+		bool paused;
 		bool producerPaused{ false };
 		bool producerClosed{ false };
 		bool lastSentPacketHasMarker{ false };

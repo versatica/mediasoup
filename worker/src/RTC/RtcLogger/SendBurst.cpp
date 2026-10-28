@@ -36,13 +36,18 @@ namespace RTC
 			}
 		}
 
-		void SendBurst::Log()
+		void SendBurst::Log(uint64_t loopTimeMs)
 		{
 			MS_TRACE();
 
-			// The iteration this runs in is not the one any burst belongs to, so whatever
-			// is in progress is already complete.
-			CloseBurst();
+			// A burst in progress with an earlier loop time is already complete. One with
+			// this very loop time may still grow, since other callbacks that see the same
+			// loop time can send more packets after this one, so it is left open and goes
+			// into the next log.
+			if (loopTimeMs != this->loopTimeMs)
+			{
+				CloseBurst();
+			}
 
 			// Nothing has been sent since the last time, and a transport that sends
 			// nothing has nothing to say.

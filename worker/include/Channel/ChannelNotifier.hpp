@@ -1,6 +1,7 @@
 #ifndef MS_CHANNEL_NOTIFIER_HPP
 #define MS_CHANNEL_NOTIFIER_HPP
 
+#include "common.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include <string>
 
@@ -39,7 +40,7 @@ namespace Channel
 
 	private:
 		// Passed by argument.
-		Channel::ChannelSocket* channel{ nullptr };
+		Channel::ChannelSocket* const channel;
 		// Others.
 		flatbuffers::FlatBufferBuilder bufferBuilder;
 	};

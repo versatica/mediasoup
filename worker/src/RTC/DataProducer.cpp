@@ -16,7 +16,11 @@ namespace RTC
 	  size_t maxMessageSize,
 	  RTC::DataProducer::Listener* listener,
 	  const FBS::Transport::ProduceDataRequest* data)
-	  : id(id), shared(shared), maxMessageSize(maxMessageSize), listener(listener)
+	  : id(id),
+	    shared(shared),
+	    maxMessageSize(maxMessageSize),
+	    listener(listener),
+	    paused(data->paused())
 	{
 		MS_TRACE();
 
@@ -58,8 +62,6 @@ namespace RTC
 		{
 			this->protocol = data->protocol()->str();
 		}
-
-		this->paused = data->paused();
 
 		// NOTE: This may throw.
 		this->shared->GetChannelMessageRegistrator()->RegisterHandler(

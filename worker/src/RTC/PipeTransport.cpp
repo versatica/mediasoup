@@ -32,7 +32,8 @@ namespace RTC
 	  // SCTP over PipeTransport is not protected by DTLS, so received State
 	  // Cookies must be authenticated to prevent forgery (RFC 9260 section 5.1.3).
 	  : RTC::Transport::Transport(
-	      shared, id, listener, options->base(), /*requireSctpStateCookieAuthentication*/ true)
+	      shared, id, listener, options->base(), /*requireSctpStateCookieAuthentication*/ true),
+	    rtx(options->enableRtx())
 	{
 		MS_TRACE();
 
@@ -64,8 +65,6 @@ namespace RTC
 		this->listenInfo.flags.ipv6Only     = options->listenInfo()->flags()->ipv6Only();
 		this->listenInfo.flags.udpReusePort = options->listenInfo()->flags()->udpReusePort();
 
-		this->rtx = options->enableRtx();
-
 		if (options->enableSrtp())
 		{
 			this->srtpKey       = Utils::Crypto::GetRandomString(PipeTransport::srtpMasterLength);
@@ -78,7 +77,7 @@ namespace RTC
 			{
 				RTC::PortManager::PortRangeKey portRangeKey;
 
-				this->udpSocket = new RTC::UdpSocket(
+				this->udpSocket = std::make_unique<RTC::UdpSocket>(
 				  this,
 				  this->shared,
 				  this->listenInfo.ip,
@@ -89,7 +88,7 @@ namespace RTC
 			}
 			else if (this->listenInfo.port != 0)
 			{
-				this->udpSocket = new RTC::UdpSocket(
+				this->udpSocket = std::make_unique<RTC::UdpSocket>(
 				  this, this->shared, this->listenInfo.ip, this->listenInfo.port, this->listenInfo.flags);
 			}
 			// NOTE: This is temporal to allow deprecated usage of worker port range.
@@ -99,7 +98,7 @@ namespace RTC
 			{
 				RTC::PortManager::PortRangeKey portRangeKey;
 
-				this->udpSocket = new RTC::UdpSocket(
+				this->udpSocket = std::make_unique<RTC::UdpSocket>(
 				  this,
 				  this->shared,
 				  this->listenInfo.ip,
@@ -137,8 +136,7 @@ namespace RTC
 		{
 			// Must delete everything since the destructor won't be called.
 
-			delete this->udpSocket;
-			this->udpSocket = nullptr;
+			this->udpSocket.reset();
 
 			throw;
 		}
@@ -154,17 +152,13 @@ namespace RTC
 
 		this->shared->GetChannelMessageRegistrator()->UnregisterHandler(this->id);
 
-		delete this->udpSocket;
-		this->udpSocket = nullptr;
+		this->udpSocket.reset();
 
-		delete this->tuple;
-		this->tuple = nullptr;
+		this->tuple.reset();
 
-		delete this->srtpSendSession;
-		this->srtpSendSession = nullptr;
+		this->srtpSendSession.reset();
 
-		delete this->srtpRecvSession;
-		this->srtpRecvSession = nullptr;
+		this->srtpRecvSession.reset();
 	}
 
 	flatbuffers::Offset<FBS::PipeTransport::DumpResponse> PipeTransport::FillBuffer(
@@ -345,7 +339,7 @@ namespace RTC
 
 						try
 						{
-							this->srtpSendSession = new RTC::SrtpSession(
+							this->srtpSendSession = std::make_unique<RTC::SrtpSession>(
 							  RTC::SrtpSession::Type::OUTBOUND,
 							  PipeTransport::srtpCryptoSuite,
 							  srtpLocalKey,
@@ -361,7 +355,7 @@ namespace RTC
 
 						try
 						{
-							this->srtpRecvSession = new RTC::SrtpSession(
+							this->srtpRecvSession = std::make_unique<RTC::SrtpSession>(
 							  RTC::SrtpSession::Type::INBOUND,
 							  PipeTransport::srtpCryptoSuite,
 							  srtpRemoteKey,
@@ -438,8 +432,8 @@ namespace RTC
 					}
 
 					// Create the tuple.
-					this->tuple = new RTC::TransportTuple(
-					  this->udpSocket,
+					this->tuple = std::make_unique<RTC::TransportTuple>(
+					  this->udpSocket.get(),
 					  reinterpret_cast<struct sockaddr*>(std::addressof(this->remoteAddrStorage)));
 
 					if (!this->listenInfo.announcedAddress.empty())
@@ -449,14 +443,11 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
-					delete this->tuple;
-					this->tuple = nullptr;
+					this->tuple.reset();
 
-					delete this->srtpSendSession;
-					this->srtpSendSession = nullptr;
+					this->srtpSendSession.reset();
 
-					delete this->srtpRecvSession;
-					this->srtpRecvSession = nullptr;
+					this->srtpRecvSession.reset();
 
 					throw;
 				}

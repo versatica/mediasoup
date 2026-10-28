@@ -141,13 +141,13 @@ namespace mocks
 
 	private:
 		// Passed by argument.
-		BackoffTimerHandleInterface::Listener* listener{ nullptr };
+		BackoffTimerHandleInterface::Listener* const listener;
 		const std::string label;
 		int64_t baseTimeoutMs;
-		BackoffAlgorithm backoffAlgorithm;
-		std::optional<int64_t> maxBackoffTimeoutMs;
-		std::optional<size_t> maxRestarts;
-		std::function<int64_t()> getTimeMs;
+		const BackoffAlgorithm backoffAlgorithm;
+		const std::optional<int64_t> maxBackoffTimeoutMs;
+		const std::optional<size_t> maxRestarts;
+		const std::function<int64_t()> getTimeMs;
 		const std::function<void()> onDelete;
 		// Others.
 		bool running{ false };

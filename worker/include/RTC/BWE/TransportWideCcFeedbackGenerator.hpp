@@ -123,8 +123,8 @@ namespace RTC
 			const size_t maxRtcpPacketLen;
 
 			// Passed by argument.
-			Listener* listener{ nullptr };
-			SharedInterface* shared{ nullptr };
+			Listener* const listener;
+			SharedInterface* const shared;
 			// Allocated by this.
 			const std::unique_ptr<TimerHandleInterface> sendPeriodicTimer;
 			std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> feedbackPacket;
