@@ -93,14 +93,14 @@ namespace RTC
 				}
 
 				// Fields in the Dependency Descriptor extension.
-				bool startOfFrame{ false };
-				bool endOfFrame{ false };
-				uint16_t frameNumber{ 0 };
-				uint8_t spatialLayer{ 0 };
-				uint8_t temporalLayer{ 0 };
-				std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor{ nullptr };
+				const bool startOfFrame;
+				const bool endOfFrame;
+				const uint16_t frameNumber;
+				const uint8_t spatialLayer;
+				const uint8_t temporalLayer;
+				const std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor;
 				// Parsed values.
-				bool isKeyFrame{ false };
+				const bool isKeyFrame;
 				std::optional<Encoder> encoder{ std::nullopt };
 			};
 
