@@ -105,6 +105,7 @@ namespace RTC
 					{
 					}
 					~EncodingContext() override = default;
+
 				public:
 					RTC::SeqManager<uint16_t, 15> pictureIdManager;
 				};

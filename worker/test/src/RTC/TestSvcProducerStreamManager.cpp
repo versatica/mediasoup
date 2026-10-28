@@ -86,6 +86,7 @@ namespace
 		      MockEncodingContext::BuildParams(spatialLayers, temporalLayers, ksvc))
 		{
 		}
+
 	private:
 		static RTC::RTP::Codecs::EncodingContext::Params& BuildParams(
 		  uint8_t spatialLayers, uint8_t temporalLayers, bool ksvc)

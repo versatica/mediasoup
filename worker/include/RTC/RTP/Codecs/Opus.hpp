@@ -41,6 +41,7 @@ namespace RTC
 					{
 					}
 					~EncodingContext() override = default;
+
 				public:
 				};
 

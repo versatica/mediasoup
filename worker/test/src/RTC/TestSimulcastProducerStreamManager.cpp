@@ -90,6 +90,7 @@ namespace
 		MockEncodingContext() : RTC::RTP::Codecs::EncodingContext(MockEncodingContext::params)
 		{
 		}
+
 	private:
 		static RTC::RTP::Codecs::EncodingContext::Params params;
 	};

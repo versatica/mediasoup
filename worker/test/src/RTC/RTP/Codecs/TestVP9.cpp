@@ -116,8 +116,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		context.SetCurrentTemporalLayer(0, 0); // This will drop items from start to start+999.
 
 		REQUIRE(context.GetTemporalLayerForFrameId(0) == 0);
-		REQUIRE(
-		  context.GetTemporalLayerForFrameId(start + 0) == 1); // It will get the item at start+1000.
+		REQUIRE(context.GetTemporalLayerForFrameId(start + 0) == 1); // It will get the item at start+1000.
 	}
 
 	SECTION("drop packets that belong to other temporal layers with unordered pictureID")
