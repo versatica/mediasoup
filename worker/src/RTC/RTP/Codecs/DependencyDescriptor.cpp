@@ -854,29 +854,28 @@ namespace RTC
 					return true;
 				}
 
-				for (const auto& templateLayer : templateLayers)
-				{
-					const auto& decodeTargetIndications = templateLayer.decodeTargetIndications;
+				return std::ranges::all_of(
+				  templateLayers,
+				  [decodeTarget, forwardedDecodeTarget](const auto& templateLayer) -> bool
+				  {
+					  const auto& decodeTargetIndications = templateLayer.decodeTargetIndications;
 
-					if (
-					  decodeTarget >= decodeTargetIndications.size() ||
-					  forwardedDecodeTarget >= decodeTargetIndications.size())
-					{
-						continue;
-					}
+					  // Nothing is known about a decode target this template does not tell
+					  // about, so it does not rule the given one out.
+					  if (
+					    decodeTarget >= decodeTargetIndications.size() ||
+					    forwardedDecodeTarget >= decodeTargetIndications.size())
+					  {
+						  return true;
+					  }
 
-					const bool needed =
-					  decodeTargetIndications[decodeTarget] != DecodeTargetIndication::NOT_PRESENT;
-					const bool sent =
-					  decodeTargetIndications[forwardedDecodeTarget] != DecodeTargetIndication::NOT_PRESENT;
+					  const bool needed =
+					    decodeTargetIndications[decodeTarget] != DecodeTargetIndication::NOT_PRESENT;
+					  const bool sent =
+					    decodeTargetIndications[forwardedDecodeTarget] != DecodeTargetIndication::NOT_PRESENT;
 
-					if (needed && !sent)
-					{
-						return false;
-					}
-				}
-
-				return true;
+					  return !needed || sent;
+				  });
 			}
 
 			bool DependencyDescriptor::IsPresentInDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const
