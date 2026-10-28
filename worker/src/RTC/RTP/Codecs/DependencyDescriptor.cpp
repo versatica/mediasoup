@@ -4,7 +4,6 @@
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 #include "Logger.hpp"
 #include "RTC/RTP/Packet.hpp"
-#include <algorithm> // std::max()
 #include <bitset>
 #include <cstring> // std::memset()
 #include <string>
