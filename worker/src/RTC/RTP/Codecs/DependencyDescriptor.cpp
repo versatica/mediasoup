@@ -21,6 +21,8 @@ namespace RTC
 			// Bit offset of the template dependency structure, this is, right after the
 			// mandatory descriptor fields and the extended descriptor field flags.
 			static constexpr uint32_t TemplateDependencyStructureOffset{ 29 };
+			// Where a rewritten descriptor is built before being written into the packet.
+			static thread_local uint8_t RewriteBuffer[Consts::TwoBytesRtpExtensionMaxLength];
 
 			/* Static members. */
 
@@ -838,9 +840,12 @@ namespace RTC
 					return true;
 				}
 
-				uint8_t buffer[Consts::TwoBytesRtpExtensionMaxLength];
-
-				const auto len = Write(activeDecodeTargetsBitmask, buffer);
+				/*
+				 * NOTE: The buffer is reused across calls. `Write()` zeroes the bytes it
+				 * fills and only those are read back, so nothing is left over from a
+				 * previous one.
+				 */
+				const auto len = Write(activeDecodeTargetsBitmask, RewriteBuffer);
 
 				if (len == 0)
 				{
