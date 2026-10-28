@@ -370,6 +370,7 @@ namespace
 
 	// Indexes into `FullSvcDeltaFrames` of the frames some tests act upon.
 	constexpr size_t FullSvcFrameS0T2Index{ 6 };
+	constexpr size_t FullSvcFrameS2T2Index{ 8 };
 	constexpr size_t FullSvcFrameS0T0Index{ 9 };
 } // namespace
 
@@ -477,6 +478,43 @@ SCENARIO(
 		// layer would let it through, but the one its frame was given would not and
 		// the frames it depends on were dropped.
 		REQUIRE(!processDeltaFrame(FullSvcFrameS0T2Index).forwarded);
+	}
+
+	/*
+	 * The same holds the other way around. Here the current layers would drop the
+	 * reordered packet while the ones its own frame was given forward it, which is
+	 * what the endpoint needs since the frames it depends on were forwarded too.
+	 */
+	SECTION("a packet reordered across a spatial downgrade is judged by its own layers")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processKeyFrame().forwarded); // frame 1
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+
+		// Run the pattern up to frame 11, leaving the 2:2 frame 12 behind.
+		for (size_t i{ 0 }; i < FullSvcFrameS2T2Index; ++i)
+		{
+			INFO("delta frame " << i);
+
+			REQUIRE(processDeltaFrame(i).forwarded);
+		}
+
+		// Only the lowest spatial layer is wanted now. The 0:0 frame is an end of
+		// frame packet of that very layer, so the downgrade happens there.
+		context.SetTargetSpatialLayer(0);
+
+		REQUIRE(processDeltaFrame(FullSvcFrameS0T0Index).forwarded); // frame 13
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+
+		// The 2:2 frame from before the downgrade arrives late. The current spatial
+		// layer would drop it, but the one its frame was given does forward it.
+		REQUIRE(processDeltaFrame(FullSvcFrameS2T2Index).forwarded); // frame 12
+
+		// And it does not move the current layers, since it says nothing about what
+		// the Consumer is being given now.
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
 	}
 
 	/*

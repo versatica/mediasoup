@@ -168,40 +168,46 @@ namespace RTC
 					return false;
 				}
 
-				// Upgrade current spatial layer if needed.
-				if (!isOldPacket && filterSpatialLayers && context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
+				// Move the current spatial layer towards the target one. A reordered packet
+				// takes no part in it, since it says nothing about what the Consumer is
+				// being given now.
+				if (!isOldPacket && filterSpatialLayers)
 				{
-					if (this->payloadDescriptor->isKeyFrame)
+					// Upgrade current spatial layer if needed.
+					if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
 					{
-						MS_DEBUG_DEV(
-						  "upgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8 ":%" PRIu8
-						  ")",
-						  context->GetCurrentSpatialLayer(),
-						  context->GetTargetSpatialLayer(),
-						  packetSpatialLayer,
-						  packetTemporalLayer);
+						if (this->payloadDescriptor->isKeyFrame)
+						{
+							MS_DEBUG_DEV(
+							  "upgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+							  ":%" PRIu8 ")",
+							  context->GetCurrentSpatialLayer(),
+							  context->GetTargetSpatialLayer(),
+							  packetSpatialLayer,
+							  packetTemporalLayer);
 
-						tmpSpatialLayer  = context->GetTargetSpatialLayer();
-						tmpTemporalLayer = 0; // Just in case.
+							tmpSpatialLayer  = context->GetTargetSpatialLayer();
+							tmpTemporalLayer = 0; // Just in case.
+						}
 					}
-				}
-				// Downgrade current spatial layer if needed.
-				else if (!isOldPacket && filterSpatialLayers && context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
-				{
-					if (
-					  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
-					  this->payloadDescriptor->endOfFrame)
+					// Downgrade current spatial layer if needed.
+					else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 					{
-						MS_DEBUG_DEV(
-						  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
-						  ":%" PRIu8 ") without keyframe (full SVC)",
-						  context->GetCurrentSpatialLayer(),
-						  context->GetTargetSpatialLayer(),
-						  packetSpatialLayer,
-						  packetTemporalLayer);
+						if (
+						  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
+						  this->payloadDescriptor->endOfFrame)
+						{
+							MS_DEBUG_DEV(
+							  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+							  ":%" PRIu8 ") without keyframe (full SVC)",
+							  context->GetCurrentSpatialLayer(),
+							  context->GetTargetSpatialLayer(),
+							  packetSpatialLayer,
+							  packetTemporalLayer);
 
-						tmpSpatialLayer  = context->GetTargetSpatialLayer();
-						tmpTemporalLayer = 0; // Just in case.
+							tmpSpatialLayer  = context->GetTargetSpatialLayer();
+							tmpTemporalLayer = 0; // Just in case.
+						}
 					}
 				}
 
@@ -211,49 +217,53 @@ namespace RTC
 					return false;
 				}
 
-				// Upgrade current temporal layer if needed.
-				if (!isOldPacket && context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
+				// Move the current temporal layer towards the target one, likewise.
+				if (!isOldPacket)
 				{
-					// NOTE: Only switch up in a frame that the Dependency Descriptor marks as
-					// a switch point for the decode target we move into. Otherwise we'd
-					// forward frames that depend on frames we already dropped, which the
-					// endpoint cannot decode.
-					//
-					// NOTE: It must also be the lowest spatial layer of its picture. The
-					// current temporal layer is common to all spatial layers, so switching up
-					// in the middle of a picture would enable the new temporal layer for the
-					// spatial layers of that same picture that were already dropped.
-					if (
-					  packetSpatialLayer == 0 && this->payloadDescriptor->IsSwitchPointForTemporalLayer(
-					                               static_cast<uint8_t>(context->GetTargetTemporalLayer())))
+					// Upgrade current temporal layer if needed.
+					if (context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
 					{
-						MS_DEBUG_DEV(
-						  "upgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
-						  ":%" PRIu8 ")",
-						  context->GetCurrentTemporalLayer(),
-						  context->GetTargetTemporalLayer(),
-						  packetSpatialLayer,
-						  packetTemporalLayer);
+						// NOTE: Only switch up in a frame that the Dependency Descriptor marks
+						// as a switch point for the decode target we move into. Otherwise we'd
+						// forward frames that depend on frames we already dropped, which the
+						// endpoint cannot decode.
+						//
+						// NOTE: It must also be the lowest spatial layer of its picture. The
+						// current temporal layer is common to all spatial layers, so switching
+						// up in the middle of a picture would enable the new temporal layer for
+						// the spatial layers of that same picture that were already dropped.
+						if (
+						  packetSpatialLayer == 0 && this->payloadDescriptor->IsSwitchPointForTemporalLayer(
+						                               static_cast<uint8_t>(context->GetTargetTemporalLayer())))
+						{
+							MS_DEBUG_DEV(
+							  "upgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+							  ":%" PRIu8 ")",
+							  context->GetCurrentTemporalLayer(),
+							  context->GetTargetTemporalLayer(),
+							  packetSpatialLayer,
+							  packetTemporalLayer);
 
-						tmpTemporalLayer = context->GetTargetTemporalLayer();
+							tmpTemporalLayer = context->GetTargetTemporalLayer();
+						}
 					}
-				}
-				// Downgrade current temporal layer if needed.
-				else if (!isOldPacket && context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
-				{
-					if (
-					  std::cmp_equal(packetTemporalLayer, context->GetTargetTemporalLayer()) &&
-					  this->payloadDescriptor->endOfFrame)
+					// Downgrade current temporal layer if needed.
+					else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
 					{
-						MS_DEBUG_DEV(
-						  "downgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
-						  ":%" PRIu8 ")",
-						  context->GetCurrentTemporalLayer(),
-						  context->GetTargetTemporalLayer(),
-						  packetSpatialLayer,
-						  packetTemporalLayer);
+						if (
+						  std::cmp_equal(packetTemporalLayer, context->GetTargetTemporalLayer()) &&
+						  this->payloadDescriptor->endOfFrame)
+						{
+							MS_DEBUG_DEV(
+							  "downgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+							  ":%" PRIu8 ")",
+							  context->GetCurrentTemporalLayer(),
+							  context->GetTargetTemporalLayer(),
+							  packetSpatialLayer,
+							  packetTemporalLayer);
 
-						tmpTemporalLayer = packetTemporalLayer;
+							tmpTemporalLayer = packetTemporalLayer;
+						}
 					}
 				}
 
@@ -279,14 +289,17 @@ namespace RTC
 				 * NOTE: A reordered packet never moves them, since it says nothing about
 				 * what the Consumer is being given now.
 				 */
-				if (!isOldPacket && filterSpatialLayers && tmpSpatialLayer != context->GetCurrentSpatialLayer())
+				if (!isOldPacket)
 				{
-					context->SetCurrentSpatialLayer(tmpSpatialLayer, frameNumber);
-				}
+					if (filterSpatialLayers && tmpSpatialLayer != context->GetCurrentSpatialLayer())
+					{
+						context->SetCurrentSpatialLayer(tmpSpatialLayer, frameNumber);
+					}
 
-				if (!isOldPacket && tmpTemporalLayer != context->GetCurrentTemporalLayer())
-				{
-					context->SetCurrentTemporalLayer(tmpTemporalLayer, frameNumber);
+					if (tmpTemporalLayer != context->GetCurrentTemporalLayer())
+					{
+						context->SetCurrentTemporalLayer(tmpTemporalLayer, frameNumber);
+					}
 				}
 
 				/*
