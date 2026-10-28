@@ -91,7 +91,10 @@ namespace RTC
 
 			public:
 				static VP9::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
-				static void ProcessRtpPacket(RTP::Packet* packet);
+				static void ProcessRtpPacket(
+				  RTP::Packet* packet,
+				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+				    templateDependencyStructure);
 
 			public:
 				class EncodingContext : public Codecs::EncodingContext

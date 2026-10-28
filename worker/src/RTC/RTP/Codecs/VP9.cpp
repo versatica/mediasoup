@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/Codecs/VP9.hpp"
 #include "Logger.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptorPayloadDescriptor.hpp"
 
 namespace RTC
 {
@@ -110,9 +111,31 @@ namespace RTC
 				return payloadDescriptor.release();
 			}
 
-			void VP9::ProcessRtpPacket(RTP::Packet* packet)
+			void VP9::ProcessRtpPacket(
+			  RTP::Packet* packet,
+			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
 			{
 				MS_TRACE();
+
+				/*
+				 * The Dependency Descriptor tells the layers of the frame and whether
+				 * decoding can start at it, which is all that is needed to forward the
+				 * packet, and it must be rewritten for the layers each Consumer is given.
+				 * So it takes over whenever the packet carries one.
+				 *
+				 * NOTE: VP9 rewrites nothing in its payload, so nothing is lost by not
+				 * parsing its own payload descriptor.
+				 */
+				auto* dependencyDescriptorPayloadDescriptor =
+				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
+
+				if (dependencyDescriptorPayloadDescriptor)
+				{
+					packet->SetPayloadDescriptorHandler(
+					  new DependencyDescriptorPayloadDescriptorHandler(dependencyDescriptorPayloadDescriptor));
+
+					return;
+				}
 
 				auto* data = packet->GetPayload();
 				auto len   = packet->GetPayloadLength();

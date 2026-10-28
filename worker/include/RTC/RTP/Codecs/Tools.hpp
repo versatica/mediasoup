@@ -70,7 +70,7 @@ namespace RTC
 
 								case RTC::RtpCodecMimeType::Subtype::VP9:
 								{
-									Codecs::VP9::ProcessRtpPacket(packet);
+									Codecs::VP9::ProcessRtpPacket(packet, templateDependencyStructure);
 
 									break;
 								}
