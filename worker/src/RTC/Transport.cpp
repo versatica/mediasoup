@@ -56,26 +56,29 @@ namespace RTC
 	  : id(id),
 	    shared(shared),
 	    listener(listener),
+	    rtcpTimer(shared->CreateTimer(this, "transport-rtcp")),
+	    enableBwe(options->enableBwe()),
+	    direct(options->direct()),
 	    recvRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
 	    sendRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
 	    recvRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
 	    sendRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
 	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100),
-	    rttCalculator(this, shared)
+	    rttCalculator(this, shared),
+	    maxSendMessageSize(options->maxSendMessageSize()),
+	    maxReceiveMessageSize(options->maxReceiveMessageSize())
+#ifdef MS_RTC_LOGGER_SEND_BURST
+	    ,
+	    sendBurstLoggerTimer(shared->CreateTimer(this, "transport-send-burst"))
+#endif
 	{
 		MS_TRACE();
 
 #ifdef MS_RTC_LOGGER_SEND_BURST
 		this->sendBurstLogger.transportId = this->id;
-		this->sendBurstLoggerTimer        = this->shared->CreateTimer(this, "transport-send-burst");
 
 		this->sendBurstLoggerTimer->Start(SendBurstLogIntervalMs, SendBurstLogIntervalMs);
 #endif
-
-		this->direct                = options->direct();
-		this->enableBwe             = options->enableBwe();
-		this->maxSendMessageSize    = options->maxSendMessageSize();
-		this->maxReceiveMessageSize = options->maxReceiveMessageSize();
 
 		// NOTE: The API gives unsigned 64 bits bitrates, so they are clamped here.
 		if (this->enableBwe)
@@ -164,9 +167,6 @@ namespace RTC
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
 			  sctpOptions, this, this->shared, options->isDataChannel(), /*mayConnectOnReceivedSctpData*/ true);
 		}
-
-		// Create the RTCP timer.
-		this->rtcpTimer = this->shared->CreateTimer(this, "transport-rtcp");
 	}
 
 	Transport::~Transport()
@@ -221,15 +221,6 @@ namespace RTC
 		// NOTE: We cannot do it here in the destructor because here we are no longer
 		// the Transport subclass but Transport parent (this is how the destruction
 		// chain works in C++).
-
-		// Delete the RTCP timer.
-		delete this->rtcpTimer;
-		this->rtcpTimer = nullptr;
-
-#ifdef MS_RTC_LOGGER_SEND_BURST
-		delete this->sendBurstLoggerTimer;
-		this->sendBurstLoggerTimer = nullptr;
-#endif
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -1520,7 +1511,10 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef MS_RTC_LOGGER_RTP
-		packet->logger.recvTransportId = this->id;
+		packet->logger.timeMs           = Utils::Time::TimeUsToMs(receivedAtUs);
+		packet->logger.recvTransportId  = this->id;
+		packet->logger.recvRtpTimestamp = packet->GetTimestamp();
+		packet->logger.recvSeqNumber    = packet->GetSequenceNumber();
 #endif
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use
@@ -3448,7 +3442,7 @@ namespace RTC
 		MS_TRACE();
 
 		// RTCP timer.
-		if (timer == this->rtcpTimer)
+		if (timer == this->rtcpTimer.get())
 		{
 			auto intervalMs = static_cast<int64_t>(RTC::RTCP::MaxVideoIntervalMs);
 
@@ -3464,9 +3458,9 @@ namespace RTC
 			this->rtcpTimer->Start(intervalMs);
 		}
 #ifdef MS_RTC_LOGGER_SEND_BURST
-		else if (timer == this->sendBurstLoggerTimer)
+		else if (timer == this->sendBurstLoggerTimer.get())
 		{
-			this->sendBurstLogger.Log();
+			this->sendBurstLogger.Log(this->shared->GetLoopTimeMs());
 		}
 #endif
 	}

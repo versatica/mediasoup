@@ -726,7 +726,9 @@ namespace RTC
 	/* Instance methods. */
 
 	DtlsTransport::DtlsTransport(Listener* listener, SharedInterface* shared)
-	  : listener(listener), shared(shared), ssl(SSL_new(DtlsTransport::sslCtx))
+	  : listener(listener),
+	    ssl(SSL_new(DtlsTransport::sslCtx)),
+	    timer(shared->CreateTimer(this, "dtls-transport"))
 	{
 		MS_TRACE();
 
@@ -779,9 +781,6 @@ namespace RTC
 		// Set callback handler for setting DTLS timer interval.
 		DTLS_set_timer_cb(this->ssl, onSslDtlsTimer);
 
-		// Set the DTLS timer.
-		this->timer = this->shared->CreateTimer(this, "dtls-transport");
-
 		return;
 
 	error:
@@ -826,9 +825,6 @@ namespace RTC
 			this->sslBioFromNetwork = nullptr;
 			this->sslBioToNetwork   = nullptr;
 		}
-
-		// Close the DTLS timer.
-		delete this->timer;
 	}
 
 	void DtlsTransport::Dump(int indentation) const
@@ -1286,7 +1282,7 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("timeout is 0, calling OnTimer() callback directly");
 
-			OnTimer(this->timer);
+			OnTimer(this->timer.get());
 
 			return true;
 		}

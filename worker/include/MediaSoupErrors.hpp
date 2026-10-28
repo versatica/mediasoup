@@ -1,6 +1,7 @@
 #ifndef MS_MEDIASOUP_ERRORS_HPP
 #define MS_MEDIASOUP_ERRORS_HPP
 
+#include "common.hpp"
 #include "Logger.hpp"
 #include <cstdio> // std::snprintf()
 #include <stdexcept>

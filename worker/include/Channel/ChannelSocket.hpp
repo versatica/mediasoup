@@ -37,7 +37,7 @@ namespace Channel
 
 	private:
 		// Passed by argument.
-		Listener* listener{ nullptr };
+		Listener* listener;
 	};
 
 	class ProducerSocket : public UnixStreamSocketHandle
@@ -124,8 +124,8 @@ namespace Channel
 		SharedInterface* shared{ nullptr };
 		// Others.
 		bool closed{ false };
-		ConsumerSocket* consumerSocket{ nullptr };
-		ProducerSocket* producerSocket{ nullptr };
+		const std::unique_ptr<ConsumerSocket> consumerSocket;
+		const std::unique_ptr<ProducerSocket> producerSocket;
 		ChannelReadFn channelReadFn{ nullptr };
 		ChannelReadCtx channelReadCtx{ nullptr };
 		ChannelWriteFn channelWriteFn{ nullptr };

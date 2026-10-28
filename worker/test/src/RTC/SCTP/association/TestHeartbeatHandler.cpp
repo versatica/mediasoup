@@ -64,7 +64,7 @@ SCENARIO("SCTP HeartbeatHandler", "[sctp][heartbeathandler]")
 
 		// NOTE: Public members for testing.
 	public:
-		RTC::SCTP::SctpOptions sctpOptions;
+		const RTC::SCTP::SctpOptions sctpOptions;
 		mocks::RTC::SCTP::MockAssociationListener associationListener;
 		RTC::SCTP::AssociationListenerDeferrer associationListenerDeferrer{ std::addressof(
 			this->associationListener) };

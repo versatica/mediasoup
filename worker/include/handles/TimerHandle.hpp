@@ -63,10 +63,10 @@ public:
 
 private:
 	// Passed by argument.
-	TimerHandleInterface::Listener* listener{ nullptr };
+	TimerHandleInterface::Listener* const listener;
 	const std::string label;
 	// Allocated by this.
-	uv_timer_t* uvHandle{ nullptr };
+	uv_timer_t* uvHandle;
 	// Others.
 	bool closed{ false };
 	int64_t timeoutMs{ 0 };

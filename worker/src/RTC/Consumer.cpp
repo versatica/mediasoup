@@ -72,11 +72,11 @@ namespace RTC
 	    producerId(producerId),
 	    shared(shared),
 	    listener(listener),
-	    kind(RTC::Media::Kind(data->kind()))
+	    kind(RTC::Media::Kind(data->kind())),
+	    pipe(data->type() == FBS::RtpParameters::Type::PIPE),
+	    paused(data->paused())
 	{
 		MS_TRACE();
-
-		this->pipe = data->type() == FBS::RtpParameters::Type::PIPE;
 
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());
@@ -194,9 +194,6 @@ namespace RTC
 				this->rtpHeaderExtensionIds.mediasoupPacketId = exten.id;
 			}
 		}
-
-		// paused is set to false by default.
-		this->paused = data->paused();
 
 		// Fill supported codec payload types.
 		for (auto& codec : this->rtpParameters.codecs)

@@ -1,6 +1,7 @@
 #ifndef MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 #define MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 
+#include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "SharedInterface.hpp"
@@ -39,14 +40,14 @@ namespace RTC
 
 		public:
 			bool paused{ false };
-			double immediateActivityScore{ 0 };
-			double mediumActivityScore{ 0 };
-			double longActivityScore{ 0 };
-			int64_t lastLevelChangeAtMs{ 0 };
+			double immediateActivityScore;
+			double mediumActivityScore;
+			double longActivityScore;
+			int64_t lastLevelChangeAtMs;
 
 		private:
-			uint8_t minLevel{ 0 };
-			uint8_t nextMinLevel{ 0 };
+			uint8_t minLevel;
+			uint8_t nextMinLevel;
 			uint32_t nextMinLevelWindowLen{ 0 };
 			std::vector<uint8_t> immediates;
 			std::vector<uint8_t> mediums;
@@ -62,8 +63,8 @@ namespace RTC
 			~ProducerSpeaker();
 
 		public:
-			RTC::Producer* producer;
-			Speaker* speaker;
+			RTC::Producer* const producer;
+			const std::unique_ptr<Speaker> speaker;
 		};
 
 	private:
@@ -98,8 +99,8 @@ namespace RTC
 	private:
 		double relativeSpeachActivities[RelativeSpeachActivitiesLen]{};
 		std::string dominantId;
-		TimerHandleInterface* periodicTimer{ nullptr };
-		int64_t intervalMs{ 300 };
+		const std::unique_ptr<TimerHandleInterface> periodicTimer;
+		int64_t intervalMs;
 		// Map of ProducerSpeakers indexed by Producer id.
 		ankerl::unordered_dense::map<std::string, ProducerSpeaker*> mapProducerSpeakers;
 		int64_t lastLevelIdleAtMs{ 0 };

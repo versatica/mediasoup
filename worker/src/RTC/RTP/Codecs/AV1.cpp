@@ -54,18 +54,15 @@ namespace RTC
 
 			AV1::PayloadDescriptor::PayloadDescriptor(
 			  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor)
+			  : startOfFrame(dependencyDescriptor->startOfFrame),
+			    endOfFrame(dependencyDescriptor->endOfFrame),
+			    frameNumber(dependencyDescriptor->frameNumber),
+			    spatialLayer(dependencyDescriptor->spatialLayer),
+			    temporalLayer(dependencyDescriptor->temporalLayer),
+			    dependencyDescriptor(std::move(dependencyDescriptor)),
+			    isKeyFrame(this->dependencyDescriptor->isKeyFrame)
 			{
 				MS_TRACE();
-
-				// Read fields.
-				this->startOfFrame  = dependencyDescriptor->startOfFrame;
-				this->endOfFrame    = dependencyDescriptor->endOfFrame;
-				this->frameNumber   = dependencyDescriptor->frameNumber;
-				this->spatialLayer  = dependencyDescriptor->spatialLayer;
-				this->temporalLayer = dependencyDescriptor->temporalLayer;
-				this->isKeyFrame    = dependencyDescriptor->isKeyFrame;
-
-				this->dependencyDescriptor = std::move(dependencyDescriptor);
 			}
 
 			void AV1::PayloadDescriptor::Dump(int indentation) const

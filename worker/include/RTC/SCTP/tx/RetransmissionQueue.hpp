@@ -300,11 +300,11 @@ namespace RTC
 			AssociationListenerInterface& associationListener;
 			const SctpOptions sctpOptions;
 			// If the peer supports RFC3758 "SCTP Partial Reliability Extension".
-			bool supportsPartialReliability;
+			const bool supportsPartialReliability;
 			// The length of the data chunk (DATA/I-DATA) header that is used.
 			const size_t dataChunkHeaderLength;
 			// The retransmission timer.
-			BackoffTimerHandleInterface* t3RtxTimer;
+			BackoffTimerHandleInterface* const t3RtxTimer;
 			// Unwraps TSNs.
 			Types::UnwrappedTsn::Unwrapper tsnUnwrapper;
 			// Congestion Window. Number of bytes that may be in-flight (sent, not

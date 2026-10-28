@@ -172,7 +172,7 @@ namespace RTC
 		private:
 			const AimdRateControlOptions options;
 			int64_t minConfiguredBitrate;
-			int64_t maxConfiguredBitrate;
+			const int64_t maxConfiguredBitrate;
 			int64_t currentBitrate;
 			int64_t latestEstimatedThroughput;
 			LinkCapacityEstimator linkCapacity;

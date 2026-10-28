@@ -37,12 +37,13 @@ public:
 	}
 
 	/**
-	 * Time at which the current iteration of the event loop began (ms).
+	 * Loop time of the event loop (ms).
 	 *
 	 * @remarks
-	 * - It is taken once per iteration and cached, so every caller within the same one
-	 *   gets the very same value no matter how long the iteration takes. That is what
-	 *   tells two iterations apart, which the clocks above cannot do.
+	 * - libuv refreshes it after polling for I/O and before running timers, and caches
+	 *   it in between, so every caller in the same stretch gets the very same value no
+	 *   matter how long the stretch takes. That is what tells two stretches apart,
+	 *   which the clocks above cannot do.
 	 */
 	static uint64_t GetLoopTimeMs()
 	{

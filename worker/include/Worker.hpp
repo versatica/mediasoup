@@ -1,6 +1,7 @@
 #ifndef MS_WORKER_HPP
 #define MS_WORKER_HPP
 
+#include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/worker.h"
@@ -52,10 +53,10 @@ public:
 
 private:
 	// Passed by argument.
-	Channel::ChannelSocket* channel{ nullptr };
+	Channel::ChannelSocket* const channel;
 	// Allocated by this.
-	SignalHandle* signalHandle{ nullptr };
-	SharedInterface* shared{ nullptr };
+	std::unique_ptr<SignalHandle> signalHandle;
+	SharedInterface* const shared;
 	ankerl::unordered_dense::map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
 	ankerl::unordered_dense::map<std::string, RTC::Router*> mapRouters;
 	// Others.

@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "lib.hpp"
-#include "common.hpp"
 #include "Channel/ChannelMessageRegistrator.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "Channel/ChannelSocket.hpp"
@@ -18,7 +17,9 @@
 #include "Utils.hpp"
 #include "Worker.hpp"
 #include <csignal> // sigaction()
+#ifdef MS_EXECUTABLE
 #include <string>
+#endif
 
 static void ignoreSignals();
 

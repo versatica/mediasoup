@@ -248,10 +248,10 @@ namespace RTC
 			// NOTE: As wide as the counter it snapshots, which does not wrap, so that
 			// the difference against it stays exact however long the stream runs.
 			uint64_t sentPriorScore{ 0 };
-			std::string mid;
+			const std::string mid;
 			uint16_t rtxSeq{ 0 };
 			RTC::RtpDataCounter transmissionCounter;
-			RTP::RetransmissionBuffer* retransmissionBuffer{ nullptr };
+			std::unique_ptr<RTP::RetransmissionBuffer> retransmissionBuffer;
 			// Sequence numbers requested by received NACKs and not retransmitted yet,
 			// in the order they were requested.
 			std::deque<uint16_t> pendingRetransmissionsQueue;

@@ -56,14 +56,14 @@ namespace RTC
 			}
 
 		private:
-			int64_t minRtoUs;
-			int64_t maxRtoUs;
-			int64_t maxRttUs;
-			int64_t minRttVarianceUs;
+			const int64_t minRtoUs;
+			const int64_t maxRtoUs;
+			const int64_t maxRttUs;
+			const int64_t minRttVarianceUs;
 			double srttUs;
 			double rtoUs;
 			double rttVarUs{ 0 };
-			bool firstMeasurement{ false };
+			bool firstMeasurement{ true };
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -557,7 +557,7 @@ namespace RTC
 			// The last cumulative TSN ack number.
 			Types::UnwrappedTsn lastCumulativeTsnAck;
 			// Callback when to discard items from the send queue.
-			std::function<bool(uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)> discardFromSendQueue;
+			const std::function<bool(uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)> discardFromSendQueue;
 			// Outstanding items. If non-empty, the first element has
 			// `TSN=this->lastCumulativeTsnAck_ + 1` and the following items are in
 			// strict increasing TSN order. The last item has

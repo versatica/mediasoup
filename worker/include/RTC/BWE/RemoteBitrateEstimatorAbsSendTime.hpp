@@ -207,7 +207,7 @@ namespace RTC
 			void TimeoutStreams(int64_t nowUs);
 
 		private:
-			Listener* listener{ nullptr };
+			Listener* const listener;
 			// Recreated whenever every stream times out, since the groups of a stream
 			// that is gone say nothing about the ones of whatever comes next.
 			std::unique_ptr<InterArrival> interArrival;

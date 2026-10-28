@@ -15,7 +15,7 @@ namespace RTC
 		/* Static. */
 
 		// Limit max number of items in the retransmission buffer.
-		static constexpr size_t RetransmissionBufferMaxItems{ 3000 };
+		static constexpr uint16_t RetransmissionBufferMaxItems{ 3000 };
 		static constexpr int64_t DefaultRttMs{ 100 };
 		// Interval between consecutive iterations of pending retransmissions.
 		static constexpr int64_t RetransmissionIntervalMs{ 10 };
@@ -58,7 +58,7 @@ namespace RTC
 					}
 				}
 
-				this->retransmissionBuffer = new RTC::RTP::RetransmissionBuffer(
+				this->retransmissionBuffer = std::make_unique<RTC::RTP::RetransmissionBuffer>(
 				  RetransmissionBufferMaxItems, maxRetransmissionDelayMs, params.clockRate);
 			}
 		}
@@ -66,10 +66,6 @@ namespace RTC
 		RtpStreamSend::~RtpStreamSend()
 		{
 			MS_TRACE();
-
-			// Delete retransmission buffer.
-			delete this->retransmissionBuffer;
-			this->retransmissionBuffer = nullptr;
 		}
 
 		flatbuffers::Offset<FBS::RtpStream::Stats> RtpStreamSend::FillBufferStats(

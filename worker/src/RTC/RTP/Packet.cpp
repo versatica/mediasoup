@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTP/Packet.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Consts.hpp"
@@ -131,15 +130,6 @@ namespace RTC
 			MS_TRACE();
 
 			SetLength(Packet::FixedHeaderMinLength);
-
-#ifdef MS_RTC_LOGGER_RTP
-			// Initialize logger.
-			// NOTE: Here we use DepLibUV directly since `this->logger` doesn't
-			// have any purpose during tests.
-			this->logger.timestamp        = DepLibUV::GetTimeMs();
-			this->logger.recvRtpTimestamp = GetTimestamp();
-			this->logger.recvSeqNumber    = GetSequenceNumber();
-#endif
 		}
 
 		Packet::~Packet()
@@ -436,6 +426,11 @@ namespace RTC
 
 			// Clone media SSRC.
 			clonedPacket->mediaSsrc = this->mediaSsrc;
+
+#ifdef MS_RTC_LOGGER_RTP
+			// Clone logger.
+			clonedPacket->logger = this->logger;
+#endif
 
 			// Assign the payload descriptor handler.
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;

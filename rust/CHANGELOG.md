@@ -3,6 +3,7 @@
 ### NEXT
 
 - BWE: Reduce CPU usage in `RTC::BWE::SendPacketHistory` ([PR #2018](https://github.com/versatica/mediasoup/pull/2018)).
+- Worker: Improve C++ code ([PR #2021](https://github.com/versatica/mediasoup/pull/2021)).
 
 ### 0.33.0
 
