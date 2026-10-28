@@ -128,6 +128,8 @@ pub enum WorkerLogTag {
     Simulcast,
     /// Logs about video SVC.
     Svc,
+    /// Logs about codec specifics.
+    Codec,
     /// Logs about SCTP (DataChannel).
     Sctp,
     /// Logs about messages (can be SCTP messages or direct messages).
@@ -148,6 +150,7 @@ impl WorkerLogTag {
             Self::Score => "score",
             Self::Simulcast => "simulcast",
             Self::Svc => "svc",
+            Self::Codec => "codec",
             Self::Sctp => "sctp",
             Self::Message => "message",
         }

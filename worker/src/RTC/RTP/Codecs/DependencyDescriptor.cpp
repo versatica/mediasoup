@@ -680,7 +680,7 @@ namespace RTC
 				if (bits > Consts::TwoBytesRtpExtensionMaxLength * 8)
 				{
 					MS_WARN_TAG(
-					  rtp,
+					  codec,
 					  "rewritten descriptor does not fit so it will be forwarded as received [bits:%" PRIu32
 					  "]",
 					  bits);

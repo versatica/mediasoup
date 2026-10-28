@@ -17,6 +17,7 @@ export type WorkerLogTag =
 	| 'score'
 	| 'simulcast'
 	| 'svc'
+	| 'codec'
 	| 'sctp'
 	| 'message';
 
