@@ -76,8 +76,9 @@ namespace
 	 * 4 pictures of 3 spatial layers each, with temporal layers T2, T1, T2, T0.
 	 *
 	 * NOTE: All of them are end of frame packets, which is what `Process()`
-	 * requires to switch layers down and to set the marker bit. Frames that the
-	 * capture sent in several packets are hence represented by their last one.
+	 * requires to switch the temporal layer down and to set the marker bit.
+	 * Frames that the capture sent in several packets are hence represented by
+	 * their last one.
 	 */
 	// clang-format off
 	const std::vector<std::vector<uint8_t>> DeltaFrames =
