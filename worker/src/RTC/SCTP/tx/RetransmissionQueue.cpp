@@ -487,6 +487,13 @@ namespace RTC
 			return this->sendQueue.HasStreamsReadyToBeReset();
 		}
 
+		size_t RetransmissionQueue::GetNumberOfStreamsReadyToBeReset() const
+		{
+			MS_TRACE();
+
+			return this->sendQueue.GetNumberOfStreamsReadyToBeReset();
+		}
+
 		std::vector<uint16_t /*streamId*/> RetransmissionQueue::BeginResetStreams()
 		{
 			MS_TRACE();

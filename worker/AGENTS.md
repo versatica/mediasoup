@@ -69,6 +69,8 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - Integer literals have no `u` suffix (`0`, not `0u`), unless the value does not fit in an `int`.
 - Write `Utils::Foo`, never `::Utils::Foo`.
 - Access `std::optional` with `.value()`, not `*opt`. In production code, a `.value()` already guarded by the surrounding flow is left alone (no `NOLINT`).
+- A function whose result the caller must check (e.g. a `bool` telling whether it did its job) is declared `[[nodiscard]]`, so that ignoring it fails at compile time instead of relying on the caller to remember.
+- Use the `std::ranges` version of an algorithm whenever there is one, passing the container itself when the algorithm covers all of it (`std::ranges::fill(container, value)`, not `std::fill(std::begin(container), std::end(container), value)`).
 
 ## Robustness
 

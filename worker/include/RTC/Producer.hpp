@@ -204,7 +204,7 @@ namespace RTC
 		RTC::RTP::RtpStreamRecv* CreateRtpStream(
 		  const RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
 		void NotifyNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream);
-		bool MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const;
+		[[nodiscard]] bool MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const;
 		/**
 		 * @param maxPacketTsChanged - Whether this packet became the one holding the
 		 * highest RTP timestamp of its RTP stream, which happens just for the first

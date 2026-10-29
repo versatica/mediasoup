@@ -126,7 +126,7 @@ namespace RTC
 			// NOTE: This method does not delete the removed SsrcInfo instance.
 			void RemoveSsrcInfo(SsrcInfo* ssrcInfo)
 			{
-				const auto it = std::find(this->ssrcInfos.begin(), this->ssrcInfos.end(), ssrcInfo);
+				const auto it = std::ranges::find(this->ssrcInfos, ssrcInfo);
 
 				if (it != this->ssrcInfos.end())
 				{

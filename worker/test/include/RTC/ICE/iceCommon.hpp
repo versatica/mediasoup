@@ -104,10 +104,10 @@ namespace iceCommon
 			REQUIRE_THROWS_AS(packet->AddUsername("foo"), MediaSoupError);                                  \
 		}                                                                                                 \
 		REQUIRE(                                                                                          \
-		  std::any_of(                                                                                    \
+		  std::ranges::any_of(                                                                            \
 		    packet->GetTransactionId(),                                                                   \
 		    packet->GetTransactionId() + RTC::ICE::StunPacket::TransactionIdLength,                       \
-		    [](uint8_t b)                                                                                 \
+		    [](uint8_t b) -> bool                                                                         \
 		    {                                                                                             \
 			    return b != 0;                                                                              \
 		    }));                                                                                          \

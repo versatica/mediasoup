@@ -140,6 +140,20 @@ namespace RTC
 			  });
 		}
 
+		size_t RoundRobinSendQueue::GetNumberOfStreamsReadyToBeReset() const
+		{
+			MS_TRACE();
+
+			return static_cast<size_t>(std::ranges::count_if(
+			  this->streams,
+			  [](const auto& entry) -> bool
+			  {
+				  const auto& stream = entry.second;
+
+				  return stream.IsReadyToBeReset();
+			  }));
+		}
+
 		std::vector<uint16_t> RoundRobinSendQueue::GetStreamsReadyToBeReset()
 		{
 			MS_TRACE();

@@ -505,7 +505,7 @@ namespace RTC
 			 *
 			 * @throw MediaSoupTypeError - If given extensions are invalid/wrong.
 			 */
-			bool SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions);
+			[[nodiscard]] bool SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions);
 
 			/**
 			 * Assign extension ids.

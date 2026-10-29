@@ -1192,7 +1192,7 @@ namespace RTC
 		this->listener->OnProducerNewRtpStream(this, rtpStream, mappedSsrc);
 	}
 
-	inline bool Producer::MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const
+	bool Producer::MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
 
@@ -1491,7 +1491,7 @@ namespace RTC
 		return true;
 	}
 
-	inline void Producer::PostProcessRtpPacket(
+	void Producer::PostProcessRtpPacket(
 	  RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged)
 	{
 		MS_TRACE();
@@ -1544,7 +1544,7 @@ namespace RTC
 		}
 	}
 
-	inline void Producer::EmitScore() const
+	void Producer::EmitScore() const
 	{
 		MS_TRACE();
 
@@ -1576,7 +1576,7 @@ namespace RTC
 		  notification);
 	}
 
-	inline void Producer::EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx) const
+	void Producer::EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx) const
 	{
 		MS_TRACE();
 
@@ -1614,7 +1614,7 @@ namespace RTC
 		}
 	}
 
-	inline void Producer::EmitTraceEventPliType(uint32_t ssrc) const
+	void Producer::EmitTraceEventPliType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1637,7 +1637,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	inline void Producer::EmitTraceEventFirType(uint32_t ssrc) const
+	void Producer::EmitTraceEventFirType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1660,7 +1660,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	inline void Producer::EmitTraceEventNackType() const
+	void Producer::EmitTraceEventNackType() const
 	{
 		MS_TRACE();
 
@@ -1678,7 +1678,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	inline void Producer::EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const
+	void Producer::EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const
 	{
 		MS_TRACE();
 
@@ -1707,8 +1707,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	inline void Producer::EmitTraceEvent(
-	  flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const
+	void Producer::EmitTraceEvent(flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const
 	{
 		MS_TRACE();
 
@@ -1719,8 +1718,7 @@ namespace RTC
 		  notification);
 	}
 
-	inline void Producer::OnRtpStreamScore(
-	  RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
+	void Producer::OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -1735,7 +1733,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	inline void Producer::OnRtpStreamSendRtcpPacket(
+	void Producer::OnRtpStreamSendRtcpPacket(
 	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
@@ -1793,7 +1791,7 @@ namespace RTC
 		this->listener->OnProducerSendRtcpPacket(this, packet);
 	}
 
-	inline uint8_t Producer::OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream)
+	uint8_t Producer::OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
@@ -1803,7 +1801,7 @@ namespace RTC
 		return this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc);
 	}
 
-	inline void Producer::OnRtpStreamSpatialLayerActivityChanged(
+	void Producer::OnRtpStreamSpatialLayerActivityChanged(
 	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
 	{
 		MS_TRACE();
@@ -1812,8 +1810,7 @@ namespace RTC
 		this->listener->OnProducerSpatialLayerActivityChanged(this, rtpStream, spatialLayer, isActive);
 	}
 
-	inline void Producer::OnKeyFrameNeeded(
-	  RTC::KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
+	void Producer::OnKeyFrameNeeded(RTC::KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
 	{
 		MS_TRACE();
 

@@ -193,7 +193,7 @@ namespace RTC
 			}
 			void RemoveChunk(SdesChunk* chunk)
 			{
-				auto it = std::find(this->chunks.begin(), this->chunks.end(), chunk);
+				const auto it = std::ranges::find(this->chunks, chunk);
 
 				if (it != this->chunks.end())
 				{

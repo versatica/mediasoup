@@ -217,11 +217,14 @@ namespace RTC
 			 * Adds a Reset Streams request to the given packet. Will start the
 			 * reconfig timer.
 			 *
+			 * @return `false` if the request does not fit in the packet, in which case
+			 *   nothing is done and the request remains to be sent.
+			 *
 			 * @remarks
 			 * - The caller must check `ShouldCreateStreamResetRequest()` first and
 			 *   only invoke this method if the former returns `true`.
 			 */
-			void AddStreamResetRequest(Packet* packet);
+			[[nodiscard]] bool AddStreamResetRequest(Packet* packet);
 
 			/**
 			 * Called when handling and incoming RE-CONFIG chunk. Processes a stream

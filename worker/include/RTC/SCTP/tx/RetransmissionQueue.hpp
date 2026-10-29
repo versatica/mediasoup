@@ -211,6 +211,7 @@ namespace RTC
 			 */
 			void PrepareResetStream(uint16_t streamId);
 			bool HasStreamsReadyToBeReset() const;
+			size_t GetNumberOfStreamsReadyToBeReset() const;
 			std::vector<uint16_t /*streamId*/> BeginResetStreams();
 			void CommitResetStreams();
 			void RollbackResetStreams();

@@ -100,7 +100,7 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 			 rtpCommon::DataBuffer }
 		};
 
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
 
 		RTC::RTP::HeaderExtensionIds headerExtensionIds;
 

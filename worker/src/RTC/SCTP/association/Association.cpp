@@ -954,14 +954,14 @@ namespace RTC
 			//
 			// @remarks
 			// - This also applies to I-DATA chunks.
-			const bool hasDataChunk = std::find_if(
-			                            receivedPacket->ChunksBegin(),
-			                            receivedPacket->ChunksEnd(),
-			                            [](const Chunk* chunk)
-			                            {
-				                            return chunk->GetType() == Chunk::ChunkType::DATA ||
-																		       chunk->GetType() == Chunk::ChunkType::I_DATA;
-			                            }) != receivedPacket->ChunksEnd();
+			const bool hasDataChunk = std::ranges::any_of(
+			  receivedPacket->ChunksBegin(),
+			  receivedPacket->ChunksEnd(),
+			  [](const Chunk* chunk) -> bool
+			  {
+				  return chunk->GetType() == Chunk::ChunkType::DATA ||
+					       chunk->GetType() == Chunk::ChunkType::I_DATA;
+			  });
 
 			if (hasDataChunk)
 			{
@@ -981,9 +981,13 @@ namespace RTC
 
 			if (this->tcb->GetStreamResetHandler().ShouldSendStreamResetRequest())
 			{
-				auto packet = this->tcb->CreatePacket();
+				const auto packet = this->tcb->CreatePacket();
 
-				this->tcb->GetStreamResetHandler().AddStreamResetRequest(packet.get());
+				if (!this->tcb->GetStreamResetHandler().AddStreamResetRequest(packet.get()))
+				{
+					return;
+				}
+
 				this->packetSender.SendPacket(packet.get());
 			}
 		}

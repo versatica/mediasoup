@@ -205,7 +205,7 @@ namespace RTC
 
 				if (!extIds.empty())
 				{
-					std::copy(
+					std::ranges::copy(
 					  extIds.begin(), extIds.end() - 1, std::ostream_iterator<std::string>(extIdsStream, ", "));
 					extIdsStream << extIds.back();
 
@@ -534,7 +534,7 @@ namespace RTC
 			}
 
 			// Clear One-Byte and Two-Bytes extensions.
-			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
+			std::ranges::fill(this->oneByteExtensions, -1);
 			this->twoBytesExtensions.clear();
 
 			const auto headerExtensionLength = GetHeaderExtensionLength();
@@ -661,7 +661,7 @@ namespace RTC
 			}
 
 			// Clear One-Byte and Two-Bytes extensions.
-			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
+			std::ranges::fill(this->oneByteExtensions, -1);
 			this->twoBytesExtensions.clear();
 
 			// Reset extension ids.

@@ -61,7 +61,7 @@ namespace RTC
 			 *   them and `items` is left empty. `false` otherwise, in which case
 			 *   neither the packet nor `items` are modified.
 			 */
-			bool AddSenderReportItems(SenderReportItems& items);
+			[[nodiscard]] bool AddSenderReportItems(SenderReportItems& items);
 			/**
 			 * Add the report of a stream being received, along with a Receiver
 			 * Reference Time report with given NTP time if the packet has none yet.
@@ -70,27 +70,28 @@ namespace RTC
 			 *   the report and `report` is left empty. `false` otherwise, in which case
 			 *   neither the packet nor `report` are modified.
 			 */
-			bool AddReceiverReport(std::unique_ptr<ReceiverReport>& report, const Utils::Time::Ntp& ntp);
+			[[nodiscard]] bool AddReceiverReport(
+			  std::unique_ptr<ReceiverReport>& report, const Utils::Time::Ntp& ntp);
 			bool HasSenderReport()
 			{
 				return this->senderReportPacket.Begin() != this->senderReportPacket.End();
 			}
 			bool HasReceiverReferenceTime()
 			{
-				return std::any_of(
+				return std::ranges::any_of(
 				  this->xrPacket.Begin(),
 				  this->xrPacket.End(),
-				  [](const ExtendedReportBlock* report)
+				  [](const ExtendedReportBlock* report) -> bool
 				  {
 					  return report->GetType() == ExtendedReportBlock::Type::RRT;
 				  });
 			}
 			bool HasDelaySinceLastRr()
 			{
-				return std::any_of(
+				return std::ranges::any_of(
 				  this->xrPacket.Begin(),
 				  this->xrPacket.End(),
-				  [](const ExtendedReportBlock* report)
+				  [](const ExtendedReportBlock* report) -> bool
 				  {
 					  return report->GetType() == ExtendedReportBlock::Type::DLRR;
 				  });

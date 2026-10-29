@@ -426,7 +426,7 @@ namespace RTC
 			/**
 			 * Adds a FORWARD-TSN chunk to the given packet and returns it, or returns
 			 * `nullptr` without adding anything if it would be a rate limited
-			 * duplicate.
+			 * duplicate or if it does not fit in the packet.
 			 *
 			 * @param rateLimitedTsn The new cumulative TSN that must not be sent again
 			 *   yet, or `std::nullopt` if no such TSN is being rate limited.
@@ -437,7 +437,7 @@ namespace RTC
 			/**
 			 * Adds an I-FORWARD-TSN chunk to the given packet and returns it, or
 			 * returns `nullptr` without adding anything if it would be a rate limited
-			 * duplicate.
+			 * duplicate or if it does not fit in the packet.
 			 *
 			 * @param rateLimitedTsn The new cumulative TSN that must not be sent again
 			 *   yet, or `std::nullopt` if no such TSN is being rate limited.

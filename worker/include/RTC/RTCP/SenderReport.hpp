@@ -135,7 +135,7 @@ namespace RTC
 			}
 			void RemoveReport(SenderReport* report)
 			{
-				auto it = std::find(this->reports.begin(), this->reports.end(), report);
+				const auto it = std::ranges::find(this->reports, report);
 
 				if (it != this->reports.end())
 				{

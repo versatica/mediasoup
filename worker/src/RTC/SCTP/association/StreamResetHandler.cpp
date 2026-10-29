@@ -3,8 +3,10 @@
 
 #include "RTC/SCTP/association/StreamResetHandler.hpp"
 #include "Logger.hpp"
+#include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -67,11 +69,32 @@ namespace RTC
 			       this->retransmissionQueue->HasStreamsReadyToBeReset();
 		}
 
-		void StreamResetHandler::AddStreamResetRequest(Packet* packet)
+		bool StreamResetHandler::AddStreamResetRequest(Packet* packet)
 		{
 			MS_TRACE();
 
 			MS_ASSERT(ShouldSendStreamResetRequest(), "should not send a stream reset request");
+
+			// The RE-CONFIG chunk carries an Outgoing SSN Reset Request parameter
+			// with 2 bytes per stream, padded to 4 bytes. It must fit in the packet
+			// before anything is changed, since preparing the request already marks
+			// the streams as being reset.
+			const size_t reConfigChunkLength =
+			  Chunk::ChunkHeaderLength +
+			  Utils::Byte::PadTo4Bytes(
+			    OutgoingSsnResetRequestParameter::OutgoingSsnResetRequestParameterHeaderLength +
+			    (this->retransmissionQueue->GetNumberOfStreamsReadyToBeReset() * 2));
+
+			if (reConfigChunkLength > packet->GetAvailableLength())
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "no room in the packet for the stream reset request [len:%zu, available len:%zu]",
+				  reConfigChunkLength,
+				  packet->GetAvailableLength());
+
+				return false;
+			}
 
 			this->currentRequest.emplace(
 			  this->retransmissionQueue->GetLastAssignedTsn(),
@@ -82,6 +105,8 @@ namespace RTC
 			this->reConfigTimer->Start();
 
 			AddReConfigChunk(packet);
+
+			return true;
 		}
 
 		void StreamResetHandler::HandleReceivedReConfigChunk(const ReConfigChunk* receivedReConfigChunk)

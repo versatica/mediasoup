@@ -222,7 +222,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		const auto packet = test.tcbContext.CreatePacket();
 
-		test.streamResetHandler.AddStreamResetRequest(packet.get());
+		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
 
 		const auto* reConfigChunk = packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>();
 
@@ -233,6 +233,37 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		REQUIRE(parameter);
 		REQUIRE(parameter->GetStreamIds() == std::vector<uint16_t>{ 42 });
+	}
+
+	SECTION("doesn't add an outgoing request that does not fit in the packet")
+	{
+		TestStreamResetHandler test;
+
+		test.streamResetHandler.ResetStreams(std::vector<uint16_t>{ 42 });
+
+		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == true);
+
+		// The RE-CONFIG chunk takes 4 bytes of header plus the Outgoing SSN Reset
+		// Request parameter, which is 16 bytes plus 2 per stream padded to 4
+		// bytes, so 24 bytes in total. Room for 23 is one short.
+		std::vector<uint8_t> buffer(RTC::SCTP::Packet::CommonHeaderLength + 24);
+
+		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			buffer.data(), RTC::SCTP::Packet::CommonHeaderLength + 23) };
+
+		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == false);
+
+		REQUIRE(packet->GetChunksCount() == 0);
+		// The request remains to be sent.
+		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == true);
+
+		// With room for 24 it fits.
+		packet.reset(RTC::SCTP::Packet::Factory(buffer.data(), buffer.size()));
+
+		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
+
+		REQUIRE(packet->GetLength() == buffer.size());
+		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == false);
 	}
 
 	SECTION("resets multiple streams in one request")
@@ -247,7 +278,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		const auto packet = test.tcbContext.CreatePacket();
 
-		test.streamResetHandler.AddStreamResetRequest(packet.get());
+		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
 
 		const auto* reConfigChunk = packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>();
 
@@ -275,7 +306,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		const auto packet = test.tcbContext.CreatePacket();
 
-		test.streamResetHandler.AddStreamResetRequest(packet.get());
+		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
 
 		const auto* parameter =
 		  packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>()
@@ -312,7 +343,7 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		const auto packet = test.tcbContext.CreatePacket();
 
-		test.streamResetHandler.AddStreamResetRequest(packet.get());
+		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
 
 		const auto* parameter =
 		  packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>()

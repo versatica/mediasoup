@@ -2010,45 +2010,50 @@ SCENARIO("SCTP Association", "[sctp][association]")
 		REQUIRE(a.listener.HasSentPackets() == false);
 	}
 
+	// Has A connect and replies to its INIT with an INIT-ACK carrying a cookie of
+	// given length. Returns the verification tag of A, which packets sent to it
+	// must carry.
+	const auto replyToInit = [](AssociationUnderTest& a, uint16_t cookieLength) -> uint32_t
+	{
+		a.association.Connect();
+
+		const auto initBuffer = a.listener.ConsumeFirstSentPacket();
+		const auto initPacket = parsePacket(initBuffer);
+
+		REQUIRE(initPacket);
+
+		const auto* initChunk = initPacket->GetFirstChunkOfType<RTC::SCTP::InitChunk>();
+
+		REQUIRE(initChunk);
+
+		const uint32_t verificationTag = initChunk->GetInitiateTag();
+
+		std::vector<uint8_t> buffer(2048);
+
+		const auto packet        = buildPacket(buffer, verificationTag);
+		auto* const initAckChunk = packet->BuildChunkInPlace<RTC::SCTP::InitAckChunk>();
+		const std::vector<uint8_t> cookie(cookieLength, 0xAA);
+
+		initAckChunk->SetInitiateTag(12345678);
+		initAckChunk->SetAdvertisedReceiverWindowCredit(1000000);
+		initAckChunk->SetNumberOfOutboundStreams(1);
+		initAckChunk->SetNumberOfInboundStreams(1);
+		initAckChunk->SetInitialTsn(1);
+
+		auto* const stateCookieParameter =
+		  initAckChunk->BuildParameterInPlace<RTC::SCTP::StateCookieParameter>();
+
+		stateCookieParameter->SetCookie(cookie.data(), cookieLength);
+		stateCookieParameter->Consolidate();
+		initAckChunk->Consolidate();
+
+		injectPacket(a, packet.get());
+
+		return verificationTag;
+	};
+
 	SECTION("aborts on an INIT-ACK whose cookie is too large to be echoed")
 	{
-		// Has A connect and replies to its INIT with an INIT-ACK carrying a cookie
-		// of given length.
-		const auto replyToInit = [](AssociationUnderTest& a, uint16_t cookieLength) -> void
-		{
-			a.association.Connect();
-
-			const auto initBuffer = a.listener.ConsumeFirstSentPacket();
-			const auto initPacket = parsePacket(initBuffer);
-
-			REQUIRE(initPacket);
-
-			const auto* initChunk = initPacket->GetFirstChunkOfType<RTC::SCTP::InitChunk>();
-
-			REQUIRE(initChunk);
-
-			std::vector<uint8_t> buffer(2048);
-
-			const auto packet        = buildPacket(buffer, initChunk->GetInitiateTag());
-			auto* const initAckChunk = packet->BuildChunkInPlace<RTC::SCTP::InitAckChunk>();
-			const std::vector<uint8_t> cookie(cookieLength, 0xAA);
-
-			initAckChunk->SetInitiateTag(12345678);
-			initAckChunk->SetAdvertisedReceiverWindowCredit(1000000);
-			initAckChunk->SetNumberOfOutboundStreams(1);
-			initAckChunk->SetNumberOfInboundStreams(1);
-			initAckChunk->SetInitialTsn(1);
-
-			auto* const stateCookieParameter =
-			  initAckChunk->BuildParameterInPlace<RTC::SCTP::StateCookieParameter>();
-
-			stateCookieParameter->SetCookie(cookie.data(), cookieLength);
-			stateCookieParameter->Consolidate();
-			initAckChunk->Consolidate();
-
-			injectPacket(a, packet.get());
-		};
-
 		// The COOKIE-ECHO takes 12 bytes of common header, 4 of chunk header and
 		// the cookie padded to 4 bytes. With a 1172 bytes cookie that is 1188
 		// bytes, the most A sends (its 1191 bytes MTU padded down to 4 bytes).
@@ -2078,6 +2083,73 @@ SCENARIO("SCTP Association", "[sctp][association]")
 			REQUIRE(a.listener.HasFailed() == true);
 			REQUIRE(a.listener.GetFailedErrorKind() == RTC::SCTP::Types::ErrorKind::PROTOCOL_VIOLATION);
 		}
+	}
+
+	SECTION("doesn't bundle a SACK that does not fit with a resent COOKIE-ECHO")
+	{
+		AssociationUnderTest a;
+
+		// A 1172 bytes cookie fills the COOKIE-ECHO packet, leaving no room for
+		// anything else.
+		const uint32_t verificationTag = replyToInit(a, 1172);
+
+		REQUIRE(
+		  packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(a.listener.ConsumeFirstSentPacket()) ==
+		  true);
+
+		// Injects into A a DATA chunk with given TSN.
+		const auto injectDataChunk = [&a, verificationTag](uint32_t tsn) -> void
+		{
+			std::vector<uint8_t> buffer(a.sctpOptions.mtu);
+
+			const auto packet     = buildPacket(buffer, verificationTag);
+			auto* const dataChunk = packet->BuildChunkInPlace<RTC::SCTP::DataChunk>();
+			const uint8_t payload[]{ 0x01 };
+
+			dataChunk->SetTsn(tsn);
+			dataChunk->SetStreamId(0);
+			dataChunk->SetPayloadProtocolId(53);
+			dataChunk->SetB(true);
+			dataChunk->SetE(true);
+			dataChunk->SetUserDataPayload(payload, sizeof(payload));
+			dataChunk->Consolidate();
+
+			injectPacket(a, packet.get());
+		};
+
+		// The first DATA chunk is acked right away, alone.
+		injectDataChunk(1);
+
+		REQUIRE(
+		  packetHasSingleChunkOfType<RTC::SCTP::SackChunk>(a.listener.ConsumeFirstSentPacket()) == true);
+
+		// The second one leaves a delayed SACK pending.
+		injectDataChunk(2);
+
+		REQUIRE(a.listener.HasSentPackets() == false);
+
+		// When the T1-cookie timer expires the COOKIE-ECHO is resent, and the
+		// pending SACK, which does not fit, is not bundled with it.
+		a.AdvanceNowMs(a.sctpOptions.t1CookieTimeoutMs);
+
+		auto* t1CookieTimer = a.shared.GetBackoffTimer("sctp-t1-cookie");
+
+		REQUIRE(t1CookieTimer);
+		REQUIRE(t1CookieTimer->EvaluateHasExpired() == true);
+
+		const auto buffer = a.listener.ConsumeFirstSentPacket();
+
+		REQUIRE(packetHasSingleChunkOfType<RTC::SCTP::CookieEchoChunk>(buffer) == true);
+		REQUIRE(buffer.size() == 1188);
+
+		// The SACK is still pending, so it is sent once the delayed ack timer
+		// expires.
+		auto* delayedAckTimer = a.shared.GetBackoffTimer("sctp-delayed-ack");
+
+		REQUIRE(delayedAckTimer);
+		REQUIRE(delayedAckTimer->EvaluateHasExpired() == true);
+		REQUIRE(
+		  packetHasSingleChunkOfType<RTC::SCTP::SackChunk>(a.listener.ConsumeFirstSentPacket()) == true);
 	}
 
 	SECTION("reports a received error chunk as a callback")
