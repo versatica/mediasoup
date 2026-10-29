@@ -135,6 +135,25 @@ namespace RTC
 				 * dependency fields, which are not parsed into any field of this class.
 				 */
 				uint8_t Write(uint32_t activeDecodeTargetsBitmask, uint8_t* buffer) const;
+				/**
+				 * Whether decoding can start at this frame for the decode target formed
+				 * by the given spatial and temporal layer, this is, whether an endpoint
+				 * that was not being sent that decode target can be switched into it
+				 * here.
+				 *
+				 * That is what a "switch" indication means: this frame and every later
+				 * frame of that decode target can be decoded without any older one.
+				 */
+				bool IsSwitchPointForDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const;
+				/**
+				 * Whether decoding can start at this frame for the decode target formed
+				 * by the spatial layer of this very frame and the given temporal layer,
+				 * this is, whether an endpoint can be switched into that temporal layer
+				 * here.
+				 *
+				 * That is what a "switch" indication means: this frame and every later
+				 * frame of that decode target can be decoded without any older one.
+				 */
 				bool IsSwitchPointForTemporalLayer(uint8_t temporalLayer) const;
 				/**
 				 * Whether this frame belongs to the decode target formed by the given

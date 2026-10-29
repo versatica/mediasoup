@@ -187,26 +187,39 @@ namespace RTC
 							  packetTemporalLayer);
 
 							tmpSpatialLayer  = context->GetTargetSpatialLayer();
-							tmpTemporalLayer = 0; // Just in case.
+							tmpTemporalLayer = 0;
 						}
 					}
 					// Downgrade current spatial layer if needed.
 					else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 					{
+						// NOTE: Only switch down in a frame that the Dependency Descriptor
+						// marks as a switch point for the decode target we move into.
+						// Otherwise we'd forward frames that depend on frames the endpoint
+						// was never sent, which it cannot decode. In K-SVC those are all the
+						// frames of the target spatial layer so far.
+						//
+						// NOTE: The decode target we enter is the one of the target spatial
+						// layer at temporal layer 0, not at the target temporal layer, since
+						// the switch drops the temporal layer to 0 as well. Climbing back up
+						// is gated on a switch point of its own, so asking for one here
+						// would hold the switch back waiting for what is not needed yet.
 						if (
 						  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
-						  this->payloadDescriptor->endOfFrame)
+						  this->payloadDescriptor->endOfFrame &&
+						  this->payloadDescriptor->IsSwitchPointForDecodeTarget(
+						    static_cast<uint8_t>(context->GetTargetSpatialLayer()), 0))
 						{
 							MS_DEBUG_DEV(
 							  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
-							  ":%" PRIu8 ") without keyframe (full SVC)",
+							  ":%" PRIu8 ") at a switch point, without keyframe",
 							  context->GetCurrentSpatialLayer(),
 							  context->GetTargetSpatialLayer(),
 							  packetSpatialLayer,
 							  packetTemporalLayer);
 
 							tmpSpatialLayer  = context->GetTargetSpatialLayer();
-							tmpTemporalLayer = 0; // Just in case.
+							tmpTemporalLayer = 0;
 						}
 					}
 				}

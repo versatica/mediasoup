@@ -896,32 +896,30 @@ namespace RTC
 				return decodeTargetIndications[decodeTarget] != DecodeTargetIndication::NOT_PRESENT;
 			}
 
-			/*
-			 * Whether decoding can start at this frame for the decode target formed by
-			 * the spatial layer of this frame and the given temporal layer.
-			 *
-			 * That's what a "switch" indication means: this frame and every later frame
-			 * of that decode target can be decoded without any older frame.
-			 */
-			bool DependencyDescriptor::IsSwitchPointForTemporalLayer(uint8_t temporalLayer) const
+			bool DependencyDescriptor::IsSwitchPointForDecodeTarget(
+			  uint8_t spatialLayer, uint8_t temporalLayer) const
 			{
 				MS_TRACE();
 
+				const auto decodeTarget = GetDecodeTarget(spatialLayer, temporalLayer);
 				const auto& decodeTargetIndications =
 				  this->templateDependencyStructure->templateLayers[this->templateId].decodeTargetIndications;
 
-				// NOTE: Decode targets are ordered by spatial layer and, within each one,
-				// by temporal layer. And `temporalLayers` holds the highest temporal layer
-				// id, hence the + 1.
-				const auto temporalLayerCount = this->templateDependencyStructure->temporalLayers + 1;
-				const size_t decodeTarget     = (this->spatialLayer * temporalLayerCount) + temporalLayer;
-
+				// The stream has no such decode target, so there is nothing to switch
+				// into.
 				if (decodeTarget >= decodeTargetIndications.size())
 				{
 					return false;
 				}
 
 				return decodeTargetIndications[decodeTarget] == DecodeTargetIndication::SWITCH;
+			}
+
+			bool DependencyDescriptor::IsSwitchPointForTemporalLayer(uint8_t temporalLayer) const
+			{
+				MS_TRACE();
+
+				return IsSwitchPointForDecodeTarget(static_cast<uint8_t>(this->spatialLayer), temporalLayer);
 			}
 
 			bool DependencyDescriptor::UpdateActiveDecodeTargets(
