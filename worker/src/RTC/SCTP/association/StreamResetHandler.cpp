@@ -87,11 +87,33 @@ namespace RTC
 
 			if (reConfigChunkLength > packet->GetAvailableLength())
 			{
-				MS_WARN_TAG(
-				  sctp,
-				  "no room in the packet for the stream reset request [len:%zu, available len:%zu]",
-				  reConfigChunkLength,
-				  packet->GetAvailableLength());
+				// NOTE: Don't create a packet to measure this, since it would reuse the
+				// buffer of the given one.
+				const size_t maxReConfigChunkLength = packet->GetBufferLength() - Packet::CommonHeaderLength;
+
+				// If it does not fit even in an empty packet it never will, so the reset
+				// of those streams is cancelled.
+				if (reConfigChunkLength > maxReConfigChunkLength)
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "stream reset request too large to be sent, cancelling it [len:%zu, max len:%zu]",
+					  reConfigChunkLength,
+					  maxReConfigChunkLength);
+
+					const auto streamIds = this->retransmissionQueue->CancelResetStreams();
+
+					this->associationListenerDeferrer.OnAssociationStreamsResetFailed(
+					  streamIds, "stream reset request too large to be sent");
+				}
+				else
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "no room in the packet for the stream reset request [len:%zu, available len:%zu]",
+					  reConfigChunkLength,
+					  packet->GetAvailableLength());
+				}
 
 				return false;
 			}

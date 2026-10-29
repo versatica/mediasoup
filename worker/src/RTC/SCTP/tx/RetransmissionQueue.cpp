@@ -517,6 +517,19 @@ namespace RTC
 			this->sendQueue.RollbackResetStreams();
 		}
 
+		std::vector<uint16_t /*streamId*/> RetransmissionQueue::CancelResetStreams()
+		{
+			MS_TRACE();
+
+			// No request was sent, so unlike BeginResetStreams() there is no
+			// breakpoint TSN to set in the outstanding data.
+			auto streamIds = this->sendQueue.GetStreamsReadyToBeReset();
+
+			this->sendQueue.RollbackResetStreams();
+
+			return streamIds;
+		}
+
 		size_t RetransmissionQueue::GetSerializedChunkLength(const UserData& data) const
 		{
 			MS_TRACE();

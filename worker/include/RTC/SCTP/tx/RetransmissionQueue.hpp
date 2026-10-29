@@ -216,6 +216,12 @@ namespace RTC
 			void CommitResetStreams();
 			void RollbackResetStreams();
 
+			/**
+			 * Cancels the reset of the streams ready to be reset, without any request
+			 * having been sent, and resumes them. Returns the ids of those streams.
+			 */
+			std::vector<uint16_t /*streamId*/> CancelResetStreams();
+
 #ifdef MS_TEST
 		public:
 #else

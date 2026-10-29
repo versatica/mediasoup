@@ -5,6 +5,7 @@
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
 #include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
+#include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ReConfigChunk.hpp"
 #include "RTC/SCTP/packet/parameters/IncomingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/OutgoingSsnResetRequestParameter.hpp"
@@ -243,27 +244,118 @@ SCENARIO("SCTP RTC::SCTP::StreamResetHandler", "[sctp][streamresethandler]")
 
 		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == true);
 
+		// Builds a packet of maximum size with a DATA chunk of given payload
+		// length already in it.
+		const auto buildPacketWithDataChunk =
+		  [&test](uint16_t payloadLength) -> std::unique_ptr<RTC::SCTP::Packet>
+		{
+			const std::vector<uint8_t> payload(payloadLength);
+
+			auto packet = test.tcbContext.CreatePacket();
+
+			auto* const dataChunk = packet->BuildChunkInPlace<RTC::SCTP::DataChunk>();
+
+			dataChunk->SetUserDataPayload(payload.data(), payloadLength);
+			dataChunk->Consolidate();
+
+			return packet;
+		};
+
 		// The RE-CONFIG chunk takes 4 bytes of header plus the Outgoing SSN Reset
 		// Request parameter, which is 16 bytes plus 2 per stream padded to 4
-		// bytes, so 24 bytes in total. Room for 23 is one short.
-		std::vector<uint8_t> buffer(RTC::SCTP::Packet::CommonHeaderLength + 24);
+		// bytes, so 24 bytes in total. An empty packet has room for the MTU
+		// (1191) minus 12 bytes of common header, so 1179 bytes. A DATA chunk with
+		// 1140 bytes of payload takes 1156 bytes and leaves room for 23, which is
+		// one short.
+		auto packet = buildPacketWithDataChunk(1140);
 
-		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
-			buffer.data(), RTC::SCTP::Packet::CommonHeaderLength + 23) };
+		REQUIRE(packet->GetAvailableLength() == 23);
 
 		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == false);
 
-		REQUIRE(packet->GetChunksCount() == 0);
+		REQUIRE(packet->GetChunksCount() == 1);
 		// The request remains to be sent.
 		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == true);
 
-		// With room for 24 it fits.
-		packet.reset(RTC::SCTP::Packet::Factory(buffer.data(), buffer.size()));
+		// Chunks are padded to 4 bytes, so the next possible room is 27, and it
+		// fits.
+		packet = buildPacketWithDataChunk(1136);
+
+		REQUIRE(packet->GetAvailableLength() == 27);
 
 		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
 
-		REQUIRE(packet->GetLength() == buffer.size());
+		REQUIRE(packet->GetAvailableLength() == 3);
 		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == false);
+	}
+
+	SECTION("cancels an outgoing request that does not fit even in an empty packet")
+	{
+		// An empty packet has room for the MTU (1191) minus 12 bytes of common
+		// header, so 1179 bytes. The RE-CONFIG chunk takes 4 bytes of header plus
+		// the Outgoing SSN Reset Request parameter, which is 16 bytes plus 2 per
+		// stream padded to 4 bytes. So 578 streams take 1176 bytes and 579 take
+		// 1180.
+		const auto buildStreamIds = [](uint16_t count) -> std::vector<uint16_t>
+		{
+			std::vector<uint16_t> streamIds;
+
+			for (uint16_t streamId{ 0 }; streamId < count; ++streamId)
+			{
+				streamIds.push_back(streamId);
+			}
+
+			return streamIds;
+		};
+
+		// 578 streams fit.
+		{
+			TestStreamResetHandler test;
+
+			test.streamResetHandler.ResetStreams(buildStreamIds(578));
+
+			const auto packet = test.tcbContext.CreatePacket();
+
+			REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
+
+			REQUIRE(packet->GetAvailableLength() == 3);
+		}
+
+		// 579 streams do not fit, so their reset is cancelled.
+		TestStreamResetHandler test;
+
+		test.streamResetHandler.ResetStreams(buildStreamIds(579));
+
+		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == true);
+
+		{
+			const RTC::SCTP::AssociationListenerDeferrer::ScopedDeferrer deferrer(
+			  test.associationListenerDeferrer);
+
+			const auto packet = test.tcbContext.CreatePacket();
+
+			REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == false);
+
+			REQUIRE(packet->GetChunksCount() == 0);
+		}
+
+		REQUIRE(test.streamResetHandler.ShouldSendStreamResetRequest() == false);
+		REQUIRE(test.associationListener.HasStreamsResetFailedForStreamId(0) == true);
+		REQUIRE(test.associationListener.HasStreamsResetFailedForStreamId(578) == true);
+
+		// The streams are resumed, so any of them can be reset again.
+		test.streamResetHandler.ResetStreams(std::vector<uint16_t>{ 42 });
+
+		const auto packet = test.tcbContext.CreatePacket();
+
+		REQUIRE(test.streamResetHandler.AddStreamResetRequest(packet.get()) == true);
+
+		const auto* parameter =
+		  packet->GetFirstChunkOfType<RTC::SCTP::ReConfigChunk>()
+		    ->GetFirstParameterOfType<RTC::SCTP::OutgoingSsnResetRequestParameter>();
+
+		REQUIRE(parameter);
+		REQUIRE(parameter->GetStreamIds() == std::vector<uint16_t>{ 42 });
 	}
 
 	SECTION("resets multiple streams in one request")

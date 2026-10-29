@@ -218,7 +218,9 @@ namespace RTC
 			 * reconfig timer.
 			 *
 			 * @return `false` if the request does not fit in the packet, in which case
-			 *   nothing is done and the request remains to be sent.
+			 *   nothing is done and the request remains to be sent. If it would not
+			 *   fit even in an empty packet, the reset of those streams is cancelled
+			 *   instead and the listener is told that it failed.
 			 *
 			 * @remarks
 			 * - The caller must check `ShouldCreateStreamResetRequest()` first and

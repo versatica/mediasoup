@@ -1474,7 +1474,7 @@ namespace RTC
 				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
 				// NOTE: We are not setting the verification tag expected by the peer
-				// so must set be T to 1.
+				// so T must be set to 1.
 				abortAssociationChunk->SetT(true);
 
 				auto* protocolViolationErrorCause =
@@ -1671,7 +1671,7 @@ namespace RTC
 				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
 				// NOTE: We are not setting the verification tag expected by the peer
-				// so must set be T to 1.
+				// so T must be set to 1.
 				abortAssociationChunk->SetT(true);
 
 				auto* protocolViolationErrorCause =
@@ -1709,7 +1709,7 @@ namespace RTC
 				auto* const abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
 				// NOTE: We are not setting the verification tag expected by the peer
-				// so must set be T to 1.
+				// so T must be set to 1.
 				abortAssociationChunk->SetT(true);
 
 				auto* const protocolViolationErrorCause =
