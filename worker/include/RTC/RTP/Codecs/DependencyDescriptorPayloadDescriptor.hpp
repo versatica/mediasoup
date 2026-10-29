@@ -69,6 +69,16 @@ namespace RTC
 					return !this->dependencyDescriptor ||
 					       this->dependencyDescriptor->IsPresentInDecodeTarget(spatialLayer, temporalLayer);
 				}
+				bool IsDecodeTargetActive(
+				  uint8_t spatialLayer,
+				  uint8_t temporalLayer,
+				  uint8_t forwardedSpatialLayer,
+				  uint8_t forwardedTemporalLayer) const
+				{
+					return this->dependencyDescriptor &&
+					       this->dependencyDescriptor->IsDecodeTargetActive(
+					         spatialLayer, temporalLayer, forwardedSpatialLayer, forwardedTemporalLayer);
+				}
 				bool IsSwitchPointForDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const
 				{
 					return this->dependencyDescriptor &&

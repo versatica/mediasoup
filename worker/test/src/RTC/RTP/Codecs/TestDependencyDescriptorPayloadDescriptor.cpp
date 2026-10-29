@@ -105,7 +105,6 @@ namespace
 	constexpr size_t FrameS2T2Index{ 8 };
 	constexpr size_t FrameS0T0Index{ 9 };
 	constexpr size_t FrameS1T0Index{ 10 };
-	constexpr size_t FrameS2T0Index{ 11 };
 
 	struct ProcessResult
 	{
@@ -273,93 +272,14 @@ SCENARIO(
 	}
 
 	/*
-	 * In K-SVC the frames of the lower spatial layers are not forwarded, so the
-	 * endpoint holds none of them. The target spatial layer can hence only be
-	 * entered at a frame the Dependency Descriptor marks as a switch point for
-	 * its decode target, which here is its temporal layer 0 frame. Entering it
-	 * anywhere else would send frames referencing ones the endpoint never got.
+	 * In K-SVC the frames of the target spatial layer were not being forwarded,
+	 * so a switch point of its decode target is not enough to enter it: a
+	 * "switch" indication promises that no older frame of the decode target is
+	 * needed, not that the frame stands on its own. Its 1:0 frames do reference
+	 * the previous one, which the endpoint never got, so the switch waits for a
+	 * key frame as the VP9 handler does.
 	 */
-	SECTION("downgrades the spatial layer only at a switch point")
-	{
-		context.SetTargetSpatialLayer(2);
-		context.SetTargetTemporalLayer(2);
-
-		REQUIRE(processKeyFrame().forwarded);
-		REQUIRE(context.GetCurrentSpatialLayer() == 2);
-
-		// Frames 94 to 99, which leave the Consumer settled on spatial layer 2.
-		for (size_t i{ 0 }; i < FrameS0T2Index; ++i)
-		{
-			processDeltaFrame(i);
-		}
-
-		REQUIRE(context.GetCurrentSpatialLayer() == 2);
-
-		// Only the middle spatial layer is wanted now.
-		context.SetTargetSpatialLayer(1);
-
-		// The 1:2 frame is the first end of frame packet of the target spatial
-		// layer, but it is no switch point for it ("-----D---"), so the layer is
-		// not entered there.
-		REQUIRE(!isSwitchPointFor(FrameS1T2Index, 1, 0));
-		REQUIRE(!processDeltaFrame(FrameS1T2Index).forwarded); // frame 101
-		REQUIRE(context.GetCurrentSpatialLayer() == 2);
-
-		// Spatial layer 2 keeps being forwarded meanwhile.
-		REQUIRE(processDeltaFrame(FrameS2T2Index).forwarded); // frame 102
-		REQUIRE(context.GetCurrentSpatialLayer() == 2);
-		REQUIRE(!processDeltaFrame(FrameS0T0Index).forwarded); // frame 103
-
-		// The 1:0 frame is a switch point for every decode target of spatial layer
-		// 1 ("---SSS---"), so the layer is entered there and the frame forwarded.
-		REQUIRE(isSwitchPointFor(FrameS1T0Index, 1, 0));
-		REQUIRE(processDeltaFrame(FrameS1T0Index).forwarded); // frame 104
-		REQUIRE(context.GetCurrentSpatialLayer() == 1);
-
-		// And spatial layer 2 is dropped from then on.
-		REQUIRE(!processDeltaFrame(FrameS2T0Index).forwarded); // frame 105
-	}
-
-	/*
-	 * The switch must happen at the first packet of one. Switching at its last packet
-	 * would send the endpoint the tail of a frame whose head it never got.
-	 *
-	 * NOTE: The capture holds a single Dependency Descriptor per frame, the one
-	 * of its last packet. The two below are those of the 1:0 frame as it would
-	 * have been sent in two packets: same template and frame number, with the
-	 * start and end of frame bits set apart.
-	 */
-	SECTION("forwards every packet of the frame it downgrades into")
-	{
-		// Template 6 (1:0), frame number 104.
-		const uint8_t firstPacket[] = { 0x86, 0x00, 0x68 };
-		const uint8_t lastPacket[]  = { 0x46, 0x00, 0x68 };
-
-		context.SetTargetSpatialLayer(2);
-		context.SetTargetTemporalLayer(2);
-
-		REQUIRE(processKeyFrame().forwarded);
-
-		// Frames 94 to 99, which leave the Consumer settled on 2:2.
-		for (size_t i{ 0 }; i < FrameS0T2Index; ++i)
-		{
-			processDeltaFrame(i);
-		}
-
-		context.SetTargetSpatialLayer(1);
-
-		REQUIRE(process(firstPacket, sizeof(firstPacket)).forwarded);
-		REQUIRE(process(lastPacket, sizeof(lastPacket)).forwarded);
-		REQUIRE(context.GetCurrentSpatialLayer() == 1);
-	}
-
-	/*
-	 * A spatial change must not cost the frame rate the Consumer had climbed to.
-	 * The temporal layer is left where it is and the switch is made at a frame
-	 * that is a switch point for the decode target of both layers, so there is
-	 * nothing to climb back up afterwards.
-	 */
-	SECTION("keeps the temporal layer across a spatial downgrade")
+	SECTION("downgrades the spatial layer only in a key frame")
 	{
 		context.SetTargetSpatialLayer(2);
 		context.SetTargetTemporalLayer(2);
@@ -374,12 +294,34 @@ SCENARIO(
 			processDeltaFrame(i);
 		}
 
+		// Only the middle spatial layer is wanted now.
 		context.SetTargetSpatialLayer(1);
 
-		// The 1:0 frame is a switch point for the 1:2 decode target ("---SSS---"),
-		// this is, for the very layers the Consumer ends up on.
+		// The 1:2 frame is no switch point for the layer ("-----D---").
+		REQUIRE(!processDeltaFrame(FrameS1T2Index).forwarded); // frame 101
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+
+		// Spatial layer 2 keeps being forwarded meanwhile.
+		REQUIRE(processDeltaFrame(FrameS2T2Index).forwarded);  // frame 102
+		REQUIRE(!processDeltaFrame(FrameS0T0Index).forwarded); // frame 103
+
+		/*
+		 * The 1:0 frame IS a switch point for every decode target of spatial layer
+		 * 1 ("---SSS---"), and that is still not enough, since none of the frames
+		 * it may reference were forwarded.
+		 */
 		REQUIRE(isSwitchPointFor(FrameS1T0Index, 1, 2));
-		REQUIRE(processDeltaFrame(FrameS1T0Index).forwarded); // frame 104
+		REQUIRE(!processDeltaFrame(FrameS1T0Index).forwarded); // frame 104
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+
+		/*
+		 * A key frame is where it happens, and the temporal layer is left where it
+		 * was, so the Consumer does not have to climb back up to it.
+		 *
+		 * NOTE: Renumbered, since a key frame that follows other frames carries a
+		 * later frame number than they do.
+		 */
+		REQUIRE(processKeyFrame(200).forwarded);
 		REQUIRE(context.GetCurrentSpatialLayer() == 1);
 		REQUIRE(context.GetCurrentTemporalLayer() == 2);
 	}

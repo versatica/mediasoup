@@ -896,6 +896,19 @@ namespace RTC
 				return decodeTargetIndications[decodeTarget] != DecodeTargetIndication::NOT_PRESENT;
 			}
 
+			bool DependencyDescriptor::IsDecodeTargetActive(
+			  uint8_t spatialLayer,
+			  uint8_t temporalLayer,
+			  uint8_t forwardedSpatialLayer,
+			  uint8_t forwardedTemporalLayer) const
+			{
+				MS_TRACE();
+
+				return IsDecodeTargetActive(
+				  GetDecodeTarget(spatialLayer, temporalLayer),
+				  GetDecodeTarget(forwardedSpatialLayer, forwardedTemporalLayer));
+			}
+
 			bool DependencyDescriptor::IsSwitchPointForDecodeTarget(
 			  uint8_t spatialLayer, uint8_t temporalLayer) const
 			{

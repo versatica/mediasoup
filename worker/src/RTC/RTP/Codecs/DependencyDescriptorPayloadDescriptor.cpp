@@ -195,26 +195,34 @@ namespace RTC
 					// Downgrade current spatial layer if needed.
 					else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 					{
-						// NOTE: Only switch down in a frame that the Dependency Descriptor
-						// marks as a switch point for the decode target we move into.
-						// Otherwise we'd forward frames that depend on frames the endpoint
-						// was never sent, which it cannot decode. In K-SVC those are all the
-						// frames of the target spatial layer so far.
-						//
-						// NOTE: The decode target we enter is the one of the target spatial
-						// layer at the temporal layer already in use, which is left alone so
-						// that a spatial change does not cost the frame rate the Consumer
-						// had climbed to.
-						//
-						// NOTE: At the start of the frame rather than at its end, since the
-						// frames of the target spatial layer were not being forwarded and the
-						// endpoint would otherwise get this one without its first packets.
-						if (
+						/*
+						 * The decode target we move into is the one of the target spatial
+						 * layer at the temporal layer already in use, which is left alone so
+						 * that a spatial change does not cost the frame rate the Consumer had
+						 * climbed to.
+						 *
+						 * NOTE: A switch point is only good enough when the frames of that
+						 * decode target were already reaching the endpoint, as in full SVC,
+						 * where the lower spatial layers are required by the higher ones. A
+						 * "switch" indication promises that no older frame of the decode
+						 * target is needed, not that the frame stands on its own, and in
+						 * K-SVC every frame of the target spatial layer has been dropped so
+						 * far. There the switch waits for a key frame, as VP9 does.
+						 */
+						const bool atSwitchPoint =
 						  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
-						  this->payloadDescriptor->startOfFrame &&
+						  this->payloadDescriptor->endOfFrame &&
 						  this->payloadDescriptor->IsSwitchPointForDecodeTarget(
 						    static_cast<uint8_t>(context->GetTargetSpatialLayer()),
-						    static_cast<uint8_t>(tmpTemporalLayer)))
+						    static_cast<uint8_t>(tmpTemporalLayer));
+
+						const bool targetAlreadySent = this->payloadDescriptor->IsDecodeTargetActive(
+						  static_cast<uint8_t>(context->GetTargetSpatialLayer()),
+						  static_cast<uint8_t>(tmpTemporalLayer),
+						  static_cast<uint8_t>(context->GetCurrentSpatialLayer()),
+						  static_cast<uint8_t>(tmpTemporalLayer));
+
+						if (this->payloadDescriptor->isKeyFrame || (atSwitchPoint && targetAlreadySent))
 						{
 							MS_DEBUG_DEV(
 							  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8

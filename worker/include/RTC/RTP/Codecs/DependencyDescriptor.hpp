@@ -168,6 +168,22 @@ namespace RTC
 				 * decode target and hence always kept.
 				 */
 				bool IsPresentInDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const;
+				/**
+				 * Whether the decode target formed by the given spatial and temporal
+				 * layer is already reaching an endpoint that is being sent the one formed
+				 * by the forwarded pair, this is, whether every frame it needs is also
+				 * needed by that one.
+				 *
+				 * NOTE: This is what tells a switch point apart from an entry point. A
+				 * "switch" indication promises that no frame of the decode target older
+				 * than this one is needed, which is of no use when its frames were not
+				 * being sent at all, as happens in K-SVC.
+				 */
+				bool IsDecodeTargetActive(
+				  uint8_t spatialLayer,
+				  uint8_t temporalLayer,
+				  uint8_t forwardedSpatialLayer,
+				  uint8_t forwardedTemporalLayer) const;
 
 			private:
 				size_t GetDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const;
