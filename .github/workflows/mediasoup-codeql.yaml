@@ -51,7 +51,7 @@ jobs:
     # `[no-ci]` marker): it only bumps version/CHANGELOG and the release is
     # driven by the tag-triggered workflows. On `pull_request` there is no
     # `head_commit`, so the guard is a no-op and the job runs.
-    if: false
+    if: ${{ !contains(github.event.head_commit.message, '[no-ci]') }}
     runs-on: ubuntu-26.04
     timeout-minutes: 120
     permissions:
