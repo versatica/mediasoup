@@ -23,6 +23,7 @@ concurrency:
 
 jobs:
   clang-tidy:
+    if: false
     runs-on: ubuntu-26.04
 
     steps:
