@@ -45,6 +45,8 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - A `.cpp` never re-includes a header that its paired `.hpp` already includes.
 - Standard headers already provided by `common.hpp` (`<algorithm>`, `<cinttypes>`, `<cstddef>`, `<cstdint>`, `<functional>`, `<memory>`, `<optional>`, `<utility>`) are never included again. Others (`<vector>`, `<map>`, `<string>`...) are included directly where used.
 - A type newly used in a file gets its own `#include`. Never rely on transitive includes (except through the paired `.hpp`).
+- Whenever code is touched, check the includes of the file: none missing and none left over.
+- A standard header that provides functions or utilities rather than a type of its own name (`<cstring>`, `<cstdlib>`, `<cmath>`, `<limits>`, `<sstream>`...) carries a comment listing what is used from it, with `()` for functions: `#include <cstring> // std::memcmp(), std::memcpy()`. Headers named after the type they provide (`<vector>`, `<string>`, `<map>`...) take no comment.
 
 ## Class layout
 

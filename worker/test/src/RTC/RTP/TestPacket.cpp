@@ -6,8 +6,9 @@
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstring> // std::memset()
+#include <cstring> // std::memcmp(), std::memcpy(), std::memset()
 #include <string>
+#include <vector>
 
 SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 {
@@ -1788,6 +1789,58 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// New length: 12 (fixed header) + 4 (ext header) + 12 (two 5-byte One-Byte
 		// elements padded to 4) + 8 (payload) = 36.
 		REQUIRE((packet->GetLength() == 36));
+	}
+
+	SECTION("Packet::SetExtensions() with ExtensionsType::Auto accepts a zero length extension")
+	{
+		// A received packet with a Two-Bytes header extension holding a single
+		// extension (id 2) whose value has length 0, which RFC 8285 allows.
+		// clang-format off
+		alignas(4) const uint8_t receivedBuffer[] =
+		{
+			0x90, 0x6F, 0x00, 0x01, // Version 2, extension flag set, payload type 111, sequence number 1.
+			0x00, 0x00, 0x00, 0x01, // Timestamp.
+			0x00, 0x00, 0x00, 0x01, // SSRC.
+			0x10, 0x00, 0x00, 0x01, // Two-Bytes header extension, length 1 (4 bytes).
+			0x02, 0x00, 0x00, 0x00, // Extension id 2 with length 0, then padding.
+			0x11, 0x22, 0x33, 0x44  // Payload.
+		};
+		// clang-format on
+
+		std::memcpy(rtpCommon::FactoryBuffer, receivedBuffer, sizeof(receivedBuffer));
+
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(
+			rtpCommon::FactoryBuffer, sizeof(receivedBuffer), sizeof(rtpCommon::FactoryBuffer)) };
+
+		REQUIRE(packet);
+		REQUIRE(packet->HasTwoBytesExtensions() == true);
+
+		uint8_t extenLen;
+		const uint8_t* const extenValue = packet->GetExtensionValue(2, extenLen);
+
+		REQUIRE(extenValue);
+		REQUIRE(extenLen == 0);
+
+		// Rewrite the extensions as a Producer does on every received packet: a MID
+		// plus the received extension, copied as it came. A One-Byte extension
+		// cannot have length 0, so this must use Two-Bytes extensions.
+		uint8_t mid[]{ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
+		uint8_t audioLevel[16];
+		std::vector<RTC::RTP::Packet::Extension> extensions;
+
+		std::memcpy(audioLevel, extenValue, extenLen);
+
+		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::MID, 1, sizeof(mid), mid);
+		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 2, extenLen, audioLevel);
+
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+
+		REQUIRE(packet->HasTwoBytesExtensions() == true);
+		REQUIRE(packet->HasExtension(1) == true);
+		REQUIRE(packet->HasExtension(2) == true);
+		REQUIRE(packet->GetExtensionValue(2, extenLen) != nullptr);
+		REQUIRE(extenLen == 0);
+		REQUIRE(packet->GetPayloadLength() == 4);
 	}
 
 	SECTION("Packet::SetExtensions() fails without modifying the packet if it does not fit")

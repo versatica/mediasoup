@@ -567,15 +567,23 @@ namespace RTC
 			{
 				uint8_t highestId{ 0 };
 				uint8_t highestLen{ 0 };
+				// A One-Byte extension cannot have length 0, while a Two-Bytes one can.
+				bool hasZeroLength{ false };
 
 				for (const auto& extension : extensions)
 				{
 					highestId  = std::max(extension.id, highestId);
 					highestLen = std::max(extension.len, highestLen);
+
+					if (extension.len == 0)
+					{
+						hasZeroLength = true;
+					}
 				}
 
-				type = highestId <= 14 && highestLen > 0 && highestLen <= 16 ? ExtensionsType::OneByte
-				                                                             : ExtensionsType::TwoBytes;
+				type = highestId <= 14 && !hasZeroLength && highestLen > 0 && highestLen <= 16
+				         ? ExtensionsType::OneByte
+				         : ExtensionsType::TwoBytes;
 
 				MS_DEBUG_DEV(
 				  "using %" PRIu8 " byte(s) extensions [highestId:%" PRIu8 ", highestLen:%" PRIu8 "]",

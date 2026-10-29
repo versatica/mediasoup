@@ -1,6 +1,5 @@
 #include "common.hpp"
-#include "RTC/RTCP/FeedbackPs.hpp"
-#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include <catch2/catch_test_macros.hpp>
 

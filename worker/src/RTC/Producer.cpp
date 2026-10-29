@@ -1338,7 +1338,7 @@ namespace RTC
 			{
 				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.playoutDelay, extenLen);
 
-				if (extenValue)
+				if (extenValue && extenLen > 0)
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
@@ -1362,7 +1362,7 @@ namespace RTC
 				extenValue =
 				  packet->GetExtensionValue(this->rtpHeaderExtensionIds.mediasoupPacketId, extenLen);
 
-				if (extenValue)
+				if (extenValue && extenLen > 0)
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
@@ -1397,7 +1397,7 @@ namespace RTC
 					extenValue =
 					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.ssrcAudioLevel, extenLen);
 
-					if (extenValue)
+					if (extenValue && extenLen > 0)
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
@@ -1438,7 +1438,7 @@ namespace RTC
 					extenValue =
 					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.dependencyDescriptor, extenLen);
 
-					if (extenValue)
+					if (extenValue && extenLen > 0)
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
@@ -1457,7 +1457,7 @@ namespace RTC
 					extenValue =
 					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
 
-					if (extenValue)
+					if (extenValue && extenLen > 0)
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
