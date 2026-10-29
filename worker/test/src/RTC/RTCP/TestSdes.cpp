@@ -463,7 +463,7 @@ SCENARIO("RTCP SDES", "[rtcp][sdes]")
 
 	SECTION("GetSize() matches the serialized size")
 	{
-		for (const size_t count : { 1, 31, 32, 62, 63 })
+		for (const size_t count : { 0, 1, 31, 32, 62, 63 })
 		{
 			RTC::RTCP::SdesPacket packet;
 

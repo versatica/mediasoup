@@ -12,8 +12,8 @@
 SCENARIO("RTCP CompoundPacket", "[rtcp][compoundpacket]")
 {
 	// Builds what a stream being sent reports, with a CNAME of given length.
-	const auto buildSenderReportItems =
-	  [](uint32_t ssrc, size_t cnameLength) -> RTC::RTCP::CompoundPacket::SenderReportItems
+	const auto buildSendStreamItems =
+	  [](uint32_t ssrc, size_t cnameLength) -> RTC::RTCP::CompoundPacket::SendStreamItems
 	{
 		const std::string cname(cnameLength, 'a');
 
@@ -33,7 +33,7 @@ SCENARIO("RTCP CompoundPacket", "[rtcp][compoundpacket]")
 		};
 	};
 
-	SECTION("sender report items that don't fit are given back")
+	SECTION("send stream items that don't fit are given back")
 	{
 		RTC::RTCP::CompoundPacket packet;
 
@@ -43,9 +43,9 @@ SCENARIO("RTCP CompoundPacket", "[rtcp][compoundpacket]")
 		// bytes.
 		for (uint32_t ssrc{ 1 }; ssrc <= 8; ++ssrc)
 		{
-			auto items = buildSenderReportItems(ssrc, 100);
+			auto items = buildSendStreamItems(ssrc, 100);
 
-			REQUIRE(packet.AddSenderReportItems(items) == true);
+			REQUIRE(packet.AddSendStreamItems(items) == true);
 
 			REQUIRE(!items.senderReport);
 			REQUIRE(!items.sdesChunk);
@@ -57,9 +57,9 @@ SCENARIO("RTCP CompoundPacket", "[rtcp][compoundpacket]")
 
 		// A 9th stream does not fit, so its items are given back and the packet
 		// is left as it was.
-		auto items = buildSenderReportItems(9, 100);
+		auto items = buildSendStreamItems(9, 100);
 
-		REQUIRE(packet.AddSenderReportItems(items) == false);
+		REQUIRE(packet.AddSendStreamItems(items) == false);
 
 		REQUIRE(items.senderReport);
 		REQUIRE(items.sdesChunk);
@@ -70,7 +70,7 @@ SCENARIO("RTCP CompoundPacket", "[rtcp][compoundpacket]")
 		// And they can be added to a new packet.
 		RTC::RTCP::CompoundPacket packet2;
 
-		REQUIRE(packet2.AddSenderReportItems(items) == true);
+		REQUIRE(packet2.AddSendStreamItems(items) == true);
 
 		REQUIRE(packet2.GetSenderReportCount() == 1);
 		REQUIRE(packet2.HasDelaySinceLastRr() == true);
@@ -84,11 +84,11 @@ SCENARIO("RTCP CompoundPacket", "[rtcp][compoundpacket]")
 		// 4 of SDES packet header. So 4 of them take 1172 bytes.
 		for (uint32_t ssrc{ 1 }; ssrc <= 4; ++ssrc)
 		{
-			auto items = buildSenderReportItems(ssrc, 255);
+			auto items = buildSendStreamItems(ssrc, 255);
 
 			items.delaySinceLastRrSsrcInfo.reset();
 
-			REQUIRE(packet.AddSenderReportItems(items) == true);
+			REQUIRE(packet.AddSendStreamItems(items) == true);
 		}
 
 		REQUIRE(packet.GetSize() == 1172);
@@ -96,9 +96,9 @@ SCENARIO("RTCP CompoundPacket", "[rtcp][compoundpacket]")
 
 		// A 5th one with DLRR does not fit, and the DLRR block created for it
 		// must not be left behind.
-		auto items = buildSenderReportItems(5, 255);
+		auto items = buildSendStreamItems(5, 255);
 
-		REQUIRE(packet.AddSenderReportItems(items) == false);
+		REQUIRE(packet.AddSendStreamItems(items) == false);
 
 		REQUIRE(packet.GetSize() == 1172);
 		REQUIRE(packet.HasDelaySinceLastRr() == false);

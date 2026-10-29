@@ -2284,19 +2284,19 @@ namespace RTC
 		{
 			auto* const consumer = kv.second;
 
-			for (auto& senderReportItems : consumer->GetRtcp(nowUs))
+			for (auto& sendStreamItems : consumer->GetRtcp(nowUs))
 			{
 				// If the items do not fit in the compound packet, send it and add them
 				// to a new one.
-				if (!packet->AddSenderReportItems(senderReportItems))
+				if (!packet->AddSendStreamItems(sendStreamItems))
 				{
 					SendRtcpCompoundPacket(packet.get());
 
 					packet = std::make_unique<RTC::RTCP::CompoundPacket>();
 
-					const bool added = packet->AddSenderReportItems(senderReportItems);
+					const bool added = packet->AddSendStreamItems(sendStreamItems);
 
-					MS_ASSERT(added, "Sender Report items do not fit in an empty RTCP compound packet");
+					MS_ASSERT(added, "send stream items do not fit in an empty RTCP compound packet");
 				}
 			}
 		}

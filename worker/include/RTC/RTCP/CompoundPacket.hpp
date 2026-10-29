@@ -20,7 +20,7 @@ namespace RTC
 			 * What a stream being sent reports in a compound packet. They must go
 			 * together in the same compound packet.
 			 */
-			struct SenderReportItems
+			struct SendStreamItems
 			{
 				/**
 				 * Never null.
@@ -61,7 +61,7 @@ namespace RTC
 			 *   them and `items` is left empty. `false` otherwise, in which case
 			 *   neither the packet nor `items` are modified.
 			 */
-			[[nodiscard]] bool AddSenderReportItems(SenderReportItems& items);
+			[[nodiscard]] bool AddSendStreamItems(SendStreamItems& items);
 			/**
 			 * Add the report of a stream being received, along with a Receiver
 			 * Reference Time report with given NTP time if the packet has none yet.

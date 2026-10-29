@@ -74,7 +74,7 @@ namespace RTC
 			}
 		}
 
-		bool CompoundPacket::AddSenderReportItems(SenderReportItems& items)
+		bool CompoundPacket::AddSendStreamItems(SendStreamItems& items)
 		{
 			MS_TRACE();
 

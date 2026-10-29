@@ -213,7 +213,7 @@ namespace RTC
 		 * What each RTP stream of this Consumer reports in a RTCP compound packet,
 		 * if it is time to report.
 		 */
-		std::vector<RTC::RTCP::CompoundPacket::SenderReportItems> GetRtcp(int64_t nowUs);
+		std::vector<RTC::RTCP::CompoundPacket::SendStreamItems> GetRtcp(int64_t nowUs);
 
 		/**
 		 * Worst remote fraction lost among the RTP streams of this Consumer.

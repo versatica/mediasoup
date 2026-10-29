@@ -904,12 +904,21 @@ namespace RTC
 
 			const size_t midLen = mid.length();
 
+			if (midLen == 0)
+			{
+				MS_WARN_TAG(rtp, "cannot set an empty MID value");
+
+				return false;
+			}
+
 			// Here we assume that there is MidRtpExtensionMaxLength available bytes,
 			// even if now they are padding bytes.
 			if (midLen > RTC::Consts::MidRtpExtensionMaxLength)
 			{
-				MS_ERROR(
-				  "no enough space for MID value [MidRtpExtensionMaxLength:%" PRIu8 ", mid:'%s']",
+				MS_WARN_TAG(
+				  rtp,
+				  "no enough space for MID value [len:%zu, max len:%" PRIu8 ", mid:'%s']",
+				  midLen,
 				  RTC::Consts::MidRtpExtensionMaxLength,
 				  mid.c_str());
 
@@ -984,8 +993,15 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
 
-			if (!extenValue || extenLen != 3)
+			if (!extenValue)
 			{
+				return false;
+			}
+
+			if (extenLen != 3)
+			{
+				MS_WARN_TAG(rtp, "invalid abs-send-time extension length [len:%" PRIu8 "]", extenLen);
+
 				return false;
 			}
 
@@ -1024,8 +1040,15 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
 
-			if (!extenValue || extenLen != 2)
+			if (!extenValue)
 			{
+				return false;
+			}
+
+			if (extenLen != 2)
+			{
+				MS_WARN_TAG(rtp, "invalid transport-wide-cc extension length [len:%" PRIu8 "]", extenLen);
+
 				return false;
 			}
 
@@ -1099,6 +1122,13 @@ namespace RTC
 			if (!extenValue)
 			{
 				MS_WARN_TAG(rtp, "dependency description not found");
+
+				return false;
+			}
+
+			if (len == 0)
+			{
+				MS_WARN_TAG(rtp, "cannot set an empty dependency descriptor");
 
 				return false;
 			}
@@ -1221,10 +1251,17 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
 
+			if (!extenValue)
+			{
+				return false;
+			}
+
 			// Extension value can be 8 or 16 bytes depending on whether it contains
 			// estimated capture clock offset or not.
-			if (!extenValue || (extenLen != 8 && extenLen != 16))
+			if (extenLen != 8 && extenLen != 16)
 			{
+				MS_WARN_TAG(rtp, "invalid abs-capture-time extension length [len:%" PRIu8 "]", extenLen);
+
 				return false;
 			}
 
@@ -1796,6 +1833,9 @@ namespace RTC
 				const auto offset = this->oneByteExtensions[id - 1];
 
 				MS_ASSERT(offset != -1, "extension with id %" PRIu8 " not found", id);
+				// In One-Byte extensions the length field holds the value length minus
+				// 1, so 0 cannot be represented.
+				MS_ASSERT(len > 0, "One-Byte extension with id %" PRIu8 " cannot have length 0", id);
 
 				auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
 

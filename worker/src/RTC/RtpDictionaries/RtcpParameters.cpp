@@ -4,7 +4,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <limits> // std::numeric_limits()
+#include <limits> // std::numeric_limits
 
 namespace RTC
 {
