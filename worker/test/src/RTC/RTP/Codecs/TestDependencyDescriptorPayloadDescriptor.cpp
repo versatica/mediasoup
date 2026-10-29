@@ -319,6 +319,62 @@ SCENARIO(
 		REQUIRE(!processDeltaFrame(FrameS2T0Index).forwarded); // frame 105
 	}
 
+	/*
+	 * A spatial change must not cost the frame rate the Consumer had climbed to.
+	 * The temporal layer is left where it is and the switch is made at a frame
+	 * that is a switch point for the decode target of both layers, so there is
+	 * nothing to climb back up afterwards.
+	 */
+	SECTION("keeps the temporal layer across a spatial downgrade")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processKeyFrame().forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+
+		// Frames 94 to 99, which leave the Consumer settled on 2:2.
+		for (size_t i{ 0 }; i < FrameS0T2Index; ++i)
+		{
+			processDeltaFrame(i);
+		}
+
+		context.SetTargetSpatialLayer(1);
+
+		// The 1:0 frame is a switch point for the 1:2 decode target ("---SSS---"),
+		// this is, for the very layers the Consumer ends up on.
+		REQUIRE(isSwitchPointFor(FrameS1T0Index, 1, 2));
+		REQUIRE(processDeltaFrame(FrameS1T0Index).forwarded); // frame 104
+		REQUIRE(context.GetCurrentSpatialLayer() == 1);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+	}
+
+	// The same upgrading, where a key frame allows the switch since it is a
+	// switch point for every decode target of the stream.
+	SECTION("keeps the temporal layer across a spatial upgrade")
+	{
+		context.SetTargetSpatialLayer(0);
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processKeyFrame().forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+
+		for (size_t i{ 0 }; i < DeltaFrames.size(); ++i)
+		{
+			processDeltaFrame(i);
+		}
+
+		context.SetTargetSpatialLayer(2);
+
+		// NOTE: Renumbered, since a key frame that follows other frames carries a
+		// later frame number than they do.
+		REQUIRE(processKeyFrame(200).forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+	}
+
 	SECTION("upgrades the spatial layer only in a key frame")
 	{
 		setTargetLayers(0, 0);

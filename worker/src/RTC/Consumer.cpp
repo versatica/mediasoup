@@ -1218,6 +1218,14 @@ namespace RTC
 			case ProducerStreamManager::RtpPacketProcessResult::Type::DROP:
 			{
 				rtpSeqManager->Drop(packet->GetSequenceNumber());
+
+				// NOTE: The temporal layer may have changed in this very frame even
+				// though it is not forwarded, so the change is emitted here too.
+				if (action.temporalLayerChanged)
+				{
+					EmitLayersChange();
+				}
+
 				return;
 			}
 

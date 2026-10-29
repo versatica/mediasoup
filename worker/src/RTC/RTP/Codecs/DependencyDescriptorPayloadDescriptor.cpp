@@ -186,8 +186,10 @@ namespace RTC
 							  packetSpatialLayer,
 							  packetTemporalLayer);
 
-							tmpSpatialLayer  = context->GetTargetSpatialLayer();
-							tmpTemporalLayer = 0;
+							// NOTE: The temporal layer is left alone. A key frame is a switch
+							// point for every decode target, so the one of the new spatial
+							// layer can be entered at whichever temporal layer is in use.
+							tmpSpatialLayer = context->GetTargetSpatialLayer();
 						}
 					}
 					// Downgrade current spatial layer if needed.
@@ -200,15 +202,15 @@ namespace RTC
 						// frames of the target spatial layer so far.
 						//
 						// NOTE: The decode target we enter is the one of the target spatial
-						// layer at temporal layer 0, not at the target temporal layer, since
-						// the switch drops the temporal layer to 0 as well. Climbing back up
-						// is gated on a switch point of its own, so asking for one here
-						// would hold the switch back waiting for what is not needed yet.
+						// layer at the temporal layer already in use, which is left alone so
+						// that a spatial change does not cost the frame rate the Consumer
+						// had climbed to.
 						if (
 						  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
 						  this->payloadDescriptor->endOfFrame &&
 						  this->payloadDescriptor->IsSwitchPointForDecodeTarget(
-						    static_cast<uint8_t>(context->GetTargetSpatialLayer()), 0))
+						    static_cast<uint8_t>(context->GetTargetSpatialLayer()),
+						    static_cast<uint8_t>(tmpTemporalLayer)))
 						{
 							MS_DEBUG_DEV(
 							  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
@@ -218,8 +220,7 @@ namespace RTC
 							  packetSpatialLayer,
 							  packetTemporalLayer);
 
-							tmpSpatialLayer  = context->GetTargetSpatialLayer();
-							tmpTemporalLayer = 0;
+							tmpSpatialLayer = context->GetTargetSpatialLayer();
 						}
 					}
 				}
