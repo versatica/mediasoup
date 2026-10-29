@@ -4,8 +4,6 @@
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include <cstring> // std::memmove()
 
 namespace RTC
 {

@@ -82,6 +82,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 - All code text is in English.
 - A comment must help whoever reads the file cold. Do not write comments that only record a discussion, and do not reference other projects the code may have been ported from.
+- Never turn a point raised while working on a change into a comment: why a header was chosen over another, why something is measured one way and not another, what an earlier version did wrong, what a lint check would say. If the code is right, it needs no note defending it.
 - No semicolons in log messages or comments: use a comma in logs and split into sentences in comments.
 - Use ASCII `->`, never the Unicode arrow.
 - Prefer `MS_WARN_TAG()` / `MS_WARN_2TAGS()` over `MS_DEBUG_DEV()` for conditions worth seeing in production.

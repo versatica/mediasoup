@@ -13,6 +13,7 @@
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"

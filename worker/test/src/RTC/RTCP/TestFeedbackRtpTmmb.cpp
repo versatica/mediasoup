@@ -1,7 +1,6 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackRtpTmmb.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstring> // std::memcmp()
 
 SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 {

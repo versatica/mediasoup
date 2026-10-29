@@ -4,6 +4,7 @@
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "Logger.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 
 namespace RTC
 {
