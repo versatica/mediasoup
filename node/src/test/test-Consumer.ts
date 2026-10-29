@@ -650,11 +650,11 @@ test('transport.consume() can be created with user provided mid', async () => {
 
 	const audioConsumer2 = await ctx.webRtcTransport2!.consume({
 		producerId: ctx.audioProducer!.id,
-		mid: 'custom-mid',
+		mid: 'some-mid',
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
-	expect(audioConsumer2.rtpParameters.mid).toBe('custom-mid');
+	expect(audioConsumer2.rtpParameters.mid).toBe('some-mid');
 
 	const audioConsumer3 = await ctx.webRtcTransport2!.consume({
 		producerId: ctx.audioProducer!.id,

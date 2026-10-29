@@ -7,7 +7,6 @@
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "Utils.hpp"
-#include <cmath>   // std::min()
 #include <numeric> // std::accumulate()
 #include <string>
 
@@ -487,6 +486,13 @@ namespace RTC
 			return this->sendQueue.HasStreamsReadyToBeReset();
 		}
 
+		size_t RetransmissionQueue::GetNumberOfStreamsReadyToBeReset() const
+		{
+			MS_TRACE();
+
+			return this->sendQueue.GetNumberOfStreamsReadyToBeReset();
+		}
+
 		std::vector<uint16_t /*streamId*/> RetransmissionQueue::BeginResetStreams()
 		{
 			MS_TRACE();
@@ -508,6 +514,19 @@ namespace RTC
 			MS_TRACE();
 
 			this->sendQueue.RollbackResetStreams();
+		}
+
+		std::vector<uint16_t /*streamId*/> RetransmissionQueue::CancelResetStreams()
+		{
+			MS_TRACE();
+
+			// No request was sent, so unlike BeginResetStreams() there is no
+			// breakpoint TSN to set in the outstanding data.
+			auto streamIds = this->sendQueue.GetStreamsReadyToBeReset();
+
+			this->sendQueue.RollbackResetStreams();
+
+			return streamIds;
 		}
 
 		size_t RetransmissionQueue::GetSerializedChunkLength(const UserData& data) const

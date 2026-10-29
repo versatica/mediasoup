@@ -6,7 +6,6 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RTCP/Feedback.hpp"
-#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "Utils.hpp"
 #ifdef MS_RTC_LOGGER_RTP
@@ -502,20 +501,24 @@ namespace RTC
 			case Channel::ChannelNotification::Event::PRODUCER_SEND:
 			{
 				const auto* body = notification->data->body_as<FBS::Producer::SendNotification>();
-				auto len         = body->data()->size();
+				const size_t len = body->data()->size();
 
 				// Increase receive transmission.
 				this->listener->OnProducerReceiveData(this, len);
 
-				if (len > ProducerSendBufferSize)
+				if (len > RTC::Consts::IncomingRtpPacketMaxSize)
 				{
-					MS_WARN_TAG(rtp, "given RTP packet exceeds maximum size [len:%i]", len);
+					MS_WARN_TAG(
+					  rtp,
+					  "ignoring RTP packet exceeding maximum size [len:%zu, max len:%zu]",
+					  len,
+					  RTC::Consts::IncomingRtpPacketMaxSize);
 
 					break;
 				}
 
 				// Copy the received packet into this buffer so it can be expanded later.
-				std::memcpy(ProducerSendBuffer, body->data()->data(), static_cast<size_t>(len));
+				std::memcpy(ProducerSendBuffer, body->data()->data(), len);
 
 				auto* packet = RTC::RTP::Packet::Parse(ProducerSendBuffer, len, ProducerSendBufferSize);
 
@@ -692,6 +695,22 @@ namespace RTC
 			return ReceiveRtpPacketResult::DISCARDED;
 		}
 
+		// Discard the packet if, once RTX encoded and protected with SRTP, it could
+		// be larger than what the receiver accepts.
+		if (packet->GetLength() + RTC::Consts::RtxOverhead + RTC::Consts::SrtpMaxOverhead > RTC::Consts::OutgoingRtpPacketMaxSize)
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "discarding RTP packet that would exceed maximum size once sent [ssrc:%" PRIu32
+			  ", seq:%" PRIu16 ", len:%zu, max len:%zu]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetLength() + RTC::Consts::RtxOverhead + RTC::Consts::SrtpMaxOverhead,
+			  RTC::Consts::OutgoingRtpPacketMaxSize);
+
+			return ReceiveRtpPacketResult::DISCARDED;
+		}
+
 		// Post-process the packet.
 		PostProcessRtpPacket(
 		  packet,
@@ -757,7 +776,7 @@ namespace RTC
 		return rtpStream->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo, receivedAtUs);
 	}
 
-	bool Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs)
+	std::vector<std::unique_ptr<RTC::RTCP::ReceiverReport>> Producer::GetRtcp(int64_t nowUs)
 	{
 		MS_TRACE();
 
@@ -767,47 +786,28 @@ namespace RTC
 
 		if (static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
 		{
-			return true;
+			return {};
 		}
 
-		std::vector<RTCP::ReceiverReport*> receiverReports;
-		RTCP::ReceiverReferenceTime* receiverReferenceTimeReport{ nullptr };
+		std::vector<std::unique_ptr<RTC::RTCP::ReceiverReport>> receiverReports;
 
 		for (auto& kv : this->mapSsrcRtpStream)
 		{
-			auto* rtpStream = kv.second;
-			auto* report    = rtpStream->GetRtcpReceiverReport();
+			auto* const rtpStream = kv.second;
 
-			receiverReports.push_back(report);
+			receiverReports.emplace_back(rtpStream->GetRtcpReceiverReport());
 
-			auto* rtxReport = rtpStream->GetRtxRtcpReceiverReport();
+			auto* const rtxReport = rtpStream->GetRtxRtcpReceiverReport();
 
 			if (rtxReport)
 			{
-				receiverReports.push_back(rtxReport);
+				receiverReports.emplace_back(rtxReport);
 			}
-		}
-
-		// Add a receiver reference time report if no present in the packet.
-		if (!packet->HasReceiverReferenceTime())
-		{
-			auto ntp = Utils::Time::TimeUsToNtp(nowUs + this->shared->GetNtpOffsetUs());
-
-			receiverReferenceTimeReport = new RTC::RTCP::ReceiverReferenceTime();
-
-			receiverReferenceTimeReport->SetNtpSec(ntp.seconds);
-			receiverReferenceTimeReport->SetNtpFrac(ntp.fractions);
-		}
-
-		// RTCP Compound packet buffer cannot hold the data.
-		if (!packet->Add(receiverReports, receiverReferenceTimeReport))
-		{
-			return false;
 		}
 
 		this->lastRtcpSentAtUs = nowUs;
 
-		return true;
+		return receiverReports;
 	}
 
 	void Producer::RequestKeyFrame(uint32_t mappedSsrc)
@@ -1192,7 +1192,7 @@ namespace RTC
 		this->listener->OnProducerNewRtpStream(this, rtpStream, mappedSsrc);
 	}
 
-	inline bool Producer::MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const
+	bool Producer::MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
 
@@ -1338,7 +1338,7 @@ namespace RTC
 			{
 				extenValue = packet->GetExtensionValue(this->rtpHeaderExtensionIds.playoutDelay, extenLen);
 
-				if (extenValue)
+				if (extenValue && extenLen > 0)
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
@@ -1362,7 +1362,7 @@ namespace RTC
 				extenValue =
 				  packet->GetExtensionValue(this->rtpHeaderExtensionIds.mediasoupPacketId, extenLen);
 
-				if (extenValue)
+				if (extenValue && extenLen > 0)
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
@@ -1397,7 +1397,7 @@ namespace RTC
 					extenValue =
 					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.ssrcAudioLevel, extenLen);
 
-					if (extenValue)
+					if (extenValue && extenLen > 0)
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
@@ -1438,7 +1438,7 @@ namespace RTC
 					extenValue =
 					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.dependencyDescriptor, extenLen);
 
-					if (extenValue)
+					if (extenValue && extenLen > 0)
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
@@ -1457,7 +1457,7 @@ namespace RTC
 					extenValue =
 					  packet->GetExtensionValue(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
 
-					if (extenValue)
+					if (extenValue && extenLen > 0)
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
@@ -1473,13 +1473,25 @@ namespace RTC
 				}
 			}
 
-			packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+			if (!packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions))
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "no room in the packet for its header extensions, discarding it [ssrc:%" PRIu32
+				  ", seq:%" PRIu16 ", len:%zu, buffer len:%zu]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber(),
+				  packet->GetLength(),
+				  packet->GetBufferLength());
+
+				return false;
+			}
 		}
 
 		return true;
 	}
 
-	inline void Producer::PostProcessRtpPacket(
+	void Producer::PostProcessRtpPacket(
 	  RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream, bool maxPacketTsChanged)
 	{
 		MS_TRACE();
@@ -1532,7 +1544,7 @@ namespace RTC
 		}
 	}
 
-	inline void Producer::EmitScore() const
+	void Producer::EmitScore() const
 	{
 		MS_TRACE();
 
@@ -1564,7 +1576,7 @@ namespace RTC
 		  notification);
 	}
 
-	inline void Producer::EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx) const
+	void Producer::EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx) const
 	{
 		MS_TRACE();
 
@@ -1602,7 +1614,7 @@ namespace RTC
 		}
 	}
 
-	inline void Producer::EmitTraceEventPliType(uint32_t ssrc) const
+	void Producer::EmitTraceEventPliType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1625,7 +1637,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	inline void Producer::EmitTraceEventFirType(uint32_t ssrc) const
+	void Producer::EmitTraceEventFirType(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
@@ -1648,7 +1660,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	inline void Producer::EmitTraceEventNackType() const
+	void Producer::EmitTraceEventNackType() const
 	{
 		MS_TRACE();
 
@@ -1666,7 +1678,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	inline void Producer::EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const
+	void Producer::EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const
 	{
 		MS_TRACE();
 
@@ -1695,8 +1707,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	inline void Producer::EmitTraceEvent(
-	  flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const
+	void Producer::EmitTraceEvent(flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const
 	{
 		MS_TRACE();
 
@@ -1707,8 +1718,7 @@ namespace RTC
 		  notification);
 	}
 
-	inline void Producer::OnRtpStreamScore(
-	  RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
+	void Producer::OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -1723,7 +1733,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	inline void Producer::OnRtpStreamSendRtcpPacket(
+	void Producer::OnRtpStreamSendRtcpPacket(
 	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
@@ -1781,7 +1791,7 @@ namespace RTC
 		this->listener->OnProducerSendRtcpPacket(this, packet);
 	}
 
-	inline uint8_t Producer::OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream)
+	uint8_t Producer::OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
@@ -1791,7 +1801,7 @@ namespace RTC
 		return this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc);
 	}
 
-	inline void Producer::OnRtpStreamSpatialLayerActivityChanged(
+	void Producer::OnRtpStreamSpatialLayerActivityChanged(
 	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive)
 	{
 		MS_TRACE();
@@ -1800,8 +1810,7 @@ namespace RTC
 		this->listener->OnProducerSpatialLayerActivityChanged(this, rtpStream, spatialLayer, isActive);
 	}
 
-	inline void Producer::OnKeyFrameNeeded(
-	  RTC::KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
+	void Producer::OnKeyFrameNeeded(RTC::KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
 	{
 		MS_TRACE();
 

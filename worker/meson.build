@@ -83,6 +83,13 @@ endif
 
 cpp = meson.get_compiler('cpp')
 
+# Ignoring the result of a [[nodiscard]] function is an error, not a warning.
+if cpp.get_argument_syntax() == 'msvc'
+  cpp_args += ['/we4834']
+else
+  cpp_args += ['-Werror=unused-result']
+endif
+
 # This is a workaround to define FLATBUFFERS_LOCALE_INDEPENDENT=0 outside
 # flatbuffers project, which is needed in case the current arch doesn't support
 # strtoll_l or strtoull_l (such as musl in Alpine Linux). Problem is that
@@ -515,6 +522,7 @@ test_sources = [
   'test/src/RTC/RTCP/TestFeedbackRtpTmmb.cpp',
   'test/src/RTC/RTCP/TestFeedbackRtpTransport.cpp',
   'test/src/RTC/RTCP/TestBye.cpp',
+  'test/src/RTC/RTCP/TestCompoundPacket.cpp',
   'test/src/RTC/RTCP/TestReceiverReport.cpp',
   'test/src/RTC/RTCP/TestSdes.cpp',
   'test/src/RTC/RTCP/TestSenderReport.cpp',

@@ -306,7 +306,9 @@ SCENARIO("SimulcastProducerStreamManager", "[rtp][producerstreammanager][simulca
 			 rtpCommon::DataBuffer }
 		};
 
-		absCaptureTimePacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+		REQUIRE(
+		  absCaptureTimePacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) ==
+		  true);
 
 		RTC::RTP::HeaderExtensionIds headerExtensionIds;
 

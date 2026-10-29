@@ -163,7 +163,7 @@ pub struct WebRtcTransportOptions {
     pub sctp_per_stream_send_queue_limit: u32,
     /// Maximum received window buffer size (in bytes). This should be a bit larger
     /// than the largest sized message you want to be able to receive.
-    /// Default 5_242_880.
+    /// Default 5_242_880. Minimum 65_536.
     pub sctp_max_receiver_window_buffer_size: u32,
     /// SCTP default stream buffered amount low threshold (in bytes). When the
     /// buffered amount of a DataConsumer stream drops to or below this value, the

@@ -110,7 +110,7 @@ SCENARIO("BWE SenderTransportCongestionController", "[bwe][sendertransportconges
 			{ RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,        AbsSendTimeId, /*len*/ 3, rtpCommon::DataBuffer }
 		};
 
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
 
 		RTC::RTP::HeaderExtensionIds headerExtensionIds;
 

@@ -55,7 +55,7 @@ export type PipeTransportOptions<
 	/**
 	 * Maximum received window buffer size (in bytes). This should be a bit larger
 	 * than the largest sized message you want to be able to receive.
-	 * Default 5242880.
+	 * Default 5242880. Minimum 65536.
 	 */
 	sctpMaxReceiverWindowBufferSize?: number;
 

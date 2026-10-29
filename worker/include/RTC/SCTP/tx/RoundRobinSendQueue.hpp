@@ -316,6 +316,8 @@ namespace RTC
 
 			bool HasStreamsReadyToBeReset() const override;
 
+			size_t GetNumberOfStreamsReadyToBeReset() const override;
+
 			std::vector<uint16_t> GetStreamsReadyToBeReset() override;
 
 			void CommitResetStreams() override;

@@ -4,6 +4,7 @@
 #include "RTC/SCTP/association/Association.hpp"
 #include "Logger.hpp"
 #include "RTC/SCTP/association/Capabilities.hpp"
+#include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/NoUserDataErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/OutOfResourceErrorCause.hpp"
@@ -953,14 +954,14 @@ namespace RTC
 			//
 			// @remarks
 			// - This also applies to I-DATA chunks.
-			const bool hasDataChunk = std::find_if(
-			                            receivedPacket->ChunksBegin(),
-			                            receivedPacket->ChunksEnd(),
-			                            [](const Chunk* chunk)
-			                            {
-				                            return chunk->GetType() == Chunk::ChunkType::DATA ||
-																		       chunk->GetType() == Chunk::ChunkType::I_DATA;
-			                            }) != receivedPacket->ChunksEnd();
+			const bool hasDataChunk = std::ranges::any_of(
+			  receivedPacket->ChunksBegin(),
+			  receivedPacket->ChunksEnd(),
+			  [](const Chunk* chunk) -> bool
+			  {
+				  return chunk->GetType() == Chunk::ChunkType::DATA ||
+					       chunk->GetType() == Chunk::ChunkType::I_DATA;
+			  });
 
 			if (hasDataChunk)
 			{
@@ -980,9 +981,13 @@ namespace RTC
 
 			if (this->tcb->GetStreamResetHandler().ShouldSendStreamResetRequest())
 			{
-				auto packet = this->tcb->CreatePacket();
+				const auto packet = this->tcb->CreatePacket();
 
-				this->tcb->GetStreamResetHandler().AddStreamResetRequest(packet.get());
+				if (!this->tcb->GetStreamResetHandler().AddStreamResetRequest(packet.get()))
+				{
+					return;
+				}
+
 				this->packetSender.SendPacket(packet.get());
 			}
 		}
@@ -1469,7 +1474,7 @@ namespace RTC
 				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
 				// NOTE: We are not setting the verification tag expected by the peer
-				// so must set be T to 1.
+				// so T must be set to 1.
 				abortAssociationChunk->SetT(true);
 
 				auto* protocolViolationErrorCause =
@@ -1666,7 +1671,7 @@ namespace RTC
 				auto* abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
 				// NOTE: We are not setting the verification tag expected by the peer
-				// so must set be T to 1.
+				// so T must be set to 1.
 				abortAssociationChunk->SetT(true);
 
 				auto* protocolViolationErrorCause =
@@ -1682,6 +1687,43 @@ namespace RTC
 
 				InternalClose(
 				  Types::ErrorKind::PROTOCOL_VIOLATION, "received INIT-ACK chunk doesn't contain a cookie");
+
+				return;
+			}
+
+			// The cookie is echoed back in a COOKIE-ECHO chunk, so it must fit in a
+			// packet we can send.
+			const size_t cookieEchoPacketLength =
+			  Packet::CommonHeaderLength + Chunk::ChunkHeaderLength +
+			  Utils::Byte::PadTo4Bytes(size_t{ stateCookieParameter->GetCookieLength() });
+
+			if (cookieEchoPacketLength > this->maxPacketLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "ignoring INIT-ACK chunk with a cookie too large to be echoed [len:%zu, max len:%zu]",
+				  cookieEchoPacketLength,
+				  this->maxPacketLength);
+
+				const auto packet = CreatePacketWithVerificationTag(this->preTcb.localVerificationTag);
+				auto* const abortAssociationChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+
+				// NOTE: We are not setting the verification tag expected by the peer
+				// so T must be set to 1.
+				abortAssociationChunk->SetT(true);
+
+				auto* const protocolViolationErrorCause =
+				  abortAssociationChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
+
+				protocolViolationErrorCause->SetAdditionalInformation("INIT-ACK with State Cookie too large");
+
+				protocolViolationErrorCause->Consolidate();
+				abortAssociationChunk->Consolidate();
+
+				this->packetSender.SendPacket(packet.get());
+
+				InternalClose(
+				  Types::ErrorKind::PROTOCOL_VIOLATION, "received INIT-ACK chunk has a cookie too large");
 
 				return;
 			}
@@ -2536,9 +2578,23 @@ namespace RTC
 				this->associationListenerDeferrer.OnAssociationError(
 				  Types::ErrorKind::PARSE_FAILED, "unknown chunk with type indicating it should be reported");
 
+				// The unknown chunk is echoed back in full within the error cause, so
+				// it must fit in a packet we can send.
+				const size_t operationErrorPacketLength =
+				  Packet::CommonHeaderLength + Chunk::ChunkHeaderLength + ErrorCause::ErrorCauseHeaderLength +
+				  Utils::Byte::PadTo4Bytes(receivedUnknownChunk->GetLength());
+
+				if (operationErrorPacketLength > this->maxPacketLength)
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "not reporting unknown chunk too large to be echoed [len:%zu, max len:%zu]",
+					  operationErrorPacketLength,
+					  this->maxPacketLength);
+				}
 				// If there is TCB (we need correct remote verification tag) send an
 				// OPERATION-ERROR chunk with a Unrecognized Chunk type error cause.
-				if (this->tcb)
+				else if (this->tcb)
 				{
 					auto packet               = this->tcb->CreatePacket();
 					auto* operationErrorChunk = packet->BuildChunkInPlace<OperationErrorChunk>();

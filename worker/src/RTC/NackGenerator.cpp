@@ -319,7 +319,7 @@ namespace RTC
 		if (!nackBatch.empty())
 		{
 			std::ostringstream seqsStream;
-			std::copy(
+			std::ranges::copy(
 			  nackBatch.begin(), nackBatch.end() - 1, std::ostream_iterator<uint32_t>(seqsStream, ","));
 			seqsStream << nackBatch.back();
 

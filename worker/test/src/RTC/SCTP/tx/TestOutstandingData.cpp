@@ -575,6 +575,38 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 		REQUIRE(forwardTsnChunk->GetNewCumulativeTsn() == 12);
 	}
 
+	SECTION("doesn't add a Forward-TSN that does not fit in the packet")
+	{
+		buffer.Insert(
+		  OutgoingMessageId,
+		  RTC::SCTP::UserData(1, 0, 0, 0, 53, { 0x00 }, true, true, false),
+		  NowUs,
+		  /*maxRetransmits*/ 0);
+
+		discardFromSendQueueTester.Prepare(/*returnValue*/ false);
+
+		buffer.NackAll();
+
+		REQUIRE(buffer.ShouldSendForwardTsn() == true);
+
+		// The FORWARD-TSN takes 8 bytes plus 4 for the single skipped stream, so
+		// a packet with room for 11 bytes after its common header is one short.
+		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, RTC::SCTP::Packet::CommonHeaderLength + 11) };
+
+		REQUIRE(buffer.AddForwardTsn(packet.get()) == nullptr);
+		REQUIRE(packet->GetLength() == RTC::SCTP::Packet::CommonHeaderLength);
+		REQUIRE(packet->GetChunksCount() == 0);
+
+		// With room for 12 bytes it fits.
+		packet.reset(
+		  RTC::SCTP::Packet::Factory(
+		    sctpCommon::FactoryBuffer, RTC::SCTP::Packet::CommonHeaderLength + 12));
+
+		REQUIRE(buffer.AddForwardTsn(packet.get()) != nullptr);
+		REQUIRE(packet->GetLength() == RTC::SCTP::Packet::CommonHeaderLength + 12);
+	}
+
 	SECTION("ack with gap blocks from RFC 9260 section 3.3.4")
 	{
 		for (int i{ 0 }; i < 8; ++i)

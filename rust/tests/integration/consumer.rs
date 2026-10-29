@@ -977,14 +977,14 @@ fn consumer_with_user_defined_mid() {
             .consume({
                 let mut options =
                     ConsumerOptions::new(producer_1.id(), consumer_device_capabilities());
-                options.mid = Some("custom-mid".to_owned());
+                options.mid = Some("some-mid".to_owned());
                 options
             })
             .await
             .expect("Failed to consume audio");
         assert_eq!(
             consumer_2_2.rtp_parameters().mid,
-            Some("custom-mid".to_string()),
+            Some("some-mid".to_string()),
             "MID is assigned to user-provided value"
         );
 

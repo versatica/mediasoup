@@ -16,9 +16,13 @@
 #include "Shared.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
-#include <csignal> // sigaction()
 #ifdef MS_EXECUTABLE
+#include <cerrno>  // errno
+#include <cstring> // std::strerror()
 #include <string>
+#ifndef _WIN32
+#include <signal.h> // NOLINT(modernize-deprecated-headers) sigaction(), sigfillset()
+#endif
 #endif
 
 static void ignoreSignals();
