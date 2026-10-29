@@ -205,9 +205,13 @@ namespace RTC
 						// layer at the temporal layer already in use, which is left alone so
 						// that a spatial change does not cost the frame rate the Consumer
 						// had climbed to.
+						//
+						// NOTE: At the start of the frame rather than at its end, since the
+						// frames of the target spatial layer were not being forwarded and the
+						// endpoint would otherwise get this one without its first packets.
 						if (
 						  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
-						  this->payloadDescriptor->endOfFrame &&
+						  this->payloadDescriptor->startOfFrame &&
 						  this->payloadDescriptor->IsSwitchPointForDecodeTarget(
 						    static_cast<uint8_t>(context->GetTargetSpatialLayer()),
 						    static_cast<uint8_t>(tmpTemporalLayer)))

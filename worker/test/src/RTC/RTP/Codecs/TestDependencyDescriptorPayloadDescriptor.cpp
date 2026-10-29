@@ -320,6 +320,39 @@ SCENARIO(
 	}
 
 	/*
+	 * The switch must happen at the first packet of one. Switching at its last packet
+	 * would send the endpoint the tail of a frame whose head it never got.
+	 *
+	 * NOTE: The capture holds a single Dependency Descriptor per frame, the one
+	 * of its last packet. The two below are those of the 1:0 frame as it would
+	 * have been sent in two packets: same template and frame number, with the
+	 * start and end of frame bits set apart.
+	 */
+	SECTION("forwards every packet of the frame it downgrades into")
+	{
+		// Template 6 (1:0), frame number 104.
+		const uint8_t firstPacket[] = { 0x86, 0x00, 0x68 };
+		const uint8_t lastPacket[]  = { 0x46, 0x00, 0x68 };
+
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processKeyFrame().forwarded);
+
+		// Frames 94 to 99, which leave the Consumer settled on 2:2.
+		for (size_t i{ 0 }; i < FrameS0T2Index; ++i)
+		{
+			processDeltaFrame(i);
+		}
+
+		context.SetTargetSpatialLayer(1);
+
+		REQUIRE(process(firstPacket, sizeof(firstPacket)).forwarded);
+		REQUIRE(process(lastPacket, sizeof(lastPacket)).forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 1);
+	}
+
+	/*
 	 * A spatial change must not cost the frame rate the Consumer had climbed to.
 	 * The temporal layer is left where it is and the switch is made at a frame
 	 * that is a switch point for the decode target of both layers, so there is
