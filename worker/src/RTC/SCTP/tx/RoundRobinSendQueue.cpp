@@ -146,7 +146,7 @@ namespace RTC
 
 			return static_cast<size_t>(std::ranges::count_if(
 			  this->streams,
-			  [](const auto& entry) -> bool
+			  [](const std::pair<const uint16_t, OutgoingStream>& entry) -> bool
 			  {
 				  const auto& stream = entry.second;
 

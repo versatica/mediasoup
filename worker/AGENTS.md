@@ -67,7 +67,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - Never use `.first` / `.second` inline: bind them to a named variable first (`const bool inserted = set.insert(x).second;`).
 - Aggregates are built with designated initializers: `{ .ssrc = ssrc, .seq = seq }`.
 - Never write the `struct` keyword before a variable, parameter or return type (`RttBackoff rttBackoff;`), except where a function hides the type (`struct stat`).
-- Every lambda states its return type explicitly, `-> void` included.
+- Every lambda states its return type explicitly, `-> void` included. Hence a lambda never takes `auto` parameters (clang-tidy `fuchsia-trailing-return` rejects a trailing return type on a generic lambda): spell out the parameter type, e.g. `const std::pair<const uint16_t, OutgoingStream>& entry` for a `std::map` entry.
 - Integer literals have no `u` suffix (`0`, not `0u`), unless the value does not fit in an `int`.
 - Write `Utils::Foo`, never `::Utils::Foo`.
 - Access `std::optional` with `.value()`, not `*opt`. In production code, a `.value()` already guarded by the surrounding flow is left alone (no `NOLINT`).
