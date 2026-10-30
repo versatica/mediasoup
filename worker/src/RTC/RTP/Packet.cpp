@@ -433,13 +433,15 @@ namespace RTC
 #endif
 
 			/*
-			 * Share the payload descriptor handler.
+			 * Share the payload descriptor handlers.
 			 *
-			 * NOTE: The handler holds no reference to the packet it was created for,
+			 * NOTE: A handler holds no reference to the packet it was created for,
 			 * so it can be shared. ProcessPayload(), EncodePayload() and
 			 * RestorePayload() tell it which packet to act on.
 			 */
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
+			clonedPacket->dependencyDescriptorPayloadDescriptorHandler =
+			  this->dependencyDescriptorPayloadDescriptorHandler;
 
 			return clonedPacket;
 		}
@@ -1533,52 +1535,77 @@ namespace RTC
 			this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
 		}
 
+		void Packet::SetDependencyDescriptorPayloadDescriptorHandler(
+		  Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
+		{
+			MS_TRACE();
+
+			this->dependencyDescriptorPayloadDescriptorHandler.reset(payloadDescriptorHandler);
+		}
+
+		/*
+		 * The Dependency Descriptor tells the layers of a frame to an endpoint that
+		 * receives it, so it only serves the Consumers that negotiated the
+		 * extension. The rest are served by the payload descriptor of their codec.
+		 */
+		Codecs::PayloadDescriptorHandler* Packet::GetPayloadDescriptorHandler(
+		  bool preferDependencyDescriptor) const
+		{
+			if (preferDependencyDescriptor && this->dependencyDescriptorPayloadDescriptorHandler)
+			{
+				return this->dependencyDescriptorPayloadDescriptorHandler.get();
+			}
+
+			return this->payloadDescriptorHandler.get();
+		}
+
 		bool Packet::ProcessPayload(Codecs::EncodingContext* context, bool& marker)
 		{
 			MS_TRACE();
 
-			if (!this->payloadDescriptorHandler)
+			auto* payloadDescriptorHandler =
+			  GetPayloadDescriptorHandler(context->PrefersDependencyDescriptor());
+
+			if (!payloadDescriptorHandler)
 			{
 				return true;
 			}
 
-			return this->payloadDescriptorHandler->Process(context, this, marker);
-		}
-
-		std::unique_ptr<Codecs::PayloadDescriptor::Encoder> Packet::GetPayloadEncoder() const
-		{
-			MS_TRACE();
-
-			if (!this->payloadDescriptorHandler)
-			{
-				return nullptr;
-			}
-
-			return this->payloadDescriptorHandler->GetEncoder();
+			return payloadDescriptorHandler->Process(context, this, marker);
 		}
 
 		void Packet::EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder)
 		{
 			MS_TRACE();
 
-			if (!this->payloadDescriptorHandler)
+			if (!encoder)
 			{
 				return;
 			}
 
-			this->payloadDescriptorHandler->Encode(this, encoder);
+			auto* payloadDescriptorHandler =
+			  GetPayloadDescriptorHandler(encoder->preferDependencyDescriptor);
+
+			if (!payloadDescriptorHandler)
+			{
+				return;
+			}
+
+			payloadDescriptorHandler->Encode(this, encoder);
 		}
 
-		void Packet::RestorePayload()
+		void Packet::RestorePayload(bool preferDependencyDescriptor)
 		{
 			MS_TRACE();
 
-			if (!this->payloadDescriptorHandler)
+			auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(preferDependencyDescriptor);
+
+			if (!payloadDescriptorHandler)
 			{
 				return;
 			}
 
-			this->payloadDescriptorHandler->Restore(this);
+			payloadDescriptorHandler->Restore(this);
 		}
 
 		bool Packet::Validate(bool storeExtensions)

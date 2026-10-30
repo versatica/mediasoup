@@ -51,7 +51,7 @@ namespace RTC
 				~DependencyDescriptorPayloadDescriptor() override = default;
 
 				void Dump(int indentation = 0) const override;
-				void Encode(RTP::Packet* packet);
+
 				void Restore(RTP::Packet* packet) const;
 				uint8_t GetDependencyDescriptorMaxLength() const
 				{
@@ -91,26 +91,6 @@ namespace RTC
 				}
 				void UpdateActiveDecodeTargets(
 				  uint16_t spatialLayer, uint16_t temporalLayer, RTP::Packet* packet);
-				std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
-				{
-					if (this->encoder.has_value())
-					{
-						return std::make_unique<Encoder>(this->encoder.value());
-					}
-					else
-					{
-						return nullptr;
-					}
-				}
-				void CreateEncoder(EncodingData encodingData)
-				{
-					this->encoder = Encoder(encodingData);
-				}
-				// Forgets the rewriting left by a Consumer that shares this packet.
-				void DropEncoder()
-				{
-					this->encoder.reset();
-				}
 
 				// Fields in the Dependency Descriptor extension.
 				const bool startOfFrame;
@@ -121,7 +101,6 @@ namespace RTC
 				const std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor;
 				// Parsed values.
 				const bool isKeyFrame;
-				std::optional<Encoder> encoder{ std::nullopt };
 			};
 
 			class DependencyDescriptorPayloadDescriptorHandler : public Codecs::PayloadDescriptorHandler
@@ -137,10 +116,7 @@ namespace RTC
 					this->payloadDescriptor->Dump(indentation);
 				}
 				bool Process(Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
-				std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-				{
-					return this->payloadDescriptor->GetEncoder();
-				}
+
 				void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override;
 				void Restore(RTP::Packet* packet) override;
 				uint8_t GetSpatialLayer() const override

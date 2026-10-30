@@ -21,6 +21,12 @@ namespace RTC
 				struct Encoder
 				{
 					virtual ~Encoder() = default;
+
+					/*
+					 * Which of the payload descriptor handlers of the packet made this
+					 * encoder, so that the same one rewrites the retransmissions.
+					 */
+					bool preferDependencyDescriptor{ false };
 				};
 
 				virtual ~PayloadDescriptor()                 = default;
@@ -102,6 +108,11 @@ namespace RTC
 					 * choosing the stream and is not up to the payload descriptor.
 					 */
 					bool simulcast{ false };
+					/*
+					 * Whether the Consumer negotiated the Dependency Descriptor header
+					 * extension, this is, whether it is going to receive it at all.
+					 */
+					bool preferDependencyDescriptor{ false };
 				};
 
 			public:
@@ -132,6 +143,17 @@ namespace RTC
 				{
 					return this->params.simulcast;
 				}
+				/**
+				 * Whether the Consumer is given the Dependency Descriptor. The layers of
+				 * a frame can only be told from it by an endpoint that receives it, so a
+				 * Consumer that did not negotiate the extension must be served by the
+				 * payload descriptor of its codec instead.
+				 */
+				bool PrefersDependencyDescriptor() const
+				{
+					return this->params.preferDependencyDescriptor;
+				}
+
 				int16_t GetTargetSpatialLayer() const
 				{
 					return this->targetLayers.spatial;
@@ -262,6 +284,16 @@ namespace RTC
 			public:
 				// Whether the codec has yet to catch up with the restart above.
 				bool syncRequired{ false };
+				/**
+				 * How the payload descriptor handler rewrote the packet being processed
+				 * for this Consumer, left here by it and taken by the Consumer so that
+				 * the retransmissions of that packet are rewritten the very same way.
+				 *
+				 * NOTE: It belongs here rather than to the packet, which is given to
+				 * every Consumer of the Producer and rewritten by each of them its own
+				 * way.
+				 */
+				std::unique_ptr<PayloadDescriptor::Encoder> encoder{ nullptr };
 
 			private:
 				const Params params;
@@ -285,7 +317,6 @@ namespace RTC
 			public:
 				virtual void Dump(int indentation = 0) const                                      = 0;
 				virtual bool Process(EncodingContext* context, RTP::Packet* packet, bool& marker) = 0;
-				virtual std::unique_ptr<PayloadDescriptor::Encoder> GetEncoder() const            = 0;
 				virtual void Encode(RTP::Packet* packet, PayloadDescriptor::Encoder* encoder)     = 0;
 				virtual void Restore(RTP::Packet* packet)                                         = 0;
 				virtual uint8_t GetSpatialLayer() const                                           = 0;

@@ -106,6 +106,16 @@ namespace RTC
 			return this->rtpHeaderExtensionIds;
 		}
 
+		/**
+		 * Whether this Consumer negotiated the Dependency Descriptor header
+		 * extension. Only then is the payload descriptor made out of it
+		 * used for this Consumer.
+		 */
+		bool PrefersDependencyDescriptor() const
+		{
+			return this->rtpHeaderExtensionIds.dependencyDescriptor != 0;
+		}
+
 		RTC::RtpParameters::Type GetType() const
 		{
 			return this->type;

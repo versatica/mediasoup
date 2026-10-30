@@ -56,23 +56,6 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "</DependencyDescriptorPayloadDescriptor>");
 			}
 
-			void DependencyDescriptorPayloadDescriptor::Encode(RTP::Packet* packet)
-			{
-				MS_TRACE();
-
-				if (!this->encoder.has_value())
-				{
-					MS_WARN_DEV("there is no encoder present");
-
-					return;
-				}
-
-				UpdateActiveDecodeTargets(
-				  this->encoder->encodingData.maxSpatialLayer,
-				  this->encoder->encodingData.maxTemporalLayer,
-				  packet);
-			}
-
 			void DependencyDescriptorPayloadDescriptor::Restore(RTP::Packet* packet) const
 			{
 				MS_TRACE();
@@ -365,13 +348,22 @@ namespace RTC
 				                               ? static_cast<uint32_t>(context->GetCurrentSpatialLayer())
 				                               : this->payloadDescriptor->GetSpatialLayers();
 
+				const auto maxTemporalLayer = static_cast<uint32_t>(context->GetCurrentTemporalLayer());
+
+				this->payloadDescriptor->UpdateActiveDecodeTargets(maxSpatialLayer, maxTemporalLayer, packet);
+
+				// Leave the Consumer how this packet was rewritten for it.
 				// clang-format off
-				this->payloadDescriptor->CreateEncoder({
-				  .maxSpatialLayer=maxSpatialLayer,
-				  .maxTemporalLayer=static_cast<uint32_t>(context->GetCurrentTemporalLayer())
-				});
+				auto encoder = std::make_unique<DependencyDescriptorPayloadDescriptor::Encoder>(
+				  DependencyDescriptorPayloadDescriptor::EncodingData{
+				    .maxSpatialLayer=maxSpatialLayer,
+				    .maxTemporalLayer=maxTemporalLayer
+				  });
 				// clang-format on
-				this->payloadDescriptor->Encode(packet);
+
+				encoder->preferDependencyDescriptor = context->PrefersDependencyDescriptor();
+
+				context->encoder = std::move(encoder);
 
 				return true;
 			}

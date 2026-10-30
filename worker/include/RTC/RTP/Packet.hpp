@@ -792,36 +792,45 @@ namespace RTC
 			void SetPayloadDescriptorHandler(Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
 
 			/**
+			 * Set the payload descriptor handler made out of the Dependency
+			 * Descriptor this packet carries, which serves the Consumers that
+			 * negotiated the extension. The rest are served by the one of the codec.
+			 */
+			void SetDependencyDescriptorPayloadDescriptorHandler(
+			  Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
+
+			/**
 			 * Process the payload.
 			 */
 			bool ProcessPayload(Codecs::EncodingContext* context, bool& marker);
 
 			/**
-			 * Get the payload encoder.
-			 */
-			std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetPayloadEncoder() const;
-
-			/**
-			 * Encode the payload.
+			 * Encode the payload, with the handler the encoder was made by.
 			 */
 			void EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder);
 
 			/**
 			 * Restore the payload.
 			 */
-			void RestorePayload();
+			void RestorePayload(bool preferDependencyDescriptor);
 
 			/**
 			 * Whether the payload contains a video keyframe.
+			 *
+			 * NOTE: The ones below tell about the packet rather than about what a
+			 * given Consumer is given, so they prefer the Dependency Descriptor,
+			 * which is where the codecs carrying it keep this.
 			 */
 			bool IsKeyFrame() const
 			{
-				if (!this->payloadDescriptorHandler)
+				auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
+
+				if (!payloadDescriptorHandler)
 				{
 					return false;
 				}
 
-				return this->payloadDescriptorHandler->IsKeyFrame();
+				return payloadDescriptorHandler->IsKeyFrame();
 			}
 
 			/**
@@ -829,12 +838,14 @@ namespace RTC
 			 */
 			uint8_t GetSpatialLayer() const
 			{
-				if (!this->payloadDescriptorHandler)
+				auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
+
+				if (!payloadDescriptorHandler)
 				{
 					return 0;
 				}
 
-				return this->payloadDescriptorHandler->GetSpatialLayer();
+				return payloadDescriptorHandler->GetSpatialLayer();
 			}
 
 			/**
@@ -842,12 +853,14 @@ namespace RTC
 			 */
 			uint8_t GetTemporalLayer() const
 			{
-				if (!this->payloadDescriptorHandler)
+				auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
+
+				if (!payloadDescriptorHandler)
 				{
 					return 0;
 				}
 
-				return this->payloadDescriptorHandler->GetTemporalLayer();
+				return payloadDescriptorHandler->GetTemporalLayer();
 			}
 
 			/**
@@ -856,12 +869,14 @@ namespace RTC
 			 */
 			uint8_t GetDependencyDescriptorMaxLength() const
 			{
-				if (!this->payloadDescriptorHandler)
+				auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
+
+				if (!payloadDescriptorHandler)
 				{
 					return 0;
 				}
 
-				return this->payloadDescriptorHandler->GetDependencyDescriptorMaxLength();
+				return payloadDescriptorHandler->GetDependencyDescriptorMaxLength();
 			}
 
 			/**
@@ -899,6 +914,13 @@ namespace RTC
 			}
 
 		private:
+			/**
+			 * The handler that serves a Consumer, which is the one of the Dependency
+			 * Descriptor when it negotiated the extension and this packet carries it,
+			 * and the one of the codec otherwise.
+			 */
+			Codecs::PayloadDescriptorHandler* GetPayloadDescriptorHandler(bool preferDependencyDescriptor) const;
+
 			/**
 			 * @remarks
 			 * - Returns FixedHeader* instead of const FixedHeader* since we may want
@@ -1016,6 +1038,12 @@ namespace RTC
 			RTP::HeaderExtensionIds headerExtensionIds{};
 			// Codec related.
 			std::shared_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
+			/*
+			 * Both are kept because the packet is handed to every Consumer of the
+			 * Producer, and whether the Dependency Descriptor may be used is a
+			 * property of each of them rather than of the packet.
+			 */
+			std::shared_ptr<Codecs::PayloadDescriptorHandler> dependencyDescriptorPayloadDescriptorHandler;
 			// Capture time of the packet.
 			std::optional<int64_t> captureAtUs;
 			// SSRC of the media stream while the packet is RTX encoded.

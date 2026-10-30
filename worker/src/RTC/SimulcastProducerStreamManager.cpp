@@ -776,6 +776,9 @@ namespace RTC
 		result.type     = RtpPacketProcessResult::Type::FORWARD;
 		result.tsOffset = this->tsOffset;
 		result.marker   = marker;
+		// Take how the payload descriptor handler rewrote the packet for this
+		// Consumer, so that its retransmissions are rewritten the very same way.
+		result.encoder = std::move(this->encodingContext->encoder);
 
 		this->lastPacketForwardedAtMs = this->shared->GetTimeMs();
 

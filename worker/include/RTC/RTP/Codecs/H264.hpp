@@ -58,10 +58,6 @@ namespace RTC
 					}
 					bool Process(
 					  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-					{
-						return nullptr;
-					}
 					void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
 					{
 					}

@@ -1032,6 +1032,9 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		result.retransmissionBufferItem->sharedPacket = sharedPacket;
 
+		// As the Consumer does, hand the item how the packet was rewritten.
+		result.retransmissionBufferItem->encoder = std::move(context1.encoder);
+
 		// Process the third packet with context2 and verify current spatial layers.
 		forwarded = packet3->ProcessPayload(std::addressof(context2), marker);
 
@@ -1066,6 +1069,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		if (result2.retransmissionBufferItem)
 		{
 			result2.retransmissionBufferItem->sharedPacket = sharedPacket;
+			result2.retransmissionBufferItem->encoder      = std::move(context2.encoder);
 		}
 
 		// Create a NACK item that requests the third packet.

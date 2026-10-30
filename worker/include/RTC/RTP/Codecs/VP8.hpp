@@ -62,24 +62,7 @@ namespace RTC
 					void Dump(int indentation = 0) const override;
 					// Rewrite the buffer with the given pictureId and tl0PictureIndex values.
 					void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
-					void Encode(uint8_t* data) const;
 					void Restore(uint8_t* data) const;
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
-					{
-						if (this->encoder.has_value())
-						{
-							return std::make_unique<Encoder>(this->encoder.value());
-						}
-						else
-						{
-							return nullptr;
-						}
-					}
-
-					void CreateEncoder(EncodingData encodingData)
-					{
-						this->encoder = Encoder(encodingData);
-					}
 
 					// Mandatory fields.
 					uint8_t extended : 1;
@@ -104,8 +87,6 @@ namespace RTC
 					bool hasTwoBytesPictureId{ false };
 					bool hasTl0PictureIndex{ false };
 					bool hasTlIndex{ false };
-
-					std::optional<Encoder> encoder{ std::nullopt };
 				};
 
 			public:
@@ -141,10 +122,7 @@ namespace RTC
 					}
 					bool Process(
 					  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-					{
-						return this->payloadDescriptor->GetEncoder();
-					}
+
 					void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override;
 					void Restore(RTP::Packet* packet) override;
 					uint8_t GetSpatialLayer() const override

@@ -278,6 +278,8 @@ namespace RTC
 				{
 					RTC::RTP::Codecs::EncodingContext::Params params;
 
+					params.preferDependencyDescriptor = PrefersDependencyDescriptor();
+
 					encodingContext.reset(
 					  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
 
@@ -354,9 +356,10 @@ namespace RTC
 
 				RTC::RTP::Codecs::EncodingContext::Params params;
 
-				params.spatialLayers  = encoding.spatialLayers;
-				params.temporalLayers = encoding.temporalLayers;
-				params.simulcast      = true;
+				params.spatialLayers              = encoding.spatialLayers;
+				params.temporalLayers             = encoding.temporalLayers;
+				params.simulcast                  = true;
+				params.preferDependencyDescriptor = PrefersDependencyDescriptor();
 
 				std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext(
 				  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
@@ -433,9 +436,10 @@ namespace RTC
 
 				RTC::RTP::Codecs::EncodingContext::Params params;
 
-				params.spatialLayers  = encoding.spatialLayers;
-				params.temporalLayers = encoding.temporalLayers;
-				params.ksvc           = encoding.ksvc;
+				params.spatialLayers              = encoding.spatialLayers;
+				params.temporalLayers             = encoding.temporalLayers;
+				params.ksvc                       = encoding.ksvc;
+				params.preferDependencyDescriptor = PrefersDependencyDescriptor();
 
 				std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext(
 				  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
@@ -1210,7 +1214,7 @@ namespace RTC
 		}
 
 		// Ask the ProducerStreamManager to process the packet.
-		const auto action = this->producerStreamManager->ProcessRtpPacket(
+		auto action = this->producerStreamManager->ProcessRtpPacket(
 		  packet, this->lastSentPacketHasMarker, rtpStream->GetClockRate(), rtpStream->GetMaxPacketTs());
 
 		switch (action.type)
@@ -1353,7 +1357,7 @@ namespace RTC
 		packet->SetMarker(origMarker);
 
 		// Restore the original payload if needed.
-		packet->RestorePayload();
+		packet->RestorePayload(PrefersDependencyDescriptor());
 
 		// If the packet was accepted and the info has been stored into
 		// the retransmission buffer then we must hand a clone of it over to the
@@ -1376,6 +1380,13 @@ namespace RTC
 			  result.retransmissionBufferItem->sequenceNumber);
 
 			result.retransmissionBufferItem->sharedPacket = sharedPacket;
+
+			/*
+			 * Along with the packet, the item is given how it was rewritten for this
+			 * Consumer, so that the stream reapplies the very same rewriting on every
+			 * retransmission.
+			 */
+			result.retransmissionBufferItem->encoder = std::move(action.encoder);
 		}
 
 		// If sent packet was the first packet of a key frame, let's send buffered

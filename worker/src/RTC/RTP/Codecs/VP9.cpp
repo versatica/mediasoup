@@ -121,20 +121,18 @@ namespace RTC
 				 * The Dependency Descriptor tells the layers of the frame and whether
 				 * decoding can start at it, which is all that is needed to forward the
 				 * packet, and it must be rewritten for the layers each Consumer is given.
-				 * So it takes over whenever the packet carries one.
+				 * So it serves the Consumers that negotiated the extension.
 				 *
-				 * NOTE: VP9 rewrites nothing in its payload, so nothing is lost by not
-				 * parsing its own payload descriptor.
+				 * NOTE: The payload descriptor of the codec is parsed all the same, for
+				 * the Consumers that did not and cannot be told the layers any other way.
 				 */
 				auto* dependencyDescriptorPayloadDescriptor =
 				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
 
 				if (dependencyDescriptorPayloadDescriptor)
 				{
-					packet->SetPayloadDescriptorHandler(
+					packet->SetDependencyDescriptorPayloadDescriptorHandler(
 					  new DependencyDescriptorPayloadDescriptorHandler(dependencyDescriptorPayloadDescriptor));
-
-					return;
 				}
 
 				auto* data = packet->GetPayload();

@@ -423,6 +423,9 @@ namespace RTC
 		result.tsOffset            = 0;
 		result.marker              = marker;
 		result.sendBufferedPackets = sendBufferedPackets;
+		// Take how the payload descriptor handler rewrote the packet for this
+		// Consumer, so that its retransmissions are rewritten the very same way.
+		result.encoder = std::move(this->encodingContext->encoder);
 
 		return result;
 	}

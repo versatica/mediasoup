@@ -32,6 +32,11 @@ namespace RTC
 					return;
 				}
 
+				/*
+				 * NOTE: Set as the handler of the codec, so that it also serves a
+				 * Consumer that did not negotiate the extension. AV1 has no payload
+				 * descriptor of its own to fall back to.
+				 */
 				packet->SetPayloadDescriptorHandler(
 				  new DependencyDescriptorPayloadDescriptorHandler(payloadDescriptor));
 			}

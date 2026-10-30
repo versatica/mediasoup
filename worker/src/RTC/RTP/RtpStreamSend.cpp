@@ -677,7 +677,7 @@ namespace RTC
 				// Restore payload.
 				if (item->encoder != nullptr)
 				{
-					packet->RestorePayload();
+					packet->RestorePayload(item->encoder->preferDependencyDescriptor);
 				}
 
 				// Restore RTP header fields.
