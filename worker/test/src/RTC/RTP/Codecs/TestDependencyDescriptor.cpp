@@ -31,7 +31,7 @@ namespace
 			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
 		};
 
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 
 		// As the Producer does, tell the length the descriptor really has and
 		// leave the room made for it as padding behind it.

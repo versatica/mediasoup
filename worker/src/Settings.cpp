@@ -337,7 +337,7 @@ void Settings::PrintConfiguration()
 
 	if (!logTags.empty())
 	{
-		std::copy(
+		std::ranges::copy(
 		  logTags.begin(), logTags.end() - 1, std::ostream_iterator<std::string>(logTagsStream, ","));
 		logTagsStream << logTags.back();
 	}

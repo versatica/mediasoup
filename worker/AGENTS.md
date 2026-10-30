@@ -45,6 +45,8 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - A `.cpp` never re-includes a header that its paired `.hpp` already includes.
 - Standard headers already provided by `common.hpp` (`<algorithm>`, `<cinttypes>`, `<cstddef>`, `<cstdint>`, `<functional>`, `<memory>`, `<optional>`, `<utility>`) are never included again. Others (`<vector>`, `<map>`, `<string>`...) are included directly where used.
 - A type newly used in a file gets its own `#include`. Never rely on transitive includes (except through the paired `.hpp`).
+- Whenever code is touched, check the includes of the file: none missing and none left over.
+- A standard header that provides functions or utilities rather than a type of its own name (`<cstring>`, `<cstdlib>`, `<cmath>`, `<limits>`, `<sstream>`...) carries a comment listing what is used from it, with `()` for functions: `#include <cstring> // std::memcmp(), std::memcpy()`. Headers named after the type they provide (`<vector>`, `<string>`, `<map>`...) take no comment.
 
 ## Class layout
 
@@ -65,10 +67,12 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - Never use `.first` / `.second` inline: bind them to a named variable first (`const bool inserted = set.insert(x).second;`).
 - Aggregates are built with designated initializers: `{ .ssrc = ssrc, .seq = seq }`.
 - Never write the `struct` keyword before a variable, parameter or return type (`RttBackoff rttBackoff;`), except where a function hides the type (`struct stat`).
-- Every lambda states its return type explicitly, `-> void` included.
+- Every lambda states its return type explicitly, `-> void` included. Hence a lambda never takes `auto` parameters (clang-tidy `fuchsia-trailing-return` rejects a trailing return type on a generic lambda): spell out the parameter type, e.g. `const std::pair<const uint16_t, OutgoingStream>& entry` for a `std::map` entry.
 - Integer literals have no `u` suffix (`0`, not `0u`), unless the value does not fit in an `int`.
 - Write `Utils::Foo`, never `::Utils::Foo`.
 - Access `std::optional` with `.value()`, not `*opt`. In production code, a `.value()` already guarded by the surrounding flow is left alone (no `NOLINT`).
+- A function whose result the caller must check (e.g. a `bool` telling whether it did its job) is declared `[[nodiscard]]`, so that ignoring it fails at compile time instead of relying on the caller to remember.
+- Use the `std::ranges` version of an algorithm whenever there is one, passing the container itself when the algorithm covers all of it (`std::ranges::fill(container, value)`, not `std::fill(std::begin(container), std::end(container), value)`).
 
 ## Robustness
 
@@ -78,6 +82,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 - All code text is in English.
 - A comment must help whoever reads the file cold. Do not write comments that only record a discussion, and do not reference other projects the code may have been ported from.
+- Never turn a point raised while working on a change into a comment: why a header was chosen over another, why something is measured one way and not another, what an earlier version did wrong, what a lint check would say. If the code is right, it needs no note defending it.
 - No semicolons in log messages or comments: use a comma in logs and split into sentences in comments.
 - Use ASCII `->`, never the Unicode arrow.
 - Prefer `MS_WARN_TAG()` / `MS_WARN_2TAGS()` over `MS_DEBUG_DEV()` for conditions worth seeing in production.

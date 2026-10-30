@@ -5,6 +5,7 @@
 #include "FBS/webRtcTransport.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/PortManager.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -1003,6 +1004,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (len > RTC::Consts::IncomingRtpPacketMaxSize)
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "ignoring RTP packet exceeding maximum size [len:%zu, max len:%zu]",
+			  len,
+			  RTC::Consts::IncomingRtpPacketMaxSize);
+
+			return;
+		}
+
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
@@ -1071,6 +1083,17 @@ namespace RTC
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
+
+		if (len > RTC::Consts::IncomingRtcpPacketMaxSize)
+		{
+			MS_WARN_TAG(
+			  rtcp,
+			  "ignoring RTCP packet exceeding maximum size [len:%zu, max len:%zu]",
+			  len,
+			  RTC::Consts::IncomingRtcpPacketMaxSize);
+
+			return;
+		}
 
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)

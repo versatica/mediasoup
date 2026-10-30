@@ -293,7 +293,7 @@ namespace Utils
 	public:
 		static void ToLowerCase(std::string& str)
 		{
-			std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+			std::ranges::transform(str, str.begin(), ::tolower);
 		}
 
 		static std::string Base64Encode(const uint8_t* data, size_t len);

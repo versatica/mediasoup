@@ -4,7 +4,7 @@
 #include "RTC/RTP/PacketUtils.hpp"
 #include "Logger.hpp"
 #include "RTC/Serializable.hpp"
-#include <new> // std::align_val_t{
+#include <new> // std::align_val_t
 
 namespace RTC
 {

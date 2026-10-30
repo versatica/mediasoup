@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "Logger.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
@@ -1110,11 +1111,24 @@ namespace RTC
 			  seqNumbers[0],
 			  seqNumbers.size());
 
-			RTC::RTCP::FeedbackRtpNackPacket packet(0, GetSsrc());
+			auto packet = std::make_unique<RTC::RTCP::FeedbackRtpNackPacket>(0, GetSsrc());
+			size_t numPacketsRequested{ 0 };
+
+			// Sends the NACK packet built so far.
+			const auto sendPacket = [this, &packet, &numPacketsRequested]() -> void
+			{
+				this->nackCount++;
+				this->nackPacketCount += numPacketsRequested;
+
+				packet->Serialize(RTC::RTCP::SerializationBuffer);
+
+				// Notify the listener.
+				static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
+				  ->OnRtpStreamSendRtcpPacket(this, packet.get());
+			};
 
 			auto it        = seqNumbers.begin();
 			const auto end = seqNumbers.end();
-			size_t numPacketsRequested{ 0 };
 
 			while (it != end)
 			{
@@ -1139,26 +1153,22 @@ namespace RTC
 
 				auto* const nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
 
-				packet.AddItem(nackItem);
+				// If the item does not fit in the packet, send the packet and start a
+				// new one.
+				if (packet->GetSize() + nackItem->GetSize() > RTC::Consts::OutgoingRtcpPacketMaxSize)
+				{
+					sendPacket();
+
+					packet              = std::make_unique<RTC::RTCP::FeedbackRtpNackPacket>(0, GetSsrc());
+					numPacketsRequested = 0;
+				}
+
+				packet->AddItem(nackItem);
 
 				numPacketsRequested += nackItem->CountRequestedPackets();
 			}
 
-			// Ensure that the RTCP packet fits into the RTCP buffer.
-			if (packet.GetSize() > RTC::RTCP::SerializationBufferSize)
-			{
-				MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)", packet.GetSize());
-
-				return;
-			}
-
-			this->nackCount++;
-			this->nackPacketCount += numPacketsRequested;
-
-			packet.Serialize(RTC::RTCP::SerializationBuffer);
-
-			// Notify the listener.
-			static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamSendRtcpPacket(this, &packet);
+			sendPacket();
 		}
 
 		inline void RtpStreamRecv::OnNackGeneratorKeyFrameRequired()

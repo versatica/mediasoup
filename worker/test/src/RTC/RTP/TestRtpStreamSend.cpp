@@ -158,7 +158,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 				 value }
 			};
 
-			packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 		}
 
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor;

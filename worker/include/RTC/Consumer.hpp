@@ -13,6 +13,7 @@
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -219,7 +220,11 @@ namespace RTC
 
 		void SendRtpPacket(RTC::RTP::Packet* packet, std::shared_ptr<RTC::RTP::Packet>& sharedPacket);
 
-		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
+		/**
+		 * What each RTP stream of this Consumer reports in a RTCP compound packet,
+		 * if it is time to report.
+		 */
+		std::vector<RTC::RTCP::CompoundPacket::SendStreamItems> GetRtcp(int64_t nowUs);
 
 		/**
 		 * Worst remote fraction lost among the RTP streams of this Consumer.

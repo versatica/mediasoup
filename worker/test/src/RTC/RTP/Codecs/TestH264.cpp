@@ -44,7 +44,7 @@ namespace
 				 value }
 			};
 
-			packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+			REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 
 			// As the Producer does, tell the length the descriptor really has.
 			REQUIRE(packet->UpdateDependencyDescriptor(dependencyDescriptor, len));

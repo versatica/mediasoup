@@ -105,6 +105,11 @@ namespace mocks
 					return false;
 				}
 
+				size_t GetNumberOfStreamsReadyToBeReset() const override
+				{
+					return 0;
+				}
+
 				std::vector<uint16_t> GetStreamsReadyToBeReset() override
 				{
 					return {};

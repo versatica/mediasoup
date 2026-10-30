@@ -213,6 +213,15 @@ test('router.createPlainTransport() with wrong arguments rejects with TypeError'
 			appData: 'NOT-AN-OBJECT',
 		})
 	).rejects.toThrow(TypeError);
+
+	// SCTP receiver window buffer size below the minimum (65536).
+	await expect(
+		ctx.router!.createPlainTransport({
+			listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+			enableSctp: true,
+			sctpMaxReceiverWindowBufferSize: 65535,
+		})
+	).rejects.toThrow(TypeError);
 }, 2000);
 
 test('router.createPlainTransport() with enableSrtp succeeds', async () => {

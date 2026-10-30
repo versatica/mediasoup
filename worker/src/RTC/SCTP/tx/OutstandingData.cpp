@@ -342,6 +342,14 @@ namespace RTC
 				return nullptr;
 			}
 
+			// Each skipped stream takes 4 bytes.
+			if (
+			  ForwardTsnChunk::ForwardTsnChunkHeaderLength + (skippedPerOrderedStream.size() * 4) >
+			  packet->GetAvailableLength())
+			{
+				return nullptr;
+			}
+
 			auto* forwardTsnChunk = packet->BuildChunkInPlace<ForwardTsnChunk>();
 
 			forwardTsnChunk->SetNewCumulativeTsn(newCumulativeAck.Wrap());
@@ -387,6 +395,12 @@ namespace RTC
 			// An I-FORWARD-TSN that does not advance the cumulative TSN is a
 			// duplicate, and the caller may be rate limiting it.
 			if (rateLimitedTsn == newCumulativeAck.Wrap())
+			{
+				return nullptr;
+			}
+
+			// Each skipped stream takes 8 bytes.
+			if (IForwardTsnChunk::IForwardTsnChunkHeaderLength + (skippedPerStream.size() * 8) > packet->GetAvailableLength())
 			{
 				return nullptr;
 			}

@@ -358,7 +358,12 @@ namespace RTC
 					// sender should create a SACK and bundle it with the outbound DATA
 					// chunk, as long as the size of the final SCTP packet does not exceed
 					// the current MTU."
-					if (this->dataTracker.ShouldSendAck(/*alsoIfDelayed*/ true))
+					//
+					// NOTE: The size is checked first, since ShouldSendAck() considers the
+					// pending ack sent. If it does not fit, the ack stays pending.
+					if (
+					  this->dataTracker.GetSackSelectiveAckLength() <= packet->GetAvailableLength() &&
+					  this->dataTracker.ShouldSendAck(/*alsoIfDelayed*/ true))
 					{
 						this->dataTracker.AddSackSelectiveAck(
 						  packet.get(), this->reassemblyQueue.GetRemainingBytes());
@@ -368,7 +373,9 @@ namespace RTC
 
 					if (this->streamResetHandler.ShouldSendStreamResetRequest())
 					{
-						this->streamResetHandler.AddStreamResetRequest(packet.get());
+						// NOTE: If it does not fit, the request remains to be sent in a later
+						// packet.
+						static_cast<void>(this->streamResetHandler.AddStreamResetRequest(packet.get()));
 					}
 				}
 

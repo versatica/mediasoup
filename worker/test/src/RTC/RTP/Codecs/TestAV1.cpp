@@ -60,7 +60,7 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 			 value }
 		};
 
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 
 		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), templateDependencyStructure);
 

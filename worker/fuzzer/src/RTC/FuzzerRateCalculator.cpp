@@ -34,7 +34,8 @@ void FuzzerRtcRateCalculator::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	auto size = Utils::Crypto::GetRandomUInt<size_t>(0, static_cast<uint32_t>(RTC::Consts::MtuSize));
+	auto size = Utils::Crypto::GetRandomUInt<size_t>(
+	  0, static_cast<uint32_t>(RTC::Consts::IncomingRtpPacketMaxSize));
 
 	nowMs += static_cast<int64_t>(Utils::Crypto::GetRandomUInt<uint64_t>(0, 1000));
 

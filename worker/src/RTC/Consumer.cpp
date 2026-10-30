@@ -4,6 +4,7 @@
 #include "RTC/Consumer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/PipeProducerStreamManager.hpp"
 #include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/RTP/PacketUtils.hpp"
@@ -84,6 +85,16 @@ namespace RTC
 		if (this->rtpParameters.encodings.empty())
 		{
 			MS_THROW_TYPE_ERROR("empty rtpParameters.encodings");
+		}
+
+		// The MID is written in the MID RTP header extension of every packet sent,
+		// which has room for a limited length.
+		if (this->rtpParameters.mid.length() > RTC::Consts::MidRtpExtensionMaxLength)
+		{
+			MS_THROW_TYPE_ERROR(
+			  "rtpParameters.mid too long [len:%zu, max len:%" PRIu8 "]",
+			  this->rtpParameters.mid.length(),
+			  RTC::Consts::MidRtpExtensionMaxLength);
 		}
 
 		// All encodings must have SSRCs.
@@ -1438,7 +1449,7 @@ namespace RTC
 		}
 	}
 
-	bool Consumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs)
+	std::vector<RTC::RTCP::CompoundPacket::SendStreamItems> Consumer::GetRtcp(int64_t nowUs)
 	{
 		MS_TRACE();
 
@@ -1452,50 +1463,42 @@ namespace RTC
 		{
 			if (nowUs != this->lastRtcpSentAtUs && static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
 			{
-				return true;
+				return {};
 			}
 		}
 		else if (static_cast<float>(elapsedMs * 1.15) < this->maxRtcpIntervalMs)
 		{
-			return true;
+			return {};
 		}
 
-		std::vector<RTCP::SenderReport*> senderReports;
-		std::vector<RTCP::SdesChunk*> sdesChunks;
-		std::vector<RTCP::DelaySinceLastRr::SsrcInfo*> delaySinceLastRrSsrcInfos;
+		std::vector<RTC::RTCP::CompoundPacket::SendStreamItems> sendStreamItems;
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto* report = rtpStream->GetRtcpSenderReport(nowUs);
+			auto* const report = rtpStream->GetRtcpSenderReport(nowUs);
 
 			if (!report)
 			{
 				continue;
 			}
 
-			senderReports.push_back(report);
-
 			// Build SDES chunk for this sender.
-			auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
-			sdesChunks.push_back(sdesChunk);
+			auto* const sdesChunk = rtpStream->GetRtcpSdesChunk();
 
-			auto* delaySinceLastRrSsrcInfo = rtpStream->GetRtcpXrDelaySinceLastRrSsrcInfo(nowUs);
+			auto* const delaySinceLastRrSsrcInfo = rtpStream->GetRtcpXrDelaySinceLastRrSsrcInfo(nowUs);
 
-			if (delaySinceLastRrSsrcInfo)
-			{
-				delaySinceLastRrSsrcInfos.push_back(delaySinceLastRrSsrcInfo);
-			}
-		}
-
-		// RTCP Compound packet buffer cannot hold the data.
-		if (!packet->Add(senderReports, sdesChunks, delaySinceLastRrSsrcInfos))
-		{
-			return false;
+			sendStreamItems.push_back(
+			  {
+			    .senderReport = std::unique_ptr<RTC::RTCP::SenderReport>(report),
+			    .sdesChunk    = std::unique_ptr<RTC::RTCP::SdesChunk>(sdesChunk),
+			    .delaySinceLastRrSsrcInfo =
+			      std::unique_ptr<RTC::RTCP::DelaySinceLastRr::SsrcInfo>(delaySinceLastRrSsrcInfo),
+			  });
 		}
 
 		this->lastRtcpSentAtUs = nowUs;
 
-		return true;
+		return sendStreamItems;
 	}
 
 	uint8_t Consumer::GetWorstRemoteFractionLost(uint32_t /*mappedSsrc*/) const

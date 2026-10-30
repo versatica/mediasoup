@@ -306,16 +306,13 @@ SCENARIO("PipeProducerStreamManager", "[rtp][producerstreammanager][pipe]")
 
 		REQUIRE(listener.keyFrameRequestCount == 3);
 		REQUIRE(
-		  std::find(
-		    listener.keyFrameRequestedSsrcs.begin(), listener.keyFrameRequestedSsrcs.end(), MappedSsrc0) !=
+		  std::ranges::find(listener.keyFrameRequestedSsrcs, MappedSsrc0) !=
 		  listener.keyFrameRequestedSsrcs.end());
 		REQUIRE(
-		  std::find(
-		    listener.keyFrameRequestedSsrcs.begin(), listener.keyFrameRequestedSsrcs.end(), MappedSsrc1) !=
+		  std::ranges::find(listener.keyFrameRequestedSsrcs, MappedSsrc1) !=
 		  listener.keyFrameRequestedSsrcs.end());
 		REQUIRE(
-		  std::find(
-		    listener.keyFrameRequestedSsrcs.begin(), listener.keyFrameRequestedSsrcs.end(), MappedSsrc2) !=
+		  std::ranges::find(listener.keyFrameRequestedSsrcs, MappedSsrc2) !=
 		  listener.keyFrameRequestedSsrcs.end());
 
 		// All streams require a key frame before forwarding.

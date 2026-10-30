@@ -3,7 +3,8 @@
 #include "RTC/RTP/Packet.hpp"
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstring> // std::memcmp()
+#include <cstring> // std::memcmp(), std::memcpy()
+#include <tuple>
 #include <vector>
 
 namespace
@@ -80,7 +81,7 @@ namespace
 			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
 		};
 
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 
 		// As the Producer does, tell the length the descriptor really has.
 		REQUIRE(packet->UpdateDependencyDescriptor(dependencyDescriptor, len));
@@ -205,8 +206,8 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		{
 			RTC::RTP::Codecs::EncodingContext::Params params;
 
-			params.spatialLayers           = 1;
-			params.temporalLayers          = 2;
+			params.spatialLayers              = 1;
+			params.temporalLayers             = 2;
 			params.preferDependencyDescriptor = preferDependencyDescriptor;
 
 			return params;

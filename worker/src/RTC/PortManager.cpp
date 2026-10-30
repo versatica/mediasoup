@@ -6,8 +6,8 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <cstring> // std::memcmp(), std::memset()
-#include <tuple>   // std::make_tuple()
+#include <cstring> // std::memcmp(), std::memcpy()
+#include <tuple>   // std::forward_as_tuple()
 
 /* Static methods for UV callbacks. */
 

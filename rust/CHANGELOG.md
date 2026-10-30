@@ -3,8 +3,12 @@
 ### NEXT
 
 - AV1: Fix SVC not being decodable ([PR #2015](https://github.com/versatica/mediasoup/pull/2015)).
+
+### 0.33.1
+
 - BWE: Reduce CPU usage in `RTC::BWE::SendPacketHistory` ([PR #2018](https://github.com/versatica/mediasoup/pull/2018)).
 - Worker: Improve C++ code ([PR #2021](https://github.com/versatica/mediasoup/pull/2021)).
+- Worker: Fix abort due to big received packet ([PR #2022](https://github.com/versatica/mediasoup/pull/2022)).
 
 ### 0.33.0
 
@@ -351,7 +355,7 @@
 
 ### 0.9.2
 
-- Update `lru` dependency to fix security vulnerability
+- Update `lru` dependency to fix security vulnerability.
 
 ### 0.9.1
 

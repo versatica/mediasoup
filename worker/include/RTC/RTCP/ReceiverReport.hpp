@@ -155,7 +155,7 @@ namespace RTC
 			}
 			void RemoveReport(ReceiverReport* report)
 			{
-				auto it = std::find(this->reports.begin(), this->reports.end(), report);
+				const auto it = std::ranges::find(this->reports, report);
 
 				if (it != this->reports.end())
 				{
@@ -194,7 +194,7 @@ namespace RTC
 				// If number of reports exceeds 31 then the required number of packets
 				// will be serialized which will take the size calculated below.
 				size_t size = (Packet::CommonHeaderSize + 4 /* this->ssrc */) *
-				              ((this->GetCount() / maxReportsPerPacket) + 1);
+				              ((this->GetCount() + maxReportsPerPacket - 1) / maxReportsPerPacket);
 				size += ReceiverReport::HeaderSize * this->GetCount();
 
 				return size;
