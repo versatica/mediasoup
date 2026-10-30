@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Fix DTLS BIO callback return value ([PR #2025](https://github.com/versatica/mediasoup/pull/2025)).
+
 ### 3.32.1
 
 - BWE: Reduce CPU usage in `RTC::BWE::SendPacketHistory` ([PR #2018](https://github.com/versatica/mediasoup/pull/2018)).

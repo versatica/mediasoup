@@ -71,7 +71,10 @@ inline static long onSslBioOut(
 {
 	MS_TRACE();
 
-	const long resultOfcallback = (operationType == BIO_CB_RETURN) ? static_cast<long>(ret) : 1;
+	// OpenSSL calls back after every operation with BIO_CB_RETURN or'ed into the
+	// operation type and takes what this returns as the operation's result, so
+	// it must be |ret| unchanged.
+	const long resultOfcallback = ((operationType & BIO_CB_RETURN) != 0) ? static_cast<long>(ret) : 1;
 
 	// This callback is called twice for write operations:
 	// - First one with operationType = BIO_CB_WRITE.
