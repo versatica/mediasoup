@@ -432,13 +432,16 @@ namespace RTC
 			clonedPacket->logger = this->logger;
 #endif
 
-			// Assign the payload descriptor handler.
+			/*
+			 * Share the payload descriptor handlers.
+			 *
+			 * NOTE: A handler holds no reference to the packet it was created for,
+			 * so it can be shared. ProcessPayload(), EncodePayload() and
+			 * RestorePayload() tell it which packet to act on.
+			 */
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
-
-			if (this->payloadDescriptorHandler)
-			{
-				clonedPacket->payloadDescriptorHandler->RtpPacketChanged(clonedPacket);
-			}
+			clonedPacket->dependencyDescriptorPayloadDescriptorHandler =
+			  this->dependencyDescriptorPayloadDescriptorHandler;
 
 			return clonedPacket;
 		}
@@ -1084,7 +1087,7 @@ namespace RTC
 
 		bool Packet::ReadDependencyDescriptor(
 		  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor,
-		  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+		  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 		    templateDependencyStructure) const
 		{
 			MS_TRACE();
@@ -1098,8 +1101,8 @@ namespace RTC
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
 
-			auto* value = Codecs::DependencyDescriptor::Parse(
-			  extenValue, extenLen, const_cast<Packet*>(this), templateDependencyStructure);
+			auto* value =
+			  Codecs::DependencyDescriptor::Parse(extenValue, extenLen, templateDependencyStructure);
 
 			if (!value)
 			{
@@ -1121,7 +1124,7 @@ namespace RTC
 
 			if (!extenValue)
 			{
-				MS_WARN_TAG(rtp, "dependency description not found");
+				MS_WARN_TAG(rtp, "dependency descriptor not found");
 
 				return false;
 			}
@@ -1133,20 +1136,38 @@ namespace RTC
 				return false;
 			}
 
+			/*
+			 * A longer descriptor can only take the padding bytes that follow the
+			 * current one, if any, since the first byte of any other extension holds
+			 * its id and is therefore never 0.
+			 */
 			if (len > extenLen)
 			{
-				MS_WARN_TAG(
-				  rtp,
-				  "no enough space for updated dependency descriptor [needed:%zu, available:%" PRIu8 "]",
-				  len,
-				  extenLen);
+				const auto offset = static_cast<size_t>(extenValue - GetHeaderExtensionValue());
+				// In One-Byte extensions the length field holds 1..16.
+				const size_t maxLen = HasOneByteExtensions() ? 16 : Consts::TwoBytesRtpExtensionMaxLength;
+				bool fits           = len <= maxLen && offset + len <= GetHeaderExtensionValueLength();
 
-				return false;
+				for (size_t idx{ extenLen }; fits && idx < len; ++idx)
+				{
+					fits = extenValue[idx] == 0;
+				}
+
+				if (!fits)
+				{
+					MS_WARN_TAG(
+					  rtp,
+					  "no enough space for updated dependency descriptor [needed:%zu, available:%" PRIu8 "]",
+					  len,
+					  extenLen);
+
+					return false;
+				}
 			}
 
 			std::memcpy(extenValue, data, len);
 
-			SetExtensionLength(this->headerExtensionIds.dependencyDescriptor, len);
+			SetExtensionLength(this->headerExtensionIds.dependencyDescriptor, static_cast<uint8_t>(len));
 
 			return true;
 		}
@@ -1560,52 +1581,77 @@ namespace RTC
 			this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
 		}
 
+		void Packet::SetDependencyDescriptorPayloadDescriptorHandler(
+		  Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
+		{
+			MS_TRACE();
+
+			this->dependencyDescriptorPayloadDescriptorHandler.reset(payloadDescriptorHandler);
+		}
+
+		/*
+		 * The Dependency Descriptor tells the layers of a frame to an endpoint that
+		 * receives it, so it only serves the Consumers that negotiated the
+		 * extension. The rest are served by the payload descriptor of their codec.
+		 */
+		Codecs::PayloadDescriptorHandler* Packet::GetPayloadDescriptorHandler(
+		  bool preferDependencyDescriptor) const
+		{
+			if (preferDependencyDescriptor && this->dependencyDescriptorPayloadDescriptorHandler)
+			{
+				return this->dependencyDescriptorPayloadDescriptorHandler.get();
+			}
+
+			return this->payloadDescriptorHandler.get();
+		}
+
 		bool Packet::ProcessPayload(Codecs::EncodingContext* context, bool& marker)
 		{
 			MS_TRACE();
 
-			if (!this->payloadDescriptorHandler)
+			auto* payloadDescriptorHandler =
+			  GetPayloadDescriptorHandler(context->PrefersDependencyDescriptor());
+
+			if (!payloadDescriptorHandler)
 			{
 				return true;
 			}
 
-			return this->payloadDescriptorHandler->Process(context, this, marker);
-		}
-
-		std::unique_ptr<Codecs::PayloadDescriptor::Encoder> Packet::GetPayloadEncoder() const
-		{
-			MS_TRACE();
-
-			if (!this->payloadDescriptorHandler)
-			{
-				return nullptr;
-			}
-
-			return this->payloadDescriptorHandler->GetEncoder();
+			return payloadDescriptorHandler->Process(context, this, marker);
 		}
 
 		void Packet::EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder)
 		{
 			MS_TRACE();
 
-			if (!this->payloadDescriptorHandler)
+			if (!encoder)
 			{
 				return;
 			}
 
-			this->payloadDescriptorHandler->Encode(this, encoder);
+			auto* payloadDescriptorHandler =
+			  GetPayloadDescriptorHandler(encoder->preferDependencyDescriptor);
+
+			if (!payloadDescriptorHandler)
+			{
+				return;
+			}
+
+			payloadDescriptorHandler->Encode(this, encoder);
 		}
 
-		void Packet::RestorePayload()
+		void Packet::RestorePayload(bool preferDependencyDescriptor)
 		{
 			MS_TRACE();
 
-			if (!this->payloadDescriptorHandler)
+			auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(preferDependencyDescriptor);
+
+			if (!payloadDescriptorHandler)
 			{
 				return;
 			}
 
-			this->payloadDescriptorHandler->Restore(this);
+			payloadDescriptorHandler->Restore(this);
 		}
 
 		bool Packet::Validate(bool storeExtensions)
@@ -1872,11 +1918,5 @@ namespace RTC
 			}
 		}
 
-		void Packet::OnDependencyDescriptorUpdated(const uint8_t* data, size_t len)
-		{
-			MS_TRACE();
-
-			UpdateDependencyDescriptor(data, len);
-		}
 	} // namespace RTP
 } // namespace RTC

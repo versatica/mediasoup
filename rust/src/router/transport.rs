@@ -676,12 +676,7 @@ pub(super) trait TransportImpl: TransportGeneric {
         let enable_rtx = enable_rtx.unwrap_or(producer.kind() == MediaKind::Video);
 
         let rtp_parameters = if transport_type == TransportType::Pipe {
-            ortc::get_pipe_consumer_rtp_parameters(
-                producer.consumable_rtp_parameters(),
-                &self.router().rtp_capabilities(),
-                producer.kind(),
-                rtx,
-            )
+            ortc::get_pipe_consumer_rtp_parameters(producer.consumable_rtp_parameters(), rtx)
         } else {
             let mut rtp_parameters = ortc::get_consumer_rtp_parameters(
                 producer.consumable_rtp_parameters(),

@@ -239,18 +239,6 @@ namespace RTC
 				}
 			}
 
-			void VP8::PayloadDescriptor::Encode(uint8_t* data) const
-			{
-				MS_TRACE();
-
-				if (this->encoder == std::nullopt)
-				{
-					return;
-				}
-
-				this->encoder->Encode(data, this);
-			}
-
 			void VP8::PayloadDescriptor::Restore(uint8_t* data) const
 			{
 				MS_TRACE();
@@ -376,9 +364,15 @@ namespace RTC
 
 				if (this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTl0PictureIndex)
 				{
-					// Store the encoding data for retransmissions.
-					this->payloadDescriptor->CreateEncoder({ pictureId, tl0PictureIndex });
-					this->payloadDescriptor->Encode(packet->GetPayload());
+					this->payloadDescriptor->Encode(packet->GetPayload(), pictureId, tl0PictureIndex);
+
+					// Leave the Consumer how this packet was rewritten for it.
+					auto encoder = std::make_unique<VP8::PayloadDescriptor::Encoder>(
+					  VP8::PayloadDescriptor::EncodingData{ pictureId, tl0PictureIndex });
+
+					encoder->preferDependencyDescriptor = context->PrefersDependencyDescriptor();
+
+					context->encoder = std::move(encoder);
 				}
 
 				return true;

@@ -28,7 +28,13 @@ namespace RTC
 				 */
 				std::shared_ptr<RTP::Packet> sharedPacket{ nullptr };
 				/**
-				 * Payload descriptor encoder.
+				 * Payload descriptor encoder, holding how the packet was rewritten so
+				 * that its retransmissions are rewritten the very same way.
+				 *
+				 * @remarks
+				 * - Insert() leaves it empty, as it does with the packet above. How the
+				 *   packet was rewritten is up to the Consumer, since one packet is
+				 *   given to all of them and each rewrites it its own way.
 				 */
 				std::unique_ptr<RTP::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
 				/**

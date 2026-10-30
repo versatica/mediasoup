@@ -787,13 +787,9 @@ export function getConsumerRtpParameters({
  */
 export function getPipeConsumerRtpParameters({
 	consumableRtpParameters,
-	routerRtpCapabilities,
-	kind,
 	enableRtx,
 }: {
 	consumableRtpParameters: RtpParameters;
-	routerRtpCapabilities: RtpCapabilities;
-	kind: MediaKind;
 	enableRtx: boolean;
 }): RtpParameters {
 	const consumerParams: RtpParameters = {
@@ -836,34 +832,6 @@ export function getPipeConsumerRtpParameters({
 				ext.uri !==
 					'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 		);
-
-	// TODO: Remove this once the Dependency-Descriptor header extension has
-	// direction 'sendrecv' in supported RTP capabilities.
-	//
-	// A pipe Consumer forwards all the layers of the Producer, so the receiving
-	// Router needs the Dependency-Descriptor header extension to tell them apart.
-	// It must be added here since, being 'recvonly' in the Router RTP
-	// capabilities, it's not present in `consumableRtpParameters`.
-	const dependencyDescriptorExt = routerRtpCapabilities.headerExtensions!.find(
-		capExt =>
-			capExt.kind === kind &&
-			capExt.uri ===
-				'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension' &&
-			capExt.direction !== 'sendrecv' &&
-			capExt.direction !== 'sendonly'
-	);
-
-	if (dependencyDescriptorExt) {
-		consumerParams.headerExtensions.push({
-			uri: dependencyDescriptorExt.uri,
-			id: dependencyDescriptorExt.preferredId,
-			encrypt: dependencyDescriptorExt.preferredEncrypt,
-			parameters: {},
-		});
-
-		// Sort header extensions by ID.
-		consumerParams.headerExtensions.sort((a, b) => a.id - b.id);
-	}
 
 	const consumableEncodings =
 		utils.clone<RtpEncodingParameters[] | undefined>(

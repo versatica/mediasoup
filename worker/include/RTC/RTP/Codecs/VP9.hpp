@@ -91,7 +91,10 @@ namespace RTC
 
 			public:
 				static VP9::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
-				static void ProcessRtpPacket(RTP::Packet* packet);
+				static void ProcessRtpPacket(
+				  RTP::Packet* packet,
+				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+				    templateDependencyStructure);
 
 			public:
 				class EncodingContext : public Codecs::EncodingContext
@@ -103,16 +106,8 @@ namespace RTC
 					}
 					~EncodingContext() override = default;
 
-					/* Pure virtual methods inherited from Codecs::EncodingContext. */
-				public:
-					void SyncRequired() override
-					{
-						this->syncRequired = true;
-					}
-
 				public:
 					RTC::SeqManager<uint16_t, 15> pictureIdManager;
-					bool syncRequired{ false };
 				};
 
 				class PayloadDescriptorHandler : public Codecs::PayloadDescriptorHandler
@@ -128,11 +123,6 @@ namespace RTC
 					}
 					bool Process(
 					  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
-					void RtpPacketChanged(RTP::Packet* packet) override {};
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-					{
-						return nullptr;
-					}
 					void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
 					{
 					}

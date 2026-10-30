@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/Codecs/H264.hpp"
 #include "Logger.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptorPayloadDescriptor.hpp"
 #include "Utils.hpp"
 
 namespace RTC
@@ -13,27 +14,13 @@ namespace RTC
 		{
 			/* Class methods. */
 
-			H264::PayloadDescriptor* H264::Parse(
-			  const uint8_t* data, size_t len, Codecs::DependencyDescriptor* dependencyDescriptor)
+			H264::PayloadDescriptor* H264::Parse(const uint8_t* data, size_t len)
 			{
 				MS_TRACE();
 
 				std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
-				if (dependencyDescriptor)
-				{
-					// Read fields.
-					payloadDescriptor->startOfFrame  = dependencyDescriptor->startOfFrame;
-					payloadDescriptor->endOfFrame    = dependencyDescriptor->endOfFrame;
-					payloadDescriptor->spatialLayer  = dependencyDescriptor->spatialLayer;
-					payloadDescriptor->temporalLayer = dependencyDescriptor->temporalLayer;
-
-					payloadDescriptor->isKeyFrame = dependencyDescriptor->isKeyFrame;
-				}
-				else
-				{
-					payloadDescriptor->isKeyFrame = IsKeyFrame(data, len);
-				}
+				payloadDescriptor->isKeyFrame = IsKeyFrame(data, len);
 
 				return payloadDescriptor.release();
 			}
@@ -116,18 +103,32 @@ namespace RTC
 
 			void H264::ProcessRtpPacket(
 			  RTP::Packet* packet,
-			  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
+			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
 			{
 				MS_TRACE();
 
+				/*
+				 * The Dependency Descriptor tells the layers of the frame and whether
+				 * decoding can start at it, which is all that is needed to forward the
+				 * packet, and it must be rewritten for the layers each Consumer is given.
+				 * So it serves the Consumers that negotiated the extension.
+				 *
+				 * NOTE: The payload descriptor of the codec is parsed all the same, for
+				 * the Consumers that did not and cannot be told the layers any other way.
+				 */
+				auto* dependencyDescriptorPayloadDescriptor =
+				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
+
+				if (dependencyDescriptorPayloadDescriptor)
+				{
+					packet->SetDependencyDescriptorPayloadDescriptorHandler(
+					  new DependencyDescriptorPayloadDescriptorHandler(dependencyDescriptorPayloadDescriptor));
+				}
+
 				auto* data = packet->GetPayload();
 				auto len   = packet->GetPayloadLength();
-				std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor;
 
-				// Read dependency descriptor.
-				packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
-
-				PayloadDescriptor* payloadDescriptor = H264::Parse(data, len, dependencyDescriptor.get());
+				PayloadDescriptor* payloadDescriptor = H264::Parse(data, len);
 
 				if (!payloadDescriptor)
 				{
@@ -146,13 +147,6 @@ namespace RTC
 				MS_TRACE();
 
 				MS_DUMP_CLEAN(indentation, "<H264::PayloadDescriptor>");
-				MS_DUMP_CLEAN(
-				  indentation,
-				  "  startOfFrame:%" PRIu8 "|endOfFrame:%" PRIu8,
-				  this->startOfFrame,
-				  this->endOfFrame);
-				MS_DUMP_CLEAN(indentation, "  spatialLayer:%" PRIu8, this->spatialLayer);
-				MS_DUMP_CLEAN(indentation, "  temporalLayer:%" PRIu8, this->temporalLayer);
 				MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
 				MS_DUMP_CLEAN(indentation, "</H264::PayloadDescriptor>");
 			}
@@ -173,18 +167,20 @@ namespace RTC
 
 				MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
-				if (this->payloadDescriptor->temporalLayer > context->GetTargetTemporalLayer())
-				{
-					return false;
-				}
-
 				// H264 always has a single spatial layer (0).
 				context->SetCurrentSpatialLayer(0);
 
-				// Update/fix current temporal layer.
-				if (this->payloadDescriptor->temporalLayer > context->GetCurrentTemporalLayer())
+				/*
+				 * The temporal layer is not parsed out of H264 packets, so they all are
+				 * taken for the lowest one and none is ever filtered out.
+				 *
+				 * NOTE: The NAL unit header extensions that carry it in H264 SVC are not
+				 * read. The Dependency Descriptor does tell it, and when the packet
+				 * carries one its payload descriptor handler takes over this one.
+				 */
+				if (context->GetCurrentTemporalLayer() < 0)
 				{
-					context->SetCurrentTemporalLayer(this->payloadDescriptor->temporalLayer);
+					context->SetCurrentTemporalLayer(0);
 				}
 
 				if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())

@@ -228,10 +228,13 @@ namespace Utils
 	class Bits
 	{
 	public:
-		static size_t CountSetBits(const uint16_t mask)
-		{
-			return static_cast<size_t>(__builtin_popcount(mask));
-		}
+		static size_t CountSetBits(uint16_t mask);
+
+		/**
+		 * Value of the bit at the given offset, counting from the most significant
+		 * bit of the first byte.
+		 */
+		static uint8_t GetBitAt(const uint8_t* data, size_t len, uint32_t offset);
 	};
 
 	class Crypto
@@ -673,33 +676,61 @@ namespace Utils
 		}
 	};
 
-	class BitStream
+	/**
+	 * Reads bits out of its own copy of the given data.
+	 *
+	 * NOTE: The copy is what lets a reader outlive the buffer it was built from,
+	 * which it does: a Dependency Descriptor is parsed out of the RTP packet it
+	 * came in, and then read again on every retransmission of that packet, long
+	 * after the receive buffer holding it has been reused.
+	 */
+	class BitReader
 	{
 	public:
-		BitStream(uint8_t* data, size_t len);
-		~BitStream() = default;
+		BitReader(const uint8_t* data, size_t len);
+		~BitReader() = default;
 
 		const uint8_t* GetData() const;
 		size_t GetLength() const;
 		uint32_t GetOffset() const;
-		void Reset();
 		uint8_t GetBit();
 		uint32_t GetBits(size_t count);
 		uint32_t GetLeftBits() const;
-		uint32_t GetNumBits(uint32_t n) const;
 		std::optional<uint32_t> ReadNs(uint32_t n);
 		void SkipBits(size_t count);
-		void Write(uint32_t offset, uint32_t n, uint32_t v);
-		void PutBit(uint8_t bit);
-		void PutBits(uint32_t count, uint32_t bits);
-
-	private:
-		void PutBit(uint32_t offset, uint8_t bit);
-		void PutBits(uint32_t offset, uint32_t count, uint32_t bits);
 
 	private:
 		uint8_t data[RTC::Consts::TwoBytesRtpExtensionMaxLength];
 		uint32_t len{ 0 };
+		uint32_t offset{ 0 };
+	};
+
+	/**
+	 * Appends bits into a buffer that the caller has zeroed.
+	 *
+	 * NOTE: Unlike BitReader, this doesn't read, doesn't own the buffer and
+	 * cannot reset it, so whatever is being rewritten can never be its own
+	 * destination. That's what makes it possible to copy over bits that are not
+	 * parsed, via PutBitRange().
+	 */
+	class BitWriter
+	{
+	public:
+		BitWriter(uint8_t* data, size_t len);
+		~BitWriter() = default;
+
+		uint32_t GetOffset() const;
+		void PutBit(uint8_t bit);
+		void PutBits(uint32_t count, uint32_t bits);
+		/**
+		 * Appends the bits of `src`, which holds `len` bytes, in the range
+		 * [from, to).
+		 */
+		void PutBitRange(const uint8_t* src, size_t len, uint32_t from, uint32_t to);
+
+	private:
+		uint8_t* data;
+		size_t len{ 0 };
 		uint32_t offset{ 0 };
 	};
 

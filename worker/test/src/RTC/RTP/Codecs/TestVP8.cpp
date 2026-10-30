@@ -601,7 +601,7 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 		auto forwarded = payloadDescriptorHandler->Process(&context, packet.get(), marker);
 		REQUIRE(forwarded);
 
-		auto encoder1 = payloadDescriptorHandler->GetEncoder();
+		auto encoder1 = std::move(context.encoder);
 		REQUIRE(encoder1);
 
 		// Update pictureId.
@@ -617,7 +617,7 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 		REQUIRE(payloadDescriptor->pictureId == 2);
 
 		// encoder2 contains the pictureId value 2.
-		auto encoder2 = payloadDescriptorHandler->GetEncoder();
+		auto encoder2 = std::move(context.encoder);
 		REQUIRE(encoder2);
 
 		// Encode with encoder1.

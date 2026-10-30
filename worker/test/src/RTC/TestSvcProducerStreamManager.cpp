@@ -86,9 +86,6 @@ namespace
 		      MockEncodingContext::BuildParams(spatialLayers, temporalLayers, ksvc))
 		{
 		}
-		void SyncRequired() override
-		{
-		}
 
 	private:
 		static RTC::RTP::Codecs::EncodingContext::Params& BuildParams(
@@ -113,18 +110,17 @@ namespace
 		{
 		}
 		bool Process(
-		  RTC::RTP::Codecs::EncodingContext* /*context*/,
-		  RTC::RTP::Packet* /*packet*/,
-		  bool& /*marker*/) override
+		  RTC::RTP::Codecs::EncodingContext* context, RTC::RTP::Packet* /*packet*/, bool& /*marker*/) override
 		{
+			// Mimics a frame that moves the layers and may then be filtered out, which
+			// is what a K-SVC switch point of a spatial layer below the forwarded one
+			// does.
+			if (this->temporalLayerToSet >= 0)
+			{
+				context->SetCurrentTemporalLayer(this->temporalLayerToSet);
+			}
+
 			return this->processResult;
-		}
-		void RtpPacketChanged(RTC::RTP::Packet* /*packet*/) override
-		{
-		}
-		std::unique_ptr<RTC::RTP::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-		{
-			return nullptr;
 		}
 		void Encode(
 		  RTC::RTP::Packet* /*packet*/, RTC::RTP::Codecs::PayloadDescriptor::Encoder* /*encoder*/) override
@@ -151,6 +147,9 @@ namespace
 		uint8_t temporalLayer{ 0 };
 		bool isKeyFrame{ false };
 		bool processResult{ true };
+		// Current temporal layer that Process() moves the context to, or -1 to leave
+		// it alone.
+		int16_t temporalLayerToSet{ -1 };
 	};
 
 	// RtpStreamRecvListener must outlive the RtpStreamRecv.
@@ -512,6 +511,51 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
 
 		REQUIRE(result.type == RtpPacketProcessResult::Type::DROP);
+	}
+
+	/*
+	 * Layer switching watches every frame of the stream, so the layers may well
+	 * move in one that is not forwarded. In K-SVC the switch points of the decode
+	 * target being sent are frames of a lower spatial layer, which the Consumer
+	 * is never given, so a change made there must be reported all the same.
+	 */
+	SECTION("ProcessRtpPacket() reports a layer change made in a dropped packet")
+	{
+		MockListener listener;
+		auto encodingContext = std::make_unique<MockEncodingContext>();
+		auto manager         = createManager(
+		  std::addressof(listener),
+		  /*preferredLayers*/ { 2, 2 },
+		  /*keyFrameSupported*/ false,
+		  RTC::Media::Kind::VIDEO,
+		  std::move(encodingContext));
+		auto rtpStream = createRtpStreamRecv();
+
+		manager->ProducerRtpStream(rtpStream.get(), MappedSsrc);
+		manager->UpdateTargetLayers(0, 0);
+
+		manager->OnTransportConnected();
+		manager->UpdateTargetLayers(0, 0);
+
+		packet->SetSequenceNumber(1);
+		auto* handler       = new MockPayloadDescriptorHandler();
+		handler->isKeyFrame = true;
+		packet->SetPayloadDescriptorHandler(handler);
+		manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		// A frame that moves the temporal layer and is then filtered out.
+		packet->SetSequenceNumber(2);
+		handler                     = new MockPayloadDescriptorHandler();
+		handler->processResult      = false;
+		handler->temporalLayerToSet = 2;
+		packet->SetPayloadDescriptorHandler(handler);
+
+		auto result = manager->ProcessRtpPacket(
+		  packet.get(), /*lastSentPacketHasMarker*/ false, /*clockRate*/ 90000, /*maxPacketTs*/ 0);
+
+		REQUIRE(result.type == RtpPacketProcessResult::Type::DROP);
+		REQUIRE(result.temporalLayerChanged);
 	}
 
 	SECTION("ProcessRtpPacket() returns FORWARD for normal packets after sync")

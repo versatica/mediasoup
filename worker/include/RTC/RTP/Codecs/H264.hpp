@@ -21,23 +21,16 @@ namespace RTC
 
 					void Dump(int indentation = 0) const override;
 
-					// Fields in Dependency Descriptor extension.
-					bool startOfFrame{ false };
-					bool endOfFrame{ false };
-					uint8_t spatialLayer{ 0 };
-					uint8_t temporalLayer{ 0 };
-
 					// Parsed values.
 					bool isKeyFrame{ false };
 				};
 
 			public:
-				static H264::PayloadDescriptor* Parse(
-				  const uint8_t* data, size_t len, Codecs::DependencyDescriptor* dependencyDescriptor);
+				static H264::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 				static bool IsKeyFrame(const uint8_t* data, size_t len);
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
-				  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 				    templateDependencyStructure);
 
 			public:
@@ -49,12 +42,6 @@ namespace RTC
 					{
 					}
 					~EncodingContext() override = default;
-
-					/* Pure virtual methods inherited from Codecs::EncodingContext. */
-				public:
-					void SyncRequired() override
-					{
-					}
 				};
 
 			public:
@@ -71,11 +58,6 @@ namespace RTC
 					}
 					bool Process(
 					  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
-					void RtpPacketChanged(RTP::Packet* packet) override {};
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-					{
-						return nullptr;
-					}
 					void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
 					{
 					}
@@ -88,7 +70,12 @@ namespace RTC
 					}
 					uint8_t GetTemporalLayer() const override
 					{
-						return this->payloadDescriptor->temporalLayer;
+						/*
+						 * The temporal layer is not parsed out of H264 packets, and a packet
+						 * carrying a Dependency Descriptor, which does tell it, is given its
+						 * payload descriptor handler instead of this one.
+						 */
+						return 0;
 					}
 					bool IsKeyFrame() const override
 					{
