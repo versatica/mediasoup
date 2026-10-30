@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Fix DTLS BIO callback return value ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Worker: Fix DTLS BIO callback return value ([PR #2025](https://github.com/versatica/mediasoup/pull/2025)).
 
 ### 0.33.1
 
