@@ -135,8 +135,8 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		// A Consumer that only wants the lowest temporal layer.
 		RTC::RTP::Codecs::EncodingContext::Params params;
 
-		params.spatialLayers           = 1;
-		params.temporalLayers          = 2;
+		params.spatialLayers              = 1;
+		params.temporalLayers             = 2;
 		params.preferDependencyDescriptor = true;
 
 		RTC::RTP::Codecs::H264::EncodingContext context(params);
@@ -198,9 +198,9 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 
 		RTC::RTP::Codecs::EncodingContext::Params params;
 
-		params.spatialLayers           = 1;
-		params.temporalLayers          = 2;
-		params.simulcast               = true;
+		params.spatialLayers              = 1;
+		params.temporalLayers             = 2;
+		params.simulcast                  = true;
 		params.preferDependencyDescriptor = true;
 
 		RTC::RTP::Codecs::H264::EncodingContext context(params);
