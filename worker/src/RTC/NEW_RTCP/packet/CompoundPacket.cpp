@@ -1,9 +1,11 @@
-#define MS_CLASS "RTC::RTCP::CompoundPacket"
+#define MS_CLASS "RTC::NEW_RTCP::CompoundPacket"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/NEW_RTCP/packet/ByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 
 namespace RTC
 {
@@ -61,10 +63,72 @@ namespace RTC
 						break;
 					}
 
-					default:
+					case Packet::PacketType::SR:
 					{
 						// TODO
-						// packet = UnknownPacket::ParseStrict(ptr, packetLength);
+						// packet = SenderReportPacket::ParseStrict(ptr, packetLength);
+
+						break;
+					}
+
+					case Packet::PacketType::RR:
+					{
+						// TODO
+						// packet = ReceiverReportPacket::ParseStrict(ptr, packetLength);
+
+						break;
+					}
+
+					case Packet::PacketType::SDES:
+					{
+						// TODO
+						// packet = SdesPacket::ParseStrict(ptr, packetLength);
+
+						break;
+					}
+
+					case Packet::PacketType::BYE:
+					{
+						packet = ByePacket::ParseStrict(ptr, packetLength, packetLength);
+
+						break;
+					}
+
+					case Packet::PacketType::APP:
+					{
+						// TODO
+						// packet = AppPacket::ParseStrict(ptr, packetLength);
+
+						break;
+					}
+
+					case Packet::PacketType::RTPFB:
+					{
+						// TODO
+						// packet = TransportLayerFeedbackPacket::ParseStrict(ptr, packetLength);
+
+						break;
+					}
+
+					case Packet::PacketType::PSFB:
+					{
+						// TODO
+						// packet = PayloadSpecificFeedbackPacket::ParseStrict(ptr, packetLength);
+
+						break;
+					}
+
+					case Packet::PacketType::XR:
+					{
+						// TODO
+						// packet = ExtendedReportPacket::ParseStrict(ptr, packetLength);
+
+						break;
+					}
+
+					default:
+					{
+						packet = UnknownPacket::ParseStrict(ptr, packetLength, packetLength);
 					}
 				}
 
@@ -112,6 +176,11 @@ namespace RTC
 		CompoundPacket::~CompoundPacket()
 		{
 			MS_TRACE();
+
+			for (const auto* packet : this->packets)
+			{
+				delete packet;
+			}
 		}
 
 		void CompoundPacket::Dump(int indentation) const

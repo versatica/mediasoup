@@ -23,9 +23,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class UnrecognizedParameterParameter : public Parameter
 		{
 			// We need that chunk calls protected and private methods in this class.

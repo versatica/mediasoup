@@ -39,9 +39,6 @@ namespace RTC
 		 *   that was skipped.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class ForwardTsnChunk : public AnyForwardTsnChunk
 		{
 			// We need that packet calls protected and private methods in this class.

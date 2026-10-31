@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::Packet"
+#define MS_CLASS "RTC::NEW_RTCP::Packet"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
@@ -16,7 +16,7 @@ namespace RTC
 		// clang-format off
 		const ankerl::unordered_dense::map<Packet::PacketType, std::string> Packet::PacketType2String =
 		{
-			{ Packet::PacketType::IJ,    "IF"    },
+			{ Packet::PacketType::IJ,    "IJ"    },
 			{ Packet::PacketType::SR,    "SR"    },
 			{ Packet::PacketType::RR,    "RR"    },
 			{ Packet::PacketType::SDES,  "SDES"  },
@@ -43,9 +43,7 @@ namespace RTC
 			  // RTCP packet types defined by IANA:
 			  // http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-4
 			  // RFC 5761 (RTCP-mux) states this range for secure RTCP/RTP detection.
-			  (buffer[1] >= 192 && buffer[1] <= 223) &&
-			  // RTCP packets must have a length that is a multiple of 4 bytes.
-			  Utils::Byte::IsPaddedTo4Bytes(bufferLength));
+			  (buffer[1] >= 192 && buffer[1] <= 223));
 		}
 
 		const std::string& Packet::PacketTypeToString(PacketType packetType)
@@ -144,7 +142,7 @@ namespace RTC
 			packet->SetLength(GetLength());
 		}
 
-		void Packet::InitializeHeader(PacketType packetType, uint16_t length)
+		void Packet::InitializeHeader(PacketType packetType, size_t length)
 		{
 			MS_TRACE();
 
@@ -162,8 +160,20 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (length < Packet::CommonHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "length (%zu bytes) cannot be lower than %zu", length, Packet::CommonHeaderLength);
+			}
+
 			// The Length field is the length of the RTCP packet in 32-bit words minus
-			// one, so the maximum representable packet length is (65535 + 1) * 4 bytes.
+			// one, so the length must be multiple of 4 bytes.
+			if (!Utils::Byte::IsPaddedTo4Bytes(length))
+			{
+				MS_THROW_TYPE_ERROR("length (%zu bytes) must be multiple of 4", length);
+			}
+
+			// The maximum representable packet length is (65535 + 1) * 4 bytes.
 			if (length > (std::numeric_limits<uint16_t>::max() + 1) * 4)
 			{
 				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 262144", length);

@@ -24,9 +24,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class InvalidStreamIdentifierErrorCause : public ErrorCause
 		{
 			// We need that chunk calls protected and private methods in this class.
