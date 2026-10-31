@@ -5,6 +5,8 @@
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/NEW_RTCP/packet/ByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 
 namespace RTC
 {
