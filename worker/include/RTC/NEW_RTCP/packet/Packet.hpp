@@ -80,7 +80,7 @@ namespace RTC
 				 */
 				RR = 201,
 				/**
-				 * RTCP Sender Report.
+				 * RTCP SDES.
 				 */
 				SDES = 202,
 				/**

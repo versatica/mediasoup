@@ -1,6 +1,5 @@
-#define MS_CLASS "RTC::RTCP::Packet"
-// TODO: Comment.
-#define MS_LOG_DEV_LEVEL 3
+#define MS_CLASS "RTC::NEW_RTCP::Packet"
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "Logger.hpp"
@@ -17,7 +16,7 @@ namespace RTC
 		// clang-format off
 		const ankerl::unordered_dense::map<Packet::PacketType, std::string> Packet::PacketType2String =
 		{
-			{ Packet::PacketType::IJ,    "IF"    },
+			{ Packet::PacketType::IJ,    "IJ"    },
 			{ Packet::PacketType::SR,    "SR"    },
 			{ Packet::PacketType::RR,    "RR"    },
 			{ Packet::PacketType::SDES,  "SDES"  },

@@ -1,6 +1,5 @@
-#define MS_CLASS "RTC::RTCP::CompoundPacket"
-// TODO: Comment.
-#define MS_LOG_DEV_LEVEL 3
+#define MS_CLASS "RTC::NEW_RTCP::CompoundPacket"
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "Logger.hpp"
@@ -177,6 +176,11 @@ namespace RTC
 		CompoundPacket::~CompoundPacket()
 		{
 			MS_TRACE();
+
+			for (const auto* packet : this->packets)
+			{
+				delete packet;
+			}
 		}
 
 		void CompoundPacket::Dump(int indentation) const
