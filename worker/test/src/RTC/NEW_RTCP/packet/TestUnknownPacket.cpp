@@ -81,4 +81,31 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 		REQUIRE(packet->GetUnknownValue()[1] == 0x22);
 		REQUIRE(packet->GetUnknownValue()[7] == 0x88);
 	}
+
+	SECTION("UnknownPacket::Parse() without value succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=0, Count=0, PT:222, Length: 0
+			0b10000000, 0xDE, 0x00, 0x00
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::UnknownPacket> packet{ RTC::NEW_RTCP::UnknownPacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 4,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		  /*packetType*/ static_cast<RTC::NEW_RTCP::Packet::PacketType>(222),
+		  /*unknownType*/ true);
+
+		REQUIRE(packet->HasUnknownValue() == false);
+		REQUIRE(packet->GetUnknownValue() == nullptr);
+		REQUIRE(packet->GetUnknownValueLength() == 0);
+	}
 }

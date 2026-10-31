@@ -91,6 +91,20 @@ namespace RTC
 					delete packet;
 					return nullptr;
 				}
+
+				// The Reason is padded to the next 32-bit boundary, and that is the
+				// end of the packet.
+				if (Utils::Byte::PadTo4Bytes(reasonEndOffset) != packetLength)
+				{
+					MS_WARN_TAG(
+					  rtcp,
+					  "packet length (%zu bytes) does not end right after the padded Reason (%zu bytes)",
+					  packetLength,
+					  Utils::Byte::PadTo4Bytes(reasonEndOffset));
+
+					delete packet;
+					return nullptr;
+				}
 			}
 
 			return packet;
@@ -171,7 +185,7 @@ namespace RTC
 
 			if (GetCount() == 31)
 			{
-				MS_THROW_ERROR("cannot add more than 31 ssrcs");
+				MS_THROW_TYPE_ERROR("cannot add more than 31 ssrcs");
 			}
 
 			// NOTE: Must be checked before growing the length below, otherwise

@@ -47,7 +47,6 @@ namespace RTC
 		 *
 		 * @remarks
 		 * - This class represents a single RTCP packet and not a compound packet.
-		 * - This struct is guaranteed to be aligned to 4 bytes.
 		 * - The padding mechanism is not implemented since it's only used when
 		 *   encrypting the compound packet by following the section 9.1 of RFC
 		 *   3550 which absolutely nobody does (SRTCP is used instead). So
@@ -104,6 +103,12 @@ namespace RTC
 				XR = 207,
 			};
 
+			/**
+			 * Struct of an RTCP Common Header.
+			 *
+			 * @remarks
+			 * - This struct is guaranteed to be aligned to 2 bytes.
+			 */
 			struct CommonHeader
 			{
 #if defined(MS_LITTLE_ENDIAN)
@@ -222,7 +227,7 @@ namespace RTC
 
 			virtual void SoftCloneInto(Packet* packet) const final;
 
-			virtual void InitializeHeader(PacketType packetType, uint16_t length) final;
+			virtual void InitializeHeader(PacketType packetType, size_t length) final;
 
 			virtual uint8_t GetCount() const final
 			{
@@ -303,8 +308,13 @@ namespace RTC
 			 * the variable-length value of the packet and updates both the length of
 			 * the Serializable and the length field.
 			 *
-			 * @throw MediaSoupTypeError - If given `valueLength` is higher than
-			 *   available length.
+			 * @throw
+			 * - MediaSoupTypeError - If given `value` is `nullptr` and `valueLength`
+			 *   is greater than 0.
+			 * - MediaSoupTypeError - If given `valueLength` is higher than available
+			 *   length.
+			 * - MediaSoupTypeError - If given `valueLength` is not multiple of 4
+			 *   bytes.
 			 *
 			 * @see GetVariableLengthValue()
 			 */
@@ -328,6 +338,12 @@ namespace RTC
 			 * into the variable-length value. This method is used in packets that
 			 * have variable-length value but it doesn't consist on a buffer + length,
 			 * but instead is an structure with fields (with variable length).
+			 *
+			 * @throw
+			 * - MediaSoupTypeError - If given `valueLength` is higher than available
+			 *   length.
+			 * - MediaSoupTypeError - If given `valueLength` is not multiple of 4
+			 *   bytes.
 			 *
 			 * @see GetVariableLengthValue()
 			 */

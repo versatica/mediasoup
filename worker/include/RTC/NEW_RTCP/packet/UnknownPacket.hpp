@@ -13,10 +13,10 @@ namespace RTC
 		 *
 		 * @see RFC 3550.
 		 *
-		 *        0                   1                   2                   3
+		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |V=2|P|    SC   |       PT      |             Length            |
+		 * |V=2|P|  Count  |       PT      |             Length            |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * \                                                               \
 		 * /                          Unknown Value                        /
@@ -50,7 +50,7 @@ namespace RTC
 
 		private:
 			/**
-			 * Only used by Parse() and ParseStrict() static methods.
+			 * Only used by ParseStrict(), Clone() and SoftClone() methods.
 			 */
 			UnknownPacket(uint8_t* buffer, size_t bufferLength);
 
@@ -76,7 +76,7 @@ namespace RTC
 				return GetVariableLengthValue();
 			}
 
-			uint16_t GetUnknownValueLength() const
+			size_t GetUnknownValueLength() const
 			{
 				return GetVariableLengthValueLength();
 			}

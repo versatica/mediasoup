@@ -43,9 +43,7 @@ namespace RTC
 			  // RTCP packet types defined by IANA:
 			  // http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-4
 			  // RFC 5761 (RTCP-mux) states this range for secure RTCP/RTP detection.
-			  (buffer[1] >= 192 && buffer[1] <= 223) &&
-			  // RTCP packets must have a length that is a multiple of 4 bytes.
-			  Utils::Byte::IsPaddedTo4Bytes(bufferLength));
+			  (buffer[1] >= 192 && buffer[1] <= 223));
 		}
 
 		const std::string& Packet::PacketTypeToString(PacketType packetType)
@@ -144,7 +142,7 @@ namespace RTC
 			packet->SetLength(GetLength());
 		}
 
-		void Packet::InitializeHeader(PacketType packetType, uint16_t length)
+		void Packet::InitializeHeader(PacketType packetType, size_t length)
 		{
 			MS_TRACE();
 

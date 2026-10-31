@@ -16,7 +16,7 @@ namespace RTC
 		 *
 		 * @see RFC 3550.
 		 *
-		 *        0                   1                   2                   3
+		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |V=2|P|    SC   |   PT=BYE=203  |             Length            |
@@ -73,7 +73,7 @@ namespace RTC
 
 		private:
 			/**
-			 * Only used by Parse(), ParseStrict() and Factory() static methods.
+			 * Only used by ParseStrict(), Factory(), Clone() and SoftClone() methods.
 			 */
 			ByePacket(uint8_t* buffer, size_t bufferLength);
 
@@ -93,7 +93,7 @@ namespace RTC
 				return (GetBuffer() + GetLength()) > GetReasonLengthPointer();
 			}
 
-			const std::string_view GetReason() const
+			std::string_view GetReason() const
 			{
 				if (!HasReason())
 				{
@@ -103,15 +103,10 @@ namespace RTC
 				const uint8_t reasonLength = GetReasonLength();
 				const auto* reason         = GetReasonPointer();
 
-				if (!reason)
-				{
-					return {};
-				}
-
 				// NOTE: Validation of the Reason length field is done outside this
 				// method.
 
-				return std::string_view(reinterpret_cast<const char*>(reason), reasonLength);
+				return { reinterpret_cast<const char*>(reason), reasonLength };
 			}
 
 			void SetReason(const std::string_view& reason);
