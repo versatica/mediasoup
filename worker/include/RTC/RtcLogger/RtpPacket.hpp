@@ -33,27 +33,31 @@ namespace RTC
 
 			static const ankerl::unordered_dense::map<DiscardReason, std::string> DiscardReason2String;
 
+		public:
 			RtpPacket()  = default;
 			~RtpPacket() = default;
+
 			void Sent();
+
 			void Discarded(DiscardReason discardReason);
 
 		private:
 			void Log() const;
+
 			void Clear();
 
 		public:
-			int64_t timestamp{};
+			int64_t timeMs{ 0 };
 			std::string recvTransportId;
 			std::string sendTransportId;
 			std::string routerId;
 			std::string producerId;
 			std::string consumerId;
-			uint32_t recvRtpTimestamp{};
-			uint32_t sendRtpTimestamp{};
-			uint16_t recvSeqNumber{};
-			uint16_t sendSeqNumber{};
-			bool discarded{};
+			uint32_t recvRtpTimestamp{ 0 };
+			uint32_t sendRtpTimestamp{ 0 };
+			uint16_t recvSeqNumber{ 0 };
+			uint16_t sendSeqNumber{ 0 };
+			bool discarded{ false };
 			DiscardReason discardReason{ DiscardReason::NONE };
 		};
 	} // namespace RtcLogger

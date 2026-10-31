@@ -36,20 +36,52 @@ namespace RTC
 		constexpr size_t TcpFramingSize{ 2 };
 
 		/**
-		 * Max MTU size.
+		 * Largest RTP packet accepted from the network, measured as received (so
+		 * encrypted if SRTP is in use). Larger ones are discarded.
 		 */
-		constexpr size_t MtuSize{ 1500 };
+		constexpr size_t IncomingRtpPacketMaxSize{ 2048 };
 
 		/**
-		 * Maximum size for a RTCP compound packet.
-		 * IPv4|Ipv6 header size (20|40 bytes). IPv6 considered.
-		 * UDP|TCP header size (8|20  bytes). TCP considered.
-		 * SRTP Encryption (148 bytes):
-		 *   - SRTP_MAX_TRAILER_LEN + 4 is the maximum number of octects that will
-		 *     be added to an RTCP packet by srtp_protect_rtcp().
-		 *   - srtp.h: SRTP_MAX_TRAILER_LEN (SRTP_MAX_TAG_LEN + SRTP_MAX_MKI_LEN).
+		 * Largest RTP packet sent, measured as sent (so encrypted if SRTP is in
+		 * use). RTP packets are forwarded rather than generated, and they grow on
+		 * the way (header extensions, RTX encoding, SRTP), so received ones that
+		 * could exceed this size once sent are discarded on arrival. It matches
+		 * `IncomingRtpPacketMaxSize`, so whatever is sent is accepted by the
+		 * receiver.
 		 */
-		constexpr size_t RtcpPacketMaxSize{ RTC::Consts::MtuSize - 40 - 20 - 148 };
+		constexpr size_t OutgoingRtpPacketMaxSize{ 2048 };
+
+		/**
+		 * Bytes that RTX encoding adds to a RTP packet (the original sequence
+		 * number).
+		 *
+		 * @see https://datatracker.ietf.org/doc/html/rfc4588#section-4
+		 */
+		constexpr size_t RtxOverhead{ 2 };
+
+		/**
+		 * Most bytes that SRTP adds to a RTP packet when protecting it (the longest
+		 * authentication tag).
+		 */
+		constexpr size_t SrtpMaxOverhead{ 16 };
+
+		/**
+		 * Largest RTCP packet accepted from the network, measured as received (so
+		 * encrypted if SRTP is in use). Larger ones are discarded.
+		 */
+		constexpr size_t IncomingRtcpPacketMaxSize{ 2048 };
+
+		/**
+		 * Largest RTCP packet generated (compound packets, transport-cc feedback,
+		 * NACK...), measured before SRTP is applied. Content that does not fit in a
+		 * packet is split into several.
+		 */
+		constexpr size_t OutgoingRtcpPacketMaxSize{ 1200 };
+
+		/**
+		 * Largest DTLS datagram generated during the handshake.
+		 */
+		constexpr size_t OutgoingDtlsPacketMaxSize{ 1200 };
 
 		/**
 		 * Max length for a 1 byte RTP header extension.
@@ -129,7 +161,15 @@ namespace RTC
 		 * @remarks
 		 * Value copied from dcSCTP library.
 		 */
-		constexpr size_t MaxSafeMtuSizeForSctp{ 1191 };
+		constexpr size_t OutgoingSctpPacketMaxSize{ 1191 };
+
+		/**
+		 * Smallest SCTP receiver window buffer size allowed. A DATA chunk is only
+		 * checked against the window before being added to the reassembly queue,
+		 * so the window must be larger than any DATA chunk payload, which is
+		 * bounded by the largest packet that can be received.
+		 */
+		constexpr size_t SctpReceiverWindowBufferMinSize{ 65536 };
 	} // namespace Consts
 } // namespace RTC
 

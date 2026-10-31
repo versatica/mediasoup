@@ -80,10 +80,10 @@ namespace RTC
 		private:
 			// Others.
 			std::string foundation;
-			uint32_t priority{ 0 };
+			uint32_t priority;
 			std::string address;
 			Protocol protocol;
-			uint16_t port{ 0 };
+			uint16_t port;
 			CandidateType type{ CandidateType::HOST };
 			TcpCandidateType tcpType{ TcpCandidateType::PASSIVE };
 		};

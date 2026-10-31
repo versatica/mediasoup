@@ -22,16 +22,13 @@ RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(
 RTC::PendingKeyFrameInfo::~PendingKeyFrameInfo()
 {
 	MS_TRACE();
-
-	this->timer->Stop();
-	delete this->timer;
 }
 
 void RTC::PendingKeyFrameInfo::OnTimer(TimerHandleInterface* timer)
 {
 	MS_TRACE();
 
-	if (timer == this->timer)
+	if (timer == this->timer.get())
 	{
 		this->listener->OnKeyFrameRequestTimeout(this);
 	}
@@ -53,16 +50,13 @@ RTC::KeyFrameRequestDelayer::KeyFrameRequestDelayer(
 RTC::KeyFrameRequestDelayer::~KeyFrameRequestDelayer()
 {
 	MS_TRACE();
-
-	this->timer->Stop();
-	delete this->timer;
 }
 
 void RTC::KeyFrameRequestDelayer::OnTimer(TimerHandleInterface* timer)
 {
 	MS_TRACE();
 
-	if (timer == this->timer)
+	if (timer == this->timer.get())
 	{
 		this->listener->OnKeyFrameDelayTimeout(this);
 	}

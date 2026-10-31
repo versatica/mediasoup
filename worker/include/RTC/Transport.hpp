@@ -403,14 +403,14 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id;
+		const std::string id;
 
 	protected:
-		SharedInterface* shared{ nullptr };
+		SharedInterface* shared;
 
 	private:
 		// Passed by argument.
-		Listener* listener{ nullptr };
+		Listener* const listener;
 		// Allocated by this.
 		ankerl::unordered_dense::map<std::string, RTC::Producer*> mapProducers;
 		ankerl::unordered_dense::map<std::string, RTC::Consumer*> mapConsumers;
@@ -423,10 +423,10 @@ namespace RTC
 		// its CNAME.
 		ankerl::unordered_dense::map<std::string, RTC::RemoteCaptureTimeEstimator>
 		  mapCnameRemoteCaptureTimeEstimator;
-		TimerHandleInterface* rtcpTimer{ nullptr };
+		const std::unique_ptr<TimerHandleInterface> rtcpTimer;
 		// Allocated by this.
 		std::unique_ptr<RTC::SCTP::AssociationInterface> sctpAssociation{ nullptr };
-		bool enableBwe{ false };
+		const bool enableBwe;
 		// NOTE: Shared pointer rather than unique because the send callbacks hold a
 		// weak reference to it, since they may be invoked after this Transport is
 		// gone.
@@ -436,7 +436,7 @@ namespace RTC
 		std::unique_ptr<RTC::BWE::ReceiverTransportCongestionController>
 		  receiverTransportCongestionController{ nullptr };
 		// Others.
-		bool direct{ false }; // Whether this Transport allows direct communication.
+		const bool direct; // Whether this Transport allows direct communication.
 		bool isDestroying{ false };
 		RTC::RTP::HeaderExtensionIds recvRtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;
@@ -462,13 +462,13 @@ namespace RTC
 		int64_t minOutgoingBitrate{ 0 };
 		int64_t outgoingDesiredBitrate{ 0 };
 		// For SCTP capable transports and for direct transport.
-		size_t maxSendMessageSize{ 0 };
-		size_t maxReceiveMessageSize{ 0 };
+		size_t maxSendMessageSize;
+		size_t maxReceiveMessageSize;
 		TraceEventTypes traceEventTypes;
 #ifdef MS_RTC_LOGGER_SEND_BURST
 		RTC::RtcLogger::SendBurst sendBurstLogger;
 		// Allocated by this.
-		TimerHandleInterface* sendBurstLoggerTimer{ nullptr };
+		const std::unique_ptr<TimerHandleInterface> sendBurstLoggerTimer;
 #endif
 	};
 } // namespace RTC

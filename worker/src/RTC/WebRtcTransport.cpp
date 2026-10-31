@@ -5,6 +5,7 @@
 #include "FBS/webRtcTransport.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/PortManager.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
@@ -234,7 +235,7 @@ namespace RTC
 			auto iceConsentTimeoutSec = options->iceConsentTimeout();
 
 			// Create a ICE server.
-			this->iceServer = new RTC::ICE::IceServer(
+			this->iceServer = std::make_unique<RTC::ICE::IceServer>(
 			  this,
 			  this->shared,
 			  Utils::Crypto::GetRandomString(32),
@@ -242,7 +243,7 @@ namespace RTC
 			  iceConsentTimeoutSec);
 
 			// Create a DTLS transport.
-			this->dtlsTransport = new RTC::DtlsTransport(this, this->shared);
+			this->dtlsTransport = std::make_unique<RTC::DtlsTransport>(this, this->shared);
 
 			// NOTE: This may throw.
 			this->shared->GetChannelMessageRegistrator()->RegisterHandler(
@@ -254,11 +255,9 @@ namespace RTC
 		{
 			// Must delete everything since the destructor won't be called.
 
-			delete this->dtlsTransport;
-			this->dtlsTransport = nullptr;
+			this->dtlsTransport.reset();
 
-			delete this->iceServer;
-			this->iceServer = nullptr;
+			this->iceServer.reset();
 
 			for (auto& kv : this->udpSockets)
 			{
@@ -311,7 +310,7 @@ namespace RTC
 			auto iceConsentTimeoutSec = options->iceConsentTimeout();
 
 			// Create a ICE server.
-			this->iceServer = new RTC::ICE::IceServer(
+			this->iceServer = std::make_unique<RTC::ICE::IceServer>(
 			  this,
 			  this->shared,
 			  Utils::Crypto::GetRandomString(32),
@@ -319,7 +318,7 @@ namespace RTC
 			  iceConsentTimeoutSec);
 
 			// Create a DTLS transport.
-			this->dtlsTransport = new RTC::DtlsTransport(this, this->shared);
+			this->dtlsTransport = std::make_unique<RTC::DtlsTransport>(this, this->shared);
 
 			// Notify the webRtcTransportListener.
 			this->webRtcTransportListener->OnWebRtcTransportCreated(this);
@@ -334,11 +333,9 @@ namespace RTC
 		{
 			// Must delete everything since the destructor won't be called.
 
-			delete this->dtlsTransport;
-			this->dtlsTransport = nullptr;
+			this->dtlsTransport.reset();
 
-			delete this->iceServer;
-			this->iceServer = nullptr;
+			this->iceServer.reset();
 
 			throw;
 		}
@@ -357,11 +354,9 @@ namespace RTC
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
-		delete this->dtlsTransport;
-		this->dtlsTransport = nullptr;
+		this->dtlsTransport.reset();
 
-		delete this->iceServer;
-		this->iceServer = nullptr;
+		this->iceServer.reset();
 
 		for (auto& kv : this->udpSockets)
 		{
@@ -381,11 +376,9 @@ namespace RTC
 
 		this->iceCandidates.clear();
 
-		delete this->srtpSendSession;
-		this->srtpSendSession = nullptr;
+		this->srtpSendSession.reset();
 
-		delete this->srtpRecvSession;
-		this->srtpRecvSession = nullptr;
+		this->srtpRecvSession.reset();
 
 		// Notify the webRtcTransportListener.
 		if (this->webRtcTransportListener)
@@ -1011,6 +1004,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (len > RTC::Consts::IncomingRtpPacketMaxSize)
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "ignoring RTP packet exceeding maximum size [len:%zu, max len:%zu]",
+			  len,
+			  RTC::Consts::IncomingRtpPacketMaxSize);
+
+			return;
+		}
+
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
 		{
@@ -1079,6 +1083,17 @@ namespace RTC
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
+
+		if (len > RTC::Consts::IncomingRtcpPacketMaxSize)
+		{
+			MS_WARN_TAG(
+			  rtcp,
+			  "ignoring RTCP packet exceeding maximum size [len:%zu, max len:%zu]",
+			  len,
+			  RTC::Consts::IncomingRtcpPacketMaxSize);
+
+			return;
+		}
 
 		// Ensure DTLS is connected.
 		if (this->dtlsTransport->GetState() != RTC::DtlsTransport::DtlsState::CONNECTED)
@@ -1366,15 +1381,13 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS connected");
 
 		// Close it if it was already set and update it.
-		delete this->srtpSendSession;
-		this->srtpSendSession = nullptr;
+		this->srtpSendSession.reset();
 
-		delete this->srtpRecvSession;
-		this->srtpRecvSession = nullptr;
+		this->srtpRecvSession.reset();
 
 		try
 		{
-			this->srtpSendSession = new RTC::SrtpSession(
+			this->srtpSendSession = std::make_unique<RTC::SrtpSession>(
 			  RTC::SrtpSession::Type::OUTBOUND, srtpCryptoSuite, srtpLocalKey, srtpLocalKeyLen);
 		}
 		catch (const MediaSoupError& error)
@@ -1384,7 +1397,7 @@ namespace RTC
 
 		try
 		{
-			this->srtpRecvSession = new RTC::SrtpSession(
+			this->srtpRecvSession = std::make_unique<RTC::SrtpSession>(
 			  RTC::SrtpSession::Type::INBOUND, srtpCryptoSuite, srtpRemoteKey, srtpRemoteKeyLen);
 
 			// Notify the Node WebRtcTransport.
@@ -1406,8 +1419,7 @@ namespace RTC
 		{
 			MS_ERROR("error creating SRTP receiving session: %s", error.what());
 
-			delete this->srtpSendSession;
-			this->srtpSendSession = nullptr;
+			this->srtpSendSession.reset();
 		}
 	}
 

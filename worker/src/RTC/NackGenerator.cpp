@@ -10,7 +10,6 @@ namespace RTC
 
 	static constexpr size_t MaxPacketAge{ 10000 };
 	static constexpr size_t MaxNackPackets{ 1000 };
-	static constexpr int64_t DefaultRttMs{ 100 };
 	static constexpr uint8_t MaxNackRetries{ 10 };
 	static constexpr int64_t TimerIntervalMs{ 40 };
 
@@ -20,8 +19,7 @@ namespace RTC
 	  : listener(listener),
 	    shared(shared),
 	    sendNackDelayMs(sendNackDelayMs),
-	    timer(shared->CreateTimer(this, "nack-generator")),
-	    rttMs(DefaultRttMs)
+	    timer(shared->CreateTimer(this, "nack-generator"))
 	{
 		MS_TRACE();
 	}
@@ -29,9 +27,6 @@ namespace RTC
 	NackGenerator::~NackGenerator()
 	{
 		MS_TRACE();
-
-		// Close the timer.
-		delete this->timer;
 	}
 
 	/**
@@ -324,7 +319,7 @@ namespace RTC
 		if (!nackBatch.empty())
 		{
 			std::ostringstream seqsStream;
-			std::copy(
+			std::ranges::copy(
 			  nackBatch.begin(), nackBatch.end() - 1, std::ostream_iterator<uint32_t>(seqsStream, ","));
 			seqsStream << nackBatch.back();
 

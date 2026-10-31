@@ -123,17 +123,14 @@ namespace RTC
 			{
 				this->ssrcInfos.push_back(ssrcInfo);
 			}
-			// NOTE: This method not only removes given number of ssrc info sub-blocks
-			// but also deletes their SsrcInfo instances.
-			void RemoveLastSsrcInfos(size_t number)
+			// NOTE: This method does not delete the removed SsrcInfo instance.
+			void RemoveSsrcInfo(SsrcInfo* ssrcInfo)
 			{
-				while (!this->ssrcInfos.empty() && number-- > 0)
+				const auto it = std::ranges::find(this->ssrcInfos, ssrcInfo);
+
+				if (it != this->ssrcInfos.end())
 				{
-					auto* ssrcInfo = this->ssrcInfos.back();
-
-					this->ssrcInfos.pop_back();
-
-					delete ssrcInfo;
+					this->ssrcInfos.erase(it);
 				}
 			}
 			Iterator Begin()

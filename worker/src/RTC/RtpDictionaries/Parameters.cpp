@@ -245,7 +245,7 @@ namespace RTC
 		const auto& value = it->second;
 		const auto& array = value.arrayOfIntegers;
 
-		return std::find(array.begin(), array.end(), integer) != array.end();
+		return std::ranges::find(array, integer) != array.end();
 	}
 
 	bool Parameters::GetBoolean(const std::string& key) const

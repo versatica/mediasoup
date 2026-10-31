@@ -42,8 +42,8 @@ namespace Channel
 #endif
 
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
-	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
-	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen))
+	  : consumerSocket(std::make_unique<ConsumerSocket>(consumerFd, MessageMaxLen, this)),
+	    producerSocket(std::make_unique<ProducerSocket>(producerFd, MessageMaxLen))
 	{
 		MS_TRACE_STD();
 	}
@@ -95,9 +95,6 @@ namespace Channel
 		{
 			Close();
 		}
-
-		delete this->consumerSocket;
-		delete this->producerSocket;
 	}
 
 	void ChannelSocket::Close()

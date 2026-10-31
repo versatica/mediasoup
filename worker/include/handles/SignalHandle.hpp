@@ -1,6 +1,7 @@
 #ifndef MS_SIGNAL_HANDLE_HPP
 #define MS_SIGNAL_HANDLE_HPP
 
+#include "common.hpp"
 #include <uv.h>
 #include <string>
 #include <vector>
@@ -33,7 +34,7 @@ public:
 
 private:
 	// Passed by argument.
-	Listener* listener{ nullptr };
+	Listener* const listener;
 	// Allocated by this.
 	std::vector<uv_signal_t*> uvHandles;
 	// Others.

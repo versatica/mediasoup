@@ -24,7 +24,8 @@ namespace RTC
 	    shared(shared),
 	    listener(listener),
 	    maxMessageSize(maxMessageSize),
-	    pipe(pipe)
+	    pipe(pipe),
+	    paused(data->paused())
 	{
 		MS_TRACE();
 
@@ -65,9 +66,6 @@ namespace RTC
 		{
 			this->protocol = data->protocol()->str();
 		}
-
-		// paused is set to false by default.
-		this->paused = data->paused();
 
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_SUBCHANNELS))
 		{

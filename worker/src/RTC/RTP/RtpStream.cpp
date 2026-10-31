@@ -28,9 +28,6 @@ namespace RTC
 		RtpStream::~RtpStream()
 		{
 			MS_TRACE();
-
-			delete this->rtxStream;
-			this->rtxStream = nullptr;
 		}
 
 		flatbuffers::Offset<FBS::RtpStream::Dump> RtpStream::FillBuffer(
@@ -98,8 +95,7 @@ namespace RTC
 
 			if (HasRtx())
 			{
-				delete this->rtxStream;
-				this->rtxStream = nullptr;
+				this->rtxStream.reset();
 			}
 
 			// Set RTX stream params.
@@ -116,7 +112,7 @@ namespace RTC
 			// Tell the RtpCodecMimeType to update its string based on current type and subtype.
 			params.mimeType.UpdateMimeType();
 
-			this->rtxStream = new RTP::RtxStream(this->shared, params);
+			this->rtxStream = std::make_unique<RTP::RtxStream>(this->shared, params);
 		}
 
 		bool RtpStream::ReceiveStreamPacket(const RTP::Packet* packet)

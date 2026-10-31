@@ -10,13 +10,14 @@ namespace RTC
 	namespace RtcLogger
 	{
 		/**
-		 * How many RTP packets a transport sends within a single iteration of the event
-		 * loop.
+		 * How many RTP packets a transport sends while the loop time of the event loop
+		 * stays the same.
 		 *
-		 * Nothing spaces those packets out, so a whole iteration's worth of them reaches
-		 * the wire back to back and lands in the first queue of the path as a single
-		 * lump. This gathers how big those lumps are and how much of each one is
-		 * retransmissions, which is what says whether there is anything worth pacing.
+		 * libuv refreshes the loop time after polling for I/O and before running timers,
+		 * and nothing spaces out the packets sent in between, so they reach the wire back
+		 * to back and land in the first queue of the path as a single lump. This gathers
+		 * how big those lumps are and how much of each one is retransmissions, which is
+		 * what says whether there is anything worth pacing.
 		 */
 		class SendBurst
 		{
@@ -48,15 +49,19 @@ namespace RTC
 			/**
 			 * Account for a packet that is about to be sent.
 			 *
-			 * @param loopTimeMs - Time at which the current iteration of the event loop
-			 * began, which is what tells one burst from the next.
+			 * @param loopTimeMs - Current loop time of the event loop, which is what tells
+			 * one burst from the next.
 			 */
 			void Sent(uint64_t loopTimeMs, size_t length, bool isRetransmission, bool isProbation);
 
 			/**
 			 * Print what has been gathered so far and start over.
+			 *
+			 * @param loopTimeMs - Current loop time of the event loop. A burst with that
+			 * same loop time may still grow, so it is left open and goes into the next
+			 * log.
 			 */
-			void Log();
+			void Log(uint64_t loopTimeMs);
 
 		private:
 			/**
@@ -70,8 +75,7 @@ namespace RTC
 			std::string transportId;
 
 		private:
-			// Time of the iteration of the event loop that the burst in progress belongs
-			// to.
+			// Loop time of the event loop that the burst in progress belongs to.
 			uint64_t loopTimeMs{ 0 };
 			size_t packets{ 0 };
 			size_t retransmissions{ 0 };

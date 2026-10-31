@@ -4,7 +4,6 @@
 #include "RTC/BWE/TargetRateController.hpp"
 #include "Logger.hpp"
 #include "RTC/BWE/BitrateUtils.hpp"
-#include "RTC/Consts.hpp"
 
 namespace RTC
 {
@@ -37,9 +36,7 @@ namespace RTC
 		}
 
 		TargetRateController::TargetRateController(TargetRateControllerOptions options)
-		  : options(options),
-		    minBitrateConfigured(Consts::BweMinBitrate),
-		    maxBitrateConfigured(Consts::BweMaxBitrate)
+		  : options(options)
 		{
 			MS_TRACE();
 

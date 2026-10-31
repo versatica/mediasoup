@@ -161,7 +161,7 @@ namespace RTC
 			std::optional<InterArrivalDelta> audioInterArrivalDelta;
 			std::optional<TrendlineEstimator> videoDelayDetector;
 			std::optional<TrendlineEstimator> audioDelayDetector;
-			TrendlineEstimator* activeDelayDetector{ nullptr };
+			TrendlineEstimator* activeDelayDetector;
 			std::optional<int64_t> lastSeenPacketUs;
 			AimdRateControl rateControl;
 			int64_t prevBitrate{ 0 };

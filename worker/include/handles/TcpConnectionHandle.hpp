@@ -35,7 +35,7 @@ public:
 		}
 
 		uv_write_t req{};
-		uint8_t* store{ nullptr };
+		uint8_t* const store;
 		onSendCallback cb;
 	};
 
@@ -117,7 +117,7 @@ protected:
 
 protected:
 	// Passed by argument.
-	size_t bufferSize{ 0 };
+	const size_t bufferSize;
 	// Allocated by this.
 	uint8_t* buffer{ nullptr };
 	// Others.
@@ -132,7 +132,7 @@ private:
 	// Passed by argument.
 	Listener* listener{ nullptr };
 	// Allocated by this.
-	uv_tcp_t* uvHandle{ nullptr };
+	uv_tcp_t* uvHandle;
 	// Others.
 	struct sockaddr_storage* localAddr{ nullptr };
 	bool closed{ false };

@@ -1,6 +1,7 @@
 #ifndef MS_SHARED_INTERFACE_HPP
 #define MS_SHARED_INTERFACE_HPP
 
+#include "common.hpp"
 #include "Channel/ChannelMessageRegistratorInterface.hpp"
 // TODO: We should have a ChannelNotifierInterface class instead.
 #include "Channel/ChannelNotifier.hpp"

@@ -14,9 +14,9 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 	public:
 		struct VerificationItem
 		{
-			bool isPresent;
-			uint16_t sequenceNumber;
-			uint32_t timestamp;
+			const bool isPresent;
+			const uint16_t sequenceNumber;
+			const uint32_t timestamp;
 		};
 
 	public:

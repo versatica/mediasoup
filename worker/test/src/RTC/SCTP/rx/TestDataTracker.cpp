@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "handles/BackoffTimerHandleInterface.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
@@ -317,7 +318,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(dataTracker.WillIncreaseCumAckTsn(17) == false);
 	}
 
-	SECTION("force should send sack immediately")
+	SECTION("force should send SACK immediately")
 	{
 		REQUIRE(dataTracker.ShouldSendAck() == false);
 
@@ -397,7 +398,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(sackChunk->GetDuplicateTsns() == std::vector<uint32_t>{ 13, 14 });
 	}
 
-	SECTION("clears duplicate tsns after creating sack")
+	SECTION("clears duplicate tsns after creating SACK")
 	{
 		observe({ 11, 12, 13, 14 });
 		observe({ 12, 13, 12, 13 }, /*expectAsDuplicate*/ true);
@@ -457,7 +458,30 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(sackChunk->GetGapAckBlocks().size() == RTC::SCTP::DataTracker::MaxGapAckBlocksReported);
 	}
 
-	SECTION("sends sack for first packet observed")
+	SECTION("SACK length matches the SACK chunk it adds")
+	{
+		// Gaps (so Gap Ack Blocks) and duplicates, more than the most that are
+		// reported of each.
+		for (uint32_t idx{ 0 }; idx < 25; ++idx)
+		{
+			const uint32_t tsn = InitialTsn + 1 + (2 * idx);
+
+			observe({ tsn });
+			observe({ tsn }, /*expectAsDuplicate*/ true);
+		}
+
+		const size_t sackLength = dataTracker.GetSackSelectiveAckLength();
+		const auto packet       = createPacket();
+		const auto* sackChunk   = addSackChunk(packet.get(), Arwnd);
+
+		REQUIRE(sackChunk);
+		// 16 bytes of header plus 20 Gap Ack Blocks and 20 duplicate TSNs of 4
+		// bytes each.
+		REQUIRE(sackLength == 176);
+		REQUIRE(sackChunk->GetLength() == sackLength);
+	}
+
+	SECTION("sends SACK for first packet observed")
 	{
 		observe({ 11 });
 		dataTracker.ObservePacketEnd();
@@ -470,7 +494,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(backoffTimer->IsRunning() == false);
 	}
 
-	SECTION("sends sack every second packet when there is no packet loss")
+	SECTION("sends SACK every second packet when there is no packet loss")
 	{
 		auto* backoffTimer = shared.GetBackoffTimer("mock-sctp-delayed-ack");
 
@@ -507,7 +531,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(backoffTimer->IsRunning() == false);
 	}
 
-	SECTION("sends sack every packet on packet loss")
+	SECTION("sends SACK every packet on packet loss")
 	{
 		const auto* backoffTimer = shared.GetBackoffTimer("mock-sctp-delayed-ack");
 
@@ -564,7 +588,7 @@ SCENARIO("SCTP DataTracker", "[sctp][datatracker]")
 		REQUIRE(backoffTimer->IsRunning() == true);
 	}
 
-	SECTION("sends sack on duplicate data chunks")
+	SECTION("sends SACK on duplicate data chunks")
 	{
 		const auto* backoffTimer = shared.GetBackoffTimer("mock-sctp-delayed-ack");
 

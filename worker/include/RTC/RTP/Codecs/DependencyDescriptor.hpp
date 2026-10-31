@@ -66,7 +66,7 @@ namespace RTC
 				uint16_t frameNumber{ 0 };
 				uint8_t templateId{ 0 };
 				// Given by argument.
-				TemplateDependencyStructure* templateDependencyStructure;
+				TemplateDependencyStructure* const templateDependencyStructure;
 				std::vector<uint8_t> decodeTargetProtectedBy;
 				std::optional<uint32_t> activeDecodeTargetsBitmask{ std::nullopt };
 				// Calculated.
@@ -76,7 +76,7 @@ namespace RTC
 				bool isKeyFrame{ false };
 
 			private:
-				DependencyDescriptor::Listener* listener{ nullptr };
+				DependencyDescriptor::Listener* listener;
 
 			public:
 				static DependencyDescriptor* Parse(

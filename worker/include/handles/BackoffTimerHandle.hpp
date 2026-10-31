@@ -85,14 +85,14 @@ public:
 
 private:
 	// Passed by argument.
-	BackoffTimerHandleInterface::Listener* listener{ nullptr };
+	BackoffTimerHandleInterface::Listener* const listener;
 	const std::string label;
 	int64_t baseTimeoutMs;
-	BackoffAlgorithm backoffAlgorithm;
-	std::optional<int64_t> maxBackoffTimeoutMs;
-	std::optional<size_t> maxRestarts;
+	const BackoffAlgorithm backoffAlgorithm;
+	const std::optional<int64_t> maxBackoffTimeoutMs;
+	const std::optional<size_t> maxRestarts;
 	// Allocated by this.
-	TimerHandle* timer{ nullptr };
+	const std::unique_ptr<TimerHandle> timer;
 	// Others.
 	bool running{ false };
 	size_t expirationCount{ 0 };

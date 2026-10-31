@@ -6,8 +6,9 @@
 #include "test/include/RTC/RTP/rtpCommon.hpp"
 #include "test/include/testHelpers.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstring> // std::memset()
+#include <cstring> // std::memcmp(), std::memcpy(), std::memset()
 #include <string>
+#include <vector>
 
 SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 {
@@ -1113,7 +1114,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*value*/ rtpCommon::DataBuffer + 3);
 
 		// Add One-Byte extensions.
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
 
 		packet->SetPayload(rtpCommon::DataBuffer, 10);
 		packet->PadTo4Bytes(); // payload + padding = 12.
@@ -1394,7 +1395,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 
 		// Add Two-Bytes extensions.
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions) == true);
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -1455,7 +1456,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    { RTC::RtpHeaderExtensionUri::Type::MID,           1,  1,  rtpCommon::DataBuffer },
 		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 14, 16, rtpCommon::DataBuffer }
     });
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 		REQUIRE(packet->HasOneByteExtensions());
 
 		// Requires Two-Bytes type extensions due to id > 14.
@@ -1463,7 +1464,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 15, 2, rtpCommon::DataBuffer }
     });
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
 		// Requires Two-Bytes type extensions due to length 0.
@@ -1471,7 +1472,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, 1, 0, rtpCommon::DataBuffer }
     });
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
 		// Requires Two-Bytes type extensions due to length > 16.
@@ -1479,7 +1480,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  {
 		    { RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME, 1, 17, rtpCommon::DataBuffer }
     });
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 		REQUIRE(packet->HasTwoBytesExtensions());
 	}
 
@@ -1541,7 +1542,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		);
 		// clang-format on
 
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
 
 		REQUIRE(packet->HasOneByteExtensions());
 
@@ -1748,9 +1749,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// A received packet whose header extension is larger than 32 KB, re-written
 		// with a small extension set (as Producer::MangleRtpPacket() does on every
 		// inbound packet), must shrink correctly. Storing the shift in an int16_t
-		// wraps the (large negative) size delta to a large positive value, so
-		// SetLength() exceeds the buffer and throws, which, uncaught on the inbound
-		// RTP path, aborts the worker.
+		// wraps the (large negative) size delta to a large positive value, so the
+		// packet would not fit in its buffer and the extensions would not be set.
 		constexpr size_t ExtensionValueLength{ 40000 };
 		constexpr size_t PayloadLength{ 8 };
 		constexpr size_t PacketLength{ 12 + 4 + ExtensionValueLength + PayloadLength };
@@ -1783,12 +1783,121 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		extensions.emplace_back(
 		  RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 2, 4, rtpCommon::DataBuffer + 4);
 
-		// Must shrink the packet, not throw.
-		REQUIRE_NOTHROW(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions));
+		// Must shrink the packet.
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
 
 		// New length: 12 (fixed header) + 4 (ext header) + 12 (two 5-byte One-Byte
 		// elements padded to 4) + 8 (payload) = 36.
 		REQUIRE((packet->GetLength() == 36));
+	}
+
+	SECTION("Packet::SetExtensions() with ExtensionsType::Auto accepts a zero length extension")
+	{
+		// A received packet with a Two-Bytes header extension holding a single
+		// extension (id 2) whose value has length 0, which RFC 8285 allows.
+		// clang-format off
+		alignas(4) const uint8_t receivedBuffer[] =
+		{
+			0x90, 0x6F, 0x00, 0x01, // Version 2, extension flag set, payload type 111, sequence number 1.
+			0x00, 0x00, 0x00, 0x01, // Timestamp.
+			0x00, 0x00, 0x00, 0x01, // SSRC.
+			0x10, 0x00, 0x00, 0x01, // Two-Bytes header extension, length 1 (4 bytes).
+			0x02, 0x00, 0x00, 0x00, // Extension id 2 with length 0, then padding.
+			0x11, 0x22, 0x33, 0x44  // Payload.
+		};
+		// clang-format on
+
+		std::memcpy(rtpCommon::FactoryBuffer, receivedBuffer, sizeof(receivedBuffer));
+
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(
+			rtpCommon::FactoryBuffer, sizeof(receivedBuffer), sizeof(rtpCommon::FactoryBuffer)) };
+
+		REQUIRE(packet);
+		REQUIRE(packet->HasTwoBytesExtensions() == true);
+
+		uint8_t extenLen;
+		const uint8_t* const extenValue = packet->GetExtensionValue(2, extenLen);
+
+		REQUIRE(extenValue);
+		REQUIRE(extenLen == 0);
+
+		// Rewrite the extensions as a Producer does on every received packet: a MID
+		// plus the received extension, copied as it came. A One-Byte extension
+		// cannot have length 0, so this must use Two-Bytes extensions.
+		uint8_t mid[]{ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
+		uint8_t audioLevel[16];
+		std::vector<RTC::RTP::Packet::Extension> extensions;
+
+		std::memcpy(audioLevel, extenValue, extenLen);
+
+		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::MID, 1, sizeof(mid), mid);
+		extensions.emplace_back(
+		  RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 2, extenLen, audioLevel);
+
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+
+		REQUIRE(packet->HasTwoBytesExtensions() == true);
+		REQUIRE(packet->HasExtension(1) == true);
+		REQUIRE(packet->HasExtension(2) == true);
+		REQUIRE(packet->GetExtensionValue(2, extenLen) != nullptr);
+		REQUIRE(extenLen == 0);
+		REQUIRE(packet->GetPayloadLength() == 4);
+	}
+
+	SECTION("Packet::SetExtensions() fails without modifying the packet if it does not fit")
+	{
+		std::vector<RTC::RTP::Packet::Extension> extensions;
+
+		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::MID, 1, 4, rtpCommon::DataBuffer);
+
+		// 12 (fixed header) + 10 (payload) = 22 bytes. Setting the extensions needs
+		// 12 more: 4 (ext header) + 8 (one 5-byte One-Byte element padded to 4).
+		// So a buffer of 33 bytes is one byte short.
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, 33) };
+
+		packet->SetPayload(rtpCommon::DataBuffer, 10);
+
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == false);
+
+		REQUIRE(packet->GetLength() == 22);
+		REQUIRE(packet->HasHeaderExtension() == false);
+		REQUIRE(
+		  helpers::areBuffersEqual(
+		    packet->GetPayload(), packet->GetPayloadLength(), rtpCommon::DataBuffer, 10) == true);
+
+		// A buffer of 34 bytes is exactly what it needs.
+		packet.reset(RTC::RTP::Packet::Factory(rtpCommon::FactoryBuffer, 34));
+
+		packet->SetPayload(rtpCommon::DataBuffer, 10);
+
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
+
+		REQUIRE(packet->GetLength() == 34);
+		REQUIRE(packet->HasOneByteExtensions() == true);
+		REQUIRE(packet->HasExtension(1) == true);
+
+		// Two Two-Bytes elements of 6 bytes take 12 bytes, 4 more than the current
+		// header extension value, so they do not fit and the One-Byte extensions
+		// already in the packet must remain untouched.
+		extensions.emplace_back(
+		  RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 2, 4, rtpCommon::DataBuffer + 4);
+
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions) == false);
+
+		REQUIRE(packet->GetLength() == 34);
+		REQUIRE(packet->HasOneByteExtensions() == true);
+		REQUIRE(packet->HasTwoBytesExtensions() == false);
+		REQUIRE(packet->HasExtension(1) == true);
+		REQUIRE(packet->HasExtension(2) == false);
+
+		uint8_t extensionLen;
+		const uint8_t* const extensionValue = packet->GetExtensionValue(1, extensionLen);
+
+		REQUIRE(extensionLen == 4);
+		REQUIRE(helpers::areBuffersEqual(extensionValue, extensionLen, rtpCommon::DataBuffer, 4) == true);
+		REQUIRE(
+		  helpers::areBuffersEqual(
+		    packet->GetPayload(), packet->GetPayloadLength(), rtpCommon::DataBuffer, 10) == true);
 	}
 
 	SECTION("Packet::SetPayload(), SetPayloadLength() and packet::RemovePayload() succeed")
@@ -1930,7 +2039,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		    { RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01, 3, 3, extension3 }
     });
 
-		packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions) == true);
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),

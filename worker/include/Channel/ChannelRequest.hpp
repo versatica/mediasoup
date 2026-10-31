@@ -65,11 +65,11 @@ namespace Channel
 
 	public:
 		// Passed by argument.
-		Channel::ChannelSocket* channel{ nullptr };
-		const FBS::Request::Request* data{ nullptr };
+		Channel::ChannelSocket* const channel;
+		const FBS::Request::Request* const data;
 		// Others.
-		uint32_t id{ 0 };
-		Method method;
+		const uint32_t id;
+		const Method method;
 		const char* methodCStr;
 		std::string handlerId;
 		bool replied{ false };

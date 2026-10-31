@@ -108,14 +108,18 @@ namespace RTC
 			case Channel::ChannelNotification::Event::TRANSPORT_SEND_RTCP:
 			{
 				const auto* body = notification->data->body_as<FBS::Transport::SendRtcpNotification>();
-				auto len         = body->data()->size();
+				const size_t len = body->data()->size();
 
 				// Increase receive transmission.
 				RTC::Transport::DataReceived(len);
 
-				if (len > RTC::Consts::MtuSize + 100)
+				if (len > RTC::Consts::IncomingRtcpPacketMaxSize)
 				{
-					MS_WARN_TAG(rtp, "given RTCP packet exceeds maximum size [len:%i]", len);
+					MS_WARN_TAG(
+					  rtcp,
+					  "ignoring RTCP packet exceeding maximum size [len:%zu, max len:%zu]",
+					  len,
+					  RTC::Consts::IncomingRtcpPacketMaxSize);
 
 					return;
 				}

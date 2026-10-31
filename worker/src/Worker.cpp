@@ -12,7 +12,7 @@
 /* Instance methods. */
 
 Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
-  : channel(channel), shared(shared)
+  : channel(channel), signalHandle(std::make_unique<SignalHandle>(this)), shared(shared)
 {
 	MS_TRACE();
 
@@ -22,9 +22,6 @@ Worker::Worker(::Channel::ChannelSocket* channel, SharedInterface* shared)
 	// Give the Channel the Shared instance, which it needs to take the arrival
 	// time of received notifications.
 	this->channel->SetShared(this->shared);
-
-	// Set the SignalHandle.
-	this->signalHandle = new SignalHandle(this);
 
 #ifdef MS_EXECUTABLE
 	{
@@ -65,7 +62,7 @@ void Worker::Close()
 	this->closed = true;
 
 	// Delete the SignalHandle.
-	delete this->signalHandle;
+	this->signalHandle.reset();
 
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)

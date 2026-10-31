@@ -87,7 +87,10 @@ namespace RTC
 				  /*value*/ bufferPtr);
 			}
 
-			this->packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+			const bool extensionsSet =
+			  this->packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+
+			MS_ASSERT(extensionsSet, "no room in the packet buffer for the header extensions");
 
 			this->minPacketLength = this->packet->GetLength();
 		}

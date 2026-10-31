@@ -185,10 +185,10 @@ namespace RTC
 		}
 
 	private:
-		SharedInterface* shared{ nullptr };
+		SharedInterface* shared;
 		// Whether the size of padding only RTP packets should not be taken into
 		// account.
-		bool ignorePaddingOnlyPackets{ false };
+		bool ignorePaddingOnlyPackets;
 		RateCalculator rate;
 		// Total packets accounted for, which nothing bounds either.
 		uint64_t packets{ 0 };

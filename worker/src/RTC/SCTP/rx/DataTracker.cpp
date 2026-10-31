@@ -284,6 +284,18 @@ namespace RTC
 			return unwrappedTsn == this->lastCumulativeAckedTsn.GetNextValue();
 		}
 
+		size_t DataTracker::GetSackSelectiveAckLength() const
+		{
+			MS_TRACE();
+
+			const size_t numGapAckBlocks =
+			  std::min(this->additionalTsnBlocks.GetBlocks().size(), DataTracker::MaxGapAckBlocksReported);
+
+			// Each Gap Ack Block and each duplicate TSN takes 4 bytes.
+			return SackChunk::SackChunkHeaderLength + (numGapAckBlocks * 4) +
+			       (this->duplicateTsns.size() * 4);
+		}
+
 		void DataTracker::AddSackSelectiveAck(Packet* packet, size_t aRwnd)
 		{
 			MS_TRACE();

@@ -8,8 +8,8 @@ SCENARIO("BWE RembGenerator", "[bwe][rembgenerator]")
 {
 	struct TestRemb
 	{
-		int64_t bitrate;
-		std::vector<uint32_t> ssrcs;
+		const int64_t bitrate;
+		const std::vector<uint32_t> ssrcs;
 	};
 
 	class TestRembGeneratorListener : public RTC::BWE::RembGenerator::Listener

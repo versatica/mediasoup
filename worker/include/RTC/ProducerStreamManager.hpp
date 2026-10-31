@@ -197,13 +197,13 @@ namespace RTC
 
 	protected:
 		// Passed by argument.
-		Listener* listener{ nullptr };
-		SharedInterface* shared{ nullptr };
-		bool keyFrameSupported{ false };
-		RTC::Media::Kind kind{};
-		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
+		Listener* const listener;
+		SharedInterface* const shared;
+		const bool keyFrameSupported;
+		const RTC::Media::Kind kind;
+		const std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
 		// Encoding context.
-		std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext;
+		const std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext;
 		// Layer preferences.
 		RTC::ConsumerTypes::VideoLayers preferredLayers;
 		// Whether a bitrate allocation is running for this Transport. While it is

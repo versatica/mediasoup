@@ -211,7 +211,7 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			BitrateProberOptions options;
+			const BitrateProberOptions options;
 			// Others.
 			State state{ State::INACTIVE };
 			// The bursts asked for, the first one being the one being emitted.

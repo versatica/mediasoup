@@ -100,6 +100,26 @@ SCENARIO("RTCP ReceiverReport", "[rtcp][receiver-report]")
 		verify(report.get());
 	}
 
+	SECTION("GetSize() matches the serialized size")
+	{
+		for (const size_t count : { 0, 1, 31, 32, 62, 63 })
+		{
+			RTC::RTCP::ReceiverReportPacket packet;
+
+			for (size_t i{ 1 }; i <= count; ++i)
+			{
+				auto* const report = new RTC::RTCP::ReceiverReport();
+
+				report->SetSsrc(i);
+				packet.AddReport(report);
+			}
+
+			alignas(4) uint8_t buffer[4096] = { 0 };
+
+			REQUIRE(packet.Serialize(buffer) == packet.GetSize());
+		}
+	}
+
 	SECTION("create RR packet with more than 31 reports")
 	{
 		const size_t count = 33;

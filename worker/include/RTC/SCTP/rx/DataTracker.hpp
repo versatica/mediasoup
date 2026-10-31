@@ -246,6 +246,11 @@ namespace RTC
 			bool WillIncreaseCumAckTsn(uint32_t tsn) const;
 
 			/**
+			 * Length of the SACK chunk that `AddSackSelectiveAck()` would add.
+			 */
+			size_t GetSackSelectiveAckLength() const;
+
+			/**
 			 * Adds a SACK chunk with selective ack to the given packet.
 			 *
 			 * @remarks
@@ -261,7 +266,7 @@ namespace RTC
 
 		private:
 			// If a packet has ever been seen.
-			BackoffTimerHandleInterface* delayedAckTimer;
+			BackoffTimerHandleInterface* const delayedAckTimer;
 			bool packetSeen{ false };
 			AckState ackState{ AckState::IDLE };
 			Types::UnwrappedTsn::Unwrapper tsnUnwrapper;

@@ -82,19 +82,19 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id;
+		const std::string id;
 
 	private:
 		// Passed by argument.
-		SharedInterface* shared{ nullptr };
-		size_t maxMessageSize{ 0 };
-		RTC::DataProducer::Listener* listener{ nullptr };
+		SharedInterface* const shared;
+		const size_t maxMessageSize;
+		RTC::DataProducer::Listener* const listener;
 		// Others.
 		Type type;
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;
-		bool paused{ false };
+		bool paused;
 		size_t messagesReceived{ 0 };
 		size_t bytesReceived{ 0 };
 	};

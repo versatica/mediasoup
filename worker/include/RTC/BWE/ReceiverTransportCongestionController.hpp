@@ -58,7 +58,7 @@ namespace RTC
 				/**
 				 * Largest an RTCP packet may be on this transport (bytes).
 				 */
-				size_t maxRtcpPacketLen{ RTC::Consts::RtcpPacketMaxSize };
+				size_t maxRtcpPacketLen{ RTC::Consts::OutgoingRtcpPacketMaxSize };
 			};
 
 		public:
@@ -132,8 +132,8 @@ namespace RTC
 
 		private:
 			// Passed by argument.
-			Listener* listener{ nullptr };
-			SharedInterface* shared{ nullptr };
+			Listener* const listener;
+			SharedInterface* const shared;
 			TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator;
 			RemoteBitrateEstimatorAbsSendTime remoteBitrateEstimator;
 			RembGenerator rembGenerator;

@@ -5,8 +5,8 @@
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
-#include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
@@ -184,7 +184,11 @@ namespace RTC
 		 */
 		std::optional<float> ReceiveRtcpXrDelaySinceLastRr(
 		  RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo, int64_t receivedAtUs);
-		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
+		/**
+		 * Receiver Reports of the RTP streams of this Producer, if it is time to
+		 * report.
+		 */
+		std::vector<std::unique_ptr<RTC::RTCP::ReceiverReport>> GetRtcp(int64_t nowUs);
 		void RequestKeyFrame(uint32_t mappedSsrc);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -200,7 +204,7 @@ namespace RTC
 		RTC::RTP::RtpStreamRecv* CreateRtpStream(
 		  const RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
 		void NotifyNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream);
-		bool MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const;
+		[[nodiscard]] bool MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const;
 		/**
 		 * @param maxPacketTsChanged - Whether this packet became the one holding the
 		 * highest RTP timestamp of its RTP stream, which happens just for the first
@@ -235,17 +239,17 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id;
+		const std::string id;
 
 	private:
 		// Passed by argument.
-		SharedInterface* shared{ nullptr };
-		RTC::Producer::Listener* listener{ nullptr };
+		SharedInterface* const shared;
+		RTC::Producer::Listener* const listener;
 		// Allocated by this.
 		ankerl::unordered_dense::map<uint32_t, RTC::RTP::RtpStreamRecv*> mapSsrcRtpStream;
-		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
+		const std::unique_ptr<RTC::KeyFrameRequestManager> keyFrameRequestManager;
 		// Others.
-		RTC::Media::Kind kind;
+		const RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
 		RtpMapping rtpMapping;
@@ -255,8 +259,8 @@ namespace RTC
 		ankerl::unordered_dense::map<RTC::RTP::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		RTC::RTP::HeaderExtensionIds rtpHeaderExtensionIds;
-		bool paused{ false };
-		bool enableMediasoupPacketIdHeaderExtension{ false };
+		bool paused;
+		const bool enableMediasoupPacketIdHeaderExtension;
 		RTC::RTP::Packet* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
 		int64_t lastRtcpSentAtUs{ 0 };

@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTP/Packet.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Consts.hpp"
@@ -131,15 +130,6 @@ namespace RTC
 			MS_TRACE();
 
 			SetLength(Packet::FixedHeaderMinLength);
-
-#ifdef MS_RTC_LOGGER_RTP
-			// Initialize logger.
-			// NOTE: Here we use DepLibUV directly since `this->logger` doesn't
-			// have any purpose during tests.
-			this->logger.timestamp        = DepLibUV::GetTimeMs();
-			this->logger.recvRtpTimestamp = GetTimestamp();
-			this->logger.recvSeqNumber    = GetSequenceNumber();
-#endif
 		}
 
 		Packet::~Packet()
@@ -215,7 +205,7 @@ namespace RTC
 
 				if (!extIds.empty())
 				{
-					std::copy(
+					std::ranges::copy(
 					  extIds.begin(), extIds.end() - 1, std::ostream_iterator<std::string>(extIdsStream, ", "));
 					extIdsStream << extIds.back();
 
@@ -437,6 +427,11 @@ namespace RTC
 			// Clone media SSRC.
 			clonedPacket->mediaSsrc = this->mediaSsrc;
 
+#ifdef MS_RTC_LOGGER_RTP
+			// Clone logger.
+			clonedPacket->logger = this->logger;
+#endif
+
 			// Assign the payload descriptor handler.
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
 
@@ -539,7 +534,7 @@ namespace RTC
 			}
 
 			// Clear One-Byte and Two-Bytes extensions.
-			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
+			std::ranges::fill(this->oneByteExtensions, -1);
 			this->twoBytesExtensions.clear();
 
 			const auto headerExtensionLength = GetHeaderExtensionLength();
@@ -559,16 +554,9 @@ namespace RTC
 			std::memmove(payload - headerExtensionLength, payload, payloadLength + paddingLength);
 		}
 
-		void Packet::SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions)
+		bool Packet::SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions)
 		{
 			MS_TRACE();
-
-			// Clear One-Byte and Two-Bytes extensions.
-			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
-			this->twoBytesExtensions.clear();
-
-			// Reset extension ids.
-			this->headerExtensionIds = {};
 
 			const auto hadHeaderExtension                 = HasHeaderExtension();
 			const auto previousHeaderExtensionValueLength = GetHeaderExtensionValueLength();
@@ -579,46 +567,29 @@ namespace RTC
 			{
 				uint8_t highestId{ 0 };
 				uint8_t highestLen{ 0 };
+				// A One-Byte extension cannot have length 0, while a Two-Bytes one can.
+				bool hasZeroLength{ false };
 
 				for (const auto& extension : extensions)
 				{
 					highestId  = std::max(extension.id, highestId);
 					highestLen = std::max(extension.len, highestLen);
+
+					if (extension.len == 0)
+					{
+						hasZeroLength = true;
+					}
 				}
 
-				type = highestId <= 14 && highestLen > 0 && highestLen <= 16 ? ExtensionsType::OneByte
-				                                                             : ExtensionsType::TwoBytes;
+				type = highestId <= 14 && !hasZeroLength && highestLen > 0 && highestLen <= 16
+				         ? ExtensionsType::OneByte
+				         : ExtensionsType::TwoBytes;
 
 				MS_DEBUG_DEV(
 				  "using %" PRIu8 " byte(s) extensions [highestId:%" PRIu8 ", highestLen:%" PRIu8 "]",
 				  type,
 				  highestId,
 				  highestLen);
-			}
-
-			// If One-Byte is requested and the packet already has One-Byte extensions,
-			// keep the header extension id.
-			if (type == ExtensionsType::OneByte && HasOneByteExtensions())
-			{
-				// Nothing to do.
-			}
-			// If Two-Bytes is requested and the packet already has Two-Bytes extensions,
-			// keep the header extension id.
-			else if (type == ExtensionsType::TwoBytes && HasTwoBytesExtensions())
-			{
-				// Nothing to do.
-			}
-			// Otherwise, if there is header extension of non matching type, modify its id.
-			else if (hadHeaderExtension)
-			{
-				if (type == ExtensionsType::OneByte)
-				{
-					GetHeaderExtensionPointer()->id = htons(0xBEDE);
-				}
-				else if (type == ExtensionsType::TwoBytes)
-				{
-					GetHeaderExtensionPointer()->id = htons(0b0001000000000000);
-				}
 			}
 
 			// Calculate total length required for all extensions (with padding if needed).
@@ -677,7 +648,8 @@ namespace RTC
 			// NOTE: Must be signed (the shift is negative when the packet shrinks)
 			// and wide enough for any header extension size. With int16_t a size
 			// delta outside [-32768, 32767] (e.g. a received packet with a header
-			// extension larger than 32 KB) wraps around and SetLength() below throws.
+			// extension larger than 32 KB) wraps around and the packet would wrongly
+			// be considered too big for its buffer.
 			int64_t shift{ 0 };
 
 			if (hadHeaderExtension)
@@ -690,6 +662,44 @@ namespace RTC
 				shift = 4 + static_cast<int64_t>(paddedExtensionsLength);
 			}
 
+			// Check that the packet fits in its buffer before modifying anything.
+			if (static_cast<int64_t>(GetLength()) + shift > static_cast<int64_t>(GetBufferLength()))
+			{
+				return false;
+			}
+
+			// Clear One-Byte and Two-Bytes extensions.
+			std::ranges::fill(this->oneByteExtensions, -1);
+			this->twoBytesExtensions.clear();
+
+			// Reset extension ids.
+			this->headerExtensionIds = {};
+
+			// If One-Byte is requested and the packet already has One-Byte extensions,
+			// keep the header extension id.
+			if (type == ExtensionsType::OneByte && HasOneByteExtensions())
+			{
+				// Nothing to do.
+			}
+			// If Two-Bytes is requested and the packet already has Two-Bytes extensions,
+			// keep the header extension id.
+			else if (type == ExtensionsType::TwoBytes && HasTwoBytesExtensions())
+			{
+				// Nothing to do.
+			}
+			// Otherwise, if there is header extension of non matching type, modify its id.
+			else if (hadHeaderExtension)
+			{
+				if (type == ExtensionsType::OneByte)
+				{
+					GetHeaderExtensionPointer()->id = htons(0xBEDE);
+				}
+				else if (type == ExtensionsType::TwoBytes)
+				{
+					GetHeaderExtensionPointer()->id = htons(0b0001000000000000);
+				}
+			}
+
 			auto* payload            = GetPayloadPointer();
 			const auto payloadLength = GetPayloadLength();
 			const auto paddingLength = GetPaddingLength();
@@ -697,7 +707,6 @@ namespace RTC
 			if (hadHeaderExtension && shift != 0)
 			{
 				// Update packet length.
-				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() + shift);
 
 				// Update the header extension length.
@@ -709,7 +718,6 @@ namespace RTC
 			else if (!hadHeaderExtension)
 			{
 				// Update packet length.
-				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() + shift);
 
 				// Set the header extension flag.
@@ -848,6 +856,8 @@ namespace RTC
 					}
 				}
 			}
+
+			return true;
 		}
 
 		void Packet::AssignExtensionIds(RTP::HeaderExtensionIds& headerExtensionIds)
@@ -894,12 +904,21 @@ namespace RTC
 
 			const size_t midLen = mid.length();
 
+			if (midLen == 0)
+			{
+				MS_WARN_TAG(rtp, "cannot set an empty MID value");
+
+				return false;
+			}
+
 			// Here we assume that there is MidRtpExtensionMaxLength available bytes,
 			// even if now they are padding bytes.
 			if (midLen > RTC::Consts::MidRtpExtensionMaxLength)
 			{
-				MS_ERROR(
-				  "no enough space for MID value [MidRtpExtensionMaxLength:%" PRIu8 ", mid:'%s']",
+				MS_WARN_TAG(
+				  rtp,
+				  "no enough space for MID value [len:%zu, max len:%" PRIu8 ", mid:'%s']",
+				  midLen,
 				  RTC::Consts::MidRtpExtensionMaxLength,
 				  mid.c_str());
 
@@ -974,8 +993,15 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
 
-			if (!extenValue || extenLen != 3)
+			if (!extenValue)
 			{
+				return false;
+			}
+
+			if (extenLen != 3)
+			{
+				MS_WARN_TAG(rtp, "invalid abs-send-time extension length [len:%" PRIu8 "]", extenLen);
+
 				return false;
 			}
 
@@ -1014,8 +1040,15 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
 
-			if (!extenValue || extenLen != 2)
+			if (!extenValue)
 			{
+				return false;
+			}
+
+			if (extenLen != 2)
+			{
+				MS_WARN_TAG(rtp, "invalid transport-wide-cc extension length [len:%" PRIu8 "]", extenLen);
+
 				return false;
 			}
 
@@ -1089,6 +1122,13 @@ namespace RTC
 			if (!extenValue)
 			{
 				MS_WARN_TAG(rtp, "dependency description not found");
+
+				return false;
+			}
+
+			if (len == 0)
+			{
+				MS_WARN_TAG(rtp, "cannot set an empty dependency descriptor");
 
 				return false;
 			}
@@ -1211,10 +1251,17 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
 
+			if (!extenValue)
+			{
+				return false;
+			}
+
 			// Extension value can be 8 or 16 bytes depending on whether it contains
 			// estimated capture clock offset or not.
-			if (!extenValue || (extenLen != 8 && extenLen != 16))
+			if (extenLen != 8 && extenLen != 16)
 			{
+				MS_WARN_TAG(rtp, "invalid abs-capture-time extension length [len:%" PRIu8 "]", extenLen);
+
 				return false;
 			}
 
@@ -1442,7 +1489,7 @@ namespace RTC
 
 			// Update packet length.
 			// NOTE: This throws if given length is higher than buffer length.
-			SetLength(GetLength() + 2);
+			SetLength(GetLength() + RTC::Consts::RtxOverhead);
 
 			// Rewrite the payload type.
 			SetPayloadType(payloadType);
@@ -1456,7 +1503,7 @@ namespace RTC
 			auto* payload = GetPayloadPointer();
 
 			// Write the original sequence number at the begining of the payload.
-			std::memmove(payload + 2, payload, payloadLength);
+			std::memmove(payload + RTC::Consts::RtxOverhead, payload, payloadLength);
 			Utils::Byte::Set2Bytes(payload, 0, GetSequenceNumber());
 
 			// Rewrite the sequence number.
@@ -1472,7 +1519,7 @@ namespace RTC
 
 			// NOTE: libwebrtc sends some RTX packets with no payload when the stream
 			// is started. Just ignore them.
-			if (payloadLength < 2)
+			if (payloadLength < RTC::Consts::RtxOverhead)
 			{
 				return false;
 			}
@@ -1490,7 +1537,8 @@ namespace RTC
 			this->mediaSsrc.reset();
 
 			// Shift the payload to its original place.
-			std::memmove(payload, payload + 2, payloadLength - 2);
+			std::memmove(
+			  payload, payload + RTC::Consts::RtxOverhead, payloadLength - RTC::Consts::RtxOverhead);
 
 			// Remove padding (if any).
 			if (HasPadding())
@@ -1500,7 +1548,7 @@ namespace RTC
 			}
 
 			// Update packet length.
-			SetLength(GetLength() - 2);
+			SetLength(GetLength() - RTC::Consts::RtxOverhead);
 
 			return true;
 		}
@@ -1785,6 +1833,9 @@ namespace RTC
 				const auto offset = this->oneByteExtensions[id - 1];
 
 				MS_ASSERT(offset != -1, "extension with id %" PRIu8 " not found", id);
+				// In One-Byte extensions the length field holds the value length minus
+				// 1, so 0 cannot be represented.
+				MS_ASSERT(len > 0, "One-Byte extension with id %" PRIu8 " cannot have length 0", id);
 
 				auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
 

@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "Logger.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
@@ -212,6 +213,13 @@ namespace RTC
 		  : RTP::RtpStream::RtpStream(listener, shared, params, 10),
 		    sendNackDelayMs(sendNackDelayMs),
 		    useRtpInactivityCheck(useRtpInactivityCheck),
+		    inactivityCheckPeriodicTimer(
+		      useRtpInactivityCheck ? shared->CreateTimer(this, "rtp-stream-recv-inactivity-check")
+					                      : nullptr),
+		    spatialLayersActivityCheckPeriodicTimer(
+		      GetSpatialLayers() > 1
+		        ? shared->CreateTimer(this, "rtp-stream-recv-spatial-layers-activity-check")
+						: nullptr),
 		    transmissionCounter(
 		      shared, params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500),
 		    mediaTransmissionCounter(shared, /*ignorePaddingOnlyPackets*/ true)
@@ -229,9 +237,6 @@ namespace RTC
 			{
 				// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 				// enabled).
-				this->inactivityCheckPeriodicTimer =
-				  this->shared->CreateTimer(this, "rtp-stream-recv-inactivity-check");
-
 				this->inactivityCheckPeriodicTimer->Start(
 				  this->params.useDtx ? InactivityCheckIntervalWithDtxMs : InactivityCheckIntervalMs);
 			}
@@ -243,9 +248,6 @@ namespace RTC
 			{
 				this->spatialLayersActivity.assign(GetSpatialLayers(), false);
 
-				this->spatialLayersActivityCheckPeriodicTimer =
-				  this->shared->CreateTimer(this, "rtp-stream-recv-spatial-layers-activity-check");
-
 				this->spatialLayersActivityCheckPeriodicTimer->Start(
 				  SpatialLayersActivityCheckIntervalMs, SpatialLayersActivityCheckIntervalMs);
 			}
@@ -254,14 +256,6 @@ namespace RTC
 		RtpStreamRecv::~RtpStreamRecv()
 		{
 			MS_TRACE();
-
-			// Close the RTP inactivity check periodic timer.
-			delete this->inactivityCheckPeriodicTimer;
-			this->inactivityCheckPeriodicTimer = nullptr;
-
-			// Close the spatial layers activity check periodic timer.
-			delete this->spatialLayersActivityCheckPeriodicTimer;
-			this->spatialLayersActivityCheckPeriodicTimer = nullptr;
 		}
 
 		flatbuffers::Offset<FBS::RtpStream::Stats> RtpStreamRecv::FillBufferStats(
@@ -1062,7 +1056,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (timer == this->inactivityCheckPeriodicTimer)
+			if (timer == this->inactivityCheckPeriodicTimer.get())
 			{
 				this->inactive = true;
 
@@ -1074,7 +1068,7 @@ namespace RTC
 
 				ResetScore(0, /*notify*/ true);
 			}
-			else if (timer == this->spatialLayersActivityCheckPeriodicTimer)
+			else if (timer == this->spatialLayersActivityCheckPeriodicTimer.get())
 			{
 				const int64_t nowMs = this->shared->GetTimeMs();
 
@@ -1117,11 +1111,24 @@ namespace RTC
 			  seqNumbers[0],
 			  seqNumbers.size());
 
-			RTC::RTCP::FeedbackRtpNackPacket packet(0, GetSsrc());
+			auto packet = std::make_unique<RTC::RTCP::FeedbackRtpNackPacket>(0, GetSsrc());
+			size_t numPacketsRequested{ 0 };
+
+			// Sends the NACK packet built so far.
+			const auto sendPacket = [this, &packet, &numPacketsRequested]() -> void
+			{
+				this->nackCount++;
+				this->nackPacketCount += numPacketsRequested;
+
+				packet->Serialize(RTC::RTCP::SerializationBuffer);
+
+				// Notify the listener.
+				static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)
+				  ->OnRtpStreamSendRtcpPacket(this, packet.get());
+			};
 
 			auto it        = seqNumbers.begin();
 			const auto end = seqNumbers.end();
-			size_t numPacketsRequested{ 0 };
 
 			while (it != end)
 			{
@@ -1146,26 +1153,22 @@ namespace RTC
 
 				auto* const nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
 
-				packet.AddItem(nackItem);
+				// If the item does not fit in the packet, send the packet and start a
+				// new one.
+				if (packet->GetSize() + nackItem->GetSize() > RTC::Consts::OutgoingRtcpPacketMaxSize)
+				{
+					sendPacket();
+
+					packet              = std::make_unique<RTC::RTCP::FeedbackRtpNackPacket>(0, GetSsrc());
+					numPacketsRequested = 0;
+				}
+
+				packet->AddItem(nackItem);
 
 				numPacketsRequested += nackItem->CountRequestedPackets();
 			}
 
-			// Ensure that the RTCP packet fits into the RTCP buffer.
-			if (packet.GetSize() > RTC::RTCP::SerializationBufferSize)
-			{
-				MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)", packet.GetSize());
-
-				return;
-			}
-
-			this->nackCount++;
-			this->nackPacketCount += numPacketsRequested;
-
-			packet.Serialize(RTC::RTCP::SerializationBuffer);
-
-			// Notify the listener.
-			static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamSendRtcpPacket(this, &packet);
+			sendPacket();
 		}
 
 		inline void RtpStreamRecv::OnNackGeneratorKeyFrameRequired()

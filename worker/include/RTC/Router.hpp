@@ -122,12 +122,12 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id;
+		const std::string id;
 
 	private:
 		// Passed by argument.
-		SharedInterface* shared{ nullptr };
-		Listener* listener{ nullptr };
+		SharedInterface* const shared;
+		Listener* const listener;
 		// Allocated by this.
 		ankerl::unordered_dense::map<std::string, RTC::Transport*> mapTransports;
 		ankerl::unordered_dense::map<std::string, RTC::RtpObserver*> mapRtpObservers;

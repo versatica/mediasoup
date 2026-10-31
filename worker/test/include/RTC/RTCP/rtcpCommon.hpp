@@ -13,11 +13,17 @@ namespace rtcpCommon
 	// NOTE: We need to declare them here with `extern` and then define them in
 	// rtcpCommon.cpp.
 	// NOTE: Random size buffers because anyway we use sizeof(XxxxBuffer).
-	extern thread_local uint8_t FactoryBuffer[66661];
-	extern thread_local uint8_t SerializeBuffer[66662];
-	extern thread_local uint8_t CloneBuffer[66663];
-	extern thread_local uint8_t DataBuffer[66664];
-	extern thread_local uint8_t ThrowBuffer[66665];
+	// NOTE: The `alignas(4)` must match the one in the definitions in
+	// rtcpCommon.cpp. Without it, the compiler may assume that these arrays have
+	// a larger alignment (on x86_64 an array of 16 bytes or more is assumed to be
+	// aligned to 16 bytes) and access them with aligned SIMD instructions (such
+	// as `movaps`), which crash since the buffers are only guaranteed to be
+	// aligned to 4 bytes.
+	alignas(4) extern thread_local uint8_t FactoryBuffer[66661];
+	alignas(4) extern thread_local uint8_t SerializeBuffer[66662];
+	alignas(4) extern thread_local uint8_t CloneBuffer[66663];
+	alignas(4) extern thread_local uint8_t DataBuffer[66664];
+	alignas(4) extern thread_local uint8_t ThrowBuffer[66665];
 
 	void ResetBuffers();
 } // namespace rtcpCommon

@@ -211,9 +211,16 @@ namespace RTC
 			 */
 			void PrepareResetStream(uint16_t streamId);
 			bool HasStreamsReadyToBeReset() const;
+			size_t GetNumberOfStreamsReadyToBeReset() const;
 			std::vector<uint16_t /*streamId*/> BeginResetStreams();
 			void CommitResetStreams();
 			void RollbackResetStreams();
+
+			/**
+			 * Cancels the reset of the streams ready to be reset, without any request
+			 * having been sent, and resumes them. Returns the ids of those streams.
+			 */
+			std::vector<uint16_t /*streamId*/> CancelResetStreams();
 
 #ifdef MS_TEST
 		public:
@@ -300,11 +307,11 @@ namespace RTC
 			AssociationListenerInterface& associationListener;
 			const SctpOptions sctpOptions;
 			// If the peer supports RFC3758 "SCTP Partial Reliability Extension".
-			bool supportsPartialReliability;
+			const bool supportsPartialReliability;
 			// The length of the data chunk (DATA/I-DATA) header that is used.
 			const size_t dataChunkHeaderLength;
 			// The retransmission timer.
-			BackoffTimerHandleInterface* t3RtxTimer;
+			BackoffTimerHandleInterface* const t3RtxTimer;
 			// Unwraps TSNs.
 			Types::UnwrappedTsn::Unwrapper tsnUnwrapper;
 			// Congestion Window. Number of bytes that may be in-flight (sent, not

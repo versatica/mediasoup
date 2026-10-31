@@ -117,6 +117,11 @@ namespace RTC
 			virtual bool HasStreamsReadyToBeReset() const = 0;
 
 			/**
+			 * Number of streams that `GetStreamsReadyToBeReset()` would return.
+			 */
+			virtual size_t GetNumberOfStreamsReadyToBeReset() const = 0;
+
+			/**
 			 * Returns a list of streams that are ready to be included in an outgoing
 			 * stream reset request. Any streams that are returned here must be
 			 * included in an outgoing stream reset request, and there must not be

@@ -97,9 +97,9 @@ namespace mocks
 
 	private:
 		// Passed by argument.
-		TimerHandleInterface::Listener* listener{ nullptr };
+		TimerHandleInterface::Listener* const listener;
 		const std::string label;
-		std::function<int64_t()> getTimeMs;
+		const std::function<int64_t()> getTimeMs;
 		const std::function<void()> onDelete;
 		// Others.
 		bool running{ false };

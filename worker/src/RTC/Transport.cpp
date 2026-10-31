@@ -15,6 +15,7 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SCTP/association/Association.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
@@ -56,26 +57,29 @@ namespace RTC
 	  : id(id),
 	    shared(shared),
 	    listener(listener),
+	    rtcpTimer(shared->CreateTimer(this, "transport-rtcp")),
+	    enableBwe(options->enableBwe()),
+	    direct(options->direct()),
 	    recvRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
 	    sendRtpTransmission(shared, /*ignorePaddingOnlyPackets*/ false),
 	    recvRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
 	    sendRtxTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 1000),
 	    sendProbationTransmission(shared, /*ignorePaddingOnlyPackets*/ false, 100),
-	    rttCalculator(this, shared)
+	    rttCalculator(this, shared),
+	    maxSendMessageSize(options->maxSendMessageSize()),
+	    maxReceiveMessageSize(options->maxReceiveMessageSize())
+#ifdef MS_RTC_LOGGER_SEND_BURST
+	    ,
+	    sendBurstLoggerTimer(shared->CreateTimer(this, "transport-send-burst"))
+#endif
 	{
 		MS_TRACE();
 
 #ifdef MS_RTC_LOGGER_SEND_BURST
 		this->sendBurstLogger.transportId = this->id;
-		this->sendBurstLoggerTimer        = this->shared->CreateTimer(this, "transport-send-burst");
 
 		this->sendBurstLoggerTimer->Start(SendBurstLogIntervalMs, SendBurstLogIntervalMs);
 #endif
-
-		this->direct                = options->direct();
-		this->enableBwe             = options->enableBwe();
-		this->maxSendMessageSize    = options->maxSendMessageSize();
-		this->maxReceiveMessageSize = options->maxReceiveMessageSize();
 
 		// NOTE: The API gives unsigned 64 bits bitrates, so they are clamped here.
 		if (this->enableBwe)
@@ -122,6 +126,13 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
 			}
 
+			if (options->sctpMaxReceiverWindowBufferSize() < RTC::Consts::SctpReceiverWindowBufferMinSize)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "sctpMaxReceiverWindowBufferSize must be at least %zu",
+				  RTC::Consts::SctpReceiverWindowBufferMinSize);
+			}
+
 			RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod
 			  zeroChecksumAlternateErrorDetectionMethod{
 				  RTC::SCTP::ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
@@ -149,7 +160,7 @@ namespace RTC
 			}
 
 			const RTC::SCTP::SctpOptions sctpOptions = {
-				.mtu                         = RTC::Consts::MaxSafeMtuSizeForSctp,
+				.mtu                         = RTC::Consts::OutgoingSctpPacketMaxSize,
 				.maxSendMessageSize          = this->maxSendMessageSize,
 				.maxSendBufferSize           = options->sctpSendBufferSize(),
 				.perStreamSendQueueLimit     = options->sctpPerStreamSendQueueLimit(),
@@ -164,9 +175,6 @@ namespace RTC
 			this->sctpAssociation = std::make_unique<RTC::SCTP::Association>(
 			  sctpOptions, this, this->shared, options->isDataChannel(), /*mayConnectOnReceivedSctpData*/ true);
 		}
-
-		// Create the RTCP timer.
-		this->rtcpTimer = this->shared->CreateTimer(this, "transport-rtcp");
 	}
 
 	Transport::~Transport()
@@ -221,15 +229,6 @@ namespace RTC
 		// NOTE: We cannot do it here in the destructor because here we are no longer
 		// the Transport subclass but Transport parent (this is how the destruction
 		// chain works in C++).
-
-		// Delete the RTCP timer.
-		delete this->rtcpTimer;
-		this->rtcpTimer = nullptr;
-
-#ifdef MS_RTC_LOGGER_SEND_BURST
-		delete this->sendBurstLoggerTimer;
-		this->sendBurstLoggerTimer = nullptr;
-#endif
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -1520,7 +1519,10 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef MS_RTC_LOGGER_RTP
-		packet->logger.recvTransportId = this->id;
+		packet->logger.timeMs           = Utils::Time::TimeUsToMs(receivedAtUs);
+		packet->logger.recvTransportId  = this->id;
+		packet->logger.recvRtpTimestamp = packet->GetTimestamp();
+		packet->logger.recvSeqNumber    = packet->GetSequenceNumber();
 #endif
 
 		// Apply the Transport RTP header extension ids so the RTP listener can use
@@ -2275,43 +2277,49 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ new RTC::RTCP::CompoundPacket() };
+		const auto ntp = Utils::Time::TimeUsToNtp(nowUs + this->shared->GetNtpOffsetUs());
+
+		auto packet = std::make_unique<RTC::RTCP::CompoundPacket>();
 
 		for (auto& kv : this->mapConsumers)
 		{
-			auto* consumer = kv.second;
-			auto rtcpAdded = consumer->GetRtcp(packet.get(), nowUs);
+			auto* const consumer = kv.second;
 
-			// RTCP data couldn't be added because the Compound packet is full.
-			// Send the RTCP compound packet and request for RTCP again.
-			if (!rtcpAdded)
+			for (auto& sendStreamItems : consumer->GetRtcp(nowUs))
 			{
-				SendRtcpCompoundPacket(packet.get());
+				// If the items do not fit in the compound packet, send it and add them
+				// to a new one.
+				if (!packet->AddSendStreamItems(sendStreamItems))
+				{
+					SendRtcpCompoundPacket(packet.get());
 
-				// Create a new compount packet.
-				packet.reset(new RTC::RTCP::CompoundPacket());
+					packet = std::make_unique<RTC::RTCP::CompoundPacket>();
 
-				// Retrieve the RTCP again.
-				consumer->GetRtcp(packet.get(), nowUs);
+					const bool added = packet->AddSendStreamItems(sendStreamItems);
+
+					MS_ASSERT(added, "send stream items do not fit in an empty RTCP compound packet");
+				}
 			}
 		}
 
 		for (auto& kv : this->mapProducers)
 		{
-			auto* producer = kv.second;
-			auto rtcpAdded = producer->GetRtcp(packet.get(), nowUs);
+			auto* const producer = kv.second;
 
-			// RTCP data couldn't be added because the Compound packet is full.
-			// Send the RTCP compound packet and request for RTCP again.
-			if (!rtcpAdded)
+			for (auto& receiverReport : producer->GetRtcp(nowUs))
 			{
-				SendRtcpCompoundPacket(packet.get());
+				// If the report does not fit in the compound packet, send it and add the
+				// report to a new one.
+				if (!packet->AddReceiverReport(receiverReport, ntp))
+				{
+					SendRtcpCompoundPacket(packet.get());
 
-				// Create a new compount packet.
-				packet.reset(new RTC::RTCP::CompoundPacket());
+					packet = std::make_unique<RTC::RTCP::CompoundPacket>();
 
-				// Retrieve the RTCP again.
-				producer->GetRtcp(packet.get(), nowUs);
+					const bool added = packet->AddReceiverReport(receiverReport, ntp);
+
+					MS_ASSERT(added, "Receiver Report does not fit in an empty RTCP compound packet");
+				}
 			}
 		}
 
@@ -3448,7 +3456,7 @@ namespace RTC
 		MS_TRACE();
 
 		// RTCP timer.
-		if (timer == this->rtcpTimer)
+		if (timer == this->rtcpTimer.get())
 		{
 			auto intervalMs = static_cast<int64_t>(RTC::RTCP::MaxVideoIntervalMs);
 
@@ -3464,9 +3472,9 @@ namespace RTC
 			this->rtcpTimer->Start(intervalMs);
 		}
 #ifdef MS_RTC_LOGGER_SEND_BURST
-		else if (timer == this->sendBurstLoggerTimer)
+		else if (timer == this->sendBurstLoggerTimer.get())
 		{
-			this->sendBurstLogger.Log();
+			this->sendBurstLogger.Log(this->shared->GetLoopTimeMs());
 		}
 #endif
 	}

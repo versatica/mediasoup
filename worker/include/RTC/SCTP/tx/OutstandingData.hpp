@@ -426,7 +426,7 @@ namespace RTC
 			/**
 			 * Adds a FORWARD-TSN chunk to the given packet and returns it, or returns
 			 * `nullptr` without adding anything if it would be a rate limited
-			 * duplicate.
+			 * duplicate or if it does not fit in the packet.
 			 *
 			 * @param rateLimitedTsn The new cumulative TSN that must not be sent again
 			 *   yet, or `std::nullopt` if no such TSN is being rate limited.
@@ -437,7 +437,7 @@ namespace RTC
 			/**
 			 * Adds an I-FORWARD-TSN chunk to the given packet and returns it, or
 			 * returns `nullptr` without adding anything if it would be a rate limited
-			 * duplicate.
+			 * duplicate or if it does not fit in the packet.
 			 *
 			 * @param rateLimitedTsn The new cumulative TSN that must not be sent again
 			 *   yet, or `std::nullopt` if no such TSN is being rate limited.
@@ -557,7 +557,7 @@ namespace RTC
 			// The last cumulative TSN ack number.
 			Types::UnwrappedTsn lastCumulativeTsnAck;
 			// Callback when to discard items from the send queue.
-			std::function<bool(uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)> discardFromSendQueue;
+			const std::function<bool(uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)> discardFromSendQueue;
 			// Outstanding items. If non-empty, the first element has
 			// `TSN=this->lastCumulativeTsnAck_ + 1` and the following items are in
 			// strict increasing TSN order. The last item has

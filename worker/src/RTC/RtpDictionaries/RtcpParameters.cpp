@@ -4,6 +4,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include <limits> // std::numeric_limits
 
 namespace RTC
 {
@@ -26,6 +27,15 @@ namespace RTC
 		if (this->cname.empty())
 		{
 			MS_THROW_TYPE_ERROR("empty cname");
+		}
+
+		// The cname is sent in a SDES item, whose length field takes 8 bits.
+		if (this->cname.size() > std::numeric_limits<uint8_t>::max())
+		{
+			MS_THROW_TYPE_ERROR(
+			  "cname too long [len:%zu, max len:%zu]",
+			  this->cname.size(),
+			  static_cast<size_t>(std::numeric_limits<uint8_t>::max()));
 		}
 
 		// reducedSize is optional, default value is true.

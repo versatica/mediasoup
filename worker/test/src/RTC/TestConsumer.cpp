@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
 #include "RTC/Consumer.hpp"
@@ -184,9 +185,9 @@ namespace
 			consumer->ProducerNewRtpStream(rtpStream.get(), 1234567890);
 		}
 
-		std::unique_ptr<ConsumerListener> listener;
-		std::unique_ptr<RTC::Consumer> consumer;
-		std::unique_ptr<RTC::RTP::RtpStreamRecv> rtpStream;
+		const std::unique_ptr<ConsumerListener> listener;
+		const std::unique_ptr<RTC::Consumer> consumer;
+		const std::unique_ptr<RTC::RTP::RtpStreamRecv> rtpStream;
 	};
 } // namespace
 

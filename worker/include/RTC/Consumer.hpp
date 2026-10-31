@@ -13,6 +13,7 @@
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -209,7 +210,11 @@ namespace RTC
 
 		void SendRtpPacket(RTC::RTP::Packet* packet, std::shared_ptr<RTC::RTP::Packet>& sharedPacket);
 
-		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, int64_t nowUs);
+		/**
+		 * What each RTP stream of this Consumer reports in a RTCP compound packet,
+		 * if it is time to report.
+		 */
+		std::vector<RTC::RTCP::CompoundPacket::SendStreamItems> GetRtcp(int64_t nowUs);
 
 		/**
 		 * Worst remote fraction lost among the RTP streams of this Consumer.
@@ -290,14 +295,14 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		std::string id;
-		std::string producerId;
+		const std::string id;
+		const std::string producerId;
 
 	private:
 		// Passed by argument.
-		SharedInterface* shared{ nullptr };
-		RTC::Consumer::Listener* listener{ nullptr };
-		RTC::Media::Kind kind;
+		SharedInterface* const shared;
+		RTC::Consumer::Listener* const listener;
+		const RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type;
 		std::vector<RTC::RtpEncodingParameters> consumableRtpEncodings;
@@ -313,7 +318,7 @@ namespace RTC
 		bool bweManaged{ false };
 		uint8_t priority{ 1 };
 		TraceEventTypes traceEventTypes;
-		bool pipe{ false };
+		const bool pipe;
 		// Others.
 		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
 		ankerl::unordered_dense::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
@@ -326,7 +331,7 @@ namespace RTC
 		std::vector<uint32_t> mediaSsrcs;
 		std::vector<uint32_t> rtxSsrcs;
 		bool transportConnected{ false };
-		bool paused{ false };
+		bool paused;
 		bool producerPaused{ false };
 		bool producerClosed{ false };
 		bool lastSentPacketHasMarker{ false };

@@ -632,13 +632,13 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 	{
 		using FeedbackPacketsMeta = struct
 		{
-			int32_t baseTimeRaw;
-			int64_t baseTimeUs;
-			uint16_t baseSequence;
-			size_t packetStatusCount;
+			const int32_t baseTimeRaw;
+			const int64_t baseTimeUs;
+			const uint16_t baseSequence;
+			const size_t packetStatusCount;
 			// In DeltaTickUs units, so these are the delta bytes of the buffer below.
-			std::vector<int16_t> deltas;
-			std::vector<uint8_t> buffer;
+			const std::vector<int16_t> deltas;
+			const std::vector<uint8_t> buffer;
 		};
 
 		// Metadata collected by parsing buffers with libwebrtc, buffers itself.
