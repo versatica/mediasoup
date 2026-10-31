@@ -1,12 +1,12 @@
-#include "test/include/RTC/RTCP/rtcpCommon.hpp" // in worker/test/include/
-#include <cstring>                              // std::memset
+#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp" // in worker/test/include/
+#include <cstring>                                  // std::memset()
 
 namespace rtcpCommon
 {
-	// NOTE: Buffers must be 4-byte aligned since RTP packet parsing casts them
-	// to structs (e.g. FixedHeader, HeaderExtension) that require 4-byte
-	// alignment. Without this, accessing multi-byte fields would be undefined
-	// behavior on strict-alignment architectures.
+	// NOTE: Buffers must be 4-byte aligned since RTCP packet parsing casts them
+	// to structs that require 4-byte alignment. Without this, accessing
+	// multi-byte fields would be undefined behavior on strict-alignment
+	// architectures.
 	alignas(4) thread_local uint8_t FactoryBuffer[];
 	alignas(4) thread_local uint8_t SerializeBuffer[];
 	alignas(4) thread_local uint8_t CloneBuffer[];

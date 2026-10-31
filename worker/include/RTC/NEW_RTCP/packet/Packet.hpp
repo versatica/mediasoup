@@ -5,7 +5,6 @@
 #include "RTC/Serializable.hpp"
 #include "Utils.hpp"
 #include <ankerl/unordered_dense.h>
-#include <cstdint>
 #include <string>
 
 namespace RTC
@@ -258,7 +257,11 @@ namespace RTC
 			 * encodes it as 32-bit words minus one as required by the RTCP Length
 			 * field.
 			 *
-			 * @throw MediaSoupTypeError - If given `length` is higher than the maximum
+			 * @throw
+			 * - MediaSoupTypeError - If given `length` is lower than the Common
+			 *   Header length (4 bytes).
+			 * - MediaSoupTypeError - If given `length` is not multiple of 4 bytes.
+			 * - MediaSoupTypeError - If given `length` is higher than the maximum
 			 *   representable packet length (262144 bytes).
 			 */
 			virtual void SetLengthField(size_t length) final;

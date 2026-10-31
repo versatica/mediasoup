@@ -24,9 +24,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class UnknownPacket : public Packet
 		{
 			// We need that compound packet calls protected and private methods in
@@ -47,7 +44,7 @@ namespace RTC
 			 * Parse a UnknownPacket.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * To be used only by `CompoundPacket::Parse()`.
 			 */
 			static UnknownPacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
 

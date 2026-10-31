@@ -33,9 +33,6 @@ namespace RTC
 		 * Optional variable-length error causes (anyone).
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class AbortAssociationChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.

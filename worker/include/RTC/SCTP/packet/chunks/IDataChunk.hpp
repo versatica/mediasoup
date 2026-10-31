@@ -65,9 +65,6 @@ namespace RTC
 		 * - User Data (variable length): This is the payload user data.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class IDataChunk : public AnyDataChunk
 		{
 			// We need that packet calls protected and private methods in this class.

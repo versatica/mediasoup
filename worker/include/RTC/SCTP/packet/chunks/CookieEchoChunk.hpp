@@ -28,9 +28,6 @@ namespace RTC
 		 * - Cookie (variable length).
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class CookieEchoChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.

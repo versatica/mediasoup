@@ -30,9 +30,6 @@ namespace RTC
 		 *   not been received.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class ShutdownChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.

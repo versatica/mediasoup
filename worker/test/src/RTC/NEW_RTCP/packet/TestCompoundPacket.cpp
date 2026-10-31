@@ -1,15 +1,14 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
-#include "test/include/RTC/RTCP/rtcpCommon.hpp"
+#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <vector>
 
-SCENARIO("RTCP Compound Packet (203)", "[serializable][rtcp][compoundpacket]")
+SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 {
 	rtcpCommon::ResetBuffers();
 

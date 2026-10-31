@@ -26,9 +26,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class AddIncomingStreamsRequestParameter : public Parameter
 		{
 			// We need that chunk calls protected and private methods in this class.

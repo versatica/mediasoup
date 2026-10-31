@@ -39,9 +39,6 @@ namespace RTC
 		 *   boundary.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class ByePacket : public Packet
 		{
 			// We need that compound packet calls protected and private methods in
@@ -70,7 +67,7 @@ namespace RTC
 			 * Parse a ByePacket.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * To be used only by `CompoundPacket::Parse()`.
 			 */
 			static ByePacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
 

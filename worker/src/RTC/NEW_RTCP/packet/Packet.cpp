@@ -162,8 +162,20 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (length < Packet::CommonHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "length (%zu bytes) cannot be lower than %zu", length, Packet::CommonHeaderLength);
+			}
+
 			// The Length field is the length of the RTCP packet in 32-bit words minus
-			// one, so the maximum representable packet length is (65535 + 1) * 4 bytes.
+			// one, so the length must be multiple of 4 bytes.
+			if (!Utils::Byte::IsPaddedTo4Bytes(length))
+			{
+				MS_THROW_TYPE_ERROR("length (%zu bytes) must be multiple of 4", length);
+			}
+
+			// The maximum representable packet length is (65535 + 1) * 4 bytes.
 			if (length > (std::numeric_limits<uint16_t>::max() + 1) * 4)
 			{
 				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 262144", length);
