@@ -52,14 +52,16 @@ namespace RTC
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = Packet::PacketType2String.find(packetType);
+			const auto it = Packet::PacketType2String.find(packetType);
 
 			if (it == Packet::PacketType2String.end())
 			{
 				return Unknown;
 			}
 
-			return it->second;
+			const std::string& packetTypeString = it->second;
+
+			return packetTypeString;
 		}
 
 		bool Packet::IsPacket(

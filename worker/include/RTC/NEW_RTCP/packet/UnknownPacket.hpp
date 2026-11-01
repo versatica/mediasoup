@@ -32,7 +32,7 @@ namespace RTC
 
 		public:
 			/**
-			 * Parse a UnknownPacket.
+			 * Parse an UnknownPacket.
 			 *
 			 * @remarks
 			 * `bufferLength` may exceed the exact length of the packet.
@@ -41,7 +41,7 @@ namespace RTC
 
 		private:
 			/**
-			 * Parse a UnknownPacket.
+			 * Parse an UnknownPacket.
 			 *
 			 * @remarks
 			 * To be used only by `CompoundPacket::Parse()`.

@@ -80,6 +80,7 @@ namespace RTC
 			if (packet->HasReason())
 			{
 				const uint8_t reasonLength = packet->GetReasonLength();
+
 				// The Reason string starts right after the 1 byte Reason length field.
 				const size_t reasonEndOffset = ssrcsEndOffset + 1 + reasonLength;
 
@@ -202,7 +203,7 @@ namespace RTC
 				std::memmove(
 				  GetReasonLengthPointer() + 4,
 				  GetReasonLengthPointer(),
-				  Utils::Byte::PadTo4Bytes(1u + GetReasonLength()));
+				  Utils::Byte::PadTo4Bytes(size_t{ 1 } + GetReasonLength()));
 			}
 
 			// Add the new ssrc.
@@ -223,14 +224,17 @@ namespace RTC
 
 			const size_t previousLength      = GetLength();
 			const size_t previousLengthField = GetLengthFieldComputed();
+
 			// The previous total length of Reason length and Reason fields padded
 			// to 4 bytes.
 			const uint16_t previousReasonFieldsPaddedLength =
-			  HasReason() ? Utils::Byte::PadTo4Bytes(1u + GetReasonLength()) : 0;
+			  HasReason() ? Utils::Byte::PadTo4Bytes(size_t{ 1 } + GetReasonLength()) : 0;
+
 			// The new total length of Reason length and Reason fields padded to
 			// 4 bytes.
 			const uint16_t newReasonFieldsPaddedLength =
 			  !reason.empty() ? Utils::Byte::PadTo4Bytes(1 + reason.size()) : 0;
+
 			const size_t newLength = size_t{ previousLength } - size_t{ previousReasonFieldsPaddedLength } +
 			                         size_t{ newReasonFieldsPaddedLength };
 

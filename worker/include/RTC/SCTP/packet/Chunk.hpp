@@ -48,8 +48,8 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			using ParametersIterator  = typename std::vector<Parameter*>::const_iterator;
-			using ErrorCausesIterator = typename std::vector<ErrorCause*>::const_iterator;
+			using ParametersIterator  = std::vector<Parameter*>::const_iterator;
+			using ErrorCausesIterator = std::vector<ErrorCause*>::const_iterator;
 
 		public:
 			/**

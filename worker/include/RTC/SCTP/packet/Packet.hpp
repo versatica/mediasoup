@@ -53,7 +53,7 @@ namespace RTC
 		class Packet : public Serializable
 		{
 		public:
-			using ChunksIterator = typename std::vector<Chunk*>::const_iterator;
+			using ChunksIterator = std::vector<Chunk*>::const_iterator;
 
 		public:
 			/**

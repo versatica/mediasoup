@@ -139,7 +139,7 @@ namespace RTC
 
 		protected:
 			/**
-			 * Whether given buffer could be a a valid RTCP packet.
+			 * Whether given buffer could be a valid RTCP packet.
 			 *
 			 * @param buffer
 			 * @param bufferLength - Can be greater than real packet length.

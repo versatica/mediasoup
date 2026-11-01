@@ -19,8 +19,9 @@ namespace RTC
 		class CompoundPacket : public Serializable
 		{
 		public:
-			using PacketsIterator = typename std::vector<Packet*>::const_iterator;
+			using PacketsIterator = std::vector<Packet*>::const_iterator;
 
+		public:
 			/**
 			 * Parse an RTCP compound packet.
 			 *
