@@ -51,7 +51,10 @@ namespace RTC
 
 				Packet* packet{ nullptr }; // NOLINT(misc-const-correctness)
 
-				MS_DEBUG_DEV("parsing RTCP packet [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, packetType);
+				MS_DEBUG_DEV(
+				  "parsing RTCP packet [ptr:%zu, type:%" PRIu8 "]",
+				  ptr - buffer,
+				  static_cast<uint8_t>(packetType));
 
 				switch (packetType)
 				{
@@ -165,6 +168,21 @@ namespace RTC
 			return compoundPacket;
 		}
 
+		CompoundPacket* CompoundPacket::Factory(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			// No space for a single packet.
+			if (bufferLength < Packet::CommonHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			// NOTE: A compound packet has no header of its own, so its length is 0
+			// until a packet is added.
+			return new CompoundPacket(buffer, bufferLength);
+		}
+
 		/* Instance methods. */
 
 		CompoundPacket::CompoundPacket(uint8_t* buffer, size_t bufferLength)
@@ -241,17 +259,25 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->needsConsolidation = true;
+			SetNeedsConsolidation(true);
 
 			// When the application completes the packet it must call
-			// `packet->Consolidate()` and that will trigger this event.
-			packet->SetConsolidatedListener(
-			  [this, packet]()
+			// `packet->Consolidate()` or `packet->Discard()` and that will trigger
+			// this event.
+			packet->SetBuildInPlaceListener(
+			  [this, packet](bool consolidate) -> void
 			  {
+				  if (!consolidate)
+				  {
+					  SetNeedsConsolidation(false);
+
+					  delete packet;
+
+					  return;
+				  }
+
 				  try
 				  {
-					  // NOTE: Packet class doesn't have `NeedsConsolidation()` method.
-
 					  // Fix buffer length assigned to the packet.
 					  packet->SetBufferLength(packet->GetLength());
 
@@ -262,25 +288,16 @@ namespace RTC
 
 					  // Add the packet to the list.
 					  this->packets.push_back(packet);
-					  this->needsConsolidation = false;
+
+					  SetNeedsConsolidation(false);
 				  }
 				  catch (const MediaSoupError& error)
 				  {
-					  this->needsConsolidation = false;
+					  SetNeedsConsolidation(false);
 
 					  throw;
 				  }
 			  });
-		}
-
-		void CompoundPacket::AssertDoesNotNeedConsolidation() const
-		{
-			MS_TRACE();
-
-			if (this->needsConsolidation)
-			{
-				MS_THROW_ERROR("compound packet needs consolidation of some ongoing packet");
-			}
 		}
 	} // namespace NEW_RTCP
 } // namespace RTC

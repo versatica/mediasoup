@@ -7,6 +7,7 @@
 #include "RTC/SCTP/packet/TLV.hpp"
 #include <ankerl/unordered_dense.h>
 #include <string>
+#include <typeinfo> // typeid
 #include <vector>
 
 namespace RTC
@@ -302,11 +303,16 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the parameter is
-			 *   completed.
+			 *   completed, or `Discard()` to remove it from the chunk (which deletes
+			 *   it). Meanwhile, `GetLength()` of the chunk does not include the
+			 *   length of the parameter.
 			 * - The caller MUST NOT free the obtained parameter pointer since it's
 			 *   now part of the chunk.
 			 * - The caller MUST free the obtained parameter only in case the
 			 *   `Consolidate()` method on the parameter throws.
+			 * - The caller MUST NOT invoke `Consolidate()` or `Discard()` on the
+			 *   obtained parameter once the chunk has been destroyed, since the
+			 *   parameter holds a listener that refers to the chunk.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -422,11 +428,16 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the error cause is
-			 *   completed.
+			 *   completed, or `Discard()` to remove it from the chunk (which deletes
+			 *   it). Meanwhile, `GetLength()` of the chunk does not include the
+			 *   length of the error cause.
 			 * - The caller MUST NOT free the obtained error cause pointer since it's
 			 *   now part of the chunk.
 			 * - The caller MUST free the obtained error cause only in case the
 			 *   `Consolidate()` method on the error cause throws.
+			 * - The caller MUST NOT invoke `Consolidate()` or `Discard()` on the
+			 *   obtained error cause once the chunk has been destroyed, since the
+			 *   error cause holds a listener that refers to the chunk.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -458,16 +469,6 @@ namespace RTC
 				HandleInPlaceErrorCause(errorCause);
 
 				return errorCause;
-			}
-
-			/**
-			 * Whether `BuildParameterInPlace()` or `BuildErrorCauseInPlace()` was
-			 * called before and the caller didn't invoke `Consolidate()` on the
-			 * returned parameter or error cause yet.
-			 */
-			virtual bool NeedsConsolidation() const final
-			{
-				return this->needsConsolidation;
 			}
 
 		protected:
@@ -653,17 +654,11 @@ namespace RTC
 
 			virtual void AssertCanHaveErrorCauses() const final;
 
-			virtual void AssertDoesNotNeedConsolidation() const final;
-
 		private:
 			// Parameters.
 			std::vector<Parameter*> parameters;
 			// Error Causes.
 			std::vector<ErrorCause*> errorCauses;
-			// Whether `BuildParameterInPlace()` or `BuildErrorCauseInPlace()` was
-			// called and the caller didn't invoke `Consolidate()` on the returned
-			// parameter or error cause yet.
-			bool needsConsolidation{ false };
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/Serializable.hpp"
+#include <typeinfo> // typeid
 #include <vector>
 
 namespace RTC
@@ -214,13 +215,21 @@ namespace RTC
 			 *   caller didn't invoke `Consolidate()` on the returned chunk yet.
 			 *
 			 * @remarks
-			 * - The caller MUST invoke `Consolidate()` once the chunk is completed.
+			 * - The caller MUST invoke `Consolidate()` once the chunk is completed,
+			 *   or `Discard()` to remove it from the packet (which deletes it).
+			 *   Meanwhile, `GetLength()` of the packet does not include the length
+			 *   of the chunk.
+			 * - `Consolidate()` and `Discard()` throw without changing anything if
+			 *   the chunk has some ongoing parameter or error cause.
 			 * - The caller MUST NOT call `BuildChunkInPlace()` while other chunk is
 			 *   in progress.
 			 * - The caller MUST NOT free the obtained chunk pointer since it's now
 			 *   part of the packet.
 			 * - The caller MUST free the obtained chunk only in case the
-			 *   `Consolidate()` method on the chunk throws.
+			 *   `Consolidate()` method on the chunk throws for any other reason.
+			 * - The caller MUST NOT invoke `Consolidate()` or `Discard()` on the
+			 *   obtained chunk once the packet has been destroyed, since the chunk
+			 *   holds a listener that refers to the packet.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -252,15 +261,6 @@ namespace RTC
 			}
 
 			/**
-			 * Whether `BuildChunkInPlace()` was called and the caller didn't invoke
-			 * `Consolidate()` on the returned chunk yet.
-			 */
-			bool NeedsConsolidation() const
-			{
-				return this->needsConsolidation;
-			}
-
-			/**
 			 * Calculate CRC32C value of the whole packet and insert it into the
 			 * Checksum field.
 			 */
@@ -288,14 +288,9 @@ namespace RTC
 
 			virtual void HandleInPlaceChunk(Chunk* chunk) final;
 
-			virtual void AssertDoesNotNeedConsolidation() const final;
-
 		private:
 			// Chunks.
 			std::vector<Chunk*> chunks;
-			// Whether `BuildChunkInPlace()` was called and the caller didn't invoke
-			// `Consolidate()` on the returned chunk yet.
-			bool needsConsolidation{ false };
 		};
 	} // namespace SCTP
 } // namespace RTC

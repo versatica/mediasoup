@@ -10,8 +10,6 @@
 
 - Remove `NEW_` prefix in all `#define MS_CLASS` in `.cpp` files.
 
-- We are not implementing `NeedsConsolidation()` in `Packet` class (only in `CompoundPacket` class). For now it's ok. Let's see.
-
 - Tests for `Packet` and `CompoundPacket`.
 
 - Fuzzer for `Packet` and `CompoundPacket`.
