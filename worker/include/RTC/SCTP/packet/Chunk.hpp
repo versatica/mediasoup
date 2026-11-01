@@ -283,15 +283,17 @@ namespace RTC
 			 * - MediaSoupError - If the chunk subclass cannot have parameters.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
+			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
+			 *   error cause yet.
 			 */
 			virtual void AddParameter(const Parameter* parameter) final;
 
 			/**
-			 * Build a parameter within the chunk's buffer and append it to the list
-			 * of parameters. The caller can perform modifications in that parameter
-			 * and those will affect the chunk body where the parameter is serialized.
-			 * The desired parameter class type is given via template argument.
+			 * Build a parameter within the chunk's buffer, which is appended to the
+			 * list of parameters once `Consolidate()` is invoked on it. The caller
+			 * can perform modifications in that parameter and those will affect the
+			 * chunk body where the parameter is serialized. The desired parameter
+			 * class type is given via template argument.
 			 *
 			 * @returns Pointer of the created parameter specific class.
 			 *
@@ -299,7 +301,8 @@ namespace RTC
 			 * - MediaSoupError - If the chunk subclass cannot have parameters.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
+			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
+			 *   error cause yet.
 			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the parameter is
@@ -407,16 +410,17 @@ namespace RTC
 			 * - MediaSoupError - If the chunk subclass cannot have error causes.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
+			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
+			 *   error cause yet.
 			 */
 			virtual void AddErrorCause(const ErrorCause* errorCause) final;
 
 			/**
-			 * Build a error cause within the chunk's buffer and append it to the
-			 * list of error causes. The caller can perform modifications in that
-			 * error cause and those will affect the chunk body where the error cause
-			 * is serialzed. The desired error cause class type is given via template
-			 * argument.
+			 * Build an error cause within the chunk's buffer, which is appended to
+			 * the list of error causes once `Consolidate()` is invoked on it. The
+			 * caller can perform modifications in that error cause and those will
+			 * affect the chunk body where the error cause is serialized. The desired
+			 * error cause class type is given via template argument.
 			 *
 			 * @returns Pointer of the created error cause specific class.
 			 *
@@ -424,7 +428,8 @@ namespace RTC
 			 * - MediaSoupError - If the chunk subclass cannot have error causes.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
+			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
+			 *   error cause yet.
 			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the error cause is

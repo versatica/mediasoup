@@ -198,21 +198,24 @@ namespace RTC
 			 *
 			 * @throw
 			 * - MediaSoupError - If `BuildChunkInPlace()` was called before and the
-			 *   caller didn't invoke `Consolidate()` on the returned chunk yet.
+			 *   caller didn't invoke `Consolidate()` or `Discard()` on the returned
+			 *   chunk yet.
 			 */
 			void AddChunk(const Chunk* chunk);
 
 			/**
-			 * Build a chunk within the packet's buffer and append it to the list of
-			 * chunks. The caller can perform modifications in that chunk and those
-			 * will affect the packet body where the chunk is serialzed. The desired
-			 * chunk class type is given via template argument.
+			 * Build a chunk within the packet's buffer, which is appended to the list
+			 * of chunks once `Consolidate()` is invoked on it. The caller can perform
+			 * modifications in that chunk and those will affect the packet body
+			 * where the chunk is serialized. The desired chunk class type is given
+			 * via template argument.
 			 *
 			 * @returns Pointer of the created chunk specific class.
 			 *
 			 * @throw
 			 * - MediaSoupError - If `BuildChunkInPlace()` was called before and the
-			 *   caller didn't invoke `Consolidate()` on the returned chunk yet.
+			 *   caller didn't invoke `Consolidate()` or `Discard()` on the returned
+			 *   chunk yet.
 			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the chunk is completed,

@@ -149,6 +149,9 @@ namespace RTC
 		 * - The listener is removed before being invoked, so this method or
 		 *   `Discard()` can only be called once per `SetBuildInPlaceListener()`
 		 *   call.
+		 * - Once consolidated, the Serializable MUST NOT be modified, since the
+		 *   parent does not track later changes (for example, a change in its
+		 *   length would leave the parent with a wrong length).
 		 *
 		 * @throw
 		 * - MediaSoupError - If `SetBuildInPlaceListener()` was not called first.
