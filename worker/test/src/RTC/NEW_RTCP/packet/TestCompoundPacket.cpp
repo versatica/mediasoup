@@ -732,6 +732,122 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		REQUIRE(unknownPacket->HasUnknownMessageType() == true);
 	}
 
+	SECTION("CompoundPacket::Parse() with a XR packet, Serialize() and Clone() succeed")
+	{
+		const auto checkPackets =
+		  [](const RTC::NEW_RTCP::CompoundPacket* compoundPacket, const uint8_t* buffer) -> void
+		{
+			const auto* const packet1 =
+			  static_cast<const RTC::NEW_RTCP::ByePacket*>(compoundPacket->GetPacketAt(0));
+			const auto* const packet2 =
+			  static_cast<const RTC::NEW_RTCP::XrPacket*>(compoundPacket->GetPacketAt(1));
+			const auto* const rrtExtendedReport =
+			  static_cast<const RTC::NEW_RTCP::RrtExtendedReport*>(packet2->GetExtendedReportAt(0));
+			const auto* const dlrrExtendedReport =
+			  static_cast<const RTC::NEW_RTCP::DlrrExtendedReport*>(packet2->GetExtendedReportAt(1));
+			const auto dlrrSubBlocks = dlrrExtendedReport->GetSubBlocks();
+
+			REQUIRE(packet1->GetBuffer() == buffer);
+			REQUIRE(packet1->GetLength() == 8);
+			REQUIRE(packet1->GetSsrcs() == std::vector<uint32_t>{ 1111 });
+
+			REQUIRE(packet2->GetBuffer() == buffer + 8);
+			REQUIRE(packet2->GetLength() == 36);
+			REQUIRE(packet2->GetSsrc() == 0x12345678);
+			REQUIRE(packet2->GetExtendedReportsCount() == 2);
+
+			REQUIRE(rrtExtendedReport->GetBuffer() == buffer + 16);
+			REQUIRE(rrtExtendedReport->GetLength() == 12);
+			REQUIRE(rrtExtendedReport->GetType() == RTC::NEW_RTCP::ExtendedReport::BlockType::RRT);
+			REQUIRE(rrtExtendedReport->GetNtp().seconds == 1111);
+			REQUIRE(rrtExtendedReport->GetNtp().fractions == 2222);
+
+			REQUIRE(dlrrExtendedReport->GetBuffer() == buffer + 28);
+			REQUIRE(dlrrExtendedReport->GetLength() == 16);
+			REQUIRE(dlrrExtendedReport->GetType() == RTC::NEW_RTCP::ExtendedReport::BlockType::DLRR);
+			REQUIRE(dlrrSubBlocks.size() == 1);
+			REQUIRE(dlrrSubBlocks[0].ssrc == 3333);
+			REQUIRE(dlrrSubBlocks[0].lastReceiverReport == 4444);
+			REQUIRE(dlrrSubBlocks[0].delaySinceLastReceiverReport == 5555);
+		};
+
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// Bye Packet
+			// V=2, P=0, SC=1, PT:203, Length: 1
+			0b10000001, 0xCB, 0x00, 0x01,
+			// SSRC 1: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// XR Packet
+			// V=2, P=0, Reserved=0, PT:207, Length: 8
+			0b10000000, 0xCF, 0x00, 0x08,
+			// SSRC: 0x12345678
+			0x12, 0x34, 0x56, 0x78,
+			// Extended Report block 1
+			// BT: 4 (RRT), Reserved: 0, Block length: 2
+			0x04, 0x00, 0x00, 0x02,
+			// NTP timestamp, most significant word: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// NTP timestamp, least significant word: 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// Extended Report block 2
+			// BT: 5 (DLRR), Reserved: 0, Block length: 3
+			0x05, 0x00, 0x00, 0x03,
+			// SSRC: 3333
+			0x00, 0x00, 0x0D, 0x05,
+			// LRR: 4444
+			0x00, 0x00, 0x11, 0x5C,
+			// DLRR: 5555
+			0x00, 0x00, 0x15, 0xB3
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket{
+			RTC::NEW_RTCP::CompoundPacket::Parse(buffer, sizeof(buffer))
+		};
+
+		CHECK_RTCP_COMPOUND_PACKET(
+		  /*compoundPacket*/ compoundPacket.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 44,
+		  /*packetsCount*/ 2);
+
+		checkPackets(compoundPacket.get(), buffer);
+
+		/* Serialize it. */
+
+		compoundPacket->Serialize(rtcpCommon::SerializeBuffer, sizeof(rtcpCommon::SerializeBuffer));
+
+		std::memset(buffer, 0xFF, sizeof(buffer));
+
+		CHECK_RTCP_COMPOUND_PACKET(
+		  /*compoundPacket*/ compoundPacket.get(),
+		  /*buffer*/ rtcpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
+		  /*length*/ 44,
+		  /*packetsCount*/ 2);
+
+		checkPackets(compoundPacket.get(), rtcpCommon::SerializeBuffer);
+
+		/* Clone it. */
+
+		compoundPacket.reset(
+		  compoundPacket->Clone(rtcpCommon::CloneBuffer, sizeof(rtcpCommon::CloneBuffer)));
+
+		std::memset(rtcpCommon::SerializeBuffer, 0xFF, sizeof(rtcpCommon::SerializeBuffer));
+
+		CHECK_RTCP_COMPOUND_PACKET(
+		  /*compoundPacket*/ compoundPacket.get(),
+		  /*buffer*/ rtcpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
+		  /*length*/ 44,
+		  /*packetsCount*/ 2);
+
+		checkPackets(compoundPacket.get(), rtcpCommon::CloneBuffer);
+	}
+
 	SECTION("CompoundPacket::Factory() using AddPacket() succeeds")
 	{
 		const auto checkPackets =
