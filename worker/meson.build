@@ -730,6 +730,10 @@ fuzzer_sources = [
   'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
+  'fuzzer/src/RTC/NEW_RTCP/packet/FuzzerByePacket.cpp',
+  'fuzzer/src/RTC/NEW_RTCP/packet/FuzzerCompoundPacket.cpp',
+  'fuzzer/src/RTC/NEW_RTCP/packet/FuzzerSdesPacket.cpp',
+  'fuzzer/src/RTC/NEW_RTCP/packet/FuzzerUnknownPacket.cpp',
   'fuzzer/src/RTC/SCTP/association/FuzzerStateCookie.cpp',
   'fuzzer/src/RTC/SCTP/packet/FuzzerPacket.cpp',
 ]

@@ -3,9 +3,9 @@
 
 #include "common.hpp"
 
-namespace FuzzerRtcRtcPacket
+namespace FuzzerRtcRtpPacket
 {
 	void Fuzz(const uint8_t* data, size_t len);
-}
+} // namespace FuzzerRtcRtpPacket
 
 #endif

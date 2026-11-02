@@ -1,0 +1,144 @@
+#include "RTC/NEW_RTCP/packet/FuzzerCompoundPacket.hpp"
+#include "RTC/NEW_RTCP/packet/ByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerSdesPacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerUnknownPacket.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
+
+namespace
+{
+	thread_local uint8_t CompoundPacketSerializeBuffer[65536];
+	thread_local uint8_t CompoundPacketCloneBuffer[65536];
+} // namespace
+
+void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
+{
+	const auto fuzzPackets = [](const RTC::NEW_RTCP::CompoundPacket* compoundPacket) -> void
+	{
+		compoundPacket->HasPackets();
+		compoundPacket->GetPacketsCount();
+		compoundPacket->GetPacketAt(0);
+		compoundPacket->GetPacketAt(1);
+		compoundPacket->GetPacketAt(2);
+		compoundPacket->GetPacketAt(666);
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SdesPacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ByePacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPacket>();
+
+		for (auto it = compoundPacket->PacketsBegin(); it != compoundPacket->PacketsEnd(); ++it)
+		{
+			const RTC::NEW_RTCP::Packet* const packet = *it;
+
+			packet->GetVersion();
+			packet->GetType();
+			packet->HasUnknownType();
+			packet->HasPadding();
+
+			switch (packet->GetType())
+			{
+				case RTC::NEW_RTCP::Packet::PacketType::IJ:
+				{
+					// TODO
+
+					break;
+				}
+
+				case RTC::NEW_RTCP::Packet::PacketType::SR:
+				{
+					// TODO
+
+					break;
+				}
+
+				case RTC::NEW_RTCP::Packet::PacketType::RR:
+				{
+					// TODO
+
+					break;
+				}
+
+				case RTC::NEW_RTCP::Packet::PacketType::SDES:
+				{
+					const auto* const sdesPacket = static_cast<const RTC::NEW_RTCP::SdesPacket*>(packet);
+
+					FuzzerRtcRtcpSdesPacket::Fuzz(sdesPacket);
+
+					break;
+				}
+
+				case RTC::NEW_RTCP::Packet::PacketType::BYE:
+				{
+					const auto* const byePacket = static_cast<const RTC::NEW_RTCP::ByePacket*>(packet);
+
+					FuzzerRtcRtcpByePacket::Fuzz(byePacket);
+
+					break;
+				}
+
+				case RTC::NEW_RTCP::Packet::PacketType::APP:
+				{
+					// TODO
+
+					break;
+				}
+
+				case RTC::NEW_RTCP::Packet::PacketType::RTPFB:
+				{
+					// TODO
+
+					break;
+				}
+
+				case RTC::NEW_RTCP::Packet::PacketType::PSFB:
+				{
+					// TODO
+
+					break;
+				}
+
+				case RTC::NEW_RTCP::Packet::PacketType::XR:
+				{
+					// TODO
+
+					break;
+				}
+
+				default:
+				{
+					const auto* const unknownPacket = static_cast<const RTC::NEW_RTCP::UnknownPacket*>(packet);
+
+					FuzzerRtcRtcpUnknownPacket::Fuzz(unknownPacket);
+				}
+			}
+		}
+	};
+
+	RTC::NEW_RTCP::CompoundPacket* const compoundPacket =
+	  RTC::NEW_RTCP::CompoundPacket::Parse(data, len);
+
+	if (!compoundPacket)
+	{
+		return;
+	}
+
+	fuzzPackets(compoundPacket);
+
+	compoundPacket->Serialize(CompoundPacketSerializeBuffer, len);
+
+	fuzzPackets(compoundPacket);
+
+	auto* const clonedCompoundPacket = compoundPacket->Clone(CompoundPacketCloneBuffer, len);
+
+	delete compoundPacket;
+
+	fuzzPackets(clonedCompoundPacket);
+
+	clonedCompoundPacket->Serialize(CompoundPacketSerializeBuffer, len);
+
+	fuzzPackets(clonedCompoundPacket);
+
+	delete clonedCompoundPacket;
+}

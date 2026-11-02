@@ -10,6 +10,7 @@
 #include "RTC/FuzzerRateCalculator.hpp"
 #include "RTC/FuzzerSeqManager.hpp"
 #include "RTC/ICE/FuzzerStunPacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerCompoundPacket.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
 #include "RTC/RTP/Codecs/FuzzerAV1.hpp"
 #include "RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
@@ -175,7 +176,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 
 	if (fuzzRtp)
 	{
-		FuzzerRtcRtcPacket::Fuzz(data, len);
+		FuzzerRtcRtpPacket::Fuzz(data, len);
 		FuzzerRtcRtpStreamSend::Fuzz(data, len);
 		FuzzerRtcRtpRetransmissionBuffer::Fuzz(data, len);
 		FuzzerRtcSeqManager::Fuzz(data, len);
@@ -185,6 +186,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	if (fuzzRtcp)
 	{
 		FuzzerRtcRtcpPacket::Fuzz(data, len);
+		FuzzerRtcRtcpCompoundPacket::Fuzz(data, len);
 	}
 
 	if (fuzzCodecs)
