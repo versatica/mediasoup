@@ -56,7 +56,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		REQUIRE(compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ByePacket>() != nullptr);
 		REQUIRE(compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPacket>() != nullptr);
 
-		const auto* packet1 =
+		const auto* const packet1 =
 		  static_cast<const RTC::NEW_RTCP::ByePacket*>(compoundPacket->GetPacketAt(0));
 
 		REQUIRE(compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ByePacket>() == packet1);
@@ -76,7 +76,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		REQUIRE(packet1->GetBuffer()[packet1->GetLength() - 1] == 0);
 		REQUIRE(packet1->GetBuffer()[packet1->GetLength() - 2] == 'r');
 
-		const auto* packet2 =
+		const auto* const packet2 =
 		  static_cast<const RTC::NEW_RTCP::UnknownPacket*>(compoundPacket->GetPacketAt(1));
 
 		REQUIRE(compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPacket>() == packet2);
@@ -171,15 +171,15 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		const auto checkPackets =
 		  [](const RTC::NEW_RTCP::CompoundPacket* compoundPacket, const uint8_t* buffer) -> void
 		{
-			const auto* packet1 =
+			const auto* const packet1 =
 			  static_cast<const RTC::NEW_RTCP::ByePacket*>(compoundPacket->GetPacketAt(0));
-			const auto* packet2 =
+			const auto* const packet2 =
 			  static_cast<const RTC::NEW_RTCP::SdesPacket*>(compoundPacket->GetPacketAt(1));
 			const auto sdesItems = packet2->GetItems();
-			const auto* packet3 =
+			const auto* const packet3 =
 			  static_cast<const RTC::NEW_RTCP::ReceiverReportPacket*>(compoundPacket->GetPacketAt(2));
 			const auto reportBlocks = packet3->GetReportBlocks();
-			const auto* packet4 =
+			const auto* const packet4 =
 			  static_cast<const RTC::NEW_RTCP::SenderReportPacket*>(compoundPacket->GetPacketAt(3));
 
 			REQUIRE(packet1->GetBuffer() == buffer);
@@ -240,7 +240,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		/* Build a packet and consolidate it. */
 
-		auto* packet1 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::ByePacket>();
+		auto* const packet1 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::ByePacket>();
 
 		packet1->AddSsrc(1111);
 		packet1->SetReason("foo");
@@ -259,7 +259,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		/* Build a packet and discard it. */
 
-		auto* packet2 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::ByePacket>();
+		auto* const packet2 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::ByePacket>();
 
 		packet2->AddSsrc(2222);
 		packet2->AddSsrc(2223);
@@ -275,7 +275,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		/* Build another packet in the same place and consolidate it. */
 
-		auto* packet3 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::SdesPacket>();
+		auto* const packet3 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::SdesPacket>();
 
 		REQUIRE(packet3->GetBuffer() == compoundPacket->GetBuffer() + 12);
 
@@ -289,7 +289,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		/* Build another packet and consolidate it. */
 
-		auto* packet4 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::ReceiverReportPacket>();
+		auto* const packet4 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::ReceiverReportPacket>();
 
 		REQUIRE(packet4->GetBuffer() == compoundPacket->GetBuffer() + 28);
 
@@ -306,7 +306,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		/* Build another packet and consolidate it. */
 
-		auto* packet5 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::SenderReportPacket>();
+		auto* const packet5 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::SenderReportPacket>();
 
 		REQUIRE(packet5->GetBuffer() == compoundPacket->GetBuffer() + 60);
 

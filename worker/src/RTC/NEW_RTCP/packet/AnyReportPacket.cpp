@@ -28,8 +28,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto* reportBlocksPointer    = GetReportBlocksPointer();
-			const uint8_t numberOfReportBlocks = GetNumberOfReportBlocks();
+			const auto* const reportBlocksPointer = GetReportBlocksPointer();
+			const uint8_t numberOfReportBlocks    = GetNumberOfReportBlocks();
 
 			std::vector<ReportBlock> reportBlocks;
 
@@ -37,7 +37,7 @@ namespace RTC
 
 			for (uint8_t idx{ 0 }; idx < numberOfReportBlocks; ++idx)
 			{
-				const auto* ptr = reportBlocksPointer + (idx * AnyReportPacket::ReportBlockLength);
+				const auto* const ptr = reportBlocksPointer + (idx * AnyReportPacket::ReportBlockLength);
 
 				reportBlocks.push_back(
 				  { .ssrc                       = Utils::Byte::Get4Bytes(ptr, 0),
@@ -78,7 +78,7 @@ namespace RTC
 
 			// The new report block goes right after the last one (the RC field has
 			// not been incremented yet).
-			auto* ptr = GetProfileSpecificExtensionsPointer();
+			auto* const ptr = GetProfileSpecificExtensionsPointer();
 
 			// Write the report block.
 			Utils::Byte::Set4Bytes(ptr, 0, reportBlock.ssrc);

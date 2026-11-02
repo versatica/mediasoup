@@ -148,7 +148,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* commonHeader = GetCommonHeaderPointer();
+			auto* const commonHeader = GetCommonHeaderPointer();
 
 			commonHeader->version    = 2;
 			commonHeader->padding    = 0;

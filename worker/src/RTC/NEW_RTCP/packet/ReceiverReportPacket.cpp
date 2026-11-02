@@ -42,7 +42,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
-			auto* packet = new ReceiverReportPacket(buffer, bufferLength);
+			auto* const packet = new ReceiverReportPacket(buffer, bufferLength);
 
 			packet->InitializeHeader(
 			  Packet::PacketType::RR, ReceiverReportPacket::ReceiverReportHeaderLength);
@@ -61,7 +61,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* packet = new ReceiverReportPacket(const_cast<uint8_t*>(buffer), bufferLength);
+			auto* const packet = new ReceiverReportPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
@@ -106,7 +106,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedPacket = new ReceiverReportPacket(buffer, bufferLength);
+			auto* const clonedPacket = new ReceiverReportPacket(buffer, bufferLength);
 
 			CloneInto(clonedPacket);
 
@@ -117,7 +117,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedPacket = new ReceiverReportPacket(const_cast<uint8_t*>(buffer), GetLength());
+			auto* const softClonedPacket =
+			  new ReceiverReportPacket(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedPacket);
 

@@ -79,7 +79,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
-			auto* packet = new SdesPacket(buffer, bufferLength);
+			auto* const packet = new SdesPacket(buffer, bufferLength);
 
 			packet->InitializeHeader(Packet::PacketType::SDES, Packet::CommonHeaderLength);
 
@@ -93,7 +93,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* packet = new SdesPacket(const_cast<uint8_t*>(buffer), bufferLength);
+			auto* const packet = new SdesPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
@@ -238,7 +238,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedPacket = new SdesPacket(buffer, bufferLength);
+			auto* const clonedPacket = new SdesPacket(buffer, bufferLength);
 
 			CloneInto(clonedPacket);
 
@@ -249,7 +249,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto* buffer = GetBuffer();
+			const auto* const buffer = GetBuffer();
 
 			std::vector<Item> items;
 			size_t offset{ Packet::CommonHeaderLength };
@@ -349,7 +349,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedPacket = new SdesPacket(const_cast<uint8_t*>(buffer), GetLength());
+			auto* const softClonedPacket = new SdesPacket(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedPacket);
 
@@ -360,13 +360,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint8_t* chunkPointer = GetVariableLengthValuePointer();
-			uint8_t* itemsEndPointer{ nullptr };
+			const uint8_t* chunkPointer = GetVariableLengthValuePointer();
+			const uint8_t* itemsEndPointer{ nullptr };
 
 			for (uint8_t chunkIdx{ 0 }; chunkIdx < GetCount(); ++chunkIdx)
 			{
 				// Skip the SSRC/CSRC.
-				uint8_t* ptr = chunkPointer + 4;
+				const uint8_t* ptr = chunkPointer + 4;
 
 				while (Utils::Byte::Get1Byte(ptr, 0) != 0)
 				{
@@ -379,7 +379,7 @@ namespace RTC
 				chunkPointer += Utils::Byte::PadTo4Bytes(static_cast<size_t>(ptr - chunkPointer) + 1);
 			}
 
-			return itemsEndPointer;
+			return const_cast<uint8_t*>(itemsEndPointer);
 		}
 	} // namespace NEW_RTCP
 } // namespace RTC
