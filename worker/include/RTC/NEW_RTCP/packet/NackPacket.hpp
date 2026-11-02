@@ -91,7 +91,8 @@ namespace RTC
 			 * @remarks
 			 * - To be used only by `CompoundPacket::Parse()`.
 			 */
-			static NackPacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
+			static NackPacket* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding);
 
 		private:
 			/**
@@ -108,7 +109,8 @@ namespace RTC
 
 			size_t GetNumberOfItems() const
 			{
-				return (GetLength() - AnyFeedbackPacket::FeedbackHeaderLength) / NackPacket::NackItemLength;
+				return (GetLength() - GetPaddingLength() - AnyFeedbackPacket::FeedbackHeaderLength) /
+				       NackPacket::NackItemLength;
 			}
 
 			std::vector<Item> GetItems() const;

@@ -90,7 +90,8 @@ namespace RTC
 			 * @remarks
 			 * - To be used only by `CompoundPacket::Parse()`.
 			 */
-			static RembPacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
+			static RembPacket* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding);
 
 		private:
 			/**

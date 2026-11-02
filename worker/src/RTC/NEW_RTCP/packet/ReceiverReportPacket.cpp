@@ -17,8 +17,9 @@ namespace RTC
 
 			Packet::PacketType packetType;
 			size_t packetLength;
+			uint8_t padding;
 
-			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength))
+			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength, padding))
 			{
 				return nullptr;
 			}
@@ -30,7 +31,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			return ReceiverReportPacket::ParseStrict(buffer, bufferLength, packetLength);
+			return ReceiverReportPacket::ParseStrict(buffer, bufferLength, packetLength, padding);
 		}
 
 		ReceiverReportPacket* ReceiverReportPacket::Factory(uint8_t* buffer, size_t bufferLength)
@@ -57,11 +58,14 @@ namespace RTC
 		}
 
 		ReceiverReportPacket* ReceiverReportPacket::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, size_t packetLength)
+		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{
 			MS_TRACE();
 
-			if (packetLength < ReceiverReportPacket::ReceiverReportHeaderLength)
+			// Length of the packet excluding padding.
+			const size_t contentLength = packetLength - padding;
+
+			if (contentLength < ReceiverReportPacket::ReceiverReportHeaderLength)
 			{
 				MS_WARN_TAG(
 				  rtcp,
@@ -82,7 +86,7 @@ namespace RTC
 			  ReceiverReportPacket::ReceiverReportHeaderLength +
 			  (packet->GetNumberOfReportBlocks() * AnyReportPacket::ReportBlockLength);
 
-			if (reportBlocksEndOffset > packetLength)
+			if (reportBlocksEndOffset > contentLength)
 			{
 				MS_WARN_TAG(rtcp, "report blocks exceed the packet length");
 

@@ -119,7 +119,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			return (GetBuffer() + GetLength()) > GetProfileSpecificExtensionsPointer();
+			return (GetBuffer() + GetLength() - GetPaddingLength()) > GetProfileSpecificExtensionsPointer();
 		}
 	} // namespace NEW_RTCP
 } // namespace RTC

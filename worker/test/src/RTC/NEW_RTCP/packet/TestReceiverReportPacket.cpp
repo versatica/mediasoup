@@ -83,7 +83,9 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 60,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkReportBlocks(packet.get());
 
@@ -115,7 +117,9 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 60,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkReportBlocks(packet.get());
 
@@ -131,9 +135,79 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 60,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkReportBlocks(packet.get());
+	}
+
+	SECTION("ReceiverReportPacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, RC=0, PT:201, Length: 2
+			0b10100000, 0xC9, 0x00, 0x02,
+			// SSRC of packet sender: 0x5D931534
+			0x5D, 0x93, 0x15, 0x34,
+			// Padding: 4 bytes
+			0x00, 0x00, 0x00, 0x04,
+			// Extra space in the buffer
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> packet{
+			RTC::NEW_RTCP::ReceiverReportPacket::Parse(buffer, sizeof(buffer))
+		};
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 12,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RR,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 4);
+
+		REQUIRE(packet->GetSsrc() == 0x5D931534);
+		REQUIRE(packet->GetNumberOfReportBlocks() == 0);
+
+		/* Modify it (it removes the padding). */
+
+		// Padding is not a profile-specific extension, so AddReportBlock() does
+		// not throw.
+		packet->AddReportBlock(
+		  { .ssrc                       = 3333,
+			  .fractionLost               = 1,
+			  .totalLost                  = 2,
+			  .extendedHighestSeq         = 3,
+			  .jitter                     = 4,
+			  .lastSenderReport           = 5,
+			  .delaySinceLastSenderReport = 6 });
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 32,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RR,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		const auto reportBlocks = packet->GetReportBlocks();
+
+		REQUIRE(packet->GetNumberOfReportBlocks() == 1);
+		REQUIRE(reportBlocks.size() == 1);
+		REQUIRE(reportBlocks[0].ssrc == 3333);
+		REQUIRE(reportBlocks[0].delaySinceLastSenderReport == 6);
 	}
 
 	SECTION("ReceiverReportPacket::Parse() fails")
@@ -221,7 +295,9 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 8,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrc() == 0);
 		REQUIRE(packet->GetNumberOfReportBlocks() == 0);
@@ -253,7 +329,9 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 56,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkReportBlocks(packet.get());
 
@@ -269,7 +347,9 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 56,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkReportBlocks(packet.get());
 
@@ -285,7 +365,9 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 56,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkReportBlocks(packet.get());
 	}

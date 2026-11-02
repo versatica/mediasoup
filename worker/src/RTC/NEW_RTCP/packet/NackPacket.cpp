@@ -18,8 +18,9 @@ namespace RTC
 
 			Packet::PacketType packetType;
 			size_t packetLength;
+			uint8_t padding;
 
-			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength))
+			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength, padding))
 			{
 				return nullptr;
 			}
@@ -31,8 +32,8 @@ namespace RTC
 				return nullptr;
 			}
 
-			const auto messageType = static_cast<AnyTransportLayerFeedbackPacket::MessageType>(
-			  reinterpret_cast<const Packet::CommonHeader*>(buffer)->count);
+			const auto messageType =
+			  static_cast<AnyTransportLayerFeedbackPacket::MessageType>(buffer[0] & 0x1F);
 
 			if (messageType != AnyTransportLayerFeedbackPacket::MessageType::NACK)
 			{
@@ -41,7 +42,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			return NackPacket::ParseStrict(buffer, bufferLength, packetLength);
+			return NackPacket::ParseStrict(buffer, bufferLength, packetLength, padding);
 		}
 
 		NackPacket* NackPacket::Factory(uint8_t* buffer, size_t bufferLength)
@@ -70,14 +71,30 @@ namespace RTC
 			return packet;
 		}
 
-		NackPacket* NackPacket::ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength)
+		NackPacket* NackPacket::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{
 			MS_TRACE();
 
+			// Length of the packet excluding padding.
+			const size_t contentLength = packetLength - padding;
+
 			// The Feedback Control Information (FCI) must contain at least one item.
-			if (packetLength < AnyFeedbackPacket::FeedbackHeaderLength + NackPacket::NackItemLength)
+			if (contentLength < AnyFeedbackPacket::FeedbackHeaderLength + NackPacket::NackItemLength)
 			{
 				MS_WARN_TAG(rtcp, "no space for feedback header and at least one item");
+
+				return nullptr;
+			}
+
+			// The Feedback Control Information (FCI) must contain whole items.
+			if ((contentLength - AnyFeedbackPacket::FeedbackHeaderLength) % NackPacket::NackItemLength != 0)
+			{
+				MS_WARN_TAG(
+				  rtcp,
+				  "Feedback Control Information length (%zu bytes) is not multiple of %zu",
+				  contentLength - AnyFeedbackPacket::FeedbackHeaderLength,
+				  NackPacket::NackItemLength);
 
 				return nullptr;
 			}

@@ -69,7 +69,8 @@ namespace RTC
 			 * @remarks
 			 * - To be used only by `CompoundPacket::Parse()`.
 			 */
-			static ByePacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
+			static ByePacket* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding);
 
 		private:
 			/**
@@ -90,7 +91,7 @@ namespace RTC
 
 			bool HasReason() const
 			{
-				return (GetBuffer() + GetLength()) > GetReasonLengthPointer();
+				return (GetBuffer() + GetLength() - GetPaddingLength()) > GetReasonLengthPointer();
 			}
 
 			std::string_view GetReason() const

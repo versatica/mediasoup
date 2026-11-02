@@ -78,7 +78,9 @@ namespace rtcpCommon
   /*size_t*/ bufferLength,                                                                               \
   /*size_t*/ length,                                                                                     \
   /*RTC::NEW_RTCP::Packet::PacketType*/ packetType,                                                      \
-  /*bool*/ unknownType)                                                                                  \
+  /*bool*/ unknownType,                                                                                  \
+  /*bool*/ hasPadding,                                                                                   \
+  /*uint8_t*/ paddingLength)                                                                             \
 	do                                                                                                     \
 	{                                                                                                      \
 		if (buffer)                                                                                          \
@@ -103,7 +105,12 @@ namespace rtcpCommon
 		REQUIRE(static_cast<unsigned>(packet->GetVersion()) == 2);                                           \
 		REQUIRE(packet->GetType() == packetType);                                                            \
 		REQUIRE(packet->HasUnknownType() == unknownType);                                                    \
-		REQUIRE(packet->HasPadding() == false);                                                              \
+		REQUIRE(packet->HasPadding() == hasPadding);                                                         \
+		REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == paddingLength);                         \
+		if (!packet->HasPadding())                                                                           \
+		{                                                                                                    \
+			REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == 0);                                   \
+		}                                                                                                    \
 		REQUIRE_THROWS_AS(packet->Serialize(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);           \
 		REQUIRE_THROWS_AS(packet->Clone(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);               \
 		REQUIRE(                                                                                             \

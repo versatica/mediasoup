@@ -18,8 +18,9 @@ namespace RTC
 
 			Packet::PacketType packetType;
 			size_t packetLength;
+			uint8_t padding;
 
-			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength))
+			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength, padding))
 			{
 				return nullptr;
 			}
@@ -31,8 +32,8 @@ namespace RTC
 				return nullptr;
 			}
 
-			const auto messageType = static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(
-			  reinterpret_cast<const Packet::CommonHeader*>(buffer)->count);
+			const auto messageType =
+			  static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(buffer[0] & 0x1F);
 
 			if (messageType != AnyPayloadSpecificFeedbackPacket::MessageType::FIR)
 			{
@@ -41,7 +42,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			return FirPacket::ParseStrict(buffer, bufferLength, packetLength);
+			return FirPacket::ParseStrict(buffer, bufferLength, packetLength, padding);
 		}
 
 		FirPacket* FirPacket::Factory(uint8_t* buffer, size_t bufferLength)
@@ -70,12 +71,16 @@ namespace RTC
 			return packet;
 		}
 
-		FirPacket* FirPacket::ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength)
+		FirPacket* FirPacket::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{
 			MS_TRACE();
 
+			// Length of the packet excluding padding.
+			const size_t contentLength = packetLength - padding;
+
 			// The Feedback Control Information (FCI) must contain at least one item.
-			if (packetLength < AnyFeedbackPacket::FeedbackHeaderLength + FirPacket::FirItemLength)
+			if (contentLength < AnyFeedbackPacket::FeedbackHeaderLength + FirPacket::FirItemLength)
 			{
 				MS_WARN_TAG(rtcp, "no space for feedback header and at least one item");
 
@@ -83,12 +88,12 @@ namespace RTC
 			}
 
 			// The Feedback Control Information (FCI) must contain whole items.
-			if ((packetLength - AnyFeedbackPacket::FeedbackHeaderLength) % FirPacket::FirItemLength != 0)
+			if ((contentLength - AnyFeedbackPacket::FeedbackHeaderLength) % FirPacket::FirItemLength != 0)
 			{
 				MS_WARN_TAG(
 				  rtcp,
 				  "Feedback Control Information length (%zu bytes) is not multiple of %zu",
-				  packetLength - AnyFeedbackPacket::FeedbackHeaderLength,
+				  contentLength - AnyFeedbackPacket::FeedbackHeaderLength,
 				  FirPacket::FirItemLength);
 
 				return nullptr;

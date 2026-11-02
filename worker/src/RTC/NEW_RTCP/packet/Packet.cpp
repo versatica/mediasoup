@@ -65,23 +65,16 @@ namespace RTC
 		}
 
 		bool Packet::IsPacket(
-		  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength)
+		  const uint8_t* buffer,
+		  size_t bufferLength,
+		  PacketType& packetType,
+		  size_t& packetLength,
+		  uint8_t& padding)
 		{
 			MS_TRACE();
 
 			if (!Packet::IsRtcp(buffer, bufferLength))
 			{
-				return false;
-			}
-
-			// The padding mechanism is not implemented since it's only used when
-			// encrypting the compound packet by following the section 9.1 of RFC
-			// 3550 which absolutely nobody does (SRTCP is used instead). So packets
-			// with Padding bit set to 1 are considered invalid and rejected.
-			if ((buffer[0] >> 5) & 0x01)
-			{
-				MS_WARN_TAG(rtcp, "RTCP packet with Padding bit set to 1 not supported");
-
 				return false;
 			}
 
@@ -96,6 +89,40 @@ namespace RTC
 				  Packet::PacketTypeToString(packetType).c_str(),
 				  packetLength,
 				  bufferLength);
+
+				return false;
+			}
+
+			// Padding bit not set.
+			if (((buffer[0] >> 5) & 0x01) == 0)
+			{
+				padding = 0;
+
+				return true;
+			}
+
+			// The last byte of the packet indicates how many padding bytes must be
+			// ignored, including itself.
+			padding = Utils::Byte::Get1Byte(buffer, packetLength - 1);
+
+			if (padding == 0)
+			{
+				MS_WARN_TAG(
+				  rtcp,
+				  "Padding bit set but padding length is 0 [packetType:%s]",
+				  Packet::PacketTypeToString(packetType).c_str());
+
+				return false;
+			}
+			else if (padding > packetLength - Packet::CommonHeaderLength)
+			{
+				MS_WARN_TAG(
+				  rtcp,
+				  "padding length greater than available length [packetType:%s, padding:%" PRIu8
+				  ", packetLength:%zu]",
+				  Packet::PacketTypeToString(packetType).c_str(),
+				  padding,
+				  packetLength);
 
 				return false;
 			}
@@ -127,6 +154,7 @@ namespace RTC
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(indentation, "  count field: %" PRIu8, GetCount());
+			MS_DUMP_CLEAN(indentation, "  padding length: %" PRIu8, GetPaddingLength());
 		}
 
 		void Packet::SoftSerialize(const uint8_t* buffer)
@@ -208,8 +236,7 @@ namespace RTC
 
 			const size_t previousLength      = GetLength();
 			const size_t previousLengthField = GetLengthFieldComputed();
-			const size_t previousValueLength = GetVariableLengthValueLength();
-			const size_t newLength           = previousLengthField - previousValueLength + valueLength;
+			const size_t newLength           = Packet::CommonHeaderLength + valueLength;
 
 			try
 			{
@@ -220,6 +247,9 @@ namespace RTC
 				// Update length field.
 				// NOTE: This will throw if computed value is too big.
 				SetLengthField(newLength);
+
+				// Remove padding (if any).
+				GetCommonHeaderPointer()->padding = 0;
 			}
 			catch (const MediaSoupError& error)
 			{

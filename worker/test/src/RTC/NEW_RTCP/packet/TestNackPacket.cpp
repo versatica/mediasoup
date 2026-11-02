@@ -54,7 +54,9 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -77,7 +79,9 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -93,9 +97,70 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
+	}
+
+	SECTION("NackPacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, FMT=1, PT:205, Length: 4
+			0b10100001, 0xCD, 0x00, 0x04,
+			// Sender SSRC: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Media SSRC: 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// PID: 100, BLP: 0x0001
+			0x00, 0x64, 0x00, 0x01,
+			// Padding: 4 bytes
+			0x00, 0x00, 0x00, 0x04
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::NackPacket> packet{ RTC::NEW_RTCP::NackPacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 20,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 4);
+
+		REQUIRE(packet->GetSenderSsrc() == 1111);
+		REQUIRE(packet->GetMediaSsrc() == 2222);
+		REQUIRE(packet->GetNumberOfItems() == 1);
+
+		/* Modify it (it removes the padding). */
+
+		packet->AddItem(200, 0x0002);
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 20,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		const auto items = packet->GetItems();
+
+		REQUIRE(packet->GetNumberOfItems() == 2);
+		REQUIRE(items.size() == 2);
+		REQUIRE(items[0].packetId == 100);
+		REQUIRE(items[0].lostPacketBitmask == 0x0001);
+		REQUIRE(items[1].packetId == 200);
+		REQUIRE(items[1].lostPacketBitmask == 0x0002);
 	}
 
 	SECTION("NackPacket::Parse() fails")
@@ -144,6 +209,25 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		// clang-format on
 
 		REQUIRE(!RTC::NEW_RTCP::NackPacket::Parse(buffer3, sizeof(buffer3)));
+
+		// The FCI (excluding padding) is not multiple of 4 bytes.
+		// clang-format off
+		alignas(4) uint8_t buffer4[] =
+		{
+			// V=2, P=1, FMT=1, PT:205, Length: 4
+			0b10100001, 0xCD, 0x00, 0x04,
+			// SSRC of packet sender: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// SSRC of media source: 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// PID: 1000, BLP: 0x0000
+			0x03, 0xE8, 0x00, 0x00,
+			// 2 extra bytes, Padding: 2 bytes
+			0x11, 0x22, 0x00, 0x02
+		};
+		// clang-format on
+
+		REQUIRE(!RTC::NEW_RTCP::NackPacket::Parse(buffer4, sizeof(buffer4)));
 	}
 
 	SECTION("NackPacket::Factory() succeeds")
@@ -179,7 +263,9 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 12,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(
 		  packet->GetMessageType() == RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK);
@@ -201,7 +287,9 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -217,7 +305,9 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -233,7 +323,9 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 	}

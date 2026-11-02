@@ -54,8 +54,9 @@ namespace RTC
 
 			Packet::PacketType packetType;
 			size_t packetLength;
+			uint8_t padding;
 
-			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength))
+			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength, padding))
 			{
 				return nullptr;
 			}
@@ -67,7 +68,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			return SdesPacket::ParseStrict(buffer, bufferLength, packetLength);
+			return SdesPacket::ParseStrict(buffer, bufferLength, packetLength, padding);
 		}
 
 		SdesPacket* SdesPacket::Factory(uint8_t* buffer, size_t bufferLength)
@@ -89,11 +90,14 @@ namespace RTC
 			return packet;
 		}
 
-		SdesPacket* SdesPacket::ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength)
+		SdesPacket* SdesPacket::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{
 			MS_TRACE();
 
-			auto* const packet = new SdesPacket(const_cast<uint8_t*>(buffer), bufferLength);
+			// Length of the packet excluding padding.
+			const size_t contentLength = packetLength - padding;
+			auto* const packet         = new SdesPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
@@ -106,7 +110,7 @@ namespace RTC
 			for (uint8_t chunkIdx{ 0 }; chunkIdx < numberOfChunks; ++chunkIdx)
 			{
 				// SSRC/CSRC of the chunk.
-				if (offset + 4 > packetLength)
+				if (offset + 4 > contentLength)
 				{
 					MS_WARN_TAG(rtcp, "no space for SSRC/CSRC of chunk %" PRIu8, chunkIdx);
 
@@ -119,7 +123,7 @@ namespace RTC
 				// Items until the null octet that terminates the list.
 				while (true)
 				{
-					if (offset >= packetLength)
+					if (offset >= contentLength)
 					{
 						MS_WARN_TAG(rtcp, "missing null octet terminating the items of chunk %" PRIu8, chunkIdx);
 
@@ -132,7 +136,7 @@ namespace RTC
 						break;
 					}
 
-					if (offset + 2 > packetLength)
+					if (offset + 2 > contentLength)
 					{
 						MS_WARN_TAG(rtcp, "no space for item header in chunk %" PRIu8, chunkIdx);
 
@@ -142,7 +146,7 @@ namespace RTC
 
 					const uint8_t itemLength = Utils::Byte::Get1Byte(buffer, offset + 1);
 
-					if (offset + 2 + itemLength > packetLength)
+					if (offset + 2 + itemLength > contentLength)
 					{
 						MS_WARN_TAG(
 						  rtcp,
@@ -160,7 +164,7 @@ namespace RTC
 				// The null octet and the padding until the next 32-bit boundary.
 				const size_t chunkEndOffset = Utils::Byte::PadTo4Bytes(offset + 1);
 
-				if (chunkEndOffset > packetLength)
+				if (chunkEndOffset > contentLength)
 				{
 					MS_WARN_TAG(rtcp, "no space for padding of chunk %" PRIu8, chunkIdx);
 
@@ -182,13 +186,13 @@ namespace RTC
 				offset = chunkEndOffset;
 			}
 
-			// The packet must end right after the last chunk.
-			if (offset != packetLength)
+			// The packet (excluding padding) must end right after the last chunk.
+			if (offset != contentLength)
 			{
 				MS_WARN_TAG(
 				  rtcp,
-				  "packet length (%zu bytes) does not end right after the last chunk (%zu bytes)",
-				  packetLength,
+				  "packet length (%zu bytes, excluding padding) does not end right after the last chunk (%zu bytes)",
+				  contentLength,
 				  offset);
 
 				delete packet;
@@ -289,13 +293,13 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("cannot add more than %zu chunks", SdesPacket::MaxChunks);
 			}
 
-			const size_t previousLength = GetLength();
+			const size_t previousValueLength = GetVariableLengthValueLength();
 
 			// NOTE: This may throw.
-			SetVariableLengthValueLength(GetVariableLengthValueLength() + 8);
+			SetVariableLengthValueLength(previousValueLength + 8);
 
 			// Write the SSRC/CSRC.
-			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), previousLength, ssrc);
+			Utils::Byte::Set4Bytes(GetVariableLengthValuePointer(), previousValueLength, ssrc);
 
 			// Write the null octet terminating the empty list of items and the
 			// padding.

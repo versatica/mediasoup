@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
+#include "Utils.hpp"
 #include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
@@ -74,7 +75,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 60,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkItems(packet.get());
 
@@ -96,7 +99,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 60,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkItems(packet.get());
 
@@ -112,7 +117,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 60,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkItems(packet.get());
 
@@ -127,7 +134,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 64,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		const auto items = packet->GetItems();
 
@@ -141,6 +150,71 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		REQUIRE(packet->GetBuffer()[packet->GetLength() - 3] == 0);
 		REQUIRE(packet->GetBuffer()[packet->GetLength() - 2] == 0);
 		REQUIRE(packet->GetBuffer()[packet->GetLength() - 1] == 0);
+	}
+
+	SECTION("SdesPacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, SC=1, PT:202, Length: 4
+			0b10100001, 0xCA, 0x00, 0x04,
+			// Chunk 1
+			// SSRC: 1234
+			0x00, 0x00, 0x04, 0xD2,
+			// Item type: 1 (CNAME), Length: 2, Value: "ab"
+			0x01, 0x02, 0x61, 0x62,
+			// 4 null octets
+			0x00, 0x00, 0x00, 0x00,
+			// Padding: 4 bytes
+			0x00, 0x00, 0x00, 0x04,
+			// Extra space in the buffer
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::SdesPacket> packet{ RTC::NEW_RTCP::SdesPacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 20,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 4);
+
+		REQUIRE(packet->GetNumberOfChunks() == 1);
+
+		const auto items = packet->GetItems();
+
+		REQUIRE(items.size() == 1);
+		REQUIRE(items[0].ssrc == 1234);
+		REQUIRE(items[0].type == RTC::NEW_RTCP::SdesPacket::ItemType::CNAME);
+		REQUIRE(items[0].value == "ab");
+
+		/* Modify it (it removes the padding). */
+
+		packet->AddChunk(5678);
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 24,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->GetNumberOfChunks() == 2);
+		REQUIRE(packet->GetItems().size() == 1);
+		// The new chunk goes where the padding was.
+		REQUIRE(Utils::Byte::Get4Bytes(packet->GetBuffer(), 16) == 5678);
+		REQUIRE(Utils::Byte::Get4Bytes(packet->GetBuffer(), 20) == 0);
 	}
 
 	SECTION("SdesPacket::Parse() fails")
@@ -264,7 +338,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 4,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetNumberOfChunks() == 0);
 		REQUIRE(packet->GetItems().empty());
@@ -286,7 +362,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 32,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkItems(packet.get());
 
@@ -302,7 +380,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 32,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkItems(packet.get());
 
@@ -318,7 +398,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 32,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkItems(packet.get());
 	}
@@ -445,7 +527,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 40,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkItems(parsedPacket.get());
 
@@ -468,7 +552,9 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 40,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkItems(packet.get());
 

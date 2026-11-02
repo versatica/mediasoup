@@ -17,8 +17,9 @@ namespace RTC
 
 			Packet::PacketType packetType;
 			size_t packetLength;
+			uint8_t padding;
 
-			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength))
+			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength, padding))
 			{
 				return nullptr;
 			}
@@ -30,15 +31,19 @@ namespace RTC
 				return nullptr;
 			}
 
-			return UnknownPayloadSpecificFeedbackPacket::ParseStrict(buffer, bufferLength, packetLength);
+			return UnknownPayloadSpecificFeedbackPacket::ParseStrict(
+			  buffer, bufferLength, packetLength, padding);
 		}
 
 		UnknownPayloadSpecificFeedbackPacket* UnknownPayloadSpecificFeedbackPacket::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, size_t packetLength)
+		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{
 			MS_TRACE();
 
-			if (packetLength < AnyFeedbackPacket::FeedbackHeaderLength)
+			// Length of the packet excluding padding.
+			const size_t contentLength = packetLength - padding;
+
+			if (contentLength < AnyFeedbackPacket::FeedbackHeaderLength)
 			{
 				MS_WARN_TAG(rtcp, "no space for feedback header");
 
