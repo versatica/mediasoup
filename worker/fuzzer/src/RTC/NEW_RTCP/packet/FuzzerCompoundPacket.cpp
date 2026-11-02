@@ -65,13 +65,6 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 
 			switch (packet->GetType())
 			{
-				case RTC::NEW_RTCP::Packet::PacketType::IJ:
-				{
-					// TODO
-
-					break;
-				}
-
 				case RTC::NEW_RTCP::Packet::PacketType::SR:
 				{
 					const auto* const senderReportPacket =
@@ -106,13 +99,6 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 					const auto* const byePacket = static_cast<const RTC::NEW_RTCP::ByePacket*>(packet);
 
 					FuzzerRtcRtcpByePacket::Fuzz(byePacket);
-
-					break;
-				}
-
-				case RTC::NEW_RTCP::Packet::PacketType::APP:
-				{
-					// TODO
 
 					break;
 				}

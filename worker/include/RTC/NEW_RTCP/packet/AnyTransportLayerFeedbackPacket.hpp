@@ -33,6 +33,7 @@ namespace RTC
 				TLLEI  = 7,
 				ECN    = 8,
 				PS     = 9,
+				CCFB   = 11,
 				TCC    = 15,
 				EXT    = 31
 			};

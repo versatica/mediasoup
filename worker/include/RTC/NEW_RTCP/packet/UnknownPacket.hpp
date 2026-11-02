@@ -9,7 +9,7 @@ namespace RTC
 	namespace NEW_RTCP
 	{
 		/**
-		 * RTCP Unknown Packet
+		 * RTCP Packet with an unknown or not implemented packet type.
 		 *
 		 * @see RFC 3550.
 		 *
