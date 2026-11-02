@@ -16,8 +16,9 @@ namespace RTC
 
 			Packet::PacketType packetType;
 			size_t packetLength;
+			uint8_t padding;
 
-			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength))
+			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength, padding))
 			{
 				return nullptr;
 			}

@@ -50,7 +50,9 @@ SCENARIO("RTCP Unknown Transport Layer Feedback Packet (205)", "[serializable][r
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -66,7 +68,9 @@ SCENARIO("RTCP Unknown Transport Layer Feedback Packet (205)", "[serializable][r
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -82,9 +86,49 @@ SCENARIO("RTCP Unknown Transport Layer Feedback Packet (205)", "[serializable][r
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
+	}
+
+	SECTION("UnknownTransportLayerFeedbackPacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, FMT=15, PT:205, Length: 3
+			0b10101111, 0xCD, 0x00, 0x03,
+			// Sender SSRC: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Media SSRC: 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// 2 bytes of value, Padding: 2 bytes
+			0xAA, 0xBB, 0x00, 0x02
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::UnknownTransportLayerFeedbackPacket> packet{
+			RTC::NEW_RTCP::UnknownTransportLayerFeedbackPacket::Parse(buffer, sizeof(buffer))
+		};
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 16,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 2);
+
+		REQUIRE(packet->GetSenderSsrc() == 1111);
+		REQUIRE(packet->GetMediaSsrc() == 2222);
+		REQUIRE(packet->HasUnknownValue() == true);
+		REQUIRE(packet->GetUnknownValueLength() == 2);
+		REQUIRE(packet->GetUnknownValue()[0] == 0xAA);
+		REQUIRE(packet->GetUnknownValue()[1] == 0xBB);
 	}
 
 	SECTION("UnknownTransportLayerFeedbackPacket::Parse() without value succeeds")
@@ -111,7 +155,9 @@ SCENARIO("RTCP Unknown Transport Layer Feedback Packet (205)", "[serializable][r
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::RTPFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSenderSsrc() == 1111);
 		REQUIRE(packet->GetMediaSsrc() == 2222);

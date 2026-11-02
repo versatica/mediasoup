@@ -17,8 +17,9 @@ namespace RTC
 
 			Packet::PacketType packetType;
 			size_t packetLength;
+			uint8_t padding;
 
-			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength))
+			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength, padding))
 			{
 				return nullptr;
 			}
@@ -30,8 +31,8 @@ namespace RTC
 				return nullptr;
 			}
 
-			const auto messageType = static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(
-			  reinterpret_cast<const Packet::CommonHeader*>(buffer)->count);
+			const auto messageType =
+			  static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(buffer[0] & 0x1F);
 
 			if (messageType != AnyPayloadSpecificFeedbackPacket::MessageType::PLI)
 			{
@@ -40,7 +41,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			return PliPacket::ParseStrict(buffer, bufferLength, packetLength);
+			return PliPacket::ParseStrict(buffer, bufferLength, packetLength, padding);
 		}
 
 		PliPacket* PliPacket::Factory(uint8_t* buffer, size_t bufferLength)
@@ -69,18 +70,22 @@ namespace RTC
 			return packet;
 		}
 
-		PliPacket* PliPacket::ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength)
+		PliPacket* PliPacket::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{
 			MS_TRACE();
 
+			// Length of the packet excluding padding.
+			const size_t contentLength = packetLength - padding;
+
 			// PLI has no FCI.
-			if (packetLength != AnyFeedbackPacket::FeedbackHeaderLength)
+			if (contentLength != AnyFeedbackPacket::FeedbackHeaderLength)
 			{
 				MS_WARN_TAG(
 				  rtcp,
-				  "PliPacket length must be %zu (got %zu)",
+				  "PliPacket length (excluding padding) must be %zu (got %zu)",
 				  AnyFeedbackPacket::FeedbackHeaderLength,
-				  packetLength);
+				  contentLength);
 
 				return nullptr;
 			}

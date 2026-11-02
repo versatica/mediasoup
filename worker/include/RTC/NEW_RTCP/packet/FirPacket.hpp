@@ -94,7 +94,8 @@ namespace RTC
 			 * @remarks
 			 * - To be used only by `CompoundPacket::Parse()`.
 			 */
-			static FirPacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
+			static FirPacket* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding);
 
 		private:
 			/**
@@ -111,7 +112,8 @@ namespace RTC
 
 			size_t GetNumberOfItems() const
 			{
-				return (GetLength() - AnyFeedbackPacket::FeedbackHeaderLength) / FirPacket::FirItemLength;
+				return (GetLength() - GetPaddingLength() - AnyFeedbackPacket::FeedbackHeaderLength) /
+				       FirPacket::FirItemLength;
 			}
 
 			std::vector<Item> GetItems() const;

@@ -47,11 +47,8 @@ namespace RTC
 		 *
 		 * @remarks
 		 * - This class represents a single RTCP packet and not a compound packet.
-		 * - The padding mechanism is not implemented since it's only used when
-		 *   encrypting the compound packet by following the section 9.1 of RFC
-		 *   3550 which absolutely nobody does (SRTCP is used instead). So
-		 *   packets with Padding bit set to 1 are considered invalid and
-		 *   rejected.
+		 * - Padding (if any) is included in the Length field but it is not part of
+		 *   the variable-length value.
 		 */
 		class Packet : public Serializable
 		{
@@ -146,14 +143,18 @@ namespace RTC
 			 * @param packetType - If given buffer is a valid packet then `packetType`
 			 *   is rewritten to parsed PacketType.
 			 * @param packetLength - If given buffer is a valid packet then
-			 *   `packetLength` is rewritten to the computed length of the packet.
-			 *
-			 * @remarks
-			 * - Packets with Padding bit set to 1 are not supported (see note above)
-			 *   and hence this function returns false if it's set.
+			 *   `packetLength` is rewritten to the computed length of the packet
+			 *   (including padding).
+			 * @param padding - If given buffer is a valid packet then `padding` is
+			 *   rewritten to the number of padding bytes at the end of the packet
+			 *   (0 if the Padding bit is not set).
 			 */
 			static bool IsPacket(
-			  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength);
+			  const uint8_t* buffer,
+			  size_t bufferLength,
+			  PacketType& packetType,
+			  size_t& packetLength,
+			  uint8_t& padding);
 
 		private:
 			static const ankerl::unordered_dense::map<PacketType, std::string> PacketType2String;
@@ -198,18 +199,25 @@ namespace RTC
 			}
 
 			/**
-			 * Whether the Padding bit is set to 1.
-			 *
-			 * @remarks
-			 * - The padding mechanism is not implemented since it's only used when
-			 *   encrypting the compound packet by following the section 9.1 of RFC
-			 *   3550 which absolutely nobody does (SRTCP is used instead). So
-			 *   packets with Padding bit set to 1 are considered invalid and
-			 *   rejected.
+			 * Whether this packet has padding.
 			 */
 			bool HasPadding() const
 			{
 				return GetCommonHeaderPointer()->padding;
+			}
+
+			/**
+			 * Length of the padding (including the last byte of the packet, which
+			 * holds it).
+			 */
+			uint8_t GetPaddingLength() const
+			{
+				if (!HasPadding())
+				{
+					return 0;
+				}
+
+				return Utils::Byte::Get1Byte(GetBuffer(), GetLength() - 1);
 			}
 
 		protected:
@@ -287,7 +295,7 @@ namespace RTC
 			 */
 			virtual bool HasVariableLengthValue() const final
 			{
-				return GetLengthFieldComputed() > Packet::CommonHeaderLength;
+				return GetLengthFieldComputed() - GetPaddingLength() > Packet::CommonHeaderLength;
 			}
 
 			/**
@@ -308,6 +316,9 @@ namespace RTC
 			 * the variable-length value of the packet and updates both the length of
 			 * the Serializable and the length field.
 			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 *
 			 * @throw
 			 * - MediaSoupTypeError - If given `value` is `nullptr` and `valueLength`
 			 *   is greater than 0.
@@ -321,7 +332,7 @@ namespace RTC
 			virtual void SetVariableLengthValue(const uint8_t* value, size_t valueLength) final;
 
 			/**
-			 * The length of the variable-length value.
+			 * The length of the variable-length value (excluding padding).
 			 */
 			virtual size_t GetVariableLengthValueLength() const final
 			{
@@ -330,7 +341,7 @@ namespace RTC
 					return 0;
 				}
 
-				return GetLengthFieldComputed() - Packet::CommonHeaderLength;
+				return GetLengthFieldComputed() - Packet::CommonHeaderLength - GetPaddingLength();
 			}
 
 			/**
@@ -338,6 +349,9 @@ namespace RTC
 			 * into the variable-length value. This method is used in packets that
 			 * have variable-length value but it doesn't consist on a buffer + length,
 			 * but instead is an structure with fields (with variable length).
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
 			 *
 			 * @throw
 			 * - MediaSoupTypeError - If given `valueLength` is higher than available

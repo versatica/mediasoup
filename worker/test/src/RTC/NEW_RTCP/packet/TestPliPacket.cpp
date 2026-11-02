@@ -40,7 +40,9 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -56,7 +58,9 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 12,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -72,9 +76,44 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 12,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
+	}
+
+	SECTION("PliPacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, FMT=1, PT:206, Length: 3
+			0b10100001, 0xCE, 0x00, 0x03,
+			// Sender SSRC: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Media SSRC: 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// Padding: 4 bytes
+			0x00, 0x00, 0x00, 0x04
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::PliPacket> packet{ RTC::NEW_RTCP::PliPacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 16,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 4);
+
+		REQUIRE(packet->GetSenderSsrc() == 1111);
+		REQUIRE(packet->GetMediaSsrc() == 2222);
 	}
 
 	SECTION("PliPacket::Parse() fails")
@@ -153,7 +192,9 @@ SCENARIO("RTCP PLI Packet (206, FMT 1)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 12,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(
 		  packet->GetMessageType() == RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI);

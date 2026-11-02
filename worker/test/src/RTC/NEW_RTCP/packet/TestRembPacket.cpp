@@ -52,7 +52,9 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -75,7 +77,9 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -91,9 +95,69 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
+	}
+
+	SECTION("RembPacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, FMT=15, PT:206, Length: 6
+			0b10101111, 0xCE, 0x00, 0x06,
+			// Sender SSRC: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Media SSRC: 0
+			0x00, 0x00, 0x00, 0x00,
+			// Unique identifier: "REMB"
+			0x52, 0x45, 0x4D, 0x42,
+			// Num SSRC: 1, BR Exp: 0, BR Mantissa: 1000
+			0x01, 0x00, 0x03, 0xE8,
+			// SSRC 1: 3333
+			0x00, 0x00, 0x0D, 0x05,
+			// Padding: 4 bytes
+			0x00, 0x00, 0x00, 0x04
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::RembPacket> packet{ RTC::NEW_RTCP::RembPacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 28,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 4);
+
+		REQUIRE(packet->GetSenderSsrc() == 1111);
+		REQUIRE(packet->GetBitrate() == 1000);
+		REQUIRE(packet->GetNumberOfSsrcs() == 1);
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 3333 });
+
+		/* Modify it (it removes the padding). */
+
+		packet->AddSsrc(4444);
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 28,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->GetNumberOfSsrcs() == 2);
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 3333, 4444 });
 	}
 
 	SECTION("RembPacket::Parse() fails")
@@ -249,7 +313,9 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(
 		  packet->GetMessageType() == RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB);
@@ -273,7 +339,9 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 32,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetBitrate() == 522022);
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 0x23456789, 0x2345678A, 0x2345678B });

@@ -58,7 +58,9 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -81,7 +83,9 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -97,9 +101,74 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
+	}
+
+	SECTION("FirPacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, FMT=4, PT:206, Length: 5
+			0b10100100, 0xCE, 0x00, 0x05,
+			// Sender SSRC: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Media SSRC: 0
+			0x00, 0x00, 0x00, 0x00,
+			// Item 1
+			// SSRC: 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// Seq nr.: 7, Reserved
+			0x07, 0x00, 0x00, 0x00,
+			// Padding: 4 bytes
+			0x00, 0x00, 0x00, 0x04,
+			// Extra space in the buffer
+			0x00, 0x00, 0x00, 0x00
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::FirPacket> packet{ RTC::NEW_RTCP::FirPacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 24,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 4);
+
+		REQUIRE(packet->GetSenderSsrc() == 1111);
+		REQUIRE(packet->GetNumberOfItems() == 1);
+
+		/* Modify it (it removes the padding). */
+
+		packet->AddItem(3333, 8);
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 28,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		const auto items = packet->GetItems();
+
+		REQUIRE(packet->GetNumberOfItems() == 2);
+		REQUIRE(items.size() == 2);
+		REQUIRE(items[0].ssrc == 2222);
+		REQUIRE(items[0].sequenceNumber == 7);
+		REQUIRE(items[1].ssrc == 3333);
+		REQUIRE(items[1].sequenceNumber == 8);
 	}
 
 	SECTION("FirPacket::Parse() fails")
@@ -191,7 +260,9 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 12,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(
 		  packet->GetMessageType() == RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR);
@@ -211,7 +282,9 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::PSFB,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(
 		  helpers::areBuffersEqual(

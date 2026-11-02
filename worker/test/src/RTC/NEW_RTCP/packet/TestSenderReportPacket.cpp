@@ -75,7 +75,9 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 52,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -91,7 +93,9 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 52,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -107,9 +111,59 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 52,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
+	}
+
+	SECTION("SenderReportPacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, RC=0, PT:200, Length: 7
+			0b10100000, 0xC8, 0x00, 0x07,
+			// SSRC of packet sender: 0x5D931534
+			0x5D, 0x93, 0x15, 0x34,
+			// NTP timestamp (most significant word): 1111
+			0x00, 0x00, 0x04, 0x57,
+			// NTP timestamp (least significant word): 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// RTP timestamp: 3333
+			0x00, 0x00, 0x0D, 0x05,
+			// Sender's packet count: 4444
+			0x00, 0x00, 0x11, 0x5C,
+			// Sender's octet count: 5555
+			0x00, 0x00, 0x15, 0xB3,
+			// Padding: 4 bytes
+			0x00, 0x00, 0x00, 0x04
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::SenderReportPacket> packet{
+			RTC::NEW_RTCP::SenderReportPacket::Parse(buffer, sizeof(buffer))
+		};
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 32,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SR,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 4);
+
+		REQUIRE(packet->GetSsrc() == 0x5D931534);
+		REQUIRE(packet->GetNtpSec() == 1111);
+		REQUIRE(packet->GetNtpFrac() == 2222);
+		REQUIRE(packet->GetRtpTimestamp() == 3333);
+		REQUIRE(packet->GetPacketCount() == 4444);
+		REQUIRE(packet->GetOctetCount() == 5555);
+		REQUIRE(packet->GetNumberOfReportBlocks() == 0);
+		REQUIRE(packet->GetReportBlocks().empty());
 	}
 
 	SECTION("SenderReportPacket::Parse() fails")
@@ -192,7 +246,9 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrc() == 0);
 		REQUIRE(packet->GetNtpSec() == 0);
@@ -234,7 +290,9 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 76,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -250,7 +308,9 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 76,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 
@@ -266,7 +326,9 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 76,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SR,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		checkPacket(packet.get());
 	}

@@ -83,7 +83,9 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*bufferLength*/ 24,
 		  /*length*/ 24,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet1->GetSsrcs() == std::vector<uint32_t>{ 1111111, 2222222, 12345678 });
 		REQUIRE(packet1->HasReason() == true);
@@ -104,7 +106,9 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*length*/ 12,
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*packetType*/ static_cast<RTC::NEW_RTCP::Packet::PacketType>(222),
-		  /*unknownType*/ true);
+		  /*unknownType*/ true,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet2->HasUnknownValue() == true);
 		REQUIRE(packet2->GetUnknownValueLength() == 8);
@@ -121,7 +125,9 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*bufferLength*/ 16,
 		  /*length*/ 16,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::APP,
-		  /*unknownType*/ true);
+		  /*unknownType*/ true,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet3->HasUnknownValue() == true);
 		REQUIRE(packet3->GetUnknownValueLength() == 12);
@@ -219,7 +225,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		REQUIRE(!RTC::NEW_RTCP::CompoundPacket::Parse(buffer6, sizeof(buffer6)));
 
-		// The Padding bit is set.
+		// The Padding bit is set and the last byte announces more padding bytes
+		// (87) than the packet has after the Common Header (4).
 		// clang-format off
 		alignas(4) uint8_t buffer7[] =
 		{
@@ -232,6 +239,109 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		// clang-format on
 
 		REQUIRE(!RTC::NEW_RTCP::CompoundPacket::Parse(buffer7, sizeof(buffer7)));
+
+		// The Padding bit is set but the last byte announces 0 padding bytes.
+		// clang-format off
+		alignas(4) uint8_t buffer8[] =
+		{
+			// Bye Packet
+			// V=2, P=1, SC=1, PT:203, Length: 2
+			0b10100001, 0xCB, 0x00, 0x02,
+			// SSRC 1: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Padding: 4 bytes, the last one being 0
+			0x00, 0x00, 0x00, 0x00
+		};
+		// clang-format on
+
+		REQUIRE(!RTC::NEW_RTCP::CompoundPacket::Parse(buffer8, sizeof(buffer8)));
+
+		// The Padding bit is set and the padding bytes (8) would eat the SSRC
+		// that the SC field announces.
+		// clang-format off
+		alignas(4) uint8_t buffer9[] =
+		{
+			// Bye Packet
+			// V=2, P=1, SC=1, PT:203, Length: 2
+			0b10100001, 0xCB, 0x00, 0x02,
+			// SSRC 1: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Padding: 4 bytes, the last one announcing 8
+			0x00, 0x00, 0x00, 0x08
+		};
+		// clang-format on
+
+		REQUIRE(!RTC::NEW_RTCP::CompoundPacket::Parse(buffer9, sizeof(buffer9)));
+	}
+
+	SECTION("CompoundPacket::Parse() succeeds with padding")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// Bye Packet
+			// V=2, P=1, SC=1, PT:203, Length: 2
+			0b10100001, 0xCB, 0x00, 0x02,
+			// SSRC 1: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Padding: 4 bytes
+			0x00, 0x00, 0x00, 0x04,
+			// Unknown Packet
+			// V=2, P=1, Count=5, PT:222, Length: 2
+			0b10100101, 0xDE, 0x00, 0x02,
+			// 5 bytes of value
+			0x11, 0x22, 0x33, 0x44,
+			0x55,
+			// Padding: 3 bytes
+			0x00, 0x00, 0x03
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket{
+			RTC::NEW_RTCP::CompoundPacket::Parse(buffer, sizeof(buffer))
+		};
+
+		CHECK_RTCP_COMPOUND_PACKET(
+		  /*compoundPacket*/ compoundPacket.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 24,
+		  /*packetsCount*/ 2);
+
+		const auto* const packet1 =
+		  static_cast<const RTC::NEW_RTCP::ByePacket*>(compoundPacket->GetPacketAt(0));
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ const_cast<RTC::NEW_RTCP::ByePacket*>(packet1),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 4);
+
+		REQUIRE(packet1->GetSsrcs() == std::vector<uint32_t>{ 1111 });
+		REQUIRE(packet1->HasReason() == false);
+
+		const auto* const packet2 =
+		  static_cast<const RTC::NEW_RTCP::UnknownPacket*>(compoundPacket->GetPacketAt(1));
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ const_cast<RTC::NEW_RTCP::UnknownPacket*>(packet2),
+		  /*buffer*/ buffer + 12,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		  /*packetType*/ static_cast<RTC::NEW_RTCP::Packet::PacketType>(222),
+		  /*unknownType*/ true,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 3);
+
+		REQUIRE(packet2->HasUnknownValue() == true);
+		REQUIRE(packet2->GetUnknownValueLength() == 5);
+		REQUIRE(packet2->GetUnknownValue()[0] == 0x11);
+		REQUIRE(packet2->GetUnknownValue()[4] == 0x55);
 	}
 
 	SECTION("CompoundPacket::Factory() succeeds")

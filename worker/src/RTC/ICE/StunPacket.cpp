@@ -475,7 +475,7 @@ namespace RTC
 				std::memcpy(std::addressof(addr), attributeValue + 4, 4);
 
 				// XOR with each byte of the Magic Cookie.
-				auto* addrBytes = reinterpret_cast<uint8_t*>(&addr);
+				auto* addrBytes = reinterpret_cast<uint8_t*>(std::addressof(addr));
 
 				for (size_t i{ 0 }; i < sizeof(StunPacket::MagicCookie); ++i)
 				{
@@ -549,14 +549,15 @@ namespace RTC
 					// Set port and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 2,
-					  &(reinterpret_cast<const struct sockaddr_in*>(xorMappedAddress))->sin_port,
+					  std::addressof(reinterpret_cast<const struct sockaddr_in*>(xorMappedAddress)->sin_port),
 					  2);
 					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 4,
-					  &(reinterpret_cast<const struct sockaddr_in*>(xorMappedAddress))->sin_addr.s_addr,
+					  std::addressof(
+					    reinterpret_cast<const struct sockaddr_in*>(xorMappedAddress)->sin_addr.s_addr),
 					  4);
 					AttributeFactoryBuffer[4] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[5] ^= StunPacket::MagicCookie[1];
@@ -580,14 +581,15 @@ namespace RTC
 					// Set port and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 2,
-					  &(reinterpret_cast<const struct sockaddr_in6*>(xorMappedAddress))->sin6_port,
+					  std::addressof(reinterpret_cast<const struct sockaddr_in6*>(xorMappedAddress)->sin6_port),
 					  2);
 					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 4,
-					  &(reinterpret_cast<const struct sockaddr_in6*>(xorMappedAddress))->sin6_addr.s6_addr,
+					  std::addressof(
+					    reinterpret_cast<const struct sockaddr_in6*>(xorMappedAddress)->sin6_addr.s6_addr),
 					  16);
 					const auto* transactionId = GetTransactionId();
 

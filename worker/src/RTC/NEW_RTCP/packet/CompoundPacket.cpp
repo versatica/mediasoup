@@ -52,8 +52,9 @@ namespace RTC
 				// parser.
 				Packet::PacketType packetType;
 				size_t packetLength;
+				uint8_t padding;
 
-				if (!Packet::IsPacket(ptr, packetMaxBufferLength, packetType, packetLength))
+				if (!Packet::IsPacket(ptr, packetMaxBufferLength, packetType, packetLength, padding))
 				{
 					MS_WARN_TAG(rtcp, "not an RTCP packet");
 
@@ -72,28 +73,28 @@ namespace RTC
 				{
 					case Packet::PacketType::SR:
 					{
-						packet = SenderReportPacket::ParseStrict(ptr, packetLength, packetLength);
+						packet = SenderReportPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 						break;
 					}
 
 					case Packet::PacketType::RR:
 					{
-						packet = ReceiverReportPacket::ParseStrict(ptr, packetLength, packetLength);
+						packet = ReceiverReportPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 						break;
 					}
 
 					case Packet::PacketType::SDES:
 					{
-						packet = SdesPacket::ParseStrict(ptr, packetLength, packetLength);
+						packet = SdesPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 						break;
 					}
 
 					case Packet::PacketType::BYE:
 					{
-						packet = ByePacket::ParseStrict(ptr, packetLength, packetLength);
+						packet = ByePacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 						break;
 					}
@@ -101,22 +102,22 @@ namespace RTC
 					case Packet::PacketType::RTPFB:
 					{
 						// The FMT field tells the type of the feedback message.
-						const auto messageType = static_cast<AnyTransportLayerFeedbackPacket::MessageType>(
-						  reinterpret_cast<const Packet::CommonHeader*>(ptr)->count);
+						const auto messageType =
+						  static_cast<AnyTransportLayerFeedbackPacket::MessageType>(ptr[0] & 0x1F);
 
 						switch (messageType)
 						{
 							case AnyTransportLayerFeedbackPacket::MessageType::NACK:
 							{
-								packet = NackPacket::ParseStrict(ptr, packetLength, packetLength);
+								packet = NackPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 								break;
 							}
 
 							default:
 							{
-								packet =
-								  UnknownTransportLayerFeedbackPacket::ParseStrict(ptr, packetLength, packetLength);
+								packet = UnknownTransportLayerFeedbackPacket::ParseStrict(
+								  ptr, packetLength, packetLength, padding);
 							}
 						}
 
@@ -126,21 +127,21 @@ namespace RTC
 					case Packet::PacketType::PSFB:
 					{
 						// The FMT field tells the type of the feedback message.
-						const auto messageType = static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(
-						  reinterpret_cast<const Packet::CommonHeader*>(ptr)->count);
+						const auto messageType =
+						  static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(ptr[0] & 0x1F);
 
 						switch (messageType)
 						{
 							case AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
 							{
-								packet = PliPacket::ParseStrict(ptr, packetLength, packetLength);
+								packet = PliPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 								break;
 							}
 
 							case AnyPayloadSpecificFeedbackPacket::MessageType::FIR:
 							{
-								packet = FirPacket::ParseStrict(ptr, packetLength, packetLength);
+								packet = FirPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 								break;
 							}
@@ -150,16 +151,16 @@ namespace RTC
 								// The application is identified by the first 4 bytes of the
 								// Feedback Control Information (FCI).
 								if (
-								  packetLength >= AnyFeedbackPacket::FeedbackHeaderLength + 4 &&
+								  packetLength - padding >= AnyFeedbackPacket::FeedbackHeaderLength + 4 &&
 								  Utils::Byte::Get4Bytes(ptr, AnyFeedbackPacket::FeedbackHeaderLength) ==
 								    RembPacket::UniqueIdentifier)
 								{
-									packet = RembPacket::ParseStrict(ptr, packetLength, packetLength);
+									packet = RembPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 								}
 								else
 								{
 									packet = UnknownPayloadSpecificFeedbackPacket::ParseStrict(
-									  ptr, packetLength, packetLength);
+									  ptr, packetLength, packetLength, padding);
 								}
 
 								break;
@@ -167,8 +168,8 @@ namespace RTC
 
 							default:
 							{
-								packet =
-								  UnknownPayloadSpecificFeedbackPacket::ParseStrict(ptr, packetLength, packetLength);
+								packet = UnknownPayloadSpecificFeedbackPacket::ParseStrict(
+								  ptr, packetLength, packetLength, padding);
 							}
 						}
 

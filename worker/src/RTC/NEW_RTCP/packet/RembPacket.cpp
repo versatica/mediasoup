@@ -18,8 +18,9 @@ namespace RTC
 
 			Packet::PacketType packetType;
 			size_t packetLength;
+			uint8_t padding;
 
-			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength))
+			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength, padding))
 			{
 				return nullptr;
 			}
@@ -31,8 +32,8 @@ namespace RTC
 				return nullptr;
 			}
 
-			const auto messageType = static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(
-			  reinterpret_cast<const Packet::CommonHeader*>(buffer)->count);
+			const auto messageType =
+			  static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(buffer[0] & 0x1F);
 
 			if (messageType != AnyPayloadSpecificFeedbackPacket::MessageType::AFB)
 			{
@@ -41,7 +42,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			return RembPacket::ParseStrict(buffer, bufferLength, packetLength);
+			return RembPacket::ParseStrict(buffer, bufferLength, packetLength, padding);
 		}
 
 		RembPacket* RembPacket::Factory(uint8_t* buffer, size_t bufferLength)
@@ -73,11 +74,15 @@ namespace RTC
 			return packet;
 		}
 
-		RembPacket* RembPacket::ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength)
+		RembPacket* RembPacket::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{
 			MS_TRACE();
 
-			if (packetLength < RembPacket::RembHeaderLength)
+			// Length of the packet excluding padding.
+			const size_t contentLength = packetLength - padding;
+
+			if (contentLength < RembPacket::RembHeaderLength)
 			{
 				MS_WARN_TAG(
 				  rtcp, "RembPacket length must be equal or greater than %zu", RembPacket::RembHeaderLength);
@@ -94,13 +99,15 @@ namespace RTC
 
 			const uint8_t numberOfSsrcs = Utils::Byte::Get1Byte(buffer, 16);
 
-			// The packet must end right after the announced SSRCs.
-			if (packetLength != RembPacket::RembHeaderLength + (numberOfSsrcs * 4))
+			// The packet (excluding padding) must end right after the announced
+			// SSRCs.
+			if (contentLength != RembPacket::RembHeaderLength + (numberOfSsrcs * 4))
 			{
 				MS_WARN_TAG(
 				  rtcp,
-				  "packet length (%zu bytes) does not match the number of SSRCs (%" PRIu8 ")",
-				  packetLength,
+				  "packet length (%zu bytes, excluding padding) does not match the number of SSRCs (%" PRIu8
+				  ")",
+				  contentLength,
 				  numberOfSsrcs);
 
 				return nullptr;

@@ -62,6 +62,7 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 			packet->GetType();
 			packet->HasUnknownType();
 			packet->HasPadding();
+			packet->GetPaddingLength();
 
 			switch (packet->GetType())
 			{

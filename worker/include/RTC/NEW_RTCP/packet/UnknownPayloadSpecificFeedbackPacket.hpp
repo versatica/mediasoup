@@ -55,7 +55,7 @@ namespace RTC
 			 * - To be used only by `CompoundPacket::Parse()`.
 			 */
 			static UnknownPayloadSpecificFeedbackPacket* ParseStrict(
-			  const uint8_t* buffer, size_t bufferLength, size_t packetLength);
+			  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding);
 
 		private:
 			/**
@@ -77,7 +77,7 @@ namespace RTC
 
 			bool HasUnknownValue() const
 			{
-				return GetLength() > AnyFeedbackPacket::FeedbackHeaderLength;
+				return GetLength() - GetPaddingLength() > AnyFeedbackPacket::FeedbackHeaderLength;
 			}
 
 			const uint8_t* GetUnknownValue() const
@@ -92,7 +92,7 @@ namespace RTC
 
 			size_t GetUnknownValueLength() const
 			{
-				return GetLength() - AnyFeedbackPacket::FeedbackHeaderLength;
+				return GetLength() - GetPaddingLength() - AnyFeedbackPacket::FeedbackHeaderLength;
 			}
 
 		private:

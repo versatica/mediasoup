@@ -31,7 +31,9 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 		  /*length*/ 12,
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*packetType*/ static_cast<RTC::NEW_RTCP::Packet::PacketType>(222),
-		  /*unknownType*/ true);
+		  /*unknownType*/ true,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->HasUnknownValue() == true);
 		REQUIRE(packet->GetUnknownValueLength() == 8);
@@ -52,7 +54,9 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 		  /*length*/ 12,
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*packetType*/ static_cast<RTC::NEW_RTCP::Packet::PacketType>(222),
-		  /*unknownType*/ true);
+		  /*unknownType*/ true,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->HasUnknownValue() == true);
 		REQUIRE(packet->GetUnknownValueLength() == 8);
@@ -73,13 +77,81 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 		  /*length*/ 12,
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*packetType*/ static_cast<RTC::NEW_RTCP::Packet::PacketType>(222),
-		  /*unknownType*/ true);
+		  /*unknownType*/ true,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->HasUnknownValue() == true);
 		REQUIRE(packet->GetUnknownValueLength() == 8);
 		REQUIRE(packet->GetUnknownValue()[0] == 0x11);
 		REQUIRE(packet->GetUnknownValue()[1] == 0x22);
 		REQUIRE(packet->GetUnknownValue()[7] == 0x88);
+	}
+
+	SECTION("UnknownPacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, Count=5, PT:222, Length: 2
+			0b10100101, 0xDE, 0x00, 0x02,
+			// 5 bytes of value
+			0x11, 0x22, 0x33, 0x44,
+			0x55,
+			// Padding: 3 bytes
+			0x00, 0x00, 0x03
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::UnknownPacket> packet{ RTC::NEW_RTCP::UnknownPacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 12,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		  /*packetType*/ static_cast<RTC::NEW_RTCP::Packet::PacketType>(222),
+		  /*unknownType*/ true,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 3);
+
+		REQUIRE(packet->HasUnknownValue() == true);
+		REQUIRE(packet->GetUnknownValueLength() == 5);
+		REQUIRE(packet->GetUnknownValue()[0] == 0x11);
+		REQUIRE(packet->GetUnknownValue()[4] == 0x55);
+	}
+
+	SECTION("UnknownPacket::Parse() with only padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, Count=5, PT:222, Length: 1
+			0b10100101, 0xDE, 0x00, 0x01,
+			// Padding: 4 bytes
+			0x00, 0x00, 0x00, 0x04
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::UnknownPacket> packet{ RTC::NEW_RTCP::UnknownPacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 8,
+		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+		  /*packetType*/ static_cast<RTC::NEW_RTCP::Packet::PacketType>(222),
+		  /*unknownType*/ true,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 4);
+
+		REQUIRE(packet->HasUnknownValue() == false);
+		REQUIRE(packet->GetUnknownValueLength() == 0);
+		REQUIRE(packet->GetUnknownValue() == nullptr);
 	}
 
 	SECTION("UnknownPacket::Parse() without value succeeds")
@@ -102,7 +174,9 @@ SCENARIO("RTCP Unknown Packet", "[serializable][rtcp][packet]")
 		  /*length*/ 4,
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		  /*packetType*/ static_cast<RTC::NEW_RTCP::Packet::PacketType>(222),
-		  /*unknownType*/ true);
+		  /*unknownType*/ true,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->HasUnknownValue() == false);
 		REQUIRE(packet->GetUnknownValue() == nullptr);
