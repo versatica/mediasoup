@@ -81,7 +81,7 @@ namespace RTC
 
 			auto* const packet = new SdesPacket(buffer, bufferLength);
 
-			packet->InitializeHeader(Packet::PacketType::SDES, Packet::CommonHeaderLength);
+			packet->InitializeHeader(Packet::PacketType::SDES, 0, Packet::CommonHeaderLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum Packet length.

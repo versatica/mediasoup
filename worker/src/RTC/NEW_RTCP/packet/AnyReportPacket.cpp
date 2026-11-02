@@ -93,24 +93,6 @@ namespace RTC
 			SetCount(GetCount() + 1);
 		}
 
-		bool AnyReportPacket::IsLengthValid() const
-		{
-			MS_TRACE();
-
-			if (GetProfileSpecificExtensionsPointer() > GetBuffer() + GetLength())
-			{
-				MS_WARN_TAG(
-				  rtcp,
-				  "fixed header and %" PRIu8 " report blocks exceed the packet length (%zu bytes)",
-				  GetNumberOfReportBlocks(),
-				  GetLength());
-
-				return false;
-			}
-
-			return true;
-		}
-
 		void AnyReportPacket::DumpReportBlocks(int indentation) const
 		{
 			MS_TRACE();

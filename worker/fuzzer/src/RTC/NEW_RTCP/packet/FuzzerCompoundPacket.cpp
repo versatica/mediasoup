@@ -1,16 +1,21 @@
 #include "RTC/NEW_RTCP/packet/FuzzerCompoundPacket.hpp"
+#include "RTC/NEW_RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerNackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerReceiverReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerSdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerSenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerUnknownPacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerUnknownTransportLayerFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/NackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
 
 namespace
 {
@@ -28,10 +33,12 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 		compoundPacket->GetPacketAt(1);
 		compoundPacket->GetPacketAt(2);
 		compoundPacket->GetPacketAt(666);
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SenderReportPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ReceiverReportPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SdesPacket>();
-		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SenderReportPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ByePacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::NackPacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownTransportLayerFeedbackPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPacket>();
 
 		for (auto it = compoundPacket->PacketsBegin(); it != compoundPacket->PacketsEnd(); ++it)
@@ -99,7 +106,31 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 
 				case RTC::NEW_RTCP::Packet::PacketType::RTPFB:
 				{
-					// TODO
+					const auto* const transportLayerFeedbackPacket =
+					  static_cast<const RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket*>(packet);
+
+					switch (transportLayerFeedbackPacket->GetMessageType())
+					{
+						case RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket::MessageType::NACK:
+						{
+							const auto* const nackPacket =
+							  static_cast<const RTC::NEW_RTCP::NackPacket*>(transportLayerFeedbackPacket);
+
+							FuzzerRtcRtcpNackPacket::Fuzz(nackPacket);
+
+							break;
+						}
+
+						default:
+						{
+							const auto* const unknownTransportLayerFeedbackPacket =
+							  static_cast<const RTC::NEW_RTCP::UnknownTransportLayerFeedbackPacket*>(
+							    transportLayerFeedbackPacket);
+
+							FuzzerRtcRtcpUnknownTransportLayerFeedbackPacket::Fuzz(
+							  unknownTransportLayerFeedbackPacket);
+						}
+					}
 
 					break;
 				}

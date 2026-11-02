@@ -44,18 +44,19 @@ namespace RTC
 
 			auto* const packet = new SenderReportPacket(buffer, bufferLength);
 
-			packet->InitializeHeader(Packet::PacketType::SR, SenderReportPacket::SenderReportHeaderLength);
+			packet->InitializeHeader(
+			  Packet::PacketType::SR, 0, SenderReportPacket::SenderReportHeaderLength);
 
-			// Must always invoke SetLength() after constructing a Serializable with
-			// not fixed length.
-			packet->SetLength(SenderReportPacket::SenderReportHeaderLength);
-
+			// Must also initialize extra fields in the header.
 			packet->SetSsrc(0);
 			packet->SetNtpSec(0);
 			packet->SetNtpFrac(0);
 			packet->SetRtpTimestamp(0);
 			packet->SetPacketCount(0);
 			packet->SetOctetCount(0);
+
+			// No need to invoke SetLength() since constructor invoked it with
+			// minimum SenderReportPacket length.
 
 			return packet;
 		}
@@ -65,14 +66,31 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (packetLength < SenderReportPacket::SenderReportHeaderLength)
+			{
+				MS_WARN_TAG(
+				  rtcp,
+				  "SenderReportPacket length must be equal or greater than %zu",
+				  SenderReportPacket::SenderReportHeaderLength);
+
+				return nullptr;
+			}
+
 			auto* const packet = new SenderReportPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
 			packet->SetLength(packetLength);
 
-			if (!packet->IsLengthValid())
+			// Validate that the announced report blocks fit into the packet.
+			const size_t reportBlocksEndOffset =
+			  SenderReportPacket::SenderReportHeaderLength +
+			  (packet->GetNumberOfReportBlocks() * AnyReportPacket::ReportBlockLength);
+
+			if (reportBlocksEndOffset > packetLength)
 			{
+				MS_WARN_TAG(rtcp, "report blocks exceed the packet length");
+
 				delete packet;
 				return nullptr;
 			}
@@ -87,7 +105,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(Packet::CommonHeaderLength);
+			SetLength(SenderReportPacket::SenderReportHeaderLength);
 		}
 
 		SenderReportPacket::~SenderReportPacket()
