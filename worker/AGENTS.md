@@ -57,7 +57,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 ## Functions and statements
 
-- Every function and method defined in a `.cpp` starts with `MS_TRACE()` (`MS_TRACE_STD()` in the `Channel` classes and other code that uses the `_STD` variants).
+- Every function and method defined in a `.cpp` starts with `MS_TRACE()` (`MS_TRACE_STD()` in the `Channel` classes and other code that uses the `_STD` variants). This does not apply to the fuzzers (`fuzzer/`).
 - Local declarations inside a function: `constexpr` first, then `const`, then non-const, with a blank line between groups. This does NOT apply to the private/protected member declarations of a class: there members are grouped by meaning with their group comment.
 - Code is split into paragraphs with blank lines: a declaration is not glued to the first thing done with it, an action is not glued to the assert/`REQUIRE` that checks it, and a check is not glued to the next action.
 - Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters. But never replace an explicit type with `auto` when the right-hand side does not show the type.
