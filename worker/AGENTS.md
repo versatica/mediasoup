@@ -50,10 +50,11 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 ## Class layout
 
-- Nested types (`struct`, `class`, `enum`, `using`) go at the very top of the class body, before any method, under their own access specifier.
+- Class constants (`static constexpr` / `static const` members) go at the very top of the class body. Nested types (`struct`, `class`, `enum`, `using`) go right after them, before any method, under their own access specifier. A class constant whose type uses a nested type goes after that nested type.
 - A block of `static constexpr` / `static const` members always starts with its own `public:` or `private:` line, even when the previous block has the same access.
 - Struct fields that need documentation use multiline `/** ... */` comments, never `//`.
 - Public methods and class constants are documented with `/** ... */`. Parameter docs take a dash: `@param nowMs - Current time.`
+- `@remarks` goes alone on its line (no colon, no text after it), and its content goes on the following lines as dash items (`- `), with continuation lines indented two spaces.
 
 ## Functions and statements
 

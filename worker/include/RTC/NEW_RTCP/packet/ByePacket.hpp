@@ -50,7 +50,7 @@ namespace RTC
 			 * Parse a ByePacket.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the packet.
+			 * - `bufferLength` may exceed the exact length of the packet.
 			 */
 			static ByePacket* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -58,7 +58,7 @@ namespace RTC
 			 * Create a ByePacket.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the packet real length.
+			 * - `bufferLength` could be greater than the packet real length.
 			 */
 			static ByePacket* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -67,7 +67,7 @@ namespace RTC
 			 * Parse a ByePacket.
 			 *
 			 * @remarks
-			 * To be used only by `CompoundPacket::Parse()`.
+			 * - To be used only by `CompoundPacket::Parse()`.
 			 */
 			static ByePacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
 

@@ -33,7 +33,7 @@ namespace RTC
 			 * Parse a ProtocolViolationErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static ProtocolViolationErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -41,7 +41,7 @@ namespace RTC
 			 * Create a ProtocolViolationErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the error cause real length.
+			 * - `bufferLength` could be greater than the error cause real length.
 			 */
 			static ProtocolViolationErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -50,7 +50,7 @@ namespace RTC
 			 * Parse a ProtocolViolationErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static ProtocolViolationErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);

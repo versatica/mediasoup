@@ -44,7 +44,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
-			auto* packet = new ByePacket(buffer, bufferLength);
+			auto* const packet = new ByePacket(buffer, bufferLength);
 
 			packet->InitializeHeader(Packet::PacketType::BYE, Packet::CommonHeaderLength);
 
@@ -58,7 +58,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* packet = new ByePacket(const_cast<uint8_t*>(buffer), bufferLength);
+			auto* const packet = new ByePacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length. It's also required so the getters below operate
@@ -155,7 +155,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedPacket = new ByePacket(buffer, bufferLength);
+			auto* const clonedPacket = new ByePacket(buffer, bufferLength);
 
 			CloneInto(clonedPacket);
 
@@ -273,7 +273,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedPacket = new ByePacket(const_cast<uint8_t*>(buffer), GetLength());
+			auto* const softClonedPacket = new ByePacket(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedPacket);
 

@@ -33,7 +33,7 @@ namespace RTC
 			 * Parse a UnrecognizedParameterParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the parameter.
+			 * - `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static UnrecognizedParameterParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -41,7 +41,7 @@ namespace RTC
 			 * Create a UnrecognizedParameterParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the parameter real length.
+			 * - `bufferLength` could be greater than the parameter real length.
 			 */
 			static UnrecognizedParameterParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -50,7 +50,7 @@ namespace RTC
 			 * Parse a UnrecognizedParameterParameter.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * - To be used only by `Chunk::ParseParameters()`.
 			 */
 			static UnrecognizedParameterParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);

@@ -52,7 +52,7 @@ namespace RTC
 			 * Parse a ForwardTsnChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static ForwardTsnChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -60,7 +60,7 @@ namespace RTC
 			 * Create a ForwardTsnChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static ForwardTsnChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -69,7 +69,7 @@ namespace RTC
 			 * Parse a ForwardTsnChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static ForwardTsnChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);

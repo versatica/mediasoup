@@ -16,9 +16,10 @@ namespace RTC
 			 * shared ownership of the clone.
 			 *
 			 * @remarks
-			 * The buffer allocated for the clone is deallocated by the clone itself
-			 * (via its buffer released listener) once it's destroyed, so the caller
-			 * just needs to drop every reference to the returned shared pointer.
+			 * - The buffer allocated for the clone is deallocated by the clone
+			 *   itself (via its buffer released listener) once it's destroyed, so
+			 *   the caller just needs to drop every reference to the returned shared
+			 *   pointer.
 			 */
 			static std::shared_ptr<RTP::Packet> ClonePacket(const RTP::Packet* packet);
 
@@ -27,10 +28,10 @@ namespace RTC
 			 * packet.
 			 *
 			 * @remarks
-			 * A shared packet corresponds to a single packet received by a Producer,
-			 * so this must be asserted wherever an already existing clone (made by
-			 * another Consumer of the same Producer) is reused rather than a new one
-			 * made.
+			 * - A shared packet corresponds to a single packet received by a
+			 *   Producer, so this must be asserted wherever an already existing
+			 *   clone (made by another Consumer of the same Producer) is reused
+			 *   rather than a new one made.
 			 */
 			static void AssertSamePacket(
 			  const std::shared_ptr<RTP::Packet>& sharedPacket, const RTP::Packet* otherPacket);

@@ -236,7 +236,7 @@ namespace RTC
 			 * as attempting to send an empty message or failing to enqueue a message
 			 * if the send queue is full.
 			 *
-			 * @remarks:
+			 * @remarks
 			 * - This is a message lifecycle event.
 			 * - When the association is deallocated, there will be no
 			 *   OnAssociationLifecycleMessageEnd() callbacks sent for messages that were

@@ -48,7 +48,7 @@ namespace RTC
 			 * Parse a OutgoingSsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the parameter.
+			 * - `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static OutgoingSsnResetRequestParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -56,7 +56,7 @@ namespace RTC
 			 * Create a OutgoingSsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the parameter real length.
+			 * - `bufferLength` could be greater than the parameter real length.
 			 */
 			static OutgoingSsnResetRequestParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -65,7 +65,7 @@ namespace RTC
 			 * Parse a OutgoingSsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * - To be used only by `Chunk::ParseParameters()`.
 			 */
 			static OutgoingSsnResetRequestParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);

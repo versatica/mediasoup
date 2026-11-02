@@ -5,7 +5,9 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
+#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 
 namespace RTC
@@ -25,7 +27,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* compoundPacket = new CompoundPacket(const_cast<uint8_t*>(buffer), bufferLength);
+			auto* const compoundPacket = new CompoundPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Pointer that initially points to the given data buffer and is later
 			// incremented to point to each packet within the compound packet.
@@ -69,16 +71,14 @@ namespace RTC
 
 					case Packet::PacketType::SR:
 					{
-						// TODO
-						// packet = SenderReportPacket::ParseStrict(ptr, packetLength);
+						packet = SenderReportPacket::ParseStrict(ptr, packetLength, packetLength);
 
 						break;
 					}
 
 					case Packet::PacketType::RR:
 					{
-						// TODO
-						// packet = ReceiverReportPacket::ParseStrict(ptr, packetLength);
+						packet = ReceiverReportPacket::ParseStrict(ptr, packetLength, packetLength);
 
 						break;
 					}
@@ -221,7 +221,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto* previousBuffer = GetBuffer();
+			const auto* const previousBuffer = GetBuffer();
 
 			// Invoke the parent method to copy the whole buffer.
 			Serializable::Serialize(buffer, bufferLength);
@@ -238,7 +238,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedCompoundPacket = new CompoundPacket(buffer, bufferLength);
+			auto* const clonedCompoundPacket = new CompoundPacket(buffer, bufferLength);
 
 			Serializable::CloneInto(clonedCompoundPacket);
 
@@ -247,7 +247,7 @@ namespace RTC
 			{
 				const size_t offset = packet->GetBuffer() - GetBuffer();
 
-				auto* softClonedPacket = packet->SoftClone(buffer + offset);
+				auto* const softClonedPacket = packet->SoftClone(buffer + offset);
 
 				clonedCompoundPacket->packets.push_back(softClonedPacket);
 			}

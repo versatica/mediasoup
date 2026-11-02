@@ -81,7 +81,7 @@ namespace RTC
 			 * Parse a DataChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static DataChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -89,7 +89,7 @@ namespace RTC
 			 * Create a DataChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static DataChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -98,7 +98,7 @@ namespace RTC
 			 * Parse a DataChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static DataChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -176,7 +176,8 @@ namespace RTC
 			void SetStreamSequenceNumber(uint16_t value);
 
 			/**
-			 * @remarks Only in I-DATA chunks.
+			 * @remarks
+			 * - Only in I-DATA chunks.
 			 */
 			uint32_t GetMessageId() const final
 			{
@@ -189,7 +190,8 @@ namespace RTC
 			}
 
 			/**
-			 * @remarks Only in I-DATA chunks.
+			 * @remarks
+			 * - Only in I-DATA chunks.
 			 */
 			uint32_t GetFragmentSequenceNumber() const final
 			{

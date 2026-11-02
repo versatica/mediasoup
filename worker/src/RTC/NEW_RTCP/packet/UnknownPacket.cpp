@@ -30,7 +30,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* packet = new UnknownPacket(const_cast<uint8_t*>(buffer), bufferLength);
+			auto* const packet = new UnknownPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
@@ -72,7 +72,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedPacket = new UnknownPacket(buffer, bufferLength);
+			auto* const clonedPacket = new UnknownPacket(buffer, bufferLength);
 
 			CloneInto(clonedPacket);
 
@@ -83,7 +83,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedPacket = new UnknownPacket(const_cast<uint8_t*>(buffer), GetLength());
+			auto* const softClonedPacket = new UnknownPacket(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedPacket);
 

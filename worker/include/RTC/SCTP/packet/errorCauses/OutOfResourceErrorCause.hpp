@@ -30,7 +30,7 @@ namespace RTC
 			 * Parse a OutOfResourceErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static OutOfResourceErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -38,7 +38,7 @@ namespace RTC
 			 * Create a OutOfResourceErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the error cause real length.
+			 * - `bufferLength` could be greater than the error cause real length.
 			 */
 			static OutOfResourceErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -47,7 +47,7 @@ namespace RTC
 			 * Parse a OutOfResourceErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static OutOfResourceErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);

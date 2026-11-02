@@ -113,7 +113,7 @@ namespace RTC
 			 * Parse a SdesPacket.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the packet.
+			 * - `bufferLength` may exceed the exact length of the packet.
 			 */
 			static SdesPacket* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -121,7 +121,7 @@ namespace RTC
 			 * Create a SdesPacket.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the packet real length.
+			 * - `bufferLength` could be greater than the packet real length.
 			 */
 			static SdesPacket* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -130,7 +130,7 @@ namespace RTC
 			 * Parse a SdesPacket.
 			 *
 			 * @remarks
-			 * To be used only by `CompoundPacket::Parse()`.
+			 * - To be used only by `CompoundPacket::Parse()`.
 			 */
 			static SdesPacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
 
@@ -187,13 +187,13 @@ namespace RTC
 			SdesPacket* SoftClone(const uint8_t* buffer) const final;
 
 			/**
-			 * Offset (from the start of the packet) of the null octet that
-			 * terminates the list of items of the last chunk.
+			 * Pointer to the null octet that terminates the list of items of the
+			 * last chunk.
 			 *
 			 * @remarks
 			 * - The packet must have at least one chunk.
 			 */
-			size_t GetLastChunkItemsEndOffset() const;
+			uint8_t* GetLastChunkItemsEndPointer() const;
 		};
 	} // namespace NEW_RTCP
 } // namespace RTC

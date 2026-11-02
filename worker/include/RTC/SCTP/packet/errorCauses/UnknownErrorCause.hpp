@@ -31,7 +31,7 @@ namespace RTC
 			 * Parse a UnknownErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static UnknownErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -40,7 +40,7 @@ namespace RTC
 			 * Parse a UnknownErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static UnknownErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
