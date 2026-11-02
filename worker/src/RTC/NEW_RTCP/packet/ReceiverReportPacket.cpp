@@ -45,13 +45,13 @@ namespace RTC
 			auto* const packet = new ReceiverReportPacket(buffer, bufferLength);
 
 			packet->InitializeHeader(
-			  Packet::PacketType::RR, ReceiverReportPacket::ReceiverReportHeaderLength);
+			  Packet::PacketType::RR, 0, ReceiverReportPacket::ReceiverReportHeaderLength);
 
-			// Must always invoke SetLength() after constructing a Serializable with
-			// not fixed length.
-			packet->SetLength(ReceiverReportPacket::ReceiverReportHeaderLength);
-
+			// Must also initialize extra fields in the header.
 			packet->SetSsrc(0);
+
+			// No need to invoke SetLength() since constructor invoked it with
+			// minimum ReceiverReportPacket length.
 
 			return packet;
 		}
@@ -61,14 +61,31 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (packetLength < ReceiverReportPacket::ReceiverReportHeaderLength)
+			{
+				MS_WARN_TAG(
+				  rtcp,
+				  "ReceiverReportPacket length must be equal or greater than %zu",
+				  ReceiverReportPacket::ReceiverReportHeaderLength);
+
+				return nullptr;
+			}
+
 			auto* const packet = new ReceiverReportPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
 			packet->SetLength(packetLength);
 
-			if (!packet->IsLengthValid())
+			// Validate that the announced report blocks fit into the packet.
+			const size_t reportBlocksEndOffset =
+			  ReceiverReportPacket::ReceiverReportHeaderLength +
+			  (packet->GetNumberOfReportBlocks() * AnyReportPacket::ReportBlockLength);
+
+			if (reportBlocksEndOffset > packetLength)
 			{
+				MS_WARN_TAG(rtcp, "report blocks exceed the packet length");
+
 				delete packet;
 				return nullptr;
 			}
@@ -83,7 +100,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(Packet::CommonHeaderLength);
+			SetLength(ReceiverReportPacket::ReceiverReportHeaderLength);
 		}
 
 		ReceiverReportPacket::~ReceiverReportPacket()

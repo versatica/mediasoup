@@ -137,16 +137,6 @@ namespace RTC
 			virtual size_t GetHeaderLength() const = 0;
 
 			/**
-			 * Whether the fixed header and the report blocks announced by the RC
-			 * field fit into the packet.
-			 *
-			 * @remarks
-			 * - To be used by `ParseStrict()` in subclasses once the length of the
-			 *   packet has been set.
-			 */
-			bool IsLengthValid() const;
-
-			/**
 			 * Subclasses must invoke this method within their Dump() method.
 			 */
 			void DumpReportBlocks(int indentation) const;

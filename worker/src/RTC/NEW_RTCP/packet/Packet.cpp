@@ -144,7 +144,7 @@ namespace RTC
 			packet->SetLength(GetLength());
 		}
 
-		void Packet::InitializeHeader(PacketType packetType, size_t length)
+		void Packet::InitializeHeader(PacketType packetType, uint8_t count, size_t length)
 		{
 			MS_TRACE();
 
@@ -152,7 +152,7 @@ namespace RTC
 
 			commonHeader->version    = 2;
 			commonHeader->padding    = 0;
-			commonHeader->count      = 0;
+			commonHeader->count      = count;
 			commonHeader->packetType = packetType;
 
 			SetLengthField(length);

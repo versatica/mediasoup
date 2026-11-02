@@ -46,7 +46,7 @@ namespace RTC
 
 			auto* const packet = new ByePacket(buffer, bufferLength);
 
-			packet->InitializeHeader(Packet::PacketType::BYE, Packet::CommonHeaderLength);
+			packet->InitializeHeader(Packet::PacketType::BYE, 0, Packet::CommonHeaderLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum Packet length.

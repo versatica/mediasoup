@@ -227,7 +227,7 @@ namespace RTC
 
 			virtual void SoftCloneInto(Packet* packet) const final;
 
-			virtual void InitializeHeader(PacketType packetType, size_t length) final;
+			virtual void InitializeHeader(PacketType packetType, uint8_t count, size_t length) final;
 
 			virtual uint8_t GetCount() const final
 			{

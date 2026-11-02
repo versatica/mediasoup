@@ -390,4 +390,90 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		REQUIRE(packet->GetNumberOfChunks() == 1);
 		REQUIRE(packet->GetItems().empty());
 	}
+
+	SECTION("SdesPacket with a chunk whose null octet ends at a 32-bit boundary")
+	{
+		const auto checkItems = [](const RTC::NEW_RTCP::SdesPacket* packet) -> void
+		{
+			const auto items = packet->GetItems();
+
+			REQUIRE(packet->GetNumberOfChunks() == 2);
+			REQUIRE(items.size() == 2);
+
+			REQUIRE(items[0].ssrc == 0x11223344);
+			REQUIRE(items[0].type == RTC::NEW_RTCP::SdesPacket::ItemType::LOC);
+			REQUIRE(items[0].value == "abcdefghijklmnopq");
+
+			REQUIRE(items[1].ssrc == 5678);
+			REQUIRE(items[1].type == RTC::NEW_RTCP::SdesPacket::ItemType::CNAME);
+			REQUIRE(items[1].value == "ab");
+		};
+
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=0, SC=2, PT:202, Length: 9
+			0b10000010, 0xCA, 0x00, 0x09,
+			// Chunk 1
+			// SSRC: 0x11223344
+			0x11, 0x22, 0x33, 0x44,
+			// Item type: 5 (LOC), Length: 17, Value: "abcdefghijklmnopq"
+			0x05, 0x11, 0x61, 0x62,
+			0x63, 0x64, 0x65, 0x66,
+			0x67, 0x68, 0x69, 0x6A,
+			0x6B, 0x6C, 0x6D, 0x6E,
+			// End of value "opq" and null octet (no padding)
+			0x6F, 0x70, 0x71, 0x00,
+			// Chunk 2
+			// SSRC: 5678
+			0x00, 0x00, 0x16, 0x2E,
+			// Item type: 1 (CNAME), Length: 2, Value: "ab"
+			0x01, 0x02, 0x61, 0x62,
+			// Null octet and 3 octets of padding
+			0x00, 0x00, 0x00, 0x00
+		};
+		// clang-format on
+
+		/* Parse it. */
+
+		std::unique_ptr<RTC::NEW_RTCP::SdesPacket> parsedPacket{ RTC::NEW_RTCP::SdesPacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ parsedPacket.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 40,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
+		  /*unknownType*/ false);
+
+		checkItems(parsedPacket.get());
+
+		/* Build the same packet. */
+
+		std::unique_ptr<RTC::NEW_RTCP::SdesPacket> packet{ RTC::NEW_RTCP::SdesPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+
+		packet->AddChunk(0x11223344);
+		packet->AddItem(RTC::NEW_RTCP::SdesPacket::ItemType::LOC, "abcdefghijklmnopq");
+
+		REQUIRE(packet->GetLength() == 28);
+
+		packet->AddChunk(5678);
+		packet->AddItem(RTC::NEW_RTCP::SdesPacket::ItemType::CNAME, "ab");
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ rtcpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
+		  /*length*/ 40,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::SDES,
+		  /*unknownType*/ false);
+
+		checkItems(packet.get());
+
+		REQUIRE(
+		  helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, sizeof(buffer)) ==
+		  true);
+	}
 }

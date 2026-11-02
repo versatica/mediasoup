@@ -4,11 +4,14 @@
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/NEW_RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/NackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
 
 namespace RTC
 {
@@ -107,8 +110,25 @@ namespace RTC
 
 					case Packet::PacketType::RTPFB:
 					{
-						// TODO
-						// packet = TransportLayerFeedbackPacket::ParseStrict(ptr, packetLength);
+						// The FMT field tells the type of the feedback message.
+						const auto messageType = static_cast<AnyTransportLayerFeedbackPacket::MessageType>(
+						  reinterpret_cast<const Packet::CommonHeader*>(ptr)->count);
+
+						switch (messageType)
+						{
+							case AnyTransportLayerFeedbackPacket::MessageType::NACK:
+							{
+								packet = NackPacket::ParseStrict(ptr, packetLength, packetLength);
+
+								break;
+							}
+
+							default:
+							{
+								packet =
+								  UnknownTransportLayerFeedbackPacket::ParseStrict(ptr, packetLength, packetLength);
+							}
+						}
 
 						break;
 					}
