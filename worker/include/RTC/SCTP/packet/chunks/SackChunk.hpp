@@ -175,7 +175,7 @@ namespace RTC
 
 			void AddDuplicateTsn(uint32_t tsn);
 
-		protected:
+		private:
 			SackChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -187,7 +187,6 @@ namespace RTC
 				return SackChunk::SackChunkHeaderLength;
 			}
 
-		private:
 			void SetNumberOfGapAckBlocks(uint16_t value);
 
 			void SetNumberOfDuplicateTsns(uint16_t value);

@@ -252,7 +252,7 @@ namespace RTC
 
 			void SetUserData(UserData userData);
 
-		protected:
+		private:
 			IDataChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -264,7 +264,6 @@ namespace RTC
 				return IDataChunk::IDataChunkHeaderLength;
 			}
 
-		private:
 			void SetReserved();
 		};
 	} // namespace SCTP

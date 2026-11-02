@@ -65,7 +65,7 @@ namespace RTC
 
 			ForwardTsnSupportedParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-		protected:
+		private:
 			ForwardTsnSupportedParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

@@ -79,7 +79,7 @@ namespace RTC
 
 			void SetReconfigurationRequestSequenceNumber(uint32_t value);
 
-		protected:
+		private:
 			SsnTsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**

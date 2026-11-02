@@ -66,7 +66,7 @@ namespace RTC
 
 			CookieReceivedWhileShuttingDownErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-		protected:
+		private:
 			CookieReceivedWhileShuttingDownErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

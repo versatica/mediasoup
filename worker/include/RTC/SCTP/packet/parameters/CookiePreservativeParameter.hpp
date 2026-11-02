@@ -78,7 +78,7 @@ namespace RTC
 
 			void SetLifeSpanIncrement(uint32_t increment);
 
-		protected:
+		private:
 			CookiePreservativeParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**

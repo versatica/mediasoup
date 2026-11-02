@@ -111,10 +111,9 @@ namespace RTC
 
 			void SetReason(const std::string_view& reason);
 
-		protected:
+		private:
 			ByePacket* SoftClone(const uint8_t* buffer) const final;
 
-		private:
 			uint8_t* GetSsrcsPointer() const
 			{
 				return GetVariableLengthValuePointer();

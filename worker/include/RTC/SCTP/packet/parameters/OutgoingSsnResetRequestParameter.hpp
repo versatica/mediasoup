@@ -108,7 +108,7 @@ namespace RTC
 
 			void AddStreamId(uint16_t streamId);
 
-		protected:
+		private:
 			OutgoingSsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -120,7 +120,6 @@ namespace RTC
 				return OutgoingSsnResetRequestParameter::OutgoingSsnResetRequestParameterHeaderLength;
 			}
 
-		private:
 			uint16_t GetNumberOfStreams() const
 			{
 				return GetVariableLengthValueLength() / 2;

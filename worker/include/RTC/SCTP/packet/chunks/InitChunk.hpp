@@ -155,7 +155,7 @@ namespace RTC
 
 			void SetInitialTsn(uint32_t value);
 
-		protected:
+		private:
 			InitChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**

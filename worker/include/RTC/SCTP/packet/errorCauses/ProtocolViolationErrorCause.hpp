@@ -87,7 +87,7 @@ namespace RTC
 
 			void SetAdditionalInformation(const std::string& info);
 
-		protected:
+		private:
 			ProtocolViolationErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			virtual const std::string ContentToString() const override final;

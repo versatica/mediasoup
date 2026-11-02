@@ -89,7 +89,7 @@ namespace RTC
 
 			void SetT(bool flag);
 
-		protected:
+		private:
 			ShutdownCompleteChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

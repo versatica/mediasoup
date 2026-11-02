@@ -106,7 +106,7 @@ namespace RTC
 			  const uint8_t* macKey       = nullptr,
 			  size_t macKeyLength         = 0);
 
-		protected:
+		private:
 			StateCookieParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

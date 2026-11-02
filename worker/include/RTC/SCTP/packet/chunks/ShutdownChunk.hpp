@@ -95,7 +95,7 @@ namespace RTC
 
 			void SetCumulativeTsnAck(uint32_t value);
 
-		protected:
+		private:
 			ShutdownChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**

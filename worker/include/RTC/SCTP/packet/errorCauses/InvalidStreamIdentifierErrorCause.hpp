@@ -79,7 +79,7 @@ namespace RTC
 
 			void SetStreamIdentifier(uint16_t value);
 
-		protected:
+		private:
 			InvalidStreamIdentifierErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -94,7 +94,6 @@ namespace RTC
 
 			virtual const std::string ContentToString() const override final;
 
-		private:
 			void SetReserved();
 		};
 	} // namespace SCTP

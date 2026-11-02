@@ -89,7 +89,7 @@ namespace RTC
 				return GetVariableLengthValueLength();
 			}
 
-		protected:
+		private:
 			UnknownChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

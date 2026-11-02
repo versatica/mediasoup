@@ -81,7 +81,7 @@ namespace RTC
 				return GetVariableLengthValueLength();
 			}
 
-		protected:
+		private:
 			UnknownPacket* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace NEW_RTCP

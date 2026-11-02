@@ -90,7 +90,7 @@ namespace RTC
 
 			void AddMissingParameterType(Parameter::ParameterType parameterType);
 
-		protected:
+		private:
 			MissingMandatoryParameterErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -105,7 +105,6 @@ namespace RTC
 
 			virtual const std::string ContentToString() const override final;
 
-		private:
 			void SetNumberOfMissingParameters(uint32_t value);
 		};
 	} // namespace SCTP

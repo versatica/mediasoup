@@ -85,7 +85,7 @@ namespace RTC
 			 */
 			void SetIPv4Address(const uint8_t* ip);
 
-		protected:
+		private:
 			IPv4AddressParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -98,7 +98,6 @@ namespace RTC
 				return IPv4AddressParameter::IPv4AddressParameterHeaderLength;
 			}
 
-		private:
 			void ResetIPv4Address();
 		};
 	} // namespace SCTP

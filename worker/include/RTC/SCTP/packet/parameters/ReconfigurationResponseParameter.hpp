@@ -142,7 +142,7 @@ namespace RTC
 
 			void SetNextTsns(uint32_t senderNextTsn, uint32_t receiverNextTsn);
 
-		protected:
+		private:
 			ReconfigurationResponseParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
