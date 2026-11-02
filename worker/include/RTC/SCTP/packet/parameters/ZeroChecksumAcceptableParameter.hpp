@@ -118,7 +118,7 @@ namespace RTC
 
 			void SetAlternateErrorDetectionMethod(AlternateErrorDetectionMethod alternateErrorDetectionMethod);
 
-		protected:
+		private:
 			ZeroChecksumAcceptableParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**

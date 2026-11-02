@@ -158,7 +158,6 @@ namespace RTC
 			auto* clonedPacket = new ByePacket(buffer, bufferLength);
 
 			CloneInto(clonedPacket);
-			SoftCloneInto(clonedPacket);
 
 			return clonedPacket;
 		}

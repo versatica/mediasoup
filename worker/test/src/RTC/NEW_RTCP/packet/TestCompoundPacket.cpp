@@ -2,6 +2,7 @@
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 #include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -171,7 +172,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			const auto* packet1 =
 			  static_cast<const RTC::NEW_RTCP::ByePacket*>(compoundPacket->GetPacketAt(0));
 			const auto* packet2 =
-			  static_cast<const RTC::NEW_RTCP::ByePacket*>(compoundPacket->GetPacketAt(1));
+			  static_cast<const RTC::NEW_RTCP::SdesPacket*>(compoundPacket->GetPacketAt(1));
+			const auto sdesItems = packet2->GetItems();
 
 			REQUIRE(packet1->GetBuffer() == buffer);
 			REQUIRE(packet1->GetLength() == 12);
@@ -179,9 +181,12 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(packet1->GetReason() == "foo");
 
 			REQUIRE(packet2->GetBuffer() == buffer + 12);
-			REQUIRE(packet2->GetLength() == 8);
-			REQUIRE(packet2->GetSsrcs() == std::vector<uint32_t>{ 3333 });
-			REQUIRE(packet2->HasReason() == false);
+			REQUIRE(packet2->GetLength() == 16);
+			REQUIRE(packet2->GetNumberOfChunks() == 1);
+			REQUIRE(sdesItems.size() == 1);
+			REQUIRE(sdesItems[0].ssrc == 3333);
+			REQUIRE(sdesItems[0].type == RTC::NEW_RTCP::SdesPacket::ItemType::CNAME);
+			REQUIRE(sdesItems[0].value == "abc");
 		};
 
 		std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket{
@@ -239,11 +244,12 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 
 		/* Build another packet in the same place and consolidate it. */
 
-		auto* packet3 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::ByePacket>();
+		auto* packet3 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::SdesPacket>();
 
 		REQUIRE(packet3->GetBuffer() == compoundPacket->GetBuffer() + 12);
 
-		packet3->AddSsrc(3333);
+		packet3->AddChunk(3333);
+		packet3->AddItem(RTC::NEW_RTCP::SdesPacket::ItemType::CNAME, "abc");
 		packet3->Consolidate();
 
 		// Consolidate() or Discard() can only be called once.
@@ -254,7 +260,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*compoundPacket*/ compoundPacket.get(),
 		  /*buffer*/ rtcpCommon::FactoryBuffer,
 		  /*bufferLength*/ 1000,
-		  /*length*/ 20,
+		  /*length*/ 28,
 		  /*packetsCount*/ 2);
 
 		checkPackets(compoundPacket.get(), rtcpCommon::FactoryBuffer);
@@ -269,7 +275,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*compoundPacket*/ compoundPacket.get(),
 		  /*buffer*/ rtcpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
-		  /*length*/ 20,
+		  /*length*/ 28,
 		  /*packetsCount*/ 2);
 
 		checkPackets(compoundPacket.get(), rtcpCommon::SerializeBuffer);
@@ -285,7 +291,7 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*compoundPacket*/ compoundPacket.get(),
 		  /*buffer*/ rtcpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
-		  /*length*/ 20,
+		  /*length*/ 28,
 		  /*packetsCount*/ 2);
 
 		checkPackets(compoundPacket.get(), rtcpCommon::CloneBuffer);

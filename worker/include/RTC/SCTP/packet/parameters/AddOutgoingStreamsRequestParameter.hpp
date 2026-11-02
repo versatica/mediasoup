@@ -88,7 +88,7 @@ namespace RTC
 
 			void SetNumberOfNewStreams(uint16_t value);
 
-		protected:
+		private:
 			AddOutgoingStreamsRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -101,7 +101,6 @@ namespace RTC
 				return AddOutgoingStreamsRequestParameter::AddOutgoingStreamsRequestParameterHeaderLength;
 			}
 
-		private:
 			void SetReserved();
 		};
 	} // namespace SCTP

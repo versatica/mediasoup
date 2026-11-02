@@ -82,7 +82,7 @@ namespace RTC
 
 			void AddAddressType(uint16_t addressType);
 
-		protected:
+		private:
 			SupportedAddressTypesParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

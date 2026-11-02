@@ -85,7 +85,7 @@ namespace RTC
 
 			void SetUnrecognizedChunk(const uint8_t* chunk, uint16_t chunkLength);
 
-		protected:
+		private:
 			UnrecognizedChunkTypeErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

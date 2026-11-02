@@ -85,7 +85,7 @@ namespace RTC
 
 			void SetInfo(const uint8_t* info, uint16_t infoLength);
 
-		protected:
+		private:
 			HeartbeatInfoParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

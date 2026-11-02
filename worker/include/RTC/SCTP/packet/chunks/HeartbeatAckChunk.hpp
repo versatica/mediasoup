@@ -87,7 +87,7 @@ namespace RTC
 				return false;
 			}
 
-		protected:
+		private:
 			HeartbeatAckChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

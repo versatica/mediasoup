@@ -88,7 +88,7 @@ namespace RTC
 
 			void SetUpperLayerAbortReason(const std::string_view& reason);
 
-		protected:
+		private:
 			UserInitiatedAbortErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			virtual const std::string ContentToString() const override final;

@@ -78,7 +78,7 @@ namespace RTC
 
 			void SetTsn(uint32_t value);
 
-		protected:
+		private:
 			NoUserDataErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**

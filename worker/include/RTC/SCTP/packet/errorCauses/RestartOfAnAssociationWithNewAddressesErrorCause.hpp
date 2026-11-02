@@ -89,7 +89,7 @@ namespace RTC
 
 			void SetNewAddressTlvs(const uint8_t* tlvs, uint16_t tlvsLength);
 
-		protected:
+		private:
 			RestartOfAnAssociationWithNewAddressesErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

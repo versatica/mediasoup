@@ -88,7 +88,7 @@ namespace RTC
 			 */
 			void SetIPv6Address(const uint8_t* ip);
 
-		protected:
+		private:
 			IPv6AddressParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -101,7 +101,6 @@ namespace RTC
 				return IPv6AddressParameter::IPv6AddressParameterHeaderLength;
 			}
 
-		private:
 			void ResetIPv6Address();
 		};
 	} // namespace SCTP

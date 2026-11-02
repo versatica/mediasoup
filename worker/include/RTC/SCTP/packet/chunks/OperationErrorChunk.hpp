@@ -85,7 +85,7 @@ namespace RTC
 				return true;
 			}
 
-		protected:
+		private:
 			OperationErrorChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

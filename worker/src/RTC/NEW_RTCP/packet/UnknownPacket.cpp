@@ -75,7 +75,6 @@ namespace RTC
 			auto* clonedPacket = new UnknownPacket(buffer, bufferLength);
 
 			CloneInto(clonedPacket);
-			SoftCloneInto(clonedPacket);
 
 			return clonedPacket;
 		}

@@ -79,7 +79,7 @@ namespace RTC
 				return false;
 			}
 
-		protected:
+		private:
 			CookieAckChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

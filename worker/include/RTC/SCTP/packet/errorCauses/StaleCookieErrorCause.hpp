@@ -78,7 +78,7 @@ namespace RTC
 
 			void SetMeasureOfStaleness(uint32_t value);
 
-		protected:
+		private:
 			StaleCookieErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**

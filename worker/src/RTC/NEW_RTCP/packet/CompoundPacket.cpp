@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 
 namespace RTC
@@ -84,8 +85,7 @@ namespace RTC
 
 					case Packet::PacketType::SDES:
 					{
-						// TODO
-						// packet = SdesPacket::ParseStrict(ptr, packetLength);
+						packet = SdesPacket::ParseStrict(ptr, packetLength, packetLength);
 
 						break;
 					}

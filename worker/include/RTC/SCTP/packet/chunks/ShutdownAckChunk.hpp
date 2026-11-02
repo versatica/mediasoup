@@ -79,7 +79,7 @@ namespace RTC
 				return false;
 			}
 
-		protected:
+		private:
 			ShutdownAckChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

@@ -99,7 +99,7 @@ namespace RTC
 
 			void AddChunkType(Chunk::ChunkType chunkType);
 
-		protected:
+		private:
 			SupportedExtensionsParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

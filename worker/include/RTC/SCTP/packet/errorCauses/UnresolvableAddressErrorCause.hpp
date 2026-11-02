@@ -85,7 +85,7 @@ namespace RTC
 
 			void SetUnresolvableAddress(const uint8_t* address, uint16_t addressLength);
 
-		protected:
+		private:
 			UnresolvableAddressErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

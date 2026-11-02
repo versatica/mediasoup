@@ -85,7 +85,7 @@ namespace RTC
 
 			void SetUnrecognizedParameters(const uint8_t* parameters, uint16_t parametersLength);
 
-		protected:
+		private:
 			UnrecognizedParametersErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

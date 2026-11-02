@@ -100,7 +100,7 @@ namespace RTC
 
 			void SetCookie(const uint8_t* cookie, uint16_t cookieLength);
 
-		protected:
+		private:
 			CookieEchoChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
