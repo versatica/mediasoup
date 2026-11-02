@@ -436,7 +436,7 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 
 		/* Parse it. */
 
-		std::unique_ptr<RTC::NEW_RTCP::SdesPacket> parsedPacket{ RTC::NEW_RTCP::SdesPacket::Parse(
+		const std::unique_ptr<RTC::NEW_RTCP::SdesPacket> parsedPacket{ RTC::NEW_RTCP::SdesPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		CHECK_RTCP_PACKET(

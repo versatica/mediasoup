@@ -1,5 +1,9 @@
 # TODO NEW RTCP
 
+- Verify if libwebrtc implements RTCP packets/feedbacks that we don't and we should.
+
+- In `Transport.cpp` we currently ignore received RTCP BYE packets. Should we handle them? Let's check libwebrtc and so on.
+
 - Delete this file `TODO_NEW_RTCP.md`.
 
 - Address all "TODO" comments in all `NEW_RTCP/` folders.

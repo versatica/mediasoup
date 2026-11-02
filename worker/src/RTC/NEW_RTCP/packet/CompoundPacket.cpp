@@ -4,14 +4,20 @@
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/FirPacket.hpp"
 #include "RTC/NEW_RTCP/packet/NackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/PliPacket.hpp"
 #include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/RembPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -135,8 +141,52 @@ namespace RTC
 
 					case Packet::PacketType::PSFB:
 					{
-						// TODO
-						// packet = PayloadSpecificFeedbackPacket::ParseStrict(ptr, packetLength);
+						// The FMT field tells the type of the feedback message.
+						const auto messageType = static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(
+						  reinterpret_cast<const Packet::CommonHeader*>(ptr)->count);
+
+						switch (messageType)
+						{
+							case AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
+							{
+								packet = PliPacket::ParseStrict(ptr, packetLength, packetLength);
+
+								break;
+							}
+
+							case AnyPayloadSpecificFeedbackPacket::MessageType::FIR:
+							{
+								packet = FirPacket::ParseStrict(ptr, packetLength, packetLength);
+
+								break;
+							}
+
+							case AnyPayloadSpecificFeedbackPacket::MessageType::AFB:
+							{
+								// The application is identified by the first 4 bytes of the
+								// Feedback Control Information (FCI).
+								if (
+								  packetLength >= AnyFeedbackPacket::FeedbackHeaderLength + 4 &&
+								  Utils::Byte::Get4Bytes(ptr, AnyFeedbackPacket::FeedbackHeaderLength) ==
+								    RembPacket::UniqueIdentifier)
+								{
+									packet = RembPacket::ParseStrict(ptr, packetLength, packetLength);
+								}
+								else
+								{
+									packet = UnknownPayloadSpecificFeedbackPacket::ParseStrict(
+									  ptr, packetLength, packetLength);
+								}
+
+								break;
+							}
+
+							default:
+							{
+								packet =
+								  UnknownPayloadSpecificFeedbackPacket::ParseStrict(ptr, packetLength, packetLength);
+							}
+						}
 
 						break;
 					}
