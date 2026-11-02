@@ -45,7 +45,16 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			0b10000101, 0xDE, 0x00, 0x02,
 			// 8 bytes of value
 			0x11, 0x22, 0x33, 0x44,
-			0x55, 0x66, 0x77, 0x88
+			0x55, 0x66, 0x77, 0x88,
+			// APP Packet (not implemented so it must be parsed as Unknown Packet)
+			// V=2, P=0, Subtype=1, PT:204, Length: 3
+			0b10000001, 0xCC, 0x00, 0x03,
+			// SSRC: 0x11223344
+			0x11, 0x22, 0x33, 0x44,
+			// Name: "abcd"
+			0x61, 0x62, 0x63, 0x64,
+			// 4 bytes of application-dependent data
+			0xAA, 0xBB, 0xCC, 0xDD
 		};
 		// clang-format on
 
@@ -57,8 +66,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*compoundPacket*/ compoundPacket.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
-		  /*length*/ 36,
-		  /*packetsCount*/ 2);
+		  /*length*/ 52,
+		  /*packetsCount*/ 3);
 
 		REQUIRE(compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ByePacket>() != nullptr);
 		REQUIRE(compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPacket>() != nullptr);
@@ -102,6 +111,22 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		REQUIRE(packet2->GetUnknownValue()[0] == 0x11);
 		REQUIRE(packet2->GetUnknownValue()[1] == 0x22);
 		REQUIRE(packet2->GetUnknownValue()[7] == 0x88);
+
+		const auto* const packet3 =
+		  static_cast<const RTC::NEW_RTCP::UnknownPacket*>(compoundPacket->GetPacketAt(2));
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ const_cast<RTC::NEW_RTCP::UnknownPacket*>(packet3),
+		  /*buffer*/ buffer + 36,
+		  /*bufferLength*/ 16,
+		  /*length*/ 16,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::APP,
+		  /*unknownType*/ true);
+
+		REQUIRE(packet3->HasUnknownValue() == true);
+		REQUIRE(packet3->GetUnknownValueLength() == 12);
+		REQUIRE(packet3->GetUnknownValue()[0] == 0x11);
+		REQUIRE(packet3->GetUnknownValue()[11] == 0xDD);
 	}
 
 	SECTION("CompoundPacket::Parse() fails")

@@ -21,6 +21,7 @@ namespace RTC
 			{ AnyTransportLayerFeedbackPacket::MessageType::TLLEI,  "TLLEI"  },
 			{ AnyTransportLayerFeedbackPacket::MessageType::ECN,    "ECN"    },
 			{ AnyTransportLayerFeedbackPacket::MessageType::PS,     "PS"     },
+			{ AnyTransportLayerFeedbackPacket::MessageType::CCFB,   "CCFB"   },
 			{ AnyTransportLayerFeedbackPacket::MessageType::TCC,    "TCC"    },
 			{ AnyTransportLayerFeedbackPacket::MessageType::EXT,    "EXT"    },
 		};

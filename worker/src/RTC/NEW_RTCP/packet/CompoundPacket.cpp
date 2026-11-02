@@ -70,14 +70,6 @@ namespace RTC
 
 				switch (packetType)
 				{
-					case Packet::PacketType::IJ:
-					{
-						// TODO
-						// packet = ExtendedJitterReportPacket::ParseStrict(ptr, packetLength);
-
-						break;
-					}
-
 					case Packet::PacketType::SR:
 					{
 						packet = SenderReportPacket::ParseStrict(ptr, packetLength, packetLength);
@@ -102,14 +94,6 @@ namespace RTC
 					case Packet::PacketType::BYE:
 					{
 						packet = ByePacket::ParseStrict(ptr, packetLength, packetLength);
-
-						break;
-					}
-
-					case Packet::PacketType::APP:
-					{
-						// TODO
-						// packet = AppPacket::ParseStrict(ptr, packetLength);
 
 						break;
 					}

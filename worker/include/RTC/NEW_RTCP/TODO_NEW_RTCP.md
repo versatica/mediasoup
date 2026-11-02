@@ -1,8 +1,6 @@
 # TODO NEW RTCP
 
-- Verify if libwebrtc implements RTCP packets/feedbacks that we don't and we should.
-
-- In `Transport.cpp` we currently ignore received RTCP BYE packets. Should we handle them? Let's check libwebrtc and so on.
+- Maybe handle received RTCP BYE. Currently we ignore them in `Transport.cpp`. In libwebrtc, `RTCPReceiver::HandleBye()` drops everything it keeps about that sender: the RTT samples, the report blocks received from that sender SSRC, the last FIR, its RRTR (XR) entry and the XR RTT. It never sends BYE.
 
 - Delete this file `TODO_NEW_RTCP.md`.
 
