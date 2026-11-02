@@ -175,7 +175,7 @@ namespace RTC
 			AddItem(parameter);
 
 			// Let's append the parameter at the end of existing parameters.
-			auto* clonedParameter =
+			auto* const clonedParameter =
 			  parameter->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, parameter->GetLength());
 
 			// Add the parameter to the list.
@@ -196,9 +196,10 @@ namespace RTC
 			AddItem(errorCause);
 
 			// Let's append the error cause at the end of existing error causes.
-			auto* clonedErrorCause = errorCause->Clone(
+			auto* const clonedErrorCause = errorCause->Clone(
 			  const_cast<uint8_t*>(GetBuffer()) + previousLength, errorCause->GetLength());
 
+			// Add the error cause to the list.
 			this->errorCauses.push_back(clonedErrorCause);
 		}
 
@@ -734,7 +735,6 @@ namespace RTC
 				  try
 				  {
 					  // Fix buffer length assigned to the parameter.
-					  // NOTE: It may throw.
 					  parameter->SetBufferLength(parameter->GetLength());
 
 					  // This will update the total length and length field of the chunk.

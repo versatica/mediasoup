@@ -17,6 +17,7 @@
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/XrPacket.hpp"
 #include "Utils.hpp"
 
 namespace RTC
@@ -178,8 +179,7 @@ namespace RTC
 
 					case Packet::PacketType::XR:
 					{
-						// TODO
-						// packet = ExtendedReportPacket::ParseStrict(ptr, packetLength);
+						packet = XrPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 						break;
 					}
@@ -308,6 +308,39 @@ namespace RTC
 			}
 
 			return clonedCompoundPacket;
+		}
+
+		void CompoundPacket::AddPacket(const Packet* packet)
+		{
+			MS_TRACE();
+
+			AssertDoesNotNeedConsolidation();
+
+			const size_t previousLength = GetLength();
+
+			// Update Serializable length.
+			// NOTE: It may throw.
+			SetLength(previousLength + packet->GetLength());
+
+			Packet* clonedPacket{ nullptr };
+
+			try
+			{
+				// Let's append the packet at the end of existing packets.
+				// NOTE: It may throw if the given packet needs consolidation.
+				clonedPacket =
+				  packet->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, packet->GetLength());
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Rollback.
+				SetLength(previousLength);
+
+				throw;
+			}
+
+			// Add the packet to the list.
+			this->packets.push_back(clonedPacket);
 		}
 
 		void CompoundPacket::HandleInPlacePacket(Packet* packet)

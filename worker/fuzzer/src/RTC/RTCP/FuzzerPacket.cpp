@@ -1,12 +1,12 @@
-#include "RTC/RTCP/FuzzerPacket.hpp"
-#include "RTC/RTCP/FuzzerBye.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPs.hpp"
-#include "RTC/RTCP/FuzzerFeedbackRtp.hpp"
-#include "RTC/RTCP/FuzzerReceiverReport.hpp"
-#include "RTC/RTCP/FuzzerSdes.hpp"
-#include "RTC/RTCP/FuzzerSenderReport.hpp"
-#include "RTC/RTCP/FuzzerXr.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerBye.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPs.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackRtp.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerReceiverReport.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerSdes.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerSenderReport.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerXr.hpp"
 #include <cstring> // std::memcpy()
 
 namespace

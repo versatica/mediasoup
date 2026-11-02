@@ -663,19 +663,13 @@ namespace RTC
 			// gives nothing to store.
 			if (report->GetNtpSec() != 0 || report->GetNtpFrac() != 0)
 			{
-				uint32_t compactNtp = report->GetNtpSec() << 16;
-
-				compactNtp += report->GetNtpFrac() >> 16;
+				const Utils::Time::Ntp ntp{ .seconds   = report->GetNtpSec(),
+				                            .fractions = report->GetNtpFrac() };
 
 				this->lastSenderReportTiming = SenderReportTiming{
-					.compactNtp   = compactNtp,
+					.compactNtp   = Utils::Time::NtpToCompactNtp(ntp),
 					.receivedAtUs = receivedAtUs,
 				};
-
-				Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
-
-				ntp.seconds   = report->GetNtpSec();
-				ntp.fractions = report->GetNtpFrac();
 
 				this->lastSenderReportMapping = RTP::RtpStream::SenderReportMapping{
 					.ntpUs = Utils::Time::NtpToTimeUs(ntp),

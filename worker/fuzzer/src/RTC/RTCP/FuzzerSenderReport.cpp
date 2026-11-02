@@ -1,4 +1,4 @@
-#include "RTC/RTCP/FuzzerSenderReport.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerSenderReport.hpp"
 #include "RTC/RTCP/Packet.hpp"
 
 void FuzzerRtcRtcpSenderReport::Fuzz(RTC::RTCP::SenderReportPacket* packet)

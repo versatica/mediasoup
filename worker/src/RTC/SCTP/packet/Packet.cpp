@@ -386,24 +386,30 @@ namespace RTC
 
 			AssertDoesNotNeedConsolidation();
 
-			const size_t length = GetLength() + chunk->GetLength();
-
-			// Let's append the chunk at the end of existing chunks.
-			auto* clonedChunk =
-			  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), chunk->GetLength());
+			const size_t previousLength = GetLength();
 
 			// Update Serializable length.
+			// NOTE: It may throw.
+			SetLength(previousLength + chunk->GetLength());
+
+			Chunk* clonedChunk{ nullptr };
+
 			try
 			{
-				SetLength(length);
+				// Let's append the chunk at the end of existing chunks.
+				// NOTE: It may throw if the given chunk needs consolidation.
+				clonedChunk =
+				  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, chunk->GetLength());
 			}
 			catch (const MediaSoupError& error)
 			{
-				delete clonedChunk;
+				// Rollback.
+				SetLength(previousLength);
 
 				throw;
 			}
 
+			// Add the chunk to the list.
 			this->chunks.push_back(clonedChunk);
 		}
 

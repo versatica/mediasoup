@@ -1,4 +1,4 @@
-#include "RTC/NEW_RTCP/packet/FuzzerFirPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerFirPacket.hpp"
 
 void FuzzerRtcRtcpFirPacket::Fuzz(const RTC::NEW_RTCP::FirPacket* packet)
 {

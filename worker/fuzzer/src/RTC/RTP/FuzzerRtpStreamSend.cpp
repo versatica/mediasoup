@@ -1,4 +1,4 @@
-#include "RTC/RTP/FuzzerRtpStreamSend.hpp"
+#include "fuzzer/include/RTC/RTP/FuzzerRtpStreamSend.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTP/PacketUtils.hpp"
 #include "Utils.hpp"

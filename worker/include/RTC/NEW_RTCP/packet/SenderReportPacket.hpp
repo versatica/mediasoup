@@ -111,24 +111,15 @@ namespace RTC
 			SenderReportPacket* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			/**
-			 * Most significant word of the NTP timestamp.
+			 * NTP timestamp.
 			 */
-			uint32_t GetNtpSec() const
+			Utils::Time::Ntp GetNtp() const
 			{
-				return Utils::Byte::Get4Bytes(GetBuffer(), 8);
+				return { .seconds   = Utils::Byte::Get4Bytes(GetBuffer(), 8),
+				         .fractions = Utils::Byte::Get4Bytes(GetBuffer(), 12) };
 			}
 
-			void SetNtpSec(uint32_t ntpSec);
-
-			/**
-			 * Least significant word of the NTP timestamp.
-			 */
-			uint32_t GetNtpFrac() const
-			{
-				return Utils::Byte::Get4Bytes(GetBuffer(), 12);
-			}
-
-			void SetNtpFrac(uint32_t ntpFrac);
+			void SetNtp(const Utils::Time::Ntp& ntp);
 
 			uint32_t GetRtpTimestamp() const
 			{

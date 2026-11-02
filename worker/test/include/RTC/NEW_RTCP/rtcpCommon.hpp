@@ -7,6 +7,7 @@
 // IWYU pragma: begin_exports
 #include "MediaSoupErrors.hpp"
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
+#include "RTC/NEW_RTCP/packet/ExtendedReport.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "Utils.hpp"
 #include "test/include/testHelpers.hpp"
@@ -117,6 +118,48 @@ namespace rtcpCommon
 		  helpers::areBuffersEqual(                                                                          \
 		    packet->GetBuffer(), packet->GetBufferLength(), originalBuffer.data(), originalBuffer.size()) == \
 		  true);                                                                                             \
+	} while (false)
+
+// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
+#define CHECK_RTCP_EXTENDED_REPORT(                                                                  \
+  /*RTC::NEW_RTCP::ExtendedReport**/ extendedReport,                                                 \
+  /*const uint8_t**/ buffer,                                                                         \
+  /*size_t*/ bufferLength,                                                                           \
+  /*size_t*/ length,                                                                                 \
+  /*RTC::NEW_RTCP::ExtendedReport::BlockType*/ blockType,                                            \
+  /*bool*/ unknownType)                                                                              \
+	do                                                                                                 \
+	{                                                                                                  \
+		REQUIRE(extendedReport);                                                                         \
+		REQUIRE(extendedReport->GetBuffer() != nullptr);                                                 \
+		const std::vector<uint8_t> originalBuffer(                                                       \
+		  extendedReport->GetBuffer(), extendedReport->GetBuffer() + extendedReport->GetBufferLength()); \
+		if (buffer)                                                                                      \
+		{                                                                                                \
+			REQUIRE(extendedReport->GetBuffer() == buffer);                                                \
+		}                                                                                                \
+		REQUIRE(extendedReport->GetBufferLength() != 0);                                                 \
+		REQUIRE(extendedReport->GetBufferLength() == bufferLength);                                      \
+		REQUIRE(extendedReport->GetLength() != 0);                                                       \
+		REQUIRE(extendedReport->GetLength() == length);                                                  \
+		REQUIRE(                                                                                         \
+		  (static_cast<size_t>(Utils::Byte::Get2Bytes(extendedReport->GetBuffer(), 2)) + 1) * 4 ==       \
+		  length);                                                                                       \
+		REQUIRE(                                                                                         \
+		  extendedReport->GetAvailableLength() ==                                                        \
+		  extendedReport->GetBufferLength() - extendedReport->GetLength());                              \
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(extendedReport->GetLength()) == true);                     \
+		REQUIRE(extendedReport->GetType() == blockType);                                                 \
+		REQUIRE(extendedReport->HasUnknownType() == unknownType);                                        \
+		REQUIRE_THROWS_AS(                                                                               \
+		  extendedReport->Serialize(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);               \
+		REQUIRE_THROWS_AS(extendedReport->Clone(rtcpCommon::ThrowBuffer, length - 1), MediaSoupError);   \
+		REQUIRE(                                                                                         \
+		  helpers::areBuffersEqual(                                                                      \
+		    extendedReport->GetBuffer(),                                                                 \
+		    extendedReport->GetBufferLength(),                                                           \
+		    originalBuffer.data(),                                                                       \
+		    originalBuffer.size()) == true);                                                             \
 	} while (false)
 
 #endif

@@ -200,6 +200,10 @@ namespace RTC
 			 * - MediaSoupError - If `BuildChunkInPlace()` was called before and the
 			 *   caller didn't invoke `Consolidate()` or `Discard()` on the returned
 			 *   chunk yet.
+			 * - MediaSoupError - If given chunk needs consolidation (some item is
+			 *   being built in place within it).
+			 * - MediaSoupTypeError - If there is no space in the buffer for given
+			 *   chunk.
 			 */
 			void AddChunk(const Chunk* chunk);
 

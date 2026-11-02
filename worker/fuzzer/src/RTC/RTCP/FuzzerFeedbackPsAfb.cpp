@@ -1,4 +1,4 @@
-#include "RTC/RTCP/FuzzerFeedbackPsAfb.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsAfb.hpp"
 
 void FuzzerRtcRtcpFeedbackPsAfb::Fuzz(RTC::RTCP::FeedbackPsAfbPacket* packet)
 {

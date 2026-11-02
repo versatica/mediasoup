@@ -1,7 +1,7 @@
 #define MS_CLASS "FuzzerRtcDtlsTransport"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/FuzzerDtlsTransport.hpp"
+#include "fuzzer/include/RTC/FuzzerDtlsTransport.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "mocks/include/MockShared.hpp"

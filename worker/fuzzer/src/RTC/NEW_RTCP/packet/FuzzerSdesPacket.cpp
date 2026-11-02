@@ -1,4 +1,4 @@
-#include "RTC/NEW_RTCP/packet/FuzzerSdesPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerSdesPacket.hpp"
 
 void FuzzerRtcRtcpSdesPacket::Fuzz(const RTC::NEW_RTCP::SdesPacket* packet)
 {

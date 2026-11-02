@@ -285,6 +285,8 @@ namespace RTC
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
 			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
 			 *   error cause yet.
+			 * - MediaSoupTypeError - If there is no space in the buffer for given
+			 *   parameter.
 			 */
 			virtual void AddParameter(const Parameter* parameter) final;
 
@@ -412,6 +414,8 @@ namespace RTC
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
 			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
 			 *   error cause yet.
+			 * - MediaSoupTypeError - If there is no space in the buffer for given
+			 *   error cause.
 			 */
 			virtual void AddErrorCause(const ErrorCause* errorCause) final;
 

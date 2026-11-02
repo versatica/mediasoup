@@ -114,6 +114,10 @@ namespace RTC
 			 * - MediaSoupError - If `BuildPacketInPlace()` was called before and the
 			 *   caller didn't invoke `Consolidate()` or `Discard()` on the returned
 			 *   packet yet.
+			 * - MediaSoupError - If given packet needs consolidation (some item is
+			 *   being built in place within it).
+			 * - MediaSoupTypeError - If there is no space in the buffer for given
+			 *   packet.
 			 */
 			void AddPacket(const Packet* packet);
 

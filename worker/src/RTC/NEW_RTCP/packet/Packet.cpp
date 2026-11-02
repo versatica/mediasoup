@@ -186,6 +186,13 @@ namespace RTC
 			SetLengthField(length);
 		}
 
+		void Packet::SetCount(uint8_t count)
+		{
+			MS_TRACE();
+
+			GetCommonHeaderPointer()->count = count;
+		}
+
 		void Packet::SetLengthField(size_t length)
 		{
 			MS_TRACE();

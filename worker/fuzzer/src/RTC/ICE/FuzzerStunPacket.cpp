@@ -1,4 +1,4 @@
-#include "RTC/ICE/FuzzerStunPacket.hpp"
+#include "fuzzer/include/RTC/ICE/FuzzerStunPacket.hpp"
 #include "RTC/ICE/StunPacket.hpp"
 #include <string_view>
 

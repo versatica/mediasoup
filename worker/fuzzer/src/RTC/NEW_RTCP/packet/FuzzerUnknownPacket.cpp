@@ -1,4 +1,4 @@
-#include "RTC/NEW_RTCP/packet/FuzzerUnknownPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerUnknownPacket.hpp"
 
 void FuzzerRtcRtcpUnknownPacket::Fuzz(const RTC::NEW_RTCP::UnknownPacket* packet)
 {

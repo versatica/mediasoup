@@ -814,6 +814,63 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(obtainedChunk1->GetT() == true);
 	}
 
+	SECTION("AddChunk() throws and leaves the Packet as it was")
+	{
+		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, 28) };
+
+		// INIT chunk, length: 20 bytes, which exceeds the Packet buffer length.
+		auto* const chunk1 = RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000);
+
+		REQUIRE_THROWS_AS(packet->AddChunk(chunk1), MediaSoupTypeError);
+
+		CHECK_SCTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ 28,
+		  /*length*/ 12,
+		  /*sourcePort*/ 0,
+		  /*destinationPort*/ 0,
+		  /*verificationTag*/ 0,
+		  /*checksum*/ 0,
+		  /*hasValidCrc32cChecksum*/ false,
+		  /*chunksCount*/ 0);
+
+		// Nothing was written after the Packet header.
+		REQUIRE(sctpCommon::FactoryBuffer[12] == 0xAA);
+		REQUIRE(sctpCommon::FactoryBuffer[31] == 0xAA);
+
+		delete chunk1;
+
+		// INIT chunk, length: 20 bytes, which fits in the Packet buffer but has a
+		// parameter being built in place within it (so it needs consolidation).
+		auto* const chunk2 = RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000);
+		auto* const parameter2 = chunk2->BuildParameterInPlace<RTC::SCTP::CookiePreservativeParameter>();
+
+		REQUIRE(chunk2->NeedsConsolidation() == true);
+
+		std::unique_ptr<RTC::SCTP::Packet> packet2{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer + 2000, 1000) };
+
+		REQUIRE_THROWS_AS(packet2->AddChunk(chunk2), MediaSoupError);
+
+		CHECK_SCTP_PACKET(
+		  /*packet*/ packet2.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer + 2000,
+		  /*bufferLength*/ 1000,
+		  /*length*/ 12,
+		  /*sourcePort*/ 0,
+		  /*destinationPort*/ 0,
+		  /*verificationTag*/ 0,
+		  /*checksum*/ 0,
+		  /*hasValidCrc32cChecksum*/ false,
+		  /*chunksCount*/ 0);
+
+		parameter2->Discard();
+
+		delete chunk2;
+	}
+
 	SECTION("BuildChunkInPlace() throws if given chunk exceeds Packet buffer length")
 	{
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(

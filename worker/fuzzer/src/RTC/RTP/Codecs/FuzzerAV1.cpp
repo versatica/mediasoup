@@ -1,4 +1,4 @@
-#include "RTC/RTP/Codecs/FuzzerAV1.hpp"
+#include "fuzzer/include/RTC/RTP/Codecs/FuzzerAV1.hpp"
 #include "RTC/RTP/Codecs/AV1.hpp"
 
 class Listener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
