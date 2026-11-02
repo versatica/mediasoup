@@ -29,8 +29,7 @@ namespace RTC
 		 * - Version (2 bits): RTP/RTCP version. Always 2.
 		 * - Padding (1 bit): If set, the packet contains padding bytes at the
 		 *   end that are not part of the value. The last padding byte indicates
-		 *   how many padding bytes must be ignored, including itself (it will be
-		 *   a multiple of four).
+		 *   how many padding bytes must be ignored, including itself.
 		 * - Count (5 bits): Field whose meaning depends on the packet type
 		 *   (PT). RFC 3550 does not assign it a single name because it varies
 		 *   per packet: in Sender/Receiver Report it is the reception report
