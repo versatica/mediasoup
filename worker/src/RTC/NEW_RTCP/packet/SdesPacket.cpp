@@ -326,7 +326,8 @@ namespace RTC
 			}
 
 			// The new item replaces the null octet and the padding of the last chunk.
-			const size_t itemOffset     = GetLastChunkItemsEndOffset();
+			auto* const itemPointer     = GetLastChunkItemsEndPointer();
+			const size_t itemOffset     = itemPointer - GetBuffer();
 			const size_t itemsEndOffset = itemOffset + 2 + value.size();
 
 			// Room for the null octet terminating the list of items and the padding.
@@ -335,12 +336,10 @@ namespace RTC
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(newLength - Packet::CommonHeaderLength);
 
-			auto* buffer = const_cast<uint8_t*>(GetBuffer());
-
 			// Write the item.
-			Utils::Byte::Set1Byte(buffer, itemOffset, static_cast<uint8_t>(type));
-			Utils::Byte::Set1Byte(buffer, itemOffset + 1, static_cast<uint8_t>(value.size()));
-			std::memmove(buffer + itemOffset + 2, value.data(), value.size());
+			Utils::Byte::Set1Byte(itemPointer, 0, static_cast<uint8_t>(type));
+			Utils::Byte::Set1Byte(itemPointer, 1, static_cast<uint8_t>(value.size()));
+			std::memmove(itemPointer + 2, value.data(), value.size());
 
 			// Write the null octet terminating the list of items and the padding.
 			FillPadding(newLength - itemsEndOffset);
@@ -357,30 +356,30 @@ namespace RTC
 			return softClonedPacket;
 		}
 
-		size_t SdesPacket::GetLastChunkItemsEndOffset() const
+		uint8_t* SdesPacket::GetLastChunkItemsEndPointer() const
 		{
 			MS_TRACE();
 
-			const auto* buffer = GetBuffer();
-
-			size_t offset{ Packet::CommonHeaderLength };
-			size_t itemsEndOffset{ 0 };
+			uint8_t* chunkPointer = GetVariableLengthValuePointer();
+			uint8_t* itemsEndPointer{ nullptr };
 
 			for (uint8_t chunkIdx{ 0 }; chunkIdx < GetCount(); ++chunkIdx)
 			{
 				// Skip the SSRC/CSRC.
-				offset += 4;
+				uint8_t* ptr = chunkPointer + 4;
 
-				while (Utils::Byte::Get1Byte(buffer, offset) != 0)
+				while (Utils::Byte::Get1Byte(ptr, 0) != 0)
 				{
-					offset += 2 + Utils::Byte::Get1Byte(buffer, offset + 1);
+					ptr += 2 + Utils::Byte::Get1Byte(ptr, 1);
 				}
 
-				itemsEndOffset = offset;
-				offset         = Utils::Byte::PadTo4Bytes(offset + 1);
+				itemsEndPointer = ptr;
+
+				// The null octet and the padding until the next 32-bit boundary.
+				chunkPointer += Utils::Byte::PadTo4Bytes(static_cast<size_t>(ptr - chunkPointer) + 1);
 			}
 
-			return itemsEndOffset;
+			return itemsEndPointer;
 		}
 	} // namespace NEW_RTCP
 } // namespace RTC

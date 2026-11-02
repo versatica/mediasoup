@@ -74,6 +74,10 @@ namespace iceCommon
 		REQUIRE(packet->GetBufferLength() == bufferLength);                                                  \
 		REQUIRE(packet->GetLength() != 0);                                                                   \
 		REQUIRE(packet->GetLength() == length);                                                              \
+		REQUIRE(                                                                                             \
+		  static_cast<size_t>(Utils::Byte::Get2Bytes(packet->GetBuffer(), 2)) +                              \
+		    RTC::ICE::StunPacket::FixedHeaderLength ==                                                       \
+		  length);                                                                                           \
 		REQUIRE(packet->GetAvailableLength() == packet->GetBufferLength() - packet->GetLength());            \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);                                 \
 		REQUIRE(packet->GetClass() == klass);                                                                \

@@ -2,10 +2,14 @@
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerReceiverReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerSdesPacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerSenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerUnknownPacket.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
+#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 
 namespace
@@ -24,7 +28,9 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 		compoundPacket->GetPacketAt(1);
 		compoundPacket->GetPacketAt(2);
 		compoundPacket->GetPacketAt(666);
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ReceiverReportPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SdesPacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SenderReportPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ByePacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPacket>();
 
@@ -48,14 +54,20 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 
 				case RTC::NEW_RTCP::Packet::PacketType::SR:
 				{
-					// TODO
+					const auto* const senderReportPacket =
+					  static_cast<const RTC::NEW_RTCP::SenderReportPacket*>(packet);
+
+					FuzzerRtcRtcpSenderReportPacket::Fuzz(senderReportPacket);
 
 					break;
 				}
 
 				case RTC::NEW_RTCP::Packet::PacketType::RR:
 				{
-					// TODO
+					const auto* const receiverReportPacket =
+					  static_cast<const RTC::NEW_RTCP::ReceiverReportPacket*>(packet);
+
+					FuzzerRtcRtcpReceiverReportPacket::Fuzz(receiverReportPacket);
 
 					break;
 				}

@@ -34,7 +34,7 @@ namespace RTC
 			 * Parse a RestartOfAnAssociationWithNewAddressesErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static RestartOfAnAssociationWithNewAddressesErrorCause* Parse(
 			  const uint8_t* buffer, size_t bufferLength);
@@ -43,7 +43,7 @@ namespace RTC
 			 * Create a RestartOfAnAssociationWithNewAddressesErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the error cause real length.
+			 * - `bufferLength` could be greater than the error cause real length.
 			 */
 			static RestartOfAnAssociationWithNewAddressesErrorCause* Factory(
 			  uint8_t* buffer, size_t bufferLength);
@@ -53,7 +53,7 @@ namespace RTC
 			 * Parse a RestartOfAnAssociationWithNewAddressesErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static RestartOfAnAssociationWithNewAddressesErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);

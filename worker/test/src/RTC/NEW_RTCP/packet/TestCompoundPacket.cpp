@@ -2,7 +2,9 @@
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
+#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 #include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -174,6 +176,11 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			const auto* packet2 =
 			  static_cast<const RTC::NEW_RTCP::SdesPacket*>(compoundPacket->GetPacketAt(1));
 			const auto sdesItems = packet2->GetItems();
+			const auto* packet3 =
+			  static_cast<const RTC::NEW_RTCP::ReceiverReportPacket*>(compoundPacket->GetPacketAt(2));
+			const auto reportBlocks = packet3->GetReportBlocks();
+			const auto* packet4 =
+			  static_cast<const RTC::NEW_RTCP::SenderReportPacket*>(compoundPacket->GetPacketAt(3));
 
 			REQUIRE(packet1->GetBuffer() == buffer);
 			REQUIRE(packet1->GetLength() == 12);
@@ -187,6 +194,30 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 			REQUIRE(sdesItems[0].ssrc == 3333);
 			REQUIRE(sdesItems[0].type == RTC::NEW_RTCP::SdesPacket::ItemType::CNAME);
 			REQUIRE(sdesItems[0].value == "abc");
+
+			REQUIRE(packet3->GetBuffer() == buffer + 28);
+			REQUIRE(packet3->GetLength() == 32);
+			REQUIRE(packet3->GetSsrc() == 4444);
+			REQUIRE(packet3->GetNumberOfReportBlocks() == 1);
+			REQUIRE(reportBlocks.size() == 1);
+			REQUIRE(reportBlocks[0].ssrc == 5555);
+			REQUIRE(reportBlocks[0].fractionLost == 10);
+			REQUIRE(reportBlocks[0].totalLost == -3);
+			REQUIRE(reportBlocks[0].extendedHighestSeq == 100);
+			REQUIRE(reportBlocks[0].jitter == 20);
+			REQUIRE(reportBlocks[0].lastSenderReport == 30);
+			REQUIRE(reportBlocks[0].delaySinceLastSenderReport == 40);
+
+			REQUIRE(packet4->GetBuffer() == buffer + 60);
+			REQUIRE(packet4->GetLength() == 28);
+			REQUIRE(packet4->GetSsrc() == 6666);
+			REQUIRE(packet4->GetNtpSec() == 1);
+			REQUIRE(packet4->GetNtpFrac() == 2);
+			REQUIRE(packet4->GetRtpTimestamp() == 3);
+			REQUIRE(packet4->GetPacketCount() == 4);
+			REQUIRE(packet4->GetOctetCount() == 5);
+			REQUIRE(packet4->GetNumberOfReportBlocks() == 0);
+			REQUIRE(packet4->GetReportBlocks().empty());
 		};
 
 		std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket{
@@ -256,12 +287,43 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		REQUIRE_THROWS_AS(packet3->Consolidate(), MediaSoupError);
 		REQUIRE_THROWS_AS(packet3->Discard(), MediaSoupError);
 
+		/* Build another packet and consolidate it. */
+
+		auto* packet4 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::ReceiverReportPacket>();
+
+		REQUIRE(packet4->GetBuffer() == compoundPacket->GetBuffer() + 28);
+
+		packet4->SetSsrc(4444);
+		packet4->AddReportBlock(
+		  { .ssrc                       = 5555,
+			  .fractionLost               = 10,
+			  .totalLost                  = -3,
+			  .extendedHighestSeq         = 100,
+			  .jitter                     = 20,
+			  .lastSenderReport           = 30,
+			  .delaySinceLastSenderReport = 40 });
+		packet4->Consolidate();
+
+		/* Build another packet and consolidate it. */
+
+		auto* packet5 = compoundPacket->BuildPacketInPlace<RTC::NEW_RTCP::SenderReportPacket>();
+
+		REQUIRE(packet5->GetBuffer() == compoundPacket->GetBuffer() + 60);
+
+		packet5->SetSsrc(6666);
+		packet5->SetNtpSec(1);
+		packet5->SetNtpFrac(2);
+		packet5->SetRtpTimestamp(3);
+		packet5->SetPacketCount(4);
+		packet5->SetOctetCount(5);
+		packet5->Consolidate();
+
 		CHECK_RTCP_COMPOUND_PACKET(
 		  /*compoundPacket*/ compoundPacket.get(),
 		  /*buffer*/ rtcpCommon::FactoryBuffer,
 		  /*bufferLength*/ 1000,
-		  /*length*/ 28,
-		  /*packetsCount*/ 2);
+		  /*length*/ 88,
+		  /*packetsCount*/ 4);
 
 		checkPackets(compoundPacket.get(), rtcpCommon::FactoryBuffer);
 
@@ -275,8 +337,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*compoundPacket*/ compoundPacket.get(),
 		  /*buffer*/ rtcpCommon::SerializeBuffer,
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
-		  /*length*/ 28,
-		  /*packetsCount*/ 2);
+		  /*length*/ 88,
+		  /*packetsCount*/ 4);
 
 		checkPackets(compoundPacket.get(), rtcpCommon::SerializeBuffer);
 
@@ -291,8 +353,8 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*compoundPacket*/ compoundPacket.get(),
 		  /*buffer*/ rtcpCommon::CloneBuffer,
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
-		  /*length*/ 28,
-		  /*packetsCount*/ 2);
+		  /*length*/ 88,
+		  /*packetsCount*/ 4);
 
 		checkPackets(compoundPacket.get(), rtcpCommon::CloneBuffer);
 	}

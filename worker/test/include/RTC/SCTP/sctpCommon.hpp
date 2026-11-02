@@ -110,6 +110,9 @@ namespace sctpCommon
 		REQUIRE(chunk->GetBufferLength() == bufferLength);                                                 \
 		REQUIRE(chunk->GetLength() != 0);                                                                  \
 		REQUIRE(chunk->GetLength() == length);                                                             \
+		REQUIRE(                                                                                           \
+		  Utils::Byte::PadTo4Bytes(static_cast<size_t>(Utils::Byte::Get2Bytes(chunk->GetBuffer(), 2))) ==  \
+		  length);                                                                                         \
 		REQUIRE(chunk->GetAvailableLength() == chunk->GetBufferLength() - chunk->GetLength());             \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(chunk->GetLength()) == true);                                \
 		REQUIRE(chunk->GetType() == chunkType);                                                            \
@@ -173,6 +176,9 @@ namespace sctpCommon
 		REQUIRE(parameter->GetLength() != 0);                                                          \
 		REQUIRE(parameter->GetLength() == length);                                                     \
 		REQUIRE(                                                                                       \
+		  Utils::Byte::PadTo4Bytes(                                                                    \
+		    static_cast<size_t>(Utils::Byte::Get2Bytes(parameter->GetBuffer(), 2))) == length);        \
+		REQUIRE(                                                                                       \
 		  parameter->GetAvailableLength() == parameter->GetBufferLength() - parameter->GetLength());   \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(parameter->GetLength()) == true);                        \
 		REQUIRE(parameter->GetType() == parameterType);                                                \
@@ -213,6 +219,9 @@ namespace sctpCommon
 		REQUIRE(errorCause->GetBufferLength() == bufferLength);                                          \
 		REQUIRE(errorCause->GetLength() != 0);                                                           \
 		REQUIRE(errorCause->GetLength() == length);                                                      \
+		REQUIRE(                                                                                         \
+		  Utils::Byte::PadTo4Bytes(                                                                      \
+		    static_cast<size_t>(Utils::Byte::Get2Bytes(errorCause->GetBuffer(), 2))) == length);         \
 		REQUIRE(                                                                                         \
 		  errorCause->GetAvailableLength() == errorCause->GetBufferLength() - errorCause->GetLength());  \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(errorCause->GetLength()) == true);                         \

@@ -42,7 +42,7 @@ namespace RTC
 			 * Parse a HeartbeatRequestChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static HeartbeatRequestChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -50,7 +50,7 @@ namespace RTC
 			 * Create a HeartbeatRequestChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static HeartbeatRequestChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -59,7 +59,7 @@ namespace RTC
 			 * Parse a HeartbeatRequestChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static HeartbeatRequestChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);

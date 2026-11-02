@@ -35,7 +35,7 @@ namespace RTC
 			 * Parse a SupportedAddressTypesParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the parameter.
+			 * - `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static SupportedAddressTypesParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -43,7 +43,7 @@ namespace RTC
 			 * Create a SupportedAddressTypesParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the parameter real length.
+			 * - `bufferLength` could be greater than the parameter real length.
 			 */
 			static SupportedAddressTypesParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -52,7 +52,7 @@ namespace RTC
 			 * Parse a SupportedAddressTypesParameter.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * - To be used only by `Chunk::ParseParameters()`.
 			 */
 			static SupportedAddressTypesParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);

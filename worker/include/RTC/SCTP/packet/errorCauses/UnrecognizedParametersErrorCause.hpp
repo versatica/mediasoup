@@ -33,7 +33,7 @@ namespace RTC
 			 * Parse a UnrecognizedParametersErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static UnrecognizedParametersErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -41,7 +41,7 @@ namespace RTC
 			 * Create a UnrecognizedParametersErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the error cause real length.
+			 * - `bufferLength` could be greater than the error cause real length.
 			 */
 			static UnrecognizedParametersErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -50,7 +50,7 @@ namespace RTC
 			 * Parse a UnrecognizedParametersErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static UnrecognizedParametersErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);

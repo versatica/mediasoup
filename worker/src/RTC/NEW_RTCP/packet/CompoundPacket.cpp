@@ -5,7 +5,9 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
+#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 
 namespace RTC
@@ -69,16 +71,14 @@ namespace RTC
 
 					case Packet::PacketType::SR:
 					{
-						// TODO
-						// packet = SenderReportPacket::ParseStrict(ptr, packetLength);
+						packet = SenderReportPacket::ParseStrict(ptr, packetLength, packetLength);
 
 						break;
 					}
 
 					case Packet::PacketType::RR:
 					{
-						// TODO
-						// packet = ReceiverReportPacket::ParseStrict(ptr, packetLength);
+						packet = ReceiverReportPacket::ParseStrict(ptr, packetLength, packetLength);
 
 						break;
 					}

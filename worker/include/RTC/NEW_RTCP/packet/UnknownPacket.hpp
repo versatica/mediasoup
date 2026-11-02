@@ -35,7 +35,7 @@ namespace RTC
 			 * Parse an UnknownPacket.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the packet.
+			 * - `bufferLength` may exceed the exact length of the packet.
 			 */
 			static UnknownPacket* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -44,7 +44,7 @@ namespace RTC
 			 * Parse an UnknownPacket.
 			 *
 			 * @remarks
-			 * To be used only by `CompoundPacket::Parse()`.
+			 * - To be used only by `CompoundPacket::Parse()`.
 			 */
 			static UnknownPacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
 
