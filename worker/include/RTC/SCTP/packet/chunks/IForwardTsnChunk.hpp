@@ -51,9 +51,6 @@ namespace RTC
 		 *   chunk, just replacing the 16-bit SSN by the 32-bit MID.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class IForwardTsnChunk : public AnyForwardTsnChunk
 		{
 			// We need that packet calls protected and private methods in this class.

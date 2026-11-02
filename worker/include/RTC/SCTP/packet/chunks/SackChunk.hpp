@@ -70,9 +70,6 @@ namespace RTC
 		 *   received in duplicate since the last SACK chunk was sent.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class SackChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.

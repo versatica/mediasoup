@@ -160,7 +160,10 @@ namespace RTC
 
 		private:
 			/**
-			 * @throw MediaSoupTypeError - If given `length` is higher than maximum
+			 * @throw
+			 * - MediaSoupTypeError - If given `length` is lower than the TLV header
+			 *   length (4 bytes).
+			 * - MediaSoupTypeError - If given `length` is higher than maximum
 			 *   allowed one (65535).
 			 */
 			virtual void SetLengthField(size_t length) final;

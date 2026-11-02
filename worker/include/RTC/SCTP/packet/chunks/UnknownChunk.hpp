@@ -22,9 +22,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class UnknownChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.

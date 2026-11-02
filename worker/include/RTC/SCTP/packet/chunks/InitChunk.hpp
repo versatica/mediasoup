@@ -62,9 +62,6 @@ namespace RTC
 		 * - Supported Address Types (12), optional.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class InitChunk : public AnyInitChunk
 		{
 			// We need that packet calls protected and private methods in this class.

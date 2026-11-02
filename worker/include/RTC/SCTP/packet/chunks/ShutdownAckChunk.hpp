@@ -24,9 +24,6 @@ namespace RTC
 		 * - Length (16 bits): 4.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class ShutdownAckChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.

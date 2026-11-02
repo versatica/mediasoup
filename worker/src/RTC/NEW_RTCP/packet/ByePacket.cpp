@@ -80,6 +80,7 @@ namespace RTC
 			if (packet->HasReason())
 			{
 				const uint8_t reasonLength = packet->GetReasonLength();
+
 				// The Reason string starts right after the 1 byte Reason length field.
 				const size_t reasonEndOffset = ssrcsEndOffset + 1 + reasonLength;
 
@@ -87,6 +88,20 @@ namespace RTC
 				{
 					MS_WARN_TAG(
 					  rtcp, "Reason length (%" PRIu8 " bytes) exceeds the packet length", reasonLength);
+
+					delete packet;
+					return nullptr;
+				}
+
+				// The Reason is padded to the next 32-bit boundary, and that is the
+				// end of the packet.
+				if (Utils::Byte::PadTo4Bytes(reasonEndOffset) != packetLength)
+				{
+					MS_WARN_TAG(
+					  rtcp,
+					  "packet length (%zu bytes) does not end right after the padded Reason (%zu bytes)",
+					  packetLength,
+					  Utils::Byte::PadTo4Bytes(reasonEndOffset));
 
 					delete packet;
 					return nullptr;
@@ -171,7 +186,7 @@ namespace RTC
 
 			if (GetCount() == 31)
 			{
-				MS_THROW_ERROR("cannot add more than 31 ssrcs");
+				MS_THROW_TYPE_ERROR("cannot add more than 31 ssrcs");
 			}
 
 			// NOTE: Must be checked before growing the length below, otherwise
@@ -188,7 +203,7 @@ namespace RTC
 				std::memmove(
 				  GetReasonLengthPointer() + 4,
 				  GetReasonLengthPointer(),
-				  Utils::Byte::PadTo4Bytes(1u + GetReasonLength()));
+				  Utils::Byte::PadTo4Bytes(size_t{ 1 } + GetReasonLength()));
 			}
 
 			// Add the new ssrc.
@@ -209,14 +224,17 @@ namespace RTC
 
 			const size_t previousLength      = GetLength();
 			const size_t previousLengthField = GetLengthFieldComputed();
+
 			// The previous total length of Reason length and Reason fields padded
 			// to 4 bytes.
 			const uint16_t previousReasonFieldsPaddedLength =
-			  HasReason() ? Utils::Byte::PadTo4Bytes(1u + GetReasonLength()) : 0;
+			  HasReason() ? Utils::Byte::PadTo4Bytes(size_t{ 1 } + GetReasonLength()) : 0;
+
 			// The new total length of Reason length and Reason fields padded to
 			// 4 bytes.
 			const uint16_t newReasonFieldsPaddedLength =
 			  !reason.empty() ? Utils::Byte::PadTo4Bytes(1 + reason.size()) : 0;
+
 			const size_t newLength = size_t{ previousLength } - size_t{ previousReasonFieldsPaddedLength } +
 			                         size_t{ newReasonFieldsPaddedLength };
 

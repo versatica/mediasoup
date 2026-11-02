@@ -23,7 +23,12 @@ namespace RTC
 		using BufferReleasedListener = std::function<void(const Serializable*, uint8_t* buffer)>;
 
 	protected:
-		using ConsolidatedListener = std::function<void()>;
+		/**
+		 * Listener set by the parent Serializable in which this one is being built
+		 * in place. It's invoked with `consolidate` set to true by `Consolidate()`
+		 * and with `consolidate` set to false by `Discard()`.
+		 */
+		using BuildInPlaceListener = std::function<void(bool consolidate)>;
 
 	public:
 		/**
@@ -98,8 +103,11 @@ namespace RTC
 		 *   pointers it holds and make them point to the proper position in the
 		 *   new buffer.
 		 *
-		 * @throw MediaSoupError - If given `bufferLength` is lower than the
-		 *   current exact length of the Serializable.
+		 * @throw
+		 * - MediaSoupError - If some item is being built in place within this
+		 *   Serializable (see `NeedsConsolidation()`).
+		 * - MediaSoupError - If given `bufferLength` is lower than the current
+		 *   exact length of the Serializable.
 		 */
 		virtual void Serialize(uint8_t* buffer, size_t bufferLength);
 
@@ -111,8 +119,11 @@ namespace RTC
 		 * @param buffer - The buffer for the cloned Serializable.
 		 * @param bufferLength - Buffer length.
 		 *
-		 * @throw MediaSoupError - If given `bufferLength` is lower than the
-		 *   current exact length of the Serializable.
+		 * @throw
+		 * - MediaSoupError - If some item is being built in place within this
+		 *   Serializable (see `NeedsConsolidation()`).
+		 * - MediaSoupError - If given `bufferLength` is lower than the current
+		 *   exact length of the Serializable.
 		 */
 		virtual Serializable* Clone(uint8_t* buffer, size_t bufferLength) const = 0;
 
@@ -134,12 +145,57 @@ namespace RTC
 		 * this Serializable is done to recompute its total length and internal
 		 * pointers.
 		 *
-		 * @throw MediaSoupError - If `SetConsolidatedListener()` was not called
-		 *   first.
+		 * @remarks
+		 * - The listener is removed before being invoked, so this method or
+		 *   `Discard()` can only be called once per `SetBuildInPlaceListener()`
+		 *   call.
+		 * - Once consolidated, the Serializable MUST NOT be modified, since the
+		 *   parent does not track later changes (for example, a change in its
+		 *   length would leave the parent with a wrong length).
 		 *
-		 * @see SetConsolidatedListener()
+		 * @throw
+		 * - MediaSoupError - If `SetBuildInPlaceListener()` was not called first.
+		 * - MediaSoupError - If this method or `Discard()` was already called.
+		 * - MediaSoupError - If some item is being built in place within this
+		 *   Serializable (see `NeedsConsolidation()`), in which case nothing
+		 *   changes and this method can be called again.
+		 *
+		 * @see SetBuildInPlaceListener()
 		 */
 		virtual void Consolidate() const final;
+
+		/**
+		 * The application can call this method, instead of `Consolidate()`, on a
+		 * Serializable that's been constructed within a parent Serializable object
+		 * in order to remove it from the parent, which then deletes it. The parent
+		 * is left as it was before the Serializable was built in place.
+		 *
+		 * @remarks
+		 * - The Serializable is deleted by the parent, so it MUST NOT be used
+		 *   after calling this method (unless it throws).
+		 * - The listener is removed before being invoked, so this method or
+		 *   `Consolidate()` can only be called once per `SetBuildInPlaceListener()`
+		 *   call.
+		 *
+		 * @throw
+		 * - MediaSoupError - If `SetBuildInPlaceListener()` was not called first.
+		 * - MediaSoupError - If this method or `Consolidate()` was already called.
+		 * - MediaSoupError - If some item is being built in place within this
+		 *   Serializable (see `NeedsConsolidation()`), in which case nothing
+		 *   changes and this method can be called again.
+		 *
+		 * @see SetBuildInPlaceListener()
+		 */
+		virtual void Discard() const final;
+
+		/**
+		 * Whether some item is being built in place within this Serializable and
+		 * `Consolidate()` or `Discard()` wasn't invoked on it yet.
+		 */
+		virtual bool NeedsConsolidation() const final
+		{
+			return this->needsConsolidation;
+		}
 
 		/**
 		 * Methods to be used by classes inheriting from Serializable.
@@ -174,10 +230,8 @@ namespace RTC
 		 *   after every change in the Serializable content that affects its
 		 *   current length.
 		 *
-		 * @throw
-		 * - MediaSoupError - If given `length` is larger than the buffer length of
-		 *   the Serializable.
-		 * - MediaSoupError - If 0 is given.
+		 * @throw MediaSoupError - If given `length` is larger than the buffer
+		 *   length of the Serializable.
 		 */
 		virtual void SetLength(size_t length) final;
 
@@ -185,13 +239,15 @@ namespace RTC
 		 * Clone the Serializable into the given Serializable.
 		 *
 		 * @remarks
-		 * - If this method throws (due to the buffer length of the given
-		 *   Serializable being too small), then this method deletes the given
-		 *   `serializable` pointer and throws, meaning that the subclass must not
-		 *   delete it in case it captured the error.
+		 * - If this method throws, then it deletes the given `serializable`
+		 *   pointer before throwing, meaning that the subclass must not delete it
+		 *   in case it captured the error.
 		 *
-		 * @throw MediaSoupError - If the buffer length of the given `serializable`
-		 *   is too small.
+		 * @throw
+		 * - MediaSoupError - If some item is being built in place within this
+		 *   Serializable (see `NeedsConsolidation()`).
+		 * - MediaSoupError - If the buffer length of the given `serializable` is
+		 *   too small.
 		 */
 		virtual void CloneInto(Serializable* serializable) const;
 
@@ -204,12 +260,30 @@ namespace RTC
 		virtual void FillPadding(uint8_t padding) final;
 
 		/**
-		 * Set a listener that will be invoked when calling `Consolidate()` on this
-		 * Serializable.
+		 * Set a listener that will be invoked when calling `Consolidate()` or
+		 * `Discard()` on this Serializable.
 		 *
 		 * @see Consolidate()
+		 * @see Discard()
 		 */
-		virtual void SetConsolidatedListener(ConsolidatedListener&& listener) final;
+		virtual void SetBuildInPlaceListener(BuildInPlaceListener&& listener) final;
+
+		/**
+		 * To be called by the parent Serializable with `true` when it starts
+		 * building an item in place within it, and with `false` once that item is
+		 * consolidated or discarded.
+		 *
+		 * @see NeedsConsolidation()
+		 */
+		virtual void SetNeedsConsolidation(bool flag) final;
+
+		/**
+		 * @throw MediaSoupError - If some item is being built in place within
+		 *   this Serializable.
+		 *
+		 * @see NeedsConsolidation()
+		 */
+		virtual void AssertDoesNotNeedConsolidation() const final;
 
 	private:
 		// Buffer holding the Serializable content.
@@ -222,8 +296,13 @@ namespace RTC
 		// Event listener invoked when the current buffer is released (no longer
 		// used by this Serializable)-
 		BufferReleasedListener* bufferReleasedListener{ nullptr };
-		// Event listener invoked when the Serializable is consolidated.
-		ConsolidatedListener consolidatedListener{ nullptr };
+		// Event listener invoked when the Serializable is consolidated or
+		// discarded. It's removed by the const `Consolidate()` and `Discard()`
+		// methods before invoking it.
+		mutable BuildInPlaceListener buildInPlaceListener{ nullptr };
+		// Whether some item is being built in place within this Serializable and
+		// `Consolidate()` or `Discard()` wasn't invoked on it yet.
+		bool needsConsolidation{ false };
 	};
 } // namespace RTC
 

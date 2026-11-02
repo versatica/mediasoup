@@ -68,9 +68,6 @@ namespace RTC
 		 *   all zero bytes. Any padding MUST NOT be included in the length field.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class DataChunk : public AnyDataChunk
 		{
 			// We need that packet calls protected and private methods in this class.

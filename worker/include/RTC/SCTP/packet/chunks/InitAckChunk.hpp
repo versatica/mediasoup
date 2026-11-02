@@ -62,9 +62,6 @@ namespace RTC
 		 *   chunk and MAY include an "Unresolvable Address" error cause.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class InitAckChunk : public AnyInitChunk
 		{
 			// We need that packet calls protected and private methods in this class.

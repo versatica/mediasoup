@@ -22,9 +22,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class IPv4AddressParameter : public Parameter
 		{
 			// We need that chunk calls protected and private methods in this class.
