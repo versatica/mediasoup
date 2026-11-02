@@ -74,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// The FCI must contain at least one item.
+			// The Feedback Control Information (FCI) must contain at least one item.
 			if (packetLength < AnyFeedbackPacket::FeedbackHeaderLength + NackPacket::NackItemLength)
 			{
 				MS_WARN_TAG(rtcp, "no space for feedback header and at least one item");

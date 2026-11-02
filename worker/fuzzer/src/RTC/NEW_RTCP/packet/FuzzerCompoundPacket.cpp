@@ -1,20 +1,29 @@
 #include "RTC/NEW_RTCP/packet/FuzzerCompoundPacket.hpp"
+#include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
+#include "RTC/NEW_RTCP/packet/FirPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerFirPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerNackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerPliPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerReceiverReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerRembPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerSdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerSenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerUnknownPacket.hpp"
+#include "RTC/NEW_RTCP/packet/FuzzerUnknownPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FuzzerUnknownTransportLayerFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/NackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/PliPacket.hpp"
 #include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/RembPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
 
 namespace
@@ -39,6 +48,10 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ByePacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::NackPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownTransportLayerFeedbackPacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::PliPacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::FirPacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::RembPacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPayloadSpecificFeedbackPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPacket>();
 
 		for (auto it = compoundPacket->PacketsBegin(); it != compoundPacket->PacketsEnd(); ++it)
@@ -137,7 +150,65 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 
 				case RTC::NEW_RTCP::Packet::PacketType::PSFB:
 				{
-					// TODO
+					const auto* const payloadSpecificFeedbackPacket =
+					  static_cast<const RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket*>(packet);
+
+					switch (payloadSpecificFeedbackPacket->GetMessageType())
+					{
+						case RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
+						{
+							const auto* const pliPacket =
+							  static_cast<const RTC::NEW_RTCP::PliPacket*>(payloadSpecificFeedbackPacket);
+
+							FuzzerRtcRtcpPliPacket::Fuzz(pliPacket);
+
+							break;
+						}
+
+						case RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::FIR:
+						{
+							const auto* const firPacket =
+							  static_cast<const RTC::NEW_RTCP::FirPacket*>(payloadSpecificFeedbackPacket);
+
+							FuzzerRtcRtcpFirPacket::Fuzz(firPacket);
+
+							break;
+						}
+
+						case RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType::AFB:
+						{
+							// An AFB packet whose application is not implemented is an
+							// UnknownPayloadSpecificFeedbackPacket.
+							if (payloadSpecificFeedbackPacket->HasUnknownMessageType())
+							{
+								const auto* const unknownPayloadSpecificFeedbackPacket =
+								  static_cast<const RTC::NEW_RTCP::UnknownPayloadSpecificFeedbackPacket*>(
+								    payloadSpecificFeedbackPacket);
+
+								FuzzerRtcRtcpUnknownPayloadSpecificFeedbackPacket::Fuzz(
+								  unknownPayloadSpecificFeedbackPacket);
+							}
+							else
+							{
+								const auto* const rembPacket =
+								  static_cast<const RTC::NEW_RTCP::RembPacket*>(payloadSpecificFeedbackPacket);
+
+								FuzzerRtcRtcpRembPacket::Fuzz(rembPacket);
+							}
+
+							break;
+						}
+
+						default:
+						{
+							const auto* const unknownPayloadSpecificFeedbackPacket =
+							  static_cast<const RTC::NEW_RTCP::UnknownPayloadSpecificFeedbackPacket*>(
+							    payloadSpecificFeedbackPacket);
+
+							FuzzerRtcRtcpUnknownPayloadSpecificFeedbackPacket::Fuzz(
+							  unknownPayloadSpecificFeedbackPacket);
+						}
+					}
 
 					break;
 				}

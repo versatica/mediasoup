@@ -32,7 +32,7 @@ namespace RTC
 		 *   means that the packet with sequence number PID + i + 1 is also lost.
 		 *
 		 * @remarks
-		 * - The FCI contains at least one item.
+		 * - The Feedback Control Information (FCI) contains at least one item.
 		 */
 		class NackPacket : public AnyTransportLayerFeedbackPacket
 		{
