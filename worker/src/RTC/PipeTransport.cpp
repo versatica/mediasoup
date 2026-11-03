@@ -133,7 +133,7 @@ namespace RTC
 			  /*channelRequestHandler*/ this,
 			  /*channelNotificationHandler*/ this);
 		}
-		catch (const MediaSoupError& error)
+		catch (const MediaSoupError&)
 		{
 			// Must delete everything since the destructor won't be called.
 
@@ -442,7 +442,7 @@ namespace RTC
 						this->tuple->SetLocalAnnouncedAddress(this->listenInfo.announcedAddress);
 					}
 				}
-				catch (const MediaSoupError& error)
+				catch (const MediaSoupError&)
 				{
 					this->tuple.reset();
 

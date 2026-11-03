@@ -291,7 +291,7 @@ namespace RTC
 				{
 					MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 				}
-				catch (const std::exception& error) // NOLINT(bugprone-empty-catch)
+				catch (const std::exception&) // NOLINT(bugprone-empty-catch)
 				{
 					// NOTE: This is to avoid a warning:
 					// '~SrtpSession' has a non-throwing exception specification but can

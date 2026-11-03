@@ -746,7 +746,7 @@ namespace RTC
 
 					  SetNeedsConsolidation(false);
 				  }
-				  catch (const MediaSoupError& error)
+				  catch (const MediaSoupError&)
 				  {
 					  SetNeedsConsolidation(false);
 
@@ -790,7 +790,7 @@ namespace RTC
 
 					  SetNeedsConsolidation(false);
 				  }
-				  catch (const MediaSoupError& error)
+				  catch (const MediaSoupError&)
 				  {
 					  SetNeedsConsolidation(false);
 

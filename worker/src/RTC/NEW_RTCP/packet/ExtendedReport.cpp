@@ -182,7 +182,7 @@ namespace RTC
 				// NOTE: This will throw if computed value is too big.
 				SetLengthField(newLength);
 			}
-			catch (const MediaSoupError& error)
+			catch (const MediaSoupError&)
 			{
 				// Rollback.
 				SetLength(previousLength);

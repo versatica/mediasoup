@@ -322,14 +322,15 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This method removes existing padding (if any).
+			 * - If given `valueLength` is not multiple of 4 bytes, this method adds
+			 *   the padding bytes needed to make the packet length multiple of 4
+			 *   bytes and sets the Padding bit.
 			 *
 			 * @throw
 			 * - MediaSoupTypeError - If given `value` is `nullptr` and `valueLength`
 			 *   is greater than 0.
-			 * - MediaSoupTypeError - If given `valueLength` is higher than available
-			 *   length.
-			 * - MediaSoupTypeError - If given `valueLength` is not multiple of 4
-			 *   bytes.
+			 * - MediaSoupTypeError - If given `valueLength` plus needed padding is
+			 *   higher than available length.
 			 *
 			 * @see GetVariableLengthValue()
 			 */
@@ -356,12 +357,14 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - This method removes existing padding (if any).
+			 * - If given `valueLength` is not multiple of 4 bytes, this method adds
+			 *   the padding bytes needed to make the packet length multiple of 4
+			 *   bytes and sets the Padding bit. Padding bytes are filled with zeros
+			 *   except the last one, which holds the padding length.
 			 *
 			 * @throw
-			 * - MediaSoupTypeError - If given `valueLength` is higher than available
-			 *   length.
-			 * - MediaSoupTypeError - If given `valueLength` is not multiple of 4
-			 *   bytes.
+			 * - MediaSoupTypeError - If given `valueLength` plus needed padding is
+			 *   higher than available length.
 			 *
 			 * @see GetVariableLengthValue()
 			 */

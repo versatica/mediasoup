@@ -723,7 +723,7 @@ namespace RTC
 				{
 					this->rtpListener.AddProducer(producer);
 				}
-				catch (const MediaSoupError& error)
+				catch (const MediaSoupError&)
 				{
 					delete producer;
 
@@ -736,7 +736,7 @@ namespace RTC
 				{
 					this->listener->OnTransportNewProducer(this, producer);
 				}
-				catch (const MediaSoupError& error)
+				catch (const MediaSoupError&)
 				{
 					this->rtpListener.RemoveProducer(producer);
 
@@ -863,7 +863,7 @@ namespace RTC
 				{
 					this->listener->OnTransportNewConsumer(this, consumer, producerId);
 				}
-				catch (const MediaSoupError& error)
+				catch (const MediaSoupError&)
 				{
 					delete consumer;
 
@@ -1002,7 +1002,7 @@ namespace RTC
 					{
 						this->sctpListener.AddDataProducer(dataProducer);
 					}
-					catch (const MediaSoupError& error)
+					catch (const MediaSoupError&)
 					{
 						delete dataProducer;
 
@@ -1016,7 +1016,7 @@ namespace RTC
 				{
 					this->listener->OnTransportNewDataProducer(this, dataProducer);
 				}
-				catch (const MediaSoupError& error)
+				catch (const MediaSoupError&)
 				{
 					if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
 					{
@@ -1090,7 +1090,7 @@ namespace RTC
 							CheckNoSctpDataConsumer(
 							  dataConsumer->GetSctpStreamParameters().streamId, request->methodCStr);
 						}
-						catch (const MediaSoupError& error)
+						catch (const MediaSoupError&)
 						{
 							delete dataConsumer;
 
@@ -1120,7 +1120,7 @@ namespace RTC
 				{
 					this->listener->OnTransportNewDataConsumer(this, dataConsumer, dataProducerId);
 				}
-				catch (const MediaSoupError& error)
+				catch (const MediaSoupError&)
 				{
 					delete dataConsumer;
 

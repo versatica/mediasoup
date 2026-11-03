@@ -260,7 +260,7 @@ namespace RTC
 			  /*channelRequestHandler*/ this,
 			  /*channelNotificationHandler*/ this);
 		}
-		catch (const MediaSoupError& error)
+		catch (const MediaSoupError&)
 		{
 			this->udpSocket.reset();
 
@@ -722,7 +722,7 @@ namespace RTC
 						}
 					}
 				}
-				catch (const MediaSoupError& error)
+				catch (const MediaSoupError&)
 				{
 					this->tuple.reset();
 
