@@ -371,7 +371,7 @@ SCENARIO(
 
 		// Only the three decode targets of the top spatial layer are told active.
 		REQUIRE(keyFrame.announced.has_value());
-		REQUIRE(keyFrame.announced.value() == 0b111000000);
+		REQUIRE(keyFrame.announced.value_or(0) == 0b111000000);
 
 		std::vector<ProcessResult> results;
 
@@ -800,7 +800,7 @@ SCENARIO(
 
 		// Only the three decode targets of spatial layer 0 are told active now.
 		REQUIRE(settled.announced.has_value());
-		REQUIRE(settled.announced.value() == 0b000000111);
+		REQUIRE(settled.announced.value_or(0) == 0b000000111);
 
 		// The 2:2 frame from before the downgrade arrives late and is forwarded,
 		// since the layers its own frame was given do forward it.
@@ -820,8 +820,8 @@ SCENARIO(
 		 * for a key frame.
 		 */
 		REQUIRE(reordered.announced.has_value());
-		REQUIRE(reordered.announced.value() == settled.announced.value());
-		REQUIRE(reordered.announced.value() != 0b111111111);
+		REQUIRE(reordered.announced.value_or(0) == settled.announced.value_or(0));
+		REQUIRE(reordered.announced.value_or(0) != 0b111111111);
 	}
 
 	/*
