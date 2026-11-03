@@ -228,7 +228,7 @@ namespace RTC
 
 						if (pictureId > 127)
 						{
-							MS_DEBUG_TAG(rtp, "casting pictureId value to one byte");
+							MS_DEBUG_TAG(codec, "casting pictureId value to one byte");
 						}
 					}
 				}
