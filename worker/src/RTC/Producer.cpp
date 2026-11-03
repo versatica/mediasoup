@@ -1236,7 +1236,6 @@ namespace RTC
 			uint8_t* extenValue;
 			uint8_t extenLen;
 			uint8_t* bufferPtr{ buffer };
-			// Proxied Dependency Descriptor, without the room made for it.
 			const uint8_t* dependencyDescriptorValue{ nullptr };
 			uint8_t dependencyDescriptorLen{ 0 };
 
