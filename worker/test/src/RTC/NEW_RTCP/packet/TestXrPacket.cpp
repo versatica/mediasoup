@@ -520,7 +520,7 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 
 		/* Parse it. */
 
-		std::unique_ptr<RTC::NEW_RTCP::XrPacket> parsedPacket{ RTC::NEW_RTCP::XrPacket::Parse(
+		const std::unique_ptr<RTC::NEW_RTCP::XrPacket> parsedPacket{ RTC::NEW_RTCP::XrPacket::Parse(
 			packet->GetBuffer(), packet->GetLength()) };
 
 		CHECK_RTCP_PACKET(

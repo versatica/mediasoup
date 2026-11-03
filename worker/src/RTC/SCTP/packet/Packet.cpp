@@ -392,7 +392,7 @@ namespace RTC
 			// NOTE: It may throw.
 			SetLength(previousLength + chunk->GetLength());
 
-			Chunk* clonedChunk{ nullptr };
+			Chunk* clonedChunk{ nullptr }; // NOLINT(misc-const-correctness)
 
 			try
 			{

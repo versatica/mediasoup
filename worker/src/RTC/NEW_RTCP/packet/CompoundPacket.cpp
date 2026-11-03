@@ -322,7 +322,7 @@ namespace RTC
 			// NOTE: It may throw.
 			SetLength(previousLength + packet->GetLength());
 
-			Packet* clonedPacket{ nullptr };
+			Packet* clonedPacket{ nullptr }; // NOLINT(misc-const-correctness)
 
 			try
 			{
