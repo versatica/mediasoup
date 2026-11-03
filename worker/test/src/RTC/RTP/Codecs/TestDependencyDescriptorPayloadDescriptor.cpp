@@ -38,6 +38,9 @@
 
 namespace
 {
+	constexpr uint8_t DependencyDescriptorId{ static_cast<uint8_t>(
+		RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR) };
+
 	/**
 	 * Key frame, carrying the template dependency structure of an L3T3 stream:
 	 * 9 decode targets and 15 templates. These are the ones used below, with
@@ -106,13 +109,102 @@ namespace
 	constexpr size_t FrameS0T0Index{ 9 };
 	constexpr size_t FrameS1T0Index{ 10 };
 
+	// Decode targets of the L3T3 structure above: 3 spatial layers × 3 temporal.
+	constexpr uint8_t DecodeTargetCount{ 9 };
+
+	/**
+	 * Creates a packet carrying the given descriptor in a Dependency Descriptor
+	 * RTP header extension `reservedLen` bytes long, just as the Producer does:
+	 * the room a Consumer may need to rewrite the descriptor is reserved, and the
+	 * extension is then shrunk back to the length the descriptor really has, so
+	 * that the room stays behind it as padding.
+	 */
+	std::unique_ptr<RTC::RTP::Packet> createPacket(const uint8_t* data, uint8_t len, uint8_t reservedLen)
+	{
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
+
+		REQUIRE(packet);
+
+		uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+
+		std::memcpy(value, data, len);
+
+		const std::vector<RTC::RTP::Packet::Extension> extensions{
+			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
+		};
+
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+		REQUIRE(packet->UpdateDependencyDescriptor(data, len));
+
+		return packet;
+	}
+
 	struct ProcessResult
 	{
 		bool forwarded{ false };
 		bool marker{ false };
 		uint8_t spatialLayer{ 0 };
 		uint8_t temporalLayer{ 0 };
+		/*
+		 * The `active_decode_targets_bitmask` the packet ends up carrying, this
+		 * is, the decode targets the endpoint is told to expect. Empty when the
+		 * packet was not forwarded or when nothing was written into it.
+		 */
+		std::optional<uint32_t> announced;
 	};
+
+	/**
+	 * Runs a frame through `DependencyDescriptorPayloadDescriptorHandler::Process()`,
+	 * which is what decides whether the packet is forwarded to the Consumer, and
+	 * reads back the descriptor the packet ends up carrying for it.
+	 */
+	ProcessResult processFrame(
+	  const uint8_t* data,
+	  size_t len,
+	  std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+	    templateDependencyStructure,
+	  RTC::RTP::Codecs::EncodingContext& context)
+	{
+		ProcessResult result;
+
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, templateDependencyStructure));
+
+		REQUIRE(dependencyDescriptor);
+
+		result.spatialLayer  = dependencyDescriptor->spatialLayer;
+		result.temporalLayer = dependencyDescriptor->temporalLayer;
+
+		// As the Producer does, with room for the rewrite a Consumer may need.
+		const auto packet =
+		  createPacket(data, static_cast<uint8_t>(len), dependencyDescriptor->GetMaxLength());
+
+		auto* payloadDescriptor =
+		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(dependencyDescriptor);
+
+		RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler payloadDescriptorHandler(
+		  payloadDescriptor);
+
+		result.forwarded = payloadDescriptorHandler.Process(&context, packet.get(), result.marker);
+
+		if (result.forwarded)
+		{
+			std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> forwarded;
+			/*
+			 * NOTE: Into a copy, since reading back a key frame parses the template
+			 * dependency structure again and would replace the one of the run.
+			 */
+			auto structure = templateDependencyStructure;
+
+			REQUIRE(packet->ReadDependencyDescriptor(forwarded, structure));
+			REQUIRE(forwarded);
+
+			result.announced = forwarded->activeDecodeTargetsBitmask;
+		}
+
+		return result;
+	}
 } // namespace
 
 SCENARIO(
@@ -129,34 +221,9 @@ SCENARIO(
 
 	RTC::RTP::Codecs::EncodingContext context(params);
 
-	/**
-	 * Runs a frame through `DependencyDescriptorPayloadDescriptorHandler::Process()`,
-	 * which is what decides whether the packet is forwarded to the Consumer.
-	 */
 	auto process = [&](const uint8_t* data, size_t len)
 	{
-		ProcessResult result;
-
-		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
-		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, templateDependencyStructure));
-
-		REQUIRE(dependencyDescriptor);
-
-		result.spatialLayer  = dependencyDescriptor->spatialLayer;
-		result.temporalLayer = dependencyDescriptor->temporalLayer;
-
-		auto* payloadDescriptor =
-		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(dependencyDescriptor);
-
-		RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler payloadDescriptorHandler(
-		  payloadDescriptor);
-
-		const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
-			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
-
-		result.forwarded = payloadDescriptorHandler.Process(&context, packet.get(), result.marker);
-
-		return result;
+		return processFrame(data, len, templateDependencyStructure, context);
 	};
 
 	/*
@@ -203,6 +270,83 @@ SCENARIO(
 		return dependencyDescriptor->IsSwitchPointForDecodeTarget(spatialLayer, temporalLayer);
 	};
 
+	/*
+	 * Whether the given delta frame is part of the decode target of the given
+	 * layers, this is, whether announcing that decode target active promises
+	 * that frame to the endpoint.
+	 */
+	auto isPresentInDecodeTargetFor = [&](size_t index, uint8_t spatialLayer, uint8_t temporalLayer)
+	{
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    DeltaFrames[index].data(), DeltaFrames[index].size(), templateDependencyStructure));
+
+		REQUIRE(dependencyDescriptor);
+
+		return dependencyDescriptor->IsPresentInDecodeTarget(spatialLayer, temporalLayer);
+	};
+
+	/*
+	 * The forward/announce invariant: a decode target told active must be one
+	 * whose frames really are forwarded. Announcing more than is sent leaves the
+	 * endpoint waiting for frames that never come, which it can only take for
+	 * loss; sending more than is announced wastes the bandwidth the filter was
+	 * meant to save.
+	 */
+	auto requireAnnouncedIsForwarded =
+	  [&](const ProcessResult& keyFrame, const std::vector<ProcessResult>& results)
+	{
+		/*
+		 * What a frame announces is a promise about the frames that follow it,
+		 * so the key frame is judged against the whole run and a delta frame
+		 * against the ones after it.
+		 */
+		auto requirePromiseKept = [&](const ProcessResult& result, size_t from, const char* which)
+		{
+			if (!result.announced.has_value())
+			{
+				return;
+			}
+
+			const auto announced = result.announced.value();
+
+			for (uint8_t decodeTarget{ 0 }; decodeTarget < DecodeTargetCount; ++decodeTarget)
+			{
+				if ((announced & (uint32_t{ 1 } << decodeTarget)) == 0)
+				{
+					continue;
+				}
+
+				// The decode targets of this structure go by spatial layer and then
+				// by temporal one, as the table above shows.
+				const auto spatialLayer  = static_cast<uint8_t>(decodeTarget / 3);
+				const auto temporalLayer = static_cast<uint8_t>(decodeTarget % 3);
+
+				// Every later frame that decode target is made of must be forwarded.
+				for (size_t j{ from }; j < results.size(); ++j)
+				{
+					if (!isPresentInDecodeTargetFor(j, spatialLayer, temporalLayer))
+					{
+						continue;
+					}
+
+					INFO(
+					  "delta frame " << j << " belongs to decode target " << static_cast<int>(decodeTarget)
+					                 << ", told active by the " << which);
+
+					REQUIRE(results[j].forwarded);
+				}
+			}
+		};
+
+		requirePromiseKept(keyFrame, 0, "key frame");
+
+		for (size_t i{ 0 }; i < results.size(); ++i)
+		{
+			requirePromiseKept(results[i], i + 1, "frame before it");
+		}
+	};
+
 	// Asks for the given layers, with nothing forwarded yet.
 	auto setTargetLayers = [&](int16_t spatialLayer, int16_t temporalLayer)
 	{
@@ -221,7 +365,15 @@ SCENARIO(
 	{
 		setTargetLayers(2, 2);
 
-		REQUIRE(processKeyFrame().forwarded);
+		const auto keyFrame = processKeyFrame();
+
+		REQUIRE(keyFrame.forwarded);
+
+		// Only the three decode targets of the top spatial layer are told active.
+		REQUIRE(keyFrame.announced.has_value());
+		REQUIRE(keyFrame.announced.value() == 0b111000000);
+
+		std::vector<ProcessResult> results;
 
 		for (size_t i{ 0 }; i < DeltaFrames.size(); ++i)
 		{
@@ -234,14 +386,22 @@ SCENARIO(
 			// The marker bit is only set in the highest forwarded spatial layer, so
 			// that the whole picture reaches the endpoint as a single unit.
 			REQUIRE(result.marker == (result.spatialLayer == 2));
+
+			results.push_back(result);
 		}
+
+		requireAnnouncedIsForwarded(keyFrame, results);
 	}
 
 	SECTION("drops upper spatial layers when targeting spatial 0")
 	{
 		setTargetLayers(0, 2);
 
-		REQUIRE(processKeyFrame().forwarded);
+		const auto keyFrame = processKeyFrame();
+
+		REQUIRE(keyFrame.forwarded);
+
+		std::vector<ProcessResult> results;
 
 		for (size_t i{ 0 }; i < DeltaFrames.size(); ++i)
 		{
@@ -250,14 +410,22 @@ SCENARIO(
 			const auto result = processDeltaFrame(i);
 
 			REQUIRE(result.forwarded == (result.spatialLayer == 0));
+
+			results.push_back(result);
 		}
+
+		requireAnnouncedIsForwarded(keyFrame, results);
 	}
 
 	SECTION("drops upper temporal layers when targeting temporal 0")
 	{
 		setTargetLayers(2, 0);
 
-		REQUIRE(processKeyFrame().forwarded);
+		const auto keyFrame = processKeyFrame();
+
+		REQUIRE(keyFrame.forwarded);
+
+		std::vector<ProcessResult> results;
 
 		for (size_t i{ 0 }; i < DeltaFrames.size(); ++i)
 		{
@@ -268,7 +436,11 @@ SCENARIO(
 			// NOTE: Only the top spatial layer is part of the 2:0 decode target, so
 			// being in temporal layer 0 is not enough for a frame to be forwarded.
 			REQUIRE(result.forwarded == (result.spatialLayer == 2 && result.temporalLayer == 0));
+
+			results.push_back(result);
 		}
+
+		requireAnnouncedIsForwarded(keyFrame, results);
 	}
 
 	/*
@@ -491,28 +663,7 @@ SCENARIO(
 
 	auto process = [&](const uint8_t* data, size_t len)
 	{
-		ProcessResult result;
-
-		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
-		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, templateDependencyStructure));
-
-		REQUIRE(dependencyDescriptor);
-
-		result.spatialLayer  = dependencyDescriptor->spatialLayer;
-		result.temporalLayer = dependencyDescriptor->temporalLayer;
-
-		auto* payloadDescriptor =
-		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(dependencyDescriptor);
-
-		RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler payloadDescriptorHandler(
-		  payloadDescriptor);
-
-		const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
-			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
-
-		result.forwarded = payloadDescriptorHandler.Process(&context, packet.get(), result.marker);
-
-		return result;
+		return processFrame(data, len, templateDependencyStructure, context);
 	};
 
 	auto processKeyFrame = [&]()
@@ -616,6 +767,61 @@ SCENARIO(
 		// And it does not move the current layers, since it says nothing about what
 		// the Consumer is being given now.
 		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+	}
+
+	/*
+	 * Which decode targets a reordered packet tells the endpoint about is the one
+	 * decision NOT made with the layers its own frame was given, and that is
+	 * deliberate. The bitmask describes the stream rather than the frame carrying
+	 * it: announcing the layers of a late frame would tell the endpoint that a
+	 * spatial layer which has already stopped being sent is still active, and it
+	 * would wait for frames that never come. Announcing the current layers is
+	 * monotone, so a reordered packet merely repeats what is already true.
+	 */
+	SECTION("a reordered packet announces the current layers, not its own")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processKeyFrame().forwarded); // frame 1
+
+		for (size_t i{ 0 }; i < FullSvcFrameS2T2Index; ++i)
+		{
+			REQUIRE(processDeltaFrame(i).forwarded);
+		}
+
+		// Down to the lowest spatial layer, which the 0:0 frame settles.
+		context.SetTargetSpatialLayer(0);
+
+		const auto settled = processDeltaFrame(FullSvcFrameS0T0Index); // frame 13
+
+		REQUIRE(settled.forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+
+		// Only the three decode targets of spatial layer 0 are told active now.
+		REQUIRE(settled.announced.has_value());
+		REQUIRE(settled.announced.value() == 0b000000111);
+
+		// The 2:2 frame from before the downgrade arrives late and is forwarded,
+		// since the layers its own frame was given do forward it.
+		const auto reordered = processDeltaFrame(FullSvcFrameS2T2Index); // frame 12
+
+		REQUIRE(reordered.forwarded);
+		REQUIRE(reordered.spatialLayer == 2);
+
+		/*
+		 * Yet it announces the decode targets of the current layers, so the
+		 * endpoint is handed a frame of a decode target the very same packet tells
+		 * it is not active. That costs the bytes of one frame.
+		 *
+		 * NOTE: The alternative costs more. Judging the bitmask by its own frame
+		 * would announce every decode target of the stream, this is, spatial
+		 * layers that are no longer forwarded, which is what makes an endpoint ask
+		 * for a key frame.
+		 */
+		REQUIRE(reordered.announced.has_value());
+		REQUIRE(reordered.announced.value() == settled.announced.value());
+		REQUIRE(reordered.announced.value() != 0b111111111);
 	}
 
 	/*
