@@ -12,6 +12,7 @@
 #include "RTC/NEW_RTCP/packet/RembPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/XrPacket.hpp"
@@ -846,6 +847,234 @@ SCENARIO("RTCP Compound Packet", "[serializable][rtcp][compoundpacket]")
 		  /*packetsCount*/ 2);
 
 		checkPackets(compoundPacket.get(), rtcpCommon::CloneBuffer);
+	}
+
+	SECTION("CompoundPacket::Parse() with a Transport-wide CC packet, Serialize() and Clone() succeed")
+	{
+		const auto checkPackets =
+		  [](const RTC::NEW_RTCP::CompoundPacket* compoundPacket, const uint8_t* buffer) -> void
+		{
+			const auto* const packet1 =
+			  static_cast<const RTC::NEW_RTCP::NackPacket*>(compoundPacket->GetPacketAt(0));
+			const auto* const packet2 =
+			  static_cast<const RTC::NEW_RTCP::TransportWideCcPacket*>(compoundPacket->GetPacketAt(1));
+			const auto items              = packet1->GetItems();
+			const auto receivedRtpPackets = packet2->GetReceivedRtpPackets();
+
+			REQUIRE(compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::TransportWideCcPacket>() == packet2);
+
+			REQUIRE(packet1->GetBuffer() == buffer);
+			REQUIRE(packet1->GetLength() == 16);
+			REQUIRE(items.size() == 1);
+			REQUIRE(items[0].packetId == 1000);
+
+			REQUIRE(packet2->GetBuffer() == buffer + 16);
+			REQUIRE(packet2->GetLength() == 24);
+			REQUIRE(packet2->HasPadding() == true);
+			REQUIRE(packet2->GetPaddingLength() == 1);
+			REQUIRE(packet2->GetSenderSsrc() == 0xFA17FA17);
+			REQUIRE(packet2->GetMediaSsrc() == 1234);
+			REQUIRE(packet2->GetBaseSequenceNumber() == 13);
+			REQUIRE(packet2->GetPacketStatusCount() == 1);
+			REQUIRE(packet2->GetBaseTimeUs() == 1076014080000);
+			REQUIRE(packet2->HasDeltas() == true);
+			REQUIRE(receivedRtpPackets.size() == 1);
+			REQUIRE(receivedRtpPackets[0].sequenceNumber == 13);
+			REQUIRE(receivedRtpPackets[0].deltaTicks == 228);
+		};
+
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// NACK Packet
+			// V=2, P=0, FMT=1, PT:205, Length: 3
+			0b10000001, 0xCD, 0x00, 0x03,
+			// SSRC of packet sender: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// SSRC of media source: 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// PID: 1000, BLP: 0x0000
+			0x03, 0xE8, 0x00, 0x00,
+			// Transport-wide CC Packet
+			// V=2, P=1, FMT=15, PT:205, Length: 5
+			0xAF, 0xCD, 0x00, 0x05,
+			// SSRC of packet sender: 0xFA17FA17
+			0xFA, 0x17, 0xFA, 0x17,
+			// SSRC of media source: 1234
+			0x00, 0x00, 0x04, 0xD2,
+			// Base sequence number: 13, Packet status count: 1
+			0x00, 0x0D, 0x00, 0x01,
+			// Reference time: 35504, Feedback packet count: 0
+			0x00, 0x8A, 0xB0, 0x00,
+			// Run Length Chunk: symbol 1, run length 1
+			0x20, 0x01,
+			// Receive delta: 228
+			0xE4,
+			// Padding: 1 byte
+			0x01
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket{
+			RTC::NEW_RTCP::CompoundPacket::Parse(buffer, sizeof(buffer))
+		};
+
+		CHECK_RTCP_COMPOUND_PACKET(
+		  /*compoundPacket*/ compoundPacket.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 40,
+		  /*packetsCount*/ 2);
+
+		checkPackets(compoundPacket.get(), buffer);
+
+		/* Serialize it. */
+
+		compoundPacket->Serialize(rtcpCommon::SerializeBuffer, sizeof(rtcpCommon::SerializeBuffer));
+
+		std::memset(buffer, 0xFF, sizeof(buffer));
+
+		CHECK_RTCP_COMPOUND_PACKET(
+		  /*compoundPacket*/ compoundPacket.get(),
+		  /*buffer*/ rtcpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
+		  /*length*/ 40,
+		  /*packetsCount*/ 2);
+
+		checkPackets(compoundPacket.get(), rtcpCommon::SerializeBuffer);
+
+		/* Clone it. */
+
+		compoundPacket.reset(
+		  compoundPacket->Clone(rtcpCommon::CloneBuffer, sizeof(rtcpCommon::CloneBuffer)));
+
+		std::memset(rtcpCommon::SerializeBuffer, 0xFF, sizeof(rtcpCommon::SerializeBuffer));
+
+		CHECK_RTCP_COMPOUND_PACKET(
+		  /*compoundPacket*/ compoundPacket.get(),
+		  /*buffer*/ rtcpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
+		  /*length*/ 40,
+		  /*packetsCount*/ 2);
+
+		checkPackets(compoundPacket.get(), rtcpCommon::CloneBuffer);
+	}
+
+	SECTION("CompoundPacket::Parse() with a malformed Transport-wide CC packet fails")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// NACK Packet
+			// V=2, P=0, FMT=1, PT:205, Length: 3
+			0b10000001, 0xCD, 0x00, 0x03,
+			// SSRC of packet sender: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// SSRC of media source: 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// PID: 1000, BLP: 0x0000
+			0x03, 0xE8, 0x00, 0x00,
+			// Transport-wide CC Packet whose packet chunks do not cover the packet
+			// status count
+			// V=2, P=0, FMT=15, PT:205, Length: 5
+			0x8F, 0xCD, 0x00, 0x05,
+			// SSRC of packet sender: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// SSRC of media source: 2222
+			0x00, 0x00, 0x08, 0xAE,
+			// Base sequence number: 1, Packet status count: 20
+			0x00, 0x01, 0x00, 0x14,
+			// Reference time: 0, Feedback packet count: 0
+			0x00, 0x00, 0x00, 0x00,
+			// One Bit Status Vector Chunk: 14 x received
+			0xBF, 0xFF,
+			// Run Length Chunk: symbol 0, run length 0
+			0x00, 0x00
+		};
+		// clang-format on
+
+		REQUIRE(!RTC::NEW_RTCP::CompoundPacket::Parse(buffer, sizeof(buffer)));
+	}
+
+	SECTION("CompoundPacket::Factory() using AddPacket() with a Transport-wide CC packet succeeds")
+	{
+		const auto checkPackets =
+		  [](const RTC::NEW_RTCP::CompoundPacket* compoundPacket, const uint8_t* buffer) -> void
+		{
+			const auto* const packet1 =
+			  static_cast<const RTC::NEW_RTCP::TransportWideCcPacket*>(compoundPacket->GetPacketAt(0));
+			const auto receivedRtpPackets = packet1->GetReceivedRtpPackets();
+
+			REQUIRE(packet1->GetBuffer() == buffer);
+			REQUIRE(packet1->GetLength() == 28);
+			REQUIRE(packet1->HasPadding() == true);
+			REQUIRE(packet1->GetPaddingLength() == 3);
+			REQUIRE(packet1->GetSenderSsrc() == 1111);
+			REQUIRE(packet1->GetMediaSsrc() == 2222);
+			REQUIRE(packet1->GetBaseSequenceNumber() == 1000);
+			REQUIRE(packet1->GetPacketStatusCount() == 4);
+			REQUIRE(packet1->GetBaseTimeUs() == 1000000000000);
+			REQUIRE(packet1->GetFeedbackPacketCount() == 3);
+			REQUIRE(receivedRtpPackets.size() == 3);
+			REQUIRE(receivedRtpPackets[0].sequenceNumber == 1000);
+			REQUIRE(receivedRtpPackets[0].deltaTicks == 4);
+			REQUIRE(receivedRtpPackets[1].sequenceNumber == 1001);
+			REQUIRE(receivedRtpPackets[1].deltaTicks == 4);
+			REQUIRE(receivedRtpPackets[2].sequenceNumber == 1003);
+			REQUIRE(receivedRtpPackets[2].deltaTicks == 4);
+		};
+
+		std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> compoundPacket{
+			RTC::NEW_RTCP::CompoundPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
+
+		// Transport-wide CC packet, length: 28 bytes (3 of them padding).
+		std::unique_ptr<RTC::NEW_RTCP::TransportWideCcPacket> packet1{
+			RTC::NEW_RTCP::TransportWideCcPacket::Factory(
+			  rtcpCommon::FactoryBuffer + 1000, 1000, /*includeDeltas*/ true)
+		};
+
+		packet1->SetSenderSsrc(1111);
+		packet1->SetMediaSsrc(2222);
+		packet1->SetFeedbackPacketCount(3);
+		packet1->SetBase(1000, 1000000000000);
+
+		REQUIRE(packet1->AddReceivedRtpPacket(1000, 1000000001000));
+		REQUIRE(packet1->AddReceivedRtpPacket(1001, 1000000002000));
+		REQUIRE(packet1->AddReceivedRtpPacket(1003, 1000000003000));
+
+		compoundPacket->AddPacket(packet1.get());
+
+		// NOTE: The stored packet is not the same than the given one since it is
+		// internally cloned.
+		REQUIRE(compoundPacket->GetPacketAt(0) != packet1.get());
+
+		// Once added, we can delete the packet.
+		packet1.reset();
+
+		CHECK_RTCP_COMPOUND_PACKET(
+		  /*compoundPacket*/ compoundPacket.get(),
+		  /*buffer*/ rtcpCommon::FactoryBuffer,
+		  /*bufferLength*/ 1000,
+		  /*length*/ 28,
+		  /*packetsCount*/ 1);
+
+		checkPackets(compoundPacket.get(), rtcpCommon::FactoryBuffer);
+
+		/* Parse it. */
+
+		const std::unique_ptr<RTC::NEW_RTCP::CompoundPacket> parsedCompoundPacket{
+			RTC::NEW_RTCP::CompoundPacket::Parse(compoundPacket->GetBuffer(), compoundPacket->GetLength())
+		};
+
+		CHECK_RTCP_COMPOUND_PACKET(
+		  /*compoundPacket*/ parsedCompoundPacket.get(),
+		  /*buffer*/ rtcpCommon::FactoryBuffer,
+		  /*bufferLength*/ 28,
+		  /*length*/ 28,
+		  /*packetsCount*/ 1);
+
+		checkPackets(parsedCompoundPacket.get(), rtcpCommon::FactoryBuffer);
 	}
 
 	SECTION("CompoundPacket::Factory() using AddPacket() succeeds")

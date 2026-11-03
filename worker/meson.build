@@ -558,6 +558,7 @@ test_sources = [
   'test/src/RTC/NEW_RTCP/packet/TestRembPacket.cpp',
   'test/src/RTC/NEW_RTCP/packet/TestSdesPacket.cpp',
   'test/src/RTC/NEW_RTCP/packet/TestSenderReportPacket.cpp',
+  'test/src/RTC/NEW_RTCP/packet/TestTransportWideCcPacket.cpp',
   'test/src/RTC/NEW_RTCP/packet/TestUnknownPacket.cpp',
   'test/src/RTC/NEW_RTCP/packet/TestUnknownPayloadSpecificFeedbackPacket.cpp',
   'test/src/RTC/NEW_RTCP/packet/TestUnknownTransportLayerFeedbackPacket.cpp',
