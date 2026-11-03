@@ -1,4 +1,4 @@
-#include "RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
+#include "fuzzer/include/RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
 
 void FuzzerRtcRtpCodecsDependencyDescriptor::Fuzz(const uint8_t* data, size_t len)
 {

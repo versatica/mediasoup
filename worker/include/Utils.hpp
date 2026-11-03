@@ -581,6 +581,15 @@ namespace Utils
 		}
 
 		/**
+		 * Convert an NTP timestamp into its compact NTP representation (the middle
+		 * 32 bits of the NTP timestamp, so 1/65536 seconds units).
+		 */
+		static uint32_t NtpToCompactNtp(Time::Ntp ntp)
+		{
+			return (ntp.seconds << 16) | (ntp.fractions >> 16);
+		}
+
+		/**
 		 * Convert an interval in compact NTP representation (the middle 32 bits of an
 		 * NTP timestamp, so 1/65536 seconds units) into microseconds.
 		 *

@@ -1,4 +1,4 @@
-#include "FuzzerUtils.hpp"
+#include "fuzzer/include/FuzzerUtils.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <cstring> // std::memcpy()

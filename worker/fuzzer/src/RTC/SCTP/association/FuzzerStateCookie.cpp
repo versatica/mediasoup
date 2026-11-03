@@ -1,4 +1,4 @@
-#include "RTC/SCTP/FuzzerStateCookie.hpp"
+#include "fuzzer/include/RTC/SCTP/FuzzerStateCookie.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "Utils.hpp"
 #include <cstring> // std::memcpy()

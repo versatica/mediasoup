@@ -225,14 +225,22 @@ namespace RTC
 			 */
 			void DumpCommon(int indentation) const;
 
-			virtual void SoftSerialize(const uint8_t* buffer) final;
+			/**
+			 * Subclasses holding items within their buffer must override this method
+			 * and invoke the parent one.
+			 */
+			virtual void SoftSerialize(const uint8_t* buffer);
 
 			/**
 			 * Can be overridden by each subclass.
 			 */
 			virtual Packet* SoftClone(const uint8_t* buffer) const = 0;
 
-			virtual void SoftCloneInto(Packet* packet) const final;
+			/**
+			 * Subclasses holding items within their buffer must override this method
+			 * and invoke the parent one.
+			 */
+			virtual void SoftCloneInto(Packet* packet) const;
 
 			virtual void InitializeHeader(PacketType packetType, uint8_t count, size_t length) final;
 
@@ -241,10 +249,7 @@ namespace RTC
 				return GetCommonHeaderPointer()->count;
 			}
 
-			virtual void SetCount(uint8_t count) final
-			{
-				GetCommonHeaderPointer()->count = count;
-			}
+			virtual void SetCount(uint8_t count) final;
 
 			/**
 			 * Value of the Length field, which is the length of the RTCP packet in

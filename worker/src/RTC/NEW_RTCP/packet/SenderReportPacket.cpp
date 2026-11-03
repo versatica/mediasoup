@@ -50,8 +50,7 @@ namespace RTC
 
 			// Must also initialize extra fields in the header.
 			packet->SetSsrc(0);
-			packet->SetNtpSec(0);
-			packet->SetNtpFrac(0);
+			packet->SetNtp({ .seconds = 0, .fractions = 0 });
 			packet->SetRtpTimestamp(0);
 			packet->SetPacketCount(0);
 			packet->SetOctetCount(0);
@@ -121,11 +120,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			const Utils::Time::Ntp ntp = GetNtp();
+
 			MS_DUMP_CLEAN(indentation, "<RTCP::SenderReportPacket>");
 			DumpCommon(indentation);
 			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
-			MS_DUMP_CLEAN(indentation, "  ntp sec: %" PRIu32, GetNtpSec());
-			MS_DUMP_CLEAN(indentation, "  ntp frac: %" PRIu32, GetNtpFrac());
+			MS_DUMP_CLEAN(indentation, "  ntp sec: %" PRIu32, ntp.seconds);
+			MS_DUMP_CLEAN(indentation, "  ntp frac: %" PRIu32, ntp.fractions);
 			MS_DUMP_CLEAN(indentation, "  rtp timestamp: %" PRIu32, GetRtpTimestamp());
 			MS_DUMP_CLEAN(indentation, "  packet count: %" PRIu32, GetPacketCount());
 			MS_DUMP_CLEAN(indentation, "  octet count: %" PRIu32, GetOctetCount());
@@ -144,18 +145,14 @@ namespace RTC
 			return clonedPacket;
 		}
 
-		void SenderReportPacket::SetNtpSec(uint32_t ntpSec)
+		void SenderReportPacket::SetNtp(const Utils::Time::Ntp& ntp)
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, ntpSec);
-		}
+			auto* const buffer = const_cast<uint8_t*>(GetBuffer());
 
-		void SenderReportPacket::SetNtpFrac(uint32_t ntpFrac)
-		{
-			MS_TRACE();
-
-			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 12, ntpFrac);
+			Utils::Byte::Set4Bytes(buffer, 8, ntp.seconds);
+			Utils::Byte::Set4Bytes(buffer, 12, ntp.fractions);
 		}
 
 		void SenderReportPacket::SetRtpTimestamp(uint32_t rtpTimestamp)

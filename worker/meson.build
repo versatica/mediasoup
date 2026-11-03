@@ -265,6 +265,11 @@ common_sources = [
   'src/RTC/NEW_RTCP/packet/UnknownPacket.cpp',
   'src/RTC/NEW_RTCP/packet/UnknownPayloadSpecificFeedbackPacket.cpp',
   'src/RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.cpp',
+  'src/RTC/NEW_RTCP/packet/XrPacket.cpp',
+  'src/RTC/NEW_RTCP/packet/ExtendedReport.cpp',
+  'src/RTC/NEW_RTCP/packet/extendedReports/DlrrExtendedReport.cpp',
+  'src/RTC/NEW_RTCP/packet/extendedReports/RrtExtendedReport.cpp',
+  'src/RTC/NEW_RTCP/packet/extendedReports/UnknownExtendedReport.cpp',
   'src/RTC/SCTP/association/Association.cpp',
   'src/RTC/SCTP/association/AssociationListenerDeferrer.cpp',
   'src/RTC/SCTP/association/Capabilities.cpp',
@@ -555,6 +560,10 @@ test_sources = [
   'test/src/RTC/NEW_RTCP/packet/TestUnknownPacket.cpp',
   'test/src/RTC/NEW_RTCP/packet/TestUnknownPayloadSpecificFeedbackPacket.cpp',
   'test/src/RTC/NEW_RTCP/packet/TestUnknownTransportLayerFeedbackPacket.cpp',
+  'test/src/RTC/NEW_RTCP/packet/TestXrPacket.cpp',
+  'test/src/RTC/NEW_RTCP/packet/extendedReports/TestDlrrExtendedReport.cpp',
+  'test/src/RTC/NEW_RTCP/packet/extendedReports/TestRrtExtendedReport.cpp',
+  'test/src/RTC/NEW_RTCP/packet/extendedReports/TestUnknownExtendedReport.cpp',
   'test/src/RTC/SCTP/sctpCommon.cpp',
   'test/src/RTC/SCTP/association/TestAssociation.cpp',
   'test/src/RTC/SCTP/association/TestCapabilities.cpp',
@@ -645,9 +654,7 @@ mediasoup_worker_test = executable(
   install_tag: 'mediasoup-worker-test',
   dependencies: dependencies,
   sources: common_sources + test_sources + mock_sources,
-  include_directories: include_directories(
-    'include',
-  ),
+  include_directories: include_directories('include'),
   cpp_args: cpp_args,
 )
 
@@ -664,9 +671,7 @@ mediasoup_worker_test_asan_address = executable(
   install_tag: 'mediasoup-worker-test-asan-address',
   dependencies: dependencies,
   sources: common_sources + test_sources + mock_sources,
-  include_directories: include_directories(
-    'include',
-  ),
+  include_directories: include_directories('include'),
   cpp_args: cpp_args + [
     '-g',
     '-O3',
@@ -691,9 +696,7 @@ mediasoup_worker_test_asan_undefined = executable(
   install_tag: 'mediasoup-worker-test-asan-undefined',
   dependencies: dependencies,
   sources: common_sources + test_sources + mock_sources,
-  include_directories: include_directories(
-    'include',
-  ),
+  include_directories: include_directories('include'),
   cpp_args: cpp_args + [
     '-g',
     '-O3',
@@ -762,6 +765,10 @@ fuzzer_sources = [
   'fuzzer/src/RTC/NEW_RTCP/packet/FuzzerUnknownPacket.cpp',
   'fuzzer/src/RTC/NEW_RTCP/packet/FuzzerUnknownPayloadSpecificFeedbackPacket.cpp',
   'fuzzer/src/RTC/NEW_RTCP/packet/FuzzerUnknownTransportLayerFeedbackPacket.cpp',
+  'fuzzer/src/RTC/NEW_RTCP/packet/FuzzerXrPacket.cpp',
+  'fuzzer/src/RTC/NEW_RTCP/packet/extendedReports/FuzzerDlrrExtendedReport.cpp',
+  'fuzzer/src/RTC/NEW_RTCP/packet/extendedReports/FuzzerRrtExtendedReport.cpp',
+  'fuzzer/src/RTC/NEW_RTCP/packet/extendedReports/FuzzerUnknownExtendedReport.cpp',
   'fuzzer/src/RTC/SCTP/association/FuzzerStateCookie.cpp',
   'fuzzer/src/RTC/SCTP/packet/FuzzerPacket.cpp',
 ]
@@ -773,10 +780,7 @@ executable(
   install_tag: 'mediasoup-worker-fuzzer',
   dependencies: dependencies,
   sources: common_sources + fuzzer_sources + mock_sources,
-  include_directories: include_directories(
-    'include',
-    'fuzzer/include'
-  ),
+  include_directories: include_directories('include'),
   cpp_args: cpp_args + [
     '-g',
     '-O3',

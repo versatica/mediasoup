@@ -1,20 +1,9 @@
-#include "RTC/NEW_RTCP/packet/FuzzerCompoundPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerCompoundPacket.hpp"
 #include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "RTC/NEW_RTCP/packet/FirPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerByePacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerFirPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerNackPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerPliPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerReceiverReportPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerRembPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerSdesPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerSenderReportPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerUnknownPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerUnknownPayloadSpecificFeedbackPacket.hpp"
-#include "RTC/NEW_RTCP/packet/FuzzerUnknownTransportLayerFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/NackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "RTC/NEW_RTCP/packet/PliPacket.hpp"
@@ -25,6 +14,19 @@
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/XrPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerByePacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerFirPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerNackPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerPliPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerReceiverReportPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerRembPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerSdesPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerSenderReportPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerUnknownPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerUnknownPayloadSpecificFeedbackPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerUnknownTransportLayerFeedbackPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerXrPacket.hpp"
 
 namespace
 {
@@ -52,6 +54,7 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::FirPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::RembPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPayloadSpecificFeedbackPacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::XrPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownPacket>();
 
 		for (auto it = compoundPacket->PacketsBegin(); it != compoundPacket->PacketsEnd(); ++it)
@@ -202,7 +205,9 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 
 				case RTC::NEW_RTCP::Packet::PacketType::XR:
 				{
-					// TODO
+					const auto* const xrPacket = static_cast<const RTC::NEW_RTCP::XrPacket*>(packet);
+
+					FuzzerRtcRtcpXrPacket::Fuzz(xrPacket);
 
 					break;
 				}

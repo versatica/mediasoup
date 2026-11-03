@@ -1,13 +1,13 @@
-#include "RTC/RTCP/FuzzerFeedbackPs.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPsAfb.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPsFir.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPsLei.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPsPli.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPsRemb.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPsRpsi.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPsSli.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPsTst.hpp"
-#include "RTC/RTCP/FuzzerFeedbackPsVbcm.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPs.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsAfb.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsFir.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsLei.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsPli.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsRemb.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsRpsi.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsSli.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsTst.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackPsVbcm.hpp"
 
 void FuzzerRtcRtcpFeedbackPs::Fuzz(RTC::RTCP::Packet* packet)
 {

@@ -1,4 +1,4 @@
-#include "RTC/FuzzerSeqManager.hpp"
+#include "fuzzer/include/RTC/FuzzerSeqManager.hpp"
 #include "RTC/SeqManager.hpp"
 #include "Utils.hpp"
 #include <iostream>

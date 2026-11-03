@@ -15,8 +15,8 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 			const auto reportBlocks = packet->GetReportBlocks();
 
 			REQUIRE(packet->GetSsrc() == 0x5D931534);
-			REQUIRE(packet->GetNtpSec() == 0xE7A1B2C3);
-			REQUIRE(packet->GetNtpFrac() == 0x12345678);
+			REQUIRE(packet->GetNtp().seconds == 0xE7A1B2C3);
+			REQUIRE(packet->GetNtp().fractions == 0x12345678);
 			REQUIRE(packet->GetRtpTimestamp() == 0x0A0B0C0D);
 			REQUIRE(packet->GetPacketCount() == 1000);
 			REQUIRE(packet->GetOctetCount() == 123456);
@@ -157,8 +157,8 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		  /*paddingLength*/ 4);
 
 		REQUIRE(packet->GetSsrc() == 0x5D931534);
-		REQUIRE(packet->GetNtpSec() == 1111);
-		REQUIRE(packet->GetNtpFrac() == 2222);
+		REQUIRE(packet->GetNtp().seconds == 1111);
+		REQUIRE(packet->GetNtp().fractions == 2222);
 		REQUIRE(packet->GetRtpTimestamp() == 3333);
 		REQUIRE(packet->GetPacketCount() == 4444);
 		REQUIRE(packet->GetOctetCount() == 5555);
@@ -208,8 +208,8 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 			const auto reportBlocks = packet->GetReportBlocks();
 
 			REQUIRE(packet->GetSsrc() == 1111);
-			REQUIRE(packet->GetNtpSec() == 2222);
-			REQUIRE(packet->GetNtpFrac() == 3333);
+			REQUIRE(packet->GetNtp().seconds == 2222);
+			REQUIRE(packet->GetNtp().fractions == 3333);
 			REQUIRE(packet->GetRtpTimestamp() == 4444);
 			REQUIRE(packet->GetPacketCount() == 5555);
 			REQUIRE(packet->GetOctetCount() == 6666);
@@ -251,8 +251,8 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrc() == 0);
-		REQUIRE(packet->GetNtpSec() == 0);
-		REQUIRE(packet->GetNtpFrac() == 0);
+		REQUIRE(packet->GetNtp().seconds == 0);
+		REQUIRE(packet->GetNtp().fractions == 0);
 		REQUIRE(packet->GetRtpTimestamp() == 0);
 		REQUIRE(packet->GetPacketCount() == 0);
 		REQUIRE(packet->GetOctetCount() == 0);
@@ -262,8 +262,7 @@ SCENARIO("RTCP Sender Report Packet (200)", "[serializable][rtcp][packet]")
 		/* Modify it. */
 
 		packet->SetSsrc(1111);
-		packet->SetNtpSec(2222);
-		packet->SetNtpFrac(3333);
+		packet->SetNtp({ .seconds = 2222, .fractions = 3333 });
 		packet->SetRtpTimestamp(4444);
 		packet->SetPacketCount(5555);
 		packet->SetOctetCount(6666);

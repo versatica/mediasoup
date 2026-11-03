@@ -1,4 +1,4 @@
-#include "RTC/RTCP/FuzzerSdes.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerSdes.hpp"
 
 void FuzzerRtcRtcpSdes::Fuzz(RTC::RTCP::SdesPacket* packet)
 {

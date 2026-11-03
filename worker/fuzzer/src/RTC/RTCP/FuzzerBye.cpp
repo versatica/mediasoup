@@ -1,4 +1,4 @@
-#include "RTC/RTCP/FuzzerBye.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerBye.hpp"
 
 void FuzzerRtcRtcpBye::Fuzz(RTC::RTCP::ByePacket* packet)
 {
