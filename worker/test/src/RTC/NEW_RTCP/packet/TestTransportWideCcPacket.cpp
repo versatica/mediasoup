@@ -1024,7 +1024,7 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		// Expected chunks created:
 		// - One Bit Status Vector Chunk (1 x received + 13 x not received).
 		// - Run Length Chunk of max length for not received symbol.
-		// - One Bit Status Vector Chunk (1 x received + 13 x not received).
+		// - Run Length Chunk of length 1 for received symbol.
 		static constexpr uint16_t PacketCount{ (1 << 13) - 1 + 14 };
 
 		testFeedback(
@@ -1537,7 +1537,8 @@ SCENARIO("RTCP Transport-wide CC Feedback Packet (205, FMT 15)", "[serializable]
 		packet->SetSenderSsrc(1111);
 		packet->SetMediaSsrc(2222);
 		packet->SetFeedbackPacketCount(feedbackPacketCount);
-		packet->SetBase(inputs.front().sequenceNumber + 1, inputs.front().timestampUs);
+		packet->SetBase(
+		  static_cast<uint16_t>(inputs.front().sequenceNumber + 1), inputs.front().timestampUs);
 
 		for (size_t idx{ 1 }; idx < inputs.size(); ++idx)
 		{
