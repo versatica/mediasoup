@@ -1129,6 +1129,8 @@ namespace RTC
 				return false;
 			}
 
+			// NOTE: One-Byte extensions cannot tell a length of 0, so `SetExtensionLength()`
+			// aborts on it rather than writing a length it cannot represent.
 			if (len == 0)
 			{
 				MS_WARN_TAG(rtp, "cannot set an empty dependency descriptor");
@@ -1140,6 +1142,10 @@ namespace RTC
 			 * A longer descriptor can only take the padding bytes that follow the
 			 * current one, if any, since the first byte of any other extension holds
 			 * its id and is therefore never 0.
+			 *
+			 * NOTE: Those bytes are left at 0 by `SetExtensionLength()`, which zeroes
+			 * whatever it releases when the extension is shrunk. That is what gives
+			 * the room back to the next Consumer once this descriptor is restored.
 			 */
 			if (len > extenLen)
 			{
@@ -1889,6 +1895,9 @@ namespace RTC
 				const auto currentLen = extension->len + 1;
 
 				// Fill with 0's if new length is minor.
+				//
+				// NOTE: `UpdateDependencyDescriptor()` relies on this to tell the room it
+				// may grow into from the extensions that follow.
 				if (len < currentLen)
 				{
 					std::memset(extension->value + len, 0, currentLen - len);
@@ -1909,6 +1918,9 @@ namespace RTC
 				const auto currentLen = extension->len;
 
 				// Fill with 0's if new length is minor.
+				//
+				// NOTE: `UpdateDependencyDescriptor()` relies on this to tell the room it
+				// may grow into from the extensions that follow.
 				if (len < currentLen)
 				{
 					std::memset(extension->value + len, 0, currentLen - len);

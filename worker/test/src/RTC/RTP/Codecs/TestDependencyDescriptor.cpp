@@ -488,6 +488,84 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 	}
 
 	/**
+	 * A delta frame does not carry the template dependency structure, it is given
+	 * the one of the stream, so it is the case where the structure may be
+	 * replaced under a descriptor still in use. That happens whenever a key frame
+	 * arrives while earlier packets are still in a retransmission buffer, and
+	 * rewriting one of those reads the structure it was parsed with.
+	 */
+	SECTION("a delta frame keeps alive the structure it was given")
+	{
+		// Key frame carrying the template dependency structure of an L1T2 stream.
+		// clang-format off
+		uint8_t keyFrameData[] =
+		{
+			0x80, 0x00, 0xE8, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C,
+		};
+
+		// Mandatory fields only, so it depends on the structure above.
+		uint8_t deltaFrameData[] =
+		{
+			0x00, 0x00, 0xE8,
+		};
+		// clang-format on
+
+		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+		  templateDependencyStructure;
+
+		auto keyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+
+		REQUIRE(keyFrame);
+
+		/*
+		 * Watches the structure the key frame installed, without holding it.
+		 *
+		 * NOTE: Taken before the delta frame is parsed, since `Parse()` hands the
+		 * structure of every descriptor back to the stream, so afterwards this
+		 * would watch whatever the delta frame holds rather than what it was given.
+		 */
+		const std::weak_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure> watched{
+			templateDependencyStructure
+		};
+		const auto* installed = templateDependencyStructure.get();
+
+		auto deltaFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    deltaFrameData, sizeof(deltaFrameData), templateDependencyStructure));
+
+		REQUIRE(deltaFrame);
+
+		// It is given the very structure of the stream rather than a copy of it.
+		REQUIRE(deltaFrame->templateDependencyStructure.get() == installed);
+
+		// The stream moves on to the structure of a new key frame, and the one in
+		// use is dropped by everything but the descriptors parsed with it.
+		keyFrame.reset();
+
+		const auto newKeyFrame = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    keyFrameData, sizeof(keyFrameData), templateDependencyStructure));
+
+		REQUIRE(newKeyFrame);
+		REQUIRE(templateDependencyStructure.get() != installed);
+
+		// The delta frame is the only one left holding it, and still reads it.
+		REQUIRE(!watched.expired());
+		REQUIRE(deltaFrame->templateDependencyStructure.get() == installed);
+		REQUIRE(deltaFrame->GetDecodeTargetsBitmask(0, 1) == 0b11);
+
+		// And it goes away with the last descriptor parsed with it, not before.
+		deltaFrame.reset();
+
+		REQUIRE(watched.expired());
+	}
+
+	/**
 	 * The custom frame dependency fields are not parsed into any member of the
 	 * descriptor, just delimited, so rewriting it must copy them over verbatim.
 	 */
