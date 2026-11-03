@@ -43,8 +43,9 @@ namespace RTC
 		 * - Packet status count (16 bits): The number of RTP packets this
 		 *   feedback contains status for, starting with the RTP packet identified
 		 *   by the base sequence number.
-		 * - Reference time (24 bits): Absolute reference time in some (unknown)
-		 *   time base chosen by the sender of the feedback, in multiples of 64 ms.
+		 * - Reference time (24 bits): Signed integer indicating an absolute
+		 *   reference time in some (unknown) time base chosen by the sender of the
+		 *   feedback, in multiples of 64 ms.
 		 * - Feedback packet count (8 bits): A counter incremented by one for each
 		 *   feedback packet sent.
 		 * - Packet chunk (16 bits each): Run Length Chunk, One Bit Status Vector
@@ -292,6 +293,9 @@ namespace RTC
 			 */
 			[[nodiscard]] bool AddReceivedRtpPacket(uint16_t sequenceNumber, int64_t timestampUs);
 
+			/**
+			 * Received RTP packets, in transport-wide sequence number order.
+			 */
 			std::vector<ReceivedRtpPacket> GetReceivedRtpPackets() const;
 
 			/**
@@ -360,16 +364,8 @@ namespace RTC
 			/**
 			 * Decode the packet chunks into the delta size of each RTP packet
 			 * status.
-			 *
-			 * @returns The length (in bytes) of the packet chunks.
 			 */
-			size_t DecodeChunks(std::vector<DeltaSize>& deltaSizes) const;
-
-			/**
-			 * Compute the length (in bytes) of the packet chunks and of the receive
-			 * deltas.
-			 */
-			void GetChunksAndDeltasLength(size_t& chunksLength, size_t& deltasLength) const;
+			void DecodeChunks(std::vector<DeltaSize>& deltaSizes) const;
 
 			/**
 			 * Whether a packet with given `contentLength` (excluding padding) fits
@@ -379,20 +375,26 @@ namespace RTC
 
 			/**
 			 * Make room for `numberOfChunks` packet chunks right after the existing
-			 * ones by moving the receive deltas forward.
+			 * ones by moving the receive deltas forward, and update the length of the
+			 * packet.
 			 *
 			 * @remarks
-			 * - It doesn't update the length of the packet.
+			 * - The new packet chunks are not written, the caller must write them.
+			 * - The caller must check that there is space for them.
 			 */
-			void InsertChunks(size_t chunksLength, size_t deltasLength, size_t numberOfChunks);
+			void InsertChunks(size_t numberOfChunks);
 
-			bool AddDeltaSize(DeltaSize deltaSize);
+			[[nodiscard]] bool AddDeltaSize(DeltaSize deltaSize);
 
-			bool AddMissingRtpPackets(size_t numMissingRtpPackets);
+			[[nodiscard]] bool AddMissingRtpPackets(size_t numMissingRtpPackets);
 
 		private:
 			// Whether the packet includes receive deltas.
 			const bool hasDeltas;
+			// Length (in bytes) of the packet chunks in the buffer.
+			size_t chunksLength{ 0 };
+			// Length (in bytes) of the receive deltas in the buffer.
+			size_t deltasLength{ 0 };
 			// Time (in microseconds) of the last added RTP packet.
 			int64_t lastTimestampUs{ 0 };
 			// Last packet chunk, also encoded in the buffer.

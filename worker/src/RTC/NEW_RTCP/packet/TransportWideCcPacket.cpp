@@ -121,6 +121,8 @@ namespace RTC
 				lastChunk.AppendTo(deltaSizes);
 			}
 
+			const size_t chunksLength = offset - TransportWideCcPacket::TransportWideCcHeaderLength;
+
 			size_t deltasLength{ 0 };
 
 			for (const DeltaSize deltaSize : deltaSizes)
@@ -177,6 +179,8 @@ namespace RTC
 			// not fixed length.
 			packet->SetLength(packetLength);
 
+			packet->chunksLength = chunksLength;
+			packet->deltasLength = hasDeltas ? deltasLength : 0;
 			packet->lastTimestampUs =
 			  packet->GetBaseTimeUs() + (deltaTicksSum * TransportWideCcPacket::DeltaTickUs);
 			packet->lastChunk = lastChunk;
@@ -346,14 +350,8 @@ namespace RTC
 
 			if (this->hasDeltas)
 			{
-				size_t chunksLength;
-				size_t deltasLength;
-
-				// NOTE: The computed receive deltas length already includes the delta
-				// of this RTP packet.
-				GetChunksAndDeltasLength(chunksLength, deltasLength);
-
-				auto* const ptr = GetChunksPointer() + chunksLength + deltasLength - deltaSize;
+				// The receive delta goes right after the last one.
+				auto* const ptr = GetChunksPointer() + this->chunksLength + this->deltasLength;
 
 				if (deltaSize == 1)
 				{
@@ -364,9 +362,11 @@ namespace RTC
 					Utils::Byte::Set2Bytes(ptr, 0, static_cast<uint16_t>(delta));
 				}
 
+				this->deltasLength += deltaSize;
+
 				SetVariableLengthValueLength(
 				  TransportWideCcPacket::TransportWideCcHeaderLength - Packet::CommonHeaderLength +
-				  chunksLength + deltasLength);
+				  this->chunksLength + this->deltasLength);
 			}
 
 			this->lastTimestampUs += delta * TransportWideCcPacket::DeltaTickUs;
@@ -378,13 +378,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::vector<DeltaSize> deltaSizes;
-			const size_t chunksLength       = DecodeChunks(deltaSizes);
-			const auto* const deltasPointer = GetChunksPointer() + chunksLength;
+			const auto* const deltasPointer = GetChunksPointer() + this->chunksLength;
 
+			std::vector<DeltaSize> deltaSizes;
 			uint16_t sequenceNumber = GetBaseSequenceNumber();
 			size_t offset{ 0 };
 			std::vector<ReceivedRtpPacket> receivedRtpPackets;
+
+			DecodeChunks(deltaSizes);
 
 			for (const DeltaSize deltaSize : deltaSizes)
 			{
@@ -454,8 +455,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// The Reference time field is a 24 bits signed integer.
 			return TransportWideCcPacket::TimeWrapPeriodUs +
-			       (static_cast<int64_t>(Utils::Byte::Get3Bytes(GetBuffer(), 16)) *
+			       (static_cast<int64_t>(Utils::Byte::Get3BytesSigned(GetBuffer(), 16)) *
 			        TransportWideCcPacket::BaseTimeTickUs);
 		}
 
@@ -498,6 +500,8 @@ namespace RTC
 
 			auto* const transportWideCcPacket = static_cast<TransportWideCcPacket*>(packet);
 
+			transportWideCcPacket->chunksLength    = this->chunksLength;
+			transportWideCcPacket->deltasLength    = this->deltasLength;
 			transportWideCcPacket->lastTimestampUs = this->lastTimestampUs;
 			transportWideCcPacket->lastChunk       = this->lastChunk;
 
@@ -511,7 +515,7 @@ namespace RTC
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 14, count);
 		}
 
-		size_t TransportWideCcPacket::DecodeChunks(std::vector<DeltaSize>& deltaSizes) const
+		void TransportWideCcPacket::DecodeChunks(std::vector<DeltaSize>& deltaSizes) const
 		{
 			MS_TRACE();
 
@@ -519,40 +523,18 @@ namespace RTC
 			const uint16_t packetStatusCount = GetPacketStatusCount();
 
 			LastChunk decoder;
-			size_t chunksLength{ 0 };
+			size_t offset{ 0 };
 
 			deltaSizes.reserve(packetStatusCount);
 
 			while (deltaSizes.size() < packetStatusCount)
 			{
-				const uint16_t chunk = Utils::Byte::Get2Bytes(chunksPointer, chunksLength);
+				const uint16_t chunk = Utils::Byte::Get2Bytes(chunksPointer, offset);
 
-				chunksLength += TransportWideCcPacket::ChunkLength;
+				offset += TransportWideCcPacket::ChunkLength;
 
 				decoder.Decode(chunk, packetStatusCount - deltaSizes.size());
 				decoder.AppendTo(deltaSizes);
-			}
-
-			return chunksLength;
-		}
-
-		void TransportWideCcPacket::GetChunksAndDeltasLength(size_t& chunksLength, size_t& deltasLength) const
-		{
-			MS_TRACE();
-
-			std::vector<DeltaSize> deltaSizes;
-
-			chunksLength = DecodeChunks(deltaSizes);
-			deltasLength = 0;
-
-			if (!this->hasDeltas)
-			{
-				return;
-			}
-
-			for (const DeltaSize deltaSize : deltaSizes)
-			{
-				deltasLength += deltaSize;
 			}
 		}
 
@@ -565,17 +547,24 @@ namespace RTC
 			  Utils::Byte::PadTo4Bytes(contentLength) <= GetBufferLength());
 		}
 
-		void TransportWideCcPacket::InsertChunks(
-		  size_t chunksLength, size_t deltasLength, size_t numberOfChunks)
+		void TransportWideCcPacket::InsertChunks(size_t numberOfChunks)
 		{
 			MS_TRACE();
 
-			auto* const chunksPointer = GetChunksPointer();
+			auto* const chunksPointer   = GetChunksPointer();
+			const size_t insertedLength = numberOfChunks * TransportWideCcPacket::ChunkLength;
 
+			// Move the receive deltas forward.
 			std::memmove(
-			  chunksPointer + chunksLength + (numberOfChunks * TransportWideCcPacket::ChunkLength),
-			  chunksPointer + chunksLength,
-			  deltasLength);
+			  chunksPointer + this->chunksLength + insertedLength,
+			  chunksPointer + this->chunksLength,
+			  this->deltasLength);
+
+			this->chunksLength += insertedLength;
+
+			SetVariableLengthValueLength(
+			  TransportWideCcPacket::TransportWideCcHeaderLength - Packet::CommonHeaderLength +
+			  this->chunksLength + this->deltasLength);
 		}
 
 		bool TransportWideCcPacket::AddDeltaSize(DeltaSize deltaSize)
@@ -589,13 +578,8 @@ namespace RTC
 				return false;
 			}
 
-			size_t chunksLength;
-			size_t deltasLength;
-
-			GetChunksAndDeltasLength(chunksLength, deltasLength);
-
 			const size_t contentLength =
-			  TransportWideCcPacket::TransportWideCcHeaderLength + chunksLength + deltasLength;
+			  TransportWideCcPacket::TransportWideCcHeaderLength + this->chunksLength + this->deltasLength;
 			const size_t addChunkLength =
 			  this->lastChunk.IsEmpty() ? TransportWideCcPacket::ChunkLength : 0;
 			auto* const chunksPointer = GetChunksPointer();
@@ -610,18 +594,17 @@ namespace RTC
 				// Open a slot for the last chunk if it was empty.
 				if (addChunkLength > 0)
 				{
-					InsertChunks(chunksLength, deltasLength, 1);
+					InsertChunks(1);
 				}
 
 				this->lastChunk.Add(deltaSize);
 
 				Utils::Byte::Set2Bytes(
 				  chunksPointer,
-				  chunksLength + addChunkLength - TransportWideCcPacket::ChunkLength,
+				  this->chunksLength - TransportWideCcPacket::ChunkLength,
 				  this->lastChunk.EncodeLast());
 
 				SetPacketStatusCount(static_cast<uint16_t>(packetStatusCount + 1));
-				SetVariableLengthValueLength(contentLength + addChunkLength - Packet::CommonHeaderLength);
 
 				return true;
 			}
@@ -634,17 +617,20 @@ namespace RTC
 			// The last chunk is full, so emit it into its slot and open a slot for a
 			// new one.
 			Utils::Byte::Set2Bytes(
-			  chunksPointer, chunksLength - TransportWideCcPacket::ChunkLength, this->lastChunk.Emit());
+			  chunksPointer,
+			  this->chunksLength - TransportWideCcPacket::ChunkLength,
+			  this->lastChunk.Emit());
 
-			InsertChunks(chunksLength, deltasLength, 1);
+			InsertChunks(1);
 
 			this->lastChunk.Add(deltaSize);
 
-			Utils::Byte::Set2Bytes(chunksPointer, chunksLength, this->lastChunk.EncodeLast());
+			Utils::Byte::Set2Bytes(
+			  chunksPointer,
+			  this->chunksLength - TransportWideCcPacket::ChunkLength,
+			  this->lastChunk.EncodeLast());
 
 			SetPacketStatusCount(static_cast<uint16_t>(packetStatusCount + 1));
-			SetVariableLengthValueLength(
-			  contentLength + TransportWideCcPacket::ChunkLength - Packet::CommonHeaderLength);
 
 			return true;
 		}
@@ -660,13 +646,8 @@ namespace RTC
 				return false;
 			}
 
-			size_t chunksLength;
-			size_t deltasLength;
-
-			GetChunksAndDeltasLength(chunksLength, deltasLength);
-
 			const size_t contentLength =
-			  TransportWideCcPacket::TransportWideCcHeaderLength + chunksLength + deltasLength;
+			  TransportWideCcPacket::TransportWideCcHeaderLength + this->chunksLength + this->deltasLength;
 			auto* const chunksPointer = GetChunksPointer();
 
 			if (!this->lastChunk.IsEmpty())
@@ -682,7 +663,7 @@ namespace RTC
 				{
 					Utils::Byte::Set2Bytes(
 					  chunksPointer,
-					  chunksLength - TransportWideCcPacket::ChunkLength,
+					  this->chunksLength - TransportWideCcPacket::ChunkLength,
 					  this->lastChunk.EncodeLast());
 
 					SetPacketStatusCount(static_cast<uint16_t>(newPacketStatusCount));
@@ -691,7 +672,9 @@ namespace RTC
 				}
 
 				Utils::Byte::Set2Bytes(
-				  chunksPointer, chunksLength - TransportWideCcPacket::ChunkLength, this->lastChunk.Emit());
+				  chunksPointer,
+				  this->chunksLength - TransportWideCcPacket::ChunkLength,
+				  this->lastChunk.Emit());
 			}
 
 			MS_ASSERT(this->lastChunk.IsEmpty(), "last chunk is not empty");
@@ -707,15 +690,18 @@ namespace RTC
 				return false;
 			}
 
-			InsertChunks(chunksLength, deltasLength, numChunks);
+			// Offset of the first new chunk.
+			const size_t offset = this->chunksLength;
+
+			InsertChunks(numChunks);
 
 			// T = 0, S = 0, run length = MaxRunLengthCapacity, see EncodeRunLength().
 			for (size_t idx{ 0 }; idx < fullChunks; ++idx)
 			{
 				Utils::Byte::Set2Bytes(
 				  chunksPointer,
-				  chunksLength + (idx * TransportWideCcPacket::ChunkLength),
-				  LastChunk::MaxRunLengthCapacity);
+				  offset + (idx * TransportWideCcPacket::ChunkLength),
+				  static_cast<uint16_t>(LastChunk::MaxRunLengthCapacity));
 			}
 
 			this->lastChunk.AddMissingRtpPackets(partialChunk);
@@ -724,13 +710,11 @@ namespace RTC
 			{
 				Utils::Byte::Set2Bytes(
 				  chunksPointer,
-				  chunksLength + (fullChunks * TransportWideCcPacket::ChunkLength),
+				  offset + (fullChunks * TransportWideCcPacket::ChunkLength),
 				  this->lastChunk.EncodeLast());
 			}
 
 			SetPacketStatusCount(static_cast<uint16_t>(newPacketStatusCount));
-			SetVariableLengthValueLength(
-			  contentLength + (TransportWideCcPacket::ChunkLength * numChunks) - Packet::CommonHeaderLength);
 
 			return true;
 		}
