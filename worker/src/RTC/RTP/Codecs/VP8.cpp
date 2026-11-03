@@ -367,8 +367,9 @@ namespace RTC
 					this->payloadDescriptor->Encode(packet->GetPayload(), pictureId, tl0PictureIndex);
 
 					// Leave the Consumer how this packet was rewritten for it.
-					auto encoder = std::make_unique<VP8::PayloadDescriptor::Encoder>(
-					  VP8::PayloadDescriptor::EncodingData{ pictureId, tl0PictureIndex });
+					auto encoder =
+					  std::make_unique<VP8::PayloadDescriptor::Encoder>(VP8::PayloadDescriptor::EncodingData{
+					    .pictureId = pictureId, .tl0PictureIndex = tl0PictureIndex });
 
 					encoder->preferDependencyDescriptor = context->PrefersDependencyDescriptor();
 
