@@ -11,6 +11,7 @@
 #include "RTC/NEW_RTCP/packet/RembPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
@@ -23,6 +24,7 @@
 #include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerRembPacket.hpp"
 #include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerSdesPacket.hpp"
 #include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerSenderReportPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerTransportWideCcPacket.hpp"
 #include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerUnknownPacket.hpp"
 #include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerUnknownPayloadSpecificFeedbackPacket.hpp"
 #include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerUnknownTransportLayerFeedbackPacket.hpp"
@@ -49,6 +51,7 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::SdesPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::ByePacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::NackPacket>();
+		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::TransportWideCcPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::UnknownTransportLayerFeedbackPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::PliPacket>();
 		compoundPacket->GetFirstPacketOfType<RTC::NEW_RTCP::FirPacket>();
@@ -120,6 +123,16 @@ void FuzzerRtcRtcpCompoundPacket::Fuzz(const uint8_t* data, size_t len)
 							  static_cast<const RTC::NEW_RTCP::NackPacket*>(transportLayerFeedbackPacket);
 
 							FuzzerRtcRtcpNackPacket::Fuzz(nackPacket);
+
+							break;
+						}
+
+						case RTC::NEW_RTCP::AnyTransportLayerFeedbackPacket::MessageType::TCC:
+						{
+							const auto* const transportWideCcPacket =
+							  static_cast<const RTC::NEW_RTCP::TransportWideCcPacket*>(transportLayerFeedbackPacket);
+
+							FuzzerRtcRtcpTransportWideCcPacket::Fuzz(transportWideCcPacket);
 
 							break;
 						}

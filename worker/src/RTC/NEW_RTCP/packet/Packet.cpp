@@ -243,7 +243,9 @@ namespace RTC
 
 			const size_t previousLength      = GetLength();
 			const size_t previousLengthField = GetLengthFieldComputed();
-			const size_t newLength           = Packet::CommonHeaderLength + valueLength;
+			const size_t notPaddedLength     = Packet::CommonHeaderLength + valueLength;
+			const size_t newLength           = Utils::Byte::PadTo4Bytes(notPaddedLength);
+			const auto paddingLength         = static_cast<uint8_t>(newLength - notPaddedLength);
 
 			try
 			{
@@ -254,17 +256,28 @@ namespace RTC
 				// Update length field.
 				// NOTE: This will throw if computed value is too big.
 				SetLengthField(newLength);
-
-				// Remove padding (if any).
-				GetCommonHeaderPointer()->padding = 0;
 			}
-			catch (const MediaSoupError& error)
+			catch (const MediaSoupError&)
 			{
 				// Rollback.
 				SetLength(previousLength);
 				SetLengthField(previousLengthField);
 
 				throw;
+			}
+
+			if (paddingLength > 0)
+			{
+				GetCommonHeaderPointer()->padding = 1;
+
+				// Padding bytes are zero except the last one, which holds the padding
+				// length.
+				FillPadding(paddingLength);
+				Utils::Byte::Set1Byte(const_cast<uint8_t*>(GetBuffer()), GetLength() - 1, paddingLength);
+			}
+			else
+			{
+				GetCommonHeaderPointer()->padding = 0;
 			}
 		}
 	} // namespace NEW_RTCP

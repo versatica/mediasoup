@@ -35,7 +35,7 @@ void FuzzerUtils::Fuzz(const uint8_t* data, size_t len)
 
 		Utils::IP::NormalizeIp(ip);
 	}
-	catch (const MediaSoupError& error) // NOLINT(bugprone-empty-catch)
+	catch (const MediaSoupError&) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -86,7 +86,7 @@ void FuzzerUtils::Fuzz(const uint8_t* data, size_t len)
 		Utils::String::Base64Encode(DataBuffer, len);
 		Utils::String::Base64Decode(DataBuffer, len, outLen);
 	}
-	catch (const MediaSoupError& error) // NOLINT(bugprone-empty-catch)
+	catch (const MediaSoupError&) // NOLINT(bugprone-empty-catch)
 	{
 	}
 

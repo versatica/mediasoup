@@ -130,7 +130,7 @@ namespace RTC
 				// NOTE: This may throw.
 				FillPadding(newPaddedLength - newNotPaddedLength);
 			}
-			catch (const MediaSoupError& error)
+			catch (const MediaSoupError&)
 			{
 				// Rollback.
 				SetLength(previousLength);
@@ -156,7 +156,7 @@ namespace RTC
 				// NOTE: This will throw if computed length field value is too big.
 				SetLengthField(previousLength + item->GetLengthField());
 			}
-			catch (const MediaSoupError& error)
+			catch (const MediaSoupError&)
 			{
 				// Rollback.
 				SetLength(previousLength);

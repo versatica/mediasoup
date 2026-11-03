@@ -43,7 +43,7 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - Every `.hpp` includes `"common.hpp"`.
 - A `.cpp` includes `"common.hpp"` only if it has no paired `.hpp` (tests, `main.cpp`, fuzzers).
 - A `.cpp` never re-includes a header that its paired `.hpp` already includes.
-- Standard headers already provided by `common.hpp` (`<algorithm>`, `<cinttypes>`, `<cstddef>`, `<cstdint>`, `<functional>`, `<memory>`, `<optional>`, `<utility>`) are never included again. Others (`<vector>`, `<map>`, `<string>`...) are included directly where used.
+- Standard headers already provided by `common.hpp` (`<algorithm>`, `<cinttypes>`, `<cstddef>`, `<cstdint>`, `<functional>`, `<memory>`, `<optional>`, `<utility>`) are never included again, neither in a `.cpp` nor in a `.hpp`. Others (`<vector>`, `<deque>`, `<map>`, `<string>`...) are included directly where used.
 - A type newly used in a file gets its own `#include`. Never rely on transitive includes (except through the paired `.hpp`).
 - Whenever code is touched, check the includes of the file: none missing and none left over.
 - A standard header that provides functions or utilities rather than a type of its own name (`<cstring>`, `<cstdlib>`, `<cmath>`, `<limits>`, `<sstream>`...) carries a comment listing what is used from it, with `()` for functions: `#include <cstring> // std::memcmp(), std::memcpy()`. Headers named after the type they provide (`<vector>`, `<string>`, `<map>`...) take no comment.
@@ -59,19 +59,45 @@ These rules apply to every C++ source file and header of the worker, that is, th
 ## Functions and statements
 
 - Every function and method defined in a `.cpp` starts with `MS_TRACE()` (`MS_TRACE_STD()` in the `Channel` classes and other code that uses the `_STD` variants). This does not apply to the fuzzers (`fuzzer/`).
-- Local declarations inside a function: `constexpr` first, then `const`, then non-const, with a blank line between groups. This does NOT apply to the private/protected member declarations of a class: there members are grouped by meaning with their group comment.
-- Code is split into paragraphs with blank lines: a declaration is not glued to the first thing done with it, an action is not glued to the assert/`REQUIRE` that checks it, and a check is not glued to the next action.
+- Local declarations inside a function or at file scope: `constexpr` first, then `const`, then non-const, with a blank line between the `const` and the non-const groups. That order is not mandatory, though: logical order wins. The "parent" is declared first and then the "children" that are put into it or assigned to it, and each declaration stays next to the one it relates to. Making a line `const` never moves it: if it ends up next to a declaration of the other kind, a blank line goes between the two and nothing else.
+- None of the above applies to the private/protected members of a class in the `.hpp`: there members go in the order that makes sense to whoever reads the class, grouped by what they are under their group comment, and a `const` member stays in its place with `const` added and nothing else. It is not moved up, not separated with a blank line and not taken out of its group.
+
+  ```cpp
+  	private:
+  		// Bounds in force.
+  		int64_t minBitrate{ 0 };
+  		const int64_t startBitrate;
+  		int64_t maxBitrate{ Types::BitrateInfinite };
+  ```
+
+- Code is split into paragraphs with blank lines, one per step: a declaration is not glued to the first thing done with it, an action is not glued to the assert/`REQUIRE` that checks it, and a check is not glued to the next action. What belongs to the same step stays together: several consecutive calls on the same object, the assignments that fill its fields, or several consecutive `REQUIRE`s.
+- A declaration that carries its own comment is a paragraph: it is separated by a blank line from the next commented declaration.
 - Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters. But never replace an explicit type with `auto` when the right-hand side does not show the type.
 - Value getters are named `GetXxx()`. Boolean getters are named `IsXxx()` / `HasXxx()`.
 - Never `&foo` to take an address: use `std::addressof(foo)`.
 - Never reach through an iterator (`it->second.field`): bind a named reference or copy first.
 - Never use `.first` / `.second` inline: bind them to a named variable first (`const bool inserted = set.insert(x).second;`).
-- Aggregates are built with designated initializers: `{ .ssrc = ssrc, .seq = seq }`.
-- Never write the `struct` keyword before a variable, parameter or return type (`RttBackoff rttBackoff;`), except where a function hides the type (`struct stat`).
+- Aggregates are built with designated initializers: `{ .ssrc = ssrc, .lastSeq = seq }`, never `{ ssrc, seq }` (clang-tidy `modernize-use-designated-initializers`).
+- Never write the `struct` keyword before a variable, parameter or return type: `RttBackoff rttBackoff;`, never `struct RttBackoff rttBackoff;`. The only exception is where a function with the same name hides the type, as with `struct stat` and `struct sigaction` (POSIX declares the `stat()` and `sigaction()` functions, and without the keyword it does not compile). There it stays, with a one-line comment saying why, so that it is not "fixed" in a later pass.
 - Every lambda states its return type explicitly, `-> void` included. Hence a lambda never takes `auto` parameters (clang-tidy `fuchsia-trailing-return` rejects a trailing return type on a generic lambda): spell out the parameter type, e.g. `const std::pair<const uint16_t, OutgoingStream>& entry` for a `std::map` entry.
 - Integer literals have no `u` suffix (`0`, not `0u`), unless the value does not fit in an `int`.
 - Write `Utils::Foo`, never `::Utils::Foo`.
-- Access `std::optional` with `.value()`, not `*opt`. In production code, a `.value()` already guarded by the surrounding flow is left alone (no `NOLINT`).
+- Access `std::optional` with `.value()`, not `*opt`.
+- In production code, before touching a `.value()`, read upwards until finding what guarantees the value. If an `if`, an `else`, an early `return` or an earlier assignment guarantees it, it is left exactly as it is: no `NOLINT`, no local variable pulled out, no restructuring of the `if`, and no mention of it. Only accesses that are really unguarded are acted upon. The `NOLINT` rule for optionals is a test rule (see "Tests (Catch2)").
+
+  ```cpp
+  if (!this->avgRttUs.has_value())
+  {
+  	avgRttUs = windowRttUs;
+  }
+  else
+  {
+  	// The condition already guarantees a value here. No NOLINT, no local
+  	// variable, no restructuring.
+  	avgRttUs = this->avgRttUs.value() * 0.7 + windowRttUs * 0.3;
+  }
+  ```
+
 - A function whose result the caller must check (e.g. a `bool` telling whether it did its job) is declared `[[nodiscard]]`, so that ignoring it fails at compile time instead of relying on the caller to remember.
 - Use the `std::ranges` version of an algorithm whenever there is one, passing the container itself when the algorithm covers all of it (`std::ranges::fill(container, value)`, not `std::fill(std::begin(container), std::end(container), value)`).
 
@@ -93,6 +119,18 @@ These rules apply to every C++ source file and header of the worker, that is, th
 - Helpers are lambdas defined inside the `SCENARIO` body, never file-level `static` functions.
 - Never `using namespace RTC;`: fully qualify names.
 - A `SCENARIO` or `SECTION` name is a single string literal, never split into adjacent literals.
-- Accessing a `std::optional` after `REQUIRE(opt.has_value())` needs `// NOLINTNEXTLINE(bugprone-unchecked-optional-access)`. When there are several accesses, bind the value once (`const auto& value = opt.value();`) with a single `NOLINT`.
+- Accessing a `std::optional` after `REQUIRE(opt.has_value())` needs `// NOLINTNEXTLINE(bugprone-unchecked-optional-access)`. The check flags all three forms, `*opt`, `opt->field` and `opt.value()`: using `.value()` does not avoid it, and the `REQUIRE()` above does not help because the checker does not see through the Catch2 macro.
+- When there are several accesses to the same optional, bind the value once with a single `NOLINT` instead of repeating it per access, the same way as with iterators:
+
+  ```cpp
+  REQUIRE(loss.has_value());
+
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  const auto& lossValue = loss.value();
+
+  REQUIRE(lossValue.expectedPackets == 100);
+  ```
+
+- Before calling a test file done, search it for `.value()`, `->` and `*` on optionals and check one by one that each access has its `NOLINT` or comes from an already bound value.
 - Use the existing mocks (`mocks::MockShared`, `mocks::MockTimerHandle`, `mocks::MockBackoffTimerHandle`) instead of writing new ones.
 - A test expectation states what the code must do. Never change an expected value, widen a tolerance or loosen an assertion just because the code now produces something else.

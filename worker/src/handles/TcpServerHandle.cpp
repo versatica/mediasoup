@@ -167,7 +167,7 @@ void TcpServerHandle::AcceptTcpConnection(TcpConnectionHandle* connection)
 	{
 		connection->Setup(this, std::addressof(this->localAddr), this->localIp, this->localPort);
 	}
-	catch (const MediaSoupError& error)
+	catch (const MediaSoupError&)
 	{
 		delete connection;
 

@@ -14,6 +14,7 @@
 #include "RTC/NEW_RTCP/packet/RembPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
 #include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownPayloadSpecificFeedbackPacket.hpp"
 #include "RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
@@ -111,6 +112,13 @@ namespace RTC
 							case AnyTransportLayerFeedbackPacket::MessageType::NACK:
 							{
 								packet = NackPacket::ParseStrict(ptr, packetLength, packetLength, padding);
+
+								break;
+							}
+
+							case AnyTransportLayerFeedbackPacket::MessageType::TCC:
+							{
+								packet = TransportWideCcPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 								break;
 							}
@@ -331,7 +339,7 @@ namespace RTC
 				clonedPacket =
 				  packet->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, packet->GetLength());
 			}
-			catch (const MediaSoupError& error)
+			catch (const MediaSoupError&)
 			{
 				// Rollback.
 				SetLength(previousLength);
@@ -379,7 +387,7 @@ namespace RTC
 
 					  SetNeedsConsolidation(false);
 				  }
-				  catch (const MediaSoupError& error)
+				  catch (const MediaSoupError&)
 				  {
 					  SetNeedsConsolidation(false);
 
