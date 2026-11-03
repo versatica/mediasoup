@@ -239,8 +239,8 @@ namespace RTC
 
 		if (this->encodingContext)
 		{
-			// Take how the payload descriptor handler rewrote the packet for this
-			// Consumer, so that its retransmissions are rewritten the very same way.
+			// Take the payload encoder for this Consumer, so that its retransmissions
+			// are rewritten the very same way.
 			result.encoder = std::move(this->encodingContext->encoder);
 		}
 
