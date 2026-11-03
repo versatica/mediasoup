@@ -62,9 +62,6 @@ namespace RTC
 		 *   chunk and MAY include an "Unresolvable Address" error cause.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class InitAckChunk : public AnyInitChunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -78,7 +75,7 @@ namespace RTC
 			 * Parse a InitAckChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static InitAckChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -86,7 +83,7 @@ namespace RTC
 			 * Create a InitAckChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static InitAckChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -95,7 +92,7 @@ namespace RTC
 			 * Parse a InitAckChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static InitAckChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -158,7 +155,7 @@ namespace RTC
 
 			void SetInitialTsn(uint32_t value);
 
-		protected:
+		private:
 			InitAckChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**

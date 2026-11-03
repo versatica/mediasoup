@@ -1,4 +1,4 @@
-#include "RTC/RTCP/FuzzerFeedbackRtpEcn.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpEcn.hpp"
 
 void FuzzerRtcRtcpFeedbackRtpEcn::Fuzz(RTC::RTCP::FeedbackRtpEcnPacket* packet)
 {

@@ -65,9 +65,6 @@ namespace RTC
 		 * - User Data (variable length): This is the payload user data.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class IDataChunk : public AnyDataChunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -81,7 +78,7 @@ namespace RTC
 			 * Parse a IDataChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static IDataChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -89,7 +86,7 @@ namespace RTC
 			 * Create a IDataChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static IDataChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -98,7 +95,7 @@ namespace RTC
 			 * Parse a IDataChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static IDataChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -169,7 +166,8 @@ namespace RTC
 			void SetStreamId(uint16_t value);
 
 			/**
-			 * @remarks Only in DATA chunks.
+			 * @remarks
+			 * - Only in DATA chunks.
 			 */
 			uint16_t GetStreamSequenceNumber() const final
 			{
@@ -255,7 +253,7 @@ namespace RTC
 
 			void SetUserData(UserData userData);
 
-		protected:
+		private:
 			IDataChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -267,7 +265,6 @@ namespace RTC
 				return IDataChunk::IDataChunkHeaderLength;
 			}
 
-		private:
 			void SetReserved();
 		};
 	} // namespace SCTP

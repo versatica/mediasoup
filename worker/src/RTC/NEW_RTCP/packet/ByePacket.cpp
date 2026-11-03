@@ -19,8 +19,9 @@ namespace RTC
 
 			Packet::PacketType packetType;
 			size_t packetLength;
+			uint8_t padding;
 
-			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength))
+			if (!Packet::IsPacket(buffer, bufferLength, packetType, packetLength, padding))
 			{
 				return nullptr;
 			}
@@ -32,7 +33,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			return ByePacket::ParseStrict(buffer, bufferLength, packetLength);
+			return ByePacket::ParseStrict(buffer, bufferLength, packetLength, padding);
 		}
 
 		ByePacket* ByePacket::Factory(uint8_t* buffer, size_t bufferLength)
@@ -44,9 +45,9 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
-			auto* packet = new ByePacket(buffer, bufferLength);
+			auto* const packet = new ByePacket(buffer, bufferLength);
 
-			packet->InitializeHeader(Packet::PacketType::BYE, Packet::CommonHeaderLength);
+			packet->InitializeHeader(Packet::PacketType::BYE, 0, Packet::CommonHeaderLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum Packet length.
@@ -54,11 +55,14 @@ namespace RTC
 			return packet;
 		}
 
-		ByePacket* ByePacket::ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength)
+		ByePacket* ByePacket::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{
 			MS_TRACE();
 
-			auto* packet = new ByePacket(const_cast<uint8_t*>(buffer), bufferLength);
+			// Length of the packet excluding padding.
+			const size_t contentLength = packetLength - padding;
+			auto* const packet         = new ByePacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length. It's also required so the getters below operate
@@ -68,7 +72,7 @@ namespace RTC
 			// Validate that the announced SSRC/CSRC count fits into the packet.
 			const size_t ssrcsEndOffset = Packet::CommonHeaderLength + (packet->GetCount() * 4);
 
-			if (ssrcsEndOffset > packetLength)
+			if (ssrcsEndOffset > contentLength)
 			{
 				MS_WARN_TAG(rtcp, "SSRC/CSRC count exceeds the packet length");
 
@@ -80,13 +84,28 @@ namespace RTC
 			if (packet->HasReason())
 			{
 				const uint8_t reasonLength = packet->GetReasonLength();
+
 				// The Reason string starts right after the 1 byte Reason length field.
 				const size_t reasonEndOffset = ssrcsEndOffset + 1 + reasonLength;
 
-				if (reasonEndOffset > packetLength)
+				if (reasonEndOffset > contentLength)
 				{
 					MS_WARN_TAG(
 					  rtcp, "Reason length (%" PRIu8 " bytes) exceeds the packet length", reasonLength);
+
+					delete packet;
+					return nullptr;
+				}
+
+				// The Reason is padded to the next 32-bit boundary, and that is the
+				// end of the packet (excluding padding).
+				if (Utils::Byte::PadTo4Bytes(reasonEndOffset) != contentLength)
+				{
+					MS_WARN_TAG(
+					  rtcp,
+					  "packet length (%zu bytes, excluding padding) does not end right after the padded Reason (%zu bytes)",
+					  contentLength,
+					  Utils::Byte::PadTo4Bytes(reasonEndOffset));
 
 					delete packet;
 					return nullptr;
@@ -140,10 +159,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedPacket = new ByePacket(buffer, bufferLength);
+			auto* const clonedPacket = new ByePacket(buffer, bufferLength);
 
 			CloneInto(clonedPacket);
-			SoftCloneInto(clonedPacket);
 
 			return clonedPacket;
 		}
@@ -171,7 +189,7 @@ namespace RTC
 
 			if (GetCount() == 31)
 			{
-				MS_THROW_ERROR("cannot add more than 31 ssrcs");
+				MS_THROW_TYPE_ERROR("cannot add more than 31 ssrcs");
 			}
 
 			// NOTE: Must be checked before growing the length below, otherwise
@@ -188,7 +206,7 @@ namespace RTC
 				std::memmove(
 				  GetReasonLengthPointer() + 4,
 				  GetReasonLengthPointer(),
-				  Utils::Byte::PadTo4Bytes(1u + GetReasonLength()));
+				  Utils::Byte::PadTo4Bytes(size_t{ 1 } + GetReasonLength()));
 			}
 
 			// Add the new ssrc.
@@ -207,48 +225,33 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("reason length (%zu bytes) cannot be greater than 255", reason.size());
 			}
 
-			const size_t previousLength      = GetLength();
-			const size_t previousLengthField = GetLengthFieldComputed();
 			// The previous total length of Reason length and Reason fields padded
 			// to 4 bytes.
 			const uint16_t previousReasonFieldsPaddedLength =
-			  HasReason() ? Utils::Byte::PadTo4Bytes(1u + GetReasonLength()) : 0;
+			  HasReason() ? Utils::Byte::PadTo4Bytes(size_t{ 1 } + GetReasonLength()) : 0;
+
 			// The new total length of Reason length and Reason fields padded to
 			// 4 bytes.
 			const uint16_t newReasonFieldsPaddedLength =
 			  !reason.empty() ? Utils::Byte::PadTo4Bytes(1 + reason.size()) : 0;
-			const size_t newLength = size_t{ previousLength } - size_t{ previousReasonFieldsPaddedLength } +
-			                         size_t{ newReasonFieldsPaddedLength };
 
-			try
+			const size_t newValueLength = GetVariableLengthValueLength() -
+			                              size_t{ previousReasonFieldsPaddedLength } +
+			                              size_t{ newReasonFieldsPaddedLength };
+
+			// NOTE: This may throw.
+			SetVariableLengthValueLength(newValueLength);
+
+			if (!reason.empty())
 			{
-				// Let's call SetLength() on parent with the new computed length.
-				// NOTE: If there is no space in the buffer for it, it will throw.
-				SetLength(newLength);
+				// Write Reason length field.
+				Utils::Byte::Set1Byte(GetReasonLengthPointer(), 0, reason.size());
 
-				// Update length field.
-				// NOTE: This will throw if computed value is too big.
-				SetLengthField(newLength);
+				// Write Reason field.
+				std::memmove(GetReasonPointer(), reason.data(), reason.size());
 
-				if (!reason.empty())
-				{
-					// Write Reason length field.
-					Utils::Byte::Set1Byte(GetReasonLengthPointer(), 0, reason.size());
-
-					// Write Reason field.
-					std::memmove(GetReasonPointer(), reason.data(), reason.size());
-
-					// Fill padding bytes with zero.
-					FillPadding(newReasonFieldsPaddedLength - 1 - reason.size());
-				}
-			}
-			catch (const MediaSoupError& error)
-			{
-				// Rollback.
-				SetLength(previousLength);
-				SetLengthField(previousLengthField);
-
-				throw;
+				// Fill padding bytes with zero.
+				FillPadding(newReasonFieldsPaddedLength - 1 - reason.size());
 			}
 		}
 
@@ -256,7 +259,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedPacket = new ByePacket(const_cast<uint8_t*>(buffer), GetLength());
+			auto* const softClonedPacket = new ByePacket(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedPacket);
 

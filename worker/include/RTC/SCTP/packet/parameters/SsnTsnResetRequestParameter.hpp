@@ -24,9 +24,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class SsnTsnResetRequestParameter : public Parameter
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -40,7 +37,7 @@ namespace RTC
 			 * Parse a SsnTsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the parameter.
+			 * - `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static SsnTsnResetRequestParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -48,7 +45,7 @@ namespace RTC
 			 * Create a SsnTsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the parameter real length.
+			 * - `bufferLength` could be greater than the parameter real length.
 			 */
 			static SsnTsnResetRequestParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -57,7 +54,7 @@ namespace RTC
 			 * Parse a SsnTsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * - To be used only by `Chunk::ParseParameters()`.
 			 */
 			static SsnTsnResetRequestParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
@@ -82,7 +79,7 @@ namespace RTC
 
 			void SetReconfigurationRequestSequenceNumber(uint32_t value);
 
-		protected:
+		private:
 			SsnTsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**

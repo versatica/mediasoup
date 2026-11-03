@@ -24,9 +24,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class UserInitiatedAbortErrorCause : public ErrorCause
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -37,7 +34,7 @@ namespace RTC
 			 * Parse a UserInitiatedAbortErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static UserInitiatedAbortErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -45,7 +42,7 @@ namespace RTC
 			 * Create a UserInitiatedAbortErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the error cause real length.
+			 * - `bufferLength` could be greater than the error cause real length.
 			 */
 			static UserInitiatedAbortErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -54,7 +51,7 @@ namespace RTC
 			 * Parse a UserInitiatedAbortErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static UserInitiatedAbortErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
@@ -91,7 +88,7 @@ namespace RTC
 
 			void SetUpperLayerAbortReason(const std::string_view& reason);
 
-		protected:
+		private:
 			UserInitiatedAbortErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			virtual const std::string ContentToString() const override final;

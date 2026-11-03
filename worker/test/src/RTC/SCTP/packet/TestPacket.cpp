@@ -10,6 +10,7 @@
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
 #include "RTC/SCTP/packet/parameters/CookiePreservativeParameter.hpp"
+#include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/IPv4AddressParameter.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -813,6 +814,63 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(obtainedChunk1->GetT() == true);
 	}
 
+	SECTION("AddChunk() throws and leaves the Packet as it was")
+	{
+		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, 28) };
+
+		// INIT chunk, length: 20 bytes, which exceeds the Packet buffer length.
+		auto* const chunk1 = RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000);
+
+		REQUIRE_THROWS_AS(packet->AddChunk(chunk1), MediaSoupTypeError);
+
+		CHECK_SCTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ 28,
+		  /*length*/ 12,
+		  /*sourcePort*/ 0,
+		  /*destinationPort*/ 0,
+		  /*verificationTag*/ 0,
+		  /*checksum*/ 0,
+		  /*hasValidCrc32cChecksum*/ false,
+		  /*chunksCount*/ 0);
+
+		// Nothing was written after the Packet header.
+		REQUIRE(sctpCommon::FactoryBuffer[12] == 0xAA);
+		REQUIRE(sctpCommon::FactoryBuffer[31] == 0xAA);
+
+		delete chunk1;
+
+		// INIT chunk, length: 20 bytes, which fits in the Packet buffer but has a
+		// parameter being built in place within it (so it needs consolidation).
+		auto* const chunk2 = RTC::SCTP::InitChunk::Factory(sctpCommon::FactoryBuffer + 1000, 1000);
+		auto* const parameter2 = chunk2->BuildParameterInPlace<RTC::SCTP::CookiePreservativeParameter>();
+
+		REQUIRE(chunk2->NeedsConsolidation() == true);
+
+		std::unique_ptr<RTC::SCTP::Packet> packet2{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer + 2000, 1000) };
+
+		REQUIRE_THROWS_AS(packet2->AddChunk(chunk2), MediaSoupError);
+
+		CHECK_SCTP_PACKET(
+		  /*packet*/ packet2.get(),
+		  /*buffer*/ sctpCommon::FactoryBuffer + 2000,
+		  /*bufferLength*/ 1000,
+		  /*length*/ 12,
+		  /*sourcePort*/ 0,
+		  /*destinationPort*/ 0,
+		  /*verificationTag*/ 0,
+		  /*checksum*/ 0,
+		  /*hasValidCrc32cChecksum*/ false,
+		  /*chunksCount*/ 0);
+
+		parameter2->Discard();
+
+		delete chunk2;
+	}
+
 	SECTION("BuildChunkInPlace() throws if given chunk exceeds Packet buffer length")
 	{
 		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
@@ -898,5 +956,56 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE(packet->NeedsConsolidation() == false);
 
 		delete chunk4;
+	}
+
+	SECTION("Discard() removes the chunk being built in place")
+	{
+		std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, 1000) };
+
+		const auto* chunk1 = packet->BuildChunkInPlace<RTC::SCTP::ShutdownCompleteChunk>();
+
+		chunk1->Consolidate();
+
+		REQUIRE(packet->GetLength() == 16);
+		REQUIRE(packet->GetChunksCount() == 1);
+
+		auto* chunk2 = packet->BuildChunkInPlace<RTC::SCTP::InitChunk>();
+
+		// The Packet length doesn't include the chunk being built in place.
+		REQUIRE(packet->GetLength() == 16);
+		REQUIRE(chunk2->GetLength() == 20);
+		REQUIRE(packet->NeedsConsolidation() == true);
+
+		const auto* parameter = chunk2->BuildParameterInPlace<RTC::SCTP::ForwardTsnSupportedParameter>();
+
+		// The chunk has an ongoing parameter so it cannot be discarded.
+		REQUIRE_THROWS_AS(chunk2->Discard(), MediaSoupError);
+
+		REQUIRE(packet->NeedsConsolidation() == true);
+
+		parameter->Consolidate();
+
+		// Now it can be discarded.
+		chunk2->Discard();
+
+		REQUIRE(packet->NeedsConsolidation() == false);
+		REQUIRE(packet->GetLength() == 16);
+		REQUIRE(packet->GetChunksCount() == 1);
+
+		// Another chunk is built in the same place.
+		const auto* chunk3 = packet->BuildChunkInPlace<RTC::SCTP::ShutdownCompleteChunk>();
+
+		REQUIRE(chunk3->GetBuffer() == packet->GetBuffer() + 16);
+
+		chunk3->Consolidate();
+
+		REQUIRE(packet->GetLength() == 20);
+		REQUIRE(packet->GetChunksCount() == 2);
+		REQUIRE(packet->GetChunkAt(1) == chunk3);
+
+		// Consolidate() or Discard() can only be called once.
+		REQUIRE_THROWS_AS(chunk3->Consolidate(), MediaSoupError);
+		REQUIRE_THROWS_AS(chunk3->Discard(), MediaSoupError);
 	}
 }

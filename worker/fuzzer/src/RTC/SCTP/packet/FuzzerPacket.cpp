@@ -1,4 +1,4 @@
-#include "RTC/SCTP/packet/FuzzerPacket.hpp"
+#include "fuzzer/include/RTC/SCTP/packet/FuzzerPacket.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 
 namespace

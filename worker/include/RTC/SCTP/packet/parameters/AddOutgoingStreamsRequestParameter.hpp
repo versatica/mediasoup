@@ -26,9 +26,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class AddOutgoingStreamsRequestParameter : public Parameter
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -42,7 +39,7 @@ namespace RTC
 			 * Parse a AddOutgoingStreamsRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the parameter.
+			 * - `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static AddOutgoingStreamsRequestParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -50,7 +47,7 @@ namespace RTC
 			 * Create a AddOutgoingStreamsRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the parameter real length.
+			 * - `bufferLength` could be greater than the parameter real length.
 			 */
 			static AddOutgoingStreamsRequestParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -59,7 +56,7 @@ namespace RTC
 			 * Parse a AddOutgoingStreamsRequestParameter.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * - To be used only by `Chunk::ParseParameters()`.
 			 */
 			static AddOutgoingStreamsRequestParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
@@ -91,7 +88,7 @@ namespace RTC
 
 			void SetNumberOfNewStreams(uint16_t value);
 
-		protected:
+		private:
 			AddOutgoingStreamsRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -104,7 +101,6 @@ namespace RTC
 				return AddOutgoingStreamsRequestParameter::AddOutgoingStreamsRequestParameterHeaderLength;
 			}
 
-		private:
 			void SetReserved();
 		};
 	} // namespace SCTP

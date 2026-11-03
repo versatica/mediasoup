@@ -28,9 +28,6 @@ namespace RTC
 		 * - Cookie (variable length).
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class CookieEchoChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -41,7 +38,7 @@ namespace RTC
 			 * Parse a CookieEchoChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static CookieEchoChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -49,7 +46,7 @@ namespace RTC
 			 * Create a CookieEchoChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static CookieEchoChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -58,7 +55,7 @@ namespace RTC
 			 * Parse a CookieEchoChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static CookieEchoChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -103,7 +100,7 @@ namespace RTC
 
 			void SetCookie(const uint8_t* cookie, uint16_t cookieLength);
 
-		protected:
+		private:
 			CookieEchoChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

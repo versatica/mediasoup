@@ -1,4 +1,4 @@
-#include "RTC/RTP/FuzzerPacket.hpp"
+#include "fuzzer/include/RTC/RTP/FuzzerPacket.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
+void FuzzerRtcRtpPacket::Fuzz(const uint8_t* data, size_t len)
 {
 	if (!RTC::RTP::Packet::IsRtp(data, len))
 	{

@@ -4,26 +4,26 @@
 #include "DepLibSRTP.hpp"
 #include "DepLibUV.hpp"
 #include "DepOpenSSL.hpp"
-#include "FuzzerUtils.hpp"
 #include "RTC/DtlsTransport.hpp"
-#include "RTC/FuzzerDtlsTransport.hpp"
-#include "RTC/FuzzerRateCalculator.hpp"
-#include "RTC/FuzzerSeqManager.hpp"
-#include "RTC/ICE/FuzzerStunPacket.hpp"
-#include "RTC/RTCP/FuzzerPacket.hpp"
-
-#include "RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
-#include "RTC/RTP/Codecs/FuzzerH264.hpp"
-#include "RTC/RTP/Codecs/FuzzerOpus.hpp"
-#include "RTC/RTP/Codecs/FuzzerVP8.hpp"
-#include "RTC/RTP/Codecs/FuzzerVP9.hpp"
-#include "RTC/RTP/FuzzerPacket.hpp"
-#include "RTC/RTP/FuzzerRetransmissionBuffer.hpp"
-#include "RTC/RTP/FuzzerRtpStreamSend.hpp"
-#include "RTC/SCTP/FuzzerStateCookie.hpp"
-#include "RTC/SCTP/packet/FuzzerPacket.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "fuzzer/include/FuzzerUtils.hpp"
+#include "fuzzer/include/RTC/FuzzerDtlsTransport.hpp"
+#include "fuzzer/include/RTC/FuzzerRateCalculator.hpp"
+#include "fuzzer/include/RTC/FuzzerSeqManager.hpp"
+#include "fuzzer/include/RTC/ICE/FuzzerStunPacket.hpp"
+#include "fuzzer/include/RTC/NEW_RTCP/packet/FuzzerCompoundPacket.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerPacket.hpp"
+#include "fuzzer/include/RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
+#include "fuzzer/include/RTC/RTP/Codecs/FuzzerH264.hpp"
+#include "fuzzer/include/RTC/RTP/Codecs/FuzzerOpus.hpp"
+#include "fuzzer/include/RTC/RTP/Codecs/FuzzerVP8.hpp"
+#include "fuzzer/include/RTC/RTP/Codecs/FuzzerVP9.hpp"
+#include "fuzzer/include/RTC/RTP/FuzzerPacket.hpp"
+#include "fuzzer/include/RTC/RTP/FuzzerRetransmissionBuffer.hpp"
+#include "fuzzer/include/RTC/RTP/FuzzerRtpStreamSend.hpp"
+#include "fuzzer/include/RTC/SCTP/FuzzerStateCookie.hpp"
+#include "fuzzer/include/RTC/SCTP/packet/FuzzerPacket.hpp"
 #include <cstdlib> // std::getenv()
 #include <iostream>
 #include <sstream> // std::istringstream()
@@ -175,7 +175,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 
 	if (fuzzRtp)
 	{
-		FuzzerRtcRtcPacket::Fuzz(data, len);
+		FuzzerRtcRtpPacket::Fuzz(data, len);
 		FuzzerRtcRtpStreamSend::Fuzz(data, len);
 		FuzzerRtcRtpRetransmissionBuffer::Fuzz(data, len);
 		FuzzerRtcSeqManager::Fuzz(data, len);
@@ -185,6 +185,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	if (fuzzRtcp)
 	{
 		FuzzerRtcRtcpPacket::Fuzz(data, len);
+		FuzzerRtcRtcpCompoundPacket::Fuzz(data, len);
 	}
 
 	if (fuzzCodecs)

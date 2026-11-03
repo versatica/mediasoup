@@ -39,9 +39,6 @@ namespace RTC
 		 *   that was skipped.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class ForwardTsnChunk : public AnyForwardTsnChunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -55,7 +52,7 @@ namespace RTC
 			 * Parse a ForwardTsnChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static ForwardTsnChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -63,7 +60,7 @@ namespace RTC
 			 * Create a ForwardTsnChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static ForwardTsnChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -72,7 +69,7 @@ namespace RTC
 			 * Parse a ForwardTsnChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static ForwardTsnChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -116,7 +113,7 @@ namespace RTC
 
 			void AddSkippedStream(const AnyForwardTsnChunk::SkippedStream& skippedStream);
 
-		protected:
+		private:
 			ForwardTsnChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -128,7 +125,6 @@ namespace RTC
 				return ForwardTsnChunk::ForwardTsnChunkHeaderLength;
 			}
 
-		private:
 			uint16_t GetSkippedStreamIdAt(uint16_t idx) const
 			{
 				return Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 4));

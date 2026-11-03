@@ -80,7 +80,10 @@ namespace RTC
 
 				Chunk* chunk{ nullptr }; // NOLINT(misc-const-correctness)
 
-				MS_DEBUG_DEV("parsing SCTP chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
+				MS_DEBUG_DEV(
+				  "parsing SCTP chunk [ptr:%zu, type:%" PRIu8 "]",
+				  ptr - buffer,
+				  static_cast<uint8_t>(chunkType));
 
 				switch (chunkType)
 				{
@@ -383,24 +386,30 @@ namespace RTC
 
 			AssertDoesNotNeedConsolidation();
 
-			const size_t length = GetLength() + chunk->GetLength();
-
-			// Let's append the chunk at the end of existing chunks.
-			auto* clonedChunk =
-			  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), chunk->GetLength());
+			const size_t previousLength = GetLength();
 
 			// Update Serializable length.
+			// NOTE: It may throw.
+			SetLength(previousLength + chunk->GetLength());
+
+			Chunk* clonedChunk{ nullptr }; // NOLINT(misc-const-correctness)
+
 			try
 			{
-				SetLength(length);
+				// Let's append the chunk at the end of existing chunks.
+				// NOTE: It may throw if the given chunk needs consolidation.
+				clonedChunk =
+				  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, chunk->GetLength());
 			}
 			catch (const MediaSoupError& error)
 			{
-				delete clonedChunk;
+				// Rollback.
+				SetLength(previousLength);
 
 				throw;
 			}
 
+			// Add the chunk to the list.
 			this->chunks.push_back(clonedChunk);
 		}
 
@@ -435,20 +444,25 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->needsConsolidation = true;
+			SetNeedsConsolidation(true);
 
 			// When the application completes the chunk it must call
-			// `chunk->Consolidate()` and that will trigger this event.
-			chunk->SetConsolidatedListener(
-			  [this, chunk]()
+			// `chunk->Consolidate()` or `chunk->Discard()` and that will trigger
+			// this event.
+			chunk->SetBuildInPlaceListener(
+			  [this, chunk](bool consolidate) -> void
 			  {
+				  if (!consolidate)
+				  {
+					  SetNeedsConsolidation(false);
+
+					  delete chunk;
+
+					  return;
+				  }
+
 				  try
 				  {
-					  if (chunk->NeedsConsolidation())
-					  {
-						  MS_THROW_ERROR("ongoing chunk needs consolidation");
-					  }
-
 					  // Fix buffer length assigned to the chunk.
 					  chunk->SetBufferLength(chunk->GetLength());
 
@@ -459,25 +473,16 @@ namespace RTC
 
 					  // Add the chunk to the list.
 					  this->chunks.push_back(chunk);
-					  this->needsConsolidation = false;
+
+					  SetNeedsConsolidation(false);
 				  }
 				  catch (const MediaSoupError& error)
 				  {
-					  this->needsConsolidation = false;
+					  SetNeedsConsolidation(false);
 
 					  throw;
 				  }
 			  });
-		}
-
-		void Packet::AssertDoesNotNeedConsolidation() const
-		{
-			MS_TRACE();
-
-			if (this->needsConsolidation)
-			{
-				MS_THROW_ERROR("packet needs consolidation of some ongoing chunk");
-			}
 		}
 	} // namespace SCTP
 } // namespace RTC

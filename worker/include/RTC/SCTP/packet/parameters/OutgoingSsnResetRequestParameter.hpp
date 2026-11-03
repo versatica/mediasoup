@@ -35,9 +35,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class OutgoingSsnResetRequestParameter : public Parameter
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -51,7 +48,7 @@ namespace RTC
 			 * Parse a OutgoingSsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the parameter.
+			 * - `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static OutgoingSsnResetRequestParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -59,7 +56,7 @@ namespace RTC
 			 * Create a OutgoingSsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the parameter real length.
+			 * - `bufferLength` could be greater than the parameter real length.
 			 */
 			static OutgoingSsnResetRequestParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -68,7 +65,7 @@ namespace RTC
 			 * Parse a OutgoingSsnResetRequestParameter.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * - To be used only by `Chunk::ParseParameters()`.
 			 */
 			static OutgoingSsnResetRequestParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
@@ -111,7 +108,7 @@ namespace RTC
 
 			void AddStreamId(uint16_t streamId);
 
-		protected:
+		private:
 			OutgoingSsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -123,7 +120,6 @@ namespace RTC
 				return OutgoingSsnResetRequestParameter::OutgoingSsnResetRequestParameterHeaderLength;
 			}
 
-		private:
 			uint16_t GetNumberOfStreams() const
 			{
 				return GetVariableLengthValueLength() / 2;

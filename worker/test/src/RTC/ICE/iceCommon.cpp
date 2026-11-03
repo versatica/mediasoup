@@ -1,10 +1,10 @@
 #include "test/include/RTC/ICE/iceCommon.hpp" // in worker/test/include/
-#include <cstring>                            // std::memset
+#include <cstring>                            // std::memset()
 
 namespace iceCommon
 {
 	// NOTE: We don't need `alignas(4)` for STUN packet parsing. However we do it
-	// for consistency with rtpCommon.cpp and sctpCommon.cpp.
+	// for consistency with rtpCommon.cpp, rtcpCommon.cpp and sctpCommon.cpp.
 	alignas(4) thread_local uint8_t FactoryBuffer[];
 	alignas(4) thread_local uint8_t ResponseFactoryBuffer[];
 	alignas(4) thread_local uint8_t SerializeBuffer[];

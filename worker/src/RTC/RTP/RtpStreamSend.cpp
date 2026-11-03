@@ -357,9 +357,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint32_t compactNtp = report->GetNtpSec() << 16;
-
-			compactNtp += report->GetNtpFrac() >> 16;
+			const uint32_t compactNtp = Utils::Time::NtpToCompactNtp(
+			  Utils::Time::Ntp{ .seconds = report->GetNtpSec(), .fractions = report->GetNtpFrac() });
 
 			this->lastReceiverReferenceTime = ReceiverReferenceTime{
 				.compactNtp   = compactNtp,

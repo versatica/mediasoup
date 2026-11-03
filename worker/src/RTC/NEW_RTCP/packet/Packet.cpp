@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::RTCP::Packet"
+#define MS_CLASS "RTC::NEW_RTCP::Packet"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
@@ -16,7 +16,7 @@ namespace RTC
 		// clang-format off
 		const ankerl::unordered_dense::map<Packet::PacketType, std::string> Packet::PacketType2String =
 		{
-			{ Packet::PacketType::IJ,    "IF"    },
+			{ Packet::PacketType::IJ,    "IJ"    },
 			{ Packet::PacketType::SR,    "SR"    },
 			{ Packet::PacketType::RR,    "RR"    },
 			{ Packet::PacketType::SDES,  "SDES"  },
@@ -43,9 +43,7 @@ namespace RTC
 			  // RTCP packet types defined by IANA:
 			  // http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-4
 			  // RFC 5761 (RTCP-mux) states this range for secure RTCP/RTP detection.
-			  (buffer[1] >= 192 && buffer[1] <= 223) &&
-			  // RTCP packets must have a length that is a multiple of 4 bytes.
-			  Utils::Byte::IsPaddedTo4Bytes(bufferLength));
+			  (buffer[1] >= 192 && buffer[1] <= 223));
 		}
 
 		const std::string& Packet::PacketTypeToString(PacketType packetType)
@@ -54,34 +52,29 @@ namespace RTC
 
 			static const std::string Unknown("UNKNOWN");
 
-			auto it = Packet::PacketType2String.find(packetType);
+			const auto it = Packet::PacketType2String.find(packetType);
 
 			if (it == Packet::PacketType2String.end())
 			{
 				return Unknown;
 			}
 
-			return it->second;
+			const std::string& packetTypeString = it->second;
+
+			return packetTypeString;
 		}
 
 		bool Packet::IsPacket(
-		  const uint8_t* buffer, size_t bufferLength, PacketType& packetType, size_t& packetLength)
+		  const uint8_t* buffer,
+		  size_t bufferLength,
+		  PacketType& packetType,
+		  size_t& packetLength,
+		  uint8_t& padding)
 		{
 			MS_TRACE();
 
 			if (!Packet::IsRtcp(buffer, bufferLength))
 			{
-				return false;
-			}
-
-			// The padding mechanism is not implemented since it's only used when
-			// encrypting the compound packet by following the section 9.1 of RFC
-			// 3550 which absolutely nobody does (SRTCP is used instead). So packets
-			// with Padding bit set to 1 are considered invalid and rejected.
-			if ((buffer[0] >> 5) & 0x01)
-			{
-				MS_WARN_TAG(rtcp, "RTCP packet with Padding bit set to 1 not supported");
-
 				return false;
 			}
 
@@ -96,6 +89,40 @@ namespace RTC
 				  Packet::PacketTypeToString(packetType).c_str(),
 				  packetLength,
 				  bufferLength);
+
+				return false;
+			}
+
+			// Padding bit not set.
+			if (((buffer[0] >> 5) & 0x01) == 0)
+			{
+				padding = 0;
+
+				return true;
+			}
+
+			// The last byte of the packet indicates how many padding bytes must be
+			// ignored, including itself.
+			padding = Utils::Byte::Get1Byte(buffer, packetLength - 1);
+
+			if (padding == 0)
+			{
+				MS_WARN_TAG(
+				  rtcp,
+				  "Padding bit set but padding length is 0 [packetType:%s]",
+				  Packet::PacketTypeToString(packetType).c_str());
+
+				return false;
+			}
+			else if (padding > packetLength - Packet::CommonHeaderLength)
+			{
+				MS_WARN_TAG(
+				  rtcp,
+				  "padding length greater than available length [packetType:%s, padding:%" PRIu8
+				  ", packetLength:%zu]",
+				  Packet::PacketTypeToString(packetType).c_str(),
+				  padding,
+				  packetLength);
 
 				return false;
 			}
@@ -127,6 +154,7 @@ namespace RTC
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(indentation, "  count field: %" PRIu8, GetCount());
+			MS_DUMP_CLEAN(indentation, "  padding length: %" PRIu8, GetPaddingLength());
 		}
 
 		void Packet::SoftSerialize(const uint8_t* buffer)
@@ -144,26 +172,45 @@ namespace RTC
 			packet->SetLength(GetLength());
 		}
 
-		void Packet::InitializeHeader(PacketType packetType, uint16_t length)
+		void Packet::InitializeHeader(PacketType packetType, uint8_t count, size_t length)
 		{
 			MS_TRACE();
 
-			auto* commonHeader = GetCommonHeaderPointer();
+			auto* const commonHeader = GetCommonHeaderPointer();
 
 			commonHeader->version    = 2;
 			commonHeader->padding    = 0;
-			commonHeader->count      = 0;
+			commonHeader->count      = count;
 			commonHeader->packetType = packetType;
 
 			SetLengthField(length);
+		}
+
+		void Packet::SetCount(uint8_t count)
+		{
+			MS_TRACE();
+
+			GetCommonHeaderPointer()->count = count;
 		}
 
 		void Packet::SetLengthField(size_t length)
 		{
 			MS_TRACE();
 
+			if (length < Packet::CommonHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "length (%zu bytes) cannot be lower than %zu", length, Packet::CommonHeaderLength);
+			}
+
 			// The Length field is the length of the RTCP packet in 32-bit words minus
-			// one, so the maximum representable packet length is (65535 + 1) * 4 bytes.
+			// one, so the length must be multiple of 4 bytes.
+			if (!Utils::Byte::IsPaddedTo4Bytes(length))
+			{
+				MS_THROW_TYPE_ERROR("length (%zu bytes) must be multiple of 4", length);
+			}
+
+			// The maximum representable packet length is (65535 + 1) * 4 bytes.
 			if (length > (std::numeric_limits<uint16_t>::max() + 1) * 4)
 			{
 				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 262144", length);
@@ -196,8 +243,7 @@ namespace RTC
 
 			const size_t previousLength      = GetLength();
 			const size_t previousLengthField = GetLengthFieldComputed();
-			const size_t previousValueLength = GetVariableLengthValueLength();
-			const size_t newLength           = previousLengthField - previousValueLength + valueLength;
+			const size_t newLength           = Packet::CommonHeaderLength + valueLength;
 
 			try
 			{
@@ -208,6 +254,9 @@ namespace RTC
 				// Update length field.
 				// NOTE: This will throw if computed value is too big.
 				SetLengthField(newLength);
+
+				// Remove padding (if any).
+				GetCommonHeaderPointer()->padding = 0;
 			}
 			catch (const MediaSoupError& error)
 			{

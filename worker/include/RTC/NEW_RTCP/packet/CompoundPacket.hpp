@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "RTC/Serializable.hpp"
+#include <typeinfo> // typeid
 #include <vector>
 
 namespace RTC
@@ -18,8 +19,9 @@ namespace RTC
 		class CompoundPacket : public Serializable
 		{
 		public:
-			using PacketsIterator = typename std::vector<Packet*>::const_iterator;
+			using PacketsIterator = std::vector<Packet*>::const_iterator;
 
+		public:
 			/**
 			 * Parse an RTCP compound packet.
 			 *
@@ -30,13 +32,20 @@ namespace RTC
 
 			/**
 			 * Create an RTCP compound packet.
+			 *
+			 * @remarks
+			 * - The compound packet is created without packets, so its length is 0
+			 *   until a packet is added.
+			 *
+			 * @throw MediaSoupTypeError - If given `bufferLength` is lower than the
+			 *   RTCP Common Header length (4 bytes).
 			 */
 			static CompoundPacket* Factory(uint8_t* buffer, size_t bufferLength);
 
-		protected:
+		private:
 			/**
-			 * Constructor is protected because we only want to create packets
-			 * instances via Parse() and Factory() in subclasses.
+			 * Constructor is private because we only want to create compound packet
+			 * instances via Parse() and Factory().
 			 */
 			CompoundPacket(uint8_t* buffer, size_t bufferLength);
 
@@ -103,30 +112,43 @@ namespace RTC
 			 *
 			 * @throw
 			 * - MediaSoupError - If `BuildPacketInPlace()` was called before and the
-			 *   caller didn't invoke `Consolidate()` on the returned packet yet.
+			 *   caller didn't invoke `Consolidate()` or `Discard()` on the returned
+			 *   packet yet.
+			 * - MediaSoupError - If given packet needs consolidation (some item is
+			 *   being built in place within it).
+			 * - MediaSoupTypeError - If there is no space in the buffer for given
+			 *   packet.
 			 */
 			void AddPacket(const Packet* packet);
 
 			/**
-			 * Build a packet within the compound packet's buffer and append it to the
-			 * list of packets. The caller can perform modifications in that packet
-			 * and those will affect the compound packet body where the packet is
-			 * serialzed. The desired packet class type is given via template argument.
+			 * Build a packet within the compound packet's buffer, which is appended
+			 * to the list of packets once `Consolidate()` is invoked on it. The
+			 * caller can perform modifications in that packet and those will affect
+			 * the compound packet body where the packet is serialized. The desired
+			 * packet class type is given via template argument.
 			 *
 			 * @returns Pointer of the created packet specific class.
 			 *
 			 * @throw
 			 * - MediaSoupError - If `BuildPacketInPlace()` was called before and the
-			 *   caller didn't invoke `Consolidate()` on the returned packet yet.
+			 *   caller didn't invoke `Consolidate()` or `Discard()` on the returned
+			 *   packet yet.
 			 *
 			 * @remarks
-			 * - The caller MUST invoke `Consolidate()` once the packet is completed.
+			 * - The caller MUST invoke `Consolidate()` once the packet is completed,
+			 *   or `Discard()` to remove it from the compound packet (which deletes
+			 *   it). Meanwhile, `GetLength()` of the compound packet does not include
+			 *   the length of the packet.
 			 * - The caller MUST NOT call `BuildPacketInPlace()` while other packet is
 			 *   in progress.
 			 * - The caller MUST NOT free the obtained packet pointer since it's now
 			 *   part of the compound packet.
 			 * - The caller MUST free the obtained packet only in case the
 			 *   `Consolidate()` method on the packet throws.
+			 * - The caller MUST NOT invoke `Consolidate()` or `Discard()` on the
+			 *   obtained packet once the compound packet has been destroyed, since
+			 *   the packet holds a listener that refers to the compound packet.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -141,7 +163,7 @@ namespace RTC
 
 				// The new packet will be added after other packet in the compound
 				// packet, this is, at the end of the compound packet.
-				const auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 				// The remaining length in the buffer is the potential buffer length
 				// of the packet.
 				const size_t packetMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
@@ -156,26 +178,12 @@ namespace RTC
 				return packet;
 			}
 
-			/**
-			 * Whether `BuildPacketInPlace()` was called and the caller didn't invoke
-			 * `Consolidate()` on the returned packet yet.
-			 */
-			bool NeedsConsolidation() const
-			{
-				return this->needsConsolidation;
-			}
-
 		private:
 			virtual void HandleInPlacePacket(Packet* packet) final;
-
-			virtual void AssertDoesNotNeedConsolidation() const final;
 
 		private:
 			// Packets.
 			std::vector<Packet*> packets;
-			// Whether `BuildPacketInPlace()` was called and the caller didn't invoke
-			// `Consolidate()` on the returned packet yet.
-			bool needsConsolidation{ false };
 		};
 	} // namespace NEW_RTCP
 } // namespace RTC

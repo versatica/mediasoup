@@ -1,12 +1,12 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/NEW_RTCP/packet/ByePacket.hpp"
-#include "test/include/RTC/RTCP/rtcpCommon.hpp"
+#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <vector>
 
-SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
+SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp][packet]")
 {
 	rtcpCommon::ResetBuffers();
 
@@ -39,7 +39,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111111, 2222222, 12345678 });
 		REQUIRE(packet->HasReason() == true);
@@ -65,7 +67,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 24,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111111, 2222222, 12345678 });
 		REQUIRE(packet->HasReason() == true);
@@ -86,7 +90,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 24,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111111, 2222222, 12345678 });
 		REQUIRE(packet->HasReason() == true);
@@ -105,7 +111,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111111, 2222222, 12345678, 3333 });
 		REQUIRE(packet->HasReason() == true);
@@ -122,7 +130,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 20,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111111, 2222222, 12345678, 3333 });
 		REQUIRE(packet->HasReason() == false);
@@ -136,7 +146,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111111, 2222222, 12345678, 3333 });
 		REQUIRE(packet->HasReason() == true);
@@ -145,6 +157,109 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		REQUIRE(packet->GetBuffer()[packet->GetLength() - 1] == 0);
 		REQUIRE(packet->GetBuffer()[packet->GetLength() - 2] == 0);
 		REQUIRE(packet->GetBuffer()[packet->GetLength() - 3] == 'e');
+	}
+
+	SECTION("ByePacket::Parse() with padding succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, SC=1, PT:203, Length: 4
+			0b10100001, 0xCB, 0x00, 0x04,
+			// SSRC 1: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Reason length: 3, Reason: "abc"
+			0x03, 0x61, 0x62, 0x63,
+			// Padding: 8 bytes
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x08
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::ByePacket> packet{ RTC::NEW_RTCP::ByePacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 20,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 8);
+
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111 });
+		REQUIRE(packet->HasReason() == true);
+		REQUIRE(packet->GetReason() == "abc");
+
+		/* Modify it (it removes the padding). */
+
+		packet->AddSsrc(2222);
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 16,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111, 2222 });
+		REQUIRE(packet->HasReason() == true);
+		REQUIRE(packet->GetReason() == "abc");
+	}
+
+	SECTION("ByePacket::Parse() with padding and SetReason() succeeds")
+	{
+		// clang-format off
+		alignas(4) uint8_t buffer[] =
+		{
+			// V=2, P=1, SC=1, PT:203, Length: 3
+			0b10100001, 0xCB, 0x00, 0x03,
+			// SSRC 1: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Padding: 8 bytes
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x08
+		};
+		// clang-format on
+
+		std::unique_ptr<RTC::NEW_RTCP::ByePacket> packet{ RTC::NEW_RTCP::ByePacket::Parse(
+			buffer, sizeof(buffer)) };
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 16,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 8);
+
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111 });
+		REQUIRE(packet->HasReason() == false);
+
+		/* Modify it (it removes the padding). */
+
+		packet->SetReason("abc");
+
+		CHECK_RTCP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 12,
+		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111 });
+		REQUIRE(packet->HasReason() == true);
+		REQUIRE(packet->GetReason() == "abc");
 	}
 
 	SECTION("ByePacket::Parse() fails")
@@ -212,6 +327,24 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		// clang-format on
 
 		REQUIRE(!RTC::NEW_RTCP::ByePacket::Parse(buffer3, sizeof(buffer3) - 1));
+
+		// Length field should be 2 (12 bytes) since the packet must end right
+		// after the padded Reason, but it announces 4 extra bytes.
+		// clang-format off
+		alignas(4) uint8_t buffer4[] =
+		{
+			// V=2, P=0, SC=1, PT:203, Length: 3
+			0b10000001, 0xCB, 0x00, 0x03,
+			// SSRC 1: 1111
+			0x00, 0x00, 0x04, 0x57,
+			// Reason length: 1, Reason: "a", 2 bytes of padding
+			0x01, 0x61, 0x00, 0x00,
+			// 4 extra bytes
+			0x11, 0x22, 0x33, 0x44
+		};
+		// clang-format on
+
+		REQUIRE(!RTC::NEW_RTCP::ByePacket::Parse(buffer4, sizeof(buffer4)));
 	}
 
 	SECTION("ByePacket::Factory() succeeds")
@@ -225,7 +358,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 4,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs().empty());
 		REQUIRE(packet->HasReason() == false);
@@ -245,7 +380,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(rtcpCommon::FactoryBuffer),
 		  /*length*/ 4 + 4 + 4 + 4 + 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111, 2222, 3333 });
 		REQUIRE(packet->HasReason() == true);
@@ -267,7 +404,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(rtcpCommon::SerializeBuffer),
 		  /*length*/ 4 + 4 + 4 + 4 + 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111, 2222, 3333 });
 		REQUIRE(packet->HasReason() == true);
@@ -289,7 +428,9 @@ SCENARIO("RTCP Bye Packet (203)", "[serializable][rtcp]")
 		  /*bufferLength*/ sizeof(rtcpCommon::CloneBuffer),
 		  /*length*/ 4 + 4 + 4 + 4 + 28,
 		  /*packetType*/ RTC::NEW_RTCP::Packet::PacketType::BYE,
-		  /*unknownType*/ false);
+		  /*unknownType*/ false,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->GetSsrcs() == std::vector<uint32_t>{ 1111, 2222, 3333 });
 		REQUIRE(packet->HasReason() == true);

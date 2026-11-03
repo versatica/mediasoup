@@ -7,6 +7,7 @@
 #include "RTC/SCTP/packet/TLV.hpp"
 #include <ankerl/unordered_dense.h>
 #include <string>
+#include <typeinfo> // typeid
 #include <vector>
 
 namespace RTC
@@ -47,8 +48,8 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			using ParametersIterator  = typename std::vector<Parameter*>::const_iterator;
-			using ErrorCausesIterator = typename std::vector<ErrorCause*>::const_iterator;
+			using ParametersIterator  = std::vector<Parameter*>::const_iterator;
+			using ErrorCausesIterator = std::vector<ErrorCause*>::const_iterator;
 
 		public:
 			/**
@@ -282,15 +283,19 @@ namespace RTC
 			 * - MediaSoupError - If the chunk subclass cannot have parameters.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
+			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
+			 *   error cause yet.
+			 * - MediaSoupTypeError - If there is no space in the buffer for given
+			 *   parameter.
 			 */
 			virtual void AddParameter(const Parameter* parameter) final;
 
 			/**
-			 * Build a parameter within the chunk's buffer and append it to the list
-			 * of parameters. The caller can perform modifications in that parameter
-			 * and those will affect the chunk body where the parameter is serialized.
-			 * The desired parameter class type is given via template argument.
+			 * Build a parameter within the chunk's buffer, which is appended to the
+			 * list of parameters once `Consolidate()` is invoked on it. The caller
+			 * can perform modifications in that parameter and those will affect the
+			 * chunk body where the parameter is serialized. The desired parameter
+			 * class type is given via template argument.
 			 *
 			 * @returns Pointer of the created parameter specific class.
 			 *
@@ -298,15 +303,21 @@ namespace RTC
 			 * - MediaSoupError - If the chunk subclass cannot have parameters.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
+			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
+			 *   error cause yet.
 			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the parameter is
-			 *   completed.
+			 *   completed, or `Discard()` to remove it from the chunk (which deletes
+			 *   it). Meanwhile, `GetLength()` of the chunk does not include the
+			 *   length of the parameter.
 			 * - The caller MUST NOT free the obtained parameter pointer since it's
 			 *   now part of the chunk.
 			 * - The caller MUST free the obtained parameter only in case the
 			 *   `Consolidate()` method on the parameter throws.
+			 * - The caller MUST NOT invoke `Consolidate()` or `Discard()` on the
+			 *   obtained parameter once the chunk has been destroyed, since the
+			 *   parameter holds a listener that refers to the chunk.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -401,16 +412,19 @@ namespace RTC
 			 * - MediaSoupError - If the chunk subclass cannot have error causes.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
+			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
+			 *   error cause yet.
+			 * - MediaSoupTypeError - If there is no space in the buffer for given
+			 *   error cause.
 			 */
 			virtual void AddErrorCause(const ErrorCause* errorCause) final;
 
 			/**
-			 * Build a error cause within the chunk's buffer and append it to the
-			 * list of error causes. The caller can perform modifications in that
-			 * error cause and those will affect the chunk body where the error cause
-			 * is serialzed. The desired error cause class type is given via template
-			 * argument.
+			 * Build an error cause within the chunk's buffer, which is appended to
+			 * the list of error causes once `Consolidate()` is invoked on it. The
+			 * caller can perform modifications in that error cause and those will
+			 * affect the chunk body where the error cause is serialized. The desired
+			 * error cause class type is given via template argument.
 			 *
 			 * @returns Pointer of the created error cause specific class.
 			 *
@@ -418,15 +432,21 @@ namespace RTC
 			 * - MediaSoupError - If the chunk subclass cannot have error causes.
 			 * - MediaSoupError - If `BuildParameterInPlace()` or
 			 *   `BuildErrorCauseInPlace()` was called before and the caller didn't
-			 *   invoke `Consolidate()` on the returned parameter or error cause yet.
+			 *   invoke `Consolidate()` or `Discard()` on the returned parameter or
+			 *   error cause yet.
 			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the error cause is
-			 *   completed.
+			 *   completed, or `Discard()` to remove it from the chunk (which deletes
+			 *   it). Meanwhile, `GetLength()` of the chunk does not include the
+			 *   length of the error cause.
 			 * - The caller MUST NOT free the obtained error cause pointer since it's
 			 *   now part of the chunk.
 			 * - The caller MUST free the obtained error cause only in case the
 			 *   `Consolidate()` method on the error cause throws.
+			 * - The caller MUST NOT invoke `Consolidate()` or `Discard()` on the
+			 *   obtained error cause once the chunk has been destroyed, since the
+			 *   error cause holds a listener that refers to the chunk.
 			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
@@ -458,16 +478,6 @@ namespace RTC
 				HandleInPlaceErrorCause(errorCause);
 
 				return errorCause;
-			}
-
-			/**
-			 * Whether `BuildParameterInPlace()` or `BuildErrorCauseInPlace()` was
-			 * called before and the caller didn't invoke `Consolidate()` on the
-			 * returned parameter or error cause yet.
-			 */
-			virtual bool NeedsConsolidation() const final
-			{
-				return this->needsConsolidation;
 			}
 
 		protected:
@@ -653,17 +663,11 @@ namespace RTC
 
 			virtual void AssertCanHaveErrorCauses() const final;
 
-			virtual void AssertDoesNotNeedConsolidation() const final;
-
 		private:
 			// Parameters.
 			std::vector<Parameter*> parameters;
 			// Error Causes.
 			std::vector<ErrorCause*> errorCauses;
-			// Whether `BuildParameterInPlace()` or `BuildErrorCauseInPlace()` was
-			// called and the caller didn't invoke `Consolidate()` on the returned
-			// parameter or error cause yet.
-			bool needsConsolidation{ false };
 		};
 	} // namespace SCTP
 } // namespace RTC

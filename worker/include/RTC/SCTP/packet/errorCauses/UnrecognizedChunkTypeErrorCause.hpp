@@ -23,9 +23,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class UnrecognizedChunkTypeErrorCause : public ErrorCause
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -36,7 +33,7 @@ namespace RTC
 			 * Parse a UnrecognizedChunkTypeErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static UnrecognizedChunkTypeErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -44,7 +41,7 @@ namespace RTC
 			 * Create a UnrecognizedChunkTypeErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the error cause real length.
+			 * - `bufferLength` could be greater than the error cause real length.
 			 */
 			static UnrecognizedChunkTypeErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -53,7 +50,7 @@ namespace RTC
 			 * Parse a UnrecognizedChunkTypeErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static UnrecognizedChunkTypeErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
@@ -88,7 +85,7 @@ namespace RTC
 
 			void SetUnrecognizedChunk(const uint8_t* chunk, uint16_t chunkLength);
 
-		protected:
+		private:
 			UnrecognizedChunkTypeErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

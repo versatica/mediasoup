@@ -1,4 +1,4 @@
-#include "RTC/RTCP/FuzzerXr.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerXr.hpp"
 
 void FuzzerRtcRtcpExtendedReport::Fuzz(RTC::RTCP::ExtendedReportPacket* packet)
 {

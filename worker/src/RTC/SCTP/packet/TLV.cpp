@@ -169,6 +169,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (length < TLV::TLVHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "length (%zu bytes) cannot be lower than %zu", length, TLV::TLVHeaderLength);
+			}
+
 			if (length > std::numeric_limits<uint16_t>::max())
 			{
 				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);

@@ -16,7 +16,7 @@ namespace RTC
 		 *
 		 * @see RFC 3550.
 		 *
-		 *        0                   1                   2                   3
+		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |V=2|P|    SC   |   PT=BYE=203  |             Length            |
@@ -39,9 +39,6 @@ namespace RTC
 		 *   boundary.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class ByePacket : public Packet
 		{
 			// We need that compound packet calls protected and private methods in
@@ -53,7 +50,7 @@ namespace RTC
 			 * Parse a ByePacket.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the packet.
+			 * - `bufferLength` may exceed the exact length of the packet.
 			 */
 			static ByePacket* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -61,7 +58,7 @@ namespace RTC
 			 * Create a ByePacket.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the packet real length.
+			 * - `bufferLength` could be greater than the packet real length.
 			 */
 			static ByePacket* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -70,13 +67,14 @@ namespace RTC
 			 * Parse a ByePacket.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `CompoundPacket::Parse()`.
 			 */
-			static ByePacket* ParseStrict(const uint8_t* buffer, size_t bufferLength, size_t packetLength);
+			static ByePacket* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding);
 
 		private:
 			/**
-			 * Only used by Parse(), ParseStrict() and Factory() static methods.
+			 * Only used by ParseStrict(), Factory(), Clone() and SoftClone() methods.
 			 */
 			ByePacket(uint8_t* buffer, size_t bufferLength);
 
@@ -93,10 +91,10 @@ namespace RTC
 
 			bool HasReason() const
 			{
-				return (GetBuffer() + GetLength()) > GetReasonLengthPointer();
+				return (GetBuffer() + GetLength() - GetPaddingLength()) > GetReasonLengthPointer();
 			}
 
-			const std::string_view GetReason() const
+			std::string_view GetReason() const
 			{
 				if (!HasReason())
 				{
@@ -106,23 +104,17 @@ namespace RTC
 				const uint8_t reasonLength = GetReasonLength();
 				const auto* reason         = GetReasonPointer();
 
-				if (!reason)
-				{
-					return {};
-				}
-
 				// NOTE: Validation of the Reason length field is done outside this
 				// method.
 
-				return std::string_view(reinterpret_cast<const char*>(reason), reasonLength);
+				return { reinterpret_cast<const char*>(reason), reasonLength };
 			}
 
 			void SetReason(const std::string_view& reason);
 
-		protected:
+		private:
 			ByePacket* SoftClone(const uint8_t* buffer) const final;
 
-		private:
 			uint8_t* GetSsrcsPointer() const
 			{
 				return GetVariableLengthValuePointer();

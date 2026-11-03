@@ -50,14 +50,15 @@ These rules apply to every C++ source file and header of the worker, that is, th
 
 ## Class layout
 
-- Nested types (`struct`, `class`, `enum`, `using`) go at the very top of the class body, before any method, under their own access specifier.
+- Class constants (`static constexpr` / `static const` members) go at the very top of the class body. Nested types (`struct`, `class`, `enum`, `using`) go right after them, before any method, under their own access specifier. A class constant whose type uses a nested type goes after that nested type. Lookup tables (`static const` maps such as `ChunkType2String`) are not class constants for this rule: they go in their own `private:` block right after the public static methods.
 - A block of `static constexpr` / `static const` members always starts with its own `public:` or `private:` line, even when the previous block has the same access.
 - Struct fields that need documentation use multiline `/** ... */` comments, never `//`.
 - Public methods and class constants are documented with `/** ... */`. Parameter docs take a dash: `@param nowMs - Current time.`
+- `@remarks` goes alone on its line (no colon, no text after it), and its content goes on the following lines as dash items (`- `), with continuation lines indented two spaces.
 
 ## Functions and statements
 
-- Every function and method defined in a `.cpp` starts with `MS_TRACE()` (`MS_TRACE_STD()` in the `Channel` classes and other code that uses the `_STD` variants).
+- Every function and method defined in a `.cpp` starts with `MS_TRACE()` (`MS_TRACE_STD()` in the `Channel` classes and other code that uses the `_STD` variants). This does not apply to the fuzzers (`fuzzer/`).
 - Local declarations inside a function: `constexpr` first, then `const`, then non-const, with a blank line between groups. This does NOT apply to the private/protected member declarations of a class: there members are grouped by meaning with their group comment.
 - Code is split into paragraphs with blank lines: a declaration is not glued to the first thing done with it, an action is not glued to the assert/`REQUIRE` that checks it, and a check is not glued to the next action.
 - Everything that can be `const` is `const`, including `const auto` locals and `const T&` parameters. But never replace an explicit type with `auto` when the right-hand side does not show the type.

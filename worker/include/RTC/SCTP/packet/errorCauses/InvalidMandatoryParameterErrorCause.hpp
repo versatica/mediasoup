@@ -21,9 +21,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class InvalidMandatoryParameterErrorCause : public ErrorCause
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -34,7 +31,7 @@ namespace RTC
 			 * Parse a InvalidMandatoryParameterErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static InvalidMandatoryParameterErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -42,7 +39,7 @@ namespace RTC
 			 * Create a InvalidMandatoryParameterErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the error cause real length.
+			 * - `bufferLength` could be greater than the error cause real length.
 			 */
 			static InvalidMandatoryParameterErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -51,7 +48,7 @@ namespace RTC
 			 * Parse a InvalidMandatoryParameterErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static InvalidMandatoryParameterErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
@@ -69,7 +66,7 @@ namespace RTC
 
 			InvalidMandatoryParameterErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-		protected:
+		private:
 			InvalidMandatoryParameterErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

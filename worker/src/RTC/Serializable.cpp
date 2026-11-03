@@ -28,6 +28,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// An item being built in place is beyond the current length, so it would
+		// not be serialized.
+		AssertDoesNotNeedConsolidation();
+
 		if (bufferLength < this->length)
 		{
 			MS_THROW_TYPE_ERROR(
@@ -58,12 +62,42 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->consolidatedListener)
+		if (!this->buildInPlaceListener)
 		{
-			MS_THROW_ERROR("consolidated listener not set");
+			MS_THROW_ERROR("build in place listener not set");
 		}
 
-		this->consolidatedListener();
+		AssertDoesNotNeedConsolidation();
+
+		const BuildInPlaceListener listener = std::move(this->buildInPlaceListener);
+
+		this->buildInPlaceListener = nullptr;
+
+		listener(/*consolidate*/ true);
+	}
+
+	void Serializable::Discard() const
+	{
+		MS_TRACE();
+
+		if (!this->buildInPlaceListener)
+		{
+			MS_THROW_ERROR("build in place listener not set");
+		}
+
+		// The listener of an item being built in place within this Serializable
+		// refers to it, so it cannot be deleted.
+		AssertDoesNotNeedConsolidation();
+
+		// The listener deletes this Serializable, so it must be moved out of it
+		// before being invoked.
+		const BuildInPlaceListener listener = std::move(this->buildInPlaceListener);
+
+		this->buildInPlaceListener = nullptr;
+
+		listener(/*consolidate*/ false);
+
+		// NOTE: This Serializable no longer exists here.
 	}
 
 	void Serializable::SetBuffer(uint8_t* buffer)
@@ -115,17 +149,21 @@ namespace RTC
 			  this->bufferLength);
 		}
 
-		if (length == 0)
-		{
-			MS_THROW_TYPE_ERROR("length cannot be 0");
-		}
-
 		this->length = length;
 	}
 
 	void Serializable::CloneInto(Serializable* serializable) const
 	{
 		MS_TRACE();
+
+		// An item being built in place is beyond the current length, so it would
+		// not be cloned.
+		if (this->needsConsolidation)
+		{
+			delete serializable;
+
+			MS_THROW_ERROR("Serializable needs consolidation of some item being built in place");
+		}
 
 		if (serializable->GetBufferLength() < this->length)
 		{
@@ -158,10 +196,27 @@ namespace RTC
 		std::memset(this->buffer + this->length - padding, 0x00, padding);
 	}
 
-	void Serializable::SetConsolidatedListener(ConsolidatedListener&& listener)
+	void Serializable::SetBuildInPlaceListener(BuildInPlaceListener&& listener)
 	{
 		MS_TRACE();
 
-		this->consolidatedListener = std::move(listener);
+		this->buildInPlaceListener = std::move(listener);
+	}
+
+	void Serializable::SetNeedsConsolidation(bool flag)
+	{
+		MS_TRACE();
+
+		this->needsConsolidation = flag;
+	}
+
+	void Serializable::AssertDoesNotNeedConsolidation() const
+	{
+		MS_TRACE();
+
+		if (this->needsConsolidation)
+		{
+			MS_THROW_ERROR("Serializable needs consolidation of some item being built in place");
+		}
 	}
 } // namespace RTC

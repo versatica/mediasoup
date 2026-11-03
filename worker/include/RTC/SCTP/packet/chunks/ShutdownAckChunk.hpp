@@ -24,9 +24,6 @@ namespace RTC
 		 * - Length (16 bits): 4.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class ShutdownAckChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -37,7 +34,7 @@ namespace RTC
 			 * Parse a ShutdownAckChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static ShutdownAckChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -45,7 +42,7 @@ namespace RTC
 			 * Create a ShutdownAckChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static ShutdownAckChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -54,7 +51,7 @@ namespace RTC
 			 * Parse a ShutdownAckChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static ShutdownAckChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -82,7 +79,7 @@ namespace RTC
 				return false;
 			}
 
-		protected:
+		private:
 			ShutdownAckChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

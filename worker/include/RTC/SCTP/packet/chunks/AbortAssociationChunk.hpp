@@ -33,9 +33,6 @@ namespace RTC
 		 * Optional variable-length error causes (anyone).
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class AbortAssociationChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -46,7 +43,7 @@ namespace RTC
 			 * Parse a AbortAssociationChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static AbortAssociationChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -54,7 +51,7 @@ namespace RTC
 			 * Create a AbortAssociationChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static AbortAssociationChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -63,7 +60,7 @@ namespace RTC
 			 * Parse a AbortAssociationChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static AbortAssociationChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -98,7 +95,7 @@ namespace RTC
 				return true;
 			}
 
-		protected:
+		private:
 			AbortAssociationChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

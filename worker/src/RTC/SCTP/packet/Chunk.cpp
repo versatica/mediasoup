@@ -175,7 +175,7 @@ namespace RTC
 			AddItem(parameter);
 
 			// Let's append the parameter at the end of existing parameters.
-			auto* clonedParameter =
+			auto* const clonedParameter =
 			  parameter->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, parameter->GetLength());
 
 			// Add the parameter to the list.
@@ -196,9 +196,10 @@ namespace RTC
 			AddItem(errorCause);
 
 			// Let's append the error cause at the end of existing error causes.
-			auto* clonedErrorCause = errorCause->Clone(
+			auto* const clonedErrorCause = errorCause->Clone(
 			  const_cast<uint8_t*>(GetBuffer()) + previousLength, errorCause->GetLength());
 
+			// Add the error cause to the list.
 			this->errorCauses.push_back(clonedErrorCause);
 		}
 
@@ -714,17 +715,26 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->needsConsolidation = true;
+			SetNeedsConsolidation(true);
 
 			// When the application completes the parameter it must call
-			// `parameter->Consolidate()` and that will trigger this event.
-			parameter->SetConsolidatedListener(
-			  [this, parameter]()
+			// `parameter->Consolidate()` or `parameter->Discard()` and that will
+			// trigger this event.
+			parameter->SetBuildInPlaceListener(
+			  [this, parameter](bool consolidate) -> void
 			  {
+				  if (!consolidate)
+				  {
+					  SetNeedsConsolidation(false);
+
+					  delete parameter;
+
+					  return;
+				  }
+
 				  try
 				  {
 					  // Fix buffer length assigned to the parameter.
-					  // NOTE: It may throw.
 					  parameter->SetBufferLength(parameter->GetLength());
 
 					  // This will update the total length and length field of the chunk.
@@ -734,11 +744,11 @@ namespace RTC
 					  // Add the parameter to the list.
 					  this->parameters.push_back(parameter);
 
-					  this->needsConsolidation = false;
+					  SetNeedsConsolidation(false);
 				  }
 				  catch (const MediaSoupError& error)
 				  {
-					  this->needsConsolidation = false;
+					  SetNeedsConsolidation(false);
 
 					  throw;
 				  }
@@ -749,13 +759,23 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->needsConsolidation = true;
+			SetNeedsConsolidation(true);
 
 			// When the application completes the error cause it must call
-			// `errorCause->Consolidate()` and that will trigger this event.
-			errorCause->SetConsolidatedListener(
-			  [this, errorCause]()
+			// `errorCause->Consolidate()` or `errorCause->Discard()` and that will
+			// trigger this event.
+			errorCause->SetBuildInPlaceListener(
+			  [this, errorCause](bool consolidate) -> void
 			  {
+				  if (!consolidate)
+				  {
+					  SetNeedsConsolidation(false);
+
+					  delete errorCause;
+
+					  return;
+				  }
+
 				  try
 				  {
 					  // Fix buffer length assigned to the error cause.
@@ -768,11 +788,11 @@ namespace RTC
 					  // Add the error cause to the list.
 					  this->errorCauses.push_back(errorCause);
 
-					  this->needsConsolidation = false;
+					  SetNeedsConsolidation(false);
 				  }
 				  catch (const MediaSoupError& error)
 				  {
-					  this->needsConsolidation = false;
+					  SetNeedsConsolidation(false);
 
 					  throw;
 				  }
@@ -796,16 +816,6 @@ namespace RTC
 			if (!CanHaveErrorCauses())
 			{
 				MS_THROW_ERROR("this chunk class cannot have error causes");
-			}
-		}
-
-		void Chunk::AssertDoesNotNeedConsolidation() const
-		{
-			MS_TRACE();
-
-			if (this->needsConsolidation)
-			{
-				MS_THROW_ERROR("chunk needs consolidation of some ongoing parameter or error cause");
 			}
 		}
 	} // namespace SCTP

@@ -1,4 +1,4 @@
-#include "RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
+#include "fuzzer/include/RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
 #include "RTC/Consts.hpp"
 #include <memory>
 

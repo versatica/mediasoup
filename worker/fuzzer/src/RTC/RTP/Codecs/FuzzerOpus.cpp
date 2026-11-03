@@ -1,4 +1,4 @@
-#include "RTC/RTP/Codecs/FuzzerOpus.hpp"
+#include "fuzzer/include/RTC/RTP/Codecs/FuzzerOpus.hpp"
 #include "RTC/RTP/Codecs/Opus.hpp"
 
 void FuzzerRtcRtpCodecsOpus::Fuzz(const uint8_t* data, size_t len)

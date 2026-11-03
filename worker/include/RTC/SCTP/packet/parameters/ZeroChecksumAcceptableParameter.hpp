@@ -26,9 +26,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class ZeroChecksumAcceptableParameter : public Parameter
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -61,7 +58,7 @@ namespace RTC
 			 * Parse a ZeroChecksumAcceptableParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the parameter.
+			 * - `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static ZeroChecksumAcceptableParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -69,7 +66,7 @@ namespace RTC
 			 * Create a ZeroChecksumAcceptableParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the parameter real length.
+			 * - `bufferLength` could be greater than the parameter real length.
 			 */
 			static ZeroChecksumAcceptableParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -81,7 +78,7 @@ namespace RTC
 			 * Parse a ZeroChecksumAcceptableParameter.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * - To be used only by `Chunk::ParseParameters()`.
 			 */
 			static ZeroChecksumAcceptableParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
@@ -121,7 +118,7 @@ namespace RTC
 
 			void SetAlternateErrorDetectionMethod(AlternateErrorDetectionMethod alternateErrorDetectionMethod);
 
-		protected:
+		private:
 			ZeroChecksumAcceptableParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**

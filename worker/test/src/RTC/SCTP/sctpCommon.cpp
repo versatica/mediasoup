@@ -1,5 +1,5 @@
 #include "test/include/RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
-#include <cstring>                              // std::memset
+#include <cstring>                              // std::memset()
 
 namespace sctpCommon
 {
@@ -22,7 +22,7 @@ namespace sctpCommon
 
 		for (size_t i = 0; i < 256; ++i)
 		{
-			sctpCommon::DataBuffer[i] = static_cast<uint8_t>(i);
+			DataBuffer[i] = static_cast<uint8_t>(i);
 		}
 	}
 } // namespace sctpCommon

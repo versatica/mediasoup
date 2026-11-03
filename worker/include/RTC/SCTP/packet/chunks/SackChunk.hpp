@@ -70,9 +70,6 @@ namespace RTC
 		 *   received in duplicate since the last SACK chunk was sent.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class SackChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -104,7 +101,7 @@ namespace RTC
 			 * Parse a SackChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static SackChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -112,7 +109,7 @@ namespace RTC
 			 * Create a SackChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static SackChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -121,7 +118,7 @@ namespace RTC
 			 * Parse a SackChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static SackChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -178,7 +175,7 @@ namespace RTC
 
 			void AddDuplicateTsn(uint32_t tsn);
 
-		protected:
+		private:
 			SackChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -190,7 +187,6 @@ namespace RTC
 				return SackChunk::SackChunkHeaderLength;
 			}
 
-		private:
 			void SetNumberOfGapAckBlocks(uint16_t value);
 
 			void SetNumberOfDuplicateTsns(uint16_t value);

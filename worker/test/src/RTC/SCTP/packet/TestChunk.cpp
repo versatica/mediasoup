@@ -114,4 +114,78 @@ SCENARIO("SCTP Chunk", "[serializable][sctp][chunk]")
 
 		delete errorCause4;
 	}
+
+	SECTION("Discard() removes the parameter being built in place")
+	{
+		std::unique_ptr<RTC::SCTP::InitChunk> chunk{ RTC::SCTP::InitChunk::Factory(
+			sctpCommon::FactoryBuffer, 1000) };
+
+		REQUIRE(chunk->GetLength() == 20);
+
+		const auto* parameter1 =
+		  chunk->BuildParameterInPlace<RTC::SCTP::ZeroChecksumAcceptableParameter>();
+
+		// The Chunk length doesn't include the parameter being built in place.
+		REQUIRE(chunk->GetLength() == 20);
+		REQUIRE(parameter1->GetLength() == 8);
+		REQUIRE(chunk->NeedsConsolidation() == true);
+
+		parameter1->Discard();
+
+		REQUIRE(chunk->NeedsConsolidation() == false);
+		REQUIRE(chunk->GetLength() == 20);
+		REQUIRE(chunk->GetParametersCount() == 0);
+
+		// Another parameter is built in the same place.
+		const auto* parameter2 = chunk->BuildParameterInPlace<RTC::SCTP::ForwardTsnSupportedParameter>();
+
+		REQUIRE(parameter2->GetBuffer() == chunk->GetBuffer() + 20);
+
+		parameter2->Consolidate();
+
+		REQUIRE(chunk->GetLength() == 24);
+		REQUIRE(chunk->GetParametersCount() == 1);
+		REQUIRE(chunk->GetParameterAt(0) == parameter2);
+
+		// Consolidate() or Discard() can only be called once.
+		REQUIRE_THROWS_AS(parameter2->Consolidate(), MediaSoupError);
+		REQUIRE_THROWS_AS(parameter2->Discard(), MediaSoupError);
+	}
+
+	SECTION("Discard() removes the error cause being built in place")
+	{
+		std::unique_ptr<RTC::SCTP::AbortAssociationChunk> chunk{
+			RTC::SCTP::AbortAssociationChunk::Factory(sctpCommon::FactoryBuffer, 1000)
+		};
+
+		REQUIRE(chunk->GetLength() == 4);
+
+		const auto* errorCause1 = chunk->BuildErrorCauseInPlace<RTC::SCTP::OutOfResourceErrorCause>();
+
+		// The Chunk length doesn't include the error cause being built in place.
+		REQUIRE(chunk->GetLength() == 4);
+		REQUIRE(errorCause1->GetLength() == 4);
+		REQUIRE(chunk->NeedsConsolidation() == true);
+
+		errorCause1->Discard();
+
+		REQUIRE(chunk->NeedsConsolidation() == false);
+		REQUIRE(chunk->GetLength() == 4);
+		REQUIRE(chunk->GetErrorCausesCount() == 0);
+
+		// Another error cause is built in the same place.
+		const auto* errorCause2 = chunk->BuildErrorCauseInPlace<RTC::SCTP::ProtocolViolationErrorCause>();
+
+		REQUIRE(errorCause2->GetBuffer() == chunk->GetBuffer() + 4);
+
+		errorCause2->Consolidate();
+
+		REQUIRE(chunk->GetLength() == 8);
+		REQUIRE(chunk->GetErrorCausesCount() == 1);
+		REQUIRE(chunk->GetErrorCauseAt(0) == errorCause2);
+
+		// Consolidate() or Discard() can only be called once.
+		REQUIRE_THROWS_AS(errorCause2->Consolidate(), MediaSoupError);
+		REQUIRE_THROWS_AS(errorCause2->Discard(), MediaSoupError);
+	}
 }

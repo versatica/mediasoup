@@ -40,9 +40,6 @@ namespace RTC
 		 * - Another parameter, optional.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class ReConfigChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -98,7 +95,7 @@ namespace RTC
 				return false;
 			}
 
-		protected:
+		private:
 			ReConfigChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

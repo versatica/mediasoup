@@ -1,9 +1,24 @@
-#define MS_CLASS "RTC::RTCP::CompoundPacket"
+#define MS_CLASS "RTC::NEW_RTCP::CompoundPacket"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/AnyTransportLayerFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/ByePacket.hpp"
+#include "RTC/NEW_RTCP/packet/FirPacket.hpp"
+#include "RTC/NEW_RTCP/packet/NackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/PliPacket.hpp"
+#include "RTC/NEW_RTCP/packet/ReceiverReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/RembPacket.hpp"
+#include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
+#include "RTC/NEW_RTCP/packet/SenderReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownPacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/UnknownTransportLayerFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/XrPacket.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -22,7 +37,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* compoundPacket = new CompoundPacket(const_cast<uint8_t*>(buffer), bufferLength);
+			auto* const compoundPacket = new CompoundPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Pointer that initially points to the given data buffer and is later
 			// incremented to point to each packet within the compound packet.
@@ -38,8 +53,9 @@ namespace RTC
 				// parser.
 				Packet::PacketType packetType;
 				size_t packetLength;
+				uint8_t padding;
 
-				if (!Packet::IsPacket(ptr, packetMaxBufferLength, packetType, packetLength))
+				if (!Packet::IsPacket(ptr, packetMaxBufferLength, packetType, packetLength, padding))
 				{
 					MS_WARN_TAG(rtcp, "not an RTCP packet");
 
@@ -49,22 +65,128 @@ namespace RTC
 
 				Packet* packet{ nullptr }; // NOLINT(misc-const-correctness)
 
-				MS_DEBUG_DEV("parsing RTCP packet [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, packetType);
+				MS_DEBUG_DEV(
+				  "parsing RTCP packet [ptr:%zu, type:%" PRIu8 "]",
+				  ptr - buffer,
+				  static_cast<uint8_t>(packetType));
 
 				switch (packetType)
 				{
-					case Packet::PacketType::IJ:
+					case Packet::PacketType::SR:
 					{
-						// TODO
-						// packet = ExtendedJitterReportPacket::ParseStrict(ptr, packetLength);
+						packet = SenderReportPacket::ParseStrict(ptr, packetLength, packetLength, padding);
+
+						break;
+					}
+
+					case Packet::PacketType::RR:
+					{
+						packet = ReceiverReportPacket::ParseStrict(ptr, packetLength, packetLength, padding);
+
+						break;
+					}
+
+					case Packet::PacketType::SDES:
+					{
+						packet = SdesPacket::ParseStrict(ptr, packetLength, packetLength, padding);
+
+						break;
+					}
+
+					case Packet::PacketType::BYE:
+					{
+						packet = ByePacket::ParseStrict(ptr, packetLength, packetLength, padding);
+
+						break;
+					}
+
+					case Packet::PacketType::RTPFB:
+					{
+						// The FMT field tells the type of the feedback message.
+						const auto messageType =
+						  static_cast<AnyTransportLayerFeedbackPacket::MessageType>(ptr[0] & 0x1F);
+
+						switch (messageType)
+						{
+							case AnyTransportLayerFeedbackPacket::MessageType::NACK:
+							{
+								packet = NackPacket::ParseStrict(ptr, packetLength, packetLength, padding);
+
+								break;
+							}
+
+							default:
+							{
+								packet = UnknownTransportLayerFeedbackPacket::ParseStrict(
+								  ptr, packetLength, packetLength, padding);
+							}
+						}
+
+						break;
+					}
+
+					case Packet::PacketType::PSFB:
+					{
+						// The FMT field tells the type of the feedback message.
+						const auto messageType =
+						  static_cast<AnyPayloadSpecificFeedbackPacket::MessageType>(ptr[0] & 0x1F);
+
+						switch (messageType)
+						{
+							case AnyPayloadSpecificFeedbackPacket::MessageType::PLI:
+							{
+								packet = PliPacket::ParseStrict(ptr, packetLength, packetLength, padding);
+
+								break;
+							}
+
+							case AnyPayloadSpecificFeedbackPacket::MessageType::FIR:
+							{
+								packet = FirPacket::ParseStrict(ptr, packetLength, packetLength, padding);
+
+								break;
+							}
+
+							case AnyPayloadSpecificFeedbackPacket::MessageType::AFB:
+							{
+								// The application is identified by the first 4 bytes of the
+								// Feedback Control Information (FCI).
+								if (
+								  packetLength - padding >= AnyFeedbackPacket::FeedbackHeaderLength + 4 &&
+								  Utils::Byte::Get4Bytes(ptr, AnyFeedbackPacket::FeedbackHeaderLength) ==
+								    RembPacket::UniqueIdentifier)
+								{
+									packet = RembPacket::ParseStrict(ptr, packetLength, packetLength, padding);
+								}
+								else
+								{
+									packet = UnknownPayloadSpecificFeedbackPacket::ParseStrict(
+									  ptr, packetLength, packetLength, padding);
+								}
+
+								break;
+							}
+
+							default:
+							{
+								packet = UnknownPayloadSpecificFeedbackPacket::ParseStrict(
+								  ptr, packetLength, packetLength, padding);
+							}
+						}
+
+						break;
+					}
+
+					case Packet::PacketType::XR:
+					{
+						packet = XrPacket::ParseStrict(ptr, packetLength, packetLength, padding);
 
 						break;
 					}
 
 					default:
 					{
-						// TODO
-						// packet = UnknownPacket::ParseStrict(ptr, packetLength);
+						packet = UnknownPacket::ParseStrict(ptr, packetLength, packetLength);
 					}
 				}
 
@@ -101,6 +223,21 @@ namespace RTC
 			return compoundPacket;
 		}
 
+		CompoundPacket* CompoundPacket::Factory(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			// No space for a single packet.
+			if (bufferLength < Packet::CommonHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			// NOTE: A compound packet has no header of its own, so its length is 0
+			// until a packet is added.
+			return new CompoundPacket(buffer, bufferLength);
+		}
+
 		/* Instance methods. */
 
 		CompoundPacket::CompoundPacket(uint8_t* buffer, size_t bufferLength)
@@ -112,6 +249,11 @@ namespace RTC
 		CompoundPacket::~CompoundPacket()
 		{
 			MS_TRACE();
+
+			for (const auto* packet : this->packets)
+			{
+				delete packet;
+			}
 		}
 
 		void CompoundPacket::Dump(int indentation) const
@@ -134,7 +276,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto* previousBuffer = GetBuffer();
+			const auto* const previousBuffer = GetBuffer();
 
 			// Invoke the parent method to copy the whole buffer.
 			Serializable::Serialize(buffer, bufferLength);
@@ -151,7 +293,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedCompoundPacket = new CompoundPacket(buffer, bufferLength);
+			auto* const clonedCompoundPacket = new CompoundPacket(buffer, bufferLength);
 
 			Serializable::CloneInto(clonedCompoundPacket);
 
@@ -160,7 +302,7 @@ namespace RTC
 			{
 				const size_t offset = packet->GetBuffer() - GetBuffer();
 
-				auto* softClonedPacket = packet->SoftClone(buffer + offset);
+				auto* const softClonedPacket = packet->SoftClone(buffer + offset);
 
 				clonedCompoundPacket->packets.push_back(softClonedPacket);
 			}
@@ -168,21 +310,62 @@ namespace RTC
 			return clonedCompoundPacket;
 		}
 
+		void CompoundPacket::AddPacket(const Packet* packet)
+		{
+			MS_TRACE();
+
+			AssertDoesNotNeedConsolidation();
+
+			const size_t previousLength = GetLength();
+
+			// Update Serializable length.
+			// NOTE: It may throw.
+			SetLength(previousLength + packet->GetLength());
+
+			Packet* clonedPacket{ nullptr }; // NOLINT(misc-const-correctness)
+
+			try
+			{
+				// Let's append the packet at the end of existing packets.
+				// NOTE: It may throw if the given packet needs consolidation.
+				clonedPacket =
+				  packet->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, packet->GetLength());
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Rollback.
+				SetLength(previousLength);
+
+				throw;
+			}
+
+			// Add the packet to the list.
+			this->packets.push_back(clonedPacket);
+		}
+
 		void CompoundPacket::HandleInPlacePacket(Packet* packet)
 		{
 			MS_TRACE();
 
-			this->needsConsolidation = true;
+			SetNeedsConsolidation(true);
 
 			// When the application completes the packet it must call
-			// `packet->Consolidate()` and that will trigger this event.
-			packet->SetConsolidatedListener(
-			  [this, packet]()
+			// `packet->Consolidate()` or `packet->Discard()` and that will trigger
+			// this event.
+			packet->SetBuildInPlaceListener(
+			  [this, packet](bool consolidate) -> void
 			  {
+				  if (!consolidate)
+				  {
+					  SetNeedsConsolidation(false);
+
+					  delete packet;
+
+					  return;
+				  }
+
 				  try
 				  {
-					  // NOTE: Packet class doesn't have `NeedsConsolidation()` method.
-
 					  // Fix buffer length assigned to the packet.
 					  packet->SetBufferLength(packet->GetLength());
 
@@ -193,25 +376,16 @@ namespace RTC
 
 					  // Add the packet to the list.
 					  this->packets.push_back(packet);
-					  this->needsConsolidation = false;
+
+					  SetNeedsConsolidation(false);
 				  }
 				  catch (const MediaSoupError& error)
 				  {
-					  this->needsConsolidation = false;
+					  SetNeedsConsolidation(false);
 
 					  throw;
 				  }
 			  });
-		}
-
-		void CompoundPacket::AssertDoesNotNeedConsolidation() const
-		{
-			MS_TRACE();
-
-			if (this->needsConsolidation)
-			{
-				MS_THROW_ERROR("compound packet needs consolidation of some ongoing packet");
-			}
 		}
 	} // namespace NEW_RTCP
 } // namespace RTC

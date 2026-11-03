@@ -23,9 +23,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class StaleCookieErrorCause : public ErrorCause
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -39,7 +36,7 @@ namespace RTC
 			 * Parse a StaleCookieErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static StaleCookieErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -47,7 +44,7 @@ namespace RTC
 			 * Create a StaleCookieErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the error cause real length.
+			 * - `bufferLength` could be greater than the error cause real length.
 			 */
 			static StaleCookieErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -56,7 +53,7 @@ namespace RTC
 			 * Parse a StaleCookieErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static StaleCookieErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
@@ -81,7 +78,7 @@ namespace RTC
 
 			void SetMeasureOfStaleness(uint32_t value);
 
-		protected:
+		private:
 			StaleCookieErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**

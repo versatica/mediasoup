@@ -30,9 +30,6 @@ namespace RTC
 		 * Optional variable-length error causes (anyone).
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class OperationErrorChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -43,7 +40,7 @@ namespace RTC
 			 * Parse a OperationErrorChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static OperationErrorChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -51,7 +48,7 @@ namespace RTC
 			 * Create a OperationErrorChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static OperationErrorChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -60,7 +57,7 @@ namespace RTC
 			 * Parse a OperationErrorChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static OperationErrorChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -88,7 +85,7 @@ namespace RTC
 				return true;
 			}
 
-		protected:
+		private:
 			OperationErrorChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

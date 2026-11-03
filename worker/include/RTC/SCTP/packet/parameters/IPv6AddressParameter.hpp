@@ -25,9 +25,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class IPv6AddressParameter : public Parameter
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -41,7 +38,7 @@ namespace RTC
 			 * Parse a IPv6AddressParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the parameter.
+			 * - `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static IPv6AddressParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -49,7 +46,7 @@ namespace RTC
 			 * Create a IPv6AddressParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the parameter real length.
+			 * - `bufferLength` could be greater than the parameter real length.
 			 */
 			static IPv6AddressParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -58,7 +55,7 @@ namespace RTC
 			 * Parse a IPv6AddressParameter.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * - To be used only by `Chunk::ParseParameters()`.
 			 */
 			static IPv6AddressParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
@@ -91,7 +88,7 @@ namespace RTC
 			 */
 			void SetIPv6Address(const uint8_t* ip);
 
-		protected:
+		private:
 			IPv6AddressParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -104,7 +101,6 @@ namespace RTC
 				return IPv6AddressParameter::IPv6AddressParameterHeaderLength;
 			}
 
-		private:
 			void ResetIPv6Address();
 		};
 	} // namespace SCTP

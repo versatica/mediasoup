@@ -1,4 +1,4 @@
-#include "RTC/FuzzerRateCalculator.hpp"
+#include "fuzzer/include/RTC/FuzzerRateCalculator.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RateCalculator.hpp"

@@ -32,9 +32,6 @@ namespace RTC
 		 * - Heartbeat Info (1), mandatory.
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class HeartbeatAckChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -45,7 +42,7 @@ namespace RTC
 			 * Parse a HeartbeatAckChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static HeartbeatAckChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -53,7 +50,7 @@ namespace RTC
 			 * Create a HeartbeatAckChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the chunk real length.
+			 * - `bufferLength` could be greater than the chunk real length.
 			 */
 			static HeartbeatAckChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -62,7 +59,7 @@ namespace RTC
 			 * Parse a HeartbeatAckChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static HeartbeatAckChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -90,7 +87,7 @@ namespace RTC
 				return false;
 			}
 
-		protected:
+		private:
 			HeartbeatAckChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

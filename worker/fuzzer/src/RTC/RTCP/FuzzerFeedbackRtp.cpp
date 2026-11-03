@@ -1,10 +1,10 @@
-#include "RTC/RTCP/FuzzerFeedbackRtp.hpp"
-#include "RTC/RTCP/FuzzerFeedbackRtpEcn.hpp"
-#include "RTC/RTCP/FuzzerFeedbackRtpNack.hpp"
-#include "RTC/RTCP/FuzzerFeedbackRtpSrReq.hpp"
-#include "RTC/RTCP/FuzzerFeedbackRtpTllei.hpp"
-#include "RTC/RTCP/FuzzerFeedbackRtpTmmb.hpp"
-#include "RTC/RTCP/FuzzerFeedbackRtpTransport.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackRtp.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpEcn.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpNack.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpSrReq.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTllei.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTmmb.hpp"
+#include "fuzzer/include/RTC/RTCP/FuzzerFeedbackRtpTransport.hpp"
 
 void FuzzerRtcRtcpFeedbackRtp::Fuzz(RTC::RTCP::Packet* packet)
 {

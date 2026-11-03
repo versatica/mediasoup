@@ -24,9 +24,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class InvalidStreamIdentifierErrorCause : public ErrorCause
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -40,7 +37,7 @@ namespace RTC
 			 * Parse a InvalidStreamIdentifierErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the error cause.
+			 * - `bufferLength` may exceed the exact length of the error cause.
 			 */
 			static InvalidStreamIdentifierErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -48,7 +45,7 @@ namespace RTC
 			 * Create a InvalidStreamIdentifierErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the error cause real length.
+			 * - `bufferLength` could be greater than the error cause real length.
 			 */
 			static InvalidStreamIdentifierErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -57,7 +54,7 @@ namespace RTC
 			 * Parse a InvalidStreamIdentifierErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 * - To be used only by `Chunk::ParseErrorCauses()`.
 			 */
 			static InvalidStreamIdentifierErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
@@ -82,7 +79,7 @@ namespace RTC
 
 			void SetStreamIdentifier(uint16_t value);
 
-		protected:
+		private:
 			InvalidStreamIdentifierErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**
@@ -97,7 +94,6 @@ namespace RTC
 
 			virtual const std::string ContentToString() const override final;
 
-		private:
 			void SetReserved();
 		};
 	} // namespace SCTP

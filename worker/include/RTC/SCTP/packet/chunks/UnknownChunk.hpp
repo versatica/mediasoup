@@ -22,9 +22,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Packet;
-
 		class UnknownChunk : public Chunk
 		{
 			// We need that packet calls protected and private methods in this class.
@@ -35,7 +32,7 @@ namespace RTC
 			 * Parse a UnknownChunk.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the chunk.
+			 * - `bufferLength` may exceed the exact length of the chunk.
 			 */
 			static UnknownChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -44,7 +41,7 @@ namespace RTC
 			 * Parse a UnknownChunk.
 			 *
 			 * @remarks
-			 * To be used only by `Packet::Parse()`.
+			 * - To be used only by `Packet::Parse()`.
 			 */
 			static UnknownChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -92,7 +89,7 @@ namespace RTC
 				return GetVariableLengthValueLength();
 			}
 
-		protected:
+		private:
 			UnknownChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP

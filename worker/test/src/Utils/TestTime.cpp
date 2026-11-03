@@ -63,6 +63,21 @@ SCENARIO("Utils::Time", "[utils][time]")
 		REQUIRE(Utils::Time::NtpToTimeUs(Utils::Time::TimeUsToNtp(1000500)) == 1000500);
 	}
 
+	SECTION("NtpToCompactNtp()")
+	{
+		// The middle 32 bits of the NTP timestamp.
+		REQUIRE(
+		  Utils::Time::NtpToCompactNtp(
+		    Utils::Time::Ntp{ .seconds = 0x12345678, .fractions = 0x9ABCDEF0 }) == 0x56789ABC);
+		REQUIRE(Utils::Time::NtpToCompactNtp(Utils::Time::Ntp{ .seconds = 0, .fractions = 0 }) == 0);
+		REQUIRE(
+		  Utils::Time::NtpToCompactNtp(
+		    Utils::Time::Ntp{ .seconds = 0xFFFFFFFF, .fractions = 0xFFFFFFFF }) == 0xFFFFFFFF);
+
+		// One second and a half in 1/65536 seconds units.
+		REQUIRE(Utils::Time::NtpToCompactNtp(Utils::Time::TimeUsToNtp(1500000)) == 0x18000);
+	}
+
 	// Middle 32 bits of the given NTP timestamp.
 	const auto toCompactNtp = [](uint32_t seconds, uint32_t fractions) -> uint32_t
 	{

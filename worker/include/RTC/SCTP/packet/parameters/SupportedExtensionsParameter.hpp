@@ -28,9 +28,6 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class SupportedExtensionsParameter : public Parameter
 		{
 			// We need that chunk calls protected and private methods in this class.
@@ -41,7 +38,7 @@ namespace RTC
 			 * Parse a SupportedExtensionsParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the parameter.
+			 * - `bufferLength` may exceed the exact length of the parameter.
 			 */
 			static SupportedExtensionsParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -49,7 +46,7 @@ namespace RTC
 			 * Create a SupportedExtensionsParameter.
 			 *
 			 * @remarks
-			 * `bufferLength` could be greater than the parameter real length.
+			 * - `bufferLength` could be greater than the parameter real length.
 			 */
 			static SupportedExtensionsParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
@@ -58,7 +55,7 @@ namespace RTC
 			 * Parse a SupportedExtensionsParameter.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * - To be used only by `Chunk::ParseParameters()`.
 			 */
 			static SupportedExtensionsParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
@@ -102,7 +99,7 @@ namespace RTC
 
 			void AddChunkType(Chunk::ChunkType chunkType);
 
-		protected:
+		private:
 			SupportedExtensionsParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
