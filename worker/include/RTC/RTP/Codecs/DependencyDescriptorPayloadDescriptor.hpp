@@ -105,7 +105,6 @@ namespace RTC
 				  uint16_t spatialLayer, uint16_t temporalLayer, RTP::Packet* packet);
 
 				// Fields in the Dependency Descriptor extension.
-				const bool startOfFrame;
 				const bool endOfFrame;
 				const uint16_t frameNumber;
 				const uint8_t spatialLayer;

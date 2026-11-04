@@ -36,8 +36,7 @@ namespace RTC
 
 			DependencyDescriptorPayloadDescriptor::DependencyDescriptorPayloadDescriptor(
 			  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor)
-			  : startOfFrame(dependencyDescriptor->startOfFrame),
-			    endOfFrame(dependencyDescriptor->endOfFrame),
+			  : endOfFrame(dependencyDescriptor->endOfFrame),
 			    frameNumber(dependencyDescriptor->frameNumber),
 			    spatialLayer(dependencyDescriptor->spatialLayer),
 			    temporalLayer(dependencyDescriptor->temporalLayer),
