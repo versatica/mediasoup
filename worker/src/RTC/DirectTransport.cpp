@@ -147,14 +147,14 @@ namespace RTC
 		}
 	}
 
-	inline bool DirectTransport::IsConnected() const
+	bool DirectTransport::IsConnected() const
 	{
 		MS_TRACE();
 
 		return true;
 	}
 
-	inline size_t DirectTransport::GetPacketOverhead() const
+	size_t DirectTransport::GetPacketOverhead() const
 	{
 		MS_TRACE();
 

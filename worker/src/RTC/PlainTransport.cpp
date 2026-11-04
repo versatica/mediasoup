@@ -260,7 +260,7 @@ namespace RTC
 			  /*channelRequestHandler*/ this,
 			  /*channelNotificationHandler*/ this);
 		}
-		catch (const MediaSoupError& error)
+		catch (const MediaSoupError&)
 		{
 			this->udpSocket.reset();
 
@@ -722,7 +722,7 @@ namespace RTC
 						}
 					}
 				}
-				catch (const MediaSoupError& error)
+				catch (const MediaSoupError&)
 				{
 					this->tuple.reset();
 
@@ -788,28 +788,28 @@ namespace RTC
 		RTC::Transport::HandleNotification(notification);
 	}
 
-	inline bool PlainTransport::IsConnected() const
+	bool PlainTransport::IsConnected() const
 	{
 		MS_TRACE();
 
 		return this->tuple ? true : false;
 	}
 
-	inline size_t PlainTransport::GetPacketOverhead() const
+	size_t PlainTransport::GetPacketOverhead() const
 	{
 		MS_TRACE();
 
 		return this->tuple ? this->tuple->GetPacketOverhead() : 0;
 	}
 
-	inline bool PlainTransport::HasSrtp() const
+	bool PlainTransport::HasSrtp() const
 	{
 		MS_TRACE();
 
 		return !this->srtpKey.empty();
 	}
 
-	inline bool PlainTransport::IsSrtpReady() const
+	bool PlainTransport::IsSrtpReady() const
 	{
 		MS_TRACE();
 
@@ -959,7 +959,7 @@ namespace RTC
 		}
 	}
 
-	inline void PlainTransport::OnPacketReceived(
+	void PlainTransport::OnPacketReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -988,7 +988,7 @@ namespace RTC
 		}
 	}
 
-	inline void PlainTransport::OnRtpDataReceived(
+	void PlainTransport::OnRtpDataReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -1095,7 +1095,7 @@ namespace RTC
 		RTC::Transport::ReceiveRtpPacket(packet, receivedAtUs);
 	}
 
-	inline void PlainTransport::OnRtcpDataReceived(
+	void PlainTransport::OnRtcpDataReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -1204,7 +1204,7 @@ namespace RTC
 		RTC::Transport::ReceiveRtcpPacket(packet, receivedAtUs);
 	}
 
-	inline void PlainTransport::OnSctpDataReceived(
+	void PlainTransport::OnSctpDataReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -1252,7 +1252,7 @@ namespace RTC
 		RTC::Transport::ReceiveSctpData(data, len, receivedAtUs);
 	}
 
-	inline void PlainTransport::EmitTuple() const
+	void PlainTransport::EmitTuple() const
 	{
 		MS_TRACE();
 
@@ -1267,7 +1267,7 @@ namespace RTC
 		  notification);
 	}
 
-	inline void PlainTransport::EmitRtcpTuple() const
+	void PlainTransport::EmitRtcpTuple() const
 	{
 		MS_TRACE();
 
@@ -1283,7 +1283,7 @@ namespace RTC
 		  notification);
 	}
 
-	inline void PlainTransport::OnUdpSocketPacketReceived(
+	void PlainTransport::OnUdpSocketPacketReceived(
 	  RTC::UdpSocket* socket,
 	  const uint8_t* data,
 	  size_t len,

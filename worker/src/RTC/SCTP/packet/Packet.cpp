@@ -401,7 +401,7 @@ namespace RTC
 				clonedChunk =
 				  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, chunk->GetLength());
 			}
-			catch (const MediaSoupError& error)
+			catch (const MediaSoupError&)
 			{
 				// Rollback.
 				SetLength(previousLength);
@@ -476,7 +476,7 @@ namespace RTC
 
 					  SetNeedsConsolidation(false);
 				  }
-				  catch (const MediaSoupError& error)
+				  catch (const MediaSoupError&)
 				  {
 					  SetNeedsConsolidation(false);
 
