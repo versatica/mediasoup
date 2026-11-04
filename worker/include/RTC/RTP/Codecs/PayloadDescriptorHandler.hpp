@@ -47,22 +47,24 @@ namespace RTC
 
 				void Push(uint16_t frameId, int16_t layer)
 				{
-					for (const auto& it : this->layerChanges)
+					// NOTE: Walked by looking at the front rather than with an iterator,
+					// since popping it would invalidate the one the loop is holding.
+					while (!this->layerChanges.empty())
 					{
+						const auto front = this->layerChanges.front().first;
+
 						// Layers can be changed only with ordered frameId values.
 						// If frameId is lower than the previous one, then it has rolled over the max value.
-						uint16_t diff = frameId > it.first
-						                  ? frameId - it.first
-						                  : frameId + RTC::SeqManager<uint16_t, 15>::MaxValue - it.first;
+						const uint16_t diff = frameId > front
+						                        ? frameId - front
+						                        : frameId + RTC::SeqManager<uint16_t, 15>::MaxValue - front;
 
-						if (diff > MaxCurrentLayerFrameIdNum)
-						{
-							this->layerChanges.pop_front();
-						}
-						else
+						if (diff <= MaxCurrentLayerFrameIdNum)
 						{
 							break;
 						}
+
+						this->layerChanges.pop_front();
 					}
 
 					this->layerChanges.emplace_back(frameId, layer);
