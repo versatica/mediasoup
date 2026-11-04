@@ -2,6 +2,7 @@
 
 ### NEXT
 
+- Worker: Fix a crash when closing a WebRTC transport with an active TCP ICE connection.
 - Worker: Fix DTLS BIO callback return value ([PR #2025](https://github.com/versatica/mediasoup/pull/2025)).
 
 ### 0.33.1

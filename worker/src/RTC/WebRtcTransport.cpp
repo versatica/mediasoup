@@ -1158,9 +1158,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::TransportTuple tuple(connection);
+		// ICE destruction closes TCP connections after the owner has been reset.
+		if (this->iceServer)
+		{
+			RTC::TransportTuple tuple(connection);
 
-		this->iceServer->RemoveTuple(std::addressof(tuple));
+			this->iceServer->RemoveTuple(std::addressof(tuple));
+		}
 	}
 
 	inline void WebRtcTransport::OnTcpConnectionPacketReceived(
