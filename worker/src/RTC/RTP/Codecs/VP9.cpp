@@ -234,7 +234,7 @@ namespace RTC
 
 				const bool isOldPacket =
 				  (this->payloadDescriptor->hasPictureId &&
-					 RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+					 RTC::SeqManager<uint16_t, VP9::FrameIdLength>::IsSeqLowerThan(
 				     this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()));
 
 				if (!isOldPacket)

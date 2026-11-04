@@ -217,7 +217,8 @@ SCENARIO(
 	params.spatialLayers  = 3;
 	params.temporalLayers = 3;
 
-	RTC::RTP::Codecs::EncodingContext context(params);
+	RTC::RTP::Codecs::EncodingContext context(
+	  params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength);
 
 	auto process = [&](const uint8_t* data, size_t len)
 	{
@@ -636,7 +637,8 @@ SCENARIO(
 	params.spatialLayers  = 3;
 	params.temporalLayers = 3;
 
-	RTC::RTP::Codecs::EncodingContext context(params);
+	RTC::RTP::Codecs::EncodingContext context(
+	  params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength);
 
 	auto process = [&](const uint8_t* data, size_t len)
 	{
@@ -825,5 +827,53 @@ SCENARIO(
 		// fresh frame it is and the upgrade happens there.
 		REQUIRE(processDeltaFrame(FullSvcFrameS0T0Index).forwarded); // frame 13
 		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+	}
+}
+
+// Frame ids wrap where the descriptor that numbered the frames says, this is,
+// at the 16 bits of the Dependency Descriptor rather than at the fewer bits a
+// codec numbers its own pictures with. Both the layer changes recorded against
+// them and the comparison that tells reordered packets apart are made in that
+// very same space.
+SCENARIO("the Dependency Descriptor numbers frames with 16 bits", "[rtp][codecs][dependency-descriptor]")
+{
+	RTC::RTP::Codecs::EncodingContext::Params params;
+
+	params.spatialLayers              = 1;
+	params.temporalLayers             = 3;
+	params.preferDependencyDescriptor = true;
+
+	RTC::RTP::Codecs::EncodingContext context(
+	  params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength);
+
+	SECTION("the layer changes around the wrap are kept")
+	{
+		constexpr uint16_t Start{ 65530 };
+
+		context.SetCurrentTemporalLayer(0, Start);
+		context.SetCurrentTemporalLayer(1, Start + 1);
+		// Eleven frames later, already rolled over.
+		context.SetCurrentTemporalLayer(2, 5);
+
+		REQUIRE(context.GetTemporalLayerForFrameId(Start) == 0);
+		REQUIRE(context.GetTemporalLayerForFrameId(Start + 1) == 1);
+		REQUIRE(context.GetTemporalLayerForFrameId(5) == 2);
+	}
+
+	SECTION("a reordered frame around the wrap is told apart")
+	{
+		context.UpdateMaxFrameId(20000);
+
+		// 5 is 19995 frames behind the newest one seen, while 40000 is 20000
+		// frames ahead of it.
+		REQUIRE(context.IsOldFrameId(5));
+		REQUIRE(!context.IsOldFrameId(40000));
+
+		context.UpdateMaxFrameId(40000);
+		context.UpdateMaxFrameId(65530);
+
+		// 5 has rolled over the newest one seen, so it is newer rather than older.
+		REQUIRE(context.IsOldFrameId(65529));
+		REQUIRE(!context.IsOldFrameId(5));
 	}
 }

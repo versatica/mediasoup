@@ -87,7 +87,9 @@ namespace
 	class MockEncodingContext : public RTC::RTP::Codecs::EncodingContext
 	{
 	public:
-		MockEncodingContext() : RTC::RTP::Codecs::EncodingContext(MockEncodingContext::params)
+		MockEncodingContext()
+		  : RTC::RTP::Codecs::EncodingContext(
+		      MockEncodingContext::params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength)
 		{
 		}
 

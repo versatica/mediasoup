@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
-#include "RTC/SeqManager.hpp"
+#include "Utils.hpp"
 #include <deque>
 
 namespace RTC
@@ -38,7 +38,9 @@ namespace RTC
 				static constexpr uint16_t MaxCurrentLayerFrameIdNum{ 1000 };
 
 			public:
-				explicit FrameIdList() = default;
+				explicit FrameIdList(uint8_t frameIdLength) : frameIdLength(frameIdLength)
+				{
+				}
 
 				~FrameIdList()
 				{
@@ -55,9 +57,8 @@ namespace RTC
 
 						// Layers can be changed only with ordered frameId values.
 						// If frameId is lower than the previous one, then it has rolled over the max value.
-						const uint16_t diff = frameId > front
-						                        ? frameId - front
-						                        : frameId + RTC::SeqManager<uint16_t, 15>::MaxValue - front;
+						const uint16_t diff =
+						  frameId > front ? frameId - front : frameId + GetMaxFrameId() - front;
 
 						if (diff <= MaxCurrentLayerFrameIdNum)
 						{
@@ -79,7 +80,7 @@ namespace RTC
 
 					for (auto it = std::next(this->layerChanges.begin()); it != this->layerChanges.end(); ++it)
 					{
-						if (RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(it->first, frameId))
+						if (IsFrameIdHigherThan(it->first, frameId))
 						{
 							return std::prev(it)->second;
 						}
@@ -89,6 +90,22 @@ namespace RTC
 				}
 
 			private:
+				/**
+				 * Frame ids wrap at the highest value the codec numbers them with, so
+				 * both the distance and the comparison are made in that space.
+				 */
+				uint16_t GetMaxFrameId() const
+				{
+					return Utils::Number::maxValue<uint16_t>(this->frameIdLength);
+				}
+
+				bool IsFrameIdHigherThan(uint16_t lhs, uint16_t rhs) const
+				{
+					return Utils::Number::IsHigherThan<uint16_t>(lhs, rhs, GetMaxFrameId());
+				}
+
+			private:
+				const uint8_t frameIdLength;
 				/**
 				 * List populated with the spatial/temporal layer changes
 				 * indexed by the corresponding frameId.
@@ -120,7 +137,19 @@ namespace RTC
 				};
 
 			public:
-				explicit EncodingContext(Codecs::EncodingContext::Params& params) : params(params)
+				/**
+				 * @param frameIdLength - Bits the codec numbers its frame ids with,
+				 *   which tells where they wrap. Overridden by the Dependency Descriptor
+				 *   one when the Consumer negotiated it, since its handler takes
+				 *   over and numbers every frame itself.
+				 */
+				explicit EncodingContext(Codecs::EncodingContext::Params& params, uint8_t frameIdLength)
+				  : params(params),
+				    frameIdLength(
+				      params.preferDependencyDescriptor ? DependencyDescriptor::FrameIdLength
+							                                  : frameIdLength),
+				    spatialLayerFrameIdList(this->frameIdLength),
+				    temporalLayerFrameIdList(this->frameIdLength)
 				{
 				}
 				virtual ~EncodingContext() = default;
@@ -273,16 +302,31 @@ namespace RTC
 				bool IsOldFrameId(uint16_t frameId) const
 				{
 					return this->maxFrameId.has_value() &&
-					       RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(frameId, this->maxFrameId.value());
+					       IsFrameIdLowerThan(frameId, this->maxFrameId.value());
 				}
 				void UpdateMaxFrameId(uint16_t frameId)
 				{
-					if (
-					  !this->maxFrameId.has_value() ||
-					  RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(frameId, this->maxFrameId.value()))
+					if (!this->maxFrameId.has_value() || IsFrameIdHigherThan(frameId, this->maxFrameId.value()))
 					{
 						this->maxFrameId = frameId;
 					}
+				}
+
+			private:
+				/**
+				 * Frame ids wrap at the highest value the codec numbers them with, so
+				 * they are compared in that space.
+				 */
+				bool IsFrameIdHigherThan(uint16_t lhs, uint16_t rhs) const
+				{
+					return Utils::Number::IsHigherThan<uint16_t>(
+					  lhs, rhs, Utils::Number::maxValue<uint16_t>(this->frameIdLength));
+				}
+
+				bool IsFrameIdLowerThan(uint16_t lhs, uint16_t rhs) const
+				{
+					return Utils::Number::IsLowerThan<uint16_t>(
+					  lhs, rhs, Utils::Number::maxValue<uint16_t>(this->frameIdLength));
 				}
 
 			public:
@@ -303,6 +347,7 @@ namespace RTC
 
 			private:
 				const Params params;
+				const uint8_t frameIdLength;
 				RTC::ConsumerTypes::VideoLayers targetLayers;
 				RTC::ConsumerTypes::VideoLayers currentLayers;
 				bool ignoreDtx{ false };

@@ -13,6 +13,13 @@ namespace RTC
 		{
 			class Opus
 			{
+			private:
+				/**
+				 * Bits Opus numbers its frames with. Audio numbers no frames at all,
+				 * so it narrows the frame id space to nothing of its own.
+				 */
+				static constexpr uint8_t FrameIdLength{ 0 };
+
 			public:
 				struct PayloadDescriptor : public Codecs::PayloadDescriptor
 				{
@@ -37,7 +44,7 @@ namespace RTC
 				{
 				public:
 					explicit EncodingContext(Codecs::EncodingContext::Params& params)
-					  : Codecs::EncodingContext(params)
+					  : Codecs::EncodingContext(params, Opus::FrameIdLength)
 					{
 					}
 					~EncodingContext() override = default;

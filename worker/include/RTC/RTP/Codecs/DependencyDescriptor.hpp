@@ -16,6 +16,12 @@ namespace RTC
 			struct DependencyDescriptor
 			{
 			public:
+				/**
+				 * Bits the Dependency Descriptor numbers frames with.
+				 */
+				static constexpr uint8_t FrameIdLength{ 16 };
+
+			public:
 				enum class DecodeTargetIndication : uint8_t
 				{
 					NOT_PRESENT = 0,

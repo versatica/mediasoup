@@ -5,6 +5,35 @@
 
 SCENARIO("Utils::Number", "[utils][number]")
 {
+	SECTION("MaxValue()")
+	{
+		// A length of 0 means every bit of T.
+		REQUIRE(Utils::Number::maxValue<uint8_t>(0) == std::numeric_limits<uint8_t>::max());
+		REQUIRE(Utils::Number::maxValue<uint16_t>(0) == std::numeric_limits<uint16_t>::max());
+		REQUIRE(Utils::Number::maxValue<uint32_t>(0) == std::numeric_limits<uint32_t>::max());
+		REQUIRE(Utils::Number::maxValue<uint64_t>(0) == std::numeric_limits<uint64_t>::max());
+
+		// A length as wide as T also means every bit of it.
+		REQUIRE(Utils::Number::maxValue<uint8_t>(8) == std::numeric_limits<uint8_t>::max());
+		REQUIRE(Utils::Number::maxValue<uint16_t>(16) == std::numeric_limits<uint16_t>::max());
+		REQUIRE(Utils::Number::maxValue<uint32_t>(32) == std::numeric_limits<uint32_t>::max());
+		REQUIRE(Utils::Number::maxValue<uint64_t>(64) == std::numeric_limits<uint64_t>::max());
+
+		// So does a length wider than T, which no value of it could ever take.
+		REQUIRE(Utils::Number::maxValue<uint8_t>(9) == std::numeric_limits<uint8_t>::max());
+		REQUIRE(Utils::Number::maxValue<uint16_t>(17) == std::numeric_limits<uint16_t>::max());
+		REQUIRE(Utils::Number::maxValue<uint32_t>(33) == std::numeric_limits<uint32_t>::max());
+		REQUIRE(Utils::Number::maxValue<uint64_t>(65) == std::numeric_limits<uint64_t>::max());
+
+		// The widest value of T still fits one bit below its own width.
+		REQUIRE(Utils::Number::maxValue<uint32_t>(31) == 2147483647);
+		REQUIRE(Utils::Number::maxValue<uint64_t>(63) == 9223372036854775807);
+
+		REQUIRE(Utils::Number::maxValue<uint16_t>(14) == 16383);
+		REQUIRE(Utils::Number::maxValue<uint16_t>(15) == 32767);
+		REQUIRE(Utils::Number::maxValue<uint32_t>(15) == 32767);
+	}
+
 	SECTION("IsEqualThan()")
 	{
 		// 0 is not equal than 16.
@@ -56,6 +85,32 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number::IsHigherThan<uint64_t, 6>(0, 64) == false);
 	}
 
+	SECTION("IsHigherThan() with max value")
+	{
+		// Same as giving the bits it takes.
+		REQUIRE(
+		  Utils::Number::IsHigherThan<uint16_t>(0, 14, Utils::Number::maxValue<uint16_t>(4)) == true);
+		REQUIRE(
+		  Utils::Number::IsHigherThan<uint16_t>(0, 64, Utils::Number::maxValue<uint16_t>(6)) == false);
+
+		// Using 16 bits, 5 is higher than 65530 since the latter has rolled over.
+		REQUIRE(
+		  Utils::Number::IsHigherThan<uint16_t>(5, 65530, Utils::Number::maxValue<uint16_t>(16)) == true);
+
+		// 20000 is higher than 5 using 16 bits, but not using 15, where it is far
+		// enough to be taken as rolled over instead.
+		REQUIRE(
+		  Utils::Number::IsHigherThan<uint16_t>(20000, 5, Utils::Number::maxValue<uint16_t>(16)) == true);
+		REQUIRE(
+		  Utils::Number::IsHigherThan<uint16_t>(20000, 5, Utils::Number::maxValue<uint16_t>(15)) == false);
+
+		// Any other length is honored the very same way, 14 bits here.
+		REQUIRE(
+		  Utils::Number::IsHigherThan<uint16_t>(10000, 5, Utils::Number::maxValue<uint16_t>(15)) == true);
+		REQUIRE(
+		  Utils::Number::IsHigherThan<uint16_t>(10000, 5, Utils::Number::maxValue<uint16_t>(14)) == false);
+	}
+
 	SECTION("IsLowerThan()")
 	{
 		// 1 is lower than 2.
@@ -93,6 +148,29 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number::IsLowerThan<uint16_t, 2>(3, 1) == true);
 		REQUIRE(Utils::Number::IsLowerThan<uint32_t, 2>(3, 1) == true);
 		REQUIRE(Utils::Number::IsLowerThan<uint64_t, 2>(3, 1) == true);
+	}
+
+	SECTION("IsLowerThan() with max value")
+	{
+		// Same as giving the bits it takes.
+		REQUIRE(Utils::Number::IsLowerThan<uint16_t>(15, 2, Utils::Number::maxValue<uint16_t>(3)) == true);
+
+		// Using 16 bits, 65530 is lower than 5 since the latter has rolled over.
+		REQUIRE(
+		  Utils::Number::IsLowerThan<uint16_t>(65530, 5, Utils::Number::maxValue<uint16_t>(16)) == true);
+
+		// 5 is lower than 20000 using 16 bits, but not using 15, where the latter
+		// is far enough to be taken as rolled over instead.
+		REQUIRE(
+		  Utils::Number::IsLowerThan<uint16_t>(5, 20000, Utils::Number::maxValue<uint16_t>(16)) == true);
+		REQUIRE(
+		  Utils::Number::IsLowerThan<uint16_t>(5, 20000, Utils::Number::maxValue<uint16_t>(15)) == false);
+
+		// Any other length is honored the very same way, 14 bits here.
+		REQUIRE(
+		  Utils::Number::IsLowerThan<uint16_t>(5, 10000, Utils::Number::maxValue<uint16_t>(15)) == true);
+		REQUIRE(
+		  Utils::Number::IsLowerThan<uint16_t>(5, 10000, Utils::Number::maxValue<uint16_t>(14)) == false);
 	}
 
 	SECTION("IsHigherOrEqualThan()")

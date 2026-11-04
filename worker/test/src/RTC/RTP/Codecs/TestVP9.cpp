@@ -158,6 +158,48 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		REQUIRE(context.GetTemporalLayerForFrameId(start + 0) == 1); // It will get the item at start+1000.
 	}
 
+	// VP9 numbers its pictures with 15 bits, so that is where the frame ids of a
+	// Consumer served by the VP9 payload descriptor wrap. A Consumer given the
+	// Dependency Descriptor is served by its handler instead, which numbers every
+	// frame itself with 16 bits.
+	SECTION("frame ids wrap where the descriptor that numbered them says")
+	{
+		RTC::RTP::Codecs::EncodingContext::Params params;
+
+		params.spatialLayers  = 1;
+		params.temporalLayers = 3;
+
+		// Records a temporal layer change right before the 15 bits wrap and
+		// another one eleven frames past it.
+		auto pushLayerChangesAroundWrap = [](RTC::RTP::Codecs::EncodingContext& context) -> void
+		{
+			context.SetCurrentTemporalLayer(0, MaxPictureId - 5);
+			context.SetCurrentTemporalLayer(1, 5);
+		};
+
+		{
+			RTC::RTP::Codecs::VP9::EncodingContext context(params);
+
+			pushLayerChangesAroundWrap(context);
+
+			// Eleven frames apart, so both changes are recent and the first one is
+			// kept.
+			REQUIRE(context.GetTemporalLayerForFrameId(MaxPictureId - 5) == 0);
+		}
+
+		{
+			params.preferDependencyDescriptor = true;
+
+			RTC::RTP::Codecs::VP9::EncodingContext context(params);
+
+			pushLayerChangesAroundWrap(context);
+
+			// 32757 frames apart in a 16 bits space, so the first change is too old
+			// to be kept and the current layer is told instead.
+			REQUIRE(context.GetTemporalLayerForFrameId(MaxPictureId - 5) == 1);
+		}
+	}
+
 	// The Dependency Descriptor only reaches a Consumer that negotiated the
 	// extension, so it is the one that serves it. The rest cannot be told the
 	// layers any other way than by the payload descriptor of the codec, and

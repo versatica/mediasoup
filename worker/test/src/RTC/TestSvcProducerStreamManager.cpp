@@ -83,7 +83,8 @@ namespace
 	public:
 		explicit MockEncodingContext(uint8_t spatialLayers = 3, uint8_t temporalLayers = 3, bool ksvc = false)
 		  : RTC::RTP::Codecs::EncodingContext(
-		      MockEncodingContext::BuildParams(spatialLayers, temporalLayers, ksvc))
+		      MockEncodingContext::BuildParams(spatialLayers, temporalLayers, ksvc),
+		      RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength)
 		{
 		}
 

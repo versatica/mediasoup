@@ -14,6 +14,13 @@ namespace RTC
 		{
 			class AV1
 			{
+			private:
+				/**
+				 * Bits AV1 numbers its frames with. It does not number them itself, so
+				 * they are the ones the Dependency Descriptor gives.
+				 */
+				static constexpr uint8_t FrameIdLength{ DependencyDescriptor::FrameIdLength };
+
 			public:
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
@@ -25,7 +32,7 @@ namespace RTC
 				{
 				public:
 					explicit EncodingContext(Codecs::EncodingContext::Params& params)
-					  : Codecs::EncodingContext(params)
+					  : Codecs::EncodingContext(params, AV1::FrameIdLength)
 					{
 					}
 					~EncodingContext() override = default;

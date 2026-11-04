@@ -295,7 +295,7 @@ namespace RTC
 				if (
 				  this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTlIndex &&
 				  this->payloadDescriptor->hasTl0PictureIndex &&
-				  !RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+				  !RTC::SeqManager<uint16_t, VP8::FrameIdLength>::IsSeqLowerThan(
 				    this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()))
 				{
 					// Drop if:

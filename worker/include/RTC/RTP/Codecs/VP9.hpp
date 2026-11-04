@@ -56,6 +56,12 @@ namespace RTC
 		{
 			class VP9
 			{
+			private:
+				/**
+				 * Bits VP9 numbers its pictures with, which tells where they wrap.
+				 */
+				static constexpr uint8_t FrameIdLength{ 15 };
+
 			public:
 				struct PayloadDescriptor : public Codecs::PayloadDescriptor
 				{
@@ -101,13 +107,13 @@ namespace RTC
 				{
 				public:
 					explicit EncodingContext(Codecs::EncodingContext::Params& params)
-					  : Codecs::EncodingContext(params)
+					  : Codecs::EncodingContext(params, VP9::FrameIdLength)
 					{
 					}
 					~EncodingContext() override = default;
 
 				public:
-					RTC::SeqManager<uint16_t, 15> pictureIdManager;
+					RTC::SeqManager<uint16_t, VP9::FrameIdLength> pictureIdManager;
 				};
 
 				class PayloadDescriptorHandler : public Codecs::PayloadDescriptorHandler

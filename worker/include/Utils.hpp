@@ -308,6 +308,63 @@ namespace Utils
 	class Number
 	{
 	public:
+		/**
+		 * Highest value that fits in `length` bits of T, or in every bit of T
+		 * when `length` is 0 or wider than T itself.
+		 */
+		template<typename T>
+		static constexpr T maxValue(uint8_t length)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			// NOTE: Lengths that take every bit of T are told apart rather than
+			// shifted, since shifting T by its own width is undefined.
+			return length == 0 || length >= std::numeric_limits<T>::digits
+			         ? std::numeric_limits<T>::max()
+							 : static_cast<T>((T{ 1 } << length) - 1);
+		}
+
+		/**
+		 * Whether lhs is higher than rhs in a space wrapping at maxValue, for
+		 * callers that only know where it wraps at runtime.
+		 */
+		template<typename T>
+		static bool IsHigherThan(T lhs, T rhs, T maxValue)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			lhs &= maxValue;
+			rhs &= maxValue;
+
+			return ((lhs > rhs) && (lhs - rhs <= maxValue / 2)) ||
+			       ((rhs > lhs) && (rhs - lhs > maxValue / 2));
+		}
+
+		/**
+		 * Whether lhs is lower than rhs in a space wrapping at maxValue, for
+		 * callers that only know where it wraps at runtime.
+		 */
+		template<typename T>
+		static bool IsLowerThan(T lhs, T rhs, T maxValue)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			lhs &= maxValue;
+			rhs &= maxValue;
+
+			return ((rhs > lhs) && (rhs - lhs <= maxValue / 2)) ||
+			       ((lhs > rhs) && (lhs - rhs > maxValue / 2));
+		}
+
 		// T is the base type (uint16_t, uint32_t, ...).
 		// N is the max number of bits used in T.
 		template<typename T, uint8_t N = 0>
@@ -318,7 +375,7 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
+			constexpr T MaxValue = maxValue<T>(N);
 
 			lhs &= MaxValue;
 			rhs &= MaxValue;
@@ -336,13 +393,7 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
-
-			lhs &= MaxValue;
-			rhs &= MaxValue;
-
-			return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
-			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
+			return IsHigherThan<T>(lhs, rhs, maxValue<T>(N));
 		}
 
 		// T is the base type (uint16_t, uint32_t, ...).
@@ -355,13 +406,7 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
-
-			lhs &= MaxValue;
-			rhs &= MaxValue;
-
-			return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
-			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
+			return IsLowerThan<T>(lhs, rhs, maxValue<T>(N));
 		}
 
 		// T is the base type (uint16_t, uint32_t, ...).
@@ -374,7 +419,7 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
+			constexpr T MaxValue = maxValue<T>(N);
 
 			lhs &= MaxValue;
 			rhs &= MaxValue;
@@ -393,7 +438,7 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
+			constexpr T MaxValue = maxValue<T>(N);
 
 			lhs &= MaxValue;
 			rhs &= MaxValue;
