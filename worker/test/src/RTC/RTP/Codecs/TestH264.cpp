@@ -155,6 +155,97 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		REQUIRE(forwarded->activeDecodeTargetsBitmask == 0b01);
 	}
 
+	// Nothing but the Dependency Descriptor tells the temporal layer of an H264
+	// packet, so a Consumer that did not negotiate the extension, and is hence
+	// served by the payload descriptor of the codec, must be filtered with the
+	// layer the descriptor carries all the same.
+	SECTION("a Consumer that did not negotiate the Dependency Descriptor still filters layers")
+	{
+		// Key frame carrying the template dependency structure of an L1T2 stream.
+		// clang-format off
+		uint8_t keyFrameDescriptor[] =
+		{
+			0x80, 0x00, 0xE8, 0x80,
+			0x01, 0x1E, 0xA8, 0x51,
+			0x41, 0x01, 0x0C, 0x13,
+			0xFC, 0x0B, 0x3C,
+		};
+
+		// Mandatory fields only, of the lowest temporal layer.
+		uint8_t lowerFrameDescriptor[] =
+		{
+			0x00, 0x00, 0xE8,
+		};
+
+		// The same of the upper temporal layer.
+		uint8_t upperFrameDescriptor[] =
+		{
+			0x02, 0x00, 0xE9,
+		};
+		// clang-format on
+
+		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+		  templateDependencyStructure;
+
+		const std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> keyFrame{
+			RTC::RTP::Codecs::DependencyDescriptor::Parse(
+			  keyFrameDescriptor, sizeof(keyFrameDescriptor), templateDependencyStructure)
+		};
+
+		REQUIRE(keyFrame);
+
+		// The frames this test needs, one per temporal layer.
+		const std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> lowerFrame{
+			RTC::RTP::Codecs::DependencyDescriptor::Parse(
+			  lowerFrameDescriptor, sizeof(lowerFrameDescriptor), templateDependencyStructure)
+		};
+
+		REQUIRE(lowerFrame);
+		REQUIRE(lowerFrame->temporalLayer == 0);
+
+		const std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> upperFrame{
+			RTC::RTP::Codecs::DependencyDescriptor::Parse(
+			  upperFrameDescriptor, sizeof(upperFrameDescriptor), templateDependencyStructure)
+		};
+
+		REQUIRE(upperFrame);
+
+		REQUIRE(upperFrame->temporalLayer == 1);
+
+		// A Consumer that did not negotiate the extension and only wants the
+		// lowest temporal layer.
+		RTC::RTP::Codecs::EncodingContext::Params params;
+
+		params.spatialLayers              = 1;
+		params.temporalLayers             = 2;
+		params.preferDependencyDescriptor = false;
+
+		RTC::RTP::Codecs::H264::EncodingContext context(params);
+
+		context.SetCurrentSpatialLayer(0);
+		context.SetCurrentTemporalLayer(0);
+		context.SetTargetSpatialLayer(0);
+		context.SetTargetTemporalLayer(0);
+
+		bool marker{ false };
+
+		// The frame of the lowest temporal layer is forwarded.
+		const auto lowerPacket =
+		  createPacket(lowerFrameDescriptor, sizeof(lowerFrameDescriptor), /*reservedLen*/ 4);
+
+		RTC::RTP::Codecs::H264::ProcessRtpPacket(lowerPacket.get(), templateDependencyStructure);
+
+		REQUIRE(lowerPacket->ProcessPayload(std::addressof(context), marker));
+
+		// The one above it is not, which only the Dependency Descriptor tells.
+		const auto upperPacket =
+		  createPacket(upperFrameDescriptor, sizeof(upperFrameDescriptor), /*reservedLen*/ 4);
+
+		RTC::RTP::Codecs::H264::ProcessRtpPacket(upperPacket.get(), templateDependencyStructure);
+
+		REQUIRE(!upperPacket->ProcessPayload(std::addressof(context), marker));
+	}
+
 	// A simulcast Consumer is given one of several streams, so its spatial layer
 	// is chosen by the ProducerStreamManager when it picks the stream and the
 	// target spatial layer of its encoding context is never set.

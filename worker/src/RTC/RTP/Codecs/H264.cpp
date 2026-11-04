@@ -117,8 +117,15 @@ namespace RTC
 				auto* const dependencyDescriptorPayloadDescriptor =
 				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
 
+				// NOTE: The temporal layer is taken from the Dependency Descriptor, since
+				// H264 packets do not tell it and those Consumers must filter layers all
+				// the same.
+				uint8_t temporalLayer{ 0 };
+
 				if (dependencyDescriptorPayloadDescriptor)
 				{
+					temporalLayer = dependencyDescriptorPayloadDescriptor->temporalLayer;
+
 					packet->SetDependencyDescriptorPayloadDescriptorHandler(
 					  new DependencyDescriptorPayloadDescriptorHandler(dependencyDescriptorPayloadDescriptor));
 				}
@@ -133,6 +140,8 @@ namespace RTC
 					return;
 				}
 
+				payloadDescriptor->temporalLayer = temporalLayer;
+
 				auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
 				packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
@@ -145,6 +154,7 @@ namespace RTC
 				MS_TRACE();
 
 				MS_DUMP_CLEAN(indentation, "<H264::PayloadDescriptor>");
+				MS_DUMP_CLEAN(indentation, "  temporalLayer: %" PRIu8, this->temporalLayer);
 				MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
 				MS_DUMP_CLEAN(indentation, "</H264::PayloadDescriptor>");
 			}
@@ -165,18 +175,19 @@ namespace RTC
 
 				MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
+				// Filter temporal layers higher than the target one.
+				if (this->payloadDescriptor->temporalLayer > context->GetTargetTemporalLayer())
+				{
+					return false;
+				}
+
 				// H264 always has a single spatial layer (0).
 				context->SetCurrentSpatialLayer(0);
 
-				// The temporal layer is not parsed out of H264 packets, so they all are
-				// taken for the lowest one and none is ever filtered out.
-				//
-				// NOTE: The NAL unit header extensions that carry it in H264 SVC are not
-				// read. The Dependency Descriptor does tell it, and when the packet
-				// carries one its payload descriptor handler takes over this one.
-				if (context->GetCurrentTemporalLayer() < 0)
+				// Update/fix current temporal layer.
+				if (this->payloadDescriptor->temporalLayer > context->GetCurrentTemporalLayer())
 				{
-					context->SetCurrentTemporalLayer(0);
+					context->SetCurrentTemporalLayer(this->payloadDescriptor->temporalLayer);
 				}
 
 				if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())

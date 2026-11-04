@@ -22,6 +22,12 @@ namespace RTC
 					void Dump(int indentation = 0) const override;
 
 					// Parsed values.
+					/**
+					 * Told by the Dependency Descriptor of the packet, since H264 packets
+					 * do not carry it themselves. Left at 0 when there is none, so that
+					 * nothing is filtered out.
+					 */
+					uint8_t temporalLayer{ 0 };
 					bool isKeyFrame{ false };
 				};
 
@@ -70,10 +76,7 @@ namespace RTC
 					}
 					uint8_t GetTemporalLayer() const override
 					{
-						// The temporal layer is not parsed out of H264 packets, and a packet
-						// carrying a Dependency Descriptor, which does tell it, is given its
-						// payload descriptor handler instead of this one.
-						return 0;
+						return this->payloadDescriptor->temporalLayer;
 					}
 					bool IsKeyFrame() const override
 					{
