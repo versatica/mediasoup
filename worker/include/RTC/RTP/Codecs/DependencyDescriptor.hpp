@@ -220,7 +220,7 @@ namespace RTC
 				bool ReadFrameDiffs();
 				bool ReadFrameDiffChains();
 				void ComputeDecodeTargetLayers() const;
-				uint32_t GetRewrittenBits() const;
+				uint32_t GetRewrittenBitCount() const;
 
 			private:
 				Utils::BitReader bitReader;

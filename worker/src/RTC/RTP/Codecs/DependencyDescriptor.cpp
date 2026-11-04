@@ -338,14 +338,14 @@ namespace RTC
 				}
 
 				// Render width and height, 16 bits each, of every spatial layer.
-				const uint32_t bits = (this->templateDependencyStructure->spatialLayers + 1) * 32;
+				const uint32_t count = (this->templateDependencyStructure->spatialLayers + 1) * 32;
 
-				if (this->bitReader.GetLeftBits() < bits)
+				if (this->bitReader.GetLeftBits() < count)
 				{
 					return false;
 				}
 
-				this->bitReader.SkipBits(bits);
+				this->bitReader.SkipBits(count);
 
 				return true;
 			}
@@ -587,14 +587,14 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				const uint32_t bits = this->templateDependencyStructure->decodeTargetCount * 2;
+				const uint32_t count = this->templateDependencyStructure->decodeTargetCount * 2;
 
-				if (this->bitReader.GetLeftBits() < bits)
+				if (this->bitReader.GetLeftBits() < count)
 				{
 					return false;
 				}
 
-				this->bitReader.SkipBits(bits);
+				this->bitReader.SkipBits(count);
 
 				return true;
 			}
@@ -630,83 +630,83 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				const uint32_t bits = this->templateDependencyStructure->chainCount * 8;
+				const uint32_t count = this->templateDependencyStructure->chainCount * 8;
 
-				if (this->bitReader.GetLeftBits() < bits)
+				if (this->bitReader.GetLeftBits() < count)
 				{
 					return false;
 				}
 
-				this->bitReader.SkipBits(bits);
+				this->bitReader.SkipBits(count);
 
 				return true;
 			}
 
-			uint32_t DependencyDescriptor::GetRewrittenBits() const
+			uint32_t DependencyDescriptor::GetRewrittenBitCount() const
 			{
 				MS_TRACE();
 
 				// Mandatory descriptor fields.
-				uint32_t bits{ 24 };
+				uint32_t count{ 24 };
 
 				// Extended descriptor field flags.
-				bits += 5;
+				count += 5;
 
 				if (this->isKeyFrame)
 				{
-					bits += this->templateDependencyStructureEndOffset - TemplateDependencyStructureOffset;
+					count += this->templateDependencyStructureEndOffset - TemplateDependencyStructureOffset;
 				}
 
 				// Active decode targets bitmask, which we always write.
-				bits += this->templateDependencyStructure->decodeTargetCount;
+				count += this->templateDependencyStructure->decodeTargetCount;
 
 				// Custom frame dependency fields.
-				bits += this->frameDependencyDefinitionEndOffset - this->frameDependencyDefinitionOffset;
+				count += this->frameDependencyDefinitionEndOffset - this->frameDependencyDefinitionOffset;
 
-				return bits;
+				return count;
 			}
 
 			uint8_t DependencyDescriptor::GetMaxLength() const
 			{
 				MS_TRACE();
 
-				const auto bits = GetRewrittenBits();
+				const auto count = GetRewrittenBitCount();
 
 				// The rewritten descriptor would not fit in the RTP header extension, so
 				// `Write()` will refuse to produce it and the descriptor will be forwarded
 				// just as it was received, telling the endpoint that decode targets being
 				// filtered out are active.
-				if (bits > Consts::TwoBytesRtpExtensionMaxLength * 8)
+				if (count > Consts::TwoBytesRtpExtensionMaxLength * 8)
 				{
 					MS_WARN_TAG(
 					  codec,
-					  "rewritten descriptor does not fit so it will be forwarded as received [bits:%" PRIu32
+					  "rewritten descriptor does not fit so it will be forwarded as received [count:%" PRIu32
 					  "]",
-					  bits);
+					  count);
 
 					return this->length;
 				}
 
 				// NOTE: The descriptor is bit packed and zero padded up to the next byte
 				// boundary, hence the rounding up.
-				return static_cast<uint8_t>((bits + 7) / 8);
+				return static_cast<uint8_t>((count + 7) / 8);
 			}
 
 			uint8_t DependencyDescriptor::Write(uint32_t activeDecodeTargetsBitmask, uint8_t* buffer) const
 			{
 				MS_TRACE();
 
-				const auto* data    = this->bitReader.GetData();
-				const uint32_t bits = GetRewrittenBits();
+				const auto* data     = this->bitReader.GetData();
+				const uint32_t count = GetRewrittenBitCount();
 
-				if (bits > Consts::TwoBytesRtpExtensionMaxLength * 8)
+				if (count > Consts::TwoBytesRtpExtensionMaxLength * 8)
 				{
-					MS_WARN_DEV("rewritten descriptor does not fit [bits:%" PRIu32 "]", bits);
+					MS_WARN_DEV("rewritten descriptor does not fit [count:%" PRIu32 "]", count);
 
 					return 0;
 				}
 
-				const auto len = static_cast<uint8_t>((bits + 7) / 8);
+				const auto len = static_cast<uint8_t>((count + 7) / 8);
 
 				std::memset(buffer, 0, len);
 
@@ -742,7 +742,7 @@ namespace RTC
 				  this->frameDependencyDefinitionOffset,
 				  this->frameDependencyDefinitionEndOffset);
 
-				MS_ASSERT(writer.GetOffset() == bits, "wrong number of written bits");
+				MS_ASSERT(writer.GetOffset() == count, "wrong number of written bits");
 
 				return len;
 			}
