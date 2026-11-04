@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.32.2
+
 - Worker: Fix DTLS BIO callback return value ([PR #2025](https://github.com/versatica/mediasoup/pull/2025)).
 - Worker: Fix crash when destroying standalone `WebRtcTransport` using TCP ([PR #2038](https://github.com/versatica/mediasoup/pull/2038), credits to @blackwithwhite666).
 
