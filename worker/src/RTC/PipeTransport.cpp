@@ -483,21 +483,21 @@ namespace RTC
 		RTC::Transport::HandleNotification(notification);
 	}
 
-	inline bool PipeTransport::IsConnected() const
+	bool PipeTransport::IsConnected() const
 	{
 		MS_TRACE();
 
 		return this->tuple ? true : false;
 	}
 
-	inline size_t PipeTransport::GetPacketOverhead() const
+	size_t PipeTransport::GetPacketOverhead() const
 	{
 		MS_TRACE();
 
 		return this->tuple ? this->tuple->GetPacketOverhead() : 0;
 	}
 
-	inline bool PipeTransport::HasSrtp() const
+	bool PipeTransport::HasSrtp() const
 	{
 		MS_TRACE();
 
@@ -631,7 +631,7 @@ namespace RTC
 		}
 	}
 
-	inline void PipeTransport::OnPacketReceived(
+	void PipeTransport::OnPacketReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -660,7 +660,7 @@ namespace RTC
 		}
 	}
 
-	inline void PipeTransport::OnRtpDataReceived(
+	void PipeTransport::OnRtpDataReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -731,7 +731,7 @@ namespace RTC
 		RTC::Transport::ReceiveRtpPacket(packet, receivedAtUs);
 	}
 
-	inline void PipeTransport::OnRtcpDataReceived(
+	void PipeTransport::OnRtcpDataReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -779,7 +779,7 @@ namespace RTC
 		RTC::Transport::ReceiveRtcpPacket(packet, receivedAtUs);
 	}
 
-	inline void PipeTransport::OnSctpDataReceived(
+	void PipeTransport::OnSctpDataReceived(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, int64_t receivedAtUs)
 	{
 		MS_TRACE();
@@ -801,7 +801,7 @@ namespace RTC
 		RTC::Transport::ReceiveSctpData(data, len, receivedAtUs);
 	}
 
-	inline void PipeTransport::OnUdpSocketPacketReceived(
+	void PipeTransport::OnUdpSocketPacketReceived(
 	  RTC::UdpSocket* socket,
 	  const uint8_t* data,
 	  size_t len,
