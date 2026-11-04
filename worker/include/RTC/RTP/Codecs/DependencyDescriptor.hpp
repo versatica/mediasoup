@@ -42,7 +42,9 @@ namespace RTC
 					std::vector<uint8_t> frameDiffChains;
 				};
 
-				// Spatial and temporal layer a decode target corresponds to.
+				/**
+				 * Spatial and temporal layer a decode target corresponds to.
+				 */
 				struct DecodeTargetLayer
 				{
 					uint8_t spatialLayer{ 0 };
@@ -58,8 +60,10 @@ namespace RTC
 					uint8_t decodeTargetCount{ 0 };
 					uint32_t chainCount{ 0 };
 					std::vector<FrameDependencyTemplate> templateLayers;
-					// Which spatial and temporal layer each decode target corresponds to,
-					// derived from the decode target indications of the templates.
+					/**
+					 * Which spatial and temporal layer each decode target corresponds to,
+					 * derived from the decode target indications of the templates.
+					 */
 					std::vector<DecodeTargetLayer> decodeTargetLayers;
 				};
 

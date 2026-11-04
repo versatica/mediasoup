@@ -87,8 +87,10 @@ namespace RTC
 				}
 
 			private:
-				// List populated with the spatial/temporal layer changes
-				// indexed by the corresponding frameId.
+				/**
+				 * List populated with the spatial/temporal layer changes
+				 * indexed by the corresponding frameId.
+				 */
 				std::deque<std::pair<uint16_t, int16_t>> layerChanges;
 			};
 
@@ -282,7 +284,9 @@ namespace RTC
 				}
 
 			public:
-				// Whether the codec has yet to catch up with the restart above.
+				/**
+				 * Whether the codec has yet to catch up with the restart above.
+				 */
 				bool syncRequired{ false };
 				/**
 				 * How the payload descriptor handler rewrote the packet being processed
@@ -300,11 +304,15 @@ namespace RTC
 				RTC::ConsumerTypes::VideoLayers targetLayers;
 				RTC::ConsumerTypes::VideoLayers currentLayers;
 				bool ignoreDtx{ false };
-				// Newest frame number seen, to tell reordered packets apart.
+				/**
+				 * Newest frame number seen, to tell reordered packets apart.
+				 */
 				std::optional<uint16_t> maxFrameId{ std::nullopt };
 
 			private:
-				// List of spatial/temporal layer changes indexed by the corresponding frameId.
+				/**
+				 * List of spatial/temporal layer changes indexed by the corresponding frameId.
+				 */
 				FrameIdList spatialLayerFrameIdList;
 				FrameIdList temporalLayerFrameIdList;
 			};
