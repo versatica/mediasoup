@@ -513,12 +513,10 @@ SCENARIO("SvcProducerStreamManager", "[rtp][producerstreammanager][svc]")
 		REQUIRE(result.type == RtpPacketProcessResult::Type::DROP);
 	}
 
-	/*
-	 * Layer switching watches every frame of the stream, so the layers may well
-	 * move in one that is not forwarded. In K-SVC the switch points of the decode
-	 * target being sent are frames of a lower spatial layer, which the Consumer
-	 * is never given, so a change made there must be reported all the same.
-	 */
+	// Layer switching watches every frame of the stream, so the layers may well
+	// move in one that is not forwarded. In K-SVC the switch points of the decode
+	// target being sent are frames of a lower spatial layer, which the Consumer
+	// is never given, so a change made there must be reported all the same.
 	SECTION("ProcessRtpPacket() reports a layer change made in a dropped packet")
 	{
 		MockListener listener;

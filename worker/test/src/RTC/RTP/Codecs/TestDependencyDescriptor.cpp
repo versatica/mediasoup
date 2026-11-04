@@ -304,13 +304,11 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(dependencyDescriptor->activeDecodeTargetsBitmask == 3);
 	}
 
-	/**
-	 * A single packet is shared by every Consumer of a Producer, so each of them
-	 * rewrites the descriptor, sends the packet and restores it for the next one.
-	 *
-	 * The RTP header extension holding it is sized once by the Producer, so
-	 * restoring it must leave the room the next Consumer needs.
-	 */
+	// A single packet is shared by every Consumer of a Producer, so each of them
+	// rewrites the descriptor, sends the packet and restores it for the next one.
+	//
+	// The RTP header extension holding it is sized once by the Producer, so
+	// restoring it must leave the room the next Consumer needs.
 	SECTION("restoring a rewritten descriptor leaves room for the next Consumer")
 	{
 		// Key frame carrying the template dependency structure of an L1T2 stream.
@@ -386,10 +384,8 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(rewritten->activeDecodeTargetsBitmask == 0b11);
 	}
 
-	/**
-	 * The rewritten descriptor is longer than the received one, so it only fits
-	 * if room was made for it in the RTP header extension.
-	 */
+	// The rewritten descriptor is longer than the received one, so it only fits
+	// if room was made for it in the RTP header extension.
 	SECTION("a descriptor with no room for the bitmask is forwarded as received")
 	{
 		// clang-format off
@@ -440,11 +436,9 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(std::memcmp(value.data(), deltaFrameData, sizeof(deltaFrameData)) == 0);
 	}
 
-	/**
-	 * Descriptors are rewritten long after being parsed, for instance when
-	 * retransmitted, and how they are written depends on the template dependency
-	 * structure they were parsed with.
-	 */
+	// Descriptors are rewritten long after being parsed, for instance when
+	// retransmitted, and how they are written depends on the template dependency
+	// structure they were parsed with.
 	SECTION("a new template dependency structure leaves the previous one alone")
 	{
 		// Key frame carrying the template dependency structure of an L1T2 stream.
@@ -487,13 +481,11 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(first->templateDependencyStructure->decodeTargetCount == 2);
 	}
 
-	/**
-	 * A delta frame does not carry the template dependency structure, it is given
-	 * the one of the stream, so it is the case where the structure may be
-	 * replaced under a descriptor still in use. That happens whenever a key frame
-	 * arrives while earlier packets are still in a retransmission buffer, and
-	 * rewriting one of those reads the structure it was parsed with.
-	 */
+	// A delta frame does not carry the template dependency structure, it is given
+	// the one of the stream, so it is the case where the structure may be
+	// replaced under a descriptor still in use. That happens whenever a key frame
+	// arrives while earlier packets are still in a retransmission buffer, and
+	// rewriting one of those reads the structure it was parsed with.
 	SECTION("a delta frame keeps alive the structure it was given")
 	{
 		// Key frame carrying the template dependency structure of an L1T2 stream.
@@ -522,13 +514,11 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 
 		REQUIRE(keyFrame);
 
-		/*
-		 * Watches the structure the key frame installed, without holding it.
-		 *
-		 * NOTE: Taken before the delta frame is parsed, since `Parse()` hands the
-		 * structure of every descriptor back to the stream, so afterwards this
-		 * would watch whatever the delta frame holds rather than what it was given.
-		 */
+		// Watches the structure the key frame installed, without holding it.
+		//
+		// NOTE: Taken before the delta frame is parsed, since `Parse()` hands the
+		// structure of every descriptor back to the stream, so afterwards this
+		// would watch whatever the delta frame holds rather than what it was given.
 		const std::weak_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure> watched{
 			templateDependencyStructure
 		};
@@ -565,10 +555,8 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(watched.expired());
 	}
 
-	/**
-	 * The custom frame dependency fields are not parsed into any member of the
-	 * descriptor, just delimited, so rewriting it must copy them over verbatim.
-	 */
+	// The custom frame dependency fields are not parsed into any member of the
+	// descriptor, just delimited, so rewriting it must copy them over verbatim.
 	SECTION("custom decode target indications, frame diffs and chains are preserved")
 	{
 		// Key frame carrying the template dependency structure of an L1T2 stream,
@@ -637,10 +625,8 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(len == sizeof(deltaFrameData));
 		REQUIRE(std::memcmp(buffer, deltaFrameData, len) == 0);
 
-		/*
-		 * And dropping a decode target must only change the bitmask, which lives
-		 * in the two bits that tell both descriptors apart.
-		 */
+		// And dropping a decode target must only change the bitmask, which lives
+		// in the two bits that tell both descriptors apart.
 		// clang-format off
 		uint8_t rewrittenData[] =
 		{
@@ -696,10 +682,8 @@ SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 		REQUIRE(len != 0);
 		REQUIRE(len == keyFrame->GetMaxLength());
 
-		/*
-		 * The rewritten key frame must carry the very same structure, so that the
-		 * endpoint goes on resolving the templates of the frames that follow.
-		 */
+		// The rewritten key frame must carry the very same structure, so that the
+		// endpoint goes on resolving the templates of the frames that follow.
 		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure> rewrittenStructure;
 
 		auto rewritten = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(

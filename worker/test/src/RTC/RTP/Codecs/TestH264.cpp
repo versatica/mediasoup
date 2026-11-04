@@ -80,11 +80,9 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		REQUIRE(payloadDescriptor->isKeyFrame);
 	}
 
-	/**
-	 * The Dependency Descriptor tells the layers of the frame regardless of the
-	 * codec, and it must be rewritten for the layers each Consumer is given, so
-	 * it takes over whenever the packet carries one.
-	 */
+	// The Dependency Descriptor tells the layers of the frame regardless of the
+	// codec, and it must be rewritten for the layers each Consumer is given, so
+	// it takes over whenever the packet carries one.
 	SECTION("the Dependency Descriptor takes over when the packet carries one")
 	{
 		// Key frame carrying the template dependency structure of an L1T2 stream.
@@ -123,11 +121,9 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 
 		RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), templateDependencyStructure);
 
-		/*
-		 * The H264 payload descriptor handler never reserves room for a rewritten
-		 * Dependency Descriptor, so a non zero length tells that the Dependency
-		 * Descriptor one took over.
-		 */
+		// The H264 payload descriptor handler never reserves room for a rewritten
+		// Dependency Descriptor, so a non zero length tells that the Dependency
+		// Descriptor one took over.
 		REQUIRE(packet->GetDependencyDescriptorMaxLength() > 0);
 		REQUIRE(packet->GetSpatialLayer() == 0);
 		REQUIRE(packet->GetTemporalLayer() == 0);
@@ -159,11 +155,9 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		REQUIRE(forwarded->activeDecodeTargetsBitmask == 0b01);
 	}
 
-	/**
-	 * A simulcast Consumer is given one of several streams, so its spatial layer
-	 * is chosen by the ProducerStreamManager when it picks the stream and the
-	 * target spatial layer of its encoding context is never set.
-	 */
+	// A simulcast Consumer is given one of several streams, so its spatial layer
+	// is chosen by the ProducerStreamManager when it picks the stream and the
+	// target spatial layer of its encoding context is never set.
 	SECTION("the Dependency Descriptor of a simulcast Consumer filters temporal layers only")
 	{
 		// clang-format off
@@ -205,10 +199,8 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 
 		RTC::RTP::Codecs::H264::EncodingContext context(params);
 
-		/*
-		 * Just as SimulcastProducerStreamManager does: only the temporal layers
-		 * are given to the context, so the spatial ones are left at -1.
-		 */
+		// Just as SimulcastProducerStreamManager does: only the temporal layers
+		// are given to the context, so the spatial ones are left at -1.
 		context.SetTargetTemporalLayer(1);
 		context.SetCurrentTemporalLayer(1);
 

@@ -1392,11 +1392,9 @@ namespace RTC
 
 			result.retransmissionBufferItem->sharedPacket = sharedPacket;
 
-			/*
-			 * Along with the packet, the item is given how it was rewritten for this
-			 * Consumer, so that the stream reapplies the very same rewriting on every
-			 * retransmission.
-			 */
+			// Along with the packet, the item is given how it was rewritten for this
+			// Consumer, so that the stream reapplies the very same rewriting on every
+			// retransmission.
 			result.retransmissionBufferItem->encoder = std::move(action.encoder);
 		}
 

@@ -5,10 +5,8 @@
 
 SCENARIO("BitWriter", "[utils][bitwriter]")
 {
-	/**
-	 * NOTE: The writer only sets the bits it is given, never clears them, so
-	 * every buffer below is zeroed first as its callers must do.
-	 */
+	// NOTE: The writer only sets the bits it is given, never clears them, so
+	// every buffer below is zeroed first as its callers must do.
 	SECTION("bits are appended from the most significant one of the first byte")
 	{
 		uint8_t buffer[1]{};
@@ -100,10 +98,8 @@ SCENARIO("BitWriter", "[utils][bitwriter]")
 		REQUIRE(buffer[0] == 0b11010000);
 	}
 
-	/**
-	 * The fields being copied over are optional, and an absent one delimits an
-	 * empty range.
-	 */
+	// The fields being copied over are optional, and an absent one delimits an
+	// empty range.
 	SECTION("an empty range writes nothing")
 	{
 		const uint8_t src[] = { 0xA5 };

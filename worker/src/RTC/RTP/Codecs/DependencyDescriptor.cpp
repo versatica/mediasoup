@@ -243,14 +243,12 @@ namespace RTC
 
 				if (templateDependencyStructurePresentFlag)
 				{
-					/*
-					 * Take a brand new structure rather than overwriting the one in use,
-					 * which descriptors already parsed with it keep referencing.
-					 *
-					 * Those may still be rewritten long after this point, for instance when
-					 * retransmitted, and the number of decode targets they write depends on
-					 * the structure they were parsed with.
-					 */
+					// Take a brand new structure rather than overwriting the one in use,
+					// which descriptors already parsed with it keep referencing.
+					//
+					// Those may still be rewritten long after this point, for instance when
+					// retransmitted, and the number of decode targets they write depends on
+					// the structure they were parsed with.
 					this->templateDependencyStructure = std::make_shared<TemplateDependencyStructure>();
 
 					if (!ReadTemplateDependencyStructure())
@@ -320,7 +318,7 @@ namespace RTC
 				return true;
 			}
 
-			/*
+			/**
 			 * The render resolutions are not used, but they must be consumed so that
 			 * whatever follows the template dependency structure is read at the right
 			 * bit offset.
@@ -352,7 +350,7 @@ namespace RTC
 				return true;
 			}
 
-			/*
+			/**
 			 * Tells the spatial and temporal layer of every decode target, this is, the
 			 * highest ones among the templates that are part of it.
 			 */
@@ -759,12 +757,10 @@ namespace RTC
 					return;
 				}
 
-				/*
-				 * The RTP header extension is shrunk back to the received length, which
-				 * leaves the room the Producer made for the rewrite as padding behind
-				 * it. The next Consumer sharing this packet grows into that padding
-				 * again when it writes its own, possibly longer, descriptor.
-				 */
+				// The RTP header extension is shrunk back to the received length, which
+				// leaves the room the Producer made for the rewrite as padding behind
+				// it. The next Consumer sharing this packet grows into that padding
+				// again when it writes its own, possibly longer, descriptor.
 
 				// NOTE: It stays marked as rewritten if it could not be written back,
 				// since that's what the packet still carries.
@@ -795,12 +791,10 @@ namespace RTC
 						continue;
 					}
 
-					/*
-					 * NOTE: In full SVC every lower decode target needs a subset of the
-					 * frames of the higher ones, so all of them stay active. In K-SVC the
-					 * lower spatial layers are not needed and hence not sent, so their
-					 * decode targets are dropped from the bitmask.
-					 */
+					// NOTE: In full SVC every lower decode target needs a subset of the
+					// frames of the higher ones, so all of them stay active. In K-SVC the
+					// lower spatial layers are not needed and hence not sent, so their
+					// decode targets are dropped from the bitmask.
 					if (!IsDecodeTargetActive(decodeTarget, forwardedDecodeTarget))
 					{
 						continue;
@@ -812,7 +806,7 @@ namespace RTC
 				return bitmask;
 			}
 
-			/*
+			/**
 			 * Index of the decode target formed by the given spatial and temporal
 			 * layer, or the decode target count if the stream has no such one.
 			 */
@@ -835,7 +829,7 @@ namespace RTC
 				return decodeTargetLayers.size();
 			}
 
-			/*
+			/**
 			 * Whether the given decode target is still being sent when only the frames
 			 * of the forwarded one are, this is, whether every frame it needs is also
 			 * needed by that one.
@@ -856,7 +850,7 @@ namespace RTC
 
 				return std::ranges::all_of(
 				  templateLayers,
-				  [decodeTarget, forwardedDecodeTarget](const auto& templateLayer) -> bool
+				  [decodeTarget, forwardedDecodeTarget](const FrameDependencyTemplate& templateLayer) -> bool
 				  {
 					  const auto& decodeTargetIndications = templateLayer.decodeTargetIndications;
 
@@ -949,11 +943,9 @@ namespace RTC
 					return true;
 				}
 
-				/*
-				 * NOTE: The buffer is reused across calls. `Write()` zeroes the bytes it
-				 * fills and only those are read back, so nothing is left over from a
-				 * previous one.
-				 */
+				// NOTE: The buffer is reused across calls. `Write()` zeroes the bytes it
+				// fills and only those are read back, so nothing is left over from a
+				// previous one.
 				const auto len = Write(activeDecodeTargetsBitmask, RewriteBuffer);
 
 				if (len == 0)

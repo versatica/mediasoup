@@ -43,7 +43,6 @@ Checks: "*,\
   -fuchsia-default-arguments-declarations,\
   -fuchsia-overloaded-operator,\
   -fuchsia-statically-constructed-objects,\
-  -fuchsia-trailing-return,\
   -google-build-using-namespace,\
   -google-default-arguments,\
   -google-readability-*,\

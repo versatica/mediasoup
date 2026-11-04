@@ -107,16 +107,14 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				/*
-				 * The Dependency Descriptor tells the layers of the frame and whether
-				 * decoding can start at it, which is all that is needed to forward the
-				 * packet, and it must be rewritten for the layers each Consumer is given.
-				 * So it serves the Consumers that negotiated the extension.
-				 *
-				 * NOTE: The payload descriptor of the codec is parsed all the same, for
-				 * the Consumers that did not and cannot be told the layers any other way.
-				 */
-				auto* dependencyDescriptorPayloadDescriptor =
+				// The Dependency Descriptor tells the layers of the frame and whether
+				// decoding can start at it, which is all that is needed to forward the
+				// packet, and it must be rewritten for the layers each Consumer is given.
+				// So it serves the Consumers that negotiated the extension.
+				//
+				// NOTE: The payload descriptor of the codec is parsed all the same, for
+				// the Consumers that did not and cannot be told the layers any other way.
+				auto* const dependencyDescriptorPayloadDescriptor =
 				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
 
 				if (dependencyDescriptorPayloadDescriptor)
@@ -170,14 +168,12 @@ namespace RTC
 				// H264 always has a single spatial layer (0).
 				context->SetCurrentSpatialLayer(0);
 
-				/*
-				 * The temporal layer is not parsed out of H264 packets, so they all are
-				 * taken for the lowest one and none is ever filtered out.
-				 *
-				 * NOTE: The NAL unit header extensions that carry it in H264 SVC are not
-				 * read. The Dependency Descriptor does tell it, and when the packet
-				 * carries one its payload descriptor handler takes over this one.
-				 */
+				// The temporal layer is not parsed out of H264 packets, so they all are
+				// taken for the lowest one and none is ever filtered out.
+				//
+				// NOTE: The NAL unit header extensions that carry it in H264 SVC are not
+				// read. The Dependency Descriptor does tell it, and when the packet
+				// carries one its payload descriptor handler takes over this one.
 				if (context->GetCurrentTemporalLayer() < 0)
 				{
 					context->SetCurrentTemporalLayer(0);

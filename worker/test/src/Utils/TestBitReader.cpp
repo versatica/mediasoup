@@ -78,10 +78,8 @@ SCENARIO("BitReader", "[utils][bitreader]")
 		REQUIRE(bitReader.GetBits(4) == 0b1100);
 	}
 
-	/**
-	 * Callers are expected to check GetLeftBits() themselves, since a zero
-	 * cannot be told apart from a real one.
-	 */
+	// Callers are expected to check GetLeftBits() themselves, since a zero
+	// cannot be told apart from a real one.
 	SECTION("reading past the data gives zeroes rather than reading past it")
 	{
 		const uint8_t data[] = { 0xFF };
@@ -99,10 +97,8 @@ SCENARIO("BitReader", "[utils][bitreader]")
 		REQUIRE(bitReader.GetLeftBits() == 0);
 	}
 
-	/**
-	 * Non symmetric unsigned encoded integer, whose values take as many bits as
-	 * the number of them requires and one less for the lowest ones.
-	 */
+	// Non symmetric unsigned encoded integer, whose values take as many bits as
+	// the number of them requires and one less for the lowest ones.
 	SECTION("ReadNs() reads non symmetric unsigned integers")
 	{
 		// 0|10|11|000, this is, 0, 1 and 2 encoded with n = 3.

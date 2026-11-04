@@ -158,13 +158,11 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		REQUIRE(context.GetTemporalLayerForFrameId(start + 0) == 1); // It will get the item at start+1000.
 	}
 
-	/*
-	 * The Dependency Descriptor only reaches a Consumer that negotiated the
-	 * extension, so it is the one that serves it. The rest cannot be told the
-	 * layers any other way than by the payload descriptor of the codec, and
-	 * filtering them with the Dependency Descriptor would drop frames they are
-	 * never told not to wait for.
-	 */
+	// The Dependency Descriptor only reaches a Consumer that negotiated the
+	// extension, so it is the one that serves it. The rest cannot be told the
+	// layers any other way than by the payload descriptor of the codec, and
+	// filtering them with the Dependency Descriptor would drop frames they are
+	// never told not to wait for.
 	SECTION("the Dependency Descriptor serves only the Consumers given it")
 	{
 		// Key frame carrying the template dependency structure of an L1T2 stream.

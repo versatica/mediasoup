@@ -825,7 +825,7 @@ namespace RTC
 			 */
 			bool IsKeyFrame() const
 			{
-				auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
+				auto* const payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
 
 				if (!payloadDescriptorHandler)
 				{
@@ -840,7 +840,7 @@ namespace RTC
 			 */
 			uint8_t GetSpatialLayer() const
 			{
-				auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
+				auto* const payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
 
 				if (!payloadDescriptorHandler)
 				{
@@ -855,7 +855,7 @@ namespace RTC
 			 */
 			uint8_t GetTemporalLayer() const
 			{
-				auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
+				auto* const payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
 
 				if (!payloadDescriptorHandler)
 				{
@@ -871,7 +871,7 @@ namespace RTC
 			 */
 			uint8_t GetDependencyDescriptorMaxLength() const
 			{
-				auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
+				auto* const payloadDescriptorHandler = GetPayloadDescriptorHandler(true);
 
 				if (!payloadDescriptorHandler)
 				{
@@ -1040,7 +1040,7 @@ namespace RTC
 			RTP::HeaderExtensionIds headerExtensionIds{};
 			// Codec related.
 			std::shared_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
-			/*
+			/**
 			 * Both are kept because the packet is handed to every Consumer of the
 			 * Producer, and whether the Dependency Descriptor may be used is a
 			 * property of each of them rather than of the packet.

@@ -99,7 +99,7 @@ namespace Utils
 		this->offset += count;
 	}
 
-	/*
+	/**
 	 * non-symmetric unsigned encoded integer with maximum
 	 * number of values n (i.e., output in range 0..n-1).
 	 * Returns std::nullopt if there are not enough bits left.

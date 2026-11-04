@@ -47,10 +47,12 @@ namespace RTC
 
 					struct Encoder : public Codecs::PayloadDescriptor::Encoder
 					{
-						~Encoder() override = default;
 						explicit Encoder(EncodingData encodingData) : encodingData(encodingData)
 						{
 						}
+
+						~Encoder() override = default;
+
 						void Encode(uint8_t* data, const VP8::PayloadDescriptor* payloadDescriptor) const;
 
 						EncodingData encodingData;

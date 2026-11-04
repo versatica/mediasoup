@@ -31,10 +31,12 @@ namespace RTC
 
 				struct Encoder : public Codecs::PayloadDescriptor::Encoder
 				{
-					~Encoder() override = default;
 					explicit Encoder(EncodingData encodingData) : encodingData(encodingData)
 					{
 					}
+
+					~Encoder() override = default;
+
 					void Encode(DependencyDescriptorPayloadDescriptor* payloadDescriptor, RTP::Packet* packet) const;
 
 					EncodingData encodingData;
@@ -47,28 +49,35 @@ namespace RTC
 
 				explicit DependencyDescriptorPayloadDescriptor(
 				  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor);
+
 				/* Pure virtual methods inherited from Codecs::PayloadDescriptor. */
 				~DependencyDescriptorPayloadDescriptor() override = default;
 
 				void Dump(int indentation = 0) const override;
 
 				void Restore(RTP::Packet* packet) const;
+
 				uint8_t GetDependencyDescriptorMaxLength() const
 				{
 					return this->dependencyDescriptor ? this->dependencyDescriptor->GetMaxLength() : 0;
 				}
-				// Highest spatial layer id of the stream this frame belongs to.
+
+				/**
+				 * Highest spatial layer id of the stream this frame belongs to.
+				 */
 				uint32_t GetSpatialLayers() const
 				{
 					return this->dependencyDescriptor
 					         ? this->dependencyDescriptor->templateDependencyStructure->spatialLayers
 									 : 0;
 				}
+
 				bool IsPresentInDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const
 				{
 					return !this->dependencyDescriptor ||
 					       this->dependencyDescriptor->IsPresentInDecodeTarget(spatialLayer, temporalLayer);
 				}
+
 				bool IsDecodeTargetActive(
 				  uint8_t spatialLayer,
 				  uint8_t temporalLayer,
@@ -79,16 +88,19 @@ namespace RTC
 					       this->dependencyDescriptor->IsDecodeTargetActive(
 					         spatialLayer, temporalLayer, forwardedSpatialLayer, forwardedTemporalLayer);
 				}
+
 				bool IsSwitchPointForDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const
 				{
 					return this->dependencyDescriptor &&
 					       this->dependencyDescriptor->IsSwitchPointForDecodeTarget(spatialLayer, temporalLayer);
 				}
+
 				bool IsSwitchPointForTemporalLayer(uint8_t temporalLayer) const
 				{
 					return this->dependencyDescriptor &&
 					       this->dependencyDescriptor->IsSwitchPointForTemporalLayer(temporalLayer);
 				}
+
 				void UpdateActiveDecodeTargets(
 				  uint16_t spatialLayer, uint16_t temporalLayer, RTP::Packet* packet);
 
@@ -115,22 +127,27 @@ namespace RTC
 				{
 					this->payloadDescriptor->Dump(indentation);
 				}
+
 				bool Process(Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
 
 				void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override;
 				void Restore(RTP::Packet* packet) override;
+
 				uint8_t GetSpatialLayer() const override
 				{
 					return this->payloadDescriptor->spatialLayer;
 				}
+
 				uint8_t GetTemporalLayer() const override
 				{
 					return this->payloadDescriptor->temporalLayer;
 				}
+
 				bool IsKeyFrame() const override
 				{
 					return this->payloadDescriptor->isKeyFrame;
 				}
+
 				uint8_t GetDependencyDescriptorMaxLength() const override
 				{
 					return this->payloadDescriptor->GetDependencyDescriptorMaxLength();

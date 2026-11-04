@@ -1444,17 +1444,15 @@ namespace RTC
 					{
 						std::memcpy(bufferPtr, extenValue, extenLen);
 
-						/*
-						 * Make room for the active decode targets bitmask that Consumers
-						 * filtering layers write into the descriptor, which may make it
-						 * longer than it came.
-						 *
-						 * NOTE: The extension is sized to hold the longest descriptor a
-						 * Consumer may write, but shrunk back to the received one below so
-						 * that the packet tells the length it really carries. The room
-						 * stays behind it as padding for `UpdateDependencyDescriptor()` to
-						 * grow into.
-						 */
+						// Make room for the active decode targets bitmask that Consumers
+						// filtering layers write into the descriptor, which may make it
+						// longer than it came.
+						//
+						// NOTE: The extension is sized to hold the longest descriptor a
+						// Consumer may write, but shrunk back to the received one below so
+						// that the packet tells the length it really carries. The room
+						// stays behind it as padding for `UpdateDependencyDescriptor()` to
+						// grow into.
 						const auto maxExtenLen = packet->GetDependencyDescriptorMaxLength();
 
 						dependencyDescriptorValue = bufferPtr;
@@ -1512,12 +1510,10 @@ namespace RTC
 				return false;
 			}
 
-			/*
-			 * Leave the room made for the Dependency Descriptor as padding.
-			 *
-			 * NOTE: After the check above, since the extensions it grows into are
-			 * only there once they have been set.
-			 */
+			// Leave the room made for the Dependency Descriptor as padding.
+			//
+			// NOTE: After the check above, since the extensions it grows into are
+			// only there once they have been set.
 			if (dependencyDescriptorValue)
 			{
 				packet->UpdateDependencyDescriptor(dependencyDescriptorValue, dependencyDescriptorLen);

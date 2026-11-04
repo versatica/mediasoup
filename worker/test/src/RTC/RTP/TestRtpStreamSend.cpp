@@ -42,10 +42,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		{
 			this->retransmittedPackets.push_back(packet);
 
-			/*
-			 * The packet is restored once it has been retransmitted, so whatever it
-			 * carries must be taken now rather than from the pointer above.
-			 */
+			// The packet is restored once it has been retransmitted, so whatever it
+			// carries must be taken now rather than from the pointer above.
 			uint8_t extenLen;
 			const auto* extenValue = packet->GetExtensionValue(DependencyDescriptorId, extenLen);
 
@@ -124,14 +122,12 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(rtxPacket->HasMarker() == origPacket->HasMarker());
 	};
 
-	/**
-	 * Gives the Dependency Descriptor extension `room` spare bytes, as
-	 * `Producer::MangleRtpPacket()` does, so that Consumers filtering layers can
-	 * write the active decode targets bitmask into it.
-	 *
-	 * NOTE: Done before parsing since the descriptor keeps a pointer into the
-	 * extension, which `SetExtensions()` moves.
-	 */
+	// Gives the Dependency Descriptor extension `room` spare bytes, as
+	// `Producer::MangleRtpPacket()` does, so that Consumers filtering layers can
+	// write the active decode targets bitmask into it.
+	//
+	// NOTE: Done before parsing since the descriptor keeps a pointer into the
+	// extension, which `SetExtensions()` moves.
 	const auto parseAV1RtpPacket =
 	  [](
 	    RTC::RTP::Packet* packet,
@@ -1112,10 +1108,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(dependencyDescriptor5);
 		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000011);
 
-		/*
-		 * And the clone is left with the descriptor as it was received, which is
-		 * 11 bytes long, rather than with the 4 bytes the rewritten one takes.
-		 */
+		// And the clone is left with the descriptor as it was received, which is
+		// 11 bytes long, rather than with the 4 bytes the rewritten one takes.
 		uint8_t restoredLen;
 
 		REQUIRE(sharedPacket->GetExtensionValue(DependencyDescriptorId, restoredLen));

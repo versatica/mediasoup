@@ -22,7 +22,7 @@ namespace RTC
 				{
 					virtual ~Encoder() = default;
 
-					/*
+					/**
 					 * Which of the payload descriptor handlers of the packet made this
 					 * encoder, so that the same one rewrites the retransmissions.
 					 */
@@ -102,13 +102,13 @@ namespace RTC
 					uint8_t spatialLayers{ 1 };
 					uint8_t temporalLayers{ 1 };
 					bool ksvc{ false };
-					/*
+					/**
 					 * Whether the Consumer is given one of several streams rather than
 					 * layers of a single one, so that choosing the spatial layer means
 					 * choosing the stream and is not up to the payload descriptor.
 					 */
 					bool simulcast{ false };
-					/*
+					/**
 					 * Whether the Consumer negotiated the Dependency Descriptor header
 					 * extension, this is, whether it is going to receive it at all.
 					 */
@@ -134,7 +134,7 @@ namespace RTC
 				{
 					return this->params.ksvc;
 				}
-				/*
+				/**
 				 * Whether the spatial layer is chosen by picking the stream to forward,
 				 * in which case the target spatial layer of this context is never set
 				 * and the payload descriptor must not filter on it.
@@ -322,7 +322,7 @@ namespace RTC
 				virtual uint8_t GetSpatialLayer() const                                           = 0;
 				virtual uint8_t GetTemporalLayer() const                                          = 0;
 				virtual bool IsKeyFrame() const                                                   = 0;
-				/*
+				/**
 				 * Bytes the Dependency Descriptor of this packet may take once rewritten,
 				 * or 0 if this codec never rewrites it.
 				 */

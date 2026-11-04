@@ -7,7 +7,7 @@
 #include <cstring> // std::memcpy()
 #include <vector>
 
-/*
+/**
  * How the Dependency Descriptor payload descriptor behaves once installed is
  * tested in TestDependencyDescriptorPayloadDescriptor.cpp, since every codec
  * shares it. What is tested here is only what AV1 itself does, this is, handing
@@ -19,7 +19,7 @@ namespace
 	constexpr uint8_t DependencyDescriptorId{ static_cast<uint8_t>(
 		RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR) };
 
-	/*
+	/**
 	 * Key frame of an L3T3_KEY stream captured from Chrome. Its contents do not
 	 * matter here beyond being a descriptor that parses.
 	 */
@@ -73,11 +73,9 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 		REQUIRE(templateDependencyStructure);
 	}
 
-	/*
-	 * Nothing but the Dependency Descriptor tells the layers of an AV1 packet,
-	 * so without it there is nothing to process and the packet is forwarded just
-	 * as it comes.
-	 */
+	// Nothing but the Dependency Descriptor tells the layers of an AV1 packet,
+	// so without it there is nothing to process and the packet is forwarded just
+	// as it comes.
 	SECTION("a packet carrying no Dependency Descriptor gets no payload descriptor")
 	{
 		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), templateDependencyStructure);

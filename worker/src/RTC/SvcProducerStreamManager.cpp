@@ -394,13 +394,11 @@ namespace RTC
 		{
 			result.type = RtpPacketProcessResult::Type::DROP;
 
-			/*
-			 * NOTE: A picture has one frame per spatial layer, all of them at the same
-			 * temporal layer, so the temporal layer changes at the first frame of a
-			 * picture. In K-SVC that frame belongs to a spatial layer below the one the
-			 * Consumer gets, so it is dropped here and the change would otherwise go
-			 * unreported.
-			 */
+			// NOTE: A picture has one frame per spatial layer, all of them at the same
+			// temporal layer, so the temporal layer changes at the first frame of a
+			// picture. In K-SVC that frame belongs to a spatial layer below the one the
+			// Consumer gets, so it is dropped here and the change would otherwise go
+			// unreported.
 			if (previousLayers != this->encodingContext->GetCurrentLayers())
 			{
 				result.temporalLayerChanged = true;

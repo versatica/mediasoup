@@ -117,16 +117,14 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				/*
-				 * The Dependency Descriptor tells the layers of the frame and whether
-				 * decoding can start at it, which is all that is needed to forward the
-				 * packet, and it must be rewritten for the layers each Consumer is given.
-				 * So it serves the Consumers that negotiated the extension.
-				 *
-				 * NOTE: The payload descriptor of the codec is parsed all the same, for
-				 * the Consumers that did not and cannot be told the layers any other way.
-				 */
-				auto* dependencyDescriptorPayloadDescriptor =
+				// The Dependency Descriptor tells the layers of the frame and whether
+				// decoding can start at it, which is all that is needed to forward the
+				// packet, and it must be rewritten for the layers each Consumer is given.
+				// So it serves the Consumers that negotiated the extension.
+				//
+				// NOTE: The payload descriptor of the codec is parsed all the same, for
+				// the Consumers that did not and cannot be told the layers any other way.
+				auto* const dependencyDescriptorPayloadDescriptor =
 				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
 
 				if (dependencyDescriptorPayloadDescriptor)

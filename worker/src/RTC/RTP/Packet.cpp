@@ -432,13 +432,11 @@ namespace RTC
 			clonedPacket->logger = this->logger;
 #endif
 
-			/*
-			 * Share the payload descriptor handlers.
-			 *
-			 * NOTE: A handler holds no reference to the packet it was created for,
-			 * so it can be shared. ProcessPayload(), EncodePayload() and
-			 * RestorePayload() tell it which packet to act on.
-			 */
+			// Share the payload descriptor handlers.
+			//
+			// NOTE: A handler holds no reference to the packet it was created for,
+			// so it can be shared. ProcessPayload(), EncodePayload() and
+			// RestorePayload() tell it which packet to act on.
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
 			clonedPacket->dependencyDescriptorPayloadDescriptorHandler =
 			  this->dependencyDescriptorPayloadDescriptorHandler;
@@ -1101,7 +1099,7 @@ namespace RTC
 			const uint8_t* extenValue =
 			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
 
-			auto* value =
+			auto* const value =
 			  Codecs::DependencyDescriptor::Parse(extenValue, extenLen, templateDependencyStructure);
 
 			if (!value)
@@ -1138,15 +1136,13 @@ namespace RTC
 				return false;
 			}
 
-			/*
-			 * A longer descriptor can only take the padding bytes that follow the
-			 * current one, if any, since the first byte of any other extension holds
-			 * its id and is therefore never 0.
-			 *
-			 * NOTE: Those bytes are left at 0 by `SetExtensionLength()`, which zeroes
-			 * whatever it releases when the extension is shrunk. That is what gives
-			 * the room back to the next Consumer once this descriptor is restored.
-			 */
+			// A longer descriptor can only take the padding bytes that follow the
+			// current one, if any, since the first byte of any other extension holds
+			// its id and is therefore never 0.
+			//
+			// NOTE: Those bytes are left at 0 by `SetExtensionLength()`, which zeroes
+			// whatever it releases when the extension is shrunk. That is what gives
+			// the room back to the next Consumer once this descriptor is restored.
 			if (len > extenLen)
 			{
 				const auto offset = static_cast<size_t>(extenValue - GetHeaderExtensionValue());
@@ -1595,7 +1591,7 @@ namespace RTC
 			this->dependencyDescriptorPayloadDescriptorHandler.reset(payloadDescriptorHandler);
 		}
 
-		/*
+		/**
 		 * The Dependency Descriptor tells the layers of a frame to an endpoint that
 		 * receives it, so it only serves the Consumers that negotiated the
 		 * extension. The rest are served by the payload descriptor of their codec.
@@ -1615,7 +1611,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* payloadDescriptorHandler =
+			auto* const payloadDescriptorHandler =
 			  GetPayloadDescriptorHandler(context->PrefersDependencyDescriptor());
 
 			if (!payloadDescriptorHandler)
@@ -1635,7 +1631,7 @@ namespace RTC
 				return;
 			}
 
-			auto* payloadDescriptorHandler =
+			auto* const payloadDescriptorHandler =
 			  GetPayloadDescriptorHandler(encoder->preferDependencyDescriptor);
 
 			if (!payloadDescriptorHandler)
@@ -1650,7 +1646,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* payloadDescriptorHandler = GetPayloadDescriptorHandler(preferDependencyDescriptor);
+			auto* const payloadDescriptorHandler = GetPayloadDescriptorHandler(preferDependencyDescriptor);
 
 			if (!payloadDescriptorHandler)
 			{

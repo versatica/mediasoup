@@ -94,13 +94,11 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				auto* context = encodingContext;
+				auto* const context = encodingContext;
 
-				/*
-				 * The spatial layer of a simulcast Consumer is chosen by picking the
-				 * stream to forward, which the ProducerStreamManager does, so its target
-				 * spatial layer is never set and there is nothing to filter here.
-				 */
+				// The spatial layer of a simulcast Consumer is chosen by picking the
+				// stream to forward, which the ProducerStreamManager does, so its target
+				// spatial layer is never set and there is nothing to filter here.
 				const bool filterSpatialLayers = !context->IsSimulcast();
 
 				MS_ASSERT(
@@ -109,16 +107,14 @@ namespace RTC
 				MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
 				const auto frameNumber = this->payloadDescriptor->frameNumber;
-				/*
-				 * A reordered packet must be judged by the layers its frame was given
-				 * rather than by the current ones, which may have changed since. Letting
-				 * it through on the new layers would forward a frame whose references
-				 * were dropped.
-				 *
-				 * NOTE: Only where the spatial layers are filtered here, this is, not for
-				 * a simulcast Consumer. There a stream switch brings frame numbers of a
-				 * different encoder, so they do not order against the ones seen so far.
-				 */
+				// A reordered packet must be judged by the layers its frame was given
+				// rather than by the current ones, which may have changed since. Letting
+				// it through on the new layers would forward a frame whose references
+				// were dropped.
+				//
+				// NOTE: Only where the spatial layers are filtered here, this is, not for
+				// a simulcast Consumer. There a stream switch brings frame numbers of a
+				// different encoder, so they do not order against the ones seen so far.
 				const bool isOldPacket = filterSpatialLayers && context->IsOldFrameId(frameNumber);
 
 				auto packetSpatialLayer  = GetSpatialLayer();
@@ -178,20 +174,18 @@ namespace RTC
 					// Downgrade current spatial layer if needed.
 					else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 					{
-						/*
-						 * The decode target we move into is the one of the target spatial
-						 * layer at the temporal layer already in use, which is left alone so
-						 * that a spatial change does not cost the frame rate the Consumer had
-						 * climbed to.
-						 *
-						 * NOTE: A switch point is only good enough when the frames of that
-						 * decode target were already reaching the endpoint, as in full SVC,
-						 * where the lower spatial layers are required by the higher ones. A
-						 * "switch" indication promises that no older frame of the decode
-						 * target is needed, not that the frame stands on its own, and in
-						 * K-SVC every frame of the target spatial layer has been dropped so
-						 * far. There the switch waits for a key frame, as VP9 does.
-						 */
+						// The decode target we move into is the one of the target spatial
+						// layer at the temporal layer already in use, which is left alone so
+						// that a spatial change does not cost the frame rate the Consumer had
+						// climbed to.
+						//
+						// NOTE: A switch point is only good enough when the frames of that
+						// decode target were already reaching the endpoint, as in full SVC,
+						// where the lower spatial layers are required by the higher ones. A
+						// "switch" indication promises that no older frame of the decode
+						// target is needed, not that the frame stands on its own, and in
+						// K-SVC every frame of the target spatial layer has been dropped so
+						// far. There the switch waits for a key frame, as VP9 does.
 						const bool atSwitchPoint =
 						  std::cmp_equal(packetSpatialLayer, context->GetTargetSpatialLayer()) &&
 						  this->payloadDescriptor->endOfFrame &&
@@ -209,7 +203,7 @@ namespace RTC
 						{
 							MS_DEBUG_DEV(
 							  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
-							  ":%" PRIu8 ") at a switch point, without keyframe",
+							  ":%" PRIu8 ")",
 							  context->GetCurrentSpatialLayer(),
 							  context->GetTargetSpatialLayer(),
 							  packetSpatialLayer,
@@ -290,14 +284,12 @@ namespace RTC
 					marker = true;
 				}
 
-				/*
-				 * Update the current layers if needed, recording the frame number they
-				 * change at so that packets reordered across the change are judged by
-				 * the layers their own frame was given.
-				 *
-				 * NOTE: A reordered packet never moves them, since it says nothing about
-				 * what the Consumer is being given now.
-				 */
+				// Update the current layers if needed, recording the frame number they
+				// change at so that packets reordered across the change are judged by
+				// the layers their own frame was given.
+				//
+				// NOTE: A reordered packet never moves them, since it says nothing about
+				// what the Consumer is being given now.
 				if (!isOldPacket)
 				{
 					if (filterSpatialLayers && tmpSpatialLayer != context->GetCurrentSpatialLayer())
@@ -311,16 +303,14 @@ namespace RTC
 					}
 				}
 
-				/*
-				 * Filter frames that the decode target being forwarded does not contain,
-				 * which the layer comparisons above cannot tell since they only know that
-				 * a frame is not above the wanted layers.
-				 *
-				 * NOTE: This comes after the current layers are updated because the layer
-				 * switching above watches every frame of the stream, including those that
-				 * are not forwarded. In K-SVC the switch points of a decode target may
-				 * well be frames that the endpoint is never sent.
-				 */
+				// Filter frames that the decode target being forwarded does not contain,
+				// which the layer comparisons above cannot tell since they only know that
+				// a frame is not above the wanted layers.
+				//
+				// NOTE: This comes after the current layers are updated because the layer
+				// switching above watches every frame of the stream, including those that
+				// are not forwarded. In K-SVC the switch points of a decode target may
+				// well be frames that the endpoint is never sent.
 				const bool dtiFilterApplies =
 				  filterSpatialLayers && tmpSpatialLayer >= 0 && tmpTemporalLayer >= 0;
 				const bool presentInDecodeTarget =
@@ -339,11 +329,9 @@ namespace RTC
 				//
 				// NOTE: The encoding data is stored so that retransmissions of this packet
 				// carry the same bitmask.
-				/*
-				 * NOTE: When the spatial layers are not filtered here they all are
-				 * forwarded, so the endpoint must be told that every decode target of
-				 * the stream is active rather than only those of one spatial layer.
-				 */
+				// NOTE: When the spatial layers are not filtered here they all are
+				// forwarded, so the endpoint must be told that every decode target of
+				// the stream is active rather than only those of one spatial layer.
 				const auto maxSpatialLayer = filterSpatialLayers
 				                               ? static_cast<uint32_t>(context->GetCurrentSpatialLayer())
 				                               : this->payloadDescriptor->GetSpatialLayers();
@@ -353,13 +341,9 @@ namespace RTC
 				this->payloadDescriptor->UpdateActiveDecodeTargets(maxSpatialLayer, maxTemporalLayer, packet);
 
 				// Leave the Consumer how this packet was rewritten for it.
-				// clang-format off
 				auto encoder = std::make_unique<DependencyDescriptorPayloadDescriptor::Encoder>(
 				  DependencyDescriptorPayloadDescriptor::EncodingData{
-				    .maxSpatialLayer=maxSpatialLayer,
-				    .maxTemporalLayer=maxTemporalLayer
-				  });
-				// clang-format on
+				    .maxSpatialLayer = maxSpatialLayer, .maxTemporalLayer = maxTemporalLayer });
 
 				encoder->preferDependencyDescriptor = context->PrefersDependencyDescriptor();
 
@@ -373,7 +357,7 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				auto* dependencyDescriptorEncoder =
+				auto* const dependencyDescriptorEncoder =
 				  static_cast<DependencyDescriptorPayloadDescriptor::Encoder*>(encoder);
 
 				dependencyDescriptorEncoder->Encode(this->payloadDescriptor.get(), packet);

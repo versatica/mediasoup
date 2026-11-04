@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_CODECS_DEPENDENCY_DESCRIPTOR_HPP
 
 #include "common.hpp"
-#include "Utils.hpp" // BitReader.
+#include "Utils.hpp"
 #include <ankerl/unordered_dense.h>
 
 namespace RTC
@@ -69,7 +69,8 @@ namespace RTC
 				uint8_t frameDependencyTemplateId{ 0 };
 				uint16_t frameNumber{ 0 };
 				uint8_t templateId{ 0 };
-				/*
+
+				/**
 				 * Given by argument, and replaced by a new one whenever this descriptor
 				 * carries a template dependency structure.
 				 *
@@ -97,7 +98,8 @@ namespace RTC
 				  std::shared_ptr<TemplateDependencyStructure> templateDependencyStructure);
 
 				void Dump(int indentation = 0) const;
-				/*
+
+				/**
 				 * Rewrites the descriptor of the given packet with the decode targets
 				 * that the given maximum layers leave active.
 				 *
@@ -107,16 +109,21 @@ namespace RTC
 				 */
 				bool UpdateActiveDecodeTargets(
 				  uint32_t maxSpatialLayer, uint32_t maxTemporalLayer, RTP::Packet* packet);
-				// Writes the descriptor back as it was received, undoing any rewrite.
+
+				/**
+				 * Writes the descriptor back as it was received, undoing any rewrite.
+				 */
 				void Restore(RTP::Packet* packet);
-				/*
+
+				/**
 				 * Bitmask of the decode targets given the maximum spatial and temporal layers.
 				 *
 				 * Bit i corresponds to decode target i, so the returned value is what
 				 * `active_decode_targets_bitmask` must be set to.
 				 */
 				uint32_t GetDecodeTargetsBitmask(uint8_t maxSpatialLayer, uint8_t maxTemporalLayer) const;
-				/*
+
+				/**
 				 * Bytes the descriptor takes once rewritten by `Write()`, which may be
 				 * more than it came in since the active decode targets bitmask is always
 				 * written even if it was not present.
@@ -126,7 +133,8 @@ namespace RTC
 				 * extension for whatever its Consumers may write there.
 				 */
 				uint8_t GetMaxLength() const;
-				/*
+
+				/**
 				 * Writes the descriptor into the given buffer with the given active decode
 				 * targets bitmask, and returns how many bytes it took.
 				 *
@@ -135,6 +143,7 @@ namespace RTC
 				 * dependency fields, which are not parsed into any field of this class.
 				 */
 				uint8_t Write(uint32_t activeDecodeTargetsBitmask, uint8_t* buffer) const;
+
 				/**
 				 * Whether decoding can start at this frame for the decode target formed
 				 * by the given spatial and temporal layer, this is, whether an endpoint
@@ -145,6 +154,7 @@ namespace RTC
 				 * frame of that decode target can be decoded without any older one.
 				 */
 				bool IsSwitchPointForDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const;
+
 				/**
 				 * Whether decoding can start at this frame for the decode target formed
 				 * by the spatial layer of this very frame and the given temporal layer,
@@ -155,6 +165,7 @@ namespace RTC
 				 * frame of that decode target can be decoded without any older one.
 				 */
 				bool IsSwitchPointForTemporalLayer(uint8_t temporalLayer) const;
+
 				/**
 				 * Whether this frame belongs to the decode target formed by the given
 				 * spatial and temporal layer, this is, whether an endpoint decoding just
@@ -168,6 +179,7 @@ namespace RTC
 				 * decode target and hence always kept.
 				 */
 				bool IsPresentInDecodeTarget(uint8_t spatialLayer, uint8_t temporalLayer) const;
+
 				/**
 				 * Whether the decode target formed by the given spatial and temporal
 				 * layer is already reaching an endpoint that is being sent the one formed
@@ -208,11 +220,18 @@ namespace RTC
 
 			private:
 				Utils::BitReader bitReader;
-				// Length of the descriptor as received.
+
+				/**
+				 * Length of the descriptor as received.
+				 */
 				uint8_t length{ 0 };
-				// Whether the descriptor in the packet no longer is the one received.
+
+				/**
+				 * Whether the descriptor in the packet no longer is the one received.
+				 */
 				bool rewritten{ false };
-				/*
+
+				/**
 				 * Where things are within the descriptor as received, so that the parts
 				 * that are not parsed can be copied over verbatim when rewriting.
 				 */
