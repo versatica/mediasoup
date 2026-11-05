@@ -2453,7 +2453,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		std::string mid;
 
-		RTC::RTP::RtpStreamSend stream(
+		const RTC::RTP::RtpStreamSend stream(
 		  std::addressof(testRtpStreamListener), std::addressof(shared), params, mid);
 
 		// SSRC (4), item type and length (2), "test-cname" (10) and the null octet
