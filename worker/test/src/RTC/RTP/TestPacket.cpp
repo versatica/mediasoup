@@ -1830,7 +1830,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		std::memcpy(audioLevel, extenValue, extenLen);
 
-		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::MID, 1, sizeof(mid), mid);
+		extensions.emplace_back(
+		  RTC::RtpHeaderExtensionUri::Type::MID, 1, static_cast<uint8_t>(sizeof(mid)), mid);
 		extensions.emplace_back(
 		  RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 2, extenLen, audioLevel);
 

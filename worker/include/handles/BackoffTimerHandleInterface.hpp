@@ -2,7 +2,7 @@
 #define MS_BACKOFF_TIMER_HANDLE_INTERFACE_HPP
 
 #include "common.hpp"
-#include <limits> // std::numeric_limits()
+#include <limits> // std::numeric_limits
 #include <string>
 
 class BackoffTimerHandleInterface
