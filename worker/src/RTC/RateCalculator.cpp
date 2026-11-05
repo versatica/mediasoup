@@ -4,7 +4,7 @@
 #include "RTC/RateCalculator.hpp"
 #include "Logger.hpp"
 #include <cmath>  // std::trunc()
-#include <limits> // std::numeric_limits()
+#include <limits> // std::numeric_limits
 
 namespace RTC
 {

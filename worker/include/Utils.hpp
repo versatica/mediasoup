@@ -6,6 +6,7 @@
 #include <openssl/evp.h>
 #include <array>
 #include <cassert>
+#include <cctype> // std::tolower()
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <limits>  // std::numeric_limits
@@ -278,8 +279,8 @@ namespace Utils
 		// Number of input bytes consumed per iteration of the slice-by-8 loop.
 		static constexpr size_t CrcSlices{ 8 };
 		using CrcTables = std::array<std::array<uint32_t, 256>, CrcSlices>;
-		static const CrcTables crc32Tables;
-		static const CrcTables crc32cTables;
+		static const CrcTables Crc32Tables;
+		static const CrcTables Crc32cTables;
 		static constexpr CrcTables generateCrcTables(uint32_t polynomial) noexcept;
 		static uint32_t ReadLe32(const uint8_t* data);
 		static uint32_t ComputeCrc(const CrcTables& tables, const uint8_t* data, size_t size);
@@ -290,7 +291,13 @@ namespace Utils
 	public:
 		static void ToLowerCase(std::string& str)
 		{
-			std::ranges::transform(str, str.begin(), ::tolower);
+			std::ranges::transform(
+			  str,
+			  str.begin(),
+			  [](unsigned char c) -> char
+			  {
+				  return static_cast<char>(std::tolower(c));
+			  });
 		}
 
 		static std::string Base64Encode(const uint8_t* data, size_t len);

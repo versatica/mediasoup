@@ -98,11 +98,13 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		auto it = this->mapChannelRequestHandlers.find(id);
+		const auto it = this->mapChannelRequestHandlers.find(id);
 
 		if (it != this->mapChannelRequestHandlers.end())
 		{
-			return it->second;
+			auto* const channelRequestHandler = it->second;
+
+			return channelRequestHandler;
 		}
 		else
 		{
@@ -115,11 +117,13 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		auto it = this->mapChannelNotificationHandlers.find(id);
+		const auto it = this->mapChannelNotificationHandlers.find(id);
 
 		if (it != this->mapChannelNotificationHandlers.end())
 		{
-			return it->second;
+			auto* const channelNotificationHandler = it->second;
+
+			return channelNotificationHandler;
 		}
 		else
 		{

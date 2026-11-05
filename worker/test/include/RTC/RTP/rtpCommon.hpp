@@ -28,6 +28,7 @@ namespace rtpCommon
 	alignas(4) extern thread_local uint8_t CloneBuffer[66663];
 	alignas(4) extern thread_local uint8_t DataBuffer[66664];
 	alignas(4) extern thread_local uint8_t ThrowBuffer[66665];
+	alignas(4) extern thread_local uint8_t ReadBuffer[66666];
 
 	void ResetBuffers();
 } // namespace rtpCommon
