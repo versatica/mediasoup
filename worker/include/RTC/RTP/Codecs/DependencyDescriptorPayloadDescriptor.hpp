@@ -39,7 +39,7 @@ namespace RTC
 
 					void Encode(DependencyDescriptorPayloadDescriptor* payloadDescriptor, RTP::Packet* packet) const;
 
-					EncodingData encodingData;
+					const EncodingData encodingData;
 				};
 
 				static DependencyDescriptorPayloadDescriptor* Parse(

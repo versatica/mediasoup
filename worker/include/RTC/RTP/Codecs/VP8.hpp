@@ -61,7 +61,7 @@ namespace RTC
 
 						void Encode(uint8_t* data, const VP8::PayloadDescriptor* payloadDescriptor) const;
 
-						EncodingData encodingData;
+						const EncodingData encodingData;
 					};
 
 					/* Pure virtual methods inherited from Codecs::PayloadDescriptor. */

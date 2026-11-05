@@ -755,7 +755,7 @@ namespace Utils
 
 	private:
 		uint8_t data[RTC::Consts::TwoBytesRtpExtensionMaxLength];
-		uint32_t len{ 0 };
+		const uint32_t len;
 		uint32_t offset{ 0 };
 	};
 
@@ -783,8 +783,8 @@ namespace Utils
 		void PutBitRange(const uint8_t* src, size_t len, uint32_t from, uint32_t to);
 
 	private:
-		uint8_t* data;
-		size_t len{ 0 };
+		uint8_t* const data;
+		const size_t len;
 		uint32_t offset{ 0 };
 	};
 
