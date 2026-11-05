@@ -45,7 +45,7 @@ namespace mocks
 			  return getTimeUs() / 1000;
 		  },
 		  /*onDelete*/
-		  [this, label]()
+		  [this, label]() -> void
 		  {
 			  this->timers.erase(label);
 		  });
@@ -80,7 +80,7 @@ namespace mocks
 			  return getTimeUs() / 1000;
 		  },
 		  /*onDelete*/
-		  [this, label]()
+		  [this, label]() -> void
 		  {
 			  this->backoffTimers.erase(label);
 		  });
