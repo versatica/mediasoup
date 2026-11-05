@@ -12,6 +12,7 @@ namespace rtpCommon
 	alignas(4) thread_local uint8_t CloneBuffer[];
 	alignas(4) thread_local uint8_t DataBuffer[];
 	alignas(4) thread_local uint8_t ThrowBuffer[];
+	alignas(4) thread_local uint8_t ReadBuffer[];
 
 	void ResetBuffers()
 	{
@@ -20,6 +21,7 @@ namespace rtpCommon
 		std::memset(CloneBuffer, 0xCC, sizeof(CloneBuffer));
 		std::memset(DataBuffer, 0xDD, sizeof(DataBuffer));
 		std::memset(ThrowBuffer, 0xEE, sizeof(ThrowBuffer));
+		std::memset(ReadBuffer, 0xFF, sizeof(ReadBuffer));
 
 		for (size_t i = 0; i < 256; ++i)
 		{

@@ -149,7 +149,7 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 SCENARIO("Utils::Crypto::GetRandomUInt()", "[utils][crypto]")
 {
 	ankerl::unordered_dense::set<uint32_t> randomUint32Numbers;
-	ankerl::unordered_dense::set<uint32_t> randomUint64Numbers;
+	ankerl::unordered_dense::set<uint64_t> randomUint64Numbers;
 
 	for (size_t i = 0; i < 200; ++i)
 	{
