@@ -204,6 +204,16 @@ namespace RTC
 				return static_cast<float>(this->fractionLost) * 100 / 256;
 			}
 
+			uint64_t GetPliCount() const
+			{
+				return this->pliCount;
+			}
+
+			uint64_t GetFirCount() const
+			{
+				return this->firCount;
+			}
+
 			/**
 			 * Round trip time of this stream (ms), or no value while nothing has been
 			 * measured.

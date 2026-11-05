@@ -5,6 +5,13 @@
 #include "FBS/rtpStream.h"
 #include "Utils/UnwrappedSequenceNumber.hpp"
 #include "handles/TimerHandleInterface.hpp"
+#include "RTC/NEW_RTCP/packet/AnyPayloadSpecificFeedbackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/AnyReportPacket.hpp"
+#include "RTC/NEW_RTCP/packet/CompoundPacket.hpp"
+#include "RTC/NEW_RTCP/packet/NackPacket.hpp"
+#include "RTC/NEW_RTCP/packet/SdesPacket.hpp"
+#include "RTC/NEW_RTCP/packet/extendedReports/DlrrExtendedReport.hpp"
+#include "RTC/NEW_RTCP/packet/extendedReports/RrtExtendedReport.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -182,11 +189,61 @@ namespace RTC
 			void ReceiveRtcpXrReceiverReferenceTime(
 			  RTC::RTCP::ReceiverReferenceTime* report, int64_t receivedAtUs);
 
+			void ReceiveRtcpNackPacket(const RTC::NEW_RTCP::NackPacket* nackPacket);
+
+			void ReceiveRtcpKeyFrameRequest(
+			  RTC::NEW_RTCP::AnyPayloadSpecificFeedbackPacket::MessageType messageType);
+
+			/**
+			 * @returns What this Receiver Report says about the link.
+			 */
+			ReceiverReportResult ReceiveRtcpReportBlock(
+			  const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock, int64_t receivedAtUs);
+
+			void ReceiveRtcpRrtExtendedReport(
+			  const RTC::NEW_RTCP::RrtExtendedReport* rrtExtendedReport, int64_t receivedAtUs);
+
 			RTC::RTCP::SenderReport* GetRtcpSenderReport(int64_t nowUs);
 
 			RTC::RTCP::DelaySinceLastRr::SsrcInfo* GetRtcpXrDelaySinceLastRrSsrcInfo(int64_t nowUs);
 
 			RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
+
+			/**
+			 * Add a Sender Report packet about this stream to the given compound
+			 * packet.
+			 *
+			 * @returns Whether it was added, which does not happen when there is
+			 *   nothing recent enough to report or when it does not fit in the
+			 *   compound packet. In both cases the compound packet is left untouched.
+			 */
+			[[nodiscard]] bool AddRtcpSenderReportPacket(
+			  RTC::NEW_RTCP::CompoundPacket* compoundPacket, int64_t nowUs);
+
+			/**
+			 * Add a DLRR sub-block about this stream to the given DLRR Extended
+			 * Report.
+			 *
+			 * @returns Whether it was added, which does not happen when no Receiver
+			 *   Reference Time Extended Report was ever received or when it does not
+			 *   fit. In both cases the DLRR Extended Report is left untouched.
+			 */
+			[[nodiscard]] bool AddRtcpDlrrSubBlock(
+			  RTC::NEW_RTCP::DlrrExtendedReport* dlrrExtendedReport, int64_t nowUs);
+
+			/**
+			 * Add a SDES chunk with the CNAME of this stream to the given SDES packet.
+			 *
+			 * @returns Whether it was added, which does not happen when the packet
+			 *   already has the most chunks it can count or when it does not fit. In
+			 *   both cases the SDES packet is left untouched.
+			 */
+			[[nodiscard]] bool AddRtcpSdesChunk(RTC::NEW_RTCP::SdesPacket* sdesPacket) const;
+
+			/**
+			 * Length (in bytes) of the SDES chunk `AddRtcpSdesChunk()` adds.
+			 */
+			size_t GetRtcpSdesChunkLength() const;
 
 			void Pause() override;
 
@@ -229,6 +286,21 @@ namespace RTC
 			 *   of them may go backwards.
 			 */
 			std::optional<Loss> UpdateSendLoss(RTC::RTCP::ReceiverReport* report);
+
+			/**
+			 * Determine how much of what the Receiver Report reports as lost really
+			 * was lost on the way to the remote endpoint, and take note of it.
+			 *
+			 * @returns What this link lost and what it was expected to deliver since
+			 *   the previous Receiver Report, or no value if this one measures no
+			 *   interval at all.
+			 *
+			 * @remarks
+			 * - What it returns, and what it takes note of in `fractionLost` and
+			 *   `packetsLost`, is held at zero and at the packets expected, since none
+			 *   of them may go backwards.
+			 */
+			std::optional<Loss> UpdateSendLoss(const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock);
 
 			/**
 			 * Forget everything measured over a numbering that is not in use anymore.
