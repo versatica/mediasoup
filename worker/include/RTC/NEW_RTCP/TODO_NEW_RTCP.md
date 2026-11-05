@@ -15,5 +15,3 @@
 - Remove `NEW_` prefix in all `#define MS_CLASS` in `.cpp` files.
 
 ## During the migration to the new RTCP
-
-- In `TransportWideCcFeedbackGenerator.cpp` add `static constexpr uint16_t MaxMissingRtpPackets{ 0x7FFE }` (libwebrtc's `kMaxMissingSequenceNumbers`) and use it in `FillAndSendFeedback()` to compute `oldestReportableSequenceNumber`.

@@ -154,16 +154,28 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			RTC::RTCP::FeedbackPsRembPacket packet(uint32_t{ 0 }, uint32_t{ 0 });
+			const std::unique_ptr<RTC::NEW_RTCP::RembPacket> packet{ RTC::NEW_RTCP::RembPacket::Factory(
+				this->packetBuffer.data(), this->packetBuffer.size()) };
 
-			packet.SetBitrate(bitrate);
+			packet->SetBitrate(bitrate);
 
-			if (!ssrcs.empty())
+			if (ssrcs.size() > RTC::NEW_RTCP::RembPacket::MaxSsrcs)
 			{
-				packet.SetSsrcs(ssrcs);
+				MS_WARN_TAG(
+				  bwe,
+				  "ignoring SSRCs that don't fit in a REMB [ssrcs:%zu, max:%zu]",
+				  ssrcs.size(),
+				  RTC::NEW_RTCP::RembPacket::MaxSsrcs);
 			}
 
-			this->listener->OnRembGeneratorSendPacket(this, std::addressof(packet));
+			const size_t numSsrcs = std::min(ssrcs.size(), RTC::NEW_RTCP::RembPacket::MaxSsrcs);
+
+			for (size_t idx{ 0 }; idx < numSsrcs; ++idx)
+			{
+				packet->AddSsrc(ssrcs[idx]);
+			}
+
+			this->listener->OnRembGeneratorSendPacket(this, packet.get());
 		}
 	} // namespace BWE
 } // namespace RTC

@@ -80,8 +80,6 @@ namespace RTC
 			 * chunks, RTCP Common Header included.
 			 */
 			static constexpr size_t TransportWideCcHeaderLength{ 20 };
-
-		private:
 			/**
 			 * The reference time is expressed in multiples of this (in
 			 * microseconds).
@@ -91,6 +89,8 @@ namespace RTC
 			 * Period (in microseconds) after which the reference time wraps around.
 			 */
 			static constexpr int64_t TimeWrapPeriodUs{ TransportWideCcPacket::BaseTimeTickUs * (1 << 24) };
+
+		private:
 			/**
 			 * Length (in bytes) of a packet chunk.
 			 */

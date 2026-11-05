@@ -3442,11 +3442,9 @@ namespace RTC
 
 	void Transport::OnReceiverTransportCongestionControllerSendRtcpPacket(
 	  RTC::BWE::ReceiverTransportCongestionController* /*receiverTransportCongestionController*/,
-	  RTC::RTCP::Packet* packet)
+	  const RTC::NEW_RTCP::Packet* packet)
 	{
 		MS_TRACE();
-
-		packet->Serialize(RTC::RTCP::SerializationBuffer);
 
 		SendRtcpPacket(packet);
 	}
