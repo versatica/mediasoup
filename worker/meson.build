@@ -734,7 +734,6 @@ fuzzer_sources = [
   'fuzzer/src/RTC/RTP/FuzzerRetransmissionBuffer.cpp',
   'fuzzer/src/RTC/RTP/FuzzerRtpStreamSend.cpp',
   'fuzzer/src/RTC/RTP/Codecs/FuzzerOpus.cpp',
-
   'fuzzer/src/RTC/RTP/Codecs/FuzzerH264.cpp',
   'fuzzer/src/RTC/RTP/Codecs/FuzzerVP8.cpp',
   'fuzzer/src/RTC/RTP/Codecs/FuzzerVP9.cpp',

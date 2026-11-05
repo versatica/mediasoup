@@ -231,7 +231,7 @@ namespace RTC
 			private:
 				Utils::BitReader bitReader;
 				// Length of the descriptor as received.
-				uint8_t length{ 0 };
+				uint8_t length;
 				// Whether the descriptor in the packet no longer is the one received.
 				bool rewritten{ false };
 				// Where things are within the descriptor as received, so that the parts
