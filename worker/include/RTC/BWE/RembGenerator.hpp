@@ -2,7 +2,8 @@
 #define MS_RTC_BWE_REMB_GENERATOR_HPP
 
 #include "common.hpp"
-#include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "RTC/NEW_RTCP/packet/RembPacket.hpp"
+#include <array>
 #include <vector>
 
 namespace RTC
@@ -32,7 +33,7 @@ namespace RTC
 				 *   returns.
 				 */
 				virtual void OnRembGeneratorSendPacket(
-				  RembGenerator* rembGenerator, RTC::RTCP::FeedbackPsRembPacket* packet) = 0;
+				  RembGenerator* rembGenerator, const RTC::NEW_RTCP::RembPacket* packet) = 0;
 			};
 
 		public:
@@ -90,6 +91,12 @@ namespace RTC
 			std::optional<int64_t> limitationRembSentAtMs;
 			// How many REMBs announcing that the cap is gone are still owed.
 			uint8_t unlimitedRembCounter{ 0 };
+			// Buffer every REMB is built in, big enough for the most SSRCs a REMB
+			// can carry.
+			alignas(4) std::array<
+			  uint8_t,
+			  RTC::NEW_RTCP::RembPacket::RembHeaderLength +
+			    (RTC::NEW_RTCP::RembPacket::MaxSsrcs * 4)> packetBuffer{};
 		};
 	} // namespace BWE
 } // namespace RTC

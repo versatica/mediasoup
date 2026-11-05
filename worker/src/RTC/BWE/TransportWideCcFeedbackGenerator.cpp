@@ -26,6 +26,9 @@ namespace RTC
 		static constexpr int64_t IncomingBitrateWindowMs{ 2500 };
 		// How far back the arrival times are kept.
 		static constexpr int64_t PacketArrivalTimestampWindowUs{ 500 * 1000 };
+		// Most sequences a feedback may report as lost before the first one it
+		// reports as received.
+		static constexpr uint16_t MaxMissingRtpPackets{ 0x7FFE };
 
 		/* Instance methods. */
 
@@ -35,6 +38,7 @@ namespace RTC
 		    listener(listener),
 		    shared(shared),
 		    sendPeriodicTimer(shared->CreateTimer(this, "transport-wide-cc-feedback-generator-send")),
+		    packetBuffer(std::make_unique<uint8_t[]>(maxRtcpPacketLen)),
 		    incomingDataCounter(shared, /*ignorePaddingOnlyPackets*/ false, IncomingBitrateWindowMs),
 		    sendIntervalMs(DefaultSendIntervalMs)
 		{
@@ -118,6 +122,10 @@ namespace RTC
 				return;
 			}
 
+			// Sequence right after the last received one added to the feedback packet
+			// being filled, which is where the next feedback starts.
+			uint16_t nextWideSeqNumber = this->feedbackWideSeqNumStart.value();
+
 			while (it != this->mapPacketArrivalTimes.end())
 			{
 				const uint16_t sequenceNumber = it->first;
@@ -125,7 +133,7 @@ namespace RTC
 				// Whether nothing has been added to the current feedback packet yet,
 				// which tells apart a packet that doesn't fit in what is left from one
 				// that doesn't fit in an empty packet either.
-				const bool feedbackPacketIsEmpty = !this->feedbackPacket->IsBaseSet();
+				const bool feedbackPacketIsEmpty = this->packet->GetPacketStatusCount() == 0;
 
 				// If the base is not set in this packet let's set it.
 				// NOTE: This may be needed many times during this loop, since the
@@ -133,8 +141,7 @@ namespace RTC
 				// full (so already sent) or failed to be built.
 				if (feedbackPacketIsEmpty)
 				{
-					const uint16_t oldestReportableSequenceNumber =
-					  sequenceNumber - RTC::RTCP::FeedbackRtpTransportPacket::maxMissingPackets;
+					const uint16_t oldestReportableSequenceNumber = sequenceNumber - MaxMissingRtpPackets;
 
 					// The base is where the report starts counting from, and every
 					// sequence between it and the first one actually received is reported
@@ -142,8 +149,7 @@ namespace RTC
 					// moved up rather than letting the packet fail to be built.
 					// NOTE: clang-tidy doesn't understand that this is guaranteed to have
 					// a value: the method returns above when it has none, and nothing
-					// takes it away afterwards, since SendFeedback() only ever assigns
-					// one.
+					// takes it away afterwards, since this loop only ever assigns one.
 					// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 					uint16_t baseSequenceNumber = this->feedbackWideSeqNumStart.value();
 
@@ -152,77 +158,38 @@ namespace RTC
 						baseSequenceNumber = oldestReportableSequenceNumber;
 					}
 
-					this->feedbackPacket->SetBase(baseSequenceNumber, timestampUs);
+					this->packet->SetBase(baseSequenceNumber, timestampUs);
 				}
 
-				const auto result =
-				  this->feedbackPacket->AddPacket(sequenceNumber, timestampUs, this->maxRtcpPacketLen);
-
-				switch (result)
+				if (this->packet->AddReceivedRtpPacket(sequenceNumber, timestampUs))
 				{
-					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::SUCCESS:
-					{
-						// If the feedback packet is full, send it now.
-						if (this->feedbackPacket->IsFull())
-						{
-							MS_DEBUG_DEV("feedback packet is full, sending it now");
+					nextWideSeqNumber = static_cast<uint16_t>(sequenceNumber + 1);
 
-							if (SendFeedback())
-							{
-								++this->feedbackPacketCount;
-							}
+					++it;
 
-							ResetFeedbackPacket(this->feedbackPacketCount);
-						}
+					continue;
+				}
 
-						++it;
+				// The packet doesn't fit in what is left of the feedback packet being
+				// filled, or it cannot be expressed relative to its base and reference
+				// time, so what is already in it goes out and a fresh one is started,
+				// whose base and reference time are taken from this very packet.
+				if (SendFeedback())
+				{
+					++this->feedbackPacketCount;
 
-						break;
-					}
+					this->feedbackWideSeqNumStart = nextWideSeqNumber;
+				}
 
-					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
-					{
-						if (SendFeedback())
-						{
-							++this->feedbackPacketCount;
-						}
+				ResetFeedbackPacket(this->feedbackPacketCount);
 
-						ResetFeedbackPacket(this->feedbackPacketCount);
-
-						// NOTE: The iterator is only advanced when the packet had a chance
-						// of fitting. If it didn't fit in a feedback packet that was
-						// already empty it will not fit in the fresh one either, and
-						// retrying it would loop forever.
-						if (feedbackPacketIsEmpty)
-						{
-							++it;
-						}
-
-						break;
-					}
-
-					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
-					{
-						// This packet cannot be expressed relative to the base and the
-						// reference time of the feedback packet being filled, so what is
-						// already in it goes out and a fresh one is started, whose base
-						// and reference time are taken from this very packet.
-						if (SendFeedback())
-						{
-							++this->feedbackPacketCount;
-						}
-
-						ResetFeedbackPacket(this->feedbackPacketCount);
-
-						// NOTE: Same reasoning as above. If it didn't fit in a feedback
-						// packet that was already empty, a fresh one changes nothing.
-						if (feedbackPacketIsEmpty)
-						{
-							++it;
-						}
-
-						break;
-					}
+				// NOTE: The iterator is only advanced when the packet had a chance of
+				// fitting. If it didn't fit in a feedback packet that was already empty
+				// it will not fit in the fresh one either, and retrying it would loop
+				// forever.
+				if (feedbackPacketIsEmpty)
+				{
+					++it;
 				}
 			}
 
@@ -230,6 +197,8 @@ namespace RTC
 			if (SendFeedback())
 			{
 				++this->feedbackPacketCount;
+
+				this->feedbackWideSeqNumStart = nextWideSeqNumber;
 			}
 
 			ResetFeedbackPacket(this->feedbackPacketCount);
@@ -239,9 +208,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->feedbackPacket->Finish();
-
-			if (!this->feedbackPacket->IsSerializable())
+			if (this->packet->GetPacketStatusCount() == 0)
 			{
 				return false;
 			}
@@ -249,13 +216,9 @@ namespace RTC
 			// The report is about whoever has sent last, which this packet could not
 			// be built with: it was started at the end of the previous round, when
 			// that may not have been known yet.
-			this->feedbackPacket->SetMediaSsrc(this->feedbackMediaSsrc);
+			this->packet->SetMediaSsrc(this->feedbackMediaSsrc);
 
-			const auto latestWideSeqNumber = this->feedbackPacket->GetLatestSequenceNumber();
-
-			this->listener->OnTransportWideCcFeedbackGeneratorSendPacket(this, this->feedbackPacket.get());
-
-			this->feedbackWideSeqNumStart = latestWideSeqNumber + 1;
+			this->listener->OnTransportWideCcFeedbackGeneratorSendPacket(this, this->packet.get());
 
 			return true;
 		}
@@ -308,10 +271,11 @@ namespace RTC
 			// NOTE: The media SSRC is left at zero here and filled in when the packet
 			// is about to go out, since who has sent last may still change while this
 			// one is being filled.
-			this->feedbackPacket = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(
-			  /*senderSsrc*/ 0, /*mediaSsrc*/ 0);
+			this->packet.reset(
+			  RTC::NEW_RTCP::TransportWideCcPacket::Factory(
+			    this->packetBuffer.get(), this->maxRtcpPacketLen, /*includeDeltas*/ true));
 
-			this->feedbackPacket->SetFeedbackPacketCount(feedbackPacketCount);
+			this->packet->SetFeedbackPacketCount(feedbackPacketCount);
 		}
 
 		int64_t TransportWideCcFeedbackGenerator::ComputeSendIntervalMs(int64_t incomingBitrate)

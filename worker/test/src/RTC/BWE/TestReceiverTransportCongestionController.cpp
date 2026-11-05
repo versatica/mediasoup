@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "RTC/BWE/ReceiverTransportCongestionController.hpp"
-#include "RTC/RTCP/FeedbackPsRemb.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
+#include "RTC/NEW_RTCP/packet/RembPacket.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -19,13 +20,13 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 	public:
 		void OnReceiverTransportCongestionControllerSendRtcpPacket(
 		  RTC::BWE::ReceiverTransportCongestionController* /*receiverTransportCongestionControl*/,
-		  RTC::RTCP::Packet* packet) override
+		  const RTC::NEW_RTCP::Packet* packet) override
 		{
 			this->rtcpTypes.push_back(packet->GetType());
 
-			if (packet->GetType() == RTC::RTCP::Type::PSFB)
+			if (packet->GetType() == RTC::NEW_RTCP::Packet::PacketType::PSFB)
 			{
-				const auto* rembPacket = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(packet);
+				const auto* rembPacket = static_cast<const RTC::NEW_RTCP::RembPacket*>(packet);
 
 				this->rembBitrates.push_back(rembPacket->GetBitrate());
 				this->rembSsrcs.push_back(rembPacket->GetSsrcs());
@@ -33,7 +34,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		}
 
 	public:
-		std::vector<RTC::RTCP::Type> rtcpTypes;
+		std::vector<RTC::NEW_RTCP::Packet::PacketType> rtcpTypes;
 		std::vector<int64_t> rembBitrates;
 		std::vector<std::vector<uint32_t>> rembSsrcs;
 	};
@@ -152,7 +153,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		REQUIRE(timer->EvaluateHasExpired());
 
 		REQUIRE(listener.rtcpTypes.size() == 1);
-		REQUIRE(listener.rtcpTypes.at(0) == RTC::RTCP::Type::RTPFB);
+		REQUIRE(listener.rtcpTypes.at(0) == RTC::NEW_RTCP::Packet::PacketType::RTPFB);
 
 		// The estimating is the remote sender's job for such a packet.
 		REQUIRE(receiverTransportCongestionControl.GetAvailableBitrate().has_value() == false);
@@ -186,7 +187,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		REQUIRE(timer->EvaluateHasExpired());
 
 		REQUIRE(listener.rtcpTypes.size() == 1);
-		REQUIRE(listener.rtcpTypes.at(0) == RTC::RTCP::Type::RTPFB);
+		REQUIRE(listener.rtcpTypes.at(0) == RTC::NEW_RTCP::Packet::PacketType::RTPFB);
 	}
 
 	SECTION("a packet carrying only abs-send-time is estimated here and announced as a REMB")
@@ -211,7 +212,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		}
 
 		REQUIRE(listener.rtcpTypes.size() == 1);
-		REQUIRE(listener.rtcpTypes.at(0) == RTC::RTCP::Type::PSFB);
+		REQUIRE(listener.rtcpTypes.at(0) == RTC::NEW_RTCP::Packet::PacketType::PSFB);
 		REQUIRE(listener.rembBitrates.at(0) > 0);
 
 		// What went out is what is reported as available.
@@ -248,7 +249,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		// The abs-send-time stream was estimated here and announced right away,
 		// while the transport-cc one waits for the periodic feedback.
 		REQUIRE(listener.rtcpTypes.size() == 1);
-		REQUIRE(listener.rtcpTypes.at(0) == RTC::RTCP::Type::PSFB);
+		REQUIRE(listener.rtcpTypes.at(0) == RTC::NEW_RTCP::Packet::PacketType::PSFB);
 
 		// And only the abs-send-time stream is in the REMB, since the other one is
 		// not estimated here at all.
@@ -263,7 +264,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		REQUIRE(timer->EvaluateHasExpired());
 
 		REQUIRE(listener.rtcpTypes.size() == 2);
-		REQUIRE(listener.rtcpTypes.at(1) == RTC::RTCP::Type::RTPFB);
+		REQUIRE(listener.rtcpTypes.at(1) == RTC::NEW_RTCP::Packet::PacketType::RTPFB);
 	}
 
 	SECTION("a stream that is removed stops being announced")
@@ -349,7 +350,7 @@ SCENARIO("BWE ReceiverTransportCongestionController", "[bwe][receivertransportco
 		REQUIRE(timer->EvaluateHasExpired());
 
 		REQUIRE(listener.rtcpTypes.size() == 1);
-		REQUIRE(listener.rtcpTypes.at(0) == RTC::RTCP::Type::RTPFB);
+		REQUIRE(listener.rtcpTypes.at(0) == RTC::NEW_RTCP::Packet::PacketType::RTPFB);
 	}
 
 	SECTION("the cap is announced even for a packet that is only reported back")

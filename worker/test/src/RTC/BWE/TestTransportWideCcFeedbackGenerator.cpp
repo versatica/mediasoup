@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "RTC/BWE/TransportWideCcFeedbackGenerator.hpp"
 #include "RTC/Consts.hpp"
-#include "RTC/RTCP/FeedbackRtpTransport.hpp"
+#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
 #include "RTC/RTP/HeaderExtensionIds.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -35,23 +35,26 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 	public:
 		void OnTransportWideCcFeedbackGeneratorSendPacket(
 		  RTC::BWE::TransportWideCcFeedbackGenerator* /*transportWideCcFeedbackGenerator*/,
-		  RTC::RTCP::FeedbackRtpTransportPacket* packet) override
+		  const RTC::NEW_RTCP::TransportWideCcPacket* packet) override
 		{
+			const int64_t baseTimeUs = packet->GetBaseTimeUs();
+
 			std::vector<TestPacketStatus> statuses;
 
-			for (const auto& packetStatus : packet->GetPacketStatuses())
-			{
-				// The reconstructed times sit in the frame of the reference time,
-				// which is shifted by a whole wrap period so that it's positive
-				// regardless of the sign of the reference time on the wire.
-				statuses.push_back(
-				  TestPacketStatus{ .wideSeqNumber = packetStatus.sequenceNumber,
-					                  .received      = packetStatus.received,
-					                  .timestampUs = packetStatus.received
-					                                   ? packetStatus.receivedAtUs -
-					                                       RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriodUs
-					                                   : 0 });
-			}
+			packet->ForAllRtpPackets(
+			  [&statuses, baseTimeUs](uint16_t sequenceNumber, std::optional<int64_t> deltaSinceBaseUs) -> void
+			  {
+				  // The reconstructed times sit in the frame of the reference time,
+				  // which is shifted by a whole wrap period so that it's positive
+				  // regardless of the sign of the reference time on the wire.
+				  statuses.push_back(
+				    TestPacketStatus{ .wideSeqNumber = sequenceNumber,
+						                  .received      = deltaSinceBaseUs.has_value(),
+						                  .timestampUs = deltaSinceBaseUs.has_value()
+						                                   ? baseTimeUs + deltaSinceBaseUs.value() -
+						                                       RTC::NEW_RTCP::TransportWideCcPacket::TimeWrapPeriodUs
+						                                   : 0 });
+			  });
 
 			this->baseSequenceNumbers.push_back(packet->GetBaseSequenceNumber());
 			this->feedbacks.push_back(statuses);
@@ -494,6 +497,54 @@ SCENARIO("BWE TransportWideCcFeedbackGenerator", "[bwe][transportwideccfeedbackg
 
 		REQUIRE(listener.baseSequenceNumbers.at(0) == 1);
 		REQUIRE(listener.baseSequenceNumbers.at(1) == 2);
+	}
+
+	SECTION("the next report starts right after the last received packet of the previous one")
+	{
+		// Room for the 20 bytes of fixed header, the chunk of the first 16 packets,
+		// their 16 one byte deltas and the chunk of the 3 lost ones that follow, but
+		// not for one more delta.
+		constexpr size_t MaxRtcpPacketLen{ 40 };
+
+		TestTransportWideCcFeedbackGeneratorListener listener;
+		RTC::BWE::TransportWideCcFeedbackGenerator transportWideCcFeedbackGenerator(
+		  std::addressof(listener), std::addressof(shared), MaxRtcpPacketLen);
+
+		TestResults expectedResults(2);
+
+		for (uint16_t wideSeqNumber{ 1 }; wideSeqNumber <= 16; ++wideSeqNumber)
+		{
+			const int64_t arrivalTimeUs = 1000000 + ((wideSeqNumber - 1) * 10000);
+
+			feedPacket(transportWideCcFeedbackGenerator, wideSeqNumber, arrivalTimeUs, DefaultPayloadSize);
+
+			expectedResults.at(0).push_back(
+			  { .wideSeqNumber = wideSeqNumber, .received = true, .timestampUs = arrivalTimeUs });
+		}
+
+		// 17, 18 and 19 are lost. The chunk that reports them still fits in the
+		// first feedback packet, but the delta of 20 does not, so the first packet
+		// ends with them and 20 goes into a second one.
+		feedPacket(transportWideCcFeedbackGenerator, 20, 1160000, DefaultPayloadSize);
+
+		transportWideCcFeedbackGenerator.FillAndSendFeedback();
+
+		for (uint16_t wideSeqNumber{ 17 }; wideSeqNumber <= 19; ++wideSeqNumber)
+		{
+			expectedResults.at(0).push_back(
+			  { .wideSeqNumber = wideSeqNumber, .received = false, .timestampUs = 0 });
+			expectedResults.at(1).push_back(
+			  { .wideSeqNumber = wideSeqNumber, .received = false, .timestampUs = 0 });
+		}
+
+		expectedResults.at(1).push_back({ .wideSeqNumber = 20, .received = true, .timestampUs = 1160000 });
+
+		checkFeedbacks(listener, expectedResults);
+
+		// The lost ones that closed the first report are reported again, since
+		// the second one starts right after 16 and not after 19.
+		REQUIRE(listener.baseSequenceNumbers.at(0) == 1);
+		REQUIRE(listener.baseSequenceNumbers.at(1) == 17);
 	}
 
 	SECTION("the send interval follows the bitrate it reports on")

@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "handles/TimerHandleInterface.hpp"
-#include "RTC/RTCP/FeedbackRtpTransport.hpp"
+#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/SeqManager.hpp"
@@ -44,7 +44,7 @@ namespace RTC
 				 */
 				virtual void OnTransportWideCcFeedbackGeneratorSendPacket(
 				  TransportWideCcFeedbackGenerator* transportWideCcFeedbackGenerator,
-				  RTC::RTCP::FeedbackRtpTransportPacket* packet) = 0;
+				  const RTC::NEW_RTCP::TransportWideCcPacket* packet) = 0;
 			};
 
 		public:
@@ -127,7 +127,10 @@ namespace RTC
 			SharedInterface* const shared;
 			// Allocated by this.
 			const std::unique_ptr<TimerHandleInterface> sendPeriodicTimer;
-			std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> feedbackPacket;
+			// Buffer every feedback packet is built in, as long as an RTCP packet may
+			// be on this transport.
+			const std::unique_ptr<uint8_t[]> packetBuffer;
+			std::unique_ptr<RTC::NEW_RTCP::TransportWideCcPacket> packet;
 			// Bitrate coming in, which is what decides how often feedback is emitted.
 			RTC::RtpDataCounter incomingDataCounter;
 			// How often feedback is emitted (ms).

@@ -837,6 +837,37 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
+	void WebRtcTransport::SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		if (!IsConnected())
+		{
+			return;
+		}
+
+		const uint8_t* data = packet->GetBuffer();
+		auto len            = packet->GetLength();
+
+		// Ensure there is sending SRTP session.
+		if (!this->srtpSendSession)
+		{
+			MS_WARN_DEV("ignoring RTCP packet due to non sending SRTP session");
+
+			return;
+		}
+
+		if (!this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
+		{
+			return;
+		}
+
+		this->iceServer->GetSelectedTuple()->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
+	}
+
 	void WebRtcTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
 		MS_TRACE();

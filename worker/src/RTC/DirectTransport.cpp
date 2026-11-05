@@ -222,6 +222,27 @@ namespace RTC
 		RTC::Transport::DataSent(packet->GetSize());
 	}
 
+	void DirectTransport::SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		// Notify the Node DirectTransport.
+		const auto data = this->shared->GetChannelNotifier()->GetBufferBuilder().CreateVector(
+		  packet->GetBuffer(), packet->GetLength());
+
+		auto notification = FBS::DirectTransport::CreateRtcpNotification(
+		  this->shared->GetChannelNotifier()->GetBufferBuilder(), data);
+
+		this->shared->GetChannelNotifier()->Emit(
+		  this->id,
+		  FBS::Notification::Event::DIRECTTRANSPORT_RTCP,
+		  FBS::Notification::Body::DirectTransport_RtcpNotification,
+		  notification);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(packet->GetLength());
+	}
+
 	void DirectTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
 		MS_TRACE();

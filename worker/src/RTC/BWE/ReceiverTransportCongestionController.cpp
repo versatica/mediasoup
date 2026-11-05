@@ -90,7 +90,7 @@ namespace RTC
 
 		void ReceiverTransportCongestionController::OnTransportWideCcFeedbackGeneratorSendPacket(
 		  TransportWideCcFeedbackGenerator* /*transportWideCcFeedbackGenerator*/,
-		  RTC::RTCP::FeedbackRtpTransportPacket* packet)
+		  const RTC::NEW_RTCP::TransportWideCcPacket* packet)
 		{
 			MS_TRACE();
 
@@ -108,7 +108,7 @@ namespace RTC
 		}
 
 		void ReceiverTransportCongestionController::OnRembGeneratorSendPacket(
-		  RembGenerator* /*rembGenerator*/, RTC::RTCP::FeedbackPsRembPacket* packet)
+		  RembGenerator* /*rembGenerator*/, const RTC::NEW_RTCP::RembPacket* packet)
 		{
 			MS_TRACE();
 
