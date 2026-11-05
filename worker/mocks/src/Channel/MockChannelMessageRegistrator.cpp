@@ -47,7 +47,9 @@ namespace mocks
 			}
 
 			return FBS::Worker::CreateChannelMessageHandlersDirect(
-			  builder, &channelRequestHandlerIds, &channelNotificationHandlerIds);
+			  builder,
+			  std::addressof(channelRequestHandlerIds),
+			  std::addressof(channelNotificationHandlerIds));
 		}
 
 		void MockChannelMessageRegistrator::RegisterHandler(

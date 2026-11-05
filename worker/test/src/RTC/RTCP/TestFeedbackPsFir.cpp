@@ -71,6 +71,6 @@ SCENARIO("RTCP Feedback PS FIR", "[rtcp][feedback-ps][fir]")
 
 		packet.AddItem(item);
 
-		verify(&packet);
+		verify(std::addressof(packet));
 	}
 }

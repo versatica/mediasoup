@@ -68,6 +68,6 @@ SCENARIO("RTCP Feedback PS LEI", "[rtcp][feedback-ps][lei]")
 
 		packet.AddItem(item);
 
-		verify(&packet);
+		verify(std::addressof(packet));
 	}
 }

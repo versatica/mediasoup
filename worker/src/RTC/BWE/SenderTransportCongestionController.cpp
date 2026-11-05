@@ -330,6 +330,146 @@ namespace RTC
 			ApplyPendingUpdate();
 		}
 
+		void SenderTransportCongestionController::ReceiveTransportWideCcFeedback(
+		  const RTC::NEW_RTCP::TransportWideCcPacket* feedback, int64_t receivedAtUs)
+		{
+			MS_TRACE();
+
+			const auto processedFeedback =
+			  this->feedbackAdapter.ProcessTransportWideCcFeedback(feedback, receivedAtUs);
+
+			if (!processedFeedback.has_value())
+			{
+				return;
+			}
+
+			const auto& transportPacketsFeedback = processedFeedback.value();
+
+			if (transportPacketsFeedback.packetFeedbacks.empty())
+			{
+				return;
+			}
+
+			// Something reports back, so the estimation is ours to do and not the
+			// remote endpoint's.
+			this->firstTransportFeedbackReceived = true;
+
+			const int64_t feedbackTimeUs    = transportPacketsFeedback.feedbackTimeUs;
+			const auto receivedWithSendInfo = transportPacketsFeedback.ReceivedWithSendInfo();
+
+			// The round trip of the whole feedback is the time since the oldest packet
+			// it reports on left, minus how long the rest of them waited at the remote
+			// endpoint before it decided to report. Taking the smallest of those is
+			// what leaves the propagation alone, without the wait.
+			//
+			// NOTE: Every packet below has an arrival time, since only the ones that
+			// were received are in `ReceivedWithSendInfo()`.
+			int64_t minPropagationRttUs{ Types::TimeUsInfinite };
+			int64_t maxReceiveTimeUs{ 0 };
+
+			for (const auto& packetResult : receivedWithSendInfo)
+			{
+				// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+				maxReceiveTimeUs = std::max(maxReceiveTimeUs, packetResult.receiveTimeUs.value());
+			}
+
+			for (const auto& packetResult : receivedWithSendInfo)
+			{
+				// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+				const int64_t receiveTimeUs    = packetResult.receiveTimeUs.value();
+				const int64_t feedbackRttUs    = feedbackTimeUs - packetResult.sentPacket.sendTimeUs;
+				const int64_t minPendingTimeUs = maxReceiveTimeUs - receiveTimeUs;
+				const int64_t propagationRttUs = feedbackRttUs - minPendingTimeUs;
+
+				minPropagationRttUs = std::min(minPropagationRttUs, propagationRttUs);
+			}
+
+			if (!receivedWithSendInfo.empty())
+			{
+				this->targetRateController.UpdatePropagationRtt(minPropagationRttUs, feedbackTimeUs);
+			}
+
+			const auto alrStartTimeUs = this->alrDetector.GetAlrStartTimeUs();
+
+			// Leaving the state has to be told to both of them, since each one holds
+			// its own idea of when it ended.
+			if (this->previouslyInAlr && !alrStartTimeUs.has_value())
+			{
+				this->acknowledgedBitrateEstimator.SetAlrEndedTimeUs(feedbackTimeUs);
+				this->probeController.SetAlrEndedTimeUs(feedbackTimeUs);
+			}
+
+			this->previouslyInAlr = alrStartTimeUs.has_value();
+
+			this->acknowledgedBitrateEstimator.IncomingPacketFeedbackVector(
+			  transportPacketsFeedback.SortedByReceiveTime());
+
+			const auto acknowledgedBitrate = this->acknowledgedBitrateEstimator.GetBitrate();
+
+			this->targetRateController.SetAcknowledgedBitrate(
+			  acknowledgedBitrate.value_or(Types::BitrateInfinite));
+
+			for (const auto& packetResult : transportPacketsFeedback.SortedByReceiveTime())
+			{
+				if (packetResult.sentPacket.probeCluster.has_value())
+				{
+					this->probeBitrateEstimator.HandleProbeAndEstimateBitrate(packetResult);
+				}
+			}
+
+			auto probeBitrate = this->probeBitrateEstimator.FetchAndResetLastEstimatedBitrate();
+
+			// A probe that measured far below what is already acknowledged is not
+			// measuring the link, so the drop it would cause is bounded.
+			if (probeBitrate.has_value() && acknowledgedBitrate.has_value())
+			{
+				const int64_t limit = std::min(
+				  this->delayBasedBwe.GetLastEstimate(),
+				  BitrateUtils::ApplyBitrateFactor(acknowledgedBitrate.value(), ProbeDropThroughputFraction));
+
+				probeBitrate = std::max(probeBitrate.value(), limit);
+			}
+
+			const auto result = this->delayBasedBwe.IncomingPacketFeedbackVector(
+			  transportPacketsFeedback,
+			  acknowledgedBitrate,
+			  probeBitrate,
+			  /*networkEstimate*/ std::nullopt,
+			  alrStartTimeUs.has_value());
+
+			if (result.updated)
+			{
+				// A probe result replaces the estimate instead of nudging it, and that
+				// has to happen before the delay based estimate is handed over, since
+				// setting it clears what the delay based path had.
+				if (result.probe)
+				{
+					this->targetRateController.SetSendBitrate(result.targetBitrate);
+				}
+
+				this->targetRateController.SetDelayBasedEstimate(result.targetBitrate);
+			}
+
+			this->targetRateController.UpdateLossBasedController(
+			  transportPacketsFeedback.packetFeedbacks, alrStartTimeUs.has_value(), feedbackTimeUs);
+
+			if (result.updated)
+			{
+				MayNotifyTargetBitrate(feedbackTimeUs);
+			}
+
+			// Coming out of an overuse is the one moment where a probe is worth it
+			// without waiting for anything else.
+			if (result.recoveredFromOveruse)
+			{
+				this->probeController.SetAlrStartTimeUs(alrStartTimeUs);
+
+				AddProbeClusters(this->probeController.RequestProbe(feedbackTimeUs));
+			}
+
+			ApplyPendingUpdate();
+		}
+
 		void SenderTransportCongestionController::ReceiveRtcpReceiverReport(
 		  int64_t lostPackets, int64_t expectedPackets)
 		{

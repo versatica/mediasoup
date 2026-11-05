@@ -217,7 +217,7 @@ namespace RTC
 					{
 						uint16_t netPictureId = htons(pictureId);
 
-						std::memcpy(data, &netPictureId, 2);
+						std::memcpy(data, std::addressof(netPictureId), 2);
 						data[0] |= 0x80;
 						data += 2;
 					}

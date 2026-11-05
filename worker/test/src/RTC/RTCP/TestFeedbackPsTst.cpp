@@ -74,6 +74,6 @@ SCENARIO("RTCP Feedback PS TSTN", "[rtcp][feedback-ps][tstn]")
 
 		packet.AddItem(item);
 
-		verify(&packet);
+		verify(std::addressof(packet));
 	}
 }

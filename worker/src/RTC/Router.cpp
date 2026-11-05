@@ -107,7 +107,8 @@ namespace RTC
 			}
 
 			mapProducerIdConsumerIds.emplace_back(
-			  FBS::Common::CreateStringStringArrayDirect(builder, producer->id.c_str(), &consumerIds));
+			  FBS::Common::CreateStringStringArrayDirect(
+			    builder, producer->id.c_str(), std::addressof(consumerIds)));
 		}
 
 		// Add mapConsumerIdProducerId.
@@ -141,7 +142,8 @@ namespace RTC
 			}
 
 			mapProducerIdObserverIds.emplace_back(
-			  FBS::Common::CreateStringStringArrayDirect(builder, producer->id.c_str(), &observerIds));
+			  FBS::Common::CreateStringStringArrayDirect(
+			    builder, producer->id.c_str(), std::addressof(observerIds)));
 		}
 
 		// Add mapDataProducerIdDataConsumerIds.
@@ -163,7 +165,7 @@ namespace RTC
 
 			mapDataProducerIdDataConsumerIds.emplace_back(
 			  FBS::Common::CreateStringStringArrayDirect(
-			    builder, dataProducer->id.c_str(), &dataConsumerIds));
+			    builder, dataProducer->id.c_str(), std::addressof(dataConsumerIds)));
 		}
 
 		// Add mapDataConsumerIdDataProducerId.
@@ -183,13 +185,13 @@ namespace RTC
 		return FBS::Router::CreateDumpResponseDirect(
 		  builder,
 		  this->id.c_str(),
-		  &transportIds,
-		  &rtpObserverIds,
-		  &mapProducerIdConsumerIds,
-		  &mapConsumerIdProducerId,
-		  &mapProducerIdObserverIds,
-		  &mapDataProducerIdDataConsumerIds,
-		  &mapDataConsumerIdDataProducerId);
+		  std::addressof(transportIds),
+		  std::addressof(rtpObserverIds),
+		  std::addressof(mapProducerIdConsumerIds),
+		  std::addressof(mapConsumerIdProducerId),
+		  std::addressof(mapProducerIdObserverIds),
+		  std::addressof(mapDataProducerIdDataConsumerIds),
+		  std::addressof(mapDataConsumerIdDataProducerId));
 	}
 
 	void Router::HandleRequest(Channel::ChannelRequest* request)
