@@ -16,7 +16,7 @@ namespace
 	  bool layerSync = true)
 	{
 		uint16_t netPictureId = htons(pictureId);
-		std::memcpy(buffer + 2, &netPictureId, 2);
+		std::memcpy(buffer + 2, std::addressof(netPictureId), 2);
 		buffer[2] |= 0x80;
 		buffer[4] = tl0PictureIndex;
 		buffer[5] = tlIndex << 6;
@@ -58,7 +58,7 @@ namespace
 		std::unique_ptr<RTC::RTP::Codecs::VP8::PayloadDescriptorHandler> payloadDescriptorHandler(
 		  new RTC::RTP::Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor));
 
-		if (payloadDescriptorHandler->Process(&context, packet.get(), marker))
+		if (payloadDescriptorHandler->Process(std::addressof(context), packet.get(), marker))
 		{
 			return std::unique_ptr<RTC::RTP::Codecs::VP8::PayloadDescriptor>(
 			  RTC::RTP::Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength()));
@@ -598,7 +598,7 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 		packet->SetPayload(payload, sizeof(payload));
 
-		auto forwarded = payloadDescriptorHandler->Process(&context, packet.get(), marker);
+		auto forwarded = payloadDescriptorHandler->Process(std::addressof(context), packet.get(), marker);
 		REQUIRE(forwarded);
 
 		auto encoder1 = std::move(context.encoder);
@@ -612,7 +612,7 @@ SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 
 		packet->SetPayload(payload, sizeof(payload));
 
-		forwarded = payloadDescriptorHandler->Process(&context, packet.get(), marker);
+		forwarded = payloadDescriptorHandler->Process(std::addressof(context), packet.get(), marker);
 		REQUIRE(forwarded);
 		REQUIRE(payloadDescriptor->pictureId == 2);
 

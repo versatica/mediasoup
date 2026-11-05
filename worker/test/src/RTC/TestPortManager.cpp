@@ -21,7 +21,7 @@ SCENARIO("PortManager", "[portmanager]")
 		in->sin_family = AF_INET;
 		in->sin_port   = 0;
 
-		REQUIRE(inet_pton(AF_INET, dottedQuad, &in->sin_addr) == 1);
+		REQUIRE(inet_pton(AF_INET, dottedQuad, std::addressof(in->sin_addr)) == 1);
 
 		return ss;
 	};
@@ -35,7 +35,7 @@ SCENARIO("PortManager", "[portmanager]")
 		in6->sin6_family = AF_INET6;
 		in6->sin6_port   = 0;
 
-		REQUIRE(inet_pton(AF_INET6, literal, &in6->sin6_addr) == 1);
+		REQUIRE(inet_pton(AF_INET6, literal, std::addressof(in6->sin6_addr)) == 1);
 
 		return ss;
 	};

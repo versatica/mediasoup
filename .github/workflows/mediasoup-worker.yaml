@@ -164,8 +164,7 @@ jobs:
             build-type: Release
             # No clang-format for Windows.
             run-lint: false
-            # Maybe some day we fix this.
-            run-test: false
+            run-test: true
             # Address Sanitizer does not work on Windows.
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -175,8 +174,7 @@ jobs:
             build-type: Release
             # No clang-format for Windows.
             run-lint: false
-            # Maybe some day we fix this.
-            run-test: false
+            run-test: true
             # Address Sanitizer does not work on Windows.
             run-test-asan-address: false
             run-test-asan-undefined: false

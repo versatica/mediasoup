@@ -561,6 +561,29 @@ namespace RTC
 		RTC::Transport::DataSent(len);
 	}
 
+	void PipeTransport::SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet)
+	{
+		MS_TRACE();
+
+		if (!IsConnected())
+		{
+			return;
+		}
+
+		const uint8_t* data = packet->GetBuffer();
+		auto len            = packet->GetLength();
+
+		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(std::addressof(data), std::addressof(len)))
+		{
+			return;
+		}
+
+		this->tuple->Send(data, len);
+
+		// Increase send transmission.
+		RTC::Transport::DataSent(len);
+	}
+
 	void PipeTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
 		MS_TRACE();

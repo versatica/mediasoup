@@ -271,9 +271,9 @@ void TcpConnectionHandle::Write(
 	const uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
 	err = uv_write(
-	  &writeData->req,
+	  std::addressof(writeData->req),
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	  &buffer,
+	  std::addressof(buffer),
 	  1,
 	  static_cast<uv_write_cb>(onWrite));
 

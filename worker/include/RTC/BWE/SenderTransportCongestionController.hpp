@@ -14,6 +14,7 @@
 #include "RTC/BWE/SendPacketHistory.hpp"
 #include "RTC/BWE/TargetRateController.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "SharedInterface.hpp"
@@ -205,6 +206,13 @@ namespace RTC
 			 */
 			void ReceiveTransportWideCcFeedback(
 			  const RTC::RTCP::FeedbackRtpTransportPacket* feedback, int64_t receivedAtUs);
+
+			/**
+			 * Feed a received transport wide cc feedback, which is what the delay
+			 * based estimation is drawn from.
+			 */
+			void ReceiveTransportWideCcFeedback(
+			  const RTC::NEW_RTCP::TransportWideCcPacket* feedback, int64_t receivedAtUs);
 
 			/**
 			 * Feed what the RTCP Receiver Reports of a received RTCP packet measured,

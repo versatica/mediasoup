@@ -216,7 +216,7 @@ static void ignoreSignals()
 
 	act.sa_handler = SIG_IGN; // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
 	act.sa_flags   = 0;
-	err            = sigfillset(&act.sa_mask);
+	err            = sigfillset(std::addressof(act.sa_mask));
 
 	if (err != 0)
 	{
@@ -228,7 +228,7 @@ static void ignoreSignals()
 		const auto& sigName = kv.first;
 		const int sigId     = kv.second;
 
-		err = sigaction(sigId, &act, nullptr);
+		err = sigaction(sigId, std::addressof(act), nullptr);
 
 		if (err != 0)
 		{

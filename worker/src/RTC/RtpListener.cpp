@@ -51,7 +51,8 @@ namespace RTC
 			  FBS::Common::CreateStringStringDirect(builder, rid.c_str(), producer->id.c_str()));
 		}
 
-		return FBS::Transport::CreateRtpListenerDirect(builder, &ssrcTable, &midTable, &ridTable);
+		return FBS::Transport::CreateRtpListenerDirect(
+		  builder, std::addressof(ssrcTable), std::addressof(midTable), std::addressof(ridTable));
 	}
 
 	void RtpListener::AddProducer(RTC::Producer* producer)

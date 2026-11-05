@@ -16,7 +16,7 @@ namespace
 	{
 		buffer[0]             = 0xAD; // I, L, B, E bits
 		uint16_t netPictureId = htons(pictureId);
-		std::memcpy(buffer + 1, &netPictureId, 2);
+		std::memcpy(buffer + 1, std::addressof(netPictureId), 2);
 		buffer[1] |= 0x80;
 		buffer[3] = (tlIndex << 5) | (1 << 4); // tlIndex, switchingUpPoint
 
@@ -47,7 +47,7 @@ namespace
 
 		packet->SetPayload(payload, sizeof(payload));
 
-		if (payloadDescriptorHandler->Process(&context, packet.get(), marker))
+		if (payloadDescriptorHandler->Process(std::addressof(context), packet.get(), marker))
 		{
 			return std::unique_ptr<RTC::RTP::Codecs::VP9::PayloadDescriptor>(
 			  RTC::RTP::Codecs::VP9::Parse(payload, sizeof(payload)));

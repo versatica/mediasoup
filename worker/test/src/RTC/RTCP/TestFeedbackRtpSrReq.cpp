@@ -54,6 +54,6 @@ SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 	{
 		RTC::RTCP::FeedbackRtpSrReqPacket packet(senderSsrc, mediaSsrc);
 
-		verify(&packet);
+		verify(std::addressof(packet));
 	}
 }

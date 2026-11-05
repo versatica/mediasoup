@@ -3,15 +3,15 @@
 #include <ankerl/unordered_dense.h>
 #include <array>
 #include <catch2/catch_test_macros.hpp>
-#include <limits> // std::numeric_limits()
+#include <limits> // std::numeric_limits
 #include <random> // std::mt19937
 
 SCENARIO("Utils::Crypto", "[utils][crypto]")
 {
 	SECTION("GetCRC32()")
 	{
-		uint8_t dataEmpty[] = {};
-		uint8_t dataZero[]  = { 0 };
+		std::array<uint8_t, 0> dataEmpty{};
+		uint8_t dataZero[] = { 0 };
 		// clang-format off
 		uint8_t dataRandom[] =
 		{
@@ -20,7 +20,7 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		};
 		// clang-format on
 
-		REQUIRE(Utils::Crypto::GetCRC32(dataEmpty, sizeof(dataEmpty)) == 0);
+		REQUIRE(Utils::Crypto::GetCRC32(dataEmpty.data(), dataEmpty.size()) == 0);
 		REQUIRE(Utils::Crypto::GetCRC32(dataZero, sizeof(dataZero)) == 0xD202EF8D);
 		REQUIRE(Utils::Crypto::GetCRC32(dataRandom, sizeof(dataRandom)) == 0xEEE31378);
 	}
@@ -30,7 +30,7 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		// Tests copied from dcSCTP code in libwebrtc:
 		// https://webrtc.googlesource.com/src//+/refs/heads/main/net/dcsctp/packet/crc32c_test.cc
 
-		uint8_t dataEmpty[]     = {};
+		std::array<uint8_t, 0> dataEmpty{};
 		uint8_t dataZero[]      = { 0 };
 		uint8_t dataManyZeros[] = { 0, 0, 0, 0 };
 		uint8_t dataShort[]     = { 1, 2, 3, 4 };
@@ -65,7 +65,7 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 		};
 		// clang-format on
 
-		REQUIRE(Utils::Crypto::GetCRC32c(dataEmpty, sizeof(dataEmpty)) == 0);
+		REQUIRE(Utils::Crypto::GetCRC32c(dataEmpty.data(), dataEmpty.size()) == 0);
 		REQUIRE(Utils::Crypto::GetCRC32c(dataZero, sizeof(dataZero)) == 0x51537d52);
 		REQUIRE(Utils::Crypto::GetCRC32c(dataManyZeros, sizeof(dataManyZeros)) == 0xC74B6748);
 		REQUIRE(Utils::Crypto::GetCRC32c(dataShort, sizeof(dataShort)) == 0xF48C3029);
@@ -149,7 +149,7 @@ SCENARIO("Utils::Crypto", "[utils][crypto]")
 SCENARIO("Utils::Crypto::GetRandomUInt()", "[utils][crypto]")
 {
 	ankerl::unordered_dense::set<uint32_t> randomUint32Numbers;
-	ankerl::unordered_dense::set<uint32_t> randomUint64Numbers;
+	ankerl::unordered_dense::set<uint64_t> randomUint64Numbers;
 
 	for (size_t i = 0; i < 200; ++i)
 	{

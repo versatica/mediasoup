@@ -14,6 +14,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
@@ -239,6 +240,7 @@ namespace RTC
 		virtual void HandleRtcpPacket(RTC::RTCP::Packet* packet, int64_t receivedAtUs) final;
 		virtual void SendRtcp(int64_t nowUs) final;
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;
+		virtual void SendRtcpPacket(const RTC::NEW_RTCP::Packet* packet)       = 0;
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendMessage(
 		  RTC::DataConsumer* dataConsumer, RTC::SCTP::Message message, onMessageQueuedCallback cb = {}) = 0;
@@ -395,7 +397,7 @@ namespace RTC
 	public:
 		void OnReceiverTransportCongestionControllerSendRtcpPacket(
 		  RTC::BWE::ReceiverTransportCongestionController* receiverTransportCongestionController,
-		  RTC::RTCP::Packet* packet) override;
+		  const RTC::NEW_RTCP::Packet* packet) override;
 
 		/* Pure virtual methods inherited from TimerHandleInterface::Listener. */
 	public:

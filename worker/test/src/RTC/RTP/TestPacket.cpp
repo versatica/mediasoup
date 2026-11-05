@@ -24,19 +24,20 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 	SECTION("Packet::Parse() packet1.raw succeeds")
 	{
-		alignas(4) uint8_t buffer[65536];
 		size_t bufferLength;
 
-		if (!helpers::readBinaryFile("data/packet1.raw", buffer, std::addressof(bufferLength)))
+		if (!helpers::readBinaryFile(
+		      "data/packet1.raw", rtpCommon::ReadBuffer, std::addressof(bufferLength)))
 		{
 			FAIL("cannot open file");
 		}
 
-		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, bufferLength) };
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(
+			rtpCommon::ReadBuffer, bufferLength) };
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
-		  /*buffer*/ buffer,
+		  /*buffer*/ rtpCommon::ReadBuffer,
 		  /*bufferLength*/ bufferLength,
 		  /*length*/ bufferLength,
 		  /*payloadType*/ 111,
@@ -58,7 +59,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0xAA, sizeof(buffer));
+		std::memset(rtpCommon::ReadBuffer, 0xAA, sizeof(rtpCommon::ReadBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -137,19 +138,20 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 	SECTION("Packet::Parse() packet2.raw succeeds")
 	{
-		alignas(4) uint8_t buffer[65536];
 		size_t bufferLength;
 
-		if (!helpers::readBinaryFile("data/packet2.raw", buffer, std::addressof(bufferLength)))
+		if (!helpers::readBinaryFile(
+		      "data/packet2.raw", rtpCommon::ReadBuffer, std::addressof(bufferLength)))
 		{
 			FAIL("cannot open file");
 		}
 
-		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, bufferLength) };
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(
+			rtpCommon::ReadBuffer, bufferLength) };
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
-		  /*buffer*/ buffer,
+		  /*buffer*/ rtpCommon::ReadBuffer,
 		  /*bufferLength*/ bufferLength,
 		  /*length*/ bufferLength,
 		  /*payloadType*/ 100,
@@ -171,7 +173,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0xAA, sizeof(buffer));
+		std::memset(rtpCommon::ReadBuffer, 0xAA, sizeof(rtpCommon::ReadBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -250,19 +252,20 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 	SECTION("Packet::Parse() packet3.raw succeeds")
 	{
-		alignas(4) uint8_t buffer[65536];
 		size_t bufferLength;
 
-		if (!helpers::readBinaryFile("data/packet3.raw", buffer, std::addressof(bufferLength)))
+		if (!helpers::readBinaryFile(
+		      "data/packet3.raw", rtpCommon::ReadBuffer, std::addressof(bufferLength)))
 		{
 			FAIL("cannot open file");
 		}
 
-		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, bufferLength) };
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(
+			rtpCommon::ReadBuffer, bufferLength) };
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
-		  /*buffer*/ buffer,
+		  /*buffer*/ rtpCommon::ReadBuffer,
 		  /*bufferLength*/ bufferLength,
 		  /*length*/ bufferLength,
 		  /*payloadType*/ 111,
@@ -284,7 +287,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		packet->Serialize(rtpCommon::SerializeBuffer, sizeof(rtpCommon::SerializeBuffer));
 
-		std::memset(buffer, 0xAA, sizeof(buffer));
+		std::memset(rtpCommon::ReadBuffer, 0xAA, sizeof(rtpCommon::ReadBuffer));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -1830,7 +1833,8 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 
 		std::memcpy(audioLevel, extenValue, extenLen);
 
-		extensions.emplace_back(RTC::RtpHeaderExtensionUri::Type::MID, 1, sizeof(mid), mid);
+		extensions.emplace_back(
+		  RTC::RtpHeaderExtensionUri::Type::MID, 1, static_cast<uint8_t>(sizeof(mid)), mid);
 		extensions.emplace_back(
 		  RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 2, extenLen, audioLevel);
 

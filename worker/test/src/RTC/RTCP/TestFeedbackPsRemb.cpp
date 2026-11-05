@@ -64,7 +64,7 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 		packet.SetSsrcs(ssrcs);
 		packet.SetBitrate(bitrate);
 
-		verify(&packet);
+		verify(std::addressof(packet));
 	}
 
 	SECTION("more ssrcs than the packet can count are dropped")

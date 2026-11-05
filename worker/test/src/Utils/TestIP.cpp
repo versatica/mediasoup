@@ -114,13 +114,13 @@ SCENARIO("Utils::IP", "[utils][ip]")
 	{
 		sockaddr_in sin{};
 
-		std::memset(&sin, 0, sizeof(sin));
+		std::memset(std::addressof(sin), 0, sizeof(sin));
 
 		sin.sin_family      = AF_INET;
 		sin.sin_port        = htons(10251);
 		sin.sin_addr.s_addr = inet_addr("82.99.219.114");
 
-		const auto* addr = reinterpret_cast<const struct sockaddr*>(&sin);
+		const auto* addr = reinterpret_cast<const struct sockaddr*>(std::addressof(sin));
 		int family;
 		std::string ip;
 		uint16_t port;

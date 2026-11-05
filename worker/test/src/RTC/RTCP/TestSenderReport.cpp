@@ -171,13 +171,13 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 		report1.SetPacketCount(packetCount);
 		report1.SetOctetCount(octetCount);
 
-		verify(&report1);
+		verify(std::addressof(report1));
 
 		SECTION("create a report out of the existing one")
 		{
-			RTC::RTCP::SenderReport report2(&report1);
+			RTC::RTCP::SenderReport report2(std::addressof(report1));
 
-			verify(&report2);
+			verify(std::addressof(report2));
 		}
 	}
 }

@@ -72,8 +72,8 @@ namespace Utils
 	// moving them above it, or making generateCrcTables() no longer constexpr evaluable (an
 	// MS_TRACE() in it would suffice), is a compile error rather than silent initialization at
 	// process start.
-	const constinit Crypto::CrcTables Crypto::crc32Tables{ generateCrcTables(Crc32Polynomial) };
-	const constinit Crypto::CrcTables Crypto::crc32cTables{ generateCrcTables(Crc32cPolynomial) };
+	const constinit Crypto::CrcTables Crypto::Crc32Tables{ generateCrcTables(Crc32Polynomial) };
+	const constinit Crypto::CrcTables Crypto::Crc32cTables{ generateCrcTables(Crc32cPolynomial) };
 
 	/**
 	 * Reads a 32 bit little endian word. The slice-by-8 formulation consumes input as little
@@ -171,7 +171,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		return ~Crypto::ComputeCrc(Crypto::crc32Tables, data, size);
+		return ~Crypto::ComputeCrc(Crypto::Crc32Tables, data, size);
 	}
 
 	/**
@@ -186,7 +186,7 @@ namespace Utils
 		MS_TRACE();
 
 		// NOTE: As in the RFC sample code, the result is returned byte swapped.
-		const uint32_t result{ ~Crypto::ComputeCrc(Crypto::crc32cTables, data, size) };
+		const uint32_t result{ ~Crypto::ComputeCrc(Crypto::Crc32cTables, data, size) };
 		const uint32_t byte0{ result & 0xff };
 		const uint32_t byte1{ (result >> 8) & 0xff };
 		const uint32_t byte2{ (result >> 16) & 0xff };
@@ -218,7 +218,8 @@ namespace Utils
 
 		size_t resultLen;
 
-		ret = EVP_MAC_final(Crypto::hmacSha1Ctx, Crypto::hmacSha1Buffer, &resultLen, SHA_DIGEST_LENGTH);
+		ret = EVP_MAC_final(
+		  Crypto::hmacSha1Ctx, Crypto::hmacSha1Buffer, std::addressof(resultLen), SHA_DIGEST_LENGTH);
 
 		MS_ASSERT(
 		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key, len);

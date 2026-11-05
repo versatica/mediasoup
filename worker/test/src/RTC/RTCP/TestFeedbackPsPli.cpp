@@ -53,6 +53,6 @@ SCENARIO("RTCP Feedback RTP PLI", "[rtcp][feedback-ps][pli]")
 	{
 		RTC::RTCP::FeedbackPsPliPacket packet(senderSsrc, mediaSsrc);
 
-		verify(&packet);
+		verify(std::addressof(packet));
 	}
 }

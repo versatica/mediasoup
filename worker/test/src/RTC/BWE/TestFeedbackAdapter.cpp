@@ -1,7 +1,8 @@
 #include "common.hpp"
 #include "RTC/BWE/FeedbackAdapter.hpp"
 #include "RTC/BWE/SendPacketHistory.hpp"
-#include "RTC/RTCP/FeedbackRtpTransport.hpp"
+#include "RTC/NEW_RTCP/packet/TransportWideCcPacket.hpp"
+#include "test/include/RTC/NEW_RTCP/rtcpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
@@ -34,24 +35,34 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		return sequenceNumber;
 	};
 
+	// Where in `rtcpCommon::FactoryBuffer` the next feedback is built, since
+	// several of them may be alive at once and each needs its own piece of it.
+	size_t feedbackBufferOffset{ 0 };
+
 	// Builds the feedback a receiver would send, reporting the given arrival
 	// times. The sequence numbers left out of them are reported as lost.
-	const auto createFeedback = [SenderSsrc, MediaSsrc](
+	const auto createFeedback = [&feedbackBufferOffset](
 	                              uint16_t baseSequenceNumber,
 	                              int64_t baseTimeUs,
 	                              const std::vector<std::pair<uint16_t, int64_t>>& receivedPackets)
-	  -> std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket>
+	  -> std::unique_ptr<RTC::NEW_RTCP::TransportWideCcPacket>
 	{
-		auto feedback = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(SenderSsrc, MediaSsrc);
+		REQUIRE(feedbackBufferOffset + RtcpMtu <= sizeof(rtcpCommon::FactoryBuffer));
 
+		std::unique_ptr<RTC::NEW_RTCP::TransportWideCcPacket> feedback(
+		  RTC::NEW_RTCP::TransportWideCcPacket::Factory(
+		    rtcpCommon::FactoryBuffer + feedbackBufferOffset, RtcpMtu, /*includeDeltas*/ true));
+
+		feedbackBufferOffset += RtcpMtu;
+
+		feedback->SetSenderSsrc(SenderSsrc);
+		feedback->SetMediaSsrc(MediaSsrc);
 		feedback->SetBase(baseSequenceNumber, baseTimeUs);
 
 		for (const auto& [sequenceNumber, receivedAtUs] : receivedPackets)
 		{
-			feedback->AddPacket(sequenceNumber, receivedAtUs, RtcpMtu);
+			REQUIRE(feedback->AddReceivedRtpPacket(sequenceNumber, receivedAtUs));
 		}
-
-		feedback->Finish();
 
 		return feedback;
 	};
@@ -59,7 +70,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("a feedback is resolved into the packets that were sent")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
@@ -106,7 +117,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("a packet reported as lost comes back with no arrival time")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
@@ -137,7 +148,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("whether a packet is audio survives the feedback")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, true, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
@@ -166,7 +177,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("the feedback tells the data still in flight once it's been resolved")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, 200, false, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, 300, false, InitialTimeUs + 10000);
@@ -204,7 +215,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		constexpr int64_t WindowDurationUs{ 1000000 };
 
 		RTC::BWE::SendPacketHistory sendPacketHistory({ .windowDurationUs = WindowDurationUs });
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 
@@ -234,7 +245,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("the arrival times of consecutive feedbacks share a single timeline")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 100000);
@@ -286,7 +297,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("a feedback arriving out of order keeps the timeline")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 100000);
@@ -336,13 +347,13 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 
 	SECTION("the base time wrapping around does not break the timeline")
 	{
-		constexpr int64_t FirstBaseTimeUs{ RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriodUs -
-		                                   RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTickUs };
-		constexpr int64_t SecondBaseTimeUs{ RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriodUs };
+		constexpr int64_t FirstBaseTimeUs{ RTC::NEW_RTCP::TransportWideCcPacket::TimeWrapPeriodUs -
+		                                   RTC::NEW_RTCP::TransportWideCcPacket::BaseTimeTickUs };
+		constexpr int64_t SecondBaseTimeUs{ RTC::NEW_RTCP::TransportWideCcPacket::TimeWrapPeriodUs };
 		constexpr int64_t ElapsedUs{ SecondBaseTimeUs - FirstBaseTimeUs };
 
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + ElapsedUs);
@@ -392,7 +403,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("the packets are reported in the order the feedback reports them")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
@@ -428,7 +439,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("the packets a lost feedback reported on are not reported as lost")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs + 10000);
@@ -464,7 +475,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		constexpr int64_t PacketCount{ 30000 };
 
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 		sendPacket(sendPacketHistory, 101, PacketSize, false, InitialTimeUs);
@@ -514,7 +525,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("a feedback reporting on no packet at all yields no value")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 
@@ -529,7 +540,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("a feedback received before any packet was sent yields no value")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		const auto feedback = createFeedback(
 		  0,
@@ -546,7 +557,7 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 	SECTION("a feedback reporting on no packet the history holds yields no value")
 	{
 		RTC::BWE::SendPacketHistory sendPacketHistory;
-		RTC::BWE::FeedbackAdapter feedbackAdapter(&sendPacketHistory);
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
 
 		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
 
@@ -558,6 +569,27 @@ SCENARIO("BWE FeedbackAdapter", "[bwe][feedbackadapter]")
 		    { 1000, RemoteTimeUs }
     });
 
+		REQUIRE(
+		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000) ==
+		  std::nullopt);
+	}
+
+	SECTION("a feedback without receive deltas yields no value")
+	{
+		RTC::BWE::SendPacketHistory sendPacketHistory;
+		RTC::BWE::FeedbackAdapter feedbackAdapter(std::addressof(sendPacketHistory));
+
+		sendPacket(sendPacketHistory, 100, PacketSize, false, InitialTimeUs);
+
+		// It tells that the packet arrived, but not when.
+		const std::unique_ptr<RTC::NEW_RTCP::TransportWideCcPacket> feedback(
+		  RTC::NEW_RTCP::TransportWideCcPacket::Factory(
+		    rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer), /*includeDeltas*/ false));
+
+		feedback->SetBase(0, RemoteTimeUs);
+
+		REQUIRE(feedback->AddReceivedRtpPacket(0, RemoteTimeUs));
+		REQUIRE(feedback->HasDeltas() == false);
 		REQUIRE(
 		  feedbackAdapter.ProcessTransportWideCcFeedback(feedback.get(), InitialTimeUs + 50000) ==
 		  std::nullopt);

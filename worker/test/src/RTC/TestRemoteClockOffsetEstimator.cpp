@@ -25,7 +25,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	                    int64_t localArrivalAtUs,
 	                    size_t count,
 	                    int64_t owdUs,
-	                    int64_t rttMs) -> void
+	                    float rttMs) -> void
 	{
 		for (size_t idx{ 0 }; idx < count; ++idx)
 		{
@@ -146,7 +146,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 			estimator.AddSenderReport(
 			  RemoteBaseUs + (static_cast<int64_t>(idx) * 1000000),
 			  LocalBaseUs + (static_cast<int64_t>(idx) * 1001000),
-			  0);
+			  0.0f);
 		}
 
 		REQUIRE(estimator.GetOffsetUs().has_value());
@@ -163,7 +163,7 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 			estimator.AddSenderReport(
 			  RemoteBaseUs + (static_cast<int64_t>(idx) * 1000000),
 			  LocalBaseUs + (static_cast<int64_t>(idx) * 1001000),
-			  0);
+			  0.0f);
 		}
 
 		REQUIRE(estimator.GetOffsetUs().has_value());
@@ -177,16 +177,16 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	{
 		// Three Sender Reports of a same compound packet, hence a single arrival
 		// time.
-		estimator.AddSenderReport(RemoteBaseUs, LocalBaseUs, 0);
-		estimator.AddSenderReport(RemoteBaseUs + 1000, LocalBaseUs, 0);
-		estimator.AddSenderReport(RemoteBaseUs + 2000, LocalBaseUs, 0);
+		estimator.AddSenderReport(RemoteBaseUs, LocalBaseUs, 0.0f);
+		estimator.AddSenderReport(RemoteBaseUs + 1000, LocalBaseUs, 0.0f);
+		estimator.AddSenderReport(RemoteBaseUs + 2000, LocalBaseUs, 0.0f);
 
 		REQUIRE(estimator.GetOffsetUs().has_value() == false);
 
 		// Two more compound packets reach the minimum.
-		estimator.AddSenderReport(RemoteBaseUs + 1000000, LocalBaseUs + 1000000, 0);
-		estimator.AddSenderReport(RemoteBaseUs + 1001000, LocalBaseUs + 1000000, 0);
-		estimator.AddSenderReport(RemoteBaseUs + 2000000, LocalBaseUs + 2000000, 0);
+		estimator.AddSenderReport(RemoteBaseUs + 1000000, LocalBaseUs + 1000000, 0.0f);
+		estimator.AddSenderReport(RemoteBaseUs + 1001000, LocalBaseUs + 1000000, 0.0f);
+		estimator.AddSenderReport(RemoteBaseUs + 2000000, LocalBaseUs + 2000000, 0.0f);
 
 		REQUIRE(estimator.GetOffsetUs().has_value());
 		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
@@ -196,9 +196,9 @@ SCENARIO("RemoteClockOffsetEstimator", "[rtp][rtcp][remoteclockoffsetestimator]"
 	SECTION("Sender Reports with no NTP timestamp are ignored")
 	{
 		// NOTE: Not using feed() here since it would advance the NTP timestamp.
-		estimator.AddSenderReport(0, LocalBaseUs, 0);
-		estimator.AddSenderReport(0, LocalBaseUs + 1000000, 0);
-		estimator.AddSenderReport(0, LocalBaseUs + 2000000, 0);
+		estimator.AddSenderReport(0, LocalBaseUs, 0.0f);
+		estimator.AddSenderReport(0, LocalBaseUs + 1000000, 0.0f);
+		estimator.AddSenderReport(0, LocalBaseUs + 2000000, 0.0f);
 
 		REQUIRE(estimator.GetOffsetUs().has_value() == false);
 	}

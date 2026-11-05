@@ -194,7 +194,13 @@ namespace RTC
 		rtcp = this->rtcp.FillBuffer(builder);
 
 		return FBS::RtpParameters::CreateRtpParametersDirect(
-		  builder, this->mid.c_str(), &codecs, &headerExtensions, &encodings, rtcp, this->msid.c_str());
+		  builder,
+		  this->mid.c_str(),
+		  std::addressof(codecs),
+		  std::addressof(headerExtensions),
+		  std::addressof(encodings),
+		  rtcp,
+		  this->msid.c_str());
 	}
 
 	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding) const

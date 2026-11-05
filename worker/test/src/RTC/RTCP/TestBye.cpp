@@ -71,7 +71,7 @@ SCENARIO("RTCP BYE", "[rtcp][bye]")
 		packet.AddSsrc(ssrc2);
 		packet.SetReason(reason);
 
-		verify(&packet);
+		verify(std::addressof(packet));
 
 		SECTION("serialize packet instance")
 		{

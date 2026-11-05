@@ -85,6 +85,6 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 
 		packet.AddItem(item);
 
-		verify(&packet);
+		verify(std::addressof(packet));
 	}
 }

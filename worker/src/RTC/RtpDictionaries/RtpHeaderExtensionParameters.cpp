@@ -43,6 +43,10 @@ namespace RTC
 		auto parameters = this->parameters.FillBuffer(builder);
 
 		return FBS::RtpParameters::CreateRtpHeaderExtensionParametersDirect(
-		  builder, RTC::RtpHeaderExtensionUri::TypeToFbs(this->type), this->id, this->encrypt, &parameters);
+		  builder,
+		  RTC::RtpHeaderExtensionUri::TypeToFbs(this->type),
+		  this->id,
+		  this->encrypt,
+		  std::addressof(parameters));
 	}
 } // namespace RTC
