@@ -130,6 +130,7 @@ namespace RTC
 				bool Process(Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
 
 				void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override;
+
 				void Restore(RTP::Packet* packet) override;
 
 				uint8_t GetSpatialLayer() const override
