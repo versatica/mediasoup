@@ -106,10 +106,8 @@ namespace RTC
 
 			private:
 				const uint8_t frameIdLength;
-				/**
-				 * List populated with the spatial/temporal layer changes
-				 * indexed by the corresponding frameId.
-				 */
+				// List populated with the spatial/temporal layer changes
+				// indexed by the corresponding frameId.
 				std::deque<std::pair<uint16_t, int16_t>> layerChanges;
 			};
 
