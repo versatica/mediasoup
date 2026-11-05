@@ -688,7 +688,7 @@ test('transport.consume() with rtpParameters override rewrites egress PT / ext-i
 	const wireMidId = (consumableMid.id % 14) + 1;
 
 	const override: mediasoup.types.RtpParameters = {
-		mid: 'VIDEO-CONSUMER',
+		mid: 'VIDCONS1',
 		codecs: [
 			{
 				mimeType: 'video/H264',
@@ -722,7 +722,7 @@ test('transport.consume() with rtpParameters override rewrites egress PT / ext-i
 	});
 
 	// The caller-visible rtpParameters must match the override.
-	expect(videoConsumer.rtpParameters.mid).toBe('VIDEO-CONSUMER');
+	expect(videoConsumer.rtpParameters.mid).toBe('VIDCONS1');
 	expect(videoConsumer.rtpParameters.codecs.length).toBe(2);
 	expect(videoConsumer.rtpParameters.codecs[0]!.mimeType).toBe('video/H264');
 	expect(videoConsumer.rtpParameters.codecs[0]!.payloadType).toBe(wireH264Pt);

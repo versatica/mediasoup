@@ -279,7 +279,6 @@ namespace RTC
 			remap(this->egressHeaderExtensionIds.ssrcAudioLevel);
 			remap(this->egressHeaderExtensionIds.dependencyDescriptor);
 			remap(this->egressHeaderExtensionIds.videoOrientation);
-			remap(this->egressHeaderExtensionIds.timeOffset);
 			remap(this->egressHeaderExtensionIds.absCaptureTime);
 			remap(this->egressHeaderExtensionIds.playoutDelay);
 			remap(this->egressHeaderExtensionIds.mediasoupPacketId);
