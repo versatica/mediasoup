@@ -230,21 +230,12 @@ namespace RTC
 
 			private:
 				Utils::BitReader bitReader;
-
-				/**
-				 * Length of the descriptor as received.
-				 */
+				// Length of the descriptor as received.
 				uint8_t length{ 0 };
-
-				/**
-				 * Whether the descriptor in the packet no longer is the one received.
-				 */
+				// Whether the descriptor in the packet no longer is the one received.
 				bool rewritten{ false };
-
-				/**
-				 * Where things are within the descriptor as received, so that the parts
-				 * that are not parsed can be copied over verbatim when rewriting.
-				 */
+				// Where things are within the descriptor as received, so that the parts
+				// that are not parsed can be copied over verbatim when rewriting.
 				bool extendedDescriptorFieldsPresent{ false };
 				bool activeDecodeTargetsPresent{ false };
 				bool customDecodeTargetIndicationsPresent{ false };
