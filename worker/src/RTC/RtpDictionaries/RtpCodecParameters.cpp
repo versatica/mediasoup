@@ -71,8 +71,8 @@ namespace RTC
 		  this->payloadType,
 		  this->clockRate,
 		  this->channels > 1 ? flatbuffers::Optional<uint8_t>(this->channels) : flatbuffers::nullopt,
-		  &parameters,
-		  &rtcpFeedback);
+		  std::addressof(parameters),
+		  std::addressof(rtcpFeedback));
 	}
 
 	bool RtpCodecParameters::HasRtcpFeedbackType(std::string_view type) const

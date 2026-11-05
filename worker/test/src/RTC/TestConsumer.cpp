@@ -146,7 +146,7 @@ namespace
 		const auto* consumeRequest = flatbuffers::GetRoot<FBS::Transport::ConsumeRequest>(buf);
 
 		return std::make_unique<RTC::Consumer>(
-		  &shared,
+		  std::addressof(shared),
 		  consumeRequest->consumerId()->str(),
 		  consumeRequest->producerId()->str(),
 		  listener,
@@ -159,7 +159,7 @@ namespace
 		RTC::RTP::RtpStream::Params params;
 
 		return std::make_unique<RTC::RTP::RtpStreamRecv>(
-		  &streamRecvListener, std::addressof(shared), params, 0, false);
+		  std::addressof(streamRecvListener), std::addressof(shared), params, 0, false);
 	}
 
 	/**
@@ -178,7 +178,7 @@ namespace
 			// there is no associated Producer).
 			const std::vector<uint8_t> scores{ 10 };
 
-			consumer->ProducerRtpStreamScores(&scores);
+			consumer->ProducerRtpStreamScores(std::addressof(scores));
 
 			// NOTE: mappedSsrc here MUST be 1234567890 (otherwise Consumer will crash).
 			// This is guaranteed by Producer class, however here we must do it manually.

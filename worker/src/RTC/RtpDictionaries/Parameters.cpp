@@ -70,8 +70,8 @@ namespace RTC
 
 				case Value::Type::ARRAY_OF_INTEGERS:
 				{
-					auto valueOffset =
-					  FBS::RtpParameters::CreateInteger32ArrayDirect(builder, &value.arrayOfIntegers);
+					auto valueOffset = FBS::RtpParameters::CreateInteger32ArrayDirect(
+					  builder, std::addressof(value.arrayOfIntegers));
 
 					parameters.emplace_back(
 					  FBS::RtpParameters::CreateParameterDirect(

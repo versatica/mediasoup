@@ -218,7 +218,8 @@ namespace Utils
 
 		size_t resultLen;
 
-		ret = EVP_MAC_final(Crypto::hmacSha1Ctx, Crypto::hmacSha1Buffer, &resultLen, SHA_DIGEST_LENGTH);
+		ret = EVP_MAC_final(
+		  Crypto::hmacSha1Ctx, Crypto::hmacSha1Buffer, std::addressof(resultLen), SHA_DIGEST_LENGTH);
 
 		MS_ASSERT(
 		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key, len);

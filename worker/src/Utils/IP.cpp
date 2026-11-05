@@ -124,7 +124,8 @@ namespace Utils
 		{
 			case AF_INET:
 			{
-				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&addrStorage));
+				err = uv_ip4_addr(
+				  ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(std::addressof(addrStorage)));
 
 				if (err != 0)
 				{
@@ -148,7 +149,8 @@ namespace Utils
 
 			case AF_INET6:
 			{
-				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&addrStorage));
+				err = uv_ip6_addr(
+				  ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(std::addressof(addrStorage)));
 
 				if (err != 0)
 				{

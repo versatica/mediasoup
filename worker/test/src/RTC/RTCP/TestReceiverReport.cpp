@@ -207,13 +207,13 @@ SCENARIO("RTCP ReceiverReport", "[rtcp][receiver-report]")
 		report1.SetLastSenderReport(lastSenderReport);
 		report1.SetDelaySinceLastSenderReport(delaySinceLastSenderReport);
 
-		verify(&report1);
+		verify(std::addressof(report1));
 
 		SECTION("create a report out of the existing one")
 		{
-			RTC::RTCP::ReceiverReport report2(&report1);
+			RTC::RTCP::ReceiverReport report2(std::addressof(report1));
 
-			verify(&report2);
+			verify(std::addressof(report2));
 		}
 	}
 }

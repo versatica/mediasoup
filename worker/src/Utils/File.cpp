@@ -26,7 +26,7 @@ namespace Utils
 		int err;
 
 		// Ensure the given file exists.
-		err = stat(file, &fileStat);
+		err = stat(file, std::addressof(fileStat));
 
 		if (err != 0)
 		{

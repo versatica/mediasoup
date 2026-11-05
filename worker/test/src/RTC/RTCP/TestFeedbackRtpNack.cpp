@@ -71,6 +71,6 @@ SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 
 		packet.AddItem(item);
 
-		verify(&packet);
+		verify(std::addressof(packet));
 	}
 }

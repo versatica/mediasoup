@@ -27,7 +27,7 @@ namespace RTC
 			  FBS::Common::CreateUint16StringDirect(builder, streamId, dataProducer->id.c_str()));
 		}
 
-		return FBS::Transport::CreateSctpListenerDirect(builder, &streamIdTable);
+		return FBS::Transport::CreateSctpListenerDirect(builder, std::addressof(streamIdTable));
 	}
 
 	void SctpListener::AddDataProducer(RTC::DataProducer* dataProducer)
