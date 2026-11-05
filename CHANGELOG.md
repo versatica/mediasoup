@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- New RTCP: Use new RTCP stack for generated BWE RTCP packets ([PR #2039](https://github.com/versatica/mediasoup/pull/2039)).
+
 ### 3.32.2
 
 - Worker: Fix DTLS BIO callback return value ([PR #2025](https://github.com/versatica/mediasoup/pull/2025)).
