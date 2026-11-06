@@ -328,10 +328,10 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 	{
 		REQUIRE(RTC::SCTP::ReConfigChunk::ComputeLengthFor(0) == 4);
 
-		auto* chunk = RTC::SCTP::ReConfigChunk::Factory(
+		auto* const chunk = RTC::SCTP::ReConfigChunk::Factory(
 		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
-		auto* parameter = chunk->BuildParameterInPlace<RTC::SCTP::OutgoingSsnResetRequestParameter>();
+		auto* const parameter = chunk->BuildParameterInPlace<RTC::SCTP::OutgoingSsnResetRequestParameter>();
 
 		parameter->AddStreamId(4444);
 		parameter->AddStreamId(4445);

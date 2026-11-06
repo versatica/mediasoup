@@ -455,7 +455,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[serializable][sctp][chunk]")
 	{
 		REQUIRE(RTC::SCTP::IDataChunk::ComputeLengthFor(0) == 20);
 
-		auto* chunk =
+		auto* const chunk =
 		  RTC::SCTP::IDataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		// A payload whose length is not a multiple of 4, so the chunk needs padding.

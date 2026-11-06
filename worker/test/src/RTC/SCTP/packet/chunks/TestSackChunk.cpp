@@ -341,7 +341,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 	{
 		REQUIRE(RTC::SCTP::SackChunk::ComputeLengthFor(0, 0) == 16);
 
-		auto* chunk =
+		auto* const chunk =
 		  RTC::SCTP::SackChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		chunk->AddAckBlock(10000, 19999);

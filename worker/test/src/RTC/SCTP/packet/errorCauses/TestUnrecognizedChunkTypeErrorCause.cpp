@@ -224,7 +224,7 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 	{
 		REQUIRE(RTC::SCTP::UnrecognizedChunkTypeErrorCause::ComputeLengthFor(0) == 4);
 
-		auto* errorCause = RTC::SCTP::UnrecognizedChunkTypeErrorCause::Factory(
+		auto* const errorCause = RTC::SCTP::UnrecognizedChunkTypeErrorCause::Factory(
 		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		// A chunk whose length is not a multiple of 4, so the error cause needs

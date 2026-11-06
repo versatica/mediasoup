@@ -423,10 +423,10 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 	{
 		REQUIRE(RTC::SCTP::OperationErrorChunk::ComputeLengthFor(0) == 4);
 
-		auto* chunk = RTC::SCTP::OperationErrorChunk::Factory(
+		auto* const chunk = RTC::SCTP::OperationErrorChunk::Factory(
 		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
-		auto* errorCause = chunk->BuildErrorCauseInPlace<RTC::SCTP::UnrecognizedChunkTypeErrorCause>();
+		auto* const errorCause = chunk->BuildErrorCauseInPlace<RTC::SCTP::UnrecognizedChunkTypeErrorCause>();
 
 		errorCause->SetUnrecognizedChunk(sctpCommon::DataBuffer, 6);
 		errorCause->Consolidate();

@@ -180,7 +180,7 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][para
 	{
 		REQUIRE(RTC::SCTP::OutgoingSsnResetRequestParameter::ComputeLengthFor(0) == 16);
 
-		auto* parameter = RTC::SCTP::OutgoingSsnResetRequestParameter::Factory(
+		auto* const parameter = RTC::SCTP::OutgoingSsnResetRequestParameter::Factory(
 		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		// An odd number of stream identifiers, so the parameter needs padding.

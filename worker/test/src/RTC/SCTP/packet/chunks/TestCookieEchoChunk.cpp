@@ -261,7 +261,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 	{
 		REQUIRE(RTC::SCTP::CookieEchoChunk::ComputeLengthFor(0) == 4);
 
-		auto* chunk = RTC::SCTP::CookieEchoChunk::Factory(
+		auto* const chunk = RTC::SCTP::CookieEchoChunk::Factory(
 		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		// A cookie whose length is not a multiple of 4, so the chunk needs padding.

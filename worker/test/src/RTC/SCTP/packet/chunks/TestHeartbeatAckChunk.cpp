@@ -387,10 +387,10 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 	{
 		REQUIRE(RTC::SCTP::HeartbeatAckChunk::ComputeLengthFor(0) == 4);
 
-		auto* chunk = RTC::SCTP::HeartbeatAckChunk::Factory(
+		auto* const chunk = RTC::SCTP::HeartbeatAckChunk::Factory(
 		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
-		auto* parameter = chunk->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
+		auto* const parameter = chunk->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
 
 		// Info length is 5 so 3 bytes of padding will be added.
 		parameter->SetInfo(sctpCommon::DataBuffer, 5);

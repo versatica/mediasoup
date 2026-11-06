@@ -264,7 +264,7 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 	{
 		REQUIRE(RTC::SCTP::IForwardTsnChunk::ComputeLengthFor(0) == 8);
 
-		auto* chunk = RTC::SCTP::IForwardTsnChunk::Factory(
+		auto* const chunk = RTC::SCTP::IForwardTsnChunk::Factory(
 		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		chunk->AddSkippedStream(
