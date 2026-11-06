@@ -3,6 +3,7 @@
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/UserData.hpp"
+#include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/parameters/IPv4AddressParameter.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -440,6 +441,25 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 		REQUIRE(gotUserData.IsUnordered() == true);
 		// NOLINTNEXTLINE(bugprone-use-after-move, hicpp-invalid-access-moved)
 		REQUIRE(std::move(gotUserData).ReleasePayload() == expectedPayload);
+
+		delete chunk;
+	}
+
+	SECTION("DataChunk::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::SCTP::DataChunk::ComputeLengthFor(0) == 16);
+
+		auto* chunk =
+		  RTC::SCTP::DataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+
+		// A payload whose length is not a multiple of 4, so the chunk needs padding.
+		chunk->SetUserDataPayload(sctpCommon::DataBuffer, 5);
+
+		REQUIRE(RTC::SCTP::DataChunk::ComputeLengthFor(5) == 24);
+		REQUIRE(chunk->GetLength() == RTC::SCTP::DataChunk::ComputeLengthFor(5));
+		REQUIRE(
+		  RTC::SCTP::AnyDataChunk::ComputeLengthFor(/*useMessageInterleaving*/ false, 5) ==
+		  RTC::SCTP::DataChunk::ComputeLengthFor(5));
 
 		delete chunk;
 	}

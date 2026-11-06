@@ -71,6 +71,15 @@ namespace RTC
 			return packet;
 		}
 
+		size_t FirPacket::ComputeLengthFor(size_t numItems)
+		{
+			MS_TRACE();
+
+			// The items go right after the feedback header, and each one is a
+			// multiple of 4 bytes, so the packet never needs padding.
+			return AnyFeedbackPacket::FeedbackHeaderLength + (numItems * FirPacket::FirItemLength);
+		}
+
 		FirPacket* FirPacket::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{

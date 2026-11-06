@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -58,6 +59,15 @@ namespace RTC
 			// minimum DataChunk length.
 
 			return chunk;
+		}
+
+		size_t DataChunk::ComputeLengthFor(size_t userDataPayloadLength)
+		{
+			MS_TRACE();
+
+			// The user data payload goes right after the chunk header, and the chunk
+			// is padded to 4 bytes.
+			return Utils::Byte::PadTo4Bytes(DataChunk::DataChunkHeaderLength + userDataPayloadLength);
 		}
 
 		DataChunk* DataChunk::ParseStrict(

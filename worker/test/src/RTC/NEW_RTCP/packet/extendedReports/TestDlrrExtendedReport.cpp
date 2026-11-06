@@ -328,4 +328,22 @@ SCENARIO("RTCP XR DLRR Extended Report (5)", "[serializable][rtcp][extendedrepor
 		REQUIRE_THROWS_AS(
 		  RTC::NEW_RTCP::DlrrExtendedReport::Factory(rtcpCommon::FactoryBuffer, 3), MediaSoupTypeError);
 	}
+
+	SECTION("DlrrExtendedReport::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::NEW_RTCP::DlrrExtendedReport::ComputeLengthFor(0) == 4);
+
+		const std::unique_ptr<RTC::NEW_RTCP::DlrrExtendedReport> extendedReport{
+			RTC::NEW_RTCP::DlrrExtendedReport::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
+
+		extendedReport->AddSubBlock(
+		  { .ssrc = 1, .lastReceiverReport = 1001, .delaySinceLastReceiverReport = 2001 });
+		extendedReport->AddSubBlock(
+		  { .ssrc = 2, .lastReceiverReport = 1002, .delaySinceLastReceiverReport = 2002 });
+
+		REQUIRE(RTC::NEW_RTCP::DlrrExtendedReport::ComputeLengthFor(2) == 28);
+		REQUIRE(extendedReport->GetLength() == RTC::NEW_RTCP::DlrrExtendedReport::ComputeLengthFor(2));
+	}
 }

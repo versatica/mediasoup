@@ -259,4 +259,27 @@ SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 
 		delete parsedChunk;
 	}
+
+	SECTION("IForwardTsnChunk::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::SCTP::IForwardTsnChunk::ComputeLengthFor(0) == 8);
+
+		auto* chunk = RTC::SCTP::IForwardTsnChunk::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+
+		chunk->AddSkippedStream(
+		  RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
+		    /*unordered*/ true, /*streamId*/ 1111, /*mid*/ 11110001 });
+		chunk->AddSkippedStream(
+		  RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
+		    /*unordered*/ false, /*streamId*/ 2222, /*mid*/ 22220002 });
+		chunk->AddSkippedStream(
+		  RTC::SCTP::AnyForwardTsnChunk::SkippedStream{
+		    /*unordered*/ true, /*streamId*/ 3333, /*mid*/ 33330003 });
+
+		REQUIRE(RTC::SCTP::IForwardTsnChunk::ComputeLengthFor(3) == 32);
+		REQUIRE(chunk->GetLength() == RTC::SCTP::IForwardTsnChunk::ComputeLengthFor(3));
+
+		delete chunk;
+	}
 }

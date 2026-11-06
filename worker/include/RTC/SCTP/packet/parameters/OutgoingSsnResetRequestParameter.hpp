@@ -60,6 +60,12 @@ namespace RTC
 			 */
 			static OutgoingSsnResetRequestParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a OutgoingSsnResetRequestParameter with the given
+			 * number of stream identifiers, padding included.
+			 */
+			static size_t ComputeLengthFor(size_t numStreamIds);
+
 		private:
 			/**
 			 * Parse a OutgoingSsnResetRequestParameter.

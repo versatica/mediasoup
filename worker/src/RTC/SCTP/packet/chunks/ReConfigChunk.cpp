@@ -53,6 +53,15 @@ namespace RTC
 			return chunk;
 		}
 
+		size_t ReConfigChunk::ComputeLengthFor(size_t parametersLength)
+		{
+			MS_TRACE();
+
+			// The parameters go right after the chunk header, and each one is already
+			// padded to 4 bytes.
+			return Chunk::ChunkHeaderLength + parametersLength;
+		}
+
 		ReConfigChunk* ReConfigChunk::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
 		{

@@ -219,4 +219,22 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorc
 
 		delete parsedErrorCause;
 	}
+
+	SECTION("UnrecognizedChunkTypeErrorCause::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::SCTP::UnrecognizedChunkTypeErrorCause::ComputeLengthFor(0) == 4);
+
+		auto* errorCause = RTC::SCTP::UnrecognizedChunkTypeErrorCause::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+
+		// A chunk whose length is not a multiple of 4, so the error cause needs
+		// padding.
+		errorCause->SetUnrecognizedChunk(sctpCommon::DataBuffer, 6);
+
+		REQUIRE(RTC::SCTP::UnrecognizedChunkTypeErrorCause::ComputeLengthFor(6) == 12);
+		REQUIRE(
+		  errorCause->GetLength() == RTC::SCTP::UnrecognizedChunkTypeErrorCause::ComputeLengthFor(6));
+
+		delete errorCause;
+	}
 }

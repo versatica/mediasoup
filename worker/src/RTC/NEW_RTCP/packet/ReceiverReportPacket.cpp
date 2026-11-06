@@ -57,6 +57,16 @@ namespace RTC
 			return packet;
 		}
 
+		size_t ReceiverReportPacket::ComputeLengthFor(size_t numReportBlocks)
+		{
+			MS_TRACE();
+
+			// The report blocks go right after the fixed header, and each one is a
+			// multiple of 4 bytes, so the packet never needs padding.
+			return ReceiverReportPacket::ReceiverReportHeaderLength +
+			       (numReportBlocks * AnyReportPacket::ReportBlockLength);
+		}
+
 		ReceiverReportPacket* ReceiverReportPacket::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{

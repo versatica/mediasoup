@@ -113,6 +113,12 @@ namespace RTC
 			 */
 			static SackChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a SackChunk with the given number of Gap Ack
+			 * Blocks and duplicate TSNs.
+			 */
+			static size_t ComputeLengthFor(size_t numGapAckBlocks, size_t numDuplicateTsns);
+
 		private:
 			/**
 			 * Parse a SackChunk.

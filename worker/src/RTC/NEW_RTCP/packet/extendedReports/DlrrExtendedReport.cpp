@@ -54,6 +54,16 @@ namespace RTC
 			return extendedReport;
 		}
 
+		size_t DlrrExtendedReport::ComputeLengthFor(size_t numSubBlocks)
+		{
+			MS_TRACE();
+
+			// The sub-blocks go right after the block header, and each one is a
+			// multiple of 4 bytes, so the block never needs padding.
+			return ExtendedReport::ExtendedReportHeaderLength +
+			       (numSubBlocks * DlrrExtendedReport::SubBlockLength);
+		}
+
 		DlrrExtendedReport* DlrrExtendedReport::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, size_t extendedReportLength)
 		{

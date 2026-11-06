@@ -95,8 +95,7 @@ namespace RTC
 			// can carry.
 			alignas(4) std::array<
 			  uint8_t,
-			  RTC::NEW_RTCP::RembPacket::RembHeaderLength +
-			    (RTC::NEW_RTCP::RembPacket::MaxSsrcs * 4)> packetBuffer{};
+			  RTC::NEW_RTCP::RembPacket::ComputeLengthFor(RTC::NEW_RTCP::RembPacket::MaxSsrcs)> packetBuffer{};
 		};
 	} // namespace BWE
 } // namespace RTC

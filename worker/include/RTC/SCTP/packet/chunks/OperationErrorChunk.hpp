@@ -52,6 +52,15 @@ namespace RTC
 			 */
 			static OperationErrorChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a OperationErrorChunk carrying the given error
+			 * causes.
+			 *
+			 * @param errorCausesLength - Sum of what `ComputeLengthFor()` of each error
+			 *   cause the chunk will carry returns.
+			 */
+			static size_t ComputeLengthFor(size_t errorCausesLength);
+
 		private:
 			/**
 			 * Parse a OperationErrorChunk.

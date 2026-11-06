@@ -6,7 +6,6 @@
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
-#include "Utils.hpp"
 
 namespace RTC
 {
@@ -76,30 +75,28 @@ namespace RTC
 			MS_ASSERT(ShouldSendStreamResetRequest(), "should not send a stream reset request");
 
 			// The RE-CONFIG chunk carries an Outgoing SSN Reset Request parameter
-			// with 2 bytes per stream, padded to 4 bytes. It must fit in the packet
-			// before anything is changed, since preparing the request already marks
-			// the streams as being reset.
-			const size_t reConfigChunkLength =
-			  Chunk::ChunkHeaderLength +
-			  Utils::Byte::PadTo4Bytes(
-			    OutgoingSsnResetRequestParameter::OutgoingSsnResetRequestParameterHeaderLength +
-			    (this->retransmissionQueue->GetNumberOfStreamsReadyToBeReset() * 2));
+			// with the streams to reset. It must fit in the packet before anything is
+			// changed, since preparing the request already marks the streams as being
+			// reset.
+			const size_t reConfigChunkLength = ReConfigChunk::ComputeLengthFor(
+			  OutgoingSsnResetRequestParameter::ComputeLengthFor(
+			    this->retransmissionQueue->GetNumberOfStreamsReadyToBeReset()));
 
 			if (reConfigChunkLength > packet->GetAvailableLength())
 			{
 				// NOTE: Don't create a packet to measure this, since it would reuse the
 				// buffer of the given one.
-				const size_t maxReConfigChunkLength = packet->GetBufferLength() - Packet::CommonHeaderLength;
+				const size_t reConfigPacketLength = Packet::ComputeLengthFor(reConfigChunkLength);
 
 				// If it does not fit even in an empty packet it never will, so the reset
 				// of those streams is cancelled.
-				if (reConfigChunkLength > maxReConfigChunkLength)
+				if (reConfigPacketLength > packet->GetBufferLength())
 				{
 					MS_WARN_TAG(
 					  sctp,
 					  "stream reset request too large to be sent, cancelling it [len:%zu, max len:%zu]",
-					  reConfigChunkLength,
-					  maxReConfigChunkLength);
+					  reConfigPacketLength,
+					  packet->GetBufferLength());
 
 					const auto streamIds = this->retransmissionQueue->CancelResetStreams();
 

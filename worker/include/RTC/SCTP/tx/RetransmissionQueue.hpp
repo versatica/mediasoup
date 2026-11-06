@@ -308,6 +308,8 @@ namespace RTC
 			const SctpOptions sctpOptions;
 			// If the peer supports RFC3758 "SCTP Partial Reliability Extension".
 			const bool supportsPartialReliability;
+			// Whether I-DATA chunks are used instead of DATA chunks.
+			const bool useMessageInterleaving;
 			// The length of the data chunk (DATA/I-DATA) header that is used.
 			const size_t dataChunkHeaderLength;
 			// The retransmission timer.

@@ -53,6 +53,15 @@ namespace RTC
 			return chunk;
 		}
 
+		size_t OperationErrorChunk::ComputeLengthFor(size_t errorCausesLength)
+		{
+			MS_TRACE();
+
+			// The error causes go right after the chunk header, and each one is
+			// already padded to 4 bytes.
+			return Chunk::ChunkHeaderLength + errorCausesLength;
+		}
+
 		OperationErrorChunk* OperationErrorChunk::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
 		{

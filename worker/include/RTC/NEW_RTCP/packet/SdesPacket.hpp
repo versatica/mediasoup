@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include <ankerl/unordered_dense.h>
+#include <initializer_list>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -124,6 +125,20 @@ namespace RTC
 			 * - `bufferLength` could be greater than the packet real length.
 			 */
 			static SdesPacket* Factory(uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Length (in bytes) of a SdesPacket carrying the given chunks.
+			 *
+			 * @param chunksLength - Sum of what `ComputeChunkLengthFor()` returns for
+			 *   each chunk the packet will carry.
+			 */
+			static size_t ComputeLengthFor(size_t chunksLength);
+
+			/**
+			 * Length (in bytes) of a chunk carrying items with values of the given
+			 * lengths, padding included.
+			 */
+			static size_t ComputeChunkLengthFor(std::initializer_list<size_t> itemValueLengths);
 
 		private:
 			/**

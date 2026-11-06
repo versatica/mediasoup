@@ -96,6 +96,12 @@ namespace RTC
 			 */
 			static DlrrExtendedReport* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a DlrrExtendedReport with the given number of
+			 * sub-blocks.
+			 */
+			static size_t ComputeLengthFor(size_t numSubBlocks);
+
 		private:
 			/**
 			 * Parse a DlrrExtendedReport.

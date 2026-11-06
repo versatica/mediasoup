@@ -84,6 +84,11 @@ namespace RTC
 			 */
 			static NackPacket* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a NackPacket with the given number of items.
+			 */
+			static size_t ComputeLengthFor(size_t numItems);
+
 		private:
 			/**
 			 * Parse a NackPacket.

@@ -50,6 +50,12 @@ namespace RTC
 			 */
 			static CookieEchoChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a CookieEchoChunk carrying a cookie of the given
+			 * length, padding included.
+			 */
+			static size_t ComputeLengthFor(size_t cookieLength);
+
 		private:
 			/**
 			 * Parse a CookieEchoChunk.

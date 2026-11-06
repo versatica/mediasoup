@@ -3,7 +3,6 @@
 
 #include "RTC/SCTP/association/HeartbeatHandler.hpp"
 #include "Logger.hpp"
-#include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
 #include "Utils.hpp"
@@ -99,7 +98,7 @@ namespace RTC
 
 			// The parameters are echoed back, so they must fit in a packet we can
 			// send.
-			size_t heartbeatAckPacketLength = packet->GetLength() + Chunk::ChunkHeaderLength;
+			size_t parametersLength{ 0 };
 
 			for (auto it = receivedHeartbeatRequestChunk->ParametersBegin();
 			     it != receivedHeartbeatRequestChunk->ParametersEnd();
@@ -107,8 +106,11 @@ namespace RTC
 			{
 				const auto* parameter = *it;
 
-				heartbeatAckPacketLength += parameter->GetLength();
+				parametersLength += parameter->GetLength();
 			}
+
+			const size_t heartbeatAckPacketLength =
+			  packet->GetLength() + HeartbeatAckChunk::ComputeLengthFor(parametersLength);
 
 			if (heartbeatAckPacketLength > packet->GetBufferLength())
 			{

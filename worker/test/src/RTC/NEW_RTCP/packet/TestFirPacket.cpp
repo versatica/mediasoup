@@ -331,4 +331,18 @@ SCENARIO("RTCP FIR Packet (206, FMT 4)", "[serializable][rtcp][packet]")
 		REQUIRE_THROWS_AS(
 		  RTC::NEW_RTCP::FirPacket::Factory(rtcpCommon::FactoryBuffer, 11), MediaSoupTypeError);
 	}
+
+	SECTION("FirPacket::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::NEW_RTCP::FirPacket::ComputeLengthFor(0) == 12);
+
+		const std::unique_ptr<RTC::NEW_RTCP::FirPacket> packet{ RTC::NEW_RTCP::FirPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+
+		packet->AddItem(1111, 1);
+		packet->AddItem(2222, 2);
+
+		REQUIRE(RTC::NEW_RTCP::FirPacket::ComputeLengthFor(2) == 28);
+		REQUIRE(packet->GetLength() == RTC::NEW_RTCP::FirPacket::ComputeLengthFor(2));
+	}
 }

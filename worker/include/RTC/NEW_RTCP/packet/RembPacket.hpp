@@ -83,6 +83,19 @@ namespace RTC
 			 */
 			static RembPacket* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a RembPacket with the given number of SSRCs.
+			 *
+			 * @remarks
+			 * - Defined here so that it can be used where a constant is needed, such
+			 *   as the size of a buffer.
+			 */
+			static constexpr size_t ComputeLengthFor(size_t numSsrcs)
+			{
+				// Each SSRC takes 4 bytes, so the packet never needs padding.
+				return RembPacket::RembHeaderLength + (numSsrcs * 4);
+			}
+
 		private:
 			/**
 			 * Parse a RembPacket.

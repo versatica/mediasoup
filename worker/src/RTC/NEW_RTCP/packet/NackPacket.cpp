@@ -71,6 +71,15 @@ namespace RTC
 			return packet;
 		}
 
+		size_t NackPacket::ComputeLengthFor(size_t numItems)
+		{
+			MS_TRACE();
+
+			// The items go right after the feedback header, and each one is a
+			// multiple of 4 bytes, so the packet never needs padding.
+			return AnyFeedbackPacket::FeedbackHeaderLength + (numItems * NackPacket::NackItemLength);
+		}
+
 		NackPacket* NackPacket::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{

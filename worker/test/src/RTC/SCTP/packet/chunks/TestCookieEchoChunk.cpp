@@ -256,4 +256,20 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[serializable][sctp][chunk]")
 
 		delete chunk;
 	}
+
+	SECTION("CookieEchoChunk::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::SCTP::CookieEchoChunk::ComputeLengthFor(0) == 4);
+
+		auto* chunk = RTC::SCTP::CookieEchoChunk::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+
+		// A cookie whose length is not a multiple of 4, so the chunk needs padding.
+		chunk->SetCookie(sctpCommon::DataBuffer, 3);
+
+		REQUIRE(RTC::SCTP::CookieEchoChunk::ComputeLengthFor(3) == 8);
+		REQUIRE(chunk->GetLength() == RTC::SCTP::CookieEchoChunk::ComputeLengthFor(3));
+
+		delete chunk;
+	}
 }

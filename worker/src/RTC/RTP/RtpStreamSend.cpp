@@ -698,7 +698,7 @@ namespace RTC
 				return false;
 			}
 
-			if (compoundPacket->GetAvailableLength() < RTC::NEW_RTCP::SenderReportPacket::SenderReportHeaderLength)
+			if (compoundPacket->GetAvailableLength() < RTC::NEW_RTCP::SenderReportPacket::ComputeLengthFor(0))
 			{
 				return false;
 			}
@@ -794,9 +794,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// SSRC (4 bytes), CNAME item type and length (1 byte each), CNAME value and
-			// the null octet that terminates the list of items, padded to 4 bytes.
-			return Utils::Byte::PadTo4Bytes(4 + 2 + GetCname().size() + 1);
+			return RTC::NEW_RTCP::SdesPacket::ComputeChunkLengthFor({ GetCname().size() });
 		}
 
 		void RtpStreamSend::Pause()

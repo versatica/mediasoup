@@ -90,6 +90,33 @@ namespace RTC
 			return packet;
 		}
 
+		size_t SdesPacket::ComputeLengthFor(size_t chunksLength)
+		{
+			MS_TRACE();
+
+			// The chunks go right after the common header, and each one is already
+			// padded to 4 bytes.
+			return Packet::CommonHeaderLength + chunksLength;
+		}
+
+		size_t SdesPacket::ComputeChunkLengthFor(std::initializer_list<size_t> itemValueLengths)
+		{
+			MS_TRACE();
+
+			// The SSRC/CSRC (4 bytes).
+			size_t length{ 4 };
+
+			// Each item takes its type and length (1 byte each) and its value.
+			for (const size_t itemValueLength : itemValueLengths)
+			{
+				length += 2 + itemValueLength;
+			}
+
+			// The null octet that terminates the list of items, and the padding up to
+			// the next 32-bit boundary.
+			return Utils::Byte::PadTo4Bytes(length + 1);
+		}
+
 		SdesPacket* SdesPacket::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{
