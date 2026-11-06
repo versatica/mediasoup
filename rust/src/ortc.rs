@@ -646,6 +646,20 @@ pub(crate) fn get_consumable_rtp_parameters(
             continue;
         }
 
+        // The Dependency Descriptor RTP extension given to a Consumer is written out of the one in
+        // the packets of this Producer, so don't announce it to Consumers unless this Producer
+        // negotiated it. Otherwise a Consumer would negotiate an extension that is never going to
+        // arrive, and it would wrap its frame ids at the 16 bits of the Dependency Descriptor
+        // rather than at the 15 of the VP9 picture ids it is actually given.
+        if cap_ext.uri == RtpHeaderExtensionUri::DependencyDescriptor
+            && !params
+                .header_extensions
+                .iter()
+                .any(|ext| ext.uri == cap_ext.uri)
+        {
+            continue;
+        }
+
         let consumable_ext = RtpHeaderExtensionParameters {
             uri: cap_ext.uri,
             id: cap_ext.preferred_id,

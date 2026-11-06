@@ -541,9 +541,9 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
     let pipe_consumer_rtp_parameters =
         get_pipe_consumer_rtp_parameters(&consumable_rtp_parameters, false);
 
-    // A pipe Consumer forwards all the layers of the Producer, so the receiving Router needs the
-    // Dependency-Descriptor header extension to tell them apart.
-    assert!(pipe_consumer_rtp_parameters.header_extensions.contains(
+    // The Dependency-Descriptor header extension is not added since this Producer did not
+    // negotiate it, so there is none to forward.
+    assert!(!pipe_consumer_rtp_parameters.header_extensions.contains(
         &RtpHeaderExtensionParameters {
             uri: RtpHeaderExtensionUri::DependencyDescriptor,
             id: 7,

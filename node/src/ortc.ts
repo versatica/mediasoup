@@ -497,6 +497,20 @@ export function getConsumableRtpParameters(
 			continue;
 		}
 
+		// The Dependency Descriptor RTP extension given to a Consumer is written out
+		// of the one in the packets of this Producer, so don't announce it to
+		// Consumers unless this Producer negotiated it. Otherwise a Consumer would
+		// negotiate an extension that is never going to arrive, and it would wrap its
+		// frame ids at the 16 bits of the Dependency Descriptor rather than at the 15
+		// of the VP9 picture ids it is actually given.
+		if (
+			capExt.uri ===
+				'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension' &&
+			!params.headerExtensions!.some(ext => ext.uri === capExt.uri)
+		) {
+			continue;
+		}
+
 		const consumableExt = {
 			uri: capExt.uri,
 			id: capExt.preferredId,

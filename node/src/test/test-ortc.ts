@@ -488,15 +488,9 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	);
 	expect(pipeConsumerRtpParameters.encodings![2]!.scalabilityMode).toBe('L1T3');
 
-	// The Dependency-Descriptor header extension is added since a pipe Consumer
-	// forwards all the layers.
+	// The Dependency-Descriptor header extension is not added since this Producer
+	// did not negotiate it, so there is none to forward.
 	expect(pipeConsumerRtpParameters.headerExtensions).toEqual([
-		{
-			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
-			id: 7,
-			encrypt: false,
-			parameters: {},
-		},
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 8,
