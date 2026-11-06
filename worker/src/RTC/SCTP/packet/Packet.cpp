@@ -275,6 +275,15 @@ namespace RTC
 			return packet;
 		}
 
+		size_t Packet::ComputeLengthFor(size_t chunksLength)
+		{
+			MS_TRACE();
+
+			// The chunks go right after the common header, and each one is already
+			// padded to 4 bytes.
+			return Packet::CommonHeaderLength + chunksLength;
+		}
+
 		/* Instance methods. */
 
 		Packet::Packet(uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)

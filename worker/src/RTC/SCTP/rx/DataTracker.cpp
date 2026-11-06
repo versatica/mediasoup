@@ -291,9 +291,7 @@ namespace RTC
 			const size_t numGapAckBlocks =
 			  std::min(this->additionalTsnBlocks.GetBlocks().size(), DataTracker::MaxGapAckBlocksReported);
 
-			// Each Gap Ack Block and each duplicate TSN takes 4 bytes.
-			return SackChunk::SackChunkHeaderLength + (numGapAckBlocks * 4) +
-			       (this->duplicateTsns.size() * 4);
+			return SackChunk::ComputeLengthFor(numGapAckBlocks, this->duplicateTsns.size());
 		}
 
 		void DataTracker::AddSackSelectiveAck(Packet* packet, size_t aRwnd)

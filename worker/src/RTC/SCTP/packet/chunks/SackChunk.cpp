@@ -60,6 +60,15 @@ namespace RTC
 			return chunk;
 		}
 
+		size_t SackChunk::ComputeLengthFor(size_t numGapAckBlocks, size_t numDuplicateTsns)
+		{
+			MS_TRACE();
+
+			// Each Gap Ack Block (start and end, 16 bits each) and each duplicate TSN
+			// (32 bits) takes 4 bytes, so the chunk never needs padding.
+			return SackChunk::SackChunkHeaderLength + (numGapAckBlocks * 4) + (numDuplicateTsns * 4);
+		}
+
 		SackChunk* SackChunk::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
 		{

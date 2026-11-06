@@ -84,7 +84,7 @@ SCENARIO("SCTP OutstandingData", "[sctp][outstandingdata]")
 	};
 
 	RTC::SCTP::OutstandingData buffer(
-	  /*dataChunkHeaderLength*/ RTC::SCTP::DataChunk::DataChunkHeaderLength,
+	  /*useMessageInterleaving*/ false,
 	  /*lastCumulativeTsnAck*/ unwrapper.Unwrap(9),
 	  discardFromSendQueue);
 

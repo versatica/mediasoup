@@ -54,6 +54,14 @@ namespace RTC
 			 */
 			static HeartbeatAckChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a HeartbeatAckChunk carrying the given parameters.
+			 *
+			 * @param parametersLength - Sum of the lengths of the parameters the chunk
+			 *   will carry, padding included.
+			 */
+			static size_t ComputeLengthFor(size_t parametersLength);
+
 		private:
 			/**
 			 * Parse a HeartbeatAckChunk.

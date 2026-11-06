@@ -59,6 +59,15 @@ namespace RTC
 			return packet;
 		}
 
+		size_t XrPacket::ComputeLengthFor(size_t extendedReportsLength)
+		{
+			MS_TRACE();
+
+			// The Extended Reports go right after the XR header, and each one is a
+			// multiple of 4 bytes.
+			return XrPacket::XrHeaderLength + extendedReportsLength;
+		}
+
 		XrPacket* XrPacket::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, size_t packetLength, uint8_t padding)
 		{

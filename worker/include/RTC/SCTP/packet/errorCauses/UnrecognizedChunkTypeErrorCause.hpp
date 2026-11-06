@@ -45,6 +45,12 @@ namespace RTC
 			 */
 			static UnrecognizedChunkTypeErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a UnrecognizedChunkTypeErrorCause carrying a chunk
+			 * of the given length, padding included.
+			 */
+			static size_t ComputeLengthFor(size_t unrecognizedChunkLength);
+
 		private:
 			/**
 			 * Parse a UnrecognizedChunkTypeErrorCause.

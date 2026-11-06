@@ -87,6 +87,11 @@ namespace RTC
 			 */
 			static FirPacket* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a FirPacket with the given number of items.
+			 */
+			static size_t ComputeLengthFor(size_t numItems);
+
 		private:
 			/**
 			 * Parse a FirPacket.

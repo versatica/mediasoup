@@ -87,6 +87,12 @@ namespace RTC
 			 */
 			static SenderReportPacket* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a SenderReportPacket with the given number of
+			 * report blocks and no profile-specific extensions.
+			 */
+			static size_t ComputeLengthFor(size_t numReportBlocks);
+
 		private:
 			/**
 			 * Parse a SenderReportPacket.

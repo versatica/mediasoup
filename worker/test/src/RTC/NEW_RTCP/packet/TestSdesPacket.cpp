@@ -562,4 +562,46 @@ SCENARIO("RTCP SDES Packet (202)", "[serializable][rtcp][packet]")
 		  helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, sizeof(buffer)) ==
 		  true);
 	}
+
+	SECTION("SdesPacket::ComputeChunkLengthFor() succeeds")
+	{
+		// The SSRC/CSRC and the null octet, padded to 4 bytes.
+		REQUIRE(RTC::NEW_RTCP::SdesPacket::ComputeChunkLengthFor({}) == 8);
+
+		const std::unique_ptr<RTC::NEW_RTCP::SdesPacket> packet{ RTC::NEW_RTCP::SdesPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+
+		const size_t lengthBefore = packet->GetLength();
+
+		packet->AddChunk(1111);
+		packet->AddItem(RTC::NEW_RTCP::SdesPacket::ItemType::CNAME, "abc");
+		packet->AddItem(RTC::NEW_RTCP::SdesPacket::ItemType::NAME, "de");
+
+		// 4 + (2 + 3) + (2 + 2) + 1, padded to 4 bytes.
+		REQUIRE(RTC::NEW_RTCP::SdesPacket::ComputeChunkLengthFor({ 3, 2 }) == 16);
+		REQUIRE(
+		  packet->GetLength() - lengthBefore ==
+		  RTC::NEW_RTCP::SdesPacket::ComputeChunkLengthFor({ 3, 2 }));
+	}
+
+	SECTION("SdesPacket::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::NEW_RTCP::SdesPacket::ComputeLengthFor(0) == 4);
+
+		const std::unique_ptr<RTC::NEW_RTCP::SdesPacket> packet{ RTC::NEW_RTCP::SdesPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+
+		packet->AddChunk(1111);
+		packet->AddItem(RTC::NEW_RTCP::SdesPacket::ItemType::CNAME, "abc");
+		packet->AddChunk(2222);
+		packet->AddItem(RTC::NEW_RTCP::SdesPacket::ItemType::CNAME, "defgh");
+
+		const size_t length = RTC::NEW_RTCP::SdesPacket::ComputeLengthFor(
+		  RTC::NEW_RTCP::SdesPacket::ComputeChunkLengthFor({ 3 }) +
+		  RTC::NEW_RTCP::SdesPacket::ComputeChunkLengthFor({ 5 }));
+
+		// 4 + (4 + 2 + 3 + 1 -> 12) + (4 + 2 + 5 + 1 -> 12).
+		REQUIRE(length == 28);
+		REQUIRE(packet->GetLength() == length);
+	}
 }

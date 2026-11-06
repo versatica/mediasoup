@@ -93,6 +93,12 @@ namespace RTC
 			 */
 			static DataChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a DataChunk carrying a user data payload of the
+			 * given length, padding included.
+			 */
+			static size_t ComputeLengthFor(size_t userDataPayloadLength);
+
 		private:
 			/**
 			 * Parse a DataChunk.

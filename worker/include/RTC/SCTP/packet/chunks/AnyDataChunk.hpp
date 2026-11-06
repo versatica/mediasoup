@@ -15,6 +15,16 @@ namespace RTC
 
 		class AnyDataChunk : public Chunk
 		{
+		public:
+			/**
+			 * Length (in bytes) of the chunk carrying a user data payload of the
+			 * given length, padding included.
+			 *
+			 * @param useMessageInterleaving - Whether the chunk is a IDataChunk (true)
+			 *   or a DataChunk (false).
+			 */
+			static size_t ComputeLengthFor(bool useMessageInterleaving, size_t userDataPayloadLength);
+
 		protected:
 			AnyDataChunk(uint8_t* buffer, size_t bufferLength) : Chunk(buffer, bufferLength)
 			{

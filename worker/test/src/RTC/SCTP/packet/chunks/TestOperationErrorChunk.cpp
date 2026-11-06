@@ -418,4 +418,26 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 
 		delete parsedChunk;
 	}
+
+	SECTION("OperationErrorChunk::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::SCTP::OperationErrorChunk::ComputeLengthFor(0) == 4);
+
+		auto* const chunk = RTC::SCTP::OperationErrorChunk::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+
+		auto* const errorCause =
+		  chunk->BuildErrorCauseInPlace<RTC::SCTP::UnrecognizedChunkTypeErrorCause>();
+
+		errorCause->SetUnrecognizedChunk(sctpCommon::DataBuffer, 6);
+		errorCause->Consolidate();
+
+		const size_t length = RTC::SCTP::OperationErrorChunk::ComputeLengthFor(
+		  RTC::SCTP::UnrecognizedChunkTypeErrorCause::ComputeLengthFor(6));
+
+		REQUIRE(length == 16);
+		REQUIRE(chunk->GetLength() == length);
+
+		delete chunk;
+	}
 }

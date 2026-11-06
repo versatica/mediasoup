@@ -1008,4 +1008,24 @@ SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 		REQUIRE_THROWS_AS(chunk3->Consolidate(), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk3->Discard(), MediaSoupError);
 	}
+
+	SECTION("Packet::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::SCTP::Packet::ComputeLengthFor(0) == 12);
+
+		const std::unique_ptr<RTC::SCTP::Packet> packet{ RTC::SCTP::Packet::Factory(
+			sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer)) };
+
+		auto* const chunk = packet->BuildChunkInPlace<RTC::SCTP::DataChunk>();
+
+		// A payload whose length is not a multiple of 4, so the chunk needs padding.
+		chunk->SetUserDataPayload(sctpCommon::DataBuffer, 5);
+		chunk->Consolidate();
+
+		const size_t length =
+		  RTC::SCTP::Packet::ComputeLengthFor(RTC::SCTP::DataChunk::ComputeLengthFor(5));
+
+		REQUIRE(length == 36);
+		REQUIRE(packet->GetLength() == length);
+	}
 }

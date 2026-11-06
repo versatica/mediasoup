@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/chunks/CookieEchoChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -51,6 +52,15 @@ namespace RTC
 			// minimum CookieEchoChunk length.
 
 			return chunk;
+		}
+
+		size_t CookieEchoChunk::ComputeLengthFor(size_t cookieLength)
+		{
+			MS_TRACE();
+
+			// The cookie goes right after the chunk header, and the chunk is padded to
+			// 4 bytes.
+			return Utils::Byte::PadTo4Bytes(Chunk::ChunkHeaderLength + cookieLength);
 		}
 
 		CookieEchoChunk* CookieEchoChunk::ParseStrict(

@@ -100,6 +100,14 @@ namespace RTC
 			 */
 			static Packet* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a Packet carrying the given chunks.
+			 *
+			 * @param chunksLength - Sum of what `ComputeLengthFor()` of each chunk the
+			 *   packet will carry returns.
+			 */
+			static size_t ComputeLengthFor(size_t chunksLength);
+
 		private:
 			/**
 			 * Constructor is private because we only want to create packet instances

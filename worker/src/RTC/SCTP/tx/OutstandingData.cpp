@@ -4,8 +4,10 @@
 #include "RTC/SCTP/tx/OutstandingData.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/AnyForwardTsnChunk.hpp"
-#include "Utils.hpp"
+#include "RTC/SCTP/packet/chunks/DataChunk.hpp"
+#include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include <map>
 
 namespace RTC
@@ -101,10 +103,13 @@ namespace RTC
 		}
 
 		OutstandingData::OutstandingData(
-		  size_t dataChunkHeaderLength,
+		  bool useMessageInterleaving,
 		  Types::UnwrappedTsn lastCumulativeTsnAck,
 		  std::function<bool(uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)> discardFromSendQueue)
-		  : dataChunkHeaderLength(dataChunkHeaderLength),
+		  : useMessageInterleaving(useMessageInterleaving),
+		    dataChunkHeaderLength(
+		      useMessageInterleaving ? IDataChunk::IDataChunkHeaderLength
+					                       : DataChunk::DataChunkHeaderLength),
 		    lastCumulativeTsnAck(lastCumulativeTsnAck),
 		    discardFromSendQueue(std::move(discardFromSendQueue))
 		{
@@ -342,10 +347,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			// Each skipped stream takes 4 bytes.
-			if (
-			  ForwardTsnChunk::ForwardTsnChunkHeaderLength + (skippedPerOrderedStream.size() * 4) >
-			  packet->GetAvailableLength())
+			if (ForwardTsnChunk::ComputeLengthFor(skippedPerOrderedStream.size()) > packet->GetAvailableLength())
 			{
 				return nullptr;
 			}
@@ -399,8 +401,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			// Each skipped stream takes 8 bytes.
-			if (IForwardTsnChunk::IForwardTsnChunkHeaderLength + (skippedPerStream.size() * 8) > packet->GetAvailableLength())
+			if (IForwardTsnChunk::ComputeLengthFor(skippedPerStream.size()) > packet->GetAvailableLength())
 			{
 				return nullptr;
 			}
@@ -521,7 +522,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			return Utils::Byte::PadTo4Bytes<size_t>(this->dataChunkHeaderLength + data.GetPayloadLength());
+			return AnyDataChunk::ComputeLengthFor(this->useMessageInterleaving, data.GetPayloadLength());
 		}
 
 		OutstandingData::Item& OutstandingData::GetItem(Types::UnwrappedTsn tsn)

@@ -297,6 +297,7 @@ common_sources = [
   'src/RTC/SCTP/packet/TLV.cpp',
   'src/RTC/SCTP/packet/UserData.cpp',
   'src/RTC/SCTP/packet/Chunk.cpp',
+  'src/RTC/SCTP/packet/chunks/AnyDataChunk.cpp',
   'src/RTC/SCTP/packet/chunks/DataChunk.cpp',
   'src/RTC/SCTP/packet/chunks/InitChunk.cpp',
   'src/RTC/SCTP/packet/chunks/InitAckChunk.cpp',

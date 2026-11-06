@@ -382,4 +382,25 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]
 
 		delete parsedChunk;
 	}
+
+	SECTION("HeartbeatAckChunk::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::SCTP::HeartbeatAckChunk::ComputeLengthFor(0) == 4);
+
+		auto* const chunk = RTC::SCTP::HeartbeatAckChunk::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+
+		auto* const parameter = chunk->BuildParameterInPlace<RTC::SCTP::HeartbeatInfoParameter>();
+
+		// Info length is 5 so 3 bytes of padding will be added.
+		parameter->SetInfo(sctpCommon::DataBuffer, 5);
+		parameter->Consolidate();
+
+		const size_t length = RTC::SCTP::HeartbeatAckChunk::ComputeLengthFor(parameter->GetLength());
+
+		REQUIRE(length == 16);
+		REQUIRE(chunk->GetLength() == length);
+
+		delete chunk;
+	}
 }

@@ -755,4 +755,27 @@ SCENARIO("RTCP XR Packet (207)", "[serializable][rtcp][packet]")
 		REQUIRE_THROWS_AS(
 		  RTC::NEW_RTCP::XrPacket::Factory(rtcpCommon::FactoryBuffer, 7), MediaSoupTypeError);
 	}
+
+	SECTION("XrPacket::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::NEW_RTCP::XrPacket::ComputeLengthFor(0) == 8);
+
+		const std::unique_ptr<RTC::NEW_RTCP::XrPacket> packet{ RTC::NEW_RTCP::XrPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+
+		auto* const dlrrExtendedReport =
+		  packet->BuildExtendedReportInPlace<RTC::NEW_RTCP::DlrrExtendedReport>();
+
+		dlrrExtendedReport->AddSubBlock(
+		  { .ssrc = 1, .lastReceiverReport = 1001, .delaySinceLastReceiverReport = 2001 });
+		dlrrExtendedReport->AddSubBlock(
+		  { .ssrc = 2, .lastReceiverReport = 1002, .delaySinceLastReceiverReport = 2002 });
+		dlrrExtendedReport->Consolidate();
+
+		const size_t length = RTC::NEW_RTCP::XrPacket::ComputeLengthFor(
+		  RTC::NEW_RTCP::DlrrExtendedReport::ComputeLengthFor(2));
+
+		REQUIRE(length == 36);
+		REQUIRE(packet->GetLength() == length);
+	}
 }

@@ -350,4 +350,19 @@ SCENARIO("RTCP Generic NACK Packet (205, FMT 1)", "[serializable][rtcp][packet]"
 		REQUIRE_THROWS_AS(
 		  RTC::NEW_RTCP::NackPacket::Factory(rtcpCommon::FactoryBuffer, 11), MediaSoupTypeError);
 	}
+
+	SECTION("NackPacket::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::NEW_RTCP::NackPacket::ComputeLengthFor(0) == 12);
+
+		const std::unique_ptr<RTC::NEW_RTCP::NackPacket> packet{ RTC::NEW_RTCP::NackPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+
+		packet->AddItem(1111, 0x0001);
+		packet->AddItem(2222, 0x0002);
+		packet->AddItem(3333, 0x0003);
+
+		REQUIRE(RTC::NEW_RTCP::NackPacket::ComputeLengthFor(3) == 24);
+		REQUIRE(packet->GetLength() == RTC::NEW_RTCP::NackPacket::ComputeLengthFor(3));
+	}
 }
