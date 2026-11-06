@@ -56,6 +56,11 @@ namespace RTC
 			bool temporalLayerChanged{ false };
 			bool marker{ false };
 			bool sendBufferedPackets{ false };
+			/**
+			 * How the payload descriptor handler rewrote the packet for this
+			 * Consumer, so that its retransmissions are rewritten the very same way.
+			 */
+			std::unique_ptr<RTC::RTP::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
 		};
 
 	public:

@@ -497,6 +497,20 @@ export function getConsumableRtpParameters(
 			continue;
 		}
 
+		// The Dependency Descriptor RTP extension given to a Consumer is written out
+		// of the one in the packets of this Producer, so don't announce it to
+		// Consumers unless this Producer negotiated it. Otherwise a Consumer would
+		// negotiate an extension that is never going to arrive, and it would wrap its
+		// frame ids at the 16 bits of the Dependency Descriptor rather than at the 15
+		// of the VP9 picture ids it is actually given.
+		if (
+			capExt.uri ===
+				'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension' &&
+			!params.headerExtensions!.some(ext => ext.uri === capExt.uri)
+		) {
+			continue;
+		}
+
 		const consumableExt = {
 			uri: capExt.uri,
 			id: capExt.preferredId,
@@ -787,13 +801,9 @@ export function getConsumerRtpParameters({
  */
 export function getPipeConsumerRtpParameters({
 	consumableRtpParameters,
-	routerRtpCapabilities,
-	kind,
 	enableRtx,
 }: {
 	consumableRtpParameters: RtpParameters;
-	routerRtpCapabilities: RtpCapabilities;
-	kind: MediaKind;
 	enableRtx: boolean;
 }): RtpParameters {
 	const consumerParams: RtpParameters = {
@@ -836,34 +846,6 @@ export function getPipeConsumerRtpParameters({
 				ext.uri !==
 					'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 		);
-
-	// TODO: Remove this once the Dependency-Descriptor header extension has
-	// direction 'sendrecv' in supported RTP capabilities.
-	//
-	// A pipe Consumer forwards all the layers of the Producer, so the receiving
-	// Router needs the Dependency-Descriptor header extension to tell them apart.
-	// It must be added here since, being 'recvonly' in the Router RTP
-	// capabilities, it's not present in `consumableRtpParameters`.
-	const dependencyDescriptorExt = routerRtpCapabilities.headerExtensions!.find(
-		capExt =>
-			capExt.kind === kind &&
-			capExt.uri ===
-				'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension' &&
-			capExt.direction !== 'sendrecv' &&
-			capExt.direction !== 'sendonly'
-	);
-
-	if (dependencyDescriptorExt) {
-		consumerParams.headerExtensions.push({
-			uri: dependencyDescriptorExt.uri,
-			id: dependencyDescriptorExt.preferredId,
-			encrypt: dependencyDescriptorExt.preferredEncrypt,
-			parameters: {},
-		});
-
-		// Sort header extensions by ID.
-		consumerParams.headerExtensions.sort((a, b) => a.id - b.id);
-	}
 
 	const consumableEncodings =
 		utils.clone<RtpEncodingParameters[] | undefined>(

@@ -3,6 +3,7 @@
 
 #include "RTC/RTP/Codecs/VP9.hpp"
 #include "Logger.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptorPayloadDescriptor.hpp"
 
 namespace RTC
 {
@@ -110,9 +111,27 @@ namespace RTC
 				return payloadDescriptor.release();
 			}
 
-			void VP9::ProcessRtpPacket(RTP::Packet* packet)
+			void VP9::ProcessRtpPacket(
+			  RTP::Packet* packet,
+			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
 			{
 				MS_TRACE();
+
+				// The Dependency Descriptor tells the layers of the frame and whether
+				// decoding can start at it, which is all that is needed to forward the
+				// packet, and it must be rewritten for the layers each Consumer is given.
+				// So it serves the Consumers that negotiated the extension.
+				//
+				// NOTE: The payload descriptor of the codec is parsed all the same, for
+				// the Consumers that did not and cannot be told the layers any other way.
+				auto* const dependencyDescriptorPayloadDescriptor =
+				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
+
+				if (dependencyDescriptorPayloadDescriptor)
+				{
+					packet->SetDependencyDescriptorPayloadDescriptorHandler(
+					  new DependencyDescriptorPayloadDescriptorHandler(dependencyDescriptorPayloadDescriptor));
+				}
 
 				auto* data = packet->GetPayload();
 				auto len   = packet->GetPayloadLength();
@@ -200,7 +219,7 @@ namespace RTC
 				if (packetSpatialLayer >= context->GetSpatialLayers() || packetTemporalLayer >= context->GetTemporalLayers())
 				{
 					MS_WARN_TAG(
-					  rtp, "too high packet layers %" PRIu8 ":%" PRIu8, packetSpatialLayer, packetTemporalLayer);
+					  codec, "too high packet layers %" PRIu8 ":%" PRIu8, packetSpatialLayer, packetTemporalLayer);
 
 					return false;
 				}
@@ -215,7 +234,7 @@ namespace RTC
 
 				const bool isOldPacket =
 				  (this->payloadDescriptor->hasPictureId &&
-					 RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+					 RTC::SeqManager<uint16_t, VP9::FrameIdLength>::IsSeqLowerThan(
 				     this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()));
 
 				if (!isOldPacket)
@@ -281,14 +300,14 @@ namespace RTC
 				// * higher than current one
 				// * different than the current one when KSVC is enabled and this is not a keyframe
 				// (interframe p bit = 1)
-				const uint16_t spatialLayerForPictureId =
-				  isOldPacket ? context->GetSpatialLayerForPictureId(this->payloadDescriptor->pictureId)
+				const uint16_t spatialLayerForFrameId =
+				  isOldPacket ? context->GetSpatialLayerForFrameId(this->payloadDescriptor->pictureId)
 					            : tmpSpatialLayer;
 
 				if (
-				  packetSpatialLayer > spatialLayerForPictureId ||
+				  packetSpatialLayer > spatialLayerForFrameId ||
 				  (context->IsKSvc() && this->payloadDescriptor->p &&
-					 packetSpatialLayer != spatialLayerForPictureId))
+					 packetSpatialLayer != spatialLayerForFrameId))
 				{
 					return false;
 				}
@@ -334,11 +353,11 @@ namespace RTC
 				}
 
 				// Filter temporal layers higher than current one.
-				const uint16_t temporalLayerForPictureId =
-				  isOldPacket ? context->GetTemporalLayerForPictureId(this->payloadDescriptor->pictureId)
+				const uint16_t temporalLayerForFrameId =
+				  isOldPacket ? context->GetTemporalLayerForFrameId(this->payloadDescriptor->pictureId)
 					            : tmpTemporalLayer;
 
-				if (packetTemporalLayer > temporalLayerForPictureId)
+				if (packetTemporalLayer > temporalLayerForFrameId)
 				{
 					return false;
 				}

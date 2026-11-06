@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
-#include "RTC/SeqManager.hpp"
+#include "Utils.hpp"
 #include <deque>
 
 namespace RTC
@@ -21,48 +21,57 @@ namespace RTC
 				struct Encoder
 				{
 					virtual ~Encoder() = default;
+
+					/**
+					 * Which of the payload descriptor handlers of the packet made this
+					 * encoder, so that the same one rewrites the retransmissions.
+					 */
+					bool preferDependencyDescriptor{ false };
 				};
 
 				virtual ~PayloadDescriptor()                 = default;
 				virtual void Dump(int indentation = 0) const = 0;
 			};
 
-			class PictureIdList
+			class FrameIdList
 			{
-				static constexpr uint16_t MaxCurrentLayerPictureIdNum{ 1000 };
+				static constexpr uint16_t MaxCurrentLayerFrameIdNum{ 1000 };
 
 			public:
-				explicit PictureIdList() = default;
+				explicit FrameIdList(uint8_t frameIdLength) : frameIdLength(frameIdLength)
+				{
+				}
 
-				~PictureIdList()
+				~FrameIdList()
 				{
 					this->layerChanges.clear();
 				}
 
-				void Push(uint16_t pictureId, int16_t layer)
+				void Push(uint16_t frameId, int16_t layer)
 				{
-					for (const auto& it : this->layerChanges)
+					// NOTE: Walked by looking at the front rather than with an iterator,
+					// since popping it would invalidate the one the loop is holding.
+					while (!this->layerChanges.empty())
 					{
-						// Layers can be changed only with ordered pictureId values.
-						// If pictureId is lower than the previous one, then it has rolled over the max value.
-						uint16_t diff = pictureId > it.first
-						                  ? pictureId - it.first
-						                  : pictureId + RTC::SeqManager<uint16_t, 15>::MaxValue - it.first;
+						const auto front = this->layerChanges.front().first;
 
-						if (diff > MaxCurrentLayerPictureIdNum)
-						{
-							this->layerChanges.pop_front();
-						}
-						else
+						// Layers can be changed only with ordered frameId values.
+						// If frameId is lower than the previous one, then it has rolled over the max value.
+						const uint16_t diff =
+						  frameId > front ? frameId - front : frameId + GetMaxFrameId() - front;
+
+						if (diff <= MaxCurrentLayerFrameIdNum)
 						{
 							break;
 						}
+
+						this->layerChanges.pop_front();
 					}
 
-					this->layerChanges.emplace_back(pictureId, layer);
+					this->layerChanges.emplace_back(frameId, layer);
 				}
 
-				int16_t GetLayer(uint16_t pictureId) const
+				int16_t GetLayer(uint16_t frameId) const
 				{
 					if (this->layerChanges.size() <= 1)
 					{
@@ -71,7 +80,7 @@ namespace RTC
 
 					for (auto it = std::next(this->layerChanges.begin()); it != this->layerChanges.end(); ++it)
 					{
-						if (RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(it->first, pictureId))
+						if (IsFrameIdHigherThan(it->first, frameId))
 						{
 							return std::prev(it)->second;
 						}
@@ -81,8 +90,24 @@ namespace RTC
 				}
 
 			private:
+				/**
+				 * Frame ids wrap at the highest value the codec numbers them with, so
+				 * both the distance and the comparison are made in that space.
+				 */
+				uint16_t GetMaxFrameId() const
+				{
+					return Utils::Number::maxValue<uint16_t>(this->frameIdLength);
+				}
+
+				bool IsFrameIdHigherThan(uint16_t lhs, uint16_t rhs) const
+				{
+					return Utils::Number::IsHigherThan<uint16_t>(lhs, rhs, GetMaxFrameId());
+				}
+
+			private:
+				const uint8_t frameIdLength;
 				// List populated with the spatial/temporal layer changes
-				// indexed by the corresponding pictureId.
+				// indexed by the corresponding frameId.
 				std::deque<std::pair<uint16_t, int16_t>> layerChanges;
 			};
 
@@ -96,10 +121,33 @@ namespace RTC
 					uint8_t spatialLayers{ 1 };
 					uint8_t temporalLayers{ 1 };
 					bool ksvc{ false };
+					/**
+					 * Whether the Consumer is given one of several streams rather than
+					 * layers of a single one, so that choosing the spatial layer means
+					 * choosing the stream and is not up to the payload descriptor.
+					 */
+					bool simulcast{ false };
+					/**
+					 * Whether the Consumer negotiated the Dependency Descriptor header
+					 * extension, this is, whether it is going to receive it at all.
+					 */
+					bool preferDependencyDescriptor{ false };
 				};
 
 			public:
-				explicit EncodingContext(Codecs::EncodingContext::Params& params) : params(params)
+				/**
+				 * @param frameIdLength - Bits the codec numbers its frame ids with,
+				 *   which tells where they wrap. Overridden by the Dependency Descriptor
+				 *   one when the Consumer negotiated it, since its handler takes
+				 *   over and numbers every frame itself.
+				 */
+				explicit EncodingContext(Codecs::EncodingContext::Params& params, uint8_t frameIdLength)
+				  : params(params),
+				    frameIdLength(
+				      params.preferDependencyDescriptor ? DependencyDescriptor::FrameIdLength
+							                                  : frameIdLength),
+				    spatialLayerFrameIdList(this->frameIdLength),
+				    temporalLayerFrameIdList(this->frameIdLength)
 				{
 				}
 				virtual ~EncodingContext() = default;
@@ -117,6 +165,26 @@ namespace RTC
 				{
 					return this->params.ksvc;
 				}
+				/**
+				 * Whether the spatial layer is chosen by picking the stream to forward,
+				 * in which case the target spatial layer of this context is never set
+				 * and the payload descriptor must not filter on it.
+				 */
+				bool IsSimulcast() const
+				{
+					return this->params.simulcast;
+				}
+				/**
+				 * Whether the Consumer is given the Dependency Descriptor. The layers of
+				 * a frame can only be told from it by an endpoint that receives it, so a
+				 * Consumer that did not negotiate the extension must be served by the
+				 * payload descriptor of its codec instead.
+				 */
+				bool PrefersDependencyDescriptor() const
+				{
+					return this->params.preferDependencyDescriptor;
+				}
+
 				int16_t GetTargetSpatialLayer() const
 				{
 					return this->targetLayers.spatial;
@@ -165,30 +233,42 @@ namespace RTC
 				{
 					this->ignoreDtx = ignoreDtx;
 				}
-				virtual void SyncRequired() = 0;
-				void SetCurrentSpatialLayer(int16_t spatialLayer, uint16_t pictureId)
+				/**
+				 * Tells that the packet flow of the Consumer restarts here, this is, that
+				 * it begins, resumes or is given another stream, so that what is known
+				 * about the packets seen so far no longer holds.
+				 */
+				void SyncRequired()
+				{
+					// The frames seen so far say nothing about the ones to come, which may
+					// even be numbered by another encoder.
+					this->maxFrameId.reset();
+
+					this->syncRequired = true;
+				}
+				void SetCurrentSpatialLayer(int16_t spatialLayer, uint16_t frameId)
 				{
 					if (this->currentLayers.spatial == spatialLayer)
 					{
 						return;
 					}
 
-					this->spatialLayerPictureIdList.Push(pictureId, spatialLayer);
+					this->spatialLayerFrameIdList.Push(frameId, spatialLayer);
 					this->currentLayers.spatial = spatialLayer;
 				}
-				void SetCurrentTemporalLayer(int16_t temporalLayer, uint16_t pictureId)
+				void SetCurrentTemporalLayer(int16_t temporalLayer, uint16_t frameId)
 				{
 					if (this->currentLayers.temporal == temporalLayer)
 					{
 						return;
 					}
 
-					this->temporalLayerPictureIdList.Push(pictureId, temporalLayer);
+					this->temporalLayerFrameIdList.Push(frameId, temporalLayer);
 					this->currentLayers.temporal = temporalLayer;
 				}
-				int16_t GetSpatialLayerForPictureId(uint16_t pictureId) const
+				int16_t GetSpatialLayerForFrameId(uint16_t frameId) const
 				{
-					int16_t layer = this->spatialLayerPictureIdList.GetLayer(pictureId);
+					int16_t layer = this->spatialLayerFrameIdList.GetLayer(frameId);
 
 					if (layer > -1)
 					{
@@ -197,9 +277,9 @@ namespace RTC
 
 					return this->currentLayers.spatial;
 				}
-				int16_t GetTemporalLayerForPictureId(uint16_t pictureId) const
+				int16_t GetTemporalLayerForFrameId(uint16_t frameId) const
 				{
-					int16_t layer = this->temporalLayerPictureIdList.GetLayer(pictureId);
+					int16_t layer = this->temporalLayerFrameIdList.GetLayer(frameId);
 
 					if (layer > -1)
 					{
@@ -208,17 +288,78 @@ namespace RTC
 
 					return this->currentLayers.temporal;
 				}
+				/**
+				 * Whether the given frame id is older than the newest one seen, this is,
+				 * whether the packet carrying it was reordered and the current layers are
+				 * no longer the ones its frame was judged against.
+				 *
+				 * NOTE: Each codec gives the frame id it has. The Dependency Descriptor
+				 * numbers every frame, so in SVC the spatial layers of a picture get one
+				 * each, while VP8 and VP9 number the whole picture.
+				 */
+				bool IsOldFrameId(uint16_t frameId) const
+				{
+					return this->maxFrameId.has_value() &&
+					       IsFrameIdLowerThan(frameId, this->maxFrameId.value());
+				}
+				void UpdateMaxFrameId(uint16_t frameId)
+				{
+					if (!this->maxFrameId.has_value() || IsFrameIdHigherThan(frameId, this->maxFrameId.value()))
+					{
+						this->maxFrameId = frameId;
+					}
+				}
+
+			private:
+				/**
+				 * Frame ids wrap at the highest value the codec numbers them with, so
+				 * they are compared in that space.
+				 */
+				bool IsFrameIdHigherThan(uint16_t lhs, uint16_t rhs) const
+				{
+					return Utils::Number::IsHigherThan<uint16_t>(
+					  lhs, rhs, Utils::Number::maxValue<uint16_t>(this->frameIdLength));
+				}
+
+				bool IsFrameIdLowerThan(uint16_t lhs, uint16_t rhs) const
+				{
+					return Utils::Number::IsLowerThan<uint16_t>(
+					  lhs, rhs, Utils::Number::maxValue<uint16_t>(this->frameIdLength));
+				}
+
+			public:
+				/**
+				 * Whether the codec has yet to catch up with the restart above.
+				 */
+				bool syncRequired{ false };
+				/**
+				 * How the payload descriptor handler rewrote the packet being processed
+				 * for this Consumer, left here by it and taken by the Consumer so that
+				 * the retransmissions of that packet are rewritten the very same way.
+				 *
+				 * NOTE: It belongs here rather than to the packet, which is given to
+				 * every Consumer of the Producer and rewritten by each of them its own
+				 * way.
+				 */
+				std::unique_ptr<PayloadDescriptor::Encoder> encoder{ nullptr };
 
 			private:
 				const Params params;
+				const uint8_t frameIdLength;
 				RTC::ConsumerTypes::VideoLayers targetLayers;
 				RTC::ConsumerTypes::VideoLayers currentLayers;
 				bool ignoreDtx{ false };
+				/**
+				 * Newest frame number seen, to tell reordered packets apart.
+				 */
+				std::optional<uint16_t> maxFrameId{ std::nullopt };
 
 			private:
-				// List of spatial/temporal layer changes indexed by the corresponding pictureId.
-				PictureIdList spatialLayerPictureIdList;
-				PictureIdList temporalLayerPictureIdList;
+				/**
+				 * List of spatial/temporal layer changes indexed by the corresponding frameId.
+				 */
+				FrameIdList spatialLayerFrameIdList;
+				FrameIdList temporalLayerFrameIdList;
 			};
 
 			class PayloadDescriptorHandler
@@ -229,13 +370,19 @@ namespace RTC
 			public:
 				virtual void Dump(int indentation = 0) const                                      = 0;
 				virtual bool Process(EncodingContext* context, RTP::Packet* packet, bool& marker) = 0;
-				virtual void RtpPacketChanged(RTP::Packet* packet)                                = 0;
-				virtual std::unique_ptr<PayloadDescriptor::Encoder> GetEncoder() const            = 0;
 				virtual void Encode(RTP::Packet* packet, PayloadDescriptor::Encoder* encoder)     = 0;
 				virtual void Restore(RTP::Packet* packet)                                         = 0;
 				virtual uint8_t GetSpatialLayer() const                                           = 0;
 				virtual uint8_t GetTemporalLayer() const                                          = 0;
 				virtual bool IsKeyFrame() const                                                   = 0;
+				/**
+				 * Bytes the Dependency Descriptor of this packet may take once rewritten,
+				 * or 0 if this codec never rewrites it.
+				 */
+				virtual uint8_t GetDependencyDescriptorMaxLength() const
+				{
+					return 0;
+				}
 			};
 		} // namespace Codecs
 	} // namespace RTP

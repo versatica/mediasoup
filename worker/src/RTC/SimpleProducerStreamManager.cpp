@@ -237,6 +237,13 @@ namespace RTC
 		result.marker              = marker;
 		result.sendBufferedPackets = sendBufferedPackets;
 
+		if (this->encodingContext)
+		{
+			// Take the payload encoder for this Consumer, so that its retransmissions
+			// are rewritten the very same way.
+			result.encoder = std::move(this->encodingContext->encoder);
+		}
+
 		return result;
 	}
 
