@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -53,6 +54,15 @@ namespace RTC
 			// No need to invoke SetLength() since parent constructor invoked it.
 
 			return errorCause;
+		}
+
+		size_t UnrecognizedChunkTypeErrorCause::ComputeLengthFor(size_t unrecognizedChunkLength)
+		{
+			MS_TRACE();
+
+			// The unrecognized chunk goes right after the error cause header, and the
+			// error cause is padded to 4 bytes.
+			return Utils::Byte::PadTo4Bytes(ErrorCause::ErrorCauseHeaderLength + unrecognizedChunkLength);
 		}
 
 		UnrecognizedChunkTypeErrorCause* UnrecognizedChunkTypeErrorCause::ParseStrict(

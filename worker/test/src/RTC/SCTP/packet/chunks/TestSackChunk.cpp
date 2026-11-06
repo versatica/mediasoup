@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
 #include "test/include/RTC/SCTP/sctpCommon.hpp"
@@ -336,5 +335,24 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
     });
 
 		delete parsedChunk;
+	}
+
+	SECTION("SackChunk::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::SCTP::SackChunk::ComputeLengthFor(0, 0) == 16);
+
+		auto* const chunk =
+		  RTC::SCTP::SackChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+
+		chunk->AddAckBlock(10000, 19999);
+		chunk->AddAckBlock(20000, 20999);
+		chunk->AddAckBlock(60000, 60999);
+		chunk->AddDuplicateTsn(10000000);
+		chunk->AddDuplicateTsn(20000000);
+
+		REQUIRE(RTC::SCTP::SackChunk::ComputeLengthFor(3, 2) == 36);
+		REQUIRE(chunk->GetLength() == RTC::SCTP::SackChunk::ComputeLengthFor(3, 2));
+
+		delete chunk;
 	}
 }

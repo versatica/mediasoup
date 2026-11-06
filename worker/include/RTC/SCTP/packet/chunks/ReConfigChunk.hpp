@@ -62,6 +62,14 @@ namespace RTC
 			 */
 			static ReConfigChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a ReConfigChunk carrying the given parameters.
+			 *
+			 * @param parametersLength - Sum of what `ComputeLengthFor()` of each
+			 *   parameter the chunk will carry returns.
+			 */
+			static size_t ComputeLengthFor(size_t parametersLength);
+
 		private:
 			/**
 			 * Parse a ReConfigChunk.

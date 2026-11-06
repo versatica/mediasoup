@@ -3,6 +3,7 @@
 
 #include "RTC/SCTP/tx/RetransmissionQueue.hpp"
 #include "Logger.hpp"
+#include "RTC/SCTP/packet/chunks/AnyDataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/IDataChunk.hpp"
 #include "RTC/SCTP/public/SctpTypes.hpp"
@@ -32,6 +33,7 @@ namespace RTC
 		    associationListener(associationListener),
 		    sctpOptions(sctpOptions),
 		    supportsPartialReliability(supportsPartialReliability),
+		    useMessageInterleaving(useMessageInterleaving),
 		    dataChunkHeaderLength(
 		      useMessageInterleaving ? IDataChunk::IDataChunkHeaderLength
 					                       : DataChunk::DataChunkHeaderLength),
@@ -45,7 +47,7 @@ namespace RTC
 		    ssthresh(this->rwnd),
 		    sendQueue(sendQueue),
 		    outstandingData(
-		      this->dataChunkHeaderLength,
+		      this->useMessageInterleaving,
 		      this->tsnUnwrapper.Unwrap(localInitialTsn - 1),
 
 		      [this](uint16_t streamId, uint32_t outgoingMessageId)
@@ -324,7 +326,7 @@ namespace RTC
 			  oldUnackedPacketBytes >= this->cwnd ? 0 : this->cwnd - oldUnackedPacketBytes;
 
 			size_t maxPacketBytesAllowedByRwnd =
-			  Utils::Byte::PadTo4Bytes(GetRwnd() + this->dataChunkHeaderLength);
+			  AnyDataChunk::ComputeLengthFor(this->useMessageInterleaving, GetRwnd());
 
 			// https://datatracker.ietf.org/doc/html/rfc9260#section-6.1
 			//
@@ -533,7 +535,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			return Utils::Byte::PadTo4Bytes(this->dataChunkHeaderLength + data.GetPayloadLength());
+			return AnyDataChunk::ComputeLengthFor(this->useMessageInterleaving, data.GetPayloadLength());
 		}
 
 		bool RetransmissionQueue::IsSackChunkValid(const SackChunk* sackChunk) const

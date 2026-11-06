@@ -75,6 +75,14 @@ namespace RTC
 			 */
 			static XrPacket* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a XrPacket carrying the given Extended Reports.
+			 *
+			 * @param extendedReportsLength - Sum of what `ComputeLengthFor()` of each
+			 *   Extended Report the packet will carry returns.
+			 */
+			static size_t ComputeLengthFor(size_t extendedReportsLength);
+
 		private:
 			/**
 			 * Parse a XrPacket.

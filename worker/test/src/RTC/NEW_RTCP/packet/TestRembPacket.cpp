@@ -438,4 +438,19 @@ SCENARIO("RTCP REMB Packet (206, FMT 15)", "[serializable][rtcp][packet]")
 		REQUIRE_THROWS_AS(
 		  RTC::NEW_RTCP::RembPacket::Factory(rtcpCommon::FactoryBuffer, 19), MediaSoupTypeError);
 	}
+
+	SECTION("RembPacket::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::NEW_RTCP::RembPacket::ComputeLengthFor(0) == 20);
+
+		const std::unique_ptr<RTC::NEW_RTCP::RembPacket> packet{ RTC::NEW_RTCP::RembPacket::Factory(
+			rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer)) };
+
+		packet->AddSsrc(1111);
+		packet->AddSsrc(2222);
+		packet->AddSsrc(3333);
+
+		REQUIRE(RTC::NEW_RTCP::RembPacket::ComputeLengthFor(3) == 32);
+		REQUIRE(packet->GetLength() == RTC::NEW_RTCP::RembPacket::ComputeLengthFor(3));
+	}
 }

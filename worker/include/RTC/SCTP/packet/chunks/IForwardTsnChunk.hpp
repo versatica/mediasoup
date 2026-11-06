@@ -76,6 +76,12 @@ namespace RTC
 			 */
 			static IForwardTsnChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Length (in bytes) of a IForwardTsnChunk with the given number of
+			 * skipped streams.
+			 */
+			static size_t ComputeLengthFor(size_t numSkippedStreams);
+
 		private:
 			/**
 			 * Parse a IForwardTsnChunk.

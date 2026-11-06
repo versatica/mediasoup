@@ -58,6 +58,15 @@ namespace RTC
 			return chunk;
 		}
 
+		size_t ForwardTsnChunk::ComputeLengthFor(size_t numSkippedStreams)
+		{
+			MS_TRACE();
+
+			// Each skipped stream (stream identifier and stream sequence number, 16
+			// bits each) takes 4 bytes, so the chunk never needs padding.
+			return ForwardTsnChunk::ForwardTsnChunkHeaderLength + (numSkippedStreams * 4);
+		}
+
 		ForwardTsnChunk* ForwardTsnChunk::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
 		{

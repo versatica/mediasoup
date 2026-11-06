@@ -323,4 +323,28 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[serializable][sctp][chunk]")
 
 		delete parsedChunk;
 	}
+
+	SECTION("ReConfigChunk::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::SCTP::ReConfigChunk::ComputeLengthFor(0) == 4);
+
+		auto* const chunk = RTC::SCTP::ReConfigChunk::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
+
+		auto* const parameter =
+		  chunk->BuildParameterInPlace<RTC::SCTP::OutgoingSsnResetRequestParameter>();
+
+		parameter->AddStreamId(4444);
+		parameter->AddStreamId(4445);
+		parameter->AddStreamId(4446);
+		parameter->Consolidate();
+
+		const size_t length = RTC::SCTP::ReConfigChunk::ComputeLengthFor(
+		  RTC::SCTP::OutgoingSsnResetRequestParameter::ComputeLengthFor(3));
+
+		REQUIRE(length == 28);
+		REQUIRE(chunk->GetLength() == length);
+
+		delete chunk;
+	}
 }

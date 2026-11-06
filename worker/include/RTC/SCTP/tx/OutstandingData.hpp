@@ -323,7 +323,7 @@ namespace RTC
 
 		public:
 			OutstandingData(
-			  size_t dataChunkHeaderLength,
+			  bool useMessageInterleaving,
 			  Types::UnwrappedTsn lastCumulativeTsnAck,
 			  std::function<bool(uint16_t /*streamId*/, uint32_t /*outgoingMessageId*/)> discardFromSendQueue);
 
@@ -552,6 +552,8 @@ namespace RTC
 			void AssertIsConsistent() const;
 
 		private:
+			// Whether I-DATA chunks are used instead of DATA chunks.
+			const bool useMessageInterleaving;
 			// The size of the data chunk (DATA/I-DATA) header that is used.
 			const size_t dataChunkHeaderLength;
 			// The last cumulative TSN ack number.

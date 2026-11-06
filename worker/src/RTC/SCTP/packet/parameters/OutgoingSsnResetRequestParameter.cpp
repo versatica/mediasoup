@@ -62,6 +62,17 @@ namespace RTC
 			return parameter;
 		}
 
+		size_t OutgoingSsnResetRequestParameter::ComputeLengthFor(size_t numStreamIds)
+		{
+			MS_TRACE();
+
+			// Each stream identifier takes 2 bytes, and the parameter is padded to 4
+			// bytes.
+			return Utils::Byte::PadTo4Bytes(
+			  OutgoingSsnResetRequestParameter::OutgoingSsnResetRequestParameterHeaderLength +
+			  (numStreamIds * 2));
+		}
+
 		OutgoingSsnResetRequestParameter* OutgoingSsnResetRequestParameter::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
 		{

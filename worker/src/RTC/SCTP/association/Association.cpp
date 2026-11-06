@@ -4,7 +4,6 @@
 #include "RTC/SCTP/association/Association.hpp"
 #include "Logger.hpp"
 #include "RTC/SCTP/association/Capabilities.hpp"
-#include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/NoUserDataErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/OutOfResourceErrorCause.hpp"
@@ -1693,9 +1692,8 @@ namespace RTC
 
 			// The cookie is echoed back in a COOKIE-ECHO chunk, so it must fit in a
 			// packet we can send.
-			const size_t cookieEchoPacketLength =
-			  Packet::CommonHeaderLength + Chunk::ChunkHeaderLength +
-			  Utils::Byte::PadTo4Bytes(size_t{ stateCookieParameter->GetCookieLength() });
+			const size_t cookieEchoPacketLength = Packet::ComputeLengthFor(
+			  CookieEchoChunk::ComputeLengthFor(stateCookieParameter->GetCookieLength()));
 
 			if (cookieEchoPacketLength > this->maxPacketLength)
 			{
@@ -2580,9 +2578,9 @@ namespace RTC
 
 				// The unknown chunk is echoed back in full within the error cause, so
 				// it must fit in a packet we can send.
-				const size_t operationErrorPacketLength =
-				  Packet::CommonHeaderLength + Chunk::ChunkHeaderLength + ErrorCause::ErrorCauseHeaderLength +
-				  Utils::Byte::PadTo4Bytes(receivedUnknownChunk->GetLength());
+				const size_t operationErrorPacketLength = Packet::ComputeLengthFor(
+				  OperationErrorChunk::ComputeLengthFor(
+				    UnrecognizedChunkTypeErrorCause::ComputeLengthFor(receivedUnknownChunk->GetLength())));
 
 				if (operationErrorPacketLength > this->maxPacketLength)
 				{

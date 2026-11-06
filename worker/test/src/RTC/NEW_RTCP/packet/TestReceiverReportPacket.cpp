@@ -480,4 +480,20 @@ SCENARIO("RTCP Receiver Report Packet (201)", "[serializable][rtcp][packet]")
 		REQUIRE_THROWS_AS(
 		  RTC::NEW_RTCP::ReceiverReportPacket::Factory(rtcpCommon::FactoryBuffer, 7), MediaSoupTypeError);
 	}
+
+	SECTION("ReceiverReportPacket::ComputeLengthFor() succeeds")
+	{
+		REQUIRE(RTC::NEW_RTCP::ReceiverReportPacket::ComputeLengthFor(0) == 8);
+
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> packet{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(
+			  rtcpCommon::FactoryBuffer, sizeof(rtcpCommon::FactoryBuffer))
+		};
+
+		packet->AddReportBlock({ .ssrc = 7777 });
+		packet->AddReportBlock({ .ssrc = 8888 });
+
+		REQUIRE(RTC::NEW_RTCP::ReceiverReportPacket::ComputeLengthFor(2) == 56);
+		REQUIRE(packet->GetLength() == RTC::NEW_RTCP::ReceiverReportPacket::ComputeLengthFor(2));
+	}
 }
