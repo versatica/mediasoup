@@ -206,12 +206,115 @@ namespace RTC
 			}
 		}
 
-		// Fill supported codec payload types.
-		for (auto& codec : this->rtpParameters.codecs)
+		// Parse the optional per-Consumer egress rewrite mapping.
+		//
+		// When this mapping is present the packet on the wire will use the
+		// "consumer" PTs and extension ids declared by the caller, while the
+		// internal worker path continues to operate on the Producer-side
+		// consumable PTs / canonical extension ids. The send path applies
+		// `Packet::ApplyEgressRewrite` in `Consumer::SendRtpPacket`.
+		if (data->consumerRtpMapping() != nullptr)
 		{
-			if (codec.mimeType.IsMediaCodec())
+			const auto* mapping = data->consumerRtpMapping();
+
+			this->hasEgressRemap = true;
+
+			for (const auto* entry : *mapping->codecs())
 			{
-				this->supportedCodecPayloadTypes[codec.payloadType] = true;
+				const uint8_t producerPt = entry->producerPayloadType();
+				const uint8_t consumerPt = entry->consumerPayloadType();
+
+				if (producerPt == 0u || producerPt >= 128u)
+				{
+					MS_THROW_TYPE_ERROR("invalid consumerRtpMapping codec (producer payload type out of range)");
+				}
+
+				if (consumerPt == 0u || consumerPt >= 128u)
+				{
+					MS_THROW_TYPE_ERROR("invalid consumerRtpMapping codec (consumer payload type out of range)");
+				}
+
+				this->egressPayloadTypeMap[producerPt] = consumerPt;
+			}
+
+			for (const auto* entry : *mapping->headerExtensions())
+			{
+				const uint8_t producerExtId = entry->producerExtId();
+				const uint8_t consumerExtId = entry->consumerExtId();
+
+				if (producerExtId == 0u || producerExtId >= 15u)
+				{
+					MS_THROW_TYPE_ERROR(
+					  "invalid consumerRtpMapping header extension (producer ext id out of range)");
+				}
+
+				if (consumerExtId == 0u || consumerExtId >= 15u)
+				{
+					MS_THROW_TYPE_ERROR(
+					  "invalid consumerRtpMapping header extension (consumer ext id out of range)");
+				}
+
+				this->egressHeaderExtensionIdMap[producerExtId] = consumerExtId;
+			}
+
+			// Build egressHeaderExtensionIds by routing each non-zero id in
+			// rtpHeaderExtensionIds through the remap table. Fields without a
+			// remap entry keep their original id (so the view stays consistent
+			// for extensions the caller did not need to re-label).
+			this->egressHeaderExtensionIds = this->rtpHeaderExtensionIds;
+
+			auto remap = [this](uint8_t& id)
+			{
+				if (id != 0u && this->egressHeaderExtensionIdMap[id] != 0u)
+				{
+					id = this->egressHeaderExtensionIdMap[id];
+				}
+			};
+
+			remap(this->egressHeaderExtensionIds.mid);
+			remap(this->egressHeaderExtensionIds.rid);
+			remap(this->egressHeaderExtensionIds.rrid);
+			remap(this->egressHeaderExtensionIds.absSendTime);
+			remap(this->egressHeaderExtensionIds.transportWideCc01);
+			remap(this->egressHeaderExtensionIds.ssrcAudioLevel);
+			remap(this->egressHeaderExtensionIds.dependencyDescriptor);
+			remap(this->egressHeaderExtensionIds.videoOrientation);
+			remap(this->egressHeaderExtensionIds.absCaptureTime);
+			remap(this->egressHeaderExtensionIds.playoutDelay);
+			remap(this->egressHeaderExtensionIds.mediasoupPacketId);
+		}
+
+		// Fill supported codec payload types.
+		//
+		// In the legacy (no-remap) path, `rtpParameters.codecs[i].payloadType`
+		// is the consumable PT (same space as the packet seen in SendRtpPacket
+		// after Producer::MangleRtpPacket), so indexing the bitset by it is
+		// correct.
+		//
+		// In the remap path, `rtpParameters.codecs[i].payloadType` holds the
+		// *wire* PT, and the packet in SendRtpPacket still carries the
+		// producer-side consumable PT. Iterate `egressPayloadTypeMap`
+		// directly: a non-zero entry at index `producerPt` means the caller
+		// declared an egress mapping for that consumable PT (media or RTX),
+		// so that is the PT we must accept.
+		if (this->hasEgressRemap)
+		{
+			for (size_t producerPt = 0u; producerPt < this->egressPayloadTypeMap.size(); ++producerPt)
+			{
+				if (this->egressPayloadTypeMap[producerPt] != 0u)
+				{
+					this->supportedCodecPayloadTypes[producerPt] = true;
+				}
+			}
+		}
+		else
+		{
+			for (auto& codec : this->rtpParameters.codecs)
+			{
+				if (codec.mimeType.IsMediaCodec())
+				{
+					this->supportedCodecPayloadTypes[codec.payloadType] = true;
+				}
 			}
 		}
 
@@ -1167,6 +1270,21 @@ namespace RTC
 		packet->logger.consumerId = this->id;
 #endif
 
+		// When this Consumer carries a per-Consumer egress PT / ext-id remap,
+		// do NOT write to the Router's fan-out sharedPacket (which is shared
+		// across all Consumers of the same Producer). A remap would otherwise
+		// leak our wire PT / ext-id into every other Consumer's retransmission
+		// buffer via the same underlying shared slot.
+		//
+		// Instead, use a per-call local shared packet: our RtpStreamSend
+		// retransmission buffer will hold the wire-state clone exclusively,
+		// while the Router's sharedPacket stays untouched (and the next
+		// non-remap Consumer will keep benefiting from fan-out sharing).
+		// Cost: one extra clone per packet per remap Consumer.
+		std::shared_ptr<RTC::RTP::Packet> localSharedPacket;
+		std::shared_ptr<RTC::RTP::Packet>& activeSharedPacket =
+		  this->hasEgressRemap ? localSharedPacket : sharedPacket;
+
 		RTC::RTP::RtpStreamSend* rtpStream;
 		RTC::SeqManager<uint16_t>* rtpSeqManager;
 		RetransmissionBuffer* targetLayerRetransmissionBuffer;
@@ -1240,7 +1358,7 @@ namespace RTC
 			case ProducerStreamManager::RtpPacketProcessResult::Type::BUFFER:
 			{
 				Consumer::StorePacketInTargetLayerRetransmissionBuffer(
-				  *targetLayerRetransmissionBuffer, packet, sharedPacket);
+				  *targetLayerRetransmissionBuffer, packet, activeSharedPacket);
 
 				return;
 			}
@@ -1295,6 +1413,21 @@ namespace RTC
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
 		packet->SetMarker(action.marker);
+
+		// Per-Consumer egress PT / ext-id rewrite (no-op unless
+		// ConsumeRequest carried a ConsumerRtpMapping). Must happen before
+		// rtpStream->ReceivePacket so the RTX store observes the wire PT.
+		RTC::RTP::Packet::EgressRewriteUndo egressUndo;
+		const bool doEgressRemap = this->hasEgressRemap && this->egressPayloadTypeMap[payloadType] != 0u;
+
+		if (doEgressRemap)
+		{
+			packet->ApplyEgressRewrite(
+			  this->egressPayloadTypeMap[payloadType],
+			  this->egressHeaderExtensionIdMap,
+			  this->egressHeaderExtensionIds,
+			  egressUndo);
+		}
 
 #ifdef MS_RTC_LOGGER_RTP
 		packet->logger.sendRtpTimestamp = timestamp;
@@ -1365,11 +1498,16 @@ namespace RTC
 		// that the clone holds the original packet and not the one rewritten for
 		// this Consumer (the stream reapplies its own values and payload encoding on
 		// every retransmission).
+		//
+		// For remap Consumers `activeSharedPacket` is a per-call local clone, so
+		// the Router's fan-out sharedPacket is not polluted with our wire
+		// PT / ext-ids: the clone happens while the packet still carries the
+		// egress-remapped values (RevertEgressRewrite runs below).
 		if (result.retransmissionBufferItem)
 		{
-			if (!sharedPacket)
+			if (!activeSharedPacket)
 			{
-				sharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
+				activeSharedPacket = RTC::RTP::PacketUtils::ClonePacket(packet);
 			}
 
 			MS_ASSERT(
@@ -1377,7 +1515,15 @@ namespace RTC
 			  "retransmission buffer item already holds a packet [seq:%" PRIu16 "]",
 			  result.retransmissionBufferItem->sequenceNumber);
 
-			result.retransmissionBufferItem->sharedPacket = sharedPacket;
+			result.retransmissionBufferItem->sharedPacket = activeSharedPacket;
+		}
+
+		// Revert the egress remap on the packet so the next Consumer in the
+		// Router fan-out (and any further logic in this Consumer that reads
+		// the packet) sees the pristine Router-canonical PT / ext-id view.
+		if (doEgressRemap)
+		{
+			packet->RevertEgressRewrite(egressUndo);
 		}
 
 		// If sent packet was the first packet of a key frame, let's send buffered
