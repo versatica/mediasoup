@@ -127,7 +127,6 @@ namespace RTC
 				InitSeq(seq);
 
 				this->started              = true;
-				this->maxSeq               = seq - 1;
 				this->maxPacketTs          = packet->GetTimestamp();
 				this->maxPacketAtUs        = this->shared->GetTimeUs();
 				this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
@@ -231,6 +230,10 @@ namespace RTC
 					  "too bad sequence number, re-syncing RTP [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 					  packet->GetSsrc(),
 					  packet->GetSequenceNumber());
+
+					// Keep counting the packets expected so far, so the jump in sequence
+					// number is not taken as packets lost.
+					this->expectedPacketsBeforeSeqReset = GetExpectedPackets();
 
 					InitSeq(seq);
 
@@ -358,6 +361,7 @@ namespace RTC
 			this->baseSeq = seq;
 			this->maxSeq  = seq;
 			this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
+			this->cycles  = 0;
 		}
 
 		flatbuffers::Offset<FBS::RtpStream::Params> RtpStream::Params::FillBuffer(

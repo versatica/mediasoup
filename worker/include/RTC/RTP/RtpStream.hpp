@@ -260,7 +260,8 @@ namespace RTC
 
 			uint32_t GetExpectedPackets() const
 			{
-				return (this->cycles + this->maxSeq) - this->baseSeq + 1;
+				return this->expectedPacketsBeforeSeqReset + (this->cycles + this->maxSeq) - this->baseSeq +
+				       1;
 			}
 
 		private:
@@ -283,6 +284,10 @@ namespace RTC
 			uint32_t cycles{ 0 };
 			// Base seq number.
 			uint32_t baseSeq{ 0 };
+			// Packets expected before the last sequence number re-sync, so the count
+			// goes on across it.
+			// NOTE: As wide as GetExpectedPackets(), which wraps along with it.
+			uint32_t expectedPacketsBeforeSeqReset{ 0 };
 			// Last 'bad' seq number + 1.
 			uint32_t badSeq{ 0 };
 			// Highest timestamp seen.

@@ -6,7 +6,6 @@
 #include "RTC/NEW_RTCP/packet/AnyReportPacket.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "Utils.hpp"
-#include <cmath> // std::round()
 
 namespace RTC
 {
@@ -52,7 +51,6 @@ namespace RTC
 				InitSeq(seq);
 
 				this->started     = true;
-				this->maxSeq      = seq - 1;
 				this->maxPacketTs = packet->GetTimestamp();
 			}
 
@@ -123,8 +121,8 @@ namespace RTC
 
 			// Calculate fraction lost.
 			//
-			// NOTE: Reading the difference of the expected count as signed makes a
-			// sequence number re-sync, which restarts the count, come out negative.
+			// NOTE: The expected count wraps at 32 bits, so the difference is taken in
+			// that width.
 			const int64_t expectedInterval = static_cast<int32_t>(expectedPackets - this->expectedPrior);
 
 			this->expectedPrior = expectedPackets;
@@ -143,9 +141,8 @@ namespace RTC
 			{
 				// A fixed point number with 8 bits of fraction, so a whole interval lost
 				// gives 256, one more than the field can hold.
-				const double fraction = std::round(static_cast<double>(lostInterval << 8) / expectedInterval);
-
-				this->fractionLost = static_cast<uint8_t>(std::min(fraction, 255.0));
+				this->fractionLost =
+				  static_cast<uint8_t>(std::min<int64_t>((lostInterval << 8) / expectedInterval, 255));
 			}
 
 			this->reportedPacketsLost += (this->packetsLost - prevPacketsLost);
@@ -243,8 +240,8 @@ namespace RTC
 
 			// Calculate fraction lost.
 			//
-			// NOTE: Reading the difference of the expected count as signed makes a
-			// sequence number re-sync, which restarts the count, come out negative.
+			// NOTE: The expected count wraps at 32 bits, so the difference is taken in
+			// that width.
 			const int64_t expectedInterval = static_cast<int32_t>(expectedPackets - this->expectedPrior);
 
 			this->expectedPrior = expectedPackets;
@@ -263,9 +260,8 @@ namespace RTC
 			{
 				// A fixed point number with 8 bits of fraction, so a whole interval lost
 				// gives 256, one more than the field can hold.
-				const double fraction = std::round(static_cast<double>(lostInterval << 8) / expectedInterval);
-
-				this->fractionLost = static_cast<uint8_t>(std::min(fraction, 255.0));
+				this->fractionLost =
+				  static_cast<uint8_t>(std::min<int64_t>((lostInterval << 8) / expectedInterval, 255));
 			}
 
 			this->reportedPacketsLost += (this->packetsLost - prevPacketsLost);
@@ -363,6 +359,10 @@ namespace RTC
 					  packet->GetSsrc(),
 					  packet->GetSequenceNumber());
 
+					// Keep counting the packets expected so far, so the jump in sequence
+					// number is not taken as packets lost.
+					this->expectedPacketsBeforeSeqReset = GetExpectedPackets();
+
 					InitSeq(seq);
 
 					this->maxPacketTs = packet->GetTimestamp();
@@ -400,6 +400,7 @@ namespace RTC
 			this->baseSeq = seq;
 			this->maxSeq  = seq;
 			this->badSeq  = RTP::RtpStream::RtpSeqMod + 1; // So seq == badSeq is false.
+			this->cycles  = 0;
 		}
 
 		flatbuffers::Offset<FBS::RtxStream::Params> RtxStream::Params::FillBuffer(

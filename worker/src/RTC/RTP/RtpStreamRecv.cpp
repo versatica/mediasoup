@@ -25,6 +25,10 @@ namespace RTC
 		// its counter has fully elapsed, so this interval just adds to that
 		// unavoidable detection delay.
 		static constexpr int64_t SpatialLayersActivityCheckIntervalMs{ 1500 };
+		// Smallest difference between the transit times of two packets (in RTP
+		// timestamp units) that is left out of the jitter, which is 5 seconds at 90
+		// kHz.
+		static constexpr int64_t MinIgnoredJitterTransitDifference{ 5 * 90000 };
 		// Buffer in which the RTCP feedback packets to send are built.
 		// NOTE: Every packet built in it is handed to the listener, which sends it
 		// right away, before the buffer is used again.
@@ -310,6 +314,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// Extended highest sequence number before this packet, to tell whether it
+			// moves the stream forward.
+			const uint32_t prevExtendedMaxSeq = this->cycles + this->maxSeq;
+
 			// Call the parent method.
 			if (!RTP::RtpStream::ReceiveStreamPacket(packet))
 			{
@@ -342,8 +350,12 @@ namespace RTC
 				}
 			}
 
-			// Calculate jitter.
-			CalculateJitter(packet->GetTimestamp(), receivedAtUs);
+			// Calculate jitter, just with packets that move the stream forward, since
+			// late ones (reordered or retransmitted) would inflate it.
+			if (this->cycles + this->maxSeq != prevExtendedMaxSeq)
+			{
+				CalculateJitter(packet->GetTimestamp(), receivedAtUs);
+			}
 
 			// Store the capture instant if the packet carries it.
 			{
@@ -583,8 +595,8 @@ namespace RTC
 
 			// Calculate fraction lost.
 			//
-			// NOTE: Reading the difference of the expected count as signed makes a
-			// sequence number re-sync, which restarts the count, come out negative.
+			// NOTE: The expected count wraps at 32 bits, so the difference is taken in
+			// that width.
 			const int64_t expectedInterval = static_cast<int32_t>(expectedPackets - this->expectedPrior);
 
 			this->expectedPrior = expectedPackets;
@@ -604,9 +616,8 @@ namespace RTC
 			{
 				// A fixed point number with 8 bits of fraction, so a whole interval lost
 				// gives 256, one more than the field can hold.
-				const double fraction = std::round(static_cast<double>(lostInterval << 8) / expectedInterval);
-
-				this->fractionLost = static_cast<uint8_t>(std::min(fraction, 255.0));
+				this->fractionLost =
+				  static_cast<uint8_t>(std::min<int64_t>((lostInterval << 8) / expectedInterval, 255));
 			}
 
 			// Worst remote fraction lost is not worse than local one.
@@ -621,8 +632,8 @@ namespace RTC
 			{
 				// Recalculate packetsLost.
 				//
-				// NOTE: The expected interval is not positive when a sequence number
-				// re-sync restarted the count, and then nothing was expected to be lost.
+				// NOTE: Clamped as the fraction lost above, since the difference read as
+				// signed may come out negative.
 				const auto newLostInterval = static_cast<uint32_t>(
 				  (worstRemoteFractionLost * std::max<int64_t>(expectedInterval, 0)) >> 8);
 
@@ -812,8 +823,8 @@ namespace RTC
 
 			// Calculate fraction lost.
 			//
-			// NOTE: Reading the difference of the expected count as signed makes a
-			// sequence number re-sync, which restarts the count, come out negative.
+			// NOTE: The expected count wraps at 32 bits, so the difference is taken in
+			// that width.
 			const int64_t expectedInterval = static_cast<int32_t>(expectedPackets - this->expectedPrior);
 
 			this->expectedPrior = expectedPackets;
@@ -833,9 +844,8 @@ namespace RTC
 			{
 				// A fixed point number with 8 bits of fraction, so a whole interval lost
 				// gives 256, one more than the field can hold.
-				const double fraction = std::round(static_cast<double>(lostInterval << 8) / expectedInterval);
-
-				this->fractionLost = static_cast<uint8_t>(std::min(fraction, 255.0));
+				this->fractionLost =
+				  static_cast<uint8_t>(std::min<int64_t>((lostInterval << 8) / expectedInterval, 255));
 			}
 
 			// Worst remote fraction lost is not worse than local one.
@@ -850,8 +860,8 @@ namespace RTC
 			{
 				// Recalculate packetsLost.
 				//
-				// NOTE: The expected interval is not positive when a sequence number
-				// re-sync restarted the count, and then nothing was expected to be lost.
+				// NOTE: Clamped as the fraction lost above, since the difference read as
+				// signed may come out negative.
 				const auto newLostInterval = static_cast<uint32_t>(
 				  (worstRemoteFractionLost * std::max<int64_t>(expectedInterval, 0)) >> 8);
 
@@ -1152,6 +1162,7 @@ namespace RTC
 
 			// NOTE: Based on https://github.com/versatica/mediasoup/issues/1018.
 			const auto transit = static_cast<int32_t>(arrivalTs - rtpTimestamp);
+
 			// NOTE: Wider than its operands because the difference of two int32_t does
 			// not fit in an int32_t, and neither would negating its lowest value.
 			int64_t d = static_cast<int64_t>(transit) - this->transit;
@@ -1169,6 +1180,13 @@ namespace RTC
 			if (d < 0)
 			{
 				d = -d;
+			}
+
+			// A jump of the RTP timestamp, such as the one of a sender that restarts
+			// its stream, says nothing about the network, so it is left out.
+			if (d >= MinIgnoredJitterTransitDifference)
+			{
+				return;
 			}
 
 			this->jitter += (1. / 16.) * (static_cast<float>(d) - this->jitter);
@@ -1296,7 +1314,17 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Nothing to do.
+			// The RTP timestamps of a restarted stream have nothing to do with the
+			// previous ones, so the next packet starts the transit calculation again.
+			this->transit = 0;
+
+			// The sequence numbers of a restarted stream have nothing to do with the
+			// previous ones either, so the next packet starts the NACK generation
+			// again.
+			if (this->params.useNack)
+			{
+				this->nackGenerator->Reset();
+			}
 		}
 
 		inline void RtpStreamRecv::OnTimer(TimerHandleInterface* timer)
