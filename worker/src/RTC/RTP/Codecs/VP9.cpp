@@ -113,7 +113,7 @@ namespace RTC
 
 			void VP9::ProcessRtpPacket(
 			  RTP::Packet* packet,
-			  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
+			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 			{
 				MS_TRACE();
 
@@ -125,7 +125,7 @@ namespace RTC
 				// NOTE: The payload descriptor of the codec is parsed all the same, for
 				// the Consumers that did not and cannot be told the layers any other way.
 				auto* const dependencyDescriptorPayloadDescriptor =
-				  DependencyDescriptorPayloadDescriptor::Parse(packet, templateDependencyStructure);
+				  DependencyDescriptorPayloadDescriptor::Parse(packet, dependencyDescriptorContext);
 
 				if (dependencyDescriptorPayloadDescriptor)
 				{

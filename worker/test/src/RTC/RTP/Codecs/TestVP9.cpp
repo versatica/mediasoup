@@ -229,18 +229,18 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		};
 		// clang-format on
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context
+		  dependencyDescriptorContext;
 
 		// NOTE: Taken apart from any packet, just to get the structure that the
 		// delta frame below is parsed with.
 		const std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> keyFrame{
 			RTC::RTP::Codecs::DependencyDescriptor::Parse(
-			  keyFrameDescriptor, sizeof(keyFrameDescriptor), templateDependencyStructure)
+			  keyFrameDescriptor, sizeof(keyFrameDescriptor), dependencyDescriptorContext)
 		};
 
 		REQUIRE(keyFrame);
-		REQUIRE(templateDependencyStructure->decodeTargetCount == 2);
+		REQUIRE(dependencyDescriptorContext.templateDependencyStructure->decodeTargetCount == 2);
 
 		auto makeContext = [](bool preferDependencyDescriptor)
 		{
@@ -263,7 +263,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			  payload,
 			  sizeof(payload));
 
-			RTC::RTP::Codecs::VP9::ProcessRtpPacket(packet.get(), templateDependencyStructure);
+			RTC::RTP::Codecs::VP9::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
 
 			auto params = makeContext(/*preferDependencyDescriptor*/ true);
 			RTC::RTP::Codecs::VP9::EncodingContext context(params);
@@ -279,7 +279,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 			std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> forwarded;
 
-			packet->ReadDependencyDescriptor(forwarded, templateDependencyStructure);
+			packet->ReadDependencyDescriptor(forwarded, dependencyDescriptorContext);
 
 			REQUIRE(forwarded);
 			REQUIRE(forwarded->activeDecodeTargetsBitmask == 0b01);
@@ -295,7 +295,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 			  payload,
 			  sizeof(payload));
 
-			RTC::RTP::Codecs::VP9::ProcessRtpPacket(packet.get(), templateDependencyStructure);
+			RTC::RTP::Codecs::VP9::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
 
 			auto params = makeContext(/*preferDependencyDescriptor*/ false);
 			RTC::RTP::Codecs::VP9::EncodingContext context(params);
@@ -311,7 +311,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 			std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> forwarded;
 
-			packet->ReadDependencyDescriptor(forwarded, templateDependencyStructure);
+			packet->ReadDependencyDescriptor(forwarded, dependencyDescriptorContext);
 
 			REQUIRE(forwarded);
 			REQUIRE(!forwarded->activeDecodeTargetsBitmask.has_value());

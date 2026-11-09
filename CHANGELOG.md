@@ -3,6 +3,7 @@
 ### NEXT
 
 - New RTCP: Use new RTCP stack for generated BWE RTCP packets ([PR #2039](https://github.com/versatica/mediasoup/pull/2039)).
+- Worker: Don’t take a template dependency structure older than the one in use ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 3.32.2
 

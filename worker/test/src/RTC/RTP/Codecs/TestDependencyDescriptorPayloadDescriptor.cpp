@@ -162,14 +162,14 @@ namespace
 	ProcessResult processFrame(
 	  const uint8_t* data,
 	  size_t len,
-	  std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-	    templateDependencyStructure,
+	  RTC::RTP::Codecs::DependencyDescriptor::Context&
+	    dependencyDescriptorContext,
 	  RTC::RTP::Codecs::EncodingContext& context)
 	{
 		ProcessResult result;
 
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
-		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, templateDependencyStructure));
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, dependencyDescriptorContext));
 
 		REQUIRE(dependencyDescriptor);
 
@@ -193,7 +193,7 @@ namespace
 			std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> forwarded;
 			// NOTE: Into a copy, since reading back a key frame parses the template
 			// dependency structure again and would replace the one of the run.
-			auto structure = templateDependencyStructure;
+			auto structure = dependencyDescriptorContext;
 
 			REQUIRE(packet->ReadDependencyDescriptor(forwarded, structure));
 			REQUIRE(forwarded);
@@ -209,8 +209,8 @@ SCENARIO(
   "process a K-SVC stream with the Dependency Descriptor payload descriptor",
   "[rtp][codecs][dependency-descriptor]")
 {
-	std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-	  templateDependencyStructure;
+	RTC::RTP::Codecs::DependencyDescriptor::Context
+	  dependencyDescriptorContext;
 
 	RTC::RTP::Codecs::EncodingContext::Params params;
 
@@ -222,7 +222,7 @@ SCENARIO(
 
 	auto process = [&](const uint8_t* data, size_t len)
 	{
-		return processFrame(data, len, templateDependencyStructure, context);
+		return processFrame(data, len, dependencyDescriptorContext, context);
 	};
 
 	// Runs the captured key frame, optionally renumbered.
@@ -258,7 +258,7 @@ SCENARIO(
 	{
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    DeltaFrames[index].data(), DeltaFrames[index].size(), templateDependencyStructure));
+		    DeltaFrames[index].data(), DeltaFrames[index].size(), dependencyDescriptorContext));
 
 		REQUIRE(dependencyDescriptor);
 
@@ -272,7 +272,7 @@ SCENARIO(
 	{
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    DeltaFrames[index].data(), DeltaFrames[index].size(), templateDependencyStructure));
+		    DeltaFrames[index].data(), DeltaFrames[index].size(), dependencyDescriptorContext));
 
 		REQUIRE(dependencyDescriptor);
 
@@ -629,8 +629,8 @@ SCENARIO(
   "process a full SVC stream with the Dependency Descriptor payload descriptor",
   "[rtp][codecs][dependency-descriptor]")
 {
-	std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-	  templateDependencyStructure;
+	RTC::RTP::Codecs::DependencyDescriptor::Context
+	  dependencyDescriptorContext;
 
 	RTC::RTP::Codecs::EncodingContext::Params params;
 
@@ -642,7 +642,7 @@ SCENARIO(
 
 	auto process = [&](const uint8_t* data, size_t len)
 	{
-		return processFrame(data, len, templateDependencyStructure, context);
+		return processFrame(data, len, dependencyDescriptorContext, context);
 	};
 
 	auto processKeyFrame = [&]()

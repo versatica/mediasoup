@@ -139,8 +139,8 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	const auto parseAV1RtpPacket =
 	  [](
 	    RTC::RTP::Packet* packet,
-	    std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-	      templateDependencyStructure,
+	    RTC::RTP::Codecs::DependencyDescriptor::Context&
+	      dependencyDescriptorContext,
 	    uint8_t room = 8) -> void
 	{
 		uint8_t extenLen;
@@ -167,7 +167,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor;
 
-		packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
+		packet->ReadDependencyDescriptor(dependencyDescriptor, dependencyDescriptorContext);
 
 		REQUIRE(dependencyDescriptor);
 
@@ -991,13 +991,13 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		context2.SetTargetSpatialLayer(0);
 		context2.SetTargetTemporalLayer(1);
 
-		std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-		  templateDependencyStructure;
+		RTC::RTP::Codecs::DependencyDescriptor::Context
+		  dependencyDescriptorContext;
 
 		// Parse the first packet for the shake of having the template dependency structure.
-		parseAV1RtpPacket(packet1.get(), templateDependencyStructure);
+		parseAV1RtpPacket(packet1.get(), dependencyDescriptorContext);
 		// Parse the second packet.
-		parseAV1RtpPacket(packet2.get(), templateDependencyStructure);
+		parseAV1RtpPacket(packet2.get(), dependencyDescriptorContext);
 
 		bool marker    = false;
 		bool forwarded = false;
@@ -1019,7 +1019,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		REQUIRE(context2.GetCurrentTemporalLayer() == 0);
 
 		// Parse the third packet
-		parseAV1RtpPacket(packet3.get(), templateDependencyStructure);
+		parseAV1RtpPacket(packet3.get(), dependencyDescriptorContext);
 
 		// Process the third packet with context1 and verify current spatial layers.
 		forwarded = packet3->ProcessPayload(std::addressof(context1), marker);
@@ -1056,7 +1056,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// payload descriptor handler.
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor2;
 
-		packet3->ReadDependencyDescriptor(dependencyDescriptor2, templateDependencyStructure);
+		packet3->ReadDependencyDescriptor(dependencyDescriptor2, dependencyDescriptorContext);
 
 		REQUIRE(dependencyDescriptor2);
 		REQUIRE(dependencyDescriptor2->activeDecodeTargetsBitmask == 0b0000000000000011);
@@ -1064,7 +1064,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		// And the clone must keep the one that was written for context1.
 		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor3;
 
-		sharedPacket->ReadDependencyDescriptor(dependencyDescriptor3, templateDependencyStructure);
+		sharedPacket->ReadDependencyDescriptor(dependencyDescriptor3, dependencyDescriptorContext);
 
 		REQUIRE(dependencyDescriptor3);
 		REQUIRE(dependencyDescriptor3->activeDecodeTargetsBitmask == 0b0000000000000001);
@@ -1102,7 +1102,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		auto dependencyDescriptor4 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    sent.data(), sent.size(), templateDependencyStructure));
+		    sent.data(), sent.size(), dependencyDescriptorContext));
 
 		REQUIRE(dependencyDescriptor4);
 		REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000001);
@@ -1117,7 +1117,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 
 		auto dependencyDescriptor5 = std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor>(
 		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
-		    sent.data(), sent.size(), templateDependencyStructure));
+		    sent.data(), sent.size(), dependencyDescriptorContext));
 
 		REQUIRE(dependencyDescriptor5);
 		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000011);

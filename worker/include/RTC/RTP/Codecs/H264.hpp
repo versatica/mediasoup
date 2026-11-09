@@ -43,8 +43,8 @@ namespace RTC
 				static bool IsKeyFrame(const uint8_t* data, size_t len);
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
-				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-				    templateDependencyStructure);
+				  Codecs::DependencyDescriptor::Context&
+				    dependencyDescriptorContext);
 
 			public:
 				class EncodingContext : public Codecs::EncodingContext

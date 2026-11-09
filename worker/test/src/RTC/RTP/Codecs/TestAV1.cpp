@@ -40,8 +40,8 @@ namespace
 
 SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 {
-	std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
-	  templateDependencyStructure;
+	RTC::RTP::Codecs::DependencyDescriptor::Context
+	  dependencyDescriptorContext;
 
 	const std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
 		rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
@@ -62,7 +62,7 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 
 		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
 
-		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), templateDependencyStructure);
+		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
 
 		// A payload descriptor handler is installed, which is what tells the
 		// length the rewritten descriptor may grow to.
@@ -70,7 +70,7 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 
 		// The template dependency structure of the stream is kept for the delta
 		// frames that follow, which do not carry it.
-		REQUIRE(templateDependencyStructure);
+		REQUIRE(dependencyDescriptorContext.templateDependencyStructure);
 	}
 
 	// Nothing but the Dependency Descriptor tells the layers of an AV1 packet,
@@ -78,9 +78,9 @@ SCENARIO("process AV1 RTP packet", "[rtp][codecs][av1]")
 	// as it comes.
 	SECTION("a packet carrying no Dependency Descriptor gets no payload descriptor")
 	{
-		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), templateDependencyStructure);
+		RTC::RTP::Codecs::AV1::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
 
 		REQUIRE(packet->GetDependencyDescriptorMaxLength() == 0);
-		REQUIRE(!templateDependencyStructure);
+		REQUIRE(!dependencyDescriptorContext.templateDependencyStructure);
 	}
 }

@@ -37,10 +37,7 @@ namespace RTC
 
 			/* Class methods. */
 
-			DependencyDescriptor* DependencyDescriptor::Parse(
-			  const uint8_t* data,
-			  size_t len,
-			  std::shared_ptr<TemplateDependencyStructure>& templateDependencyStructure)
+			DependencyDescriptor* DependencyDescriptor::Parse(const uint8_t* data, size_t len, Context& context)
 			{
 				MS_TRACE();
 
@@ -58,13 +55,13 @@ namespace RTC
 					return nullptr;
 				}
 
-				if (templateDependencyStructure == nullptr)
+				if (context.templateDependencyStructure == nullptr)
 				{
-					templateDependencyStructure = std::make_shared<TemplateDependencyStructure>();
+					context.templateDependencyStructure = std::make_shared<TemplateDependencyStructure>();
 				}
 
 				std::unique_ptr<DependencyDescriptor> dependencyDescriptor(
-				  new DependencyDescriptor(data, len, templateDependencyStructure));
+				  new DependencyDescriptor(data, len, context.templateDependencyStructure));
 
 				if (!dependencyDescriptor->ReadMandatoryDescriptorFields())
 				{
@@ -90,12 +87,45 @@ namespace RTC
 					return nullptr;
 				}
 
-				// Hand over the structure this descriptor carried, if any, so that the
-				// following ones are parsed with it.
-				//
-				// NOTE: Not done when parsing fails, so that a truncated structure never
-				// replaces the one in use.
-				templateDependencyStructure = dependencyDescriptor->templateDependencyStructure;
+				/*
+				 * Unwrap the frame number so that frames can be ordered despite the 16
+				 * bits of the field wrapping around.
+				 */
+				const auto frameNumber =
+				  context.frameNumberUnwrapper.Unwrap(dependencyDescriptor->frameNumber);
+
+				/*
+				 * Update the template dependency structure if needed.
+				 */
+				if (dependencyDescriptor->templateDependencyStructurePresent)
+				{
+					/*
+					 * A structure only counts in the first packet of its frame, and only
+					 * if its frame is not older than the one that brought the structure in
+					 * use.
+					 */
+					if (!dependencyDescriptor->startOfFrame)
+					{
+						MS_WARN_DEV(
+						  "ignoring a template dependency structure that is not in the first packet of its frame");
+					}
+					else if (
+					  context.structureFrameNumber.has_value() &&
+					  frameNumber < context.structureFrameNumber.value())
+					{
+						MS_WARN_TAG(
+						  codec,
+						  "ignoring a template dependency structure older than the one in use [frame:%" PRIi64
+						  ", structure frame:%" PRIi64 "]",
+						  frameNumber.GetValue(),
+						  context.structureFrameNumber.value().GetValue());
+					}
+					else
+					{
+						context.templateDependencyStructure = dependencyDescriptor->templateDependencyStructure;
+						context.structureFrameNumber        = frameNumber;
+					}
+				}
 
 				return dependencyDescriptor.release();
 			}
@@ -140,7 +170,7 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "  spatialLayer: %u", this->spatialLayer);
 				MS_DUMP_CLEAN(indentation, "  temporalLayer: %u", this->temporalLayer);
 
-				if (this->isKeyFrame)
+				if (this->templateDependencyStructurePresent)
 				{
 					MS_DUMP_CLEAN(indentation + 1, "<TemplateDependencyStructure>");
 					MS_DUMP_CLEAN(
@@ -233,15 +263,14 @@ namespace RTC
 
 				this->extendedDescriptorFieldsPresent = true;
 
-				const bool templateDependencyStructurePresentFlag = this->bitReader.GetBit();
-
+				this->templateDependencyStructurePresent   = this->bitReader.GetBit();
 				this->activeDecodeTargetsPresent           = this->bitReader.GetBit();
 				this->customDecodeTargetIndicationsPresent = this->bitReader.GetBit();
 				this->customFrameDiffsPresent              = this->bitReader.GetBit();
 				this->customChainsPresent                  = this->bitReader.GetBit();
 				this->templateDependencyStructureEndOffset = this->bitReader.GetOffset();
 
-				if (templateDependencyStructurePresentFlag)
+				if (this->templateDependencyStructurePresent)
 				{
 					// Take a brand new structure rather than overwriting the one in use,
 					// which descriptors already parsed with it keep referencing.
@@ -652,7 +681,7 @@ namespace RTC
 				// Extended descriptor field flags.
 				bitCount += 5;
 
-				if (this->isKeyFrame)
+				if (this->templateDependencyStructurePresent)
 				{
 					bitCount += this->templateDependencyStructureEndOffset - TemplateDependencyStructureOffset;
 				}
@@ -716,14 +745,14 @@ namespace RTC
 				writer.PutBitRange(data, this->length, 0, 24);
 
 				// Extended descriptor field flags, with the active decode targets one set.
-				writer.PutBit(this->isKeyFrame ? 1 : 0);
+				writer.PutBit(this->templateDependencyStructurePresent ? 1 : 0);
 				writer.PutBit(1);
 				writer.PutBit(this->customDecodeTargetIndicationsPresent ? 1 : 0);
 				writer.PutBit(this->customFrameDiffsPresent ? 1 : 0);
 				writer.PutBit(this->customChainsPresent ? 1 : 0);
 
 				// Template dependency structure, unchanged.
-				if (this->isKeyFrame)
+				if (this->templateDependencyStructurePresent)
 				{
 					writer.PutBitRange(
 					  data,

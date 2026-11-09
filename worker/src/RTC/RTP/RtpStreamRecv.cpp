@@ -316,7 +316,7 @@ namespace RTC
 			// Process the packet at codec level.
 			if (packet->GetPayloadType() == GetPayloadType())
 			{
-				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->templateDependencyStructure);
+				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->dependencyDescriptorContext);
 			}
 
 			// Pass the packet to the NackGenerator.
@@ -480,7 +480,7 @@ namespace RTC
 			// Process the packet at codec level.
 			if (packet->GetPayloadType() == GetPayloadType())
 			{
-				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->templateDependencyStructure);
+				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->dependencyDescriptorContext);
 			}
 
 			// Mark the packet as retransmitted.

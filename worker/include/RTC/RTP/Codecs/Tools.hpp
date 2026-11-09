@@ -52,8 +52,8 @@ namespace RTC
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
 				  const RTC::RtpCodecMimeType& mimeType,
-				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-				    templateDependencyStructure)
+				  Codecs::DependencyDescriptor::Context&
+				    dependencyDescriptorContext)
 				{
 					switch (mimeType.type)
 					{
@@ -70,21 +70,21 @@ namespace RTC
 
 								case RTC::RtpCodecMimeType::Subtype::VP9:
 								{
-									Codecs::VP9::ProcessRtpPacket(packet, templateDependencyStructure);
+									Codecs::VP9::ProcessRtpPacket(packet, dependencyDescriptorContext);
 
 									break;
 								}
 
 								case RTC::RtpCodecMimeType::Subtype::H264:
 								{
-									Codecs::H264::ProcessRtpPacket(packet, templateDependencyStructure);
+									Codecs::H264::ProcessRtpPacket(packet, dependencyDescriptorContext);
 
 									break;
 								}
 
 								case RTC::RtpCodecMimeType::Subtype::AV1:
 								{
-									Codecs::AV1::ProcessRtpPacket(packet, templateDependencyStructure);
+									Codecs::AV1::ProcessRtpPacket(packet, dependencyDescriptorContext);
 
 									break;
 								}
