@@ -60,12 +60,12 @@ namespace RTC
 		}
 		/**
 		 * Whether the packet with the given sequence number is being asked for, or
-		 * was asked for and already arrived (so any copy of it that comes later is
-		 * a retransmission too).
+		 * was asked for and is no longer pending (so any copy of it that comes later
+		 * is a retransmission).
 		 */
 		bool IsNacked(uint16_t seq) const
 		{
-			return this->nackList.contains(seq) || this->answeredList.contains(seq);
+			return this->nackList.contains(seq) || this->requestedList.contains(seq);
 		}
 		void UpdateRttMs(int64_t rttMs)
 		{
@@ -99,8 +99,8 @@ namespace RTC
 		std::map<uint16_t, NackInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> nackList;
 		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> keyFrameList;
 		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
-		// Packets asked for that already arrived.
-		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> answeredList;
+		// Packets asked for that are no longer pending, whether they arrived or not.
+		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> requestedList;
 		bool started{ false };
 		uint16_t lastSeq{ 0 }; // Seq number of last valid packet.
 		int64_t rttMs{ DefaultRttMs };

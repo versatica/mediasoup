@@ -46,7 +46,7 @@ namespace RTC
 		{
 			// Do not start with a retransmission, whose sequence number may be far
 			// behind the current one.
-			if (isRecovered || this->answeredList.contains(seq))
+			if (isRecovered || this->requestedList.contains(seq))
 			{
 				return false;
 			}
@@ -76,14 +76,14 @@ namespace RTC
 			if (this->nackList.erase(seq) != 0)
 			{
 				// Remember it, so any later copy of it is known to be a retransmission.
-				this->answeredList.insert(seq);
+				this->requestedList.insert(seq);
 
-				// Remove old ones so we don't accumulate answered packets.
-				auto it = this->answeredList.lower_bound(this->lastSeq - MaxPacketAge);
+				// Remove old ones so we don't accumulate requested packets.
+				auto it = this->requestedList.lower_bound(this->lastSeq - MaxPacketAge);
 
-				if (it != this->answeredList.begin())
+				if (it != this->requestedList.begin())
 				{
-					this->answeredList.erase(this->answeredList.begin(), it);
+					this->requestedList.erase(this->requestedList.begin(), it);
 				}
 
 				MS_DEBUG_DEV(
@@ -187,9 +187,9 @@ namespace RTC
 
 		this->nackList.erase(this->nackList.begin(), it);
 
-		auto answeredIt = this->answeredList.lower_bound(seqEnd - MaxPacketAge);
+		auto requestedIt = this->requestedList.lower_bound(seqEnd - MaxPacketAge);
 
-		this->answeredList.erase(this->answeredList.begin(), answeredIt);
+		this->requestedList.erase(this->requestedList.begin(), requestedIt);
 
 		// If the nack list is too large, remove packets from the nack list until
 		// the latest first packet of a keyframe. If the list is still too large,
@@ -207,6 +207,14 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  rtx, "NACK list full, clearing it and requesting a key frame [seqEnd:%" PRIu16 "]", seqEnd);
+
+				// The packets already asked for may still arrive, as retransmissions.
+				for (const auto& kv : this->nackList)
+				{
+					const NackInfo& nackInfo = kv.second;
+
+					this->requestedList.insert(nackInfo.seq);
+				}
 
 				this->nackList.clear();
 				this->listener->OnNackGeneratorKeyFrameRequired();
@@ -247,6 +255,16 @@ namespace RTC
 			{
 				// We have found a keyframe that actually is newer than at least one
 				// packet in the nack list.
+				//
+				// NOTE: The packets already asked for may still arrive, as
+				// retransmissions.
+				for (auto removedIt = this->nackList.begin(); removedIt != it; ++removedIt)
+				{
+					const NackInfo& nackInfo = removedIt->second;
+
+					this->requestedList.insert(nackInfo.seq);
+				}
+
 				this->nackList.erase(this->nackList.begin(), it);
 
 				return true;
@@ -297,6 +315,9 @@ namespace RTC
 					  "]",
 					  seq);
 
+					// The NACKs just sent may still be answered.
+					this->requestedList.insert(seq);
+
 					it = this->nackList.erase(it);
 				}
 				else
@@ -323,6 +344,9 @@ namespace RTC
 					  "sequence number removed from the NACK list due to max retries [filter:time, seq:%" PRIu16
 					  "]",
 					  seq);
+
+					// The NACKs just sent may still be answered.
+					this->requestedList.insert(seq);
 
 					it = this->nackList.erase(it);
 				}
@@ -366,7 +390,7 @@ namespace RTC
 		this->nackList.clear();
 		this->keyFrameList.clear();
 		this->recoveredList.clear();
-		this->answeredList.clear();
+		this->requestedList.clear();
 		this->started = false;
 		this->lastSeq = 0;
 	}
@@ -376,9 +400,11 @@ namespace RTC
 		MS_TRACE();
 
 		// The packets still asked for may arrive later, as retransmissions.
-		for (const auto& [seq, nackInfo] : this->nackList)
+		for (const auto& kv : this->nackList)
 		{
-			this->answeredList.insert(seq);
+			const NackInfo& nackInfo = kv.second;
+
+			this->requestedList.insert(nackInfo.seq);
 		}
 
 		this->nackList.clear();
