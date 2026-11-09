@@ -18,11 +18,10 @@ namespace RTC
 
 			// Store some extra info into the item.
 			//
-			// NOTE: `sharedPacket` is left empty here. Insert() returns the item so
-			// that the Consumer fills it right after, once the packet has been
-			// restored to its original state.
+			// NOTE: `sharedPacket`, `payloadDescriptorHandler` and `encoder` are left
+			// empty here. Insert() returns the item so that the Consumer fills them
+			// right after, once the packet has been restored to its original state.
 			return new Item{
-				.encoder        = packet->GetPayloadEncoder(),
 				.ssrc           = packet->GetSsrc(),
 				.sequenceNumber = packet->GetSequenceNumber(),
 				.timestamp      = packet->GetTimestamp(),

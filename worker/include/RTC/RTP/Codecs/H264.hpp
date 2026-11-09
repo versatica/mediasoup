@@ -13,6 +13,13 @@ namespace RTC
 		{
 			class H264
 			{
+			private:
+				/**
+				 * Bits H264 numbers its frames with. It does not number them itself,
+				 * so they are the ones the Dependency Descriptor gives.
+				 */
+				static constexpr uint8_t FrameIdLength{ DependencyDescriptor::FrameIdLength };
+
 			public:
 				struct PayloadDescriptor : public Codecs::PayloadDescriptor
 				{
@@ -21,23 +28,22 @@ namespace RTC
 
 					void Dump(int indentation = 0) const override;
 
-					// Fields in Dependency Descriptor extension.
-					bool startOfFrame{ false };
-					bool endOfFrame{ false };
-					uint8_t spatialLayer{ 0 };
-					uint8_t temporalLayer{ 0 };
-
 					// Parsed values.
+					/**
+					 * Told by the Dependency Descriptor of the packet, since H264 packets
+					 * do not carry it themselves. Left at 0 when there is none, so that
+					 * nothing is filtered out.
+					 */
+					uint8_t temporalLayer{ 0 };
 					bool isKeyFrame{ false };
 				};
 
 			public:
-				static H264::PayloadDescriptor* Parse(
-				  const uint8_t* data, size_t len, Codecs::DependencyDescriptor* dependencyDescriptor);
+				static H264::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 				static bool IsKeyFrame(const uint8_t* data, size_t len);
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
-				  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 				    templateDependencyStructure);
 
 			public:
@@ -45,16 +51,10 @@ namespace RTC
 				{
 				public:
 					explicit EncodingContext(Codecs::EncodingContext::Params& params)
-					  : Codecs::EncodingContext(params)
+					  : Codecs::EncodingContext(params, H264::FrameIdLength)
 					{
 					}
 					~EncodingContext() override = default;
-
-					/* Pure virtual methods inherited from Codecs::EncodingContext. */
-				public:
-					void SyncRequired() override
-					{
-					}
 				};
 
 			public:
@@ -71,11 +71,6 @@ namespace RTC
 					}
 					bool Process(
 					  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
-					void RtpPacketChanged(RTP::Packet* packet) override {};
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-					{
-						return nullptr;
-					}
 					void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
 					{
 					}

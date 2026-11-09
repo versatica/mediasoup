@@ -228,7 +228,7 @@ namespace RTC
 
 						if (pictureId > 127)
 						{
-							MS_DEBUG_TAG(rtp, "casting pictureId value to one byte");
+							MS_DEBUG_TAG(codec, "casting pictureId value to one byte");
 						}
 					}
 				}
@@ -237,18 +237,6 @@ namespace RTC
 				{
 					*data = tl0PictureIndex;
 				}
-			}
-
-			void VP8::PayloadDescriptor::Encode(uint8_t* data) const
-			{
-				MS_TRACE();
-
-				if (this->encoder == std::nullopt)
-				{
-					return;
-				}
-
-				this->encoder->Encode(data, this);
 			}
 
 			void VP8::PayloadDescriptor::Restore(uint8_t* data) const
@@ -307,7 +295,7 @@ namespace RTC
 				if (
 				  this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTlIndex &&
 				  this->payloadDescriptor->hasTl0PictureIndex &&
-				  !RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+				  !RTC::SeqManager<uint16_t, VP8::FrameIdLength>::IsSeqLowerThan(
 				    this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()))
 				{
 					// Drop if:
@@ -376,9 +364,16 @@ namespace RTC
 
 				if (this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTl0PictureIndex)
 				{
-					// Store the encoding data for retransmissions.
-					this->payloadDescriptor->CreateEncoder({ pictureId, tl0PictureIndex });
-					this->payloadDescriptor->Encode(packet->GetPayload());
+					this->payloadDescriptor->Encode(packet->GetPayload(), pictureId, tl0PictureIndex);
+
+					// Leave the Consumer how this packet was rewritten for it.
+					auto encoder =
+					  std::make_unique<VP8::PayloadDescriptor::Encoder>(VP8::PayloadDescriptor::EncodingData{
+					    .pictureId = pictureId, .tl0PictureIndex = tl0PictureIndex });
+
+					encoder->preferDependencyDescriptor = context->PrefersDependencyDescriptor();
+
+					context->encoder = std::move(encoder);
 				}
 
 				return true;

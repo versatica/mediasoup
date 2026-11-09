@@ -81,10 +81,9 @@ namespace
 	class MockEncodingContext : public RTC::RTP::Codecs::EncodingContext
 	{
 	public:
-		MockEncodingContext() : RTC::RTP::Codecs::EncodingContext(MockEncodingContext::params)
-		{
-		}
-		void SyncRequired() override
+		MockEncodingContext()
+		  : RTC::RTP::Codecs::EncodingContext(
+		      MockEncodingContext::params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength)
 		{
 		}
 
@@ -109,13 +108,6 @@ namespace
 		  bool& /*marker*/) override
 		{
 			return this->processResult;
-		}
-		void RtpPacketChanged(RTC::RTP::Packet* /*packet*/) override
-		{
-		}
-		std::unique_ptr<RTC::RTP::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-		{
-			return nullptr;
 		}
 		void Encode(
 		  RTC::RTP::Packet* /*packet*/, RTC::RTP::Codecs::PayloadDescriptor::Encoder* /*encoder*/) override
