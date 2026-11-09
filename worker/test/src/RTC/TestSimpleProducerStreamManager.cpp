@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/SimpleProducerStreamManager.hpp"
@@ -57,7 +58,7 @@ namespace
 		}
 
 		void OnRtpStreamSendRtcpPacket(
-		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* /*packet*/) override
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::NEW_RTCP::Packet* /*packet*/) override
 		{
 		}
 
@@ -68,6 +69,15 @@ namespace
 
 		void OnRtpStreamSpatialLayerActivityChanged(
 		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+		{
+		}
+
+		void OnRtpStreamRestarted(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTP::Packet* /*packet*/) override
+		{
+		}
+
+		void OnRtpStreamKeyFrameRequired(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
 		{
 		}
 	};

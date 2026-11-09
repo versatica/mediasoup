@@ -127,14 +127,17 @@ namespace RTC
 				InitSeq(seq);
 
 				this->started              = true;
-				this->maxSeq               = seq - 1;
 				this->maxPacketTs          = packet->GetTimestamp();
 				this->maxPacketAtUs        = this->shared->GetTimeUs();
 				this->maxPacketCaptureAtUs = packet->GetCaptureAtUs();
 			}
 
 			// If not a valid packet ignore it.
-			if (!UpdateSeq(packet))
+			//
+			// NOTE: A requested retransmission may be far older than the allowed
+			// misorder, and it must neither be discarded nor taken as the start of a
+			// restarted stream.
+			if (!(IsRequestedRetransmission(packet) ? UpdateRecoveredSeq(packet) : UpdateSeq(packet)))
 			{
 				MS_WARN_TAG(
 				  rtp,
@@ -232,6 +235,10 @@ namespace RTC
 					  packet->GetSsrc(),
 					  packet->GetSequenceNumber());
 
+					// Keep counting the packets expected so far, so the jump in sequence
+					// number is not taken as packets lost.
+					this->expectedPacketsBeforeSeqReset = GetExpectedPackets();
+
 					InitSeq(seq);
 
 					this->maxPacketTs          = packet->GetTimestamp();
@@ -264,6 +271,34 @@ namespace RTC
 			}
 
 			return true;
+		}
+
+		bool RtpStream::UpdateRecoveredSeq(const RTP::Packet* packet)
+		{
+			MS_TRACE();
+
+			const uint16_t seq    = packet->GetSequenceNumber();
+			const uint16_t udelta = seq - this->maxSeq;
+
+			// Ahead of the highest sequence number seen but not "so much bigger", so it
+			// moves the stream forward as any other packet would.
+			if (udelta < MaxDropout)
+			{
+				return UpdateSeq(packet);
+			}
+
+			// Behind the highest sequence number seen, however far. It leaves the
+			// sequence number state as it is, and the NackGenerator tells whether it
+			// was requested.
+			if (udelta > RtpSeqMod / 2)
+			{
+				return true;
+			}
+
+			// Too far ahead to be any requested packet.
+			this->packetsDiscarded++;
+
+			return false;
 		}
 
 		void RtpStream::UpdateScore(uint8_t score)
@@ -358,6 +393,7 @@ namespace RTC
 			this->baseSeq = seq;
 			this->maxSeq  = seq;
 			this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
+			this->cycles  = 0;
 		}
 
 		flatbuffers::Offset<FBS::RtpStream::Params> RtpStream::Params::FillBuffer(

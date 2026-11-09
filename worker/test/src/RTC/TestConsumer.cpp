@@ -2,6 +2,7 @@
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
 #include "RTC/Consumer.hpp"
+#include "RTC/NEW_RTCP/packet/Packet.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/RtpStream.hpp"
 #include "RTC/RTP/RtpStreamRecv.hpp"
@@ -29,7 +30,8 @@ namespace
 		{
 		}
 
-		void OnRtpStreamSendRtcpPacket(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override
+		void OnRtpStreamSendRtcpPacket(
+		  RTC::RTP::RtpStreamRecv* rtpStream, const RTC::NEW_RTCP::Packet* packet) override
 		{
 		}
 
@@ -40,6 +42,15 @@ namespace
 
 		void OnRtpStreamSpatialLayerActivityChanged(
 		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+		{
+		}
+
+		void OnRtpStreamRestarted(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTP::Packet* /*packet*/) override
+		{
+		}
+
+		void OnRtpStreamKeyFrameRequired(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
 		{
 		}
 	};
