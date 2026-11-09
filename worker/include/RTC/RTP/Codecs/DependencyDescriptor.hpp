@@ -85,14 +85,20 @@ namespace RTC
 				 */
 				struct Context
 				{
+					/**
+					 * Template dependency structure the descriptors of the stream are
+					 * parsed with.
+					 */
 					std::shared_ptr<TemplateDependencyStructure> templateDependencyStructure;
 					/**
 					 * Orders the frames of the stream despite their number wrapping around.
 					 * Given every frame, not just the ones that bring a structure.
 					 */
 					Utils::UnwrappedSequenceNumber<uint16_t>::Unwrapper frameNumberUnwrapper;
-					// Frame that brought the structure in use, if any yet.
-					std::optional<Utils::UnwrappedSequenceNumber<uint16_t>> structureFrameNumber;
+					/**
+					 * Frame that brought the structure in use, if any yet.
+					 */
+					std::optional<Utils::UnwrappedSequenceNumber<uint16_t>> unwrappedStructureFrameNumber;
 				};
 
 			public:

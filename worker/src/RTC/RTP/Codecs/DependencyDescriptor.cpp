@@ -87,43 +87,35 @@ namespace RTC
 					return nullptr;
 				}
 
-				/*
-				 * Unwrap the frame number so that frames can be ordered despite the 16
-				 * bits of the field wrapping around.
-				 */
-				const auto frameNumber =
+				// Unwrap the frame number so that frames can be ordered despite the 16
+				// bits of the field wrapping around.
+				const auto unwrappedFrameNumber =
 				  context.frameNumberUnwrapper.Unwrap(dependencyDescriptor->frameNumber);
 
-				/*
-				 * Update the template dependency structure if needed.
-				 */
+				// Update the template dependency structure if needed.
 				if (dependencyDescriptor->templateDependencyStructurePresent)
 				{
-					/*
-					 * A structure only counts in the first packet of its frame, and only
-					 * if its frame is not older than the one that brought the structure in
-					 * use.
-					 */
+					// A structure only counts in the first packet of its frame, and only if
+					// its frame is not older than the one that brought the structure in use.
 					if (!dependencyDescriptor->startOfFrame)
 					{
-						MS_WARN_DEV(
+						MS_DEBUG_DEV(
 						  "ignoring a template dependency structure that is not in the first packet of its frame");
 					}
 					else if (
-					  context.structureFrameNumber.has_value() &&
-					  frameNumber < context.structureFrameNumber.value())
+					  context.unwrappedStructureFrameNumber.has_value() &&
+					  unwrappedFrameNumber < context.unwrappedStructureFrameNumber.value())
 					{
-						MS_WARN_TAG(
-						  codec,
+						MS_DEBUG_DEV(
 						  "ignoring a template dependency structure older than the one in use [frame:%" PRIi64
 						  ", structure frame:%" PRIi64 "]",
-						  frameNumber.GetValue(),
-						  context.structureFrameNumber.value().GetValue());
+						  unwrappedFrameNumber.GetValue(),
+						  context.unwrappedStructureFrameNumber.value().GetValue());
 					}
 					else
 					{
 						context.templateDependencyStructure = dependencyDescriptor->templateDependencyStructure;
-						context.structureFrameNumber        = frameNumber;
+						context.unwrappedStructureFrameNumber = unwrappedFrameNumber;
 					}
 				}
 
