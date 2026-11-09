@@ -229,8 +229,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		};
 		// clang-format on
 
-		RTC::RTP::Codecs::DependencyDescriptor::Context
-		  dependencyDescriptorContext;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		// NOTE: Taken apart from any packet, just to get the structure that the
 		// delta frame below is parsed with.

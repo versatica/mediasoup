@@ -43,9 +43,7 @@ namespace RTC
 				};
 
 				static DependencyDescriptorPayloadDescriptor* Parse(
-				  RTP::Packet* packet,
-				  Codecs::DependencyDescriptor::Context&
-				    dependencyDescriptorContext);
+				  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext);
 
 				explicit DependencyDescriptorPayloadDescriptor(
 				  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor);

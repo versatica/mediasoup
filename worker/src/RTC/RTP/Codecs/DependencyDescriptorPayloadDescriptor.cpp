@@ -13,8 +13,7 @@ namespace RTC
 			/* Class methods. */
 
 			DependencyDescriptorPayloadDescriptor* DependencyDescriptorPayloadDescriptor::Parse(
-			  RTP::Packet* packet,
-			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
+			  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 			{
 				MS_TRACE();
 

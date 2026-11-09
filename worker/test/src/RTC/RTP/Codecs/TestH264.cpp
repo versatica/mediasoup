@@ -102,8 +102,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		};
 		// clang-format on
 
-		RTC::RTP::Codecs::DependencyDescriptor::Context
-		  dependencyDescriptorContext;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		// NOTE: Taken apart from any packet, just to get the structure that the
 		// delta frame below is parsed with.
@@ -184,8 +183,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		};
 		// clang-format on
 
-		RTC::RTP::Codecs::DependencyDescriptor::Context
-		  dependencyDescriptorContext;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		const std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> keyFrame{
 			RTC::RTP::Codecs::DependencyDescriptor::Parse(
@@ -266,8 +264,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 		};
 		// clang-format on
 
-		RTC::RTP::Codecs::DependencyDescriptor::Context
-		  dependencyDescriptorContext;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		const std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> keyFrame{
 			RTC::RTP::Codecs::DependencyDescriptor::Parse(
@@ -316,8 +313,7 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 	{
 		const auto packet = createPacket(nullptr, 0, 0);
 
-		RTC::RTP::Codecs::DependencyDescriptor::Context
-		  dependencyDescriptorContext;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		RTC::RTP::Codecs::H264::ProcessRtpPacket(packet.get(), dependencyDescriptorContext);
 

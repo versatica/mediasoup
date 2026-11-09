@@ -139,8 +139,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 	const auto parseAV1RtpPacket =
 	  [](
 	    RTC::RTP::Packet* packet,
-	    RTC::RTP::Codecs::DependencyDescriptor::Context&
-	      dependencyDescriptorContext,
+	    RTC::RTP::Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
 	    uint8_t room = 8) -> void
 	{
 		uint8_t extenLen;
@@ -991,8 +990,7 @@ SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 		context2.SetTargetSpatialLayer(0);
 		context2.SetTargetTemporalLayer(1);
 
-		RTC::RTP::Codecs::DependencyDescriptor::Context
-		  dependencyDescriptorContext;
+		RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 		// Parse the first packet for the shake of having the template dependency structure.
 		parseAV1RtpPacket(packet1.get(), dependencyDescriptorContext);

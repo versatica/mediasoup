@@ -162,8 +162,7 @@ namespace
 	ProcessResult processFrame(
 	  const uint8_t* data,
 	  size_t len,
-	  RTC::RTP::Codecs::DependencyDescriptor::Context&
-	    dependencyDescriptorContext,
+	  RTC::RTP::Codecs::DependencyDescriptor::Context& dependencyDescriptorContext,
 	  RTC::RTP::Codecs::EncodingContext& context)
 	{
 		ProcessResult result;
@@ -209,8 +208,7 @@ SCENARIO(
   "process a K-SVC stream with the Dependency Descriptor payload descriptor",
   "[rtp][codecs][dependency-descriptor]")
 {
-	RTC::RTP::Codecs::DependencyDescriptor::Context
-	  dependencyDescriptorContext;
+	RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 	RTC::RTP::Codecs::EncodingContext::Params params;
 
@@ -629,8 +627,7 @@ SCENARIO(
   "process a full SVC stream with the Dependency Descriptor payload descriptor",
   "[rtp][codecs][dependency-descriptor]")
 {
-	RTC::RTP::Codecs::DependencyDescriptor::Context
-	  dependencyDescriptorContext;
+	RTC::RTP::Codecs::DependencyDescriptor::Context dependencyDescriptorContext;
 
 	RTC::RTP::Codecs::EncodingContext::Params params;
 

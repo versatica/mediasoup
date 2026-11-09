@@ -112,8 +112,7 @@ namespace RTC
 			}
 
 			void VP9::ProcessRtpPacket(
-			  RTP::Packet* packet,
-			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
+			  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 			{
 				MS_TRACE();
 

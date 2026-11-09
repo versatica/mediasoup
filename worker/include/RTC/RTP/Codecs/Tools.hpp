@@ -52,8 +52,7 @@ namespace RTC
 				static void ProcessRtpPacket(
 				  RTP::Packet* packet,
 				  const RTC::RtpCodecMimeType& mimeType,
-				  Codecs::DependencyDescriptor::Context&
-				    dependencyDescriptorContext)
+				  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 				{
 					switch (mimeType.type)
 					{

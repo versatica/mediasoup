@@ -23,9 +23,7 @@ namespace RTC
 
 			public:
 				static void ProcessRtpPacket(
-				  RTP::Packet* packet,
-				  Codecs::DependencyDescriptor::Context&
-				    dependencyDescriptorContext);
+				  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext);
 
 			public:
 				class EncodingContext : public Codecs::EncodingContext

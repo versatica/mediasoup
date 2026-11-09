@@ -14,8 +14,7 @@ namespace RTC
 			/* Class methods. */
 
 			void AV1::ProcessRtpPacket(
-			  RTP::Packet* packet,
-			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
+			  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 			{
 				MS_TRACE();
 

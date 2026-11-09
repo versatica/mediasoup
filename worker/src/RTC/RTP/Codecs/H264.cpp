@@ -102,8 +102,7 @@ namespace RTC
 			}
 
 			void H264::ProcessRtpPacket(
-			  RTP::Packet* packet,
-			  Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
+			  RTP::Packet* packet, Codecs::DependencyDescriptor::Context& dependencyDescriptorContext)
 			{
 				MS_TRACE();
 
