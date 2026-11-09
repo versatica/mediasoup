@@ -36,6 +36,12 @@ namespace RTC
 		{
 			class VP8
 			{
+			private:
+				/**
+				 * Bits VP8 numbers its pictures with, which tells where they wrap.
+				 */
+				static constexpr uint8_t FrameIdLength{ 15 };
+
 			public:
 				struct PayloadDescriptor : public Codecs::PayloadDescriptor
 				{
@@ -47,13 +53,15 @@ namespace RTC
 
 					struct Encoder : public Codecs::PayloadDescriptor::Encoder
 					{
-						~Encoder() override = default;
 						explicit Encoder(EncodingData encodingData) : encodingData(encodingData)
 						{
 						}
+
+						~Encoder() override = default;
+
 						void Encode(uint8_t* data, const VP8::PayloadDescriptor* payloadDescriptor) const;
 
-						EncodingData encodingData;
+						const EncodingData encodingData;
 					};
 
 					/* Pure virtual methods inherited from Codecs::PayloadDescriptor. */
@@ -62,24 +70,7 @@ namespace RTC
 					void Dump(int indentation = 0) const override;
 					// Rewrite the buffer with the given pictureId and tl0PictureIndex values.
 					void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
-					void Encode(uint8_t* data) const;
 					void Restore(uint8_t* data) const;
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
-					{
-						if (this->encoder.has_value())
-						{
-							return std::make_unique<Encoder>(this->encoder.value());
-						}
-						else
-						{
-							return nullptr;
-						}
-					}
-
-					void CreateEncoder(EncodingData encodingData)
-					{
-						this->encoder = Encoder(encodingData);
-					}
 
 					// Mandatory fields.
 					uint8_t extended : 1;
@@ -104,8 +95,6 @@ namespace RTC
 					bool hasTwoBytesPictureId{ false };
 					bool hasTl0PictureIndex{ false };
 					bool hasTlIndex{ false };
-
-					std::optional<Encoder> encoder{ std::nullopt };
 				};
 
 			public:
@@ -117,22 +106,14 @@ namespace RTC
 				{
 				public:
 					explicit EncodingContext(Codecs::EncodingContext::Params& params)
-					  : Codecs::EncodingContext(params)
+					  : Codecs::EncodingContext(params, VP8::FrameIdLength)
 					{
 					}
 					~EncodingContext() override = default;
 
-					/* Pure virtual methods inherited from Codecs::EncodingContext. */
 				public:
-					void SyncRequired() override
-					{
-						this->syncRequired = true;
-					}
-
-				public:
-					RTC::SeqManager<uint16_t, 15> pictureIdManager;
+					RTC::SeqManager<uint16_t, VP8::FrameIdLength> pictureIdManager;
 					RTC::SeqManager<uint8_t> tl0PictureIndexManager;
-					bool syncRequired{ false };
 				};
 
 			public:
@@ -149,11 +130,7 @@ namespace RTC
 					}
 					bool Process(
 					  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
-					void RtpPacketChanged(RTP::Packet* packet) override {};
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-					{
-						return this->payloadDescriptor->GetEncoder();
-					}
+
 					void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override;
 					void Restore(RTP::Packet* packet) override;
 					uint8_t GetSpatialLayer() const override

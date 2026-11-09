@@ -56,6 +56,12 @@ namespace RTC
 		{
 			class VP9
 			{
+			private:
+				/**
+				 * Bits VP9 numbers its pictures with, which tells where they wrap.
+				 */
+				static constexpr uint8_t FrameIdLength{ 15 };
+
 			public:
 				struct PayloadDescriptor : public Codecs::PayloadDescriptor
 				{
@@ -91,28 +97,23 @@ namespace RTC
 
 			public:
 				static VP9::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
-				static void ProcessRtpPacket(RTP::Packet* packet);
+				static void ProcessRtpPacket(
+				  RTP::Packet* packet,
+				  std::shared_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+				    templateDependencyStructure);
 
 			public:
 				class EncodingContext : public Codecs::EncodingContext
 				{
 				public:
 					explicit EncodingContext(Codecs::EncodingContext::Params& params)
-					  : Codecs::EncodingContext(params)
+					  : Codecs::EncodingContext(params, VP9::FrameIdLength)
 					{
 					}
 					~EncodingContext() override = default;
 
-					/* Pure virtual methods inherited from Codecs::EncodingContext. */
 				public:
-					void SyncRequired() override
-					{
-						this->syncRequired = true;
-					}
-
-				public:
-					RTC::SeqManager<uint16_t, 15> pictureIdManager;
-					bool syncRequired{ false };
+					RTC::SeqManager<uint16_t, VP9::FrameIdLength> pictureIdManager;
 				};
 
 				class PayloadDescriptorHandler : public Codecs::PayloadDescriptorHandler
@@ -128,11 +129,6 @@ namespace RTC
 					}
 					bool Process(
 					  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
-					void RtpPacketChanged(RTP::Packet* packet) override {};
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-					{
-						return nullptr;
-					}
 					void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
 					{
 					}

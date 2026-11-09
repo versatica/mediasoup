@@ -1,0 +1,879 @@
+#include "common.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptorPayloadDescriptor.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "test/include/RTC/RTP/rtpCommon.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include <cstring> // std::memcpy()
+#include <vector>
+
+/**
+ * The Dependency Descriptor payload descriptor is codec agnostic, so what is
+ * tested here is the dependency structure of the stream rather than the codec
+ * that produced it. The captures below happen to come from AV1, and the very
+ * same expectations hold for any other codec whose packets carry the
+ * extension.
+ *
+ * The Dependency Descriptors below are REAL bytes captured from Chrome
+ * producing AV1 with `scalabilityMode: 'L3T3_KEY'`, this is, K-SVC.
+ *
+ * NOTE: K-SVC matters here. Inter layer prediction only happens at key frames,
+ * so the delta frames of a spatial layer are not referenced by the higher ones
+ * and their decode target indications say so with a "-" (not present). A
+ * Consumer given the top spatial layer is hence sent that layer alone.
+ *
+ * An equivalent capture can be taken and dumped with:
+ *
+ *   tshark -i <interface> -f "udp portrange <rtcMinPort>-<rtcMaxPort>" -s 0 \
+ *     -w capture.pcapng
+ *
+ *   tshark -r capture.pcapng -o rtp.heuristic_rtp:TRUE \
+ *     -Y "rtp.p_type==<av1 payload type>" -T fields \
+ *     -e rtp.seq -e rtp.marker \
+ *     -e rtp.ext.rfc5285.id -e rtp.ext.rfc5285.len -e rtp.ext.rfc5285.data
+ *
+ * The Dependency Descriptor is the extension whose value is ~90 bytes long in
+ * the first packet of a key frame and 3 bytes long everywhere else.
+ */
+
+namespace
+{
+	constexpr uint8_t DependencyDescriptorId{ static_cast<uint8_t>(
+		RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR) };
+
+	/**
+	 * Key frame, carrying the template dependency structure of an L3T3 stream:
+	 * 9 decode targets and 15 templates. These are the ones used below, with
+	 * their spatial and temporal layers and their decode target indications:
+	 *
+	 *   id  sId  tId  decodeTargetIndications
+	 *    1    0    0  SSS------
+	 *    2    0    1  -DS------
+	 *    3    0    2  --D------
+	 *    4    0    2  --D------
+	 *    6    1    0  ---SSS---
+	 *    7    1    1  ----DS---
+	 *    8    1    2  -----D---
+	 *    9    1    2  -----D---
+	 *   11    2    0  ------SSS
+	 *   12    2    1  -------DS
+	 *   13    2    2  --------D
+	 *   14    2    2  --------D
+	 */
+	// clang-format off
+	const uint8_t KeyFrameData[] =
+	{
+		0xc0, 0x00, 0x4f, 0x80, 0x08, 0x14, 0x85, 0x21, 0x4e, 0xaa, 0xaa, 0xa8,
+		0x00, 0x06, 0x00, 0x00, 0x40, 0x00, 0x10, 0x00, 0x02, 0xaa, 0x80, 0xa8,
+		0x00, 0x06, 0x00, 0x00, 0x40, 0x00, 0x10, 0x00, 0x02, 0xa0, 0x00, 0xa8,
+		0x00, 0x06, 0x00, 0x00, 0x40, 0x00, 0x16, 0xd5, 0x49, 0x24, 0x1b, 0x55,
+		0x24, 0x90, 0x6d, 0x54, 0x92, 0x31, 0x57, 0xe0, 0x01, 0x97, 0x4c, 0xa8,
+		0x64, 0x33, 0x0e, 0x22, 0x23, 0x96, 0xec, 0xa8, 0x65, 0x53, 0x04, 0x22,
+		0x43, 0x90, 0xec, 0xa8, 0x77, 0x53, 0x01, 0x3f, 0x00, 0xb3, 0x02, 0x7f,
+		0x01, 0x67, 0x04, 0xff, 0x02, 0xcf
+	};
+	// clang-format on
+
+	/**
+	 * One full repetition of the layers pattern that follows the key frame:
+	 * 4 pictures of 3 spatial layers each, with temporal layers T2, T1, T2, T0.
+	 *
+	 * NOTE: All of them are end of frame packets, which is what `Process()`
+	 * requires to switch the temporal layer down and to set the marker bit.
+	 * Frames that the capture sent in several packets are hence represented by
+	 * their last one.
+	 */
+	// clang-format off
+	const std::vector<std::vector<uint8_t>> DeltaFrames =
+	{
+		{ 0xc3, 0x00, 0x5e }, // frame  94, template  3, S0T2
+		{ 0xc8, 0x00, 0x5f }, // frame  95, template  8, S1T2
+		{ 0x4d, 0x00, 0x60 }, // frame  96, template 13, S2T2
+		{ 0xc2, 0x00, 0x61 }, // frame  97, template  2, S0T1
+		{ 0xc7, 0x00, 0x62 }, // frame  98, template  7, S1T1
+		{ 0xcc, 0x00, 0x63 }, // frame  99, template 12, S2T1
+		{ 0xc4, 0x00, 0x64 }, // frame 100, template  4, S0T2
+		{ 0xc9, 0x00, 0x65 }, // frame 101, template  9, S1T2
+		{ 0xce, 0x00, 0x66 }, // frame 102, template 14, S2T2
+		{ 0xc1, 0x00, 0x67 }, // frame 103, template  1, S0T0
+		{ 0xc6, 0x00, 0x68 }, // frame 104, template  6, S1T0
+		{ 0x4b, 0x00, 0x69 }, // frame 105, template 11, S2T0
+	};
+	// clang-format on
+
+	// Indexes into `DeltaFrames` of the frames some tests act upon.
+	constexpr size_t FrameS0T1Index{ 3 };
+	constexpr size_t FrameS0T2Index{ 6 };
+	constexpr size_t FrameS1T2Index{ 7 };
+	constexpr size_t FrameS2T2Index{ 8 };
+	constexpr size_t FrameS0T0Index{ 9 };
+	constexpr size_t FrameS1T0Index{ 10 };
+
+	// Decode targets of the L3T3 structure above: 3 spatial layers × 3 temporal.
+	constexpr uint8_t DecodeTargetCount{ 9 };
+
+	/**
+	 * Creates a packet carrying the given descriptor in a Dependency Descriptor
+	 * RTP header extension `reservedLen` bytes long, just as the Producer does:
+	 * the room a Consumer may need to rewrite the descriptor is reserved, and the
+	 * extension is then shrunk back to the length the descriptor really has, so
+	 * that the room stays behind it as padding.
+	 */
+	std::unique_ptr<RTC::RTP::Packet> createPacket(const uint8_t* data, uint8_t len, uint8_t reservedLen)
+	{
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
+
+		REQUIRE(packet);
+
+		uint8_t value[RTC::Consts::TwoBytesRtpExtensionMaxLength]{};
+
+		std::memcpy(value, data, len);
+
+		const std::vector<RTC::RTP::Packet::Extension> extensions{
+			{ RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, DependencyDescriptorId, reservedLen, value }
+		};
+
+		REQUIRE(packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions) == true);
+		REQUIRE(packet->UpdateDependencyDescriptor(data, len));
+
+		return packet;
+	}
+
+	struct ProcessResult
+	{
+		bool forwarded{ false };
+		bool marker{ false };
+		uint8_t spatialLayer{ 0 };
+		uint8_t temporalLayer{ 0 };
+		/**
+		 * The `active_decode_targets_bitmask` the packet ends up carrying, this
+		 * is, the decode targets the endpoint is told to expect. Empty when the
+		 * packet was not forwarded or when nothing was written into it.
+		 */
+		std::optional<uint32_t> announced;
+	};
+
+	/**
+	 * Runs a frame through `DependencyDescriptorPayloadDescriptorHandler::Process()`,
+	 * which is what decides whether the packet is forwarded to the Consumer, and
+	 * reads back the descriptor the packet ends up carrying for it.
+	 */
+	ProcessResult processFrame(
+	  const uint8_t* data,
+	  size_t len,
+	  std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+	    templateDependencyStructure,
+	  RTC::RTP::Codecs::EncodingContext& context)
+	{
+		ProcessResult result;
+
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(data, len, templateDependencyStructure));
+
+		REQUIRE(dependencyDescriptor);
+
+		result.spatialLayer  = dependencyDescriptor->spatialLayer;
+		result.temporalLayer = dependencyDescriptor->temporalLayer;
+
+		// As the Producer does, with room for the rewrite a Consumer may need.
+		const auto packet =
+		  createPacket(data, static_cast<uint8_t>(len), dependencyDescriptor->GetMaxLength());
+
+		auto* payloadDescriptor =
+		  new RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptor(dependencyDescriptor);
+
+		RTC::RTP::Codecs::DependencyDescriptorPayloadDescriptorHandler payloadDescriptorHandler(
+		  payloadDescriptor);
+
+		result.forwarded = payloadDescriptorHandler.Process(&context, packet.get(), result.marker);
+
+		if (result.forwarded)
+		{
+			std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> forwarded;
+			// NOTE: Into a copy, since reading back a key frame parses the template
+			// dependency structure again and would replace the one of the run.
+			auto structure = templateDependencyStructure;
+
+			REQUIRE(packet->ReadDependencyDescriptor(forwarded, structure));
+			REQUIRE(forwarded);
+
+			result.announced = forwarded->activeDecodeTargetsBitmask;
+		}
+
+		return result;
+	}
+} // namespace
+
+SCENARIO(
+  "process a K-SVC stream with the Dependency Descriptor payload descriptor",
+  "[rtp][codecs][dependency-descriptor]")
+{
+	std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+	  templateDependencyStructure;
+
+	RTC::RTP::Codecs::EncodingContext::Params params;
+
+	params.spatialLayers  = 3;
+	params.temporalLayers = 3;
+
+	RTC::RTP::Codecs::EncodingContext context(
+	  params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength);
+
+	auto process = [&](const uint8_t* data, size_t len)
+	{
+		return processFrame(data, len, templateDependencyStructure, context);
+	};
+
+	// Runs the captured key frame, optionally renumbered.
+	//
+	// NOTE: A key frame that follows other frames carries a later frame number,
+	// so replaying the captured one as is would look like a reordered packet.
+	auto processKeyFrame = [&](uint16_t frameNumber = 0) -> ProcessResult
+	{
+		uint8_t data[sizeof(KeyFrameData)];
+
+		std::memcpy(data, KeyFrameData, sizeof(KeyFrameData));
+
+		if (frameNumber != 0)
+		{
+			data[1] = static_cast<uint8_t>(frameNumber >> 8);
+			data[2] = static_cast<uint8_t>(frameNumber & 0xff);
+		}
+
+		return process(data, sizeof(data));
+	};
+
+	auto processDeltaFrame = [&](size_t index)
+	{
+		return process(DeltaFrames[index].data(), DeltaFrames[index].size());
+	};
+
+	// Whether the given delta frame is a switch point for the decode target of
+	// the given layers, which is what entering a spatial layer keys on.
+	//
+	// NOTE: Parsing a delta frame does not touch the template dependency
+	// structure, so this does not disturb the run.
+	auto isSwitchPointFor = [&](size_t index, uint8_t spatialLayer, uint8_t temporalLayer)
+	{
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    DeltaFrames[index].data(), DeltaFrames[index].size(), templateDependencyStructure));
+
+		REQUIRE(dependencyDescriptor);
+
+		return dependencyDescriptor->IsSwitchPointForDecodeTarget(spatialLayer, temporalLayer);
+	};
+
+	// Whether the given delta frame is part of the decode target of the given
+	// layers, this is, whether announcing that decode target active promises
+	// that frame to the endpoint.
+	auto isPresentInDecodeTargetFor = [&](size_t index, uint8_t spatialLayer, uint8_t temporalLayer)
+	{
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor> dependencyDescriptor(
+		  RTC::RTP::Codecs::DependencyDescriptor::Parse(
+		    DeltaFrames[index].data(), DeltaFrames[index].size(), templateDependencyStructure));
+
+		REQUIRE(dependencyDescriptor);
+
+		return dependencyDescriptor->IsPresentInDecodeTarget(spatialLayer, temporalLayer);
+	};
+
+	// The forward/announce invariant: a decode target told active must be one
+	// whose frames really are forwarded. Announcing more than is sent leaves the
+	// endpoint waiting for frames that never come, which it can only take for
+	// loss; sending more than is announced wastes the bandwidth the filter was
+	// meant to save.
+	auto requireAnnouncedIsForwarded =
+	  [&](const ProcessResult& keyFrame, const std::vector<ProcessResult>& results)
+	{
+		// What a frame announces is a promise about the frames that follow it,
+		// so the key frame is judged against the whole run and a delta frame
+		// against the ones after it.
+		auto requirePromiseKept = [&](const ProcessResult& result, size_t from, const char* which)
+		{
+			if (!result.announced.has_value())
+			{
+				return;
+			}
+
+			const auto announced = result.announced.value();
+
+			for (uint8_t decodeTarget{ 0 }; decodeTarget < DecodeTargetCount; ++decodeTarget)
+			{
+				if ((announced & (uint32_t{ 1 } << decodeTarget)) == 0)
+				{
+					continue;
+				}
+
+				// The decode targets of this structure go by spatial layer and then
+				// by temporal one, as the table above shows.
+				const auto spatialLayer  = static_cast<uint8_t>(decodeTarget / 3);
+				const auto temporalLayer = static_cast<uint8_t>(decodeTarget % 3);
+
+				// Every later frame that decode target is made of must be forwarded.
+				for (size_t j{ from }; j < results.size(); ++j)
+				{
+					if (!isPresentInDecodeTargetFor(j, spatialLayer, temporalLayer))
+					{
+						continue;
+					}
+
+					INFO(
+					  "delta frame " << j << " belongs to decode target " << static_cast<int>(decodeTarget)
+					                 << ", told active by the " << which);
+
+					REQUIRE(results[j].forwarded);
+				}
+			}
+		};
+
+		requirePromiseKept(keyFrame, 0, "key frame");
+
+		for (size_t i{ 0 }; i < results.size(); ++i)
+		{
+			requirePromiseKept(results[i], i + 1, "frame before it");
+		}
+	};
+
+	// Asks for the given layers, with nothing forwarded yet.
+	auto setTargetLayers = [&](int16_t spatialLayer, int16_t temporalLayer)
+	{
+		context.SetTargetSpatialLayer(spatialLayer);
+		context.SetTargetTemporalLayer(temporalLayer);
+		context.SetCurrentSpatialLayer(0);
+		context.SetCurrentTemporalLayer(0);
+	};
+
+	// The lower spatial layers of a delta picture are not part of the decode
+	// target of the top one, so a Consumer given 2:2 is sent that layer alone.
+	// The key frame is part of every decode target and is always forwarded.
+	SECTION("forwards only the top spatial layer when targeting 2:2")
+	{
+		setTargetLayers(2, 2);
+
+		const auto keyFrame = processKeyFrame();
+
+		REQUIRE(keyFrame.forwarded);
+
+		// Only the three decode targets of the top spatial layer are told active.
+		REQUIRE(keyFrame.announced.has_value());
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		REQUIRE(keyFrame.announced.value() == 0b111000000);
+
+		std::vector<ProcessResult> results;
+
+		for (size_t i{ 0 }; i < DeltaFrames.size(); ++i)
+		{
+			INFO("delta frame " << i);
+
+			const auto result = processDeltaFrame(i);
+
+			REQUIRE(result.forwarded == (result.spatialLayer == 2));
+
+			// The marker bit is only set in the highest forwarded spatial layer, so
+			// that the whole picture reaches the endpoint as a single unit.
+			REQUIRE(result.marker == (result.spatialLayer == 2));
+
+			results.push_back(result);
+		}
+
+		requireAnnouncedIsForwarded(keyFrame, results);
+	}
+
+	SECTION("drops upper spatial layers when targeting spatial 0")
+	{
+		setTargetLayers(0, 2);
+
+		const auto keyFrame = processKeyFrame();
+
+		REQUIRE(keyFrame.forwarded);
+
+		std::vector<ProcessResult> results;
+
+		for (size_t i{ 0 }; i < DeltaFrames.size(); ++i)
+		{
+			INFO("delta frame " << i);
+
+			const auto result = processDeltaFrame(i);
+
+			REQUIRE(result.forwarded == (result.spatialLayer == 0));
+
+			results.push_back(result);
+		}
+
+		requireAnnouncedIsForwarded(keyFrame, results);
+	}
+
+	SECTION("drops upper temporal layers when targeting temporal 0")
+	{
+		setTargetLayers(2, 0);
+
+		const auto keyFrame = processKeyFrame();
+
+		REQUIRE(keyFrame.forwarded);
+
+		std::vector<ProcessResult> results;
+
+		for (size_t i{ 0 }; i < DeltaFrames.size(); ++i)
+		{
+			INFO("delta frame " << i);
+
+			const auto result = processDeltaFrame(i);
+
+			// NOTE: Only the top spatial layer is part of the 2:0 decode target, so
+			// being in temporal layer 0 is not enough for a frame to be forwarded.
+			REQUIRE(result.forwarded == (result.spatialLayer == 2 && result.temporalLayer == 0));
+
+			results.push_back(result);
+		}
+
+		requireAnnouncedIsForwarded(keyFrame, results);
+	}
+
+	// In K-SVC the frames of the target spatial layer were not being forwarded,
+	// so a switch point of its decode target is not enough to enter it: a
+	// "switch" indication promises that no older frame of the decode target is
+	// needed, not that the frame stands on its own. Its 1:0 frames do reference
+	// the previous one, which the endpoint never got, so the switch waits for a
+	// key frame as the VP9 handler does.
+	SECTION("downgrades the spatial layer only in a key frame")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processKeyFrame().forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+
+		// Frames 94 to 99, which leave the Consumer settled on 2:2.
+		for (size_t i{ 0 }; i < FrameS0T2Index; ++i)
+		{
+			processDeltaFrame(i);
+		}
+
+		// Only the middle spatial layer is wanted now.
+		context.SetTargetSpatialLayer(1);
+
+		// The 1:2 frame is no switch point for the layer ("-----D---").
+		REQUIRE(!processDeltaFrame(FrameS1T2Index).forwarded); // frame 101
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+
+		// Spatial layer 2 keeps being forwarded meanwhile.
+		REQUIRE(processDeltaFrame(FrameS2T2Index).forwarded);  // frame 102
+		REQUIRE(!processDeltaFrame(FrameS0T0Index).forwarded); // frame 103
+
+		// The 1:0 frame IS a switch point for every decode target of spatial layer
+		// 1 ("---SSS---"), and that is still not enough, since none of the frames
+		// it may reference were forwarded.
+		REQUIRE(isSwitchPointFor(FrameS1T0Index, 1, 2));
+		REQUIRE(!processDeltaFrame(FrameS1T0Index).forwarded); // frame 104
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+
+		// A key frame is where it happens, and the temporal layer is left where it
+		// was, so the Consumer does not have to climb back up to it.
+		//
+		// NOTE: Renumbered, since a key frame that follows other frames carries a
+		// later frame number than they do.
+		REQUIRE(processKeyFrame(200).forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 1);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+	}
+
+	// The same upgrading, where a key frame allows the switch since it is a
+	// switch point for every decode target of the stream.
+	SECTION("keeps the temporal layer across a spatial upgrade")
+	{
+		context.SetTargetSpatialLayer(0);
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processKeyFrame().forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+
+		for (size_t i{ 0 }; i < DeltaFrames.size(); ++i)
+		{
+			processDeltaFrame(i);
+		}
+
+		context.SetTargetSpatialLayer(2);
+
+		// NOTE: Renumbered, since a key frame that follows other frames carries a
+		// later frame number than they do.
+		REQUIRE(processKeyFrame(200).forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+	}
+
+	SECTION("upgrades the spatial layer only in a key frame")
+	{
+		setTargetLayers(0, 0);
+
+		// NOTE: The key frame is what carries the template dependency structure, so
+		// it must come first for the delta frames below to be parseable at all.
+		REQUIRE(processKeyFrame().forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+
+		// Now ask for every spatial layer.
+		context.SetTargetSpatialLayer(2);
+
+		// Delta frames don't upgrade it, so the upper spatial layers are dropped.
+		REQUIRE(processDeltaFrame(FrameS0T0Index).forwarded);
+		REQUIRE(!processDeltaFrame(FrameS1T0Index).forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+
+		// A key frame does upgrade it.
+		REQUIRE(processKeyFrame(/*frameNumber*/ 200).forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+	}
+
+	// Upgrading the temporal layer is only safe in a frame the Dependency
+	// Descriptor marks as a switch point for the decode target being moved into,
+	// this is, with a "S" indication for it.
+	//
+	// Switching up anywhere else would forward frames that depend on frames
+	// already dropped, which the endpoint cannot decode.
+	SECTION("upgrades the temporal layer only in a switch point")
+	{
+		setTargetLayers(2, 0);
+
+		REQUIRE(processKeyFrame().forwarded);
+
+		// Only temporal layer 0 is wanted so far, so the 0:1 frame is dropped.
+		REQUIRE(!processDeltaFrame(FrameS0T1Index).forwarded);
+
+		// Now ask for temporal layer 2.
+		context.SetTargetTemporalLayer(2);
+
+		// The 0:2 frame is not a switch point for decode target 0:2 (its
+		// indications are "--D------"), and it depends on the 0:1 frame just
+		// dropped, so it's not forwarded.
+		REQUIRE(!processDeltaFrame(FrameS0T2Index).forwarded);
+		REQUIRE(context.GetCurrentTemporalLayer() == 0);
+
+		// The 0:0 frame is a switch point for it ("SSS------"), so the upgrade
+		// happens there.
+		//
+		// NOTE: The frame itself is not forwarded, since spatial layer 0 is not
+		// part of the decode target this Consumer is given. Layer switching
+		// watches every frame of the stream, including those it does not send.
+		REQUIRE(!processDeltaFrame(FrameS0T0Index).forwarded);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+	}
+}
+
+namespace
+{
+	/**
+	 * The same stream as above but with `scalabilityMode: 'L3T3'`, this is, full
+	 * SVC, also captured from Chrome.
+	 *
+	 * Here inter layer prediction happens in every picture, so the delta frames
+	 * of a spatial layer are needed by the higher ones and their decode target
+	 * indications say so with an "R" (required) rather than a "-". Nothing is
+	 * filtered out, which is what tells this apart from the K-SVC stream above.
+	 *
+	 *   id  sId  tId  decodeTargetIndications
+	 *    0    0    0  SSSRRRRRR
+	 *    2    0    1  -DS-RR-RR
+	 *    3    0    2  --D--R--R
+	 *    4    0    2  --D--R--R
+	 *    5    1    0  ---SSSRRR
+	 *    7    1    1  ----DS-RR
+	 *    8    1    2  -----D--R
+	 *    9    1    2  -----D--R
+	 *   10    2    0  ------SSS
+	 *   12    2    1  -------DS
+	 *   13    2    2  --------D
+	 *   14    2    2  --------D
+	 */
+	// clang-format off
+	const uint8_t FullSvcKeyFrameData[] =
+	{
+		0xc1, 0x00, 0x01, 0x80, 0x08, 0x14, 0x85, 0x21, 0x4e, 0xaf, 0xff, 0xaa,
+		0xaa, 0x86, 0x3c, 0xf0, 0x43, 0x0c, 0x10, 0xc3, 0x02, 0xaf, 0xc0, 0xaa,
+		0xa0, 0x06, 0x3c, 0x00, 0x43, 0x00, 0x10, 0xc0, 0x02, 0xa0, 0x00, 0xa8,
+		0x00, 0x06, 0x00, 0x00, 0x40, 0x00, 0x1d, 0x95, 0x49, 0x26, 0xe0, 0x82,
+		0xb0, 0x4a, 0x09, 0x41, 0xb8, 0x20, 0xac, 0x12, 0x82, 0x50, 0x31, 0x57,
+		0xf9, 0x74, 0x00, 0x0c, 0xa8, 0x64, 0x33, 0x0e, 0x22, 0x22, 0x22, 0xec,
+		0xa8, 0x65, 0x53, 0x04, 0x22, 0x42, 0x30, 0xec, 0xa8, 0x77, 0x53, 0x01,
+		0x3f, 0x00, 0xb3, 0x02, 0x7f, 0x01, 0x67, 0x04, 0xff, 0x02, 0xcf
+	};
+
+	// One full repetition of the layers pattern that follows the key frame, with
+	// the same shape as the K-SVC one above.
+	const std::vector<std::vector<uint8_t>> FullSvcDeltaFrames =
+	{
+		{ 0xc3, 0x00, 0x04 }, // frame  4, template  3, S0T2
+		{ 0xc8, 0x00, 0x05 }, // frame  5, template  8, S1T2
+		{ 0xcd, 0x00, 0x06 }, // frame  6, template 13, S2T2
+		{ 0xc2, 0x00, 0x07 }, // frame  7, template  2, S0T1
+		{ 0xc7, 0x00, 0x08 }, // frame  8, template  7, S1T1
+		{ 0xcc, 0x00, 0x09 }, // frame  9, template 12, S2T1
+		{ 0xc4, 0x00, 0x0a }, // frame 10, template  4, S0T2
+		{ 0xc9, 0x00, 0x0b }, // frame 11, template  9, S1T2
+		{ 0xce, 0x00, 0x0c }, // frame 12, template 14, S2T2
+		{ 0xc0, 0x00, 0x0d }, // frame 13, template  0, S0T0
+		{ 0xc5, 0x00, 0x0e }, // frame 14, template  5, S1T0
+		{ 0x4a, 0x00, 0x0f }, // frame 15, template 10, S2T0
+	};
+	// clang-format on
+
+	// Indexes into `FullSvcDeltaFrames` of the frames some tests act upon.
+	constexpr size_t FullSvcFrameS0T2Index{ 6 };
+	constexpr size_t FullSvcFrameS2T2Index{ 8 };
+	constexpr size_t FullSvcFrameS0T0Index{ 9 };
+} // namespace
+
+SCENARIO(
+  "process a full SVC stream with the Dependency Descriptor payload descriptor",
+  "[rtp][codecs][dependency-descriptor]")
+{
+	std::shared_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+	  templateDependencyStructure;
+
+	RTC::RTP::Codecs::EncodingContext::Params params;
+
+	params.spatialLayers  = 3;
+	params.temporalLayers = 3;
+
+	RTC::RTP::Codecs::EncodingContext context(
+	  params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength);
+
+	auto process = [&](const uint8_t* data, size_t len)
+	{
+		return processFrame(data, len, templateDependencyStructure, context);
+	};
+
+	auto processKeyFrame = [&]()
+	{
+		return process(FullSvcKeyFrameData, sizeof(FullSvcKeyFrameData));
+	};
+
+	auto processDeltaFrame = [&](size_t index)
+	{
+		return process(FullSvcDeltaFrames[index].data(), FullSvcDeltaFrames[index].size());
+	};
+
+	// Every lower spatial layer is required by the decode target of the top one,
+	// so none of them may be filtered out. This is the same code and the same
+	// Consumer as the K-SVC case above, which forwards just one spatial layer,
+	// and only the dependency structure of the stream tells them apart.
+	SECTION("forwards every layer when targeting 2:2")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(2);
+		context.SetCurrentSpatialLayer(0);
+		context.SetCurrentTemporalLayer(0);
+
+		REQUIRE(processKeyFrame().forwarded);
+
+		for (size_t i{ 0 }; i < FullSvcDeltaFrames.size(); ++i)
+		{
+			INFO("delta frame " << i);
+
+			REQUIRE(processDeltaFrame(i).forwarded);
+		}
+	}
+
+	// A packet reordered across a layer change must be judged by the layers its
+	// own frame was given rather than by the current ones. Letting it through on
+	// the new ones would forward a frame whose references were dropped.
+	//
+	// NOTE: The current layers are left as they come so that the first change is
+	// recorded against its frame number, which is what the Consumer does.
+	SECTION("a packet reordered across a temporal upgrade is judged by its own layers")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(0);
+
+		REQUIRE(processKeyFrame().forwarded);
+		REQUIRE(context.GetCurrentTemporalLayer() == 0);
+
+		// Only temporal layer 0 is wanted, so this 0:2 frame is dropped and so are
+		// the frames depending on it.
+		REQUIRE(!processDeltaFrame(FullSvcFrameS0T2Index).forwarded);
+
+		// Now ask for every temporal layer. The 0:0 frame is a switch point for the
+		// decode target, so the upgrade happens there.
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processDeltaFrame(FullSvcFrameS0T0Index).forwarded);
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+
+		// The 0:2 frame from before the upgrade arrives late. The current temporal
+		// layer would let it through, but the one its frame was given would not and
+		// the frames it depends on were dropped.
+		REQUIRE(!processDeltaFrame(FullSvcFrameS0T2Index).forwarded);
+	}
+
+	// The same holds the other way around. Here the current layers would drop the
+	// reordered packet while the ones its own frame was given forward it, which is
+	// what the endpoint needs since the frames it depends on were forwarded too.
+	SECTION("a packet reordered across a spatial downgrade is judged by its own layers")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processKeyFrame().forwarded); // frame 1
+		REQUIRE(context.GetCurrentSpatialLayer() == 2);
+
+		// Run the pattern up to frame 11, leaving the 2:2 frame 12 behind.
+		for (size_t i{ 0 }; i < FullSvcFrameS2T2Index; ++i)
+		{
+			INFO("delta frame " << i);
+
+			REQUIRE(processDeltaFrame(i).forwarded);
+		}
+
+		// Only the lowest spatial layer is wanted now. The 0:0 frame is an end of
+		// frame packet of that very layer, so the downgrade happens there.
+		context.SetTargetSpatialLayer(0);
+
+		REQUIRE(processDeltaFrame(FullSvcFrameS0T0Index).forwarded); // frame 13
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+
+		// The 2:2 frame from before the downgrade arrives late. The current spatial
+		// layer would drop it, but the one its frame was given does forward it.
+		REQUIRE(processDeltaFrame(FullSvcFrameS2T2Index).forwarded); // frame 12
+
+		// And it does not move the current layers, since it says nothing about what
+		// the Consumer is being given now.
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+	}
+
+	// Which decode targets a reordered packet tells the endpoint about is the one
+	// decision NOT made with the layers its own frame was given, and that is
+	// deliberate. The bitmask describes the stream rather than the frame carrying
+	// it: announcing the layers of a late frame would tell the endpoint that a
+	// spatial layer which has already stopped being sent is still active, and it
+	// would wait for frames that never come. Announcing the current layers is
+	// monotone, so a reordered packet merely repeats what is already true.
+	SECTION("a reordered packet announces the current layers, not its own")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(2);
+
+		REQUIRE(processKeyFrame().forwarded); // frame 1
+
+		for (size_t i{ 0 }; i < FullSvcFrameS2T2Index; ++i)
+		{
+			REQUIRE(processDeltaFrame(i).forwarded);
+		}
+
+		// Down to the lowest spatial layer, which the 0:0 frame settles.
+		context.SetTargetSpatialLayer(0);
+
+		const auto settled = processDeltaFrame(FullSvcFrameS0T0Index); // frame 13
+
+		REQUIRE(settled.forwarded);
+		REQUIRE(context.GetCurrentSpatialLayer() == 0);
+
+		// Only the three decode targets of spatial layer 0 are told active now.
+		REQUIRE(settled.announced.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto settledAnnounced = settled.announced.value();
+
+		REQUIRE(settledAnnounced == 0b000000111);
+
+		// The 2:2 frame from before the downgrade arrives late and is forwarded,
+		// since the layers its own frame was given do forward it.
+		const auto reordered = processDeltaFrame(FullSvcFrameS2T2Index); // frame 12
+
+		REQUIRE(reordered.forwarded);
+		REQUIRE(reordered.spatialLayer == 2);
+
+		// Yet it announces the decode targets of the current layers, so the
+		// endpoint is handed a frame of a decode target the very same packet tells
+		// it is not active. That costs the bytes of one frame.
+		//
+		// NOTE: The alternative costs more. Judging the bitmask by its own frame
+		// would announce every decode target of the stream, this is, spatial
+		// layers that are no longer forwarded, which is what makes an endpoint ask
+		// for a key frame.
+		REQUIRE(reordered.announced.has_value());
+
+		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+		const auto reorderedAnnounced = reordered.announced.value();
+
+		REQUIRE(reorderedAnnounced == settledAnnounced);
+		REQUIRE(reorderedAnnounced != 0b111111111);
+	}
+
+	// The packet flow of a Consumer restarts at a sync point, so the frames seen
+	// before it say nothing about the ones that follow and must not make them
+	// look reordered.
+	SECTION("a sync point forgets the frames seen so far")
+	{
+		context.SetTargetSpatialLayer(2);
+		context.SetTargetTemporalLayer(0);
+
+		REQUIRE(processKeyFrame().forwarded);
+
+		// Run the whole pattern, frames 4 to 15, so that 15 is the newest frame
+		// seen.
+		for (size_t i{ 0 }; i < FullSvcDeltaFrames.size(); ++i)
+		{
+			processDeltaFrame(i);
+		}
+
+		context.SetTargetTemporalLayer(2);
+		context.SyncRequired();
+
+		// The 0:0 frame is frame 13, below the 15 just seen, so on its own it
+		// would be taken for reordered and could not upgrade anything. The sync
+		// point says the frames before it no longer count, so it is treated as the
+		// fresh frame it is and the upgrade happens there.
+		REQUIRE(processDeltaFrame(FullSvcFrameS0T0Index).forwarded); // frame 13
+		REQUIRE(context.GetCurrentTemporalLayer() == 2);
+	}
+}
+
+// Frame ids wrap where the descriptor that numbered the frames says, this is,
+// at the 16 bits of the Dependency Descriptor rather than at the fewer bits a
+// codec numbers its own pictures with. Both the layer changes recorded against
+// them and the comparison that tells reordered packets apart are made in that
+// very same space.
+SCENARIO("the Dependency Descriptor numbers frames with 16 bits", "[rtp][codecs][dependency-descriptor]")
+{
+	RTC::RTP::Codecs::EncodingContext::Params params;
+
+	params.spatialLayers              = 1;
+	params.temporalLayers             = 3;
+	params.preferDependencyDescriptor = true;
+
+	RTC::RTP::Codecs::EncodingContext context(
+	  params, RTC::RTP::Codecs::DependencyDescriptor::FrameIdLength);
+
+	SECTION("the layer changes around the wrap are kept")
+	{
+		constexpr uint16_t Start{ 65530 };
+
+		context.SetCurrentTemporalLayer(0, Start);
+		context.SetCurrentTemporalLayer(1, Start + 1);
+		// Eleven frames later, already rolled over.
+		context.SetCurrentTemporalLayer(2, 5);
+
+		REQUIRE(context.GetTemporalLayerForFrameId(Start) == 0);
+		REQUIRE(context.GetTemporalLayerForFrameId(Start + 1) == 1);
+		REQUIRE(context.GetTemporalLayerForFrameId(5) == 2);
+	}
+
+	SECTION("a reordered frame around the wrap is told apart")
+	{
+		context.UpdateMaxFrameId(20000);
+
+		// 5 is 19995 frames behind the newest one seen, while 40000 is 20000
+		// frames ahead of it.
+		REQUIRE(context.IsOldFrameId(5));
+		REQUIRE(!context.IsOldFrameId(40000));
+
+		context.UpdateMaxFrameId(40000);
+		context.UpdateMaxFrameId(65530);
+
+		// 5 has rolled over the newest one seen, so it is newer rather than older.
+		REQUIRE(context.IsOldFrameId(65529));
+		REQUIRE(!context.IsOldFrameId(5));
+	}
+}

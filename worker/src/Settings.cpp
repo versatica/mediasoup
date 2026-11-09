@@ -254,6 +254,10 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 		{
 			logTags.svc = true;
 		}
+		else if (tag == "codec")
+		{
+			logTags.codec = true;
+		}
 		else if (tag == "sctp")
 		{
 			logTags.sctp = true;
@@ -317,6 +321,10 @@ void Settings::PrintConfiguration()
 	if (Settings::configuration.logTags.svc)
 	{
 		logTags.emplace_back("svc");
+	}
+	if (Settings::configuration.logTags.codec)
+	{
+		logTags.emplace_back("codec");
 	}
 	if (Settings::configuration.logTags.sctp)
 	{

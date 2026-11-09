@@ -13,6 +13,13 @@ namespace RTC
 		{
 			class Opus
 			{
+			private:
+				/**
+				 * Bits Opus numbers its frames with. Audio numbers no frames at all,
+				 * so it narrows the frame id space to nothing of its own.
+				 */
+				static constexpr uint8_t FrameIdLength{ 0 };
+
 			public:
 				struct PayloadDescriptor : public Codecs::PayloadDescriptor
 				{
@@ -37,20 +44,12 @@ namespace RTC
 				{
 				public:
 					explicit EncodingContext(Codecs::EncodingContext::Params& params)
-					  : Codecs::EncodingContext(params)
+					  : Codecs::EncodingContext(params, Opus::FrameIdLength)
 					{
 					}
 					~EncodingContext() override = default;
 
-					/* Pure virtual methods inherited from Codecs::EncodingContext. */
 				public:
-					void SyncRequired() override
-					{
-						this->syncRequired = true;
-					}
-
-				public:
-					bool syncRequired{ false };
 				};
 
 			public:
@@ -67,11 +66,6 @@ namespace RTC
 					}
 					bool Process(
 					  Codecs::EncodingContext* encodingContext, RTP::Packet* packet, bool& marker) override;
-					void RtpPacketChanged(RTP::Packet* packet) override {};
-					std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
-					{
-						return nullptr;
-					}
 					void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
 					{
 					}

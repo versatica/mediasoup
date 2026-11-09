@@ -366,7 +366,7 @@ namespace RTC
 			// Just valid media.
 			RTC::RtpDataCounter mediaTransmissionCounter;
 			// Template dependency structure for Dependency Descriptor.
-			std::unique_ptr<RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+			std::shared_ptr<RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 			  templateDependencyStructure;
 		};
 	} // namespace RTP
