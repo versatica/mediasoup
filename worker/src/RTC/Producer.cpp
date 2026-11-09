@@ -1862,7 +1862,7 @@ namespace RTC
 		// lost (do not do it if this is a key frame).
 		//
 		// NOTE: Not forced, since a sender may make the stream restart again and
-		// again, and a key frame already asked for is enough.
+		// again, and a key frame already requested is enough.
 		if (this->keyFrameRequestManager && !this->paused && !packet->IsKeyFrame())
 		{
 			this->keyFrameRequestManager->KeyFrameNeeded(rtpStream->GetSsrc());

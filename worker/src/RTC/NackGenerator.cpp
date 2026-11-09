@@ -208,7 +208,7 @@ namespace RTC
 				MS_WARN_TAG(
 				  rtx, "NACK list full, clearing it and requesting a key frame [seqEnd:%" PRIu16 "]", seqEnd);
 
-				// The packets already asked for may still arrive, as retransmissions.
+				// The packets already requested may still arrive, as retransmissions.
 				for (const auto& kv : this->nackList)
 				{
 					const NackInfo& nackInfo = kv.second;
@@ -256,7 +256,7 @@ namespace RTC
 				// We have found a keyframe that actually is newer than at least one
 				// packet in the nack list.
 				//
-				// NOTE: The packets already asked for may still arrive, as
+				// NOTE: The packets already requested may still arrive, as
 				// retransmissions.
 				for (auto removedIt = this->nackList.begin(); removedIt != it; ++removedIt)
 				{
@@ -399,7 +399,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// The packets still asked for may arrive later, as retransmissions.
+		// The packets still requested may arrive later, as retransmissions.
 		for (const auto& kv : this->nackList)
 		{
 			const NackInfo& nackInfo = kv.second;

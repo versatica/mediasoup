@@ -289,13 +289,13 @@ namespace RTC
 
 			// Behind the highest sequence number seen, however far. It leaves the
 			// sequence number state as it is, and the NackGenerator tells whether it
-			// was asked for.
+			// was requested.
 			if (udelta > RtpSeqMod / 2)
 			{
 				return true;
 			}
 
-			// Too far ahead to be any packet asked for.
+			// Too far ahead to be any requested packet.
 			this->packetsDiscarded++;
 
 			return false;

@@ -917,7 +917,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(listener.restartCount == 1);
 	}
 
-	SECTION("a packet recovered by RTX is accepted however old and never restarts the stream")
+	SECTION("a packet recovered by RTX too late is not forwarded and never restarts the stream")
 	{
 		// Needed by the RTX stream to tell its MIME type, and by the codec
 		// processing of the packets it carries.
@@ -948,13 +948,13 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 			rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 		}
 
-		// The retransmission of sequence number 2 arrives, so it is taken.
+		// The retransmission of sequence number 2 arrives too late to be forwarded.
 		packet->SetSequenceNumber(2);
 		packet->RtxEncode(params.rtxPayloadType, params.rtxSsrc, /*seq*/ 0);
 
-		REQUIRE(rtpStream.ReceiveRtxPacket(packet.get(), shared.GetTimeUs()));
+		REQUIRE(!rtpStream.ReceiveRtxPacket(packet.get(), shared.GetTimeUs()));
 
-		// Then the one of sequence number 3, which was not asked for, as part of a
+		// Then the one of sequence number 3, which was not requested, as part of a
 		// burst of consecutive retransmissions.
 		packet->SetSequenceNumber(3);
 		packet->RtxEncode(params.rtxPayloadType, params.rtxSsrc, /*seq*/ 1);
@@ -980,7 +980,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(reportBlock.extendedHighestSeq == 2004);
 	}
 
-	SECTION("a retransmission asked for is accepted however old and never restarts the stream")
+	SECTION("a requested retransmission too late is not forwarded and never restarts the stream")
 	{
 		RtpStreamRecvListener listener;
 		RTC::RTP::RtpStreamRecv rtpStream(
@@ -1005,12 +1005,12 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		}
 
 		// The retransmission of sequence number 2 arrives in the stream itself
-		// (there is no RTX), so it is taken.
+		// (there is no RTX), too late to be forwarded.
 		packet->SetSequenceNumber(2);
 
-		REQUIRE(rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs()));
+		REQUIRE(!rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs()));
 
-		// Then sequence number 3 again, which was not asked for, right after it.
+		// Then sequence number 3 again, which was not requested, right after it.
 		packet->SetSequenceNumber(3);
 
 		REQUIRE(!rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs()));
@@ -1059,12 +1059,12 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 		// Their retransmissions arrive in the stream itself (there is no RTX), and
 		// then a second copy of each one, as when the sender answers two NACKs for
-		// the same packets.
+		// the same packets. All of them too late to be forwarded.
 		for (const uint16_t seq : { 2, 3, 2, 3 })
 		{
 			packet->SetSequenceNumber(seq);
 
-			REQUIRE(rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs()));
+			REQUIRE(!rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs()));
 		}
 
 		// The stream goes on as if nothing happened.

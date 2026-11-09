@@ -327,6 +327,19 @@ namespace RTC
 				return false;
 			}
 
+			// A requested retransmission that arrives this late is not forwarded, since
+			// the streams of the Consumers would take it as invalid, but the
+			// NackGenerator is told so that it stops requesting it.
+			if (IsTooOldToForward(packet))
+			{
+				if (this->params.useNack)
+				{
+					this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ false);
+				}
+
+				return false;
+			}
+
 			// Process the packet at codec level.
 			if (packet->GetPayloadType() == GetPayloadType())
 			{
@@ -509,6 +522,16 @@ namespace RTC
 				  "invalid RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
+
+				return false;
+			}
+
+			// A requested retransmission that arrives this late is not forwarded, since
+			// the streams of the Consumers would take it as invalid, but the
+			// NackGenerator is told so that it stops requesting it.
+			if (IsTooOldToForward(packet))
+			{
+				this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ true);
 
 				return false;
 			}
@@ -1156,6 +1179,18 @@ namespace RTC
 			{
 				this->inactivityCheckPeriodicTimer->Restart();
 			}
+		}
+
+		bool RtpStreamRecv::IsTooOldToForward(const RTP::Packet* packet) const
+		{
+			MS_TRACE();
+
+			const uint16_t udelta = packet->GetSequenceNumber() - this->maxSeq;
+
+			// Behind the highest sequence number seen, and as far as `UpdateSeq()`
+			// takes as a bad sequence number.
+			return udelta > RTP::RtpStream::RtpSeqMod / 2 &&
+			       udelta <= RTP::RtpStream::RtpSeqMod - RTP::RtpStream::MaxMisorder;
 		}
 
 		void RtpStreamRecv::CalculateJitter(uint32_t rtpTimestamp, int64_t receivedAtUs)

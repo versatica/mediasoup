@@ -354,6 +354,13 @@ namespace RTC
 		private:
 			void CalculateJitter(uint32_t rtpTimestamp, int64_t receivedAtUs);
 
+			/**
+			 * Whether the given packet, already accepted, is so far behind the highest
+			 * sequence number seen that the streams of the Consumers would take it as
+			 * invalid, so it is not forwarded.
+			 */
+			bool IsTooOldToForward(const RTP::Packet* packet) const;
+
 			void UpdateScore();
 
 			/**
