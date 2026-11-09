@@ -1822,6 +1822,18 @@ namespace RTC
 		this->listener->OnProducerSpatialLayerActivityChanged(this, rtpStream, spatialLayer, isActive);
 	}
 
+	void Producer::OnRtpStreamRestarted(RTC::RTP::RtpStreamRecv* rtpStream, const RTC::RTP::Packet* packet)
+	{
+		MS_TRACE();
+
+		// Request a key frame for the restarted stream since its first packets were
+		// lost (do not do it if this is a key frame).
+		if (this->keyFrameRequestManager && !this->paused && !packet->IsKeyFrame())
+		{
+			this->keyFrameRequestManager->ForceKeyFrameNeeded(rtpStream->GetSsrc());
+		}
+	}
+
 	void Producer::OnKeyFrameNeeded(RTC::KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
 	{
 		MS_TRACE();

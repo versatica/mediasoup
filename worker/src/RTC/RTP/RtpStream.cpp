@@ -133,7 +133,11 @@ namespace RTC
 			}
 
 			// If not a valid packet ignore it.
-			if (!UpdateSeq(packet))
+			//
+			// NOTE: A retransmission asked for may be far older than the allowed
+			// misorder, and it must neither be discarded nor taken as the start of a
+			// restarted stream.
+			if (!(IsRequestedRetransmission(packet) ? UpdateRecoveredSeq(packet) : UpdateSeq(packet)))
 			{
 				MS_WARN_TAG(
 				  rtp,
@@ -267,6 +271,34 @@ namespace RTC
 			}
 
 			return true;
+		}
+
+		bool RtpStream::UpdateRecoveredSeq(const RTP::Packet* packet)
+		{
+			MS_TRACE();
+
+			const uint16_t seq    = packet->GetSequenceNumber();
+			const uint16_t udelta = seq - this->maxSeq;
+
+			// Ahead of the highest sequence number seen but not "so much bigger", so it
+			// moves the stream forward as any other packet would.
+			if (udelta < MaxDropout)
+			{
+				return UpdateSeq(packet);
+			}
+
+			// Behind the highest sequence number seen, however far. It leaves the
+			// sequence number state as it is, and the NackGenerator tells whether it
+			// was asked for.
+			if (udelta > RtpSeqMod / 2)
+			{
+				return true;
+			}
+
+			// Too far ahead to be any packet asked for.
+			this->packetsDiscarded++;
+
+			return false;
 		}
 
 		void RtpStream::UpdateScore(uint8_t score)

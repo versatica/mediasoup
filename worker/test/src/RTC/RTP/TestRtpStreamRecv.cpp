@@ -129,11 +129,18 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		{
 		}
 
+		void OnRtpStreamRestarted(
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTP::Packet* /*packet*/) override
+		{
+			this->restartCount++;
+		}
+
 	public:
 		bool shouldTriggerNack = false;
 		bool shouldTriggerPLI  = false;
 		bool shouldTriggerFIR  = false;
 		std::vector<uint16_t> nackedSeqNumbers;
+		size_t restartCount{ 0 };
 	};
 
 	mocks::MockShared shared(/*getTimeUs*/
@@ -227,6 +234,11 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 			void OnRtpStreamSpatialLayerActivityChanged(
 			  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*spatialLayer*/, bool /*isActive*/) override
+			{
+			}
+
+			void OnRtpStreamRestarted(
+			  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTP::Packet* /*packet*/) override
 			{
 			}
 
@@ -863,6 +875,153 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 		REQUIRE(listener.nackedSeqNumbers.size() == 1);
 		REQUIRE(listener.nackedSeqNumbers[0] == 1003);
+	}
+
+	SECTION("the listener is told once when the stream restarts")
+	{
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		for (const uint16_t seq : { 1, 2, 3 })
+		{
+			packet->SetSequenceNumber(seq);
+			rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+		}
+
+		// The first packet far from the previous ones is discarded.
+		packet->SetSequenceNumber(30000);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.restartCount == 0);
+
+		// The next one restarts the stream.
+		packet->SetSequenceNumber(30001);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.restartCount == 1);
+
+		packet->SetSequenceNumber(30002);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.restartCount == 1);
+	}
+
+	SECTION("a packet recovered by RTX is accepted however old and never restarts the stream")
+	{
+		// Needed by the RTX stream to tell its MIME type, and by the codec
+		// processing of the packets it carries.
+		params.mimeType.type    = RTC::RtpCodecMimeType::Type::VIDEO;
+		params.mimeType.subtype = RTC::RtpCodecMimeType::Subtype::VP8;
+
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		rtpStream.SetRtx(params.rtxPayloadType, params.rtxSsrc);
+
+		packet->SetSequenceNumber(1);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		// Sequence number 2 is lost and NACKed.
+		packet->SetSequenceNumber(3);
+		listener.shouldTriggerNack = true;
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.nackedSeqNumbers.size() == 1);
+		REQUIRE(listener.nackedSeqNumbers[0] == 2);
+
+		// The stream goes on for longer than the allowed misorder.
+		for (uint16_t seq{ 4 }; seq <= 2003; ++seq)
+		{
+			packet->SetSequenceNumber(seq);
+			rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+		}
+
+		// The retransmission of sequence number 2 arrives, so it is taken.
+		packet->SetSequenceNumber(2);
+		packet->RtxEncode(params.rtxPayloadType, params.rtxSsrc, /*seq*/ 0);
+
+		REQUIRE(rtpStream.ReceiveRtxPacket(packet.get(), shared.GetTimeUs()));
+
+		// Then the one of sequence number 3, which was not asked for, as part of a
+		// burst of consecutive retransmissions.
+		packet->SetSequenceNumber(3);
+		packet->RtxEncode(params.rtxPayloadType, params.rtxSsrc, /*seq*/ 1);
+
+		REQUIRE(!rtpStream.ReceiveRtxPacket(packet.get(), shared.GetTimeUs()));
+
+		// The stream goes on as if nothing happened.
+		packet->SetSequenceNumber(2004);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.restartCount == 0);
+
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> receiverReportPacket{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
+
+		REQUIRE(rtpStream.AddRtcpReportBlock(receiverReportPacket.get()));
+
+		const std::vector<RTC::NEW_RTCP::AnyReportPacket::ReportBlock> reportBlocks =
+		  receiverReportPacket->GetReportBlocks();
+		const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock = reportBlocks.at(0);
+
+		REQUIRE(reportBlock.extendedHighestSeq == 2004);
+	}
+
+	SECTION("a retransmission asked for is accepted however old and never restarts the stream")
+	{
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		packet->SetSequenceNumber(1);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		// Sequence number 2 is lost and NACKed.
+		packet->SetSequenceNumber(3);
+		listener.shouldTriggerNack = true;
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.nackedSeqNumbers.size() == 1);
+		REQUIRE(listener.nackedSeqNumbers[0] == 2);
+
+		// The stream goes on for longer than the allowed misorder.
+		for (uint16_t seq{ 4 }; seq <= 2003; ++seq)
+		{
+			packet->SetSequenceNumber(seq);
+			rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+		}
+
+		// The retransmission of sequence number 2 arrives in the stream itself
+		// (there is no RTX), so it is taken.
+		packet->SetSequenceNumber(2);
+
+		REQUIRE(rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs()));
+
+		// Then sequence number 3 again, which was not asked for, right after it.
+		packet->SetSequenceNumber(3);
+
+		REQUIRE(!rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs()));
+
+		// The stream goes on as if nothing happened.
+		packet->SetSequenceNumber(2004);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.restartCount == 0);
+
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> receiverReportPacket{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
+
+		REQUIRE(rtpStream.AddRtcpReportBlock(receiverReportPacket.get()));
+
+		const std::vector<RTC::NEW_RTCP::AnyReportPacket::ReportBlock> reportBlocks =
+		  receiverReportPacket->GetReportBlocks();
+		const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock = reportBlocks.at(0);
+
+		REQUIRE(reportBlock.extendedHighestSeq == 2004);
 	}
 
 	SECTION("AddRtcpReportBlock() reports a jitter that leaves out RTP timestamp jumps")

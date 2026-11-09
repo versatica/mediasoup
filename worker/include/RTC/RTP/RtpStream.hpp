@@ -252,6 +252,25 @@ namespace RTC
 		protected:
 			bool UpdateSeq(const RTP::Packet* packet);
 
+			/**
+			 * Same as `UpdateSeq()` but for a retransmission asked for, recovered by RTX
+			 * or not, which never restarts the stream since it may be any packet asked
+			 * for, however old.
+			 *
+			 * @returns Whether the packet is valid, which it is unless it is too far
+			 *   ahead of the highest sequence number seen.
+			 */
+			bool UpdateRecoveredSeq(const RTP::Packet* packet);
+
+			/**
+			 * Whether the given packet is a retransmission this stream asked for, which
+			 * is then validated as a packet recovered by RTX.
+			 */
+			virtual bool IsRequestedRetransmission(const RTP::Packet* /*packet*/) const
+			{
+				return false;
+			}
+
 			void UpdateScore(uint8_t score);
 
 			void PacketRetransmitted(const RTP::Packet* packet);

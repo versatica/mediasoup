@@ -234,6 +234,7 @@ namespace RTC
 		uint8_t OnRtpStreamNeedWorstRemoteFractionLost(RTC::RTP::RtpStreamRecv* rtpStream) override;
 		void OnRtpStreamSpatialLayerActivityChanged(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) override;
+		void OnRtpStreamRestarted(RTC::RTP::RtpStreamRecv* rtpStream, const RTC::RTP::Packet* packet) override;
 
 		/* Pure virtual methods inherited from RTC::KeyFrameRequestManager::Listener. */
 	public:

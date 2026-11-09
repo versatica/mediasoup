@@ -58,6 +58,13 @@ namespace RTC
 		{
 			return this->nackList.size();
 		}
+		/**
+		 * Whether the packet with the given sequence number is being asked for.
+		 */
+		bool IsInNackList(uint16_t seq) const
+		{
+			return this->nackList.contains(seq);
+		}
 		void UpdateRttMs(int64_t rttMs)
 		{
 			this->rttMs = rttMs;

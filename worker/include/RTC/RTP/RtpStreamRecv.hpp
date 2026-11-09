@@ -61,6 +61,14 @@ namespace RTC
 				 */
 				virtual void OnRtpStreamSpatialLayerActivityChanged(
 				  RTP::RtpStreamRecv* rtpStream, uint8_t spatialLayer, bool isActive) = 0;
+				/**
+				 * The sender restarted the stream, whose first packet was discarded on
+				 * the way, so it may need a key frame.
+				 *
+				 * @param packet - Packet that made the stream restart, already
+				 *   processed at codec level.
+				 */
+				virtual void OnRtpStreamRestarted(RTP::RtpStreamRecv* rtpStream, const RTP::Packet* packet) = 0;
 			};
 
 		public:
@@ -359,6 +367,10 @@ namespace RTC
 		public:
 			void UserOnSequenceNumberReset() override;
 
+			/* Virtual methods inherited from RTP::RtpStream. */
+		protected:
+			bool IsRequestedRetransmission(const RTP::Packet* packet) const override;
+
 			/* Pure virtual methods inherited from TimerHandleInterface. */
 		protected:
 			void OnTimer(TimerHandleInterface* timer) override;
@@ -399,6 +411,8 @@ namespace RTC
 			std::unique_ptr<RTC::NackGenerator> nackGenerator;
 			const std::unique_ptr<TimerHandleInterface> inactivityCheckPeriodicTimer;
 			bool inactive{ false };
+			// Whether the packet being received made the stream restart.
+			bool restarted{ false };
 			const std::unique_ptr<TimerHandleInterface> spatialLayersActivityCheckPeriodicTimer;
 			// Whether each spatial layer was carrying traffic at the latest check.
 			// Empty unless this stream has more than a spatial layer.

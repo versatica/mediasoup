@@ -332,6 +332,15 @@ namespace RTC
 				RTP::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->templateDependencyStructure);
 			}
 
+			// Tell the listener if this packet made the stream restart, now that it
+			// can tell whether the packet starts a key frame.
+			if (this->restarted)
+			{
+				this->restarted = false;
+
+				static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamRestarted(this, packet);
+			}
+
 			// Pass the packet to the NackGenerator.
 			if (this->params.useNack)
 			{
@@ -485,7 +494,7 @@ namespace RTC
 			  packet->GetSequenceNumber());
 
 			// If not a valid packet ignore it.
-			if (!RTP::RtpStream::UpdateSeq(packet))
+			if (!RTP::RtpStream::UpdateRecoveredSeq(packet))
 			{
 				MS_WARN_TAG(
 				  rtx,
@@ -1325,6 +1334,17 @@ namespace RTC
 			{
 				this->nackGenerator->Reset();
 			}
+
+			// Whether it needs a key frame can only be told once the packet has been
+			// processed at codec level, so the listener is told later.
+			this->restarted = true;
+		}
+
+		bool RtpStreamRecv::IsRequestedRetransmission(const RTP::Packet* packet) const
+		{
+			MS_TRACE();
+
+			return this->params.useNack && this->nackGenerator->IsInNackList(packet->GetSequenceNumber());
 		}
 
 		inline void RtpStreamRecv::OnTimer(TimerHandleInterface* timer)
