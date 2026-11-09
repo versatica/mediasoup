@@ -2,7 +2,8 @@
 
 ### NEXT
 
-- New RTCP: Use new RTCP stack for generated BWE RTCP packets ([PR #2039](https://github.com/versatica/mediasoup/pull/2039)).
+- New RTCP: Use the new RTCP stack to generate BWE RTCP packets ([PR #2039](https://github.com/versatica/mediasoup/pull/2039)).
+- New RTCP: Use the new RTCP stack to generate PLI, FIR and NACK packets ([PR #2046](https://github.com/versatica/mediasoup/pull/2046)).
 
 ### 0.33.2
 
