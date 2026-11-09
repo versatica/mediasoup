@@ -44,6 +44,13 @@ namespace RTC
 
 		if (!this->started)
 		{
+			// Do not start with a retransmission, whose sequence number may be far
+			// behind the current one.
+			if (isRecovered || this->answeredList.contains(seq))
+			{
+				return false;
+			}
+
 			this->started = true;
 			this->lastSeq = seq;
 
@@ -68,6 +75,17 @@ namespace RTC
 			// It was a nacked packet.
 			if (this->nackList.erase(seq) != 0)
 			{
+				// Remember it, so any later copy of it is known to be a retransmission.
+				this->answeredList.insert(seq);
+
+				// Remove old ones so we don't accumulate answered packets.
+				auto it = this->answeredList.lower_bound(this->lastSeq - MaxPacketAge);
+
+				if (it != this->answeredList.begin())
+				{
+					this->answeredList.erase(this->answeredList.begin(), it);
+				}
+
 				MS_DEBUG_DEV(
 				  "NACKed packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", recovered:%s]",
 				  packet->GetSsrc(),
@@ -168,6 +186,10 @@ namespace RTC
 		auto it = this->nackList.lower_bound(seqEnd - MaxPacketAge);
 
 		this->nackList.erase(this->nackList.begin(), it);
+
+		auto answeredIt = this->answeredList.lower_bound(seqEnd - MaxPacketAge);
+
+		this->answeredList.erase(this->answeredList.begin(), answeredIt);
 
 		// If the nack list is too large, remove packets from the nack list until
 		// the latest first packet of a keyframe. If the list is still too large,
@@ -340,6 +362,24 @@ namespace RTC
 	void NackGenerator::Reset()
 	{
 		MS_TRACE();
+
+		this->nackList.clear();
+		this->keyFrameList.clear();
+		this->recoveredList.clear();
+		this->answeredList.clear();
+		this->started = false;
+		this->lastSeq = 0;
+	}
+
+	void NackGenerator::Pause()
+	{
+		MS_TRACE();
+
+		// The packets still asked for may arrive later, as retransmissions.
+		for (const auto& [seq, nackInfo] : this->nackList)
+		{
+			this->answeredList.insert(seq);
+		}
 
 		this->nackList.clear();
 		this->keyFrameList.clear();

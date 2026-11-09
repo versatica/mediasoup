@@ -1024,6 +1024,58 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		REQUIRE(reportBlock.extendedHighestSeq == 2004);
 	}
 
+	SECTION("late copies of retransmissions already received never restart the stream")
+	{
+		RtpStreamRecvListener listener;
+		RTC::RTP::RtpStreamRecv rtpStream(
+		  std::addressof(listener), std::addressof(shared), params, SendNackDelay, UseRtpInactivityCheck);
+
+		packet->SetSequenceNumber(1);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		// Sequence numbers 2 and 3 are lost and NACKed.
+		packet->SetSequenceNumber(4);
+		listener.shouldTriggerNack = true;
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.nackedSeqNumbers.size() == 2);
+
+		// The stream goes on for longer than the allowed misorder.
+		for (uint16_t seq{ 5 }; seq <= 2004; ++seq)
+		{
+			packet->SetSequenceNumber(seq);
+			rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+		}
+
+		// Their retransmissions arrive in the stream itself (there is no RTX), and
+		// then a second copy of each one, as when the sender answers two NACKs for
+		// the same packets.
+		for (const uint16_t seq : { 2, 3, 2, 3 })
+		{
+			packet->SetSequenceNumber(seq);
+
+			REQUIRE(rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs()));
+		}
+
+		// The stream goes on as if nothing happened.
+		packet->SetSequenceNumber(2005);
+		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.restartCount == 0);
+
+		const std::unique_ptr<RTC::NEW_RTCP::ReceiverReportPacket> receiverReportPacket{
+			RTC::NEW_RTCP::ReceiverReportPacket::Factory(rtcpCommon::FactoryBuffer, 1000)
+		};
+
+		REQUIRE(rtpStream.AddRtcpReportBlock(receiverReportPacket.get()));
+
+		const std::vector<RTC::NEW_RTCP::AnyReportPacket::ReportBlock> reportBlocks =
+		  receiverReportPacket->GetReportBlocks();
+		const RTC::NEW_RTCP::AnyReportPacket::ReportBlock& reportBlock = reportBlocks.at(0);
+
+		REQUIRE(reportBlock.extendedHighestSeq == 2005);
+	}
+
 	SECTION("AddRtcpReportBlock() reports a jitter that leaves out RTP timestamp jumps")
 	{
 		RtpStreamRecvListener listener;

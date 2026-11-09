@@ -314,8 +314,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// Extended highest sequence number before this packet, to tell whether it
-			// moves the stream forward.
+			// Whether this is the first packet of the stream, and the extended highest
+			// sequence number before it, to tell whether it moves the stream forward.
+			const bool isFirstPacket          = !IsStarted();
 			const uint32_t prevExtendedMaxSeq = this->cycles + this->maxSeq;
 
 			// Call the parent method.
@@ -359,14 +360,21 @@ namespace RTC
 				}
 			}
 
+			// Late packets (reordered or retransmitted) say nothing about the current
+			// state of the stream.
+			const bool movesStreamForward =
+			  isFirstPacket || this->cycles + this->maxSeq != prevExtendedMaxSeq;
+
 			// Calculate jitter, just with packets that move the stream forward, since
-			// late ones (reordered or retransmitted) would inflate it.
-			if (this->cycles + this->maxSeq != prevExtendedMaxSeq)
+			// late ones would inflate it.
+			if (movesStreamForward)
 			{
 				CalculateJitter(packet->GetTimestamp(), receivedAtUs);
 			}
 
-			// Store the capture instant if the packet carries it.
+			// Store the capture instant if the packet carries it, just with packets
+			// that move the stream forward, since late ones would replace a newer one.
+			if (movesStreamForward)
 			{
 				uint64_t absCaptureTimestamp{ 0 };
 				int64_t estimatedCaptureClockOffset{ 0 };
@@ -1132,7 +1140,7 @@ namespace RTC
 
 			if (this->params.useNack)
 			{
-				this->nackGenerator->Reset();
+				this->nackGenerator->Pause();
 			}
 
 			// Reset jitter.
@@ -1344,7 +1352,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			return this->params.useNack && this->nackGenerator->IsInNackList(packet->GetSequenceNumber());
+			return this->params.useNack && this->nackGenerator->IsNacked(packet->GetSequenceNumber());
 		}
 
 		inline void RtpStreamRecv::OnTimer(TimerHandleInterface* timer)

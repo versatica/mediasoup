@@ -277,6 +277,14 @@ namespace RTC
 
 			void PacketRepaired(const RTP::Packet* packet);
 
+			/**
+			 * Whether at least a RTP packet has been received.
+			 */
+			bool IsStarted() const
+			{
+				return this->started;
+			}
+
 			uint32_t GetExpectedPackets() const
 			{
 				return this->expectedPacketsBeforeSeqReset + (this->cycles + this->maxSeq) - this->baseSeq +
