@@ -411,8 +411,8 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 		REQUIRE(senderReportMapping.has_value());
 
-		// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		const RTC::RTP::RtpStream::SenderReportMapping& senderReportMappingValue =
+		  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 		  senderReportMapping.value();
 
 		REQUIRE(senderReportMappingValue.ntpUs == 1000 * 1000000);
