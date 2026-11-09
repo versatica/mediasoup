@@ -76,6 +76,10 @@ namespace
 		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTP::Packet* /*packet*/) override
 		{
 		}
+
+		void OnRtpStreamKeyFrameRequired(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
+		{
+		}
 	};
 
 	class MockEncodingContext : public RTC::RTP::Codecs::EncodingContext

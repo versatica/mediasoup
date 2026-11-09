@@ -1869,6 +1869,16 @@ namespace RTC
 		}
 	}
 
+	void Producer::OnRtpStreamKeyFrameRequired(RTC::RTP::RtpStreamRecv* rtpStream)
+	{
+		MS_TRACE();
+
+		if (this->keyFrameRequestManager && !this->paused)
+		{
+			this->keyFrameRequestManager->KeyFrameNeeded(rtpStream->GetSsrc());
+		}
+	}
+
 	void Producer::OnKeyFrameNeeded(RTC::KeyFrameRequestManager* /*keyFrameRequestManager*/, uint32_t ssrc)
 	{
 		MS_TRACE();

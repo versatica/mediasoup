@@ -1484,7 +1484,8 @@ namespace RTC
 
 			MS_DEBUG_TAG(rtx, "requesting key frame [ssrc:%" PRIu32 "]", this->params.ssrc);
 
-			RequestKeyFrame();
+			// Notify the listener.
+			static_cast<RTP::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamKeyFrameRequired(this);
 		}
 	} // namespace RTP
 } // namespace RTC

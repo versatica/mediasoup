@@ -135,12 +135,18 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 			this->restartCount++;
 		}
 
+		void OnRtpStreamKeyFrameRequired(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
+		{
+			this->keyFrameRequiredCount++;
+		}
+
 	public:
 		bool shouldTriggerNack = false;
 		bool shouldTriggerPLI  = false;
 		bool shouldTriggerFIR  = false;
 		std::vector<uint16_t> nackedSeqNumbers;
 		size_t restartCount{ 0 };
+		size_t keyFrameRequiredCount{ 0 };
 	};
 
 	mocks::MockShared shared(/*getTimeUs*/
@@ -239,6 +245,10 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 			void OnRtpStreamRestarted(
 			  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTP::Packet* /*packet*/) override
+			{
+			}
+
+			void OnRtpStreamKeyFrameRequired(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
 			{
 			}
 
@@ -385,11 +395,11 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
 
 		// Seq different is bigger than MaxNackPackets in NackGenerator, so it
-		// triggers a key frame.
+		// triggers a key frame, which is left to the listener to ask for.
 		packet->SetSequenceNumber(1003);
-		listener.shouldTriggerPLI = true;
-		listener.shouldTriggerFIR = false;
 		rtpStream.ReceivePacket(packet.get(), shared.GetTimeUs());
+
+		REQUIRE(listener.keyFrameRequiredCount == 1);
 	}
 
 	SECTION("ReceiveRtcpSenderReportPacket() ignores a zeroed NTP timestamp")

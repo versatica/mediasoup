@@ -49,6 +49,10 @@ namespace
 		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTP::Packet* /*packet*/) override
 		{
 		}
+
+		void OnRtpStreamKeyFrameRequired(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
+		{
+		}
 	};
 
 	class ConsumerListener : public RTC::Consumer::Listener

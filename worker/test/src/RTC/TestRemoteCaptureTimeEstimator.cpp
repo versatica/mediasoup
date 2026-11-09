@@ -49,6 +49,10 @@ SCENARIO("RemoteCaptureTimeEstimator", "[rtp][rtcp][remotecapturetimeestimator]"
 		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, const RTC::RTP::Packet* /*packet*/) override
 		{
 		}
+
+		void OnRtpStreamKeyFrameRequired(RTC::RTP::RtpStreamRecv* /*rtpStream*/) override
+		{
+		}
 	};
 
 	int64_t nowUs{ LocalBaseUs };
